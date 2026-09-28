@@ -51,7 +51,7 @@ interface SaveShape {
       kiemDaoBase?: number
       mode?: string
     }
-    spellPath?: { element: string | null; route: string | null }
+    spellPath?: { element: string | null }
     artifact?: { artifactId?: string }
     nodeLevels?: Record<string, number>
     purchasedNodeIds?: string[]
@@ -434,7 +434,9 @@ test.describe('Cultivation Path ritual - six-way matrix (P14)', () => {
     expect(save.player.realmId).toBe('qi_refining')
     expect(save.player.cultivationPath).toBe('spell')
     expect(save.player.cultivationWay).toBe('spell_pathway')
-    expect(save.player.spellPath).toEqual({ element: null, route: null })
+    // Phap Tu Reimagined (Task 16): the route half of the legacy
+    // {element, route} commit is retired - spellPath carries element only.
+    expect(save.player.spellPath).toEqual({ element: null })
     expect(save.techniques.map((t) => t.id)).toEqual(['five_elements_art'])
 
     // Element tree surface - 5 element tabs render for ngu_hanh only.

@@ -10,7 +10,7 @@ import { bootToGuestHome, createCharacterThroughUi, enterHome } from './helpers'
  */
 test.describe('Create character to combat', () => {
   test('creates a character, starts a stage battle and shows a result', async ({ page }) => {
-    test.setTimeout(210_000)
+    test.setTimeout(360_000)
 
     await bootToGuestHome(page)
 
@@ -43,14 +43,16 @@ test.describe('Create character to combat', () => {
     await expect(combatTopBar).toBeVisible({ timeout: 15_000 })
     await expect(combatTopBar.getByText('quái')).toBeVisible()
 
-    // Battle runs in REAL TIME (100ms tick). A fresh mortal character on stage 1
-    // (116 enemies) reliably ends in DEFEAT after ~100s of combat (observed in
-    // error snapshots: rewards Linh Thạch +9 granted along the way). Victory
-    // (clearing all 116) would also be a valid end state. Poll generously.
+    // Battle runs real-time through the turn loop (turn N/20 cap). A fresh
+    // mortal character on stage 1 (116 enemies) reliably ends in DEFEAT;
+    // victory (clearing all) is a valid end state too. The observed defeat
+    // lands well inside the budget on a fast host, but presentation-deadline
+    // scaling + parallel-worker contention stretch a turn past 10s on slow
+    // filesystems - the cap alone is ~20 turns of rendered combat.
     const resultModal = page.locator('.combat-result-modal')
     await expect
       .poll(async () => resultModal.isVisible(), {
-        timeout: 180_000,
+        timeout: 300_000,
         message: 'Combat result modal (victory/defeat) should appear',
       })
       .toBe(true)

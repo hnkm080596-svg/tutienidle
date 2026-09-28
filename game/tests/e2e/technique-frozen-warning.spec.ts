@@ -164,6 +164,17 @@ test.describe('BreakthroughRequirementPanel unperfected-technique warning (M-F-T
       })
       .toMatch(/victory|defeat|cleared/)
 
+    // M-F-TALENT (S15-18): a settled breakthrough opens the blocking talent
+    // entitlement dialog - no dismiss path by design, the pick resolves it
+    // and home chrome (.command-wheel-layer) can only return afterwards.
+    const entitlementModal = page.getByTestId('talent-entitlement-modal')
+    await expect(entitlementModal).toBeVisible({ timeout: 30_000 })
+    await entitlementModal
+      .locator('[data-testid^="entitlement-talent-"], [data-testid^="entitlement-upgrade-"]')
+      .first()
+      .click()
+    await expect(entitlementModal).toHaveCount(0, { timeout: 10_000 })
+
     await expect(page.locator('.command-wheel-layer')).toBeAttached({ timeout: 30_000 })
     await expect(tribulationUi).toHaveCount(0)
     await waitForPresentationIdle(page)

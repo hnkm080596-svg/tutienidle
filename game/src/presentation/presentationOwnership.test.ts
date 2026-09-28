@@ -161,6 +161,8 @@ describe('Presentation Ownership AST Guard (Task 13)', () => {
         `Found unauthorized primary scene lifecycle calls in production files: ${JSON.stringify(productionViolations, null, 2)}`,
       ).toEqual([])
     },
-    30_000,
+    // AST-parses every production file -- Windows full-suite contention
+    // was observed starving this past the previous 30s budget.
+    120_000,
   )
 })

@@ -16,7 +16,10 @@ import { bootToGuestHome, createCharacterThroughUi, enterHome } from './helpers'
  *    GHI LOG timestamp mỗi lần pending>0 (bằng chứng runtime) — người review
  *    xem ảnh countdown/materialize + số liệu log.
  */
-test.describe('Turn-Based Wave VFX visual capture', () => {
+// @capture: this spec also writes frame/screenshot artifacts to
+// test-results/. It stays in the default e2e run because its runtime
+// telegraph assertions are real protection, not capture-only output.
+test.describe('Turn-Based Wave VFX visual capture', { tag: '@capture' }, () => {
   test('captures countdown/materialize screenshots + runtime wave telegraph proof', async ({ page }) => {
     test.setTimeout(180_000)
 

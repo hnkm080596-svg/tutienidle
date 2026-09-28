@@ -8,6 +8,7 @@ import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import { dongFuLayerList } from '@/presentation/background/DongFuArt'
 import { THANH_VAN_SEASONS, THANH_VAN_TIMES } from '@/game/support/ThanhVanArt'
+import { resolveMagick } from './testing/nativeToolProbe'
 
 const variants = THANH_VAN_SEASONS.flatMap((season) =>
   THANH_VAN_TIMES.map((time) => ({ season, time })),
@@ -17,10 +18,16 @@ const urls = [
   ...new Set(variants.flatMap((variant) => dongFuLayerList(variant).map((layer) => layer.url))),
 ]
 
+// Alpha sampling shells out to ImageMagick: IM7 `magick`, or IM6 `convert`
+// on POSIX. Hosts without either skip the sample assertions instead of
+// crashing the whole suite on ENOENT; the 40-PNG signature/dimension
+// contract above is pure fs and still runs everywhere.
+const magick = resolveMagick()
+
 function sampleAlpha(url: string, x: number, y: number): number {
   const file = fileURLToPath(new URL(`../../public${url}`, import.meta.url))
   return Number(execFileSync(
-    'magick',
+    magick!,
     [file, '-crop', `1x1+${x}+${y}`, '-format', '%[fx:a]', 'info:'],
     { encoding: 'utf8' },
   ).trim())
@@ -42,7 +49,7 @@ describe('Dong Fu modular background assets', () => {
     }
   })
 
-  it('keeps the lake above the cultivation dais transparent without erasing the dais', () => {
+  it.skipIf(magick === null)('keeps the lake above the cultivation dais transparent without erasing the dais', () => {
     for (const season of THANH_VAN_SEASONS) {
       const url = `/assets/backgrounds/dong-fu/modular/seasons/${season}/07-sect-ground.png`
 
