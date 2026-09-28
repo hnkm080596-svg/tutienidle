@@ -543,7 +543,9 @@ class AudioManagerImpl {
       // B4: suspended tab → resume before playing (no throw on failure).
       const ctx = Tone.getContext()
       if (ctx.state === 'suspended') {
-        void ctx.resume()
+        // resume() can reject (e.g. context closed) - swallow so no
+        // floating unhandled rejection escapes the cue path.
+        void ctx.resume().catch(() => {})
       }
 
       const src = this.pickDecodedSrc(id, def.src)
