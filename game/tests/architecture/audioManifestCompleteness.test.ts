@@ -183,7 +183,11 @@ describe('audio manifest completeness', () => {
     // rows today; a preset reaching it proves its impact row is gone.)
     const unrouted = [...presets].filter((p) => {
       const route = cueForActionImpact({ presetId: p })
-      return route === 'combat.impact' || route.startsWith('combat.element.')
+      return (
+        route === undefined ||
+        route === 'combat.impact' ||
+        route.startsWith('combat.element.')
+      )
     })
     expect(unrouted).toEqual([])
     expect(

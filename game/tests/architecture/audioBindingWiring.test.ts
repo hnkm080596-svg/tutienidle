@@ -19,56 +19,19 @@ import { join } from 'node:path'
 import { readFileSync } from 'node:fs'
 import { SCAN_TIMEOUT, srcCorpus } from './helpers/scanTs'
 import { AUDIO_CUES, resolveAudioCue } from '@/core/audio/AudioCueManifest'
+import { uncommented } from './helpers/commentStrip'
 
 const SRC_DIR = join(process.cwd(), 'src')
 const FILES = srcCorpus(SRC_DIR)
 
-// String-aware comment strip: `// emit('x'` prose and /* ... */ blocks do
-// not count, but `//` INSIDE a quoted literal ('a//b') must survive - a
-// naive line strip would corrupt the literal being scanned.
-function uncommented(text: string): string {
-  const noHtml = text.replace(/<!--[\s\S]*?-->/g, '')
-  let out = ''
-  let i = 0
-  let quote: string | null = null
-  while (i < noHtml.length) {
-    const c = noHtml[i]!
-    if (quote !== null) {
-      out += c
-      if (c === '\\') {
-        out += noHtml[i + 1] ?? ''
-        i += 2
-        continue
-      }
-      if (c === quote) quote = null
-      i++
-      continue
-    }
-    if (c === "'" || c === '"' || c === '`') {
-      quote = c
-      out += c
-      i++
-      continue
-    }
-    if (c === '/' && noHtml[i + 1] === '/') {
-      while (i < noHtml.length && noHtml[i] !== '\n') i++
-      continue
-    }
-    if (c === '/' && noHtml[i + 1] === '*') {
-      const end = noHtml.indexOf('*/', i + 2)
-      i = end === -1 ? noHtml.length : end + 2
-      continue
-    }
-    out += c
-    i++
-  }
-  return out
-}
 
 const EMITTED = new Set<string>()
 for (const file of FILES) {
-  // Test-only emitters must not satisfy a production bound name.
-  if (file.fromSrc.endsWith('.test.ts')) continue
+  // Test-only emitters must not satisfy a production bound name; Vue
+  // component emits (emit('back'), emit('close')...) are UI events, not
+  // domain bus events - sweeping them would let a future bound audio
+  // event name be falsely satisfied by an unrelated component emit.
+  if (file.fromSrc.endsWith('.test.ts') || file.fromSrc.endsWith('.vue')) continue
   for (const m of uncommented(file.text).matchAll(/\bemit\s*(?:<[^>]*>)?\(\s*['"`]([a-z_0-9]+)['"`]/g)) {
     EMITTED.add(m[1]!)
   }
@@ -103,11 +66,17 @@ describe('audio binding wiring', () => {
       // name may be preceded by start, a non-word char, or the `.`
       // receiver - `xcue(`/`decode(` stay excluded.
       const CALL = /(?:^|[^\w]|\.)(?:cue|playCue)\s*(?:\?\.\s*)?\(([^)]*)\)/g
-      // A local declaration `function cue(...)` / `get cue()` is not a
-      // store call - skip it so the bare-call arm only fires on real
-      // invocations with cue-id literals.
-      const DECL_TAIL = /\b(?:function|get|set)\s*$/
-      const LOCAL_DECL = /\b(?:function\s+(?:\*\s*)?|(?:const|let|var)\s+)(cue|playCue)\b/g
+      // A local declaration at line start (`function cue(`, `get cue(`,
+      // `set cue(`, optionally `async`) is not a store call - the check
+      // must anchor on the declaration line, not just a trailing word:
+      // `myMap.set\ncue('x')` must NOT be exempted.
+      const LINE_DECL = /^\s*(?:async\s+)?(?:function\s*\*?\s*|get\s+|set\s+)$/
+      // Only REAL local functions exempt the bare-call arm: `function cue`
+      // / `const cue = (` / `const cue = async` / `const cue = function`.
+      // `const cue = useAudioStore().cue` aliases the store seam and its
+      // calls must still be checked - a value-side store ref means no
+      // exemption.
+      const LOCAL_DECL = /\bfunction\s*(?:\*\s*)?(cue|playCue)\b|\b(?:const|let|var)\s+(cue|playCue)\s*=\s*(?:async\b|function\b|\()/g
       const checkLiteral = (violations: string[], fromSrc: string, literal: string): void => {
         if (literal.includes('${')) {
           const prefix = literal.replace(/\.\$\{[^}]+\}$/, '')
@@ -132,16 +101,44 @@ describe('audio binding wiring', () => {
         // Names declared locally in this file (`function cue`, `const cue
         // =`) are not the store seam - bare calls to them are exempt.
         const localNames = new Set<string>()
-        for (const d of text.matchAll(LOCAL_DECL)) localNames.add(d[1]!)
-        for (const m of text.matchAll(CALL)) {
-          // Position of the `cue`/`playCue` name itself (the match may
-          // start one char earlier on the permitted prefix).
+        for (const d of text.matchAll(LOCAL_DECL)) localNames.add(d[1] ?? d[2]!)
+        // Destructure aliases (`const { cue: q } = useAudioStore()` then
+        // `q('id')`) rename the seam - collect them and check their calls
+        // through the same literal resolution pipeline.
+        const aliases: string[] = []
+        for (const dm of text.matchAll(/\bconst\s*\{[^}]*\}/g)) {
+          for (const am of dm[0].matchAll(/\b(?:cue|playCue)\s*:\s*([A-Za-z_]\w*)/g)) {
+            aliases.push(am[1]!)
+          }
+        }
+        const callRe =
+          aliases.length === 0
+            ? CALL
+            : new RegExp(
+                `(?:^|[^\\w]|\\.)(?:cue|playCue|${aliases.join('|')})\\s*(?:\\?\\.\\s*)?\\(([^)]*)\\)`,
+                'g',
+              )
+        for (const m of text.matchAll(callRe)) {
+          // Position of the callee name itself (the match may start one
+          // char earlier on the permitted prefix).
           const prefixLen = /^(?:[^\w]|\.)/.test(m[0]) ? 1 : 0
           const namePos = (m.index ?? 0) + prefixLen
-          if (DECL_TAIL.test(text.slice(Math.max(0, namePos - 40), namePos))) continue
+          // Declaration shapes at line start (`function cue(`, `get cue(`,
+          // `set cue(`) are not calls - anchor on the LINE before the
+          // name, not a trailing-word lookback (which suppressed real
+          // calls after `myMap.set`-style lines).
+          const lineStart = text.lastIndexOf('\n', namePos) + 1
+          const beforeOnLine = text.slice(lineStart, namePos)
+          if (LINE_DECL.test(beforeOnLine)) continue
+          // Method shorthand `cue(id: string) {` (stores/audio.ts) is a
+          // declaration, not a call: line-start name + args closed by
+          // `{`/`:` immediately after `)`. A mid-line `? cue(x) : y`
+          // keeps `x ?` before it on the line, so ternaries stay scanned.
+          const afterCall = text.slice((m.index ?? 0) + m[0].length)
+          if (/^\s*$/.test(beforeOnLine) && /^\s*[:{]/.test(afterCall)) continue
           if (prefixLen === 0 || m[0][0] !== '.') {
-            const name = /^playCue/.test(m[0].slice(prefixLen)) ? 'playCue' : 'cue'
-            if (localNames.has(name)) continue
+            const callee = /^[A-Za-z_]\w*/.exec(m[0].slice(prefixLen))![0]
+            if (localNames.has(callee)) continue
           }
           const argText = m[1]!
           for (const lit of argText.matchAll(LITERAL)) {
@@ -174,7 +171,20 @@ describe('audio binding wiring', () => {
             } else {
               const first = LITERAL.exec(tail)
               LITERAL.lastIndex = 0
-              if (first && first.index < 8) checkLiteral(violations, file.fromSrc, first[2]!)
+              if (first && first.index < 8) {
+                checkLiteral(violations, file.fromSrc, first[2]!)
+                // Concat initializers (`const X = 'a' + 'bogus.id'`)
+                // bind more than the first literal - sweep the rest of
+                // the statement when a `+` connector follows.
+                const stmtEnd = tail.search(/[;\n]/)
+                const stmt = stmtEnd === -1 ? tail : tail.slice(0, stmtEnd)
+                if (/\+/.test(stmt)) {
+                  for (const lit of stmt.matchAll(LITERAL)) {
+                    if (lit.index === first.index) continue
+                    checkLiteral(violations, file.fromSrc, lit[2]!)
+                  }
+                }
+              }
             }
           }
         }

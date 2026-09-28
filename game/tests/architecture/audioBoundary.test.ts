@@ -16,6 +16,7 @@
 import { describe, expect, it } from 'vitest'
 import { join } from 'node:path'
 import { readTs, SCAN_TIMEOUT, srcCorpus } from './helpers/scanTs'
+import { uncommented } from './helpers/commentStrip'
 
 const SRC_DIR = join(process.cwd(), 'src')
 
@@ -27,51 +28,6 @@ const IMPORT_RE = /(?:import|export)\s+(?:type\s+)?(?:[\w*{}\s,]*?\s+from\s+)?['
 const DYNAMIC_IMPORT_RE =
   /(?:import|require)\s*\(\s*(?:\/\*[\s\S]*?\*\/\s*|\/\/[^\n]*\s*)*['"`]([^'"`]+)['"`]\s*(?:\/\*[\s\S]*?\*\/\s*|\/\/[^\n]*\s*)*\)/g
 
-// String-aware comment strip: comment spans between tokens
-// (`import /*c*/ Tone`, `import(/*c*/ 'tone')`) must not splice a
-// specifier past the regexes; and `//` INSIDE a quoted specifier
-// ('./..//audio/x') must survive - a naive line strip would cut the
-// specifier short and smuggle the audio path past AUDIO_SPEC_RE.
-// HTML comments are stripped too so `<!-- import 'tone' -->` template
-// prose in .vue files does not produce a phantom specifier.
-function uncommented(text: string): string {
-  const noHtml = text.replace(/<!--[\s\S]*?-->/g, '')
-  let out = ''
-  let i = 0
-  let quote: string | null = null
-  while (i < noHtml.length) {
-    const c = noHtml[i]!
-    if (quote !== null) {
-      out += c
-      if (c === '\\') {
-        out += noHtml[i + 1] ?? ''
-        i += 2
-        continue
-      }
-      if (c === quote) quote = null
-      i++
-      continue
-    }
-    if (c === "'" || c === '"' || c === '`') {
-      quote = c
-      out += c
-      i++
-      continue
-    }
-    if (c === '/' && noHtml[i + 1] === '/') {
-      while (i < noHtml.length && noHtml[i] !== '\n') i++
-      continue
-    }
-    if (c === '/' && noHtml[i + 1] === '*') {
-      const end = noHtml.indexOf('*/', i + 2)
-      i = end === -1 ? noHtml.length : end + 2
-      continue
-    }
-    out += c
-    i++
-  }
-  return out
-}
 
 function importSpecifiers(text: string): string[] {
   const clean = uncommented(text)
@@ -89,7 +45,7 @@ function importSpecifiers(text: string): string[] {
 // `audio/` directory - matching on the directory (not on an 'Audio' filename
 // prefix) keeps a future core/audio/util.ts inside the ban. The `($)` tail
 // also catches a directory import (`@/core/audio` resolving to index.ts).
-const AUDIO_SPEC_RE = /(^|\/)audio([/?#]|$)/
+const AUDIO_SPEC_RE = /(^|\/)audio([/?#.]|$)/
 
 describe('audio boundary', () => {
   it(
@@ -103,7 +59,15 @@ describe('audio boundary', () => {
         // the real consumer - the ban is on production coupling.
         if (file.fromSrc.endsWith('.test.ts')) continue
         for (const spec of importSpecifiers(file.text)) {
-          if (spec === 'tone' || spec.startsWith('tone/') || AUDIO_SPEC_RE.test(spec)) {
+          // Specifiers containing escapes ('cor\u0065/audio', 't\x6fne')
+          // resolve to banned paths at evaluation time while evading the
+          // literal match - no legitimate static import needs a backslash.
+          if (
+            spec.includes('\\') ||
+            spec === 'tone' ||
+            spec.startsWith('tone/') ||
+            AUDIO_SPEC_RE.test(spec)
+          ) {
             offenders.push(`${file.fromSrc} -> ${spec}`)
           }
         }
@@ -179,6 +143,27 @@ describe('audio boundary', () => {
           continue
         }
         if (!ALLOWLIST.has(file.fromSrc)) offenders.push(file.fromSrc)
+      }
+      expect(offenders).toEqual([])
+    },
+    SCAN_TIMEOUT,
+  )
+
+  it(
+    'jsdom tests reaching the real audio path pin visibilityState=visible',
+    () => {
+      // jsdom defaults document.visibilityState to 'prerender' - the real
+      // playCue gate drops every cue there, so a jsdom test exercising the
+      // real audio path without the pin passes vacuously. Any jsdom test
+      // file referencing AudioManager/playCue must carry the pin.
+      const offenders: string[] = []
+      for (const file of srcCorpus(SRC_DIR)) {
+        if (!file.fromSrc.endsWith('.test.ts')) continue
+        if (!file.text.includes('@vitest-environment jsdom')) continue
+        if (!/AudioManager|playCue/.test(file.text)) continue
+        if (!file.text.includes("visibilityState")) {
+          offenders.push(file.fromSrc)
+        }
       }
       expect(offenders).toEqual([])
     },
