@@ -1,14 +1,15 @@
 // @vitest-environment jsdom
 //
-// Bảng 9.5 #5 (2026-09-07) — TurnCombatSkillBar hiển thị tên skill thật
-// (TurnSkillDisplayMeta) thay nhãn role cố định; fallback nhãn role khi
-// id không có trong map.
+// Bang 9.5 #5 (2026-09-07) -- TurnCombatSkillBar hien thi ten skill that
+// (TurnSkillDisplayMeta) thay nhan role co dinh; fallback nhan role khi
+// id khong co trong map.
 //
-// Mount theo pattern project (createApp + h, KHÔNG @vue/test-utils —
-// chưa cài, xem CombatExitConfirmModal.test.ts). Mock composable bằng
+// Mount theo pattern project (createApp + h, KHONG @vue/test-utils --
+// chua cai, xem CombatExitConfirmModal.test.ts). Mock composable bang
 // vi.mock (hoisted factory).
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createApp, h, nextTick } from 'vue'
+import { i18n } from '@/i18n'
 import type { TurnSkillPresentationEntry } from '@/core/combat/CombatSkillPresentation'
 import { hasPathCapability } from '@/core/player/CultivationPathSystem'
 import type { CultivationPathId, CultivationWayId, PathCapability } from '@/core/player/CultivationPathKit'
@@ -33,7 +34,7 @@ vi.mock('@/composables/useTurnCombatManual', () => ({
     isBattleFighting: { value: true },
     slotList: { value: mocks.slotList },
     chooseSlot: mocks.chooseSlot,
-    // Kiem Tu Reimagined — no dynamicBasic provider in this fixture:
+    // Kiem Tu Reimagined -- no dynamicBasic provider in this fixture:
     // the orb picker stays hidden and the 3-slot row renders. The
     // __v_isRef tag is required: template v-if/v-for unrefs these,
     // a bare {value: x} object is truthy and would render a phantom
@@ -106,6 +107,9 @@ function mountBar(): HTMLElement {
 
   const app = createApp({ render: () => h(TurnCombatSkillBar) })
 
+  // The bar speaks i18n now (skillBar.* keys) -- mount needs the plugin,
+  // same pattern as CombatExitConfirmModal.test.ts.
+  app.use(i18n)
   app.mount(container)
 
   return container
@@ -123,7 +127,7 @@ describe('TurnCombatSkillBar — display label (9.5 #5)', () => {
     await nextTick()
 
     expect(container.textContent).toContain('Huy Kiếm')
-    // 2 slot còn lại fallback nhãn role.
+    // 2 slot con lai fallback nhan role.
     expect(container.textContent).toContain('Đặc Biệt')
     expect(container.textContent).toContain('Tuyệt Kỹ')
 
@@ -144,9 +148,9 @@ describe('TurnCombatSkillBar — display label (9.5 #5)', () => {
   })
 })
 
-// Phap Tu Reimagined (Task 16) — the ngo_dao way owns NO active ultimate: the
+// Phap Tu Reimagined (Task 16) -- the ngo_dao way owns NO active ultimate: the
 // ult slot is the ngo_dao_hon_don dao passive, rendered as an emblem,
-// never a button (spec §3.3).
+// never a button (spec S3.3).
 describe('TurnCombatSkillBar — ngo_dao passive emblem', () => {
   it('ult slot là emblem ngo_dao_hon_don, KHÔNG phải button', async () => {
     mocks.cultivationPath = 'spell'
@@ -165,7 +169,7 @@ describe('TurnCombatSkillBar — ngo_dao passive emblem', () => {
     expect(container.textContent).toContain('Bị Động')
     expect(container.textContent).not.toContain('Tuyệt Kỹ')
 
-    // Exactly 2 buttons (basic + special) — the emblem is a div.
+    // Exactly 2 buttons (basic + special) -- the emblem is a div.
     const buttons = container.querySelectorAll('button.turn-combat-skill-bar__slot-button')
 
     expect(buttons).toHaveLength(2)

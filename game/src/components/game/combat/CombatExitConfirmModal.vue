@@ -1,15 +1,15 @@
 <script setup lang="ts">
-// 6A-T6 (2026-09-01, spec §3) — confirm modal thoát trận, extract từ
+// 6A-T6 (2026-09-01, spec S3) -- confirm modal thoat tran, extract tu
 // CombatControlBar (L173-182 + confirmExit L47-55): scene exit-zone
-// (canvas) emit 'combat_exit_request' → modal này mở; logic confirm
-// giữ NGUYÊN (abandonBattle → manual → combat_scene_exit →
+// (canvas) emit 'combat_exit_request' -> modal nay mo; logic confirm
+// giu NGUYEN (abandonBattle -> manual -> combat_scene_exit ->
 // combat_scene_exit) - now runs inside the closed curtain via
 // useBattleActions.exitCombatToHome. Gate: Stage only (Tribulation has
 // its own flow).
-import { onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useUiStore } from '@/stores/ui'
-import { useGameManager } from '@/composables/useGameState'
+import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useBattleActions } from '@/composables/useBattleActions'
 import { useDialogFocus } from '@/composables/useDialogFocus'
 import GameButton from '@/components/common/GameButton.vue'
@@ -21,9 +21,25 @@ const { exitCombatToHome } = useBattleActions()
 
 const visible = ref(false)
 const cardRef = ref<HTMLElement | null>(null)
+const { stateVersion } = useStateVersion()
 
-// Deferred follow-up (2026-09-03) — focus trap dùng chung (QA-003):
-// Escape = HỦY thoát (Ở LẠI trận), KHÔNG BAO GIỜ exit qua Escape.
+// stateVersion ticks every game loop; a battle that resolves itself
+// while the confirm sits open must dismiss it (result panels own exit).
+// Live = any non-terminal battle state (intro/countdown/fighting).
+const battleLive = computed(() => {
+  stateVersion.value
+  const state = gameManager.getTurnBattle()?.state
+  return state === 'intro' || state === 'countdown' || state === 'fighting'
+})
+
+watch(battleLive, (live) => {
+  if (!live) {
+    visible.value = false
+  }
+})
+
+// Deferred follow-up (2026-09-03) -- focus trap dung chung (QA-003):
+// Escape = HUY thoat (O LAI tran), KHONG BAO GIO exit qua Escape.
 useDialogFocus(cardRef, visible, {
   onEscape: () => {
     visible.value = false
@@ -31,11 +47,24 @@ useDialogFocus(cardRef, visible, {
 })
 
 function onExitRequest() {
-  // Scene chỉ request; Stage gate giữ tại render (v-if) để Tribulation
-  // không bao giờ thấy modal dù event phát nhầm.
-  if (ui.combatOrigin === 'stage') {
-    visible.value = true
+  // Scene/topbar only request; the Stage gate stays at render so
+  // Tribulation never sees the modal on a stray emit. UI audit
+  // 2026-09-28: also require a live battle -- a request fired after
+  // victory/defeat must not stack the abandon-confirm over the result
+  // panel (the result panels own their exit actions). intro/countdown
+  // count as live: abandonBattle accepts them and the player must be
+  // able to bail during the wind-up (~3s dead window otherwise).
+  if (ui.combatOrigin !== 'stage') {
+    return
   }
+
+  const battleState = gameManager.getTurnBattle()?.state
+
+  if (battleState !== 'intro' && battleState !== 'countdown' && battleState !== 'fighting') {
+    return
+  }
+
+  visible.value = true
 }
 
 function confirmExit() {

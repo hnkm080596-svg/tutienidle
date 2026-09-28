@@ -33,19 +33,44 @@ export class GameManagerEconomyOps {
     materialId: string,
     amount: number,
     player: PlayerData,
-  ): { ok: boolean; reason?: string; gained?: number } {
+  ): { ok: boolean; reason?: string; gained?: number; stoneMaterialId?: string } {
     const vendorSystem = new VendorSystem(this.deps.materialRegistry, this.deps.getAlchemyRecipes())
 
     const result = vendorSystem.sellMaterial(this.deps.materialBag, materialId, amount, player.realmId)
 
-    if (result.ok && result.gained) {
-      this.deps.notifyMaterialGained(
-        getSpiritStoneMaterialIdForRealmTier(getRealmTier(player.realmId)),
-        result.gained,
-      )
+    if (result.ok && result.gained && result.stoneMaterialId) {
+      this.deps.notifyMaterialGained(result.stoneMaterialId, result.gained)
     }
 
     return result
+  }
+
+  /**
+   * Read-only sale quote for the Vendor UI (ui-audit fix): the real
+   * granted stone count + name at the player's realm tier. Panels must
+   * show THIS, not unitPrice*qty (which is ha-pham-equivalent).
+   * granted=0 means the stack is too small to convert (sellMaterial
+   * would reject with too_small).
+   */
+  previewVendorSale(
+    materialId: string,
+    amount: number,
+    player: PlayerData,
+  ): { granted: number; stoneName: string } | null {
+    const vendorSystem = new VendorSystem(this.deps.materialRegistry, this.deps.getAlchemyRecipes())
+
+    const quote = vendorSystem.previewSellGrant(this.deps.materialBag, materialId, amount, player.realmId)
+
+    if (quote === null) {
+      return null
+    }
+
+    const stoneMaterialId = getSpiritStoneMaterialIdForRealmTier(getRealmTier(player.realmId))
+    const stoneName = this.deps.materialRegistry.has(stoneMaterialId)
+      ? this.deps.materialRegistry.get(stoneMaterialId).name
+      : stoneMaterialId
+
+    return { granted: quote.granted, stoneName }
   }
 
   /**

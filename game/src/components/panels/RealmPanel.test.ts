@@ -91,17 +91,23 @@ describe('RealmPanel', () => {
     mounted.unmount()
   })
 
-  // M-QI-03 - normal Truc Co read-model: exactly the two locked lines,
-  // rendered only for qi_refining; hidden foundation inputs never surface.
+  // M-QI-03 - normal Truc Co read-model: exactly the two locked lines
+  // for qi_refining; hidden foundation inputs never surface. Ui-audit
+  // fix: mortal ALSO renders its Quan Khi level row - a permanently
+  // disabled button with no visible requirement read as a dead control.
   it('hiển thị đúng 2 dòng điều kiện Trúc Cơ cho qi_refining, cập nhật trạng thái trực tiếp', async () => {
     const mounted = mountRealmPanel()
     const reqRows = () => Array.from(
       mounted.container.querySelectorAll<HTMLElement>('.realm-requirement'),
     )
     const rowMet = (el: HTMLElement) => el.classList.contains('realm-requirement--met')
+    const rowLabel = (el: HTMLElement) =>
+      (el.textContent ?? '').replace(/^[✓✗]/, '').replace(/\s+/g, ' ').trim()
 
-    // Mortal keeps its line-less Quan Khi presentation (Truc Co scope only).
-    expect(reqRows()).toHaveLength(0)
+    // Mortal surfaces the Quan Khi level gate (ui-audit progression fix).
+    expect(reqRows()).toHaveLength(1)
+    expect(rowLabel(reqRows()[0]!)).toBe('Phàm Nhân tầng 12')
+    expect(rowMet(reqRows()[0]!)).toBe(false)
 
     mounted.player.realmId = 'qi_refining'
     mounted.player.realmLevel = 12
@@ -110,8 +116,6 @@ describe('RealmPanel', () => {
     expect(reqRows()).toHaveLength(2)
     // QI-D6: the block renders EXACTLY the two mandatory normal inputs -
     // row text = marker glyph + semantic label, nothing else appended.
-    const rowLabel = (el: HTMLElement) =>
-      (el.textContent ?? '').replace(/^[✓✗]/, '').replace(/\s+/g, ' ').trim()
     expect(rowLabel(reqRows()[0]!)).toBe('Luyện Khí tầng 12')
     expect(rowMet(reqRows()[0]!)).toBe(true)
     expect(rowLabel(reqRows()[1]!)).toBe('Chương 10 hoàn thành')

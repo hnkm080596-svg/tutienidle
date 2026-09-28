@@ -8,6 +8,7 @@ import TribulationSceneOverlay from '../game/tribulation/TribulationSceneOverlay
 import { VUE_ROUTE_ADAPTER_KEY } from '@/presentation/PresentationContracts'
 import DongFuCommandWheel from '../game/DongFuCommandWheel.vue'
 import AutoFarmIndicator from '../game/AutoFarmIndicator.vue'
+import CurrencyHud from '../game/CurrencyHud.vue'
 import BuildingDetailPopover from '../game/BuildingDetailPopover.vue'
 import LeftPanel from './LeftPanel.vue'
 import RightPanel from './RightPanel.vue'
@@ -105,6 +106,11 @@ function closeSidePanels() {
         <div v-if="ui.activeBuildingPopoverId" class="game-root__building-popover-layer">
           <BuildingDetailPopover :building-id="ui.activeBuildingPopoverId" />
         </div>
+
+        <!-- Economy currency strip (audit H1) - pinned top-left so the
+             Linh Thach / companion-currency balances are readable from
+             the home scene without opening a panel. -->
+        <CurrencyHud />
 
         <LeftPanel class="game-root__left-panel" />
         <RightPanel />

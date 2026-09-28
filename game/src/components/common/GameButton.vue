@@ -169,7 +169,6 @@ const sliceTint = computed(() => (props.variant === 'danger' ? '--cinnabar' : un
    focus rule (0,2,1), so the sys ring is re-declared here under sys
    anchors - same 2px non-glow contract, sys hue, no chrome shadow. */
 .sys-surface .game-button:focus-visible,
-.sys-modal .game-button:focus-visible,
 .overlay-panel__card--system .game-button:focus-visible {
   outline-color: var(--sys-focus, rgba(217, 212, 199, 0.65));
   box-shadow: none;

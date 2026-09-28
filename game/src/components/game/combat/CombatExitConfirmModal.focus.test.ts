@@ -21,6 +21,7 @@ interface MockGameManager {
   emit: ReturnType<typeof vi.fn>
   on: ReturnType<typeof vi.fn>
   off: ReturnType<typeof vi.fn>
+  getTurnBattle: ReturnType<typeof vi.fn>
   capturedRequestHandler: (() => void) | null
 }
 
@@ -30,6 +31,8 @@ function makeGameManager(): MockGameManager {
     emit: vi.fn(),
     on: vi.fn(),
     off: vi.fn(),
+    // UI audit 2026-09-28: the modal also gates on a live fighting battle.
+    getTurnBattle: vi.fn(() => ({ state: 'fighting' })),
     capturedRequestHandler: null,
   }
 

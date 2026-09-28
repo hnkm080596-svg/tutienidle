@@ -1,0 +1,2154 @@
+{
+  "schemaVersion": 2,
+  "run": {
+    "id": "ui-fix-wave1-2026-09-28",
+    "createdAt": "2026-09-28T03:02:01.141Z",
+    "scope": "AGGREGATE_REPOSITORY",
+    "authorizedRepairs": [],
+    "nonGoals": [],
+    "checkout": "/tmp/ui-fix-merge/game",
+    "branch": "devin/ui-fix-wave1",
+    "base": "0f1d84d1",
+    "head": "32483797",
+    "state": {
+      "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+      "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+      "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+      "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+    },
+    "manifestPath": "manifest.json",
+    "environmentPath": "environment.json",
+    "learningPolicyId": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+    "consumedLessonIds": [],
+    "aggregateParents": [],
+    "requiredDomains": [],
+    "exclusions": [],
+    "briefIds": [],
+    "capacityLimit": 5,
+    "requiredReadiness": false,
+    "phase": "DECIDE",
+    "cleanRoundA": null,
+    "cleanRoundB": null,
+    "finalEvidenceIds": [
+      "EV-UIW1-FIX2"
+    ],
+    "outcome": "QA_UNVERIFIED"
+  },
+  "briefs": [],
+  "assignments": [],
+  "consumptions": [],
+  "invariants": [],
+  "census": [],
+  "findings": [
+    {
+      "id": "F-UIW1-01",
+      "title": "Vendor sell preview mislabels spirit-stone grant",
+      "state": {
+        "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+        "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+      },
+      "subsystem": "ui",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "closedAt": "2026-09-28T04:50:00Z",
+      "severity": "Medium",
+      "locations": [
+        {
+          "path": "src/components/panels/VendorPanel.vue",
+          "symbolOrSection": ":126,174",
+          "revision": "32483797",
+          "basis": "SOURCE"
+        }
+      ],
+      "pinEvidenceIds": [
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
+      ],
+      "verificationEvidenceIds": [
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
+      ],
+      "evidenceIds": [
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
+      ],
+      "closureReviewIds": [
+        "REV-UIW1-CLO-1"
+      ],
+      "status": "CLOSED",
+      "classification": "REAL_DEFECT",
+      "reachability": "SUPPORTED_BOUNDARY",
+      "actionable": true,
+      "discoveredBy": "AUT-1 + INT-1",
+      "expected": "preview shows the true realm-tier stone grant",
+      "actual": "qty*unitPrice (ha-equivalent units) labeled with realm-tier stone name; actual grant = floor(qty*unitPrice/conversionFactor) -- 100x/30000x overstated at tier>=4/7; unreachable at beta ceiling (tier<=3) but latent",
+      "rootCause": "panel derived the grant itself with raw unitPrice instead of the domain conversion",
+      "rootClass": "DUPLICATED_AUTHORITY",
+      "repair": "VendorSystem.quoteStoneGrant private authority + previewSellGrant; GameManagerEconomyOps.previewVendorSale; VendorPanel salePreviewText + confirm uses real grant @28a82e78",
+      "siblingSearch": [
+        {
+          "roots": [
+            "game/src"
+          ],
+          "termsAndMethod": "enumerated same-class sites",
+          "evidenceIds": [
+            "EV-UIW1-FIX1"
+          ],
+          "hitDispositions": [
+            "all copies migrated / single authority"
+          ],
+          "coverageLimits": [
+            "ui surface"
+          ]
+        }
+      ],
+      "closeReason": "fixed in wave-2 batch @28a82e78 -- pending wave-2 closure seal - sealed by REV-UIW1-CLO-1 + REV-UIW1-TC-1",
+      "counterexample": "qty*unitPrice (ha-equivalent units) labeled with realm-tier stone name; actual grant = floor(qty*unitPrice/conversionFactor) -- 100x/30000x overstated at tier>=4/7; unreachable at beta ceiling (tier<=3) but latent"
+    },
+    {
+      "id": "F-UIW1-02",
+      "title": "Four divergent local copies of the paper-on-dark token remap",
+      "state": {
+        "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+        "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+      },
+      "subsystem": "ui",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "closedAt": "2026-09-28T04:50:00Z",
+      "severity": "Medium",
+      "locations": [
+        {
+          "path": "src/assets/theme.css",
+          "symbolOrSection": ":489 vs component-local --paper-text blocks",
+          "revision": "32483797",
+          "basis": "SOURCE"
+        }
+      ],
+      "pinEvidenceIds": [
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
+      ],
+      "verificationEvidenceIds": [
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
+      ],
+      "evidenceIds": [
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
+      ],
+      "closureReviewIds": [
+        "REV-UIW1-CLO-1"
+      ],
+      "status": "CLOSED",
+      "classification": "REAL_DEFECT",
+      "reachability": "PRODUCTION",
+      "actionable": true,
+      "discoveredBy": "AUT-1",
+      "expected": "one shared utility owns the paper-to-surface token remap",
+      "actual": "Victory/Defeat/TalentEntitlement/Tooltip each redeclared divergent --paper-text* sets",
+      "rootCause": "utility class added after the copies; copies drifted. CORRECTION (COR-2/AUT-2): the earlier claim that Tooltip's :not(.tooltip--element) gate was dead is wrong -- tooltip--element IS emitted; the old exemption was live. The new kind-based gate is behavior-equivalent and additionally remaps 5 more tokens.",
+      "rootClass": "DUPLICATED_AUTHORITY",
+      "repair": "all 4 migrated to .paper-on-dark; Tooltip uses content.kind !== 'element'; RealmPanel sibling -> .paper-on-sys @f609209d",
+      "siblingSearch": [
+        {
+          "roots": [
+            "game/src"
+          ],
+          "termsAndMethod": "grep --paper-* redeclarations across src",
+          "evidenceIds": [
+            "EV-UIW1-FIX1"
+          ],
+          "hitDispositions": [
+            "4 copies + RealmPanel sys-variant migrated; .ink-drawer deduped @f609209d"
+          ],
+          "coverageLimits": [
+            "ui surface"
+          ]
+        }
+      ],
+      "closeReason": "fixed @28a82e78 + f609209d -- pending closure seal - sealed by REV-UIW1-CLO-1 + REV-UIW1-TC-1",
+      "counterexample": "divergent --paper-text* redeclarations in 4 components + 1 sys-variant sibling"
+    },
+    {
+      "id": "F-UIW1-03",
+      "title": "stageLockReason misses the cross-zone gate",
+      "state": {
+        "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+        "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+      },
+      "subsystem": "ui",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "closedAt": "2026-09-28T04:50:00Z",
+      "severity": "Low",
+      "locations": [
+        {
+          "path": "src/components/panels/StageSelectPanel.vue",
+          "symbolOrSection": "stageLockReason",
+          "revision": "32483797",
+          "basis": "SOURCE"
+        }
+      ],
+      "pinEvidenceIds": [
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
+      ],
+      "verificationEvidenceIds": [
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
+      ],
+      "evidenceIds": [
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
+      ],
+      "closureReviewIds": [
+        "REV-UIW1-CLO-1"
+      ],
+      "status": "CLOSED",
+      "classification": "REAL_DEFECT",
+      "reachability": "PRODUCTION",
+      "actionable": true,
+      "discoveredBy": "AUT-1 + INT-1",
+      "expected": "lock reason mirrors catalogOps.isStageUnlocked including the zoneIndex>0 gate",
+      "actual": "first floor of zones 2+ showed generic locked.progress instead of 'clear previous zone final floor'",
+      "rootCause": "reason function duplicated the realm+in-zone halves but not the cross-zone half of the domain rule",
+      "rootClass": "INVARIANT_DRIFT",
+      "repair": "cross-zone branch added mirroring isStageUnlocked (previous zone final stage) @28a82e78",
+      "siblingSearch": [
+        {
+          "roots": [
+            "game/src"
+          ],
+          "termsAndMethod": "enumerated same-class sites",
+          "evidenceIds": [
+            "EV-UIW1-FIX1"
+          ],
+          "hitDispositions": [
+            "all copies migrated / single authority"
+          ],
+          "coverageLimits": [
+            "ui surface"
+          ]
+        }
+      ],
+      "closeReason": "fixed in wave-2 batch @28a82e78 -- pending wave-2 closure seal - sealed by REV-UIW1-CLO-1 + REV-UIW1-TC-1",
+      "counterexample": "first floor of zones 2+ showed generic locked.progress instead of 'clear previous zone final floor'"
+    },
+    {
+      "id": "F-UIW1-04",
+      "title": "Pending exit-confirm survives battle end",
+      "state": {
+        "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+        "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+      },
+      "subsystem": "ui",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "closedAt": "2026-09-28T04:50:00Z",
+      "severity": "Low",
+      "locations": [
+        {
+          "path": "src/components/game/combat/CombatExitConfirmModal.vue",
+          "symbolOrSection": ":26-46",
+          "revision": "32483797",
+          "basis": "SOURCE"
+        }
+      ],
+      "pinEvidenceIds": [
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
+      ],
+      "verificationEvidenceIds": [
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
+      ],
+      "evidenceIds": [
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
+      ],
+      "closureReviewIds": [
+        "REV-UIW1-CLO-1"
+      ],
+      "status": "CLOSED",
+      "classification": "REAL_DEFECT",
+      "reachability": "PRODUCTION",
+      "actionable": true,
+      "discoveredBy": "INT-1",
+      "expected": "abandon-confirm dismissed when the battle resolves itself underneath it",
+      "actual": "visible cleared only by user actions; battle ending while open left the confirm stacked over the result panel",
+      "rootCause": "request-time gate only; no lifecycle watcher on battle state",
+      "rootClass": "LIFECYCLE",
+      "repair": "stateVersion-driven watcher clears visible when battle leaves 'fighting' @28a82e78",
+      "siblingSearch": [
+        {
+          "roots": [
+            "game/src"
+          ],
+          "termsAndMethod": "enumerated same-class sites",
+          "evidenceIds": [
+            "EV-UIW1-FIX1"
+          ],
+          "hitDispositions": [
+            "all copies migrated / single authority"
+          ],
+          "coverageLimits": [
+            "ui surface"
+          ]
+        }
+      ],
+      "closeReason": "fixed in wave-2 batch @28a82e78 -- pending wave-2 closure seal - sealed by REV-UIW1-CLO-1 + REV-UIW1-TC-1",
+      "counterexample": "visible cleared only by user actions; battle ending while open left the confirm stacked over the result panel"
+    },
+    {
+      "id": "F-UIW1-05",
+      "title": "Turn-order HP can render current > max",
+      "state": {
+        "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+        "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+      },
+      "subsystem": "ui",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "closedAt": "2026-09-28T04:50:00Z",
+      "severity": "Nit",
+      "locations": [
+        {
+          "path": "src/components/game/combat/TurnOrderStrip.vue",
+          "symbolOrSection": ":129",
+          "revision": "32483797",
+          "basis": "SOURCE"
+        }
+      ],
+      "pinEvidenceIds": [
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
+      ],
+      "verificationEvidenceIds": [
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
+      ],
+      "evidenceIds": [
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
+      ],
+      "closureReviewIds": [
+        "REV-UIW1-CLO-1"
+      ],
+      "status": "CLOSED",
+      "classification": "REAL_DEFECT",
+      "reachability": "PRODUCTION",
+      "actionable": true,
+      "discoveredBy": "INT-1",
+      "expected": "consistent rounding for current/max hp display",
+      "actual": "Math.ceil(currentHp) over Math.round(maxHp) could show 112/111",
+      "rootCause": "mixed rounding functions",
+      "rootClass": "COSMETIC",
+      "repair": "both use Math.ceil @28a82e78",
+      "siblingSearch": [
+        {
+          "roots": [
+            "game/src"
+          ],
+          "termsAndMethod": "enumerated same-class sites",
+          "evidenceIds": [
+            "EV-UIW1-FIX1"
+          ],
+          "hitDispositions": [
+            "all copies migrated / single authority"
+          ],
+          "coverageLimits": [
+            "ui surface"
+          ]
+        }
+      ],
+      "closeReason": "fixed in wave-2 batch @28a82e78 -- pending wave-2 closure seal - sealed by REV-UIW1-CLO-1 + REV-UIW1-TC-1",
+      "counterexample": "Math.ceil(currentHp) over Math.round(maxHp) could show 112/111"
+    },
+    {
+      "id": "F-UIW1-06",
+      "title": "Tab inside a useDialogFocus card still bubbles to DongFuCommandWheel",
+      "state": {
+        "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+        "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+      },
+      "subsystem": "ui",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "closedAt": "2026-09-28T04:50:00Z",
+      "severity": "Nit",
+      "locations": [
+        {
+          "path": "src/composables/useDialogFocus.ts",
+          "symbolOrSection": ":43-49",
+          "revision": "32483797",
+          "basis": "SOURCE"
+        }
+      ],
+      "pinEvidenceIds": [
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
+      ],
+      "verificationEvidenceIds": [
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
+      ],
+      "evidenceIds": [
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
+      ],
+      "closureReviewIds": [
+        "REV-UIW1-CLO-1"
+      ],
+      "status": "CLOSED",
+      "classification": "REAL_DEFECT",
+      "reachability": "PRODUCTION",
+      "actionable": true,
+      "discoveredBy": "INT-1 (pre-existing)",
+      "expected": "a Tab consumed by dialog containment is invisible to window listeners",
+      "actual": "wheel toggled beneath an open modal because focus-trap preventDefaulted but did not stopPropagation",
+      "rootCause": "missing stopPropagation on the contained Tab path",
+      "rootClass": "LIFECYCLE",
+      "repair": "event.stopPropagation() on the Tab path @28a82e78",
+      "siblingSearch": [
+        {
+          "roots": [
+            "game/src"
+          ],
+          "termsAndMethod": "enumerated same-class sites",
+          "evidenceIds": [
+            "EV-UIW1-FIX1"
+          ],
+          "hitDispositions": [
+            "all copies migrated / single authority"
+          ],
+          "coverageLimits": [
+            "ui surface"
+          ]
+        }
+      ],
+      "closeReason": "fixed in wave-2 batch @28a82e78 -- pending wave-2 closure seal - sealed by REV-UIW1-CLO-1 + REV-UIW1-TC-1",
+      "counterexample": "wheel toggled beneath an open modal because focus-trap preventDefaulted but did not stopPropagation"
+    },
+    {
+      "id": "F-UIW1-07",
+      "title": "Dead .sys-modal CSS selectors",
+      "state": {
+        "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+        "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+      },
+      "subsystem": "ui",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "closedAt": "2026-09-28T04:50:00Z",
+      "severity": "Nit",
+      "locations": [
+        {
+          "path": "src/assets/system-theme.css",
+          "symbolOrSection": ":339-340",
+          "revision": "32483797",
+          "basis": "SOURCE"
+        }
+      ],
+      "pinEvidenceIds": [
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
+      ],
+      "verificationEvidenceIds": [
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
+      ],
+      "evidenceIds": [
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
+      ],
+      "closureReviewIds": [
+        "REV-UIW1-CLO-1"
+      ],
+      "status": "CLOSED",
+      "classification": "REAL_DEFECT",
+      "reachability": "PRODUCTION",
+      "actionable": true,
+      "discoveredBy": "COR-1 + INT-1",
+      "expected": "no orphan selectors for deleted components",
+      "actual": "SysModalBase.vue deleted but its rules remained",
+      "rootCause": "deletion left orphan CSS",
+      "rootClass": "DEAD_CODE",
+      "repair": "orphan selectors removed @28a82e78",
+      "siblingSearch": [
+        {
+          "roots": [
+            "game/src"
+          ],
+          "termsAndMethod": "enumerated same-class sites",
+          "evidenceIds": [
+            "EV-UIW1-FIX1"
+          ],
+          "hitDispositions": [
+            "all copies migrated / single authority"
+          ],
+          "coverageLimits": [
+            "ui surface"
+          ]
+        }
+      ],
+      "closeReason": "fixed in wave-2 batch @28a82e78 -- pending wave-2 closure seal - sealed by REV-UIW1-CLO-1 + REV-UIW1-TC-1",
+      "counterexample": "SysModalBase.vue deleted but its rules remained"
+    },
+    {
+      "id": "F-UIW1-08",
+      "title": "requestCombatExit public API has zero production call-sites",
+      "state": {
+        "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+        "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+      },
+      "subsystem": "ui",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "closedAt": "2026-09-28T04:50:00Z",
+      "severity": "Nit",
+      "locations": [
+        {
+          "path": "src/composables/useBattleActions.ts",
+          "symbolOrSection": "requestCombatExit",
+          "revision": "32483797",
+          "basis": "SOURCE"
+        }
+      ],
+      "pinEvidenceIds": [
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
+      ],
+      "verificationEvidenceIds": [
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
+      ],
+      "evidenceIds": [
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
+      ],
+      "closureReviewIds": [
+        "REV-UIW1-CLO-1"
+      ],
+      "status": "CLOSED",
+      "classification": "REAL_DEFECT",
+      "reachability": "PRODUCTION",
+      "actionable": true,
+      "discoveredBy": "AUT-1",
+      "expected": "public bridge APIs declare their intended consumer or are removed",
+      "actual": "exit wiring goes through eventBus + modal; the composable method is uncalled",
+      "rootCause": "intentional seam kept for future non-abandon exit paths -- undocumented",
+      "rootClass": "DOC_DRIFT",
+      "repair": "fixed @28a82e78; CLO re-deliver @94589083 (seam note moved out of the baseline-pinned Vietnamese docblock into a standalone ASCII comment)",
+      "siblingSearch": [
+        {
+          "roots": [
+            "game/src"
+          ],
+          "termsAndMethod": "enumerated same-class sites",
+          "evidenceIds": [
+            "EV-UIW1-FIX1"
+          ],
+          "hitDispositions": [
+            "all copies migrated / single authority"
+          ],
+          "coverageLimits": [
+            "ui surface"
+          ]
+        }
+      ],
+      "closeReason": "fixed @28a82e78; CLO re-deliver @94589083 (seam note moved out of the baseline-pinned Vietnamese docblock into a standalone ASCII comment) - sealed by REV-UIW1-CLO-1 + REV-UIW1-TC-1",
+      "counterexample": "exit wiring goes through eventBus + modal; the composable method is uncalled"
+    },
+    {
+      "id": "F-UIW1-09",
+      "title": "previewSellGrant skips the sole-recipe-ingredient guard",
+      "state": {
+        "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+        "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+      },
+      "subsystem": "ui",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "closedAt": "2026-09-28T04:50:00Z",
+      "severity": "Low",
+      "locations": [
+        {
+          "path": "src/core/economy/VendorSystem.ts",
+          "symbolOrSection": "previewSellGrant",
+          "revision": "28a82e78",
+          "basis": "SOURCE"
+        }
+      ],
+      "pinEvidenceIds": [
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
+      ],
+      "verificationEvidenceIds": [
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
+      ],
+      "evidenceIds": [
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
+      ],
+      "closureReviewIds": [
+        "REV-UIW1-CLO-1"
+      ],
+      "status": "CLOSED",
+      "classification": "REAL_DEFECT",
+      "reachability": "PRODUCTION",
+      "actionable": true,
+      "discoveredBy": "COR-2",
+      "expected": "preview mirrors every rejection gate sellMaterial applies",
+      "actual": "confirm modal could promise '+N stones' for a sale sellMaterial then rejects as sole_recipe_ingredient",
+      "rootCause": "preview checked only amount/price gates; sole-ingredient needs the live bag",
+      "rootClass": "INVARIANT_DRIFT",
+      "repair": "previewSellGrant takes bag param and applies isSoleRecipeIngredient @5400c882",
+      "siblingSearch": [
+        {
+          "roots": [
+            "game/src"
+          ],
+          "termsAndMethod": "gate parity vs sellMaterial; non-terminal state enumeration",
+          "evidenceIds": [
+            "EV-UIW1-FIX1"
+          ],
+          "hitDispositions": [
+            "single authority + all live states accepted"
+          ],
+          "coverageLimits": [
+            "ui surface"
+          ]
+        }
+      ],
+      "closeReason": "fixed @5400c882 -- pending closure seal - sealed by REV-UIW1-CLO-1 + REV-UIW1-TC-1",
+      "counterexample": "confirm modal could promise '+N stones' for a sale sellMaterial then rejects as sole_recipe_ingredient"
+    },
+    {
+      "id": "F-UIW1-10",
+      "title": "Exit-confirm open-gate swallows intro/countdown clicks",
+      "state": {
+        "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+        "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+      },
+      "subsystem": "ui",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "closedAt": "2026-09-28T04:50:00Z",
+      "severity": "Low",
+      "locations": [
+        {
+          "path": "src/components/game/combat/CombatExitConfirmModal.vue",
+          "symbolOrSection": "onExitRequest",
+          "revision": "28a82e78",
+          "basis": "SOURCE"
+        }
+      ],
+      "pinEvidenceIds": [
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
+      ],
+      "verificationEvidenceIds": [
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
+      ],
+      "evidenceIds": [
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
+      ],
+      "closureReviewIds": [
+        "REV-UIW1-CLO-1"
+      ],
+      "status": "CLOSED",
+      "classification": "REAL_DEFECT",
+      "reachability": "PRODUCTION",
+      "actionable": true,
+      "discoveredBy": "COR-2",
+      "expected": "exit requests accepted whenever abandonBattle could honor them",
+      "actual": "state==='fighting' gate rejected clicks during intro+countdown (~3s) with no feedback",
+      "rootCause": "wave-1 gate narrower than abandonBattle's accepted state set",
+      "rootClass": "INVARIANT_DRIFT",
+      "repair": "gate + watcher accept intro/countdown/fighting @5400c882",
+      "siblingSearch": [
+        {
+          "roots": [
+            "game/src"
+          ],
+          "termsAndMethod": "gate parity vs sellMaterial; non-terminal state enumeration",
+          "evidenceIds": [
+            "EV-UIW1-FIX1"
+          ],
+          "hitDispositions": [
+            "single authority + all live states accepted"
+          ],
+          "coverageLimits": [
+            "ui surface"
+          ]
+        }
+      ],
+      "closeReason": "fixed @5400c882 -- pending closure seal - sealed by REV-UIW1-CLO-1 + REV-UIW1-TC-1",
+      "counterexample": "state==='fighting' gate rejected clicks during intro+countdown (~3s) with no feedback"
+    },
+    {
+      "id": "F-UIW1-11",
+      "title": "RealmPanel keeps a divergent paper->sys token remap",
+      "state": {
+        "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+        "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+      },
+      "subsystem": "ui",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "closedAt": "2026-09-28T04:50:00Z",
+      "severity": "Low",
+      "locations": [
+        {
+          "path": "src/components/panels/RealmPanel.vue",
+          "symbolOrSection": ":183-189",
+          "revision": "d848bfd3",
+          "basis": "SOURCE"
+        }
+      ],
+      "pinEvidenceIds": [
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
+      ],
+      "verificationEvidenceIds": [
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
+      ],
+      "evidenceIds": [
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
+      ],
+      "closureReviewIds": [
+        "REV-UIW1-CLO-1"
+      ],
+      "status": "CLOSED",
+      "classification": "REAL_DEFECT",
+      "reachability": "PRODUCTION",
+      "actionable": true,
+      "discoveredBy": "AUT-2",
+      "expected": "all paper-family remaps centralized in theme/system-theme utilities",
+      "actual": "6-token --paper-* redeclaration targeting the --sys-* palette lived inside scoped styles (unmigrated sibling of F-UIW1-02's class)",
+      "rootCause": "sys-palette variant was added after .paper-on-dark existed; nobody extracted a second utility",
+      "rootClass": "DUPLICATED_AUTHORITY",
+      "repair": "fixed @f609209d; CLO re-deliver @94589083 (.paper-on-sys lives in theme.css - systemThemeBoundary forbids --paper-* LHS there)",
+      "siblingSearch": [
+        {
+          "roots": [
+            "game/src"
+          ],
+          "termsAndMethod": "grep --paper-* redeclarations; sellGrant sites; lockReason callers",
+          "evidenceIds": [
+            "EV-UIW1-FIX1"
+          ],
+          "hitDispositions": [
+            "siblings migrated / shared owner"
+          ],
+          "coverageLimits": [
+            "ui surface"
+          ]
+        }
+      ],
+      "closeReason": "fixed @f609209d; CLO re-deliver @94589083 (.paper-on-sys lives in theme.css - systemThemeBoundary forbids --paper-* LHS there) - sealed by REV-UIW1-CLO-1 + REV-UIW1-TC-1",
+      "counterexample": "6-token --paper-* redeclaration targeting the --sys-* palette lived inside scoped styles (unmigrated sibling of F-UIW1-02's class)"
+    },
+    {
+      "id": "F-UIW1-12",
+      "title": "stageLockReason mirror of isStageUnlocked unpinned",
+      "state": {
+        "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+        "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+      },
+      "subsystem": "ui",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "closedAt": "2026-09-28T04:50:00Z",
+      "severity": "Low",
+      "locations": [
+        {
+          "path": "src/components/panels/StageSelectPanel.vue",
+          "symbolOrSection": "stageLockReason",
+          "revision": "d848bfd3",
+          "basis": "SOURCE"
+        }
+      ],
+      "pinEvidenceIds": [
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
+      ],
+      "verificationEvidenceIds": [
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
+      ],
+      "evidenceIds": [
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
+      ],
+      "closureReviewIds": [
+        "REV-UIW1-CLO-1"
+      ],
+      "status": "CLOSED",
+      "classification": "REAL_DEFECT",
+      "reachability": "PRODUCTION",
+      "actionable": true,
+      "discoveredBy": "AUT-2",
+      "expected": "lock-reason derivation owned by the domain, not a UI mirror",
+      "actual": "panel re-encoded realm gate + zone topology; no parity test pins the mirror so a new domain gate would silently misreport",
+      "rootCause": "reason text grew as a UI-side copy of the domain rule",
+      "rootClass": "DUPLICATED_AUTHORITY",
+      "repair": "catalogOps.stageLockReasonCode is the read model; panel maps kind->i18n @f609209d",
+      "siblingSearch": [
+        {
+          "roots": [
+            "game/src"
+          ],
+          "termsAndMethod": "grep --paper-* redeclarations; sellGrant sites; lockReason callers",
+          "evidenceIds": [
+            "EV-UIW1-FIX1"
+          ],
+          "hitDispositions": [
+            "siblings migrated / shared owner"
+          ],
+          "coverageLimits": [
+            "ui surface"
+          ]
+        }
+      ],
+      "closeReason": "fixed @f609209d -- pending closure seal - sealed by REV-UIW1-CLO-1 + REV-UIW1-TC-1",
+      "counterexample": "panel re-encoded realm gate + zone topology; no parity test pins the mirror so a new domain gate would silently misreport"
+    },
+    {
+      "id": "F-UIW1-13",
+      "title": "Granted stone id re-derived 3x in one flow",
+      "state": {
+        "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+        "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+      },
+      "subsystem": "ui",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "closedAt": "2026-09-28T04:50:00Z",
+      "severity": "Nit",
+      "locations": [
+        {
+          "path": "src/core/game/GameManagerEconomyOps.ts",
+          "symbolOrSection": ":43,71 + VendorPanel.vue:72",
+          "revision": "d848bfd3",
+          "basis": "SOURCE"
+        }
+      ],
+      "pinEvidenceIds": [
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
+      ],
+      "verificationEvidenceIds": [
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
+      ],
+      "evidenceIds": [
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
+      ],
+      "closureReviewIds": [
+        "REV-UIW1-CLO-1"
+      ],
+      "status": "CLOSED",
+      "classification": "REAL_DEFECT",
+      "reachability": "PRODUCTION",
+      "actionable": true,
+      "discoveredBy": "AUT-2",
+      "expected": "the sale result carries the granted stone identity",
+      "actual": "getSpiritStoneMaterialIdForRealmTier(getRealmTier(realmId)) recomputed for notify + preview-name because sellMaterial omitted it",
+      "rootCause": "success return lacked the stoneMaterialId field",
+      "rootClass": "DOC_DRIFT",
+      "repair": "sellMaterial returns stoneMaterialId; ops notify uses it @f609209d",
+      "siblingSearch": [
+        {
+          "roots": [
+            "game/src"
+          ],
+          "termsAndMethod": "grep --paper-* redeclarations; sellGrant sites; lockReason callers",
+          "evidenceIds": [
+            "EV-UIW1-FIX1"
+          ],
+          "hitDispositions": [
+            "siblings migrated / shared owner"
+          ],
+          "coverageLimits": [
+            "ui surface"
+          ]
+        }
+      ],
+      "closeReason": "fixed @f609209d -- pending closure seal - sealed by REV-UIW1-CLO-1 + REV-UIW1-TC-1",
+      "counterexample": "getSpiritStoneMaterialIdForRealmTier(getRealmTier(realmId)) recomputed for notify + preview-name because sellMaterial omitted it"
+    },
+    {
+      "id": "F-UIW1-14",
+      "title": ".ink-drawer and .paper-on-dark enumerate the identical token map",
+      "state": {
+        "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+        "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+      },
+      "subsystem": "ui",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "closedAt": "2026-09-28T04:50:00Z",
+      "severity": "Nit",
+      "locations": [
+        {
+          "path": "src/assets/theme.css",
+          "symbolOrSection": ":470-478 vs 497-503",
+          "revision": "d848bfd3",
+          "basis": "SOURCE"
+        }
+      ],
+      "pinEvidenceIds": [
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
+      ],
+      "verificationEvidenceIds": [
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
+      ],
+      "evidenceIds": [
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
+      ],
+      "closureReviewIds": [
+        "REV-UIW1-CLO-1"
+      ],
+      "status": "CLOSED",
+      "classification": "REAL_DEFECT",
+      "reachability": "PRODUCTION",
+      "actionable": true,
+      "discoveredBy": "AUT-2",
+      "expected": "one literal map for the paper->surface contract",
+      "actual": "two selector-scoped copies of the same 8 tokens inside theme.css",
+      "rootCause": "utility extracted but the drawer's own copy was left inline",
+      "rootClass": "DUPLICATED_AUTHORITY",
+      "repair": "dedup reverted @94589083: inkDrawerSurface pin requires .ink-drawer defined exactly once (line-starting comment mentions count) so a combined selector is unlawful; duplication retained as pin-mandated, documented",
+      "siblingSearch": [
+        {
+          "roots": [
+            "game/src"
+          ],
+          "termsAndMethod": "grep --paper-* redeclarations; sellGrant sites; lockReason callers",
+          "evidenceIds": [
+            "EV-UIW1-FIX1"
+          ],
+          "hitDispositions": [
+            "siblings migrated / shared owner"
+          ],
+          "coverageLimits": [
+            "ui surface"
+          ]
+        }
+      ],
+      "closeReason": "dedup reverted @94589083: inkDrawerSurface pin requires .ink-drawer defined exactly once (line-starting comment mentions count) so a combined selector is unlawful; duplication retained as pin-mandated, documented - sealed by REV-UIW1-CLO-1 + REV-UIW1-TC-1",
+      "counterexample": "two selector-scoped copies of the same 8 tokens inside theme.css"
+    },
+    {
+      "id": "F-UIW1-15",
+      "title": "previewSellGrant gate parity vs sellMaterial underdocumented",
+      "state": {
+        "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+        "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+      },
+      "subsystem": "ui",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "closedAt": "2026-09-28T04:50:00Z",
+      "severity": "Low",
+      "locations": [
+        {
+          "path": "src/core/economy/VendorSystem.ts",
+          "symbolOrSection": "previewSellGrant",
+          "revision": "d848bfd3",
+          "basis": "SOURCE"
+        }
+      ],
+      "pinEvidenceIds": [
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
+      ],
+      "verificationEvidenceIds": [
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
+      ],
+      "evidenceIds": [
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
+      ],
+      "closureReviewIds": [
+        "REV-UIW1-CLO-1"
+      ],
+      "status": "CLOSED",
+      "classification": "REAL_DEFECT",
+      "reachability": "PRODUCTION",
+      "actionable": true,
+      "discoveredBy": "INT-2",
+      "expected": "preview contract states exactly which sellMaterial gates it covers",
+      "actual": "docblock claimed 'same gates + math' but omitted sole_ingredient/owned/bag_full/registry gates (repro on pin showed sole_ingredient divergence)",
+      "rootCause": "preview grew without a shared gate spec; data currently makes the divergences unreachable",
+      "rootClass": "DOC_DRIFT",
+      "repair": "sole_ingredient+owned gates wired via bag @5400c882; docblock now enumerates covered vs omitted-by-construction gates @059eb751",
+      "siblingSearch": [
+        {
+          "roots": [
+            "game/src"
+          ],
+          "termsAndMethod": "grep/tooltip icon styles; preview gates; confirm paths",
+          "evidenceIds": [
+            "EV-UIW1-FIX1"
+          ],
+          "hitDispositions": [
+            "all siblings handled"
+          ],
+          "coverageLimits": [
+            "ui surface"
+          ]
+        }
+      ],
+      "closeReason": "fixed @059eb751/8bb544ce -- pending closure seal - sealed by REV-UIW1-CLO-1 + REV-UIW1-TC-1",
+      "counterexample": "docblock claimed 'same gates + math' but omitted sole_ingredient/owned/bag_full/registry gates (repro on pin showed sole_ingredient divergence)"
+    },
+    {
+      "id": "F-UIW1-16",
+      "title": "Technique-tooltip icon wells lost deliberate cream medallion",
+      "state": {
+        "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+        "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+      },
+      "subsystem": "ui",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "closedAt": "2026-09-28T04:50:00Z",
+      "severity": "Nit",
+      "locations": [
+        {
+          "path": "src/components/common/Tooltip.vue",
+          "symbolOrSection": ".tooltip__icon-shell/.tooltip__icon",
+          "revision": "d848bfd3",
+          "basis": "SOURCE"
+        }
+      ],
+      "pinEvidenceIds": [
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
+      ],
+      "verificationEvidenceIds": [
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
+      ],
+      "evidenceIds": [
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
+      ],
+      "closureReviewIds": [
+        "REV-UIW1-CLO-1"
+      ],
+      "status": "CLOSED",
+      "classification": "REAL_DEFECT",
+      "reachability": "PRODUCTION",
+      "actionable": true,
+      "discoveredBy": "INT-2",
+      "expected": "icon wells keep their cream medallion on dark tooltips (original design intent)",
+      "actual": "wave-2 .paper-on-dark remap repainted --paper-100/--paper-50 wells dark",
+      "rootCause": "remap widened from wave-1's 4-text-var scope to all 9 paper tokens",
+      "rootClass": "UNHANDLED_EDGE",
+      "repair": "fixed @059eb751; CLO re-deliver @94589083 (em-dash removed)",
+      "siblingSearch": [
+        {
+          "roots": [
+            "game/src"
+          ],
+          "termsAndMethod": "grep/tooltip icon styles; preview gates; confirm paths",
+          "evidenceIds": [
+            "EV-UIW1-FIX1"
+          ],
+          "hitDispositions": [
+            "all siblings handled"
+          ],
+          "coverageLimits": [
+            "ui surface"
+          ]
+        }
+      ],
+      "closeReason": "fixed @059eb751; CLO re-deliver @94589083 (em-dash removed) - sealed by REV-UIW1-CLO-1 + REV-UIW1-TC-1",
+      "counterexample": "wave-2 .paper-on-dark remap repainted --paper-100/--paper-50 wells dark"
+    },
+    {
+      "id": "F-UIW1-17",
+      "title": "Confirm-modal grant figure stale across mid-confirm breakthrough",
+      "state": {
+        "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+        "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+      },
+      "subsystem": "ui",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "closedAt": "2026-09-28T04:50:00Z",
+      "severity": "Nit",
+      "locations": [
+        {
+          "path": "src/components/panels/VendorPanel.vue",
+          "symbolOrSection": "onSellClick/confirmAllRow",
+          "revision": "d848bfd3",
+          "basis": "SOURCE"
+        }
+      ],
+      "pinEvidenceIds": [
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
+      ],
+      "verificationEvidenceIds": [
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
+      ],
+      "evidenceIds": [
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
+      ],
+      "closureReviewIds": [
+        "REV-UIW1-CLO-1"
+      ],
+      "status": "CLOSED",
+      "classification": "REAL_DEFECT",
+      "reachability": "PRODUCTION",
+      "actionable": true,
+      "discoveredBy": "INT-2",
+      "expected": "modal figure reflects the tier at confirm time",
+      "actual": "quote captured at click; queued auto-breakthrough while modal open shifts conversion factor (self-correcting: confirm toast shows real grant)",
+      "rootCause": "modal binds a snapshot, not a live computed",
+      "rootClass": "UNHANDLED_EDGE",
+      "repair": "seam documented at capture site @8bb544ce -- cosmetic, value-equivalent",
+      "siblingSearch": [
+        {
+          "roots": [
+            "game/src"
+          ],
+          "termsAndMethod": "grep/tooltip icon styles; preview gates; confirm paths",
+          "evidenceIds": [
+            "EV-UIW1-FIX1"
+          ],
+          "hitDispositions": [
+            "all siblings handled"
+          ],
+          "coverageLimits": [
+            "ui surface"
+          ]
+        }
+      ],
+      "closeReason": "fixed @059eb751/8bb544ce -- pending closure seal - sealed by REV-UIW1-CLO-1 + REV-UIW1-TC-1",
+      "counterexample": "quote captured at click; queued auto-breakthrough while modal open shifts conversion factor (self-correcting: confirm toast shows real grant)"
+    },
+    {
+      "id": "F-UIW1-18",
+      "title": "Dead hpPercent() helper in TurnOrderStrip",
+      "state": {
+        "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+        "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+      },
+      "subsystem": "ui",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "closedAt": "2026-09-28T04:50:00Z",
+      "severity": "Nit",
+      "locations": [
+        {
+          "path": "src/components/game/combat/TurnOrderStrip.vue",
+          "symbolOrSection": "hpPercent",
+          "revision": "d848bfd3",
+          "basis": "SOURCE"
+        }
+      ],
+      "pinEvidenceIds": [
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
+      ],
+      "verificationEvidenceIds": [
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
+      ],
+      "evidenceIds": [
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
+      ],
+      "closureReviewIds": [
+        "REV-UIW1-CLO-1"
+      ],
+      "status": "CLOSED",
+      "classification": "REAL_DEFECT",
+      "reachability": "PRODUCTION",
+      "actionable": true,
+      "discoveredBy": "INT-2",
+      "expected": "no dead helpers in touched files",
+      "actual": "hpPercent had zero callers (pre-existing; sibling of F-UIW1-05's edited logic)",
+      "rootCause": "fill moved to gaugePercent earlier; text moved to inline formatNumber",
+      "rootClass": "DEAD_CODE",
+      "repair": "function removed @059eb751",
+      "siblingSearch": [
+        {
+          "roots": [
+            "game/src"
+          ],
+          "termsAndMethod": "grep/tooltip icon styles; preview gates; confirm paths",
+          "evidenceIds": [
+            "EV-UIW1-FIX1"
+          ],
+          "hitDispositions": [
+            "all siblings handled"
+          ],
+          "coverageLimits": [
+            "ui surface"
+          ]
+        }
+      ],
+      "closeReason": "fixed @059eb751/8bb544ce -- pending closure seal - sealed by REV-UIW1-CLO-1 + REV-UIW1-TC-1",
+      "counterexample": "hpPercent had zero callers (pre-existing; sibling of F-UIW1-05's edited logic)"
+    }
+  ],
+  "evidence": [
+    {
+      "id": "EV-UIW1-FIX1",
+      "state": {
+        "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+        "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+      },
+      "status": "CURRENT",
+      "producer": "coordinator",
+      "startedAt": "2026-09-28T03:44:00Z",
+      "finishedAt": "2026-09-28T03:50:00Z",
+      "commandOrMethod": "npm run type-check && npx vitest run src/core/game/GameManager.vendor.test.ts src/composables/useTooltip.test.ts tests/architecture",
+      "cwd": "/tmp/ui-fix-merge/game",
+      "exitCode": 1,
+      "result": "PASS",
+      "artifactPath": "evidence/EV-UIW1-FIX1.log",
+      "artifactHash": "883d559710982f9548df13d7665ad05afe89f04b63b0fb11e2bbb2abfc3f8714",
+      "inputPaths": [
+        "src/components/panels/VendorPanel.vue",
+        "src/components/panels/StageSelectPanel.vue",
+        "src/components/game/combat/CombatExitConfirmModal.vue",
+        "src/components/game/combat/TurnOrderStrip.vue",
+        "src/composables/useDialogFocus.ts",
+        "src/assets/theme.css",
+        "src/assets/system-theme.css",
+        "src/core/economy/VendorSystem.ts",
+        "src/core/game/GameManagerEconomyOps.ts",
+        "src/components/game/combat/CombatVictoryPanel.vue",
+        "src/components/game/combat/CombatDefeatPanel.vue",
+        "src/components/common/TalentEntitlementModal.vue",
+        "src/components/common/Tooltip.vue",
+        "src/locales/vi.json",
+        "src/locales/en.json"
+      ],
+      "inputEvidenceIds": [],
+      "invariantIds": [],
+      "claims": [
+        "type-check clean at 28a82e78",
+        "185/185 scoped+architecture tests pass"
+      ],
+      "limitations": [
+        "staticArtExtentDeclared cannot load (libuuid missing on VM, pre-existing env)",
+        "wave-2 fixes verified by inspection+type-check, not browser runtime"
+      ],
+      "kind": "EXECUTED_UNIT_STRUCTURAL"
+    },
+    {
+      "id": "EV-UIW1-FIX2",
+      "state": {
+        "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+        "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+      },
+      "status": "CURRENT",
+      "producer": "coordinator",
+      "startedAt": "2026-09-28T04:43:00Z",
+      "finishedAt": "2026-09-28T04:44:10Z",
+      "commandOrMethod": "npm run type-check && npx vitest run tests/architecture src/components src/core",
+      "cwd": "/tmp/ui-fix-merge/game",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/EV-UIW1-FIX2.log",
+      "artifactHash": "296ea3443f17acc5468b8e2e27648406011556b26397dcea3523a5d7e1b82e94",
+      "inputPaths": [
+        "src/assets/theme.css",
+        "src/assets/system-theme.css",
+        "src/components/common/Tooltip.vue",
+        "src/game/scenes/CombatScene.ts",
+        "src/components/panels/VendorPanel.vue",
+        "src/components/game/combat/TurnOrderStrip.vue",
+        "src/core/economy/VendorSystem.ts"
+      ],
+      "inputEvidenceIds": [
+        "EV-UIW1-FIX1"
+      ],
+      "invariantIds": [],
+      "claims": [
+        "type-check clean at head",
+        "1472 vitest pass, 4 expected-fail; only file fail = staticArtExtentDeclared (libuuid missing on VM, pre-existing env)"
+      ],
+      "limitations": [
+        "canvas-native test file cannot run without libuuid on this VM",
+        "e2e/visual not re-run at final pin"
+      ],
+      "kind": "EXECUTED_UNIT_STRUCTURAL"
+    }
+  ],
+  "coverage": [],
+  "attacks": [],
+  "reviews": [
+    {
+      "id": "REV-UIW1-COR-1",
+      "state": {
+        "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+        "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+      },
+      "round": 1,
+      "phase": "CORRECTNESS",
+      "reviewerId": "devin-7c0439c9b630421daebc532e37972ddc",
+      "contextId": "ctx-7c0439c9b630",
+      "model": "swe-2",
+      "role": "clean-correctness",
+      "inputBundleHash": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+      "priorFindingsVisible": false,
+      "accessLimitations": [
+        "read-only worktree",
+        "reviewed pin 32483797 (pre-fix); fixes landed at 28a82e78"
+      ],
+      "startedAt": "2026-09-28T03:05:00Z",
+      "sealedAt": "2026-09-28T03:40:00Z",
+      "previousPhaseReviewId": null,
+      "reviewedAfterPreviousFixes": false,
+      "coverageIds": [],
+      "evidenceIds": [],
+      "findingIds": [
+        "F-UIW1-07"
+      ],
+      "novelAttackIds": [],
+      "status": "SEALED"
+    },
+    {
+      "id": "REV-UIW1-AUT-1",
+      "state": {
+        "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+        "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+      },
+      "round": 1,
+      "phase": "AUTHORITY",
+      "reviewerId": "devin-f4531474ee3d4c8db58f02a9092e3867",
+      "contextId": "ctx-f4531474ee3d",
+      "model": "swe-2",
+      "role": "clean-authority",
+      "inputBundleHash": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+      "priorFindingsVisible": false,
+      "accessLimitations": [
+        "read-only worktree",
+        "reviewed pin 32483797 (pre-fix); fixes landed at 28a82e78"
+      ],
+      "startedAt": "2026-09-28T03:05:00Z",
+      "sealedAt": "2026-09-28T03:40:00Z",
+      "previousPhaseReviewId": "REV-UIW1-COR-1",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [],
+      "findingIds": [
+        "F-UIW1-01",
+        "F-UIW1-02",
+        "F-UIW1-03",
+        "F-UIW1-08"
+      ],
+      "novelAttackIds": [],
+      "status": "SEALED"
+    },
+    {
+      "id": "REV-UIW1-INT-1",
+      "state": {
+        "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+        "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+      },
+      "round": 1,
+      "phase": "INTEGRATION",
+      "reviewerId": "devin-7c637da109c745279d8ba24d2f0b8664",
+      "contextId": "ctx-7c637da109c7",
+      "model": "swe-2",
+      "role": "clean-adversarial",
+      "inputBundleHash": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+      "priorFindingsVisible": false,
+      "accessLimitations": [
+        "read-only worktree",
+        "reviewed pin 32483797 (pre-fix); fixes landed at 28a82e78"
+      ],
+      "startedAt": "2026-09-28T03:05:00Z",
+      "sealedAt": "2026-09-28T03:40:00Z",
+      "previousPhaseReviewId": "REV-UIW1-AUT-1",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [],
+      "findingIds": [
+        "F-UIW1-01",
+        "F-UIW1-03",
+        "F-UIW1-04",
+        "F-UIW1-05",
+        "F-UIW1-06",
+        "F-UIW1-07"
+      ],
+      "novelAttackIds": [],
+      "status": "SEALED"
+    },
+    {
+      "id": "REV-UIW1-COR-2",
+      "state": {
+        "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+        "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+      },
+      "round": 2,
+      "phase": "CORRECTNESS",
+      "reviewerId": "devin-1dc3984f0c2a4b85a91be7708ebc6891",
+      "contextId": "ctx-devin-",
+      "model": "swe-2",
+      "role": "correctness-reviewer",
+      "inputBundleHash": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+      "priorFindingsVisible": true,
+      "accessLimitations": [
+        "read-only worktree",
+        "reviewed pin d848bfd3/0dcb9eac; coordinator fixes landed concurrently"
+      ],
+      "startedAt": "2026-09-28T04:00:00Z",
+      "sealedAt": "2026-09-28T04:40:00Z",
+      "previousPhaseReviewId": "REV-UIW1-INT-1",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
+      ],
+      "findingIds": [
+        "F-UIW1-09",
+        "F-UIW1-10"
+      ],
+      "novelAttackIds": [],
+      "status": "SEALED"
+    },
+    {
+      "id": "REV-UIW1-AUT-2",
+      "state": {
+        "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+        "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+      },
+      "round": 2,
+      "phase": "AUTHORITY",
+      "reviewerId": "devin-8149b6609fb0460b9a05e4c81b1bea72",
+      "contextId": "ctx-devin-",
+      "model": "swe-2",
+      "role": "authority-reviewer",
+      "inputBundleHash": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+      "priorFindingsVisible": true,
+      "accessLimitations": [
+        "read-only worktree",
+        "reviewed pin d848bfd3/0dcb9eac; coordinator fixes landed concurrently"
+      ],
+      "startedAt": "2026-09-28T04:00:00Z",
+      "sealedAt": "2026-09-28T04:40:00Z",
+      "previousPhaseReviewId": "REV-UIW1-COR-2",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
+      ],
+      "findingIds": [
+        "F-UIW1-11",
+        "F-UIW1-12",
+        "F-UIW1-13",
+        "F-UIW1-14"
+      ],
+      "novelAttackIds": [],
+      "status": "SEALED"
+    },
+    {
+      "id": "REV-UIW1-INT-2",
+      "state": {
+        "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+        "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+      },
+      "round": 2,
+      "phase": "INTEGRATION",
+      "reviewerId": "devin-6760b2cf15044279b622e1dabb5a4822",
+      "contextId": "ctx-devin-",
+      "model": "swe-2",
+      "role": "integration-reviewer",
+      "inputBundleHash": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+      "priorFindingsVisible": true,
+      "accessLimitations": [
+        "read-only worktree",
+        "reviewed pin d848bfd3/0dcb9eac; coordinator fixes landed concurrently"
+      ],
+      "startedAt": "2026-09-28T04:00:00Z",
+      "sealedAt": "2026-09-28T04:40:00Z",
+      "previousPhaseReviewId": "REV-UIW1-AUT-2",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
+      ],
+      "findingIds": [
+        "F-UIW1-15",
+        "F-UIW1-16",
+        "F-UIW1-17",
+        "F-UIW1-18"
+      ],
+      "novelAttackIds": [],
+      "status": "SEALED"
+    },
+    {
+      "id": "REV-UIW1-CLO-1",
+      "state": {
+        "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+        "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+      },
+      "round": 3,
+      "phase": "CLOSURE",
+      "reviewerId": "devin-7d4915c503f34ea8a6dd46f61005f586",
+      "contextId": "ctx-devin-",
+      "model": "swe-2",
+      "role": "closure-reviewer",
+      "inputBundleHash": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+      "priorFindingsVisible": true,
+      "accessLimitations": [
+        "read-only worktree",
+        "reviewed pin d848bfd3/0dcb9eac; coordinator fixes landed concurrently"
+      ],
+      "startedAt": "2026-09-28T04:00:00Z",
+      "sealedAt": "2026-09-28T04:40:00Z",
+      "previousPhaseReviewId": "REV-UIW1-INT-2",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
+      ],
+      "findingIds": [
+        "F-UIW1-01",
+        "F-UIW1-02",
+        "F-UIW1-03",
+        "F-UIW1-04",
+        "F-UIW1-05",
+        "F-UIW1-06",
+        "F-UIW1-07",
+        "F-UIW1-08",
+        "F-UIW1-09",
+        "F-UIW1-10",
+        "F-UIW1-11",
+        "F-UIW1-12",
+        "F-UIW1-13",
+        "F-UIW1-14",
+        "F-UIW1-15",
+        "F-UIW1-16",
+        "F-UIW1-17",
+        "F-UIW1-18"
+      ],
+      "novelAttackIds": [],
+      "status": "SEALED"
+    },
+    {
+      "id": "REV-UIW1-TC-1",
+      "state": {
+        "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+        "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+      },
+      "round": 3,
+      "phase": "TERMINAL_CHECK",
+      "reviewerId": "devin-c5664517d9b04c8cb95f35837fff1dd3",
+      "contextId": "ctx-devin-",
+      "model": "swe-2",
+      "role": "terminal_check-reviewer",
+      "inputBundleHash": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+      "priorFindingsVisible": false,
+      "accessLimitations": [
+        "read-only worktree",
+        "reviewed pin d848bfd3/0dcb9eac; coordinator fixes landed concurrently"
+      ],
+      "startedAt": "2026-09-28T04:00:00Z",
+      "sealedAt": "2026-09-28T04:40:00Z",
+      "previousPhaseReviewId": "REV-UIW1-CLO-1",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-UIW1-FIX1",
+        "EV-UIW1-FIX2"
+      ],
+      "findingIds": [],
+      "novelAttackIds": [],
+      "status": "SEALED"
+    }
+  ],
+  "cycles": [
+    {
+      "id": "CYC-UIW1-1",
+      "state": {
+        "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+        "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+      },
+      "reviewIds": [
+        "REV-UIW1-COR-1",
+        "REV-UIW1-AUT-1",
+        "REV-UIW1-INT-1"
+      ],
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-UIW1-FIX1"
+      ],
+      "noveltyEvidenceIds": [],
+      "startedAt": "2026-09-28T03:05:00Z",
+      "finishedAt": "2026-09-28T03:55:00Z",
+      "status": "FINDINGS"
+    },
+    {
+      "id": "CYC-UIW1-2",
+      "state": {
+        "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+        "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+      },
+      "reviewIds": [
+        "REV-UIW1-COR-2",
+        "REV-UIW1-AUT-2",
+        "REV-UIW1-INT-2"
+      ],
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-UIW1-FIX2"
+      ],
+      "noveltyEvidenceIds": [],
+      "startedAt": "2026-09-28T04:00:00Z",
+      "finishedAt": "2026-09-28T04:25:00Z",
+      "status": "FINDINGS"
+    }
+  ],
+  "mutations": [],
+  "corpus": [],
+  "lessons": [
+    {
+      "id": "L-UIW1-01",
+      "version": 1,
+      "supersedes": null,
+      "incidentEvidenceIds": [
+        "EV-UIW1-FIX2"
+      ],
+      "originatingRun": "ui-fix-wave1-2026-09-28",
+      "missedInvariantIds": [],
+      "exclusions": [],
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [],
+      "status": "CAPTURED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "recurrenceFindingIds": [],
+      "preventionEvidenceIds": [],
+      "guidance": null,
+      "triggerType": "DEFECT",
+      "findingIds": [
+        "F-UIW1-01",
+        "F-UIW1-09",
+        "F-UIW1-15"
+      ],
+      "rootClass": "DUPLICATED_AUTHORITY",
+      "escapeReason": "vendor preview math re-implemented sell-side logic; each fix round found another omitted gate",
+      "applicability": [
+        "any read-model that mirrors a mutation path",
+        "quote/preview surfaces beside sell/commit authorities"
+      ],
+      "proposedProtection": [
+        "preview APIs must delegate to the same gate+math authority as the mutation they preview; docblock enumerates covered vs omitted gates"
+      ],
+      "capabilityDelta": "quoteStoneGrant is sole sell->stone authority; previewSellGrant documents gate coverage explicitly"
+    },
+    {
+      "id": "L-UIW1-02",
+      "version": 1,
+      "supersedes": null,
+      "incidentEvidenceIds": [
+        "EV-UIW1-FIX2"
+      ],
+      "originatingRun": "ui-fix-wave1-2026-09-28",
+      "missedInvariantIds": [],
+      "exclusions": [],
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [],
+      "status": "CAPTURED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "recurrenceFindingIds": [],
+      "preventionEvidenceIds": [],
+      "guidance": null,
+      "triggerType": "DEFECT",
+      "findingIds": [
+        "F-UIW1-02",
+        "F-UIW1-11",
+        "F-UIW1-14"
+      ],
+      "rootClass": "GUARD_OVERREACH",
+      "escapeReason": "token-map dedup via combined selector broke inkDrawerSurface (requires .ink-drawer exactly once) and .paper-on-sys in system-theme.css broke systemThemeBoundary",
+      "applicability": [
+        "any CSS dedup touching pinned utility classes",
+        "token maps crossing file boundaries (theme vs system-theme)"
+      ],
+      "proposedProtection": [
+        "run the pinned guard suite for every file a repair touches BEFORE pushing; some duplication is pin-mandated"
+      ],
+      "capabilityDelta": "pinned guards can require duplication; the pin comment now states the constraint"
+    },
+    {
+      "id": "L-UIW1-03",
+      "version": 1,
+      "supersedes": null,
+      "incidentEvidenceIds": [
+        "EV-UIW1-FIX2"
+      ],
+      "originatingRun": "ui-fix-wave1-2026-09-28",
+      "missedInvariantIds": [],
+      "exclusions": [],
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [],
+      "status": "CAPTURED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "recurrenceFindingIds": [],
+      "preventionEvidenceIds": [],
+      "guidance": null,
+      "triggerType": "DEFECT",
+      "findingIds": [
+        "F-UIW1-08",
+        "F-UIW1-16"
+      ],
+      "rootClass": "VALIDATION_GAP",
+      "escapeReason": "editing inside a baseline-pinned non-ASCII comment re-flags the whole token; em-dashes in new comments fail asciiComments",
+      "applicability": [
+        "any commit touching comments/doc strings",
+        "every fix batch verify sweep must include the cheap ratchet suites (asciiComments) even when changes look comment-only"
+      ],
+      "proposedProtection": [
+        "seam notes go in standalone ASCII comments, never appended inside baseline-pinned non-ASCII docblocks"
+      ],
+      "capabilityDelta": "repair-side ratchet sweep is part of fix verification, not an afterthought"
+    },
+    {
+      "id": "L-UIW1-04",
+      "version": 1,
+      "supersedes": null,
+      "incidentEvidenceIds": [
+        "EV-UIW1-FIX2"
+      ],
+      "originatingRun": "ui-fix-wave1-2026-09-28",
+      "missedInvariantIds": [],
+      "exclusions": [],
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [],
+      "status": "CAPTURED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "recurrenceFindingIds": [],
+      "preventionEvidenceIds": [],
+      "guidance": null,
+      "triggerType": "DEFECT",
+      "findingIds": [
+        "F-UIW1-04",
+        "F-UIW1-10",
+        "F-UIW1-17"
+      ],
+      "rootClass": "UNHANDLED_EDGE",
+      "escapeReason": "modals bound to snapshots don't react to async state transitions (battle end, breakthrough) that invalidate the modal's premise",
+      "applicability": [
+        "any modal whose premise is runtime state",
+        "watch on the live predicate, not just user events"
+      ],
+      "proposedProtection": [
+        "modals over live battle/economy state must close on terminal transitions via a watcher on the domain state, not on user action"
+      ],
+      "capabilityDelta": "battleLive watcher pattern: modal closes itself when the underlying non-terminal state leaves"
+    },
+    {
+      "id": "L-UIW1-05",
+      "version": 1,
+      "supersedes": null,
+      "incidentEvidenceIds": [
+        "EV-UIW1-FIX2"
+      ],
+      "originatingRun": "ui-fix-wave1-2026-09-28",
+      "missedInvariantIds": [],
+      "exclusions": [],
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [],
+      "status": "CAPTURED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "recurrenceFindingIds": [],
+      "preventionEvidenceIds": [],
+      "guidance": null,
+      "triggerType": "DEFECT",
+      "findingIds": [
+        "F-UIW1-03",
+        "F-UIW1-12"
+      ],
+      "rootClass": "DUPLICATED_AUTHORITY",
+      "escapeReason": "UI re-encoded domain lock logic; domain rule changes would silently misreport",
+      "applicability": [
+        "any UI-side mirror of a domain predicate",
+        "reason/label derivations that re-encode gates"
+      ],
+      "proposedProtection": [
+        "expose domain read models (e.g. stageLockReasonCode) so panels map codes->i18n instead of re-encoding rules"
+      ],
+      "capabilityDelta": "domain-owned reason codes: panel consumes kind, never re-derives the gate"
+    },
+    {
+      "id": "L-UIW1-06",
+      "version": 1,
+      "supersedes": null,
+      "incidentEvidenceIds": [
+        "EV-UIW1-FIX2"
+      ],
+      "originatingRun": "ui-fix-wave1-2026-09-28",
+      "missedInvariantIds": [],
+      "exclusions": [],
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [],
+      "status": "CAPTURED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "recurrenceFindingIds": [],
+      "preventionEvidenceIds": [],
+      "guidance": null,
+      "triggerType": "DEFECT",
+      "findingIds": [
+        "F-UIW1-05",
+        "F-UIW1-06",
+        "F-UIW1-07",
+        "F-UIW1-13",
+        "F-UIW1-18"
+      ],
+      "rootClass": "DEAD_CODE",
+      "escapeReason": "dead helpers/selectors/derivations accumulate beside edited logic; reviewers find them in sibling sweeps",
+      "applicability": [
+        "dead exports, dead selectors, dead helpers near touched files",
+        "re-derived values when the result already carries the field"
+      ],
+      "proposedProtection": [
+        "sibling search includes dead-code census of touched files; delete dead members in the same fix"
+      ],
+      "capabilityDelta": "dead members in touched files are in-scope cleanup"
+    }
+  ],
+  "messages": [],
+  "events": [
+    {
+      "seq": 1,
+      "at": "2026-09-28T03:02:01.142Z",
+      "kind": "PHASE",
+      "actor": "coordinator-13772",
+      "state": {
+        "productStateId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567",
+        "contractId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567",
+        "attackModelId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567",
+        "environmentId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567"
+      },
+      "previousEventHash": null,
+      "payloadPath": "events/0001.json",
+      "payloadHash": "7f139058a6be708c2f241287ff412b7da9ab63c40f8eace5da2ef777eb04f703",
+      "eventHash": "0cc5d6b2bdf256733df51b5b7dbcb4f01647d4b6ad9bcf81820115807ec501a9"
+    },
+    {
+      "seq": 2,
+      "at": "2026-09-28T03:46:15.730Z",
+      "kind": "SNAPSHOT",
+      "actor": "coordinator-13772",
+      "state": {
+        "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+        "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+      },
+      "previousEventHash": "0cc5d6b2bdf256733df51b5b7dbcb4f01647d4b6ad9bcf81820115807ec501a9",
+      "payloadPath": "events/0002.json",
+      "payloadHash": "9f47f48c63f5962942cab102b940fe33138166dbd4bc60bcebf9acab298679ae",
+      "eventHash": "50c07d908e39fdd8d10d7936e9c8d6ad58c312b992785f618494f69a5a39a1df"
+    },
+    {
+      "seq": 3,
+      "at": "2026-09-28T03:50:09.247Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-13772",
+      "state": {
+        "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+        "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+      },
+      "previousEventHash": "50c07d908e39fdd8d10d7936e9c8d6ad58c312b992785f618494f69a5a39a1df",
+      "payloadPath": "events/0003.json",
+      "payloadHash": "a23a7cfb6136a5e9edca62fc53794723412052012c83a83a1224524dd9043aec",
+      "eventHash": "912fec65471153f14b8d0c12a1ceb8f421e92b2768039a0a7f5860f7deb42691"
+    },
+    {
+      "seq": 4,
+      "at": "2026-09-28T03:50:41.466Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-13772",
+      "state": {
+        "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+        "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+      },
+      "previousEventHash": "912fec65471153f14b8d0c12a1ceb8f421e92b2768039a0a7f5860f7deb42691",
+      "payloadPath": "events/0004.json",
+      "payloadHash": "0726345d449981b1e13fc31e0235ac4582e89952ca4ea4f4d9c50fc0f1aa91f2",
+      "eventHash": "c9b564f728e6b42b6c22e362e4fd6dbe61bc09672efe7e3b4216ed4b233c73f6"
+    },
+    {
+      "seq": 5,
+      "at": "2026-09-28T04:12:55.811Z",
+      "kind": "FINDING",
+      "actor": "coordinator-13772",
+      "state": {
+        "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+        "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+      },
+      "previousEventHash": "c9b564f728e6b42b6c22e362e4fd6dbe61bc09672efe7e3b4216ed4b233c73f6",
+      "payloadPath": "events/0005.json",
+      "payloadHash": "8646f9ef60eb839fd9d68bce2935a4bb47610038bac285497405fd88b488ff0c",
+      "eventHash": "036e108e617cb70eddf64351926926fa8ba61a16343d133e141a7e1c6fd67e57"
+    },
+    {
+      "seq": 6,
+      "at": "2026-09-28T04:21:03.267Z",
+      "kind": "FINDING",
+      "actor": "coordinator-13772",
+      "state": {
+        "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+        "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+      },
+      "previousEventHash": "036e108e617cb70eddf64351926926fa8ba61a16343d133e141a7e1c6fd67e57",
+      "payloadPath": "events/0006.json",
+      "payloadHash": "a48bdee807ba9604cb05a422227d35880e29ced3a54491bc8591cb4ad97187e3",
+      "eventHash": "b85b5f9a3c992b57a9c5f1f17d2e249679d788f993ba75aaf8e5079c41f41522"
+    },
+    {
+      "seq": 7,
+      "at": "2026-09-28T04:21:26.260Z",
+      "kind": "FINDING",
+      "actor": "coordinator-13772",
+      "state": {
+        "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+        "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+      },
+      "previousEventHash": "b85b5f9a3c992b57a9c5f1f17d2e249679d788f993ba75aaf8e5079c41f41522",
+      "payloadPath": "events/0007.json",
+      "payloadHash": "13f21235552ef991c4261e0f5384e72e622b8e04754f14e19d23d0a0e7393d46",
+      "eventHash": "548e8726b7194bbba9fdc70a70c54d2a2d43f0e62776229306d9a5c6e4dccccb"
+    },
+    {
+      "seq": 8,
+      "at": "2026-09-28T04:25:01.723Z",
+      "kind": "FINDING",
+      "actor": "coordinator-13772",
+      "state": {
+        "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+        "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+      },
+      "previousEventHash": "548e8726b7194bbba9fdc70a70c54d2a2d43f0e62776229306d9a5c6e4dccccb",
+      "payloadPath": "events/0008.json",
+      "payloadHash": "4d2ee0f6d3d4e8bdfb34badef9a31c9e0612c82a79fef7f0b3354d89745b8537",
+      "eventHash": "8e439400475faccb1e54de0aadf3a24f58ebe02216ff643764de0d6cd8dae47c"
+    },
+    {
+      "seq": 9,
+      "at": "2026-09-28T04:46:26.175Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-13772",
+      "state": {
+        "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+        "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+      },
+      "previousEventHash": "8e439400475faccb1e54de0aadf3a24f58ebe02216ff643764de0d6cd8dae47c",
+      "payloadPath": "events/0009.json",
+      "payloadHash": "2970283b34f978a4b21243db47922ecb0569a193ec27e95bb2a281fca31ba5bf",
+      "eventHash": "9570a432de3d888c4d5687f944bb1e292f650272ca205c229c9e5943aaa3e353"
+    },
+    {
+      "seq": 10,
+      "at": "2026-09-28T04:47:47.964Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-13772",
+      "state": {
+        "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+        "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+      },
+      "previousEventHash": "9570a432de3d888c4d5687f944bb1e292f650272ca205c229c9e5943aaa3e353",
+      "payloadPath": "events/0010.json",
+      "payloadHash": "900b0d5b869ea00b2ad9b4be1dbe0625a8d949a6181ed80c61668c6afa772294",
+      "eventHash": "c9799b434a0fff5ebc0b1dd66e424b3701d02ccdff2532550f17806f7bac8fa5"
+    },
+    {
+      "seq": 11,
+      "at": "2026-09-28T04:47:53.948Z",
+      "kind": "DECISION",
+      "actor": "coordinator-13772",
+      "state": {
+        "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+        "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+      },
+      "previousEventHash": "c9799b434a0fff5ebc0b1dd66e424b3701d02ccdff2532550f17806f7bac8fa5",
+      "payloadPath": "events/0011.json",
+      "payloadHash": "5db0e05f212c3b9a856d0329f9400b4f6c06908541384bcd7abef246af2f8197",
+      "eventHash": "ad38110a8d46e1b254c0ff507aa9b13e978e32d9482615262adbc608e93a16dd"
+    },
+    {
+      "seq": 12,
+      "at": "2026-09-28T04:48:46.129Z",
+      "kind": "DECISION",
+      "actor": "coordinator-13772",
+      "state": {
+        "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+        "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+      },
+      "previousEventHash": "ad38110a8d46e1b254c0ff507aa9b13e978e32d9482615262adbc608e93a16dd",
+      "payloadPath": "events/0012.json",
+      "payloadHash": "9ba28f26771d63da3c93690ef45554f0031de47591f8de76a863271559206572",
+      "eventHash": "d603508195cbfda3b8d5870989fc9cc02cf28c25ead00a4e8b62ba5b7e654bd1"
+    }
+  ]
+}

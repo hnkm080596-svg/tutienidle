@@ -57,6 +57,30 @@ function isStageUnlocked(stage: (typeof stagesInZone.value)[number]): boolean {
   return gameManager.catalogOps.isStageUnlocked(stage.id, player.$state)
 }
 
+// Locked-floor reason (ui-audit progression fix): the domain read model
+// catalogOps.stageLockReasonCode owns the gate logic; the panel only maps
+// the reason code to i18n text.
+function stageLockReason(stage: (typeof stagesInZone.value)[number]): string {
+  const reason = gameManager.catalogOps.stageLockReasonCode(stage.id, player.$state)
+
+  if (reason === null) {
+    return ''
+  }
+
+  if (reason.kind === 'realm') {
+    return t('panels.stageSelect.locked.requireRealm', {
+      realm: getCurrentRealm(reason.realmId).name,
+      level: reason.realmLevel,
+    })
+  }
+
+  if (reason.kind === 'floor') {
+    return t('panels.stageSelect.locked.clearFloor', { floor: reason.floor })
+  }
+
+  return t('panels.stageSelect.locked.progress')
+}
+
 const selectedZoneId = ref<string | null>(zones.value[0]?.id ?? null)
 
 const selectedZone = computed(() =>
@@ -288,7 +312,7 @@ function start() {
                 'is-locked': !isStageUnlocked(node.stage),
                 'is-final': node.isLast,
               }"
-              v-tooltip="node.stage.description"
+              v-tooltip="node.stage.id === selectedStageId ? undefined : isStageUnlocked(node.stage) ? node.stage.description : stageLockReason(node.stage)"
               @click="selectStage(node.stage.id)"
             >
               <span class="stage-map__number">{{ node.stage.floor ?? node.stage.requiredRealmLevel ?? 1 }}</span>
@@ -297,6 +321,7 @@ function start() {
                 <small>{{ node.enemies.join(' · ') }}</small>
               </span>
               <span v-if="node.stage.bossEnemyId" class="stage-map__boss">{{ t('panels.stageSelect.labels.boss') }}</span>
+              <span v-if="!isStageUnlocked(node.stage)" class="stage-map__lock" aria-hidden="true">🔒</span>
             </button>
           </div>
         </section>
@@ -311,6 +336,7 @@ function start() {
       <template v-if="selectedStage">
         <h4 class="stage-select__title">{{ selectedStage.name }}</h4>
         <p class="stage-select__description">{{ selectedStage.description }}</p>
+        <p v-if="!isStageUnlocked(selectedStage)" class="stage-select__locked-hint">{{ stageLockReason(selectedStage) }}</p>
 
         <div class="stage-select__encounter-summary">
           <span><strong>{{ selectedStage.totalEnemyCount }}</strong> {{ t('panels.stageSelect.labels.enemiesSuffix') }}</span>
@@ -525,6 +551,22 @@ function start() {
 .stage-map__node.is-locked {
   opacity: 0.45;
   cursor: not-allowed;
+}
+
+/* Lock affordance on the floor tile itself - the 45% dim alone did not
+   read as "locked" (ui-audit progression fix). */
+.stage-map__lock {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  font-size: var(--text-sm);
+  line-height: 1;
+}
+
+.stage-select__locked-hint {
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--crimson);
 }
 
 .stage-map__node.is-final:not(.is-selected) {
