@@ -25,9 +25,11 @@ const { stateVersion } = useStateVersion()
 
 // stateVersion ticks every game loop; a battle that resolves itself
 // while the confirm sits open must dismiss it (result panels own exit).
+// Live = any non-terminal battle state (intro/countdown/fighting).
 const battleLive = computed(() => {
   stateVersion.value
-  return gameManager.getTurnBattle()?.state === 'fighting'
+  const state = gameManager.getTurnBattle()?.state
+  return state === 'intro' || state === 'countdown' || state === 'fighting'
 })
 
 watch(battleLive, (live) => {
@@ -49,12 +51,16 @@ function onExitRequest() {
   // Tribulation never sees the modal on a stray emit. UI audit
   // 2026-09-28: also require a live battle -- a request fired after
   // victory/defeat must not stack the abandon-confirm over the result
-  // panel (the result panels own their exit actions).
+  // panel (the result panels own their exit actions). intro/countdown
+  // count as live: abandonBattle accepts them and the player must be
+  // able to bail during the wind-up (~3s dead window otherwise).
   if (ui.combatOrigin !== 'stage') {
     return
   }
 
-  if (gameManager.getTurnBattle()?.state !== 'fighting') {
+  const battleState = gameManager.getTurnBattle()?.state
+
+  if (battleState !== 'intro' && battleState !== 'countdown' && battleState !== 'fighting') {
     return
   }
 

@@ -124,10 +124,12 @@ export class VendorSystem {
 
   /**
    * Read-only preview of what a sale would grant (same gates + math as
-   * sellMaterial). null = not sellable for this player; granted = 0 means
-   * the stack is too small to convert at this realm tier.
+   * sellMaterial). null = not sellable for this player (covers the
+   * sole-recipe-ingredient guard, which needs the live bag); granted = 0
+   * means the stack is too small to convert at this realm tier.
    */
   previewSellGrant(
+    bag: MaterialBag,
     materialId: string,
     amount: number,
     realmId: string,
@@ -139,6 +141,10 @@ export class VendorSystem {
     const unitPrice = this.getUnitSellPrice(materialId, realmId)
 
     if (unitPrice === undefined) {
+      return null
+    }
+
+    if (this.isSoleRecipeIngredient(materialId, bag.getAmount(materialId) - amount)) {
       return null
     }
 

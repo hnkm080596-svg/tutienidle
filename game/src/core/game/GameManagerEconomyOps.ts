@@ -62,7 +62,7 @@ export class GameManagerEconomyOps {
   ): { granted: number; stoneName: string } | null {
     const vendorSystem = new VendorSystem(this.deps.materialRegistry, this.deps.getAlchemyRecipes())
 
-    const quote = vendorSystem.previewSellGrant(materialId, amount, player.realmId)
+    const quote = vendorSystem.previewSellGrant(this.deps.materialBag, materialId, amount, player.realmId)
 
     if (quote === null) {
       return null
