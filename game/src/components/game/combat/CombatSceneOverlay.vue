@@ -24,8 +24,15 @@ import TurnOrderStrip from './TurnOrderStrip.vue'
 import BattleLogPanel from './BattleLogPanel.vue'
 import CombatExitConfirmModal from './CombatExitConfirmModal.vue'
 import { publishTopBarHeight, resetCombatInsets } from '@/presentation/geometry/combatInsets'
+import { useTurnCombatManual } from '@/composables/useTurnCombatManual'
 
 const rootRef = ref<HTMLElement | null>(null)
+
+// Skill dock mounts only while the battle is fighting: its only content
+// (TurnCombatSkillBar) self-hides otherwise, and an empty dock would be a
+// dead panel blocking the battlefield edge (UI audit 2026-09-28). Unmount
+// also clears the published `right` inset via the dock's own unmount hook.
+const { isBattleFighting } = useTurnCombatManual()
 
 let insetsObserver: ResizeObserver | null = null
 
@@ -102,7 +109,7 @@ onUnmounted(() => {
   <div ref="rootRef" class="combat-scene-overlay">
     <CombatTopBar class="combat-scene-overlay__top-bar" />
 
-    <CombatSkillDockPanel />
+    <CombatSkillDockPanel v-if="isBattleFighting" />
 
     <div class="combat-scene-overlay__battlefield">
       <!-- Combat AI panel — góc TRÁI battlefield, chỉ panel nhận pointer. -->

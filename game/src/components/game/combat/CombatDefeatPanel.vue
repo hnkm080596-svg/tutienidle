@@ -98,7 +98,7 @@ async function refight(): Promise<void> {
 const { remaining: retryCountdown, start: startAutoRetryCountdown, stop: stopAutoRetryCountdown } = useAutoRetryCountdown(RETRY_COUNTDOWN_SECONDS, refight)
 
 // 9.6 — countdown fallback 10s về Động Phủ; clear chung với nhánh 3s.
-const { start: startReturnCountdown, stop: stopReturnCountdown } = useAutoRetryCountdown(RETURN_COUNTDOWN_SECONDS, returnHome)
+const { remaining: returnCountdown, start: startReturnCountdown, stop: stopReturnCountdown } = useAutoRetryCountdown(RETURN_COUNTDOWN_SECONDS, returnHome)
 
 function clearTimers() {
   stopAutoRetryCountdown()
@@ -152,13 +152,22 @@ onMounted(() => {
         {{ t('combat.defeat.retry') }}<template v-if="isAutoRetrying"> {{ t('combat.defeat.retryCountdown', { duration: formatDuration(retryCountdown, 'countdown') }) }}</template>
       </GameButton>
 
-      <GameButton class="combat-defeat-panel__return" variant="secondary" @click="returnHome">{{ t('combat.defeat.returnHome') }}</GameButton>
+      <GameButton class="combat-defeat-panel__return" variant="secondary" @click="returnHome">
+        {{ t('combat.defeat.returnHome') }} {{ t('combat.defeat.returnCountdown', { duration: formatDuration(returnCountdown, 'countdown') }) }}
+      </GameButton>
     </div>
   </div>
 </template>
 
 <style scoped>
 .combat-defeat-panel {
+  /* surface-xl-paper-scroll renders dark since the dark-mode pass —
+     remap the paper text family onto the surface palette so RewardList
+     items stay legible (same contract as .ink-drawer). */
+  --paper-text: var(--surface-text);
+  --paper-text-soft: var(--surface-text-soft);
+  --paper-text-muted: var(--surface-text-muted);
+
   position: relative;
   isolation: isolate;
   box-sizing: border-box;

@@ -144,6 +144,10 @@ function makeFakeArc(radius: number, color: number): FakeArc {
     setOrigin() {
       return arc
     },
+    setRadius(r: number) {
+      arc.radius = r
+      return arc
+    },
     setFillStyle(c: number) {
       arc.fillColor = c
       return arc

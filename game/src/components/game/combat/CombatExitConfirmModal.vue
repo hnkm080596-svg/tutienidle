@@ -31,11 +31,20 @@ useDialogFocus(cardRef, visible, {
 })
 
 function onExitRequest() {
-  // Scene chỉ request; Stage gate giữ tại render (v-if) để Tribulation
-  // không bao giờ thấy modal dù event phát nhầm.
-  if (ui.combatOrigin === 'stage') {
-    visible.value = true
+  // Scene/topbar only request; the Stage gate stays at render so
+  // Tribulation never sees the modal on a stray emit. UI audit
+  // 2026-09-28: also require a live battle — a request fired after
+  // victory/defeat must not stack the abandon-confirm over the result
+  // panel (the result panels own their exit actions).
+  if (ui.combatOrigin !== 'stage') {
+    return
   }
+
+  if (gameManager.getTurnBattle()?.state !== 'fighting') {
+    return
+  }
+
+  visible.value = true
 }
 
 function confirmExit() {

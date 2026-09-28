@@ -788,6 +788,7 @@
       "retry": "Rematch",
       "retryCountdown": "{duration}",
       "returnHome": "Return to Cave",
+      "returnCountdown": "({duration})",
       "hintCultivate": "Your cultivation is still lacking — refine a few more levels, then return stronger.",
       "hintGear": "Not enough power to breach this realm — enhance your gear, take pills, or gain insight before the rematch."
     },
@@ -850,6 +851,19 @@
       },
       "topBar": {
         "enemiesSuffix": "enemies"
+      },
+      "skillBar": {
+        "roles": {
+          "basic": "Basic",
+          "special": "Special",
+          "ultimate": "Ultimate"
+        },
+        "passiveTag": "Passive",
+        "manualToggle": "Manual",
+        "awaitingChoice": "Your turn — pick a skill",
+        "use": "Use {name}",
+        "empty": "Empty",
+        "unreleased": "Not Yet Released"
       },
       "turnStrip": {
         "upcoming": "Next up",
