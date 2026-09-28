@@ -1,0 +1,25 @@
+{
+ "kind": "fix-batch",
+ "run": "sound-system-2026-09-28",
+ "state": "01208c6174edbf529e256ac9810683855b0ae82b61b9d2affb7f0f22af429498",
+ "pin": "eb43c897",
+ "fixes": [
+  "commentStrip.ts rewrite: scriptBlocksOf (attr-mask skeleton + markup stack + html comments), length-preserving stripComments, scanComments blanks regex+jsx spans, literalRanges template middle/tail via reScan",
+  "audioBoundary: IMPORT_META literal+nonliteral arms, isNonliteralImportCall tail rules, AudioManager reach widened (bracket/optional/call-receiver), .vue template sweep in both loops",
+  "audioBindingWiring: NONLITERAL_EMITS computed-name arm w/ declaresLocalEmit exemption, templateTextOf attr-value-only, LOCAL_DECL rhs window, destructure aliases, screamingIdent unresolved, bracket receiver, \\u escape flag, multi-line generic window",
+  "combatAudioBinding: entity_vitals_changed reason discrimination (ward_grant->grant, damage-family->break/ward, else silent); hit cues only when sourceId===player",
+  "AudioManager: setEnabled ramps master to 0 (silence in-flight), setMasterVolume enabled-gate, playCue typeof guard",
+  "ConfirmModal: ui.modal.close on open->closed edge; App.vue: keydown unlock listener; AssetBundleCatalog: boundary-aware prefix match",
+  "audioManifestCompleteness: producer regexes widened to three quote styles"
+ ],
+ "rejects": [
+  "F-SND-256 (INT-13) setChannelVolume duck truncation: premise false at pin \u2014 music routes through rampMusicGain, duck composes correctly"
+ ],
+ "dups": [
+  "F-SND-236 (AUT-3) = F-SND-228 (COR-7): close-tag shapes",
+  "F-SND-245 (INT-02) = F-SND-224 (COR-3): template continuation token",
+  "F-SND-246 (INT-03) = F-SND-239 (AUT-6): JSX-text desync",
+  "F-SND-257 (INT-14) = F-SND-94: pre-existing master reds"
+ ],
+ "verify": "npm run type-check clean; scoped vitest 109/109 audio lanes + 12/12 dialog/settings/vendor + architecture suite green (3 pre-existing reds unchanged); 4 smuggle probes flagged then reverted"
+}
