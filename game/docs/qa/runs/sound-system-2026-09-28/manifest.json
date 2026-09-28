@@ -22620,7 +22620,7 @@
       "path": "src/presentation/audio/ambientAudioDriver.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "e124c163aee6cefbde5920f230907275630700df9cb05ccdbfab8b84ead47418"
+      "hash": "dead763242b0edf4152ad1e2b48569b0dfecae38d60a6c53a4d81e6066d19364"
     },
     {
       "path": "src/presentation/audio/ambientAudioDriver.ts",
@@ -23532,13 +23532,13 @@
       "path": "tests/architecture/audioBindingWiring.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "2147c34ad7a4702c5dbffa875d3f2f412e18239f927c8097b559bbc1763b0756"
+      "hash": "338afa215c69875e62cbfba878f73c89125c83940ed4e38062f55f338daefbc0"
     },
     {
       "path": "tests/architecture/audioBoundary.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "879dcae2811e8f7eae4b9c59dc421ef27e59b23cff1988863efd60634fdc7147"
+      "hash": "c6f970efc10b91fb54b4d6b93e4e261863936ff6e9aec837ca763597353c1e7d"
     },
     {
       "path": "tests/architecture/audioManifestCompleteness.test.ts",
@@ -23658,7 +23658,7 @@
       "path": "tests/architecture/helpers/commentStrip.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "237435b46befb4bd559efe33f373ec258659c5eac28eea4ac0fd0f2ae845b35d"
+      "hash": "5f459c225682a588d624b4499ef00b651823462e0e23e7033f9f2ec1adadab1b"
     },
     {
       "path": "tests/architecture/helpers/scanTs.ts",
@@ -24021,5 +24021,5 @@
       "hash": "e69b4133ed37ca9a4f05e66d90521d0bb749c4764bf1f454d0eb13de601f7940"
     }
   ],
-  "productStateId": "9802f6a24ddd40dd2bb8a1b68cc07a566f5a02227534acb5574f914eb382fe02"
+  "productStateId": "cb33abdf1ff6a6a82f3f33bb2c660f06a8a5119007f0eb1e5ce164b4f15e0148"
 }

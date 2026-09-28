@@ -1,0 +1,14 @@
+{
+  "applied": [
+    "finding:F-SND-123",
+    "finding:F-SND-124",
+    "finding:F-SND-125",
+    "finding:F-SND-126",
+    "finding:F-SND-127",
+    "finding:F-SND-128",
+    "finding:F-SND-129",
+    "evidence:EV-SND-FIX11",
+    "review:REV-SND-COR-7",
+    "cycle:CYC-SND-7"
+  ]
+}
