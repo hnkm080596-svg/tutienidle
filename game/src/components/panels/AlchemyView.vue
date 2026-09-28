@@ -245,6 +245,65 @@ const canBrew = computed(() => {
   return true
 })
 
+// ui-audit economy M4: the brew button was disabled with NO on-screen
+// reason, so "why won't it brew" was invisible. The herb input is
+// reported first (it is the player's selection), then slot/fuel/stone
+// in canBrew order; every branch maps to an existing alchemy.reason.*
+// key so the line under the button names the exact missing input.
+const brewBlockReason = computed<string | null>(() => {
+  stateVersion.value
+
+  if (!selectedRecipe.value) {
+    return null
+  }
+
+  if (!selectedHerbId.value || !variantRows.value.find((row) => row.materialId === selectedHerbId.value)?.enough) {
+    return 'missing_herb'
+  }
+
+  if (jobs.value.length >= Math.max(1, maxJobSlots.value)) {
+    return 'job_slots_full'
+  }
+
+  if (fuelWoodRow.value && fuelWoodRow.value.owned < fuelWoodRow.value.amount) {
+    return 'missing_fuel_wood'
+  }
+
+  if (spiritStoneRow.value.owned < spiritStoneRow.value.amount) {
+    return 'missing_spirit_stone'
+  }
+
+  return null
+})
+
+// audit M4: the old outcome sentence always rendered the "{chance}% thêm
+// {extra} viên" tail — at 0% it literally promised "0% thêm 2 viên" and
+// at guaranteed=0 it read "Chắc chắn 0 viên". Pick the one string shape
+// that matches the actual guarantee.
+const outcomeLabel = computed(() => {
+  if (!preview.value) {
+    return ''
+  }
+
+  const { guaranteedPills, extraPillChance, extraPillYield } = preview.value
+
+  if (guaranteedPills > 0 && extraPillChance > 0) {
+    return t('alchemy.outcome', { guaranteed: guaranteedPills, chance: extraPillChance, extra: extraPillYield })
+  }
+
+  if (guaranteedPills > 0) {
+    return t('alchemy.outcomeGuaranteed', { guaranteed: guaranteedPills })
+  }
+
+  if (extraPillChance > 0) {
+    return t('alchemy.outcomeChanceOnly', { chance: extraPillChance, extra: extraPillYield })
+  }
+
+  // guaranteed == 0 && chance == 0: brewing yields nothing on this run
+  // (e.g. a recipe below the player's room level) - say so plainly.
+  return t('alchemy.outcomeNone')
+})
+
 function alchemyErrorMessage(reason: string | undefined): string {
   const key = `alchemy.reason.${reason ?? 'fallback'}`
 
@@ -312,7 +371,7 @@ function cancelJob(jobId: string) {
         <h4>{{ t('alchemy.preview') }}</h4>
 
         <p class="alchemy-detail__outcome">
-          {{ t('alchemy.outcome', { guaranteed: preview.guaranteedPills, chance: preview.extraPillChance, extra: preview.extraPillYield }) }}
+          {{ outcomeLabel }}
         </p>
 
         <!-- Bỏ "— Đan Phòng cấp N" (2026-08-30, bug report: trùng lặp
@@ -355,6 +414,10 @@ function cancelJob(jobId: string) {
         <GameButton class="alchemy-detail__action" size="sm" accent-var="--scene-fire-text" :disabled="!canBrew" @click="startJob">
           {{ t('alchemy.startBrewing') }}
         </GameButton>
+
+        <p v-if="brewBlockReason" class="alchemy-detail__block-reason" data-testid="brew-block-reason">
+          {{ alchemyErrorMessage(brewBlockReason) }}
+        </p>
       </section>
 
       <section v-if="jobs.length > 0" class="alchemy-detail__block">
@@ -479,6 +542,12 @@ function cancelJob(jobId: string) {
   margin: 0;
   font-size: var(--text-xs);
   color: var(--paper-text-soft);
+}
+
+.alchemy-detail__block-reason {
+  margin: 6px 0 0;
+  font-size: var(--text-xs);
+  color: var(--cinnabar);
 }
 
 .alchemy-variant {

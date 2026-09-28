@@ -71,10 +71,12 @@ function buildTooltip(pill: Pill, owned: number): GradedItemTooltipContent {
 
       case 'cultivation':
         // Pill nghề dùng % yêu cầu tầng; legacy dùng flat.
+        // formatStat('cultivationPercent') already appends "%" — the
+        // extra literal here rendered "+3.0%%" (audit M2).
         return effect.cultivationPercent !== undefined
           ? {
               label: 'Tu Vi',
-              value: `+${formatStat('cultivationPercent', effect.cultivationPercent)}% yêu cầu tầng`,
+              value: `+${formatStat('cultivationPercent', effect.cultivationPercent)} yêu cầu tầng`,
             }
           : { label: 'Tu Vi', value: `+${effect.value ?? 0}` }
 
@@ -122,6 +124,13 @@ function buildTooltip(pill: Pill, owned: number): GradedItemTooltipContent {
   })
 
   const sections: TooltipSection[] = rows.length > 0 ? [{ label: 'Hiệu Ứng', rows }] : []
+
+  // audit M2: drinkable pills consume on a TWO-click confirm, so the
+  // tooltip must advertise the gesture — a {label, rows: []} section
+  // renders as one caption line. Material pills stay inert.
+  if (pill.type !== 'material') {
+    sections.push({ label: t('bag.pill.useHint'), rows: [] })
+  }
 
   // Same naming model as equipment (2026-09-14): the title is the FULL
   // composed "{Chat} - {Name}" string; the single display color rides
@@ -178,7 +187,7 @@ function buildTooltip(pill: Pill, owned: number): GradedItemTooltipContent {
 // chỉ có tác dụng khi đang có trận đang đánh (ngoài trận player không
 // có HP sống để hồi, uống "Tiểu Hồi Đan" lúc đó coi như không có gì
 // để hồi — không phải lỗi, chỉ là không có đích).
-function drinkPill(pillId: string) {
+function drinkPill(pillId: string, pillName: string) {
   const target: PillTarget = {
     addCultivation: (amount) => addCultivation(player.$state, amount),
 
@@ -211,6 +220,10 @@ function drinkPill(pillId: string) {
   const result = gameManager.pillOps.usePillDetailed(pillId, target, player.$state)
 
   if (result.ok) {
+    // audit M2: one-click consume had NO success feedback — mirror the
+    // vendor fix and push a loot toast with the pill name.
+    useNotificationStore().push('loot', t('bag.pill.used', { name: pillName }))
+
     bumpState()
 
     return
@@ -242,6 +255,48 @@ interface PillEntry {
   /** Composed "{Chat} - {Name}" display name - the search axis. */
   name: string
 }
+
+// audit M2 (2026-09-28) - pills used to consume on a single click with
+// zero confirmation or success feedback, so one stray click burned a
+// rare elixir. First click now ARMS the pill (selected ring + a short
+// disarm timeout); only the second click on the same pill calls the
+// consume path. Clicking a different cell re-arms onto it instead.
+const armedPillId = ref<string | null>(null)
+
+const ARM_TIMEOUT_MS = 4000
+
+let armTimer: ReturnType<typeof setTimeout> | undefined
+
+function disarmPill() {
+  armedPillId.value = null
+
+  if (armTimer !== undefined) {
+    clearTimeout(armTimer)
+    armTimer = undefined
+  }
+}
+
+function onPillClick(pillId: string, name: string) {
+  if (armedPillId.value === pillId) {
+    disarmPill()
+    drinkPill(pillId, name)
+
+    return
+  }
+
+  armedPillId.value = pillId
+
+  if (armTimer !== undefined) {
+    clearTimeout(armTimer)
+  }
+
+  armTimer = setTimeout(() => {
+    armedPillId.value = null
+    armTimer = undefined
+  }, ARM_TIMEOUT_MS)
+}
+
+onUnmounted(disarmPill)
 
 const SORT_OPTIONS: Array<BagSortOption & { value: PillSortMode }> = [
   { value: 'grade', label: 'Phẩm đan' },
@@ -300,7 +355,15 @@ const entries = computed<PillEntry[]>(() => {
 
         // Mission E Task 2 (audit T1-10): material pills have no drink
         // action - the cell renders without a click affordance.
-        onClick: stack.pill.type === 'material' ? undefined : () => drinkPill(stack.pill.id),
+        onClick:
+          stack.pill.type === 'material'
+            ? undefined
+            : () => onPillClick(stack.pill.id, displayName),
+
+        // audit M2 two-click consume: the armed pill reads
+        // interaction:'selected' so the ring shows WHICH pill the
+        // second click will drink.
+        state: armedPillId.value === stack.pill.id ? { interaction: 'selected' } : undefined,
       },
     }
   })
@@ -470,6 +533,7 @@ const activeTimedEffects = computed(() => {
         :amount="cell?.amount"
         :tooltip="cell?.tooltip"
         :icon="cell?.icon"
+        :state="cell?.state"
         @click="cell?.onClick?.()"
       />
     </div>

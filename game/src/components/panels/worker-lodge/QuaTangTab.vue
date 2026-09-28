@@ -12,6 +12,8 @@ import { useNotificationStore } from '@/stores/notification'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import GameButton from '@/components/common/GameButton.vue'
 import { COMPANIONS } from '@/data/companion/Companions'
+import { COMPANION_GIFT_MOMENTS, type CompanionGiftMoment } from '@/data/companion/CompanionGiftMoments'
+import { realmLabel } from '@/core/presentation/labels'
 import { ITEM_GRADE_LABELS, type ItemGrade } from '@/core/item/ItemGrade'
 import type { ClaimCompanionGiftResult } from '@/core/game/GameManagerCompanionOps'
 
@@ -28,6 +30,29 @@ interface GiftRow {
   name: string
   grade: ItemGrade | undefined
   claimed: boolean
+  context: string | null
+}
+
+// ui-audit economy Low (Qua Tang row context): a pending row showed
+// just the companion name + a Nhận button - nothing about WHY the gift
+// exists. Record ids double as CompanionGiftMoments ids (provenance by
+// design), so the trigger that issued it resolves straight to copy.
+function giftContext(recordId: string): string | null {
+  const moment: CompanionGiftMoment | undefined = COMPANION_GIFT_MOMENTS.find(
+    (entry) => entry.id === recordId,
+  )
+
+  if (!moment) {
+    return null
+  }
+
+  if (moment.trigger.kind === 'realm_entered') {
+    return t('quaTang.context.realmEntered', { realm: realmLabel(moment.trigger.realmId) })
+  }
+
+  const stage = gameManager.catalogOps.getStage(moment.trigger.stageId)
+
+  return t('quaTang.context.stageCompleted', { stage: stage?.name ?? moment.trigger.stageId })
 }
 
 // PlayerData fields are Pinia-reactive via the player store - the ops
@@ -45,6 +70,7 @@ const gifts = computed<GiftRow[]>(() => {
       name: definition?.name ?? record.definitionId,
       grade: definition?.grade,
       claimed: record.claimed,
+      context: giftContext(record.id),
     }
   })
 })
@@ -84,6 +110,7 @@ function onClaim(giftId: string) {
     <div v-for="gift in pending" :key="gift.id" class="qua-tang__row">
       <span class="qua-tang__identity">
         <span class="qua-tang__name">{{ gift.name }}</span>
+        <span v-if="gift.context" class="qua-tang__context">{{ gift.context }}</span>
         <span v-if="gift.grade" class="qua-tang__grade" :style="{ color: `var(--grade-${gift.grade})` }">
           {{ ITEM_GRADE_LABELS[gift.grade] }}
         </span>
@@ -136,8 +163,14 @@ function onClaim(giftId: string) {
 
 .qua-tang__identity {
   display: inline-flex;
+  flex-wrap: wrap;
   align-items: baseline;
   gap: 8px;
+}
+
+.qua-tang__context {
+  color: var(--paper-text-muted);
+  font-size: var(--text-xs);
 }
 
 .qua-tang__name {

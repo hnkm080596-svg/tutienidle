@@ -482,8 +482,13 @@
       "sell": {
         "title": "Liquidate",
         "rate": "Sell surplus materials for Spirit Stones at current grade rates.",
-        "unitPriceSuffix": "lesser/unit",
-        "button": "Sell All",
+        "unitPriceSuffix": "Spirit Stones/unit",
+        "quantityAria": "Amount to sell",
+        "totalPreview": "→ +{total} {stone}",
+        "sold": "Sold {qty} {name} — received {gained} {stone}",
+        "confirmTitle": "Sell the whole stack?",
+        "confirmMessage": "Sell all {qty} {name} for {total} {stone}. This cannot be undone.",
+        "button": "Sell",
         "empty": "Nothing can be sold right now."
       }
     },
@@ -661,6 +666,12 @@
         "once": "Quests"
       },
       "anyEnemy": "Any enemy",
+      "rewards": {
+        "spiritStone": "Spirit Stones +{amount}",
+        "cultivation": "Cultivation +{amount}",
+        "skillInsight": "Skill Insight +{amount}"
+      },
+      "bagShortfall": "Keep enough in the bag to hand in: {have}/{need}",
       "actions": {
         "claimed": "Claimed",
         "claim": "Claim Reward"
@@ -686,7 +697,13 @@
         "allGrades": "All grades",
         "allAges": "All ages"
       },
-      "estimate": "≈ {amount} essence / cycle"
+      "estimate": "≈ {amount} essence / cycle",
+      "matching": "Matching ore in bag: {count}",
+      "hint": {
+        "noCapacity": "No decompose capacity — build or upgrade the Worker Lodge to free up workers.",
+        "noWorkers": "No workers assigned — raise the Workers slider to start decomposing.",
+        "noMatchingOres": "No ore in the bag matches the filters — gather ore from mining/exploration or loosen the filters."
+      }
     },
     "scripture": {
       "empty": "No lore fragments found yet.",
@@ -712,7 +729,7 @@
     "tokens": "{name}: {count}",
     "pity": "Pity: {count}/{max}",
     "pull": "Recruit (1 {token})",
-    "unavailable": "Not open in this build — new companions arrive via Gifts.",
+    "unavailable": "Not open in this build — new companions arrive via Gifts. Accumulated tokens, Duyen Phan and pity are kept.",
     "errors": {
       "missingToken": "No {token} available.",
       "poolUnavailable": "Not open in this build — new companions arrive via Gifts.",
@@ -735,7 +752,8 @@
       "constellationMaxed": "Constellation already maxed (C{max})",
       "insufficientDuyenPhan": "Not enough Duyen Phan (need {cost})"
     },
-    "unavailable": "Not open in this build — new companions arrive via Gifts.",
+    "shortName": "Duyen Phan",
+    "unavailable": "Not open in this build — new companions arrive via Gifts. Accumulated Duyen Phan is kept.",
     "errors": {
       "unknownDefinition": "Unknown companion.",
       "constellationMaxed": "Constellation already maxed.",
@@ -746,11 +764,18 @@
     },
     "empty": "No companions available to exchange."
   },
+  "currencyHud": {
+    "aria": "Current resources"
+  },
   "quaTang": {
     "hint": "Companion gifts earned along the cultivation journey.",
     "claim": "Claim",
     "claimed": "Claimed",
     "claimedBadge": "Claimed",
+    "context": {
+      "realmEntered": "Reached {realm} — companion gift",
+      "stageCompleted": "Cleared {stage} — companion gift"
+    },
     "empty": "No gifts yet.",
     "errors": {
       "unknownGift": "Invalid gift.",
@@ -1217,6 +1242,8 @@
     "otherCosts": "Other costs",
     "preview": "Brew preview",
     "outcome": "Guaranteed {guaranteed}, {chance}% chance of {extra} more",
+    "outcomeGuaranteed": "Guaranteed {guaranteed}",
+    "outcomeChanceOnly": "{chance}% chance of {extra}",
     "duration": "Duration: ~{minutes} min",
     "jobs": "Brewing",
     "cancelJob": "Cancel (materials lost)",
@@ -1233,7 +1260,8 @@
       "missing_spirit_stone": "Not enough Spirit Stones",
       "missing_special_ingredient": "Missing the recipe's special ingredient",
       "fallback": "Cannot start brewing"
-    }
+    },
+    "outcomeNone": "This run yields no pills."
   },
   "layout": {
     "functionOverlay": {
@@ -1256,6 +1284,8 @@
   "bag": {
     "overflow": "Bag full — lost {amount} {name}",
     "pill": {
+      "useHint": "Click to select — click again to drink.",
+      "used": "Used {name}.",
       "reason": {
         "wrong_realm": "Only usable at the pill's own realm.",
         "all_main_stats_capped": "All 5 main stats have reached the realm cap.",

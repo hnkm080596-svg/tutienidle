@@ -206,7 +206,10 @@ export const buildings: Building[] = [
 
     name: 'Ký Bảo Các',
 
-    description: 'Nơi trao đổi nguyên liệu dư thừa và quy đổi phẩm cấp Linh Thạch/nguyên liệu.',
+    // gp123 6G removed the quy-doi (conversion) cards but left this copy
+    // promising them - audit M8. Sell-only wording matches what the
+    // panel actually renders.
+    description: 'Nơi bán nguyên liệu dư thừa lấy Linh Thạch theo phẩm cảnh giới hiện hành.',
 
     category: 'crafting_station',
 
