@@ -5,6 +5,7 @@ import {
   enterHome,
   openSettingsAndSave,
   reauthAndEnterHome,
+  waitForPresentationIdle,
   GUEST_SAVE_KEY,
 } from './helpers'
 
@@ -25,8 +26,12 @@ import {
  *   production code is mocked or gated.
  *
  * Flow:
- * 1. Create a character, save through Settings, seed one real companion
- *    (ho_ly_tinh) into player.companions, reload and re-authenticate.
+ * 1. Create a character, drive the real Quan Khi ritual and commit a way
+ *    (a non-mortal save must carry cultivationPath - the mortal-boundary
+ *    contract rejects realm-only seeds, and the formation wheel slot is
+ *    disabled below Truc Co). Then seed foundation_establishment + one
+ *    real companion (ho_ly_tinh) onto the coherent qi_refining save,
+ *    reload and re-authenticate.
  * 2. Open the panel, select Cuu Cung Tran, drag player + the companion
  *    into cells (real DragEvent dispatch -- native dragTo does not fire
  *    this codebase's Vue @dragstart/@drop handlers, see P14).
@@ -39,6 +44,8 @@ import {
  * The webServer (DEV_PORT) is started/killed by playwright.config.ts.
  */
 const SAVE_KEY = GUEST_SAVE_KEY
+const BREAKTHROUGH_GATE_LEVEL = 12
+const FAST_FORWARD_SECONDS = 600
 
 // CompanionInstance (data/companion/Companions.ts) entry identical to what
 // createCompanionInstance() produces on a real pull: mortal realmLevel 1,
@@ -58,12 +65,28 @@ interface SaveShape {
   version: number
   player: {
     name: string
+    realmId: string
+    realmLevel: number
+    cultivation: number
     companions: Array<Record<string, unknown>>
     formationLoadout: {
       formationId: string
       assignments: Array<{ row: number; column: number; combatantId: string }>
     } | null
   }
+  techniques: Array<{
+    id: string
+    gradeHistory?: Record<number, { finalRank: number; completionState: string }>
+  }>
+}
+
+interface TribulationDirectorHandle {
+  update(deltaSeconds: number): void
+  getState(): { state: 'ongoing' | 'victory' | 'defeat' } | null
+}
+
+interface GameManagerHandle {
+  tribulationDirector: TribulationDirectorHandle
 }
 
 function readSave(page: Page): Promise<SaveShape | null> {
@@ -73,6 +96,55 @@ function readSave(page: Page): Promise<SaveShape | null> {
 
     return raw ? (JSON.parse(raw) as SaveShape) : null
   })
+}
+
+function advanceTribulation(page: Page): Promise<string> {
+  return page.evaluate((seconds) => {
+    const game = (window as Window & {
+      __tutienPhaserGame?: { registry: { get(key: string): unknown } }
+    }).__tutienPhaserGame
+    const manager = game?.registry.get('gameManager') as GameManagerHandle | undefined
+    const director = manager?.tribulationDirector
+
+    if (!director) {
+      return 'missing-director'
+    }
+
+    director.update(seconds)
+    return director.getState()?.state ?? 'cleared'
+  }, FAST_FORWARD_SECONDS)
+}
+
+/** Save, patch the persisted player slice, reload into the patched save. */
+async function seedAndReload(
+  page: Page,
+  expectedRealm: string,
+  playerPatch: Record<string, unknown>,
+): Promise<void> {
+  await openSettingsAndSave(page)
+
+  const saveBefore = await readSave(page)
+  expect(saveBefore).not.toBeNull()
+  expect(saveBefore!.player.realmId).toBe(expectedRealm)
+
+  const seededSave = {
+    ...saveBefore!,
+    player: {
+      ...saveBefore!.player,
+      cultivation: 0,
+      ...playerPatch,
+    },
+  }
+
+  await page.addInitScript(
+    ({ key, payload }) => {
+      localStorage.setItem(key, JSON.stringify(payload))
+    },
+    { key: SAVE_KEY, payload: seededSave },
+  )
+
+  await page.reload()
+  await reauthAndEnterHome(page)
 }
 
 // Native dragTo does not reach this codebase's Vue @dragstart/@drop
@@ -102,23 +174,109 @@ async function dragCardToCell(page: Page, cardIndex: number, cellIndex: number):
 
 test.describe('Standing slot panel (P14)', () => {
   test('panel opens, drag-drop works without crash, 3x3 grid with distinct occupied state', async ({ page }) => {
-    test.setTimeout(120_000)
+    test.setTimeout(300_000)
 
     await bootToGuestHome(page)
     await createCharacterThroughUi(page, 'P14 Slot Panel')
     await enterHome(page)
 
-    // Save once through Settings so the seeded payload below keeps every
-    // field of the current schema version, then inject the companion into
-    // player.companions (same convention as save-reload.spec.ts).
+    // P7-M9: the Tran Phap wheel slot stays disabled below Truc Co
+    // (isFormationUnlocked), and a non-mortal save must carry a real
+    // cultivationPath - mortalBoundaryContractViolation rejects
+    // realm-only seeds outright. Drive the real Quan Khi ritual from a
+    // seeded realmLevel-12 mortal and commit the phap tu way, then bump
+    // the coherent qi_refining save to foundation_establishment.
+    await seedAndReload(page, 'mortal', { realmLevel: BREAKTHROUGH_GATE_LEVEL })
+
+    // RealmPanel -> Quan Khi (same drive as technique-frozen-warning).
+    await page.keyboard.press('Tab')
+    const realmSlot = page.locator('[data-wheel-slot="realm"]')
+    await expect(realmSlot).toBeVisible({ timeout: 10_000 })
+    await realmSlot.click()
+
+    const realmDialog = page.getByRole('dialog', { name: 'Cảnh Giới' })
+    await expect(realmDialog).toBeVisible({ timeout: 15_000 })
+    const quanKhiButton = realmDialog.getByRole('button', { name: 'Quán Khí' })
+    await expect(quanKhiButton).toBeEnabled({ timeout: 10_000 })
+    await quanKhiButton.click()
+
+    const breakthroughConfirm = page.getByRole('dialog', { name: /Độ kiếp cũng là độ thân/ })
+    await expect(breakthroughConfirm).toBeVisible({ timeout: 10_000 })
+    await breakthroughConfirm.getByRole('button', { name: 'Đã hiểu' }).click()
+
+    const tribulationUi = page.locator('.tribulation-ui')
+    await expect(tribulationUi).toBeVisible({ timeout: 30_000 })
+    await waitForPresentationIdle(page)
+
+    await expect
+      .poll(() => advanceTribulation(page), {
+        timeout: 30_000,
+        message: 'Quan Khi tribulation should resolve once the session hold releases',
+      })
+      .toMatch(/victory|defeat|cleared/)
+
+    // M-F-TALENT: a settled breakthrough opens the blocking talent
+    // entitlement dialog - the pick resolves it and home chrome returns.
+    const entitlementModal = page.getByTestId('talent-entitlement-modal')
+    await expect(entitlementModal).toBeVisible({ timeout: 30_000 })
+    await entitlementModal
+      .locator('[data-testid^="entitlement-talent-"], [data-testid^="entitlement-upgrade-"]')
+      .first()
+      .click()
+    await expect(entitlementModal).toHaveCount(0, { timeout: 10_000 })
+
+    await expect(page.locator('.command-wheel-layer')).toBeAttached({ timeout: 30_000 })
+    await expect(tribulationUi).toHaveCount(0)
+    await waitForPresentationIdle(page)
+
+    const announcement = page.locator('.world-announcement')
+    if (await announcement.isVisible().catch(() => false)) {
+      await announcement.click()
+    }
+    await expect(announcement).toHaveCount(0, { timeout: 15_000 })
+
+    // QuanKhiPanel offer list -> the phap tu (spell_pathway) card. Any
+    // committed way satisfies the mortal-boundary contract; this one's
+    // post-ritual save shape is the proven foundation-bump seed.
+    const choice = page.getByRole('button', { name: /Đại Ngũ Hành Chân Quyết/ })
+    await expect(choice).toBeEnabled({ timeout: 15_000 })
+    await choice.click()
+
+    const confirm = page.locator('.confirm-modal__confirm')
+    await expect(confirm).toBeVisible({ timeout: 10_000 })
+    await confirm.click()
+    await expect(page.locator('.overlay-panel')).toHaveCount(0, { timeout: 10_000 })
+
+    if (await announcement.isVisible().catch(() => false)) {
+      await announcement.click()
+    }
+    await expect(announcement).toHaveCount(0, { timeout: 15_000 })
+
+    // Bump the coherent qi_refining save to foundation_establishment and
+    // inject the companion (same save-reload convention as before).
     await openSettingsAndSave(page)
 
     const saveBefore = await readSave(page)
     expect(saveBefore).not.toBeNull()
+    expect(saveBefore!.player.realmId).toBe('qi_refining')
 
     const seededSave: SaveShape = {
       ...saveBefore!,
-      player: { ...saveBefore!.player, companions: [{ ...SEEDED_COMPANION }] },
+      player: {
+        ...saveBefore!.player,
+        companions: [{ ...SEEDED_COMPANION }],
+        realmId: 'foundation_establishment',
+        realmLevel: 1,
+        cultivation: 0,
+      },
+      // M-F-TECHNIQUE (v75) save integrity: the realm bump leaves the
+      // live grade lagging (grade 1 < realm index 2), so the seeded
+      // save must carry the born-sealed grade-1 record the realm-exit
+      // freeze seam would have written - without it restore rejects.
+      techniques: saveBefore!.techniques.map((technique) => ({
+        ...technique,
+        gradeHistory: { 1: { finalRank: 0, completionState: 'partial' } },
+      })),
     }
 
     // addInitScript runs BEFORE the new page's app JS on reload, so it

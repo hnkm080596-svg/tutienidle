@@ -149,7 +149,7 @@ describe('BuffSystem — reactiveTrigger effect', () => {
   it('onCastBegin: roll trúng → áp appliesDefinitionId buff lên actor, CC-check sau đó block turn (ccBlocked=true, 0 hit)', () => {
     const { battle, system, enemyEntity } = fixture([STUN_DEF], [PUNISH_DEF])
 
-    const actor = system.peekNextActor(battle)!
+    const actor = system.dequeueNextActorForClaim(battle)!
 
     const declared = system.declareActorAction(battle, actor)
 
@@ -165,7 +165,7 @@ describe('BuffSystem — reactiveTrigger effect', () => {
   it('onImpactLanded: roll trúng trên target + queuesFollowUp → battle.queuedFollowUpActorId = target.id', () => {
     const { battle, system } = fixture([COUNTER_DEF])
 
-    const actor = system.peekNextActor(battle)!
+    const actor = system.dequeueNextActorForClaim(battle)!
 
     const declared = system.declareActorAction(battle, actor)
     const { targetIds } = system.applyActionImpact(battle, declared)
@@ -195,24 +195,24 @@ describe('BuffSystem — reactiveTrigger effect', () => {
 
     const { battle, system } = fixture([NO_FIRE])
 
-    const actor = system.peekNextActor(battle)!
+    const actor = system.dequeueNextActorForClaim(battle)!
     const declared = system.declareActorAction(battle, actor)
     system.applyActionImpact(battle, declared)
 
     expect(battle.queuedFollowUps).toBeUndefined()
   })
 
-  it('queuedFollowUps → peekNextActor lần KẾ trả actor đó trực tiếp (bypass gauge)', () => {
+  it('queuedFollowUps → dequeueNextActorForClaim lần KẾ trả actor đó trực tiếp (bypass gauge)', () => {
     const { battle, system } = fixture([COUNTER_DEF])
 
-    const actor = system.peekNextActor(battle)!
+    const actor = system.dequeueNextActorForClaim(battle)!
     const declared = system.declareActorAction(battle, actor)
     const { targetIds } = system.applyActionImpact(battle, declared)
     system.completeAction(battle, actor, declared, targetIds)
 
     expect(battle.queuedFollowUps?.map((entry) => entry.actorId)).toEqual(['enemy'])
 
-    const next = system.peekNextActor(battle)
+    const next = system.dequeueNextActorForClaim(battle)
 
     expect(next?.id).toBe('enemy')
     expect(battle.queuedFollowUps).toBeUndefined()

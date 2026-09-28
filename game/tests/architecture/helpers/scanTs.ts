@@ -38,8 +38,10 @@ export function readTs(path: string): string {
   return readFileSync(path, 'utf8')
 }
 
-/** Headroom for filesystem-scan guards under full-suite worker contention. */
-export const SCAN_TIMEOUT = 60_000
+/** Headroom for filesystem-scan guards under full-suite worker contention.
+    Windows hosts measured >60s per-tokenizer/scan passes under load, so the
+    budget is set for the slowest supported environment. */
+export const SCAN_TIMEOUT = 120_000
 
 /** Recursively list .vue SFCs. An SFC imports just as well as a .ts file. */
 export function listVue(dir: string): string[] {

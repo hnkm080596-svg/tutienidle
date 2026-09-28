@@ -191,7 +191,7 @@ export interface TurnSkillDefinition {
   healPercentOfDamage?: number
   /** Future Systems Task 7 - skill charges for N turns (The) then self-resolves (Tram). */
   chargeTurns?: number
-  /** Action Playback (2026-09-05) - VFX preset for action_impact. undefined = default fallback preset (Task 4). */
+  /** Skill presentation recipe key resolved via getSkillPresentationRecipe; undefined falls back to the arcane_impact recipe. */
   presetId?: CombatVfxPresetId
   /**
    * M-QI-05 / QI-D3 - canonical progression owner for internal or

@@ -1,0 +1,20 @@
+{
+  "tools": {
+    "node": "v24 expected; exact version pending runtime capture",
+    "install": "npm ci --no-audit --no-fund; 639 packages; package-lock unchanged"
+  },
+  "os": "win32",
+  "profile": "worktree Vite desktop+narrow Edge WebGL; headless Vitest manual clock",
+  "locale": "vi",
+  "viewportProfiles": [
+    [
+      1280,
+      800
+    ],
+    [
+      390,
+      844
+    ]
+  ],
+  "rng": "SeededRandom for combat, local seeded procedural visual sampling"
+}

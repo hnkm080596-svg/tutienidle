@@ -27,6 +27,7 @@ export interface CombatVfxPreset {
 }
 
 export const COMBAT_VFX_PRESETS = {
+  ngu_kiem_flight: { id: 'ngu_kiem_flight', color: 0xaeeaff, space: 'upright', areaScale: 1, durationMs: 250 },
   slash: { id: 'slash', color: 0xeaf6ff, space: 'upright', areaScale: 1, durationMs: 230 },
   claw: { id: 'claw', color: 0xffb0a0, space: 'upright', areaScale: 1, durationMs: 230 },
   arcane_impact: {
@@ -497,7 +498,3 @@ export const COMBAT_VFX_PRESETS = {
     durationMs: 210,
   },
 } as const satisfies Record<CombatVfxPresetId, CombatVfxPreset>
-
-export function getCombatVfxPreset(id: CombatVfxPresetId): CombatVfxPreset {
-  return COMBAT_VFX_PRESETS[id]
-}

@@ -1238,7 +1238,7 @@ export class GameManager {
     return this.turnBattleOps.presentationOps.isActionPlaybackWaiting()
   }
 
-  /** Phaser goi khi ready flourish xong -> declare action, phat 'attack'. */
+  /** Phaser calls when the ready flourish ends - declares the action and publishes skill_presentation_cast. */
   acknowledgeTurnReady(token?: string): void {
     this.turnBattleOps.presentationOps.acknowledgeTurnReady(token)
   }
