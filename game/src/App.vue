@@ -202,6 +202,9 @@ const unbindCombatAudio = bindCombatAudio(gameManager.eventBus, {
 // W10: push the reducedShake flag into the presentation shake gate - scenes
 // read the module-level scale (src/game may not import stores).
 const audioStore = useAudioStore()
+// Persisted enabled=false must gate every activation path before the
+// first gesture (GameButton unlocks the manager directly).
+audioStore.hydrateManager()
 
 // W7: uiStore panel/wheel transitions -> ui.panel.*/ui.wheel.* cues.
 const unbindUiAudio = bindUiAudio(ui)

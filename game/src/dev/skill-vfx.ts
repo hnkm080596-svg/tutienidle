@@ -4,6 +4,7 @@ import type { CombatVfxPresetId } from '@/core/battle/CombatAction'
 import type { ActorAnchorFact, SkillCastPresentation, SkillPresentationOutcome, SkillPresentationResolved } from '@/core/battle/turn/SkillPresentationFacts'
 import { SkillPresentationRunner } from '@/presentation/skills/SkillPresentationRunner'
 import { PhaserSkillVfxDriver } from '@/game/support/skill-vfx/PhaserSkillVfxDriver'
+import { applyScreenShake } from '@/presentation/vfx/screenShakePolicy'
 import { getSkillPresentationRecipe } from '@/data/vfx/SkillPresentationRecipes'
 
 // This HTML entry is not in the production build and never imports GameManager/save services.
@@ -146,7 +147,9 @@ class SkillLabScene extends Phaser.Scene {
           duration: durationMs, yoyo: true, onComplete: () => marker.destroy(),
         })
       },
-      cameraImpulse: (durationMs, intensity) => this.cameras.main.shake(durationMs, intensity, false),
+      // Same gate as production scenes - reducedShake must reach the dev
+      // lab too, or the W10 policy is not the sole shake authority.
+      cameraImpulse: (durationMs, intensity) => applyScreenShake(this.cameras.main, durationMs, intensity, false),
     }, quality, reduced)
     runner = new SkillPresentationRunner(driver, getSkillPresentationRecipe, error => console.error(error))
     element('play').onclick = play

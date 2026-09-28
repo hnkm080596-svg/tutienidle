@@ -9,12 +9,12 @@ import { formatNumber } from '@/core/format/NumberFormatter'
 import { formatDuration } from '@/core/format/formatDuration'
 import { useI18n } from 'vue-i18n'
 import { onMounted, ref, useId } from 'vue'
-import { AudioManager } from '@/core/audio/AudioManager'
 import GameButton from './GameButton.vue'
 import StatRow from './primitives/StatRow.vue'
 import InkNineSlice from './primitives/InkNineSlice.vue'
 import { useDialogFocus } from '@/composables/useDialogFocus'
 import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
+import { useAudioStore } from '@/stores/audio'
 
 // UI-005 (Task 3, 2026-09-07) — Offline summary là blocking dialog thật:
 // role="dialog" + aria-modal + focus trap/restore qua useDialogFocus
@@ -33,14 +33,13 @@ const panelRef = ref<HTMLElement | null>(null)
 
 // W7: stinger on mount (the offline report IS the reward moment) +
 // ui.confirm on the one-way Continue/Escape close.
-const audio = AudioManager.getInstance()
 onMounted(() => {
-  audio.playCue('stinger.offline')
+  useAudioStore().cue('stinger.offline')
 })
 
 function onContinue() {
-  audio.playCue('ui.confirm')
-  audio.playCue('ui.modal.close')
+  useAudioStore().cue('ui.confirm')
+  useAudioStore().cue('ui.modal.close')
   emit('close')
 }
 

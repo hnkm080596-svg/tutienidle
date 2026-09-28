@@ -14,12 +14,12 @@ import CombatSkillSlot from './CombatSkillSlot.vue'
 import { useTurnCombatManual } from '@/composables/useTurnCombatManual'
 import { useGameManager } from '@/composables/useGameState'
 import { useUiStore } from '@/stores/ui'
-import { AudioManager } from '@/core/audio/AudioManager'
 
 import { turnSkillDisplayMetaOf } from '@/data/skill/TurnSkillDisplayMeta'
 import type { TurnSkillPresentationEntry } from '@/core/combat/CombatSkillPresentation'
 import type { TurnSkillDefinition, TurnSkillSlotRole } from '@/core/battle/turn/TurnSkillAction'
 import type { TooltipContent } from '@/composables/useTooltip'
+import { useAudioStore } from '@/stores/audio'
 
 const ROLE_ORDER: readonly TurnSkillSlotRole[] = ['basic', 'special', 'ultimate']
 
@@ -131,14 +131,14 @@ function tapSlot(role: TurnSkillSlotRole): void {
   // W7: landed manual picks cue combat.select (the composable's reject
   // path owns ui.error).
   if (isAwaitingChoice.value) {
-    AudioManager.getInstance().playCue('combat.select')
+    useAudioStore().cue('combat.select')
   }
   chooseSlot(role)
 }
 
 function onDynamicBasicClick(defId: string): void {
   if (isAwaitingChoice.value) {
-    AudioManager.getInstance().playCue('combat.select')
+    useAudioStore().cue('combat.select')
   }
   chooseDynamicBasic(defId)
 }

@@ -478,7 +478,7 @@ listener-try/catch path; `npm run type-check` + scoped vitest green.
 2. `src/components/common/primitives/Chip.vue` — `@click` →
    `audio.cue('ui.tab')` (+ `audio.unlock()` like GameButton). Blanket fix:
    every tab bar, filter, run-mode chip, settings toggle gets sound.
-3. `src/components/menu/MenuButton.vue` — click → `ui.click`.
+3. ~~`src/components/menu/MenuButton.vue`~~ — removed on master before this wave landed; menu-era clicks ride the GameButton default.
 4. `GameButton.vue` / `ToastContainer.vue` — migrate `uiClick`/`toastX` ids
    to `ui.click`/`ui.toast.<kind>` (the only legacy-id edits; then
    `play(SoundId)` alias retires per W2.7).

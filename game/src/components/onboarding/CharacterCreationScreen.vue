@@ -10,7 +10,7 @@ import { SKILLS } from '@/data/skill/Skills'
 import type { Skill } from '@/core/skill/Skill'
 import { characterCreationService } from '@/services/character/CharacterCreationServiceFactory'
 import { isValidCharacterName } from '@/services/character/CharacterCreationService'
-import { AudioManager } from '@/core/audio/AudioManager'
+import { useAudioStore } from '@/stores/audio'
 
 // BETA-CREATION - ONE unified flow: name + talent + starting-skill pick on
 // a single screen. The 5-point allocation step is removed entirely; base
@@ -67,7 +67,7 @@ function toggleTalent(talent: TalentDefinition) {
 }
 async function reroll() {
   if (rolling.value || creating.value) return
-  AudioManager.getInstance().playCue('progress.reroll')
+  useAudioStore().cue('progress.reroll')
   rolling.value = true
   error.value = ''
   try {
@@ -96,11 +96,11 @@ async function finish() {
     const result = await characterCreationService.createCharacter(payload)
     if (!result.ok) {
       error.value = result.message
-      AudioManager.getInstance().playCue('ui.error')
+      useAudioStore().cue('ui.error')
       return
     }
     // W7: character creation commit is the onboarding completion beat.
-    AudioManager.getInstance().playCue('progress.create')
+    useAudioStore().cue('progress.create')
     // Keep `creating` until unmount - the boot/save work that follows runs while
     // this screen is still displayed under the closing curtain.
     emit('complete', payload)

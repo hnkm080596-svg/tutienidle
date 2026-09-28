@@ -182,6 +182,9 @@ export interface StatusVfxAttachedEvent {
 
   /** Buff bar — duration Infinity → hàng permanent, không timer. */
   permanent?: boolean
+
+  /** Periodic-damage flag - lets audio/VFX tell a real DoT from a plain buff/debuff (dotType alone is just a definitionId). */
+  periodicDamage?: boolean
 }
 
 export interface StatusVfxUpdatedEvent {

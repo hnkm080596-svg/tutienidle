@@ -84,10 +84,11 @@ export type DomImageResourceDescriptor = Readonly<{
   url: string
 }>
 
-// Sound System W4: DOM-side audio fetch lane. `key` is the cue id, `urls`
-// the codec/variant fallbacks tried in order. `optional` is a type-level
-// marker: a missing file marks the key missing and resolves - it never
-// rejects a bundle the way a missing texture does.
+// Sound System W4: DOM-side audio fetch lane. `key` is the manifest src
+// path (AudioManager buffers are keyed by src), `urls` holds that single
+// src. `optional` is a type-level marker: a missing file marks the key
+// missing and resolves - it never rejects a bundle the way a missing
+// texture does.
 export type DomAudioResourceDescriptor = Readonly<{
   kind: 'dom-audio'
   key: string
@@ -314,11 +315,15 @@ export function audioDescriptorsFor(
 ): readonly DomAudioResourceDescriptor[] {
   const prefixes = AUDIO_BUNDLE_PREFIXES[bundleId]
   const out: DomAudioResourceDescriptor[] = []
+  const seen = new Set<string>()
   for (const [id, def] of Object.entries(AUDIO_CUES)) {
     if (!prefixes.some((p) => id === p || id.startsWith(p))) continue
     const urls = typeof def.src === 'string' ? (def.src ? [def.src] : []) : [...def.src]
-    if (urls.length === 0) continue
-    out.push({ kind: 'dom-audio', key: id, urls, optional: true })
+    for (const src of urls) {
+      if (seen.has(src)) continue
+      seen.add(src)
+      out.push({ kind: 'dom-audio', key: src, urls: [src], optional: true })
+    }
   }
   return out
 }

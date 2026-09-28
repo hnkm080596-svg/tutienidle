@@ -13,7 +13,7 @@ import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useBattleActions } from '@/composables/useBattleActions'
 import { useDialogFocus } from '@/composables/useDialogFocus'
 import GameButton from '@/components/common/GameButton.vue'
-import { AudioManager } from '@/core/audio/AudioManager'
+import { useAudioStore } from '@/stores/audio'
 
 const { t } = useI18n()
 const ui = useUiStore()
@@ -49,11 +49,10 @@ useDialogFocus(cardRef, visible, {
 
 // W7: the modal owns its own open cue - the stage gate below can reject
 // the request, so the event-level static row would cue a phantom open.
-const audio = AudioManager.getInstance()
 
 function dismiss() {
-  audio.playCue('ui.cancel')
-  audio.playCue('ui.modal.close')
+  useAudioStore().cue('ui.cancel')
+  useAudioStore().cue('ui.modal.close')
   visible.value = false
 }
 
@@ -75,13 +74,13 @@ function onExitRequest() {
     return
   }
 
-  audio.playCue('ui.modal.open')
+  useAudioStore().cue('ui.modal.open')
   visible.value = true
 }
 
 function confirmExit() {
-  audio.playCue('ui.confirm')
-  audio.playCue('ui.modal.close')
+  useAudioStore().cue('ui.confirm')
+  useAudioStore().cue('ui.modal.close')
   // Abandon + UI teardown run inside the closed curtain (abandonBattle
   // self-guards when the battle already ended on its own mid-close - the
   // exit still stands). The modal itself closes right away as click

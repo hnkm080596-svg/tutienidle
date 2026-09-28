@@ -46,7 +46,9 @@ function loadPersisted(): PersistedAudioSettings {
       if (typeof parsed !== 'object' || parsed === null) continue
       return parsed as PersistedAudioSettings
     } catch {
-      return {}
+      // Corrupt blob (bad JSON etc.) - fall through to the v1 key
+      // instead of discarding a valid older blob with it.
+      continue
     }
   }
   return {}
@@ -89,17 +91,27 @@ export const useAudioStore = defineStore('audio', {
   },
 
   actions: {
-    /** Call on the first user gesture (click/touch) to pass the autoplay policy. */
-    unlock() {
+    /**
+     * Push persisted/reactive settings into AudioManager without
+     * unlocking - called once at store creation so persisted
+     * enabled=false gates EVERY activation path (GameButton calls
+     * mgr.unlock() directly, bypassing this store's unlock()).
+     */
+    hydrateManager() {
       const mgr = AudioManager.getInstance()
-      mgr.unlock()
-      // Push latest state into AudioManager (SettingsPanel may have set it
-      // from localStorage before the first gesture).
       mgr.setEnabled(this.enabled)
       mgr.setMasterVolume(this.masterVolume)
       mgr.setChannelVolume('music', this.musicVolume)
       mgr.setChannelVolume('sfx', this.sfxVolume)
       mgr.setChannelVolume('ui', this.uiVolume)
+    },
+
+    /** Call on the first user gesture (click/touch) to pass the autoplay policy. */
+    unlock() {
+      const mgr = AudioManager.getInstance()
+      mgr.unlock()
+      // SettingsPanel may have changed state after hydrateManager().
+      this.hydrateManager()
     },
 
     setEnabled(value: boolean) {

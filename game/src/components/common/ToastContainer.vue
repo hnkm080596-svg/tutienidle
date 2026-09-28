@@ -4,8 +4,8 @@ import { useI18n } from 'vue-i18n'
 import { useNotificationStore } from '@/stores/notification'
 import type { NotificationKind } from '@/core/notification/NotificationEvent'
 import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
-import { AudioManager } from '@/core/audio/AudioManager'
 import { isMaxRankTone } from '@/core/profession/slotRank'
+import { useAudioStore } from '@/stores/audio'
 
 const notification = useNotificationStore()
 const { t } = useI18n()
@@ -28,7 +28,7 @@ watch(
   (ids, prevIds) => {
     const prev = new Set(prevIds)
     for (const toast of notification.toasts) {
-      if (!prev.has(toast.id)) AudioManager.getInstance().playCue(KIND_SOUND[toast.kind])
+      if (!prev.has(toast.id)) useAudioStore().cue(KIND_SOUND[toast.kind])
     }
   },
 )

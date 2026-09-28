@@ -61,6 +61,7 @@ import { describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { SCAN_TIMEOUT, srcCorpus } from './helpers/scanTs'
+import { AUDIO_CUES, resolveAudioCue } from '../../src/core/audio/AudioCueManifest'
 
 const SRC_DIR = join(process.cwd(), 'src')
 const LOCALES_DIR = join(SRC_DIR, 'locales')
@@ -371,21 +372,32 @@ describe('i18n key parity (P16)', () => {
       // Audio cue ids share the `combat.`/`tribulation.` locale namespaces
       // by convention (sound-system-spec 1.2: `domain.verb[.qualifier]`,
       // lowercase segments only - e.g. `combat.kiem.combo.nhat_tuyen`). They
-      // are data keys in the audio manifest, not i18n keys; camelCase i18n
-      // typos still fail the lowercase-only shape and get reported.
-      const AUDIO_CUE_ID =
-        /^(combat|ui|music|ambient|stinger|progress|tribulation|craft|farm)(\.[a-z_0-9]+)+$/
-      // Cue ids also appear as template literals (`combat.cast.${skillId}`)
-      // - the interpolator builds the qualifier at runtime, never an i18n key.
-      const AUDIO_CUE_TEMPLATE =
-        /^(combat|ui|music|ambient|stinger|progress|tribulation|craft|farm)(\.[a-z_0-9]+)*\.\$\{[^}]+\}$/
+      // are data keys in the audio manifest, not i18n keys. The exemption
+      // is manifest-verified, not shape-only: a literal under an audio
+      // namespace that does NOT resolve via resolveAudioCue still gets
+      // checked as a (probably missing) i18n key.
+      const AUDIO_CUE_TEMPLATE = /^(.*)\.\$\{[^}]+\}$/
+      const isAudioCue = (literal: string): boolean => {
+        const tpl = AUDIO_CUE_TEMPLATE.exec(literal)
+        if (tpl) {
+          // `combat.cast.${skillId}` - the static prefix must itself resolve
+          // (resolveAudioCue strips unknown qualifier segments) or cover
+          // concrete rows beneath it (`combat.element.${element}`).
+          const prefix = tpl[1]!
+          return (
+            resolveAudioCue(prefix) !== undefined ||
+            Object.keys(AUDIO_CUES).some((k) => k.startsWith(prefix + '.'))
+          )
+        }
+        return resolveAudioCue(literal) !== undefined
+      }
       const violations: string[] = []
       for (const file of FILES) {
         for (const m of file.clean.matchAll(STRING_LITERAL)) {
           const literal = m[2]!
           if (!literal.includes('.') || !NAMESPACE_RE.test(literal.split('.')[0]!)) continue
           if (!KEY_SHAPE.test(literal)) continue
-          if (AUDIO_CUE_ID.test(literal) || AUDIO_CUE_TEMPLATE.test(literal)) continue
+          if (isAudioCue(literal)) continue
           if (!keyExists(literal, VI_PATHS) || !keyExists(literal, EN_PATHS)) {
             violations.push(`${file.fromSrc} -> ${literal}`)
           }

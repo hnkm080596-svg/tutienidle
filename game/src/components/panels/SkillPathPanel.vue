@@ -18,7 +18,6 @@
 // TurnBattleSystem), "equipping a whole Element" adds no further meaning.
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { AudioManager } from '@/core/audio/AudioManager'
 import { useUiStore } from '@/stores/ui'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
@@ -45,6 +44,7 @@ import { turnSkillDisplayMetaOf } from '@/data/skill/TurnSkillDisplayMeta'
 import { getSkillCoreLevel } from '@/core/progression/SkillCoreLevel'
 import { useTurnBattleInfo } from '@/composables/useTurnBattleInfo'
 import OverlayPanel from '@/components/common/OverlayPanel.vue'
+import { useAudioStore } from '@/stores/audio'
 
 const { t } = useI18n()
 const ui = useUiStore()
@@ -133,7 +133,7 @@ function onNodeUnlocked(node: ProgressionNode) {
   unlockSeq += 1
   unlockTrigger.value = { nodeId: node.id, seq: unlockSeq }
   // W7: a landed node purchase is a progression beat.
-  AudioManager.getInstance().playCue('progress.node_unlock')
+  useAudioStore().cue('progress.node_unlock')
 }
 
 function onSelectNode(node: ProgressionNode, purchased: boolean, purchasable: boolean) {

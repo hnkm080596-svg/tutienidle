@@ -13,7 +13,6 @@ import { useUiStore } from '@/stores/ui'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useWorldAnnouncementStore } from '@/stores/worldAnnouncement'
-import { AudioManager } from '@/core/audio/AudioManager'
 import {
   CULTIVATION_PATH_MODULES,
   type CultivationPathId,
@@ -35,6 +34,7 @@ import type { OrbId } from '@/core/kiem-tu/KiemTuState'
 import { turnSkillDisplayMetaOf } from '@/data/skill/TurnSkillDisplayMeta'
 import { getRealmIndex } from '@/core/realm/realmSystem'
 import { REALMS } from '@/data/realms/realm'
+import { useAudioStore } from '@/stores/audio'
 
 const { t, te } = useI18n()
 
@@ -130,7 +130,7 @@ function confirmChoosePath() {
 
   // W7: path commitment is a progression beat (the ConfirmModal's own
   // ui.confirm already fired on the button).
-  AudioManager.getInstance().playCue('progress.path_choose')
+  useAudioStore().cue('progress.path_choose')
 
   const way = CULTIVATION_PATH_MODULES[choice.pathId].ways[choice.wayId]
 

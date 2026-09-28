@@ -8,8 +8,28 @@
 // remain as the qualifier-strip fallback for ids the catalogs do not know
 // yet.
 
-import type { SynthSoundId } from './AudioManager'
 import { type AudioChannelId } from './AudioChannels'
+
+export type SynthSoundId =
+  | 'uiClick'
+  | 'uiConfirm'
+  | 'uiCancel'
+  | 'toastLoot'
+  | 'toastCraft'
+  | 'toastUpgrade'
+  | 'toastError'
+  | 'toastWarning'
+  | 'toastSave'
+  | 'combatAttack'
+  | 'combatHit'
+  | 'combatCritical'
+  | 'combatDodge'
+  | 'combatBlock'
+  | 'combatKill'
+  | 'battleStart'
+  | 'battleVictory'
+  | 'battleDefeat'
+
 
 /**
  * Cue-id string (`domain.verb[.qualifier]`). Manifest rows are keyed by a

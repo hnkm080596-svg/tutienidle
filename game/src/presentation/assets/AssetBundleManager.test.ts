@@ -404,8 +404,8 @@ describe('W4 dom-audio lane', () => {
       await manager.ensureLoaded(['audio-core'])
       await manager.ensureLoaded(['audio-core'])
       expect(domAudioLoader).toHaveBeenCalledTimes(1)
-      expect(attach).toHaveBeenCalledWith('ui.click', bytes)
-      expect(manager.isResourceLoaded('ui.click')).toBe(true)
+      expect(attach).toHaveBeenCalledWith('assets/audio/ui/click.ogg', bytes)
+      expect(manager.isResourceLoaded('assets/audio/ui/click.ogg')).toBe(true)
     } finally {
       attach.mockRestore()
       restore()
@@ -420,7 +420,7 @@ describe('W4 dom-audio lane', () => {
     try {
       const manager = new AssetBundleManager({ loaderScene, domImageLoader, domAudioLoader })
       await expect(manager.ensureLoaded(['audio-combat'])).resolves.toBeUndefined()
-      expect(manager.isResourceLoaded('combat.hit')).toBe(false)
+      expect(manager.isResourceLoaded('assets/audio/sfx/missing.ogg')).toBe(false)
       // missing mark: second ensure does not re-fetch
       await manager.ensureLoaded(['audio-combat'])
       expect(domAudioLoader).toHaveBeenCalledTimes(1)
@@ -429,21 +429,22 @@ describe('W4 dom-audio lane', () => {
     }
   })
 
-  it('descriptor collision between conflicting dom-audio rows still throws', async () => {
-    const restore = injectCue('ui.click', 'a.ogg')
+  it('two cues sharing one src dedupe to a single fetch keyed by src', async () => {
+    const restore = injectCue('ui.click', 'shared.ogg')
+    const restore2 = injectCue('ui.hover', 'shared.ogg')
+    const attach = vi
+      .spyOn(AudioManager.getInstance(), 'attachEncodedBuffer')
+      .mockImplementation(() => undefined)
     const domAudioLoader: DomAudioLoader = vi.fn(async () => new ArrayBuffer(4))
     try {
       const manager = new AssetBundleManager({ loaderScene, domImageLoader, domAudioLoader })
       await manager.ensureLoaded(['audio-core'])
-      restore()
-      const restore2 = injectCue('ui.click', 'different.ogg')
-      try {
-        await expect(manager.ensureLoaded(['audio-core'])).rejects.toThrow('collision')
-      } finally {
-        restore2()
-      }
+      expect(domAudioLoader).toHaveBeenCalledTimes(1)
+      expect(attach).toHaveBeenCalledWith('shared.ogg', expect.any(ArrayBuffer))
     } finally {
+      attach.mockRestore()
       restore()
+      restore2()
     }
   })
 })

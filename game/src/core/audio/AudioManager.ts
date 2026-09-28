@@ -57,27 +57,9 @@ import {
   DEFAULT_CHANNEL_VOLUMES,
   type AudioChannelId,
 } from './AudioChannels'
-import { resolveAudioCue, type AudioCueDef } from './AudioCueManifest'
+import { resolveAudioCue, type AudioCueDef, type SynthSoundId } from './AudioCueManifest'
 
-export type SynthSoundId =
-  | 'uiClick'
-  | 'uiConfirm'
-  | 'uiCancel'
-  | 'toastLoot'
-  | 'toastCraft'
-  | 'toastUpgrade'
-  | 'toastError'
-  | 'toastWarning'
-  | 'toastSave'
-  | 'combatAttack'
-  | 'combatHit'
-  | 'combatCritical'
-  | 'combatDodge'
-  | 'combatBlock'
-  | 'combatKill'
-  | 'battleStart'
-  | 'battleVictory'
-  | 'battleDefeat'
+export type { SynthSoundId }
 
 // Recipe per sound — engine kind + note + duration.
 type SynthEngine = 'metal' | 'fm' | 'am' | 'membrane' | 'noise'
@@ -533,6 +515,12 @@ class AudioManagerImpl {
       this.logSilent(id)
       return
     }
+    // loop:true / music-channel rows are the music slot's job - a playCue
+    // spawn would loop forever, unreachable by stopMusic/suspendMusic.
+    if (def.loop === true || def.channel === 'music') {
+      this.logSilent(id)
+      return
+    }
 
     const now = Date.now()
     const gap = def.cooldownMs ?? MIN_GAP_MS
@@ -593,7 +581,9 @@ class AudioManagerImpl {
     }
     const decoded = src.filter((s) => this.buffers.has(s))
     if (decoded.length === 0) return undefined
-    const cursor = (this.variantCursor.get(id) ?? 0) + 1
+    // Start at index 0: the cursor stores the LAST served index, so the
+    // first play must advance from -1, not 0 (else index 0 never leads).
+    const cursor = (this.variantCursor.get(id) ?? -1) + 1
     this.variantCursor.set(id, cursor)
     return decoded[cursor % decoded.length]
   }
@@ -614,7 +604,15 @@ class AudioManagerImpl {
       try { player.dispose() } catch { /* already disposed */ }
     }
     this.players.add(player)
-    player.start()
+    try {
+      player.start()
+    } catch (err) {
+      // A start() throw would strand a connected, never-started player in
+      // `players` until dispose - detach it now instead.
+      this.players.delete(player)
+      try { player.dispose() } catch { /* already disposed */ }
+      throw err
+    }
 
     if (def.duckMusic !== undefined) {
       this.applyDuck(def.duckMusic, Math.max(50, buffer.duration * 1000))
@@ -626,7 +624,9 @@ class AudioManagerImpl {
   /** Requests looped music; starts now or once unlocked (desired slot). */
   playMusic(id: string): void {
     this.desiredMusicId = id
-    this.musicSuspended = false
+    this.pendingMusicFadeSec = 0
+    // Suspension is owned only by suspendMusic()/resumeMusic() (tab
+    // visibility); a play request while hidden must not un-suspend.
     this.applyDesiredMusic()
   }
 
@@ -634,8 +634,8 @@ class AudioManagerImpl {
   crossfadeMusic(id: string, fadeMs: number): void {
     if (this.desiredMusicId === id && this.playingMusicId === id) return
     this.desiredMusicId = id
-    this.musicSuspended = false
     const fadeSec = Math.max(0.01, fadeMs / 1000)
+    this.pendingMusicFadeSec = fadeSec
     if (this.playingMusicId !== null && this.playingMusicId !== id) {
       this.releaseMusicPlayer(fadeMs)
     }
@@ -644,7 +644,7 @@ class AudioManagerImpl {
 
   stopMusic(fadeMs = 400): void {
     this.desiredMusicId = null
-    this.musicSuspended = false
+    this.pendingMusicFadeSec = 0
     this.releaseMusicPlayer(fadeMs)
   }
 
@@ -661,6 +661,13 @@ class AudioManagerImpl {
     old.fadeOut = Math.max(0.01, fadeMs / 1000)
     try {
       old.stop(`+${old.fadeOut}`)
+      // In a suspended context onstop never fires - force-detach the
+      // fading player once its fade window has fully elapsed.
+      const reaper = setTimeout(() => {
+        this.players.delete(old)
+        try { old.dispose() } catch { /* already disposed */ }
+      }, fadeMs + 200)
+      ;(reaper as unknown as { unref?: () => void }).unref?.()
     } catch {
       this.players.delete(old)
       try { old.dispose() } catch { /* already disposed */ }
@@ -689,10 +696,16 @@ class AudioManagerImpl {
     this.playingMusicId = null
   }
 
-  private applyDesiredMusic(fadeSec = 0): void {
+  // Fade requested by the latest crossfadeMusic while not yet ready -
+  // consumed once a player actually starts so pre-unlock requests still
+  // fade in instead of popping (the unlock path passes no arg).
+  private pendingMusicFadeSec = 0
+
+  private applyDesiredMusic(fadeSec?: number): void {
     const id = this.desiredMusicId
     if (id === null || id === this.playingMusicId) return
     if (!this.enabled || this.musicSuspended || this.unlockState !== 'ready') return
+    const fade = fadeSec ?? this.pendingMusicFadeSec
     const def = resolveAudioCue(id)
     if (def === undefined) return
     const src = this.pickDecodedSrc(id, def.src)
@@ -703,26 +716,35 @@ class AudioManagerImpl {
     const gain = this.channelGains.music
     const buffer = this.buffers.get(src)
     if (!gain || !buffer) return
+    this.disposeMusicPlayer()
+    let player: Tone.Player | undefined
     try {
-      this.disposeMusicPlayer()
-      const player = new Tone.Player(buffer)
+      player = new Tone.Player(buffer)
       player.connect(gain)
       player.loop = true
-      player.fadeIn = fadeSec
+      player.fadeIn = fade
       if (def.volume !== undefined) {
         player.volume.value = def.volume <= 0 ? -Infinity : 20 * Math.log10(def.volume)
       }
-      player.onstop = () => {
+      const playerRef = player
+      playerRef.onstop = () => {
+        this.players.delete(playerRef)
+        try { playerRef.dispose() } catch { /* already disposed */ }
+      }
+      this.players.add(playerRef)
+      this.musicPlayer = playerRef
+      this.playingMusicId = id
+      playerRef.start()
+      this.pendingMusicFadeSec = 0
+    } catch (err) {
+      // Same strand guard as spawnPlayer - drop the failed player.
+      if (player) {
         this.players.delete(player)
         try { player.dispose() } catch { /* already disposed */ }
       }
-      this.players.add(player)
-      this.musicPlayer = player
-      this.playingMusicId = id
-      player.start()
-    } catch {
       this.musicPlayer = null
       this.playingMusicId = null
+      throw err
     }
   }
 

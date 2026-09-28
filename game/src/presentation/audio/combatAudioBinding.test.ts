@@ -111,7 +111,7 @@ describe('bindCombatAudio', () => {
     expect(cueSpy).toHaveBeenCalledWith('combat.impact')
   })
 
-  it('status_vfx_attached picks buff/debuff/dot by polarity+dotType', () => {
+  it('status_vfx_attached picks buff/debuff/dot by polarity+periodicDamage', () => {
     const bus = new EventBus()
     bindCombatAudio(bus)
 
@@ -119,8 +119,20 @@ describe('bindCombatAudio', () => {
     expect(cueSpy).toHaveBeenLastCalledWith('combat.buff.apply')
     bus.emit('status_vfx_attached', { polarity: 'debuff' })
     expect(cueSpy).toHaveBeenLastCalledWith('combat.debuff.apply')
-    bus.emit('status_vfx_attached', { polarity: 'debuff', dotType: 'poison' })
+    // dotType is just the definitionId (always set) - the DoT cue keys
+    // off periodicDamage, the producer's periodic-damage flag.
+    bus.emit('status_vfx_attached', { polarity: 'debuff', dotType: 'poison', periodicDamage: true })
     expect(cueSpy).toHaveBeenLastCalledWith('combat.dot.apply')
+  })
+
+  it('player-targeted hit stays silent - damage owns combat.hurt', () => {
+    const bus = new EventBus()
+    bindCombatAudio(bus)
+
+    bus.emit('hit', { targetId: 'player' })
+    expect(cueSpy).not.toHaveBeenCalled()
+    bus.emit('hit', { targetId: 'enemy_1' })
+    expect(cueSpy).toHaveBeenLastCalledWith('combat.hit')
   })
 
   it('session kind picks combat.start / tribulation.start', () => {
@@ -130,9 +142,11 @@ describe('bindCombatAudio', () => {
     bus.emit('presentation_session_started', { sessionId: 's1', kind: 'combat' })
     expect(cueSpy).toHaveBeenCalledWith('combat.start')
 
+    // Tribulation sessions stay silent here - tribulation_started fires
+    // the same tick and owns the start cue (tribulation.begin).
     cueSpy.mockClear()
     bus.emit('presentation_session_started', { sessionId: 's2', kind: 'tribulation' })
-    expect(cueSpy).toHaveBeenCalledWith('tribulation.start')
+    expect(cueSpy).not.toHaveBeenCalled()
   })
 
   it('battle_end + tribulation_outcome discriminate on state', () => {
@@ -169,13 +183,17 @@ describe('bindCombatAudio', () => {
     const bus = new EventBus()
     bindCombatAudio(bus)
 
-    bus.emit('reactive_proc', { success: false, trigger: 'counter' })
+    bus.emit('reactive_proc', { success: false, mechanic: 'counter' })
     expect(cueSpy).not.toHaveBeenCalled()
 
-    bus.emit('reactive_proc', { success: true, trigger: 'intercept' })
+    // The discriminator is `mechanic` (intercept/counter/follow_up) - the
+    // producer's `trigger` field carries the reactive window name.
+    bus.emit('reactive_proc', { success: true, mechanic: 'intercept' })
     expect(cueSpy).toHaveBeenLastCalledWith('combat.ungthe.intercept')
-    bus.emit('reactive_proc', { success: true, trigger: 'counter' })
+    bus.emit('reactive_proc', { success: true, mechanic: 'counter' })
     expect(cueSpy).toHaveBeenLastCalledWith('combat.ungthe.counter')
+    bus.emit('reactive_proc', { success: true, trigger: 'intercept' })
+    expect(cueSpy).toHaveBeenLastCalledWith('combat.ungthe')
     bus.emit('reactive_proc', { success: true })
     expect(cueSpy).toHaveBeenLastCalledWith('combat.ungthe')
   })

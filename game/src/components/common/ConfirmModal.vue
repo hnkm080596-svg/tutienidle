@@ -2,10 +2,10 @@
 import { computed, ref, useId, watch } from 'vue'
 import { i18n } from '@/i18n'
 import GameButton from './GameButton.vue'
-import { AudioManager } from '@/core/audio/AudioManager'
 import InkNineSlice from './primitives/InkNineSlice.vue'
 import { useDialogFocus } from '@/composables/useDialogFocus'
 import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
+import { useAudioStore } from '@/stores/audio'
 
 // Restyle (2026-09-28, ui-audit creation-meta) - was SysModalBase system
 // chrome (sci-fi chrome chrome + translucent panel) clashing with the
@@ -38,24 +38,23 @@ const emit = defineEmits<{ confirm: []; cancel: [] }>()
 
 // W7: shared confirm chrome owns modal open + confirm/cancel cues for
 // every ConfirmModal consumer (QuanKhiPanel path choice, save gate, ...).
-const audio = AudioManager.getInstance()
 
 watch(
   () => props.open,
   (open, wasOpen) => {
-    if (open && !wasOpen) audio.playCue('ui.modal.open')
+    if (open && !wasOpen) useAudioStore().cue('ui.modal.open')
   },
 )
 
 function onConfirm() {
-  audio.playCue('ui.confirm')
-  audio.playCue('ui.modal.close')
+  useAudioStore().cue('ui.confirm')
+  useAudioStore().cue('ui.modal.close')
   emit('confirm')
 }
 
 function onCancel() {
-  audio.playCue('ui.cancel')
-  audio.playCue('ui.modal.close')
+  useAudioStore().cue('ui.cancel')
+  useAudioStore().cue('ui.modal.close')
   emit('cancel')
 }
 
@@ -70,7 +69,7 @@ const panelRef = ref<HTMLElement | null>(null)
 // no click handler on purpose - a destructive confirm must not dismiss
 // from an accidental outside tap.
 useDialogFocus(panelRef, computed(() => props.open), {
-  onEscape: () => emit('cancel'),
+  onEscape: onCancel,
 })
 </script>
 
@@ -101,8 +100,6 @@ useDialogFocus(panelRef, computed(() => props.open), {
       </div>
     </Transition>
   </Teleport>
-</template>
-
 </template>
 
 <style scoped>

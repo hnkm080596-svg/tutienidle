@@ -16,7 +16,6 @@ import {
   type CommandWheelSlot,
 } from '@/data/ui/commandWheelCatalog'
 import { getCommandWheelOrbitDirection } from '@/data/ui/commandWheelOrbit'
-import { AudioManager } from '@/core/audio/AudioManager'
 import { resolveExpectedArtifactId } from '@/core/artifact/Artifact'
 import {
   ARTIFACT_UNLOCK_REALM_ID,
@@ -26,6 +25,7 @@ import { isCompanionDomainUnlocked } from '@/core/companion/CompanionAvailabilit
 import { isFormationUnlocked } from '@/core/game/FormationPlacement'
 import { isRealmAvailable } from '@/core/realm/ReleasePolicy'
 import NotificationBadge from '@/components/common/NotificationBadge.vue'
+import { useAudioStore } from '@/stores/audio'
 
 const ui = useUiStore()
 const player = usePlayerStore()
@@ -303,7 +303,7 @@ function activate(slot: CommandWheelSlot) {
 
   // W7: wheel pick lands before the close cue (ui.wheel.close fires via
   // uiAudioBinding's isCommandWheelOpen transition below).
-  AudioManager.getInstance().playCue('ui.wheel.select')
+  useAudioStore().cue('ui.wheel.select')
   ui.closeCommandWheel()
 
   if (slot.buildingId) {

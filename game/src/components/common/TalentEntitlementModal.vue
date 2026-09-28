@@ -12,7 +12,6 @@
 // checkTribulationOutcomeAction) waits on the same record.
 import { computed, ref, useId, watchEffect } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { AudioManager } from '@/core/audio/AudioManager'
 import InkNineSlice from './primitives/InkNineSlice.vue'
 import { TALENT_RARITY_LABELS, type TalentDefinition } from '@/core/talent/Talent'
 import {
@@ -27,6 +26,7 @@ import { usePlayerStore } from '@/stores/player'
 import { useGameManager } from '@/composables/useGameState'
 import { useDialogFocus } from '@/composables/useDialogFocus'
 import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
+import { useAudioStore } from '@/stores/audio'
 
 const player = usePlayerStore()
 const gameManager = useGameManager()
@@ -92,7 +92,7 @@ function decide(decision: TalentEntitlementDecision): void {
   // authored pools, so a false return needs no surfacing.
   // W7: a decided entitlement is a progression pick.
   if (gameManager.realmAdvanceOps.resolveTalentEntitlement(player, decision)) {
-    AudioManager.getInstance().playCue('progress.talent_pick')
+    useAudioStore().cue('progress.talent_pick')
   }
 }
 </script>

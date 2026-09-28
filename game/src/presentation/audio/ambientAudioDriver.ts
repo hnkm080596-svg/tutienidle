@@ -99,6 +99,9 @@ export function bindAmbientAudio(
   }
 
   document.addEventListener('visibilitychange', onVisibilityChange)
+  // Seed the flag for a page already hidden at load - the change event
+  // only fires on transitions, so without this a hidden load plays music.
+  onVisibilityChange()
 
   return () => {
     unsubscribe()

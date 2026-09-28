@@ -3433,6 +3433,7 @@ export class TurnBattleSystem {
           type: 'reactive_proc',
           holderId: holder.entity.id,
           trigger,
+          mechanic: attempt.effect?.mechanic,
           success: attempt.success,
           paid: attempt.paid,
         })

@@ -30,9 +30,8 @@ const props = withDefaults(defineProps<{
 const emit = defineEmits<{ click: [MouseEvent] }>()
 
 // Direct AudioManager singleton (not the Pinia store) so GameButton can
-// mount in unit tests without an active Pinia. SettingsPanel and other
-// components needing reactive state use useAudioStore for
-// enabled + volume.
+// mount in unit tests without an active Pinia - documented exception to
+// the W7 useAudioStore().cue rule for Pinia-free primitives.
 const audio = AudioManager.getInstance()
 
 // Centralized click handler - plays ui.click SFX + unlocks the AudioContext

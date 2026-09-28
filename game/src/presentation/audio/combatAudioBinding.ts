@@ -22,7 +22,9 @@ import { PLAYER_ID } from '@/core/skill/PassiveSystem'
 
 const STATIC_CUES: ReadonlyArray<readonly [string, string]> = [
   ['attack', 'combat.cast'],
-  ['hit', 'combat.hit'],
+  // 'hit' moved to PAYLOAD_CUES: a player-targeted hit co-fires with
+  // 'damage' (which already maps to combat.hurt) - mapping hit->hit
+  // there would double-fire two cues for one landed blow.
   ['critical', 'combat.crit'],
   ['dodge', 'combat.dodge'],
   ['block', 'combat.block'],
@@ -66,6 +68,9 @@ interface ActionImpactLike {
 
 interface StatusAttachLike {
   polarity?: string
+  // True DoT flag emitted by the producer; dotType is just the
+  // definitionId and is always set, so it cannot discriminate.
+  periodicDamage?: boolean
   dotType?: string
 }
 
@@ -91,6 +96,9 @@ interface CultivationLike {
 
 interface ReactiveProcLike {
   trigger?: string
+  // Mechanic discriminator (intercept/counter/follow_up) emitted by the
+  // core producer; the trigger field is the reactive window name.
+  mechanic?: string
   success?: boolean
 }
 
@@ -143,6 +151,12 @@ const PAYLOAD_CUES: ReadonlyArray<readonly [string, (event: never) => string | u
     (event: TargetLike) => (event.targetId === PLAYER_ID ? 'combat.hurt' : undefined),
   ],
   [
+    'hit',
+    // combat.hit = "player lands a blow"; player-taken hits are covered
+    // by damage->combat.hurt (which also covers DoT ticks).
+    (event: TargetLike) => (event.targetId === PLAYER_ID ? undefined : 'combat.hit'),
+  ],
+  [
     'entity_vitals_changed',
     (event: VitalsLike) => {
       const before = event.wardBefore ?? 0
@@ -161,7 +175,7 @@ const PAYLOAD_CUES: ReadonlyArray<readonly [string, (event: never) => string | u
   [
     'status_vfx_attached',
     (event: StatusAttachLike) => {
-      if (event.dotType) return 'combat.dot.apply'
+      if (event.periodicDamage === true) return 'combat.dot.apply'
       if (event.polarity === 'debuff') return 'combat.debuff.apply'
       return 'combat.buff.apply'
     },
@@ -178,8 +192,10 @@ const PAYLOAD_CUES: ReadonlyArray<readonly [string, (event: never) => string | u
   ],
   [
     'presentation_session_started',
+    // Tribulation sessions intentionally silent here: tribulation_started
+    // fires the same tick and owns the start cue (tribulation.begin).
     (event: SessionRef) =>
-      event.kind === 'combat' ? 'combat.start' : event.kind === 'tribulation' ? 'tribulation.start' : undefined,
+      event.kind === 'combat' ? 'combat.start' : undefined,
   ],
   [
     'tribulation_outcome',
@@ -201,8 +217,8 @@ const PAYLOAD_CUES: ReadonlyArray<readonly [string, (event: never) => string | u
     'reactive_proc',
     (event: ReactiveProcLike) => {
       if (event.success !== true) return undefined
-      if (event.trigger === 'intercept') return 'combat.ungthe.intercept'
-      if (event.trigger === 'counter') return 'combat.ungthe.counter'
+      if (event.mechanic === 'intercept') return 'combat.ungthe.intercept'
+      if (event.mechanic === 'counter') return 'combat.ungthe.counter'
       return 'combat.ungthe'
     },
   ],

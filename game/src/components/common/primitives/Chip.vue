@@ -23,9 +23,11 @@ const attrs = useAttrs()
 const isTab = computed(() => attrs.role === 'tab')
 
 // W7: blanket ui.tab on every Chip click (tabs, filters, toggles) -
-// AudioManager direct, like GameButton, so chips work without Pinia.
+// AudioManager direct, like GameButton, so chips work without Pinia
+// (documented exception to the W7 useAudioStore().cue rule).
 // Disabled buttons never fire click, so disabled chips stay silent.
 const audio = AudioManager.getInstance()
+
 function onClick() {
   audio.unlock()
   audio.playCue('ui.tab')
