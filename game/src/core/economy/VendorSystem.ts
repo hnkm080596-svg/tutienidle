@@ -101,6 +101,53 @@ export class VendorSystem {
   }
 
   /**
+   * Single authority for the sell->stone conversion. unitPrice is
+   * ha-pham-equivalent; the real grant is floor(raw / conversionFactor)
+   * where the factor follows the realm-tier stone table (1/100/30000).
+   * Returns null when the stack is too small to yield any stone.
+   */
+  private quoteStoneGrant(
+    unitPrice: number,
+    amount: number,
+    realmId: string,
+  ): { gainedStone: number; stoneMaterialId: string } | null {
+    const tier = getRealmTier(realmId)
+    const conversionFactor = tier >= 7 ? 30_000 : tier >= 4 ? 100 : 1
+    const gainedStone = Math.floor((unitPrice * amount) / conversionFactor)
+
+    if (gainedStone <= 0) {
+      return null
+    }
+
+    return { gainedStone, stoneMaterialId: getSpiritStoneMaterialIdForRealmTier(tier) }
+  }
+
+  /**
+   * Read-only preview of what a sale would grant (same gates + math as
+   * sellMaterial). null = not sellable for this player; granted = 0 means
+   * the stack is too small to convert at this realm tier.
+   */
+  previewSellGrant(
+    materialId: string,
+    amount: number,
+    realmId: string,
+  ): { granted: number; stoneMaterialId: string } | null {
+    if (!Number.isInteger(amount) || amount <= 0) {
+      return null
+    }
+
+    const unitPrice = this.getUnitSellPrice(materialId, realmId)
+
+    if (unitPrice === undefined) {
+      return null
+    }
+
+    const quote = this.quoteStoneGrant(unitPrice, amount, realmId)
+
+    return quote === null ? { granted: 0, stoneMaterialId: '' } : { granted: quote.gainedStone, stoneMaterialId: quote.stoneMaterialId }
+  }
+
+  /**
    * Bán `amount` đơn vị material lấy Linh Thạch. Trả { ok: true, gained }
    * với gained = số Linh Thạch ĐÃ quy đổi theo phẩm realm của material.
    */
@@ -144,23 +191,13 @@ export class VendorSystem {
       return { ok: false, reason: 'sole_recipe_ingredient' }
     }
 
-    const tier = getRealmTier(realmId)
+    const quote = this.quoteStoneGrant(unitPrice, amount, realmId)
 
-    // conversionFactor: 1 (hạ), 100 (trung), 30000 (thượng) — khớp
-    // getSpiritStoneMaterialIdForRealmTier (trung bắt đầu tier 4, thượng
-    // tier 7). Plan dẫn công thức Math.pow(RATIO, tier-4) nhưng bảng 1/100/
-    // 30000 không sinh ra từ luỹ thừa của 100 — theo đúng BẢNG (intent).
-    const conversionFactor = tier >= 7 ? 30_000 : tier >= 4 ? 100 : 1
-
-    const rawHa = unitPrice * amount
-
-    const gainedStone = Math.floor(rawHa / conversionFactor)
-
-    if (gainedStone <= 0) {
+    if (quote === null) {
       return { ok: false, reason: 'too_small' }
     }
 
-    const stoneMaterialId = getSpiritStoneMaterialIdForRealmTier(tier)
+    const { gainedStone, stoneMaterialId } = quote
 
     if (!this.registry.has(stoneMaterialId)) {
       return { ok: false, reason: 'unknown_material' }

@@ -97,7 +97,7 @@ function decide(decision: TalentEntitlementDecision): void {
   <div v-if="entitlement" class="talent-entitlement" :style="{ zIndex: OVERLAY_LAYERS.modal }" data-testid="talent-entitlement-modal">
     <section
       ref="panelRef"
-      class="talent-entitlement__panel"
+      class="talent-entitlement__panel paper-on-dark"
       role="dialog"
       aria-modal="true"
       :aria-labelledby="titleId"
@@ -163,17 +163,9 @@ function decide(decision: TalentEntitlementDecision): void {
 
 /* M-tier InkNineSlice - same surface/frame pairing as OfflineSummaryModal;
    the dialog is wider to hold the 3-card grid but keeps the M frame band.
-   surface-m-paper paints a dark surface, so the panel remaps the paper
-   tokens to the surface ramp - the same override .ink-drawer applies for
-   ink surfaces (theme.css). */
+   surface-m-paper paints a dark surface; the .paper-on-dark utility class
+   on the element owns the paper->surface token remap (theme.css). */
 .talent-entitlement__panel {
-  --paper-50: var(--surface-600);
-  --paper-text: var(--surface-text);
-  --paper-text-soft: var(--surface-text-soft);
-  --paper-text-muted: var(--surface-text-muted);
-  --paper-line: var(--surface-line);
-  --paper-line-soft: var(--surface-line-soft);
-
   position: relative;
   isolation: isolate;
   display: flex;

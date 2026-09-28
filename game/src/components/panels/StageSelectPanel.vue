@@ -92,6 +92,22 @@ function stageLockReason(stage: (typeof stagesInZone.value)[number]): string {
     return t('panels.stageSelect.locked.clearFloor', { floor: previous.floor ?? previous.requiredRealmLevel ?? 1 })
   }
 
+  // Cross-zone gate (mirrors catalogOps.isStageUnlocked): first floor of
+  // zone N>0 requires the previous zone's final stage.
+  if (index === 0 && zone) {
+    const zoneIndex = zones.value.findIndex((candidate) => candidate.id === zone.id)
+    const previousFinalId = zoneIndex > 0
+      ? zones.value[zoneIndex - 1]!.stageIds.at(-1)
+      : undefined
+    const previousFinal = previousFinalId
+      ? gameManager.catalogOps.getStage(previousFinalId)
+      : undefined
+
+    if (previousFinal) {
+      return t('panels.stageSelect.locked.clearFloor', { floor: previousFinal.floor ?? previousFinal.requiredRealmLevel ?? 1 })
+    }
+  }
+
   return t('panels.stageSelect.locked.progress')
 }
 

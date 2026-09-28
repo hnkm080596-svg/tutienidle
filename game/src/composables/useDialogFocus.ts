@@ -43,7 +43,10 @@ export function useDialogFocus(
         if (event.key !== 'Tab') return
         // Tab luôn bị chặn native trước early-return: dialog không có focusable
         // cũng KHÔNG cho Tab thoát containment (focus giữ nguyên tại chỗ).
+        // stopPropagation: window-level listeners (DongFuCommandWheel Tab
+        // toggle) must not see a Tab consumed by dialog containment.
         event.preventDefault()
+        event.stopPropagation()
         const list = focusables()
         if (list.length === 0) return
         if (list.length === 1) {

@@ -76,8 +76,24 @@ const sellStoneName = computed(() => {
     : t('alchemy.spiritStones')
 })
 
+// Domain quote for a sale -- same math as the grant (ha-pham equiv
+// divided by the realm-tier factor), so preview/confirm never lie.
+function saleQuote(materialId: string, qty: number) {
+  return gameManager.economyOps.previewVendorSale(materialId, qty, player.$state)
+}
+
+function salePreviewText(row: { materialId: string; owned: number }) {
+  const quote = saleQuote(row.materialId, qtyFor(row.materialId, row.owned))
+
+  if (quote === null || quote.granted <= 0) {
+    return t('panels.vendor.sell.tooSmall')
+  }
+
+  return t('panels.vendor.sell.totalPreview', { total: formatNumber(quote.granted), stone: quote.stoneName })
+}
+
 // Selling the WHOLE stack is the irreversible case - confirm it.
-const confirmAllRow = ref<{ materialId: string; name: string; qty: number; total: number } | null>(null)
+const confirmAllRow = ref<{ materialId: string; name: string; qty: number; granted: number; stone: string } | null>(null)
 
 function sell(materialId: string, amount: number, name: string) {
   if (amount <= 0) {
@@ -119,11 +135,14 @@ function onSellClick(row: { materialId: string; name: string; owned: number; uni
   const qty = qtyFor(row.materialId, row.owned)
 
   if (qty === row.owned) {
+    const quote = saleQuote(row.materialId, qty)
+
     confirmAllRow.value = {
       materialId: row.materialId,
       name: row.name,
       qty,
-      total: qty * row.unitPrice,
+      granted: quote?.granted ?? 0,
+      stone: quote?.stoneName ?? sellStoneName.value,
     }
 
     return
@@ -170,9 +189,7 @@ function confirmSellAll() {
               @input="onQtyInput(row.materialId, row.owned, $event)"
             />
 
-            <span class="resource-card__total">
-              {{ t('panels.vendor.sell.totalPreview', { total: formatNumber(qtyFor(row.materialId, row.owned) * row.unitPrice), stone: sellStoneName }) }}
-            </span>
+            <span class="resource-card__total">{{ salePreviewText(row) }}</span>
 
             <GameButton size="sm" @click="onSellClick(row)">
               {{ t('panels.vendor.sell.button') }}
@@ -188,7 +205,7 @@ function confirmSellAll() {
       :open="confirmAllRow !== null"
       :title="t('panels.vendor.sell.confirmTitle')"
       :message="confirmAllRow
-        ? t('panels.vendor.sell.confirmMessage', { qty: formatNumber(confirmAllRow.qty), name: confirmAllRow.name, total: formatNumber(confirmAllRow.total), stone: sellStoneName })
+        ? t('panels.vendor.sell.confirmMessage', { qty: formatNumber(confirmAllRow.qty), name: confirmAllRow.name, total: formatNumber(confirmAllRow.granted), stone: confirmAllRow.stone })
         : ''"
       :confirm-label="t('panels.vendor.sell.button')"
       @confirm="confirmSellAll"

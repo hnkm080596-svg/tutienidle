@@ -482,9 +482,10 @@
       "sell": {
         "title": "Liquidate",
         "rate": "Sell surplus materials for Spirit Stones at current grade rates.",
-        "unitPriceSuffix": "Spirit Stones/unit",
+        "unitPriceSuffix": "low-grade Spirit Stones/unit",
         "quantityAria": "Amount to sell",
         "totalPreview": "→ +{total} {stone}",
+        "tooSmall": "→ too little to convert at this realm",
         "sold": "Sold {qty} {name} — received {gained} {stone}",
         "confirmTitle": "Sell the whole stack?",
         "confirmMessage": "Sell all {qty} {name} for {total} {stone}. This cannot be undone.",

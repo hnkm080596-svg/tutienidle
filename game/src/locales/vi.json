@@ -482,9 +482,10 @@
       "sell": {
         "title": "Hóa Bán",
         "rate": "Bán nguyên liệu dư thừa lấy Linh Thạch theo phẩm hiện hành.",
-        "unitPriceSuffix": "Linh Thạch/đơn vị",
+        "unitPriceSuffix": "Linh Thạch hạ phẩm/đơn vị",
         "quantityAria": "Số lượng bán",
         "totalPreview": "→ +{total} {stone}",
+        "tooSmall": "→ quá ít để quy đổi ở cảnh giới này",
         "sold": "Đã bán {qty} {name} — nhận {gained} {stone}",
         "confirmTitle": "Bán hết toàn bộ?",
         "confirmMessage": "Bán hết {qty} {name} nhận {total} {stone}. Không thể hoàn tác.",

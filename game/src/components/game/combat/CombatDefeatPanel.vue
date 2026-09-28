@@ -129,7 +129,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="combat-defeat-panel">
+  <div class="combat-defeat-panel paper-on-dark">
     <InkWashBackdrop left-mountain bottom-mist :right-mountain="false" />
     <InkNineSlice asset-id="surface-xl-paper-scroll" layer="surface" />
     <InkNineSlice asset-id="frame-xl-ceremony" layer="frame" tint-var="--cinnabar" />
@@ -161,13 +161,7 @@ onMounted(() => {
 
 <style scoped>
 .combat-defeat-panel {
-  /* surface-xl-paper-scroll renders dark since the dark-mode pass --
-     remap the paper text family onto the surface palette so RewardList
-     items stay legible (same contract as .ink-drawer). */
-  --paper-text: var(--surface-text);
-  --paper-text-soft: var(--surface-text-soft);
-  --paper-text-muted: var(--surface-text-muted);
-
+  /* .paper-on-dark owns the paper->surface remap (theme.css). */
   position: relative;
   isolation: isolate;
   box-sizing: border-box;

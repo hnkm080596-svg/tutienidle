@@ -49,6 +49,34 @@ export class GameManagerEconomyOps {
   }
 
   /**
+   * Read-only sale quote for the Vendor UI (ui-audit fix): the real
+   * granted stone count + name at the player's realm tier. Panels must
+   * show THIS, not unitPrice*qty (which is ha-pham-equivalent).
+   * granted=0 means the stack is too small to convert (sellMaterial
+   * would reject with too_small).
+   */
+  previewVendorSale(
+    materialId: string,
+    amount: number,
+    player: PlayerData,
+  ): { granted: number; stoneName: string } | null {
+    const vendorSystem = new VendorSystem(this.deps.materialRegistry, this.deps.getAlchemyRecipes())
+
+    const quote = vendorSystem.previewSellGrant(materialId, amount, player.realmId)
+
+    if (quote === null) {
+      return null
+    }
+
+    const stoneMaterialId = getSpiritStoneMaterialIdForRealmTier(getRealmTier(player.realmId))
+    const stoneName = this.deps.materialRegistry.has(stoneMaterialId)
+      ? this.deps.materialRegistry.get(stoneMaterialId).name
+      : stoneMaterialId
+
+    return { granted: quote.granted, stoneName }
+  }
+
+  /**
    * The list of materials the player OWNS and can sell to the Vendor
    * (Ky Bao Coc, 2026-08-30) - used by VendorPanel.vue for the UI list;
    * kept separate from sellMaterialToVendor() (the action) so the panel

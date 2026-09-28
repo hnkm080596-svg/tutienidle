@@ -6,10 +6,10 @@
 // combat_scene_exit) - now runs inside the closed curtain via
 // useBattleActions.exitCombatToHome. Gate: Stage only (Tribulation has
 // its own flow).
-import { onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useUiStore } from '@/stores/ui'
-import { useGameManager } from '@/composables/useGameState'
+import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useBattleActions } from '@/composables/useBattleActions'
 import { useDialogFocus } from '@/composables/useDialogFocus'
 import GameButton from '@/components/common/GameButton.vue'
@@ -21,6 +21,20 @@ const { exitCombatToHome } = useBattleActions()
 
 const visible = ref(false)
 const cardRef = ref<HTMLElement | null>(null)
+const { stateVersion } = useStateVersion()
+
+// stateVersion ticks every game loop; a battle that resolves itself
+// while the confirm sits open must dismiss it (result panels own exit).
+const battleLive = computed(() => {
+  stateVersion.value
+  return gameManager.getTurnBattle()?.state === 'fighting'
+})
+
+watch(battleLive, (live) => {
+  if (!live) {
+    visible.value = false
+  }
+})
 
 // Deferred follow-up (2026-09-03) -- focus trap dung chung (QA-003):
 // Escape = HUY thoat (O LAI tran), KHONG BAO GIO exit qua Escape.

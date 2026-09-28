@@ -142,7 +142,7 @@ function hideBrokenImage(event: Event) {
         ref="floating"
         role="tooltip"
         class="tooltip"
-        :class="[content.kind ? `tooltip--${content.kind}` : 'tooltip--plain', content.kind === 'element' ? `tooltip--element-${content.element}` : '', content.kind === 'equipment' ? 'tooltip--detailed' : '', content.kind && content.kind !== 'plain' ? 'tooltip--rich' : '', itemAuraColor ? 'tooltip--aura' : '']"
+        :class="[content.kind ? `tooltip--${content.kind}` : 'tooltip--plain', content.kind === 'element' ? `tooltip--element-${content.element}` : '', content.kind === 'equipment' ? 'tooltip--detailed' : '', content.kind && content.kind !== 'plain' ? 'tooltip--rich' : '', itemAuraColor ? 'tooltip--aura' : '', content.kind !== 'element' ? 'paper-on-dark' : '']"
         :style="{ ...floatingStyles, '--tooltip-accent': qualityAccentColor ?? itemAuraColor, '--tooltip-aura': itemAuraColor, zIndex: OVERLAY_LAYERS.tooltip }"
       >
         <img v-if="elementBannerUrl" class="tooltip__banner" :src="elementBannerUrl" alt="" aria-hidden="true" />
@@ -223,17 +223,9 @@ function hideBrokenImage(event: Event) {
   background: transparent;
   box-shadow: none; color: var(--paper-text, #211f1a); font: var(--text-xs) var(--font-body); pointer-events: none; isolation: isolate;
 }
-/* Paper family -> dark surface equivalents. The tooltip teleports to
-   <body> so it never inherits the .ink-drawer remap, while its
-   surface-m-paper layer is dark navy - without this, --paper-* light-
-   paper inks render dark-on-dark (invisible stat values). Element
-   banners keep the real paper inks: their art is cream. */
-.tooltip:not(.tooltip--element) {
-  --paper-text: var(--surface-text);
-  --paper-text-soft: var(--surface-text-soft);
-  --paper-text-muted: var(--surface-text-muted);
-  --paper-line: var(--surface-line);
-}
+/* Non-element tooltips carry .paper-on-dark (theme.css owns the remap):
+   the tooltip teleports to <body> so it never inherits .ink-drawer.
+   Element banners keep the real paper inks: their art is cream. */
 .tooltip::before { content: ''; position: absolute; z-index: 4; inset: 12px auto 12px 5px; width: 2px; background: var(--tooltip-accent); opacity: .72; }
 /* Item aura - soft outer glow in the item's own rank color (bag item
    tooltips only, see itemAuraColor). color-mix keeps it translucent. */

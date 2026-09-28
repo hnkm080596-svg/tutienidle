@@ -126,7 +126,7 @@ function buffPolarity(buff: BuffInstanceSnapshot): string {
         :class="{ 'is-dead': !member.entity.alive }"
       >
         {{ member.entity.name || member.id }}
-        <span class="turn-order-strip__member-hp">{{ formatNumber(Math.max(0, Math.ceil(member.entity.currentHp))) }}/{{ formatNumber(Math.max(0, Math.round(member.entity.maxHp))) }}</span>
+        <span class="turn-order-strip__member-hp">{{ formatNumber(Math.max(0, Math.ceil(member.entity.currentHp))) }}/{{ formatNumber(Math.max(0, Math.ceil(member.entity.maxHp))) }}</span>
         <span v-if="!member.entity.alive" class="turn-order-strip__member-dead">†</span>
         <span
           v-for="buff in visibleBuffs(member)"
