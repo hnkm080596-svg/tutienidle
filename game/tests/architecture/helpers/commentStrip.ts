@@ -10,17 +10,24 @@ import * as ts from 'typescript'
 // regexes, and emit()/cue() calls in this codebase live in <script>.
 export function uncommented(fileText: string, fileName = 'file.ts'): string {
   const text = scriptOf(fileName, fileText)
-  const sf = ts.createSourceFile(fileName, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS)
-  const ranges: ts.CommentRange[] = []
-  const collect = (pos: number, end: number): void => {
-    for (const r of ts.getLeadingCommentRanges(text, pos) ?? []) ranges.push(r)
-    for (const r of ts.getTrailingCommentRanges(text, end) ?? []) ranges.push(r)
+  // Tokenize with trivia enabled instead of walking the AST: comments in
+  // "dead zones" (empty `()`, `{}`, `[]`, class/enum bodies) never attach
+  // to a child node, so an AST comment-range walk leaves them in place -
+  // a surviving `/* import 'tone' */` reads as real code and a surviving
+  // commented `emit()` can fake the emitted-binding arm. The scanner
+  // returns every comment token regardless of where it sits.
+  const scanner = ts.createScanner(ts.ScriptTarget.Latest, false, undefined, text)
+  const ranges: Array<{ pos: number; end: number }> = []
+  for (;;) {
+    const tok = scanner.scan()
+    if (tok === ts.SyntaxKind.EndOfFileToken) break
+    if (
+      tok === ts.SyntaxKind.SingleLineCommentTrivia ||
+      tok === ts.SyntaxKind.MultiLineCommentTrivia
+    ) {
+      ranges.push({ pos: scanner.getTokenStart(), end: scanner.getTokenEnd() })
+    }
   }
-  const visit = (node: ts.Node): void => {
-    collect(node.pos, node.end)
-    ts.forEachChild(node, visit)
-  }
-  visit(sf)
   ranges.sort((a, b) => a.pos - b.pos)
   let out = ''
   let pos = 0
@@ -33,7 +40,12 @@ export function uncommented(fileText: string, fileName = 'file.ts'): string {
 
 function scriptOf(fileName: string, text: string): string {
   if (!fileName.endsWith('.vue')) return text
+  // Drop HTML comments first - a <script> tag commented out in the
+  // template is dead markup, not analyzable code.
+  const noHtmlComments = text.replace(/<!--[\s\S]*?-->/g, '')
   const blocks: string[] = []
-  for (const m of text.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/gi)) blocks.push(m[1]!)
+  for (const m of noHtmlComments.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/gi)) {
+    blocks.push(m[1]!)
+  }
   return blocks.join('\n')
 }

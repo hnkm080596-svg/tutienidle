@@ -148,28 +148,4 @@ describe('audio boundary', () => {
     SCAN_TIMEOUT,
   )
 
-  it(
-    'jsdom tests reaching the real audio path pin visibilityState=visible',
-    () => {
-      // jsdom defaults document.visibilityState to 'prerender' - the real
-      // playCue gate drops every cue there, so a jsdom test exercising the
-      // real audio path without the pin passes vacuously. Any jsdom test
-      // file referencing AudioManager/playCue must carry the pin.
-      const offenders: string[] = []
-      for (const file of srcCorpus(SRC_DIR)) {
-        if (!file.fromSrc.endsWith('.test.ts')) continue
-        if (!file.text.includes('@vitest-environment jsdom')) continue
-        if (!/AudioManager|playCue/.test(file.text)) continue
-        if (
-          !/Object\.defineProperty\(\s*document\s*,\s*['"]visibilityState['"]|document\.visibilityState\s*=|stubGlobal\(\s*['"]document['"]/.test(
-            file.text,
-          )
-        ) {
-          offenders.push(file.fromSrc)
-        }
-      }
-      expect(offenders).toEqual([])
-    },
-    SCAN_TIMEOUT,
-  )
 })

@@ -12,11 +12,6 @@ import type { GamePresentationCoordinator } from '@/presentation/GamePresentatio
 import type { Route } from '@/presentation/PresentationContracts'
 import type { AudioBundleLoader } from './audioAssetWiring'
 
-// jsdom defaults visibilityState to 'prerender' - AudioManager.playCue
-// drops every cue unless the page reports 'visible'; pin it so real-path
-// audio under test is not silently swallowed.
-Object.defineProperty(document, 'visibilityState', { value: 'visible', configurable: true })
-
 type Listener = (snapshot: { currentRoute: Route }) => void
 
 function fakeCoordinator(initial: Route): {
@@ -120,6 +115,17 @@ describe('bindAmbientAudio bundle lane', () => {
     emit('combat')
     expect(audio.crossfadeMusic).toHaveBeenLastCalledWith('music.combat', 1500)
     unbind()
+  })
+})
+
+describe('jsdom audio premise', () => {
+  it('document.visibilityState defaults to visible', () => {
+    // The real playCue gate drops cues when the page is not visible.
+    // Audio-touching jsdom tests rely on the jsdom default being
+    // 'visible' (pretendToBeVisual) - if jsdom ever flips the default
+    // this pins the premise loudly instead of letting audio tests pass
+    // vacuously behind a dropped gate.
+    expect(document.visibilityState).toBe('visible')
   })
 })
 

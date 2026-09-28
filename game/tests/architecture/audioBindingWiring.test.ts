@@ -66,12 +66,21 @@ describe('audio binding wiring', () => {
       // forms). A bare `cue('id')` (destructured) is covered too: the
       // name may be preceded by start, a non-word char, or the `.`
       // receiver - `xcue(`/`decode(` stay excluded.
-      const CALL = /(?:^|[^\w]|\.)(?:cue|playCue)\s*!?\s*(?:<[^>\n]*>)?\s*!?\s*(?:\?\.\s*)?\(([^)]*)\)/g
+      const CALL =
+        /(?:^|[^\w]|\.)(?:cue|playCue)\s*!?\s*(?:<(?:[^<>\n]|<[^<>\n]*>)*>)?\s*!?\s*(?:\?\.\s*)?\(([^)]*)\)/g
       // A local declaration at line start (`function cue(`, `get cue(`,
       // `set cue(`, optionally `async`) is not a store call - the check
       // must anchor on the declaration line, not just a trailing word:
       // `myMap.set\ncue('x')` must NOT be exempted.
-      const LINE_DECL = /^\s*(?:async\s+)?(?:function\s*\*?\s*|get\s+|set\s+)$/
+      // Two declaration shapes at line start: (a) keyword decls
+      // (`function cue(`, `async function cue(`, `get cue(`, `set cue(`)
+      // and (b) modifier runs preceding a method name (`static cue(`,
+      // `public async cue(`) - in (b) the callee itself is the method
+      // name so the line text before it is modifiers only.
+      const MODIFIER = '(?:public|private|protected|static|abstract|override|async|readonly)'
+      const LINE_DECL = new RegExp(
+        `^\\s*(?:(?:${MODIFIER}\\s+)*(?:function\\s*\\*?\\s*|get\\s+|set\\s+)|(?:${MODIFIER}\\s+)+)$`,
+      )
       // Only REAL local functions exempt the bare-call arm: `function cue`
       // / `const cue = (` / `const cue = async` / `const cue = function`.
       // `const cue = useAudioStore().cue` aliases the store seam and its
@@ -129,7 +138,7 @@ describe('audio binding wiring', () => {
           aliases.length === 0
             ? CALL
             : new RegExp(
-                `(?:^|[^\\w]|\\.)(?:cue|playCue|${aliases.join('|')})(?:<[^>\\n]*>)?\\s*!?\\s*(?:\\?\\.\\s*)?\\(([^)]*)\\)`,
+                `(?:^|[^\\w]|\\.)(?:cue|playCue|${aliases.join('|')})(?:<(?:[^<>\\n]|<[^<>\\n]*>)*>)?\\s*!?\\s*(?:\\?\\.\\s*)?\\(([^)]*)\\)`,
                 'g',
               )
         for (const m of text.matchAll(callRe)) {
@@ -146,10 +155,10 @@ describe('audio binding wiring', () => {
           if (LINE_DECL.test(beforeOnLine)) continue
           // Method shorthand `cue(id: string) {` (stores/audio.ts) is a
           // declaration, not a call: line-start name + args closed by
-          // `{`/`:` immediately after `)`. A mid-line `? cue(x) : y`
-          // keeps `x ?` before it on the line, so ternaries stay scanned.
+          // `{`/`:` on the SAME line right after `)`. Allowing \n here
+          // let `cue('bogus')\n{...}` skip the check as a fake shorthand.
           const afterCall = text.slice((m.index ?? 0) + m[0].length)
-          if (/^\s*$/.test(beforeOnLine) && /^\s*[:{]/.test(afterCall)) continue
+          if (/^\s*$/.test(beforeOnLine) && /^[ \t]*[:{]/.test(afterCall)) continue
           if (prefixLen === 0 || m[0][0] !== '.') {
             const callee = /^[A-Za-z_]\w*/.exec(m[0].slice(prefixLen))![0]
             if (localNames.has(callee)) continue
@@ -169,7 +178,7 @@ describe('audio binding wiring', () => {
           // consuming it would leave `tail` inside the string and
           // LITERAL.exec would never see the bound value (dead branch).
           // The map/array arm consumes `{`/`[` on purpose (obj sweep).
-          const decl = `\\b${ident}\\s*(?::[^=\\n]+)?=\\s*(?:(?=['"\`])|[\\[{])|\\b${ident}\\s*:\\s*(?=['"\`])`
+          const decl = `\\b${ident}\\s*(?::[^=\\n]+)?=\\s*(?:\\(\\s*)?(?:(?=['"\`])|[\\[{])|\\b${ident}\\s*:\\s*(?=['"\`])`
           for (const dm of text.matchAll(new RegExp(decl, 'g'))) {
             const tail = text.slice(dm.index! + dm[0].length)
             // If the declaration ended on `{` it opened a flat
@@ -221,6 +230,21 @@ describe('audio binding wiring', () => {
           /\b(?:audioStore|store|audioMgr|audioManager|audio|am)\s*\.\s*(cue|playCue)\b(?!\s*!?\s*(?:<[^>\n]*>)?\s*!?\s*(?:\?\.\s*)?\()/g,
         )) {
           violations.push(`${file.fromSrc} -> value-ref .${vm[1]} at offset ${vm.index}`)
+        }
+        // Indirect invocation escapes the dotted value-ref arm:
+        // `store['cue'](x)`, `store.cue.call(this, x)`, `.apply`, `.bind`.
+        // Bracket access is never idiomatic here, so it flags outright.
+        for (const vm of text.matchAll(
+          /\b(?:audioStore|store|audioMgr|audioManager|audio|am)\s*(?:\[\s*['"](?:cue|playCue)['"]\s*\]|\.\s*(?:cue|playCue)\s*\.\s*(?:call|apply|bind)\s*\()/g,
+        )) {
+          violations.push(`${file.fromSrc} -> indirect ${vm[0]} at offset ${vm.index}`)
+        }
+        // `store.cu\u0065(...)` spells the seam through a unicode escape -
+        // flag escapes embedded in identifier-ish text. (A `\uXXXX` inside
+        // a plain string literal is not matched because a word char must
+        // sit immediately before the backslash.)
+        for (const vm of text.matchAll(/[A-Za-z_$]\\u[0-9a-fA-F]{4}/g)) {
+          violations.push(`${file.fromSrc} -> ident escape ${vm[0]} at offset ${vm.index}`)
         }
       }
       expect(violations).toEqual([])
