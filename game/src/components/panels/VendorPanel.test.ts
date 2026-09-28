@@ -110,6 +110,19 @@ function sellButtons(mounted: ReturnType<typeof mountVendorPanel>) {
   )
 }
 
+// ui-audit economy H2 — selling the whole stack (the qty default) now
+// routes through ConfirmModal; the helper walks that extra step so the
+// toast-reason assertions below keep exercising the same domain path.
+async function confirmSellAll() {
+  await nextTick()
+
+  const confirm = document.body.querySelector<HTMLButtonElement>('.confirm-modal__confirm')
+
+  confirm?.click()
+
+  await nextTick()
+}
+
 afterEach(() => {
   document.body.innerHTML = ''
   vi.restoreAllMocks()
@@ -128,7 +141,7 @@ describe('VendorPanel — toast lý do từ chối (gp123 6G fix round 1)', () =
     expect(sellButtons(mounted).length).toBe(1)
 
     sellButtons(mounted)[0]!.click()
-    await nextTick()
+    await confirmSellAll()
 
     const messages = mounted.notifications.toasts.map((toast) => toast.message)
 
@@ -153,7 +166,7 @@ describe('VendorPanel — toast lý do từ chối (gp123 6G fix round 1)', () =
     })
 
     sellButtons(mounted)[0]!.click()
-    await nextTick()
+    await confirmSellAll()
 
     expect(mounted.notifications.toasts.map((toast) => toast.message)).toContain(
       'Chỉ thu mua vật phẩm có phẩm thấp hơn cảnh giới hiện tại',

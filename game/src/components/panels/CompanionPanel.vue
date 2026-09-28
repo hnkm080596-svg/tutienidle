@@ -321,6 +321,14 @@ function close() {
     height="min(680px, 88vh)"
     @close="close"
   >
+    <!-- ui-audit economy M7: standalone panels relied on backdrop/Escape
+         alone - an explicit Đóng affordance matches QuestPanel. -->
+    <template #header-actions>
+      <GameButton variant="ghost" size="sm" @click="close">
+        {{ t('panels.common.close') }}
+      </GameButton>
+    </template>
+
     <div class="companion-panel">
       <p v-if="groups.length === 0" class="companion-panel__empty">{{ t('companion.empty') }}</p>
 

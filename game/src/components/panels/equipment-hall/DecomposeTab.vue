@@ -20,6 +20,8 @@ import { professionGradeRank } from '@/core/profession/slotRank'
 import { HERB_AGES } from '@/core/production/ProductionTypes'
 import type { HerbAge } from '@/core/production/ProductionTypes'
 import { MATERIAL_AGE_LABELS } from '@/data/materials/materials'
+import { materialLabel } from '@/core/presentation/labels'
+import { formatNumber } from '@/core/format/NumberFormatter'
 
 const { t } = useI18n()
 const gameManager = useGameManager()
@@ -39,11 +41,19 @@ const { stateVersion } = useStateVersion()
 
 const capacityMirror = ref(system.getCapacity())
 
+// ui-audit economy M5: which bag ores the CURRENT filters match —
+// the tab used to render three controls and nothing else, so an
+// unstaffed/failed-match state read as a dead, unexplained widget.
+// listMatchingOres() is the domain query (reuses oreMatchesFilter —
+// the UI never re-derives the predicate).
+const matchingOres = ref(system.listMatchingOres())
+
 watch(
   stateVersion,
   () => {
     settingsMirror.value = system.getSettings()
     capacityMirror.value = system.getCapacity()
+    matchingOres.value = system.listMatchingOres()
   },
   { immediate: true },
 )
@@ -52,7 +62,23 @@ function applySetting(patch: Partial<DecomposeSettings>) {
   system.setSetting(patch)
 
   settingsMirror.value = system.getSettings()
+  matchingOres.value = system.listMatchingOres()
 }
+
+function oreLabel(materialId: string): string {
+  return materialLabel(materialId, gameManager.materialRegistry)
+}
+
+// Empty-state priority: no capacity (Chiêu Hiền Quán not built yet) →
+// no workers assigned → no ore in the bag matching the filters. Only
+// one guidance line renders at a time.
+const emptyHintKey = computed(() => {
+  if (capacityMirror.value <= 0) return 'panels.decompose.hint.noCapacity'
+  if (settingsMirror.value.workers <= 0) return 'panels.decompose.hint.noWorkers'
+  if (matchingOres.value.length === 0) return 'panels.decompose.hint.noMatchingOres'
+
+  return null
+})
 
 // Ước lượng output/lượt cho PREVIEW (grade 'all' → Cửu 1.0 làm đại diện).
 const PREVIEW_BASE_BY_ALL = 1
@@ -138,6 +164,24 @@ function onWorkersInput(event: Event) {
     <p class="decompose-tab__estimate">
       {{ t('panels.decompose.estimate', { amount: estimate }) }}
     </p>
+
+    <!-- audit M5: guidance + a live list of which ores will be fed, so
+         an idle tab stops reading as a dead widget. -->
+    <p v-if="emptyHintKey" class="decompose-tab__hint" data-testid="decompose-hint">
+      {{ t(emptyHintKey) }}
+    </p>
+
+    <div v-else class="decompose-tab__matching">
+      <p class="decompose-tab__matching-title">
+        {{ t('panels.decompose.matching', { count: matchingOres.reduce((sum, ore) => sum + ore.amount, 0) }) }}
+      </p>
+
+      <ul class="decompose-tab__matching-list">
+        <li v-for="ore in matchingOres" :key="ore.materialId">
+          {{ oreLabel(ore.materialId) }} ×{{ formatNumber(ore.amount) }}
+        </li>
+      </ul>
+    </div>
   </div>
 </template>
 
@@ -166,5 +210,44 @@ function onWorkersInput(event: Event) {
   margin: 0;
   color: var(--text-muted);
   font-size: var(--text-body);
+}
+
+.decompose-tab__hint {
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px dashed color-mix(in srgb, var(--jade) 40%, var(--paper-line));
+  border-radius: var(--radius-md);
+  color: var(--paper-text-soft);
+  font-size: var(--text-sm);
+}
+
+.decompose-tab__matching {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.decompose-tab__matching-title {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+}
+
+.decompose-tab__matching-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.decompose-tab__matching-list li {
+  padding: 3px 10px;
+  border: 1px solid var(--paper-line);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--mineral-gold) 8%, var(--paper-50));
+  color: var(--paper-text);
+  font-size: var(--text-xs);
 }
 </style>

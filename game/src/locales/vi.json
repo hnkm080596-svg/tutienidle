@@ -454,8 +454,13 @@
       "sell": {
         "title": "Hóa Bán",
         "rate": "Bán nguyên liệu dư thừa lấy Linh Thạch theo phẩm hiện hành.",
-        "unitPriceSuffix": "hạ/đơn vị",
-        "button": "Bán hết",
+        "unitPriceSuffix": "Linh Thạch/đơn vị",
+        "quantityAria": "Số lượng bán",
+        "totalPreview": "→ +{total} {stone}",
+        "sold": "Đã bán {qty} {name} — nhận {gained} {stone}",
+        "confirmTitle": "Bán hết toàn bộ?",
+        "confirmMessage": "Bán hết {qty} {name} nhận {total} {stone}. Không thể hoàn tác.",
+        "button": "Bán",
         "empty": "Không có nguyên liệu nào bán được lúc này."
       }
     },
@@ -620,6 +625,12 @@
         "once": "Nhiệm Vụ"
       },
       "anyEnemy": "Bất kỳ quái",
+      "rewards": {
+        "spiritStone": "Linh Thạch +{amount}",
+        "cultivation": "Tu Vi +{amount}",
+        "skillInsight": "Cảm Ngộ Kỹ Năng +{amount}"
+      },
+      "bagShortfall": "Cần giữ đủ trong túi để nộp: {have}/{need}",
       "actions": {
         "claimed": "Đã Nhận",
         "claim": "Nhận Thưởng"
@@ -643,7 +654,13 @@
         "allGrades": "Mọi phẩm",
         "allAges": "Mọi tuổi"
       },
-      "estimate": "≈ {amount} Luyện Khí Tinh Hoa / lượt"
+      "estimate": "≈ {amount} Luyện Khí Tinh Hoa / lượt",
+      "matching": "Khoáng phù hợp trong túi: {count}",
+      "hint": {
+        "noCapacity": "Chưa có chỗ phân giải — xây hoặc nâng cấp Chiêu Hiền Quán để có nhân công.",
+        "noWorkers": "Chưa phân công nhân công — kéo thanh Nhân công lên để bắt đầu phân giải.",
+        "noMatchingOres": "Không có Linh Khoáng nào trong túi khớp bộ lọc — thu thập khoáng từ khai thác/thám hiểm hoặc nới bộ lọc."
+      }
     }
   },
   "workerLodge": {
@@ -665,7 +682,7 @@
     "tokens": "{name}: {count}",
     "pity": "Bảo hiểm: {count}/{max}",
     "pull": "Chiêu Mộ (1 {token})",
-    "unavailable": "Chưa mở trong bản hiện tại — đồng đội mới đến qua Quà Tặng.",
+    "unavailable": "Chưa mở trong bản hiện tại — đồng đội mới đến qua Quà Tặng. Chiêu Hiến Lệnh, Duyên Phận và bảo hiểm đã tích lũy đều được giữ lại.",
     "errors": {
       "missingToken": "Không có {token}.",
       "poolUnavailable": "Chưa mở trong bản hiện tại — đồng đội mới đến qua Quà Tặng.",
@@ -688,7 +705,8 @@
       "constellationMaxed": "Cung Mệnh đã đạt tối đa (C{max})",
       "insufficientDuyenPhan": "Không đủ Duyên Phận (cần {cost})"
     },
-    "unavailable": "Chưa mở trong bản hiện tại — đồng đội mới đến qua Quà Tặng.",
+    "shortName": "Duyên Phận",
+    "unavailable": "Chưa mở trong bản hiện tại — đồng đội mới đến qua Quà Tặng. Duyên Phận đã tích lũy đều được giữ lại.",
     "errors": {
       "unknownDefinition": "Đồng đội không tồn tại.",
       "constellationMaxed": "Cung Mệnh đã đạt tối đa.",
@@ -699,11 +717,18 @@
     },
     "empty": "Chưa có đồng đội nào để đổi."
   },
+  "currencyHud": {
+    "aria": "Tài nguyên đang có"
+  },
   "quaTang": {
     "hint": "Quà tặng đồng đội nhận được từ hành trình tu luyện.",
     "claim": "Nhận",
     "claimed": "Đã nhận",
     "claimedBadge": "Đã nhận",
+    "context": {
+      "realmEntered": "Đạt {realm} — tặng đồng đội",
+      "stageCompleted": "Vượt {stage} — tặng đồng đội"
+    },
     "empty": "Chưa có quà tặng nào.",
     "errors": {
       "unknownGift": "Quà tặng không hợp lệ.",
@@ -1146,6 +1171,8 @@
     "otherCosts": "Chi phí khác",
     "preview": "Xem trước lần luyện",
     "outcome": "Chắc chắn {guaranteed} viên, {chance}% thêm {extra} viên",
+    "outcomeGuaranteed": "Chắc chắn {guaranteed} viên",
+    "outcomeChanceOnly": "{chance}% nhận {extra} viên",
     "duration": "Thời gian: ~{minutes} phút",
     "jobs": "Lò đang luyện",
     "cancelJob": "Huỷ (mất nguyên liệu)",
@@ -1162,7 +1189,8 @@
       "missing_spirit_stone": "Không đủ Linh Thạch",
       "missing_special_ingredient": "Thiếu nguyên liệu đặc biệt của đan phương",
       "fallback": "Không thể bắt đầu luyện"
-    }
+    },
+    "outcomeNone": "Lần này không nhận được đan nào."
   },
   "layout": {
     "functionOverlay": {
@@ -1185,6 +1213,8 @@
   "bag": {
     "overflow": "Túi đầy — mất {amount} {name}",
     "pill": {
+      "useHint": "Bấm để chọn — bấm lần nữa để uống.",
+      "used": "Đã dùng {name}.",
       "reason": {
         "wrong_realm": "Chỉ dùng được tại đúng cảnh giới của đan dược.",
         "all_main_stats_capped": "Cả 5 chỉ số chính đã đạt trần cảnh giới.",

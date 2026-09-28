@@ -97,7 +97,12 @@ function onPull() {
 
 <template>
   <section class="chieu-mo">
-    <div class="chieu-mo__status">
+    <!-- ui-audit economy H3: when the pool is closed the token / duyen
+         phan / pity chips previously rendered like a LIVE currency
+         strip, so the tab read as a dead end hiding real balances. The
+         --parked modifier mutes them and the unavailable banner below
+         carries the new retained-balance sentence. -->
+    <div class="chieu-mo__status" :class="{ 'chieu-mo__status--parked': !poolEnabled }">
       <span class="chieu-mo__status-item">
         {{ t('chieuMo.tokens', { name: tokenName, count: formatNumber(tokenCount) }) }}
       </span>
@@ -169,6 +174,14 @@ function onPull() {
 
 .chieu-mo__status-item--pity {
   border-color: color-mix(in srgb, var(--mineral-gold) 45%, var(--paper-line));
+}
+
+/* Parked counters: the pool is closed so these are stored balances, not
+   a live shop - dim them so the tab no longer advertises action. */
+.chieu-mo__status--parked .chieu-mo__status-item {
+  border-style: dashed;
+  background: color-mix(in srgb, var(--chrome-500) 6%, var(--paper-50));
+  color: var(--paper-text-soft);
 }
 
 .chieu-mo__unavailable {

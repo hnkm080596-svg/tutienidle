@@ -1,11 +1,14 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import GameButton from '@/components/common/GameButton.vue'
+import ConfirmModal from '@/components/common/ConfirmModal.vue'
 import { formatNumber } from '@/core/format/NumberFormatter'
 import { useNotificationStore } from '@/stores/notification'
+import { getSpiritStoneMaterialIdForRealmTier } from '@/core/material/SpiritStoneMaterial'
+import { getRealmTier } from '@/core/realm/RealmTierMap'
 
 // Ký Bảo Các — gp123 6G (2026-09-06): chỉ còn Hóa Bán (thu mua nguyên
 // liệu thừa lấy Linh Thạch). 2 card Đổi Phẩm (Linh Thạch 100→1, Linh
@@ -40,12 +43,48 @@ const sellableRows = computed(() => {
     .sort((a, b) => a.name.localeCompare(b.name))
 })
 
-function sellAll(materialId: string, owned: number) {
-  if (owned <= 0) {
+// ui-audit economy H2 (2026-09-28) — "Bán hết" used to burn the whole
+// stack on one click with no quantity, no total preview, no confirm and
+// no success feedback. Rows now carry a quantity input (defaults to the
+// full stack) + an inline "+N Linh Thạch" total; selling the ENTIRE
+// stack routes through ConfirmModal (the irreversible case), partial
+// sells commit directly, and success pushes a loot toast.
+const sellQuantities = reactive<Record<string, number>>({})
+
+function qtyFor(materialId: string, owned: number): number {
+  const qty = sellQuantities[materialId] ?? owned
+
+  return Math.min(Math.max(1, Math.floor(qty) || 1), owned)
+}
+
+function onQtyInput(materialId: string, owned: number, event: Event) {
+  const raw = Number((event.target as HTMLInputElement).value)
+
+  sellQuantities[materialId] = Number.isFinite(raw)
+    ? Math.min(Math.max(1, Math.floor(raw)), owned)
+    : owned
+}
+
+// Sell price lands in the player's realm-tier spirit stone — name it so
+// the preview/toast read "+N Hạ phẩm Linh Thạch" instead of a bare
+// "hạ/đơn vị" fragment (audit N2).
+const sellStoneName = computed(() => {
+  const materialId = getSpiritStoneMaterialIdForRealmTier(getRealmTier(player.realmId))
+
+  return gameManager.materialRegistry.has(materialId)
+    ? gameManager.materialRegistry.get(materialId).name
+    : t('alchemy.spiritStones')
+})
+
+// Selling the WHOLE stack is the irreversible case - confirm it.
+const confirmAllRow = ref<{ materialId: string; name: string; qty: number; total: number } | null>(null)
+
+function sell(materialId: string, amount: number, name: string) {
+  if (amount <= 0) {
     return
   }
 
-  const result = gameManager.economyOps.sellMaterialToVendor(materialId, owned, player.$state)
+  const result = gameManager.economyOps.sellMaterialToVendor(materialId, amount, player.$state)
 
   // gp123 6G fix round 1 — gate message CHỈ khi reason là grade_not_below;
   // reason khác (sole_recipe_ingredient, bag_full, ...) nhận message
@@ -61,7 +100,46 @@ function sellAll(materialId: string, owned: number) {
     return
   }
 
+  useNotificationStore().push(
+    'loot',
+    t('panels.vendor.sell.sold', {
+      qty: formatNumber(amount),
+      name,
+      gained: formatNumber(result.gained ?? 0),
+      stone: sellStoneName.value,
+    }),
+  )
+
+  delete sellQuantities[materialId]
+
   bumpState()
+}
+
+function onSellClick(row: { materialId: string; name: string; owned: number; unitPrice: number }) {
+  const qty = qtyFor(row.materialId, row.owned)
+
+  if (qty === row.owned) {
+    confirmAllRow.value = {
+      materialId: row.materialId,
+      name: row.name,
+      qty,
+      total: qty * row.unitPrice,
+    }
+
+    return
+  }
+
+  sell(row.materialId, qty, row.name)
+}
+
+function confirmSellAll() {
+  const row = confirmAllRow.value
+
+  confirmAllRow.value = null
+
+  if (row) {
+    sell(row.materialId, row.qty, row.name)
+  }
 }
 </script>
 
@@ -76,19 +154,46 @@ function sellAll(materialId: string, owned: number) {
 
       <div v-if="sellableRows.length" class="resource-card__rows">
         <div v-for="row in sellableRows" :key="row.materialId" class="resource-card__row">
-          <span>
+          <span class="resource-card__name">
             {{ row.name }} <strong>({{ formatNumber(row.owned) }})</strong>
             — {{ formatNumber(row.unitPrice) }} {{ t('panels.vendor.sell.unitPriceSuffix') }}
           </span>
 
-          <GameButton size="sm" @click="sellAll(row.materialId, row.owned)">
-            {{ t('panels.vendor.sell.button') }}
-          </GameButton>
+          <span class="resource-card__sale">
+            <input
+              class="resource-card__qty"
+              type="number"
+              min="1"
+              :max="row.owned"
+              :value="qtyFor(row.materialId, row.owned)"
+              :aria-label="t('panels.vendor.sell.quantityAria')"
+              @input="onQtyInput(row.materialId, row.owned, $event)"
+            />
+
+            <span class="resource-card__total">
+              {{ t('panels.vendor.sell.totalPreview', { total: formatNumber(qtyFor(row.materialId, row.owned) * row.unitPrice), stone: sellStoneName }) }}
+            </span>
+
+            <GameButton size="sm" @click="onSellClick(row)">
+              {{ t('panels.vendor.sell.button') }}
+            </GameButton>
+          </span>
         </div>
       </div>
 
       <p v-else class="resource-card__empty">{{ t('panels.vendor.sell.empty') }}</p>
     </div>
+
+    <ConfirmModal
+      :open="confirmAllRow !== null"
+      :title="t('panels.vendor.sell.confirmTitle')"
+      :message="confirmAllRow
+        ? t('panels.vendor.sell.confirmMessage', { qty: formatNumber(confirmAllRow.qty), name: confirmAllRow.name, total: formatNumber(confirmAllRow.total), stone: sellStoneName })
+        : ''"
+      :confirm-label="t('panels.vendor.sell.button')"
+      @confirm="confirmSellAll"
+      @cancel="confirmAllRow = null"
+    />
   </section>
 </template>
 
@@ -136,6 +241,7 @@ function sellAll(materialId: string, owned: number) {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: 8px;
   padding: 6px 8px;
   border: 1px solid var(--paper-line);
@@ -147,6 +253,35 @@ function sellAll(materialId: string, owned: number) {
 
 .resource-card__row strong {
   color: var(--jade);
+}
+
+.resource-card__name {
+  min-width: 0;
+  flex: 1 1 40%;
+}
+
+.resource-card__sale {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.resource-card__qty {
+  width: 4.5em;
+  min-height: var(--tap-min);
+  padding: 0 var(--space-1);
+  background: var(--paper-50);
+  color: var(--paper-text);
+  border: 1px solid var(--paper-line);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  text-align: right;
+}
+
+.resource-card__total {
+  color: var(--mineral-gold);
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 .vendor-panel__card {

@@ -29,7 +29,12 @@ export function useBuildingHeaderState(buildingId: Ref<string | undefined>) {
     return current ? { ...current } : undefined
   })
 
-  const artPath = computed(() => `/assets/buildings/dong-fu/${buildingId.value}.png`)
+  // v2 art bundle — same convention as dongFuBuildingAssetUrls()
+  // (presentation/background/DongFuBuildingArt.ts): the flat
+  // dong-fu/<id>.png never shipped for vendor/chi_hien_quan, so the old
+  // flat path 404'd into a broken-image icon (audit H4). Every building
+  // mapped in FunctionOverlayPanel has a v2/<id>/base.png.
+  const artPath = computed(() => `/assets/buildings/dong-fu/v2/${buildingId.value}/base.png`)
 
   // Upgrade rules live in BuildingSystem.quoteUpgrade (via buildingOps) —
   // the header consumes the quote and keeps label formatting only.

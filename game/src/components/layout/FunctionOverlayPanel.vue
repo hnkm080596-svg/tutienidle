@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import OverlayPanel from '@/components/common/OverlayPanel.vue'
 import GameButton from '@/components/common/GameButton.vue'
@@ -49,6 +49,15 @@ const buildingId = computed(() => (mode.value ? BUILDINGS[mode.value] : undefine
 
 const header = useBuildingHeaderState(buildingId)
 
+// Header art 404 (e.g. a future building without a v2 bundle) hides the
+// <img> instead of showing the browser's broken-image glyph on the
+// cream placeholder. Re-mounts on path change reset the flag.
+const artBroken = ref(false)
+
+watch(header.artPath, () => {
+  artBroken.value = false
+})
+
 function close() {
   ui.closeHomeOverlays()
 }
@@ -69,7 +78,13 @@ function close() {
          riêng bên dưới. -->
     <template v-if="header.template.value" #heading>
       <div class="building-heading">
-        <img class="building-heading__art" :src="header.artPath.value" alt="" />
+        <img
+          v-if="!artBroken"
+          class="building-heading__art"
+          :src="header.artPath.value"
+          alt=""
+          @error="artBroken = true"
+        />
         <div class="building-heading__text">
           <p class="building-heading__name">{{ header.template.value.name }}</p>
           <small class="building-heading__level">{{ t('layout.functionOverlay.levelRange', { level: header.instance.value?.level ?? 0, max: header.template.value.maxLevel }) }}</small>
@@ -132,19 +147,22 @@ function close() {
 }
 
 .building-heading__text { min-width: 0; }
-.building-heading__name { margin: 0; color: var(--paper-text, #211f1a); font: 700 var(--text-title) var(--font-display); letter-spacing: .06em; }
+/* Name/cost sit on the DARK ink header of OverlayPanel — they must use
+   the surface ramp, not the light-paper ramp (audit H4: --paper-text on
+   the ink title bar rendered dark-on-dark). */
+.building-heading__name { margin: 0; color: var(--surface-text); font: 700 var(--text-title) var(--font-display); letter-spacing: .06em; }
 .building-heading__level { color: var(--jade); font-size: var(--text-sm); }
 
 .building-heading__upgrade-area { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; }
 
 .building-heading__upgrade:disabled {
-  background: var(--paper-200);
-  color: var(--paper-text-muted);
+  background: var(--ink-800);
+  color: var(--surface-text-muted);
 }
 
 .building-heading__cost {
   text-align: right;
-  color: var(--paper-text-muted);
+  color: var(--surface-text-muted);
   font-size: var(--text-xs);
 }
 
