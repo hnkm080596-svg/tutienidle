@@ -1,9 +1,9 @@
-// combat-vfx-spawner (ui-discoverability-refactor-plan.md 3.2) - tach tu
+// combat-vfx-spawner (ui-discoverability-refactor-plan.md §3.2) — tách từ
 // CombatScene.ts: Spawn VFX theo preset (action impact, spawn telegraph,
-// teleport, hit-flash, lunge/recoil, status icon). Module nhan dependency
-// tuong minh qua `scene` - moi cross-call i qua scene delegate e giu
-// nguyen seam test (flashColor bi spy trong CombatScene.playerMotion.test.ts;
-// applyPendingPositions em add/Graphics qua proxy trong spawnVfx test).
+// teleport, hit-flash, lunge/recoil, status icon). Module nhận dependency
+// tường minh qua `scene` — mọi cross-call đi qua scene delegate để giữ
+// nguyên seam test (flashColor bị spy trong CombatScene.playerMotion.test.ts;
+// applyPendingPositions đếm add/Graphics qua proxy trong spawnVfx test).
 import Phaser from 'phaser'
 
 import type { ActionImpactEvent, BattlePositionsEvent } from '@/core/battle/BattleEvents'
@@ -52,11 +52,11 @@ interface StatusEntry {
   stackLabel: Phaser.GameObjects.Text
 }
 
-// Turn-Based Wave Redesign (2026-09-06) - subset cua BattlePositionsEvent
-// ma reconcileSpawnVfx() thuc su oc. BattlePositionsEvent thoa man cau
-// truc nay (TypeScript structural typing) - legacy call site hien co
-// (CombatScene.reconcileSpawnVfx()) KHONG can thay oi gi. Turn-based
-// combat tu dung object shape nay tu TurnBattleEntitySnapshotEvent
+// Turn-Based Wave Redesign (2026-09-06) — subset của BattlePositionsEvent
+// mà reconcileSpawnVfx() thực sự đọc. BattlePositionsEvent thỏa mãn cấu
+// trúc này (TypeScript structural typing) — legacy call site hiện có
+// (CombatScene.reconcileSpawnVfx()) KHÔNG cần thay đổi gì. Turn-based
+// combat tự dựng object shape này từ TurnBattleEntitySnapshotEvent
 // (CombatScene.onTurnBattleEntitySnapshot(), Task 7).
 export interface SpawnVfxSnapshot {
   spawningEnemies?: {
@@ -73,8 +73,8 @@ export class CombatVfxSpawner {
   constructor(private readonly scene: CombatScene) {}
 
   /**
-   * Buff bar (2026-09-02) - tooltip instance (lazy-create tai
-   * onStatusAttached/showTooltipFor); onStatusRemoved/cleanup goi hideFor.
+   * Buff bar (2026-09-02) — tooltip instance (lazy-create tại
+   * onStatusAttached/showTooltipFor); onStatusRemoved/cleanup gọi hideFor.
    */
   statusTooltip?: StatusTooltip
 

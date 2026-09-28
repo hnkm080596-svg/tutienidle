@@ -5,13 +5,13 @@ import type { TurnSkillPresentationEntry } from '@/core/combat/CombatSkillPresen
 import type { TurnSkillDefinition, TurnSkillSlotRole } from '@/core/battle/turn/TurnSkillAction'
 
 /**
- * Slice 7 (Completion Task 10 + master plan Task 5 hop nhat) - cau noi
- * reactivity giua turn-based engine (GameManager/TurnBattle) va Vue cho
- * manual UI. Cau noi duy nhat la stateVersion (App.vue tick + bumpState)
- * nhu cac composable combat khac - KHONG setInterval/rAF rieng.
+ * Slice 7 (Completion Task 10 + master plan Task 5 hợp nhất) — cầu nối
+ * reactivity giữa turn-based engine (GameManager/TurnBattle) và Vue cho
+ * manual UI. Cầu nối duy nhất là stateVersion (App.vue tick + bumpState)
+ * như các composable combat khác — KHÔNG setInterval/rAF riêng.
  *
  * ARCH-005 (M12): EVERY derived computed below reads stateVersion.value
- * directly - the engine mutates the TurnBattle object in place, so
+ * directly — the engine mutates the TurnBattle object in place, so
  * `battle` resolves to the same reference forever and a computed
  * chained on it is never invalidated again after first eval (the skill
  * bar stayed invisible in live combat; 2026-09-14 audit). Same rule as
@@ -81,7 +81,7 @@ export function useTurnCombatManual() {
     return [entry.basic, entry.special, entry.ultimate]
   })
 
-  /** Bam 1 slot role - chi khi ang pause cho choice; slot khong ready a bi disable o UI. */
+  /** Bấm 1 slot role — chỉ khi đang pause chờ choice; slot không ready đã bị disable ở UI. */
   function chooseSlot(role: TurnSkillSlotRole): void {
     if (!gameManager.isAwaitingManualTurnChoice()) {
       AudioManager.getInstance().playCue('ui.error')
@@ -93,9 +93,9 @@ export function useTurnCombatManual() {
     bumpState()
   }
 
-  // Kiem Tu Reimagined Task 7 - sword_pathway manual orb picker. When the player
+  // Kiem Tu Reimagined Task 7 — sword_pathway manual orb picker. When the player
   // participant carries a dynamicBasic provider (Kiem Pho / Ngu Kiem
-  // Dao) its manualOptions() are the ONLY legal manual picks - the
+  // Dao) its manualOptions() are the ONLY legal manual picks — the
   // generic 3-slot basic button is replaced by these buttons.
   const dynamicBasicOptions = computed<readonly TurnSkillDefinition[]>(() => {
     stateVersion.value

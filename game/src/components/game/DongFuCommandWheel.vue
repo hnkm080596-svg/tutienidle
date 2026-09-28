@@ -1,9 +1,9 @@
 <script setup lang="ts">
-// Command wheel nhieu tang (plan Workstream B) - mo bang click nhan vat
-// tu luyen giua ong Phu (trigger o DongFuScene.vue), ong bang click
-// lan nua/click vung trong/Escape. Slot phan bo eu 360 theo thu tu
-// catalog tren hai quy ao tron. Slot i tu tam theo cung xoan, hai vong
-// quay nguoc chieu nhau va tang alpha trong suot hanh trinh.
+// Command wheel nhiều tầng (plan Workstream B) — mở bằng click nhân vật
+// tu luyện giữa Động Phủ (trigger ở DongFuScene.vue), đóng bằng click
+// lần nữa/click vùng trống/Escape. Slot phân bố đều 360° theo thứ tự
+// catalog trên hai quỹ đạo tròn. Slot đi từ tâm theo cung xoắn, hai vòng
+// quay ngược chiều nhau và tăng alpha trong suốt hành trình.
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useUiStore } from '@/stores/ui'
@@ -35,9 +35,9 @@ const stageActive = useStageActive()
 
 const navigation = useBuildingNavigation()
 
-// Ban Menh Phap Bao (2026-08-27) - context runtime cho
-// CommandWheelSlot.disabledReason(), build o AY (component, khong
-// phai catalog) - xem ghi chu "catalog thuan data" trong
+// Bản Mệnh Pháp Bảo (2026-08-27) — context runtime cho
+// CommandWheelSlot.disabledReason(), build ở ĐÂY (component, không
+// phải catalog) — xem ghi chú "catalog thuần data" trong
 // commandWheelCatalog.ts.
 const disabledContext = computed<CommandWheelDisabledContext>(() => ({
   artifactDomainUnlocked: isArtifactDomainUnlocked(player.realmId),
@@ -59,14 +59,14 @@ function disabledReason(slot: CommandWheelSlot): string | null {
   return slot.disabledReason?.(disabledContext.value) ?? null
 }
 
-/** Future slot (available=false) ton tai trong catalog nhung KHONG render. */
+/** Future slot (available=false) tồn tại trong catalog nhưng KHÔNG render. */
 const renderedSlots = computed(() => COMMAND_WHEEL_SLOTS.filter((slot) => slot.available()))
 
 const ORBIT_COUNT = 2
 const ORBIT_SWEEP_DEGREES = 112
 const MOTION_DURATION_MS = 320
 
-// ================= Circular orbit layout - clamp() thich nghi viewport =======
+// ================= Circular orbit layout — clamp() thích nghi viewport =======
 const viewportSize = ref({ width: window.innerWidth, height: window.innerHeight })
 
 function onResize() {
@@ -84,11 +84,11 @@ onBeforeUnmount(() => {
 function outerOrbitRadius(): number {
   const { width, height } = viewportSize.value
   const shortSide = Math.min(width, height)
-  // Wheel o y=66%: gioi han theo khoang trong that phia duoi, khong gia
-  // inh tam nam giua viewport. Button nho hon cho phep vong mo rong ma van
-  // chua mep man hinh; khoang trong tam phai u e khong che sprite nhan vat.
-  // San 168px KHONG uoc vuot bottomFit - cua so thap tha vong nho con hon
-  // slot tran khoi mep duoi viewport.
+  // Wheel ở y=66%: giới hạn theo khoảng trống thật phía dưới, không giả
+  // định tâm nằm giữa viewport. Button nhỏ hơn cho phép vòng mở rộng mà vẫn
+  // chừa mép màn hình; khoảng trống tâm phải đủ để không che sprite nhân vật.
+  // Sàn 168px KHÔNG được vượt bottomFit — cửa sổ thấp thà vòng nhỏ còn hơn
+  // slot tràn khỏi mép dưới viewport.
   const bottomFit = height * 0.34 - 32
   const ideal = Math.max(168, Math.min(340, shortSide * 0.34))
   return Math.max(96, Math.min(ideal, bottomFit))
@@ -339,8 +339,8 @@ function activate(slot: CommandWheelSlot) {
     }"
     :aria-hidden="!isVisible || stageActive"
   >
-    <!-- Vung trong (backdrop) - click ong wheel VA chan click xuyen
-         xuong hotspot ben duoi khi wheel ang mo (Workstream C). -->
+    <!-- Vùng trống (backdrop) — click đóng wheel VÀ chặn click xuyên
+         xuống hotspot bên dưới khi wheel đang mở (Workstream C). -->
     <div class="command-wheel-layer__backdrop" aria-hidden="true" @click="ui.closeCommandWheel()" />
 
     <div
@@ -387,10 +387,10 @@ function activate(slot: CommandWheelSlot) {
 
         <span v-if="isUpgradeable(slot)" class="command-wheel__upgrade-dot" aria-hidden="true" />
 
-        <!-- 2026-08-30 frontend-design pass - slot khoa truoc ay CHI
-             phan biet bang opacity mo i, de oc nham la "chi toi mau"
-             thay vi "chua bam uoc". Them icon khoa goc duoi-phai (2 goc
-             kia a co upgrade-dot/notification-badge). -->
+        <!-- 2026-08-30 frontend-design pass — slot khóa trước đây CHỈ
+             phân biệt bằng opacity mờ đi, dễ đọc nhầm là "chỉ tối màu"
+             thay vì "chưa bấm được". Thêm icon khóa góc dưới-phải (2 góc
+             kia đã có upgrade-dot/notification-badge). -->
         <span v-if="disabledReason(slot)" class="command-wheel__lock-badge" aria-hidden="true">🔒</span>
 
         <NotificationBadge

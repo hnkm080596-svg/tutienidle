@@ -52,14 +52,14 @@ export const TEST_EQUIPMENT_INSTANCE = {
 }
 
 export interface LootTestSetupOptions {
-  /** Enemy realm - drives getRealmRewardMultiplier + artifact EXP. */
+  /** Enemy realm — drives getRealmRewardMultiplier + artifact EXP. */
   realmId?: string
   /** Still consumed by getArtifactExperienceReward; currency no longer read. */
   rewards?: EnemyReward
   family?: string
   signatureDrops?: SignatureDrop[]
   talentIds?: string[]
-  /** Active stage - decides the stage drop table. Omit for no stage. */
+  /** Active stage — decides the stage drop table. Omit for no stage. */
   stage?: LootTestStage
   /** Material ids registered into a real MaterialRegistry. */
   materialIds?: string[]
@@ -104,14 +104,14 @@ export function createLootTestSetup(options: LootTestSetupOptions = {}) {
   const pillTemplates = options.pillTemplates ?? []
 
   // EquipmentBag.add() returns AutoDissolveReward[] (soft-cap audit
-  // 2026-08-31) - the mock must return an array to match the real contract.
+  // 2026-08-31) — the mock must return an array to match the real contract.
   const equipmentBag = { add: vi.fn().mockReturnValue([]) }
   const pillBag = { add: vi.fn().mockReturnValue(0) }
   const giveReward = vi.fn()
   const eventBus = { emit: vi.fn() }
   const notifications = { push: vi.fn(), drain: () => [] }
   // Typed to the real signature so tests can read mock.calls[n][4]
-  // (qualityBonusSteps) - an untyped vi.fn would type calls as [].
+  // (qualityBonusSteps) — an untyped vi.fn would type calls as [].
   const createInstance = vi.fn<EquipmentSystem['createInstance']>(
     () => TEST_EQUIPMENT_INSTANCE as EquipmentInstance,
   )
@@ -120,7 +120,7 @@ export function createLootTestSetup(options: LootTestSetupOptions = {}) {
   // "consumed everything" so summaries read honest.
   const gainMastery = vi.fn((_amount: number, _realmId?: string, _realmLevel?: number) => ({ gained: _amount, rankUps: 0 }))
   // Heal-on-kill talents are retired (v4 catalog) so the stub never heals;
-  // it also must NOT write currentHp directly - this helper is a non-test
+  // it also must NOT write currentHp directly — this helper is a non-test
   // file and the R14 vitalsWriteAuthority guard scans it as production code.
   const applyHealing = vi.fn(() => 0)
 

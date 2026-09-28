@@ -1,8 +1,8 @@
 <script setup lang="ts">
-// Tham Hiem (2026-08-14) - man hinh chon man truoc khi chien au, thay
-// nut "Chien au" truc tiep cu. 3 lua chon theo ung thu tu nguoi
-// dung mo ta: ia Gioi (map lon) -> Man (trong ia Gioi o) -> che o
-// (Lap Lai Khieu Chien / Tu ong Tham Hiem) -> Bat au.
+// Thám Hiểm (2026-08-14) — màn hình chọn màn trước khi chiến đấu, thay
+// nút "Chiến Đấu" trực tiếp cũ. 3 lựa chọn theo đúng thứ tự người
+// dùng mô tả: Địa Giới (map lớn) → Màn (trong Địa Giới đó) → chế độ
+// (Lặp Lại Khiêu Chiến / Tự Động Thám Hiểm) → Bắt Đầu.
 import { computed, inject, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '@/stores/player'
@@ -29,14 +29,14 @@ onMounted(() => {
   assetManager?.prefetch(['combat']).catch(() => {})
 })
 
-// Combat UI Redesign muc 4/15 - Chon Ai la noi DUY NHAT cau hinh Auto
-// Battle TRUOC tran (Combat Scene gio chiem toan man hinh, khong con
-// BottomBar/BattleControls hien UOC nua trong luc combat e bat/tat
-// giua chung) va shortcut e chinh Build - KHONG dung Build UI rieng,
-// chi deep-link. Truoc tro vao tab Tam Phap cua LoadoutManager.vue (a
-// xoa); gio mo thang SkillPathPanel.vue (2026-08-20) - quyet inh build
-// THAT SU (chon skill/node) nam o o, Tam Phap gio chi oc, khong con
-// gi e "chinh".
+// Combat UI Redesign mục 4/15 — Chọn Ải là nơi DUY NHẤT cấu hình Auto
+// Battle TRƯỚC trận (Combat Scene giờ chiếm toàn màn hình, không còn
+// BottomBar/BattleControls hiện ĐƯỢC nữa trong lúc combat để bật/tắt
+// giữa chừng) và shortcut để chỉnh Build — KHÔNG dựng Build UI riêng,
+// chỉ deep-link. Trước trỏ vào tab Tâm Pháp của LoadoutManager.vue (đã
+// xoá); giờ mở thẳng SkillPathPanel.vue (2026-08-20) — quyết định build
+// THẬT SỰ (chọn skill/node) nằm ở đó, Tâm Pháp giờ chỉ đọc, không còn
+// gì để "chỉnh".
 function openBuild() {
   ui.standalonePanel = 'skill'
 }
@@ -49,11 +49,11 @@ function isZoneUnlocked(zoneId: string): boolean {
   return Boolean(firstStageId && gameManager.catalogOps.isStageUnlocked(firstStageId, player.$state))
 }
 
-// Luyen Khi tang 1-10 content pass - gate MIN hon isZoneUnlocked (chi
-// ai-canh-gioi): requiredRealmLevel CHI uoc xet khi player ANG o
-// ung requiredRealmId cua Stage o - neu player a vuot han qua ai
-// canh gioi nay (vd a len Truc Co), tang gate coi nhu het y nghia,
-// Stage mo tu do e farm lai.
+// Luyện Khí tầng 1-10 content pass — gate MỊN hơn isZoneUnlocked (chỉ
+// đại-cảnh-giới): requiredRealmLevel CHỈ được xét khi player ĐANG ở
+// đúng requiredRealmId của Stage đó — nếu player đã vượt hẳn qua đại
+// cảnh giới này (vd đã lên Trúc Cơ), tầng gate coi như hết ý nghĩa,
+// Stage mở tự do để farm lại.
 function isStageUnlocked(stage: (typeof stagesInZone.value)[number]): boolean {
   return gameManager.catalogOps.isStageUnlocked(stage.id, player.$state)
 }
@@ -77,7 +77,7 @@ const stagesInZone = computed(() => {
 const selectedStageId = ref<string | null>(null)
 const selectedChapter = ref<number>(stagesInZone.value[0]?.chapter ?? 1)
 
-// Auto-farm B5 - armed state is player state (survives reload), so the
+// Auto-farm B5 — armed state is player state (survives reload), so the
 // panel mirrors it: running farm row + stop control, and the perfect-farm
 // start only closes the panel when the domain accepted it.
 const armedFarmStage = computed(() => {
@@ -120,11 +120,11 @@ function selectFirstStageInChapter() {
     ?? null
 }
 
-// oi ia Gioi thi bo chon Man cu (Man thuoc ia Gioi truoc, khong con
-// hop le o ia Gioi moi).
-// oi chapter.value -> watcher ben duoi tu chon lai stage (ung 1 lan);
-// chapter GIU NGUYEN (a so zone eu bat au o chapter 1) thi watcher
-// o khong ban, nen goi truc tiep o ay e khong roi mat lan chon lai.
+// Đổi Địa Giới thì bỏ chọn Màn cũ (Màn thuộc Địa Giới trước, không còn
+// hợp lệ ở Địa Giới mới).
+// Đổi chapter.value → watcher bên dưới tự chọn lại stage (đúng 1 lần);
+// chapter GIỮ NGUYÊN (đa số zone đều bắt đầu ở chapter 1) thì watcher
+// đó không bắn, nên gọi trực tiếp ở đây để không rơi mất lần chọn lại.
 watch(selectedZoneId, () => {
   const nextChapter = stagesInZone.value[0]?.chapter ?? 1
 
@@ -186,7 +186,7 @@ watch(selectedStageId, () => {
   mode.value = 'manual'
 })
 
-// Auto-farm Task 6 - chip thu 4 chi bat khi stage ang chon a Hoan My.
+// Auto-farm Task 6 — chip thứ 4 chỉ bật khi stage đang chọn đã Hoàn Mỹ.
 const isSelectedStagePerfectClear = computed(() =>
   Boolean(selectedStage.value && player.$state.perfectClearStageIds.includes(selectedStage.value.id)),
 )
@@ -216,9 +216,9 @@ function start() {
     return
   }
 
-  // Auto-farm Task 6 (2026-09-04) - perfect_farm KHONG start tran that:
-  // goi startAutoFarm truc tiep (roll reward theo wall-clock, khong
-  // hoat anh) - khac moi mode khac eu qua startSelectedStage.
+  // Auto-farm Task 6 (2026-09-04) — perfect_farm KHÔNG start trận thật:
+  // gọi startAutoFarm trực tiếp (roll reward theo wall-clock, không
+  // hoạt ảnh) — khác mọi mode khác đều qua startSelectedStage.
   if (mode.value === 'perfect_farm') {
     // Only close on an accepted start - a refused start (slot held by a
     // running farm, missing perfect clear) keeps the panel open so the
@@ -239,11 +239,11 @@ function start() {
 <template>
   <BuildingConstructionGate building-id="teleport_array">
   <div class="stage-select-shell">
-    <!-- Banner anh teleport_array a bo (2026-08-30, bug report: hinh du
-         thua). Intro text (eyebrow/h3/mo ta) BO LUON (2026-08-30, bug
-         report thu 2: trung lap - title bar OverlayPanel a hien "ia
-         Gioi", nhan filter "ia Gioi"/"Canh Gioi Khu Vuc" ben duoi a tu
-         giai thich, khong can lap lai bang cau van). -->
+    <!-- Banner ảnh teleport_array đã bỏ (2026-08-30, bug report: hình dư
+         thừa). Intro text (eyebrow/h3/mô tả) BỎ LUÔN (2026-08-30, bug
+         report thứ 2: trùng lặp — title bar OverlayPanel đã hiện "Địa
+         Giới", nhãn filter "Địa Giới"/"Cảnh Giới Khu Vực" bên dưới đã tự
+         giải thích, không cần lặp lại bằng câu văn). -->
     <div class="stage-select">
       <nav class="stage-select__filters" :aria-label="t('panels.stageSelect.aria.filters')">
         <div class="stage-select__filter-group">
@@ -327,9 +327,9 @@ function start() {
             <span class="stage-select__enemy-sigil">{{ enemy.name.charAt(0) }}</span>
             <span>
               <strong>{{ enemy.name }}</strong>
-              <!-- Bo "Trong so {{enemy.weight}}" (2026-08-30, bug report:
-                   so trong so RNG noi bo, khong co ngu canh tong nen
-                   khong giup nguoi choi quyet inh gi). -->
+              <!-- Bỏ "Trọng số {{enemy.weight}}" (2026-08-30, bug report:
+                   số trọng số RNG nội bộ, không có ngữ cảnh tổng nên
+                   không giúp người chơi quyết định gì). -->
               <small>
                 <template v-if="enemy.level">{{ t('panels.stageSelect.labels.levelPrefix', { level: enemy.level }) }} · </template>{{ t(ARCHETYPE_LABEL_KEYS[enemy.archetype] ?? 'panels.stageSelect.archetypes.melee') }}
                 <template v-if="enemy.eliteChance > 0"> · {{ t('panels.stageSelect.labels.eliteChance', { percent: Math.round(enemy.eliteChance * 100) }) }}</template>

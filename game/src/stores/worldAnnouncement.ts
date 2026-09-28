@@ -8,8 +8,8 @@ export interface WorldAnnouncementContent {
   body: string
 }
 
-// Thoi gian tu ong neu nguoi choi khong bam gi - u oc xong 1 dong
-// title + 1 dong body (khop mockup muc XIII tai lieu beta).
+// Thời gian tự đóng nếu người chơi không bấm gì — đủ đọc xong 1 dòng
+// title + 1 dòng body (khớp mockup mục XIII tài liệu beta).
 const AUTO_CLOSE_MS = 5000
 
 // Handle for the auto-close timer - tracked so show()/hide() cancels
@@ -37,8 +37,8 @@ export const useWorldAnnouncementStore = defineStore('worldAnnouncement', {
       this.active = { title, body }
 
       autoCloseHandle = setTimeout(() => {
-        // Chi tu ong neu van UNG announcement nay (nguoi choi co
-        // the a ong tay hoac 1 announcement khac a e len).
+        // Chỉ tự đóng nếu vẫn ĐÚNG announcement này (người chơi có
+        // thể đã đóng tay hoặc 1 announcement khác đã đè lên).
         if (this.active?.title === title && this.active?.body === body) {
           this.hide()
         }

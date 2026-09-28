@@ -45,7 +45,7 @@ export class GameManagerBattleRewardOps {
   }
 
   /**
-   * ARCH-014 (M12) - the ONLY 'battle_end' publication site for a stage
+   * ARCH-014 (M12) — the ONLY 'battle_end' publication site for a stage
    * battle. Exactly once per cycle via the battleEndEmitted flag:
    * victory and natural defeat arrive through grantTurnBattleRewards(),
    * player abandon arrives through emitAbandonEnd() (called from
@@ -142,7 +142,7 @@ export class GameManagerBattleRewardOps {
         this.deps.stageWaves.stopRepeat()
       }
 
-      // ARCH-014 (M12) - publish the terminal fact for EVERY outcome,
+      // ARCH-014 (M12) — publish the terminal fact for EVERY outcome,
       // not just victory: natural defeat used to set the once-flag
       // without emitting, so audio/scene/cache consumers never ran on a
       // loss. Per-outcome policy below stays victory-only.

@@ -235,7 +235,7 @@ export function getCombatDescriptors(): readonly AssetResourceDescriptor[] {
     }
   }
 
-  // Character animation atlases (Spec B 3.1) - one entry per distinct sheet,
+  // Character animation atlases (Spec B §3.1) — one entry per distinct sheet,
   // however many entities and clips share it.
   for (const { clips } of animatedCombatEntities()) {
     for (const clip of Object.values(clips)) {

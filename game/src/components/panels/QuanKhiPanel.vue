@@ -1,12 +1,12 @@
 <script setup lang="ts">
-// Quan Khi (2026-08-20, Realm Passive & Pressure follow-up) - tach
-// path-choices ("Buoc Vao Phap Tu/Kiem Tu") ra khoi CharacterPanel.vue
+// Quán Khí (2026-08-20, Realm Passive & Pressure follow-up) — tách
+// path-choices ("Bước Vào Pháp Tu/Kiếm Tu") ra khỏi CharacterPanel.vue
 // thanh overlay rieng, cung pattern SkillPathPanel.vue.
-// Mo qua TribulationOutcomeService sau khi thang kiep Quan Khi
-// (targetRealmId 'qi_refining'), hoac qua entry button tren
-// CharacterPanel.vue cho Kiem Tu - panel nay KHONG tu kiem tra lai
-// ieu kien, chi tu ong ngay sau khi chon xong (component goi no
-// a gate roi).
+// Mở qua TribulationOutcomeService sau khi thắng kiếp Quán Khí
+// (targetRealmId 'qi_refining'), hoặc qua entry button trên
+// CharacterPanel.vue cho Kiếm Tu — panel này KHÔNG tự kiểm tra lại
+// điều kiện, chỉ tự đóng ngay sau khi chọn xong (component gọi nó
+// đã gate rồi).
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useUiStore } from '@/stores/ui'
@@ -48,17 +48,17 @@ const cooldownSeconds = computed(() => {
   return gameManager.tribulationDirector.getCooldownSeconds()
 })
 
-// Phap Tu Reimagined (Task 16) - the ritual offers exactly what the
+// Phap Tu Reimagined (Task 16) — the ritual offers exactly what the
 // path authority lists: hidden_spell_pathway appears ONLY when linh_bao is already
 // Lv3 at ritual time; hidden_body_pathway appears ONLY when huy_quyen is Lv3 (same
 // isCultivationPathOffered predicate the ritual enforces inside
-// applyPathChoice); no locked-card tease when ineligible (spec 11).
-// Offerability is evaluated live per render - eligibility is never
+// applyPathChoice); no locked-card tease when ineligible (spec §11).
+// Offerability is evaluated live per render — eligibility is never
 // stored.
 const availableWays = computed(() => {
   stateVersion.value
 
-  // M2 - offers are (path, way) pairs from the authority. Ineligible
+  // M2 — offers are (path, way) pairs from the authority. Ineligible
   // ways stay hidden (pre-framework omission behavior preserved); each
   // row carries the resolved way definition for display.
   return listOfferableWays(player.$state)
@@ -74,7 +74,7 @@ const availableWays = computed(() => {
     )
 })
 
-// A sealed way's kit names - resolved live from the way declaration
+// A sealed way's kit names — resolved live from the way declaration
 // (resolved skill kit + the way's initiation passives, P7-M2) so the card
 // never drifts from authored content.
 function sealedKitSkillNames(way: PathWayDefinition): string[] {
@@ -82,9 +82,9 @@ function sealedKitSkillNames(way: PathWayDefinition): string[] {
   return skillIds.map(id => gameManager.skillManager.get(id)?.name ?? id)
 }
 
-// Thay window.confirm() native - modal xac nhan ong bo hoa qua state
-// (giu nguyen yeu cau "lua chon KHONG the oi lai" bang modal rieng
-// thay vi browser confirm() mac inh).
+// Thay window.confirm() native — modal xác nhận đồng bộ hoá qua state
+// (giữ nguyên yêu cầu "lựa chọn KHÔNG thể đổi lại" bằng modal riêng
+// thay vì browser confirm() mặc định).
 const pendingChoice = ref<{ pathId: CultivationPathId; wayId: CultivationWayId } | null>(null)
 
 const pendingWay = computed(() =>
@@ -122,9 +122,9 @@ function confirmChoosePath() {
   if (gameManager.realmAdvanceOps.chooseCultivationPath(choice.pathId, choice.wayId, player.$state)) {
     bumpState()
 
-    // Nghi Le Nhap Mon - chon path VUA LA hanh ong ot pha Pham Nhan
-    // -> Luyen Khi (xem GameManager.chooseCultivationPath()), xung ang
-    // 1 world announcement giong moi lan oi ai canh gioi khac.
+    // Nghi Lễ Nhập Môn — chọn path VỪA LÀ hành động đột phá Phàm Nhân
+    // -> Luyện Khí (xem GameManager.chooseCultivationPath()), xứng đáng
+    // 1 world announcement giống mọi lần đổi đại cảnh giới khác.
     if (realmIdBefore === 'mortal' && player.realmId !== 'mortal') {
       useWorldAnnouncementStore().show(
         t('panels.quanKhi.world.ceremonyTitle'),
@@ -140,9 +140,9 @@ function close() {
   ui.closeHomeOverlays()
 }
 
-// Kiem Tu specialization card below - shown only after the player has
+// Kiem Tu specialization card below — shown only after the player has
 // chosen the sword path (read-only display; the way was locked at
-// the Initiation Ritual - there is no in-panel conversion).
+// the Initiation Ritual — there is no in-panel conversion).
 const isSwordPath = computed(() => {
   stateVersion.value
 
@@ -151,7 +151,7 @@ const isSwordPath = computed(() => {
   return isActivePath(player, 'sword')
 })
 
-// Cultivation Path Framework (M6/M9) - the sword/hidden way is canonical on
+// Cultivation Path Framework (M6/M9) — the sword/hidden way is canonical on
 // PlayerData.cultivationWay. P1 - read through the declared capability:
 // 'sword.sword_riding' only resolves for the ('sword','hidden_sword_pathway') pair.
 const swordPathWay = computed(() => {
@@ -166,9 +166,9 @@ const specNameDisplay = computed(() =>
     : t('panels.quanKhi.specNames.kiemPho'),
 )
 
-// Kiem Tu Reimagined (spec 11) - out-of-combat Kiem Pho preset editor.
+// Kiem Tu Reimagined (spec §11) — out-of-combat Kiem Pho preset editor.
 // Direct-op editing: every click goes through setKiemPhoPreset() so
-// PlayerData stays the single source of truth - no draft copy to sync.
+// PlayerData stays the single source of truth — no draft copy to sync.
 const orbPalette = Object.keys(KIEM_PHO_ORBS) as OrbId[]
 
 const realmIndex = computed(() => {
@@ -235,7 +235,7 @@ function removeOrbAt(index: number) {
 
       <div class="quan-khi-panel__choices">
         <template v-for="kit in availableWays" :key="`${kit.pathId}/${kit.wayId}`">
-          <!-- Sealed hidden-path card (Task 16, M9) - renders for any
+          <!-- Sealed hidden-path card (Task 16, M9) — renders for any
                way declaring sealedOffer (today: hidden_spell_pathway); names the
                way, carries the permanent warning, no node-tree entry
                point. -->
@@ -270,7 +270,7 @@ function removeOrbAt(index: number) {
       </div>
     </div>
 
-    <!-- Kiem Tu Reimagined (spec 2026-09-15) - shows the active
+    <!-- Kiem Tu Reimagined (spec 2026-09-15) — shows the active
          specialization (Kiem Pho / Ngu Kiem Dao) read from
          player.cultivationWay. -->
     <div v-if="isSwordPath" class="quan-khi-panel__card">
@@ -286,7 +286,7 @@ function removeOrbAt(index: number) {
       </div>
     </div>
 
-    <!-- Kiem Pho preset editor - sword_pathway only (hidden_sword_pathway never reads preset).
+    <!-- Kiem Pho preset editor — sword_pathway only (hidden_sword_pathway never reads preset).
          Strip = current persisted sequence, palette = realm-unlocked
          orbs; both write through setKiemPhoPreset(). -->
     <div v-if="isSwordPath && swordPathWay === 'sword_pathway'" class="quan-khi-panel__card">

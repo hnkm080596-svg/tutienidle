@@ -8,14 +8,14 @@ import { formatNumber } from '@/core/format/NumberFormatter'
 import { useNotificationStore } from '@/stores/notification'
 import { AudioManager } from '@/core/audio/AudioManager'
 
-// Ky Bao Cac - gp123 6G (2026-09-06): chi con Hoa Ban (thu mua nguyen
-// lieu thua lay Linh Thach). 2 card oi Pham (Linh Thach 100->1, Linh
-// Moc/Khoang 10->1 theo canh gioi) a XOA cung API quy oi
-// (GameManager.convertSpiritStonesUp/convertMaterialTier). Thu mua chi
-// liet ke material pham NGHE thap hon canh gioi nguoi choi (gate
-// sell-by-grade trong VendorSystem) - danh sach rong o canh pham nhan
-// la hanh vi ung, khong phai loi hien thi. Tab "Cua hang" an theo
-// quyet inh user (khong render).
+// Ký Bảo Các — gp123 6G (2026-09-06): chỉ còn Hóa Bán (thu mua nguyên
+// liệu thừa lấy Linh Thạch). 2 card Đổi Phẩm (Linh Thạch 100→1, Linh
+// Mộc/Khoáng 10→1 theo cảnh giới) đã XÓA cùng API quy đổi
+// (GameManager.convertSpiritStonesUp/convertMaterialTier). Thu mua chỉ
+// liệt kê material phẩm NGHỀ thấp hơn cảnh giới người chơi (gate
+// sell-by-grade trong VendorSystem) — danh sách rỗng ở cảnh phàm nhân
+// là hành vi đúng, không phải lỗi hiển thị. Tab "Cửa hàng" ẩn theo
+// quyết định user (không render).
 const BUILDING_ID = 'vendor'
 
 const player = usePlayerStore()
@@ -48,9 +48,9 @@ function sellAll(materialId: string, owned: number) {
 
   const result = gameManager.economyOps.sellMaterialToVendor(materialId, owned, player.$state)
 
-  // gp123 6G fix round 1 - gate message CHI khi reason la grade_not_below;
-  // reason khac (sole_recipe_ingredient, bag_full, ...) nhan message
-  // generic e khong noi sai su that.
+  // gp123 6G fix round 1 — gate message CHỈ khi reason là grade_not_below;
+  // reason khác (sole_recipe_ingredient, bag_full, ...) nhận message
+  // generic để không nói sai sự thật.
   if (!result.ok) {
     useNotificationStore().push(
       'warning',

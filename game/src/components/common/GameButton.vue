@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import InkNineSlice from './primitives/InkNineSlice.vue'
 import type { InkWashUiAssetId } from '@/assets/inkWashUi'
 import { AudioManager } from '@/core/audio/AudioManager'
-// Shared chrome primitive (UI/UX rework phase A) - replaces hand-rolled
+// Shared chrome primitive (UI/UX rework phase A) — replaces hand-rolled
 // buttons (each panel declaring its own background/color/border) with one
 // component reusing the --gold/--jade/--crimson/--tap-* tokens in theme.css.
 const props = withDefaults(defineProps<{
@@ -47,7 +47,7 @@ function handleClick(event: MouseEvent) {
 }
 
 const sliceAsset = computed<InkWashUiAssetId | undefined>(() => {
-  // border-image (InkNineSlice) does not follow border-radius - circle
+  // border-image (InkNineSlice) does not follow border-radius — circle
   // buttons use a plain CSS border (.game-button--circle) instead.
   if (props.shape === 'circle') return undefined
   switch (props.variant) {

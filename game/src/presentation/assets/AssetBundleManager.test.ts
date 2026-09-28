@@ -209,7 +209,7 @@ describe('AssetBundleManager', () => {
     manager.setLoaderScene(newLoader)
     resolveOld()
 
-    // The stale load fails honestly - resolving it would claim success for
+    // The stale load fails honestly — resolving it would claim success for
     // resources the CURRENT loader does not hold.
     await expect(pending).rejects.toThrow('superseded')
     expect(manager.isLoaded('core-ui')).toBe(false)
@@ -308,7 +308,7 @@ describe('AssetBundleManager', () => {
       domImageLoader: blockingDomLoader,
     })
 
-    // 'home' mixes dom-image layers with Phaser textures - both start here.
+    // 'home' mixes dom-image layers with Phaser textures — both start here.
     const pending = manager.ensureLoaded(['home'])
     manager.setLoaderScene(createMockLoaderScene())
     resolveDom()

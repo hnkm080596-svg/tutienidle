@@ -1,10 +1,10 @@
 <script setup lang="ts">
-// Beta Phase 4 (muc XIV tai lieu) - thay console.log('Offline:'...) cu
-// trong App.vue's onMounted(). Chi hien Thoi gian + Tu vi - he thong
-// offline hien tai (core/idle/OfflineProgressSystem.ts) CHI tich tu
-// vi, khong co material/tai nguyen nao khac e hien them (mockup muc
-// XIV co "+ Tai nguyen/+ Progress" nhung o la vi du minh hoa, khong
-// phai data that ang co).
+// Beta Phase 4 (mục XIV tài liệu) — thay console.log('Offline:'...) cũ
+// trong App.vue's onMounted(). Chỉ hiện Thời gian + Tu vi — hệ thống
+// offline hiện tại (core/idle/OfflineProgressSystem.ts) CHỈ tích tu
+// vi, không có material/tài nguyên nào khác để hiện thêm (mockup mục
+// XIV có "+ Tài nguyên/+ Progress" nhưng đó là ví dụ minh hoạ, không
+// phải data thật đang có).
 import { formatNumber } from '@/core/format/NumberFormatter'
 import { formatDuration } from '@/core/format/formatDuration'
 import { useI18n } from 'vue-i18n'
@@ -16,9 +16,9 @@ import InkNineSlice from './primitives/InkNineSlice.vue'
 import { useDialogFocus } from '@/composables/useDialogFocus'
 import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
 
-// UI-005 (Task 3, 2026-09-07) - Offline summary la blocking dialog that:
+// UI-005 (Task 3, 2026-09-07) — Offline summary là blocking dialog thật:
 // role="dialog" + aria-modal + focus trap/restore qua useDialogFocus
-// (UI-015: nguoi choi phai chu ong Continue, background khong bam uoc).
+// (UI-015: người chơi phải chủ động Continue, background không bấm được).
 const props = defineProps<{
   elapsedSeconds: number
 
@@ -66,12 +66,12 @@ const titleId = useId()
       <ul class="offline-summary__rows">
         <StatRow :label="t('combat.offline.labels.duration')">{{ formatDuration(props.elapsedSeconds) }}</StatRow>
 
-        <!-- Chi Thoi gian + Tu vi - core/idle/OfflineProgressSystem.ts
-             CHI tinh cultivationPerSecond * elapsedSeconds, khong co
-             nguon thu offline nao khac trong game logic hien tai. Mo
-             rong OfflineSummaryData (stores/offlineSummary.ts) + them
-             row tuong ung neu sau nay OfflineProgressSystem co nguon
-             thu moi. -->
+        <!-- Chỉ Thời gian + Tu vi — core/idle/OfflineProgressSystem.ts
+             CHỈ tính cultivationPerSecond * elapsedSeconds, không có
+             nguồn thu offline nào khác trong game logic hiện tại. Mở
+             rộng OfflineSummaryData (stores/offlineSummary.ts) + thêm
+             row tương ứng nếu sau này OfflineProgressSystem có nguồn
+             thu mới. -->
         <StatRow :label="t('combat.offline.labels.cultivation')" tone="positive">{{ formatNumber(Math.floor(props.cultivation)) }}</StatRow>
       </ul>
 

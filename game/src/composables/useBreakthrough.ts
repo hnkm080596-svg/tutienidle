@@ -15,11 +15,11 @@ import { i18n } from '@/i18n'
  * Previously (2026-08-20) this composable owned the whole consequence
  * chain: realm passive sync, the spell KC technique grant, artifact
  * awakening, and the banked artifact tier release. All migrated verbatim
- * to the domain service - behavior parity pinned by
+ * to the domain service — behavior parity pinned by
  * BreakthroughOutcomeService.test.ts and the pre-existing
  * cultivationRitualFlow.integration tests.
  *
- * `gameManagerOverride` (Auto ot Pha) - App.vue's tick() calls this
+ * `gameManagerOverride` (Auto Đột Phá) — App.vue's tick() calls this
  * composable directly but is NOT inside its own provide() subtree (inject
  * would throw), so it passes its local GameManager instance. Every other
  * caller keeps the inject behavior.
@@ -37,7 +37,7 @@ export function useBreakthrough(gameManagerOverride?: GameManager) {
       return false
     }
 
-    // Beta Phase 4 (World Announcement) - major-realm change is a
+    // Beta Phase 4 (World Announcement) — major-realm change is a
     // milestone (minor-level successes announce nothing; the tribulation
     // chain owns its own announcements since Slice 1). P16: the domain
     // returns i18n keys + params; the gateway resolves them here.

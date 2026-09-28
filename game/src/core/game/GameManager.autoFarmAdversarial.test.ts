@@ -27,7 +27,7 @@ describe('Adversarial — offline auto-farm invariants (QA quick)', () => {
     const lastCheckedMs = Date.now() - 120_000
     player.autoFarmStage = { stageId: 'adv_stage', lastCheckedMs }
 
-    // Settle 120s = 2 cycles (50s moi cycle) + 20s du -> lastCheckedMs tien 100s.
+    // Settle 120s = 2 cycles (50s mỗi cycle) + 20s dư → lastCheckedMs tiến 100s.
     gameManager.turnBattleOps.autoFarmOps.settleAutoFarmOffline(player, 120)
     const afterFirst = player.autoFarmStage!.lastCheckedMs
 
@@ -81,7 +81,7 @@ describe('Adversarial — offline auto-farm invariants (QA quick)', () => {
 // tickAutoFarm guards cycleSeconds at consumption (isValidCycleSeconds).
 // The Mission B round-3 eligibility gate (resolveValidAutoFarmStage,
 // shared by startAutoFarm/reconcile) means an armed farm with an invalid
-// cycle can no longer be CREATED through either entry - so these tests
+// cycle can no longer be CREATED through either entry — so these tests
 // arm a VALID farm then corrupt the cycle, exercising the tick guard as
 // the defense-in-depth layer it is.
 function buildAutoFarmOps(
@@ -89,7 +89,7 @@ function buildAutoFarmOps(
   out?: { eventBus: EventBus },
 ) {
   // The slot mock reproduces real StageManager semantics: a ticking farm
-  // must hold the lease OBJECT it acquired (Mission B audit - identity,
+  // must hold the lease OBJECT it acquired (Mission B audit — identity,
   // not stageId), so tests arm it through startAutoFarm rather than
   // hand-setting player.autoFarmStage.
   let active: { stageId: string } | null = null
@@ -131,7 +131,7 @@ function buildAutoFarmOps(
 }
 
 // Arm the farm through the real entry point so the ops' lease marker
-// tracks the acquired slot object - then adjust lastCheckedMs for the
+// tracks the acquired slot object — then adjust lastCheckedMs for the
 // scenario under test.
 function armFarm(ops: GameManagerAutoFarmOps, player: ReturnType<typeof createDefaultPlayer>, lastCheckedMs: number) {
   if (!ops.startAutoFarm(player, 'adv_stage')) {
@@ -200,7 +200,7 @@ describe('Adversarial — corrupt lastCheckedMs bound (C1)', () => {
     expect(Number.isFinite(player.autoFarmStage!.lastCheckedMs)).toBe(true)
 
     // The clamped window forfeits over-cap time: lastCheckedMs lands at
-    // now minus the sub-cycle carry, so the NEXT tick rolls ~0 cycles -
+    // now minus the sub-cycle carry, so the NEXT tick rolls ~0 cycles —
     // not another 24h batch (which would be an infinite per-tick faucet).
     expect(player.autoFarmStage!.lastCheckedMs).toBeGreaterThan(Date.now() - 60_000)
 

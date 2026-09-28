@@ -2,11 +2,11 @@
 import { computed, useAttrs } from 'vue'
 import InkNineSlice from './InkNineSlice.vue'
 import { AudioManager } from '@/core/audio/AudioManager'
-// Primitive pill chon uoc - atom cho TabBar va moi filter/mode switcher.
-// Cong thuc chuan: idle paper-200 (u toi e phan biet trang giay phia
-// sau, khong con khoi muc en); active noi bat han bang vien ong
-// --mineral-gold + nen paper sang nhat, khong hoa lan nen panel. Nen
-// active ieu khien qua CSS var --chip-active-bg (noi can tint thi
+// Primitive pill chọn được — atom cho TabBar và mọi filter/mode switcher.
+// Công thức chuẩn: idle paper-200 (đủ tối để phân biệt trang giấy phía
+// sau, không còn khối mực đen); active nổi bật hẳn bằng viền đồng
+// --mineral-gold + nền paper sáng nhất, không hoà lẫn nền panel. Nền
+// active điều khiển qua CSS var --chip-active-bg (nơi cần tint thì
 // override).
 withDefaults(defineProps<{
   active?: boolean
@@ -16,7 +16,7 @@ withDefaults(defineProps<{
   disabled: false,
 })
 
-// R11 (AR-28) - selection semantics: a Chip under role="tab" (TabBar) lets
+// R11 (AR-28) — selection semantics: a Chip under role="tab" (TabBar) lets
 // the tab role carry aria-selected; everywhere else it is a toggle, so
 // active maps to aria-pressed.
 const attrs = useAttrs()

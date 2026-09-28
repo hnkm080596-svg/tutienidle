@@ -1,4 +1,4 @@
-// ARCH-014 (M12) - battle_end terminal contract.
+// ARCH-014 (M12) — battle_end terminal contract.
 //
 // Before M12: the victory/defeat terminal in GameManagerBattleRewardOps
 // set battleEndEmitted for BOTH outcomes but only emitted 'battle_end'
@@ -88,7 +88,7 @@ function fragilePlayer(): PlayerData {
   return player
 }
 
-/** Direct startBattle() input - the dev-spawn/tribulation entry point. */
+/** Direct startBattle() input — the dev-spawn/tribulation entry point. */
 function playerEntity(overrides: { might?: number; maxHp?: number; speed?: number } = {}): CombatEntity {
   const stats = createBaseStats({
     might: overrides.might ?? 1_000,
@@ -128,7 +128,7 @@ afterEach(() => {
   resetAudioManagerForTest()
 })
 
-/** Count only terminal-sound calls - turns also emit attack/hit/death SFX. */
+/** Count only terminal-sound calls — turns also emit attack/hit/death SFX. */
 function soundCalls(soundId: 'combat.victory' | 'combat.defeat' | 'combat.start'): number {
   return playSpy.mock.calls.filter((call: unknown[]) => call[0] === soundId).length
 }
@@ -278,7 +278,7 @@ describe('ARCH-014 (M12) — battle_end terminal publication, exactly once per o
     runUntil(combatSource, () => gameManager.getTurnBattle()?.state === 'victory')
     expect(battleEnds).toEqual([{ type: 'battle_end', state: 'victory' }])
 
-    // Non-stage entry - startBattleWithPlayer is the stageWaves launchBattle
+    // Non-stage entry — startBattleWithPlayer is the stageWaves launchBattle
     // callback AND the devtools/tribulation path; it routes through
     // startBattle(). Before the review-round fix this battle inherited
     // battleEndEmitted=true, so its terminal never published.
@@ -310,7 +310,7 @@ describe('ARCH-014 (M12) — battle_end terminal publication, exactly once per o
     runUntil(combatSource, () => gameManager.getTurnBattle()?.state === 'victory')
     expect(battleEnds).toEqual([{ type: 'battle_end', state: 'victory' }])
 
-    // Direct CombatEntity entry - the enemySpawnDebug path. Pre-fix the
+    // Direct CombatEntity entry — the enemySpawnDebug path. Pre-fix the
     // stale flag made emitAbandonEnd a silent no-op here (regression vs the
     // pre-M12 unconditional abandon emit).
     gameManager.startBattle(playerEntity(), devEnemy)

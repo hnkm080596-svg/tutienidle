@@ -1,4 +1,4 @@
-// useAudioStore.test.ts - verifies the store mirrors AudioManager both ways.
+// useAudioStore.test.ts — verifies the store mirrors AudioManager both ways.
 // W3: v2 blob {enabled, masterVolume, musicVolume, sfxVolume, uiVolume,
 // reducedShake} under 'tutienidle.audio.v2'; v1 fallback migrates forward.
 
@@ -7,7 +7,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import { useAudioStore } from './audio'
 import { AudioManager, resetAudioManagerForTest } from '@/core/audio/AudioManager'
 
-// Node environment - minimal localStorage polyfill (same pattern as
+// Node environment — minimal localStorage polyfill (same pattern as
 // SaveSystem.test.ts).
 class MemoryStorage implements Storage {
   private store = new Map<string, string>()
@@ -20,7 +20,7 @@ class MemoryStorage implements Storage {
 }
 
 beforeEach(() => {
-  // Fresh storage per test - the store persists settings, so a previous
+  // Fresh storage per test — the store persists settings, so a previous
   // test's write must not leak into the next store's defaults.
   vi.stubGlobal('localStorage', new MemoryStorage())
   setActivePinia(createPinia())

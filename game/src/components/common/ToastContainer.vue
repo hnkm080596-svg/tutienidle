@@ -31,8 +31,8 @@ watch(
   },
 )
 
-// Khop token mau co san trong assets/theme.css - khong them token
-// moi, tai dung ung bang mau game a co.
+// Khớp token màu có sẵn trong assets/theme.css — không thêm token
+// mới, tái dùng đúng bảng màu game đã có.
 const KIND_COLOR: Record<NotificationKind, string> = {
   loot: 'var(--jade)',
   craft: 'var(--mineral-gold)',
@@ -42,11 +42,11 @@ const KIND_COLOR: Record<NotificationKind, string> = {
   error: 'var(--crimson)',
 }
 
-// So toast hien ong thoi tuy chieu cao man hinh that - Teleport to
-// body nen .toast-container KHONG nam trong scale transform cua
-// .game-root (xem GameRoot.vue), window.innerHeight la ung on vi.
-// Chieu cao item lay du ra (46px) vi loot toast kem icon + noi dung
-// hai dong render ~40-44px thuc te, khong phai 32px nhu toast chu tron.
+// Số toast hiện đồng thời tuỳ chiều cao màn hình thật — Teleport to
+// body nên .toast-container KHÔNG nằm trong scale transform của
+// .game-root (xem GameRoot.vue), window.innerHeight là đúng đơn vị.
+// Chiều cao item lấy dư ra (46px) vì loot toast kèm icon + nội dung
+// hai dòng render ~40-44px thực tế, không phải 32px như toast chữ trơn.
 const TOAST_TOP_OFFSET_PX = 24
 const TOAST_BOTTOM_MARGIN_PX = 24
 const TOAST_ITEM_HEIGHT_PX = 46
@@ -88,9 +88,9 @@ function lastNameText(name: string): string {
           :style="{ '--toast-color': toast.loot?.accentColorVar ? `var(${toast.loot.accentColorVar})` : KIND_COLOR[toast.kind] }"
           role="status"
         >
-          <!-- UI-006 (Task 4, 2026-09-07) - toast message la live region
-               (role="status"), dismiss la NUT RIENG (keyboard/SR reachable)
-               thay vi click div toan toast. -->
+          <!-- UI-006 (Task 4, 2026-09-07) — toast message là live region
+               (role="status"), dismiss là NÚT RIÊNG (keyboard/SR reachable)
+               thay vì click div toàn toast. -->
           <button
             type="button"
             class="toast-item__dismiss"
