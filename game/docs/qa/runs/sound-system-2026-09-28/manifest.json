@@ -23532,13 +23532,13 @@
       "path": "tests/architecture/audioBindingWiring.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "6b880371693f1ec1968d9c98b1338b0e731d105964142304d3930c48c79d386a"
+      "hash": "35b1b2de6579b3cf223c8dcfd23ba3175180be6930040e04b9b0e02b812d396c"
     },
     {
       "path": "tests/architecture/audioBoundary.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "c98c5adafff0c8008b9340d15f991dccf6732b62f9be9bf8ccdea87904114a96"
+      "hash": "bf7bd18254f9e1df8f7b4b5286f9f024b7ad1f8357991e36b612409e6a6ada70"
     },
     {
       "path": "tests/architecture/audioManifestCompleteness.test.ts",
@@ -23658,13 +23658,13 @@
       "path": "tests/architecture/helpers/commentStrip.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "23872e4e805915d7bbbc529c685ef777620cc4f112e333920722b9febcdd28e2"
+      "hash": "f32de2ed90638729a7c54355ed683270f0cbc96d4800cf19c181f8c16a384caf"
     },
     {
       "path": "tests/architecture/helpers/scanTs.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "46989c9186863cbf4e7a9e5f566df5af06562e45b207c8b67ca49c2cc5698fff"
+      "hash": "75f35b8b4396b84180a48f1c776145bcee20d286040dd697d8815fb6a3f5bb5e"
     },
     {
       "path": "tests/architecture/i18nKeyParity.test.ts",
@@ -24021,5 +24021,5 @@
       "hash": "e69b4133ed37ca9a4f05e66d90521d0bb749c4764bf1f454d0eb13de601f7940"
     }
   ],
-  "productStateId": "f1d6e94334bbaab7974578711c13148dcf79a3c13a923b2ab965eaa06c849700"
+  "productStateId": "96d992c92528869989edc56c4ab0405aa7c004a785d45ff4e3444707fab2e336"
 }
