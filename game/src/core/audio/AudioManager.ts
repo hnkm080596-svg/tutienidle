@@ -829,6 +829,9 @@ class AudioManagerImpl {
     this.pendingEncoded.delete(key)
     this.decodeAttempts.delete(key)
     this.buffers.set(key, buffer)
+    // Same contract as decodeInto: a decoded delivery may be the buffer a
+    // desired music track was waiting on.
+    this.applyDesiredMusic()
   }
 
   hasDecodedBuffer(key: string): boolean {

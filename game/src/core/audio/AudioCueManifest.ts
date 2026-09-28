@@ -131,11 +131,12 @@ const REACTION_IDS = [
 ] as const
 
 // CombatVfxPresetId members (src/core/battle/CombatAction.ts) that route
-// to combat.impact.* - the W9 completeness test pins this list against the
-// union. Excluded by routing, not by omission:
+// to combat.impact.* - the W9 completeness test derives this list from the
+// binding's routing table, so it cannot drift from the special cases:
 //   kiem_combo_* -> combat.kiem.combo.*; tu_luc -> combat.kiem.tu_luc;
-//   boss_ground_slam -> combat.boss.slam; ngu_kiem_flight is a flight
-//   preset that never emits action_impact.
+//   boss_ground_slam -> combat.boss.slam. Every other emitted preset owns
+//   an expanded row here (ngu_kiem_flight does emit action_impact via
+//   NguKiemDaoSkills.presetId - no special route, so it keeps its row).
 const IMPACT_PRESET_IDS = [
   'slash',
   'claw',
@@ -151,6 +152,7 @@ const IMPACT_PRESET_IDS = [
   'shadow_burst',
   'kiem_orb_dam',
   'kiem_orb_chem',
+  'ngu_kiem_flight',
   'hoa_cau_comet',
   'thuy_tien_dart',
   'doc_chuong_palm',
@@ -281,13 +283,16 @@ export const AUDIO_CUES: Readonly<Record<string, AudioCueDef>> = {
   'combat.debuff.apply': sfx({ cooldownMs: 120, synthFallback: 'toastWarning' }),
   'combat.dot.apply': sfx({ cooldownMs: 120, synthFallback: 'toastWarning' }),
   'combat.buff.expire': sfx({ cooldownMs: 120 }),
+  // Armed-reserved: status_vfx_updated emits live on attach/refresh/stack
+  // change (TurnStatusPresentationEvents) but nothing subscribes - whether
+  // stack ticks should voice is a sound-design call deferred to asset time.
   'combat.buff.stack': sfx({ cooldownMs: 120 }),
   'combat.reaction': sfx({ duckMusic: 0.4, synthFallback: 'combatCritical' }),
   ...expand(REACTION_IDS, 'combat.reaction.', sfx({ duckMusic: 0.4 })),
   'combat.loot': sfx({ cooldownMs: 120, synthFallback: 'toastLoot' }),
   'combat.essence': sfx({ cooldownMs: 80, synthFallback: 'toastCraft' }),
-  // Armed-reserved: TurnBattleSystem charge init is silent today - no
-  // emit exists; wired when a charge-started hook lands.
+  // Armed-reserved: TurnBattleSystem charge init and release are silent
+  // today - no emit exists for either; wired when charge hooks land.
   'combat.charge': sfx({ synthFallback: 'combatAttack' }),
   'combat.release': sfx({ duckMusic: 0.3, synthFallback: 'combatCritical' }),
   'combat.boss.slam': sfx({ duckMusic: 0.5, synthFallback: 'combatCritical' }),
@@ -306,6 +311,8 @@ export const AUDIO_CUES: Readonly<Record<string, AudioCueDef>> = {
   // Armed-reserved: countdownProgress is a snapshot field; no tick emit
   // exists to key off yet (spec marks this P2).
   'combat.countdown.tick': ui({ synthFallback: 'uiClick' }),
+  // Armed-reserved: 'turn_end' is a skill-trigger name, not an emitted
+  // event - no producer exists today.
   'combat.turn_end': sfx(),
   'combat.exit': ui({ synthFallback: 'uiCancel' }),
   'combat.start': sfx({ duckMusic: 0.3, synthFallback: 'battleStart' }),
@@ -323,7 +330,7 @@ export const AUDIO_CUES: Readonly<Record<string, AudioCueDef>> = {
   'progress.perfect': sfx({ duckMusic: 0.5, synthFallback: 'toastUpgrade' }),
   'progress.hidden_open': sfx({ duckMusic: 0.5, synthFallback: 'toastWarning' }),
   // Armed-reserved: no producer passes this cue id today (QuanKhiPanel
-  // announces with the default stinger) - voices when one lands.
+  // announces with progress.path_choose) - voices when one lands.
   'progress.quan_the': sfx({ synthFallback: 'toastSave' }),
 
   // ---- Tribulation ----
@@ -354,8 +361,16 @@ export const AUDIO_CUES: Readonly<Record<string, AudioCueDef>> = {
   'music.home': music(),
   'music.combat': music(),
   'music.tribulation': music(),
+  // Armed-reserved: ROUTE_MUSIC emits only the bare music.home id today;
+  // per-time variants voice when the driver learns time-of-day.
   ...expand(MUSIC_HOME_TIMES, 'music.home.', music()),
 }
+
+// Forward slots: armed rows with neither a producer nor an armed-reserved
+// marker (combat.kiem.tu_luc, combat.impact.lightning_strike) are
+// catalog-expansion slots by convention - they voice the moment their
+// qualifier is emitted, and the completeness test keeps them from
+// drifting out of sync with the catalogs they index.
 
 /**
  * exact match -> strip one trailing qualifier segment and retry -> undefined.

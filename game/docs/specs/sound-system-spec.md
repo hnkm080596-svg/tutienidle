@@ -206,8 +206,8 @@ silent until real files land.
 | farm.cycle | sfx | | | | — | P2 (suppressed unless Home visible) |
 | stinger.announce | sfx | | | 0.6 | battleStart | P1 |
 | stinger.offline | sfx | | | 0.6 | toastSave | P2 |
-| ambient.cultivate.on | music | | | | — | P2 |
-| ambient.cultivate.off | music | | | | — | P2 |
+| ambient.cultivate.on | sfx | | | | — | P2 (one-shot transition stinger, not looped music) |
+| ambient.cultivate.off | sfx | | | | — | P2 (one-shot transition stinger, not looped music) |
 | music.menu | music | ✓ | | | — | P1 |
 | music.home | music | ✓ | | | — | P0 |
 | music.combat | music | ✓ | | | — | P0 |

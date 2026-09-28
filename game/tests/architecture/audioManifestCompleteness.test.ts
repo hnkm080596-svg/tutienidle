@@ -23,6 +23,7 @@ import { describe, expect, it } from 'vitest'
 import { readFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { AUDIO_CUES, resolveAudioCue } from '@/core/audio/AudioCueManifest'
+import { cueForActionImpact } from '@/presentation/audio/combatAudioBinding'
 
 const SPEC_PATH = join(process.cwd(), 'docs/specs/sound-system-spec.md')
 const AUDIT_PATH = join(process.cwd(), 'docs/design/sound-system-audit.md')
@@ -156,8 +157,9 @@ describe('audio manifest completeness', () => {
     expect(castRows.filter((id) => !skillIds.has(id))).toEqual([])
 
     // combat.impact.* must cover exactly the CombatVfxPresetId members
-    // that route to the impact family - presets routed elsewhere are
-    // excluded by name (mirrors cueForActionImpact in combatAudioBinding).
+    // that route to the impact family - derived from the binding's own
+    // routing function so a new special-case (or a retargeted route)
+    // cannot drift from a mirrored exclusion list.
     const combatActionSrc = readFileSync(
       join(process.cwd(), 'src/core/battle/CombatAction.ts'),
       'utf8',
@@ -172,11 +174,12 @@ describe('audio manifest completeness', () => {
         (m) => m[1]!,
       ),
     )
-    const NON_IMPACT_ROUTES = new Set([
-      'tu_luc', // -> combat.kiem.tu_luc
-      'boss_ground_slam', // -> combat.boss.slam
-      'ngu_kiem_flight', // flight preset - never emits action_impact
-    ])
+    // A preset landing on the bare 'combat.impact' anchor has no row and
+    // no owner - full-coverage ruling forbids that quietly.
+    const unrouted = [...presets].filter(
+      (p) => cueForActionImpact({ presetId: p }) === 'combat.impact',
+    )
+    expect(unrouted).toEqual([])
     expect(
       keys
         .filter((k) => k.startsWith('combat.impact.'))
@@ -184,7 +187,7 @@ describe('audio manifest completeness', () => {
         .sort(),
     ).toEqual(
       [...presets]
-        .filter((p) => !NON_IMPACT_ROUTES.has(p) && !p.startsWith('kiem_combo_'))
+        .filter((p) => cueForActionImpact({ presetId: p }) === `combat.impact.${p}`)
         .sort(),
     )
 

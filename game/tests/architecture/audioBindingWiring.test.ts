@@ -65,8 +65,11 @@ describe('audio binding wiring', () => {
     () => {
       const LITERAL = /(['"`])((?:(?!\1)[^\\])+)\1/g
       // `.cue(` / `.playCue(` call, arguments up to the closing paren
-      // (cue calls take a single arg; `[^)]*` covers ternary/map-index forms).
-      const CALL = /\.(?:cue|playCue)\s*\(([^)]*)\)/g
+      // (cue calls take a single arg; `[^)]*` covers ternary/map-index
+      // forms). A bare `cue('id')` (destructured) is covered too: the
+      // name may be preceded by start, a non-word char, or the `.`
+      // receiver - `xcue(`/`decode(` stay excluded.
+      const CALL = /(?:^|[^\w]|\.)(?:cue|playCue)\s*\(([^)]*)\)/g
       const checkLiteral = (violations: string[], fromSrc: string, literal: string): void => {
         if (literal.includes('${')) {
           const prefix = literal.replace(/\.\$\{[^}]+\}$/, '')

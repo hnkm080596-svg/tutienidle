@@ -22,7 +22,10 @@ const SRC_DIR = join(process.cwd(), 'src')
 const IMPORT_RE = /(?:import|export)\s+(?:type\s+)?(?:[\w*{}\s,]*?\s+from\s+)?['"]([^'"]+)['"]/g
 // Dynamic/lazy import lanes - `await import('tone')` and `require('tone')`
 // bypass the static regex, and a lazy audio stack is the realistic smuggle.
-const DYNAMIC_IMPORT_RE = /(?:import|require)\s*\(\s*['"]([^'"]+)['"]\s*\)/g
+// Comment spans between `(` and the specifier, and backtick specifiers,
+// must not slip past the literal-quote extractor either.
+const DYNAMIC_IMPORT_RE =
+  /(?:import|require)\s*\(\s*(?:\/\*[\s\S]*?\*\/\s*|\/\/[^\n]*\s*)*['"`]([^'"`]+)['"`]\s*(?:\/\*[\s\S]*?\*\/\s*|\/\/[^\n]*\s*)*\)/g
 
 function importSpecifiers(text: string): string[] {
   const out: string[] = []
@@ -37,8 +40,9 @@ function importSpecifiers(text: string): string[] {
 
 // A specifier belongs to the audio subsystem when its path walks through an
 // `audio/` directory - matching on the directory (not on an 'Audio' filename
-// prefix) keeps a future core/audio/util.ts inside the ban.
-const AUDIO_SPEC_RE = /(^|\/)audio\//
+// prefix) keeps a future core/audio/util.ts inside the ban. The `($)` tail
+// also catches a directory import (`@/core/audio` resolving to index.ts).
+const AUDIO_SPEC_RE = /(^|\/)audio(\/|$)/
 
 describe('audio boundary', () => {
   it(
@@ -109,13 +113,16 @@ describe('audio boundary', () => {
       for (const file of srcCorpus(SRC_DIR)) {
         if (file.fromSrc.endsWith('.test.ts')) continue
         if (file.fromSrc.startsWith('core/audio/')) continue
-        if (file.fromSrc.startsWith('stores/audio')) continue
+        // Exact-file exemption - a startsWith('stores/audio') anchor would
+        // silently exempt a future sibling like stores/audioSneak.ts.
+        if (file.fromSrc === 'stores/audio.ts') continue
         if (file.fromSrc.startsWith('presentation/audio/')) continue
         // Trigger on ANY AudioManager reach: a direct call, a playCue, or
         // importing the module at all (destructured getInstance or a renamed
-        // import would otherwise slip past the call-shape regex).
+        // import would otherwise slip past the call-shape regex). The
+        // specifier arm tolerates `.ts`/query suffixes on the module path.
         if (
-          !/AudioManager\s*\.\s*getInstance\s*\(|\.\s*playCue\s*\(|['"][^'"]*audio\/AudioManager['"]/.test(
+          !/AudioManager\s*\.\s*getInstance\s*\(|\.\s*playCue\s*\(|['"][^'"]*audio\/AudioManager[^'"]*['"]/.test(
             file.text,
           )
         ) {

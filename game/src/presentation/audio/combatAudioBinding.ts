@@ -129,7 +129,10 @@ const ELEMENT_BY_PRESET: Readonly<Record<string, string>> = {
   wind_blade: 'moc',
 }
 
-function cueForActionImpact(event: ActionImpactLike): string | undefined {
+// Exported for the W9 completeness pin: combat.impact.* rows are derived
+// from this routing table so a new special-case cannot drift from the
+// manifest's exclusion list (audioManifestCompleteness.test.ts).
+export function cueForActionImpact(event: ActionImpactLike): string | undefined {
   const presetId = event.presetId
   if (!presetId) return 'combat.impact'
 
@@ -144,10 +147,10 @@ function cueForActionImpact(event: ActionImpactLike): string | undefined {
   if (presetId.startsWith('kiem_orb_')) {
     return `combat.impact.${presetId}` in AUDIO_CUES ? `combat.impact.${presetId}` : 'combat.impact'
   }
-  // The boss slam is a scripted encounter beat, not a generic impact -
-  // it owns combat.boss.slam (armed, duck 0.5); letting it fall through
-  // to the expanded combat.impact.boss_ground_slam row would play the
-  // silent placeholder and skip the duck.
+  // The heavy-slam beat owns combat.boss.slam (armed, duck 0.5): the
+  // preset is shared by boss casts and the khai_son_luc_si companion
+  // ultimate (Companions.ts). Falling through to the bare combat.impact
+  // anchor would lose both the dedicated row and the duck.
   if (presetId === 'boss_ground_slam') return 'combat.boss.slam'
 
   const specific = `combat.impact.${presetId}`
