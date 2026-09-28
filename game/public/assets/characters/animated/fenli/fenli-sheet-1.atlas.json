@@ -1,0 +1,1195 @@
+{
+  "frames": {
+    "fenli-idle-001.png": {
+      "frame": {
+        "x": 2,
+        "y": 2,
+        "w": 224,
+        "h": 372
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 1,
+        "w": 224,
+        "h": 372
+      },
+      "sourceSize": {
+        "w": 228,
+        "h": 373
+      }
+    },
+    "fenli-idle-002.png": {
+      "frame": {
+        "x": 390,
+        "y": 2,
+        "w": 227,
+        "h": 371
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 1,
+        "y": 1,
+        "w": 227,
+        "h": 371
+      },
+      "sourceSize": {
+        "w": 228,
+        "h": 373
+      }
+    },
+    "fenli-idle-003.png": {
+      "frame": {
+        "x": 778,
+        "y": 2,
+        "w": 228,
+        "h": 372
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 228,
+        "h": 372
+      },
+      "sourceSize": {
+        "w": 228,
+        "h": 373
+      }
+    },
+    "fenli-idle-004.png": {
+      "frame": {
+        "x": 1166,
+        "y": 2,
+        "w": 225,
+        "h": 372
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 3,
+        "y": 0,
+        "w": 225,
+        "h": 372
+      },
+      "sourceSize": {
+        "w": 228,
+        "h": 373
+      }
+    },
+    "fenli-idle-005.png": {
+      "frame": {
+        "x": 1554,
+        "y": 2,
+        "w": 217,
+        "h": 372
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 11,
+        "y": 0,
+        "w": 217,
+        "h": 372
+      },
+      "sourceSize": {
+        "w": 228,
+        "h": 373
+      }
+    },
+    "fenli-idle-006.png": {
+      "frame": {
+        "x": 1942,
+        "y": 2,
+        "w": 210,
+        "h": 373
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 18,
+        "y": 0,
+        "w": 210,
+        "h": 373
+      },
+      "sourceSize": {
+        "w": 228,
+        "h": 373
+      }
+    },
+    "fenli-idle-007.png": {
+      "frame": {
+        "x": 2330,
+        "y": 2,
+        "w": 208,
+        "h": 373
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 20,
+        "y": 0,
+        "w": 208,
+        "h": 373
+      },
+      "sourceSize": {
+        "w": 228,
+        "h": 373
+      }
+    },
+    "fenli-idle-008.png": {
+      "frame": {
+        "x": 2718,
+        "y": 2,
+        "w": 206,
+        "h": 371
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 22,
+        "y": 1,
+        "w": 206,
+        "h": 371
+      },
+      "sourceSize": {
+        "w": 228,
+        "h": 373
+      }
+    },
+    "fenli-idle-009.png": {
+      "frame": {
+        "x": 3106,
+        "y": 2,
+        "w": 204,
+        "h": 372
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 24,
+        "y": 1,
+        "w": 204,
+        "h": 372
+      },
+      "sourceSize": {
+        "w": 228,
+        "h": 373
+      }
+    },
+    "fenli-idle-010.png": {
+      "frame": {
+        "x": 3494,
+        "y": 2,
+        "w": 201,
+        "h": 372
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 27,
+        "y": 1,
+        "w": 201,
+        "h": 372
+      },
+      "sourceSize": {
+        "w": 228,
+        "h": 373
+      }
+    },
+    "fenli-idle-011.png": {
+      "frame": {
+        "x": 2,
+        "y": 502,
+        "w": 198,
+        "h": 371
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 30,
+        "y": 1,
+        "w": 198,
+        "h": 371
+      },
+      "sourceSize": {
+        "w": 228,
+        "h": 373
+      }
+    },
+    "fenli-idle-012.png": {
+      "frame": {
+        "x": 390,
+        "y": 502,
+        "w": 195,
+        "h": 371
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 33,
+        "y": 1,
+        "w": 195,
+        "h": 371
+      },
+      "sourceSize": {
+        "w": 228,
+        "h": 373
+      }
+    },
+    "fenli-idle-013.png": {
+      "frame": {
+        "x": 778,
+        "y": 502,
+        "w": 191,
+        "h": 371
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 37,
+        "y": 1,
+        "w": 191,
+        "h": 371
+      },
+      "sourceSize": {
+        "w": 228,
+        "h": 373
+      }
+    },
+    "fenli-idle-014.png": {
+      "frame": {
+        "x": 1166,
+        "y": 502,
+        "w": 189,
+        "h": 371
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 39,
+        "y": 1,
+        "w": 189,
+        "h": 371
+      },
+      "sourceSize": {
+        "w": 228,
+        "h": 373
+      }
+    },
+    "fenli-idle-015.png": {
+      "frame": {
+        "x": 1554,
+        "y": 502,
+        "w": 186,
+        "h": 372
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 42,
+        "y": 1,
+        "w": 186,
+        "h": 372
+      },
+      "sourceSize": {
+        "w": 228,
+        "h": 373
+      }
+    },
+    "fenli-idle-016.png": {
+      "frame": {
+        "x": 1942,
+        "y": 502,
+        "w": 185,
+        "h": 372
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 43,
+        "y": 0,
+        "w": 185,
+        "h": 372
+      },
+      "sourceSize": {
+        "w": 228,
+        "h": 373
+      }
+    },
+    "fenli-idle-017.png": {
+      "frame": {
+        "x": 2330,
+        "y": 502,
+        "w": 185,
+        "h": 373
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 43,
+        "y": 0,
+        "w": 185,
+        "h": 373
+      },
+      "sourceSize": {
+        "w": 228,
+        "h": 373
+      }
+    },
+    "fenli-idle-018.png": {
+      "frame": {
+        "x": 2718,
+        "y": 502,
+        "w": 185,
+        "h": 372
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 43,
+        "y": 0,
+        "w": 185,
+        "h": 372
+      },
+      "sourceSize": {
+        "w": 228,
+        "h": 373
+      }
+    },
+    "fenli-idle-019.png": {
+      "frame": {
+        "x": 3106,
+        "y": 502,
+        "w": 185,
+        "h": 373
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 43,
+        "y": 0,
+        "w": 185,
+        "h": 373
+      },
+      "sourceSize": {
+        "w": 228,
+        "h": 373
+      }
+    },
+    "fenli-idle-020.png": {
+      "frame": {
+        "x": 3494,
+        "y": 502,
+        "w": 185,
+        "h": 373
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 43,
+        "y": 0,
+        "w": 185,
+        "h": 373
+      },
+      "sourceSize": {
+        "w": 228,
+        "h": 373
+      }
+    },
+    "fenli-idle-021.png": {
+      "frame": {
+        "x": 2,
+        "y": 1002,
+        "w": 190,
+        "h": 372
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 38,
+        "y": 1,
+        "w": 190,
+        "h": 372
+      },
+      "sourceSize": {
+        "w": 228,
+        "h": 373
+      }
+    },
+    "fenli-idle-022.png": {
+      "frame": {
+        "x": 390,
+        "y": 1002,
+        "w": 199,
+        "h": 371
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 29,
+        "y": 1,
+        "w": 199,
+        "h": 371
+      },
+      "sourceSize": {
+        "w": 228,
+        "h": 373
+      }
+    },
+    "fenli-idle-023.png": {
+      "frame": {
+        "x": 778,
+        "y": 1002,
+        "w": 206,
+        "h": 371
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 22,
+        "y": 1,
+        "w": 206,
+        "h": 371
+      },
+      "sourceSize": {
+        "w": 228,
+        "h": 373
+      }
+    },
+    "fenli-idle-024.png": {
+      "frame": {
+        "x": 1166,
+        "y": 1002,
+        "w": 214,
+        "h": 372
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 14,
+        "y": 1,
+        "w": 214,
+        "h": 372
+      },
+      "sourceSize": {
+        "w": 228,
+        "h": 373
+      }
+    },
+    "fenli-idle-025.png": {
+      "frame": {
+        "x": 1554,
+        "y": 1002,
+        "w": 220,
+        "h": 372
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 8,
+        "y": 1,
+        "w": 220,
+        "h": 372
+      },
+      "sourceSize": {
+        "w": 228,
+        "h": 373
+      }
+    },
+    "fenli-attack-001.png": {
+      "frame": {
+        "x": 1942,
+        "y": 1002,
+        "w": 224,
+        "h": 372
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 1,
+        "w": 224,
+        "h": 372
+      },
+      "sourceSize": {
+        "w": 228,
+        "h": 373
+      }
+    },
+    "fenli-attack-002.png": {
+      "frame": {
+        "x": 2330,
+        "y": 1002,
+        "w": 337,
+        "h": 371
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -109,
+        "y": 2,
+        "w": 337,
+        "h": 371
+      },
+      "sourceSize": {
+        "w": 228,
+        "h": 373
+      }
+    },
+    "fenli-attack-003.png": {
+      "frame": {
+        "x": 2718,
+        "y": 1002,
+        "w": 338,
+        "h": 421
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -86,
+        "y": -48,
+        "w": 338,
+        "h": 421
+      },
+      "sourceSize": {
+        "w": 228,
+        "h": 373
+      }
+    },
+    "fenli-attack-004.png": {
+      "frame": {
+        "x": 3106,
+        "y": 1002,
+        "w": 237,
+        "h": 478
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 15,
+        "y": -106,
+        "w": 237,
+        "h": 478
+      },
+      "sourceSize": {
+        "w": 228,
+        "h": 373
+      }
+    },
+    "fenli-attack-005.png": {
+      "frame": {
+        "x": 3494,
+        "y": 1002,
+        "w": 294,
+        "h": 373
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 18,
+        "y": 0,
+        "w": 294,
+        "h": 373
+      },
+      "sourceSize": {
+        "w": 228,
+        "h": 373
+      }
+    },
+    "fenli-attack-006.png": {
+      "frame": {
+        "x": 2,
+        "y": 1502,
+        "w": 249,
+        "h": 392
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": -19,
+        "w": 249,
+        "h": 392
+      },
+      "sourceSize": {
+        "w": 228,
+        "h": 373
+      }
+    },
+    "fenli-attack-007.png": {
+      "frame": {
+        "x": 390,
+        "y": 1502,
+        "w": 227,
+        "h": 439
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": -66,
+        "w": 227,
+        "h": 439
+      },
+      "sourceSize": {
+        "w": 228,
+        "h": 373
+      }
+    },
+    "fenli-attack-008.png": {
+      "frame": {
+        "x": 778,
+        "y": 1502,
+        "w": 190,
+        "h": 447
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 38,
+        "y": -74,
+        "w": 190,
+        "h": 447
+      },
+      "sourceSize": {
+        "w": 228,
+        "h": 373
+      }
+    },
+    "fenli-attack-009.png": {
+      "frame": {
+        "x": 1166,
+        "y": 1502,
+        "w": 255,
+        "h": 415
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 13,
+        "y": -42,
+        "w": 255,
+        "h": 415
+      },
+      "sourceSize": {
+        "w": 228,
+        "h": 373
+      }
+    },
+    "fenli-attack-010.png": {
+      "frame": {
+        "x": 1554,
+        "y": 1502,
+        "w": 216,
+        "h": 462
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 25,
+        "y": -89,
+        "w": 216,
+        "h": 462
+      },
+      "sourceSize": {
+        "w": 228,
+        "h": 373
+      }
+    },
+    "fenli-attack-011.png": {
+      "frame": {
+        "x": 1942,
+        "y": 1502,
+        "w": 223,
+        "h": 475
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 17,
+        "y": -102,
+        "w": 223,
+        "h": 475
+      },
+      "sourceSize": {
+        "w": 228,
+        "h": 373
+      }
+    },
+    "fenli-attack-012.png": {
+      "frame": {
+        "x": 2330,
+        "y": 1502,
+        "w": 231,
+        "h": 409
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": -36,
+        "w": 231,
+        "h": 409
+      },
+      "sourceSize": {
+        "w": 228,
+        "h": 373
+      }
+    },
+    "fenli-attack-013.png": {
+      "frame": {
+        "x": 2718,
+        "y": 1502,
+        "w": 253,
+        "h": 360
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -24,
+        "y": 13,
+        "w": 253,
+        "h": 360
+      },
+      "sourceSize": {
+        "w": 228,
+        "h": 373
+      }
+    },
+    "fenli-attack-014.png": {
+      "frame": {
+        "x": 3106,
+        "y": 1502,
+        "w": 212,
+        "h": 362
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 16,
+        "y": 11,
+        "w": 212,
+        "h": 362
+      },
+      "sourceSize": {
+        "w": 228,
+        "h": 373
+      }
+    },
+    "fenli-attack-015.png": {
+      "frame": {
+        "x": 3494,
+        "y": 1502,
+        "w": 246,
+        "h": 372
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -17,
+        "y": 1,
+        "w": 246,
+        "h": 372
+      },
+      "sourceSize": {
+        "w": 228,
+        "h": 373
+      }
+    },
+    "fenli-ult-001.png": {
+      "frame": {
+        "x": 2,
+        "y": 2002,
+        "w": 224,
+        "h": 372
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 1,
+        "w": 224,
+        "h": 372
+      },
+      "sourceSize": {
+        "w": 228,
+        "h": 373
+      }
+    },
+    "fenli-ult-002.png": {
+      "frame": {
+        "x": 390,
+        "y": 2002,
+        "w": 315,
+        "h": 372
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -84,
+        "y": 0,
+        "w": 315,
+        "h": 372
+      },
+      "sourceSize": {
+        "w": 228,
+        "h": 373
+      }
+    },
+    "fenli-ult-003.png": {
+      "frame": {
+        "x": 778,
+        "y": 2002,
+        "w": 378,
+        "h": 371
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -141,
+        "y": 1,
+        "w": 378,
+        "h": 371
+      },
+      "sourceSize": {
+        "w": 228,
+        "h": 373
+      }
+    },
+    "fenli-ult-004.png": {
+      "frame": {
+        "x": 1166,
+        "y": 2002,
+        "w": 249,
+        "h": 482
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -4,
+        "y": -109,
+        "w": 249,
+        "h": 482
+      },
+      "sourceSize": {
+        "w": 228,
+        "h": 373
+      }
+    },
+    "fenli-ult-005.png": {
+      "frame": {
+        "x": 1554,
+        "y": 2002,
+        "w": 246,
+        "h": 484
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": -113,
+        "w": 246,
+        "h": 484
+      },
+      "sourceSize": {
+        "w": 228,
+        "h": 373
+      }
+    },
+    "fenli-ult-006.png": {
+      "frame": {
+        "x": 1942,
+        "y": 2002,
+        "w": 257,
+        "h": 496
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -2,
+        "y": -116,
+        "w": 257,
+        "h": 496
+      },
+      "sourceSize": {
+        "w": 228,
+        "h": 373
+      }
+    },
+    "fenli-ult-007.png": {
+      "frame": {
+        "x": 2330,
+        "y": 2002,
+        "w": 265,
+        "h": 478
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 9,
+        "y": -108,
+        "w": 265,
+        "h": 478
+      },
+      "sourceSize": {
+        "w": 228,
+        "h": 373
+      }
+    },
+    "fenli-ult-008.png": {
+      "frame": {
+        "x": 2718,
+        "y": 2002,
+        "w": 291,
+        "h": 426
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -25,
+        "y": -45,
+        "w": 291,
+        "h": 426
+      },
+      "sourceSize": {
+        "w": 228,
+        "h": 373
+      }
+    },
+    "fenli-ult-009.png": {
+      "frame": {
+        "x": 3106,
+        "y": 2002,
+        "w": 228,
+        "h": 416
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -11,
+        "y": -32,
+        "w": 228,
+        "h": 416
+      },
+      "sourceSize": {
+        "w": 228,
+        "h": 373
+      }
+    },
+    "fenli-ult-010.png": {
+      "frame": {
+        "x": 3494,
+        "y": 2002,
+        "w": 196,
+        "h": 416
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -5,
+        "y": -32,
+        "w": 196,
+        "h": 416
+      },
+      "sourceSize": {
+        "w": 228,
+        "h": 373
+      }
+    },
+    "fenli-ult-011.png": {
+      "frame": {
+        "x": 2,
+        "y": 2502,
+        "w": 251,
+        "h": 407
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 12,
+        "y": -29,
+        "w": 251,
+        "h": 407
+      },
+      "sourceSize": {
+        "w": 228,
+        "h": 373
+      }
+    },
+    "fenli-ult-012.png": {
+      "frame": {
+        "x": 390,
+        "y": 2502,
+        "w": 282,
+        "h": 388
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 15,
+        "y": -15,
+        "w": 282,
+        "h": 388
+      },
+      "sourceSize": {
+        "w": 228,
+        "h": 373
+      }
+    },
+    "fenli-ult-013.png": {
+      "frame": {
+        "x": 778,
+        "y": 2502,
+        "w": 263,
+        "h": 422
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 14,
+        "y": -51,
+        "w": 263,
+        "h": 422
+      },
+      "sourceSize": {
+        "w": 228,
+        "h": 373
+      }
+    },
+    "fenli-ult-014.png": {
+      "frame": {
+        "x": 1166,
+        "y": 2502,
+        "w": 221,
+        "h": 493
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 19,
+        "y": -120,
+        "w": 221,
+        "h": 493
+      },
+      "sourceSize": {
+        "w": 228,
+        "h": 373
+      }
+    },
+    "fenli-ult-015.png": {
+      "frame": {
+        "x": 1554,
+        "y": 2502,
+        "w": 352,
+        "h": 396
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -102,
+        "y": -24,
+        "w": 352,
+        "h": 396
+      },
+      "sourceSize": {
+        "w": 228,
+        "h": 373
+      }
+    },
+    "fenli-ult-016.png": {
+      "frame": {
+        "x": 1942,
+        "y": 2502,
+        "w": 384,
+        "h": 373
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -129,
+        "y": 0,
+        "w": 384,
+        "h": 373
+      },
+      "sourceSize": {
+        "w": 228,
+        "h": 373
+      }
+    },
+    "fenli-ult-017.png": {
+      "frame": {
+        "x": 2330,
+        "y": 2502,
+        "w": 309,
+        "h": 373
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -63,
+        "y": 0,
+        "w": 309,
+        "h": 373
+      },
+      "sourceSize": {
+        "w": 228,
+        "h": 373
+      }
+    },
+    "fenli-ult-018.png": {
+      "frame": {
+        "x": 2718,
+        "y": 2502,
+        "w": 246,
+        "h": 371
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -13,
+        "y": 1,
+        "w": 246,
+        "h": 371
+      },
+      "sourceSize": {
+        "w": 228,
+        "h": 373
+      }
+    },
+    "fenli-death-001.png": {
+      "frame": {
+        "x": 3106,
+        "y": 2502,
+        "w": 246,
+        "h": 372
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -17,
+        "y": 1,
+        "w": 246,
+        "h": 372
+      },
+      "sourceSize": {
+        "w": 228,
+        "h": 373
+      }
+    }
+  },
+  "meta": {
+    "app": "pack-character-art.mjs",
+    "version": "1.0",
+    "image": "fenli-sheet-1.png",
+    "format": "RGBA8888",
+    "size": {
+      "w": 3880,
+      "h": 3000
+    },
+    "scale": "1"
+  }
+}

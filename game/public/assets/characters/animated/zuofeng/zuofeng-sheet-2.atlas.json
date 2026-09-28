@@ -1,0 +1,375 @@
+{
+  "frames": {
+    "zuofeng-attack-001.png": {
+      "frame": {
+        "x": 2,
+        "y": 2,
+        "w": 438,
+        "h": 646
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 1,
+        "y": 1,
+        "w": 438,
+        "h": 646
+      },
+      "sourceSize": {
+        "w": 439,
+        "h": 647
+      }
+    },
+    "zuofeng-attack-002.png": {
+      "frame": {
+        "x": 592,
+        "y": 2,
+        "w": 503,
+        "h": 646
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -57,
+        "y": 1,
+        "w": 503,
+        "h": 646
+      },
+      "sourceSize": {
+        "w": 439,
+        "h": 647
+      }
+    },
+    "zuofeng-attack-003.png": {
+      "frame": {
+        "x": 1182,
+        "y": 2,
+        "w": 548,
+        "h": 647
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -96,
+        "y": 0,
+        "w": 548,
+        "h": 647
+      },
+      "sourceSize": {
+        "w": 439,
+        "h": 647
+      }
+    },
+    "zuofeng-attack-004.png": {
+      "frame": {
+        "x": 1772,
+        "y": 2,
+        "w": 582,
+        "h": 649
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -121,
+        "y": -2,
+        "w": 582,
+        "h": 649
+      },
+      "sourceSize": {
+        "w": 439,
+        "h": 647
+      }
+    },
+    "zuofeng-attack-005.png": {
+      "frame": {
+        "x": 2362,
+        "y": 2,
+        "w": 586,
+        "h": 649
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -123,
+        "y": -2,
+        "w": 586,
+        "h": 649
+      },
+      "sourceSize": {
+        "w": 439,
+        "h": 647
+      }
+    },
+    "zuofeng-attack-006.png": {
+      "frame": {
+        "x": 2952,
+        "y": 2,
+        "w": 585,
+        "h": 648
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -122,
+        "y": -1,
+        "w": 585,
+        "h": 648
+      },
+      "sourceSize": {
+        "w": 439,
+        "h": 647
+      }
+    },
+    "zuofeng-attack-007.png": {
+      "frame": {
+        "x": 2,
+        "y": 913,
+        "w": 585,
+        "h": 650
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -122,
+        "y": -3,
+        "w": 585,
+        "h": 650
+      },
+      "sourceSize": {
+        "w": 439,
+        "h": 647
+      }
+    },
+    "zuofeng-attack-008.png": {
+      "frame": {
+        "x": 592,
+        "y": 913,
+        "w": 586,
+        "h": 650
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -123,
+        "y": -3,
+        "w": 586,
+        "h": 650
+      },
+      "sourceSize": {
+        "w": 439,
+        "h": 647
+      }
+    },
+    "zuofeng-attack-009.png": {
+      "frame": {
+        "x": 1182,
+        "y": 913,
+        "w": 586,
+        "h": 648
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -123,
+        "y": -1,
+        "w": 586,
+        "h": 648
+      },
+      "sourceSize": {
+        "w": 439,
+        "h": 647
+      }
+    },
+    "zuofeng-attack-010.png": {
+      "frame": {
+        "x": 1772,
+        "y": 913,
+        "w": 585,
+        "h": 648
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -122,
+        "y": -1,
+        "w": 585,
+        "h": 648
+      },
+      "sourceSize": {
+        "w": 439,
+        "h": 647
+      }
+    },
+    "zuofeng-attack-011.png": {
+      "frame": {
+        "x": 2362,
+        "y": 913,
+        "w": 585,
+        "h": 648
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -122,
+        "y": -1,
+        "w": 585,
+        "h": 648
+      },
+      "sourceSize": {
+        "w": 439,
+        "h": 647
+      }
+    },
+    "zuofeng-attack-012.png": {
+      "frame": {
+        "x": 2952,
+        "y": 913,
+        "w": 585,
+        "h": 649
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -122,
+        "y": -2,
+        "w": 585,
+        "h": 649
+      },
+      "sourceSize": {
+        "w": 439,
+        "h": 647
+      }
+    },
+    "zuofeng-attack-013.png": {
+      "frame": {
+        "x": 2,
+        "y": 1824,
+        "w": 586,
+        "h": 650
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -122,
+        "y": -3,
+        "w": 586,
+        "h": 650
+      },
+      "sourceSize": {
+        "w": 439,
+        "h": 647
+      }
+    },
+    "zuofeng-attack-014.png": {
+      "frame": {
+        "x": 592,
+        "y": 1824,
+        "w": 580,
+        "h": 648
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -120,
+        "y": -1,
+        "w": 580,
+        "h": 648
+      },
+      "sourceSize": {
+        "w": 439,
+        "h": 647
+      }
+    },
+    "zuofeng-attack-015.png": {
+      "frame": {
+        "x": 1182,
+        "y": 1824,
+        "w": 563,
+        "h": 647
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -110,
+        "y": 0,
+        "w": 563,
+        "h": 647
+      },
+      "sourceSize": {
+        "w": 439,
+        "h": 647
+      }
+    },
+    "zuofeng-attack-016.png": {
+      "frame": {
+        "x": 1772,
+        "y": 1824,
+        "w": 538,
+        "h": 646
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -89,
+        "y": 1,
+        "w": 538,
+        "h": 646
+      },
+      "sourceSize": {
+        "w": 439,
+        "h": 647
+      }
+    },
+    "zuofeng-attack-017.png": {
+      "frame": {
+        "x": 2362,
+        "y": 1824,
+        "w": 460,
+        "h": 646
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -18,
+        "y": 1,
+        "w": 460,
+        "h": 646
+      },
+      "sourceSize": {
+        "w": 439,
+        "h": 647
+      }
+    },
+    "zuofeng-attack-018.png": {
+      "frame": {
+        "x": 2952,
+        "y": 1824,
+        "w": 438,
+        "h": 646
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 1,
+        "y": 1,
+        "w": 438,
+        "h": 646
+      },
+      "sourceSize": {
+        "w": 439,
+        "h": 647
+      }
+    }
+  },
+  "meta": {
+    "app": "pack-character-art.mjs",
+    "version": "1.0",
+    "image": "zuofeng-sheet-2.png",
+    "format": "RGBA8888",
+    "size": {
+      "w": 3540,
+      "h": 2733
+    },
+    "scale": "1"
+  }
+}

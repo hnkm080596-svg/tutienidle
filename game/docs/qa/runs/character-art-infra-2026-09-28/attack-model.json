@@ -1,0 +1,29 @@
+{
+  "surfaces": [
+    "asset-pack-pipeline (pack-character-art.mjs)",
+    "reskin-registry (CharacterArt.ts profile->slug mapping + metadata)",
+    "presentation-contract (ult clip, ANIMATED_CHARACTER_KEYS per-entity override, optional attack/ult clips)",
+    "slot-role-propagation (castSlotRole -> emitTurnCastStart -> CombatScenePayload -> combat-action-feedback)",
+    "asset-loading (CombatPreload / AssetBundleCatalog / preview scene enumeration)",
+    "combat-lifecycle (player sprite create/idle/attack/ult/death/destroy, profile swap mid-combat, re-entry, shutdown)",
+    "preview-parity (TranPhapCombatPreviewScene reskin + sync rebuild semantics)",
+    "display-anchoring (sourceSize/extent crop, origin (0.5,1), avatar fallback sizing)",
+    "test-oracles (characterArtReskin manifest parity, artModeUniformity exception set, e2e capture incl. player ult probe)"
+  ],
+  "attacks": [
+    "profile->slug mapping misses a consumer: a combatTextureKey reader bypasses resolvePlayerEntityKey and draws the old PNG mid-combat",
+    "ult cast on an entity without an authored ult clip skips the attack tell entirely (fallback chain gap)",
+    "slotRole wrong for reactive actions (counter/follow-up/intercept) or for enemies/companions sharing the cast pipeline",
+    "preview sync rebuild loop: sprite texture never matches expected key under reskin/atlas-miss -> destroy+recreate every sync",
+    "profile swap mid-combat: animated->static or slug->slug transition leaves stale texture/size/anim",
+    "second CombatScene.create re-registers 'zuofeng-*' anim keys (duplicate registration crash)",
+    "scene shutdown or player death mid-ult/death clip: stale ANIMATION_COMPLETE destroys replacement sprite or blocks finalize",
+    "atlas texture fails to load -> avatar fallback draws with wrong sourceSize/extent or crashes on missing frame",
+    "packer emits clip spanning sheets or frame names drifting from '<slug>-<clip>-NNN' -> empty clips at runtime",
+    "feet anchoring: sourceSize crop vs authored box mismatch -> player floats/sinks vs ground line",
+    "registry vs manifest drift (clip ranges, sheet names, extent, avatarSize) silently stale",
+    "unmapped character variants leak into combat bundle/VRAM or animate despite ANIMATED_CHARACTER_KEYS",
+    "companion id colliding with a character slug resolves to wrong art",
+    "death clip missing (synthetic from attack last frame) breaks beginDeathSequence finalization"
+  ]
+}

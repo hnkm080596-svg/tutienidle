@@ -51,7 +51,10 @@ import {
   type PlayerVisualProfileId,
 } from '@/presentation/art/PlayerVisualProfiles'
 import { ENTITY_ART_MODE } from '@/presentation/art/EntityArtMode'
-import { animatedArtFormFor } from '@/presentation/art/CombatPresentationCatalogue'
+import {
+  animatedArtFormFor,
+  resolvePlayerEntityKey,
+} from '@/presentation/art/CombatPresentationCatalogue'
 import { combatAnimationKey } from '@/presentation/art/CombatEntityPresentation'
 import { registerClipCatalogue } from './combat/combat-animation-playback'
 
@@ -192,7 +195,9 @@ export class MainScene extends Phaser.Scene {
       // is alive - playerVisualProfileHandler swaps profileId) plus the
       // cultivate bridge loop, then kick the standing pose's idle.
       for (const profile of Object.values(PLAYER_VISUAL_PROFILES)) {
-        const clips = animatedArtFormFor(profile.combatTextureKey)
+        const clips = animatedArtFormFor(
+          resolvePlayerEntityKey(profile.id, profile.combatTextureKey),
+        )
 
         if (clips) {
           registerClipCatalogue(this.anims, clips)
@@ -306,7 +311,9 @@ export class MainScene extends Phaser.Scene {
     const profile = this.player
       ? PLAYER_VISUAL_PROFILES[this.player.profileId]
       : PLAYER_VISUAL_PROFILES.mortal
-    const clips = animatedArtFormFor(profile.combatTextureKey)
+    const clips = animatedArtFormFor(
+      resolvePlayerEntityKey(profile.id, profile.combatTextureKey),
+    )
 
     if (this.player?.sitting) {
       return clips?.cultivate?.sourceSize ?? CULTIVATE_BRIDGE_SOURCE_SIZE
@@ -327,11 +334,15 @@ export class MainScene extends Phaser.Scene {
     }
 
     const profile = PLAYER_VISUAL_PROFILES[this.player.profileId]
-    const clips = animatedArtFormFor(profile.combatTextureKey)
+    // Reskin-aware (F-CB2-05): resolve the character slug, not the legacy
+    // profile texture key, so dormant animated mode renders the same art
+    // combat does.
+    const entityKey = resolvePlayerEntityKey(profile.id, profile.combatTextureKey)
+    const clips = animatedArtFormFor(entityKey)
     const key = this.player.sitting
       ? (clips?.cultivate?.key ?? CULTIVATE_BRIDGE_KEY)
       : clips
-        ? combatAnimationKey(profile.combatTextureKey, 'idle')
+        ? combatAnimationKey(entityKey, 'idle')
         : undefined
 
     if (key && this.anims.exists(key) && this.player.sprite.anims.currentAnim?.key !== key) {

@@ -12,9 +12,9 @@
 // CombatScene.fallbackSpriteTextureKey().
 import { describe, expect, it, vi } from 'vitest'
 import { CombatGridView } from './combat-grid-view'
-import { BOSS_DISPLAY_SCALE_MULTIPLIER, ENEMY_DISPLAY_SCALE_MULTIPLIER } from './combatConstants'
-import { ENTITY_ART_MODE } from '@/presentation/art/EntityArtMode'
+import { BOSS_DISPLAY_SCALE_MULTIPLIER, ENEMY_DISPLAY_SCALE_MULTIPLIER, PLAYER_ID } from './combatConstants'
 import { MONSTER_ART } from '@/game/support/MonsterArt'
+import { CHARACTER_ART } from '@/game/support/CharacterArt'
 import type { CombatGridViewHost } from './CombatGridViewHost'
 
 /**
@@ -52,7 +52,7 @@ function createFakeScene() {
     characterWidth: 40,
     characterHeight: 50,
     playerSourceSize: { w: 1244, h: 1264 },
-    playerProfile: { combatTextureKey: 'player-mortal-ink-sword-concept-v2' },
+    playerProfile: { id: 'mortal', combatTextureKey: 'player-mortal-ink-sword-concept-v2' },
     add: {
       text: () => chainable(),
       sprite: vi.fn(() => chainable()),
@@ -213,6 +213,56 @@ describe('CombatGridView.getOrCreateSprite() — host.fallbackSpriteTextureKey()
       isBoss: false,
     })
 
+    expect(sprite.kind).toBe('rect')
+  })
+
+  it('reskinned PLAYER with atlas+avatar missing falls back to the profile PNG - never __MISSING (F-CAI-25)', () => {
+    const { scene, gridView } = createFakeScene()
+
+    // mortal maps to zuofeng (animated). Only the profile PNG reports
+    // loaded - atlas AND avatar both miss.
+    const profileKey = (scene.playerProfile as { combatTextureKey: string }).combatTextureKey
+
+    scene.textures = { exists: (key: string) => key === profileKey }
+
+    const sprite = gridView.getOrCreateSprite(PLAYER_ID, 0x4caf50, 'Player', 0)
+
+    expect(sprite.kind).toBe('sprite')
+
+    const spriteFactory = (scene.add as { sprite: ReturnType<typeof vi.fn> }).sprite
+    expect(spriteFactory.mock.calls[0]?.[2]).toBe(profileKey)
+  })
+
+  it('reskinned PLAYER with atlas missing still draws the variant avatar - the intermediate chain step (Clean-B2 coverage)', () => {
+    const { scene, gridView } = createFakeScene()
+
+    // mortal maps to zuofeng (animated). Only the variant avatar reports
+    // loaded - the idle sheet misses, so the draw chain must land on the
+    // avatar, not skip straight to the profile PNG / Rectangle.
+    const avatarKey = CHARACTER_ART['zuofeng']?.avatarKey
+
+    expect(avatarKey).toBeDefined()
+
+    scene.textures = { exists: (key: string) => key === avatarKey }
+
+    const sprite = gridView.getOrCreateSprite(PLAYER_ID, 0x4caf50, 'Player', 0)
+
+    expect(sprite.kind).toBe('sprite')
+
+    const spriteFactory = (scene.add as { sprite: ReturnType<typeof vi.fn> }).sprite
+    expect(spriteFactory.mock.calls[0]?.[2]).toBe(avatarKey)
+  })
+
+  it('reskinned PLAYER with atlas+avatar+profile ALL missing -> Rectangle terminal fallback (F-CAI-25)', () => {
+    const { scene, gridView } = createFakeScene()
+
+    scene.textures = { exists: () => false }
+
+    const sprite = gridView.getOrCreateSprite(PLAYER_ID, 0x4caf50, 'Player', 0)
+
+    // The player branch must end on the same Rectangle the enemy branch
+    // does - Phaser's implicit __MISSING checkerboard is not an acceptable
+    // final visual.
     expect(sprite.kind).toBe('rect')
   })
 
@@ -392,25 +442,26 @@ describe('CombatGridView — idle motion for static entities', () => {
     expect(sprite.footY).toBe(200)
   })
 
-  it('the player gets the same bob as every static entity (uniformity 2026-09-19)', () => {
-    // Before the uniform contract the player was the lone animated entity
-    // and moved through its own frames. In 'static' mode the player is a
-    // static entity like everything else - same PNG, same bob.
+  it('the reskinned player draws its character atlas and skips the bob (character-art-infra)', () => {
+    // The fixture's profile id 'mortal' maps to 'zuofeng' in
+    // CHARACTER_RESKIN_MAP, so the player is an animated override entity in
+    // every mode: atlas idle frame, no bob tween.
     const { scene, gridView } = createFakeScene()
 
     const player = gridView.getOrCreateSprite('player', 0x4a90d9, 'Player', 4)
 
-    if (ENTITY_ART_MODE === 'static') {
-      expect(player.idle).toBeDefined()
-      expect(
-        (scene.tweens as { add: ReturnType<typeof vi.fn> }).add,
-      ).toHaveBeenCalled()
-    } else {
-      expect(player.idle).toBeUndefined()
-      expect(
-        (scene.tweens as { add: ReturnType<typeof vi.fn> }).add,
-      ).not.toHaveBeenCalled()
-    }
+    const spriteCalls = (scene.add as { sprite: ReturnType<typeof vi.fn> }).sprite.mock.calls
+    const playerCall = spriteCalls.find((call) => String(call[2]).startsWith('zuofeng-sheet-'))
+
+    expect(playerCall, 'player did not draw the zuofeng atlas').toBeDefined()
+    expect(playerCall![3]).toBe('zuofeng-idle-001.png')
+    expect(player.idle).toBeUndefined()
+    expect(
+      (scene.tweens as { add: ReturnType<typeof vi.fn> }).add,
+    ).not.toHaveBeenCalled()
+    expect(
+      (scene.startEntityIdle as ReturnType<typeof vi.fn>),
+    ).toHaveBeenCalledWith(player, 'player')
   })
 
   it('destroying a sprite kills its bob, which outlives the GameObject otherwise', () => {

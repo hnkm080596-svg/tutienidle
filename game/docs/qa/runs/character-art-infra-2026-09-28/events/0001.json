@@ -1,0 +1,30 @@
+{
+  "phase": "INTAKE",
+  "request": {
+    "runId": "character-art-infra-2026-09-28",
+    "productRoot": "..",
+    "task": "Character art infrastructure wave: pack-character-art.mjs pipeline (10 variants emitted, only zuofeng wired), CharacterArt.ts registry + CHARACTER_RESKIN_MAP (all 4 profiles -> zuofeng placeholder pending user's six real sets), 'ult' clip contract + slotRole propagation (CombatAnimationRuntime -> turn_cast_start -> combat-action-feedback), avatar static fallback, TranPhapCombatPreviewScene reskin support, manifest-pinned tests. No roster/stat/name/gameplay changes. Unmapped variants stay packed-but-unwired.",
+    "authorizedRepairs": [
+      "task-owned files only: art pipeline, presentation wiring, registry, loaders, playback, tests"
+    ],
+    "nonGoals": [
+      "new character roster/stats/names",
+      "SFX design",
+      "VFX",
+      "companion art mapping",
+      "master modifications"
+    ],
+    "budget": "max 2 dispatched verifier agents per task-turn (user ruling); 1 adversarial reviewer dispatched",
+    "priorEvidence": [
+      "npm run verify green on pre-review state (type-check+build+6984 vitest, 4 stale mid-edit fails re-verified green isolated)",
+      "playwright combat-idle-motion-capture green (player ult probe included)",
+      "P18 OCR delegation pass: 38 previewed / 22 reviewed / 16 generated-binary skipped, 2 Medium findings fixed (MISSING_CLIP_FALLBACK, preview sync acceptable-key set)",
+      "P5 passes 1-2 complete on post-OCR state"
+    ],
+    "contractPaths": [
+      "AGENTS.md",
+      "game/docs/qa/protocol/README.md",
+      "game/CLAUDE.md"
+    ]
+  }
+}

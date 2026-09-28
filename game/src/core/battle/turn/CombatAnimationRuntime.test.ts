@@ -108,6 +108,98 @@ describe('CombatAnimationRuntime', () => {
     expect(events).toContain('turn_cast_start')
   })
 
+  // character-art-infra: the payload's slotRole selects the authored clip
+  // downstream (ult vs attack). It comes from reference-comparing
+  // declared.action.slot against the actor's slot objects - a basic/slotless
+  // declare reports 'basic', the ultimate slot reports 'ultimate'.
+  it('turn_cast_start carries slotRole basic for a slotless/basic declare', () => {
+    const { runtime, player, eventBus } = fixture()
+
+    const roles: (string | undefined)[] = []
+    eventBus.on('turn_cast_start', (payload) => roles.push((payload as { slotRole?: string }).slotRole))
+
+    runtime.notifyReadyActor(player)
+    runtime.acknowledgeTurnReady(runtime.getPendingPlaybackToken()!)
+
+    expect(roles).toEqual(['basic'])
+  })
+
+  it('turn_cast_start carries slotRole ultimate when the declared slot IS actor.ultimate', () => {
+    const { runtime, player, eventBus, turnBattleSystem } = fixture()
+
+    const ultSlot = { skill: GENERIC_PHYSICAL_BASIC, remainingCooldownTurns: 0 }
+    player.ultimate = ultSlot
+
+    const realDeclare = turnBattleSystem.declareActorAction.bind(turnBattleSystem)
+    vi.spyOn(turnBattleSystem, 'declareActorAction').mockImplementation((battle, actor) => {
+      const declared = realDeclare(battle, actor)
+      if (declared.action) {
+        declared.action = { ...declared.action, slot: ultSlot }
+      }
+      return declared
+    })
+
+    const roles: (string | undefined)[] = []
+    eventBus.on('turn_cast_start', (payload) => roles.push((payload as { slotRole?: string }).slotRole))
+
+    runtime.notifyReadyActor(player)
+    runtime.acknowledgeTurnReady(runtime.getPendingPlaybackToken()!)
+
+    expect(roles).toEqual(['ultimate'])
+  })
+
+  // Clean-A2 R2-F7: a charge-RESOLVE turn carries no slot (action is null -
+  // the slot was consumed at commit), but declared.chargedSkill IS the
+  // slot's skill object. The resolve hit must report the same role the
+  // commit did, or the resolve silently degrades ult->attack.
+  it('turn_cast_start reports the charged slot role on the resolve turn', () => {
+    const { runtime, player, eventBus, turnBattleSystem } = fixture()
+
+    const ultSkill = { ...GENERIC_PHYSICAL_BASIC, id: 'charged_ult_test' }
+    player.ultimate = { skill: ultSkill, remainingCooldownTurns: 0 }
+
+    const realDeclare = turnBattleSystem.declareActorAction.bind(turnBattleSystem)
+    vi.spyOn(turnBattleSystem, 'declareActorAction').mockImplementation((battle, actor) => {
+      const declared = realDeclare(battle, actor)
+      // Simulate the resolve turn: no action slot, chargedSkill present.
+      declared.action = null
+      ;(declared as { chargedSkill?: unknown }).chargedSkill = ultSkill
+      return declared
+    })
+
+    const roles: (string | undefined)[] = []
+    eventBus.on('turn_cast_start', (payload) => roles.push((payload as { slotRole?: string }).slotRole))
+
+    runtime.notifyReadyActor(player)
+    runtime.acknowledgeTurnReady(runtime.getPendingPlaybackToken()!)
+
+    expect(roles).toEqual(['ultimate'])
+  })
+
+  // Clean-B F-CB2-02: a declared turn that is NOT a cast (charge-
+  // continuation / skipped - action null AND chargedSkill null) reports
+  // 'none' so presentation skips the attack tell instead of replaying it
+  // every channeling turn.
+  it('turn_cast_start reports none for a non-cast declared turn', () => {
+    const { runtime, player, eventBus, turnBattleSystem } = fixture()
+
+    const realDeclare = turnBattleSystem.declareActorAction.bind(turnBattleSystem)
+    vi.spyOn(turnBattleSystem, 'declareActorAction').mockImplementation((battle, actor) => {
+      const declared = realDeclare(battle, actor)
+      // Simulate a charge-continuation turn: no action, no resolved charge.
+      declared.action = null
+      return declared
+    })
+
+    const roles: (string | undefined)[] = []
+    eventBus.on('turn_cast_start', (payload) => roles.push((payload as { slotRole?: string }).slotRole))
+
+    runtime.notifyReadyActor(player)
+    runtime.acknowledgeTurnReady(runtime.getPendingPlaybackToken()!)
+
+    expect(roles).toEqual(['none'])
+  })
+
   it('acknowledgeActionImpact → applies impact → getAnimationState reports standby + emits action_impact', () => {
     const { runtime, player, eventBus } = fixture()
 
@@ -482,6 +574,8 @@ describe('CombatAnimationRuntime', () => {
         expect(resume.skillId).toBeDefined()
         expect(resume.targetIds).toBeDefined()
         expect(resume.token).not.toBe(oldCastToken)
+        // The replayed onAttack needs the same clip the live emit selected.
+        expect(resume.slotRole).toBe('basic')
 
         // Old token rejected
         runtime.acknowledgeActionImpact(oldCastToken)
@@ -490,6 +584,34 @@ describe('CombatAnimationRuntime', () => {
         // New token accepted -> advances to standby
         runtime.acknowledgeActionImpact(resume.token)
         expect(runtime.getAnimationState(player.id)).toBe('standby')
+      }
+    })
+
+    // Clean-A F-2: a resumed cast replays onAttack - without the role a
+    // resumed ULTIMATE would draw the 'attack' clip instead of 'ult'.
+    it('resumed cast carries slotRole ultimate when the pending declare used the ultimate slot', () => {
+      const { runtime, player, turnBattleSystem } = fixture()
+      runtime.setPresentationActive(true)
+
+      const ultSlot = { skill: GENERIC_PHYSICAL_BASIC, remainingCooldownTurns: 0 }
+      player.ultimate = ultSlot
+
+      const realDeclare = turnBattleSystem.declareActorAction.bind(turnBattleSystem)
+      vi.spyOn(turnBattleSystem, 'declareActorAction').mockImplementation((battle, actor) => {
+        const declared = realDeclare(battle, actor)
+        if (declared.action) {
+          declared.action = { ...declared.action, slot: ultSlot }
+        }
+        return declared
+      })
+
+      runtime.notifyReadyActor(player)
+      runtime.acknowledgeTurnReady(runtime.getPendingPlaybackToken()!)
+
+      const resume = runtime.preparePresentationResume()!
+      expect(resume.phase).toBe('cast')
+      if (resume.phase === 'cast') {
+        expect(resume.slotRole).toBe('ultimate')
       }
     })
 

@@ -1,0 +1,455 @@
+{
+  "frames": {
+    "gaosheng-idle-001.png": {
+      "frame": {
+        "x": 2,
+        "y": 2,
+        "w": 403,
+        "h": 498
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 3,
+        "w": 403,
+        "h": 498
+      },
+      "sourceSize": {
+        "w": 403,
+        "h": 501
+      }
+    },
+    "gaosheng-idle-002.png": {
+      "frame": {
+        "x": 624,
+        "y": 2,
+        "w": 403,
+        "h": 500
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 1,
+        "w": 403,
+        "h": 500
+      },
+      "sourceSize": {
+        "w": 403,
+        "h": 501
+      }
+    },
+    "gaosheng-idle-003.png": {
+      "frame": {
+        "x": 1246,
+        "y": 2,
+        "w": 400,
+        "h": 501
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 1,
+        "y": 0,
+        "w": 400,
+        "h": 501
+      },
+      "sourceSize": {
+        "w": 403,
+        "h": 501
+      }
+    },
+    "gaosheng-idle-004.png": {
+      "frame": {
+        "x": 1868,
+        "y": 2,
+        "w": 400,
+        "h": 501
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 1,
+        "y": 0,
+        "w": 400,
+        "h": 501
+      },
+      "sourceSize": {
+        "w": 403,
+        "h": 501
+      }
+    },
+    "gaosheng-idle-005.png": {
+      "frame": {
+        "x": 2490,
+        "y": 2,
+        "w": 400,
+        "h": 501
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 1,
+        "y": 0,
+        "w": 400,
+        "h": 501
+      },
+      "sourceSize": {
+        "w": 403,
+        "h": 501
+      }
+    },
+    "gaosheng-idle-006.png": {
+      "frame": {
+        "x": 3112,
+        "y": 2,
+        "w": 402,
+        "h": 499
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 2,
+        "w": 402,
+        "h": 499
+      },
+      "sourceSize": {
+        "w": 403,
+        "h": 501
+      }
+    },
+    "gaosheng-idle-007.png": {
+      "frame": {
+        "x": 2,
+        "y": 619,
+        "w": 402,
+        "h": 499
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 2,
+        "w": 402,
+        "h": 499
+      },
+      "sourceSize": {
+        "w": 403,
+        "h": 501
+      }
+    },
+    "gaosheng-idle-008.png": {
+      "frame": {
+        "x": 624,
+        "y": 619,
+        "w": 403,
+        "h": 498
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 3,
+        "w": 403,
+        "h": 498
+      },
+      "sourceSize": {
+        "w": 403,
+        "h": 501
+      }
+    },
+    "gaosheng-attack-001.png": {
+      "frame": {
+        "x": 1246,
+        "y": 619,
+        "w": 403,
+        "h": 499
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 2,
+        "w": 403,
+        "h": 499
+      },
+      "sourceSize": {
+        "w": 403,
+        "h": 501
+      }
+    },
+    "gaosheng-attack-002.png": {
+      "frame": {
+        "x": 1868,
+        "y": 619,
+        "w": 402,
+        "h": 501
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 2,
+        "y": 0,
+        "w": 402,
+        "h": 501
+      },
+      "sourceSize": {
+        "w": 403,
+        "h": 501
+      }
+    },
+    "gaosheng-attack-003.png": {
+      "frame": {
+        "x": 2490,
+        "y": 619,
+        "w": 401,
+        "h": 501
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 2,
+        "y": 0,
+        "w": 401,
+        "h": 501
+      },
+      "sourceSize": {
+        "w": 403,
+        "h": 501
+      }
+    },
+    "gaosheng-attack-004.png": {
+      "frame": {
+        "x": 3112,
+        "y": 619,
+        "w": 403,
+        "h": 498
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 2,
+        "y": 3,
+        "w": 403,
+        "h": 498
+      },
+      "sourceSize": {
+        "w": 403,
+        "h": 501
+      }
+    },
+    "gaosheng-attack-005.png": {
+      "frame": {
+        "x": 2,
+        "y": 1236,
+        "w": 405,
+        "h": 495
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 20,
+        "y": 6,
+        "w": 405,
+        "h": 495
+      },
+      "sourceSize": {
+        "w": 403,
+        "h": 501
+      }
+    },
+    "gaosheng-attack-006.png": {
+      "frame": {
+        "x": 624,
+        "y": 1236,
+        "w": 406,
+        "h": 613
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -5,
+        "y": -112,
+        "w": 406,
+        "h": 613
+      },
+      "sourceSize": {
+        "w": 403,
+        "h": 501
+      }
+    },
+    "gaosheng-attack-007.png": {
+      "frame": {
+        "x": 1246,
+        "y": 1236,
+        "w": 618,
+        "h": 423
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -212,
+        "y": 78,
+        "w": 618,
+        "h": 423
+      },
+      "sourceSize": {
+        "w": 403,
+        "h": 501
+      }
+    },
+    "gaosheng-attack-008.png": {
+      "frame": {
+        "x": 1868,
+        "y": 1236,
+        "w": 606,
+        "h": 420
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -199,
+        "y": 81,
+        "w": 606,
+        "h": 420
+      },
+      "sourceSize": {
+        "w": 403,
+        "h": 501
+      }
+    },
+    "gaosheng-attack-009.png": {
+      "frame": {
+        "x": 2490,
+        "y": 1236,
+        "w": 608,
+        "h": 420
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -201,
+        "y": 81,
+        "w": 608,
+        "h": 420
+      },
+      "sourceSize": {
+        "w": 403,
+        "h": 501
+      }
+    },
+    "gaosheng-attack-010.png": {
+      "frame": {
+        "x": 3112,
+        "y": 1236,
+        "w": 610,
+        "h": 420
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -201,
+        "y": 81,
+        "w": 610,
+        "h": 420
+      },
+      "sourceSize": {
+        "w": 403,
+        "h": 501
+      }
+    },
+    "gaosheng-attack-011.png": {
+      "frame": {
+        "x": 2,
+        "y": 1853,
+        "w": 604,
+        "h": 420
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -200,
+        "y": 81,
+        "w": 604,
+        "h": 420
+      },
+      "sourceSize": {
+        "w": 403,
+        "h": 501
+      }
+    },
+    "gaosheng-attack-012.png": {
+      "frame": {
+        "x": 624,
+        "y": 1853,
+        "w": 528,
+        "h": 544
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -121,
+        "y": -43,
+        "w": 528,
+        "h": 544
+      },
+      "sourceSize": {
+        "w": 403,
+        "h": 501
+      }
+    },
+    "gaosheng-attack-013.png": {
+      "frame": {
+        "x": 1246,
+        "y": 1853,
+        "w": 376,
+        "h": 555
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -2,
+        "y": -54,
+        "w": 376,
+        "h": 555
+      },
+      "sourceSize": {
+        "w": 403,
+        "h": 501
+      }
+    },
+    "gaosheng-attack-014.png": {
+      "frame": {
+        "x": 1868,
+        "y": 1853,
+        "w": 403,
+        "h": 499
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 2,
+        "w": 403,
+        "h": 499
+      },
+      "sourceSize": {
+        "w": 403,
+        "h": 501
+      }
+    }
+  },
+  "meta": {
+    "app": "pack-character-art.mjs",
+    "version": "1.0",
+    "image": "gaosheng-sheet-1.png",
+    "format": "RGBA8888",
+    "size": {
+      "w": 3732,
+      "h": 2468
+    },
+    "scale": "1"
+  }
+}

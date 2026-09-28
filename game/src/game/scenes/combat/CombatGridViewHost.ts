@@ -22,7 +22,7 @@ export interface CombatGridViewHost {
   readonly characterWidth: number
   readonly characterHeight: number
   readonly playerSourceSize: { w: number; h: number }
-  readonly playerProfile: { combatTextureKey: string }
+  readonly playerProfile: { id: string; combatTextureKey: string }
   readonly sprites: Map<string, EntitySprite>
   // resetVisual() only — host không cần interpolate thật vẫn thoả type
   // bằng 1 Map rỗng (xem TranPhapCombatPreviewScene, Task 4).

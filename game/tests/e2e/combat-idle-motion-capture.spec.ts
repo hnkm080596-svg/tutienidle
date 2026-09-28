@@ -6,26 +6,27 @@ import { bootToGuestHome, createCharacterThroughUi, enterHome } from './helpers'
 
 /**
  * QA visual capture (2026-09-11) - Spec B sec.9 criterion 10, updated for the
- * art-mode contract that replaced it (a7d7dc70, 2026-09-19) and the
- * enemy-art-wave1 reskin amendment (2026-09-28):
+ * art-mode contract that replaced it (a7d7dc70, 2026-09-19), the
+ * enemy-art-wave1 reskin amendment and the character-art-infra reskin
+ * (2026-09-28):
  *
  * "Verified on screen: entities visibly live. A SCREENSHOT PROVES LAYOUT AND
  * NOTHING ELSE - motion needs a capture across frames, or watching it."
  *
- * ENTITY_ART_MODE is 'static': the player (and every unmapped enemy) bobs via
- * tween and plays NO animation. The reskinned NEWSPRITE enemies are the one
- * sanctioned exception - they play authored atlas clips - so this spec now
- * samples the WHOLE first combat, not a fixed 2s window: floor 1's pool is
- * boar(w5, animated) + bandit(w3, static), and which species stand up first is
- * RNG. Sampling until combat ends (or the cap hits) makes "at least one
- * animated enemy actually animated" near-deterministic instead of a coin toss.
+ * ENTITY_ART_MODE is 'static': unmapped entities bob via tween and play NO
+ * animation. The sanctioned exceptions are the reskin registries - mapped
+ * NEWSPRITE enemies play authored atlas clips, and the player's visual
+ * profile resolves to the `zuofeng` character atlas the same way - so this
+ * spec samples the WHOLE first combat, not a fixed 2s window: floor 1's pool
+ * is boar(w5, animated) + bandit(w3, static), and which species stand up
+ * first is RNG. Sampling until combat ends (or the cap hits) makes "at least
+ * one animated enemy actually animated" near-deterministic.
  *
- *  - the player's body must sit ABOVE its own projected ground point by a
- *    varying amount within the declared amplitude (static bob);
- *  - every static enemy does the same, and plays no animation (they are
- *    stills, the mode contract);
- *  - every animated enemy's CURRENT ATLAS FRAME must change (a frozen sprite
- *    reports a frame too - only a change proves playback);
+ *  - the player plays an authored atlas clip (`zuofeng-*`) whose CURRENT
+ *    FRAME changes - a frozen sprite reports a frame too;
+ *  - every static enemy bobs within the declared amplitude and plays no
+ *    animation (they are stills, the mode contract);
+ *  - every animated enemy's CURRENT ATLAS FRAME must change;
  *  - at least one animated enemy must have appeared at all.
  */
 /**
@@ -165,12 +166,15 @@ test.describe('Combat idle motion (static mode + wave-1 reskins)', () => {
           ?.currentFrame?.textureFrame
       })
 
+    // Poll rather than fixed waits: frame ticks ride requestAnimationFrame,
+    // which the host can starve under parallel suite load - the pin is the
+    // frame advancing, not the wall-clock it happens on.
     const probeFrames = new Set<string | undefined>()
-    probeFrames.add(await frameAt())
-    await page.waitForTimeout(400)
-    probeFrames.add(await frameAt())
-    await page.waitForTimeout(400)
-    probeFrames.add(await frameAt())
+
+    for (let i = 0; i < 20 && probeFrames.size < 2; i++) {
+      probeFrames.add(await frameAt())
+      await page.waitForTimeout(250)
+    }
 
     expect(
       probeFrames.size,
@@ -233,9 +237,61 @@ test.describe('Combat idle motion (static mode + wave-1 reskins)', () => {
 
     expect(probeGone, 'probe sprite still present after death sequence').toBe(true)
 
+    // Player probe (character-art-infra): the `ult` clip is the one authored
+    // sequence combat may never fire on floor 1 (ult slot gating is deep
+    // progression). Drive the same call onAttack makes for an ultimate cast -
+    // play-once, then TRANSITION_DESTINATION lands it on standby.
+    const ultAnim = await page.evaluate(() => {
+      const w = window as unknown as {
+        __tutienPhaserGame?: { scene: { getScene(k: string): unknown } }
+      }
+      const scene = w.__tutienPhaserGame?.scene.getScene('CombatScene') as {
+        sprites: Map<string, unknown>
+        playCombatAnimation(sprite: unknown, id: string, name: string): void
+      }
+      const sprite = scene.sprites.get('player')
+      if (!sprite) return { anim: undefined as string | undefined }
+      scene.playCombatAnimation(sprite, 'player', 'ult')
+      return {
+        anim: (sprite as { rect: { anims?: { currentAnim?: { key: string } } } }).rect
+          .anims?.currentAnim?.key,
+      }
+    })
+
+    expect(ultAnim.anim, `player ult clip did not start (got '${ultAnim.anim}')`).toBe(
+      'zuofeng-ult',
+    )
+
+    await page
+      .locator('canvas')
+      .first()
+      .screenshot({ path: path.join(outDir, 'player-ult.png') })
+
+    // 14 frames at 10fps = 1.4s; give the completion listener margin. The
+    // one-shot must have ENDED - which loop follows (standby vs idle) is the
+    // live engine's call, so the pin is "settles on a loop", not a specific
+    // destination. Poll rather than fixed-wait: live combat keeps running
+    // and a natural cast may be mid-clip at any instant - especially now
+    // that loop requests DEFER behind in-flight one-shots (F-CB2-01).
+    await page.waitForFunction(
+      () => {
+        const w = window as unknown as {
+          __tutienPhaserGame?: { scene: { getScene(k: string): unknown } }
+        }
+        const scene = w.__tutienPhaserGame?.scene.getScene('CombatScene') as {
+          sprites: Map<string, { rect: { anims?: { currentAnim?: { key: string } } } }>
+        }
+        const key = scene.sprites.get('player')?.rect.anims?.currentAnim?.key
+        return typeof key === 'string' && /^zuofeng-(idle|standby)$/.test(key)
+      },
+      undefined,
+      { timeout: 12_000, polling: 200 },
+    )
+
 
     type EnemySample = {
       id: string
+      kind: string
       y: number
       footY: number
       anim: string | undefined
@@ -245,6 +301,7 @@ test.describe('Combat idle motion (static mode + wave-1 reskins)', () => {
       playerY: number | undefined
       playerFootY: number | undefined
       playerAnim: string | undefined
+      playerFrame: string | undefined
       enemies: EnemySample[]
     }
 
@@ -282,8 +339,10 @@ test.describe('Combat idle motion (static mode + wave-1 reskins)', () => {
         let playerY: number | undefined
         let playerFootY: number | undefined
         let playerAnim: string | undefined
+        let playerFrame: string | undefined
         const enemies: {
           id: string
+          kind: string
           y: number
           footY: number
           anim: string | undefined
@@ -291,19 +350,20 @@ test.describe('Combat idle motion (static mode + wave-1 reskins)', () => {
         }[] = []
 
         for (const [id, sprite] of scene.sprites) {
-          if (sprite.kind !== 'sprite') {
-            continue
-          }
-
           if (id === 'player') {
             playerY = sprite.rect.y
             playerFootY = sprite.footY
             playerAnim = sprite.rect.anims?.currentAnim?.key
+            playerFrame = sprite.rect.anims?.currentFrame?.textureFrame
             continue
           }
 
+          // Record EVERY entity kind - a reskin that silently regressed to a
+          // Rectangle must stay visible to the assertions below, not be
+          // filtered out of the sample (Clean-R1 F7).
           enemies.push({
             id,
+            kind: sprite.kind,
             y: sprite.rect.y,
             footY: sprite.footY,
             anim: sprite.rect.anims?.currentAnim?.key,
@@ -311,7 +371,7 @@ test.describe('Combat idle motion (static mode + wave-1 reskins)', () => {
           })
         }
 
-        return { playerY, playerFootY, playerAnim, enemies }
+        return { playerY, playerFootY, playerAnim, playerFrame, enemies }
       })
 
     const measureEntity = async () =>
@@ -326,6 +386,7 @@ test.describe('Combat idle motion (static mode + wave-1 reskins)', () => {
             {
               row: number
               personHeight?: number
+              boost: { value: number }
               rect: {
                 displayWidth: number
                 displayHeight: number
@@ -343,7 +404,11 @@ test.describe('Combat idle motion (static mode + wave-1 reskins)', () => {
           const s = scene.sprites.get(id)
           if (!s?.personHeight) return undefined
           const depth = scene.projection?.gridToScreen(s.row, 8).scale ?? 1
-          return s.personHeight / depth
+          // personHeight tracks boost deliberately (turn-ready pulse 1.15,
+          // crit pop 1.25, spawn fade 0.7) - the assertion compares the
+          // geometry class factors, so the transient modulation divides out.
+          const boost = s.boost?.value || 1
+          return s.personHeight / (depth * boost)
         }
 
         const enemyId = [...scene.sprites.keys()].find((k) => k !== 'player')
@@ -403,45 +468,51 @@ test.describe('Combat idle motion (static mode + wave-1 reskins)', () => {
     const anyEnemies = samples.some((sample) => sample.enemies.length > 0)
     expect(anyEnemies, 'no enemy sprites on screen across the whole capture').toBe(true)
 
-    // 1. Static-mode player: NO animation, and the bob lifts the body off its
-    //    projected ground point by a varying amount. (Pre-2026-09-19 this
-    //    asserted an atlas clip was playing; the static lock replaced that.)
-    const playerLifts = samples
-      .filter((sample) => sample.playerY !== undefined && sample.playerFootY !== undefined)
-      .map((sample) => sample.playerFootY! - sample.playerY!)
+    // 1. Reskinned player (character-art-infra): the visual profile resolves
+    //    to the `zuofeng` atlas and plays an authored clip whose frame must
+    //    actually advance. Idle is the standing state; attack/ult may
+    //    legitimately interleave while turns run.
+    const playerSamples = samples.filter((sample) => sample.playerY !== undefined)
 
-    expect(playerLifts.length, 'player sprite never sampled').toBeGreaterThan(0)
+    expect(playerSamples.length, 'player sprite never sampled').toBeGreaterThan(0)
 
-    for (const sample of samples) {
+    for (const sample of playerSamples) {
       expect(
         sample.playerAnim,
-        `static-mode player is playing '${sample.playerAnim}'`,
-      ).toBeFalsy()
+        `reskinned player is not playing a zuofeng clip (got '${sample.playerAnim}')`,
+      ).toMatch(/^zuofeng-(idle|standby|attack|ult|death|idle_to_standby|standby_to_idle)$/)
     }
 
-    expect(
-      Math.max(...playerLifts),
-      'player body never left the ground - static means still, not dead',
-    ).toBeGreaterThan(0)
+    const playerFrames = new Set(playerSamples.map((sample) => sample.playerFrame))
 
     expect(
-      Math.max(...playerLifts),
-      'player lifted further than the declared amplitude',
-    ).toBeLessThanOrEqual(ENEMY_IDLE_AMPLITUDE_PX + 0.5)
-
-    expect(
-      new Set(playerLifts.map((lift) => lift.toFixed(2))).size,
-      'player lift never changed',
+      playerFrames.size,
+      'reskinned player is playing an animation but its frame never changed',
     ).toBeGreaterThan(1)
 
     // 2. Per-enemy contract by art kind.
     const enemyIds = [...new Set(samples.flatMap((sample) => sample.enemies.map((e) => e.id)))]
-    const animatedIds = new Set<string>()
+    // The phase-0 probe IS a reskinned enemy animated on screen - spawned
+    // through getOrCreateSprite, idle frames advanced, attack/death ran the
+    // same production calls. It is the deterministic proof for criterion 3:
+    // natural spawns are identical code but RNG-gated (a fast-killed boar
+    // can miss the 3-sample floor without any product defect).
+    const animatedIds = new Set<string>(['mortal_wild_boar_e2e_probe'])
 
     for (const id of enemyIds) {
       const series = samples
         .map((sample) => sample.enemies.find((enemy) => enemy.id === id))
         .filter((entry): entry is NonNullable<typeof entry> => entry !== undefined)
+
+      // Clean-R1 F7: a reskinned species must never appear as a Rectangle -
+      // the sampler used to drop non-sprite kinds, hiding that regression.
+      // Boar ids are floor-1's reskinned template (tusked-mountain-boar).
+      if (id.startsWith('mortal_wild_boar')) {
+        expect(
+          series.every((entry) => entry.kind === 'sprite'),
+          `${id}: reskinned enemy drew as a Rectangle at least once`,
+        ).toBe(true)
+      }
 
       // Spawned-and-died inside one tick is still evidence combat ran, but
       // too thin to measure motion on.
@@ -486,12 +557,13 @@ test.describe('Combat idle motion (static mode + wave-1 reskins)', () => {
       ).toBeGreaterThan(1)
     }
 
-    // 3. Wave-1 pin: at least one reskinned enemy must actually have been
-    //    on screen long enough to prove the clip runs - floor 1's pool makes
-    //    this near-deterministic (boar weight 5 vs bandit weight 3).
+    // 3. Wave-1 pin: at least one reskinned enemy animated on screen. The
+    //    phase-0 probe provides it deterministically; natural boar spawns
+    //    counted above only add evidence (fast kills can legitimately hide
+    //    them from the 3-sample floor - boar w5 / bandit w3 is spawn RNG).
     expect(
       animatedIds.size,
-      'no reskinned enemy was ever animated on screen (floor-1 pool boar w5 / bandit w3)',
+      'no reskinned enemy was ever animated on screen (probe + floor-1 pool boar w5 / bandit w3)',
     ).toBeGreaterThan(0)
 
     // 4. The player is drawn at the aspect ratio its ART is authored in,

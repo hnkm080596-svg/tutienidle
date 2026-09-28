@@ -35,6 +35,14 @@ import {
   resolveMonsterArtSlug,
   type MonsterClipRange,
 } from '@/game/support/MonsterArt'
+import {
+  ANIMATED_CHARACTER_KEYS,
+  CHARACTER_ART,
+  CHARACTER_FRAME_SUFFIX,
+  CHARACTER_ZERO_PAD,
+  resolveCharacterArtSlug,
+  type CharacterClipRange,
+} from '@/game/support/CharacterArt'
 import { ENTITY_ART_MODE } from './EntityArtMode'
 import {
   combatAnimationKey,
@@ -218,6 +226,7 @@ export const REQUIRED_COMBAT_ANIMATION_NAMES = [
 export const COMBAT_ANIMATION_NAMES: readonly CombatAnimationName[] = [
   ...REQUIRED_COMBAT_ANIMATION_NAMES,
   'attack',
+  'ult',
   'idle_to_standby',
   'standby_to_idle',
   'cultivate',
@@ -347,7 +356,7 @@ function entityPresentation(
   // ANIMATED_ENEMY_KEYS emit their authored clip set regardless of the
   // global mode. The mode stays the roster default; the set is the single
   // enumeration of who overrides it, and the uniformity test pins both.
-  if (ANIMATED_ENEMY_KEYS.has(entityKey)) {
+  if (ANIMATED_ENEMY_KEYS.has(entityKey) || ANIMATED_CHARACTER_KEYS.has(entityKey)) {
     return { kind: 'animated', clips }
   }
 
@@ -430,15 +439,22 @@ function buildCatalogue(): {
     repeat,
   })
 
-  const monsterCatalogue = (variant: (typeof MONSTER_ART)[string]): CombatAnimationCatalogue => ({
-    idle: monsterClip(variant.slug, 'idle', variant.clips.idle, 8, -1, variant.extent, variant.sourceSize),
-    // standby reuses the idle frames - no standby art exists in the dump.
-    standby: monsterClip(variant.slug, 'standby', variant.clips.idle, 8, -1, variant.extent, variant.sourceSize),
-    death: monsterClip(variant.slug, 'death', variant.clips.death, 8, 0, variant.extent, variant.sourceSize),
-    attack: variant.clips.attack
-      ? monsterClip(variant.slug, 'attack', variant.clips.attack, 8, 0, variant.extent, variant.sourceSize)
-      : undefined,
-  })
+  const monsterCatalogue = (variant: (typeof MONSTER_ART)[string]): CombatAnimationCatalogue => {
+    const clips: CombatAnimationCatalogue = {
+      idle: monsterClip(variant.slug, 'idle', variant.clips.idle, 8, -1, variant.extent, variant.sourceSize),
+      // standby reuses the idle frames - no standby art exists in the dump.
+      standby: monsterClip(variant.slug, 'standby', variant.clips.idle, 8, -1, variant.extent, variant.sourceSize),
+      death: monsterClip(variant.slug, 'death', variant.clips.death, 8, 0, variant.extent, variant.sourceSize),
+    }
+
+    // Optional clips are OMITTED, never present-but-undefined: consumers
+    // iterate Object.values(clips) and would dereference undefined (Clean-R2).
+    if (variant.clips.attack) {
+      clips.attack = monsterClip(variant.slug, 'attack', variant.clips.attack, 8, 0, variant.extent, variant.sourceSize)
+    }
+
+    return clips
+  }
 
   for (const variant of Object.values(MONSTER_ART)) {
     register(
@@ -450,6 +466,67 @@ function buildCatalogue(): {
         extent: UNTRIMMED_FULL_BOX_EXTENT,
       },
       monsterCatalogue(variant),
+    )
+  }
+
+  // Reskinned characters (character-art-infra) - authored NEWSPRITE atlases
+  // keyed by character slug. Same contract as monsters: standby reuses idle,
+  // attack/ult are the optional authored play-once clips, death is real or
+  // packer-synthesized. The roster avatar doubles as the static fallback.
+  const characterClip = (
+    entityKey: string,
+    name: CombatAnimationName,
+    range: CharacterClipRange,
+    frameRate: number,
+    repeat: number,
+    extent: ArtExtent,
+    sourceSize: { w: number; h: number },
+  ): AtlasClip => ({
+    key: combatAnimationKey(entityKey, name),
+    sheetKey: range.sheetKey,
+    sheetUrl: range.sheetUrl,
+    atlasUrl: range.atlasUrl,
+    framePrefix: range.framePrefix,
+    frameSuffix: CHARACTER_FRAME_SUFFIX,
+    zeroPad: CHARACTER_ZERO_PAD,
+    firstFrame: range.firstFrame,
+    lastFrame: range.lastFrame,
+    frameRate,
+    sourceSize: { ...sourceSize },
+    extent,
+    repeat,
+  })
+
+  const characterCatalogue = (variant: (typeof CHARACTER_ART)[string]): CombatAnimationCatalogue => {
+    const clips: CombatAnimationCatalogue = {
+      idle: characterClip(variant.slug, 'idle', variant.clips.idle, 8, -1, variant.extent, variant.sourceSize),
+      standby: characterClip(variant.slug, 'standby', variant.clips.idle, 8, -1, variant.extent, variant.sourceSize),
+      death: characterClip(variant.slug, 'death', variant.clips.death, 8, 0, variant.extent, variant.sourceSize),
+    }
+
+    // Optional clips are OMITTED, never present-but-undefined (same rule as
+    // monsterCatalogue above - Clean-R2).
+    if (variant.clips.attack) {
+      clips.attack = characterClip(variant.slug, 'attack', variant.clips.attack, 8, 0, variant.extent, variant.sourceSize)
+    }
+
+    if (variant.clips.ult) {
+      clips.ult = characterClip(variant.slug, 'ult', variant.clips.ult, 10, 0, variant.extent, variant.sourceSize)
+    }
+
+    return clips
+  }
+
+  for (const variant of Object.values(CHARACTER_ART)) {
+    register(
+      variant.slug,
+      {
+        textureKey: variant.avatarKey,
+        textureUrl: variant.avatarUrl,
+        sourceSize: { ...variant.avatarSize },
+        extent: UNTRIMMED_FULL_BOX_EXTENT,
+      },
+      characterCatalogue(variant),
     )
   }
 
@@ -627,6 +704,24 @@ export function resolveCombatEntityKey(runtimeId: string): string {
   }
 
   return CATALOGUE.has(runtimeId) ? runtimeId : PLACEHOLDER_ENTITY_KEY
+}
+
+/**
+ * PLAYER_ID's entity key (character-art-infra): a mapped visual profile
+ * resolves to its character slug BEFORE the static texture key - the player-
+ * side sibling of resolveCombatEntityKey's enemy reskin branch. Callers that
+ * already know the profile use this instead of re-deriving the mapping, so
+ * playback, sprite creation and the TranPhap panel can never disagree about
+ * which entity the player IS.
+ */
+export function resolvePlayerEntityKey(profileId: string, fallbackTextureKey: string): string {
+  const reskinSlug = resolveCharacterArtSlug(profileId)
+
+  if (reskinSlug !== undefined && CATALOGUE.has(reskinSlug)) {
+    return reskinSlug
+  }
+
+  return fallbackTextureKey
 }
 
 /** Every animated entity's clips, for preload and animation registration. */

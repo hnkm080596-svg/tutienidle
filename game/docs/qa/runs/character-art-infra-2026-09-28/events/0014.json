@@ -1,0 +1,51 @@
+{
+  "outcome": "QA_UNVERIFIED",
+  "detail": "required evidence/coverage/independence missing",
+  "clauses": [
+    {
+      "id": "C1-identity",
+      "ok": true,
+      "reason": "all final evidence binds the declared state"
+    },
+    {
+      "id": "C2-census-coverage",
+      "ok": false,
+      "reason": "coverage COV-I-CHAR-RESKIN-RESOLVE-DETERMINISTIC=STALE; coverage COV-I-CHAR-RESKIN-RESOLVE-STATIC_SEMANTIC=STALE; coverage COV-I-CHAR-RESKIN-RESOLVE-RUNTIME_E2E=STALE; coverage COV-I-ANIMATED-CHAR-OVERRIDE-DETERMINISTIC=STALE; coverage COV-I-ANIMATED-CHAR-OVERRIDE-STATIC_SEMANTIC=STALE; coverage COV-I-ANIMATED-CHAR-OVERRIDE-RUNTIME_E2E=STALE; coverage COV-I-ULT-SLOT-SELECT-DETERMINISTIC=STALE; coverage COV-I-ULT-SLOT-SELECT-STATIC_SEMANTIC=STALE; coverage COV-I-AVATAR-FALLBACK-DETERMINISTIC=STALE; coverage COV-I-AVATAR-FALLBACK-STATIC_SEMANTIC=STALE; coverage COV-I-REGISTRY-MANIFEST-PARITY-DETERMINISTIC=STALE; coverage COV-I-REGISTRY-MANIFEST-PARITY-STATIC_SEMANTIC=STALE; coverage COV-I-PREVIEW-PARITY-DETERMINISTIC=STALE; coverage COV-I-PREVIEW-PARITY-STATIC_SEMANTIC=STALE; coverage COV-I-CLIP-LIFECYCLE-DETERMINISTIC=STALE; coverage COV-I-CLIP-LIFECYCLE-RUNTIME_E2E=STALE"
+    },
+    {
+      "id": "C3-no-open",
+      "ok": false,
+      "reason": "exception F-CAI-17; exception F-CAI-18"
+    },
+    {
+      "id": "C4-final-gates",
+      "ok": true,
+      "reason": "final gates green"
+    },
+    {
+      "id": "C5-sequential",
+      "ok": true,
+      "reason": "sequential phase reviews present"
+    },
+    {
+      "id": "C6-clean-pair",
+      "ok": false,
+      "reason": "Clean A missing/not CLEAN; Clean B missing/not CLEAN"
+    },
+    {
+      "id": "C7-mutation-corpus",
+      "ok": true,
+      "reason": "mutation + corpus satisfied"
+    },
+    {
+      "id": "C8-terminal-check",
+      "ok": false,
+      "reason": "no sealed independent TERMINAL_CHECK on the final state"
+    },
+    {
+      "id": "C9-readiness",
+      "ok": true,
+      "reason": "brief(s) lack finalConformance evidence: "
+    }
+  ]
+}

@@ -9,8 +9,9 @@
 // Object.create cá»§a cÃ¡c file CombatScene.*.test.ts khÃ¡c â€” KHÃ”NG dá»±ng
 // Phaser tháº­t.
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { createTestScene } from './combat/combatTestHarness'
+import { createTestScene, patchScene } from './combat/combatTestHarness'
 import { PLAYER_ID } from './combat/combatConstants'
+import { CombatActionFeedback } from './combat/combat-action-feedback'
 import { combatAnimationKey } from '@/presentation/art/CombatEntityPresentation'
 import { PLACEHOLDER_ENTITY_KEY } from '@/presentation/art/CombatPresentationCatalogue'
 import { PLAYER_VISUAL_PROFILES } from '@/presentation/art/PlayerVisualProfiles'
@@ -62,21 +63,43 @@ function createScene() {
 }
 
 function fakeGameSprite() {
-  const listeners = new Map<string, (...args: unknown[]) => void>()
+  // Set-per-event matches Phaser's emitter: multiple once-listeners CAN be
+  // armed on the same event (the stale-listener edge this suite pins).
+  const listeners = new Map<string, Set<(...args: unknown[]) => void>>()
 
   return {
     playCalls: [] as string[],
+    textureCalls: [] as string[],
+    offCalls: [] as [string, unknown][],
+    texture: undefined as { key: string } | undefined,
     destroyed: false,
     play(key: string) {
       this.playCalls.push(key)
       return this
     },
+    setTexture(key: string) {
+      this.textureCalls.push(key)
+      this.texture = { key }
+      return this
+    },
     once(event: string, handler: (...args: unknown[]) => void) {
-      listeners.set(event, handler)
+      const s = listeners.get(event) ?? new Set()
+      s.add(handler)
+      listeners.set(event, s)
+      return this
+    },
+    off(event: string, handler: (...args: unknown[]) => void) {
+      listeners.get(event)?.delete(handler)
+      this.offCalls.push([event, handler])
       return this
     },
     emit(event: string, ...args: unknown[]) {
-      listeners.get(event)?.(...args)
+      // once() handlers self-remove on fire, like Phaser.
+      const s = listeners.get(event)
+      for (const h of [...(s ?? [])]) {
+        s?.delete(h)
+        h(...args)
+      }
     },
     setScale() {
       return this
@@ -113,12 +136,12 @@ function makeSprite(kind: 'sprite' | 'rect', rectOverride?: Record<string, unkno
 }
 
 describe('CombatScene â€” entityAnimationKeyPrefix()', () => {
-  it('player â†’ combatTextureKey cá»§a profile hiá»‡n hÃ nh', () => {
+  it('player â†’ character slug for a reskin-mapped profile (character-art-infra)', () => {
     const scene = createScene()
 
-    expect(scene.entityAnimationKeyPrefix(PLAYER_ID)).toBe(
-      PLAYER_VISUAL_PROFILES.mortal.combatTextureKey,
-    )
+    // 'mortal' maps to 'zuofeng' in CHARACTER_RESKIN_MAP - the slug is the
+    // entity key now, the profile texture key only for unmapped profiles.
+    expect(scene.entityAnimationKeyPrefix(PLAYER_ID)).toBe('zuofeng')
   })
 
   it('enemy trong batch Mortal â†’ resolveEnemyTextureKey()', () => {
@@ -222,20 +245,18 @@ describe('CombatScene â€” playCombatAnimation()', () => {
     expect((sprite.rect as ReturnType<typeof fakeGameSprite>).playCalls).toHaveLength(0)
   })
 
-  it('player + clip Ä‘Ã£ Ä‘Äƒng kÃ½ â†’ play(Ä‘Ãºng key theo profile hiá»‡n hÃ nh)', () => {
-    // Promoted to animated for this test - in the shipped 'static' mode the
-    // player plays nothing; the clip-key path is exercised via the same
-    // criterion-7 promotion the enemy tests use.
-    PROMOTED.set(PLAYER_VISUAL_PROFILES.mortal.combatTextureKey, 'animated')
-
+  it('player + clip Ä‘Ã£ Ä‘Äƒng kÃ½ â†’ play(Ä‘Ãºng key theo entity key hiá»‡n hÃ nh)', () => {
+    // character-art-infra: the reskinned profile resolves to 'zuofeng', which
+    // IS animated in the real catalogue - no promotion needed.
     const scene = createScene()
     const sprite = makeSprite('sprite')
+    const playerKey = scene.entityAnimationKeyPrefix(PLAYER_ID)!
 
     scene.anims = { exists: () => true }
     scene.playCombatAnimation(sprite, PLAYER_ID, 'idle_to_standby')
 
     expect((sprite.rect as ReturnType<typeof fakeGameSprite>).playCalls).toEqual([
-      combatAnimationKey(PLAYER_VISUAL_PROFILES.mortal.combatTextureKey, 'idle_to_standby'),
+      combatAnimationKey(playerKey, 'idle_to_standby'),
     ])
   })
 
@@ -274,12 +295,10 @@ describe('CombatScene â€” playCombatAnimation()', () => {
   it('a transition clip chains into its destination loop when it completes (B7)', () => {
     // idle_to_standby's completion lands on the standby LOOP, not on idle -
     // the transition is the road into the engaged state, not a detour out.
-    PROMOTED.set(PLAYER_VISUAL_PROFILES.mortal.combatTextureKey, 'animated')
-
     const scene = createScene()
     const sprite = makeSprite('sprite')
     const gameSprite = sprite.rect as ReturnType<typeof fakeGameSprite>
-    const profileKey = PLAYER_VISUAL_PROFILES.mortal.combatTextureKey
+    const profileKey = scene.entityAnimationKeyPrefix(PLAYER_ID)!
 
     scene.anims = { exists: () => true }
     scene.playCombatAnimation(sprite, PLAYER_ID, 'idle_to_standby')
@@ -296,16 +315,279 @@ describe('CombatScene â€” playCombatAnimation()', () => {
     ])
   })
 
-  it('a transition the entity never authored snaps straight to its destination loop', () => {
-    // Placeholder catalogues have no transition clips: asking for one must
-    // still REACH the engaged loop, or an unauthored entity would freeze in
-    // the wrong state.
-    PROMOTED.set(PLAYER_VISUAL_PROFILES.mortal.combatTextureKey, 'animated')
-
+  // Atlas-miss registers the clip name with ZERO frames (generateFrameNames
+  // on an absent texture). exists() says true, but playing an empty anim
+  // must not swap the avatar fallback texture - the degrade path treats
+  // zero-frame clips as missing.
+  it('a clip registered with zero frames does not play - avatar fallback stays drawn', () => {
     const scene = createScene()
     const sprite = makeSprite('sprite')
     const gameSprite = sprite.rect as ReturnType<typeof fakeGameSprite>
-    const profileKey = PLAYER_VISUAL_PROFILES.mortal.combatTextureKey
+    const playerKey = scene.entityAnimationKeyPrefix(PLAYER_ID)!
+
+    scene.anims = {
+      exists: (key: string) => key === combatAnimationKey(playerKey, 'idle'),
+      get: () => ({ frames: [] }),
+    }
+    scene.playCombatAnimation(sprite, PLAYER_ID, 'idle')
+
+    expect(gameSprite.playCalls).toEqual([])
+  })
+
+  // character-art-infra: 'ult' is OPTIONAL per entity - an ultimate cast on a
+  // set without authored ult art degrades to the attack clip (which itself
+  // degrades to the standby snap), never silently to standby. This is the
+  // MISSING_CLIP_FALLBACK chain; a refactor that drops it would revert ults
+  // to a standby snap with no failing test.
+  it("an 'ult' the entity never authored degrades to its attack clip, then standby", () => {
+    const scene = createScene()
+    const sprite = makeSprite('sprite')
+    const gameSprite = sprite.rect as ReturnType<typeof fakeGameSprite>
+    const playerKey = scene.entityAnimationKeyPrefix(PLAYER_ID)!
+    const ultKey = combatAnimationKey(playerKey, 'ult')
+    const attackKey = combatAnimationKey(playerKey, 'attack')
+
+    scene.anims = { exists: (key: string) => key !== ultKey }
+    scene.playCombatAnimation(sprite, PLAYER_ID, 'ult')
+
+    expect(gameSprite.playCalls).toEqual([attackKey])
+
+    gameSprite.emit('animationcomplete', { key: attackKey })
+
+    expect(gameSprite.playCalls).toEqual([
+      attackKey,
+      combatAnimationKey(playerKey, 'standby'),
+    ])
+  })
+
+  // character-art-infra: 'ult' plays ONLY for casts whose turn_cast_start
+  // carried slotRole 'ultimate' - a basic/special cast on the same sprite
+  // must still take the attack clip.
+  it("onAttack picks 'ult' for slotRole 'ultimate' and 'attack' otherwise", () => {
+    const scene = createScene()
+    const sprite = makeSprite('sprite')
+    const gameSprite = sprite.rect as ReturnType<typeof fakeGameSprite>
+    const playerKey = scene.entityAnimationKeyPrefix(PLAYER_ID)!
+
+    scene.sprites.set(PLAYER_ID, sprite)
+    patchScene(scene, { _vfxSpawner: { playHorizontalImpulse: vi.fn() } })
+    scene.anims = { exists: () => true }
+
+    scene.onAttack({ sourceId: PLAYER_ID, slotRole: 'ultimate' })
+    expect(gameSprite.playCalls).toEqual([combatAnimationKey(playerKey, 'ult')])
+
+    gameSprite.playCalls.length = 0
+    scene.onAttack({ sourceId: PLAYER_ID, slotRole: 'special' })
+    expect(gameSprite.playCalls).toEqual([combatAnimationKey(playerKey, 'attack')])
+
+    gameSprite.playCalls.length = 0
+    scene.onAttack({ sourceId: PLAYER_ID })
+    expect(gameSprite.playCalls).toEqual([combatAnimationKey(playerKey, 'attack')])
+  })
+
+  // Clean-B F-CB2-02: slotRole 'none' marks a declared turn that is not a
+  // slot cast (charge-continuation/skipped) - no lunge, no clip.
+  it("onAttack with slotRole 'none' plays neither impulse nor clip", () => {
+    const scene = createScene()
+    const sprite = makeSprite('sprite')
+    const gameSprite = sprite.rect as ReturnType<typeof fakeGameSprite>
+    const impulse = vi.fn()
+
+    scene.sprites.set(PLAYER_ID, sprite)
+    patchScene(scene, { _vfxSpawner: { playHorizontalImpulse: impulse } })
+    scene.anims = { exists: () => true }
+
+    scene.onAttack({ sourceId: PLAYER_ID, slotRole: 'none' })
+
+    expect(impulse).not.toHaveBeenCalled()
+    expect(gameSprite.playCalls).toEqual([])
+  })
+
+  // Clean-B F-CB2-04: the dying check precedes the impulse - a resume
+  // replay of a dead actor's cast must not shove the corpse.
+  it('onAttack on a dying actor skips both impulse and clip', () => {
+    const scene = createScene()
+    const sprite = makeSprite('sprite')
+    const gameSprite = sprite.rect as ReturnType<typeof fakeGameSprite>
+    const impulse = vi.fn()
+
+    scene.sprites.set(PLAYER_ID, sprite)
+    scene.playerDying = true
+    patchScene(scene, { _vfxSpawner: { playHorizontalImpulse: impulse } })
+    scene.anims = { exists: () => true }
+
+    scene.onAttack({ sourceId: PLAYER_ID, slotRole: 'ultimate' })
+
+    expect(impulse).not.toHaveBeenCalled()
+    expect(gameSprite.playCalls).toEqual([])
+  })
+
+  // Clean-A2 R2-F1: a late cast/standby event mid-death must not replace
+  // the death clip - its key-filtered ANIMATION_COMPLETE would never fire,
+  // wedging the corpse (enemies) or replaying casts under the overlay
+  // (player). Death owns the animation channel until finalize.
+  it('a dying entity ignores further clip plays - the death sequence owns the channel', () => {
+    const scene = createScene()
+    const sprite = makeSprite('sprite')
+    const gameSprite = sprite.rect as ReturnType<typeof fakeGameSprite>
+    const enemyId = 'mortal_wild_boar_dead1'
+
+    scene.sprites.set(enemyId, sprite)
+    scene.dyingIds.add(enemyId)
+    scene.anims = { exists: () => true }
+
+    scene.playCombatAnimation(sprite, enemyId, 'attack')
+    scene.playCombatAnimation(sprite, enemyId, 'idle')
+
+    expect(gameSprite.playCalls).toEqual([])
+
+    // Player path: same gate via playerDying.
+    const playerSprite = makeSprite('sprite')
+    const playerGame = playerSprite.rect as ReturnType<typeof fakeGameSprite>
+    scene.sprites.set(PLAYER_ID, playerSprite)
+    scene.playerDying = true
+
+    scene.playCombatAnimation(playerSprite, PLAYER_ID, 'attack')
+
+    expect(playerGame.playCalls).toEqual([])
+  })
+
+  // Clean-R1 F1: the ANIMATION_COMPLETE chain plays the destination clip -
+  // on a partial sheet failure the destination registers zero frames
+  // (zuofeng splits clips across sheets) and a bare play() would throw.
+  // The destination hop must take the same empty-clip guard as the start.
+  it('a zero-frame destination clip degrades to the sibling loop - no freeze, no throw', () => {
+    const scene = createScene()
+    const sprite = makeSprite('sprite')
+    const gameSprite = sprite.rect as ReturnType<typeof fakeGameSprite>
+    const playerKey = scene.entityAnimationKeyPrefix(PLAYER_ID)!
+    const attackKey = combatAnimationKey(playerKey, 'attack')
+    const standbyKey = combatAnimationKey(playerKey, 'standby')
+    const idleKey = combatAnimationKey(playerKey, 'idle')
+
+    scene.anims = {
+      exists: () => true,
+      // standby is the sheet that "failed to load" - registered, zero frames
+      get: (key: string) => ({ frames: key === standbyKey ? [] : [{ f: 1 }] }),
+    }
+
+    scene.playCombatAnimation(sprite, PLAYER_ID, 'attack')
+    expect(gameSprite.playCalls).toEqual([attackKey])
+
+    gameSprite.emit('animationcomplete', { key: attackKey })
+
+    // Destination empty -> MISSING_CLIP_FALLBACK degrades standby -> idle
+    // instead of freezing the sprite on the last attack frame (Clean-R2 F3).
+    expect(gameSprite.playCalls).toEqual([attackKey, idleKey])
+  })
+
+  it('a double loop miss (idle AND standby empty) terminates the chain - no infinite fallback', () => {
+    const scene = createScene()
+    const sprite = makeSprite('sprite')
+    const gameSprite = sprite.rect as ReturnType<typeof fakeGameSprite>
+    const playerKey = scene.entityAnimationKeyPrefix(PLAYER_ID)!
+    const attackKey = combatAnimationKey(playerKey, 'attack')
+    const standbyKey = combatAnimationKey(playerKey, 'standby')
+    const idleKey = combatAnimationKey(playerKey, 'idle')
+
+    scene.anims = {
+      exists: () => true,
+      // BOTH loop sheets failed - idle<->standby cross-reference must not
+      // recurse forever.
+      get: (key: string) => ({ frames: key === standbyKey || key === idleKey ? [] : [{ f: 1 }] }),
+    }
+
+    scene.playCombatAnimation(sprite, PLAYER_ID, 'attack')
+    gameSprite.emit('animationcomplete', { key: attackKey })
+
+    // Chain terminates: standby empty -> idle empty -> cycle guard -> stop.
+    expect(gameSprite.playCalls).toEqual([attackKey])
+  })
+
+  // Clean-B F-CB2-01: a loop request arriving while a one-shot is armed must
+  // NOT interrupt the clip - it defers, and the armed listener consumes it
+  // in place of the clip's default destination on completion.
+  it('standby_to_idle during an armed attack defers until the clip completes', () => {
+    const scene = createScene()
+    const sprite = makeSprite('sprite')
+    const gameSprite = sprite.rect as ReturnType<typeof fakeGameSprite>
+    const playerKey = scene.entityAnimationKeyPrefix(PLAYER_ID)!
+    const attackKey = combatAnimationKey(playerKey, 'attack')
+    const standbyKey = combatAnimationKey(playerKey, 'standby')
+    const idleKey = combatAnimationKey(playerKey, 'idle')
+    const transitionKey = combatAnimationKey(playerKey, 'standby_to_idle')
+
+    // Zuofeng authors no transition clips: standby_to_idle resolves to the
+    // idle LOOP - which is exactly the request shape that must defer.
+    scene.anims = { exists: (key: string) => key !== transitionKey }
+
+    scene.playCombatAnimation(sprite, PLAYER_ID, 'attack')
+    expect(gameSprite.playCalls).toEqual([attackKey])
+
+    // Turn end fires standby_to_idle mid-clip: nothing plays yet.
+    scene.playCombatAnimation(sprite, PLAYER_ID, 'standby_to_idle')
+    expect(gameSprite.playCalls).toEqual([attackKey])
+    expect(sprite.deferredLoopRequest).toBe('idle')
+
+    // Clip completes -> listener consumes the deferral, landing on idle
+    // instead of the clip's own standby destination.
+    gameSprite.emit('animationcomplete', { key: attackKey })
+    expect(gameSprite.playCalls).toEqual([attackKey, idleKey])
+    expect(sprite.deferredLoopRequest).toBeUndefined()
+  })
+
+  it('without a deferral the one-shot still lands on its own destination', () => {
+    const scene = createScene()
+    const sprite = makeSprite('sprite')
+    const gameSprite = sprite.rect as ReturnType<typeof fakeGameSprite>
+    const playerKey = scene.entityAnimationKeyPrefix(PLAYER_ID)!
+    const attackKey = combatAnimationKey(playerKey, 'attack')
+    const standbyKey = combatAnimationKey(playerKey, 'standby')
+
+    scene.anims = { exists: () => true }
+
+    scene.playCombatAnimation(sprite, PLAYER_ID, 'attack')
+    gameSprite.emit('animationcomplete', { key: attackKey })
+
+    expect(gameSprite.playCalls).toEqual([attackKey, standbyKey])
+  })
+
+  // Clean-B F-CB2-03: when the WHOLE loop chain is unplayable (partial
+  // multi-sheet loss) the sprite restores the still art it drew before the
+  // one-shot instead of freezing on the clip's last frame.
+  it('a fully-empty loop chain restores the pre-clip base texture', () => {
+    const scene = createScene()
+    const sprite = makeSprite('sprite')
+    const gameSprite = sprite.rect as ReturnType<typeof fakeGameSprite>
+    const playerKey = scene.entityAnimationKeyPrefix(PLAYER_ID)!
+    const attackKey = combatAnimationKey(playerKey, 'attack')
+    const standbyKey = combatAnimationKey(playerKey, 'standby')
+    const idleKey = combatAnimationKey(playerKey, 'idle')
+
+    gameSprite.texture = { key: 'zuofeng-avatar' }
+    scene.textures = { exists: (key: string) => key === 'zuofeng-avatar' }
+    scene.anims = {
+      exists: () => true,
+      get: (key: string) => ({ frames: key === standbyKey || key === idleKey ? [] : [{ f: 1 }] }),
+    }
+
+    scene.playCombatAnimation(sprite, PLAYER_ID, 'attack')
+    gameSprite.emit('animationcomplete', { key: attackKey })
+
+    // standby empty -> idle empty -> terminate -> avatar still art restored.
+    expect(gameSprite.textureCalls).toEqual(['zuofeng-avatar'])
+    expect(gameSprite.playCalls).toEqual([attackKey])
+  })
+
+  it('a transition the entity never authored snaps straight to its destination loop', () => {
+    // Placeholder catalogues have no transition clips: asking for one must
+    // still REACH the engaged loop, or an unauthored entity would freeze in
+    // the wrong state. Zuofeng has none either - the character dump carries
+    // no transition art.
+    const scene = createScene()
+    const sprite = makeSprite('sprite')
+    const gameSprite = sprite.rect as ReturnType<typeof fakeGameSprite>
+    const profileKey = scene.entityAnimationKeyPrefix(PLAYER_ID)!
     const transitionKey = combatAnimationKey(profileKey, 'idle_to_standby')
 
     scene.anims = { exists: (key: string) => key !== transitionKey }
@@ -315,8 +597,6 @@ describe('CombatScene â€” playCombatAnimation()', () => {
   })
 
   it('a DIFFERENT clip completing does not yank the player to the destination', () => {
-    PROMOTED.set(PLAYER_VISUAL_PROFILES.mortal.combatTextureKey, 'animated')
-
     const scene = createScene()
     const sprite = makeSprite('sprite')
     const gameSprite = sprite.rect as ReturnType<typeof fakeGameSprite>
@@ -329,14 +609,80 @@ describe('CombatScene â€” playCombatAnimation()', () => {
     expect(gameSprite.playCalls).toHaveLength(1)
   })
 
+  // Clean-A F3 / Clean-B F1: replaying the SAME one-shot mid-flight used to
+  // leave the first once-listener orphaned on the emitter - on completion it
+  // fired before the live one, consumed the deferred intent, and the live
+  // listener then overrode it (latest intent lost). The arming path now
+  // removes the superseded listener first.
+  it('a same-key one-shot re-arm removes the superseded listener - latest intent wins', () => {
+    const scene = createScene()
+    const sprite = makeSprite('sprite')
+    const gameSprite = sprite.rect as ReturnType<typeof fakeGameSprite>
+    const playerKey = scene.entityAnimationKeyPrefix(PLAYER_ID)!
+    const attackKey = combatAnimationKey(playerKey, 'attack')
+    const idleKey = combatAnimationKey(playerKey, 'idle')
+
+    scene.anims = { exists: (key: string) => !key.endsWith('_to_idle') && !key.endsWith('idle_to_standby') }
+
+    scene.playCombatAnimation(sprite, PLAYER_ID, 'attack')
+    const first = sprite.pendingTransitionListener
+    scene.playCombatAnimation(sprite, PLAYER_ID, 'attack')
+    const second = sprite.pendingTransitionListener
+
+    expect(first).toBeDefined()
+    expect(second).toBeDefined()
+    expect(second).not.toBe(first)
+    // The first listener was explicitly removed from the emitter.
+    expect(gameSprite.offCalls).toEqual([['animationcomplete', first]])
+
+    // A deferred loop request arrives while the second attack plays.
+    scene.playCombatAnimation(sprite, PLAYER_ID, 'standby_to_idle')
+    expect(sprite.deferredLoopRequest).toBe('idle')
+
+    // Completion: only the live listener may consume the deferral.
+    gameSprite.emit('animationcomplete', { key: attackKey })
+    expect(gameSprite.playCalls).toEqual([attackKey, attackKey, idleKey])
+    expect(sprite.deferredLoopRequest).toBeUndefined()
+  })
+
+  // Clean-A F4: deferral must not hinge on the destination clip being
+  // registered - a partial-sheet miss (destination gone, clip playing) would
+  // otherwise let a later loop request truncate the in-flight one-shot.
+  it('a loop request still defers when the one-shot destination registration is missing', () => {
+    const scene = createScene()
+    const sprite = makeSprite('sprite')
+    const gameSprite = sprite.rect as ReturnType<typeof fakeGameSprite>
+    const playerKey = scene.entityAnimationKeyPrefix(PLAYER_ID)!
+    const attackKey = combatAnimationKey(playerKey, 'attack')
+    const idleKey = combatAnimationKey(playerKey, 'idle')
+
+    // standby (attack's destination) is entirely unregistered and the
+    // transition clip is unauthored: the clip still arms, and completion
+    // routes through the guarded chain to idle.
+    const transitionKey = combatAnimationKey(playerKey, 'standby_to_idle')
+    const standbyKey = combatAnimationKey(playerKey, 'standby')
+    scene.anims = {
+      exists: (key: string) => key !== transitionKey && key !== standbyKey,
+      get: () => ({ frames: [{ f: 1 }] }),
+    }
+
+    scene.playCombatAnimation(sprite, PLAYER_ID, 'attack')
+    expect(sprite.pendingTransitionListener).toBeDefined()
+
+    scene.playCombatAnimation(sprite, PLAYER_ID, 'standby_to_idle')
+    expect(gameSprite.playCalls).toEqual([attackKey]) // still deferred, not truncated
+    expect(sprite.deferredLoopRequest).toBe('idle')
+
+    gameSprite.emit('animationcomplete', { key: attackKey })
+    expect(gameSprite.playCalls[gameSprite.playCalls.length - 1]).toBe(idleKey)
+  })
+
   it('idle does not re-trigger itself, and death is left to onDeath()', () => {
     // Chaining idle off idle would restart a looping clip on every completion;
     // chaining it off death would return a corpse to standing before the
     // destroy handler runs.
-    PROMOTED.set(PLAYER_VISUAL_PROFILES.mortal.combatTextureKey, 'animated')
-
     const scene = createScene()
-    const profileKey = PLAYER_VISUAL_PROFILES.mortal.combatTextureKey
+    const profileKey = scene.entityAnimationKeyPrefix(PLAYER_ID)!
 
     for (const name of ['idle', 'death'] as const) {
       const sprite = makeSprite('sprite')
@@ -437,6 +783,38 @@ describe('CombatScene â€” beginDeathSequence() death-deferral', () => {
     expect(scene.dyingIds.has('mortal_savage_tiger_1')).toBe(false)
   })
 
+  // Clean-A F-1: an atlas-miss registers the death clip NAME with zero
+  // frames (exists() true) - play() on it throws on frames[0]. The death
+  // path must treat an empty clip as missing and die by the tween, exactly
+  // like a static entity.
+  it('an empty (zero-frame) death clip is skipped - the entity dies by the tween path', () => {
+    PROMOTED.set('mortal-savage-tiger-v1', 'animated')
+
+    const scene = createScene()
+    const { tweens, tweenConfigs } = stubTweensCapturingOnComplete()
+
+    scene.tweens = tweens
+    scene.anims = { exists: () => true, get: () => ({ frames: [] }) }
+
+    const sprite = makeSprite('sprite')
+    const gameSprite = sprite.rect as ReturnType<typeof fakeGameSprite>
+
+    scene.sprites.set('mortal_savage_tiger_1', sprite)
+    scene._gridView = { destroyEntitySprite: vi.fn() }
+
+    scene.beginDeathSequence(sprite, 'mortal_savage_tiger_1')
+
+    // No play() on an empty clip; the body tween carries the death.
+    expect(gameSprite.playCalls).toEqual([])
+
+    const mainTweenOnComplete = tweenConfigs[0]!.onComplete as () => void
+
+    mainTweenOnComplete()
+
+    expect(scene._gridView.destroyEntitySprite).toHaveBeenCalledTimes(1)
+    expect(scene.sprites.has('mortal_savage_tiger_1')).toBe(false)
+  })
+
   it('animationcomplete cá»§a Má»˜T clip khÃ¡c (key khÃ´ng khá»›p) khÃ´ng kÃ­ch hoáº¡t finalize', () => {
     PROMOTED.set('mortal-savage-tiger-v1', 'animated')
 
@@ -477,8 +855,11 @@ describe('CombatScene â€” beginDeathSequence() death-deferral', () => {
     scene.beginDeathSequence(sprite, PLAYER_ID)
 
     expect(scene.playerDying).toBe(true)
+    // Emit with the ACTUAL key the death path played (the reskin slug, not the
+    // profile texture key) - otherwise animDone never resolves and finalize
+    // never runs, so the isPlayer guard would pass even if deleted.
     gameSprite.emit('animationcomplete', {
-      key: combatAnimationKey(PLAYER_VISUAL_PROFILES.mortal.combatTextureKey, 'death'),
+      key: combatAnimationKey(scene.entityAnimationKeyPrefix(PLAYER_ID)!, 'death'),
     })
 
     expect(scene._gridView.destroyEntitySprite).not.toHaveBeenCalled()
@@ -511,14 +892,16 @@ describe('CombatScene â€” beginDeathSequence() death-deferral', () => {
 
     scene.beginDeathSequence(sprite, PLAYER_ID)
 
+    const playerKey = scene.entityAnimationKeyPrefix(PLAYER_ID)!
+
     expect(gameSprite.playCalls).toEqual([
-      combatAnimationKey(PLAYER_VISUAL_PROFILES.mortal.combatTextureKey, 'death'),
+      combatAnimationKey(playerKey, 'death'),
     ])
 
     scene.onBattleStart()
 
     expect(gameSprite.playCalls.at(-1)).toBe(
-      combatAnimationKey(PLAYER_VISUAL_PROFILES.mortal.combatTextureKey, 'idle'),
+      combatAnimationKey(playerKey, 'idle'),
     )
     expect(scene.playerDying).toBe(false)
   })
@@ -573,5 +956,54 @@ describe('CombatScene.getOrCreateSprite() â€” id tÃ¡i xuáº¥t hiá»‡
     const result = scene.getOrCreateSprite('enemy-2', 0, 'Enemy', 4)
 
     expect(result).toBe(sprite)
+  })
+})
+
+describe('CombatScene — onTurnStandbyComplete dying-entity tween channel (CR1-F1)', () => {
+  it('standby tail does NOT kill the death fall-tween on a dying enemy corpse', () => {
+    const scene = createScene()
+    const sprite = makeSprite('rect')
+
+    scene.sprites.set('mortal_savage_tiger_1', sprite)
+    scene.dyingIds.add('mortal_savage_tiger_1')
+
+    const killTweensOf = vi.fn()
+    scene.tweens = { killTweensOf }
+    scene.anims = { exists: () => false }
+
+    new CombatActionFeedback(scene as never).onTurnStandbyComplete({ actorId: 'mortal_savage_tiger_1' })
+
+    expect(killTweensOf).not.toHaveBeenCalled()
+  })
+
+  it('standby tail does NOT kill the fall-tween on a dying player either', () => {
+    const scene = createScene()
+    const sprite = makeSprite('rect')
+
+    scene.sprites.set(PLAYER_ID, sprite)
+    scene.playerDying = true
+
+    const killTweensOf = vi.fn()
+    scene.tweens = { killTweensOf }
+    scene.anims = { exists: () => false }
+
+    new CombatActionFeedback(scene as never).onTurnStandbyComplete({ actorId: PLAYER_ID })
+
+    expect(killTweensOf).not.toHaveBeenCalled()
+  })
+
+  it('living entity still gets the rect tween reset — baseline behavior unchanged', () => {
+    const scene = createScene()
+    const sprite = makeSprite('rect', fakeGameSprite())
+
+    scene.sprites.set('mortal_savage_tiger_1', sprite)
+
+    const killTweensOf = vi.fn()
+    scene.tweens = { killTweensOf }
+    scene.anims = { exists: () => false }
+
+    new CombatActionFeedback(scene as never).onTurnStandbyComplete({ actorId: 'mortal_savage_tiger_1' })
+
+    expect(killTweensOf).toHaveBeenCalledWith(sprite.rect)
   })
 })

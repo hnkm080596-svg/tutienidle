@@ -1,0 +1,10 @@
+{
+ "id": "MUT-09",
+ "inv": [
+  "I-CLIP-LIFECYCLE"
+ ],
+ "file": "src/game/scenes/combat/combat-action-feedback.ts",
+ "result": "KILLED_EXPECTED",
+ "mutantHash": "3951b2b338b9998c6a7ac68ec89c6ccdd010532d5a412d7ba1ee93585b38d6a6",
+ "candidateUnchanged": true
+}

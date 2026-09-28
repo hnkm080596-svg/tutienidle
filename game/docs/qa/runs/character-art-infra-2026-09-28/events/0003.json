@@ -1,0 +1,11 @@
+{
+  "applied": [
+    "invariant:INV-CHAR-RESKIN-RESOLVE",
+    "invariant:INV-ANIMATED-CHAR-OVERRIDE",
+    "invariant:INV-ULT-SLOT-SELECT",
+    "invariant:INV-AVATAR-FALLBACK",
+    "invariant:INV-REGISTRY-MANIFEST-PARITY",
+    "invariant:INV-PREVIEW-PARITY",
+    "invariant:INV-CLIP-LIFECYCLE"
+  ]
+}

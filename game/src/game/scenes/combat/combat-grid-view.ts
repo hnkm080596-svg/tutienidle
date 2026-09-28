@@ -12,6 +12,7 @@ import {
   atlasFrameName,
   presentationFor,
   resolveCombatEntityKey,
+  resolvePlayerEntityKey,
   staticArtFormFor,
 } from '@/presentation/art/CombatPresentationCatalogue'
 import { resolveEntityDisplaySize } from '@/presentation/geometry/combatEntityScale'
@@ -435,24 +436,119 @@ export class CombatGridView {
     // enemy resolves qua catalogue - authored art hoac placeholder cung
     // mode (uniformity 2026-09-19), Rectangle chi con la double-fallback.
     if (id === PLAYER_ID) {
-      const entityKey = this.host.textures.exists(this.host.playerProfile.combatTextureKey)
-        ? this.host.playerProfile.combatTextureKey
-        : PLAYER_TEXTURE_KEY
+      // Character reskin (character-art-infra): a mapped profile resolves to
+      // its character slug BEFORE the static texture key - the profile PNG is
+      // the fallback for unmapped profiles, never the skin of a reskinned one.
+      const profileKey = resolvePlayerEntityKey(
+        this.host.playerProfile.id,
+        this.host.playerProfile.combatTextureKey,
+      )
+      const entityKey =
+        profileKey !== this.host.playerProfile.combatTextureKey ||
+        this.host.textures.exists(this.host.playerProfile.combatTextureKey)
+          ? profileKey
+          : PLAYER_TEXTURE_KEY
       const presentation = presentationFor(entityKey)
 
       // Same draw resolution as the enemy branch below: a static entity
       // renders its PNG, an animated entity renders the first frame of its
       // idle sheet.
-      const drawKey =
+      let drawKey: string | undefined =
         presentation?.kind === 'static'
           ? presentation.texture.textureKey
           : presentation?.kind === 'animated'
             ? presentation.clips.idle.sheetKey
             : entityKey
-      const drawFrame =
+      let drawFrame =
         presentation?.kind === 'animated'
           ? atlasFrameName(presentation.clips.idle, presentation.clips.idle.firstFrame)
           : undefined
+      let drawSourceSize =
+        presentation?.kind === 'static'
+          ? presentation.texture.sourceSize
+          : presentation?.kind === 'animated'
+            ? presentation.clips.idle.sourceSize
+            : playerArtSourceSize(this.host.playerProfile.combatTextureKey)
+      let drawExtent =
+        presentation?.kind === 'static'
+          ? presentation.texture.extent
+          : presentation?.kind === 'animated'
+            ? presentation.clips.idle.extent
+            : artExtentFor(this.host.playerProfile.combatTextureKey)
+
+      // Atlas-miss fallback (same contract as the enemy branch): an animated
+      // reskin whose sheet failed to load draws its static form - the variant
+      // avatar the preload still queues.
+      if (
+        drawKey &&
+        presentation?.kind === 'animated' &&
+        !this.host.textures.exists(drawKey)
+      ) {
+        const staticForm = staticArtFormFor(entityKey)
+
+        if (staticForm && this.host.textures.exists(staticForm.texture.textureKey)) {
+          drawKey = staticForm.texture.textureKey
+          drawFrame = undefined
+          drawSourceSize = staticForm.texture.sourceSize
+          drawExtent = staticForm.texture.extent
+        }
+      }
+
+      // Terminal fallback (Clean-R2 F1 / F-CAI-17): avatar missing too means
+      // the enemy branch's double-fallback - the profile PNG, then the host
+      // fallback texture, then the Rectangle. Without this gate a double miss
+      // drew Phaser's __MISSING checkerboard at full character height.
+      if (drawKey && !this.host.textures.exists(drawKey)) {
+        const surviving = [
+          this.host.playerProfile.combatTextureKey,
+          this.host.fallbackSpriteTextureKey(id),
+        ].find((key): key is string => key !== undefined && this.host.textures.exists(key))
+
+        if (surviving) {
+          drawKey = surviving
+          drawFrame = undefined
+          drawSourceSize = playerArtSourceSize(surviving)
+          drawExtent = artExtentFor(surviving)
+        } else {
+          drawKey = undefined
+        }
+      }
+
+      // Absolute last resort - the same Rectangle the enemy branch ends on.
+      if (!drawKey) {
+        const rect = this.host.add
+          .rectangle(0, 0, this.host.characterWidth, this.host.characterHeight, color)
+          .setOrigin(0.5)
+
+        this.host.physics.add.existing(rect)
+
+        if (this.host.isPerspective) {
+          rect.setOrigin(0.5, 1)
+        }
+
+        const rectSprite: EntitySprite = {
+          kind: 'rect',
+          rect,
+          label,
+          color,
+          offsetX: 0,
+          row,
+          sizeMultiplier: PLAYER_DISPLAY_SCALE_MULTIPLIER,
+          boost: { value: 1 },
+          footY: 0,
+          columnFloat: 0,
+        }
+
+        if (this.host.isPerspective) {
+          rectSprite.shadow = this.host.add
+            .ellipse(0, 0, 10, 4, SHADOW_COLOR, SHADOW_ALPHA)
+            .setDepth(DEPTH_ENTITY_SHADOW)
+        }
+
+        this.host.sprites.set(id, rectSprite)
+
+        return rectSprite
+      }
 
       const gameSprite = this.host.add.sprite(0, 0, drawKey, drawFrame)
 
@@ -477,8 +573,8 @@ export class CombatGridView {
         // an atlas frame authored at 200x350, so `applySpriteSize` forced a
         // 1.094 aspect onto 0.571 art — 3.44x too wide on screen. Spec B moved
         // what the sprite draws and left what sizes it behind.
-        sourceSize: playerArtSourceSize(this.host.playerProfile.combatTextureKey),
-        extent: artExtentFor(this.host.playerProfile.combatTextureKey),
+        sourceSize: drawSourceSize,
+        extent: drawExtent,
         sizeMultiplier: PLAYER_DISPLAY_SCALE_MULTIPLIER,
         boost: { value: 1 },
         footY: 0,

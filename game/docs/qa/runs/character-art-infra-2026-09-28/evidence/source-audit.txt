@@ -1,0 +1,13 @@
+Source audit - aggregate working-tree diff vs 578e9946 - state 2ff6b1ec406a - 2026-09-28T18:40:00Z
+
+- P15 ASCII-comment scan on added lines: clean
+- changed files: 24
+- untracked: ['?? game/docs/qa/runs/character-art-infra-2026-09-28/', '?? game/public/assets/characters/animated/', '?? game/scripts/pack-character-art.mjs', '?? game/src/game/support/CharacterArt.ts', '?? game/tests/architecture/characterArtReskin.test.ts']
+
+Invariants recap (verified in diff):
+- CharacterArt registry <-> atlas manifest parity pinned; feet-anchor asserted per frame
+- Key namespaces disjoint (pinned); slotRole union extended with none for non-cast turns
+- deferredLoopRequest + pendingTransitionListener + pendingBaseTextureKey lifecycle:
+  armed only on resolved one-shot; consumed by listener; cleared on swap/death/stop
+- resolvePlayerEntityKey is the single player-art resolution point (incl. dormant MainScene mode)
+- castSlotRole returns none for action==null && chargedSkill==null (non-cast declared turns)

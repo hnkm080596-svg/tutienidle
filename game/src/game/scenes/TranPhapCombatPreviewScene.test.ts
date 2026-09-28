@@ -8,6 +8,13 @@ import {
 } from './TranPhapCombatPreviewScene'
 import { STANDING_SLOT_COUNT } from '@/core/battle/BattlefieldRegions'
 import { PLAYER_VISUAL_PROFILES } from '@/presentation/art/PlayerVisualProfiles'
+import type Phaser from 'phaser'
+import type { LaneIndex } from '@/core/battle/BattleLane'
+import type { EntitySprite } from './combat/combatTypes'
+import {
+  presentationFor,
+  resolvePlayerEntityKey,
+} from '@/presentation/art/CombatPresentationCatalogue'
 
 describe('TranPhapCombatPreviewScene — perspective geometry constant (Battlefield Perspective Panel, 2026-09-06)', () => {
   it('PANEL_WIDTH/PANEL_HEIGHT khớp CHÍNH XÁC với canvas Phaser thật trong TranPhapPanel.vue (420x480)', () => {
@@ -33,39 +40,67 @@ describe('TranPhapCombatPreviewScene — standing-slot grid size (standing-slot 
 // static-art path; combatants with no registered presentation
 // (companions — no art exists yet) keep the placeholder idle animation.
 describe('TranPhapCombatPreviewScene — real art resolution', () => {
-  function fakeSprite(id: string, textureKey = 'ph') {
-    return {
-      kind: 'sprite' as const,
-      rect: {
-        anims: { isPlaying: false },
-        played: [] as string[],
-        play(key: string) {
-          this.played.push(key)
-          return this
-        },
-        texture: { key: textureKey },
+  function fakeSprite(id: string, textureKey = 'ph'): EntitySprite {
+    const played: string[] = []
+    const rect = {
+      anims: { isPlaying: false },
+      played,
+      play(key: string) {
+        played.push(key)
+        return rect
       },
-      label: {},
+      texture: { key: textureKey },
+    } as unknown as Phaser.GameObjects.Sprite
+
+    // `id` is not part of EntitySprite - the test's destroyEntitySprite stub
+    // tracks rebuilds by it, mirroring what the real grid view knows from
+    // its map key.
+    const sprite = {
+      kind: 'sprite' as const,
+      rect,
+      label: {} as Phaser.GameObjects.Text,
       color: 0,
       offsetX: 0,
-      row: 0,
+      row: 0 as LaneIndex,
+      sizeMultiplier: 1,
+      boost: { value: 1 },
+      footY: 0,
+      columnFloat: 0,
       id,
     }
+
+    return sprite
+  }
+
+  // The texture the REAL CombatGridView draws for the player today:
+  // resolvePlayerEntityKey -> presentation -> idle sheet for animated
+  // reskins, the profile PNG for static/unmapped profiles.
+  function playerDrawTextureKey(profile: { id: string; combatTextureKey: string }): string {
+    const presentation = presentationFor(resolvePlayerEntityKey(profile.id, profile.combatTextureKey))
+
+    return presentation?.kind === 'animated'
+      ? presentation.clips.idle.sheetKey
+      : profile.combatTextureKey
   }
 
   function bareScene() {
-    const scene = Object.create(TranPhapCombatPreviewScene.prototype) as TranPhapCombatPreviewScene
+    const scene = Object.create(TranPhapCombatPreviewScene.prototype) as TranPhapCombatPreviewScene & {
+      destroyCalls: string[]
+    }
 
     const sprites = new Map<string, ReturnType<typeof fakeSprite>>()
 
     Object.assign(scene, {
       sprites,
+      destroyCalls: [] as string[],
       gridView: {
         getOrCreateSprite: (id: string) => {
           if (!sprites.has(id)) {
-            // Mirrors CombatGridView: the player sprite is created with the
-            // current profile texture; everyone else falls back.
-            const textureKey = id === 'player' ? scene.playerProfile.combatTextureKey : 'ph'
+            // Mirrors CombatGridView's real draw chain: a reskin-mapped
+            // profile draws its animated presentation's idle sheet, an
+            // unmapped one the profile PNG; everyone else falls back.
+            const textureKey =
+              id === 'player' ? playerDrawTextureKey(scene.playerProfile) : 'ph'
 
             sprites.set(id, fakeSprite(id, textureKey))
           }
@@ -73,6 +108,7 @@ describe('TranPhapCombatPreviewScene — real art resolution', () => {
         },
         positionSprite: () => undefined,
         destroyEntitySprite: (sprite: { id: string }) => {
+          scene.destroyCalls.push(sprite.id)
           sprites.delete(sprite.id)
         },
       },
@@ -81,7 +117,7 @@ describe('TranPhapCombatPreviewScene — real art resolution', () => {
     return scene
   }
 
-  it('player assignment renders the static profile PNG — no idle clip, like CombatScene', () => {
+  it('player assignment renders the reskinned idle sheet — mortal maps to zuofeng today', () => {
     const scene = bareScene()
 
     scene.syncAssignments({
@@ -92,7 +128,7 @@ describe('TranPhapCombatPreviewScene — real art resolution', () => {
     const sprite = scene.sprites.get('player')!
     const rect = sprite.rect as unknown as { played: string[]; texture: { key: string } }
 
-    expect(rect.texture.key).toBe(PLAYER_VISUAL_PROFILES.mortal.combatTextureKey)
+    expect(rect.texture.key).toBe('zuofeng-sheet-1')
     expect(rect.played).toEqual([])
   })
 
@@ -110,7 +146,11 @@ describe('TranPhapCombatPreviewScene — real art resolution', () => {
     )
   })
 
-  it('a profile switch rebuilds an existing player sprite onto the new texture', () => {
+  it('a profile switch between same-slug profiles keeps the sprite — nothing to redraw', () => {
+    // mortal and phap_tu BOTH map to zuofeng today: the acceptable texture
+    // set is identical either side of the switch, so destroying the sprite
+    // would be churn for zero visual change. When a future profile maps to
+    // a different slug its sheet leaves the set and the rebuild resumes.
     const scene = bareScene()
 
     scene.syncAssignments({
@@ -125,11 +165,47 @@ describe('TranPhapCombatPreviewScene — real art resolution', () => {
       playerProfileId: 'phap_tu',
     })
 
-    const after = scene.sprites.get('player')!
-    const afterRect = after.rect as unknown as { texture: { key: string } }
+    expect(scene.sprites.get('player')).toBe(before)
+    expect(scene.destroyCalls).toEqual([])
+  })
 
-    expect(after).not.toBe(before)
-    expect(afterRect.texture.key).toBe(PLAYER_VISUAL_PROFILES.phap_tu.combatTextureKey)
+  // character-art-infra: the rebuild guard must accept every texture the
+  // draw chain can legitimately produce - the idle sheet, the avatar on
+  // atlas-miss, or the shared fallback - and rebuild ONLY on a foreign one.
+  it('a player sprite already drawing a valid texture survives sync (no destroy)', () => {
+    const scene = bareScene()
+
+    // The acceptable set covers EVERY draw-chain output: idle sheet, avatar
+    // on atlas-miss, the profile PNG on double-miss (grid-view terminal
+    // fallback), the shared placeholder. Missing any one would rebuild the
+    // sprite on every sync under that failure mode.
+    for (const textureKey of ['zuofeng-sheet-1', 'zuofeng-avatar', 'player-mortal-ink-sword-concept-v2']) {
+      scene.sprites.clear()
+      scene.destroyCalls.length = 0
+      scene.sprites.set('player', fakeSprite('player', textureKey))
+
+      scene.syncAssignments({
+        assignments: [{ row: 0, column: 1, combatantId: 'player' }],
+        playerProfileId: 'mortal',
+      })
+
+      expect(scene.destroyCalls, `sprite on '${textureKey}' was destroyed on sync`).toEqual([])
+      expect((scene.sprites.get('player')!.rect as Phaser.GameObjects.Sprite).texture.key).toBe(textureKey)
+    }
+  })
+
+  it('a player sprite on a stale texture is rebuilt on sync', () => {
+    const scene = bareScene()
+
+    scene.sprites.set('player', fakeSprite('player', 'player-kiem-tu-old-png'))
+
+    scene.syncAssignments({
+      assignments: [{ row: 0, column: 1, combatantId: 'player' }],
+      playerProfileId: 'mortal',
+    })
+
+    expect(scene.destroyCalls).toEqual(['player'])
+    expect((scene.sprites.get('player')!.rect as Phaser.GameObjects.Sprite).texture.key).toBe('zuofeng-sheet-1')
   })
 
   it('companion without registered presentation resolves placeholder art of the active mode', () => {
@@ -162,6 +238,30 @@ describe('TranPhapCombatPreviewScene — real art resolution', () => {
     scene.startEntityIdle(sprite as never, 'tran_mac')
 
     const played = (sprite.rect as unknown as { played: string[] }).played
+
+    expect(played).toEqual([])
+  })
+
+  // Clean-A F-5: atlas-miss registers the clip name with zero frames -
+  // exists() reports true but play() throws on frames[0]. Same guard class
+  // as combat playCombatAnimation/beginDeathSequence.
+  it('startEntityIdle skips a zero-frame clip — empty registered anim is treated as missing', () => {
+    const scene = bareScene()
+
+    scene.syncAssignments({
+      assignments: [{ row: 1, column: 0, combatantId: 'player' }],
+      playerProfileId: 'mortal',
+    })
+
+    const sprite = scene.sprites.get('player')!
+    const played = (sprite.rect as unknown as { played: string[] }).played
+
+    scene.anims = {
+      exists: () => true,
+      get: () => ({ frames: [] }),
+    } as never
+
+    scene.startEntityIdle(sprite as never, 'player')
 
     expect(played).toEqual([])
   })

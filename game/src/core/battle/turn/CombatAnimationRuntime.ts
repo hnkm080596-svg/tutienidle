@@ -6,9 +6,40 @@ import type { CombatAnimationName } from '../CombatAnimationTypes'
 
 export type ResumePlayback =
   | Readonly<{ phase: 'ready'; token: string; actorId: string }>
-  | Readonly<{ phase: 'cast'; token: string; actorId: string; skillId: string; targetIds: readonly string[] }>
+  | Readonly<{ phase: 'cast'; token: string; actorId: string; skillId: string; targetIds: readonly string[]; slotRole: 'basic' | 'special' | 'ultimate' | 'none' }>
   | Readonly<{ phase: 'complete'; token: string; actorId: string; targetIds: readonly string[] }>
   | Readonly<{ phase: 'manual'; actorId: string }>
+
+/**
+ * Which kit slot a declared cast came out of. The slot is positional - the
+ * participant's `ultimate`/`special` slot objects ARE the identity, so
+ * `declared.action.slot` is compared by reference (a cast may carry no slot,
+ * e.g. CC-blocked, implicit basics, queued repeat/multicast executions ->
+ * 'basic': follow-ups are strikes, not slot casts, so 'basic' is correct).
+ */
+function castSlotRole(
+  actor: TurnBattleParticipant,
+  declared: TurnDeclaredAction,
+): 'basic' | 'special' | 'ultimate' | 'none' {
+  const slot = declared.action?.slot
+  if (slot && slot === actor.ultimate) return 'ultimate'
+  if (slot && slot === actor.special) return 'special'
+  // Charge-RESOLVE casts carry no slot (action is null on the resolve turn -
+  // the slot was consumed at commit) but declared.chargedSkill IS the slot's
+  // skill object, captured by reference at declareActorAction. The resolve
+  // deserves the same clip the commit played (Clean-A2 R2-F7).
+  const charged = declared.chargedSkill
+  if (charged) {
+    if (charged === actor.ultimate?.skill || charged.id === actor.ultimate?.skill.id) return 'ultimate'
+    if (charged === actor.special?.skill || charged.id === actor.special?.skill.id) return 'special'
+  }
+  // A declared turn carrying neither an action nor a resolved charge is not
+  // a cast at all (charge-continuation, CC-skip, NULL_ACTION): report 'none'
+  // so presentation skips the lunge + attack clip it would otherwise replay
+  // every channeling turn (Clean-B F-CB2-02).
+  if (declared.action == null) return 'none'
+  return 'basic'
+}
 
 /**
  * Combat Runtime Separation (2026-09-07, AGENTS.md P17) — owns the
@@ -239,7 +270,7 @@ export class CombatAnimationRuntime {
     const declared = this.deps.getTurnBattleSystem().declareActorAction(battle, actor)
     this.pendingDeclaredAction = { actor, declared }
 
-    emitTurnCastStart(this.deps.eventBus, actor.id, declared.skillId, declared.affected.map((target) => target.id))
+    emitTurnCastStart(this.deps.eventBus, actor.id, declared.skillId, declared.affected.map((target) => target.id), castSlotRole(actor, declared))
 
     this.deps.stepCompletionSink?.onReady()
   }
@@ -386,7 +417,7 @@ export class CombatAnimationRuntime {
     const declared = this.deps.getTurnBattleSystem().declareActorAction(battle, actor, choice)
     this.pendingDeclaredAction = { actor, declared }
 
-    emitTurnCastStart(this.deps.eventBus, actor.id, declared.skillId, declared.affected.map((target) => target.id))
+    emitTurnCastStart(this.deps.eventBus, actor.id, declared.skillId, declared.affected.map((target) => target.id), castSlotRole(actor, declared))
 
     return true
   }
@@ -496,12 +527,16 @@ export class CombatAnimationRuntime {
 
     if (this.pendingDeclaredAction) {
       const token = this.nextPlaybackToken()
+      const { actor, declared } = this.pendingDeclaredAction
       return {
         phase: 'cast',
         token,
-        actorId: this.pendingDeclaredAction.actor.id,
-        skillId: this.pendingDeclaredAction.declared.skillId,
-        targetIds: this.pendingDeclaredAction.declared.affected.map((target) => target.id),
+        actorId: actor.id,
+        skillId: declared.skillId,
+        targetIds: declared.affected.map((target) => target.id),
+        // The replayed onAttack must select the same clip the live emit did -
+        // resume without the role would replay an ultimate as 'attack'.
+        slotRole: castSlotRole(actor, declared),
       }
     }
 

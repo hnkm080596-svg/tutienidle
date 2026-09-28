@@ -131,6 +131,12 @@ export interface CombatAnimationCatalogue {
    * returns to `standby`, matching the lunge's midpoint-impact timing.
    */
   attack?: AtlasClip
+  /**
+   * Authored ultimate clip (character-art-infra, 2026-09-28). Optional like
+   * `attack`: it plays only when `turn_cast_start` reports slot role
+   * 'ultimate', is play-once, and returns to `standby`.
+   */
+  ult?: AtlasClip
   idle_to_standby?: AtlasClip
   standby_to_idle?: AtlasClip
   cultivate?: AtlasClip

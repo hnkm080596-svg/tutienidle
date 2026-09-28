@@ -1,0 +1,895 @@
+{
+  "frames": {
+    "ziyuan-idle-001.png": {
+      "frame": {
+        "x": 2,
+        "y": 2,
+        "w": 199,
+        "h": 273
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 2,
+        "w": 199,
+        "h": 273
+      },
+      "sourceSize": {
+        "w": 199,
+        "h": 275
+      }
+    },
+    "ziyuan-idle-002.png": {
+      "frame": {
+        "x": 313,
+        "y": 2,
+        "w": 199,
+        "h": 273
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 2,
+        "w": 199,
+        "h": 273
+      },
+      "sourceSize": {
+        "w": 199,
+        "h": 275
+      }
+    },
+    "ziyuan-idle-003.png": {
+      "frame": {
+        "x": 624,
+        "y": 2,
+        "w": 199,
+        "h": 272
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 3,
+        "w": 199,
+        "h": 272
+      },
+      "sourceSize": {
+        "w": 199,
+        "h": 275
+      }
+    },
+    "ziyuan-idle-004.png": {
+      "frame": {
+        "x": 935,
+        "y": 2,
+        "w": 199,
+        "h": 272
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 3,
+        "w": 199,
+        "h": 272
+      },
+      "sourceSize": {
+        "w": 199,
+        "h": 275
+      }
+    },
+    "ziyuan-idle-005.png": {
+      "frame": {
+        "x": 1246,
+        "y": 2,
+        "w": 199,
+        "h": 270
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 5,
+        "w": 199,
+        "h": 270
+      },
+      "sourceSize": {
+        "w": 199,
+        "h": 275
+      }
+    },
+    "ziyuan-idle-006.png": {
+      "frame": {
+        "x": 1557,
+        "y": 2,
+        "w": 199,
+        "h": 271
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 4,
+        "w": 199,
+        "h": 271
+      },
+      "sourceSize": {
+        "w": 199,
+        "h": 275
+      }
+    },
+    "ziyuan-idle-007.png": {
+      "frame": {
+        "x": 1868,
+        "y": 2,
+        "w": 199,
+        "h": 272
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 3,
+        "w": 199,
+        "h": 272
+      },
+      "sourceSize": {
+        "w": 199,
+        "h": 275
+      }
+    },
+    "ziyuan-idle-008.png": {
+      "frame": {
+        "x": 2179,
+        "y": 2,
+        "w": 199,
+        "h": 272
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 3,
+        "w": 199,
+        "h": 272
+      },
+      "sourceSize": {
+        "w": 199,
+        "h": 275
+      }
+    },
+    "ziyuan-idle-009.png": {
+      "frame": {
+        "x": 2490,
+        "y": 2,
+        "w": 199,
+        "h": 275
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 199,
+        "h": 275
+      },
+      "sourceSize": {
+        "w": 199,
+        "h": 275
+      }
+    },
+    "ziyuan-idle-010.png": {
+      "frame": {
+        "x": 2801,
+        "y": 2,
+        "w": 199,
+        "h": 272
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 3,
+        "w": 199,
+        "h": 272
+      },
+      "sourceSize": {
+        "w": 199,
+        "h": 275
+      }
+    },
+    "ziyuan-idle-011.png": {
+      "frame": {
+        "x": 3112,
+        "y": 2,
+        "w": 199,
+        "h": 273
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 2,
+        "w": 199,
+        "h": 273
+      },
+      "sourceSize": {
+        "w": 199,
+        "h": 275
+      }
+    },
+    "ziyuan-idle-012.png": {
+      "frame": {
+        "x": 3423,
+        "y": 2,
+        "w": 199,
+        "h": 273
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 2,
+        "w": 199,
+        "h": 273
+      },
+      "sourceSize": {
+        "w": 199,
+        "h": 275
+      }
+    },
+    "ziyuan-idle-013.png": {
+      "frame": {
+        "x": 3734,
+        "y": 2,
+        "w": 199,
+        "h": 274
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 1,
+        "w": 199,
+        "h": 274
+      },
+      "sourceSize": {
+        "w": 199,
+        "h": 275
+      }
+    },
+    "ziyuan-idle-014.png": {
+      "frame": {
+        "x": 2,
+        "y": 347,
+        "w": 199,
+        "h": 273
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 2,
+        "w": 199,
+        "h": 273
+      },
+      "sourceSize": {
+        "w": 199,
+        "h": 275
+      }
+    },
+    "ziyuan-attack-001.png": {
+      "frame": {
+        "x": 313,
+        "y": 347,
+        "w": 199,
+        "h": 273
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 2,
+        "w": 199,
+        "h": 273
+      },
+      "sourceSize": {
+        "w": 199,
+        "h": 275
+      }
+    },
+    "ziyuan-attack-002.png": {
+      "frame": {
+        "x": 624,
+        "y": 347,
+        "w": 282,
+        "h": 278
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -66,
+        "y": -3,
+        "w": 282,
+        "h": 278
+      },
+      "sourceSize": {
+        "w": 199,
+        "h": 275
+      }
+    },
+    "ziyuan-attack-003.png": {
+      "frame": {
+        "x": 935,
+        "y": 347,
+        "w": 219,
+        "h": 297
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -29,
+        "y": -24,
+        "w": 219,
+        "h": 297
+      },
+      "sourceSize": {
+        "w": 199,
+        "h": 275
+      }
+    },
+    "ziyuan-attack-004.png": {
+      "frame": {
+        "x": 1246,
+        "y": 347,
+        "w": 290,
+        "h": 247
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -95,
+        "y": 27,
+        "w": 290,
+        "h": 247
+      },
+      "sourceSize": {
+        "w": 199,
+        "h": 275
+      }
+    },
+    "ziyuan-attack-005.png": {
+      "frame": {
+        "x": 1557,
+        "y": 347,
+        "w": 297,
+        "h": 236
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 7,
+        "y": 38,
+        "w": 297,
+        "h": 236
+      },
+      "sourceSize": {
+        "w": 199,
+        "h": 275
+      }
+    },
+    "ziyuan-attack-006.png": {
+      "frame": {
+        "x": 1868,
+        "y": 347,
+        "w": 284,
+        "h": 232
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 7,
+        "y": 42,
+        "w": 284,
+        "h": 232
+      },
+      "sourceSize": {
+        "w": 199,
+        "h": 275
+      }
+    },
+    "ziyuan-attack-007.png": {
+      "frame": {
+        "x": 2179,
+        "y": 347,
+        "w": 280,
+        "h": 237
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -18,
+        "y": 37,
+        "w": 280,
+        "h": 237
+      },
+      "sourceSize": {
+        "w": 199,
+        "h": 275
+      }
+    },
+    "ziyuan-attack-008.png": {
+      "frame": {
+        "x": 2490,
+        "y": 347,
+        "w": 270,
+        "h": 227
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -65,
+        "y": 47,
+        "w": 270,
+        "h": 227
+      },
+      "sourceSize": {
+        "w": 199,
+        "h": 275
+      }
+    },
+    "ziyuan-attack-009.png": {
+      "frame": {
+        "x": 2801,
+        "y": 347,
+        "w": 286,
+        "h": 221
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -78,
+        "y": 54,
+        "w": 286,
+        "h": 221
+      },
+      "sourceSize": {
+        "w": 199,
+        "h": 275
+      }
+    },
+    "ziyuan-attack-010.png": {
+      "frame": {
+        "x": 3112,
+        "y": 347,
+        "w": 291,
+        "h": 257
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -80,
+        "y": 18,
+        "w": 291,
+        "h": 257
+      },
+      "sourceSize": {
+        "w": 199,
+        "h": 275
+      }
+    },
+    "ziyuan-attack-011.png": {
+      "frame": {
+        "x": 3423,
+        "y": 347,
+        "w": 223,
+        "h": 313
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -16,
+        "y": -38,
+        "w": 223,
+        "h": 313
+      },
+      "sourceSize": {
+        "w": 199,
+        "h": 275
+      }
+    },
+    "ziyuan-attack-012.png": {
+      "frame": {
+        "x": 3734,
+        "y": 347,
+        "w": 207,
+        "h": 340
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -11,
+        "y": -65,
+        "w": 207,
+        "h": 340
+      },
+      "sourceSize": {
+        "w": 199,
+        "h": 275
+      }
+    },
+    "ziyuan-attack-013.png": {
+      "frame": {
+        "x": 2,
+        "y": 692,
+        "w": 206,
+        "h": 290
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -7,
+        "y": -15,
+        "w": 206,
+        "h": 290
+      },
+      "sourceSize": {
+        "w": 199,
+        "h": 275
+      }
+    },
+    "ziyuan-attack-014.png": {
+      "frame": {
+        "x": 313,
+        "y": 692,
+        "w": 202,
+        "h": 274
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 1,
+        "w": 202,
+        "h": 274
+      },
+      "sourceSize": {
+        "w": 199,
+        "h": 275
+      }
+    },
+    "ziyuan-ult-001.png": {
+      "frame": {
+        "x": 624,
+        "y": 692,
+        "w": 199,
+        "h": 273
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 2,
+        "w": 199,
+        "h": 273
+      },
+      "sourceSize": {
+        "w": 199,
+        "h": 275
+      }
+    },
+    "ziyuan-ult-002.png": {
+      "frame": {
+        "x": 935,
+        "y": 692,
+        "w": 223,
+        "h": 272
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -17,
+        "y": 3,
+        "w": 223,
+        "h": 272
+      },
+      "sourceSize": {
+        "w": 199,
+        "h": 275
+      }
+    },
+    "ziyuan-ult-003.png": {
+      "frame": {
+        "x": 1246,
+        "y": 692,
+        "w": 291,
+        "h": 280
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -89,
+        "y": -4,
+        "w": 291,
+        "h": 280
+      },
+      "sourceSize": {
+        "w": 199,
+        "h": 275
+      }
+    },
+    "ziyuan-ult-004.png": {
+      "frame": {
+        "x": 1557,
+        "y": 692,
+        "w": 244,
+        "h": 341
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -47,
+        "y": -65,
+        "w": 244,
+        "h": 341
+      },
+      "sourceSize": {
+        "w": 199,
+        "h": 275
+      }
+    },
+    "ziyuan-ult-005.png": {
+      "frame": {
+        "x": 1868,
+        "y": 692,
+        "w": 254,
+        "h": 272
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -55,
+        "y": 4,
+        "w": 254,
+        "h": 272
+      },
+      "sourceSize": {
+        "w": 199,
+        "h": 275
+      }
+    },
+    "ziyuan-ult-006.png": {
+      "frame": {
+        "x": 2179,
+        "y": 692,
+        "w": 267,
+        "h": 274
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -62,
+        "y": 2,
+        "w": 267,
+        "h": 274
+      },
+      "sourceSize": {
+        "w": 199,
+        "h": 275
+      }
+    },
+    "ziyuan-ult-007.png": {
+      "frame": {
+        "x": 2490,
+        "y": 692,
+        "w": 245,
+        "h": 339
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -31,
+        "y": -64,
+        "w": 245,
+        "h": 339
+      },
+      "sourceSize": {
+        "w": 199,
+        "h": 275
+      }
+    },
+    "ziyuan-ult-008.png": {
+      "frame": {
+        "x": 2801,
+        "y": 692,
+        "w": 212,
+        "h": 249
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 17,
+        "y": 26,
+        "w": 212,
+        "h": 249
+      },
+      "sourceSize": {
+        "w": 199,
+        "h": 275
+      }
+    },
+    "ziyuan-ult-009.png": {
+      "frame": {
+        "x": 3112,
+        "y": 692,
+        "w": 307,
+        "h": 234
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -117,
+        "y": 39,
+        "w": 307,
+        "h": 234
+      },
+      "sourceSize": {
+        "w": 199,
+        "h": 275
+      }
+    },
+    "ziyuan-ult-010.png": {
+      "frame": {
+        "x": 3423,
+        "y": 692,
+        "w": 201,
+        "h": 258
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 37,
+        "y": 15,
+        "w": 201,
+        "h": 258
+      },
+      "sourceSize": {
+        "w": 199,
+        "h": 275
+      }
+    },
+    "ziyuan-ult-011.png": {
+      "frame": {
+        "x": 3734,
+        "y": 692,
+        "w": 275,
+        "h": 280
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 26,
+        "y": -4,
+        "w": 275,
+        "h": 280
+      },
+      "sourceSize": {
+        "w": 199,
+        "h": 275
+      }
+    },
+    "ziyuan-ult-012.png": {
+      "frame": {
+        "x": 2,
+        "y": 1037,
+        "w": 229,
+        "h": 279
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -9,
+        "y": -5,
+        "w": 229,
+        "h": 279
+      },
+      "sourceSize": {
+        "w": 199,
+        "h": 275
+      }
+    },
+    "ziyuan-ult-013.png": {
+      "frame": {
+        "x": 313,
+        "y": 1037,
+        "w": 276,
+        "h": 284
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -66,
+        "y": -1,
+        "w": 276,
+        "h": 284
+      },
+      "sourceSize": {
+        "w": 199,
+        "h": 275
+      }
+    },
+    "ziyuan-ult-014.png": {
+      "frame": {
+        "x": 624,
+        "y": 1037,
+        "w": 239,
+        "h": 275
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -37,
+        "y": 0,
+        "w": 239,
+        "h": 275
+      },
+      "sourceSize": {
+        "w": 199,
+        "h": 275
+      }
+    },
+    "ziyuan-ult-015.png": {
+      "frame": {
+        "x": 935,
+        "y": 1037,
+        "w": 204,
+        "h": 275
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -3,
+        "y": 0,
+        "w": 204,
+        "h": 275
+      },
+      "sourceSize": {
+        "w": 199,
+        "h": 275
+      }
+    },
+    "ziyuan-death-001.png": {
+      "frame": {
+        "x": 1246,
+        "y": 1037,
+        "w": 202,
+        "h": 274
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 1,
+        "w": 202,
+        "h": 274
+      },
+      "sourceSize": {
+        "w": 199,
+        "h": 275
+      }
+    }
+  },
+  "meta": {
+    "app": "pack-character-art.mjs",
+    "version": "1.0",
+    "image": "ziyuan-sheet-1.png",
+    "format": "RGBA8888",
+    "size": {
+      "w": 4043,
+      "h": 1380
+    },
+    "scale": "1"
+  }
+}

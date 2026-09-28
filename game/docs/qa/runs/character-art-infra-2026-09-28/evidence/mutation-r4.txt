@@ -1,0 +1,23 @@
+MUT-09: KILLED (exit 1) unchanged=True
+.[39mrect[33m.[39m[34msetScale[39m([34m1[39m)
+    [90m   |[39m                     [31m^[39m
+    [90m243|[39m       }
+    [90m244|[39m     }
+[90m [2m❯[22m src/game/scenes/CombatScene.combatAnimations.test.ts:[2m974:46[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/game/scenes/CombatScene.combatAnimations.test.ts[2m > [22mCombatScene — onTurnStandbyComplete dying-entity tween channel (CR1-F1)[2m > [22mstandby tail does NOT kill the fall-tween on a dying player either
+[31m[1mTypeError[22m: sprite.rect.setScale is not a function[39m
+[36m [2m❯[22m CombatActionFeedback.onTurnStandbyComplete src/game/scenes/combat/combat-action-feedback.ts:[2m242:21[22m[39m
+    [90m240|[39m         scene[33m.[39mtweens[33m.[39m[34mkillTweensOf[39m(sprite[33m.[39mrect)
+    [90m241|[39m
+    [90m242|[39m         sprite[33m.[39mrect[33m.[39m[34msetScale[39m([34m1[39m)
+    [90m   |[39m                     [31m^[39m
+    [90m243|[39m       }
+    [90m244|[39m     }
+[90m [2m❯[22m src/game/scenes/CombatScene.combatAnimations.test.ts:[2m990:46[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯[22m[39m
+
+

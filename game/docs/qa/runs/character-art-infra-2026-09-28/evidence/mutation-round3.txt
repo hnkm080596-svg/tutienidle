@@ -1,0 +1,24 @@
+MUT-08: KILLED (exit 1) unchanged=True
+
+[2m   Duration [22m 1.11s[2m (transform 654ms, setup 0ms, import 833ms, tests 39ms, environment 0ms)[22m
+
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 1 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m src/core/battle/turn/CombatAnimationRuntime.test.ts[2m > [22mCombatAnimationRuntime[2m > [22mTask 3: hold-safe action runtime and preparePresentationResume[2m > [22mresumed cast carries slotRole ultimate when the pending declare used the ultimate slot
+[31m[1mAssertionError[22m: expected 'basic' to be 'ultimate' // Object.is equality[39m
+
+Expected: [32m"ultimate"[39m
+Received: [31m"basic"[39m
+
+[36m [2m❯[22m src/core/battle/turn/CombatAnimationRuntime.test.ts:[2m614:33[22m[39m
+    [90m612|[39m       [34mexpect[39m(resume[33m.[39mphase)[33m.[39m[34mtoBe[39m([32m'cast'[39m)
+    [90m613|[39m       [35mif[39m (resume[33m.[39mphase [33m===[39m [32m'cast'[39m) {
+    [90m614|[39m         [34mexpect[39m(resume[33m.[39mslotRole)[33m.[39m[34mtoBe[39m([32m'ultimate'[39m)
+    [90m   |[39m                                 [31m^[39m
+    [90m615|[39m       }
+    [90m616|[39m     })
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯[22m[39m
+
+

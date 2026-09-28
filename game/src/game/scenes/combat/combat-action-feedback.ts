@@ -33,17 +33,34 @@ export class CombatActionFeedback {
       const isPlayer = event.sourceId === PLAYER_ID
       const dx = isPlayer ? ATTACK_LUNGE_PX : -ATTACK_LUNGE_PX
 
-      // Uniform contract (2026-09-19) - attack readability IS the lunge
-      // tween for every entity. No per-skill clips: cast/sweep_hand/punch
-      // were removed from CombatAnimationName when the per-faction art
-      // split died.
-      scene.playHorizontalImpulse(attacker, dx, ATTACK_LUNGE_DURATION_MS)
+      // The dying check precedes the impulse: a resume replay of a cast
+      // whose actor died mid-action must not shove the falling corpse
+      // (Clean-B F-CB2-04). 'none' marks a declared turn that is not a
+      // slot cast at all (charge-continuation/skipped turns): no lunge,
+      // no clip - just the impact ack pacing below (F-CB2-02).
+      const dying =
+        event.sourceId !== undefined &&
+        (isPlayer ? scene.playerDying : scene.dyingIds.has(event.sourceId))
 
-      // Amendment (enemy-art-wave1, 2026-09-28): entities WITH an authored
-      // attack clip play it alongside the lunge - a play-once clip that
-      // returns to standby. No-op for static entities and clip-less
-      // catalogues, so the lunge remains the only attack tell there.
-      scene.playCombatAnimation(attacker, event.sourceId, 'attack')
+      if (!dying && event.slotRole !== 'none') {
+        // Uniform contract (2026-09-19) - attack readability IS the lunge
+        // tween for every entity. No per-skill clips: cast/sweep_hand/punch
+        // were removed from CombatAnimationName when the per-faction art
+        // split died.
+        scene.playHorizontalImpulse(attacker, dx, ATTACK_LUNGE_DURATION_MS)
+
+        // Amendment (enemy-art-wave1, 2026-09-28): entities WITH an authored
+        // attack clip play it alongside the lunge - a play-once clip that
+        // returns to standby. No-op for static entities and clip-less
+        // catalogues, so the lunge remains the only attack tell there.
+        // character-art-infra: an 'ultimate' slotRole cast prefers the authored
+        // ult clip; playCombatAnimation no-ops when the catalogue lacks one.
+        scene.playCombatAnimation(
+          attacker,
+          event.sourceId,
+          event.slotRole === 'ultimate' ? 'ult' : 'attack',
+        )
+      }
 
       // Action Playback Task 7 (2026-09-05) / R5 (AR-20) - impact frame tai midpoint
       // lunge: damage ap dung luc don "trung" tren man hinh. Token bat tai spawn.
@@ -213,9 +230,20 @@ export class CombatActionFeedback {
       // through its transition; entities without it snap straight to idle.
       scene.playCombatAnimation(sprite, event.actorId, 'standby_to_idle')
 
-      scene.tweens.killTweensOf(sprite.rect)
+      // CR1-F1 - a dying entity's death sequence owns sprite.rect's tween
+      // channel (fall/fade -> finalize). A standby tail arriving after a
+      // lethal action-end flush must not kill that tween or the corpse
+      // wedges mid-fall forever.
+      const dying =
+        event.actorId === PLAYER_ID
+          ? scene.playerDying
+          : scene.dyingIds.has(event.actorId)
 
-      sprite.rect.setScale(1)
+      if (!dying) {
+        scene.tweens.killTweensOf(sprite.rect)
+
+        sprite.rect.setScale(1)
+      }
     }
   }
 

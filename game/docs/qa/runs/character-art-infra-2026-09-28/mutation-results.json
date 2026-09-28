@@ -1,0 +1,107 @@
+[
+ {
+  "id": "MUT-01",
+  "inv": [
+   "I-CHAR-RESKIN-RESOLVE"
+  ],
+  "file": "src/game/support/CharacterArt.ts",
+  "old": "  return (CHARACTER_RESKIN_MAP as Record<string, string>)[profileId]",
+  "new": "  return undefined // MUTANT: reskin resolution severed",
+  "oracle": "tests/architecture/characterArtReskin.test.ts",
+  "desc": "mapped profile no longer resolves to a character slug",
+  "result": "KILLED_EXPECTED",
+  "mutantHash": "a3da8511077a73f14907cb1b7e3536e4fb396164fc5b2ac017085ee791b4ef3a",
+  "candidateUnchanged": true,
+  "exitCode": 1
+ },
+ {
+  "id": "MUT-02",
+  "inv": [
+   "I-ANIMATED-CHAR-OVERRIDE"
+  ],
+  "file": "src/presentation/art/CombatPresentationCatalogue.ts",
+  "old": "    return reskinSlug",
+  "new": "    return fallbackTextureKey // MUTANT: entity key ignores reskin slug",
+  "oracle": "src/game/scenes/TranPhapCombatPreviewScene.test.ts",
+  "desc": "mapped profile falls back to legacy texture key inside combat",
+  "result": "SURVIVED",
+  "mutantHash": "23fbfa20e40f41b720eb7d6c15abac8a28f6e25de6bd9ca066ac639582ac9fdf",
+  "candidateUnchanged": true,
+  "exitCode": 0
+ },
+ {
+  "id": "MUT-03",
+  "inv": [
+   "I-ULT-SLOT-SELECT"
+  ],
+  "file": "src/game/scenes/combat/combat-action-feedback.ts",
+  "old": "        event.slotRole === 'ultimate' ? 'ult' : 'attack',",
+  "new": "        'attack', // MUTANT: ult slot ignored",
+  "oracle": "src/game/scenes/CombatScene.combatAnimations.test.ts",
+  "desc": "ultimate cast plays attack instead of ult",
+  "result": "KILLED_EXPECTED",
+  "mutantHash": "cb3edb893d961b11dfaadbd4f2c84f8b284dc4ea660775a95c652d9cc4675954",
+  "candidateUnchanged": true,
+  "exitCode": 1
+ },
+ {
+  "id": "MUT-04",
+  "inv": [
+   "I-AVATAR-FALLBACK"
+  ],
+  "file": "src/game/scenes/combat/combat-grid-view.ts",
+  "old": "      if (staticForm && this.host.textures.exists(staticForm.texture.textureKey)) {",
+  "new": "      if (false && staticForm && this.host.textures.exists(staticForm.texture.textureKey)) { // MUTANT: avatar fallback skipped",
+  "oracle": "src/game/scenes/combat/combat-grid-view.test.ts",
+  "desc": "atlas-miss falls straight to placeholder, skipping the avatar",
+  "result": "KILLED_EXPECTED",
+  "mutantHash": "9fa2b1afcfdfff06e3779018df21926addeb77e3c341728c4255652add7796a0",
+  "candidateUnchanged": true,
+  "exitCode": 1
+ },
+ {
+  "id": "MUT-05",
+  "inv": [
+   "I-REGISTRY-MANIFEST-PARITY"
+  ],
+  "file": "src/game/support/CharacterArt.ts",
+  "old": "    { idle: [1, 8, 1], attack: [1, 18, 2], ult: [1, 14, 3], death: [1, 1, 3] },",
+  "new": "    { idle: [1, 8, 1], attack: [1, 17, 2], ult: [1, 14, 3], death: [1, 1, 3] }, // MUTANT: attack range drift",
+  "oracle": "tests/architecture/characterArtReskin.test.ts",
+  "desc": "registry clip range drifts from the emitted manifest",
+  "result": "KILLED_EXPECTED",
+  "mutantHash": "3b420ad3b4cf2c70ce7180ce7125b6077573b4e458d3800377e5a77595d53093",
+  "candidateUnchanged": true,
+  "exitCode": 1
+ },
+ {
+  "id": "MUT-06",
+  "inv": [
+   "I-PREVIEW-PARITY"
+  ],
+  "file": "src/game/scenes/TranPhapCombatPreviewScene.ts",
+  "old": "          const staticForm = staticArtFormFor(mappedKey)\n\n          if (staticForm) {\n            acceptableTextureKeys.add(staticForm.texture.textureKey)\n          }",
+  "new": "          // MUTANT: avatar key dropped from the acceptable set",
+  "oracle": "src/game/scenes/TranPhapCombatPreviewScene.test.ts",
+  "desc": "avatar fallback key removed from acceptable sync keys",
+  "result": "KILLED_EXPECTED",
+  "mutantHash": "4cc893224339d0c2e7e537cf196df12642efdccf2434d00b5cf42a663e047649",
+  "candidateUnchanged": true,
+  "exitCode": 1
+ },
+ {
+  "id": "MUT-07",
+  "inv": [
+   "I-CLIP-LIFECYCLE"
+  ],
+  "file": "src/game/scenes/combat/combat-animation-playback.ts",
+  "old": "      const empty = this.scene.anims.get?.(candidateKey)?.frames.length === 0",
+  "new": "      const empty = false // MUTANT: zero-frame anim treated as playable",
+  "oracle": "src/game/scenes/CombatScene.combatAnimations.test.ts",
+  "desc": "empty registered anim gets played, swapping the avatar texture",
+  "result": "KILLED_EXPECTED",
+  "mutantHash": "cbca41fe554d5fead46f19546c320e15e423c52bb857005229e1e8391b715573",
+  "candidateUnchanged": true,
+  "exitCode": 1
+ }
+]

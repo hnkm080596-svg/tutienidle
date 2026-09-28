@@ -37,10 +37,12 @@ import {
   resolveEnemyTextureKey,
 } from '@/game/support/EnemyArt'
 import { MONSTER_ART, reskinnedTemplateIds } from '@/game/support/MonsterArt'
+import { CHARACTER_ART } from '@/game/support/CharacterArt'
 import { PLAYER_VISUAL_PROFILES } from '@/presentation/art/PlayerVisualProfiles'
 import {
   animatedCombatEntities,
   animatedArtFormFor,
+  resolvePlayerEntityKey,
   PLACEHOLDER_STATIC_TEXTURE_KEY,
   PLACEHOLDER_STATIC_TEXTURE_URL,
 } from '@/presentation/art/CombatPresentationCatalogue'
@@ -130,7 +132,12 @@ export function getHomeDescriptors(): readonly AssetResourceDescriptor[] {
     // and the cultivate bridge (sitting). The PNGs above stay loaded too:
     // PlayerPortrait and panel surfaces still read them.
     for (const profile of Object.values(PLAYER_VISUAL_PROFILES)) {
-      const clips = animatedArtFormFor(profile.combatTextureKey)
+      // Resolve through the same entity-key authority MainScene uses - the
+      // raw combatTextureKey misses reskin-mapped character sheets and
+      // under-enumerates the bundle (dormant-mode divergence).
+      const clips = animatedArtFormFor(
+        resolvePlayerEntityKey(profile.id, profile.combatTextureKey),
+      )
 
       if (!clips) {
         continue
@@ -222,6 +229,11 @@ export function getCombatDescriptors(): readonly AssetResourceDescriptor[] {
 
   // Reskinned enemies (enemy-art-wave1): avatar PNG is the static fallback.
   for (const variant of Object.values(MONSTER_ART)) {
+    addImage(variant.avatarKey, variant.avatarUrl)
+  }
+
+  // Reskinned characters (character-art-infra): same fallback contract.
+  for (const variant of Object.values(CHARACTER_ART)) {
     addImage(variant.avatarKey, variant.avatarUrl)
   }
 

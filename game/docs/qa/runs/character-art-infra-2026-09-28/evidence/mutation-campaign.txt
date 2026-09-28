@@ -1,0 +1,424 @@
+===== MUT-01 mapped profile no longer resolves to a character slug
+he static fallback cannot lie about its box[32m 1[2mms[22m[39m
+     [32m✓[39m every reskin target is a declared variant and every key is a real profile id[32m 0[2mms[22m[39m
+[31m     [31m×[31m prodone
+esolution: mapped profiles hit the slug, unmapped return undefined[39m[32m 7[2mms[22m[39m
+[31m     [31m×[31m resolvePlayerEntityKey returns the character slug for mapped profiles, fallback otherwise[39m[32m 4[2mms[22m[39m
+     [32m✓[39m entity presentation: character slugs are animated with authored attack + ult clips[32m 0[2mms[22m[39m
+     [32m✓[39m character slugs collide with no monster variant or companion id[32m 0[2mms[22m[39m
+     [32m✓[39m catalogue keys are pairwise disjoint across all five producers[32m 1[2mms[22m[39m
+     [32m✓[39m no animated catalogue emits an undefined clip entry[32m 0[2mms[22m[39m
+     [32m✓[39m ANIMATED_CHARACTER_KEYS is exactly the reskin image - no orphan slugs, no missing ones[32m 0[2mms[22m[39m
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m2 failed[39m[22m[2m | [22m[1m[32m10 passed[39m[22m[90m (12)[39m
+[2m   Start at [22m 19:55:18
+[2m   Duration [22m 498ms[2m (transform 167ms, setup 0ms, import 224ms, tests 26ms, environment 0ms)[22m
+
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 2 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m tests/architecture/characterArtReskin.test.ts[2m > [22mcharacter art reskin registry (infra)[2m > [22mprofile resolution: mapped profiles hit the slug, unmapped return undefined
+[31m[1mAssertionError[22m: mortal: expected undefined to be 'zuofeng' // Object.is equality[39m
+
+[32m- Expected:[39m
+"zuofeng"
+
+[31m+ Received:[39m
+undefined
+
+[36m [2m❯[22m tests/architecture/characterArtReskin.test.ts:[2m202:61[22m[39m
+    [90m200|[39m   it('profile resolution: mapped profiles hit the slug, unmapped retur…
+    [90m201|[39m     [35mfor[39m ([35mconst[39m profileId [35mof[39m [33mKNOWN_PROFILE_IDS[39m) {
+    [90m202|[39m       expect(resolveCharacterArtSlug(profileId), profileId).toBe('zuof…
+    [90m   |[39m                                                             [31m^[39m
+    [90m203|[39m     }
+    [90m204|[39m     [34mexpect[39m([34mresolveCharacterArtSlug[39m([32m'not_a_profile'[39m))[33m.[39m[34mtoBeUndefined[39m()
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/architecture/characterArtReskin.test.ts[2m > [22mcharacter art reskin registry (infra)[2m > [22mresolvePlayerEntityKey returns the character slug for mapped profiles, fallback otherwise
+[31m[1mAssertionError[22m: mortal: expected 'legacy-fallback-key' to be 'zuofeng' // Object.is equality[39m
+
+Expected: [32m"zuofeng"[39m
+Received: [31m"legacy-fallback-key"[39m
+
+[36m [2m❯[22m tests/architecture/characterArtReskin.test.ts:[2m212:83[22m[39m
+    [90m210|[39m   it('resolvePlayerEntityKey returns the character slug for mapped pro…
+    [90m211|[39m     [35mfor[39m ([35mconst[39m profileId [35mof[39m [33mKNOWN_PROFILE_IDS[39m) {
+    [90m212|[39m       expect(resolvePlayerEntityKey(profileId, 'legacy-fallback-key'),…
+    [90m   |[39m                                                                                   [31m^[39m
+    [90m213|[39m     }
+    [90m214|[39m     expect(resolvePlayerEntityKey('not_a_profile', 'legacy-fallback-ke…
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯[22m[39m
+
+
+
+===== MUT-02 mapped profile falls back to legacy texture key inside combat
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.11 [39m[90mE:/tutienidle/.agent-worktrees/character-art-infra/game[39m
+
+ [32m✓[39m src/game/scenes/TranPhapCombatPreviewScene.test.ts [2m([22m[2m13 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m13 passed[39m[22m[90m (13)[39m
+[2m   Start at [22m 19:55:21
+[2m   Duration [22m 6.51s[2m (transform 3.36s, setup 0ms, import 5.06s, tests 15ms, environment 1.20s)[22m
+
+
+
+===== MUT-03 ultimate cast plays attack instead of ult
+n[32m 0[2mms[22m[39m
+     [32m✓[39m a same-key one-shot re-arm removes the superseded listener - latest intent wins[32m 1[2mms[22m[39m
+     [32m✓[39m a loop request still defers when the one-shot destination registration is missing[32m 0[2mms[22m[39m
+     [32m✓[39m idle does not re-trigger itself, and death is left to onDeath()[32m 0[2mms[22m[39m
+     [32m✓[39m actorId undefined (spriteFor miss upstream) â†’ khÃ´ng throw, khÃ´ng play[32m 0[2mms[22m[39m
+     [32m✓[39m enemy Rectangle (khÃ´ng animation kháº£ dá»¥ng) â€” destroy CHá»ˆ sau khi tween xong (hÃ nh vi y há»‡t trÆ°á»›c Task 9)[32m 1[2mms[22m[39m
+     [32m✓[39m an ANIMATED enemy (promoted, §9 criterion 7) plays -death at once - the clip is the body visual: no fall/fade tween, destroy waits for ANIMATION_COMPLETE only[32m 1[2mms[22m[39m
+     [32m✓[39m an empty (zero-frame) death clip is skipped - the entity dies by the tween path[32m 1[2mms[22m[39m
+     [32m✓[39m animationcomplete cá»§a Má»˜T clip khÃ¡c (key khÃ´ng khá»›p) khÃ´ng kÃ­ch hoáº¡t finalize[32m 0[2mms[22m[39m
+     [32m✓[39m player â€” KHÃ”NG BAO GIá»œ destroy dÃ¹ cáº£ tween láº«n animation Ä‘á»u xong (giá»¯ vá»‹ trÃ­ cuá»‘i dÆ°á»›i overlay káº¿t quáº£)[32m 1[2mms[22m[39m
+     [32m✓[39m reset after player death - onBattleStart() replays idle so the corpse frame does not carry into the new battle[32m 2[2mms[22m[39m
+     [32m✓[39m id Ä‘ang dyingIds â†’ sprite cÅ© bá»‹ finalize NGAY (destroy) trÆ°á»›c khi táº¡o sprite má»›i, vÃ  tÃ­n hiá»‡u completion CÅ¨ khÃ´ng Ä‘á»¥ng tá»›i sprite Má»šI[32m 2[2mms[22m[39m
+     [32m✓[39m id KHÃ”NG trong dyingIds â†’ khÃ´ng Ä‘á»¥ng gÃ¬ tá»›i forceFinalizeDeath, Ä‘i tháº³ng qua gridView[32m 0[2mms[22m[39m
+     [32m✓[39m standby tail does NOT kill the death fall-tween on a dying enemy corpse[32m 0[2mms[22m[39m
+     [32m✓[39m standby tail does NOT kill the fall-tween on a dying player either[32m 1[2mms[22m[39m
+     [32m✓[39m living entity still gets the rect tween reset — baseline behavior unchanged[32m 1[2mms[22m[39m
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m39 passed[39m[22m[90m (40)[39m
+[2m   Start at [22m 19:55:30
+[2m   Duration [22m 7.44s[2m (transform 4.11s, setup 0ms, import 5.89s, tests 50ms, environment 1.22s)[22m
+
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 1 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m src/game/scenes/CombatScene.combatAnimations.test.ts[2m > [22mCombatScene â€” playCombatAnimation()[2m > [22monAttack picks 'ult' for slotRole 'ultimate' and 'attack' otherwise
+[31m[1mAssertionError[22m: expected [ 'zuofeng-attack' ] to deeply equal [ 'zuofeng-ult' ][39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  [[22m
+[32m-   "zuofeng-ult",[39m
+[31m+   "zuofeng-attack",[39m
+[2m  ][22m
+
+[36m [2m❯[22m src/game/scenes/CombatScene.combatAnimations.test.ts:[2m377:34[22m[39m
+    [90m375|[39m
+    [90m376|[39m     scene[33m.[39m[34monAttack[39m({ sourceId[33m:[39m [33mPLAYER_ID[39m[33m,[39m slotRole[33m:[39m [32m'ultimate'[39m })
+    [90m377|[39m     expect(gameSprite.playCalls).toEqual([combatAnimationKey(playerKey…
+    [90m   |[39m                                  [31m^[39m
+    [90m378|[39m
+    [90m379|[39m     gameSprite[33m.[39mplayCalls[33m.[39mlength [33m=[39m [34m0[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯[22m[39m
+
+
+
+===== MUT-04 atlas-miss falls straight to placeholder, skipping the avatar
+mbatScene thật) → Rectangle double-fallback — KHÔNG regression cho combat thật[32m 0[2mms[22m[39m
+     [32m✓[39m reskinned enemy with a MISSING atlas still draws its avatar PNG (F-EAW-09) - never falls straight to Rectangle[32m 1[2mms[22m[39m
+     [32m✓[39m reskinned enemy with BOTH atlas and avatar missing -> Rectangle double-fallback (same as any unloaded art)[32m 1[2mms[22m[39m
+     [32m✓[39m reskinned PLAYER with atlas+avatar missing falls back to the profile PNG - never __MISSING (F-CAI-25)[32m 1[2mms[22m[39m
+[31m     [31m×[31m reskinned PLAYER with atlas missing still draws the variant avatar - the intermediate chain step (Clean-B2 coverage)[39m[32m 10[2mms[22m[39m
+     [32m✓[39m reskinned PLAYER with atlas+avatar+profile ALL missing -> Rectangle terminal fallback (F-CAI-25)[32m 0[2mms[22m[39m
+     [32m✓[39m gọi getOrCreateSprite 2 lần cùng id → trả về CÙNG object sprite (không destroy/tạo lại) — đây là cơ chế fix bug animation-reset của panel Trận Pháp (Task 4)[32m 1[2mms[22m[39m
+     [32m✓[39m lưới 6x6 (panel) → 7 đường ngang + 7 đường dọc (rows+1, columns+1), KHÔNG phải 11/17 của lưới thật[32m 2[2mms[22m[39m
+     [32m✓[39m KHÔNG còn gọi fillPoints (cổng phòng thủ HERO_COLUMN đã bị xóa — obsolete với turn-based)[32m 1[2mms[22m[39m
+     [32m✓[39m perspective mode (arenaRect undefined) vẫn vẽ viền ngoài qua strokePoints (viền KHÔNG bị xóa, chỉ gate polygon bị xóa)[32m 1[2mms[22m[39m
+     [32m✓[39m a static enemy starts a looping, phase-delayed bob on creation[32m 1[2mms[22m[39m
+     [32m✓[39m two individuals of the SAME species get different phases[32m 0[2mms[22m[39m
+     [32m✓[39m the bob moves the BODY, leaving feet, shadow and depth on the ground[32m 2[2mms[22m[39m
+     [32m✓[39m the reskinned player draws its character atlas and skips the bob (character-art-infra)[32m 2[2mms[22m[39m
+     [32m✓[39m destroying a sprite kills its bob, which outlives the GameObject otherwise[32m 1[2mms[22m[39m
+     [32m✓[39m trimmed art gets a BIGGER box so the character lands at the same height[32m 1[2mms[22m[39m
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m20 passed[39m[22m[90m (21)[39m
+[2m   Start at [22m 19:55:40
+[2m   Duration [22m 6.13s[2m (transform 3.23s, setup 0ms, import 4.77s, tests 34ms, environment 1.10s)[22m
+
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 1 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m src/game/scenes/combat/combat-grid-view.test.ts[2m > [22mCombatGridView.getOrCreateSprite() — host.fallbackSpriteTextureKey() (Battlefield Slot, 2026-09-06)[2m > [22mreskinned PLAYER with atlas missing still draws the variant avatar - the intermediate chain step (Clean-B2 coverage)
+[31m[1mAssertionError[22m: expected 'rect' to be 'sprite' // Object.is equality[39m
+
+Expected: [32m"sprite"[39m
+Received: [31m"rect"[39m
+
+[36m [2m❯[22m src/game/scenes/combat/combat-grid-view.test.ts:[2m250:25[22m[39m
+    [90m248|[39m     const sprite = gridView.getOrCreateSprite(PLAYER_ID, 0x4caf50, 'Pl…
+    [90m249|[39m
+    [90m250|[39m     [34mexpect[39m(sprite[33m.[39mkind)[33m.[39m[34mtoBe[39m([32m'sprite'[39m)
+    [90m   |[39m                         [31m^[39m
+    [90m251|[39m
+    [90m252|[39m     const spriteFactory = (scene.add as { sprite: ReturnType<typeof vi…
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯[22m[39m
+
+
+
+===== MUT-05 registry clip range drifts from the emitted manifest
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.11 [39m[90mE:/tutienidle/.agent-worktrees/character-art-infra/game[39m
+
+ [31m❯[39m tests/architecture/characterArtReskin.test.ts [2m([22m[2m12 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 24[2mms[22m[39m
+     [32m✓[39m every wired variant's sheet, atlas and avatar exist on disk where declared[32m 3[2mms[22m[39m
+     [32m✓[39m every declared clip frame exists in its atlas, with matching sourceSize[32m 5[2mms[22m[39m
+[31m     [31m×[31m sourceSize/extent/clip ranges equal the manifest - including per-clip sheet placement[39m[32m 8[2mms[22m[39m
+     [32m✓[39m avatarSize equals the real PNG dims - the static fallback cannot lie about its box[32m 1[2mms[22m[39m
+     [32m✓[39m every reskin target is a declared variant and every key is a real profile id[32m 0[2mms[22m[39m
+     [32m✓[39m profile resolution: mapped profiles hit the slug, unmapped return undefined[32m 0[2mms[22m[39m
+     [32m✓[39m resolvePlayerEntityKey returns the character slug for mapped profiles, fallback otherwise[32m 0[2mms[22m[39m
+     [32m✓[39m entity presentation: character slugs are animated with authored attack + ult clips[32m 0[2mms[22m[39m
+     [32m✓[39m character slugs collide with no monster variant or companion id[32m 0[2mms[22m[39m
+     [32m✓[39m catalogue keys are pairwise disjoint across all five producers[32m 2[2mms[22m[39m
+     [32m✓[39m no animated catalogue emits an undefined clip entry[32m 1[2mms[22m[39m
+     [32m✓[39m ANIMATED_CHARACTER_KEYS is exactly the reskin image - no orphan slugs, no missing ones[32m 0[2mms[22m[39m
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m11 passed[39m[22m[90m (12)[39m
+[2m   Start at [22m 19:55:49
+[2m   Duration [22m 465ms[2m (transform 159ms, setup 0ms, import 220ms, tests 24ms, environment 0ms)[22m
+
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 1 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m tests/architecture/characterArtReskin.test.ts[2m > [22mcharacter art reskin registry (infra)[2m > [22msourceSize/extent/clip ranges equal the manifest - including per-clip sheet placement
+[31m[1mAssertionError[22m: expected 17 to be 18 // Object.is equality[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- 18[39m
+[31m+ 17[39m
+
+[36m [2m❯[22m tests/architecture/characterArtReskin.test.ts:[2m168:38[22m[39m
+    [90m166|[39m           expect(emitted, `${variant.slug}: manifest lacks '${name}'`)…
+    [90m167|[39m           [34mexpect[39m(declared[33m.[39mfirstFrame)[33m.[39m[34mtoBe[39m(emitted[33m![39m[33m.[39mfirstFrame)
+    [90m168|[39m           [34mexpect[39m(declared[33m.[39mlastFrame)[33m.[39m[34mtoBe[39m(emitted[33m![39m[33m.[39mlastFrame)
+    [90m   |[39m                                      [31m^[39m
+    [90m169|[39m           [34mexpect[39m(
+    [90m170|[39m             declared[33m.[39msheetUrl[33m.[39m[34mendsWith[39m([32m`/[39m[36m${[39memitted[33m![39m[33m.[39msheet[36m}[39m[32m`[39m)[33m,[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯[22m[39m
+
+
+
+===== MUT-06 avatar fallback key removed from acceptable sync keys
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.11 [39m[90mE:/tutienidle/.agent-worktrees/character-art-infra/game[39m
+
+ [31m❯[39m src/game/scenes/TranPhapCombatPreviewScene.test.ts [2m([22m[2m13 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 18[2mms[22m[39m
+     [32m✓[39m PANEL_WIDTH/PANEL_HEIGHT khớp CHÍNH XÁC với canvas Phaser thật trong TranPhapPanel.vue (420x480)[32m 2[2mms[22m[39m
+     [32m✓[39m PERSPECTIVE_MIN_ROAD_HEIGHT_PANEL nhỏ hơn hằng số combat thật (320) — panel cần sàn thấp hơn cho canvas nhỏ[32m 0[2mms[22m[39m
+     [32m✓[39m panel grid resolution reads the shared STANDING_SLOT_COUNT (3x3), not a local constant[32m 0[2mms[22m[39m
+     [32m✓[39m player assignment renders the reskinned idle sheet — mortal maps to zuofeng today[32m 2[2mms[22m[39m
+     [32m✓[39m playerProfileId switches which profile texture the scene reports[32m 1[2mms[22m[39m
+     [32m✓[39m a profile switch between same-slug profiles keeps the sprite — nothing to redraw[32m 0[2mms[22m[39m
+[31m     [31m×[31m a player sprite already drawing a valid texture survives sync (no destroy)[39m[32m 9[2mms[22m[39m
+     [32m✓[39m a player sprite on a stale texture is rebuilt on sync[32m 1[2mms[22m[39m
+     [32m✓[39m companion without registered presentation resolves placeholder art of the active mode[32m 0[2mms[22m[39m
+     [32m✓[39m startEntityIdle no-ops in static mode — placeholder is a PNG, not a clip[32m 0[2mms[22m[39m
+     [32m✓[39m startEntityIdle skips a zero-frame clip — empty registered anim is treated as missing[32m 0[2mms[22m[39m
+     [32m✓[39m cell->cell move updates the sprite row — preview shows the unit in the new cell[32m 0[2mms[22m[39m
+     [32m✓[39m legacy array payload still works (playerProfileId optional)[32m 0[2mms[22m[39m
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m12 passed[39m[22m[90m (13)[39m
+[2m   Start at [22m 19:55:52
+[2m   Duration [22m 6.17s[2m (transform 3.21s, setup 0ms, import 4.75s, tests 18ms, environment 1.16s)[22m
+
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 1 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m src/game/scenes/TranPhapCombatPreviewScene.test.ts[2m > [22mTranPhapCombatPreviewScene — real art resolution[2m > [22ma player sprite already drawing a valid texture survives sync (no destroy)
+[31m[1mAssertionError[22m: sprite on 'zuofeng-avatar' was destroyed on sync: expected [ 'player' ] to deeply equal [][39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- [][39m
+[31m+ [[39m
+[31m+   "player",[39m
+[31m+ ][39m
+
+[36m [2m❯[22m src/game/scenes/TranPhapCombatPreviewScene.test.ts:[2m192:85[22m[39m
+    [90m190|[39m       })
+    [90m191|[39m
+    [90m192|[39m       expect(scene.destroyCalls, `sprite on '${textureKey}' was destro…
+    [90m   |[39m                                                                                     [31m^[39m
+    [90m193|[39m       expect((scene.sprites.get('player')!.rect as Phaser.GameObjects.…
+    [90m194|[39m     }
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯[22m[39m
+
+
+
+===== MUT-07 empty registered anim gets played, swapping the avatar texture
+.combatAnimations.test.ts:[2m334:34[22m[39m
+    [90m332|[39m     scene[33m.[39m[34mplayCombatAnimation[39m(sprite[33m,[39m [33mPLAYER_ID[39m[33m,[39m [32m'idle'[39m)
+    [90m333|[39m
+    [90m334|[39m     [34mexpect[39m(gameSprite[33m.[39mplayCalls)[33m.[39m[34mtoEqual[39m([])
+    [90m   |[39m                                  [31m^[39m
+    [90m335|[39m   })
+    [90m336|[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/game/scenes/CombatScene.combatAnimations.test.ts[2m > [22mCombatScene â€” playCombatAnimation()[2m > [22ma zero-frame destination clip degrades to the sibling loop - no freeze, no throw
+[31m[1mAssertionError[22m: expected [ 'zuofeng-attack', 'zuofeng-standby' ] to deeply equal [ 'zuofeng-attack', 'zuofeng-idle' ][39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  [[22m
+[2m    "zuofeng-attack",[22m
+[32m-   "zuofeng-idle",[39m
+[31m+   "zuofeng-standby",[39m
+[2m  ][22m
+
+[36m [2m❯[22m src/game/scenes/CombatScene.combatAnimations.test.ts:[2m481:34[22m[39m
+    [90m479|[39m     // Destination empty -> MISSING_CLIP_FALLBACK degrades standby -> …
+    [90m480|[39m     // instead of freezing the sprite on the last attack frame (Clean-…
+    [90m481|[39m     [34mexpect[39m(gameSprite[33m.[39mplayCalls)[33m.[39m[34mtoEqual[39m([attackKey[33m,[39m idleKey])
+    [90m   |[39m                                  [31m^[39m
+    [90m482|[39m   })
+    [90m483|[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/game/scenes/CombatScene.combatAnimations.test.ts[2m > [22mCombatScene â€” playCombatAnimation()[2m > [22ma double loop miss (idle AND standby empty) terminates the chain - no infinite fallback
+[31m[1mAssertionError[22m: expected [ 'zuofeng-attack', 'zuofeng-standby' ] to deeply equal [ 'zuofeng-attack' ][39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  [[22m
+[2m    "zuofeng-attack",[22m
+[31m+   "zuofeng-standby",[39m
+[2m  ][22m
+
+[36m [2m❯[22m src/game/scenes/CombatScene.combatAnimations.test.ts:[2m504:34[22m[39m
+    [90m502|[39m
+    [90m503|[39m     // Chain terminates: standby empty -> idle empty -> cycle guard ->…
+    [90m504|[39m     [34mexpect[39m(gameSprite[33m.[39mplayCalls)[33m.[39m[34mtoEqual[39m([attackKey])
+    [90m   |[39m                                  [31m^[39m
+    [90m505|[39m   })
+    [90m506|[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/game/scenes/CombatScene.combatAnimations.test.ts[2m > [22mCombatScene â€” playCombatAnimation()[2m > [22ma fully-empty loop chain restores the pre-clip base texture
+[31m[1mAssertionError[22m: expected [] to deeply equal [ 'zuofeng-avatar' ][39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- [[39m
+[32m-   "zuofeng-avatar",[39m
+[32m- ][39m
+[31m+ [][39m
+
+[36m [2m❯[22m src/game/scenes/CombatScene.combatAnimations.test.ts:[2m578:37[22m[39m
+    [90m576|[39m
+    [90m577|[39m     // standby empty -> idle empty -> terminate -> avatar still art re…
+    [90m578|[39m     [34mexpect[39m(gameSprite[33m.[39mtextureCalls)[33m.[39m[34mtoEqual[39m([[32m'zuofeng-avatar'[39m])
+    [90m   |[39m                                     [31m^[39m
+    [90m579|[39m     [34mexpect[39m(gameSprite[33m.[39mplayCalls)[33m.[39m[34mtoEqual[39m([attackKey])
+    [90m580|[39m   })
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯[22m[39m
+
+
+
+===== MUT-02 mapped profile falls back to legacy texture key inside combat
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.11 [39m[90mE:/tutienidle/.agent-worktrees/character-art-infra/game[39m
+
+ [31m❯[39m tests/architecture/characterArtReskin.test.ts [2m([22m[2m12 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 24[2mms[22m[39m
+     [32m✓[39m every wired variant's sheet, atlas and avatar exist on disk where declared[32m 3[2mms[22m[39m
+     [32m✓[39m every declared clip frame exists in its atlas, with matching sourceSize[32m 6[2mms[22m[39m
+     [32m✓[39m sourceSize/extent/clip ranges equal the manifest - including per-clip sheet placement[32m 1[2mms[22m[39m
+     [32m✓[39m avatarSize equals the real PNG dims - the static fallback cannot lie about its box[32m 1[2mms[22m[39m
+     [32m✓[39m every reskin target is a declared variant and every key is a real profile id[32m 0[2mms[22m[39m
+     [32m✓[39m profile resolution: mapped profiles hit the slug, unmapped return undefined[32m 0[2mms[22m[39m
+[31m     [31m×[31m resolvePlayerEntityKey returns the character slug for mapped profiles, fallback otherwise[39m[32m 7[2mms[22m[39m
+     [32m✓[39m entity presentation: character slugs are animated with authored attack + ult clips[32m 0[2mms[22m[39m
+     [32m✓[39m character slugs collide with no monster variant or companion id[32m 0[2mms[22m[39m
+     [32m✓[39m catalogue keys are pairwise disjoint across all five producers[32m 1[2mms[22m[39m
+     [32m✓[39m no animated catalogue emits an undefined clip entry[32m 0[2mms[22m[39m
+     [32m✓[39m ANIMATED_CHARACTER_KEYS is exactly the reskin image - no orphan slugs, no missing ones[32m 0[2mms[22m[39m
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m11 passed[39m[22m[90m (12)[39m
+[2m   Start at [22m 19:56:12
+[2m   Duration [22m 460ms[2m (transform 157ms, setup 0ms, import 211ms, tests 24ms, environment 0ms)[22m
+
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 1 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m tests/architecture/characterArtReskin.test.ts[2m > [22mcharacter art reskin registry (infra)[2m > [22mresolvePlayerEntityKey returns the character slug for mapped profiles, fallback otherwise
+[31m[1mAssertionError[22m: mortal: expected 'legacy-fallback-key' to be 'zuofeng' // Object.is equality[39m
+
+Expected: [32m"zuofeng"[39m
+Received: [31m"legacy-fallback-key"[39m
+
+[36m [2m❯[22m tests/architecture/characterArtReskin.test.ts:[2m212:83[22m[39m
+    [90m210|[39m   it('resolvePlayerEntityKey returns the character slug for mapped pro…
+    [90m211|[39m     [35mfor[39m ([35mconst[39m profileId [35mof[39m [33mKNOWN_PROFILE_IDS[39m) {
+    [90m212|[39m       expect(resolvePlayerEntityKey(profileId, 'legacy-fallback-key'),…
+    [90m   |[39m                                                                                   [31m^[39m
+    [90m213|[39m     }
+    [90m214|[39m     expect(resolvePlayerEntityKey('not_a_profile', 'legacy-fallback-ke…
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯[22m[39m
+
+
+
+===== MUT-04 atlas-miss falls straight to placeholder, skipping the avatar
+ [32m✓[39m placeholder texture cũng thiếu + host trả undefined (như CombatScene thật) → Rectangle double-fallback — KHÔNG regression cho combat thật[32m 1[2mms[22m[39m
+[31m     [31m×[31m reskinned enemy with a MISSING atlas still draws its avatar PNG (F-EAW-09) - never falls straight to Rectangle[39m[32m 9[2mms[22m[39m
+     [32m✓[39m reskinned enemy with BOTH atlas and avatar missing -> Rectangle double-fallback (same as any unloaded art)[32m 0[2mms[22m[39m
+     [32m✓[39m reskinned PLAYER with atlas+avatar missing falls back to the profile PNG - never __MISSING (F-CAI-25)[32m 1[2mms[22m[39m
+     [32m✓[39m reskinned PLAYER with atlas missing still draws the variant avatar - the intermediate chain step (Clean-B2 coverage)[32m 0[2mms[22m[39m
+     [32m✓[39m reskinned PLAYER with atlas+avatar+profile ALL missing -> Rectangle terminal fallback (F-CAI-25)[32m 0[2mms[22m[39m
+     [32m✓[39m gọi getOrCreateSprite 2 lần cùng id → trả về CÙNG object sprite (không destroy/tạo lại) — đây là cơ chế fix bug animation-reset của panel Trận Pháp (Task 4)[32m 1[2mms[22m[39m
+     [32m✓[39m lưới 6x6 (panel) → 7 đường ngang + 7 đường dọc (rows+1, columns+1), KHÔNG phải 11/17 của lưới thật[32m 1[2mms[22m[39m
+     [32m✓[39m KHÔNG còn gọi fillPoints (cổng phòng thủ HERO_COLUMN đã bị xóa — obsolete với turn-based)[32m 1[2mms[22m[39m
+     [32m✓[39m perspective mode (arenaRect undefined) vẫn vẽ viền ngoài qua strokePoints (viền KHÔNG bị xóa, chỉ gate polygon bị xóa)[32m 0[2mms[22m[39m
+     [32m✓[39m a static enemy starts a looping, phase-delayed bob on creation[32m 1[2mms[22m[39m
+     [32m✓[39m two individuals of the SAME species get different phases[32m 1[2mms[22m[39m
+     [32m✓[39m the bob moves the BODY, leaving feet, shadow and depth on the ground[32m 1[2mms[22m[39m
+     [32m✓[39m the reskinned player draws its character atlas and skips the bob (character-art-infra)[32m 1[2mms[22m[39m
+     [32m✓[39m destroying a sprite kills its bob, which outlives the GameObject otherwise[32m 1[2mms[22m[39m
+     [32m✓[39m trimmed art gets a BIGGER box so the character lands at the same height[32m 1[2mms[22m[39m
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m20 passed[39m[22m[90m (21)[39m
+[2m   Start at [22m 19:56:15
+[2m   Duration [22m 6.22s[2m (transform 3.16s, setup 0ms, import 4.76s, tests 29ms, environment 1.14s)[22m
+
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 1 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m src/game/scenes/combat/combat-grid-view.test.ts[2m > [22mCombatGridView.getOrCreateSprite() — host.fallbackSpriteTextureKey() (Battlefield Slot, 2026-09-06)[2m > [22mreskinned enemy with a MISSING atlas still draws its avatar PNG (F-EAW-09) - never falls straight to Rectangle
+[31m[1mAssertionError[22m: expected 'rect' to be 'sprite' // Object.is equality[39m
+
+Expected: [32m"sprite"[39m
+Received: [31m"rect"[39m
+
+[36m [2m❯[22m src/game/scenes/combat/combat-grid-view.test.ts:[2m199:25[22m[39m
+    [90m197|[39m     })
+    [90m198|[39m
+    [90m199|[39m     [34mexpect[39m(sprite[33m.[39mkind)[33m.[39m[34mtoBe[39m([32m'sprite'[39m)
+    [90m   |[39m                         [31m^[39m
+    [90m200|[39m
+    [90m201|[39m     const spriteFactory = (scene.add as { sprite: ReturnType<typeof vi…
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯[22m[39m
+
+

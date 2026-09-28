@@ -19,6 +19,7 @@ import {
   MORTAL_ENEMY_TEMPLATE_IDS,
 } from './EnemyArt'
 import { MONSTER_ART, reskinnedTemplateIds } from './MonsterArt'
+import { CHARACTER_ART } from './CharacterArt'
 import { PLAYER_VISUAL_PROFILES } from '@/presentation/art/PlayerVisualProfiles'
 import { peekThanhVanVariant, thanhVanLoadList } from './ThanhVanArt'
 import {
@@ -150,6 +151,11 @@ export function queueCombatAssets(scene: Phaser.Scene): void {
   // Reskinned enemies (enemy-art-wave1): the avatar PNG is each variant's
   // static fallback form - load it so the dormant half stays real art.
   for (const variant of Object.values(MONSTER_ART)) {
+    queueOnce(variant.avatarKey, variant.avatarUrl)
+  }
+
+  // Reskinned characters (character-art-infra): same fallback contract.
+  for (const variant of Object.values(CHARACTER_ART)) {
     queueOnce(variant.avatarKey, variant.avatarUrl)
   }
 

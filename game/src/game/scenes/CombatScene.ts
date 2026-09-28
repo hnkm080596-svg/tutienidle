@@ -182,6 +182,11 @@ export interface CombatScenePayload {
   sourceId?: string
   targetId?: string
   skillId?: string
+  /** Kit slot the cast came from - lets the renderer pick the authored ult
+   *  clip for ultimate casts. 'none' marks a declared turn that is not a
+   *  slot cast at all (charge-continuation/skipped turns): no lunge, no
+   *  clip, just the impact ack pacing (Clean-B F-CB2-02). */
+  slotRole?: 'basic' | 'special' | 'ultimate' | 'none'
   // Player visual profile bridge (body-anchor plan Ã‚Â§4.2) Ã¢â‚¬â€ event
   // 'player_visual_profile_changed' gÃ¡Â»Â­i kÃƒÂ¨m ID hÃƒÂ¬nh thÃƒÂ¡i mÃ¡Â»â€ºi.
   profileId?: string
@@ -238,6 +243,15 @@ interface EntitySprite {
   // scale/geometry mÃƒÂ  projection ghi mÃ¡Â»â€”i frame.
   shadow?: Phaser.GameObjects.Ellipse
   boost: { value: number }
+  // Mirrors combatTypes.ts EntitySprite (see the note above): procedural
+  // idle-bob target (Clean-A3 A-9 mirror drift), the pending one-shot
+  // transition listener removed selectively on profile swap (Clean-B2
+  // IN3-F1), and the deferred loop / pre-clip base texture used by
+  // playCombatAnimation's deferral + restore paths (Clean-B F-CB2-01/03).
+  idle?: { offsetY: number }
+  pendingTransitionListener?: (anim: Phaser.Animations.Animation) => void
+  deferredLoopRequest?: CombatAnimationName
+  pendingBaseTextureKey?: string
   footY: number
   columnFloat: number
 }
@@ -1804,6 +1818,12 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     this.vfxSpawner.statusTooltip?.hide()
     this.floatedStatusKeys?.clear()
 
+    // A new battle resurrects the player: clear the dying flag BEFORE the
+    // idle replay below - playCombatAnimation gates on playerDying so death
+    // owns the channel, and without this ordering the restart replay is
+    // swallowed by that very guard.
+    this.playerDying = false
+
     const player = this.sprites.get(PLAYER_ID)
 
     if (player) {
@@ -1822,9 +1842,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
       this.positionSprite(player, HERO_COLUMN)
     }
 
-    this.playerDying = false
-
-    // Scene restart / trÃ¡ÂºÂ­n mÃ¡Â»â€ºi trong cÃƒÂ¹ng scene Ã¢â‚¬â€ dÃ¡Â»Ân Player spawn VFX cÃ…Â©.
+    // Scene restart / same-scene refight - clean stale Player spawn VFX.
     this.playerSpawnHandle?.destroy()
     this.playerSpawnHandle = undefined
 
@@ -1904,6 +1922,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
         sourceId: resume.actorId,
         skillId: resume.skillId,
         targetId: resume.targetIds[0],
+        slotRole: resume.slotRole,
       })
     } else if (resume.phase === 'complete') {
       const token = resume.token
