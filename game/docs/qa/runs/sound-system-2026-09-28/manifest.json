@@ -22602,7 +22602,7 @@
       "path": "src/presentation/assets/AssetBundleCatalog.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "6edbe0351cffc26a48a2b280aa6e881a73e1bf4eb64e987a17c29aa9d2e69506"
+      "hash": "d8c307891693488a9512c699235d4541e28fff3e3c6f27f1aae7784cbc4c9254"
     },
     {
       "path": "src/presentation/assets/AssetBundleManager.test.ts",
@@ -22626,7 +22626,7 @@
       "path": "src/presentation/audio/ambientAudioDriver.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "949ce4a823c0505d3a6a077f1d7491c607c201d0d0d159644f930a1d668e659d"
+      "hash": "0871849044d5a659feb16aecb29b636024ee007cae76c80c7b50292f488202d5"
     },
     {
       "path": "src/presentation/audio/audioAssetWiring.ts",
@@ -22638,13 +22638,13 @@
       "path": "src/presentation/audio/combatAudioBinding.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "5ef759d43ddb3c6f8597cba5bbe8402ba187cbf7183c2a2679f8771b313ae112"
+      "hash": "0a48c7c8716635ca78615ea3ec80b34b98ceedbe5e628d5c6aed3dedec18d2d2"
     },
     {
       "path": "src/presentation/audio/combatAudioBinding.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "b89da75292474602e763750caf1357ef852dac0241021a9833961766ded2ed9b"
+      "hash": "d0ef30f62c4888775256b153b5dcc9f09892dee935cda034e67f48dd17dc0ee7"
     },
     {
       "path": "src/presentation/audio/uiAudioBinding.test.ts",
@@ -23532,19 +23532,19 @@
       "path": "tests/architecture/audioBindingWiring.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "96e08a042af9637ce64b4b6bbdc7291637b0d8b9aba4ccc9e275b023d1f1a1c5"
+      "hash": "7347ab2fd18ae859a0f4a3465018abc69d22a2d253d0ecbada971272d69be04a"
     },
     {
       "path": "tests/architecture/audioBoundary.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "ce581471365c3d9afaf810b335127dcc6585d09694504c8057cfe6568c98c1aa"
+      "hash": "80e22401f2ead8b0fa2c513862293000d8d78d03d6967ac35e9c0170f29eb8e4"
     },
     {
       "path": "tests/architecture/audioManifestCompleteness.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "bfd2f978f977761d7b11620f942b6419a8e679f5b14c742177f75905788b9f2a"
+      "hash": "1958ecdfd4d2aaa1d45d9f645206e706ad830a7f55c15cef504f114b18e0925b"
     },
     {
       "path": "tests/architecture/baselines/asciiComments.json",
@@ -23658,7 +23658,7 @@
       "path": "tests/architecture/helpers/commentStrip.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "79fea4a4cebea926a408cc483f6a93ce8da54f8d10fc88c1ad49fe3b3bd483ce"
+      "hash": "50ed603d283c2ebeccc9c6ce7a1e076ca34f0cd92d2cf209781fbc6643da5294"
     },
     {
       "path": "tests/architecture/helpers/scanTs.ts",
@@ -23904,7 +23904,7 @@
       "path": "tests/e2e/sound-system.spec.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "113297316d3cf176a6f026d7de4b93ebd219c0d369763037414fc13fdb6e287a"
+      "hash": "2b1fef6090d633b0ec6d226f178bf14130647cb11bb563c90dad1e3346c3195d"
     },
     {
       "path": "tests/e2e/standing-slot-panel.spec.ts",
@@ -24021,5 +24021,5 @@
       "hash": "e69b4133ed37ca9a4f05e66d90521d0bb749c4764bf1f454d0eb13de601f7940"
     }
   ],
-  "productStateId": "9df20d02682b224097187e8af85ad7f518bbff54825e1547c39418bebe8935f2"
+  "productStateId": "324b39d00ec58ea009ac15e39d0daf3ab741a10196c85313c983527fd833f5d0"
 }
