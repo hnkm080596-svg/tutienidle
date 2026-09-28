@@ -1,0 +1,16 @@
+{
+  "applied": [
+    "evidence:EV-UIW1-FIX1",
+    "review:REV-UIW1-COR-1",
+    "review:REV-UIW1-AUT-1",
+    "review:REV-UIW1-INT-1",
+    "finding:F-UIW1-01",
+    "finding:F-UIW1-02",
+    "finding:F-UIW1-03",
+    "finding:F-UIW1-04",
+    "finding:F-UIW1-05",
+    "finding:F-UIW1-06",
+    "finding:F-UIW1-07",
+    "finding:F-UIW1-08"
+  ]
+}

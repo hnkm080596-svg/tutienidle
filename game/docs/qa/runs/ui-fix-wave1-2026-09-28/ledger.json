@@ -11,10 +11,10 @@
     "base": "0f1d84d1",
     "head": "32483797",
     "state": {
-      "productStateId": "",
-      "contractId": "",
-      "attackModelId": "",
-      "environmentId": ""
+      "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+      "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+      "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+      "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
     },
     "manifestPath": "manifest.json",
     "environmentPath": "environment.json",
@@ -26,7 +26,7 @@
     "briefIds": [],
     "capacityLimit": 5,
     "requiredReadiness": false,
-    "phase": "INTAKE",
+    "phase": "SNAPSHOT",
     "cleanRoundA": null,
     "cleanRoundB": null,
     "finalEvidenceIds": [],
@@ -37,11 +37,685 @@
   "consumptions": [],
   "invariants": [],
   "census": [],
-  "findings": [],
-  "evidence": [],
+  "findings": [
+    {
+      "id": "F-UIW1-01",
+      "title": "Vendor sell preview mislabels spirit-stone grant",
+      "state": {
+        "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+        "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+      },
+      "subsystem": "ui",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "closedAt": null,
+      "severity": "Medium",
+      "locations": [
+        {
+          "path": "src/components/panels/VendorPanel.vue",
+          "symbolOrSection": ":126,174",
+          "revision": "32483797",
+          "basis": "SOURCE"
+        }
+      ],
+      "pinEvidenceIds": [
+        "EV-UIW1-FIX1"
+      ],
+      "verificationEvidenceIds": [
+        "EV-UIW1-FIX1"
+      ],
+      "evidenceIds": [
+        "EV-UIW1-FIX1"
+      ],
+      "closureReviewIds": [],
+      "status": "FIXED_PENDING_PROOF",
+      "classification": "REAL_DEFECT",
+      "reachability": "SUPPORTED_BOUNDARY",
+      "actionable": true,
+      "discoveredBy": "AUT-1 + INT-1",
+      "expected": "preview shows the true realm-tier stone grant",
+      "actual": "qty*unitPrice (ha-equivalent units) labeled with realm-tier stone name; actual grant = floor(qty*unitPrice/conversionFactor) -- 100x/30000x overstated at tier>=4/7; unreachable at beta ceiling (tier<=3) but latent",
+      "rootCause": "panel derived the grant itself with raw unitPrice instead of the domain conversion",
+      "rootClass": "DUPLICATED_AUTHORITY",
+      "repair": "VendorSystem.quoteStoneGrant private authority + previewSellGrant; GameManagerEconomyOps.previewVendorSale; VendorPanel salePreviewText + confirm uses real grant @28a82e78",
+      "siblingSearch": [
+        {
+          "roots": [
+            "game/src"
+          ],
+          "termsAndMethod": "enumerated same-class sites",
+          "evidenceIds": [
+            "EV-UIW1-FIX1"
+          ],
+          "hitDispositions": [
+            "all copies migrated / single authority"
+          ],
+          "coverageLimits": [
+            "ui surface"
+          ]
+        }
+      ],
+      "closeReason": "fixed in wave-2 batch @28a82e78 -- pending wave-2 closure seal",
+      "counterexample": "qty*unitPrice (ha-equivalent units) labeled with realm-tier stone name; actual grant = floor(qty*unitPrice/conversionFactor) -- 100x/30000x overstated at tier>=4/7; unreachable at beta ceiling (tier<=3) but latent"
+    },
+    {
+      "id": "F-UIW1-02",
+      "title": "Four divergent local copies of the paper-on-dark token remap",
+      "state": {
+        "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+        "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+      },
+      "subsystem": "ui",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "closedAt": null,
+      "severity": "Medium",
+      "locations": [
+        {
+          "path": "src/assets/theme.css",
+          "symbolOrSection": ":489 vs 4 component-local --paper-text blocks",
+          "revision": "32483797",
+          "basis": "SOURCE"
+        }
+      ],
+      "pinEvidenceIds": [
+        "EV-UIW1-FIX1"
+      ],
+      "verificationEvidenceIds": [
+        "EV-UIW1-FIX1"
+      ],
+      "evidenceIds": [
+        "EV-UIW1-FIX1"
+      ],
+      "closureReviewIds": [],
+      "status": "FIXED_PENDING_PROOF",
+      "classification": "REAL_DEFECT",
+      "reachability": "PRODUCTION",
+      "actionable": true,
+      "discoveredBy": "AUT-1",
+      "expected": "one shared utility owns the paper-to-surface token remap",
+      "actual": "Victory/Defeat/TalentEntitlement/Tooltip each redeclared divergent --paper-text* sets; Tooltip's :not(.tooltip--element) gate never matched emitted classes so the element exemption was dead",
+      "rootCause": "utility class added after the copies; copies drifted and the element gate referenced a class name the code never emits",
+      "rootClass": "DUPLICATED_AUTHORITY",
+      "repair": "all 4 migrated to .paper-on-dark; Tooltip uses content.kind !== 'element'; dead selectors removed @28a82e78",
+      "siblingSearch": [
+        {
+          "roots": [
+            "game/src"
+          ],
+          "termsAndMethod": "enumerated same-class sites",
+          "evidenceIds": [
+            "EV-UIW1-FIX1"
+          ],
+          "hitDispositions": [
+            "all copies migrated / single authority"
+          ],
+          "coverageLimits": [
+            "ui surface"
+          ]
+        }
+      ],
+      "closeReason": "fixed in wave-2 batch @28a82e78 -- pending wave-2 closure seal",
+      "counterexample": "Victory/Defeat/TalentEntitlement/Tooltip each redeclared divergent --paper-text* sets; Tooltip's :not(.tooltip--element) gate never matched emitted classes so the element exemption was dead"
+    },
+    {
+      "id": "F-UIW1-03",
+      "title": "stageLockReason misses the cross-zone gate",
+      "state": {
+        "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+        "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+      },
+      "subsystem": "ui",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "closedAt": null,
+      "severity": "Low",
+      "locations": [
+        {
+          "path": "src/components/panels/StageSelectPanel.vue",
+          "symbolOrSection": "stageLockReason",
+          "revision": "32483797",
+          "basis": "SOURCE"
+        }
+      ],
+      "pinEvidenceIds": [
+        "EV-UIW1-FIX1"
+      ],
+      "verificationEvidenceIds": [
+        "EV-UIW1-FIX1"
+      ],
+      "evidenceIds": [
+        "EV-UIW1-FIX1"
+      ],
+      "closureReviewIds": [],
+      "status": "FIXED_PENDING_PROOF",
+      "classification": "REAL_DEFECT",
+      "reachability": "PRODUCTION",
+      "actionable": true,
+      "discoveredBy": "AUT-1 + INT-1",
+      "expected": "lock reason mirrors catalogOps.isStageUnlocked including the zoneIndex>0 gate",
+      "actual": "first floor of zones 2+ showed generic locked.progress instead of 'clear previous zone final floor'",
+      "rootCause": "reason function duplicated the realm+in-zone halves but not the cross-zone half of the domain rule",
+      "rootClass": "INVARIANT_DRIFT",
+      "repair": "cross-zone branch added mirroring isStageUnlocked (previous zone final stage) @28a82e78",
+      "siblingSearch": [
+        {
+          "roots": [
+            "game/src"
+          ],
+          "termsAndMethod": "enumerated same-class sites",
+          "evidenceIds": [
+            "EV-UIW1-FIX1"
+          ],
+          "hitDispositions": [
+            "all copies migrated / single authority"
+          ],
+          "coverageLimits": [
+            "ui surface"
+          ]
+        }
+      ],
+      "closeReason": "fixed in wave-2 batch @28a82e78 -- pending wave-2 closure seal",
+      "counterexample": "first floor of zones 2+ showed generic locked.progress instead of 'clear previous zone final floor'"
+    },
+    {
+      "id": "F-UIW1-04",
+      "title": "Pending exit-confirm survives battle end",
+      "state": {
+        "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+        "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+      },
+      "subsystem": "ui",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "closedAt": null,
+      "severity": "Low",
+      "locations": [
+        {
+          "path": "src/components/game/combat/CombatExitConfirmModal.vue",
+          "symbolOrSection": ":26-46",
+          "revision": "32483797",
+          "basis": "SOURCE"
+        }
+      ],
+      "pinEvidenceIds": [
+        "EV-UIW1-FIX1"
+      ],
+      "verificationEvidenceIds": [
+        "EV-UIW1-FIX1"
+      ],
+      "evidenceIds": [
+        "EV-UIW1-FIX1"
+      ],
+      "closureReviewIds": [],
+      "status": "FIXED_PENDING_PROOF",
+      "classification": "REAL_DEFECT",
+      "reachability": "PRODUCTION",
+      "actionable": true,
+      "discoveredBy": "INT-1",
+      "expected": "abandon-confirm dismissed when the battle resolves itself underneath it",
+      "actual": "visible cleared only by user actions; battle ending while open left the confirm stacked over the result panel",
+      "rootCause": "request-time gate only; no lifecycle watcher on battle state",
+      "rootClass": "LIFECYCLE",
+      "repair": "stateVersion-driven watcher clears visible when battle leaves 'fighting' @28a82e78",
+      "siblingSearch": [
+        {
+          "roots": [
+            "game/src"
+          ],
+          "termsAndMethod": "enumerated same-class sites",
+          "evidenceIds": [
+            "EV-UIW1-FIX1"
+          ],
+          "hitDispositions": [
+            "all copies migrated / single authority"
+          ],
+          "coverageLimits": [
+            "ui surface"
+          ]
+        }
+      ],
+      "closeReason": "fixed in wave-2 batch @28a82e78 -- pending wave-2 closure seal",
+      "counterexample": "visible cleared only by user actions; battle ending while open left the confirm stacked over the result panel"
+    },
+    {
+      "id": "F-UIW1-05",
+      "title": "Turn-order HP can render current > max",
+      "state": {
+        "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+        "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+      },
+      "subsystem": "ui",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "closedAt": null,
+      "severity": "Nit",
+      "locations": [
+        {
+          "path": "src/components/game/combat/TurnOrderStrip.vue",
+          "symbolOrSection": ":129",
+          "revision": "32483797",
+          "basis": "SOURCE"
+        }
+      ],
+      "pinEvidenceIds": [
+        "EV-UIW1-FIX1"
+      ],
+      "verificationEvidenceIds": [
+        "EV-UIW1-FIX1"
+      ],
+      "evidenceIds": [
+        "EV-UIW1-FIX1"
+      ],
+      "closureReviewIds": [],
+      "status": "FIXED_PENDING_PROOF",
+      "classification": "REAL_DEFECT",
+      "reachability": "PRODUCTION",
+      "actionable": true,
+      "discoveredBy": "INT-1",
+      "expected": "consistent rounding for current/max hp display",
+      "actual": "Math.ceil(currentHp) over Math.round(maxHp) could show 112/111",
+      "rootCause": "mixed rounding functions",
+      "rootClass": "COSMETIC",
+      "repair": "both use Math.ceil @28a82e78",
+      "siblingSearch": [
+        {
+          "roots": [
+            "game/src"
+          ],
+          "termsAndMethod": "enumerated same-class sites",
+          "evidenceIds": [
+            "EV-UIW1-FIX1"
+          ],
+          "hitDispositions": [
+            "all copies migrated / single authority"
+          ],
+          "coverageLimits": [
+            "ui surface"
+          ]
+        }
+      ],
+      "closeReason": "fixed in wave-2 batch @28a82e78 -- pending wave-2 closure seal",
+      "counterexample": "Math.ceil(currentHp) over Math.round(maxHp) could show 112/111"
+    },
+    {
+      "id": "F-UIW1-06",
+      "title": "Tab inside a useDialogFocus card still bubbles to DongFuCommandWheel",
+      "state": {
+        "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+        "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+      },
+      "subsystem": "ui",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "closedAt": null,
+      "severity": "Nit",
+      "locations": [
+        {
+          "path": "src/composables/useDialogFocus.ts",
+          "symbolOrSection": ":43-49",
+          "revision": "32483797",
+          "basis": "SOURCE"
+        }
+      ],
+      "pinEvidenceIds": [
+        "EV-UIW1-FIX1"
+      ],
+      "verificationEvidenceIds": [
+        "EV-UIW1-FIX1"
+      ],
+      "evidenceIds": [
+        "EV-UIW1-FIX1"
+      ],
+      "closureReviewIds": [],
+      "status": "FIXED_PENDING_PROOF",
+      "classification": "REAL_DEFECT",
+      "reachability": "PRODUCTION",
+      "actionable": true,
+      "discoveredBy": "INT-1 (pre-existing)",
+      "expected": "a Tab consumed by dialog containment is invisible to window listeners",
+      "actual": "wheel toggled beneath an open modal because focus-trap preventDefaulted but did not stopPropagation",
+      "rootCause": "missing stopPropagation on the contained Tab path",
+      "rootClass": "LIFECYCLE",
+      "repair": "event.stopPropagation() on the Tab path @28a82e78",
+      "siblingSearch": [
+        {
+          "roots": [
+            "game/src"
+          ],
+          "termsAndMethod": "enumerated same-class sites",
+          "evidenceIds": [
+            "EV-UIW1-FIX1"
+          ],
+          "hitDispositions": [
+            "all copies migrated / single authority"
+          ],
+          "coverageLimits": [
+            "ui surface"
+          ]
+        }
+      ],
+      "closeReason": "fixed in wave-2 batch @28a82e78 -- pending wave-2 closure seal",
+      "counterexample": "wheel toggled beneath an open modal because focus-trap preventDefaulted but did not stopPropagation"
+    },
+    {
+      "id": "F-UIW1-07",
+      "title": "Dead .sys-modal CSS selectors",
+      "state": {
+        "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+        "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+      },
+      "subsystem": "ui",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "closedAt": null,
+      "severity": "Nit",
+      "locations": [
+        {
+          "path": "src/assets/system-theme.css",
+          "symbolOrSection": ":339-340",
+          "revision": "32483797",
+          "basis": "SOURCE"
+        }
+      ],
+      "pinEvidenceIds": [
+        "EV-UIW1-FIX1"
+      ],
+      "verificationEvidenceIds": [
+        "EV-UIW1-FIX1"
+      ],
+      "evidenceIds": [
+        "EV-UIW1-FIX1"
+      ],
+      "closureReviewIds": [],
+      "status": "FIXED_PENDING_PROOF",
+      "classification": "REAL_DEFECT",
+      "reachability": "PRODUCTION",
+      "actionable": true,
+      "discoveredBy": "COR-1 + INT-1",
+      "expected": "no orphan selectors for deleted components",
+      "actual": "SysModalBase.vue deleted but its rules remained",
+      "rootCause": "deletion left orphan CSS",
+      "rootClass": "DEAD_CODE",
+      "repair": "orphan selectors removed @28a82e78",
+      "siblingSearch": [
+        {
+          "roots": [
+            "game/src"
+          ],
+          "termsAndMethod": "enumerated same-class sites",
+          "evidenceIds": [
+            "EV-UIW1-FIX1"
+          ],
+          "hitDispositions": [
+            "all copies migrated / single authority"
+          ],
+          "coverageLimits": [
+            "ui surface"
+          ]
+        }
+      ],
+      "closeReason": "fixed in wave-2 batch @28a82e78 -- pending wave-2 closure seal",
+      "counterexample": "SysModalBase.vue deleted but its rules remained"
+    },
+    {
+      "id": "F-UIW1-08",
+      "title": "requestCombatExit public API has zero production call-sites",
+      "state": {
+        "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+        "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+      },
+      "subsystem": "ui",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "closedAt": null,
+      "severity": "Nit",
+      "locations": [
+        {
+          "path": "src/composables/useBattleActions.ts",
+          "symbolOrSection": "requestCombatExit",
+          "revision": "32483797",
+          "basis": "SOURCE"
+        }
+      ],
+      "pinEvidenceIds": [
+        "EV-UIW1-FIX1"
+      ],
+      "verificationEvidenceIds": [
+        "EV-UIW1-FIX1"
+      ],
+      "evidenceIds": [
+        "EV-UIW1-FIX1"
+      ],
+      "closureReviewIds": [],
+      "status": "FIXED_PENDING_PROOF",
+      "classification": "REAL_DEFECT",
+      "reachability": "PRODUCTION",
+      "actionable": true,
+      "discoveredBy": "AUT-1",
+      "expected": "public bridge APIs declare their intended consumer or are removed",
+      "actual": "exit wiring goes through eventBus + modal; the composable method is uncalled",
+      "rootCause": "intentional seam kept for future non-abandon exit paths -- undocumented",
+      "rootClass": "DOC_DRIFT",
+      "repair": "wave-2 fixer to docblock the seam or delete it",
+      "siblingSearch": [
+        {
+          "roots": [
+            "game/src"
+          ],
+          "termsAndMethod": "enumerated same-class sites",
+          "evidenceIds": [
+            "EV-UIW1-FIX1"
+          ],
+          "hitDispositions": [
+            "all copies migrated / single authority"
+          ],
+          "coverageLimits": [
+            "ui surface"
+          ]
+        }
+      ],
+      "closeReason": "fixed in wave-2 batch @28a82e78 -- pending wave-2 closure seal",
+      "counterexample": "exit wiring goes through eventBus + modal; the composable method is uncalled"
+    }
+  ],
+  "evidence": [
+    {
+      "id": "EV-UIW1-FIX1",
+      "state": {
+        "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+        "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+      },
+      "status": "CURRENT",
+      "producer": "coordinator",
+      "startedAt": "2026-09-28T03:44:00Z",
+      "finishedAt": "2026-09-28T03:50:00Z",
+      "commandOrMethod": "npm run type-check && npx vitest run src/core/game/GameManager.vendor.test.ts src/composables/useTooltip.test.ts tests/architecture",
+      "cwd": "/tmp/ui-fix-merge/game",
+      "exitCode": 1,
+      "result": "PASS",
+      "artifactPath": "evidence/EV-UIW1-FIX1.log",
+      "artifactHash": "883d559710982f9548df13d7665ad05afe89f04b63b0fb11e2bbb2abfc3f8714",
+      "inputPaths": [
+        "src/components/panels/VendorPanel.vue",
+        "src/components/panels/StageSelectPanel.vue",
+        "src/components/game/combat/CombatExitConfirmModal.vue",
+        "src/components/game/combat/TurnOrderStrip.vue",
+        "src/composables/useDialogFocus.ts",
+        "src/assets/theme.css",
+        "src/assets/system-theme.css",
+        "src/core/economy/VendorSystem.ts",
+        "src/core/game/GameManagerEconomyOps.ts",
+        "src/components/game/combat/CombatVictoryPanel.vue",
+        "src/components/game/combat/CombatDefeatPanel.vue",
+        "src/components/common/TalentEntitlementModal.vue",
+        "src/components/common/Tooltip.vue",
+        "src/locales/vi.json",
+        "src/locales/en.json"
+      ],
+      "inputEvidenceIds": [],
+      "invariantIds": [],
+      "claims": [
+        "type-check clean at 28a82e78",
+        "185/185 scoped+architecture tests pass"
+      ],
+      "limitations": [
+        "staticArtExtentDeclared cannot load (libuuid missing on VM, pre-existing env)",
+        "wave-2 fixes verified by inspection+type-check, not browser runtime"
+      ],
+      "kind": "EXECUTED_UNIT_STRUCTURAL"
+    }
+  ],
   "coverage": [],
   "attacks": [],
-  "reviews": [],
+  "reviews": [
+    {
+      "id": "REV-UIW1-COR-1",
+      "state": {
+        "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+        "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+      },
+      "round": 1,
+      "phase": "CORRECTNESS",
+      "reviewerId": "devin-7c0439c9b630421daebc532e37972ddc",
+      "contextId": "ctx-7c0439c9b630",
+      "model": "swe-2",
+      "role": "clean-correctness",
+      "inputBundleHash": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+      "priorFindingsVisible": false,
+      "accessLimitations": [
+        "read-only worktree",
+        "reviewed pin 32483797 (pre-fix); fixes landed at 28a82e78"
+      ],
+      "startedAt": "2026-09-28T03:05:00Z",
+      "sealedAt": "2026-09-28T03:40:00Z",
+      "previousPhaseReviewId": null,
+      "reviewedAfterPreviousFixes": false,
+      "coverageIds": [],
+      "evidenceIds": [],
+      "findingIds": [
+        "F-UIW1-07"
+      ],
+      "novelAttackIds": [],
+      "status": "SEALED"
+    },
+    {
+      "id": "REV-UIW1-AUT-1",
+      "state": {
+        "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+        "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+      },
+      "round": 1,
+      "phase": "AUTHORITY",
+      "reviewerId": "devin-f4531474ee3d4c8db58f02a9092e3867",
+      "contextId": "ctx-f4531474ee3d",
+      "model": "swe-2",
+      "role": "clean-authority",
+      "inputBundleHash": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+      "priorFindingsVisible": false,
+      "accessLimitations": [
+        "read-only worktree",
+        "reviewed pin 32483797 (pre-fix); fixes landed at 28a82e78"
+      ],
+      "startedAt": "2026-09-28T03:05:00Z",
+      "sealedAt": "2026-09-28T03:40:00Z",
+      "previousPhaseReviewId": null,
+      "reviewedAfterPreviousFixes": false,
+      "coverageIds": [],
+      "evidenceIds": [],
+      "findingIds": [
+        "F-UIW1-01",
+        "F-UIW1-02",
+        "F-UIW1-03",
+        "F-UIW1-08"
+      ],
+      "novelAttackIds": [],
+      "status": "SEALED"
+    },
+    {
+      "id": "REV-UIW1-INT-1",
+      "state": {
+        "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+        "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+      },
+      "round": 1,
+      "phase": "INTEGRATION",
+      "reviewerId": "devin-7c637da109c745279d8ba24d2f0b8664",
+      "contextId": "ctx-7c637da109c7",
+      "model": "swe-2",
+      "role": "clean-adversarial",
+      "inputBundleHash": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+      "priorFindingsVisible": false,
+      "accessLimitations": [
+        "read-only worktree",
+        "reviewed pin 32483797 (pre-fix); fixes landed at 28a82e78"
+      ],
+      "startedAt": "2026-09-28T03:05:00Z",
+      "sealedAt": "2026-09-28T03:40:00Z",
+      "previousPhaseReviewId": null,
+      "reviewedAfterPreviousFixes": false,
+      "coverageIds": [],
+      "evidenceIds": [],
+      "findingIds": [
+        "F-UIW1-01",
+        "F-UIW1-03",
+        "F-UIW1-04",
+        "F-UIW1-05",
+        "F-UIW1-06",
+        "F-UIW1-07"
+      ],
+      "novelAttackIds": [],
+      "status": "SEALED"
+    }
+  ],
   "cycles": [],
   "mutations": [],
   "corpus": [],
@@ -63,6 +737,54 @@
       "payloadPath": "events/0001.json",
       "payloadHash": "7f139058a6be708c2f241287ff412b7da9ab63c40f8eace5da2ef777eb04f703",
       "eventHash": "0cc5d6b2bdf256733df51b5b7dbcb4f01647d4b6ad9bcf81820115807ec501a9"
+    },
+    {
+      "seq": 2,
+      "at": "2026-09-28T03:46:15.730Z",
+      "kind": "SNAPSHOT",
+      "actor": "coordinator-13772",
+      "state": {
+        "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+        "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+      },
+      "previousEventHash": "0cc5d6b2bdf256733df51b5b7dbcb4f01647d4b6ad9bcf81820115807ec501a9",
+      "payloadPath": "events/0002.json",
+      "payloadHash": "9f47f48c63f5962942cab102b940fe33138166dbd4bc60bcebf9acab298679ae",
+      "eventHash": "50c07d908e39fdd8d10d7936e9c8d6ad58c312b992785f618494f69a5a39a1df"
+    },
+    {
+      "seq": 3,
+      "at": "2026-09-28T03:50:09.247Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-13772",
+      "state": {
+        "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+        "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+      },
+      "previousEventHash": "50c07d908e39fdd8d10d7936e9c8d6ad58c312b992785f618494f69a5a39a1df",
+      "payloadPath": "events/0003.json",
+      "payloadHash": "a23a7cfb6136a5e9edca62fc53794723412052012c83a83a1224524dd9043aec",
+      "eventHash": "912fec65471153f14b8d0c12a1ceb8f421e92b2768039a0a7f5860f7deb42691"
+    },
+    {
+      "seq": 4,
+      "at": "2026-09-28T03:50:41.466Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-13772",
+      "state": {
+        "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+        "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+      },
+      "previousEventHash": "912fec65471153f14b8d0c12a1ceb8f421e92b2768039a0a7f5860f7deb42691",
+      "payloadPath": "events/0004.json",
+      "payloadHash": "0726345d449981b1e13fc31e0235ac4582e89952ca4ea4f4d9c50fc0f1aa91f2",
+      "eventHash": "c9b564f728e6b42b6c22e362e4fd6dbe61bc09672efe7e3b4216ed4b233c73f6"
     }
   ]
 }
