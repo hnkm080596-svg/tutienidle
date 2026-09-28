@@ -27,12 +27,24 @@ const IMPORT_RE = /(?:import|export)\s+(?:type\s+)?(?:[\w*{}\s,]*?\s+from\s+)?['
 const DYNAMIC_IMPORT_RE =
   /(?:import|require)\s*\(\s*(?:\/\*[\s\S]*?\*\/\s*|\/\/[^\n]*\s*)*['"`]([^'"`]+)['"`]\s*(?:\/\*[\s\S]*?\*\/\s*|\/\/[^\n]*\s*)*\)/g
 
+// Cheap comment strip: comment spans between tokens (`import /*c*/ Tone`,
+// `import(/*c*/ 'tone')`) must not splice a specifier past the regexes,
+// and `// .playCue(` prose must not trip the reach trigger below.
+function uncommented(text: string): string {
+  return text
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .split('\n')
+    .map((line) => line.replace(/\/\/.*$/, ''))
+    .join('\n')
+}
+
 function importSpecifiers(text: string): string[] {
+  const clean = uncommented(text)
   const out: string[] = []
-  for (const match of text.matchAll(IMPORT_RE)) {
+  for (const match of clean.matchAll(IMPORT_RE)) {
     out.push(match[1]!)
   }
-  for (const match of text.matchAll(DYNAMIC_IMPORT_RE)) {
+  for (const match of clean.matchAll(DYNAMIC_IMPORT_RE)) {
     out.push(match[1]!)
   }
   return out
@@ -78,11 +90,14 @@ describe('audio boundary', () => {
   })
 
   it(
-    'no .vue file imports tone directly',
+    'no file outside core/audio imports tone directly',
     () => {
+      // .ts reaches synthesis just as well as .vue - the ban is on the
+      // whole non-core/audio tree, not only SFCs.
       const offenders: string[] = []
       for (const file of srcCorpus(SRC_DIR)) {
-        if (!file.path.endsWith('.vue')) continue
+        if (file.fromSrc.endsWith('.test.ts')) continue
+        if (file.fromSrc.startsWith('core/audio/')) continue
         for (const spec of importSpecifiers(file.text)) {
           if (spec === 'tone' || spec.startsWith('tone/')) {
             offenders.push(`${file.fromSrc} -> ${spec}`)
@@ -123,7 +138,7 @@ describe('audio boundary', () => {
         // specifier arm tolerates `.ts`/query suffixes on the module path.
         if (
           !/AudioManager\s*\.\s*getInstance\s*\(|\.\s*playCue\s*\(|['"][^'"]*audio\/AudioManager[^'"]*['"]/.test(
-            file.text,
+            uncommented(file.text),
           )
         ) {
           continue

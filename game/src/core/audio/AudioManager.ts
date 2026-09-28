@@ -520,7 +520,7 @@ class AudioManagerImpl {
     // Hidden tab: drop one-shots rather than sounding or queueing on a
     // suspended context - the ambient driver owns the visibility policy,
     // and deferred starts would burst-fire on tab return.
-    if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return
+    if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return
 
     const def = resolveAudioCue(id)
     if (def === undefined) {
