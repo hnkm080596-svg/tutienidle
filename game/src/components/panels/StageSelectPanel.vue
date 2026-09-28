@@ -14,7 +14,7 @@ import BuildingConstructionGate from './BuildingConstructionGate.vue'
 import GameButton from '@/components/common/GameButton.vue'
 import Chip from '@/components/common/primitives/Chip.vue'
 import EmptyState from '@/components/common/primitives/EmptyState.vue'
-import { getCurrentRealm, getRealmIndex } from '@/core/realm/realmSystem'
+import { getCurrentRealm } from '@/core/realm/realmSystem'
 
 const { t } = useI18n()
 
@@ -57,55 +57,25 @@ function isStageUnlocked(stage: (typeof stagesInZone.value)[number]): boolean {
   return gameManager.catalogOps.isStageUnlocked(stage.id, player.$state)
 }
 
-// Locked-floor reason (ui-audit progression fix): the same gates as
-// catalogOps.isStageUnlocked, read back as display text - realm/floor
-// gate, else the previous floor of the zone's chain.
+// Locked-floor reason (ui-audit progression fix): the domain read model
+// catalogOps.stageLockReasonCode owns the gate logic; the panel only maps
+// the reason code to i18n text.
 function stageLockReason(stage: (typeof stagesInZone.value)[number]): string {
-  if (isStageUnlocked(stage)) {
+  const reason = gameManager.catalogOps.stageLockReasonCode(stage.id, player.$state)
+
+  if (reason === null) {
     return ''
   }
 
-  if (stage.requiredRealmId) {
-    const requiredRealmIndex = getRealmIndex(stage.requiredRealmId)
-    const playerRealmIndex = getRealmIndex(player.realmId)
-
-    if (
-      playerRealmIndex < requiredRealmIndex ||
-      (playerRealmIndex === requiredRealmIndex &&
-        stage.requiredRealmLevel !== undefined &&
-        player.realmLevel < stage.requiredRealmLevel)
-    ) {
-      return t('panels.stageSelect.locked.requireRealm', {
-        realm: getCurrentRealm(stage.requiredRealmId).name,
-        level: stage.requiredRealmLevel ?? 1,
-      })
-    }
+  if (reason.kind === 'realm') {
+    return t('panels.stageSelect.locked.requireRealm', {
+      realm: getCurrentRealm(reason.realmId).name,
+      level: reason.realmLevel,
+    })
   }
 
-  const zone = selectedZone.value
-  const index = zone ? zone.stageIds.indexOf(stage.id) : -1
-  const previous = zone && index > 0
-    ? gameManager.catalogOps.getStage(zone.stageIds[index - 1]!)
-    : undefined
-
-  if (previous) {
-    return t('panels.stageSelect.locked.clearFloor', { floor: previous.floor ?? previous.requiredRealmLevel ?? 1 })
-  }
-
-  // Cross-zone gate (mirrors catalogOps.isStageUnlocked): first floor of
-  // zone N>0 requires the previous zone's final stage.
-  if (index === 0 && zone) {
-    const zoneIndex = zones.value.findIndex((candidate) => candidate.id === zone.id)
-    const previousFinalId = zoneIndex > 0
-      ? zones.value[zoneIndex - 1]!.stageIds.at(-1)
-      : undefined
-    const previousFinal = previousFinalId
-      ? gameManager.catalogOps.getStage(previousFinalId)
-      : undefined
-
-    if (previousFinal) {
-      return t('panels.stageSelect.locked.clearFloor', { floor: previousFinal.floor ?? previousFinal.requiredRealmLevel ?? 1 })
-    }
+  if (reason.kind === 'floor') {
+    return t('panels.stageSelect.locked.clearFloor', { floor: reason.floor })
   }
 
   return t('panels.stageSelect.locked.progress')

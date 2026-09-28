@@ -162,7 +162,7 @@ export class VendorSystem {
     materialId: string,
     amount: number,
     realmId: string,
-  ): { ok: boolean; reason?: string; gained?: number } {
+  ): { ok: boolean; reason?: string; gained?: number; stoneMaterialId?: string } {
     if (!Number.isInteger(amount) || amount <= 0) {
       return { ok: false, reason: 'invalid_amount' }
     }
@@ -222,6 +222,6 @@ export class VendorSystem {
 
     bag.add(stoneMaterial, gainedStone)
 
-    return { ok: true, gained: gainedStone }
+    return { ok: true, gained: gainedStone, stoneMaterialId }
   }
 }

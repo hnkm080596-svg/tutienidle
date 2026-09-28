@@ -83,7 +83,7 @@ function majorBreakthrough() {
 
 <template>
   <OverlayPanel :open="ui.standalonePanel === 'realm'" :title="t('panels.realm.title')" width="min(1120px, 94vw)" height="min(760px, 90vh)" variant="system" @close="close">
-    <div class="realm-panel">
+    <div class="realm-panel paper-on-sys">
       <div class="realm-panel__cultivator">
         <div class="realm-panel__aura" />
         <PlayerPortrait variant="cultivate" :height="150" animated />
@@ -177,17 +177,8 @@ function majorBreakthrough() {
 .realm-panel__cultivator { position: relative; display: flex; flex-direction: column; align-items: center; color: var(--paper-text-soft); }
 .realm-panel__cultivator strong { color: var(--paper-text); font-family: var(--font-display); }
 
-/* M-UI-SYSTEM: inside system modal chrome the paper family remaps to sys
-   values - same family-remap mechanism .ink-drawer owns for drawers (the
-   scoped pattern; --paper-* never gets redefined at :root elsewhere). */
-.overlay-panel__card--system .realm-panel {
-  --paper-text: var(--sys-text, var(--text-primary));
-  --paper-text-soft: var(--sys-text-muted, var(--text-secondary));
-  --paper-text-muted: var(--sys-text-dim, var(--text-muted));
-  --paper-eyebrow: var(--sys-cyan, var(--chrome-300));
-  --paper-line: var(--sys-line, var(--ink-line));
-  --paper-line-soft: var(--sys-line-soft, var(--ink-line-soft));
-}
+/* Paper-to-sys remap moved to the .paper-on-sys utility in
+   system-theme.css (single owner; applied on .realm-panel above). */
 /* Ten/canh gioi khong co co chu tuong minh truoc day (2026-08-30
    frontend-design pass: dong nhan dien quan trong nhat panel lai nho
    nhat) - nang len dung co CharacterPanel's identity block dung. */

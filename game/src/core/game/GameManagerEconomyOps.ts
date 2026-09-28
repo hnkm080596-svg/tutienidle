@@ -33,16 +33,13 @@ export class GameManagerEconomyOps {
     materialId: string,
     amount: number,
     player: PlayerData,
-  ): { ok: boolean; reason?: string; gained?: number } {
+  ): { ok: boolean; reason?: string; gained?: number; stoneMaterialId?: string } {
     const vendorSystem = new VendorSystem(this.deps.materialRegistry, this.deps.getAlchemyRecipes())
 
     const result = vendorSystem.sellMaterial(this.deps.materialBag, materialId, amount, player.realmId)
 
-    if (result.ok && result.gained) {
-      this.deps.notifyMaterialGained(
-        getSpiritStoneMaterialIdForRealmTier(getRealmTier(player.realmId)),
-        result.gained,
-      )
+    if (result.ok && result.gained && result.stoneMaterialId) {
+      this.deps.notifyMaterialGained(result.stoneMaterialId, result.gained)
     }
 
     return result

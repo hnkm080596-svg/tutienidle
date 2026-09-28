@@ -288,6 +288,19 @@ div.overlay-panel.overlay-panel--system {
   color: var(--sys-text);
 }
 
+/* PAPER-TO-SYS TOKEN MAP - sibling of theme.css .paper-on-dark: panels
+   inside the system modal chrome remap the paper family onto the sys
+   palette (NOT --surface-*). One owner; components opt in via the class
+   instead of re-declaring the map in scoped styles. */
+.paper-on-sys {
+  --paper-text: var(--sys-text, var(--text-primary));
+  --paper-text-soft: var(--sys-text-muted, var(--text-secondary));
+  --paper-text-muted: var(--sys-text-dim, var(--text-muted));
+  --paper-eyebrow: var(--sys-cyan, var(--chrome-300));
+  --paper-line: var(--sys-line, var(--ink-line));
+  --paper-line-soft: var(--sys-line-soft, var(--ink-line-soft));
+}
+
 /* Task 5 - RealmPanel interior under the system modal chrome. Requirement
    rows keep their check/cross text markers (never hue-only); realm nodes keep
    the shield shape and the "locked" text label. Scoped panel rules are
