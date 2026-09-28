@@ -322,6 +322,10 @@
      action bar: --top-bar-h/--bottom-bar-h đã xoá vì hết consumer.
      ============================================================ */
   --combat-topbar-h: clamp(46px, 4.8vh, 72px);
+  /* UI audit 2026-09-28 — intrinsic size for one HUD skill slot. The
+     slot-view inside scales to fill its button, so the button must own
+     the size (shrink-to-fit collapse regression). */
+  --combat-skill-slot-size: 64px;
 
   /* ============================================================
      WS2 Typography & interaction tokens (2026-08-24)

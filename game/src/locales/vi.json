@@ -835,6 +835,7 @@
       "retry": "Tái Chiến",
       "retryCountdown": "{duration}",
       "returnHome": "Về Động Phủ",
+      "returnCountdown": "({duration})",
       "hintCultivate": "Tu vi chưa đủ — tu luyện thêm tầng, rồi quay lại khi đã mạnh hơn.",
       "hintGear": "Chưa đủ sức phá bí cảnh — cường hóa trang bị, dùng đan dược hoặc lĩnh ngộ thêm trước khi tái chiến."
     },
@@ -897,6 +898,19 @@
       },
       "topBar": {
         "enemiesSuffix": "quái"
+      },
+      "skillBar": {
+        "roles": {
+          "basic": "Thường",
+          "special": "Đặc Biệt",
+          "ultimate": "Tuyệt Kỹ"
+        },
+        "passiveTag": "Bị Động",
+        "manualToggle": "Thủ công",
+        "awaitingChoice": "Đến lượt bạn — chọn kỹ năng",
+        "use": "Dùng {name}",
+        "empty": "Trống",
+        "unreleased": "Chưa Ra Mắt"
       },
       "turnStrip": {
         "upcoming": "Lượt tới",

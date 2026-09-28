@@ -9,6 +9,7 @@
 // vi.mock (hoisted factory).
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createApp, h, nextTick } from 'vue'
+import { i18n } from '@/i18n'
 import type { TurnSkillPresentationEntry } from '@/core/combat/CombatSkillPresentation'
 import { hasPathCapability } from '@/core/player/CultivationPathSystem'
 import type { CultivationPathId, CultivationWayId, PathCapability } from '@/core/player/CultivationPathKit'
@@ -106,6 +107,9 @@ function mountBar(): HTMLElement {
 
   const app = createApp({ render: () => h(TurnCombatSkillBar) })
 
+  // The bar speaks i18n now (skillBar.* keys) — mount needs the plugin,
+  // same pattern as CombatExitConfirmModal.test.ts.
+  app.use(i18n)
   app.mount(container)
 
   return container

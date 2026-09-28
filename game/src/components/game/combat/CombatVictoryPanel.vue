@@ -146,6 +146,13 @@ onMounted(() => {
 
 <style scoped>
 .combat-victory-panel {
+  /* surface-xl-paper-scroll renders dark since the dark-mode pass —
+     remap the paper text family onto the surface palette so the title
+     and RewardList items stay legible (same contract as .ink-drawer). */
+  --paper-text: var(--surface-text);
+  --paper-text-soft: var(--surface-text-soft);
+  --paper-text-muted: var(--surface-text-muted);
+
   position: relative;
   isolation: isolate;
   box-sizing: border-box;
