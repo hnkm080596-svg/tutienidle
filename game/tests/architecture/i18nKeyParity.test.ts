@@ -389,7 +389,11 @@ describe('i18n key parity (P16)', () => {
             Object.keys(AUDIO_CUES).some((k) => k.startsWith(prefix + '.'))
           )
         }
-        return resolveAudioCue(literal) !== undefined
+        // Exact manifest membership only - NOT resolveAudioCue, whose
+        // qualifier-strip fallback would swallow real i18n keys sitting
+        // under cue namespaces (e.g. `combat.victory.title` resolving to
+        // the `combat.victory` cue row).
+        return Object.prototype.hasOwnProperty.call(AUDIO_CUES, literal)
       }
       const violations: string[] = []
       for (const file of FILES) {
@@ -397,6 +401,10 @@ describe('i18n key parity (P16)', () => {
           const literal = m[2]!
           if (!literal.includes('.') || !NAMESPACE_RE.test(literal.split('.')[0]!)) continue
           if (!KEY_SHAPE.test(literal)) continue
+          // Manifest unit tests deliberately probe qualifier-strip
+          // fallback with unknown qualifiers (`combat.cast.not_a_real_skill`)
+          // - those literals resolve as cues by design, not as i18n keys.
+          if (file.fromSrc.endsWith('.test.ts') && resolveAudioCue(literal) !== undefined) continue
           if (isAudioCue(literal)) continue
           if (!keyExists(literal, VI_PATHS) || !keyExists(literal, EN_PATHS)) {
             violations.push(`${file.fromSrc} -> ${literal}`)

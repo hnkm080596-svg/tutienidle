@@ -653,6 +653,8 @@ class AudioManagerImpl {
    * disposing immediately would cut the fade. Falls back to immediate
    * dispose when stop() throws (player never started).
    */
+  private pendingReapers = new Set<ReturnType<typeof setTimeout>>()
+
   private releaseMusicPlayer(fadeMs: number): void {
     const old = this.musicPlayer
     this.musicPlayer = null
@@ -664,10 +666,13 @@ class AudioManagerImpl {
       // In a suspended context onstop never fires - force-detach the
       // fading player once its fade window has fully elapsed.
       const reaper = setTimeout(() => {
+        this.pendingReapers.delete(reaper)
+        if (!this.players.has(old)) return
         this.players.delete(old)
         try { old.dispose() } catch { /* already disposed */ }
       }, fadeMs + 200)
       ;(reaper as unknown as { unref?: () => void }).unref?.()
+      this.pendingReapers.add(reaper)
     } catch {
       this.players.delete(old)
       try { old.dispose() } catch { /* already disposed */ }
@@ -912,6 +917,8 @@ class AudioManagerImpl {
     this.duck.timer = null
     this.duck.amount = 0
     this.duck.until = 0
+    for (const t of this.pendingReapers) clearTimeout(t)
+    this.pendingReapers.clear()
     this.desiredMusicId = null
     this.playingMusicId = null
     this.musicSuspended = false

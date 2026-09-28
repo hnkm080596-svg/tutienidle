@@ -158,7 +158,7 @@ describe('W4 dom-audio lane', () => {
     try {
       expect(getBundleDescriptors('audio-core')).toEqual([])
       const combat = getBundleDescriptors('audio-combat')
-      const row = combat.find((d) => d.key === 'combat.hit')
+      const row = combat.find((d) => d.key === 'assets/audio/sfx/combat/hit.ogg')
       expect(row).toBeDefined()
       expect(row!.kind).toBe('dom-audio')
       expect((row as { urls: readonly string[] }).urls).toEqual([
@@ -170,11 +170,14 @@ describe('W4 dom-audio lane', () => {
     }
   })
 
-  it('array src becomes ordered urls (codec fallback)', () => {
+  it('array src becomes one descriptor per src (variant rows)', () => {
     const restore = injectCue('ui.click', ['a.ogg', 'a.mp3'])
     try {
-      const row = getBundleDescriptors('audio-core').find((d) => d.key === 'ui.click')
-      expect((row as { urls: readonly string[] }).urls).toEqual(['a.ogg', 'a.mp3'])
+      const descs = getBundleDescriptors('audio-core')
+      const a = descs.find((d) => d.key === 'a.ogg')
+      const b = descs.find((d) => d.key === 'a.mp3')
+      expect((a as { urls: readonly string[] }).urls).toEqual(['a.ogg'])
+      expect((b as { urls: readonly string[] }).urls).toEqual(['a.mp3'])
     } finally {
       restore()
     }

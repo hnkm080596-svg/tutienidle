@@ -11,7 +11,7 @@
     "base": "21a5f8c5",
     "head": "791a7903",
     "state": {
-      "productStateId": "61f39678385b753baaa87aca9b2cbc9c92bb2458fe9c6a4e419c2ca19fb78a2d",
+      "productStateId": "8c6941674f7646e0ce71f62b9f8a7c708c23398ecedad69826d6be49b9e2465c",
       "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
       "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
       "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
@@ -1420,7 +1420,7 @@
       "limitations": [
         "self-confirming pins hide F-SND-02/03/04"
       ],
-      "status": "CURRENT",
+      "status": "STALE",
       "kind": "EXECUTED_UNIT_STRUCTURAL"
     },
     {
@@ -1448,7 +1448,7 @@
         "single write path except A1-04 gap"
       ],
       "limitations": [],
-      "status": "CURRENT",
+      "status": "STALE",
       "kind": "EXECUTED_INTEGRATION"
     },
     {
@@ -1479,8 +1479,49 @@
       "limitations": [
         "attack-model.json absent at pin"
       ],
-      "status": "CURRENT",
+      "status": "STALE",
       "kind": "EXECUTED_INTEGRATION"
+    },
+    {
+      "id": "EV-SND-FIX1",
+      "state": {
+        "productStateId": "8c6941674f7646e0ce71f62b9f8a7c708c23398ecedad69826d6be49b9e2465c",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+      },
+      "kind": "EXECUTED_INTEGRATION",
+      "producer": "coordinator",
+      "startedAt": "2026-09-28T06:23:00Z",
+      "finishedAt": "2026-09-28T06:32:00Z",
+      "commandOrMethod": "vue-tsc --build; vitest run (audio scope + migrated components + architecture guards); master worktree cross-check for pre-existing failures",
+      "cwd": "game",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "docs/qa/runs/sound-system-2026-09-28/evidence/EV-SND-FIX1.log",
+      "artifactHash": "f8a3df62ae052f5ad4b4141fce81654ad382fab0ec6c396d6acc3ed033f98b40",
+      "inputPaths": [
+        "src/core/audio",
+        "src/presentation/audio",
+        "src/presentation/assets",
+        "src/stores",
+        "src/components",
+        "tests/architecture"
+      ],
+      "inputEvidenceIds": [],
+      "invariantIds": [],
+      "claims": [
+        "all wave-1 fixes verified on resulting tree",
+        "type-check clean",
+        "619 scoped tests green",
+        "new audioBindingWiring + manifest-verified i18n guard pass",
+        "3 remaining suite failures proven pre-existing on master (combatContract R14.4, dynamicRegionHost, staticArtExtentDeclared/libuuid)"
+      ],
+      "limitations": [
+        "e2e not rerun post-fix (same pin-scope as wave-1)",
+        "PRE_EXISTING failures listed are master-side, not from this diff"
+      ],
+      "status": "CURRENT"
     }
   ],
   "coverage": [],
@@ -1529,7 +1570,7 @@
         "F-SND-12"
       ],
       "novelAttackIds": [],
-      "status": "SEALED"
+      "status": "STALE"
     },
     {
       "id": "REV-SND-AUT-1",
@@ -1573,7 +1614,7 @@
         "F-SND-21"
       ],
       "novelAttackIds": [],
-      "status": "SEALED"
+      "status": "STALE"
     },
     {
       "id": "REV-SND-INT-1",
@@ -1612,7 +1653,7 @@
         "F-SND-23"
       ],
       "novelAttackIds": [],
-      "status": "SEALED"
+      "status": "STALE"
     }
   ],
   "cycles": [
@@ -1638,7 +1679,7 @@
       "noveltyEvidenceIds": [],
       "startedAt": "2026-09-28T05:31:00Z",
       "finishedAt": "2026-09-28T06:00:00Z",
-      "status": "FINDINGS"
+      "status": "STALE"
     }
   ],
   "mutations": [],
@@ -1693,6 +1734,38 @@
       "payloadPath": "events/0003.json",
       "payloadHash": "3c8ddbcc6406dd345e75bb5395a5d212392733fa6476670cbf94944d39163655",
       "eventHash": "75c6afaaf9042f82b5fe5f633a8a74aff7773ff335a1c9f4931af82d46520f0d"
+    },
+    {
+      "seq": 4,
+      "at": "2026-09-28T06:41:41.859Z",
+      "kind": "SNAPSHOT",
+      "actor": "coordinator-56995",
+      "state": {
+        "productStateId": "8c6941674f7646e0ce71f62b9f8a7c708c23398ecedad69826d6be49b9e2465c",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+      },
+      "previousEventHash": "75c6afaaf9042f82b5fe5f633a8a74aff7773ff335a1c9f4931af82d46520f0d",
+      "payloadPath": "events/0004.json",
+      "payloadHash": "92ec1511f86acc4d00d09f699a7599b0525b54800f64a840f8ab4684694c2915",
+      "eventHash": "ee78353180184c752e6de2a1aeb74ad017dd8e216c598b6e2c793659111137c0"
+    },
+    {
+      "seq": 5,
+      "at": "2026-09-28T06:42:08.172Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-56995",
+      "state": {
+        "productStateId": "8c6941674f7646e0ce71f62b9f8a7c708c23398ecedad69826d6be49b9e2465c",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+      },
+      "previousEventHash": "ee78353180184c752e6de2a1aeb74ad017dd8e216c598b6e2c793659111137c0",
+      "payloadPath": "events/0005.json",
+      "payloadHash": "e00530f59ef9a010ab91a6944b02e9afa593c71b93683f7dcac5a13c777559d8",
+      "eventHash": "bbc695a750f4b97da6e19e3ab8e458a4864d573799b93050b8e85125dc8056bc"
     }
   ]
 }

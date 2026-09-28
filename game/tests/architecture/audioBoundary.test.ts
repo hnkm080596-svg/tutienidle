@@ -76,4 +76,30 @@ describe('audio boundary', () => {
     },
     SCAN_TIMEOUT,
   )
+
+  it(
+    'direct AudioManager consumers stay inside the documented pinia-free allowlist',
+    () => {
+      // Spec W7 routes audio through useAudioStore().cue. The only files
+      // allowed to touch AudioManager directly are the audio internals, the
+      // dom-audio bundle lane, and the pinia-free primitives (GameButton and
+      // Chip must mount without an active pinia - see InkWashPrimitives.test).
+      const ALLOWLIST = new Set([
+        'presentation/assets/AssetBundleManager.ts',
+        'components/common/GameButton.vue',
+        'components/common/primitives/Chip.vue',
+      ])
+      const offenders: string[] = []
+      for (const file of srcCorpus(SRC_DIR)) {
+        if (file.fromSrc.endsWith('.test.ts')) continue
+        if (file.fromSrc.startsWith('core/audio/')) continue
+        if (file.fromSrc.startsWith('stores/audio')) continue
+        if (file.fromSrc.startsWith('presentation/audio/')) continue
+        if (!/AudioManager\.getInstance\(\)|\.playCue\(/.test(file.text)) continue
+        if (!ALLOWLIST.has(file.fromSrc)) offenders.push(file.fromSrc)
+      }
+      expect(offenders).toEqual([])
+    },
+    SCAN_TIMEOUT,
+  )
 })

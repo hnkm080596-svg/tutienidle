@@ -7,7 +7,7 @@
 import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
 import { useI18n } from 'vue-i18n'
 import GameButton from '@/components/common/GameButton.vue'
-import { AudioManager } from '@/core/audio/AudioManager'
+import { useAudioStore } from '@/stores/audio'
 
 defineProps<{
   content: { title: string; description: string } | null
@@ -18,10 +18,10 @@ const emit = defineEmits<{ close: [] }>()
 const { t } = useI18n()
 
 // W7: close paths (backdrop + button) both read as cancel + modal close.
-const audio = AudioManager.getInstance()
+const audioStore = useAudioStore()
 function onClose() {
-  audio.playCue('ui.cancel')
-  audio.playCue('ui.modal.close')
+  audioStore.cue('ui.cancel')
+  audioStore.cue('ui.modal.close')
   emit('close')
 }
 </script>

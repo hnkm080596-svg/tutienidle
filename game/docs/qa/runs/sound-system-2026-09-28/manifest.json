@@ -3282,7 +3282,7 @@
       "path": "docs/specs/sound-system-spec.md",
       "kind": "file",
       "mode": 33188,
-      "hash": "9405e52b9ce1b5967c14e465ef115d9b81792fef57bf61bec6b0cb8d443c6c5f"
+      "hash": "e3f5092f294fa8d991258e7df55a57323d1cfd8268eab69022f34b97fd479e28"
     },
     {
       "path": "docs/specs/the-tu-an-ung-the-spec.md",
@@ -14178,7 +14178,7 @@
       "path": "src/App.vue",
       "kind": "file",
       "mode": 33188,
-      "hash": "56cf2e7f5d9855646ed00203c43a38defc6e91e57432741a4046d85e4d30991e"
+      "hash": "432183be20a435ccbc6ad28eac5e031d8f50b86b65cd9c9dac4dd3c919e66d40"
     },
     {
       "path": "src/App.wiring.test.ts",
@@ -14298,13 +14298,13 @@
       "path": "src/components/common/ConfirmModal.vue",
       "kind": "file",
       "mode": 33188,
-      "hash": "caad0a2bab20354037011d721ca5113abcd71eb858181592bcf613cf7cc84b5d"
+      "hash": "c502b287a90f7d08a2eeb15074a57f9b3d7d7bdc209ae4711966f49d2421cf40"
     },
     {
       "path": "src/components/common/dialogFocus.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "77fe2743c177c956da81f32c02e0754f71fae9d616f92bef45f0559abe2c3bdf"
+      "hash": "2913e07ed185a44577123d3dfc1bf1a9fb6dc5fc8c3c9d61df541a1952f18361"
     },
     {
       "path": "src/components/common/dialogFocusAdversarial.test.ts",
@@ -14346,7 +14346,7 @@
       "path": "src/components/common/GameButton.vue",
       "kind": "file",
       "mode": 33188,
-      "hash": "deff5d2667cb6dab3b65612072b41836ce1dec4b3ffeb25271739e600c373110"
+      "hash": "b98ce38a6364463f8ae371545b27e785d7d0651033d748377cb2ec2f7ae0ae98"
     },
     {
       "path": "src/components/common/InkWashBackdrop.test.ts",
@@ -14406,7 +14406,7 @@
       "path": "src/components/common/OfflineSummaryModal.vue",
       "kind": "file",
       "mode": 33188,
-      "hash": "52f91216b9a92052c4f0a23b4323c7730c8c8e17a45ff6fff0525858732adc59"
+      "hash": "bcb72f6c119c6ea312d058e0760fc58879115f5462c53b73ab2db4aafea4d3f6"
     },
     {
       "path": "src/components/common/OverlayPanel.vue",
@@ -14442,7 +14442,7 @@
       "path": "src/components/common/primitives/Chip.vue",
       "kind": "file",
       "mode": 33188,
-      "hash": "bc5b8deaa4a2506363e7713cff5149eb7162ccd290d100833b5320ca2279a228"
+      "hash": "7c5321194457eb981a377543f9e76982957dc8ee471e5a8788b1c8186f5e9e29"
     },
     {
       "path": "src/components/common/primitives/EmptyState.vue",
@@ -14538,7 +14538,7 @@
       "path": "src/components/common/TalentEntitlementModal.vue",
       "kind": "file",
       "mode": 33188,
-      "hash": "2f91a6025be37f3f3291c012d51d15ff594db4b1d103faac330b402a8acb8c52"
+      "hash": "c25dd7ac413e2cae9a0ff35ff2bc6c644e8db0dcc96a02f13451117576211d19"
     },
     {
       "path": "src/components/common/ToastContainer.test.ts",
@@ -14550,7 +14550,7 @@
       "path": "src/components/common/ToastContainer.vue",
       "kind": "file",
       "mode": 33188,
-      "hash": "758c10da583f3e4d1edc10e43529f197ecb84177b99c9cb4a32815633c014c70"
+      "hash": "04e07afd4e7e1f60937bd2620521509c311b2ace7267afbb0133976eae6a12f2"
     },
     {
       "path": "src/components/common/Tooltip.vue",
@@ -14652,7 +14652,7 @@
       "path": "src/components/game/combat/CombatExitConfirmModal.vue",
       "kind": "file",
       "mode": 33188,
-      "hash": "a2d681dd46c4feddf62b9fd1a581faa1b8f3341e3e918e6ffcb6948a5d564d56"
+      "hash": "e7fd2ebeffb278d0fea093473bf5d13837436b5ee1ef53d5a7ea63439c5fd602"
     },
     {
       "path": "src/components/game/combat/CombatIntroOverlay.vue",
@@ -14730,7 +14730,7 @@
       "path": "src/components/game/combat/hud/TurnCombatSkillBar.vue",
       "kind": "file",
       "mode": 33188,
-      "hash": "acc9b4d6e3792477cf43bda238e623fd51bd6e1e8aa7d3b0c3f4731c2b0fd68f"
+      "hash": "869ba26a0f37385102a2c3eb2b9e201d2bffb0d72cade203cef06062af14f891"
     },
     {
       "path": "src/components/game/combat/RewardList.test.ts",
@@ -14790,7 +14790,7 @@
       "path": "src/components/game/DongFuCommandWheel.vue",
       "kind": "file",
       "mode": 33188,
-      "hash": "ffa8de0a33455fc070b99eb1ba2a93e5650c06c953da5bb259ef107480724ea6"
+      "hash": "a30230113e38c201ef0cacde335a09cfc14a5b1f45e4068addb1cdf26e37d354"
     },
     {
       "path": "src/components/game/DongFuScene.test.ts",
@@ -14898,13 +14898,13 @@
       "path": "src/components/onboarding/CharacterCreationScreen.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "7dc2e39c2815f552881341a71667fb283aba6f34cfc77ed806613be884ac8718"
+      "hash": "cf297bca58d8bdf5bb53a42819e6c70a2dce57d644ff5162d512343eedd5477b"
     },
     {
       "path": "src/components/onboarding/CharacterCreationScreen.vue",
       "kind": "file",
       "mode": 33188,
-      "hash": "e41844e13b473721e6f5dc86b46ac248418ddfe9f4dfb8d7d74058ff20b4ccdd"
+      "hash": "fe0aea00d7246061e857c8a344acfbccba553398339631508cd77150125b7e6b"
     },
     {
       "path": "src/components/panels/AlchemyView.test.ts",
@@ -14916,7 +14916,7 @@
       "path": "src/components/panels/AlchemyView.vue",
       "kind": "file",
       "mode": 33188,
-      "hash": "3dd04dadfac4b0dddc62e68540990080c5b70365544331b4cc42a5ce6954c900"
+      "hash": "73e89aeaececa22be21e66adf0a39d67ff2bcbc121061a2e094a52715b7cec15"
     },
     {
       "path": "src/components/panels/artifact/ArtifactExperienceBar.vue",
@@ -15150,7 +15150,7 @@
       "path": "src/components/panels/EquipmentPaperdoll.vue",
       "kind": "file",
       "mode": 33188,
-      "hash": "9c1144e104286524cc16aa9266b311eae52c1f47fa197b7f7430a9ff753ed51f"
+      "hash": "d59775dd2764b55ef9e6ada0ddc0259c9333948b6db4d2598f832e548096191f"
     },
     {
       "path": "src/components/panels/InventoryPanel.vue",
@@ -15192,7 +15192,7 @@
       "path": "src/components/panels/QuanKhiPanel.vue",
       "kind": "file",
       "mode": 33188,
-      "hash": "4e0f4e8723aa5391ec0ed240885c97035e2303b43be82e8110cf8e444fb78953"
+      "hash": "ff4b7dfe92257a2dca9f27c0e8e5bac1cdc5c8e4f89120a8fb0e5a40062385ab"
     },
     {
       "path": "src/components/panels/QuestPanel.vue",
@@ -15372,7 +15372,7 @@
       "path": "src/components/panels/SkillPathPanel.vue",
       "kind": "file",
       "mode": 33188,
-      "hash": "04644555daeb47cb0dcde5875247c483039f6d1dc376d51f4822c0cf40e24aa6"
+      "hash": "dd76ad980dfab3900f1c26341b4aca6310bf808b35cf50b847820db3ff17d6c6"
     },
     {
       "path": "src/components/panels/StageSelectPanel.test.ts",
@@ -15384,7 +15384,7 @@
       "path": "src/components/panels/StageSelectPanel.vue",
       "kind": "file",
       "mode": 33188,
-      "hash": "79c04cc06b7334aac402457730a46259a9f6c12086876dc7b955a65b38584dbb"
+      "hash": "520b0f17b2d0493c34d7adc733994f2d3fece043c5e1eabac2ec4679a03ec002"
     },
     {
       "path": "src/components/panels/TranPhapPanel.test.ts",
@@ -15408,7 +15408,7 @@
       "path": "src/components/panels/VendorPanel.vue",
       "kind": "file",
       "mode": 33188,
-      "hash": "7d713c345121d3223d613c19183c687460af8417322d21d259d3f176e949745b"
+      "hash": "d289a5975743dc16dff6386ca1758f4603e95d991848a6946bdbea8b390dcaa9"
     },
     {
       "path": "src/components/panels/worker-lodge/ChieuMoTab.vue",
@@ -15720,7 +15720,7 @@
       "path": "src/composables/useTurnCombatManual.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "45547227c386a19fdb048b910d2d1cb03515821d903b8e7fe44dfab070385cc5"
+      "hash": "670a5ff9f676809c8b405cdc925f747ba487afcb68b3e531321b55779a8822b5"
     },
     {
       "path": "src/core/alchemy/AlchemySystem.test.ts",
@@ -15780,7 +15780,7 @@
       "path": "src/core/audio/AudioCueManifest.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "1da181cd37f77c0c507e971dbfc28b25bdb688278cc777e69faccaccc59dbbce"
+      "hash": "e1bebc1f2576fdfb30a6d3f34b93519fee03f844b13c42268c27f0c2f9897903"
     },
     {
       "path": "src/core/audio/AudioManager.test.ts",
@@ -15792,7 +15792,7 @@
       "path": "src/core/audio/AudioManager.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "5c5ba4ffd5fd86417f0ad4a35d9d7612b8687b91018ea8242d52e64e17c9c08f"
+      "hash": "a5cc657e519f9af02c12cce2a79c49fa9e8e00366949cca1ee9caefdc5b22c99"
     },
     {
       "path": "src/core/battle/ActionImpactSystem.ts",
@@ -15828,7 +15828,7 @@
       "path": "src/core/battle/BattleEvents.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "af78c3f9fab73921666eff2446b1110da4d9851cd687c11d593e1ba15052aa24"
+      "hash": "5e52ab5156217f069a2d8bd608a25927860df32bf67c5efe4431b29f60a696ea"
     },
     {
       "path": "src/core/battle/BattlefieldRegions.test.ts",
@@ -16662,7 +16662,7 @@
       "path": "src/core/battle/turn/TurnBattleSystem.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "ef1bc4dd1510dcd0139cb7953c977d0aae3ca78f1c211bab511d29460cd5a3d9"
+      "hash": "90de155fe2904d566d0280b4aa30f18d13e6a86af12d1d545590fa5b3d58bdd5"
     },
     {
       "path": "src/core/battle/turn/TurnBattleSystem.ttNovelAttack.test.ts",
@@ -16782,13 +16782,13 @@
       "path": "src/core/battle/turn/TurnStatusPresentationEvents.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "8342a0e9f788769522d57933ce5f4a29d6b96b6791257ca159316dd7abe3f3c6"
+      "hash": "d2f18142adb83225a6acbcd6ec6af69eceb61c739019b778e11859b8bdc57b76"
     },
     {
       "path": "src/core/battle/turn/TurnStatusPresentationEvents.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "06efff064c6ab58297de88f699f9c4f1199126bd5b45858ca759ae08eef64fc8"
+      "hash": "70cdc7eda956cdfe5c70dc3aeafb93db2d6db46e55651f94c219d74e2b9f472a"
     },
     {
       "path": "src/core/battle/turn/TurnToken.test.ts",
@@ -21978,7 +21978,7 @@
       "path": "src/dev/skill-vfx.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "1b46fa06c3e3c2fae11b5f239bd396d431be9597f89770895409a4cde60217f7"
+      "hash": "decf962c360dd42baf35aeafe3148ef350d49080b61cf7b5befd49a4b5d78ce0"
     },
     {
       "path": "src/directives/tooltip.ts",
@@ -22602,13 +22602,13 @@
       "path": "src/presentation/assets/AssetBundleCatalog.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "bb31e6fe85cbb6663ab557cd88dcf76d3bd7972212fa5b94f16b8868cf3aa979"
+      "hash": "c8122df1698c9c4e73a61c50cfaf7616a7bbe00322cf37d6db4cf9ba2cbda169"
     },
     {
       "path": "src/presentation/assets/AssetBundleManager.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "84c8b5f04b3f6650e35a7b8d6adc091349ec939434ccca0070be203c4df003ea"
+      "hash": "42c5280e51849b7d0d862aa98a343e00bea3803c099eecc6234bb8277c6e5dab"
     },
     {
       "path": "src/presentation/assets/AssetBundleManager.ts",
@@ -22626,7 +22626,7 @@
       "path": "src/presentation/audio/ambientAudioDriver.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "72d26e8fd86309b9e3be4484a6f80fd8b09946360b2b519bf27cb1b20ca7713d"
+      "hash": "ad8fc87137b7d77ec178cd57582115d5aca3b7df69832676b8dff42f98cd5840"
     },
     {
       "path": "src/presentation/audio/audioAssetWiring.ts",
@@ -22638,13 +22638,13 @@
       "path": "src/presentation/audio/combatAudioBinding.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "84ac75cbb8469ec86bdc3728c432afd75ec647bb44e8249303b1f6c8761fe763"
+      "hash": "cb9a7d1d263298518a144217e449288711abef5634463e5634f34acc68072293"
     },
     {
       "path": "src/presentation/audio/combatAudioBinding.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "24deebc291af1f485a17838db38f78d8a70ee9052d34dae1a723a98b244d6520"
+      "hash": "8d1469bd27f85aa806b90feb437eb83fdbb849132d42b0b7426957b1c85204eb"
     },
     {
       "path": "src/presentation/audio/uiAudioBinding.test.ts",
@@ -23322,7 +23322,7 @@
       "path": "src/stores/audio.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "ded9630761161adbf03b32130ec1d49a7973c824ef922c6f568c8ee242095f4e"
+      "hash": "38d820abc3c03915ae00b1a90bf1d601a75b8aa5df12102adc6a72ad59eafc29"
     },
     {
       "path": "src/stores/breakthroughRequirement.ts",
@@ -23466,7 +23466,7 @@
       "path": "src/stores/worldAnnouncement.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "f9085450f7cf1828a7d8653e8a3e6e9a512fbb8f948322139505c43f9ffc5432"
+      "hash": "5e2e6601a35e7d74734715021595a1a0bcdc55e164308f8dc53f29f8ae19b5fc"
     },
     {
       "path": "supabase/migrations/202608240001_online_auth_character.sql",
@@ -23527,6 +23527,12 @@
       "kind": "file",
       "mode": 33188,
       "hash": "a1b1df1d2c2a825d15c0d2900018ba921747d269964ac2f42e98f8d96e7253a7"
+    },
+    {
+      "path": "tests/architecture/audioBindingWiring.test.ts",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "b05c9065e0536537c51d827aeb526429dade8d1b908a19f50d34a6b95c432d9c"
     },
     {
       "path": "tests/architecture/audioBoundary.test.ts",
@@ -23658,7 +23664,7 @@
       "path": "tests/architecture/i18nKeyParity.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "7f3626e97efcdc657755a7f4cd799ad1e84461996dfad3e2f1914fea7fce44cd"
+      "hash": "1a1f1f77955d31a115c8724d4e27ae68e2d28836947450ddbc286ed3467ee097"
     },
     {
       "path": "tests/architecture/inkDrawerSurface.test.ts",
@@ -24009,5 +24015,5 @@
       "hash": "e69b4133ed37ca9a4f05e66d90521d0bb749c4764bf1f454d0eb13de601f7940"
     }
   ],
-  "productStateId": "61f39678385b753baaa87aca9b2cbc9c92bb2458fe9c6a4e419c2ca19fb78a2d"
+  "productStateId": "8c6941674f7646e0ce71f62b9f8a7c708c23398ecedad69826d6be49b9e2465c"
 }

@@ -373,8 +373,9 @@ export const AUDIO_CUES: Readonly<Record<string, AudioCueDef>> = {
   // ---- Stingers / ambient / music ----
   'stinger.announce': sfx({ duckMusic: 0.6, synthFallback: 'battleStart' }),
   'stinger.offline': sfx({ duckMusic: 0.6, synthFallback: 'toastSave' }),
-  'ambient.cultivate.on': music({ loop: false }),
-  'ambient.cultivate.off': music({ loop: false }),
+  // One-shot transition stingers on the sfx channel - not looped music.
+  'ambient.cultivate.on': sfx({ duckMusic: 0.5 }),
+  'ambient.cultivate.off': sfx({ duckMusic: 0.5 }),
   'music.menu': music(),
   'music.home': music(),
   'music.combat': music(),

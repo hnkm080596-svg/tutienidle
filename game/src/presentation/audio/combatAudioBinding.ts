@@ -17,6 +17,7 @@ import { AUDIO_CUES } from '@/core/audio/AudioCueManifest'
 import type { SessionRef } from '@/core/presentation/PresentationSession'
 import type { Route } from '@/presentation/PresentationContracts'
 import { PLAYER_ID } from '@/core/skill/PassiveSystem'
+import type { ReactiveProcMechanic, ReactiveTriggerName } from '@/core/proc/ProcCapabilities'
 
 // ---- Static rows -------------------------------------------------------
 
@@ -95,10 +96,10 @@ interface CultivationLike {
 }
 
 interface ReactiveProcLike {
-  trigger?: string
-  // Mechanic discriminator (intercept/counter/follow_up) emitted by the
-  // core producer; the trigger field is the reactive window name.
-  mechanic?: string
+  // Producer (TurnBattleSystem) emits the ReactiveProcPayload fields -
+  // trigger is the reactive window name, mechanic the discriminator.
+  trigger?: ReactiveTriggerName
+  mechanic?: ReactiveProcMechanic
   success?: boolean
 }
 
