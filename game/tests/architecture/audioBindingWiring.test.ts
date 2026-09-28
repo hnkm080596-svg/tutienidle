@@ -23,13 +23,46 @@ import { AUDIO_CUES, resolveAudioCue } from '@/core/audio/AudioCueManifest'
 const SRC_DIR = join(process.cwd(), 'src')
 const FILES = srcCorpus(SRC_DIR)
 
-// Cheap comment strip so `// emit('x'` prose and /* ... */ blocks do not count.
+// String-aware comment strip: `// emit('x'` prose and /* ... */ blocks do
+// not count, but `//` INSIDE a quoted literal ('a//b') must survive - a
+// naive line strip would corrupt the literal being scanned.
 function uncommented(text: string): string {
-  return text
-    .replace(/\/\*[\s\S]*?\*\//g, '')
-    .split('\n')
-    .map((line) => line.replace(/\/\/.*$/, ''))
-    .join('\n')
+  const noHtml = text.replace(/<!--[\s\S]*?-->/g, '')
+  let out = ''
+  let i = 0
+  let quote: string | null = null
+  while (i < noHtml.length) {
+    const c = noHtml[i]!
+    if (quote !== null) {
+      out += c
+      if (c === '\\') {
+        out += noHtml[i + 1] ?? ''
+        i += 2
+        continue
+      }
+      if (c === quote) quote = null
+      i++
+      continue
+    }
+    if (c === "'" || c === '"' || c === '`') {
+      quote = c
+      out += c
+      i++
+      continue
+    }
+    if (c === '/' && noHtml[i + 1] === '/') {
+      while (i < noHtml.length && noHtml[i] !== '\n') i++
+      continue
+    }
+    if (c === '/' && noHtml[i + 1] === '*') {
+      const end = noHtml.indexOf('*/', i + 2)
+      i = end === -1 ? noHtml.length : end + 2
+      continue
+    }
+    out += c
+    i++
+  }
+  return out
 }
 
 const EMITTED = new Set<string>()
@@ -69,7 +102,12 @@ describe('audio binding wiring', () => {
       // forms). A bare `cue('id')` (destructured) is covered too: the
       // name may be preceded by start, a non-word char, or the `.`
       // receiver - `xcue(`/`decode(` stay excluded.
-      const CALL = /(?:^|[^\w]|\.)(?:cue|playCue)\s*\(([^)]*)\)/g
+      const CALL = /(?:^|[^\w]|\.)(?:cue|playCue)\s*(?:\?\.\s*)?\(([^)]*)\)/g
+      // A local declaration `function cue(...)` / `get cue()` is not a
+      // store call - skip it so the bare-call arm only fires on real
+      // invocations with cue-id literals.
+      const DECL_TAIL = /\b(?:function|get|set)\s*$/
+      const LOCAL_DECL = /\b(?:function\s+(?:\*\s*)?|(?:const|let|var)\s+)(cue|playCue)\b/g
       const checkLiteral = (violations: string[], fromSrc: string, literal: string): void => {
         if (literal.includes('${')) {
           const prefix = literal.replace(/\.\$\{[^}]+\}$/, '')
@@ -91,7 +129,20 @@ describe('audio binding wiring', () => {
         // Tests legitimately feed bogus ids - only production files bind.
         if (file.fromSrc.endsWith('.test.ts')) continue
         const text = uncommented(file.text)
+        // Names declared locally in this file (`function cue`, `const cue
+        // =`) are not the store seam - bare calls to them are exempt.
+        const localNames = new Set<string>()
+        for (const d of text.matchAll(LOCAL_DECL)) localNames.add(d[1]!)
         for (const m of text.matchAll(CALL)) {
+          // Position of the `cue`/`playCue` name itself (the match may
+          // start one char earlier on the permitted prefix).
+          const prefixLen = /^(?:[^\w]|\.)/.test(m[0]) ? 1 : 0
+          const namePos = (m.index ?? 0) + prefixLen
+          if (DECL_TAIL.test(text.slice(Math.max(0, namePos - 40), namePos))) continue
+          if (prefixLen === 0 || m[0][0] !== '.') {
+            const name = /^playCue/.test(m[0].slice(prefixLen)) ? 'playCue' : 'cue'
+            if (localNames.has(name)) continue
+          }
           const argText = m[1]!
           for (const lit of argText.matchAll(LITERAL)) {
             checkLiteral(violations, file.fromSrc, lit[2]!)

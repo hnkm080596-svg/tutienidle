@@ -174,11 +174,14 @@ describe('audio manifest completeness', () => {
         (m) => m[1]!,
       ),
     )
-    // A preset landing on the bare 'combat.impact' anchor has no row and
-    // no owner - full-coverage ruling forbids that quietly.
-    const unrouted = [...presets].filter(
-      (p) => cueForActionImpact({ presetId: p }) === 'combat.impact',
-    )
+    // A preset landing on the bare 'combat.impact' anchor OR an element
+    // fallback row has lost its dedicated impact row - both are silent
+    // coverage holes. (combat.element.* is fully shadowed by expanded
+    // rows today; a preset reaching it proves its impact row is gone.)
+    const unrouted = [...presets].filter((p) => {
+      const route = cueForActionImpact({ presetId: p })
+      return route === 'combat.impact' || route.startsWith('combat.element.')
+    })
     expect(unrouted).toEqual([])
     expect(
       keys

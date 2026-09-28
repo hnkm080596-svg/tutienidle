@@ -27,15 +27,50 @@ const IMPORT_RE = /(?:import|export)\s+(?:type\s+)?(?:[\w*{}\s,]*?\s+from\s+)?['
 const DYNAMIC_IMPORT_RE =
   /(?:import|require)\s*\(\s*(?:\/\*[\s\S]*?\*\/\s*|\/\/[^\n]*\s*)*['"`]([^'"`]+)['"`]\s*(?:\/\*[\s\S]*?\*\/\s*|\/\/[^\n]*\s*)*\)/g
 
-// Cheap comment strip: comment spans between tokens (`import /*c*/ Tone`,
-// `import(/*c*/ 'tone')`) must not splice a specifier past the regexes,
-// and `// .playCue(` prose must not trip the reach trigger below.
+// String-aware comment strip: comment spans between tokens
+// (`import /*c*/ Tone`, `import(/*c*/ 'tone')`) must not splice a
+// specifier past the regexes; and `//` INSIDE a quoted specifier
+// ('./..//audio/x') must survive - a naive line strip would cut the
+// specifier short and smuggle the audio path past AUDIO_SPEC_RE.
+// HTML comments are stripped too so `<!-- import 'tone' -->` template
+// prose in .vue files does not produce a phantom specifier.
 function uncommented(text: string): string {
-  return text
-    .replace(/\/\*[\s\S]*?\*\//g, '')
-    .split('\n')
-    .map((line) => line.replace(/\/\/.*$/, ''))
-    .join('\n')
+  const noHtml = text.replace(/<!--[\s\S]*?-->/g, '')
+  let out = ''
+  let i = 0
+  let quote: string | null = null
+  while (i < noHtml.length) {
+    const c = noHtml[i]!
+    if (quote !== null) {
+      out += c
+      if (c === '\\') {
+        out += noHtml[i + 1] ?? ''
+        i += 2
+        continue
+      }
+      if (c === quote) quote = null
+      i++
+      continue
+    }
+    if (c === "'" || c === '"' || c === '`') {
+      quote = c
+      out += c
+      i++
+      continue
+    }
+    if (c === '/' && noHtml[i + 1] === '/') {
+      while (i < noHtml.length && noHtml[i] !== '\n') i++
+      continue
+    }
+    if (c === '/' && noHtml[i + 1] === '*') {
+      const end = noHtml.indexOf('*/', i + 2)
+      i = end === -1 ? noHtml.length : end + 2
+      continue
+    }
+    out += c
+    i++
+  }
+  return out
 }
 
 function importSpecifiers(text: string): string[] {
