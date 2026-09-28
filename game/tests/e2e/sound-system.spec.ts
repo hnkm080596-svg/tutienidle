@@ -37,7 +37,10 @@ async function installProbe(page: Page): Promise<void> {
     const w = window as unknown as ProbeWindow
     w.__audioCues = []
     w.__audioMusic = []
-    const mod = (await import('/src/core/audio/AudioManager.ts')) as {
+    // Non-literal specifier: this URL is resolved by the dev server inside
+    // the page, not by the spec's own module graph.
+    const specifier = '/src/core/audio/AudioManager.ts'
+    const mod = (await import(/* @vite-ignore */ specifier)) as {
       AudioManager: {
         getInstance(): {
           playCue: (id: string) => void
