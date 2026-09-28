@@ -1,6 +1,6 @@
-// CombatEntityPresentation — what a combat entity's art IS, as a type.
+// CombatEntityPresentation - what a combat entity's art IS, as a type.
 //
-// Spec B §4.1/§4.2/§4.3
+// Spec B sec.4.1/sec.4.2/sec.4.3
 // (docs/superpowers/specs/2026-09-11-combat-animation-metadata-design.md).
 //
 // Two classes, not one - but WHICH class an entity is no longer per-entity
@@ -11,25 +11,25 @@
 // no shipped state may mix the two kinds.
 //
 // A DISCRIMINATED UNION, so a consumer has to decide which it is holding. The
-// alternative — an animated presentation whose clips happen to be absent — is
-// the `Partial<Record<…>>` shape Spec A §4.2 has just finished removing from the
+// alternative - an animated presentation whose clips happen to be absent - is
+// the `Partial<Record<...>>` shape Spec A sec.4.2 has just finished removing from the
 // registry gate, where it pushed an absence check onto every call site.
 //
 // PROMOTION IS A DATA CHANGE. An enemy gains animation when its entry becomes
-// `{ kind: 'animated', clips: … }`. No playback code is touched, because every
+// `{ kind: 'animated', clips: ... }`. No playback code is touched, because every
 // consumer already narrows on `kind`. That reversibility is the whole reason
-// §3.2's economy is safe to take; if it stopped being true, the economy would
-// have become load-bearing and the design would be wrong (§9 criterion 7).
+// sec.3.2's economy is safe to take; if it stopped being true, the economy would
+// have become load-bearing and the design would be wrong (sec.9 criterion 7).
 import type { CombatAnimationName } from '@/core/battle/CombatAnimationTypes'
 
 export type { CombatAnimationName }
 
 /**
  * One animation clip, as a range of NAMED frames inside a trimmed
- * TexturePacker atlas (§3.1).
+ * TexturePacker atlas (sec.3.1).
  *
  * Frames are addressed by name rather than by index into a uniform grid, because
- * a trimmed atlas's JSON carries `sourceSize` and `spriteSourceSize` per frame —
+ * a trimmed atlas's JSON carries `sourceSize` and `spriteSourceSize` per frame -
  * exactly the data spec C needs to plant a foot on a grid cell without guessing.
  * A uniform grid pads every frame to the same box and throws that away.
  *
@@ -38,13 +38,13 @@ export type { CombatAnimationName }
  */
 /**
  * Where the character's own pixels sit inside the authored box, as fractions of
- * that box — the atlas's `spriteSourceSize` normalised by `sourceSize`.
+ * that box - the atlas's `spriteSourceSize` normalised by `sourceSize`.
  *
- * Measured from the art, never hand-written. Used by SCALE alone (Spec C §4.1):
- * anchors do not read it, because they come from the battlefield cell (§3.1).
+ * Measured from the art, never hand-written. Used by SCALE alone (Spec C sec.4.1):
+ * anchors do not read it, because they come from the battlefield cell (sec.3.1).
  *
  * `{ x: 0, y: 0, w: 1, h: 1 }` for untrimmed art, which makes every formula in
- * §3.2 collapse to sizing the box directly.
+ * sec.3.2 collapse to sizing the box directly.
  */
 export interface ArtExtent {
   x: number
@@ -78,7 +78,7 @@ export interface AtlasClip {
   frameRate: number
 
   /**
-   * The UNTRIMMED box every frame of this clip is authored in — the atlas
+   * The UNTRIMMED box every frame of this clip is authored in - the atlas
    * JSON's `sourceSize`.
    *
    * Added 2026-09-11 after a MEASURED defect: the display size of an animated
@@ -93,7 +93,7 @@ export interface AtlasClip {
    * on disk, so it cannot drift silently.
    *
    * Note this is the AUTHORED box, not the trimmed pixels. The per-frame trim
-   * offset inside it is spec C's problem (§5.2), and it differs per frame.
+   * offset inside it is spec C's problem (sec.5.2), and it differs per frame.
    */
   sourceSize: { w: number; h: number }
 
@@ -125,6 +125,18 @@ export interface CombatAnimationCatalogue {
   idle: AtlasClip
   standby: AtlasClip
   death: AtlasClip
+  /**
+   * Authored attack clip (enemy-art-wave1, 2026-09-28). Optional: entities
+   * without it keep the shared lunge tween. Play-once (repeat 0); playback
+   * returns to `standby`, matching the lunge's midpoint-impact timing.
+   */
+  attack?: AtlasClip
+  /**
+   * Authored ultimate clip (character-art-infra, 2026-09-28). Optional like
+   * `attack`: it plays only when `turn_cast_start` reports slot role
+   * 'ultimate', is play-once, and returns to `standby`.
+   */
+  ult?: AtlasClip
   idle_to_standby?: AtlasClip
   standby_to_idle?: AtlasClip
   cultivate?: AtlasClip
@@ -141,21 +153,21 @@ export interface StaticEntityArt {
 }
 
 /**
- * Procedural motion for a static entity. Costs no art — this is the whole point
- * of §3.2's economy, and the reason "static" does not have to mean "dead".
+ * Procedural motion for a static entity. Costs no art - this is the whole point
+ * of sec.3.2's economy, and the reason "static" does not have to mean "dead".
  *
- * Worth stating plainly because the decision described enemies as static "như
- * hiện tại": they were not. Walk sway/bob/tilt were deleted outright on
+ * Worth stating plainly because the decision described enemies as static "nh?
+ * hi?n t?i": they were not. Walk sway/bob/tilt were deleted outright on
  * 2026-08-26 (`combat-grid-view.ts`), leaving rotation 0 and a straight
  * projected position. So this is a TARGET state, and reaching it means adding a
- * motion that is not there — cheap, but not a no-op.
+ * motion that is not there - cheap, but not a no-op.
  */
 export interface IdleMotion {
   /**
    * Peak vertical offset, in SCREEN pixels, and NOT scaled by projection depth.
    *
-   * Decided 2026-09-11: one size for every row. The alternative — scaling
-   * amplitude by the row's depth factor, so a far enemy breathes less — is more
+   * Decided 2026-09-11: one size for every row. The alternative - scaling
+   * amplitude by the row's depth factor, so a far enemy breathes less - is more
    * correct perspective and was explicitly not wanted. A far enemy is already
    * small; scaling its motion too makes it read as frozen.
    */

@@ -36,10 +36,13 @@ import {
   enemyTextureUrl,
   resolveEnemyTextureKey,
 } from '@/game/support/EnemyArt'
+import { MONSTER_ART, reskinnedTemplateIds } from '@/game/support/MonsterArt'
+import { CHARACTER_ART } from '@/game/support/CharacterArt'
 import { PLAYER_VISUAL_PROFILES } from '@/presentation/art/PlayerVisualProfiles'
 import {
   animatedCombatEntities,
   animatedArtFormFor,
+  resolvePlayerEntityKey,
   PLACEHOLDER_STATIC_TEXTURE_KEY,
   PLACEHOLDER_STATIC_TEXTURE_URL,
 } from '@/presentation/art/CombatPresentationCatalogue'
@@ -129,7 +132,12 @@ export function getHomeDescriptors(): readonly AssetResourceDescriptor[] {
     // and the cultivate bridge (sitting). The PNGs above stay loaded too:
     // PlayerPortrait and panel surfaces still read them.
     for (const profile of Object.values(PLAYER_VISUAL_PROFILES)) {
-      const clips = animatedArtFormFor(profile.combatTextureKey)
+      // Resolve through the same entity-key authority MainScene uses - the
+      // raw combatTextureKey misses reskin-mapped character sheets and
+      // under-enumerates the bundle (dormant-mode divergence).
+      const clips = animatedArtFormFor(
+        resolvePlayerEntityKey(profile.id, profile.combatTextureKey),
+      )
 
       if (!clips) {
         continue
@@ -204,12 +212,29 @@ export function getCombatDescriptors(): readonly AssetResourceDescriptor[] {
   // Reward Gourd art
   addImage(GOURD_TEXTURE_KEY, GOURD_TEXTURE_URL)
 
-  // Mortal enemy batch textures
+  // Mortal enemy batch textures - minus reskinned ids, whose old PNG is
+  // unreachable (the variant slug wins resolution; the avatar is fallback).
+  const reskinned = reskinnedTemplateIds()
+
   for (const templateId of ENEMY_TEMPLATE_IDS) {
+    if (reskinned.has(templateId)) {
+      continue
+    }
+
     const textureKey = resolveEnemyTextureKey(templateId)
     if (textureKey) {
       addImage(textureKey, enemyTextureUrl(textureKey))
     }
+  }
+
+  // Reskinned enemies (enemy-art-wave1): avatar PNG is the static fallback.
+  for (const variant of Object.values(MONSTER_ART)) {
+    addImage(variant.avatarKey, variant.avatarUrl)
+  }
+
+  // Reskinned characters (character-art-infra): same fallback contract.
+  for (const variant of Object.values(CHARACTER_ART)) {
+    addImage(variant.avatarKey, variant.avatarUrl)
   }
 
   // Player profiles combat & cultivate textures
@@ -220,7 +245,7 @@ export function getCombatDescriptors(): readonly AssetResourceDescriptor[] {
     }
   }
 
-  // Character animation atlases (Spec B §3.1) — one entry per distinct sheet,
+  // Character animation atlases (Spec B sec.3.1) - one entry per distinct sheet,
   // however many entities and clips share it.
   for (const { clips } of animatedCombatEntities()) {
     for (const clip of Object.values(clips)) {

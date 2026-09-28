@@ -1,0 +1,175 @@
+{
+  "frames": {
+    "zuofeng-idle-001.png": {
+      "frame": {
+        "x": 2,
+        "y": 2,
+        "w": 438,
+        "h": 647
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 438,
+        "h": 647
+      },
+      "sourceSize": {
+        "w": 439,
+        "h": 647
+      }
+    },
+    "zuofeng-idle-002.png": {
+      "frame": {
+        "x": 592,
+        "y": 2,
+        "w": 439,
+        "h": 647
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 439,
+        "h": 647
+      },
+      "sourceSize": {
+        "w": 439,
+        "h": 647
+      }
+    },
+    "zuofeng-idle-003.png": {
+      "frame": {
+        "x": 1182,
+        "y": 2,
+        "w": 439,
+        "h": 647
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 439,
+        "h": 647
+      },
+      "sourceSize": {
+        "w": 439,
+        "h": 647
+      }
+    },
+    "zuofeng-idle-004.png": {
+      "frame": {
+        "x": 1772,
+        "y": 2,
+        "w": 438,
+        "h": 647
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 438,
+        "h": 647
+      },
+      "sourceSize": {
+        "w": 439,
+        "h": 647
+      }
+    },
+    "zuofeng-idle-005.png": {
+      "frame": {
+        "x": 2362,
+        "y": 2,
+        "w": 438,
+        "h": 647
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 438,
+        "h": 647
+      },
+      "sourceSize": {
+        "w": 439,
+        "h": 647
+      }
+    },
+    "zuofeng-idle-006.png": {
+      "frame": {
+        "x": 2952,
+        "y": 2,
+        "w": 438,
+        "h": 647
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 438,
+        "h": 647
+      },
+      "sourceSize": {
+        "w": 439,
+        "h": 647
+      }
+    },
+    "zuofeng-idle-007.png": {
+      "frame": {
+        "x": 2,
+        "y": 913,
+        "w": 439,
+        "h": 647
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 439,
+        "h": 647
+      },
+      "sourceSize": {
+        "w": 439,
+        "h": 647
+      }
+    },
+    "zuofeng-idle-008.png": {
+      "frame": {
+        "x": 592,
+        "y": 913,
+        "w": 438,
+        "h": 647
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 438,
+        "h": 647
+      },
+      "sourceSize": {
+        "w": 439,
+        "h": 647
+      }
+    }
+  },
+  "meta": {
+    "app": "pack-character-art.mjs",
+    "version": "1.0",
+    "image": "zuofeng-sheet-1.png",
+    "format": "RGBA8888",
+    "size": {
+      "w": 3540,
+      "h": 1822
+    },
+    "scale": "1"
+  }
+}

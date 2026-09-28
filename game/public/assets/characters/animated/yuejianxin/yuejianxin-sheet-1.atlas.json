@@ -1,0 +1,375 @@
+{
+  "frames": {
+    "yuejianxin-idle-001.png": {
+      "frame": {
+        "x": 2,
+        "y": 2,
+        "w": 456,
+        "h": 496
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 456,
+        "h": 496
+      },
+      "sourceSize": {
+        "w": 456,
+        "h": 496
+      }
+    },
+    "yuejianxin-idle-002.png": {
+      "frame": {
+        "x": 622,
+        "y": 2,
+        "w": 453,
+        "h": 495
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 1,
+        "y": 1,
+        "w": 453,
+        "h": 495
+      },
+      "sourceSize": {
+        "w": 456,
+        "h": 496
+      }
+    },
+    "yuejianxin-idle-003.png": {
+      "frame": {
+        "x": 1242,
+        "y": 2,
+        "w": 453,
+        "h": 493
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 3,
+        "w": 453,
+        "h": 493
+      },
+      "sourceSize": {
+        "w": 456,
+        "h": 496
+      }
+    },
+    "yuejianxin-idle-004.png": {
+      "frame": {
+        "x": 1862,
+        "y": 2,
+        "w": 452,
+        "h": 493
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 1,
+        "y": 3,
+        "w": 452,
+        "h": 493
+      },
+      "sourceSize": {
+        "w": 456,
+        "h": 496
+      }
+    },
+    "yuejianxin-idle-005.png": {
+      "frame": {
+        "x": 2482,
+        "y": 2,
+        "w": 453,
+        "h": 495
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 2,
+        "y": 1,
+        "w": 453,
+        "h": 495
+      },
+      "sourceSize": {
+        "w": 456,
+        "h": 496
+      }
+    },
+    "yuejianxin-idle-006.png": {
+      "frame": {
+        "x": 3102,
+        "y": 2,
+        "w": 453,
+        "h": 495
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 2,
+        "y": 1,
+        "w": 453,
+        "h": 495
+      },
+      "sourceSize": {
+        "w": 456,
+        "h": 496
+      }
+    },
+    "yuejianxin-idle-007.png": {
+      "frame": {
+        "x": 2,
+        "y": 690,
+        "w": 453,
+        "h": 496
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 2,
+        "y": 0,
+        "w": 453,
+        "h": 496
+      },
+      "sourceSize": {
+        "w": 456,
+        "h": 496
+      }
+    },
+    "yuejianxin-attack-001.png": {
+      "frame": {
+        "x": 622,
+        "y": 690,
+        "w": 455,
+        "h": 495
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 5,
+        "y": 1,
+        "w": 455,
+        "h": 495
+      },
+      "sourceSize": {
+        "w": 456,
+        "h": 496
+      }
+    },
+    "yuejianxin-attack-002.png": {
+      "frame": {
+        "x": 1242,
+        "y": 690,
+        "w": 476,
+        "h": 495
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -15,
+        "y": 1,
+        "w": 476,
+        "h": 495
+      },
+      "sourceSize": {
+        "w": 456,
+        "h": 496
+      }
+    },
+    "yuejianxin-attack-003.png": {
+      "frame": {
+        "x": 1862,
+        "y": 690,
+        "w": 305,
+        "h": 684
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 161,
+        "y": -188,
+        "w": 305,
+        "h": 684
+      },
+      "sourceSize": {
+        "w": 456,
+        "h": 496
+      }
+    },
+    "yuejianxin-attack-004.png": {
+      "frame": {
+        "x": 2482,
+        "y": 690,
+        "w": 380,
+        "h": 519
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 174,
+        "y": -23,
+        "w": 380,
+        "h": 519
+      },
+      "sourceSize": {
+        "w": 456,
+        "h": 496
+      }
+    },
+    "yuejianxin-attack-005.png": {
+      "frame": {
+        "x": 3102,
+        "y": 690,
+        "w": 616,
+        "h": 429
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -155,
+        "y": 64,
+        "w": 616,
+        "h": 429
+      },
+      "sourceSize": {
+        "w": 456,
+        "h": 496
+      }
+    },
+    "yuejianxin-attack-006.png": {
+      "frame": {
+        "x": 2,
+        "y": 1378,
+        "w": 547,
+        "h": 396
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -19,
+        "y": 99,
+        "w": 547,
+        "h": 396
+      },
+      "sourceSize": {
+        "w": 456,
+        "h": 496
+      }
+    },
+    "yuejianxin-attack-007.png": {
+      "frame": {
+        "x": 622,
+        "y": 1378,
+        "w": 386,
+        "h": 386
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 94,
+        "y": 106,
+        "w": 386,
+        "h": 386
+      },
+      "sourceSize": {
+        "w": 456,
+        "h": 496
+      }
+    },
+    "yuejianxin-attack-008.png": {
+      "frame": {
+        "x": 1242,
+        "y": 1378,
+        "w": 344,
+        "h": 444
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 101,
+        "y": 49,
+        "w": 344,
+        "h": 444
+      },
+      "sourceSize": {
+        "w": 456,
+        "h": 496
+      }
+    },
+    "yuejianxin-attack-009.png": {
+      "frame": {
+        "x": 1862,
+        "y": 1378,
+        "w": 322,
+        "h": 464
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 140,
+        "y": 29,
+        "w": 322,
+        "h": 464
+      },
+      "sourceSize": {
+        "w": 456,
+        "h": 496
+      }
+    },
+    "yuejianxin-attack-010.png": {
+      "frame": {
+        "x": 2482,
+        "y": 1378,
+        "w": 375,
+        "h": 477
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 86,
+        "y": 19,
+        "w": 375,
+        "h": 477
+      },
+      "sourceSize": {
+        "w": 456,
+        "h": 496
+      }
+    },
+    "yuejianxin-attack-011.png": {
+      "frame": {
+        "x": 3102,
+        "y": 1378,
+        "w": 455,
+        "h": 495
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 5,
+        "y": 1,
+        "w": 455,
+        "h": 495
+      },
+      "sourceSize": {
+        "w": 456,
+        "h": 496
+      }
+    }
+  },
+  "meta": {
+    "app": "pack-character-art.mjs",
+    "version": "1.0",
+    "image": "yuejianxin-sheet-1.png",
+    "format": "RGBA8888",
+    "size": {
+      "w": 3720,
+      "h": 2064
+    },
+    "scale": "1"
+  }
+}

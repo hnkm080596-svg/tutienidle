@@ -21,7 +21,11 @@ import {
   PLACEHOLDER_STATIC_TEXTURE_URL,
   presentationFor,
   resolveCombatEntityKey,
+  resolvePlayerEntityKey,
+  staticArtFormFor,
 } from '@/presentation/art/CombatPresentationCatalogue'
+import { MONSTER_ART } from '@/game/support/MonsterArt'
+import { CHARACTER_ART } from '@/game/support/CharacterArt'
 import { combatAnimationKey } from '@/presentation/art/CombatEntityPresentation'
 import { ENTITY_ART_MODE } from '@/presentation/art/EntityArtMode'
 import { registerClipCatalogue } from './combat/combat-animation-playback'
@@ -29,6 +33,7 @@ import { PLAYER_VISUAL_PROFILES, type PlayerVisualProfile } from '@/presentation
 import type { PlayerVisualProfileId } from '@/core/player/PlayerVisualForm'
 import type { FormationAssignmentsPayload } from '@/presentation/contracts/regionEvents'
 import { PLAYER_ID } from './combat/combatConstants'
+import { PLAYER_TEXTURE_KEY } from '@/game/support/CombatPreload'
 import type { BattleGridProjection } from '@/presentation/geometry/BattleGridProjection'
 import { STANDING_SLOT_COUNT } from '@/core/battle/BattlefieldRegions'
 import type { FormationSlotAssignment } from '@/core/player/Player'
@@ -103,7 +108,7 @@ export class TranPhapCombatPreviewScene extends Phaser.Scene implements CombatGr
     return { ...this.activeProfile().combatSourceSize }
   }
 
-  get playerProfile(): { combatTextureKey: string } {
+  get playerProfile(): { id: string; combatTextureKey: string } {
     return this.activeProfile()
   }
   sprites = new Map<string, EntitySprite>()
@@ -157,6 +162,32 @@ export class TranPhapCombatPreviewScene extends Phaser.Scene implements CombatGr
         this.load.image(profile.combatTextureKey, profile.combatTextureUrl.replace(/^\/+/, ''))
       }
     }
+
+    // Character reskin sheets (character-art-infra): the panel only shows
+    // party combatants and the player is always one, so its atlas is needed
+    // here even under the static global mode (per-entity animated override).
+    // Monster sheets stay combat-only - a reskinned enemy in this panel falls
+    // back to its avatar via the atlas-miss branch (loaded below).
+    const characterSheets = new Set<string>()
+
+    for (const variant of Object.values(CHARACTER_ART)) {
+      for (const range of Object.values(variant.clips)) {
+        if (range === undefined || characterSheets.has(range.sheetKey) || this.textures.exists(range.sheetKey)) {
+          continue
+        }
+
+        characterSheets.add(range.sheetKey)
+        this.load.atlas(range.sheetKey, range.sheetUrl, range.atlasUrl)
+      }
+    }
+
+    // Reskin avatar fallbacks - the static form CombatGridView draws on an
+    // atlas miss, for both registries.
+    for (const variant of [...Object.values(MONSTER_ART), ...Object.values(CHARACTER_ART)]) {
+      if (!this.textures.exists(variant.avatarKey)) {
+        this.load.image(variant.avatarKey, variant.avatarUrl)
+      }
+    }
   }
 
   create(): void {
@@ -189,13 +220,12 @@ export class TranPhapCombatPreviewScene extends Phaser.Scene implements CombatGr
     this.gridGraphics = this.add.graphics()
     this.gridView.redrawGridLines()
 
-    // Animated mode only: register every entity's clip set so startEntityIdle
-    // can play `<entityKey>-idle` - same keys CombatScene would build, via the
-    // shared helper (uniformity, 2026-09-19). Static mode registers nothing.
-    if (ENTITY_ART_MODE === 'animated') {
-      for (const { clips } of animatedCombatEntities()) {
-        registerClipCatalogue(this.anims, clips)
-      }
+    // Same enumeration CombatScene registers from: in 'animated' mode the
+    // whole roster, in 'static' mode exactly the reskin override sets - so
+    // startEntityIdle can play `<entityKey>-idle` on reskinned combatants too
+    // (uniformity, 2026-09-19; reskin amendments 2026-09-28).
+    for (const { clips } of animatedCombatEntities()) {
+      registerClipCatalogue(this.anims, clips)
     }
 
   }
@@ -214,7 +244,7 @@ export class TranPhapCombatPreviewScene extends Phaser.Scene implements CombatGr
 
     const entityKey =
       id === PLAYER_ID
-        ? this.playerProfile.combatTextureKey
+        ? resolvePlayerEntityKey(this.playerProfile.id, this.playerProfile.combatTextureKey)
         : resolveCombatEntityKey(id)
 
     if (presentationFor(entityKey)?.kind !== 'animated') {
@@ -223,7 +253,9 @@ export class TranPhapCombatPreviewScene extends Phaser.Scene implements CombatGr
 
     const key = combatAnimationKey(entityKey, 'idle')
 
-    if (this.anims.exists(key)) {
+    // Atlas-miss registers the clip name with zero frames - exists() is true
+    // but play() throws on frames[0]; treat an empty clip as missing.
+    if (this.anims.exists(key) && this.anims.get?.(key)?.frames.length !== 0) {
       ;(sprite.rect as Phaser.GameObjects.Sprite).play(key)
     }
   }
@@ -278,20 +310,55 @@ export class TranPhapCombatPreviewScene extends Phaser.Scene implements CombatGr
       if (assignment.combatantId === PLAYER_ID) {
         const existing = this.sprites.get(PLAYER_ID)
 
-        // What the player sprite SHOULD be drawing right now, mode-aware:
-        // the profile PNG in static mode, the idle sheet in animated mode
-        // (comparing against combatTextureKey there would rebuild the sprite
-        // on EVERY sync - its texture is the atlas, not the PNG).
-        const presentation = presentationFor(this.playerProfile.combatTextureKey)
-        const expectedTextureKey =
-          presentation?.kind === 'animated'
-            ? presentation.clips.idle.sheetKey
-            : this.playerProfile.combatTextureKey
+        // What the player sprite is ALLOWED to be drawing right now: the
+        // profile PNG in static mode; in animated mode the whole draw chain
+        // getOrCreateSprite resolves (idle sheet -> avatar on atlas-miss ->
+        // shared fallback) - rejecting any layer rebuilds the sprite on
+        // EVERY sync even though its texture is correct for the state.
+        const mappedKey = resolvePlayerEntityKey(
+          this.playerProfile.id,
+          this.playerProfile.combatTextureKey,
+        )
+        const presentation = presentationFor(mappedKey)
+        const acceptableTextureKeys = new Set<string>()
+
+        if (presentation?.kind === 'animated') {
+          acceptableTextureKeys.add(presentation.clips.idle.sheetKey)
+
+          const staticForm = staticArtFormFor(mappedKey)
+
+          if (staticForm) {
+            acceptableTextureKeys.add(staticForm.texture.textureKey)
+          }
+
+          // The grid-view terminal chain can legitimately leave the sprite
+          // on the profile PNG when both atlas and avatar miss - it is a
+          // real draw-chain output, not a stale texture (Clean-A2 R2-F2).
+          acceptableTextureKeys.add(this.playerProfile.combatTextureKey)
+
+          const fallbackKey = this.fallbackSpriteTextureKey(PLAYER_ID)
+
+          if (fallbackKey) {
+            acceptableTextureKeys.add(fallbackKey)
+          }
+        } else {
+          acceptableTextureKeys.add(this.playerProfile.combatTextureKey)
+
+          // grid-view:450 can also draw PLAYER_TEXTURE_KEY for an unmapped
+          // profile whose PNG never loaded (Clean-B2 CR2-F5).
+          acceptableTextureKeys.add(PLAYER_TEXTURE_KEY)
+
+          const fallbackKey = this.fallbackSpriteTextureKey(PLAYER_ID)
+
+          if (fallbackKey) {
+            acceptableTextureKeys.add(fallbackKey)
+          }
+        }
 
         if (
           existing &&
           existing.kind === 'sprite' &&
-          (existing.rect as Phaser.GameObjects.Sprite).texture.key !== expectedTextureKey
+          !acceptableTextureKeys.has((existing.rect as Phaser.GameObjects.Sprite).texture.key)
         ) {
           this.gridView.destroyEntitySprite(existing)
           this.sprites.delete(PLAYER_ID)

@@ -184,6 +184,11 @@ export interface CombatScenePayload {
   sourceId?: string
   targetId?: string
   skillId?: string
+  /** Kit slot the cast came from - lets the renderer pick the authored ult
+   *  clip for ultimate casts. 'none' marks a declared turn that is not a
+   *  slot cast at all (charge-continuation/skipped turns): no lunge, no
+   *  clip, just the impact ack pacing (Clean-B F-CB2-02). */
+  slotRole?: 'basic' | 'special' | 'ultimate' | 'none'
   // Player visual profile bridge (body-anchor plan Ã‚Â§4.2) Ã¢â‚¬â€ event
   // 'player_visual_profile_changed' gÃ¡Â»Â­i kÃƒÂ¨m ID hÃƒÂ¬nh thÃƒÂ¡i mÃ¡Â»â€ºi.
   profileId?: string
@@ -240,6 +245,15 @@ interface EntitySprite {
   // scale/geometry mÃƒÂ  projection ghi mÃ¡Â»â€”i frame.
   shadow?: Phaser.GameObjects.Ellipse
   boost: { value: number }
+  // Mirrors combatTypes.ts EntitySprite (see the note above): procedural
+  // idle-bob target (Clean-A3 A-9 mirror drift), the pending one-shot
+  // transition listener removed selectively on profile swap (Clean-B2
+  // IN3-F1), and the deferred loop / pre-clip base texture used by
+  // playCombatAnimation's deferral + restore paths (Clean-B F-CB2-01/03).
+  idle?: { offsetY: number }
+  pendingTransitionListener?: (anim: Phaser.Animations.Animation) => void
+  deferredLoopRequest?: CombatAnimationName
+  pendingBaseTextureKey?: string
   footY: number
   columnFloat: number
 }
@@ -646,6 +660,11 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   private getCombatEventBindings(): Array<[string, EventHandler<never>]> {
     return [
       ['skill_presentation_cast', (event: SkillCastPresentation) => this.onSkillCast(event)],
+      // Art waves (2026-09-28): authored attack/ult clip at cast start -
+      // clip-only, the lunge and both action ACKs belong to the skill
+      // presentation runner. slotRole 'none' marks non-cast declared turns.
+      ['turn_cast_start', (event: CombatScenePayload) =>
+        this.playCastClip(event.sourceId, event.slotRole)],
       ['skill_presentation_resolved', (event: SkillPresentationResolved) => this.onSkillResolved(event)],
       ['critical', (event: CombatScenePayload) => this.onCritical(event)],
       ['hit', (event: CombatScenePayload) => this.onHit(event)],
@@ -1431,6 +1450,22 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     this.animationPlayback.playCombatAnimation(sprite, actorId, name)
   }
 
+  // Art waves (2026-09-28): authored 'attack'/'ult' clip trigger shared by
+  // the turn_cast_start binding and the resume replay. slotRole 'none'
+  // (charge continuation, skipped/non-cast turns) plays nothing; 'ultimate'
+  // prefers the authored ult clip and falls back to 'attack' via the
+  // playback table. No-op for static catalogues. The lunge and both action
+  // ACKs are owned by the skill presentation runner, not here.
+  private playCastClip(
+    actorId: string | undefined,
+    slotRole: 'basic' | 'special' | 'ultimate' | 'none' | undefined,
+  ): void {
+    if (!actorId || slotRole === 'none') return
+    const sprite = this.spriteFor(actorId)
+    if (!sprite) return
+    this.playCombatAnimation(sprite, actorId, slotRole === 'ultimate' ? 'ult' : 'attack')
+  }
+
   // CombatGridViewHost - kick idle right after sprite creation. No-op for
   // static-mode entities (playCombatAnimation guards on kind); animated-mode
   // entities would otherwise sit on a frozen first frame until their first
@@ -1878,6 +1913,12 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     this.vfxSpawner.statusTooltip?.hide()
     this.floatedStatusKeys?.clear()
 
+    // A new battle resurrects the player: clear the dying flag BEFORE the
+    // idle replay below - playCombatAnimation gates on playerDying so death
+    // owns the channel, and without this ordering the restart replay is
+    // swallowed by that very guard.
+    this.playerDying = false
+
     const player = this.sprites.get(PLAYER_ID)
 
     if (player) {
@@ -1896,9 +1937,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
       this.positionSprite(player, HERO_COLUMN)
     }
 
-    this.playerDying = false
-
-    // Scene restart / trÃ¡ÂºÂ­n mÃ¡Â»â€ºi trong cÃƒÂ¹ng scene Ã¢â‚¬â€ dÃ¡Â»Ân Player spawn VFX cÃ…Â©.
+    // Scene restart / same-scene refight - clean stale Player spawn VFX.
     this.playerSpawnHandle?.destroy()
     this.playerSpawnHandle = undefined
 
@@ -1985,6 +2024,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
       this.onTurnReady({ actorId: resume.actorId })
     } else if (resume.phase === 'cast') {
       this.onSkillCast(resume.cast)
+      this.playCastClip(resume.actorId, resume.slotRole)
     } else if (resume.phase === 'complete') {
       const port = this.gameManagerRef
       if (port) this.skillPlayback.resumeResolved(resume.resolved, port)

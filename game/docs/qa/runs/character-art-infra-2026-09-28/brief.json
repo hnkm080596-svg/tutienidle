@@ -1,0 +1,164 @@
+{
+ "id": "BRIEF-character-art-infra",
+ "taskId": "character-art-infra",
+ "revision": 1,
+ "planningBaseline": {
+  "productStateId": "08eabb3b0a87bee2319883182c76f5e32754c01b124442385601856b4bfd98e1",
+  "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+  "attackModelId": "a4ec1e669112c29f48c6fb9439c9b82710aebc43a811ccd6dce62048d9f2349f",
+  "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+ },
+ "policyHash": "60ff569d5cbba6d6db8b6a34e9fecc72a87aeba60ff0cd6422455368c58b6a4b",
+ "requirementRefs": [
+  {
+   "path": "docs/qa/runs/character-art-infra-2026-09-28/request.json",
+   "symbolOrSection": "task",
+   "revision": "sha256:60c6daaae9fcebf967558d46429dc773670e85d58c64d7c1d88c1d033ea1ae66",
+   "basis": "USER"
+  },
+  {
+   "path": "AGENTS.md",
+   "symbolOrSection": "Internal QA authority",
+   "revision": "sha256:f90fcf000fe830f86d0d06027100e738663aaeed0cfc3f8dcb92f8b0432a2be7",
+   "basis": "MAINTAINED_CONTRACT"
+  }
+ ],
+ "invariantIds": [
+  "I-CHAR-RESKIN-RESOLVE",
+  "I-ANIMATED-CHAR-OVERRIDE",
+  "I-ULT-SLOT-SELECT",
+  "I-AVATAR-FALLBACK",
+  "I-REGISTRY-MANIFEST-PARITY",
+  "I-PREVIEW-PARITY",
+  "I-CLIP-LIFECYCLE"
+ ],
+ "dependencyRefs": [
+  {
+   "path": "src/presentation/art/CombatPresentationCatalogue.ts",
+   "symbolOrSection": "resolvePlayerEntityKey/presentationFor",
+   "revision": "sha256:0698d5a0a54083d2f6d629c69671cba3a1538397081a9d7a3190fca2401fbe93",
+   "basis": "SOURCE"
+  },
+  {
+   "path": "src/game/support/MonsterArt.ts",
+   "symbolOrSection": "MonsterArtVariant contract (mirror)",
+   "revision": "sha256:63ae013c31872d0b2c6344c84863ccee73d8c1d2a3f5c20d262becb971a6c9ce",
+   "basis": "HISTORICAL"
+  }
+ ],
+ "sourceDependencyHashes": [
+  {
+   "path": "src/presentation/art/CombatPresentationCatalogue.ts",
+   "symbolOrSection": "resolvePlayerEntityKey",
+   "revision": "sha256:0698d5a0a54083d2f6d629c69671cba3a1538397081a9d7a3190fca2401fbe93",
+   "basis": "SOURCE"
+  },
+  {
+   "path": "src/game/support/MonsterArt.ts",
+   "symbolOrSection": "MonsterArtVariant",
+   "revision": "sha256:63ae013c31872d0b2c6344c84863ccee73d8c1d2a3f5c20d262becb971a6c9ce",
+   "basis": "SOURCE"
+  },
+  {
+   "path": "public/assets/characters/animated/manifest.json",
+   "symbolOrSection": "characters.variants",
+   "revision": "sha256:3444b38abad17c6fb4404135f4c9cc6fbca6ee0c9a845bd63eb77a0e7a0b31dd",
+   "basis": "SOURCE"
+  },
+  {
+   "path": "docs/qa/runs/character-art-infra-2026-09-28/request.json",
+   "symbolOrSection": "task/nonGoals",
+   "revision": "sha256:60c6daaae9fcebf967558d46429dc773670e85d58c64d7c1d88c1d033ea1ae66",
+   "basis": "USER"
+  }
+ ],
+ "expectedChangeSet": [
+  "scripts/pack-character-art.mjs (new)",
+  "public/assets/characters/animated/** (generated)",
+  "src/game/support/CharacterArt.ts (new)",
+  "src/presentation/art/CombatPresentationCatalogue.ts + CombatEntityPresentation.ts",
+  "src/core/battle/** slotRole propagation",
+  "src/game/scenes/** combat draw + preview reskin",
+  "tests/** pins"
+ ],
+ "lessonRouting": [
+  {
+   "lessonRef": "L-016@1",
+   "decision": "NOT_APPLICABLE",
+   "reason": "no semantic trigger matched"
+  },
+  {
+   "lessonRef": "L-017@1",
+   "decision": "NOT_APPLICABLE",
+   "reason": "no semantic trigger matched"
+  },
+  {
+   "lessonRef": "L-018@1",
+   "decision": "NOT_APPLICABLE",
+   "reason": "no semantic trigger matched"
+  },
+  {
+   "lessonRef": "L-019@1",
+   "decision": "NOT_APPLICABLE",
+   "reason": "no semantic trigger matched"
+  },
+  {
+   "lessonRef": "L-020@1",
+   "decision": "NOT_APPLICABLE",
+   "reason": "no semantic trigger matched"
+  },
+  {
+   "lessonRef": "L-021@1",
+   "decision": "NOT_APPLICABLE",
+   "reason": "no semantic trigger matched"
+  }
+ ],
+ "slices": [
+  "packer",
+  "registry",
+  "playback",
+  "preview"
+ ],
+ "firstProofObligations": [
+  {
+   "oracle": "onAttack selects ult for slotRole=ultimate; missing ult degrades to attack (CombatScene.combatAnimations.test.ts)",
+   "stage": "BEFORE_PROPAGATION",
+   "admittedSlice": "playback",
+   "evidenceIds": [
+    "EV-FOCUSED"
+   ]
+  },
+  {
+   "oracle": "CHARACTER_ART rows equal on-disk manifest (characterArtReskin.test.ts)",
+   "stage": "BEFORE_WRITE",
+   "admittedSlice": "registry",
+   "evidenceIds": [
+    "EV-FOCUSED"
+   ]
+  },
+  {
+   "oracle": "acceptable-key set prevents rebuild churn; atlas-miss stable (TranPhapCombatPreviewScene.test.ts)",
+   "stage": "BEFORE_PROPAGATION",
+   "admittedSlice": "preview",
+   "evidenceIds": [
+    "EV-FOCUSED"
+   ]
+  }
+ ],
+ "unresolvedAssumptions": [],
+ "readiness": "IMPLEMENTATION_READY",
+ "preflightEvidenceIds": [
+  "EV-VERIFY-FULL",
+  "EV-FOCUSED",
+  "EV-E2E-MOTION",
+  "EV-MUTATION"
+ ],
+ "deviations": [],
+ "consumedBy": [],
+ "checkpoints": [],
+ "finalConformanceIds": [
+  "EV-VERIFY-FULL",
+  "EV-E2E-MOTION",
+  "EV-MUTATION"
+ ]
+}

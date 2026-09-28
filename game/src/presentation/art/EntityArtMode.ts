@@ -6,6 +6,11 @@
 // The catalogue emits each entity's `kind` from this constant, so the whole
 // tree - combat, panels, previews - moves together. Compile-time by design:
 // shipping a runtime toggle would mean producing BOTH art forms forever.
+//
+// Amendment (enemy-art-wave1, 2026-09-28): ANIMATED_ENEMY_KEYS in
+// MonsterArt.ts is the single enumerated exception - entities in that set
+// emit their authored clip set even under 'static'. The mode remains the
+// roster default; the set, not scattered checks, decides who overrides it.
 export type EntityArtMode = 'static' | 'animated'
 
 export const ENTITY_ART_MODE: EntityArtMode = 'static'

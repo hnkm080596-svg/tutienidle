@@ -28,12 +28,14 @@ export function emitTurnCastStart(
   sourceId: string,
   skillId: string,
   targetIds: string[],
+  slotRole?: 'basic' | 'special' | 'ultimate' | 'none',
 ): void {
   eventBus.emit('turn_cast_start', {
     type: 'turn_cast_start',
     sourceId,
     targetId: targetIds[0],
     skillId,
+    slotRole,
   })
 }
 

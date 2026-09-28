@@ -1,0 +1,1 @@
+npm run verify on product state d3e104d1dbd03b2a (post-F-EAW-09 repair): type-check PASS, vite build PASS, vitest 6976 passed; 2 suite-load timeouts (dongFuBackgroundAssets.test.ts, GameManager.autoFarmOffline.test.ts) unrelated to diff.

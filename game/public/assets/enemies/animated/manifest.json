@@ -1,0 +1,1364 @@
+{
+  "generated": "pack-enemy-art.mjs",
+  "zeroPad": 3,
+  "frameSuffix": ".png",
+  "variants": {
+    "graymane-wolf": {
+      "out": "graymane-wolf",
+      "src": "monster-library/08-graymane-wolf",
+      "recolor": null,
+      "pivot": {
+        "x": 0.42597747,
+        "y": 0.015073736
+      },
+      "extent": {
+        "x": 0,
+        "y": 0,
+        "w": 0.9841269841269841,
+        "h": 1
+      },
+      "sourceSize": {
+        "w": 504,
+        "h": 283
+      },
+      "canvasSize": {
+        "w": 960,
+        "h": 960
+      },
+      "sheets": 1,
+      "clips": {
+        "idle": {
+          "framePrefix": "graymane-wolf-idle-",
+          "firstFrame": 1,
+          "lastFrame": 9,
+          "frameCount": 9,
+          "sheet": "graymane-wolf-sheet-1.png",
+          "atlas": "graymane-wolf-sheet-1.atlas.json"
+        },
+        "attack": {
+          "framePrefix": "graymane-wolf-attack-",
+          "firstFrame": 1,
+          "lastFrame": 2,
+          "frameCount": 2,
+          "sheet": "graymane-wolf-sheet-1.png",
+          "atlas": "graymane-wolf-sheet-1.atlas.json"
+        },
+        "death": {
+          "framePrefix": "graymane-wolf-death-",
+          "firstFrame": 1,
+          "lastFrame": 1,
+          "frameCount": 1,
+          "sheet": "graymane-wolf-sheet-1.png",
+          "atlas": "graymane-wolf-sheet-1.atlas.json"
+        }
+      },
+      "avatar": "copied",
+      "avatarSize": {
+        "w": 147,
+        "h": 150
+      },
+      "sfx": [
+        "graymane-wolf-attack.ogg"
+      ]
+    },
+    "tusked-mountain-boar": {
+      "out": "tusked-mountain-boar",
+      "src": "forest-region/tusked-mountain-boar",
+      "recolor": null,
+      "pivot": {
+        "x": 0.50179523,
+        "y": 0.045390323
+      },
+      "extent": {
+        "x": 0.007751937984496124,
+        "y": 0,
+        "w": 0.9651162790697675,
+        "h": 1
+      },
+      "sourceSize": {
+        "w": 258,
+        "h": 154
+      },
+      "canvasSize": {
+        "w": 624,
+        "h": 624
+      },
+      "sheets": 1,
+      "clips": {
+        "idle": {
+          "framePrefix": "tusked-mountain-boar-idle-",
+          "firstFrame": 1,
+          "lastFrame": 15,
+          "frameCount": 15,
+          "sheet": "tusked-mountain-boar-sheet-1.png",
+          "atlas": "tusked-mountain-boar-sheet-1.atlas.json"
+        },
+        "attack": {
+          "framePrefix": "tusked-mountain-boar-attack-",
+          "firstFrame": 1,
+          "lastFrame": 2,
+          "frameCount": 2,
+          "sheet": "tusked-mountain-boar-sheet-1.png",
+          "atlas": "tusked-mountain-boar-sheet-1.atlas.json"
+        },
+        "death": {
+          "framePrefix": "tusked-mountain-boar-death-",
+          "firstFrame": 1,
+          "lastFrame": 1,
+          "frameCount": 1,
+          "sheet": "tusked-mountain-boar-sheet-1.png",
+          "atlas": "tusked-mountain-boar-sheet-1.atlas.json",
+          "synthetic": true
+        }
+      },
+      "avatar": "copied",
+      "avatarSize": {
+        "w": 102,
+        "h": 102
+      },
+      "sfx": []
+    },
+    "bloodarm-ox-demon": {
+      "out": "bloodarm-ox-demon",
+      "src": "monster-library/37-bloodarm-ox-demon",
+      "recolor": null,
+      "pivot": {
+        "x": 0.45501167,
+        "y": -0.0077378904
+      },
+      "extent": {
+        "x": 0,
+        "y": 0,
+        "w": 0.9883449883449883,
+        "h": 0.9971830985915493
+      },
+      "sourceSize": {
+        "w": 429,
+        "h": 355
+      },
+      "canvasSize": {
+        "w": 960,
+        "h": 960
+      },
+      "sheets": 1,
+      "clips": {
+        "idle": {
+          "framePrefix": "bloodarm-ox-demon-idle-",
+          "firstFrame": 1,
+          "lastFrame": 8,
+          "frameCount": 8,
+          "sheet": "bloodarm-ox-demon-sheet-1.png",
+          "atlas": "bloodarm-ox-demon-sheet-1.atlas.json"
+        },
+        "attack": {
+          "framePrefix": "bloodarm-ox-demon-attack-",
+          "firstFrame": 1,
+          "lastFrame": 2,
+          "frameCount": 2,
+          "sheet": "bloodarm-ox-demon-sheet-1.png",
+          "atlas": "bloodarm-ox-demon-sheet-1.atlas.json"
+        },
+        "death": {
+          "framePrefix": "bloodarm-ox-demon-death-",
+          "firstFrame": 1,
+          "lastFrame": 1,
+          "frameCount": 1,
+          "sheet": "bloodarm-ox-demon-sheet-1.png",
+          "atlas": "bloodarm-ox-demon-sheet-1.atlas.json"
+        }
+      },
+      "avatar": "copied",
+      "avatarSize": {
+        "w": 148,
+        "h": 150
+      },
+      "sfx": [
+        "bloodarm-ox-demon-attack.ogg"
+      ]
+    },
+    "mudbelly-green-toad": {
+      "out": "mudbelly-green-toad",
+      "src": "monster-library/24-mudbelly-green-toad",
+      "recolor": null,
+      "pivot": {
+        "x": 0.50105095,
+        "y": 0.05067123
+      },
+      "extent": {
+        "x": 0,
+        "y": 0,
+        "w": 1,
+        "h": 1
+      },
+      "sourceSize": {
+        "w": 475,
+        "h": 345
+      },
+      "canvasSize": {
+        "w": 960,
+        "h": 960
+      },
+      "sheets": 1,
+      "clips": {
+        "idle": {
+          "framePrefix": "mudbelly-green-toad-idle-",
+          "firstFrame": 1,
+          "lastFrame": 13,
+          "frameCount": 13,
+          "sheet": "mudbelly-green-toad-sheet-1.png",
+          "atlas": "mudbelly-green-toad-sheet-1.atlas.json"
+        },
+        "attack": {
+          "framePrefix": "mudbelly-green-toad-attack-",
+          "firstFrame": 1,
+          "lastFrame": 2,
+          "frameCount": 2,
+          "sheet": "mudbelly-green-toad-sheet-1.png",
+          "atlas": "mudbelly-green-toad-sheet-1.atlas.json"
+        },
+        "death": {
+          "framePrefix": "mudbelly-green-toad-death-",
+          "firstFrame": 1,
+          "lastFrame": 1,
+          "frameCount": 1,
+          "sheet": "mudbelly-green-toad-sheet-1.png",
+          "atlas": "mudbelly-green-toad-sheet-1.atlas.json"
+        }
+      },
+      "avatar": "derived",
+      "avatarSize": {
+        "w": 512,
+        "h": 512
+      },
+      "sfx": [
+        "mudbelly-green-toad-attack.ogg"
+      ]
+    },
+    "whiteshell-venom-beetle": {
+      "out": "whiteshell-venom-beetle",
+      "src": "monster-library/09-whiteshell-venom-beetle",
+      "recolor": null,
+      "pivot": {
+        "x": 0.4655374,
+        "y": 0.073903464
+      },
+      "extent": {
+        "x": 0.010067114093959731,
+        "y": 0,
+        "w": 0.9848993288590604,
+        "h": 0.9909502262443439
+      },
+      "sourceSize": {
+        "w": 596,
+        "h": 221
+      },
+      "canvasSize": {
+        "w": 960,
+        "h": 960
+      },
+      "sheets": 1,
+      "clips": {
+        "idle": {
+          "framePrefix": "whiteshell-venom-beetle-idle-",
+          "firstFrame": 1,
+          "lastFrame": 9,
+          "frameCount": 9,
+          "sheet": "whiteshell-venom-beetle-sheet-1.png",
+          "atlas": "whiteshell-venom-beetle-sheet-1.atlas.json"
+        },
+        "attack": {
+          "framePrefix": "whiteshell-venom-beetle-attack-",
+          "firstFrame": 1,
+          "lastFrame": 2,
+          "frameCount": 2,
+          "sheet": "whiteshell-venom-beetle-sheet-1.png",
+          "atlas": "whiteshell-venom-beetle-sheet-1.atlas.json"
+        },
+        "death": {
+          "framePrefix": "whiteshell-venom-beetle-death-",
+          "firstFrame": 1,
+          "lastFrame": 1,
+          "frameCount": 1,
+          "sheet": "whiteshell-venom-beetle-sheet-1.png",
+          "atlas": "whiteshell-venom-beetle-sheet-1.atlas.json"
+        }
+      },
+      "avatar": "derived",
+      "avatarSize": {
+        "w": 512,
+        "h": 512
+      },
+      "sfx": [
+        "whiteshell-venom-beetle-attack-x1.5.ogg",
+        "whiteshell-venom-beetle-attack-x2.ogg",
+        "whiteshell-venom-beetle-attack.ogg"
+      ]
+    },
+    "witherfir-vineman": {
+      "out": "witherfir-vineman",
+      "src": "monster-library/29-witherfir-vineman",
+      "recolor": null,
+      "pivot": {
+        "x": 0.4943157,
+        "y": 0.051731467
+      },
+      "extent": {
+        "x": 0.04011461318051576,
+        "y": 0,
+        "w": 0.9398280802292264,
+        "h": 1
+      },
+      "sourceSize": {
+        "w": 349,
+        "h": 572
+      },
+      "canvasSize": {
+        "w": 960,
+        "h": 960
+      },
+      "sheets": 1,
+      "clips": {
+        "idle": {
+          "framePrefix": "witherfir-vineman-idle-",
+          "firstFrame": 1,
+          "lastFrame": 10,
+          "frameCount": 10,
+          "sheet": "witherfir-vineman-sheet-1.png",
+          "atlas": "witherfir-vineman-sheet-1.atlas.json"
+        },
+        "attack": {
+          "framePrefix": "witherfir-vineman-attack-",
+          "firstFrame": 1,
+          "lastFrame": 2,
+          "frameCount": 2,
+          "sheet": "witherfir-vineman-sheet-1.png",
+          "atlas": "witherfir-vineman-sheet-1.atlas.json"
+        },
+        "death": {
+          "framePrefix": "witherfir-vineman-death-",
+          "firstFrame": 1,
+          "lastFrame": 1,
+          "frameCount": 1,
+          "sheet": "witherfir-vineman-sheet-1.png",
+          "atlas": "witherfir-vineman-sheet-1.atlas.json"
+        }
+      },
+      "avatar": "copied",
+      "avatarSize": {
+        "w": 132,
+        "h": 150
+      },
+      "sfx": [
+        "witherfir-vineman-attack.ogg"
+      ]
+    },
+    "drybranch-treant": {
+      "out": "drybranch-treant",
+      "src": "forest-region/drybranch-treant",
+      "recolor": null,
+      "pivot": {
+        "x": 0.5016691,
+        "y": 0.12
+      },
+      "extent": {
+        "x": 0,
+        "y": 0,
+        "w": 0.9935897435897436,
+        "h": 1
+      },
+      "sourceSize": {
+        "w": 624,
+        "h": 624
+      },
+      "canvasSize": {
+        "w": 624,
+        "h": 624
+      },
+      "sheets": 1,
+      "clips": {
+        "idle": {
+          "framePrefix": "drybranch-treant-idle-",
+          "firstFrame": 1,
+          "lastFrame": 13,
+          "frameCount": 13,
+          "sheet": "drybranch-treant-sheet-1.png",
+          "atlas": "drybranch-treant-sheet-1.atlas.json"
+        },
+        "attack": {
+          "framePrefix": "drybranch-treant-attack-",
+          "firstFrame": 1,
+          "lastFrame": 2,
+          "frameCount": 2,
+          "sheet": "drybranch-treant-sheet-1.png",
+          "atlas": "drybranch-treant-sheet-1.atlas.json"
+        },
+        "death": {
+          "framePrefix": "drybranch-treant-death-",
+          "firstFrame": 1,
+          "lastFrame": 1,
+          "frameCount": 1,
+          "sheet": "drybranch-treant-sheet-1.png",
+          "atlas": "drybranch-treant-sheet-1.atlas.json",
+          "synthetic": true
+        }
+      },
+      "avatar": "copied",
+      "avatarSize": {
+        "w": 102,
+        "h": 102
+      },
+      "sfx": []
+    },
+    "spore-flower-spirit": {
+      "out": "spore-flower-spirit",
+      "src": "forest-region/spore-flower-spirit",
+      "recolor": null,
+      "pivot": {
+        "x": 0.5590997,
+        "y": -0.18470487
+      },
+      "extent": {
+        "x": 0.13654618473895583,
+        "y": 0,
+        "w": 0.8594377510040161,
+        "h": 0.8806584362139918
+      },
+      "sourceSize": {
+        "w": 249,
+        "h": 243
+      },
+      "canvasSize": {
+        "w": 624,
+        "h": 624
+      },
+      "sheets": 1,
+      "clips": {
+        "idle": {
+          "framePrefix": "spore-flower-spirit-idle-",
+          "firstFrame": 1,
+          "lastFrame": 15,
+          "frameCount": 15,
+          "sheet": "spore-flower-spirit-sheet-1.png",
+          "atlas": "spore-flower-spirit-sheet-1.atlas.json"
+        },
+        "attack": {
+          "framePrefix": "spore-flower-spirit-attack-",
+          "firstFrame": 1,
+          "lastFrame": 2,
+          "frameCount": 2,
+          "sheet": "spore-flower-spirit-sheet-1.png",
+          "atlas": "spore-flower-spirit-sheet-1.atlas.json"
+        },
+        "death": {
+          "framePrefix": "spore-flower-spirit-death-",
+          "firstFrame": 1,
+          "lastFrame": 1,
+          "frameCount": 1,
+          "sheet": "spore-flower-spirit-sheet-1.png",
+          "atlas": "spore-flower-spirit-sheet-1.atlas.json",
+          "synthetic": true
+        }
+      },
+      "avatar": "copied",
+      "avatarSize": {
+        "w": 102,
+        "h": 102
+      },
+      "sfx": []
+    },
+    "streamgrudge-nymph": {
+      "out": "streamgrudge-nymph",
+      "src": "monster-library/33-streamgrudge-nymph",
+      "recolor": null,
+      "pivot": {
+        "x": 0.52896714,
+        "y": -0.07713351
+      },
+      "extent": {
+        "x": 0.01282051282051282,
+        "y": 0,
+        "w": 0.9871794871794872,
+        "h": 0.9945054945054945
+      },
+      "sourceSize": {
+        "w": 468,
+        "h": 546
+      },
+      "canvasSize": {
+        "w": 960,
+        "h": 960
+      },
+      "sheets": 1,
+      "clips": {
+        "idle": {
+          "framePrefix": "streamgrudge-nymph-idle-",
+          "firstFrame": 1,
+          "lastFrame": 10,
+          "frameCount": 10,
+          "sheet": "streamgrudge-nymph-sheet-1.png",
+          "atlas": "streamgrudge-nymph-sheet-1.atlas.json"
+        },
+        "attack": {
+          "framePrefix": "streamgrudge-nymph-attack-",
+          "firstFrame": 1,
+          "lastFrame": 2,
+          "frameCount": 2,
+          "sheet": "streamgrudge-nymph-sheet-1.png",
+          "atlas": "streamgrudge-nymph-sheet-1.atlas.json"
+        },
+        "death": {
+          "framePrefix": "streamgrudge-nymph-death-",
+          "firstFrame": 1,
+          "lastFrame": 1,
+          "frameCount": 1,
+          "sheet": "streamgrudge-nymph-sheet-1.png",
+          "atlas": "streamgrudge-nymph-sheet-1.atlas.json"
+        }
+      },
+      "avatar": "copied",
+      "avatarSize": {
+        "w": 138,
+        "h": 150
+      },
+      "sfx": [
+        "streamgrudge-nymph-attack-x1.5.ogg",
+        "streamgrudge-nymph-attack-x2.ogg",
+        "streamgrudge-nymph-attack.ogg"
+      ]
+    },
+    "blood-locust-elder": {
+      "out": "blood-locust-elder",
+      "src": "boss/region1-boss-blood-locust-elder",
+      "recolor": null,
+      "pivot": {
+        "x": 0.49920237,
+        "y": 0.0515026
+      },
+      "extent": {
+        "x": 0.01757188498402556,
+        "y": 0,
+        "w": 0.9728434504792333,
+        "h": 1
+      },
+      "sourceSize": {
+        "w": 626,
+        "h": 857
+      },
+      "canvasSize": {
+        "w": 960,
+        "h": 960
+      },
+      "sheets": 1,
+      "clips": {
+        "idle": {
+          "framePrefix": "blood-locust-elder-idle-",
+          "firstFrame": 1,
+          "lastFrame": 12,
+          "frameCount": 12,
+          "sheet": "blood-locust-elder-sheet-1.png",
+          "atlas": "blood-locust-elder-sheet-1.atlas.json"
+        },
+        "attack": {
+          "framePrefix": "blood-locust-elder-attack-",
+          "firstFrame": 1,
+          "lastFrame": 1,
+          "frameCount": 1,
+          "sheet": "blood-locust-elder-sheet-1.png",
+          "atlas": "blood-locust-elder-sheet-1.atlas.json"
+        },
+        "death": {
+          "framePrefix": "blood-locust-elder-death-",
+          "firstFrame": 1,
+          "lastFrame": 1,
+          "frameCount": 1,
+          "sheet": "blood-locust-elder-sheet-1.png",
+          "atlas": "blood-locust-elder-sheet-1.atlas.json"
+        },
+        "bloodwood-devour": {
+          "framePrefix": "blood-locust-elder-bloodwood-devour-",
+          "firstFrame": 1,
+          "lastFrame": 1,
+          "frameCount": 1,
+          "sheet": "blood-locust-elder-sheet-1.png",
+          "atlas": "blood-locust-elder-sheet-1.atlas.json"
+        }
+      },
+      "avatar": "copied",
+      "avatarSize": {
+        "w": 150,
+        "h": 150
+      },
+      "sfx": [
+        "blood-locust-elder-attack.ogg",
+        "blood-locust-elder-bloodwood-devour-x1.5.ogg",
+        "blood-locust-elder-bloodwood-devour-x2.ogg",
+        "blood-locust-elder-bloodwood-devour.ogg"
+      ]
+    },
+    "wugu-demon-king": {
+      "out": "wugu-demon-king",
+      "src": "boss/trial-tower-boss-wugu-demon-king",
+      "recolor": null,
+      "pivot": {
+        "x": 0.53211653,
+        "y": 0.02245997
+      },
+      "extent": {
+        "x": 0.008639308855291577,
+        "y": 0,
+        "w": 0.9848812095032398,
+        "h": 1
+      },
+      "sourceSize": {
+        "w": 463,
+        "h": 376
+      },
+      "canvasSize": {
+        "w": 992,
+        "h": 932
+      },
+      "sheets": 4,
+      "clips": {
+        "idle": {
+          "framePrefix": "wugu-demon-king-idle-",
+          "firstFrame": 1,
+          "lastFrame": 13,
+          "frameCount": 13,
+          "sheet": "wugu-demon-king-sheet-1.png",
+          "atlas": "wugu-demon-king-sheet-1.atlas.json"
+        },
+        "attack": {
+          "framePrefix": "wugu-demon-king-attack-",
+          "firstFrame": 1,
+          "lastFrame": 23,
+          "frameCount": 23,
+          "sheet": "wugu-demon-king-sheet-2.png",
+          "atlas": "wugu-demon-king-sheet-2.atlas.json"
+        },
+        "death": {
+          "framePrefix": "wugu-demon-king-death-",
+          "firstFrame": 1,
+          "lastFrame": 1,
+          "frameCount": 1,
+          "sheet": "wugu-demon-king-sheet-2.png",
+          "atlas": "wugu-demon-king-sheet-2.atlas.json"
+        },
+        "enrage": {
+          "framePrefix": "wugu-demon-king-enrage-",
+          "firstFrame": 1,
+          "lastFrame": 20,
+          "frameCount": 20,
+          "sheet": "wugu-demon-king-sheet-3.png",
+          "atlas": "wugu-demon-king-sheet-3.atlas.json"
+        },
+        "stomp": {
+          "framePrefix": "wugu-demon-king-stomp-",
+          "firstFrame": 1,
+          "lastFrame": 24,
+          "frameCount": 24,
+          "sheet": "wugu-demon-king-sheet-4.png",
+          "atlas": "wugu-demon-king-sheet-4.atlas.json"
+        }
+      },
+      "avatar": "copied",
+      "avatarSize": {
+        "w": 150,
+        "h": 150
+      },
+      "sfx": []
+    },
+    "bloodflower-tree-fiend-mudboss": {
+      "out": "bloodflower-tree-fiend-mudboss",
+      "src": "forest-region/bloodflower-tree-fiend",
+      "recolor": {
+        "hueShift": 170,
+        "valueScale": 0.8
+      },
+      "pivot": {
+        "x": 0.52401906,
+        "y": 0.031186668
+      },
+      "extent": {
+        "x": 0.025974025974025976,
+        "y": 0,
+        "w": 0.9642857142857143,
+        "h": 1
+      },
+      "sourceSize": {
+        "w": 616,
+        "h": 543
+      },
+      "canvasSize": {
+        "w": 624,
+        "h": 624
+      },
+      "sheets": 1,
+      "clips": {
+        "idle": {
+          "framePrefix": "bloodflower-tree-fiend-mudboss-idle-",
+          "firstFrame": 1,
+          "lastFrame": 25,
+          "frameCount": 25,
+          "sheet": "bloodflower-tree-fiend-mudboss-sheet-1.png",
+          "atlas": "bloodflower-tree-fiend-mudboss-sheet-1.atlas.json"
+        },
+        "attack": {
+          "framePrefix": "bloodflower-tree-fiend-mudboss-attack-",
+          "firstFrame": 1,
+          "lastFrame": 2,
+          "frameCount": 2,
+          "sheet": "bloodflower-tree-fiend-mudboss-sheet-1.png",
+          "atlas": "bloodflower-tree-fiend-mudboss-sheet-1.atlas.json"
+        },
+        "death": {
+          "framePrefix": "bloodflower-tree-fiend-mudboss-death-",
+          "firstFrame": 1,
+          "lastFrame": 1,
+          "frameCount": 1,
+          "sheet": "bloodflower-tree-fiend-mudboss-sheet-1.png",
+          "atlas": "bloodflower-tree-fiend-mudboss-sheet-1.atlas.json",
+          "synthetic": true
+        },
+        "skill": {
+          "framePrefix": "bloodflower-tree-fiend-mudboss-skill-",
+          "firstFrame": 1,
+          "lastFrame": 2,
+          "frameCount": 2,
+          "sheet": "bloodflower-tree-fiend-mudboss-sheet-1.png",
+          "atlas": "bloodflower-tree-fiend-mudboss-sheet-1.atlas.json"
+        }
+      },
+      "avatar": "copied",
+      "avatarSize": {
+        "w": 81,
+        "h": 78
+      },
+      "sfx": []
+    },
+    "streamscale-forkman-floodserpent": {
+      "out": "streamscale-forkman-floodserpent",
+      "src": "monster-library/25-streamscale-forkman",
+      "recolor": {
+        "hueShift": 190,
+        "valueScale": 0.85
+      },
+      "pivot": {
+        "x": 0.60821927,
+        "y": 0.03586494
+      },
+      "extent": {
+        "x": 0.01556420233463035,
+        "y": 0,
+        "w": 0.980544747081712,
+        "h": 0.9935205183585313
+      },
+      "sourceSize": {
+        "w": 514,
+        "h": 463
+      },
+      "canvasSize": {
+        "w": 960,
+        "h": 960
+      },
+      "sheets": 1,
+      "clips": {
+        "idle": {
+          "framePrefix": "streamscale-forkman-floodserpent-idle-",
+          "firstFrame": 1,
+          "lastFrame": 9,
+          "frameCount": 9,
+          "sheet": "streamscale-forkman-floodserpent-sheet-1.png",
+          "atlas": "streamscale-forkman-floodserpent-sheet-1.atlas.json"
+        },
+        "attack": {
+          "framePrefix": "streamscale-forkman-floodserpent-attack-",
+          "firstFrame": 1,
+          "lastFrame": 2,
+          "frameCount": 2,
+          "sheet": "streamscale-forkman-floodserpent-sheet-1.png",
+          "atlas": "streamscale-forkman-floodserpent-sheet-1.atlas.json"
+        },
+        "death": {
+          "framePrefix": "streamscale-forkman-floodserpent-death-",
+          "firstFrame": 1,
+          "lastFrame": 1,
+          "frameCount": 1,
+          "sheet": "streamscale-forkman-floodserpent-sheet-1.png",
+          "atlas": "streamscale-forkman-floodserpent-sheet-1.atlas.json"
+        }
+      },
+      "avatar": "copied",
+      "avatarSize": {
+        "w": 142,
+        "h": 150
+      },
+      "sfx": [
+        "streamscale-forkman-attack.ogg"
+      ]
+    },
+    "graymane-wolf-ferocious": {
+      "out": "graymane-wolf-ferocious",
+      "src": "monster-library/08-graymane-wolf",
+      "recolor": {
+        "hueShift": -25,
+        "valueScale": 0.82,
+        "satScale": 1.15
+      },
+      "pivot": {
+        "x": 0.42597747,
+        "y": 0.015073736
+      },
+      "extent": {
+        "x": 0,
+        "y": 0,
+        "w": 0.9841269841269841,
+        "h": 1
+      },
+      "sourceSize": {
+        "w": 504,
+        "h": 283
+      },
+      "canvasSize": {
+        "w": 960,
+        "h": 960
+      },
+      "sheets": 1,
+      "clips": {
+        "idle": {
+          "framePrefix": "graymane-wolf-ferocious-idle-",
+          "firstFrame": 1,
+          "lastFrame": 9,
+          "frameCount": 9,
+          "sheet": "graymane-wolf-ferocious-sheet-1.png",
+          "atlas": "graymane-wolf-ferocious-sheet-1.atlas.json"
+        },
+        "attack": {
+          "framePrefix": "graymane-wolf-ferocious-attack-",
+          "firstFrame": 1,
+          "lastFrame": 2,
+          "frameCount": 2,
+          "sheet": "graymane-wolf-ferocious-sheet-1.png",
+          "atlas": "graymane-wolf-ferocious-sheet-1.atlas.json"
+        },
+        "death": {
+          "framePrefix": "graymane-wolf-ferocious-death-",
+          "firstFrame": 1,
+          "lastFrame": 1,
+          "frameCount": 1,
+          "sheet": "graymane-wolf-ferocious-sheet-1.png",
+          "atlas": "graymane-wolf-ferocious-sheet-1.atlas.json"
+        }
+      },
+      "avatar": "copied",
+      "avatarSize": {
+        "w": 147,
+        "h": 150
+      },
+      "sfx": [
+        "graymane-wolf-attack.ogg"
+      ]
+    },
+    "tusked-mountain-boar-ferocious": {
+      "out": "tusked-mountain-boar-ferocious",
+      "src": "forest-region/tusked-mountain-boar",
+      "recolor": {
+        "hueShift": -25,
+        "valueScale": 0.82,
+        "satScale": 1.15
+      },
+      "pivot": {
+        "x": 0.50179523,
+        "y": 0.045390323
+      },
+      "extent": {
+        "x": 0.007751937984496124,
+        "y": 0,
+        "w": 0.9651162790697675,
+        "h": 1
+      },
+      "sourceSize": {
+        "w": 258,
+        "h": 154
+      },
+      "canvasSize": {
+        "w": 624,
+        "h": 624
+      },
+      "sheets": 1,
+      "clips": {
+        "idle": {
+          "framePrefix": "tusked-mountain-boar-ferocious-idle-",
+          "firstFrame": 1,
+          "lastFrame": 15,
+          "frameCount": 15,
+          "sheet": "tusked-mountain-boar-ferocious-sheet-1.png",
+          "atlas": "tusked-mountain-boar-ferocious-sheet-1.atlas.json"
+        },
+        "attack": {
+          "framePrefix": "tusked-mountain-boar-ferocious-attack-",
+          "firstFrame": 1,
+          "lastFrame": 2,
+          "frameCount": 2,
+          "sheet": "tusked-mountain-boar-ferocious-sheet-1.png",
+          "atlas": "tusked-mountain-boar-ferocious-sheet-1.atlas.json"
+        },
+        "death": {
+          "framePrefix": "tusked-mountain-boar-ferocious-death-",
+          "firstFrame": 1,
+          "lastFrame": 1,
+          "frameCount": 1,
+          "sheet": "tusked-mountain-boar-ferocious-sheet-1.png",
+          "atlas": "tusked-mountain-boar-ferocious-sheet-1.atlas.json",
+          "synthetic": true
+        }
+      },
+      "avatar": "copied",
+      "avatarSize": {
+        "w": 102,
+        "h": 102
+      },
+      "sfx": []
+    },
+    "bloodarm-ox-demon-ferocious": {
+      "out": "bloodarm-ox-demon-ferocious",
+      "src": "monster-library/37-bloodarm-ox-demon",
+      "recolor": {
+        "hueShift": -25,
+        "valueScale": 0.82,
+        "satScale": 1.15
+      },
+      "pivot": {
+        "x": 0.45501167,
+        "y": -0.0077378904
+      },
+      "extent": {
+        "x": 0,
+        "y": 0,
+        "w": 0.9883449883449883,
+        "h": 0.9971830985915493
+      },
+      "sourceSize": {
+        "w": 429,
+        "h": 355
+      },
+      "canvasSize": {
+        "w": 960,
+        "h": 960
+      },
+      "sheets": 1,
+      "clips": {
+        "idle": {
+          "framePrefix": "bloodarm-ox-demon-ferocious-idle-",
+          "firstFrame": 1,
+          "lastFrame": 8,
+          "frameCount": 8,
+          "sheet": "bloodarm-ox-demon-ferocious-sheet-1.png",
+          "atlas": "bloodarm-ox-demon-ferocious-sheet-1.atlas.json"
+        },
+        "attack": {
+          "framePrefix": "bloodarm-ox-demon-ferocious-attack-",
+          "firstFrame": 1,
+          "lastFrame": 2,
+          "frameCount": 2,
+          "sheet": "bloodarm-ox-demon-ferocious-sheet-1.png",
+          "atlas": "bloodarm-ox-demon-ferocious-sheet-1.atlas.json"
+        },
+        "death": {
+          "framePrefix": "bloodarm-ox-demon-ferocious-death-",
+          "firstFrame": 1,
+          "lastFrame": 1,
+          "frameCount": 1,
+          "sheet": "bloodarm-ox-demon-ferocious-sheet-1.png",
+          "atlas": "bloodarm-ox-demon-ferocious-sheet-1.atlas.json"
+        }
+      },
+      "avatar": "copied",
+      "avatarSize": {
+        "w": 148,
+        "h": 150
+      },
+      "sfx": [
+        "bloodarm-ox-demon-attack.ogg"
+      ]
+    },
+    "mudbelly-green-toad-ferocious": {
+      "out": "mudbelly-green-toad-ferocious",
+      "src": "monster-library/24-mudbelly-green-toad",
+      "recolor": {
+        "hueShift": -25,
+        "valueScale": 0.82,
+        "satScale": 1.15
+      },
+      "pivot": {
+        "x": 0.50105095,
+        "y": 0.05067123
+      },
+      "extent": {
+        "x": 0,
+        "y": 0,
+        "w": 1,
+        "h": 1
+      },
+      "sourceSize": {
+        "w": 475,
+        "h": 345
+      },
+      "canvasSize": {
+        "w": 960,
+        "h": 960
+      },
+      "sheets": 1,
+      "clips": {
+        "idle": {
+          "framePrefix": "mudbelly-green-toad-ferocious-idle-",
+          "firstFrame": 1,
+          "lastFrame": 13,
+          "frameCount": 13,
+          "sheet": "mudbelly-green-toad-ferocious-sheet-1.png",
+          "atlas": "mudbelly-green-toad-ferocious-sheet-1.atlas.json"
+        },
+        "attack": {
+          "framePrefix": "mudbelly-green-toad-ferocious-attack-",
+          "firstFrame": 1,
+          "lastFrame": 2,
+          "frameCount": 2,
+          "sheet": "mudbelly-green-toad-ferocious-sheet-1.png",
+          "atlas": "mudbelly-green-toad-ferocious-sheet-1.atlas.json"
+        },
+        "death": {
+          "framePrefix": "mudbelly-green-toad-ferocious-death-",
+          "firstFrame": 1,
+          "lastFrame": 1,
+          "frameCount": 1,
+          "sheet": "mudbelly-green-toad-ferocious-sheet-1.png",
+          "atlas": "mudbelly-green-toad-ferocious-sheet-1.atlas.json"
+        }
+      },
+      "avatar": "derived",
+      "avatarSize": {
+        "w": 512,
+        "h": 512
+      },
+      "sfx": [
+        "mudbelly-green-toad-attack.ogg"
+      ]
+    },
+    "whiteshell-venom-beetle-ferocious": {
+      "out": "whiteshell-venom-beetle-ferocious",
+      "src": "monster-library/09-whiteshell-venom-beetle",
+      "recolor": {
+        "hueShift": -25,
+        "valueScale": 0.82,
+        "satScale": 1.15
+      },
+      "pivot": {
+        "x": 0.4655374,
+        "y": 0.073903464
+      },
+      "extent": {
+        "x": 0.010067114093959731,
+        "y": 0,
+        "w": 0.9848993288590604,
+        "h": 0.9909502262443439
+      },
+      "sourceSize": {
+        "w": 596,
+        "h": 221
+      },
+      "canvasSize": {
+        "w": 960,
+        "h": 960
+      },
+      "sheets": 1,
+      "clips": {
+        "idle": {
+          "framePrefix": "whiteshell-venom-beetle-ferocious-idle-",
+          "firstFrame": 1,
+          "lastFrame": 9,
+          "frameCount": 9,
+          "sheet": "whiteshell-venom-beetle-ferocious-sheet-1.png",
+          "atlas": "whiteshell-venom-beetle-ferocious-sheet-1.atlas.json"
+        },
+        "attack": {
+          "framePrefix": "whiteshell-venom-beetle-ferocious-attack-",
+          "firstFrame": 1,
+          "lastFrame": 2,
+          "frameCount": 2,
+          "sheet": "whiteshell-venom-beetle-ferocious-sheet-1.png",
+          "atlas": "whiteshell-venom-beetle-ferocious-sheet-1.atlas.json"
+        },
+        "death": {
+          "framePrefix": "whiteshell-venom-beetle-ferocious-death-",
+          "firstFrame": 1,
+          "lastFrame": 1,
+          "frameCount": 1,
+          "sheet": "whiteshell-venom-beetle-ferocious-sheet-1.png",
+          "atlas": "whiteshell-venom-beetle-ferocious-sheet-1.atlas.json"
+        }
+      },
+      "avatar": "derived",
+      "avatarSize": {
+        "w": 512,
+        "h": 512
+      },
+      "sfx": [
+        "whiteshell-venom-beetle-attack-x1.5.ogg",
+        "whiteshell-venom-beetle-attack-x2.ogg",
+        "whiteshell-venom-beetle-attack.ogg"
+      ]
+    },
+    "drybranch-treant-ferocious": {
+      "out": "drybranch-treant-ferocious",
+      "src": "forest-region/drybranch-treant",
+      "recolor": {
+        "hueShift": -25,
+        "valueScale": 0.82,
+        "satScale": 1.15
+      },
+      "pivot": {
+        "x": 0.5016691,
+        "y": 0.12
+      },
+      "extent": {
+        "x": 0,
+        "y": 0,
+        "w": 0.9935897435897436,
+        "h": 1
+      },
+      "sourceSize": {
+        "w": 624,
+        "h": 624
+      },
+      "canvasSize": {
+        "w": 624,
+        "h": 624
+      },
+      "sheets": 1,
+      "clips": {
+        "idle": {
+          "framePrefix": "drybranch-treant-ferocious-idle-",
+          "firstFrame": 1,
+          "lastFrame": 13,
+          "frameCount": 13,
+          "sheet": "drybranch-treant-ferocious-sheet-1.png",
+          "atlas": "drybranch-treant-ferocious-sheet-1.atlas.json"
+        },
+        "attack": {
+          "framePrefix": "drybranch-treant-ferocious-attack-",
+          "firstFrame": 1,
+          "lastFrame": 2,
+          "frameCount": 2,
+          "sheet": "drybranch-treant-ferocious-sheet-1.png",
+          "atlas": "drybranch-treant-ferocious-sheet-1.atlas.json"
+        },
+        "death": {
+          "framePrefix": "drybranch-treant-ferocious-death-",
+          "firstFrame": 1,
+          "lastFrame": 1,
+          "frameCount": 1,
+          "sheet": "drybranch-treant-ferocious-sheet-1.png",
+          "atlas": "drybranch-treant-ferocious-sheet-1.atlas.json",
+          "synthetic": true
+        }
+      },
+      "avatar": "copied",
+      "avatarSize": {
+        "w": 102,
+        "h": 102
+      },
+      "sfx": []
+    },
+    "spore-flower-spirit-ferocious": {
+      "out": "spore-flower-spirit-ferocious",
+      "src": "forest-region/spore-flower-spirit",
+      "recolor": {
+        "hueShift": -25,
+        "valueScale": 0.82,
+        "satScale": 1.15
+      },
+      "pivot": {
+        "x": 0.5590997,
+        "y": -0.18470487
+      },
+      "extent": {
+        "x": 0.13654618473895583,
+        "y": 0,
+        "w": 0.8594377510040161,
+        "h": 0.8806584362139918
+      },
+      "sourceSize": {
+        "w": 249,
+        "h": 243
+      },
+      "canvasSize": {
+        "w": 624,
+        "h": 624
+      },
+      "sheets": 1,
+      "clips": {
+        "idle": {
+          "framePrefix": "spore-flower-spirit-ferocious-idle-",
+          "firstFrame": 1,
+          "lastFrame": 15,
+          "frameCount": 15,
+          "sheet": "spore-flower-spirit-ferocious-sheet-1.png",
+          "atlas": "spore-flower-spirit-ferocious-sheet-1.atlas.json"
+        },
+        "attack": {
+          "framePrefix": "spore-flower-spirit-ferocious-attack-",
+          "firstFrame": 1,
+          "lastFrame": 2,
+          "frameCount": 2,
+          "sheet": "spore-flower-spirit-ferocious-sheet-1.png",
+          "atlas": "spore-flower-spirit-ferocious-sheet-1.atlas.json"
+        },
+        "death": {
+          "framePrefix": "spore-flower-spirit-ferocious-death-",
+          "firstFrame": 1,
+          "lastFrame": 1,
+          "frameCount": 1,
+          "sheet": "spore-flower-spirit-ferocious-sheet-1.png",
+          "atlas": "spore-flower-spirit-ferocious-sheet-1.atlas.json",
+          "synthetic": true
+        }
+      },
+      "avatar": "copied",
+      "avatarSize": {
+        "w": 102,
+        "h": 102
+      },
+      "sfx": []
+    },
+    "bloodflower-tree-fiend-mudboss-ferocious": {
+      "out": "bloodflower-tree-fiend-mudboss-ferocious",
+      "src": "forest-region/bloodflower-tree-fiend",
+      "recolor": {
+        "hueShift": 210,
+        "valueScale": 0.68,
+        "satScale": 1.1
+      },
+      "pivot": {
+        "x": 0.52401906,
+        "y": 0.031186668
+      },
+      "extent": {
+        "x": 0.025974025974025976,
+        "y": 0,
+        "w": 0.9642857142857143,
+        "h": 1
+      },
+      "sourceSize": {
+        "w": 616,
+        "h": 543
+      },
+      "canvasSize": {
+        "w": 624,
+        "h": 624
+      },
+      "sheets": 1,
+      "clips": {
+        "idle": {
+          "framePrefix": "bloodflower-tree-fiend-mudboss-ferocious-idle-",
+          "firstFrame": 1,
+          "lastFrame": 25,
+          "frameCount": 25,
+          "sheet": "bloodflower-tree-fiend-mudboss-ferocious-sheet-1.png",
+          "atlas": "bloodflower-tree-fiend-mudboss-ferocious-sheet-1.atlas.json"
+        },
+        "attack": {
+          "framePrefix": "bloodflower-tree-fiend-mudboss-ferocious-attack-",
+          "firstFrame": 1,
+          "lastFrame": 2,
+          "frameCount": 2,
+          "sheet": "bloodflower-tree-fiend-mudboss-ferocious-sheet-1.png",
+          "atlas": "bloodflower-tree-fiend-mudboss-ferocious-sheet-1.atlas.json"
+        },
+        "death": {
+          "framePrefix": "bloodflower-tree-fiend-mudboss-ferocious-death-",
+          "firstFrame": 1,
+          "lastFrame": 1,
+          "frameCount": 1,
+          "sheet": "bloodflower-tree-fiend-mudboss-ferocious-sheet-1.png",
+          "atlas": "bloodflower-tree-fiend-mudboss-ferocious-sheet-1.atlas.json",
+          "synthetic": true
+        },
+        "skill": {
+          "framePrefix": "bloodflower-tree-fiend-mudboss-ferocious-skill-",
+          "firstFrame": 1,
+          "lastFrame": 2,
+          "frameCount": 2,
+          "sheet": "bloodflower-tree-fiend-mudboss-ferocious-sheet-1.png",
+          "atlas": "bloodflower-tree-fiend-mudboss-ferocious-sheet-1.atlas.json"
+        }
+      },
+      "avatar": "copied",
+      "avatarSize": {
+        "w": 81,
+        "h": 78
+      },
+      "sfx": []
+    },
+    "streamscale-forkman-floodserpent-ferocious": {
+      "out": "streamscale-forkman-floodserpent-ferocious",
+      "src": "monster-library/25-streamscale-forkman",
+      "recolor": {
+        "hueShift": 150,
+        "valueScale": 0.72,
+        "satScale": 1.1
+      },
+      "pivot": {
+        "x": 0.60821927,
+        "y": 0.03586494
+      },
+      "extent": {
+        "x": 0.01556420233463035,
+        "y": 0,
+        "w": 0.980544747081712,
+        "h": 0.9935205183585313
+      },
+      "sourceSize": {
+        "w": 514,
+        "h": 463
+      },
+      "canvasSize": {
+        "w": 960,
+        "h": 960
+      },
+      "sheets": 1,
+      "clips": {
+        "idle": {
+          "framePrefix": "streamscale-forkman-floodserpent-ferocious-idle-",
+          "firstFrame": 1,
+          "lastFrame": 9,
+          "frameCount": 9,
+          "sheet": "streamscale-forkman-floodserpent-ferocious-sheet-1.png",
+          "atlas": "streamscale-forkman-floodserpent-ferocious-sheet-1.atlas.json"
+        },
+        "attack": {
+          "framePrefix": "streamscale-forkman-floodserpent-ferocious-attack-",
+          "firstFrame": 1,
+          "lastFrame": 2,
+          "frameCount": 2,
+          "sheet": "streamscale-forkman-floodserpent-ferocious-sheet-1.png",
+          "atlas": "streamscale-forkman-floodserpent-ferocious-sheet-1.atlas.json"
+        },
+        "death": {
+          "framePrefix": "streamscale-forkman-floodserpent-ferocious-death-",
+          "firstFrame": 1,
+          "lastFrame": 1,
+          "frameCount": 1,
+          "sheet": "streamscale-forkman-floodserpent-ferocious-sheet-1.png",
+          "atlas": "streamscale-forkman-floodserpent-ferocious-sheet-1.atlas.json"
+        }
+      },
+      "avatar": "copied",
+      "avatarSize": {
+        "w": 142,
+        "h": 150
+      },
+      "sfx": [
+        "streamscale-forkman-attack.ogg"
+      ]
+    }
+  }
+}

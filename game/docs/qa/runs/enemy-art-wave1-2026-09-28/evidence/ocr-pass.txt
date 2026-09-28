@@ -1,0 +1,1 @@
+P18 open-code-review delegation pass over aggregate diff: pivot parser fix (m_X/m_Y), feet anchoring via idle-union-bbox crop, dead old-PNG preload removal, sheetUrl per-clip manifest pinning.

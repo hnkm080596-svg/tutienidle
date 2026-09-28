@@ -1,0 +1,1 @@
+P4 quick adversarial review: docs/qa/2026-09-27-enemy-art-wave1-quick.md - found F-EAW-09 (atlas-miss fell through to Rectangle); other attack surfaces clean.

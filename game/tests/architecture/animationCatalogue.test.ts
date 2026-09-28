@@ -21,6 +21,8 @@
  */
 import { describe, expect, it } from 'vitest'
 import { ENTITY_ART_MODE } from '@/presentation/art/EntityArtMode'
+import { ANIMATED_ENEMY_KEYS } from '@/game/support/MonsterArt'
+import { ANIMATED_CHARACTER_KEYS } from '@/game/support/CharacterArt'
 import {
   animatedArtFormFor,
   animatedCombatEntities,
@@ -138,7 +140,12 @@ describe('combat animation catalogue', () => {
     }
 
     if (ENTITY_ART_MODE === 'static') {
-      expect(animatedCombatEntities()).toEqual([])
+      // enemy-art-wave1 + character-art-infra amendments: the ONLY animated
+      // entities under 'static' are the enumerated reskin sets - nothing
+      // else may drift animated.
+      expect(new Set(animatedCombatEntities().map((e) => e.entityKey))).toEqual(
+        new Set([...ANIMATED_ENEMY_KEYS, ...ANIMATED_CHARACTER_KEYS]),
+      )
     }
   })
 

@@ -1,0 +1,51 @@
+{
+  "outcome": "QA_UNVERIFIED",
+  "detail": "required evidence/coverage/independence missing",
+  "clauses": [
+    {
+      "id": "C1-identity",
+      "ok": true,
+      "reason": "all final evidence binds the declared state"
+    },
+    {
+      "id": "C2-census-coverage",
+      "ok": false,
+      "reason": "coverage COV-INV-RESKIN-RESOLVE-INDEPENDENT_REVIEW=MISSING; coverage COV-INV-ANIMATED-OVERRIDE-INDEPENDENT_REVIEW=MISSING; coverage COV-INV-FEET-ANCHOR-INDEPENDENT_REVIEW=MISSING; coverage COV-INV-LOADER-PARITY-INDEPENDENT_REVIEW=MISSING; coverage COV-INV-DEATH-LIFECYCLE-INDEPENDENT_REVIEW=MISSING; coverage COV-INV-REGISTRY-MANIFEST-PARITY-INDEPENDENT_REVIEW=MISSING; coverage COV-INV-ATTACK-RETURN-INDEPENDENT_REVIEW=MISSING"
+    },
+    {
+      "id": "C3-no-open",
+      "ok": false,
+      "reason": "exception F-EAW-08"
+    },
+    {
+      "id": "C4-final-gates",
+      "ok": false,
+      "reason": "no final evidence recorded"
+    },
+    {
+      "id": "C5-sequential",
+      "ok": false,
+      "reason": "sequential CORRECTNESS→AUTHORITY→INTEGRATION reviews missing"
+    },
+    {
+      "id": "C6-clean-pair",
+      "ok": false,
+      "reason": "Clean A missing/not CLEAN; Clean B missing/not CLEAN"
+    },
+    {
+      "id": "C7-mutation-corpus",
+      "ok": false,
+      "reason": "no killed mutant for I-RESKIN-RESOLVE; no killed mutant for I-ANIMATED-OVERRIDE; no killed mutant for I-DEATH-LIFECYCLE; no killed mutant for I-REGISTRY-MANIFEST-PARITY"
+    },
+    {
+      "id": "C8-terminal-check",
+      "ok": false,
+      "reason": "no sealed independent TERMINAL_CHECK on the final state"
+    },
+    {
+      "id": "C9-readiness",
+      "ok": false,
+      "reason": "requiredReadiness run has no construction brief (PU-24)"
+    }
+  ]
+}

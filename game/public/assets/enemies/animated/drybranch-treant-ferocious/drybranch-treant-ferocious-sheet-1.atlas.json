@@ -1,0 +1,335 @@
+{
+  "frames": {
+    "drybranch-treant-ferocious-idle-001.png": {
+      "frame": {
+        "x": 2,
+        "y": 2,
+        "w": 620,
+        "h": 624
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 620,
+        "h": 624
+      },
+      "sourceSize": {
+        "w": 624,
+        "h": 624
+      }
+    },
+    "drybranch-treant-ferocious-idle-002.png": {
+      "frame": {
+        "x": 630,
+        "y": 2,
+        "w": 624,
+        "h": 624
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 624,
+        "h": 624
+      },
+      "sourceSize": {
+        "w": 624,
+        "h": 624
+      }
+    },
+    "drybranch-treant-ferocious-idle-003.png": {
+      "frame": {
+        "x": 1258,
+        "y": 2,
+        "w": 624,
+        "h": 624
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 624,
+        "h": 624
+      },
+      "sourceSize": {
+        "w": 624,
+        "h": 624
+      }
+    },
+    "drybranch-treant-ferocious-idle-004.png": {
+      "frame": {
+        "x": 1886,
+        "y": 2,
+        "w": 624,
+        "h": 624
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 624,
+        "h": 624
+      },
+      "sourceSize": {
+        "w": 624,
+        "h": 624
+      }
+    },
+    "drybranch-treant-ferocious-idle-005.png": {
+      "frame": {
+        "x": 2514,
+        "y": 2,
+        "w": 624,
+        "h": 624
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 624,
+        "h": 624
+      },
+      "sourceSize": {
+        "w": 624,
+        "h": 624
+      }
+    },
+    "drybranch-treant-ferocious-idle-006.png": {
+      "frame": {
+        "x": 3142,
+        "y": 2,
+        "w": 624,
+        "h": 624
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 624,
+        "h": 624
+      },
+      "sourceSize": {
+        "w": 624,
+        "h": 624
+      }
+    },
+    "drybranch-treant-ferocious-idle-007.png": {
+      "frame": {
+        "x": 2,
+        "y": 630,
+        "w": 624,
+        "h": 624
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 624,
+        "h": 624
+      },
+      "sourceSize": {
+        "w": 624,
+        "h": 624
+      }
+    },
+    "drybranch-treant-ferocious-idle-008.png": {
+      "frame": {
+        "x": 630,
+        "y": 630,
+        "w": 624,
+        "h": 624
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 624,
+        "h": 624
+      },
+      "sourceSize": {
+        "w": 624,
+        "h": 624
+      }
+    },
+    "drybranch-treant-ferocious-idle-009.png": {
+      "frame": {
+        "x": 1258,
+        "y": 630,
+        "w": 624,
+        "h": 624
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 624,
+        "h": 624
+      },
+      "sourceSize": {
+        "w": 624,
+        "h": 624
+      }
+    },
+    "drybranch-treant-ferocious-idle-010.png": {
+      "frame": {
+        "x": 1886,
+        "y": 630,
+        "w": 624,
+        "h": 624
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 624,
+        "h": 624
+      },
+      "sourceSize": {
+        "w": 624,
+        "h": 624
+      }
+    },
+    "drybranch-treant-ferocious-idle-011.png": {
+      "frame": {
+        "x": 2514,
+        "y": 630,
+        "w": 624,
+        "h": 624
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 624,
+        "h": 624
+      },
+      "sourceSize": {
+        "w": 624,
+        "h": 624
+      }
+    },
+    "drybranch-treant-ferocious-idle-012.png": {
+      "frame": {
+        "x": 3142,
+        "y": 630,
+        "w": 624,
+        "h": 624
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 624,
+        "h": 624
+      },
+      "sourceSize": {
+        "w": 624,
+        "h": 624
+      }
+    },
+    "drybranch-treant-ferocious-idle-013.png": {
+      "frame": {
+        "x": 2,
+        "y": 1258,
+        "w": 624,
+        "h": 624
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 624,
+        "h": 624
+      },
+      "sourceSize": {
+        "w": 624,
+        "h": 624
+      }
+    },
+    "drybranch-treant-ferocious-attack-001.png": {
+      "frame": {
+        "x": 630,
+        "y": 1258,
+        "w": 620,
+        "h": 624
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 620,
+        "h": 624
+      },
+      "sourceSize": {
+        "w": 624,
+        "h": 624
+      }
+    },
+    "drybranch-treant-ferocious-attack-002.png": {
+      "frame": {
+        "x": 1258,
+        "y": 1258,
+        "w": 620,
+        "h": 624
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 620,
+        "h": 624
+      },
+      "sourceSize": {
+        "w": 624,
+        "h": 624
+      }
+    },
+    "drybranch-treant-ferocious-death-001.png": {
+      "frame": {
+        "x": 1886,
+        "y": 1258,
+        "w": 620,
+        "h": 624
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 620,
+        "h": 624
+      },
+      "sourceSize": {
+        "w": 624,
+        "h": 624
+      }
+    }
+  },
+  "meta": {
+    "app": "pack-enemy-art.mjs",
+    "version": "1.0",
+    "image": "drybranch-treant-ferocious-sheet-1.png",
+    "format": "RGBA8888",
+    "size": {
+      "w": 3768,
+      "h": 1884
+    },
+    "scale": "1"
+  }
+}

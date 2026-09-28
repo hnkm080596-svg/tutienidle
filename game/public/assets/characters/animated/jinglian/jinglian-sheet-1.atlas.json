@@ -1,0 +1,1155 @@
+{
+  "frames": {
+    "jinglian-idle-001.png": {
+      "frame": {
+        "x": 2,
+        "y": 2,
+        "w": 139,
+        "h": 262
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 1,
+        "w": 139,
+        "h": 262
+      },
+      "sourceSize": {
+        "w": 144,
+        "h": 263
+      }
+    },
+    "jinglian-idle-002.png": {
+      "frame": {
+        "x": 218,
+        "y": 2,
+        "w": 138,
+        "h": 263
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 138,
+        "h": 263
+      },
+      "sourceSize": {
+        "w": 144,
+        "h": 263
+      }
+    },
+    "jinglian-idle-003.png": {
+      "frame": {
+        "x": 434,
+        "y": 2,
+        "w": 136,
+        "h": 263
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 136,
+        "h": 263
+      },
+      "sourceSize": {
+        "w": 144,
+        "h": 263
+      }
+    },
+    "jinglian-idle-004.png": {
+      "frame": {
+        "x": 650,
+        "y": 2,
+        "w": 136,
+        "h": 263
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 136,
+        "h": 263
+      },
+      "sourceSize": {
+        "w": 144,
+        "h": 263
+      }
+    },
+    "jinglian-idle-005.png": {
+      "frame": {
+        "x": 866,
+        "y": 2,
+        "w": 134,
+        "h": 263
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 134,
+        "h": 263
+      },
+      "sourceSize": {
+        "w": 144,
+        "h": 263
+      }
+    },
+    "jinglian-idle-006.png": {
+      "frame": {
+        "x": 1082,
+        "y": 2,
+        "w": 136,
+        "h": 263
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 136,
+        "h": 263
+      },
+      "sourceSize": {
+        "w": 144,
+        "h": 263
+      }
+    },
+    "jinglian-idle-007.png": {
+      "frame": {
+        "x": 1298,
+        "y": 2,
+        "w": 137,
+        "h": 263
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 137,
+        "h": 263
+      },
+      "sourceSize": {
+        "w": 144,
+        "h": 263
+      }
+    },
+    "jinglian-idle-008.png": {
+      "frame": {
+        "x": 1514,
+        "y": 2,
+        "w": 138,
+        "h": 263
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 138,
+        "h": 263
+      },
+      "sourceSize": {
+        "w": 144,
+        "h": 263
+      }
+    },
+    "jinglian-idle-009.png": {
+      "frame": {
+        "x": 1730,
+        "y": 2,
+        "w": 138,
+        "h": 263
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 138,
+        "h": 263
+      },
+      "sourceSize": {
+        "w": 144,
+        "h": 263
+      }
+    },
+    "jinglian-idle-010.png": {
+      "frame": {
+        "x": 1946,
+        "y": 2,
+        "w": 139,
+        "h": 263
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 139,
+        "h": 263
+      },
+      "sourceSize": {
+        "w": 144,
+        "h": 263
+      }
+    },
+    "jinglian-idle-011.png": {
+      "frame": {
+        "x": 2162,
+        "y": 2,
+        "w": 141,
+        "h": 263
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 141,
+        "h": 263
+      },
+      "sourceSize": {
+        "w": 144,
+        "h": 263
+      }
+    },
+    "jinglian-idle-012.png": {
+      "frame": {
+        "x": 2378,
+        "y": 2,
+        "w": 143,
+        "h": 263
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 143,
+        "h": 263
+      },
+      "sourceSize": {
+        "w": 144,
+        "h": 263
+      }
+    },
+    "jinglian-idle-013.png": {
+      "frame": {
+        "x": 2594,
+        "y": 2,
+        "w": 144,
+        "h": 263
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 144,
+        "h": 263
+      },
+      "sourceSize": {
+        "w": 144,
+        "h": 263
+      }
+    },
+    "jinglian-idle-014.png": {
+      "frame": {
+        "x": 2810,
+        "y": 2,
+        "w": 143,
+        "h": 263
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 143,
+        "h": 263
+      },
+      "sourceSize": {
+        "w": 144,
+        "h": 263
+      }
+    },
+    "jinglian-idle-015.png": {
+      "frame": {
+        "x": 3026,
+        "y": 2,
+        "w": 140,
+        "h": 263
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 140,
+        "h": 263
+      },
+      "sourceSize": {
+        "w": 144,
+        "h": 263
+      }
+    },
+    "jinglian-idle-016.png": {
+      "frame": {
+        "x": 3242,
+        "y": 2,
+        "w": 139,
+        "h": 263
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 139,
+        "h": 263
+      },
+      "sourceSize": {
+        "w": 144,
+        "h": 263
+      }
+    },
+    "jinglian-attack-001.png": {
+      "frame": {
+        "x": 3458,
+        "y": 2,
+        "w": 139,
+        "h": 262
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 1,
+        "w": 139,
+        "h": 262
+      },
+      "sourceSize": {
+        "w": 144,
+        "h": 263
+      }
+    },
+    "jinglian-attack-002.png": {
+      "frame": {
+        "x": 3674,
+        "y": 2,
+        "w": 139,
+        "h": 262
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 1,
+        "w": 139,
+        "h": 262
+      },
+      "sourceSize": {
+        "w": 144,
+        "h": 263
+      }
+    },
+    "jinglian-attack-003.png": {
+      "frame": {
+        "x": 2,
+        "y": 318,
+        "w": 139,
+        "h": 263
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 139,
+        "h": 263
+      },
+      "sourceSize": {
+        "w": 144,
+        "h": 263
+      }
+    },
+    "jinglian-attack-004.png": {
+      "frame": {
+        "x": 218,
+        "y": 318,
+        "w": 137,
+        "h": 262
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 2,
+        "y": 1,
+        "w": 137,
+        "h": 262
+      },
+      "sourceSize": {
+        "w": 144,
+        "h": 263
+      }
+    },
+    "jinglian-attack-005.png": {
+      "frame": {
+        "x": 434,
+        "y": 318,
+        "w": 187,
+        "h": 261
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 2,
+        "w": 187,
+        "h": 261
+      },
+      "sourceSize": {
+        "w": 144,
+        "h": 263
+      }
+    },
+    "jinglian-attack-006.png": {
+      "frame": {
+        "x": 650,
+        "y": 318,
+        "w": 188,
+        "h": 272
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -5,
+        "y": -9,
+        "w": 188,
+        "h": 272
+      },
+      "sourceSize": {
+        "w": 144,
+        "h": 263
+      }
+    },
+    "jinglian-attack-007.png": {
+      "frame": {
+        "x": 866,
+        "y": 318,
+        "w": 154,
+        "h": 310
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -9,
+        "y": -47,
+        "w": 154,
+        "h": 310
+      },
+      "sourceSize": {
+        "w": 144,
+        "h": 263
+      }
+    },
+    "jinglian-attack-008.png": {
+      "frame": {
+        "x": 1082,
+        "y": 318,
+        "w": 152,
+        "h": 312
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -10,
+        "y": -49,
+        "w": 152,
+        "h": 312
+      },
+      "sourceSize": {
+        "w": 144,
+        "h": 263
+      }
+    },
+    "jinglian-attack-009.png": {
+      "frame": {
+        "x": 1298,
+        "y": 318,
+        "w": 149,
+        "h": 312
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -10,
+        "y": -49,
+        "w": 149,
+        "h": 312
+      },
+      "sourceSize": {
+        "w": 144,
+        "h": 263
+      }
+    },
+    "jinglian-attack-010.png": {
+      "frame": {
+        "x": 1514,
+        "y": 318,
+        "w": 150,
+        "h": 311
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -11,
+        "y": -48,
+        "w": 150,
+        "h": 311
+      },
+      "sourceSize": {
+        "w": 144,
+        "h": 263
+      }
+    },
+    "jinglian-attack-011.png": {
+      "frame": {
+        "x": 1730,
+        "y": 318,
+        "w": 152,
+        "h": 307
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -13,
+        "y": -44,
+        "w": 152,
+        "h": 307
+      },
+      "sourceSize": {
+        "w": 144,
+        "h": 263
+      }
+    },
+    "jinglian-attack-012.png": {
+      "frame": {
+        "x": 1946,
+        "y": 318,
+        "w": 159,
+        "h": 301
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -14,
+        "y": -38,
+        "w": 159,
+        "h": 301
+      },
+      "sourceSize": {
+        "w": 144,
+        "h": 263
+      }
+    },
+    "jinglian-attack-013.png": {
+      "frame": {
+        "x": 2162,
+        "y": 318,
+        "w": 201,
+        "h": 290
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -20,
+        "y": -27,
+        "w": 201,
+        "h": 290
+      },
+      "sourceSize": {
+        "w": 144,
+        "h": 263
+      }
+    },
+    "jinglian-attack-014.png": {
+      "frame": {
+        "x": 2378,
+        "y": 318,
+        "w": 212,
+        "h": 284
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -17,
+        "y": -21,
+        "w": 212,
+        "h": 284
+      },
+      "sourceSize": {
+        "w": 144,
+        "h": 263
+      }
+    },
+    "jinglian-attack-015.png": {
+      "frame": {
+        "x": 2594,
+        "y": 318,
+        "w": 147,
+        "h": 266
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -8,
+        "y": -3,
+        "w": 147,
+        "h": 266
+      },
+      "sourceSize": {
+        "w": 144,
+        "h": 263
+      }
+    },
+    "jinglian-attack-016.png": {
+      "frame": {
+        "x": 2810,
+        "y": 318,
+        "w": 139,
+        "h": 262
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 1,
+        "w": 139,
+        "h": 262
+      },
+      "sourceSize": {
+        "w": 144,
+        "h": 263
+      }
+    },
+    "jinglian-attack-017.png": {
+      "frame": {
+        "x": 3026,
+        "y": 318,
+        "w": 137,
+        "h": 263
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 137,
+        "h": 263
+      },
+      "sourceSize": {
+        "w": 144,
+        "h": 263
+      }
+    },
+    "jinglian-ult-001.png": {
+      "frame": {
+        "x": 3242,
+        "y": 318,
+        "w": 139,
+        "h": 262
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 1,
+        "w": 139,
+        "h": 262
+      },
+      "sourceSize": {
+        "w": 144,
+        "h": 263
+      }
+    },
+    "jinglian-ult-002.png": {
+      "frame": {
+        "x": 3458,
+        "y": 318,
+        "w": 139,
+        "h": 263
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 139,
+        "h": 263
+      },
+      "sourceSize": {
+        "w": 144,
+        "h": 263
+      }
+    },
+    "jinglian-ult-003.png": {
+      "frame": {
+        "x": 3674,
+        "y": 318,
+        "w": 154,
+        "h": 263
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 154,
+        "h": 263
+      },
+      "sourceSize": {
+        "w": 144,
+        "h": 263
+      }
+    },
+    "jinglian-ult-004.png": {
+      "frame": {
+        "x": 2,
+        "y": 634,
+        "w": 179,
+        "h": 263
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 179,
+        "h": 263
+      },
+      "sourceSize": {
+        "w": 144,
+        "h": 263
+      }
+    },
+    "jinglian-ult-005.png": {
+      "frame": {
+        "x": 218,
+        "y": 634,
+        "w": 187,
+        "h": 260
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 3,
+        "w": 187,
+        "h": 260
+      },
+      "sourceSize": {
+        "w": 144,
+        "h": 263
+      }
+    },
+    "jinglian-ult-006.png": {
+      "frame": {
+        "x": 434,
+        "y": 634,
+        "w": 168,
+        "h": 281
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": -18,
+        "w": 168,
+        "h": 281
+      },
+      "sourceSize": {
+        "w": 144,
+        "h": 263
+      }
+    },
+    "jinglian-ult-007.png": {
+      "frame": {
+        "x": 650,
+        "y": 634,
+        "w": 153,
+        "h": 284
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": -21,
+        "w": 153,
+        "h": 284
+      },
+      "sourceSize": {
+        "w": 144,
+        "h": 263
+      }
+    },
+    "jinglian-ult-008.png": {
+      "frame": {
+        "x": 866,
+        "y": 634,
+        "w": 139,
+        "h": 281
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": -18,
+        "w": 139,
+        "h": 281
+      },
+      "sourceSize": {
+        "w": 144,
+        "h": 263
+      }
+    },
+    "jinglian-ult-009.png": {
+      "frame": {
+        "x": 1082,
+        "y": 634,
+        "w": 142,
+        "h": 281
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": -18,
+        "w": 142,
+        "h": 281
+      },
+      "sourceSize": {
+        "w": 144,
+        "h": 263
+      }
+    },
+    "jinglian-ult-010.png": {
+      "frame": {
+        "x": 1298,
+        "y": 634,
+        "w": 149,
+        "h": 278
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": -15,
+        "w": 149,
+        "h": 278
+      },
+      "sourceSize": {
+        "w": 144,
+        "h": 263
+      }
+    },
+    "jinglian-ult-011.png": {
+      "frame": {
+        "x": 1514,
+        "y": 634,
+        "w": 168,
+        "h": 273
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": -10,
+        "w": 168,
+        "h": 273
+      },
+      "sourceSize": {
+        "w": 144,
+        "h": 263
+      }
+    },
+    "jinglian-ult-012.png": {
+      "frame": {
+        "x": 1730,
+        "y": 634,
+        "w": 187,
+        "h": 271
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": -8,
+        "w": 187,
+        "h": 271
+      },
+      "sourceSize": {
+        "w": 144,
+        "h": 263
+      }
+    },
+    "jinglian-ult-013.png": {
+      "frame": {
+        "x": 1946,
+        "y": 634,
+        "w": 178,
+        "h": 272
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": -9,
+        "w": 178,
+        "h": 272
+      },
+      "sourceSize": {
+        "w": 144,
+        "h": 263
+      }
+    },
+    "jinglian-ult-014.png": {
+      "frame": {
+        "x": 2162,
+        "y": 634,
+        "w": 169,
+        "h": 271
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": -8,
+        "w": 169,
+        "h": 271
+      },
+      "sourceSize": {
+        "w": 144,
+        "h": 263
+      }
+    },
+    "jinglian-ult-015.png": {
+      "frame": {
+        "x": 2378,
+        "y": 634,
+        "w": 148,
+        "h": 277
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": -14,
+        "w": 148,
+        "h": 277
+      },
+      "sourceSize": {
+        "w": 144,
+        "h": 263
+      }
+    },
+    "jinglian-ult-016.png": {
+      "frame": {
+        "x": 2594,
+        "y": 634,
+        "w": 139,
+        "h": 281
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": -18,
+        "w": 139,
+        "h": 281
+      },
+      "sourceSize": {
+        "w": 144,
+        "h": 263
+      }
+    },
+    "jinglian-ult-017.png": {
+      "frame": {
+        "x": 2810,
+        "y": 634,
+        "w": 139,
+        "h": 263
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 139,
+        "h": 263
+      },
+      "sourceSize": {
+        "w": 144,
+        "h": 263
+      }
+    },
+    "jinglian-ult-018.png": {
+      "frame": {
+        "x": 3026,
+        "y": 634,
+        "w": 147,
+        "h": 269
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -1,
+        "y": -6,
+        "w": 147,
+        "h": 269
+      },
+      "sourceSize": {
+        "w": 144,
+        "h": 263
+      }
+    },
+    "jinglian-ult-019.png": {
+      "frame": {
+        "x": 3242,
+        "y": 634,
+        "w": 158,
+        "h": 285
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 1,
+        "y": -22,
+        "w": 158,
+        "h": 285
+      },
+      "sourceSize": {
+        "w": 144,
+        "h": 263
+      }
+    },
+    "jinglian-ult-020.png": {
+      "frame": {
+        "x": 3458,
+        "y": 634,
+        "w": 205,
+        "h": 294
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -23,
+        "y": -31,
+        "w": 205,
+        "h": 294
+      },
+      "sourceSize": {
+        "w": 144,
+        "h": 263
+      }
+    },
+    "jinglian-ult-021.png": {
+      "frame": {
+        "x": 3674,
+        "y": 634,
+        "w": 194,
+        "h": 293
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -17,
+        "y": -30,
+        "w": 194,
+        "h": 293
+      },
+      "sourceSize": {
+        "w": 144,
+        "h": 263
+      }
+    },
+    "jinglian-ult-022.png": {
+      "frame": {
+        "x": 2,
+        "y": 950,
+        "w": 173,
+        "h": 283
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -5,
+        "y": -20,
+        "w": 173,
+        "h": 283
+      },
+      "sourceSize": {
+        "w": 144,
+        "h": 263
+      }
+    },
+    "jinglian-ult-023.png": {
+      "frame": {
+        "x": 218,
+        "y": 950,
+        "w": 141,
+        "h": 265
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": -2,
+        "w": 141,
+        "h": 265
+      },
+      "sourceSize": {
+        "w": 144,
+        "h": 263
+      }
+    },
+    "jinglian-death-001.png": {
+      "frame": {
+        "x": 434,
+        "y": 950,
+        "w": 137,
+        "h": 263
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 137,
+        "h": 263
+      },
+      "sourceSize": {
+        "w": 144,
+        "h": 263
+      }
+    }
+  },
+  "meta": {
+    "app": "pack-character-art.mjs",
+    "version": "1.0",
+    "image": "jinglian-sheet-1.png",
+    "format": "RGBA8888",
+    "size": {
+      "w": 3888,
+      "h": 1264
+    },
+    "scale": "1"
+  }
+}
