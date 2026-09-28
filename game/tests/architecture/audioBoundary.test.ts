@@ -82,7 +82,12 @@ describe('audio boundary', () => {
     // `tone/build/...` import must not slip past an equality check.
     for (const spec of importSpecifiers(text, 'core/audio/AudioCueManifest.ts')) {
       for (const banned of ['tone', 'vue', 'phaser']) {
-        expect(spec === banned || spec.startsWith(`${banned}/`)).toBe(false)
+        // Same tail grammar as the other arms - `tone?url`, `vue#x`,
+        // `phaser.esm` resolve through Vite but break the data-only
+        // contract for non-Vite consumers. `\\` rejects unicode-escape
+        // specifiers like 'to\\u006ee' that spell a banned module.
+        expect(spec.includes('\\')).toBe(false)
+        expect(new RegExp(`^${banned}([/?#.]|$)`).test(spec)).toBe(false)
       }
     }
   })

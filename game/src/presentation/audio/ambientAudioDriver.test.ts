@@ -139,6 +139,7 @@ describe('bindAmbientAudio visibility lane', () => {
     unlocked = true
     const unbind = bindAmbientAudio(coordinator, store)
     suspend.mockClear()
+    resume.mockClear()
 
     // 'prerender' must suspend just like 'hidden' - a prerendered tab
     // otherwise starts a player into a suspended context.

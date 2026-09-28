@@ -87,23 +87,23 @@ describe('audio binding wiring', () => {
       // calls must still be checked - a value-side store ref means no
       // exemption.
       const LOCAL_DECL = /\bfunction\s*(?:\*\s*)?(cue|playCue)\b|\b(?:const|let|var)\s+(cue|playCue)\s*=\s*(?:async\b|function\b|\()/g
-      const checkLiteral = (violations: string[], fromSrc: string, literal: string): void => {
+      const checkLiteral = (violations: Set<string>, fromSrc: string, literal: string): void => {
         if (literal.includes('${')) {
           const prefix = literal.replace(/\.\$\{[^}]+\}$/, '')
           // The static prefix resolves itself OR covers concrete rows
           // beneath it (`combat.element.${element}` -> combat.element.*).
           const covered = Object.keys(AUDIO_CUES).some((k) => k.startsWith(prefix + '.'))
           if (resolveAudioCue(prefix) === undefined && !covered) {
-            violations.push(`${fromSrc} -> ${literal}`)
+            violations.add(`${fromSrc} -> ${literal}`)
           }
           return
         }
         if (!literal.includes('.')) return
         if (resolveAudioCue(literal) === undefined) {
-          violations.push(`${fromSrc} -> ${literal}`)
+          violations.add(`${fromSrc} -> ${literal}`)
         }
       }
-      const violations: string[] = []
+      const violations = new Set<string>()
       for (const file of FILES) {
         // Tests legitimately feed bogus ids - only production files bind.
         if (file.fromSrc.endsWith('.test.ts')) continue
@@ -178,7 +178,7 @@ describe('audio binding wiring', () => {
           // consuming it would leave `tail` inside the string and
           // LITERAL.exec would never see the bound value (dead branch).
           // The map/array arm consumes `{`/`[` on purpose (obj sweep).
-          const decl = `\\b${ident}\\s*(?::[^=\\n]+)?=\\s*(?:\\(\\s*)?(?:(?=['"\`])|[\\[{])|\\b${ident}\\s*:\\s*(?=['"\`])`
+          const decl = `\\b${ident}\\s*(?::[^=\\n]+)?(?:\\?\\?=|\\|\\|=|=)\\s*(?:\\(\\s*)?(?:(?=['"\`])|[\\[{])|\\b${ident}\\s*:\\s*(?=['"\`])`
           for (const dm of text.matchAll(new RegExp(decl, 'g'))) {
             const tail = text.slice(dm.index! + dm[0].length)
             // If the declaration ended on `{` it opened a flat
@@ -229,7 +229,7 @@ describe('audio binding wiring', () => {
         for (const vm of text.matchAll(
           /\b(?:audioStore|store|audioMgr|audioManager|audio|am)\s*\.\s*(cue|playCue)\b(?!\s*!?\s*(?:<[^>\n]*>)?\s*!?\s*(?:\?\.\s*)?\()/g,
         )) {
-          violations.push(`${file.fromSrc} -> value-ref .${vm[1]} at offset ${vm.index}`)
+          violations.add(`${file.fromSrc} -> value-ref .${vm[1]} at offset ${vm.index}`)
         }
         // Indirect invocation escapes the dotted value-ref arm:
         // `store['cue'](x)`, `store.cue.call(this, x)`, `.apply`, `.bind`.
@@ -237,17 +237,17 @@ describe('audio binding wiring', () => {
         for (const vm of text.matchAll(
           /\b(?:audioStore|store|audioMgr|audioManager|audio|am)\s*(?:\[\s*['"](?:cue|playCue)['"]\s*\]|\.\s*(?:cue|playCue)\s*\.\s*(?:call|apply|bind)\s*\()/g,
         )) {
-          violations.push(`${file.fromSrc} -> indirect ${vm[0]} at offset ${vm.index}`)
+          violations.add(`${file.fromSrc} -> indirect ${vm[0]} at offset ${vm.index}`)
         }
         // `store.cu\u0065(...)` spells the seam through a unicode escape -
         // flag escapes embedded in identifier-ish text. (A `\uXXXX` inside
         // a plain string literal is not matched because a word char must
         // sit immediately before the backslash.)
         for (const vm of text.matchAll(/[A-Za-z_$]\\u[0-9a-fA-F]{4}/g)) {
-          violations.push(`${file.fromSrc} -> ident escape ${vm[0]} at offset ${vm.index}`)
+          violations.add(`${file.fromSrc} -> ident escape ${vm[0]} at offset ${vm.index}`)
         }
       }
-      expect(violations).toEqual([])
+      expect([...violations].sort()).toEqual([])
     },
     SCAN_TIMEOUT,
   )
