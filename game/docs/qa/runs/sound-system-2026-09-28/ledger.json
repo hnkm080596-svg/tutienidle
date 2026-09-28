@@ -11,7 +11,7 @@
     "base": "21a5f8c5",
     "head": "791a7903",
     "state": {
-      "productStateId": "ec767da9ba7bdbb6748fab960a7bd1065d0e1217ce99a2f8bd125711479f6166",
+      "productStateId": "e312aba72705b9a624d1c24d97508e10db41e19cb18857958dadd22cbc5b3865",
       "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
       "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
       "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
@@ -3701,7 +3701,7 @@
       "limitations": [
         "e2e spec not re-run; scoped vitest only"
       ],
-      "status": "CURRENT"
+      "status": "STALE"
     },
     {
       "kind": "EXECUTED_UNIT_STRUCTURAL",
@@ -3742,7 +3742,7 @@
         "e2e spec not re-run; scoped vitest only",
         "mutation probes ran on scratch copies"
       ],
-      "status": "CURRENT"
+      "status": "STALE"
     },
     {
       "kind": "EXECUTED_UNIT_STRUCTURAL",
@@ -3778,7 +3778,7 @@
         "probe file ran locally then deleted (scratch, never committed)",
         "e2e not re-run"
       ],
-      "status": "CURRENT"
+      "status": "STALE"
     }
   ],
   "coverage": [],
@@ -4018,7 +4018,7 @@
         "F-SND-35"
       ],
       "novelAttackIds": [],
-      "status": "SEALED"
+      "status": "STALE"
     },
     {
       "id": "REV-SND-COR-3",
@@ -4057,7 +4057,7 @@
         "F-SND-49"
       ],
       "novelAttackIds": [],
-      "status": "SEALED"
+      "status": "STALE"
     },
     {
       "id": "REV-SND-AUT-3",
@@ -4096,7 +4096,7 @@
         "F-SND-43"
       ],
       "novelAttackIds": [],
-      "status": "SEALED"
+      "status": "STALE"
     },
     {
       "id": "REV-SND-INT-3",
@@ -4138,7 +4138,7 @@
         "F-SND-57"
       ],
       "novelAttackIds": [],
-      "status": "SEALED"
+      "status": "STALE"
     }
   ],
   "cycles": [
@@ -4187,7 +4187,7 @@
       "noveltyEvidenceIds": [],
       "startedAt": "2026-09-28T06:45:00Z",
       "finishedAt": "2026-09-28T07:55:00Z",
-      "status": "FINDINGS"
+      "status": "STALE"
     },
     {
       "id": "CYC-SND-3",
@@ -4210,7 +4210,7 @@
       "noveltyEvidenceIds": [],
       "startedAt": "2026-09-28T08:00:00Z",
       "finishedAt": "2026-09-28T09:05:00Z",
-      "status": "FINDINGS"
+      "status": "STALE"
     }
   ],
   "mutations": [],
@@ -4569,6 +4569,38 @@
       "payloadPath": "events/0022.json",
       "payloadHash": "7534968c405719be3fed386439817350c6daabc9e1c8f446bb167b941c39bdac",
       "eventHash": "d895afd446a366d8e10e97d2d0f197be318a7c26f4f9d72d1b41003ab119ca6e"
+    },
+    {
+      "seq": 23,
+      "at": "2026-09-28T09:03:00.547Z",
+      "kind": "SNAPSHOT",
+      "actor": "coordinator-56995",
+      "state": {
+        "productStateId": "e312aba72705b9a624d1c24d97508e10db41e19cb18857958dadd22cbc5b3865",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+      },
+      "previousEventHash": "d895afd446a366d8e10e97d2d0f197be318a7c26f4f9d72d1b41003ab119ca6e",
+      "payloadPath": "events/0023.json",
+      "payloadHash": "160cbdd818126279dd2100ab1ed53e5a08c220b4d8d49b2e748db52f350ccb0b",
+      "eventHash": "2953e1285c5caa642dcc4d83ae9e907dad34793d5c7b204869b728a618a0c57e"
+    },
+    {
+      "seq": 24,
+      "at": "2026-09-28T09:03:10.093Z",
+      "kind": "SNAPSHOT",
+      "actor": "coordinator-56995",
+      "state": {
+        "productStateId": "e312aba72705b9a624d1c24d97508e10db41e19cb18857958dadd22cbc5b3865",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+      },
+      "previousEventHash": "2953e1285c5caa642dcc4d83ae9e907dad34793d5c7b204869b728a618a0c57e",
+      "payloadPath": "events/0024.json",
+      "payloadHash": "e1c513e7d122a04ef483602e321b2e7e5bf97eeef328efa9dc28d9af4113716a",
+      "eventHash": "cff78a3edad2f6074cb4a0d9ef0ddb2f2a72034e0c05d8fd2b02b0ab5712b817"
     }
   ]
 }
