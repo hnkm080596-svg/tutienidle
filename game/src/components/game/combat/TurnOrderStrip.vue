@@ -64,14 +64,6 @@ const isRoundOverLimit = computed(
   () => perfectClearLimit.value !== undefined && roundsElapsed.value >= perfectClearLimit.value,
 )
 
-function hpPercent(entity: { currentHp: number; maxHp: number }): number {
-  if (entity.maxHp <= 0) {
-    return 0
-  }
-
-  return Math.max(0, Math.min(100, (entity.currentHp / entity.maxHp) * 100))
-}
-
 function label(index: number): string {
   const actor = upcomingActors.value[index]
 

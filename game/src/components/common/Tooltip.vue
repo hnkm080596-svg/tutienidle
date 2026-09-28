@@ -234,8 +234,11 @@ function hideBrokenImage(event: Event) {
 .tooltip--rich { max-width: min(320px, calc(100vw - 24px)); padding: 12px 14px; }
 .tooltip--detailed { max-width: min(380px, calc(100vw - 24px)); }
 .tooltip__header { display: flex; align-items: center; gap: 10px; }
-.tooltip__icon-shell { flex: 0 0 54px; display: grid; place-items: center; width: 54px; height: 54px; border: 1px solid color-mix(in srgb, var(--tooltip-accent) 42%, var(--paper-line, rgba(42,41,36,.42))); border-radius: 2px; background: color-mix(in srgb, var(--paper-100, #ebe3d2) 82%, transparent); overflow: hidden; }
-.tooltip__icon, .tooltip__icon-fallback { grid-area: 1 / 1; } .tooltip__icon { width: 100%; height: 100%; padding: 5px; object-fit: contain; box-sizing: border-box; background: color-mix(in srgb, var(--paper-50, #f5f0e4) 84%, transparent); } .tooltip__icon-fallback { color: var(--tooltip-accent); font: 700 var(--text-panel-title) var(--font-display); }
+/* Icon wells keep their deliberate CREAM medallion even under
+   .paper-on-dark (literal tokens, not --paper-* vars) — icons read as
+   painted art on parchment, not on the dark surface. */
+.tooltip__icon-shell { flex: 0 0 54px; display: grid; place-items: center; width: 54px; height: 54px; border: 1px solid color-mix(in srgb, var(--tooltip-accent) 42%, rgba(42,41,36,.42)); border-radius: 2px; background: color-mix(in srgb, #ebe3d2 82%, transparent); overflow: hidden; }
+.tooltip__icon, .tooltip__icon-fallback { grid-area: 1 / 1; } .tooltip__icon { width: 100%; height: 100%; padding: 5px; object-fit: contain; box-sizing: border-box; background: color-mix(in srgb, #f5f0e4 84%, transparent); } .tooltip__icon-fallback { color: var(--tooltip-accent); font: 700 var(--text-panel-title) var(--font-display); }
 .tooltip__pair { display: flex; gap: 12px; }
 .tooltip__card { min-width: 0; flex: 1 1 0; }
 .tooltip__heading { min-width: 0; }

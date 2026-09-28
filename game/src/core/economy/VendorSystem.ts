@@ -123,10 +123,14 @@ export class VendorSystem {
   }
 
   /**
-   * Read-only preview of what a sale would grant (same gates + math as
-   * sellMaterial). null = not sellable for this player (covers the
-   * sole-recipe-ingredient guard, which needs the live bag); granted = 0
-   * means the stack is too small to convert at this realm tier.
+   * Read-only preview of what a sale would grant. Covers sellMaterial's
+   * gates that can flip the verdict at preview time: amount validity,
+   * known/sellable material, the sole-recipe-ingredient guard (needs the
+   * live bag). Omitted by construction: owned<amount (callers clamp to
+   * bag contents), bag_full (spirit stones stackLimit=MAX_SAFE_INTEGER),
+   * stone registry.has (catalog constant). null = not sellable for this
+   * player; granted = 0 means the stack is too small to convert at this
+   * realm tier.
    */
   previewSellGrant(
     bag: MaterialBag,
