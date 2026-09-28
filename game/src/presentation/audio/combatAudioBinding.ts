@@ -141,9 +141,6 @@ export function cueForActionImpact(event: ActionImpactLike): string | undefined 
       : 'combat.kiem.combo'
   }
   if (presetId === 'tu_luc') return 'combat.kiem.tu_luc'
-  if (presetId.startsWith('kiem_orb_')) {
-    return `combat.impact.${presetId}` in AUDIO_CUES ? `combat.impact.${presetId}` : 'combat.impact'
-  }
   // The heavy-slam beat owns combat.boss.slam (armed, duck 0.5): the
   // preset is shared by boss casts and the khai_son_luc_si companion
   // ultimate (Companions.ts). Falling through to the bare combat.impact

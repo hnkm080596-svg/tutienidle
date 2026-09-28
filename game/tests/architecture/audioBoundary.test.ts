@@ -16,7 +16,12 @@
 import { describe, expect, it } from 'vitest'
 import { join } from 'node:path'
 import { readTs, SCAN_TIMEOUT, srcCorpus, isTestFile } from './helpers/scanTs'
-import { scriptBlockSpansOf, markupCommentRanges, uncommented } from './helpers/commentStrip'
+import {
+  scriptBlockSpansOf,
+  markupCommentRanges,
+  uncommented,
+  literalRanges,
+} from './helpers/commentStrip'
 
 const SRC_DIR = join(process.cwd(), 'src')
 
@@ -69,7 +74,16 @@ function paramsShaped(argText: string): boolean {
     argText.trim() === '' ||
     argText
       .split(',')
-      .every((p) => /^\s*[\w$]+\s*$/.test(p) || /^\s*[\w$]+\s*:\s*[\s\S]+$/.test(p))
+      .every(
+        (p) =>
+          /^\s*[\w$]+\s*$/.test(p) ||
+          /^\s*[\w$]+\??\s*:\s*[\s\S]+$/.test(p) ||
+          // `x = default`, `...rest`, object/array destructure - all
+          // legal parameter shapes, never call arguments.
+          /^\s*[\w$]+(?:\s*:\s*[\s\S]+)?\s*=\s*[\s\S]+$/.test(p) ||
+          /^\s*\.\.\.[\w$]+(?:\s*:\s*[\s\S]+)?\s*$/.test(p) ||
+          /^\s*[[{][\s\S]*[\]}](?:\s*:\s*[\s\S]+)?\s*$/.test(p),
+      )
   )
 }
 
@@ -279,6 +293,27 @@ describe('audio boundary', () => {
         }
         for (const m of clean.matchAll(COMPOSED_IMPORT_RE)) {
           offenders.push(`${file.fromSrc} -> ${m[0]}`)
+        }
+        // `re\u0071uire('tone')` lexes as the `require` identifier (plain
+        // ident escapes are legal ES) but no `\brequire\b` regex sees it.
+        // Flag escapes embedded in identifier text when the decoded ident
+        // spells the import seams; literal interiors are data, not code.
+        const lits = literalRanges(clean, file.fromSrc)
+        const inLit = (i: number) => lits.some((r) => i >= r.pos && i < r.end)
+        for (const m of clean.matchAll(/\\u(?:[0-9a-fA-F]{4}|\{[0-9a-fA-F]+\})|\\x[0-9a-fA-F]{2}/g)) {
+          const i = m.index ?? 0
+          if (inLit(i)) continue
+          const before = /[\w$]*$/.exec(clean.slice(0, i))![0]
+          const after = /^(?:[\w$]|\\u[0-9a-fA-F]{4}|\\u\{[0-9a-fA-F]+\}|\\x[0-9a-fA-F]{2})*/.exec(
+            clean.slice(i + m[0].length),
+          )![0]
+          const decoded = `${before}${m[0]}${after}`
+            .replace(/\\x([0-9a-fA-F]{2})/g, (_, h: string) => String.fromCharCode(parseInt(h, 16)))
+            .replace(/\\u\{([0-9a-fA-F]+)\}/g, (_, h: string) => String.fromCodePoint(parseInt(h, 16)))
+            .replace(/\\u([0-9a-fA-F]{4})/g, (_, h: string) => String.fromCharCode(parseInt(h, 16)))
+          if (/^(?:require|import)$/.test(decoded)) {
+            offenders.push(`${file.fromSrc} -> ident escape ${m[0]}`)
+          }
         }
         if (file.fromSrc.endsWith('.vue')) {
           const tpl = templateTextOf(file.text)

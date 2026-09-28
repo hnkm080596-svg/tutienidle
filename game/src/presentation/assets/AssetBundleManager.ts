@@ -139,7 +139,11 @@ export class AssetBundleManager implements AssetPort {
   // immediately without re-fetching a known-missing file.
   private readonly missingResources = new Map<string, number>()
   private readonly inFlightLoads = new Map<string, Promise<void>>()
-  private readonly loaderSceneResolvers = new Set<(scene: AssetLoaderScene) => void>()
+  private readonly loaderSceneResolvers = new Set<{
+    resolve: (scene: AssetLoaderScene) => void
+    reject: (err: Error) => void
+    onAbort: () => void
+  }>()
   private disposed = false
   // ARCH-013/L04 — loadedResources records what the CURRENT loader's cache
   // holds. setLoaderScene/dispose bump this; a physical load that resolves
@@ -167,8 +171,8 @@ export class AssetBundleManager implements AssetPort {
       this.inFlightLoads.clear()
 
       if (scene) {
-        for (const resolver of this.loaderSceneResolvers) {
-          resolver(scene)
+        for (const entry of this.loaderSceneResolvers) {
+          entry.resolve(scene)
         }
         this.loaderSceneResolvers.clear()
       }
@@ -248,18 +252,23 @@ export class AssetBundleManager implements AssetPort {
     if (this.loaderScene) return Promise.resolve(this.loaderScene)
 
     return new Promise<AssetLoaderScene>((resolve, reject) => {
-      const onAbort = () => {
-        this.loaderSceneResolvers.delete(resolver)
-        reject(new Error('Load aborted'))
+      const entry = {
+        resolve: (scene: AssetLoaderScene) => {
+          signal?.removeEventListener('abort', entry.onAbort)
+          resolve(scene)
+        },
+        reject: (err: Error) => {
+          signal?.removeEventListener('abort', entry.onAbort)
+          reject(err)
+        },
+        onAbort: () => {
+          this.loaderSceneResolvers.delete(entry)
+          reject(new Error('Load aborted'))
+        },
       }
 
-      const resolver = (scene: AssetLoaderScene) => {
-        signal?.removeEventListener('abort', onAbort)
-        resolve(scene)
-      }
-
-      signal?.addEventListener('abort', onAbort, { once: true })
-      this.loaderSceneResolvers.add(resolver)
+      signal?.addEventListener('abort', entry.onAbort, { once: true })
+      this.loaderSceneResolvers.add(entry)
     })
   }
 
@@ -277,6 +286,11 @@ export class AssetBundleManager implements AssetPort {
     this.disposed = true
     this.loaderScene = null
     this.loaderGeneration += 1
+    // Reject outstanding waiters - silently clearing them would leave a
+    // caller awaiting a scene that can never arrive (dangling promise).
+    for (const entry of this.loaderSceneResolvers) {
+      entry.reject(new Error('AssetBundleManager disposed'))
+    }
     this.loaderSceneResolvers.clear()
     this.inFlightLoads.clear()
     this.loadedResources.clear()

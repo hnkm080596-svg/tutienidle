@@ -42,7 +42,7 @@ export function markupCommentRanges(text: string): Array<{ pos: number; end: num
 // non-letter is a bogus comment in HTML (skipped to `>`) - consumed as
 // one inert token so `</ <script>` cannot resurrect a dead block.
 const MARKUP_TOKEN =
-  /<!--[->]?>|--!?>|<!--|<\/?[a-zA-Z][\w.-]*(?:(?!--\!?>)[^<>])*>|<\/(?=[^a-zA-Z])[^>]*>?/g
+  /<!--[->]?>|--!?>|<!--|<\/?[a-zA-Z][\w.-]*(?:(?!--\!?>)[^<>])*>|<\/(?=[^a-zA-Z])(?:(?!--\!?>)[^>])*>?/g
 
 /**
  * Live top-level <script> blocks of a .vue SFC, with JSX-ness from the
@@ -94,7 +94,14 @@ function scriptBlocksWithSpans(text: string): {
     }
     if (j >= text.length) continue // no '>' - not a tag extent
     const tag = text.slice(i, j + 1)
-    const masked = tag.replace(/"[^"]*"|'[^']*'/g, (m) => ' '.repeat(m.length))
+    let masked = tag.replace(/"[^"]*"|'[^']*'/g, (m) => ' '.repeat(m.length))
+    // Unquoted attr values can carry markup-looking text (`x=<!--`,
+    // `x=<div`): HTML keeps them as attr text. Blank every interior
+    // `<`/`>` so only the tag's own delimiters stay live - quoted values
+    // are already blanked by the pass above.
+    const mEnd = masked.endsWith('>') ? masked.length - 1 : masked.length
+    masked =
+      masked[0]! + masked.slice(1, mEnd).replace(/[<>]/g, ' ') + masked.slice(mEnd)
     for (let k = i; k <= j; k++) if (attrMaskChars[k] !== '\n') attrMaskChars[k] = masked[k - i]!
     i = j
   }
@@ -129,18 +136,52 @@ function scriptBlocksWithSpans(text: string): {
         continue
       }
       if (st === 'interp') {
-        const e = attrMasked.indexOf('}}', pos)
-        interpRanges.push(e < 0 ? [iStart, attrMasked.length] : [iStart, e + 2])
-        pos = e < 0 ? attrMasked.length : e + 2
+        // An unclosed `{{` is literal text in real Vue/HTML parsing: the
+        // first markup-looking `<` (tag open `<x`, close `</x`) outside a
+        // JS string aborts the interpolation and that markup parses
+        // normally. Masking to EOF here hid everything after an
+        // unterminated `{{`. Strings are honored so `{{ '<script>' }}`
+        // still masks as one complete interpolation.
+        let e = -1
+        let abort = -1
+        let q2 = ''
+        for (let k = pos; k < attrMasked.length; k++) {
+          const ch = attrMasked[k]!
+          if (q2) {
+            if (ch === '\\') k++
+            else if (ch === q2) q2 = ''
+            continue
+          }
+          if (ch === '"' || ch === "'" || ch === '`') {
+            q2 = ch
+            continue
+          }
+          if (ch === '}' && attrMasked[k + 1] === '}') {
+            e = k
+            break
+          }
+          if (ch === '<' && /[a-zA-Z/]/.test(attrMasked[k + 1] ?? '')) {
+            abort = k
+            break
+          }
+        }
+        if (e >= 0) {
+          interpRanges.push([iStart, e + 2])
+          pos = e + 2
+        } else {
+          pos = abort < 0 ? attrMasked.length : abort
+        }
         st = 'text'
         continue
       }
       if (st === 'script') {
-        // Only `</` + name `script` exits - `</script)>` (name `script)`)
-        // does not, matching the walk's close-tag rule.
+        // Script data ends only at `</` + ASCII-letter name `script`:
+        // `</ script>` (whitespace gap) and `</` + non-letter are opaque
+        // body text, and `</script)>` (name `script)`) does not close -
+        // matching the walk's raw-text close rule.
         const cl = attrMasked.indexOf('</', pos)
         if (cl < 0) break
-        const nm = /^<\/\s*([^\s/>]*)/.exec(attrMasked.slice(cl))
+        const nm = /^<\/([^\s/>]*)/.exec(attrMasked.slice(cl))
         pos = cl + 2
         if (nm && nm[1]!.toLowerCase() === 'script') st = 'text'
         continue
@@ -221,35 +262,69 @@ function scriptBlocksWithSpans(text: string): {
   const commentAllowed = (): boolean =>
     !inForeign() && !RAWTEXT.has(stack[stack.length - 1] ?? '')
   // Set when a live <script> opened; its body runs until the next
-  // </script> close token (browsers end scripts at the first `</script`
-  // regardless of context, so this matches real parsing).
+  // `</script` in RAW text (browsers end scripts at the first `</script`
+  // regardless of context - quoted strings included - and the name must
+  // follow `</` immediately: `</ script>` is bogus-comment text, never a
+  // close). Scanning raw text keeps the close immune to attr masking,
+  // which may have erased a `</script` inside a JS string literal.
   let pendingBodyStart = -1
   let pendingLang = ''
   let pendingOpenPos = -1
+  let pendingCloseAt = -1
+  // Same rule for a nested rawtext element (<style>/<textarea>/<title>/a
+  // nested <script>): once opened, only `</name` + delimiter in raw text
+  // ends the body - every other token (incl. `<!--` and `</other>`) is
+  // opaque body text. Top-level <script> uses pendingBodyStart instead
+  // (it also produces a ScriptBlock).
+  let rawtextName = ''
+  let rawtextBodyStart = -1
+  let rawtextCloseAt = -1
   for (const m of skeleton.matchAll(MARKUP_TOKEN)) {
     const tok = m[0]
-    // Inside a live script body only the </script> close is markup: every
-    // other token is opaque script text (a "<script>" string literal must
-    // not push the element stack or open a second block).
     if (pendingBodyStart >= 0) {
-      // HTML tag names run to whitespace, `/`, or `>` - `</script)>` is a
-      // close tag named `script)`, which does NOT close a script element.
-      const sc = /^<\/\s*([^\s/>]*)/.exec(tok)
-      if (sc && sc[1]!.toLowerCase() === 'script') {
-        blocks.push({
-          body: text.slice(pendingBodyStart, m.index),
-          jsx: pendingLang === 'tsx' || pendingLang === 'jsx',
-        })
-        spans.push({ pos: pendingOpenPos, end: m.index! + tok.length })
-        pendingBodyStart = -1
-        pendingOpenPos = -1
-        const at = stack.lastIndexOf('script')
-        if (at >= 0) {
-          stack.length = at
-          foreignFlags.length = at
-        }
+      if (pendingCloseAt < 0) {
+        const re = /<\/script(?=[\s/>]|$)/gi
+        re.lastIndex = pendingBodyStart
+        pendingCloseAt = re.exec(text)?.index ?? text.length
       }
-      continue
+      if (m.index! < pendingCloseAt) continue // opaque script text
+      const gt = text.indexOf('>', pendingCloseAt)
+      const closeEnd = gt < 0 ? text.length : gt + 1
+      blocks.push({
+        body: text.slice(pendingBodyStart, pendingCloseAt),
+        jsx: pendingLang === 'tsx' || pendingLang === 'jsx',
+      })
+      spans.push({ pos: pendingOpenPos, end: closeEnd })
+      pendingBodyStart = -1
+      pendingOpenPos = -1
+      pendingCloseAt = -1
+      const at = stack.lastIndexOf('script')
+      if (at >= 0) {
+        stack.length = at
+        foreignFlags.length = at
+      }
+      if (m.index! < closeEnd) continue // consume the close-tag token
+      // else fall through: the token starts after the close - normal markup
+    }
+    if (rawtextName) {
+      if (rawtextCloseAt < 0) {
+        const re = new RegExp(`<\\/${rawtextName}(?=[\\s/>]|$)`, 'gi')
+        re.lastIndex = rawtextBodyStart
+        rawtextCloseAt = re.exec(text)?.index ?? text.length
+      }
+      if (m.index! < rawtextCloseAt) continue // opaque rawtext body text
+      const gt = text.indexOf('>', rawtextCloseAt)
+      const closeEnd = gt < 0 ? text.length : gt + 1
+      const at = stack.lastIndexOf(rawtextName)
+      if (at >= 0) {
+        stack.length = at
+        foreignFlags.length = at
+      }
+      rawtextName = ''
+      rawtextCloseAt = -1
+      rawtextBodyStart = -1
+      if (m.index! < closeEnd) continue
+      // else fall through to normal markup handling
     }
     // Inside a markup comment every token is inert - open tags inside a
     // comment body (`<!-- <div> -->`) must not touch the stack, and a
@@ -274,7 +349,10 @@ function scriptBlocksWithSpans(text: string): {
     // that must not reach the open/close scans below (they would push a
     // fake `!--` element).
     if (tok === '<!-->' || tok === '<!--->') continue
-    const close = /^<\/\s*([^\s/>]*)/.exec(tok)
+    // A close tag's name must follow `</` immediately: `</ div>` is a
+    // bogus comment in HTML, never a close - letting `\s*` skip the gap
+    // would pop a real open element (or a live script).
+    const close = /^<\/([^\s/>]*)/.exec(tok)
     if (close) {
       const name = close[1]!.toLowerCase()
       // Close tags are tolerated with stray attrs (`</script foo>`,
@@ -303,13 +381,32 @@ function scriptBlocksWithSpans(text: string): {
     if (!/\/>$/.test(tok)) {
       stack.push(name)
       foreignFlags.push(foreign)
+      if (RAWTEXT.has(name)) {
+        rawtextName = name
+        rawtextBodyStart = m.index! + tok.length
+      }
     }
     continue
   }
   // An unclosed live `<script>` runs to EOF - no block is produced but
-  // the span still covers the body so template-side stripping removes it.
+  // the span still covers the body so template-side stripping removes
+  // it. A raw-scan close that no skeleton token reached (a masked
+  // `</script` inside a string, or `</script` at EOF) still produces the
+  // block body.
   if (pendingBodyStart >= 0) {
-    spans.push({ pos: pendingOpenPos, end: text.length })
+    if (pendingCloseAt >= 0) {
+      const gt = text.indexOf('>', pendingCloseAt)
+      blocks.push({
+        body: text.slice(pendingBodyStart, pendingCloseAt),
+        jsx: pendingLang === 'tsx' || pendingLang === 'jsx',
+      })
+      spans.push({
+        pos: pendingOpenPos,
+        end: gt < 0 ? text.length : gt + 1,
+      })
+    } else {
+      spans.push({ pos: pendingOpenPos, end: text.length })
+    }
   }
   // An unclosed `<!--` comments out the file tail.
   if (inComment && commentStart >= 0) {
