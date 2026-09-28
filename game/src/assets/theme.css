@@ -474,6 +474,31 @@
   --paper-grain: var(--surface-grain);
 }
 
+/* PAPER-TO-SURFACE TOKEN MAP - remaps the paper token family onto the
+   dark surface palette for containers painted by dark InkNineSlice art
+   (auth card, creation panel, tutorial/offline/save-error/confirm modals,
+   SettingsPanel inside the dark OverlayPanel). Same contract .ink-drawer
+   owns for the HUD drawers, extracted without the drawer PNG art so
+   non-drawer dark surfaces share ONE owner instead of duplicating the
+   per-token override (TalentEntitlementModal kept an inline copy before
+   this utility existed). */
+.paper-on-dark {
+  /* color must be set directly: descendants relying on INHERITED color
+     (bare h1/h2/p) never re-evaluate --paper-text for inheritance, so the
+     remap alone left them dark-on-dark (ui-audit creation-meta High). */
+  color: var(--surface-text);
+  --paper-50: var(--surface-600);
+  --paper-100: var(--surface-700);
+  --paper-200: var(--surface-800);
+  --paper-text: var(--surface-text);
+  --paper-text-soft: var(--surface-text-soft);
+  --paper-text-muted: var(--surface-text-muted);
+  --paper-eyebrow: var(--surface-eyebrow);
+  --paper-line: var(--surface-line);
+  --paper-line-soft: var(--surface-line-soft);
+  --paper-grain: var(--surface-grain);
+}
+
 /* INK DIVIDER (user art pass 2026-09) — shared section separator: a
    soft white glow strip (divider-glow.png) plus a bright segment that
    sweeps left -> right -> left (animation-direction: alternate).

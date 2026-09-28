@@ -1,10 +1,12 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
 import GameButton from '@/components/common/GameButton.vue'
 import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
 import { useErrorStore } from '@/stores/error'
 import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
 
 const errorStore = useErrorStore()
+const { t } = useI18n()
 
 // UI-014 (Task 9, 2026-09-07) — nút trước đây nhãn "Thử Lại" nhưng thực
 // chất CHỈ clear error store (không retry/re-mount operation nào). Đổi
@@ -22,19 +24,19 @@ function reloadPage() {
 
 <template>
   <div v-if="errorStore.current" class="error-screen" :style="{ zIndex: OVERLAY_LAYERS.appError }">
-    <div class="error-screen__panel">
+    <div class="error-screen__panel paper-on-dark">
       <InkNineSlice asset-id="surface-xl-paper-scroll" layer="surface" />
       <InkNineSlice asset-id="frame-xl-ceremony" layer="frame" />
 
       <div class="error-screen__scroll">
-        <h2 class="error-screen__title">Đã xảy ra lỗi</h2>
+        <h2 class="error-screen__title">{{ t('errors.app.title') }}</h2>
 
         <p class="error-screen__message">{{ errorStore.current }}</p>
 
         <div class="error-screen__actions">
-          <GameButton variant="primary" @click="dismiss">Đóng</GameButton>
+          <GameButton variant="primary" @click="dismiss">{{ t('errors.app.close') }}</GameButton>
 
-          <GameButton variant="secondary" @click="reloadPage">Tải Lại Trang</GameButton>
+          <GameButton variant="secondary" @click="reloadPage">{{ t('errors.app.reload') }}</GameButton>
         </div>
       </div>
     </div>

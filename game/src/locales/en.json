@@ -346,6 +346,23 @@
     "wheel": {
       "aria": {
         "group": "Cave Dwelling Command Wheel"
+      },
+      "slots": {
+        "character": "Character",
+        "realm": "Realm",
+        "skill": "Skills",
+        "quest": "Quests",
+        "phap_bao": "Artifact",
+        "talisman_slot": "Talisman",
+        "formation_slot": "Formation",
+        "companion_roster": "Companions",
+        "teleport_array": "Teleport Array",
+        "pill_room": "Pill Room",
+        "gathering_outpost": "Gathering",
+        "chi_hien_quan": "Recruitment Hall",
+        "equipment_hall": "Armory",
+        "scripture_pavilion": "Scripture Pavilion",
+        "settings": "Settings"
       }
     },
     "tranPhap": {
@@ -605,12 +622,23 @@
         "uiScaleAria": "Interface font size",
         "uiScale": "Interface Font Size",
         "audioAria": "Audio",
-        "audio": "Audio"
+        "audio": "Audio",
+        "save": "Save Data",
+        "saveAria": "Save data",
+        "language": "Language",
+        "languageAria": "Language"
       },
       "audio": {
         "on": "On",
         "off": "Off",
         "volume": "Volume"
+      },
+      "language": {
+        "note": "Applies to all interface text.",
+        "names": {
+          "vi": "Tiếng Việt",
+          "en": "English"
+        }
       }
     },
     "quest": {
@@ -631,7 +659,9 @@
       "build": "Build"
     },
     "common": {
-      "close": "Close"
+      "close": "Close",
+      "confirm": "Confirm",
+      "cancel": "Cancel"
     },
     "decompose": {
       "labels": {
@@ -644,6 +674,10 @@
         "allAges": "All ages"
       },
       "estimate": "≈ {amount} essence / cycle"
+    },
+    "scripture": {
+      "empty": "No lore fragments found yet.",
+      "emptyHint": "Fragments that record old tales — they drop from exploration and combat."
     }
   },
   "workerLodge": {
@@ -858,14 +892,6 @@
       }
     }
   },
-  "menu": {
-    "main": {
-      "start": "Begin Cultivation",
-      "continue": "Continue",
-      "settings": "Settings",
-      "exit": "Exit"
-    }
-  },
   "onboarding": {
     "chapter": {
       "eyebrow": "CHAPTER {number}",
@@ -900,14 +926,18 @@
         "button": "Play Now",
         "note": "Guest progress stops at Foundation Establishment"
       },
-      "status": "Test server · UI prototype"
+      "status": "Test server · UI prototype",
+      "continue": "Continue — {name}",
+      "continueNoName": "Continue",
+      "language": "Language",
+      "saveCleared": "Your save was cleared — start fresh when ready."
     },
     "creation": {
       "back": "← Back",
       "headerKicker": "DESTINY-BINDING",
       "headerTitle": "Create Character",
       "nameStep": {
-        "kicker": "DAO NAME",
+        "kicker": "DAO TITLE",
         "title": "A title carried through the immortal path",
         "description": "Character names are unique and cannot be changed in the early phase.",
         "label": "Character Name",
@@ -919,7 +949,17 @@
         "title": "Choose One Innate Talent",
         "selected": "Selected {count} / 1",
         "rolling": "Observing the heavens…",
-        "reroll": "↻ Reroll all"
+        "reroll": "↻ Reroll all",
+        "tags": {
+          "combat": "Combat",
+          "crafting": "Crafting",
+          "cultivation": "Cultivation",
+          "defense": "Defense",
+          "mechanic": "Mechanic",
+          "resource": "Resource",
+          "risk_reward": "Risk & Reward",
+          "skill": "Skill"
+        }
       },
       "skillStep": {
         "kicker": "FIRST STRIKE",
@@ -1130,7 +1170,11 @@
       }
     },
     "success": "{label} succeeded",
-    "failed": "Cannot {label}: {reason}"
+    "failed": "Cannot {label}: {reason}",
+    "title": "Action Log",
+    "clear": "Clear",
+    "expand": "Expand",
+    "collapse": "Collapse"
   },
   "autoFarm": {
     "running": "Auto-farming Perfect Clear: {stage}",
@@ -1247,7 +1291,9 @@
   },
   "notifications": {
     "skillLevelUp": "{name} reached level {level}",
-    "skillLevelUpMulti": "{name} gained {gained} levels, reaching level {level}"
+    "skillLevelUpMulti": "{name} gained {gained} levels, reaching level {level}",
+    "autosaveFailed": "Progress could not be saved — browser storage is full. Smelt some equipment to free space.",
+    "resetDeleteFailed": "Could not delete the save — the browser is refusing storage access."
   },
   "save": {
     "conflict": "Save was changed by another session.",
@@ -1276,6 +1322,92 @@
       "stateDone": "Complete",
       "detail": "Essence {essence} · Spirit Stones {stones} · Success {chance}% · Pity {pity}/{pityLimit}",
       "attempt": "Attempt Reverse Circulation"
+    }
+  },
+  "app": {
+    "title": "TIÊN HIỆP IDLE"
+  },
+  "errors": {
+    "app": {
+      "title": "An error occurred",
+      "close": "Close",
+      "reload": "Reload Page"
+    },
+    "boot": {
+      "title": "Unable to start",
+      "backToAuth": "Back to sign in"
+    }
+  },
+  "toasts": {
+    "received": "Received",
+    "dismissAria": "Dismiss notification: {label}"
+  },
+  "home": {
+    "commandWheel": {
+      "openAria": "Open the Cave Dwelling command wheel",
+      "hint": "Command · Tab"
+    }
+  },
+  "tutorial": {
+    "skip": "Skip",
+    "next": "Next",
+    "start": "Start",
+    "steps": {
+      "1": {
+        "title": "Welcome, Cultivator",
+        "body": "Your path to immortality starts here. Click the cultivating character (or press Tab) at any time to open the Command Wheel — the entry point to every part of your dwelling."
+      },
+      "2": {
+        "title": "The Cave Dwelling",
+        "body": "Your character cultivates over time, even while you are away. Open Command Wheel → Character to see your realm and cultivation progress."
+      },
+      "3": {
+        "title": "Breakthrough",
+        "body": "When your cultivation is ready, the Breakthrough action opens under Character — succeed to raise your realm and cultivation power."
+      },
+      "4": {
+        "title": "Armory",
+        "body": "Open Command Wheel → Armory to forge and refine equipment from gathered materials."
+      },
+      "5": {
+        "title": "Equipment",
+        "body": "Gear in the Character panel raises combat power — wear your best before heading out."
+      },
+      "6": {
+        "title": "Exploration",
+        "body": "The Gathering outpost (Command Wheel → Gathering, or click the building on the map) collects materials over time — return to harvest when it finishes."
+      },
+      "7": {
+        "title": "Combat",
+        "body": "Open Command Wheel → Teleport Array (or click the building on the map) to pick a combat realm — your character fights automatically until the battle ends."
+      },
+      "8": {
+        "title": "Spoils of Battle",
+        "body": "Defeated beasts drop spirit stones, materials, and sometimes rare equipment."
+      },
+      "9": {
+        "title": "Begin",
+        "body": "Everything is ready — may you ascend swiftly, cultivator!"
+      }
+    }
+  },
+  "saveIncompatible": {
+    "title": "Save is incompatible with this version",
+    "bodyIncompatible": "Your save belongs to version {version}, which is incompatible with the current version. Your progress is intact — download it before continuing.",
+    "bodyCorrupted": "The current save could not be read (the data may be corrupted). You can download the raw file to inspect it, or import another save.",
+    "actions": {
+      "export": "Download Save (.json)",
+      "import": "Import Another Save",
+      "reset": "Delete & Start Over"
+    },
+    "confirm": {
+      "resetTitle": "Delete & Start Over",
+      "resetBody": "Delete the current save and start a new character? Download your save first if you have not — this cannot be undone.",
+      "importFailedTitle": "Import Failed",
+      "importFailedBody": "The save file is not valid."
+    },
+    "notify": {
+      "deleteFailed": "Could not delete the save — the browser is refusing storage access."
     }
   }
 }

@@ -6,6 +6,8 @@ import InkWashBackdrop from '@/components/common/InkWashBackdrop.vue'
 import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
 import { authService } from '@/services/auth/AuthServiceFactory'
 import { isValidLoginId, isValidPassword, type AuthenticationMode, type AuthSession } from '@/services/auth/AuthService'
+import { LOCALE_OPTIONS, saveLocale } from '@/composables/locale'
+import { readResumeCandidate, consumeResetNotice } from '@/composables/resumeSession'
 
 const emit = defineEmits<{ authenticated: [session: AuthSession] }>()
 const mode = ref<'login' | 'register'>('login')
@@ -14,7 +16,24 @@ const password = ref('')
 const submitting = ref(false)
 const error = ref('')
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
+
+// ui-audit creation-meta - reload forced a full re-login even when a
+// session/save was still on disk; offer one-click continue instead.
+const resume = readResumeCandidate()
+
+// ui-audit creation-meta Low - after a save reset the app reloads onto
+// this card; one line of continuity beats silently starting over.
+const resetNotice = consumeResetNotice()
+
+function continueSaved() {
+  if (!resume || submitting.value) return
+
+  // Same busy-state convention as authenticate(): keep the spinner until
+  // the curtain transition unmounts this screen.
+  submitting.value = true
+  emit('authenticated', resume.session)
+}
 
 const validId = computed(() => isValidLoginId(loginId.value))
 const canSubmit = computed(() => validId.value && isValidPassword(password.value) && !submitting.value)
@@ -58,17 +77,45 @@ function switchTab(target: 'login' | 'register') {
 <template>
   <main class="auth-screen" data-testid="auth-screen">
     <InkWashBackdrop left-mountain bamboo seal="small" :bottom-mist="false" />
-    <section class="auth-card">
+    <section class="auth-card paper-on-dark">
       <InkNineSlice asset-id="surface-xl-paper-scroll" layer="surface" />
       <InkNineSlice asset-id="frame-xl-ceremony" layer="frame" />
       <div class="auth-card__seal">仙</div>
+      <!-- Language switch is reachable BEFORE auth: same chips idiom as
+           SettingsPanel; persists via composables/locale. -->
+      <div class="auth-locale" :aria-label="t('onboarding.auth.language')">
+        <button
+          v-for="option in LOCALE_OPTIONS"
+          :key="option"
+          type="button"
+          class="auth-locale__option"
+          :class="{ active: locale === option }"
+          :data-testid="`auth-locale-${option}`"
+          @click="saveLocale(option)"
+        >{{ t(`panels.settings.language.names.${option}`) }}</button>
+      </div>
+
       <p class="auth-card__eyebrow">{{ t('onboarding.auth.eyebrow') }}</p>
       <h1>Tiên Hiệp Idle</h1>
+      <p v-if="resetNotice" class="auth-card__notice">{{ t('onboarding.auth.saveCleared') }}</p>
       <p class="auth-card__lead">{{ t('onboarding.auth.lead') }}</p>
 
       <!-- UI-003/004 (Task 2, 2026-09-07) — tabs semantics thật: role="tab"
            + aria-selected + arrow-key navigation; form errors qua
            aria-invalid/aria-describedby + live region announcement. -->
+      <GameButton
+        v-if="resume"
+        class="continue-action"
+        variant="primary"
+        size="lg"
+        :disabled="submitting"
+        :loading="submitting"
+        data-testid="auth-continue-button"
+        @click="continueSaved"
+      >
+        {{ resume.name ? t('onboarding.auth.continue', { name: resume.name }) : t('onboarding.auth.continueNoName') }}
+      </GameButton>
+
       <div class="auth-tabs" role="tablist" :aria-label="t('onboarding.auth.eyebrow')">
         <button
           id="auth-tab-login"
@@ -142,6 +189,9 @@ function switchTab(target: 'login' | 'register') {
 .auth-card > :not(.ink-nine-slice) { position: relative; z-index: 3; }
 .auth-card__seal { width: 54px; height: 54px; margin: 0 auto 16px; display: grid; place-items: center; border: 1px solid var(--cinnabar, #b54432); color: var(--cinnabar, #b54432); font: 700 var(--text-display) var(--font-display); transform: rotate(45deg); }.auth-card__seal::first-letter { transform: rotate(-45deg); }
 .auth-card__eyebrow { margin: 0; color: var(--mineral-gold, #b79653); font-size: var(--text-xs); letter-spacing: .28em; }.auth-card h1 { margin: 8px 0 4px; font: 700 var(--text-display-lg) var(--font-display); }.auth-card__lead { margin: 0 0 24px; color: var(--paper-text-soft, #5e5a50); font-family: var(--font-display); font-style: italic; }
+.auth-locale { display: flex; justify-content: flex-end; gap: 6px; margin-bottom: 14px; }.auth-locale__option { min-height: 32px; padding: 4px 10px; border: 1px solid var(--paper-line, rgba(42,41,36,.42)); border-radius: var(--radius-sm, 2px); background: transparent; color: var(--paper-text-muted, #6b6860); font-size: var(--text-xs); letter-spacing: .08em; cursor: pointer; }.auth-locale__option.active { border-color: var(--mineral-gold, #b79653); color: var(--paper-text, #211f1a); }.auth-locale__option:hover { border-color: var(--mineral-gold, #b79653); }
+.continue-action { width: 100%; margin-bottom: 16px; }
+.auth-card__notice { margin: 8px 0 14px; padding: 6px 10px; border: 1px solid var(--paper-line, rgba(42,41,36,.42)); border-radius: var(--radius-sm, 2px); color: var(--paper-text-soft, #5e5a50); font-size: var(--text-xs); }
 .auth-tabs { display: grid; grid-template-columns: 1fr 1fr; border-bottom: 1px solid var(--ink-line); margin-bottom: 20px; }.auth-tabs button { border: 0; padding: 10px; min-height: var(--tap-min); background: none; color: var(--text-muted); cursor: pointer; }.auth-tabs button.active { color: var(--paper-text, #211f1a); border-bottom: 2px solid var(--cinnabar, #b54432); }
 .auth-form { display: grid; gap: 14px; text-align: left; }.auth-form label { display: grid; gap: 7px; color: var(--paper-text-soft, #5e5a50); font-size: var(--text-xs); }.auth-form input { box-sizing: border-box; width: 100%; border: 1px solid var(--paper-line, rgba(42,41,36,.42)); border-radius: 2px; padding: 12px 13px; outline: none; background: color-mix(in srgb, var(--paper-50, #f5f0e4) 86%, transparent); color: var(--paper-text, #211f1a); }.auth-form input:focus { border-color: var(--brush-600, #5e5a50); box-shadow: none; }.auth-form__hint { margin: -8px 0 0; font-size: var(--text-xs); }.is-error { color: var(--cinnabar, #b54432); }
 .primary-action { width: 100%; margin-top: 4px; }.auth-divider { display: flex; align-items: center; gap: 10px; margin: 19px 0; color: var(--text-muted); font-size: var(--text-xs); }.auth-divider::before,.auth-divider::after { content: ''; flex: 1; height: 1px; background: var(--ink-line); }.guest-action { width: 100%; }.guest-action :deep(.game-button__label) { display: grid; gap: 4px; justify-items: center; width: 100%; }.guest-action small { color: var(--text-muted); font-weight: 400; }.auth-card__status { margin: 20px 0 0; color: var(--text-muted); font-size: var(--text-xs); }.auth-card__status i { display: inline-block; width: 6px; height: 6px; margin-right: 6px; border-radius: 50%; background: var(--jade); box-shadow: 0 0 7px var(--jade); }

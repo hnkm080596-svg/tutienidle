@@ -1,4 +1,8 @@
 <script setup lang="ts">
+import { i18n } from '@/i18n'
+
+// Brand title via i18n.global.t (module composer - the component mounts
+// without the i18n plugin installed and still stays locale-reactive).
 // Beta Phase 4 (mục XVIII) — Boot → Load Save → Initialize → Home.
 // Boot hiện tại HOÀN TOÀN đồng bộ (không await gì) nên màn này chỉ
 // hiện trong khoảnh khắc rất ngắn trên thực tế — dựng đúng khung sườn
@@ -8,7 +12,7 @@
 
 <template>
   <div class="loading-screen">
-    <p class="loading-screen__title">TIÊN HIỆP IDLE</p>
+    <p class="loading-screen__title">{{ i18n.global.t('app.title') }}</p>
 
     <div class="loading-screen__pulse" />
   </div>

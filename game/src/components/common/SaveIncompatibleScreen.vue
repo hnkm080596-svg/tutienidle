@@ -1,15 +1,19 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import GameButton from '@/components/common/GameButton.vue'
 import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
+import InkWashBackdrop from '@/components/common/InkWashBackdrop.vue'
 import { useSaveIssueStore } from '@/stores/saveIssue'
 import { useNotificationStore } from '@/stores/notification'
 import { exportSaveToFile, deleteSave, importSaveRaw } from '@/services/save/SaveSystem'
 import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
 import ConfirmModal from './ConfirmModal.vue'
+import { markResetNotice } from '@/composables/resumeSession'
 
 const saveIssue = useSaveIssueStore()
 const notification = useNotificationStore()
+const { t } = useI18n()
 
 // Thay window.confirm()/window.alert() native — modal xác nhận đồng bộ
 // hoá bằng pending-action giống SettingsPanel.vue: mở ConfirmModal, hành
@@ -35,15 +39,16 @@ function handleExport() {
 
 function handleReset() {
   requestConfirm(
-    'Xoá & Bắt Đầu Mới',
-    'Xoá save hiện tại và bắt đầu nhân vật mới? Nhớ Tải Về Save trước nếu chưa làm — hành động này không thể hoàn tác.',
+    t('saveIncompatible.confirm.resetTitle'),
+    t('saveIncompatible.confirm.resetBody'),
     () => {
       // Mission A review — deleteSave() returns false on storage
       // failure; reloading would boot back into the same corrupt save.
       if (deleteSave()) {
+        markResetNotice()
         window.location.reload()
       } else {
-        notification.push('error', 'Không xoá được save — trình duyệt đang từ chối truy cập bộ nhớ.')
+        notification.push('error', t('saveIncompatible.notify.deleteFailed'))
       }
     },
     true,
@@ -68,7 +73,7 @@ function handleImport(event: Event) {
     } else {
       // UI-007/UI-014 (Task 5) — confirm rỗng-callback → alert close-only
       // (không có action "xác nhận" vô nghĩa); reset file input để retry.
-      requestConfirm('Nhập Save Thất Bại', 'File save không hợp lệ.', () => {}, false)
+      requestConfirm(t('saveIncompatible.confirm.importFailedTitle'), t('saveIncompatible.confirm.importFailedBody'), () => {}, false)
 
       input.value = ''
     }
@@ -80,32 +85,30 @@ function handleImport(event: Event) {
 
 <template>
   <div class="save-incompatible" :style="{ zIndex: OVERLAY_LAYERS.saveGate }">
-    <div class="save-incompatible__panel">
+    <InkWashBackdrop left-mountain right-mountain bottom-mist />
+    <div class="save-incompatible__panel paper-on-dark">
       <InkNineSlice asset-id="surface-xl-paper-scroll" layer="surface" />
       <InkNineSlice asset-id="frame-xl-ceremony" layer="frame" />
 
-      <h2 class="save-incompatible__title">Save không tương thích với phiên bản hiện tại</h2>
+      <h2 class="save-incompatible__title">{{ t('saveIncompatible.title') }}</h2>
 
       <p v-if="saveIssue.status === 'incompatible'" class="save-incompatible__message">
-        Save của bạn thuộc phiên bản
-        <strong>{{ saveIssue.foundVersion ?? '?' }}</strong>, không tương thích với phiên bản
-        hiện tại. Tiến trình vẫn còn nguyên — tải về trước khi tiếp tục.
+        {{ t('saveIncompatible.bodyIncompatible', { version: saveIssue.foundVersion ?? '?' }) }}
       </p>
 
       <p v-else class="save-incompatible__message">
-        Không đọc được save hiện tại (dữ liệu có thể đã hỏng). Bạn có thể tải file thô về để tự
-        kiểm tra, hoặc nhập lại save khác.
+        {{ t('saveIncompatible.bodyCorrupted') }}
       </p>
 
       <div class="save-incompatible__actions">
-        <GameButton variant="secondary" @click="handleExport">Tải Về Save (.json)</GameButton>
+        <GameButton variant="secondary" @click="handleExport">{{ t('saveIncompatible.actions.export') }}</GameButton>
 
         <label class="save-incompatible__import">
-          Nhập Save Khác
+          {{ t('saveIncompatible.actions.import') }}
           <input type="file" accept="application/json" @change="handleImport" />
         </label>
 
-        <GameButton variant="danger" @click="handleReset">Xoá & Bắt Đầu Mới</GameButton>
+        <GameButton variant="danger" @click="handleReset">{{ t('saveIncompatible.actions.reset') }}</GameButton>
       </div>
     </div>
 

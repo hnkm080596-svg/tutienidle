@@ -346,6 +346,23 @@
     "wheel": {
       "aria": {
         "group": "Bảng lệnh Động Phủ"
+      },
+      "slots": {
+        "character": "Nhân Vật",
+        "realm": "Cảnh Giới",
+        "skill": "Kỹ Năng",
+        "quest": "Nhiệm Vụ",
+        "phap_bao": "Pháp Bảo",
+        "talisman_slot": "Phù",
+        "formation_slot": "Trận",
+        "companion_roster": "Đồng Đội",
+        "teleport_array": "Truyền Tống Trận",
+        "pill_room": "Đan Phòng",
+        "gathering_outpost": "Sản Xuất",
+        "chi_hien_quan": "Chiêu Hiền Quán",
+        "equipment_hall": "Khí Đường",
+        "scripture_pavilion": "Tàng Kinh Các",
+        "settings": "Cài Đặt"
       }
     },
     "tranPhap": {
@@ -605,12 +622,23 @@
         "uiScaleAria": "Cỡ chữ giao diện",
         "uiScale": "Cỡ Chữ Giao Diện",
         "audioAria": "Âm thanh",
-        "audio": "Âm Thanh"
+        "audio": "Âm Thanh",
+        "save": "Lưu Trữ",
+        "saveAria": "Lưu trữ",
+        "language": "Ngôn Ngữ",
+        "languageAria": "Ngôn ngữ"
       },
       "audio": {
         "on": "Bật",
         "off": "Tắt",
         "volume": "Âm lượng"
+      },
+      "language": {
+        "note": "Áp dụng cho toàn bộ văn bản giao diện.",
+        "names": {
+          "vi": "Tiếng Việt",
+          "en": "English"
+        }
       }
     },
     "quest": {
@@ -631,7 +659,9 @@
       "build": "Xây dựng"
     },
     "common": {
-      "close": "Đóng"
+      "close": "Đóng",
+      "confirm": "Xác Nhận",
+      "cancel": "Hủy"
     },
     "decompose": {
       "labels": {
@@ -644,6 +674,10 @@
         "allAges": "Mọi tuổi"
       },
       "estimate": "≈ {amount} Luyện Khí Tinh Hoa / lượt"
+    },
+    "scripture": {
+      "empty": "Chưa tìm thấy manh mối nào.",
+      "emptyHint": "Manh mối ghi lại những chuyện xưa — rơi ra khi thám hiểm và chiến đấu."
     }
   },
   "workerLodge": {
@@ -858,14 +892,6 @@
       }
     }
   },
-  "menu": {
-    "main": {
-      "start": "Bắt đầu tu luyện",
-      "continue": "Tiếp tục",
-      "settings": "Cài đặt",
-      "exit": "Thoát"
-    }
-  },
   "onboarding": {
     "chapter": {
       "eyebrow": "CHƯƠNG {number}",
@@ -900,7 +926,11 @@
         "button": "Chơi ngay",
         "note": "Tiến trình khách dừng tại Trúc Cơ"
       },
-      "status": "Máy chủ thử nghiệm · UI prototype"
+      "status": "Máy chủ thử nghiệm · UI prototype",
+      "continue": "Tiếp Tục — {name}",
+      "continueNoName": "Tiếp Tục",
+      "language": "Ngôn ngữ",
+      "saveCleared": "Save đã được xoá — hãy bắt đầu lại nào."
     },
     "creation": {
       "back": "← Trở lại",
@@ -919,7 +949,17 @@
         "title": "Chọn một Thiên Phú",
         "selected": "Đã chọn {count} / 1",
         "rolling": "Đang quan sát thiên cơ…",
-        "reroll": "↻ Reroll toàn bộ"
+        "reroll": "↻ Reroll toàn bộ",
+        "tags": {
+          "combat": "Chiến Đấu",
+          "crafting": "Chế Tạo",
+          "cultivation": "Tu Luyện",
+          "defense": "Phòng Thủ",
+          "mechanic": "Cơ Quan",
+          "resource": "Tài Nguyên",
+          "risk_reward": "Mạo Hiểm",
+          "skill": "Kỹ Năng"
+        }
       },
       "skillStep": {
         "kicker": "KHỞI THỦY",
@@ -1130,7 +1170,11 @@
       }
     },
     "success": "{label} thành công",
-    "failed": "Không thể {label}: {reason}"
+    "failed": "Không thể {label}: {reason}",
+    "title": "Nhật ký thao tác",
+    "clear": "Xóa",
+    "expand": "Mở",
+    "collapse": "Thu gọn"
   },
   "autoFarm": {
     "running": "Đang Tự Động Hoàn Mỹ: {stage}",
@@ -1247,7 +1291,9 @@
   },
   "notifications": {
     "skillLevelUp": "{name} đạt cấp {level}",
-    "skillLevelUpMulti": "{name} tăng {gained} cấp, đạt cấp {level}"
+    "skillLevelUpMulti": "{name} tăng {gained} cấp, đạt cấp {level}",
+    "autosaveFailed": "Không lưu được tiến trình — bộ nhớ trình duyệt đầy. Hãy hóa luyện bớt trang bị.",
+    "resetDeleteFailed": "Không xoá được save — trình duyệt đang từ chối truy cập bộ nhớ."
   },
   "save": {
     "conflict": "Save đã thay đổi ở một phiên khác.",
@@ -1276,6 +1322,92 @@
       "stateDone": "Viên mãn",
       "detail": "Tinh Hoa {essence} · Linh Thạch {stones} · Thành công {chance}% · Bảo hiểm {pity}/{pityLimit}",
       "attempt": "Thử Nghịch Chu Thiên"
+    }
+  },
+  "app": {
+    "title": "TIÊN HIỆP IDLE"
+  },
+  "errors": {
+    "app": {
+      "title": "Đã xảy ra lỗi",
+      "close": "Đóng",
+      "reload": "Tải Lại Trang"
+    },
+    "boot": {
+      "title": "Không thể khởi động",
+      "backToAuth": "Trở về đăng nhập"
+    }
+  },
+  "toasts": {
+    "received": "Nhận được",
+    "dismissAria": "Đóng thông báo: {label}"
+  },
+  "home": {
+    "commandWheel": {
+      "openAria": "Mở bảng lệnh Động Phủ",
+      "hint": "Bảng Lệnh · Tab"
+    }
+  },
+  "tutorial": {
+    "skip": "Bỏ Qua",
+    "next": "Tiếp Theo",
+    "start": "Bắt Đầu",
+    "steps": {
+      "1": {
+        "title": "Chào mừng Đạo Hữu",
+        "body": "Con đường tu tiên bắt đầu từ đây. Bấm vào nhân vật đang tu luyện (hoặc phím Tab) bất cứ lúc nào để mở Bảng Lệnh — nơi mở mọi khu vực của Động Phủ."
+      },
+      "2": {
+        "title": "Động Phủ",
+        "body": "Nhân vật tự tu luyện theo thời gian, kể cả khi đang đi vắng. Mở Bảng Lệnh → Nhân Vật để xem cảnh giới và tốc độ tích lũy tu vi."
+      },
+      "3": {
+        "title": "Đột Phá",
+        "body": "Khi tu vi đã đủ, chức năng Đột Phá mở ra trong mục Nhân Vật — đột phá thành công sẽ tăng cảnh giới và sức mạnh tu luyện."
+      },
+      "4": {
+        "title": "Khí Đường",
+        "body": "Mở Bảng Lệnh → Khí Đường để chế tạo và cường hóa trang bị từ nguyên liệu thu thập được."
+      },
+      "5": {
+        "title": "Trang Bị",
+        "body": "Trang bị trong mục Nhân Vật tăng sức chiến đấu — hãy mặc món tốt nhất trước khi xuất chiến."
+      },
+      "6": {
+        "title": "Thám Hiểm",
+        "body": "Công trình Sản Xuất (Bảng Lệnh → Sản Xuất, hoặc bấm trực tiếp công trình trên bản đồ) thu thập nguyên liệu theo thời gian — quay lại thu hoạch khi hoàn thành."
+      },
+      "7": {
+        "title": "Chiến Đấu",
+        "body": "Mở Bảng Lệnh → Truyền Tống Trận (hoặc bấm công trình trên bản đồ) để chọn địa giới chiến đấu — nhân vật tự động tấn công đến khi trận kết thúc."
+      },
+      "8": {
+        "title": "Chiến Lợi Phẩm",
+        "body": "Đánh bại yêu thú để nhận linh thạch, nguyên liệu và đôi khi là trang bị quý."
+      },
+      "9": {
+        "title": "Bắt Đầu Thôi",
+        "body": "Mọi thứ đã sẵn sàng — chúc đạo hữu sớm ngày đắc đạo thành tiên!"
+      }
+    }
+  },
+  "saveIncompatible": {
+    "title": "Save không tương thích với phiên bản hiện tại",
+    "bodyIncompatible": "Save của bạn thuộc phiên bản {version}, không tương thích với phiên bản hiện tại. Tiến trình vẫn còn nguyên — tải về trước khi tiếp tục.",
+    "bodyCorrupted": "Không đọc được save hiện tại (dữ liệu có thể đã hỏng). Bạn có thể tải file thô về để tự kiểm tra, hoặc nhập lại save khác.",
+    "actions": {
+      "export": "Tải Về Save (.json)",
+      "import": "Nhập Save Khác",
+      "reset": "Xoá & Bắt Đầu Mới"
+    },
+    "confirm": {
+      "resetTitle": "Xoá & Bắt Đầu Mới",
+      "resetBody": "Xoá save hiện tại và bắt đầu nhân vật mới? Nhớ Tải Về Save trước nếu chưa làm — hành động này không thể hoàn tác.",
+      "importFailedTitle": "Nhập Save Thất Bại",
+      "importFailedBody": "File save không hợp lệ."
+    },
+    "notify": {
+      "deleteFailed": "Không xoá được save — trình duyệt đang từ chối truy cập bộ nhớ."
     }
   }
 }
