@@ -3282,7 +3282,7 @@
       "path": "docs/specs/sound-system-spec.md",
       "kind": "file",
       "mode": 33188,
-      "hash": "2c0c2cf245c5b768941bb2d8f6e20190b9f17f38f0161f92d781ee9972201fc6"
+      "hash": "fbdf56b73fdf1f56815fb4f1ca5bbca1b363c9370a46b6520fc8ef563cf727f8"
     },
     {
       "path": "docs/specs/the-tu-an-ung-the-spec.md",
@@ -14178,7 +14178,7 @@
       "path": "src/App.vue",
       "kind": "file",
       "mode": 33188,
-      "hash": "3afa4ee627583de81caee26231dfbefc3139a21cb585b6a7f6b81c4165924dfd"
+      "hash": "9862f0771dabd04113ddeef312f45a53fe18b524feadd53006747e4cd63cf2d1"
     },
     {
       "path": "src/App.wiring.test.ts",
@@ -15774,13 +15774,13 @@
       "path": "src/core/audio/AudioCueManifest.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "4e168a05c296317b856928ff0823f8d0e0a0b7c8daa5b4ff0bb4253fb4a0e31d"
+      "hash": "1d4b210cf87381bd03da47830c52e13e4e32f7a28609da3097c22f0f84baa868"
     },
     {
       "path": "src/core/audio/AudioCueManifest.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "2c6d2995340ff8b503f2900b26980ba4c62669ff69de605ac916a0e501864788"
+      "hash": "cc074816453202f68725434ca8a62cda20e19f8af26c9b2a0df05b9288616bd2"
     },
     {
       "path": "src/core/audio/AudioManager.test.ts",
@@ -15792,7 +15792,7 @@
       "path": "src/core/audio/AudioManager.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "3f0ccdcd41c124cfbca4231a1908f3025e323ffa81db605908c51321dcac068c"
+      "hash": "ea62e10c90bef7a9df9e2d56908ca77dee9023e7c6a094637adc771335c83042"
     },
     {
       "path": "src/core/battle/ActionImpactSystem.ts",
@@ -22614,7 +22614,7 @@
       "path": "src/presentation/assets/AssetBundleManager.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "5cdf83f2961755997b9ae2bed173d50efa5c55da5de2c915fdcf0d96c26275e1"
+      "hash": "48ef2778a8cc433370303ce7b5fb716e98f38d0061423dcf88fe104545b5f6a7"
     },
     {
       "path": "src/presentation/audio/ambientAudioDriver.test.ts",
@@ -22638,13 +22638,13 @@
       "path": "src/presentation/audio/combatAudioBinding.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "38ad17ab2bd29949bbe2d7d925d0dbf8aa2e94ec4b23a1421ea7bba01c0a2871"
+      "hash": "3cc918b7779e69edb0a77a8d549f0bf05edf79afed602cd8c7aaa0b716811243"
     },
     {
       "path": "src/presentation/audio/combatAudioBinding.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "dee1000520dd244d66616cf2cfe03022ace656c0928d4b3ae7679dae5d0ce3e4"
+      "hash": "7cfef68565fadb642d22e3c9112f2a963b1d629909788e0220633ba53c907af8"
     },
     {
       "path": "src/presentation/audio/uiAudioBinding.test.ts",
@@ -23532,19 +23532,19 @@
       "path": "tests/architecture/audioBindingWiring.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "0c0fdccc8383500530c4236c9f7f3f6ac772dcb0986d076661fcc944ad317191"
+      "hash": "76ea753dddf1bd454acbbb8afeaeb85d0137f63b858da33a9e381cc11a0491c8"
     },
     {
       "path": "tests/architecture/audioBoundary.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "cb1d129d9fb4f45a491e704b0c1a5e81e7492a352ff1296a8f5c8be079af7c48"
+      "hash": "2f1e294dfc0acb9f837efb14d639044e0a5474368bb8318529b5bbc47ccdc5d8"
     },
     {
       "path": "tests/architecture/audioManifestCompleteness.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "14289f4e42bc30534a663180dba2f696df20e35c09670c92c0d1c5ecb8cecbf3"
+      "hash": "f485b5e4ed87c291a5229e4235a04eeaa995e850b115316398a30f5d8fb6e23f"
     },
     {
       "path": "tests/architecture/baselines/asciiComments.json",
@@ -24015,5 +24015,5 @@
       "hash": "e69b4133ed37ca9a4f05e66d90521d0bb749c4764bf1f454d0eb13de601f7940"
     }
   ],
-  "productStateId": "e312aba72705b9a624d1c24d97508e10db41e19cb18857958dadd22cbc5b3865"
+  "productStateId": "aea7ccce2c57ea1b88901661186883c85872911edc286fec9f502c71bac67d30"
 }
