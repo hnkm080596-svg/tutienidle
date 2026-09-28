@@ -135,6 +135,9 @@ function onSellClick(row: { materialId: string; name: string; owned: number; uni
   const qty = qtyFor(row.materialId, row.owned)
 
   if (qty === row.owned) {
+    // Quote captured at click-time: a mid-modal auto-breakthrough could
+    // shift the realm tier, but sellMaterial recomputes honestly and the
+    // toast always shows the real grant (self-correcting, value-equal).
     const quote = saleQuote(row.materialId, qty)
 
     confirmAllRow.value = {
