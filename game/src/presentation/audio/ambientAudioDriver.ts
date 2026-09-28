@@ -113,5 +113,9 @@ export function bindAmbientAudio(
     stopEnabledWatch()
     document.removeEventListener('visibilitychange', onVisibilityChange)
     audio.stopMusic()
+    // Clear the suspension flag a hidden mount may have set - stopMusic
+    // does not touch it, and a later direct playMusic must not find
+    // musicSuspended still true from a dead binding.
+    audio.resumeMusic()
   }
 }

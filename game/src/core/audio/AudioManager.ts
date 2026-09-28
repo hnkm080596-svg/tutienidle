@@ -829,12 +829,22 @@ class AudioManagerImpl {
    * exists; queues while not (attach before unlock is the normal path).
    * Never throws / never rejects.
    */
+  // Per-key attach generation: a newer attachEncodedBuffer supersedes
+  // any in-flight decode of an older payload - last resolver LOSES, so
+  // a stale decode can never clobber fresher bytes.
+  private readonly attachSeq = new Map<string, number>()
+
   attachEncodedBuffer(key: string, data: ArrayBuffer): void {
+    const seq = (this.attachSeq.get(key) ?? 0) + 1
+    this.attachSeq.set(key, seq)
+    // Fresh bytes get a fresh retry budget - an exhausted counter must
+    // not poison a re-delivery of the same key.
+    this.decodeAttempts.delete(key)
     if (this.unlockState !== 'ready') {
       this.pendingEncoded.set(key, data)
       return
     }
-    void this.decodeInto(key, data)
+    void this.decodeInto(key, data, seq)
   }
 
   private flushPendingEncoded(): void {
@@ -842,11 +852,12 @@ class AudioManagerImpl {
     const pending = [...this.pendingEncoded]
     this.pendingEncoded.clear()
     for (const [key, data] of pending) {
-      void this.decodeInto(key, data)
+      void this.decodeInto(key, data, this.attachSeq.get(key) ?? 0)
     }
   }
 
-  private async decodeInto(key: string, data: ArrayBuffer): Promise<void> {
+  private async decodeInto(key: string, data: ArrayBuffer, seq: number): Promise<void> {
+    const gen = this.generation
     try {
       const ctx = Tone.getContext() as unknown as {
         rawContext?: AudioContext
@@ -856,13 +867,22 @@ class AudioManagerImpl {
         typeof ctx.rawContext?.decodeAudioData === 'function'
           ? ctx.rawContext.decodeAudioData.bind(ctx.rawContext)
           : ctx.decodeAudioData?.bind(ctx)
-      if (!decode) return
+      if (!decode) {
+        // No decode entrypoint on this context - park the bytes instead
+        // of dropping them so a later context can still deliver.
+        this.pendingEncoded.set(key, data)
+        return
+      }
       const buffer = await decode(data)
+      // Zombie guards: a dispose() bumped generation, or a newer attach
+      // bumped seq - either way this payload is dead.
+      if (this.generation !== gen || this.attachSeq.get(key) !== seq) return
       this.buffers.set(key, buffer)
       this.decodeAttempts.delete(key)
       // A desired music track may have been waiting on this buffer.
       this.applyDesiredMusic()
     } catch {
+      if (this.generation !== gen || this.attachSeq.get(key) !== seq) return
       // Decode failure counts here (covers initial + retried decodes):
       // retain the bytes for a bounded play-time retry (retryDecode).
       // Past the limit the slot stays silent - the cue keeps its
@@ -879,7 +899,7 @@ class AudioManagerImpl {
     const data = this.pendingEncoded.get(key)
     if (data === undefined) return
     this.pendingEncoded.delete(key)
-    void this.decodeInto(key, data)
+    void this.decodeInto(key, data, this.attachSeq.get(key) ?? 0)
   }
 
   /**
@@ -944,6 +964,7 @@ class AudioManagerImpl {
     this.buffers.clear()
     this.pendingEncoded.clear()
     this.decodeAttempts.clear()
+    this.attachSeq.clear()
     this.cueCooldownAt.clear()
     this.variantCursor.clear()
     this.silentLogged.clear()
