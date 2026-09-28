@@ -211,4 +211,8 @@
 // tham_the -> quan_the). A v85 save with the-tu investment can no
 // longer validate. Save v85 is rejected (dev phase, no migration,
 // no compat translator).
-export const CURRENT_SAVE_VERSION = 86 as const
+// v87 (2026-09-27, PHAP TU REIMAGINE route retirement): spell_pathway
+// loses its `route` key with the retired legacy route machinery -
+// saves carrying {element, route} pairs are legacy shape and rejected
+// wholesale (dev phase, no migration, no compat translator).
+export const CURRENT_SAVE_VERSION = 87 as const

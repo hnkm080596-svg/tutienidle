@@ -1,0 +1,19 @@
+{
+  "applied": [
+    "evidence:EV-PTR-CORP",
+    "evidence:EV-PTR-FIXP3",
+    "review:REV-PTR-COR-P1",
+    "finding:F-PTR-236",
+    "finding:F-PTR-237",
+    "finding:F-PTR-238",
+    "finding:F-PTR-239",
+    "finding:F-PTR-240",
+    "finding:F-PTR-241",
+    "finding:F-PTR-242",
+    "finding:F-PTR-243",
+    "lesson:L-PTR-P-DEAD-FIELDS",
+    "lesson:L-PTR-P-DESIGNED-SEMANTICS",
+    "lesson:L-PTR-P-NARROWER-CONTRACT",
+    "lesson:L-PTR-P-CHAIN-GAP"
+  ]
+}

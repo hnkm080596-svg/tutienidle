@@ -1,0 +1,33 @@
+{
+  "applied": [
+    "review:REV-PTR-COR-F1 (updated)",
+    "review:REV-PTR-AUT-F1 (updated)",
+    "review:REV-PTR-INT-F1 (updated)",
+    "review:REV-PTR-NOV-1 (updated)",
+    "finding:F-PTR-69 (updated)",
+    "finding:F-PTR-70 (updated)",
+    "finding:F-PTR-71 (updated)",
+    "finding:F-PTR-72 (updated)",
+    "finding:F-PTR-73 (updated)",
+    "finding:F-PTR-74 (updated)",
+    "finding:F-PTR-75 (updated)",
+    "finding:F-PTR-76 (updated)",
+    "finding:F-PTR-77 (updated)",
+    "finding:F-PTR-78 (updated)",
+    "finding:F-PTR-79 (updated)",
+    "finding:F-PTR-80 (updated)",
+    "finding:F-PTR-81 (updated)",
+    "finding:F-PTR-82 (updated)",
+    "evidence:EV-PTR-CORF (updated)",
+    "evidence:EV-PTR-AUTF (updated)",
+    "evidence:EV-PTR-INTF (updated)",
+    "evidence:EV-PTR-NOVF (updated)",
+    "evidence:EV-PTR-FIXF (updated)",
+    "lesson:L-PTR-CORF-GATE (updated)",
+    "lesson:L-PTR-INTF-BIND (updated)",
+    "lesson:L-PTR-AUTF-AUTH (updated)",
+    "lesson:L-PTR-CORF-STAMP (updated)",
+    "lesson:L-PTR-NOVF-BLOCK (updated)",
+    "lesson:L-PTR-INTF-BURN (updated)"
+  ]
+}

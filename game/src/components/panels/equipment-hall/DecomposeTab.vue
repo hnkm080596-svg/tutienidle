@@ -1,12 +1,12 @@
 ﻿<script setup lang="ts">
-// Task 14-UI (rework P4, 2026-09-01, spec §5.6) — Tab Phân Giải:
-// settings phân giải Linh Khoáng → Luyện Khí Tinh Hoa.
-// - gradeFilter / ageFilter / worker slider → DecomposeSystem
-// - Output estimate: base(grade all→Cửu 1.0) × tuổi × workers (ước lượng
-//   hiển thị — system tính chính xác theo tồn kho lúc tick)
-// gp123 6E (task C2): filter "chất" cũ (hoang..tien) đổi thành filter
-// TUỔI (decade..thuong_co) theo trục tuổi thống nhất.
-// Flexible rule (AGENTS.md): grid auto-fit, không hardcode px.
+// Task 14-UI (rework P4, 2026-09-01, spec S5.6) -- Tab Phan Giai:
+// settings phan giai Linh Khoang -> Luyen Khi Tinh Hoa.
+// - gradeFilter / ageFilter / worker slider -> DecomposeSystem
+// - Output estimate: base(grade all->Cuu 1.0) x tuoi x workers (uoc luong
+//   hien thi -- system tinh chinh xac theo ton kho luc tick)
+// gp123 6E (task C2): filter "chat" cu (hoang..tien) doi thanh filter
+// TUOI (decade..thuong_co) theo truc tuoi thong nhat.
+// Flexible rule (AGENTS.md): grid auto-fit, khong hardcode px.
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
@@ -20,13 +20,15 @@ import { professionGradeRank } from '@/core/profession/slotRank'
 import { HERB_AGES } from '@/core/production/ProductionTypes'
 import type { HerbAge } from '@/core/production/ProductionTypes'
 import { MATERIAL_AGE_LABELS } from '@/data/materials/materials'
+import { materialLabel } from '@/core/presentation/labels'
+import { formatNumber } from '@/core/format/NumberFormatter'
 
 const { t } = useI18n()
 const gameManager = useGameManager()
 
-// DecomposeSystem nằm trên GameManager (Task 14 wiring). System thuần TS
-// KHÔNG reactive — local mirror ref đồng bộ sau mỗi setSetting để Vue
-// re-render (không chờ stateVersion bump từ tick loop).
+// DecomposeSystem nam tren GameManager (Task 14 wiring). System thuan TS
+// KHONG reactive -- local mirror ref dong bo sau moi setSetting de Vue
+// re-render (khong cho stateVersion bump tu tick loop).
 const system = gameManager.decomposeSystem
 
 const settingsMirror = ref<DecomposeSettings>(system.getSettings())
@@ -39,11 +41,19 @@ const { stateVersion } = useStateVersion()
 
 const capacityMirror = ref(system.getCapacity())
 
+// ui-audit economy M5: which bag ores the CURRENT filters match --
+// the tab used to render three controls and nothing else, so an
+// unstaffed/failed-match state read as a dead, unexplained widget.
+// listMatchingOres() is the domain query (reuses oreMatchesFilter --
+// the UI never re-derives the predicate).
+const matchingOres = ref(system.listMatchingOres())
+
 watch(
   stateVersion,
   () => {
     settingsMirror.value = system.getSettings()
     capacityMirror.value = system.getCapacity()
+    matchingOres.value = system.listMatchingOres()
   },
   { immediate: true },
 )
@@ -52,9 +62,25 @@ function applySetting(patch: Partial<DecomposeSettings>) {
   system.setSetting(patch)
 
   settingsMirror.value = system.getSettings()
+  matchingOres.value = system.listMatchingOres()
 }
 
-// Ước lượng output/lượt cho PREVIEW (grade 'all' → Cửu 1.0 làm đại diện).
+function oreLabel(materialId: string): string {
+  return materialLabel(materialId, gameManager.materialRegistry)
+}
+
+// Empty-state priority: no capacity (Chieu Hien Quan not built yet) ->
+// no workers assigned -> no ore in the bag matching the filters. Only
+// one guidance line renders at a time.
+const emptyHintKey = computed(() => {
+  if (capacityMirror.value <= 0) return 'panels.decompose.hint.noCapacity'
+  if (settingsMirror.value.workers <= 0) return 'panels.decompose.hint.noWorkers'
+  if (matchingOres.value.length === 0) return 'panels.decompose.hint.noMatchingOres'
+
+  return null
+})
+
+// Uoc luong output/luot cho PREVIEW (grade 'all' -> Cuu 1.0 lam dai dien).
 const PREVIEW_BASE_BY_ALL = 1
 
 const estimate = computed(() => {
@@ -138,6 +164,24 @@ function onWorkersInput(event: Event) {
     <p class="decompose-tab__estimate">
       {{ t('panels.decompose.estimate', { amount: estimate }) }}
     </p>
+
+    <!-- audit M5: guidance + a live list of which ores will be fed, so
+         an idle tab stops reading as a dead widget. -->
+    <p v-if="emptyHintKey" class="decompose-tab__hint" data-testid="decompose-hint">
+      {{ t(emptyHintKey) }}
+    </p>
+
+    <div v-else class="decompose-tab__matching">
+      <p class="decompose-tab__matching-title">
+        {{ t('panels.decompose.matching', { count: matchingOres.reduce((sum, ore) => sum + ore.amount, 0) }) }}
+      </p>
+
+      <ul class="decompose-tab__matching-list">
+        <li v-for="ore in matchingOres" :key="ore.materialId">
+          {{ oreLabel(ore.materialId) }} ×{{ formatNumber(ore.amount) }}
+        </li>
+      </ul>
+    </div>
   </div>
 </template>
 
@@ -166,5 +210,44 @@ function onWorkersInput(event: Event) {
   margin: 0;
   color: var(--text-muted);
   font-size: var(--text-body);
+}
+
+.decompose-tab__hint {
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px dashed color-mix(in srgb, var(--jade) 40%, var(--paper-line));
+  border-radius: var(--radius-md);
+  color: var(--paper-text-soft);
+  font-size: var(--text-sm);
+}
+
+.decompose-tab__matching {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.decompose-tab__matching-title {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+}
+
+.decompose-tab__matching-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.decompose-tab__matching-list li {
+  padding: 3px 10px;
+  border: 1px solid var(--paper-line);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--mineral-gold) 8%, var(--paper-50));
+  color: var(--paper-text);
+  font-size: var(--text-xs);
 }
 </style>

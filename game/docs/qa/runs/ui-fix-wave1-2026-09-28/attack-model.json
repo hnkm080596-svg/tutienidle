@@ -1,0 +1,54 @@
+{
+ "attacks": [
+  {
+   "id": "ATK-LOCALE-UNION",
+   "surface": "vi.json/en.json union merge (adjacent adds: scripture + matching/hint)",
+   "probe": "both JSONs parse; every key present on BOTH locales (i18nKeyParity); no key lost to the union; no trailing-comma or duplicate-key corruption"
+  },
+  {
+   "id": "ATK-SLOT-RENDER",
+   "surface": "TurnCombatSkillBar slot-button 64x64 fix",
+   "probe": "slot-button CSS actually renders 64x64 in the assembled bar; child CombatSkillSlot width:100% inside a fixed button resolves correctly; autoflow/manual modes both lay out"
+  },
+  {
+   "id": "ATK-REALM-GATE",
+   "surface": "RealmPanel requirement gate widened past qi_refining",
+   "probe": "mortal sees requirements incl. the level row; qi_refining+ unchanged; higher realms not mis-scoped; getBreakthroughRequirements rows render for every realm"
+  },
+  {
+   "id": "ATK-EXIT-WIRING",
+   "surface": "requestCombatExit production call site + CombatExitConfirmModal",
+   "probe": "exit confirm actually reaches requestCombatExit; post-exit state not wedged; modal not reachable mid-tribulation or after battle end; Escape/backdrop semantics consistent"
+  },
+  {
+   "id": "ATK-PAPER-DARK",
+   "surface": ".paper-on-dark shared utility + SysModalBase deletion",
+   "probe": "SysModalBase has zero remaining imports; every former consumer now renders correctly via the shared utility; dark-title fix did not leak onto light surfaces"
+  },
+  {
+   "id": "ATK-LOCALE-WIRE",
+   "surface": "composables/locale.ts + locale switchers",
+   "probe": "locale.value actually assigned; switching EN->VI live-updates mounted components; persisted locale restores on reload; no component left on stale locale"
+  },
+  {
+   "id": "ATK-MERGE-OVERLAP",
+   "surface": "cross-slice overlaps (combat titles vs creation-meta dark-title fix; progression HP float vs economy formatters; nav affordance vs combat exit)",
+   "probe": "no double-applied style (e.g. two dark-title classes fighting); no conflicting formatter; merged file regions each contain the intended superset"
+  },
+  {
+   "id": "ATK-NAV-EXIT",
+   "surface": "nav affordances + wheel + tutorial rewrite",
+   "probe": "every screen reachable has a visible exit path; tutorial steps point at elements that still exist post-fix; wheel opens via a discoverable control"
+  },
+  {
+   "id": "ATK-ECON-FLOW",
+   "surface": "currency HUD + sell-all confirm + gacha honesty + pill confirm",
+   "probe": "sell-all preview total matches actual grant; cancel path sells nothing; HUD updates on gain/spend; gacha rates shown match real table; pill confirm consumed state once"
+  },
+  {
+   "id": "ATK-TEST-DEBT",
+   "surface": "new tests/e2e specs added by fixers",
+   "probe": "e2e spec assertions match shipped UI; pinned values not copied from broken pre-fix state; vitest additions cover the fix not just its presence"
+  }
+ ]
+}

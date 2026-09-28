@@ -1,0 +1,30 @@
+{
+ "run": "phap-tu-reimagine-2026-09-26",
+ "reviewId": "REV-PTR-COR-E1",
+ "reviewer": "devin-bd589d8374194eaab0ed5fd32075ae00",
+ "phase": "CORRECTNESS",
+ "pin": "b1f59d72",
+ "verdict": "FINDINGS -- 1x Low; no Critical/High/Medium",
+ "reportPath": "docs/qa/runs/phap-tu-reimagine-2026-09-26/records-core.json (reviewer worktree)",
+ "adjudication": [
+  {
+   "finding": "F-PTR-59 / COR-E1",
+   "claim": "CultivationPathRegistry.ts:381 'element === undefined || resolved !== GENERIC_PHYSICAL_BASIC' stamps theGainOnLandedCast on generic_physical when element unset AND linh_bao unlearned.",
+   "disposition": "REJECTED NON_ACTIONABLE (spec-pinned; crafted-only edge)",
+   "verification": "local experiment: removing 'element === undefined ||' turns GameManager.empowerment.test.ts 'pre-commit basic carries the +1 The gain' RED (1/13 fail) -- reverted, suite green 13/13. Pre-commit GENERIC fallback IS the legitimate spec-D2 starter (physical strike before linh_bao); corrupt edge reachable only via crafted save and minted The is inert without an element.",
+   "lesson": "the stamp condition covers BOTH the element basic AND the pre-element starter phase -- do not narrow it to post-commit only."
+  }
+ ],
+ "sealedSurfaces": [
+  "The economy",
+  "empowerment gates",
+  "oncePerCast",
+  "landedConsequences incl non-damaging",
+  "hitOpIdsByTarget per-target isolation",
+  "specialization select/clawback",
+  "Ho The DR",
+  "save v87",
+  "route retirement",
+  "resetBattleScopedResources"
+ ]
+}

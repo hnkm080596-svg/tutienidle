@@ -1,0 +1,29 @@
+{
+  "applied": [
+    "review:REV-PTR-COR-H1",
+    "review:REV-PTR-AUT-H1",
+    "review:REV-PTR-INT-H1",
+    "evidence:EV-PTR-CORH",
+    "evidence:EV-PTR-AUTH",
+    "evidence:EV-PTR-INTH",
+    "evidence:EV-PTR-FIXH",
+    "finding:F-PTR-105",
+    "finding:F-PTR-106",
+    "finding:F-PTR-107",
+    "finding:F-PTR-108",
+    "finding:F-PTR-109",
+    "finding:F-PTR-110",
+    "finding:F-PTR-111",
+    "finding:F-PTR-112",
+    "finding:F-PTR-113",
+    "finding:F-PTR-114",
+    "finding:F-PTR-115",
+    "finding:F-PTR-116",
+    "finding:F-PTR-117",
+    "finding:F-PTR-118",
+    "finding:F-PTR-119",
+    "lesson:L-PTR-H-SEMANTICS",
+    "lesson:L-PTR-H-GRANT-ORDER",
+    "lesson:L-PTR-H-LANE-DISCRIMINANT"
+  ]
+}

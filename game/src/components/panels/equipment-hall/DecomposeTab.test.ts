@@ -8,6 +8,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import DecomposeTab from './DecomposeTab.vue'
 import { DecomposeSystem } from '@/core/production/DecomposeSystem'
 import { MaterialBag } from '@/core/material/MaterialBag'
+import { MaterialRegistry } from '@/core/material/MaterialRegistry'
 import { materials } from '@/data/materials/materials'
 import { BUMP_STATE_KEY, GAME_MANAGER_KEY, STATE_VERSION_KEY } from '@/composables/useGameState'
 import { i18n } from '@/i18n'
@@ -23,9 +24,16 @@ function makeGameManager() {
   const decompose = new DecomposeSystem(bag)
   decompose.updateCapacity(6)
 
+  const materialRegistry = new MaterialRegistry()
+
+  for (const material of materials) {
+    materialRegistry.register(material)
+  }
+
   return {
     decomposeSystem: decompose,
     materialBag: bag,
+    materialRegistry,
   }
 }
 

@@ -7,10 +7,13 @@ import App from './App.vue'
 import { vTooltip } from './directives/tooltip'
 import { useErrorStore } from './stores/error'
 import { initUiScale } from './composables/uiScale'
+import { initLocale } from './composables/locale'
 import { i18n } from './i18n'
 
 // WS8 — áp UI scale người chơi chọn TRƯỚC mount để không nhấp nháy font.
 initUiScale()
+// Saved locale applies before mount - no VI flash before hydration.
+initLocale()
 
 const app = createApp(App)
 const pinia = createPinia()

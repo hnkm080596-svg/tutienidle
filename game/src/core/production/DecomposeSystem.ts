@@ -107,6 +107,21 @@ export class DecomposeSystem {
   }
 
   /**
+   * ui-audit economy M5 - read-only snapshot of which bag stacks the
+   * CURRENT filters match. DecomposeTab uses it for the matching-ore
+   * list + empty-state copy so the UI never re-implements the filter
+   * (A9: oreMatchesFilter stays the single implementation).
+   */
+  listMatchingOres(): DecomposeOutputEntry[] {
+    return this.bag
+      .getAll()
+      .filter((stack) =>
+        this.oreMatchesFilter(stack.material.id, this.settings.gradeFilter, this.settings.ageFilter),
+      )
+      .map((stack) => ({ materialId: stack.material.id, amount: stack.amount }))
+  }
+
+  /**
    * Tick theo thời gian thực (nowMs). Đủ chu kỳ và workers > 0 → chạy
    * MỘT lượt phân giải (catch-up một lượt nếu trễ nhiều — idle-friendly,
    * không nhân burst).

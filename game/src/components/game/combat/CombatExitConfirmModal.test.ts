@@ -24,6 +24,7 @@ interface MockGameManager {
   emit: ReturnType<typeof vi.fn>
   on: ReturnType<typeof vi.fn>
   off: ReturnType<typeof vi.fn>
+  getTurnBattle: ReturnType<typeof vi.fn>
   capturedRequestHandler: (() => void) | null
 }
 
@@ -33,6 +34,8 @@ function makeGameManager(): MockGameManager {
     emit: vi.fn(),
     on: vi.fn(),
     off: vi.fn(),
+    // UI audit 2026-09-28: the modal also gates on a live fighting battle.
+    getTurnBattle: vi.fn(() => ({ state: 'fighting' })),
     capturedRequestHandler: null,
   }
 
@@ -119,6 +122,21 @@ describe('CombatExitConfirmModal — extract (6A-T6)', () => {
   it('Tribulation KHÔNG mở modal (gate combatOrigin)', async () => {
     const gm = makeGameManager()
     const modal = mountModal(gm, 'tribulation')
+
+    gm.capturedRequestHandler?.()
+    await nextTick()
+
+    expect(modal.query()).toBeNull()
+
+    modal.unmount()
+  })
+
+  it('request ngoài trạng thái fighting (victory/defeat) KHÔNG mở modal', async () => {
+    const gm = makeGameManager()
+
+    gm.getTurnBattle.mockReturnValue({ state: 'victory' })
+
+    const modal = mountModal(gm, 'stage')
 
     gm.capturedRequestHandler?.()
     await nextTick()

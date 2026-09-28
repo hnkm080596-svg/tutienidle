@@ -312,4 +312,63 @@ export class GameManagerCatalogOps {
     const previousFinalStage = previousZone.stageIds.at(-1)
     return Boolean(previousFinalStage && player.completedStageIds.includes(previousFinalStage))
   }
+
+  /**
+   * Why a stage is locked, as a display-ready reason code. null = unlocked.
+   * Same gates as isStageUnlocked — this is the read model, not a second
+   * authority; UI must render the code via i18n, never re-derive the rule.
+   */
+  stageLockReasonCode(
+    stageId: string,
+    player: PlayerData,
+  ):
+    | { kind: 'realm'; realmId: string; realmLevel: number }
+    | { kind: 'floor'; floor: number }
+    | { kind: 'progress' }
+    | null {
+    if (this.isStageUnlocked(stageId, player)) {
+      return null
+    }
+
+    const stage = this.deps.stageTemplates.get(stageId)
+
+    if (stage?.requiredRealmId) {
+      const requiredRealmIndex = getRealmIndex(stage.requiredRealmId)
+      const playerRealmIndex = getRealmIndex(player.realmId)
+
+      if (
+        playerRealmIndex < requiredRealmIndex ||
+        (playerRealmIndex === requiredRealmIndex &&
+          stage.requiredRealmLevel !== undefined &&
+          player.realmLevel < stage.requiredRealmLevel)
+      ) {
+        return { kind: 'realm', realmId: stage.requiredRealmId, realmLevel: stage.requiredRealmLevel ?? 1 }
+      }
+    }
+
+    const zones = this.deps.zoneRegistry.getAll()
+    const zoneIndex = zones.findIndex((candidate) => candidate.stageIds.includes(stageId))
+    const zone = zones[zoneIndex]
+
+    if (zone) {
+      const index = zone.stageIds.indexOf(stageId)
+
+      if (index > 0) {
+        const previous = this.deps.stageTemplates.get(zone.stageIds[index - 1]!)
+        if (previous) {
+          return { kind: 'floor', floor: previous.floor ?? previous.requiredRealmLevel ?? 1 }
+        }
+      }
+
+      if (index === 0 && zoneIndex > 0) {
+        const previousFinalId = zones[zoneIndex - 1]!.stageIds.at(-1)
+        const previousFinal = previousFinalId ? this.deps.stageTemplates.get(previousFinalId) : undefined
+        if (previousFinal) {
+          return { kind: 'floor', floor: previousFinal.floor ?? previousFinal.requiredRealmLevel ?? 1 }
+        }
+      }
+    }
+
+    return { kind: 'progress' }
+  }
 }

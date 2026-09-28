@@ -1,0 +1,295 @@
+# QA run phap-tu-reimagine-2026-09-26
+
+- phase: DECIDE
+- outcome: QA_UNVERIFIED
+- state: product=1353a680dceb contract=f6c338574232 attack=6741d10ad40a env=e3ca14a6b377
+- base/head: master -> 038706f7
+
+## Findings
+
+- **F-PTR-01** Critical/REAL_DEFECT — CLOSED — Truc Co specials cast FREE - resourceCostPercentOfMax never stamped (30% MaxLL live cost dead)
+- **F-PTR-02** Critical/REAL_DEFECT — CLOSED — PHAP_TU_WINDOW_LANDED_CONSEQUENCES never attached - van_moc/kim_y/trong_nhac windows inert
+- **F-PTR-03** High/REAL_DEFECT — CLOSED — penetrationFromStacks never stamped on metal basic - Kim Liet pierce scaling dead
+- **F-PTR-04** Low/REAL_DEFECT — CLOSED — Empowered (Phap The) variant dropped theGainOnLandedCast - empowered casts granted 0 The
+- **F-PTR-05** Low/REAL_DEFECT — CLOSED — boundToSourceBuffId markers outlive window by one runPhaseB boundary
+- **F-PTR-06** Medium/REAL_DEFECT — CLOSED — TechniqueGateAuthored 'frozen surplus' test expectation wrong for new gate ladder
+- **F-PTR-07** Low/REAL_DEFECT — CLOSED — THE_BAR_MAX literal 5 duplicated canonical SPELL_PATH_MAX_THE
+- **F-PTR-08** High/REAL_DEFECT — CLOSED — AoE secondary onLanded effects fired per-target instead of once-per-cast
+- **F-PTR-09** Low/REAL_DEFECT — CLOSED — Ho The DR unclamped - could exceed cap when mp pool anomalies
+- **F-PTR-10** Low/REAL_DEFECT — CLOSED — selectSpellPathElement had no mid-battle guard - element switchable during combat
+- **F-PTR-11** Nit/REAL_DEFECT — CLOSED — theGainOnLandedCast grant emitted per execution (follow-up repeats/multicast) not per cast
+- **F-PTR-12** High/REAL_DEFECT — CLOSED — Coordinator-found: ops_landed_any read captured priorLandedHitOpIds BY REFERENCE - later lanes poisoned the dedup var
+- **F-PTR-13** Low/REAL_DEFECT — CLOSED — Comment mojibake + splice damage during ascii-ratchet transliteration sweep
+- **F-PTR-16** High/REAL_DEFECT — CLOSED — Moc window lane dead -- non-damaging basic never consumes landedConsequences
+- **F-PTR-17** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — Water empowered rider hardcodes han_tuc chance 0.5 (specialization authors 0.65/0.4)
+- **F-PTR-18** Nit/DOCUMENTATION_DEFECT — CLOSED — saveVersion.ts header omits the v85 changelog entry
+- **F-PTR-19** Low/REAL_DEFECT — CLOSED — Bound marker pays one last periodic_growth tick after mid-action window loss
+- **F-PTR-20** Nit/DOCUMENTATION_DEFECT — CLOSED — Resolved TODO(coordinator) left in the metal window lane comment
+- **F-PTR-21** Nit/REAL_DEFECT — CLOSED — Dead routeProfileProvider stubs left in 2 test fixtures after route retirement
+- **F-PTR-22** Nit/DOCUMENTATION_DEFECT — CLOSED — LegacySkillAdapter header still maps theGainOnCrit -> grants.theOnCrit (field retired)
+- **F-PTR-23** Nit/REAL_DEFECT — CLOSED — grantTheFromCast duplicates the TheEconomy.grantThe clamp inline
+- **F-PTR-24** Nit/DOCUMENTATION_DEFECT — CLOSED — Stale emitGrants doc comment claims follow-up executions mint The; engine-lane divergence is latent
+- **F-PTR-25** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — hitOpIdsByTarget accumulates secondary-hit ops -- future target_hit_landed gate could open on a secondary's landing
+- **F-PTR-26** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — PHAP_TU_SPECIAL_COOLDOWN_TURNS(5) > PHAP_TRANG_TURNS(3) makes keep/refresh window semantics unreachable at authored numbers
+- **F-PTR-27** Medium/REAL_DEFECT — CLOSED — CURRENT_SAVE_VERSION=85 collides with master's published v85 (THE TU BETA); branch must claim v86
+- **F-PTR-28** Low/REAL_DEFECT — CLOSED — saveVersion v85 comment cites phantom fields (rerollBank/diversionBank/opsHistory/kiem_tu killed/beasts) that exist nowhere on branch or master
+- **F-PTR-29** Low/REAL_DEFECT — CLOSED — hoTheBridge re-implements DR without clampStatValue + stale HoTheStats cast workaround
+- **F-PTR-30** Low/REAL_DEFECT — CLOSED — theBarBridge hardcodes THE_BAR_MAX for max/threshold/lit instead of entity.maxThe + empowerment.theThreshold
+- **F-PTR-31** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — LandedConsequences ordering: non-damaging lane appends LAST (post-apply) vs damaging lane splices into deal_damage.onLanded — latent authoring trap
+- **F-PTR-32** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — Dormant entity.maxThe write in TurnBattleAdapter (resolvedSpecialUltimate.maxThe) — adapter stamps a field its sole phap-tu caller omits
+- **F-PTR-33** Nit/REAL_DEFECT — CLOSED — Stale doc: TurnSkillAction empowerment comment still cites retired linh_ngo_<godUltId> node ownership; TBS comment claims pool burns via consumesAllThe for empowered path
+- **F-PTR-34** Nit/REAL_DEFECT — CLOSED — theGainOnLandedCast +1 The stamped on EVERY kit-resolved basic including generic fallbacks — wider than spec D2 (element basic only)
+- **F-PTR-35** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — Dead union member 'spell.empowered_ult' in PathCapability — no producer emits it
+- **F-PTR-36** Medium/TEST_DEFECT — CLOSED — Type errors in qa(intB) pin suites — vue-tsc exit 2 (criticalChance/BaseStats/.payload)
+- **F-PTR-37** Nit/TEST_DEFECT — CLOSED — Dead entries in techniqueRank allowlists — retired linh_ngo_*/minor_*_intensity ids
+- **F-PTR-38** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — Auxiliaries claim id slots before roots in LegacySkillAdapter merge
+- **F-PTR-39** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — Always-true inner guard in water PHAP_TU_PHAP_THE rider + unreachable recast lane (spec-TBD cooldowns)
+- **F-PTR-40** Medium/TEST_DEFECT — DUPLICATE_LINKED — Type-check red at pin — qa(intB) test files (dup of F-PTR-36)
+- **F-PTR-41** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — oncePerCast dedup keys on first landed lane, not first firing lane
+- **F-PTR-42** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — instances.count bleeds into in-lane secondaries (N hits per firing lane)
+- **F-PTR-43** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — Non-damaging landedConsequences fires per declared target incl. dead targets' lanes
+- **F-PTR-44** Medium/REAL_DEFECT — CLOSED — +1 The stamp gated on element!==undefined drops the legitimate pre-element starter basic (spec D2 covers starter phase too)
+- **F-PTR-45** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — Resisted non-damaging apply still mints +1 The (op resolve counts connected, not apply-roll outcome)
+- **F-PTR-46** Nit/DOCUMENTATION_DEFECT — CLOSED — Stale 'route' comment in GameManagerRealmAdvanceOps.ts:375 (spellPath no longer carries route)
+- **F-PTR-47** Nit/DOCUMENTATION_DEFECT — CLOSED — Stale 'route' comment in CultivationPathKit.ts:79 (grantedNodeLevels note)
+- **F-PTR-48** Nit/DOCUMENTATION_DEFECT — CLOSED — Stale 'element/route pair ownership' comment in CultivationPathKit.ts:389
+- **F-PTR-49** Low/REAL_DEFECT — CLOSED — Empowerment gate subcastIndex===0 alone lets TBS-queued follow-up executions re-empower (routeCast hardcodes subcastIndex 0)
+- **F-PTR-50** Low/REAL_DEFECT — CLOSED — hoTheBridge duplicates combat DR formula with wrong clamp order + reports raw stat
+- **F-PTR-51** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — Triple-owned entity.maxThe ?? default fallback (TheEconomy/theBarBridge/resourceMax)
+- **F-PTR-52** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — landedConsequences ordering inverts between damaging (prepend) and non-damaging (append) lanes
+- **F-PTR-53** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — Dead consume-all machinery retained (consumesAllThe/theScaling/theBurned/cast_snapshot)
+- **F-PTR-54** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — Dead exports tryPayProcCost/onProcSuccess on declared gain authority
+- **F-PTR-55** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — Water rider `if target_hit_landed(loop_target)` read as vacuous inside its landed gate
+- **F-PTR-56** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — Non-damaging for_each_target lane lacks per-target target_alive wrap
+- **F-PTR-57** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — resolvePlanCost percentOfMax NaN fails open at PRECHECK
+- **F-PTR-58** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — Water rider nested target_hit_landed compiles to second gate -> landed hooks double-fire
+- **F-PTR-59** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — element === undefined disjunct mints +1 The on GENERIC fallback when linh_bao unlearned
+- **F-PTR-60** Low/REAL_DEFECT — CLOSED — The-grant channels lack commitsCast gate (emitGrants + grantTheFromCast engine lane)
+- **F-PTR-61** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — Corrupt-state GENERIC mints +1 The (same as F-PTR-59)
+- **F-PTR-62** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — hoTheBridge duplicates CombatSystem DR formula + extra lower clamp
+- **F-PTR-63** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — landedConsequences lane-dependent semantics (hit-gated vs unconditional per-target)
+- **F-PTR-64** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — resolvePlanCost folds percentOfMax against 'effective' scalars (composite payload w/o cost -> free cast)
+- **F-PTR-65** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — comment-only indentation churn on unrelated doc blocks
+- **F-PTR-66** High/REAL_DEFECT — CLOSED — Nested landed gates double-fire orchestration hooks (empowered Thuy basic: minted per-hit gate + authored if-gate)
+- **F-PTR-67** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — emitGrants dedups subcastIndex>0 only, not commitsCast (queued follow-ups re-resolve at subcastIndex:0)
+- **F-PTR-68** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — validateSpellPathPersistedState does not check spellPath.element coherence with purchased element root
+- **F-PTR-69** Medium/REAL_DEFECT — CLOSED — emitGrants commitsCast gate kills theGainOnLandedCast on deferred charge-resolve executions
+- **F-PTR-70** Low/REAL_DEFECT — CLOSED — authored if target_hit_landed inside multi-instance onLanded binds accumulated hitOpIds -- dedup key never matches enclosing gate
+- **F-PTR-71** Nit/REAL_DEFECT — CLOSED — collectOncePerCast container-blind: misses oncePerCast ops nested inside for_each_target
+- **F-PTR-72** Low/REAL_DEFECT — CLOSED — root-authored consumesAllThe+theScaling resolves without theBurned capture (empowerment-arm only)
+- **F-PTR-73** Low/REAL_DEFECT — CLOSED — hoThe DR formula duplicated between CombatSystem and presentation bridge
+- **F-PTR-74** Nit/REAL_DEFECT — CLOSED — bound-marker staleness predicate triplicated across BuffSystem sites
+- **F-PTR-75** Low/REAL_DEFECT — CLOSED — pre-element arm short-circuits GENERIC exclusion -> corrupt-state GENERIC_PHYSICAL_BASIC mints +1 The
+- **F-PTR-76** Nit/REAL_DEFECT — CLOSED — commitCast writes entity.currentThe=0 directly -- bypasses TheEconomy pool authority
+- **F-PTR-77** Nit/REAL_DEFECT — CLOSED — CastLeveling comment still names deleted SpellPathRoutes/NodeSystem modules
+- **F-PTR-78** Low/REAL_DEFECT — CLOSED — blocked cast (resource precheck) still queues repeat/multicast follow-up executions -- payload replays free
+- **F-PTR-79** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — resolveFollowUp same-id aux-first id claiming resolves empowered variant on headless re-resolve
+- **F-PTR-80** Nit/REAL_DEFECT — CLOSED — empowerment+compositePool on one def silently loses empowered payload (swap precedes pick)
+- **F-PTR-81** Medium/REAL_DEFECT — DUPLICATE_LINKED — INT F1 -- dup of F-PTR-69 (deferred-resolve grant kill)
+- **F-PTR-82** Medium/REAL_DEFECT — DUPLICATE_LINKED — INT F2 -- dup of F-PTR-70 (multi-instance authored-if dedup key break)
+- **F-PTR-83** Medium/REAL_DEFECT — CLOSED — P15 ascii ratchet fails -- em dash U+2014 in drainAllThe doc comment added by the fix batch
+- **F-PTR-84** Low/REAL_DEFECT — CLOSED — dead 'spell.empowered_ult' PathCapability union member (no producer/consumer)
+- **F-PTR-85** Low/REAL_DEFECT — CLOSED — statScalars['maxMp'] keyed off EFFECTIVE def cost while resolvePlanCost folds ROOT def cost
+- **F-PTR-86** Low/REAL_DEFECT — CLOSED — empowerment stamped whenever element!==undefined incl. non-kit GENERIC/basic fallbacks
+- **F-PTR-87** Nit/REAL_DEFECT — CLOSED — CombatScene.ts class docblock mojibake + mangled indentation
+- **F-PTR-88** Medium/REAL_DEFECT — CLOSED — spec-pinned fixture RED on pin: buildWith(undefined) occupies the corrupt-state GENERIC edge
+- **F-PTR-89** Low/REAL_DEFECT — CLOSED — blocked charge-init still arms pendingChargedSkillId/chargingTurnsRemaining (resolves free)
+- **F-PTR-90** Low/REAL_DEFECT — CLOSED — execution.theBurned captured on non-committing queued execs (repeat/multicast)
+- **F-PTR-91** Nit/REAL_DEFECT — CLOSED — empowerment+compositePool mutual-exclusion fault lacks a direct registry pin
+- **F-PTR-92** Nit/REAL_DEFECT — CLOSED — sinh_co_chu doc drift: 'once per cast' vs actual once-per-window latch
+- **F-PTR-94** Low/REAL_DEFECT — CLOSED — composite pick silently overrides empowerment in the engine-unit lane (registry fault converts to silent behavior)
+- **F-PTR-95** Low/REAL_DEFECT — CLOSED — applyPeriodicGrowth/addStacks lacks the 0-floor its sibling setStacks has
+- **F-PTR-93** Low/REAL_DEFECT — DUPLICATE_LINKED — INT-1 dup of F-PTR-89 (blocked charge-init arms pendingCharge)
+- **F-PTR-96** Nit/REAL_DEFECT — DUPLICATE_LINKED — INT-5 dup of F-PTR-86 (empowerment stamped on non-kit fallback)
+- **F-PTR-97** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — sinh_co plants + latch burns on a whiffed doc_can roll
+- **F-PTR-98** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — collectOncePerCast for_each_target recursion is unreachable-but-defensive
+- **F-PTR-99** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — routed charge-resolve relies on affected staying empty
+- **F-PTR-100** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — consumeResourceFor unchecked subtraction can write negative pool
+- **F-PTR-101** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — resolveFollowUp resolves empowered variant via skills.require on same-id phap-tu
+- **F-PTR-102** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — 'attack' event emits before the block outcome is known
+- **F-PTR-103** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — PER_TARGET markers steal across same-element casters (latest-wins)
+- **F-PTR-104** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — maxMp=0 participant casts Trang special for free
+- **F-PTR-105** Medium/REAL_DEFECT — CLOSED — applyPeriodicGrowth bypasses commitStacks contract (no maxStacks clamp, no consume-at-zero)
+- **F-PTR-106** Medium/REAL_DEFECT — CLOSED — landed-lane intent allowlist only enforced at depth 0 -- nested-lane ops escape to any target
+- **F-PTR-107** Low/REAL_DEFECT — CLOSED — theCap duplicated across plan runtime + kiem bridge instead of delegating to TheEconomy
+- **F-PTR-108** Low/REAL_DEFECT — CLOSED — requiredResourceFor applies percentOfMax cost to any resourceType (mana-only semantics silently ignored)
+- **F-PTR-109** Nit/REAL_DEFECT — CLOSED — dormant combo consumesAllThe+chargeTurns: theBurned cannot forward to charge-resolve, theScaling reads 0
+- **F-PTR-110** Nit/REAL_DEFECT — CLOSED — dead theBurned capture in declareQueuedExecution (executionCommitsCast always false on queued execs)
+- **F-PTR-111** Nit/REAL_DEFECT — CLOSED — PresentationGate SceneReadyPort JSDoc star-misalignment
+- **F-PTR-112** Low/REAL_DEFECT — CLOSED — 'attack' event emitted BEFORE routed blocked check -- blocked casts still notify passive listeners
+- **F-PTR-113** Nit/REAL_DEFECT — CLOSED — stale 'empowered' source docstring describes retired god-ult payload mechanic
+- **F-PTR-114** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — sinh_co plant gated on hit+window stacks_below, not doc_can apply result (spec ambiguity)
+- **F-PTR-115** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — latent: future kit def with repeatCasts/multicast would silently lose Phap The riders on replays
+- **F-PTR-116** Nit/REAL_DEFECT — CLOSED — CombatScene rewritten ASCII JSDoc at 2-space indent
+- **F-PTR-117** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — theBar hidden until element commit while starter already mints +1 (cosmetic consequence)
+- **F-PTR-118** Low/REAL_DEFECT — CLOSED — chargeTurns x repeatCasts/multicast unguarded: self-scope queues repeats at init + spurious unrouted report; resolve ignores targetScope
+- **F-PTR-119** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — spell_pathway kit assert asymmetry: resolveSpecialUltimate silently returns undefined on missing kit member
+- **F-PTR-120** Low/REAL_DEFECT — CLOSED — applyPeriodicGrowth fix unpinned (pin-test claim gap)
+- **F-PTR-121** Low/REAL_DEFECT — CLOSED — percentOfMax mana-gate unpinned (pin-test claim gap)
+- **F-PTR-122** Low/REAL_DEFECT — CLOSED — dormant residual: legacy charge-resolve lane whiffs self-scoped charged defs
+- **F-PTR-123** Nit/REAL_DEFECT — CLOSED — dead theScaling fold on queued executions
+- **F-PTR-124** Medium/REAL_DEFECT — CLOSED — emitLifecycleUnit commits a tick for a consumed instance (applyPeriodicGrowth can retire the ticking instance first)
+- **F-PTR-125** Low/REAL_DEFECT — CLOSED — LegacySkillAdapter silently drops landedConsequences on self-scope defs (field absent from never-fires report)
+- **F-PTR-126** Low/REAL_DEFECT — CLOSED — route-era The-burn machinery (consumesAllThe/theScaling/detonateDoT/theBurned) dormant with docblocks describing live mechanics
+- **F-PTR-127** Low/REAL_DEFECT — CLOSED — engine-unit lane silently no-ops landedConsequences/elementalPenetrationBonus/penetrationFromStacks
+- **F-PTR-128** Low/REAL_DEFECT — CLOSED — validateConditionShallow cannot see landed-lane context (expression-level if inside onLanded fields faults wrongly + deps={})
+- **F-PTR-129** Nit/REAL_DEFECT — CLOSED — stale fault text 'loop_target only valid inside for_each_target' omits the landed-lane legality
+- **F-PTR-130** Nit/REAL_DEFECT — CLOSED — dead needTarget local + void needTarget scaffolding remnant
+- **F-PTR-131** Nit/REAL_DEFECT — CLOSED — in-lane bad intent produces two faults for the same field (pre-check + re-validating recursion)
+- **F-PTR-132** Nit/REAL_DEFECT — CLOSED — CombatEntity maxThe docblock claims bridges delegate to theCap; theBarBridge correctly uses THE_BAR_MAX spell-domain fallback
+- **F-PTR-133** Nit/REAL_DEFECT — CLOSED — applyPeriodicGrowth mirrors rather than shares commitStacks clamp/remove/emit (drift-risk duplication) + drainAllThe duplicate pool-zeroing
+- **F-PTR-134** Nit/REAL_DEFECT — CLOSED — blocked self-cast still records actor.id in targetIds + feeds landed/ally windows (castBlocked ignored downstream)
+- **F-PTR-135** Nit/REAL_DEFECT — CLOSED — applyPeriodicGrowth zombie tick (dup of AUT M1)
+- **F-PTR-136** Nit/REAL_DEFECT — CLOSED — adapter forces mana for percentOfMax before registry mana-only gate can see non-mana resourceType (channel authority conflict)
+- **F-PTR-137** Nit/REAL_DEFECT — CLOSED — empowerment+chargeTurns missing mutual-exclusion fault (siblings consumesAllThe/compositePool already faulted)
+- **F-PTR-138** Medium/REAL_DEFECT — CLOSED — unrouted casts leak full cast semantics: attack emit, repeatCasts/multicast queue, dynamicBasic extras, Tro window on a documented no-op
+- **F-PTR-139** Low/REAL_DEFECT — CLOSED — landed-lane intent allowlist escapes at expression level (validateConditionShallow hardcodes insideLandedLane=false)
+- **F-PTR-140** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — repeatCasts/multicast+chargeTurns silently dead (init affected=0 guard; resolve isCharging skip)
+- **F-PTR-141** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — theBarBridge maxThe ?? THE_BAR_MAX(5) diverges from canonical theCap fallback 100
+- **F-PTR-142** Nit/REAL_DEFECT — CLOSED — adapter forces resourceType mana for percentOfMax regardless of authored resourceType
+- **F-PTR-143** Nit/REAL_DEFECT — CLOSED — reactivePayloads are raw TurnSkillDefinitions, never registry-validated (dormant fields would commit unvalidated)
+- **F-PTR-144** Nit/REAL_DEFECT — CLOSED — self-scope landedConsequences dropped silently at adapter (no report entry)
+- **F-PTR-145** Medium/REAL_DEFECT — CLOSED — queued repeat/multicast exec of a chargeTurns>0 def resolves to silent no-op (dead queue slot)
+- **F-PTR-146** Medium/REAL_DEFECT — CLOSED — unrouted charge-RESOLVE arm never stamps castBlocked and reports with a dead label; tail ally window fans procs on a no-op
+- **F-PTR-147** Low/REAL_DEFECT — CLOSED — registry lacks repeatCasts/multicast x chargeTurns parity fault (sibling of consumesAllThe/empowerment faults)
+- **F-PTR-148** Low/REAL_DEFECT — CLOSED — resolveInterceptWindow consumes its once-roll + writes suppressed marker/ward grant pre-route, before castBlocked is knowable
+- **F-PTR-149** Nit/REAL_DEFECT — CLOSED — adapter non-mana resourceCostPercentOfMax with no flat resourceCost resolves free and reports a lying "flat resourceCost applies" warn
+- **F-PTR-150** Nit/REAL_DEFECT — CLOSED — unrouted charge-resolve lane reports but does not stamp castBlocked (ally window still rolls)
+- **F-PTR-151** Nit/REAL_DEFECT — CLOSED — stale route-era docblocks on the spellPath persisted-state authority after route retirement
+- **F-PTR-152** Low/REAL_DEFECT — CLOSED — dead spend-authority exports tryPayProcCost/onProcSuccess in TheEconomy.ts (zero production callers; live lane gates inline + adapter consume)
+- **F-PTR-153** Low/REAL_DEFECT — CLOSED — engine-lane consumeResourceFor debits without floor or fault -- can write a negative pool (latent divergence from pay-or-skip scheduler lane)
+- **F-PTR-154** Low/REAL_DEFECT — CLOSED — subcasts x chargeTurns fault covered count+multicast only -- compositePool/compositeCount still authorable on charged defs (dead-combo gap)
+- **F-PTR-155** Medium/NON_ACTIONABLE — REJECTED_WITH_PROOF — subcasts.compositePool x chargeTurns escapes dead-combo fault (COR-K F1)
+- **F-PTR-156** Medium/NON_ACTIONABLE — REJECTED_WITH_PROOF — subcasts.compositePool/compositeCount x chargeTurns fault gap (AUT-K F1)
+- **F-PTR-157** Medium/NON_ACTIONABLE — REJECTED_WITH_PROOF — compositePool x chargeTurns fault gap -> zero-step cast (INT-K F1)
+- **F-PTR-158** Low/REAL_DEFECT — CLOSED — whiffed/dangling charge-resolve conflated -- false UNROUTED_CAST warn + castBlocked stamp on whiff
+- **F-PTR-159** Low/REAL_DEFECT — CLOSED — self-scoped extra reports fabricated landed entry after unrouted (loud no-op) resolve
+- **F-PTR-160** Low/REAL_DEFECT — CLOSED — resourceType:'none' + resourceCostPercentOfMax silently binds mana on routed lane
+- **F-PTR-161** Low/REAL_DEFECT — CLOSED — unrouted casts whiffed into zero targets never stamp castBlocked
+- **F-PTR-162** Low/REAL_DEFECT — CLOSED — charge-tick and charge-init turns open the ally window as nonDamaging actions (spec ambiguity)
+- **F-PTR-163** Low/REAL_DEFECT — CLOSED — empowerment decided twice -- TBS declare gate vs SkillResolver re-eval (latent duplicated truth)
+- **F-PTR-164** Low/REAL_DEFECT — CLOSED — theBarBridge THE_BAR_MAX fallback vs theCap MAX_THE diverge on raw-override path
+- **F-PTR-165** Nit/REAL_DEFECT — CLOSED — theBurned docblock claims no live producer; TBS stamps it on consumesAllThe payloads
+- **F-PTR-166** Nit/REAL_DEFECT — CLOSED — EntityResourceAdapter consume-all writes currentThe=0 inline vs drainAllThe owner
+- **F-PTR-167** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — tryPayProcCost/onProcSuccess dormant exported surface pinned only by tests
+- **F-PTR-168** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — theBarBridge reads entity.maxThe ?? THE_BAR_MAX directly (INT-K nit)
+- **F-PTR-169** Nit/REAL_DEFECT — CLOSED — lastOpResult reverse-scans settled-results array per call -- O(hits x results) on settle hot path
+- **F-PTR-170** Low/REAL_DEFECT — CLOSED — validateValueQuery leaves target unconstrained -- lane-only intents bind member[0] outside lane, non-lane intents escape the D4 allowlist inside lane
+- **F-PTR-171** Low/REAL_DEFECT — CLOSED — resource_* value queries register any non-empty resourceId but execution throws mid-cast on unknown ids
+- **F-PTR-172** Nit/REAL_DEFECT — CLOSED — applyPeriodicGrowth marker loop continues -- two marker defs naming the same grown id multi-feed per tick
+- **F-PTR-173** Low/REAL_DEFECT — CLOSED — resetBattleScopedResources docblock names non-existent call sites; raw primaryEntityOverride path skips the reset (currentThe leaks across battles)
+- **F-PTR-174** Low/REAL_DEFECT — CLOSED — whiffed charge-resolve misclassified as authored-non-damaging in the ally window -- declared.chargedSkill null on whiff makes authoredDamaging false and fans out to battle.enemies
+- **F-PTR-175** Low/REAL_DEFECT — CLOSED — EntityResourceAdapter numeric consume writes entity.currentThe inline -- second write site outside TheEconomy
+- **F-PTR-176** Nit/REAL_DEFECT — CLOSED — phapTheActive re-evaluates currentThe >= theThreshold -- third predicate site reading the same stamped field
+- **F-PTR-177** Nit/REAL_DEFECT — CLOSED — reportUnroutedCast docblock says "once per cast identity" but the dedup key is per skill/def identity
+- **F-PTR-178** Low/REAL_DEFECT — CLOSED — target_hit_landed on an intent no deal_damage can mint throws SkillResolverError uncaught through resolveNextStep -- crashes the tick, bypasses castBlocked
+- **F-PTR-179** Medium/REAL_DEFECT — CLOSED — unknown resourceIds validate clean on non-query surfaces then crash mid-execute past the decline lane (resource_at_least conditions, gain_resource/consume_resource ops)
+- **F-PTR-180** Low/REAL_DEFECT — CLOSED — declined charge-resolve on an armed def misclassified as silent whiff -- armedCharged tests the armed id's slot membership, not whether the captured def routed to null at deferred resolve
+- **F-PTR-181** Nit/REAL_DEFECT — CLOSED — member[0] set-valued binding semantics undocumented at validateTargetIntent vs requireSingleBindingTarget sites
+- **F-PTR-182** Nit/REAL_DEFECT — CLOSED — ResolvedSkillPlan.test.ts authors resourceId 'mp' -- outside the closed set the registry itself enforces
+- **F-PTR-183** Low/REAL_DEFECT — CLOSED — consumeResourceFor floors+writes entity.currentThe via RESOURCE_FIELD -- second debit write site vs consumeThe caller-checks-first contract; authored the-cost defs floor on commit lane but skip-fault on plan lane
+- **F-PTR-184** Low/REAL_DEFECT — CLOSED — resetBattleScopedResources writes entity.currentThe=0 outside TheEconomy -- same out-of-module write class removed from the adapter in the previous batch
+- **F-PTR-185** Low/REAL_DEFECT — CLOSED — landedConsequences on a NON-damaging def compiles inside for_each_target where lane-only intents other_enemy/other_enemies become a catalog fault -- legal vocabulary depends on def.damage
+- **F-PTR-186** Nit/REAL_DEFECT — CLOSED — TheEconomy docblock :15-18 claims no landed-cast gain field exists -- theGainOnLandedCast is a real TurnSkillDefinition field
+- **F-PTR-187** Nit/REAL_DEFECT — CLOSED — EntityResourceAdapter docblock :11-13 claims direct clamped write -- all currentThe writes now route TheEconomy
+- **F-PTR-188** Nit/REAL_DEFECT — CLOSED — EntityResourceAdapter :121-124 -- wired channels['the'] is ignored unconditionally (RESOURCE_THE branch handles it); intent undocumented
+- **F-PTR-189** Nit/REAL_DEFECT — CLOSED — dead re-export SkillExecutor.ts:930 export { SkillResolverError } -- zero importers
+- **F-PTR-190** Medium/REAL_DEFECT — CLOSED — executePlan commits cooldown+cast count+cost consume BEFORE expandCompositeExtras resolves extras -- an extra's resolver throw leaves partial mutation stamped castBlocked as if nothing happened
+- **F-PTR-191** Low/REAL_DEFECT — CLOSED — CombatProcSystem once:true exits after ANY recorded attempt incl. paid:false -- an unfunded first grant eats the roll for a payable second grant on the same holder
+- **F-PTR-192** Low/REAL_DEFECT — CLOSED — grantBasicLandedIncome gates on payloadId only -- empowered/composite variants of the actor's basic zero the income (skillId!==actor.basic.id)
+- **F-PTR-193** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — charge-resolve routed decline classified as silent whiff via armedCharged slot-id match
+- **F-PTR-194** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — resolveInterceptWindow consumes its once-roll + writes suppressed marker/ward grant pre-route, before castBlocked is knowable
+- **F-PTR-195** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — whiffed damaging cast -> authoredDamaging false -> ally window fans to all living enemies
+- **F-PTR-196** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — pending queued-execution slot drops entries on double-peek or actor-id mismatch
+- **F-PTR-197** Low/REAL_DEFECT — CLOSED — awaitStep ANIMATION_FALLBACK_MS timer callback throws driveStepWork domain faults WITHOUT calling done() -- step never completes, turn token stays claimed forever, advanceCombat early-returns (silent freeze on a timer thread)
+- **F-PTR-198** Nit/REAL_DEFECT — CLOSED — appliedTargetIds docblock claims apply_buff-only resolved-op semantics -- impl pushes ANY resolved op on an affected target
+- **F-PTR-199** Nit/REAL_DEFECT — CLOSED — CombatSystemDamageAdapter stamps isPrimary:true on every hit options object -- zero engine readers (inert drift)
+- **F-PTR-200** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — resolveInterceptWindow consumes its once-roll + writes suppressed marker/ward grant pre-route (rediscovered)
+- **F-PTR-201** Low/REAL_DEFECT — CLOSED — applyPeriodicGrowth drain-to-zero `return` kills the marker's own consume retire AND the whole marker loop -- remaining markers on the same target never feed (dead-instance periodic tick sibling class)
+- **F-PTR-202** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — basic income minted on BOTH routed charge-resolve grants AND the legacy charge-resolve tail (double mint claim)
+- **F-PTR-203** Nit/REAL_DEFECT — CLOSED — resolveFollowUp docblock claims authored-root semantics -- aux-claims ids resolve the empowered VARIANT def for follow-ups, not the plain root
+- **F-PTR-204** Nit/REAL_DEFECT — CLOSED — RESOURCE_TYPES admits 'none' on authored cost.resourceType but the plan runtime's resource switch knows only {the,mana,ward} -- TurnSkillPlanRuntimeError at PRECHECK, past the decline lane
+- **F-PTR-205** Nit/REAL_DEFECT — CLOSED — vestigial grantBasicLandedIncome call at TurnBattleSystem:2471 self-gates runtime===undefined -- dead on every lane
+- **F-PTR-206** Nit/REAL_DEFECT — CLOSED — theScaling without consumesAllThe silently reads theBurned=0 -- missing mutex fault (dead-authoring class sibling of consumesAllThe x chargeTurns)
+- **F-PTR-207** Low/REAL_DEFECT — CLOSED — applyPeriodicGrowth: sibling marker feeds write+emit on removed instance after drain-to-zero (resurrection buff_stacks_changed for a removed instanceId)
+- **F-PTR-208** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — entity.maxThe stamped at TWO sites (CombatBuild:242 roles/runtime; TurnBattleAdapter:90 resolvedSpecialUltimate) -- last-write-wins by caller convention only
+- **F-PTR-209** Low/REAL_DEFECT — CLOSED — TurnBattleAdapter reactivePayloads docblock overstates dead fields -- consumesAllThe/chargeTurns/resourceCost ARE live on the bypass lane (consumed but unvalidated)
+- **F-PTR-210** Nit/REAL_DEFECT — CLOSED — TheEconomy.consumeThe docblock 'single write site for a decreasing debit' falsified by dormant tryPayProcCost inline write (:95)
+- **F-PTR-211** Nit/REAL_DEFECT — CLOSED — GameManagerTurnBattleOps:1201 claims mana channel 'raw debit, no clamp' but consumeResourceFor floors at zero
+- **F-PTR-212** Nit/REAL_DEFECT — CLOSED — theScaling formula `1 + theBurned/100 x coeff` duplicated at TurnBattleSystem:1914 and SkillResolver:1409
+- **F-PTR-213** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — empowerment decided twice (TBS commit-time vs resolver re-check) -- documented latent duplication
+- **F-PTR-214** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — theBarBridge default `maxThe ?? THE_BAR_MAX` (5) diverges from theCap `?? MAX_THE` (100)
+- **F-PTR-215** Low/REAL_DEFECT — CLOSED — gateOnApplyResult carried on a non-gated op type is silently dropped -- no define-time fault (runtime-carried fields bypass the type-scoped union)
+- **F-PTR-216** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — empowerment + subcasts.multicast/repeatCasts authored pairing: source 'empowered' excluded from the multicast roll
+- **F-PTR-217** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — non-SkillResolverError inside composite-extra pre-commit resolve rethrows past the decline lane
+- **F-PTR-218** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — reactive-bypass commitsCast=true payloads could reach the resolver empowerment re-check (unvalidated lane reaching a validated gate)
+- **F-PTR-219** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — intercept window consumes its once-roll and writes the ward before routability is knowable
+- **F-PTR-220** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — applyPeriodicGrowth keeps iterating markers after draining the instance to zero (COR rediscovery)
+- **F-PTR-221** Nit/REAL_DEFECT — CLOSED — target_hit_landed authored on trigger.condition or expression 'if' slots passes define-time validation, faults only at resolve->decline
+- **F-PTR-222** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — aux-claim merge lets require(rootId) return the empowered variant instead of the plain root
+- **F-PTR-236** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — compositePool member not kind==='active' throws SkillExecutorError escaping the SkillResolverError->null catch (crash instead of decline)
+- **F-PTR-237** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — 'attack' emit moved after tryPlanCast and gated on !castBlocked -- ordering change vs legacy
+- **F-PTR-238** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — percentOfMax cost on maxMp==0 reads required<=0 -> free cast
+- **F-PTR-239** Low/REAL_DEFECT — CLOSED — resourceCostPercentOfMax mutually exclusive with resourceCost per docblock but unenforced: both set on a mana def silently drops the flat cost
+- **F-PTR-240** Nit/REAL_DEFECT — CLOSED — armedCharged resolves chargedSkill against special/ultimate only; a chargeTurns basic whiffs silently instead of resolving
+- **F-PTR-241** Nit/REAL_DEFECT — CLOSED — evaluateSkillCondition has no production callers -- dormant parity surface (executor consumes evaluateResolvedCondition)
+- **F-PTR-242** Nit/REAL_DEFECT — CLOSED — HitResolveOptions.isPrimary is a required field with zero readers; the secondaryPercent its docblock references does not exist
+- **F-PTR-243** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — phapTheLabel positions right of the bar with no overflow guard
+- **F-PTR-223** Low/REAL_DEFECT — DUPLICATE_LINKED — preResolved replay blind to same-id empowerment: buildPhapTheVariant keeps variant.id===base.id so payloadDef.id!==rootDef.id never fires; resolver re-evaluates the threshold on live state; execution.theBurned/resolvedVariantId never ride the replay channel
+- **F-PTR-224** Low/REAL_DEFECT — CLOSED — consumeThe lacks the floor/guard the pool's own authority enforces elsewhere (negative amount inflates; overdraft goes negative)
+- **F-PTR-225** Low/REAL_DEFECT — CLOSED — asymmetric dead-authoring faults: onLanded/oncePerCast on a non-deal_damage op validate clean and are silently ignored
+- **F-PTR-226** Nit/REAL_DEFECT — CLOSED — subcasts.compositeCount without compositePool never faulted (dead field)
+- **F-PTR-227** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — dual 'the' consume contract: all-or-nothing skip (EntityResourceAdapter) vs partial-clamp Math.min (TurnSkillAction)
+- **F-PTR-228** Medium/REAL_DEFECT — CLOSED — NOVA-1 -- ho_mon intercept pays out before the cast is proven to exist: unfunded/adapter-declined casts open the window, protector pays 15 The + squishy mints externalWard(7500)+ho_ve marker + intercepted=true, then castBlocked; repeated dead casts drain the pool farming wards
+- **F-PTR-229** Medium/REAL_DEFECT — CLOSED — NOVA-5 -- save v87 boundary: {spell_pathway, spellPath.element:'fire', skills:[]} passes shape validation AND assertSaveAcceptable, then resolveAuthoredBasic throws at EVERY battle build -- self-reproducing crash save
+- **F-PTR-230** Low/REAL_DEFECT — CLOSED — NOVA-4 -- oncePerCast dedup is per-primary-op: two primaries each mint a flagged secondary; instances:{count:2} fans the flagged resolution into 2 hits (latent; contract narrower than the name)
+- **F-PTR-231** Low/REAL_DEFECT — CLOSED — SkillResolverError->null catch wraps executor.execute: a post-commit in-execute re-resolve throw would masquerade as a declined cast with cost/damage already applied (dormant: driveFollowUps:false, extras resolve pre-commit)
+- **F-PTR-232** Low/REAL_DEFECT — CLOSED — grantBasicLandedIncome pays per landed hit -- spec-consistent per-hit semantics but an authoring trap for multi-target ung_the basics
+- **F-PTR-233** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — theBarBridge maxThe fallback THE_BAR_MAX(5) vs engine theCap MAX_THE(100)
+- **F-PTR-234** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — catalogFor merge: root-id collisions across per-battle catalogs drop silently
+- **F-PTR-235** Nit/REAL_DEFECT — CLOSED — coverage limit: routed charge-resolve replay on empowered/composite chargedSkill + 30%-of-max routed cost verified by read only (no shipped def combines chargeTurns with empowerment/compositePicks)
+- **F-PTR-244** Nit/REAL_DEFECT — CLOSED — SPELL_KIT_IDS[activeElement][0] throws a bare TypeError on a corrupt save carrying a non-ElementType element string
+- **F-PTR-245** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — covered defs declining at plan time still pay the Ho proc cost + mint ward/marker before castBlocked stamps
+- **F-PTR-246** Medium/REAL_DEFECT — CLOSED — hidden_spell_pathway kit has no save-acceptance mirror (sibling axis ungated)
+- **F-PTR-247** Low/REAL_DEFECT — CLOSED — ordering-hazard docblock contradicts gate comment (unreachable vs accepted-latent)
+- **F-PTR-248** Low/REAL_DEFECT — CLOSED — NaN slips the floor guards in grantThe/consumeThe
+- **F-PTR-249** Nit/REAL_DEFECT — CLOSED — stale module-header claim "single clamp expression"
+- **F-PTR-250** Low/REAL_DEFECT — DUPLICATE_LINKED — hidden_spell_pathway sibling axis ungated (same defect as F-PTR-246)
+- **F-PTR-251** Low/REAL_DEFECT — CLOSED — viability gate clause coverage: only adapter-unsupported branch pinned
+- **F-PTR-252** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — post-window decline leaves paid cost + ward on a never-landed cast
+- **F-PTR-253** Nit/REAL_DEFECT — CLOSED — consumeThe(entity,0) early return skips the old normalize-on-read
+- **F-PTR-254** Low/REAL_DEFECT — CLOSED — consumeResourceFor: NaN required cost slips the <=0 floor and bricks currentMp
+- **F-PTR-255** Nit/REAL_DEFECT — CLOSED — theCap trusts entity.maxThe -- corrupt NaN cap bricks finite grants
+- **F-PTR-256** Nit/REAL_DEFECT — CLOSED — tryPayProcCost reports paid-true on NaN cost while paying nothing
+- **F-PTR-257** Low/REAL_DEFECT — CLOSED — dormant second write site on entity.maxThe silently overwrites
+- **F-PTR-258** Low/NON_ACTIONABLE — REJECTED_WITH_PROOF — empowerment predicate evaluated at three sites
+- **F-PTR-259** Low/REAL_DEFECT — CLOSED — latent repeat-of-empowered hole: no registry fault on empowerment x repeatCasts
+- **F-PTR-260** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — duplicated constants with parity comments, no enforcement
+- **F-PTR-261** Nit/REAL_DEFECT — CLOSED — pendingQueuedExecution drop-on-mismatch asymmetry undocumented
+- **F-PTR-262** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — resolvedVariantId in routeCast preResolved branch is unreachable
+- **F-PTR-263** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — writeExternalWardGrant REPLACE-not-max: new ward overwrites a larger existing ward
+- **F-PTR-264** Nit/REAL_DEFECT — DUPLICATE_LINKED — TheEconomy trusts entity.maxThe on grant path (dup of COR-R nit)
+- **F-PTR-265** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — resolveInterceptWindow lacks declared.intercepted idempotence re-guard
+- **F-PTR-266** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — post-window decline path unreachable for enemy casts
+- **F-PTR-267** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — version-skew: pre-feature saves rejected by new kit-coherence check
+
+## Coverage
+
+- cells: 0 total; 
+
+## Chronology
+
+- cycle CYCLE-PTR-A1: STALE; reviews REV-PTR-COR-A1,REV-PTR-AUT-A1,REV-PTR-INT-A1
+- cycle CYCLE-PTR-B1: STALE; reviews REV-PTR-COR-B1,REV-PTR-AUT-B1,REV-PTR-INT-B1
+
+## Convergence
+
+- OK C1-identity: all final evidence binds the declared state
+- OK C2-census-coverage: census + coverage complete
+- OK C3-no-open: none open
+- OK C4-final-gates: final gates green
+- OK C5-sequential: sequential phase reviews present
+- UNMET C6-clean-pair: Clean A missing/not CLEAN; Clean B missing/not CLEAN
+- OK C7-mutation-corpus: mutation + corpus satisfied
+- OK C8-terminal-check: independent terminal verifier sealed
+- OK C9-readiness: brief(s) lack finalConformance evidence: 

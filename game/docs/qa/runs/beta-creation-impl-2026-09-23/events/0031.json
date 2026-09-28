@@ -1,0 +1,10 @@
+{
+  "applied": [
+    "evidence:EV-A-INTEGRATION-SEAL",
+    "finding:F-A-INTEGRATION-1",
+    "finding:F-A-INTEGRATION-2",
+    "finding:F-A-INTEGRATION-3",
+    "review:REV-A-INTEGRATION",
+    "message:MSG-SEALED-RA-INTEGRATION"
+  ]
+}

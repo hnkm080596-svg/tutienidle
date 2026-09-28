@@ -1666,10 +1666,10 @@ function system_tickCountdownPassthrough(battle: TurnBattle, system: TurnBattleS
 }
 
 // ---------------------------------------------------------------------------
-// Slice 7 (Completion Task 10) â€” peekNextActor / resolveActorTurn split
+// Slice 7 (Completion Task 10) -- dequeueNextActorForClaim / resolveActorTurn split
 // ---------------------------------------------------------------------------
 
-describe('TurnBattleSystem.peekNextActor', () => {
+describe('TurnBattleSystem.dequeueNextActorForClaim', () => {
   it('returns the next ready actor WITHOUT resolving anything (no turn consumed, state unchanged)', () => {
     const player = createCombatant({
       id: 'player',
@@ -1690,7 +1690,7 @@ describe('TurnBattleSystem.peekNextActor', () => {
     }
 
     const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
-    const actor = system.peekNextActor(battle)
+    const actor = system.dequeueNextActorForClaim(battle)
 
     expect(actor?.id).toBe('player')
     expect(battle.totalTurnsElapsed ?? 0).toBe(0)
@@ -1698,7 +1698,7 @@ describe('TurnBattleSystem.peekNextActor', () => {
     expect(enemyEntity.currentHp).toBe(1_000_000)
   })
 
-  it('peek is idempotent until resolved â€” calling twice returns the same actor', () => {
+  it('committing dequeue -- a second claim before resolve re-reads gauge order and returns the same still-ready actor', () => {
     const player = createCombatant({
       id: 'player',
       type: 'player',
@@ -1719,8 +1719,79 @@ describe('TurnBattleSystem.peekNextActor', () => {
 
     const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
 
-    expect(system.peekNextActor(battle)?.id).toBe('player')
-    expect(system.peekNextActor(battle)?.id).toBe('player')
+    // Not an idempotent peek: each call commits gauge advancement. The
+    // player's gauge is not consumed until completeAction, so the second
+    // claim still surfaces the same ready actor.
+    expect(system.dequeueNextActorForClaim(battle)?.id).toBe('player')
+    expect(system.dequeueNextActorForClaim(battle)?.id).toBe('player')
+  })
+
+  it('queue-path double claim over a parked queued execution throws -- no silent overwrite of a committed payload', () => {
+    const player = createCombatant({
+      id: 'player',
+      type: 'player',
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 999 }),
+    })
+    const enemyEntity = createCombatant({
+      id: 'enemy',
+      currentHp: 1_000_000,
+      maxHp: 1_000_000,
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0 }),
+    })
+
+    const repeatSkill: TurnSkillDefinition = {
+      id: 'repeat_skill',
+      cooldownTurns: 0,
+      damage: { kind: 'physical', multiplier: 1 },
+      targeting: { shape: 'single' },
+    }
+
+    const battle: TurnBattle = {
+      players: [makeParticipant('player', player, 10, 0)],
+      enemies: [makeParticipant('enemy', enemyEntity, 10, 1)],
+      state: 'fighting',
+      queuedExecutions: [
+        { actorId: 'player', rootSkill: repeatSkill, source: 'repeat', multicastDepth: 0 },
+        { actorId: 'player', rootSkill: repeatSkill, source: 'repeat', multicastDepth: 0 },
+      ],
+    }
+
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
+
+    // First claim parks the entry on pendingQueuedExecution. A second
+    // dequeue before declareActorAction consumes it would overwrite the
+    // committed payload -- the guard fails loud instead.
+    expect(system.dequeueNextActorForClaim(battle)?.id).toBe('player')
+    expect(() => system.dequeueNextActorForClaim(battle)).toThrow(/pendingQueuedExecution/)
+  })
+
+  it('queue-path double claim over a parked reactive follow-up throws -- no silent overwrite of a committed payload', () => {
+    const player = createCombatant({
+      id: 'player',
+      type: 'player',
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 999 }),
+    })
+    const enemyEntity = createCombatant({
+      id: 'enemy',
+      currentHp: 1_000_000,
+      maxHp: 1_000_000,
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 0 }),
+    })
+
+    const battle: TurnBattle = {
+      players: [makeParticipant('player', player, 10, 0)],
+      enemies: [makeParticipant('enemy', enemyEntity, 10, 1)],
+      state: 'fighting',
+      queuedFollowUps: [
+        { actorId: 'enemy', executionKind: 'reactive_bypass', actionSource: 'follow_up' },
+        { actorId: 'enemy', executionKind: 'reactive_bypass', actionSource: 'follow_up' },
+      ],
+    }
+
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
+
+    expect(system.dequeueNextActorForClaim(battle)?.id).toBe('enemy')
+    expect(() => system.dequeueNextActorForClaim(battle)).toThrow(/pendingReactiveEntry/)
   })
 
   it('returns null when no living combatant remains', () => {
@@ -1744,7 +1815,42 @@ describe('TurnBattleSystem.peekNextActor', () => {
 
     const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
 
-    expect(system.peekNextActor(battle)).toBeNull()
+    expect(system.dequeueNextActorForClaim(battle)).toBeNull()
+  })
+})
+
+describe('TurnBattleSystem.isCommittedFollowUpClaim', () => {
+  it('a live charging actor holds a committed claim', () => {
+    const charger = makeParticipant(
+      'charger',
+      createCombatant({ id: 'charger', type: 'player' }),
+      10,
+      0,
+    )
+    charger.chargingTurnsRemaining = 2
+    charger.pendingChargedSkillId = 'charger_special'
+
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
+
+    expect(system.isCommittedFollowUpClaim(charger)).toBe(true)
+  })
+
+  it('a charging actor killed mid-charge does NOT hold a committed claim (charge fields linger on the corpse)', () => {
+    // Charge fields clear only inside declareActorAction -- an actor
+    // killed mid-charge keeps chargingTurnsRemaining until the cycle
+    // reset, so the predicate must gate on entity.alive first.
+    const corpse = makeParticipant(
+      'corpse',
+      createCombatant({ id: 'corpse', type: 'player', alive: false }),
+      10,
+      0,
+    )
+    corpse.chargingTurnsRemaining = 2
+    corpse.pendingChargedSkillId = 'corpse_special'
+
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
+
+    expect(system.isCommittedFollowUpClaim(corpse)).toBe(false)
   })
 })
 
@@ -1797,7 +1903,7 @@ describe('TurnBattleSystem.resolveActorTurn', () => {
     }
 
     const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
-    const actor = system.peekNextActor(battle)
+    const actor = system.dequeueNextActorForClaim(battle)
 
     expect(actor).not.toBeNull()
 
@@ -1867,7 +1973,7 @@ describe('TurnBattleSystem.resolveActorTurn', () => {
     }
 
     const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
-    const actor = system.peekNextActor(battle)
+    const actor = system.dequeueNextActorForClaim(battle)
 
     expect(actor).not.toBeNull()
 
@@ -1925,7 +2031,7 @@ describe('TurnBattleSystem.resolveActorTurn', () => {
     }
 
     const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
-    const actor = system.peekNextActor(battle)
+    const actor = system.dequeueNextActorForClaim(battle)
 
     const step = system.resolveActorTurn(battle, actor!, 'special')
 

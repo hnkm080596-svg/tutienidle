@@ -9,7 +9,6 @@ import type { ElementType } from '../element/ElementType'
 import type { Skill } from '../skill/Skill'
 import type { EffectiveSkill } from '../skill/SkillSystem'
 import type { SkillManager } from '../skill/SkillManager'
-import type { RouteProfile } from '../phap-tu/PhapTuRoutes'
 
 /**
  * Mission C Task 9 (spec C4, audit T5-44) - the cultivation-path combat
@@ -86,5 +85,4 @@ export interface CultivationPathRuntimeDeps {
   nodeRegistry: { getAll(): ProgressionNode[] }
   getNodeLevel(nodeId: string, player: PlayerData): number
   getSpellPathElement(): ElementType | undefined
-  routeProfileProvider(skillId: string): RouteProfile
 }

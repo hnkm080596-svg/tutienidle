@@ -1,0 +1,64 @@
+{
+ "attacks": [
+  {
+   "id": "ATK-THE-ECONOMY",
+   "surface": "The gain/spend lifecycle",
+   "probe": "basic cast grants +1 The ONLY on landed (miss/fizzle/null no gain); cap 5 enforced; hidden way never gains The (F11); empowered variant consumes exactly 5; The state survives save/load; no gain on non-phap-tu paths"
+  },
+  {
+   "id": "ATK-PHAP-THE-VARIANT",
+   "surface": "buildPhapTheVariant empowerment",
+   "probe": "element committed (spell_pathway) attaches empowerment variant; variant fires ONLY when currentThe>=5; variant effects per element (water other_enemy 0.5, earth other_enemies 0.4, metal penetration bonus, fire periodic trigger, wood sinh_co latch); variant never fires without The>=5 or without commit"
+  },
+  {
+   "id": "ATK-PHAP-TRANG-WINDOW",
+   "surface": "Phap Trang window buffs + markers",
+   "probe": "each special opens its trang window (holder_turns 3 REFRESH, boundToSourceBuffId markers die with window); earth trong_the consume-all->push_gauge -0.5->trong_the_da_bi latch; metal kim_liet cap3 penetration-from-stacks; fire periodic_growth cap->doc_can; wood sinh_co latch via sinh_co_chu"
+  },
+  {
+   "id": "ATK-PERCENT-COST",
+   "surface": "percentOfMax live evaluation",
+   "probe": "special cost = 30% MaxLL evaluated LIVE at cast (F10 — not frozen at battle build); hasResourceFor reads entity.stats.maxMp; cast blocked if insufficient; zero/NaN maxMp fails closed"
+  },
+  {
+   "id": "ATK-HO-THE-DR",
+   "surface": "linhLucHoTheCap damage reduction",
+   "probe": "DR = cap x currentMp/maxMp in resolveAttack; applies ONLY to hostile direct damage; DoT/reaction/flat bypass (F11); LL=0 -> DR=0; cap from linh_ngo_<special> node (0.25)"
+  },
+  {
+   "id": "ATK-RETIREMENT-REACH",
+   "surface": "route machinery fully dead",
+   "probe": "PhapTuRoutes/routeTag/switchRoute/previewRouteSwitch/empowered-ult/chain defs unimportable; no live caller of retired symbols; SPELL_ROUTE_SKILL_IDS gone; kit = [basic,special] pair only; LQ kit exactly basic; TC grant = special"
+  },
+  {
+   "id": "ATK-SAVE-V85",
+   "surface": "save migration v85",
+   "probe": "v84 save with route field -> reject-all incompatible (not silent drop); SpellPathState{element} only; crafted save with route/phantom special/mismatched element rejected or inert; the_thuc_tinh node gone"
+  },
+  {
+   "id": "ATK-INTENT-EXPANSION",
+   "surface": "other_enemy/other_enemies intents",
+   "probe": "resolves all hostile enemies EXCLUDING primary target; empty secondary set = clean no-op (not error); intent ordering deterministic; does not hit allies/self"
+  },
+  {
+   "id": "ATK-ONLANDED-IF",
+   "surface": "onLanded if + secondary deal_damage",
+   "probe": "consequence fires only when if-condition true at land time (stacks_at_least/stacks_below/boundToSourceBuffId checks); secondary deal_damage honored with own coefficient; if false -> consequence skipped silently"
+  },
+  {
+   "id": "ATK-UI-THE-BAR",
+   "surface": "The bar + PHAP THE indicator",
+   "probe": "bar max/threshold = 5; phapTheActive = empowerment present && currentThe>=5; indicator only for spell_pathway committed element; hidden way shows no bar/dots"
+  },
+  {
+   "id": "ATK-RESPEC-INTEGRITY",
+   "surface": "respec with element-only path",
+   "probe": "respec cannot produce phantom route state; element reset preserves The pool correctly; refund math uses shared helper; node tree absence of route nodes cannot dead-lock committed element"
+  },
+  {
+   "id": "ATK-MARKER-BOUND",
+   "surface": "boundToSourceBuffId lifecycle",
+   "probe": "marker dies exactly when source window dies; marker cannot outlive across respec/save; double-window refresh does not double-stack markers"
+  }
+ ]
+}

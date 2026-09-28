@@ -43,7 +43,7 @@ import { SkillExecutor } from '../../skilldef/SkillExecutor'
 import type { StatReadPort, SkillResolveEntityQuery } from '../../skilldef/CastSnapshot'
 import type { SkillBuffInstanceSummary, SkillDetonatePeriodic, SkillQueryPorts } from '../../skilldef/SkillQueryPorts'
 import type { SkillPreResolution, SkillResolveInput } from '../../skilldef/SkillResolver'
-import { SkillResolver } from '../../skilldef/SkillResolver'
+import { SkillResolver, SkillResolverError } from '../../skilldef/SkillResolver'
 
 import type {
   TurnBattle,
@@ -53,6 +53,7 @@ import type {
 import { isNaturalActionSource } from '../../proc/ProcCapabilities'
 import type { TurnSkillDefinition } from './TurnSkillAction'
 import { executionCommitsCast } from './TurnSkillAction'
+import { PlanPresentationCollector, type ResolvedPresentationGroup } from './SkillPresentationFacts'
 
 // ---------------------------------------------------------------------------
 // Orchestration surface -- TBS implements these over its private helpers.
@@ -108,6 +109,7 @@ export interface TurnSkillPlanOrchestration {
 }
 
 export interface TurnSkillPlanRoutedCast {
+  presentationGroups: readonly ResolvedPresentationGroup[]
   outcome: SkillCastOutcome
   /** Deduped first-landed order -- the legacy targetIds/landedTargets
       bookkeeping for the Tro window + the return value. */
@@ -126,6 +128,7 @@ export class TurnSkillPlanRuntimeError extends Error {}
 // ---------------------------------------------------------------------------
 
 interface PlanCastSession {
+  presentation?: PlanPresentationCollector
   landedTargetIds: string[]
   landedTargets: TurnBattleParticipant[]
   /** apply_buff targets whose op resolved -- the non-damaging lane's
@@ -235,6 +238,7 @@ export class TurnSkillPlanRuntime {
       commitsCast && (rootDef.chargeTurns ?? 0) > 0
 
     const session = this.newSession(declared)
+    session.presentation = new PlanPresentationCollector(actor, [rootDef, payloadDef, ...(declared.compositePickedSkills ?? [])], id => tbs.participant(battle, id), 'primary')
     const executor = this.buildExecutor(battle, actor, declared, session)
 
     const input: SkillResolveInput = {
@@ -252,7 +256,9 @@ export class TurnSkillPlanRuntime {
       ...(declared.suddenDeathMultiplier !== 1
         ? { coefficientScale: declared.suddenDeathMultiplier }
         : {}),
-      ...(chargeResolveDef !== undefined ? { payloadOnly: true } : {}),
+      ...(chargeResolveDef !== undefined
+        ? { payloadOnly: true, deferredResolve: true }
+        : {}),
       ...(chargeInit ? { chargeInit: true } : {}),
       commitsCast,
       // TBS drives repeats/multicast through its own queuedExecutions
@@ -262,10 +268,32 @@ export class TurnSkillPlanRuntime {
       ...(preResolved !== undefined ? { preResolved } : {}),
     }
 
-    const plan = this.resolver.resolve(input)
-    const outcome = executor.execute(plan, input)
+    // A resolver throw mid-plan means the registry accepted a shape
+    // the machinery cannot express (e.g. a target_hit_landed gate on
+    // an intent no deal_damage can mint) -- convert it to the same
+    // decline every caller already handles (null -> reportUnroutedCast
+    // -> castBlocked) instead of an uncaught exception crashing the
+    // tick and skipping the blocked bookkeeping. executor.execute is
+    // inside the try because its own resolver.resolve calls (extras,
+    // composite payloads) throw the same class. Dormant edge: a
+    // resolver throw AFTER commit (an in-execute re-resolve on a
+    // roster that shrank mid-cast) would also masquerade as a
+    // declined cast with cost/damage already applied -- unreachable
+    // while driveFollowUps stays false and composite extras resolve
+    // pre-commit; enabling follow-ups needs a distinct
+    // faulted-after-commit plan state, not this catch.
+    let outcome: SkillCastOutcome
+    try {
+      const plan = this.resolver.resolve(input)
+      session.presentation.register(plan)
+      outcome = executor.execute(plan, input)
+    } catch (error) {
+      if (error instanceof SkillResolverError) return null
+      throw error
+    }
 
     return {
+      presentationGroups: session.presentation.finish(outcome.blocked ? 'insufficient-resource' : chargeInit ? 'charging' : 'no-presentable-operation'),
       outcome,
       landedTargetIds: session.landedTargetIds,
       landedTargets: session.landedTargets,
@@ -289,12 +317,13 @@ export class TurnSkillPlanRuntime {
     declared: TurnDeclaredAction,
     extraDef: TurnSkillDefinition,
     extraTargets: readonly TurnBattleParticipant[],
-  ): { landedTargetIds: readonly string[]; hitCount: number } | null {
+  ): { landedTargetIds: readonly string[]; hitCount: number; presentationGroups: readonly ResolvedPresentationGroup[] } | null {
     const catalog = this.catalogFor(extraDef)
     if (catalog.unsupported.length > 0) return null
 
     const tbs = this.deps.orchestration
     const session = this.newSession(declared, extraTargets)
+    session.presentation = new PlanPresentationCollector(actor, [extraDef], id => tbs.participant(battle, id), 'combo')
     const executor = this.buildExecutor(battle, actor, declared, session)
 
     const input: SkillResolveInput = {
@@ -319,10 +348,18 @@ export class TurnSkillPlanRuntime {
       driveFollowUps: false,
     }
 
-    const plan = this.resolver.resolve(input)
-    executor.execute(plan, input)
+    let outcome: SkillCastOutcome
+    try {
+      const plan = this.resolver.resolve(input)
+      session.presentation.register(plan)
+      outcome = executor.execute(plan, input)
+    } catch (error) {
+      if (error instanceof SkillResolverError) return null
+      throw error
+    }
 
     return {
+      presentationGroups: session.presentation.finish(outcome.blocked ? 'insufficient-resource' : 'no-presentable-operation'),
       landedTargetIds: session.landedTargetIds,
       hitCount: session.hitCount,
     }
@@ -454,7 +491,14 @@ export class TurnSkillPlanRuntime {
       }, 0)
 
     return {
+      onOperationWillSettle: (operation) => {
+        if ('selector' in operation.payload) {
+          const instance = this.deps.buffs.getInstance(operation.payload.selector)
+          if (instance) session.presentation?.captureSelectedBuff(operation.operationId, instance.targetId, instance.instanceId)
+        }
+      },
       onOperationSettled: (operation, result, plan) => {
+        session.presentation?.settle(operation, result, plan)
         if (result.status === 'resolved') {
           const opTarget = (operation.payload as { targetId?: string })
             .targetId
@@ -563,6 +607,7 @@ export class TurnSkillPlanRuntime {
       },
 
       onPlanCompleted: (plan) => {
+        session.presentation?.register(plan)
         // Legacy refresh boundary (ARCH-002 parity): applyDeclaredBuff
         // refreshes each applied target and the non-damaging lane
         // refreshes affected + actor, so routed ops must leave stats
@@ -635,11 +680,18 @@ export class TurnSkillPlanRuntime {
       opResults: {
         // Same trace surface the executor testkit uses -- records are
         // append-only; the latest record for the id is the result.
-        lastOpResult: (operationId) =>
-          [...scheduler.trace.records]
-            .reverse()
-            .find((record) => record.operation.operationId === operationId)
-            ?.result,
+        lastOpResult: (operationId) => {
+          // Backward scan without the reversed-copy allocation -- called
+          // per target on the settle hot path.
+          const records = scheduler.trace.records
+          for (let i = records.length - 1; i >= 0; i--) {
+            const record = records[i]
+            if (record !== undefined && record.operation.operationId === operationId) {
+              return record.result
+            }
+          }
+          return undefined
+        },
       },
     }
   }

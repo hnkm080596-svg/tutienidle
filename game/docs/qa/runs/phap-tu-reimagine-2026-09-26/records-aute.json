@@ -1,0 +1,48 @@
+{
+ "run": "phap-tu-reimagine-2026-09-26",
+ "reviewId": "REV-PTR-AUT-E1",
+ "reviewer": "devin-551656057ae84cbeb73ecd6b297d65df",
+ "phase": "AUTHORITY",
+ "pin": "b1f59d72",
+ "verdict": "FINDINGS -- 2 Low + 4 Nit; no Critical/High/Medium",
+ "adjudication": [
+  {
+   "finding": "F-PTR-60 / LOW-1",
+   "disposition": "FIXED @0b160fca",
+   "verification": "emitGrants now gates !plan.commitsCast; engine lane grantTheFromCast wrapped in executionCommitsCast(declared.execution). type-check clean; scoped vitest 2029 pass / 4 expected-fail (same pin)"
+  },
+  {
+   "finding": "F-PTR-61 / LOW-2",
+   "disposition": "DUPLICATE of F-PTR-59 (COR-E1) -- rejected spec-pinned"
+  },
+  {
+   "finding": "F-PTR-62 / NIT-1",
+   "disposition": "REJECTED -- deliberate presentation mirror"
+  },
+  {
+   "finding": "F-PTR-63 / NIT-2",
+   "disposition": "REJECTED -- documented legacy-parity lane semantics (same family as earlier resisted-apply adjudication)"
+  },
+  {
+   "finding": "F-PTR-64 / NIT-3",
+   "disposition": "REJECTED -- latent (sole producer finite literal 0.3)"
+  },
+  {
+   "finding": "F-PTR-65 / NIT-4",
+   "disposition": "REJECTED -- cosmetic comment-only churn"
+  }
+ ],
+ "observedOnly": [
+  "consumesAllThe/theBurned/theScaling parity tree fully retained with zero consumers",
+  "commitCast's direct currentThe = 0 write (TBS.ts:2853) bypasses the resource authority on the engine lane"
+ ],
+ "sealedSurfaces": [
+  "cap single-sourced through grantThe/entity.maxThe",
+  "auxiliary-first registry claim resolves require(rootId) to empowered def while definitionId keeps base identity",
+  "oncePerCast one rider per AoE cast",
+  "capstones via getEffectiveSkill",
+  "element roots respec-preserved + clawback",
+  "route machinery fully excised",
+  "hidden-way seal airtight"
+ ]
+}

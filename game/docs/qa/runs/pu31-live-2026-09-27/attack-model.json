@@ -1,0 +1,9 @@
+{
+  "surfaces": ["learning/publication", "lesson-routing", "consumption-record"],
+  "attacks": [
+    "self-qualified lesson (qualifiedBy contains the qualifying actor)",
+    "policy publication torn write (policy file without active-policy index or vice versa)",
+    "consumption claimed without routing APPLY + brief",
+    "QUALIFIED lesson routing on STALE sourceDependencies"
+  ]
+}

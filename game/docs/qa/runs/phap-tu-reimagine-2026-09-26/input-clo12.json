@@ -1,0 +1,67 @@
+{
+ "records": [
+  {
+   "kind": "review",
+   "id": "REV-PTR-CLO-12",
+   "state": {
+    "productStateId": "f5c75798ae22364e8ff6690d1f802dcff8a31c713d0c0950bbefb95365492fa4",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "round": 9,
+   "phase": "CLOSURE",
+   "reviewerId": "devin-bb20deb3f71a4f0cbf10252fd6cb2bd3",
+   "contextId": "ctx-bb20deb3",
+   "model": "swe-2",
+   "role": "closure",
+   "inputBundleHash": "f5c75798ae22364e8ff6690d1f802dcff8a31c713d0c0950bbefb95365492fa4",
+   "priorFindingsVisible": true,
+   "accessLimitations": [
+    "read-only worktree"
+   ],
+   "startedAt": "2026-09-27T02:46:43Z",
+   "sealedAt": "2026-09-27T02:48:37Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [
+    "EV-PTR-CLO12"
+   ],
+   "findingIds": [],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "kind": "EXECUTED_INTEGRATION",
+    "id": "EV-PTR-CLO12",
+    "state": {
+     "productStateId": "f5c75798ae22364e8ff6690d1f802dcff8a31c713d0c0950bbefb95365492fa4",
+     "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+     "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+     "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+    },
+    "status": "CURRENT",
+    "producer": "devin-bb20deb3f71a4f0cbf10252fd6cb2bd3",
+    "startedAt": "2026-09-27T02:46:43Z",
+    "finishedAt": "2026-09-27T02:48:37Z",
+    "commandOrMethod": "closure verify residual batch @c2bb6992: read sites + type-check + vitest (2 files/36 + battle+buff2 113 files/992 tests, all PASS)",
+    "cwd": "game/",
+    "exitCode": 0,
+    "result": "PASS",
+    "artifactPath": "records-clo12.json",
+    "artifactHash": "0950967274c765f2d0032251a2b150bb145963dc97f4be9c776f856b31690b42",
+    "claims": [
+     "all 4 residual fixes verified on c2bb6992",
+     "live theScaling fold remains only on commit-cast lane L1910-1915"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [],
+    "invariantIds": [],
+    "limitations": []
+   }
+  }
+ ]
+}

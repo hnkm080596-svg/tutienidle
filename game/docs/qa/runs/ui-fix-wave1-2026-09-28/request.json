@@ -1,0 +1,16 @@
+{
+ "runId": "ui-fix-wave1-2026-09-28",
+ "productRoot": ".",
+ "goal": "Verify the merged UI-FIX wave-1 branch devin/ui-fix-wave1 (PR #46, head 32483797, base 0f1d84d1). The branch unions 4 fixer slices (creation-meta 243bfce6, progression f3b14c91, combat 6fa2bb9e, economy 8bb6e240) remediating verified findings from docs/ui-audit/. Surface: Vue UI components, composables, locale JSONs, CSS, e2e specs. Fixers each verified their own slice; this run covers the UNION state on top of master — cross-slice interactions, merge resolutions, and regressions.",
+ "requiredReadiness": false,
+ "contractPaths": [
+  "docs/qa/protocol/README.md"
+ ],
+ "attackModelPath": "attack-model.json",
+ "checkout": "/tmp/ui-fix-merge/game",
+ "branch": "devin/ui-fix-wave1",
+ "base": "0f1d84d1",
+ "head": "32483797",
+ "capacityLimit": 5,
+ "environmentPath": "environment.json"
+}

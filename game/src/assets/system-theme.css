@@ -337,7 +337,6 @@ aside.character-detail.sys-surface {
 
 /* Focus - non-glow, >= 2px, on every interactive sys control (spec 7.2). */
 .sys-surface :is(button, [role='button'], a, input, select, [tabindex]):focus-visible,
-.sys-modal :is(button, [role='button'], a, input, select, [tabindex]):focus-visible,
 .overlay-panel__card--system :is(button, [role='button'], a, input, select, [tabindex]):focus-visible {
   outline: 2px solid var(--sys-focus);
   outline-offset: 2px;

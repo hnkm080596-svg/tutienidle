@@ -1,0 +1,318 @@
+{
+ "records": [
+  {
+   "kind": "finding",
+   "id": "F-PTR-262",
+   "title": "resolvedVariantId in routeCast preResolved branch is unreachable",
+   "state": {
+    "productStateId": "c3e72917d3bee71a3bf4b0bab2c8f6ca13bf9e41e667615933cd29e838cc8dda",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "subsystem": "core",
+   "duplicateOf": null,
+   "rejectionReason": "unreachable by construction; harmless latent coverage",
+   "exception": null,
+   "siblingFindingIds": [],
+   "invariantIds": [],
+   "closedAt": "2026-09-27T15:10:00Z",
+   "severity": "Nit",
+   "locations": [
+    {
+     "path": "src/core/battle/turn/TurnSkillPlanRuntime.ts",
+     "symbolOrSection": ":239-241",
+     "revision": "7d837a91",
+     "basis": "SOURCE"
+    }
+   ],
+   "pinEvidenceIds": [
+    "EV-PTR-AUTR"
+   ],
+   "verificationEvidenceIds": [
+    "EV-PTR-AUTR"
+   ],
+   "evidenceIds": [
+    "EV-PTR-AUTR"
+   ],
+   "closureReviewIds": [],
+   "status": "REJECTED_WITH_PROOF",
+   "classification": "NON_ACTIONABLE",
+   "reachability": "UNKNOWN",
+   "actionable": false,
+   "discoveredBy": "cleanR AUT",
+   "expected": "dead parameter documented or removed",
+   "actual": "empowered source implies payloadDef.id === rootDef.id which skips the preResolved branch entirely",
+   "rootCause": "latent coverage for a hypothetical distinct-id empowered producer",
+   "rootClass": "DORMANT_CODE",
+   "repair": "none -- rejected with proof (harmless latent coverage, no behavior defect)",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "enumerate same-class sites against the repaired authority/policy",
+     "evidenceIds": [
+      "EV-PTR-AUTR"
+     ],
+     "hitDispositions": [
+      "sibling sites enumerated"
+     ],
+     "coverageLimits": [
+      "fixture-injected or documented-latent reachability only"
+     ]
+    }
+   ],
+   "closeReason": "rejected: unreachable by construction; harmless latent coverage",
+   "counterexample": "empowered source implies payloadDef.id === rootDef.id which skips the preResolved branch entirely"
+  },
+  {
+   "kind": "finding",
+   "id": "F-PTR-264",
+   "title": "TheEconomy trusts entity.maxThe on grant path (dup of COR-R nit)",
+   "state": {
+    "productStateId": "c3e72917d3bee71a3bf4b0bab2c8f6ca13bf9e41e667615933cd29e838cc8dda",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "subsystem": "core",
+   "duplicateOf": "F-PTR-255",
+   "rejectionReason": null,
+   "exception": null,
+   "siblingFindingIds": [],
+   "invariantIds": [],
+   "closedAt": "2026-09-27T15:10:00Z",
+   "severity": "Nit",
+   "locations": [
+    {
+     "path": "src/core/the-tu/TheEconomy.ts",
+     "symbolOrSection": "theCap",
+     "revision": "7d837a91",
+     "basis": "SOURCE"
+    }
+   ],
+   "pinEvidenceIds": [
+    "EV-PTR-FIXR"
+   ],
+   "verificationEvidenceIds": [
+    "EV-PTR-FIXR"
+   ],
+   "evidenceIds": [
+    "EV-PTR-FIXR"
+   ],
+   "closureReviewIds": [],
+   "status": "DUPLICATE_LINKED",
+   "classification": "NON_ACTIONABLE",
+   "reachability": "FIXTURE_INJECTED",
+   "actionable": true,
+   "discoveredBy": "cleanR INT",
+   "expected": "cap guarded against corrupt entity.maxThe",
+   "actual": "same claim as F-PTR-255 -- independent rediscovery by INT lens",
+   "rootCause": "same as F-PTR-255",
+   "rootClass": "DUPLICATE",
+   "repair": "fixed in wave-R batch via F-PTR-255 (theCap fallback)",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "enumerate same-class sites against the repaired authority/policy",
+     "evidenceIds": [
+      "EV-PTR-FIXR"
+     ],
+     "hitDispositions": [
+      "sibling sites enumerated"
+     ],
+     "coverageLimits": [
+      "fixture-injected or documented-latent reachability only"
+     ]
+    }
+   ],
+   "closeReason": "duplicate of F-PTR-255",
+   "counterexample": "same claim as F-PTR-255 -- independent rediscovery by INT lens"
+  },
+  {
+   "kind": "finding",
+   "id": "F-PTR-265",
+   "title": "resolveInterceptWindow lacks declared.intercepted idempotence re-guard",
+   "state": {
+    "productStateId": "c3e72917d3bee71a3bf4b0bab2c8f6ca13bf9e41e667615933cd29e838cc8dda",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "subsystem": "core",
+   "duplicateOf": null,
+   "rejectionReason": "verified unreachable; bounded impact",
+   "exception": null,
+   "siblingFindingIds": [],
+   "invariantIds": [],
+   "closedAt": "2026-09-27T15:10:00Z",
+   "severity": "Nit",
+   "locations": [
+    {
+     "path": "src/core/battle/turn/TurnBattleSystem.ts",
+     "symbolOrSection": ":3192",
+     "revision": "7d837a91",
+     "basis": "SOURCE"
+    }
+   ],
+   "pinEvidenceIds": [
+    "EV-PTR-INTR"
+   ],
+   "verificationEvidenceIds": [
+    "EV-PTR-INTR"
+   ],
+   "evidenceIds": [
+    "EV-PTR-INTR"
+   ],
+   "closureReviewIds": [],
+   "status": "REJECTED_WITH_PROOF",
+   "classification": "NON_ACTIONABLE",
+   "reachability": "UNKNOWN",
+   "actionable": false,
+   "discoveredBy": "cleanR INT",
+   "expected": "re-entry barred or made idempotent",
+   "actual": "single-apply pending pipeline relied on; re-entry barred at type level (QueuedFollowUp.actionSource excludes normal|skill); worst case duplicate marker event (REPLACE idempotent)",
+   "rootCause": "verified unreachable re-entry",
+   "rootClass": "UNREACHABLE",
+   "repair": "none -- rejected with proof (type-level bar + idempotent REPLACE bound impact)",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "enumerate same-class sites against the repaired authority/policy",
+     "evidenceIds": [
+      "EV-PTR-INTR"
+     ],
+     "hitDispositions": [
+      "sibling sites enumerated"
+     ],
+     "coverageLimits": [
+      "fixture-injected or documented-latent reachability only"
+     ]
+    }
+   ],
+   "closeReason": "rejected: verified unreachable; bounded impact",
+   "counterexample": "single-apply pending pipeline relied on; re-entry barred at type level (QueuedFollowUp.actionSource excludes normal|skil"
+  },
+  {
+   "kind": "finding",
+   "id": "F-PTR-266",
+   "title": "post-window decline path unreachable for enemy casts",
+   "state": {
+    "productStateId": "c3e72917d3bee71a3bf4b0bab2c8f6ca13bf9e41e667615933cd29e838cc8dda",
+    "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+    "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+    "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+   },
+   "subsystem": "core",
+   "duplicateOf": null,
+   "rejectionReason": "unreachable by authored-data census",
+   "exception": null,
+   "siblingFindingIds": [],
+   "invariantIds": [],
+   "closedAt": "2026-09-27T15:10:00Z",
+   "severity": "Nit",
+   "locations": [
+    {
+     "path": "src/core/battle/turn/TurnBattleSystem.ts",
+     "symbolOrSection": ":3197",
+     "revision": "7d837a91",
+     "basis": "SOURCE"
+    }
+   ],
+   "pinEvidenceIds": [
+    "EV-PTR-INTR"
+   ],
+   "verificationEvidenceIds": [
+    "EV-PTR-INTR"
+   ],
+   "evidenceIds": [
+    "EV-PTR-INTR"
+   ],
+   "closureReviewIds": [],
+   "status": "REJECTED_WITH_PROOF",
+   "classification": "NON_ACTIONABLE",
+   "reachability": "UNKNOWN",
+   "actionable": false,
+   "discoveredBy": "cleanR INT",
+   "expected": "substituted declared.affected + ward would persist on a declined cast if reachable",
+   "actual": "grep-verified: no enemy def authors resourceCost/resourceCostPercentOfMax and window only opens on enemy actors; ordering-hazard docblock documents the seam",
+   "rootCause": "verified unreachable branch",
+   "rootClass": "UNREACHABLE",
+   "repair": "none -- rejected with proof (unreachable + documented seam)",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "enumerate same-class sites against the repaired authority/policy",
+     "evidenceIds": [
+      "EV-PTR-INTR"
+     ],
+     "hitDispositions": [
+      "sibling sites enumerated"
+     ],
+     "coverageLimits": [
+      "fixture-injected or documented-latent reachability only"
+     ]
+    }
+   ],
+   "closeReason": "rejected: unreachable by authored-data census",
+   "counterexample": "grep-verified: no enemy def authors resourceCost/resourceCostPercentOfMax and window only opens on enemy actors; orderin"
+  },
+  {
+   "kind": "lesson",
+   "body": {
+    "version": 1,
+    "supersedes": null,
+    "incidentEvidenceIds": [
+     "EV-PTR-AUTR",
+     "EV-PTR-INTR"
+    ],
+    "originatingRun": "phap-tu-reimagine-2026-09-26",
+    "missedInvariantIds": [],
+    "exclusions": [],
+    "promotionEvidenceIds": [],
+    "qualifiedBy": [],
+    "status": "CAPTURED",
+    "policyVersion": null,
+    "effectiveFromRun": null,
+    "recurrenceFindingIds": [],
+    "preventionEvidenceIds": [
+     "EV-PTR-AUTR",
+     "EV-PTR-INTR"
+    ],
+    "guidance": null,
+    "id": "L-PTR-R-DOCUMENTED-LATENT",
+    "triggerType": "DEFECT",
+    "findingIds": [
+     "F-PTR-258",
+     "F-PTR-260",
+     "F-PTR-261",
+     "F-PTR-262",
+     "F-PTR-263",
+     "F-PTR-264",
+     "F-PTR-265",
+     "F-PTR-266",
+     "F-PTR-267"
+    ],
+    "rootClass": "DOCUMENTED_LATENT",
+    "escapeReason": "wave-R tail: claims that are real code facts but documented-latent / type-unreachable / designed-semantics -- closed by proof + docblock, not code churn",
+    "applicability": [
+     "latent surfaces reviewers keep rediscovering",
+     "documented asymmetries (drop-on-mismatch, REPLACE ward)",
+     "fail-closed acceptance vs version-skew"
+    ],
+    "proposedProtection": [
+     "docblock names the asymmetry explicitly so future reviewers see the documented answer",
+     "reject-with-proof records the verification, not just the dismissal"
+    ],
+    "capabilityDelta": "documented-latent adjudication discipline; dup-link across reviewer lenses"
+   }
+  }
+ ]
+}

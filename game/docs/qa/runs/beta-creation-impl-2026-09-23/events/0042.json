@@ -1,0 +1,15 @@
+{
+ "type": "FINDINGS_ADJUDICATION",
+ "round": "clean-A",
+ "candidate": "94f0e9f7",
+ "headAfterFixes": "8f53aa18",
+ "summary": "Clean-A trio sealed: 1 Medium + 3 Low + 3 Nit across correctness/authority/integration lenses. All actionable findings repaired at 8f53aa18 (10 files, +88/-13): third-channel core-grant check added to v82 preflight, write-op mortal predicate narrowed to preflight terms, rejected->recovery pin committed, shadowed journey fixture corrected, diagnostics channel preserved, sim profiles de-duplicated onto MORTAL_DEFAULT_BASIC_ID.",
+ "deferred": [
+  {
+   "id": "F-AUTH-02-residual",
+   "reason": "SQL literal precursor list is a documented cross-language DRIFT NOTE; DB mirror column is write-only bookkeeping - both accepted contract choices, not defects"
+  }
+ ],
+ "verifyEvidence": "scoped vitest green post-fix: core/game+save+composables 1494/1494, earlygame 48/48 (incl. un-shadowed zhou_tian fixture); vue-tsc --build exit 0",
+ "protocolNote": "per clean-pair rule the fixes invalidate A's candidate binding; Clean-B trio dispatches on 8f53aa18 as the frozen merged candidate"
+}

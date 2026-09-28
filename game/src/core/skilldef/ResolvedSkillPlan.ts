@@ -42,6 +42,12 @@ export type ResolvedSkillCondition =
   // threshold already folded to a number at RESOLVE (a non-foldable
   // threshold is a structural fault at resolve time).
   | { kind: 'hp_percent_below'; targetId: CombatEntityId; threshold: number }
+  | {
+      kind: 'stacks_below'
+      targetId: CombatEntityId
+      definitionId: BuffDefinitionId
+      max: number
+    }
   // authored self-scope -> bound to sourceId.
   | {
       kind: 'resource_at_least'
@@ -295,6 +301,11 @@ export interface ResolvedSkillPlan {
       (repeat/multicast) carry commitsCast:false so their fresh cast
       identity never re-commits (executionCommitsCast parity). */
   commitsCast: boolean
+  /** Deferred charge-resolve identity (TBS chargeTurns parity): set on
+      the routed resolve execution of a committed charge. Its
+      commitsCast stays false yet the grant lane still mints on it --
+      follow-up/extra lanes never carry this flag. */
+  deferredResolve?: boolean
 
   // Executor-consumed def-level semantics (copied from the EFFECTIVE def
   // after variant/composite resolution).
@@ -448,6 +459,11 @@ export function evaluateResolvedCondition(
       )
     case 'hp_percent_below':
       return ctx.hpPercent(condition.targetId) < condition.threshold
+    case 'stacks_below':
+      return (
+        ctx.buffStacks(condition.definitionId, condition.targetId, undefined) <
+        condition.max
+      )
     case 'resource_at_least':
       return (
         ctx.resourceCurrent(condition.targetId, condition.resourceId) >=

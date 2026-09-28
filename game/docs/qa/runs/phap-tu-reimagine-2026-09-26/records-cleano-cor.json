@@ -1,0 +1,29 @@
+{
+ "verdict": "FINDINGS",
+ "pin": "8b19829c",
+ "reviewer": "devin-e72ab9d0b1264fe28b1a41d2c9f838e6",
+ "findings": [
+  {
+   "n": "F1",
+   "severity": "Low",
+   "summary": "intercept window consumes once-roll + writes ward before routability (TBS:3186-3313; documented hazard, unreachable)"
+  },
+  {
+   "n": "F2",
+   "severity": "Low",
+   "summary": "applyPeriodicGrowth marker loop continues feeding removed instance after drain-to-zero (BuffSystem:1038-1057) -- dup of AUT-A LOW-1"
+  },
+  {
+   "n": "F3",
+   "severity": "Nit",
+   "summary": "target_hit_landed outside op.if slots passes define-time, faults only at resolve->decline (registry:1391 vs resolver:912)"
+  },
+  {
+   "n": "F4",
+   "severity": "Nit",
+   "summary": "aux-claim merge lets require(rootId) return empowered variant (dormant under driveFollowUps:false + commitsCast:false, documented)"
+  }
+ ],
+ "verification": "type-check clean; ~2500 tests green (108+750+1643)",
+ "report": "docs/qa/2026-09-27-phap-tu-reimagine-cor.md (reviewer worktree, not pushed)"
+}

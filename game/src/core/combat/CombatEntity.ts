@@ -48,16 +48,23 @@ export interface CombatEntity {
   // (resetBattleScopedResources), for every path sharing the pool
   // (Phap Tu, Bat Kiem). No PlayerData persistence, no cross-cycle
   // carry. Gains are skill-authored (TurnSkillDefinition.
-  // theGainOnLandedCast/theGainOnCrit — once per cast, never per
+  // theGainOnLandedCast - once per cast, never per
   // target). Optional — readers use `?? 0`.
   currentThe?: number
   // Battle snapshot of the The cap (undefined => MAX_THE). Derived once
   // at participant build — two disjoint producers, one per path:
-  // spell via resolveMaxThe(player) (MAX_THE + truong_the_<element>
-  // node contribution); ung_the via the kit-baked flat MAX_THE
+  // spell via resolveMaxThe(player) (spell_pathway cap is a flat
+  // SPELL_PATH_MAX_THE=5); ung_the via the kit-baked flat MAX_THE
   // (buildTheTuAnKit stamps maxThe: MAX_THE - there is no node-bonus
-  // channel in the beta window). TheEconomy.theCap is the single
-  // read site (`entity.maxThe ?? MAX_THE`); never persisted.
+  // channel in the beta window). TheEconomy.theCap is the engine's
+  // single read site (`entity.maxThe ?? MAX_THE`); kiemBarBridge
+  // delegates to it, while theBarBridge uses THE_BAR_MAX (the
+  // spell-domain cap) as its own fallback. Never persisted.
+  // Divergence consequence (documented, test/dev-path only): a raw
+  // primaryEntityOverride that skips resolveMaxThe AND leaves this
+  // unset reads cap 100 in the engine (theCap) vs cap 5 on the HUD
+  // (theBarBridge) -- the override path is expected to stamp its own
+  // cap, not to rely on either fallback.
   maxThe?: number
 
   // The Tu Reimagined (spec 2026-09-15 D7/section 7.13) — momentum resource

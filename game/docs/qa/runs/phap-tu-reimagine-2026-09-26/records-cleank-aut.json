@@ -1,0 +1,13 @@
+{
+  "reviewer": "devin-c7329f8d7d7643c8903f742c35b94651",
+  "verdict": "FINDINGS -- 1 Medium + 2 Low + 3 Nit",
+  "evidence": "type-check clean; 234 files / 1846 tests pass (4 expected-fail)",
+  "findings": [
+    "F1 (Medium): subcasts.compositePool/compositeCount slips the subcasts x chargeTurns fault",
+    "F2 (Low): empowerment decided twice -- TBS declare gate vs SkillResolver re-eval (latent divergence)",
+    "F3 (Low): theBarBridge THE_BAR_MAX fallback vs theCap MAX_THE diverge on raw-override path",
+    "F4 (Nit): theBurned docblock claims no live producer; TBS:1875 stamps it",
+    "F5 (Nit): EntityResourceAdapter consume-all writes currentThe=0 inline vs drainAllThe",
+    "F6 (Nit): tryPayProcCost/onProcSuccess dormant exported surface retained"
+  ]
+}

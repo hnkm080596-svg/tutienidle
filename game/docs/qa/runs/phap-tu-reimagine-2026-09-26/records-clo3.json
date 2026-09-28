@@ -1,0 +1,13 @@
+{
+ "closure": "REV-PTR-CLO-3",
+ "sealed": [
+  "F-PTR-27",
+  "F-PTR-28",
+  "F-PTR-29",
+  "F-PTR-30",
+  "F-PTR-33",
+  "F-PTR-34"
+ ],
+ "tests": "15 files / 502 tests pass",
+ "residual": "master v86 -> branch re-bumped v87 @bba563b8"
+}

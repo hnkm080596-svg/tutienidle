@@ -68,6 +68,140 @@ describe('SkillDefinitionRegistry', () => {
     ).toThrow(/compositePool references unknown skill 'ghost_skill'/)
   })
 
+  it('constructor faults when one definition carries empowerment AND compositePool', () => {
+    expect(
+      () =>
+        new SkillDefinitionRegistry(
+          [
+            activeDef('empowered_ult'),
+            activeDef('pool_base'),
+            activeDef('a', {
+              variants: { empowerment: { theThreshold: 10, empoweredSkillId: 'empowered_ult' } },
+              subcasts: { compositePool: ['pool_base'], compositeCount: 1 },
+            }),
+          ],
+          deps,
+        ),
+    ).toThrow(/empowerment and subcasts\.compositePool are mutually exclusive/)
+  })
+
+  it('constructor faults when one definition carries empowerment AND subcasts.count', () => {
+    // Repeat executions replay the committed resolution without
+    // re-evaluating empowerment -- they would silently run the base
+    // payload. Dormant today; this pin keeps the hole unauthorable.
+    expect(
+      () =>
+        new SkillDefinitionRegistry(
+          [
+            activeDef('empowered_ult'),
+            activeDef('a', {
+              variants: { empowerment: { theThreshold: 10, empoweredSkillId: 'empowered_ult' } },
+              subcasts: { count: 2 },
+            }),
+          ],
+          deps,
+        ),
+    ).toThrow(/empowerment and subcasts\.count are mutually exclusive/)
+  })
+
+  it('constructor faults when one definition carries consumesAllThe AND chargeTurns', () => {
+    // Charge-resolve declares carry no execution object, so theBurned
+    // can never forward -- theScaling would read 0 at resolve. Dormant
+    // today; this pin keeps the silent-0 state unauthorable.
+    expect(
+      () =>
+        new SkillDefinitionRegistry(
+          [
+            activeDef('a', {
+              consumesAllThe: true,
+              cadence: { cooldownTurns: 2, chargeTurns: 1 },
+            }),
+          ],
+          deps,
+        ),
+    ).toThrow(/consumesAllThe and cadence\.chargeTurns are mutually exclusive/)
+  })
+
+  it('constructor faults when one definition carries any subcasts AND chargeTurns', () => {
+    // A charge-init declare commits the cast but never carries the
+    // payload resolve -- subcasts are stripped wholesale at deferred
+    // resolve, so every variant is dead authoring. Dormant today;
+    // keeps the dead combos unauthorable.
+    for (const subcasts of [
+      { count: 2 },
+      { multicast: { chance: 1, maxExtraCasts: 1 } },
+      { compositePool: ['pool_base'] },
+      { compositeCount: 2 },
+    ] as const) {
+      expect(
+        () =>
+          new SkillDefinitionRegistry(
+            [
+              activeDef('a', {
+                subcasts,
+                cadence: { cooldownTurns: 2, chargeTurns: 1 },
+              }),
+            ],
+            deps,
+          ),
+      ).toThrow(/subcasts and cadence\.chargeTurns are mutually exclusive/)
+    }
+  })
+
+  it('constructor faults when compositeCount is authored without compositePool', () => {
+    // compositeCount only governs the compositePool pick -- alone it is
+    // silently dead authoring and must reject like every other dead
+    // combo (gateOnApplyResult-on-deal_damage shape).
+    expect(
+      () =>
+        new SkillDefinitionRegistry(
+          [activeDef('a', { subcasts: { compositeCount: 2 } })],
+          deps,
+        ),
+    ).toThrow(/compositeCount requires subcasts\.compositePool/)
+  })
+
+  it('constructor faults when onLanded/oncePerCast ride a non-deal_damage op', () => {
+    // The landed gates compile only under the deal_damage case -- a
+    // smuggled field on any other op type is silently dead authoring.
+    expect(
+      () =>
+        new SkillDefinitionRegistry(
+          [
+            activeDef('a', {
+              operations: [
+                {
+                  type: 'heal',
+                  target: 'self',
+                  amount: 5,
+                  onLanded: [{ type: 'heal', target: 'self', amount: 1 }],
+                } as never,
+              ],
+            }),
+          ],
+          deps,
+        ),
+    ).toThrow(/onLanded\/oncePerCast are only legal on deal_damage/)
+    expect(
+      () =>
+        new SkillDefinitionRegistry(
+          [
+            activeDef('a', {
+              operations: [
+                {
+                  type: 'apply_buff',
+                  target: 'self',
+                  definitionId: 'ung_the' as BuffDefinitionId,
+                  oncePerCast: true,
+                } as never,
+              ],
+            }),
+          ],
+          deps,
+        ),
+    ).toThrow(/onLanded\/oncePerCast are only legal on deal_damage/)
+  })
+
   it('accepts compositePool refs that resolve inside the registry', () => {
     const registry = new SkillDefinitionRegistry(
       [

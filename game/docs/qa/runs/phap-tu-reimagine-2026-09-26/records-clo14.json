@@ -1,0 +1,12 @@
+{
+  "reviewer": "devin-f92eaa3129bb4926aefd3446ff9683ff",
+  "verdict": "FINDINGS -- 8/9 verified clean, 1 residual",
+  "evidence": "npm run type-check clean; npx vitest run src/core/battle/turn src/core/skilldef src/core/buff2 tests/architecture/asciiComments = 104 files / 930 tests PASS",
+  "fixesVerified": [
+    "F-PTR-145 (M): chargeTurns>0 queue gate fires on charge-init declares only; pin non-vacuous",
+    "F-PTR-146 (M): castBlocked stamped pre-report in unrouted resolve arm; label chargedSkill?.id ?? declared.skillId live",
+    "F-PTR-148/149/151/152/153: verified",
+    "dup closures: F-PTR-150 via 146; F-PTR-147 via 145 partial (residual below)"
+  ],
+  "residual": "Low/HYPOTHETICAL VALIDATION_GAP: subcasts x chargeTurns fault covered count+multicast only; compositePool/compositeCount still authorable -- deferred resolve strips rootSubcasts wholesale; composite shell + chargeTurns resolves to zero ops. Probe: new SkillDefinitionRegistry([activeDef(a,{subcasts:{compositePool:[pool_base]},cadence:{chargeTurns:1}})]) does NOT throw. Zero live defs carry the combo."
+}

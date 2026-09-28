@@ -1,0 +1,45 @@
+{
+ "run": "phap-tu-reimagine-2026-09-26",
+ "reviewId": "REV-PTR-NOV-1",
+ "reviewer": "devin-608603f2690e4840ad5e7bf36e7690bd",
+ "phase": "NOVEL_SYNTHESIS",
+ "pin": "6d0722b2",
+ "verdict": "FINDINGS -- 0 Medium+; 2 Low + 2 Nit",
+ "adjudication": [
+  {
+   "finding": "F-PTR-75 (F-NOV-1) / Low",
+   "disposition": "DUPLICATE of GENERIC stamp fix (F-PTR-75)"
+  },
+  {
+   "finding": "F-PTR-78 (F-NOV-2) / Low latent",
+   "disposition": "FIXED @1a4ea837",
+   "verification": "declared.castBlocked stamps in applyActionImpact on routed outcome.blocked; enqueueFollowUpExecutions gates on it -- blocked cast queues no repeat/multicast. Headless parity: execute() now requires commitsCast && !outcome.blocked before driveFollowUps. Pins: unaffordable repeatCasts queues 0; affordable queues 2"
+  },
+  {
+   "finding": "F-PTR-79 (F-NOV-3) / Nit latent",
+   "disposition": "REJECTED",
+   "verification": "fixture-injected lane: driveFollowUps is never true in production (TSPR:279,337 pass false; TBS owns queuedExecutions). Headless resolveFollowUp id-collision claim unreachable; hardening guard (commitsCast && !blocked) added anyway"
+  },
+  {
+   "finding": "F-PTR-80 (F-NOV-4) / Nit",
+   "disposition": "FIXED @1a4ea837",
+   "verification": "SkillDefinitionRegistry.validateActive faults empowerment+subcasts.compositePool on one def (invalid_field_value on variants.empowerment)"
+  }
+ ],
+ "attackVectorsProbed": [
+  "save/load mid-mechanic surface",
+  "v87 crafted saves",
+  "element-switch mid-encounter",
+  "commitsCast across every mint lane",
+  "Ho The DR ordering vs shields",
+  "oncePerCast re-cast boundaries",
+  "locale drift",
+  "determinism"
+ ],
+ "sealedSurfaces": [
+  "no battle state persisted (mid-mechanic probe has no surface)",
+  "landed-gate keys unique per mintOccurrence",
+  "DR inside resolveAttack only post-floor",
+  "element commit blocked by out-of-combat guard"
+ ]
+}

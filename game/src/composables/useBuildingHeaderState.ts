@@ -2,11 +2,11 @@ import { computed, type Ref } from 'vue'
 import { useGameManager, useStateVersion } from './useGameState'
 import { getCurrentRealm } from '@/core/realm/realmSystem'
 
-// Dời từ BuildingPanelHeader.vue (2026-08-30, bug report: building header
-// cũ chiếm hẳn 1 dải riêng phía dưới title bar OverlayPanel, tạo cảm giác
-// 2 tầng thông tin). Giờ FunctionOverlayPanel.vue bơm thẳng ảnh+tên+cấp
-// vào slot #heading của CHÍNH title bar OverlayPanel, nút Nâng cấp vào
-// #header-actions — chỉ còn MỘT dải header duy nhất cho mọi building panel.
+// Doi tu BuildingPanelHeader.vue (2026-08-30, bug report: building header
+// cu chiem han 1 dai rieng phia duoi title bar OverlayPanel, tao cam giac
+// 2 tang thong tin). Gio FunctionOverlayPanel.vue bom thang anh+ten+cap
+// vao slot #heading cua CHINH title bar OverlayPanel, nut Nang cap vao
+// #header-actions -- chi con MOT dai header duy nhat cho moi building panel.
 export function useBuildingHeaderState(buildingId: Ref<string | undefined>) {
   const gameManager = useGameManager()
   const { stateVersion, bumpState } = useStateVersion()
@@ -29,7 +29,12 @@ export function useBuildingHeaderState(buildingId: Ref<string | undefined>) {
     return current ? { ...current } : undefined
   })
 
-  const artPath = computed(() => `/assets/buildings/dong-fu/${buildingId.value}.png`)
+  // v2 art bundle -- same convention as dongFuBuildingAssetUrls()
+  // (presentation/background/DongFuBuildingArt.ts): the flat
+  // dong-fu/<id>.png never shipped for vendor/chi_hien_quan, so the old
+  // flat path 404'd into a broken-image icon (audit H4). Every building
+  // mapped in FunctionOverlayPanel has a v2/<id>/base.png.
+  const artPath = computed(() => `/assets/buildings/dong-fu/v2/${buildingId.value}/base.png`)
 
   // Upgrade rules live in BuildingSystem.quoteUpgrade (via buildingOps) —
   // the header consumes the quote and keeps label formatting only.

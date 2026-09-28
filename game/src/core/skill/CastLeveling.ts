@@ -8,10 +8,9 @@
 //
 // P1 - extracted from SkillSystem into a leaf module: the cultivation
 // path catalog (CultivationPathKit) evaluates offer gates through
-// getCastLeveledSkillLevel, and NodeSystem consumes the path authority -
-// keeping this table on SkillSystem would close the import cycle
-// NodeSystem -> CultivationPathSystem -> Kit -> SkillSystem ->
-// SpellPathRoutes -> NodeSystem. This module imports nothing.
+// getCastLeveledSkillLevel, and NodeSystem reads this table directly -
+// keeping it on SkillSystem would make NodeSystem pull the whole skill
+// graph just to read thresholds. This module imports nothing.
 export const CAST_LEVELING_THRESHOLDS: Record<string, { lv2: number; lv3: number }> = {
   tram:      { lv2: 1000, lv3: 10000 },
   linh_bao:  { lv2: 1000, lv3: 10000 },

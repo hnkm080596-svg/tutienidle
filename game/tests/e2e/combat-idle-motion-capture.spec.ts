@@ -44,7 +44,10 @@ import { bootToGuestHome, createCharacterThroughUi, enterHome } from './helpers'
  */
 const ENEMY_IDLE_AMPLITUDE_PX = 6
 
-test.describe('Combat idle motion (static mode + wave-1 reskins)', () => {
+// @capture: this spec also writes frame/screenshot artifacts to
+// test-results/. It stays in the default e2e run because its assertions
+// guard the real idle-motion contract, not capture-only output.
+test.describe('Combat idle motion (static mode + wave-1 reskins)', { tag: '@capture' }, () => {
   test('static entities bob; reskinned enemies play authored frames', async ({ page }) => {
     test.setTimeout(240_000)
 
@@ -77,7 +80,7 @@ test.describe('Combat idle motion (static mode + wave-1 reskins)', () => {
     // so drive it directly through the scene's own public surface:
     // getOrCreateSprite resolves 'mortal_wild_boar_*' -> tusked-mountain-boar
     // exactly like a real spawn does, then playCombatAnimation/beginDeath-
-    // Sequence run the same calls onAttack/onDeath make. (onAttack itself is
+    // Sequence run the same calls the cast-start binding/onDeath make. (the binding itself is
     // NOT called - it would acknowledge the engine's pending playback token.)
     const probe = await page.evaluate(() => {
       const w = window as unknown as {
@@ -186,7 +189,7 @@ test.describe('Combat idle motion (static mode + wave-1 reskins)', () => {
       .first()
       .screenshot({ path: path.join(outDir, 'probe-idle.png') })
 
-    // Attack clip: the same call onAttack makes for this sprite.
+    // Attack clip: the same call the cast-start binding makes for this sprite.
     const attackAnim = await page.evaluate(() => {
       const w = window as unknown as {
         __tutienPhaserGame?: { scene: { getScene(k: string): unknown } }
@@ -239,7 +242,7 @@ test.describe('Combat idle motion (static mode + wave-1 reskins)', () => {
 
     // Player probe (character-art-infra): the `ult` clip is the one authored
     // sequence combat may never fire on floor 1 (ult slot gating is deep
-    // progression). Drive the same call onAttack makes for an ultimate cast -
+    // progression). Drive the same call the binding makes for an ultimate cast -
     // play-once, then TRANSITION_DESTINATION lands it on standby.
     const ultAnim = await page.evaluate(() => {
       const w = window as unknown as {

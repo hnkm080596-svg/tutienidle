@@ -1,0 +1,40 @@
+{
+ "verdict": "FINDINGS",
+ "pin": "2164df05",
+ "reviewer": "devin-f0801f411cb748879cc62add90525161",
+ "findings": [
+  {
+   "n": "LOW-1",
+   "severity": "Low",
+   "summary": "preResolved replay blind to same-id empowerment: buildPhapTheVariant keeps variant.id === base.id so payloadDef.id !== rootDef.id never fires; resolver re-evaluates currentThe >= theThreshold on live state; execution.theBurned/resolvedVariantId never ride the replay channel",
+   "disposition": "duplicate of F-PTR-213 (same-id empowerment replay blindness, already recorded + repaired in wave-O adjudication)"
+  },
+  {
+   "n": "LOW-2",
+   "severity": "Low",
+   "summary": "consumeThe lacks the floor/guard the pool's own authority enforces elsewhere: negative amount inflates the pool, overdraft goes negative; both live callers pre-gate so latent caller-discipline fragility (TheEconomy:52-53)",
+   "disposition": "fixed @29b4719c -- amount <= 0 no-op + hard floor at 0"
+  },
+  {
+   "n": "LOW-3",
+   "severity": "Low",
+   "summary": "asymmetric dead-authoring faults: onLanded/oncePerCast carried on a non-deal_damage op validate clean and are silently ignored (lane checks exist only under case deal_damage)",
+   "disposition": "fixed @29b4719c -- registry invalid_field_value fault at define time"
+  },
+  {
+   "n": "NIT-1",
+   "severity": "Nit",
+   "summary": "subcasts.compositeCount without compositePool never faulted (dead field; unreachable via the adapter, only dead if hand-authored)",
+   "disposition": "fixed @29b4719c -- registry fault compositeCount requires compositePool"
+  },
+  {
+   "n": "NIT-2",
+   "severity": "Nit",
+   "summary": "dual 'the' consume contract: EntityResourceAdapter all-or-nothing (skip) vs TurnSkillAction partial-clamp Math.min; two consume semantics for one resource across two surfaces",
+   "disposition": "rejected -- designed per-surface semantics, both bounded no-negative; clamp variant reachable only on the engine-unit lane"
+  }
+ ],
+ "notes": "AUT census clean otherwise: single theCap read site, write-site census on currentThe = three TheEconomy functions, commitSpellPathElement owns atomic commit, route machinery retired, composite extras resolve pre-commit, grownRemoved guard in place",
+ "testsRun": "tsc 0 errors; scoped vitest 24 files / 289 tests PASS + PhapTheVariants.autqa.test.ts 2/2",
+ "filesReviewed": 30
+}

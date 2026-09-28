@@ -1,0 +1,41 @@
+{
+ "artifact": "cleanR COR reviewer verdict summary",
+ "run": "phap-tu-reimagine-2026-09-26",
+ "reviewer": "devin-3471f2cb4c5e4e98b8547ef396517226",
+ "reviewerRole": "clean-correctness",
+ "pin": "7d837a91",
+ "productStateId": "c3e72917d3bee71a3bf4b0bab2c8f6ca13bf9e41e667615933cd29e838cc8dda",
+ "verdict": "FINDINGS",
+ "findings": [
+  {
+   "n": 1,
+   "severity": "Low",
+   "file": "src/core/battle/turn/TurnSkillAction.ts:449-452",
+   "claim": "consumeResourceFor non-'the' lanes: required <= 0 can't catch NaN (NaN<=0 is false) and Math.max(0, pool - required) writes NaN into currentMp; plan-side lane bypasses hasResourceFor -- same bricked-pool class TheEconomy isFinite guards just closed. Reachability authored/corrupt-data only.",
+   "disposition": "FIXED -- !Number.isFinite(required) added to the early-return guard + pin 'non-finite required cost leaves the pool untouched'"
+  },
+  {
+   "n": 2,
+   "severity": "Nit",
+   "file": "src/core/the-tu/TheEconomy.ts:39-45",
+   "claim": "grantThe isFinite guard covers amount but not the cap: theCap reads entity.maxThe ?? MAX_THE, so a corrupt baked entity with maxThe=NaN still writes NaN. Internal-only today.",
+   "disposition": "FIXED -- theCap falls back to MAX_THE on non-finite entity.maxThe + pin"
+  },
+  {
+   "n": 3,
+   "severity": "Nit",
+   "file": "src/core/proc/CombatProcSystem.ts (tryPayProcCost)",
+   "claim": "NaN cost -> guarded consumeThe no-ops -> returns true, reports 'paid' while paying nothing. Dormant lane, zero production callers.",
+   "disposition": "FIXED -- tryPayProcCost refuses non-finite cost + pin"
+  }
+ ],
+ "verifiedClaims": [
+  "saveAcceptance hidden_spell_pathway kit check: atomic ritual grant, mirrors assertNgoDaoKitLearned at battle build, scoped by isHiddenSpellPathway -- no false-positive path",
+  "SPELL_KIT_IDS defensive lookup: descriptive coherence reject, no bare TypeError",
+  "intercept viability gate mirrors all apply-lane dead-cast shapes incl. charge-init (affected empty at init); positive + 3 negative pins",
+  "ordering-hazard docblock names both decline classes accurately; enemy defs carry no resourceCost so plan-side decline unreachable",
+  "theBarBridge phapTheActive reads the same stamped threshold the engine gates on; empowerment theThreshold === SPELL_PATH_MAX_THE === flat cap 5"
+ ],
+ "testsRun": "type-check + scoped vitest clean; repro verified in node (consumeResourceFor mana NaN -> currentMp=NaN)",
+ "notes": "No Critical/High/Medium. All findings reachable only via authored/corrupt data or dormant lanes."
+}

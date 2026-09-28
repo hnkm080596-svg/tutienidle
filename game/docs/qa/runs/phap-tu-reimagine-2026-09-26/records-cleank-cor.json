@@ -1,0 +1,13 @@
+{
+  "reviewer": "devin-6429dac853924f58bc72e711469f2f47",
+  "verdict": "FINDINGS -- 1 Medium + 5 Low",
+  "evidence": "type-check clean; 965 tests green across turn/skilldef/buff2/the-tu scopes",
+  "findings": [
+    "F1 (Medium): subcasts.compositePool x chargeTurns escapes dead-combo fault (covers count>0|multicast only)",
+    "F2 (Low): whiffed/dangling charge-resolve emits false UNROUTED_CAST warn + stamps castBlocked",
+    "F3 (Low): self-scoped extra reports fabricated landed entry after unrouted resolve",
+    "F4 (Low): resourceType:'none' + resourceCostPercentOfMax silently binds mana on routed lane",
+    "F5 (Low): unrouted casts whiffed into zero targets never stamp castBlocked",
+    "F6 (Low): charge-tick/init turns open ally window as nonDamaging actions (spec ambiguity)"
+  ]
+}

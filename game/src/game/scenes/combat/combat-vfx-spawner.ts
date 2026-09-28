@@ -6,17 +6,13 @@
 // applyPendingPositions đếm add/Graphics qua proxy trong spawnVfx test).
 import Phaser from 'phaser'
 
-import type { ActionImpactEvent, BattlePositionsEvent } from '@/core/battle/BattleEvents'
+import type { BattlePositionsEvent } from '@/core/battle/BattleEvents'
 import type { GridPosition, LaneIndex } from '@/core/battle/BattleGrid'
 import type { EnemySpawnVfxPresetId } from '@/core/battle/CombatAction'
-import {
-  spawnActionImpactVfx,
-  type ActionImpactVfxHandle,
-} from '@/game/support/ActionImpactVfx'
 import { spawnEnemySpawnVfx } from '@/game/support/EnemySpawnVfx'
-import { getCombatVfxPreset } from '@/data/vfx/CombatVfxPresets'
 import { getStatusVfxPreset } from '@/data/vfx/StatusVfxPresets'
 import type { BodyAnchorId } from '@/presentation/geometry/combatBodyAnchors'
+import { readHoThe } from '@/presentation/bridges/hoTheBridge'
 import {
   DEPTH_OVERLAY_UI,
   DEPTH_UPRIGHT_VFX,
@@ -101,58 +97,22 @@ export class CombatVfxSpawner {
         stacks: entry.stacks,
         remainingTime: entry.remainingTime,
         permanent: entry.permanent,
+        // Phap Tu Reimagine (F13) -- player-owned statuses carry the live
+        // Ho The DR line (cap * currentMp/maxMp read at show time).
+        extraLine: entry.targetId === PLAYER_ID ? this.hoTheLine() : undefined,
       },
     )
   }
 
-  /**
-   * Remediation Task 2 — nhận sẵn `onComplete` (đã capture token từ
-   * CombatScene) rồi truyền thẳng vào spawnActionImpactVfx: ack engine từ
-   * completion TỰ THỰC của tween, không tự tính duration trùng lặp.
-   * Trả ActionImpactVfxHandle; undefined khi không spawn được (projection
-   * miss) — caller phải complete ngay theo fallback path.
-   */
-  onActionImpact(
-    event: ActionImpactEvent,
-    onComplete?: () => void,
-  ): ActionImpactVfxHandle | undefined {
-    const projection = this.scene.projection
+  /** F13 -- live Ho The DR readout; null/0 DR hides the row. */
+  private hoTheLine(): string | undefined {
+    const ho = this.scene.registry ? readHoThe(this.scene.registry) : null
 
-    if (!projection) {
+    if (!ho || ho.dr <= 0) {
       return undefined
     }
 
-    const preset = getCombatVfxPreset(event.presetId)
-    // MỘT action = MỘT VFX chính; multi-hit chỉ thêm pulse (spec mục 8).
-    const pulses = Math.max(1, Math.min(6, event.hitCount))
-
-    const handle = spawnActionImpactVfx(
-      {
-        scene: this.scene,
-        projection,
-        area: event.affectedArea,
-        anchorCell: event.anchorCell,
-        preset,
-        pulses,
-        uprightDepth: this.resolveUprightVfxDepth(event.anchorCell),
-      },
-      onComplete,
-    )
-
-    if (preset.screenShake) {
-      this.scene.cameras.main.shake(preset.screenShake.durationMs, preset.screenShake.intensity)
-    }
-
-    // affectedTargetIds chỉ phục vụ hit-flash — KHÔNG spawn effect sao.
-    for (const targetId of event.landedTargetIds) {
-      const sprite = this.scene.spriteFor(targetId)
-
-      if (sprite) {
-        this.flashColor(sprite, preset.color, 90)
-      }
-    }
-
-    return handle
+    return `Hộ Thể -${Math.round(ho.dr * 100)}%`
   }
 
   /**

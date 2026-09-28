@@ -57,9 +57,6 @@ const PATH_RUNTIME_STUB_DEPS = {
   nodeRegistry: { getAll: () => [] },
   getNodeLevel: () => 0,
   getSpellPathElement: () => undefined,
-  routeProfileProvider: () => {
-    throw new Error('unused')
-  },
 } as unknown as CultivationPathRuntimeDeps
 import { SKILLS } from '../../data/skill/Skills'
 import { TECHNIQUES } from '../../data/technique/Techniques'
@@ -181,6 +178,14 @@ function listSourceFiles(dir: string): string[] {
   }
   return out
 }
+
+/** Headroom for the grep-guards below: each walks all of src/ inside one
+ *  test, so the suite default 5s starves under full-suite worker
+ *  contention on slower filesystems (measured on Windows).
+ *  (Counterpart of SCAN_TIMEOUT in tests/architecture/helpers/scanTs.ts,
+ *  which src tests cannot import without pulling Node-typed helpers into
+ *  the app tsconfig program.) */
+const SCAN_GUARD_TIMEOUT = 120_000
 
 /** Strip // line comments and block comments before scanning so removal
  *  notes naming retired ids do not trip the guard. */
@@ -328,7 +333,7 @@ describe('INV-7 — hardcore discovery', () => {
     }
   })
 
-  it('grep-guard: nothing outside the owner seam reads the combo table', () => {
+  it('grep-guard: nothing outside the owner seam reads the combo table', { timeout: SCAN_GUARD_TIMEOUT }, () => {
     // K11's discovery contract binds EVERY layer -- scan all of src,
     // allowlisting the only legitimate referencers: the table itself
     // and the matcher/provider that own and inject it. A combo name or
@@ -746,7 +751,7 @@ describe('INV-12 — no dead ids in production content (Task 12 sweep)', () => {
     /KIEM_TRAN_BURN/, /dispatchOnHitEffect/, /OnHitEffectKind/,
   ]
 
-  it('no production source file references a retired id', () => {
+  it('no production source file references a retired id', { timeout: SCAN_GUARD_TIMEOUT }, () => {
     const violations: string[] = []
     for (const file of listSourceFiles(srcRoot)) {
       const rel = file.replace(/\\/g, '/')
@@ -779,7 +784,7 @@ describe('INV-13 — manual/auto parity', () => {
 })
 
 describe('INV-14 — `the` isolation', () => {
-  it('no kiem-tu source file reads or writes currentThe', () => {
+  it('no kiem-tu source file reads or writes currentThe', { timeout: SCAN_GUARD_TIMEOUT }, () => {
     const swordPathDirs = [
       join(srcRoot, 'core', 'kiem-tu'),
       join(srcRoot, 'data', 'progression'),

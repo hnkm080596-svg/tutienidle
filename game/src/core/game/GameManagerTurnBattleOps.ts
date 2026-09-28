@@ -130,6 +130,11 @@ export { COUNTDOWN_TOTAL_TICKS, INTRO_TOTAL_TICKS }
  * frozen for the rest of the session.
  */
 export const ANIMATION_FALLBACK_MS = 4000
+// Cumulative bound on awaitStep's isBlocking re-arm loop: a renderer that
+// stays blocking past ~32 s drains its pending playback mechanically
+// instead of deferring forever - a forced ACK drive would only be
+// rejected on arrival while the session still blocks.
+const AWAIT_STEP_DEFERRAL_CAP_MS = ANIMATION_FALLBACK_MS * 8
 
 /** The three renderer signals the pipeline's asynchronous steps wait on. */
 import type { TurnStepSignal } from './GameManagerTurnBattlePresentationOps'
@@ -541,15 +546,23 @@ export class GameManagerTurnBattleOps {
       const readyActor = this.turnBattleSystem.tickPacing(battle, false)
 
       if (readyActor !== null) {
-        // Task 11 -- a queued repeat/multicast execution is NOT a turn
-        // choice: manual mode must not park it awaiting input (the cast
-        // was already committed; the follow-up resolves automatically).
-        const isQueuedExecution = this.turnBattleSystem.isPendingQueuedExecution(readyActor.id)
+        // A committed claim is NOT a turn choice: manual mode must not
+        // park it awaiting input. isCommittedFollowUpClaim owns the
+        // enumeration of committed lanes on the battle system -- a
+        // queued repeat/multicast execution, a reactive follow-up
+        // (Phan/Tro counter declaring through declareReactiveBypass's
+        // forced payload), and an in-flight charge whose declare ticks
+        // or resolves the committed payload -- so every such lane is
+        // exempt automatically rather than being listed per call site.
+        // An AWAITING_INPUT pause on any of them would solicit a manual
+        // choice the declare then silently discards.
+        const isCommittedFollowUp =
+          this.turnBattleSystem.isCommittedFollowUpClaim(readyActor)
 
         this.turnToken.claim({
           actorId: readyActor.id,
           isPlayerTeam: battle.players.includes(readyActor),
-          manualMode: isQueuedExecution ? false : this.presentationOps.runtime.isBattleManualMode(),
+          manualMode: isCommittedFollowUp ? false : this.presentationOps.runtime.isBattleManualMode(),
         })
 
         if (this.turnToken.getState() === 'AWAITING_INPUT') {
@@ -758,11 +771,45 @@ export class GameManagerTurnBattleOps {
    * mean the turn made progress.
    */
   private awaitStep(signal: TurnStepSignal, done: () => void): void {
-    const timer = setTimeout(() => {
+    let deferredMs = 0
+    const fallback = () => {
+      if (this.presentationOps.session.isBlocking()) {
+        deferredMs += ANIMATION_FALLBACK_MS
+        if (deferredMs < AWAIT_STEP_DEFERRAL_CAP_MS) {
+          timer = setTimeout(fallback, ANIMATION_FALLBACK_MS)
+          this.pendingStepTimers.push(timer)
+          return
+        }
+        // A force-drive cannot run while the session blocks: the runtime
+        // gates every acknowledge* on isSessionBlocking first, so the work
+        // is rejected on arrival - and dropping the parked settle entry
+        // after it leaves resume ACKs to run the mechanics while the step
+        // never completes (the turn token would wedge in RESOLVING).
+        // Drain the pending playback mechanically instead - the same
+        // inline settle the deactivation path performs - so this turn
+        // still runs its work and resolves.
+        console.warn(
+          `[TurnBattle] step '${signal}' blocked for ${deferredMs}ms - draining pending playback mechanically`,
+        )
+        this.presentationOps.runtime.drainPendingPlayback()
+        return
+      }
+      // Runtime acknowledgement owns settlement; rejected work cannot advance.
+      // Clear the parked settle before driving: an accepted drive settles
+      // through the runtime's own stepCompletionSink, and on a silent reject
+      // or a thrown domain fault nothing stale is left for a later turn's
+      // ACK of the same signal to fire this turn's done(). The step must
+      // still complete either way -- otherwise the turn token stays claimed
+      // and advanceCombat early-returns forever (silent freeze on a timer
+      // thread). done() runs in finally, then the fault propagates loud.
       this.pendingStepDone[signal] = undefined
-      this.driveStepWork(signal)
-      done()
-    }, ANIMATION_FALLBACK_MS)
+      try {
+        this.driveStepWork(signal)
+      } finally {
+        done()
+      }
+    }
+    let timer = setTimeout(fallback, ANIMATION_FALLBACK_MS)
 
     this.pendingStepTimers.push(timer)
 
@@ -1199,7 +1246,7 @@ export class GameManagerTurnBattleOps {
       resource: new EntityResourceAdapter(resolveEntity, {
         // skilldef M4 -- skill costs ride consume_resource ops.
         // 'mana' -> consumeResourceFor (the mana-cost writer: raw
-        // debit, no clamp, the insufficient check gates first);
+        // debit floored at zero, the insufficient check gates first);
         // 'ward' -> EntityVitalsSystem spend/grant (the vitals
         // authority owns shield mutation, never a raw field write).
         mana: {
@@ -2408,6 +2455,22 @@ export class GameManagerTurnBattleOps {
     // choice the UI no longer offers. The claimed turn becomes an auto turn.
     if (stranded && this.turnToken.getState() === 'AWAITING_INPUT') {
       this.turnToken.submitChoice()
+      // The flag flip itself is boundary-queued below like every external
+      // command, but this rescue just committed the stranded turn to AUTO -
+      // a drain in the queued window would read the stale live flag and
+      // re-park the committed claim into awaitedManualActor, skipping
+      // declare/impact/complete and leaving manual-pause residue on an IDLE
+      // token. Invariant: a committed claim is never re-parked as manual,
+      // so the flag moves now; the queued replay is an idempotent no-op
+      // that only preserves command ordering.
+      //
+      // Structural dependency: the flush is safe ONLY because a non-null
+      // `stranded` implies enabled === false, so the immediate write and
+      // the queued replay both move the flag the same direction. A future
+      // rescue-on-enable refactor would break that idempotency (queued
+      // value would differ from the flushed one) - revisit this ordering
+      // before adding one.
+      this.presentationOps.runtime.setBattleManualMode(false)
       this.beginTurnPipeline(stranded, 'ready')
     }
 

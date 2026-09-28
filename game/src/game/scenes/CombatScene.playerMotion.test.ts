@@ -23,7 +23,7 @@ interface TestableCombatScene {
     add: ReturnType<typeof vi.fn>
   }
   flashColor: ReturnType<typeof vi.fn>
-  onAttack(event: { sourceId?: string }): void
+  playHorizontalImpulse(sprite: MotionSprite, distance: number, duration: number): void
   onHit(event: { targetId?: string }): void
 }
 
@@ -56,7 +56,10 @@ describe('CombatScene player motion feedback', () => {
   it('nhich player ve phia truoc mot nhip nho khi ra don', () => {
     const { scene, player } = createScene()
 
-    scene.onAttack({ sourceId: 'player' })
+    // The attack event handler is gone - the skill presentation runner drives
+    // the lunge as a cast-phase actor-impulse cue. playHorizontalImpulse keeps
+    // the same channel contract: reset offsetX, tween, restore on complete.
+    scene.playHorizontalImpulse(player, 8, 350)
 
     const tween = latestTween(scene)
 

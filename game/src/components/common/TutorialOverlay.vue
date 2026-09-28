@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, useId } from 'vue'
+import { useI18n } from 'vue-i18n'
 import GameButton from '@/components/common/GameButton.vue'
 import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
 import { usePlayerStore } from '@/stores/player'
@@ -11,6 +12,7 @@ import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
 // + aria-modal + focus trap qua useDialogFocus (cùng primitive ConfirmModal/
 // OverlayPanel đang dùng, không tự dựng overlay behavior riêng nữa).
 const player = usePlayerStore()
+const { t } = useI18n()
 
 const panelRef = ref<HTMLElement | null>(null)
 const isOpen = computed(() => !player.hasSeenTutorial)
@@ -45,7 +47,7 @@ function next() {
   <div v-if="!player.hasSeenTutorial" class="tutorial-overlay" :style="{ zIndex: OVERLAY_LAYERS.modal }">
     <div
       ref="panelRef"
-      class="tutorial-overlay__panel"
+      class="tutorial-overlay__panel paper-on-dark"
       role="dialog"
       aria-modal="true"
       :aria-labelledby="titleId"
@@ -56,15 +58,15 @@ function next() {
 
       <p class="tutorial-overlay__progress">{{ currentIndex + 1 }} / {{ TUTORIAL_STEPS.length }}</p>
 
-      <h3 :id="titleId" class="tutorial-overlay__title">{{ currentStep.title }}</h3>
+      <h3 :id="titleId" class="tutorial-overlay__title">{{ t(currentStep.titleKey) }}</h3>
 
-      <p :id="bodyId" class="tutorial-overlay__body">{{ currentStep.body }}</p>
+      <p :id="bodyId" class="tutorial-overlay__body">{{ t(currentStep.bodyKey) }}</p>
 
       <div class="tutorial-overlay__actions">
-        <GameButton variant="ghost" @click="finish">Bỏ Qua</GameButton>
+        <GameButton variant="ghost" @click="finish">{{ t('tutorial.skip') }}</GameButton>
 
         <GameButton variant="primary" @click="next">
-          {{ isLastStep ? 'Bắt Đầu' : 'Tiếp Theo' }}
+          {{ isLastStep ? t('tutorial.start') : t('tutorial.next') }}
         </GameButton>
       </div>
     </div>

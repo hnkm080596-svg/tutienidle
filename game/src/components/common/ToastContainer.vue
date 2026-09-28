@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useNotificationStore } from '@/stores/notification'
 import type { NotificationKind } from '@/core/notification/NotificationEvent'
 import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
@@ -7,6 +8,7 @@ import { AudioManager, type SoundId } from '@/core/audio/AudioManager'
 import { isMaxRankTone } from '@/core/profession/slotRank'
 
 const notification = useNotificationStore()
+const { t } = useI18n()
 
 // Toast kind -> SFX. Playing here (not in the store's push()) keeps the
 // notification store free of audio deps and — more importantly — plays the
@@ -93,7 +95,7 @@ function lastNameText(name: string): string {
           <button
             type="button"
             class="toast-item__dismiss"
-            :aria-label="`Đóng thông báo: ${toast.loot ? toast.loot.name : toast.message ?? ''}`"
+            :aria-label="t('toasts.dismissAria', { label: toast.loot ? toast.loot.name : toast.message ?? '' })"
             @click="notification.dismiss(toast.id)"
           >×</button>
           <template v-if="toast.loot">
@@ -108,7 +110,7 @@ function lastNameText(name: string): string {
               />
             </div>
             <div class="toast-item__content">
-              <span class="toast-item__eyebrow">Nhận được</span>
+              <span class="toast-item__eyebrow">{{ t('toasts.received') }}</span>
               <!-- Single-color name + muted grade suffix (item-info-card
                    spec section 2): 'tien' tone upgrades to the rainbow
                    class. -->

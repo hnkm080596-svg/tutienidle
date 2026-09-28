@@ -1,0 +1,24 @@
+{
+ "review": "REV-PTR-AUT-I1",
+ "reviewer": "devin-b50f281158194f0dae7dcbc7b324b231",
+ "pin": "c2bb6992",
+ "verdict": "FINDINGS",
+ "counts": {
+  "medium": 1,
+  "low": 4,
+  "nit": 5
+ },
+ "findingIds": [
+  "F-PTR-124",
+  "F-PTR-125",
+  "F-PTR-126",
+  "F-PTR-127",
+  "F-PTR-128",
+  "F-PTR-129",
+  "F-PTR-130",
+  "F-PTR-131",
+  "F-PTR-132",
+  "F-PTR-133"
+ ],
+ "verifiedClean": "theCap authority, grant funnel, commitsCast gate, oncePerCast, instanceHitOpIds, deferredResolve, castBlocked, percentOfMax, DR helper, v87, route machinery excised, intents enforced"
+}

@@ -1,0 +1,562 @@
+{
+ "records": [
+  {
+   "kind": "evidence",
+   "body": {
+    "kind": "EXECUTED_INTEGRATION",
+    "id": "EV-PTR-CLO20",
+    "state": {
+     "productStateId": "c3e72917d3bee71a3bf4b0bab2c8f6ca13bf9e41e667615933cd29e838cc8dda",
+     "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+     "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+     "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+    },
+    "status": "CURRENT",
+    "producer": "devin-e3460cbf2daa4d1b8956be10bb6303c3",
+    "startedAt": "2026-09-28T06:30:00Z",
+    "finishedAt": "2026-09-28T06:33:00Z",
+    "commandOrMethod": "closure review @7d837a91: SEALED -- all 7 pending claims verified; type-check exit 0; scoped vitest save+the-tu+hoIntercept PASS",
+    "cwd": "game/",
+    "exitCode": 0,
+    "result": "PASS",
+    "artifactPath": "records-clo20.json",
+    "artifactHash": "b4ad9e84a8d71d557afd550b39f74b484a56cfc622a638a94b112550bcc3225f",
+    "claims": [
+     "all 7 pending closure claims verified at pin 7d837a91"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [],
+    "invariantIds": [],
+    "limitations": []
+   }
+  },
+  {
+   "kind": "review",
+   "body": {
+    "id": "REV-PTR-CLO-20",
+    "state": {
+     "productStateId": "c3e72917d3bee71a3bf4b0bab2c8f6ca13bf9e41e667615933cd29e838cc8dda",
+     "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+     "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+     "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+    },
+    "round": 20,
+    "phase": "CLOSURE",
+    "reviewerId": "devin-e3460cbf2daa4d1b8956be10bb6303c3",
+    "contextId": "sealed-child-e3460cbf2daa4d1b8956be10bb6303c3",
+    "role": "closure",
+    "priorFindingsVisible": false,
+    "startedAt": "2026-09-28T06:30:00Z",
+    "sealedAt": "2026-09-28T06:33:00Z",
+    "status": "CURRENT",
+    "findingIds": [],
+    "model": "swe-2",
+    "inputBundleHash": "c3e72917d3bee71a3bf4b0bab2c8f6ca13bf9e41e667615933cd29e838cc8dda",
+    "accessLimitations": [],
+    "previousPhaseReviewId": null,
+    "reviewedAfterPreviousFixes": true,
+    "coverageIds": [],
+    "evidenceIds": [
+     "EV-PTR-CLO20"
+    ],
+    "novelAttackIds": []
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-PTR-244",
+    "title": "SPELL_KIT_IDS[activeElement][0] throws a bare TypeError on a corrupt save carrying a non-ElementType element string",
+    "state": {
+     "productStateId": "ea88b6faccd0f4978b0d20a2b78acb9e7aa886a544d6e4901002c23c96030e89",
+     "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+     "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+     "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+    },
+    "subsystem": "core",
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "siblingFindingIds": [],
+    "invariantIds": [],
+    "closedAt": "2026-09-27T12:15:00Z",
+    "severity": "Nit",
+    "locations": [
+     {
+      "path": "src/services/save/saveAcceptance.ts",
+      "symbolOrSection": ":243-253",
+      "revision": "4d2ada93",
+      "basis": "SOURCE"
+     }
+    ],
+    "pinEvidenceIds": [
+     "EV-PTR-FIXQ1"
+    ],
+    "verificationEvidenceIds": [
+     "EV-PTR-FIXQ1"
+    ],
+    "evidenceIds": [
+     "EV-PTR-FIXQ1"
+    ],
+    "closureReviewIds": [
+     "REV-PTR-CLO-20"
+    ],
+    "status": "CLOSED",
+    "classification": "REAL_DEFECT",
+    "reachability": "FIXTURE_INJECTED",
+    "actionable": true,
+    "discoveredBy": "cleanQ COR",
+    "expected": "descriptive rejection on corrupt element",
+    "actual": "bare TypeError 'Cannot read properties of undefined'",
+    "rootCause": "the coherence check indexed the kit map without guarding the undefined case -- fails closed either way but the rejection surfaced as TypeError instead of the descriptive coherence error",
+    "rootClass": "CONTRACT_GAP",
+    "repair": "defensive lookup: unknown element throws descriptive rejection @4d2ada93 + corrupt-element pin test @c02fbf50",
+    "siblingSearch": [
+     {
+      "roots": [
+       "game/src"
+      ],
+      "termsAndMethod": "enumerate same-class sites against the repaired authority/policy",
+      "evidenceIds": [
+       "EV-PTR-FIXQ1"
+      ],
+      "hitDispositions": [
+       "sibling sites enumerated"
+      ],
+      "coverageLimits": [
+       "fixture-injected or documented-latent reachability only"
+      ]
+     }
+    ],
+    "closeReason": "fixed @4d2ada93 -- pending closure seal",
+    "counterexample": "bare TypeError 'Cannot read properties of undefined'"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-PTR-246",
+    "title": "hidden_spell_pathway kit has no save-acceptance mirror (sibling axis ungated)",
+    "state": {
+     "productStateId": "ea88b6faccd0f4978b0d20a2b78acb9e7aa886a544d6e4901002c23c96030e89",
+     "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+     "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+     "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+    },
+    "subsystem": "core",
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "siblingFindingIds": [],
+    "invariantIds": [],
+    "closedAt": "2026-09-27T12:22:00Z",
+    "severity": "Medium",
+    "locations": [
+     {
+      "path": "src/services/save/saveAcceptance.ts",
+      "symbolOrSection": ":265-278",
+      "revision": "7d837a91",
+      "basis": "SOURCE"
+     },
+     {
+      "path": "src/core/player/CultivationPathRegistry.ts",
+      "symbolOrSection": ":86-100",
+      "revision": "29b4719c",
+      "basis": "SOURCE"
+     }
+    ],
+    "pinEvidenceIds": [
+     "EV-PTR-FIXQ2"
+    ],
+    "verificationEvidenceIds": [
+     "EV-PTR-FIXQ2"
+    ],
+    "evidenceIds": [
+     "EV-PTR-FIXQ2"
+    ],
+    "closureReviewIds": [
+     "REV-PTR-CLO-20"
+    ],
+    "status": "CLOSED",
+    "classification": "REAL_DEFECT",
+    "reachability": "FIXTURE_INJECTED",
+    "actionable": true,
+    "discoveredBy": "cleanQ AUT",
+    "expected": "every battle-build hard-fail class gets an acceptance-seam mirror",
+    "actual": "hidden-way 3-skill kit unchecked: corrupt save passes all 3 seams then throws on every battle entry; newest-wins resyncs the poison",
+    "rootCause": "wave-P closed the crash-on-battle-entry class for spell_pathway only; the hidden sibling axis left ungated",
+    "rootClass": "CONTRACT_GAP",
+    "repair": "assertSaveAcceptable checks isHiddenSpellPathway -> full HIDDEN_SPELL_REQUIRED_SKILLS in save.skills @7d837a91 + 3 pin tests",
+    "siblingSearch": [
+     {
+      "roots": [
+       "game/src"
+      ],
+      "termsAndMethod": "enumerate same-class sites against the repaired authority/policy",
+      "evidenceIds": [
+       "EV-PTR-FIXQ2"
+      ],
+      "hitDispositions": [
+       "sibling sites enumerated"
+      ],
+      "coverageLimits": [
+       "fixture-injected or documented-latent reachability only"
+      ]
+     }
+    ],
+    "closeReason": "fixed in wave-Q batch @7d837a91 -- pending closure seal",
+    "counterexample": "isSaveAcceptable true while assertNgoDaoKitLearned throws on every battle build"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-PTR-247",
+    "title": "ordering-hazard docblock contradicts gate comment (unreachable vs accepted-latent)",
+    "state": {
+     "productStateId": "ea88b6faccd0f4978b0d20a2b78acb9e7aa886a544d6e4901002c23c96030e89",
+     "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+     "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+     "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+    },
+    "subsystem": "core",
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "siblingFindingIds": [],
+    "invariantIds": [],
+    "closedAt": "2026-09-27T12:22:00Z",
+    "severity": "Low",
+    "locations": [
+     {
+      "path": "src/core/battle/turn/TurnBattleSystem.ts",
+      "symbolOrSection": ":3181-3190",
+      "revision": "7d837a91",
+      "basis": "SOURCE"
+     }
+    ],
+    "pinEvidenceIds": [
+     "EV-PTR-FIXQ2"
+    ],
+    "verificationEvidenceIds": [
+     "EV-PTR-FIXQ2"
+    ],
+    "evidenceIds": [
+     "EV-PTR-FIXQ2"
+    ],
+    "closureReviewIds": [
+     "REV-PTR-CLO-20"
+    ],
+    "status": "CLOSED",
+    "classification": "REAL_DEFECT",
+    "reachability": "FIXTURE_INJECTED",
+    "actionable": true,
+    "discoveredBy": "cleanQ AUT",
+    "expected": "docblock reflects both decline classes",
+    "actual": "docblock claims hazard unreachable via precheck while gate comment admits resolver declines as accepted-latent",
+    "rootCause": "adjacent comments from different rounds disagree about the decline surface",
+    "rootClass": "DOC_DRIFT",
+    "repair": "ordering-hazard docblock names both decline classes (resolver routeCast->null + plan-side) @7d837a91",
+    "siblingSearch": [
+     {
+      "roots": [
+       "game/src"
+      ],
+      "termsAndMethod": "enumerate same-class sites against the repaired authority/policy",
+      "evidenceIds": [
+       "EV-PTR-FIXQ2"
+      ],
+      "hitDispositions": [
+       "sibling sites enumerated"
+      ],
+      "coverageLimits": [
+       "fixture-injected or documented-latent reachability only"
+      ]
+     }
+    ],
+    "closeReason": "fixed in wave-Q batch @7d837a91 -- pending closure seal",
+    "counterexample": "routeCast->null via SkillResolverError (TurnSkillPlanRuntime.ts:301-307)"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-PTR-248",
+    "title": "NaN slips the floor guards in grantThe/consumeThe",
+    "state": {
+     "productStateId": "ea88b6faccd0f4978b0d20a2b78acb9e7aa886a544d6e4901002c23c96030e89",
+     "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+     "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+     "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+    },
+    "subsystem": "core",
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "siblingFindingIds": [],
+    "invariantIds": [],
+    "closedAt": "2026-09-27T12:22:00Z",
+    "severity": "Low",
+    "locations": [
+     {
+      "path": "src/core/the-tu/TheEconomy.ts",
+      "symbolOrSection": ":39-44,59-65",
+      "revision": "7d837a91",
+      "basis": "SOURCE"
+     }
+    ],
+    "pinEvidenceIds": [
+     "EV-PTR-FIXQ2"
+    ],
+    "verificationEvidenceIds": [
+     "EV-PTR-FIXQ2"
+    ],
+    "evidenceIds": [
+     "EV-PTR-FIXQ2"
+    ],
+    "closureReviewIds": [
+     "REV-PTR-CLO-20"
+    ],
+    "status": "CLOSED",
+    "classification": "REAL_DEFECT",
+    "reachability": "FIXTURE_INJECTED",
+    "actionable": true,
+    "discoveredBy": "cleanQ AUT",
+    "expected": "module guards mirror adapter requireWellFormedAmount (reject non-finite)",
+    "actual": "NaN <= 0 is false so NaN reaches the clamp -> NaN currentThe write bricks the pool silently",
+    "rootCause": "guard written as amount <= 0 only; non-finite unenumerated",
+    "rootClass": "CONTRACT_GAP",
+    "repair": "!Number.isFinite guards on grantThe + consumeThe @7d837a91 + TheEconomy.test.ts pins",
+    "siblingSearch": [
+     {
+      "roots": [
+       "game/src"
+      ],
+      "termsAndMethod": "enumerate same-class sites against the repaired authority/policy",
+      "evidenceIds": [
+       "EV-PTR-FIXQ2"
+      ],
+      "hitDispositions": [
+       "sibling sites enumerated"
+      ],
+      "coverageLimits": [
+       "fixture-injected or documented-latent reachability only"
+      ]
+     }
+    ],
+    "closeReason": "fixed in wave-Q batch @7d837a91 -- pending closure seal",
+    "counterexample": "Math.max(0, 5 - NaN) -> NaN"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-PTR-249",
+    "title": "stale module-header claim \"single clamp expression\"",
+    "state": {
+     "productStateId": "ea88b6faccd0f4978b0d20a2b78acb9e7aa886a544d6e4901002c23c96030e89",
+     "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+     "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+     "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+    },
+    "subsystem": "core",
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "siblingFindingIds": [],
+    "invariantIds": [],
+    "closedAt": "2026-09-27T12:22:00Z",
+    "severity": "Nit",
+    "locations": [
+     {
+      "path": "src/core/the-tu/TheEconomy.ts",
+      "symbolOrSection": ":19-21",
+      "revision": "7d837a91",
+      "basis": "SOURCE"
+     }
+    ],
+    "pinEvidenceIds": [
+     "EV-PTR-FIXQ2"
+    ],
+    "verificationEvidenceIds": [
+     "EV-PTR-FIXQ2"
+    ],
+    "evidenceIds": [
+     "EV-PTR-FIXQ2"
+    ],
+    "closureReviewIds": [
+     "REV-PTR-CLO-20"
+    ],
+    "status": "CLOSED",
+    "classification": "REAL_DEFECT",
+    "reachability": "FIXTURE_INJECTED",
+    "actionable": true,
+    "discoveredBy": "cleanQ AUT",
+    "expected": "header reflects the three module-owned write sites",
+    "actual": "header says single clamp; three clamp sites exist",
+    "rootCause": "pre-existing doc drift amplified by the wave-P consume guard",
+    "rootClass": "DOC_DRIFT",
+    "repair": "header lists the three write sites under one authority @7d837a91",
+    "siblingSearch": [
+     {
+      "roots": [
+       "game/src"
+      ],
+      "termsAndMethod": "enumerate same-class sites against the repaired authority/policy",
+      "evidenceIds": [
+       "EV-PTR-FIXQ2"
+      ],
+      "hitDispositions": [
+       "sibling sites enumerated"
+      ],
+      "coverageLimits": [
+       "fixture-injected or documented-latent reachability only"
+      ]
+     }
+    ],
+    "closeReason": "fixed in wave-Q batch @7d837a91 -- pending closure seal",
+    "counterexample": "header says single clamp; three clamp sites exist"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-PTR-251",
+    "title": "viability gate clause coverage: only adapter-unsupported branch pinned",
+    "state": {
+     "productStateId": "ea88b6faccd0f4978b0d20a2b78acb9e7aa886a544d6e4901002c23c96030e89",
+     "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+     "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+     "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+    },
+    "subsystem": "core",
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "siblingFindingIds": [],
+    "invariantIds": [],
+    "closedAt": "2026-09-27T12:22:00Z",
+    "severity": "Low",
+    "locations": [
+     {
+      "path": "src/core/battle/turn/TurnBattleSystem.hoIntercept.test.ts",
+      "symbolOrSection": ":301-355",
+      "revision": "7d837a91",
+      "basis": "SOURCE"
+     }
+    ],
+    "pinEvidenceIds": [
+     "EV-PTR-FIXQ2"
+    ],
+    "verificationEvidenceIds": [
+     "EV-PTR-FIXQ2"
+    ],
+    "evidenceIds": [
+     "EV-PTR-FIXQ2"
+    ],
+    "closureReviewIds": [
+     "REV-PTR-CLO-20"
+    ],
+    "status": "CLOSED",
+    "classification": "REAL_DEFECT",
+    "reachability": "LIVE",
+    "actionable": true,
+    "discoveredBy": "cleanQ INT",
+    "expected": "each gate clause has a direct pin",
+    "actual": "dead-payload / empty-affected / charge-discriminant branches unpinned",
+    "rootCause": "NOVA-1 gate shipped with one representative pin only",
+    "rootClass": "MISSING_COVERAGE",
+    "repair": "3 pin tests @7d837a91: action==null, empty-affected, charge-init declare",
+    "siblingSearch": [
+     {
+      "roots": [
+       "game/src"
+      ],
+      "termsAndMethod": "enumerate same-class sites against the repaired authority/policy",
+      "evidenceIds": [
+       "EV-PTR-FIXQ2"
+      ],
+      "hitDispositions": [
+       "sibling sites enumerated"
+      ],
+      "coverageLimits": [
+       "fixture-injected or documented-latent reachability only"
+      ]
+     }
+    ],
+    "closeReason": "fixed in wave-Q batch @7d837a91 -- pending closure seal",
+    "counterexample": "whiffed cast previously paid the protector proc cost on a phantom hit"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-PTR-253",
+    "title": "consumeThe(entity,0) early return skips the old normalize-on-read",
+    "state": {
+     "productStateId": "ea88b6faccd0f4978b0d20a2b78acb9e7aa886a544d6e4901002c23c96030e89",
+     "contractId": "f6c338574232939371c9f50d4accd2a3ebed53535e022b5d19b81fa8eb15e553",
+     "attackModelId": "6741d10ad40a2205d6f1fe111004505d58e54331fe6448471fdbd4f5ebd03d10",
+     "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+    },
+    "subsystem": "core",
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "siblingFindingIds": [],
+    "invariantIds": [],
+    "closedAt": "2026-09-27T12:22:00Z",
+    "severity": "Nit",
+    "locations": [
+     {
+      "path": "src/core/the-tu/TheEconomy.ts",
+      "symbolOrSection": ":54-65",
+      "revision": "7d837a91",
+      "basis": "SOURCE"
+     }
+    ],
+    "pinEvidenceIds": [
+     "EV-PTR-FIXQ2"
+    ],
+    "verificationEvidenceIds": [
+     "EV-PTR-FIXQ2"
+    ],
+    "evidenceIds": [
+     "EV-PTR-FIXQ2"
+    ],
+    "closureReviewIds": [
+     "REV-PTR-CLO-20"
+    ],
+    "status": "CLOSED",
+    "classification": "REAL_DEFECT",
+    "reachability": "FIXTURE_INJECTED",
+    "actionable": true,
+    "discoveredBy": "cleanQ INT",
+    "expected": "semantic shift made explicit",
+    "actual": "amount<=0 no longer normalizes undefined/negative to 0 -- no reachable difference",
+    "rootCause": "wave-P floor guard removed the incidental normalize side effect",
+    "rootClass": "DOC_DRIFT",
+    "repair": "early-return docblock records the removed normalize + writer/reader census @7d837a91",
+    "siblingSearch": [
+     {
+      "roots": [
+       "game/src"
+      ],
+      "termsAndMethod": "enumerate same-class sites against the repaired authority/policy",
+      "evidenceIds": [
+       "EV-PTR-FIXQ2"
+      ],
+      "hitDispositions": [
+       "sibling sites enumerated"
+      ],
+      "coverageLimits": [
+       "fixture-injected or documented-latent reachability only"
+      ]
+     }
+    ],
+    "closeReason": "fixed in wave-Q batch @7d837a91 -- pending closure seal",
+    "counterexample": "amount<=0 no longer normalizes undefined/negative to 0 -- no reachable difference"
+   }
+  }
+ ]
+}

@@ -1,0 +1,27 @@
+{
+ "kind": "fix-batch",
+ "run": "phap-tu-reimagine-2026-09-26",
+ "state": "28b18a907dfc36fa3123639aee41afc4d543af30bc1342a59421d95bb0141db8",
+ "pin": "34b46f74",
+ "fixes": [
+  "TurnSkillAction.consumeResourceFor: !Number.isFinite(required) guard (NaN required no longer bricks currentMp) + pin",
+  "TheEconomy.theCap: non-finite entity.maxThe falls back to MAX_THE + pin",
+  "CombatProcSystem.tryPayProcCost: refuses non-finite cost (no longer reports paid while paying nothing) + pin",
+  "TurnBattleAdapter: divergent resolvedSpecialUltimate.maxThe faults instead of silently overwriting + pin",
+  "SkillDefinitionRegistry: new fault empowerment x subcasts.count>0 (repeat-of-empowered hole closed) + pin",
+  "TurnBattleSystem: pendingQueuedExecution drop-on-mismatch asymmetry docblock"
+ ],
+ "rejects": [
+  "AUT-R-2 empowerment tri-evaluation: structurally forced + divergence verified unreachable (documented)",
+  "AUT-R-4 duplicated constants: parity verified equivalent by inspection",
+  "AUT-R-6 resolvedVariantId dead preResolved branch: harmless latent coverage",
+  "INT-R-1 ward REPLACE-not-max: documented intended contract (never stacks)",
+  "INT-R-3 intercept idempotence re-guard: verified unreachable at type level",
+  "INT-R-4 post-window decline for enemy casts: grep-verified unreachable, docblock documented",
+  "INT-R-5 save version-skew: intended fail-closed"
+ ],
+ "dups": [
+  "INT-R-2 = COR-R-2 (maxThe trust) -- closed in same batch"
+ ],
+ "verify": "type-check clean; scoped vitest 282/282 (skilldef + adapter + the-tu + TurnSkillAction + empowerment)"
+}

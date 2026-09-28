@@ -1,0 +1,27 @@
+{
+ "review": "REV-PTR-INT-I1",
+ "reviewer": "devin-233db7a8becc45ff8d963d1ab2092ab2",
+ "pin": "c2bb6992",
+ "verdict": "FINDINGS",
+ "counts": {
+  "medium": 1,
+  "low": 1,
+  "nit": 5
+ },
+ "findingIds": [
+  "F-PTR-138",
+  "F-PTR-139",
+  "F-PTR-140",
+  "F-PTR-141",
+  "F-PTR-142",
+  "F-PTR-143",
+  "F-PTR-144"
+ ],
+ "reviewerRejected": [
+  "H1 landed/rider ordering by design",
+  "H2 shared shape+target by design",
+  "H3 oncePerCast full-eval dead branch by design",
+  "H4 dormant op-fields scalar-by-design"
+ ],
+ "repro": "unrouted-leak repro + castBlocked stamp gates + charge-init disarm verified in reviewer worktree"
+}

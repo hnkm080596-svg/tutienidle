@@ -1,0 +1,920 @@
+{
+  "schemaVersion": 2,
+  "run": {
+    "id": "phap-tu-reimagine-merge-2026-09-27",
+    "createdAt": "2026-09-27T17:56:15.734Z",
+    "scope": "AGGREGATE_REPOSITORY",
+    "authorizedRepairs": [],
+    "nonGoals": [],
+    "checkout": "/home/ubuntu/repos/tutienidle/.agent-worktrees/phap-tu-reimagine/game",
+    "branch": "devin/1790423750-phap-tu-reimagine",
+    "base": "68621987",
+    "head": "8e25a766",
+    "state": {
+      "productStateId": "d467c64edae3956a5f65ddb7eeea67e9fdf45ad0b71d1a5ee18ed9cfbe41ccab",
+      "contractId": "33679340803ed2f2fab73308470df533f9f8066cb37b2009ada41c3ab7e4d517",
+      "attackModelId": "d8d32bdb460ed5edc8749e548a1c561f8b4d6780159b72d23558c6d6f5eea5ab",
+      "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+    },
+    "manifestPath": "manifest.json",
+    "environmentPath": "environment.json",
+    "learningPolicyId": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+    "consumedLessonIds": [],
+    "aggregateParents": [],
+    "requiredDomains": [],
+    "exclusions": [],
+    "briefIds": [],
+    "capacityLimit": 5,
+    "requiredReadiness": false,
+    "phase": "DECIDE",
+    "cleanRoundA": null,
+    "cleanRoundB": null,
+    "finalEvidenceIds": [
+      "EV-MRG-TERMINAL"
+    ],
+    "outcome": "QA_UNVERIFIED"
+  },
+  "briefs": [],
+  "assignments": [],
+  "consumptions": [],
+  "invariants": [],
+  "census": [],
+  "findings": [
+    {
+      "id": "F-MRG-01",
+      "title": "merged hoIntercept.test.ts dropped the 4 NOVA-1 pin tests (took master verbatim)",
+      "state": {
+        "productStateId": "ba9e38e3dbfc48c40be3cadc776e016a04171257c31d19d6f2d62ab3b2e1217d",
+        "contractId": "33679340803ed2f2fab73308470df533f9f8066cb37b2009ada41c3ab7e4d517",
+        "attackModelId": "d8d32bdb460ed5edc8749e548a1c561f8b4d6780159b72d23558c6d6f5eea5ab",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "subsystem": "core",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "closedAt": "2026-09-27T18:25:00Z",
+      "severity": "Low",
+      "locations": [
+        {
+          "path": "src/core/battle/turn/TurnBattleSystem.hoIntercept.test.ts",
+          "symbolOrSection": "NOVA-1 block",
+          "revision": "8e25a766",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "src/core/battle/turn/TurnBattleSystem.ts",
+          "symbolOrSection": ":3598-3613",
+          "revision": "8e25a766",
+          "basis": "SOURCE"
+        }
+      ],
+      "pinEvidenceIds": [
+        "EV-MRG-FIX1"
+      ],
+      "verificationEvidenceIds": [
+        "EV-MRG-FIX1"
+      ],
+      "evidenceIds": [
+        "EV-MRG-FIX1"
+      ],
+      "closureReviewIds": [
+        "REV-MRG-CLO-1"
+      ],
+      "status": "CLOSED",
+      "classification": "REAL_DEFECT",
+      "reachability": "SUPPORTED_BOUNDARY",
+      "actionable": true,
+      "discoveredBy": "merge COR",
+      "expected": "all four dead-swing pin classes (unviable/null-action/whiffed/charge-init) asserted against the window",
+      "actual": "manual-resolution file took THEIRS wholesale; the NOVA-1 block (ours 282-355) never ported onto merged fixtures",
+      "rootCause": "resolution side-selection dropped pin-only blocks",
+      "rootClass": "MERGE_RESOLUTION_LOSS",
+      "repair": "ported all 4 pins onto merged fixture shape (withHoMon opts.observed, ung-the semantics) @d9e7b7fc; 39/39 scoped green",
+      "siblingSearch": [
+        {
+          "roots": [
+            "game/src"
+          ],
+          "termsAndMethod": "enumerate merge-resolution peers (other union files / other pool renderers) for the same defect class",
+          "evidenceIds": [
+            "EV-MRG-FIX1"
+          ],
+          "hitDispositions": [
+            "peers enumerated -- no sibling defects found"
+          ],
+          "coverageLimits": [
+            "merge-touched surface only"
+          ]
+        }
+      ],
+      "closeReason": "fixed in merge-QA wave-1 batch @d9e7b7fc -- pending closure seal",
+      "counterexample": "manual-resolution file took THEIRS wholesale; the NOVA-1 block (ours 282-355) never ported onto merged fixtures"
+    },
+    {
+      "id": "F-MRG-02",
+      "title": "dormant consumesAllThe/theBurned lane diverges from master in queued executions",
+      "state": {
+        "productStateId": "ba9e38e3dbfc48c40be3cadc776e016a04171257c31d19d6f2d62ab3b2e1217d",
+        "contractId": "33679340803ed2f2fab73308470df533f9f8066cb37b2009ada41c3ab7e4d517",
+        "attackModelId": "d8d32bdb460ed5edc8749e548a1c561f8b4d6780159b72d23558c6d6f5eea5ab",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "subsystem": "core",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "closedAt": "2026-09-27T18:25:00Z",
+      "severity": "Nit",
+      "locations": [
+        {
+          "path": "src/core/battle/turn/TurnBattleSystem.ts",
+          "symbolOrSection": ":2957",
+          "revision": "8e25a766",
+          "basis": "SOURCE"
+        }
+      ],
+      "pinEvidenceIds": [
+        "EV-MRG-FIX1"
+      ],
+      "verificationEvidenceIds": [
+        "EV-MRG-FIX1"
+      ],
+      "evidenceIds": [
+        "EV-MRG-FIX1"
+      ],
+      "closureReviewIds": [
+        "REV-MRG-CLO-1"
+      ],
+      "status": "CLOSED",
+      "classification": "REAL_DEFECT",
+      "reachability": "HYPOTHETICAL",
+      "actionable": true,
+      "discoveredBy": "merge AUT",
+      "expected": "asymmetric drain-without-scale either restored or documented as unsupported combo",
+      "actual": "ours' builder carries no theBurned capture; a consumesAllThe+repeatCasts def would drain at commitCast with no theScaling fold",
+      "rootCause": "deliberate empowered-lane drop retired all consumesAllThe data producers; lane stays executable but unreachable",
+      "rootClass": "DORMANT_CODE",
+      "repair": "docblock now names the repeatCasts/multicast incompatibility + restore direction @d9e7b7fc (no code change -- zero data producers today)",
+      "siblingSearch": [
+        {
+          "roots": [
+            "game/src"
+          ],
+          "termsAndMethod": "enumerate merge-resolution peers (other union files / other pool renderers) for the same defect class",
+          "evidenceIds": [
+            "EV-MRG-FIX1"
+          ],
+          "hitDispositions": [
+            "peers enumerated -- no sibling defects found"
+          ],
+          "coverageLimits": [
+            "merge-touched surface only"
+          ]
+        }
+      ],
+      "closeReason": "fixed in merge-QA wave-1 batch @d9e7b7fc -- pending closure seal",
+      "counterexample": "ours' builder carries no theBurned capture; a consumesAllThe+repeatCasts def would drain at commitCast with no theScalin"
+    },
+    {
+      "id": "F-MRG-03",
+      "title": "ung-the The pool renders as ~100 overlapping pips instead of a fill bar",
+      "state": {
+        "productStateId": "ba9e38e3dbfc48c40be3cadc776e016a04171257c31d19d6f2d62ab3b2e1217d",
+        "contractId": "33679340803ed2f2fab73308470df533f9f8066cb37b2009ada41c3ab7e4d517",
+        "attackModelId": "d8d32bdb460ed5edc8749e548a1c561f8b4d6780159b72d23558c6d6f5eea5ab",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "subsystem": "core",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "closedAt": "2026-09-27T18:25:00Z",
+      "severity": "Low",
+      "locations": [
+        {
+          "path": "src/game/scenes/combat/PlayerHudLayer.ts",
+          "symbolOrSection": "updateThe",
+          "revision": "8e25a766",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "src/presentation/bridges/theBarBridge.ts",
+          "symbolOrSection": ":136-153",
+          "revision": "8e25a766",
+          "basis": "SOURCE"
+        }
+      ],
+      "pinEvidenceIds": [
+        "EV-MRG-FIX1"
+      ],
+      "verificationEvidenceIds": [
+        "EV-MRG-FIX1"
+      ],
+      "evidenceIds": [
+        "EV-MRG-FIX1"
+      ],
+      "closureReviewIds": [
+        "REV-MRG-CLO-1"
+      ],
+      "status": "CLOSED",
+      "classification": "REAL_DEFECT",
+      "reachability": "SUPPORTED_BOUNDARY",
+      "actionable": true,
+      "discoveredBy": "merge INT",
+      "expected": "large pools keep a readable fill-rect readout; pips only for small caps",
+      "actual": "merged updateThe draws dotMax=Math.round(max) pips at 1.4px spacing in a 140px bar -- a solid smear; label still correct",
+      "rootCause": "union kept ours pip row (designed for cap 5) without bounding it against the ung-the 100 pool",
+      "rootClass": "MERGE_RESOLUTION_LOSS",
+      "repair": "fill-rect lane when dotMax > THE_DOT_LANE_MAX(12): scaleX ratio + armed color, pips hidden @d9e7b7fc",
+      "siblingSearch": [
+        {
+          "roots": [
+            "game/src"
+          ],
+          "termsAndMethod": "enumerate merge-resolution peers (other union files / other pool renderers) for the same defect class",
+          "evidenceIds": [
+            "EV-MRG-FIX1"
+          ],
+          "hitDispositions": [
+            "peers enumerated -- no sibling defects found"
+          ],
+          "coverageLimits": [
+            "merge-touched surface only"
+          ]
+        }
+      ],
+      "closeReason": "fixed in merge-QA wave-1 batch @d9e7b7fc -- pending closure seal",
+      "counterexample": "merged updateThe draws dotMax=Math.round(max) pips at 1.4px spacing in a 140px bar -- a solid smear; label still correct"
+    },
+    {
+      "id": "F-MRG-04",
+      "title": "no repo pin test for the fill lane (ung-the >12-pip HUD path)",
+      "state": {
+        "productStateId": "d467c64edae3956a5f65ddb7eeea67e9fdf45ad0b71d1a5ee18ed9cfbe41ccab",
+        "contractId": "33679340803ed2f2fab73308470df533f9f8066cb37b2009ada41c3ab7e4d517",
+        "attackModelId": "d8d32bdb460ed5edc8749e548a1c561f8b4d6780159b72d23558c6d6f5eea5ab",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Nit",
+      "classification": "NON_ACTIONABLE",
+      "actionable": false,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "src/game/scenes/combat/PlayerHudLayer.ts",
+          "symbolOrSection": "updateThe",
+          "revision": "d9e7b7fc",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "devin-6a7a3ea864034308b5b8a1382db6b7cb",
+      "counterexample": "pre-existing: fill lane verified only by throwaway scratch vitest during CLO; PlayerHudLayer.test.ts has no >12-max case",
+      "expected": "a committed pin test covering the fill lane",
+      "actual": "no committed coverage",
+      "status": "REJECTED_WITH_PROOF",
+      "invariantIds": [],
+      "evidenceIds": [
+        "EV-MRG-CLO1"
+      ],
+      "closureReviewIds": [
+        "REV-MRG-CLO-1"
+      ],
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "siblingFindingIds": [],
+      "subsystem": "presentation",
+      "duplicateOf": null,
+      "rejectionReason": "pre-existing nit, not introduced by the merge resolution; recorded for visibility, deferred out of this runs authorized repair scope",
+      "exception": null,
+      "repair": null,
+      "rootCause": "fill lane added by merge fix; scratch-verified but no committed pin",
+      "rootClass": "PRE_EXISTING",
+      "siblingSearch": [],
+      "closedAt": "2026-09-27T19:20:00Z",
+      "closeReason": "rejected as out-of-scope pre-existing; kept visible for follow-up"
+    },
+    {
+      "id": "F-MRG-05",
+      "title": "updateThe setVisible(true) clobbers group.visible on hide->show transitions",
+      "state": {
+        "productStateId": "d467c64edae3956a5f65ddb7eeea67e9fdf45ad0b71d1a5ee18ed9cfbe41ccab",
+        "contractId": "33679340803ed2f2fab73308470df533f9f8066cb37b2009ada41c3ab7e4d517",
+        "attackModelId": "d8d32bdb460ed5edc8749e548a1c561f8b4d6780159b72d23558c6d6f5eea5ab",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "severity": "Nit",
+      "classification": "NON_ACTIONABLE",
+      "actionable": false,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "src/game/scenes/combat/PlayerHudLayer.ts",
+          "symbolOrSection": "updateThe",
+          "revision": "d9e7b7fc",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "devin-6a7a3ea864034308b5b8a1382db6b7cb",
+      "counterexample": "pre-existing: fill.setVisible on the The group can re-show a group hidden by parent visibility",
+      "expected": "visibility restore honors parent/group hide state",
+      "actual": "direct setVisible without intermediate check",
+      "status": "REJECTED_WITH_PROOF",
+      "invariantIds": [],
+      "evidenceIds": [
+        "EV-MRG-CLO1"
+      ],
+      "closureReviewIds": [
+        "REV-MRG-CLO-1"
+      ],
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "siblingFindingIds": [],
+      "subsystem": "presentation",
+      "duplicateOf": null,
+      "rejectionReason": "pre-existing nit, not introduced by the merge resolution; recorded for visibility, deferred out of this runs authorized repair scope",
+      "exception": null,
+      "repair": null,
+      "rootCause": "pre-existing visibility logic edge, not introduced by merge",
+      "rootClass": "PRE_EXISTING",
+      "siblingSearch": [],
+      "closedAt": "2026-09-27T19:20:00Z",
+      "closeReason": "rejected as out-of-scope pre-existing; kept visible for follow-up"
+    }
+  ],
+  "evidence": [
+    {
+      "kind": "EXECUTED_UNIT_STRUCTURAL",
+      "id": "EV-MRG-FIX1",
+      "state": {
+        "productStateId": "d467c64edae3956a5f65ddb7eeea67e9fdf45ad0b71d1a5ee18ed9cfbe41ccab",
+        "contractId": "33679340803ed2f2fab73308470df533f9f8066cb37b2009ada41c3ab7e4d517",
+        "attackModelId": "d8d32bdb460ed5edc8749e548a1c561f8b4d6780159b72d23558c6d6f5eea5ab",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "status": "CURRENT",
+      "producer": "devin-5bf2143f50154f09bbdb6b8a1f7cb508",
+      "startedAt": "2026-09-27T18:05:00Z",
+      "finishedAt": "2026-09-27T18:25:00Z",
+      "commandOrMethod": "merge-QA wave-1 adjudication batch @d9e7b7fc: NOVA-1 pin restore + HUD fill lane + theBurned docblock; type-check + 39 scoped green",
+      "cwd": "game/",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "records-merge1-fix.json",
+      "artifactHash": "07674e0f50347c05b8486910834c2e7cebeb28a73bf901688a2c4879a244417b",
+      "claims": [
+        "all 3 merge-QA findings fixed"
+      ],
+      "inputEvidenceIds": [],
+      "inputPaths": [],
+      "invariantIds": [],
+      "limitations": []
+    },
+    {
+      "kind": "EXECUTED_UNIT_STRUCTURAL",
+      "id": "EV-MRG-COR1",
+      "state": {
+        "productStateId": "ba9e38e3dbfc48c40be3cadc776e016a04171257c31d19d6f2d62ab3b2e1217d",
+        "contractId": "33679340803ed2f2fab73308470df533f9f8066cb37b2009ada41c3ab7e4d517",
+        "attackModelId": "d8d32bdb460ed5edc8749e548a1c561f8b4d6780159b72d23558c6d6f5eea5ab",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "status": "STALE",
+      "producer": "devin-55425468fbb84cac997c492edc11a560",
+      "startedAt": "2026-09-27T18:05:00Z",
+      "finishedAt": "2026-09-27T18:25:00Z",
+      "commandOrMethod": "COR merge review @8e25a766: 64 files enumerated; 34 byte-exact disjoint unions; pin integrity + dead-ref clean; 1 Low finding",
+      "cwd": "game/",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "records-merge1-cor.json",
+      "artifactHash": "ea704246f886510a4bfe3dc31c69ade139400f894c04f126dcecc6c8649bf054",
+      "claims": [
+        "COR verdict FINDINGS(1)"
+      ],
+      "inputEvidenceIds": [],
+      "inputPaths": [],
+      "invariantIds": [],
+      "limitations": []
+    },
+    {
+      "kind": "EXECUTED_UNIT_STRUCTURAL",
+      "id": "EV-MRG-AUT1",
+      "state": {
+        "productStateId": "ba9e38e3dbfc48c40be3cadc776e016a04171257c31d19d6f2d62ab3b2e1217d",
+        "contractId": "33679340803ed2f2fab73308470df533f9f8066cb37b2009ada41c3ab7e4d517",
+        "attackModelId": "d8d32bdb460ed5edc8749e548a1c561f8b4d6780159b72d23558c6d6f5eea5ab",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "status": "STALE",
+      "producer": "devin-afe1c2467f1b449287fc2a8f7fb1a286",
+      "startedAt": "2026-09-27T18:05:00Z",
+      "finishedAt": "2026-09-27T18:25:00Z",
+      "commandOrMethod": "AUT merge review @8e25a766: write-site census clean (6 currentThe sites owner-bound); castBlocked lane maps correctly; 1 Nit finding",
+      "cwd": "game/",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "records-merge1-aut.json",
+      "artifactHash": "815814759487db1c03d6e486bee6b932c10bd16a9e0e357824cce655024ac426",
+      "claims": [
+        "AUT verdict FINDINGS(1)"
+      ],
+      "inputEvidenceIds": [],
+      "inputPaths": [],
+      "invariantIds": [],
+      "limitations": []
+    },
+    {
+      "kind": "EXECUTED_UNIT_STRUCTURAL",
+      "id": "EV-MRG-INT1",
+      "state": {
+        "productStateId": "ba9e38e3dbfc48c40be3cadc776e016a04171257c31d19d6f2d62ab3b2e1217d",
+        "contractId": "33679340803ed2f2fab73308470df533f9f8066cb37b2009ada41c3ab7e4d517",
+        "attackModelId": "d8d32bdb460ed5edc8749e548a1c561f8b4d6780159b72d23558c6d6f5eea5ab",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "status": "STALE",
+      "producer": "devin-1db8e9118bf14dcfa8553f89676c50a9",
+      "startedAt": "2026-09-27T18:05:00Z",
+      "finishedAt": "2026-09-27T18:25:00Z",
+      "commandOrMethod": "INT merge review @8e25a766: adversarial runtime cross-domain attacks clean on charge-resolve/empowered/save-load lanes; 1 Low finding",
+      "cwd": "game/",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "records-merge1-int.json",
+      "artifactHash": "7574cdb7542a13d41396c3850cf500179eb30a834a7de2bfb401c1f9ac191b4f",
+      "claims": [
+        "INT verdict FINDINGS(1)"
+      ],
+      "inputEvidenceIds": [],
+      "inputPaths": [],
+      "invariantIds": [],
+      "limitations": []
+    },
+    {
+      "id": "EV-MRG-TERMINAL",
+      "state": {
+        "productStateId": "d467c64edae3956a5f65ddb7eeea67e9fdf45ad0b71d1a5ee18ed9cfbe41ccab",
+        "contractId": "33679340803ed2f2fab73308470df533f9f8066cb37b2009ada41c3ab7e4d517",
+        "attackModelId": "d8d32bdb460ed5edc8749e548a1c561f8b4d6780159b72d23558c6d6f5eea5ab",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "status": "CURRENT",
+      "producer": "devin-36b4ed6c62314681a56819fca98046f3",
+      "startedAt": "2026-09-27T19:00:00Z",
+      "finishedAt": "2026-09-27T19:05:00Z",
+      "commandOrMethod": "TERMINAL_CHECK final-verify @d9e7b7fc: type-check clean; vitest 790 files/6977 tests — 6970 pass, 2 fail (magick ENOENT env noise), 5 expected-fail; invariant spot-checks all hold (THE_PROC_COST/REACTION_DEBT_CAP, charge-resolve no castBlocked stamp, NodeInspector inBattle, balance fingerprints, buff catalog 68); fix batch touches only 3 claimed files",
+      "cwd": "game/",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "terminal-check-verdict.txt",
+      "artifactHash": "ae86a2186575e3d47e2dc5e92b28ad45fe45318e7c4175752e2fd8a8e41f35dc",
+      "claims": [
+        "merge product carries no unresolved merge-resolution defect",
+        "final gates pass on pin d9e7b7fc (env noise only)"
+      ],
+      "inputPaths": [],
+      "inputEvidenceIds": [
+        "EV-MRG-FIX1"
+      ],
+      "invariantIds": [],
+      "limitations": [
+        "canvas/libuuid suite-load noise not reproduced on reviewer VM; PlayerHudLayer.test.ts ran and passed there"
+      ],
+      "kind": "EXECUTED_UNIT_STRUCTURAL"
+    },
+    {
+      "kind": "EXECUTED_UNIT_STRUCTURAL",
+      "id": "EV-MRG-CLO1",
+      "state": {
+        "productStateId": "d467c64edae3956a5f65ddb7eeea67e9fdf45ad0b71d1a5ee18ed9cfbe41ccab",
+        "contractId": "33679340803ed2f2fab73308470df533f9f8066cb37b2009ada41c3ab7e4d517",
+        "attackModelId": "d8d32bdb460ed5edc8749e548a1c561f8b4d6780159b72d23558c6d6f5eea5ab",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "status": "CURRENT",
+      "producer": "devin-6a7a3ea864034308b5b8a1382db6b7cb",
+      "startedAt": "2026-09-27T19:05:00Z",
+      "finishedAt": "2026-09-27T19:15:00Z",
+      "commandOrMethod": "CLO seal @d9e7b7fc: F-MRG-01 4 NOVA-1 pins exist + executed (28/28 green, spy lane fires); F-MRG-02 docblock accurate, zero consumesAllThe producers; F-MRG-03 fill lane verified incl scratch vitest 7/7 (PlayerHudLayer.test.ts runs on reviewer VM, 8/8)",
+      "cwd": "game/",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "clo-verdict.txt",
+      "artifactHash": "f4806d0dc922ee41f035c302267b0ec5ede9cbaecf372cb8aa7cd7a6598d4662",
+      "claims": [
+        "all 3 merge-QA fixes verified real and correct on d9e7b7fc",
+        "no new defects found"
+      ],
+      "inputEvidenceIds": [],
+      "inputPaths": [],
+      "invariantIds": [],
+      "limitations": []
+    }
+  ],
+  "coverage": [],
+  "attacks": [],
+  "reviews": [
+    {
+      "id": "REV-MRG-COR-1",
+      "state": {
+        "productStateId": "ba9e38e3dbfc48c40be3cadc776e016a04171257c31d19d6f2d62ab3b2e1217d",
+        "contractId": "33679340803ed2f2fab73308470df533f9f8066cb37b2009ada41c3ab7e4d517",
+        "attackModelId": "d8d32bdb460ed5edc8749e548a1c561f8b4d6780159b72d23558c6d6f5eea5ab",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "round": 1,
+      "phase": "CORRECTNESS",
+      "reviewerId": "devin-55425468fbb84cac997c492edc11a560",
+      "contextId": "ctx-55425468",
+      "model": "swe-2",
+      "role": "merge-correctness",
+      "inputBundleHash": "ba9e38e3dbfc48c40be3cadc776e016a04171257c31d19d6f2d62ab3b2e1217d",
+      "priorFindingsVisible": false,
+      "accessLimitations": [
+        "read-only clone"
+      ],
+      "startedAt": "2026-09-27T18:00:00Z",
+      "sealedAt": "2026-09-27T18:25:00Z",
+      "previousPhaseReviewId": null,
+      "reviewedAfterPreviousFixes": false,
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-MRG-COR1"
+      ],
+      "findingIds": [
+        "F-MRG-01"
+      ],
+      "novelAttackIds": [],
+      "status": "SEALED"
+    },
+    {
+      "id": "REV-MRG-AUT-1",
+      "state": {
+        "productStateId": "ba9e38e3dbfc48c40be3cadc776e016a04171257c31d19d6f2d62ab3b2e1217d",
+        "contractId": "33679340803ed2f2fab73308470df533f9f8066cb37b2009ada41c3ab7e4d517",
+        "attackModelId": "d8d32bdb460ed5edc8749e548a1c561f8b4d6780159b72d23558c6d6f5eea5ab",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "round": 1,
+      "phase": "AUTHORITY",
+      "reviewerId": "devin-afe1c2467f1b449287fc2a8f7fb1a286",
+      "contextId": "ctx-afe1c246",
+      "model": "swe-2",
+      "role": "merge-authority",
+      "inputBundleHash": "ba9e38e3dbfc48c40be3cadc776e016a04171257c31d19d6f2d62ab3b2e1217d",
+      "priorFindingsVisible": false,
+      "accessLimitations": [
+        "read-only clone"
+      ],
+      "startedAt": "2026-09-27T18:00:00Z",
+      "sealedAt": "2026-09-27T18:25:00Z",
+      "previousPhaseReviewId": null,
+      "reviewedAfterPreviousFixes": false,
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-MRG-AUT1"
+      ],
+      "findingIds": [
+        "F-MRG-02"
+      ],
+      "novelAttackIds": [],
+      "status": "SEALED"
+    },
+    {
+      "id": "REV-MRG-INT-1",
+      "state": {
+        "productStateId": "ba9e38e3dbfc48c40be3cadc776e016a04171257c31d19d6f2d62ab3b2e1217d",
+        "contractId": "33679340803ed2f2fab73308470df533f9f8066cb37b2009ada41c3ab7e4d517",
+        "attackModelId": "d8d32bdb460ed5edc8749e548a1c561f8b4d6780159b72d23558c6d6f5eea5ab",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "round": 1,
+      "phase": "INTEGRATION",
+      "reviewerId": "devin-1db8e9118bf14dcfa8553f89676c50a9",
+      "contextId": "ctx-1db8e911",
+      "model": "swe-2",
+      "role": "merge-integration",
+      "inputBundleHash": "ba9e38e3dbfc48c40be3cadc776e016a04171257c31d19d6f2d62ab3b2e1217d",
+      "priorFindingsVisible": false,
+      "accessLimitations": [
+        "read-only clone"
+      ],
+      "startedAt": "2026-09-27T18:00:00Z",
+      "sealedAt": "2026-09-27T18:25:00Z",
+      "previousPhaseReviewId": null,
+      "reviewedAfterPreviousFixes": false,
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-MRG-INT1"
+      ],
+      "findingIds": [
+        "F-MRG-03"
+      ],
+      "novelAttackIds": [],
+      "status": "SEALED"
+    },
+    {
+      "id": "REV-MRG-TERMINAL",
+      "state": {
+        "productStateId": "d467c64edae3956a5f65ddb7eeea67e9fdf45ad0b71d1a5ee18ed9cfbe41ccab",
+        "contractId": "33679340803ed2f2fab73308470df533f9f8066cb37b2009ada41c3ab7e4d517",
+        "attackModelId": "d8d32bdb460ed5edc8749e548a1c561f8b4d6780159b72d23558c6d6f5eea5ab",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "round": 2,
+      "phase": "TERMINAL_CHECK",
+      "reviewerId": "devin-36b4ed6c62314681a56819fca98046f3",
+      "contextId": "sealed-child-36b4ed6c62314681a56819fca98046f3",
+      "role": "terminal",
+      "model": "swe-2",
+      "inputBundleHash": "d467c64edae3956a5f65ddb7eeea67e9fdf45ad0b71d1a5ee18ed9cfbe41ccab",
+      "priorFindingsVisible": false,
+      "accessLimitations": [],
+      "startedAt": "2026-09-27T18:50:00Z",
+      "sealedAt": "2026-09-27T19:05:00Z",
+      "previousPhaseReviewId": null,
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-MRG-TERMINAL"
+      ],
+      "findingIds": [],
+      "novelAttackIds": [],
+      "status": "SEALED"
+    },
+    {
+      "id": "REV-MRG-CLO-1",
+      "state": {
+        "productStateId": "d467c64edae3956a5f65ddb7eeea67e9fdf45ad0b71d1a5ee18ed9cfbe41ccab",
+        "contractId": "33679340803ed2f2fab73308470df533f9f8066cb37b2009ada41c3ab7e4d517",
+        "attackModelId": "d8d32bdb460ed5edc8749e548a1c561f8b4d6780159b72d23558c6d6f5eea5ab",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "round": 2,
+      "phase": "CLOSURE",
+      "reviewerId": "devin-6a7a3ea864034308b5b8a1382db6b7cb",
+      "contextId": "sealed-child-6a7a3ea864034308b5b8a1382db6b7cb",
+      "role": "closure",
+      "model": "swe-2",
+      "inputBundleHash": "d467c64edae3956a5f65ddb7eeea67e9fdf45ad0b71d1a5ee18ed9cfbe41ccab",
+      "priorFindingsVisible": true,
+      "accessLimitations": [],
+      "startedAt": "2026-09-27T19:05:00Z",
+      "sealedAt": "2026-09-27T19:15:00Z",
+      "previousPhaseReviewId": null,
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-MRG-CLO1"
+      ],
+      "findingIds": [
+        "F-MRG-01",
+        "F-MRG-02",
+        "F-MRG-03"
+      ],
+      "novelAttackIds": [],
+      "status": "SEALED"
+    }
+  ],
+  "cycles": [
+    {
+      "id": "CYCLE-MRG-R1",
+      "state": {
+        "productStateId": "ba9e38e3dbfc48c40be3cadc776e016a04171257c31d19d6f2d62ab3b2e1217d",
+        "contractId": "33679340803ed2f2fab73308470df533f9f8066cb37b2009ada41c3ab7e4d517",
+        "attackModelId": "d8d32bdb460ed5edc8749e548a1c561f8b4d6780159b72d23558c6d6f5eea5ab",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "reviewIds": [
+        "REV-MRG-COR-1",
+        "REV-MRG-AUT-1",
+        "REV-MRG-INT-1"
+      ],
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-MRG-COR1",
+        "EV-MRG-AUT1",
+        "EV-MRG-INT1"
+      ],
+      "noveltyEvidenceIds": [],
+      "startedAt": "2026-09-27T18:00:00Z",
+      "finishedAt": "2026-09-27T18:25:00Z",
+      "status": "FINDINGS"
+    }
+  ],
+  "mutations": [],
+  "corpus": [],
+  "lessons": [
+    {
+      "version": 1,
+      "supersedes": null,
+      "incidentEvidenceIds": [
+        "EV-MRG-COR1",
+        "EV-MRG-INT1"
+      ],
+      "originatingRun": "phap-tu-reimagine-merge-2026-09-27",
+      "missedInvariantIds": [],
+      "exclusions": [],
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [],
+      "status": "CAPTURED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "recurrenceFindingIds": [],
+      "preventionEvidenceIds": [
+        "EV-MRG-FIX1"
+      ],
+      "guidance": null,
+      "id": "L-MRG-VERBATIM-SIDE-DROP",
+      "triggerType": "DEFECT",
+      "findingIds": [
+        "F-MRG-01",
+        "F-MRG-02",
+        "F-MRG-03",
+        "F-MRG-04",
+        "F-MRG-05"
+      ],
+      "rootClass": "MERGE_RESOLUTION_LOSS",
+      "escapeReason": "union policy covered source files but a test file resolved verbatim-THEIRS dropped pin-only blocks; a UI file resolved ours carried an unbounded rendering assumption master had guarded",
+      "applicability": [
+        "any merge resolution that takes one side verbatim (tests especially -- they carry pins, not just coverage)",
+        "renderers whose layout math assumes a small fixed cap"
+      ],
+      "proposedProtection": [
+        "merge resolution policy: for files with pin/regression blocks, diff-block level instead of whole-file side choice",
+        "bounding assertion when a renderer's element count is data-driven"
+      ],
+      "capabilityDelta": "merge-resolution audits must enumerate dropped blocks, not only conflicted hunks"
+    }
+  ],
+  "messages": [],
+  "events": [
+    {
+      "seq": 1,
+      "at": "2026-09-27T17:56:15.735Z",
+      "kind": "PHASE",
+      "actor": "coordinator-merge",
+      "state": {
+        "productStateId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567",
+        "contractId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567",
+        "attackModelId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567",
+        "environmentId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567"
+      },
+      "previousEventHash": null,
+      "payloadPath": "events/0001.json",
+      "payloadHash": "c37c122054471a44e83ac00df0db9544ea838331727b2176a98f859d2696b019",
+      "eventHash": "823bc080f580ae5da17c3d54f064c5650f59c8424644e7260fbaca7cb51fbfe2"
+    },
+    {
+      "seq": 2,
+      "at": "2026-09-27T17:56:41.152Z",
+      "kind": "SNAPSHOT",
+      "actor": "coordinator-merge",
+      "state": {
+        "productStateId": "ba9e38e3dbfc48c40be3cadc776e016a04171257c31d19d6f2d62ab3b2e1217d",
+        "contractId": "33679340803ed2f2fab73308470df533f9f8066cb37b2009ada41c3ab7e4d517",
+        "attackModelId": "d8d32bdb460ed5edc8749e548a1c561f8b4d6780159b72d23558c6d6f5eea5ab",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "823bc080f580ae5da17c3d54f064c5650f59c8424644e7260fbaca7cb51fbfe2",
+      "payloadPath": "events/0002.json",
+      "payloadHash": "b9b19e028780eb89222138572a481b9e1b72fc439eff975e6d99713e2648785b",
+      "eventHash": "b94649cd13e44105f930506d0c529c13002b773d887258ef38b64028a1cd1ff1"
+    },
+    {
+      "seq": 3,
+      "at": "2026-09-27T18:26:59.161Z",
+      "kind": "SNAPSHOT",
+      "actor": "coordinator-merge",
+      "state": {
+        "productStateId": "d467c64edae3956a5f65ddb7eeea67e9fdf45ad0b71d1a5ee18ed9cfbe41ccab",
+        "contractId": "33679340803ed2f2fab73308470df533f9f8066cb37b2009ada41c3ab7e4d517",
+        "attackModelId": "d8d32bdb460ed5edc8749e548a1c561f8b4d6780159b72d23558c6d6f5eea5ab",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "b94649cd13e44105f930506d0c529c13002b773d887258ef38b64028a1cd1ff1",
+      "payloadPath": "events/0003.json",
+      "payloadHash": "d6d5572430e69be02fc52d27ccb133ff78f02ea65b89e34409a1f8d4685de24b",
+      "eventHash": "c39682d1b7ece458febf28ae117add6c612db0d3ed5e4ee73b82ca46f4b572a4"
+    },
+    {
+      "seq": 4,
+      "at": "2026-09-27T18:28:43.260Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-merge",
+      "state": {
+        "productStateId": "d467c64edae3956a5f65ddb7eeea67e9fdf45ad0b71d1a5ee18ed9cfbe41ccab",
+        "contractId": "33679340803ed2f2fab73308470df533f9f8066cb37b2009ada41c3ab7e4d517",
+        "attackModelId": "d8d32bdb460ed5edc8749e548a1c561f8b4d6780159b72d23558c6d6f5eea5ab",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "c39682d1b7ece458febf28ae117add6c612db0d3ed5e4ee73b82ca46f4b572a4",
+      "payloadPath": "events/0004.json",
+      "payloadHash": "3b27e1f34e8f1c81c766f05882844c4578e584d28ec1635de84d2e2d641320af",
+      "eventHash": "4896710d493cd7e7f79f0941dae6aa0fc5a47cfae1e098a461c1bfeb04eb43de"
+    },
+    {
+      "seq": 5,
+      "at": "2026-09-27T18:29:09.942Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-merge",
+      "state": {
+        "productStateId": "d467c64edae3956a5f65ddb7eeea67e9fdf45ad0b71d1a5ee18ed9cfbe41ccab",
+        "contractId": "33679340803ed2f2fab73308470df533f9f8066cb37b2009ada41c3ab7e4d517",
+        "attackModelId": "d8d32bdb460ed5edc8749e548a1c561f8b4d6780159b72d23558c6d6f5eea5ab",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "4896710d493cd7e7f79f0941dae6aa0fc5a47cfae1e098a461c1bfeb04eb43de",
+      "payloadPath": "events/0005.json",
+      "payloadHash": "d02b08ea5a48408a82ef72ed88afe9587c1349fc773992ceb3450020b2924fa8",
+      "eventHash": "1cd8e878cae0d7952f94e645205174b50d9e60899bc5881240d7efcfa60e9da2"
+    },
+    {
+      "seq": 6,
+      "at": "2026-09-27T18:37:37.053Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-merge",
+      "state": {
+        "productStateId": "d467c64edae3956a5f65ddb7eeea67e9fdf45ad0b71d1a5ee18ed9cfbe41ccab",
+        "contractId": "33679340803ed2f2fab73308470df533f9f8066cb37b2009ada41c3ab7e4d517",
+        "attackModelId": "d8d32bdb460ed5edc8749e548a1c561f8b4d6780159b72d23558c6d6f5eea5ab",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "1cd8e878cae0d7952f94e645205174b50d9e60899bc5881240d7efcfa60e9da2",
+      "payloadPath": "events/0006.json",
+      "payloadHash": "5339ca2993986c897a3ac93b9187eb86c721a56640c74dbfe30fcefb0c810fde",
+      "eventHash": "5624ffe7d98c29c2650febcdb9b9134d65d465e3bb5acb99c858789e72821f06"
+    },
+    {
+      "seq": 7,
+      "at": "2026-09-27T18:43:28.862Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-merge",
+      "state": {
+        "productStateId": "d467c64edae3956a5f65ddb7eeea67e9fdf45ad0b71d1a5ee18ed9cfbe41ccab",
+        "contractId": "33679340803ed2f2fab73308470df533f9f8066cb37b2009ada41c3ab7e4d517",
+        "attackModelId": "d8d32bdb460ed5edc8749e548a1c561f8b4d6780159b72d23558c6d6f5eea5ab",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "5624ffe7d98c29c2650febcdb9b9134d65d465e3bb5acb99c858789e72821f06",
+      "payloadPath": "events/0007.json",
+      "payloadHash": "104a9dc446f37b452bdb31962f9005cb791c9dcd77d0b7c5aa0edec41994d4c5",
+      "eventHash": "0fc3a9c26623bbd4e6b822e3bf2be11caf04969b27285f8a4ee3caeda2c31139"
+    },
+    {
+      "seq": 8,
+      "at": "2026-09-27T18:45:33.985Z",
+      "kind": "DECISION",
+      "actor": "coordinator-merge",
+      "state": {
+        "productStateId": "d467c64edae3956a5f65ddb7eeea67e9fdf45ad0b71d1a5ee18ed9cfbe41ccab",
+        "contractId": "33679340803ed2f2fab73308470df533f9f8066cb37b2009ada41c3ab7e4d517",
+        "attackModelId": "d8d32bdb460ed5edc8749e548a1c561f8b4d6780159b72d23558c6d6f5eea5ab",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "0fc3a9c26623bbd4e6b822e3bf2be11caf04969b27285f8a4ee3caeda2c31139",
+      "payloadPath": "events/0008.json",
+      "payloadHash": "5db0e05f212c3b9a856d0329f9400b4f6c06908541384bcd7abef246af2f8197",
+      "eventHash": "0ce51931f0cef5da7235dbf4df53801e26b5655007ab66dbd825997d3220663d"
+    },
+    {
+      "seq": 9,
+      "at": "2026-09-27T18:46:30.057Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-merge",
+      "state": {
+        "productStateId": "d467c64edae3956a5f65ddb7eeea67e9fdf45ad0b71d1a5ee18ed9cfbe41ccab",
+        "contractId": "33679340803ed2f2fab73308470df533f9f8066cb37b2009ada41c3ab7e4d517",
+        "attackModelId": "d8d32bdb460ed5edc8749e548a1c561f8b4d6780159b72d23558c6d6f5eea5ab",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "0ce51931f0cef5da7235dbf4df53801e26b5655007ab66dbd825997d3220663d",
+      "payloadPath": "events/0009.json",
+      "payloadHash": "d30f85b33b83b8ead7937439e31f1a59a382f109da506415a02ef956a6e97a84",
+      "eventHash": "1f9d9f89e75787ca0d687212fcb1c1706c84afe1f57f4baad9d6283dcf7e1782"
+    },
+    {
+      "seq": 10,
+      "at": "2026-09-27T18:46:30.331Z",
+      "kind": "DECISION",
+      "actor": "coordinator-merge",
+      "state": {
+        "productStateId": "d467c64edae3956a5f65ddb7eeea67e9fdf45ad0b71d1a5ee18ed9cfbe41ccab",
+        "contractId": "33679340803ed2f2fab73308470df533f9f8066cb37b2009ada41c3ab7e4d517",
+        "attackModelId": "d8d32bdb460ed5edc8749e548a1c561f8b4d6780159b72d23558c6d6f5eea5ab",
+        "environmentId": "e3ca14a6b37796faaa7ee0d8bd3175e44835db34f5f4b27592448ced4d51a181"
+      },
+      "previousEventHash": "1f9d9f89e75787ca0d687212fcb1c1706c84afe1f57f4baad9d6283dcf7e1782",
+      "payloadPath": "events/0010.json",
+      "payloadHash": "9ba28f26771d63da3c93690ef45554f0031de47591f8de76a863271559206572",
+      "eventHash": "a9a4a354eb46349f5c0ba2b5d6785c151097b0cf48b859016df6912f4d06bd42"
+    }
+  ]
+}

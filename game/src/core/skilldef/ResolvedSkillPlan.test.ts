@@ -122,13 +122,13 @@ describe('evaluateResolvedCondition', () => {
     ).toBe(true)
     expect(
       evaluateResolvedCondition(
-        { kind: 'resource_at_least', targetId: S, resourceId: 'mp', amount: 40 },
+        { kind: 'resource_at_least', targetId: S, resourceId: 'mana', amount: 40 },
         ctx(),
       ),
     ).toBe(false)
     expect(
       evaluateResolvedCondition(
-        { kind: 'resource_at_least', targetId: S, resourceId: 'mp', amount: 30 },
+        { kind: 'resource_at_least', targetId: S, resourceId: 'mana', amount: 30 },
         ctx(),
       ),
     ).toBe(true)

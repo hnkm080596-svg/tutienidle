@@ -1,0 +1,29 @@
+{
+ "kind": "review-verdicts",
+ "run": "phap-tu-reimagine-2026-09-26",
+ "round": 20,
+ "reviewedState": "ea88b6faccd0f4978b0d20a2b78acb9e7aa886a544d6e4901002c23c96030e89",
+ "pin": "29b4719c",
+ "verdicts": [
+  {
+   "review": "REV-PTR-AUT-Q1",
+   "verdict": "FINDINGS",
+   "findings": [
+    "F-PTR-246",
+    "F-PTR-247",
+    "F-PTR-248",
+    "F-PTR-249"
+   ]
+  },
+  {
+   "review": "REV-PTR-INT-Q1",
+   "verdict": "FINDINGS",
+   "findings": [
+    "F-PTR-250",
+    "F-PTR-251",
+    "F-PTR-252",
+    "F-PTR-253"
+   ]
+  }
+ ]
+}

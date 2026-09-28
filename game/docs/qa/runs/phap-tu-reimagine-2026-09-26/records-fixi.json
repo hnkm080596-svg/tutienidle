@@ -1,0 +1,35 @@
+{
+ "kind": "fix-evidence",
+ "commits": [
+  "6f7eabe9",
+  "ed8668fc",
+  "30bcc16a"
+ ],
+ "fixed": [
+  "F-PTR-124",
+  "F-PTR-125",
+  "F-PTR-126",
+  "F-PTR-127",
+  "F-PTR-128",
+  "F-PTR-129",
+  "F-PTR-130",
+  "F-PTR-131",
+  "F-PTR-132",
+  "F-PTR-133",
+  "F-PTR-134",
+  "F-PTR-136",
+  "F-PTR-137",
+  "F-PTR-138",
+  "F-PTR-143"
+ ],
+ "testsUpdated": [
+  "TurnBattleSystem.midImpactDeath.test.ts",
+  "TurnBattleSystem.theTuAnRiders.test.ts"
+ ],
+ "pinsAdded": [
+  "unrouted no-op cast leaks no cast semantics"
+ ],
+ "typecheck": "clean",
+ "vitest": "scoped 1656 pass",
+ "asciiRatchet": "clean"
+}
