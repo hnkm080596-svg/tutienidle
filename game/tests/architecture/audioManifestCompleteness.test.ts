@@ -27,6 +27,7 @@ import { readFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { AUDIO_CUES, resolveAudioCue } from '@/core/audio/AudioCueManifest'
 import { cueForActionImpact } from '@/presentation/audio/combatAudioBinding'
+import { isTestFile } from './helpers/scanTs'
 
 const SPEC_PATH = join(process.cwd(), 'docs/specs/sound-system-spec.md')
 const AUDIT_PATH = join(process.cwd(), 'docs/design/sound-system-audit.md')
@@ -147,7 +148,7 @@ describe('audio manifest completeness', () => {
     const skillIds = new Set<string>(['basic_attack'])
     const skillDir = join(process.cwd(), 'src/data/skill')
     for (const file of readdirSync(skillDir)) {
-      if (!file.endsWith('.ts') || file.endsWith('.test.ts')) continue
+      if (!file.endsWith('.ts') || isTestFile(file)) continue
       for (const m of readFileSync(join(skillDir, file), 'utf8').matchAll(
         /\bid:\s*'([^']+)'/g,
       )) {

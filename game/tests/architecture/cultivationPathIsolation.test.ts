@@ -23,7 +23,7 @@
  */
 import { describe, expect, it } from 'vitest'
 import { join, relative, sep } from 'node:path'
-import { listAllTs, listVue, readTs, SCAN_TIMEOUT } from './helpers/scanTs'
+import { listAllTs, listVue, readTs, SCAN_TIMEOUT, isTestFile } from './helpers/scanTs'
 
 const GAME_ROOT = process.cwd()
 const SRC = join(GAME_ROOT, 'src')
@@ -211,7 +211,7 @@ const SLICE_READ_ALLOWLIST: readonly string[] = [
 
 describe('cultivation path isolation (M10)', () => {
   const moduleFiles = PATH_MODULE_DIRS.flatMap((dir) =>
-    listAllTs(join(SRC, dir)).filter((f) => !f.endsWith('.test.ts')),
+    listAllTs(join(SRC, dir)).filter((f) => !isTestFile(f)),
   )
 
   it('scans a real module corpus (guard must not silently pass on empty input)', () => {
@@ -264,7 +264,7 @@ describe('cultivation path isolation (M10)', () => {
         ...listAllTs(join(SRC, 'presentation')),
         ...listVue(join(SRC, 'components')),
       ]
-        .filter((f) => !f.endsWith('.test.ts'))
+        .filter((f) => !isTestFile(f))
         .filter((f) => {
           const fromSrc = relative(SRC, f).split(sep).join('/') + '/'
           return !BRANCH_EXEMPT_PREFIXES.some((prefix) => fromSrc.startsWith(prefix))
@@ -299,7 +299,7 @@ describe('cultivation path isolation (M10)', () => {
         ...listAllTs(join(SRC, 'services')),
         ...listAllTs(join(SRC, 'presentation')),
         ...listVue(join(SRC, 'components')),
-      ].filter((f) => !f.endsWith('.test.ts'))
+      ].filter((f) => !isTestFile(f))
 
       const violations: string[] = []
       for (const file of scanned) {
@@ -342,7 +342,7 @@ describe('cultivation path isolation (M10)', () => {
         ...listAllTs(join(SRC, 'services')),
         ...listAllTs(join(SRC, 'presentation')),
         ...listVue(join(SRC, 'components')),
-      ].filter((f) => !f.endsWith('.test.ts'))
+      ].filter((f) => !isTestFile(f))
 
       const violations: string[] = []
       for (const file of scanned) {

@@ -18,7 +18,7 @@
  */
 import { describe, expect, it } from 'vitest'
 import { join } from 'node:path'
-import { SCAN_TIMEOUT, srcCorpus } from './helpers/scanTs'
+import { SCAN_TIMEOUT, srcCorpus, isTestFile } from './helpers/scanTs'
 
 const SRC_DIR = join(process.cwd(), 'src')
 const GATE_MODULE = 'presentation/gate/PresentationGate.ts'
@@ -44,7 +44,7 @@ const RAW_ACCESS = new RegExp(
 )
 
 const FILES = srcCorpus(SRC_DIR).filter(
-  (file) => !file.fromSrc.endsWith('.test.ts') && file.fromSrc !== GATE_MODULE,
+  (file) => !isTestFile(file.fromSrc) && file.fromSrc !== GATE_MODULE,
 )
 
 describe('presentation gate', () => {

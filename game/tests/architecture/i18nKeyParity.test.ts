@@ -60,7 +60,7 @@
 import { describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { SCAN_TIMEOUT, srcCorpus } from './helpers/scanTs'
+import { SCAN_TIMEOUT, srcCorpus, isTestFile } from './helpers/scanTs'
 import { AUDIO_CUES, resolveAudioCue } from '../../src/core/audio/AudioCueManifest'
 
 const SRC_DIR = join(process.cwd(), 'src')
@@ -404,7 +404,7 @@ describe('i18n key parity (P16)', () => {
           // Manifest unit tests deliberately probe qualifier-strip
           // fallback with unknown qualifiers (`combat.cast.not_a_real_skill`)
           // - those literals resolve as cues by design, not as i18n keys.
-          if (file.fromSrc.endsWith('.test.ts') && resolveAudioCue(literal) !== undefined) continue
+          if (isTestFile(file.fromSrc) && resolveAudioCue(literal) !== undefined) continue
           if (isAudioCue(literal)) continue
           if (!keyExists(literal, VI_PATHS) || !keyExists(literal, EN_PATHS)) {
             violations.push(`${file.fromSrc} -> ${literal}`)

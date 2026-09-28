@@ -20,7 +20,7 @@
 import { describe, expect, it } from 'vitest'
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join, relative, sep } from 'node:path'
-import { listAllTs, SCAN_TIMEOUT } from './helpers/scanTs'
+import { listAllTs, SCAN_TIMEOUT, isTestFile } from './helpers/scanTs'
 
 const GAME_ROOT = process.cwd()
 const SRC_DIR = join(GAME_ROOT, 'src')
@@ -93,7 +93,7 @@ describe('projection lives in presentation/geometry', () => {
       const homes = ALL_TS.filter(
         (file) =>
           /(?:BattleGridProjection|BattlefieldRenderMode)\.ts$/.test(file) &&
-          !file.endsWith('.test.ts'),
+          !isTestFile(file),
       )
 
       expect(homes.map(fromSrc).sort()).toEqual([

@@ -15,7 +15,7 @@
  */
 import { describe, expect, it } from 'vitest'
 import { join } from 'node:path'
-import { readTs, SCAN_TIMEOUT, srcCorpus } from './helpers/scanTs'
+import { readTs, SCAN_TIMEOUT, srcCorpus, isTestFile } from './helpers/scanTs'
 import { uncommented } from './helpers/commentStrip'
 
 const SRC_DIR = join(process.cwd(), 'src')
@@ -34,10 +34,28 @@ const DYNAMIC_IMPORT_RE =
 // module calls.
 const NONLITERAL_IMPORT_RE = /(?:^|[^\w.])(?:import|require)\s*\(\s*(?!['"`])[^)]*\)/g
 // `import('to' + 'ne')` is a literal-shaped call whose specifier is a
-// concat - the extractor reads only 'to' and misses the spell. A literal
-// directly followed by `+` is a concat specifier, not a static string.
-const CONCAT_IMPORT_RE =
-  /(?:^|[^\w.])(?:import|require)\s*\(\s*(?:\/\*[\s\S]*?\*\/\s*|\/\/[^\n]*\s*)*['"`][^'"`]*['"`]\s*\+/g
+// concat - the extractor reads only 'to' and misses the spell. The same
+// holds for every operator/wrapper that follows the literal (`||`, `??`,
+// `-`, `.concat(...)`) - after the closing quote only `)` or `,` (a
+// second options arg) is legitimate.
+const COMPOSED_IMPORT_RE =
+  /(?:^|[^\w.])(?:import|require)\s*\(\s*(?:\/\*[\s\S]*?\*\/\s*|\/\/[^\n]*\s*)*['"`][^'"`]*['"`]\s*[^\s),]/g
+// A specifier built inside a template literal (`import(`tone${''}`)`)
+// lands in the literal extractor as text containing `${` - the banned
+// checks can't resolve it, so the substring itself is the violation.
+const SUSPECT_SPEC_RE = /\\|\$\{/
+// `require(id: Type)`/`import(spec: Type)` declare the seam; the `: ` skip
+// must apply ONLY to that parameter-annotation shape - a `:` inside the
+// arg list (ternary, object literal, options arg) is real call text.
+const DECL_ARG_RE = /^\s*[A-Za-z_$][\w$]*\s*:\s*[^:\s]/
+
+function isNonliteralImportCall(m: RegExpMatchArray, clean: string): boolean {
+  const argText = m[0].slice(m[0].indexOf('(') + 1, m[0].lastIndexOf(')'))
+  if (DECL_ARG_RE.test(argText)) return false
+  const after = clean.slice((m.index ?? 0) + m[0].length)
+  if (/^\s*[:{]/.test(after)) return false
+  return true
+}
 
 
 function importSpecifiers(text: string, fileName: string): string[] {
@@ -68,18 +86,30 @@ describe('audio boundary', () => {
         if (file.fromSrc.startsWith('core/audio/')) continue
         // Tests may spy on AudioManager to prove a domain event reaches
         // the real consumer - the ban is on production coupling.
-        if (file.fromSrc.endsWith('.test.ts')) continue
+        if (isTestFile(file.fromSrc)) continue
         for (const spec of importSpecifiers(file.text, file.fromSrc)) {
           // Specifiers containing escapes ('cor\u0065/audio', 't\x6fne')
-          // resolve to banned paths at evaluation time while evading the
-          // literal match - no legitimate static import needs a backslash.
+          // or `${}` interpolation (`tone${''}`) resolve to banned paths
+          // at evaluation time while evading the literal match - no
+          // legitimate static specifier needs either.
           if (
-            spec.includes('\\') ||
+            SUSPECT_SPEC_RE.test(spec) ||
             /^tone([/?#.]|$)/.test(spec) ||
             AUDIO_SPEC_RE.test(spec)
           ) {
             offenders.push(`${file.fromSrc} -> ${spec}`)
           }
+        }
+        // The nonliteral/concat tripwires apply to the core boundary too -
+        // coverage must be owned here, not inherited from the tone guard.
+        const cleanCore = uncommented(file.text, file.fromSrc)
+        for (const m of cleanCore.matchAll(NONLITERAL_IMPORT_RE)) {
+          if (isNonliteralImportCall(m, cleanCore)) {
+            offenders.push(`${file.fromSrc} -> ${m[0]}`)
+          }
+        }
+        for (const m of cleanCore.matchAll(COMPOSED_IMPORT_RE)) {
+          offenders.push(`${file.fromSrc} -> ${m[0]}`)
         }
       }
       expect(offenders).toEqual([])
@@ -97,7 +127,7 @@ describe('audio boundary', () => {
         // `phaser.esm` resolve through Vite but break the data-only
         // contract for non-Vite consumers. `\\` rejects unicode-escape
         // specifiers like 'to\\u006ee' that spell a banned module.
-        expect(spec.includes('\\')).toBe(false)
+        expect(SUSPECT_SPEC_RE.test(spec)).toBe(false)
         expect(new RegExp(`^${banned}([/?#.]|$)`).test(spec)).toBe(false)
       }
     }
@@ -110,7 +140,7 @@ describe('audio boundary', () => {
       // whole non-core/audio tree, not only SFCs.
       const offenders: string[] = []
       for (const file of srcCorpus(SRC_DIR)) {
-        if (file.fromSrc.endsWith('.test.ts')) continue
+        if (isTestFile(file.fromSrc)) continue
         if (file.fromSrc.startsWith('core/audio/')) continue
         for (const spec of importSpecifiers(file.text, file.fromSrc)) {
           // `\\` in a specifier spells a banned module through a unicode
@@ -129,7 +159,7 @@ describe('audio boundary', () => {
           if (/^\s*[:{]/.test(after)) continue
           offenders.push(`${file.fromSrc} -> ${m[0]}`)
         }
-        for (const m of clean.matchAll(CONCAT_IMPORT_RE)) {
+        for (const m of clean.matchAll(COMPOSED_IMPORT_RE)) {
           offenders.push(`${file.fromSrc} -> ${m[0]}`)
         }
       }
@@ -155,7 +185,7 @@ describe('audio boundary', () => {
       ])
       const offenders: string[] = []
       for (const file of srcCorpus(SRC_DIR)) {
-        if (file.fromSrc.endsWith('.test.ts')) continue
+        if (isTestFile(file.fromSrc)) continue
         if (file.fromSrc.startsWith('core/audio/')) continue
         // Exact-file exemption - a startsWith('stores/audio') anchor would
         // silently exempt a future sibling like stores/audioSneak.ts.

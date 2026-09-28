@@ -23,7 +23,7 @@
  */
 import { describe, expect, it } from 'vitest'
 import { join } from 'node:path'
-import { SCAN_TIMEOUT, srcCorpus } from './helpers/scanTs'
+import { SCAN_TIMEOUT, srcCorpus, isTestFile } from './helpers/scanTs'
 
 const SRC_DIR = join(process.cwd(), 'src')
 const LAYERS_MODULE = 'core/presentation/OverlayLayers.ts'
@@ -98,7 +98,7 @@ describe('overlay layer contract', () => {
       const offenders: string[] = []
 
       for (const file of corpus) {
-        if (file.fromSrc === LAYERS_MODULE || file.fromSrc.endsWith('.test.ts')) {
+        if (file.fromSrc === LAYERS_MODULE || isTestFile(file.fromSrc)) {
           continue
         }
 

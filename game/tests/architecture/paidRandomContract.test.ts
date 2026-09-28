@@ -22,7 +22,7 @@
  */
 import { describe, expect, it } from 'vitest'
 import { join } from 'node:path'
-import { readTs, srcCorpus, SCAN_TIMEOUT } from './helpers/scanTs'
+import { readTs, srcCorpus, SCAN_TIMEOUT, isTestFile } from './helpers/scanTs'
 
 const GAME_ROOT = process.cwd()
 const WASH_FILE = join(GAME_ROOT, 'src/core/equipment/EquipmentWash.ts')
@@ -55,7 +55,7 @@ describe('R14/R9 — paid random result requires domain-owned capability', () =>
 
     for (const file of srcCorpus(SRC_DIR)) {
       if (file.fromSrc === 'core/equipment/EquipmentWash.ts') continue
-      if (file.path.endsWith('.test.ts')) continue
+      if (isTestFile(file.path)) continue
 
       const text = uncommented(file.text)
 
@@ -118,7 +118,7 @@ describe('R14/R9 — paid random result requires domain-owned capability', () =>
 
     for (const file of srcCorpus(SRC_DIR)) {
       if (file.fromSrc === 'core/equipment/EquipmentSystem.ts') continue
-      if (file.path.endsWith('.test.ts')) continue
+      if (isTestFile(file.path)) continue
 
       if (/\bpendingRefinePreview\b/.test(uncommented(file.text))) {
         offenders.push(file.fromSrc)
@@ -132,7 +132,7 @@ describe('R14/R9 — paid random result requires domain-owned capability', () =>
     const importers: string[] = []
 
     for (const file of srcCorpus(SRC_DIR)) {
-      if (file.path.endsWith('.test.ts')) continue
+      if (isTestFile(file.path)) continue
       if (file.fromSrc === 'core/equipment/EquipmentWash.ts') continue
 
       if (/from\s+['"][^'"]*EquipmentWash['"]/.test(uncommented(file.text))) {

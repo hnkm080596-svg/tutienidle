@@ -16,7 +16,7 @@
  */
 import { describe, expect, it } from 'vitest'
 import { join } from 'node:path'
-import { SCAN_TIMEOUT, srcCorpus } from './helpers/scanTs'
+import { SCAN_TIMEOUT, srcCorpus, isTestFile } from './helpers/scanTs'
 
 const SRC_DIR = join(process.cwd(), 'src')
 const HOST_MODULE = 'presentation/host/useDynamicRegion.ts'
@@ -36,7 +36,7 @@ function code(text: string): string {
   return text.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/(^|[^:])\/\/[^\n]*/g, '$1 ')
 }
 
-const FILES = srcCorpus(SRC_DIR).filter((file) => !file.fromSrc.endsWith('.test.ts'))
+const FILES = srcCorpus(SRC_DIR).filter((file) => !isTestFile(file.fromSrc))
 
 describe('dynamic region host', () => {
   it(
