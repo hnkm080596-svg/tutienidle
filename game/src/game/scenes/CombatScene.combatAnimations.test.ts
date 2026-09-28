@@ -62,6 +62,21 @@ function createScene() {
   return scene
 }
 
+// Post-#43 clip path: authored attack/ult clips ride the clip-only
+// turn_cast_start binding (playCastClip); the skill presentation runner
+// owns the lunge and both action ACKs. Fire through the real binding so
+// the wiring itself is pinned, not just the clip-picking helper.
+function fireCastStart(
+  scene: ReturnType<typeof createScene>,
+  event: Record<string, unknown>,
+) {
+  const binding = scene
+    .getCombatEventBindings()
+    .find(([name]: [string]) => name === 'turn_cast_start')
+  if (!binding) throw new Error('turn_cast_start binding missing')
+  binding[1](event)
+}
+
 function fakeGameSprite() {
   // Set-per-event matches Phaser's emitter: multiple once-listeners CAN be
   // armed on the same event (the stale-listener edge this suite pins).
@@ -363,7 +378,7 @@ describe('CombatScene â€” playCombatAnimation()', () => {
   // character-art-infra: 'ult' plays ONLY for casts whose turn_cast_start
   // carried slotRole 'ultimate' - a basic/special cast on the same sprite
   // must still take the attack clip.
-  it("onAttack picks 'ult' for slotRole 'ultimate' and 'attack' otherwise", () => {
+  it("turn_cast_start picks 'ult' for slotRole 'ultimate' and 'attack' otherwise", () => {
     const scene = createScene()
     const sprite = makeSprite('sprite')
     const gameSprite = sprite.rect as ReturnType<typeof fakeGameSprite>
@@ -373,21 +388,21 @@ describe('CombatScene â€” playCombatAnimation()', () => {
     patchScene(scene, { _vfxSpawner: { playHorizontalImpulse: vi.fn() } })
     scene.anims = { exists: () => true }
 
-    scene.onAttack({ sourceId: PLAYER_ID, slotRole: 'ultimate' })
+    fireCastStart(scene, { sourceId: PLAYER_ID, slotRole: 'ultimate' })
     expect(gameSprite.playCalls).toEqual([combatAnimationKey(playerKey, 'ult')])
 
     gameSprite.playCalls.length = 0
-    scene.onAttack({ sourceId: PLAYER_ID, slotRole: 'special' })
+    fireCastStart(scene, { sourceId: PLAYER_ID, slotRole: 'special' })
     expect(gameSprite.playCalls).toEqual([combatAnimationKey(playerKey, 'attack')])
 
     gameSprite.playCalls.length = 0
-    scene.onAttack({ sourceId: PLAYER_ID })
+    fireCastStart(scene, { sourceId: PLAYER_ID })
     expect(gameSprite.playCalls).toEqual([combatAnimationKey(playerKey, 'attack')])
   })
 
   // Clean-B F-CB2-02: slotRole 'none' marks a declared turn that is not a
   // slot cast (charge-continuation/skipped) - no lunge, no clip.
-  it("onAttack with slotRole 'none' plays neither impulse nor clip", () => {
+  it("turn_cast_start with slotRole 'none' plays neither impulse nor clip", () => {
     const scene = createScene()
     const sprite = makeSprite('sprite')
     const gameSprite = sprite.rect as ReturnType<typeof fakeGameSprite>
@@ -397,7 +412,7 @@ describe('CombatScene â€” playCombatAnimation()', () => {
     patchScene(scene, { _vfxSpawner: { playHorizontalImpulse: impulse } })
     scene.anims = { exists: () => true }
 
-    scene.onAttack({ sourceId: PLAYER_ID, slotRole: 'none' })
+    fireCastStart(scene, { sourceId: PLAYER_ID, slotRole: 'none' })
 
     expect(impulse).not.toHaveBeenCalled()
     expect(gameSprite.playCalls).toEqual([])
@@ -405,7 +420,7 @@ describe('CombatScene â€” playCombatAnimation()', () => {
 
   // Clean-B F-CB2-04: the dying check precedes the impulse - a resume
   // replay of a dead actor's cast must not shove the corpse.
-  it('onAttack on a dying actor skips both impulse and clip', () => {
+  it('turn_cast_start on a dying actor skips both impulse and clip', () => {
     const scene = createScene()
     const sprite = makeSprite('sprite')
     const gameSprite = sprite.rect as ReturnType<typeof fakeGameSprite>
@@ -416,7 +431,7 @@ describe('CombatScene â€” playCombatAnimation()', () => {
     patchScene(scene, { _vfxSpawner: { playHorizontalImpulse: impulse } })
     scene.anims = { exists: () => true }
 
-    scene.onAttack({ sourceId: PLAYER_ID, slotRole: 'ultimate' })
+    fireCastStart(scene, { sourceId: PLAYER_ID, slotRole: 'ultimate' })
 
     expect(impulse).not.toHaveBeenCalled()
     expect(gameSprite.playCalls).toEqual([])

@@ -37,7 +37,10 @@ describe('CombatScene shared skill playback wiring', () => {
     const names = scene.getCombatEventBindings().map(([name]: [string]) => name)
     expect(names).toContain('skill_presentation_cast')
     expect(names).toContain('skill_presentation_resolved')
-    expect(names).not.toContain('turn_cast_start')
+    // Art waves: 'turn_cast_start' stays bound clip-only via playCastClip
+    // (authored attack/ult clips). It must never drive skill visuals -
+    // the runner owns lunge, impacts and both action ACKs.
+    expect(names).toContain('turn_cast_start')
     expect(names).not.toContain('action_impact')
   })
   it('runs the production recipe with exactly one captured impact and complete ACK', () => {
