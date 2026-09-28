@@ -150,8 +150,6 @@ const IMPACT_PRESET_IDS = [
   'kiem_combo_nhat_tuyen',
   'kiem_combo_liet_ngan',
   'kiem_combo_tam_phach',
-  'kiem_combo_tam_thich',
-  'kiem_combo_tam_tram',
   'kiem_combo_tam_lieu',
   'kiem_combo_tam_tao',
   'kiem_combo_khai_ngan',
@@ -201,8 +199,6 @@ const KIEM_COMBO_IDS = [
   'nhat_tuyen',
   'liet_ngan',
   'tam_phach',
-  'tam_thich',
-  'tam_tram',
   'tam_lieu',
   'tam_tao',
   'khai_ngan',
@@ -355,7 +351,9 @@ export const AUDIO_CUES: Readonly<Record<string, AudioCueDef>> = {
   'progress.quan_the': sfx({ synthFallback: 'toastSave' }),
 
   // ---- Tribulation ----
-  'tribulation.start': sfx({ duckMusic: 0.3, synthFallback: 'battleStart' }),
+  // No tribulation.start row: presentation_session_started is silent for
+  // tribulation sessions - tribulation_started owns the start cue
+  // (combatAudioBinding.ts); an armed row here would double-voice.
   'tribulation.begin': sfx({ duckMusic: 0.5, synthFallback: 'battleStart' }),
   'tribulation.thunder': sfx({ cooldownMs: 150, duckMusic: 0.4, synthFallback: 'combatCritical' }),
   'tribulation.chapter': sfx({ synthFallback: 'toastWarning' }),

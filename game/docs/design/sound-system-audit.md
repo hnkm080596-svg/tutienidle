@@ -69,7 +69,7 @@ manifest scales to hundreds of cues without a union type edit).
 | Reaction skipped | `GameManagerTurnBattleOps.ts:687` | — none (silent skip is correct) | — |
 | Reward particle → gourd/essence stream | `src/core/game/BattleLootSystem.ts:720` (`reward_particle`, `kind` field) + arrival event `src/game/scenes/CombatScene.ts:1554,1567` (`essence_stream_arrival`) | `combat.loot` / `combat.essence` | P1 |
 | Battle end victory/defeat | `src/core/game/GameManagerBattleRewardOps.ts:57` (`battle_end`, `state` field) | `combat.victory` / `combat.defeat` | P0 |
-| Combat session begins | `src/core/game/GameManagerTurnBattleOps.ts:1906,2188` + `src/core/tribulation/TribulationDirector.ts:300` (`presentation_session_started`, `kind`) | `combat.start` / `tribulation.start` | P0 |
+| Combat session begins | `src/core/game/GameManagerTurnBattleOps.ts:1906,2188` (`presentation_session_started`, `kind`) | `combat.start` (tribulation sessions silent here - `tribulation_started` owns the start cue) | P0 |
 | Combat exit (canvas request → confirm modal) | `src/game/scenes/CombatScene.ts:1704` (`combat_exit_request`) | `ui.modal.open` | P1 |
 | Scene exit committed | `src/composables/useBattleActions.ts:111` (`combat_scene_exit`) | `combat.exit` | P2 |
 | Pause overlay open/close | `src/components/game/combat/CombatPauseOverlay.vue:40` (`continue` emit) + open site | `ui.modal.open` / `ui.modal.close` | P2 |

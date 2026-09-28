@@ -324,7 +324,8 @@ class AudioManagerImpl {
   // queued until a live context exists; active one-shot Player tracking.
   private buffers = new Map<string, AudioBuffer>()
   private pendingEncoded = new Map<string, ArrayBuffer>()
-  // Decode attempts per src - a failed decode keeps its bytes in
+  // Decode attempts per src (counted inside decodeInto, covering the
+  // initial decode and every retry) - a failed decode keeps its bytes in
   // pendingEncoded and playCue kicks a bounded retry, so one transient
   // decode failure cannot permanently silence an src.
   private decodeAttempts = new Map<string, number>()
@@ -858,10 +859,12 @@ class AudioManagerImpl {
       // A desired music track may have been waiting on this buffer.
       this.applyDesiredMusic()
     } catch {
-      // Decode failure: retain the bytes for a bounded play-time retry
-      // (retryDecode). Past the limit the slot stays silent - the cue
-      // keeps its fallback path either way.
-      const attempts = this.decodeAttempts.get(key) ?? 0
+      // Decode failure counts here (covers initial + retried decodes):
+      // retain the bytes for a bounded play-time retry (retryDecode).
+      // Past the limit the slot stays silent - the cue keeps its
+      // fallback path either way.
+      const attempts = (this.decodeAttempts.get(key) ?? 0) + 1
+      this.decodeAttempts.set(key, attempts)
       if (attempts < DECODE_RETRY_LIMIT) {
         this.pendingEncoded.set(key, data)
       }
@@ -871,10 +874,7 @@ class AudioManagerImpl {
   private retryDecode(key: string): void {
     const data = this.pendingEncoded.get(key)
     if (data === undefined) return
-    const attempts = this.decodeAttempts.get(key) ?? 0
     this.pendingEncoded.delete(key)
-    if (attempts >= DECODE_RETRY_LIMIT) return
-    this.decodeAttempts.set(key, attempts + 1)
     void this.decodeInto(key, data)
   }
 
@@ -939,6 +939,7 @@ class AudioManagerImpl {
     this.disposeMusicPlayer()
     this.buffers.clear()
     this.pendingEncoded.clear()
+    this.decodeAttempts.clear()
     this.cueCooldownAt.clear()
     this.variantCursor.clear()
     this.silentLogged.clear()

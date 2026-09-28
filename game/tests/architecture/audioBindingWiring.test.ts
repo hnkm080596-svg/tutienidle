@@ -51,6 +51,9 @@ describe('audio binding wiring', () => {
       // Row heads in both tables look like ['event_name', ...] across lines.
       const bound = new Set<string>()
       for (const m of binding.matchAll(/\[\s*['"`]([a-z_0-9]+)['"`]/g)) bound.add(m[1]!)
+      // Direct subscriptions outside the tables (e.g. the route-gated
+      // farm_cycle row) must satisfy the same emitted-by-real-code rule.
+      for (const m of binding.matchAll(/\bon\s*\(\s*['"`]([a-z_0-9]+)['"`]/g)) bound.add(m[1]!)
       const dead = [...bound].filter((name) => !EMITTED.has(name))
       expect(dead).toEqual([])
     },

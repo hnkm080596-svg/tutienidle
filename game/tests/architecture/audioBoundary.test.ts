@@ -41,7 +41,7 @@ describe('audio boundary', () => {
         // the real consumer - the ban is on production coupling.
         if (file.fromSrc.endsWith('.test.ts')) continue
         for (const spec of importSpecifiers(file.text)) {
-          if (spec === 'tone' || spec.includes('audio/Audio') || spec.includes('/audio/Audio')) {
+          if (spec === 'tone' || spec.startsWith('tone/') || spec.includes('audio/Audio') || spec.includes('/audio/Audio')) {
             offenders.push(`${file.fromSrc} -> ${spec}`)
           }
         }
@@ -53,10 +53,12 @@ describe('audio boundary', () => {
 
   it('AudioCueManifest is data-only (no tone/vue/phaser imports)', () => {
     const text = readTs(join(SRC_DIR, 'core/audio/AudioCueManifest.ts'))
+    // `=== x || startsWith(x + '/')` - a `phaser/subpath` or
+    // `tone/build/...` import must not slip past an equality check.
     for (const spec of importSpecifiers(text)) {
-      expect(spec).not.toBe('tone')
-      expect(spec).not.toBe('vue')
-      expect(spec).not.toBe('phaser')
+      for (const banned of ['tone', 'vue', 'phaser']) {
+        expect(spec === banned || spec.startsWith(`${banned}/`)).toBe(false)
+      }
     }
   })
 
@@ -95,7 +97,7 @@ describe('audio boundary', () => {
         if (file.fromSrc.startsWith('core/audio/')) continue
         if (file.fromSrc.startsWith('stores/audio')) continue
         if (file.fromSrc.startsWith('presentation/audio/')) continue
-        if (!/AudioManager\.getInstance\(\)|\.playCue\(/.test(file.text)) continue
+        if (!/AudioManager\s*\.\s*getInstance\s*\(|\.\s*playCue\s*\(/.test(file.text)) continue
         if (!ALLOWLIST.has(file.fromSrc)) offenders.push(file.fromSrc)
       }
       expect(offenders).toEqual([])

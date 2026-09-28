@@ -104,7 +104,10 @@ interface ReactiveProcLike {
 
 // Preset -> ngu hanh element fallback (combat.element.*). Lives here - the
 // manifest stays data-only and presets already resolve exactly; this table
-// is the middle hop for presets without their own row.
+// is the middle hop for presets without their own row. Every entry below is
+// currently shadowed by a concrete combat.impact.<preset> row (the
+// membership check wins first) - kept as the hook for future presets that
+// ship without their own row, at which point combat.element.* voices them.
 const ELEMENT_BY_PRESET: Readonly<Record<string, string>> = {
   fire_burst: 'hoa',
   hoa_cau_comet: 'hoa',

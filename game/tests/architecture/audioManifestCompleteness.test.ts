@@ -20,7 +20,7 @@
  *    through MERGE_MAP instead.
  */
 import { describe, expect, it } from 'vitest'
-import { readFileSync } from 'node:fs'
+import { readFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { AUDIO_CUES, resolveAudioCue } from '@/core/audio/AudioCueManifest'
 
@@ -100,5 +100,59 @@ describe('audio manifest completeness', () => {
       (id) => !CUE_ID_RE.test(id) || !DOMAINS.has(id.split('.')[0]!),
     )
     expect(bad).toEqual([])
+  })
+
+  // The catalog enumerations (CAST_SKILL_IDS / REACTION_IDS /
+  // KIEM_COMBO_IDS) claim to mirror their data sources; that claim must
+  // actually be pinned, or renamed/removed ids drift silently (OQ-C).
+  it('manifest catalog enumerations match their data sources', () => {
+    const keys = Object.keys(AUDIO_CUES)
+
+    const kiemSrc = readFileSync(
+      join(process.cwd(), 'src/data/skill/KiemPhoCombos.ts'),
+      'utf8',
+    )
+    const realCombos = new Set(
+      [...kiemSrc.matchAll(/\bcombo\('([^']+)'/g)].map((m) => m[1]),
+    )
+    expect(
+      keys
+        .filter((k) => k.startsWith('combat.kiem.combo.'))
+        .map((k) => k.slice('combat.kiem.combo.'.length))
+        .sort(),
+    ).toEqual([...realCombos].sort())
+
+    const reactionSrc = readFileSync(
+      join(process.cwd(), 'src/data/reaction/ReactionDefinitions.ts'),
+      'utf8',
+    )
+    const realReactions = new Set(
+      [...reactionSrc.matchAll(/\b(?:sinh|khac)\('([^']+)'/g)].map(
+        (m) => m[1],
+      ),
+    )
+    expect(
+      keys
+        .filter((k) => k.startsWith('combat.reaction.'))
+        .map((k) => k.slice('combat.reaction.'.length))
+        .sort(),
+    ).toEqual([...realReactions].sort())
+
+    // Cast ids: every `id:` in the skill data files, plus the synthetic
+    // 'basic_attack' fallback skillId the turn engine can emit.
+    const skillIds = new Set<string>(['basic_attack'])
+    const skillDir = join(process.cwd(), 'src/data/skill')
+    for (const file of readdirSync(skillDir)) {
+      if (!file.endsWith('.ts') || file.endsWith('.test.ts')) continue
+      for (const m of readFileSync(join(skillDir, file), 'utf8').matchAll(
+        /\bid:\s*'([^']+)'/g,
+      )) {
+        skillIds.add(m[1]!)
+      }
+    }
+    const castRows = keys
+      .filter((k) => k.startsWith('combat.cast.'))
+      .map((k) => k.slice('combat.cast.'.length))
+    expect(castRows.filter((id) => !skillIds.has(id))).toEqual([])
   })
 })

@@ -142,7 +142,7 @@ describe('bindCombatAudio', () => {
     expect(cueSpy).toHaveBeenLastCalledWith('combat.hit')
   })
 
-  it('session kind picks combat.start / tribulation.start', () => {
+  it('session kind voices combat.start; tribulation sessions stay silent', () => {
     const bus = new EventBus()
     bindCombatAudio(bus)
 

@@ -193,7 +193,6 @@ silent until real files land.
 | progress.perfect | sfx | | | 0.5 | toastUpgrade | P1 |
 | progress.hidden_open | sfx | | | 0.5 | toastWarning | P1 |
 | progress.quan_the | sfx | | | | toastSave | P2 |
-| tribulation.start | sfx | | | 0.3 | battleStart | P0 |
 | tribulation.begin | sfx | | | 0.5 | battleStart | P0 |
 | tribulation.thunder | sfx | | 150 | 0.4 | combatCritical | P0 |
 | tribulation.chapter | sfx | | | | toastWarning | P1 |
@@ -388,7 +387,7 @@ rejected transition.
 | `reward_particle` | `combat.loot` | `kind` |
 | `essence_stream_arrival` | `combat.essence` | — |
 | `battle_end` | `combat.victory`/`combat.defeat` | `state` |
-| `presentation_session_started` | `combat.start`/`tribulation.start` | `session.kind` |
+| `presentation_session_started` | `combat.start` (combat only; tribulation silent here — `tribulation_started` owns the start cue) | `session.kind` |
 | `combat_exit_request` | `ui.modal.open` | — |
 | `combat_scene_exit` | `combat.exit` | P2 |
 | `tribulation_started` | `tribulation.begin` | — |
