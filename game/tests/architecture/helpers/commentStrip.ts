@@ -18,6 +18,14 @@ export function uncommented(fileText: string, fileName = 'file.ts'): string {
   // returns every comment token regardless of where it sits.
   const scanner = ts.createScanner(ts.ScriptTarget.Latest, false, undefined, text)
   const ranges: Array<{ pos: number; end: number }> = []
+  // Bare scan() is parser-assistive, not self-sufficient: inside a
+  // template's `${...}` interpolation the `}` that closes it must be
+  // re-scanned via reScanTemplateToken (the parser does this; a bare loop
+  // does not). Without the rescan the following backtick opens a phantom
+  // template and every comment in the file tail is swallowed. Track
+  // template state: push on TemplateHead/TemplateMiddle, count braces
+  // inside the interpolation, and re-scan when `}` closes a `${`.
+  const templates: number[] = []
   for (;;) {
     const tok = scanner.scan()
     if (tok === ts.SyntaxKind.EndOfFileToken) break
@@ -26,6 +34,30 @@ export function uncommented(fileText: string, fileName = 'file.ts'): string {
       tok === ts.SyntaxKind.MultiLineCommentTrivia
     ) {
       ranges.push({ pos: scanner.getTokenStart(), end: scanner.getTokenEnd() })
+      continue
+    }
+    if (
+      tok === ts.SyntaxKind.TemplateHead ||
+      tok === ts.SyntaxKind.TemplateMiddle
+    ) {
+      templates.push(0)
+      continue
+    }
+    if (tok === ts.SyntaxKind.OpenBraceToken && templates.length > 0) {
+      templates[templates.length - 1]!++
+      continue
+    }
+    if (tok === ts.SyntaxKind.CloseBraceToken && templates.length > 0) {
+      if (templates[templates.length - 1]! > 0) {
+        templates[templates.length - 1]!--
+        continue
+      }
+      const cont = scanner.reScanTemplateToken(false)
+      if (cont === ts.SyntaxKind.LastTemplateToken) {
+        templates.pop()
+      }
+      // TemplateMiddle re-opens the next interpolation - braces reset.
+      continue
     }
   }
   // The scanner is lexer-authority, not parser-authority: a `/` the parser

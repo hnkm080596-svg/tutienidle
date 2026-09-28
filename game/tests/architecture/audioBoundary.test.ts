@@ -27,6 +27,17 @@ const IMPORT_RE = /(?:import|export)\b\s*(?:type\b\s*)?(?:[\w*{}\s,]*?\s*from\s*
 // must not slip past the literal-quote extractor either.
 const DYNAMIC_IMPORT_RE =
   /(?:import|require)\s*\(\s*(?:\/\*[\s\S]*?\*\/\s*|\/\/[^\n]*\s*)*['"`]([^'"`]+)['"`]/g
+// A dynamic specifier that is NOT a plain literal (`import('to' + 'ne')`,
+// `import(spec)`) can spell any module at runtime - flag the call shape
+// itself so the literal extractor cannot be bypassed.
+// Word/`.` prefix excluded so `skills.require(id)` and `a.import(` are not
+// module calls.
+const NONLITERAL_IMPORT_RE = /(?:^|[^\w.])(?:import|require)\s*\(\s*(?!['"`])[^)]*\)/g
+// `import('to' + 'ne')` is a literal-shaped call whose specifier is a
+// concat - the extractor reads only 'to' and misses the spell. A literal
+// directly followed by `+` is a concat specifier, not a static string.
+const CONCAT_IMPORT_RE =
+  /(?:^|[^\w.])(?:import|require)\s*\(\s*(?:\/\*[\s\S]*?\*\/\s*|\/\/[^\n]*\s*)*['"`][^'"`]*['"`]\s*\+/g
 
 
 function importSpecifiers(text: string, fileName: string): string[] {
@@ -102,9 +113,24 @@ describe('audio boundary', () => {
         if (file.fromSrc.endsWith('.test.ts')) continue
         if (file.fromSrc.startsWith('core/audio/')) continue
         for (const spec of importSpecifiers(file.text, file.fromSrc)) {
-          if (/^tone([/?#.]|$)/.test(spec)) {
+          // `\\` in a specifier spells a banned module through a unicode
+          // escape ('to\\u006ee') - the tail grammar alone misses it.
+          if (spec.includes('\\') || /^tone([/?#.]|$)/.test(spec)) {
             offenders.push(`${file.fromSrc} -> ${spec}`)
           }
+        }
+        // Dynamic calls with a non-literal specifier cannot be screened
+        // at all - flag the shape. Skip declarations: `require(id: T)`
+        // annotates a method, and a decl tail `: Ret`/`{` follows `)`.
+        const clean = uncommented(file.text, file.fromSrc)
+        for (const m of clean.matchAll(NONLITERAL_IMPORT_RE)) {
+          if (m[0].includes(':')) continue
+          const after = clean.slice((m.index ?? 0) + m[0].length)
+          if (/^\s*[:{]/.test(after)) continue
+          offenders.push(`${file.fromSrc} -> ${m[0]}`)
+        }
+        for (const m of clean.matchAll(CONCAT_IMPORT_RE)) {
+          offenders.push(`${file.fromSrc} -> ${m[0]}`)
         }
       }
       expect(offenders).toEqual([])
