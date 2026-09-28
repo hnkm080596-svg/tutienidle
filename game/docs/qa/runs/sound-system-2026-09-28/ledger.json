@@ -3021,6 +3021,476 @@
       "siblingFindingIds": [],
       "invariantIds": [],
       "evidenceIds": []
+    },
+    {
+      "id": "F-SND-50",
+      "title": "decodeInto catch misattributed post-decode applyDesiredMusic throw as decode failure (parked live buffer, refunded attempts)",
+      "state": {
+        "productStateId": "ec767da9ba7bdbb6748fab960a7bd1065d0e1217ce99a2f8bd125711479f6166",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+      },
+      "subsystem": "audio",
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "discoveredBy": "INT-3",
+      "expected": "only genuine decode errors feed retry/park logic",
+      "actual": "a Player.start() throw inside the try was caught as decode failure - bytes re-parked despite buffers.set succeeding",
+      "rootCause": "applyDesiredMusic call sat inside the decode try/catch and could rethrow",
+      "rootClass": "ERROR_MISATTRIBUTION",
+      "counterexample": "none found",
+      "locations": [
+        {
+          "path": "src/core/audio/AudioManager.ts",
+          "symbolOrSection": "decodeInto try",
+          "revision": "93cbaa2c",
+          "basis": "SOURCE"
+        }
+      ],
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/core/audio",
+            "src/presentation/audio",
+            "src/presentation/assets",
+            "src/stores",
+            "tests/architecture"
+          ],
+          "termsAndMethod": "adversarial probe sweep over wave-2 machinery (decode-retry, unbind, visibility, duck, shake choke); 25 executed probes",
+          "evidenceIds": [],
+          "hitDispositions": [],
+          "coverageLimits": [
+            "probes assert reachable behavior at public API surface"
+          ]
+        }
+      ],
+      "repair": "closed by F-SND-47's fix: applyDesiredMusic no longer rethrows - nothing post-decode in the try can raise; verified on fixed tree (P8/P8b flipped)",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [
+        "EV-SND-FIX5"
+      ],
+      "closureReviewIds": [],
+      "status": "FIXED_PENDING_PROOF",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "evidenceIds": []
+    },
+    {
+      "id": "F-SND-51",
+      "title": "applyDesiredMusic throw during unlock() aborted the entire unlock (disposeChain + back to idle)",
+      "state": {
+        "productStateId": "ec767da9ba7bdbb6748fab960a7bd1065d0e1217ce99a2f8bd125711479f6166",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+      },
+      "subsystem": "audio",
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "discoveredBy": "INT-3",
+      "expected": "a music-slot failure cannot roll back a healthy chain build",
+      "actual": "the shared catch in unlock() disposed the just-built chain when desired-music application threw",
+      "rootCause": "flush/apply ran inside buildChain's try",
+      "rootClass": "BLAST_RADIUS",
+      "counterexample": "none found",
+      "locations": [
+        {
+          "path": "src/core/audio/AudioManager.ts",
+          "symbolOrSection": "unlock() continuation",
+          "revision": "93cbaa2c",
+          "basis": "SOURCE"
+        }
+      ],
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/core/audio",
+            "src/presentation/audio",
+            "src/presentation/assets",
+            "src/stores",
+            "tests/architecture"
+          ],
+          "termsAndMethod": "adversarial probe sweep over wave-2 machinery (decode-retry, unbind, visibility, duck, shake choke); 25 executed probes",
+          "evidenceIds": [],
+          "hitDispositions": [],
+          "coverageLimits": [
+            "probes assert reachable behavior at public API surface"
+          ]
+        }
+      ],
+      "repair": "closed by F-SND-47's fix: applyDesiredMusic contains its own failure; verified (P8c flipped)",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [
+        "EV-SND-FIX5"
+      ],
+      "closureReviewIds": [],
+      "status": "FIXED_PENDING_PROOF",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "evidenceIds": []
+    },
+    {
+      "id": "F-SND-52",
+      "title": "decode retry budget is per-key-lifetime: an exhausted key poisons fresh byte deliveries",
+      "state": {
+        "productStateId": "ec767da9ba7bdbb6748fab960a7bd1065d0e1217ce99a2f8bd125711479f6166",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+      },
+      "subsystem": "audio",
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "discoveredBy": "INT-3",
+      "expected": "fresh attachEncodedBuffer gets a fresh budget",
+      "actual": "after budget exhaustion a re-delivery of the same key decoded once and was dropped",
+      "rootCause": "decodeAttempts never reset on attach",
+      "rootClass": "STATE_REUSE_POISON",
+      "counterexample": "none found",
+      "locations": [
+        {
+          "path": "src/core/audio/AudioManager.ts",
+          "symbolOrSection": "attachEncodedBuffer",
+          "revision": "93cbaa2c",
+          "basis": "SOURCE"
+        }
+      ],
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/core/audio",
+            "src/presentation/audio",
+            "src/presentation/assets",
+            "src/stores",
+            "tests/architecture"
+          ],
+          "termsAndMethod": "adversarial probe sweep over wave-2 machinery (decode-retry, unbind, visibility, duck, shake choke); 25 executed probes",
+          "evidenceIds": [],
+          "hitDispositions": [],
+          "coverageLimits": [
+            "probes assert reachable behavior at public API surface"
+          ]
+        }
+      ],
+      "repair": "attachEncodedBuffer now decodeAttempts.delete(key) on new bytes",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [
+        "EV-SND-FIX5"
+      ],
+      "closureReviewIds": [],
+      "status": "FIXED_PENDING_PROOF",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "evidenceIds": []
+    },
+    {
+      "id": "F-SND-53",
+      "title": "concurrent attachEncodedBuffer for one key - last resolver wins, stale payload can clobber fresh bytes",
+      "state": {
+        "productStateId": "ec767da9ba7bdbb6748fab960a7bd1065d0e1217ce99a2f8bd125711479f6166",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+      },
+      "subsystem": "audio",
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "discoveredBy": "INT-3",
+      "expected": "newer attach supersedes in-flight decodes",
+      "actual": "whichever decodeAudioData resolved last owned buffers",
+      "rootCause": "no ordering token between attach and decode completion",
+      "rootClass": "RACE_UNGUARDED",
+      "counterexample": "none found",
+      "locations": [
+        {
+          "path": "src/core/audio/AudioManager.ts",
+          "symbolOrSection": "attachEncodedBuffer/decodeInto",
+          "revision": "93cbaa2c",
+          "basis": "SOURCE"
+        }
+      ],
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/core/audio",
+            "src/presentation/audio",
+            "src/presentation/assets",
+            "src/stores",
+            "tests/architecture"
+          ],
+          "termsAndMethod": "adversarial probe sweep over wave-2 machinery (decode-retry, unbind, visibility, duck, shake choke); 25 executed probes",
+          "evidenceIds": [],
+          "hitDispositions": [],
+          "coverageLimits": [
+            "probes assert reachable behavior at public API surface"
+          ]
+        }
+      ],
+      "repair": "attachSeq per-key generation token; decodeInto resolves only when seq still current",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [
+        "EV-SND-FIX5"
+      ],
+      "closureReviewIds": [],
+      "status": "FIXED_PENDING_PROOF",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "evidenceIds": []
+    },
+    {
+      "id": "F-SND-54",
+      "title": "'if (!decode) return' silently discarded encoded bytes with no re-park or signal",
+      "state": {
+        "productStateId": "ec767da9ba7bdbb6748fab960a7bd1065d0e1217ce99a2f8bd125711479f6166",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+      },
+      "subsystem": "audio",
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "discoveredBy": "INT-3",
+      "expected": "undecodable-now bytes park for a later context",
+      "actual": "bytes dropped when the context exposed no decodeAudioData",
+      "rootCause": "bare return in decode resolution branch",
+      "rootClass": "SILENT_DROP",
+      "counterexample": "none found",
+      "locations": [
+        {
+          "path": "src/core/audio/AudioManager.ts",
+          "symbolOrSection": "decodeInto !decode branch",
+          "revision": "93cbaa2c",
+          "basis": "SOURCE"
+        }
+      ],
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/core/audio",
+            "src/presentation/audio",
+            "src/presentation/assets",
+            "src/stores",
+            "tests/architecture"
+          ],
+          "termsAndMethod": "adversarial probe sweep over wave-2 machinery (decode-retry, unbind, visibility, duck, shake choke); 25 executed probes",
+          "evidenceIds": [],
+          "hitDispositions": [],
+          "coverageLimits": [
+            "probes assert reachable behavior at public API surface"
+          ]
+        }
+      ],
+      "repair": "bytes parked into pendingEncoded so a later context can deliver",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [
+        "EV-SND-FIX5"
+      ],
+      "closureReviewIds": [],
+      "status": "FIXED_PENDING_PROOF",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "evidenceIds": []
+    },
+    {
+      "id": "F-SND-55",
+      "title": "in-flight decodeInto failure re-parks bytes after dispose() cleared them (zombie write into next lifecycle)",
+      "state": {
+        "productStateId": "ec767da9ba7bdbb6748fab960a7bd1065d0e1217ce99a2f8bd125711479f6166",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+      },
+      "subsystem": "audio",
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "discoveredBy": "INT-3",
+      "expected": "post-dispose continuations cannot write",
+      "actual": "a late rejection re-set pendingEncoded after pendingEncoded.clear()",
+      "rootCause": "no generation check in decodeInto's catch",
+      "rootClass": "ZOMBIE_WRITE",
+      "counterexample": "none found",
+      "locations": [
+        {
+          "path": "src/core/audio/AudioManager.ts",
+          "symbolOrSection": "decodeInto catch + dispose()",
+          "revision": "93cbaa2c",
+          "basis": "SOURCE"
+        }
+      ],
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/core/audio",
+            "src/presentation/audio",
+            "src/presentation/assets",
+            "src/stores",
+            "tests/architecture"
+          ],
+          "termsAndMethod": "adversarial probe sweep over wave-2 machinery (decode-retry, unbind, visibility, duck, shake choke); 25 executed probes",
+          "evidenceIds": [],
+          "hitDispositions": [],
+          "coverageLimits": [
+            "probes assert reachable behavior at public API surface"
+          ]
+        }
+      ],
+      "repair": "decodeInto captures generation; both paths bail when it changed",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [
+        "EV-SND-FIX5"
+      ],
+      "closureReviewIds": [],
+      "status": "FIXED_PENDING_PROOF",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "evidenceIds": []
+    },
+    {
+      "id": "F-SND-56",
+      "title": "ambient driver teardown while hidden leaves musicSuspended=true - next music caller silently blocked",
+      "state": {
+        "productStateId": "ec767da9ba7bdbb6748fab960a7bd1065d0e1217ce99a2f8bd125711479f6166",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+      },
+      "subsystem": "audio",
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "discoveredBy": "INT-3",
+      "expected": "teardown leaves no stale suspension",
+      "actual": "bind-while-hidden + unbind kept the flag; direct playMusic spawned nothing",
+      "rootCause": "stopMusic does not clear the suspend flag; teardown never resumed",
+      "rootClass": "STATE_LIFECYCLE_LEAK",
+      "counterexample": "none found",
+      "locations": [
+        {
+          "path": "src/presentation/audio/ambientAudioDriver.ts",
+          "symbolOrSection": "teardown",
+          "revision": "93cbaa2c",
+          "basis": "SOURCE"
+        }
+      ],
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/core/audio",
+            "src/presentation/audio",
+            "src/presentation/assets",
+            "src/stores",
+            "tests/architecture"
+          ],
+          "termsAndMethod": "adversarial probe sweep over wave-2 machinery (decode-retry, unbind, visibility, duck, shake choke); 25 executed probes",
+          "evidenceIds": [],
+          "hitDispositions": [],
+          "coverageLimits": [
+            "probes assert reachable behavior at public API surface"
+          ]
+        }
+      ],
+      "repair": "teardown calls resumeMusic() after stopMusic() - desiredMusicId null so applyDesiredMusic early-returns; verified (P17 flipped)",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [
+        "EV-SND-FIX5"
+      ],
+      "closureReviewIds": [],
+      "status": "FIXED_PENDING_PROOF",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "evidenceIds": []
+    },
+    {
+      "id": "F-SND-57",
+      "title": "duckMusic on empty cultivate stinger slots is dead config until assets land (informational)",
+      "state": {
+        "productStateId": "ec767da9ba7bdbb6748fab960a7bd1065d0e1217ce99a2f8bd125711479f6166",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+      },
+      "subsystem": "audio",
+      "severity": "Nit",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "discoveredBy": "INT-3",
+      "expected": "no dead config",
+      "actual": "ambient.cultivate.on/off carry duckMusic:0.5 with src:'' - playCue exits before any duck",
+      "rootCause": "synth-less silent slots cannot duck",
+      "rootClass": "INTENT_DEAD_WINDOW",
+      "counterexample": "none found",
+      "locations": [
+        {
+          "path": "src/core/audio/AudioCueManifest.ts",
+          "symbolOrSection": "ambient.cultivate.*",
+          "revision": "93cbaa2c",
+          "basis": "SOURCE"
+        }
+      ],
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/core/audio",
+            "src/presentation/audio",
+            "src/presentation/assets",
+            "src/stores",
+            "tests/architecture"
+          ],
+          "termsAndMethod": "adversarial probe sweep over wave-2 machinery (decode-retry, unbind, visibility, duck, shake choke); 25 executed probes",
+          "evidenceIds": [],
+          "hitDispositions": [],
+          "coverageLimits": [
+            "probes assert reachable behavior at public API surface"
+          ]
+        }
+      ],
+      "repair": "rejected: intentional - duckMusic activates when real stinger assets land; P18 verified the duck reaches the music bus without a player once bytes exist",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "TRIAGED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "evidenceIds": []
     }
   ],
   "evidence": [
@@ -3271,6 +3741,42 @@
       "limitations": [
         "e2e spec not re-run; scoped vitest only",
         "mutation probes ran on scratch copies"
+      ],
+      "status": "CURRENT"
+    },
+    {
+      "kind": "EXECUTED_UNIT_STRUCTURAL",
+      "id": "EV-SND-FIX5",
+      "state": {
+        "productStateId": "ec767da9ba7bdbb6748fab960a7bd1065d0e1217ce99a2f8bd125711479f6166",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+      },
+      "producer": "coordinator",
+      "startedAt": "2026-09-28T08:55:00Z",
+      "finishedAt": "2026-09-28T09:02:00Z",
+      "commandOrMethod": "npm run type-check + npx vitest run (audio lanes + guards) + re-run of INT-3's 25-probe adversarial file on the fixed tree",
+      "cwd": "game",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/EV-SND-FIX5.log",
+      "artifactHash": "d8b07e565a133b10cd8f4326baf75c42261c1617cbd6a276bd47ed62d178b77c",
+      "inputPaths": [
+        "src/core/audio/AudioManager.ts",
+        "src/presentation/audio/ambientAudioDriver.ts"
+      ],
+      "inputEvidenceIds": [],
+      "invariantIds": [],
+      "claims": [
+        "type-check clean",
+        "104 scoped tests pass",
+        "11 of INT-3's defect-asserting probes now fail because the asserted bug is gone (P3/P4/P6/P7/P8b/P8c/P10/P11/P17); P1/P2 stale on the corrected 3-attempt budget",
+        "14 clean-surface probes still pass"
+      ],
+      "limitations": [
+        "probe file ran locally then deleted (scratch, never committed)",
+        "e2e not re-run"
       ],
       "status": "CURRENT"
     }
@@ -3591,6 +4097,48 @@
       ],
       "novelAttackIds": [],
       "status": "SEALED"
+    },
+    {
+      "id": "REV-SND-INT-3",
+      "state": {
+        "productStateId": "ec767da9ba7bdbb6748fab960a7bd1065d0e1217ce99a2f8bd125711479f6166",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+      },
+      "round": 3,
+      "phase": "INTEGRATION",
+      "reviewerId": "devin-74cb958739374a77960c07c7c7eb3a4b",
+      "contextId": "ctx-int-3",
+      "model": "swe-2",
+      "role": "adversarial-integration",
+      "inputBundleHash": "ec767da9ba7bdbb6748fab960a7bd1065d0e1217ce99a2f8bd125711479f6166",
+      "priorFindingsVisible": false,
+      "accessLimitations": [
+        "detached checkout of pinned head 93cbaa2c",
+        "e2e spec not run by reviewers"
+      ],
+      "startedAt": "2026-09-28T08:11:00Z",
+      "sealedAt": "2026-09-28T09:00:00Z",
+      "previousPhaseReviewId": "REV-SND-AUT-3",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [],
+      "findingIds": [
+        "F-SND-44",
+        "F-SND-50",
+        "F-SND-51",
+        "F-SND-36",
+        "F-SND-52",
+        "F-SND-49",
+        "F-SND-53",
+        "F-SND-54",
+        "F-SND-55",
+        "F-SND-56",
+        "F-SND-57"
+      ],
+      "novelAttackIds": [],
+      "status": "SEALED"
     }
   ],
   "cycles": [
@@ -3639,6 +4187,29 @@
       "noveltyEvidenceIds": [],
       "startedAt": "2026-09-28T06:45:00Z",
       "finishedAt": "2026-09-28T07:55:00Z",
+      "status": "FINDINGS"
+    },
+    {
+      "id": "CYC-SND-3",
+      "state": {
+        "productStateId": "ec767da9ba7bdbb6748fab960a7bd1065d0e1217ce99a2f8bd125711479f6166",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+      },
+      "reviewIds": [
+        "REV-SND-COR-3",
+        "REV-SND-AUT-3",
+        "REV-SND-INT-3"
+      ],
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-SND-FIX4",
+        "EV-SND-FIX5"
+      ],
+      "noveltyEvidenceIds": [],
+      "startedAt": "2026-09-28T08:00:00Z",
+      "finishedAt": "2026-09-28T09:05:00Z",
       "status": "FINDINGS"
     }
   ],
@@ -3982,6 +4553,22 @@
       "payloadPath": "events/0021.json",
       "payloadHash": "efed88b04eba31f6dca4589cd6fcc4490b4955df46f0b9443647e65facc47257",
       "eventHash": "8587a535b75b29367a905ec61cd8503f7632603edaa04f356b3c92be1871a482"
+    },
+    {
+      "seq": 22,
+      "at": "2026-09-28T09:02:34.113Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-56995",
+      "state": {
+        "productStateId": "ec767da9ba7bdbb6748fab960a7bd1065d0e1217ce99a2f8bd125711479f6166",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+      },
+      "previousEventHash": "8587a535b75b29367a905ec61cd8503f7632603edaa04f356b3c92be1871a482",
+      "payloadPath": "events/0022.json",
+      "payloadHash": "7534968c405719be3fed386439817350c6daabc9e1c8f446bb167b941c39bdac",
+      "eventHash": "d895afd446a366d8e10e97d2d0f197be318a7c26f4f9d72d1b41003ab119ca6e"
     }
   ]
 }
