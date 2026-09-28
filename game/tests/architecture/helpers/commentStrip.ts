@@ -193,13 +193,13 @@ function scriptOf(fileName: string, text: string): string {
   // quoted attribute values inside tags are blanked so `title="<!--"`
   // cannot masquerade as a comment opener.
   const markup = text
-    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, (s) => ' '.repeat(s.length))
+    .replace(/<script[^>]*>[\s\S]*?<\/script\s*>/gi, (s) => ' '.repeat(s.length))
     .replace(/<script[^>]*\/>/gi, (s) => ' '.repeat(s.length))
     .replace(/<[^>]*>/g, (tag) =>
       tag.replace(/"[^"]*"|'[^']*'/g, (q) => ' '.repeat(q.length)),
     )
   const blocks: string[] = []
-  for (const m of text.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/gi)) {
+  for (const m of text.matchAll(/<script[^>]*>([\s\S]*?)<\/script\s*>/gi)) {
     const region = markup.slice(0, m.index)
     // Inside an unclosed `<!--` comment -> dead markup.
     if (region.lastIndexOf('<!--') > region.lastIndexOf('-->')) continue

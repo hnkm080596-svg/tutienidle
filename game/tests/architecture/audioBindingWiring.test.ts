@@ -75,8 +75,11 @@ describe('audio binding wiring', () => {
       // receiver - `xcue(`/`decode(` stay excluded.
       // The generic-args group is lazy so generics carrying parens
       // (`cue<F<() => R>>`) still reach the `(`.
+      // Quote chars are allowed prefixes here (literal interiors are
+      // filtered by literalRanges below) so a template attribute like
+      // @click="cue('x')" still matches.
       const CALL =
-        /(?:^|[^\w'"`]|\.)(?:cue|playCue)\s*!?\s*(?:<[^\n]*?>)?\s*!?\s*(?:\?\.\s*)?\(([^)]*)\)/g
+        /(?:^|[^\w])(?:cue|playCue)\s*!?\s*(?:<[^\n]*?>)?\s*!?\s*(?:\?\.\s*)?\(([^)]*)\)/g
       // A local declaration at line start (`function cue(`, `get cue(`,
       // `set cue(`, optionally `async`) is not a store call - the check
       // must anchor on the declaration line, not just a trailing word:
@@ -125,15 +128,30 @@ describe('audio binding wiring', () => {
               .replace(/<script[\s\S]*?<\/script>/gi, '')
               .replace(/<!--[\s\S]*?-->/g, '')
           : ''
-        const text = uncommented(file.text, file.fromSrc) + '\n' + templateText
+        const scriptText = uncommented(file.text, file.fromSrc)
+        const text = scriptText + '\n' + templateText
         // Names declared locally in this file (`function cue`, `const cue
         // =`) are not the store seam - bare calls to them are exempt.
+        const aliases: string[] = []
         const localNames = new Set<string>()
-        for (const d of text.matchAll(LOCAL_DECL)) localNames.add(d[1] ?? d[2]!)
+        for (const d of text.matchAll(LOCAL_DECL)) {
+          const name = d[1] ?? d[2]!
+          // A one-line wrapper `const cue = (id) => store.cue(id)` is a
+          // seam ALIAS, not a domain-local - its RHS references the
+          // seam, so call sites of it must still be checked.
+          const rhs = text.slice(
+            (d.index ?? 0) + d[0].length,
+            (d.index ?? 0) + d[0].length + 120,
+          )
+          if (/\b(?:cue|playCue|useAudioStore|audioStore|store)\b/.test(rhs.split('\n')[0]!)) {
+            aliases.push(name)
+            continue
+          }
+          localNames.add(name)
+        }
         // Destructure aliases (`const { cue: q } = useAudioStore()` then
         // `q('id')`) rename the seam - collect them and check their calls
         // through the same literal resolution pipeline.
-        const aliases: string[] = []
         for (const dm of text.matchAll(/\b(?:const|let|var)\s*\{[^}]*\}/g)) {
           for (const am of dm[0].matchAll(/\b(?:cue|playCue)\s*:\s*([A-Za-z_]\w*)/g)) {
             aliases.push(am[1]!)
@@ -149,23 +167,25 @@ describe('audio binding wiring', () => {
           }
         }
         // `import { cue as q }` from the store module renames the seam
-        // without a destructure - collect those aliases too.
-        // Lowercase-only alias names: `foo as Bar` is a TS cast to a
-        // type name, not a seam rename - capitalized targets stay out.
-        for (const am of text.matchAll(/\b(?:cue|playCue)\s+as\s+([a-z_$][\w$]*)/g)) {
+        // without a destructure - collect those aliases too. Capital
+        // targets included: `cue as Q` is a rename, and a cast like
+        // `x as Foo` never appears on the seam names themselves.
+        for (const am of text.matchAll(/\b(?:cue|playCue)\s+as\s+([A-Za-z_$][\w$]*)/g)) {
           aliases.push(am[1]!)
         }
         const callRe =
           aliases.length === 0
             ? CALL
             : new RegExp(
-                `(?:^|[^\\w'"\\x60]|\\.)(?:cue|playCue|${aliases.join('|')})(?:<[^\\n]*?>)?\\s*!?\\s*(?:\\?\\.\\s*)?\\(([^)]*)\\)`,
+                `(?:^|[^\\w])(?:cue|playCue|${aliases.join('|')})(?:<[^\\n]*?>)?\\s*!?\\s*(?:\\?\\.\\s*)?\\(([^)]*)\\)`,
                 'g',
               )
         // Literal spans (strings, template text, regexes) - a match
         // sitting inside one is data, not code. Covers multi-line
-        // literals where line-local parity desyncs.
-        const lits = literalRanges(text, file.fromSrc)
+        // literals where line-local parity desyncs. Computed over the
+        // SCRIPT only: Vue template attribute text is real code, not a
+        // TS literal, and must not be filtered out.
+        const lits = literalRanges(scriptText, file.fromSrc)
         const inLit = (i: number) => lits.some((r) => i >= r.pos && i < r.end)
         for (const m of text.matchAll(callRe)) {
           // Position of the callee name itself (the match may start one
@@ -220,7 +240,7 @@ describe('audio binding wiring', () => {
           // branches.
           const decl =
             `\\b${ident}\\s*(?::[^=\\n]+)?(?:\\?\\?=|\\|\\|=|&&=|\\+=|=)\\s*` +
-            `(?:\\(*\\s*(?=['"\`])|[\\[{]|\\w+\\s*\\(\\s*(?=['"\`])|[^;="'\`\\n]*?\\?\\s*(?=['"\`]))` +
+            `(?:\\(*\\s*(?=['"\`])|[\\[{]|\\w+\\s*\\(\\s*(?=['"\`])|[^;="'\`\\n]*?\\?\\s*(?=['"\`])|[^;="'\`\\n]*?(?:&&|\\|\\|)\\s*(?=['"\`]))` +
             `|\\b${ident}\\s*:\\s*(?=['"\`])`
           for (const dm of text.matchAll(new RegExp(decl, 'g'))) {
             const tail = text.slice(dm.index! + dm[0].length)
@@ -272,7 +292,9 @@ describe('audio binding wiring', () => {
         // RHS) is not a call shape and would escape CALL entirely - flag
         // it. Receiver names are restricted to audio-seam idiom so the
         // VFX domain's own `cue` property (SkillCue) is not flagged.
-        const RECEIVER = '(?:useAudioStore\\s*\\(\\s*\\)|audioStore|store|audioMgr|audioManager|audio|am)'
+        // `useAudioStore(pinia)` is the real Pinia signature - args are
+        // allowed; member tails (`store.self.cue`) keep the seam.
+        const RECEIVER = '(?:useAudioStore\\s*\\([^)]*\\)|(?:audioStore|store|audioMgr|audioManager|audio|am)(?:\\.[\\w$]+)*)'
         for (const vm of text.matchAll(
           // `[?!]*` before the dot keeps `store?.cue` and `store!.cue`
           // on the receiver arm.
@@ -319,11 +341,18 @@ describe('audio binding wiring', () => {
           violations.add(`${file.fromSrc} -> indirect ${vm[0]} at offset ${vm.index}`)
         }
         // Bracket access computing the cue name from quoted segments
-        // (`['cue']`, `['cu'+'e']`, `['c'+'ue']`) is indirect invocation;
-        // generic member indexing (`audio[ch.field]`) is not.
-        for (const vm of text.matchAll(new RegExp(`\\b${RECEIVER}\\s*\\[\\s*([^\\]]*)\\]`, 'g'))) {
+        // (`['cue']`, `['cu'+'e']`, `['c'+'ue']`, `['c\x75e']`,
+        // `['play'+'Cue']`) is indirect invocation on ANY receiver -
+        // `obj['cue'](x)` is not idiomatic member access. Escapes inside
+        // segments are decoded before the join is compared.
+        const decodeSeg = (seg: string): string =>
+          seg
+            .replace(/\\x([0-9a-fA-F]{2})/g, (_, h: string) => String.fromCharCode(parseInt(h, 16)))
+            .replace(/\\u\{([0-9a-fA-F]+)\}/g, (_, h: string) => String.fromCodePoint(parseInt(h, 16)))
+            .replace(/\\u([0-9a-fA-F]{4})/g, (_, h: string) => String.fromCharCode(parseInt(h, 16)))
+        for (const vm of text.matchAll(/\b[A-Za-z_$][\w$]*(?:\.[\w$]+)*\s*\[\s*([^\]]*)\]/g)) {
           const segs = [...vm[1]!.matchAll(/'([^']*)'|"([^"]*)"|`([^`]*)`/g)].map(
-            (sm) => sm[1] ?? sm[2] ?? sm[3]!,
+            (sm) => decodeSeg(sm[1] ?? sm[2] ?? sm[3]!),
           )
           if (segs.length === 0) continue
           if (segs.join('') === 'cue' || segs.join('') === 'playCue') {
@@ -343,9 +372,21 @@ describe('audio binding wiring', () => {
         }
         // `cue` as a tagged template (`cue`tag``) bypasses the call arm's
         // `(` requirement - flag it outright (not a real API here).
-        for (const vm of text.matchAll(/\b(?:cue|playCue)\s*`/g)) {
+        // Collected aliases are tagged the same way.
+        const tagRe =
+          aliases.length === 0
+            ? /\b(?:cue|playCue)\s*`/g
+            : new RegExp(`\\b(?:cue|playCue|${aliases.join('|')})\\s*\``, 'g')
+        for (const vm of text.matchAll(tagRe)) {
           if (inLit(vm.index ?? 0)) continue
           violations.add(`${file.fromSrc} -> tagged-template ${vm[0].trim()} at offset ${vm.index}`)
+        }
+        // `(cue)('x')` wraps the callee in parens - the `)` between the
+        // name and the call `(` defeats the CALL arm.
+        for (const vm of text.matchAll(/\(\s*(cue|playCue)\s*\)\s*\(/g)) {
+          if (localNames.has(vm[1]!)) continue
+          if (inLit(vm.index ?? 0)) continue
+          violations.add(`${file.fromSrc} -> paren-callee ${vm[0]} at offset ${vm.index}`)
         }
       }
       expect([...violations].sort()).toEqual([])

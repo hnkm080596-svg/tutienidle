@@ -26,7 +26,7 @@ const IMPORT_RE = /(?:import|export)\b\s*(?:type\b\s*)?(?:[\w*{}\s,]*?\s*from\s*
 // Comment spans between `(` and the specifier, and backtick specifiers,
 // must not slip past the literal-quote extractor either.
 const DYNAMIC_IMPORT_RE =
-  /(?:import|require)\s*\(\s*(?:\/\*[\s\S]*?\*\/\s*|\/\/[^\n]*\s*)*['"`]([^'"`]+)['"`]/g
+  /(?:^|[^\w.])(?:import|require)\s*\(\s*(?:\/\*[\s\S]*?\*\/\s*|\/\/[^\n]*\s*)*['"`]([^'"`]+)['"`]/g
 // A dynamic specifier that is NOT a plain literal (`import('to' + 'ne')`,
 // `import(spec)`) can spell any module at runtime - flag the call shape
 // itself so the literal extractor cannot be bypassed.
@@ -53,8 +53,15 @@ function isNonliteralImportCall(m: RegExpMatchArray, clean: string): boolean {
   const argText = m[0].slice(m[0].indexOf('(') + 1, m[0].lastIndexOf(')'))
   if (DECL_ARG_RE.test(argText)) return false
   const after = clean.slice((m.index ?? 0) + m[0].length)
-  if (/^\s*[:{]/.test(after)) return false
-  return true
+  if (!/^\s*[:{]/.test(after)) return true
+  // `:`/`{` right after `)` is a declaration tail only when the match is
+  // a declaration: it must sit at line start (a `cond ? import(dyn) : x`
+  // ternary arm is a real call even though `:` follows) and the args
+  // must look like a parameter list (idents, commas, annotations).
+  const lineStart = clean.lastIndexOf('\n', m.index ?? 0) + 1
+  if (!/^\s*$/.test(clean.slice(lineStart, m.index ?? 0))) return true
+  if (!/^[\w$,\s:.[\]<>|&?*]*$/.test(argText)) return true
+  return false
 }
 
 
@@ -154,10 +161,9 @@ describe('audio boundary', () => {
         // annotates a method, and a decl tail `: Ret`/`{` follows `)`.
         const clean = uncommented(file.text, file.fromSrc)
         for (const m of clean.matchAll(NONLITERAL_IMPORT_RE)) {
-          if (m[0].includes(':')) continue
-          const after = clean.slice((m.index ?? 0) + m[0].length)
-          if (/^\s*[:{]/.test(after)) continue
-          offenders.push(`${file.fromSrc} -> ${m[0]}`)
+          if (isNonliteralImportCall(m, clean)) {
+            offenders.push(`${file.fromSrc} -> ${m[0]}`)
+          }
         }
         for (const m of clean.matchAll(COMPOSED_IMPORT_RE)) {
           offenders.push(`${file.fromSrc} -> ${m[0]}`)
@@ -196,7 +202,7 @@ describe('audio boundary', () => {
         // import would otherwise slip past the call-shape regex). The
         // specifier arm tolerates `.ts`/query suffixes on the module path.
         if (
-          !/AudioManager\s*\.\s*getInstance\s*\(|\.\s*playCue\s*\(|['"][^'"]*audio\/AudioManager[^'"]*['"]/.test(
+          !/AudioManager\s*\.\s*getInstance\s*\(|\.\s*playCue\s*\(|['"`][^'"`]*audio\/AudioManager[^'"`]*['"`]/.test(
             uncommented(file.text, file.fromSrc),
           )
         ) {
