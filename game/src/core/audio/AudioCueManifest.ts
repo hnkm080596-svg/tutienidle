@@ -261,6 +261,8 @@ export const AUDIO_CUES: Readonly<Record<string, AudioCueDef>> = {
   'combat.dodge': sfx({ synthFallback: 'combatDodge' }),
   'combat.block': sfx({ synthFallback: 'combatBlock' }),
   'combat.death': sfx({ synthFallback: 'combatKill' }),
+  // Deliberately unbound: the 'death' emit already routes to
+  // combat.death; 'kill' stays armed for a distinct kill-confirm asset.
   'combat.kill': sfx({ synthFallback: 'combatKill' }),
   'combat.hurt': sfx({ cooldownMs: 80, synthFallback: 'combatHit' }),
   'combat.survive_lethal': sfx({ duckMusic: 0.4, synthFallback: 'combatBlock' }),
@@ -284,7 +286,8 @@ export const AUDIO_CUES: Readonly<Record<string, AudioCueDef>> = {
   'combat.dot.apply': sfx({ cooldownMs: 120, synthFallback: 'toastWarning' }),
   'combat.buff.expire': sfx({ cooldownMs: 120 }),
   // Armed-reserved: status_vfx_updated emits live on attach/refresh/stack
-  // change (TurnStatusPresentationEvents) but nothing subscribes - whether
+  // change (TurnStatusPresentationEvents); the VFX scene subscribes but
+  // the audio binding does not - whether
   // stack ticks should voice is a sound-design call deferred to asset time.
   'combat.buff.stack': sfx({ cooldownMs: 120 }),
   'combat.reaction': sfx({ duckMusic: 0.4, synthFallback: 'combatCritical' }),

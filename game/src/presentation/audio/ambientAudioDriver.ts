@@ -70,7 +70,10 @@ export function bindAmbientAudio(
   // equals `route` there, so the listener is change-only; seed the
   // initial route explicitly so the first unlock() knows the track.
   function onVisibilityChange(): void {
-    if (document.visibilityState === 'hidden') {
+    // Mirror playCue's gate (`!== 'visible'`): 'prerender' must suspend
+    // too - otherwise a prerendered tab starts a player into a suspended
+    // context while cues are being dropped.
+    if (document.visibilityState !== 'visible') {
       audio.suspendMusic()
     } else {
       audio.resumeMusic()

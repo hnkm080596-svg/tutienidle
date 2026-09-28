@@ -154,7 +154,11 @@ describe('audio binding wiring', () => {
           const identMatch = argText.match(/^\s*([A-Za-z_]\w*)/)
           if (!identMatch) continue
           const ident = identMatch[1]!
-          const decl = `\\b${ident}\\s*(?::[^=\\n]+)?=\\s*(?:['"\`]|[\\[{])|\\b${ident}\\s*:\\s*['"\`]`
+          // The literal arms must LOOK AHEAD on the opening quote -
+          // consuming it would leave `tail` inside the string and
+          // LITERAL.exec would never see the bound value (dead branch).
+          // The map/array arm consumes `{`/`[` on purpose (obj sweep).
+          const decl = `\\b${ident}\\s*(?::[^=\\n]+)?=\\s*(?:(?=['"\`])|[\\[{])|\\b${ident}\\s*:\\s*(?=['"\`])`
           for (const dm of text.matchAll(new RegExp(decl, 'g'))) {
             const tail = text.slice(dm.index! + dm[0].length)
             // If the declaration ended on `{` it opened a flat

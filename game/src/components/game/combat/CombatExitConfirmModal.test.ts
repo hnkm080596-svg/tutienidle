@@ -14,6 +14,11 @@ import { useUiStore } from '@/stores/ui'
 import { GAME_MANAGER_KEY, STATE_VERSION_KEY, BUMP_STATE_KEY } from '@/composables/useGameState'
 import { i18n } from '@/i18n'
 
+// jsdom defaults visibilityState to 'prerender' - AudioManager.playCue
+// drops every cue unless the page reports 'visible'; pin it so real-path
+// audio under test is not silently swallowed.
+Object.defineProperty(document, 'visibilityState', { value: 'visible', configurable: true })
+
 // i18n (2.2 lô 2) — component dùng t() nên mount phải cài i18n; assert
 // qua i18n.global.t(key) thay vì raw vi string (pattern HomeResourceStrip).
 function t(key: string): string {

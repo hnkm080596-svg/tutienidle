@@ -7,6 +7,11 @@ import { createApp, h } from 'vue'
 import Chip from './Chip.vue'
 import { AudioManager } from '@/core/audio/AudioManager'
 
+// jsdom defaults visibilityState to 'prerender' - AudioManager.playCue
+// drops every cue unless the page reports 'visible'; pin it so real-path
+// audio under test is not silently swallowed.
+Object.defineProperty(document, 'visibilityState', { value: 'visible', configurable: true })
+
 let playCue: ReturnType<typeof vi.spyOn>
 let unlock: ReturnType<typeof vi.spyOn>
 
