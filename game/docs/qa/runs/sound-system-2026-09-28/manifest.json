@@ -846,7 +846,7 @@
       "path": "docs/design/sound-system-audit.md",
       "kind": "file",
       "mode": 33188,
-      "hash": "52af7b3cb5f500e7c1711db82be34e848684ee22f0c44cb19662c59d33abb732"
+      "hash": "fd824f9a63bf4bda154758513354edf3a19a4b4ec88fb43a2c97a9122d706a84"
     },
     {
       "path": "docs/design/the-tu-an-ung-the-design.txt",
@@ -3282,7 +3282,7 @@
       "path": "docs/specs/sound-system-spec.md",
       "kind": "file",
       "mode": 33188,
-      "hash": "41bcab71973311057e277785929b76d5c8bcc8ae956c497e0752a298dd00cf19"
+      "hash": "d810fd750dac8fc3f252e513c8dfd487097abaa1eed36626162a2669036545e4"
     },
     {
       "path": "docs/specs/the-tu-an-ung-the-spec.md",
@@ -15780,7 +15780,7 @@
       "path": "src/core/audio/AudioCueManifest.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "75a454c37fe0f45802c51644427633dfeaceefb76137d52ec416568376914a85"
+      "hash": "83c280ab89b9a2bd71b1a640102b627ee6fe1b4c3ef626ae3f1fc7c403d66b0a"
     },
     {
       "path": "src/core/audio/AudioManager.test.ts",
@@ -22602,7 +22602,7 @@
       "path": "src/presentation/assets/AssetBundleCatalog.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "d8c307891693488a9512c699235d4541e28fff3e3c6f27f1aae7784cbc4c9254"
+      "hash": "6167ecfc99be866d3d1707cf2152848c4bfbb15f99020884818e3022a9ebf8be"
     },
     {
       "path": "src/presentation/assets/AssetBundleManager.test.ts",
@@ -22632,7 +22632,7 @@
       "path": "src/presentation/audio/audioAssetWiring.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "b23d0012fb498c3752023ad49866e3316e6e8e7b2f3ce3479a90bad0996109b3"
+      "hash": "5a688ba3e2826d2d463dd8da64c5433596cc71f765647f48c2d2c47f379ac016"
     },
     {
       "path": "src/presentation/audio/combatAudioBinding.test.ts",
@@ -22644,7 +22644,7 @@
       "path": "src/presentation/audio/combatAudioBinding.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "d0ef30f62c4888775256b153b5dcc9f09892dee935cda034e67f48dd17dc0ee7"
+      "hash": "6f27a04efdb2d4832bf11f71e02d08e661e45e331e55d8369be9d330816b42dd"
     },
     {
       "path": "src/presentation/audio/uiAudioBinding.test.ts",
@@ -23532,19 +23532,19 @@
       "path": "tests/architecture/audioBindingWiring.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "7347ab2fd18ae859a0f4a3465018abc69d22a2d253d0ecbada971272d69be04a"
+      "hash": "38ccb86c09098c1cc43e00417e849aa194ebb7c59899df127e63b27789a31400"
     },
     {
       "path": "tests/architecture/audioBoundary.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "80e22401f2ead8b0fa2c513862293000d8d78d03d6967ac35e9c0170f29eb8e4"
+      "hash": "8d10210fcf02fe8d78bf7cd8d1e72e0cfbd3b028456e948a4b2bca7b0c947d9a"
     },
     {
       "path": "tests/architecture/audioManifestCompleteness.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "1958ecdfd4d2aaa1d45d9f645206e706ad830a7f55c15cef504f114b18e0925b"
+      "hash": "dab10172ff3cc49c1af8045b1f140c83f399899515a3e0470509cf4d894aa5fa"
     },
     {
       "path": "tests/architecture/baselines/asciiComments.json",
@@ -23580,7 +23580,7 @@
       "path": "tests/architecture/combatContract.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "cd01e7d6fc52754f97f2812536d3345452a0c199159bb7507ed299275519e130"
+      "hash": "891b7ce7c16df559aca23f8e2da34f38637e6e82ca12eb29b04a9f2e4e3b41de"
     },
     {
       "path": "tests/architecture/combatSchedulerDormancy.test.ts",
@@ -23610,7 +23610,7 @@
       "path": "tests/architecture/dynamicRegionHost.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "0ae043e2fad87362582720a1b3f3d5391c3fd4fd6707beb42b056cec15aa501e"
+      "hash": "0734606ea9884c2935cc8db4788b28651e4697426d8d181db47afe1bfad03886"
     },
     {
       "path": "tests/architecture/eagerGlobTestExclusion.test.ts",
@@ -23658,7 +23658,7 @@
       "path": "tests/architecture/helpers/commentStrip.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "50ed603d283c2ebeccc9c6ce7a1e076ca34f0cd92d2cf209781fbc6643da5294"
+      "hash": "cac7bdf1fe9d642ca6644ae6c7345ae23263d579edc6ffa19e65939d4d760c2b"
     },
     {
       "path": "tests/architecture/helpers/scanTs.ts",
@@ -23731,6 +23731,12 @@
       "kind": "file",
       "mode": 33188,
       "hash": "025cf6931ccc6aa1171f8f57bd2de61f3fd5eb22573ea8db3c5c2ba727ca5c8d"
+    },
+    {
+      "path": "tests/architecture/screenShakeAuthority.test.ts",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "d6f2e08dec7c3de24b5c2f61ad151b53d10f03ac582a2056f34c85a8007e1017"
     },
     {
       "path": "tests/architecture/skillDefProducerSources.test.ts",
@@ -24021,5 +24027,5 @@
       "hash": "e69b4133ed37ca9a4f05e66d90521d0bb749c4764bf1f454d0eb13de601f7940"
     }
   ],
-  "productStateId": "324b39d00ec58ea009ac15e39d0daf3ab741a10196c85313c983527fd833f5d0"
+  "productStateId": "9c48db23660832ad7a4f03da7a7c22049f6106fc60814433e4da0a36d253cd3a"
 }
