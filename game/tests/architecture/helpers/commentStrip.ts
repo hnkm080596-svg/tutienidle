@@ -1,58 +1,39 @@
-// String-aware comment strip shared by the audio guards: comment spans
-// between tokens (`import /*c*/ Tone`, `import(/*c*/ 'tone')`) must not
-// splice a specifier past the regexes; `//` or `/*` INSIDE a quoted
-// specifier ('./..//audio/x') must survive - a naive line strip would cut
-// the specifier short and smuggle the audio path past AUDIO_SPEC_RE; and
-// `/*` inside a `//` comment must not open a phantom block (the naive
-// replace-order strip ate all 11 imports of GameManagerCompanionOps.ts).
-// HTML comments are stripped so `<!-- import 'tone' -->` template prose
-// in .vue files does not produce a phantom specifier.
-//
-// Known limitation: `${}`-nested template literals and regex literals
-// containing quote chars are not modeled - a backtick inside ${} flips
-// string parity. Corpus sweep shows no live hit; a guard change that
-// trips on a real file is loud, not silent.
-export function uncommented(text: string): string {
-  let out = ''
-  let i = 0
-  let quote: string | null = null
-  while (i < text.length) {
-    const c = text[i]!
-    if (quote !== null) {
-      out += c
-      if (c === '\\') {
-        out += text[i + 1] ?? ''
-        i += 2
-        continue
-      }
-      if (c === quote) quote = null
-      i++
-      continue
-    }
-    if (c === "'" || c === '"' || c === '`') {
-      quote = c
-      out += c
-      i++
-      continue
-    }
-    if (c === '/' && text[i + 1] === '/') {
-      while (i < text.length && text[i] !== '\n') i++
-      continue
-    }
-    if (c === '/' && text[i + 1] === '*') {
-      const end = text.indexOf('*/', i + 2)
-      i = end === -1 ? text.length : end + 2
-      continue
-    }
-    // HTML comments (`<!-- ... -->` in .vue templates) - only outside
-    // strings, so `'<!--'`/`'-->'` literals cannot pair up to eat code.
-    if (c === '<' && text.slice(i, i + 4) === '<!--') {
-      const end = text.indexOf('-->', i + 4)
-      i = end === -1 ? text.length : end + 3
-      continue
-    }
-    out += c
-    i++
+import * as ts from 'typescript'
+
+// Shared comment stripper for the audio architecture guards. Uses the
+// real TypeScript parser for comment extraction so strings, template
+// literals with `${}` interpolation, regex literals, and escapes are all
+// tokenized correctly - a hand-rolled char scanner cannot (it desyncs on
+// `'-'` inside `${}` and lets '<!--'/'-->' string literals pair up to
+// delete real code). For .vue files only the <script> blocks are
+// analyzed: template HTML comments and markup never reach the guards'
+// regexes, and emit()/cue() calls in this codebase live in <script>.
+export function uncommented(fileText: string, fileName = 'file.ts'): string {
+  const text = scriptOf(fileName, fileText)
+  const sf = ts.createSourceFile(fileName, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS)
+  const ranges: ts.CommentRange[] = []
+  const collect = (pos: number, end: number): void => {
+    for (const r of ts.getLeadingCommentRanges(text, pos) ?? []) ranges.push(r)
+    for (const r of ts.getTrailingCommentRanges(text, end) ?? []) ranges.push(r)
   }
-  return out
+  const visit = (node: ts.Node): void => {
+    collect(node.pos, node.end)
+    ts.forEachChild(node, visit)
+  }
+  visit(sf)
+  ranges.sort((a, b) => a.pos - b.pos)
+  let out = ''
+  let pos = 0
+  for (const r of ranges) {
+    if (r.pos > pos) out += text.slice(pos, r.pos)
+    pos = Math.max(pos, r.end)
+  }
+  return out + text.slice(pos)
+}
+
+function scriptOf(fileName: string, text: string): string {
+  if (!fileName.endsWith('.vue')) return text
+  const blocks: string[] = []
+  for (const m of text.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/gi)) blocks.push(m[1]!)
+  return blocks.join('\n')
 }

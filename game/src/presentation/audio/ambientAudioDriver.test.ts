@@ -122,3 +122,32 @@ describe('bindAmbientAudio bundle lane', () => {
     unbind()
   })
 })
+
+describe('bindAmbientAudio visibility lane', () => {
+  it('suspends music on hidden/prerender and resumes on visible', () => {
+    const store = useAudioStore()
+    const audio = AudioManager.getInstance()
+    const suspend = vi.spyOn(audio, 'suspendMusic').mockImplementation(() => {})
+    const resume = vi.spyOn(audio, 'resumeMusic').mockImplementation(() => {})
+    const { coordinator } = fakeCoordinator('home')
+    unlocked = true
+    const unbind = bindAmbientAudio(coordinator, store)
+    suspend.mockClear()
+
+    // 'prerender' must suspend just like 'hidden' - a prerendered tab
+    // otherwise starts a player into a suspended context.
+    // Drivers bound by earlier tests share the singleton - assert the
+    // event fires suspend, not an exact count.
+    for (const state of ['hidden', 'prerender']) {
+      Object.defineProperty(document, 'visibilityState', { value: state, configurable: true })
+      document.dispatchEvent(new Event('visibilitychange'))
+      expect(suspend).toHaveBeenCalled()
+      suspend.mockClear()
+    }
+
+    Object.defineProperty(document, 'visibilityState', { value: 'visible', configurable: true })
+    document.dispatchEvent(new Event('visibilitychange'))
+    expect(resume).toHaveBeenCalled()
+    unbind()
+  })
+})

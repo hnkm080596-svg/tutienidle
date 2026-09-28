@@ -29,8 +29,8 @@ const DYNAMIC_IMPORT_RE =
   /(?:import|require)\s*\(\s*(?:\/\*[\s\S]*?\*\/\s*|\/\/[^\n]*\s*)*['"`]([^'"`]+)['"`]\s*(?:\/\*[\s\S]*?\*\/\s*|\/\/[^\n]*\s*)*\)/g
 
 
-function importSpecifiers(text: string): string[] {
-  const clean = uncommented(text)
+function importSpecifiers(text: string, fileName: string): string[] {
+  const clean = uncommented(text, fileName)
   const out: string[] = []
   for (const match of clean.matchAll(IMPORT_RE)) {
     out.push(match[1]!)
@@ -58,14 +58,13 @@ describe('audio boundary', () => {
         // Tests may spy on AudioManager to prove a domain event reaches
         // the real consumer - the ban is on production coupling.
         if (file.fromSrc.endsWith('.test.ts')) continue
-        for (const spec of importSpecifiers(file.text)) {
+        for (const spec of importSpecifiers(file.text, file.fromSrc)) {
           // Specifiers containing escapes ('cor\u0065/audio', 't\x6fne')
           // resolve to banned paths at evaluation time while evading the
           // literal match - no legitimate static import needs a backslash.
           if (
             spec.includes('\\') ||
-            spec === 'tone' ||
-            spec.startsWith('tone/') ||
+            /^tone([/?#.]|$)/.test(spec) ||
             AUDIO_SPEC_RE.test(spec)
           ) {
             offenders.push(`${file.fromSrc} -> ${spec}`)
@@ -81,7 +80,7 @@ describe('audio boundary', () => {
     const text = readTs(join(SRC_DIR, 'core/audio/AudioCueManifest.ts'))
     // `=== x || startsWith(x + '/')` - a `phaser/subpath` or
     // `tone/build/...` import must not slip past an equality check.
-    for (const spec of importSpecifiers(text)) {
+    for (const spec of importSpecifiers(text, 'core/audio/AudioCueManifest.ts')) {
       for (const banned of ['tone', 'vue', 'phaser']) {
         expect(spec === banned || spec.startsWith(`${banned}/`)).toBe(false)
       }
@@ -97,7 +96,7 @@ describe('audio boundary', () => {
       for (const file of srcCorpus(SRC_DIR)) {
         if (file.fromSrc.endsWith('.test.ts')) continue
         if (file.fromSrc.startsWith('core/audio/')) continue
-        for (const spec of importSpecifiers(file.text)) {
+        for (const spec of importSpecifiers(file.text, file.fromSrc)) {
           if (spec === 'tone' || spec.startsWith('tone/')) {
             offenders.push(`${file.fromSrc} -> ${spec}`)
           }
@@ -137,7 +136,7 @@ describe('audio boundary', () => {
         // specifier arm tolerates `.ts`/query suffixes on the module path.
         if (
           !/AudioManager\s*\.\s*getInstance\s*\(|\.\s*playCue\s*\(|['"][^'"]*audio\/AudioManager[^'"]*['"]/.test(
-            uncommented(file.text),
+            uncommented(file.text, file.fromSrc),
           )
         ) {
           continue

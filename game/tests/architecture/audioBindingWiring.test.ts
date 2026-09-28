@@ -32,7 +32,7 @@ for (const file of FILES) {
   // domain bus events - sweeping them would let a future bound audio
   // event name be falsely satisfied by an unrelated component emit.
   if (file.fromSrc.endsWith('.test.ts') || file.fromSrc.endsWith('.vue')) continue
-  for (const m of uncommented(file.text).matchAll(/\bemit\s*(?:<[^>]*>)?\(\s*['"`]([a-z_0-9]+)['"`]/g)) {
+  for (const m of uncommented(file.text, file.fromSrc).matchAll(/\bemit\s*(?:<[^>]*>)?\(\s*['"`]([a-z_0-9]+)['"`]/g)) {
     EMITTED.add(m[1]!)
   }
 }
@@ -43,6 +43,7 @@ describe('audio binding wiring', () => {
     () => {
       const binding = uncommented(
         readFileSync(join(SRC_DIR, 'presentation/audio/combatAudioBinding.ts'), 'utf8'),
+        'presentation/audio/combatAudioBinding.ts',
       )
       // Row heads in both tables look like ['event_name', ...] across lines.
       const bound = new Set<string>()
@@ -65,7 +66,7 @@ describe('audio binding wiring', () => {
       // forms). A bare `cue('id')` (destructured) is covered too: the
       // name may be preceded by start, a non-word char, or the `.`
       // receiver - `xcue(`/`decode(` stay excluded.
-      const CALL = /(?:^|[^\w]|\.)(?:cue|playCue)\s*(?:\?\.\s*)?\(([^)]*)\)/g
+      const CALL = /(?:^|[^\w]|\.)(?:cue|playCue)\s*!?\s*(?:<[^>\n]*>)?\s*!?\s*(?:\?\.\s*)?\(([^)]*)\)/g
       // A local declaration at line start (`function cue(`, `get cue(`,
       // `set cue(`, optionally `async`) is not a store call - the check
       // must anchor on the declaration line, not just a trailing word:
@@ -97,7 +98,7 @@ describe('audio binding wiring', () => {
       for (const file of FILES) {
         // Tests legitimately feed bogus ids - only production files bind.
         if (file.fromSrc.endsWith('.test.ts')) continue
-        const text = uncommented(file.text)
+        const text = uncommented(file.text, file.fromSrc)
         // Names declared locally in this file (`function cue`, `const cue
         // =`) are not the store seam - bare calls to them are exempt.
         const localNames = new Set<string>()
@@ -115,7 +116,7 @@ describe('audio binding wiring', () => {
           aliases.length === 0
             ? CALL
             : new RegExp(
-                `(?:^|[^\\w]|\\.)(?:cue|playCue|${aliases.join('|')})\\s*(?:\\?\\.\\s*)?\\(([^)]*)\\)`,
+                `(?:^|[^\\w]|\\.)(?:cue|playCue|${aliases.join('|')})(?:<[^>\\n]*>)?\\s*!?\\s*(?:\\?\\.\\s*)?\\(([^)]*)\\)`,
                 'g',
               )
         for (const m of text.matchAll(callRe)) {
@@ -163,8 +164,13 @@ describe('audio binding wiring', () => {
             // Otherwise the declaration is `NAME = 'lit'` and only the
             // FIRST literal is the bound value; sweeping further would
             // flag unrelated literals that merely follow the declaration.
+            const arr = dm[0].endsWith('[') ? tail.match(/^[^\]]*\]/) : null
             const obj = dm[0].endsWith('{') ? tail.match(/^[^}]*\}/) : null
-            if (obj) {
+            if (arr) {
+              for (const lit of arr[0].matchAll(LITERAL)) {
+                checkLiteral(violations, file.fromSrc, lit[2]!)
+              }
+            } else if (obj) {
               for (const lit of obj[0].matchAll(LITERAL)) {
                 checkLiteral(violations, file.fromSrc, lit[2]!)
               }
