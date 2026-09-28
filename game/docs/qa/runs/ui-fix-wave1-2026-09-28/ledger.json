@@ -123,7 +123,7 @@
       "locations": [
         {
           "path": "src/assets/theme.css",
-          "symbolOrSection": ":489 vs 4 component-local --paper-text blocks",
+          "symbolOrSection": ":489 vs component-local --paper-text blocks",
           "revision": "32483797",
           "basis": "SOURCE"
         }
@@ -144,29 +144,29 @@
       "actionable": true,
       "discoveredBy": "AUT-1",
       "expected": "one shared utility owns the paper-to-surface token remap",
-      "actual": "Victory/Defeat/TalentEntitlement/Tooltip each redeclared divergent --paper-text* sets; Tooltip's :not(.tooltip--element) gate never matched emitted classes so the element exemption was dead",
-      "rootCause": "utility class added after the copies; copies drifted and the element gate referenced a class name the code never emits",
+      "actual": "Victory/Defeat/TalentEntitlement/Tooltip each redeclared divergent --paper-text* sets",
+      "rootCause": "utility class added after the copies; copies drifted. CORRECTION (COR-2/AUT-2): the earlier claim that Tooltip's :not(.tooltip--element) gate was dead is wrong -- tooltip--element IS emitted; the old exemption was live. The new kind-based gate is behavior-equivalent and additionally remaps 5 more tokens.",
       "rootClass": "DUPLICATED_AUTHORITY",
-      "repair": "all 4 migrated to .paper-on-dark; Tooltip uses content.kind !== 'element'; dead selectors removed @28a82e78",
+      "repair": "all 4 migrated to .paper-on-dark; Tooltip uses content.kind !== 'element'; RealmPanel sibling -> .paper-on-sys @f609209d",
       "siblingSearch": [
         {
           "roots": [
             "game/src"
           ],
-          "termsAndMethod": "enumerated same-class sites",
+          "termsAndMethod": "grep --paper-* redeclarations across src",
           "evidenceIds": [
             "EV-UIW1-FIX1"
           ],
           "hitDispositions": [
-            "all copies migrated / single authority"
+            "4 copies + RealmPanel sys-variant migrated; .ink-drawer deduped @f609209d"
           ],
           "coverageLimits": [
             "ui surface"
           ]
         }
       ],
-      "closeReason": "fixed in wave-2 batch @28a82e78 -- pending wave-2 closure seal",
-      "counterexample": "Victory/Defeat/TalentEntitlement/Tooltip each redeclared divergent --paper-text* sets; Tooltip's :not(.tooltip--element) gate never matched emitted classes so the element exemption was dead"
+      "closeReason": "fixed @28a82e78 + f609209d -- pending closure seal",
+      "counterexample": "divergent --paper-text* redeclarations in 4 components + 1 sys-variant sibling"
     },
     {
       "id": "F-UIW1-03",
@@ -687,6 +687,266 @@
       ],
       "closeReason": "fixed @5400c882 -- pending closure seal",
       "counterexample": "state==='fighting' gate rejected clicks during intro+countdown (~3s) with no feedback"
+    },
+    {
+      "id": "F-UIW1-11",
+      "title": "RealmPanel keeps a divergent paper->sys token remap",
+      "state": {
+        "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+        "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+      },
+      "subsystem": "ui",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "closedAt": null,
+      "severity": "Low",
+      "locations": [
+        {
+          "path": "src/components/panels/RealmPanel.vue",
+          "symbolOrSection": ":183-189",
+          "revision": "d848bfd3",
+          "basis": "SOURCE"
+        }
+      ],
+      "pinEvidenceIds": [
+        "EV-UIW1-FIX1"
+      ],
+      "verificationEvidenceIds": [
+        "EV-UIW1-FIX1"
+      ],
+      "evidenceIds": [
+        "EV-UIW1-FIX1"
+      ],
+      "closureReviewIds": [],
+      "status": "FIXED_PENDING_PROOF",
+      "classification": "REAL_DEFECT",
+      "reachability": "PRODUCTION",
+      "actionable": true,
+      "discoveredBy": "AUT-2",
+      "expected": "all paper-family remaps centralized in theme/system-theme utilities",
+      "actual": "6-token --paper-* redeclaration targeting the --sys-* palette lived inside scoped styles (unmigrated sibling of F-UIW1-02's class)",
+      "rootCause": "sys-palette variant was added after .paper-on-dark existed; nobody extracted a second utility",
+      "rootClass": "DUPLICATED_AUTHORITY",
+      "repair": ".paper-on-sys utility in system-theme.css; RealmPanel uses the class @f609209d",
+      "siblingSearch": [
+        {
+          "roots": [
+            "game/src"
+          ],
+          "termsAndMethod": "grep --paper-* redeclarations; sellGrant sites; lockReason callers",
+          "evidenceIds": [
+            "EV-UIW1-FIX1"
+          ],
+          "hitDispositions": [
+            "siblings migrated / shared owner"
+          ],
+          "coverageLimits": [
+            "ui surface"
+          ]
+        }
+      ],
+      "closeReason": "fixed @f609209d -- pending closure seal",
+      "counterexample": "6-token --paper-* redeclaration targeting the --sys-* palette lived inside scoped styles (unmigrated sibling of F-UIW1-02's class)"
+    },
+    {
+      "id": "F-UIW1-12",
+      "title": "stageLockReason mirror of isStageUnlocked unpinned",
+      "state": {
+        "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+        "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+      },
+      "subsystem": "ui",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "closedAt": null,
+      "severity": "Low",
+      "locations": [
+        {
+          "path": "src/components/panels/StageSelectPanel.vue",
+          "symbolOrSection": "stageLockReason",
+          "revision": "d848bfd3",
+          "basis": "SOURCE"
+        }
+      ],
+      "pinEvidenceIds": [
+        "EV-UIW1-FIX1"
+      ],
+      "verificationEvidenceIds": [
+        "EV-UIW1-FIX1"
+      ],
+      "evidenceIds": [
+        "EV-UIW1-FIX1"
+      ],
+      "closureReviewIds": [],
+      "status": "FIXED_PENDING_PROOF",
+      "classification": "REAL_DEFECT",
+      "reachability": "PRODUCTION",
+      "actionable": true,
+      "discoveredBy": "AUT-2",
+      "expected": "lock-reason derivation owned by the domain, not a UI mirror",
+      "actual": "panel re-encoded realm gate + zone topology; no parity test pins the mirror so a new domain gate would silently misreport",
+      "rootCause": "reason text grew as a UI-side copy of the domain rule",
+      "rootClass": "DUPLICATED_AUTHORITY",
+      "repair": "catalogOps.stageLockReasonCode is the read model; panel maps kind->i18n @f609209d",
+      "siblingSearch": [
+        {
+          "roots": [
+            "game/src"
+          ],
+          "termsAndMethod": "grep --paper-* redeclarations; sellGrant sites; lockReason callers",
+          "evidenceIds": [
+            "EV-UIW1-FIX1"
+          ],
+          "hitDispositions": [
+            "siblings migrated / shared owner"
+          ],
+          "coverageLimits": [
+            "ui surface"
+          ]
+        }
+      ],
+      "closeReason": "fixed @f609209d -- pending closure seal",
+      "counterexample": "panel re-encoded realm gate + zone topology; no parity test pins the mirror so a new domain gate would silently misreport"
+    },
+    {
+      "id": "F-UIW1-13",
+      "title": "Granted stone id re-derived 3x in one flow",
+      "state": {
+        "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+        "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+      },
+      "subsystem": "ui",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "closedAt": null,
+      "severity": "Nit",
+      "locations": [
+        {
+          "path": "src/core/game/GameManagerEconomyOps.ts",
+          "symbolOrSection": ":43,71 + VendorPanel.vue:72",
+          "revision": "d848bfd3",
+          "basis": "SOURCE"
+        }
+      ],
+      "pinEvidenceIds": [
+        "EV-UIW1-FIX1"
+      ],
+      "verificationEvidenceIds": [
+        "EV-UIW1-FIX1"
+      ],
+      "evidenceIds": [
+        "EV-UIW1-FIX1"
+      ],
+      "closureReviewIds": [],
+      "status": "FIXED_PENDING_PROOF",
+      "classification": "REAL_DEFECT",
+      "reachability": "PRODUCTION",
+      "actionable": true,
+      "discoveredBy": "AUT-2",
+      "expected": "the sale result carries the granted stone identity",
+      "actual": "getSpiritStoneMaterialIdForRealmTier(getRealmTier(realmId)) recomputed for notify + preview-name because sellMaterial omitted it",
+      "rootCause": "success return lacked the stoneMaterialId field",
+      "rootClass": "DOC_DRIFT",
+      "repair": "sellMaterial returns stoneMaterialId; ops notify uses it @f609209d",
+      "siblingSearch": [
+        {
+          "roots": [
+            "game/src"
+          ],
+          "termsAndMethod": "grep --paper-* redeclarations; sellGrant sites; lockReason callers",
+          "evidenceIds": [
+            "EV-UIW1-FIX1"
+          ],
+          "hitDispositions": [
+            "siblings migrated / shared owner"
+          ],
+          "coverageLimits": [
+            "ui surface"
+          ]
+        }
+      ],
+      "closeReason": "fixed @f609209d -- pending closure seal",
+      "counterexample": "getSpiritStoneMaterialIdForRealmTier(getRealmTier(realmId)) recomputed for notify + preview-name because sellMaterial omitted it"
+    },
+    {
+      "id": "F-UIW1-14",
+      "title": ".ink-drawer and .paper-on-dark enumerate the identical token map",
+      "state": {
+        "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+        "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+      },
+      "subsystem": "ui",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "closedAt": null,
+      "severity": "Nit",
+      "locations": [
+        {
+          "path": "src/assets/theme.css",
+          "symbolOrSection": ":470-478 vs 497-503",
+          "revision": "d848bfd3",
+          "basis": "SOURCE"
+        }
+      ],
+      "pinEvidenceIds": [
+        "EV-UIW1-FIX1"
+      ],
+      "verificationEvidenceIds": [
+        "EV-UIW1-FIX1"
+      ],
+      "evidenceIds": [
+        "EV-UIW1-FIX1"
+      ],
+      "closureReviewIds": [],
+      "status": "FIXED_PENDING_PROOF",
+      "classification": "REAL_DEFECT",
+      "reachability": "PRODUCTION",
+      "actionable": true,
+      "discoveredBy": "AUT-2",
+      "expected": "one literal map for the paper->surface contract",
+      "actual": "two selector-scoped copies of the same 8 tokens inside theme.css",
+      "rootCause": "utility extracted but the drawer's own copy was left inline",
+      "rootClass": "DUPLICATED_AUTHORITY",
+      "repair": "combined rule .ink-drawer,.paper-on-dark holds the single map @f609209d",
+      "siblingSearch": [
+        {
+          "roots": [
+            "game/src"
+          ],
+          "termsAndMethod": "grep --paper-* redeclarations; sellGrant sites; lockReason callers",
+          "evidenceIds": [
+            "EV-UIW1-FIX1"
+          ],
+          "hitDispositions": [
+            "siblings migrated / shared owner"
+          ],
+          "coverageLimits": [
+            "ui surface"
+          ]
+        }
+      ],
+      "closeReason": "fixed @f609209d -- pending closure seal",
+      "counterexample": "two selector-scoped copies of the same 8 tokens inside theme.css"
     }
   ],
   "evidence": [
@@ -931,6 +1191,38 @@
       "payloadPath": "events/0005.json",
       "payloadHash": "8646f9ef60eb839fd9d68bce2935a4bb47610038bac285497405fd88b488ff0c",
       "eventHash": "036e108e617cb70eddf64351926926fa8ba61a16343d133e141a7e1c6fd67e57"
+    },
+    {
+      "seq": 6,
+      "at": "2026-09-28T04:21:03.267Z",
+      "kind": "FINDING",
+      "actor": "coordinator-13772",
+      "state": {
+        "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+        "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+      },
+      "previousEventHash": "036e108e617cb70eddf64351926926fa8ba61a16343d133e141a7e1c6fd67e57",
+      "payloadPath": "events/0006.json",
+      "payloadHash": "a48bdee807ba9604cb05a422227d35880e29ced3a54491bc8591cb4ad97187e3",
+      "eventHash": "b85b5f9a3c992b57a9c5f1f17d2e249679d788f993ba75aaf8e5079c41f41522"
+    },
+    {
+      "seq": 7,
+      "at": "2026-09-28T04:21:26.260Z",
+      "kind": "FINDING",
+      "actor": "coordinator-13772",
+      "state": {
+        "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+        "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+      },
+      "previousEventHash": "b85b5f9a3c992b57a9c5f1f17d2e249679d788f993ba75aaf8e5079c41f41522",
+      "payloadPath": "events/0007.json",
+      "payloadHash": "13f21235552ef991c4261e0f5384e72e622b8e04754f14e19d23d0a0e7393d46",
+      "eventHash": "548e8726b7194bbba9fdc70a70c54d2a2d43f0e62776229306d9a5c6e4dccccb"
     }
   ]
 }
