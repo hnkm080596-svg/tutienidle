@@ -205,8 +205,9 @@ const audioStore = useAudioStore()
 // W7: uiStore panel/wheel transitions -> ui.panel.*/ui.wheel.* cues.
 const unbindUiAudio = bindUiAudio(ui)
 
-// W8: committed route -> music slot crossfade (silent until real assets).
-const unbindAmbientAudio = bindAmbientAudio(coordinator, audioStore)
+// W8: committed route -> music slot crossfade (silent until real assets);
+// W4: same route drives the lazy audio-* bundle fetch (unlock+enabled gated).
+const unbindAmbientAudio = bindAmbientAudio(coordinator, audioStore, assetBundleManager)
 
 watch(
   () => audioStore.reducedShake,

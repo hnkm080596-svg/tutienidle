@@ -344,6 +344,7 @@ class AudioManagerImpl {
   private musicPlayer: Tone.Player | null = null
   private desiredMusicId: string | null = null
   private playingMusicId: string | null = null
+  private readyListeners = new Set<() => void>()
   private musicSuspended = false
   private cueCooldownAt = new Map<string, number>()
   private variantCursor = new Map<string, number>()
@@ -365,6 +366,21 @@ class AudioManagerImpl {
 
   isUnlocked(): boolean {
     return this.unlockState === 'ready'
+  }
+
+  /**
+   * Registers a callback fired every time the chain becomes ready (the
+   * unlock() continuation's tail). If already ready, fires immediately.
+   * Returns the unregister function.
+   */
+  onReady(cb: () => void): () => void {
+    this.readyListeners.add(cb)
+    if (this.unlockState === 'ready') {
+      try { cb() } catch { /* listener must not break callers */ }
+    }
+    return () => {
+      this.readyListeners.delete(cb)
+    }
   }
 
   /**
@@ -394,6 +410,11 @@ class AudioManagerImpl {
           // contract).
           this.flushPendingEncoded()
           this.applyDesiredMusic()
+          // W4: late-bound consumers (ambient driver's lazy bundle fetch)
+          // that gated on isUnlocked() re-fire here.
+          for (const cb of this.readyListeners) {
+            try { cb() } catch { /* listener must not break unlock */ }
+          }
         } catch {
           // B5: dispose the partial chain (e.g. Reverb threw after
           // Gain+Filter were created) — no leaked nodes.

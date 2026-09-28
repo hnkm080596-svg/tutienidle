@@ -16,12 +16,17 @@
 //
 // Bind once in App.vue; the returned teardown unsubscribes, removes the
 // visibility listener, and stops music.
+//
+// W4 lane: when a bundles loader is passed, each applied route also
+// requests its lazy audio-* bundles - gated on unlock() && enabled so a
+// muted or never-gestured session fetches nothing (Q5).
 
 import { AudioManager } from '@/core/audio/AudioManager'
 import type { GamePresentationCoordinator } from '@/presentation/GamePresentationCoordinator'
 import type { Route } from '@/presentation/PresentationContracts'
 import type { AudioCueId } from '@/core/audio/AudioCueManifest'
 import type { useAudioStore } from '@/stores/audio'
+import { ensureAudioForRoute, type AudioBundleLoader } from './audioAssetWiring'
 import { watch } from 'vue'
 
 const CROSSFADE_MS = 1500
@@ -42,12 +47,21 @@ type AudioStore = ReturnType<typeof useAudioStore>
 export function bindAmbientAudio(
   coordinator: GamePresentationCoordinator,
   audioStore: AudioStore,
+  bundles?: AudioBundleLoader,
 ): () => void {
   const audio = AudioManager.getInstance()
   let route: Route = coordinator.getSnapshot().currentRoute
 
+  // Lazy audio bundles follow the SAME gate as playback: no fetch before
+  // the first user gesture unlocks audio, none while muted.
+  function ensureRouteBundles(): void {
+    if (!bundles || !audioStore.enabled || !audio.isUnlocked()) return
+    void ensureAudioForRoute(route, bundles)
+  }
+
   function applyRoute(r: Route): void {
     route = r
+    ensureRouteBundles()
     if (!audioStore.enabled) return
     audio.crossfadeMusic(ROUTE_MUSIC[r], CROSSFADE_MS)
   }
@@ -60,10 +74,15 @@ export function bindAmbientAudio(
   })
   applyRoute(route)
 
+  // The route applied before the first gesture was gated on isUnlocked() -
+  // re-fire once the chain is live.
+  const stopReady = audio.onReady(ensureRouteBundles)
+
   const stopEnabledWatch = watch(
     () => audioStore.enabled,
     (enabled) => {
       if (enabled) {
+        ensureRouteBundles()
         audio.crossfadeMusic(ROUTE_MUSIC[route], CROSSFADE_MS)
       } else {
         audio.stopMusic()
@@ -83,6 +102,7 @@ export function bindAmbientAudio(
 
   return () => {
     unsubscribe()
+    stopReady()
     stopEnabledWatch()
     document.removeEventListener('visibilitychange', onVisibilityChange)
     audio.stopMusic()
