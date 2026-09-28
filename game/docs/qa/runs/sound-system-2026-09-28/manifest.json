@@ -14436,7 +14436,7 @@
       "path": "src/components/common/primitives/Chip.audio.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "724b99dda746fb5c42471237452b54469cf34f98ccac95040fd2517a4017e09e"
+      "hash": "008a1beda403e0b390137ef5b889278419153e745b73262d5db4df6a8b38760e"
     },
     {
       "path": "src/components/common/primitives/Chip.vue",
@@ -14646,7 +14646,7 @@
       "path": "src/components/game/combat/CombatExitConfirmModal.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "761268e25b8f1daa0e75b9260370f2cc741bae26b1551996a165b5c596df24e5"
+      "hash": "de22bea303bcc6fe7d28d3e26544caa3c5836fd681bafa35a8be15997dc2c197"
     },
     {
       "path": "src/components/game/combat/CombatExitConfirmModal.vue",
@@ -15780,13 +15780,13 @@
       "path": "src/core/audio/AudioCueManifest.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "9621f4f3af7c6798b031fb4aa0ebba01c8694a0345ef737d714ad5a3147d927c"
+      "hash": "73e55479cbed52be1e086614fa26b7333d536260113aff4e891cb323f0421daf"
     },
     {
       "path": "src/core/audio/AudioManager.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "9b7b715ad5d380d10461451b3283664585d4ea340c3986f5970aa5890ae52a58"
+      "hash": "c95237e2aeef98a11921b068580144bb54840714c33b06cc6f93c7a9f8c1cae7"
     },
     {
       "path": "src/core/audio/AudioManager.ts",
@@ -22620,13 +22620,13 @@
       "path": "src/presentation/audio/ambientAudioDriver.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "788ad02474bf9a283cdaf036dffce8dd3f67da6e361321f15b9434ab6fb4ed78"
+      "hash": "e124c163aee6cefbde5920f230907275630700df9cb05ccdbfab8b84ead47418"
     },
     {
       "path": "src/presentation/audio/ambientAudioDriver.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "bab0a294b41154ac8a3b370123142f603e676bbdc8c16073f7b7e58acc0ca012"
+      "hash": "949ce4a823c0505d3a6a077f1d7491c607c201d0d0d159644f930a1d668e659d"
     },
     {
       "path": "src/presentation/audio/audioAssetWiring.ts",
@@ -22650,7 +22650,7 @@
       "path": "src/presentation/audio/uiAudioBinding.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "13a49928cb482b002ea8dce19e0f01c3623f1dd2d82f78ae75bdcbc4e5aeefb7"
+      "hash": "a395626277a88ae2d16706a32a2ad12dbdaf9557ab381897b8b31f88366b6878"
     },
     {
       "path": "src/presentation/audio/uiAudioBinding.ts",
@@ -23532,19 +23532,19 @@
       "path": "tests/architecture/audioBindingWiring.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "5d808cfbed9f213145cb30ffd4f8c9770b96945e0a9b3c4f4c5586906ac5832d"
+      "hash": "7134a49e6ab393e79214250db1ec550fabef1ddf39c4db13ff6aab666f411dec"
     },
     {
       "path": "tests/architecture/audioBoundary.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "d87a6dc6dd8ee2c3c468ae05aaa559be15e5f8e55f51cf103af48aafe4f262ca"
+      "hash": "348704949ffe889d0bd00a1d80110f6f49d8b5a03d1e9d9fe4a92580f34a9ead"
     },
     {
       "path": "tests/architecture/audioManifestCompleteness.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "350d0702b9af4552175c44b1456575230f4e241ea7a084fb473acc840f9ab7f8"
+      "hash": "8df1ebeb83e6ce1b01f668e356a4f2acae014714d52631cf952ea63abcf2cf0e"
     },
     {
       "path": "tests/architecture/baselines/asciiComments.json",
@@ -24015,5 +24015,5 @@
       "hash": "e69b4133ed37ca9a4f05e66d90521d0bb749c4764bf1f454d0eb13de601f7940"
     }
   ],
-  "productStateId": "a2da9c1ae7bc6824fb06cc7f4b3ec74502f167544bdc3c71f63b21521b8dafa5"
+  "productStateId": "f5f8657a7e06cfd1994600f0328603002cf7a45acfcadc9fe1737c90eea13a14"
 }
