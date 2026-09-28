@@ -3282,7 +3282,7 @@
       "path": "docs/specs/sound-system-spec.md",
       "kind": "file",
       "mode": 33188,
-      "hash": "fbdf56b73fdf1f56815fb4f1ca5bbca1b363c9370a46b6520fc8ef563cf727f8"
+      "hash": "41bcab71973311057e277785929b76d5c8bcc8ae956c497e0752a298dd00cf19"
     },
     {
       "path": "docs/specs/the-tu-an-ung-the-spec.md",
@@ -15780,7 +15780,7 @@
       "path": "src/core/audio/AudioCueManifest.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "cc074816453202f68725434ca8a62cda20e19f8af26c9b2a0df05b9288616bd2"
+      "hash": "9621f4f3af7c6798b031fb4aa0ebba01c8694a0345ef737d714ad5a3147d927c"
     },
     {
       "path": "src/core/audio/AudioManager.test.ts",
@@ -15792,7 +15792,7 @@
       "path": "src/core/audio/AudioManager.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "ea62e10c90bef7a9df9e2d56908ca77dee9023e7c6a094637adc771335c83042"
+      "hash": "03c6add23b639e24b1e60bf49966878ba6782e27f13a6b841278f7f83afd2767"
     },
     {
       "path": "src/core/battle/ActionImpactSystem.ts",
@@ -22644,7 +22644,7 @@
       "path": "src/presentation/audio/combatAudioBinding.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "7cfef68565fadb642d22e3c9112f2a963b1d629909788e0220633ba53c907af8"
+      "hash": "f266b7197f8277f44b1590864c05e0c910be74c1e3a9e3b7c515389830cad847"
     },
     {
       "path": "src/presentation/audio/uiAudioBinding.test.ts",
@@ -23532,19 +23532,19 @@
       "path": "tests/architecture/audioBindingWiring.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "76ea753dddf1bd454acbbb8afeaeb85d0137f63b858da33a9e381cc11a0491c8"
+      "hash": "5d808cfbed9f213145cb30ffd4f8c9770b96945e0a9b3c4f4c5586906ac5832d"
     },
     {
       "path": "tests/architecture/audioBoundary.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "2f1e294dfc0acb9f837efb14d639044e0a5474368bb8318529b5bbc47ccdc5d8"
+      "hash": "d87a6dc6dd8ee2c3c468ae05aaa559be15e5f8e55f51cf103af48aafe4f262ca"
     },
     {
       "path": "tests/architecture/audioManifestCompleteness.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "f485b5e4ed87c291a5229e4235a04eeaa995e850b115316398a30f5d8fb6e23f"
+      "hash": "350d0702b9af4552175c44b1456575230f4e241ea7a084fb473acc840f9ab7f8"
     },
     {
       "path": "tests/architecture/baselines/asciiComments.json",
@@ -24015,5 +24015,5 @@
       "hash": "e69b4133ed37ca9a4f05e66d90521d0bb749c4764bf1f454d0eb13de601f7940"
     }
   ],
-  "productStateId": "aea7ccce2c57ea1b88901661186883c85872911edc286fec9f502c71bac67d30"
+  "productStateId": "a2da9c1ae7bc6824fb06cc7f4b3ec74502f167544bdc3c71f63b21521b8dafa5"
 }
