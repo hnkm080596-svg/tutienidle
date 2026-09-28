@@ -16,7 +16,7 @@
 import { describe, expect, it } from 'vitest'
 import { join } from 'node:path'
 import { readTs, SCAN_TIMEOUT, srcCorpus, isTestFile } from './helpers/scanTs'
-import { scriptBlockSpansOf, uncommented } from './helpers/commentStrip'
+import { scriptBlockSpansOf, markupCommentRanges, uncommented } from './helpers/commentStrip'
 
 const SRC_DIR = join(process.cwd(), 'src')
 
@@ -58,6 +58,20 @@ const SUSPECT_SPEC_RE = /\\|\$\{/
 // must apply ONLY to that parameter-annotation shape - a `:` inside the
 // arg list (ternary, object literal, options arg) is real call text.
 const DECL_ARG_RE = /^\s*[A-Za-z_$][\w$]*\s*:\s*[^:\s]/
+// Parameter-list shape for the method-shorthand exemption: every
+// comma-split part is a bare ident (`x`) or a typed ident (`x: T`). A `.`
+// outside a type annotation (`import(a.b) {}`) is a member expression -
+// never a parameter. Residual FP lane: a generic type containing a
+// top-level comma (`x: Map<K,V>`) inside a `require()`/`import()`
+// method shorthand is flagged.
+function paramsShaped(argText: string): boolean {
+  return (
+    argText.trim() === '' ||
+    argText
+      .split(',')
+      .every((p) => /^\s*[\w$]+\s*$/.test(p) || /^\s*[\w$]+\s*:\s*[\s\S]+$/.test(p))
+  )
+}
 
 function isNonliteralImportCall(m: RegExpMatchArray, clean: string): boolean {
   const argText = m[0].slice(m[0].indexOf('(') + 1, m[0].lastIndexOf(')'))
@@ -87,7 +101,7 @@ function isNonliteralImportCall(m: RegExpMatchArray, clean: string): boolean {
     }
     if (
       (/^\s*$/.test(beforeOnLine) || /[{;,]\s*$/.test(beforeOnLine)) &&
-      /^[\w$,\s:.[\]<>|&?*]*$/.test(argText)
+      paramsShaped(argText)
     ) {
       return false
     }
@@ -98,7 +112,7 @@ function isNonliteralImportCall(m: RegExpMatchArray, clean: string): boolean {
   // real call even though `:` follows) and the args must look like a
   // parameter list (idents, commas, annotations).
   if (!/^\s*$/.test(beforeOnLine)) return true
-  if (!/^[\w$,\s:.[\]<>|&?*]*$/.test(argText)) return true
+  if (!paramsShaped(argText)) return true
   return false
 }
 
@@ -134,7 +148,12 @@ function templateTextOf(text: string): string {
   for (const sp of scriptBlockSpansOf(text)) {
     for (let i = sp.pos; i < sp.end && i < chars.length; i++) chars[i] = ' '
   }
-  return chars.join('').replace(/<!--[\s\S]*?-->/g, '')
+  // Walk-derived comment masking: an `<!--` inside a quoted attribute is
+  // attr text, not a comment open (the naive regex would eat real markup).
+  for (const cr of markupCommentRanges(text)) {
+    for (let i = cr.pos; i < cr.end && i < chars.length; i++) chars[i] = ' '
+  }
+  return chars.join('')
 }
 
 // A specifier belongs to the audio subsystem when its path walks through an

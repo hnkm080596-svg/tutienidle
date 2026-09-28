@@ -61,12 +61,11 @@ interface VitalsLike {
 // Regen/stat_refresh/sacrifice/ward_spend deltas are bookkeeping, not
 // combat audio. Membership is the canonical DAMAGE_VITALS_REASONS set
 // (BattleMetrics owns the damage-family truth: damage/dot/ward_break/
-// reaction/reflection/heavenly_tribulation) plus survive_lethal - a
-// lethal-save IS a ward event even though the HP ledger excludes it.
-const WARD_DAMAGE_REASONS: ReadonlySet<VitalsChangeReason> = new Set<VitalsChangeReason>([
-  ...DAMAGE_VITALS_REASONS,
-  'survive_lethal',
-])
+// reaction/reflection/heavenly_tribulation). survive_lethal is NOT a
+// member: its emit sites pass wardBefore === wardAfter (the post-save
+// snapshot), so no delta can ever route through it - the audible path
+// is the static talent_survive_lethal row.
+const WARD_DAMAGE_REASONS: ReadonlySet<VitalsChangeReason> = DAMAGE_VITALS_REASONS
 
 interface TargetLike {
   targetId?: string
@@ -127,28 +126,6 @@ interface ReactionResolvedLike {
   reactionId?: string
 }
 
-// Preset -> ngu hanh element fallback (combat.element.*). Lives here - the
-// manifest stays data-only and presets already resolve exactly; this table
-// is the middle hop for presets without their own row. Every entry below is
-// currently shadowed by a concrete combat.impact.<preset> row (the
-// membership check wins first) - kept as the hook for future presets that
-// ship without their own row, at which point combat.element.* voices them.
-const ELEMENT_BY_PRESET: Readonly<Record<string, string>> = {
-  fire_burst: 'hoa',
-  hoa_cau_comet: 'hoa',
-  lightning_strike: 'hoa',
-  water_surge: 'thuy',
-  thuy_tien_dart: 'thuy',
-  earth_shockwave: 'tho',
-  tho_cau_boulder: 'tho',
-  metal_slash: 'kim',
-  diem_kim_point: 'kim',
-  tram_slash: 'kim',
-  wood_spikes: 'moc',
-  doc_chuong_palm: 'moc',
-  wind_blade: 'moc',
-}
-
 // Exported for the W9 completeness pin: combat.impact.* rows are derived
 // from this routing table so a new special-case cannot drift from the
 // manifest's exclusion list (audioManifestCompleteness.test.ts).
@@ -175,8 +152,7 @@ export function cueForActionImpact(event: ActionImpactLike): string | undefined 
 
   const specific = `combat.impact.${presetId}`
   if (specific in AUDIO_CUES) return specific
-  const element = ELEMENT_BY_PRESET[presetId]
-  return element ? `combat.element.${element}` : 'combat.impact'
+  return 'combat.impact'
 }
 
 const PAYLOAD_CUES: ReadonlyArray<readonly [string, (event: never) => string | undefined]> = [

@@ -20,6 +20,10 @@ import { SCAN_TIMEOUT, srcCorpus, isTestFile } from './helpers/scanTs'
 
 const SRC_DIR = join(process.cwd(), 'src')
 const HOST_MODULE = 'presentation/host/useDynamicRegion.ts'
+// Dev-only lab pages own their Phaser.Game directly (they mount outside the
+// routed region tree and never carry gameplay state) - exempt explicitly,
+// one file per entry.
+const HOST_EXEMPT = new Set(['dev/skill-vfx.ts'])
 
 const CONSTRUCTS_GAME = /\bnew\s+(?:\w+\s*\.\s*)?Game\s*\(/
 
@@ -59,7 +63,10 @@ describe('dynamic region host', () => {
     'nothing outside the host constructs a Phaser.Game',
     () => {
       const offenders = FILES.filter(
-        (file) => file.fromSrc !== HOST_MODULE && CONSTRUCTS_GAME.test(code(file.text)),
+        (file) =>
+          file.fromSrc !== HOST_MODULE &&
+          !HOST_EXEMPT.has(file.fromSrc) &&
+          CONSTRUCTS_GAME.test(code(file.text)),
       ).map((file) => file.fromSrc)
 
       expect(offenders).toEqual([])

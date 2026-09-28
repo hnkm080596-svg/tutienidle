@@ -15,7 +15,7 @@ export interface AudioBundleLoader {
   ensureLoaded(bundleIds: readonly AssetBundleId[], signal?: AbortSignal): Promise<void>
 }
 
-const ROUTE_AUDIO_BUNDLES: Record<Route, readonly AssetBundleId[]> = {
+export const ROUTE_AUDIO_BUNDLES: Record<Route, readonly AssetBundleId[]> = {
   home: ['audio-core'],
   combat: ['audio-core', 'audio-combat'],
   tribulation: ['audio-core', 'audio-tribulation'],

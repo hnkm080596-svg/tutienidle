@@ -303,19 +303,29 @@ export function getTribulationDescriptors(): readonly AssetResourceDescriptor[] 
  * their own cues (tribulation keeps combat.* because ward/vitals events
  * fire there too). While every manifest `src` is '' this yields [].
  */
-const AUDIO_BUNDLE_PREFIXES: Record<AudioBundleId, readonly string[]> = {
+export const AUDIO_BUNDLE_PREFIXES: Record<AudioBundleId, readonly string[]> = {
   'audio-core': ['ui.', 'stinger.', 'progress.', 'craft.', 'farm.', 'ambient.', 'music.menu', 'music.home'],
   'audio-combat': ['combat.', 'music.combat'],
   'audio-tribulation': ['tribulation.', 'combat.', 'music.tribulation'],
+}
+
+/** Boundary-aware prefix match shared by the two bundle lookups below:
+ *  `id === p` covers the exact row (`music.combat` itself),
+ *  `id.startsWith(p + '.')` covers sub-ids; a bare startsWith(p) would
+ *  also match a flat sibling like `music.menubar`. Prefix entries may
+ *  already carry the trailing dot (`combat.`), which IS the prefix.
+ */
+function prefixCoversCue(p: string, cueId: string): boolean {
+  return p.endsWith('.')
+    ? cueId.startsWith(p)
+    : cueId === p || cueId.startsWith(`${p}.`)
 }
 
 /** Bundle ids whose prefix table covers the cue - empty means the cue
  *  can never be fetched (a new manifest domain forgot a bundle row). */
 export function audioBundleIdsForCue(cueId: string): AudioBundleId[] {
   return (Object.keys(AUDIO_BUNDLE_PREFIXES) as AudioBundleId[]).filter((bundleId) =>
-    AUDIO_BUNDLE_PREFIXES[bundleId].some(
-      (p) => (p.endsWith('.') ? cueId.startsWith(p) : cueId === p || cueId.startsWith(`${p}.`)),
-    ),
+    AUDIO_BUNDLE_PREFIXES[bundleId].some((p) => prefixCoversCue(p, cueId)),
   )
 }
 
@@ -324,15 +334,10 @@ export function audioDescriptorsFor(
   bundleId: AudioBundleId,
 ): readonly DomAudioResourceDescriptor[] {
   const prefixes = AUDIO_BUNDLE_PREFIXES[bundleId]
-  // Boundary-aware prefix match: `id === p` covers the exact row
-  // (`music.combat` itself), `id.startsWith(p + '.')` covers sub-ids -
-  // a bare startsWith(p) would also match a flat sibling like
-  // `music.menubar`. Entries may already carry the trailing dot
-  // (`combat.`), in which case the dotted form is the prefix itself.
   const out: DomAudioResourceDescriptor[] = []
   const seen = new Set<string>()
   for (const [id, def] of Object.entries(AUDIO_CUES)) {
-    if (!prefixes.some((p) => (p.endsWith('.') ? id.startsWith(p) : id === p || id.startsWith(`${p}.`)))) continue
+    if (!prefixes.some((p) => prefixCoversCue(p, id))) continue
     const urls = typeof def.src === 'string' ? (def.src ? [def.src] : []) : [...def.src]
     for (const src of urls) {
       if (seen.has(src)) continue

@@ -85,12 +85,12 @@ cues without new engine events. Preset table: `src/data/vfx/CombatVfxPresets.ts:
 
 | Rider | Data | Suggested cue-id | Priority |
 |---|---|---|---|
-| Kim (metal) | preset `metal_slash` | `combat.element.kim` | P1 |
-| Thủy (water) | preset `water_surge` | `combat.element.thuy` | P1 |
-| Mộc (wood) | preset `wood_spikes` | `combat.element.moc` | P1 |
-| Hỏa (fire) | preset `fire_burst` | `combat.element.hoa` | P1 |
-| Thổ (earth) | preset `earth_shockwave` | `combat.element.tho` | P1 |
-| Generic/lightning/wind/holy/shadow | `lightning_strike`, `wind_blade`, `holy_radiance`, `shadow_burst`, `slash`, `claw`, `arcane_impact` | `combat.element.<preset>` fallback map | P2 |
+| Kim (metal) | preset `metal_slash` | `combat.impact.metal_slash` | P1 |
+| Thủy (water) | preset `water_surge` | `combat.impact.water_surge` | P1 |
+| Mộc (wood) | preset `wood_spikes` | `combat.impact.wood_spikes` | P1 |
+| Hỏa (fire) | preset `fire_burst` | `combat.impact.fire_burst` | P1 |
+| Thổ (earth) | preset `earth_shockwave` | `combat.impact.earth_shockwave` | P1 |
+| Generic/lightning/wind/holy/shadow | `lightning_strike`, `wind_blade`, `holy_radiance`, `shadow_burst`, `slash`, `claw`, `arcane_impact` | `combat.impact.<presetId>` rows (fall back to `combat.impact`) | P2 |
 | Boss slam | `boss_ground_slam` (has `screenShake`) | `combat.boss.slam` | P1 |
 | Kiếm Phổ combo land (37-combo table, presetId `kiem_combo_*`) | `src/data/skill/KiemPhoCombos.ts:69-105` | `combat.kiem.combo` (+ per-capstone `combat.kiem.combo.<id>` for the 6 beta combos) | P1 |
 | Tứ Lực channel tick | preset `tu_luc` (`CombatVfxPresets.ts:112`) | `combat.kiem.tu_luc` | P2 |

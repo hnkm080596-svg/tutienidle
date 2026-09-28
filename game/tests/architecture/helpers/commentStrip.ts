@@ -21,13 +21,28 @@ export interface ScriptBlock {
   jsx: boolean
 }
 
+/** Markup comment ranges (`<!--` through its closing `-->`/`--!>`, or
+ *  to EOF when unclosed) in a .vue file, per the same live-parse the
+ *  script blocks come from. Consumers that strip comments must use
+ *  these - a naive `<!--[\s\S]*?-->` regex treats `<!--` inside a
+ *  quoted attribute as a comment open and deletes real markup. */
+export function markupCommentRanges(text: string): Array<{ pos: number; end: number }> {
+  return scriptBlocksWithSpans(text).comments
+}
+
 // Markup tokens that participate in deadness state: comment delimiters
 // and element tags. Everything else - comment bodies, element text,
 // interpolation bodies, foreign block contents - is not markup and must
-// not flip the state machine. The tag alternative refuses to cross `<`
-// or a `-->` tail: real markup ends a tag at its first `>`, and a `-->`
-// embedded in would-be tag text still closes an open comment.
-const MARKUP_TOKEN = /<!--|-->|<\/?[a-zA-Z][\w.-]*(?:(?!-->)[^<>])*>/g
+// not flip the state machine. `<!-->` and `<!--->` are abrupt-closed
+// empty comments in HTML (never open a comment); they must tokenize as
+// one unit BEFORE `<!--` can claim their first four chars. `--!>` closes
+// a comment the same as `-->`. A tag refuses to cross `<` or a `-->`/`--!>`
+// tail: real markup ends a tag at its first `>`, and a close embedded in
+// would-be tag text still closes an open comment. `</` followed by a
+// non-letter is a bogus comment in HTML (skipped to `>`) - consumed as
+// one inert token so `</ <script>` cannot resurrect a dead block.
+const MARKUP_TOKEN =
+  /<!--[->]?>|--!?>|<!--|<\/?[a-zA-Z][\w.-]*(?:(?!--\!?>)[^<>])*>|<\/(?=[^a-zA-Z])[^>]*>?/g
 
 /**
  * Live top-level <script> blocks of a .vue SFC, with JSX-ness from the
@@ -47,19 +62,135 @@ const MARKUP_TOKEN = /<!--|-->|<\/?[a-zA-Z][\w.-]*(?:(?!-->)[^<>])*>/g
 function scriptBlocksWithSpans(text: string): {
   blocks: ScriptBlock[]
   spans: Array<{ pos: number; end: number }>
+  comments: Array<{ pos: number; end: number }>
 } {
 
   // Blank quoted attribute values inside tags first: '>' inside an attr
   // value otherwise ends its tag early, and literal '<script>'/'<!--'
-  // inside an attr becomes a fake token. Then blank {{ ... }} interpolation
-  // bodies the same way - they are expressions (`{{ '<!--'.length }}`),
-  // and a marker-looking string inside one would otherwise poison the walk.
-  const attrMasked = text.replace(/<[^>]*>/g, (tag) =>
-    tag.replace(/"[^"]*"|'[^']*'/g, (q) => ' '.repeat(q.length)),
-  )
-  const interpMasked = attrMasked.replace(/\{\{[\s\S]*?\}\}/g, (m) =>
-    m.replace(/[^\n]/g, ' '),
-  )
+  // inside an attr becomes a fake token. The tag-extent scan itself must
+  // be quote-aware: `<[^>]*>` truncates at a `>` inside a quoted value
+  // (`<div title="a>b">`, `<div title="<script>">`), leaving the value
+  // unpaired and its marker text live.
+  const attrMaskChars = text.split('')
+  for (let i = 0; i < text.length; i++) {
+    if (text[i] !== '<') continue
+    // Only a real tag open carries attribute values: `<`+letter or `</`.
+    // `<!--`, `<!doctype`, `<?`, `< ` etc. are not tags - masking their
+    // "quoted" regions would blank a `'-->'` literal inside a comment
+    // body and hide the real close from the walk.
+    if (!/[a-zA-Z/]/.test(text[i + 1] ?? '')) continue
+    let j = i + 1
+    let q = ''
+    while (j < text.length) {
+      const ch = text[j]!
+      if (q) {
+        if (ch === q) q = ''
+      } else if (ch === '"' || ch === "'") {
+        q = ch
+      } else if (ch === '>') {
+        break
+      }
+      j++
+    }
+    if (j >= text.length) continue // no '>' - not a tag extent
+    const tag = text.slice(i, j + 1)
+    const masked = tag.replace(/"[^"]*"|'[^']*'/g, (m) => ' '.repeat(m.length))
+    for (let k = i; k <= j; k++) if (attrMaskChars[k] !== '\n') attrMaskChars[k] = masked[k - i]!
+    i = j
+  }
+  const attrMasked = attrMaskChars.join('')
+  // {{ }} bodies are expressions (`{{ '<!--'.length }}`) - a marker-
+  // looking string inside one would poison the walk. But masking order
+  // cannot be a blanket regex: delimiter priority is POSITIONAL. `{{ '<!--' }}`
+  // is an interp (the `<!--` inside is inert expression text), while
+  // `<!-- {{ --> }}` is a comment (the `-->` inside the `{{ }}` text is
+  // what closes it - blanking the interp first would erase the close and
+  // deaden the rest of the file). A single lexical pass decides: text /
+  // interp / comment, where each state only honors its own closer.
+  let interpMasked = attrMasked
+  {
+    const interpRanges: Array<[number, number]> = []
+    let pos = 0
+    // Script bodies are opaque markup text (the walk skips them via
+    // pendingBodyStart): a `{{`/`<!--` inside one must not open an
+    // interp/comment here - a `{{` inside a script literal (`'{{'`,
+    // `/\{\{/`, `// {{`) would otherwise swallow the real `</script>`
+    // and merge the next block into this one.
+    let st: 'text' | 'interp' | 'comment' | 'script' = 'text'
+    let iStart = -1
+    while (pos < attrMasked.length) {
+      if (st === 'comment') {
+        const e1 = attrMasked.indexOf('-->', pos)
+        const e2 = attrMasked.indexOf('--!>', pos)
+        const e =
+          e1 < 0 ? (e2 < 0 ? -1 : e2) : e2 < 0 ? e1 : Math.min(e1, e2)
+        pos = e < 0 ? attrMasked.length : e + (e === e2 ? 4 : 3)
+        st = 'text'
+        continue
+      }
+      if (st === 'interp') {
+        const e = attrMasked.indexOf('}}', pos)
+        interpRanges.push(e < 0 ? [iStart, attrMasked.length] : [iStart, e + 2])
+        pos = e < 0 ? attrMasked.length : e + 2
+        st = 'text'
+        continue
+      }
+      if (st === 'script') {
+        // Only `</` + name `script` exits - `</script)>` (name `script)`)
+        // does not, matching the walk's close-tag rule.
+        const cl = attrMasked.indexOf('</', pos)
+        if (cl < 0) break
+        const nm = /^<\/\s*([^\s/>]*)/.exec(attrMasked.slice(cl))
+        pos = cl + 2
+        if (nm && nm[1]!.toLowerCase() === 'script') st = 'text'
+        continue
+      }
+      const c = attrMasked.indexOf('<!--', pos)
+      const i2 = attrMasked.indexOf('{{', pos)
+      const s = attrMasked.indexOf('<script', pos)
+      const next = [c, i2, s].filter((x) => x >= 0)
+      if (next.length === 0) break
+      const first = Math.min(...next)
+      if (first === s) {
+        // `<script`/whitespace/`/`/`>` boundary required - `<script)` is
+        // open tag `script)` (name ends at whitespace/`/`/`>`).
+        const after = attrMasked[s + 7]
+        if (after !== undefined && /[\s/>]/.test(after)) {
+          // Self-closing `<script/>` carries no body state.
+          const gt = attrMasked.indexOf('>', s)
+          if (gt < 0) break
+          if (attrMasked[gt - 1] !== '/') st = 'script'
+          pos = gt + 1
+          continue
+        }
+        pos = s + 7
+        continue
+      }
+      if (first === c) {
+        // `<!-->` / `<!--->` are abrupt-closed empty comments - not opens.
+        if (
+          attrMasked[c + 4] === '>' ||
+          (attrMasked[c + 4] === '-' && attrMasked[c + 5] === '>')
+        ) {
+          pos = attrMasked[c + 4] === '>' ? c + 5 : c + 6
+          continue
+        }
+        st = 'comment'
+        pos = c + 4
+        continue
+      }
+      iStart = i2
+      st = 'interp'
+      pos = i2 + 2
+    }
+    if (interpRanges.length) {
+      const chars = attrMasked.split('')
+      for (const [a, b] of interpRanges) {
+        for (let k = a; k < b; k++) if (chars[k] !== '\n') chars[k] = ' '
+      }
+      interpMasked = chars.join('')
+    }
+  }
   const skel = interpMasked.split('')
   for (let i = 0; i < skel.length; i++) skel[i] = skel[i] === '\n' ? '\n' : ' '
   for (const m of interpMasked.matchAll(MARKUP_TOKEN)) {
@@ -69,8 +200,10 @@ function scriptBlocksWithSpans(text: string): {
 
   const blocks: ScriptBlock[] = []
   const spans: Array<{ pos: number; end: number }> = []
+  const comments: Array<{ pos: number; end: number }> = []
   const stack: string[] = []
   let inComment = false
+  let commentStart = -1
   // A comment body is fully inert in real HTML/Vue-SFC parsing: tags
   // inside `<!-- ... -->` are comment text, not markup - `<!-- <div> -->`
   // pushes nothing and `<!-- </template> -->` pops nothing. An unclosed
@@ -99,7 +232,9 @@ function scriptBlocksWithSpans(text: string): {
     // other token is opaque script text (a "<script>" string literal must
     // not push the element stack or open a second block).
     if (pendingBodyStart >= 0) {
-      const sc = /^<\/\s*([a-zA-Z][\w.-]*)/.exec(tok)
+      // HTML tag names run to whitespace, `/`, or `>` - `</script)>` is a
+      // close tag named `script)`, which does NOT close a script element.
+      const sc = /^<\/\s*([^\s/>]*)/.exec(tok)
       if (sc && sc[1]!.toLowerCase() === 'script') {
         blocks.push({
           body: text.slice(pendingBodyStart, m.index),
@@ -120,15 +255,26 @@ function scriptBlocksWithSpans(text: string): {
     // comment body (`<!-- <div> -->`) must not touch the stack, and a
     // `<!-- </template> -->` close is comment text, not markup.
     if (inComment) {
-      if (tok === '-->') inComment = false
+      if (tok === '-->' || tok === '--!>') {
+        inComment = false
+        comments.push({ pos: commentStart, end: m.index! + tok.length })
+        commentStart = -1
+      }
       continue
     }
     if (tok === '<!--') {
-      if (commentAllowed()) inComment = true
+      if (commentAllowed()) {
+        inComment = true
+        commentStart = m.index!
+      }
       continue
     }
-    if (tok === '-->') continue
-    const close = /^<\/\s*([a-zA-Z][\w.-]*)/.exec(tok)
+    if (tok === '-->' || tok === '--!>') continue
+    // `<!-->`/`<!--->` are closed empty comments - markup-inert tokens
+    // that must not reach the open/close scans below (they would push a
+    // fake `!--` element).
+    if (tok === '<!-->' || tok === '<!--->') continue
+    const close = /^<\/\s*([^\s/>]*)/.exec(tok)
     if (close) {
       const name = close[1]!.toLowerCase()
       // Close tags are tolerated with stray attrs (`</script foo>`,
@@ -141,7 +287,7 @@ function scriptBlocksWithSpans(text: string): {
       }
       continue
     }
-    const open = /^<\s*([a-zA-Z][\w.-]*)/.exec(tok)
+    const open = /^<\s*([^\s/>]*)/.exec(tok)
     if (!open) continue
     const name = open[1]!.toLowerCase()
     if (name === 'script' && stack.length === 0 && !/\/>$/.test(tok)) {
@@ -165,7 +311,11 @@ function scriptBlocksWithSpans(text: string): {
   if (pendingBodyStart >= 0) {
     spans.push({ pos: pendingOpenPos, end: text.length })
   }
-  return { blocks, spans }
+  // An unclosed `<!--` comments out the file tail.
+  if (inComment && commentStart >= 0) {
+    comments.push({ pos: commentStart, end: text.length })
+  }
+  return { blocks, spans, comments }
 }
 
 export function scriptBlocksOf(text: string): ScriptBlock[] {

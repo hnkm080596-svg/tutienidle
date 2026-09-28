@@ -33,7 +33,7 @@ paths relative to `game/`.
 | Q5 | Bundle strategy | **Separate lazy `audio-*` bundles**, requested only after `unlock()` && `enabled` — a muted player pays zero download cost, and no route transition ever blocks on audio (audio descriptors are fail-soft by contract). |
 | Q6 | Placeholder policy | `src: ''` → **silent no-op** (not a shared `silence.ogg`). A dev-mode `console.debug` logs the first miss per cue-id so wired sites remain verifiable in dev. The audit's soft-tick alternative is rejected: a placeholder that makes sound is a placeholder that ships to production. |
 | Q7 | Volume defaults | `master 0.7` (unchanged); `music 0.5`, `sfx 0.8`, `ui 0.7`. Lands as defaults in the v2 store; user adjusts in Settings. |
-| Q8 | Combat density | Per-cue `cooldownMs` (default `MIN_GAP_MS = 60`) + `variants[]` round-robin. High-rate rows (`combat.hit`, `combat.hurt`, `combat.element.*`) ship `cooldownMs: 80`. |
+| Q8 | Combat density | Per-cue `cooldownMs` (default `MIN_GAP_MS = 60`) + `variants[]` round-robin. High-rate rows (`combat.hit`, `combat.hurt`, `combat.impact.*`) ship `cooldownMs: 80`. |
 | Q9 | Gap emits | Both lanes used, chosen per site (§6): trace-executions drain where the data already lands in `scheduler.trace` (reflect, on-hit proc); direct domain emit where only the caller holds the outcome (reactive-proc, perfect-clear, hidden-window, hộ-thể absorb, farm cycle). Core never imports audio; emits are presentation-observation events. |
 | Q10 | Boot music | Accepted: silent until first gesture (autoplay policy). `unlock()` already exists; `ambientAudioDriver` starts `music.menu`/`music.home` inside the unlock continuation. |
 
@@ -88,7 +88,7 @@ export const AUDIO_CUES: Record<string, AudioCueDef> = { /* §1.2 */ }
 qualifier segment and retry until a row matches → `undefined` (silent no-op +
 dev `console.debug` once per id). So `combat.cast.<skillId>`,
 `combat.impact.<presetId>`, `combat.reaction.<reactionId>`,
-`combat.element.<x>`, `ui.toast.<kind>`, `combat.ungthe.<trigger>` all land on
+`ui.toast.<kind>`, `combat.ungthe.<trigger>` all land on
 their family row until a specific row exists. Adding a qualified row later is a
 manifest-only edit — never a code edit.
 
@@ -145,11 +145,7 @@ silent until real files land.
 | combat.turn_ready | sfx | | | | uiConfirm | P1 |
 | combat.impact | sfx | | 80 | | combatHit | P0 (preset fallback row) |
 | combat.impact.<presetId> | sfx | | 80 | | — | open qualifier slots |
-| combat.element.kim | sfx | | 80 | | combatHit | P1 |
-| combat.element.thuy | sfx | | 80 | | combatHit | P1 |
-| combat.element.moc | sfx | | 80 | | combatHit | P1 |
-| combat.element.hoa | sfx | | 80 | | combatCritical | P1 |
-| combat.element.tho | sfx | | 80 | | combatBlock | P1 |
+| combat.impact.<presetId> per-preset rows (metal_slash, water_surge, wood_spikes, fire_burst, earth_shockwave, ...) | sfx | | 80 | | combatHit | P1 |
 | combat.spawn | sfx | | 120 | | toastWarning | P1 |
 | combat.spawn.elite | sfx | | 120 | | toastWarning | P1 |
 | combat.spawn.boss | sfx | | | 0.4 | battleStart | P1 |
@@ -381,7 +377,7 @@ rejected transition.
 | `entity_vitals_changed` | `combat.ward.grant`/`combat.ward.break`/`combat.ward` | `wardBefore`/`wardAfter` delta sign (P2 rows; OQ-B) |
 | `turn_ready` | `combat.turn_ready` | manual input window |
 | `turn_cast_start` | `combat.cast.<skillId>` → `combat.cast` | manifest resolve chain |
-| `action_impact` | `boss_ground_slam`→`combat.boss.slam`; `kiem_combo_*`→`combat.kiem.combo.*`; `tu_luc`→`combat.kiem.tu_luc`; else `combat.impact.<presetId>` → `combat.element.*` map → `combat.impact` | preset→element table lives in binding, not core |
+| `action_impact` | `boss_ground_slam`→`combat.boss.slam`; `kiem_combo_*`→`combat.kiem.combo.*`; `tu_luc`→`combat.kiem.tu_luc`; else `combat.impact.<presetId>` → `combat.impact` | specific rows land via manifest expansion, anchor is the fallback |
 | `status_vfx_attached` | `combat.buff.apply`/`combat.debuff.apply`/`combat.dot.apply` | `polarity` + `dotType` |
 | `status_vfx_removed` | `combat.buff.expire` | — |
 | `reward_particle` | `combat.loot` | `kind` |

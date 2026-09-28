@@ -270,11 +270,6 @@ export const AUDIO_CUES: Readonly<Record<string, AudioCueDef>> = {
   'combat.turn_ready': sfx({ synthFallback: 'uiConfirm' }),
   'combat.impact': sfx({ cooldownMs: 80, synthFallback: 'combatHit' }),
   ...expand(IMPACT_PRESET_IDS, 'combat.impact.', sfx({ cooldownMs: 80 })),
-  'combat.element.kim': sfx({ cooldownMs: 80, synthFallback: 'combatHit' }),
-  'combat.element.thuy': sfx({ cooldownMs: 80, synthFallback: 'combatHit' }),
-  'combat.element.moc': sfx({ cooldownMs: 80, synthFallback: 'combatHit' }),
-  'combat.element.hoa': sfx({ cooldownMs: 80, synthFallback: 'combatCritical' }),
-  'combat.element.tho': sfx({ cooldownMs: 80, synthFallback: 'combatBlock' }),
   // Armed-reserved: enemy spawns ride the pendingEnemySpawns snapshot
   // (combat-vfx-spawner), which has no cue hook yet - these rows voice
   // the moment a spawn binding lands.

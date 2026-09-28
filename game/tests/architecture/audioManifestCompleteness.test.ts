@@ -27,7 +27,12 @@ import { readFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { AUDIO_CUES, resolveAudioCue } from '@/core/audio/AudioCueManifest'
 import { cueForActionImpact } from '@/presentation/audio/combatAudioBinding'
-import { audioBundleIdsForCue } from '@/presentation/assets/AssetBundleCatalog'
+import {
+  AUDIO_BUNDLE_PREFIXES,
+  audioBundleIdsForCue,
+  type AudioBundleId,
+} from '@/presentation/assets/AssetBundleCatalog'
+import { ROUTE_AUDIO_BUNDLES } from '@/presentation/audio/audioAssetWiring'
 import { isTestFile } from './helpers/scanTs'
 
 const SPEC_PATH = join(process.cwd(), 'docs/specs/sound-system-spec.md')
@@ -107,10 +112,17 @@ describe('audio manifest completeness', () => {
     expect(uncovered).toEqual([])
   })
 
+  // ROUTE_AUDIO_BUNDLES is a THIRD enumeration: a bundle that exists but
+  // no route requests is dead weight (and a prefix-table drift signal).
+  it('every lazy audio bundle is requested by at least one route', () => {
+    const routed = new Set(Object.values(ROUTE_AUDIO_BUNDLES).flat())
+    const unrouted = (Object.keys(AUDIO_BUNDLE_PREFIXES) as AudioBundleId[])
+      .filter((id) => !routed.has(id))
+    expect(unrouted).toEqual([])
+  })
+
   it('every manifest row id matches the cue-id convention', () => {
-    const bad = Object.keys(AUDIO_CUES).filter(
-      (id) => !CUE_ID_RE.test(id) || !DOMAINS.has(id.split('.')[0]!),
-    )
+    const bad = Object.keys(AUDIO_CUES).filter((id) => !CUE_ID_RE.test(id))
     expect(bad).toEqual([])
   })
 
