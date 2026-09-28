@@ -947,6 +947,266 @@
       ],
       "closeReason": "fixed @f609209d -- pending closure seal",
       "counterexample": "two selector-scoped copies of the same 8 tokens inside theme.css"
+    },
+    {
+      "id": "F-UIW1-15",
+      "title": "previewSellGrant gate parity vs sellMaterial underdocumented",
+      "state": {
+        "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+        "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+      },
+      "subsystem": "ui",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "closedAt": null,
+      "severity": "Low",
+      "locations": [
+        {
+          "path": "src/core/economy/VendorSystem.ts",
+          "symbolOrSection": "previewSellGrant",
+          "revision": "d848bfd3",
+          "basis": "SOURCE"
+        }
+      ],
+      "pinEvidenceIds": [
+        "EV-UIW1-FIX1"
+      ],
+      "verificationEvidenceIds": [
+        "EV-UIW1-FIX1"
+      ],
+      "evidenceIds": [
+        "EV-UIW1-FIX1"
+      ],
+      "closureReviewIds": [],
+      "status": "FIXED_PENDING_PROOF",
+      "classification": "REAL_DEFECT",
+      "reachability": "PRODUCTION",
+      "actionable": true,
+      "discoveredBy": "INT-2",
+      "expected": "preview contract states exactly which sellMaterial gates it covers",
+      "actual": "docblock claimed 'same gates + math' but omitted sole_ingredient/owned/bag_full/registry gates (repro on pin showed sole_ingredient divergence)",
+      "rootCause": "preview grew without a shared gate spec; data currently makes the divergences unreachable",
+      "rootClass": "DOC_DRIFT",
+      "repair": "sole_ingredient+owned gates wired via bag @5400c882; docblock now enumerates covered vs omitted-by-construction gates @059eb751",
+      "siblingSearch": [
+        {
+          "roots": [
+            "game/src"
+          ],
+          "termsAndMethod": "grep/tooltip icon styles; preview gates; confirm paths",
+          "evidenceIds": [
+            "EV-UIW1-FIX1"
+          ],
+          "hitDispositions": [
+            "all siblings handled"
+          ],
+          "coverageLimits": [
+            "ui surface"
+          ]
+        }
+      ],
+      "closeReason": "fixed @059eb751/8bb544ce -- pending closure seal",
+      "counterexample": "docblock claimed 'same gates + math' but omitted sole_ingredient/owned/bag_full/registry gates (repro on pin showed sole_ingredient divergence)"
+    },
+    {
+      "id": "F-UIW1-16",
+      "title": "Technique-tooltip icon wells lost deliberate cream medallion",
+      "state": {
+        "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+        "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+      },
+      "subsystem": "ui",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "closedAt": null,
+      "severity": "Nit",
+      "locations": [
+        {
+          "path": "src/components/common/Tooltip.vue",
+          "symbolOrSection": ".tooltip__icon-shell/.tooltip__icon",
+          "revision": "d848bfd3",
+          "basis": "SOURCE"
+        }
+      ],
+      "pinEvidenceIds": [
+        "EV-UIW1-FIX1"
+      ],
+      "verificationEvidenceIds": [
+        "EV-UIW1-FIX1"
+      ],
+      "evidenceIds": [
+        "EV-UIW1-FIX1"
+      ],
+      "closureReviewIds": [],
+      "status": "FIXED_PENDING_PROOF",
+      "classification": "REAL_DEFECT",
+      "reachability": "PRODUCTION",
+      "actionable": true,
+      "discoveredBy": "INT-2",
+      "expected": "icon wells keep their cream medallion on dark tooltips (original design intent)",
+      "actual": "wave-2 .paper-on-dark remap repainted --paper-100/--paper-50 wells dark",
+      "rootCause": "remap widened from wave-1's 4-text-var scope to all 9 paper tokens",
+      "rootClass": "UNHANDLED_EDGE",
+      "repair": "well backgrounds now literal cream tokens, immune to the remap @059eb751",
+      "siblingSearch": [
+        {
+          "roots": [
+            "game/src"
+          ],
+          "termsAndMethod": "grep/tooltip icon styles; preview gates; confirm paths",
+          "evidenceIds": [
+            "EV-UIW1-FIX1"
+          ],
+          "hitDispositions": [
+            "all siblings handled"
+          ],
+          "coverageLimits": [
+            "ui surface"
+          ]
+        }
+      ],
+      "closeReason": "fixed @059eb751/8bb544ce -- pending closure seal",
+      "counterexample": "wave-2 .paper-on-dark remap repainted --paper-100/--paper-50 wells dark"
+    },
+    {
+      "id": "F-UIW1-17",
+      "title": "Confirm-modal grant figure stale across mid-confirm breakthrough",
+      "state": {
+        "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+        "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+      },
+      "subsystem": "ui",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "closedAt": null,
+      "severity": "Nit",
+      "locations": [
+        {
+          "path": "src/components/panels/VendorPanel.vue",
+          "symbolOrSection": "onSellClick/confirmAllRow",
+          "revision": "d848bfd3",
+          "basis": "SOURCE"
+        }
+      ],
+      "pinEvidenceIds": [
+        "EV-UIW1-FIX1"
+      ],
+      "verificationEvidenceIds": [
+        "EV-UIW1-FIX1"
+      ],
+      "evidenceIds": [
+        "EV-UIW1-FIX1"
+      ],
+      "closureReviewIds": [],
+      "status": "FIXED_PENDING_PROOF",
+      "classification": "REAL_DEFECT",
+      "reachability": "PRODUCTION",
+      "actionable": true,
+      "discoveredBy": "INT-2",
+      "expected": "modal figure reflects the tier at confirm time",
+      "actual": "quote captured at click; queued auto-breakthrough while modal open shifts conversion factor (self-correcting: confirm toast shows real grant)",
+      "rootCause": "modal binds a snapshot, not a live computed",
+      "rootClass": "UNHANDLED_EDGE",
+      "repair": "seam documented at capture site @8bb544ce -- cosmetic, value-equivalent",
+      "siblingSearch": [
+        {
+          "roots": [
+            "game/src"
+          ],
+          "termsAndMethod": "grep/tooltip icon styles; preview gates; confirm paths",
+          "evidenceIds": [
+            "EV-UIW1-FIX1"
+          ],
+          "hitDispositions": [
+            "all siblings handled"
+          ],
+          "coverageLimits": [
+            "ui surface"
+          ]
+        }
+      ],
+      "closeReason": "fixed @059eb751/8bb544ce -- pending closure seal",
+      "counterexample": "quote captured at click; queued auto-breakthrough while modal open shifts conversion factor (self-correcting: confirm toast shows real grant)"
+    },
+    {
+      "id": "F-UIW1-18",
+      "title": "Dead hpPercent() helper in TurnOrderStrip",
+      "state": {
+        "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+        "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+      },
+      "subsystem": "ui",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "closedAt": null,
+      "severity": "Nit",
+      "locations": [
+        {
+          "path": "src/components/game/combat/TurnOrderStrip.vue",
+          "symbolOrSection": "hpPercent",
+          "revision": "d848bfd3",
+          "basis": "SOURCE"
+        }
+      ],
+      "pinEvidenceIds": [
+        "EV-UIW1-FIX1"
+      ],
+      "verificationEvidenceIds": [
+        "EV-UIW1-FIX1"
+      ],
+      "evidenceIds": [
+        "EV-UIW1-FIX1"
+      ],
+      "closureReviewIds": [],
+      "status": "FIXED_PENDING_PROOF",
+      "classification": "REAL_DEFECT",
+      "reachability": "PRODUCTION",
+      "actionable": true,
+      "discoveredBy": "INT-2",
+      "expected": "no dead helpers in touched files",
+      "actual": "hpPercent had zero callers (pre-existing; sibling of F-UIW1-05's edited logic)",
+      "rootCause": "fill moved to gaugePercent earlier; text moved to inline formatNumber",
+      "rootClass": "DEAD_CODE",
+      "repair": "function removed @059eb751",
+      "siblingSearch": [
+        {
+          "roots": [
+            "game/src"
+          ],
+          "termsAndMethod": "grep/tooltip icon styles; preview gates; confirm paths",
+          "evidenceIds": [
+            "EV-UIW1-FIX1"
+          ],
+          "hitDispositions": [
+            "all siblings handled"
+          ],
+          "coverageLimits": [
+            "ui surface"
+          ]
+        }
+      ],
+      "closeReason": "fixed @059eb751/8bb544ce -- pending closure seal",
+      "counterexample": "hpPercent had zero callers (pre-existing; sibling of F-UIW1-05's edited logic)"
     }
   ],
   "evidence": [
@@ -1223,6 +1483,22 @@
       "payloadPath": "events/0007.json",
       "payloadHash": "13f21235552ef991c4261e0f5384e72e622b8e04754f14e19d23d0a0e7393d46",
       "eventHash": "548e8726b7194bbba9fdc70a70c54d2a2d43f0e62776229306d9a5c6e4dccccb"
+    },
+    {
+      "seq": 8,
+      "at": "2026-09-28T04:25:01.723Z",
+      "kind": "FINDING",
+      "actor": "coordinator-13772",
+      "state": {
+        "productStateId": "2b52e8712061dfd632663cf596900611dcc2443a4eaca486c211e0bfa57d966a",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "a1c5bd8b31cfcd8a1f0e37d056c2e49300fd116d1833096f082c77356cf371a5",
+        "environmentId": "7dbf357f7d8b0fc18b9e6b3a591ada234fd5f76ebaeec40176a97cbd8c6030fa"
+      },
+      "previousEventHash": "548e8726b7194bbba9fdc70a70c54d2a2d43f0e62776229306d9a5c6e4dccccb",
+      "payloadPath": "events/0008.json",
+      "payloadHash": "4d2ee0f6d3d4e8bdfb34badef9a31c9e0612c82a79fef7f0b3354d89745b8537",
+      "eventHash": "8e439400475faccb1e54de0aadf3a24f58ebe02216ff643764de0d6cd8dae47c"
     }
   ]
 }
