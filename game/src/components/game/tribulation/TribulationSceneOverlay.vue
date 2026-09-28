@@ -85,7 +85,10 @@ function answer(index: number) {
 .tribulation-ui__hp-track { width:100%; border:1px solid var(--scene-tribulation-line); border-radius:8px; --bar-track: var(--scene-tribulation-deep); --bar-from: var(--scene-tribulation-hp); --bar-to: var(--scene-tribulation-hp); }
 .tribulation-ui__hp, .tribulation-ui__hint, .tribulation-ui__strikes { margin-top:6px; font-size:var(--text-xs); text-shadow:0 1px 3px #000; }
 .tribulation-ui__hint, .tribulation-ui__strikes { color:var(--scene-tribulation-text-soft); }
-.tribulation-ui__mind { position:absolute; top:16%; left:50%; transform:translateX(-50%); width:min(520px, 92vw); display:flex; flex-direction:column; gap:10px; pointer-events:auto; background:color-mix(in srgb, var(--ink-950) 72%, transparent); border:1px solid var(--scene-tribulation-line); border-radius:var(--radius-md); padding:16px 18px; }
+/* top:26% keeps the card clear of the scene's THIEN KIEP title band
+   (~17% height) - at 16% the card edge clipped the title mid-glyph
+   (ui-audit progression fix). */
+.tribulation-ui__mind { position:absolute; top:26%; left:50%; transform:translateX(-50%); width:min(520px, 92vw); display:flex; flex-direction:column; gap:10px; pointer-events:auto; background:color-mix(in srgb, var(--ink-950) 72%, transparent); border:1px solid var(--scene-tribulation-line); border-radius:var(--radius-md); padding:16px 18px; }
 .tribulation-ui__question { margin:0; font-size:var(--text-body-lg); font-weight:700; color:var(--chrome-100); }
 .tribulation-ui__answers { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
 .tribulation-ui__time-track { border:1px solid var(--scene-tribulation-line); border-radius:8px; --bar-track: var(--scene-tribulation-deep); --bar-from: var(--scene-tribulation-time); --bar-to: color-mix(in srgb, var(--scene-tribulation-line) 80%, white); }

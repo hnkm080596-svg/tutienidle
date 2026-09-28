@@ -264,7 +264,8 @@
       },
       "sections": {
         "pathSelection": {
-          "hint": "Choose your cultivation path — this decision CANNOT be changed."
+          "hint": "Choose your cultivation path — this decision CANNOT be changed.",
+          "kit": "Initiation kit: {kit}"
         },
         "hiddenPath": {
           "description": "Linh Bao reached its limit — the hidden road reveals itself. Kit: {kit}. No element, no stance, no The — power flows from elemental reactions alone.",
@@ -284,6 +285,11 @@
           "appendAria": "Append {name} to the sequence",
           "removeAria": "Remove {name} from the sequence"
         }
+      },
+      "pathDescriptions": {
+        "spell_pathway": "The five-element spellcraft road — unlocks the Element and Aspect node trees; damage grows through elemental reactions.",
+        "sword_pathway": "The sword road — basic strikes follow the seal order in the Kiếm Phổ; matching seal chains burst into finishers.",
+        "body_pathway": "The body road — the Thể Tu tree rooted in Steel War or Mountain Stance; close combat built on soaking and countering."
       },
       "actions": {
         "enterPath": "Enter {name}"
@@ -319,6 +325,11 @@
       "empty": {
         "noStages": "This region has no combat floors yet.",
         "selectStage": "Select a floor to view the formation."
+      },
+      "locked": {
+        "requireRealm": "Requires {realm} floor {level}",
+        "clearFloor": "Clear Floor {floor} first",
+        "progress": "Clear the previous floor to unlock"
       },
       "modes": {
         "manual": "Manual",
@@ -519,6 +530,7 @@
       "title": "Realm",
       "tierLine": "{realm} · Floor {level}",
       "cultivationUnit": "Cultivation",
+      "rateEta": "+{rate} {unit}/s · ~{eta} left",
       "labels": {
         "quanKhi": "Quán Khí",
         "foundation": "Foundation Establishment",
@@ -527,7 +539,8 @@
       "nodes": {
         "aria": "Nine realms progress",
         "comingSoon": "Coming soon",
-        "unlocked": "Attuned",
+        "current": "Current",
+        "unlocked": "Reached",
         "locked": "Not unlocked"
       },
       "requirements": {

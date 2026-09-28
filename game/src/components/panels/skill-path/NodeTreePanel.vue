@@ -519,15 +519,21 @@ watch(branches, () => {
 // `zoom` doi layout box that nen getBoundingClientRect() dung boi
 // measure() o tren van dung, ResizeObserver container van tu ban lai
 // khi zoom doi, khong can patch rieng cho SkillConnections.vue) de vua
-// khung theo mac dinh. Nguoi choi co the zoom tay de xem chi tiet hon --
-// khi do (va chi khi do) viewport moi cho cuon/pan.
+// khung theo mac dinh.
+// Ui-audit fix: the default fit has a READABLE floor (FIT_ZOOM_MIN) -
+// a tall tree used to shrink to 40% where node text was illegible. When
+// the unclamped fit ratio (rawFitZoom) sits below the floor the applied
+// zoom stays readable and the viewport scrolls/pans instead of
+// shrinking further; manual zoom-out to ZOOM_MIN still works.
 const ZOOM_MIN = 0.4
 const ZOOM_MAX = 1.5
 const ZOOM_STEP = 0.15
+const FIT_ZOOM_MIN = 0.65
 
 const viewportEl = ref<HTMLElement | null>(null)
 const contentEl = ref<HTMLElement | null>(null)
 
+const rawFitZoom = ref(1)
 const fitZoom = ref(1)
 const zoom = ref(1)
 const zoomOverridden = ref(false)
@@ -555,7 +561,8 @@ function recomputeFit() {
     return
   }
 
-  fitZoom.value = clampZoom(viewport.clientHeight / naturalHeight)
+  rawFitZoom.value = viewport.clientHeight / naturalHeight
+  fitZoom.value = Math.min(ZOOM_MAX, Math.max(FIT_ZOOM_MIN, Math.round(rawFitZoom.value * 100) / 100))
 
   if (!zoomOverridden.value) {
     zoom.value = fitZoom.value
@@ -577,7 +584,10 @@ function zoomToFit() {
   zoom.value = fitZoom.value
 }
 
-const isPannable = computed(() => zoom.value > fitZoom.value + 0.01)
+// Panning follows the UNCLAMPED fit: the scaled content overflows the
+// viewport exactly when the applied zoom exceeds the raw fit ratio (incl.
+// the case where the floor holds the default zoom above rawFitZoom).
+const isPannable = computed(() => zoom.value > rawFitZoom.value + 0.01)
 
 // Zoom doi vi tri render that cua tung node -- ve lai duong noi SVG theo
 // toa do moi. Khong chi dua vao ResizeObserver (du tin cay voi `zoom`
@@ -625,11 +635,12 @@ onBeforeUnmount(() => {
         <button type="button" :disabled="zoom >= ZOOM_MAX" @click="zoomIn">+</button>
       </div>
 
-      <span class="node-tree__points">{{ player.skillInsight }} {{ t('panels.nodeTree.labels.insight') }}</span>
+      <span class="node-tree__points">{{ t('panels.nodeTree.labels.insight') }}: {{ player.skillInsight }}</span>
     </div>
 
-    <!-- Zoom-to-fit thay cuộn (2026-08-30) — mặc định co vừa khung,
-         zoom tay vượt fit mới cho cuộn/pan (is-pannable). -->
+    <!-- Zoom-to-fit thay cuộn (2026-08-30) — mặc định co vừa khung nhưng
+         không dưới sàn đọc được (FIT_ZOOM_MIN); nội dung tràn khung cho
+         cuộn/pan (is-pannable). -->
     <div ref="viewportEl" class="node-tree__viewport" :class="{ 'is-pannable': isPannable }">
       <div ref="contentEl" class="node-tree__scale-content" :style="{ zoom: `${zoom}` }">
         <div v-for="branch in branches" :key="branch.branchTag ?? 'other'" class="node-tree__branch">
@@ -775,8 +786,8 @@ onBeforeUnmount(() => {
 }
 
 /* Zoom-to-fit thay cuon (2026-08-30) -- mac dinh overflow:hidden (noi
-   dung da co vua khung qua CSS `zoom`), chi cho cuon/pan khi nguoi choi
-   tu zoom tay vuot muc fit (is-pannable). */
+   dung da co vua khung qua CSS `zoom`), cho cuon/pan khi zoom vuot muc
+   fit THO (is-pannable ke ca khi san FIT_ZOOM_MIN giu zoom cao hon fit). */
 .node-tree__viewport {
   flex: 1;
   min-height: 0;

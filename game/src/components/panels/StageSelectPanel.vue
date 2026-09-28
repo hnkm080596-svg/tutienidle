@@ -14,7 +14,7 @@ import BuildingConstructionGate from './BuildingConstructionGate.vue'
 import GameButton from '@/components/common/GameButton.vue'
 import Chip from '@/components/common/primitives/Chip.vue'
 import EmptyState from '@/components/common/primitives/EmptyState.vue'
-import { getCurrentRealm } from '@/core/realm/realmSystem'
+import { getCurrentRealm, getRealmIndex } from '@/core/realm/realmSystem'
 
 const { t } = useI18n()
 
@@ -55,6 +55,44 @@ function isZoneUnlocked(zoneId: string): boolean {
 // Stage mở tự do để farm lại.
 function isStageUnlocked(stage: (typeof stagesInZone.value)[number]): boolean {
   return gameManager.catalogOps.isStageUnlocked(stage.id, player.$state)
+}
+
+// Locked-floor reason (ui-audit progression fix): the same gates as
+// catalogOps.isStageUnlocked, read back as display text - realm/floor
+// gate, else the previous floor of the zone's chain.
+function stageLockReason(stage: (typeof stagesInZone.value)[number]): string {
+  if (isStageUnlocked(stage)) {
+    return ''
+  }
+
+  if (stage.requiredRealmId) {
+    const requiredRealmIndex = getRealmIndex(stage.requiredRealmId)
+    const playerRealmIndex = getRealmIndex(player.realmId)
+
+    if (
+      playerRealmIndex < requiredRealmIndex ||
+      (playerRealmIndex === requiredRealmIndex &&
+        stage.requiredRealmLevel !== undefined &&
+        player.realmLevel < stage.requiredRealmLevel)
+    ) {
+      return t('panels.stageSelect.locked.requireRealm', {
+        realm: getCurrentRealm(stage.requiredRealmId).name,
+        level: stage.requiredRealmLevel ?? 1,
+      })
+    }
+  }
+
+  const zone = selectedZone.value
+  const index = zone ? zone.stageIds.indexOf(stage.id) : -1
+  const previous = zone && index > 0
+    ? gameManager.catalogOps.getStage(zone.stageIds[index - 1]!)
+    : undefined
+
+  if (previous) {
+    return t('panels.stageSelect.locked.clearFloor', { floor: previous.floor ?? previous.requiredRealmLevel ?? 1 })
+  }
+
+  return t('panels.stageSelect.locked.progress')
 }
 
 const selectedZoneId = ref<string | null>(zones.value[0]?.id ?? null)
@@ -288,7 +326,7 @@ function start() {
                 'is-locked': !isStageUnlocked(node.stage),
                 'is-final': node.isLast,
               }"
-              v-tooltip="node.stage.description"
+              v-tooltip="node.stage.id === selectedStageId ? undefined : isStageUnlocked(node.stage) ? node.stage.description : stageLockReason(node.stage)"
               @click="selectStage(node.stage.id)"
             >
               <span class="stage-map__number">{{ node.stage.floor ?? node.stage.requiredRealmLevel ?? 1 }}</span>
@@ -297,6 +335,7 @@ function start() {
                 <small>{{ node.enemies.join(' · ') }}</small>
               </span>
               <span v-if="node.stage.bossEnemyId" class="stage-map__boss">{{ t('panels.stageSelect.labels.boss') }}</span>
+              <span v-if="!isStageUnlocked(node.stage)" class="stage-map__lock" aria-hidden="true">🔒</span>
             </button>
           </div>
         </section>
@@ -311,6 +350,7 @@ function start() {
       <template v-if="selectedStage">
         <h4 class="stage-select__title">{{ selectedStage.name }}</h4>
         <p class="stage-select__description">{{ selectedStage.description }}</p>
+        <p v-if="!isStageUnlocked(selectedStage)" class="stage-select__locked-hint">{{ stageLockReason(selectedStage) }}</p>
 
         <div class="stage-select__encounter-summary">
           <span><strong>{{ selectedStage.totalEnemyCount }}</strong> {{ t('panels.stageSelect.labels.enemiesSuffix') }}</span>
@@ -525,6 +565,22 @@ function start() {
 .stage-map__node.is-locked {
   opacity: 0.45;
   cursor: not-allowed;
+}
+
+/* Lock affordance on the floor tile itself - the 45% dim alone did not
+   read as "locked" (ui-audit progression fix). */
+.stage-map__lock {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  font-size: var(--text-sm);
+  line-height: 1;
+}
+
+.stage-select__locked-hint {
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--crimson);
 }
 
 .stage-map__node.is-final:not(.is-selected) {

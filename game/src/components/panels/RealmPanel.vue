@@ -14,7 +14,10 @@ import { usePlayerStore } from '@/stores/player'
 import { useGameManager } from '@/composables/useGameState'
 import { useBreakthroughRequirementStore } from '@/stores/breakthroughRequirement'
 import { CORE_REALM_LEVEL, getCurrentRealm, getNextRealm } from '@/core/realm/realmSystem'
+import { formatNumber } from '@/core/format/NumberFormatter'
+import { formatDuration } from '@/core/format/formatDuration'
 import { getRealmTier } from '@/core/realm/RealmTierMap'
+import type { RealmPassiveNode } from '@/data/realm/RealmPassiveNodes'
 import { REALM_PASSIVE_NODES } from '@/data/realm/RealmPassiveNodes'
 import { useRealmStatPassives } from '@/composables/useRealmStatPassives'
 
@@ -30,16 +33,41 @@ const { realmStatPassiveRows } = useRealmStatPassives()
 
 const currentTier = computed(() => getRealmTier(player.realmId))
 const canBreakthrough = computed(() => gameManager.realmAdvanceOps.canTriggerBreakthrough(player.$state))
-// M-QI-03 - normal Truc Co read-model: the visible requirement block is
-// scoped to qi_refining (the domain rows also drive the gate itself;
-// hidden foundation inputs are never rows - QI-D6).
+// M-QI-03 - normal Truc Co read-model. The gate rows are rendered for
+// EVERY realm (mortal included) so the first major breakthrough button
+// never sits dead with no explanation; realms with no player-gated
+// transition simply return no rows. Hidden foundation inputs are never
+// rows (QI-D6).
 const requirements = computed(() =>
-  player.realmId === 'qi_refining'
-    ? gameManager.realmAdvanceOps.getBreakthroughRequirements(player.$state)
-    : [],
+  gameManager.realmAdvanceOps.getBreakthroughRequirements(player.$state),
 )
 const nextRealmName = computed(() => getNextRealm(player.realmId)?.name ?? '')
 const realmName = computed(() => getCurrentRealm(player.realmId).name)
+// Idle-game readout under the cultivation bar: the live per-second rate
+// (same snapshot the tick writes) plus the ETA to filling this floor.
+const cultivationRate = computed(() => player.cultivationPerSecond)
+const cultivationEta = computed(() => {
+  if (cultivationRate.value <= 0) {
+    return ''
+  }
+
+  const remaining = Math.max(0, player.cultivationRequired - player.cultivation)
+  return formatDuration(remaining / cultivationRate.value)
+})
+
+// Mortal needs a lit home rung (ui-audit): REALM_PASSIVE_NODES starts at
+// the mortal->qi_refining reward (unlockTier 2), so a mortal player saw
+// nine locked nodes and no "you are here". The display list prepends the
+// mortal rung only - the authored data stays reward-shaped.
+const realmNodes: RealmPassiveNode[] = [
+  {
+    realmId: 'mortal',
+    label: getCurrentRealm('mortal').name,
+    unlockTier: getRealmTier('mortal'),
+    comingSoon: false,
+  },
+  ...REALM_PASSIVE_NODES,
+]
 const majorBreakthroughLabel = computed(() => {
   if (player.realmId === 'mortal') return t('panels.realm.labels.quanKhi')
   if (player.realmId === 'qi_refining') return t('panels.realm.labels.foundation')
@@ -74,6 +102,9 @@ function majorBreakthrough() {
         >
           <template #label><span class="realm-panel__cultivation-label">{{ Math.floor(player.cultivation) }} / {{ Math.floor(player.cultivationRequired) }} {{ t('panels.realm.cultivationUnit') }}</span></template>
         </Bar>
+        <div v-if="cultivationRate > 0" class="realm-panel__cultivation-meta">
+          {{ t('panels.realm.rateEta', { rate: formatNumber(cultivationRate), unit: t('panels.realm.cultivationUnit'), eta: cultivationEta }) }}
+        </div>
       </div>
 
       <div class="realm-panel__actions">
@@ -101,15 +132,16 @@ function majorBreakthrough() {
 
       <div class="realm-panel__nodes" :aria-label="t('panels.realm.nodes.aria')">
         <div
-          v-for="(node, index) in REALM_PASSIVE_NODES"
-          :key="node.realmId"
+          v-for="(node, index) in realmNodes"
+          :key="`${node.realmId}-${index}`"
           class="realm-node"
           :class="{ 'is-current': currentTier === node.unlockTier, 'is-complete': currentTier >= node.unlockTier, 'is-locked': node.comingSoon }"
         >
-          <span class="realm-node__index">{{ index + 1 }}</span>
+          <span class="realm-node__index">{{ index }}</span>
           <strong>{{ node.label }}</strong>
           <small v-if="node.comingSoon">{{ t('panels.realm.nodes.comingSoon') }}</small>
-          <small v-else>{{ currentTier >= node.unlockTier ? t('panels.realm.nodes.unlocked') : t('panels.realm.nodes.locked') }}</small>
+          <small v-else-if="currentTier === node.unlockTier">{{ t('panels.realm.nodes.current') }}</small>
+          <small v-else>{{ currentTier > node.unlockTier ? t('panels.realm.nodes.unlocked') : t('panels.realm.nodes.locked') }}</small>
         </div>
       </div>
 
@@ -162,6 +194,7 @@ function majorBreakthrough() {
 .realm-panel__name { font-size: var(--text-title); }
 .realm-panel__realm-line { font-size: var(--text-body); font-weight: 600; color: var(--jade); }
 .realm-panel__cultivation-label { font-size: var(--text-md); font-weight: 700; }
+.realm-panel__cultivation-meta { margin-top: 5px; text-align: center; font-size: var(--text-xs); color: var(--paper-text-muted); font-variant-numeric: tabular-nums; }
 .realm-panel__aura { position: absolute; width: 190px; height: 190px; border-radius: 50%; background: radial-gradient(circle, color-mix(in srgb, var(--chrome-500) 25%, transparent), transparent 68%); animation: realm-breathe 3s ease-in-out infinite; }
 .realm-panel__actions { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 10px; }
 .realm-panel__actions :deep(button:disabled) { opacity: .38; filter: grayscale(1); }
