@@ -28,7 +28,27 @@ export function uncommented(fileText: string, fileName = 'file.ts'): string {
       ranges.push({ pos: scanner.getTokenStart(), end: scanner.getTokenEnd() })
     }
   }
-  ranges.sort((a, b) => a.pos - b.pos)
+  // The scanner is lexer-authority, not parser-authority: a `/` the parser
+  // reads as a regex literal still tokenizes `/*` inside it as a comment
+  // opener (`/[/*]/`, `/a\/*/`), and the phantom comment then eats the
+  // file tail. A real comment can never overlap a parsed regex node, so
+  // any scanner range overlapping a RegularExpressionLiteral span is a
+  // mis-lex - reject it.
+  const sf = ts.createSourceFile(fileName, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS)
+  const regexSpans: Array<{ pos: number; end: number }> = []
+  const visit = (node: ts.Node): void => {
+    if (node.kind === ts.SyntaxKind.RegularExpressionLiteral) {
+      regexSpans.push({ pos: node.getStart(sf), end: node.end })
+    }
+    ts.forEachChild(node, visit)
+  }
+  visit(sf)
+  const kept = ranges.filter(
+    (r) => !regexSpans.some((s) => r.pos < s.end && r.end > s.pos),
+  )
+  kept.sort((a, b) => a.pos - b.pos)
+  ranges.length = 0
+  ranges.push(...kept)
   let out = ''
   let pos = 0
   for (const r of ranges) {
@@ -40,12 +60,22 @@ export function uncommented(fileText: string, fileName = 'file.ts'): string {
 
 function scriptOf(fileName: string, text: string): string {
   if (!fileName.endsWith('.vue')) return text
-  // Drop HTML comments first - a <script> tag commented out in the
-  // template is dead markup, not analyzable code.
-  const noHtmlComments = text.replace(/<!--[\s\S]*?-->/g, '')
+  // A <script> tag inside an HTML comment is dead markup and must not
+  // contribute code. Decide per tag by looking only at TEMPLATE text
+  // before it (script bodies are excised first so a '<!--' literal inside
+  // a script string cannot corrupt the comment accounting - stripping
+  // <!-- --> globally would let script-side string literals pair up and
+  // delete real code).
   const blocks: string[] = []
-  for (const m of noHtmlComments.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/gi)) {
-    blocks.push(m[1]!)
+  let searchFrom = 0
+  for (const m of text.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/gi)) {
+    const region = text
+      .slice(searchFrom, m.index)
+      .replace(/<script[\s\S]*?<\/script>/gi, '')
+    const open = region.lastIndexOf('<!--')
+    const close = region.lastIndexOf('-->')
+    if (open <= close) blocks.push(m[1]!)
+    searchFrom = (m.index ?? 0) + m[0].length
   }
   return blocks.join('\n')
 }
