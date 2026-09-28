@@ -18,6 +18,8 @@ import type { SessionRef } from '@/core/presentation/PresentationSession'
 import type { Route } from '@/presentation/PresentationContracts'
 import { PLAYER_ID } from '@/core/skill/PassiveSystem'
 import type { ReactiveProcMechanic, ReactiveTriggerName } from '@/core/proc/ProcCapabilities'
+import { DAMAGE_VITALS_REASONS } from '@/core/simulation/BattleMetrics'
+import type { VitalsChangeReason } from '@/core/combat/EntityVitalsSystem'
 
 // ---- Static rows -------------------------------------------------------
 
@@ -51,19 +53,18 @@ const STATIC_CUES: ReadonlyArray<readonly [string, string]> = [
 interface VitalsLike {
   wardBefore?: number
   wardAfter?: number
-  reason?: string
+  reason?: VitalsChangeReason
 }
 
-// EntityVitalsSystem VitalsChangeReason values that belong to the
-// damage family - ward deltas emitted under them are combat-relevant
-// (absorb/break). Regen/stat_refresh/sacrifice/ward_spend deltas are
-// bookkeeping, not combat audio.
-const WARD_DAMAGE_REASONS = new Set([
-  'damage',
-  'dot',
-  'reaction',
-  'reflection',
-  'heavenly_tribulation',
+// VitalsChangeReason values that belong to the damage family - ward
+// deltas emitted under them are combat-relevant (absorb/break).
+// Regen/stat_refresh/sacrifice/ward_spend deltas are bookkeeping, not
+// combat audio. Membership is the canonical DAMAGE_VITALS_REASONS set
+// (BattleMetrics owns the damage-family truth: damage/dot/ward_break/
+// reaction/reflection/heavenly_tribulation) plus survive_lethal - a
+// lethal-save IS a ward event even though the HP ledger excludes it.
+const WARD_DAMAGE_REASONS: ReadonlySet<VitalsChangeReason> = new Set<VitalsChangeReason>([
+  ...DAMAGE_VITALS_REASONS,
   'survive_lethal',
 ])
 
@@ -197,11 +198,11 @@ const PAYLOAD_CUES: ReadonlyArray<readonly [string, (event: never) => string | u
   ],
   [
     'hit',
-    // combat.hit = "player lands a blow" - the player must be the
-    // SOURCE (an enemy striking a companion otherwise sounds identical).
-    // Player-taken hits are covered by damage->combat.hurt (which also
-    // covers DoT ticks).
-    (event: HitLike) => (event.sourceId === PLAYER_ID ? 'combat.hit' : undefined),
+    // Spec contract (sound-system-spec section 6): combat.hit sounds
+    // whenever the TARGET is not the player - a companion's outgoing hit
+    // cues the same as the player's own, and player-taken hits stay
+    // covered by damage->combat.hurt (which also covers DoT ticks).
+    (event: HitLike) => (event.targetId !== PLAYER_ID ? 'combat.hit' : undefined),
   ],
   [
     'entity_vitals_changed',
@@ -213,8 +214,13 @@ const PAYLOAD_CUES: ReadonlyArray<readonly [string, (event: never) => string | u
       // break).
       const before = event.wardBefore ?? 0
       const after = event.wardAfter ?? 0
-      if (event.reason === 'ward_grant') return 'combat.ward.grant'
-      if (!WARD_DAMAGE_REASONS.has(event.reason ?? '')) return undefined
+      // grantWard emits even when the grant clamps to zero at the ward
+      // ceiling - the cue needs the same delta discrimination the
+      // damage lanes have or every capped grant sounds a phantom cue.
+      if (event.reason === 'ward_grant') {
+        return after > before ? 'combat.ward.grant' : undefined
+      }
+      if (!event.reason || !WARD_DAMAGE_REASONS.has(event.reason)) return undefined
       if (before > 0 && after === 0) return 'combat.ward.break'
       if (after < before) return 'combat.ward'
       return undefined

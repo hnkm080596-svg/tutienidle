@@ -309,6 +309,16 @@ const AUDIO_BUNDLE_PREFIXES: Record<AudioBundleId, readonly string[]> = {
   'audio-tribulation': ['tribulation.', 'combat.', 'music.tribulation'],
 }
 
+/** Bundle ids whose prefix table covers the cue - empty means the cue
+ *  can never be fetched (a new manifest domain forgot a bundle row). */
+export function audioBundleIdsForCue(cueId: string): AudioBundleId[] {
+  return (Object.keys(AUDIO_BUNDLE_PREFIXES) as AudioBundleId[]).filter((bundleId) =>
+    AUDIO_BUNDLE_PREFIXES[bundleId].some(
+      (p) => (p.endsWith('.') ? cueId.startsWith(p) : cueId === p || cueId.startsWith(`${p}.`)),
+    ),
+  )
+}
+
 /** Manifest-derived audio descriptors: one row per cue with a non-empty src. */
 export function audioDescriptorsFor(
   bundleId: AudioBundleId,

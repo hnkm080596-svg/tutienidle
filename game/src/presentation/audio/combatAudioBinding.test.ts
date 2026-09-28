@@ -28,7 +28,7 @@ describe('bindCombatAudio', () => {
 
     const cases: Array<[string, string, object?]> = [
       ['attack', 'combat.cast'],
-      ['hit', 'combat.hit', { sourceId: 'player' }],
+      ['hit', 'combat.hit', { sourceId: 'player', targetId: 'enemy_1' }],
       ['critical', 'combat.crit'],
       ['dodge', 'combat.dodge'],
       ['block', 'combat.block'],
@@ -165,16 +165,17 @@ describe('bindCombatAudio', () => {
     expect(cueSpy).toHaveBeenLastCalledWith('combat.dot.apply')
   })
 
-  it('hit sounds only when the player is the source', () => {
+  it('hit sounds whenever the target is not the player (spec contract)', () => {
     const bus = new EventBus()
     bindCombatAudio(bus)
 
-    // An enemy striking (sourceId != player) stays silent here - a
-    // player-taken hit already sounds via damage -> combat.hurt.
+    // Spec: suppressed only when the PLAYER takes the hit - that lane
+    // already sounds via damage -> combat.hurt. Allied/companion
+    // outgoing hits cue identically to the player's own.
     bus.emit('hit', { sourceId: 'enemy_1', targetId: 'player' })
     expect(cueSpy).not.toHaveBeenCalled()
-    bus.emit('hit', { targetId: 'enemy_1' })
-    expect(cueSpy).not.toHaveBeenCalled()
+    bus.emit('hit', { sourceId: 'companion_1', targetId: 'enemy_1' })
+    expect(cueSpy).toHaveBeenLastCalledWith('combat.hit')
     bus.emit('hit', { sourceId: 'player', targetId: 'enemy_1' })
     expect(cueSpy).toHaveBeenLastCalledWith('combat.hit')
   })

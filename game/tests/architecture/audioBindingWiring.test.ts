@@ -19,7 +19,7 @@ import { join } from 'node:path'
 import { readFileSync } from 'node:fs'
 import { SCAN_TIMEOUT, srcCorpus, isTestFile } from './helpers/scanTs'
 import { AUDIO_CUES, resolveAudioCue } from '@/core/audio/AudioCueManifest'
-import { literalRanges, uncommented } from './helpers/commentStrip'
+import { scriptBlockSpansOf, literalRanges, uncommented, usesJsxBlocks } from './helpers/commentStrip'
 
 const SRC_DIR = join(process.cwd(), 'src')
 const FILES = srcCorpus(SRC_DIR)
@@ -39,7 +39,7 @@ for (const file of FILES) {
   // matches inside literal spans are dropped.
   const lits = literalRanges(cleanText, file.fromSrc)
   const inLit = (i: number) => lits.some((r) => i >= r.pos && i < r.end)
-  for (const m of cleanText.matchAll(/\bemit\s*(?:<[\s\S]{0,400}?>)?\(\s*['"`]([a-z_0-9]+)['"`]/g)) {
+  for (const m of cleanText.matchAll(/\bemit\s*(?:<[\s\S]{0,2000}?>)?\(\s*['"`]([a-z_0-9]+)['"`]/g)) {
     if (inLit(m.index ?? 0)) continue
     EMITTED.add(m[1]!)
   }
@@ -55,18 +55,86 @@ for (const file of FILES) {
   // (`emit: (issue: string) => void`, `emit(target: CombatEntity...)`)
   // use a local emitter, not the bus - skip them entirely.
   const declaresLocalEmit = /\bemit\s*:\s*\([^)]*\)\s*=>|\bemit\s*\(\s*[\w$]+\s*:/.test(cleanText)
-  if (!declaresLocalEmit) {
-    for (const m of cleanText.matchAll(/\bemit\s*(?:<[\s\S]{0,400}?>)?\(\s*(?:`[^`]*\$\{|['"`][^'"`\n]*['"`]\s*\+)/g)) {
+  // The local-emitter exemption applies PER CALLEE, not file-wide: a
+  // bare `emit(` may be the local callback when a file declares one, but
+  // a receiver-qualified `bus.emit(...)` is unambiguously the bus and is
+  // always arm-checked (one `emit(reason: ...)` signature must not
+  // silence every emit in an emit-heavy file).
+  const emitExempt = (i: number) => declaresLocalEmit && cleanText[i - 1] !== '.'
+  {
+    // `emit(('a' + 'b'))` paren-wraps the first literal - the `\(*` run
+    // after the call paren reaches through the wrap.
+    for (const m of cleanText.matchAll(/\bemit\s*(?:<[\s\S]{0,2000}?>)?\(\s*\(*\s*(?:`[^`]*\$\{|['"`][^'"`\n]*['"`]\s*\+)/g)) {
+      if (emitExempt(m.index ?? 0)) continue
       if (inLit(m.index ?? 0)) continue
       NONLITERAL_EMITS.push(`${file.fromSrc} -> ${m[0]}`)
     }
+    // Call-led head args: `emit(fn() + 'x')` continues a computed name
+    // past the call; `emit(f(...), payload)` puts a computed value in
+    // name position (arg 0 of a multi-arg emit). A SINGLE-arg pure call
+    // `emit(payloadFactory(...))` is the payload-object emit convention
+    // - indistinguishable from a name-producing call statically - so it
+    // is carved out like `emit(name)`. Scanner-side regexes cannot see
+    // past `)`, so this arm walks the balanced call itself.
+    for (const m of cleanText.matchAll(/\bemit\s*(?:<[\s\S]{0,2000}?>)?\(\s*\(*\s*[\w$]+(?:\.[\w$]+)*\s*\(/g)) {
+      if (emitExempt(m.index ?? 0)) continue
+      if (inLit(m.index ?? 0)) continue
+      // m ends at the callee's `(`. Skip it balanced.
+      let depth = 0
+      let i = (m.index ?? 0) + m[0].length - 1
+      for (; i < cleanText.length; i++) {
+        const c = cleanText[i]!
+        if (inLit(i)) continue
+        if (c === '(') depth++
+        else if (c === ')') {
+          depth--
+          if (depth === 0) break
+        }
+      }
+      if (depth !== 0) continue
+      let j = i + 1
+      while (j < cleanText.length && /\s/.test(cleanText[j]!)) j++
+      let next = cleanText[j]
+      if (next === ',') {
+        // `emit(f(...),\n)` carries a trailing comma - it is still a
+        // single-arg payload emit; only a comma followed by a real
+        // second argument puts the call in name position.
+        let k = j + 1
+        while (k < cleanText.length && /\s/.test(cleanText[k]!)) k++
+        next = cleanText[k] === ')' ? undefined : ','
+      }
+      if (next === ',' || next === '+' || next === '.') {
+        NONLITERAL_EMITS.push(`${file.fromSrc} -> emit(${m[0].slice(0, 40)}...) (computed head arg)`)
+      }
+    }
+    // Ident/member-led concat: `emit(x + 'y')`, `emit(obj.k + 'y')` -
+    // the head ident is not followed by `(` so the call arm never sees
+    // it; the `+` directly after the value is the marker.
+    for (const m of cleanText.matchAll(/\bemit\s*(?:<[\s\S]{0,2000}?>)?\(\s*\(*\s*[\w$]+(?:\.[\w$]+)*\s*\+/g)) {
+      if (emitExempt(m.index ?? 0)) continue
+      if (inLit(m.index ?? 0)) continue
+      NONLITERAL_EMITS.push(`${file.fromSrc} -> ${m[0]} (computed head arg)`)
+    }
     // Object-payload emits name the event via `emit({type: 'x'})` - flag
     // only a computed `type` (`[expr]` key or non-literal value).
-    for (const m of cleanText.matchAll(/\bemit\s*(?:<[\s\S]{0,400}?>)?\(\s*\{\s*(?:\[\s*[^\]]+\]|type\s*:\s*[^\s,'"`)}\n]+)/g)) {
+    for (const m of cleanText.matchAll(/\bemit\s*(?:<[\s\S]{0,2000}?>)?\(\s*\(*\s*\{\s*(?:\[\s*[^\]]+\]|type\s*:\s*[^\s,'"`)}\n]+)/g)) {
+      if (emitExempt(m.index ?? 0)) continue
       if (inLit(m.index ?? 0)) continue
       NONLITERAL_EMITS.push(`${file.fromSrc} -> ${m[0]} (computed event key)`)
     }
   }
+}
+
+/** Template markup minus live script blocks and HTML comments: spans
+ *  come from the skeleton's live-parse (`scriptBlockSpansOf`), so an
+ *  unbalanced nested `<script>` cannot swallow the template tail the
+ *  way a `<script>...</script>` regex strip does. */
+function scriptlessTemplateText(text: string): string {
+  const chars = text.split('')
+  for (const sp of scriptBlockSpansOf(text)) {
+    for (let i = sp.pos; i < sp.end && i < chars.length; i++) chars[i] = ' '
+  }
+  return chars.join('').replace(/<!--[\s\S]*?-->/g, '')
 }
 
 describe('audio binding wiring', () => {
@@ -98,6 +166,36 @@ describe('audio binding wiring', () => {
   )
 
   it(
+    'cue-id literals in binding tables are exact manifest members',
+    () => {
+      // Binding tables hand cue ids back as VALUES (=> 'combat.hit',
+      // cueId: 'x', map values) - they never pass through the .cue(
+      // call-site arm, and resolveAudioCue's qualifier-strip fallback
+      // can silently accept a typo'd id as a wrong-but-valid row. Sweep
+      // the cue-bearing files for dotted literals and require exact
+      // manifest membership. AudioCueId is `string` (not a keyof union),
+      // so the type system cannot carry this check.
+      const BINDING_FILES = [
+        'presentation/audio/combatAudioBinding.ts',
+        'presentation/audio/uiAudioBinding.ts',
+        'presentation/audio/ambientAudioDriver.ts',
+        'stores/worldAnnouncement.ts',
+      ]
+      const bad: string[] = []
+      for (const rel of BINDING_FILES) {
+        const text = uncommented(readFileSync(join(SRC_DIR, rel), 'utf8'), rel)
+        for (const r of literalRanges(text, rel)) {
+          const lit = text.slice(r.pos + 1, r.end - 1)
+          if (!/^[a-z_0-9]+(\.[a-z_0-9]+)+$/.test(lit)) continue
+          if (!(lit in AUDIO_CUES)) bad.push(`${rel} -> ${lit}`)
+        }
+      }
+      expect(bad).toEqual([])
+    },
+    SCAN_TIMEOUT,
+  )
+
+  it(
     'every literal cue id passed to .cue()/.playCue() resolves via the manifest',
     () => {
       const LITERAL = /(['"`])((?:(?!\1)[^\\])+)\1/g
@@ -112,7 +210,7 @@ describe('audio binding wiring', () => {
       // filtered by literalRanges below) so a template attribute like
       // @click="cue('x')" still matches.
       const CALL =
-        /(?:^|[^\w])(?:cue|playCue)\s*!?\s*(?:<[\s\S]{0,400}?>)?\s*!?\s*(?:\?\.\s*)?\(([^)]*)\)/g
+        /(?:^|[^\w])(?:cue|playCue)\s*!?\s*(?:<[\s\S]{0,2000}?>)?\s*!?\s*(?:\?\.\s*)?\(([^)]*)\)/g
       // A local declaration at line start (`function cue(`, `get cue(`,
       // `set cue(`, optionally `async`) is not a store call - the check
       // must anchor on the declaration line, not just a trailing word:
@@ -122,7 +220,7 @@ describe('audio binding wiring', () => {
       // and (b) modifier runs preceding a method name (`static cue(`,
       // `public async cue(`) - in (b) the callee itself is the method
       // name so the line text before it is modifiers only.
-      const MODIFIER = '(?:public|private|protected|static|abstract|override|async|readonly)'
+      const MODIFIER = '(?:public|private|protected|static|abstract|override|async|readonly|export|declare|default)'
       const LINE_DECL = new RegExp(
         `(?:^|[{;])\\s*(?:(?:${MODIFIER}\\s+)*(?:function\\s*\\*?\\s*|get\\s+|set\\s+)|(?:${MODIFIER}\\s+)+)$`,
       )
@@ -163,18 +261,36 @@ describe('audio binding wiring', () => {
         // keeps them from producing false violations.
         const templateText = file.fromSrc.endsWith('.vue')
           ? [
-              ...file.text
-                .replace(/<script\b[^>]*>[\s\S]*?<\/script[^>]*>/gi, '')
-                .replace(/<!--[\s\S]*?-->/g, '')
+              // Event-handler and bound-attribute VALUES (`@click=",
+              // `v-on:x=`, `v-bind:x=`, `:x=`) compile to real call sites;
+              // literal attrs (`title="...")` are inert text, not
+              // expressions. Bare `v-on=`/`v-bind=` object-syntax values
+              // (`v-on="{click: () => cue('x')}"`) and {{ ... }}
+              // interpolation bodies are executable too - sweep all of
+              // them (reported W12: prefixed-only miss).
+              ...scriptlessTemplateText(file.text)
                 .matchAll(
-                  /(?:@|v-on:|v-bind:|:)[\w.\[\]:#-]*\s*=\s*(['"])((?:(?!\1)[\s\S])*)\1/g,
+                  /(?:@|v-on:|v-bind:|:)[\w.\[\]:#-]*\s*=\s*(['"])((?:(?!\1)[\s\S])*)\1|\bv-(?:on|bind)\s*=\s*(['"])((?:(?!\3)[\s\S])*)\3|\{\{([\s\S]*?)\}\}/g,
                 ),
             ]
-              .map((m) => m[2]!)
+              .map((m) => m[2] ?? m[4] ?? m[5]!)
               .join('\n')
           : ''
         const scriptText = uncommented(file.text, file.fromSrc)
         const text = scriptText + '\n' + templateText
+        // Imported local names: `import { importedCueId } from ...` -
+        // an imported ident fed to cue() is a cross-file smuggle lane.
+        const importedIdents = new Set<string>()
+        for (const im of text.matchAll(/^\s*import\s+(?:type\s+)?(?:\{([^}]*)\}|([\w$]+)|\*\s+as\s+([\w$]+))/gm)) {
+          if (im[2]) importedIdents.add(im[2])
+          if (im[3]) importedIdents.add(im[3])
+          if (im[1]) {
+            for (const spec of im[1].split(',')) {
+              const m = /(?:\bas\s+)?([\w$]+)\s*$/.exec(spec.trim())
+              if (m) importedIdents.add(m[1]!)
+            }
+          }
+        }
         // Names declared locally in this file (`function cue`, `const cue
         // =`) are not the store seam - bare calls to them are exempt.
         const aliases: string[] = []
@@ -186,7 +302,7 @@ describe('audio binding wiring', () => {
           // seam, so call sites of it must still be checked.
           const rhs = text.slice(
             (d.index ?? 0) + d[0].length,
-            (d.index ?? 0) + d[0].length + 400,
+            (d.index ?? 0) + d[0].length + 2000,
           )
           // The seam check must see the WHOLE RHS up to the statement
           // end - `const cue = (\n  id,\n) => audioStore.cue(id)` (a
@@ -218,6 +334,17 @@ describe('audio binding wiring', () => {
             }
           }
           if (end < 0) continue
+          // Only a destructure FROM the seam renames the store's cue -
+          // `const { cue: q } = { cue: localFn }` is a domain-local and
+          // its calls must stay exempt (same RHS rule as seamDeclared).
+          const afterBrace = text.slice(end + 1, end + 1 + 2000)
+          if (
+            !/^\s*=\s*(?:useAudioStore\s*\(|(?:audioStore|store|audioMgr|audioManager|audio|am)\b)/.test(
+              afterBrace,
+            )
+          ) {
+            continue
+          }
           const body = text.slice(openIdx, end + 1)
           for (const am of body.matchAll(/\b(?:cue|playCue)\s*:\s*([A-Za-z_]\w*)/g)) {
             aliases.push(am[1]!)
@@ -247,7 +374,7 @@ describe('audio binding wiring', () => {
           aliases.length === 0
             ? CALL
             : new RegExp(
-                `(?:^|[^\\w])(?:cue|playCue|${aliases.join('|')})\\s*!?\\s*(?:<[\\s\\S]{0,400}?>)?\\s*!?\\s*(?:\\?\\.\\s*)?\\(([^)]*)\\)`,
+                `(?:^|[^\\w])(?:cue|playCue|${aliases.join('|')})\\s*!?\\s*(?:<[\\s\\S]{0,2000}?>)?\\s*!?\\s*(?:\\?\\.\\s*)?\\(([^)]*)\\)`,
                 'g',
               )
         // Literal spans (strings, template text, regexes) - a match
@@ -255,7 +382,10 @@ describe('audio binding wiring', () => {
         // literals where line-local parity desyncs. Computed over the
         // SCRIPT only: Vue template attribute text is real code, not a
         // TS literal, and must not be filtered out.
-        const lits = literalRanges(scriptText, file.fromSrc)
+        // tsx .vue blocks must scan under the JSX variant - `.vue` maps
+        // to Standard TS, which mis-lexes JsxText quotes into phantom
+        // strings (a `'` inside <div>don't</div> hides real calls).
+        const lits = literalRanges(scriptText, file.fromSrc, usesJsxBlocks(file.text, file.fromSrc))
         const inLit = (i: number) => lits.some((r) => i >= r.pos && i < r.end)
         for (const m of text.matchAll(callRe)) {
           // Position of the callee name itself (the match may start one
@@ -364,7 +494,10 @@ describe('audio binding wiring', () => {
               }
             }
           }
-          if (screamingIdent && !identResolved) {
+          // Imported names are the cross-file lane regardless of casing:
+          // `cue(importedCueId)` smuggles any id past the manifest check
+          // because this scan cannot resolve the other module's value.
+          if (!identResolved && (screamingIdent || importedIdents.has(ident))) {
             violations.add(`${file.fromSrc} -> unresolved cross-file ident ${ident}`)
           }
         }
@@ -380,7 +513,7 @@ describe('audio binding wiring', () => {
           // `[?!]*` before the dot keeps `store?.cue` and `store!.cue`
           // on the receiver arm.
           new RegExp(
-            `\\b${RECEIVER}\\s*[?!]*\\s*\\.\\s*(cue|playCue)\\b(?!\\s*!?\\s*(?:<[\\s\\S]{0,400}?>)?\\s*!?\\s*(?:\\?\\.\\s*)?\\()`,
+            `\\b${RECEIVER}\\s*[?!]*\\s*\\.\\s*(cue|playCue)\\b(?!\\s*!?\\s*(?:<[\\s\\S]{0,2000}?>)?\\s*!?\\s*(?:\\?\\.\\s*)?\\()`,
             'g',
           ),
         )) {
@@ -391,13 +524,29 @@ describe('audio binding wiring', () => {
         // is sourced from the audio store (`const {cue} = store` /
         // `const cue = store.cue`). A domain-local `cue` (SkillCue
         // params in the VFX driver) is a different binding.
-        // Decl shapes must see through ONE nesting level in the object
-        // pattern (`{ a: {b}, cue } = store`) - a flat `[^}]*` run stops
-        // at the inner `}` and misses the seam name after it.
+        // Decl shapes must see through ARBITRARY nesting in the object
+        // pattern (`{ a: {b: {cue}} } = store`) - a flat or one-level
+        // `[^}]*` run stops at an inner `}` and misses the seam name
+        // after it, so the balanced-brace span is walked instead.
         const seamDeclared =
-          new RegExp(
-            `\\bconst\\s+\\{[^{}]*(?:\\{[^{}]*\\}[^{}]*)*\\b(?:cue|playCue)\\b(?:[^{}]|\\{[^{}]*\\})*\\}\\s*=\\s*${RECEIVER}`,
-          ).test(text) ||
+          [...text.matchAll(/\b(?:const|let|var)\s*\{/g)].some((dm) => {
+            const openIdx = (dm.index ?? 0) + dm[0].length - 1
+            let depth = 0
+            let end = -1
+            for (let i = openIdx; i < text.length; i++) {
+              if (text[i] === '{') depth++
+              else if (text[i] === '}') {
+                depth--
+                if (depth === 0) {
+                  end = i
+                  break
+                }
+              }
+            }
+            if (end < 0) return false
+            if (!/\b(?:cue|playCue)\b/.test(text.slice(openIdx, end + 1))) return false
+            return new RegExp(`^\\s*=\\s*${RECEIVER}`).test(text.slice(end + 1))
+          }) ||
           new RegExp(
             `\\bconst\\s+(?:cue|playCue)\\s*=\\s*${RECEIVER}\\s*[?!]*\\s*\\.\\s*(?:cue|playCue)\\b`,
           ).test(text)
@@ -427,8 +576,10 @@ describe('audio binding wiring', () => {
         // Bracket access computing the cue name from quoted segments
         // (`['cue']`, `['cu'+'e']`, `['c'+'ue']`, `['c\x75e']`,
         // `['play'+'Cue']`) is indirect invocation on ANY receiver -
-        // `obj['cue'](x)` is not idiomatic member access. Escapes inside
-        // segments are decoded before the join is compared.
+        // `obj['cue'](x)` is not idiomatic member access. A trailing
+        // `(` is required - a bare read `const f = obj['cue']` is data
+        // flow, not invocation. Escapes inside segments are decoded
+        // before the join is compared.
         const decodeSeg = (seg: string): string =>
           seg
             .replace(/\\x([0-9a-fA-F]{2})/g, (_, h: string) => String.fromCharCode(parseInt(h, 16)))
@@ -437,7 +588,7 @@ describe('audio binding wiring', () => {
         // The receiver may be a call result or a parenthesized expr too:
         // `useAudioStore()['cue'](x)` / `(store)['cue'](x)` must not
         // evade (an ident-only chain never saw the `()` tail).
-        for (const vm of text.matchAll(/(?:\b[A-Za-z_$][\w$]*(?:\.[\w$]+)*(?:\s*\([^()]*\))?|\([^()]*\))\s*\[\s*([^\]]*)\]/g)) {
+        for (const vm of text.matchAll(/(?:\b[A-Za-z_$][\w$]*(?:\.[\w$]+)*(?:\s*\([^()]*\))?|\([^()]*\))\s*\[\s*([^\]]*)\]\s*\(/g)) {
           const segs = [...vm[1]!.matchAll(/'([^']*)'|"([^"]*)"|`([^`]*)`/g)].map(
             (sm) => decodeSeg(sm[1] ?? sm[2] ?? sm[3]!),
           )
@@ -450,7 +601,10 @@ describe('audio binding wiring', () => {
         // flag escapes embedded in identifier-ish text. (A `\uXXXX` inside
         // a plain string literal is not matched because a word char must
         // sit immediately before the backslash.)
-        for (const vm of text.matchAll(/[A-Za-z_$.\)\]]\\u(?:[0-9a-fA-F]{4}|\{[0-9a-fA-F]+\})/g)) {
+        // `\u0063ue('x')` at statement start has no word char before the
+        // backslash - the prefix class is optional so both the embedded
+        // form (`store.cu\u0065`) and the leading form flag.
+        for (const vm of text.matchAll(/(^|[^\\])\\u(?:[0-9a-fA-F]{4}|\{[0-9a-fA-F]+\})/gm)) {
           // `\uXXXX` inside a literal ('caf\u0065', /a\u{62}c/) is data,
           // not an identifier escape - literal spans cover multi-line
           // literals where line-parity desyncs.

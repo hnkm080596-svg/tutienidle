@@ -27,22 +27,17 @@ import { readFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { AUDIO_CUES, resolveAudioCue } from '@/core/audio/AudioCueManifest'
 import { cueForActionImpact } from '@/presentation/audio/combatAudioBinding'
+import { audioBundleIdsForCue } from '@/presentation/assets/AssetBundleCatalog'
 import { isTestFile } from './helpers/scanTs'
 
 const SPEC_PATH = join(process.cwd(), 'docs/specs/sound-system-spec.md')
 const AUDIT_PATH = join(process.cwd(), 'docs/design/sound-system-audit.md')
 
-const DOMAINS = new Set([
-  'combat',
-  'ui',
-  'music',
-  'ambient',
-  'stinger',
-  'progress',
-  'tribulation',
-  'craft',
-  'farm',
-])
+// Derived from the manifest, not hardcoded: the set filters PROSE
+// backticks only. A spec-table row under a domain the manifest lacks is
+// still collected and fails the resolve check loudly - a hardcoded list
+// would silently drop that drift.
+const DOMAINS = new Set(Object.keys(AUDIO_CUES).map((k) => k.split('.')[0]!))
 
 const CUE_ID_RE = /^[a-z]+(\.[a-z_0-9]+)+$/
 
@@ -60,21 +55,23 @@ function collectCueIds(markdown: string): string[] {
   const ids = new Set<string>()
 
   for (const match of markdown.matchAll(/`([a-z]+(?:\.[a-z_0-9<>\[\]]+)+)`/g)) {
-    addId(match[1]!)
+    addId(match[1]!, true)
   }
   // Bare first-column ids in spec tables: `| ui.toast.loot | ui | ...`
+  // A dotted id in table position IS a cue row - no domain filter, so a
+  // row under a new domain resolves-or-fails visibly.
   for (const match of markdown.matchAll(/^\|\s*([a-z]+(?:\.[a-z_0-9<>]+)+)\s*\|/gm)) {
-    addId(match[1]!)
+    addId(match[1]!, false)
   }
 
-  function addId(raw: string): void {
+  function addId(raw: string, proseContext: boolean): void {
     let id = raw
     while (id.endsWith('>')) {
       id = id.slice(0, id.lastIndexOf('.'))
     }
     // A placeholder mid-path (`ui.toast.<kind>`) drops to its family.
     id = id.replace(/\.<[^.]+>/g, '')
-    if (CUE_ID_RE.test(id) && DOMAINS.has(id.split('.')[0]!)) ids.add(id)
+    if (CUE_ID_RE.test(id) && (!proseContext || DOMAINS.has(id.split('.')[0]!))) ids.add(id)
   }
 
   return [...ids].sort()
@@ -98,6 +95,16 @@ describe('audio manifest completeness', () => {
     const ids = collectCueIds(readFileSync(AUDIT_PATH, 'utf8'))
     expect(ids.length).toBeGreaterThan(0)
     expect(ids.filter((id) => !resolves(id))).toEqual([])
+  })
+
+  // AUDIO_BUNDLE_PREFIXES is a second enumeration of the manifest's
+  // domain space: a new domain cue id that forgets a bundle row is
+  // never fetched (and so never voiced) - pin the coverage.
+  it('every manifest cue id is covered by at least one lazy audio bundle', () => {
+    const uncovered = Object.keys(AUDIO_CUES).filter(
+      (id) => audioBundleIdsForCue(id).length === 0,
+    )
+    expect(uncovered).toEqual([])
   })
 
   it('every manifest row id matches the cue-id convention', () => {
@@ -150,9 +157,9 @@ describe('audio manifest completeness', () => {
     for (const file of readdirSync(skillDir)) {
       if (!file.endsWith('.ts') || isTestFile(file)) continue
       for (const m of readFileSync(join(skillDir, file), 'utf8').matchAll(
-        /\bid:\s*'([^']+)'/g,
+        /\bid:\s*(['"`])([^'"`]+)\1/g,
       )) {
-        skillIds.add(m[1]!)
+        skillIds.add(m[2]!)
       }
     }
     const castRows = keys

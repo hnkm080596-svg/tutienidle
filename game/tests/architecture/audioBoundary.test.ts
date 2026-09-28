@@ -16,7 +16,7 @@
 import { describe, expect, it } from 'vitest'
 import { join } from 'node:path'
 import { readTs, SCAN_TIMEOUT, srcCorpus, isTestFile } from './helpers/scanTs'
-import { uncommented } from './helpers/commentStrip'
+import { scriptBlockSpansOf, uncommented } from './helpers/commentStrip'
 
 const SRC_DIR = join(process.cwd(), 'src')
 
@@ -35,12 +35,14 @@ const DYNAMIC_IMPORT_RE =
 const NONLITERAL_IMPORT_RE = /(?:^|[^\w.])(?:import|require)\s*\(\s*(?!['"`])[^)]*\)/g
 // `import.meta.glob('...')` / `import.meta.resolve('...')` are bundling
 // lanes with no `import(`/`require(` token - screen their specifiers too.
+// Bracket member access (`import.meta['glob'](x)`) carries the same
+// bundling lanes - dot and bracket spellings both count.
 const IMPORT_META_SPEC_RE =
-  /\bimport\s*\.\s*meta\s*\.\s*(?:glob|resolve)\s*\(\s*['"`]([^'"`]+)['"`]/g
+  /\bimport\s*\.\s*meta\s*(?:\.\s*(?:glob|resolve)|\[\s*['"`](?:glob|resolve)['"`]\s*\])\s*\(\s*['"`]([^'"`]+)['"`]/g
 // The same lanes with a computed specifier (`import.meta.glob(dir)`)
 // carry no literal to screen - flag the call shape itself.
 const NONLITERAL_META_RE =
-  /\bimport\s*\.\s*meta\s*\.\s*(?:glob|resolve)\s*\(\s*(?!['"`])[^)]*\)/g
+  /\bimport\s*\.\s*meta\s*(?:\.\s*(?:glob|resolve)|\[\s*['"`](?:glob|resolve)['"`]\s*\])\s*\(\s*(?!['"`])[^)]*\)/g
 // `import('to' + 'ne')` is a literal-shaped call whose specifier is a
 // concat - the extractor reads only 'to' and misses the spell. The same
 // holds for every operator/wrapper that follows the literal (`||`, `??`,
@@ -69,12 +71,27 @@ function isNonliteralImportCall(m: RegExpMatchArray, clean: string): boolean {
   const lineStart = clean.lastIndexOf('\n', m.index ?? 0) + 1
   const beforeOnLine = clean.slice(lineStart, m.index ?? 0)
   if (tail[1] === '{') {
-    // `{` opens a declaration body only when a declaration keyword run
-    // heads the line (`export function require(x) {`). A bare call at
-    // line start followed by a block is a real call, not a decl.
-    return !/\b(?:function|export|declare|async|get|set|static|public|private|protected|override|abstract)\b[^()\n]*$/.test(
-      beforeOnLine,
-    )
+    // `{` opens a declaration body when a declaration keyword run heads
+    // the line (`export function require(x) {`) OR when the match is a
+    // method shorthand - `require(x) {}` / `{ import(y){} }` carry no
+    // keyword. Shorthand detection: the callee sits in declaration
+    // position (line start, or directly after `{`/`;`/`,`) and the arg
+    // text is parameter-shaped. Residual lane: `import(dyn) {}` as a
+    // statement call plus block is genuinely ambiguous and exempted.
+    if (
+      /\b(?:function|export|declare|async|get|set|static|public|private|protected|override|abstract)\b[^()\n]*$/.test(
+        beforeOnLine,
+      )
+    ) {
+      return false
+    }
+    if (
+      (/^\s*$/.test(beforeOnLine) || /[{;,]\s*$/.test(beforeOnLine)) &&
+      /^[\w$,\s:.[\]<>|&?*]*$/.test(argText)
+    ) {
+      return false
+    }
+    return true
   }
   // `:` is a declaration tail only when the match is a declaration: it
   // must sit at line start (a `cond ? import(dyn) : x` ternary arm is a
@@ -109,9 +126,15 @@ function importSpecifiers(text: string, fileName: string): string[] {
 // attr text with a cue-ish string flags nothing here since only call
 // shapes are checked).
 function templateTextOf(text: string): string {
-  return text
-    .replace(/<script\b[^>]*>[\s\S]*?<\/script[^>]*>/gi, '')
-    .replace(/<!--[\s\S]*?-->/g, '')
+  // Strip by the skeleton's LIVE script spans, not a `<script>...</script>`
+  // regex - an unclosed/dead `<script>` inside markup used to make the
+  // regex consume through the real `</script>`, deleting every template
+  // attribute between them.
+  const chars = text.split('')
+  for (const sp of scriptBlockSpansOf(text)) {
+    for (let i = sp.pos; i < sp.end && i < chars.length; i++) chars[i] = ' '
+  }
+  return chars.join('').replace(/<!--[\s\S]*?-->/g, '')
 }
 
 // A specifier belongs to the audio subsystem when its path walks through an
@@ -167,6 +190,19 @@ describe('audio boundary', () => {
           }
           for (const m of tpl.matchAll(NONLITERAL_META_RE)) {
             offenders.push(`${file.fromSrc} -> ${m[0]}`)
+          }
+          // `import.meta.glob('tone/x')` inside a template attribute
+          // expression is build-time evaluated by Vite exactly like a
+          // script call - the literal-spec collection must sweep tpl too.
+          for (const m of tpl.matchAll(IMPORT_META_SPEC_RE)) {
+            const spec = m[1]!
+            if (
+              SUSPECT_SPEC_RE.test(spec) ||
+              /^tone([/?#.]|$)/.test(spec) ||
+              AUDIO_SPEC_RE.test(spec)
+            ) {
+              offenders.push(`${file.fromSrc} -> ${spec}`)
+            }
           }
           for (const m of tpl.matchAll(COMPOSED_IMPORT_RE)) {
             offenders.push(`${file.fromSrc} -> ${m[0]}`)
@@ -239,6 +275,11 @@ describe('audio boundary', () => {
             offenders.push(`${file.fromSrc} -> ${m[0]}`)
           }
           for (const m of tpl.matchAll(DYNAMIC_IMPORT_RE)) {
+            if (/^tone([/?#.]|$)/.test(m[1]!)) {
+              offenders.push(`${file.fromSrc} -> ${m[1]}`)
+            }
+          }
+          for (const m of tpl.matchAll(IMPORT_META_SPEC_RE)) {
             if (/^tone([/?#.]|$)/.test(m[1]!)) {
               offenders.push(`${file.fromSrc} -> ${m[1]}`)
             }

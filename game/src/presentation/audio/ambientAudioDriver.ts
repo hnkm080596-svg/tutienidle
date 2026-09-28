@@ -66,9 +66,6 @@ export function bindAmbientAudio(
     audio.crossfadeMusic(ROUTE_MUSIC[r], CROSSFADE_MS)
   }
 
-  // subscribe() fires immediately with the current snapshot - the route
-  // equals `route` there, so the listener is change-only; seed the
-  // initial route explicitly so the first unlock() knows the track.
   function onVisibilityChange(): void {
     // Mirror playCue's gate (`!== 'visible'`): 'prerender' must suspend
     // too - otherwise a prerendered tab starts a player into a suspended

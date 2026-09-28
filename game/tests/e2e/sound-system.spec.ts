@@ -119,7 +119,7 @@ test.describe('Sound system', () => {
         | { emit(type: string, event: unknown): void }
         | undefined
       if (!bus) throw new Error('eventBus not exposed in registry')
-      bus.emit('hit', { type: 'hit' })
+      bus.emit('hit', { type: 'hit', sourceId: 'player', targetId: 'enemy_1' })
       bus.emit('critical', { type: 'critical' })
       bus.emit('battle_end', { type: 'battle_end', state: 'victory' })
     })
