@@ -893,6 +893,7 @@ class AudioManagerImpl {
     this.desiredMusicId = null
     this.playingMusicId = null
     this.musicSuspended = false
+    this.readyListeners.clear()
 
     this.disposeChain()
     this.unlockState = 'idle'
