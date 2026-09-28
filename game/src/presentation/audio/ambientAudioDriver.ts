@@ -69,6 +69,23 @@ export function bindAmbientAudio(
   // subscribe() fires immediately with the current snapshot - the route
   // equals `route` there, so the listener is change-only; seed the
   // initial route explicitly so the first unlock() knows the track.
+  function onVisibilityChange(): void {
+    if (document.visibilityState === 'hidden') {
+      audio.suspendMusic()
+    } else {
+      audio.resumeMusic()
+    }
+  }
+
+  document.addEventListener('visibilitychange', onVisibilityChange)
+  // Seed BEFORE the first applyRoute: on a hidden remount with unlocked
+  // audio, applyRoute's crossfadeMusic would otherwise spawn a player for
+  // a few ms before the seed suspends it.
+  onVisibilityChange()
+
+  // subscribe() fires immediately with the current snapshot - the route
+  // equals `route` there, so the listener is change-only; seed the
+  // initial route explicitly so the first unlock() knows the track.
   const unsubscribe = coordinator.subscribe((snapshot) => {
     if (snapshot.currentRoute !== route) applyRoute(snapshot.currentRoute)
   })
@@ -89,19 +106,6 @@ export function bindAmbientAudio(
       }
     },
   )
-
-  function onVisibilityChange(): void {
-    if (document.visibilityState === 'hidden') {
-      audio.suspendMusic()
-    } else {
-      audio.resumeMusic()
-    }
-  }
-
-  document.addEventListener('visibilitychange', onVisibilityChange)
-  // Seed the flag for a page already hidden at load - the change event
-  // only fires on transitions, so without this a hidden load plays music.
-  onVisibilityChange()
 
   return () => {
     unsubscribe()

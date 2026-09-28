@@ -30,7 +30,6 @@ const STATIC_CUES: ReadonlyArray<readonly [string, string]> = [
   ['dodge', 'combat.dodge'],
   ['block', 'combat.block'],
   ['death', 'combat.death'],
-  ['kill', 'combat.kill'],
   ['heal', 'combat.heal'],
   ['talent_survive_lethal', 'combat.survive_lethal'],
   ['turn_ready', 'combat.turn_ready'],
@@ -145,6 +144,11 @@ function cueForActionImpact(event: ActionImpactLike): string | undefined {
 }
 
 const PAYLOAD_CUES: ReadonlyArray<readonly [string, (event: never) => string | undefined]> = [
+  // 'kill' fires back-to-back with 'death' per entity death (CombatSystem) -
+  // mapping both would double-fire one kill sound. combat.kill stays in the
+  // manifest as a forward slot for a distinct kill-confirm asset; rebind
+  // when that asset lands and the pair is meant to layer.
+  ['kill', () => undefined],
   // 'damage' fires alongside hit/critical — audible only when the PLAYER
   // takes the hit (combat.hurt), else silent to avoid double-triggering.
   [

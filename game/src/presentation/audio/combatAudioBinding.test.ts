@@ -33,7 +33,6 @@ describe('bindCombatAudio', () => {
       ['dodge', 'combat.dodge'],
       ['block', 'combat.block'],
       ['death', 'combat.death'],
-      ['kill', 'combat.kill'],
       ['heal', 'combat.heal'],
       ['talent_survive_lethal', 'combat.survive_lethal'],
       ['turn_ready', 'combat.turn_ready'],
@@ -55,6 +54,14 @@ describe('bindCombatAudio', () => {
       bus.emit(event, { type: event })
       expect(cueSpy, event).toHaveBeenCalledWith(expectedCue)
     }
+  })
+
+  it('kill stays silent - it co-fires with death on every entity death', () => {
+    const bus = new EventBus()
+    bindCombatAudio(bus)
+
+    bus.emit('kill', { type: 'kill', sourceId: 'player', targetId: 'enemy-1' })
+    expect(cueSpy).not.toHaveBeenCalled()
   })
 
   it('plays combat.hurt only when the PLAYER takes damage', () => {

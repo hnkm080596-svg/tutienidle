@@ -302,6 +302,8 @@ function createSynth(recipe: SoundRecipe): AnySynth {
 }
 
 
+const DECODE_RETRY_LIMIT = 3
+
 class AudioManagerImpl {
   private enabled = true
   private masterVolume = 0.7
@@ -322,6 +324,11 @@ class AudioManagerImpl {
   // queued until a live context exists; active one-shot Player tracking.
   private buffers = new Map<string, AudioBuffer>()
   private pendingEncoded = new Map<string, ArrayBuffer>()
+  // Decode attempts per src - a failed decode keeps its bytes in
+  // pendingEncoded and playCue kicks a bounded retry, so one transient
+  // decode failure cannot permanently silence an src.
+  private decodeAttempts = new Map<string, number>()
+  
   private players = new Set<Tone.Player>()
   private musicPlayer: Tone.Player | null = null
   private desiredMusicId: string | null = null
@@ -535,6 +542,13 @@ class AudioManagerImpl {
       }
 
       const src = this.pickDecodedSrc(id, def.src)
+      if (src === undefined) {
+        // src requested but undecoded: if its bytes are parked (context
+        // wasn't ready or a decode failed), kick a bounded retry - the
+        // first post-failure play stays silent, later plays succeed.
+        const srcs = typeof def.src === 'string' ? (def.src === '' ? [] : [def.src]) : def.src
+        for (const s of srcs) this.retryDecode(s)
+      }
       if (src !== undefined) {
         this.cueCooldownAt.set(id, now)
         this.spawnPlayer(src, def)
@@ -840,11 +854,28 @@ class AudioManagerImpl {
       if (!decode) return
       const buffer = await decode(data)
       this.buffers.set(key, buffer)
+      this.decodeAttempts.delete(key)
       // A desired music track may have been waiting on this buffer.
       this.applyDesiredMusic()
     } catch {
-      // Decode failure: slot stays empty — cue keeps its silent/fallback path.
+      // Decode failure: retain the bytes for a bounded play-time retry
+      // (retryDecode). Past the limit the slot stays silent - the cue
+      // keeps its fallback path either way.
+      const attempts = this.decodeAttempts.get(key) ?? 0
+      if (attempts < DECODE_RETRY_LIMIT) {
+        this.pendingEncoded.set(key, data)
+      }
     }
+  }
+
+  private retryDecode(key: string): void {
+    const data = this.pendingEncoded.get(key)
+    if (data === undefined) return
+    const attempts = this.decodeAttempts.get(key) ?? 0
+    this.pendingEncoded.delete(key)
+    if (attempts >= DECODE_RETRY_LIMIT) return
+    this.decodeAttempts.set(key, attempts + 1)
+    void this.decodeInto(key, data)
   }
 
   /**
