@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 2,
+  "run": {
+    "id": "sound-system-2026-09-28",
+    "createdAt": "2026-09-28T05:31:45.607Z",
+    "scope": "AGGREGATE_REPOSITORY",
+    "authorizedRepairs": [],
+    "nonGoals": [],
+    "checkout": "/tmp/sound-merge/game",
+    "branch": "devin/1790536865-sound-system-audit",
+    "base": "21a5f8c5",
+    "head": "791a7903",
+    "state": {
+      "productStateId": "",
+      "contractId": "",
+      "attackModelId": "",
+      "environmentId": ""
+    },
+    "manifestPath": "manifest.json",
+    "environmentPath": "environment.json",
+    "learningPolicyId": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+    "consumedLessonIds": [],
+    "aggregateParents": [],
+    "requiredDomains": [],
+    "exclusions": [],
+    "briefIds": [],
+    "capacityLimit": 5,
+    "requiredReadiness": false,
+    "phase": "INTAKE",
+    "cleanRoundA": null,
+    "cleanRoundB": null,
+    "finalEvidenceIds": [],
+    "outcome": null
+  },
+  "briefs": [],
+  "assignments": [],
+  "consumptions": [],
+  "invariants": [],
+  "census": [],
+  "findings": [],
+  "evidence": [],
+  "coverage": [],
+  "attacks": [],
+  "reviews": [],
+  "cycles": [],
+  "mutations": [],
+  "corpus": [],
+  "lessons": [],
+  "messages": [],
+  "events": [
+    {
+      "seq": 1,
+      "at": "2026-09-28T05:31:45.607Z",
+      "kind": "PHASE",
+      "actor": "coordinator-56995",
+      "state": {
+        "productStateId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567",
+        "contractId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567",
+        "attackModelId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567",
+        "environmentId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567"
+      },
+      "previousEventHash": null,
+      "payloadPath": "events/0001.json",
+      "payloadHash": "39ba7003aa987def8280f09f2d576c03b829ed7e369d1dd646a9b6ac9c9ea526",
+      "eventHash": "c5f8fe1f30b696e0cb9a5cf593e84ad4e96ab2c88d177f2e105c2ec812f487d6"
+    }
+  ]
+}

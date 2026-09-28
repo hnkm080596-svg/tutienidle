@@ -1,0 +1,19 @@
+{
+  "phase": "INTAKE",
+  "request": {
+    "runId": "sound-system-2026-09-28",
+    "productRoot": ".",
+    "goal": "Verify the sound-system scaffold PR #44 (branch devin/1790536865-sound-system-audit, head 791a7903, base/master-tip 21a5f8c5 = post #41+#43+#46). The branch adds a full audio architecture: AudioCueManifest (~230 cue rows, src:'' silent), AudioManager channel buses, audio Pinia store v2, dom-audio lazy bundle lane, combat/ui/ambient bindings, 5 new core gap emits, W10 screenShakePolicy, Settings audio UI, architecture guards. Merge resolutions onto newest master rewire cues onto master's chrome (i18n aria, ConfirmModal/ExitConfirm, VendorPanel sell-quote, Settings language section) and route #43's new cameraImpulse through applyScreenShake. Surface: audio core, presentation bindings, scene wiring, combat/UI touchpoints, stores, locales, e2e spec.",
+    "requiredReadiness": false,
+    "contractPaths": [
+      "docs/qa/protocol/README.md"
+    ],
+    "attackModelPath": "attack-model.json",
+    "checkout": "/tmp/sound-merge/game",
+    "branch": "devin/1790536865-sound-system-audit",
+    "base": "21a5f8c5",
+    "head": "791a7903",
+    "capacityLimit": 5,
+    "environmentPath": "environment.json"
+  }
+}
