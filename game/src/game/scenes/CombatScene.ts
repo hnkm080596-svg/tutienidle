@@ -1700,6 +1700,10 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
    * 6A-T5 — exit zone trong canvas click → bridge sang DOM confirm
    * modal (T6) qua eventBus. KHÔNG mở modal trực tiếp từ scene.
    */
+  // NOTE (2026-09-28): intentional seam - no production caller wires a
+  // canvas exit-zone click today; the DOM CombatTopBar exit button emits
+  // the same 'combat_exit_request' event directly. Keep for a future
+  // in-canvas exit affordance; do not call from production UI code.
   requestCombatExit() {
     this.eventBus?.emit('combat_exit_request', undefined)
   }

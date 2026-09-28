@@ -50,7 +50,7 @@ function entryText(entry: ActionFeedbackEntry): string {
       aria-relevant="additions"
     >
       <div class="feedback-log__header">
-        <span>Nhật ký thao tác</span>
+        <span>{{ t('actionFeedback.title') }}</span>
 
         <div class="feedback-log__controls">
           <button
@@ -59,11 +59,11 @@ function entryText(entry: ActionFeedbackEntry): string {
             class="feedback-log__btn"
             @click="feedback.clear()"
           >
-            Xóa
+            {{ t('actionFeedback.clear') }}
           </button>
 
           <button type="button" class="feedback-log__btn" @click="feedback.toggleCollapsed()">
-            {{ feedback.collapsed ? 'Mở' : 'Thu gọn' }}
+            {{ feedback.collapsed ? t('actionFeedback.expand') : t('actionFeedback.collapse') }}
           </button>
         </div>
       </div>

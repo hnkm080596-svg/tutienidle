@@ -18,7 +18,7 @@ export interface CommandWheelSlot {
 
   ring: CommandWheelRing
 
-  label: string
+  labelKey: string
 
   target?: PanelTarget
 
@@ -90,21 +90,21 @@ export const COMMAND_WHEEL_SLOTS: CommandWheelSlot[] = [
   {
     id: 'character',
     ring: 1,
-    label: 'Nhân Vật',
+    labelKey: 'panels.wheel.slots.character',
     target: { kind: 'left_panel', mode: 'character' },
     available: ALWAYS_AVAILABLE,
   },
   {
     id: 'realm',
     ring: 1,
-    label: 'Cảnh Giới',
+    labelKey: 'panels.wheel.slots.realm',
     target: { kind: 'standalone', panel: 'realm' },
     available: ALWAYS_AVAILABLE,
   },
   {
     id: 'skill',
     ring: 1,
-    label: 'Kỹ Năng',
+    labelKey: 'panels.wheel.slots.skill',
     target: { kind: 'standalone', panel: 'skill' },
     available: ALWAYS_AVAILABLE,
   },
@@ -113,7 +113,7 @@ export const COMMAND_WHEEL_SLOTS: CommandWheelSlot[] = [
   {
     id: 'quest',
     ring: 2,
-    label: 'Nhiệm Vụ',
+    labelKey: 'panels.wheel.slots.quest',
     target: { kind: 'standalone', panel: 'quest' },
     available: ALWAYS_AVAILABLE,
   },
@@ -124,7 +124,7 @@ export const COMMAND_WHEEL_SLOTS: CommandWheelSlot[] = [
   {
     id: 'phap_bao',
     ring: 2,
-    label: 'Pháp Bảo',
+    labelKey: 'panels.wheel.slots.phap_bao',
     target: { kind: 'standalone', panel: 'artifact' },
     available: ALWAYS_AVAILABLE,
     // M-F-ARTIFACT-DEFER: the domain is deferred to Kim Dan+, which is
@@ -150,7 +150,7 @@ export const COMMAND_WHEEL_SLOTS: CommandWheelSlot[] = [
   {
     id: 'talisman_slot',
     ring: 2,
-    label: 'Phù',
+    labelKey: 'panels.wheel.slots.talisman_slot',
     available: NEVER_AVAILABLE,
   },
   // Trận Pháp (Combat Art Roster spec, 2026-09-05) — SHIPPED, mở
@@ -160,7 +160,7 @@ export const COMMAND_WHEEL_SLOTS: CommandWheelSlot[] = [
   {
     id: 'formation_slot',
     ring: 2,
-    label: 'Trận',
+    labelKey: 'panels.wheel.slots.formation_slot',
     target: { kind: 'standalone', panel: 'tran_phap' },
     available: ALWAYS_AVAILABLE,
     disabledReason: (context) => {
@@ -177,7 +177,7 @@ export const COMMAND_WHEEL_SLOTS: CommandWheelSlot[] = [
   {
     id: 'companion_roster',
     ring: 2,
-    label: 'Đồng Đội',
+    labelKey: 'panels.wheel.slots.companion_roster',
     target: { kind: 'standalone', panel: 'companion' },
     available: ALWAYS_AVAILABLE,
     disabledReason: (context) => {
@@ -193,35 +193,35 @@ export const COMMAND_WHEEL_SLOTS: CommandWheelSlot[] = [
   {
     id: 'teleport_array',
     ring: 3,
-    label: 'Truyền Tống Trận',
+    labelKey: 'panels.wheel.slots.teleport_array',
     buildingId: 'teleport_array',
     available: ALWAYS_AVAILABLE,
   },
   {
     id: 'pill_room',
     ring: 3,
-    label: 'Đan Phòng',
+    labelKey: 'panels.wheel.slots.pill_room',
     buildingId: 'pill_room',
     available: ALWAYS_AVAILABLE,
   },
   {
     id: 'gathering_outpost',
     ring: 3,
-    label: 'Sản Xuất',
+    labelKey: 'panels.wheel.slots.gathering_outpost',
     buildingId: 'gathering_outpost',
     available: ALWAYS_AVAILABLE,
   },
   {
     id: 'chi_hien_quan',
     ring: 3,
-    label: 'Chiêu Hiền Quán',
+    labelKey: 'panels.wheel.slots.chi_hien_quan',
     buildingId: 'chi_hien_quan',
     available: ALWAYS_AVAILABLE,
   },
   {
     id: 'equipment_hall',
     ring: 3,
-    label: 'Khí Đường',
+    labelKey: 'panels.wheel.slots.equipment_hall',
     buildingId: 'equipment_hall',
     available: ALWAYS_AVAILABLE,
   },
@@ -230,7 +230,7 @@ export const COMMAND_WHEEL_SLOTS: CommandWheelSlot[] = [
   {
     id: 'scripture_pavilion',
     ring: 4,
-    label: 'Tàng Kinh Các',
+    labelKey: 'panels.wheel.slots.scripture_pavilion',
     // KHÔNG qua building controller — entry duy nhất là shortcut này.
     target: { kind: 'left_panel', mode: 'scripture_pavilion' },
     available: ALWAYS_AVAILABLE,
@@ -238,7 +238,7 @@ export const COMMAND_WHEEL_SLOTS: CommandWheelSlot[] = [
   {
     id: 'settings',
     ring: 4,
-    label: 'Cài Đặt',
+    labelKey: 'panels.wheel.slots.settings',
     target: { kind: 'left_panel', mode: 'settings' },
     available: ALWAYS_AVAILABLE,
   },

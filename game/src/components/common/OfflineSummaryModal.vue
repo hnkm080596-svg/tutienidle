@@ -53,7 +53,7 @@ const titleId = useId()
   <div class="offline-summary" :style="{ zIndex: OVERLAY_LAYERS.modal }">
     <section
       ref="panelRef"
-      class="offline-summary__panel"
+      class="offline-summary__panel paper-on-dark"
       role="dialog"
       aria-modal="true"
       :aria-labelledby="titleId"

@@ -8,6 +8,7 @@ import { usePlayerStore } from '@/stores/player'
 import { useBreakthroughRequirementStore } from '@/stores/breakthroughRequirement'
 import { GAME_MANAGER_KEY, BUMP_STATE_KEY, STATE_VERSION_KEY } from '@/composables/useGameState'
 import { TECHNIQUES } from '@/data/technique/Techniques'
+import { makeInstance } from '@/core/equipment/EquipmentInstance.fixture'
 import type { PlayerData } from '@/core/player/Player'
 import { i18n } from '@/i18n'
 
@@ -53,13 +54,27 @@ function mountPanel(setup?: (manager: GameManager, player: PlayerData) => void) 
 afterEach(() => { document.body.innerHTML = '' })
 
 describe('BreakthroughRequirementPanel — confirm panel (Task 9.1)', () => {
-  it('render title "Độ kiếp cũng là độ thân" + subtitle đỏ + 2 nút', () => {
-    const { container, unmount } = mountPanel()
+  // The equipment subtitle only renders while gear is actually worn
+  // (ui-audit fix) - an always-on warning read as a lie on gear-less
+  // saves.
+  it('render title "Độ kiếp cũng là độ thân" + subtitle đỏ + 2 nút khi có trang bị', () => {
+    const { container, unmount } = mountPanel((manager) => {
+      manager.equipmentBag.add(makeInstance({ equipped: true }))
+    })
 
     expect(container.textContent).toContain(t('tribulation.stillEquipped.title'))
     expect(container.textContent).toContain(t('tribulation.stillEquipped.subtitle'))
     expect(container.textContent).toContain(t('tribulation.stillEquipped.confirm'))
     expect(container.textContent).toContain(t('tribulation.stillEquipped.cancel'))
+
+    unmount()
+  })
+
+  it('ẩn subtitle trang bị khi không có đồ nào đang mặc', () => {
+    const { container, unmount } = mountPanel()
+
+    expect(container.textContent).toContain(t('tribulation.stillEquipped.title'))
+    expect(container.textContent).not.toContain(t('tribulation.stillEquipped.subtitle'))
 
     unmount()
   })
@@ -104,7 +119,8 @@ describe('BreakthroughRequirementPanel — unperfected technique warning (M-F-TE
     })
 
     // rank 12 at realmLevel 12 projects dai_thanh - still unperfected.
-    expect(warnings(container)).toHaveLength(2)
+    // (no gear equipped here - the equipment subtitle stays hidden)
+    expect(warnings(container)).toHaveLength(1)
     expect(container.textContent).toContain(t('tribulation.unperfectedTechnique.state.dai_thanh'))
 
     unmount()
@@ -116,7 +132,7 @@ describe('BreakthroughRequirementPanel — unperfected technique warning (M-F-TE
       manager.techniqueManager.getActive()!.rank = 18
     })
 
-    expect(warnings(container)).toHaveLength(1)
+    expect(warnings(container)).toHaveLength(0)
     expect(container.textContent).not.toContain(t('tribulation.unperfectedTechnique.state.partial'))
     expect(container.textContent).not.toContain(t('tribulation.unperfectedTechnique.state.dai_thanh'))
 
@@ -126,7 +142,7 @@ describe('BreakthroughRequirementPanel — unperfected technique warning (M-F-TE
   it('hides the warning when no technique is held', () => {
     const { container, unmount } = mountPanel()
 
-    expect(warnings(container)).toHaveLength(1)
+    expect(warnings(container)).toHaveLength(0)
 
     unmount()
   })
@@ -142,7 +158,7 @@ describe('BreakthroughRequirementPanel — unperfected technique warning (M-F-TE
     })
 
     // The sealed record returns verbatim even at a new realmLevel.
-    expect(warnings(container)).toHaveLength(2)
+    expect(warnings(container)).toHaveLength(1)
     expect(container.textContent).toContain(t('tribulation.unperfectedTechnique.state.dai_thanh'))
 
     unmount()

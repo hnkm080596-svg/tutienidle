@@ -7,6 +7,7 @@ import { useGameManager } from '@/composables/useGameState'
 import { useNotificationStore } from '@/stores/notification'
 import { exportSaveToFile, getRawSave, importSaveRaw, SAVE_RESET_REQUEST_EVENT } from '@/services/save/SaveSystem'
 import { UI_SCALE_OPTIONS, loadUiScale, saveUiScale } from '@/composables/uiScale'
+import { LOCALE_OPTIONS, saveLocale, type AppLocale } from '@/composables/locale'
 import ConfirmModal from '@/components/common/ConfirmModal.vue'
 import GameButton from '@/components/common/GameButton.vue'
 import Chip from '@/components/common/primitives/Chip.vue'
@@ -15,6 +16,7 @@ const player = usePlayerStore()
 const gameManager = useGameManager()
 const notification = useNotificationStore()
 const audio = useAudioStore()
+const { t, locale } = useI18n()
 
 // W3: one slider per audio channel (field = store state, channel = bus id).
 const AUDIO_CHANNELS = [
@@ -22,7 +24,6 @@ const AUDIO_CHANNELS = [
   { field: 'sfxVolume', channel: 'sfx', labelKey: 'sfxVolume' },
   { field: 'uiVolume', channel: 'ui', labelKey: 'uiVolume' },
 ] as const
-const { t } = useI18n()
 
 // Thay window.confirm() native — modal xác nhận đồng bộ hoá bằng
 // pending-action: mở ConfirmModal, hành động thật chỉ chạy khi
@@ -48,6 +49,10 @@ const uiScale = ref<number>(loadUiScale())
 function handleUiScale(scale: number) {
   uiScale.value = scale
   saveUiScale(scale)
+}
+
+function handleLocale(next: AppLocale) {
+  saveLocale(next)
 }
 
 const lastSavedLabel = ref('')
@@ -151,31 +156,39 @@ function handleReset() {
 </script>
 
 <template>
-  <div class="settings-panel">
+  <div class="settings-panel paper-on-dark">
     <p class="settings-panel__warning">
       {{ t('panels.settings.autosaveNote') }}
     </p>
 
-    <div class="settings-panel__actions">
-      <GameButton variant="secondary" data-testid="settings-save-button" @click="handleSave">{{ t('panels.settings.actions.save') }}</GameButton>
+    <!-- Sectioned grid (ui-audit creation-meta): the actions column was
+         a lone 360px strip inside a min(1120px) overlay - group the four
+         setting clusters into equal cards that fill the space. -->
+    <div class="settings-panel__grid">
+      <section class="settings-panel__section" :aria-label="t('panels.settings.sections.saveAria')">
+        <h4>{{ t('panels.settings.sections.save') }}</h4>
 
-      <GameButton variant="secondary" @click="handleLoad">{{ t('panels.settings.actions.reload') }}</GameButton>
+        <div class="settings-panel__actions">
+          <GameButton variant="secondary" data-testid="settings-save-button" @click="handleSave">{{ t('panels.settings.actions.save') }}</GameButton>
 
-      <GameButton variant="secondary" @click="handleExport">{{ t('panels.settings.actions.export') }}</GameButton>
+          <GameButton variant="secondary" @click="handleLoad">{{ t('panels.settings.actions.reload') }}</GameButton>
 
-      <label class="settings-panel__import">
-        {{ t('panels.settings.actions.import') }}
-        <input type="file" accept="application/json" @change="handleImportFile" />
-      </label>
+          <GameButton variant="secondary" @click="handleExport">{{ t('panels.settings.actions.export') }}</GameButton>
 
-      <GameButton class="settings-panel__danger" variant="danger" @click="handleReset">
-        {{ t('panels.settings.actions.reset') }}
-      </GameButton>
-    </div>
+          <label class="settings-panel__import">
+            {{ t('panels.settings.actions.import') }}
+            <input type="file" accept="application/json" @change="handleImportFile" />
+          </label>
+
+          <GameButton class="settings-panel__danger" variant="danger" @click="handleReset">
+            {{ t('panels.settings.actions.reset') }}
+          </GameButton>
+        </div>
+      </section>
 
     <!-- WS8 — cỡ chữ giao diện: chỉ scale typography/control tokens,
          không đụng canvas/khung layout. Áp dụng tức thời + lưu local. -->
-    <section class="settings-panel__ui-scale" :aria-label="t('panels.settings.sections.uiScaleAria')">
+    <section class="settings-panel__section settings-panel__ui-scale" :aria-label="t('panels.settings.sections.uiScaleAria')">
       <h4>{{ t('panels.settings.sections.uiScale') }}</h4>
 
       <div class="settings-panel__ui-scale-options">
@@ -192,7 +205,7 @@ function handleReset() {
     </section>
 
     <!-- Audio - on/off + master/channel volumes (0-100%) + reduced shake. Persisted via useAudioStore. -->
-    <section class="settings-panel__audio" :aria-label="t('panels.settings.sections.audioAria')">
+    <section class="settings-panel__section settings-panel__audio" :aria-label="t('panels.settings.sections.audioAria')">
       <h4>{{ t('panels.settings.sections.audio') }}</h4>
 
       <div class="settings-panel__audio-row">
@@ -254,6 +267,27 @@ function handleReset() {
       </div>
     </section>
 
+    <!-- Language - UI locale, persisted via composables/locale. -->
+    <section class="settings-panel__section settings-panel__language" :aria-label="t('panels.settings.sections.languageAria')">
+      <h4>{{ t('panels.settings.sections.language') }}</h4>
+
+      <p class="settings-panel__section-note">{{ t('panels.settings.language.note') }}</p>
+
+      <div class="settings-panel__language-options">
+        <Chip
+          v-for="option in LOCALE_OPTIONS"
+          :key="option"
+          class="settings-panel__language-option"
+          :active="locale === option"
+          :data-testid="`settings-locale-${option}`"
+          @click="handleLocale(option)"
+        >
+          {{ t(`panels.settings.language.names.${option}`) }}
+        </Chip>
+      </div>
+    </section>
+    </div>
+
     <p v-if="lastSavedLabel" class="settings-panel__hint">{{ t('panels.settings.hints.savedAt', { time: lastSavedLabel }) }}</p>
 
     <ConfirmModal
@@ -283,16 +317,39 @@ function handleReset() {
   margin: 0 0 12px;
 }
 
+.settings-panel__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 14px;
+  align-items: start;
+}
+
+.settings-panel__section {
+  padding: 14px;
+  border: 1px solid var(--paper-line);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--paper-100) 35%, transparent);
+}
+
+.settings-panel__section h4 {
+  margin: 0 0 10px;
+  color: var(--paper-text);
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  letter-spacing: 0.05em;
+}
+
+.settings-panel__section-note {
+  margin: 0 0 10px;
+  color: var(--paper-text-soft);
+  font-size: var(--text-xs);
+}
+
 .settings-panel__actions {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 10px;
-  max-width: 360px;
-  padding: 14px;
-  border: 1px solid var(--paper-line);
-  border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--paper-100) 35%, transparent);
 }
 
 .settings-panel__actions > .game-button,
@@ -329,12 +386,6 @@ function handleReset() {
 }
 
 /* WS8 — chọn cỡ chữ giao diện. */
-.settings-panel__ui-scale {
-  margin-top: 16px;
-  padding-top: 12px;
-  border-top: 1px solid var(--paper-line);
-}
-
 .settings-panel__ui-scale h4 {
   margin: 0 0 8px;
 }
@@ -357,12 +408,6 @@ function handleReset() {
 }
 
 /* Audio — on/off + master volume. */
-.settings-panel__audio {
-  margin-top: 16px;
-  padding-top: 12px;
-  border-top: 1px solid var(--paper-line);
-}
-
 .settings-panel__audio h4 {
   margin: 0 0 8px;
   color: var(--paper-text);
@@ -400,5 +445,23 @@ function handleReset() {
   min-width: 3ch;
   text-align: right;
   color: var(--paper-text-soft);
+}
+
+/* Language - chip row in the same rhythm as ui-scale options. */
+.settings-panel__language-options {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.settings-panel__language-option {
+  padding: 0 var(--space-4);
+  border-color: var(--paper-line);
+  color: var(--paper-text);
+  font-size: var(--text-sm);
+  --chip-active-bg: color-mix(in srgb, var(--chrome-300) 12%, transparent);
+}
+
+.settings-panel__language-option:hover {
+  border-color: var(--chrome-500);
 }
 </style>

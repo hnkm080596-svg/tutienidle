@@ -101,6 +101,63 @@ export class VendorSystem {
   }
 
   /**
+   * Single authority for the sell->stone conversion. unitPrice is
+   * ha-pham-equivalent; the real grant is floor(raw / conversionFactor)
+   * where the factor follows the realm-tier stone table (1/100/30000).
+   * Returns null when the stack is too small to yield any stone.
+   */
+  private quoteStoneGrant(
+    unitPrice: number,
+    amount: number,
+    realmId: string,
+  ): { gainedStone: number; stoneMaterialId: string } | null {
+    const tier = getRealmTier(realmId)
+    const conversionFactor = tier >= 7 ? 30_000 : tier >= 4 ? 100 : 1
+    const gainedStone = Math.floor((unitPrice * amount) / conversionFactor)
+
+    if (gainedStone <= 0) {
+      return null
+    }
+
+    return { gainedStone, stoneMaterialId: getSpiritStoneMaterialIdForRealmTier(tier) }
+  }
+
+  /**
+   * Read-only preview of what a sale would grant. Covers sellMaterial's
+   * gates that can flip the verdict at preview time: amount validity,
+   * known/sellable material, the sole-recipe-ingredient guard (needs the
+   * live bag). Omitted by construction: owned<amount (callers clamp to
+   * bag contents), bag_full (spirit stones stackLimit=MAX_SAFE_INTEGER),
+   * stone registry.has (catalog constant). null = not sellable for this
+   * player; granted = 0 means the stack is too small to convert at this
+   * realm tier.
+   */
+  previewSellGrant(
+    bag: MaterialBag,
+    materialId: string,
+    amount: number,
+    realmId: string,
+  ): { granted: number; stoneMaterialId: string } | null {
+    if (!Number.isInteger(amount) || amount <= 0) {
+      return null
+    }
+
+    const unitPrice = this.getUnitSellPrice(materialId, realmId)
+
+    if (unitPrice === undefined) {
+      return null
+    }
+
+    if (this.isSoleRecipeIngredient(materialId, bag.getAmount(materialId) - amount)) {
+      return null
+    }
+
+    const quote = this.quoteStoneGrant(unitPrice, amount, realmId)
+
+    return quote === null ? { granted: 0, stoneMaterialId: '' } : { granted: quote.gainedStone, stoneMaterialId: quote.stoneMaterialId }
+  }
+
+  /**
    * Bán `amount` đơn vị material lấy Linh Thạch. Trả { ok: true, gained }
    * với gained = số Linh Thạch ĐÃ quy đổi theo phẩm realm của material.
    */
@@ -109,7 +166,7 @@ export class VendorSystem {
     materialId: string,
     amount: number,
     realmId: string,
-  ): { ok: boolean; reason?: string; gained?: number } {
+  ): { ok: boolean; reason?: string; gained?: number; stoneMaterialId?: string } {
     if (!Number.isInteger(amount) || amount <= 0) {
       return { ok: false, reason: 'invalid_amount' }
     }
@@ -144,23 +201,13 @@ export class VendorSystem {
       return { ok: false, reason: 'sole_recipe_ingredient' }
     }
 
-    const tier = getRealmTier(realmId)
+    const quote = this.quoteStoneGrant(unitPrice, amount, realmId)
 
-    // conversionFactor: 1 (hạ), 100 (trung), 30000 (thượng) — khớp
-    // getSpiritStoneMaterialIdForRealmTier (trung bắt đầu tier 4, thượng
-    // tier 7). Plan dẫn công thức Math.pow(RATIO, tier-4) nhưng bảng 1/100/
-    // 30000 không sinh ra từ luỹ thừa của 100 — theo đúng BẢNG (intent).
-    const conversionFactor = tier >= 7 ? 30_000 : tier >= 4 ? 100 : 1
-
-    const rawHa = unitPrice * amount
-
-    const gainedStone = Math.floor(rawHa / conversionFactor)
-
-    if (gainedStone <= 0) {
+    if (quote === null) {
       return { ok: false, reason: 'too_small' }
     }
 
-    const stoneMaterialId = getSpiritStoneMaterialIdForRealmTier(tier)
+    const { gainedStone, stoneMaterialId } = quote
 
     if (!this.registry.has(stoneMaterialId)) {
       return { ok: false, reason: 'unknown_material' }
@@ -179,6 +226,6 @@ export class VendorSystem {
 
     bag.add(stoneMaterial, gainedStone)
 
-    return { ok: true, gained: gainedStone }
+    return { ok: true, gained: gainedStone, stoneMaterialId }
   }
 }

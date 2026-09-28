@@ -33,9 +33,14 @@ const HUD_LABEL_FONT_SIZE = '12px'
 const HUD_SUB_LABEL_FONT_SIZE = '10px'
 const LABEL_ABOVE_BAR = 4
 
-/** Phap Tu Reimagine -- one pip per The point (HUD_DOT_RADIUS ~1.5x the
- * 4px sub-bar height so the row reads clearly). */
-const THE_DOT_RADIUS = 3
+/** Phap Tu Reimagine -- one pip per The point. UI audit 2026-09-28:
+ * a fixed 3px radius read as dust specks on the 140px lane; the radius
+ * now adapts to the row density (fat pips when the cap is small, e.g.
+ * the reimagined pool = 5) while staying under this ceiling. */
+const THE_DOT_RADIUS_MAX = 5
+/** Minimum visible gap between pip edges -- keeps individual pips
+ * distinguishable at the densest row (dotMax == THE_DOT_LANE_MAX). */
+const THE_DOT_MIN_GAP = 2
 /** Pip rows stay readable only at small caps (the reimagined pool = 5);
  * beyond this the dots overlap into a smear, so large pools (ung-the
  * 100) ride the fill-rect lane instead. */
@@ -244,7 +249,7 @@ export class PlayerHudLayer {
       while (this.theGroup.dots.length < dotMax) {
         this.theGroup.dots.push(
           this.scene.add
-            .circle(0, 0, THE_DOT_RADIUS, PLAYER_HUD_BG_COLOR)
+            .circle(0, 0, THE_DOT_RADIUS_MAX, PLAYER_HUD_BG_COLOR)
             .setStrokeStyle(1, PLAYER_HUD_THE_COLOR)
             .setDepth(DEPTH_OVERLAY_UI + 2),
         )
@@ -402,8 +407,13 @@ export class PlayerHudLayer {
   private layoutTheExtras(): void {
     const group = this.theGroup
     const spacing = group.dotMax > 0 ? group.width / group.dotMax : 0
+    // Fit the largest readable pip into the live spacing: 5px radius at
+    // small caps, shrinking only enough to keep THE_DOT_MIN_GAP at the
+    // densest row (radius is also re-derived on resize).
+    const radius = Math.max(2, Math.min(THE_DOT_RADIUS_MAX, (spacing - THE_DOT_MIN_GAP) / 2))
 
     group.dots.forEach((dot, index) => {
+      dot.setRadius(radius)
       dot.setPosition(group.background.x + spacing * (index + 0.5), group.background.y)
     })
 

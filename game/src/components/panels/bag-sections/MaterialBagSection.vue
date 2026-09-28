@@ -38,6 +38,28 @@ const CATEGORY_ORDER: MaterialCategory[] = [
   'herb', 'wood', 'ore', 'monster_core', 'spirit_stone', 'essence', 'byproduct', 'other',
 ]
 
+// ui-audit economy M3: material categories without icon art
+// (spirit_stone/monster_core/essence/byproduct/other) all rendered the
+// SAME gray letter monogram, so distinct resources looked identical.
+// Each icon-less cell now carries a category accent var that tints the
+// monogram disc (see the :deep rule on .bag-section__slot).
+const CATEGORY_ACCENT: Record<MaterialCategory, string> = {
+  herb: 'var(--jade)',
+  wood: 'var(--chrome-500)',
+  ore: 'var(--rank-color-5)',
+  monster_core: 'var(--cinnabar)',
+  spirit_stone: 'var(--mineral-gold)',
+  essence: 'var(--rank-color-7)',
+  byproduct: 'var(--chrome-300)',
+  other: 'var(--surface-text-muted)',
+}
+
+type MaterialBagCell = BagCell & { accentVar?: string }
+
+function accentFor(material: Material): string | undefined {
+  return material.icon ? undefined : CATEGORY_ACCENT[material.category]
+}
+
 const SOURCE_ORDER: Material['sourceType'][] = ['boss', 'monster', 'building', 'exploration']
 
 const SOURCE_LABELS = computed<Record<Material['sourceType'], string>>(() => ({
@@ -163,7 +185,7 @@ const { stateVersion } = useStateVersion()
 const { gridRef, pageSize, gridStyle } = useBagGridLayout()
 
 interface MaterialEntry {
-  cell: BagCell
+  cell: MaterialBagCell
 
   material: Material
 
@@ -283,7 +305,7 @@ function familyBadgeLabel(item: FilteredMaterial): string {
   return `${badge.slice(0, separator)} · ${t(badge.slice(separator + 3))}`
 }
 
-function familyCell(item: FilteredMaterial): BagCell {
+function familyCell(item: FilteredMaterial): MaterialBagCell {
   const material = representativeMaterial(item)
 
   // Ô họ hiển thị TÊN GỐC (không prefix tuổi — badge đã ghi
@@ -306,6 +328,8 @@ function familyCell(item: FilteredMaterial): BagCell {
     amount: item.amount,
 
     icon: material.icon,
+
+    accentVar: accentFor(material),
 
     tooltip: buildTooltip(material, item.amount),
 
@@ -358,7 +382,7 @@ function comparePinned(a: FilteredMaterial, b: FilteredMaterial): number {
   return aPinned ? -1 : 1
 }
 
-const cells = computed<BagCell[]>(() => {
+const cells = computed<MaterialBagCell[]>(() => {
   const sortState = ui.bagSorts.material
 
   const normalCompare: (a: FilteredMaterial, b: FilteredMaterial) => number =
@@ -381,6 +405,7 @@ const cells = computed<BagCell[]>(() => {
           description: item.material.description,
           amount: item.amount,
           icon: item.material.icon,
+          accentVar: accentFor(item.material),
           tooltip: buildTooltip(item.material, item.amount),
           rarityRank: professionRankOf(item.material),
           rarityRankScale: 10,
@@ -440,6 +465,7 @@ watch([searchQuery, activeGroup], () => resetPage())
         :rarity-rank="cell?.rarityRank"
         :rarity-rank-scale="cell?.rarityRankScale"
         :name-segments="cell?.nameSegments"
+        :style="cell?.accentVar ? { '--material-accent': cell.accentVar } : undefined"
       />
     </div>
 
@@ -523,5 +549,13 @@ watch([searchQuery, activeGroup], () => resetPage())
 .bag-section__slot {
   width: 100%;
   aspect-ratio: 1 / 1;
+}
+
+/* audit M3: icon-less materials still render the letter monogram, but
+   the disc + glyph now take the category accent var set per cell so
+   spirit stones / cores / essences stop looking identical. */
+.bag-section__slot :deep(.slot-view__monogram) {
+  background: color-mix(in srgb, var(--material-accent, var(--ink-700)) 26%, var(--ink-700));
+  color: var(--material-accent, var(--slot-rarity-color, var(--text-secondary)));
 }
 </style>

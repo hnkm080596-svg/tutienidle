@@ -6,6 +6,7 @@
 // duoc, khong liet ke toan bo danh sach da co (dung tinh than "manh
 // moi phai tu tim thay", khong phai browse catalog biet truoc).
 import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import SlotView from '../../common/SlotView.vue'
 import EmptyState from '../../common/primitives/EmptyState.vue'
 import LoreCodexModal from '../LoreCodexModal.vue'
@@ -14,6 +15,7 @@ import { usePanelPagination } from '@/composables/usePanelPagination'
 
 const gameManager = useGameManager()
 const { stateVersion } = useStateVersion()
+const { t } = useI18n()
 
 const openedContent = ref<{ title: string; description: string } | null>(null)
 
@@ -48,7 +50,13 @@ const pagedLoreItems = computed(() => loreItems.value.slice(loreRange.value.star
 
 <template>
   <div class="lore-codex">
-    <EmptyState v-if="loreItems.length === 0">Chưa tìm thấy manh mối nào.</EmptyState>
+    <!-- ui-audit creation-meta: empty state was a dead end - the hint
+         names where lore fragments actually drop (exploration + monster
+         kills, sourceType in data/materials). -->
+    <EmptyState v-if="loreItems.length === 0">
+      {{ t('panels.scripture.empty') }}<br />
+      <small class="lore-codex__empty-hint">{{ t('panels.scripture.emptyHint') }}</small>
+    </EmptyState>
 
     <template v-else>
       <div ref="loreGridEl" class="lore-codex__grid">
@@ -89,6 +97,13 @@ const pagedLoreItems = computed(() => loreItems.value.slice(loreRange.value.star
 
 .lore-codex .empty-state {
   padding: 12px;
+}
+
+.lore-codex__empty-hint {
+  display: inline-block;
+  margin-top: 6px;
+  color: var(--paper-text-soft);
+  font-size: var(--text-xs);
 }
 
 .lore-codex__grid {

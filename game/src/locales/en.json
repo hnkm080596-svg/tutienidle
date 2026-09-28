@@ -264,7 +264,8 @@
       },
       "sections": {
         "pathSelection": {
-          "hint": "Choose your cultivation path — this decision CANNOT be changed."
+          "hint": "Choose your cultivation path — this decision CANNOT be changed.",
+          "kit": "Initiation kit: {kit}"
         },
         "hiddenPath": {
           "description": "Linh Bao reached its limit — the hidden road reveals itself. Kit: {kit}. No element, no stance, no The — power flows from elemental reactions alone.",
@@ -284,6 +285,11 @@
           "appendAria": "Append {name} to the sequence",
           "removeAria": "Remove {name} from the sequence"
         }
+      },
+      "pathDescriptions": {
+        "spell_pathway": "The five-element spellcraft road — unlocks the Element and Aspect node trees; damage grows through elemental reactions.",
+        "sword_pathway": "The sword road — basic strikes follow the seal order in the Kiếm Phổ; matching seal chains burst into finishers.",
+        "body_pathway": "The body road — the Thể Tu tree rooted in Steel War or Mountain Stance; close combat built on soaking and countering."
       },
       "actions": {
         "enterPath": "Enter {name}"
@@ -320,6 +326,11 @@
         "noStages": "This region has no combat floors yet.",
         "selectStage": "Select a floor to view the formation."
       },
+      "locked": {
+        "requireRealm": "Requires {realm} floor {level}",
+        "clearFloor": "Clear Floor {floor} first",
+        "progress": "Clear the previous floor to unlock"
+      },
       "modes": {
         "manual": "Manual",
         "repeat": "Repeat",
@@ -346,6 +357,23 @@
     "wheel": {
       "aria": {
         "group": "Cave Dwelling Command Wheel"
+      },
+      "slots": {
+        "character": "Character",
+        "realm": "Realm",
+        "skill": "Skills",
+        "quest": "Quests",
+        "phap_bao": "Artifact",
+        "talisman_slot": "Talisman",
+        "formation_slot": "Formation",
+        "companion_roster": "Companions",
+        "teleport_array": "Teleport Array",
+        "pill_room": "Pill Room",
+        "gathering_outpost": "Gathering",
+        "chi_hien_quan": "Recruitment Hall",
+        "equipment_hall": "Armory",
+        "scripture_pavilion": "Scripture Pavilion",
+        "settings": "Settings"
       }
     },
     "tranPhap": {
@@ -454,8 +482,14 @@
       "sell": {
         "title": "Liquidate",
         "rate": "Sell surplus materials for Spirit Stones at current grade rates.",
-        "unitPriceSuffix": "lesser/unit",
-        "button": "Sell All",
+        "unitPriceSuffix": "low-grade Spirit Stones/unit",
+        "quantityAria": "Amount to sell",
+        "totalPreview": "→ +{total} {stone}",
+        "tooSmall": "→ too little to convert at this realm",
+        "sold": "Sold {qty} {name} — received {gained} {stone}",
+        "confirmTitle": "Sell the whole stack?",
+        "confirmMessage": "Sell all {qty} {name} for {total} {stone}. This cannot be undone.",
+        "button": "Sell",
         "empty": "Nothing can be sold right now."
       }
     },
@@ -502,6 +536,7 @@
       "title": "Realm",
       "tierLine": "{realm} · Floor {level}",
       "cultivationUnit": "Cultivation",
+      "rateEta": "+{rate} {unit}/s · ~{eta} left",
       "labels": {
         "quanKhi": "Quán Khí",
         "foundation": "Foundation Establishment",
@@ -510,7 +545,8 @@
       "nodes": {
         "aria": "Nine realms progress",
         "comingSoon": "Coming soon",
-        "unlocked": "Attuned",
+        "current": "Current",
+        "unlocked": "Reached",
         "locked": "Not unlocked"
       },
       "requirements": {
@@ -605,7 +641,11 @@
         "uiScaleAria": "Interface font size",
         "uiScale": "Interface Font Size",
         "audioAria": "Audio",
-        "audio": "Audio"
+        "audio": "Audio",
+        "save": "Save Data",
+        "saveAria": "Save data",
+        "language": "Language",
+        "languageAria": "Language"
       },
       "audio": {
         "on": "On",
@@ -615,6 +655,13 @@
         "sfxVolume": "Effects",
         "uiVolume": "Interface",
         "reducedShake": "Reduce screen shake"
+      },
+      "language": {
+        "note": "Applies to all interface text.",
+        "names": {
+          "vi": "Tiếng Việt",
+          "en": "English"
+        }
       }
     },
     "quest": {
@@ -624,6 +671,12 @@
         "once": "Quests"
       },
       "anyEnemy": "Any enemy",
+      "rewards": {
+        "spiritStone": "Spirit Stones +{amount}",
+        "cultivation": "Cultivation +{amount}",
+        "skillInsight": "Skill Insight +{amount}"
+      },
+      "bagShortfall": "Keep enough in the bag to hand in: {have}/{need}",
       "actions": {
         "claimed": "Claimed",
         "claim": "Claim Reward"
@@ -635,7 +688,9 @@
       "build": "Build"
     },
     "common": {
-      "close": "Close"
+      "close": "Close",
+      "confirm": "Confirm",
+      "cancel": "Cancel"
     },
     "decompose": {
       "labels": {
@@ -647,7 +702,17 @@
         "allGrades": "All grades",
         "allAges": "All ages"
       },
-      "estimate": "≈ {amount} essence / cycle"
+      "estimate": "≈ {amount} essence / cycle",
+      "matching": "Matching ore in bag: {count}",
+      "hint": {
+        "noCapacity": "No decompose capacity — build or upgrade the Worker Lodge to free up workers.",
+        "noWorkers": "No workers assigned — raise the Workers slider to start decomposing.",
+        "noMatchingOres": "No ore in the bag matches the filters — gather ore from mining/exploration or loosen the filters."
+      }
+    },
+    "scripture": {
+      "empty": "No lore fragments found yet.",
+      "emptyHint": "Fragments that record old tales — they drop from exploration and combat."
     }
   },
   "workerLodge": {
@@ -669,7 +734,7 @@
     "tokens": "{name}: {count}",
     "pity": "Pity: {count}/{max}",
     "pull": "Recruit (1 {token})",
-    "unavailable": "Not open in this build — new companions arrive via Gifts.",
+    "unavailable": "Not open in this build — new companions arrive via Gifts. Accumulated tokens, Duyen Phan and pity are kept.",
     "errors": {
       "missingToken": "No {token} available.",
       "poolUnavailable": "Not open in this build — new companions arrive via Gifts.",
@@ -692,7 +757,8 @@
       "constellationMaxed": "Constellation already maxed (C{max})",
       "insufficientDuyenPhan": "Not enough Duyen Phan (need {cost})"
     },
-    "unavailable": "Not open in this build — new companions arrive via Gifts.",
+    "shortName": "Duyen Phan",
+    "unavailable": "Not open in this build — new companions arrive via Gifts. Accumulated Duyen Phan is kept.",
     "errors": {
       "unknownDefinition": "Unknown companion.",
       "constellationMaxed": "Constellation already maxed.",
@@ -703,11 +769,18 @@
     },
     "empty": "No companions available to exchange."
   },
+  "currencyHud": {
+    "aria": "Current resources"
+  },
   "quaTang": {
     "hint": "Companion gifts earned along the cultivation journey.",
     "claim": "Claim",
     "claimed": "Claimed",
     "claimedBadge": "Claimed",
+    "context": {
+      "realmEntered": "Reached {realm} — companion gift",
+      "stageCompleted": "Cleared {stage} — companion gift"
+    },
     "empty": "No gifts yet.",
     "errors": {
       "unknownGift": "Invalid gift.",
@@ -792,6 +865,7 @@
       "retry": "Rematch",
       "retryCountdown": "{duration}",
       "returnHome": "Return to Cave",
+      "returnCountdown": "({duration})",
       "hintCultivate": "Your cultivation is still lacking — refine a few more levels, then return stronger.",
       "hintGear": "Not enough power to breach this realm — enhance your gear, take pills, or gain insight before the rematch."
     },
@@ -855,19 +929,24 @@
       "topBar": {
         "enemiesSuffix": "enemies"
       },
+      "skillBar": {
+        "roles": {
+          "basic": "Basic",
+          "special": "Special",
+          "ultimate": "Ultimate"
+        },
+        "passiveTag": "Passive",
+        "manualToggle": "Manual",
+        "awaitingChoice": "Your turn — pick a skill",
+        "use": "Use {name}",
+        "empty": "Empty",
+        "unreleased": "Not Yet Released"
+      },
       "turnStrip": {
         "upcoming": "Next up",
         "round": "Round {current}",
         "roundWithLimit": "Round {current}/{limit}"
       }
-    }
-  },
-  "menu": {
-    "main": {
-      "start": "Begin Cultivation",
-      "continue": "Continue",
-      "settings": "Settings",
-      "exit": "Exit"
     }
   },
   "onboarding": {
@@ -904,14 +983,18 @@
         "button": "Play Now",
         "note": "Guest progress stops at Foundation Establishment"
       },
-      "status": "Test server · UI prototype"
+      "status": "Test server · UI prototype",
+      "continue": "Continue — {name}",
+      "continueNoName": "Continue",
+      "language": "Language",
+      "saveCleared": "Your save was cleared — start fresh when ready."
     },
     "creation": {
       "back": "← Back",
       "headerKicker": "DESTINY-BINDING",
       "headerTitle": "Create Character",
       "nameStep": {
-        "kicker": "DAO NAME",
+        "kicker": "DAO TITLE",
         "title": "A title carried through the immortal path",
         "description": "Character names are unique and cannot be changed in the early phase.",
         "label": "Character Name",
@@ -923,7 +1006,17 @@
         "title": "Choose One Innate Talent",
         "selected": "Selected {count} / 1",
         "rolling": "Observing the heavens…",
-        "reroll": "↻ Reroll all"
+        "reroll": "↻ Reroll all",
+        "tags": {
+          "combat": "Combat",
+          "crafting": "Crafting",
+          "cultivation": "Cultivation",
+          "defense": "Defense",
+          "mechanic": "Mechanic",
+          "resource": "Resource",
+          "risk_reward": "Risk & Reward",
+          "skill": "Skill"
+        }
       },
       "skillStep": {
         "kicker": "FIRST STRIKE",
@@ -1134,7 +1227,11 @@
       }
     },
     "success": "{label} succeeded",
-    "failed": "Cannot {label}: {reason}"
+    "failed": "Cannot {label}: {reason}",
+    "title": "Action Log",
+    "clear": "Clear",
+    "expand": "Expand",
+    "collapse": "Collapse"
   },
   "autoFarm": {
     "running": "Auto-farming Perfect Clear: {stage}",
@@ -1150,6 +1247,8 @@
     "otherCosts": "Other costs",
     "preview": "Brew preview",
     "outcome": "Guaranteed {guaranteed}, {chance}% chance of {extra} more",
+    "outcomeGuaranteed": "Guaranteed {guaranteed}",
+    "outcomeChanceOnly": "{chance}% chance of {extra}",
     "duration": "Duration: ~{minutes} min",
     "jobs": "Brewing",
     "cancelJob": "Cancel (materials lost)",
@@ -1166,7 +1265,8 @@
       "missing_spirit_stone": "Not enough Spirit Stones",
       "missing_special_ingredient": "Missing the recipe's special ingredient",
       "fallback": "Cannot start brewing"
-    }
+    },
+    "outcomeNone": "This run yields no pills."
   },
   "layout": {
     "functionOverlay": {
@@ -1189,6 +1289,8 @@
   "bag": {
     "overflow": "Bag full — lost {amount} {name}",
     "pill": {
+      "useHint": "Click to select — click again to drink.",
+      "used": "Used {name}.",
       "reason": {
         "wrong_realm": "Only usable at the pill's own realm.",
         "all_main_stats_capped": "All 5 main stats have reached the realm cap.",
@@ -1251,7 +1353,9 @@
   },
   "notifications": {
     "skillLevelUp": "{name} reached level {level}",
-    "skillLevelUpMulti": "{name} gained {gained} levels, reaching level {level}"
+    "skillLevelUpMulti": "{name} gained {gained} levels, reaching level {level}",
+    "autosaveFailed": "Progress could not be saved — browser storage is full. Smelt some equipment to free space.",
+    "resetDeleteFailed": "Could not delete the save — the browser is refusing storage access."
   },
   "save": {
     "conflict": "Save was changed by another session.",
@@ -1280,6 +1384,92 @@
       "stateDone": "Complete",
       "detail": "Essence {essence} · Spirit Stones {stones} · Success {chance}% · Pity {pity}/{pityLimit}",
       "attempt": "Attempt Reverse Circulation"
+    }
+  },
+  "app": {
+    "title": "TIÊN HIỆP IDLE"
+  },
+  "errors": {
+    "app": {
+      "title": "An error occurred",
+      "close": "Close",
+      "reload": "Reload Page"
+    },
+    "boot": {
+      "title": "Unable to start",
+      "backToAuth": "Back to sign in"
+    }
+  },
+  "toasts": {
+    "received": "Received",
+    "dismissAria": "Dismiss notification: {label}"
+  },
+  "home": {
+    "commandWheel": {
+      "openAria": "Open the Cave Dwelling command wheel",
+      "hint": "Command · Tab"
+    }
+  },
+  "tutorial": {
+    "skip": "Skip",
+    "next": "Next",
+    "start": "Start",
+    "steps": {
+      "1": {
+        "title": "Welcome, Cultivator",
+        "body": "Your path to immortality starts here. Click the cultivating character (or press Tab) at any time to open the Command Wheel — the entry point to every part of your dwelling."
+      },
+      "2": {
+        "title": "The Cave Dwelling",
+        "body": "Your character cultivates over time, even while you are away. Open Command Wheel → Character to see your realm and cultivation progress."
+      },
+      "3": {
+        "title": "Breakthrough",
+        "body": "When your cultivation is ready, the Breakthrough action opens under Character — succeed to raise your realm and cultivation power."
+      },
+      "4": {
+        "title": "Armory",
+        "body": "Open Command Wheel → Armory to forge and refine equipment from gathered materials."
+      },
+      "5": {
+        "title": "Equipment",
+        "body": "Gear in the Character panel raises combat power — wear your best before heading out."
+      },
+      "6": {
+        "title": "Exploration",
+        "body": "The Gathering outpost (Command Wheel → Gathering, or click the building on the map) collects materials over time — return to harvest when it finishes."
+      },
+      "7": {
+        "title": "Combat",
+        "body": "Open Command Wheel → Teleport Array (or click the building on the map) to pick a combat realm — your character fights automatically until the battle ends."
+      },
+      "8": {
+        "title": "Spoils of Battle",
+        "body": "Defeated beasts drop spirit stones, materials, and sometimes rare equipment."
+      },
+      "9": {
+        "title": "Begin",
+        "body": "Everything is ready — may you ascend swiftly, cultivator!"
+      }
+    }
+  },
+  "saveIncompatible": {
+    "title": "Save is incompatible with this version",
+    "bodyIncompatible": "Your save belongs to version {version}, which is incompatible with the current version. Your progress is intact — download it before continuing.",
+    "bodyCorrupted": "The current save could not be read (the data may be corrupted). You can download the raw file to inspect it, or import another save.",
+    "actions": {
+      "export": "Download Save (.json)",
+      "import": "Import Another Save",
+      "reset": "Delete & Start Over"
+    },
+    "confirm": {
+      "resetTitle": "Delete & Start Over",
+      "resetBody": "Delete the current save and start a new character? Download your save first if you have not — this cannot be undone.",
+      "importFailedTitle": "Import Failed",
+      "importFailedBody": "The save file is not valid."
+    },
+    "notify": {
+      "deleteFailed": "Could not delete the save — the browser is refusing storage access."
     }
   }
 }

@@ -39,6 +39,7 @@ import { useOfflineSummaryStore } from './stores/offlineSummary'
 import { useSaveIssueStore } from './stores/saveIssue'
 import { installAutomationFlagsPersistence } from './stores/uiFlagsPersistence'
 import { useAppLifecycle, type BootOutcome } from './composables/useAppLifecycle'
+import { hasResumeCandidate, markResetNotice } from './composables/resumeSession'
 import { accountIdForSession, setSaveAccountId } from './services/save/saveKeys'
 import type { AuthSession } from './services/auth/AuthService'
 import GameRoot from './components/layout/GameRoot.vue'
@@ -386,7 +387,7 @@ const lifecycle = useAppLifecycle({
     // ghi thanh cong lai de chuoi fail ke tiep van duoc bao.
     if (result.status !== 'ok' && !saveFailureNotified) {
       saveFailureNotified = true
-      notification.push('error', 'Không lưu được tiến trình — bộ nhớ trình duyệt đầy. Hãy hóa luyện bớt trang bị.')
+      notification.push('error', t('notifications.autosaveFailed'))
       console.warn('[autosave] progress was not saved', result)
     } else if (result.status === 'ok') {
       saveFailureNotified = false
@@ -422,9 +423,10 @@ function resetSaveFromSettings() {
   // reloading anyway would boot back into the same save the user tried
   // to delete.
   if (deleteSave()) {
+    markResetNotice()
     window.location.reload()
   } else {
-    notification.push('error', 'Không xoá được save — trình duyệt đang từ chối truy cập bộ nhớ.')
+    notification.push('error', t('notifications.resetDeleteFailed'))
   }
 }
 
@@ -654,9 +656,11 @@ async function onCharacterCreated(payload: CharacterCreationPayload) {
 onMounted(() => {
   window.addEventListener(SAVE_RESET_REQUEST_EVENT, resetSaveFromSettings)
 
+  // ui-audit creation-meta - reload used to replay the full 3s title intro
+  // even with a session+save on disk; resume candidates get a short beat.
   introHandle = window.setTimeout(() => {
     bootFlow.showAuth()
-  }, 3000)
+  }, hasResumeCandidate() ? 450 : 3000)
 })
 
 onUnmounted(() => {
@@ -728,9 +732,9 @@ onUnmounted(() => {
     <SaveIncompatibleScreen v-if="saveIssue.status" />
 
     <main v-else class="boot-error">
-      <h1>Không thể khởi động</h1>
+      <h1>{{ t('errors.boot.title') }}</h1>
       <p>{{ bootError }}</p>
-      <button type="button" @click="bootFlow.showAuth">Trở về đăng nhập</button>
+      <button type="button" @click="bootFlow.showAuth">{{ t('errors.boot.backToAuth') }}</button>
     </main>
   </RouteMount>
 
