@@ -2165,6 +2165,862 @@
       "siblingFindingIds": [],
       "invariantIds": [],
       "evidenceIds": []
+    },
+    {
+      "id": "F-SND-36",
+      "title": "decodeAttempts map never cleared on dispose; counting ran per-retry-pass not per-decode (dup: COR-3 C3-01)",
+      "state": {
+        "productStateId": "ec767da9ba7bdbb6748fab960a7bd1065d0e1217ce99a2f8bd125711479f6166",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+      },
+      "subsystem": "audio",
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "discoveredBy": "AUT-3",
+      "expected": "decode retry bookkeeping bounded and disposed",
+      "actual": "decodeAttempts entries survived dispose(); failure counting keyed retry pops so one failure could yield 4 decode passes",
+      "rootCause": "counter introduced at retry boundary, not decode boundary; dispose() not updated",
+      "rootClass": "STATE_LIFECYCLE_LEAK",
+      "counterexample": "none found",
+      "locations": [
+        {
+          "path": "src/core/audio/AudioManager.ts",
+          "symbolOrSection": "decodeAttempts/retryDecode/dispose",
+          "revision": "93cbaa2c",
+          "basis": "SOURCE"
+        }
+      ],
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/core/audio",
+            "src/presentation/audio",
+            "src/presentation/assets",
+            "src/stores",
+            "src/components",
+            "tests/architecture"
+          ],
+          "termsAndMethod": "sibling sweep over touched seam families",
+          "evidenceIds": [],
+          "hitDispositions": [],
+          "coverageLimits": [
+            "sweep limited to diff-touched seam families"
+          ]
+        }
+      ],
+      "repair": "decodeAttempts incremented inside decodeInto catch per failed decode; cleared in dispose()",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [
+        "EV-SND-FIX4"
+      ],
+      "closureReviewIds": [],
+      "status": "FIXED_PENDING_PROOF",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "evidenceIds": []
+    },
+    {
+      "id": "F-SND-37",
+      "title": "decode-retry off-by-one allowed 4 decode passes vs documented limit 3",
+      "state": {
+        "productStateId": "ec767da9ba7bdbb6748fab960a7bd1065d0e1217ce99a2f8bd125711479f6166",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+      },
+      "subsystem": "audio",
+      "severity": "Nit",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "discoveredBy": "AUT-3",
+      "expected": "DECODE_RETRY_LIMIT bounds actual decode attempts",
+      "actual": "attempts counted on pop so limit+1 decodes ran",
+      "rootCause": "count-at-dispatch vs count-at-attempt drift",
+      "rootClass": "OFF_BY_ONE",
+      "counterexample": "none found",
+      "locations": [
+        {
+          "path": "src/core/audio/AudioManager.ts",
+          "symbolOrSection": "decodeInto catch",
+          "revision": "93cbaa2c",
+          "basis": "SOURCE"
+        }
+      ],
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/core/audio",
+            "src/presentation/audio",
+            "src/presentation/assets",
+            "src/stores",
+            "src/components",
+            "tests/architecture"
+          ],
+          "termsAndMethod": "sibling sweep over touched seam families",
+          "evidenceIds": [],
+          "hitDispositions": [],
+          "coverageLimits": [
+            "sweep limited to diff-touched seam families"
+          ]
+        }
+      ],
+      "repair": "attempts counted inside decodeInto catch; DECODE_RETRY_LIMIT=3 bounds attempts",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [
+        "EV-SND-FIX4"
+      ],
+      "closureReviewIds": [],
+      "status": "FIXED_PENDING_PROOF",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "evidenceIds": []
+    },
+    {
+      "id": "F-SND-38",
+      "title": "audioBoundary guards bypassable: whitespace in getInstance(), tone/phaser subpath imports",
+      "state": {
+        "productStateId": "ec767da9ba7bdbb6748fab960a7bd1065d0e1217ce99a2f8bd125711479f6166",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+      },
+      "subsystem": "audio",
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "discoveredBy": "AUT-3",
+      "expected": "guards catch whitespace variants and subpath imports",
+      "actual": "probes 'getInstance ()' and 'tone/build/esm' passed the regex",
+      "rootCause": "regex anchored to exact spec and no whitespace",
+      "rootClass": "GUARD_BYPASS",
+      "counterexample": "none found",
+      "locations": [
+        {
+          "path": "tests/architecture/audioBoundary.test.ts",
+          "symbolOrSection": "core-imports + allowlist probes",
+          "revision": "93cbaa2c",
+          "basis": "SOURCE"
+        }
+      ],
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/core/audio",
+            "src/presentation/audio",
+            "src/presentation/assets",
+            "src/stores",
+            "src/components",
+            "tests/architecture"
+          ],
+          "termsAndMethod": "sibling sweep over touched seam families",
+          "evidenceIds": [],
+          "hitDispositions": [],
+          "coverageLimits": [
+            "sweep limited to diff-touched seam families"
+          ]
+        }
+      ],
+      "repair": "regex hardened (\\\\s*, spec.startsWith(`${b}`/`${b}/`)); mutation-probed",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [
+        "EV-SND-FIX4"
+      ],
+      "closureReviewIds": [],
+      "status": "FIXED_PENDING_PROOF",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "evidenceIds": []
+    },
+    {
+      "id": "F-SND-39",
+      "title": "audioBindingWiring misses bus.on() subscriptions outside the cue tables",
+      "state": {
+        "productStateId": "ec767da9ba7bdbb6748fab960a7bd1065d0e1217ce99a2f8bd125711479f6166",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+      },
+      "subsystem": "audio",
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "discoveredBy": "AUT-3",
+      "expected": "bound-name check covers every subscription form",
+      "actual": "direct bus.on('event') calls in the binding escaped the table scan",
+      "rootCause": "scan only read STATIC_CUES/PAYLOAD_CUES keys",
+      "rootClass": "COVERAGE_GAP",
+      "counterexample": "none found",
+      "locations": [
+        {
+          "path": "tests/architecture/audioBindingWiring.test.ts",
+          "symbolOrSection": "EMITTED/bound check",
+          "revision": "93cbaa2c",
+          "basis": "SOURCE"
+        }
+      ],
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/core/audio",
+            "src/presentation/audio",
+            "src/presentation/assets",
+            "src/stores",
+            "src/components",
+            "tests/architecture"
+          ],
+          "termsAndMethod": "sibling sweep over touched seam families",
+          "evidenceIds": [],
+          "hitDispositions": [],
+          "coverageLimits": [
+            "sweep limited to diff-touched seam families"
+          ]
+        }
+      ],
+      "repair": "bound-name scan also collects /\\bon\\(\\s*['\"`](\\w+)['\"`]/ direct subscriptions",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [
+        "EV-SND-FIX4"
+      ],
+      "closureReviewIds": [],
+      "status": "FIXED_PENDING_PROOF",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "evidenceIds": []
+    },
+    {
+      "id": "F-SND-40",
+      "title": "ELEMENT_BY_PRESET element fallback entirely shadowed by richer lane",
+      "state": {
+        "productStateId": "ec767da9ba7bdbb6748fab960a7bd1065d0e1217ce99a2f8bd125711479f6166",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+      },
+      "subsystem": "audio",
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "discoveredBy": "AUT-3",
+      "expected": "fallback hook documented as shadowed",
+      "actual": "comment implied fallback was live",
+      "rootCause": "doc drift vs lane precedence",
+      "rootClass": "DOC_DRIFT",
+      "counterexample": "none found",
+      "locations": [
+        {
+          "path": "src/presentation/audio/combatAudioBinding.ts",
+          "symbolOrSection": "ELEMENT_BY_PRESET",
+          "revision": "93cbaa2c",
+          "basis": "SOURCE"
+        }
+      ],
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/core/audio",
+            "src/presentation/audio",
+            "src/presentation/assets",
+            "src/stores",
+            "src/components",
+            "tests/architecture"
+          ],
+          "termsAndMethod": "sibling sweep over touched seam families",
+          "evidenceIds": [],
+          "hitDispositions": [],
+          "coverageLimits": [
+            "sweep limited to diff-touched seam families"
+          ]
+        }
+      ],
+      "repair": "comment rewritten to state shadowed-fallback semantics",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [
+        "EV-SND-FIX4"
+      ],
+      "closureReviewIds": [],
+      "status": "FIXED_PENDING_PROOF",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "evidenceIds": []
+    },
+    {
+      "id": "F-SND-41",
+      "title": "manifest row 'tribulation.start' armed but unbound (dead armed row vs spec's tribulation.begin ownership)",
+      "state": {
+        "productStateId": "ec767da9ba7bdbb6748fab960a7bd1065d0e1217ce99a2f8bd125711479f6166",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+      },
+      "subsystem": "audio",
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "discoveredBy": "AUT-3",
+      "expected": "no armed cue row without a binding/spec owner",
+      "actual": "tribulation.start sat armed with no emitter - tribulation.begin owns the start cue per spec/audit",
+      "rootCause": "stale manifest row outlived binding decision",
+      "rootClass": "DEAD_ROW",
+      "counterexample": "none found",
+      "locations": [
+        {
+          "path": "src/core/audio/AudioCueManifest.ts",
+          "symbolOrSection": "tribulation.start row",
+          "revision": "93cbaa2c",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "docs/specs/sound-system-spec.md",
+          "symbolOrSection": "binding table",
+          "revision": "93cbaa2c",
+          "basis": "SOURCE"
+        }
+      ],
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/core/audio",
+            "src/presentation/audio",
+            "src/presentation/assets",
+            "src/stores",
+            "src/components",
+            "tests/architecture"
+          ],
+          "termsAndMethod": "sibling sweep over touched seam families",
+          "evidenceIds": [],
+          "hitDispositions": [],
+          "coverageLimits": [
+            "sweep limited to diff-touched seam families"
+          ]
+        }
+      ],
+      "repair": "row removed; spec row + audit doc row 72 corrected to tribulation.begin ownership",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [
+        "EV-SND-FIX4"
+      ],
+      "closureReviewIds": [],
+      "status": "FIXED_PENDING_PROOF",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "evidenceIds": []
+    },
+    {
+      "id": "F-SND-42",
+      "title": "KIEM_COMBO_IDS drifted from KiemPhoCombos (tam_thich/tam_tram don't exist); manifest claimed cross-check that no test performed",
+      "state": {
+        "productStateId": "ec767da9ba7bdbb6748fab960a7bd1065d0e1217ce99a2f8bd125711479f6166",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+      },
+      "subsystem": "audio",
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "discoveredBy": "AUT-3",
+      "expected": "manifest enumerations equal their data sources and the claim is pinned",
+      "actual": "tam_thich/tam_tram rows address nonexistent combos; cross-check claim unbacked",
+      "rootCause": "doc claim ahead of enforcement",
+      "rootClass": "SPEC_GAP",
+      "counterexample": "none found",
+      "locations": [
+        {
+          "path": "src/core/audio/AudioCueManifest.ts",
+          "symbolOrSection": "KIEM_COMBO_IDS",
+          "revision": "93cbaa2c",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "tests/architecture/audioManifestCompleteness.test.ts",
+          "symbolOrSection": "catalog cross-check test",
+          "revision": "93cbaa2c",
+          "basis": "SOURCE"
+        }
+      ],
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/core/audio",
+            "src/presentation/audio",
+            "src/presentation/assets",
+            "src/stores",
+            "src/components",
+            "tests/architecture"
+          ],
+          "termsAndMethod": "sibling sweep over touched seam families",
+          "evidenceIds": [],
+          "hitDispositions": [],
+          "coverageLimits": [
+            "sweep limited to diff-touched seam families"
+          ]
+        }
+      ],
+      "repair": "ids corrected to real combos; new test pins combo/reaction/cast enumerations to data sources",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [
+        "EV-SND-FIX4"
+      ],
+      "closureReviewIds": [],
+      "status": "FIXED_PENDING_PROOF",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "evidenceIds": []
+    },
+    {
+      "id": "F-SND-43",
+      "title": "attachDecodedBuffer is a public test-only seam on the production class",
+      "state": {
+        "productStateId": "ec767da9ba7bdbb6748fab960a7bd1065d0e1217ce99a2f8bd125711479f6166",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+      },
+      "subsystem": "audio",
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "discoveredBy": "AUT-3",
+      "expected": "test seam not reachable as public API",
+      "actual": "attachDecodedBuffer exposed on AudioManagerImpl surface",
+      "rootCause": "test seam elevated to public method",
+      "rootClass": "TEST_SEAM_EXPOSURE",
+      "counterexample": "none found",
+      "locations": [
+        {
+          "path": "src/core/audio/AudioManager.ts",
+          "symbolOrSection": "attachDecodedBuffer",
+          "revision": "93cbaa2c",
+          "basis": "SOURCE"
+        }
+      ],
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/core/audio",
+            "src/presentation/audio",
+            "src/presentation/assets",
+            "src/stores",
+            "src/components",
+            "tests/architecture"
+          ],
+          "termsAndMethod": "sibling sweep over touched seam families",
+          "evidenceIds": [],
+          "hitDispositions": [],
+          "coverageLimits": [
+            "sweep limited to diff-touched seam families"
+          ]
+        }
+      ],
+      "repair": "deferred-visible: single production caller is the dom-audio lane; renaming/narrowing would complicate the seam for little gain; recorded as accepted test surface",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "TRIAGED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "evidenceIds": []
+    },
+    {
+      "id": "F-SND-44",
+      "title": "music lane never kicks retryDecode: applyDesiredMusic skipped retry for parked srcs",
+      "state": {
+        "productStateId": "ec767da9ba7bdbb6748fab960a7bd1065d0e1217ce99a2f8bd125711479f6166",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+      },
+      "subsystem": "audio",
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "discoveredBy": "COR-3",
+      "expected": "retry kick symmetric with sfx lane",
+      "actual": "applyDesiredMusic only kicked retryDecode on undefined-src branch",
+      "rootCause": "kick placed on one branch only",
+      "rootClass": "ASYM_LANE",
+      "counterexample": "none found",
+      "locations": [
+        {
+          "path": "src/core/audio/AudioManager.ts",
+          "symbolOrSection": "applyDesiredMusic",
+          "revision": "93cbaa2c",
+          "basis": "SOURCE"
+        }
+      ],
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/core/audio",
+            "src/presentation/audio",
+            "src/presentation/assets",
+            "src/stores",
+            "src/components",
+            "tests/architecture"
+          ],
+          "termsAndMethod": "sibling sweep over touched seam families",
+          "evidenceIds": [],
+          "hitDispositions": [],
+          "coverageLimits": [
+            "sweep limited to diff-touched seam families"
+          ]
+        }
+      ],
+      "repair": "retryDecode kicked per src in src===undefined branch (music lane heals same as sfx)",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [
+        "EV-SND-FIX4"
+      ],
+      "closureReviewIds": [],
+      "status": "FIXED_PENDING_PROOF",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "evidenceIds": []
+    },
+    {
+      "id": "F-SND-45",
+      "title": "essence_stream_arrival + reward_particle(essence) co-fire doubles essence chime per drop",
+      "state": {
+        "productStateId": "ec767da9ba7bdbb6748fab960a7bd1065d0e1217ce99a2f8bd125711479f6166",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+      },
+      "subsystem": "audio",
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "discoveredBy": "COR-3",
+      "expected": "single audible per essence drop",
+      "actual": "essence_stream_arrival bound while reward_particle(essence) already voices combat.essence",
+      "rootCause": "same double-emit class as kill/death",
+      "rootClass": "DOUBLE_EMIT_PAIR",
+      "counterexample": "none found",
+      "locations": [
+        {
+          "path": "src/presentation/audio/combatAudioBinding.ts",
+          "symbolOrSection": "essence_stream_arrival row",
+          "revision": "93cbaa2c",
+          "basis": "SOURCE"
+        }
+      ],
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/core/audio",
+            "src/presentation/audio",
+            "src/presentation/assets",
+            "src/stores",
+            "src/components",
+            "tests/architecture"
+          ],
+          "termsAndMethod": "sibling sweep over touched seam families",
+          "evidenceIds": [],
+          "hitDispositions": [],
+          "coverageLimits": [
+            "sweep limited to diff-touched seam families"
+          ]
+        }
+      ],
+      "repair": "row moved to PAYLOAD_CUES () => undefined; pin test asserts 0 cues on emit",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [
+        "EV-SND-FIX4"
+      ],
+      "closureReviewIds": [],
+      "status": "FIXED_PENDING_PROOF",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "evidenceIds": []
+    },
+    {
+      "id": "F-SND-46",
+      "title": "dom-audio missingResources mark is permanent: one transient fetch failure silences the src for the session",
+      "state": {
+        "productStateId": "ec767da9ba7bdbb6748fab960a7bd1065d0e1217ce99a2f8bd125711479f6166",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+      },
+      "subsystem": "audio",
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "discoveredBy": "COR-3",
+      "expected": "transient failure gets bounded retry",
+      "actual": "first fetch failure marks key missing forever",
+      "rootCause": "binary missing set, no attempt bound",
+      "rootClass": "UNBOUNDED_MARK",
+      "counterexample": "none found",
+      "locations": [
+        {
+          "path": "src/presentation/assets/AssetBundleManager.ts",
+          "symbolOrSection": "missingResources/loadSingleDomAudio",
+          "revision": "93cbaa2c",
+          "basis": "SOURCE"
+        }
+      ],
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/core/audio",
+            "src/presentation/audio",
+            "src/presentation/assets",
+            "src/stores",
+            "src/components",
+            "tests/architecture"
+          ],
+          "termsAndMethod": "sibling sweep over touched seam families",
+          "evidenceIds": [],
+          "hitDispositions": [],
+          "coverageLimits": [
+            "sweep limited to diff-touched seam families"
+          ]
+        }
+      ],
+      "repair": "missing set -> per-key attempt map; DOM_AUDIO_FETCH_ATTEMPTS=2 (initial + 1 retry); test pin updated",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [
+        "EV-SND-FIX4"
+      ],
+      "closureReviewIds": [],
+      "status": "FIXED_PENDING_PROOF",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "evidenceIds": []
+    },
+    {
+      "id": "F-SND-47",
+      "title": "applyDesiredMusic rethrew decode failures through coordinator notify() into route-commit/unlock rollback path",
+      "state": {
+        "productStateId": "ec767da9ba7bdbb6748fab960a7bd1065d0e1217ce99a2f8bd125711479f6166",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+      },
+      "subsystem": "audio",
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "discoveredBy": "COR-3",
+      "expected": "audio failures contained inside audio",
+      "actual": "a decode throw propagated out of the music slot into callers",
+      "rootCause": "missing catch at lane boundary",
+      "rootClass": "ERROR_ESCAPE",
+      "counterexample": "none found",
+      "locations": [
+        {
+          "path": "src/core/audio/AudioManager.ts",
+          "symbolOrSection": "applyDesiredMusic catch",
+          "revision": "93cbaa2c",
+          "basis": "SOURCE"
+        }
+      ],
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/core/audio",
+            "src/presentation/audio",
+            "src/presentation/assets",
+            "src/stores",
+            "src/components",
+            "tests/architecture"
+          ],
+          "termsAndMethod": "sibling sweep over touched seam families",
+          "evidenceIds": [],
+          "hitDispositions": [],
+          "coverageLimits": [
+            "sweep limited to diff-touched seam families"
+          ]
+        }
+      ],
+      "repair": "catch no longer rethrows; failure contained to the lane",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [
+        "EV-SND-FIX4"
+      ],
+      "closureReviewIds": [],
+      "status": "FIXED_PENDING_PROOF",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "evidenceIds": []
+    },
+    {
+      "id": "F-SND-48",
+      "title": "pointerdown unlock listener armed once:true - a transiently failed unlock left the app permanently locked",
+      "state": {
+        "productStateId": "ec767da9ba7bdbb6748fab960a7bd1065d0e1217ce99a2f8bd125711479f6166",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+      },
+      "subsystem": "audio",
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "discoveredBy": "COR-3",
+      "expected": "listener survives until unlock actually succeeds",
+      "actual": "once:true disarmed on the first gesture regardless of outcome",
+      "rootCause": "one-shot registered before async unlock outcome known",
+      "rootClass": "LIFECYCLE_EARLY_DISARM",
+      "counterexample": "none found",
+      "locations": [
+        {
+          "path": "src/App.vue",
+          "symbolOrSection": "unlockAudioOnFirstGesture",
+          "revision": "93cbaa2c",
+          "basis": "SOURCE"
+        }
+      ],
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/core/audio",
+            "src/presentation/audio",
+            "src/presentation/assets",
+            "src/stores",
+            "src/components",
+            "tests/architecture"
+          ],
+          "termsAndMethod": "sibling sweep over touched seam families",
+          "evidenceIds": [],
+          "hitDispositions": [],
+          "coverageLimits": [
+            "sweep limited to diff-touched seam families"
+          ]
+        }
+      ],
+      "repair": "persistent listener; disarmed via AudioManager.onReady callback; App.vue added to boundary allowlist as composition root",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [
+        "EV-SND-FIX4"
+      ],
+      "closureReviewIds": [],
+      "status": "FIXED_PENDING_PROOF",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "evidenceIds": []
+    },
+    {
+      "id": "F-SND-49",
+      "title": "manifest src[] documented as ordered fallbacks; partial-decode variant pools never re-healed",
+      "state": {
+        "productStateId": "ec767da9ba7bdbb6748fab960a7bd1065d0e1217ce99a2f8bd125711479f6166",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+      },
+      "subsystem": "audio",
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "discoveredBy": "COR-3",
+      "expected": "docs match round-robin semantics; playCue heals partial pools",
+      "actual": "comment claimed ordered-fallback; playCue only kicked retry when src===undefined",
+      "rootCause": "doc drift + incomplete heal condition",
+      "rootClass": "DOC_DRIFT",
+      "counterexample": "none found",
+      "locations": [
+        {
+          "path": "src/core/audio/AudioCueManifest.ts",
+          "symbolOrSection": "src field comment",
+          "revision": "93cbaa2c",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "src/core/audio/AudioManager.ts",
+          "symbolOrSection": "playCue retry kick",
+          "revision": "93cbaa2c",
+          "basis": "SOURCE"
+        }
+      ],
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/core/audio",
+            "src/presentation/audio",
+            "src/presentation/assets",
+            "src/stores",
+            "src/components",
+            "tests/architecture"
+          ],
+          "termsAndMethod": "sibling sweep over touched seam families",
+          "evidenceIds": [],
+          "hitDispositions": [],
+          "coverageLimits": [
+            "sweep limited to diff-touched seam families"
+          ]
+        }
+      ],
+      "repair": "comment corrected to variant-pool/round-robin; playCue kicks retryDecode for any parked src",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [
+        "EV-SND-FIX4"
+      ],
+      "closureReviewIds": [],
+      "status": "FIXED_PENDING_PROOF",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "evidenceIds": []
     }
   ],
   "evidence": [
@@ -2374,6 +3230,47 @@
       "kind": "EXECUTED_UNIT_STRUCTURAL",
       "limitations": [
         "e2e spec not re-run; scoped vitest only"
+      ],
+      "status": "CURRENT"
+    },
+    {
+      "kind": "EXECUTED_UNIT_STRUCTURAL",
+      "id": "EV-SND-FIX4",
+      "state": {
+        "productStateId": "ec767da9ba7bdbb6748fab960a7bd1065d0e1217ce99a2f8bd125711479f6166",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+      },
+      "producer": "coordinator",
+      "startedAt": "2026-09-28T08:40:00Z",
+      "finishedAt": "2026-09-28T08:47:00Z",
+      "commandOrMethod": "npm run type-check + npx vitest run (audio lanes + architecture guards)",
+      "cwd": "game",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/EV-SND-FIX4.log",
+      "artifactHash": "edd26624f40b57a0cc77319793516294fad0d9fbd5ab1bfe86f4e894fd5bef7c",
+      "inputPaths": [
+        "src/core/audio",
+        "src/presentation/audio",
+        "src/presentation/assets",
+        "src/stores/audio.ts",
+        "src/App.vue",
+        "tests/architecture"
+      ],
+      "inputEvidenceIds": [],
+      "invariantIds": [],
+      "claims": [
+        "type-check clean at wave-3 fix tip",
+        "104 scoped tests pass incl. updated bounded-fetch pin",
+        "boundary guard mutation probes catch tone/build + getInstance () bypasses",
+        "wiring guard catches direct bus.on('zzz_dead_event') subscriptions",
+        "catalog cross-check test pins manifest enumerations to real data sources"
+      ],
+      "limitations": [
+        "e2e spec not re-run; scoped vitest only",
+        "mutation probes ran on scratch copies"
       ],
       "status": "CURRENT"
     }
@@ -2613,6 +3510,84 @@
         "F-SND-33",
         "F-SND-34",
         "F-SND-35"
+      ],
+      "novelAttackIds": [],
+      "status": "SEALED"
+    },
+    {
+      "id": "REV-SND-COR-3",
+      "state": {
+        "productStateId": "ec767da9ba7bdbb6748fab960a7bd1065d0e1217ce99a2f8bd125711479f6166",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+      },
+      "round": 3,
+      "phase": "CORRECTNESS",
+      "reviewerId": "devin-82704f21306148d2b7fefc1559598bc2",
+      "contextId": "ctx-cor-3",
+      "model": "swe-2",
+      "role": "clean-correctness",
+      "inputBundleHash": "ec767da9ba7bdbb6748fab960a7bd1065d0e1217ce99a2f8bd125711479f6166",
+      "priorFindingsVisible": false,
+      "accessLimitations": [
+        "detached checkout of pinned head 93cbaa2c",
+        "e2e spec not run by reviewers"
+      ],
+      "startedAt": "2026-09-28T08:00:00Z",
+      "sealedAt": "2026-09-28T08:35:00Z",
+      "previousPhaseReviewId": "REV-SND-INT-2",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [],
+      "findingIds": [
+        "F-SND-36",
+        "F-SND-44",
+        "F-SND-45",
+        "F-SND-30",
+        "F-SND-46",
+        "F-SND-47",
+        "F-SND-48",
+        "F-SND-49"
+      ],
+      "novelAttackIds": [],
+      "status": "SEALED"
+    },
+    {
+      "id": "REV-SND-AUT-3",
+      "state": {
+        "productStateId": "ec767da9ba7bdbb6748fab960a7bd1065d0e1217ce99a2f8bd125711479f6166",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+      },
+      "round": 3,
+      "phase": "AUTHORITY",
+      "reviewerId": "devin-b8d9ef457dff447290f92e3f13359796",
+      "contextId": "ctx-aut-3",
+      "model": "swe-2",
+      "role": "clean-authority",
+      "inputBundleHash": "ec767da9ba7bdbb6748fab960a7bd1065d0e1217ce99a2f8bd125711479f6166",
+      "priorFindingsVisible": false,
+      "accessLimitations": [
+        "detached checkout of pinned head 93cbaa2c",
+        "e2e spec not run by reviewers"
+      ],
+      "startedAt": "2026-09-28T08:00:00Z",
+      "sealedAt": "2026-09-28T08:30:00Z",
+      "previousPhaseReviewId": "REV-SND-COR-3",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [],
+      "findingIds": [
+        "F-SND-36",
+        "F-SND-37",
+        "F-SND-38",
+        "F-SND-39",
+        "F-SND-40",
+        "F-SND-41",
+        "F-SND-42",
+        "F-SND-43"
       ],
       "novelAttackIds": [],
       "status": "SEALED"
@@ -2991,6 +3966,22 @@
       "payloadPath": "events/0020.json",
       "payloadHash": "83b924a5fd0f95b45e99319907d03b3498480547138197ca3754175e0d8be0a5",
       "eventHash": "07c9f6d7dadc0f3ffbf8b09fa0f63b394dd65e7a5d331875b3c96ecdff090a75"
+    },
+    {
+      "seq": 21,
+      "at": "2026-09-28T08:49:01.717Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-56995",
+      "state": {
+        "productStateId": "ec767da9ba7bdbb6748fab960a7bd1065d0e1217ce99a2f8bd125711479f6166",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+      },
+      "previousEventHash": "07c9f6d7dadc0f3ffbf8b09fa0f63b394dd65e7a5d331875b3c96ecdff090a75",
+      "payloadPath": "events/0021.json",
+      "payloadHash": "efed88b04eba31f6dca4589cd6fcc4490b4955df46f0b9443647e65facc47257",
+      "eventHash": "8587a535b75b29367a905ec61cd8503f7632603edaa04f356b3c92be1871a482"
     }
   ]
 }
