@@ -50,7 +50,7 @@ Additional decisions folded into the design:
 |---|---|---|
 | OQ-A | Music source while `music.*` rows are empty | **RESOLVED — silent until real files.** No Tone.js ambient-synthesis fallback ships; `music.*`/`ambient.*` rows carry NO `synthFallback`. The slot machinery (unlock, crossfade, duck, visibility pause) still lands fully so a file drop is the only remaining step. |
 | OQ-B | `combat.ward` discrimination | Open — unchanged: binding filters on `entity_vitals_changed` `wardBefore`/`wardAfter` delta sign (fields confirmed present in the emit). |
-| OQ-C | Per-skill / per-reaction qualifier scope | **RESOLVED — FULL coverage.** Every qualifier cue in the audit inventory is a real slot the user will fill: the manifest enumerates one row per concrete catalog id (every castable `skillId`, every `reactionId`, every `presetId`, all 38 `kiem_combo_*` combos, both `ungthe` triggers, all 4 `music.home.<time>` variants). Nothing rides "signature content only". |
+| OQ-C | Per-skill / per-reaction qualifier scope | **RESOLVED — FULL coverage.** Every qualifier cue in the audit inventory is a real slot the user will fill: the manifest enumerates one row per concrete catalog id (every castable `skillId`, every `reactionId`, every `presetId`, all 37 `kiem_combo_*` combos, both `ungthe` triggers, all 4 `music.home.<time>` variants). Nothing rides "signature content only". |
 | OQ-D | Reduced screen-shake toggle | **RESOLVED — in scope as W10.** `reducedShake` flag joins the v2 settings blob; SettingsPanel toggle (i18n en+vi); the two camera-shake sites (`combat-vfx-spawner` `cameras.main.shake`, `TribulationScene.strikeLightning`) scale through a presentation policy module. |
 
 ---
@@ -94,7 +94,7 @@ manifest-only edit — never a code edit.
 
 **OQ-C full coverage:** those qualifier families are not wildcards — the
 manifest expands each into one row per concrete catalog id (every castable
-`skillId`, every `reactionId`, every `CombatVfxPresetId`, all 38 Kiem Pho combo
+`skillId`, every `reactionId`, every `CombatVfxPresetId`, all 37 Kiem Pho combo
 ids, both `ungthe` triggers, all four `music.home.<time>` variants). The family
 anchor rows below stay as the fallback for ids the catalogs don't know yet;
 the expanded rows sit beside them so the user can fill one specific
@@ -369,23 +369,23 @@ rejected transition.
 | eventBus event | cue | discriminator |
 |---|---|---|
 | `attack` | `combat.cast` | — |
-| `hit` | `combat.hit` | — |
+| `hit` | `combat.hit` | suppressed when `targetId === PLAYER_ID` (player-taken hits are owned by `damage`→`combat.hurt`) |
 | `critical` | `combat.crit` | — |
 | `dodge` | `combat.dodge` | — |
 | `block` | `combat.block` | — |
 | `damage` | `combat.hurt` | `targetId === PLAYER_ID` only |
 | `death` | `combat.death` | — |
-| `kill` | `combat.kill` | — |
+| `kill` | — (unbound: fires back-to-back with `death`; `combat.kill` is a reserved forward slot) | — |
 | `heal` | `combat.heal` | `actual > 0` already gated at emit |
 | `talent_survive_lethal` | `combat.survive_lethal` | — |
 | `entity_vitals_changed` | `combat.ward.grant`/`combat.ward.break`/`combat.ward` | `wardBefore`/`wardAfter` delta sign (P2 rows; OQ-B) |
 | `turn_ready` | `combat.turn_ready` | manual input window |
 | `turn_cast_start` | `combat.cast.<skillId>` → `combat.cast` | manifest resolve chain |
-| `action_impact` | `combat.impact.<presetId>` → `combat.element.*` map → `combat.impact` | preset→element table lives in binding, not core |
+| `action_impact` | `boss_ground_slam`→`combat.boss.slam`; `kiem_combo_*`→`combat.kiem.combo.*`; `tu_luc`→`combat.kiem.tu_luc`; else `combat.impact.<presetId>` → `combat.element.*` map → `combat.impact` | preset→element table lives in binding, not core |
 | `status_vfx_attached` | `combat.buff.apply`/`combat.debuff.apply`/`combat.dot.apply` | `polarity` + `dotType` |
 | `status_vfx_removed` | `combat.buff.expire` | — |
 | `reward_particle` | `combat.loot` | `kind` |
-| `essence_stream_arrival` | `combat.essence` | — |
+| `essence_stream_arrival` | — (unbound: progress signal; `combat.essence` already voiced at `reward_particle` drop) | — |
 | `battle_end` | `combat.victory`/`combat.defeat` | `state` |
 | `presentation_session_started` | `combat.start` (combat only; tribulation silent here — `tribulation_started` owns the start cue) | `session.kind` |
 | `combat_exit_request` | `ui.modal.open` | — |
@@ -396,6 +396,7 @@ rejected transition.
 | `tribulation_outcome` | `tribulation.victory`/`tribulation.fail` | `state` |
 | `mind_question_result` | `tribulation.answer.ok`/`.fail` | `correct` |
 | `cultivation_changed` | `ambient.cultivate.on`/`.off` | `isCultivating` (P2) |
+| `reaction_resolved` | `combat.reaction.<reactionId>` → `combat.reaction` | `reactionId` qualifier (re-emitted by `drainPresentationEvents`) |
 | plus W6's new emits | `combat.thetu.reflect`, `combat.ungthe.*`, `combat.phaptu.proc`, `combat.hothe.absorb`, `progress.perfect`, `progress.hidden_open`, `farm.cycle` | per §6 |
 
 Notes: `turn_cast_start` and `action_impact` are documented observation feeds
@@ -678,7 +679,7 @@ full `tests/architecture/` suite green.
   `entity_vitals_changed` emit).
 - **OQ-C — Per-skill / per-reaction asset scope.** RESOLVED (§0b): FULL
   coverage — every qualifier in the audit inventory gets a real manifest row
-  (all castable skills, all reactions, all VFX presets, all 38 kiem combos,
+  (all castable skills, all reactions, all VFX presets, all 37 kiem combos,
   both ứng-thể triggers, all four Thanh Vân time variants).
 - **OQ-D — Reduced-shake toggle.** RESOLVED (§0b): in scope as W10 —
   `reducedShake` in the v2 settings blob + SettingsPanel toggle (i18n en+vi)

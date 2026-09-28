@@ -228,9 +228,14 @@ watch(
 // (onReady would fire synchronously before any disarm handle exists).
 const unlockAudioOnFirstGesture = () => useAudioStore().unlock()
 const audioManager = AudioManager.getInstance()
+let disarmAudioUnlock: (() => void) | undefined
 if (!audioManager.isUnlocked()) {
   window.addEventListener('pointerdown', unlockAudioOnFirstGesture)
-  audioManager.onReady(() => {
+  // onReady would fire synchronously when already unlocked, so the
+  // isUnlocked gate above is what keeps the listener unarmed on remount.
+  // Keep the unregister handle: if unlock never succeeds the callback
+  // would otherwise leak on the module singleton across remounts.
+  disarmAudioUnlock = audioManager.onReady(() => {
     window.removeEventListener('pointerdown', unlockAudioOnFirstGesture)
   })
 }
@@ -715,6 +720,8 @@ onUnmounted(() => {
   unbindUiAudio()
   unbindAmbientAudio()
   window.removeEventListener('pointerdown', unlockAudioOnFirstGesture)
+  disarmAudioUnlock?.()
+  disarmAudioUnlock = undefined
   phaserSceneAdapter.dispose()
   assetBundleManager.dispose()
 })

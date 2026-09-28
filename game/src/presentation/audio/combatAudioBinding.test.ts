@@ -122,6 +122,25 @@ describe('bindCombatAudio', () => {
     expect(cueSpy).toHaveBeenCalledWith('combat.impact')
   })
 
+  it('boss_ground_slam routes to the armed boss.slam row, not the silent expanded impact row', () => {
+    const bus = new EventBus()
+    bindCombatAudio(bus)
+
+    bus.emit('action_impact', { presetId: 'boss_ground_slam' })
+    expect(cueSpy).toHaveBeenCalledWith('combat.boss.slam')
+  })
+
+  it('reaction_resolved carries the reaction qualifier', () => {
+    const bus = new EventBus()
+    bindCombatAudio(bus)
+
+    bus.emit('reaction_resolved', { reactionId: 'duong_viem' })
+    expect(cueSpy).toHaveBeenCalledWith('combat.reaction.duong_viem')
+
+    bus.emit('reaction_resolved', {})
+    expect(cueSpy).toHaveBeenLastCalledWith('combat.reaction')
+  })
+
   it('status_vfx_attached picks buff/debuff/dot by polarity+periodicDamage', () => {
     const bus = new EventBus()
     bindCombatAudio(bus)

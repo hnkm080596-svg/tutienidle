@@ -130,7 +130,12 @@ const REACTION_IDS = [
   'tran_thuy',
 ] as const
 
-// Every CombatVfxPresetId in src/core/battle/CombatAction.ts.
+// CombatVfxPresetId members (src/core/battle/CombatAction.ts) that route
+// to combat.impact.* - the W9 completeness test pins this list against the
+// union. Excluded by routing, not by omission:
+//   kiem_combo_* -> combat.kiem.combo.*; tu_luc -> combat.kiem.tu_luc;
+//   boss_ground_slam -> combat.boss.slam; ngu_kiem_flight is a flight
+//   preset that never emits action_impact.
 const IMPACT_PRESET_IDS = [
   'slash',
   'claw',
@@ -144,47 +149,8 @@ const IMPACT_PRESET_IDS = [
   'wind_blade',
   'holy_radiance',
   'shadow_burst',
-  'boss_ground_slam',
-  'tu_luc',
   'kiem_orb_dam',
   'kiem_orb_chem',
-  'kiem_combo_nhat_tuyen',
-  'kiem_combo_liet_ngan',
-  'kiem_combo_tam_phach',
-  'kiem_combo_tam_lieu',
-  'kiem_combo_tam_tao',
-  'kiem_combo_khai_ngan',
-  'kiem_combo_nhi_thich_nhat_phach',
-  'kiem_combo_thau_ngan',
-  'kiem_combo_nhi_tram_nhat_phach',
-  'kiem_combo_nhi_phach_nhat_thich',
-  'kiem_combo_nhi_lieu_nhat_thich',
-  'kiem_combo_nhi_tao_nhat_thich',
-  'kiem_combo_hoi_tuyen',
-  'kiem_combo_diep_ngan',
-  'kiem_combo_phach_thich_phach',
-  'kiem_combo_thich_tram_phach_thich',
-  'kiem_combo_tram_phach_thich_tram',
-  'kiem_combo_phach_tram_thich_phach',
-  'kiem_combo_lieu_tram_thich_lieu',
-  'kiem_combo_tao_tram_thich_tao',
-  'kiem_combo_thich_lieu_tram_thich',
-  'kiem_combo_thich_tao_tram_thich',
-  'kiem_combo_tram_lieu_phach_tram',
-  'kiem_combo_phach_lieu_tram_phach',
-  'kiem_combo_thich_tram_tram_lieu',
-  'kiem_combo_tram_thich_thich_lieu',
-  'kiem_combo_phach_thich_thich_tao',
-  'kiem_combo_ngu_hanh_kiem',
-  'kiem_combo_ngu_hanh_nghich_chuyen',
-  'kiem_combo_thich_tram_tram_phach_thich',
-  'kiem_combo_tram_thich_phach_tram_phach',
-  'kiem_combo_phach_tram_thich_lieu_tao',
-  'kiem_combo_thich_lieu_phach_tram_tao',
-  'kiem_combo_tao_tram_thich_phach_lieu',
-  'kiem_combo_tram_phach_lieu_tao_thich',
-  'kiem_combo_phach_lieu_tao_thich_tram',
-  'kiem_combo_lieu_tao_thich_tram_phach',
   'hoa_cau_comet',
   'thuy_tien_dart',
   'doc_chuong_palm',
@@ -305,6 +271,9 @@ export const AUDIO_CUES: Readonly<Record<string, AudioCueDef>> = {
   'combat.element.moc': sfx({ cooldownMs: 80, synthFallback: 'combatHit' }),
   'combat.element.hoa': sfx({ cooldownMs: 80, synthFallback: 'combatCritical' }),
   'combat.element.tho': sfx({ cooldownMs: 80, synthFallback: 'combatBlock' }),
+  // Armed-reserved: enemy spawns ride the pendingEnemySpawns snapshot
+  // (combat-vfx-spawner), which has no cue hook yet - these rows voice
+  // the moment a spawn binding lands.
   'combat.spawn': sfx({ cooldownMs: 120, synthFallback: 'toastWarning' }),
   'combat.spawn.elite': sfx({ cooldownMs: 120, synthFallback: 'toastWarning' }),
   'combat.spawn.boss': sfx({ duckMusic: 0.4, synthFallback: 'battleStart' }),
@@ -317,6 +286,8 @@ export const AUDIO_CUES: Readonly<Record<string, AudioCueDef>> = {
   ...expand(REACTION_IDS, 'combat.reaction.', sfx({ duckMusic: 0.4 })),
   'combat.loot': sfx({ cooldownMs: 120, synthFallback: 'toastLoot' }),
   'combat.essence': sfx({ cooldownMs: 80, synthFallback: 'toastCraft' }),
+  // Armed-reserved: TurnBattleSystem charge init is silent today - no
+  // emit exists; wired when a charge-started hook lands.
   'combat.charge': sfx({ synthFallback: 'combatAttack' }),
   'combat.release': sfx({ duckMusic: 0.3, synthFallback: 'combatCritical' }),
   'combat.boss.slam': sfx({ duckMusic: 0.5, synthFallback: 'combatCritical' }),
@@ -332,6 +303,8 @@ export const AUDIO_CUES: Readonly<Record<string, AudioCueDef>> = {
   'combat.ward': sfx({ cooldownMs: 120 }),
   'combat.ward.grant': sfx({ synthFallback: 'toastSave' }),
   'combat.ward.break': sfx({ synthFallback: 'combatBlock' }),
+  // Armed-reserved: countdownProgress is a snapshot field; no tick emit
+  // exists to key off yet (spec marks this P2).
   'combat.countdown.tick': ui({ synthFallback: 'uiClick' }),
   'combat.turn_end': sfx(),
   'combat.exit': ui({ synthFallback: 'uiCancel' }),
@@ -349,6 +322,8 @@ export const AUDIO_CUES: Readonly<Record<string, AudioCueDef>> = {
   'progress.create': sfx({ synthFallback: 'uiConfirm' }),
   'progress.perfect': sfx({ duckMusic: 0.5, synthFallback: 'toastUpgrade' }),
   'progress.hidden_open': sfx({ duckMusic: 0.5, synthFallback: 'toastWarning' }),
+  // Armed-reserved: no producer passes this cue id today (QuanKhiPanel
+  // announces with the default stinger) - voices when one lands.
   'progress.quan_the': sfx({ synthFallback: 'toastSave' }),
 
   // ---- Tribulation ----

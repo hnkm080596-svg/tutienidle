@@ -154,5 +154,55 @@ describe('audio manifest completeness', () => {
       .filter((k) => k.startsWith('combat.cast.'))
       .map((k) => k.slice('combat.cast.'.length))
     expect(castRows.filter((id) => !skillIds.has(id))).toEqual([])
+
+    // combat.impact.* must cover exactly the CombatVfxPresetId members
+    // that route to the impact family - presets routed elsewhere are
+    // excluded by name (mirrors cueForActionImpact in combatAudioBinding).
+    const combatActionSrc = readFileSync(
+      join(process.cwd(), 'src/core/battle/CombatAction.ts'),
+      'utf8',
+    )
+    const unionBody = combatActionSrc.match(
+      /export type CombatVfxPresetId\s*=([\s\S]*?)\n\n/,
+    )![1]!
+    // Strip // comments first: prose apostrophes ("design's") shift the
+    // quote parity and would silently corrupt the member list.
+    const presets = new Set(
+      [...unionBody.replace(/\/\/[^\n]*/g, '').matchAll(/'([a-z_0-9]+)'/g)].map(
+        (m) => m[1]!,
+      ),
+    )
+    const NON_IMPACT_ROUTES = new Set([
+      'tu_luc', // -> combat.kiem.tu_luc
+      'boss_ground_slam', // -> combat.boss.slam
+      'ngu_kiem_flight', // flight preset - never emits action_impact
+    ])
+    expect(
+      keys
+        .filter((k) => k.startsWith('combat.impact.'))
+        .map((k) => k.slice('combat.impact.'.length))
+        .sort(),
+    ).toEqual(
+      [...presets]
+        .filter((p) => !NON_IMPACT_ROUTES.has(p) && !p.startsWith('kiem_combo_'))
+        .sort(),
+    )
+
+    // music.home.* mirrors THANH_VAN_TIMES.
+    const bgSrc = readFileSync(
+      join(process.cwd(), 'src/presentation/background/BackgroundVariant.ts'),
+      'utf8',
+    )
+    const times = [
+      ...bgSrc
+        .match(/THANH_VAN_TIMES\s*=\s*\[([^\]]+)\]/)![1]!
+        .matchAll(/'([^']+)'/g),
+    ].map((m) => m[1]!)
+    expect(
+      keys
+        .filter((k) => k.startsWith('music.home.'))
+        .map((k) => k.slice('music.home.'.length))
+        .sort(),
+    ).toEqual(times.sort())
   })
 })

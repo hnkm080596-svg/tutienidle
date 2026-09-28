@@ -51,7 +51,7 @@ describe('AudioCueManifest', () => {
     const concrete: Array<[string, string]> = [
       ['combat.cast.tram', 'sfx'],
       ['combat.reaction.duong_viem', 'sfx'],
-      ['combat.impact.kiem_combo_hoi_tuyen', 'sfx'],
+      ['combat.impact.slash', 'sfx'],
       ['combat.kiem.combo.nhat_tuyen', 'sfx'],
       ['music.home.morning', 'music'],
     ]

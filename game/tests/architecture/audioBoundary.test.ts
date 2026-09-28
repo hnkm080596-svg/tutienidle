@@ -20,14 +20,25 @@ import { readTs, SCAN_TIMEOUT, srcCorpus } from './helpers/scanTs'
 const SRC_DIR = join(process.cwd(), 'src')
 
 const IMPORT_RE = /(?:import|export)\s+(?:type\s+)?(?:[\w*{}\s,]*?\s+from\s+)?['"]([^'"]+)['"]/g
+// Dynamic/lazy import lanes - `await import('tone')` and `require('tone')`
+// bypass the static regex, and a lazy audio stack is the realistic smuggle.
+const DYNAMIC_IMPORT_RE = /(?:import|require)\s*\(\s*['"]([^'"]+)['"]\s*\)/g
 
 function importSpecifiers(text: string): string[] {
   const out: string[] = []
   for (const match of text.matchAll(IMPORT_RE)) {
     out.push(match[1]!)
   }
+  for (const match of text.matchAll(DYNAMIC_IMPORT_RE)) {
+    out.push(match[1]!)
+  }
   return out
 }
+
+// A specifier belongs to the audio subsystem when its path walks through an
+// `audio/` directory - matching on the directory (not on an 'Audio' filename
+// prefix) keeps a future core/audio/util.ts inside the ban.
+const AUDIO_SPEC_RE = /(^|\/)audio\//
 
 describe('audio boundary', () => {
   it(
@@ -41,7 +52,7 @@ describe('audio boundary', () => {
         // the real consumer - the ban is on production coupling.
         if (file.fromSrc.endsWith('.test.ts')) continue
         for (const spec of importSpecifiers(file.text)) {
-          if (spec === 'tone' || spec.startsWith('tone/') || spec.includes('audio/Audio') || spec.includes('/audio/Audio')) {
+          if (spec === 'tone' || spec.startsWith('tone/') || AUDIO_SPEC_RE.test(spec)) {
             offenders.push(`${file.fromSrc} -> ${spec}`)
           }
         }
@@ -100,7 +111,16 @@ describe('audio boundary', () => {
         if (file.fromSrc.startsWith('core/audio/')) continue
         if (file.fromSrc.startsWith('stores/audio')) continue
         if (file.fromSrc.startsWith('presentation/audio/')) continue
-        if (!/AudioManager\s*\.\s*getInstance\s*\(|\.\s*playCue\s*\(/.test(file.text)) continue
+        // Trigger on ANY AudioManager reach: a direct call, a playCue, or
+        // importing the module at all (destructured getInstance or a renamed
+        // import would otherwise slip past the call-shape regex).
+        if (
+          !/AudioManager\s*\.\s*getInstance\s*\(|\.\s*playCue\s*\(|['"][^'"]*audio\/AudioManager['"]/.test(
+            file.text,
+          )
+        ) {
+          continue
+        }
         if (!ALLOWLIST.has(file.fromSrc)) offenders.push(file.fromSrc)
       }
       expect(offenders).toEqual([])

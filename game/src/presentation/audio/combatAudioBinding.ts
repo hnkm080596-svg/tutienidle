@@ -101,6 +101,12 @@ interface ReactiveProcLike {
   success?: boolean
 }
 
+interface ReactionResolvedLike {
+  // Producer (GameManagerTurnBattleOps) re-emits the scheduler's
+  // reaction_resolved with the reaction id as the qualifier.
+  reactionId?: string
+}
+
 // Preset -> ngu hanh element fallback (combat.element.*). Lives here - the
 // manifest stays data-only and presets already resolve exactly; this table
 // is the middle hop for presets without their own row. Every entry below is
@@ -138,6 +144,11 @@ function cueForActionImpact(event: ActionImpactLike): string | undefined {
   if (presetId.startsWith('kiem_orb_')) {
     return `combat.impact.${presetId}` in AUDIO_CUES ? `combat.impact.${presetId}` : 'combat.impact'
   }
+  // The boss slam is a scripted encounter beat, not a generic impact -
+  // it owns combat.boss.slam (armed, duck 0.5); letting it fall through
+  // to the expanded combat.impact.boss_ground_slam row would play the
+  // silent placeholder and skip the duck.
+  if (presetId === 'boss_ground_slam') return 'combat.boss.slam'
 
   const specific = `combat.impact.${presetId}`
   if (specific in AUDIO_CUES) return specific
@@ -201,6 +212,13 @@ const PAYLOAD_CUES: ReadonlyArray<readonly [string, (event: never) => string | u
     'battle_end',
     (event: BattleEndLike) =>
       event.state === 'victory' ? 'combat.victory' : 'combat.defeat',
+  ],
+  // reaction_resolved is emitted live by GameManagerTurnBattleOps with
+  // reactionId - the combat.reaction.<id> family is armed per reaction.
+  [
+    'reaction_resolved',
+    (event: ReactionResolvedLike) =>
+      event.reactionId ? `combat.reaction.${event.reactionId}` : 'combat.reaction',
   ],
   [
     'presentation_session_started',
