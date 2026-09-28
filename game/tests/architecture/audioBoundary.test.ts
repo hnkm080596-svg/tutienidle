@@ -33,6 +33,14 @@ const DYNAMIC_IMPORT_RE =
 // Word/`.` prefix excluded so `skills.require(id)` and `a.import(` are not
 // module calls.
 const NONLITERAL_IMPORT_RE = /(?:^|[^\w.])(?:import|require)\s*\(\s*(?!['"`])[^)]*\)/g
+// `import.meta.glob('...')` / `import.meta.resolve('...')` are bundling
+// lanes with no `import(`/`require(` token - screen their specifiers too.
+const IMPORT_META_SPEC_RE =
+  /\bimport\s*\.\s*meta\s*\.\s*(?:glob|resolve)\s*\(\s*['"`]([^'"`]+)['"`]/g
+// The same lanes with a computed specifier (`import.meta.glob(dir)`)
+// carry no literal to screen - flag the call shape itself.
+const NONLITERAL_META_RE =
+  /\bimport\s*\.\s*meta\s*\.\s*(?:glob|resolve)\s*\(\s*(?!['"`])[^)]*\)/g
 // `import('to' + 'ne')` is a literal-shaped call whose specifier is a
 // concat - the extractor reads only 'to' and misses the spell. The same
 // holds for every operator/wrapper that follows the literal (`||`, `??`,
@@ -53,13 +61,26 @@ function isNonliteralImportCall(m: RegExpMatchArray, clean: string): boolean {
   const argText = m[0].slice(m[0].indexOf('(') + 1, m[0].lastIndexOf(')'))
   if (DECL_ARG_RE.test(argText)) return false
   const after = clean.slice((m.index ?? 0) + m[0].length)
-  if (!/^\s*[:{]/.test(after)) return true
-  // `:`/`{` right after `)` is a declaration tail only when the match is
-  // a declaration: it must sit at line start (a `cond ? import(dyn) : x`
-  // ternary arm is a real call even though `:` follows) and the args
-  // must look like a parameter list (idents, commas, annotations).
+  // `:`/`{` after `)` is a declaration tail only when it sits on the
+  // SAME line - `\s*` crossing newlines let `import(spec)\n{...}` (a
+  // statement call plus a block) masquerade as a declaration.
+  const tail = /^[ \t]*([:{])/.exec(after)
+  if (!tail) return true
   const lineStart = clean.lastIndexOf('\n', m.index ?? 0) + 1
-  if (!/^\s*$/.test(clean.slice(lineStart, m.index ?? 0))) return true
+  const beforeOnLine = clean.slice(lineStart, m.index ?? 0)
+  if (tail[1] === '{') {
+    // `{` opens a declaration body only when a declaration keyword run
+    // heads the line (`export function require(x) {`). A bare call at
+    // line start followed by a block is a real call, not a decl.
+    return !/\b(?:function|export|declare|async|get|set|static|public|private|protected|override|abstract)\b[^()\n]*$/.test(
+      beforeOnLine,
+    )
+  }
+  // `:` is a declaration tail only when the match is a declaration: it
+  // must sit at line start (a `cond ? import(dyn) : x` ternary arm is a
+  // real call even though `:` follows) and the args must look like a
+  // parameter list (idents, commas, annotations).
+  if (!/^\s*$/.test(beforeOnLine)) return true
   if (!/^[\w$,\s:.[\]<>|&?*]*$/.test(argText)) return true
   return false
 }
@@ -74,7 +95,23 @@ function importSpecifiers(text: string, fileName: string): string[] {
   for (const match of clean.matchAll(DYNAMIC_IMPORT_RE)) {
     out.push(match[1]!)
   }
+  for (const match of clean.matchAll(IMPORT_META_SPEC_RE)) {
+    out.push(match[1]!)
+  }
   return out
+}
+
+// .vue template markup is real code territory too: `@click="import(
+// 'tone')"` compiles into a function body, so the dynamic/concat call
+// tripwires must sweep it. uncommented() sees only the <script>, so the
+// markup text (script pairs and HTML comments removed) is scanned
+// separately - attribute EXPRESSIONS are scanned wholesale (literal
+// attr text with a cue-ish string flags nothing here since only call
+// shapes are checked).
+function templateTextOf(text: string): string {
+  return text
+    .replace(/<script\b[^>]*>[\s\S]*?<\/script[^>]*>/gi, '')
+    .replace(/<!--[\s\S]*?-->/g, '')
 }
 
 // A specifier belongs to the audio subsystem when its path walks through an
@@ -115,8 +152,25 @@ describe('audio boundary', () => {
             offenders.push(`${file.fromSrc} -> ${m[0]}`)
           }
         }
+        for (const m of cleanCore.matchAll(NONLITERAL_META_RE)) {
+          offenders.push(`${file.fromSrc} -> ${m[0]}`)
+        }
         for (const m of cleanCore.matchAll(COMPOSED_IMPORT_RE)) {
           offenders.push(`${file.fromSrc} -> ${m[0]}`)
+        }
+        if (file.fromSrc.endsWith('.vue')) {
+          const tpl = templateTextOf(file.text)
+          for (const m of tpl.matchAll(NONLITERAL_IMPORT_RE)) {
+            if (isNonliteralImportCall(m, tpl)) {
+              offenders.push(`${file.fromSrc} -> ${m[0]}`)
+            }
+          }
+          for (const m of tpl.matchAll(NONLITERAL_META_RE)) {
+            offenders.push(`${file.fromSrc} -> ${m[0]}`)
+          }
+          for (const m of tpl.matchAll(COMPOSED_IMPORT_RE)) {
+            offenders.push(`${file.fromSrc} -> ${m[0]}`)
+          }
         }
       }
       expect(offenders).toEqual([])
@@ -165,8 +219,30 @@ describe('audio boundary', () => {
             offenders.push(`${file.fromSrc} -> ${m[0]}`)
           }
         }
+        for (const m of clean.matchAll(NONLITERAL_META_RE)) {
+          offenders.push(`${file.fromSrc} -> ${m[0]}`)
+        }
         for (const m of clean.matchAll(COMPOSED_IMPORT_RE)) {
           offenders.push(`${file.fromSrc} -> ${m[0]}`)
+        }
+        if (file.fromSrc.endsWith('.vue')) {
+          const tpl = templateTextOf(file.text)
+          for (const m of tpl.matchAll(NONLITERAL_IMPORT_RE)) {
+            if (isNonliteralImportCall(m, tpl)) {
+              offenders.push(`${file.fromSrc} -> ${m[0]}`)
+            }
+          }
+          for (const m of tpl.matchAll(NONLITERAL_META_RE)) {
+            offenders.push(`${file.fromSrc} -> ${m[0]}`)
+          }
+          for (const m of tpl.matchAll(COMPOSED_IMPORT_RE)) {
+            offenders.push(`${file.fromSrc} -> ${m[0]}`)
+          }
+          for (const m of tpl.matchAll(DYNAMIC_IMPORT_RE)) {
+            if (/^tone([/?#.]|$)/.test(m[1]!)) {
+              offenders.push(`${file.fromSrc} -> ${m[1]}`)
+            }
+          }
         }
       }
       expect(offenders).toEqual([])
@@ -197,14 +273,20 @@ describe('audio boundary', () => {
         // silently exempt a future sibling like stores/audioSneak.ts.
         if (file.fromSrc === 'stores/audio.ts') continue
         if (file.fromSrc.startsWith('presentation/audio/')) continue
-        // Trigger on ANY AudioManager reach: a direct call, a playCue, or
-        // importing the module at all (destructured getInstance or a renamed
-        // import would otherwise slip past the call-shape regex). The
-        // specifier arm tolerates `.ts`/query suffixes on the module path.
+        // Trigger on ANY AudioManager reach: a direct call (dotted,
+        // optional-chained, or bracket member), a playCue (dotted or
+        // bracketed), or importing the module at all. The specifier arm
+        // tolerates `.ts`/query suffixes on the module path.
+        const TRIGGER =
+          /\bAudioManager\s*(?:\?\s*)?\.\s*getInstance\s*\(|\bAudioManager\s*\[\s*['"`]|\.\s*playCue\s*\(|\[\s*['"`](?:getInstance|playCue)['"`]\s*\]\s*\(|['"`][^'"`]*audio\/AudioManager[^'"`]*['"`]/
+        // Bracket access requires a following `(` - `T['getInstance']`
+        // indexed type access is not a call and must not flag.
+        // .vue template markup is live code territory too - `uncommented`
+        // returns script only, so `@click="AudioManager.getInstance()"`
+        // would otherwise escape the reach check.
         if (
-          !/AudioManager\s*\.\s*getInstance\s*\(|\.\s*playCue\s*\(|['"`][^'"`]*audio\/AudioManager[^'"`]*['"`]/.test(
-            uncommented(file.text, file.fromSrc),
-          )
+          !TRIGGER.test(uncommented(file.text, file.fromSrc)) &&
+          !(file.fromSrc.endsWith('.vue') && TRIGGER.test(templateTextOf(file.text)))
         ) {
           continue
         }

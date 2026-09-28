@@ -43,18 +43,19 @@ watch(
   () => props.open,
   (open, wasOpen) => {
     if (open && !wasOpen) useAudioStore().cue('ui.modal.open')
+    // The close edge is cue'd here too, not only in the button handlers:
+    // a programmatic close (parent sets open=false) is still a close.
+    if (!open && wasOpen) useAudioStore().cue('ui.modal.close')
   },
 )
 
 function onConfirm() {
   useAudioStore().cue('ui.confirm')
-  useAudioStore().cue('ui.modal.close')
   emit('confirm')
 }
 
 function onCancel() {
   useAudioStore().cue('ui.cancel')
-  useAudioStore().cue('ui.modal.close')
   emit('cancel')
 }
 

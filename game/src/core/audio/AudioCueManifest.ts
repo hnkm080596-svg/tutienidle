@@ -380,6 +380,9 @@ export const AUDIO_CUES: Readonly<Record<string, AudioCueDef>> = {
  * `combat.cast.foo` lands on `combat.cast`; unknown ids return undefined.
  */
 export function resolveAudioCue(id: string): AudioCueDef | undefined {
+  // Non-string ids (a map lookup miss handing `undefined`) would throw
+  // on `.length` - playCue promises never to throw, so coerce here.
+  if (typeof id !== 'string' || id.length === 0) return undefined
   let key = id
   while (key.length > 0) {
     const def = AUDIO_CUES[key]

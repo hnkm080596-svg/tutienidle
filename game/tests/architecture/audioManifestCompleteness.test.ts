@@ -118,7 +118,7 @@ describe('audio manifest completeness', () => {
       'utf8',
     )
     const realCombos = new Set(
-      [...kiemSrc.matchAll(/\bcombo\('([^']+)'/g)].map((m) => m[1]),
+      [...kiemSrc.matchAll(/\bcombo\(['"`]([^'"`]+)['"`]/g)].map((m) => m[1]),
     )
     expect(
       keys
@@ -132,7 +132,7 @@ describe('audio manifest completeness', () => {
       'utf8',
     )
     const realReactions = new Set(
-      [...reactionSrc.matchAll(/\b(?:sinh|khac)\('([^']+)'/g)].map(
+      [...reactionSrc.matchAll(/\b(?:sinh|khac)\(['"`]([^'"`]+)['"`]/g)].map(
         (m) => m[1],
       ),
     )
@@ -174,7 +174,7 @@ describe('audio manifest completeness', () => {
     // Strip // comments first: prose apostrophes ("design's") shift the
     // quote parity and would silently corrupt the member list.
     const presets = new Set(
-      [...unionBody.replace(/\/\/[^\n]*/g, '').matchAll(/'([a-z_0-9]+)'/g)].map(
+      [...unionBody.replace(/\/\/[^\n]*/g, '').matchAll(/['"`]([a-z_0-9]+)['"`]/g)].map(
         (m) => m[1]!,
       ),
     )
@@ -210,7 +210,7 @@ describe('audio manifest completeness', () => {
     const times = [
       ...bgSrc
         .match(/THANH_VAN_TIMES\s*=\s*\[([^\]]+)\]/)![1]!
-        .matchAll(/'([^']+)'/g),
+        .matchAll(/['"`]([^'"`]+)['"`]/g),
     ].map((m) => m[1]!)
     expect(
       keys

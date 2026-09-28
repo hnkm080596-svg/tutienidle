@@ -221,23 +221,29 @@ watch(
 )
 
 // Autoplay policy: unlock AudioContext on the first pointer gesture anywhere
-// (Phaser canvas clicks never reach GameButton). Not `once`: a transiently
-// failed unlock (Tone.start() rejects) must leave the listener armed so a
-// later gesture still retries. The listener is disarmed when the chain
-// reports ready; a mount with the chain already ready skips arming at all
-// (onReady would fire synchronously before any disarm handle exists).
+// (Phaser canvas clicks never reach GameButton). keydown is armed too -
+// keyboard-only activation fires click, not pointerdown, so keyboard
+// users on non-primitive surfaces would never hydrate+unlock. Not
+// `once`: a transiently failed unlock (Tone.start() rejects) must leave
+// the listener armed so a later gesture still retries. The listener is
+// disarmed when the chain reports ready; a mount with the chain already
+// ready skips arming at all (onReady would fire synchronously before any
+// disarm handle exists).
 const unlockAudioOnFirstGesture = () => useAudioStore().unlock()
 const audioManager = AudioManager.getInstance()
+const disarmAudioUnlockListeners = () => {
+  window.removeEventListener('pointerdown', unlockAudioOnFirstGesture)
+  window.removeEventListener('keydown', unlockAudioOnFirstGesture)
+}
 let disarmAudioUnlock: (() => void) | undefined
 if (!audioManager.isUnlocked()) {
   window.addEventListener('pointerdown', unlockAudioOnFirstGesture)
+  window.addEventListener('keydown', unlockAudioOnFirstGesture)
   // onReady would fire synchronously when already unlocked, so the
   // isUnlocked gate above is what keeps the listener unarmed on remount.
   // Keep the unregister handle: if unlock never succeeds the callback
   // would otherwise leak on the module singleton across remounts.
-  disarmAudioUnlock = audioManager.onReady(() => {
-    window.removeEventListener('pointerdown', unlockAudioOnFirstGesture)
-  })
+  disarmAudioUnlock = audioManager.onReady(disarmAudioUnlockListeners)
 }
 
 provide(PHASER_SCENE_ADAPTER_KEY, phaserSceneAdapter)
@@ -719,7 +725,7 @@ onUnmounted(() => {
   unbindCombatAudio()
   unbindUiAudio()
   unbindAmbientAudio()
-  window.removeEventListener('pointerdown', unlockAudioOnFirstGesture)
+  disarmAudioUnlockListeners()
   disarmAudioUnlock?.()
   disarmAudioUnlock = undefined
   phaserSceneAdapter.dispose()

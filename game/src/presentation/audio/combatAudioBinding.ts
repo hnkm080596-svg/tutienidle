@@ -51,9 +51,28 @@ const STATIC_CUES: ReadonlyArray<readonly [string, string]> = [
 interface VitalsLike {
   wardBefore?: number
   wardAfter?: number
+  reason?: string
 }
 
+// EntityVitalsSystem VitalsChangeReason values that belong to the
+// damage family - ward deltas emitted under them are combat-relevant
+// (absorb/break). Regen/stat_refresh/sacrifice/ward_spend deltas are
+// bookkeeping, not combat audio.
+const WARD_DAMAGE_REASONS = new Set([
+  'damage',
+  'dot',
+  'reaction',
+  'reflection',
+  'heavenly_tribulation',
+  'survive_lethal',
+])
+
 interface TargetLike {
+  targetId?: string
+}
+
+interface HitLike {
+  sourceId?: string
   targetId?: string
 }
 
@@ -178,18 +197,26 @@ const PAYLOAD_CUES: ReadonlyArray<readonly [string, (event: never) => string | u
   ],
   [
     'hit',
-    // combat.hit = "player lands a blow"; player-taken hits are covered
-    // by damage->combat.hurt (which also covers DoT ticks).
-    (event: TargetLike) => (event.targetId === PLAYER_ID ? undefined : 'combat.hit'),
+    // combat.hit = "player lands a blow" - the player must be the
+    // SOURCE (an enemy striking a companion otherwise sounds identical).
+    // Player-taken hits are covered by damage->combat.hurt (which also
+    // covers DoT ticks).
+    (event: HitLike) => (event.sourceId === PLAYER_ID ? 'combat.hit' : undefined),
   ],
   [
     'entity_vitals_changed',
     (event: VitalsLike) => {
+      // Ward cues discriminate by event reason: grants belong to
+      // ward_grant only (regen/stat_refresh silently restoring ward
+      // must not sound a grant), break/decline belong to the damage
+      // family only (ward_spend or sacrifice reducing ward is not a
+      // break).
       const before = event.wardBefore ?? 0
       const after = event.wardAfter ?? 0
-      if (after > before) return 'combat.ward.grant'
+      if (event.reason === 'ward_grant') return 'combat.ward.grant'
+      if (!WARD_DAMAGE_REASONS.has(event.reason ?? '')) return undefined
       if (before > 0 && after === 0) return 'combat.ward.break'
-      if (after !== before) return 'combat.ward'
+      if (after < before) return 'combat.ward'
       return undefined
     },
   ],

@@ -484,10 +484,14 @@ class AudioManagerImpl {
   setEnabled(value: boolean): void {
     this.enabled = value
     if (!value) {
-      // Enabled=false silences all three channels: active music suspends but
-      // keeps desiredMusicId so re-enabling resumes it (spec 6.3).
+      // Enabled=false silences all three channels: ramp the master bus
+      // to 0 so in-flight one-shot players quiet immediately, and
+      // suspend music (desiredMusicId kept so re-enabling resumes it -
+      // spec 6.3).
+      this.master?.gain.rampTo(0, 0.05)
       this.suspendMusicPlayback()
     } else {
+      this.master?.gain.rampTo(this.masterVolume, 0.05)
       this.applyDesiredMusic()
     }
   }
@@ -498,7 +502,9 @@ class AudioManagerImpl {
 
   setMasterVolume(value: number): void {
     this.masterVolume = Math.max(0, Math.min(1, value))
-    if (this.master) {
+    // While disabled the master bus stays at 0 - a volume change must not
+    // undo the silence setEnabled(false) established.
+    if (this.master && this.enabled) {
       this.master.gain.rampTo(this.masterVolume, 0.05)
     }
   }
@@ -515,6 +521,9 @@ class AudioManagerImpl {
    * throws; no-ops before unlock or when disabled.
    */
   playCue(id: string): void {
+    // Never-throws contract: coerce non-string ids before resolveAudioCue
+    // can read `.length` off them.
+    if (typeof id !== 'string' || id.length === 0) return
     if (!this.enabled) return
     if (this.unlockState !== 'ready') return
     // Hidden tab: drop one-shots rather than sounding or queueing on a

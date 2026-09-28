@@ -26,9 +26,9 @@ describe('bindCombatAudio', () => {
     const bus = new EventBus()
     bindCombatAudio(bus)
 
-    const cases: Array<[string, string]> = [
+    const cases: Array<[string, string, object?]> = [
       ['attack', 'combat.cast'],
-      ['hit', 'combat.hit'],
+      ['hit', 'combat.hit', { sourceId: 'player' }],
       ['critical', 'combat.crit'],
       ['dodge', 'combat.dodge'],
       ['block', 'combat.block'],
@@ -48,9 +48,9 @@ describe('bindCombatAudio', () => {
       ['hothe_absorb', 'combat.hothe.absorb'],
     ]
 
-    for (const [event, expectedCue] of cases) {
+    for (const [event, expectedCue, extra] of cases) {
       cueSpy.mockClear()
-      bus.emit(event, { type: event })
+      bus.emit(event, { type: event, ...extra })
       expect(cueSpy, event).toHaveBeenCalledWith(expectedCue)
     }
   })
@@ -83,17 +83,27 @@ describe('bindCombatAudio', () => {
     const bus = new EventBus()
     bindCombatAudio(bus)
 
-    bus.emit('entity_vitals_changed', { wardBefore: 0, wardAfter: 50 })
+    // Grant sounds on ward_grant reason only - regen/stat_refresh
+    // restoring ward must stay silent.
+    bus.emit('entity_vitals_changed', { wardBefore: 0, wardAfter: 50, reason: 'ward_grant' })
     expect(cueSpy).toHaveBeenLastCalledWith('combat.ward.grant')
 
-    bus.emit('entity_vitals_changed', { wardBefore: 50, wardAfter: 0 })
+    cueSpy.mockClear()
+    bus.emit('entity_vitals_changed', { wardBefore: 0, wardAfter: 50, reason: 'regen' })
+    expect(cueSpy).not.toHaveBeenCalled()
+
+    // Break/decline only under the damage reason family - ward_spend or
+    // sacrifice eating ward is not a break.
+    bus.emit('entity_vitals_changed', { wardBefore: 50, wardAfter: 0, reason: 'damage' })
     expect(cueSpy).toHaveBeenLastCalledWith('combat.ward.break')
 
-    bus.emit('entity_vitals_changed', { wardBefore: 50, wardAfter: 20 })
+    bus.emit('entity_vitals_changed', { wardBefore: 50, wardAfter: 20, reason: 'dot' })
     expect(cueSpy).toHaveBeenLastCalledWith('combat.ward')
 
     cueSpy.mockClear()
-    bus.emit('entity_vitals_changed', { wardBefore: 0, wardAfter: 0 })
+    bus.emit('entity_vitals_changed', { wardBefore: 50, wardAfter: 0, reason: 'ward_spend' })
+    expect(cueSpy).not.toHaveBeenCalled()
+    bus.emit('entity_vitals_changed', { wardBefore: 50, wardAfter: 50, reason: 'damage' })
     expect(cueSpy).not.toHaveBeenCalled()
   })
 
@@ -155,13 +165,17 @@ describe('bindCombatAudio', () => {
     expect(cueSpy).toHaveBeenLastCalledWith('combat.dot.apply')
   })
 
-  it('player-targeted hit stays silent - damage owns combat.hurt', () => {
+  it('hit sounds only when the player is the source', () => {
     const bus = new EventBus()
     bindCombatAudio(bus)
 
-    bus.emit('hit', { targetId: 'player' })
+    // An enemy striking (sourceId != player) stays silent here - a
+    // player-taken hit already sounds via damage -> combat.hurt.
+    bus.emit('hit', { sourceId: 'enemy_1', targetId: 'player' })
     expect(cueSpy).not.toHaveBeenCalled()
     bus.emit('hit', { targetId: 'enemy_1' })
+    expect(cueSpy).not.toHaveBeenCalled()
+    bus.emit('hit', { sourceId: 'player', targetId: 'enemy_1' })
     expect(cueSpy).toHaveBeenLastCalledWith('combat.hit')
   })
 

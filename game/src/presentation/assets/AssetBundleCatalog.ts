@@ -314,10 +314,15 @@ export function audioDescriptorsFor(
   bundleId: AudioBundleId,
 ): readonly DomAudioResourceDescriptor[] {
   const prefixes = AUDIO_BUNDLE_PREFIXES[bundleId]
+  // Boundary-aware prefix match: `id === p` covers the exact row
+  // (`music.combat` itself), `id.startsWith(p + '.')` covers sub-ids -
+  // a bare startsWith(p) would also match a flat sibling like
+  // `music.menubar`. Entries may already carry the trailing dot
+  // (`combat.`), in which case the dotted form is the prefix itself.
   const out: DomAudioResourceDescriptor[] = []
   const seen = new Set<string>()
   for (const [id, def] of Object.entries(AUDIO_CUES)) {
-    if (!prefixes.some((p) => id === p || id.startsWith(p))) continue
+    if (!prefixes.some((p) => (p.endsWith('.') ? id.startsWith(p) : id === p || id.startsWith(`${p}.`)))) continue
     const urls = typeof def.src === 'string' ? (def.src ? [def.src] : []) : [...def.src]
     for (const src of urls) {
       if (seen.has(src)) continue
