@@ -49,3 +49,11 @@ export function resolveRevisionKey(): string { return `${REVISION_KEY_BASE}:${re
 const SYNC_BASE_KEY_BASE = 'tien-hiep-idle-save-sync-base'
 export function resolveSyncBaseKey(): string { return `${SYNC_BASE_KEY_BASE}:${resolveSaveAccountId()}` }
 export function resolveImportHandoffKey(): string { return `${IMPORT_HANDOFF_KEY_BASE}:${resolveSaveAccountId()}` }
+
+// The local CAS lineage counter (9.11), read through the shared key
+// resolver - every writer (LocalCloudSaveService.save, the login
+// reconcile, importSaveRaw) must bump it through the same convention.
+export function readLocalSaveRevision(): number {
+  const value = Number(localStorage.getItem(resolveRevisionKey()))
+  return Number.isSafeInteger(value) && value >= 0 ? value : 0
+}

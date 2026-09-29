@@ -1,18 +1,19 @@
 import { requestSupabase } from '../supabase/SupabaseHttp'
 import { readSupabaseSession, resolveSupabaseSession } from '../supabase/SupabaseSession'
 import type { SupabaseConfig } from '../supabase/SupabaseConfig'
-import { CURRENT_SAVE_VERSION, inspectLocalSave, type GameSave } from '../save/SaveSystem'
+import { CURRENT_SAVE_VERSION, backupCurrentSave, inspectLocalSave, type GameSave } from '../save/SaveSystem'
 import { validateGameSaveShape } from '../save/saveShapeValidation'
 import {
   isSaveAcceptable,
   staticSaveAcceptanceCatalogs,
 } from '../save/saveAcceptance'
-import { resolveImportHandoffKey, resolveRevisionKey, resolveSaveKey } from '../save/saveKeys'
 import {
   readLocalSaveRevision,
-  readSyncBaseRevision,
-  writeSyncBaseRevision,
-} from './LocalCloudSaveService'
+  resolveImportHandoffKey,
+  resolveRevisionKey,
+  resolveSaveKey,
+} from '../save/saveKeys'
+import { readSyncBaseRevision, writeSyncBaseRevision } from './LocalCloudSaveService'
 
 export type RemoteSyncOutcome = 'pulled' | 'pushed' | 'skipped' | 'unavailable' | 'conflict'
 
@@ -166,9 +167,15 @@ export async function syncRemoteSaveOnLogin(config: SupabaseConfig): Promise<Rem
         if (sameContent) {
           writeSyncBaseRevision(remoteRow.save_revision)
         } else if (
-          localRevision > remoteRow.save_revision &&
-          remoteUpdatedMs > localLastSavedAt
+          localRevision === remoteRow.save_revision ||
+          (localRevision > remoteRow.save_revision &&
+            remoteUpdatedMs > localLastSavedAt)
         ) {
+          // Equal counters with different content is a true lineage
+          // fork (two devices that each reached rev N independently):
+          // the counters offer no ordering at all, so a wall-clock pick
+          // is arbitrary - hold both sides like the divergence gate
+          // above. The stale-side push arm is the carried F1 scenario.
           return 'conflict'
         }
       }
@@ -181,6 +188,13 @@ export async function syncRemoteSaveOnLogin(config: SupabaseConfig): Promise<Rem
       // same bytes. The reverse order leaves new-revision + old-save ->
       // remoteAhead is false and the stale local save pushes right back
       // over the remote row that was just pulled.
+      // F-BX-31 - same safety net as deleteSave/importSaveRaw before
+      // the pull overwrites the local slot: the pre-pull save is the
+      // only copy of this device's unpushed progress. backupCurrentSave
+      // is best-effort (quota/SecurityError -> false), so a failed
+      // backup degrades to the pre-fix exposure rather than failing
+      // the pull - the remote row itself stays recoverable upstream.
+      void backupCurrentSave()
       const pulledRaw = JSON.stringify(remoteUsable.normalizedSave)
       localStorage.setItem(resolveSaveKey(), pulledRaw)
       // Sync base adopts the pulled remote revision before the local
@@ -249,16 +263,17 @@ export async function syncRemoteSaveOnLogin(config: SupabaseConfig): Promise<Rem
         return 'unavailable'
       }
     } else {
-      // No remote row yet - plain insert. A concurrent first-push loses to
-      // the PK conflict (throws -> 'unavailable') and pulls on next login.
+      // No remote row yet - plain insert. F-BX-33: the Prefer
+      // 'resolution=merge-duplicates' header used to turn this into a
+      // silent UPSERT over a concurrent first-push, producing exactly
+      // the same-revision-different-content fork the divergence gate
+      // now refuses to pick between. A losing first-push now hits the
+      // PK conflict (throws -> 'unavailable') and re-compares fresh on
+      // the next login.
       await requestSupabase<unknown>(
         config,
         '/rest/v1/character_saves',
-        {
-          method: 'POST',
-          headers: { Prefer: 'resolution=merge-duplicates' },
-          body,
-        },
+        { method: 'POST', body },
         session.accessToken,
       )
     }

@@ -242,21 +242,31 @@ describe('TurnBattleSystem — queuedExecutions drain order and dead actors (Mis
 })
 
 describe('TurnBattleSystem — follow-up reciprocity guard', () => {
-  it('caps consecutive bypass turns and falls back to normal gauge order', () => {
+  it('caps consecutive bypass turns by DEFERRING the remainder - paid committed entries are never voided (F-BX-41)', () => {
     const { battle, system } = fixture()
 
     // Manually simulate a long chain having already happened (rather than
     // building a full ping-pong buff setup) — verify the guard itself.
+    // The queued entry is already-committed work: its cost/trigger was
+    // paid when it was enqueued, so the cap must defer it, not drop it.
     battle.queuedFollowUps = [{ actorId: 'enemy', executionKind: 'reactive_bypass', actionSource: 'follow_up' }]
     battle.followUpChainDepth = 4 // MAX_FOLLOW_UP_CHAIN_DEPTH
 
     const result = system.tickPacing(battle, false)
 
-    // Guard tripped: queue dropped, falls through to normal (gauge not
-    // ready yet for either side at actionGauge=0) → no actor this tick.
-    expect(battle.queuedFollowUps).toBeUndefined()
+    // Guard tripped: falls back to normal order (gauge not ready yet
+    // for either side at actionGauge=0) → no actor this tick, but the
+    // committed entry is preserved for the next dequeue.
+    expect(battle.queuedFollowUps).toHaveLength(1)
     expect(battle.followUpChainDepth).toBe(0)
     expect(result).toBeNull()
+
+    // The deferred committed entry drains on the very next dequeue -
+    // the cap bounded the consecutive chain, not the committed work.
+    const actor = system.tickPacing(battle, false)
+    expect(actor?.id).toBe('enemy')
+    expect(battle.queuedFollowUps).toBeUndefined()
+    expect(battle.followUpChainDepth).toBe(1)
   })
 })
 

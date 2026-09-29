@@ -722,6 +722,41 @@ describe('CombatAnimationRuntime', () => {
       expect(runtime.isAwaitingManualTurnChoice()).toBe(false)
     })
 
+    it('manual resume re-mints the playback token so pre-resume callbacks go stale (F-BX-44)', () => {
+      const { runtime, player, eventBus } = fixture()
+      runtime.setPresentationActive(true)
+      runtime.setBattleManualMode(true)
+      runtime.pauseForManualActor(player)
+
+      const resolved: unknown[] = []
+      eventBus.on('skill_presentation_resolved', (fact) => resolved.push(fact))
+
+      // Every resume branch renews the token once per re-attachment so a
+      // stale renderer callback quoting a pre-detach token cannot match;
+      // manual was the only branch that skipped the re-mint.
+      const resume = runtime.preparePresentationResume()!
+      expect(resume.phase).toBe('manual')
+      if (resume.phase !== 'manual') return
+      expect(resume.actorId).toBe(player.id)
+
+      const resumeAgain = runtime.preparePresentationResume()!
+      expect(resumeAgain.phase).toBe('manual')
+      if (resumeAgain.phase !== 'manual') return
+      expect(resumeAgain.token).not.toBe(resume.token)
+
+      // The choice declares with the freshly minted token.
+      expect(runtime.submitTurnChoice('basic')).toBe(true)
+      expect(runtime.isAwaitingManualTurnChoice()).toBe(false)
+      expect(runtime.getPendingPlaybackToken()).toBe(resumeAgain.token)
+
+      // A callback quoting the earlier resume's (now stale) token is
+      // rejected; the current token still admits the impact.
+      runtime.acknowledgeActionImpact(resume.token)
+      expect(resolved).toHaveLength(0)
+      runtime.acknowledgeActionImpact(resumeAgain.token)
+      expect(resolved).toHaveLength(1)
+    })
+
     it('rejects all acknowledgments and manual choice while isSessionBlocking is true', () => {
       let blocking = true
       const eventBus = new EventBus()

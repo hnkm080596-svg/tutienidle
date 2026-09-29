@@ -293,7 +293,7 @@ describe('reactive bypass contract (spec 7.1)', () => {
     expect(playerP.entity.currentThe).toBe(85)
   })
 
-  it('4-deep chain trips MAX_FOLLOW_UP_CHAIN_DEPTH — queue drops, the next action is a NATURAL turn', () => {
+  it('4-deep chain trips MAX_FOLLOW_UP_CHAIN_DEPTH — the paid entry DEFERS, the next action is a NATURAL turn (F-BX-41)', () => {
     const { battle, playerP, combat, runtime } = makeBattle()
     battle.queuedFollowUps = [
       { actorId: 'reactor', executionKind: 'reactive_bypass', actionSource: 'counter', payloadSkillId: 'phan_kich', targetIds: ['enemy'] },
@@ -307,8 +307,10 @@ describe('reactive bypass contract (spec 7.1)', () => {
 
     // Guard tripped -> gauge order; the faster player wins the race and
     // the action that resolves IS a natural turn (lifecycle ticks).
+    // The committed paid entry stays queued for a later dequeue - the
+    // cap defers it instead of voiding paid work.
     expect(step.actorId).toBe('reactor')
-    expect(battle.queuedFollowUps).toBeUndefined()
+    expect(battle.queuedFollowUps).toHaveLength(1)
     expect(battle.followUpChainDepth).toBe(0)
     expect(battle.totalTurnsElapsed).toBe(1)
     expect(buffsOf(runtime, playerP, 'test_dot_host')[0]!.remaining).toBe(buffTurnsBefore! - 1)

@@ -11,14 +11,14 @@ import {
 
 import { calculateOfflineProgress, type OfflineResult } from '../core/idle/OfflineProgressSystem'
 import { calculateOfflineTime } from '../core/idle/GameClock'
-import { getActiveCultivationSpeedPercent, splitCultivationSpeedWindow } from '../core/economy/TuLinhTranBalance'
+import { splitCultivationSpeedWindow } from '../core/economy/TuLinhTranBalance'
 import { buildGameSave, computeRestoreIdentity, type GameSave } from '../services/save/SaveSystem'
 import { cloudSaveCoordinator } from '../services/cloudSave/CloudSaveServiceFactory'
 import { asBaseStats, createBaseStats } from '@/core/stats/StatBlock'
 import { STAT_DOMAIN } from '@/core/stats/StatDomain'
 import type { GameManager } from '@/core/game/GameManager'
 import { getRequiredCultivation } from '@/core/realm/realmSystem'
-import { cultivateTick } from '@/core/cultivation/CultivationTick'
+import { computeUnbuffedCultivationRate, cultivateTick } from '@/core/cultivation/CultivationTick'
 import { accrueCultivationInsight } from '@/core/cultivation/CultivationInsight'
 import type { StatModifier } from '@/core/stats/StatCalculator'
 import { normalizeArtifactProgress } from '@/core/artifact/ArtifactProgression'
@@ -268,14 +268,18 @@ export const usePlayerStore = defineStore('player', {
 
       // EM-02 - the saved cultivationPerSecond snapshot folds in timed
       // buffs (Tu Linh Tran) that expire mid-window; boosted-rate x
-      // whole-window over-grants. Re-derive the un-buffed base rate and
-      // pay each expiry-boundary segment its own live percent through
+      // whole-window over-grants. F-BX-30 - the snapshot is also one
+      // tick stale in BOTH directions (a buff that activated or expired
+      // inside the last second before the save leaves it wrong), so
+      // the un-buffed base rate is re-derived from the saved
+      // talent/realm fields - the same authority the tick itself uses
+      // (CultivationTick.computeUnbuffedCultivationRate) - and each
+      // expiry-boundary segment is paid its own live percent through
       // the same seconds->cultivation conversion authority.
       const savedTimedEffects = save.player.persistentTimedEffects ?? []
       const windowStartMs = save.player.lastSavedAt
       const windowEndMs = windowStartMs + offlineSeconds * 1000
-      const percentAtSave = getActiveCultivationSpeedPercent(savedTimedEffects, windowStartMs)
-      const unbuffedCultivationPerSecond = save.player.cultivationPerSecond / (1 + percentAtSave)
+      const unbuffedCultivationPerSecond = computeUnbuffedCultivationRate(save.player)
       const offline: OfflineResult = {
         elapsedSeconds: offlineSeconds,
         cultivation: splitCultivationSpeedWindow(savedTimedEffects, windowStartMs, windowEndMs).reduce(

@@ -239,3 +239,39 @@ describe('son_nhac external ward contract (D3/INV-12)', () => {
     expect(allyP.entity.externalWard!.amount).toBe(wardBefore)
   })
 })
+
+// F-BX-42 - the effective-stat pipeline has no output floor, so a
+// stat-source reaching <=0 wrote entity.maxHp unconditionally and
+// clampToMaxHp then minted negative hp on a still-living entity, while
+// a negative speed stalled the gauge silently. refreshParticipantStats
+// is the consumption boundary: maxHp floors at 1, speed at 0.
+describe('F-BX-42 — effective-stat floors at the vitals boundary', () => {
+  it('non-positive effective maxHp floors the ceiling and clamps hp; negative speed floors at 0', () => {
+    const broken = createCombatant({ id: 'p1', type: 'player', currentHp: 50, maxHp: 50 })
+    broken.baseStats = asBaseStats({ ...broken.baseStats, maxHp: -100, speed: -50 })
+    broken.stats = asBaseStats({ ...broken.stats, maxHp: -100, speed: -50 })
+    const participant = makeParticipant('p1', broken, -50, 0)
+
+    const battle: TurnBattle = {
+      players: [participant],
+      enemies: [],
+      state: 'fighting',
+      totalTurnsElapsed: 0,
+    }
+
+    new TurnBattleSystem(new CombatSystem(new EventBus())).refreshEffectiveStats(battle)
+
+    expect(broken.maxHp).toBe(1)
+    expect(broken.currentHp).toBe(1)
+    expect(participant.speed).toBe(0)
+  })
+
+  it('clampToMaxHp floors currentHp at 0 even when the ceiling itself is corrupt', () => {
+    const entity = createCombatant({ id: 'p2', type: 'player', currentHp: 50, maxHp: -5 })
+    const combat = new CombatSystem(new EventBus())
+
+    combat.vitals.clampToMaxHp(entity, 'stat_refresh')
+
+    expect(entity.currentHp).toBe(0)
+  })
+})

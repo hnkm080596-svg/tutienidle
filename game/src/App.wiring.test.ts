@@ -474,3 +474,39 @@ describe('onNewCharacter creation pick — consume-once', () => {
     expect(usePos).toBeGreaterThan(clearPos)
   })
 })
+
+// F-BX-32 - the two-tab LWW ping-pong surfaced silently: the coordinator
+// already tags a conflict-recovered write (recoveredFromConflict), but
+// nothing consumed it, so every overwrite stayed invisible. This is a
+// static pin on the same contract the wiring guards above check: the
+// autosave callback must reference the flag AND push a notification for
+// it - removing either re-opens the silent-overwrite hole.
+describe('persistPlayer — conflict-recovery is user-visible (F-BX-32)', () => {
+  const { scriptSetup } = readAppVueBlocks()
+  const appSourceFile = parseScript(scriptSetup, 'App.vue.script-setup.ts')
+
+  function findPersistPlayerBody(): string {
+    let found = ''
+    const visit = (node: ts.Node): void => {
+      if (
+        ts.isPropertyAssignment(node)
+        && ts.isIdentifier(node.name)
+        && node.name.text === 'persistPlayer'
+        && ts.isArrowFunction(node.initializer)
+      ) {
+        found = node.initializer.body.getText(appSourceFile)
+        return
+      }
+      ts.forEachChild(node, visit)
+    }
+    visit(appSourceFile)
+    if (!found) throw new Error('persistPlayer callback not found in App.vue — wiring changed?')
+    return found
+  }
+
+  it('reads recoveredFromConflict and pushes a warning notification', () => {
+    const body = findPersistPlayerBody()
+    expect(body).toContain('recoveredFromConflict')
+    expect(body).toContain('notification.push')
+  })
+})

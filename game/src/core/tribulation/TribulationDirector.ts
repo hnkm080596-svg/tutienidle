@@ -214,7 +214,17 @@ export class TribulationDirector {
    * for the Truc Co gate.
    */
   start(player: PlayerData, playerStats: Stats, hasTrucCoDan: boolean, targetRealmId: string): boolean {
-    if (this.getCooldownSeconds() > 0 || this.active) {
+    // F-BX-51 - a committed-but-undrained outcome (restored from save,
+    // or a victory that arms no cooldown) is the only settlement
+    // record: attemptId + receipt slot + dedup. A fresh run writes
+    // `committedOutcome = null` below before it commits anything, so
+    // starting while one is pending would destroy it - refuse instead;
+    // the outcome must drain through clear() first.
+    if (
+      this.getCooldownSeconds() > 0 ||
+      this.active ||
+      this.committedOutcome !== null
+    ) {
       return false
     }
 

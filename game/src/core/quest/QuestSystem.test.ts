@@ -204,6 +204,44 @@ describe('QuestSystem', () => {
     const notResetTwice = system.checkAndResetDaily(registry, manager, player, Date.now() + 25 * 60 * 60 * 1000)
     expect(notResetTwice).toBe(false)
   })
+
+  it('a future lastDailyResetAtMs self-heals instead of freezing dailies (F-BX-39)', () => {
+    const { registry, manager, system } = setup()
+    const player = createPlayer()
+
+    // A clock-forward jump persisted a future marker; comparing
+    // day-buckets alone then freezes the daily board until real time
+    // crosses it.
+    const future = Date.now() + 30 * 24 * 60 * 60 * 1000
+    manager.resetDaily(['kill_test'], future)
+    expect(manager.getLastDailyResetAtMs()).toBe(future)
+
+    const now = Date.now()
+    expect(system.checkAndResetDaily(registry, manager, player, now)).toBe(true)
+    expect(manager.getLastDailyResetAtMs()).toBe(now)
+  })
+
+  it('unknown requiredRealmId fails closed - never activates for any realm (F-BX-52)', () => {
+    const { registry, manager, system } = setup()
+    registry.register({
+      ...killQuest,
+      id: 'typo_realm_quest',
+      requiredRealmId: 'typo_realm',
+    })
+    const player = createPlayer('qi_refining')
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+
+    try {
+      system.reconcileActiveQuests(registry, manager, player)
+
+      // getRealmIndex('typo_realm') === -1 used to satisfy
+      // `playerIndex >= requiredIndex` for every player.
+      expect(manager.getActive().some((row) => row.questId === 'typo_realm_quest')).toBe(false)
+      expect(warn).toHaveBeenCalled()
+    } finally {
+      warn.mockRestore()
+    }
+  })
 })
 
 describe('QuestSystem - domain-scoped reward material gate (F-W-10)', () => {

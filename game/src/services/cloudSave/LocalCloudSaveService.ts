@@ -1,11 +1,12 @@
 import { loadGame, writeGameSave, type GameSave } from '../save/SaveSystem'
-import { resolveRevisionKey, resolveSyncBaseKey } from '../save/saveKeys'
+import { readLocalSaveRevision, resolveRevisionKey, resolveSyncBaseKey } from '../save/saveKeys'
 import type { CloudSaveLoadResult, CloudSaveService, CloudSaveWriteResult } from './CloudSaveService'
 
-export function readLocalSaveRevision(): number {
-  const value = Number(localStorage.getItem(resolveRevisionKey()))
-  return Number.isSafeInteger(value) && value >= 0 ? value : 0
-}
+// readLocalSaveRevision moved to saveKeys.ts (the leaf key module) so
+// the import seam in SaveSystem can read the counter without a
+// SaveSystem <-> cloudSave circular import. Re-export keeps the
+// existing './LocalCloudSaveService' import sites working.
+export { readLocalSaveRevision }
 
 /**
  * F1 lineage anchor: the remote save_revision the local lineage last
