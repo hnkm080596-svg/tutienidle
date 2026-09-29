@@ -60,7 +60,8 @@
 import { describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { SCAN_TIMEOUT, srcCorpus } from './helpers/scanTs'
+import { SCAN_TIMEOUT, srcCorpus, isTestFile } from './helpers/scanTs'
+import { AUDIO_CUES, resolveAudioCue } from '../../src/core/audio/AudioCueManifest'
 
 const SRC_DIR = join(process.cwd(), 'src')
 const LOCALES_DIR = join(SRC_DIR, 'locales')
@@ -368,12 +369,43 @@ describe('i18n key parity (P16)', () => {
     'every namespace-prefixed key literal (descriptor maps, messageKey payloads) resolves in both global locales',
     () => {
       const STRING_LITERAL = /(['"`])((?:(?!\1)[^\\]|\\.)+)\1/g
+      // Audio cue ids share the `combat.`/`tribulation.` locale namespaces
+      // by convention (sound-system-spec 1.2: `domain.verb[.qualifier]`,
+      // lowercase segments only - e.g. `combat.kiem.combo.nhat_tuyen`). They
+      // are data keys in the audio manifest, not i18n keys. The exemption
+      // is manifest-verified, not shape-only: a literal under an audio
+      // namespace that does NOT resolve via resolveAudioCue still gets
+      // checked as a (probably missing) i18n key.
+      const AUDIO_CUE_TEMPLATE = /^(.*)\.\$\{[^}]+\}$/
+      const isAudioCue = (literal: string): boolean => {
+        const tpl = AUDIO_CUE_TEMPLATE.exec(literal)
+        if (tpl) {
+          // `combat.cast.${skillId}` - the static prefix must itself resolve
+          // (resolveAudioCue strips unknown qualifier segments) or cover
+          // concrete rows beneath it (`combat.element.${element}`).
+          const prefix = tpl[1]!
+          return (
+            resolveAudioCue(prefix) !== undefined ||
+            Object.keys(AUDIO_CUES).some((k) => k.startsWith(prefix + '.'))
+          )
+        }
+        // Exact manifest membership only - NOT resolveAudioCue, whose
+        // qualifier-strip fallback would swallow real i18n keys sitting
+        // under cue namespaces (e.g. `combat.victory.title` resolving to
+        // the `combat.victory` cue row).
+        return Object.prototype.hasOwnProperty.call(AUDIO_CUES, literal)
+      }
       const violations: string[] = []
       for (const file of FILES) {
         for (const m of file.clean.matchAll(STRING_LITERAL)) {
           const literal = m[2]!
           if (!literal.includes('.') || !NAMESPACE_RE.test(literal.split('.')[0]!)) continue
           if (!KEY_SHAPE.test(literal)) continue
+          // Manifest unit tests deliberately probe qualifier-strip
+          // fallback with unknown qualifiers (`combat.cast.not_a_real_skill`)
+          // - those literals resolve as cues by design, not as i18n keys.
+          if (isTestFile(file.fromSrc) && resolveAudioCue(literal) !== undefined) continue
+          if (isAudioCue(literal)) continue
           if (!keyExists(literal, VI_PATHS) || !keyExists(literal, EN_PATHS)) {
             violations.push(`${file.fromSrc} -> ${literal}`)
           }

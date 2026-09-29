@@ -25,6 +25,10 @@ export interface TurnStatusSnapshotEntry {
   remainingTurns: number
   polarity: 'buff' | 'debuff'
   permanent: boolean
+  // True when the definition carries a periodic damage recipe - the
+  // status_vfx_attached cue differentiates real DoTs from plain
+  // buffs/debuffs on this flag (dotType is just the definitionId).
+  periodicDamage: boolean
 }
 
 function collectParticipantStatuses(
@@ -49,6 +53,7 @@ function collectParticipantStatuses(
         definition.polarity ??
         (definition.kind === 'debuff' || definition.kind === 'ailment' ? 'debuff' : 'buff'),
       permanent,
+      periodicDamage: (definition.periodic ?? []).some((p) => p.type === 'damage'),
     })
   }
 }
@@ -104,6 +109,7 @@ export function diffAndEmitTurnStatusVfx(
         buffName: buffNameFor(current.dotType),
         polarity: current.polarity,
         permanent: current.permanent,
+        periodicDamage: current.periodicDamage,
       })
     } else if (current.stacks !== previous.stacks || current.remainingTurns > previous.remainingTurns) {
       // Deliberate `>` vs legacy's `>=`: remainingTime decayed every

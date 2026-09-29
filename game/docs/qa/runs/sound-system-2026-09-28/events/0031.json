@@ -1,0 +1,20 @@
+{
+  "applied": [
+    "finding:F-SND-110",
+    "finding:F-SND-111",
+    "finding:F-SND-112",
+    "finding:F-SND-113",
+    "finding:F-SND-114",
+    "finding:F-SND-115",
+    "finding:F-SND-116",
+    "finding:F-SND-117",
+    "finding:F-SND-118",
+    "finding:F-SND-119",
+    "finding:F-SND-120",
+    "finding:F-SND-121",
+    "finding:F-SND-122",
+    "evidence:EV-SND-FIX10",
+    "review:REV-SND-AUT-7",
+    "review:REV-SND-INT-7"
+  ]
+}

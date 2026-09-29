@@ -186,3 +186,30 @@ describe('BattleLootSystem — DropResult consumer', () => {
     ])
   })
 })
+
+describe('BattleLootSystem — hidden_window_opened emit (Sound System W6)', () => {
+  it('emits one event per channel id the kill crossed', () => {
+    const { killEnemy, eventBus, deps } = createLootTestSetup({})
+    const opened = deps.hiddenBeast.onEnemyDefeated as unknown as ReturnType<typeof vi.fn>
+    opened.mockReturnValue(['chan_a', 'chan_b'])
+
+    killEnemy()
+
+    const calls = eventBus.emit.mock.calls
+      .map((args) => args[1])
+      .filter((e) => (e as { type?: string }).type === 'hidden_window_opened')
+    expect(calls).toEqual([
+      { type: 'hidden_window_opened', channelId: 'chan_a' },
+      { type: 'hidden_window_opened', channelId: 'chan_b' },
+    ])
+  })
+
+  it('empty crossing report emits nothing', () => {
+    const { killEnemy, eventBus } = createLootTestSetup({})
+    killEnemy()
+    const calls = eventBus.emit.mock.calls
+      .map((args) => args[1])
+      .filter((e) => (e as { type?: string }).type === 'hidden_window_opened')
+    expect(calls).toHaveLength(0)
+  })
+})

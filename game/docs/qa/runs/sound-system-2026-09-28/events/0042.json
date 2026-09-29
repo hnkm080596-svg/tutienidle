@@ -1,0 +1,32 @@
+{
+  "applied": [
+    "review:REV-SND-COR-9",
+    "review:REV-SND-AUT-9",
+    "review:REV-SND-INT-9",
+    "finding:F-SND-157",
+    "finding:F-SND-158",
+    "finding:F-SND-159",
+    "finding:F-SND-160",
+    "finding:F-SND-161",
+    "finding:F-SND-162",
+    "finding:F-SND-163",
+    "finding:F-SND-164",
+    "finding:F-SND-165",
+    "finding:F-SND-166",
+    "finding:F-SND-167",
+    "finding:F-SND-168",
+    "finding:F-SND-169",
+    "finding:F-SND-170",
+    "finding:F-SND-171",
+    "finding:F-SND-172",
+    "finding:F-SND-173",
+    "finding:F-SND-174",
+    "finding:F-SND-175",
+    "finding:F-SND-176",
+    "finding:F-SND-177",
+    "finding:F-SND-178",
+    "finding:F-SND-179",
+    "evidence:EV-SND-FIX16",
+    "cycle:CYC-SND-9"
+  ]
+}

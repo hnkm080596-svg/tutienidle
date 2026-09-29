@@ -12,6 +12,7 @@ import GameButton from '@/components/common/GameButton.vue'
 import StatRow from '@/components/common/primitives/StatRow.vue'
 import { PROFESSION_GRADE_NAMES, getProfessionGradeForRealm } from '@/core/profession/ProfessionGrade'
 import { professionGradeRank } from '@/core/profession/slotRank'
+import { useAudioStore } from '@/stores/audio'
 
 // Luyện Đan (2026-08-25, resource-professions-rework plan §8/§9.3) —
 // thay RecipeCraftingView: mỗi đan phương nhận ĐÚNG MỘT Linh Thảo
@@ -319,13 +320,20 @@ function startJob() {
 
   if (!result.ok) {
     useNotificationStore().push('warning', alchemyErrorMessage(result.reason))
+    useAudioStore().cue('ui.error')
+    bumpState()
+    return
   }
+
+  // W7: a committed brew is the craft-start beat.
+  useAudioStore().cue('craft.start')
 
   bumpState()
 }
 
 function cancelJob(jobId: string) {
   gameManager.alchemyOps.cancelAlchemyJob(jobId)
+  useAudioStore().cue('ui.cancel')
 
   bumpState()
 }

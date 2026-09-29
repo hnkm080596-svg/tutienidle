@@ -19,6 +19,7 @@ import { turnSkillDisplayMetaOf } from '@/data/skill/TurnSkillDisplayMeta'
 import type { TurnSkillPresentationEntry } from '@/core/combat/CombatSkillPresentation'
 import type { TurnSkillDefinition, TurnSkillSlotRole } from '@/core/battle/turn/TurnSkillAction'
 import type { TooltipContent } from '@/composables/useTooltip'
+import { useAudioStore } from '@/stores/audio'
 
 const ROLE_ORDER: readonly TurnSkillSlotRole[] = ['basic', 'special', 'ultimate']
 
@@ -127,7 +128,19 @@ function isTappable(entry: TurnSkillPresentationEntry): boolean {
 }
 
 function tapSlot(role: TurnSkillSlotRole): void {
+  // W7: landed manual picks cue combat.select (the composable's reject
+  // path owns ui.error).
+  if (isAwaitingChoice.value) {
+    useAudioStore().cue('combat.select')
+  }
   chooseSlot(role)
+}
+
+function onDynamicBasicClick(defId: string): void {
+  if (isAwaitingChoice.value) {
+    useAudioStore().cue('combat.select')
+  }
+  chooseDynamicBasic(defId)
 }
 </script>
 
@@ -145,7 +158,7 @@ function tapSlot(role: TurnSkillSlotRole): void {
           :class="{ 'is-tappable': isAwaitingChoice }"
           :disabled="!isAwaitingChoice"
           :aria-label="t('combat.overlay.skillBar.use', { name: orbLabel(orb) })"
-          @click="chooseDynamicBasic(orb.id)"
+          @click="onDynamicBasicClick(orb.id)"
         >
           <CombatSkillSlot
             :empty-label="orbLabel(orb)"

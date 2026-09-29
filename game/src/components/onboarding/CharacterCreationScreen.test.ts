@@ -1,8 +1,11 @@
 // @vitest-environment jsdom
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { createPinia, setActivePinia } from 'pinia'
 import { createApp, h, nextTick } from 'vue'
 import CharacterCreationScreen, { type CharacterCreationPayload } from './CharacterCreationScreen.vue'
 import { i18n } from '@/i18n'
+
+beforeEach(() => setActivePinia(createPinia()))
 
 function mountScreen(onComplete?: (payload: CharacterCreationPayload) => void) {
   const container = document.createElement('div')

@@ -44,6 +44,7 @@ import { turnSkillDisplayMetaOf } from '@/data/skill/TurnSkillDisplayMeta'
 import { getSkillCoreLevel } from '@/core/progression/SkillCoreLevel'
 import { useTurnBattleInfo } from '@/composables/useTurnBattleInfo'
 import OverlayPanel from '@/components/common/OverlayPanel.vue'
+import { useAudioStore } from '@/stores/audio'
 
 const { t } = useI18n()
 const ui = useUiStore()
@@ -131,6 +132,8 @@ let unlockSeq = 0
 function onNodeUnlocked(node: ProgressionNode) {
   unlockSeq += 1
   unlockTrigger.value = { nodeId: node.id, seq: unlockSeq }
+  // W7: a landed node purchase is a progression beat.
+  useAudioStore().cue('progress.node_unlock')
 }
 
 function onSelectNode(node: ProgressionNode, purchased: boolean, purchasable: boolean) {

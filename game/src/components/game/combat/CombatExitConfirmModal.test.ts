@@ -9,6 +9,7 @@ import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
 import { createApp, h, nextTick, ref } from 'vue'
 import { createPinia } from 'pinia'
 import CombatExitConfirmModal from './CombatExitConfirmModal.vue'
+import { AudioManager } from '@/core/audio/AudioManager'
 import { useUiStore } from '@/stores/ui'
 import { GAME_MANAGER_KEY, STATE_VERSION_KEY, BUMP_STATE_KEY } from '@/composables/useGameState'
 import { i18n } from '@/i18n'
@@ -176,6 +177,46 @@ describe('CombatExitConfirmModal — extract (6A-T6)', () => {
     expect(gm.emit).not.toHaveBeenCalledWith('combat_scene_exit', undefined)
     expect(modal.query()).toBeNull()
 
+    modal.unmount()
+  })
+})
+
+describe('CombatExitConfirmModal — W7 audio cues', () => {
+  it('ui.modal.open on open; ui.confirm+ui.modal.close on exit; ui.cancel+ui.modal.close on stay', async () => {
+    const playCue = vi.spyOn(AudioManager.getInstance(), 'playCue').mockImplementation(() => {})
+    const gm = makeGameManager()
+    const modal = mountModal(gm, 'stage')
+
+    gm.capturedRequestHandler?.()
+    await nextTick()
+    expect(playCue).toHaveBeenCalledWith('ui.modal.open')
+
+    playCue.mockClear()
+    await modal.clickButton(t('combat.overlay.exitConfirm.exit'))
+    expect(playCue).toHaveBeenCalledWith('ui.confirm')
+    expect(playCue).toHaveBeenCalledWith('ui.modal.close')
+
+    playCue.mockClear()
+    gm.capturedRequestHandler?.()
+    await nextTick()
+    await modal.clickButton(t('combat.overlay.exitConfirm.stay'))
+    expect(playCue).toHaveBeenCalledWith('ui.cancel')
+    expect(playCue).toHaveBeenCalledWith('ui.modal.close')
+
+    playCue.mockRestore()
+    modal.unmount()
+  })
+
+  it('a stage-gate rejection (tribulation origin) plays no open cue', async () => {
+    const playCue = vi.spyOn(AudioManager.getInstance(), 'playCue').mockImplementation(() => {})
+    const gm = makeGameManager()
+    const modal = mountModal(gm, 'tribulation')
+
+    gm.capturedRequestHandler?.()
+    await nextTick()
+    expect(playCue).not.toHaveBeenCalled()
+
+    playCue.mockRestore()
     modal.unmount()
   })
 })

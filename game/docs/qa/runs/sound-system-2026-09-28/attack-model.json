@@ -1,0 +1,15 @@
+{
+  "threats": [
+    "silent no-op path hides wiring bugs: playCue resolves to silence for every row, so a mis-wired cue name produces zero observable failure",
+    "audio bundle lazy-load race: route transition before unlock() or while buffers load drops cues silently",
+    "Pinia store v2 migration corrupts persisted audio prefs (v1 keys)",
+    "gap emits in core (reactive_proc, proc_reflect, perfect_clear, hidden_window_opened, hothe_absorb) double-fire or skip on replay/queue edges",
+    "combatAudioBinding plays during headless/no-visual combat runs where DOM audio is absent",
+    "Settings sliders desync from AudioManager bus gains; master volume multiplies channels correctly",
+    "ambientAudioDriver crossfade leaks AudioContext nodes on rapid route change; visibilitychange suspend/resume",
+    "screenShakePolicy misses a shake site after merge (cameraImpulse, tribulation)",
+    "audio cooldown/duck caps interact badly: max-active duck mutes a critical cue",
+    "e2e spec asserts only absence-of-errors, not audible output — vacuous green"
+  ],
+  "verification_modes": ["static diff review", "type-check", "scoped vitest (audio stores/bindings/manifest/architecture)", "e2e sound-system spec", "wiring census"]
+}

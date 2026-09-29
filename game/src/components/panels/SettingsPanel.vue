@@ -18,6 +18,13 @@ const notification = useNotificationStore()
 const audio = useAudioStore()
 const { t, locale } = useI18n()
 
+// W3: one slider per audio channel (field = store state, channel = bus id).
+const AUDIO_CHANNELS = [
+  { field: 'musicVolume', channel: 'music', labelKey: 'musicVolume' },
+  { field: 'sfxVolume', channel: 'sfx', labelKey: 'sfxVolume' },
+  { field: 'uiVolume', channel: 'ui', labelKey: 'uiVolume' },
+] as const
+
 // Thay window.confirm() native — modal xác nhận đồng bộ hoá bằng
 // pending-action: mở ConfirmModal, hành động thật chỉ chạy khi
 // resolvePendingConfirm() (nút "Xác Nhận") được gọi.
@@ -197,7 +204,7 @@ function handleReset() {
       </div>
     </section>
 
-    <!-- Audio — on/off + master volume (0-100%). Persisted via useAudioStore. -->
+    <!-- Audio - on/off + master/channel volumes (0-100%) + reduced shake. Persisted via useAudioStore. -->
     <section class="settings-panel__section settings-panel__audio" :aria-label="t('panels.settings.sections.audioAria')">
       <h4>{{ t('panels.settings.sections.audio') }}</h4>
 
@@ -225,6 +232,38 @@ function handleReset() {
           />
           <span class="settings-panel__audio-volume-value">{{ Math.round(audio.masterVolume * 100) }}%</span>
         </label>
+      </div>
+
+      <div class="settings-panel__audio-row">
+        <label
+          v-for="channel in AUDIO_CHANNELS"
+          :key="channel.field"
+          class="settings-panel__audio-volume"
+        >
+          {{ t(`panels.settings.audio.${channel.labelKey}`) }}
+          <input
+            type="range"
+            min="0"
+            max="100"
+            :value="Math.round(audio[channel.field] * 100)"
+            :disabled="!audio.enabled"
+            :data-testid="`settings-audio-${channel.field}`"
+            @input="audio.setChannelVolume(channel.channel, Number(($event.target as HTMLInputElement).value) / 100)"
+          />
+          <span class="settings-panel__audio-volume-value">{{ Math.round(audio[channel.field] * 100) }}%</span>
+        </label>
+      </div>
+
+      <div class="settings-panel__audio-row">
+        <Chip
+          class="settings-panel__audio-toggle"
+          :active="audio.reducedShake"
+          :aria-pressed="audio.reducedShake"
+          data-testid="settings-reduced-shake"
+          @click="audio.setReducedShake(!audio.reducedShake)"
+        >
+          {{ t('panels.settings.audio.reducedShake') }}
+        </Chip>
       </div>
     </section>
 

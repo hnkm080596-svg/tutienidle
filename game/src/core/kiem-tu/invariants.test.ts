@@ -344,6 +344,10 @@ describe('INV-7 — hardcore discovery', () => {
       'src/data/skill/KiemPhoCombos.ts',
       'src/core/kiem-tu/KiemPhoProvider.ts',
       'src/core/kiem-tu/KiemPhoSystem.ts',
+      // Sound system W1: the cue manifest enumerates every combo id as a
+      // `combat.kiem.combo.<id>` asset slot (data-only - no name or
+      // presentation surface ever leaves the manifest).
+      'src/core/audio/AudioCueManifest.ts',
     ]
     const violations: string[] = []
     // A hardcoded literal bypasses the import scan — quote-delimited

@@ -14,6 +14,7 @@ import { itemQualityRank, professionGradeRank } from '@/core/profession/slotRank
 import type { EquipmentTooltipContent } from '@/composables/useTooltip'
 import type { NameSegment } from '@/core/item/NameSegment'
 import type { SlotBadge } from '@/components/common/SlotTypes'
+import { useAudioStore } from '@/stores/audio'
 
 const { t } = useI18n()
 const gameManager = useGameManager()
@@ -192,6 +193,7 @@ const badgesBySlot = computed<Record<EquipmentSlot, SlotBadge[]>>(() => {
 
 function onSlotClick(instance: EquipmentInstance | undefined) {
   if (instance) {
+    useAudioStore().cue('ui.equip')
     unequip(instance.instanceId)
   }
 }

@@ -1,0 +1,28 @@
+{
+ "kind": "fix-batch",
+ "run": "sound-system-2026-09-28",
+ "state": "9df20d02682b224097187e8af85ad7f518bbff54825e1547c39418bebe8935f2",
+ "pin": "0279a691",
+ "fixes": [
+  "commentStrip: fully inert inComment (no tag push/pop, only --> exits); MARKUP_TOKEN boundary-aware (tag cannot cross </> or -->); interpMasked blanks {{ }} bodies; script body opaque until </script; usesJsxBlocks + TSX parse kind + JsxText non-code ranges; scriptBlockSpansOf export (live-parse spans incl. unclosed tail); dead scriptOf deleted",
+  "audioBoundary: IMPORT_META_SPEC_RE+NONLITERAL_META_RE bracket member access; tpl sweeps now run IMPORT_META_SPEC_RE w/ banned-spec checks; isNonliteralImportCall method-shorthand exemption (decl position + param-shaped args); templateTextOf strips by scriptBlockSpansOf",
+  "audioBindingWiring: emit call-led balanced walk + ident-concat arm + trailing-comma handling; destructure arm gated on seam RHS; bracket receiver requires call (; LINE_DECL +export/declare/default; LOCAL_DECL + generic windows 2000; importedIdents set; bare v-on/v-bind + {{ }} sweep; binding-table literal manifest-membership pin",
+  "combatAudioBinding: WARD_DAMAGE_REASONS = typed DAMAGE_VITALS_REASONS + survive_lethal (ward_break rejoined); ward_grant delta guard; hit axis = spec targetId!==PLAYER_ID; combatAudioBinding.test + e2e updated to spec contract",
+  "audioManifestCompleteness: DOMAINS derived from manifest keys, table-row ids unconditional, id: triple-quote; bundle-coverage pin via audioBundleIdsForCue export",
+  "ambientAudioDriver: duplicated header paragraph removed"
+ ],
+ "dups": [
+  "F-SND-274 (AUT-1) + F-SND-290 (INT-F1) = F-SND-258 (COR-1): comment tag poison",
+  "F-SND-276 (AUT-3) = F-SND-259 (COR-2): interpolation poison",
+  "F-SND-281 (AUT-8) = F-SND-272 (COR-15): declaresLocalEmit file-wide",
+  "F-SND-283 (AUT-10) = F-SND-265 (COR-8): hit gate axis",
+  "F-SND-288 (AUT-15) = F-SND-270 (COR-13): id: quote width",
+  "F-SND-291 (INT-F2) = F-SND-279 (AUT-6): ward_break membership"
+ ],
+ "residual": [
+  "import(dyn) {} statement-call + block is syntactically ambiguous with method shorthand - exempted (documented lane)",
+  "emit(f(...)) single-arg pure call is the payload-object convention - a name-producing pure call is statically indistinguishable (carve-out, same class as emit(name))",
+  "3 pre-existing master reds inherited post-#43: staticArtExtentDeclared (libuuid env), combatContract onBattleStart decl-shape, dynamicRegionHost dev/skill-vfx.ts"
+ ],
+ "verify": "EV-SND-FIX19: type-check clean; architecture+audio+stores scoped vitest 214 pass (3 pre-existing master reds); 11 mutation probes all flag/pass as designed and reverted"
+}

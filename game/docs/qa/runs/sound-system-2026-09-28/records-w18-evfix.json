@@ -1,0 +1,36 @@
+{
+ "records": [
+  {
+   "kind": "evidence",
+   "body": {
+    "kind": "EXECUTED_UNIT_STRUCTURAL",
+    "id": "EV-SND-FIX25",
+    "state": {
+     "productStateId": "df4741f521af2f2c82931da6e608cc3dc34386f7668e2fb905db1ada4a06292c",
+     "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+     "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+     "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+    },
+    "status": "CURRENT",
+    "producer": "coordinator",
+    "startedAt": "2026-09-29T05:25:00Z",
+    "finishedAt": "2026-09-29T05:35:00Z",
+    "commandOrMethod": "npm run type-check; npx vitest run tests/architecture + audio; node-v24 canvas test; 27-arm smuggle probe sweep under src/__w18probe (deleted)",
+    "cwd": "game/",
+    "exitCode": 0,
+    "result": "PASS",
+    "artifactPath": "evidence/EV-SND-FIX25.log",
+    "artifactHash": "6d8c8bb2cd0e3b408dd8cb2dfd93bece1e2949fbc011f863a2bd16ff284ec4c0",
+    "claims": [
+     "42 wave-18 reports -> 27 unique findings (incl dup links), all actionable fixed; every new arm probe-verified; suite green on real corpus"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [],
+    "invariantIds": [],
+    "limitations": [
+     "e2e spec not re-run; 3 pre-existing master reds unchanged; 2-level receiver call args deferred; unquoted attr values truncate at quote (HTML rule)"
+    ]
+   }
+  }
+ ]
+}

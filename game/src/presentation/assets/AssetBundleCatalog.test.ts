@@ -7,7 +7,10 @@ import {
   getCoreUiDescriptors,
   getHomeDescriptors,
   getTribulationDescriptors,
+  type AssetResourceDescriptor,
 } from './AssetBundleCatalog'
+import { AUDIO_CUES } from '@/core/audio/AudioCueManifest'
+import { descriptorsMatch } from './AssetBundleManager'
 import {
   ENEMY_TEMPLATE_IDS,
   PLAYER_TEXTURE_KEY,
@@ -130,5 +133,77 @@ describe('AssetBundleCatalog', () => {
       expect(keys).toContain('char-cultivate')
     }
     expect(keys).toContain(PLAYER_TEXTURE_KEY)
+  })
+})
+
+
+describe('W4 dom-audio lane', () => {
+  // Mutating the manifest for the test is safe: audioDescriptorsFor reads it
+  // lazily inside getBundleDescriptors, and we restore in finally.
+  function injectCue(id: string, src: string | readonly string[]) {
+    const cues = AUDIO_CUES as Record<string, (typeof AUDIO_CUES)[string]>
+    const orig = cues[id]
+    cues[id] = { ...orig!, src }
+    return () => {
+      if (orig) cues[id] = orig
+      else delete cues[id]
+    }
+  }
+
+  it('audio bundles enumerate only manifest rows with non-empty src', () => {
+    expect(getBundleDescriptors('audio-core')).toEqual([])
+    expect(getBundleDescriptors('audio-combat')).toEqual([])
+    expect(getBundleDescriptors('audio-tribulation')).toEqual([])
+
+    const restore = injectCue('combat.hit', 'assets/audio/sfx/combat/hit.ogg')
+    try {
+      expect(getBundleDescriptors('audio-core')).toEqual([])
+      const combat = getBundleDescriptors('audio-combat')
+      const row = combat.find((d) => d.key === 'assets/audio/sfx/combat/hit.ogg')
+      expect(row).toBeDefined()
+      expect(row!.kind).toBe('dom-audio')
+      expect((row as { urls: readonly string[] }).urls).toEqual([
+        'assets/audio/sfx/combat/hit.ogg',
+      ])
+      expect((row as { optional: boolean }).optional).toBe(true)
+    } finally {
+      restore()
+    }
+  })
+
+  it('array src becomes one descriptor per src (variant rows)', () => {
+    const restore = injectCue('ui.click', ['a.ogg', 'a.mp3'])
+    try {
+      const descs = getBundleDescriptors('audio-core')
+      const a = descs.find((d) => d.key === 'a.ogg')
+      const b = descs.find((d) => d.key === 'a.mp3')
+      expect((a as { urls: readonly string[] }).urls).toEqual(['a.ogg'])
+      expect((b as { urls: readonly string[] }).urls).toEqual(['a.mp3'])
+    } finally {
+      restore()
+    }
+  })
+
+  it('descriptorsMatch compares dom-audio urls arrays', () => {
+    const a: AssetResourceDescriptor = {
+      kind: 'dom-audio',
+      key: 'ui.click',
+      urls: ['x.ogg'],
+      optional: true,
+    }
+    const same: AssetResourceDescriptor = { ...a, urls: ['x.ogg'] }
+    const diff: AssetResourceDescriptor = { ...a, urls: ['y.ogg'] }
+    const longer: AssetResourceDescriptor = { ...a, urls: ['x.ogg', 'x.mp3'] }
+    expect(descriptorsMatch(a, same)).toBe(true)
+    expect(descriptorsMatch(a, diff)).toBe(false)
+    expect(descriptorsMatch(a, longer)).toBe(false)
+  })
+
+  it('audio bundles never appear in getBundlesForRoute', () => {
+    for (const route of ['boot', 'auth', 'character', 'home', 'combat', 'tribulation', 'error'] as const) {
+      for (const bundle of getBundlesForRoute(route)) {
+        expect(bundle.startsWith('audio-')).toBe(false)
+      }
+    }
   })
 })

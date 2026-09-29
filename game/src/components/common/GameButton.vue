@@ -14,7 +14,7 @@ const props = withDefaults(defineProps<{
   disabled?: boolean
   loading?: boolean
   type?: 'button' | 'submit'
-  /** When false (default true), the button does NOT play uiClick on click. */
+  /** When false (default true), the button does NOT play ui.click on click. */
   sound?: boolean
 }>(), {
   variant: 'primary',
@@ -30,18 +30,17 @@ const props = withDefaults(defineProps<{
 const emit = defineEmits<{ click: [MouseEvent] }>()
 
 // Direct AudioManager singleton (not the Pinia store) so GameButton can
-// mount in unit tests without an active Pinia. SettingsPanel and other
-// components needing reactive state use useAudioStore for
-// enabled + volume.
+// mount in unit tests without an active Pinia - documented exception to
+// the W7 useAudioStore().cue rule for Pinia-free primitives.
 const audio = AudioManager.getInstance()
 
-// Centralized click handler — plays uiClick SFX + unlocks the AudioContext
+// Centralized click handler - plays ui.click SFX + unlocks the AudioContext
 // on the first click (autoplay policy requires a user gesture). The real
 // parent click still fires via emit('click').
 function handleClick(event: MouseEvent) {
   audio.unlock()
   if (props.sound) {
-    audio.play('uiClick')
+    audio.playCue('ui.click')
   }
   emit('click', event)
 }

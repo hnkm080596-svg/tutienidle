@@ -1,4 +1,6 @@
 // useAudioStore.test.ts — verifies the store mirrors AudioManager both ways.
+// W3: v2 blob {enabled, masterVolume, musicVolume, sfxVolume, uiVolume,
+// reducedShake} under 'tutienidle.audio.v2'; v1 fallback migrates forward.
 
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
@@ -26,10 +28,14 @@ beforeEach(() => {
 })
 
 describe('useAudioStore', () => {
-  it('defaults to enabled=true, masterVolume=0.7', () => {
+  it('defaults to enabled=true, masterVolume=0.7, channel defaults, reducedShake=false', () => {
     const store = useAudioStore()
     expect(store.enabled).toBe(true)
     expect(store.masterVolume).toBe(0.7)
+    expect(store.musicVolume).toBe(0.5)
+    expect(store.sfxVolume).toBe(0.8)
+    expect(store.uiVolume).toBe(0.7)
+    expect(store.reducedShake).toBe(false)
   })
 
   it('setEnabled(false) syncs to AudioManager', () => {
@@ -52,26 +58,90 @@ describe('useAudioStore', () => {
     expect(store.masterVolume).toBe(0)
   })
 
-  it('persists enabled + volume to localStorage', () => {
+  it('setChannelVolume syncs each channel to AudioManager and clamps', () => {
+    const mgr = AudioManager.getInstance()
+    const store = useAudioStore()
+    store.setChannelVolume('music', 0.25)
+    store.setChannelVolume('sfx', 2)
+    store.setChannelVolume('ui', -0.5)
+    expect(store.musicVolume).toBe(0.25)
+    expect(store.sfxVolume).toBe(1)
+    expect(store.uiVolume).toBe(0)
+    expect(mgr.getChannelVolume('music')).toBe(0.25)
+    expect(mgr.getChannelVolume('sfx')).toBe(1)
+    expect(mgr.getChannelVolume('ui')).toBe(0)
+  })
+
+  it('setReducedShake persists the flag', () => {
+    const store = useAudioStore()
+    store.setReducedShake(true)
+    expect(store.reducedShake).toBe(true)
+
+    setActivePinia(createPinia())
+    const restored = useAudioStore()
+    expect(restored.reducedShake).toBe(true)
+  })
+
+  it('persists the full v2 blob to localStorage', () => {
     const store = useAudioStore()
     store.setEnabled(false)
     store.setMasterVolume(0.4)
+    store.setChannelVolume('music', 0.3)
+    store.setChannelVolume('sfx', 0.9)
+    store.setChannelVolume('ui', 0.6)
+    store.setReducedShake(true)
 
-    const raw = localStorage.getItem('tutienidle.audio.v1')
+    const raw = localStorage.getItem('tutienidle.audio.v2')
     expect(raw).not.toBeNull()
-    const parsed = JSON.parse(raw as string) as { enabled: boolean; masterVolume: number }
-    expect(parsed.enabled).toBe(false)
-    expect(parsed.masterVolume).toBe(0.4)
+    const parsed = JSON.parse(raw as string) as Record<string, unknown>
+    expect(parsed).toMatchObject({
+      enabled: false,
+      masterVolume: 0.4,
+      musicVolume: 0.3,
+      sfxVolume: 0.9,
+      uiVolume: 0.6,
+      reducedShake: true,
+    })
 
     // A fresh store instance restores the persisted settings.
     setActivePinia(createPinia())
     const restored = useAudioStore()
     expect(restored.enabled).toBe(false)
     expect(restored.masterVolume).toBe(0.4)
+    expect(restored.musicVolume).toBe(0.3)
+    expect(restored.sfxVolume).toBe(0.9)
+    expect(restored.uiVolume).toBe(0.6)
+    expect(restored.reducedShake).toBe(true)
+  })
+
+  it('v1 blob migrates forward (enabled + masterVolume carry, rest default)', () => {
+    localStorage.setItem('tutienidle.audio.v1', JSON.stringify({
+      enabled: false,
+      masterVolume: 0.15,
+    }))
+    setActivePinia(createPinia())
+    const store = useAudioStore()
+    expect(store.enabled).toBe(false)
+    expect(store.masterVolume).toBe(0.15)
+    expect(store.musicVolume).toBe(0.5)
+    expect(store.reducedShake).toBe(false)
+    // Writing must land on the v2 key.
+    store.setEnabled(true)
+    expect(localStorage.getItem('tutienidle.audio.v2')).not.toBeNull()
+  })
+
+  it('v2 blob wins over a stale v1 blob', () => {
+    localStorage.setItem('tutienidle.audio.v1', JSON.stringify({ enabled: false, masterVolume: 0.1 }))
+    localStorage.setItem('tutienidle.audio.v2', JSON.stringify({ enabled: true, masterVolume: 0.9, musicVolume: 0.2 }))
+    setActivePinia(createPinia())
+    const store = useAudioStore()
+    expect(store.enabled).toBe(true)
+    expect(store.masterVolume).toBe(0.9)
+    expect(store.musicVolume).toBe(0.2)
   })
 
   it('ignores malformed persisted payloads', () => {
-    localStorage.setItem('tutienidle.audio.v1', '{not json')
+    localStorage.setItem('tutienidle.audio.v2', '{not json')
     setActivePinia(createPinia())
     const store = useAudioStore()
     expect(store.enabled).toBe(true)
@@ -81,5 +151,12 @@ describe('useAudioStore', () => {
   it('unlock() does NOT throw when AudioContext is unavailable', () => {
     const store = useAudioStore()
     expect(() => store.unlock()).not.toThrow()
+  })
+
+  it('cue() forwards to AudioManager.playCue without throwing', () => {
+    const spy = vi.spyOn(AudioManager.getInstance(), 'playCue')
+    const store = useAudioStore()
+    store.cue('ui.click')
+    expect(spy).toHaveBeenCalledWith('ui.click')
   })
 })

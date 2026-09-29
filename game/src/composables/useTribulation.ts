@@ -98,6 +98,7 @@ function presentOutcome(result: TribulationOutcomeResult): void {
   announcements.show(
     i18n.global.t(announcement.titleKey, announcement.titleParams ?? {}),
     i18n.global.t(announcement.bodyKey, announcement.bodyParams ?? {}),
+    result.kind === 'victory' ? 'tribulation.victory' : 'tribulation.fail',
   )
 
   if (result.kind === 'victory' && result.standalonePanel) {
@@ -116,6 +117,7 @@ function presentSettlementError(): void {
   announcements.show(
     i18n.global.t('announce.tribulation.settlementError.title'),
     i18n.global.t('announce.tribulation.settlementError.body'),
+    'tribulation.fail',
   )
 }
 

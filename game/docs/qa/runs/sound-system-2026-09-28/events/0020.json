@@ -1,0 +1,11 @@
+{
+  "applied": [
+    "review:REV-SND-INT-2",
+    "finding:F-SND-32",
+    "finding:F-SND-33",
+    "finding:F-SND-34",
+    "finding:F-SND-35",
+    "evidence:EV-SND-FIX3",
+    "cycle:CYC-SND-2"
+  ]
+}

@@ -16,7 +16,7 @@
 import { describe, expect, it } from 'vitest'
 import { readdirSync, statSync } from 'node:fs'
 import { join, relative } from 'node:path'
-import { listProductionTs, readTs, SCAN_TIMEOUT } from './helpers/scanTs'
+import { listProductionTs, readTs, SCAN_TIMEOUT, isTestFile } from './helpers/scanTs'
 
 const GAME_ROOT = process.cwd()
 
@@ -35,7 +35,7 @@ function listVueAndTs(dir: string): string[] {
     const full = join(dir, entry)
     if (statSync(full).isDirectory()) {
       out.push(...listVueAndTs(full))
-    } else if ((entry.endsWith('.ts') || entry.endsWith('.vue')) && !entry.endsWith('.test.ts')) {
+    } else if ((entry.endsWith('.ts') || entry.endsWith('.vue')) && !isTestFile(entry)) {
       out.push(full)
     }
   }

@@ -20,14 +20,27 @@ export function listProductionTs(dir: string): string[] {
   return out
 }
 
-/** Recursively list ALL .ts files including tests (for corpus checks). */
+/** Source extensions the corpus scans - .ts/.tsx/.vue plus the JS/TS
+    module variants Vite accepts (.js/.jsx/.mjs/.cjs/.mts/.cts). A .mts or
+    .cjs file carrying a banned import is a complete bypass lane. */
+const ALL_EXTS = ['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs', '.mts', '.cts']
+const DECL_RE = /\.d\.(ts|mts|cts)$/
+const TEST_RE = /\.test\.(ts|tsx|js|jsx|mjs|cjs|mts|cts)$/
+
+/** True for `foo.test.<ext>` under any extension the corpus scans - the
+    corpus widened past .ts, so the test exemption must widen with it. */
+export function isTestFile(name: string): boolean {
+  return TEST_RE.test(name)
+}
+
+/** Recursively list ALL script files including tests (for corpus checks). */
 export function listAllTs(dir: string): string[] {
   const out: string[] = []
   for (const entry of readdirSync(dir)) {
     const full = join(dir, entry)
     if (statSync(full).isDirectory()) {
       out.push(...listAllTs(full))
-    } else if (entry.endsWith('.ts') && !entry.endsWith('.d.ts')) {
+    } else if (ALL_EXTS.some((ext) => entry.endsWith(ext)) && !DECL_RE.test(entry)) {
       out.push(full)
     }
   }

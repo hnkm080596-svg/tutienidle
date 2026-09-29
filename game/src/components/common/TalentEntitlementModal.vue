@@ -26,6 +26,7 @@ import { usePlayerStore } from '@/stores/player'
 import { useGameManager } from '@/composables/useGameState'
 import { useDialogFocus } from '@/composables/useDialogFocus'
 import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
+import { useAudioStore } from '@/stores/audio'
 
 const player = usePlayerStore()
 const gameManager = useGameManager()
@@ -89,7 +90,10 @@ function decide(decision: TalentEntitlementDecision): void {
   // Domain owns grant/legality; a rejected decision keeps the record
   // (and the dialog) - the UI never shows an illegal choice in the
   // authored pools, so a false return needs no surfacing.
-  gameManager.realmAdvanceOps.resolveTalentEntitlement(player, decision)
+  // W7: a decided entitlement is a progression pick.
+  if (gameManager.realmAdvanceOps.resolveTalentEntitlement(player, decision)) {
+    useAudioStore().cue('progress.talent_pick')
+  }
 }
 </script>
 

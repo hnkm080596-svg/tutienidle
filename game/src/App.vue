@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, provide, ref } from 'vue'
+import { computed, onMounted, onUnmounted, provide, ref, watch } from 'vue'
 import { usePlayerStore } from './stores/player'
 import { useUiStore } from './stores/ui'
 import { GameClock, DEFAULT_MAX_OFFLINE_SECONDS } from './core/idle/GameClock'
@@ -21,6 +21,10 @@ import { GamePresentationCoordinator } from './presentation/GamePresentationCoor
 import { createGamePresentation } from './presentation/createGamePresentation'
 import { bindPresentationActive } from './presentation/bindPresentationActive'
 import { bindCombatAudio } from './presentation/audio/combatAudioBinding'
+import { bindUiAudio } from './presentation/audio/uiAudioBinding'
+import { bindAmbientAudio } from './presentation/audio/ambientAudioDriver'
+import { AudioManager } from './core/audio/AudioManager'
+import { setReducedShakeEnabled } from './presentation/vfx/screenShakePolicy'
 import { useAudioStore } from './stores/audio'
 import { RafClockSource } from './presentation/clock/RafClockSource'
 import { MainProcessClockSource } from './presentation/clock/MainProcessClockSource'
@@ -191,12 +195,56 @@ const unbindPresentationActive = bindPresentationActive(coordinator, gameManager
 
 // Audio: domain combat events -> SFX (observation only, A7). Bound at module
 // scope next to the other event-bus bindings; store handles enabled/volume.
-const unbindCombatAudio = bindCombatAudio(gameManager.eventBus)
+// routeProvider lets the binding suppress off-route cues (farm.cycle).
+const unbindCombatAudio = bindCombatAudio(gameManager.eventBus, {
+  routeProvider: () => coordinator.getSnapshot().currentRoute,
+})
+
+// W10: push the reducedShake flag into the presentation shake gate - scenes
+// read the module-level scale (src/game may not import stores).
+const audioStore = useAudioStore()
+// Persisted enabled=false must gate every activation path before the
+// first gesture (GameButton unlocks the manager directly).
+audioStore.hydrateManager()
+
+// W7: uiStore panel/wheel transitions -> ui.panel.*/ui.wheel.* cues.
+const unbindUiAudio = bindUiAudio(ui)
+
+// W8: committed route -> music slot crossfade (silent until real assets);
+// W4: same route drives the lazy audio-* bundle fetch (unlock+enabled gated).
+const unbindAmbientAudio = bindAmbientAudio(coordinator, audioStore, assetBundleManager)
+
+watch(
+  () => audioStore.reducedShake,
+  (value) => setReducedShakeEnabled(value),
+  { immediate: true },
+)
 
 // Autoplay policy: unlock AudioContext on the first pointer gesture anywhere
-// (Phaser canvas clicks never reach GameButton). `once` keeps it one-shot.
+// (Phaser canvas clicks never reach GameButton). keydown is armed too -
+// keyboard-only activation fires click, not pointerdown, so keyboard
+// users on non-primitive surfaces would never hydrate+unlock. Not
+// `once`: a transiently failed unlock (Tone.start() rejects) must leave
+// the listener armed so a later gesture still retries. The listener is
+// disarmed when the chain reports ready; a mount with the chain already
+// ready skips arming at all (onReady would fire synchronously before any
+// disarm handle exists).
 const unlockAudioOnFirstGesture = () => useAudioStore().unlock()
-window.addEventListener('pointerdown', unlockAudioOnFirstGesture, { once: true })
+const audioManager = AudioManager.getInstance()
+const disarmAudioUnlockListeners = () => {
+  window.removeEventListener('pointerdown', unlockAudioOnFirstGesture)
+  window.removeEventListener('keydown', unlockAudioOnFirstGesture)
+}
+let disarmAudioUnlock: (() => void) | undefined
+if (!audioManager.isUnlocked()) {
+  window.addEventListener('pointerdown', unlockAudioOnFirstGesture)
+  window.addEventListener('keydown', unlockAudioOnFirstGesture)
+  // onReady would fire synchronously when already unlocked, so the
+  // isUnlocked gate above is what keeps the listener unarmed on remount.
+  // Keep the unregister handle: if unlock never succeeds the callback
+  // would otherwise leak on the module singleton across remounts.
+  disarmAudioUnlock = audioManager.onReady(disarmAudioUnlockListeners)
+}
 
 provide(PHASER_SCENE_ADAPTER_KEY, phaserSceneAdapter)
 provide(ASSET_BUNDLE_MANAGER_KEY, assetBundleManager)
@@ -675,7 +723,11 @@ onUnmounted(() => {
   routeAdapter.dispose()
   unbindPresentationActive()
   unbindCombatAudio()
-  window.removeEventListener('pointerdown', unlockAudioOnFirstGesture)
+  unbindUiAudio()
+  unbindAmbientAudio()
+  disarmAudioUnlockListeners()
+  disarmAudioUnlock?.()
+  disarmAudioUnlock = undefined
   phaserSceneAdapter.dispose()
   assetBundleManager.dispose()
 })

@@ -7,6 +7,7 @@
 import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
 import { useI18n } from 'vue-i18n'
 import GameButton from '@/components/common/GameButton.vue'
+import { useAudioStore } from '@/stores/audio'
 
 defineProps<{
   content: { title: string; description: string } | null
@@ -15,18 +16,26 @@ defineProps<{
 const emit = defineEmits<{ close: [] }>()
 
 const { t } = useI18n()
+
+// W7: close paths (backdrop + button) both read as cancel + modal close.
+const audioStore = useAudioStore()
+function onClose() {
+  audioStore.cue('ui.cancel')
+  audioStore.cue('ui.modal.close')
+  emit('close')
+}
 </script>
 
 <template>
   <Teleport to="body">
     <Transition name="lore-modal-fade">
-      <div v-if="content" class="lore-modal" :style="{ zIndex: OVERLAY_LAYERS.modal }" @click.self="emit('close')">
+      <div v-if="content" class="lore-modal" :style="{ zIndex: OVERLAY_LAYERS.modal }" @click.self="onClose">
         <div class="lore-modal__panel scrollfade">
           <h3 class="lore-modal__title">{{ content.title }}</h3>
 
           <p class="lore-modal__description">{{ content.description }}</p>
 
-          <GameButton class="lore-modal__close" variant="secondary" size="sm" @click="emit('close')">{{ t('panels.common.close') }}</GameButton>
+          <GameButton class="lore-modal__close" variant="secondary" size="sm" :sound="false" @click="onClose">{{ t('panels.common.close') }}</GameButton>
         </div>
       </div>
     </Transition>

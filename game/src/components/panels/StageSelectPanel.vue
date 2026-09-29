@@ -15,6 +15,7 @@ import GameButton from '@/components/common/GameButton.vue'
 import Chip from '@/components/common/primitives/Chip.vue'
 import EmptyState from '@/components/common/primitives/EmptyState.vue'
 import { getCurrentRealm } from '@/core/realm/realmSystem'
+import { useAudioStore } from '@/stores/audio'
 
 const { t } = useI18n()
 
@@ -114,6 +115,7 @@ const armedFarmStage = computed(() => {
 
 function stopAutoFarm() {
   gameManager.turnBattleOps.autoFarmOps.stopAutoFarm(player.$state)
+  useAudioStore().cue('farm.stop')
 }
 
 const chapterOptions = computed(() => {
@@ -246,7 +248,10 @@ function start() {
     // running farm, missing perfect clear) keeps the panel open so the
     // failure is visible instead of silent (partial T4-38).
     if (gameManager.turnBattleOps.autoFarmOps.startAutoFarm(player.$state, selectedStage.value.id)) {
+      useAudioStore().cue('farm.arm')
       ui.leftPanelMode = null
+    } else {
+      useAudioStore().cue('ui.error')
     }
     return
   }

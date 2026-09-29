@@ -1,0 +1,29 @@
+{
+  "applied": [
+    "evidence:EV-SND-FIX7",
+    "finding:F-SND-80",
+    "finding:F-SND-81",
+    "finding:F-SND-82",
+    "finding:F-SND-83",
+    "finding:F-SND-84",
+    "finding:F-SND-85",
+    "finding:F-SND-86",
+    "finding:F-SND-87",
+    "finding:F-SND-88",
+    "finding:F-SND-89",
+    "finding:F-SND-90",
+    "finding:F-SND-91",
+    "finding:F-SND-92",
+    "finding:F-SND-93",
+    "finding:F-SND-94",
+    "finding:F-SND-95",
+    "finding:F-SND-96",
+    "finding:F-SND-97",
+    "finding:F-SND-98",
+    "finding:F-SND-99",
+    "review:REV-SND-COR-5",
+    "review:REV-SND-AUT-5",
+    "review:REV-SND-INT-5",
+    "cycle:CYC-SND-5"
+  ]
+}

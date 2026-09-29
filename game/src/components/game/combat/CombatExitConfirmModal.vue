@@ -13,6 +13,7 @@ import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useBattleActions } from '@/composables/useBattleActions'
 import { useDialogFocus } from '@/composables/useDialogFocus'
 import GameButton from '@/components/common/GameButton.vue'
+import { useAudioStore } from '@/stores/audio'
 
 const { t } = useI18n()
 const ui = useUiStore()
@@ -42,9 +43,18 @@ watch(battleLive, (live) => {
 // Escape = HUY thoat (O LAI tran), KHONG BAO GIO exit qua Escape.
 useDialogFocus(cardRef, visible, {
   onEscape: () => {
-    visible.value = false
+    dismiss()
   },
 })
+
+// W7: the modal owns its own open cue - the stage gate below can reject
+// the request, so the event-level static row would cue a phantom open.
+
+function dismiss() {
+  useAudioStore().cue('ui.cancel')
+  useAudioStore().cue('ui.modal.close')
+  visible.value = false
+}
 
 function onExitRequest() {
   // Scene/topbar only request; the Stage gate stays at render so
@@ -64,10 +74,13 @@ function onExitRequest() {
     return
   }
 
+  useAudioStore().cue('ui.modal.open')
   visible.value = true
 }
 
 function confirmExit() {
+  useAudioStore().cue('ui.confirm')
+  useAudioStore().cue('ui.modal.close')
   // Abandon + UI teardown run inside the closed curtain (abandonBattle
   // self-guards when the battle already ended on its own mid-close - the
   // exit still stands). The modal itself closes right away as click
@@ -90,14 +103,14 @@ onUnmounted(() => {
   <div
     v-if="visible"
     class="combat-exit-confirm__overlay"
-    @click.self="visible = false"
+    @click.self="dismiss"
   >
     <div ref="cardRef" class="combat-exit-confirm">
       <p class="combat-exit-confirm__text">{{ t('combat.overlay.exitConfirm.message') }}</p>
 
       <div class="combat-exit-confirm__actions">
-        <GameButton variant="secondary" size="sm" @click="visible = false">{{ t('combat.overlay.exitConfirm.stay') }}</GameButton>
-        <GameButton variant="danger" size="sm" @click="confirmExit">{{ t('combat.overlay.exitConfirm.exit') }}</GameButton>
+        <GameButton variant="secondary" size="sm" :sound="false" @click="dismiss">{{ t('combat.overlay.exitConfirm.stay') }}</GameButton>
+        <GameButton variant="danger" size="sm" :sound="false" @click="confirmExit">{{ t('combat.overlay.exitConfirm.exit') }}</GameButton>
       </div>
     </div>
   </div>

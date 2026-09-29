@@ -45,6 +45,7 @@ export function useBreakthrough(gameManagerOverride?: GameManager) {
       worldAnnouncement.show(
         i18n.global.t(result.announcement.titleKey, result.announcement.titleParams ?? {}),
         i18n.global.t(result.announcement.bodyKey, result.announcement.bodyParams ?? {}),
+        'progress.breakthrough',
       )
     }
 

@@ -112,6 +112,7 @@ describe('snapshotTurnStatuses', () => {
     expect(snapshot.size).toBe(2)
     expect(snapshot.get('player:burn:source_1')).toEqual({
       targetId: 'player', dotType: 'burn', stacks: 2, remainingTurns: 3, polarity: 'debuff', permanent: false,
+      periodicDamage: false,
     })
     expect(snapshot.get('enemy:ward:src_x')).toMatchObject({ polarity: 'buff' })
   })
@@ -209,7 +210,7 @@ describe('diffAndEmitTurnStatusVfx', () => {
     const battle = makeBattle({ players: [player] })
 
     const before = new Map<string, TurnStatusSnapshotEntry>([
-      ['player:burn:source_1', { targetId: 'player', dotType: 'burn', stacks: 1, remainingTurns: 3, polarity: 'debuff', permanent: false }],
+      ['player:burn:source_1', { targetId: 'player', dotType: 'burn', stacks: 1, remainingTurns: 3, polarity: 'debuff', permanent: false, periodicDamage: true }],
     ])
 
     diffAndEmitTurnStatusVfx(bus, battle, before, runtime.buffs, REGISTRY)
@@ -220,7 +221,7 @@ describe('diffAndEmitTurnStatusVfx', () => {
     // otherwise every tick spams an update event.
     events.updated.length = 0
     const beforeDecayed = new Map<string, TurnStatusSnapshotEntry>([
-      ['player:burn:source_1', { targetId: 'player', dotType: 'burn', stacks: 2, remainingTurns: 9, polarity: 'debuff', permanent: false }],
+      ['player:burn:source_1', { targetId: 'player', dotType: 'burn', stacks: 2, remainingTurns: 9, polarity: 'debuff', permanent: false, periodicDamage: true }],
     ])
     diffAndEmitTurnStatusVfx(bus, battle, beforeDecayed, runtime.buffs, REGISTRY)
     expect(events.updated).toHaveLength(0)
@@ -233,7 +234,7 @@ describe('diffAndEmitTurnStatusVfx', () => {
     const runtime = makeWorld([player])
 
     const before = new Map<string, TurnStatusSnapshotEntry>([
-      ['player:burn:source_1', { targetId: 'player', dotType: 'burn', stacks: 1, remainingTurns: 1, polarity: 'debuff', permanent: false }],
+      ['player:burn:source_1', { targetId: 'player', dotType: 'burn', stacks: 1, remainingTurns: 1, polarity: 'debuff', permanent: false, periodicDamage: true }],
     ])
 
     diffAndEmitTurnStatusVfx(bus, makeBattle({ players: [player] }), before, runtime.buffs, REGISTRY)
@@ -249,7 +250,7 @@ describe('diffAndEmitTurnStatusVfx', () => {
     const runtime = makeWorld([enemy])
 
     const before = new Map<string, TurnStatusSnapshotEntry>([
-      ['enemy:burn:source_1', { targetId: 'enemy', dotType: 'burn', stacks: 1, remainingTurns: 2, polarity: 'debuff', permanent: false }],
+      ['enemy:burn:source_1', { targetId: 'enemy', dotType: 'burn', stacks: 1, remainingTurns: 2, polarity: 'debuff', permanent: false, periodicDamage: true }],
     ])
 
     diffAndEmitTurnStatusVfx(bus, makeBattle({ enemies: [enemy] }), before, runtime.buffs, REGISTRY)

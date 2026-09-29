@@ -1,0 +1,39 @@
+=== npm run type-check ===
+
+> tien-hiep-idle@0.0.0 type-check
+> vue-tsc --build
+
+
+=== vitest tests/architecture ===
+ FAIL  tests/architecture/staticArtExtentDeclared.test.ts [ tests/architecture/staticArtExtentDeclared.test.ts ]
+Error: libuuid.so.1: cannot open shared object file: No such file or directory
+ ❯ Object.<anonymous> node_modules/canvas/lib/bindings.js:3:18
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 49 passed (50)
+      Tests  194 passed (194)
+   Start at  05:32:45
+   Duration  15.25s (transform 6.31s, setup 0ms, import 19.21s, tests 33.60s, environment 18ms)
+
+
+=== vitest audio scopes ===
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/sound-merge/game
+
+
+ Test Files  10 passed (10)
+      Tests  100 passed (100)
+   Start at  05:33:01
+   Duration  14.99s (transform 2.00s, setup 0ms, import 11.53s, tests 21.27s, environment 1.67s)
+
+
+=== canvas test via node v24 ===
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/sound-merge/game
+
+
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+   Start at  05:33:17
+   Duration  854ms (transform 67ms, setup 0ms, import 88ms, tests 662ms, environment 0ms)
+

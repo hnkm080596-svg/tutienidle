@@ -1,0 +1,32 @@
+{
+ "kind": "fix-batch",
+ "run": "sound-system-2026-09-28",
+ "state": "9424ee8cc8b28554a08c44889e7b2f7dc18d76fc5117e37ccbaeed09997c4752",
+ "pin": "48885ad5",
+ "fixes": [
+  "commentStrip: quote-aware tagSpans + quotedAttr spans + inTag gate; foreign-block top-level-aware (templateSpan last-close, generic <name> skip); unquoted v-on/v-bind brace-balanced object values",
+  "audioBindingWiring: reBare : lookahead dropped; emitAliases self-emit guard; paren/for/bracket mints; reCase case-label arms; cue-alias .call/.apply/.bind; cue arg-head unary-strip + ??||&& segment heads + ident-hop worklist; ; -bounded mint RHS; value-ref .call/apply/bind exclusion; paren-callee . bridge",
+  "screenShakeAuthority: receiver tail + .; per-alternative member-key split; collectShakeBound nested/quoted/default; flagBoundCalls (?<![\\w$.]) + .call/?. tails; dm regex + paren-assignment; ctrlParen + case-line : gate; compound reassign ops",
+  "audioBoundary: metaDeclKind capture + compound-op reassign guard; reMember ?./!/bracket + quoted keys; import.meta[k] value-ref unresolved-key flag",
+  "AssetBundleManager: domInFlightLoads survive setLoaderScene; catch max(cur,tries)+1; attachEncodedBuffer + loadedResources gated on !disposed",
+  "AudioCueManifest: hasOwnProperty gate (playCue('constructor') no longer TypeErrors)",
+  "probeW17.test.ts: foreign-block live/inert regression pins"
+ ],
+ "dups": [
+  "F-SND-431 (AUT-2) + F-SND-433 (INT-01) = F-SND-409: tagSpan quote-aware truncation",
+  "F-SND-434 (INT-02) = F-SND-410: paren-callee . bridge",
+  "F-SND-435 (INT-04) = F-SND-414: shake ?.[ receiver + member keys",
+  "F-SND-436 (INT-05) = F-SND-423: assignment destructure mints (shake side of AUT-3 class)",
+  "F-SND-437 (INT-06) = F-SND-417: shakeBoundNames/flagBoundCalls",
+  "F-SND-438 (INT-07) = F-SND-425: boundary value-ref",
+  "F-SND-439 (INT-08) = F-SND-419: ABM in-flight",
+  "F-SND-440 (INT-09) = F-SND-424: foreign-block limits",
+  "F-SND-441 (AUT-6) = F-SND-429: receiver mid-chain (2-level residual under F-SND-426)"
+ ],
+ "residual": [
+  "useAudioStore(f(g())) 2-level call-arg receivers (F-SND-426 documented; 1-level covered)",
+  "emit(factory()) whole-arg single call = forwarded-payload convention",
+  "3 pre-existing master reds inherited post-#43: staticArtExtentDeclared (libuuid env), combatContract onBattleStart, dynamicRegionHost/i18nKeyParity on dev/skill-vfx.ts"
+ ],
+ "verify": "EV-SND-FIX24: vue-tsc clean; architecture+audio+stores 194+2 pass; smuggle file arms all fire at marked offsets then deleted"
+}

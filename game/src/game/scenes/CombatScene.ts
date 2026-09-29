@@ -132,6 +132,7 @@ import type { PositionInterpolation } from './combat/combatTypes'
 import type { CombatGridViewHost } from './combat/CombatGridViewHost'
 import { CombatSnapshotReconcile } from './combat/combat-snapshot-reconcile'
 import type { TurnBattleEntitySnapshotEvent } from '@/core/battle/turn/TurnActionPresentationEvents'
+import { applyScreenShake } from '@/presentation/vfx/screenShakePolicy'
 
 export { formatDotDamageText } from './combat/combatTextFormat'
 
@@ -645,7 +646,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
             : fact.entityId === PLAYER_ID ? 1 : -1
           this.playHorizontalImpulse(sprite, direction * impulsePx, durationMs)
         },
-        cameraImpulse: (durationMs, intensity) => this.cameras.main.shake(durationMs, intensity, false),
+        cameraImpulse: (durationMs, intensity) => applyScreenShake(this.cameras.main, durationMs, intensity, false),
       }, reducedMotion ? 'low' : 'standard', reducedMotion)
       this._skillPlayback = new SkillPresentationRunner(this._skillVfxDriver, getSkillPresentationRecipe,
         error => { console.warn('[SkillPresentation]', error) })

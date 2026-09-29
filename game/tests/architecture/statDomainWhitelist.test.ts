@@ -3,6 +3,7 @@ import { DOMAIN_SOURCE_WHITELIST, STAT_DOMAIN } from '../../src/core/stats/StatD
 import type { StatDomain } from '../../src/core/stats/StatDomain'
 import type { StatType } from '../../src/core/stats/StatTypes'
 import { createBaseStats } from '../../src/core/stats/StatBlock'
+import { isTestFile } from './helpers/scanTs'
 
 /**
  * Domain whitelist lint (stat-system-reimagined Task 7, spec section 2.1 --
@@ -174,7 +175,7 @@ describe('domain source whitelist (INV-11)', () => {
     // .test.ts exclusion the eager import executes every matched test
     // module and re-registers its suites inside this file (measured:
     // +424 duplicate case executions in one run). The runtime
-    // path.endsWith('.test.ts') skip below only spares the scan, not the
+    // isTestFile(path) skip below only spares the scan, not the
     // registration - the exclusion must happen in the glob itself.
     const modules = import.meta.glob(
       ['../../src/data/**/*.ts', '!../../src/data/**/*.test.ts'],
@@ -183,7 +184,7 @@ describe('domain source whitelist (INV-11)', () => {
     const found = new Map<object, FoundModifier>()
 
     for (const [path, moduleExports] of Object.entries(modules)) {
-      if (path.endsWith('.test.ts')) {
+      if (isTestFile(path)) {
         continue
       }
       const file = path.replace(/^(\.\.\/)+/, '')

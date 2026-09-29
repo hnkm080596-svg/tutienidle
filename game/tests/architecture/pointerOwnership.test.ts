@@ -20,7 +20,7 @@
  */
 import { describe, expect, it } from 'vitest'
 import { join } from 'node:path'
-import { SCAN_TIMEOUT, srcCorpus } from './helpers/scanTs'
+import { SCAN_TIMEOUT, srcCorpus, isTestFile } from './helpers/scanTs'
 
 const SRC_DIR = join(process.cwd(), 'src')
 
@@ -36,7 +36,7 @@ const ALLOWLIST: Record<string, string> = {
 }
 
 const GAME_FILES = srcCorpus(SRC_DIR).filter(
-  (file) => file.fromSrc.startsWith('game/') && !file.fromSrc.endsWith('.test.ts'),
+  (file) => file.fromSrc.startsWith('game/') && !isTestFile(file.fromSrc),
 )
 
 /** `setInteractive(`, or an `on('pointer…')` / `once('pointer…')` subscription. */

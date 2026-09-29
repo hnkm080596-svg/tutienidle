@@ -8,12 +8,13 @@
 import { formatNumber } from '@/core/format/NumberFormatter'
 import { formatDuration } from '@/core/format/formatDuration'
 import { useI18n } from 'vue-i18n'
-import { ref, useId } from 'vue'
+import { onMounted, ref, useId } from 'vue'
 import GameButton from './GameButton.vue'
 import StatRow from './primitives/StatRow.vue'
 import InkNineSlice from './primitives/InkNineSlice.vue'
 import { useDialogFocus } from '@/composables/useDialogFocus'
 import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
+import { useAudioStore } from '@/stores/audio'
 
 // UI-005 (Task 3, 2026-09-07) — Offline summary là blocking dialog thật:
 // role="dialog" + aria-modal + focus trap/restore qua useDialogFocus
@@ -29,7 +30,20 @@ const emit = defineEmits<{ close: [] }>()
 const { t } = useI18n()
 
 const panelRef = ref<HTMLElement | null>(null)
-useDialogFocus(panelRef, ref(true), { onEscape: () => emit('close') })
+
+// W7: stinger on mount (the offline report IS the reward moment) +
+// ui.confirm on the one-way Continue/Escape close.
+onMounted(() => {
+  useAudioStore().cue('stinger.offline')
+})
+
+function onContinue() {
+  useAudioStore().cue('ui.confirm')
+  useAudioStore().cue('ui.modal.close')
+  emit('close')
+}
+
+useDialogFocus(panelRef, ref(true), { onEscape: onContinue })
 
 const titleId = useId()
 </script>
@@ -60,7 +74,7 @@ const titleId = useId()
         <StatRow :label="t('combat.offline.labels.cultivation')" tone="positive">{{ formatNumber(Math.floor(props.cultivation)) }}</StatRow>
       </ul>
 
-      <GameButton class="offline-summary__continue" @click="emit('close')">{{ t('combat.offline.continue') }}</GameButton>
+      <GameButton class="offline-summary__continue" :sound="false" @click="onContinue">{{ t('combat.offline.continue') }}</GameButton>
     </section>
   </div>
 </template>

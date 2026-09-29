@@ -173,15 +173,21 @@ export function validateSemantics(ledger, { runDir = null, checkState = null } =
   }
   // path containment + recorded hash matches
   if (runDir) {
-    const checkPath = (rel, expectHash, owner) => {
+    const checkPath = (rel, expectHash, owner, staleOk = false) => {
       if (!rel) return;
       if (!pathsContained(runDir, rel)) { f("MC1", owner, `path escapes run dir: ${rel}`); return; }
       const abs = path.join(runDir, rel);
-      if (!fs.existsSync(abs)) { f("MC1", owner, `referenced path missing: ${rel}`); return; }
+      if (!fs.existsSync(abs)) {
+        // A superseded (STALE/REJECTED) record's artifact may be lost without
+        // breaking integrity - the claim no longer bears weight. Only CURRENT
+        // evidence (and events/messages, which pass no status) is load-bearing.
+        if (staleOk !== true) f("MC1", owner, `referenced path missing: ${rel}`);
+        return;
+      }
       if (expectHash && fileHashHex(abs) !== expectHash) f("MC1", owner, `hash mismatch for ${rel}`);
     };
     for (const e of ledger.events) checkPath(e.payloadPath, e.payloadHash, `event:${e.seq}`);
-    for (const e of ledger.evidence) checkPath(e.artifactPath, e.artifactHash, e.id);
+    for (const e of ledger.evidence) checkPath(e.artifactPath, e.artifactHash, e.id, e.status !== "CURRENT");
     for (const m of ledger.messages) checkPath(m.payloadPath, m.payloadHash, m.id);
   }
 

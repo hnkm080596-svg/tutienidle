@@ -1,4 +1,5 @@
 import { computed } from 'vue'
+import { useAudioStore } from '@/stores/audio'
 import { useGameManager, useStateVersion } from './useGameState'
 import type { TurnSkillPresentationEntry } from '@/core/combat/CombatSkillPresentation'
 import type { TurnSkillDefinition, TurnSkillSlotRole } from '@/core/battle/turn/TurnSkillAction'
@@ -83,6 +84,7 @@ export function useTurnCombatManual() {
   /** Bấm 1 slot role — chỉ khi đang pause chờ choice; slot không ready đã bị disable ở UI. */
   function chooseSlot(role: TurnSkillSlotRole): void {
     if (!gameManager.isAwaitingManualTurnChoice()) {
+      useAudioStore().cue('ui.error')
       return
     }
 
@@ -111,6 +113,7 @@ export function useTurnCombatManual() {
 
   function chooseDynamicBasic(defId: string): void {
     if (!gameManager.isAwaitingManualTurnChoice()) {
+      useAudioStore().cue('ui.error')
       return
     }
 

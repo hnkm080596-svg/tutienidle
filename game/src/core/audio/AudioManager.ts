@@ -1,4 +1,20 @@
-// AudioManager — singleton SFX playback via Tone.js synthesis.
+// AudioManager - singleton audio engine: Tone.js synth recipes (legacy
+// SFX path) + decoded-asset playback through per-channel gain buses
+// (sound-system W2).
+//
+// Routing (spec 2):
+//   sfx/ui sources -> channelGain -> reverb -> lowpass -> master -> destination
+//   music sources  -> musicGain   ->          lowpass -> master -> destination
+// Music bypasses reverb; per-cue duckMusic ramps musicGain down (max-active,
+// not summed).
+//
+// `playCue(cueId)` resolves via AUDIO_CUES: decoded buffer -> Tone.Player;
+// else synthFallback recipe; else silent no-op (dev console.debug once/id).
+// `playMusic/stopMusic/crossfadeMusic` own a single music Player slot.
+// Buffers arrive through attachDecodedBuffer/attachEncodedBuffer - keys are
+// manifest `src` strings; encoded data queues until the context exists.
+//
+
 //
 // Why Tone.js (instead of raw Web Audio API):
 //   - Strong synth engines (FMSynth, AMSynth, MetalSynth, MembraneSynth)
@@ -11,9 +27,11 @@
 // API:
 //   - getInstance()       → singleton
 //   - unlock()            → calls Tone.start() (autoplay policy); idempotent
-//   - play(id)            → plays one sound (per-id cooldown anti-spam)
+//   - playCue(id)         -> plays one manifest cue (per-id cooldown anti-spam)
+//   - playMusic/stopMusic/crossfadeMusic -> the single music slot
 //   - setEnabled(false)   → mutes everything
 //   - setMasterVolume(v)  → 0..1
+//   - setChannelVolume(ch,v) -> per-bus volume (music/sfx/ui)
 //
 // Bug-fix pass 2026-09-06 (systematic debugging):
 //   B1  NoiseSynth.triggerAttackRelease does NOT take a note — signature is
@@ -24,8 +42,8 @@
 //       tail. Now unlock() async-chains: start → init → ready.
 //   B3  Combat events (hit/damage) fire many times per tick → same sound
 //       id stacking into a "noise wall". Now per-id 60ms cooldown.
-//   B4  Suspended tab (autoplay policy re-engaged) → play() went silent.
-//       Now play() checks ctx.state and resume()s when suspended.
+//   B4  Suspended tab (autoplay policy re-engaged) -> playback went silent.
+//       Now playback checks ctx.state and resume()s when suspended.
 //   B5  initChain failing midway leaked already-created nodes; retry
 //       stacked a new chain on top. Now disposes partial chain + full
 //       dispose on reset.
@@ -34,25 +52,14 @@
 
 import * as Tone from 'tone'
 
-export type SoundId =
-  | 'uiClick'
-  | 'uiConfirm'
-  | 'uiCancel'
-  | 'toastLoot'
-  | 'toastCraft'
-  | 'toastUpgrade'
-  | 'toastError'
-  | 'toastWarning'
-  | 'toastSave'
-  | 'combatAttack'
-  | 'combatHit'
-  | 'combatCritical'
-  | 'combatDodge'
-  | 'combatBlock'
-  | 'combatKill'
-  | 'battleStart'
-  | 'battleVictory'
-  | 'battleDefeat'
+import {
+  AUDIO_CHANNELS,
+  DEFAULT_CHANNEL_VOLUMES,
+  type AudioChannelId,
+} from './AudioChannels'
+import { resolveAudioCue, type AudioCueDef, type SynthSoundId } from './AudioCueManifest'
+
+export type { SynthSoundId }
 
 // Recipe per sound — engine kind + note + duration.
 type SynthEngine = 'metal' | 'fm' | 'am' | 'membrane' | 'noise'
@@ -76,7 +83,7 @@ interface SoundRecipe {
   }
 }
 
-const SOUND_LIBRARY: Record<SoundId, SoundRecipe> = {
+export const SOUND_LIBRARY: Record<SynthSoundId, SoundRecipe> = {
   // UI — cultivation-genre gong taps: MetalSynth, low pitch, short decay.
   uiClick: {
     engine: 'metal',
@@ -294,19 +301,49 @@ function createSynth(recipe: SoundRecipe): AnySynth {
   }
 }
 
+
+const DECODE_RETRY_LIMIT = 3
+
 class AudioManagerImpl {
   private enabled = true
   private masterVolume = 0.7
   /** 'idle' | 'pending' | 'ready' — unlock() only runs while idle; unlocked ≡ (state==='ready'). */
   private unlockState: 'idle' | 'pending' | 'ready' = 'idle'
 
-  private synthCache = new Map<SoundId, AnySynth>()
-  private lastPlayAt = new Map<SoundId, number>()
+  private synthCache = new Map<string, AnySynth>() // key `${channel}:${id}` - a recipe can back cues on different channels
 
-  // Tone chain: synth → reverb → lowpass → master → destination
+  // Tone chain: master -> destination; lowpass -> master; reverb -> lowpass.
+  // Channel gains: sfx/ui connect to reverb, music connects to lowpass.
   private master: Tone.Gain | null = null
   private lowpass: Tone.Filter | null = null
   private reverb: Tone.Reverb | null = null
+  private channelGains: Partial<Record<AudioChannelId, Tone.Gain>> = {}
+  private channelVolumes: Record<AudioChannelId, number> = { ...DEFAULT_CHANNEL_VOLUMES }
+
+  // W2 asset path: decoded buffers keyed by manifest src; encoded data
+  // queued until a live context exists; active one-shot Player tracking.
+  private buffers = new Map<string, AudioBuffer>()
+  private pendingEncoded = new Map<string, ArrayBuffer>()
+  // Decode attempts per src (counted inside decodeInto, covering the
+  // initial decode and every retry) - a failed decode keeps its bytes in
+  // pendingEncoded and playCue kicks a bounded retry, so one transient
+  // decode failure cannot permanently silence an src.
+  private decodeAttempts = new Map<string, number>()
+  
+  private players = new Set<Tone.Player>()
+  private musicPlayer: Tone.Player | null = null
+  private desiredMusicId: string | null = null
+  private playingMusicId: string | null = null
+  private readyListeners = new Set<() => void>()
+  private musicSuspended = false
+  private cueCooldownAt = new Map<string, number>()
+  private variantCursor = new Map<string, number>()
+  private silentLogged = new Set<string>()
+  private duck = {
+    amount: 0,
+    until: 0,
+    timer: null as ReturnType<typeof setTimeout> | null,
+  }
 
   /**
    * Generation counter — incremented on every dispose(). unlock()'s async
@@ -319,6 +356,21 @@ class AudioManagerImpl {
 
   isUnlocked(): boolean {
     return this.unlockState === 'ready'
+  }
+
+  /**
+   * Registers a callback fired every time the chain becomes ready (the
+   * unlock() continuation's tail). If already ready, fires immediately.
+   * Returns the unregister function.
+   */
+  onReady(cb: () => void): () => void {
+    this.readyListeners.add(cb)
+    if (this.unlockState === 'ready') {
+      try { cb() } catch { /* listener must not break callers */ }
+    }
+    return () => {
+      this.readyListeners.delete(cb)
+    }
   }
 
   /**
@@ -343,6 +395,16 @@ class AudioManagerImpl {
             return
           }
           this.unlockState = 'ready'
+          // W2: flush queued encoded buffers + start any music a binding
+          // asked for before the context existed (spec W8 desired-music
+          // contract).
+          this.flushPendingEncoded()
+          this.applyDesiredMusic()
+          // W4: late-bound consumers (ambient driver's lazy bundle fetch)
+          // that gated on isUnlocked() re-fire here.
+          for (const cb of this.readyListeners) {
+            try { cb() } catch { /* listener must not break unlock */ }
+          }
         } catch {
           // B5: dispose the partial chain (e.g. Reverb threw after
           // Gain+Filter were created) — no leaked nodes.
@@ -379,10 +441,24 @@ class AudioManagerImpl {
     this.reverb = reverb
 
     await reverb.ready
+
+    // Channel buses (spec 2): sfx/ui feed reverb; music feeds lowpass
+    // directly (bed track stays clean). Assigned to the map right after
+    // construction so disposeChain() can clean partial state.
+    const sfxGain = new Tone.Gain(this.channelVolumes.sfx).connect(reverb)
+    this.channelGains.sfx = sfxGain
+    const uiGain = new Tone.Gain(this.channelVolumes.ui).connect(reverb)
+    this.channelGains.ui = uiGain
+    const musicGain = new Tone.Gain(this.channelVolumes.music).connect(lowpass)
+    this.channelGains.music = musicGain
   }
 
   private disposeChain(): void {
-    // Reverse order: reverb → lowpass → master.
+    // Reverse order: channel gains -> reverb -> lowpass -> master.
+    for (const ch of AUDIO_CHANNELS) {
+      try { this.channelGains[ch]?.dispose() } catch { /* already disposed */ }
+      this.channelGains[ch] = undefined
+    }
     try { this.reverb?.dispose() } catch { /* already disposed */ }
     try { this.lowpass?.dispose() } catch { /* already disposed */ }
     try { this.master?.dispose() } catch { /* already disposed */ }
@@ -391,8 +467,33 @@ class AudioManagerImpl {
     this.master = null
   }
 
+  /** Per-channel volume 0..1; ramps the bus gain when the chain is live. */
+  setChannelVolume(channel: AudioChannelId, value: number): void {
+    this.channelVolumes[channel] = Math.max(0, Math.min(1, value))
+    if (channel === 'music') {
+      this.rampMusicGain()
+      return
+    }
+    this.channelGains[channel]?.gain.rampTo(this.channelVolumes[channel], 0.05)
+  }
+
+  getChannelVolume(channel: AudioChannelId): number {
+    return this.channelVolumes[channel]
+  }
+
   setEnabled(value: boolean): void {
     this.enabled = value
+    if (!value) {
+      // Enabled=false silences all three channels: ramp the master bus
+      // to 0 so in-flight one-shot players quiet immediately, and
+      // suspend music (desiredMusicId kept so re-enabling resumes it -
+      // spec 6.3).
+      this.master?.gain.rampTo(0, 0.05)
+      this.suspendMusicPlayback()
+    } else {
+      this.master?.gain.rampTo(this.masterVolume, 0.05)
+      this.applyDesiredMusic()
+    }
   }
 
   isEnabled(): boolean {
@@ -401,7 +502,9 @@ class AudioManagerImpl {
 
   setMasterVolume(value: number): void {
     this.masterVolume = Math.max(0, Math.min(1, value))
-    if (this.master) {
+    // While disabled the master bus stays at 0 - a volume change must not
+    // undo the silence setEnabled(false) established.
+    if (this.master && this.enabled) {
       this.master.gain.rampTo(this.masterVolume, 0.05)
     }
   }
@@ -410,35 +513,420 @@ class AudioManagerImpl {
     return this.masterVolume
   }
 
+  // ---- W2: cue playback -------------------------------------------------
+
   /**
-   * Plays a sound by id. Does not throw when audio is not unlocked or Tone
-   * is unavailable (SSR/test environments) — silent no-op.
+   * Plays a manifest cue. resolve -> cooldown -> decoded buffer ->
+   * synthFallback -> silent no-op (dev console.debug once per id). Never
+   * throws; no-ops before unlock or when disabled.
    */
-  play(id: SoundId): void {
+  playCue(id: string): void {
+    // Never-throws contract: coerce non-string ids before resolveAudioCue
+    // can read `.length` off them.
+    if (typeof id !== 'string' || id.length === 0) return
     if (!this.enabled) return
     if (this.unlockState !== 'ready') return
+    // Hidden tab: drop one-shots rather than sounding or queueing on a
+    // suspended context - the ambient driver owns the visibility policy,
+    // and deferred starts would burst-fire on tab return.
+    if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return
+
+    const def = resolveAudioCue(id)
+    if (def === undefined) {
+      this.logSilent(id)
+      return
+    }
+    // loop:true / music-channel rows are the music slot's job - a playCue
+    // spawn would loop forever, unreachable by stopMusic/suspendMusic.
+    if (def.loop === true || def.channel === 'music') {
+      this.logSilent(id)
+      return
+    }
+
+    const now = Date.now()
+    const gap = def.cooldownMs ?? MIN_GAP_MS
+    const last = this.cueCooldownAt.get(id) ?? 0
+    if (now - last < gap) return
 
     try {
       // B4: suspended tab → resume before playing (no throw on failure).
       const ctx = Tone.getContext()
       if (ctx.state === 'suspended') {
-        void ctx.resume()
+        // resume() can reject (e.g. context closed) - swallow so no
+        // floating unhandled rejection escapes the cue path.
+        void ctx.resume().catch(() => {})
       }
 
-      // B3: per-id anti-spam cooldown.
-      const now = Date.now()
-      const last = this.lastPlayAt.get(id) ?? 0
-      if (now - last < MIN_GAP_MS) return
-      this.lastPlayAt.set(id, now)
-
-      const recipe = SOUND_LIBRARY[id]
-      const synth = this.getOrCreateSynth(id, recipe)
-      if (!synth) return
-
-      this.triggerSynth(synth, recipe)
+      const src = this.pickDecodedSrc(id, def.src)
+      // Any src with parked bytes (context wasn't ready or a decode
+      // failed) gets a bounded retry kick, not only when the whole cue
+      // is undecoded - a partially-decoded variant set heals this way.
+      const srcs = typeof def.src === 'string' ? (def.src === '' ? [] : [def.src]) : def.src
+      for (const s of srcs) this.retryDecode(s)
+      if (src !== undefined) {
+        this.cueCooldownAt.set(id, now)
+        this.spawnPlayer(src, def)
+        return
+      }
+      if (def.synthFallback !== undefined) {
+        this.cueCooldownAt.set(id, now)
+        const recipe = SOUND_LIBRARY[def.synthFallback]
+        const synth = this.getOrCreateSynth(def.channel, def.synthFallback, recipe)
+        if (synth) {
+          this.triggerSynth(synth, recipe)
+          if (def.duckMusic !== undefined) {
+            this.applyDuck(def.duckMusic, 600)
+          }
+        }
+        return
+      }
+      this.logSilent(id)
     } catch {
-      // Tone.js not ready (e.g. no AudioContext in jsdom/test) — silent no-op.
+      // Tone.js not ready - silent no-op.
     }
+  }
+
+  /**
+   * Dev-mode one-shot debug line per cue id that resolved to nothing
+   * playable (empty slot, unknown id). jsdom/Vitest sees the same path.
+   */
+  private logSilent(id: string): void {
+    if (this.silentLogged.has(id)) return
+    this.silentLogged.add(id)
+    if (import.meta.env.DEV) {
+      console.debug(`[audio] silent cue: ${id}`)
+    }
+  }
+
+  /**
+   * Picks a decoded src for a cue. `''` → undefined; string → itself when
+   * decoded; string[] → round-robin across the decoded subset.
+   */
+  private pickDecodedSrc(id: string, src: AudioCueDef['src']): string | undefined {
+    if (src === '') return undefined
+    if (typeof src === 'string') {
+      return this.buffers.has(src) ? src : undefined
+    }
+    const decoded = src.filter((s) => this.buffers.has(s))
+    if (decoded.length === 0) return undefined
+    // Start at index 0: the cursor stores the LAST served index, so the
+    // first play must advance from -1, not 0 (else index 0 never leads).
+    const cursor = (this.variantCursor.get(id) ?? -1) + 1
+    this.variantCursor.set(id, cursor)
+    return decoded[cursor % decoded.length]
+  }
+
+  private spawnPlayer(src: string, def: AudioCueDef): void {
+    const gain = this.channelGains[def.channel]
+    const buffer = this.buffers.get(src)
+    if (!gain || !buffer) return
+
+    const player = new Tone.Player(buffer)
+    player.connect(gain)
+    player.loop = def.loop ?? false
+    if (def.volume !== undefined) {
+      player.volume.value = def.volume <= 0 ? -Infinity : 20 * Math.log10(def.volume)
+    }
+    player.onstop = () => {
+      this.players.delete(player)
+      try { player.dispose() } catch { /* already disposed */ }
+    }
+    this.players.add(player)
+    try {
+      player.start()
+    } catch (err) {
+      // A start() throw would strand a connected, never-started player in
+      // `players` until dispose - detach it now instead.
+      this.players.delete(player)
+      try { player.dispose() } catch { /* already disposed */ }
+      throw err
+    }
+
+    if (def.duckMusic !== undefined) {
+      this.applyDuck(def.duckMusic, Math.max(50, buffer.duration * 1000))
+    }
+  }
+
+  // ---- W2: music slot + duck -------------------------------------------
+
+  /** Requests looped music; starts now or once unlocked (desired slot). */
+  playMusic(id: string): void {
+    this.desiredMusicId = id
+    this.pendingMusicFadeSec = 0
+    // Suspension is owned only by suspendMusic()/resumeMusic() (tab
+    // visibility); a play request while hidden must not un-suspend.
+    this.applyDesiredMusic()
+  }
+
+  /** Crossfade to a new track: fade out current, fade in next. */
+  crossfadeMusic(id: string, fadeMs: number): void {
+    if (this.desiredMusicId === id && this.playingMusicId === id) return
+    this.desiredMusicId = id
+    const fadeSec = Math.max(0.01, fadeMs / 1000)
+    this.pendingMusicFadeSec = fadeSec
+    if (this.playingMusicId !== null && this.playingMusicId !== id) {
+      this.releaseMusicPlayer(fadeMs)
+    }
+    this.applyDesiredMusic(fadeSec)
+  }
+
+  stopMusic(fadeMs = 400): void {
+    this.desiredMusicId = null
+    this.pendingMusicFadeSec = 0
+    this.releaseMusicPlayer(fadeMs)
+  }
+
+  /**
+   * Fades the music slot out and lets the player's onstop dispose it —
+   * disposing immediately would cut the fade. Falls back to immediate
+   * dispose when stop() throws (player never started).
+   */
+  private pendingReapers = new Set<ReturnType<typeof setTimeout>>()
+
+  private releaseMusicPlayer(fadeMs: number): void {
+    const old = this.musicPlayer
+    this.musicPlayer = null
+    this.playingMusicId = null
+    if (!old) return
+    old.fadeOut = Math.max(0.01, fadeMs / 1000)
+    try {
+      old.stop(`+${old.fadeOut}`)
+      // In a suspended context onstop never fires - force-detach the
+      // fading player once its fade window has fully elapsed.
+      const reaper = setTimeout(() => {
+        this.pendingReapers.delete(reaper)
+        if (!this.players.has(old)) return
+        this.players.delete(old)
+        try { old.dispose() } catch { /* already disposed */ }
+      }, fadeMs + 200)
+      ;(reaper as unknown as { unref?: () => void }).unref?.()
+      this.pendingReapers.add(reaper)
+    } catch {
+      this.players.delete(old)
+      try { old.dispose() } catch { /* already disposed */ }
+    }
+  }
+
+  /** Visibility pause: stop the player but keep the desired slot. */
+  suspendMusic(): void {
+    this.musicSuspended = true
+    this.suspendMusicPlayback()
+  }
+
+  resumeMusic(): void {
+    this.musicSuspended = false
+    this.applyDesiredMusic()
+  }
+
+  private suspendMusicPlayback(): void {
+    const old = this.musicPlayer
+    if (old) {
+      try { old.stop() } catch { /* not started */ }
+      this.players.delete(old)
+      try { old.dispose() } catch { /* already disposed */ }
+    }
+    this.musicPlayer = null
+    this.playingMusicId = null
+  }
+
+  // Fade requested by the latest crossfadeMusic while not yet ready -
+  // consumed once a player actually starts so pre-unlock requests still
+  // fade in instead of popping (the unlock path passes no arg).
+  private pendingMusicFadeSec = 0
+
+  private applyDesiredMusic(fadeSec?: number): void {
+    const id = this.desiredMusicId
+    if (id === null || id === this.playingMusicId) return
+    if (!this.enabled || this.musicSuspended || this.unlockState !== 'ready') return
+    const fade = fadeSec ?? this.pendingMusicFadeSec
+    const def = resolveAudioCue(id)
+    if (def === undefined) return
+    const src = this.pickDecodedSrc(id, def.src)
+    // Same retry contract as playCue: kick every parked src, not only
+    // when nothing decoded - a partially-decoded variant pool heals.
+    const srcs = typeof def.src === 'string' ? (def.src === '' ? [] : [def.src]) : def.src
+    for (const s of srcs) this.retryDecode(s)
+    if (src === undefined) {
+      this.logSilent(id)
+      return
+    }
+    const gain = this.channelGains.music
+    const buffer = this.buffers.get(src)
+    if (!gain || !buffer) return
+    this.disposeMusicPlayer()
+    let player: Tone.Player | undefined
+    try {
+      player = new Tone.Player(buffer)
+      player.connect(gain)
+      player.loop = true
+      player.fadeIn = fade
+      if (def.volume !== undefined) {
+        player.volume.value = def.volume <= 0 ? -Infinity : 20 * Math.log10(def.volume)
+      }
+      const playerRef = player
+      playerRef.onstop = () => {
+        this.players.delete(playerRef)
+        try { playerRef.dispose() } catch { /* already disposed */ }
+      }
+      this.players.add(playerRef)
+      this.musicPlayer = playerRef
+      this.playingMusicId = id
+      playerRef.start()
+      this.pendingMusicFadeSec = 0
+    } catch {
+      // Same strand guard as spawnPlayer - drop the failed player, then
+      // stay silent. No rethrow: applyDesiredMusic runs inside the
+      // coordinator's unguarded notify() loop and unlock()'s tail, so a
+      // throw here would abort a route commit or roll back all audio.
+      if (player) {
+        this.players.delete(player)
+        try { player.dispose() } catch { /* already disposed */ }
+      }
+      this.musicPlayer = null
+      this.playingMusicId = null
+    }
+  }
+
+  private disposeMusicPlayer(): void {
+    if (this.musicPlayer) {
+      this.players.delete(this.musicPlayer)
+      try { this.musicPlayer.dispose() } catch { /* already disposed */ }
+    }
+    this.musicPlayer = null
+    this.playingMusicId = null
+  }
+
+  /**
+   * Ducks the music bus by `amount` (0..1) for `durationMs`. Max-active
+   * semantics: a new duck raises/extends the active duck, never sums; the
+   * bus restores to channel volume once the last window expires (spec §2).
+   */
+  applyDuck(amount: number, durationMs: number): void {
+    const now = Date.now()
+    const a = Math.max(0, Math.min(1, amount))
+    const until = now + Math.max(0, durationMs)
+    if (this.duck.until > now) {
+      this.duck.amount = Math.max(this.duck.amount, a)
+      this.duck.until = Math.max(this.duck.until, until)
+    } else {
+      this.duck.amount = a
+      this.duck.until = until
+    }
+    this.rampMusicGain()
+    if (this.duck.timer) clearTimeout(this.duck.timer)
+    const delay = this.duck.until - now
+    this.duck.timer = setTimeout(() => {
+      this.duck.amount = 0
+      this.duck.until = 0
+      this.duck.timer = null
+      this.rampMusicGain()
+    }, delay)
+  }
+
+  private rampMusicGain(): void {
+    const target = this.channelVolumes.music * (1 - this.duck.amount)
+    this.channelGains.music?.gain.rampTo(target, 0.05)
+  }
+
+  // ---- W2/W4: buffer intake --------------------------------------------
+
+  /** Decoded AudioBuffer for a manifest src key (asset lane hands it over). */
+  attachDecodedBuffer(key: string, buffer: AudioBuffer): void {
+    // A decoded attach supersedes any parked or in-flight encoded payload
+    // for the same key - same generation contract as attachEncodedBuffer.
+    this.attachSeq.set(key, (this.attachSeq.get(key) ?? 0) + 1)
+    this.pendingEncoded.delete(key)
+    this.decodeAttempts.delete(key)
+    this.buffers.set(key, buffer)
+    // Same contract as decodeInto: a decoded delivery may be the buffer a
+    // desired music track was waiting on.
+    this.applyDesiredMusic()
+  }
+
+  hasDecodedBuffer(key: string): boolean {
+    return this.buffers.has(key)
+  }
+
+  /**
+   * Encoded bytes for a manifest src key. Decodes when a live context
+   * exists; queues while not (attach before unlock is the normal path).
+   * Never throws / never rejects.
+   */
+  // Per-key attach generation: a newer attachEncodedBuffer supersedes
+  // any in-flight decode of an older payload - last resolver LOSES, so
+  // a stale decode can never clobber fresher bytes.
+  private readonly attachSeq = new Map<string, number>()
+
+  attachEncodedBuffer(key: string, data: ArrayBuffer): void {
+    // A fresh attach supersedes any parked payload for the key - without
+    // this, retryDecode could decode the OLD bytes under the NEW seq and
+    // install the stale payload last.
+    this.pendingEncoded.delete(key)
+    const seq = (this.attachSeq.get(key) ?? 0) + 1
+    this.attachSeq.set(key, seq)
+    // Fresh bytes get a fresh retry budget - an exhausted counter must
+    // not poison a re-delivery of the same key.
+    this.decodeAttempts.delete(key)
+    if (this.unlockState !== 'ready') {
+      this.pendingEncoded.set(key, data)
+      return
+    }
+    void this.decodeInto(key, data, seq)
+  }
+
+  private flushPendingEncoded(): void {
+    if (this.pendingEncoded.size === 0) return
+    const pending = [...this.pendingEncoded]
+    this.pendingEncoded.clear()
+    for (const [key, data] of pending) {
+      void this.decodeInto(key, data, this.attachSeq.get(key) ?? 0)
+    }
+  }
+
+  private async decodeInto(key: string, data: ArrayBuffer, seq: number): Promise<void> {
+    const gen = this.generation
+    try {
+      const ctx = Tone.getContext() as unknown as {
+        rawContext?: AudioContext
+        decodeAudioData?: (d: ArrayBuffer) => Promise<AudioBuffer>
+      }
+      const decode =
+        typeof ctx.rawContext?.decodeAudioData === 'function'
+          ? ctx.rawContext.decodeAudioData.bind(ctx.rawContext)
+          : ctx.decodeAudioData?.bind(ctx)
+      if (!decode) {
+        // No decode entrypoint on this context - park the bytes instead
+        // of dropping them so a later context can still deliver.
+        this.pendingEncoded.set(key, data)
+        return
+      }
+      const buffer = await decode(data)
+      // Zombie guards: a dispose() bumped generation, or a newer attach
+      // bumped seq - either way this payload is dead.
+      if (this.generation !== gen || this.attachSeq.get(key) !== seq) return
+      this.buffers.set(key, buffer)
+      this.decodeAttempts.delete(key)
+      // A desired music track may have been waiting on this buffer.
+      this.applyDesiredMusic()
+    } catch {
+      if (this.generation !== gen || this.attachSeq.get(key) !== seq) return
+      // Decode failure counts here (covers initial + retried decodes):
+      // retain the bytes for a bounded play-time retry (retryDecode).
+      // Past the limit the slot stays silent - the cue keeps its
+      // fallback path either way.
+      const attempts = (this.decodeAttempts.get(key) ?? 0) + 1
+      this.decodeAttempts.set(key, attempts)
+      if (attempts < DECODE_RETRY_LIMIT) {
+        this.pendingEncoded.set(key, data)
+      }
+    }
+  }
+
+  private retryDecode(key: string): void {
+    const data = this.pendingEncoded.get(key)
+    if (data === undefined) return
+    this.pendingEncoded.delete(key)
+    void this.decodeInto(key, data, this.attachSeq.get(key) ?? 0)
   }
 
   /**
@@ -466,18 +954,20 @@ class AudioManagerImpl {
     )
   }
 
-  private getOrCreateSynth(id: SoundId, recipe: SoundRecipe): AnySynth | null {
-    const cached = this.synthCache.get(id)
+  private getOrCreateSynth(channel: AudioChannelId, id: SynthSoundId, recipe: SoundRecipe): AnySynth | null {
+    const cacheKey = `${channel}:${id}`
+    const cached = this.synthCache.get(cacheKey)
     if (cached) return cached
 
-    if (!this.reverb) return null
+    const bus = this.channelGains[channel]
+    if (!bus) return null
 
     const synth = createSynth(recipe)
 
-    // Route: synth → reverb → lowpass → master → destination
-    synth.connect(this.reverb)
+    // Route: synth → channelGain → reverb → lowpass → master → destination
+    synth.connect(bus)
 
-    this.synthCache.set(id, synth)
+    this.synthCache.set(cacheKey, synth)
     return synth
   }
 
@@ -491,7 +981,32 @@ class AudioManagerImpl {
       synth.dispose()
     }
     this.synthCache.clear()
-    this.lastPlayAt.clear()
+
+    for (const player of this.players) {
+      try { player.stop() } catch { /* not started */ }
+      try { player.dispose() } catch { /* already disposed */ }
+    }
+    this.players.clear()
+    this.disposeMusicPlayer()
+    this.buffers.clear()
+    this.pendingEncoded.clear()
+    this.decodeAttempts.clear()
+    this.attachSeq.clear()
+    this.cueCooldownAt.clear()
+    this.variantCursor.clear()
+    this.silentLogged.clear()
+    if (this.duck.timer) {
+      clearTimeout(this.duck.timer)
+    }
+    this.duck.timer = null
+    this.duck.amount = 0
+    this.duck.until = 0
+    for (const t of this.pendingReapers) clearTimeout(t)
+    this.pendingReapers.clear()
+    this.desiredMusicId = null
+    this.playingMusicId = null
+    this.musicSuspended = false
+    this.readyListeners.clear()
 
     this.disposeChain()
     this.unlockState = 'idle'

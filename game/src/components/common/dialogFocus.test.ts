@@ -1,8 +1,11 @@
 // @vitest-environment jsdom
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { createPinia, setActivePinia } from 'pinia'
 import { createApp, h, nextTick, ref, type App, type Ref } from 'vue'
 import ConfirmModal from './ConfirmModal.vue'
 import OverlayPanel from './OverlayPanel.vue'
+
+beforeEach(() => setActivePinia(createPinia()))
 
 const mounted: Array<{ app: App; container: HTMLElement }> = []
 

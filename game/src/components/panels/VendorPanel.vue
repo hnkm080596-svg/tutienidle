@@ -9,6 +9,7 @@ import { formatNumber } from '@/core/format/NumberFormatter'
 import { useNotificationStore } from '@/stores/notification'
 import { getSpiritStoneMaterialIdForRealmTier } from '@/core/material/SpiritStoneMaterial'
 import { getRealmTier } from '@/core/realm/RealmTierMap'
+import { useAudioStore } from '@/stores/audio'
 
 // Ky Bao Cac -- gp123 6G (2026-09-06): chi con Hoa Ban (thu mua nguyen
 // lieu thua lay Linh Thach). 2 card Doi Pham (Linh Thach 100->1, Linh
@@ -127,6 +128,10 @@ function sell(materialId: string, amount: number, name: string) {
   )
 
   delete sellQuantities[materialId]
+
+  // W7: a landed sale is a purchase cue (sell = spend direction inverted,
+  // same commerce affordance).
+  useAudioStore().cue('ui.purchase')
 
   bumpState()
 }

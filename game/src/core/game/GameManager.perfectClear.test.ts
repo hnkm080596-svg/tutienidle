@@ -298,3 +298,47 @@ describe('GameManager — Hoàn Mỹ condition on turn-based victory', () => {
     })
   })
 })
+
+describe('GameManager — perfect_clear observation emit (Sound System W6)', () => {
+  it('fires exactly once on first record — repeat victories stay silent', () => {
+    const stageDef = {
+      id: 'perfect_stage',
+      name: 'Perfect Stage',
+      description: '',
+      floor: 1,
+      enemyPool: [{ enemyId: 'perfect_dummy', weight: 1 }],
+      totalEnemyCount: 1, waves: [1],
+      spawnIntervalSeconds: 0,
+      perfectClearTurnLimit: 10,
+    } as Stage
+    const DUMMY = defineEnemy({
+      id: 'perfect_dummy', name: 'Perfect Dummy', level: 1, realmId: 'mortal', lane: 'ground',
+      statsInput: { maxHp: 1, might: 0, attackSpeed: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
+      rewards: { techniqueMastery: 0, spiritStone: 0 },
+    })
+    const gameManager = new GameManager()
+    const combatSource = new ManualClockSource()
+    gameManager.setCombatClockSource(combatSource)
+    const player = createDefaultPlayer()
+    player.baseStats = asBaseStats({ ...player.baseStats, might: 100 })
+    gameManager.catalogOps.registerEnemyTemplates([DUMMY])
+    gameManager.catalogOps.registerStages([stageDef])
+    gameManager.setActivePlayer(player)
+
+    const seen: { stageId: string; clearSeconds: number }[] = []
+    gameManager.eventBus.on<typeof seen[number]>('perfect_clear', (e) => seen.push(e))
+
+    for (let round = 0; round < 2; round++) {
+      gameManager.turnBattleOps.startStage(player, stageDef, false)
+      for (let i = 0; i < 400 && gameManager.getTurnBattle()?.state !== 'victory'; i++) {
+        combatSource.advance(COMBAT_STEP_SECONDS)
+      }
+      expect(gameManager.getTurnBattle()?.state).toBe('victory')
+    }
+
+    expect(player.perfectClearStageIds).toContain('perfect_stage')
+    expect(seen).toHaveLength(1)
+    expect(seen[0]!.stageId).toBe('perfect_stage')
+    expect(seen[0]!.clearSeconds).toBeGreaterThanOrEqual(0)
+  })
+})

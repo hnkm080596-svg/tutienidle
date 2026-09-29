@@ -1,3 +1,4 @@
+import type { EventBus } from '../events/EventBus'
 import { enemyToCombatEntity } from '../enemy/Enemy'
 import type { EnemySystem } from '../enemy/EnemySystem'
 import { DEFAULT_MAX_OFFLINE_SECONDS } from '../idle/GameClock'
@@ -51,6 +52,7 @@ export class GameManagerAutoFarmOps {
       stageWaves: StageWaveSystem
       enemySystem: EnemySystem
       buildPlayerRewardReceiver: (player: PlayerData) => RewardReceiver
+      eventBus: EventBus
     },
   ) {}
 
@@ -310,6 +312,14 @@ export class GameManagerAutoFarmOps {
     // clamped (corrupt) timestamp forfeits the over-cap time instead of
     // re-paying a fresh 24h batch on every world tick.
     autoFarm.lastCheckedMs = now - (elapsedMs - completedCycles * cycleMs)
+
+    // Sound System W6: one observation emit per completing tick
+    // ({stageId, cycles}). The audio binding suppresses it off-route.
+    this.deps.eventBus.emit('farm_cycle', {
+      type: 'farm_cycle',
+      stageId: autoFarm.stageId,
+      cycles: completedCycles,
+    })
   }
 
   /**

@@ -216,5 +216,13 @@ export class GameManagerBattleRewardOps {
 
     player.perfectClearStageIds.push(stage.id)
     player.perfectClearSeconds[stage.id] = clearSeconds
+
+    // Sound System W6: first-record-only emit (the includes() early-return
+    // above makes second runs unreachable here). Observation only.
+    this.deps.eventBus.emit('perfect_clear', {
+      type: 'perfect_clear',
+      stageId: stage.id,
+      clearSeconds,
+    })
   }
 }

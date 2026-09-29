@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, useAttrs } from 'vue'
 import InkNineSlice from './InkNineSlice.vue'
+import { AudioManager } from '@/core/audio/AudioManager'
 // Primitive pill chọn được — atom cho TabBar và mọi filter/mode switcher.
 // Công thức chuẩn: idle paper-200 (đủ tối để phân biệt trang giấy phía
 // sau, không còn khối mực đen); active nổi bật hẳn bằng viền đồng
@@ -20,6 +21,17 @@ withDefaults(defineProps<{
 // active maps to aria-pressed.
 const attrs = useAttrs()
 const isTab = computed(() => attrs.role === 'tab')
+
+// W7: blanket ui.tab on every Chip click (tabs, filters, toggles) -
+// AudioManager direct, like GameButton, so chips work without Pinia
+// (documented exception to the W7 useAudioStore().cue rule).
+// Disabled buttons never fire click, so disabled chips stay silent.
+const audio = AudioManager.getInstance()
+
+function onClick() {
+  audio.unlock()
+  audio.playCue('ui.tab')
+}
 </script>
 
 <template>
@@ -29,6 +41,7 @@ const isTab = computed(() => attrs.role === 'tab')
     :class="{ 'is-active': active }"
     :disabled="disabled"
     :aria-pressed="isTab ? undefined : active"
+    @click="onClick"
   >
     <InkNineSlice
       asset-id="frame-xs-ink-line"

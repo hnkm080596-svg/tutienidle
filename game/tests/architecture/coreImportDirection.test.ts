@@ -15,7 +15,7 @@
  */
 import { describe, expect, it } from 'vitest'
 import { join, relative, sep } from 'node:path'
-import { listAllTs, readTs, SCAN_TIMEOUT } from './helpers/scanTs'
+import { listAllTs, readTs, SCAN_TIMEOUT, isTestFile } from './helpers/scanTs'
 
 const GAME_ROOT = process.cwd()
 const CORE_DIR = join(GAME_ROOT, 'src', 'core')
@@ -102,7 +102,7 @@ describe('R14.1b — A6: core never imports presentation/framework upward', () =
   // TribulationOutcomeService.test.ts needs the real player store because
   // writing absent optional keys on store.$state does not reflect (probe
   // evidence 2026-09-11). Exempt tests explicitly, production stays strict.
-  const files = listAllTs(CORE_DIR).filter((f) => !f.endsWith('.test.ts'))
+  const files = listAllTs(CORE_DIR).filter((f) => !isTestFile(f))
 
   it('runs over a real corpus (guard must not silently pass on empty input)', { timeout: SCAN_TIMEOUT }, () => {
     expect(files.length).toBeGreaterThan(100)

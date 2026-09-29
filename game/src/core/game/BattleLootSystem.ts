@@ -446,11 +446,19 @@ export class BattleLootSystem {
           // hidden-substitution window is ACTIVE-only, so idle auto-farm
           // cycles must not warm the counter it never benefits from.
           if (this.player && this.channel === 'active') {
-            this.deps.hiddenBeast.onEnemyDefeated(
+            // Sound System W6: hiddenBeast reports the channels whose
+            // threshold this kill crossed; one observation emit each.
+            const openedChannels = this.deps.hiddenBeast.onEnemyDefeated(
               this.player,
               defeatedTemplateId,
               enemy.realmId,
             )
+            for (const channelId of openedChannels) {
+              this.deps.eventBus.emit('hidden_window_opened', {
+                type: 'hidden_window_opened',
+                channelId,
+              })
+            }
           }
         }
       }

@@ -34,6 +34,7 @@ import type { OrbId } from '@/core/kiem-tu/KiemTuState'
 import { turnSkillDisplayMetaOf } from '@/data/skill/TurnSkillDisplayMeta'
 import { getRealmIndex } from '@/core/realm/realmSystem'
 import { REALMS } from '@/data/realms/realm'
+import { useAudioStore } from '@/stores/audio'
 
 const { t, te } = useI18n()
 
@@ -126,6 +127,10 @@ function confirmChoosePath() {
   if (!choice) {
     return
   }
+
+  // W7: path commitment is a progression beat (the ConfirmModal's own
+  // ui.confirm already fired on the button).
+  useAudioStore().cue('progress.path_choose')
 
   const way = CULTIVATION_PATH_MODULES[choice.pathId].ways[choice.wayId]
 

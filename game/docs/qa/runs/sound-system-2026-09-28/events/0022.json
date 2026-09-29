@@ -1,0 +1,15 @@
+{
+  "applied": [
+    "evidence:EV-SND-FIX5",
+    "finding:F-SND-50",
+    "finding:F-SND-51",
+    "finding:F-SND-52",
+    "finding:F-SND-53",
+    "finding:F-SND-54",
+    "finding:F-SND-55",
+    "finding:F-SND-56",
+    "finding:F-SND-57",
+    "review:REV-SND-INT-3",
+    "cycle:CYC-SND-3"
+  ]
+}

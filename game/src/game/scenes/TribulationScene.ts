@@ -8,6 +8,7 @@ import {
   queueInkWashUiAtlas,
 } from '@/game/support/InkWashUiPhaser'
 import { queueTribulationAssets } from '@/game/support/TribulationPreload'
+import { applyScreenShake } from '@/presentation/vfx/screenShakePolicy'
 import { ENTITY_ART_MODE } from '@/presentation/art/EntityArtMode'
 import {
   getCultivateTexture,
@@ -167,7 +168,7 @@ export class TribulationScene extends Phaser.Scene {
     }
     bolt.lineTo(this.player.x, this.player.y).strokePath()
     this.cameras.main.flash(90, 170, 210, 255, false)
-    this.cameras.main.shake(160, 0.012)
+    applyScreenShake(this.cameras.main, 160, 0.012)
     this.player.setTint(0xd8f4ff)
     this.time.delayedCall(150, () => this.player?.clearTint())
     this.tweens.add({ targets: bolt, alpha: 0, duration: 260, onComplete: () => bolt.destroy() })

@@ -51,8 +51,11 @@ import {
 } from '@/presentation/art/CombatPresentationCatalogue'
 import { ENTITY_ART_MODE } from '@/presentation/art/EntityArtMode'
 import { atlasClipsOf } from '@/presentation/art/CombatEntityPresentation'
+import { AUDIO_CUES } from '@/core/audio/AudioCueManifest'
 
-export type AssetBundleId = 'core-ui' | 'home' | 'combat' | 'tribulation'
+export type AudioBundleId = 'audio-core' | 'audio-combat' | 'audio-tribulation'
+
+export type AssetBundleId = 'core-ui' | 'home' | 'combat' | 'tribulation' | AudioBundleId
 
 export type ImageResourceDescriptor = Readonly<{
   kind: 'image'
@@ -88,12 +91,25 @@ export type DomImageResourceDescriptor = Readonly<{
   url: string
 }>
 
+// Sound System W4: DOM-side audio fetch lane. `key` is the manifest src
+// path (AudioManager buffers are keyed by src), `urls` holds that single
+// src. `optional` is a type-level marker: a missing file marks the key
+// missing and resolves - it never rejects a bundle the way a missing
+// texture does.
+export type DomAudioResourceDescriptor = Readonly<{
+  kind: 'dom-audio'
+  key: string
+  urls: readonly string[]
+  optional: true
+}>
+
 export type AssetResourceDescriptor =
   | ImageResourceDescriptor
   | SpritesheetResourceDescriptor
   | AtlasResourceDescriptor
   | MultiAtlasResourceDescriptor
   | DomImageResourceDescriptor
+  | DomAudioResourceDescriptor
 
 export function getCoreUiDescriptors(): readonly AssetResourceDescriptor[] {
   return [
@@ -359,6 +375,57 @@ export function getTribulationDescriptors(): readonly AssetResourceDescriptor[] 
   return descriptors
 }
 
+/**
+ * Cue-id prefixes each lazy audio bundle covers. `audio-core` carries every
+ * non-scene cue domain plus menu/home music; combat and tribulation add
+ * their own cues (tribulation keeps combat.* because ward/vitals events
+ * fire there too). While every manifest `src` is '' this yields [].
+ */
+export const AUDIO_BUNDLE_PREFIXES: Record<AudioBundleId, readonly string[]> = {
+  'audio-core': ['ui.', 'stinger.', 'progress.', 'craft.', 'farm.', 'ambient.', 'music.menu', 'music.home'],
+  'audio-combat': ['combat.', 'music.combat'],
+  'audio-tribulation': ['tribulation.', 'combat.', 'music.tribulation'],
+}
+
+/** Boundary-aware prefix match shared by the two bundle lookups below:
+ *  `id === p` covers the exact row (`music.combat` itself),
+ *  `id.startsWith(p + '.')` covers sub-ids; a bare startsWith(p) would
+ *  also match a flat sibling like `music.menubar`. Prefix entries may
+ *  already carry the trailing dot (`combat.`), which IS the prefix.
+ */
+function prefixCoversCue(p: string, cueId: string): boolean {
+  return p.endsWith('.')
+    ? cueId.startsWith(p)
+    : cueId === p || cueId.startsWith(`${p}.`)
+}
+
+/** Bundle ids whose prefix table covers the cue - empty means the cue
+ *  can never be fetched (a new manifest domain forgot a bundle row). */
+export function audioBundleIdsForCue(cueId: string): AudioBundleId[] {
+  return (Object.keys(AUDIO_BUNDLE_PREFIXES) as AudioBundleId[]).filter((bundleId) =>
+    AUDIO_BUNDLE_PREFIXES[bundleId].some((p) => prefixCoversCue(p, cueId)),
+  )
+}
+
+/** Manifest-derived audio descriptors: one row per cue with a non-empty src. */
+export function audioDescriptorsFor(
+  bundleId: AudioBundleId,
+): readonly DomAudioResourceDescriptor[] {
+  const prefixes = AUDIO_BUNDLE_PREFIXES[bundleId]
+  const out: DomAudioResourceDescriptor[] = []
+  const seen = new Set<string>()
+  for (const [id, def] of Object.entries(AUDIO_CUES)) {
+    if (!prefixes.some((p) => prefixCoversCue(p, id))) continue
+    const urls = typeof def.src === 'string' ? (def.src ? [def.src] : []) : [...def.src]
+    for (const src of urls) {
+      if (seen.has(src)) continue
+      seen.add(src)
+      out.push({ kind: 'dom-audio', key: src, urls: [src], optional: true })
+    }
+  }
+  return out
+}
+
 export function getBundleDescriptors(bundleId: AssetBundleId): readonly AssetResourceDescriptor[] {
   switch (bundleId) {
     case 'core-ui':
@@ -369,6 +436,10 @@ export function getBundleDescriptors(bundleId: AssetBundleId): readonly AssetRes
       return getCombatDescriptors()
     case 'tribulation':
       return getTribulationDescriptors()
+    case 'audio-core':
+    case 'audio-combat':
+    case 'audio-tribulation':
+      return audioDescriptorsFor(bundleId)
   }
 }
 

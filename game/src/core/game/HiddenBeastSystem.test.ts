@@ -199,3 +199,39 @@ describe('HiddenBeastSystem - band-less stage never attracts a hidden beast (F-W
     expect(system.maybeReplaceSpawn(player, channel.bandRealmId)).toEqual({ id: channel.enemyId })
   })
 })
+
+// Sound System W6 -- onEnemyDefeated reports the channel ids whose
+// kill count CROSSED killThreshold this call. Resets (beast kills) and
+// non-crossing increments never report; the emit itself lives in
+// BattleLootSystem.
+describe('HiddenBeastSystem — crossing report contract (Sound System W6)', () => {
+  it('returns [channelId] exactly on the threshold-crossing kill', () => {
+    const ch = fixtureChannel({ killThreshold: 2 })
+    const sys = channelSystem([ch])
+    const player = luyenKhiPlayer()
+
+    expect(sys.onEnemyDefeated(player, 'pool_toad', 'qi_refining')).toEqual([]) // 0 -> 1
+    expect(sys.onEnemyDefeated(player, 'pool_toad', 'qi_refining')).toEqual(['fixture_beast']) // 1 -> 2
+    // Post-window increments never re-cross.
+    expect(sys.onEnemyDefeated(player, 'pool_toad', 'qi_refining')).toEqual([]) // 2 -> 3
+  })
+
+  it('killing the beast resets and reports []', () => {
+    const ch = fixtureChannel({ killThreshold: 2 })
+    const sys = channelSystem([ch])
+    const player = luyenKhiPlayer()
+    player.hiddenBeastKills = { fixture_beast: 5 }
+
+    expect(sys.onEnemyDefeated(player, 'fixture_enemy', 'qi_refining')).toEqual([])
+    expect(player.hiddenBeastKills.fixture_beast).toBe(0)
+  })
+
+  it('kills outside the channel band never report', () => {
+    const ch = fixtureChannel({ bandRealmId: 'qi_refining' })
+    const sys = channelSystem([ch])
+    const player = luyenKhiPlayer()
+    player.hiddenBeastKills = { fixture_beast: ch.killThreshold - 1 }
+
+    expect(sys.onEnemyDefeated(player, 'pool_toad', 'foundation')).toEqual([])
+  })
+})

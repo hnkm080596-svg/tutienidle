@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { computed, ref, useId } from 'vue'
+import { computed, ref, useId, watch } from 'vue'
 import { i18n } from '@/i18n'
 import GameButton from './GameButton.vue'
 import InkNineSlice from './primitives/InkNineSlice.vue'
 import { useDialogFocus } from '@/composables/useDialogFocus'
 import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
+import { useAudioStore } from '@/stores/audio'
 
 // Restyle (2026-09-28, ui-audit creation-meta) - was SysModalBase system
 // chrome (sci-fi chrome chrome + translucent panel) clashing with the
@@ -35,6 +36,29 @@ const props = withDefaults(
 
 const emit = defineEmits<{ confirm: []; cancel: [] }>()
 
+// W7: shared confirm chrome owns modal open + confirm/cancel cues for
+// every ConfirmModal consumer (QuanKhiPanel path choice, save gate, ...).
+
+watch(
+  () => props.open,
+  (open, wasOpen) => {
+    if (open && !wasOpen) useAudioStore().cue('ui.modal.open')
+    // The close edge is cue'd here too, not only in the button handlers:
+    // a programmatic close (parent sets open=false) is still a close.
+    if (!open && wasOpen) useAudioStore().cue('ui.modal.close')
+  },
+)
+
+function onConfirm() {
+  useAudioStore().cue('ui.confirm')
+  emit('confirm')
+}
+
+function onCancel() {
+  useAudioStore().cue('ui.cancel')
+  emit('cancel')
+}
+
 const confirmLabel = computed(() => props.confirmLabel ?? i18n.global.t('panels.common.confirm'))
 const cancelLabel = computed(() => props.cancelLabel ?? i18n.global.t('panels.common.cancel'))
 
@@ -46,7 +70,7 @@ const panelRef = ref<HTMLElement | null>(null)
 // no click handler on purpose - a destructive confirm must not dismiss
 // from an accidental outside tap.
 useDialogFocus(panelRef, computed(() => props.open), {
-  onEscape: () => emit('cancel'),
+  onEscape: onCancel,
 })
 </script>
 
@@ -70,8 +94,8 @@ useDialogFocus(panelRef, computed(() => props.open), {
           <p :id="messageId" class="confirm-modal__message">{{ message }}</p>
 
           <div class="confirm-modal__actions">
-            <GameButton class="confirm-modal__cancel" variant="ghost" @click="emit('cancel')">{{ cancelLabel }}</GameButton>
-            <GameButton class="confirm-modal__confirm" :variant="danger ? 'danger' : 'primary'" @click="emit('confirm')">{{ confirmLabel }}</GameButton>
+            <GameButton class="confirm-modal__cancel" variant="ghost" :sound="false" @click="onCancel">{{ cancelLabel }}</GameButton>
+            <GameButton class="confirm-modal__confirm" :variant="danger ? 'danger' : 'primary'" :sound="false" @click="onConfirm">{{ confirmLabel }}</GameButton>
           </div>
         </section>
       </div>

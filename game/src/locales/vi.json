@@ -678,7 +678,11 @@
       "audio": {
         "on": "Bật",
         "off": "Tắt",
-        "volume": "Âm lượng"
+        "volume": "Âm lượng",
+        "musicVolume": "Nhạc nền",
+        "sfxVolume": "Hiệu ứng",
+        "uiVolume": "Giao diện",
+        "reducedShake": "Giảm rung màn hình"
       },
       "language": {
         "note": "Áp dụng cho toàn bộ văn bản giao diện.",

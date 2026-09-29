@@ -85,7 +85,7 @@ describe('R14.4 — CombatScene countdown telegraph handles clear on every battl
     const scene = readTs(join(GAME_ROOT, 'src/game/scenes/CombatScene.ts'))
     // Anchor on the METHOD declaration, not the comment mentions earlier in
     // the file (a line-275 comment also says "onBattleStart()").
-    const startIdx = scene.indexOf('\n  onBattleStart()')
+    const startIdx = scene.indexOf('\n  onBattleStart(')
     expect(startIdx).toBeGreaterThan(0)
     // Take the method body up to the next method boundary.
     const body = scene.slice(startIdx, startIdx + 6000)

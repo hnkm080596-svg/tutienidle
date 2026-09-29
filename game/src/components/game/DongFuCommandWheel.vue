@@ -25,6 +25,7 @@ import { isCompanionDomainUnlocked } from '@/core/companion/CompanionAvailabilit
 import { isFormationUnlocked } from '@/core/game/FormationPlacement'
 import { isRealmAvailable } from '@/core/realm/ReleasePolicy'
 import NotificationBadge from '@/components/common/NotificationBadge.vue'
+import { useAudioStore } from '@/stores/audio'
 
 const ui = useUiStore()
 const player = usePlayerStore()
@@ -300,6 +301,9 @@ function activate(slot: CommandWheelSlot) {
     return
   }
 
+  // W7: wheel pick lands before the close cue (ui.wheel.close fires via
+  // uiAudioBinding's isCommandWheelOpen transition below).
+  useAudioStore().cue('ui.wheel.select')
   ui.closeCommandWheel()
 
   if (slot.buildingId) {

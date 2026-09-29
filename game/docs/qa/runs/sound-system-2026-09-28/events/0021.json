@@ -1,0 +1,21 @@
+{
+  "applied": [
+    "evidence:EV-SND-FIX4",
+    "finding:F-SND-36",
+    "finding:F-SND-37",
+    "finding:F-SND-38",
+    "finding:F-SND-39",
+    "finding:F-SND-40",
+    "finding:F-SND-41",
+    "finding:F-SND-42",
+    "finding:F-SND-43",
+    "finding:F-SND-44",
+    "finding:F-SND-45",
+    "finding:F-SND-46",
+    "finding:F-SND-47",
+    "finding:F-SND-48",
+    "finding:F-SND-49",
+    "review:REV-SND-COR-3",
+    "review:REV-SND-AUT-3"
+  ]
+}
