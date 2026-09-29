@@ -416,6 +416,17 @@ const lifecycle = useAppLifecycle({
       console.warn('[autosave] progress was not saved', result)
     } else if (result.status === 'ok') {
       saveFailureNotified = false
+
+      // F-BX-32 - a write that recovered from a CAS conflict silently
+      // overwrote the other session's lineage (two tabs/devices on one
+      // account ping-pong the remote row). LWW stays the designed
+      // reconciliation for a single-player save, but it must never be
+      // SILENT: surface the recovery once per occurrence so the user
+      // can see another session is writing the same account. Deeper
+      // semantics (merge vs. block) stay a product decision.
+      if (result.recoveredFromConflict) {
+        notification.push('warning', t('save.conflict'))
+      }
     }
 
     return result
