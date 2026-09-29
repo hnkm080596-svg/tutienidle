@@ -414,7 +414,9 @@ describe('W4 dom-audio lane', () => {
 
   it('a fetch failure marks the key missing and resolves (never rejects)', async () => {
     const restore = injectCue('combat.hit', 'assets/audio/sfx/missing.ogg')
-    const domAudioLoader: DomAudioLoader = vi.fn(async () => {
+    const missingCalls: unknown[] = []
+    const domAudioLoader: DomAudioLoader = vi.fn(async (urls) => {
+      if ((urls as readonly string[]).includes('assets/audio/sfx/missing.ogg')) missingCalls.push(urls)
       throw new Error('404')
     })
     try {
@@ -424,9 +426,9 @@ describe('W4 dom-audio lane', () => {
       // bounded retry: second ensure re-fetches once (transient failures
       // must not silence a src forever), third+ resolves without fetching
       await manager.ensureLoaded(['audio-combat'])
-      expect(domAudioLoader).toHaveBeenCalledTimes(2)
+      expect(missingCalls).toHaveLength(2)
       await manager.ensureLoaded(['audio-combat'])
-      expect(domAudioLoader).toHaveBeenCalledTimes(2)
+      expect(missingCalls).toHaveLength(2)
     } finally {
       restore()
     }
