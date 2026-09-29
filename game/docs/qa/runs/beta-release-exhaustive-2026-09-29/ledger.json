@@ -533,6 +533,117 @@
         }
       ],
       "reservedAt": "2026-09-29T14:28:03.840Z"
+    },
+    {
+      "id": "ASG-BX-AUTE",
+      "parentId": null,
+      "capacityScope": "swe2-slot",
+      "inputBundleHash": "98aef652a357207671714326f4b05342fe52ef798de768c24fdde4dbc7af0648",
+      "dependencies": [],
+      "requiredCapabilities": [
+        "exec",
+        "repo-read"
+      ],
+      "writeSurface": [
+        "blind audit auth/electron/adapters"
+      ],
+      "readiness": "READY",
+      "status": "QUEUED",
+      "observedRuntimeId": "devin-45aa74bb55b64499809dd91c0d127df2",
+      "history": [
+        {
+          "at": "2026-09-29T15:01:00Z",
+          "from": "-",
+          "to": "CREATED",
+          "reason": "wave-3 dispatch"
+        },
+        {
+          "at": "2026-09-29T15:01:30Z",
+          "from": "CREATED",
+          "to": "READY",
+          "reason": "prompt delivered"
+        },
+        {
+          "at": "2026-09-29T15:01:33.091Z",
+          "from": "READY",
+          "to": "QUEUED",
+          "reason": "capacity 5/5 occupied - queued, no slot consumed by queue record"
+        }
+      ]
+    },
+    {
+      "id": "ASG-BX-XSYS",
+      "parentId": null,
+      "capacityScope": "swe2-slot",
+      "inputBundleHash": "30b604de8a21f9759ee14bb1f6fd946b0a8a0bd3ed266ce01b60b2ab77b94fbf",
+      "dependencies": [],
+      "requiredCapabilities": [
+        "exec",
+        "repo-read"
+      ],
+      "writeSurface": [
+        "cross-system adversarial attacks"
+      ],
+      "readiness": "READY",
+      "status": "QUEUED",
+      "observedRuntimeId": "devin-edf0652e36dd46d9ad7bb58098f19b5c",
+      "history": [
+        {
+          "at": "2026-09-29T15:01:00Z",
+          "from": "-",
+          "to": "CREATED",
+          "reason": "wave-3 dispatch"
+        },
+        {
+          "at": "2026-09-29T15:01:30Z",
+          "from": "CREATED",
+          "to": "READY",
+          "reason": "prompt delivered"
+        },
+        {
+          "at": "2026-09-29T15:01:33.222Z",
+          "from": "READY",
+          "to": "QUEUED",
+          "reason": "capacity 5/5 occupied - queued, no slot consumed by queue record"
+        }
+      ]
+    },
+    {
+      "id": "ASG-BX-PLAY",
+      "parentId": null,
+      "capacityScope": "swe2-slot",
+      "inputBundleHash": "4b21662f5684eaafa19f3c8a7bd09cfd7269771ca6630b30a212c07ecde55005",
+      "dependencies": [],
+      "requiredCapabilities": [
+        "exec",
+        "repo-read"
+      ],
+      "writeSurface": [
+        "six-ways playthrough matrix executor"
+      ],
+      "readiness": "READY",
+      "status": "QUEUED",
+      "observedRuntimeId": "devin-48584b80fe634386a85f1fab9417de20",
+      "history": [
+        {
+          "at": "2026-09-29T15:01:00Z",
+          "from": "-",
+          "to": "CREATED",
+          "reason": "wave-3 dispatch"
+        },
+        {
+          "at": "2026-09-29T15:01:30Z",
+          "from": "CREATED",
+          "to": "READY",
+          "reason": "prompt delivered"
+        },
+        {
+          "at": "2026-09-29T15:01:33.364Z",
+          "from": "READY",
+          "to": "QUEUED",
+          "reason": "capacity 5/5 occupied - queued, no slot consumed by queue record"
+        }
+      ]
     }
   ],
   "consumptions": [],
@@ -6018,6 +6129,54 @@
       "payloadPath": "events/0029.json",
       "payloadHash": "ccbb848157db03bdbff437704c38309470e1152512d22b86f8ce21dacd192589",
       "eventHash": "bcc0109c6fedd290a17eaec79fdf3ca0387fde1ef0ee9cba63a33280d6fa6822"
+    },
+    {
+      "seq": 30,
+      "at": "2026-09-29T15:01:33.092Z",
+      "kind": "SCHEDULE",
+      "actor": "coordinator-beta",
+      "state": {
+        "productStateId": "8c280581a5cd7f61bb134a642b3a9a949170922eb47070b0c6969446ca8d46e9",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "previousEventHash": "bcc0109c6fedd290a17eaec79fdf3ca0387fde1ef0ee9cba63a33280d6fa6822",
+      "payloadPath": "events/0030.json",
+      "payloadHash": "f4324fabd053ef98db948779010d4f817a31c662ef25583a028902a42e75a465",
+      "eventHash": "d343a9d84f0181e32ec80b283c18f3431b00e5054e99b5e3d15608949057a10d"
+    },
+    {
+      "seq": 31,
+      "at": "2026-09-29T15:01:33.223Z",
+      "kind": "SCHEDULE",
+      "actor": "coordinator-beta",
+      "state": {
+        "productStateId": "8c280581a5cd7f61bb134a642b3a9a949170922eb47070b0c6969446ca8d46e9",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "previousEventHash": "d343a9d84f0181e32ec80b283c18f3431b00e5054e99b5e3d15608949057a10d",
+      "payloadPath": "events/0031.json",
+      "payloadHash": "7190a75025ac81f25b86447a5e64bfe0c2b33bb832990f0b01b92126cb19d50f",
+      "eventHash": "1f993c770b703224a38a043e0870925ce0cbc7c7a98eefdb79bd129c03c4c2fb"
+    },
+    {
+      "seq": 32,
+      "at": "2026-09-29T15:01:33.365Z",
+      "kind": "SCHEDULE",
+      "actor": "coordinator-beta",
+      "state": {
+        "productStateId": "8c280581a5cd7f61bb134a642b3a9a949170922eb47070b0c6969446ca8d46e9",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "previousEventHash": "1f993c770b703224a38a043e0870925ce0cbc7c7a98eefdb79bd129c03c4c2fb",
+      "payloadPath": "events/0032.json",
+      "payloadHash": "8de03bee15fe9a28fa01a8db23dc21351503d69a3792cff5c05d237dba4ba107",
+      "eventHash": "c506367609b2a5ddf2a51850afd75fe531db5ca99998757dece1f06fb74d2cea"
     }
   ]
 }

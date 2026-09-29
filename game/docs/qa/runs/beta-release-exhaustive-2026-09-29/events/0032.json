@@ -1,0 +1,34 @@
+{
+  "action": "admit",
+  "assignment": {
+    "id": "ASG-BX-PLAY",
+    "parentId": null,
+    "capacityScope": "swe2-slot",
+    "inputBundleHash": "4b21662f5684eaafa19f3c8a7bd09cfd7269771ca6630b30a212c07ecde55005",
+    "dependencies": [],
+    "requiredCapabilities": [
+      "exec",
+      "repo-read"
+    ],
+    "writeSurface": [
+      "six-ways playthrough matrix executor"
+    ],
+    "readiness": "READY",
+    "status": "READY",
+    "observedRuntimeId": "devin-48584b80fe634386a85f1fab9417de20",
+    "history": [
+      {
+        "at": "2026-09-29T15:01:00Z",
+        "from": "-",
+        "to": "CREATED",
+        "reason": "wave-3 dispatch"
+      },
+      {
+        "at": "2026-09-29T15:01:30Z",
+        "from": "CREATED",
+        "to": "READY",
+        "reason": "prompt delivered"
+      }
+    ]
+  }
+}
