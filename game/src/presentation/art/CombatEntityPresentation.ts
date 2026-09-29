@@ -113,8 +113,9 @@ export interface AtlasClip {
 
   /**
    * The authored IMPACT frame of a play-once cast clip (impact-sync): the
-   * frame index (within [firstFrame, lastFrame]) at which the strike
-   * visually connects - the weapon lands, the blast touches the target.
+   * CLIP-LOCAL frame index (0..frameCount-1, matching the packer marker)
+   * at which the strike visually connects - the weapon lands, the blast
+   * touches the target.
    * Authored by visual frame inspection into
    * `art/animation-impact-markers.json` and propagated onto every clip the
    * marker names; the generated manifest carries the same number so a

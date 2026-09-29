@@ -258,7 +258,7 @@ export const MONSTER_ART: Record<string, MonsterArtVariant> = {
     { idle: [1, 9, 1], attack: [1, 2, 1], death: [1, 1, 1] },
     { attackSfx: 'streamscale-forkman-attack.ogg', avatarSize: { w: 142, h: 150 } },
   ),
-  // The Cổ Thú / Wugu Demon King (impact-sync): packed on disk since
+  // The Co Thu / Wugu Demon King (impact-sync): packed on disk since
   // wave-1 but RESERVED until now - the first variant whose clips span
   // multiple sheets. enrage (sheet-3) and stomp (sheet-4) are packed but
   // have no runtime path yet, so they are not registered here.
@@ -306,7 +306,7 @@ export const ENEMY_RESKIN_MAP: Record<string, string> = {
   // 'foundation_dragon_enrage' BUFF - the *_phase* ids are buffs, not
   // enemies). It wears the real boss art, not a ferocious nymph recolor.
   foundation_ferocious_flood_dragon_whelp: 'blood-locust-elder',
-  // Cổ Thú (hidden-beast boss) binds the wugu-demon-king atlas
+  // Co Thu (hidden-beast boss) binds the wugu-demon-king atlas
   // (impact-sync). huyet_mong deliberately stays unbound - it is not the
   // same entity.
   co_thu: 'wugu-demon-king',
