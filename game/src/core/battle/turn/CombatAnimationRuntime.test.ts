@@ -679,7 +679,6 @@ describe('CombatAnimationRuntime', () => {
       // token but keeps the requestId the latches are keyed on.
       const resumeCast = runtime.preparePresentationResume()!
       expect(resumeCast.phase).toBe('cast')
-      expect(resumeCast.phase === 'cast').toBe(true)
       if (resumeCast.phase !== 'cast') throw new Error('resume must be cast phase')
       expect(resumeCast.cast.ref.requestId).toBe(originalRequestId)
       expect(resumeCast.cast.ref.token).not.toBe(emitted[0]!.ref.token)

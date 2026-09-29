@@ -3,6 +3,7 @@
 // No @vue/test-utils in this project - mount via the public Vue API
 // (createApp/h), same pattern as SlotView.test.ts.
 import { describe, expect, it } from 'vitest'
+import { createPinia } from 'pinia'
 import { createApp, h } from 'vue'
 import PlayerPortrait from './PlayerPortrait.vue'
 import { ENTITY_ART_MODE } from '@/presentation/art/EntityArtMode'
@@ -16,6 +17,9 @@ function mountPortrait(props: Record<string, unknown>) {
     render: () => h(PlayerPortrait as any, props),
   })
 
+  // The component reads the player store for live cultivationWay/armed
+  // state - mount with the same store wiring every app consumer gets.
+  app.use(createPinia())
   app.mount(container)
 
   return {
