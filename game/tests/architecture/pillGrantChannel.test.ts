@@ -26,12 +26,13 @@
 import { describe, expect, it } from 'vitest'
 import ts from 'typescript'
 import { join, relative } from 'node:path'
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { srcCorpus, SCAN_TIMEOUT } from './helpers/scanTs'
 import { scriptBlocksOf } from './helpers/commentStrip'
 
 const GAME_ROOT = process.cwd()
 const SRC_DIR = join(GAME_ROOT, 'src')
+const ELECTRON_DIR = join(GAME_ROOT, 'electron')
 
 const TEST_EXT_RE = /\.test\.(ts|tsx|js|jsx|mjs|cjs|mts|cts)$/
 
@@ -167,7 +168,9 @@ describe('pill grant channel - ops wrapper is the only production caller', () =>
     { timeout: SCAN_TIMEOUT },
     () => {
       const offenders: string[] = []
-      for (const file of srcCorpus(SRC_DIR)) {
+      const corpus = [...srcCorpus(SRC_DIR)]
+      if (existsSync(ELECTRON_DIR)) corpus.push(...srcCorpus(ELECTRON_DIR))
+      for (const file of corpus) {
         if (TEST_EXT_RE.test(file.path)) continue
         const rel = relative(GAME_ROOT, file.path).replaceAll('\\', '/')
         if (ALLOWED_CALLERS.has(rel)) continue

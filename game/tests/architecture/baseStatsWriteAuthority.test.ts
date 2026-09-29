@@ -27,22 +27,32 @@
  * template/unicode string forms and multi-line layouts cannot hide a
  * write. Coverage: assignment + compound ops, ++/--, delete, for-of/
  * for-in and destructuring targets, Object.assign/defineProperty/
- * defineProperties, Reflect.set/defineProperty/deleteProperty/apply,
- * .call/.apply on the structural names, callee-root aliases
- * (`const O = Object`, `globalThis.Reflect`), Pinia `$patch` (literal,
- * spread and indirect forms), `$state` forged-state replacement
- * (literal or opaque), pool aliases (rooted access, destructured,
- * bracket and const-string-key forms), and .vue template lanes
- * (event handlers, bindings, interpolations, v-model).
+ * defineProperties, Reflect.get/set/defineProperty/deleteProperty/
+ * apply/getOwnPropertyDescriptor, .call/.apply on structural names
+ * (dot, bracket and const-key callee spellings, parenthesized callees,
+ * bare identifiers bound via destructuring or member capture), callee-
+ * root aliases (`const O = Object`, `globalThis.Reflect`), Pinia
+ * `$patch` (literal, spread, indirect and .call/.apply forms - any
+ * opaque receiver flagged), `$state` forged-state replacement and
+ * assign-injection (dot, bracket and const-key spellings), pool aliases
+ * (rooted access, destructured incl. parameter destructuring and
+ * binding-element initializers, bracket and const-string-key forms),
+ * computed/const-key object props (`{[K]: v}` where K='baseStats'),
+ * and .vue template lanes (event handlers incl. dynamic `@[key]`/
+ * `#[slot]` names, bindings, interpolations, v-model incl. `:arg`
+ * and modifier forms).
  *
  * Honest residual bound (documented, not hidden): computed keys that
  * never spell the name (`p[k]` with a computed k, Reflect.set with a
- * variable key), opaque payload data flow where no `baseStats` token
- * appears (`Object.assign(p, payloadVar)` on a plain object), runtime
- * name enumeration (`Object.keys`/`Reflect.ownKeys` then `ps[name]`),
- * eval/imported bindings, transitive and parameter aliases, and writes
- * authored inside the allowlisted files themselves - the allowlist IS
- * the trust boundary. Those are human-review lanes.
+ * variable key), split string concatenation (`'base'+'Stats'` - no
+ * single literal spells the name; substring heuristics are not used
+ * because 'base'/'stat'/'stats' collide with ordinary prop names),
+ * opaque payload data flow where no `baseStats`/`$state` token appears
+ * (`Object.assign(p, payloadVar)` on a plain object), runtime name
+ * enumeration (`Object.keys`/`Reflect.ownKeys` then `ps[name]`), eval /
+ * imported bindings, transitive multi-hop aliases, and writes authored
+ * inside the allowlisted files themselves - the allowlist IS the trust
+ * boundary. Those are human-review lanes.
  */
 import { describe, expect, it } from 'vitest'
 import ts from 'typescript'
@@ -89,7 +99,9 @@ function scriptText(path: string, text: string): { body: string; jsx: boolean }[
   return [{ body: text, jsx: path.endsWith('.tsx') || path.endsWith('.jsx') }]
 }
 
-/** Is `node` a property/element access naming baseStats? */
+/** Is `node` a property/element access naming baseStats, or a
+ * reflective read that returns the pool (`Reflect.get(x,'baseStats')`,
+ * `Object.getOwnPropertyDescriptor(x,'baseStats')`)? */
 function isBaseStatsAccess(node: ts.Node): boolean {
   if (ts.isPropertyAccessExpression(node)) {
     return node.name.text === 'baseStats'
@@ -102,11 +114,47 @@ function isBaseStatsAccess(node: ts.Node): boolean {
       arg.text === 'baseStats'
     )
   }
+  if (ts.isCallExpression(node)) {
+    const callee = node.expression
+    if (ts.isPropertyAccessExpression(callee)) {
+      const root = ts.isIdentifier(callee.expression)
+        ? callee.expression.text
+        : callee.expression.getText()
+      if (
+        (root === 'Reflect' && callee.name.text === 'get') ||
+        (root === 'Object' && callee.name.text === 'getOwnPropertyDescriptor')
+      ) {
+        return node.arguments.some(
+          (a) =>
+            (ts.isStringLiteral(a) || ts.isNoSubstitutionTemplateLiteral(a)) &&
+            a.text === 'baseStats',
+        )
+      }
+    }
+  }
   return false
 }
 
+/** Transparent wrappers around an expression: parens, nonnull, as,
+ * satisfies - they never change what object the expression yields. */
+function unwrapExpr(e: ts.Expression): ts.Expression {
+  let cur = e
+  for (;;) {
+    if (
+      ts.isParenthesizedExpression(cur) ||
+      ts.isNonNullExpression(cur) ||
+      ts.isAsExpression(cur) ||
+      ts.isSatisfiesExpression(cur)
+    ) {
+      cur = cur.expression
+    } else {
+      return cur
+    }
+  }
+}
+
 /** Does the subtree contain a baseStats access or an alias-rooted member access? */
-function containsPoolAccess(node: ts.Node, aliases: ReadonlySet<string>, constKeys: ReadonlySet<string>): boolean {
+function containsPoolAccess(node: ts.Node, aliases: ReadonlySet<string>, constKeys: ReadonlyMap<string, string>): boolean {
   let found = false
   const visit = (n: ts.Node): void => {
     if (found) return
@@ -118,15 +166,15 @@ function containsPoolAccess(node: ts.Node, aliases: ReadonlySet<string>, constKe
       ts.isElementAccessExpression(n) &&
       n.argumentExpression !== undefined &&
       ts.isIdentifier(n.argumentExpression) &&
-      constKeys.has(n.argumentExpression.text)
+      constKeys.get(n.argumentExpression.text) === 'baseStats'
     ) {
       found = true
       return
     }
     if (
       (ts.isPropertyAccessExpression(n) || ts.isElementAccessExpression(n)) &&
-      ts.isIdentifier(n.expression) &&
-      aliases.has(n.expression.text)
+      ts.isIdentifier(unwrapExpr(n.expression)) &&
+      aliases.has(unwrapExpr(n.expression).getText())
     ) {
       found = true
       return
@@ -178,7 +226,7 @@ interface Offender {
  */
 function templateExpressions(text: string): string[] {
   const exprs: string[] = []
-  const attrRe = /(?:^|\s)(?:v-|@|:|#)[\w:._-]*\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/g
+  const attrRe = /(?:^|\s)(?:v-|@|:|#)[\w:._[\]-]*\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/g
   const interpRe = /\{\{((?:[^{}]|\{[^{}]*\})*)\}\}/g
   let m: RegExpExecArray | null
   while ((m = attrRe.exec(text)) !== null) {
@@ -216,13 +264,16 @@ function collectOffenders(): { violations: Offender[]; unclassified: Offender[] 
 
     // ---- pass 1: collect aliases + const keys + global aliases ----
     const aliases = new Set<string>()
-    const constKeys = new Set<string>()
+    // `const K = 'baseStats' | '$state'` - identifier -> literal value.
+    const constKeys = new Map<string, string>()
     // `const O = Object` / `const R = Reflect` / `const G = globalThis`
     // - one-level aliases onto the reflective roots.
     const rootAliases = new Map<string, string>()
-    // `const fn = store.$patch` / `const f = obj.assign` - an identifier
-    // bound to a structural member, used via .call/.apply.
-    const memberAliases = new Set<string>()
+    // `const fn = store.$patch` / `const f = obj.assign` /
+    // `const {assign} = Object` - an identifier bound to a structural
+    // member, used via bare call or .call/.apply. `root` is the source
+    // root when known (destructured off Object/Reflect), else '__expr__'.
+    const memberAliases = new Map<string, { member: string; root: string }>()
 
     const isPoolRootAccess = (n: ts.Node): boolean => {
       let cur = n
@@ -233,9 +284,16 @@ function collectOffenders(): { violations: Offender[]; unclassified: Offender[] 
     }
 
     const collect = (n: ts.Node): void => {
-      // const { baseStats } = x / const { baseStats: b } = x
-      if (ts.isVariableDeclaration(n) && ts.isObjectBindingPattern(n.name)) {
-        for (const el of n.name.elements) {
+      // const { baseStats } = x / const { baseStats: b } = x /
+      // const { x = p.baseStats } = {} - destructured pool aliases.
+      // Also function params: `f({ baseStats })` is a write channel.
+      const bindPattern =
+        (ts.isVariableDeclaration(n) || ts.isParameter(n)) &&
+        ts.isObjectBindingPattern(n.name)
+          ? n.name
+          : undefined
+      if (bindPattern !== undefined) {
+        for (const el of bindPattern.elements) {
           const prop = el.propertyName
           if (
             prop !== undefined &&
@@ -246,6 +304,43 @@ function collectOffenders(): { violations: Offender[]; unclassified: Offender[] 
             aliases.add(el.name.text)
           } else if (prop === undefined && ts.isIdentifier(el.name) && el.name.text === 'baseStats') {
             aliases.add('baseStats')
+          } else if (
+            el.initializer !== undefined &&
+            isPoolRootAccess(el.initializer) &&
+            ts.isIdentifier(el.name)
+          ) {
+            aliases.add(el.name.text)
+          }
+          // const { assign } = Object / const { set } = Reflect -
+          // destructured structural write names.
+          const declInit =
+            ts.isVariableDeclaration(n) && n.initializer !== undefined
+              ? unwrapExpr(n.initializer)
+              : undefined
+          if (
+            declInit !== undefined &&
+            ts.isIdentifier(el.name) &&
+            ((ts.isIdentifier(declInit) &&
+              (declInit.text === 'Object' ||
+                declInit.text === 'Reflect' ||
+                rootAliases.get(declInit.text) === 'Object' ||
+                rootAliases.get(declInit.text) === 'Reflect')) ||
+              (ts.isPropertyAccessExpression(declInit) &&
+                ts.isIdentifier(declInit.expression) &&
+                (declInit.expression.text === 'globalThis' ||
+                  rootAliases.get(declInit.expression.text) === 'globalThis') &&
+                ['Object', 'Reflect'].includes(declInit.name.text)))
+          ) {
+            const memberName =
+              el.propertyName !== undefined && ts.isIdentifier(el.propertyName)
+                ? el.propertyName.text
+                : el.name.text
+            if (STRUCTURAL_WRITE_NAMES.has(memberName) || memberName === '$patch') {
+              const srcRoot = ts.isIdentifier(declInit)
+                ? (rootAliases.get(declInit.text) ?? declInit.text)
+                : declInit.name.text
+              memberAliases.set(el.name.text, { member: memberName, root: srcRoot })
+            }
           }
         }
       }
@@ -270,16 +365,16 @@ function collectOffenders(): { violations: Offender[]; unclassified: Offender[] 
       ) {
         aliases.add(n.left.text)
       }
-      // const K = 'baseStats'
+      // const K = 'baseStats' / const S = '$state'
       if (
         ts.isVariableDeclaration(n) &&
         ts.isIdentifier(n.name) &&
         n.initializer !== undefined &&
         (ts.isStringLiteral(n.initializer) ||
           ts.isNoSubstitutionTemplateLiteral(n.initializer)) &&
-        n.initializer.text === 'baseStats'
+        (n.initializer.text === 'baseStats' || n.initializer.text === '$state')
       ) {
-        constKeys.add(n.name.text)
+        constKeys.set(n.name.text, n.initializer.text)
       }
       // const O = Object / const R = Reflect / const G = globalThis /
       // const O = globalThis.Object - reflective-root aliases.
@@ -301,12 +396,23 @@ function collectOffenders(): { violations: Offender[]; unclassified: Offender[] 
           rootAliases.set(n.name.text, init.name.text)
         }
         // const fn = <something>.$patch / <something>.<structural-name>
-        if (
-          ts.isPropertyAccessExpression(init) &&
-          (init.name.text === '$patch' ||
-            STRUCTURAL_WRITE_NAMES.has(init.name.text))
+        // (bracket form `x['$patch']` resolves the same way)
+        let memberName: string | undefined
+        if (ts.isPropertyAccessExpression(init)) {
+          memberName = init.name.text
+        } else if (
+          ts.isElementAccessExpression(init) &&
+          init.argumentExpression !== undefined &&
+          (ts.isStringLiteral(init.argumentExpression) ||
+            ts.isNoSubstitutionTemplateLiteral(init.argumentExpression))
         ) {
-          memberAliases.add(n.name.text)
+          memberName = init.argumentExpression.text
+        }
+        if (
+          memberName !== undefined &&
+          (memberName === '$patch' || STRUCTURAL_WRITE_NAMES.has(memberName))
+        ) {
+          memberAliases.set(n.name.text, { member: memberName, root: '__expr__' })
         }
       }
       ts.forEachChild(n, collect)
@@ -324,23 +430,40 @@ function collectOffenders(): { violations: Offender[]; unclassified: Offender[] 
 
       const pool = (n: ts.Node): boolean => containsPoolAccess(n, aliases, constKeys)
 
-      const hasBaseStatsProp = (n: ts.Node): boolean => {
+      // Literal property with a given name: `{ name: x }`, `{ 'name': x }`,
+      // `{ [K]: x }` where K is a const bound to `name`.
+      const hasPropNamed = (n: ts.Node, name: string): boolean => {
         let hit = false
         const walk = (x: ts.Node): void => {
           if (hit) return
-          if (
-            (ts.isPropertyAssignment(x) || ts.isShorthandPropertyAssignment(x)) &&
-            ts.isIdentifier(x.name) &&
-            x.name.text === 'baseStats'
-          ) {
-            hit = true
-            return
+          if (ts.isPropertyAssignment(x) || ts.isShorthandPropertyAssignment(x)) {
+            const nm = x.name
+            if (
+              (ts.isIdentifier(nm) || ts.isStringLiteral(nm) || ts.isNoSubstitutionTemplateLiteral(nm)) &&
+              nm.text === name
+            ) {
+              hit = true
+              return
+            }
+            if (ts.isComputedPropertyName(nm)) {
+              const e = nm.expression
+              if (
+                ((ts.isStringLiteral(e) || ts.isNoSubstitutionTemplateLiteral(e)) &&
+                  e.text === name) ||
+                (ts.isIdentifier(e) && constKeys.get(e.text) === name)
+              ) {
+                hit = true
+                return
+              }
+            }
           }
           ts.forEachChild(x, walk)
         }
         walk(n)
         return hit
       }
+      const hasBaseStatsProp = (n: ts.Node): boolean => hasPropNamed(n, 'baseStats')
+      const hasStateProp = (n: ts.Node): boolean => hasPropNamed(n, '$state')
 
       const hasSpread = (n: ts.Node): boolean => {
         let hit = false
@@ -388,29 +511,85 @@ function collectOffenders(): { violations: Offender[]; unclassified: Offender[] 
             hit = true
             return
           }
+          if (
+            ts.isElementAccessExpression(x) &&
+            x.argumentExpression !== undefined &&
+            (ts.isStringLiteral(x.argumentExpression) ||
+              ts.isNoSubstitutionTemplateLiteral(x.argumentExpression)) &&
+            (STRUCTURAL_WRITE_NAMES.has(x.argumentExpression.text) ||
+              x.argumentExpression.text === '$patch')
+          ) {
+            hit = true
+            return
+          }
           ts.forEachChild(x, walk)
         }
         walk(n)
         return hit
       }
 
-      const hasBaseStatsToken = (n: ts.Node): boolean => {
+      // Anywhere a literal token or a const-key bound to it appears:
+      // 'baseStats' / '$state' / `x[K]` / bare `K` in an arg.
+      const hasTokenNamed = (n: ts.Node, name: string): boolean => {
         let hit = false
         const walk = (x: ts.Node): void => {
           if (hit) return
           if (
             (ts.isStringLiteral(x) || ts.isNoSubstitutionTemplateLiteral(x)) &&
-            x.text === 'baseStats'
+            x.text === name
           ) {
+            hit = true
+            return
+          }
+          if (ts.isIdentifier(x) && constKeys.get(x.text) === name) {
+            hit = true
+            return
+          }
+          ts.forEachChild(x, walk)
+        }
+        walk(n)
+        return hit
+      }
+      const hasBaseStatsToken = (n: ts.Node): boolean => hasTokenNamed(n, 'baseStats')
+      const hasStateToken = (n: ts.Node): boolean => hasTokenNamed(n, '$state')
+
+      // `x.$state`, `x['$state']`, `x[S]` (S const) - the state slot on a store.
+      const isStateSlot = (x: ts.Node): boolean => {
+        if (ts.isPropertyAccessExpression(x)) return x.name.text === '$state'
+        if (ts.isElementAccessExpression(x)) {
+          const a = x.argumentExpression
+          if (a === undefined) return false
+          if (
+            (ts.isStringLiteral(a) || ts.isNoSubstitutionTemplateLiteral(a)) &&
+            a.text === '$state'
+          ) {
+            return true
+          }
+          return ts.isIdentifier(a) && constKeys.get(a.text) === '$state'
+        }
+        return false
+      }
+
+      // Does the subtree name $patch as a member or bind a $patch alias?
+      const touchesPatch = (n: ts.Node): boolean => {
+        let hit = false
+        const walk = (x: ts.Node): void => {
+          if (hit) return
+          if (ts.isPropertyAccessExpression(x) && x.name.text === '$patch') {
             hit = true
             return
           }
           if (
             ts.isElementAccessExpression(x) &&
             x.argumentExpression !== undefined &&
-            ts.isIdentifier(x.argumentExpression) &&
-            constKeys.has(x.argumentExpression.text)
+            (ts.isStringLiteral(x.argumentExpression) ||
+              ts.isNoSubstitutionTemplateLiteral(x.argumentExpression)) &&
+            x.argumentExpression.text === '$patch'
           ) {
+            hit = true
+            return
+          }
+          if (ts.isIdentifier(x) && memberAliases.get(x.text)?.member === '$patch') {
             hit = true
             return
           }
@@ -450,45 +629,89 @@ function collectOffenders(): { violations: Offender[]; unclassified: Offender[] 
           flag(n.initializer.getText(sf))
         }
         if (ts.isCallExpression(n)) {
-          const callee = n.expression
+          const callee = unwrapExpr(n.expression)
+          // Resolve the callee to a member name + root across spelled
+          // spellings: `x.y(...)`, `x['y'](...)`, `(x.y)(...)`,
+          // `x[K](...)` (const key), bare `f(...)` (member alias).
+          let calleeName = ''
+          let calleeRoot = ''
+          let calleeViaPatch = false
           if (ts.isPropertyAccessExpression(callee)) {
-            const calleeName = callee.name.text
-            const calleeRoot = resolveRoot(callee.expression)
+            calleeName = callee.name.text
+            calleeRoot = resolveRoot(callee.expression)
+            calleeViaPatch = calleeName === '$patch'
+          } else if (ts.isElementAccessExpression(callee)) {
+            const a = callee.argumentExpression
+            if (
+              a !== undefined &&
+              (ts.isStringLiteral(a) || ts.isNoSubstitutionTemplateLiteral(a))
+            ) {
+              calleeName = a.text
+              calleeRoot = resolveRoot(callee.expression)
+              calleeViaPatch = calleeName === '$patch'
+            } else if (a !== undefined && ts.isIdentifier(a) && constKeys.has(a.text)) {
+              calleeName = constKeys.get(a.text) ?? ''
+              calleeRoot = resolveRoot(callee.expression)
+              calleeViaPatch = calleeName === '$patch'
+            }
+          } else if (ts.isIdentifier(callee)) {
+            const bound = memberAliases.get(callee.text)
+            if (bound !== undefined) {
+              calleeName = bound.member
+              calleeRoot = bound.root === '__expr__' ? '' : bound.root
+              calleeViaPatch = bound.member === '$patch'
+            }
+          }
+          if (calleeName !== '') {
             const isStructuralCall =
               STRUCTURAL_WRITE_NAMES.has(calleeName) &&
-              (calleeRoot === 'Object' || calleeRoot === 'Reflect')
+              (calleeRoot === 'Object' ||
+                calleeRoot === 'Reflect' ||
+                calleeRoot === '')
             // Object.assign / Reflect.set|defineProperty|deleteProperty /
-            // Object.defineProperty|defineProperties with pool or a
-            // baseStats token in any arg (aliases resolved via rootAliases).
+            // Object.defineProperty|defineProperties with pool, a
+            // baseStats/$state token or prop, or an unprovable spread in
+            // any arg.
             if (isStructuralCall) {
               if (
-                n.arguments.some((a) => pool(a) || hasBaseStatsProp(a) || hasBaseStatsToken(a) || hasSpread(a))
+                n.arguments.some(
+                  (a) =>
+                    pool(a) ||
+                    hasBaseStatsProp(a) ||
+                    hasBaseStatsToken(a) ||
+                    hasStateProp(a) ||
+                    hasStateToken(a) ||
+                    hasSpread(a),
+                )
               ) {
                 flag(n.getText(sf))
               }
             }
             // Object.assign(<store-ish target>, payload) - indirect write
-            if (calleeName === 'assign' && calleeRoot === 'Object') {
+            if (calleeName === 'assign' && (calleeRoot === 'Object' || calleeRoot === '')) {
               const first = n.arguments[0]
-              if (
-                first !== undefined &&
-                ts.isPropertyAccessExpression(first) &&
-                (first.name.text === '$state' ||
-                  (ts.isIdentifier(first.expression) &&
-                    /Store$/.test(first.expression.text)))
-              ) {
-                flag(n.getText(sf))
+              if (first !== undefined) {
+                const unwrapped = unwrapExpr(first)
+                if (
+                  isStateSlot(unwrapped) ||
+                  (ts.isPropertyAccessExpression(unwrapped) &&
+                    ts.isIdentifier(unwrapped.expression) &&
+                    /Store$/.test(unwrapped.expression.text))
+                ) {
+                  flag(n.getText(sf))
+                }
               }
             }
-            // store.$patch(literal|spread|indirect) - literal must be a
-            // plain object with no spread and no baseStats prop; every
-            // other form is unprovable and flagged.
-            if (calleeName === '$patch') {
+            // store.$patch(literal|spread|indirect) in any spelling -
+            // literal must be a plain object with no spread and no
+            // baseStats prop; every other form is unprovable.
+            if (calleeViaPatch) {
               const arg = n.arguments[0]
               if (arg !== undefined) {
                 if (
                   !ts.isObjectLiteralExpression(arg) ||
                   hasBaseStatsProp(arg) ||
+                  hasStateProp(arg) ||
                   hasSpread(arg)
                 ) {
                   flag(n.getText(sf))
@@ -497,40 +720,63 @@ function collectOffenders(): { violations: Offender[]; unclassified: Offender[] 
             }
             // fn.call/fn.apply where fn touches a structural write name
             // or $patch - `store.$patch.call(s, {baseStats})`,
-            // `Object.assign.call(Object, p, {...})`.
-            if (
-              (calleeName === 'call' || calleeName === 'apply') &&
-              (touchesStructuralName(callee.expression) ||
-                (ts.isIdentifier(callee.expression) &&
-                  memberAliases.has(callee.expression.text))) &&
-              n.arguments.some((a) => pool(a) || hasBaseStatsProp(a) || hasBaseStatsToken(a))
-            ) {
-              flag(n.getText(sf))
+            // `Object.assign.call(Object, p, {...})`. A $patch receiver
+            // is as opaque as $patch itself, so its args get the
+            // $patch rule rather than the spelled-token rule.
+            if (calleeName === 'call' || calleeName === 'apply') {
+              const receiver =
+                ts.isPropertyAccessExpression(callee) ||
+                ts.isElementAccessExpression(callee)
+                  ? callee.expression
+                  : callee
+              const receiverIsPatch = touchesPatch(receiver)
+              const receiverIsStructural =
+                receiverIsPatch ||
+                touchesStructuralName(receiver) ||
+                (ts.isIdentifier(receiver) && memberAliases.has(receiver.text))
+              // A $patch call/apply receiver is as opaque as $patch
+              // itself (arg[0] is thisArg, the payload position is
+              // unprovable) - flag every such form.
+              if (receiverIsPatch) {
+                flag(n.getText(sf))
+              } else if (
+                receiverIsStructural &&
+                n.arguments.some(
+                  (a) =>
+                    pool(a) ||
+                    hasBaseStatsProp(a) ||
+                    hasBaseStatsToken(a) ||
+                    hasStateProp(a) ||
+                    hasStateToken(a),
+                )
+              ) {
+                flag(n.getText(sf))
+              }
             }
             // Reflect.apply(fn, thisArg, argsArray) with fn touching a
-            // structural name or $patch.
+            // structural name, a $patch member or a member alias.
             if (
               calleeName === 'apply' &&
               calleeRoot === 'Reflect' &&
               n.arguments[0] !== undefined &&
-              touchesStructuralName(n.arguments[0])
+              (touchesStructuralName(n.arguments[0]) ||
+                touchesPatch(n.arguments[0]) ||
+                (ts.isIdentifier(n.arguments[0]) &&
+                  memberAliases.has(n.arguments[0].text)))
             ) {
               flag(n.getText(sf))
             }
-            // Reflect.get / Object.getOwnPropertyDescriptor with the
-            // literal name in-sight is handled by the funnel guard; here
-            // only pool-touching args matter.
           }
         }
-        // x.$state = <literal-with-baseStats | spread | opaque> -
-        // forged state replacement.
+        // x.$state = <literal-with-baseStats | spread | opaque> in any
+        // spelling - `x.$state=`, `x['$state']=`, `x[S]=` (S const).
         if (
           ts.isBinaryExpression(n) &&
           n.operatorToken.kind === ts.SyntaxKind.EqualsToken &&
-          ts.isPropertyAccessExpression(n.left) &&
-          n.left.name.text === '$state' &&
+          isStateSlot(n.left) &&
           (!ts.isObjectLiteralExpression(n.right) ||
             hasBaseStatsProp(n.right) ||
+            hasStateProp(n.right) ||
             hasSpread(n.right))
         ) {
           flag(n.getText(sf))
@@ -564,7 +810,7 @@ function collectOffenders(): { violations: Offender[]; unclassified: Offender[] 
       // v-model with a non-literal/unquoted member target is a write
       // lane even when the expression does not name the pool
       // (`v-model="rec[key]"`, `v-model=pool.defense`).
-      const vmRe = /v-model(?:\.[\w.-]+)?\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/g
+      const vmRe = /v-model(?::[\w.-]+)?(?:\.[\w.-]+)?\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/g
       let m: RegExpExecArray | null
       while ((m = vmRe.exec(text)) !== null) {
         const v = m[1] ?? m[2] ?? m[3]
