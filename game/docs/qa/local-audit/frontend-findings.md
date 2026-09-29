@@ -185,3 +185,32 @@ Method: fresh boot → creation → seed mortal L12 → **win Quán Khí live** 
 - **Foundation stages enterable**: `foundation_floor_1` Bắt Đầu enabled at foundation, disabled at qi_refining — `isStageUnlocked` realm gate verified both directions.
 - **Realm panel requirement rows** (qi cap): "✓ Luyện Khí tầng 12 / ✓ Chương 10 hoàn thành" — explicit checklist before the Trúc Cơ button; this pattern just isn't extended to the closed ceiling (FE-17).
 - Save-commit lag after ceremony: realm commits in memory immediately; the localStorage save lags until the next autosave/manual save — a reload in the gap could lose the breakthrough. Narrow window, Low-level risk already implied by INFRA findings.
+
+---
+
+# Round 4 — mobile viewport audit (390×844, touch)
+
+Method: fresh mortal boot on mobile emulation; measured bounding boxes + viewport overflow + touch targets.
+
+### FE-22 — HIGH — Combat on mobile: ~50% of the viewport is a dead black column
+
+- **Evidence:** shot `m9-combat` at 390×844 — the vertical divider sits at x≈197; the Phaser scene + countdown + sprites render only in the left half while the entire right half is the fixed dock column rendered as empty black (same FE-03 root, catastrophic at mobile width). `dockW=197` measured ≈ 50.5% of `vw=390`.
+- **Impact:** the single most important screen is effectively half-width on phones; sprites, turn queue, and telegraphs all compress into 197px.
+
+### FE-23 — LOW — Command wheel labels clip at the left viewport edge
+
+- **Evidence:** shot `m5-wheel` — the orbit ring overflows the 390px canvas; the Chiêu Hiền Quán slot's label renders "u Hiền Quán" (leading characters cut by the screen edge).
+- **Impact:** cosmetic; slot remains tappable (57×57px targets — all ≥44px, no sub-40px targets found anywhere).
+
+### FE-24 — LOW — "Ai Mục Tiêu" targeting panel permanently overlays the shrunken combat scene
+
+- **Evidence:** shot `m9-combat` — a 5-radio target-priority card sits over the top-left of the battle area from the countdown onward; combined with FE-22 the actually-visible unobstructed scene is a fraction of the viewport.
+- **Impact:** informational clutter on the smallest screen — should default to collapsed on narrow viewports.
+
+## Round-4 verified-good
+
+- **No horizontal overflow** at 390px (`scrollWidth === clientWidth === 390`).
+- **Stage select adapts well** — tabs, floor chips, detail card with description + "10 quái" + per-enemy cards (Lv/type/element %), mode row, Chỉnh Build + Bắt Đầu footer all fit and stay readable (shot `m8-stage-detail`). "Truyền Tống Trận" title remains FE-02 dark-on-dark.
+- **Inventory (Kho Vật)** mobile layout clean: tabs Trang Bị/Nguyên Liệu/Đan Dược + filter chips, empty grid state.
+- **Wheel on mobile works by tap**; all 14 slots ≥57×57px — touch-target compliant.
+- **Zero page errors** in mobile session; only the known AudioContext/WebGL warnings.
