@@ -676,7 +676,7 @@
         "six-ways playthrough matrix executor"
       ],
       "readiness": "READY",
-      "status": "RESERVED",
+      "status": "FINISHED",
       "observedRuntimeId": "devin-48584b80fe634386a85f1fab9417de20",
       "history": [
         {
@@ -702,9 +702,17 @@
           "from": "QUEUED",
           "to": "RESERVED",
           "reason": "admitted at 5/5 (incl. external 0)"
+        },
+        {
+          "at": "2026-09-29T15:37:59.777Z",
+          "from": "RESERVED",
+          "to": "FINISHED",
+          "reason": "lifecycle verified released via 'exited'"
         }
       ],
-      "reservedAt": "2026-09-29T15:01:53.552Z"
+      "reservedAt": "2026-09-29T15:01:53.552Z",
+      "releaseEvidence": "matrix 46/48 pass; HIGH spell-path save corruption F-BX-83; Low perfectClearSeconds=0 F-BX-84; edges all pass",
+      "resultRef": "evidence/wave3-playthrough-matrix.txt"
     }
   ],
   "consumptions": [],
@@ -6228,6 +6236,98 @@
       "fixedInRevision": null,
       "closedAt": null,
       "closeReason": "independent rediscovery confirms F-BX-24"
+    },
+    {
+      "id": "F-BX-83",
+      "title": "Save permanently corrupted for every spell-path player after foundation breakthrough (phap_tu + ngu_hanh)",
+      "state": {
+        "productStateId": "b3ade7e3f442eb2a98da5b317248dd469440631e950f0b3f1ad24cfe116060f4",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "severity": "High",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/core/player/CultivationPathSystem.ts",
+          "symbolOrSection": ":404-454 masteryGrantRecord vs saveShapeValidation.ts:756-764",
+          "revision": "5efdf9a9",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "playthrough-matrix devin-48584b80",
+      "invariantIds": [
+        "I-AGGREGATE-RELEASE"
+      ],
+      "evidenceIds": [],
+      "counterexample": "vitest rig: spell-path profile + foundation victory -> write+load = corrupted (100% deterministic)",
+      "expected": "a save produced by normal play loads cleanly",
+      "actual": "masteryGrantRecord(1|2) writes nodeLevels.tinh_thong_* but never mirrors into purchasedNodeIds -> validateGameSaveShape -> status 'corrupted' -> reload loses character. grantSkillCore writes both channels (sword/body ways unaffected)",
+      "rootCause": "granted-node seam writes only the level channel, not the purchase ledger",
+      "rootClass": "writer-validator-mismatch",
+      "subsystem": "progression",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": "Write tinh_thong_* grants through the same both-channel path (or mirror into purchasedNodeIds at grant time); add save-shape pin for granted-node ways",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "OBSERVED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "fixedInRevision": null,
+      "closedAt": null,
+      "closeReason": null
+    },
+    {
+      "id": "F-BX-84",
+      "title": "perfectClearSeconds=0 writer/validator mismatch corrupts save",
+      "state": {
+        "productStateId": "b3ade7e3f442eb2a98da5b317248dd469440631e950f0b3f1ad24cfe116060f4",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/core/game/GameManagerBattleRewardOps.ts",
+          "symbolOrSection": ":214-218 clearSeconds Math.max(0,...) vs validator requiring >0",
+          "revision": "5efdf9a9",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "playthrough-matrix devin-48584b80",
+      "invariantIds": [
+        "I-AGGREGATE-RELEASE"
+      ],
+      "evidenceIds": [],
+      "counterexample": "vitest rig: spell-path profile + foundation victory -> write+load = corrupted (100% deterministic)",
+      "expected": "a save produced by normal play loads cleanly",
+      "actual": "writer can emit 0 (same-ms perfect clear) -> validator rejects -> 'corrupted'",
+      "rootCause": "contract hole between writer and validator",
+      "rootClass": "writer-validator-mismatch",
+      "subsystem": "combat",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": "Floor clearSeconds at >0 epsilon or relax validator to >=0; one-sided contract",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "OBSERVED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "fixedInRevision": null,
+      "closedAt": null,
+      "closeReason": null
     }
   ],
   "evidence": [
@@ -7053,6 +7153,38 @@
       "payloadPath": "events/0043.json",
       "payloadHash": "fc62df047892604848f0c76af0a32f40a39e0c4ea48265731a3b6154dc88f6e2",
       "eventHash": "0abb8e976a9b6b260ec78dc9755abe8cbc99a3f55e81f1bfde39403c9b013de3"
+    },
+    {
+      "seq": 44,
+      "at": "2026-09-29T15:37:59.778Z",
+      "kind": "SCHEDULE",
+      "actor": "coordinator-beta",
+      "state": {
+        "productStateId": "b3ade7e3f442eb2a98da5b317248dd469440631e950f0b3f1ad24cfe116060f4",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "previousEventHash": "0abb8e976a9b6b260ec78dc9755abe8cbc99a3f55e81f1bfde39403c9b013de3",
+      "payloadPath": "events/0044.json",
+      "payloadHash": "c867b90a8dd7d60e6e9ff2d181c20e0668290bdaba563859ce8dad6ed0fff5b3",
+      "eventHash": "29e9dacde706036ee786f8e21ecafddbcce05ddc3600a669732e2537344bf37c"
+    },
+    {
+      "seq": 45,
+      "at": "2026-09-29T15:38:08.451Z",
+      "kind": "FINDING",
+      "actor": "coordinator-beta",
+      "state": {
+        "productStateId": "b3ade7e3f442eb2a98da5b317248dd469440631e950f0b3f1ad24cfe116060f4",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "previousEventHash": "29e9dacde706036ee786f8e21ecafddbcce05ddc3600a669732e2537344bf37c",
+      "payloadPath": "events/0045.json",
+      "payloadHash": "9248ceef71ed9c47ccf79f8a4cdab28a4fbfb8775b6dcd5ce2befac460ca005d",
+      "eventHash": "7310f23cd73576b9137e35fc0b5f600c073803e192e9621d44411d25b3d13cff"
     }
   ]
 }

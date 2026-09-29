@@ -1,0 +1,7 @@
+{
+  "action": "observe",
+  "assignmentId": "ASG-BX-PLAY",
+  "observedStatus": "exited",
+  "evidence": "matrix 46/48 pass; HIGH spell-path save corruption F-BX-83; Low perfectClearSeconds=0 F-BX-84; edges all pass",
+  "resultRef": "evidence/wave3-playthrough-matrix.txt"
+}

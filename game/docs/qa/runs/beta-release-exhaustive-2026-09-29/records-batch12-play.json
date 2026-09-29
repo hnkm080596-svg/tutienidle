@@ -1,0 +1,102 @@
+{
+ "records": [
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-BX-83",
+    "title": "Save permanently corrupted for every spell-path player after foundation breakthrough (phap_tu + ngu_hanh)",
+    "state": {
+     "productStateId": "b3ade7e3f442eb2a98da5b317248dd469440631e950f0b3f1ad24cfe116060f4",
+     "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+     "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+     "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+    },
+    "severity": "High",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "PRODUCTION",
+    "locations": [
+     {
+      "path": "game/src/core/player/CultivationPathSystem.ts",
+      "symbolOrSection": ":404-454 masteryGrantRecord vs saveShapeValidation.ts:756-764",
+      "revision": "5efdf9a9",
+      "basis": "SOURCE"
+     }
+    ],
+    "discoveredBy": "playthrough-matrix devin-48584b80",
+    "invariantIds": [
+     "I-AGGREGATE-RELEASE"
+    ],
+    "evidenceIds": [],
+    "counterexample": "vitest rig: spell-path profile + foundation victory -> write+load = corrupted (100% deterministic)",
+    "expected": "a save produced by normal play loads cleanly",
+    "actual": "masteryGrantRecord(1|2) writes nodeLevels.tinh_thong_* but never mirrors into purchasedNodeIds -> validateGameSaveShape -> status 'corrupted' -> reload loses character. grantSkillCore writes both channels (sword/body ways unaffected)",
+    "rootCause": "granted-node seam writes only the level channel, not the purchase ledger",
+    "rootClass": "writer-validator-mismatch",
+    "subsystem": "progression",
+    "siblingSearch": [],
+    "siblingFindingIds": [],
+    "repair": "Write tinh_thong_* grants through the same both-channel path (or mirror into purchasedNodeIds at grant time); add save-shape pin for granted-node ways",
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "status": "OBSERVED",
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "fixedInRevision": null,
+    "closedAt": null,
+    "closeReason": null
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-BX-84",
+    "title": "perfectClearSeconds=0 writer/validator mismatch corrupts save",
+    "state": {
+     "productStateId": "b3ade7e3f442eb2a98da5b317248dd469440631e950f0b3f1ad24cfe116060f4",
+     "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+     "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+     "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+    },
+    "severity": "Low",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "PRODUCTION",
+    "locations": [
+     {
+      "path": "game/src/core/game/GameManagerBattleRewardOps.ts",
+      "symbolOrSection": ":214-218 clearSeconds Math.max(0,...) vs validator requiring >0",
+      "revision": "5efdf9a9",
+      "basis": "SOURCE"
+     }
+    ],
+    "discoveredBy": "playthrough-matrix devin-48584b80",
+    "invariantIds": [
+     "I-AGGREGATE-RELEASE"
+    ],
+    "evidenceIds": [],
+    "counterexample": "vitest rig: spell-path profile + foundation victory -> write+load = corrupted (100% deterministic)",
+    "expected": "a save produced by normal play loads cleanly",
+    "actual": "writer can emit 0 (same-ms perfect clear) -> validator rejects -> 'corrupted'",
+    "rootCause": "contract hole between writer and validator",
+    "rootClass": "writer-validator-mismatch",
+    "subsystem": "combat",
+    "siblingSearch": [],
+    "siblingFindingIds": [],
+    "repair": "Floor clearSeconds at >0 epsilon or relax validator to >=0; one-sided contract",
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "status": "OBSERVED",
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "fixedInRevision": null,
+    "closedAt": null,
+    "closeReason": null
+   }
+  }
+ ]
+}
