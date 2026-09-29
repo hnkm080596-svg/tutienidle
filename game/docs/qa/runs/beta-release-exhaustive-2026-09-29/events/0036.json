@@ -1,0 +1,34 @@
+{
+  "action": "admit",
+  "assignment": {
+    "id": "ASG-BX-AUTE",
+    "parentId": null,
+    "capacityScope": "swe2-slot",
+    "inputBundleHash": "98aef652a357207671714326f4b05342fe52ef798de768c24fdde4dbc7af0648",
+    "dependencies": [],
+    "requiredCapabilities": [
+      "exec",
+      "repo-read"
+    ],
+    "writeSurface": [
+      "blind audit auth/electron/adapters"
+    ],
+    "readiness": "READY",
+    "status": "READY",
+    "observedRuntimeId": "devin-45aa74bb55b64499809dd91c0d127df2",
+    "history": [
+      {
+        "at": "2026-09-29T15:01:00Z",
+        "from": "-",
+        "to": "CREATED",
+        "reason": "wave-3 dispatch"
+      },
+      {
+        "at": "2026-09-29T15:01:30Z",
+        "from": "CREATED",
+        "to": "READY",
+        "reason": "prompt delivered"
+      }
+    ]
+  }
+}

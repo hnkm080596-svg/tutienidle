@@ -1,0 +1,34 @@
+{
+  "action": "admit",
+  "assignment": {
+    "id": "ASG-BX-XSYS",
+    "parentId": null,
+    "capacityScope": "swe2-slot",
+    "inputBundleHash": "30b604de8a21f9759ee14bb1f6fd946b0a8a0bd3ed266ce01b60b2ab77b94fbf",
+    "dependencies": [],
+    "requiredCapabilities": [
+      "exec",
+      "repo-read"
+    ],
+    "writeSurface": [
+      "cross-system adversarial attacks"
+    ],
+    "readiness": "READY",
+    "status": "READY",
+    "observedRuntimeId": "devin-edf0652e36dd46d9ad7bb58098f19b5c",
+    "history": [
+      {
+        "at": "2026-09-29T15:01:00Z",
+        "from": "-",
+        "to": "CREATED",
+        "reason": "wave-3 dispatch"
+      },
+      {
+        "at": "2026-09-29T15:01:30Z",
+        "from": "CREATED",
+        "to": "READY",
+        "reason": "prompt delivered"
+      }
+    ]
+  }
+}
