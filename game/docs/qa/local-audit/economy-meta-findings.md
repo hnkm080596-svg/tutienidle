@@ -46,6 +46,16 @@
 
 ---
 
+### EM-05 — MEDIUM — Offline production settles every cycle at login-time realm (cycle seconds AND reward band) — same class as EM-01
+
+- **Severity:** Medium
+- **Location:** `game/src/core/production/ProductionOffline.ts:137` (`CYCLE_BASE_SECONDS_BY_REALM[currentRealmId]`), `:151-163` (`advanceWorkerLanes` gets `collectionRealmId: currentRealmId` for every lane); entry point `game/src/core/production/ProductionSystem.ts` `settleOffline` resolves `currentRealmId` at call time and passes it down for the whole window.
+- **Root cause:** Online `tickWorkers` pins `collectionRealmId` per cycle at creation time (the cycle records the realm it was produced under). The offline path collapses the whole `[offlineSinceMs, nowMs]` window to the realm at login — so every retroactively-completed cycle is timed AND paid at the post-breakthrough realm (cycle base seconds differ per realm, and `rollRewards`/hidden-channel band eligibility read `cycle.collectionRealmId`, `ProductionSystem.ts:528-535`).
+- **Repro:** Player near a breakthrough quits with workers running; breakthrough-granting state at next login (or the save's realm already advanced pre-quit) → all offline cycles settle at the new realm's cycle time/reward band instead of the realm they ran under — over-pays on every breakthrough-across-offline transition; also prices cycles shorter/longer than they actually were.
+- **Impact:** Same over-grant class as EM-01 (realm repricing across the offline window); magnitude scales with realm step.
+
+---
+
 ## Notes reviewed and cleared (no findings)
 
 - `VendorSystem.sellMaterial` — atomic preflight (`canAcceptAmount` before debit, `:169-180`), grade gate (`:42-56`), sole-recipe-ingredient guard (`:92-101`), integer/zero amount rejection.
@@ -56,3 +66,5 @@
 - `ProductionOffline`/`WorkerLaneAdvance` — offline settle shares the same allocator + lane-advance mechanism as online tick; forfeits over-budget completions deliberately.
 - `QuestManager.restore` — defense-in-depth normalization; `checkAndResetDaily` uses UTC day-buckets deliberately.
 - `GameClock` — pure `calculateOfflineTime` with clamps; monotonic `Math.max` on timestamps.
+- **Round-2, production quest hooks:** `grantCycleRewards` pushes `pendingEvents`; `GameManagerTickOps.ts:184` drains them and calls `notifyMaterialGained(materialId, delivered)` — collect-quests DO count production rewards on the tick after settle (incl. post-restore), same as the decompose channel (`:293`). Cleared.
+- **Round-2, alchemy settle drain:** `settleOffline` during restore pushes into `pendingEvents` with `delivered`/`overflow` receipts; `GameManagerTickOps.ts:212-239` drains them on the next tick and emits craft + bag-overflow toasts — post-restore pill overflow IS surfaced through this path (the INFRA-07 gap is only the raw `save.pills` restore loop). Cleared.

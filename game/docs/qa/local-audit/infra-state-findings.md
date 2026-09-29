@@ -68,6 +68,16 @@ Overall observation: this slice has already been through several audit rounds (c
 
 ---
 
+### INFRA-07 — LOW — Pill overflow discarded silently at restore (materials report it; pills don't)
+
+- **Severity:** Low
+- **Location:** `game/src/core/game/GameManagerSaveRestore.ts:299-303` — `pillBag.add(...)` return value (overflow count) discarded; compare `:286-297` + `:325-336` where material restore + auto-dissolve rewards DO accumulate `restoreOverflows` and emit `createBagOverflowEvent`.
+- **Root cause:** `PillBag.add` clamps at `MAX_STACK_AMOUNT` and returns the lost amount (`PillBag.ts:23-29`); the restore loop drops the receipt, so an over-cap pill stack in the payload loses the excess with no event/log.
+- **Repro:** Import/hand-edit a save whose `pills[].amount` exceeds `MAX_STACK_AMOUNT` (import normalizes shape, not caps) → restore → excess pills vanish silently; a material in the same situation would have produced an overflow toast.
+- **Impact:** Inconsistent loss-reporting contract only — legit writes can't produce over-cap stacks, so reachable only via foreign/imported payloads.
+
+---
+
 ## Notes reviewed and cleared (no finding)
 
 - `useAppLifecycle` boot generation-fencing, `bootInFlight`/`saveInFlight` guards, autosave idempotent start, `stopAll` teardown — deliberately hardened; `startAutosave` correctly wired at `App.vue:602` only on `status:'entered'` after the first durable save commits (`useAppLifecycle.ts:283-285`).
@@ -76,3 +86,6 @@ Overall observation: this slice has already been through several audit rounds (c
 - `installAutomationFlagsPersistence` `{detached:true}` subscription is unsubscribed at `App.vue:655`; `introHandle` cleared at `App.vue:658`.
 - `CombatScene`/`MainScene`/`TribulationScene` event subscriptions all pair `events.once('shutdown')` cleanup with named handlers; scale listeners removed at shutdown.
 - `SupabaseSession` refresh path clears session on failure; session in `sessionStorage` is per-tab (deliberate — new tabs resolve to the `guest` save slot via `saveKeys.ts`).
+- **Round-2, offline-window authority:** `GameManagerSaveRestore.ts:401-403` computes raw uncapped `elapsedOfflineSeconds`, but every consumer clamps its own window — production + decompose at `PRODUCTION_OFFLINE_CAP_SECONDS` = 10h (`ProductionBalance.ts:120`, `ProductionOffline.ts:64`, `DecomposeSystem.ts:241`), auto-farm at `DEFAULT_MAX_OFFLINE_SECONDS` = 24h (`GameManagerAutoFarmOps.ts:220-226`), cultivation via `GameClock.calculateOfflineTime`. The raw value only feeds the `>60s` gate. Different caps per subsystem are deliberate, not drift — cleared.
+- **Round-2, wash/refine paid-op tickets:** `EquipmentWash.previewWashAffixes`/`commitWashAffixes` — cost deducted at preview, ticket consumed on EVERY commit attempt, bound by object identity + membership generation + issued-at snapshot, `invalidatePendingOperationTickets` on restore. Airtight — cleared.
+- **Round-2, reward ops:** `GameManagerBattleRewardOps` `rewardsGranted`/`battleEndEmitted` flags give per-kill and terminal exactly-once semantics; abandon shares the once-guard; `bankPassiveCarry` overwrite can't double-count. `StageWaveSystem.start` is transactional (lease rollback on any pick/launch failure); lease release is identity-checked so a stale `stopRepeat` can't stomp a foreign owner. Cleared.
