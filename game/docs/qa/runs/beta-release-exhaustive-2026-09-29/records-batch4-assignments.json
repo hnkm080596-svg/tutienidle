@@ -1,0 +1,197 @@
+{
+ "records": [
+  {
+   "kind": "assignment",
+   "body": {
+    "id": "ASG-BX-REP1",
+    "parentId": null,
+    "capacityScope": "swe2-slot",
+    "inputBundleHash": "e0894e33de9a972808b8d78bb53e92e339e3b45fadc7ccd014beaf20a5dbcdf5",
+    "dependencies": [],
+    "requiredCapabilities": [
+     "exec",
+     "repo-read",
+     "repo-write"
+    ],
+    "writeSurface": "worktree .agent-worktrees/beta-repair-carried branch beta-repair-carried: production fixes for carried findings F-BX-01,04,05,06,07 + verify F-BX-08..12",
+    "readiness": "READY",
+    "status": "RUNNING",
+    "reservedAt": "2026-09-27T13:56:00Z",
+    "observedRuntimeId": "devin-1d053a775d0743819a3edc55e08b78e2",
+    "releaseEvidence": null,
+    "resultRef": null,
+    "timeoutState": null,
+    "history": [
+     {
+      "at": "2026-09-27T13:56:00Z",
+      "from": "-",
+      "to": "CREATED",
+      "reason": "wave-0 dispatch"
+     },
+     {
+      "at": "2026-09-27T13:56:00Z",
+      "from": "CREATED",
+      "to": "QUEUED",
+      "reason": "prompt delivered"
+     },
+     {
+      "at": "2026-09-27T13:56:00Z",
+      "from": "QUEUED",
+      "to": "RESERVED",
+      "reason": "slot claimed (4/4)"
+     },
+     {
+      "at": "2026-09-27T13:56:00Z",
+      "from": "QUEUED",
+      "to": "RUNNING",
+      "reason": "session started"
+     }
+    ]
+   }
+  },
+  {
+   "kind": "assignment",
+   "body": {
+    "id": "ASG-BX-REG",
+    "parentId": null,
+    "capacityScope": "swe2-slot",
+    "inputBundleHash": "fef29df21ec1b718c09ba6f16146b664533d8cce33598222123ec8669af3cab3",
+    "dependencies": [],
+    "requiredCapabilities": [
+     "exec",
+     "repo-read"
+    ],
+    "writeSurface": "read-only probe: registry/asset/identity integrity sweep on S0",
+    "readiness": "READY",
+    "status": "RUNNING",
+    "reservedAt": "2026-09-27T13:56:00Z",
+    "observedRuntimeId": "devin-7dbc5d19a3cf42e69f30ce8ad7a7c25e",
+    "releaseEvidence": null,
+    "resultRef": null,
+    "timeoutState": null,
+    "history": [
+     {
+      "at": "2026-09-27T13:56:00Z",
+      "from": "-",
+      "to": "CREATED",
+      "reason": "wave-0 dispatch"
+     },
+     {
+      "at": "2026-09-27T13:56:00Z",
+      "from": "CREATED",
+      "to": "QUEUED",
+      "reason": "prompt delivered"
+     },
+     {
+      "at": "2026-09-27T13:56:00Z",
+      "from": "QUEUED",
+      "to": "RESERVED",
+      "reason": "slot claimed (4/4)"
+     },
+     {
+      "at": "2026-09-27T13:56:00Z",
+      "from": "QUEUED",
+      "to": "RUNNING",
+      "reason": "session started"
+     }
+    ]
+   }
+  },
+  {
+   "kind": "assignment",
+   "body": {
+    "id": "ASG-BX-LRN",
+    "parentId": null,
+    "capacityScope": "swe2-slot",
+    "inputBundleHash": "eb11595aa87c05b13ba66677cbeb1fde8f2ec5ce3b28af447b1f6ee4f014d908",
+    "dependencies": [],
+    "requiredCapabilities": [
+     "exec",
+     "repo-read"
+    ],
+    "writeSurface": "read-only probe: learned-defects replay on S0",
+    "readiness": "READY",
+    "status": "RUNNING",
+    "reservedAt": "2026-09-27T13:56:00Z",
+    "observedRuntimeId": "devin-8c1d32bb66294cc88ea8daadfac3d5ec",
+    "releaseEvidence": null,
+    "resultRef": null,
+    "timeoutState": null,
+    "history": [
+     {
+      "at": "2026-09-27T13:56:00Z",
+      "from": "-",
+      "to": "CREATED",
+      "reason": "wave-0 dispatch"
+     },
+     {
+      "at": "2026-09-27T13:56:00Z",
+      "from": "CREATED",
+      "to": "QUEUED",
+      "reason": "prompt delivered"
+     },
+     {
+      "at": "2026-09-27T13:56:00Z",
+      "from": "QUEUED",
+      "to": "RESERVED",
+      "reason": "slot claimed (4/4)"
+     },
+     {
+      "at": "2026-09-27T13:56:00Z",
+      "from": "QUEUED",
+      "to": "RUNNING",
+      "reason": "session started"
+     }
+    ]
+   }
+  },
+  {
+   "kind": "assignment",
+   "body": {
+    "id": "ASG-BX-CRT",
+    "parentId": null,
+    "capacityScope": "swe2-slot",
+    "inputBundleHash": "a575fd82c283478673e9069776f9a0515978e03a3b59e5a6011f3d696c68fac4",
+    "dependencies": [],
+    "requiredCapabilities": [
+     "exec",
+     "repo-read"
+    ],
+    "writeSurface": "blind correctness audit: bootstrap+creation+identity on S0",
+    "readiness": "READY",
+    "status": "RUNNING",
+    "reservedAt": "2026-09-27T13:56:00Z",
+    "observedRuntimeId": "devin-bcdb6981eb8d4796bfdaba2f0a51b59d",
+    "releaseEvidence": null,
+    "resultRef": null,
+    "timeoutState": null,
+    "history": [
+     {
+      "at": "2026-09-27T13:56:00Z",
+      "from": "-",
+      "to": "CREATED",
+      "reason": "wave-0 dispatch"
+     },
+     {
+      "at": "2026-09-27T13:56:00Z",
+      "from": "CREATED",
+      "to": "QUEUED",
+      "reason": "prompt delivered"
+     },
+     {
+      "at": "2026-09-27T13:56:00Z",
+      "from": "QUEUED",
+      "to": "RESERVED",
+      "reason": "slot claimed (4/4)"
+     },
+     {
+      "at": "2026-09-27T13:56:00Z",
+      "from": "QUEUED",
+      "to": "RUNNING",
+      "reason": "session started"
+     }
+    ]
+   }
+  }
+ ]
+}

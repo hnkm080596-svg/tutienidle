@@ -1,0 +1,38 @@
+{
+  "action": "admit",
+  "assignment": {
+    "id": "ASG-BX-REP1",
+    "parentId": null,
+    "capacityScope": "swe2-slot",
+    "inputBundleHash": "e0894e33de9a972808b8d78bb53e92e339e3b45fadc7ccd014beaf20a5dbcdf5",
+    "dependencies": [],
+    "requiredCapabilities": [
+      "exec",
+      "repo-write"
+    ],
+    "writeSurface": [
+      "worktree beta-repair-carried: production fixes F-BX-01,04,05,06,07 + verify F-BX-08..12"
+    ],
+    "readiness": "READY",
+    "status": "QUEUED",
+    "reservedAt": null,
+    "observedRuntimeId": "devin-1d053a775d0743819a3edc55e08b78e2",
+    "releaseEvidence": null,
+    "resultRef": null,
+    "timeoutState": null,
+    "history": [
+      {
+        "at": "2026-09-27T13:56:00Z",
+        "from": "-",
+        "to": "CREATED",
+        "reason": "wave-0 dispatch"
+      },
+      {
+        "at": "2026-09-27T13:56:00Z",
+        "from": "CREATED",
+        "to": "QUEUED",
+        "reason": "prompt delivered"
+      }
+    ]
+  }
+}

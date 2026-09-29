@@ -1,0 +1,38 @@
+{
+  "action": "admit",
+  "assignment": {
+    "id": "ASG-BX-REG",
+    "parentId": null,
+    "capacityScope": "swe2-slot",
+    "inputBundleHash": "fef29df21ec1b718c09ba6f16146b664533d8cce33598222123ec8669af3cab3",
+    "dependencies": [],
+    "requiredCapabilities": [
+      "exec",
+      "repo-read"
+    ],
+    "writeSurface": [
+      "read-only registry/asset/identity integrity sweep on S0"
+    ],
+    "readiness": "READY",
+    "status": "QUEUED",
+    "reservedAt": null,
+    "observedRuntimeId": "devin-7dbc5d19a3cf42e69f30ce8ad7a7c25e",
+    "releaseEvidence": null,
+    "resultRef": null,
+    "timeoutState": null,
+    "history": [
+      {
+        "at": "2026-09-27T13:56:00Z",
+        "from": "-",
+        "to": "CREATED",
+        "reason": "wave-0 dispatch"
+      },
+      {
+        "at": "2026-09-27T13:56:00Z",
+        "from": "CREATED",
+        "to": "QUEUED",
+        "reason": "prompt delivered"
+      }
+    ]
+  }
+}

@@ -58,12 +58,2675 @@
     "outcome": null
   },
   "briefs": [],
-  "assignments": [],
+  "assignments": [
+    {
+      "id": "ASG-BX-REP1",
+      "parentId": null,
+      "capacityScope": "swe2-slot",
+      "inputBundleHash": "e0894e33de9a972808b8d78bb53e92e339e3b45fadc7ccd014beaf20a5dbcdf5",
+      "dependencies": [],
+      "requiredCapabilities": [
+        "exec",
+        "repo-write"
+      ],
+      "writeSurface": [
+        "worktree beta-repair-carried: production fixes F-BX-01,04,05,06,07 + verify F-BX-08..12"
+      ],
+      "readiness": "READY",
+      "status": "RESERVED",
+      "reservedAt": "2026-09-29T12:50:44.459Z",
+      "observedRuntimeId": "devin-1d053a775d0743819a3edc55e08b78e2",
+      "releaseEvidence": null,
+      "resultRef": null,
+      "timeoutState": null,
+      "history": [
+        {
+          "at": "2026-09-27T13:56:00Z",
+          "from": "-",
+          "to": "CREATED",
+          "reason": "wave-0 dispatch"
+        },
+        {
+          "at": "2026-09-27T13:56:00Z",
+          "from": "CREATED",
+          "to": "QUEUED",
+          "reason": "prompt delivered"
+        },
+        {
+          "at": "2026-09-29T12:50:44.459Z",
+          "from": "QUEUED",
+          "to": "RESERVED",
+          "reason": "admitted at 1/5 (incl. external 0)"
+        }
+      ]
+    },
+    {
+      "id": "ASG-BX-REG",
+      "parentId": null,
+      "capacityScope": "swe2-slot",
+      "inputBundleHash": "fef29df21ec1b718c09ba6f16146b664533d8cce33598222123ec8669af3cab3",
+      "dependencies": [],
+      "requiredCapabilities": [
+        "exec",
+        "repo-read"
+      ],
+      "writeSurface": [
+        "read-only registry/asset/identity integrity sweep on S0"
+      ],
+      "readiness": "READY",
+      "status": "RESERVED",
+      "reservedAt": "2026-09-29T12:50:44.589Z",
+      "observedRuntimeId": "devin-7dbc5d19a3cf42e69f30ce8ad7a7c25e",
+      "releaseEvidence": null,
+      "resultRef": null,
+      "timeoutState": null,
+      "history": [
+        {
+          "at": "2026-09-27T13:56:00Z",
+          "from": "-",
+          "to": "CREATED",
+          "reason": "wave-0 dispatch"
+        },
+        {
+          "at": "2026-09-27T13:56:00Z",
+          "from": "CREATED",
+          "to": "QUEUED",
+          "reason": "prompt delivered"
+        },
+        {
+          "at": "2026-09-29T12:50:44.588Z",
+          "from": "QUEUED",
+          "to": "RESERVED",
+          "reason": "admitted at 2/5 (incl. external 0)"
+        }
+      ]
+    },
+    {
+      "id": "ASG-BX-LRN",
+      "parentId": null,
+      "capacityScope": "swe2-slot",
+      "inputBundleHash": "eb11595aa87c05b13ba66677cbeb1fde8f2ec5ce3b28af447b1f6ee4f014d908",
+      "dependencies": [],
+      "requiredCapabilities": [
+        "exec",
+        "repo-read"
+      ],
+      "writeSurface": [
+        "read-only learned-defects replay on S0"
+      ],
+      "readiness": "READY",
+      "status": "RESERVED",
+      "reservedAt": "2026-09-29T12:50:44.716Z",
+      "observedRuntimeId": "devin-8c1d32bb66294cc88ea8daadfac3d5ec",
+      "releaseEvidence": null,
+      "resultRef": null,
+      "timeoutState": null,
+      "history": [
+        {
+          "at": "2026-09-27T13:56:00Z",
+          "from": "-",
+          "to": "CREATED",
+          "reason": "wave-0 dispatch"
+        },
+        {
+          "at": "2026-09-27T13:56:00Z",
+          "from": "CREATED",
+          "to": "QUEUED",
+          "reason": "prompt delivered"
+        },
+        {
+          "at": "2026-09-29T12:50:44.716Z",
+          "from": "QUEUED",
+          "to": "RESERVED",
+          "reason": "admitted at 3/5 (incl. external 0)"
+        }
+      ]
+    },
+    {
+      "id": "ASG-BX-CRT",
+      "parentId": null,
+      "capacityScope": "swe2-slot",
+      "inputBundleHash": "a575fd82c283478673e9069776f9a0515978e03a3b59e5a6011f3d696c68fac4",
+      "dependencies": [],
+      "requiredCapabilities": [
+        "exec",
+        "repo-read"
+      ],
+      "writeSurface": [
+        "blind correctness audit: bootstrap+creation+identity on S0"
+      ],
+      "readiness": "READY",
+      "status": "RESERVED",
+      "reservedAt": "2026-09-29T12:50:44.842Z",
+      "observedRuntimeId": "devin-bcdb6981eb8d4796bfdaba2f0a51b59d",
+      "releaseEvidence": null,
+      "resultRef": null,
+      "timeoutState": null,
+      "history": [
+        {
+          "at": "2026-09-27T13:56:00Z",
+          "from": "-",
+          "to": "CREATED",
+          "reason": "wave-0 dispatch"
+        },
+        {
+          "at": "2026-09-27T13:56:00Z",
+          "from": "CREATED",
+          "to": "QUEUED",
+          "reason": "prompt delivered"
+        },
+        {
+          "at": "2026-09-29T12:50:44.841Z",
+          "from": "QUEUED",
+          "to": "RESERVED",
+          "reason": "admitted at 4/5 (incl. external 0)"
+        }
+      ]
+    }
+  ],
   "consumptions": [],
-  "invariants": [],
+  "invariants": [
+    {
+      "id": "I-BOOT-ENTRY-CHAIN",
+      "statement": "Application start -> auth/guest -> character detect -> create/load -> home -> gameplay -> persist -> reload -> re-auth: the entry chain is a single canonical sequence; a reload at any point restores a coherent state or cleanly restarts creation - never half-written player state",
+      "domain": "bootstrap-lifecycle",
+      "risk": "HIGH",
+      "sources": [
+        {
+          "path": "game/docs/qa/missions/beta-release-exhaustive-2026-09-29.md",
+          "symbolOrSection": "mission brief",
+          "revision": "f1049b5e",
+          "basis": "MAINTAINED_CONTRACT"
+        }
+      ],
+      "owner": {
+        "path": "game/src/services/save/SaveSystem.ts",
+        "symbolOrSection": "entry chain",
+        "revision": "f1049b5e",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "AuthService.ts",
+        "SaveSystem.ts",
+        "CloudSaveCoordinator.ts"
+      ],
+      "legalReaders": [
+        "App bootstrap",
+        "Creation flow",
+        "MainScene"
+      ],
+      "projections": [
+        "n/a"
+      ],
+      "caches": [
+        "n/a"
+      ],
+      "validStates": [],
+      "forbiddenStates": [],
+      "preconditions": [],
+      "postconditions": [],
+      "legalTransitions": [],
+      "illegalTransitions": [],
+      "failureBehavior": "n/a",
+      "atomicity": "n/a",
+      "inverseBehavior": "n/a",
+      "persistence": "n/a",
+      "migration": "n/a",
+      "lifecycle": "n/a",
+      "runtimeConsequences": [],
+      "uiConsequences": [],
+      "oracles": [],
+      "requiredEvidenceSurfaces": [
+        "DETERMINISTIC",
+        "STATIC_SEMANTIC",
+        "RUNTIME_E2E",
+        "INDEPENDENT_REVIEW"
+      ],
+      "taxonomyIds": [],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-BOOT-QUIT-FLUSH",
+      "statement": "quit/pagehide/unload ordering: pending writes complete or are explicitly abandoned - a reload never observes a torn write",
+      "domain": "bootstrap-lifecycle",
+      "risk": "HIGH",
+      "sources": [
+        {
+          "path": "game/docs/qa/missions/beta-release-exhaustive-2026-09-29.md",
+          "symbolOrSection": "mission brief",
+          "revision": "f1049b5e",
+          "basis": "MAINTAINED_CONTRACT"
+        }
+      ],
+      "owner": {
+        "path": "game/src/services/save/SaveSystem.ts",
+        "symbolOrSection": "flush ordering",
+        "revision": "f1049b5e",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "SaveSystem.ts",
+        "storage adapter"
+      ],
+      "legalReaders": [
+        "restore path"
+      ],
+      "projections": [
+        "n/a"
+      ],
+      "caches": [
+        "n/a"
+      ],
+      "validStates": [],
+      "forbiddenStates": [],
+      "preconditions": [],
+      "postconditions": [],
+      "legalTransitions": [],
+      "illegalTransitions": [],
+      "failureBehavior": "n/a",
+      "atomicity": "n/a",
+      "inverseBehavior": "n/a",
+      "persistence": "n/a",
+      "migration": "n/a",
+      "lifecycle": "n/a",
+      "runtimeConsequences": [],
+      "uiConsequences": [],
+      "oracles": [],
+      "requiredEvidenceSurfaces": [
+        "DETERMINISTIC",
+        "STATIC_SEMANTIC",
+        "INDEPENDENT_REVIEW"
+      ],
+      "taxonomyIds": [],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-IDENTITY-PATH-WAY",
+      "statement": "Canonical identity = (path,way) pair: paths exactly {sword,spell,body}, ways exactly the six *_pathway ids; no legacy Vietnamese path id is a second identity authority anywhere",
+      "domain": "paths-ways-nodes-technique-body-realm",
+      "risk": "HIGH",
+      "sources": [
+        {
+          "path": "game/docs/qa/missions/beta-release-exhaustive-2026-09-29.md",
+          "symbolOrSection": "mission brief",
+          "revision": "f1049b5e",
+          "basis": "MAINTAINED_CONTRACT"
+        }
+      ],
+      "owner": {
+        "path": "game/src/data/",
+        "symbolOrSection": "identity types",
+        "revision": "f1049b5e",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "creation service",
+        "save validator"
+      ],
+      "legalReaders": [
+        "resolvers",
+        "UI",
+        "combat build",
+        "save validation"
+      ],
+      "projections": [
+        "n/a"
+      ],
+      "caches": [
+        "n/a"
+      ],
+      "validStates": [],
+      "forbiddenStates": [],
+      "preconditions": [],
+      "postconditions": [],
+      "legalTransitions": [],
+      "illegalTransitions": [],
+      "failureBehavior": "n/a",
+      "atomicity": "n/a",
+      "inverseBehavior": "n/a",
+      "persistence": "n/a",
+      "migration": "n/a",
+      "lifecycle": "n/a",
+      "runtimeConsequences": [],
+      "uiConsequences": [],
+      "oracles": [],
+      "requiredEvidenceSurfaces": [
+        "DETERMINISTIC",
+        "STATIC_SEMANTIC",
+        "RUNTIME_E2E",
+        "INDEPENDENT_REVIEW"
+      ],
+      "taxonomyIds": [],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-CREATION-CONTRACT",
+      "statement": "New chars: base stats 1/1/1/1/1 + name + starting talent + one of {tram,linh_bao,huy_quyen}; every legal pick produces a combat-ready character; no implicit tram repair",
+      "domain": "bootstrap-lifecycle",
+      "risk": "HIGH",
+      "sources": [
+        {
+          "path": "game/docs/qa/missions/beta-release-exhaustive-2026-09-29.md",
+          "symbolOrSection": "mission brief",
+          "revision": "f1049b5e",
+          "basis": "MAINTAINED_CONTRACT"
+        }
+      ],
+      "owner": {
+        "path": "game/src/services/",
+        "symbolOrSection": "creation service",
+        "revision": "f1049b5e",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "creation flow"
+      ],
+      "legalReaders": [
+        "PlayerData",
+        "SkillManager",
+        "save"
+      ],
+      "projections": [
+        "n/a"
+      ],
+      "caches": [
+        "n/a"
+      ],
+      "validStates": [],
+      "forbiddenStates": [],
+      "preconditions": [],
+      "postconditions": [],
+      "legalTransitions": [],
+      "illegalTransitions": [],
+      "failureBehavior": "n/a",
+      "atomicity": "n/a",
+      "inverseBehavior": "n/a",
+      "persistence": "n/a",
+      "migration": "n/a",
+      "lifecycle": "n/a",
+      "runtimeConsequences": [],
+      "uiConsequences": [],
+      "oracles": [],
+      "requiredEvidenceSurfaces": [
+        "DETERMINISTIC",
+        "STATIC_SEMANTIC",
+        "RUNTIME_E2E",
+        "INDEPENDENT_REVIEW"
+      ],
+      "taxonomyIds": [],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-SAVE-V87-POLICY",
+      "statement": "CURRENT_SAVE_VERSION=87: accepts current shape; older versions reject cleanly; no retired-field resurrection; failed validation = zero partial restoration across ALL live owners",
+      "domain": "save-restore-cloud",
+      "risk": "HIGH",
+      "sources": [
+        {
+          "path": "game/docs/qa/missions/beta-release-exhaustive-2026-09-29.md",
+          "symbolOrSection": "mission brief",
+          "revision": "f1049b5e",
+          "basis": "MAINTAINED_CONTRACT"
+        }
+      ],
+      "owner": {
+        "path": "game/src/services/save/saveVersion.ts",
+        "symbolOrSection": "version gate + validators",
+        "revision": "f1049b5e",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "SaveSystem.ts"
+      ],
+      "legalReaders": [
+        "restore path",
+        "all owners"
+      ],
+      "projections": [
+        "n/a"
+      ],
+      "caches": [
+        "n/a"
+      ],
+      "validStates": [],
+      "forbiddenStates": [],
+      "preconditions": [],
+      "postconditions": [],
+      "legalTransitions": [],
+      "illegalTransitions": [],
+      "failureBehavior": "n/a",
+      "atomicity": "n/a",
+      "inverseBehavior": "n/a",
+      "persistence": "n/a",
+      "migration": "n/a",
+      "lifecycle": "n/a",
+      "runtimeConsequences": [],
+      "uiConsequences": [],
+      "oracles": [],
+      "requiredEvidenceSurfaces": [
+        "DETERMINISTIC",
+        "STATIC_SEMANTIC",
+        "INDEPENDENT_REVIEW"
+      ],
+      "taxonomyIds": [],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-SAVE-VALIDATE-COMPLETE",
+      "statement": "Every persisted field a consumer reads is shape-validated; persistentTimedEffects.cultivationSpeedPercent/effectGroup checked (F-MG-22 class) - crafted NaN/negative inputs cannot reach fold math",
+      "domain": "save-restore-cloud",
+      "risk": "HIGH",
+      "sources": [
+        {
+          "path": "game/docs/qa/missions/beta-release-exhaustive-2026-09-29.md",
+          "symbolOrSection": "mission brief",
+          "revision": "f1049b5e",
+          "basis": "MAINTAINED_CONTRACT"
+        }
+      ],
+      "owner": {
+        "path": "game/src/services/save/saveShapeValidation.ts",
+        "symbolOrSection": "field validators",
+        "revision": "f1049b5e",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "validators"
+      ],
+      "legalReaders": [
+        "restore path",
+        "offline fold"
+      ],
+      "projections": [
+        "n/a"
+      ],
+      "caches": [
+        "n/a"
+      ],
+      "validStates": [],
+      "forbiddenStates": [],
+      "preconditions": [],
+      "postconditions": [],
+      "legalTransitions": [],
+      "illegalTransitions": [],
+      "failureBehavior": "n/a",
+      "atomicity": "n/a",
+      "inverseBehavior": "n/a",
+      "persistence": "n/a",
+      "migration": "n/a",
+      "lifecycle": "n/a",
+      "runtimeConsequences": [],
+      "uiConsequences": [],
+      "oracles": [],
+      "requiredEvidenceSurfaces": [
+        "DETERMINISTIC",
+        "STATIC_SEMANTIC",
+        "INDEPENDENT_REVIEW"
+      ],
+      "taxonomyIds": [],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-CLOUD-LINEAGE-ORDER",
+      "statement": "Cloud reconcile must never regress to an older lineage: save_revision counters that diverge per device cannot order writes (F-MG-18) - pull/push ordering + CAS guard preserve newest state",
+      "domain": "save-restore-cloud",
+      "risk": "HIGH",
+      "sources": [
+        {
+          "path": "game/docs/qa/missions/beta-release-exhaustive-2026-09-29.md",
+          "symbolOrSection": "mission brief",
+          "revision": "f1049b5e",
+          "basis": "MAINTAINED_CONTRACT"
+        }
+      ],
+      "owner": {
+        "path": "game/src/services/cloudSave/SupabaseRemoteSave.ts",
+        "symbolOrSection": "remoteAhead/push CAS",
+        "revision": "f1049b5e",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "SupabaseRemoteSave.ts",
+        "CloudSaveCoordinator.ts"
+      ],
+      "legalReaders": [
+        "LocalCloudSaveService.ts"
+      ],
+      "projections": [
+        "n/a"
+      ],
+      "caches": [
+        "n/a"
+      ],
+      "validStates": [],
+      "forbiddenStates": [],
+      "preconditions": [],
+      "postconditions": [],
+      "legalTransitions": [],
+      "illegalTransitions": [],
+      "failureBehavior": "n/a",
+      "atomicity": "n/a",
+      "inverseBehavior": "n/a",
+      "persistence": "n/a",
+      "migration": "n/a",
+      "lifecycle": "n/a",
+      "runtimeConsequences": [],
+      "uiConsequences": [],
+      "oracles": [],
+      "requiredEvidenceSurfaces": [
+        "DETERMINISTIC",
+        "STATIC_SEMANTIC",
+        "INDEPENDENT_REVIEW"
+      ],
+      "taxonomyIds": [],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-REALM-GATE-FOUNDATION",
+      "statement": "Foundation gate: LQ level 12 + chapter qi_refining_abyssal_pool cleared; realm settlement exactly-once; defeat/cooldown/replay cannot double-apply or skip",
+      "domain": "paths-ways-nodes-technique-body-realm",
+      "risk": "HIGH",
+      "sources": [
+        {
+          "path": "game/docs/qa/missions/beta-release-exhaustive-2026-09-29.md",
+          "symbolOrSection": "mission brief",
+          "revision": "f1049b5e",
+          "basis": "MAINTAINED_CONTRACT"
+        }
+      ],
+      "owner": {
+        "path": "game/src/core/realm/",
+        "symbolOrSection": "breakthrough gate",
+        "revision": "f1049b5e",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "breakthrough service"
+      ],
+      "legalReaders": [
+        "UI",
+        "save"
+      ],
+      "projections": [
+        "n/a"
+      ],
+      "caches": [
+        "n/a"
+      ],
+      "validStates": [],
+      "forbiddenStates": [],
+      "preconditions": [],
+      "postconditions": [],
+      "legalTransitions": [],
+      "illegalTransitions": [],
+      "failureBehavior": "n/a",
+      "atomicity": "n/a",
+      "inverseBehavior": "n/a",
+      "persistence": "n/a",
+      "migration": "n/a",
+      "lifecycle": "n/a",
+      "runtimeConsequences": [],
+      "uiConsequences": [],
+      "oracles": [],
+      "requiredEvidenceSurfaces": [
+        "DETERMINISTIC",
+        "STATIC_SEMANTIC",
+        "RUNTIME_E2E",
+        "INDEPENDENT_REVIEW"
+      ],
+      "taxonomyIds": [],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-HIDDEN-LINEAGE-PREFIX",
+      "statement": "hiddenPerfection lineage is a strict prefix ordered by realm; normal breakthrough closes it permanently; completed hidden rewards never repeat",
+      "domain": "paths-ways-nodes-technique-body-realm",
+      "risk": "HIGH",
+      "sources": [
+        {
+          "path": "game/docs/qa/missions/beta-release-exhaustive-2026-09-29.md",
+          "symbolOrSection": "mission brief",
+          "revision": "f1049b5e",
+          "basis": "MAINTAINED_CONTRACT"
+        }
+      ],
+      "owner": {
+        "path": "game/src/core/realm/hidden/HiddenPerfection.ts",
+        "symbolOrSection": "lineage state",
+        "revision": "f1049b5e",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "hidden systems"
+      ],
+      "legalReaders": [
+        "save",
+        "realm gates"
+      ],
+      "projections": [
+        "n/a"
+      ],
+      "caches": [
+        "n/a"
+      ],
+      "validStates": [],
+      "forbiddenStates": [],
+      "preconditions": [],
+      "postconditions": [],
+      "legalTransitions": [],
+      "illegalTransitions": [],
+      "failureBehavior": "n/a",
+      "atomicity": "n/a",
+      "inverseBehavior": "n/a",
+      "persistence": "n/a",
+      "migration": "n/a",
+      "lifecycle": "n/a",
+      "runtimeConsequences": [],
+      "uiConsequences": [],
+      "oracles": [],
+      "requiredEvidenceSurfaces": [
+        "DETERMINISTIC",
+        "STATIC_SEMANTIC",
+        "INDEPENDENT_REVIEW"
+      ],
+      "taxonomyIds": [],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-BODY-EXACT-ONCE",
+      "statement": "Every BodyProgression transaction is exactly-once with exact resource debit or zero change; physique transformation fires once at canonical checkpoint; reload never advances twice",
+      "domain": "paths-ways-nodes-technique-body-realm",
+      "risk": "HIGH",
+      "sources": [
+        {
+          "path": "game/docs/qa/missions/beta-release-exhaustive-2026-09-29.md",
+          "symbolOrSection": "mission brief",
+          "revision": "f1049b5e",
+          "basis": "MAINTAINED_CONTRACT"
+        }
+      ],
+      "owner": {
+        "path": "game/src/core/realm/body/BodyProgressionSystem.ts",
+        "symbolOrSection": "chapter transactions",
+        "revision": "f1049b5e",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "BodyProgressionSystem.ts"
+      ],
+      "legalReaders": [
+        "resources",
+        "UI",
+        "save"
+      ],
+      "projections": [
+        "n/a"
+      ],
+      "caches": [
+        "n/a"
+      ],
+      "validStates": [],
+      "forbiddenStates": [],
+      "preconditions": [],
+      "postconditions": [],
+      "legalTransitions": [],
+      "illegalTransitions": [],
+      "failureBehavior": "n/a",
+      "atomicity": "n/a",
+      "inverseBehavior": "n/a",
+      "persistence": "n/a",
+      "migration": "n/a",
+      "lifecycle": "n/a",
+      "runtimeConsequences": [],
+      "uiConsequences": [],
+      "oracles": [],
+      "requiredEvidenceSurfaces": [
+        "DETERMINISTIC",
+        "STATIC_SEMANTIC",
+        "INDEPENDENT_REVIEW"
+      ],
+      "taxonomyIds": [],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-TECHNIQUE-FROZEN",
+      "statement": "Technique = canonical holder: grade/rank/mastery/quality/gradeHistory under frozen-cycle model 0..18; mastery only from authorized sources - never from defeat/abort/visual/dup settlement",
+      "domain": "paths-ways-nodes-technique-body-realm",
+      "risk": "HIGH",
+      "sources": [
+        {
+          "path": "game/docs/qa/missions/beta-release-exhaustive-2026-09-29.md",
+          "symbolOrSection": "mission brief",
+          "revision": "f1049b5e",
+          "basis": "MAINTAINED_CONTRACT"
+        }
+      ],
+      "owner": {
+        "path": "game/src/data/",
+        "symbolOrSection": "Technique model",
+        "revision": "f1049b5e",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "combat settlement",
+        "node grants"
+      ],
+      "legalReaders": [
+        "UI",
+        "save"
+      ],
+      "projections": [
+        "n/a"
+      ],
+      "caches": [
+        "n/a"
+      ],
+      "validStates": [],
+      "forbiddenStates": [],
+      "preconditions": [],
+      "postconditions": [],
+      "legalTransitions": [],
+      "illegalTransitions": [],
+      "failureBehavior": "n/a",
+      "atomicity": "n/a",
+      "inverseBehavior": "n/a",
+      "persistence": "n/a",
+      "migration": "n/a",
+      "lifecycle": "n/a",
+      "runtimeConsequences": [],
+      "uiConsequences": [],
+      "oracles": [],
+      "requiredEvidenceSurfaces": [
+        "DETERMINISTIC",
+        "STATIC_SEMANTIC",
+        "INDEPENDENT_REVIEW"
+      ],
+      "taxonomyIds": [],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-SKILL-CORE-AUTHORITY",
+      "statement": "Core Node Level is the sole skill-level authority: no independent Skill.level/persisted skillLevels; every Beta levelled skill's runtime effect derives from canonical core level",
+      "domain": "paths-ways-nodes-technique-body-realm",
+      "risk": "HIGH",
+      "sources": [
+        {
+          "path": "game/docs/qa/missions/beta-release-exhaustive-2026-09-29.md",
+          "symbolOrSection": "mission brief",
+          "revision": "f1049b5e",
+          "basis": "MAINTAINED_CONTRACT"
+        }
+      ],
+      "owner": {
+        "path": "game/src/core/progression/ProgressionNode.ts",
+        "symbolOrSection": "node levels",
+        "revision": "f1049b5e",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "node purchase/upgrade/respec/grant"
+      ],
+      "legalReaders": [
+        "skill build",
+        "combat",
+        "UI",
+        "save"
+      ],
+      "projections": [
+        "n/a"
+      ],
+      "caches": [
+        "n/a"
+      ],
+      "validStates": [],
+      "forbiddenStates": [],
+      "preconditions": [],
+      "postconditions": [],
+      "legalTransitions": [],
+      "illegalTransitions": [],
+      "failureBehavior": "n/a",
+      "atomicity": "n/a",
+      "inverseBehavior": "n/a",
+      "persistence": "n/a",
+      "migration": "n/a",
+      "lifecycle": "n/a",
+      "runtimeConsequences": [],
+      "uiConsequences": [],
+      "oracles": [],
+      "requiredEvidenceSurfaces": [
+        "DETERMINISTIC",
+        "STATIC_SEMANTIC",
+        "INDEPENDENT_REVIEW"
+      ],
+      "taxonomyIds": [],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-WAY-KIT-ISOLATION",
+      "statement": "Each of the six ways' kit identity matches its authored contract: sword basic-only+orbs+combo; hidden ways fixed-kit; spell element state isolated to spell way; body HP-cost/reflect semantics",
+      "domain": "paths-ways-nodes-technique-body-realm",
+      "risk": "HIGH",
+      "sources": [
+        {
+          "path": "game/docs/qa/missions/beta-release-exhaustive-2026-09-29.md",
+          "symbolOrSection": "mission brief",
+          "revision": "f1049b5e",
+          "basis": "MAINTAINED_CONTRACT"
+        }
+      ],
+      "owner": {
+        "path": "game/src/data/",
+        "symbolOrSection": "way kits",
+        "revision": "f1049b5e",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "combat build"
+      ],
+      "legalReaders": [
+        "UI",
+        "save"
+      ],
+      "projections": [
+        "n/a"
+      ],
+      "caches": [
+        "n/a"
+      ],
+      "validStates": [],
+      "forbiddenStates": [],
+      "preconditions": [],
+      "postconditions": [],
+      "legalTransitions": [],
+      "illegalTransitions": [],
+      "failureBehavior": "n/a",
+      "atomicity": "n/a",
+      "inverseBehavior": "n/a",
+      "persistence": "n/a",
+      "migration": "n/a",
+      "lifecycle": "n/a",
+      "runtimeConsequences": [],
+      "uiConsequences": [],
+      "oracles": [],
+      "requiredEvidenceSurfaces": [
+        "DETERMINISTIC",
+        "STATIC_SEMANTIC",
+        "RUNTIME_E2E",
+        "INDEPENDENT_REVIEW"
+      ],
+      "taxonomyIds": [],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-COMBAT-SETTLE-ONCE",
+      "statement": "Battle outcome + reward settlement happen exactly once per battle: invocation/event cardinality enforced; abort/teardown/mid-cast death/restart cannot duplicate or drop settlement",
+      "domain": "combat-vitals-skills",
+      "risk": "HIGH",
+      "sources": [
+        {
+          "path": "game/docs/qa/missions/beta-release-exhaustive-2026-09-29.md",
+          "symbolOrSection": "mission brief",
+          "revision": "f1049b5e",
+          "basis": "MAINTAINED_CONTRACT"
+        }
+      ],
+      "owner": {
+        "path": "game/src/core/game/GameManagerTurnBattleOps.ts",
+        "symbolOrSection": "settlement",
+        "revision": "f1049b5e",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "TurnBattleAdapter.ts"
+      ],
+      "legalReaders": [
+        "rewards",
+        "mastery",
+        "quest"
+      ],
+      "projections": [
+        "n/a"
+      ],
+      "caches": [
+        "n/a"
+      ],
+      "validStates": [],
+      "forbiddenStates": [],
+      "preconditions": [],
+      "postconditions": [],
+      "legalTransitions": [],
+      "illegalTransitions": [],
+      "failureBehavior": "n/a",
+      "atomicity": "n/a",
+      "inverseBehavior": "n/a",
+      "persistence": "n/a",
+      "migration": "n/a",
+      "lifecycle": "n/a",
+      "runtimeConsequences": [],
+      "uiConsequences": [],
+      "oracles": [],
+      "requiredEvidenceSurfaces": [
+        "DETERMINISTIC",
+        "STATIC_SEMANTIC",
+        "INDEPENDENT_REVIEW"
+      ],
+      "taxonomyIds": [],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-IMPACT-PRESENTATION",
+      "statement": "Presentation releases pending domain impact at authored markers; it is never a second authority for damage/reward; visual failure (missing/stale/dup token, no ACK, scene switch, missing asset, zero-frame) cannot double-deal, skip, or resurrect callbacks",
+      "domain": "presentation-identity",
+      "risk": "HIGH",
+      "sources": [
+        {
+          "path": "game/docs/qa/missions/beta-release-exhaustive-2026-09-29.md",
+          "symbolOrSection": "mission brief",
+          "revision": "f1049b5e",
+          "basis": "MAINTAINED_CONTRACT"
+        }
+      ],
+      "owner": {
+        "path": "game/src/core/battle/turn/CombatAnimationRuntime.ts",
+        "symbolOrSection": "cast->impact pipeline",
+        "revision": "f1049b5e",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "CombatAnimationRuntime.ts",
+        "CombatScene.ts"
+      ],
+      "legalReaders": [
+        "TurnBattle"
+      ],
+      "projections": [
+        "n/a"
+      ],
+      "caches": [
+        "n/a"
+      ],
+      "validStates": [],
+      "forbiddenStates": [],
+      "preconditions": [],
+      "postconditions": [],
+      "legalTransitions": [],
+      "illegalTransitions": [],
+      "failureBehavior": "n/a",
+      "atomicity": "n/a",
+      "inverseBehavior": "n/a",
+      "persistence": "n/a",
+      "migration": "n/a",
+      "lifecycle": "n/a",
+      "runtimeConsequences": [],
+      "uiConsequences": [],
+      "oracles": [],
+      "requiredEvidenceSurfaces": [
+        "DETERMINISTIC",
+        "STATIC_SEMANTIC",
+        "RUNTIME_E2E",
+        "INDEPENDENT_REVIEW"
+      ],
+      "taxonomyIds": [],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-BUFF-PROC-CARDINALITY",
+      "statement": "buff/reaction/ailment/proc/follow-up/reflect/control systems: apply/refresh/stack/expiry/dispel ownership correct on death/repeat; spell element mechanics never leak to sword/body via shared helpers; invocation cardinality exact",
+      "domain": "combat-vitals-skills",
+      "risk": "HIGH",
+      "sources": [
+        {
+          "path": "game/docs/qa/missions/beta-release-exhaustive-2026-09-29.md",
+          "symbolOrSection": "mission brief",
+          "revision": "f1049b5e",
+          "basis": "MAINTAINED_CONTRACT"
+        }
+      ],
+      "owner": {
+        "path": "game/src/core/skill/PassiveSystem.ts",
+        "symbolOrSection": "effect engines",
+        "revision": "f1049b5e",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "effect engines"
+      ],
+      "legalReaders": [
+        "combat",
+        "UI"
+      ],
+      "projections": [
+        "n/a"
+      ],
+      "caches": [
+        "n/a"
+      ],
+      "validStates": [],
+      "forbiddenStates": [],
+      "preconditions": [],
+      "postconditions": [],
+      "legalTransitions": [],
+      "illegalTransitions": [],
+      "failureBehavior": "n/a",
+      "atomicity": "n/a",
+      "inverseBehavior": "n/a",
+      "persistence": "n/a",
+      "migration": "n/a",
+      "lifecycle": "n/a",
+      "runtimeConsequences": [],
+      "uiConsequences": [],
+      "oracles": [],
+      "requiredEvidenceSurfaces": [
+        "DETERMINISTIC",
+        "STATIC_SEMANTIC",
+        "INDEPENDENT_REVIEW"
+      ],
+      "taxonomyIds": [],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-STAT-PROVENANCE",
+      "statement": "Stat pipeline: base+body+physique+talent+equipment+realm+technique+way+combat deltas ordered and provenance-tracked; no double-apply/stale/wrong-domain/foreign-way leak; HP/maxHP coherent; reload no re-apply",
+      "domain": "stats",
+      "risk": "HIGH",
+      "sources": [
+        {
+          "path": "game/docs/qa/missions/beta-release-exhaustive-2026-09-29.md",
+          "symbolOrSection": "mission brief",
+          "revision": "f1049b5e",
+          "basis": "MAINTAINED_CONTRACT"
+        }
+      ],
+      "owner": {
+        "path": "game/src/core/stats/StatCalculator.ts",
+        "symbolOrSection": "pipeline",
+        "revision": "f1049b5e",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "modifier writers"
+      ],
+      "legalReaders": [
+        "assembly",
+        "combat",
+        "UI"
+      ],
+      "projections": [
+        "n/a"
+      ],
+      "caches": [
+        "n/a"
+      ],
+      "validStates": [],
+      "forbiddenStates": [],
+      "preconditions": [],
+      "postconditions": [],
+      "legalTransitions": [],
+      "illegalTransitions": [],
+      "failureBehavior": "n/a",
+      "atomicity": "n/a",
+      "inverseBehavior": "n/a",
+      "persistence": "n/a",
+      "migration": "n/a",
+      "lifecycle": "n/a",
+      "runtimeConsequences": [],
+      "uiConsequences": [],
+      "oracles": [],
+      "requiredEvidenceSurfaces": [
+        "DETERMINISTIC",
+        "STATIC_SEMANTIC",
+        "INDEPENDENT_REVIEW"
+      ],
+      "taxonomyIds": [],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-TALENT-OFFER-LEGAL",
+      "statement": "Talent lifecycle: creation pick + breakthrough entitlement + NEW/UPGRADE offers - every offered option individually legal; pending entitlement blocks progress; no forged/foreign/zero-weight member",
+      "domain": "stats",
+      "risk": "HIGH",
+      "sources": [
+        {
+          "path": "game/docs/qa/missions/beta-release-exhaustive-2026-09-29.md",
+          "symbolOrSection": "mission brief",
+          "revision": "f1049b5e",
+          "basis": "MAINTAINED_CONTRACT"
+        }
+      ],
+      "owner": {
+        "path": "game/src/data/",
+        "symbolOrSection": "talent offers",
+        "revision": "f1049b5e",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "talent system"
+      ],
+      "legalReaders": [
+        "creation",
+        "breakthrough",
+        "save"
+      ],
+      "projections": [
+        "n/a"
+      ],
+      "caches": [
+        "n/a"
+      ],
+      "validStates": [],
+      "forbiddenStates": [],
+      "preconditions": [],
+      "postconditions": [],
+      "legalTransitions": [],
+      "illegalTransitions": [],
+      "failureBehavior": "n/a",
+      "atomicity": "n/a",
+      "inverseBehavior": "n/a",
+      "persistence": "n/a",
+      "migration": "n/a",
+      "lifecycle": "n/a",
+      "runtimeConsequences": [],
+      "uiConsequences": [],
+      "oracles": [],
+      "requiredEvidenceSurfaces": [
+        "DETERMINISTIC",
+        "STATIC_SEMANTIC",
+        "INDEPENDENT_REVIEW"
+      ],
+      "taxonomyIds": [],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-INVENTORY-CONSERVATION",
+      "statement": "Item/material/currency transactions conserve: source not destroyed unless output accepted per contract; capacity boundaries; partial/zero/duplicate delivery safe; paid preview cannot replay",
+      "domain": "inventory-equipment-rewards-economy",
+      "risk": "HIGH",
+      "sources": [
+        {
+          "path": "game/docs/qa/missions/beta-release-exhaustive-2026-09-29.md",
+          "symbolOrSection": "mission brief",
+          "revision": "f1049b5e",
+          "basis": "MAINTAINED_CONTRACT"
+        }
+      ],
+      "owner": {
+        "path": "game/src/core/game/EquipmentOpsSystem.ts",
+        "symbolOrSection": "transactions",
+        "revision": "f1049b5e",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "inventory ops",
+        "reward settlement"
+      ],
+      "legalReaders": [
+        "UI",
+        "save"
+      ],
+      "projections": [
+        "n/a"
+      ],
+      "caches": [
+        "n/a"
+      ],
+      "validStates": [],
+      "forbiddenStates": [],
+      "preconditions": [],
+      "postconditions": [],
+      "legalTransitions": [],
+      "illegalTransitions": [],
+      "failureBehavior": "n/a",
+      "atomicity": "n/a",
+      "inverseBehavior": "n/a",
+      "persistence": "n/a",
+      "migration": "n/a",
+      "lifecycle": "n/a",
+      "runtimeConsequences": [],
+      "uiConsequences": [],
+      "oracles": [],
+      "requiredEvidenceSurfaces": [
+        "DETERMINISTIC",
+        "STATIC_SEMANTIC",
+        "INDEPENDENT_REVIEW"
+      ],
+      "taxonomyIds": [],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-EQUIP-PIPELINE",
+      "statement": "Equipment: drop->affix->bag->equip->enhance->refine->wash->dissolve->save; failed txn never partially consumes; one instance in one slot; stat contribution bound to equipped state (no ghost)",
+      "domain": "inventory-equipment-rewards-economy",
+      "risk": "HIGH",
+      "sources": [
+        {
+          "path": "game/docs/qa/missions/beta-release-exhaustive-2026-09-29.md",
+          "symbolOrSection": "mission brief",
+          "revision": "f1049b5e",
+          "basis": "MAINTAINED_CONTRACT"
+        }
+      ],
+      "owner": {
+        "path": "game/src/core/game/EquipmentOpsSystem.ts",
+        "symbolOrSection": "equipment ops",
+        "revision": "f1049b5e",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "equipment ops"
+      ],
+      "legalReaders": [
+        "stats",
+        "UI",
+        "save"
+      ],
+      "projections": [
+        "n/a"
+      ],
+      "caches": [
+        "n/a"
+      ],
+      "validStates": [],
+      "forbiddenStates": [],
+      "preconditions": [],
+      "postconditions": [],
+      "legalTransitions": [],
+      "illegalTransitions": [],
+      "failureBehavior": "n/a",
+      "atomicity": "n/a",
+      "inverseBehavior": "n/a",
+      "persistence": "n/a",
+      "migration": "n/a",
+      "lifecycle": "n/a",
+      "runtimeConsequences": [],
+      "uiConsequences": [],
+      "oracles": [],
+      "requiredEvidenceSurfaces": [
+        "DETERMINISTIC",
+        "STATIC_SEMANTIC",
+        "INDEPENDENT_REVIEW"
+      ],
+      "taxonomyIds": [],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-ECON-SOURCE-SINK",
+      "statement": "Beta economy graph closes: every sink has a reachable source, every mandatory material obtainable at intended realm; no infinite loop; no deferred-still-producing; duplicate tick impossible",
+      "domain": "economy-progression",
+      "risk": "HIGH",
+      "sources": [
+        {
+          "path": "game/docs/qa/missions/beta-release-exhaustive-2026-09-29.md",
+          "symbolOrSection": "mission brief",
+          "revision": "f1049b5e",
+          "basis": "MAINTAINED_CONTRACT"
+        }
+      ],
+      "owner": {
+        "path": "game/src/core/building/BuildingSystem.ts",
+        "symbolOrSection": "production",
+        "revision": "f1049b5e",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "production",
+        "offline",
+        "rewards"
+      ],
+      "legalReaders": [
+        "inventory",
+        "UI"
+      ],
+      "projections": [
+        "n/a"
+      ],
+      "caches": [
+        "n/a"
+      ],
+      "validStates": [],
+      "forbiddenStates": [],
+      "preconditions": [],
+      "postconditions": [],
+      "legalTransitions": [],
+      "illegalTransitions": [],
+      "failureBehavior": "n/a",
+      "atomicity": "n/a",
+      "inverseBehavior": "n/a",
+      "persistence": "n/a",
+      "migration": "n/a",
+      "lifecycle": "n/a",
+      "runtimeConsequences": [],
+      "uiConsequences": [],
+      "oracles": [],
+      "requiredEvidenceSurfaces": [
+        "DETERMINISTIC",
+        "STATIC_SEMANTIC",
+        "INDEPENDENT_REVIEW"
+      ],
+      "taxonomyIds": [],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-OFFLINE-PARITY",
+      "statement": "offline/auto-farm/world-tick/live give equivalent canonical outcomes (rewards/mastery/progress/resources/kills); offline prices the window at the rate actually held (F-MG-21 class); clock-jump/negative-ts/repeat-collection safe",
+      "domain": "time-offline",
+      "risk": "HIGH",
+      "sources": [
+        {
+          "path": "game/docs/qa/missions/beta-release-exhaustive-2026-09-29.md",
+          "symbolOrSection": "mission brief",
+          "revision": "f1049b5e",
+          "basis": "MAINTAINED_CONTRACT"
+        }
+      ],
+      "owner": {
+        "path": "game/src/core/game/",
+        "symbolOrSection": "offline settlement",
+        "revision": "f1049b5e",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "offline",
+        "autofarm",
+        "ticks"
+      ],
+      "legalReaders": [
+        "inventory",
+        "progression",
+        "save"
+      ],
+      "projections": [
+        "n/a"
+      ],
+      "caches": [
+        "n/a"
+      ],
+      "validStates": [],
+      "forbiddenStates": [],
+      "preconditions": [],
+      "postconditions": [],
+      "legalTransitions": [],
+      "illegalTransitions": [],
+      "failureBehavior": "n/a",
+      "atomicity": "n/a",
+      "inverseBehavior": "n/a",
+      "persistence": "n/a",
+      "migration": "n/a",
+      "lifecycle": "n/a",
+      "runtimeConsequences": [],
+      "uiConsequences": [],
+      "oracles": [],
+      "requiredEvidenceSurfaces": [
+        "DETERMINISTIC",
+        "STATIC_SEMANTIC",
+        "INDEPENDENT_REVIEW"
+      ],
+      "taxonomyIds": [],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-COMPANION-FORMATION",
+      "statement": "Companions: Foundation-unlock, gift claim once, no duplicate companion/payout, no premature mortal/qi exposure; formation: no duplicate combatant slotting, stale member safe",
+      "domain": "quests-companions-formation-stages",
+      "risk": "HIGH",
+      "sources": [
+        {
+          "path": "game/docs/qa/missions/beta-release-exhaustive-2026-09-29.md",
+          "symbolOrSection": "mission brief",
+          "revision": "f1049b5e",
+          "basis": "MAINTAINED_CONTRACT"
+        }
+      ],
+      "owner": {
+        "path": "game/src/",
+        "symbolOrSection": "companion+formation systems",
+        "revision": "f1049b5e",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "gift/claim",
+        "formation"
+      ],
+      "legalReaders": [
+        "combat",
+        "save",
+        "UI"
+      ],
+      "projections": [
+        "n/a"
+      ],
+      "caches": [
+        "n/a"
+      ],
+      "validStates": [],
+      "forbiddenStates": [],
+      "preconditions": [],
+      "postconditions": [],
+      "legalTransitions": [],
+      "illegalTransitions": [],
+      "failureBehavior": "n/a",
+      "atomicity": "n/a",
+      "inverseBehavior": "n/a",
+      "persistence": "n/a",
+      "migration": "n/a",
+      "lifecycle": "n/a",
+      "runtimeConsequences": [],
+      "uiConsequences": [],
+      "oracles": [],
+      "requiredEvidenceSurfaces": [
+        "DETERMINISTIC",
+        "STATIC_SEMANTIC",
+        "INDEPENDENT_REVIEW"
+      ],
+      "taxonomyIds": [],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-ARTIFACT-DORMANT",
+      "statement": "Artifact is deferred past Beta: no Foundation grant/wheel/dependency/drop/stat leak onto a clean Beta character; dormant code presence is not a defect",
+      "domain": "quests-companions-formation-stages",
+      "risk": "STANDARD",
+      "sources": [
+        {
+          "path": "game/docs/qa/missions/beta-release-exhaustive-2026-09-29.md",
+          "symbolOrSection": "mission brief",
+          "revision": "f1049b5e",
+          "basis": "MAINTAINED_CONTRACT"
+        }
+      ],
+      "owner": {
+        "path": "game/src/",
+        "symbolOrSection": "artifact systems",
+        "revision": "f1049b5e",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "none at Foundation"
+      ],
+      "legalReaders": [
+        "UI",
+        "drops",
+        "stats"
+      ],
+      "projections": [
+        "n/a"
+      ],
+      "caches": [
+        "n/a"
+      ],
+      "validStates": [],
+      "forbiddenStates": [],
+      "preconditions": [],
+      "postconditions": [],
+      "legalTransitions": [],
+      "illegalTransitions": [],
+      "failureBehavior": "n/a",
+      "atomicity": "n/a",
+      "inverseBehavior": "n/a",
+      "persistence": "n/a",
+      "migration": "n/a",
+      "lifecycle": "n/a",
+      "runtimeConsequences": [],
+      "uiConsequences": [],
+      "oracles": [],
+      "requiredEvidenceSurfaces": [
+        "DETERMINISTIC",
+        "STATIC_SEMANTIC",
+        "INDEPENDENT_REVIEW"
+      ],
+      "taxonomyIds": [],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-UI-ELIGIBILITY",
+      "statement": "For every Beta action: UI eligibility == domain eligibility == commit eligibility; disabled-button bypass impossible; always-reject green button is a defect; retired authority (loadout/technique-progression/route/body-fields) absent from UI",
+      "domain": "ui-i18n-a11y-phaser-audio",
+      "risk": "HIGH",
+      "sources": [
+        {
+          "path": "game/docs/qa/missions/beta-release-exhaustive-2026-09-29.md",
+          "symbolOrSection": "mission brief",
+          "revision": "f1049b5e",
+          "basis": "MAINTAINED_CONTRACT"
+        }
+      ],
+      "owner": {
+        "path": "game/src/components/",
+        "symbolOrSection": "panels",
+        "revision": "f1049b5e",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "UI actions"
+      ],
+      "legalReaders": [
+        "domain"
+      ],
+      "projections": [
+        "n/a"
+      ],
+      "caches": [
+        "n/a"
+      ],
+      "validStates": [],
+      "forbiddenStates": [],
+      "preconditions": [],
+      "postconditions": [],
+      "legalTransitions": [],
+      "illegalTransitions": [],
+      "failureBehavior": "n/a",
+      "atomicity": "n/a",
+      "inverseBehavior": "n/a",
+      "persistence": "n/a",
+      "migration": "n/a",
+      "lifecycle": "n/a",
+      "runtimeConsequences": [],
+      "uiConsequences": [],
+      "oracles": [],
+      "requiredEvidenceSurfaces": [
+        "DETERMINISTIC",
+        "STATIC_SEMANTIC",
+        "RUNTIME_E2E",
+        "INDEPENDENT_REVIEW"
+      ],
+      "taxonomyIds": [],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-PRESENTATION-IDENTITY",
+      "statement": "Presentation identity correct at every surface: nameplate via authored name; cultivate texture way-keyed wherever the pose renders (F-MG-19); visualArmed is mortal-scoped (F-MG-25); deleted-art references absent",
+      "domain": "presentation-identity",
+      "risk": "STANDARD",
+      "sources": [
+        {
+          "path": "game/docs/qa/missions/beta-release-exhaustive-2026-09-29.md",
+          "symbolOrSection": "mission brief",
+          "revision": "f1049b5e",
+          "basis": "MAINTAINED_CONTRACT"
+        }
+      ],
+      "owner": {
+        "path": "game/src/components/common/PlayerPortrait.vue",
+        "symbolOrSection": "imageUrl + gates",
+        "revision": "f1049b5e",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "presentation layer"
+      ],
+      "legalReaders": [
+        "scenes",
+        "panels"
+      ],
+      "projections": [
+        "n/a"
+      ],
+      "caches": [
+        "n/a"
+      ],
+      "validStates": [],
+      "forbiddenStates": [],
+      "preconditions": [],
+      "postconditions": [],
+      "legalTransitions": [],
+      "illegalTransitions": [],
+      "failureBehavior": "n/a",
+      "atomicity": "n/a",
+      "inverseBehavior": "n/a",
+      "persistence": "n/a",
+      "migration": "n/a",
+      "lifecycle": "n/a",
+      "runtimeConsequences": [],
+      "uiConsequences": [],
+      "oracles": [],
+      "requiredEvidenceSurfaces": [
+        "DETERMINISTIC",
+        "STATIC_SEMANTIC",
+        "INDEPENDENT_REVIEW"
+      ],
+      "taxonomyIds": [],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-AUDIO-SCAFFOLD",
+      "statement": "Audio: cue resolution safe; missing asset slot fails silently by design (no exception); buses/routes wired; settings persist; no duplicate cue spam; listeners cleaned; gesture unlock",
+      "domain": "ui-i18n-a11y-phaser-audio",
+      "risk": "STANDARD",
+      "sources": [
+        {
+          "path": "game/docs/qa/missions/beta-release-exhaustive-2026-09-29.md",
+          "symbolOrSection": "mission brief",
+          "revision": "f1049b5e",
+          "basis": "MAINTAINED_CONTRACT"
+        }
+      ],
+      "owner": {
+        "path": "game/src/core/audio/AudioManager.ts",
+        "symbolOrSection": "audio core",
+        "revision": "f1049b5e",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "AudioManager.ts",
+        "bindings"
+      ],
+      "legalReaders": [
+        "scenes",
+        "UI"
+      ],
+      "projections": [
+        "n/a"
+      ],
+      "caches": [
+        "n/a"
+      ],
+      "validStates": [],
+      "forbiddenStates": [],
+      "preconditions": [],
+      "postconditions": [],
+      "legalTransitions": [],
+      "illegalTransitions": [],
+      "failureBehavior": "n/a",
+      "atomicity": "n/a",
+      "inverseBehavior": "n/a",
+      "persistence": "n/a",
+      "migration": "n/a",
+      "lifecycle": "n/a",
+      "runtimeConsequences": [],
+      "uiConsequences": [],
+      "oracles": [],
+      "requiredEvidenceSurfaces": [
+        "DETERMINISTIC",
+        "STATIC_SEMANTIC",
+        "INDEPENDENT_REVIEW"
+      ],
+      "taxonomyIds": [],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-PHASER-LIFECYCLE",
+      "statement": "Phaser lifecycle: battle N never inherits battle N-1 transient state; listeners/timers/tweens/sprites/receipts torn down on shutdown/restart; resize/layers correct",
+      "domain": "ui-i18n-a11y-phaser-audio",
+      "risk": "HIGH",
+      "sources": [
+        {
+          "path": "game/docs/qa/missions/beta-release-exhaustive-2026-09-29.md",
+          "symbolOrSection": "mission brief",
+          "revision": "f1049b5e",
+          "basis": "MAINTAINED_CONTRACT"
+        }
+      ],
+      "owner": {
+        "path": "game/src/game/scenes/CombatScene.ts",
+        "symbolOrSection": "scene lifecycle",
+        "revision": "f1049b5e",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "scenes"
+      ],
+      "legalReaders": [
+        "runtime"
+      ],
+      "projections": [
+        "n/a"
+      ],
+      "caches": [
+        "n/a"
+      ],
+      "validStates": [],
+      "forbiddenStates": [],
+      "preconditions": [],
+      "postconditions": [],
+      "legalTransitions": [],
+      "illegalTransitions": [],
+      "failureBehavior": "n/a",
+      "atomicity": "n/a",
+      "inverseBehavior": "n/a",
+      "persistence": "n/a",
+      "migration": "n/a",
+      "lifecycle": "n/a",
+      "runtimeConsequences": [],
+      "uiConsequences": [],
+      "oracles": [],
+      "requiredEvidenceSurfaces": [
+        "DETERMINISTIC",
+        "STATIC_SEMANTIC",
+        "RUNTIME_E2E",
+        "INDEPENDENT_REVIEW"
+      ],
+      "taxonomyIds": [],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-REGISTRY-INTEGRITY",
+      "statement": "Registries: no duplicate IDs, dangling refs, illegal enums/realm/way, orphan cores, impossible prereq cycles, hidden-in-normal catalog, post-Beta-required-by-Beta, asset descriptors pointing at missing files",
+      "domain": "tests-qa-tooling",
+      "risk": "HIGH",
+      "sources": [
+        {
+          "path": "game/docs/qa/missions/beta-release-exhaustive-2026-09-29.md",
+          "symbolOrSection": "mission brief",
+          "revision": "f1049b5e",
+          "basis": "MAINTAINED_CONTRACT"
+        }
+      ],
+      "owner": {
+        "path": "game/src/data/",
+        "symbolOrSection": "registries",
+        "revision": "f1049b5e",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "data authors"
+      ],
+      "legalReaders": [
+        "loaders",
+        "validation"
+      ],
+      "projections": [
+        "n/a"
+      ],
+      "caches": [
+        "n/a"
+      ],
+      "validStates": [],
+      "forbiddenStates": [],
+      "preconditions": [],
+      "postconditions": [],
+      "legalTransitions": [],
+      "illegalTransitions": [],
+      "failureBehavior": "n/a",
+      "atomicity": "n/a",
+      "inverseBehavior": "n/a",
+      "persistence": "n/a",
+      "migration": "n/a",
+      "lifecycle": "n/a",
+      "runtimeConsequences": [],
+      "uiConsequences": [],
+      "oracles": [],
+      "requiredEvidenceSurfaces": [
+        "DETERMINISTIC",
+        "STATIC_SEMANTIC",
+        "INDEPENDENT_REVIEW"
+      ],
+      "taxonomyIds": [],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-TEST-ORACLE",
+      "statement": "The test suite actually detects: tests assert live owners not inputs; no self-mocking oracles; idempotent-final-only masking invocation dupes; deliberate semantic mutation of each critical invariant kills a test for the intended reason",
+      "domain": "tests-qa-tooling",
+      "risk": "HIGH",
+      "sources": [
+        {
+          "path": "game/docs/qa/missions/beta-release-exhaustive-2026-09-29.md",
+          "symbolOrSection": "mission brief",
+          "revision": "f1049b5e",
+          "basis": "MAINTAINED_CONTRACT"
+        }
+      ],
+      "owner": {
+        "path": "game/tests/",
+        "symbolOrSection": "architecture+domain tests",
+        "revision": "f1049b5e",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "test authors"
+      ],
+      "legalReaders": [
+        "CI"
+      ],
+      "projections": [
+        "n/a"
+      ],
+      "caches": [
+        "n/a"
+      ],
+      "validStates": [],
+      "forbiddenStates": [],
+      "preconditions": [],
+      "postconditions": [],
+      "legalTransitions": [],
+      "illegalTransitions": [],
+      "failureBehavior": "n/a",
+      "atomicity": "n/a",
+      "inverseBehavior": "n/a",
+      "persistence": "n/a",
+      "migration": "n/a",
+      "lifecycle": "n/a",
+      "runtimeConsequences": [],
+      "uiConsequences": [],
+      "oracles": [],
+      "requiredEvidenceSurfaces": [
+        "DETERMINISTIC",
+        "STATIC_SEMANTIC",
+        "INDEPENDENT_REVIEW"
+      ],
+      "taxonomyIds": [],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-LOCAL-ART-ABSENT",
+      "statement": "Locally-held untracked art stays local (user requirement): zero runtime-referenced assets must be missing from the tracked tree; a runtime path referencing an untracked/committed-missing file is a defect",
+      "domain": "presentation-identity",
+      "risk": "STANDARD",
+      "sources": [
+        {
+          "path": "game/docs/qa/missions/beta-release-exhaustive-2026-09-29.md",
+          "symbolOrSection": "mission brief",
+          "revision": "f1049b5e",
+          "basis": "MAINTAINED_CONTRACT"
+        }
+      ],
+      "owner": {
+        "path": "game/public/assets/",
+        "symbolOrSection": "manifest+descriptors",
+        "revision": "f1049b5e",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "art manifest"
+      ],
+      "legalReaders": [
+        "loaders"
+      ],
+      "projections": [
+        "n/a"
+      ],
+      "caches": [
+        "n/a"
+      ],
+      "validStates": [],
+      "forbiddenStates": [],
+      "preconditions": [],
+      "postconditions": [],
+      "legalTransitions": [],
+      "illegalTransitions": [],
+      "failureBehavior": "n/a",
+      "atomicity": "n/a",
+      "inverseBehavior": "n/a",
+      "persistence": "n/a",
+      "migration": "n/a",
+      "lifecycle": "n/a",
+      "runtimeConsequences": [],
+      "uiConsequences": [],
+      "oracles": [],
+      "requiredEvidenceSurfaces": [
+        "DETERMINISTIC",
+        "STATIC_SEMANTIC",
+        "INDEPENDENT_REVIEW"
+      ],
+      "taxonomyIds": [],
+      "status": "ACTIVE"
+    }
+  ],
   "census": [],
-  "findings": [],
-  "evidence": [],
+  "findings": [
+    {
+      "title": "[carried F-MG-03] PRE-EXISTING on master: combatContract R14.4 searches parameterless onBattleStart()",
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/tests/architecture/combatContract.test.ts",
+          "symbolOrSection": "R14.4",
+          "revision": "f1049b5e",
+          "basis": "SOURCE"
+        }
+      ],
+      "counterexample": "identical failure reproduces on base ref f196b8d0 without the delta",
+      "expected": "suite green",
+      "actual": "pre-existing failure on master",
+      "rootCause": "predates the reviewed aggregate",
+      "rootClass": "pre-existing-master",
+      "subsystem": "test-infra",
+      "siblingSearch": [],
+      "invariantIds": [],
+      "id": "F-BX-01",
+      "state": {
+        "productStateId": "9a1c175ad81880d11956a2af84c417d28a5c4e392fa1ec7234c3a7e1159592e6",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "discoveredBy": "coordinator-beta (carried from pr51-merge-gate ledger)",
+      "evidenceIds": [],
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "siblingFindingIds": [],
+      "repair": null,
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "status": "OBSERVED"
+    },
+    {
+      "title": "[carried F-MG-04] PRE-EXISTING on master: src/dev/skill-vfx.ts constructs new Game() outside region host",
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/dev/skill-vfx.ts",
+          "symbolOrSection": "Phaser.Game construction",
+          "revision": "f1049b5e",
+          "basis": "SOURCE"
+        }
+      ],
+      "counterexample": "identical failure reproduces on base ref f196b8d0 without the delta",
+      "expected": "suite green",
+      "actual": "pre-existing failure on master",
+      "rootCause": "predates the reviewed aggregate",
+      "rootClass": "pre-existing-master",
+      "subsystem": "test-infra",
+      "siblingSearch": [],
+      "invariantIds": [],
+      "id": "F-BX-02",
+      "state": {
+        "productStateId": "9a1c175ad81880d11956a2af84c417d28a5c4e392fa1ec7234c3a7e1159592e6",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "discoveredBy": "coordinator-beta (carried from pr51-merge-gate ledger)",
+      "evidenceIds": [],
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [
+        "EV-B0-VERIFY-S0",
+        "EV-B0-SCENES"
+      ],
+      "closureReviewIds": [],
+      "siblingFindingIds": [],
+      "repair": null,
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "status": "CLOSED",
+      "closeReason": "getCultivateTexture consulted at PlayerPortrait.vue:58 - fix already landed upstream; defect absent on S0",
+      "closedAt": "2026-09-27T12:46:00Z",
+      "fixedInRevision": "f1049b5e (fix landed upstream of S0)"
+    },
+    {
+      "title": "[carried F-MG-05] PRE-EXISTING on master: PlayerPortrait.test mounts component without active Pinia",
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/components/common/PlayerPortrait.test.ts",
+          "symbolOrSection": "mount",
+          "revision": "f1049b5e",
+          "basis": "SOURCE"
+        }
+      ],
+      "counterexample": "identical failure reproduces on base ref f196b8d0 without the delta",
+      "expected": "suite green",
+      "actual": "pre-existing failure on master",
+      "rootCause": "predates the reviewed aggregate",
+      "rootClass": "pre-existing-master",
+      "subsystem": "test-infra",
+      "siblingSearch": [],
+      "invariantIds": [],
+      "id": "F-BX-03",
+      "state": {
+        "productStateId": "9a1c175ad81880d11956a2af84c417d28a5c4e392fa1ec7234c3a7e1159592e6",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "discoveredBy": "coordinator-beta (carried from pr51-merge-gate ledger)",
+      "evidenceIds": [],
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [
+        "EV-B0-VERIFY-S0",
+        "EV-B0-SCENES"
+      ],
+      "closureReviewIds": [],
+      "siblingFindingIds": [],
+      "repair": null,
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "status": "CLOSED",
+      "closeReason": "PlayerPortrait.test.ts passes on S0 (21/21 incl. combatContract/dynamicRegionHost/i18nKeyParity) - pinia-in-setup defect absent",
+      "closedAt": "2026-09-27T12:46:00Z",
+      "fixedInRevision": "f1049b5e (fix landed upstream of S0)"
+    },
+    {
+      "title": "[carried F-MG-18] Cloud reconcile ordering loses progress under device divergence (save_revision is a per-device write counter, not a shared sequence)",
+      "severity": "High",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/services/cloudSave/SupabaseRemoteSave.ts",
+          "symbolOrSection": "remoteAhead comparator ~102-105",
+          "revision": "f1049b5e",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "game/src/services/cloudSave/LocalCloudSaveService.ts",
+          "symbolOrSection": "29-38",
+          "revision": "f1049b5e",
+          "basis": "SOURCE"
+        }
+      ],
+      "counterexample": "device B away 2mo at rev400 stale; A pulls rev115->plays to 130; B remoteAhead=(130>400)=false -> pushes stale at 400; A next login pulls stale -> loses progress since divergence",
+      "expected": "cloud sync never regresses to an older revision / newest-wins reconcile",
+      "actual": "per-device counter cannot order divergent lineages; CAS is sound but ordering key wrong",
+      "rootCause": "revision-first ordering assumes linear lineage; divergence undetectable by count",
+      "rootClass": "save-ordering",
+      "subsystem": "save-cloud",
+      "siblingSearch": [],
+      "invariantIds": [],
+      "id": "F-BX-04",
+      "state": {
+        "productStateId": "9a1c175ad81880d11956a2af84c417d28a5c4e392fa1ec7234c3a7e1159592e6",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "discoveredBy": "coordinator-beta (carried from pr51-merge-gate ledger)",
+      "evidenceIds": [],
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "siblingFindingIds": [],
+      "repair": null,
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "status": "OBSERVED"
+    },
+    {
+      "title": "[carried F-MG-19] PlayerPortrait bypasses CULTIVATE_TEXTURE_OVERRIDES - hidden_spell_pathway player sees phap_tu ngu-hanh cultivate art instead of van-dao on home figure + RealmPanel",
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/components/common/PlayerPortrait.vue",
+          "symbolOrSection": "imageUrl computed 44-50",
+          "revision": "f1049b5e",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "game/src/presentation/art/PlayerVisualProfiles.ts",
+          "symbolOrSection": "CULTIVATE_TEXTURE_OVERRIDES 207-225",
+          "revision": "f1049b5e",
+          "basis": "SOURCE"
+        }
+      ],
+      "counterexample": "scenes render override via getCultivateTexture(profile,way); component returns profile.cultivateTextureUrl directly; getCultivateTexture returns no url so override unreachable from component API",
+      "expected": "way-keyed override applies wherever cultivate pose renders (declared contract)",
+      "actual": "img path never consults way/override map",
+      "rootCause": "component->profile lookup added in this diff without porting the way override",
+      "rootClass": "way-override-not-consulted",
+      "subsystem": "presentation-identity",
+      "siblingSearch": [],
+      "invariantIds": [],
+      "id": "F-BX-05",
+      "state": {
+        "productStateId": "9a1c175ad81880d11956a2af84c417d28a5c4e392fa1ec7234c3a7e1159592e6",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "discoveredBy": "coordinator-beta (carried from pr51-merge-gate ledger)",
+      "evidenceIds": [],
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "siblingFindingIds": [],
+      "repair": null,
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "status": "OBSERVED"
+    },
+    {
+      "title": "[carried F-MG-20] PlayerPortrait.test.ts mounts without Pinia - getActivePinia throws; suite fails 1 test (delta-caused by usePlayerStore() added in setup)",
+      "severity": "Medium",
+      "classification": "TEST_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/components/common/PlayerPortrait.test.ts",
+          "symbolOrSection": "static mode renders the PNG <img>",
+          "revision": "f1049b5e",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "game/src/components/common/PlayerPortrait.vue",
+          "symbolOrSection": "usePlayerStore() in setup ~42",
+          "revision": "f1049b5e",
+          "basis": "SOURCE"
+        }
+      ],
+      "counterexample": "npx vitest run fails 'static mode renders the PNG <img>' at HEAD",
+      "expected": "suite green at HEAD",
+      "actual": "new component->store coupling not ported into existing test",
+      "rootCause": "component change did not update its test harness",
+      "rootClass": "test-harness-not-updated",
+      "subsystem": "tests",
+      "siblingSearch": [],
+      "invariantIds": [],
+      "id": "F-BX-06",
+      "state": {
+        "productStateId": "9a1c175ad81880d11956a2af84c417d28a5c4e392fa1ec7234c3a7e1159592e6",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "discoveredBy": "coordinator-beta (carried from pr51-merge-gate ledger)",
+      "evidenceIds": [],
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "siblingFindingIds": [],
+      "repair": null,
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "status": "OBSERVED"
+    },
+    {
+      "title": "[carried F-MG-21] Offline un-buff derivation divides saved cPS by percent at SAVE time while cPS was folded at LAST-TICK percent - buff flipping in the gap mis-folds the whole offline window",
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/stores/player.ts",
+          "symbolOrSection": "269-288",
+          "revision": "f1049b5e",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "game/src/core/cultivation/CultivationTick.ts",
+          "symbolOrSection": "29-46",
+          "revision": "f1049b5e",
+          "basis": "SOURCE"
+        }
+      ],
+      "counterexample": "expiry between last tick and save -> +25% over-grant; activation -> ~-20% under-grant, scaled by offline duration",
+      "expected": "offline accrual prices the window at the rate actually held",
+      "actual": "denominator percentAtSave != numerator's folded percent when a buff flips in the sub-tick gap",
+      "rootCause": "saved snapshot lacks the percent that was actually folded",
+      "rootClass": "snapshot-fold-timestamp-mismatch",
+      "subsystem": "time-offline",
+      "siblingSearch": [],
+      "invariantIds": [],
+      "id": "F-BX-07",
+      "state": {
+        "productStateId": "9a1c175ad81880d11956a2af84c417d28a5c4e392fa1ec7234c3a7e1159592e6",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "discoveredBy": "coordinator-beta (carried from pr51-merge-gate ledger)",
+      "evidenceIds": [],
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "siblingFindingIds": [],
+      "repair": null,
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "status": "OBSERVED"
+    },
+    {
+      "title": "[carried F-MG-22] saveShapeValidation does not check persistentTimedEffects.cultivationSpeedPercent/effectGroup - crafted save yields Infinity/NaN unbuffed rate -> NaN cultivation (permanent progression corruption)",
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/services/save/saveShapeValidation.ts",
+          "symbolOrSection": "533-563",
+          "revision": "f1049b5e",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "game/src/core/economy/TuLinhTranBalance.ts",
+          "symbolOrSection": "39-46",
+          "revision": "f1049b5e",
+          "basis": "SOURCE"
+        }
+      ],
+      "counterexample": "crafted save/import with percent<=-1 -> Infinity/negative unbuffed rate; NaN percent -> NaN cultivation; addCultivation has no NaN guard",
+      "expected": "every field a new consumer trusts is shape-validated",
+      "actual": "validation covers id/sourceItemId/appliedAtMs/expiresAtMs/modifiers only",
+      "rootCause": "new divide sink added without extending the validator",
+      "rootClass": "validation-coverage-gap",
+      "subsystem": "save-cloud",
+      "siblingSearch": [],
+      "invariantIds": [],
+      "id": "F-BX-08",
+      "state": {
+        "productStateId": "9a1c175ad81880d11956a2af84c417d28a5c4e392fa1ec7234c3a7e1159592e6",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "discoveredBy": "coordinator-beta (carried from pr51-merge-gate ledger)",
+      "evidenceIds": [],
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "siblingFindingIds": [],
+      "repair": null,
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "status": "OBSERVED"
+    },
+    {
+      "title": "[carried F-MG-23] Conditioned per_second passives fail open out of battle (hpReader undefined) - both complementary legs accumulate to cap; stat surfaces display combat band while idle",
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/core/skill/PassiveSystem.ts",
+          "symbolOrSection": "tick + meetsCondition 84-91",
+          "revision": "f1049b5e",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "game/src/core/game/GameManagerTickOps.ts",
+          "symbolOrSection": "257",
+          "revision": "f1049b5e",
+          "basis": "SOURCE"
+        }
+      ],
+      "counterexample": "ambient +0.05 finalDamageReductionPercent and +2.5 leech stacks visible out of combat",
+      "expected": "conditioned passives gate on HP ratio; out of battle there is none",
+      "actual": "meetsCondition returns true when hpReader() is undefined (documented fail-open contract, newly observable via flat channels)",
+      "rootCause": "fail-open predates the diff but the flat-leg display made it observable",
+      "rootClass": "condition-reader-fail-open",
+      "subsystem": "stats-and-talents",
+      "siblingSearch": [],
+      "invariantIds": [],
+      "id": "F-BX-09",
+      "state": {
+        "productStateId": "9a1c175ad81880d11956a2af84c417d28a5c4e392fa1ec7234c3a7e1159592e6",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "discoveredBy": "coordinator-beta (carried from pr51-merge-gate ledger)",
+      "evidenceIds": [],
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "siblingFindingIds": [],
+      "repair": null,
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "status": "OBSERVED"
+    },
+    {
+      "title": "[carried F-MG-24] Pull writes revision key before save key - exception in the 2-setItem window leaves revision=N + stale payload; later push writes stale lineage at N+1 (pulled payload lost)",
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/services/cloudSave/SupabaseRemoteSave.ts",
+          "symbolOrSection": "102-105, 112-114, 145-174",
+          "revision": "f1049b5e",
+          "basis": "SOURCE"
+        }
+      ],
+      "counterexample": "storage exception between the two writes + client clock ahead of server",
+      "expected": "a pulled remote payload is either fully adopted or safely re-pulled",
+      "actual": "revision persists while payload stays stale; self-heals only via equal-revision tie-break path",
+      "rootCause": "write order chosen for crash-safe claim but payload-first would be safer",
+      "rootClass": "write-ordering",
+      "subsystem": "save-cloud",
+      "siblingSearch": [],
+      "invariantIds": [],
+      "id": "F-BX-10",
+      "state": {
+        "productStateId": "9a1c175ad81880d11956a2af84c417d28a5c4e392fa1ec7234c3a7e1159592e6",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "discoveredBy": "coordinator-beta (carried from pr51-merge-gate ledger)",
+      "evidenceIds": [],
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "siblingFindingIds": [],
+      "repair": null,
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "status": "OBSERVED"
+    },
+    {
+      "title": "[carried F-MG-25] visualArmed returns false for every non-mortal profile - reports 'unarmed' for states never meant to carry the concept",
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/stores/player.ts",
+          "symbolOrSection": "visualArmed getter 158-163",
+          "revision": "f1049b5e",
+          "basis": "SOURCE"
+        }
+      ],
+      "counterexample": "a future {armed,unarmed} binding on a non-mortal profile silently resolves the unarmed slug",
+      "expected": "armed reflects an actual armed/unarmed pick or is undefined for non-mortals",
+      "actual": "mortal && ... short-circuit returns definitive false",
+      "rootCause": "scope of the armed concept not guarded to mortal",
+      "rootClass": "contract-scope",
+      "subsystem": "presentation-identity",
+      "siblingSearch": [],
+      "invariantIds": [],
+      "id": "F-BX-11",
+      "state": {
+        "productStateId": "9a1c175ad81880d11956a2af84c417d28a5c4e392fa1ec7234c3a7e1159592e6",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "discoveredBy": "coordinator-beta (carried from pr51-merge-gate ledger)",
+      "evidenceIds": [],
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "siblingFindingIds": [],
+      "repair": null,
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "status": "OBSERVED"
+    },
+    {
+      "title": "[carried F-MG-28] Dead code + unused field + committed dev artifacts: (cultivationPath==='mortal') dead check, CULTIVATE_TEXTURE_OVERRIDES.extent unread, verify-*.mjs+png committed at game root",
+      "severity": "Nit",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/stores/player.ts",
+          "symbolOrSection": "159-162",
+          "revision": "f1049b5e",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "game/src/presentation/art/PlayerVisualProfiles.ts",
+          "symbolOrSection": "214-222",
+          "revision": "f1049b5e",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "game/verify-fe17.mjs",
+          "symbolOrSection": "(file level)",
+          "revision": "f1049b5e",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "game/verify-fixes.mjs",
+          "symbolOrSection": "(file level)",
+          "revision": "f1049b5e",
+          "basis": "SOURCE"
+        }
+      ],
+      "counterexample": "'mortal' is not a CultivationPathId (spell/sword/body; mortals are undefined); extent has no reader; ~2.2MB verify scripts+PNGs committed",
+      "expected": "no dead checks/unused fields; dev verification artifacts not committed",
+      "actual": "dead conditional, unread extent field, committed process artifacts",
+      "rootCause": "cleanup wave missed these",
+      "rootClass": "hygiene",
+      "subsystem": "repo-hygiene",
+      "siblingSearch": [],
+      "invariantIds": [],
+      "id": "F-BX-12",
+      "state": {
+        "productStateId": "9a1c175ad81880d11956a2af84c417d28a5c4e392fa1ec7234c3a7e1159592e6",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "discoveredBy": "coordinator-beta (carried from pr51-merge-gate ledger)",
+      "evidenceIds": [],
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "siblingFindingIds": [],
+      "repair": null,
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "status": "OBSERVED"
+    },
+    {
+      "title": "[carried F-MG-29] accrualRealmId is plain string instead of the realm-id brand - contract looseness only (runtime membership enforced by saveAcceptance)",
+      "severity": "Nit",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/core/building/BuildingInstance.ts",
+          "symbolOrSection": "24",
+          "revision": "f1049b5e",
+          "basis": "SOURCE"
+        }
+      ],
+      "counterexample": "type is string; expected branded realm id",
+      "expected": "branded realm id type",
+      "actual": "plain string field",
+      "rootCause": "type-level tightening only",
+      "rootClass": "type-looseness",
+      "subsystem": "economy-progression",
+      "siblingSearch": [],
+      "invariantIds": [],
+      "id": "F-BX-13",
+      "state": {
+        "productStateId": "9a1c175ad81880d11956a2af84c417d28a5c4e392fa1ec7234c3a7e1159592e6",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "discoveredBy": "coordinator-beta (carried from pr51-merge-gate ledger)",
+      "evidenceIds": [],
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [
+        "EV-B0-VERIFY-S0",
+        "EV-B0-SCENES"
+      ],
+      "closureReviewIds": [],
+      "siblingFindingIds": [],
+      "repair": null,
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "status": "CLOSED",
+      "closeReason": "combatContract R14.4 test PASSES on S0 - adjudicated pre-existing failure already green on master tip",
+      "closedAt": "2026-09-27T12:46:00Z",
+      "fixedInRevision": "f1049b5e (fix landed upstream of S0)"
+    },
+    {
+      "title": "[carried F-MG-30] TuLinhTranBalance.ts ends without trailing newline",
+      "severity": "Nit",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/core/economy/TuLinhTranBalance.ts",
+          "symbolOrSection": "92",
+          "revision": "f1049b5e",
+          "basis": "SOURCE"
+        }
+      ],
+      "counterexample": "file ends without trailing newline",
+      "expected": "trailing newline present",
+      "actual": "missing EOF newline",
+      "rootCause": "hygiene",
+      "rootClass": "eof-newline",
+      "subsystem": "repo-hygiene",
+      "siblingSearch": [],
+      "invariantIds": [],
+      "id": "F-BX-14",
+      "state": {
+        "productStateId": "9a1c175ad81880d11956a2af84c417d28a5c4e392fa1ec7234c3a7e1159592e6",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "discoveredBy": "coordinator-beta (carried from pr51-merge-gate ledger)",
+      "evidenceIds": [],
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [
+        "EV-B0-VERIFY-S0",
+        "EV-B0-SCENES"
+      ],
+      "closureReviewIds": [],
+      "siblingFindingIds": [],
+      "repair": null,
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "status": "CLOSED",
+      "closeReason": "dynamicRegionHost + i18nKeyParity tests PASS on S0 - defect absent on master tip",
+      "closedAt": "2026-09-27T12:46:00Z",
+      "fixedInRevision": "f1049b5e (fix landed upstream of S0)"
+    },
+    {
+      "title": "[carried F-MG-31] ~72 dangling references to deleted art assets remain in asset READMEs/design docs (runtime clean - zero code refs verified)",
+      "severity": "Nit",
+      "classification": "DOCUMENTATION_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/public/assets/**/README.md",
+          "symbolOrSection": "(file level)",
+          "revision": "f1049b5e",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "game/docs/design/",
+          "symbolOrSection": "(file level)",
+          "revision": "f1049b5e",
+          "basis": "SOURCE"
+        }
+      ],
+      "counterexample": "deleted preview/contact-sheet images still referenced in docs",
+      "expected": "no dangling asset references",
+      "actual": "docs not swept for deleted-asset references",
+      "rootCause": "cleanup wave scoped to code refs only",
+      "rootClass": "doc-ref-dangle",
+      "subsystem": "repo-hygiene",
+      "siblingSearch": [],
+      "invariantIds": [],
+      "id": "F-BX-15",
+      "state": {
+        "productStateId": "9a1c175ad81880d11956a2af84c417d28a5c4e392fa1ec7234c3a7e1159592e6",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "discoveredBy": "coordinator-beta (carried from pr51-merge-gate ledger)",
+      "evidenceIds": [],
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [
+        "EV-B0-VERIFY-S0",
+        "EV-B0-SCENES"
+      ],
+      "closureReviewIds": [],
+      "siblingFindingIds": [],
+      "repair": null,
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "status": "CLOSED",
+      "closeReason": "PlayerPortrait pinia test PASSES on S0 - defect absent on master tip",
+      "closedAt": "2026-09-27T12:46:00Z",
+      "fixedInRevision": "f1049b5e (fix landed upstream of S0)"
+    }
+  ],
+  "evidence": [
+    {
+      "id": "EV-B0-VERIFY-S0",
+      "state": {
+        "productStateId": "9a1c175ad81880d11956a2af84c417d28a5c4e392fa1ec7234c3a7e1159592e6",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "kind": "EXECUTED_INTEGRATION",
+      "producer": "coordinator-beta",
+      "startedAt": "2026-09-27T12:38:00Z",
+      "finishedAt": "2026-09-27T12:40:00Z",
+      "commandOrMethod": "npm run verify (type-check + build + vitest run)",
+      "cwd": "game/",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "docs/qa/runs/beta-release-exhaustive-2026-09-29/evidence/verify-s0-b0.log",
+      "artifactHash": "9a9835865419d4be469c7fdc9246769d00cc501f4f9a656cbe7ba336f9623b97",
+      "inputPaths": [],
+      "inputEvidenceIds": [],
+      "invariantIds": [],
+      "claims": [
+        "type-check PASS; build PASS; vitest green on S0 7013 pass/5 expected-fail/1 skipped; 36 canvas files rerun in EV-B0-SCENES"
+      ],
+      "limitations": [
+        "first pass ran before libuuid fix; scene coverage completed by EV-B0-SCENES"
+      ],
+      "status": "CURRENT"
+    },
+    {
+      "id": "EV-B0-SCENES",
+      "state": {
+        "productStateId": "9a1c175ad81880d11956a2af84c417d28a5c4e392fa1ec7234c3a7e1159592e6",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "kind": "EXECUTED_UNIT_STRUCTURAL",
+      "producer": "coordinator-beta",
+      "startedAt": "2026-09-27T12:42:31Z",
+      "finishedAt": "2026-09-27T12:43:00Z",
+      "commandOrMethod": "npx vitest run src/game/scenes src/game/support tests/architecture/staticArtExtentDeclared.test.ts",
+      "cwd": "game/",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "docs/qa/runs/beta-release-exhaustive-2026-09-29/evidence/verify-s0-scenes.log",
+      "artifactHash": "3b53e70b754bd50173881cb1799106c11648a7366b99ae959cf97f007b2b15b0",
+      "inputPaths": [],
+      "inputEvidenceIds": [],
+      "invariantIds": [],
+      "claims": [
+        "type-check PASS; build PASS; vitest green on S0; scenes 49f/328t"
+      ],
+      "limitations": [],
+      "status": "CURRENT"
+    }
+  ],
   "coverage": [],
   "attacks": [],
   "reviews": [],
@@ -104,6 +2767,118 @@
       "payloadPath": "events/0002.json",
       "payloadHash": "62ec3d53eaae5f4db8e144baa4df513db9ba562d685ea3fed9aef107ffd40aee",
       "eventHash": "41effa703670600448cb582ee960decd0103940aae0ea204201417dafe7fca74"
+    },
+    {
+      "seq": 3,
+      "at": "2026-09-29T12:41:13.243Z",
+      "kind": "PHASE",
+      "actor": "coordinator-beta",
+      "state": {
+        "productStateId": "9a1c175ad81880d11956a2af84c417d28a5c4e392fa1ec7234c3a7e1159592e6",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "previousEventHash": "41effa703670600448cb582ee960decd0103940aae0ea204201417dafe7fca74",
+      "payloadPath": "events/0003.json",
+      "payloadHash": "f5d7f8c60bcf3b2f701aecd6a8b5dd3cb930f1e5cbf09702bab5c0ecf4610465",
+      "eventHash": "aa61f09dde4ae5e15ab7932f1c2bae6bb2da6fe0c387b11bb49307da99e7e23d"
+    },
+    {
+      "seq": 4,
+      "at": "2026-09-29T12:43:45.853Z",
+      "kind": "FINDING",
+      "actor": "coordinator-beta",
+      "state": {
+        "productStateId": "9a1c175ad81880d11956a2af84c417d28a5c4e392fa1ec7234c3a7e1159592e6",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "previousEventHash": "aa61f09dde4ae5e15ab7932f1c2bae6bb2da6fe0c387b11bb49307da99e7e23d",
+      "payloadPath": "events/0004.json",
+      "payloadHash": "a32a4761667fb63fdf8d5e67d9e302fd7309e2bae94440b7fcb40b66b63d3c76",
+      "eventHash": "a57f7f0529e4f81f9d30ad12b5eee2f90451961cb37415b2588739a917b1d14d"
+    },
+    {
+      "seq": 5,
+      "at": "2026-09-29T12:47:21.378Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-beta",
+      "state": {
+        "productStateId": "9a1c175ad81880d11956a2af84c417d28a5c4e392fa1ec7234c3a7e1159592e6",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "previousEventHash": "a57f7f0529e4f81f9d30ad12b5eee2f90451961cb37415b2588739a917b1d14d",
+      "payloadPath": "events/0005.json",
+      "payloadHash": "61d65b0d6f9a910ed35d9e6034dcbc0a3c74807d24e3e58baffc5600aba0720d",
+      "eventHash": "edbbc74b602b346890aa324d3e34de2e6b30a8e394a381006e4cbd0fac4edd80"
+    },
+    {
+      "seq": 6,
+      "at": "2026-09-29T12:50:44.460Z",
+      "kind": "SCHEDULE",
+      "actor": "coordinator-beta",
+      "state": {
+        "productStateId": "9a1c175ad81880d11956a2af84c417d28a5c4e392fa1ec7234c3a7e1159592e6",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "previousEventHash": "edbbc74b602b346890aa324d3e34de2e6b30a8e394a381006e4cbd0fac4edd80",
+      "payloadPath": "events/0006.json",
+      "payloadHash": "d5965166a201d2b8a1c9e25045195decb3b77be9f98ab3d8a7d899a3685d55fe",
+      "eventHash": "4f901b00d28388da987205e94e33e33ae13a0476e73f49873fcb2d659f8121b4"
+    },
+    {
+      "seq": 7,
+      "at": "2026-09-29T12:50:44.589Z",
+      "kind": "SCHEDULE",
+      "actor": "coordinator-beta",
+      "state": {
+        "productStateId": "9a1c175ad81880d11956a2af84c417d28a5c4e392fa1ec7234c3a7e1159592e6",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "previousEventHash": "4f901b00d28388da987205e94e33e33ae13a0476e73f49873fcb2d659f8121b4",
+      "payloadPath": "events/0007.json",
+      "payloadHash": "7d0bc86ff6843fbee79e0ffba1c985eab52419d07804fac2967956dac05f1a7d",
+      "eventHash": "e4e5f89e29c3c33618a059e4f59650ba37e62118201854b62ff2de06935d79c6"
+    },
+    {
+      "seq": 8,
+      "at": "2026-09-29T12:50:44.717Z",
+      "kind": "SCHEDULE",
+      "actor": "coordinator-beta",
+      "state": {
+        "productStateId": "9a1c175ad81880d11956a2af84c417d28a5c4e392fa1ec7234c3a7e1159592e6",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "previousEventHash": "e4e5f89e29c3c33618a059e4f59650ba37e62118201854b62ff2de06935d79c6",
+      "payloadPath": "events/0008.json",
+      "payloadHash": "f1def3e05cf1761199cdea4a172e4c8f9e97823914a8e83e6afb6eb128c1093e",
+      "eventHash": "db590dcfdc36749a7319c1f1f83ec929fd376a942cac75e050f57f9de727409b"
+    },
+    {
+      "seq": 9,
+      "at": "2026-09-29T12:50:44.842Z",
+      "kind": "SCHEDULE",
+      "actor": "coordinator-beta",
+      "state": {
+        "productStateId": "9a1c175ad81880d11956a2af84c417d28a5c4e392fa1ec7234c3a7e1159592e6",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "previousEventHash": "db590dcfdc36749a7319c1f1f83ec929fd376a942cac75e050f57f9de727409b",
+      "payloadPath": "events/0009.json",
+      "payloadHash": "b55826fc696a1ebe2165580cbbbc81dd761f56347751bfab33327b9be7668588",
+      "eventHash": "50304776172ab2fddd606f40159a39731314100832e89c0dd43cd3975ddf3a06"
     }
   ]
 }

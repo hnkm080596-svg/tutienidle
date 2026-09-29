@@ -1,0 +1,38 @@
+{
+  "action": "admit",
+  "assignment": {
+    "id": "ASG-BX-CRT",
+    "parentId": null,
+    "capacityScope": "swe2-slot",
+    "inputBundleHash": "a575fd82c283478673e9069776f9a0515978e03a3b59e5a6011f3d696c68fac4",
+    "dependencies": [],
+    "requiredCapabilities": [
+      "exec",
+      "repo-read"
+    ],
+    "writeSurface": [
+      "blind correctness audit: bootstrap+creation+identity on S0"
+    ],
+    "readiness": "READY",
+    "status": "QUEUED",
+    "reservedAt": null,
+    "observedRuntimeId": "devin-bcdb6981eb8d4796bfdaba2f0a51b59d",
+    "releaseEvidence": null,
+    "resultRef": null,
+    "timeoutState": null,
+    "history": [
+      {
+        "at": "2026-09-27T13:56:00Z",
+        "from": "-",
+        "to": "CREATED",
+        "reason": "wave-0 dispatch"
+      },
+      {
+        "at": "2026-09-27T13:56:00Z",
+        "from": "CREATED",
+        "to": "QUEUED",
+        "reason": "prompt delivered"
+      }
+    ]
+  }
+}

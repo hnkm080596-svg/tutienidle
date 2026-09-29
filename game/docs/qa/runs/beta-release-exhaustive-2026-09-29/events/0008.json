@@ -1,0 +1,38 @@
+{
+  "action": "admit",
+  "assignment": {
+    "id": "ASG-BX-LRN",
+    "parentId": null,
+    "capacityScope": "swe2-slot",
+    "inputBundleHash": "eb11595aa87c05b13ba66677cbeb1fde8f2ec5ce3b28af447b1f6ee4f014d908",
+    "dependencies": [],
+    "requiredCapabilities": [
+      "exec",
+      "repo-read"
+    ],
+    "writeSurface": [
+      "read-only learned-defects replay on S0"
+    ],
+    "readiness": "READY",
+    "status": "QUEUED",
+    "reservedAt": null,
+    "observedRuntimeId": "devin-8c1d32bb66294cc88ea8daadfac3d5ec",
+    "releaseEvidence": null,
+    "resultRef": null,
+    "timeoutState": null,
+    "history": [
+      {
+        "at": "2026-09-27T13:56:00Z",
+        "from": "-",
+        "to": "CREATED",
+        "reason": "wave-0 dispatch"
+      },
+      {
+        "at": "2026-09-27T13:56:00Z",
+        "from": "CREATED",
+        "to": "QUEUED",
+        "reason": "prompt delivered"
+      }
+    ]
+  }
+}
