@@ -566,4 +566,23 @@ describe('importSaveRaw', () => {
     expect(importSaveRaw(JSON.stringify(validSave()))).toBe(false)
     expect(localStorage.getItem(IMPORT_DISCARDED_EQUIPMENT_COUNT_KEY)).toBeNull()
   })
+
+  it('import bumps the CAS revision so the next login pull cannot overwrite the imported save (F-BX-34)', () => {
+    localStorage.setItem(SAVE_KEY, VALID_RAW)
+    localStorage.setItem(SAVE_REVISION_KEY, '7')
+
+    // The imported payload is new local lineage: an unchanged counter
+    // leaves the remote row ahead, so the next-login reconcile pulls
+    // the remote save right back over the import before it is played.
+    expect(importSaveRaw(JSON.stringify(validSave()))).toBe(true)
+    expect(localStorage.getItem(SAVE_REVISION_KEY)).toBe('8')
+  })
+
+  it('a rejected import leaves the revision untouched (F-BX-34)', () => {
+    localStorage.setItem(SAVE_KEY, VALID_RAW)
+    localStorage.setItem(SAVE_REVISION_KEY, '7')
+
+    expect(importSaveRaw('not json')).toBe(false)
+    expect(localStorage.getItem(SAVE_REVISION_KEY)).toBe('7')
+  })
 })

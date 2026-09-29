@@ -15,6 +15,7 @@ import {
 } from './saveAcceptance'
 import { CURRENT_SAVE_VERSION } from './saveVersion'
 import {
+  readLocalSaveRevision,
   resolveBackupKey,
   resolveImportHandoffKey,
   resolveRevisionKey,
@@ -790,9 +791,24 @@ export function importSaveRaw(raw: string): boolean {
     return false
   }
 
+  // F-BX-34 - the import counts as new local lineage, so the CAS
+  // revision must move with it: leaving the pre-import counter lets
+  // the next login see the remote row ahead and pull it right back
+  // over the just-imported save. Revision-first, same order as
+  // LocalCloudSaveService.save (9.11): a torn pair (new revision +
+  // old save) converges through CAS mismatch -> coordinator resync,
+  // while new-save + old-revision would lose the import silently.
+  const priorRevision = readLocalSaveRevision()
   try {
+    localStorage.setItem(resolveRevisionKey(), String(priorRevision + 1))
     localStorage.setItem(resolveSaveKey(), normalizedRaw)
   } catch {
+    try {
+      localStorage.setItem(resolveRevisionKey(), String(priorRevision))
+    } catch {
+      // Rollback failure leaves new-revision + old-save - the safe
+      // torn state (next save CAS-mismatches and resyncs).
+    }
     restorePriorMarker()
     return false
   }
