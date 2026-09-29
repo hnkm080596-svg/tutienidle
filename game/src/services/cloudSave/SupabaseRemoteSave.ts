@@ -105,13 +105,15 @@ export async function syncRemoteSaveOnLogin(config: SupabaseConfig): Promise<Rem
         (remoteRow.save_revision === localRevision && remoteUpdatedMs > localLastSavedAt))
 
     if (remoteUsable && remoteAhead && remoteRow) {
-      // Revision-first, same convention as LocalCloudSaveService: a crash
-      // between the two writes leaves new-revision + old-save -> the next
-      // CAS mismatches and the coordinator resyncs - never a stale-
-      // revision split.
+      // Save-first (F5): a crash after the save write but before the
+      // revision write leaves old-revision + new-save -> the next login
+      // still sees the remote row ahead and re-pulls, self-healing to the
+      // same bytes. The reverse order leaves new-revision + old-save ->
+      // remoteAhead is false and the stale local save pushes right back
+      // over the remote row that was just pulled.
       const pulledRaw = JSON.stringify(remoteUsable.normalizedSave)
-      localStorage.setItem(resolveRevisionKey(), String(remoteRow.save_revision))
       localStorage.setItem(resolveSaveKey(), pulledRaw)
+      localStorage.setItem(resolveRevisionKey(), String(remoteRow.save_revision))
       // Discard-notice parity with importSaveRaw: equipment dropped by
       // normalization on the pull seam reports through the same one-shot
       // handoff channel - bound to the exact stored bytes so a stale
