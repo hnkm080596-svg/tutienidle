@@ -6,6 +6,8 @@ import { useAudioStore } from '@/stores/audio'
 import { useGameManager } from '@/composables/useGameState'
 import { useNotificationStore } from '@/stores/notification'
 import { exportSaveToFile, getRawSave, importSaveRaw, SAVE_RESET_REQUEST_EVENT } from '@/services/save/SaveSystem'
+import { validateRecoveryData } from '@/services/save/recoveryApi'
+import { cloudSaveCoordinator } from '@/services/cloudSave/CloudSaveServiceFactory'
 import { UI_SCALE_OPTIONS, loadUiScale, saveUiScale } from '@/composables/uiScale'
 import { LOCALE_OPTIONS, saveLocale, type AppLocale } from '@/composables/locale'
 import ConfirmModal from '@/components/common/ConfirmModal.vue'
@@ -17,6 +19,13 @@ const gameManager = useGameManager()
 const notification = useNotificationStore()
 const audio = useAudioStore()
 const { t, locale } = useI18n()
+
+// B1.9a - under the remote authority the panel's recovery actions keep
+// different semantics: manual import validates/exports the file instead
+// of overwriting (no client-side path can replace the cloud row), reset
+// clears the local cache so the authoritative load restores from cloud,
+// and export stamps its provenance + revision onto the filename.
+const remoteAuthoritative = cloudSaveCoordinator.capability === 'remote-authoritative'
 
 // W3: one slider per audio channel (field = store state, channel = bus id).
 const AUDIO_CHANNELS = [
@@ -105,7 +114,12 @@ async function handleExport() {
   const raw = getRawSave()
 
   if (raw) {
-    exportSaveToFile(raw)
+    exportSaveToFile(
+      raw,
+      remoteAuthoritative
+        ? { source: 'cloud', revision: cloudSaveCoordinator.getRevision() }
+        : { source: 'local', revision: cloudSaveCoordinator.getRevision() },
+    )
   }
 }
 
@@ -121,12 +135,32 @@ function handleImportFile(event: Event) {
 
   requestConfirm(
     t('panels.settings.confirm.importTitle'),
-    t('panels.settings.confirm.importBody'),
+    remoteAuthoritative
+      ? t('panels.settings.confirm.importBodyRemote')
+      : t('panels.settings.confirm.importBody'),
     () => {
       const reader = new FileReader()
 
       reader.onload = () => {
-        const ok = importSaveRaw(String(reader.result))
+        const rawText = String(reader.result)
+
+        if (remoteAuthoritative) {
+          // Remote mode: validate the recovery file only. A consumable
+          // payload is exported back normalized (identified by source +
+          // revision); the cloud row and the local cache stay untouched.
+          const validation = validateRecoveryData(rawText)
+
+          if (validation.status === 'valid') {
+            exportSaveToFile(validation.normalizedRaw, { source: 'recovery-import' })
+            notification.push('save', t('panels.settings.notifications.importValidatedRemote'))
+          } else {
+            notification.push('error', t('panels.settings.errors.invalidSaveFile'))
+          }
+
+          return
+        }
+
+        const ok = importSaveRaw(rawText)
 
         if (ok) {
           window.location.reload()
@@ -145,8 +179,12 @@ function handleImportFile(event: Event) {
 
 function handleReset() {
   requestConfirm(
-    t('panels.settings.confirm.resetTitle'),
-    t('panels.settings.confirm.resetBody'),
+    remoteAuthoritative
+      ? t('panels.settings.confirm.resetCloudTitle')
+      : t('panels.settings.confirm.resetTitle'),
+    remoteAuthoritative
+      ? t('panels.settings.confirm.resetCloudBody')
+      : t('panels.settings.confirm.resetBody'),
     // App phải dừng interval/pagehide autosave TRƯỚC khi xoá; nếu panel tự
     // reload, pagehide ghi lại chính save vừa xoá.
     () => window.dispatchEvent(new Event(SAVE_RESET_REQUEST_EVENT)),
@@ -181,7 +219,7 @@ function handleReset() {
           </label>
 
           <GameButton class="settings-panel__danger" variant="danger" @click="handleReset">
-            {{ t('panels.settings.actions.reset') }}
+            {{ remoteAuthoritative ? t('panels.settings.actions.resetCloud') : t('panels.settings.actions.reset') }}
           </GameButton>
         </div>
       </section>
@@ -407,7 +445,7 @@ function handleReset() {
   border-color: var(--chrome-500);
 }
 
-/* Audio — on/off + master volume. */
+/* Audio - on/off + master volume. */
 .settings-panel__audio h4 {
   margin: 0 0 8px;
   color: var(--paper-text);

@@ -1,9 +1,4 @@
 import type { CharacterCreationService } from './CharacterCreationService'
-import { characterCreationService as mockCharacterCreationService } from './MockCharacterCreationService'
-import { SupabaseCharacterCreationService } from './SupabaseCharacterCreationService'
-import { getSupabaseConfig } from '../supabase/SupabaseConfig'
+import { backendBundle } from '../backend/backendBundle'
 
-const config = getSupabaseConfig()
-export const characterCreationService: CharacterCreationService = config
-  ? new SupabaseCharacterCreationService(config)
-  : mockCharacterCreationService
+export const characterCreationService: CharacterCreationService = backendBundle.characterCreationService

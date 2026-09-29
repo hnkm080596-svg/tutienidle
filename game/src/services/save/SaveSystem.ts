@@ -9,6 +9,7 @@ import type {
   RestoreGameSessionResult,
 } from './saveTypes'
 import { validateGameSaveShape } from './saveShapeValidation'
+import { exportFilename, type ExportProvenance } from './recoveryApi'
 import {
   isSaveAcceptable,
   staticSaveAcceptanceCatalogs,
@@ -21,7 +22,7 @@ import {
   resolveSaveKey,
 } from './saveKeys'
 
-// large-file-split — save-shape interfaces (GameSave, stack saves,
+// large-file-split - save-shape interfaces (GameSave, stack saves,
 // production/alchemy save states, restore contract) live in
 // saveTypes.ts; re-exported so existing `from './SaveSystem'` imports
 // keep working unchanged.
@@ -98,7 +99,7 @@ export { CURRENT_SAVE_VERSION }
 // number` (thanh kinh nghiệm riêng của Tâm Pháp, xem
 // core/technique/TechniqueTier.ts). Save cũ thiếu field này — không
 // viết migration, cùng convention mọi version trước.
-// version 29 (2026-08-20): Realm Passive & Pressure System — player:
+// version 29 (2026-08-20): Realm Passive & Pressure System - player:
 // PlayerData thêm 4 field BẮT BUỘC MỚI `bodyRefinementCompletedTiers`/
 // `bodyRefinementCurrentTierProgress`/`breakthroughGrade`/
 // `grantedRealmPassiveIds` (Luyện Thể Phàm Nhân + Nhập Đạo/Kiến Cơ, xem
@@ -144,12 +145,12 @@ export { CURRENT_SAVE_VERSION }
 // trong Ngũ Hành hoàn tất redesign (Hỏa/Thủy/Mộc/Thổ/Kim). Save cũ
 // thiếu các field này — không viết migration, cùng convention mọi
 // version trước.
-// version 36 (2026-08-21): Plans/magicpathgeneral — Reaction Engine
+// version 36 (2026-08-21): Plans/magicpathgeneral - Reaction Engine
 // transaction refactor + DOT RES + Poison Recovery. baseStats (Stats)
 // thêm 2 field BẮT BUỘC MỚI `dotResistancePercent`/
 // `poisonRecoveryPercent` (xem core/combat/CombatSystem.ts's
 // applyDotDamage(), core/stats/StatTypes.ts). CŨNG đổi tên hiển
-// (2026-09-14 note: poisonRecoveryPercent has since retired — saves
+// (2026-09-14 note: poisonRecoveryPercent has since retired - saves
 // carrying it drop the key via the baseStats whitelist at restore.)
 // thị "Độc Căn" <-> "Mộc Thế" cho đúng semantic (KHÔNG đổi field/id
 // nào — save cũ tương thích với riêng phần này). Save cũ thiếu 2 field
@@ -192,8 +193,8 @@ export { CURRENT_SAVE_VERSION }
 // migrate không mất progression):
 // - player.persistentTimedEffects: mặc định [] (timed effect regen).
 // - materials map id cũ → mới: linh_thao_chung→mortal_herb_common_raw,
-//   quang_sat→mortal_ore_common_raw, thanh_linh_moc→mortal_wood_common_raw,
-//   huyen_thiet→mortal_ore_common_processed, phu_chi→mortal_wood_common_processed
+//   quang_sat->mortal_ore_common_raw, thanh_linh_moc->mortal_wood_common_raw,
+//   huyen_thiet->mortal_ore_common_processed, phu_chi->mortal_wood_common_processed
 //   (gộp amount nếu trùng id đích).
 // - legacy pills map to the nearest effect: healing->pill_regen_mortal,
 //   cultivation->pill_cultivation_mortal; permanent/buff do NOT become
@@ -204,7 +205,7 @@ export { CURRENT_SAVE_VERSION }
 // vòng kinh tế "Địa Giới → Lâm/Quáng/Động Thiên → Bag"):
 // - materials: map cặp raw/processed cũ về material TRỰC TIẾP mới theo
 //   bảng quy đổi cố định (không parse tên ID ngoài pattern đã chốt):
-//   wood_*_raw/processed → `<realm>_wood_decade`; ore_*_raw/processed →
+//   wood_*_raw/processed -> `<realm>_wood_decade`; ore_*_raw/processed ->
 //   `<realm>_ore_decade` (gp123 6E C2: trục tuổi thống nhất); herb_*_raw/processed → thảo Động Thiên decade
 //   đầu tiên của realm tương ứng (không xác định được đan phương cũ).
 // - Phu/Tran legacy RETIRED (sec.10.1): talismans/formations in the Bag
@@ -281,7 +282,7 @@ export function restoreGameSession(
     }
   }
 
-  // M1 (ARCH-001) — a mid-restore failure is a handled rejection, not an
+  // M1 (ARCH-001) - a mid-restore failure is a handled rejection, not an
   // uncaught boot exception. Identity hashes commit only after each owner
   // finished applying, so retrying the same payload re-applies the
   // un-committed slices instead of skipping them.
@@ -304,19 +305,19 @@ export function restoreGameSession(
 }
 
 /**
- * M1 (ARCH-001) — the snapshot-boundary detach. EVERY GameSave slice
+ * M1 (ARCH-001) - the snapshot-boundary detach. EVERY GameSave slice
  * must be a detached VALUE: mutating live manager state after the build,
  * or mutating the built save itself, must never reach the other side.
  *
  * JSON round-trip, NOT structuredClone: a save is also built from a
  * Pinia store's reactive $state (the player slice), and structuredClone
- * has no concept of Proxy exotic objects at ANY nesting depth — it throws
+ * has no concept of Proxy exotic objects at ANY nesting depth - it throws
  * DataCloneError the moment it meets one, including a nested field Vue
  * only wrapped in a Proxy lazily after some earlier getter/computed
- * touched it during actual gameplay (toRaw() alone is not sufficient —
+ * touched it during actual gameplay (toRaw() alone is not sufficient -
  * it only unwraps the outermost proxy). JSON.stringify/parse reads
  * through Proxies transparently at any depth, and the built save is
- * exactly what writeGameSave() serializes to localStorage anyway — the
+ * exactly what writeGameSave() serializes to localStorage anyway - the
  * in-memory snapshot now equals its persisted form byte-for-byte.
  */
 function detachSaveValue<T>(value: T): T {
@@ -334,7 +335,7 @@ export function buildGameSave(player: PlayerData, gameManager: GameManager): Gam
     },
 
     // Manager getters intentionally return LIVE domain objects for
-    // gameplay consumers — the detach happens HERE, at the save
+    // gameplay consumers - the detach happens HERE, at the save
     // boundary, so every slice in the returned save is a value copy.
     techniques: detachSaveValue(gameManager.techniqueManager.getAll()),
 
@@ -372,7 +373,7 @@ export function buildGameSave(player: PlayerData, gameManager: GameManager): Gam
 
       workerCycles: state.workerCycles?.length ? state.workerCycles : undefined,
 
-      // Mission A2 — manual allocation must persist; runtime-only
+      // Mission A2 - manual allocation must persist; runtime-only
       // activeWorkerSlots stays derived from live capacity (not saved).
       assignedWorkers: state.assignedWorkers,
 
@@ -430,7 +431,7 @@ export type LoadOutcome =
   | { status: 'ok'; save: GameSave; discardedEquipmentCount: number; raw: string }
   | { status: 'incompatible'; foundVersion: number | undefined; raw: string }
   | { status: 'corrupted'; raw: string }
-  // Mission A review (MA-R2-02) — storage access itself threw
+  // Mission A review (MA-R2-02) - storage access itself threw
   // (SecurityError/denied). Deliberately NOT 'empty': callers must not
   // start a new character over an unreadable existing save.
   | { status: 'storage_unavailable' }
@@ -537,7 +538,7 @@ export function loadGame(): LoadOutcome {
 
   const raw = inspected.raw
 
-  // Handoff marker is auxiliary — a read failure degrades to "no
+  // Handoff marker is auxiliary - a read failure degrades to "no
   // marker" (count lost, save still loads) instead of failing the load.
   let importedHandoffRaw: string | null = null
 
@@ -582,7 +583,7 @@ export function loadGame(): LoadOutcome {
     try {
       localStorage.removeItem(resolveImportHandoffKey())
     } catch {
-      // Marker persists harmlessly — next valid load consumes/removes it.
+      // Marker persists harmlessly - next valid load consumes/removes it.
     }
   }
 
@@ -651,10 +652,10 @@ export function restoreBackup(): boolean {
   }
 }
 
-// Mission A review (MA-R2-01) — returns observable success: callers
+// Mission A review (MA-R2-01) - returns observable success: callers
 // must only reload on `true`, otherwise a swallowed removeItem failure
 // would reload into the same corrupt save the user just tried to
-// delete. Every key is attempted even when one throws — aborting the
+// delete. Every key is attempted even when one throws - aborting the
 // loop early could leave a stale SAVE_REVISION_KEY that fails the next
 // character's first CAS write.
 export function deleteSave(): boolean {
@@ -683,26 +684,29 @@ export function deleteSave(): boolean {
 // đường thoát an toàn thật sự cho save không tương thích/hỏng, vì
 // BACKUP_KEY vẫn nằm trong cùng localStorage nên mất theo nếu người
 // dùng xoá site data.
-export function exportSaveToFile(raw: string) {
+// `provenance` (B1.9a) stamps source + revision onto the filename so a
+// cloud-acked export is distinguishable from a local-slot or
+// validated-import one.
+export function exportSaveToFile(raw: string, provenance?: ExportProvenance) {
   const blob = new Blob([raw], { type: 'application/json' })
   const url = URL.createObjectURL(blob)
 
   const link = document.createElement('a')
 
   link.href = url
-  link.download = `tien-hiep-idle-save-${Date.now()}.json`
+  link.download = exportFilename(provenance, Date.now())
   link.click()
 
   URL.revokeObjectURL(url)
 }
 
-// Nhập save từ nội dung file .json do người chơi chọn — kiểm tra parse
-// được + có field `version`/`player`, và nếu là save ĐÚNG version hiện
-// hành thì phải nguyên shape (validateGameSaveShape) mới cho ghi — chặn
-// ghi đè save tốt bằng một save hỏng ngay tại cửa nhập. Save version
-// KHÁC vẫn được ghi (loadGame() lần reload kế sẽ phân loại 'incompatible'
-// và cho Export/Xoá qua SaveIncompatibleScreen — đúng flow recovery hiện
-// có). Backup save hiện tại (nếu có) trước khi ghi đè.
+// Import a player-chosen .json save: parse must succeed and `version`/`player`
+// fields must exist; a save at EXACTLY the current version must also pass
+// validateGameSaveShape before writing - stops a broken save overwriting a
+// good one at the import gate. A DIFFERENT version is still written (the
+// reload's loadGame() then classifies it 'incompatible' and offers
+// Export/Delete via SaveIncompatibleScreen - the existing recovery flow).
+// Back up the current save (if any) before overwriting.
 export function importSaveRaw(raw: string): boolean {
   let parsed: unknown
   let normalizedRaw = raw
@@ -723,8 +727,8 @@ export function importSaveRaw(raw: string): boolean {
     return false
   }
 
-  // Chỉ enforce shape khi đúng version hiện hành — save version khác để
-  // loadGame() xử lý 'incompatible' (không chặn đường recovery của user).
+  // Enforce shape only at the current version - other versions are left
+  // for loadGame()'s 'incompatible' path (keeps the user's recovery route).
   if ((parsed as { version?: unknown }).version === CURRENT_SAVE_VERSION) {
     const shape = validateGameSaveShape(parsed)
 
@@ -745,9 +749,10 @@ export function importSaveRaw(raw: string): boolean {
     discardedEquipmentCount = shape.discardedEquipmentCount
   }
 
-  // Chuẩn bị handoff TRƯỚC khi đụng backup/save chính. Nếu storage không
-  // nhận được marker thì import thất bại nguyên vẹn thay vì thay save nhưng
-  // làm mất counter. Exact normalizedRaw ràng buộc marker với đúng payload.
+  // Prepare the handoff BEFORE touching backup/main save. If storage
+  // cannot accept the marker the import fails intact rather than writing
+  // a save but losing the counter. Exact normalizedRaw binds the marker
+  // to the right payload.
   // Snapshot the prior marker first: a pending marker written by the
   // other seam (remote pull writes it after its save) belongs to the
   // CURRENT save, so a later abort must restore it.
@@ -782,7 +787,7 @@ export function importSaveRaw(raw: string): boolean {
     return false
   }
 
-  // Mission A5 — backup failure aborts the import intact: overwriting
+  // Mission A5 - backup failure aborts the import intact: overwriting,
   // the only save without a written safety net is the unsafe outcome,
   // so a failed backup returns false with SAVE_KEY untouched.
   if (!backupCurrentSave()) {

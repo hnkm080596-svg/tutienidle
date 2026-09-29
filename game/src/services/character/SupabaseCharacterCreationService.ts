@@ -2,7 +2,7 @@ import type { TalentDefinition } from '@/core/talent/Talent'
 import type { SupabaseConfig } from '../supabase/SupabaseConfig'
 import { resolveSupabaseSession, type StoredSupabaseSession } from '../supabase/SupabaseSession'
 import { requestSupabase, SupabaseHttpError } from '../supabase/SupabaseHttp'
-import { CURRENT_SAVE_VERSION } from '../save/SaveSystem'
+import { parseRemoteCharacterMetadata, type RemoteCharacterMetadata } from '../session/BackendStatus'
 import {
   validateCharacterCreationDraft,
   type CharacterCreationDraft,
@@ -12,6 +12,37 @@ import {
 } from './CharacterCreationService'
 
 interface TalentRollResponse { rollId: string; talents: TalentDefinition[] }
+
+// B1.4 (beta-final PR3) - the PR2 five-arg metadata-only contract:
+// create_character provisions the character row and returns its canonical
+// metadata; it NEVER writes a save row. The client rebuilds the starter
+// snapshot (initializeCharacter) and commits it through
+// write_character_save(expectedRevision=0) -> revision 1, which precedes
+// the first tick. A crash in between replays CHARACTER_UNINITIALIZED at
+// the next boot with the same metadata - exactly one starter snapshot,
+// never a reroll.
+interface CreateCharacterResponse {
+  status?: string
+  character?: unknown
+  code?: string
+  serverTimeUtc?: string
+}
+
+function creationRejection(code: string | undefined): CharacterCreationResult {
+  switch (code) {
+    case 'CHARACTER_EXISTS':
+      return { ok: false, code: 'character_exists', message: 'Nhân vật đã tồn tại trên máy chủ — tải lại để tiếp tục.' }
+    case 'CHARACTER_NAME_UNAVAILABLE':
+      return { ok: false, code: 'name_taken', message: 'Đạo danh này đã có chủ.' }
+    case 'INVALID_TALENT_ROLL':
+    case 'INVALID_TALENT_SELECTION':
+      return { ok: false, code: 'invalid_talents', message: 'Lượt Thiên Phú đã hết hiệu lực.' }
+    case 'INVALID_MORTAL_SKILL':
+      return { ok: false, code: 'invalid_skill', message: 'Khởi thủy chiêu thức không hợp lệ.' }
+    default:
+      return { ok: false, code: 'server_unavailable', message: 'Không thể tạo nhân vật. Vui lòng thử lại.' }
+  }
+}
 
 export class SupabaseCharacterCreationService implements CharacterCreationService {
   private rollId: string | null = null
@@ -55,7 +86,7 @@ export class SupabaseCharacterCreationService implements CharacterCreationServic
       const session = await this.session()
       const available = await this.checkNameAvailable(draft.name)
       if (!available) return { ok: false, code: 'name_taken', message: 'Đạo danh này đã có chủ.' }
-      const characterId = await requestSupabase<string>(this.config, '/rest/v1/rpc/create_character', {
+      const response = await requestSupabase<CreateCharacterResponse>(this.config, '/rest/v1/rpc/create_character', {
         method: 'POST',
         body: JSON.stringify({
           p_session_id: session.sessionId,
@@ -63,15 +94,23 @@ export class SupabaseCharacterCreationService implements CharacterCreationServic
           p_name: draft.name,
           p_talent_ids: draft.talentIds,
           p_mortal_basic_skill_id: draft.mortalBasicSkillId,
-          p_initial_save: {},
-          // Trước đây hardcode 39 trong khi CURRENT_SAVE_VERSION đã lên 40 —
-          // nhân vật tạo qua cloud sẽ bị chặn "incompatible" ngay lần load.
-          // Luôn gửi version schema hiện hành từ SaveSystem (nguồn duy nhất).
-          p_schema_version: CURRENT_SAVE_VERSION,
         }),
       }, session.accessToken)
+
+      if (response.status === 'REJECTED') {
+        return creationRejection(response.code)
+      }
+
+      const character = response.status === 'CREATED'
+        ? parseRemoteCharacterMetadata(response.character)
+        : null
+
+      if (!character) {
+        return { ok: false, code: 'server_unavailable', message: 'Máy chủ trả dữ liệu nhân vật không hợp lệ.' }
+      }
+
       this.rollId = null
-      return { ok: true, characterId }
+      return { ok: true, characterId: character.id, character }
     } catch (error) {
       if (error instanceof SupabaseHttpError && error.status === 409) {
         return { ok: false, code: 'name_taken', message: 'Đạo danh này đã có chủ.' }
