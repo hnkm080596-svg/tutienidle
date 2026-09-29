@@ -176,7 +176,7 @@ describe('TranPhapPanel', () => {
 
     expect(img).not.toBeNull()
     expect(img!.getAttribute('src') ?? '').toContain(
-      'player-mortal-ink-sword-concept-v2',
+      'player-mortal-pham-nhan-v1',
     )
 
     mounted.unmount()

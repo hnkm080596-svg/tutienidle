@@ -117,7 +117,7 @@ describe('TranPhapCombatPreviewScene — real art resolution', () => {
     return scene
   }
 
-  it('player assignment renders the reskinned idle sheet — mortal maps to zuofeng today', () => {
+  it('player assignment renders the reskinned idle sheet — mortal maps to pham_nhan', () => {
     const scene = bareScene()
 
     scene.syncAssignments({
@@ -128,7 +128,7 @@ describe('TranPhapCombatPreviewScene — real art resolution', () => {
     const sprite = scene.sprites.get('player')!
     const rect = sprite.rect as unknown as { played: string[]; texture: { key: string } }
 
-    expect(rect.texture.key).toBe('zuofeng-sheet-1')
+    expect(rect.texture.key).toBe('pham_nhan-sheet-1')
     expect(rect.played).toEqual([])
   })
 
@@ -146,11 +146,10 @@ describe('TranPhapCombatPreviewScene — real art resolution', () => {
     )
   })
 
-  it('a profile switch between same-slug profiles keeps the sprite — nothing to redraw', () => {
-    // mortal and phap_tu BOTH map to zuofeng today: the acceptable texture
-    // set is identical either side of the switch, so destroying the sprite
-    // would be churn for zero visual change. When a future profile maps to
-    // a different slug its sheet leaves the set and the rebuild resumes.
+  it('a profile switch between different-slug profiles rebuilds the sprite', () => {
+    // mortal->pham_nhan, phap_tu->ngu_hanh since the 2026-09-27 art wave:
+    // the acceptable texture set differs either side of the switch, so the
+    // stale sheet must be rebuilt onto the new variant's idle sheet.
     const scene = bareScene()
 
     scene.syncAssignments({
@@ -158,15 +157,15 @@ describe('TranPhapCombatPreviewScene — real art resolution', () => {
       playerProfileId: 'mortal',
     })
 
-    const before = scene.sprites.get('player')!
-
     scene.syncAssignments({
       assignments: [{ row: 0, column: 1, combatantId: 'player' }],
       playerProfileId: 'phap_tu',
     })
 
-    expect(scene.sprites.get('player')).toBe(before)
-    expect(scene.destroyCalls).toEqual([])
+    expect(scene.destroyCalls).toEqual(['player'])
+    expect(
+      (scene.sprites.get('player')!.rect as Phaser.GameObjects.Sprite).texture.key,
+    ).toBe('ngu_hanh-sheet-1')
   })
 
   // character-art-infra: the rebuild guard must accept every texture the
@@ -179,7 +178,7 @@ describe('TranPhapCombatPreviewScene — real art resolution', () => {
     // on atlas-miss, the profile PNG on double-miss (grid-view terminal
     // fallback), the shared placeholder. Missing any one would rebuild the
     // sprite on every sync under that failure mode.
-    for (const textureKey of ['zuofeng-sheet-1', 'zuofeng-avatar', 'player-mortal-ink-sword-concept-v2']) {
+    for (const textureKey of ['pham_nhan-sheet-1', 'pham_nhan-avatar', 'player-mortal-pham-nhan-v1']) {
       scene.sprites.clear()
       scene.destroyCalls.length = 0
       scene.sprites.set('player', fakeSprite('player', textureKey))
@@ -205,7 +204,7 @@ describe('TranPhapCombatPreviewScene — real art resolution', () => {
     })
 
     expect(scene.destroyCalls).toEqual(['player'])
-    expect((scene.sprites.get('player')!.rect as Phaser.GameObjects.Sprite).texture.key).toBe('zuofeng-sheet-1')
+    expect((scene.sprites.get('player')!.rect as Phaser.GameObjects.Sprite).texture.key).toBe('pham_nhan-sheet-1')
   })
 
   it('companion without registered presentation resolves placeholder art of the active mode', () => {

@@ -12,6 +12,8 @@
 // `ult` is the character-only clip (enemy packer emits skill/enrage/...
 // instead). It is OPTIONAL downstream: catalogues emit it when the variant
 // carries one, playback treats it like `attack` (play-once -> standby).
+// `<slug>-cast-<key>` dirs emit per-skill cast clips into `manifest.cast` -
+// keyed by skillId or slot role, resolved by playCastClip before slot-role.
 //
 // Missing pieces are SYNTHESIZED where the contract requires them:
 //   - no `death` clip (most characters): last attack frame, darkened 45%
@@ -26,6 +28,10 @@ import path from 'node:path'
 const args = process.argv.slice(2)
 const SRC_ARG = args[args.indexOf('--src') + 1] || null
 const DRY_RUN = args.includes('--dry-run')
+// --only <out1,out2>: emit just those EMISSIONS rows (partial rerun without
+// the other dumps on hand) and MERGE their reports into the existing
+// manifest instead of replacing it wholesale.
+const ONLY_ARG = args[args.indexOf('--only') + 1]?.split(',').filter(Boolean) ?? null
 
 if (!SRC_ARG) {
   throw new Error('Usage: pack-character-art.mjs --src <NEWSPRITE character dir> [--dry-run]')
@@ -52,8 +58,15 @@ const EMISSIONS = [
   { out: 'youzhu', src: 'youzhu', scale: 0.75 },
   { out: 'yuejianxin', src: 'yuejianxin', scale: 0.75 },
   { out: 'ziyuan', src: 'ziyuan', scale: 0.75 },
+  // Minh hand-drawn player sets (2026-09-27): cell-sliced dumps, 1x scale.
+  { out: 'pham_nhan', src: 'pham_nhan', scale: 0.75 },
+  { out: 'pham_nhan_unarmed', src: 'pham_nhan_unarmed', scale: 0.75 },
+  { out: 'ngu_kiem', src: 'ngu_kiem', scale: 0.75 },
+  { out: 'ngu_hanh', src: 'ngu_hanh', scale: 0.75 },
 ]
 
+// Base clips keep contract order; per-skill cast clips (`cast-<key>` dirs)
+// sort alphabetically after them so new skills need no packer edit.
 const CLIP_ORDER = ['idle', 'attack', 'ult', 'death']
 const REQUIRED_CLIPS = ['idle', 'death'] // contract minimum (standby reuses idle frames)
 
@@ -77,7 +90,9 @@ function clipOfDirName(dirName) {
   // death ships both layouts across dumps: bare `death/` AND `<slug>-death/`
   // (same convention as idle/attack/ult) - accept both or real death frames
   // are silently replaced by the synthesized last-attack frame.
-  const m = last.match(/(?:^|-)(idle|attack|ult|death)$/i)
+  // `cast-<key>` dirs carry per-skill cast clips (key = skillId or slot role
+  // like 'special') - the key rides the clip name through the manifest.
+  const m = last.match(/(?:^|-)(idle|attack|ult|death|cast-[a-z0-9_]+)$/i)
   return m ? m[1].toLowerCase() : null
 }
 
@@ -207,7 +222,10 @@ async function emitVariant(emission) {
   const pivotJson = clips.get('idle')?.[0]?.file?.replace(/\.png(\.png)?$/i, '.png.json')
   const pivot = pivotJson && existsSync(pivotJson) ? readPivot(pivotJson) : { x: 0.5, y: 1.0 }
 
-  const orderedClips = CLIP_ORDER.filter((c) => clips.has(c))
+  const orderedClips = [
+    ...CLIP_ORDER.filter((c) => clips.has(c)),
+    ...[...clips.keys()].filter((c) => c.startsWith('cast-')).sort(),
+  ]
   const frames = [] // {clip,index,canvas,bounds,size,syntheticDeath}
   let sourceSize = null
   for (const clip of orderedClips) {
@@ -393,11 +411,12 @@ async function emitVariant(emission) {
   const radars = await stageSubdir(speciesDir, outDir, emission.out, 'radar-chart')
 
   const clipReport = {}
+  const castReport = {}
   for (const clip of orderedClips) {
     const list = clips.get(clip)
     const placed = frames.filter((f) => f.clip === clip)
     const sheetFile = sheetFiles.find((sf) => sf.name === placed[0]?.sheetName)
-    clipReport[clip] = {
+    const entry = {
       framePrefix: `${emission.out}-${clip}-`,
       firstFrame: list[0].index,
       lastFrame: list.at(-1).index,
@@ -406,6 +425,10 @@ async function emitVariant(emission) {
       atlas: sheetFile?.json ?? null,
       synthetic: list.some((f) => f.syntheticDeath) || undefined,
     }
+    // `cast-<key>` clips report under `cast` keyed by the bare key - the
+    // registry reads `cast.linh_bao` / `cast.special` without the prefix.
+    if (clip.startsWith('cast-')) castReport[clip.slice(5)] = entry
+    else clipReport[clip] = entry
   }
 
   return {
@@ -417,6 +440,7 @@ async function emitVariant(emission) {
     canvasSize,
     sheets: sheets.filter((s) => s.canvas).length,
     clips: clipReport,
+    cast: castReport,
     avatar: avatarMode,
     avatarSize,
     avatars,
@@ -427,8 +451,15 @@ async function emitVariant(emission) {
 }
 
 async function main() {
-  const manifest = { generated: 'pack-character-art.mjs', zeroPad: ZERO_PAD, frameSuffix: FRAME_SUFFIX, variants: {} }
-  for (const e of EMISSIONS) {
+  const emissions = ONLY_ARG ? EMISSIONS.filter((e) => ONLY_ARG.includes(e.out)) : EMISSIONS
+  if (ONLY_ARG && emissions.length !== ONLY_ARG.length) {
+    throw new Error(`--only names no EMISSIONS row: ${ONLY_ARG.filter((o) => !emissions.some((e) => e.out === o)).join(',')}`)
+  }
+  const manifestPath = path.join(OUT_ROOT, 'manifest.json')
+  const manifest = ONLY_ARG && existsSync(manifestPath)
+    ? JSON.parse(readFileSync(manifestPath, 'utf8'))
+    : { generated: 'pack-character-art.mjs', zeroPad: ZERO_PAD, frameSuffix: FRAME_SUFFIX, variants: {} }
+  for (const e of emissions) {
     const report = await emitVariant(e)
     manifest.variants[e.out] = report
     console.log(
@@ -438,9 +469,9 @@ async function main() {
   }
   if (!DRY_RUN) {
     mkdirSync(OUT_ROOT, { recursive: true })
-    writeFileSync(path.join(OUT_ROOT, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`)
+    writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`)
   }
-  console.log(DRY_RUN ? 'dry-run complete' : `manifest written to ${path.join(OUT_ROOT, 'manifest.json')}`)
+  console.log(DRY_RUN ? 'dry-run complete' : `manifest written to ${manifestPath}`)
 }
 
 await main()

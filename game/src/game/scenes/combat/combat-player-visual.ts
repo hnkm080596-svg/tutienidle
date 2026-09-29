@@ -49,7 +49,9 @@ export class CombatPlayerVisual {
       // Character reskin (character-art-infra): resolve the ENTITY key, not
       // the texture key - a mapped profile's skin is its character slug, and
       // swapping back to the profile PNG here would strip the reskin.
-      const entityKey = resolvePlayerEntityKey(profile.id, profile.combatTextureKey)
+      const entityKey = resolvePlayerEntityKey(profile.id, profile.combatTextureKey, {
+        armed: this.scene.playerArmed,
+      })
       const presentation = presentationFor(entityKey)
 
       // Mode-aware swap (uniformity, 2026-09-19): an animated profile trades

@@ -26,7 +26,7 @@ import {
 } from '@/presentation/art/CombatPresentationCatalogue'
 import { MONSTER_ART } from '@/game/support/MonsterArt'
 import { CHARACTER_ART } from '@/game/support/CharacterArt'
-import { combatAnimationKey } from '@/presentation/art/CombatEntityPresentation'
+import { atlasClipsOf, combatAnimationKey } from '@/presentation/art/CombatEntityPresentation'
 import { ENTITY_ART_MODE } from '@/presentation/art/EntityArtMode'
 import { registerClipCatalogue } from './combat/combat-animation-playback'
 import { PLAYER_VISUAL_PROFILES, type PlayerVisualProfile } from '@/presentation/art/PlayerVisualProfiles'
@@ -99,9 +99,17 @@ export class TranPhapCombatPreviewScene extends Phaser.Scene implements CombatGr
   // receives through the registry gate. `mortal` is only the pre-payload
   // default; syncAssignments() updates it on every assignments event.
   private currentProfileId: PlayerVisualProfileId = 'mortal'
+  // Armed pick rides the same assignments payload (art-seam wave): the
+  // panel must not rebuild the sprite on the wrong variant after a
+  // basic-skill change. Undefined keeps the armed resolver default.
+  private currentArmed: boolean | undefined
 
   private activeProfile(): PlayerVisualProfile {
     return PLAYER_VISUAL_PROFILES[this.currentProfileId] ?? PLAYER_VISUAL_PROFILES.mortal
+  }
+
+  get playerArmed(): boolean | undefined {
+    return this.currentArmed
   }
 
   get playerSourceSize(): { w: number; h: number } {
@@ -140,7 +148,7 @@ export class TranPhapCombatPreviewScene extends Phaser.Scene implements CombatGr
       const queued = new Set<string>()
 
       for (const { clips } of animatedCombatEntities()) {
-        for (const clip of Object.values(clips)) {
+        for (const clip of atlasClipsOf(clips)) {
           if (queued.has(clip.sheetKey)) {
             continue
           }
@@ -171,7 +179,10 @@ export class TranPhapCombatPreviewScene extends Phaser.Scene implements CombatGr
     const characterSheets = new Set<string>()
 
     for (const variant of Object.values(CHARACTER_ART)) {
-      for (const range of Object.values(variant.clips)) {
+      for (const range of [
+        ...Object.values(variant.clips),
+        ...Object.values(variant.castClips ?? {}),
+      ]) {
         if (range === undefined || characterSheets.has(range.sheetKey) || this.textures.exists(range.sheetKey)) {
           continue
         }
@@ -244,7 +255,9 @@ export class TranPhapCombatPreviewScene extends Phaser.Scene implements CombatGr
 
     const entityKey =
       id === PLAYER_ID
-        ? resolvePlayerEntityKey(this.playerProfile.id, this.playerProfile.combatTextureKey)
+        ? resolvePlayerEntityKey(this.playerProfile.id, this.playerProfile.combatTextureKey, {
+            armed: this.currentArmed,
+          })
         : resolveCombatEntityKey(id)
 
     if (presentationFor(entityKey)?.kind !== 'animated') {
@@ -285,6 +298,9 @@ export class TranPhapCombatPreviewScene extends Phaser.Scene implements CombatGr
     } else if (payload && Array.isArray(payload.assignments)) {
       assignments = payload.assignments
       profileId = payload.playerProfileId
+      if (typeof payload.playerArmed === 'boolean') {
+        this.currentArmed = payload.playerArmed
+      }
     } else {
       return
     }
@@ -318,6 +334,7 @@ export class TranPhapCombatPreviewScene extends Phaser.Scene implements CombatGr
         const mappedKey = resolvePlayerEntityKey(
           this.playerProfile.id,
           this.playerProfile.combatTextureKey,
+          { armed: this.currentArmed },
         )
         const presentation = presentationFor(mappedKey)
         const acceptableTextureKeys = new Set<string>()

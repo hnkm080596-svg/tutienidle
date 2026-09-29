@@ -52,7 +52,7 @@ function createFakeScene() {
     characterWidth: 40,
     characterHeight: 50,
     playerSourceSize: { w: 1244, h: 1264 },
-    playerProfile: { id: 'mortal', combatTextureKey: 'player-mortal-ink-sword-concept-v2' },
+    playerProfile: { id: 'mortal', combatTextureKey: 'player-mortal-pham-nhan-v1' },
     add: {
       text: () => chainable(),
       sprite: vi.fn(() => chainable()),
@@ -219,7 +219,7 @@ describe('CombatGridView.getOrCreateSprite() — host.fallbackSpriteTextureKey()
   it('reskinned PLAYER with atlas+avatar missing falls back to the profile PNG - never __MISSING (F-CAI-25)', () => {
     const { scene, gridView } = createFakeScene()
 
-    // mortal maps to zuofeng (animated). Only the profile PNG reports
+    // mortal maps to pham_nhan (animated). Only the profile PNG reports
     // loaded - atlas AND avatar both miss.
     const profileKey = (scene.playerProfile as { combatTextureKey: string }).combatTextureKey
 
@@ -236,10 +236,10 @@ describe('CombatGridView.getOrCreateSprite() — host.fallbackSpriteTextureKey()
   it('reskinned PLAYER with atlas missing still draws the variant avatar - the intermediate chain step (Clean-B2 coverage)', () => {
     const { scene, gridView } = createFakeScene()
 
-    // mortal maps to zuofeng (animated). Only the variant avatar reports
+    // mortal maps to pham_nhan (animated). Only the variant avatar reports
     // loaded - the idle sheet misses, so the draw chain must land on the
     // avatar, not skip straight to the profile PNG / Rectangle.
-    const avatarKey = CHARACTER_ART['zuofeng']?.avatarKey
+    const avatarKey = CHARACTER_ART['pham_nhan']?.avatarKey
 
     expect(avatarKey).toBeDefined()
 
@@ -443,7 +443,7 @@ describe('CombatGridView — idle motion for static entities', () => {
   })
 
   it('the reskinned player draws its character atlas and skips the bob (character-art-infra)', () => {
-    // The fixture's profile id 'mortal' maps to 'zuofeng' in
+    // The fixture's profile id 'mortal' maps to 'pham_nhan' in
     // CHARACTER_RESKIN_MAP, so the player is an animated override entity in
     // every mode: atlas idle frame, no bob tween.
     const { scene, gridView } = createFakeScene()
@@ -451,10 +451,10 @@ describe('CombatGridView — idle motion for static entities', () => {
     const player = gridView.getOrCreateSprite('player', 0x4a90d9, 'Player', 4)
 
     const spriteCalls = (scene.add as { sprite: ReturnType<typeof vi.fn> }).sprite.mock.calls
-    const playerCall = spriteCalls.find((call) => String(call[2]).startsWith('zuofeng-sheet-'))
+    const playerCall = spriteCalls.find((call) => String(call[2]).startsWith('pham_nhan-sheet-'))
 
-    expect(playerCall, 'player did not draw the zuofeng atlas').toBeDefined()
-    expect(playerCall![3]).toBe('zuofeng-idle-001.png')
+    expect(playerCall, 'player did not draw the pham_nhan atlas').toBeDefined()
+    expect(playerCall![3]).toBe('pham_nhan-idle-001.png')
     expect(player.idle).toBeUndefined()
     expect(
       (scene.tweens as { add: ReturnType<typeof vi.fn> }).add,

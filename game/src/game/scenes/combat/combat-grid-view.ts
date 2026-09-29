@@ -442,6 +442,7 @@ export class CombatGridView {
       const profileKey = resolvePlayerEntityKey(
         this.host.playerProfile.id,
         this.host.playerProfile.combatTextureKey,
+        { armed: this.host.playerArmed },
       )
       const entityKey =
         profileKey !== this.host.playerProfile.combatTextureKey ||
