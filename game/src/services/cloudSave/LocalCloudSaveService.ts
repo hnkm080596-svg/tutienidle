@@ -1,28 +1,14 @@
 import { loadGame, writeGameSave, type GameSave } from '../save/SaveSystem'
-import { readLocalSaveRevision, resolveRevisionKey, resolveSyncBaseKey } from '../save/saveKeys'
+import { readLocalSaveRevision, resolveRevisionKey } from '../save/saveKeys'
 import type { CloudSaveLoadResult, CloudSaveService, CloudSaveWriteResult } from './CloudSaveService'
 
-// readLocalSaveRevision moved to saveKeys.ts (the leaf key module) so
-// the import seam in SaveSystem can read the counter without a
-// SaveSystem <-> cloudSave circular import. Re-export keeps the
-// existing './LocalCloudSaveService' import sites working.
+// readLocalSaveRevision and the sync-base pair moved to saveKeys.ts (the
+// leaf key module) so the import seam in SaveSystem can read the counter
+// and the reset-tombstone ceiling without a SaveSystem <-> cloudSave
+// circular import. Re-export keeps the existing './LocalCloudSaveService'
+// import sites working.
 export { readLocalSaveRevision }
-
-/**
- * F1 lineage anchor: the remote save_revision the local lineage last
- * descended from (adopted on every successful pull/push). null means the
- * account has never completed a sync under base tracking - the login
- * reconcile treats that as the migration case.
- */
-export function readSyncBaseRevision(): number | null {
-  const raw = localStorage.getItem(resolveSyncBaseKey())
-  const value = raw === null ? Number.NaN : Number(raw)
-  return Number.isSafeInteger(value) && value >= 0 ? value : null
-}
-
-export function writeSyncBaseRevision(revision: number): void {
-  localStorage.setItem(resolveSyncBaseKey(), String(revision))
-}
+export { readSyncBaseRevision, writeSyncBaseRevision } from '../save/saveKeys'
 
 export class LocalCloudSaveService implements CloudSaveService {
   readonly capability = 'local-only' as const

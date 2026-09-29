@@ -17,12 +17,65 @@ export interface StoredSupabaseSession {
 
 const SESSION_KEY = 'tien-hiep-idle-auth-session'
 
+// F-BX-71 - the session used to live ONLY in sessionStorage: a full
+// restart silently dropped the login and the resume path fabricated a
+// guest session. Storage split: sessionStorage stays the live-tab copy;
+// localStorage is the restart-durable mirror. Reads prefer the tab copy
+// (a second tab can hold a different session), then adopt the durable
+// mirror and re-prime the tab slot.
+// The 'previously logged in' marker survives session clears - a 400/401
+// refresh rejection wipes the session but the login still happened - so
+// the auth card can surface 'session expired' instead of the silent
+// guest resume. Only an explicit logout clears it.
+const LOGIN_HISTORY_KEY = 'tien-hiep-idle-auth-account'
+
+// Node tools / denied storage leave localStorage undefined or throwing -
+// the durable half of the split is strictly best-effort next to the
+// sessionStorage authority.
+function durableStorage(): Storage | null {
+  try {
+    return typeof localStorage === 'undefined' ? null : localStorage
+  } catch {
+    return null
+  }
+}
+
 export function storeSupabaseSession(session: StoredSupabaseSession): void {
-  sessionStorage.setItem(SESSION_KEY, JSON.stringify(session))
+  const raw = JSON.stringify(session)
+  sessionStorage.setItem(SESSION_KEY, raw)
+  try {
+    durableStorage()?.setItem(SESSION_KEY, raw)
+    if (session.userId && session.mode !== 'guest') {
+      durableStorage()?.setItem(LOGIN_HISTORY_KEY, session.userId)
+    }
+  } catch {
+    // Mirror/marker write denied - degrade to the old sessionStorage-only
+    // behavior rather than failing the login.
+  }
 }
 
 export function readSupabaseSession(): StoredSupabaseSession | null {
-  const raw = sessionStorage.getItem(SESSION_KEY)
+  return (
+    parseSupabaseSession(sessionStorage.getItem(SESSION_KEY)) ??
+    adoptDurableSupabaseSession()
+  )
+}
+
+// Restart / new-tab path: the durable copy becomes this tab's session
+// and the tab slot is re-primed so later reads stay cheap.
+function adoptDurableSupabaseSession(): StoredSupabaseSession | null {
+  const session = parseSupabaseSession(durableStorage()?.getItem(SESSION_KEY) ?? null)
+  if (session) {
+    try {
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify(session))
+    } catch {
+      // Re-prime failed - the session is still valid for this call.
+    }
+  }
+  return session
+}
+
+function parseSupabaseSession(raw: string | null): StoredSupabaseSession | null {
   if (!raw) return null
 
   try {
@@ -44,6 +97,32 @@ export function readSupabaseSession(): StoredSupabaseSession | null {
 
 export function clearSupabaseSession(): void {
   sessionStorage.removeItem(SESSION_KEY)
+  try {
+    durableStorage()?.removeItem(SESSION_KEY)
+  } catch {
+    // Mirror clear denied - a stale durable copy re-adopts on next read
+    // and gets re-attempted by the next refresh rejection anyway.
+  }
+}
+
+/** The 'previously logged in' userId the last non-guest session recorded,
+ *  or null when no login was ever stored here. */
+export function readSupabaseLoginMarker(): string | null {
+  try {
+    return durableStorage()?.getItem(LOGIN_HISTORY_KEY) ?? null
+  } catch {
+    return null
+  }
+}
+
+/** Explicit sign-out only - clears the 'previously logged in' marker so
+ *  a deliberate logout never surfaces as 'session expired'. */
+export function clearSupabaseLoginMarker(): void {
+  try {
+    durableStorage()?.removeItem(LOGIN_HISTORY_KEY)
+  } catch {
+    // Best-effort: a stale marker can only fire the expired notice once.
+  }
 }
 
 const REFRESH_SKEW_MS = 30_000

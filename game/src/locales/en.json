@@ -1015,7 +1015,8 @@
       "continue": "Continue — {name}",
       "continueNoName": "Continue",
       "language": "Language",
-      "saveCleared": "Your save was cleared — start fresh when ready."
+      "saveCleared": "Your save was cleared — start fresh when ready.",
+      "sessionExpired": "Your login session expired — sign in again to keep syncing."
     },
     "creation": {
       "back": "← Back",

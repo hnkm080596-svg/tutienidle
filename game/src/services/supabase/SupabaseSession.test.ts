@@ -1,5 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
+  clearSupabaseLoginMarker,
+  clearSupabaseSession,
+  readSupabaseLoginMarker,
   readSupabaseSession,
   resolveSupabaseSession,
   storeSupabaseSession,
@@ -19,6 +22,7 @@ class MemoryStorage implements Storage {
 
 beforeEach(() => {
   vi.stubGlobal('sessionStorage', new MemoryStorage())
+  vi.stubGlobal('localStorage', new MemoryStorage())
 })
 
 describe('resolveSupabaseSession - refresh-aware accessor (spec F8)', () => {
@@ -157,5 +161,58 @@ describe('resolveSupabaseSession - refresh-aware accessor (spec F8)', () => {
     expect(await resolveSupabaseSession(config)).toBeNull()
     expect(fetchSpy).not.toHaveBeenCalled()
     vi.unstubAllGlobals()
+  })
+})
+
+describe('F-BX-71 - durable mirror survives restart; marker tracks the login', () => {
+  const session = {
+    accessToken: 'tok', refreshToken: 'rt', sessionId: 's1',
+    userId: 'u1', mode: 'login' as const, expiresAtMs: Date.now() + 3_600_000,
+  }
+
+  it('full restart (sessionStorage wiped) recovers the session from localStorage and re-primes the tab copy', () => {
+    storeSupabaseSession(session)
+    // A restart is a fresh sessionStorage over the same localStorage.
+    vi.stubGlobal('sessionStorage', new MemoryStorage())
+
+    const restored = readSupabaseSession()
+    expect(restored?.accessToken).toBe('tok')
+    expect(restored?.userId).toBe('u1')
+    // Re-primed: a second read needs no durable fallback to find it.
+    expect(sessionStorage.getItem('tien-hiep-idle-auth-session')).not.toBeNull()
+  })
+
+  it('sessionStorage copy wins over a diverging durable mirror (this tab owns its session)', () => {
+    storeSupabaseSession(session)
+    localStorage.setItem('tien-hiep-idle-auth-session', JSON.stringify({ ...session, accessToken: 'other-tab' }))
+    expect(readSupabaseSession()?.accessToken).toBe('tok')
+  })
+
+  it('clearSupabaseSession removes BOTH copies - the wipe is real', () => {
+    storeSupabaseSession(session)
+    clearSupabaseSession()
+    expect(readSupabaseSession()).toBeNull()
+    expect(localStorage.getItem('tien-hiep-idle-auth-session')).toBeNull()
+  })
+
+  it('a refresh-400 wipe keeps the login marker - that IS the expired-login case', async () => {
+    storeSupabaseSession({ ...session, expiresAtMs: Date.now() - 1000 })
+    vi.stubGlobal('fetch', vi.fn(async () => new Response('{"error":"invalid_grant"}', { status: 400 })))
+
+    expect(await resolveSupabaseSession(config)).toBeNull()
+    expect(readSupabaseSession()).toBeNull()
+    expect(readSupabaseLoginMarker()).toBe('u1')
+    vi.unstubAllGlobals()
+  })
+
+  it('guest sessions never write the marker; explicit marker clear = deliberate sign-out', () => {
+    storeSupabaseSession({ accessToken: 'g', refreshToken: 'g', sessionId: 'g', userId: 'ug', mode: 'guest' })
+    expect(readSupabaseLoginMarker()).toBeNull()
+
+    storeSupabaseSession(session)
+    expect(readSupabaseLoginMarker()).toBe('u1')
+    clearSupabaseSession()
+    clearSupabaseLoginMarker()
+    expect(readSupabaseLoginMarker()).toBeNull()
   })
 })

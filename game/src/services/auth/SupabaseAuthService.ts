@@ -1,5 +1,5 @@
 import type { SupabaseConfig } from '../supabase/SupabaseConfig'
-import { clearSupabaseSession, readSupabaseSession, storeSupabaseSession } from '../supabase/SupabaseSession'
+import { clearSupabaseLoginMarker, clearSupabaseSession, readSupabaseSession, storeSupabaseSession } from '../supabase/SupabaseSession'
 import { requestSupabase, SupabaseHttpError } from '../supabase/SupabaseHttp'
 import { isValidLoginId, isValidPassword, type AuthCredentials, type AuthenticationMode, type AuthResult, type AuthService } from './AuthService'
 
@@ -73,6 +73,9 @@ export class SupabaseAuthService implements AuthService {
       if (session) await requestSupabase(this.config, '/auth/v1/logout', { method: 'POST' }, session.accessToken)
     } finally {
       clearSupabaseSession()
+      // A deliberate sign-out is not 'session expired' - drop the
+      // 'previously logged in' marker with the session itself.
+      clearSupabaseLoginMarker()
     }
   }
 }

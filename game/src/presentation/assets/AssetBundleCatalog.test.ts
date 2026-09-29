@@ -151,9 +151,23 @@ describe('W4 dom-audio lane', () => {
   }
 
   it('audio bundles enumerate only manifest rows with non-empty src', () => {
+    // F-BX-18 armed the combat.enemy_attack.* rows with real OGG src:
+    // 'combat.' is covered by audio-combat AND audio-tribulation, so the
+    // declared files enumerate under both; audio-core's domains still
+    // ship src='' (no UI/stinger asset has dropped).
     expect(getBundleDescriptors('audio-core')).toEqual([])
-    expect(getBundleDescriptors('audio-combat')).toEqual([])
-    expect(getBundleDescriptors('audio-tribulation')).toEqual([])
+    const declaredSrcs = new Set(
+      Object.entries(AUDIO_CUES)
+        .filter(([id, def]) => id.startsWith('combat.enemy_attack.') && typeof def.src === 'string' && def.src !== '')
+        .map(([, def]) => def.src as string),
+    )
+    expect(declaredSrcs.size).toBeGreaterThan(0)
+    for (const bundle of ['audio-combat', 'audio-tribulation'] as const) {
+      const keys = new Set(getBundleDescriptors(bundle).map((d) => d.key))
+      for (const src of declaredSrcs) {
+        expect(keys.has(src), `${bundle} missing ${src}`).toBe(true)
+      }
+    }
 
     const restore = injectCue('combat.hit', 'assets/audio/sfx/combat/hit.ogg')
     try {

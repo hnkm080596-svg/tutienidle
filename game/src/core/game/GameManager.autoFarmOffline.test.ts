@@ -155,6 +155,35 @@ describe('GameManager — auto-farm offline catch-up (restore)', () => {
       expect(player.autoFarmStage?.lastCheckedMs).toBe(lastCheckedMs)
     })
 
+    it('F-BX-38 - a second settle over an already-settled interval re-pays nothing (exactly-once keyed to lastCheckedMs)', () => {
+      const { gameManager, player } = harnessWithFarm()
+      gameManager.setActivePlayer(player)
+
+      player.perfectClearStageIds.push('farm_stage')
+      player.perfectClearSeconds['farm_stage'] = 100 // cycle = 50s
+
+      player.autoFarmStage = {
+        stageId: 'farm_stage',
+        lastCheckedMs: Date.now() - 120_000,
+      }
+
+      // The caller-side hash guard only dedupes an IDENTICAL payload - a
+      // second restore whose own >60s window clears the gate used to pay
+      // the same interval twice at the ops layer.
+      gameManager.turnBattleOps.autoFarmOps.settleAutoFarmOffline(player, 120)
+      const afterFirst = gameManager.getBattleRewardSummary().spiritStone
+      const anchorAfterFirst = player.autoFarmStage!.lastCheckedMs
+      expect(anchorAfterFirst).toBeGreaterThan(Date.now() - 120_000)
+
+      // Second settle: caller window (now - a fresh lastSavedAt) still
+      // >60s, but the keyed window only holds the unsettled remainder
+      // (~20s < one 50s cycle).
+      gameManager.turnBattleOps.autoFarmOps.settleAutoFarmOffline(player, 70)
+
+      expect(gameManager.getBattleRewardSummary().spiritStone).toBe(afterFirst)
+      expect(player.autoFarmStage!.lastCheckedMs).toBe(anchorAfterFirst)
+    })
+
     it('corrupt small-positive lastCheckedMs → settle pays one capped window, next online tick does NOT pay a second (audit T1-12)', () => {
       vi.useFakeTimers()
       try {

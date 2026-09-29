@@ -8,7 +8,9 @@ import {
   staticSaveAcceptanceCatalogs,
 } from '../save/saveAcceptance'
 import {
+  clearResetTombstone,
   readLocalSaveRevision,
+  readResetTombstone,
   resolveImportHandoffKey,
   resolveRevisionKey,
   resolveSaveKey,
@@ -71,9 +73,13 @@ export async function syncRemoteSaveOnLogin(config: SupabaseConfig): Promise<Rem
     const session = await resolveSupabaseSession(config)
     if (!session || session.mode === 'guest' || !session.userId) return 'skipped'
 
+    // F-BX-25 - deterministic pick: user_id is UNIQUE so this returns at
+    // most one row today, but nothing in the contract orders limit=1.
+    // created_at.asc binds the ORIGINAL character and the soft-delete
+    // filter keeps a scheduled-for-deletion row from binding saves.
     const characters = await requestSupabase<CharacterRow[]>(
       config,
-      `/rest/v1/characters?select=id&user_id=eq.${session.userId}&limit=1`,
+      `/rest/v1/characters?select=id&user_id=eq.${session.userId}&deleted_at=is.null&order=created_at.asc&limit=1`,
       {},
       session.accessToken,
     )
@@ -131,6 +137,20 @@ export async function syncRemoteSaveOnLogin(config: SupabaseConfig): Promise<Rem
       (remoteRow.save_revision > localRevision ||
         (remoteRow.save_revision === localRevision && remoteUpdatedMs > localLastSavedAt))
 
+    // F-BX-24 - reset tombstone: deleteSave recorded the highest remote
+    // revision this lineage could know. A remote row at/below the ceiling
+    // still carries the deleted lineage - the pull arm below must NOT
+    // resurrect it (covers reset-from-settings, restoreBackup lineage,
+    // and the incompatible-local delete). A row above the ceiling moved
+    // after the reset on another device: the tombstone is spent and the
+    // normal reconcile decides.
+    const tombstone = readResetTombstone()
+    const remoteUnderTombstone =
+      tombstone !== null && remoteRow !== undefined && remoteRow.save_revision <= tombstone.remoteCeiling
+    if (tombstone !== null && remoteRow !== undefined && remoteRow.save_revision > tombstone.remoteCeiling) {
+      clearResetTombstone()
+    }
+
     // F1 — lineage divergence gate. Per-device counters cannot order
     // lineages that forked: a stale device whose counter ran far ahead of
     // the remote's still compares ">" and would push its stale lineage
@@ -181,7 +201,29 @@ export async function syncRemoteSaveOnLogin(config: SupabaseConfig): Promise<Rem
       }
     }
 
-    if (remoteUsable && remoteAhead && remoteRow) {
+    let remoteRowDeleted = false
+    if (remoteUnderTombstone && remoteRow) {
+      // Remote still carries the deleted lineage: suppress the pull, then
+      // best-effort DELETE the stale row - the durable half of the fix
+      // once migration 202609290002_character_saves_delete.sql applies
+      // remotely (it adds the saves_own_delete policy; until then RLS
+      // denies and the tombstone alone keeps suppressing each login).
+      try {
+        await requestSupabase<unknown>(
+          config,
+          `/rest/v1/character_saves?character_id=eq.${characterId}`,
+          { method: 'DELETE' },
+          session.accessToken,
+        )
+        clearResetTombstone()
+        remoteRowDeleted = true
+      } catch {
+        // Delete denied or unreachable - the tombstone still suppresses
+        // the pull on the next login.
+      }
+    }
+
+    if (remoteUsable && remoteAhead && remoteRow && !remoteUnderTombstone) {
       // Save-first (F5): a crash after the save write but before the
       // revision write leaves old-revision + new-save -> the next login
       // still sees the remote row ahead and re-pulls, self-healing to the
@@ -243,7 +285,7 @@ export async function syncRemoteSaveOnLogin(config: SupabaseConfig): Promise<Rem
       updated_at: new Date().toISOString(),
     })
 
-    if (remoteRow) {
+    if (remoteRow && !remoteRowDeleted) {
       // INFRA-02 — CAS push: PATCH guarded by the revision we just read.
       // Two live sessions on one account can no longer blind-upsert over
       // each other; the loser sees 0 rows updated and reports
@@ -296,6 +338,9 @@ export async function syncRemoteSaveOnLogin(config: SupabaseConfig): Promise<Rem
     } catch {
       // Auxiliary write - degraded to a later adoption, never to a fork.
     }
+    // A live lineage now owns the remote row - any reset tombstone is
+    // fully resolved.
+    clearResetTombstone()
     return 'pushed'
   } catch {
     return 'unavailable'

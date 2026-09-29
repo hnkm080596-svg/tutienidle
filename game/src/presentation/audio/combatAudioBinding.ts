@@ -20,11 +20,14 @@ import { PLAYER_ID } from '@/core/skill/PassiveSystem'
 import type { ReactiveProcMechanic, ReactiveTriggerName } from '@/core/proc/ProcCapabilities'
 import { DAMAGE_VITALS_REASONS } from '@/core/simulation/BattleMetrics'
 import type { VitalsChangeReason } from '@/core/combat/EntityVitalsSystem'
+import { MONSTER_ART, resolveMonsterArtSlug } from '@/game/support/MonsterArt'
 
 // ---- Static rows -------------------------------------------------------
 
 const STATIC_CUES: ReadonlyArray<readonly [string, string]> = [
-  ['attack', 'combat.cast'],
+  // 'attack' moved to PAYLOAD_CUES (F-BX-18): reskinned-enemy swings
+  // voice the variant's declared attackSfxUrl; everything else keeps
+  // the legacy combat.cast row.
   // 'hit' moved to PAYLOAD_CUES: a player-targeted hit co-fires with
   // 'damage' (which already maps to combat.hurt) - mapping hit->hit
   // there would double-fire two cues for one landed blow.
@@ -74,6 +77,26 @@ interface TargetLike {
 interface HitLike {
   sourceId?: string
   targetId?: string
+}
+
+interface AttackLike {
+  sourceId?: string
+}
+
+/**
+ * F-BX-18 - the attackSfxUrl seam wired: an 'attack' event whose source
+ * is a reskinned enemy variant with a declared attackSfxUrl cues
+ * `combat.enemy_attack.<slug>` (qualifier = slug with '-' -> '_', per
+ * the manifest's expandSrc convention). Player/companion swings,
+ * unmapped enemies and silent variants keep the legacy combat.cast row.
+ */
+export function cueForAttack(event: AttackLike): string {
+  const slug = event.sourceId ? resolveMonsterArtSlug(event.sourceId) : undefined
+  const variant = slug ? MONSTER_ART[slug] : undefined
+  if (slug && variant?.attackSfxUrl) {
+    return `combat.enemy_attack.${slug.replaceAll('-', '_')}`
+  }
+  return 'combat.cast'
 }
 
 interface SkillCastLike {
@@ -153,6 +176,7 @@ export function cueForActionImpact(event: ActionImpactLike): string | undefined 
 }
 
 const PAYLOAD_CUES: ReadonlyArray<readonly [string, (event: never) => string | undefined]> = [
+  ['attack', cueForAttack],
   // 'kill' fires back-to-back with 'death' per entity death (CombatSystem) -
   // mapping both would double-fire one kill sound. combat.kill stays in the
   // manifest as a forward slot for a distinct kill-confirm asset; rebind

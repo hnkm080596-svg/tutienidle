@@ -7,7 +7,7 @@ import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
 import { authService } from '@/services/auth/AuthServiceFactory'
 import { isValidLoginId, isValidPassword, type AuthenticationMode, type AuthSession } from '@/services/auth/AuthService'
 import { LOCALE_OPTIONS, saveLocale } from '@/composables/locale'
-import { readResumeCandidate, consumeResetNotice } from '@/composables/resumeSession'
+import { readResumeCandidate, consumeResetNotice, hasExpiredLoginMarker } from '@/composables/resumeSession'
 
 const emit = defineEmits<{ authenticated: [session: AuthSession] }>()
 const mode = ref<'login' | 'register'>('login')
@@ -25,6 +25,10 @@ const resume = readResumeCandidate()
 // ui-audit creation-meta Low - after a save reset the app reloads onto
 // this card; one line of continuity beats silently starting over.
 const resetNotice = consumeResetNotice()
+
+// F-BX-71 - a wiped/expired login used to fall back to a fabricated
+// guest session with no sign anything was lost; say it on the card.
+const sessionExpiredNotice = hasExpiredLoginMarker()
 
 function continueSaved() {
   if (!resume || submitting.value) return
@@ -98,6 +102,7 @@ function switchTab(target: 'login' | 'register') {
       <p class="auth-card__eyebrow">{{ t('onboarding.auth.eyebrow') }}</p>
       <h1>Tiên Hiệp Idle</h1>
       <p v-if="resetNotice" class="auth-card__notice">{{ t('onboarding.auth.saveCleared') }}</p>
+      <p v-if="sessionExpiredNotice" class="auth-card__notice">{{ t('onboarding.auth.sessionExpired') }}</p>
       <p class="auth-card__lead">{{ t('onboarding.auth.lead') }}</p>
 
       <!-- UI-003/004 (Task 2, 2026-09-07) — tabs semantics thật: role="tab"

@@ -102,18 +102,22 @@ describe('GameManager — Hoàn Mỹ condition on turn-based victory', () => {
 
   it('slower Hoàn Mỹ lần 2 không rewrite record - record là best time', () => {
     // F-BX-85 contract: the record channel is the fastest qualifying
-    // clear. A second PC that is NOT faster leaves the record untouched
-    // (mocked clock so the comparison is deterministic).
+    // clear. A second PC that is NOT faster leaves the record untouched.
+    // Wall-clock durations pin the F-BX-53 FALLBACK path deterministically
+    // - a mid-battle clock-source swap detaches the step anchor, so the
+    // writer measures wall time instead of combat steps.
     let nowMs = 1_000_000
     vi.spyOn(Date, 'now').mockImplementation(() => nowMs)
 
-    const { gameManager, player, stageDef, combatSource } = harness(stage({ perfectClearTurnLimit: 50 }))
+    const { gameManager, player, stageDef } = harness(stage({ perfectClearTurnLimit: 50 }))
     player.baseStats = asBaseStats({ ...player.baseStats, might: 100  })
+    const clock1 = new ManualClockSource()
+    gameManager.setCombatClockSource(clock1)
 
     nowMs += 1_000 // cycle 1 clears in 1s
     for (let i = 0; i < 400 && gameManager.getTurnBattle()?.state !== 'victory'; i++) {
       try {
-        combatSource.advance(COMBAT_STEP_SECONDS)
+        clock1.advance(COMBAT_STEP_SECONDS)
       } catch (error) {
         console.error('[PC-LOOP-THREW]', i, error instanceof Error ? error.message : String(error))
         break
@@ -125,11 +129,13 @@ describe('GameManager — Hoàn Mỹ condition on turn-based victory', () => {
     expect(player.perfectClearStageIds).toContain('perfect_stage')
 
     gameManager.turnBattleOps.startStage(player, stageDef, false)
+    const clock2 = new ManualClockSource()
+    gameManager.setCombatClockSource(clock2)
 
     nowMs += 2_000 // cycle 2 clears in 2s - slower, must not rewrite
     for (let i = 0; i < 400 && gameManager.getTurnBattle()?.state !== 'victory'; i++) {
       try {
-        combatSource.advance(COMBAT_STEP_SECONDS)
+        clock2.advance(COMBAT_STEP_SECONDS)
       } catch (error) {
         console.error('[PC-LOOP-THREW]', i, error instanceof Error ? error.message : String(error))
         break
@@ -266,13 +272,17 @@ describe('GameManager — Hoàn Mỹ condition on turn-based victory', () => {
       let nowMs = 1_000_000
       vi.spyOn(Date, 'now').mockImplementation(() => nowMs)
 
-      const { gameManager, player, stageDef, combatSource } = harness(stage({ perfectClearTurnLimit: 50 }))
+      const { gameManager, player, stageDef } = harness(stage({ perfectClearTurnLimit: 50 }))
+      // F-BX-53 fallback path: swap the clock source mid-battle so the
+      // record reads wall time - that is what the 42s comparison pins.
+      const clock1 = new ManualClockSource()
+      gameManager.setCombatClockSource(clock1)
 
       player.perfectClearStageIds.push('perfect_stage')
       player.perfectClearSeconds['perfect_stage'] = 42
 
       nowMs += 43_000 // a slower qualifying clear than the stored 42s
-      driveToVictory(gameManager, combatSource)
+      driveToVictory(gameManager, clock1)
 
       expect(gameManager.getTurnBattle()?.state).toBe('victory')
       expect(player.perfectClearSeconds['perfect_stage']).toBe(42)
@@ -280,8 +290,10 @@ describe('GameManager — Hoàn Mỹ condition on turn-based victory', () => {
       // A later qualifying clear that beats the record rewrites it -
       // repeat-run clears are eligible again once anchoring is fixed.
       gameManager.turnBattleOps.startStage(player, stageDef, false)
+      const clock2 = new ManualClockSource()
+      gameManager.setCombatClockSource(clock2)
       nowMs += 1_000 // this cycle clears in 1s - faster than 42
-      driveToVictory(gameManager, combatSource)
+      driveToVictory(gameManager, clock2)
 
       expect(gameManager.getTurnBattle()?.state).toBe('victory')
       expect(player.perfectClearSeconds['perfect_stage']).toBeLessThan(42)
@@ -356,15 +368,19 @@ describe('GameManager — perfect_clear observation emit (Sound System W6)', () 
 
     // Round 1: first record (10s). Round 2: faster (5s) -> record
     // rewritten AND re-emitted. Round 3: slower (7s) -> no write, silent.
+    // Wall-clock durations pin the F-BX-53 fallback path (a mid-battle
+    // source swap detaches the step anchor -> wall-clock measure).
     let nowMs = 1_000_000
     vi.spyOn(Date, 'now').mockImplementation(() => nowMs)
     const roundDurationsMs = [10_000, 5_000, 7_000]
 
     for (const durationMs of roundDurationsMs) {
       gameManager.turnBattleOps.startStage(player, stageDef, false)
+      const roundClock = new ManualClockSource()
+      gameManager.setCombatClockSource(roundClock)
       nowMs += durationMs
       for (let i = 0; i < 400 && gameManager.getTurnBattle()?.state !== 'victory'; i++) {
-        combatSource.advance(COMBAT_STEP_SECONDS)
+        roundClock.advance(COMBAT_STEP_SECONDS)
       }
       expect(gameManager.getTurnBattle()?.state).toBe('victory')
     }
@@ -467,10 +483,14 @@ describe('GameManager — F-BX-84/85: clearSeconds writer contract (positive flo
     })
 
     gameManager.turnBattleOps.startStage(player, stage, true) // repeatContinuously
+    // F-BX-53 fallback path: swap the source mid-battle so these
+    // wall-clock durations are what the record measures.
+    const cycle1Clock = new ManualClockSource()
+    gameManager.setCombatClockSource(cycle1Clock)
 
     nowMs += 10_000 // cycle 1 clears 10s after launch
     for (let i = 0; i < 400 && victories < 1; i++) {
-      combatSource.advance(COMBAT_STEP_SECONDS)
+      cycle1Clock.advance(COMBAT_STEP_SECONDS)
     }
     expect(victories).toBe(1)
     expect(player.perfectClearSeconds['pc85_stage']).toBeCloseTo(10, 3)
@@ -478,11 +498,83 @@ describe('GameManager — F-BX-84/85: clearSeconds writer contract (positive flo
     // Cycle 2 restarts at the cycle-1 victory instant (1_010_000); clearing
     // 200ms into the new cycle must record ~0.2s, not ~10.2s (anchor),
     // and must rewrite because it is faster (record-is-best contract).
+    const cycle2Clock = new ManualClockSource()
+    gameManager.setCombatClockSource(cycle2Clock)
     nowMs += 200
     for (let i = 0; i < 400 && victories < 2; i++) {
-      combatSource.advance(COMBAT_STEP_SECONDS)
+      cycle2Clock.advance(COMBAT_STEP_SECONDS)
     }
     expect(victories).toBe(2)
     expect(player.perfectClearSeconds['pc85_stage']).toBeCloseTo(0.2, 3)
+  })
+
+  it('F-BX-53: clearSeconds is the combat-clock measure - frozen (paused/hidden) time does not count', () => {
+    // The writer reads the battle clock's emitted steps: they accumulate
+    // only while the clock runs, so a held clock ('tab-hidden' /
+    // 'not-revealed' / 'turn-in-flight') charges nothing to the clear -
+    // exactly the pause-aware contract the auditor asked for.
+    const stage = stageDef()
+    const gameManager = new GameManager()
+    const combatSource = new ManualClockSource()
+    gameManager.setCombatClockSource(combatSource)
+    const player = createDefaultPlayer()
+    player.baseStats = asBaseStats({ ...player.baseStats, might: 100 })
+    gameManager.catalogOps.registerEnemyTemplates([DUMMY_ENEMY])
+    gameManager.catalogOps.registerStages([stage])
+    gameManager.setActivePlayer(player)
+    gameManager.turnBattleOps.startStage(player, stage, false)
+
+    const stepsAtStart = gameManager.turnBattleOps.getElapsedCombatSteps()
+
+    // 50 frames (~5s of wall-clock-equivalent combat time) arrive while
+    // the clock is frozen - they must emit zero steps and never reach
+    // the record.
+    const stepsBeforeFreeze = gameManager.turnBattleOps.getElapsedCombatSteps()
+    gameManager.turnBattleOps.freezeCombat('tab-hidden')
+    for (let i = 0; i < 50; i++) {
+      combatSource.advance(COMBAT_STEP_SECONDS)
+    }
+    expect(gameManager.turnBattleOps.getElapsedCombatSteps()).toBe(stepsBeforeFreeze)
+    gameManager.turnBattleOps.resumeCombat('tab-hidden')
+
+    for (let i = 0; i < 400 && gameManager.getTurnBattle()?.state !== 'victory'; i++) {
+      combatSource.advance(COMBAT_STEP_SECONDS)
+    }
+
+    expect(gameManager.getTurnBattle()?.state).toBe('victory')
+    const battleSeconds =
+      (gameManager.turnBattleOps.getElapsedCombatSteps() - stepsAtStart) * COMBAT_STEP_SECONDS
+    expect(battleSeconds).toBeGreaterThan(0)
+    expect(player.perfectClearStageIds).toContain('pc85_stage')
+    expect(player.perfectClearSeconds['pc85_stage']).toBeCloseTo(battleSeconds, 10)
+  })
+
+  it('F-BX-53 fallback: a mid-battle clock-source swap keeps the wall-clock measure', () => {
+    let nowMs = 1_000_000
+    vi.spyOn(Date, 'now').mockImplementation(() => nowMs)
+
+    const stage = stageDef()
+    const gameManager = new GameManager()
+    const combatSource = new ManualClockSource()
+    gameManager.setCombatClockSource(combatSource)
+    const player = createDefaultPlayer()
+    player.baseStats = asBaseStats({ ...player.baseStats, might: 100 })
+    gameManager.catalogOps.registerEnemyTemplates([DUMMY_ENEMY])
+    gameManager.catalogOps.registerStages([stage])
+    gameManager.setActivePlayer(player)
+    gameManager.turnBattleOps.startStage(player, stage, false)
+
+    // Swapping the source re-mints the clock: the step anchor belongs to
+    // a different instance, so the writer falls back to wall clock.
+    const swappedClock = new ManualClockSource()
+    gameManager.setCombatClockSource(swappedClock)
+
+    nowMs += 3_000
+    for (let i = 0; i < 400 && gameManager.getTurnBattle()?.state !== 'victory'; i++) {
+      swappedClock.advance(COMBAT_STEP_SECONDS)
+    }
+
+    expect(gameManager.getTurnBattle()?.state).toBe('victory')
+    expect(player.perfectClearSeconds['pc85_stage']).toBeCloseTo(3, 3)
   })
 })

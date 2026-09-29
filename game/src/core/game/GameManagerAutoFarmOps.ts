@@ -233,8 +233,24 @@ export class GameManagerAutoFarmOps {
       DEFAULT_MAX_OFFLINE_SECONDS,
     )
 
+    const now = Date.now()
+
+    // F-BX-38 - exactly-once at the ops layer: unsettled farm time is
+    // anchored at the persisted lastCheckedMs (it advances with every
+    // settle and online tick), NOT at the caller's now-lastSavedAt
+    // window. A second restore whose own >60s gate passes would
+    // otherwise re-pay cycles an earlier settle already claimed - the
+    // keyed window can only contain time no settle has paid yet.
+    // Same corruption recovery as tickAutoFarm below.
+    if (!Number.isFinite(autoFarm.lastCheckedMs) || autoFarm.lastCheckedMs < 0) {
+      autoFarm.lastCheckedMs = now
+    }
+
     const cycleMs = (cycleSeconds / 2) * 1000
-    const elapsedMs = cappedElapsedSeconds * 1000
+    const elapsedMs = Math.min(
+      cappedElapsedSeconds * 1000,
+      Math.max(0, now - autoFarm.lastCheckedMs),
+    )
     const completedCycles = Math.floor(elapsedMs / cycleMs)
 
     if (completedCycles <= 0) {
@@ -251,7 +267,7 @@ export class GameManagerAutoFarmOps {
     // window, then the next online tickAutoFarm clamped (now - staleTs)
     // to the cap and paid the SAME window a second time (double-pay —
     // also triggered by any honest session longer than the 24h cap).
-    autoFarm.lastCheckedMs = Date.now() - (elapsedMs - completedCycles * cycleMs)
+    autoFarm.lastCheckedMs = now - (elapsedMs - completedCycles * cycleMs)
   }
 
   /**

@@ -67,6 +67,33 @@ export class SupabaseCharacterCreationService implements CharacterCreationServic
     return validateCharacterCreationDraft(draft, availableTalentIds)
   }
 
+  /**
+   * F-BX-25 - recover the account's committed character after an
+   * ambiguous create attempt. characters.user_id is UNIQUE, so at most
+   * one live row can ever exist for the account - a row found after a
+   * failed/uncertain create IS the character an earlier attempt minted
+   * (crash mid-create, lost response, post-reset recreate). Ordered and
+   * soft-delete-filtered exactly like the boot reconcile's lookup.
+   */
+  private async recoverCommittedCharacter(session: StoredSupabaseSession): Promise<string | null> {
+    if (!session.userId) return null
+    const rows = await requestSupabase<{ id: string }[]>(
+      this.config,
+      `/rest/v1/characters?select=id&user_id=eq.${session.userId}&deleted_at=is.null&order=created_at.asc&limit=1`,
+      {},
+      session.accessToken,
+    )
+    return rows[0]?.id ?? null
+  }
+
+  private async recoverCommittedCharacterSafe(): Promise<string | null> {
+    try {
+      return await this.recoverCommittedCharacter(await this.session())
+    } catch {
+      return null
+    }
+  }
+
   async createCharacter(draft: CharacterCreationDraft): Promise<CharacterCreationResult> {
     const validation = this.validateDraft(draft, this.availableTalentIds)
     if (!validation.ok) return validation
@@ -75,7 +102,18 @@ export class SupabaseCharacterCreationService implements CharacterCreationServic
     try {
       const session = await this.session()
       const available = await this.checkNameAvailable(draft.name)
-      if (!available) return { ok: false, code: 'name_taken', message: 'Đạo danh này đã có chủ.' }
+      if (!available) {
+        // F-BX-25: the name may be held by THIS account's own committed
+        // character (a crashed retry or the post-reset recreate path
+        // hits the user_id unique slot regardless of name) - adopt it
+        // instead of declaring a collision.
+        const committed = await this.recoverCommittedCharacter(session)
+        if (committed) {
+          this.rollId = null
+          return { ok: true, characterId: committed }
+        }
+        return { ok: false, code: 'name_taken', message: 'Đạo danh này đã có chủ.' }
+      }
       const characterId = await requestSupabase<string>(this.config, '/rest/v1/rpc/create_character', {
         method: 'POST',
         body: JSON.stringify({
@@ -94,6 +132,15 @@ export class SupabaseCharacterCreationService implements CharacterCreationServic
       this.rollId = null
       return { ok: true, characterId }
     } catch (error) {
+      // F-BX-25: an ambiguous failure can still have committed - the
+      // response was lost after the RPC wrote, or a 409 reports the
+      // account's existing unique row. Adopt it rather than burning the
+      // name on the player's retry.
+      const committed = await this.recoverCommittedCharacterSafe()
+      if (committed) {
+        this.rollId = null
+        return { ok: true, characterId: committed }
+      }
       if (error instanceof SupabaseHttpError) {
         if (error.status === 409) {
           return { ok: false, code: 'name_taken', message: 'Đạo danh này đã có chủ.' }
