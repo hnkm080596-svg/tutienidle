@@ -146,3 +146,42 @@ Method: real breakthrough ritual driven live (seed `realmLevel=12` → Quán Kh�
 **Trúc Cơ (foundation_establishment):** release ceiling per `ReleasePolicy.progressionCeilingRealmId`; reachable only through the qi_refining breakthrough chain — direct save injection is correctly **fail-closed rejected** ("Invalid technique progression state in save: five_elements_art") with an incompatible-save recovery modal (dark-on-dark title — same FE-02 class). Stage tab browsable but entry gated by `isStageUnlocked`. Formation/companion unlock predicates target this realm — verified wired, not playtested (requires a second live tribulation).
 
 **Save-integrity observations:** realm-seeding attempts confirmed the restore preflight is genuinely fail-closed (naive `realmId` patch rejected outright; committed-path save patched to foundation rejected on technique grade-history consistency). Rejected saves surface a recovery modal — verified twice. This is a strength worth noting for the cloud master.
+
+---
+
+# Round 3 — Trúc Cơ breakthrough live run + foundation surfaces
+
+Method: fresh boot → creation → seed mortal L12 → **win Quán Khí live** (quiz answers driven via `tribulationDirector.getState().currentQuestion.correctAnswerIndex`) → way pick → qi_refining → seed qi L12 + `qi_refining_abyssal_pool` → **win Trúc Cơ tribulation live** (mind chapter answered; tank/lightning chapters survived via runtime test-only defense override on the director ghost — audit tooling, not a product path) → foundation_establishment reached legitimately through the release-window chain.
+
+### FE-17 — MEDIUM — Release-ceiling gate (Kim Đan) shows a dead button with zero explanation
+
+- **Evidence:** shot `f14-realm-foundation` — at Trúc Cơ · Tầng 1 the realm panel renders a dim "Kim Đan" button with **no requirement rows, no "Sắp ra mắt"/"Chưa mở" label, no tooltip** (BreakthroughGate returns `[]` for closed transitions, so the requirements section is empty and the button just sits disabled). Compounds with FE-12: the same panel simultaneously shows the *passive node* for the realm the player is standing in as "Sắp ra mắt".
+- **Impact:** at the exact content ceiling a paying player's progression screen is a dead end with no "this is the current beta cap" message. One line of copy fixes it.
+
+### FE-18 — LOW — Formation panel lists 5 formations with no effect/slot information
+
+- **Evidence:** shot `f11-formation_slot` — rows for Độc Hành/Lưỡng Nghi/Tam Tài/Ngũ Hành/Cửu Cung Trận show names only; no member count, effect, or slot preview on the row; grid shows the player chip with a truncated name ("Kiểm Toán G…"); only a "Lưu Trận Pháp" button. No hover hint observed on rows.
+- **Impact:** player cannot compare formations to pick one — pure name-list.
+
+### FE-19 — LOW — Companion roster empty state is a dead panel
+
+- **Evidence:** shot `f11-companion_roster` — full-size dark panel containing one line "Chưa có đồng đội nào — chiêu mộ tại Chiêu Hiền Quán."; the pointer names the source building but offers no button/link to open it.
+- **Impact:** missed conversion moment — the unlock just happened, the player is right there, and the panel gives no action.
+
+### FE-20 — LOW — Realm panel node description cards clip at the panel bottom edge
+
+- **Evidence:** shots `f3-realm-qi-cap`, `f14-realm-foundation` — "Nhập Đạo"/"Kiến Cơ" description cards render partially cut by the panel's lower boundary at 900px viewport (text ends mid-sentence at the edge).
+
+### FE-21 — NIT — Stage detail numbering mixes "Tầng N" and "Màn 3.1"
+
+- **Evidence:** shot `f13-stage1` — nodes are labeled "Tầng 1…10" while the detail header reads "Màn 3.1" and node-card enemy lists truncate to "Viêm Giáp Viên ·…". Two numbering vocabularies for the same thing.
+
+## Round-3 verified-good surface (recorded so cloud doesn't re-check)
+
+- **Trúc Cơ confirm dialog**: warns "Không thể mặc trang bị khi độ kiếp" + technique-freeze consequence before commit — informed-choice UX done right.
+- **Tribulation (Trúc Cơ)**: 3 chapters (mind quiz 4Q timed → body tank → lightning tank), readable quiz UI, live HP bar; **defeat path** shows "Độ Kiếp Thất Bại — Kiếp Thương còn vương lại — hãy dưỡng thương rồi thử lại" (consequence + recovery instruction — good).
+- **Victory path**: announcement renders resolved grade ("★ NHÂN ĐẠO TRÚC CƠ ★") + second talent-entitlement modal fires.
+- **Unlock predicates work**: wheel diff mortal→foundation — `formation_slot`/`companion_roster` shed their LOCK state at Trúc Cơ; `phap_bao` stays locked (Kim Đan deferred) — gating accurate per realm.
+- **Foundation stages enterable**: `foundation_floor_1` Bắt Đầu enabled at foundation, disabled at qi_refining — `isStageUnlocked` realm gate verified both directions.
+- **Realm panel requirement rows** (qi cap): "✓ Luyện Khí tầng 12 / ✓ Chương 10 hoàn thành" — explicit checklist before the Trúc Cơ button; this pattern just isn't extended to the closed ceiling (FE-17).
+- Save-commit lag after ceremony: realm commits in memory immediately; the localStorage save lags until the next autosave/manual save — a reload in the gap could lose the breakthrough. Narrow window, Low-level risk already implied by INFRA findings.
