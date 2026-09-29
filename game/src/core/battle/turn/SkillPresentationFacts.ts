@@ -21,6 +21,17 @@ export type PlaybackRef = Readonly<{ sessionId: number; requestId: string; token
 export type ActorAnchorFact = Readonly<{ entityId: string; row: number; column: number }>
 export type CastDisposition =
   'action' | 'charge-start' | 'charge-tick' | 'charge-release' | 'blocked' | 'empty'
+
+// Which kit slot a declared cast came out of. This is the slot-role truth
+// for BOTH presentation feeds: skill_presentation_cast carries it on the
+// cast fact, and the observation feed turn_cast_start reports the same
+// value - a second derivation would invite a shadow rule that can disagree.
+//
+// 'none' = the declared turn is not a cast at all (charge-continuation,
+// CC-skip, NULL_ACTION): the slot-role animation resolver produces no clip
+// for it and the cast presentation runs on recipe timing.
+export type CastSlotRole = 'basic' | 'special' | 'ultimate' | 'none'
+
 export type SkillCastPresentation = Readonly<{
   ref: PlaybackRef
   rootSkillId: string
@@ -30,6 +41,7 @@ export type SkillCastPresentation = Readonly<{
   declaredTargets: readonly ActorAnchorFact[]
   candidateInstanceCount: number
   disposition: CastDisposition
+  slotRole: CastSlotRole
 }>
 type OutcomeIdentity = Readonly<{
   outcomeId: string
@@ -123,7 +135,39 @@ export function buildSkillCastPresentation(
     declaredTargets: declared.affected.map(actorAnchor),
     candidateInstanceCount: skill?.instances?.count ?? 1,
     disposition: castDisposition(declared),
+    slotRole: castSlotRole(actor, declared),
   })
+}
+
+/**
+ * Which kit slot a declared cast came out of. The slot is positional - the
+ * participant's `ultimate`/`special` slot objects ARE the identity, so
+ * `declared.action.slot` is compared by reference (a cast may carry no slot,
+ * e.g. CC-blocked, implicit basics, queued repeat/multicast executions ->
+ * 'basic': follow-ups are strikes, not slot casts, so 'basic' is correct).
+ */
+export function castSlotRole(
+  actor: TurnBattleParticipant,
+  declared: TurnDeclaredAction,
+): CastSlotRole {
+  const slot = declared.action?.slot
+  if (slot && slot === actor.ultimate) return 'ultimate'
+  if (slot && slot === actor.special) return 'special'
+  // Charge-RESOLVE casts carry no slot (action is null on the resolve turn -
+  // the slot was consumed at commit) but declared.chargedSkill IS the slot's
+  // skill object, captured by reference at declareActorAction. The resolve
+  // deserves the same clip the commit played (Clean-A2 R2-F7).
+  const charged = declared.chargedSkill
+  if (charged) {
+    if (charged === actor.ultimate?.skill || charged.id === actor.ultimate?.skill.id) return 'ultimate'
+    if (charged === actor.special?.skill || charged.id === actor.special?.skill.id) return 'special'
+  }
+  // A declared turn carrying neither an action nor a resolved charge is not
+  // a cast at all (charge-continuation, CC-skip, NULL_ACTION): report 'none'
+  // so presentation skips the lunge + attack clip it would otherwise replay
+  // every channeling turn (Clean-B F-CB2-02).
+  if (declared.action == null) return 'none'
+  return 'basic'
 }
 export function presentationGroup(
   actor: TurnBattleParticipant,

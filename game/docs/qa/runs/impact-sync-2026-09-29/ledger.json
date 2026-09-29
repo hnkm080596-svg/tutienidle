@@ -1,0 +1,100 @@
+{
+  "schemaVersion": 2,
+  "run": {
+    "id": "impact-sync-2026-09-29",
+    "createdAt": "2026-09-29T06:19:02.178Z",
+    "scope": "AGGREGATE_REPOSITORY",
+    "authorizedRepairs": [
+      "impact-sync plan implementation on post-PR-#48 master: cast publication seam, cast fact completeness, exact-play resolver, animation-driven impact timing, art metadata contract, wugu/monster readiness, companion seam, PlayerPortrait readiness"
+    ],
+    "nonGoals": [
+      "skill mechanics redesign",
+      "companion redesign",
+      "new enemy specials",
+      "wugu stomp/enrage gameplay",
+      "combat formulas",
+      "targeting changes",
+      "multi-hit protocol",
+      "save schema",
+      "cast-duration rebalance",
+      "PR48 asset import",
+      "hidden-way art",
+      "unrelated presentation rewrites",
+      "opening a PR"
+    ],
+    "checkout": "/home/ubuntu/repos/tutienidle/.agent-worktrees/impact-sync",
+    "branch": "devin/1790662000-impact-sync",
+    "base": "51b9efdb025ba0fc7b22f62e80f04875050d08b5",
+    "head": "",
+    "state": {
+      "productStateId": "4320b95bf65bf83554d73e14c3475b21054b830c894fcd191ab28ff8e98f3e82",
+      "contractId": "56850e8f8e893c6f26628a7029fa8abf9f7b78eb3a085c140b61ce8faea226ea",
+      "attackModelId": "760f1ceb6058b38073e17d4484c06fc5131a145b1747a5cab18ddf5e7d700e64",
+      "environmentId": "ee44462ccd7d97621763997e1cc8a63fc7585f97c3a78e0cf730bcb2846ca7c5"
+    },
+    "manifestPath": "manifest.json",
+    "environmentPath": "environment.json",
+    "learningPolicyId": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+    "consumedLessonIds": [],
+    "aggregateParents": [],
+    "requiredDomains": [],
+    "exclusions": [],
+    "briefIds": [],
+    "capacityLimit": 5,
+    "requiredReadiness": true,
+    "phase": "SNAPSHOT",
+    "cleanRoundA": null,
+    "cleanRoundB": null,
+    "finalEvidenceIds": [],
+    "outcome": null
+  },
+  "briefs": [],
+  "assignments": [],
+  "consumptions": [],
+  "invariants": [],
+  "census": [],
+  "findings": [],
+  "evidence": [],
+  "coverage": [],
+  "attacks": [],
+  "reviews": [],
+  "cycles": [],
+  "mutations": [],
+  "corpus": [],
+  "lessons": [],
+  "messages": [],
+  "events": [
+    {
+      "seq": 1,
+      "at": "2026-09-29T06:19:02.179Z",
+      "kind": "PHASE",
+      "actor": "coordinator-8923",
+      "state": {
+        "productStateId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567",
+        "contractId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567",
+        "attackModelId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567",
+        "environmentId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567"
+      },
+      "previousEventHash": null,
+      "payloadPath": "events/0001.json",
+      "payloadHash": "607726c5ca89b25661a862d1cfeab38b1a5a5ae9b90d2807cd36c7ac0c551a08",
+      "eventHash": "7c3f2f7ead6517670b97e3468e18e575f15b7e0e51500c068b2cd42037b25158"
+    },
+    {
+      "seq": 2,
+      "at": "2026-09-29T06:19:03.026Z",
+      "kind": "SNAPSHOT",
+      "actor": "coordinator-8923",
+      "state": {
+        "productStateId": "4320b95bf65bf83554d73e14c3475b21054b830c894fcd191ab28ff8e98f3e82",
+        "contractId": "56850e8f8e893c6f26628a7029fa8abf9f7b78eb3a085c140b61ce8faea226ea",
+        "attackModelId": "760f1ceb6058b38073e17d4484c06fc5131a145b1747a5cab18ddf5e7d700e64",
+        "environmentId": "ee44462ccd7d97621763997e1cc8a63fc7585f97c3a78e0cf730bcb2846ca7c5"
+      },
+      "previousEventHash": "7c3f2f7ead6517670b97e3468e18e575f15b7e0e51500c068b2cd42037b25158",
+      "payloadPath": "events/0002.json",
+      "payloadHash": "c2dff1adc2d8a443a58a55e45824ca580222b582d1515c1058af5a098b464b4e",
+      "eventHash": "b50b41b8d37c6f413669166c961731c5dab773faa7ee6e6b11ef7b3b01ad53ff"
+    }
+  ]
+}

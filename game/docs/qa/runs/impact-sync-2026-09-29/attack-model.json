@@ -1,0 +1,15 @@
+{
+  "attackModelVersion": "impact-sync-1",
+  "families": [
+    "publication-order race: cast emitted before impact step parks (auto/manual, interactive/headless)",
+    "stale/duplicate cast: side effects before admission (sprite restart, runner restart, extra ACK)",
+    "resolver drift: timing clip != actually-played clip; wrong fallback order; slotRole 'none' playing attack",
+    "resume duplication: pre-impact reattach replays or double-impacts; token staleness",
+    "marker arithmetic: bad frame index, non-integer, out-of-range, unknown variant/clip, drift vs manifest",
+    "timing wedge: clipImpactMs >= ANIMATION_FALLBACK_MS; invalid computed timing",
+    "art registry drift: per-clip sheet wrong, wugu layout, companion entityKey/art-slug conflation, namespace collision",
+    "preload parity: companion/wugu/cast atlases missing from queueCombatAssets or getCombatDescriptors",
+    "death overlap: cast arriving mid-death replacing death clip, duplicate impact/complete",
+    "catalogue flatten: castClips keyed map breaking Object.values consumers"
+  ]
+}

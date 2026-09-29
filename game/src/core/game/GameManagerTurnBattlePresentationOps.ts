@@ -163,7 +163,7 @@ export class GameManagerTurnBattlePresentationOps {
     return this.runtime.isActionPlaybackWaiting()
   }
 
-  /** Phaser calls when the ready flourish ends - declares the action and publishes skill_presentation_cast. */
+  /** Phaser calls when the ready flourish ends - declares the action. The pipeline's impact step publishes skill_presentation_cast. */
   acknowledgeTurnReady(token?: string): void {
     this.runtime.acknowledgeTurnReady(token)
   }

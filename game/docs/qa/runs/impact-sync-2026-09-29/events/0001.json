@@ -1,0 +1,37 @@
+{
+  "phase": "INTAKE",
+  "request": {
+    "runId": "impact-sync-2026-09-29",
+    "productRoot": ".",
+    "checkout": "/home/ubuntu/repos/tutienidle/.agent-worktrees/impact-sync",
+    "branch": "devin/1790662000-impact-sync",
+    "base": "51b9efdb025ba0fc7b22f62e80f04875050d08b5",
+    "authorizedRepairs": [
+      "impact-sync plan implementation on post-PR-#48 master: cast publication seam, cast fact completeness, exact-play resolver, animation-driven impact timing, art metadata contract, wugu/monster readiness, companion seam, PlayerPortrait readiness"
+    ],
+    "nonGoals": [
+      "skill mechanics redesign",
+      "companion redesign",
+      "new enemy specials",
+      "wugu stomp/enrage gameplay",
+      "combat formulas",
+      "targeting changes",
+      "multi-hit protocol",
+      "save schema",
+      "cast-duration rebalance",
+      "PR48 asset import",
+      "hidden-way art",
+      "unrelated presentation rewrites",
+      "opening a PR"
+    ],
+    "contractPaths": [
+      "../AGENTS.md",
+      "docs/qa/protocol/README.md"
+    ],
+    "extraExclude": [
+      "docs/qa/runs/impact-sync-2026-09-29"
+    ],
+    "requiredReadiness": true,
+    "capacityLimit": 5
+  }
+}
