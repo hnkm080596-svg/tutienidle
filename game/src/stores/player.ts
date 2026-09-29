@@ -16,6 +16,8 @@ import { buildGameSave, computeRestoreIdentity, type GameSave } from '../service
 import { cloudSaveCoordinator } from '../services/cloudSave/CloudSaveServiceFactory'
 import { asBaseStats, createBaseStats } from '@/core/stats/StatBlock'
 import { STAT_DOMAIN } from '@/core/stats/StatDomain'
+import { getEffectiveMainStatCap } from '@/core/stats/StatCap'
+import { MAIN_STAT_KEYS } from '@/core/stats/StatTypes'
 import type { GameManager } from '@/core/game/GameManager'
 import { getRequiredCultivation } from '@/core/realm/realmSystem'
 import { cultivateTick } from '@/core/cultivation/CultivationTick'
@@ -327,7 +329,7 @@ export const usePlayerStore = defineStore('player', {
       const filteredBaseStats: Record<string, number> = {}
 
       for (const [key, value] of Object.entries(clonedPlayer.baseStats)) {
-        if (allowedStatKeys.has(key)) {
+        if (allowedStatKeys.has(key) && Number.isFinite(value) && value >= 0) {
           filteredBaseStats[key] = value
         }
       }
@@ -345,6 +347,37 @@ export const usePlayerStore = defineStore('player', {
         }),
       }
 
+      // Retired pill-permanent:<stat> flat modifiers (pre-rework saves)
+      // are folded into baseStats once, then dropped below: the bucket
+      // must not keep paying while the cap gate only reads baseStats,
+      // and the earned points stay visible to every baseStats reader.
+      // Main stats fold under the shared effective cap; other valid
+      // stat keys fold uncapped (no main-cap concept applies).
+      const isRetiredPillPermanent = (modifier: StatModifier): boolean =>
+        modifier.id.startsWith('pill-permanent:')
+      const mainCap = getEffectiveMainStatCap(restoredPlayer)
+      for (const modifier of restoredPlayer.modifiers ?? []) {
+        if (!isRetiredPillPermanent(modifier) || !allowedStatKeys.has(modifier.stat)) {
+          continue
+        }
+        const gain = modifier.flat ?? 0
+        if (gain <= 0) {
+          continue
+        }
+        const key = modifier.stat
+        const bound = (MAIN_STAT_KEYS as readonly string[]).includes(key)
+          ? mainCap
+          : Number.POSITIVE_INFINITY
+        restoredPlayer.baseStats[key] = Math.min(bound, (restoredPlayer.baseStats[key] ?? 0) + gain)
+      }
+
+      // Value-domain coherence on the persisted pool: main stats clamp
+      // to the shared cap (a save claiming more is corrupt or crafted -
+      // same bound every legitimate writer already enforces).
+      for (const key of MAIN_STAT_KEYS) {
+        restoredPlayer.baseStats[key] = Math.min(mainCap, restoredPlayer.baseStats[key] ?? 0)
+      }
+
       // Same whitelist for StatModifier.stat fields persisted on the
       // player slice - a modifier whose stat is not a current StatType
       // drops (never renamed), and a modifier on a domain-gated stat
@@ -352,6 +385,9 @@ export const usePlayerStore = defineStore('player', {
       // wrong tag would be rejected by applyDomainGate on every
       // recompute, so the inert zombie is dropped at restore instead.
       const isCurrentShapeModifier = (modifier: StatModifier): boolean => {
+        if (isRetiredPillPermanent(modifier)) {
+          return false
+        }
         if (!allowedStatKeys.has(modifier.stat)) {
           return false
         }

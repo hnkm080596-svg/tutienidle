@@ -1326,6 +1326,7 @@
         "retired": "This pill is retired — its old effect is no longer supported.",
         "cap": "The related stat has reached the realm cap.",
         "material_pill": "This pill is not consumed directly — it is spent through its own system.",
+        "in_battle": "Stat-granting pills cannot be used mid-battle.",
         "fallback": "Cannot use this pill."
       }
     },

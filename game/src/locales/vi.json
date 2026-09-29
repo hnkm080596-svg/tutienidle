@@ -1326,6 +1326,7 @@
         "retired": "Đan dược này đã ngừng lưu hành — hiệu ứng cũ không còn được hỗ trợ.",
         "cap": "Chỉ số liên quan đã đạt trần cảnh giới.",
         "material_pill": "Đan dược này không uống trực tiếp — nó được tiêu qua hệ thống riêng.",
+        "in_battle": "Đan dược cộng chỉ số không dùng được giữa trận.",
         "fallback": "Không thể dùng đan dược."
       }
     },

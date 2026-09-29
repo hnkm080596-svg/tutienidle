@@ -65,6 +65,38 @@ describe('legacy save -> domain gate on persisted modifiers (QA)', () => {
     vi.spyOn(Date, 'now').mockImplementation(() => NOW)
   })
 
+  it('a retired pill-permanent modifier folds into baseStats at restore, then drops', () => {
+    const player = usePlayerStore()
+    const save = buildMinimalSave({
+      baseStats: { strength: 5 },
+      modifiers: [
+        { id: 'pill-permanent:strength', sourceId: 'to_cot_dan', sourceType: 'pill', stat: 'strength', flat: 3 },
+        { id: 'pill-permanent:might', sourceId: 'x', sourceType: 'pill', stat: 'might', flat: 2 },
+      ],
+    })
+
+    player.restoreFromSave(save)
+
+    expect(player.baseStats.strength).toBe(8)
+    expect(player.baseStats.might).toBe(createBaseStats().might + 2)
+    expect(player.modifiers.every((m) => !m.id.startsWith('pill-permanent:'))).toBe(true)
+  })
+
+  it('the fold respects getEffectiveMainStatCap for main stats', () => {
+    const player = usePlayerStore()
+    const save = buildMinimalSave({
+      baseStats: { strength: 9 },
+      modifiers: [
+        { id: 'pill-permanent:strength', sourceId: 'x', sourceType: 'pill', stat: 'strength', flat: 5 },
+      ],
+    })
+
+    player.restoreFromSave(save)
+
+    // mortal cap = 10, no completed perfection -> 10, not 14.
+    expect(player.baseStats.strength).toBe(10)
+  })
+
   it('a legacy-keyed persisted modifier is dropped at restore, not backfilled', () => {
     const player = usePlayerStore()
     const save = buildMinimalSave({

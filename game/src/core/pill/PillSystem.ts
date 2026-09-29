@@ -109,14 +109,20 @@ export class PillSystem {
 
     // permanent_stat writes baseStats now - same bound as every other
     // baseStats writer (level-up + pills share getEffectiveMainStatCap).
+    // Accumulate per stat: two same-stat grants in one pill must not
+    // each gate against the pre-use value and then evaporate on apply.
+    const pendingByStat = new Map<string, number>()
+    const mainCap = getEffectiveMainStatCap(player)
     for (const effect of pill.effects) {
       if (effect.type !== 'permanent_stat' || !effect.stat) {
         continue
       }
 
-      if ((player.baseStats[effect.stat] ?? 0) + (effect.value ?? 0) > getEffectiveMainStatCap(player)) {
+      const next = (pendingByStat.get(effect.stat) ?? 0) + (effect.value ?? 0)
+      if ((player.baseStats[effect.stat] ?? 0) + next > mainCap) {
         return 'cap'
       }
+      pendingByStat.set(effect.stat, next)
     }
 
     return 'ok'
@@ -146,6 +152,11 @@ export class PillSystem {
     // magnitudes (cultivation %, insight, regen rate). Indivisible grants
     // (a main-stat POINT) are not scaled.
     potencyMultiplier = 1,
+    // Residual adapter for mixed-effect pills: an effect type outside
+    // the profession vocabulary (heal/buff/flat-cultivation) is applied
+    // through the same channel `use()` would use instead of silently
+    // dropping it.
+    target?: PillTarget,
   ): { mainStat?: MainStatKey; timedEffect?: PersistentTimedEffect } {
     let mainStat: MainStatKey | undefined
     let timedEffect: PersistentTimedEffect | undefined
@@ -159,6 +170,12 @@ export class PillSystem {
         // the shared bound honest even if a future caller skips
         // canUseProfessionPill's cap gate.
         if (effect.stat) {
+          if (!(MAIN_STAT_KEYS as readonly string[]).includes(effect.stat)) {
+            // baseStats accepts every StatType, but the main-stat bound
+            // only has meaning for MAIN_STAT_KEYS - a non-main target
+            // here is authored-data drift, refuse the write.
+            continue
+          }
           const cap = getEffectiveMainStatCap(player)
           player.baseStats[effect.stat] = Math.min(
             cap,
@@ -244,6 +261,13 @@ export class PillSystem {
         player.totalSkillInsightGained += amount
 
         continue
+      }
+
+      // Residual vocabulary (heal/buff/flat-cultivation/...): apply via
+      // the target adapter rather than dropping - a pill mixing a
+      // profession effect with a legacy effect must pay both.
+      if (target) {
+        this.applyEffect(effect, target)
       }
     }
 

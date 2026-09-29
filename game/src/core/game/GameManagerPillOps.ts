@@ -19,6 +19,11 @@ export class GameManagerPillOps {
       pillRegistry: PillRegistry
       pillSystem: PillSystem
       applyTimedEffect: (player: PlayerData, effect: PersistentTimedEffect) => void
+      // Same out-of-combat gate the other baseStats writer
+      // (allocateAttributePoint) enforces - a running battle never reads
+      // baseStats it did not mint, so mid-battle grants would be
+      // battle-invisible; the pill stays in the bag instead.
+      isTurnBattleInProgress: () => boolean
     },
   ) {}
 
@@ -36,7 +41,7 @@ export class GameManagerPillOps {
     random: () => number = Math.random,
   ): {
     ok: boolean
-    reason?: 'not_found' | 'wrong_realm' | 'all_main_stats_capped' | 'requires_phap_tu' | 'cap' | 'retired' | 'material_pill'
+    reason?: 'not_found' | 'wrong_realm' | 'all_main_stats_capped' | 'requires_phap_tu' | 'cap' | 'retired' | 'material_pill' | 'in_battle'
     mainStat?: MainStatKey
   } {
     if (!this.deps.pillBag.has(pillId, 1)) {
@@ -77,6 +82,18 @@ export class GameManagerPillOps {
         (effect.type === 'cultivation' && effect.cultivationPercent !== undefined),
     )
 
+    // Out-of-combat gate for baseStats-writing effects - mirrors
+    // allocateAttributePoint: a running battle minted its stats already,
+    // so a mid-battle grant would be invisible until post-battle resync.
+    // Only stat-granting pills are refused; heal/regen/buff keep working
+    // mid-fight (their effects land on the live entity).
+    if (
+      this.deps.isTurnBattleInProgress() &&
+      pill.effects.some((e) => e.type === 'permanent_stat' || e.type === 'random_main_stat')
+    ) {
+      return { ok: false, reason: 'in_battle' }
+    }
+
     if (isProfessionPill) {
       const reason = this.deps.pillSystem.canUseProfessionPill(pill, player)
 
@@ -90,6 +107,7 @@ export class GameManagerPillOps {
         random,
         // M3 - Hoa Hau Thong Than: +50% effectiveness on crafted pills.
         getAlchemyDoublePill(player.selectedTalentIds, player.talentLevels)?.potencyMultiplier ?? 1,
+        target,
       )
 
       if (result.timedEffect) {

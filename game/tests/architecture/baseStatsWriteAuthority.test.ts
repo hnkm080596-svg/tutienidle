@@ -23,7 +23,7 @@
  */
 import { describe, expect, it } from 'vitest'
 import { join, relative } from 'node:path'
-import { listProductionTs, readTs, SCAN_TIMEOUT } from './helpers/scanTs'
+import { srcCorpus, SCAN_TIMEOUT } from './helpers/scanTs'
 
 const GAME_ROOT = process.cwd()
 const SRC_DIR = join(GAME_ROOT, 'src')
@@ -40,7 +40,24 @@ const SRC_DIR = join(GAME_ROOT, 'src')
  * do not match - the `:` form is an object literal, not a `.` member write.
  */
 const BASESTATS_WRITE_RE =
-  /\.baseStats\s*(?:[+\-*/]?=(?!=)|\+\+|--)|\.baseStats(?:\.\w+|\[[^\]]*\])\s*(?:[+\-*/]?=(?!=)|\+\+|--)|Object\.assign\([^)]*\.baseStats|delete\s+\w+\.baseStats/
+  /\.baseStats\s*(?:[+\-*/]?=(?!=)|\+\+|--)|\.baseStats\s*(?:\.\w+|\[[^\]]*\])\s*(?:[+\-*/]?=(?!=)|\+\+|--)|\[(?:"baseStats"|'baseStats')\]\s*(?:\.\w+|\[[^\]]*\])?\s*(?:[+\-*/]?=(?!=)|\+\+|--)|Object\.assign\([^)]*\.baseStats|Object\.assign\(\s*\w+\s*,\s*\{[^}]*\bbaseStats\b|\.\$patch\(\s*\{[^}]*\bbaseStats\b|Reflect\.set\([^)]*\bbaseStats\b|delete\s+\w+\.baseStats/
+
+/**
+ * Pool-alias escape hatch: `const s = x.baseStats; s.strength = 1` writes
+ * the same pool without spelling `.baseStats` on the write line. Track
+ * per-file alias declarations, then flag member writes on the alias.
+ * Store `$state.baseStats` inside an SFC (`player.$state.baseStats`) is
+ * caught by the main regex; the alias arm covers the rest.
+ */
+// `const copy = { ...x.baseStats }` is a fresh object - writes go to
+// the copy, not the pool - so an RHS opening with `{` is excluded.
+const ALIAS_DECL_RE = /(?:const|let|var)\s+(\w+)\s*=\s*(?!\s*\{)[^;=]*\.baseStats\b/g
+const aliasWriteRe = (id: string): RegExp =>
+  new RegExp(
+    `\\b${id}\\s*(?:\\.\\w+|\\[[^\\]]*\\])\\s*(?:[+\\-*/]?=(?!=)|\\+\\+|--)|Object\\.assign\\(\\s*${id}\\b|delete\\s+${id}\\s*\\.`,
+  )
+
+const TEST_EXT_RE = /\.test\.(ts|tsx|js|jsx|mjs|cjs|mts|cts)$/
 
 interface AllowedFile {
   path: string
@@ -58,6 +75,11 @@ const ALLOWED: AllowedFile[] = [
     contract:
       'Pill stat channel authority: useProfessionPill writes permanent_stat/random_main_stat grants into baseStats, bounded by the same cap (canUseProfessionPill).',
   },
+  {
+    path: 'src/stores/player.ts',
+    contract:
+      'Restore-time migration fold: retired pill-permanent:* modifiers fold their earned flat into baseStats once during load (bounded by getEffectiveMainStatCap); the modifier is dropped so the fold is idempotent, not a new grant channel.',
+  },
 ]
 
 interface Offender {
@@ -70,21 +92,31 @@ function collectOffenders(): { violations: Offender[]; unclassified: Offender[] 
   const violations: Offender[] = []
   const unclassified: Offender[] = []
 
-  for (const file of listProductionTs(SRC_DIR)) {
-    const rel = relative(GAME_ROOT, file).replaceAll('\\', '/')
+  for (const file of srcCorpus(SRC_DIR)) {
+    if (TEST_EXT_RE.test(file.path)) continue
+    const rel = relative(GAME_ROOT, file.path).replaceAll('\\', '/')
     const allowed = ALLOWED.find((a) => a.path === rel)
 
-    readTs(file)
-      .split('\n')
-      .forEach((line, idx) => {
-        if (!BASESTATS_WRITE_RE.test(line)) return
-        const offender = { file: rel, line: idx + 1, text: line.trim() }
-        if (allowed) {
-          violations.push(offender)
-        } else {
-          unclassified.push(offender)
-        }
-      })
+    const lines = file.text.split('\n')
+    const aliasIds = new Set<string>()
+    for (const line of lines) {
+      ALIAS_DECL_RE.lastIndex = 0
+      let m: RegExpExecArray | null
+      while ((m = ALIAS_DECL_RE.exec(line)) !== null) {
+        if (m[1]) aliasIds.add(m[1])
+      }
+    }
+    const aliasRes = [...aliasIds].map(aliasWriteRe)
+
+    lines.forEach((line, idx) => {
+      if (!BASESTATS_WRITE_RE.test(line) && !aliasRes.some((re) => re.test(line))) return
+      const offender = { file: rel, line: idx + 1, text: line.trim() }
+      if (allowed) {
+        violations.push(offender)
+      } else {
+        unclassified.push(offender)
+      }
+    })
   }
 
   return { violations, unclassified }
