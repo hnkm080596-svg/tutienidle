@@ -7,6 +7,8 @@ import InkWashBackdrop from '@/components/common/InkWashBackdrop.vue'
 import { useSaveIssueStore } from '@/stores/saveIssue'
 import { useNotificationStore } from '@/stores/notification'
 import { exportSaveToFile, deleteSave, importSaveRaw } from '@/services/save/SaveSystem'
+import { validateRecoveryData } from '@/services/save/recoveryApi'
+import { cloudSaveCoordinator } from '@/services/cloudSave/CloudSaveServiceFactory'
 import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
 import ConfirmModal from './ConfirmModal.vue'
 import { markResetNotice } from '@/composables/resumeSession'
@@ -14,6 +16,13 @@ import { markResetNotice } from '@/composables/resumeSession'
 const saveIssue = useSaveIssueStore()
 const notification = useNotificationStore()
 const { t } = useI18n()
+
+// B1.9a - under the remote authority the corrupt/incompatible bytes
+// live server-side. Export still preserves raw data for manual
+// recovery; import is validate+export only (it cannot overwrite the
+// cloud row); reset becomes a cloud recheck that restores whatever
+// the authoritative row holds.
+const remoteAuthoritative = cloudSaveCoordinator.capability === 'remote-authoritative'
 
 // Thay window.confirm()/window.alert() native — modal xác nhận đồng bộ
 // hoá bằng pending-action giống SettingsPanel.vue: mở ConfirmModal, hành
@@ -34,16 +43,28 @@ function cancelPendingConfirm() {
 }
 
 function handleExport() {
-  exportSaveToFile(saveIssue.raw)
+  exportSaveToFile(
+    saveIssue.raw,
+    remoteAuthoritative
+      ? { source: 'cloud', revision: cloudSaveCoordinator.getRevision() }
+      : { source: 'local', revision: cloudSaveCoordinator.getRevision() },
+  )
 }
 
 function handleReset() {
   requestConfirm(
-    t('saveIncompatible.confirm.resetTitle'),
-    t('saveIncompatible.confirm.resetBody'),
+    remoteAuthoritative
+      ? t('saveIncompatible.confirm.resetCloudTitle')
+      : t('saveIncompatible.confirm.resetTitle'),
+    remoteAuthoritative
+      ? t('saveIncompatible.confirm.resetCloudBody')
+      : t('saveIncompatible.confirm.resetBody'),
     () => {
       // Mission A review — deleteSave() returns false on storage
       // failure; reloading would boot back into the same corrupt save.
+      // In remote mode this is only a CACHE reset: the authoritative
+      // load re-fetches the cloud row after reload (an unchanged
+      // corrupt row lands back on this surface).
       if (deleteSave()) {
         markResetNotice()
         window.location.reload()
@@ -66,7 +87,25 @@ function handleImport(event: Event) {
   const reader = new FileReader()
 
   reader.onload = () => {
-    const ok = importSaveRaw(String(reader.result))
+    const rawText = String(reader.result)
+
+    if (remoteAuthoritative) {
+      // Remote mode: classify the file, export the validated copy back
+      // for manual recovery, never overwrite the cloud row or cache.
+      const validation = validateRecoveryData(rawText)
+
+      if (validation.status === 'valid') {
+        exportSaveToFile(validation.normalizedRaw, { source: 'recovery-import' })
+        notification.push('save', t('saveIncompatible.notify.importValidatedRemote'))
+      } else {
+        requestConfirm(t('saveIncompatible.confirm.importFailedTitle'), t('saveIncompatible.confirm.importFailedBody'), () => {}, false)
+      }
+
+      input.value = ''
+      return
+    }
+
+    const ok = importSaveRaw(rawText)
 
     if (ok) {
       window.location.reload()
@@ -108,7 +147,9 @@ function handleImport(event: Event) {
           <input type="file" accept="application/json" @change="handleImport" />
         </label>
 
-        <GameButton variant="danger" @click="handleReset">{{ t('saveIncompatible.actions.reset') }}</GameButton>
+        <GameButton variant="danger" @click="handleReset">
+          {{ remoteAuthoritative ? t('saveIncompatible.actions.resetCloud') : t('saveIncompatible.actions.reset') }}
+        </GameButton>
       </div>
     </div>
 
@@ -128,7 +169,7 @@ function handleImport(event: Event) {
 .save-incompatible {
   position: fixed;
   inset: 0;
-  /* z-index via OVERLAY_LAYERS.saveGate (inline style) — top of the
+  /* z-index via OVERLAY_LAYERS.saveGate (inline style) - top of the
      content layers, still under the curtain by contract. */
   overflow: auto;
   display: flex;

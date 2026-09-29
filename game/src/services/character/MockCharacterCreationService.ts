@@ -6,7 +6,7 @@ import {
   type CharacterCreationValidation,
 } from './CharacterCreationService'
 
-class MockCharacterCreationService implements CharacterCreationService {
+export class MockCharacterCreationService implements CharacterCreationService {
   private availableTalentIds = new Set<string>()
 
   async rollTalents() {

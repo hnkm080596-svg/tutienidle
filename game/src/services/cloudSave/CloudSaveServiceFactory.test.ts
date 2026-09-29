@@ -1,9 +1,9 @@
-// R10 (AR-15, local scope, S5) — the factory must construct a service
-// whose capability is 'local-only', full stop. There is no environment
-// branching in the factory today (see BOUNDS.md); this guard exists so
-// that IF one is ever added, it fails loudly the moment it silently
-// upgrades the default export's capability without an explicit, separately
-// scoped remote-adapter mission.
+// R10 (AR-15) + B1.2 - the coordinator is bundle-composed from the
+// explicit VITE_BACKEND_MODE. Under test (no mode declared, non-PROD)
+// the default is the local mock bundle, so capability stays 'local-only'.
+// The release/supabase branches of that matrix are pinned by
+// src/services/backend/backendMode.test.ts - a regression that made a
+// fatal release composition silently resolve would fail there too.
 import { describe, expect, it } from 'vitest'
 import { cloudSaveCoordinator } from './CloudSaveServiceFactory'
 import { LocalCloudSaveService } from './LocalCloudSaveService'

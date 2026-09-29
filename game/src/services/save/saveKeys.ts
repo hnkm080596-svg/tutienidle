@@ -32,12 +32,18 @@ export function resolveSaveAccountId(): string {
   // Node/vitest has no sessionStorage - resolver stays pure there.
   if (typeof sessionStorage === 'undefined') return GUEST_ACCOUNT_ID
   const session = readSupabaseSession()
-  return session?.mode !== 'guest' && session?.userId ? session.userId : GUEST_ACCOUNT_ID
+  // B1.5 - the Supabase userId scopes BOTH registered and guest
+  // identities (anonymous guests hold a real auth.users row); only a
+  // session without one (mock mode) shares the 'guest' slot.
+  return session?.userId ?? GUEST_ACCOUNT_ID
 }
 
 export function accountIdForSession(session: { mode: string; userId?: string; loginId?: string }): string {
+  // B1.5 - prefer the Supabase userId whenever the session carries one
+  // (guest anonymous sessions included).
+  if (session.userId) return session.userId
   if (session.mode !== 'login' && session.mode !== 'register') return GUEST_ACCOUNT_ID
-  return session.userId ?? session.loginId ?? GUEST_ACCOUNT_ID
+  return session.loginId ?? GUEST_ACCOUNT_ID
 }
 
 export function resolveSaveKey(): string { return `${SAVE_KEY_BASE}:${resolveSaveAccountId()}` }

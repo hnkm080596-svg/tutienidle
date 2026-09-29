@@ -1,7 +1,7 @@
 import type { AuthService } from './AuthService'
-import { authService as mockAuthService } from './MockAuthService'
-import { SupabaseAuthService } from './SupabaseAuthService'
-import { getSupabaseConfig } from '../supabase/SupabaseConfig'
+import { backendBundle } from '../backend/backendBundle'
 
-const config = getSupabaseConfig()
-export const authService: AuthService = config ? new SupabaseAuthService(config) : mockAuthService
+// B1.2 - the mode decision lives in the single composition root
+// (services/backend/backendBundle.ts); factories just re-export the
+// bundle member so existing consumer imports keep working.
+export const authService: AuthService = backendBundle.authService

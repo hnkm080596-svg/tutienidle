@@ -114,6 +114,34 @@ describe('CloudSaveCoordinator', () => {
     expect(coordinator.getRevision()).toBe(0)
   })
 
+  // B1.6 - remote-authoritative conflict is TERMINAL: the coordinator
+  // returns it unchanged - no re-sync, no retry write. The old
+  // load-latest/retry-overwrite branch belongs to local-only storage.
+  it('remote-authoritative conflict is terminal - never re-syncs or retries', async () => {
+    let loads = 0
+    const writes: number[] = []
+    const service: CloudSaveService = {
+      capability: 'remote-authoritative',
+      async load() {
+        loads += 1
+        return { status: 'ok', save: snapshot, revision: 4, discardedEquipmentCount: 0, raw: 'raw' }
+      },
+      async save(_save, expectedRevision) {
+        writes.push(expectedRevision)
+        return { status: 'conflict', currentRevision: 9 }
+      },
+    }
+    const coordinator = new CloudSaveCoordinator(service)
+    await coordinator.load()
+
+    const result = await coordinator.save(snapshot)
+
+    expect(result).toEqual({ status: 'conflict', currentRevision: 9 })
+    expect(writes).toEqual([4])
+    expect(loads).toBe(1)
+    expect(coordinator.getRevision()).toBe(4)
+  })
+
   it('reset() starts a fresh revision chain for a new character', async () => {
     const { service, writes } = mockService(
       [() => ({ status: 'ok', save: snapshot, revision: 7, discardedEquipmentCount: 0, raw: 'raw-bytes' })],

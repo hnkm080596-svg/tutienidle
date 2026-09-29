@@ -6,7 +6,7 @@ export class CloudSaveCoordinator {
 
   constructor(private readonly service: CloudSaveService) {}
 
-  // R10 (AR-15, local scope, S5) — passthrough so callers/tests can assert
+  // R10 (AR-15, local scope, S5) - passthrough so callers/tests can assert
   // the adapter boundary without reaching into the private service field.
   get capability(): CloudSaveCapability {
     return this.service.capability
@@ -14,7 +14,10 @@ export class CloudSaveCoordinator {
 
   async load(): Promise<CloudSaveLoadResult> {
     const result = await this.service.load()
-    if (result.status === 'ok' || result.status === 'empty') this.revision = result.revision
+    // 'uninitialized' carries revision 0: the first write is expected 0->1.
+    if (result.status === 'ok' || result.status === 'empty' || result.status === 'uninitialized') {
+      this.revision = result.revision
+    }
     return result
   }
 
@@ -23,6 +26,16 @@ export class CloudSaveCoordinator {
 
     if (result.status === 'ok') {
       this.revision = result.revision
+      return result
+    }
+
+    // Beta-final B1.6 - under a remote-authoritative adapter a revision
+    // conflict is a LIFECYCLE STATE, not an auto-retry trigger: another
+    // session committed first, and the reconcile/recovery machinery
+    // (PR4-5) owns the response. The local load-latest/retry-overwrite
+    // branch below must never run - blindly overwriting the newer remote
+    // revision is exactly the authority violation the spec forbids.
+    if (this.service.capability === 'remote-authoritative') {
       return result
     }
 

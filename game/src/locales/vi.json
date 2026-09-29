@@ -643,13 +643,15 @@
         "reload": "Tải Lại (từ lần lưu gần nhất)",
         "export": "Xuất Save (.json)",
         "import": "Nhập Save",
-        "reset": "Xoá Save & Bắt Đầu Mới"
+        "reset": "Xoá Save & Bắt Đầu Mới",
+        "resetCloud": "Tải Lại Từ Cloud"
       },
       "notifications": {
         "saved": "Đã lưu tiến trình",
         "saveFailedShort": "Lưu thất bại",
         "saveFailed": "Không lưu được — bộ nhớ đầy hoặc bị chặn.",
-        "exportFailed": "Không thể xuất save — ghi dữ liệu thất bại."
+        "exportFailed": "Không thể xuất save — ghi dữ liệu thất bại.",
+        "importValidatedRemote": "File save hợp lệ — đã xuất bản chuẩn hoá. Save trên máy chủ không đổi."
       },
       "hints": {
         "savedAt": "Đã lưu lúc {time}"
@@ -660,7 +662,10 @@
         "importTitle": "Nhập Save",
         "importBody": "Nhập save này sẽ THAY THẾ tiến trình hiện tại (đã sao lưu 1 bản trước khi ghi đè). Tiếp tục?",
         "resetTitle": "Xoá Save",
-        "resetBody": "Xoá toàn bộ tiến trình và bắt đầu nhân vật mới? Nhớ \"Xuất Save\" trước nếu chưa làm — hành động này không thể hoàn tác."
+        "resetBody": "Xoá toàn bộ tiến trình và bắt đầu nhân vật mới? Nhớ \"Xuất Save\" trước nếu chưa làm — hành động này không thể hoàn tác.",
+        "resetCloudTitle": "Tải Lại Từ Cloud",
+        "resetCloudBody": "Xoá bộ nhớ đệm local và tải lại tiến trình từ máy chủ? Save trên máy chủ KHÔNG bị xoá — phiên bản server sẽ được khôi phục.",
+        "importBodyRemote": "Chế độ cloud: file nhập chỉ được KIỂM TRA và xuất lại bản đã chuẩn hoá — save trên máy chủ không bị thay thế. Tiếp tục?"
       },
       "errors": {
         "invalidSaveFile": "File save không hợp lệ."
@@ -1398,7 +1403,8 @@
   },
   "save": {
     "conflict": "Save đã thay đổi ở một phiên khác.",
-    "createFailed": "Tạo nhân vật thất bại — khởi tạo không hoàn tất."
+    "createFailed": "Tạo nhân vật thất bại — khởi tạo không hoàn tất.",
+    "characterDeleted": "Nhân vật đã bị xoá trên máy chủ — không thể tiếp tục phiên này."
   },
   "hidden": {
     "mortal": {
@@ -1438,6 +1444,9 @@
     "boot": {
       "title": "Không thể khởi động",
       "backToAuth": "Trở về đăng nhập"
+    },
+    "backendConfig": {
+      "title": "Cấu hình backend không hợp lệ"
     }
   },
   "toasts": {
@@ -1500,16 +1509,20 @@
     "actions": {
       "export": "Tải Về Save (.json)",
       "import": "Nhập Save Khác",
-      "reset": "Xoá & Bắt Đầu Mới"
+      "reset": "Xoá & Bắt Đầu Mới",
+      "resetCloud": "Tải Lại Từ Cloud"
     },
     "confirm": {
       "resetTitle": "Xoá & Bắt Đầu Mới",
       "resetBody": "Xoá save hiện tại và bắt đầu nhân vật mới? Nhớ Tải Về Save trước nếu chưa làm — hành động này không thể hoàn tác.",
       "importFailedTitle": "Nhập Save Thất Bại",
-      "importFailedBody": "File save không hợp lệ."
+      "importFailedBody": "File save không hợp lệ.",
+      "resetCloudTitle": "Tải Lại Từ Cloud",
+      "resetCloudBody": "Xoá bộ nhớ đệm local và tải lại từ máy chủ? Save trên máy chủ không bị xoá — nếu dữ liệu server vẫn lỗi, màn hình này sẽ hiện lại."
     },
     "notify": {
-      "deleteFailed": "Không xoá được save — trình duyệt đang từ chối truy cập bộ nhớ."
+      "deleteFailed": "Không xoá được save — trình duyệt đang từ chối truy cập bộ nhớ.",
+      "importValidatedRemote": "File save hợp lệ — đã xuất bản chuẩn hoá. Save trên máy chủ không đổi."
     }
   }
 }

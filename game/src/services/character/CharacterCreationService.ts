@@ -1,5 +1,6 @@
 import type { TalentDefinition } from '@/core/talent/Talent'
 import { isMortalPrecursorSkillId } from '@/core/skill/MortalPrecursors'
+import type { RemoteCharacterMetadata } from '../session/BackendStatus'
 
 // Thiên Phú là quyết định chọn HƯỚNG ĐẠO duy nhất của nhân vật
 // (talent-direction-choice-plan.md): mỗi nhân vật chọn đúng 1 thiên phú
@@ -14,9 +15,16 @@ export interface CharacterCreationDraft {
   mortalBasicSkillId: string
 }
 
-export type CharacterCreationErrorCode = 'invalid_name' | 'invalid_talents' | 'invalid_skill' | 'name_taken' | 'server_unavailable'
+export type CharacterCreationErrorCode = 'invalid_name' | 'invalid_talents' | 'invalid_skill' | 'name_taken' | 'server_unavailable' | 'character_exists'
 export type CharacterCreationValidation = { ok: true } | { ok: false; code: CharacterCreationErrorCode; message: string }
-export type CharacterCreationResult = { ok: true; characterId: string } | { ok: false; code: CharacterCreationErrorCode; message: string }
+// The supabase create_character RPC is metadata-only (B1.4): CREATED
+// returns the canonical character block, which doubles as the
+// reconstruction input if the first save never lands
+// (CHARACTER_UNINITIALIZED at the next boot). Mock sessions return only
+// the id.
+export type CharacterCreationResult =
+  | { ok: true; characterId: string; character?: RemoteCharacterMetadata }
+  | { ok: false; code: CharacterCreationErrorCode; message: string }
 
 export interface CharacterCreationService {
   rollTalents(): Promise<TalentDefinition[]>

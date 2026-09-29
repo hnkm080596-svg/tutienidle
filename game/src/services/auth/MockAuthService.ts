@@ -7,7 +7,7 @@ import {
   type AuthService,
 } from './AuthService'
 
-class MockAuthService implements AuthService {
+export class MockAuthService implements AuthService {
   async authenticate(mode: AuthenticationMode, credentials?: AuthCredentials): Promise<AuthResult> {
     await new Promise(resolve => window.setTimeout(resolve, 250))
 
