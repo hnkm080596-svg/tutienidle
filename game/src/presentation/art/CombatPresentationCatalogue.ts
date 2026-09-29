@@ -168,11 +168,6 @@ const PLAYER_MORTAL_IDLE_EXTENT = { x: 0.203125, y: 0.0625, w: 0.6328125, h: 0.8
 const PLAYER_MORTAL_STANDBY_EXTENT = { x: 0.203125, y: 0.0625, w: 0.6328125, h: 0.8671875 }
 const PLAYER_MORTAL_DEATH_EXTENT = { x: 0.2109375, y: 0.0625, w: 0.609375, h: 0.8671875 }
 
-/** Frame name for an index, matching what the generator wrote. */
-export function placeholderFrameName(index: number): string {
-  return `${PLACEHOLDER_FRAME_PREFIX}${String(index).padStart(PLACEHOLDER_ZERO_PAD, '0')}${PLACEHOLDER_FRAME_SUFFIX}`
-}
-
 /** Frame name for an index inside ANY atlas clip's naming scheme. */
 export function atlasFrameName(clip: AtlasClip, index: number): string {
   return `${clip.framePrefix}${String(index).padStart(clip.zeroPad, '0')}${clip.frameSuffix}`

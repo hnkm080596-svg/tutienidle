@@ -272,15 +272,5 @@ export function companionArtVariants(): CharacterArtVariant[] {
     .filter((variant): variant is CharacterArtVariant => variant !== undefined)
 }
 
-/**
- * Forced-animation set for companions uses the MAP KEYS (companion ids),
- * never the art slugs - catalogue identity is the companion id (sec.48).
- * Derived snapshot for the uniformity test; runtime membership checks read
- * COMPANION_RESKIN_MAP live through isForcedAnimatedEntity.
- */
-export const ANIMATED_COMPANION_KEYS: ReadonlySet<string> = new Set(
-  Object.keys(COMPANION_RESKIN_MAP),
-)
-
 export const CHARACTER_ZERO_PAD = ZERO_PAD
 export const CHARACTER_FRAME_SUFFIX = FRAME_SUFFIX
