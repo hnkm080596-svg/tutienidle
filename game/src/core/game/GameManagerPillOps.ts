@@ -3,7 +3,6 @@ import type { PillRegistry } from '../pill/PillRegistry'
 import type { PillSystem, PillTarget } from '../pill/PillSystem'
 import type { PersistentTimedEffect } from '../player/PersistentTimedEffect'
 import type { PlayerData } from '../player/Player'
-import { getCurrentRealm } from '../realm/realmSystem'
 import { getAlchemyDoublePill } from '../talent/TalentEffects'
 import type { MainStatKey } from '../stats/StatTypes'
 
@@ -66,8 +65,12 @@ export class GameManagerPillOps {
       return { ok: false, reason: 'wrong_realm' }
     }
 
+    // permanent_stat joined the profession path 2026-09-29 (ruling:
+    // pills write baseStats directly - the hidden predicate reads
+    // baseStats only, so a modifier channel could never fund it).
     const isProfessionPill = pill.effects.some(
       (effect) =>
+        effect.type === 'permanent_stat' ||
         effect.type === 'random_main_stat' ||
         effect.type === 'regen' ||
         effect.type === 'skill_insight' ||
@@ -98,25 +101,10 @@ export class GameManagerPillOps {
       return { ok: true, mainStat: result.mainStat }
     }
 
-    // Legacy path - unchanged old behavior (permanent_stat cap + heal/
-    // buff/flat cultivation).
-    const cap = getCurrentRealm(player.realmId).attributeCap
-
-    if (!this.deps.pillSystem.canUse(pill, player, cap)) {
-      return { ok: false, reason: 'cap' }
-    }
-
-    const permanentModifiers = this.deps.pillSystem.use(pill, target)
-
-    for (const modifier of permanentModifiers) {
-      const existing = player.modifiers.find((candidate) => candidate.id === modifier.id)
-
-      if (existing) {
-        existing.flat = (existing.flat ?? 0) + (modifier.flat ?? 0)
-      } else {
-        player.modifiers.push(modifier)
-      }
-    }
+    // Legacy path - heal/buff/flat-cultivation pills with no realmId.
+    // Side effects run through the target adapter; nothing produces
+    // StatModifier anymore (the pill-permanent bucket is retired).
+    this.deps.pillSystem.use(pill, target)
 
     this.deps.pillBag.remove(pillId, 1)
 

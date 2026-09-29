@@ -38,14 +38,15 @@ describe('mortalStatBudget — enumerated-source budget (spec §3.4)', () => {
     expect(budget.required).toBe(expectedRequired)
 
     const mortal = REALMS.find((r) => r.id === 'mortal')!
-    // Post-BETA-CREATION creation distributes no points - breakthrough
-    // is the only enumerated source.
+    // Post-BETA-CREATION creation distributes no points - level-up
+    // allocation is the measured channel here (permanent_stat pills are
+    // the second channel, material-bounded, exercised elsewhere).
     const expectedAvailable = mortal.maxLevel - createDefaultPlayer().realmLevel
     expect(budget.available).toBe(expectedAvailable)
     expect(budget.shortfall).toBe(expectedRequired - expectedAvailable)
   })
 
-  it('current enumerated sources fall short — available < required', () => {
+  it('the level-up channel alone falls short — available < required', () => {
     const budget = mortalStatBudget()
     expect(budget.available).toBeLessThan(budget.required)
     expect(budget.shortfall).toBeGreaterThan(0)
@@ -58,17 +59,32 @@ describe('reachableStatSourceCensus — data-verifiable source census (spec §3.
     expect(census.pillsWithRandomMainStat).toEqual([])
   })
 
+  // Ruling 2026-09-29: permanent_stat pills write baseStats directly -
+  // they are the authored pill channel that can fund the hidden
+  // predicate at mortal (the alchemy/grotto pipeline supplies them).
+  it('all five mortal stat families are authored as permanent_stat pills', () => {
+    const census = reachableStatSourceCensus()
+    expect(census.mortalPillsWithPermanentStat.sort()).toEqual([
+      'duong_than_dan_mortal',
+      'khai_linh_dan_mortal',
+      'phi_van_dan_mortal',
+      'thoi_the_dan_mortal',
+      'to_cot_dan_mortal',
+    ])
+  })
+
   it('quest rewards have no attribute-point channel (closed Reward type)', () => {
     const census = reachableStatSourceCensus()
     expect(census.rewardChannelsClosed).toBe(true)
   })
 
-  it('quest pill itemDrops resolve only through PILLS — transitively clean', () => {
+  it('quest pill itemDrops resolve only through PILLS — no stat-channel leak', () => {
     const census = reachableStatSourceCensus()
-    // With pillsWithRandomMainStat empty, no quest-drop pill reaches baseStats.
+    // No quest-drop pill may reach baseStats through either pill channel.
     expect(census.questItemDropPillIds).toBeDefined()
     for (const pillId of census.questItemDropPillIds) {
       expect(census.pillsWithRandomMainStat).not.toContain(pillId)
+      expect(census.mortalPillsWithPermanentStat).not.toContain(pillId)
     }
   })
 })

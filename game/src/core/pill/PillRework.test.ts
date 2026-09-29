@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { buildTieredPills } from '@/data/pill/pills'
-import { clampToRealmCap } from './PillSystem'
+import { MAIN_STAT_KEYS } from '@/core/stats/StatTypes'
 import { alchemyRecipes } from '@/data/alchemy/alchemyRecipes'
 import {
   THANH_VAN_GROTTO_HERB_BASES,
@@ -16,9 +16,17 @@ describe('Đan dược 9 phẩm', () => {
     expect(new Set(pills.map(pill => pill.name))).toHaveLength(8)
   })
 
-  it('clamp bonus vĩnh viễn theo trần cảnh giới', () => {
-    expect(clampToRealmCap(9, 4, 'mortal')).toBe(1)
-    expect(clampToRealmCap(10, 4, 'mortal')).toBe(0)
+  // 2026-09-29 ruling: permanent_stat writes baseStats, which only the
+  // 5 main stats may occupy meaningfully - a non-main stat here would
+  // bypass the cap gate's semantics and the hidden predicate alike.
+  it('mọi effect permanent_stat được author đều target một Main Stat', () => {
+    for (const pill of buildTieredPills()) {
+      for (const effect of pill.effects) {
+        if (effect.type === 'permanent_stat') {
+          expect(MAIN_STAT_KEYS).toContain(effect.stat)
+        }
+      }
+    }
   })
 
   it('nối đủ 8 linh thảo tương ứng vào recipe; Động Thiên chỉ nuôi họ chưa retire', () => {

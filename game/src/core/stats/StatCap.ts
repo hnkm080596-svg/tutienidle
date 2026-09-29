@@ -1,9 +1,10 @@
 import { getRealmIndex } from '../realm/realmSystem'
 
 // PLAN HOAN CHINH muc 3 - tran cua MOI Main Stat. CO Y KHONG dung
-// RealmData.attributeCap - field do da co y nghia RIENG (tran cong don
-// vinh vien tu Dan duoc, xem PillSystem.canUse()), chi dinh nghia cho
-// 3/10 canh gioi - tai dung ten/field do cho Main Stat se dung do.
+// RealmData.attributeCap - field do tung la tran cong don rieng cho
+// bonus pill modifier; da bo 2026-09-29 khi permanent_stat pills chuyen
+// sang ghi thang vao baseStats va chung tran nay (level-up + dan duoc
+// viet vao cung mot pool, cung mot bound: getEffectiveMainStatCap).
 //
 // 2026-08-20 (Realm Passive & Pressure follow-up) - thay cong thuc x2
 // moi dai canh gioi cu bang bang so lieu tay cho 3 canh gioi dau (yeu

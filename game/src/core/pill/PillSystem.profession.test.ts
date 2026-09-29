@@ -84,15 +84,34 @@ describe('Pill nghề — gate + atomic consumption', () => {
     expect(gameManager.pillBag.has(REGEN_PILL, 1)).toBe(true)
   })
 
-  it('đan vĩnh viễn tăng đúng thuộc tính cố định của loại đan', async () => {
+  it('đan vĩnh viễn cộng THẲNG vào baseStats (ruling 2026-09-29) - không tạo modifier', async () => {
     const { gameManager, player } = setup()
+
+    const before = player.baseStats.strength
 
     await registerPill(gameManager, PERMANENT_PILL, 2)
     const result = gameManager.pillOps.usePillDetailed(PERMANENT_PILL, pillTarget(), player)
 
     expect(result.ok).toBe(true)
-    expect(player.modifiers.find((modifier) => modifier.id === 'pill-permanent:strength')?.flat).toBe(1)
+    expect(player.baseStats.strength).toBe(before + 1)
+    expect(player.modifiers.some((modifier) => modifier.id === 'pill-permanent:strength')).toBe(false)
     expect(gameManager.pillBag.getAmount(PERMANENT_PILL)).toBe(1)
+  })
+
+  it('baseStats từ đan vĩnh viễn được predicate lineage ẩn tính (đọc baseStats thô)', async () => {
+    const { gameManager, player } = setup()
+
+    // Pill the stat to just under cap via the production path, then a
+    // final pill closes it - the hidden predicate's baseStats read
+    // reaches cap only because the write is to baseStats, not modifiers.
+    const cap = getMainStatCap('mortal')
+    player.baseStats.strength = cap - 1
+
+    await registerPill(gameManager, PERMANENT_PILL)
+    const result = gameManager.pillOps.usePillDetailed(PERMANENT_PILL, pillTarget(), player)
+
+    expect(result.ok).toBe(true)
+    expect(player.baseStats.strength).toBe(cap)
   })
 
   it('thuộc tính đích đã chạm trần → không consume', async () => {

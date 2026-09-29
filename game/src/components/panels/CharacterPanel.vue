@@ -6,7 +6,6 @@ import { useUiStore } from '@/stores/ui'
 import { getCurrentRealm } from '@/core/realm/realmSystem'
 import PlayerPortrait from '../common/PlayerPortrait.vue'
 import GameButton from '../common/GameButton.vue'
-import type { Stats } from '@/core/stats/StatBlock'
 import { formatNumber } from '@/core/format/NumberFormatter'
 import { BASE_STAT_LABELS, formatStat } from '@/core/stats/StatLabels'
 import { ELEMENT_LABELS, ELEMENT_COLOR_VARS, ELEMENT_ORDER } from '@/core/element/ElementLabels'
@@ -18,7 +17,6 @@ import { useProgressionActions } from '@/composables/useProgressionActions'
 import { useTurnBattleInfo } from '@/composables/useTurnBattleInfo'
 import { getTalentDefinition } from '@/data/talent/Talents'
 import { TALENT_RARITY_LABELS, type TalentDefinition, type TalentRarity } from '@/core/talent/Talent'
-import SysStat from '../common/system/SysStat.vue'
 import SysTag from '../common/system/SysTag.vue'
 
 const { t } = useI18n()
@@ -210,27 +208,6 @@ const combatPower = computed(() => {
   )
 })
 
-// Thay thế pillUsageRows cũ (đếm SỐ LẦN uống mỗi pill) — giờ hiện
-// TIẾN ĐỘ TRẦN thật theo Cảnh Giới (RealmData.attributeCap): mỗi
-// stat có bonus vĩnh viễn cộng dồn từ pill (bucket
-// `pill-permanent:${stat}`, xem PillSystem.ts) hiện "Tên Stat: X/cap".
-// Ẩn hoàn toàn nếu Cảnh Giới hiện tại chưa thiết kế trần.
-const pillPermanentRows = computed(() => {
-  const cap = realm.value.attributeCap
-
-  if (cap === undefined) {
-    return []
-  }
-
-  return player.modifiers
-    .filter(modifier => modifier.id.startsWith('pill-permanent:'))
-    .map(modifier => ({
-      stat: modifier.stat,
-      label: BASE_STAT_LABELS.find(entry => entry.key === modifier.stat)?.label ?? modifier.stat,
-      value: modifier.flat ?? 0,
-      cap,
-    }))
-})
 </script>
 
 <template>
@@ -380,12 +357,6 @@ const pillPermanentRows = computed(() => {
             <span class="element-node__core">{{ formatNumber(Math.round(player.finalStats.primordialPower)) }}</span>
           </div>
         </div>
-      </div>
-
-      <div v-if="pillPermanentRows.length > 0" class="pill-usage">
-        <SysStat v-for="row in pillPermanentRows" :key="row.stat" class="pill-usage__item" :label="row.label">
-          {{ row.value }}/{{ row.cap }}
-        </SysStat>
       </div>
     </div>
   </section>
@@ -964,22 +935,5 @@ const pillPermanentRows = computed(() => {
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   pointer-events: none;
-}
-
-.pill-usage {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 4px;
-  max-width: 100%;
-}
-
-.pill-usage__item {
-  flex: 0 0 auto;
-  padding: 1px 6px;
-  border: 1px solid var(--sys-line-soft, var(--paper-line));
-  border-radius: 3px;
-  color: var(--paper-text-soft);
-  white-space: nowrap;
 }
 </style>
