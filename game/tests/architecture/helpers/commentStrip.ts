@@ -36,13 +36,14 @@ export function markupCommentRanges(text: string): Array<{ pos: number; end: num
 // not flip the state machine. `<!-->` and `<!--->` are abrupt-closed
 // empty comments in HTML (never open a comment); they must tokenize as
 // one unit BEFORE `<!--` can claim their first four chars. `--!>` closes
-// a comment the same as `-->`. A tag refuses to cross `<` or a `-->`/`--!>`
-// tail: real markup ends a tag at its first `>`, and a close embedded in
-// would-be tag text still closes an open comment. `</` followed by a
-// non-letter is a bogus comment in HTML (skipped to `>`) - consumed as
-// one inert token so `</ <script>` cannot resurrect a dead block.
+// a comment the same as `-->`. A tag ends at its first `>` in raw extent
+// text - `--` inside tag text (`<div x=a-->`) is attr text, because
+// comment closes are resolved by raw scan (see the inComment arm), never
+// by token shape. `</` followed by a non-letter is a bogus comment in
+// HTML (skipped to `>`) - consumed as one inert token so `</ <script>`
+// cannot resurrect a dead block.
 const MARKUP_TOKEN =
-  /<!--[->]?>|--!?>|<!--|<\/?[a-zA-Z][\w.-]*(?:(?!--\!?>)[^<>])*>|<\/(?=[^a-zA-Z])(?:(?!--\!?>)[^>])*>?/g
+  /<!--[->]?>|--!?>|<!--|<\/?[a-zA-Z][\w.-]*[^<>]*>|<\/(?=[^a-zA-Z])[^>]*>?/g
 
 /**
  * Live top-level <script> blocks of a .vue SFC, with JSX-ness from the
@@ -127,8 +128,11 @@ function scriptBlocksWithSpans(text: string): {
     let iStart = -1
     while (pos < attrMasked.length) {
       if (st === 'comment') {
-        const e1 = attrMasked.indexOf('-->', pos)
-        const e2 = attrMasked.indexOf('--!>', pos)
+        // Close on raw text: inside a comment there is no tag/attr
+        // parsing, so a `-->` attr masking erased (e.g. inside
+        // `<!-- <div a="x-->"`) is still the real close in HTML5.
+        const e1 = text.indexOf('-->', pos)
+        const e2 = text.indexOf('--!>', pos)
         const e =
           e1 < 0 ? (e2 < 0 ? -1 : e2) : e2 < 0 ? e1 : Math.min(e1, e2)
         pos = e < 0 ? attrMasked.length : e + (e === e2 ? 4 : 3)
@@ -179,9 +183,12 @@ function scriptBlocksWithSpans(text: string): {
         // `</ script>` (whitespace gap) and `</` + non-letter are opaque
         // body text, and `</script)>` (name `script)`) does not close -
         // matching the walk's raw-text close rule.
-        const cl = attrMasked.indexOf('</', pos)
+        // Close on raw text: a `</script` inside a JS string or inside
+        // attr-masked text still ends the body in HTML5 - masking must
+        // not hide it.
+        const cl = text.indexOf('</', pos)
         if (cl < 0) break
-        const nm = /^<\/([^\s/>]*)/.exec(attrMasked.slice(cl))
+        const nm = /^<\/([^\s/>]*)/.exec(text.slice(cl))
         pos = cl + 2
         if (nm && nm[1]!.toLowerCase() === 'script') st = 'text'
         continue
@@ -245,6 +252,7 @@ function scriptBlocksWithSpans(text: string): {
   const stack: string[] = []
   let inComment = false
   let commentStart = -1
+  let commentEnd = -1
   // A comment body is fully inert in real HTML/Vue-SFC parsing: tags
   // inside `<!-- ... -->` are comment text, not markup - `<!-- <div> -->`
   // pushes nothing and `<!-- </template> -->` pops nothing. An unclosed
@@ -330,12 +338,28 @@ function scriptBlocksWithSpans(text: string): {
     // comment body (`<!-- <div> -->`) must not touch the stack, and a
     // `<!-- </template> -->` close is comment text, not markup.
     if (inComment) {
-      if (tok === '-->' || tok === '--!>') {
-        inComment = false
-        comments.push({ pos: commentStart, end: m.index! + tok.length })
-        commentStart = -1
+      if (commentEnd < 0) {
+        // Close by raw scan (same rule as script bodies): the first
+        // `-->`/`--!>` anywhere in the remaining text ends the comment.
+        // Inside a comment there is no tag parsing, so a `-->` that was
+        // absorbed into a malformed tag token (`<!-- <div x=a-->`) is
+        // still the close - scanning raw text finds it either way.
+        const re = /--!?>/g
+        re.lastIndex = commentStart + 4
+        commentEnd = re.exec(text)?.index ?? text.length
       }
-      continue
+      if (m.index! < commentEnd) continue // opaque comment text
+      const closeLen = text.startsWith('--!>', commentEnd) ? 4 : 3
+      comments.push({
+        pos: commentStart,
+        end: Math.min(commentEnd + closeLen, text.length),
+      })
+      inComment = false
+      commentStart = -1
+      const resume = commentEnd + closeLen
+      commentEnd = -1
+      if (m.index! < resume) continue // consume the close token
+      // else fall through: the token starts after the close
     }
     if (tok === '<!--') {
       if (commentAllowed()) {
@@ -388,25 +412,26 @@ function scriptBlocksWithSpans(text: string): {
     }
     continue
   }
-  // An unclosed live `<script>` runs to EOF - no block is produced but
-  // the span still covers the body so template-side stripping removes
-  // it. A raw-scan close that no skeleton token reached (a masked
-  // `</script` inside a string, or `</script` at EOF) still produces the
-  // block body.
+  // An unclosed live `<script>` still produces its block: no later
+  // skeleton token means the close can only live in raw text now (a
+  // masked `</script` inside a JS string, or `</script` truncated at
+  // EOF). HTML5 keeps the tail live to the first raw `</script` or to
+  // EOF - emitting the block either way, never dropping the body.
   if (pendingBodyStart >= 0) {
-    if (pendingCloseAt >= 0) {
-      const gt = text.indexOf('>', pendingCloseAt)
-      blocks.push({
-        body: text.slice(pendingBodyStart, pendingCloseAt),
-        jsx: pendingLang === 'tsx' || pendingLang === 'jsx',
-      })
-      spans.push({
-        pos: pendingOpenPos,
-        end: gt < 0 ? text.length : gt + 1,
-      })
-    } else {
-      spans.push({ pos: pendingOpenPos, end: text.length })
+    if (pendingCloseAt < 0) {
+      const re = /<\/script(?=[\s/>]|$)/gi
+      re.lastIndex = pendingBodyStart
+      pendingCloseAt = re.exec(text)?.index ?? text.length
     }
+    const gt = text.indexOf('>', pendingCloseAt)
+    blocks.push({
+      body: text.slice(pendingBodyStart, pendingCloseAt),
+      jsx: pendingLang === 'tsx' || pendingLang === 'jsx',
+    })
+    spans.push({
+      pos: pendingOpenPos,
+      end: gt < 0 ? text.length : gt + 1,
+    })
   }
   // An unclosed `<!--` comments out the file tail.
   if (inComment && commentStart >= 0) {
@@ -417,6 +442,44 @@ function scriptBlocksWithSpans(text: string): {
 
 export function scriptBlocksOf(text: string): ScriptBlock[] {
   return scriptBlocksWithSpans(text).blocks
+}
+
+/** Template markup minus live script blocks and HTML comments: spans
+ *  come from the skeleton's live-parse (`scriptBlockSpansOf`), so an
+ *  unbalanced nested `<script>` cannot swallow the template tail the
+ *  way a `<script>...</script>` regex strip does. */
+function scriptlessTemplateText(text: string): string {
+  const chars = text.split('')
+  for (const sp of scriptBlockSpansOf(text)) {
+    for (let i = sp.pos; i < sp.end && i < chars.length; i++) chars[i] = ' '
+  }
+  // Comment masking comes from the walk, not a naive `<!--...-->` regex:
+  // an `<!--` inside a quoted attribute is attr text, not a comment open.
+  for (const cr of markupCommentRanges(text)) {
+    for (let i = cr.pos; i < cr.end && i < chars.length; i++) chars[i] = ' '
+  }
+  return chars.join('')
+}
+
+/** Concatenated template expression text of a `.vue` SFC: event-handler
+ *  and bound-attribute VALUES (`@click=`, `v-on:x=`, `v-bind:x=`, `:x=`),
+ *  bare `v-on=`/`v-bind=` object-syntax values, arbitrary directive values
+ *  (`v-if`/`v-show`/`v-for`/`v-html`/`v-text`/`v-slot`/`v-memo` all compile
+ *  to expressions), and `{{ ... }}` interpolation bodies. Literal attrs
+ *  (`title="..."`) are inert text and stay excluded. The `{{ }}` capture
+ *  is string-aware so a `}}` inside a quoted string does not truncate the
+ *  interpolation body. */
+export function templateExprText(text: string): string {
+  return [
+    ...scriptlessTemplateText(text).matchAll(
+      // Dynamic-arg names are arbitrary expressions inside brackets
+      // (`@[ e ]`, `@[e+f]`, `v-on:['click']`) and values may be unquoted
+      // (`@click=expr`) - a class limited to word chars missed both shapes.
+      /(?:@|#|:|v-[\w.-]*:)(?:[\w.#:-]*\[[^\]]*\][\w.#:-]*|[\w.#:-]*)\s*=\s*(?:(['"])((?:(?!\1)[\s\S])*)\1|([^\s>'"]+))|\bv-[\w.-]+\s*=\s*(['"])((?:(?!\4)[\s\S])*)\4|\{\{((?:'[^']*'|"[^"]*"|`[^`]*`|[^'"}]|}(?!}))*)\}\}/g,
+    ),
+  ]
+    .map((m) => m[2] ?? m[3] ?? m[5] ?? m[6]!)
+    .join('\n')
 }
 
 /** Spans (open tag through `</script>` close) of the LIVE script blocks

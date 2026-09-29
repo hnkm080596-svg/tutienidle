@@ -79,10 +79,13 @@ function paramsShaped(argText: string): boolean {
           /^\s*[\w$]+\s*$/.test(p) ||
           /^\s*[\w$]+\??\s*:\s*[\s\S]+$/.test(p) ||
           // `x = default`, `...rest`, object/array destructure - all
-          // legal parameter shapes, never call arguments.
-          /^\s*[\w$]+(?:\s*:\s*[\s\S]+)?\s*=\s*[\s\S]+$/.test(p) ||
+          // legal parameter shapes, never call arguments. `=` must not
+          // read `==`/`=>`/`>=` (`a == b` and `a => b` are call args);
+          // a single-element `[x]`/`{x}` needs a real pattern mark
+          // (`,`/`:`/`=`/`...`) or it is just an array/object arg.
+          /^\s*[\w$]+(?:\s*:\s*[\s\S]+)?\s*=(?![=>])\s*[\s\S]+$/.test(p) ||
           /^\s*\.\.\.[\w$]+(?:\s*:\s*[\s\S]+)?\s*$/.test(p) ||
-          /^\s*[[{][\s\S]*[\]}](?:\s*:\s*[\s\S]+)?\s*$/.test(p),
+          /^\s*[[{](?=[\s\S]*(?:[,:]|\.\.\.|=(?![=>])))[\s\S]*[\]}](?:\s*:\s*[\s\S]+)?\s*$/.test(p),
       )
   )
 }
@@ -313,7 +316,46 @@ describe('audio boundary', () => {
             .replace(/\\u([0-9a-fA-F]{4})/g, (_, h: string) => String.fromCharCode(parseInt(h, 16)))
           if (/^(?:require|import)$/.test(decoded)) {
             offenders.push(`${file.fromSrc} -> ident escape ${m[0]}`)
+          } else if (
+            /^(?:meta|glob|resolve)$/.test(decoded) &&
+            // `import.m\u0065ta` / `import.meta.gl\u006fb` - the member
+            // escapes only count in `import.`/`meta.` context (a plain
+            // `foo.meta` member is unrelated).
+            /(?:import|meta)\s*\.\s*$/.test(
+              clean.slice(0, i - before.length),
+            )
+          ) {
+            offenders.push(`${file.fromSrc} -> import.meta ident escape ${m[0]}`)
           }
+        }
+        // `import.meta['gl'+'ob']` spells the bundling lane through a
+        // concat bracket the single-quote arm can't see - decode+join
+        // the quoted segments like the shake/cue bracket arms.
+        for (const m of clean.matchAll(
+          /\bimport\s*\.\s*meta\s*(?:\?\s*)?(?:\.|!)?\s*\[\s*([^\]]*)\]/g,
+        )) {
+          const i = m.index ?? 0
+          if (inLit(i)) continue
+          const segs = [...m[1]!.matchAll(/'([^']*)'|"([^"]*)"|`([^`]*)`/g)].map(
+            (sm) =>
+              (sm[1] ?? sm[2] ?? sm[3]!)
+                .replace(/\\x([0-9a-fA-F]{2})/g, (_, h: string) => String.fromCharCode(parseInt(h, 16)))
+                .replace(/\\u\{([0-9a-fA-F]+)\}/g, (_, h: string) => String.fromCodePoint(parseInt(h, 16)))
+                .replace(/\\u([0-9a-fA-F]{4})/g, (_, h: string) => String.fromCharCode(parseInt(h, 16))),
+          )
+          if (segs.length === 0) continue
+          if (/^(?:glob|resolve)$/.test(segs.join(''))) {
+            offenders.push(`${file.fromSrc} -> import.meta bracket ${m[0].slice(0, 60)}`)
+          }
+        }
+        // `const g = import.meta.glob` hands the bundling lane around as
+        // a VALUE - no `(` means nothing to screen, so flag the shape.
+        for (const m of clean.matchAll(
+          /\bimport\s*\.\s*meta\s*\.\s*(?:glob|resolve)\b(?!\s*\()/g,
+        )) {
+          const i = m.index ?? 0
+          if (inLit(i)) continue
+          offenders.push(`${file.fromSrc} -> import.meta value-ref ${m[0].slice(0, 60)}`)
         }
         if (file.fromSrc.endsWith('.vue')) {
           const tpl = templateTextOf(file.text)

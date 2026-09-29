@@ -241,7 +241,14 @@ export class AssetBundleManager implements AssetPort {
 
     // 2. Load Phaser textures via loader scene (serialized batch)
     if (phaserDescriptors.length > 0) {
-      const loader = this.loaderScene ?? (await this.waitForLoaderScene(signal))
+      let loader = this.loaderScene ?? (await this.waitForLoaderScene(signal))
+      // A waiter resolved with scene A can be superseded by a same-tick
+      // setLoaderScene(B) before the continuation runs - re-wait until
+      // the captured loader is current, else a stale scene publishes
+      // keys into the new generation's resource map.
+      while (loader !== this.loaderScene) {
+        loader = this.loaderScene ?? (await this.waitForLoaderScene(signal))
+      }
       tasks.push(this.loadPhaserBatch(loader, phaserDescriptors, signal))
     }
 
@@ -374,7 +381,12 @@ export class AssetBundleManager implements AssetPort {
 
     const runLoad = async (): Promise<void> => {
       try {
-        const bytes = await this.domAudioLoader(desc.urls, signal)
+        // The loader promise is deduped across callers via inFlightLoads,
+        // so it must not carry any one caller's abort signal - aborting
+        // caller A would kill the shared fetch for every joiner whose
+        // wrapWithSignal then resolves success on a load that never ran.
+        // Per-caller abort still applies at the wrapWithSignal layer.
+        const bytes = await this.domAudioLoader(desc.urls)
         AudioManager.getInstance().attachEncodedBuffer(desc.key, bytes)
         this.loadedResources.add(desc.key)
       } catch {
