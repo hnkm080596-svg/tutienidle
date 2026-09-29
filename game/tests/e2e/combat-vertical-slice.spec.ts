@@ -147,7 +147,7 @@ async function seedAndReload(
 }
 
 async function winQuanKhiAndOpenRitual(page: import('@playwright/test').Page): Promise<void> {
-  await page.keyboard.press('Tab')
+  await page.locator('.home-player__trigger').click()
   const realmSlot = page.locator('[data-wheel-slot="realm"]')
   await expect(realmSlot).toBeVisible({ timeout: 10_000 })
   await realmSlot.click()
@@ -238,7 +238,7 @@ async function chooseWay(page: import('@playwright/test').Page, wayNamePattern: 
 async function startStageOneBattle(page: import('@playwright/test').Page): Promise<void> {
   const teleportSlot = page.locator('[data-wheel-slot="teleport_array"]')
   if (!(await teleportSlot.isVisible().catch(() => false))) {
-    await page.keyboard.press('Tab')
+    await page.locator('.home-player__trigger').click()
   }
   await expect(teleportSlot).toBeVisible({ timeout: 10_000 })
   await teleportSlot.click()
@@ -509,8 +509,8 @@ test.describe('P3 — production combat vertical slice', () => {
     // panel is the natural-defeat surface, not the abandon surface.
     await expect(page.locator('.command-wheel-layer')).toBeAttached({ timeout: 30_000 })
     // The curtain is still settling when the wheel layer reattaches -
-    // Tab would be swallowed mid-transition, so wait for idle before
-    // re-entering a stage.
+    // The trigger click would be swallowed mid-transition, so wait for
+    // idle before re-entering a stage.
     await waitForPresentationIdle(page)
     const abandoned = await page.evaluate(() => {
       const game = (window as Window & {

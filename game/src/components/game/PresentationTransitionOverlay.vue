@@ -12,10 +12,11 @@
  * - Error controls remain reachable while gameplay is locked.
  */
 
-import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, useId } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { CoordinatorError, Phase } from '@/presentation/PresentationContracts'
 import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
+import { useDialogFocus } from '@/composables/useDialogFocus'
 
 const props = withDefaults(
   defineProps<{
@@ -58,6 +59,19 @@ const leftPanelRef = ref<HTMLElement | null>(null)
 const rightPanelRef = ref<HTMLElement | null>(null)
 const errorCardRef = ref<HTMLElement | null>(null)
 const curtainState = ref<'opened' | 'closing' | 'closed' | 'opening'>('opened')
+const errorTitleId = useId()
+const errorMessageId = useId()
+
+// The error surface is a real dialog (F-BX-54): while it is up the
+// window-capture keydown below suppresses every keypress outside it, so
+// focus must be moved INTO the card on open and cycled inside it - the
+// canonical useDialogFocus primitive owns focus-on-open/Tab cycle/Escape.
+const errorVisible = computed(() => props.error !== null || props.phase === 'failed')
+useDialogFocus(errorCardRef, errorVisible, {
+  onEscape: () => {
+    if (props.canReturnHome) emit('back')
+  },
+})
 
 let lastActiveElement: HTMLElement | null = null
 
@@ -151,12 +165,12 @@ async function open(_id: number, signal: AbortSignal): Promise<void> {
 }
 
 function handleKeydown(event: KeyboardEvent) {
-  if (!props.isLocked && curtainState.value === 'opened' && !props.error) {
+  if (!props.isLocked && curtainState.value === 'opened' && !errorVisible.value) {
     return
   }
 
   // If error modal is visible and event is inside it, allow it
-  if (props.error && errorCardRef.value?.contains(event.target as Node)) {
+  if (errorVisible.value && event.target instanceof Node && errorCardRef.value?.contains(event.target)) {
     return
   }
 
@@ -219,12 +233,19 @@ defineExpose({
     <!-- Error shell (reachable while locked) -->
     <div
       v-if="error || phase === 'failed'"
-      ref="errorCardRef"
       class="transition-overlay__error"
     >
-      <div class="transition-overlay__error-card">
-        <h3 class="transition-overlay__error-title">{{ t('errorTitle') }}</h3>
-        <p class="transition-overlay__error-message">{{ error?.message ?? '' }}</p>
+      <div
+        ref="errorCardRef"
+        class="transition-overlay__error-card"
+        tabindex="-1"
+        role="alertdialog"
+        aria-modal="true"
+        :aria-labelledby="errorTitleId"
+        :aria-describedby="errorMessageId"
+      >
+        <h3 :id="errorTitleId" class="transition-overlay__error-title">{{ t('errorTitle') }}</h3>
+        <p :id="errorMessageId" class="transition-overlay__error-message">{{ error?.message ?? '' }}</p>
         <div class="transition-overlay__error-actions">
           <button
             type="button"

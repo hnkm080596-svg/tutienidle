@@ -23,7 +23,7 @@ async function enterBattle(page: Page, name: string): Promise<void> {
   await createCharacterThroughUi(page, name)
   await enterHome(page)
 
-  await page.keyboard.press('Tab')
+  await page.locator('.home-player__trigger').click()
 
   const teleportSlot = page.locator('[data-wheel-slot="teleport_array"]')
   await expect(teleportSlot).toBeVisible({ timeout: 10_000 })

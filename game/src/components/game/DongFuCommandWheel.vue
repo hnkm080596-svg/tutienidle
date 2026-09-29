@@ -10,6 +10,7 @@ import { useUiStore } from '@/stores/ui'
 import { usePlayerStore } from '@/stores/player'
 import { useStageActive } from '@/composables/useStageActive'
 import { useBuildingNavigation } from '@/composables/useBuildingNavigation'
+import { useDialogFocus } from '@/composables/useDialogFocus'
 import {
   COMMAND_WHEEL_SLOTS,
   type CommandWheelDisabledContext,
@@ -211,35 +212,26 @@ onBeforeUnmount(() => {
   }
 })
 
-// ================= Keyboard toggle/close wheel ========================
-function isEditableTarget(target: EventTarget | null): boolean {
-  return (
-    target instanceof HTMLInputElement ||
-    target instanceof HTMLTextAreaElement ||
-    target instanceof HTMLSelectElement ||
-    (target instanceof HTMLElement && target.isContentEditable)
-  )
-}
+// ================= Keyboard close + focus forwarding =================
+// F-BX-55 - plain Tab is NOT a wheel shortcut: an app-wide Tab must do
+// native focus traversal (the focusable portrait trigger in DongFuScene
+// is the keyboard open path). While the wheel is open its backdrop
+// blocks pointer interaction, so the canonical useDialogFocus primitive
+// owns keyboard parity: focus the first slot on open, cycle Tab inside
+// the wheel, Escape closes and restores the previous focus.
+const wheelRef = ref<HTMLElement | null>(null)
+
+const wheelKeyboardActive = computed(() => ui.isCommandWheelOpen && !stageActive.value)
+
+useDialogFocus(wheelRef, wheelKeyboardActive, {
+  onEscape: () => {
+    ui.closeCommandWheel()
+  },
+})
 
 function onKeydown(event: KeyboardEvent) {
   if (event.key === 'Escape') {
     ui.closeCommandWheel()
-
-    return
-  }
-
-  if (
-    event.key === 'Tab' &&
-    !event.repeat &&
-    !event.altKey &&
-    !event.ctrlKey &&
-    !event.metaKey &&
-    !event.shiftKey &&
-    !stageActive.value &&
-    !isEditableTarget(event.target)
-  ) {
-    event.preventDefault()
-    ui.toggleCommandWheel()
   }
 }
 
@@ -343,8 +335,10 @@ function activate(slot: CommandWheelSlot) {
     <div class="command-wheel-layer__backdrop" aria-hidden="true" @click="ui.closeCommandWheel()" />
 
     <div
+      ref="wheelRef"
       class="command-wheel"
       role="group"
+      tabindex="-1"
       :aria-label="t('panels.wheel.aria.group')"
       :class="{ 'is-ready': isReady, 'is-closing': isClosing }"
     >

@@ -1435,7 +1435,7 @@
   "home": {
     "commandWheel": {
       "openAria": "Mở bảng lệnh Động Phủ",
-      "hint": "Bảng Lệnh · Tab"
+      "hint": "Bảng Lệnh"
     }
   },
   "tutorial": {
@@ -1445,7 +1445,7 @@
     "steps": {
       "1": {
         "title": "Chào mừng Đạo Hữu",
-        "body": "Con đường tu tiên bắt đầu từ đây. Bấm vào nhân vật đang tu luyện (hoặc phím Tab) bất cứ lúc nào để mở Bảng Lệnh — nơi mở mọi khu vực của Động Phủ."
+        "body": "Con đường tu tiên bắt đầu từ đây. Bấm vào nhân vật đang tu luyện bất cứ lúc nào để mở Bảng Lệnh — nơi mở mọi khu vực của Động Phủ."
       },
       "2": {
         "title": "Động Phủ",

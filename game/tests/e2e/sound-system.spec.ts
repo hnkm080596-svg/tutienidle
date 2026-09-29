@@ -105,7 +105,7 @@ test.describe('Sound system', () => {
     expect(seenCues).toContain('progress.create')
 
     // (3): command wheel open.
-    await page.keyboard.press('Tab')
+    await page.locator('.home-player__trigger').click()
     const settingsSlot = page.locator('[data-wheel-slot="settings"]')
     await expect(settingsSlot).toBeVisible({ timeout: 10_000 })
     await expect.poll(async () => (await cues(page)).includes('ui.wheel.open')).toBe(true)
@@ -142,7 +142,7 @@ test.describe('Sound system', () => {
     // Persist across reload: re-auth (same guest save), reopen settings.
     await page.reload()
     await reauthAndEnterHome(page)
-    await page.keyboard.press('Tab')
+    await page.locator('.home-player__trigger').click()
     const settingsSlot2 = page.locator('[data-wheel-slot="settings"]')
     await expect(settingsSlot2).toBeVisible({ timeout: 10_000 })
     await settingsSlot2.click()

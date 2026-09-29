@@ -20,8 +20,8 @@ test.describe('Presentation routing regression (Task 1 baseline)', () => {
     await createCharacterThroughUi(page, 'E2E Presentation 01')
     await enterHome(page)
 
-    // Open command wheel via Tab, then teleport_array slot -> stage select.
-    await page.keyboard.press('Tab')
+    // Open command wheel via its DOM trigger, then teleport_array slot -> stage select.
+    await page.locator('.home-player__trigger').click()
     const teleportSlot = page.locator('[data-wheel-slot="teleport_array"]')
     await expect(teleportSlot).toBeVisible({ timeout: 10_000 })
     await teleportSlot.click()

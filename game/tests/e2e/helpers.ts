@@ -110,8 +110,8 @@ export async function reauthAndEnterHome(page: Page): Promise<void> {
  * Open the Cài Đặt panel and click the manual save button.
  */
 export async function openSettingsAndSave(page: Page): Promise<void> {
-  // Tab to open command wheel, then click Cài Đặt slot.
-  await page.keyboard.press('Tab')
+  // Open the command wheel via its DOM trigger, then click Cài Đặt slot.
+  await page.locator('.home-player__trigger').click()
   const settingsSlot = page.locator('[data-wheel-slot="settings"]')
   await expect(settingsSlot).toBeVisible({ timeout: 10_000 })
   await settingsSlot.click()

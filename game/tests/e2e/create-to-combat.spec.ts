@@ -20,10 +20,9 @@ test.describe('Create character to combat', () => {
     await enterHome(page)
 
     // Mở màn chọn ải qua command wheel slot Truyền Tống Trận (data-wheel-slot attr).
-    // Phaser canvas click risk: AVOID clicking the canvas character trigger; instead
-    // use the keyboard shortcut Tab (DongFuCommandWheel.vue listens for Tab keydown)
-    // to open the command wheel deterministically.
-    await page.keyboard.press('Tab')
+    // Phaser canvas click risk: AVOID clicking the canvas character sprite; the
+    // wheel trigger is a real DOM button - open the wheel deterministically.
+    await page.locator('.home-player__trigger').click()
 
     const teleportSlot = page.locator('[data-wheel-slot="teleport_array"]')
     await expect(teleportSlot).toBeVisible({ timeout: 10_000 })
