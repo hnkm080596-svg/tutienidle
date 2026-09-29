@@ -1,0 +1,1141 @@
+# QA run sound-system-2026-09-28
+
+- phase: DECIDE
+- outcome: QA_BLOCKED_SCOPE
+- state: product=ad427d8c3774 contract=42e4f2876e38 attack=204967363e9d env=645ac294231c
+- base/head: 21a5f8c5 -> 791a7903
+
+## Findings
+
+- **F-SND-01** Critical/REAL_DEFECT — PROVEN — ConfirmModal stray duplicate </template> breaks app boot
+- **F-SND-02** High/REAL_DEFECT — PROVEN — dom-audio lane stores decoded buffers under cue id; playback looks up manifest src
+- **F-SND-03** Medium/REAL_DEFECT — PROVEN — reactive_proc discriminator dead: trigger carries window name, mechanic absent from payload
+- **F-SND-04** Medium/REAL_DEFECT — PROVEN — status_vfx_attached always cues combat.dot.apply; buff/debuff branches unreachable
+- **F-SND-05** Medium/REAL_DEFECT — PROVEN — play/crossfade/stopMusic unconditionally clear musicSuspended -> hidden tab resumes audio
+- **F-SND-06** Low/REAL_DEFECT — TRIAGED — loadPersisted corrupt-v2 JSON skips promised v1 fallback
+- **F-SND-07** Low/REAL_DEFECT — TRIAGED — Player leaks on start()/stop() throw + suspended-context fade paths
+- **F-SND-08** Nit/REAL_DEFECT — TRIAGED — variant cursor off-by-one: first play never serves index 0
+- **F-SND-09** Nit/REAL_DEFECT — TRIAGED — fade-in dropped for music requested before unlock
+- **F-SND-10** Low/REAL_DEFECT — TRIAGED — i18nKeyParity cue-id exemption is shape-only; real i18n keys under combat.*/tribulation.* skipped
+- **F-SND-11** Nit/REAL_DEFECT — TRIAGED — battle-ending proc records may never drain (cosmetic)
+- **F-SND-12** Nit/REAL_DEFECT — TRIAGED — EquipmentPaperdoll plays ui.equip on unequip direction
+- **F-SND-13** Medium/REAL_DEFECT — PROVEN — tribulation cues double-sourced: tribulation_started + presentation_session_started same tick
+- **F-SND-14** Medium/REAL_DEFECT — PROVEN — persisted enabled/volumes only pushed via store.unlock() on pointerdown; keyboard unlock bypasses mute
+- **F-SND-15** Medium/REAL_DEFECT — PROVEN — spec W7 single-cue-path violated: cue() had zero callers, ~17 components used playCue directly
+- **F-SND-16** Medium/REAL_DEFECT — PROVEN — emit-name<->binding coupling stringly and unguarded; literal cue ids unvalidated
+- **F-SND-17** Low/REAL_DEFECT — TRIAGED — dev/skill-vfx.ts cameraImpulse bypasses applyScreenShake policy
+- **F-SND-18** Low/REAL_DEFECT — TRIAGED — playCue on loop:true/music rows mints untracked music-bus player unreachable by stop/suspend
+- **F-SND-19** Low/REAL_DEFECT — TRIAGED — player-taken hit double-fires combat.hit + combat.hurt (same recipe)
+- **F-SND-20** Low/REAL_DEFECT — TRIAGED — unwired manifest rows (countdown.tick, spawn.*, charge/release, boss.slam, buff.stack, turn_end)
+- **F-SND-21** Nit/REAL_DEFECT — TRIAGED — inverted dep: manifest type-imports SynthSoundId from AudioManager; spec refs MenuButton.vue
+- **F-SND-22** Low/REAL_DEFECT — TRIAGED — ConfirmModal Escape bypasses onCancel -> no cancel/modal-close cues
+- **F-SND-23** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — AssetBundleCatalog.test still asserts pre-fix cue-id descriptor contract
+- **F-SND-24** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — ambient.cultivate.on/off unwirable - music channel but playCue rejects loop:false music rows
+- **F-SND-25** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — audioBindingWiring guard blind spots - test emitters counted, weak regexes, missed arg forms
+- **F-SND-26** Low/REAL_DEFECT — FIXED_PENDING_PROOF — releaseMusicPlayer reaper double-disposes and leaks pending timers on dispose
+- **F-SND-27** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — LoreCodexModal is a third undocumented direct AudioManager consumer; importer allowlist unpinned
+- **F-SND-28** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — i18nKeyParity cue exemption swallows real i18n keys under cue namespaces
+- **F-SND-29** Low/REAL_DEFECT — FIXED_PENDING_PROOF — reactive_proc consumer declares mechanic/trigger as bare string - rename silently degrades to combat.ungthe
+- **F-SND-30** Low/REAL_DEFECT — TRIAGED — two cast-cue producers co-fire per cast (attack->combat.cast + turn_cast_start->combat.cast.<id>)
+- **F-SND-31** Nit/REAL_DEFECT — TRIAGED — orphaned manifest rows (tribulation.start, music.home.* variants) + dead isLoaded()
+- **F-SND-32** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — 'death'+'kill' co-fire doubles kill sound per entity death
+- **F-SND-33** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — decode failure permanently silences a src (loaded marked pre-decode, no retry)
+- **F-SND-34** Low/REAL_DEFECT — FIXED_PENDING_PROOF — ambient driver seeds visibility AFTER first applyRoute (hidden-remount player blip)
+- **F-SND-35** Low/REAL_DEFECT — TRIAGED — hydrateManager() opt-in: store state alone does not gate the manager
+- **F-SND-36** Low/REAL_DEFECT — FIXED_PENDING_PROOF — decodeAttempts map never cleared on dispose; counting ran per-retry-pass not per-decode (dup: COR-3 C3-01)
+- **F-SND-37** Nit/REAL_DEFECT — FIXED_PENDING_PROOF — decode-retry off-by-one allowed 4 decode passes vs documented limit 3
+- **F-SND-38** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — audioBoundary guards bypassable: whitespace in getInstance(), tone/phaser subpath imports
+- **F-SND-39** Low/REAL_DEFECT — FIXED_PENDING_PROOF — audioBindingWiring misses bus.on() subscriptions outside the cue tables
+- **F-SND-40** Low/REAL_DEFECT — FIXED_PENDING_PROOF — ELEMENT_BY_PRESET element fallback entirely shadowed by richer lane
+- **F-SND-41** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — manifest row 'tribulation.start' armed but unbound (dead armed row vs spec's tribulation.begin ownership)
+- **F-SND-42** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — KIEM_COMBO_IDS drifted from KiemPhoCombos (tam_thich/tam_tram don't exist); manifest claimed cross-check that no test performed
+- **F-SND-43** Low/REAL_DEFECT — TRIAGED — attachDecodedBuffer is a public test-only seam on the production class
+- **F-SND-44** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — music lane never kicks retryDecode: applyDesiredMusic skipped retry for parked srcs
+- **F-SND-45** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — essence_stream_arrival + reward_particle(essence) co-fire doubles essence chime per drop
+- **F-SND-46** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — dom-audio missingResources mark is permanent: one transient fetch failure silences the src for the session
+- **F-SND-47** Low/REAL_DEFECT — FIXED_PENDING_PROOF — applyDesiredMusic rethrew decode failures through coordinator notify() into route-commit/unlock rollback path
+- **F-SND-48** Low/REAL_DEFECT — FIXED_PENDING_PROOF — pointerdown unlock listener armed once:true - a transiently failed unlock left the app permanently locked
+- **F-SND-49** Low/REAL_DEFECT — FIXED_PENDING_PROOF — manifest src[] documented as ordered fallbacks; partial-decode variant pools never re-healed
+- **F-SND-50** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — decodeInto catch misattributed post-decode applyDesiredMusic throw as decode failure (parked live buffer, refunded attempts)
+- **F-SND-51** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — applyDesiredMusic throw during unlock() aborted the entire unlock (disposeChain + back to idle)
+- **F-SND-52** Low/REAL_DEFECT — FIXED_PENDING_PROOF — decode retry budget is per-key-lifetime: an exhausted key poisons fresh byte deliveries
+- **F-SND-53** Low/REAL_DEFECT — FIXED_PENDING_PROOF — concurrent attachEncodedBuffer for one key - last resolver wins, stale payload can clobber fresh bytes
+- **F-SND-54** Low/REAL_DEFECT — FIXED_PENDING_PROOF — 'if (!decode) return' silently discarded encoded bytes with no re-park or signal
+- **F-SND-55** Low/REAL_DEFECT — FIXED_PENDING_PROOF — in-flight decodeInto failure re-parks bytes after dispose() cleared them (zombie write into next lifecycle)
+- **F-SND-56** Low/REAL_DEFECT — FIXED_PENDING_PROOF — ambient driver teardown while hidden leaves musicSuspended=true - next music caller silently blocked
+- **F-SND-57** Nit/REAL_DEFECT — TRIAGED — duckMusic on empty cultivate stinger slots is dead config until assets land (informational)
+- **F-SND-58** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — pendingEncoded payload not seq-bound: stale bytes decode under new seq and clobber newer attach (C4-01)
+- **F-SND-59** Low/REAL_DEFECT — FIXED_PENDING_PROOF — attachDecodedBuffer bypasses attachSeq ordering - in-flight encoded decode clobbers decoded attach (C4-02/A4-08)
+- **F-SND-60** Low/REAL_DEFECT — FIXED_PENDING_PROOF — onReady self-disarm leaves dead readyListener when callback fires synchronously (C4-03/A4-09)
+- **F-SND-61** Low/REAL_DEFECT — FIXED_PENDING_PROOF — playCue can sound/queue while tab hidden (C4-04, suspected - gated defensively)
+- **F-SND-62** Low/REAL_DEFECT — FIXED_PENDING_PROOF — applyDesiredMusic only heals fully-undecoded cues - partial variant pools never retry (C4-05/I4-05)
+- **F-SND-63** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — aborted load burns missingResources budget - 2 aborted route requests silence a cue forever (C4-06/I4-03)
+- **F-SND-64** Nit/REAL_DEFECT — FIXED_PENDING_PROOF — stale '38 combos' prose (C4-07/A4-12)
+- **F-SND-65** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — INT-4 probe: stale pendingEncoded revives under current seq (I4-01, probe 1c/1d)
+- **F-SND-66** Low/REAL_DEFECT — FIXED_PENDING_PROOF — INT-4 probe: attachDecodedBuffer clobbered by in-flight encoded decode (I4-02, probe 1f)
+- **F-SND-67** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — INT-4 probe: caller abort burns shared missingResources budget (I4-03, probe 5d)
+- **F-SND-68** Low/REAL_DEFECT — FIXED_PENDING_PROOF — void ctx.resume() floats a real unhandled rejection (I4-04, probe 7b)
+- **F-SND-69** Low/REAL_DEFECT — FIXED_PENDING_PROOF — INT-4 probe: music lane heals only fully-undecoded (I4-05, probe 7d)
+- **F-SND-70** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — reaction_resolved emitted live but never bound - whole combat.reaction family silent (A4-01)
+- **F-SND-71** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — combat.boss.slam shadowed by silent expanded impact row - boss slam plays silence + skips duck (A4-02)
+- **F-SND-72** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — spec W7 table stale vs deliberate unbindings (kill/essence_stream_arrival) + hit suppression omitted (A4-03)
+- **F-SND-73** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — catalog cross-check pinned 3/5 enumerations - IMPACT_PRESET_IDS/MUSIC_HOME_TIMES drifted unpinned (A4-04)
+- **F-SND-74** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — dynamic import('tone')/require('tone') escapes the boundary guard (A4-05)
+- **F-SND-75** Low/REAL_DEFECT — FIXED_PENDING_PROOF — spaced call .cue(/.playCue( skips literal validation inside allowlisted files (A4-06)
+- **F-SND-76** Low/REAL_DEFECT — FIXED_PENDING_PROOF — destructured/renamed getInstance escapes the consumer allowlist trigger (A4-07)
+- **F-SND-77** Low/REAL_DEFECT — FIXED_PENDING_PROOF — core-import ban matched filename 'audio/Audio' not the audio directory (A4-10)
+- **F-SND-78** Low/REAL_DEFECT — FIXED_PENDING_PROOF — armed-reserved rows invisible as reservations (A4-11 census note)
+- **F-SND-79** Low/REAL_DEFECT — TRIAGED — armed rows reserved on emits that do not exist yet - deferred-visible, permitted by spec 6.5 (A4-11 residue)
+- **F-SND-80** Low/REAL_DEFECT — FIXED_PENDING_PROOF — 'ngu_kiem_flight never emits action_impact' false premise in IMPACT_PRESET_IDS comment + W9 test exclusion
+- **F-SND-81** Low/REAL_DEFECT — FIXED_PENDING_PROOF — stale 'silent placeholder' rationale in boss_ground_slam special-case comment
+- **F-SND-82** Nit/REAL_DEFECT — FIXED_PENDING_PROOF — armed-reserved comment names 'default stinger' but panel cues progress.path_choose
+- **F-SND-83** Low/REAL_DEFECT — FIXED_PENDING_PROOF — attachDecodedBuffer does not re-fire applyDesiredMusic (decoded-lane asymmetry, no callers today)
+- **F-SND-84** Nit/REAL_DEFECT — FIXED_PENDING_PROOF — test regexes miss comment-spliced imports and bare destructured cue() calls
+- **F-SND-85** Low/REAL_DEFECT — FIXED_PENDING_PROOF — ngu_kiem_flight exclusion premise false (dup of C5-01) + mirror already drifted at authoring
+- **F-SND-86** Low/REAL_DEFECT — FIXED_PENDING_PROOF — NON_IMPACT_ROUTES is comment-duplicated mirror of binding routing - drift caught in only one direction
+- **F-SND-87** Low/REAL_DEFECT — FIXED_PENDING_PROOF — AUDIO_SPEC_RE latent bypasses: dir import @/core/audio (needs index.ts), future non-audio alias, backtick/computed specifiers
+- **F-SND-88** Low/REAL_DEFECT — FIXED_PENDING_PROOF — allowlist trigger misses extension/query-suffixed AudioManager specifiers (AudioManager.ts verified unflagged)
+- **F-SND-89** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — startsWith('stores/audio') exempts any future stores/audio*.ts sibling - probe file imported AudioManager unflagged
+- **F-SND-90** Low/REAL_DEFECT — FIXED_PENDING_PROOF — boss_ground_slam not boss-exclusive - khai_son_luc_si companion ult shares preset; 'scripted encounter beat' comment wrong
+- **F-SND-91** Low/REAL_DEFECT — FIXED_PENDING_PROOF — spec table channels ambient.cultivate.on|off as music; manifest implements sfx()
+- **F-SND-92** Low/REAL_DEFECT — FIXED_PENDING_PROOF — armed-reserved markers cover a strict subset of unbound rows: combat.buff.stack has a LIVE emit (status_vfx_updated) with no route, turn_end/music.home.* unmarked, release coverage positional
+- **F-SND-93** Nit/REAL_DEFECT — FIXED_PENDING_PROOF — producer-less forward slots (combat.kiem.tu_luc, combat.impact.lightning_strike) undocumented as convention
+- **F-SND-94** Medium/REAL_DEFECT — TRIAGED — tests/architecture suite red x2 at pin: dynamicRegionHost (dev/skill-vfx.ts new Phaser.Game) + combatContract R14.4 (broken anchor) - both reproduce on origin/master, inherited via merge 791a7903
+- **F-SND-95** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — tone import boundary covers only core/** and *.vue - a .ts in composables/services can statically import * as Tone and pass green
+- **F-SND-96** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — comment-spliced dynamic+static imports and backtick specifiers slip IMPORT_RE/DYNAMIC_IMPORT_RE
+- **F-SND-97** Low/REAL_DEFECT — FIXED_PENDING_PROOF — 'store . cue (\'x\')' spaced member access slips the wiring literal check
+- **F-SND-98** Nit/REAL_DEFECT — TRIAGED — kiem_combo_* union additions escape the impact pin
+- **F-SND-99** Nit/REAL_DEFECT — FIXED_PENDING_PROOF — allowlist trigger flags comment mentions of .playCue(; visibility gate misses 'prerender'
+- **F-SND-100** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — W9 derived pin blind to element-mapped impact-row deletions (circular oracle)
+- **F-SND-101** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — naive uncommented() corrupted scanned text: // inside strings truncated specifiers; /* inside //-comments opened phantom blocks eating all imports of GameManagerCompanionOps.ts + EquipmentHallPanel.vue; <!-- --> phantom specifiers
+- **F-SND-102** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — wiring ident-arm bound-literal branch dead: decl regex consumed opening quote so cue(CONST) literals never checked
+- **F-SND-103** Low/REAL_DEFECT — FIXED_PENDING_PROOF — bare-cue arm: cue?.() evaded; locally-declared cue() false-positived
+- **F-SND-104** Low/REAL_DEFECT — TRIAGED — corpus scans .ts/.vue only - .js/.mts/.cts under src escape all audio guards
+- **F-SND-105** Low/REAL_DEFECT — FIXED_PENDING_PROOF — jsdom defaults visibilityState='prerender' - real-path playCue silently drops in any future jsdom audio test
+- **F-SND-106** Low/REAL_DEFECT — FIXED_PENDING_PROOF — visibility policy asymmetry: playCue drops on !== 'visible' but ambient driver resumed on 'prerender'
+- **F-SND-107** Nit/REAL_DEFECT — FIXED_PENDING_PROOF — armed-reserved marker wording drift: buff.stack 'nothing subscribes' inaccurate (status_vfx_attached on attach; VFX consumes _updated); combat.kill unbind undocumented on row
+- **F-SND-108** Nit/REAL_DEFECT — FIXED_PENDING_PROOF — AUDIO_SPEC_RE missed query/hash suffix specifiers (audio?v=1)
+- **F-SND-109** Nit/REAL_DEFECT — FIXED_PENDING_PROOF — playCue visibility drop had no dedicated pin test; completeness docblock still claimed pure-data import
+- **F-SND-110** High/REAL_DEFECT — FIXED_PENDING_PROOF — A7-01 High: manifest unrouted arm TS18048 - route.startsWith on string|undefined
+- **F-SND-111** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — A7-02 Medium: bare-call exemption too broad - any const cue= exempted
+- **F-SND-112** Low/REAL_DEFECT — FIXED_PENDING_PROOF — A7-03 Low: emit sweep scanned .vue/.test.ts files
+- **F-SND-113** Low/REAL_DEFECT — FIXED_PENDING_PROOF — A7-04 Low: uncommented() duplicated across two guard files
+- **F-SND-114** Low/REAL_DEFECT — FIXED_PENDING_PROOF — A7-05 Low: jsdom visibilityState pin had no enforcement seam
+- **F-SND-115** Nit/REAL_DEFECT — FIXED_PENDING_PROOF — A7-06 Nit: AUDIO_SPEC_RE tail missed '.' suffix
+- **F-SND-116** High/REAL_DEFECT — FIXED_PENDING_PROOF — I7-01 High: noHtml pre-pass eats code between '<!--' and '-->' string literals
+- **F-SND-117** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — I7-02 Medium: DECL_TAIL 40-char lookback suppressed real cue calls
+- **F-SND-118** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — I7-03 Medium: destructure alias `const { cue: q } = store; q('bogus')` invisible
+- **F-SND-119** Low/REAL_DEFECT — FIXED_PENDING_PROOF — I7-04 Low: `const X = 'a' + 'bogus.id'` concat evaded literal arm
+- **F-SND-120** Low/REAL_DEFECT — FIXED_PENDING_PROOF — I7-05 Low: escaped specifiers evade AUDIO_SPEC_RE and the tone ban
+- **F-SND-121** Nit/REAL_DEFECT — FIXED_PENDING_PROOF — I7-06 Nit: `function* cue` evaded LOCAL_DECL (FP direction)
+- **F-SND-122** Nit/REAL_DEFECT — TRIAGED — I7-07 Nit: uncommented() desyncs on ${}-nested quotes / regex literals containing the delimiter
+- **F-SND-123** High/REAL_DEFECT — TRIAGED — C7-01 dup A7-01: unrouted arm type-check break
+- **F-SND-124** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — C7-02 Medium: char scanner desyncs on ${} interpolation and regex literals
+- **F-SND-125** Medium/REAL_DEFECT — TRIAGED — C7-03 dup A7-02: LOCAL_DECL seam-alias exemption
+- **F-SND-126** Low/REAL_DEFECT — FIXED_PENDING_PROOF — C7-04+05b Low: sibling spec arms miss ?/#/. tails; array decls sweep element 0 only
+- **F-SND-127** Low/REAL_DEFECT — FIXED_PENDING_PROOF — C7-06 Low: driver-level hidden/prerender branch untested
+- **F-SND-128** Nit/REAL_DEFECT — TRIAGED — C7-07 Nit: EMITTED over-collects non-Vue emits
+- **F-SND-129** Nit/REAL_DEFECT — FIXED_PENDING_PROOF — C7-08 Nit: CALL misses cue!() and cue<T>() shapes
+- **F-SND-130** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — COR-8 F1 Medium: manifest banned-package arm kept exact-match
+- **F-SND-131** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — COR-8 F2 Medium: tree-wide tone arm missing tails
+- **F-SND-132** Low/REAL_DEFECT — FIXED_PENDING_PROOF — COR-8 F3 Low: multi-line concat initializer escapes
+- **F-SND-133** Low/REAL_DEFECT — FIXED_PENDING_PROOF — COR-8 F4 Low: let/var destructure + import-as aliases unswept
+- **F-SND-134** Low/REAL_DEFECT — FIXED_PENDING_PROOF — COR-8 F5 Low: .vue template cue() calls uncovered
+- **F-SND-135** Low/REAL_DEFECT — FIXED_PENDING_PROOF — COR-8 F6 Low: jsdom meta-guard satisfied by comment mention
+- **F-SND-136** Nit/REAL_DEFECT — FIXED_PENDING_PROOF — COR-8 F8a Nit: value-position .cue/.playCue escapes CALL
+- **F-SND-137** Nit/REAL_DEFECT — TRIAGED — COR-8 F8b Nit: <!-- --> inside .ts no longer stripped
+- **F-SND-138** Medium/TEST_DEFECT — FIXED_PENDING_PROOF — AUT-8 F2: jsdom pin premise stale under vitest (pretendToBeVisual => 'visible'); meta-guard also satisfied by comment mention
+- **F-SND-139** Low/REAL_DEFECT — FIXED_PENDING_PROOF — AUT-8 F3: alias call arm dropped CALL's leading \s*!? - q!<T>('bogus') escaped while cue!<T> was caught
+- **F-SND-140** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — AUT-8 F5 / INT-8 F4+F5: shorthand exemption crossed newlines (cue(x)\n{} orphan block, line-broken ternary); modifier decls (static/public cue) FP-flagged twice
+- **F-SND-141** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — AUT-8 F6+F7 accepted limits: dotless bogus cue ids; import('to'+'ne') dynamic-concat
+- **F-SND-142** Nit/TEST_DEFECT — FIXED_PENDING_PROOF — AUT-8 F8: visibility lane test's resume assertion not attributable to the dispatch (seed resume at bind time left spy dirty)
+- **F-SND-143** High/TEST_DEFECT — FIXED_PENDING_PROOF — INT-8 F1 HIGH: AST comment-range walk misses comments in dead zones - f(){/* import 'tone' */} stayed visible (FP direction) and commented emit() could satisfy the emitted-binding arm (FN direction)
+- **F-SND-144** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — INT-8 F4: shorthand exemption newline crossing (dup of F-SND-140 escape half)
+- **F-SND-145** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — INT-8 F5: modifier-decl FP + duplicate violation listing (dup of F-SND-140 FP half; dedupe nit folded in)
+- **F-SND-146** Low/REAL_DEFECT — FIXED_PENDING_PROOF — INT-8 F6: member indirection evades - store['cue'](x), store.cue.call/apply/bind
+- **F-SND-147** Low/REAL_DEFECT — FIXED_PENDING_PROOF — INT-8 F7: line-broken concat initializer escapes sweep
+- **F-SND-148** Low/REAL_DEFECT — FIXED_PENDING_PROOF — INT-8 F8: bound-literal lookahead misses paren-wrapped init and ??=/||=
+- **F-SND-149** Low/REAL_DEFECT — FIXED_PENDING_PROOF — INT-8 F9: nested generic cue<Map<K,V>>('x') and store.cu\u0065('x') escape
+- **F-SND-150** Low/TEST_DEFECT — FIXED_PENDING_PROOF — INT-8 F10: jsdom meta-guard satisfied by bare substring; narrow trigger set (dup of F-SND-138)
+- **F-SND-151** Low/FALSE_POSITIVE — REJECTED_WITH_PROOF — INT-8 F11: .vue template-attribute cue() claimed invisible
+- **F-SND-152** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — INT-8 nits: dotted event names invisible to bound-emitted arms (pre-existing convention risk); .vue EMITTED exclusion is documented intent; 'combat.'+x concat asymmetry; cross-file bound literals
+- **F-SND-153** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — AUT-8 F1: manifest banned-package arm kept exact-match (dup of F-SND-130)
+- **F-SND-154** Low/REAL_DEFECT — FIXED_PENDING_PROOF — AUT-8 F4: const-only alias sweep misses let/var/member/import renames (dup of F-SND-133)
+- **F-SND-155** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — INT-8 F2: [/?#.]+backslash tails reached only arm-1 (manifest arm + arm-3 equality at 51f0e861)
+- **F-SND-156** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — INT-8 F3: alias sweep const-only + member/import renames (dup of F-SND-133)
+- **F-SND-157** Critical/REAL_DEFECT — FIXED_PENDING_PROOF — commentStrip: scanner emits phantom comment inside regex literals - /[/*]/, /a\/*/, /\// eat the file tail for all uncommented() guards
+- **F-SND-158** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — commentStrip: <!-- --> strip ran on whole .vue before script extraction - script string literals pair up and delete code
+- **F-SND-159** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — wiring: ident-escape arm flags \uXXXX inside plain strings ('caf\u0065')
+- **F-SND-160** Low/REAL_DEFECT — FIXED_PENDING_PROOF — wiring: receiver whitelist misses useAudioStore() and useAudioStore()['cue']
+- **F-SND-161** Low/REAL_DEFECT — FIXED_PENDING_PROOF — wiring: generic args covered only to depth-2 - cue<Map<K,List<V>>> evades
+- **F-SND-162** High/REAL_DEFECT — FIXED_PENDING_PROOF — commentStrip regex-literal desync (AUT independent proof on audioBoundary + wiring)
+- **F-SND-163** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — commentStrip .vue global <!-- --> strip deletes real code (INT-9 same)
+- **F-SND-164** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — wiring: const q = useAudioStore().cue escapes value-ref arm
+- **F-SND-165** Low/REAL_DEFECT — FIXED_PENDING_PROOF — wiring: ternary / (( initializer escapes decl-ident arm
+- **F-SND-166** Low/REAL_DEFECT — FIXED_PENDING_PROOF — wiring: CALL scans inside string literals; mid-line `{ set cue(v) }` FP; `cue as q` matches TS casts
+- **F-SND-167** Nit/REAL_DEFECT — TRIAGED — premise-pin file placement arbitrary; template sweep lacks comment authority over attr JS
+- **F-SND-168** Low/REAL_DEFECT — TRIAGED — wiring: 'a.lit' true-branch literal in ternary decl swept with bad branch
+- **F-SND-169** High/REAL_DEFECT — FIXED_PENDING_PROOF — boundary: import'tone' / from'tone' / export..from'tone' escape IMPORT_RE (mandatory whitespace)
+- **F-SND-170** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — boundary: import('tone',{with:{...}}) escapes - regex demanded close paren
+- **F-SND-171** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — boundary: non-literal/concat dynamic specifiers import('to'+'ne'), import(spec) escape
+- **F-SND-172** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — boundary: 'to\u006ee' escape specifier; direct-import arm lacked backslash rejection
+- **F-SND-173** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — wiring: \u{65} code-point escapes bypass the \uXXXX arm
+- **F-SND-174** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — wiring: &&=/+= bind literals into cue vars; param destructure ({cue:q}) renames the seam
+- **F-SND-175** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — wiring: undotted literals never checked - cue('bogus') unflagged
+- **F-SND-176** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — wiring: same-line cue('x') : fake-shorthand exempted
+- **F-SND-177** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — emitted arm: emit('x') inside a string literal satisfies a bound event name
+- **F-SND-178** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — corpus misses .tsx/.js/.jsx/.mjs under src/
+- **F-SND-179** Low/REAL_DEFECT — TRIAGED — residual: arbitrary-name receivers (s2.cue) and Reflect.get(store,'cue') evade receiver arms
+- **F-SND-180** High/REAL_DEFECT — FIXED_PENDING_PROOF — scriptOf() unmatched `<!--` before <script> drops whole script
+- **F-SND-181** High/REAL_DEFECT — FIXED_PENDING_PROOF — `:` exemption on NONLITERAL swallows ternary/second-arg dynamic imports
+- **F-SND-182** High/REAL_DEFECT — FIXED_PENDING_PROOF — literal specifiers with non-+ operators evade all arms
+- **F-SND-183** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — phantom-comment rejection retains comments nested inside phantom span
+- **F-SND-184** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — template-depth desync on `{` inside regex inside ${}
+- **F-SND-185** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — bare cue.call/apply/bind evade indirect arm
+- **F-SND-186** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — bracket arm only inspects first quoted segment
+- **F-SND-187** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — param-destructure alias arm misses defaults/nested
+- **F-SND-188** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — per-line quote parity fails on multi-line literals
+- **F-SND-189** Low/REAL_DEFECT — FIXED_PENDING_PROOF — ident-escape arm flags regex literals like /na\u0065me/
+- **F-SND-190** Low/REAL_DEFECT — FIXED_PENDING_PROOF — .test.js/.jsx/.tsx/.mjs not exempted under widened corpus
+- **F-SND-191** High/REAL_DEFECT — FIXED_PENDING_PROOF — `<!--` inside template attribute value drops real <script>
+- **F-SND-192** High/REAL_DEFECT — FIXED_PENDING_PROOF — backtick specifier with ${} interpolation evades banned arms
+- **F-SND-193** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — phantom-comment rejection never re-scans the restored tail
+- **F-SND-194** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — NONLITERAL `:`-skip silences real nonliteral calls
+- **F-SND-195** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — .mts/.cts/.cjs/.d.mts escape the widened corpus
+- **F-SND-196** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — generic arm cannot span `(` inside type args
+- **F-SND-197** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — value-ref arm misses ?./!. and bare-callback passes
+- **F-SND-198** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — emit inside multi-line template/string satisfies bound arm
+- **F-SND-199** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — JSX-text /* */ in .tsx/.jsx swallows file tail
+- **F-SND-200** Low/REAL_DEFECT — FIXED_PENDING_PROOF — test exemptions .test.ts-only after corpus widening
+- **F-SND-201** Low/REAL_DEFECT — FIXED_PENDING_PROOF — bracket arm anchors cue name to first quoted segment
+- **F-SND-202** Low/REAL_DEFECT — FIXED_PENDING_PROOF — bound-literal sweep misses call wrappers on RHS
+- **F-SND-203** Low/REAL_DEFECT — FIXED_PENDING_PROOF — second <script> inside one unclosed <!-- swept
+- **F-SND-204** Low/REAL_DEFECT — FIXED_PENDING_PROOF — <script> inside <template #slot> swept as module script
+- **F-SND-205** High/REAL_DEFECT — FIXED_PENDING_PROOF — /* inside regex literal still swallows real comments
+- **F-SND-206** High/REAL_DEFECT — FIXED_PENDING_PROOF — { inside regex inside ${} desyncs template depth
+- **F-SND-207** High/REAL_DEFECT — FIXED_PENDING_PROOF — .vue: <!-- inside a template attribute excises a live script
+- **F-SND-208** High/REAL_DEFECT — FIXED_PENDING_PROOF — .vue: </script > whitespace close tag hides entire script
+- **F-SND-209** High/REAL_DEFECT — FIXED_PENDING_PROOF — NONLITERAL `: `{` skip lanes smuggle import('tone')
+- **F-SND-210** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — template-literal spec with nested quotes escapes DYNAMIC
+- **F-SND-211** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — backtick spec escapes AudioManager allowlist trigger
+- **F-SND-212** Nit/REAL_DEFECT — FIXED_PENDING_PROOF — latent FP lanes (.require args, template `import` text)
+- **F-SND-213** High/REAL_DEFECT — FIXED_PENDING_PROOF — one-line wrapper const cue=(id)=>store.cue(id) exempts file
+- **F-SND-214** High/REAL_DEFECT — FIXED_PENDING_PROOF — emit parity breaks both directions (multiline/stray quote)
+- **F-SND-215** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — bracket arm first-literal only; concat/escape splits evade
+- **F-SND-216** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — receiver brittleness: useAudioStore(arg), member tails, unqualified obj['cue']
+- **F-SND-217** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — bare-call arm misses capital alias, (cue)(, cue.call, generic parens, alias tags
+- **F-SND-218** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — param destructure {cue:q}={} default evades
+- **F-SND-219** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — @click="cue('bogus')" evades via quote prefix exclusion
+- **F-SND-220** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — IDENT = cond &&/'cue' || 'cue' RHS not swept
+- **F-SND-221** Low/REAL_DEFECT — TRIAGED — over-aggressive sweeps may flag legit code (typed destructure cb, nested call literals, both-branch ternary)
+- **F-SND-222** High/REAL_DEFECT — FIXED_PENDING_PROOF — zero-width comment splice import/*c*/x -> importx blinds keyword arms
+- **F-SND-223** High/REAL_DEFECT — FIXED_PENDING_PROOF — .vue commented <script/>/<template> poisons scriptOf region checks
+- **F-SND-224** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — literalRanges never collects TemplateMiddle/Tail text
+- **F-SND-225** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — destructure alias sweep truncates at first nested }
+- **F-SND-226** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — cue(importedConst) unvalidated cross-file indirection
+- **F-SND-227** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — entity_vitals_changed binding ignores event.reason
+- **F-SND-228** Low/REAL_DEFECT — FIXED_PENDING_PROOF — </script junk> / </script/> close-tag forms hide whole script
+- **F-SND-229** Low/REAL_DEFECT — FIXED_PENDING_PROOF — .vue template non-handler attributes flagged as cue calls (FP)
+- **F-SND-230** Low/REAL_DEFECT — FIXED_PENDING_PROOF — manifest catalog pins single-quote only
+- **F-SND-231** Nit/REAL_DEFECT — FIXED_PENDING_PROOF — AUDIO_BUNDLE_PREFIXES music entries lack trailing dots
+- **F-SND-232** Nit/REAL_DEFECT — FIXED_PENDING_PROOF — EMITTED generic arm is depth-1
+- **F-SND-233** Nit/REAL_DEFECT — FIXED_PENDING_PROOF — hit->combat.hit plays for any non-player target
+- **F-SND-234** High/REAL_DEFECT — FIXED_PENDING_PROOF — <!-- inside {{ }} interpolation drops whole <script> for every consumer
+- **F-SND-235** High/REAL_DEFECT — FIXED_PENDING_PROOF — unclosed <script> inside template markup swallows real script
+- **F-SND-236** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — </script/> / </script attr> close-tag shapes hide script
+- **F-SND-237** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — NONLITERAL_IMPORT [:{] exemption: statement-position import(x)+{ escapes
+- **F-SND-238** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — boundary trigger misses bracket/optional member on AudioManager
+- **F-SND-239** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — .vue <script lang="tsx"> scanned as plain ts: JSX text blanks code
+- **F-SND-240** Low/REAL_DEFECT — FIXED_PENDING_PROOF — ConfirmModal: ui.modal.close only on user confirm/cancel
+- **F-SND-241** Nit/REAL_DEFECT — FIXED_PENDING_PROOF — playCue throws on non-string id before never-throws guarantee
+- **F-SND-242** Nit/REAL_DEFECT — FIXED_PENDING_PROOF — emitted-set discovery literal-only; computed emit names desync
+- **F-SND-243** Nit/REAL_DEFECT — FIXED_PENDING_PROOF — pointerdown only unlock gesture; keyboard activation never hydrates
+- **F-SND-244** High/REAL_DEFECT — FIXED_PENDING_PROOF — scriptOf markup mask leaves comment bodies/non-script blocks live
+- **F-SND-245** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — literalRanges missing template continuation token
+- **F-SND-246** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — JSX-text /* desyncs scanComments in real .tsx/.jsx and vue tsx scripts
+- **F-SND-247** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — LOCAL_DECL seam-alias gate inspects only first RHS line
+- **F-SND-248** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — alias-active callRe orders ! after generic -> cue !<T>(x) invisible
+- **F-SND-249** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — bracket arm requires ident-chain receiver -> useAudioStore()["cue"](x) evades
+- **F-SND-250** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — .vue template-attribute JS invisible to boundary guard
+- **F-SND-251** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — member-position identifier escape store.\u0063ue(x) defeats name arms
+- **F-SND-252** Low/REAL_DEFECT — FIXED_PENDING_PROOF — bare cue<Multi\nLine>("x") invisible; generic arm cannot span lines
+- **F-SND-253** Low/REAL_DEFECT — FIXED_PENDING_PROOF — import.meta.glob/resolve specifiers invisible to boundary guard
+- **F-SND-254** Low/REAL_DEFECT — FIXED_PENDING_PROOF — unannotated function require(x) flagged as nonliteral require (FP)
+- **F-SND-255** Low/REAL_DEFECT — FIXED_PENDING_PROOF — setEnabled(false) does not silence in-flight one-shots
+- **F-SND-256** Nit/FALSE_POSITIVE — REJECTED_WITH_PROOF — setChannelVolume("music") during active duck truncates audible duck
+- **F-SND-257** Nit/REAL_DEFECT — TRIAGED — architecture suite non-green at pin (pre-existing master reds)
+- **F-SND-258** High/REAL_DEFECT — FIXED_PENDING_PROOF — <!-- <tag> bodies pushed element stack; --> could never clear inComment
+- **F-SND-259** High/REAL_DEFECT — FIXED_PENDING_PROOF — F-SND-234 incomplete: {{ '<!--' }} interpolation still poisoned the walk
+- **F-SND-260** High/REAL_DEFECT — FIXED_PENDING_PROOF — --> inside a tag token swallowed, comment never closed
+- **F-SND-261** High/REAL_DEFECT — FIXED_PENDING_PROOF — unclosed <!-- inside <template> deadened top-level <script>
+- **F-SND-262** High/REAL_DEFECT — FIXED_PENDING_PROOF — e2e spec emitted hit without targetId; combat.hit could never fire
+- **F-SND-263** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — <script>-shaped text inside script body left stack residue
+- **F-SND-264** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — lang="tsx" .vue scripts scanned as Standard TS; JsxText hides real calls
+- **F-SND-265** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — companion/ally-source hits fully silent
+- **F-SND-266** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — {{ cue(x) }} + bare v-on/v-bind object attrs escaped wiring template sweep
+- **F-SND-267** Low/REAL_DEFECT — FIXED_PENDING_PROOF — emit(('a'+'b')) paren-wrap evaded NONLITERAL_EMITS concat arm
+- **F-SND-268** Low/REAL_DEFECT — FIXED_PENDING_PROOF — leading-escape \u0063ue(x) evaded ident-escape arm and CALL
+- **F-SND-269** Low/REAL_DEFECT — FIXED_PENDING_PROOF — depth-2+ object destructure evaded seamDeclared one-nesting regex
+- **F-SND-270** Low/REAL_DEFECT — FIXED_PENDING_PROOF — F-SND-230 incomplete: skillIds scan still single-quote-only
+- **F-SND-271** Low/REAL_DEFECT — FIXED_PENDING_PROOF — cue(importedLowerCamel) cross-file indirection unvalidated
+- **F-SND-272** Nit/REAL_DEFECT — FIXED_PENDING_PROOF — declaresLocalEmit was file-wide
+- **F-SND-273** Nit/REAL_DEFECT — FIXED_PENDING_PROOF — generic-arg windows capped at 400 chars
+- **F-SND-274** High/REAL_DEFECT — FIXED_PENDING_PROOF — scriptBlocksOf wedged to [] on unbalanced tag inside HTML comment
+- **F-SND-275** High/REAL_DEFECT — FIXED_PENDING_PROOF — commented </template><script> resurrected dead code as live block
+- **F-SND-276** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — {{ "..." }} interpolation literals injected markup tokens
+- **F-SND-277** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — WARD_DAMAGE_REASONS untyped duplicate of DAMAGE_VITALS_REASONS, divergent
+- **F-SND-278** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — entity_vitals_changed grant cue unguarded by delta check (phantom cue at ward ceiling)
+- **F-SND-279** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — ward_break excluded from binding damage-family set
+- **F-SND-280** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — NONLITERAL_EMITS missed identifier-led computed names emit(x+'y')
+- **F-SND-281** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — declaresLocalEmit file-wide exemption disabled whole-file check
+- **F-SND-282** Low/REAL_DEFECT — FIXED_PENDING_PROOF — binding-table cue-id literals never validated against manifest (~46 strings)
+- **F-SND-283** Low/REAL_DEFECT — FIXED_PENDING_PROOF — hit gate axis diverged from spec (sourceId vs targetId)
+- **F-SND-284** Low/REAL_DEFECT — FIXED_PENDING_PROOF — DOMAINS hardcoded 9-item set over-claimed spec-table coverage
+- **F-SND-285** Low/REAL_DEFECT — FIXED_PENDING_PROOF — AUDIO_BUNDLE_PREFIXES unpinned mirror of cue-id domain space
+- **F-SND-286** Low/REAL_DEFECT — FIXED_PENDING_PROOF — wiring latent FPs: bracket receiver without (, export/declare in LINE_DECL, literal-typed params
+- **F-SND-287** Low/REAL_DEFECT — FIXED_PENDING_PROOF — bare v-on/v-bind object attrs + import.meta['glob'] bracket access unswept
+- **F-SND-288** Nit/REAL_DEFECT — FIXED_PENDING_PROOF — id: producer regex single-quoted while siblings triple-quote
+- **F-SND-289** Nit/REAL_DEFECT — FIXED_PENDING_PROOF — hygiene: dead scriptOf helper + duplicated comment paragraph in ambientAudioDriver
+- **F-SND-290** High/REAL_DEFECT — FIXED_PENDING_PROOF — comment-tag poison: open tags in comment pushed stack, --> never cleared
+- **F-SND-291** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — WARD_DAMAGE_REASONS missing ward_break (Khiên Nổ kickback silent)
+- **F-SND-292** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — .vue template sweeps never ran IMPORT_META_SPEC_RE (literal glob escape)
+- **F-SND-293** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — isNonliteralImportCall FPs on method shorthand require(x){}/import(y){}
+- **F-SND-294** Low/REAL_DEFECT — FIXED_PENDING_PROOF — destructure-alias arm collected cue:/playCue: renames from any const {
+- **F-SND-295** Low/REAL_DEFECT — FIXED_PENDING_PROOF — cue(x) inside JsxText flagged as a call
+- **F-SND-296** Low/REAL_DEFECT — FIXED_PENDING_PROOF — templateTextOf regex strip swallowed template tail on unbalanced nested <script>
+- **F-SND-297** High/REAL_DEFECT — FIXED_PENDING_PROOF — `<!-->`/`<!--->` abrupt-closed empty comments kept comment open to EOF
+- **F-SND-298** High/REAL_DEFECT — FIXED_PENDING_PROOF — `</script)>`-style close tags desynced the script-body walk
+- **F-SND-299** High/REAL_DEFECT — FIXED_PENDING_PROOF — `{{ --> }}` interp masking erased `-->` inside comment bodies
+- **F-SND-300** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — template sweep missed executable v-* directive expressions
+- **F-SND-301** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — `bus. emit(...)` whitespace defeated the per-callee exemption
+- **F-SND-302** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — `bus['emit'](...)` bracket-member emit uncovered
+- **F-SND-303** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — emit computed-arg arms missed `new`/wrap-paren/other continuations
+- **F-SND-304** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — `import(a.b) {}` passed the method-shorthand param-shape test
+- **F-SND-305** Low/REAL_DEFECT — FIXED_PENDING_PROOF — `{a='{', cue}` string default miscounted the balanced-brace walk
+- **F-SND-306** Low/REAL_DEFECT — FIXED_PENDING_PROOF — `</ <script>...</script>` bogus comment extracted as live block
+- **F-SND-307** Nit/REAL_DEFECT — FIXED_PENDING_PROOF — manifest 'row id matches convention' domain half was vacuous
+- **F-SND-308** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — attr-mask truncation forged `<script>` tokens inside quoted attrs
+- **F-SND-309** Low/REAL_DEFECT — FIXED_PENDING_PROOF — literal `emit('<bound>')` arm lacked the local-emitter exemption
+- **F-SND-310** Low/REAL_DEFECT — FIXED_PENDING_PROOF — importedIdents missed mixed `import def, {…}` specifier shapes
+- **F-SND-311** Low/REAL_DEFECT — FIXED_PENDING_PROOF — `survive_lethal` in WARD_DAMAGE_REASONS was vacuous; comment over-claimed
+- **F-SND-312** Low/REAL_DEFECT — FIXED_PENDING_PROOF — element fallback dead-by-pin while spec still documented it live
+- **F-SND-313** Low/REAL_DEFECT — FIXED_PENDING_PROOF — bundle->route hop unpinned
+- **F-SND-314** Low/REAL_DEFECT — FIXED_PENDING_PROOF — naive `<!--.*?-->` strip treated `<!--` inside attr values as comment opens
+- **F-SND-315** Nit/REAL_DEFECT — FIXED_PENDING_PROOF — boundary-aware prefix predicate duplicated
+- **F-SND-316** Nit/REAL_DEFECT — FIXED_PENDING_PROOF — applyScreenShake 'single choke point' unpinned
+- **F-SND-317** Low/REAL_DEFECT — FIXED_PENDING_PROOF — call-led arm `.`/`[` asymmetry missed computed-head emit shapes
+- **F-SND-318** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — `{{…}}` inside script bodies merged script blocks (wave-12 regression)
+- **F-SND-319** Low/REAL_DEFECT — FIXED_PENDING_PROOF — `emit(('literal'))` paren-wrapped literal invisible to EMITTED collector
+- **F-SND-320** Low/REAL_DEFECT — FIXED_PENDING_PROOF — BINDING_FILES hardcoded 4-file list let future binding tables escape
+- **F-SND-321** Nit/REAL_DEFECT — TRIAGED — seam-alias RHS window over-flags semicolon-free locals
+- **F-SND-322** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — pre-existing pin failures: combatContract anchor + dynamicRegionHost dev-lab
+- **F-SND-323** High/TEST_DEFECT — FIXED_PENDING_PROOF — `</`+non-letter bogus-comment arm swallows a following `-->`/`--!>` inside comments
+- **F-SND-324** Medium/TEST_DEFECT — FIXED_PENDING_PROOF — multiline named-import clauses evade importedIdents capture
+- **F-SND-325** Medium/TEST_DEFECT — FIXED_PENDING_PROOF — directive sweep misses dynamic-arg names with spaces/exprs and unquoted attr values
+- **F-SND-326** Medium/TEST_DEFECT — FIXED_PENDING_PROOF — emit invocation arms enumerate head shapes; unary/postfix/conditional heads slip through
+- **F-SND-327** Medium/TEST_DEFECT — FIXED_PENDING_PROOF — `</ script>` (whitespace after `</`) treated as a real script close tag
+- **F-SND-328** Low/TEST_DEFECT — FIXED_PENDING_PROOF — param-destructure alias arm ran on raw text, not noLit
+- **F-SND-329** Low/TEST_DEFECT — FIXED_PENDING_PROOF — screenShakeAuthority misses `.shake.call/apply/bind`, computed members, identifier escapes
+- **F-SND-330** Low/TEST_DEFECT — FIXED_PENDING_PROOF — binding-literal pin's cueDomains gate lets domain-typo literals pass
+- **F-SND-331** Low/TEST_DEFECT — FIXED_PENDING_PROOF — seam-RHS gate gaps: for-of/for-in receivers and `store['cue']` read-alias
+- **F-SND-332** Medium/TEST_DEFECT — FIXED_PENDING_PROOF — unquoted/quoted attribute value containing `<!--` opens an EOF comment / desyncs extent
+- **F-SND-333** Medium/TEST_DEFECT — FIXED_PENDING_PROOF — close/comment tokens inside nested RAWTEXT elements desync the walk
+- **F-SND-334** Low/TEST_DEFECT — FIXED_PENDING_PROOF — attr-extent quote masking inside JS strings hid a real `</script>` close (over-inclusion)
+- **F-SND-335** Medium/TEST_DEFECT — FIXED_PENDING_PROOF — unclosed `{{` interpolation masks to EOF, hiding later `<script>` (regression)
+- **F-SND-336** Low/TEST_DEFECT — FIXED_PENDING_PROOF — declaresLocalEmit trips on type-level `emit:` signatures, exempting whole files
+- **F-SND-337** Low/TEST_DEFECT — FIXED_PENDING_PROOF — audioBoundary lacks identifier-escape arm; `re\u0071uire('tone')` evades every require arm
+- **F-SND-338** Nit/TEST_DEFECT — FIXED_PENDING_PROOF — paramsShaped over-flags legal method shorthand with defaults/rest/destructuring
+- **F-SND-339** Nit/REAL_DEFECT — FIXED_PENDING_PROOF — waitForLoaderScene promise never settles if dispose() runs while a caller waits without a signal
+- **F-SND-340** Nit/REAL_DEFECT — FIXED_PENDING_PROOF — `kiem_orb_` branch in cueForActionImpact is dead-redundant
+- **F-SND-341** Nit/DOCUMENTATION_DEFECT — FIXED_PENDING_PROOF — `emit((f(),'x'))` arm comment disagreed with observed behavior
+- **F-SND-342** High/TEST_DEFECT — FIXED_PENDING_PROOF — unclosed <script> at EOF emitted no productState block (coverage asymmetry)
+- **F-SND-343** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — domAudioLoader propagated first caller's AbortSignal into shared deduped fetch
+- **F-SND-344** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — stale loaderScene reference loaded via destroyed scene (no re-wait loop)
+- **F-SND-345** High/TEST_DEFECT — FIXED_PENDING_PROOF — markup tag tempering let </x -->/forged closes poison comment ranges
+- **F-SND-346** Medium/TEST_DEFECT — FIXED_PENDING_PROOF — declare mask [^;{]* glued across newlines; no inLit guard
+- **F-SND-347** Medium/TEST_DEFECT — FIXED_PENDING_PROOF — type union members beyond first left unmasked (=\s*$ terminator missing)
+- **F-SND-348** Medium/TEST_DEFECT — FIXED_PENDING_PROOF — emit signature emit(e?: T)/emit:()=>void in params not masked
+- **F-SND-349** Low/TEST_DEFECT — FIXED_PENDING_PROOF — (audio.cue) parenthesized callee false-positive
+- **F-SND-350** Medium/TEST_DEFECT — FIXED_PENDING_PROOF — bare emit value forms unflagged (emit as expr, .call/.apply/.bind, tag)
+- **F-SND-351** Medium/TEST_DEFECT — FIXED_PENDING_PROOF — bracket-member emit bus['em'+'it'] / ['emit'] undecoded
+- **F-SND-352** Medium/TEST_DEFECT — FIXED_PENDING_PROOF — emit-alias collection gaps: nested destructure, assignment, bracket, \S receiver
+- **F-SND-353** Low/TEST_DEFECT — FIXED_PENDING_PROOF — const r = bus.emit double-claimed as alias + value-ref
+- **F-SND-354** Medium/TEST_DEFECT — FIXED_PENDING_PROOF — bracket/optional/non-null cue receivers cue?.call (cue)?.( cues['k'] unflagged
+- **F-SND-355** Low/TEST_DEFECT — FIXED_PENDING_PROOF — cue tag template (cue)`x` unflagged
+- **F-SND-356** Medium/TEST_DEFECT — FIXED_PENDING_PROOF — non-leading param destructure f(a, {cue:q}) unflagged
+- **F-SND-357** Medium/TEST_DEFECT — FIXED_PENDING_PROOF — seamDeclared missed =/of/in receivers (for-of {cue:q} of bogus.seam)
+- **F-SND-358** Medium/TEST_DEFECT — FIXED_PENDING_PROOF — bare cue reference fence too narrow ([cue], {k:cue}, ...cue, cue&&x)
+- **F-SND-359** Low/TEST_DEFECT — FIXED_PENDING_PROOF — .cue( called on unrestricted receivers (bogus chain FP risk + missed store.cue?.() etc)
+- **F-SND-360** Medium/TEST_DEFECT — FIXED_PENDING_PROOF — store['cue'] / (store)['cue'] bracket read unflagged
+- **F-SND-361** Low/TEST_DEFECT — FIXED_PENDING_PROOF — ;import specifier at statement anchor unflagged
+- **F-SND-362** Medium/TEST_DEFECT — FIXED_PENDING_PROOF — import.meta escapes/bracket/value-extraction all unflagged
+- **F-SND-363** Medium/TEST_DEFECT — FIXED_PENDING_PROOF — paramsShaped 'a == b'/'a => b' read as default param; single [x]/{x} exempt
+- **F-SND-364** Medium/TEST_DEFECT — FIXED_PENDING_PROOF — cam.shake via bracket/concat/escape spelling .includes FP + misses
+- **F-SND-365** Medium/TEST_DEFECT — FIXED_PENDING_PROOF — cam[K] ident-key resolution missing (const K='shake')
+- **F-SND-366** Medium/TEST_DEFECT — FIXED_PENDING_PROOF — {shake} destructure extraction unflagged
+- **F-SND-367** Medium/TEST_DEFECT — FIXED_PENDING_PROOF — .vue template surface not swept (cam.shake in @click/template)
+- **F-SND-368** Low/TEST_DEFECT — FIXED_PENDING_PROOF — {{}} capture not string-aware ('}}' inside string literal truncated expr)
+- **F-SND-369** Low/TEST_DEFECT — FIXED_PENDING_PROOF — boundary literal regions not shared with shake sweep (scriptlessTemplateText split)
+- **F-SND-370** Low/TEST_DEFECT — FIXED_PENDING_PROOF — typeof bus.emit / typeof store.cue value-ref FP
+- **F-SND-371** High/REAL_DEFECT — FIXED_PENDING_PROOF — AssetBundleManager disposed/pre-aborted gates missing: post-dispose waitForLoaderScene dangles waiter; post-dispose setLoaderScene publishes into disposed manager
+- **F-SND-372** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — cue call-arm receiver gate requires flush dot: store?.cue, store!.cue, store .cue, (store).cue, useAudioStore()?.cue evade
+- **F-SND-373** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — ?. ordering holes in emit/cue call regexes: emit?.<T>(, emit.call?.(, emit!.call?.(, (emit as F).call?.(, store.cue?.<T>(
+- **F-SND-374** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — emit: inside any control paren flips file-wide typeEmitDecl exemption (if/while/for/switch/catch parens accepted as param parens)
+- **F-SND-375** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — import.meta indirection arms missing: {glob|resolve} = import.meta destructure, const ns = import.meta alias, import.meta[K] ident key
+- **F-SND-376** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — loadSingleDomAudio stale !signal?.aborted gate under-counts real fetch failures: attempt cap unreachable under caller abort
+- **F-SND-377** Low/REAL_DEFECT — FIXED_PENDING_PROOF — {emit: r} = <non-whitelist receiver> alias destructure gap: whitelist misses common bus synonyms
+- **F-SND-378** Low/REAL_DEFECT — FIXED_PENDING_PROOF — ternary-:/EOL fence gaps in bare emit/cue value arms: cond ? emit : alt, x : cue at EOL
+- **F-SND-379** Low/REAL_DEFECT — FIXED_PENDING_PROOF — typeof import.meta.glob flagged: value-ref arm lacked the emit arm's typeof exemption
+- **F-SND-380** Low/REAL_DEFECT — FIXED_PENDING_PROOF — shake identLit map is const-only: let/var literal bindings in cam[KEY] escape
+- **F-SND-381** Low/REAL_DEFECT — FIXED_PENDING_PROOF — {shake} destructure arm requires const|let|var: function-parameter destructures f({shake}) escape
+- **F-SND-382** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — {{ }} interpolation capture truncates at adjacent }} inside regex literals and escaped quotes, hiding expression tail from template sweeps
+- **F-SND-383** High/REAL_DEFECT — FIXED_PENDING_PROOF — seam-receiver gate matched by suffix/prefix not word boundary: over-flags lookalike idents and misses store's own alias; capitalized *AudioStore/*AudioMgr evade
+- **F-SND-384** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — emit as X / cue as X arms mint type names as aliases (FP factory)
+- **F-SND-385** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — dead subset arm (cue)( flags unconditionally -> FP on valid calls, triple-reporting
+- **F-SND-386** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — emit-alias receiver validation incoherent: substring whitelist on one arm, none on the other two
+- **F-SND-387** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — nested-arg literals inside cue(...) flagged as cue ids
+- **F-SND-388** Low/REAL_DEFECT — FIXED_PENDING_PROOF — templateExprText over-includes: {{ }} inside literal attribute values and foreign-block bodies swept as expressions
+- **F-SND-389** Low/REAL_DEFECT — FIXED_PENDING_PROOF — templateTextOf in audioBoundary.test.ts was third inline copy of scriptless-template blanking
+- **F-SND-390** Low/REAL_DEFECT — FIXED_PENDING_PROOF — usesJsxBlocks flag not propagated to joined-.vue literalRanges in shake + boundary sweeps
+- **F-SND-391** Nit/REAL_DEFECT — FIXED_PENDING_PROOF — violation Set deduped file -> literal strings across call sites (distinct sites collapsed)
+- **F-SND-392** Nit/REAL_DEFECT — FIXED_PENDING_PROOF — import.meta?.glob / import.meta?.resolve (?. spelling) escaped all meta arms
+- **F-SND-393** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — param-object destructures function h({emit: q}) flip the exemption and mint no alias
+- **F-SND-394** Low/REAL_DEFECT — FIXED_PENDING_PROOF — declare-masked spans still flip typeEmitDecl - ambient declarations exempt the file
+- **F-SND-395** Low/REAL_DEFECT — FIXED_PENDING_PROOF — emit alias gaps: ?.[ / ![ bridges, of/in expression RHS, emit as any
+- **F-SND-396** Low/REAL_DEFECT — FIXED_PENDING_PROOF — => inside <> generic windows closes them early - emit<() => ()>(x) args never inspected
+- **F-SND-397** Low/REAL_DEFECT — FIXED_PENDING_PROOF — (emit) => emit(x) param emits classified as producer calls
+- **F-SND-398** Low/REAL_DEFECT — FIXED_PENDING_PROOF — cue paren-indirect hole: (cue).call/.apply/.bind, (cue)?.call evade
+- **F-SND-399** Low/REAL_DEFECT — FIXED_PENDING_PROOF — cue bare-ref fence gaps + [/expression-of destructure evasion
+- **F-SND-400** Low/REAL_DEFECT — FIXED_PENDING_PROOF — recv.cue.call(x) produced triple/double violations per site
+- **F-SND-401** Low/REAL_DEFECT — FIXED_PENDING_PROOF — cue concat specifiers evade: cue('ui.click' + n), cue(n + 'ui.click')
+- **F-SND-402** Low/REAL_DEFECT — FIXED_PENDING_PROOF — \x2e/\u002e dot escapes evade all three guards' escape arms
+- **F-SND-403** Low/REAL_DEFECT — FIXED_PENDING_PROOF — shake over-flag lanes: no receiver check on ['shake'], rename destructure, dynamic concat
+- **F-SND-404** Low/REAL_DEFECT — FIXED_PENDING_PROOF — shake evasion lanes: comma/ternary/interp keys, let, annotated/param destructure, bare shake()
+- **F-SND-405** Low/REAL_DEFECT — FIXED_PENDING_PROOF — boundary .vue template sweep lacked wave-16 arms; typeof/['glob'] FP+dup; import.meta[k] computed member unscreened
+- **F-SND-406** Low/REAL_DEFECT — FIXED_PENDING_PROOF — templateExprText arm-1 swept plain element text - @click=/:x= in prose flagged
+- **F-SND-407** Low/REAL_DEFECT — FIXED_PENDING_PROOF — {{ }} inside dead script/foreign bodies swept as expressions
+- **F-SND-408** Low/REAL_DEFECT — FIXED_PENDING_PROOF — boundary templateTextOf swept literal attribute values
+- **F-SND-409** High/REAL_DEFECT — FIXED_PENDING_PROOF — templateExprText tagSpan [^<>]* not quote-aware: attr `>`/`<` truncates tag, later directives unswept; {{}} in literal attr swept
+- **F-SND-410** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — paren-callee arms bridge ?. but not . : (emit as F).call(, (cue).call( escape
+- **F-SND-411** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — emit-alias reBare : lookahead flags object-literal keys {q:} {emit:}
+- **F-SND-412** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — case f({emit:q}|{cue:qc}|{shake}): mints fake bindings via : -gate (case colon treated as signature colon)
+- **F-SND-413** Low/REAL_DEFECT — FIXED_PENDING_PROOF — cue-alias indirect .call/.apply/.bind uncovered (emit side has reIndirect)
+- **F-SND-414** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — shake bracket: cam?.['shake']/a.['shake'] fail receiver (no .); cam['x','shake'], cam[k?'a':'shake'] evade join rule
+- **F-SND-415** Low/REAL_DEFECT — FIXED_PENDING_PROOF — cue arg-head: unary/spread heads silent; ?? / || / && resolve head ident only; ident->ident decl chains unresolved
+- **F-SND-416** Low/REAL_DEFECT — FIXED_PENDING_PROOF — shake mixed concat cam['sh'+k+'e'] evades substring rule; compound reassign += ??= missed
+- **F-SND-417** Low/REAL_DEFECT — FIXED_PENDING_PROOF — shakeBoundNames misses nested {a:{shake}}, quoted 'shake':s2, {shake:s=d}/{shake:{n}}; flagBoundCalls no receiver lookbehind (obj.s3 FP), misses s?.(/s.call(
+- **F-SND-418** Low/REAL_DEFECT — FIXED_PENDING_PROOF — alias-mint RHS window [\s\S]{0,200} crosses ; mints aliases on unrelated receivers
+- **F-SND-419** Low/REAL_DEFECT — FIXED_PENDING_PROOF — AssetBundleManager: setLoaderScene/dispose clears inFlightLoads -> detached dom fetch + duplicate refetch; stale tries snapshot under-counts rejections across mid-flight swap; post-dispose attach still calls attachEncodedBuffer
+- **F-SND-420** Nit/REAL_DEFECT — FIXED_PENDING_PROOF — store.cue.call double-report (indirect + value-ref at same offset)
+- **F-SND-421** Nit/REAL_DEFECT — FIXED_PENDING_PROOF — const emit = bus.emit self-alias -> emit(x) classified twice
+- **F-SND-422** High/REAL_DEFECT — FIXED_PENDING_PROOF — resolveAudioCue resolves Object.prototype members -> playCue('constructor') TypeError despite never-throws contract
+- **F-SND-423** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — ({x}=y) / for ({x} of y) / r = bus['emit'] evade all alias-mint arms (emit + shake sides)
+- **F-SND-424** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — foreign-block blank position-blind (nested <i18n> over-blanked) + name-limited i18n|style (<route>/<docs> unblanked -> {{ cue }} FP)
+- **F-SND-425** Low/REAL_DEFECT — FIXED_PENDING_PROOF — boundary metaIdentLit missing reassignment guard; ns['glob']/ns!.glob + import.meta[k] value-ref (no call) evade
+- **F-SND-426** Low/REAL_DEFECT — FIXED_PENDING_PROOF — RECEIVER edges: useAudioStore(f(g())) 2-level call args escape
+- **F-SND-427** Nit/REAL_DEFECT — FIXED_PENDING_PROOF — unquoted v-on=/v-bind= object values unswept
+- **F-SND-428** Nit/REAL_DEFECT — FIXED_PENDING_PROOF — case emit: switch-label read unflagged
+- **F-SND-429** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — receiver member tails miss ?./bracket mid-chain: store?.k.cue, store['k'].cue, audioStore().cue
+- **F-SND-430** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — ({shake} = cam) assignment destructure unmatched; CONTROL_PAREN keyword-prefixed ( unbound
+- **F-SND-431** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — AUT-2 tagSpan quote-aware truncation (TurnOrderStrip.vue:141 :style live hit)
+- **F-SND-432** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — AUT-4 foreign-block position/name limits
+- **F-SND-433** High/REAL_DEFECT — FIXED_PENDING_PROOF — INT-01 tagSpan truncation NodeTreePanel.vue:635
+- **F-SND-434** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — INT-02 paren-callee . bridge
+- **F-SND-435** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — INT-04 shake ?.[ receiver + ternary/comma member keys
+- **F-SND-436** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — INT-05 shake assignment destructure + keyword-paren
+- **F-SND-437** Low/REAL_DEFECT — FIXED_PENDING_PROOF — INT-06 shakeBoundNames nested/quoted + flagBoundCalls tails
+- **F-SND-438** Low/REAL_DEFECT — FIXED_PENDING_PROOF — INT-07 import.meta[k] value-ref
+- **F-SND-439** Low/REAL_DEFECT — FIXED_PENDING_PROOF — INT-08 ABM in-flight cleared on swap/dispose
+- **F-SND-440** Low/REAL_DEFECT — FIXED_PENDING_PROOF — INT-09 foreign-block name-limited
+- **F-SND-441** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — AUT-6 RECEIVER mid-chain member tails
+- **F-SND-442** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — emit mint arms self-flag the binding site (patternSpans misses for(/paren shapes)
+- **F-SND-443** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — screaming-head check fires on non-name positions (cue(COND ? a : b), unary, && tails)
+- **F-SND-444** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — `store?.[k].cue` / `store.[k].cue` escape - `?.[` / `.[` bridge missing from RECEIVER tail
+- **F-SND-445** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — `cue?.call`/`cue!.call`/bare `store.cue.bind` value reads escape (F-SND-354 wrong + F-SND-420 side effect)
+- **F-SND-446** Low/REAL_DEFECT — FIXED_PENDING_PROOF — cam['sh'+k+'e'] still escapes (F-SND-416 titled repro unfixed)
+- **F-SND-447** Low/REAL_DEFECT — FIXED_PENDING_PROOF — foreign-block `</template>` inside body still extends templateSpan (F-SND-424 edge)
+- **F-SND-448** Low/REAL_DEFECT — FIXED_PENDING_PROOF — member-assignment targets mint as emit aliases (obj.handler = bus.emit mints `handler`)
+- **F-SND-449** Low/REAL_DEFECT — FIXED_PENDING_PROOF — import.meta alias receivers skip concat/ident keys (ns['glo'+'b'], ns[K])
+- **F-SND-450** Low/REAL_DEFECT — FIXED_PENDING_PROOF — loadSingleDomImage revives loadedResources after dispose (missing !disposed gate)
+- **F-SND-451** Low/REAL_DEFECT — FIXED_PENDING_PROOF — `{shake: {s}}` collects the wrong bound name (key text not inner pattern)
+- **F-SND-452** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — cue param-destructure scan mints inside control parens and ternary colons (no ctrlParen/case gate)
+- **F-SND-453** Low/REAL_DEFECT — FIXED_PENDING_PROOF — `case emit + 1:` / `case alias + 1:` evade every arm
+- **F-SND-454** Low/REAL_DEFECT — FIXED_PENDING_PROOF — emit alias in ternary condition / tagged template evades where bare emit is covered
+- **F-SND-455** Low/REAL_DEFECT — FIXED_PENDING_PROOF — shake member-key alt-split flags the ternary CONDITION segment as a key
+- **F-SND-456** Low/REAL_DEFECT — FIXED_PENDING_PROOF — `cue(MAP?.[k])` / `cue(MAP![k])` over-flag as computed-head
+- **F-SND-457** Low/REAL_DEFECT — FIXED_PENDING_PROOF — `cue(...['lit'])` never resolves the literal -> computed-head flag on real keys
+- **F-SND-458** Nit/REAL_DEFECT — FIXED_PENDING_PROOF — `cue('a' + 'b')` concat args multi-report (one flag per segment + computed-head)
+- **F-SND-459** Low/REAL_DEFECT — FIXED_PENDING_PROOF — cue-alias bare-value and `case cue:`/`case playCue:` label positions escape (emit arms not mirrored)
+- **F-SND-460** Low/REAL_DEFECT — FIXED_PENDING_PROOF — (cue)(ident) flags unconditionally - arg-head resolution not applied
+- **F-SND-461** Low/REAL_DEFECT — FIXED_PENDING_PROOF — unquoted non-brace `v-*` directive values escape the template sweep
+- **F-SND-462** Low/REAL_DEFECT — FIXED_PENDING_PROOF — a lone `'`/`"` inside a tag kills that tag's tagSpans - directives on it unswept
+- **F-SND-463** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — boundary consumer TRIGGER reads literal attrs - title="AudioManager..." FPs (F-SND-408 fix wrong)
+- **F-SND-464** Low/REAL_DEFECT — FIXED_PENDING_PROOF — import.meta[ident] unresolved-key arm over-flags statically-resolvable non-lane literals
+- **F-SND-465** Low/REAL_DEFECT — FIXED_PENDING_PROOF — cue destructure-mint gate's fixed name list drifts from RECV_ALT
+- **F-SND-466** Low/REAL_DEFECT — FIXED_PENDING_PROOF — shake bound-name lanes: `(s2)(x)`, `hand=s2`, `forEach(s2)`, `cond ? s2 :`, `case s2:`, `{go:s2}` escape
+- **F-SND-467** Low/REAL_DEFECT — FIXED_PENDING_PROOF — ABM setLoaderScene clears loadedResources incl DOM-lane keys -> post-swap refetch storm + false isLoaded
+- **F-SND-468** Nit/REAL_DEFECT — FIXED_PENDING_PROOF — ABM missingResources RMW comment is stale vs the landed fix
+- **F-SND-469** Nit/REAL_DEFECT — FIXED_PENDING_PROOF — (cue)(x) double-reports (paren-callee + bare-ref at the same site)
+- **F-SND-470** Nit/REAL_DEFECT — FIXED_PENDING_PROOF — emit double-report `bus.emit.call(x)` - `.emit` value-ref + `emit.call` bare-indirect both fire
+- **F-SND-471** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — AUT F-W18-01 = F-SND-442 (emit mint self-flag binding sites)
+- **F-SND-472** Low/REAL_DEFECT — FIXED_PENDING_PROOF — INT F5 = F-SND-442 ({emit:r}/{cue:q} mint sites flagged as value reads)
+- **F-SND-473** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — AUT F-W18-02 duplicate-side = F-SND-452 (param-destructure mint in ctrl parens)
+- **F-SND-474** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — AUT F-W18-03 = F-SND-445 (store.cue?.call/!.call escape)
+- **F-SND-475** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — INT F1 = F-SND-445 (RECV.cue?.call/!.call/?.apply/!.bind escape)
+- **F-SND-476** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — AUT F-W18-04 = F-SND-444 (store?.[k].cue / store.[k].cue bridge)
+- **F-SND-477** Low/REAL_DEFECT — FIXED_PENDING_PROOF — AUT F-W18-06 = F-SND-454 (alias ternary/tag evasion)
+- **F-SND-478** Low/REAL_DEFECT — FIXED_PENDING_PROOF — INT F4 = F-SND-454 (emit-alias ternary hole)
+- **F-SND-479** Low/REAL_DEFECT — FIXED_PENDING_PROOF — AUT F-W18-07 = F-SND-455 (ternary condition flagged as member key)
+- **F-SND-480** Low/REAL_DEFECT — FIXED_PENDING_PROOF — INT F15a = F-SND-455 (? tail flags ternary condition)
+- **F-SND-481** Low/REAL_DEFECT — FIXED_PENDING_PROOF — INT F15b = F-SND-446 (mixed-concat over/under-flag)
+- **F-SND-482** Low/REAL_DEFECT — FIXED_PENDING_PROOF — AUT F-W18-10 = F-SND-447 (templateSpan last-close reads foreign bodies)
+- **F-SND-483** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — INT F8 = F-SND-447 (templateSpan extends to last close)
+- **F-SND-484** Low/REAL_DEFECT — FIXED_PENDING_PROOF — AUT F-W18-11 = F-SND-449 (ns[glo+b] concat bracket key)
+- **F-SND-485** Nit/REAL_DEFECT — FIXED_PENDING_PROOF — AUT F-W18-12 = F-SND-470 ((emit).call double-report)
+- **F-SND-486** Nit/REAL_DEFECT — FIXED_PENDING_PROOF — AUT F-W18-13 = F-SND-458 (cue concat arg multi-report)
+- **F-SND-487** Nit/REAL_DEFECT — FIXED_PENDING_PROOF — INT F13 = F-SND-452 (multiline `case\nf({cue:q}):` mints rename)
+- **F-SND-488** Nit/REAL_DEFECT — FIXED_PENDING_PROOF — INT F17 = F-SND-450 (loadSingleDomImage missing !disposed gate)
+- **F-SND-489** Nit/REAL_DEFECT — FIXED_PENDING_PROOF — INT F19 = F-SND-469 ((cue)(x) paren-callee + bare-ref double)
+- **F-SND-520** High/REAL_DEFECT — FIXED_PENDING_PROOF — ternary `:` satisfies the param-gate and flips the whole-file emit exemption; same class mints cue/shake aliases
+- **F-SND-521** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — member-tail mints/flags: `store.cue.length`, `bus.emit.length`, `? emit.prop :` read a property, mint an emitter alias
+- **F-SND-522** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — literal evidence tables are last-write-wins file-wide (identLit/metaIdentLit overwrite; cross-scope clobber)
+- **F-SND-523** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — hop mints escape the reassign audit: `let B = A` minted const-kind entries, later `B = x` never evicted
+- **F-SND-524** Low/REAL_DEFECT — FIXED_PENDING_PROOF — `:`-annotation window `[\s\S]{0,200}` crosses statements - next-statement `=`/`of`/`in` satisfies the gate
+- **F-SND-525** Low/REAL_DEFECT — FIXED_PENDING_PROOF — same-site double-report cluster: CALL vs alias callRe vs fence arms vs paren spans
+- **F-SND-526** Low/REAL_DEFECT — FIXED_PENDING_PROOF — same-name local decls and param sites over-flag (function s(){}, work(s), (s)=>s)
+- **F-SND-527** Low/REAL_DEFECT — FIXED_PENDING_PROOF — `{emit} = <non-bus>` revokes the interface exemption
+- **F-SND-528** Nit/REAL_DEFECT — FIXED_PENDING_PROOF — cue mint site double-report (emit/cue asymmetry)
+- **F-SND-529** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — leading-empty concat `cam['' + k + 'e']` evades the spelling check
+- **F-SND-530** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — `}}` inside an interp string truncates the `{{ }}` wipe - template depth desync
+- **F-SND-531** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — emit catch-mint fails when the catch annotation contains `)`
+- **F-SND-532** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — recv.cue['call'](x) / recv.emit['call'](x) double-report on the bracket surface
+- **F-SND-533** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — ident-keyed `[C]` bracket-indirect escapes every wiring arm
+- **F-SND-534** Low/REAL_DEFECT — FIXED_PENDING_PROOF — shake bound-name bracket arm narrower than siblings
+- **F-SND-535** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — flagBoundCalls self-flags bound names at binding sites; `catch ({shake: s})` double-reports
+- **F-SND-536** Low/REAL_DEFECT — FIXED_PENDING_PROOF — import.meta receiver-wraps `(0, import.meta).glob` escape the member arms
+- **F-SND-537** Low/REAL_DEFECT — FIXED_PENDING_PROOF — 4-hop alias rebind bound leaves a 5th-hop escape
+- **F-SND-538** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — unkeyworded store rebinds (`s2 = store`) mint only `useAudioStore(` shape
+- **F-SND-539** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — import.meta destructure only accepts `= import.meta` - alias and of/in forms escape
+- **F-SND-540** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — template-interp bracket keys never flag on any seam
+- **F-SND-541** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — LHS bracket-extraction mint requires a single quoted literal - `store['cu' + 'e']` doesn't mint
+- **F-SND-542** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — statement-led `[cue]`/`{cue}` destructure does not set seamDeclared
+- **F-SND-543** Low/REAL_DEFECT — FIXED_PENDING_PROOF — `{ s: t }` param rename suppresses the outer shake-bound `s` (key-position counted as bound)
+- **F-SND-544** Low/REAL_DEFECT — FIXED_PENDING_PROOF — resolveArgIdent `{pattern}` arm counts rename keys as arg bindings
+- **F-SND-545** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — shadowSpans `[^()]*` signature scan cannot span param defaults containing parens
+- **F-SND-546** Low/REAL_DEFECT — FIXED_PENDING_PROOF — mixed-concat leftover arm never resolves declared idents - `cam['' + VOL]` FP
+- **F-SND-547** Nit/NON_ACTIONABLE — REJECTED_WITH_PROOF — rebuildBracketKey strips `[\s+]` before compare - `import.meta['g l' + 'ob']` FP
+- **F-SND-490** High/REAL_DEFECT — FIXED_PENDING_PROOF — templateSpan depth counter corrupts on `</template>` inside quoted attrs/{{}}/style-script/foreign pairs + stray pre-root markup
+- **F-SND-491** Low/REAL_DEFECT — FIXED_PENDING_PROOF — fallback tagSpans quotedAttr pairs `='`-leading unquoted values into directive text
+- **F-SND-492** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — patternSpans `(`-led and statement-led ungated - f({emit})/f([emit]) call-arg literals suppressed as patterns
+- **F-SND-493** Low/REAL_DEFECT — FIXED_PENDING_PROOF — [emit] = src statement-led destructure FP'd as bare emit value
+- **F-SND-494** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — namePos tail rejects `!`/`as`/`satisfies` - cue(BOGUS_MAP![k]) escapes screaming-ident gate
+- **F-SND-495** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — collectAnyBound picks `{` opener inside `[` outer pattern - {shake:[s1,{s2}]} loses s1
+- **F-SND-496** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — seamDeclared blind to shorthand/keywordless/`(`-led/for-of cue destructures - bare-ref lane never arms
+- **F-SND-497** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — metaIdentLit benign gate stores first concat literal - const K='gl'+'ob' silences import.meta[K]
+- **F-SND-498** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — (emit as <complex>).call( and (alias as T)(x) cast-paren callees escape
+- **F-SND-499** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — empty-string concat launders shake spell arm - cam[''+k]
+- **F-SND-500** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — resolveArgIdent resolves call args through template-domain declarations
+- **F-SND-501** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — s['call'](x) bracket-member indirect escapes flagBoundCalls
+- **F-SND-502** Low/REAL_DEFECT — FIXED_PENDING_PROOF — case NAME\n: line-broken labels + mid-statement case lookback escapes
+- **F-SND-503** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — import.meta unkeyworded alias/destructure + multi-hop mints asymmetric with emit
+- **F-SND-504** Low/REAL_DEFECT — FIXED_PENDING_PROOF — RECV_ALT RHS gate mints cue aliases off receivers merely containing seam name
+- **F-SND-505** Nit/REAL_DEFECT — FIXED_PENDING_PROOF — ABM post-dispose missingResources.set revives a cleared map
+- **F-SND-506** High/REAL_DEFECT — FIXED_PENDING_PROOF — {emit} = bus shorthand mint never sets emitBound -> file-wide declaresLocalEmit exemption leaks to shorthand call sites
+- **F-SND-507** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — ["call"|"apply"|"bind"] bracket-indirect uncovered on cue/emit + aliases
+- **F-SND-508** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — catch ({seam:alias}) renames never mint, on all three seams
+- **F-SND-509** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — cue(cond ? HEAD.k : 'lit') ternary heads never segmented at depth-0 ?/:
+- **F-SND-510** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — non-null `!` bridges evade three unrelated arms (import.meta![.], emit/alias !., value-read !.)
+- **F-SND-511** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — import.meta['g'+x] single-seg+dynamic concat escapes bracket arm
+- **F-SND-512** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — storeAliases unkeyworded mint + ident rebind hops uncovered
+- **F-SND-513** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — s['cue']/s.cue extraction flags but minted alias calls go unchecked
+- **F-SND-514** Low/REAL_DEFECT — FIXED_PENDING_PROOF — ? alias.member : ternary member-tail reads alias unchecked
+- **F-SND-515** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — flagBoundCalls file-wide lanes flag names shadowed by local params
+- **F-SND-516** Medium/REAL_DEFECT — FIXED_PENDING_PROOF — cue(M?.['k'])/cue(M['k']) flag quoted map KEYS as cue literals (FP)
+- **F-SND-517** Low/REAL_DEFECT — FIXED_PENDING_PROOF — (cue)(b) unconditional paren-callee fallback flags resolvable decl-bound args
+- **F-SND-518** Low/REAL_DEFECT — FIXED_PENDING_PROOF — 2-hop ident chains flag unresolved-key on benign statics (FP)
+- **F-SND-519** Nit/REAL_DEFECT — FIXED_PENDING_PROOF — multi-report dedupe spans in reviewer aggregates miss new arm sites
+
+## Coverage
+
+- cells: 0 total; 
+
+## Chronology
+
+- cycle CYC-SND-1: STALE; reviews REV-SND-COR-1,REV-SND-AUT-1,REV-SND-INT-1
+- cycle CYC-SND-2: STALE; reviews REV-SND-COR-2,REV-SND-AUT-2,REV-SND-INT-2
+- cycle CYC-SND-3: STALE; reviews REV-SND-COR-3,REV-SND-AUT-3,REV-SND-INT-3
+- cycle CYC-SND-4: STALE; reviews REV-SND-COR-4,REV-SND-AUT-4,REV-SND-INT-4
+- cycle CYC-SND-5: STALE; reviews REV-SND-COR-5,REV-SND-AUT-5,REV-SND-INT-5
+- cycle CYC-SND-6: STALE; reviews REV-SND-COR-6,REV-SND-AUT-6,REV-SND-INT-6
+- cycle CYC-SND-7: STALE; reviews REV-SND-COR-7,REV-SND-AUT-7,REV-SND-INT-7
+- cycle CYC-SND-8: STALE; reviews REV-SND-COR-8,REV-SND-AUT-8,REV-SND-INT-8
+- cycle CYC-SND-9: STALE; reviews REV-SND-COR-9,REV-SND-AUT-9,REV-SND-INT-9
+- cycle CYC-SND-10: STALE; reviews REV-SND-COR-10,REV-SND-AUT-10,REV-SND-INT-10
+- cycle CYC-SND-11: STALE; reviews REV-SND-COR-11,REV-SND-AUT-11,REV-SND-INT-11
+- cycle CYC-SND-12: STALE; reviews REV-SND-COR-12,REV-SND-AUT-12,REV-SND-INT-12
+- cycle CYC-SND-13: STALE; reviews REV-SND-COR-13,REV-SND-AUT-13,REV-SND-INT-13
+- cycle CYC-SND-14: STALE; reviews REV-SND-COR-14,REV-SND-AUT-14,REV-SND-INT-14
+- cycle CYC-SND-15: STALE; reviews REV-SND-COR-15,REV-SND-AUT-15,REV-SND-INT-15
+- cycle CYC-SND-16: STALE; reviews REV-SND-COR-16,REV-SND-AUT-16,REV-SND-INT-16
+- cycle CYC-SND-17: STALE; reviews REV-SND-COR-17,REV-SND-AUT-17,REV-SND-INT-17
+- cycle CYC-SND-18: STALE; reviews REV-SND-COR-18,REV-SND-AUT-18,REV-SND-INT-18
+- cycle CYC-SND-20: STALE; reviews REV-SND-COR-20,REV-SND-AUT-20,REV-SND-INT-20
+- cycle CYC-SND-19: STALE; reviews REV-SND-COR-19,REV-SND-AUT-19,REV-SND-INT-19
+
+## Convergence
+
+- OK C1-identity: all final evidence binds the declared state
+- OK C2-census-coverage: census + coverage complete
+- UNMET C3-no-open: open F-SND-01; open F-SND-02; open F-SND-03; open F-SND-04; open F-SND-05; open F-SND-06; open F-SND-07; open F-SND-08; open F-SND-09; open F-SND-10; open F-SND-11; open F-SND-12; open F-SND-13; open F-SND-14; open F-SND-15; open F-SND-16; open F-SND-17; open F-SND-18; open F-SND-19; open F-SND-20; open F-SND-21; open F-SND-22; open F-SND-23; open F-SND-24; open F-SND-25; open F-SND-26; open F-SND-27; open F-SND-28; open F-SND-29; open F-SND-30; open F-SND-31; open F-SND-32; open F-SND-33; open F-SND-34; open F-SND-35; open F-SND-36; open F-SND-37; open F-SND-38; open F-SND-39; open F-SND-40; open F-SND-41; open F-SND-42; open F-SND-43; open F-SND-44; open F-SND-45; open F-SND-46; open F-SND-47; open F-SND-48; open F-SND-49; open F-SND-50; open F-SND-51; open F-SND-52; open F-SND-53; open F-SND-54; open F-SND-55; open F-SND-56; open F-SND-57; open F-SND-58; open F-SND-59; open F-SND-60; open F-SND-61; open F-SND-62; open F-SND-63; open F-SND-64; open F-SND-65; open F-SND-66; open F-SND-67; open F-SND-68; open F-SND-69; open F-SND-70; open F-SND-71; open F-SND-72; open F-SND-73; open F-SND-74; open F-SND-75; open F-SND-76; open F-SND-77; open F-SND-78; open F-SND-79; open F-SND-80; open F-SND-81; open F-SND-82; open F-SND-83; open F-SND-84; open F-SND-85; open F-SND-86; open F-SND-87; open F-SND-88; open F-SND-89; open F-SND-90; open F-SND-91; open F-SND-92; open F-SND-93; open F-SND-94; open F-SND-95; open F-SND-96; open F-SND-97; open F-SND-98; open F-SND-99; open F-SND-100; open F-SND-101; open F-SND-102; open F-SND-103; open F-SND-104; open F-SND-105; open F-SND-106; open F-SND-107; open F-SND-108; open F-SND-109; open F-SND-110; open F-SND-111; open F-SND-112; open F-SND-113; open F-SND-114; open F-SND-115; open F-SND-116; open F-SND-117; open F-SND-118; open F-SND-119; open F-SND-120; open F-SND-121; open F-SND-122; open F-SND-123; open F-SND-124; open F-SND-125; open F-SND-126; open F-SND-127; open F-SND-128; open F-SND-129; open F-SND-130; open F-SND-131; open F-SND-132; open F-SND-133; open F-SND-134; open F-SND-135; open F-SND-136; open F-SND-137; open F-SND-138; open F-SND-139; open F-SND-140; open F-SND-142; open F-SND-143; open F-SND-144; open F-SND-145; open F-SND-146; open F-SND-147; open F-SND-148; open F-SND-149; open F-SND-150; open F-SND-153; open F-SND-154; open F-SND-155; open F-SND-156; open F-SND-157; open F-SND-158; open F-SND-159; open F-SND-160; open F-SND-161; open F-SND-162; open F-SND-163; open F-SND-164; open F-SND-165; open F-SND-166; open F-SND-167; open F-SND-168; open F-SND-169; open F-SND-170; open F-SND-171; open F-SND-172; open F-SND-173; open F-SND-174; open F-SND-175; open F-SND-176; open F-SND-177; open F-SND-178; open F-SND-179; open F-SND-180; open F-SND-181; open F-SND-182; open F-SND-183; open F-SND-184; open F-SND-185; open F-SND-186; open F-SND-187; open F-SND-188; open F-SND-189; open F-SND-190; open F-SND-191; open F-SND-192; open F-SND-193; open F-SND-194; open F-SND-195; open F-SND-196; open F-SND-197; open F-SND-198; open F-SND-199; open F-SND-200; open F-SND-201; open F-SND-202; open F-SND-203; open F-SND-204; open F-SND-205; open F-SND-206; open F-SND-207; open F-SND-208; open F-SND-209; open F-SND-210; open F-SND-211; open F-SND-212; open F-SND-213; open F-SND-214; open F-SND-215; open F-SND-216; open F-SND-217; open F-SND-218; open F-SND-219; open F-SND-220; open F-SND-221; open F-SND-222; open F-SND-223; open F-SND-224; open F-SND-225; open F-SND-226; open F-SND-227; open F-SND-228; open F-SND-229; open F-SND-230; open F-SND-231; open F-SND-232; open F-SND-233; open F-SND-234; open F-SND-235; open F-SND-236; open F-SND-237; open F-SND-238; open F-SND-239; open F-SND-240; open F-SND-241; open F-SND-242; open F-SND-243; open F-SND-244; open F-SND-245; open F-SND-246; open F-SND-247; open F-SND-248; open F-SND-249; open F-SND-250; open F-SND-251; open F-SND-252; open F-SND-253; open F-SND-254; open F-SND-255; open F-SND-257; open F-SND-258; open F-SND-259; open F-SND-260; open F-SND-261; open F-SND-262; open F-SND-263; open F-SND-264; open F-SND-265; open F-SND-266; open F-SND-267; open F-SND-268; open F-SND-269; open F-SND-270; open F-SND-271; open F-SND-272; open F-SND-273; open F-SND-274; open F-SND-275; open F-SND-276; open F-SND-277; open F-SND-278; open F-SND-279; open F-SND-280; open F-SND-281; open F-SND-282; open F-SND-283; open F-SND-284; open F-SND-285; open F-SND-286; open F-SND-287; open F-SND-288; open F-SND-289; open F-SND-290; open F-SND-291; open F-SND-292; open F-SND-293; open F-SND-294; open F-SND-295; open F-SND-296; open F-SND-297; open F-SND-298; open F-SND-299; open F-SND-300; open F-SND-301; open F-SND-302; open F-SND-303; open F-SND-304; open F-SND-305; open F-SND-306; open F-SND-307; open F-SND-308; open F-SND-309; open F-SND-310; open F-SND-311; open F-SND-312; open F-SND-313; open F-SND-314; open F-SND-315; open F-SND-316; open F-SND-317; open F-SND-318; open F-SND-319; open F-SND-320; open F-SND-321; open F-SND-322; open F-SND-323; open F-SND-324; open F-SND-325; open F-SND-326; open F-SND-327; open F-SND-328; open F-SND-329; open F-SND-330; open F-SND-331; open F-SND-332; open F-SND-333; open F-SND-334; open F-SND-335; open F-SND-336; open F-SND-337; open F-SND-338; open F-SND-339; open F-SND-340; open F-SND-341; open F-SND-342; open F-SND-343; open F-SND-344; open F-SND-345; open F-SND-346; open F-SND-347; open F-SND-348; open F-SND-349; open F-SND-350; open F-SND-351; open F-SND-352; open F-SND-353; open F-SND-354; open F-SND-355; open F-SND-356; open F-SND-357; open F-SND-358; open F-SND-359; open F-SND-360; open F-SND-361; open F-SND-362; open F-SND-363; open F-SND-364; open F-SND-365; open F-SND-366; open F-SND-367; open F-SND-368; open F-SND-369; open F-SND-370; open F-SND-371; open F-SND-372; open F-SND-373; open F-SND-374; open F-SND-375; open F-SND-376; open F-SND-377; open F-SND-378; open F-SND-379; open F-SND-380; open F-SND-381; open F-SND-382; open F-SND-383; open F-SND-384; open F-SND-385; open F-SND-386; open F-SND-387; open F-SND-388; open F-SND-389; open F-SND-390; open F-SND-391; open F-SND-392; open F-SND-393; open F-SND-394; open F-SND-395; open F-SND-396; open F-SND-397; open F-SND-398; open F-SND-399; open F-SND-400; open F-SND-401; open F-SND-402; open F-SND-403; open F-SND-404; open F-SND-405; open F-SND-406; open F-SND-407; open F-SND-408; open F-SND-409; open F-SND-410; open F-SND-411; open F-SND-412; open F-SND-413; open F-SND-414; open F-SND-415; open F-SND-416; open F-SND-417; open F-SND-418; open F-SND-419; open F-SND-420; open F-SND-421; open F-SND-422; open F-SND-423; open F-SND-424; open F-SND-425; open F-SND-426; open F-SND-427; open F-SND-428; open F-SND-429; open F-SND-430; open F-SND-431; open F-SND-432; open F-SND-433; open F-SND-434; open F-SND-435; open F-SND-436; open F-SND-437; open F-SND-438; open F-SND-439; open F-SND-440; open F-SND-441; open F-SND-442; open F-SND-443; open F-SND-444; open F-SND-445; open F-SND-446; open F-SND-447; open F-SND-448; open F-SND-449; open F-SND-450; open F-SND-451; open F-SND-452; open F-SND-453; open F-SND-454; open F-SND-455; open F-SND-456; open F-SND-457; open F-SND-458; open F-SND-459; open F-SND-460; open F-SND-461; open F-SND-462; open F-SND-463; open F-SND-464; open F-SND-465; open F-SND-466; open F-SND-467; open F-SND-468; open F-SND-469; open F-SND-470; open F-SND-471; open F-SND-472; open F-SND-473; open F-SND-474; open F-SND-475; open F-SND-476; open F-SND-477; open F-SND-478; open F-SND-479; open F-SND-480; open F-SND-481; open F-SND-482; open F-SND-483; open F-SND-484; open F-SND-485; open F-SND-486; open F-SND-487; open F-SND-488; open F-SND-489; open F-SND-520; open F-SND-521; open F-SND-522; open F-SND-523; open F-SND-524; open F-SND-525; open F-SND-526; open F-SND-527; open F-SND-528; open F-SND-529; open F-SND-530; open F-SND-531; open F-SND-532; open F-SND-533; open F-SND-534; open F-SND-535; open F-SND-536; open F-SND-537; open F-SND-538; open F-SND-539; open F-SND-540; open F-SND-541; open F-SND-542; open F-SND-543; open F-SND-544; open F-SND-545; open F-SND-546; open F-SND-490; open F-SND-491; open F-SND-492; open F-SND-493; open F-SND-494; open F-SND-495; open F-SND-496; open F-SND-497; open F-SND-498; open F-SND-499; open F-SND-500; open F-SND-501; open F-SND-502; open F-SND-503; open F-SND-504; open F-SND-505; open F-SND-506; open F-SND-507; open F-SND-508; open F-SND-509; open F-SND-510; open F-SND-511; open F-SND-512; open F-SND-513; open F-SND-514; open F-SND-515; open F-SND-516; open F-SND-517; open F-SND-518; open F-SND-519
+- UNMET C4-final-gates: no final evidence recorded
+- OK C5-sequential: sequential phase reviews present
+- UNMET C6-clean-pair: Clean A missing/not CLEAN; Clean B missing/not CLEAN
+- OK C7-mutation-corpus: mutation + corpus satisfied
+- UNMET C8-terminal-check: no sealed independent TERMINAL_CHECK on the final state
+- OK C9-readiness: readiness not required for this run (v1 or opt-out)
+
+## Validation failures
+
+- MC12 F-SND-01: actionable finding still PROVEN
+- MC12 F-SND-02: actionable finding still PROVEN
+- MC12 F-SND-03: actionable finding still PROVEN
+- MC12 F-SND-04: actionable finding still PROVEN
+- MC12 F-SND-05: actionable finding still PROVEN
+- MC12 F-SND-06: actionable finding still TRIAGED
+- MC12 F-SND-07: actionable finding still TRIAGED
+- MC12 F-SND-08: actionable finding still TRIAGED
+- MC12 F-SND-09: actionable finding still TRIAGED
+- MC12 F-SND-10: actionable finding still TRIAGED
+- MC12 F-SND-11: actionable finding still TRIAGED
+- MC12 F-SND-12: actionable finding still TRIAGED
+- MC12 F-SND-13: actionable finding still PROVEN
+- MC12 F-SND-14: actionable finding still PROVEN
+- MC12 F-SND-15: actionable finding still PROVEN
+- MC12 F-SND-16: actionable finding still PROVEN
+- MC12 F-SND-17: actionable finding still TRIAGED
+- MC12 F-SND-18: actionable finding still TRIAGED
+- MC12 F-SND-19: actionable finding still TRIAGED
+- MC12 F-SND-20: actionable finding still TRIAGED
+- MC12 F-SND-21: actionable finding still TRIAGED
+- MC12 F-SND-22: actionable finding still TRIAGED
+- MC12 F-SND-23: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-24: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-25: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-26: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-27: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-28: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-29: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-30: actionable finding still TRIAGED
+- MC12 F-SND-31: actionable finding still TRIAGED
+- MC12 F-SND-32: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-33: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-34: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-35: actionable finding still TRIAGED
+- MC12 F-SND-36: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-37: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-38: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-39: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-40: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-41: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-42: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-43: actionable finding still TRIAGED
+- MC12 F-SND-44: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-45: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-46: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-47: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-48: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-49: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-50: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-51: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-52: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-53: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-54: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-55: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-56: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-57: actionable finding still TRIAGED
+- MC12 F-SND-58: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-59: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-60: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-61: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-62: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-63: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-64: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-65: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-66: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-67: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-68: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-69: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-70: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-71: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-72: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-73: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-74: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-75: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-76: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-77: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-78: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-79: actionable finding still TRIAGED
+- MC12 F-SND-80: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-81: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-82: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-83: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-84: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-85: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-86: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-87: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-88: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-89: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-90: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-91: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-92: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-93: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-94: actionable finding still TRIAGED
+- MC12 F-SND-95: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-96: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-97: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-98: actionable finding still TRIAGED
+- MC12 F-SND-99: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-100: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-101: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-102: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-103: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-104: actionable finding still TRIAGED
+- MC12 F-SND-105: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-106: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-107: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-108: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-109: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-110: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-111: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-112: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-113: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-114: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-115: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-116: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-117: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-118: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-119: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-120: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-121: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-122: actionable finding still TRIAGED
+- MC12 F-SND-123: actionable finding still TRIAGED
+- MC12 F-SND-124: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-125: actionable finding still TRIAGED
+- MC12 F-SND-126: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-127: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-128: actionable finding still TRIAGED
+- MC12 F-SND-129: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-130: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-131: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-132: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-133: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-134: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-135: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-136: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-137: actionable finding still TRIAGED
+- MC12 F-SND-138: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-139: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-140: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-142: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-143: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-144: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-145: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-146: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-147: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-148: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-149: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-150: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-153: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-154: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-155: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-156: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-157: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-158: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-159: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-160: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-161: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-162: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-163: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-164: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-165: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-166: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-167: actionable finding still TRIAGED
+- MC12 F-SND-168: actionable finding still TRIAGED
+- MC12 F-SND-169: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-170: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-171: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-172: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-173: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-174: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-175: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-176: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-177: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-178: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-179: actionable finding still TRIAGED
+- MC12 F-SND-180: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-181: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-182: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-183: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-184: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-185: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-186: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-187: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-188: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-189: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-190: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-191: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-192: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-193: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-194: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-195: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-196: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-197: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-198: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-199: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-200: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-201: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-202: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-203: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-204: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-205: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-206: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-207: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-208: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-209: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-210: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-211: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-212: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-213: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-214: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-215: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-216: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-217: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-218: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-219: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-220: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-221: actionable finding still TRIAGED
+- MC12 F-SND-222: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-223: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-224: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-225: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-226: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-227: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-228: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-229: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-230: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-231: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-232: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-233: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-234: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-235: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-236: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-237: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-238: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-239: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-240: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-241: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-242: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-243: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-244: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-245: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-246: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-247: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-248: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-249: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-250: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-251: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-252: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-253: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-254: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-255: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-257: actionable finding still TRIAGED
+- MC12 F-SND-258: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-259: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-260: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-261: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-262: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-263: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-264: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-265: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-266: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-267: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-268: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-269: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-270: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-271: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-272: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-273: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-274: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-275: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-276: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-277: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-278: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-279: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-280: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-281: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-282: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-283: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-284: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-285: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-286: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-287: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-288: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-289: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-290: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-291: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-292: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-293: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-294: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-295: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-296: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-297: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-298: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-299: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-300: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-301: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-302: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-303: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-304: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-305: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-306: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-307: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-308: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-309: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-310: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-311: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-312: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-313: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-314: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-315: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-316: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-317: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-318: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-319: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-320: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-321: actionable finding still TRIAGED
+- MC12 F-SND-322: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-323: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-324: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-325: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-326: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-327: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-328: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-329: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-330: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-331: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-332: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-333: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-334: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-335: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-336: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-337: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-338: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-339: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-340: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-341: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-342: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-343: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-344: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-345: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-346: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-347: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-348: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-349: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-350: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-351: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-352: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-353: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-354: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-355: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-356: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-357: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-358: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-359: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-360: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-361: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-362: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-363: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-364: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-365: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-366: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-367: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-368: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-369: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-370: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-371: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-372: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-373: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-374: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-375: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-376: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-377: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-378: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-379: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-380: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-381: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-382: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-383: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-384: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-385: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-386: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-387: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-388: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-389: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-390: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-391: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-392: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-393: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-394: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-395: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-396: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-397: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-398: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-399: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-400: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-401: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-402: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-403: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-404: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-405: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-406: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-407: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-408: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-409: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-410: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-411: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-412: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-413: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-414: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-415: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-416: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-417: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-418: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-419: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-420: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-421: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-422: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-423: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-424: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-425: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-426: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-427: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-428: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-429: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-430: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-431: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-432: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-433: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-434: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-435: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-436: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-437: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-438: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-439: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-440: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-441: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-442: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-443: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-444: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-445: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-446: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-447: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-448: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-449: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-450: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-451: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-452: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-453: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-454: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-455: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-456: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-457: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-458: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-459: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-460: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-461: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-462: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-463: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-464: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-465: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-466: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-467: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-468: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-469: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-470: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-471: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-472: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-473: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-474: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-475: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-476: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-477: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-478: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-479: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-480: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-481: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-482: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-483: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-484: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-485: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-486: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-487: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-488: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-489: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-520: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-521: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-522: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-523: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-524: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-525: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-526: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-527: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-528: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-529: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-530: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-531: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-532: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-533: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-534: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-535: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-536: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-537: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-538: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-539: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-540: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-541: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-542: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-543: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-544: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-545: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-546: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-490: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-491: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-492: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-493: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-494: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-495: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-496: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-497: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-498: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-499: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-500: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-501: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-502: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-503: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-504: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-505: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-506: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-507: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-508: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-509: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-510: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-511: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-512: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-513: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-514: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-515: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-516: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-517: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-518: actionable finding still FIXED_PENDING_PROOF
+- MC12 F-SND-519: actionable finding still FIXED_PENDING_PROOF
+- MC13 F-SND-547: terminal finding has no linked lesson record (meaningful incidents must enter learning history)

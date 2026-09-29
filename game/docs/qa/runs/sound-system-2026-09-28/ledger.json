@@ -26,11 +26,11 @@
     "briefIds": [],
     "capacityLimit": 5,
     "requiredReadiness": false,
-    "phase": "SNAPSHOT",
+    "phase": "DECIDE",
     "cleanRoundA": null,
     "cleanRoundB": null,
     "finalEvidenceIds": [],
-    "outcome": null
+    "outcome": "QA_BLOCKED_SCOPE"
   },
   "briefs": [],
   "assignments": [],
@@ -35067,6 +35067,22 @@
       "payloadPath": "events/0073.json",
       "payloadHash": "595f36366893d6c12f4a59108670fd42db4159c9eda7f4457946e54f1fc91a32",
       "eventHash": "659a2f93be251502e8b0d20fd4963a98a72cef1cdc4dd08f61199e1ccae13c18"
+    },
+    {
+      "seq": 74,
+      "at": "2026-09-29T10:18:11.980Z",
+      "kind": "DECISION",
+      "actor": "coordinator-56995",
+      "state": {
+        "productStateId": "ad427d8c3774e9e96ee9d3b274e547c5f8e0e99eff793d6546bc26c22ee6d3fa",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+      },
+      "previousEventHash": "659a2f93be251502e8b0d20fd4963a98a72cef1cdc4dd08f61199e1ccae13c18",
+      "payloadPath": "events/0074.json",
+      "payloadHash": "867f52231aea6b63891679fa68b2f36384281a2485a59fe93128424e727f19c3",
+      "eventHash": "87fc0ecbb81f9f51f293ce9fd352cabe4f664ddb834bd6e8f3ed9f1ffa1a092d"
     }
   ]
 }
