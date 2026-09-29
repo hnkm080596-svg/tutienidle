@@ -451,6 +451,15 @@ export function grantCultivationPathRealmReward(
 
       const clamped = Math.min(level, getNodeMaxLevel(node))
       player.nodeLevels[nodeId] = Math.max(player.nodeLevels[nodeId] ?? 0, clamped)
+
+      // F-BX-83: ownership is BOTH channels - nodeLevels >= 1 AND the
+      // purchasedNodeIds mirror saveShapeValidation requires for every
+      // owned node. Same write pair purchaseNode/grantSkillCore use; a
+      // levels-only grant without the mirror corrupts the next save.
+      player.purchasedNodeIds ??= []
+      if (!player.purchasedNodeIds.includes(nodeId)) {
+        player.purchasedNodeIds.push(nodeId)
+      }
     }
   }
 

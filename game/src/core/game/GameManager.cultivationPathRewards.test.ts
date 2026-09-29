@@ -45,7 +45,7 @@ describe('GameManager — cultivation path realm rewards', () => {
     expect(gameManager.techniqueManager.getActive()?.mastery).toBe(42)
   })
 
-  it('realm-entry grant writes nodeLevels only - purchasedNodeIds mirror stays untouched', () => {
+  it('realm-entry grant writes BOTH ownership channels - purchasedNodeIds mirrors the granted node', () => {
     const gameManager = new GameManager()
     const player = createDefaultPlayer()
 
@@ -62,7 +62,18 @@ describe('GameManager — cultivation path realm rewards', () => {
     // element's grant only).
     expect(player.nodeLevels['the_thuc_tinh']).toBeUndefined()
     expect(player.nodeLevels['tinh_thong_hoa']).toBe(1)
-    expect(player.purchasedNodeIds).toEqual(['existing_purchase'])
+    // F-BX-83: ownership = nodeLevels >= 1 AND purchasedNodeIds mirror
+    // (the save validator requires both). Grants write the same both-
+    // channel pair purchaseNode/grantSkillCore already write - all five
+    // element mastery nodes the record grants land in the mirror.
+    expect(player.purchasedNodeIds).toEqual([
+      'existing_purchase',
+      'tinh_thong_hoa',
+      'tinh_thong_thuy',
+      'tinh_thong_moc',
+      'tinh_thong_kim',
+      'tinh_thong_tho',
+    ])
   })
 
   it('Kiếm Tu ở Trúc Cơ chỉ có record passive — không nhận nhầm technique/artifact Pháp Tu', () => {
@@ -124,7 +135,10 @@ describe('GameManager — cultivation path realm rewards', () => {
     gameManager.saveOps.restoreFromSave(save)
 
     expect(player.nodeLevels['tinh_thong_hoa']).toBe(1)
-    expect(player.purchasedNodeIds ?? []).not.toContain('tinh_thong_hoa')
+    // F-BX-83: the reconcile grant shares the both-channel contract -
+    // a restored save that gains the node also gains the mirror, so a
+    // round-trip write passes validation.
+    expect(player.purchasedNodeIds ?? []).toContain('tinh_thong_hoa')
   })
 
   it('reconcile is idempotent and never grants rewards above the player realm', () => {
