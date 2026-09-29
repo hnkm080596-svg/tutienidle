@@ -1,0 +1,29 @@
+{
+  "action": "admit",
+  "assignment": {
+    "id": "ASG-BX-REPAIR-W5",
+    "parentId": null,
+    "capacityScope": "swe2-slot",
+    "inputBundleHash": "8e18d6a7e76a4bc9a97713d66203a451",
+    "dependencies": [],
+    "requiredCapabilities": [
+      "exec",
+      "repo-read",
+      "repo-write"
+    ],
+    "writeSurface": [
+      "branch beta-repair-wave5"
+    ],
+    "readiness": "READY",
+    "status": "READY",
+    "observedRuntimeId": "devin-8e18d6a7e76a4bc9a97713d66203a451",
+    "history": [
+      {
+        "at": "2026-09-29T16:58:00Z",
+        "from": "-",
+        "to": "READY",
+        "reason": "repair w5: soak findings F-BX-94/95/96"
+      }
+    ]
+  }
+}

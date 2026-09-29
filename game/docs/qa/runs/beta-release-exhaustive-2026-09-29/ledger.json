@@ -956,6 +956,39 @@
       "reservedAt": "2026-09-29T16:22:46.305Z",
       "releaseEvidence": "6 findings repaired @72bd134e merged; tsc+796 scoped green",
       "resultRef": "beta-repair-wave4b"
+    },
+    {
+      "id": "ASG-BX-REPAIR-W5",
+      "parentId": null,
+      "capacityScope": "swe2-slot",
+      "inputBundleHash": "8e18d6a7e76a4bc9a97713d66203a451",
+      "dependencies": [],
+      "requiredCapabilities": [
+        "exec",
+        "repo-read",
+        "repo-write"
+      ],
+      "writeSurface": [
+        "branch beta-repair-wave5"
+      ],
+      "readiness": "READY",
+      "status": "RESERVED",
+      "observedRuntimeId": "devin-8e18d6a7e76a4bc9a97713d66203a451",
+      "history": [
+        {
+          "at": "2026-09-29T16:58:00Z",
+          "from": "-",
+          "to": "READY",
+          "reason": "repair w5: soak findings F-BX-94/95/96"
+        },
+        {
+          "at": "2026-09-29T16:51:04.357Z",
+          "from": "READY",
+          "to": "RESERVED",
+          "reason": "admitted at 3/5 (incl. external 0)"
+        }
+      ],
+      "reservedAt": "2026-09-29T16:51:04.357Z"
     }
   ],
   "consumptions": [],
@@ -8324,6 +8357,22 @@
       "payloadPath": "events/0065.json",
       "payloadHash": "eef99ce3d51c0bd6e1b7aab6a7488d69593bdbf56b7aec9a619f17b47ccd4f38",
       "eventHash": "e0de8344210a9f9a60a41feb2b45119c42035f15f7bca971dcd1ad8a12033d22"
+    },
+    {
+      "seq": 66,
+      "at": "2026-09-29T16:51:04.358Z",
+      "kind": "SCHEDULE",
+      "actor": "coordinator-beta",
+      "state": {
+        "productStateId": "a145206f13aa610d749d2fecd0747a50539b74b43946f7cf389c308a052dd1dc",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "previousEventHash": "e0de8344210a9f9a60a41feb2b45119c42035f15f7bca971dcd1ad8a12033d22",
+      "payloadPath": "events/0066.json",
+      "payloadHash": "d783f372957c886a41cfb8ccc32cd366c4a54e8fd60d2637598199d681dacd44",
+      "eventHash": "f744ee1c9d7fa0b8a5f43588d9c0ceb1d7267009e05e24d9541c2b9896de1603"
     }
   ]
 }
