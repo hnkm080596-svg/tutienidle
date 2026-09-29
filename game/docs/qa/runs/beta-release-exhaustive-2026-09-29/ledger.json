@@ -6738,13 +6738,18 @@
       "pinEvidenceIds": [],
       "verificationEvidenceIds": [],
       "closureReviewIds": [],
-      "status": "OBSERVED",
+      "status": "CLOSED",
       "duplicateOf": null,
       "rejectionReason": null,
-      "exception": null,
+      "exception": {
+        "humanInstructionRef": "user message 2026-09-29: xóa save, không cần quan tâm",
+        "scope": "save-version migration premise",
+        "reason": "dev-phase no-migration policy confirmed intended for beta",
+        "expiresWhen": "post-beta if save compat becomes a requirement"
+      },
       "fixedInRevision": null,
-      "closedAt": null,
-      "closeReason": null
+      "closedAt": "2026-09-29T16:55:00Z",
+      "closeReason": "HUMAN_EXCEPTION confirmed by release owner (Minh): beta players on <v87 saves accept the incompatible path; no migration chain needed"
     },
     {
       "id": "F-BX-89",
@@ -8079,6 +8084,22 @@
       "payloadPath": "events/0060.json",
       "payloadHash": "a708d2a9912b198e26ac31986a762181e5826b6db9c83db78c3131765b81dfea",
       "eventHash": "f05de2ba4296c7705bc05325bbf2b6109a6938cd00bc4c5333f606f33d825a96"
+    },
+    {
+      "seq": 61,
+      "at": "2026-09-29T16:37:47.478Z",
+      "kind": "FINDING",
+      "actor": "coordinator-beta",
+      "state": {
+        "productStateId": "8d7ea1cd7ca3df591edd09011e5c8a123a59536dd71d831c886f8ba2c016c435",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "previousEventHash": "f05de2ba4296c7705bc05325bbf2b6109a6938cd00bc4c5333f606f33d825a96",
+      "payloadPath": "events/0061.json",
+      "payloadHash": "78fcbf8d8a41e831a08f4ea3123e98d65abb6f9f53e3cb6f697cf139eac6be0b",
+      "eventHash": "f0d9c1ec271b04cee28bd680072b7c3416e1ec2026b37f4a0cbe58723089fb85"
     }
   ]
 }

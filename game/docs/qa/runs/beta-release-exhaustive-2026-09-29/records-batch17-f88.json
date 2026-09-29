@@ -1,0 +1,58 @@
+{
+ "records": [
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-BX-88",
+    "title": "[product-question] Save migration gate premise stale: <v87 rejected 'incompatible' by design",
+    "state": {
+     "productStateId": "b3ade7e3f442eb2a98da5b317248dd469440631e950f0b3f1ad24cfe116060f4",
+     "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+     "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+     "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+    },
+    "severity": "Low",
+    "classification": "NON_ACTIONABLE",
+    "actionable": false,
+    "reachability": "PRODUCTION",
+    "locations": [
+     {
+      "path": "game/src/services/save/SaveSystem.ts",
+      "symbolOrSection": ":494 + saveVersion.ts policy",
+      "revision": "f93acd39",
+      "basis": "SOURCE"
+     }
+    ],
+    "discoveredBy": "deterministic-gates devin-d52d8062",
+    "invariantIds": [
+     "I-AGGREGATE-RELEASE"
+    ],
+    "evidenceIds": [],
+    "counterexample": "asciiComments.test.ts failing on tip",
+    "expected": "verify green / gate premise current",
+    "actual": "mission expected v81-v86 migration chain; shipped policy deterministically rejects old saves 'incompatible' with zero writes (verified correct per policy)",
+    "rootCause": "dev-phase no-migration policy",
+    "rootClass": "policy-drift",
+    "subsystem": "save-cloud",
+    "siblingSearch": [],
+    "siblingFindingIds": [],
+    "repair": "CONFIRM with release owner: beta players on old saves must accept incompatible path",
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "status": "CLOSED",
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": {
+     "humanInstructionRef": "user message 2026-09-29: x\u00f3a save, kh\u00f4ng c\u1ea7n quan t\u00e2m",
+     "scope": "save-version migration premise",
+     "reason": "dev-phase no-migration policy confirmed intended for beta",
+     "expiresWhen": "post-beta if save compat becomes a requirement"
+    },
+    "fixedInRevision": null,
+    "closedAt": "2026-09-29T16:55:00Z",
+    "closeReason": "HUMAN_EXCEPTION confirmed by release owner (Minh): beta players on <v87 saves accept the incompatible path; no migration chain needed"
+   }
+  }
+ ]
+}
