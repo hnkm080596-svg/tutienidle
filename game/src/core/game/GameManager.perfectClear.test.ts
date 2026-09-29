@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { ManualClockSource, COMBAT_STEP_SECONDS } from '../battle/turn/CombatClock'
 import { GameManager } from './GameManager'
 import { createDefaultPlayer } from '../player/Player'
@@ -7,6 +7,7 @@ import { defineEnemy } from '../enemy/Enemy'
 import type { Stage } from '../stage/Stage'
 import { COMPANIONS } from '../../data/companion/Companions'
 import type { CompanionDefinition } from '../../data/companion/Companions'
+import { SPIRIT_STONE_MATERIAL } from '../material/SpiritStoneMaterial'
 
 // Auto-farm spec Task 3 — Hoàn Mỹ condition trên turn-based victory:
 // record perfectClearStageIds + perfectClearSeconds khi HP loss <=75%
@@ -99,10 +100,17 @@ describe('GameManager — Hoàn Mỹ condition on turn-based victory', () => {
     expect(player.perfectClearStageIds).not.toContain('perfect_stage')
   })
 
-  it('không overwrite perfectClearSeconds khi đạt Hoàn Mỹ lần 2', () => {
+  it('slower Hoàn Mỹ lần 2 không rewrite record - record là best time', () => {
+    // F-BX-85 contract: the record channel is the fastest qualifying
+    // clear. A second PC that is NOT faster leaves the record untouched
+    // (mocked clock so the comparison is deterministic).
+    let nowMs = 1_000_000
+    vi.spyOn(Date, 'now').mockImplementation(() => nowMs)
+
     const { gameManager, player, stageDef, combatSource } = harness(stage({ perfectClearTurnLimit: 50 }))
     player.baseStats = asBaseStats({ ...player.baseStats, might: 100  })
 
+    nowMs += 1_000 // cycle 1 clears in 1s
     for (let i = 0; i < 400 && gameManager.getTurnBattle()?.state !== 'victory'; i++) {
       try {
         combatSource.advance(COMBAT_STEP_SECONDS)
@@ -113,13 +121,12 @@ describe('GameManager — Hoàn Mỹ condition on turn-based victory', () => {
     }
 
     const firstSeconds = player.perfectClearSeconds['perfect_stage']
-
-    // clearSeconds is wall-clock (Date.now() diff) and can legitimately
-    // be 0 in a synchronous test loop - assert the RECORD, not the value.
+    expect(firstSeconds).toBeCloseTo(1, 3)
     expect(player.perfectClearStageIds).toContain('perfect_stage')
 
     gameManager.turnBattleOps.startStage(player, stageDef, false)
 
+    nowMs += 2_000 // cycle 2 clears in 2s - slower, must not rewrite
     for (let i = 0; i < 400 && gameManager.getTurnBattle()?.state !== 'victory'; i++) {
       try {
         combatSource.advance(COMBAT_STEP_SECONDS)
@@ -130,6 +137,7 @@ describe('GameManager — Hoàn Mỹ condition on turn-based victory', () => {
     }
 
     expect(player.perfectClearSeconds['perfect_stage']).toBe(firstSeconds)
+    vi.restoreAllMocks()
   })
 
   // Spec v3 D1 (2026-09-11): perfect clear = EVERY party member alive at
@@ -236,9 +244,11 @@ describe('GameManager — Hoàn Mỹ condition on turn-based victory', () => {
     })
 
     it('already-PC stage cleared without qualifying -> PC state kept, nothing re-recorded', () => {
-      // perfectClearTurnLimit: 1 - a real battle always takes >= 1 turn,
-      // so this victory is a normal (non-qualifying) clear.
-      const { gameManager, player, combatSource } = harness(stage({ perfectClearTurnLimit: 1 }))
+      // perfectClearTurnLimit: 0 - roundsElapsed < 0 can never hold, so
+      // this victory is always a normal (non-qualifying) clear: under
+      // the fastest-record contract (F-BX-85) only a QUALIFYING faster
+      // clear may rewrite the record.
+      const { gameManager, player, combatSource } = harness(stage({ perfectClearTurnLimit: 0 }))
 
       player.perfectClearStageIds.push('perfect_stage')
       player.perfectClearSeconds['perfect_stage'] = 42
@@ -250,17 +260,33 @@ describe('GameManager — Hoàn Mỹ condition on turn-based victory', () => {
       expect(player.perfectClearSeconds['perfect_stage']).toBe(42)
     })
 
-    it('already-PC stage cleared again with qualifying pace -> perfectClearSeconds NOT overwritten', () => {
-      const { gameManager, player, combatSource } = harness(stage({ perfectClearTurnLimit: 50 }))
+    it('already-PC stage cleared again SLOWER -> record kept; FASTER -> record rewritten (F-BX-85)', () => {
+      // The record channel is the best time: a qualifying clear that is
+      // NOT faster than the stored record never rewrites it.
+      let nowMs = 1_000_000
+      vi.spyOn(Date, 'now').mockImplementation(() => nowMs)
+
+      const { gameManager, player, stageDef, combatSource } = harness(stage({ perfectClearTurnLimit: 50 }))
 
       player.perfectClearStageIds.push('perfect_stage')
       player.perfectClearSeconds['perfect_stage'] = 42
 
+      nowMs += 43_000 // a slower qualifying clear than the stored 42s
       driveToVictory(gameManager, combatSource)
 
       expect(gameManager.getTurnBattle()?.state).toBe('victory')
-      expect(player.perfectClearStageIds).toEqual(['perfect_stage'])
       expect(player.perfectClearSeconds['perfect_stage']).toBe(42)
+
+      // A later qualifying clear that beats the record rewrites it -
+      // repeat-run clears are eligible again once anchoring is fixed.
+      gameManager.turnBattleOps.startStage(player, stageDef, false)
+      nowMs += 1_000 // this cycle clears in 1s - faster than 42
+      driveToVictory(gameManager, combatSource)
+
+      expect(gameManager.getTurnBattle()?.state).toBe('victory')
+      expect(player.perfectClearSeconds['perfect_stage']).toBeLessThan(42)
+      expect(player.perfectClearSeconds['perfect_stage']).toBeCloseTo(1, 3)
+      vi.restoreAllMocks()
     })
 
     it('die then revive still counts as PC (alive at the victory tick)', () => {
@@ -300,7 +326,7 @@ describe('GameManager — Hoàn Mỹ condition on turn-based victory', () => {
 })
 
 describe('GameManager — perfect_clear observation emit (Sound System W6)', () => {
-  it('fires exactly once on first record — repeat victories stay silent', () => {
+  it('fires per RECORD write — the first record and each faster clear; slower victories stay silent (F-BX-85)', () => {
     const stageDef = {
       id: 'perfect_stage',
       name: 'Perfect Stage',
@@ -328,17 +354,135 @@ describe('GameManager — perfect_clear observation emit (Sound System W6)', () 
     const seen: { stageId: string; clearSeconds: number }[] = []
     gameManager.eventBus.on<typeof seen[number]>('perfect_clear', (e) => seen.push(e))
 
-    for (let round = 0; round < 2; round++) {
+    // Round 1: first record (10s). Round 2: faster (5s) -> record
+    // rewritten AND re-emitted. Round 3: slower (7s) -> no write, silent.
+    let nowMs = 1_000_000
+    vi.spyOn(Date, 'now').mockImplementation(() => nowMs)
+    const roundDurationsMs = [10_000, 5_000, 7_000]
+
+    for (const durationMs of roundDurationsMs) {
       gameManager.turnBattleOps.startStage(player, stageDef, false)
+      nowMs += durationMs
       for (let i = 0; i < 400 && gameManager.getTurnBattle()?.state !== 'victory'; i++) {
         combatSource.advance(COMBAT_STEP_SECONDS)
       }
       expect(gameManager.getTurnBattle()?.state).toBe('victory')
     }
 
-    expect(player.perfectClearStageIds).toContain('perfect_stage')
-    expect(seen).toHaveLength(1)
-    expect(seen[0]!.stageId).toBe('perfect_stage')
-    expect(seen[0]!.clearSeconds).toBeGreaterThanOrEqual(0)
+    expect(player.perfectClearStageIds).toEqual(['perfect_stage'])
+    expect(player.perfectClearSeconds['perfect_stage']).toBeCloseTo(5, 3)
+    expect(seen).toHaveLength(2)
+    expect(seen[0]!.clearSeconds).toBeCloseTo(10, 3)
+    expect(seen[1]!.clearSeconds).toBeCloseTo(5, 3)
+    vi.restoreAllMocks()
+  })
+})
+
+describe('GameManager — F-BX-84/85: clearSeconds writer contract (positive floor + cycle anchoring)', () => {
+  const DUMMY_ENEMY = defineEnemy({
+    id: 'pc85_dummy',
+    name: 'PC85 Dummy',
+    level: 1,
+    realmId: 'mortal',
+    lane: 'ground',
+    statsInput: {
+      maxHp: 1,
+      might: 0,
+      attackSpeed: 1,
+      criticalRate: 0,
+      criticalDamage: 1.5,
+      armor: 0,
+    },
+    rewards: { techniqueMastery: 0, spiritStone: 1 },
+  })
+
+  function stageDef(): Stage {
+    return {
+      id: 'pc85_stage',
+      name: 'PC85 Stage',
+      description: '',
+      floor: 1,
+      enemyPool: [{ enemyId: DUMMY_ENEMY.id, weight: 1 }],
+      totalEnemyCount: 1, waves: [1],
+      spawnIntervalSeconds: 0,
+      perfectClearTurnLimit: 50,
+    }
+  }
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('F-BX-84: a same-instant qualifying clear still records a POSITIVE clearSeconds (validator requires >0)', () => {
+    // The save validator rejects perfectClearSeconds <= 0 - a headless
+    // run can legitimately measure a 0 wall-clock diff; the writer must
+    // floor the record instead of writing a corruptable value.
+    const fixed = 1_700_000_000_000
+    vi.spyOn(Date, 'now').mockReturnValue(fixed)
+
+    const stage = stageDef()
+    const gameManager = new GameManager()
+    const combatSource = new ManualClockSource()
+    gameManager.setCombatClockSource(combatSource)
+    const player = createDefaultPlayer()
+    player.baseStats = asBaseStats({ ...player.baseStats, might: 100 })
+    gameManager.catalogOps.registerEnemyTemplates([DUMMY_ENEMY])
+    gameManager.catalogOps.registerStages([stage])
+    gameManager.setActivePlayer(player)
+    gameManager.turnBattleOps.startStage(player, stage, false)
+
+    for (let i = 0; i < 400 && gameManager.getTurnBattle()?.state !== 'victory'; i++) {
+      combatSource.advance(COMBAT_STEP_SECONDS)
+    }
+
+    expect(gameManager.getTurnBattle()?.state).toBe('victory')
+    expect(player.perfectClearStageIds).toContain('pc85_stage')
+    expect(player.perfectClearSeconds['pc85_stage']).toBeGreaterThan(0)
+  })
+
+  it('F-BX-85: repeat cycles re-anchor the clear clock AND a faster cycle rewrites the record', () => {
+    // Whole-run anchoring (bug): cycle N>1 records the full run clock
+    // (~45s farm cycles) AND the once-only guard kept the inflated
+    // record forever. Contract: the record is the fastest qualifying
+    // cycle time, measured from that cycle's start.
+    let nowMs = 1_000_000
+    vi.spyOn(Date, 'now').mockImplementation(() => nowMs)
+
+    const stage = stageDef()
+    const gameManager = new GameManager()
+    const combatSource = new ManualClockSource()
+    gameManager.setCombatClockSource(combatSource)
+    const player = createDefaultPlayer()
+    player.baseStats = asBaseStats({ ...player.baseStats, might: 100 })
+    gameManager.catalogOps.registerMaterials([SPIRIT_STONE_MATERIAL])
+    gameManager.catalogOps.registerEnemyTemplates([DUMMY_ENEMY])
+    gameManager.catalogOps.registerStages([stage])
+    gameManager.setActivePlayer(player)
+
+    // battle_end publishes exactly once per cycle (ARCH-014) - the
+    // deterministic per-victory counter a repeat loop can gate on.
+    let victories = 0
+    gameManager.eventBus.on('battle_end', () => {
+      victories += 1
+    })
+
+    gameManager.turnBattleOps.startStage(player, stage, true) // repeatContinuously
+
+    nowMs += 10_000 // cycle 1 clears 10s after launch
+    for (let i = 0; i < 400 && victories < 1; i++) {
+      combatSource.advance(COMBAT_STEP_SECONDS)
+    }
+    expect(victories).toBe(1)
+    expect(player.perfectClearSeconds['pc85_stage']).toBeCloseTo(10, 3)
+
+    // Cycle 2 restarts at the cycle-1 victory instant (1_010_000); clearing
+    // 200ms into the new cycle must record ~0.2s, not ~10.2s (anchor),
+    // and must rewrite because it is faster (record-is-best contract).
+    nowMs += 200
+    for (let i = 0; i < 400 && victories < 2; i++) {
+      combatSource.advance(COMBAT_STEP_SECONDS)
+    }
+    expect(victories).toBe(2)
+    expect(player.perfectClearSeconds['pc85_stage']).toBeCloseTo(0.2, 3)
   })
 })
