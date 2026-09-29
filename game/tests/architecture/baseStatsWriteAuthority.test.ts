@@ -186,7 +186,8 @@ function templateExpressions(text: string): string[] {
     if (v !== undefined && v.length > 0) exprs.push(v)
   }
   while ((m = interpRe.exec(text)) !== null) {
-    exprs.push(m[1])
+    const v = m[1]
+    if (v !== undefined && v.length > 0) exprs.push(v)
   }
   return exprs
 }
