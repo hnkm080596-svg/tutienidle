@@ -33,3 +33,8 @@ Each finding uses `### <id> — <SEVERITY> — <title>` with fields: Severity, L
 - **EM-02 (Medium):** offline cultivation grant applies the Tu Linh Tran buff's boosted `cultivationPerSecond` snapshot to the full offline window even after the buff expires.
 - **INFRA-01 (Medium):** remote newest-wins compares two machines' client clocks — skew picks the wrong winner, silent rollback.
 - **INFRA-02 (Medium):** `character_saves` push is an unconditional upsert — no CAS on the remote row.
+
+## Coverage notes
+
+- **Round 4 (this pass, no new findings):** battle terminal-edge funnel (`completeAction` defeat-before-victory ordering), talent passive sync (`syncTalentCombatPassive` iterates all effects/talents), mana-shield cap, absorb order, technique progression, talent entitlement transaction, tribulation settle/drain seam, save-versioning discipline, persistent-buff pool (Kiep Thuong session-scope is documented design), tick ordering, GameManager DI wiring, node economy atomicity, companion gacha/progression/exchange/gift/feed, drop pipeline rng ordering, artifact progression + deferred domain gate. All cleared — see "Notes reviewed and cleared" tails in each findings file.
+- Prior rounds already cleared: ops layer exactly-once guards, offline-window caps, wash/refine tickets, production/alchemy event drains, restore depth, stage leases, quest internals, combat build partition, presentation sessions, timed-effect merge.
