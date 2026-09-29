@@ -1,4 +1,5 @@
 import rawManifest from './ink-wash-ui-slices.json'
+import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 
 export const INK_WASH_UI_ASSET_IDS = [
   'frame-xs-ink-line',
@@ -42,7 +43,14 @@ export interface InkWashUiAsset {
 const assets = rawManifest.assets as InkWashUiAsset[]
 
 export const INK_WASH_UI_ASSETS = Object.fromEntries(
-  assets.map((asset) => [asset.id, Object.freeze(asset)]),
+  assets.map((asset) => [
+    asset.id,
+    Object.freeze({
+      ...asset,
+      url1x: resolveAssetUrl(asset.url1x),
+      url2x: resolveAssetUrl(asset.url2x),
+    }),
+  ]),
 ) as Readonly<Record<InkWashUiAssetId, Readonly<InkWashUiAsset>>>
 
 export function getInkWashUiAsset(id: InkWashUiAssetId): Readonly<InkWashUiAsset> {

@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue'
 import { autoUpdate, flip, offset, shift, size, useFloating } from '@floating-ui/vue'
 import { useTooltip } from '@/composables/useTooltip'
+import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
 import ItemCardBody from '@/components/common/ItemCardBody.vue'
 import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
@@ -64,7 +65,7 @@ function maxWidthForKind(kind: string | undefined): number {
 // formation redesign, 2026-09-15).
 const elementBannerUrl = computed(() =>
   content.value?.kind === 'element'
-    ? `/assets/ui/elements/banner-${content.value.element}.png`
+    ? resolveAssetUrl(`/assets/ui/elements/banner-${content.value.element}.png`)
     : undefined,
 )
 

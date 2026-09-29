@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 withDefaults(defineProps<{
   leftMountain?: boolean
   rightMountain?: boolean
@@ -13,7 +14,7 @@ withDefaults(defineProps<{
   seal: 'none',
 })
 
-const overlayRoot = '/assets/ui/ink-wash/overlays'
+const overlayRoot = resolveAssetUrl('/assets/ui/ink-wash/overlays')
 </script>
 
 <template>

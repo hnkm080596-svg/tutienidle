@@ -1,6 +1,7 @@
 import Phaser from 'phaser'
 import { readOptionalGate } from '@/presentation/gate/PresentationGate'
 import type { AssetResourceDescriptor } from '@/presentation/assets/AssetBundleCatalog'
+import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import { ASSET_LOADER_SCENE_KEY } from '@/presentation/PresentationContracts'
 
 export { ASSET_LOADER_SCENE_KEY }
@@ -144,19 +145,23 @@ export class AssetLoaderScene extends Phaser.Scene {
       for (const d of needed) {
         switch (d.kind) {
           case 'image':
-            this.load.image(d.key, d.url)
+            this.load.image(d.key, resolveAssetUrl(d.url))
             break
           case 'spritesheet':
-            this.load.spritesheet(d.key, d.url, {
+            this.load.spritesheet(d.key, resolveAssetUrl(d.url), {
               frameWidth: d.frameWidth,
               frameHeight: d.frameHeight,
             })
             break
           case 'atlas':
-            this.load.atlas(d.key, d.textureUrl, d.atlasUrl)
+            this.load.atlas(d.key, resolveAssetUrl(d.textureUrl), resolveAssetUrl(d.atlasUrl))
             break
           case 'multiatlas':
-            this.load.multiatlas(d.key, d.jsonUrl, d.basePath)
+            this.load.multiatlas(
+              d.key,
+              resolveAssetUrl(d.jsonUrl),
+              d.basePath === undefined ? undefined : resolveAssetUrl(d.basePath),
+            )
             break
         }
       }

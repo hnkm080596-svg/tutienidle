@@ -3,6 +3,7 @@ import {
   getInkWashUiAsset,
   type InkWashUiAssetId,
 } from '@/assets/inkWashUi'
+import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 
 export const INK_WASH_UI_ATLAS_KEY = 'ink-wash-ui'
 export const INK_WASH_UI_ATLAS_IMAGE_URL = 'assets/ui/ink-wash/atlas/ink-wash-ui.png'
@@ -23,8 +24,8 @@ export function queueInkWashUiAtlas(scene: Phaser.Scene): void {
   if (scene.textures.exists(INK_WASH_UI_ATLAS_KEY)) return
   scene.load.atlas(
     INK_WASH_UI_ATLAS_KEY,
-    INK_WASH_UI_ATLAS_IMAGE_URL,
-    INK_WASH_UI_ATLAS_DATA_URL,
+    resolveAssetUrl(INK_WASH_UI_ATLAS_IMAGE_URL),
+    resolveAssetUrl(INK_WASH_UI_ATLAS_DATA_URL),
   )
 }
 
