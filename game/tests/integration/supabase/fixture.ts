@@ -349,6 +349,17 @@ export async function receiptRows(pg: Client, userId: string) {
   return r.rows
 }
 
+// Acceptance seed (B1-C): the count of commits the server attributes to one
+// mutation id - an identical retry must keep this at 1 forever.
+export async function mutationReceiptCount(pg: Client, userId: string, mutationId: string) {
+  const r = await pg.query(
+    `select count(*)::int as n from public.save_mutation_receipts
+       where owner_user_id = $1 and mutation_id = $2`,
+    [userId, mutationId],
+  )
+  return r.rows[0].n as number
+}
+
 export async function activeSessionCount(pg: Client, userId: string) {
   const r = await pg.query(
     `select count(*)::int as n from public.account_sessions where user_id=$1 and revoked_at is null`,

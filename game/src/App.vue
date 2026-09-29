@@ -634,6 +634,11 @@ async function bootGame(createNewCharacter = false): Promise<BootOutcome> {
 function onAuthenticated(session: AuthSession) {
   // Spec F8 - bind the save slot BEFORE boot loads: every storage path
   // resolves through resolveSaveKey() from this point on.
+  // B1-C - bump the save generation FIRST: an in-flight write from the
+  // previous session/account cannot touch the journal or cache once it
+  // resolves (reset/logout/user-switch fence), and queued writers drain
+  // instead of committing under the new account.
+  cloudSaveCoordinator.reset()
   setSaveAccountId(accountIdForSession(session))
   void bootGame(false)
 }

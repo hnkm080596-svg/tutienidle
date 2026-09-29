@@ -8,7 +8,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { SupabaseCloudSaveService } from './SupabaseCloudSaveService'
 import { CloudSaveCoordinator } from './CloudSaveCoordinator'
-import { setSaveAccountId, resolveRevisionKey, resolveSaveKey } from '../save/saveKeys'
+import { setSaveAccountId, resolveAckedSaveKey, resolvePendingSaveKey, resolveSaveKey } from '../save/saveKeys'
+import { parseAckedSaveEnvelope } from './AckedSaveCache'
 import { CURRENT_SAVE_VERSION } from '../save/SaveSystem'
 import { createDefaultPlayer } from '../../core/player/Player'
 import type { ClientBuildInfo } from '../backend/ClientBuildInfo'
@@ -105,6 +106,19 @@ function makeService(monotonic = { now: 1000 }): SupabaseCloudSaveService {
   })
 }
 
+// B1-C envelope namespace: releaseChannel + non-secret project host.
+const ENV_ID = 'beta:example'
+
+function ackedEnvelope() {
+  const raw = localStorage.getItem(resolveAckedSaveKey(ENV_ID))
+  return raw ? parseAckedSaveEnvelope(raw) : null
+}
+
+function pendingRecord() {
+  const raw = localStorage.getItem(resolvePendingSaveKey(ENV_ID))
+  return raw ? (JSON.parse(raw) as import('./PendingSaveJournal').PendingSaveRecord) : null
+}
+
 beforeEach(() => {
   vi.stubGlobal('localStorage', new MemoryStorage())
   vi.stubGlobal('sessionStorage', new MemoryStorage())
@@ -119,7 +133,7 @@ describe('SupabaseCloudSaveService - load_game_state mapping (B1.3)', () => {
 
     expect(result).toEqual({ status: 'empty', revision: 0 })
     expect(localStorage.getItem(resolveSaveKey())).toBeNull()
-    expect(localStorage.getItem(resolveRevisionKey())).toBeNull()
+    expect(ackedEnvelope()).toBeNull()
   })
 
   it('CHARACTER_UNINITIALIZED → uninitialized + canonical metadata + checkpoint stored', async () => {
@@ -214,9 +228,12 @@ describe('SupabaseCloudSaveService - load_game_state mapping (B1.3)', () => {
       expect(result.revision).toBe(5)
       expect(result.raw).toBe(JSON.stringify(payload))
     }
-    // B1.5 cache mirror: revision-first, bare GameSave bytes.
-    expect(localStorage.getItem(resolveRevisionKey())).toBe('5')
-    expect(localStorage.getItem(resolveSaveKey())).toBe(JSON.stringify(payload))
+    // B1-C acked mirror: payload + revision + identity as ONE envelope.
+    const envelope = ackedEnvelope()
+    expect(envelope?.revision).toBe(5)
+    expect(envelope?.rawPayload).toBe(JSON.stringify(payload))
+    expect(envelope?.userId).toBe('u1')
+    expect(envelope?.characterId).toBe('char-1')
   })
 
   it('SAVE_READY with drifted payload version → incompatible (never a silent restore)', async () => {
@@ -248,7 +265,7 @@ describe('SupabaseCloudSaveService - load_game_state mapping (B1.3)', () => {
     expect(result.status).toBe('corrupted')
     if (result.status === 'corrupted') expect(result.raw).toBe(JSON.stringify(payload))
     // The corrupt payload must NOT be written into the cache mirror.
-    expect(localStorage.getItem(resolveSaveKey())).toBeNull()
+    expect(ackedEnvelope()).toBeNull()
   })
 
   it('missing binding → unavailable AUTH_EXPIRED (no session, no write)', async () => {
@@ -398,8 +415,11 @@ describe('SupabaseCloudSaveService - write_character_save contract (B1.5/B1.6)',
     const result = await service.save(snapshot, 5)
 
     expect(result).toEqual({ status: 'ok', revision: 6 })
-    expect(localStorage.getItem(resolveRevisionKey())).toBe('6')
-    expect(localStorage.getItem(resolveSaveKey())).toBe(JSON.stringify(snapshot))
+    const envelope = ackedEnvelope()
+    expect(envelope?.revision).toBe(6)
+    expect(envelope?.rawPayload).toBe(JSON.stringify(snapshot))
+    // The ACKed write clears the durable pending record it replaced.
+    expect(pendingRecord()).toBeNull()
   })
 
   it('CONFLICT is terminal: exactly one write attempt, remote row untouched, result surfaces', async () => {
@@ -439,10 +459,15 @@ describe('SupabaseCloudSaveService - write_character_save contract (B1.5/B1.6)',
     if (result.status === 'conflict') expect(result.currentRevision).toBe(9)
   })
 
-  it('save without a prior load re-anchors the checkpoint through heartbeat first', async () => {
+  it('save without a prior load resolves identity + anchors the checkpoint through load_game_state first', async () => {
     const calls = stubFetch((call) => {
-      if (call.url.endsWith('/rpc/heartbeat_session')) {
-        return json({ status: 'OK', serverTimeUtc: 'x', checkpoint: CHECKPOINT })
+      if (call.url.endsWith('/rpc/load_game_state')) {
+        return json({
+          status: 'CHARACTER_UNINITIALIZED',
+          character: REMOTE_CHARACTER,
+          serverCheckpoint: CHECKPOINT,
+          serverTimeUtc: 'x',
+        })
       }
       if (call.url.endsWith('/rpc/write_character_save')) {
         return json({ status: 'COMMITTED', committedRevision: 1, currentRevision: 1, serverTimeUtc: 'x' })
@@ -454,18 +479,20 @@ describe('SupabaseCloudSaveService - write_character_save contract (B1.5/B1.6)',
     const result = await service.save(validGameSave(), 0)
 
     expect(result).toEqual({ status: 'ok', revision: 1 })
-    const heartbeatIndex = calls.findIndex(c => c.url.endsWith('/rpc/heartbeat_session'))
+    // B1-C: the identity fetch doubles as the checkpoint anchor - no
+    // separate heartbeat is needed before the journaled write.
+    const loadIndex = calls.findIndex(c => c.url.endsWith('/rpc/load_game_state'))
     const writeIndex = calls.findIndex(c => c.url.endsWith('/rpc/write_character_save'))
-    expect(heartbeatIndex).toBeGreaterThanOrEqual(0)
-    expect(writeIndex).toBeGreaterThan(heartbeatIndex)
+    expect(loadIndex).toBeGreaterThanOrEqual(0)
+    expect(writeIndex).toBeGreaterThan(loadIndex)
     const body = JSON.parse(String(calls[writeIndex]!.init.body)) as Record<string, unknown>
     expect((body.p_time_checkpoint as { checkpointId?: string }).checkpointId).toBe('chk-1')
   })
 
-  it('heartbeat with no live checkpoint → unavailable NO_CHARACTER (never a fabricated checkpoint)', async () => {
-    stubFetch((call) => {
-      if (call.url.endsWith('/rpc/heartbeat_session')) {
-        return json({ status: 'OK', serverTimeUtc: 'x', checkpoint: null })
+  it('identity fetch on a NO_CHARACTER remote → unavailable NO_CHARACTER (never a fabricated checkpoint)', async () => {
+    const calls = stubFetch((call) => {
+      if (call.url.endsWith('/rpc/load_game_state')) {
+        return json({ status: 'NO_CHARACTER', serverTimeUtc: 'x' })
       }
       return json({}, 404)
     })
@@ -473,6 +500,38 @@ describe('SupabaseCloudSaveService - write_character_save contract (B1.5/B1.6)',
     const result = await makeService().save(validGameSave(), 0)
 
     expect(result).toMatchObject({ status: 'unavailable', code: 'SERVER_ERROR', detail: 'NO_CHARACTER' })
+    expect(calls.filter((c) => c.url.endsWith('/rpc/write_character_save'))).toHaveLength(0)
+  })
+
+  it('known identity but no live checkpoint → heartbeat re-anchor; dead checkpoint → NO_CHARACTER', async () => {
+    const calls = stubFetch((call) => {
+      if (call.url.endsWith('/rpc/load_game_state')) {
+        // SAVE_READY without a serverCheckpoint field: identity resolves
+        // but the checkpoint slot stays empty.
+        return json({
+          status: 'SAVE_READY',
+          character: REMOTE_CHARACTER,
+          save: {
+            schemaVersion: CURRENT_SAVE_VERSION,
+            saveRevision: 5,
+            payload: validGameSave(),
+            updatedAt: 'x',
+          },
+          serverTimeUtc: 'x',
+        })
+      }
+      if (call.url.endsWith('/rpc/heartbeat_session')) {
+        return json({ status: 'OK', serverTimeUtc: 'x', checkpoint: null })
+      }
+      return json({}, 404)
+    })
+
+    const service = makeService()
+    await service.load()
+    const result = await service.save(validGameSave(), 5)
+
+    expect(result).toMatchObject({ status: 'unavailable', code: 'SERVER_ERROR', detail: 'NO_CHARACTER' })
+    expect(calls.filter((c) => c.url.endsWith('/rpc/write_character_save'))).toHaveLength(0)
   })
 
   it.each([

@@ -26,12 +26,23 @@ import {
   checkpointArg,
   saveRow,
   receiptRows,
+  mutationReceiptCount,
   activeSessionCount,
   uniqueName,
   type ContractEnv,
   type TestUser,
   type CharacterMeta,
 } from './fixture'
+import { SupabaseCloudSaveService } from '../../../src/services/cloudSave/SupabaseCloudSaveService'
+import { CloudSaveCoordinator } from '../../../src/services/cloudSave/CloudSaveCoordinator'
+import { PendingSaveJournal, buildPendingSaveRecord } from '../../../src/services/cloudSave/PendingSaveJournal'
+import { AckedSaveCache } from '../../../src/services/cloudSave/AckedSaveCache'
+import { setSaveAccountId } from '../../../src/services/save/saveKeys'
+import { withMortalCreationPick } from '../../../src/services/save/GameSave.fixture'
+import { createDefaultPlayer } from '../../../src/core/player/Player'
+import type { ClientBuildInfo } from '../../../src/services/backend/ClientBuildInfo'
+import type { GameSave } from '../../../src/services/save/saveTypes'
+import type { ReconcileDecision } from '../../../src/services/cloudSave/reconcilePendingSave'
 
 test.describe.configure({ mode: 'serial' })
 
@@ -875,4 +886,341 @@ test('attacks: {} via retired create overload impossible; new create writes no s
   expect(await saveRow(pg, character.id)).toBeNull()
   const s = await loadState(env, user.token, sid)
   expect(s.status).toBe('CHARACTER_UNINITIALIZED')
+})
+
+// ---------------------------------------------------------------------------
+// B1-C durable journal (PR4): the REAL client-side queue/adapter/journal/cache
+// modules running against the REAL RPC surface - only localStorage is emulated
+// (an in-memory Storage), because the suite executes in Node. Every commit,
+// receipt and conflict below happens on the real staging project.
+// ---------------------------------------------------------------------------
+
+class MemoryStorage implements Storage {
+  private store = new Map<string, string>()
+  get length() { return this.store.size }
+  clear(): void { this.store.clear() }
+  getItem(key: string): string | null { return this.store.get(key) ?? null }
+  key(index: number): string | null { return [...this.store.keys()][index] ?? null }
+  removeItem(key: string): void { this.store.delete(key) }
+  setItem(key: string, value: string): void { this.store.set(key, value) }
+}
+
+const CONTRACT_BUILD: ClientBuildInfo = {
+  buildId: BUILD,
+  appVersion: '0.0.0',
+  releaseChannel: 'beta',
+  saveSchemaVersion: 87,
+}
+
+// Same derivation as the adapter: releaseChannel + project-ref fingerprint.
+function contractEnvId(): string {
+  const host = new URL(env.supabaseUrl).hostname
+  const project = host.endsWith('.supabase.co') ? host.slice(0, -'.supabase.co'.length) : host
+  return `beta:${project}`
+}
+
+// A save satisfying BOTH contracts: the server identity gate (name, talents,
+// mortal pick bound to the character) and the client shape/acceptance
+// pipeline the adapter runs on load. `marker` varies a non-identity field so
+// distinct snapshots stay contract-legal (name/talentIds are immutable).
+function integrationGameSave(character: CharacterMeta, marker = false): GameSave {
+  const player = createDefaultPlayer()
+  player.name = character.name
+  player.selectedTalentIds = [...character.selectedTalentIds]
+  player.hasSeenTutorial = marker
+  const save: GameSave = {
+    version: 87,
+    player,
+    techniques: [],
+    skills: [],
+    materials: [],
+    equipment: [],
+    pills: [],
+    talismans: [],
+    formations: [],
+    buildings: [],
+    equipmentSlots: [],
+  }
+  if (character.mortalBasicSkillId) {
+    withMortalCreationPick(save, character.mortalBasicSkillId)
+  }
+  return save
+}
+
+// GameSave is a nominal interface without an index signature; the RPC
+// fixture takes a plain record - the payload crosses the wire untyped anyway.
+const asRpcPayload = (save: GameSave) => save as unknown as Record<string, unknown>
+
+interface JournalHarness {
+  service: SupabaseCloudSaveService
+  journal: PendingSaveJournal
+  acked: AckedSaveCache
+  binding: { environmentId: string; userId: string; characterId: string }
+  decisions: ReconcileDecision[]
+}
+
+// Adapter + journal + cache over one shared storage slot, bound to the real
+// session/character. reconcileObserver captures the pure decider's verdicts.
+function journalHarness(user: TestUser, character: CharacterMeta, sessionId: string): JournalHarness {
+  const storage = new MemoryStorage()
+  const environmentId = contractEnvId()
+  setSaveAccountId(user.userId)
+  const decisions: ReconcileDecision[] = []
+  const service = new SupabaseCloudSaveService(
+    { url: env.supabaseUrl, anonKey: env.anonKey },
+    CONTRACT_BUILD,
+    {
+      storage,
+      resolveBinding: async () => ({
+        sessionId,
+        userId: user.userId,
+        accessToken: user.token,
+      }),
+      reconcileObserver: (decision) => decisions.push(decision),
+    },
+  )
+  return {
+    service,
+    journal: new PendingSaveJournal(environmentId, { storage }),
+    acked: new AckedSaveCache(environmentId, { storage }),
+    binding: { environmentId, userId: user.userId, characterId: character.id },
+    decisions,
+  }
+}
+
+// Acceptance seed: the load-side replay of a durable pending record whose
+// mutation already committed; returns the load result + reconcile decision.
+async function retrySameMutationAfterLostAck(h: JournalHarness) {
+  const load = await h.service.load()
+  return { load, decision: h.decisions.at(-1) ?? null }
+}
+
+// Acceptance seed: the authoritative save_revision as the server stores it.
+async function readServerRevision(characterId: string): Promise<number | null> {
+  const row = await saveRow(pg, characterId)
+  return row ? row.save_revision : null
+}
+
+test('journal: committed-but-unacked pending record resolves already-committed once', async () => {
+  const { user, sid, character } = await authedUserWithCharacter()
+  const cp = (await loadState(env, user.token, sid)).serverCheckpoint
+  const mutation = randomUUID()
+  const payload = integrationGameSave(character)
+  const h = journalHarness(user, character, sid)
+
+  // The durable record the client journaled, plus the same mutation committed
+  // through the fixture - standing in for a write whose COMMITTED never
+  // reached the client (lost ACK / killed transport after the commit).
+  const record = buildPendingSaveRecord({
+    environmentId: h.binding.environmentId,
+    userId: user.userId,
+    characterId: character.id,
+    mutationId: mutation,
+    baseRevision: 0,
+    timeCheckpoint: { checkpointId: cp.checkpointId, elapsedMonotonicMs: 100 },
+    schemaVersion: 87,
+    buildId: BUILD,
+    createdAtUtc: new Date().toISOString(),
+    rawPayload: JSON.stringify(payload),
+  })
+  expect(h.journal.put(record).status).toBe('ok')
+
+  const first = await writeSave(env, user.token, {
+    sessionId: sid, expectedRevision: 0, payload: asRpcPayload(payload),
+    mutationId: mutation, timeCheckpoint: checkpointArg(cp, 100), buildId: BUILD,
+  })
+  expect(first.body.status).toBe('COMMITTED')
+  const cutoffAfterCommit = (await saveRow(pg, character.id)).progression_cutoff_at
+
+  // Next boot: load() replays the frozen mutation verbatim - identical
+  // request digest - and the receipt resolves it without a second commit.
+  const { load, decision } = await retrySameMutationAfterLostAck(h)
+  expect(load.status).toBe('ok')
+  expect(decision).toMatchObject({
+    status: 'already-committed',
+    committedRevision: 1,
+    currentRevision: 1,
+    cachePayload: 'pending',
+  })
+
+  // Journal drained, single receipt, revision and cutoff untouched by replay.
+  expect(h.journal.read(h.binding).status).toBe('none')
+  expect(await mutationReceiptCount(pg, user.userId, mutation)).toBe(1)
+  expect(await readServerRevision(character.id)).toBe(1)
+  const row = await saveRow(pg, character.id)
+  expect(row.progression_cutoff_at).toEqual(cutoffAfterCommit)
+  // jsonb key order is canonicalized server-side - deep equality, not bytes.
+  expect(row.payload).toEqual(payload)
+
+  // The ACKed mirror carries the committed bytes + revision + identity.
+  const cached = h.acked.read(h.binding)
+  expect(cached.status).toBe('ok')
+  if (cached.status === 'ok') {
+    expect(cached.envelope.revision).toBe(1)
+    expect(JSON.parse(cached.envelope.rawPayload)).toEqual(payload)
+  }
+})
+
+test('journal: receipt older than the remote head refreshes the live row', async () => {
+  const { user, sid, character } = await authedUserWithCharacter()
+  const cp = (await loadState(env, user.token, sid)).serverCheckpoint
+  const h = journalHarness(user, character, sid)
+
+  // Head to 7 without six round trips, then commit the tracked mutation.
+  const w1 = await writeSave(env, user.token, {
+    sessionId: sid, expectedRevision: 0, payload: asRpcPayload(integrationGameSave(character)),
+    mutationId: randomUUID(), timeCheckpoint: checkpointArg(cp, 10), buildId: BUILD,
+  })
+  expect(w1.body.status).toBe('COMMITTED')
+  await pg.query(`update public.character_saves set save_revision = 7 where character_id = $1`, [character.id])
+
+  const cp2 = (await loadState(env, user.token, sid)).serverCheckpoint
+  const mutation = randomUUID()
+  const payload8 = integrationGameSave(character, true)
+  const w8 = await writeSave(env, user.token, {
+    sessionId: sid, expectedRevision: 7, payload: asRpcPayload(payload8),
+    mutationId: mutation, timeCheckpoint: checkpointArg(cp2, 200), buildId: BUILD,
+  })
+  expect(w8.body.status).toBe('COMMITTED')
+  expect(w8.body.committedRevision).toBe(8)
+  // Acceptance seed: readServerRevision() -> 8
+  expect(await readServerRevision(character.id)).toBe(8)
+
+  // A second writer moves the head past the receipt (revision 9).
+  const payload9 = integrationGameSave(character, false)
+  const w9 = await writeSave(env, user.token, {
+    sessionId: sid, expectedRevision: 8, payload: asRpcPayload(payload9),
+    mutationId: randomUUID(), timeCheckpoint: checkpointArg(cp2, 300), buildId: BUILD,
+  })
+  expect(w9.body.status).toBe('COMMITTED')
+
+  // The durable record for the older commit replays: already-committed at 8
+  // while the head is 9 -> cache the LIVE row, never the obsolete pending.
+  const record = buildPendingSaveRecord({
+    environmentId: h.binding.environmentId,
+    userId: user.userId,
+    characterId: character.id,
+    mutationId: mutation,
+    baseRevision: 7,
+    timeCheckpoint: { checkpointId: cp2.checkpointId, elapsedMonotonicMs: 200 },
+    schemaVersion: 87,
+    buildId: BUILD,
+    createdAtUtc: new Date().toISOString(),
+    rawPayload: JSON.stringify(payload8),
+  })
+  expect(h.journal.put(record).status).toBe('ok')
+
+  const { load, decision } = await retrySameMutationAfterLostAck(h)
+  expect(load.status).toBe('ok')
+  expect(decision).toMatchObject({
+    status: 'already-committed',
+    committedRevision: 8,
+    currentRevision: 9,
+    cachePayload: 'remote',
+  })
+  expect(h.journal.read(h.binding).status).toBe('none')
+  // Acceptance seed: countCommitsForMutation() -> 1 (replay never re-commits)
+  expect(await mutationReceiptCount(pg, user.userId, mutation)).toBe(1)
+  const cached = h.acked.read(h.binding)
+  expect(cached.status).toBe('ok')
+  if (cached.status === 'ok') {
+    expect(cached.envelope.revision).toBe(9)
+    expect(JSON.parse(cached.envelope.rawPayload)).toEqual(payload9)
+  }
+})
+
+test('journal: genuine CAS divergence surfaces pending-conflict and keeps the record', async () => {
+  const { user, sid, character } = await authedUserWithCharacter()
+  const cp = (await loadState(env, user.token, sid)).serverCheckpoint
+  const w1 = await writeSave(env, user.token, {
+    sessionId: sid, expectedRevision: 0, payload: asRpcPayload(integrationGameSave(character)),
+    mutationId: randomUUID(), timeCheckpoint: checkpointArg(cp, 10), buildId: BUILD,
+  })
+  expect(w1.body.status).toBe('COMMITTED')
+
+  // A durable record claiming a stale base revision with a mutation the
+  // receipts have never seen replays into a real CONFLICT: terminal locally,
+  // retained for the recovery surface, remote untouched.
+  const h = journalHarness(user, character, sid)
+  const record = buildPendingSaveRecord({
+    environmentId: h.binding.environmentId,
+    userId: user.userId,
+    characterId: character.id,
+    mutationId: randomUUID(),
+    baseRevision: 0,
+    timeCheckpoint: { checkpointId: cp.checkpointId, elapsedMonotonicMs: 50 },
+    schemaVersion: 87,
+    buildId: BUILD,
+    createdAtUtc: new Date().toISOString(),
+    rawPayload: JSON.stringify(integrationGameSave(character, true)),
+  })
+  expect(h.journal.put(record).status).toBe('ok')
+
+  const load = await h.service.load()
+  expect(load.status).toBe('pending-conflict')
+  if (load.status === 'pending-conflict') {
+    expect(load.currentRevision).toBe(1)
+    expect(load.pendingRaw).toBe(record.rawPayload)
+  }
+  expect(h.decisions.at(-1)).toMatchObject({ status: 'conflict', currentRevision: 1 })
+  expect(h.journal.read(h.binding).status).toBe('pending')
+  expect(await readServerRevision(character.id)).toBe(1)
+  expect(await mutationReceiptCount(pg, user.userId, record.mutationId)).toBe(0)
+})
+
+test('journal: foreign bindings never read; clear is scoped to the exact mutation', () => {
+  const storage = new MemoryStorage()
+  const environmentId = contractEnvId()
+  setSaveAccountId('u-a')
+  const journal = new PendingSaveJournal(environmentId, { storage })
+  const binding = { environmentId, userId: 'u-a', characterId: 'c-a' }
+  const record = buildPendingSaveRecord({
+    ...binding,
+    mutationId: 'm-1',
+    baseRevision: 0,
+    timeCheckpoint: { checkpointId: 'chk', elapsedMonotonicMs: 0 },
+    schemaVersion: 87,
+    buildId: BUILD,
+    createdAtUtc: new Date().toISOString(),
+    rawPayload: '{"version":87}',
+  })
+  expect(journal.put(record).status).toBe('ok')
+
+  // Acceptance seed: journal.read(otherBinding) -> null-equivalent
+  // ('none' outside the env slot, 'mismatch' for a foreign identity).
+  expect(journal.read({ ...binding, environmentId: 'beta:other' }).status).toBe('none')
+  expect(journal.read({ ...binding, userId: 'u-b' }).status).toBe('mismatch')
+  expect(journal.read({ ...binding, characterId: 'c-b' }).status).toBe('mismatch')
+
+  // Acceptance seed: journal.clearMatching(binding, olderMutationId) -> false
+  expect(journal.clearMatching(binding, 'm-older')).toEqual({ status: 'ok', cleared: false })
+  expect(journal.read(binding).status).toBe('pending')
+  expect(journal.clearMatching(binding, 'm-1')).toEqual({ status: 'ok', cleared: true })
+})
+
+test('coordinator: overlapping saves serialize into exactly two remote commits', async () => {
+  const { user, sid, character } = await authedUserWithCharacter()
+  const h = journalHarness(user, character, sid)
+  const coordinator = new CloudSaveCoordinator(h.service)
+
+  const boot = await coordinator.load()
+  expect(boot.status === 'uninitialized' || boot.status === 'ok').toBeTruthy()
+
+  const snapA = integrationGameSave(character, true)
+  const snapB = integrationGameSave(character, false)
+  const snapC = integrationGameSave(character, true)
+  const r1 = coordinator.save(snapA)
+  const r2 = coordinator.save(snapB)
+  const r3 = coordinator.save(snapC)
+  const [a, b, c] = await Promise.all([r1, r2, r3])
+
+  expect(a.status).toBe('ok')
+  expect(b.status).toBe('ok')
+  expect(c.status).toBe('ok')
+  // The queued snapshot is displaced by the newest joiner: B rides C's
+  // write, so exactly two write_character_save commits ever existed.
+  expect(b).toEqual(c)
+  expect(b.status === 'ok' && b.revision).toBe(2)
+  expect(await readServerRevision(character.id)).toBe(2)
+  expect((await receiptRows(pg, user.userId)).length).toBe(2)
 })
