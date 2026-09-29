@@ -400,6 +400,100 @@ describe('production presentation handshake first proof', () => {
     expect(battle.totalTurnsElapsed).toBeGreaterThan(turnsBefore + 1)
     manager.abandonBattle()
   })
+  // Impact-sync sec.64: the publication order is the contract - cast
+  // publication always precedes the sealed result batch, in every claim/
+  // presentation combination. Manual is exercised as itself, never as an
+  // auto variant.
+  it('publication order holds across auto/manual x interactive/headless (sec.64)', () => {
+    for (const manual of [false, true]) {
+      for (const interactive of [false, true]) {
+        const manager = new GameManager()
+        const clock = new ManualClockSource()
+        manager.setCombatClockSource(clock)
+        const events: string[] = []
+        manager.eventBus.on('skill_presentation_cast', () => events.push('cast'))
+        manager.eventBus.on('skill_presentation_resolved', () => events.push('resolved'))
+        if (interactive) {
+          manager.setPresentationActive(true)
+          manager.setPresentationMode('interactive')
+          startAStage(manager)
+          // An interactive pipeline only mints playback work once a
+          // session has attached - the attach/release handshake every
+          // production handshake test performs.
+          const port = manager.getPresentationPort()
+          const hold = port.hold(port.getCurrentSession()!)!
+          port.attach(hold)
+          port.release(hold)
+        } else {
+          startAStage(manager)
+        }
+
+        const driveParked = () => {
+          const token = manager.getPendingPlaybackToken()
+          if (token) {
+            manager.acknowledgeTurnReady(token)
+            manager.acknowledgeActionImpact(token)
+            manager.acknowledgeActionComplete(token)
+          }
+        }
+
+        if (manual) {
+          manager.setBattleManualMode(true)
+          for (let i = 0; i < 400 && !manager.isAwaitingManualTurnChoice(); i++) {
+            driveParked()
+            if (manager.getTurnTokenState() === 'IDLE') {
+              clock.advance(COMBAT_STEP_SECONDS)
+            }
+          }
+          expect(manager.isAwaitingManualTurnChoice()).toBe(true)
+          events.length = 0
+          expect(manager.submitTurnChoice('basic')).toBe(true)
+          driveParked()
+        } else {
+          events.length = 0
+          for (let i = 0; i < 300 && events.length < 2; i++) {
+            driveParked()
+            clock.advance(COMBAT_STEP_SECONDS)
+          }
+          driveParked()
+        }
+
+        expect(
+          events.length,
+          `${manual ? 'manual' : 'auto'} x ${interactive ? 'interactive' : 'headless'} produced ${JSON.stringify(events)}`,
+        ).toBeGreaterThanOrEqual(2)
+        expect(
+          events.slice(0, 2),
+          `${manual ? 'manual' : 'auto'} x ${interactive ? 'interactive' : 'headless'}`,
+        ).toEqual(['cast', 'resolved'])
+        manager.abandonBattle()
+      }
+    }
+  })
+  // Impact-sync sec.60: the impact step is ALREADY parked when the cast
+  // fact lands - an ACK delivered inside the cast subscriber settles that
+  // exact step (impact applies exactly once) and the pipeline moves to
+  // complete. This is the real early-ACK path the renderer drives.
+  it('an ACK inside the cast subscriber settles the parked impact step exactly once', () => {
+    const { manager } = setup()
+    let impacts = 0
+    let completes = 0
+    manager.eventBus.on('action_impact', () => {
+      impacts++
+    })
+    manager.eventBus.on('turn_battle_step_complete', () => {
+      completes++
+    })
+    manager.eventBus.on('skill_presentation_cast', () => {
+      manager.acknowledgeActionImpact(manager.getPendingPlaybackToken()!)
+    })
+    manager.acknowledgeTurnReady(manager.getPendingPlaybackToken()!)
+    expect(impacts).toBe(1)
+    manager.acknowledgeActionComplete(manager.getPendingPlaybackToken()!)
+    expect(manager.getTurnTokenState()).toBe('IDLE')
+    expect(manager.getTurnBattle()!.totalTurnsElapsed).toBe(1)
+    manager.abandonBattle()
+  })
   it('accepts synchronous complete from impact observer without losing pipeline settlement', () => {
     const { manager } = setup()
     let impacts = 0

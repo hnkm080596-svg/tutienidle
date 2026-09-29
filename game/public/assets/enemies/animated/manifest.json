@@ -633,7 +633,8 @@
           "lastFrame": 23,
           "frameCount": 23,
           "sheet": "wugu-demon-king-sheet-2.png",
-          "atlas": "wugu-demon-king-sheet-2.atlas.json"
+          "atlas": "wugu-demon-king-sheet-2.atlas.json",
+          "impactFrameIndex": 7
         },
         "death": {
           "framePrefix": "wugu-demon-king-death-",

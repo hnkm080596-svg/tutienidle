@@ -571,12 +571,15 @@ describe('CombatAnimationRuntime', () => {
       expect(resume).toBeDefined()
       expect(resume.phase).toBe('cast')
       if (resume.phase === 'cast') {
-        expect(resume.actorId).toBe(player.id)
-        expect(resume.skillId).toBeDefined()
-        expect(resume.targetIds).toBeDefined()
+        // The resumed variant carries the whole cast fact (impact-sync):
+        // source/skill/targets/slotRole live inside resume.cast, and the
+        // fresh admission token inside cast.ref - same as the live emit.
+        expect(resume.cast.source.entityId).toBe(player.id)
+        expect(resume.cast.resolvedSkillId).toBeDefined()
+        expect(resume.cast.declaredTargets).toBeDefined()
         expect(resume.token).not.toBe(oldCastToken)
-        // The replayed onAttack needs the same clip the live emit selected.
-        expect(resume.slotRole).toBe('basic')
+        // The replayed onSkillCast needs the same clip the live emit selected.
+        expect(resume.cast.slotRole).toBe('basic')
 
         // Old token rejected
         runtime.acknowledgeActionImpact(oldCastToken)
@@ -588,7 +591,7 @@ describe('CombatAnimationRuntime', () => {
       }
     })
 
-    // Clean-A F-2: a resumed cast replays onAttack - without the role a
+    // Clean-A F-2: a resumed cast replays onSkillCast - without the role a
     // resumed ULTIMATE would draw the 'attack' clip instead of 'ult'.
     it('resumed cast carries slotRole ultimate when the pending declare used the ultimate slot', () => {
       const { runtime, player, turnBattleSystem } = fixture()
@@ -612,7 +615,7 @@ describe('CombatAnimationRuntime', () => {
       const resume = runtime.preparePresentationResume()!
       expect(resume.phase).toBe('cast')
       if (resume.phase === 'cast') {
-        expect(resume.slotRole).toBe('ultimate')
+        expect(resume.cast.slotRole).toBe('ultimate')
       }
     })
 
@@ -641,6 +644,63 @@ describe('CombatAnimationRuntime', () => {
         runtime.acknowledgeActionComplete(resume.token)
         expect(runtime.isActionPlaybackWaiting()).toBe(false)
       }
+    })
+
+    // Impact-sync sec.65: the remaining resume pins in one flow -
+    // requestId survives reattachment (per-action latches stay aligned)
+    // while the token rotates; a resume parked AFTER impact carries no
+    // cast fact at all, so the scene can never restart an animation that
+    // already struck; damage lands exactly once; complete once.
+    it('resume pins: requestId stable, no cast re-deliver after impact, damage once', () => {
+      const { runtime, player, eventBus } = fixture()
+      runtime.setPresentationActive(true)
+
+      const emitted: Array<{ ref: { requestId: string; token: string } }> = []
+      eventBus.on('skill_presentation_cast', (cast) => {
+        emitted.push(cast as { ref: { requestId: string; token: string } })
+      })
+      let impacts = 0
+      eventBus.on('action_impact', () => {
+        impacts++
+      })
+
+      runtime.notifyReadyActor(player)
+      runtime.acknowledgeTurnReady(runtime.getPendingPlaybackToken()!)
+      // The pipeline's impact step owns the publication point - the unit
+      // fixture has no pipeline, so it invokes the same seam the step does.
+      expect(runtime.publishPendingCast()).toBe(true)
+      expect(emitted).toHaveLength(1)
+      // Idempotent re-publication for the same declared action is a no-op
+      // only after the ACK consumed it - a second emit now replays the
+      // cast, which canStart (scene side) rejects as a duplicate.
+      const originalRequestId = emitted[0]!.ref.requestId
+
+      // Reattach pre-impact: 'cast' resume restarts playback on a fresh
+      // token but keeps the requestId the latches are keyed on.
+      const resumeCast = runtime.preparePresentationResume()!
+      expect(resumeCast.phase).toBe('cast')
+      expect(resumeCast.phase === 'cast').toBe(true)
+      if (resumeCast.phase !== 'cast') throw new Error('resume must be cast phase')
+      expect(resumeCast.cast.ref.requestId).toBe(originalRequestId)
+      expect(resumeCast.cast.ref.token).not.toBe(emitted[0]!.ref.token)
+      expect(resumeCast.cast.ref.token).toBe(resumeCast.token)
+
+      // Stale pre-reattach token is dead; the renewed one lands impact.
+      runtime.acknowledgeActionImpact(emitted[0]!.ref.token)
+      expect(impacts).toBe(0)
+      runtime.acknowledgeActionImpact(resumeCast.token)
+      expect(impacts).toBe(1)
+
+      // Reattach post-impact: 'complete' resume carries NO cast fact -
+      // restart is structurally impossible at this phase.
+      const resumeComplete = runtime.preparePresentationResume()!
+      expect(resumeComplete.phase).toBe('complete')
+      expect('cast' in resumeComplete).toBe(false)
+      if (resumeComplete.phase === 'complete') {
+        runtime.acknowledgeActionComplete(resumeComplete.token)
+      }
+      expect(runtime.isActionPlaybackWaiting()).toBe(false)
+      expect(impacts).toBe(1)
     })
 
     it('resumes pending manual choice phase', () => {

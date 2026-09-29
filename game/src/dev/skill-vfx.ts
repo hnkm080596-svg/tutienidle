@@ -84,6 +84,7 @@ function play() {
   const cast: SkillCastPresentation = {
     ref, rootSkillId: id, resolvedSkillId: id, presetId: id, source,
     declaredTargets: [target], candidateInstanceCount: count, disposition: 'action',
+    slotRole: 'basic',
   }
   const receipt: SkillPresentationResolved = { ref, sealed: true, groups: [{
     groupId: 'primary', role: 'primary', resolvedSkillId: id, presetId: id, source,

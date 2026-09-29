@@ -229,19 +229,21 @@ export function getCultivateTexture(
   way?: CultivationWayId,
 ): {
   key: string
-
+  url: string
   sourceSize: { w: number; h: number }
 } {
   const override = way !== undefined ? CULTIVATE_TEXTURE_OVERRIDES[way] : undefined
 
   if (override) {
-    return { key: override.key, sourceSize: { ...override.sourceSize } }
+    return { key: override.key, url: override.url, sourceSize: { ...override.sourceSize } }
   }
 
+  const mortal = PLAYER_VISUAL_PROFILES.mortal
+
   return {
-    key: profile.cultivateTextureKey ?? PLAYER_VISUAL_PROFILES.mortal.cultivateTextureKey!,
-    sourceSize: profile.cultivateSourceSize ??
-      PLAYER_VISUAL_PROFILES.mortal.cultivateSourceSize!,
+    key: profile.cultivateTextureKey ?? mortal.cultivateTextureKey!,
+    url: profile.cultivateTextureUrl ?? mortal.cultivateTextureUrl!,
+    sourceSize: profile.cultivateSourceSize ?? mortal.cultivateSourceSize!,
   }
 }
 

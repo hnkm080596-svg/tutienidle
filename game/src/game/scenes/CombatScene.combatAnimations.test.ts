@@ -12,8 +12,11 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createTestScene, patchScene } from './combat/combatTestHarness'
 import { PLAYER_ID } from './combat/combatConstants'
 import { CombatActionFeedback } from './combat/combat-action-feedback'
-import { combatAnimationKey } from '@/presentation/art/CombatEntityPresentation'
-import { PLACEHOLDER_ENTITY_KEY } from '@/presentation/art/CombatPresentationCatalogue'
+import { clipImpactMs, combatAnimationKey } from '@/presentation/art/CombatEntityPresentation'
+import {
+  animatedArtFormFor,
+  PLACEHOLDER_ENTITY_KEY,
+} from '@/presentation/art/CombatPresentationCatalogue'
 import { PLAYER_VISUAL_PROFILES } from '@/presentation/art/PlayerVisualProfiles'
 
 // Spec B §3.2 (2026-09-11) — enemies are `kind: 'static'`: they have no clips,
@@ -62,19 +65,61 @@ function createScene() {
   return scene
 }
 
-// Post-#43 clip path: authored attack/ult clips ride the clip-only
-// turn_cast_start binding (playCastClip); the skill presentation runner
-// owns the lunge and both action ACKs. Fire through the real binding so
-// the wiring itself is pinned, not just the clip-picking helper.
-function fireCastStart(
-  scene: ReturnType<typeof createScene>,
-  event: Record<string, unknown>,
-) {
+// Impact-sync clip path: the authored cast/attack/ult clip is chosen by
+// startCastPlayback inside the skill_presentation_cast handler - the same
+// event drives admission, clip playback and the runner's timing, so these
+// tests fire the real binding with a real cast fact.
+function castBinding(scene: ReturnType<typeof createScene>) {
   const binding = scene
     .getCombatEventBindings()
-    .find(([name]: [string]) => name === 'turn_cast_start')
-  if (!binding) throw new Error('turn_cast_start binding missing')
-  binding[1](event)
+    .find(([name]: [string]) => name === 'skill_presentation_cast')
+  if (!binding) throw new Error('skill_presentation_cast binding missing')
+  return binding[1] as (cast: unknown) => void
+}
+
+let castSeq = 0
+function fireSkillCast(
+  scene: ReturnType<typeof createScene>,
+  over: { sourceId?: string; slotRole?: string; skillId?: string; pendingToken?: string },
+) {
+  castSeq++
+  const cast = {
+    ref: { sessionId: 1, requestId: `cast-${castSeq}`, token: `tok-${castSeq}` },
+    rootSkillId: over.skillId ?? 'generic_basic',
+    resolvedSkillId: over.skillId ?? 'generic_basic',
+    presetId: 'ngu_kiem_flight',
+    source: { entityId: over.sourceId ?? PLAYER_ID, row: 1, column: 1 },
+    declaredTargets: [{ entityId: 'enemy', row: 1, column: 8 }],
+    candidateInstanceCount: 1,
+    disposition: 'action',
+    slotRole: over.slotRole ?? 'basic',
+  }
+
+  // The runner needs a live ACK port whose pending token is the cast's -
+  // admission is the token check; ACKs only matter to update(), not here.
+  scene.gameManagerRef = {
+    // `pendingToken` replays a cast whose parked step already rotated past
+    // its token - the stale-delivery admission case.
+    getPendingPlaybackToken: () => over.pendingToken ?? cast.ref.token,
+    acknowledgeActionImpact: vi.fn(),
+    acknowledgeActionComplete: vi.fn(),
+    acknowledgeTurnReady: vi.fn(),
+  } as never
+
+  // Recipe cast cues sample at elapsed 0 - give the driver the same stubs
+  // the presentation suite uses so nothing outside the clip pick matters.
+  scene.cameras = { main: { shake: vi.fn() } }
+  scene.add = { graphics: () => {
+    const graphics: Record<string, unknown> = {}
+    for (const key of ['clear', 'setVisible', 'setDepth', 'lineStyle', 'lineBetween', 'fillStyle',
+      'fillTriangle', 'strokeCircle', 'strokeEllipse', 'destroy']) graphics[key] = () => graphics
+    return graphics
+  } }
+  scene.projection = { gridToScreen: () => ({ x: 0, y: 0 }) }
+  scene.tweens = { add: vi.fn(), killTweensOf: vi.fn() }
+
+  castBinding(scene)(cast)
+  return cast
 }
 
 function fakeGameSprite() {
@@ -375,35 +420,36 @@ describe('CombatScene â€” playCombatAnimation()', () => {
     ])
   })
 
-  // character-art-infra: 'ult' plays ONLY for casts whose turn_cast_start
-  // carried slotRole 'ultimate' - a basic/special cast on the same sprite
-  // must still take the attack clip.
-  it("turn_cast_start picks 'ult' for slotRole 'ultimate' and 'attack' otherwise", () => {
+  // character-art-infra: 'ult' plays ONLY for casts whose cast fact carries
+  // slotRole 'ultimate' - a basic/special cast on the same sprite must still
+  // take the attack clip. The fixture uses 'zuofeng' because it is the one
+  // wired character variant with authored ult art (the resolver reads the
+  // catalogue's authored set, so an ult-less variant degrades to attack).
+  it("skill_presentation_cast picks 'ult' for slotRole 'ultimate' and 'attack' otherwise", () => {
     const scene = createScene()
     const sprite = makeSprite('sprite')
     const gameSprite = sprite.rect as ReturnType<typeof fakeGameSprite>
-    const playerKey = scene.entityAnimationKeyPrefix(PLAYER_ID)!
 
-    scene.sprites.set(PLAYER_ID, sprite)
+    scene.sprites.set('zuofeng', sprite)
     patchScene(scene, { _vfxSpawner: { playHorizontalImpulse: vi.fn() } })
     scene.anims = { exists: () => true }
 
-    fireCastStart(scene, { sourceId: PLAYER_ID, slotRole: 'ultimate' })
-    expect(gameSprite.playCalls).toEqual([combatAnimationKey(playerKey, 'ult')])
+    fireSkillCast(scene, { sourceId: 'zuofeng', slotRole: 'ultimate' })
+    expect(gameSprite.playCalls).toEqual(['zuofeng-ult'])
 
     gameSprite.playCalls.length = 0
-    fireCastStart(scene, { sourceId: PLAYER_ID, slotRole: 'special' })
-    expect(gameSprite.playCalls).toEqual([combatAnimationKey(playerKey, 'attack')])
+    fireSkillCast(scene, { sourceId: 'zuofeng', slotRole: 'special' })
+    expect(gameSprite.playCalls).toEqual(['zuofeng-attack'])
 
     gameSprite.playCalls.length = 0
-    fireCastStart(scene, { sourceId: PLAYER_ID })
-    expect(gameSprite.playCalls).toEqual([combatAnimationKey(playerKey, 'attack')])
+    fireSkillCast(scene, { sourceId: 'zuofeng' })
+    expect(gameSprite.playCalls).toEqual(['zuofeng-attack'])
   })
 
   // Art-seam S1 (2026-09-29, user ruling Q1): a per-skill cast clip outranks
   // the slot-role pick - linh_bao on the unarmed mortal resolves its own
   // authored clip instead of the huy_quyen punch attack.
-  it('turn_cast_start plays the per-skill cast clip ahead of the slot-role pick', () => {
+  it('skill_presentation_cast plays the per-skill cast clip ahead of the slot-role pick', () => {
     const scene = createScene()
     const sprite = makeSprite('sprite')
     const gameSprite = sprite.rect as ReturnType<typeof fakeGameSprite>
@@ -415,7 +461,7 @@ describe('CombatScene â€” playCombatAnimation()', () => {
     // Unarmed mortal (linh_bao/huy_quyen pick) -> 'pham_nhan_unarmed'.
     scene.playerArmed = false
 
-    fireCastStart(scene, { sourceId: PLAYER_ID, slotRole: 'basic', skillId: 'linh_bao' })
+    fireSkillCast(scene, { sourceId: PLAYER_ID, slotRole: 'basic', skillId: 'linh_bao' })
     expect(gameSprite.playCalls).toEqual(['pham_nhan_unarmed-cast-linh_bao'])
 
     // The cast clip is a one-shot: completion routes to standby through
@@ -429,13 +475,13 @@ describe('CombatScene â€” playCombatAnimation()', () => {
     // A skillId the variant never authored falls back to the slot-role
     // pick - same 'attack' the pre-seam path played.
     gameSprite.playCalls.length = 0
-    fireCastStart(scene, { sourceId: PLAYER_ID, slotRole: 'basic', skillId: 'huy_quyen' })
+    fireSkillCast(scene, { sourceId: PLAYER_ID, slotRole: 'basic', skillId: 'huy_quyen' })
     expect(gameSprite.playCalls).toEqual(['pham_nhan_unarmed-attack'])
   })
 
   // Slot-role keyed castClips: ngu_hanh authors ONE 'special' cast covering
   // every element - the skillId lookup misses, the slot-role lookup hits.
-  it("turn_cast_start falls back to the slot-role cast clip when the skillId isn't keyed", () => {
+  it("skill_presentation_cast falls back to the slot-role cast clip when the skillId isn't keyed", () => {
     const scene = createScene()
     const sprite = makeSprite('sprite')
     const gameSprite = sprite.rect as ReturnType<typeof fakeGameSprite>
@@ -446,7 +492,7 @@ describe('CombatScene â€” playCombatAnimation()', () => {
     patchScene(scene, { _vfxSpawner: { playHorizontalImpulse: vi.fn() } })
     scene.anims = { exists: () => true }
 
-    fireCastStart(scene, {
+    fireSkillCast(scene, {
       sourceId: PLAYER_ID,
       slotRole: 'special',
       skillId: 'ngu_hanh_tho_thuan',
@@ -455,41 +501,188 @@ describe('CombatScene â€” playCombatAnimation()', () => {
     expect(gameSprite.playCalls).toEqual(['ngu_hanh-cast-special'])
   })
 
-  // Clean-B F-CB2-02: slotRole 'none' marks a declared turn that is not a
-  // slot cast (charge-continuation/skipped) - no lunge, no clip.
-  it("turn_cast_start with slotRole 'none' plays neither impulse nor clip", () => {
+  // slotRole 'none' marks a declared turn that is not a slot cast
+  // (charge-continuation/skipped) - no authored clip resolves.
+  it("skill_presentation_cast with slotRole 'none' plays no clip", () => {
     const scene = createScene()
     const sprite = makeSprite('sprite')
     const gameSprite = sprite.rect as ReturnType<typeof fakeGameSprite>
-    const impulse = vi.fn()
 
     scene.sprites.set(PLAYER_ID, sprite)
-    patchScene(scene, { _vfxSpawner: { playHorizontalImpulse: impulse } })
+    patchScene(scene, { _vfxSpawner: { playHorizontalImpulse: vi.fn() } })
     scene.anims = { exists: () => true }
 
-    fireCastStart(scene, { sourceId: PLAYER_ID, slotRole: 'none' })
+    fireSkillCast(scene, { sourceId: PLAYER_ID, slotRole: 'none' })
 
-    expect(impulse).not.toHaveBeenCalled()
     expect(gameSprite.playCalls).toEqual([])
   })
 
-  // Clean-B F-CB2-04: the dying check precedes the impulse - a resume
-  // replay of a dead actor's cast must not shove the corpse.
-  it('turn_cast_start on a dying actor skips both impulse and clip', () => {
+  // Clean-B F-CB2-04: the dying check precedes the clip - a resume replay
+  // of a dead actor's cast must not animate the corpse.
+  it('skill_presentation_cast on a dying actor skips the clip', () => {
     const scene = createScene()
     const sprite = makeSprite('sprite')
     const gameSprite = sprite.rect as ReturnType<typeof fakeGameSprite>
-    const impulse = vi.fn()
 
     scene.sprites.set(PLAYER_ID, sprite)
     scene.playerDying = true
-    patchScene(scene, { _vfxSpawner: { playHorizontalImpulse: impulse } })
+    patchScene(scene, { _vfxSpawner: { playHorizontalImpulse: vi.fn() } })
     scene.anims = { exists: () => true }
 
-    fireCastStart(scene, { sourceId: PLAYER_ID, slotRole: 'ultimate' })
+    fireSkillCast(scene, { sourceId: PLAYER_ID, slotRole: 'ultimate' })
 
-    expect(impulse).not.toHaveBeenCalled()
     expect(gameSprite.playCalls).toEqual([])
+  })
+
+  // Impact-sync sec.61: a cast whose token no longer matches the parked
+  // step (stale replay / rotated resume) is refused admission - nothing
+  // plays, the runner never starts, and no ACK can leak to the domain.
+  it('a stale skill_presentation_cast is a full no-op - no clip, no runner start, no ACK', () => {
+    const scene = createScene()
+    const sprite = makeSprite('sprite')
+    const gameSprite = sprite.rect as ReturnType<typeof fakeGameSprite>
+
+    scene.sprites.set(PLAYER_ID, sprite)
+    patchScene(scene, { _vfxSpawner: { playHorizontalImpulse: vi.fn() } })
+    scene.anims = { exists: () => true }
+
+    const runner = (scene as never as { skillPlayback: { start: unknown } }).skillPlayback
+    const start = vi.spyOn(runner as never, 'start')
+
+    const cast = fireSkillCast(scene, { sourceId: PLAYER_ID, pendingToken: 'rotated' })
+    const port = scene.gameManagerRef as unknown as {
+      acknowledgeActionImpact: ReturnType<typeof vi.fn>
+      acknowledgeActionComplete: ReturnType<typeof vi.fn>
+    }
+
+    expect(gameSprite.playCalls).toEqual([])
+    expect(start).not.toHaveBeenCalled()
+    expect(port.acknowledgeActionImpact).not.toHaveBeenCalled()
+    expect(port.acknowledgeActionComplete).not.toHaveBeenCalled()
+    expect(cast.ref.token).not.toBe('rotated')
+  })
+
+  // Impact-sync sec.61: re-emitting the SAME cast (same ref - e.g. an
+  // EventBus replay) is a duplicate, not a restart. canStart rejects it:
+  // the in-flight playback owns this cast's timing.
+  it('a duplicate same-ref cast emit replays nothing - one clip, one runner start', () => {
+    const scene = createScene()
+    const sprite = makeSprite('sprite')
+    const gameSprite = sprite.rect as ReturnType<typeof fakeGameSprite>
+
+    scene.sprites.set(PLAYER_ID, sprite)
+    patchScene(scene, { _vfxSpawner: { playHorizontalImpulse: vi.fn() } })
+    scene.anims = { exists: () => true }
+
+    const runner = (scene as never as { skillPlayback: { start: unknown } }).skillPlayback
+    const start = vi.spyOn(runner as never, 'start')
+
+    const cast = fireSkillCast(scene, { sourceId: PLAYER_ID })
+    expect(gameSprite.playCalls).toEqual(['pham_nhan-attack'])
+
+    castBinding(scene)(cast)
+
+    expect(start).toHaveBeenCalledTimes(1)
+    expect(gameSprite.playCalls).toEqual(['pham_nhan-attack'])
+  })
+
+  // Impact-sync sec.62 (I5): the timing clip IS the played clip. When the
+  // per-skill cast clip is registered-but-absent (atlas not loaded), the
+  // resolver falls to the attack clip and the runner is started with the
+  // ATTACK clip's authored impact moment - not the missing cast clip's.
+  it('a missing per-skill clip falls back to attack and attack owns the runner timing', () => {
+    const scene = createScene()
+    const sprite = makeSprite('sprite')
+    const gameSprite = sprite.rect as ReturnType<typeof fakeGameSprite>
+
+    scene.playerArmed = false
+    scene.sprites.set(PLAYER_ID, sprite)
+    patchScene(scene, { _vfxSpawner: { playHorizontalImpulse: vi.fn() } })
+
+    // Every key exists EXCEPT the preferred cast clip.
+    const castClip = animatedArtFormFor('pham_nhan_unarmed')!.castClips!.linh_bao!
+    scene.anims = { exists: (key: string) => key !== castClip.key }
+
+    const runner = (scene as never as { skillPlayback: { start: unknown } }).skillPlayback
+    const start = vi.spyOn(runner as never, 'start')
+
+    fireSkillCast(scene, { sourceId: PLAYER_ID, slotRole: 'basic', skillId: 'linh_bao' })
+
+    const attack = animatedArtFormFor('pham_nhan_unarmed')!.attack!
+    expect(gameSprite.playCalls).toEqual(['pham_nhan_unarmed-attack'])
+    expect(start).toHaveBeenCalledWith(expect.anything(), expect.anything(), {
+      castMs: clipImpactMs(attack),
+    })
+  })
+
+  // Impact-sync sec.63: the one missing resolver cell - a preferred clip
+  // registered with ZERO frames (atlas miss) must not lock the pick: the
+  // resolver walks on to the slot-role/attack candidates instead of
+  // reporting the empty clip as "played".
+  it('a zero-frame preferred clip yields to the next candidate', () => {
+    const scene = createScene()
+    const sprite = makeSprite('sprite')
+    const gameSprite = sprite.rect as ReturnType<typeof fakeGameSprite>
+
+    scene.playerArmed = false
+    scene.sprites.set(PLAYER_ID, sprite)
+    patchScene(scene, { _vfxSpawner: { playHorizontalImpulse: vi.fn() } })
+
+    const castClip = animatedArtFormFor('pham_nhan_unarmed')!.castClips!.linh_bao!
+    scene.anims = {
+      exists: () => true,
+      get: (key: string) => ({ frames: key === castClip.key ? [] : [{ f: 1 }] }),
+    }
+
+    fireSkillCast(scene, { sourceId: PLAYER_ID, slotRole: 'basic', skillId: 'linh_bao' })
+
+    expect(gameSprite.playCalls).toEqual(['pham_nhan_unarmed-attack'])
+  })
+
+  // Impact-sync sec.63: the remaining resolver cells - a cast for an
+  // actor with no sprite plays nothing and still runs (recipe timing).
+  it('a cast for a sprite-less actor plays no clip but stays on the runner path', () => {
+    const scene = createScene()
+    patchScene(scene, { _vfxSpawner: { playHorizontalImpulse: vi.fn() } })
+    scene.anims = { exists: () => true }
+
+    const runner = (scene as never as { skillPlayback: { start: (...args: never[]) => void } })
+      .skillPlayback
+    const start = vi.spyOn(runner, 'start')
+
+    fireSkillCast(scene, { sourceId: 'enemy_1' })
+
+    // No sprite -> 'none' -> recipe timing (no castMs override).
+    expect(start).toHaveBeenCalledTimes(1)
+    expect(start.mock.calls[0]![2]).toBeUndefined()
+  })
+
+  // Impact-sync sec.63 (unmarked policy): a long clip with no authored
+  // marker still plays, but the caller flags the art debt on the console.
+  it('a long unmarked cast clip plays with an art-debt warn', () => {
+    const scene = createScene()
+    const sprite = makeSprite('sprite')
+    const gameSprite = sprite.rect as ReturnType<typeof fakeGameSprite>
+
+    scene.playerArmed = false
+    scene.sprites.set(PLAYER_ID, sprite)
+    patchScene(scene, { _vfxSpawner: { playHorizontalImpulse: vi.fn() } })
+    scene.anims = { exists: () => true }
+
+    // Strip the authored marker so the runtime exercises the unmarked path.
+    const castClip = animatedArtFormFor('pham_nhan_unarmed')!.castClips!.linh_bao!
+    const marker = castClip.impactFrameIndex
+    castClip.impactFrameIndex = undefined
+    try {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+      fireSkillCast(scene, { sourceId: PLAYER_ID, slotRole: 'basic', skillId: 'linh_bao' })
+
+      expect(gameSprite.playCalls).toEqual([castClip.key])
+      expect(warn).toHaveBeenCalledWith(expect.stringContaining('unmarked cast clip'))
+      warn.mockRestore()
+    } finally {
+      castClip.impactFrameIndex = marker
+    }
   })
 
   // Clean-A2 R2-F1: a late cast/standby event mid-death must not replace

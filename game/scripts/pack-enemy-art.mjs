@@ -33,6 +33,14 @@ const args = process.argv.slice(2)
 const SRC_ARG = args[args.indexOf('--src') + 1] || null
 const DRY_RUN = args.includes('--dry-run')
 
+// Impact-sync: authored impact frames live in art/animation-impact-markers.json
+// (clip-local index, 0..frameCount-1). This packer validates them and emits
+// impactFrameIndex into each clip's manifest entry; the runtime reads the same
+// JSON through the registries, so the manifest is a drift-check, not a source.
+const IMPACT_MARKERS = JSON.parse(
+  readFileSync(new URL('../art/animation-impact-markers.json', import.meta.url), 'utf8'),
+).enemies ?? {}
+
 if (!SRC_ARG) {
   throw new Error('Usage: pack-enemy-art.mjs --src <NEWSPRITE enemy dir> [--dry-run]')
 }
@@ -469,7 +477,7 @@ async function emitVariant(emission) {
     if (placed.some((f) => f.sheetName !== placed[0].sheetName)) {
       throw new Error(`${emission.out}: clip ${clip} split across sheets`)
     }
-    clipReport[clip] = {
+    const entry = {
       framePrefix: `${emission.out}-${clip}-`,
       firstFrame: list[0].index,
       lastFrame: list.at(-1).index,
@@ -477,6 +485,22 @@ async function emitVariant(emission) {
       sheet: sheetFile?.png ?? null,
       atlas: sheetFile?.json ?? null,
       synthetic: list.some((f) => f.syntheticDeath) || undefined,
+    }
+    const marker = IMPACT_MARKERS[emission.out]?.[clip]
+    if (marker !== undefined) {
+      if (!Number.isInteger(marker) || marker < 0 || marker >= entry.frameCount) {
+        throw new Error(`${emission.out}: impact marker '${clip}'=${marker} out of range 0..${entry.frameCount - 1}`)
+      }
+      entry.impactFrameIndex = marker
+    }
+    clipReport[clip] = entry
+  }
+
+  // Marker hygiene: a marker naming a clip this variant never packed is
+  // dead data - fail loudly instead of shipping drift.
+  for (const name of Object.keys(IMPACT_MARKERS[emission.out] ?? {})) {
+    if (!orderedClips.includes(name)) {
+      throw new Error(`${emission.out}: impact marker names unknown clip '${name}'`)
     }
   }
 
@@ -505,6 +529,13 @@ async function main() {
       `${e.out}: clips=${Object.entries(report.clips).map(([c, r]) => `${c}:${r.frameCount}${r.synthetic ? '(syn)' : ''}`).join(' ')} ` +
       `sheets=${report.sheets} avatar=${report.avatar} sfx=${report.sfx.length} pivot=(${report.pivot.x.toFixed(2)},${report.pivot.y.toFixed(2)})`,
     )
+  }
+  // Marker hygiene: a marker naming a variant this pack never emitted is
+  // dead data - fail loudly instead of shipping drift.
+  for (const slug of Object.keys(IMPACT_MARKERS)) {
+    if (!(slug in manifest.variants)) {
+      throw new Error(`impact marker names unknown enemy variant '${slug}'`)
+    }
   }
   if (!DRY_RUN) {
     mkdirSync(OUT_ROOT, { recursive: true })

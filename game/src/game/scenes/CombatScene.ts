@@ -89,7 +89,7 @@ import {
 } from '@/game/support/ThanhVanArt'
 import { attachThanhVanBackdrop, type ThanhVanBackdropHandle } from '@/game/support/ThanhVanBackdrop'
 import { animatedCombatAnimationSets } from '@/game/support/CombatPreload'
-import { animatedArtFormFor } from '@/presentation/art/CombatPresentationCatalogue'
+import { clipImpactMs, UNMARKED_CAST_CLIP_FRAME_LIMIT } from '@/presentation/art/CombatEntityPresentation'
 import type {
   CombatAnimationCatalogue,
   CombatAnimationName,
@@ -659,9 +659,44 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
       pool: this._skillVfxDriver?.stats ?? { allocated: 0, active: 0, capacity: 24 } }
   }
 
+  /**
+   * The ONE cast-acknowledgement driver (impact-sync): admission -> play
+   * the authored clip the cast resolves to -> hand the runner THAT clip's
+   * authored impact moment. Three cases share one rule - the timing clip
+   * IS the played clip (I5):
+   *
+   * - playback.clip set: start() runs on clipImpactMs(clip); the impact
+   *   ACK lands on the authored contact frame.
+   * - source 'none' (static entity, slotRole 'none', or every candidate
+   *   unplayable): start() runs on recipe timing - unchanged semantics.
+   * - canStart false (stale replay or duplicate same-ref emit): nothing
+   *   plays and nothing restarts.
+   */
   private onSkillCast(cast: SkillCastPresentation): void {
     const port = this.gameManagerRef
-    if (port) this.skillPlayback.start(cast, port)
+    if (!port || !this.skillPlayback.canStart(cast, port)) return
+
+    const sprite = this.spriteFor(cast.source.entityId)
+    const playback = sprite
+      ? this.animationPlayback.startCastPlayback(sprite, cast.source.entityId, cast)
+      : { source: 'none' as const }
+
+    const castMs = playback.clip ? clipImpactMs(playback.clip) : undefined
+
+    // Unmarked-policy art debt (plan sec.33): a long clip with no authored
+    // impact frame plays but reports its impact at clip end - flag it so
+    // the marker gap surfaces in logs instead of silently shipping.
+    if (
+      playback.clip &&
+      playback.clip.impactFrameIndex === undefined &&
+      playback.clip.lastFrame - playback.clip.firstFrame + 1 > UNMARKED_CAST_CLIP_FRAME_LIMIT
+    ) {
+      console.warn(
+        `[ImpactSync] unmarked cast clip '${playback.clip.key}' (${playback.clip.lastFrame - playback.clip.firstFrame + 1}f) - impact resolves at clip end; author a marker`,
+      )
+    }
+
+    this.skillPlayback.start(cast, port, castMs === undefined ? undefined : { castMs })
   }
 
   private onSkillResolved(resolved: SkillPresentationResolved): void {
@@ -671,11 +706,6 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   private getCombatEventBindings(): Array<[string, EventHandler<never>]> {
     return [
       ['skill_presentation_cast', (event: SkillCastPresentation) => this.onSkillCast(event)],
-      // Art waves (2026-09-28): authored attack/ult clip at cast start -
-      // clip-only, the lunge and both action ACKs belong to the skill
-      // presentation runner. slotRole 'none' marks non-cast declared turns.
-      ['turn_cast_start', (event: CombatScenePayload) =>
-        this.playCastClip(event.sourceId, event.slotRole, event.skillId)],
       ['skill_presentation_resolved', (event: SkillPresentationResolved) => this.onSkillResolved(event)],
       ['critical', (event: CombatScenePayload) => this.onCritical(event)],
       ['hit', (event: CombatScenePayload) => this.onHit(event)],
@@ -1472,37 +1502,6 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     this.animationPlayback.playCombatAnimation(sprite, actorId, name)
   }
 
-  // Art waves (2026-09-28): authored 'attack'/'ult' clip trigger shared by
-  // the turn_cast_start binding and the resume replay. slotRole 'none'
-  // (charge continuation, skipped/non-cast turns) plays nothing; 'ultimate'
-  // prefers the authored ult clip and falls back to 'attack' via the
-  // playback table. No-op for static catalogues. The lunge and both action
-  // ACKs are owned by the skill presentation runner, not here.
-  private playCastClip(
-    actorId: string | undefined,
-    slotRole: 'basic' | 'special' | 'ultimate' | 'none' | undefined,
-    skillId?: string,
-  ): void {
-    if (!actorId || slotRole === 'none') return
-    const sprite = this.spriteFor(actorId)
-    if (!sprite) return
-
-    // Per-skill cast clip first (art-seam S1): castClips keyed by Skill.id,
-    // then by slot role ('special'), ahead of the slot-role fallback chain.
-    const entityKey = this.entityAnimationKeyPrefix(actorId)
-    const castClips = entityKey ? animatedArtFormFor(entityKey)?.castClips : undefined
-    const castClip =
-      (skillId !== undefined ? castClips?.[skillId] : undefined) ??
-      (slotRole !== undefined ? castClips?.[slotRole] : undefined)
-
-    if (castClip) {
-      this.animationPlayback.playAtlasClip(sprite, actorId, castClip)
-      return
-    }
-
-    this.playCombatAnimation(sprite, actorId, slotRole === 'ultimate' ? 'ult' : 'attack')
-  }
-
   // CombatGridViewHost - kick idle right after sprite creation. No-op for
   // static-mode entities (playCombatAnimation guards on kind); animated-mode
   // entities would otherwise sit on a frozen first frame until their first
@@ -2060,8 +2059,11 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     if (resume.phase === 'ready') {
       this.onTurnReady({ actorId: resume.actorId })
     } else if (resume.phase === 'cast') {
+      // The cast fact is the whole resume (impact-sync): the fresh token
+      // inside cast.ref drives admission, the same requestId keeps action
+      // latches aligned, and startCastPlayback resolves the same clip the
+      // live emit did - one domain impact either way.
       this.onSkillCast(resume.cast)
-      this.playCastClip(resume.actorId, resume.slotRole, resume.skillId)
     } else if (resume.phase === 'complete') {
       const port = this.gameManagerRef
       if (port) this.skillPlayback.resumeResolved(resume.resolved, port)

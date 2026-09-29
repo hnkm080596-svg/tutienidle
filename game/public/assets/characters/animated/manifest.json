@@ -40,7 +40,8 @@
           "lastFrame": 18,
           "frameCount": 18,
           "sheet": "zuofeng-sheet-2.png",
-          "atlas": "zuofeng-sheet-2.atlas.json"
+          "atlas": "zuofeng-sheet-2.atlas.json",
+          "impactFrameIndex": 5
         },
         "ult": {
           "framePrefix": "zuofeng-ult-",
@@ -48,7 +49,8 @@
           "lastFrame": 14,
           "frameCount": 14,
           "sheet": "zuofeng-sheet-3.png",
-          "atlas": "zuofeng-sheet-3.atlas.json"
+          "atlas": "zuofeng-sheet-3.atlas.json",
+          "impactFrameIndex": 11
         },
         "death": {
           "framePrefix": "zuofeng-death-",
@@ -1135,7 +1137,8 @@
           "lastFrame": 17,
           "frameCount": 17,
           "sheet": "pham_nhan-sheet-2.png",
-          "atlas": "pham_nhan-sheet-2.atlas.json"
+          "atlas": "pham_nhan-sheet-2.atlas.json",
+          "impactFrameIndex": 6
         },
         "death": {
           "framePrefix": "pham_nhan-death-",
@@ -1194,7 +1197,8 @@
           "lastFrame": 17,
           "frameCount": 17,
           "sheet": "ngu_kiem-sheet-1.png",
-          "atlas": "ngu_kiem-sheet-1.atlas.json"
+          "atlas": "ngu_kiem-sheet-1.atlas.json",
+          "impactFrameIndex": 6
         },
         "death": {
           "framePrefix": "ngu_kiem-death-",
@@ -1252,7 +1256,8 @@
           "lastFrame": 17,
           "frameCount": 17,
           "sheet": "ngu_hanh-sheet-2.png",
-          "atlas": "ngu_hanh-sheet-2.atlas.json"
+          "atlas": "ngu_hanh-sheet-2.atlas.json",
+          "impactFrameIndex": 6
         },
         "death": {
           "framePrefix": "ngu_hanh-death-",
@@ -1270,7 +1275,8 @@
           "lastFrame": 17,
           "frameCount": 17,
           "sheet": "ngu_hanh-sheet-3.png",
-          "atlas": "ngu_hanh-sheet-3.atlas.json"
+          "atlas": "ngu_hanh-sheet-3.atlas.json",
+          "impactFrameIndex": 8
         }
       },
       "avatar": "derived",
@@ -1320,7 +1326,8 @@
           "lastFrame": 17,
           "frameCount": 17,
           "sheet": "pham_nhan_unarmed-sheet-1.png",
-          "atlas": "pham_nhan_unarmed-sheet-1.atlas.json"
+          "atlas": "pham_nhan_unarmed-sheet-1.atlas.json",
+          "impactFrameIndex": 8
         },
         "death": {
           "framePrefix": "pham_nhan_unarmed-death-",
@@ -1338,7 +1345,8 @@
           "lastFrame": 17,
           "frameCount": 17,
           "sheet": "pham_nhan_unarmed-sheet-2.png",
-          "atlas": "pham_nhan_unarmed-sheet-2.atlas.json"
+          "atlas": "pham_nhan_unarmed-sheet-2.atlas.json",
+          "impactFrameIndex": 10
         }
       },
       "avatar": "derived",

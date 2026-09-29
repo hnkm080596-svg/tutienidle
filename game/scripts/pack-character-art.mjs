@@ -13,7 +13,7 @@
 // instead). It is OPTIONAL downstream: catalogues emit it when the variant
 // carries one, playback treats it like `attack` (play-once -> standby).
 // `<slug>-cast-<key>` dirs emit per-skill cast clips into `manifest.cast` -
-// keyed by skillId or slot role, resolved by playCastClip before slot-role.
+// keyed by skillId or slot role, resolved by startCastPlayback before slot-role.
 //
 // Missing pieces are SYNTHESIZED where the contract requires them:
 //   - no `death` clip (most characters): last attack frame, darkened 45%
@@ -32,6 +32,15 @@ const DRY_RUN = args.includes('--dry-run')
 // the other dumps on hand) and MERGE their reports into the existing
 // manifest instead of replacing it wholesale.
 const ONLY_ARG = args[args.indexOf('--only') + 1]?.split(',').filter(Boolean) ?? null
+
+// Impact-sync: authored impact frames live in art/animation-impact-markers.json
+// (clip-local index, 0..frameCount-1, keyed by SOURCE clip name like
+// 'attack'/'ult'/'cast-linh_bao'). This packer validates them and emits
+// impactFrameIndex into each clip's manifest entry; the runtime reads the
+// same JSON through the registries, so the manifest is a drift-check.
+const IMPACT_MARKERS = JSON.parse(
+  readFileSync(new URL('../art/animation-impact-markers.json', import.meta.url), 'utf8'),
+).characters ?? {}
 
 if (!SRC_ARG) {
   throw new Error('Usage: pack-character-art.mjs --src <NEWSPRITE character dir> [--dry-run]')
@@ -425,10 +434,25 @@ async function emitVariant(emission) {
       atlas: sheetFile?.json ?? null,
       synthetic: list.some((f) => f.syntheticDeath) || undefined,
     }
+    const marker = IMPACT_MARKERS[emission.out]?.[clip]
+    if (marker !== undefined) {
+      if (!Number.isInteger(marker) || marker < 0 || marker >= entry.frameCount) {
+        throw new Error(`${emission.out}: impact marker '${clip}'=${marker} out of range 0..${entry.frameCount - 1}`)
+      }
+      entry.impactFrameIndex = marker
+    }
     // `cast-<key>` clips report under `cast` keyed by the bare key - the
     // registry reads `cast.linh_bao` / `cast.special` without the prefix.
     if (clip.startsWith('cast-')) castReport[clip.slice(5)] = entry
     else clipReport[clip] = entry
+  }
+
+  // Marker hygiene: a marker naming a clip this variant never packed is
+  // dead data - fail loudly instead of shipping drift.
+  for (const name of Object.keys(IMPACT_MARKERS[emission.out] ?? {})) {
+    if (!orderedClips.includes(name)) {
+      throw new Error(`${emission.out}: impact marker names unknown clip '${name}'`)
+    }
   }
 
   return {
@@ -466,6 +490,13 @@ async function main() {
       `${e.out}: clips=${Object.entries(report.clips).map(([c, r]) => `${c}:${r.frameCount}${r.synthetic ? '(syn)' : ''}`).join(' ')} ` +
       `sheets=${report.sheets} avatar=${report.avatar} avatars=${Object.keys(report.avatars).length} portraits=${Object.keys(report.portraits).length}`,
     )
+  }
+  // Marker hygiene: a marker naming a variant this pack never emitted is
+  // dead data - fail loudly instead of shipping drift.
+  for (const slug of Object.keys(IMPACT_MARKERS)) {
+    if (!(slug in manifest.variants)) {
+      throw new Error(`impact marker names unknown character variant '${slug}'`)
+    }
   }
   if (!DRY_RUN) {
     mkdirSync(OUT_ROOT, { recursive: true })

@@ -1,0 +1,28 @@
+{
+  "$comment": "Impact markers (impact-sync): authored by contact-sheet frame inspection (scripts/render-contact-sheet.mjs). Keys are ART SLUGS; clip names are SOURCE clip names as the packers report them ('attack', 'ult', 'cast-<key>'). Values are CLIP-LOCAL frame indices 0..frameCount-1 - the frame where the strike visually connects. pack-character-art.mjs / pack-enemy-art.mjs validate and inject them into the manifests; CharacterArt/MonsterArt read this file directly.",
+  "characters": {
+    "zuofeng": {
+      "attack": 5,
+      "ult": 11
+    },
+    "pham_nhan": {
+      "attack": 6
+    },
+    "pham_nhan_unarmed": {
+      "attack": 8,
+      "cast-linh_bao": 10
+    },
+    "ngu_kiem": {
+      "attack": 6
+    },
+    "ngu_hanh": {
+      "attack": 6,
+      "cast-special": 8
+    }
+  },
+  "enemies": {
+    "wugu-demon-king": {
+      "attack": 7
+    }
+  }
+}
