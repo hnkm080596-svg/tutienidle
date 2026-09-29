@@ -380,6 +380,15 @@ export function resolveAudioCue(id: string): AudioCueDef | undefined {
   if (typeof id !== 'string' || id.length === 0) return undefined
   let key = id
   while (key.length > 0) {
+    // Own-property check: AUDIO_CUES is a plain object, so `AUDIO_CUES[key]`
+    // alone resolves Object.prototype members ('constructor', 'toString'...)
+    // into non-cue values that crash downstream in playCue.
+    if (!Object.prototype.hasOwnProperty.call(AUDIO_CUES, key)) {
+      const cut = key.lastIndexOf('.')
+      if (cut < 0) return undefined
+      key = key.slice(0, cut)
+      continue
+    }
     const def = AUDIO_CUES[key]
     if (def !== undefined) return def
     const cut = key.lastIndexOf('.')

@@ -353,11 +353,23 @@ describe('audio boundary', () => {
         // identifiers, so resolve the key through an in-file const
         // literal the way the shake arm's identLit does.
         const metaIdentLit = new Map<string, string>()
+        const metaDeclKind = new Map<string, string>()
         for (const m of clean.matchAll(
-          /\b(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*(?:'([^']*)'|"([^"]*)"|`([^`]*)`)/g,
+          /\b(const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*(?:'([^']*)'|"([^"]*)"|`([^`]*)`)/g,
         )) {
-          const lit = m[2] ?? m[3] ?? m[4]!
-          if (lit === 'glob' || lit === 'resolve') metaIdentLit.set(m[1]!, lit)
+          const lit = m[3] ?? m[4] ?? m[5]!
+          if (lit === 'glob' || lit === 'resolve') metaIdentLit.set(m[2]!, lit)
+          metaDeclKind.set(m[2]!, m[1]!)
+        }
+        // A rebound non-const name's literal is stale evidence (`let K =
+        // 'glob'; K = 'x'` then `import.meta[K]` is not a lane).
+        for (const [name, kind] of metaDeclKind) {
+          if (kind === 'const') continue
+          const reAssign = new RegExp(
+            `\\b${name}\\s*(?:=(?!=)|\\+\\+|--|<<=|>>>=|>>=|\\+=|-=|\\*=|/=|%=|&=|\\|=|\\^=|\\?\\?=|&&=|\\|\\|=)`,
+            'g',
+          )
+          if ([...clean.matchAll(reAssign)].length > 1) metaIdentLit.delete(name)
         }
         for (const m of clean.matchAll(
           /\bimport\s*\.\s*meta\s*(?:\?\s*)?(?:\.|!)?\s*\[\s*([A-Za-z_$][\w$]*)\s*\]/g,
@@ -366,6 +378,11 @@ describe('audio boundary', () => {
           if (inLit(i)) continue
           if (metaIdentLit.has(m[1]!)) {
             offenders.push(`${file.fromSrc} -> import.meta ident-key ${m[0].slice(0, 60)}`)
+          } else {
+            // `import.meta[k]` on a key this scan cannot resolve is an
+            // unverifiable lane - flag the shape instead of assuming it
+            // is benign.
+            offenders.push(`${file.fromSrc} -> import.meta unresolved-key ${m[0].slice(0, 60)}`)
           }
         }
         // `const {glob|resolve} = import.meta` extracts the lane into a
@@ -388,7 +405,9 @@ describe('audio boundary', () => {
           const i = m.index ?? 0
           if (inLit(i)) continue
           const reMember = new RegExp(
-            `\\b${m[1]!}\\s*(?:\\?\\s*)?(?:\\.|!)\\s*(?:glob|resolve)\\b`,
+            // `?.`/`!.`/bracket members on the alias reach the same lane:
+            // `ns?.glob`, `ns!.resolve`, `ns['glob']`, `ns?.['resolve']`.
+            `\\b${m[1]!}\\s*(?:[?!]?\\s*\\.\\s*(?:glob|resolve)\\b|[?!]?\\s*\\.?\\s*\\[\\s*(?:'glob'|"glob"|\\x60glob\\x60|'resolve'|"resolve"|\\x60resolve\\x60)\\s*\\])`,
             'g',
           )
           for (const mm of clean.matchAll(reMember)) {

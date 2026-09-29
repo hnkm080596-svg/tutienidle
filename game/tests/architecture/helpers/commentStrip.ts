@@ -472,11 +472,29 @@ export function scriptlessTemplateText(text: string): string {
 export function templateExprText(text: string): string {
   const base = scriptlessTemplateText(text)
   const chars = base.split('')
-  // Foreign SFC blocks carry opaque bodies - <i18n> JSON and <style>
-  // CSS are not template expressions, so a `{{`/`:`/`=` inside one is
-  // inert text.
-  for (const fm of base.matchAll(/<(i18n|style)(?:\s[^>]*)?>[\s\S]*?<\/\1\s*>/gi)) {
-    for (let i = fm.index!; i < fm.index! + fm[0].length; i++) {
+  // Foreign SFC blocks carry opaque bodies - <i18n> JSON, <style> CSS and
+  // every other top-level custom block (<docs>, <route>, ...) are not
+  // template expressions, so a `{{`/`:`/`=` inside one is inert text.
+  // Position matters: an <i18n>/<style> ELEMENT nested inside <template>
+  // is live markup whose {{ }} interpolations still compile, so only
+  // blocks whose open tag sits OUTSIDE the <template> span blank out.
+  const templateOpen = /<template(?:\s[^>]*)?>/i.exec(base)
+  const templateSpan = templateOpen
+    ? (() => {
+        // Nested <template v-if> elements share the tag name - the ROOT
+        // template's close is the LAST `</template>` in the document.
+        let end = base.length
+        for (const cm of base.matchAll(/<\/\s*template\s*>/gi)) {
+          end = cm.index! + cm[0].length
+        }
+        return { pos: templateOpen.index!, end }
+      })()
+    : null
+  for (const fm of base.matchAll(/<([a-zA-Z][\w-]*)(?:\s[^>]*)?>[\s\S]*?<\/\s*\1\s*>/g)) {
+    if (fm[1]!.toLowerCase() === 'template') continue
+    const pos = fm.index!
+    if (templateSpan && pos >= templateSpan.pos && pos < templateSpan.end) continue
+    for (let i = pos; i < pos + fm[0].length; i++) {
       if (chars[i] !== '\n') chars[i] = ' '
     }
   }
@@ -487,7 +505,10 @@ export function templateExprText(text: string): string {
   // quoted span drops only the literal-value FPs.
   const tagSpans: Array<[number, number]> = []
   const quotedAttr: Array<[number, number]> = []
-  for (const tm of exprText.matchAll(/<[a-zA-Z][^<>]*>/g)) {
+  // Tag extent is quote-aware: `[^<>]*` would truncate at a `>` inside a
+  // quoted attr (`v-if="x > 0"`), dropping every later directive on the tag
+  // from the sweep AND unmasking literal `{{ }}` inside attr values.
+  for (const tm of exprText.matchAll(/<[a-zA-Z](?:[^<>"']|"[^"]*"|'[^']*')*>/g)) {
     tagSpans.push([tm.index!, tm.index! + tm[0].length])
     for (const am of tm[0].matchAll(/=\s*(["'])[\s\S]*?\1/g)) {
       const qStart = tm.index! + am.index! + am[0].indexOf(am[1]!)
@@ -504,15 +525,15 @@ export function templateExprText(text: string): string {
       // Dynamic-arg names are arbitrary expressions inside brackets
       // (`@[ e ]`, `@[e+f]`, `v-on:['click']`) and values may be unquoted
       // (`@click=expr`) - a class limited to word chars missed both shapes.
-      /(?:@|#|:|v-[\w.-]*:)(?:[\w.#:-]*\[[^\]]*\][\w.#:-]*|[\w.#:-]*)\s*=\s*(?:(['"])((?:(?!\1)[\s\S])*)\1|([^\s>'"]+))|\bv-[\w.-]+\s*=\s*(['"])((?:(?!\4)[\s\S])*)\4|\{\{((?:'(?:\\.|[^'\\])*'|"(?:\\.|[^"\\])*"|`(?:\\.|[^`\\])*`|\/[^/\n]*\/[gimsuy]*|[^'"}]|}(?!}))*)\}\}/g,
+      /(?:@|#|:|v-[\w.-]*:)(?:[\w.#:-]*\[[^\]]*\][\w.#:-]*|[\w.#:-]*)\s*=\s*(?:(['"])((?:(?!\1)[\s\S])*)\1|(\{(?:'(?:\\.|[^'\\])*'|"(?:\\.|[^"\\])*"|`(?:\\.|[^`\\])*`|[^'"}]|}(?![\s>]))*\})|([^\s>'"]+))|\bv-[\w.-]+\s*=\s*(?:(['"])((?:(?!\5)[\s\S])*)\5|(\{(?:'(?:\\.|[^'\\])*'|"(?:\\.|[^"\\])*"|`(?:\\.|[^`\\])*`|[^'"}]|}(?![\s>]))*\}))|\{\{((?:'(?:\\.|[^'\\])*'|"(?:\\.|[^"\\])*"|`(?:\\.|[^`\\])*`|\/[^/\n]*\/[gimsuy]*|[^'"}]|}(?!}))*)\}\}/g,
     ),
   ]
     .filter(
       (m) =>
         !inQuotedAttr(m.index ?? 0) &&
-        (m[6] !== undefined || inTag(m.index ?? 0)),
+        (m[8] !== undefined || inTag(m.index ?? 0)),
     )
-    .map((m) => m[2] ?? m[3] ?? m[5] ?? m[6]!)
+    .map((m) => m[2] ?? m[3] ?? m[4] ?? m[6] ?? m[7] ?? m[8]!)
     .join('\n')
 }
 

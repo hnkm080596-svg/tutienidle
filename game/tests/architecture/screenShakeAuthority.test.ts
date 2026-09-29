@@ -50,7 +50,13 @@ describe('screen shake authority', () => {
         }
         for (const [name, kind] of declKind) {
           if (kind === 'const') continue
-          const reAssign = new RegExp(`\\b${name}\\s*(?:=(?!=)|\\+\\+|--)`, 'g')
+          // Compound/logical assigns (`+=`, `??=`, `&&=`...) rebind the
+          // name exactly like `=` - a stale literal on a rebound name is
+          // the same false evidence.
+          const reAssign = new RegExp(
+            `\\b${name}\\s*(?:=(?!=)|\\+\\+|--|<<=|>>>=|>>=|\\+=|-=|\\*=|/=|%=|&=|\\|=|\\^=|\\?\\?=|&&=|\\|\\|=)`,
+            'g',
+          )
           if ([...text.matchAll(reAssign)].length > 1) identLit.delete(name)
         }
         // Member-position `shake` in ANY invocation shape is the policy
@@ -74,7 +80,9 @@ describe('screen shake authority', () => {
           // bracket. A keyword tail (`of [...x]`, `return [...]`) reads
           // as an identifier but starts an expression, not a member.
           const prevWord = /[\w$]*$/.exec(text.slice(0, i))![0]
-          if (!/[\w$\)\]?!]\s*$/.test(text.slice(0, i))) continue
+          // `.` qualifies as a receiver tail: `cam?.['shake']` and
+          // `cam.['shake']` end the receiver on the optional/plain dot.
+          if (!/[\w$\)\]?!.]\s*$/.test(text.slice(0, i))) continue
           if (
             /^(?:of|in|new|return|typeof|delete|void|instanceof|yield|await|case|do|else|throw|const|let|var|import|export|from|function|class|extends|if|for|while|switch|catch|with)$/.test(
               prevWord,
@@ -83,46 +91,68 @@ describe('screen shake authority', () => {
           // `[...x, 'lit']` is an array literal with a spread element,
           // not a computed member.
           if (/^\[\s*\.\.\./.test(m[0])) continue
-          const segs = [...m[0].matchAll(/'([^']*)'|"([^"]*)"|`([^`]*)`/g)].map(
-            (sm) => decodeSeg(sm[1] ?? sm[2] ?? sm[3]!),
-          )
-          if (segs.length === 0) {
-            // `cam[key]` with a bare identifier key resolves against the
-            // file's own `const KEY = '...'` map; anything else is the
-            // documented residual of static analysis.
-            const ident = /^\s*([A-Za-z_$][\w$]*)\s*$/.exec(
-              m[0].slice(1, -1),
-            )?.[1]
-            if (ident && identLit.get(ident) === 'shake') {
-              offenders.push(`${file.fromSrc}:${i} (ident-key ${ident})`)
+          // Alternatives inside the bracket (`cam[k ? 'shake' : 'x']`,
+          // `cam[a, 'shake']`) are depth-0 `,`/`?`/`:`-separated - each
+          // alternative spells its own member, so decode per
+          // alternative instead of joining the whole bracket.
+          const inner = m[0].slice(1, -1)
+          const alts: string[] = []
+          {
+            let ad = 0
+            let cur = ''
+            for (const ch of inner) {
+              if (ch === '(' || ch === '[' || ch === '{') ad++
+              else if (ch === ')' || ch === ']' || ch === '}') ad--
+              if (ad === 0 && (ch === ',' || ch === '?' || ch === ':')) {
+                alts.push(cur)
+                cur = ''
+                continue
+              }
+              cur += ch
             }
-            continue
+            alts.push(cur)
           }
-          if (segs.join('') === 'shake') {
-            offenders.push(`${file.fromSrc}:${i}`)
-            continue
+          let flaggedBracket = false
+          for (const alt of alts) {
+            const segs = [...alt.matchAll(/'([^']*)'|"([^"]*)"|`([^`]*)`/g)].map(
+              (sm) => decodeSeg(sm[1] ?? sm[2] ?? sm[3]!),
+            )
+            if (segs.length === 0) {
+              // `cam[key]` / `cam[k ? KEY : 'x']` with a bare identifier
+              // key resolves against the file's own `const KEY = '...'`
+              // map; anything else is the documented residual.
+              const ident = /^\s*([A-Za-z_$][\w$]*)\s*$/.exec(alt)?.[1]
+              if (ident && identLit.get(ident) === 'shake') {
+                offenders.push(`${file.fromSrc}:${i} (ident-key ${ident})`)
+                flaggedBracket = true
+              }
+              continue
+            }
+            const joined = segs.join('')
+            if (joined === 'shake') {
+              offenders.push(`${file.fromSrc}:${i}`)
+              flaggedBracket = true
+              break
+            }
+            // `cam['sh' + k]` mixes a quoted segment with a dynamic key -
+            // flag only when the static half is a substring of `shake`
+            // (a concat that could actually spell it); `cam['icon' +
+            // kind]` is a resolvable-enough shape to stay silent.
+            const rest = alt.replace(/'[^']*'|"[^"]*"|`[^`]*`/g, '')
+            if (/[A-Za-z_$]/.test(rest) && 'shake'.includes(joined)) {
+              offenders.push(`${file.fromSrc}:${i} (mixed concat member)`)
+              flaggedBracket = true
+              break
+            }
           }
-          // `cam['sh' + k]` mixes a quoted segment with a dynamic key -
-          // flag only when the static half is a substring of `shake` (a
-          // concat that could actually spell it); `cam['icon' + kind]`
-          // is a resolvable-enough shape to stay silent.
-          const rest = m[0].replace(/'[^']*'|"[^"]*"|`[^`]*`/g, '')
-          const joined = segs.join('')
-          if (
-            segs.length > 0 &&
-            /[A-Za-z_$]/.test(rest) &&
-            (joined.length > 0 ? 'shake'.includes(joined) : rest.includes('+'))
-          ) {
-            offenders.push(`${file.fromSrc}:${i} (mixed concat member)`)
-          }
+          if (flaggedBracket) continue
         }
         // Only `shake` in KEY position is an extraction:
         // `{shake}` / `{shake: s}` / `{shake = d}` / `{...shake}` flag,
         // `{a: shake}` binds a local to `cam.a` and is benign. Returns
         // the LOCAL names the extraction binds - `{shake: s}` binds `s`,
         // shorthand `{shake}` binds `shake` itself.
-        const shakeBoundNames = (openIdx: number, endIdx: number): string[] => {
-          const inner = text.slice(openIdx + 1, endIdx)
+        const collectShakeBound = (inner: string): string[] => {
           const segs: string[] = []
           let d = 0
           let cur = ''
@@ -139,19 +169,50 @@ describe('screen shake authority', () => {
           segs.push(cur)
           const bound: string[] = []
           for (const seg of segs) {
-            const keyM = /^\s*(?:\.\.\.\s*)?shake\b/.exec(seg)
-            if (!keyM) continue
-            const rest = seg.slice(keyM[0].length)
-            if (!/^\s*(?::|=|,?\s*$)/.test(rest)) continue
-            const boundM = /^\s*:\s*([\w$]+)\s*$/.exec(rest)
-            bound.push(boundM?.[1] ?? 'shake')
+            // Quoted keys (`{'shake': s}`) and computed literal keys
+            // (`{['shake']: s}`) extract the member the same way.
+            const keyM = /^\s*(?:\.\.\.\s*)?(?:shake\b|'shake'|"shake"|\['shake'\]|\["shake"\])/.exec(seg)
+            if (keyM) {
+              const rest = seg.slice(keyM[0].length)
+              if (/^\s*(?::|=|,?\s*$)/.test(rest)) {
+                // The bound name is the first ident after `:` (a
+                // `{shake: s = d}` default still binds `s`).
+                const boundM = /^\s*:\s*([\w$]+)/.exec(rest)
+                bound.push(boundM?.[1] ?? 'shake')
+              }
+            }
+            // Nested object patterns (`{a: {b: {shake}}}`) hide the key
+            // below depth 0 - recurse into every brace span.
+            for (const bm of seg.matchAll(/\{/g)) {
+              let dd = 0
+              let be = -1
+              for (let j = bm.index!; j < seg.length; j++) {
+                if (seg[j] === '{') dd++
+                else if (seg[j] === '}') {
+                  dd--
+                  if (dd === 0) {
+                    be = j
+                    break
+                  }
+                }
+              }
+              if (be > bm.index!) bound.push(...collectShakeBound(seg.slice(bm.index! + 1, be)))
+            }
           }
           return bound
         }
+        const shakeBoundNames = (openIdx: number, endIdx: number): string[] =>
+          collectShakeBound(text.slice(openIdx + 1, endIdx))
         const flagBoundCalls = (names: string[]) => {
           for (const name of new Set(names)) {
             for (const sm of text.matchAll(
-              new RegExp(`\\b${name}\\s*!?\\s*\\(`, 'g'),
+              // `(?<![\w$.])` keeps `obj.s(` (member call) out when `s`
+              // is the bound name; `s?.(`/`s.call|apply|bind(` invoke
+              // the same binding through another shape.
+              new RegExp(
+                `(?<![\\w$.])${name}\\s*!?\\s*\\(|\\b${name}\\s*[?!]*\\s*\\.\\s*(?:call|apply|bind)\\s*(?:\\?\\s*\\.)?\\s*\\(|(?<![\\w$.])${name}\\s*\\?\\.\\s*\\(`,
+                'g',
+              ),
             )) {
               if (inLit(sm.index ?? 0)) continue
               offenders.push(`${file.fromSrc}:${sm.index} (destructure-bound call)`)
@@ -164,7 +225,10 @@ describe('screen shake authority', () => {
         // covers multi-declarator extractions (`let a = 1, { shake } =
         // cam`); a `, {` inside an object/array literal fails the
         // `=|of|in` right-hand gate below.
-        for (const dm of text.matchAll(/(?:\b(?:const|let|var)|,)\s*\{/g)) {
+        // `({shake} = cam)` wraps the extraction in parens - the `(`
+        // fence plus the post-brace `=`/`of`/`in` gate below separates
+        // it from call-argument literals (`f({shake})` fails the gate).
+        for (const dm of text.matchAll(/(?:\b(?:const|let|var)|,|\()\s*\{/g)) {
           if (inLit(dm.index ?? 0)) continue
           const openIdx = dm.index! + dm[0].length - 1
           let depth = 0
@@ -200,7 +264,7 @@ describe('screen shake authority', () => {
           /(?:\b(?:if|for|while|switch|catch|with|return|typeof|case|throw|new|in|of|do|else|yield|await|delete|void|instanceof)|\?)\s*$/
         for (const pm of text.matchAll(/\(/g)) {
           if (inLit(pm.index ?? 0)) continue
-          if (CONTROL_PAREN.test(text.slice(0, pm.index!))) continue
+          const ctrlParen = CONTROL_PAREN.test(text.slice(0, pm.index!))
           let depth = 0
           let end = -1
           for (let i = pm.index!; i < text.length; i++) {
@@ -216,7 +280,18 @@ describe('screen shake authority', () => {
             }
           }
           if (end < 0) continue
-          if (!/^\s*(?:=>|\{|:)/.test(text.slice(end + 1))) continue
+          const afterParen = text.slice(end + 1)
+          // `case f({shake}):` - the case colon satisfies the `:` gate
+          // while `{shake}` is a call argument, not a param pattern.
+          if (/^\s*:/.test(afterParen)) {
+            const ls = text.lastIndexOf('\n', pm.index!) + 1
+            if (/\b(?:case|default)\b/.test(text.slice(ls, pm.index!))) continue
+          }
+          // Control-keyword parens (`return (...)`, `await (...)`) can
+          // still hold an arrow signature `({shake}: T) => x` - the `=>`
+          // gate alone proves a param list; `{`/`:` after a keyword
+          // paren is a block or label.
+          if (ctrlParen ? !/^\s*=>/.test(afterParen) : !/^\s*(?:=>|\{|:)/.test(afterParen)) continue
           // Check each `{` inside the signature paren the same way the
           // declaration arm does - `({a: shake})` is value position,
           // `({shake})` / `({shake: s})` are extractions.

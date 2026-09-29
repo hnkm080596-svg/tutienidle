@@ -139,6 +139,11 @@ export class AssetBundleManager implements AssetPort {
   // immediately without re-fetching a known-missing file.
   private readonly missingResources = new Map<string, number>()
   private readonly inFlightLoads = new Map<string, Promise<void>>()
+  // DOM image/audio loads are scene-independent (browser cache /
+  // AudioManager): dedupe them in a map a loader swap does NOT clear,
+  // otherwise a mid-flight fetch becomes unjoinable and a second
+  // ensureLoaded duplicates it.
+  private readonly domInFlightLoads = new Map<string, Promise<void>>()
   private readonly loaderSceneResolvers = new Set<{
     resolve: (scene: AssetLoaderScene) => void
     reject: (err: Error) => void
@@ -170,6 +175,10 @@ export class AssetBundleManager implements AssetPort {
       this.loaderScene = scene
       this.loaderGeneration += 1
       this.loadedResources.clear()
+      // DOM lanes keep their own in-flight map (domInFlightLoads): a DOM
+      // fetch's result lives in the browser/AudioManager caches, which are
+      // scene-independent, so a loader swap must not detach it into an
+      // unjoinable duplicate fetch the way it should for scene-bound loads.
       this.inFlightLoads.clear()
 
       if (scene) {
@@ -306,6 +315,7 @@ export class AssetBundleManager implements AssetPort {
     }
     this.loaderSceneResolvers.clear()
     this.inFlightLoads.clear()
+    this.domInFlightLoads.clear()
     this.loadedResources.clear()
     this.missingResources.clear()
     this.knownDescriptors.clear()
@@ -334,7 +344,7 @@ export class AssetBundleManager implements AssetPort {
       return Promise.resolve()
     }
 
-    const existingPromise = this.inFlightLoads.get(desc.key)
+    const existingPromise = this.domInFlightLoads.get(desc.key)
     if (existingPromise) {
       return this.wrapWithSignal(existingPromise, signal)
     }
@@ -350,18 +360,18 @@ export class AssetBundleManager implements AssetPort {
         // "superseded" failure mid-transition.
         this.loadedResources.add(desc.key)
       } finally {
-        // Identity-guarded delete: a loader swap clears the map, and a NEW
-        // generation may already have registered its own entry for this key
-        // — a stale continuation must not remove it.
-        if (this.inFlightLoads.get(desc.key) === loadPromise) {
-          this.inFlightLoads.delete(desc.key)
+        // Identity-guarded delete: a NEW load may already have registered
+        // its own entry for this key — a stale continuation must not
+        // remove it.
+        if (this.domInFlightLoads.get(desc.key) === loadPromise) {
+          this.domInFlightLoads.delete(desc.key)
         }
       }
     }
 
     const loadPromise = runLoad()
 
-    this.inFlightLoads.set(desc.key, loadPromise)
+    this.domInFlightLoads.set(desc.key, loadPromise)
     return this.wrapWithSignal(loadPromise, signal)
   }
 
@@ -380,36 +390,46 @@ export class AssetBundleManager implements AssetPort {
       return Promise.resolve()
     }
 
-    const existingPromise = this.inFlightLoads.get(desc.key)
+    const existingPromise = this.domInFlightLoads.get(desc.key)
     if (existingPromise) {
       return this.wrapWithSignal(existingPromise, signal).catch(() => undefined)
     }
 
     const runLoad = async (): Promise<void> => {
       try {
-        // The loader promise is deduped across callers via inFlightLoads,
+        // The loader promise is deduped across callers via domInFlightLoads,
         // so it must not carry any one caller's abort signal - aborting
         // caller A would kill the shared fetch for every joiner whose
         // wrapWithSignal then resolves success on a load that never ran.
         // Per-caller abort still applies at the wrapWithSignal layer.
         const bytes = await this.domAudioLoader(desc.urls)
-        AudioManager.getInstance().attachEncodedBuffer(desc.key, bytes)
-        this.loadedResources.add(desc.key)
+        // A detached continuation (post-dispose manager) must not park
+        // bytes into a live AudioManager singleton it no longer owns.
+        if (!this.disposed) {
+          AudioManager.getInstance().attachEncodedBuffer(desc.key, bytes)
+          this.loadedResources.add(desc.key)
+        }
       } catch {
         // The deduped loader never carries a caller's signal, so every
         // rejection here is a real fetch/decode failure and counts against
-        // the attempt bound.
-        this.missingResources.set(desc.key, tries + 1)
+        // the attempt bound. Read-modify-write against the current count:
+        // a loader swap clears the dedupe map and lets a second load for
+        // the same key overlap the first - both closures would hold the
+        // same stale `tries` and under-count the rejections.
+        this.missingResources.set(
+          desc.key,
+          Math.max(this.missingResources.get(desc.key) ?? 0, tries) + 1,
+        )
       } finally {
-        if (this.inFlightLoads.get(desc.key) === loadPromise) {
-          this.inFlightLoads.delete(desc.key)
+        if (this.domInFlightLoads.get(desc.key) === loadPromise) {
+          this.domInFlightLoads.delete(desc.key)
         }
       }
     }
 
     const loadPromise = runLoad()
 
-    this.inFlightLoads.set(desc.key, loadPromise)
+    this.domInFlightLoads.set(desc.key, loadPromise)
     // The promise itself never rejects (fail-soft), but wrapWithSignal can
     // reject on caller abort — callers of an OPTIONAL lane must not see a
     // rejection either, so swallow it.

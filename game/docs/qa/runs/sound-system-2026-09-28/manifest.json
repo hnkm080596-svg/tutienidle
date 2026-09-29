@@ -15780,7 +15780,7 @@
       "path": "src/core/audio/AudioCueManifest.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "83c280ab89b9a2bd71b1a640102b627ee6fe1b4c3ef626ae3f1fc7c403d66b0a"
+      "hash": "e36f746745c01311901c836b4545ad8bea89b45820c17d17ded9020ac934ecb9"
     },
     {
       "path": "src/core/audio/AudioManager.test.ts",
@@ -22614,7 +22614,7 @@
       "path": "src/presentation/assets/AssetBundleManager.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "c83c5581403d3c3cc477432e93656dba8ad9fcced2e2c5815451c3e57421ae5f"
+      "hash": "64f0c1e79fa1da7d3e64f17dec29de297448095f48e007a4b56ad87bbdb30693"
     },
     {
       "path": "src/presentation/audio/ambientAudioDriver.test.ts",
@@ -23532,13 +23532,13 @@
       "path": "tests/architecture/audioBindingWiring.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "89a1d9eb5c930a7b94a7ebb5689ca0260a46d26a4dec5c4c825ef86416afabb1"
+      "hash": "c17d9f51a9432670ef476327089ef359537ea7d0eeb404391f46e0120353c5c1"
     },
     {
       "path": "tests/architecture/audioBoundary.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "42ed321d773dd7526de211b655bab74e48d48861ab987ea392f5c153ab817b80"
+      "hash": "30570cd7fcd4b563a35852d092046857d5c97247a7faaba2d8325e6f3e9077a6"
     },
     {
       "path": "tests/architecture/audioManifestCompleteness.test.ts",
@@ -23658,7 +23658,7 @@
       "path": "tests/architecture/helpers/commentStrip.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "fedfe28e66c78d576fe0e0e516d51f36a05970ad84b7f5fdc661352b2dafa06b"
+      "hash": "a0ff50839a07d6e035a2459f63f9f6962cd9e7909e83d27e2b5543a5965f03e7"
     },
     {
       "path": "tests/architecture/helpers/scanTs.ts",
@@ -23709,6 +23709,12 @@
       "hash": "227bd9f416a8f041a7e54488e2d790aa5e778981ee02e8155811d0a9e9a5575d"
     },
     {
+      "path": "tests/architecture/probeW17.test.ts",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "9caf6ac9c11e1e3b29ffb31ab28260e8c970108584133a5a476cc2f478758c96"
+    },
+    {
       "path": "tests/architecture/progressionOutcomeOwnership.test.ts",
       "kind": "file",
       "mode": 33188,
@@ -23736,7 +23742,7 @@
       "path": "tests/architecture/screenShakeAuthority.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "3ba7473b6b7377b6f13115c358256bf4858fd72b99f9a50da3bfc07712d170fe"
+      "hash": "4fa852af44b0d73a551744b4b3f3d7360b996bf6ab7257a52b622e7bf2ab41af"
     },
     {
       "path": "tests/architecture/skillDefProducerSources.test.ts",
@@ -24027,5 +24033,5 @@
       "hash": "e69b4133ed37ca9a4f05e66d90521d0bb749c4764bf1f454d0eb13de601f7940"
     }
   ],
-  "productStateId": "8e42a1eac967ff3d9b1fb8dd9ee50c24a0bfe61151d4315858133bf43bd75440"
+  "productStateId": "9424ee8cc8b28554a08c44889e7b2f7dc18d76fc5117e37ccbaeed09997c4752"
 }
