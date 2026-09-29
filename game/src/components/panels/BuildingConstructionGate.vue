@@ -46,6 +46,9 @@ onMounted(() => {
       buildingId: props.buildingId,
       level: 1,
       lastCollectedAt: Date.now() / 1000,
+      // EM-01 - dev-granted instances pin the same way as build()/starter
+      // grants so a breakthrough cannot reprice an unclaimed window.
+      accrualRealmId: player.realmId,
     })
 
     bumpState()

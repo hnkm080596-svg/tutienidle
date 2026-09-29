@@ -118,7 +118,7 @@ export const CHARACTER_CREATION_TALENTS: TalentDefinition[] = [
   {
     id: 'bat_tu_the',
     name: 'Bất Tử Thể',
-    description: 'Trời sinh mệnh cứng, một chân đã bước qua cửa tử. Mỗi trận, lần đầu nhận đòn chí mạng sẽ không chết, giữ lại 1 điểm sinh lực, tẩy mọi debuff và hóa Tử Sinh Ngộ 10 giây (+30% sát thương cuối, +20% né chí mạng). Độ Kiếp là nghi lễ thật — thiên phú này không áp dụng.',
+    description: 'Trời sinh mệnh cứng, một chân đã bước qua cửa tử. Mỗi trận, lần đầu nhận đòn gây tử thương sẽ không chết, giữ lại 1 điểm sinh lực, tẩy mọi debuff và hóa Tử Sinh Ngộ 10 giây (+30% sát thương cuối, +20% né chí mạng). Độ Kiếp là nghi lễ thật — thiên phú này không áp dụng.',
     rarity: 'dia',
     weight: 12,
     tags: ['defense', 'mechanic'],

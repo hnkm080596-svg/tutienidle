@@ -560,6 +560,10 @@ async function bootGame(createNewCharacter = false): Promise<BootOutcome> {
           buildingId,
           level: 1,
           lastCollectedAt: clock.nowSeconds(),
+          // EM-01 - starter buildings pin their first accrual window to the
+          // creation realm, same as BuildingSystem.build(); without it a
+          // breakthrough before first claim reprices the whole backlog.
+          accrualRealmId: player.$state.realmId,
         }
 
         gameManager.buildingManager.add(instance)

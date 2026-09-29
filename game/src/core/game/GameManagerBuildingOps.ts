@@ -214,7 +214,12 @@ export class GameManagerBuildingOps {
     const template = instance ? this.deps.buildingRegistry.get(instance.buildingId) : undefined
 
     const expectedMaterialId = template
-      ? this.deps.buildingSystem.resolveProducesMaterialId(template, player.realmId)
+      ? // EM-01 - the pre-check must validate the PINNED realm's material,
+        // same id claim() will emit; current realm can differ mid-window.
+        this.deps.buildingSystem.resolveProducesMaterialId(
+          template,
+          instance?.accrualRealmId ?? player.realmId,
+        )
       : undefined
 
     if (!expectedMaterialId || !this.deps.materialRegistry.has(expectedMaterialId)) {
