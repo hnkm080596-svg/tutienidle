@@ -448,7 +448,7 @@ export function scriptBlocksOf(text: string): ScriptBlock[] {
  *  come from the skeleton's live-parse (`scriptBlockSpansOf`), so an
  *  unbalanced nested `<script>` cannot swallow the template tail the
  *  way a `<script>...</script>` regex strip does. */
-function scriptlessTemplateText(text: string): string {
+export function scriptlessTemplateText(text: string): string {
   const chars = text.split('')
   for (const sp of scriptBlockSpansOf(text)) {
     for (let i = sp.pos; i < sp.end && i < chars.length; i++) chars[i] = ' '
@@ -470,14 +470,48 @@ function scriptlessTemplateText(text: string): string {
  *  is string-aware so a `}}` inside a quoted string does not truncate the
  *  interpolation body. */
 export function templateExprText(text: string): string {
+  const base = scriptlessTemplateText(text)
+  const chars = base.split('')
+  // Foreign SFC blocks carry opaque bodies - <i18n> JSON and <style>
+  // CSS are not template expressions, so a `{{`/`:`/`=` inside one is
+  // inert text.
+  for (const fm of base.matchAll(/<(i18n|style)(?:\s[^>]*)?>[\s\S]*?<\/\1\s*>/gi)) {
+    for (let i = fm.index!; i < fm.index! + fm[0].length; i++) {
+      if (chars[i] !== '\n') chars[i] = ' '
+    }
+  }
+  const exprText = chars.join('')
+  // Quoted attribute values are literal text - `title="{{ x }}"`,
+  // `href="/p/x:y=z"`. Directive-attr matches still anchor on their
+  // attr NAME outside the quotes, so filtering match-starts inside a
+  // quoted span drops only the literal-value FPs.
+  const tagSpans: Array<[number, number]> = []
+  const quotedAttr: Array<[number, number]> = []
+  for (const tm of exprText.matchAll(/<[a-zA-Z][^<>]*>/g)) {
+    tagSpans.push([tm.index!, tm.index! + tm[0].length])
+    for (const am of tm[0].matchAll(/=\s*(["'])[\s\S]*?\1/g)) {
+      const qStart = tm.index! + am.index! + am[0].indexOf(am[1]!)
+      quotedAttr.push([qStart, qStart + am[0].length - am[0].indexOf(am[1]!)])
+    }
+  }
+  const inQuotedAttr = (i: number) => quotedAttr.some(([a, b]) => i >= a && i < b)
+  // Directive-attr arms are only real inside a tag - element TEXT like
+  // `press @click="x"` is prose, not a binding. `{{ }}` interps (m[6])
+  // are valid anywhere in template text so they skip the tag gate.
+  const inTag = (i: number) => tagSpans.some(([a, b]) => i >= a && i < b)
   return [
-    ...scriptlessTemplateText(text).matchAll(
+    ...exprText.matchAll(
       // Dynamic-arg names are arbitrary expressions inside brackets
       // (`@[ e ]`, `@[e+f]`, `v-on:['click']`) and values may be unquoted
       // (`@click=expr`) - a class limited to word chars missed both shapes.
-      /(?:@|#|:|v-[\w.-]*:)(?:[\w.#:-]*\[[^\]]*\][\w.#:-]*|[\w.#:-]*)\s*=\s*(?:(['"])((?:(?!\1)[\s\S])*)\1|([^\s>'"]+))|\bv-[\w.-]+\s*=\s*(['"])((?:(?!\4)[\s\S])*)\4|\{\{((?:'[^']*'|"[^"]*"|`[^`]*`|[^'"}]|}(?!}))*)\}\}/g,
+      /(?:@|#|:|v-[\w.-]*:)(?:[\w.#:-]*\[[^\]]*\][\w.#:-]*|[\w.#:-]*)\s*=\s*(?:(['"])((?:(?!\1)[\s\S])*)\1|([^\s>'"]+))|\bv-[\w.-]+\s*=\s*(['"])((?:(?!\4)[\s\S])*)\4|\{\{((?:'(?:\\.|[^'\\])*'|"(?:\\.|[^"\\])*"|`(?:\\.|[^`\\])*`|\/[^/\n]*\/[gimsuy]*|[^'"}]|}(?!}))*)\}\}/g,
     ),
   ]
+    .filter(
+      (m) =>
+        !inQuotedAttr(m.index ?? 0) &&
+        (m[6] !== undefined || inTag(m.index ?? 0)),
+    )
     .map((m) => m[2] ?? m[3] ?? m[5] ?? m[6]!)
     .join('\n')
 }

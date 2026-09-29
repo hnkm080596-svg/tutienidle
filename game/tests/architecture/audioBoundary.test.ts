@@ -17,10 +17,11 @@ import { describe, expect, it } from 'vitest'
 import { join } from 'node:path'
 import { readTs, SCAN_TIMEOUT, srcCorpus, isTestFile } from './helpers/scanTs'
 import {
-  scriptBlockSpansOf,
-  markupCommentRanges,
+  scriptlessTemplateText,
+  templateExprText,
   uncommented,
   literalRanges,
+  usesJsxBlocks,
 } from './helpers/commentStrip'
 
 const SRC_DIR = join(process.cwd(), 'src')
@@ -43,11 +44,14 @@ const NONLITERAL_IMPORT_RE = /(?:^|[^\w.])(?:import|require)\s*\(\s*(?!['"`])[^)
 // Bracket member access (`import.meta['glob'](x)`) carries the same
 // bundling lanes - dot and bracket spellings both count.
 const IMPORT_META_SPEC_RE =
-  /\bimport\s*\.\s*meta\s*(?:\.\s*(?:glob|resolve)|\[\s*['"`](?:glob|resolve)['"`]\s*\])\s*\(\s*['"`]([^'"`]+)['"`]/g
+  /\bimport\s*\.\s*meta\s*(?:(?:\?\s*)?(?:\.|!)\s*(?:glob|resolve)\s*!?\s*(?:\?\s*\.\s*)?|\[\s*['"`](?:glob|resolve)['"`]\s*\]\s*(?:\?\s*\.\s*)?)\(\s*['"`]([^'"`]+)['"`]/g
 // The same lanes with a computed specifier (`import.meta.glob(dir)`)
-// carry no literal to screen - flag the call shape itself.
+// carry no literal to screen - flag the call shape itself. A computed
+// MEMBER (`import.meta[k](dir)`) is likewise unverifiable: the
+// `[(?!['"`])` alternative covers bracket members whose content is not
+// a quoted `glob`/`resolve` lane name.
 const NONLITERAL_META_RE =
-  /\bimport\s*\.\s*meta\s*(?:\.\s*(?:glob|resolve)|\[\s*['"`](?:glob|resolve)['"`]\s*\])\s*\(\s*(?!['"`])[^)]*\)/g
+  /\bimport\s*\.\s*meta\s*(?:(?:\?\s*)?(?:\.|!)\s*(?:glob|resolve)\s*!?\s*(?:\?\s*\.\s*)?|\[\s*['"`](?:glob|resolve)['"`]\s*\]\s*(?:\?\s*\.\s*)?|\[\s*(?!['"`])[^\]]*\]\s*(?:\?\s*\.\s*)?)\(\s*(?!['"`])[^)]*\)/g
 // `import('to' + 'ne')` is a literal-shaped call whose specifier is a
 // concat - the extractor reads only 'to' and misses the spell. The same
 // holds for every operator/wrapper that follows the literal (`||`, `??`,
@@ -157,20 +161,10 @@ function importSpecifiers(text: string, fileName: string): string[] {
 // attr text with a cue-ish string flags nothing here since only call
 // shapes are checked).
 function templateTextOf(text: string): string {
-  // Strip by the skeleton's LIVE script spans, not a `<script>...</script>`
-  // regex - an unclosed/dead `<script>` inside markup used to make the
-  // regex consume through the real `</script>`, deleting every template
-  // attribute between them.
-  const chars = text.split('')
-  for (const sp of scriptBlockSpansOf(text)) {
-    for (let i = sp.pos; i < sp.end && i < chars.length; i++) chars[i] = ' '
-  }
-  // Walk-derived comment masking: an `<!--` inside a quoted attribute is
-  // attr text, not a comment open (the naive regex would eat real markup).
-  for (const cr of markupCommentRanges(text)) {
-    for (let i = cr.pos; i < cr.end && i < chars.length; i++) chars[i] = ' '
-  }
-  return chars.join('')
+  // The shared helper owns the script-span + comment-range blanking - an
+  // unclosed/dead `<script>` or an `<!--` inside a quoted attribute must
+  // not desync a local copy of the same masking logic.
+  return scriptlessTemplateText(text)
 }
 
 // A specifier belongs to the audio subsystem when its path walks through an
@@ -218,7 +212,7 @@ describe('audio boundary', () => {
           offenders.push(`${file.fromSrc} -> ${m[0]}`)
         }
         if (file.fromSrc.endsWith('.vue')) {
-          const tpl = templateTextOf(file.text)
+          const tpl = templateExprText(file.text)
           for (const m of tpl.matchAll(NONLITERAL_IMPORT_RE)) {
             if (isNonliteralImportCall(m, tpl)) {
               offenders.push(`${file.fromSrc} -> ${m[0]}`)
@@ -301,7 +295,7 @@ describe('audio boundary', () => {
         // ident escapes are legal ES) but no `\brequire\b` regex sees it.
         // Flag escapes embedded in identifier text when the decoded ident
         // spells the import seams; literal interiors are data, not code.
-        const lits = literalRanges(clean, file.fromSrc)
+        const lits = literalRanges(clean, file.fromSrc, usesJsxBlocks(file.text, file.fromSrc))
         const inLit = (i: number) => lits.some((r) => i >= r.pos && i < r.end)
         for (const m of clean.matchAll(/\\u(?:[0-9a-fA-F]{4}|\{[0-9a-fA-F]+\})|\\x[0-9a-fA-F]{2}/g)) {
           const i = m.index ?? 0
@@ -314,16 +308,23 @@ describe('audio boundary', () => {
             .replace(/\\x([0-9a-fA-F]{2})/g, (_, h: string) => String.fromCharCode(parseInt(h, 16)))
             .replace(/\\u\{([0-9a-fA-F]+)\}/g, (_, h: string) => String.fromCodePoint(parseInt(h, 16)))
             .replace(/\\u([0-9a-fA-F]{4})/g, (_, h: string) => String.fromCharCode(parseInt(h, 16)))
-          if (/^(?:require|import)$/.test(decoded)) {
+          // `import\x2emeta` decodes to `import.meta` - a dot escape
+          // inside the decoded span splits the ident into members, so
+          // compare the tail and let the decoded context supply the
+          // `import.`/`meta.` gate.
+          const parts = decoded.split('.')
+          const tail = parts[parts.length - 1]!
+          if (/^(?:require|import)$/.test(decoded) || (parts.length > 1 && /^(?:require|import)$/.test(tail))) {
             offenders.push(`${file.fromSrc} -> ident escape ${m[0]}`)
           } else if (
-            /^(?:meta|glob|resolve)$/.test(decoded) &&
+            /^(?:meta|glob|resolve)$/.test(tail) &&
             // `import.m\u0065ta` / `import.meta.gl\u006fb` - the member
             // escapes only count in `import.`/`meta.` context (a plain
-            // `foo.meta` member is unrelated).
-            /(?:import|meta)\s*\.\s*$/.test(
-              clean.slice(0, i - before.length),
-            )
+            // `foo.meta` member is unrelated). A dot escape supplies the
+            // context internally (`import\x2emeta` -> ctx `import`).
+            (parts.length > 1
+              ? /(?:^|\.)(?:import|meta)$/.test(parts.slice(0, -1).join('.'))
+              : /(?:import|meta)\s*\.\s*$/.test(clean.slice(0, i - before.length)))
           ) {
             offenders.push(`${file.fromSrc} -> import.meta ident escape ${m[0]}`)
           }
@@ -348,17 +349,71 @@ describe('audio boundary', () => {
             offenders.push(`${file.fromSrc} -> import.meta bracket ${m[0].slice(0, 60)}`)
           }
         }
-        // `const g = import.meta.glob` hands the bundling lane around as
-        // a VALUE - no `(` means nothing to screen, so flag the shape.
+        // `import.meta[K]` - the quoted-seg arm above skips bare
+        // identifiers, so resolve the key through an in-file const
+        // literal the way the shake arm's identLit does.
+        const metaIdentLit = new Map<string, string>()
         for (const m of clean.matchAll(
-          /\bimport\s*\.\s*meta\s*\.\s*(?:glob|resolve)\b(?!\s*\()/g,
+          /\b(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*(?:'([^']*)'|"([^"]*)"|`([^`]*)`)/g,
+        )) {
+          const lit = m[2] ?? m[3] ?? m[4]!
+          if (lit === 'glob' || lit === 'resolve') metaIdentLit.set(m[1]!, lit)
+        }
+        for (const m of clean.matchAll(
+          /\bimport\s*\.\s*meta\s*(?:\?\s*)?(?:\.|!)?\s*\[\s*([A-Za-z_$][\w$]*)\s*\]/g,
         )) {
           const i = m.index ?? 0
           if (inLit(i)) continue
+          if (metaIdentLit.has(m[1]!)) {
+            offenders.push(`${file.fromSrc} -> import.meta ident-key ${m[0].slice(0, 60)}`)
+          }
+        }
+        // `const {glob|resolve} = import.meta` extracts the lane into a
+        // local name - flag the destructure itself (every later use of
+        // the name is the same bundling channel).
+        for (const m of clean.matchAll(
+          /\b(?:const|let|var)\s*\{([^}]*)\}\s*=\s*import\s*\.\s*meta\b/g,
+        )) {
+          const i = m.index ?? 0
+          if (inLit(i)) continue
+          if (/\b(?:glob|resolve)\b/.test(m[1]!)) {
+            offenders.push(`${file.fromSrc} -> import.meta destructure ${m[0].slice(0, 60)}`)
+          }
+        }
+        // `const ns = import.meta` mints a receiver alias - flag every
+        // `ns.glob`/`ns.resolve` member on it.
+        for (const m of clean.matchAll(
+          /\b(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*import\s*\.\s*meta\b/g,
+        )) {
+          const i = m.index ?? 0
+          if (inLit(i)) continue
+          const reMember = new RegExp(
+            `\\b${m[1]!}\\s*(?:\\?\\s*)?(?:\\.|!)\\s*(?:glob|resolve)\\b`,
+            'g',
+          )
+          for (const mm of clean.matchAll(reMember)) {
+            if (inLit(mm.index ?? 0)) continue
+            offenders.push(`${file.fromSrc} -> import.meta alias ${mm[0].slice(0, 60)}`)
+          }
+        }
+        // `const g = import.meta.glob` hands the bundling lane around as
+        // a VALUE - no `(` means nothing to screen, so flag the shape.
+        // `typeof import.meta.glob` is a type query, not a lane use.
+        for (const m of clean.matchAll(
+          /\bimport\s*\.\s*meta\s*(?:\?\s*)?(?:\.|!)\s*(?:glob|resolve)\b(?!\s*\()/g,
+        )) {
+          const i = m.index ?? 0
+          if (inLit(i)) continue
+          if (
+            /\btypeof\s*[\w$]*(?:\s*\.\s*[\w$]+)*\s*$/.test(
+              clean.slice(Math.max(0, i - 64), i),
+            )
+          )
+            continue
           offenders.push(`${file.fromSrc} -> import.meta value-ref ${m[0].slice(0, 60)}`)
         }
         if (file.fromSrc.endsWith('.vue')) {
-          const tpl = templateTextOf(file.text)
+          const tpl = templateExprText(file.text)
           for (const m of tpl.matchAll(NONLITERAL_IMPORT_RE)) {
             if (isNonliteralImportCall(m, tpl)) {
               offenders.push(`${file.fromSrc} -> ${m[0]}`)

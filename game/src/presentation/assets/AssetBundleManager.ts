@@ -161,6 +161,8 @@ export class AssetBundleManager implements AssetPort {
   }
 
   setLoaderScene(scene: AssetLoaderScene | null): void {
+    // A scene arriving after disposal must not re-arm the load pipeline.
+    if (this.disposed) return
     if (this.loaderScene !== scene) {
       // Scene changed or game recreated: clear cache bound to previous scene.
       // The generation bump is what stops a still-running old-generation load
@@ -256,6 +258,10 @@ export class AssetBundleManager implements AssetPort {
   }
 
   private waitForLoaderScene(signal?: AbortSignal): Promise<AssetLoaderScene> {
+    // Registered waiters can never settle once the manager is disposed or the
+    // caller's signal already fired - registering either way would dangle.
+    if (this.disposed) return Promise.reject(new Error('AssetBundleManager disposed'))
+    if (signal?.aborted) return Promise.reject(new Error('Load aborted'))
     if (this.loaderScene) return Promise.resolve(this.loaderScene)
 
     return new Promise<AssetLoaderScene>((resolve, reject) => {
@@ -390,11 +396,10 @@ export class AssetBundleManager implements AssetPort {
         AudioManager.getInstance().attachEncodedBuffer(desc.key, bytes)
         this.loadedResources.add(desc.key)
       } catch {
-        // An aborted load is not evidence of a missing file - only real
-        // fetch failures count against the attempt bound.
-        if (!signal?.aborted) {
-          this.missingResources.set(desc.key, tries + 1)
-        }
+        // The deduped loader never carries a caller's signal, so every
+        // rejection here is a real fetch/decode failure and counts against
+        // the attempt bound.
+        this.missingResources.set(desc.key, tries + 1)
       } finally {
         if (this.inFlightLoads.get(desc.key) === loadPromise) {
           this.inFlightLoads.delete(desc.key)
