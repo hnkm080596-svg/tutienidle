@@ -6,12 +6,33 @@ import { CURRENT_SAVE_VERSION } from '../save/SaveSystem'
 import {
   validateCharacterCreationDraft,
   type CharacterCreationDraft,
+  type CharacterCreationErrorCode,
   type CharacterCreationResult,
   type CharacterCreationService,
   type CharacterCreationValidation,
 } from './CharacterCreationService'
 
 interface TalentRollResponse { rollId: string; talents: TalentDefinition[] }
+
+// F-BX-72 - PostgREST raise exception answers as HTTP 400
+// {code, details, hint, message}; each authored domain message maps onto
+// the error code the UI already renders (migration
+// 202608240001_online_auth_character.sql owns the message list).
+const CREATE_CHARACTER_400_MESSAGES: Record<string, { code: CharacterCreationErrorCode; message: string }> = {
+  'character name unavailable': { code: 'name_taken', message: 'Đạo danh này đã có chủ.' },
+  'invalid talent roll': { code: 'invalid_talents', message: 'Lượt Thiên Phú đã hết hiệu lực.' },
+  'invalid talent selection': { code: 'invalid_talents', message: 'Phải chọn đúng một Thiên Phú thuộc lượt roll hiện tại.' },
+  'not enough enabled talents': { code: 'invalid_talents', message: 'Phải chọn đúng một Thiên Phú thuộc lượt roll hiện tại.' },
+  'invalid mortal basic skill': { code: 'invalid_skill', message: 'Phải chọn một khởi thủy chiêu thức.' },
+  'session revoked': { code: 'session_revoked', message: 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.' },
+  'authentication required': { code: 'session_revoked', message: 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.' },
+}
+
+function extractPayloadMessage(payload: unknown): string | null {
+  if (typeof payload !== 'object' || payload === null) return null
+  const message = (payload as { message?: unknown }).message
+  return typeof message === 'string' ? message : null
+}
 
 export class SupabaseCharacterCreationService implements CharacterCreationService {
   private rollId: string | null = null
@@ -73,8 +94,14 @@ export class SupabaseCharacterCreationService implements CharacterCreationServic
       this.rollId = null
       return { ok: true, characterId }
     } catch (error) {
-      if (error instanceof SupabaseHttpError && error.status === 409) {
-        return { ok: false, code: 'name_taken', message: 'Đạo danh này đã có chủ.' }
+      if (error instanceof SupabaseHttpError) {
+        if (error.status === 409) {
+          return { ok: false, code: 'name_taken', message: 'Đạo danh này đã có chủ.' }
+        }
+        if (error.status === 400) {
+          const mapped = CREATE_CHARACTER_400_MESSAGES[extractPayloadMessage(error.payload) ?? '']
+          if (mapped) return { ok: false, ...mapped }
+        }
       }
       return { ok: false, code: 'server_unavailable', message: 'Không thể tạo nhân vật. Vui lòng thử lại.' }
     }

@@ -14,7 +14,7 @@ export interface CharacterCreationDraft {
   mortalBasicSkillId: string
 }
 
-export type CharacterCreationErrorCode = 'invalid_name' | 'invalid_talents' | 'invalid_skill' | 'name_taken' | 'server_unavailable'
+export type CharacterCreationErrorCode = 'invalid_name' | 'invalid_talents' | 'invalid_skill' | 'name_taken' | 'session_revoked' | 'server_unavailable'
 export type CharacterCreationValidation = { ok: true } | { ok: false; code: CharacterCreationErrorCode; message: string }
 export type CharacterCreationResult = { ok: true; characterId: string } | { ok: false; code: CharacterCreationErrorCode; message: string }
 
