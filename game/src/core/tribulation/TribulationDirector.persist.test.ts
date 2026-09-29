@@ -167,6 +167,40 @@ describe('TribulationDirector — v82 runtime persist (F-W-5)', () => {
     expect(restoredOutcome.settlementError).toBeInstanceOf(Error)
   })
 
+  it('restored pending outcome refuses start() - an undrained victory cannot be clobbered by a new run (F-BX-51)', () => {
+    const { gameManager, player } = setupManager()
+    surviveFoundationTribulation(player)
+
+    expect(gameManager.startTribulation(player.$state, 'foundation_establishment')).toBe(true)
+    driveToTerminal(gameManager)
+    const committed = gameManager.tribulationDirector.getCommittedOutcome()!
+    expect(committed.outcome).toBe('victory')
+
+    const slice = JSON.parse(
+      JSON.stringify(gameManager.tribulationDirector.serializeRuntime()),
+    )
+
+    const restored = new GameManager()
+    restored.tribulationDirector.restoreRuntime(slice)
+    const director = restored.tribulationDirector
+    const pending = director.getCommittedOutcome()!
+
+    // Victory arms no cooldown and the restore leaves `active` null, so
+    // the existing guards alone let a second start() through - where
+    // `committedOutcome = null` destroyed the only settlement record
+    // (attemptId + receipt slot) before the pending victory drained.
+    expect(
+      director.start(
+        player.$state,
+        restored.resolveAmbientPlayerStats(player.$state),
+        false,
+        'foundation_establishment',
+      ),
+    ).toBe(false)
+    expect(director.getCommittedOutcome()).toBe(pending)
+    expect(director.getState()).toBeNull()
+  })
+
   it('same-session restore is replacement-complete: a save without the slice clears stale outcome + live run (QA-2026-09-24-01)', () => {
     const { gameManager, player } = setupManager()
     surviveFoundationTribulation(player)
