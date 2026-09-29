@@ -1,0 +1,675 @@
+{
+  "frames": {
+    "ngu_hanh-idle-001.png": {
+      "frame": {
+        "x": 2,
+        "y": 2,
+        "w": 433,
+        "h": 518
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 0,
+        "w": 433,
+        "h": 518
+      },
+      "sourceSize": {
+        "w": 444,
+        "h": 518
+      }
+    },
+    "ngu_hanh-idle-002.png": {
+      "frame": {
+        "x": 540,
+        "y": 2,
+        "w": 438,
+        "h": 518
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 0,
+        "w": 438,
+        "h": 518
+      },
+      "sourceSize": {
+        "w": 444,
+        "h": 518
+      }
+    },
+    "ngu_hanh-idle-003.png": {
+      "frame": {
+        "x": 1078,
+        "y": 2,
+        "w": 440,
+        "h": 518
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 0,
+        "w": 440,
+        "h": 518
+      },
+      "sourceSize": {
+        "w": 444,
+        "h": 518
+      }
+    },
+    "ngu_hanh-idle-004.png": {
+      "frame": {
+        "x": 1616,
+        "y": 2,
+        "w": 440,
+        "h": 518
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 2,
+        "y": 0,
+        "w": 440,
+        "h": 518
+      },
+      "sourceSize": {
+        "w": 444,
+        "h": 518
+      }
+    },
+    "ngu_hanh-idle-005.png": {
+      "frame": {
+        "x": 2154,
+        "y": 2,
+        "w": 442,
+        "h": 518
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 442,
+        "h": 518
+      },
+      "sourceSize": {
+        "w": 444,
+        "h": 518
+      }
+    },
+    "ngu_hanh-idle-006.png": {
+      "frame": {
+        "x": 2692,
+        "y": 2,
+        "w": 437,
+        "h": 518
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 2,
+        "y": 0,
+        "w": 437,
+        "h": 518
+      },
+      "sourceSize": {
+        "w": 444,
+        "h": 518
+      }
+    },
+    "ngu_hanh-idle-007.png": {
+      "frame": {
+        "x": 3230,
+        "y": 2,
+        "w": 435,
+        "h": 518
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 2,
+        "y": 0,
+        "w": 435,
+        "h": 518
+      },
+      "sourceSize": {
+        "w": 444,
+        "h": 518
+      }
+    },
+    "ngu_hanh-idle-008.png": {
+      "frame": {
+        "x": 2,
+        "y": 551,
+        "w": 433,
+        "h": 518
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 2,
+        "y": 0,
+        "w": 433,
+        "h": 518
+      },
+      "sourceSize": {
+        "w": 444,
+        "h": 518
+      }
+    },
+    "ngu_hanh-idle-009.png": {
+      "frame": {
+        "x": 540,
+        "y": 551,
+        "w": 431,
+        "h": 518
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 2,
+        "y": 0,
+        "w": 431,
+        "h": 518
+      },
+      "sourceSize": {
+        "w": 444,
+        "h": 518
+      }
+    },
+    "ngu_hanh-idle-010.png": {
+      "frame": {
+        "x": 1078,
+        "y": 551,
+        "w": 428,
+        "h": 518
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 2,
+        "y": 0,
+        "w": 428,
+        "h": 518
+      },
+      "sourceSize": {
+        "w": 444,
+        "h": 518
+      }
+    },
+    "ngu_hanh-idle-011.png": {
+      "frame": {
+        "x": 1616,
+        "y": 551,
+        "w": 429,
+        "h": 518
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 0,
+        "w": 429,
+        "h": 518
+      },
+      "sourceSize": {
+        "w": 444,
+        "h": 518
+      }
+    },
+    "ngu_hanh-idle-012.png": {
+      "frame": {
+        "x": 2154,
+        "y": 551,
+        "w": 431,
+        "h": 518
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 0,
+        "w": 431,
+        "h": 518
+      },
+      "sourceSize": {
+        "w": 444,
+        "h": 518
+      }
+    },
+    "ngu_hanh-idle-013.png": {
+      "frame": {
+        "x": 2692,
+        "y": 551,
+        "w": 433,
+        "h": 518
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 0,
+        "w": 433,
+        "h": 518
+      },
+      "sourceSize": {
+        "w": 444,
+        "h": 518
+      }
+    },
+    "ngu_hanh-idle-014.png": {
+      "frame": {
+        "x": 3230,
+        "y": 551,
+        "w": 438,
+        "h": 518
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 0,
+        "w": 438,
+        "h": 518
+      },
+      "sourceSize": {
+        "w": 444,
+        "h": 518
+      }
+    },
+    "ngu_hanh-idle-015.png": {
+      "frame": {
+        "x": 2,
+        "y": 1100,
+        "w": 438,
+        "h": 518
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 0,
+        "w": 438,
+        "h": 518
+      },
+      "sourceSize": {
+        "w": 444,
+        "h": 518
+      }
+    },
+    "ngu_hanh-idle-016.png": {
+      "frame": {
+        "x": 540,
+        "y": 1100,
+        "w": 440,
+        "h": 518
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 2,
+        "y": 0,
+        "w": 440,
+        "h": 518
+      },
+      "sourceSize": {
+        "w": 444,
+        "h": 518
+      }
+    },
+    "ngu_hanh-idle-017.png": {
+      "frame": {
+        "x": 1078,
+        "y": 1100,
+        "w": 440,
+        "h": 518
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 2,
+        "y": 0,
+        "w": 440,
+        "h": 518
+      },
+      "sourceSize": {
+        "w": 444,
+        "h": 518
+      }
+    },
+    "ngu_hanh-idle-018.png": {
+      "frame": {
+        "x": 1616,
+        "y": 1100,
+        "w": 437,
+        "h": 518
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 2,
+        "y": 0,
+        "w": 437,
+        "h": 518
+      },
+      "sourceSize": {
+        "w": 444,
+        "h": 518
+      }
+    },
+    "ngu_hanh-idle-019.png": {
+      "frame": {
+        "x": 2154,
+        "y": 1100,
+        "w": 433,
+        "h": 518
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 2,
+        "y": 0,
+        "w": 433,
+        "h": 518
+      },
+      "sourceSize": {
+        "w": 444,
+        "h": 518
+      }
+    },
+    "ngu_hanh-idle-020.png": {
+      "frame": {
+        "x": 2692,
+        "y": 1100,
+        "w": 431,
+        "h": 518
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 2,
+        "y": 0,
+        "w": 431,
+        "h": 518
+      },
+      "sourceSize": {
+        "w": 444,
+        "h": 518
+      }
+    },
+    "ngu_hanh-idle-021.png": {
+      "frame": {
+        "x": 3230,
+        "y": 1100,
+        "w": 431,
+        "h": 518
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 2,
+        "y": 0,
+        "w": 431,
+        "h": 518
+      },
+      "sourceSize": {
+        "w": 444,
+        "h": 518
+      }
+    },
+    "ngu_hanh-idle-022.png": {
+      "frame": {
+        "x": 2,
+        "y": 1649,
+        "w": 431,
+        "h": 518
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 2,
+        "y": 0,
+        "w": 431,
+        "h": 518
+      },
+      "sourceSize": {
+        "w": 444,
+        "h": 518
+      }
+    },
+    "ngu_hanh-idle-023.png": {
+      "frame": {
+        "x": 540,
+        "y": 1649,
+        "w": 429,
+        "h": 518
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 0,
+        "w": 429,
+        "h": 518
+      },
+      "sourceSize": {
+        "w": 444,
+        "h": 518
+      }
+    },
+    "ngu_hanh-idle-024.png": {
+      "frame": {
+        "x": 1078,
+        "y": 1649,
+        "w": 431,
+        "h": 518
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 0,
+        "w": 431,
+        "h": 518
+      },
+      "sourceSize": {
+        "w": 444,
+        "h": 518
+      }
+    },
+    "ngu_hanh-idle-025.png": {
+      "frame": {
+        "x": 1616,
+        "y": 1649,
+        "w": 433,
+        "h": 518
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 0,
+        "w": 433,
+        "h": 518
+      },
+      "sourceSize": {
+        "w": 444,
+        "h": 518
+      }
+    },
+    "ngu_hanh-idle-026.png": {
+      "frame": {
+        "x": 2154,
+        "y": 1649,
+        "w": 435,
+        "h": 518
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 7,
+        "y": 0,
+        "w": 435,
+        "h": 518
+      },
+      "sourceSize": {
+        "w": 444,
+        "h": 518
+      }
+    },
+    "ngu_hanh-idle-027.png": {
+      "frame": {
+        "x": 2692,
+        "y": 1649,
+        "w": 438,
+        "h": 518
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 0,
+        "w": 438,
+        "h": 518
+      },
+      "sourceSize": {
+        "w": 444,
+        "h": 518
+      }
+    },
+    "ngu_hanh-idle-028.png": {
+      "frame": {
+        "x": 3230,
+        "y": 1649,
+        "w": 442,
+        "h": 518
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 2,
+        "y": 0,
+        "w": 442,
+        "h": 518
+      },
+      "sourceSize": {
+        "w": 444,
+        "h": 518
+      }
+    },
+    "ngu_hanh-idle-029.png": {
+      "frame": {
+        "x": 2,
+        "y": 2198,
+        "w": 442,
+        "h": 518
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 442,
+        "h": 518
+      },
+      "sourceSize": {
+        "w": 444,
+        "h": 518
+      }
+    },
+    "ngu_hanh-idle-030.png": {
+      "frame": {
+        "x": 540,
+        "y": 2198,
+        "w": 437,
+        "h": 518
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 2,
+        "y": 0,
+        "w": 437,
+        "h": 518
+      },
+      "sourceSize": {
+        "w": 444,
+        "h": 518
+      }
+    },
+    "ngu_hanh-idle-031.png": {
+      "frame": {
+        "x": 1078,
+        "y": 2198,
+        "w": 433,
+        "h": 518
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 2,
+        "y": 0,
+        "w": 433,
+        "h": 518
+      },
+      "sourceSize": {
+        "w": 444,
+        "h": 518
+      }
+    },
+    "ngu_hanh-idle-032.png": {
+      "frame": {
+        "x": 1616,
+        "y": 2198,
+        "w": 431,
+        "h": 518
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 2,
+        "y": 0,
+        "w": 431,
+        "h": 518
+      },
+      "sourceSize": {
+        "w": 444,
+        "h": 518
+      }
+    },
+    "ngu_hanh-idle-033.png": {
+      "frame": {
+        "x": 2154,
+        "y": 2198,
+        "w": 428,
+        "h": 518
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 2,
+        "y": 0,
+        "w": 428,
+        "h": 518
+      },
+      "sourceSize": {
+        "w": 444,
+        "h": 518
+      }
+    }
+  },
+  "meta": {
+    "app": "pack-character-art.mjs",
+    "version": "1.0",
+    "image": "ngu_hanh-sheet-1.png",
+    "format": "RGBA8888",
+    "size": {
+      "w": 3766,
+      "h": 2745
+    },
+    "scale": "1"
+  }
+}

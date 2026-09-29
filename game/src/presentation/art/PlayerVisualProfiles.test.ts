@@ -9,7 +9,8 @@ import type { PlayerVisualProfileId } from '@/core/player/PlayerVisualForm'
 
 // Player visual profile catalog (plan §4.1 + §9 unit tests):
 // - chọn đúng profile theo realmId/cultivationPath;
-// - fallback an toàn cho kiem_tu (chưa có art riêng) và giá trị lạ.
+// - dedicated art for kiem_tu/phap_tu cultivate (2026-09-27 hand-drawn
+//   wave); the_tu keeps the mortal fallback until its set is drawn.
 describe('PlayerVisualProfiles — resolvePlayerVisualProfileId', () => {
   it('Phàm Nhân (realm mortal, không path) → mortal', () => {
     expect(resolvePlayerVisualProfileId({ realmId: 'mortal' })).toBe('mortal')
@@ -58,25 +59,36 @@ describe('PlayerVisualProfiles - profile coverage', () => {
   })
 })
 
-describe('PlayerVisualProfiles — fallback policy', () => {
-  it('kiem_tu tái dùng toàn bộ texture Phàm Nhân', () => {
+describe('PlayerVisualProfiles — art binding policy', () => {
+  it('kiem_tu có art riêng (combat static + cultivate)', () => {
     const kiemTu = PLAYER_VISUAL_PROFILES.kiem_tu
     const mortal = PLAYER_VISUAL_PROFILES.mortal
 
-    expect(kiemTu.combatTextureKey).toBe(mortal.combatTextureKey)
-    expect(kiemTu.combatTextureUrl).toBe(mortal.combatTextureUrl)
-    expect(kiemTu.combatSourceSize).toEqual(mortal.combatSourceSize)
-    expect(kiemTu.bodyAnchors).toEqual(mortal.bodyAnchors)
-    expect(getCultivateTexture(kiemTu).key).toBe(getCultivateTexture(mortal).key)
+    expect(kiemTu.combatTextureKey).toBe('player-kiem-tu-v1')
+    expect(kiemTu.combatTextureUrl).toBe(
+      '/assets/characters/player/kiem-tu/player-kiem-tu-v1.png',
+    )
+    expect(kiemTu.combatTextureKey).not.toBe(mortal.combatTextureKey)
+    expect(getCultivateTexture(kiemTu).key).toBe('player-kiem-tu-cultivate-v1')
+    expect(getCultivateTexture(kiemTu).key).not.toBe(getCultivateTexture(mortal).key)
   })
 
-  it('phap_tu có combat art riêng, cultivate fallback Phàm Nhân', () => {
+  it('phap_tu có combat + cultivate art riêng (Ngũ Hành)', () => {
     const phapTu = PLAYER_VISUAL_PROFILES.phap_tu
 
     expect(phapTu.combatTextureKey).not.toBe(PLAYER_VISUAL_PROFILES.mortal.combatTextureKey)
-    expect(getCultivateTexture(phapTu).key).toBe(
+    expect(getCultivateTexture(phapTu).key).toBe('player-phap-tu-cultivate-ngu-hanh-v1')
+    expect(getCultivateTexture(phapTu).key).not.toBe(
       getCultivateTexture(PLAYER_VISUAL_PROFILES.mortal).key,
     )
+  })
+
+  it('the_tu vẫn fallback mortal (chưa có art riêng)', () => {
+    const theTu = PLAYER_VISUAL_PROFILES.the_tu
+    const mortal = PLAYER_VISUAL_PROFILES.mortal
+
+    expect(theTu.combatTextureKey).toBe(mortal.combatTextureKey)
+    expect(getCultivateTexture(theTu).key).toBe(getCultivateTexture(mortal).key)
   })
 
   it('mọi profile khai đủ 5 body anchor trong khoảng 0..1', () => {

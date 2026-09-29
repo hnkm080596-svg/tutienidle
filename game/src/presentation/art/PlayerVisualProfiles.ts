@@ -63,8 +63,12 @@ export interface PlayerVisualProfile {
 }
 
 const MORTAL_COMBAT_KEY = 'player-mortal-ink-sword-concept-v2'
-const MORTAL_CULTIVATE_KEY = 'player-mortal-cultivate-v1'
+// Minh hand-drawn cultivate v2 (2026-09-27) replaces the v1 placeholder.
+const MORTAL_CULTIVATE_KEY = 'player-mortal-cultivate-v2'
 const PHAP_TU_COMBAT_KEY = 'player-phap-tu-v1'
+const PHAP_TU_CULTIVATE_KEY = 'player-phap-tu-cultivate-ngu-hanh-v1'
+const KIEM_TU_COMBAT_KEY = 'player-kiem-tu-v1'
+const KIEM_TU_CULTIVATE_KEY = 'player-kiem-tu-cultivate-v1'
 
 /** Anchor mặc định — tư thế đứng đạo bào, chân ở đáy ảnh (foot anchor). */
 function standingAnchors(
@@ -101,7 +105,7 @@ export const PLAYER_VISUAL_PROFILES: Record<PlayerVisualProfileId, PlayerVisualP
 
     cultivateTextureKey: MORTAL_CULTIVATE_KEY,
     cultivateTextureUrl: `/assets/characters/player/mortal/${MORTAL_CULTIVATE_KEY}.png`,
-    cultivateSourceSize: { w: 1233, h: 1275 },
+    cultivateSourceSize: { w: 1254, h: 1254 },
 
     bodyAnchors: standingAnchors({
       // Art thủy mặc cầm kiếm v2: tay kiếm nằm bên trái texture.
@@ -122,10 +126,12 @@ export const PLAYER_VISUAL_PROFILES: Record<PlayerVisualProfileId, PlayerVisualP
     combatTextureUrl: `/assets/characters/player/phap-tu/${PHAP_TU_COMBAT_KEY}.png`,
     combatSourceSize: { w: 1293, h: 1216 },
 
-    // Plan §2 — cultivate tạm dùng fallback Phàm Nhân đã thống nhất.
-    cultivateTextureKey: MORTAL_CULTIVATE_KEY,
-    cultivateTextureUrl: `/assets/characters/player/mortal/${MORTAL_CULTIVATE_KEY}.png`,
-    cultivateSourceSize: { w: 1233, h: 1275 },
+    // Minh hand-drawn Ngũ Hành cultivate (2026-09-27). Pháp Tu Ẩn
+    // (Vạn Đạo) has a dedicated PNG on disk but no profile id - the
+    // hidden ways collapse into 'phap_tu' before art lookup.
+    cultivateTextureKey: PHAP_TU_CULTIVATE_KEY,
+    cultivateTextureUrl: `/assets/characters/player/phap-tu/${PHAP_TU_CULTIVATE_KEY}.png`,
+    cultivateSourceSize: { w: 1254, h: 1254 },
 
     // Art Pháp Tu tay tung chú cao hơn và thân áo rộng hơn.
     bodyAnchors: standingAnchors({
@@ -140,21 +146,23 @@ export const PLAYER_VISUAL_PROFILES: Record<PlayerVisualProfileId, PlayerVisualP
   kiem_tu: {
     id: 'kiem_tu',
 
-    // Chưa có art riêng — toàn bộ fallback Phàm Nhân (plan §2).
-    combatTextureKey: MORTAL_COMBAT_KEY,
-    combatTextureUrl: `/assets/characters/player/mortal/${MORTAL_COMBAT_KEY}.png`,
-    combatSourceSize: { w: 1312, h: 1199 },
+    // Minh hand-drawn Ngự Kiếm set (2026-09-27): static frame extracted
+    // from the idle sheet for non-combat surfaces; combat itself runs the
+    // 'ngu_kiem' animated variant via CHARACTER_RESKIN_MAP.
+    combatTextureKey: KIEM_TU_COMBAT_KEY,
+    combatTextureUrl: `/assets/characters/player/kiem-tu/${KIEM_TU_COMBAT_KEY}.png`,
+    combatSourceSize: { w: 744, h: 744 },
 
-    cultivateTextureKey: MORTAL_CULTIVATE_KEY,
-    cultivateTextureUrl: `/assets/characters/player/mortal/${MORTAL_CULTIVATE_KEY}.png`,
-    cultivateSourceSize: { w: 1233, h: 1275 },
+    cultivateTextureKey: KIEM_TU_CULTIVATE_KEY,
+    cultivateTextureUrl: `/assets/characters/player/kiem-tu/${KIEM_TU_CULTIVATE_KEY}.png`,
+    cultivateSourceSize: { w: 1312, h: 1199 },
 
     bodyAnchors: standingAnchors({
-      head: { x: 0.55, y: 0.25 },
-      chest: { x: 0.55, y: 0.46 },
-      castHand: { x: 0.32, y: 0.62 },
-      offHand: { x: 0.78, y: 0.47 },
-      feet: { x: 0.55, y: 0.96 },
+      head: { x: 0.5, y: 0.1 },
+      chest: { x: 0.5, y: 0.35 },
+      castHand: { x: 0.68, y: 0.45 },
+      offHand: { x: 0.32, y: 0.5 },
+      feet: { x: 0.5, y: 0.96 },
     }),
 
     cultivateBodyAnchors: lotusAnchors(),

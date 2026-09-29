@@ -154,9 +154,9 @@ describe('CombatScene â€” entityAnimationKeyPrefix()', () => {
   it('player â†’ character slug for a reskin-mapped profile (character-art-infra)', () => {
     const scene = createScene()
 
-    // 'mortal' maps to 'zuofeng' in CHARACTER_RESKIN_MAP - the slug is the
+    // 'mortal' maps to 'pham_nhan' in CHARACTER_RESKIN_MAP - the slug is the
     // entity key now, the profile texture key only for unmapped profiles.
-    expect(scene.entityAnimationKeyPrefix(PLAYER_ID)).toBe('zuofeng')
+    expect(scene.entityAnimationKeyPrefix(PLAYER_ID)).toBe('pham_nhan')
   })
 
   it('enemy trong batch Mortal â†’ resolveEnemyTextureKey()', () => {
@@ -261,8 +261,8 @@ describe('CombatScene â€” playCombatAnimation()', () => {
   })
 
   it('player + clip Ä‘Ã£ Ä‘Äƒng kÃ½ â†’ play(Ä‘Ãºng key theo entity key hiá»‡n hÃ nh)', () => {
-    // character-art-infra: the reskinned profile resolves to 'zuofeng', which
-    // IS animated in the real catalogue - no promotion needed.
+    // character-art-infra: the reskinned profile resolves to 'pham_nhan',
+    // which IS animated in the real catalogue - no promotion needed.
     const scene = createScene()
     const sprite = makeSprite('sprite')
     const playerKey = scene.entityAnimationKeyPrefix(PLAYER_ID)!
@@ -579,8 +579,8 @@ describe('CombatScene â€” playCombatAnimation()', () => {
     const standbyKey = combatAnimationKey(playerKey, 'standby')
     const idleKey = combatAnimationKey(playerKey, 'idle')
 
-    gameSprite.texture = { key: 'zuofeng-avatar' }
-    scene.textures = { exists: (key: string) => key === 'zuofeng-avatar' }
+    gameSprite.texture = { key: 'pham_nhan-avatar' }
+    scene.textures = { exists: (key: string) => key === 'pham_nhan-avatar' }
     scene.anims = {
       exists: () => true,
       get: (key: string) => ({ frames: key === standbyKey || key === idleKey ? [] : [{ f: 1 }] }),
@@ -590,7 +590,7 @@ describe('CombatScene â€” playCombatAnimation()', () => {
     gameSprite.emit('animationcomplete', { key: attackKey })
 
     // standby empty -> idle empty -> terminate -> avatar still art restored.
-    expect(gameSprite.textureCalls).toEqual(['zuofeng-avatar'])
+    expect(gameSprite.textureCalls).toEqual(['pham_nhan-avatar'])
     expect(gameSprite.playCalls).toEqual([attackKey])
   })
 

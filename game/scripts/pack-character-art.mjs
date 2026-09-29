@@ -26,6 +26,10 @@ import path from 'node:path'
 const args = process.argv.slice(2)
 const SRC_ARG = args[args.indexOf('--src') + 1] || null
 const DRY_RUN = args.includes('--dry-run')
+// --only <out1,out2>: emit just those EMISSIONS rows (partial rerun without
+// the other dumps on hand) and MERGE their reports into the existing
+// manifest instead of replacing it wholesale.
+const ONLY_ARG = args[args.indexOf('--only') + 1]?.split(',').filter(Boolean) ?? null
 
 if (!SRC_ARG) {
   throw new Error('Usage: pack-character-art.mjs --src <NEWSPRITE character dir> [--dry-run]')
@@ -52,6 +56,10 @@ const EMISSIONS = [
   { out: 'youzhu', src: 'youzhu', scale: 0.75 },
   { out: 'yuejianxin', src: 'yuejianxin', scale: 0.75 },
   { out: 'ziyuan', src: 'ziyuan', scale: 0.75 },
+  // Minh hand-drawn player sets (2026-09-27): cell-sliced dumps, 1x scale.
+  { out: 'pham_nhan', src: 'pham_nhan', scale: 0.75 },
+  { out: 'ngu_kiem', src: 'ngu_kiem', scale: 0.75 },
+  { out: 'ngu_hanh', src: 'ngu_hanh', scale: 0.75 },
 ]
 
 const CLIP_ORDER = ['idle', 'attack', 'ult', 'death']
@@ -427,8 +435,15 @@ async function emitVariant(emission) {
 }
 
 async function main() {
-  const manifest = { generated: 'pack-character-art.mjs', zeroPad: ZERO_PAD, frameSuffix: FRAME_SUFFIX, variants: {} }
-  for (const e of EMISSIONS) {
+  const emissions = ONLY_ARG ? EMISSIONS.filter((e) => ONLY_ARG.includes(e.out)) : EMISSIONS
+  if (ONLY_ARG && emissions.length !== ONLY_ARG.length) {
+    throw new Error(`--only names no EMISSIONS row: ${ONLY_ARG.filter((o) => !emissions.some((e) => e.out === o)).join(',')}`)
+  }
+  const manifestPath = path.join(OUT_ROOT, 'manifest.json')
+  const manifest = ONLY_ARG && existsSync(manifestPath)
+    ? JSON.parse(readFileSync(manifestPath, 'utf8'))
+    : { generated: 'pack-character-art.mjs', zeroPad: ZERO_PAD, frameSuffix: FRAME_SUFFIX, variants: {} }
+  for (const e of emissions) {
     const report = await emitVariant(e)
     manifest.variants[e.out] = report
     console.log(
@@ -438,9 +453,9 @@ async function main() {
   }
   if (!DRY_RUN) {
     mkdirSync(OUT_ROOT, { recursive: true })
-    writeFileSync(path.join(OUT_ROOT, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`)
+    writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`)
   }
-  console.log(DRY_RUN ? 'dry-run complete' : `manifest written to ${path.join(OUT_ROOT, 'manifest.json')}`)
+  console.log(DRY_RUN ? 'dry-run complete' : `manifest written to ${manifestPath}`)
 }
 
 await main()

@@ -1097,6 +1097,197 @@
       },
       "closeups": {},
       "radars": {}
+    },
+    "pham_nhan": {
+      "out": "pham_nhan",
+      "src": "pham_nhan",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      },
+      "extent": {
+        "x": 0.00808080808080808,
+        "y": 0,
+        "w": 0.9919191919191919,
+        "h": 1
+      },
+      "sourceSize": {
+        "w": 495,
+        "h": 512
+      },
+      "canvasSize": {
+        "w": 558,
+        "h": 558
+      },
+      "sheets": 3,
+      "clips": {
+        "idle": {
+          "framePrefix": "pham_nhan-idle-",
+          "firstFrame": 1,
+          "lastFrame": 33,
+          "frameCount": 33,
+          "sheet": "pham_nhan-sheet-1.png",
+          "atlas": "pham_nhan-sheet-1.atlas.json"
+        },
+        "attack": {
+          "framePrefix": "pham_nhan-attack-",
+          "firstFrame": 1,
+          "lastFrame": 17,
+          "frameCount": 17,
+          "sheet": "pham_nhan-sheet-2.png",
+          "atlas": "pham_nhan-sheet-2.atlas.json"
+        },
+        "ult": {
+          "framePrefix": "pham_nhan-ult-",
+          "firstFrame": 1,
+          "lastFrame": 17,
+          "frameCount": 17,
+          "sheet": "pham_nhan-sheet-2.png",
+          "atlas": "pham_nhan-sheet-2.atlas.json"
+        },
+        "death": {
+          "framePrefix": "pham_nhan-death-",
+          "firstFrame": 1,
+          "lastFrame": 17,
+          "frameCount": 17,
+          "sheet": "pham_nhan-sheet-3.png",
+          "atlas": "pham_nhan-sheet-3.atlas.json"
+        }
+      },
+      "avatar": "derived",
+      "avatarSize": {
+        "w": 512,
+        "h": 512
+      },
+      "avatars": {},
+      "portraits": {},
+      "closeups": {},
+      "radars": {}
+    },
+    "ngu_kiem": {
+      "out": "ngu_kiem",
+      "src": "ngu_kiem",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      },
+      "extent": {
+        "x": 0.02,
+        "y": 0,
+        "w": 0.9085714285714286,
+        "h": 1
+      },
+      "sourceSize": {
+        "w": 350,
+        "h": 475
+      },
+      "canvasSize": {
+        "w": 558,
+        "h": 558
+      },
+      "sheets": 1,
+      "clips": {
+        "idle": {
+          "framePrefix": "ngu_kiem-idle-",
+          "firstFrame": 1,
+          "lastFrame": 33,
+          "frameCount": 33,
+          "sheet": "ngu_kiem-sheet-1.png",
+          "atlas": "ngu_kiem-sheet-1.atlas.json"
+        },
+        "attack": {
+          "framePrefix": "ngu_kiem-attack-",
+          "firstFrame": 1,
+          "lastFrame": 17,
+          "frameCount": 17,
+          "sheet": "ngu_kiem-sheet-1.png",
+          "atlas": "ngu_kiem-sheet-1.atlas.json"
+        },
+        "death": {
+          "framePrefix": "ngu_kiem-death-",
+          "firstFrame": 1,
+          "lastFrame": 17,
+          "frameCount": 17,
+          "sheet": "ngu_kiem-sheet-1.png",
+          "atlas": "ngu_kiem-sheet-1.atlas.json"
+        }
+      },
+      "avatar": "derived",
+      "avatarSize": {
+        "w": 512,
+        "h": 512
+      },
+      "avatars": {},
+      "portraits": {},
+      "closeups": {},
+      "radars": {}
+    },
+    "ngu_hanh": {
+      "out": "ngu_hanh",
+      "src": "ngu_hanh",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      },
+      "extent": {
+        "x": 0.009009009009009009,
+        "y": 0,
+        "w": 0.9752252252252253,
+        "h": 1
+      },
+      "sourceSize": {
+        "w": 444,
+        "h": 518
+      },
+      "canvasSize": {
+        "w": 549,
+        "h": 567
+      },
+      "sheets": 2,
+      "clips": {
+        "idle": {
+          "framePrefix": "ngu_hanh-idle-",
+          "firstFrame": 1,
+          "lastFrame": 33,
+          "frameCount": 33,
+          "sheet": "ngu_hanh-sheet-1.png",
+          "atlas": "ngu_hanh-sheet-1.atlas.json"
+        },
+        "attack": {
+          "framePrefix": "ngu_hanh-attack-",
+          "firstFrame": 1,
+          "lastFrame": 17,
+          "frameCount": 17,
+          "sheet": "ngu_hanh-sheet-2.png",
+          "atlas": "ngu_hanh-sheet-2.atlas.json"
+        },
+        "ult": {
+          "framePrefix": "ngu_hanh-ult-",
+          "firstFrame": 1,
+          "lastFrame": 17,
+          "frameCount": 17,
+          "sheet": "ngu_hanh-sheet-2.png",
+          "atlas": "ngu_hanh-sheet-2.atlas.json"
+        },
+        "death": {
+          "framePrefix": "ngu_hanh-death-",
+          "firstFrame": 1,
+          "lastFrame": 1,
+          "frameCount": 1,
+          "sheet": "ngu_hanh-sheet-2.png",
+          "atlas": "ngu_hanh-sheet-2.atlas.json",
+          "synthetic": true
+        }
+      },
+      "avatar": "derived",
+      "avatarSize": {
+        "w": 512,
+        "h": 512
+      },
+      "avatars": {},
+      "portraits": {},
+      "closeups": {},
+      "radars": {}
     }
   }
 }

@@ -76,10 +76,10 @@ describe('CombatPlayerVisual.applyPlayerVisualProfile', () => {
     const staleListener = () => {}
     sprite.pendingTransitionListener = staleListener
     sprite.deferredLoopRequest = 'idle'
-    sprite.pendingBaseTextureKey = 'zuofeng-avatar'
+    sprite.pendingBaseTextureKey = 'pham_nhan-avatar'
 
-    // zuofeng atlas sheets loaded
-    const scene = createScene(new Set(['zuofeng-sheet-1', 'zuofeng-sheet-2', 'zuofeng-sheet-3']))
+    // pham_nhan atlas sheets loaded
+    const scene = createScene(new Set(['pham_nhan-sheet-1', 'pham_nhan-sheet-2', 'pham_nhan-sheet-3']))
     scene.sprites.set(PLAYER_ID, sprite)
     const visual = new CombatPlayerVisual(scene as unknown as CombatScene)
 
@@ -90,9 +90,9 @@ describe('CombatPlayerVisual.applyPlayerVisualProfile', () => {
     expect(sprite.pendingTransitionListener).toBeUndefined()
     expect(sprite.deferredLoopRequest).toBeUndefined()
     expect(sprite.pendingBaseTextureKey).toBeUndefined()
-    expect(gs.textureCalls[0]).toContain('zuofeng-sheet-1')
+    expect(gs.textureCalls[0]).toContain('pham_nhan-sheet-1')
     expect(scene.playCombatAnimation).toHaveBeenCalledWith(sprite, PLAYER_ID, 'idle')
-    expect(sprite.sourceSize).toEqual({ w: 439, h: 647 })
+    expect(sprite.sourceSize).toEqual({ w: 495, h: 512 })
   })
 
   it('dying player early-returns: corpse keeps its frame, no swap side-effects', () => {
@@ -101,7 +101,7 @@ describe('CombatPlayerVisual.applyPlayerVisualProfile', () => {
     sprite.pendingTransitionListener = () => {}
     sprite.deferredLoopRequest = 'standby'
 
-    const scene = createScene(new Set(['zuofeng-sheet-1']))
+    const scene = createScene(new Set(['pham_nhan-sheet-1']))
     scene.playerDying = true
     scene.sprites.set(PLAYER_ID, sprite)
     const visual = new CombatPlayerVisual(scene as unknown as CombatScene)
@@ -116,10 +116,10 @@ describe('CombatPlayerVisual.applyPlayerVisualProfile', () => {
 
   it('atlas-miss + avatar drawn: sprite keeps the avatar box, not atlas metrics', () => {
     const gs = fakeGameSprite()
-    gs.texture = { key: 'zuofeng-avatar' }
+    gs.texture = { key: 'pham_nhan-avatar' }
     const sprite = makeSprite(gs)
 
-    const scene = createScene(new Set(['zuofeng-avatar'])) // no sheets
+    const scene = createScene(new Set(['pham_nhan-avatar'])) // no sheets
     scene.sprites.set(PLAYER_ID, sprite)
     const visual = new CombatPlayerVisual(scene as unknown as CombatScene)
 
@@ -142,8 +142,8 @@ describe('CombatPlayerVisual.applyPlayerVisualProfile', () => {
 
     visual.applyPlayerVisualProfile('mortal')
 
-    // mortal profile combat PNG sourceSize - must NOT be zuofeng's 439x647
-    expect(sprite.sourceSize).not.toEqual({ w: 439, h: 647 })
+    // mortal profile combat PNG sourceSize - must NOT be pham_nhan's atlas box
+    expect(sprite.sourceSize).not.toEqual({ w: 495, h: 512 })
     expect(sprite.sourceSize.w).toBeGreaterThan(0)
   })
 })

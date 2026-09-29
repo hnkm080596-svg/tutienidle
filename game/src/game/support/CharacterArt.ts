@@ -13,7 +13,7 @@
 // - the static profile PNG stays registered under its own key (other scenes
 // still consume it) and is the unmapped fallback.
 //
-// User mapping pending: every current profile id binds `zuofeng` as the
+// Mortal/phap_tu/kiem_tu bind the 2026-09-27 hand-drawn sets; `zuofeng`
 // placeholder until the six new character sets arrive - swap this table's
 // values when the art lands; no other file changes.
 import type { ArtExtent } from '@/presentation/art/CombatEntityPresentation'
@@ -111,6 +111,27 @@ export const CHARACTER_ART: Record<string, CharacterArtVariant> = {
     { idle: [1, 8, 1], attack: [1, 18, 2], ult: [1, 14, 3], death: [1, 1, 3] },
     { avatarSize: { w: 512, h: 512 } },
   ),
+  pham_nhan: variant(
+    'pham_nhan',
+    { w: 495, h: 512 },
+    { x: 0.008081, y: 0, w: 0.991919, h: 1 },
+    { idle: [1, 33, 1], attack: [1, 17, 2], ult: [1, 17, 2], death: [1, 17, 3] },
+    { avatarSize: { w: 512, h: 512 } },
+  ),
+  ngu_kiem: variant(
+    'ngu_kiem',
+    { w: 350, h: 475 },
+    { x: 0.02, y: 0, w: 0.908571, h: 1 },
+    { idle: [1, 33, 1], attack: [1, 17, 1], death: [1, 17, 1] },
+    { avatarSize: { w: 512, h: 512 } },
+  ),
+  ngu_hanh: variant(
+    'ngu_hanh',
+    { w: 444, h: 518 },
+    { x: 0.009009, y: 0, w: 0.975225, h: 1 },
+    { idle: [1, 33, 1], attack: [1, 17, 2], ult: [1, 17, 2], death: [1, 1, 2] },
+    { avatarSize: { w: 512, h: 512 } },
+  ),
 }
 
 /**
@@ -119,9 +140,10 @@ export const CHARACTER_ART: Record<string, CharacterArtVariant> = {
  * 2026-09-28). Profiles sharing one slug collapse onto the same atlas.
  */
 export const CHARACTER_RESKIN_MAP: Record<PlayerVisualProfileId, string> = {
-  mortal: 'zuofeng',
-  phap_tu: 'zuofeng',
-  kiem_tu: 'zuofeng',
+  mortal: 'pham_nhan',
+  phap_tu: 'ngu_hanh',
+  kiem_tu: 'ngu_kiem',
+  // the_tu art not drawn yet - keeps the placeholder set.
   the_tu: 'zuofeng',
 }
 

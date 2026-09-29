@@ -119,6 +119,12 @@ export const PLAYER_STATIC_EXTENT_PHAP_TU: ArtExtent = {
   w: 0.843001,
   h: 0.985197,
 }
+export const PLAYER_STATIC_EXTENT_KIEM_TU: ArtExtent = {
+  x: 0.169355,
+  y: 0.096774,
+  w: 0.568548,
+  h: 0.850806,
+}
 export const PLACEHOLDER_STATIC_EXTENT: ArtExtent = {
   x: 0.226563,
   y: 0.140625,
@@ -129,6 +135,7 @@ export const PLACEHOLDER_STATIC_EXTENT: ArtExtent = {
 const PLAYER_STATIC_EXTENTS: Record<string, ArtExtent> = {
   'player-mortal-ink-sword-concept-v2': PLAYER_STATIC_EXTENT_MORTAL,
   'player-phap-tu-v1': PLAYER_STATIC_EXTENT_PHAP_TU,
+  'player-kiem-tu-v1': PLAYER_STATIC_EXTENT_KIEM_TU,
 }
 
 /**
