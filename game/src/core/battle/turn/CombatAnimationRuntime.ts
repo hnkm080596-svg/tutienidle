@@ -7,40 +7,9 @@ import { buildSkillCastPresentation, freezePresentation, sealSkillPresentation, 
 
 export type ResumePlayback =
   | Readonly<{ phase: 'ready'; token: string; actorId: string }>
-  | Readonly<{ phase: 'cast'; token: string; actorId: string; skillId: string; targetIds: readonly string[]; slotRole: 'basic' | 'special' | 'ultimate' | 'none'; cast: SkillCastPresentation }>
+  | Readonly<{ phase: 'cast'; token: string; cast: SkillCastPresentation }>
   | Readonly<{ phase: 'complete'; token: string; actorId: string; targetIds: readonly string[]; resolved: SkillPresentationResolved }>
   | Readonly<{ phase: 'manual'; actorId: string }>
-
-/**
- * Which kit slot a declared cast came out of. The slot is positional - the
- * participant's `ultimate`/`special` slot objects ARE the identity, so
- * `declared.action.slot` is compared by reference (a cast may carry no slot,
- * e.g. CC-blocked, implicit basics, queued repeat/multicast executions ->
- * 'basic': follow-ups are strikes, not slot casts, so 'basic' is correct).
- */
-function castSlotRole(
-  actor: TurnBattleParticipant,
-  declared: TurnDeclaredAction,
-): 'basic' | 'special' | 'ultimate' | 'none' {
-  const slot = declared.action?.slot
-  if (slot && slot === actor.ultimate) return 'ultimate'
-  if (slot && slot === actor.special) return 'special'
-  // Charge-RESOLVE casts carry no slot (action is null on the resolve turn -
-  // the slot was consumed at commit) but declared.chargedSkill IS the slot's
-  // skill object, captured by reference at declareActorAction. The resolve
-  // deserves the same clip the commit played (Clean-A2 R2-F7).
-  const charged = declared.chargedSkill
-  if (charged) {
-    if (charged === actor.ultimate?.skill || charged.id === actor.ultimate?.skill.id) return 'ultimate'
-    if (charged === actor.special?.skill || charged.id === actor.special?.skill.id) return 'special'
-  }
-  // A declared turn carrying neither an action nor a resolved charge is not
-  // a cast at all (charge-continuation, CC-skip, NULL_ACTION): report 'none'
-  // so presentation skips the lunge + attack clip it would otherwise replay
-  // every channeling turn (Clean-B F-CB2-02).
-  if (declared.action == null) return 'none'
-  return 'basic'
-}
 
 /**
  * Combat Runtime Separation (2026-09-07, AGENTS.md P17) — owns the
@@ -144,6 +113,8 @@ export class CombatAnimationRuntime {
 
   /** Đã áp damage, chờ acknowledgeActionComplete(). */
   private pendingImpact: { actor: TurnBattleParticipant; declared: TurnDeclaredAction; targetIds: string[]; resolved: SkillPresentationResolved } | null = null
+  /** Cast object already emitted via publishPendingCast - dedupe guard. */
+  private publishedCast: SkillCastPresentation | null = null
   private requestSequence = 0
   private publishingImpact = false
   private deferredCompleteToken: string | undefined
@@ -285,7 +256,12 @@ export class CombatAnimationRuntime {
     return this.pendingReadyActor !== null || this.pendingDeclaredAction !== null || this.pendingImpact !== null
   }
 
-  /** Phaser gọi khi ready flourish xong → declare action, phát 'turn_cast_start'. */
+  /**
+   * Phaser calls when the ready flourish ends - declares the action.
+   * Publication of `skill_presentation_cast` is deliberately NOT here: it
+   * happens inside the pipeline's impact step (publishPendingCast), so a
+   * subscriber can never receive the cast before the step that gates it.
+   */
   acknowledgeTurnReady(token?: string): void {
     if (this.deps.isSessionBlocking?.()) {
       return
@@ -314,10 +290,32 @@ export class CombatAnimationRuntime {
     const cast = this.declarePresentation(actor, declared)
     this.pendingDeclaredAction = { actor, declared, cast }
 
-    emitTurnCastStart(this.deps.eventBus, actor.id, declared.skillId, declared.affected.map((target) => target.id), castSlotRole(actor, declared))
+    emitTurnCastStart(this.deps.eventBus, actor.id, declared.skillId, declared.affected.map((target) => target.id), cast.slotRole)
 
     this.deps.stepCompletionSink?.onReady()
-    this.deps.eventBus.emit('skill_presentation_cast', cast)
+  }
+
+  /**
+   * The ONE `skill_presentation_cast` publication point. Called inside the
+   * pipeline's impact step AFTER awaitStep has parked the step - so a
+   * subscriber that ACKs impact synchronously settles THIS step instead of
+   * racing it (the manual path used to emit before the pipeline existed,
+   * which a sync ACK resolved under the pipeline's feet). A second call for
+   * the same declared action is a no-op: pendingDeclaredAction is cleared by
+   * the ACK that consumed it, and a repeat emit would replay the runner.
+   *
+   * Returns whether a cast fact was published.
+   */
+  publishPendingCast(): boolean {
+    const pending = this.pendingDeclaredAction
+    if (!pending || pending.cast === this.publishedCast) {
+      // Same declared action already published and still pending its ACK -
+      // a repeat emit would replay the runner; the call is a no-op.
+      return false
+    }
+    this.publishedCast = pending.cast
+    this.deps.eventBus.emit('skill_presentation_cast', pending.cast)
+    return true
   }
 
   /** Phaser gọi tại impact frame (lunge tween xong) → áp damage, phát VFX. */
@@ -474,8 +472,7 @@ export class CombatAnimationRuntime {
     const cast = this.declarePresentation(actor, declared)
     this.pendingDeclaredAction = { actor, declared, cast }
 
-    emitTurnCastStart(this.deps.eventBus, actor.id, declared.skillId, declared.affected.map((target) => target.id), castSlotRole(actor, declared))
-    this.deps.eventBus.emit('skill_presentation_cast', cast)
+    emitTurnCastStart(this.deps.eventBus, actor.id, declared.skillId, declared.affected.map((target) => target.id), cast.slotRole)
 
     return true
   }
@@ -589,17 +586,14 @@ export class CombatAnimationRuntime {
       const token = this.nextPlaybackToken()
       const cast = freezePresentation({ ...this.pendingDeclaredAction.cast, ref: { ...this.pendingDeclaredAction.cast.ref, token } })
       this.pendingDeclaredAction.cast = cast
-      const { actor, declared } = this.pendingDeclaredAction
+      // The cast fact is the whole resume payload: a fresh ref.token drives
+      // admission while the preserved requestId keeps per-action latches
+      // aligned, and slotRole rides inside the fact - the replayer resolves
+      // the same clip the live emit did (impact-sync resume collapse).
       return {
         phase: 'cast',
         cast,
         token,
-        actorId: actor.id,
-        skillId: declared.skillId,
-        targetIds: declared.affected.map((target) => target.id),
-        // The replayed onAttack must select the same clip the live emit did -
-        // resume without the role would replay an ultimate as 'attack'.
-        slotRole: castSlotRole(actor, declared),
       }
     }
 

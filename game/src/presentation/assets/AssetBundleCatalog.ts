@@ -37,7 +37,7 @@ import {
   resolveEnemyTextureKey,
 } from '@/game/support/EnemyArt'
 import { MONSTER_ART, reskinnedTemplateIds } from '@/game/support/MonsterArt'
-import { CHARACTER_ART, resolveCharacterArtSlugs } from '@/game/support/CharacterArt'
+import { CHARACTER_ART, companionArtVariants, resolveCharacterArtSlugs } from '@/game/support/CharacterArt'
 import {
   CULTIVATE_TEXTURE_OVERRIDES,
   PLAYER_VISUAL_PROFILES,
@@ -260,6 +260,12 @@ export function getCombatDescriptors(): readonly AssetResourceDescriptor[] {
 
   // Reskinned characters (character-art-infra): same fallback contract.
   for (const variant of Object.values(CHARACTER_ART)) {
+    addImage(variant.avatarKey, variant.avatarUrl)
+  }
+
+  // Mapped companions (impact-sync sec.52): borrowed character avatar as
+  // static fallback - no-op while COMPANION_RESKIN_MAP is empty.
+  for (const variant of companionArtVariants()) {
     addImage(variant.avatarKey, variant.avatarUrl)
   }
 

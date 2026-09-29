@@ -24,7 +24,7 @@ function fixture(quality: 'standard' | 'low' = 'standard', reducedMotion = false
   const context: SkillCueContext = { ref: { sessionId: 1, requestId: '1', token: '1' }, recipe,
     phase: 'cast', cast: { ref: { sessionId: 1, requestId: '1', token: '1' }, rootSkillId: 'test',
       resolvedSkillId: 'test', presetId: 'metal_slash', source, declaredTargets: [target],
-      candidateInstanceCount: 100, disposition: 'action' } }
+      candidateInstanceCount: 100, disposition: 'action', slotRole: 'basic' } }
   return { driver, context, draws, surface, destroyed: () => destroyed }
 }
 describe('pooled Phaser skill driver', () => {

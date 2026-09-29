@@ -117,19 +117,13 @@ import type { TemplateRegistry } from './TemplateRegistry'
  * countdownProgress computation.
  * R5 (AR-24): Exported from TurnBattleConstants to eliminate upward dependency.
  */
-import { COUNTDOWN_TOTAL_TICKS, INTRO_TOTAL_TICKS } from '../battle/turn/TurnBattleConstants'
-export { COUNTDOWN_TOTAL_TICKS, INTRO_TOTAL_TICKS }
+import {
+  ANIMATION_FALLBACK_MS,
+  COUNTDOWN_TOTAL_TICKS,
+  INTRO_TOTAL_TICKS,
+} from '../battle/turn/TurnBattleConstants'
+export { ANIMATION_FALLBACK_MS, COUNTDOWN_TOTAL_TICKS, INTRO_TOTAL_TICKS }
 
-/**
- * Combat Turn Mechanism spec section 4.1a - how long a parked ANIMATION or
- * SEMANTIC_VFX step waits for the renderer before completing itself.
- *
- * This is not an optimisation. It is what stops a destroyed sprite, a
- * cancelled tween or a texture that failed to load from parking the pipeline
- * forever, which would leave the turn token non-IDLE and the combat clock
- * frozen for the rest of the session.
- */
-export const ANIMATION_FALLBACK_MS = 4000
 // Cumulative bound on awaitStep's isBlocking re-arm loop: a renderer that
 // stays blocking past ~32 s drains its pending playback mechanically
 // instead of deferring forever - a forced ACK drive would only be
@@ -741,6 +735,13 @@ export class GameManagerTurnBattleOps {
       kind: 'semantic-vfx',
       run: (done) => {
         this.awaitStep('impact', done)
+        // Cast publication lives HERE, inside the parked step (impact-sync):
+        // after awaitStep installs pendingStepDone.impact, a subscriber that
+        // ACKs impact synchronously settles THIS step rather than racing it.
+        // Emitting at declare time instead would leave manual turns
+        // publish-then-park - the old defect where a sync early ACK resolved
+        // before the pipeline existed.
+        this.presentationOps.runtime.publishPendingCast()
         this.settleHeadlessStep('impact')
       },
     })

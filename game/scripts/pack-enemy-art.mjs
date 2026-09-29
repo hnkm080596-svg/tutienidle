@@ -33,6 +33,12 @@ const args = process.argv.slice(2)
 const SRC_ARG = args[args.indexOf('--src') + 1] || null
 const DRY_RUN = args.includes('--dry-run')
 
+// Impact-sync: authored impact frames live in art/animation-impact-markers.json
+// (clip-local index, 0..frameCount-1). This packer validates them and emits
+// impactFrameIndex into each clip's manifest entry; the runtime reads the same
+// JSON through the registries, so the manifest is a drift-check, not a source.
+const IMPACT_MARKERS = loadImpactMarkers().enemies ?? {}
+
 if (!SRC_ARG) {
   throw new Error('Usage: pack-enemy-art.mjs --src <NEWSPRITE enemy dir> [--dry-run]')
 }
@@ -43,7 +49,6 @@ const AUDIO_ROOT = path.resolve('public/assets/audio/enemies')
 // Canvas size varies per dump family (monster-library 960x960, forest-region
 // 624x624). Derived per variant from the first loaded frame; a mixed-size
 // species is rejected (all clips must share one authored box).
-const EXPECTED_SIZE = { w: 960, h: 960 }
 const PADDING = 2
 const MAX_SHEET = 4096
 const ZERO_PAD = 3
@@ -469,7 +474,7 @@ async function emitVariant(emission) {
     if (placed.some((f) => f.sheetName !== placed[0].sheetName)) {
       throw new Error(`${emission.out}: clip ${clip} split across sheets`)
     }
-    clipReport[clip] = {
+    const entry = {
       framePrefix: `${emission.out}-${clip}-`,
       firstFrame: list[0].index,
       lastFrame: list.at(-1).index,
@@ -478,7 +483,17 @@ async function emitVariant(emission) {
       atlas: sheetFile?.json ?? null,
       synthetic: list.some((f) => f.syntheticDeath) || undefined,
     }
+    const marker = IMPACT_MARKERS[emission.out]?.[clip]
+    if (marker !== undefined) {
+      assertMarkerInRange(emission.out, clip, marker, entry.frameCount)
+      entry.impactFrameIndex = marker
+    }
+    clipReport[clip] = entry
   }
+
+  // Marker hygiene: a marker naming a clip this variant never packed is
+  // dead data - fail loudly instead of shipping drift.
+  assertKnownMarkerClips(emission.out, IMPACT_MARKERS[emission.out], orderedClips)
 
   return {
     out: emission.out,
@@ -506,6 +521,9 @@ async function main() {
       `sheets=${report.sheets} avatar=${report.avatar} sfx=${report.sfx.length} pivot=(${report.pivot.x.toFixed(2)},${report.pivot.y.toFixed(2)})`,
     )
   }
+  // Marker hygiene: a marker naming a variant this pack never emitted is
+  // dead data - fail loudly instead of shipping drift.
+  assertKnownMarkerVariants('enemy', IMPACT_MARKERS, Object.keys(manifest.variants))
   if (!DRY_RUN) {
     mkdirSync(OUT_ROOT, { recursive: true })
     writeFileSync(path.join(OUT_ROOT, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`)

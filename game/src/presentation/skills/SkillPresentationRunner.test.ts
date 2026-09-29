@@ -11,6 +11,7 @@ const target = { entityId: 'enemy', row: 1, column: 8 }
 const cast: SkillCastPresentation = {
   ref, rootSkillId: 'test', resolvedSkillId: 'test', presetId: 'metal_slash',
   source, declaredTargets: [target], candidateInstanceCount: 1, disposition: 'action',
+  slotRole: 'basic',
 }
 function batch(token = ref.token): SkillPresentationResolved {
   return {

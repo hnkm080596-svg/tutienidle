@@ -40,6 +40,8 @@ import {
   CHARACTER_ART,
   CHARACTER_FRAME_SUFFIX,
   CHARACTER_ZERO_PAD,
+  COMPANION_RESKIN_MAP,
+  companionArtVariant,
   resolveCharacterArtSlug,
   type CharacterClipRange,
 } from '@/game/support/CharacterArt'
@@ -350,6 +352,23 @@ function idleMotionFor(entityKey: string): IdleMotion {
 export const FALLBACK_PLAYER_ENTITY_KEY = 'player-mortal'
 
 /**
+ * Central forced-animation policy (impact-sync sec.49): the ONE predicate
+ * answering "does this entity emit its authored clip set regardless of
+ * ENTITY_ART_MODE". The underlying sets stay data-owned beside their
+ * registries (MonsterArt/CharacterArt); callers never OR them ad hoc.
+ */
+export function isForcedAnimatedEntity(entityKey: string): boolean {
+  // Companion membership reads the map live (not the derived snapshot) so
+  // a fixture-injected mapping animates through the same path real content
+  // will - sec.48's set stays the uniformity-test enumeration.
+  return (
+    ANIMATED_ENEMY_KEYS.has(entityKey) ||
+    ANIMATED_CHARACTER_KEYS.has(entityKey) ||
+    Object.hasOwn(COMPANION_RESKIN_MAP, entityKey)
+  )
+}
+
+/**
  * Both declared forms of one entity, side by side. The catalogue emits ONE
  * of them - picked by ENTITY_ART_MODE - and keeps the other reachable through
  * `animatedArtFormFor`/`staticArtFormFor` so the dormant form's data stays
@@ -361,11 +380,12 @@ function entityPresentation(
   staticArt: { texture: StaticEntityArt; idleMotion: IdleMotion },
   clips: CombatAnimationCatalogue,
 ): CombatEntityPresentation {
-  // Reskin amendment (enemy-art-wave1, 2026-09-28): entities in
-  // ANIMATED_ENEMY_KEYS emit their authored clip set regardless of the
-  // global mode. The mode stays the roster default; the set is the single
-  // enumeration of who overrides it, and the uniformity test pins both.
-  if (ANIMATED_ENEMY_KEYS.has(entityKey) || ANIMATED_CHARACTER_KEYS.has(entityKey)) {
+  // Reskin amendment (enemy-art-wave1, 2026-09-28): forced-animated
+  // entities emit their authored clip set regardless of the global mode.
+  // The mode stays the roster default; isForcedAnimatedEntity is the
+  // single policy enumerating who overrides it (sec.49), and the
+  // uniformity test pins both.
+  if (isForcedAnimatedEntity(entityKey)) {
     return { kind: 'animated', clips }
   }
 
@@ -374,7 +394,7 @@ function entityPresentation(
     : { kind: 'static', texture: staticArt.texture, idleMotion: staticArt.idleMotion }
 }
 
-function buildCatalogue(): {
+export function buildCatalogue(): {
   entries: Map<string, CombatEntityPresentation>
   animatedForms: Map<string, CombatAnimationCatalogue>
   staticForms: Map<string, { texture: StaticEntityArt; idleMotion: IdleMotion }>
@@ -448,6 +468,7 @@ function buildCatalogue(): {
     sourceSize: { ...sourceSize },
     extent,
     repeat,
+    impactFrameIndex: range.impactFrameIndex,
   })
 
   const monsterCatalogue = (variant: (typeof MONSTER_ART)[string]): CombatAnimationCatalogue => {
@@ -506,34 +527,44 @@ function buildCatalogue(): {
     sourceSize: { ...sourceSize },
     extent,
     repeat,
+    impactFrameIndex: range.impactFrameIndex,
   })
 
-  const characterCatalogue = (variant: (typeof CHARACTER_ART)[string]): CombatAnimationCatalogue => {
+  // Character-art catalogue builder (impact-sync sec.50): entityKey and
+  // the art source are independent parameters. Player reskins register
+  // under the variant slug itself; companions keep their gameplay id as
+  // the key while borrowing a character variant's sheet.
+  const characterCatalogue = (
+    entityKey: string,
+    variant: (typeof CHARACTER_ART)[string],
+  ): CombatAnimationCatalogue => {
     const clips: CombatAnimationCatalogue = {
-      idle: characterClip(variant.slug, 'idle', variant.clips.idle, 8, -1, variant.extent, variant.sourceSize),
-      standby: characterClip(variant.slug, 'standby', variant.clips.idle, 8, -1, variant.extent, variant.sourceSize),
-      death: characterClip(variant.slug, 'death', variant.clips.death, 8, 0, variant.extent, variant.sourceSize),
+      idle: characterClip(entityKey, 'idle', variant.clips.idle, 8, -1, variant.extent, variant.sourceSize),
+      standby: characterClip(entityKey, 'standby', variant.clips.idle, 8, -1, variant.extent, variant.sourceSize),
+      death: characterClip(entityKey, 'death', variant.clips.death, 8, 0, variant.extent, variant.sourceSize),
     }
 
     // Optional clips are OMITTED, never present-but-undefined (same rule as
     // monsterCatalogue above - Clean-R2).
     if (variant.clips.attack) {
-      clips.attack = characterClip(variant.slug, 'attack', variant.clips.attack, 8, 0, variant.extent, variant.sourceSize)
+      clips.attack = characterClip(entityKey, 'attack', variant.clips.attack, 8, 0, variant.extent, variant.sourceSize)
     }
 
     if (variant.clips.ult) {
-      clips.ult = characterClip(variant.slug, 'ult', variant.clips.ult, 10, 0, variant.extent, variant.sourceSize)
+      clips.ult = characterClip(entityKey, 'ult', variant.clips.ult, 10, 0, variant.extent, variant.sourceSize)
     }
 
     // Per-skill cast clips (art-seam S1) - keyed map on the catalogue, anim
-    // key `${slug}-cast-${key}`; play-once at the attack clip's frameRate.
+    // key `${entityKey}-cast-${key}`; play-once at the attack frameRate.
     if (variant.castClips) {
       const castClips: Record<string, AtlasClip> = {}
 
       for (const [key, range] of Object.entries(variant.castClips)) {
+        // The anim key drops the `role:` selector prefix so it names the
+        // authored atlas clip ('cast-special'), not the selector.
         castClips[key] = {
-          ...characterClip(variant.slug, 'attack', range, 8, 0, variant.extent, variant.sourceSize),
-          key: `${variant.slug}-cast-${key}`,
+          ...characterClip(entityKey, 'attack', range, 8, 0, variant.extent, variant.sourceSize),
+          key: `${entityKey}-cast-${key.replace(/^role:/, '')}`,
         }
       }
 
@@ -552,7 +583,7 @@ function buildCatalogue(): {
         sourceSize: { ...variant.avatarSize },
         extent: UNTRIMMED_FULL_BOX_EXTENT,
       },
-      characterCatalogue(variant),
+      characterCatalogue(variant.slug, variant),
     )
   }
 
@@ -587,20 +618,30 @@ function buildCatalogue(): {
   }
 
   // Companions join combat with entity.id === definition.id
-  // (companionToCombatEntity) and have NO authored art yet. Registering
-  // them explicitly - pointing at the shared placeholder - is what makes
-  // the missing art show up in placeholderEntityKeys() as tracked debt
-  // instead of hiding behind the wildcard fallback.
+  // (companionToCombatEntity). COMPANION_RESKIN_MAP (impact-sync sec.46)
+  // binds a companion id to a packed CHARACTER_ART slug - the catalogue
+  // identity stays the companion id, only the art source is borrowed.
+  // Unmapped companions keep the placeholder registration below, which is
+  // what makes the missing art show up in placeholderEntityKeys() as
+  // tracked debt instead of hiding behind the wildcard fallback.
   for (const companion of COMPANIONS) {
+    const art = companionArtVariant(companion.id)
     register(
       companion.id,
-      {
-        textureKey: PLACEHOLDER_STATIC_TEXTURE_KEY,
-        textureUrl: PLACEHOLDER_STATIC_TEXTURE_URL,
-        sourceSize: { ...PLACEHOLDER_STATIC_SOURCE_SIZE },
-        extent: PLACEHOLDER_STATIC_EXTENT,
-      },
-      placeholderClips(companion.id),
+      art
+        ? {
+            textureKey: art.avatarKey,
+            textureUrl: art.avatarUrl,
+            sourceSize: { ...art.avatarSize },
+            extent: UNTRIMMED_FULL_BOX_EXTENT,
+          }
+        : {
+            textureKey: PLACEHOLDER_STATIC_TEXTURE_KEY,
+            textureUrl: PLACEHOLDER_STATIC_TEXTURE_URL,
+            sourceSize: { ...PLACEHOLDER_STATIC_SOURCE_SIZE },
+            extent: PLACEHOLDER_STATIC_EXTENT,
+          },
+      art ? characterCatalogue(companion.id, art) : placeholderClips(companion.id),
     )
   }
 

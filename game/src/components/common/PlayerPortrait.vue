@@ -1,8 +1,14 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { ENTITY_ART_MODE } from '@/presentation/art/EntityArtMode'
-import { animatedArtFormFor } from '@/presentation/art/CombatPresentationCatalogue'
-import { PLAYER_VISUAL_PROFILES } from '@/presentation/art/PlayerVisualProfiles'
+import {
+  animatedArtFormFor,
+  resolvePlayerEntityKey,
+} from '@/presentation/art/CombatPresentationCatalogue'
+import {
+  getCultivateTexture,
+  PLAYER_VISUAL_PROFILES,
+} from '@/presentation/art/PlayerVisualProfiles'
 import { usePlayerStore } from '@/stores/player'
 import EntitySpriteCanvas from './EntitySpriteCanvas.vue'
 
@@ -41,13 +47,17 @@ const props = withDefaults(defineProps<PlayerPortraitProps>(), {
 // carried v2).
 const player = usePlayerStore()
 
-const imageUrl = computed(() => {
-  const profile = PLAYER_VISUAL_PROFILES[player.visualProfileId] ?? PLAYER_VISUAL_PROFILES.mortal
+const profile = computed(
+  () => PLAYER_VISUAL_PROFILES[player.visualProfileId] ?? PLAYER_VISUAL_PROFILES.mortal,
+)
 
-  return props.variant === 'cultivate'
-    ? (profile.cultivateTextureUrl ?? PLAYER_VISUAL_PROFILES.mortal.cultivateTextureUrl)
-    : profile.combatTextureUrl
-})
+const imageUrl = computed(() =>
+  props.variant === 'cultivate'
+    // getCultivateTexture is the single authority - hidden-way override
+    // wins, then the profile's own cultivate PNG, then mortal's.
+    ? getCultivateTexture(profile.value, player.cultivationWay ?? undefined).url
+    : profile.value.combatTextureUrl,
+)
 
 // Animated mode - the figure plays the same clips combat would. `portrait`
 // draws the mortal idle loop from the catalogue's dormant animated form;
@@ -55,7 +65,17 @@ const imageUrl = computed(() => {
 // atlases carry a cultivate clip (uniformity plan, 2026-09-19).
 const useCanvas = ENTITY_ART_MODE === 'animated'
 
-const idleClip = animatedArtFormFor(PLAYER_VISUAL_PROFILES.mortal.combatTextureKey)?.idle
+// The same entity key combat resolves for this profile - reskin-mapped
+// profiles animate their own sheet (armed/unarmed pick included), unmapped
+// profiles fall back to their static key's dormant placeholder clips.
+const idleClip = computed(
+  () =>
+    animatedArtFormFor(
+      resolvePlayerEntityKey(profile.value.id, profile.value.combatTextureKey, {
+        armed: player.visualArmed,
+      }),
+    )?.idle,
+)
 
 const CULTIVATE_BRIDGE = {
   sheetUrl: '/assets/cultivate.png',
@@ -73,16 +93,16 @@ const canvasProps = computed(() => {
     return CULTIVATE_BRIDGE
   }
 
-  return idleClip
+  return idleClip.value
     ? {
-        sheetUrl: idleClip.sheetUrl,
-        atlasUrl: idleClip.atlasUrl,
-        framePrefix: idleClip.framePrefix,
-        frameSuffix: idleClip.frameSuffix,
-        zeroPad: idleClip.zeroPad,
-        firstFrame: idleClip.firstFrame,
-        lastFrame: idleClip.lastFrame,
-        fps: idleClip.frameRate,
+        sheetUrl: idleClip.value.sheetUrl,
+        atlasUrl: idleClip.value.atlasUrl,
+        framePrefix: idleClip.value.framePrefix,
+        frameSuffix: idleClip.value.frameSuffix,
+        zeroPad: idleClip.value.zeroPad,
+        firstFrame: idleClip.value.firstFrame,
+        lastFrame: idleClip.value.lastFrame,
+        fps: idleClip.value.frameRate,
       }
     : undefined
 })

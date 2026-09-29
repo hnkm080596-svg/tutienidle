@@ -13,7 +13,7 @@
 // instead). It is OPTIONAL downstream: catalogues emit it when the variant
 // carries one, playback treats it like `attack` (play-once -> standby).
 // `<slug>-cast-<key>` dirs emit per-skill cast clips into `manifest.cast` -
-// keyed by skillId or slot role, resolved by playCastClip before slot-role.
+// keyed by skillId or slot role, resolved by startCastPlayback before slot-role.
 //
 // Missing pieces are SYNTHESIZED where the contract requires them:
 //   - no `death` clip (most characters): last attack frame, darkened 45%
@@ -32,6 +32,13 @@ const DRY_RUN = args.includes('--dry-run')
 // the other dumps on hand) and MERGE their reports into the existing
 // manifest instead of replacing it wholesale.
 const ONLY_ARG = args[args.indexOf('--only') + 1]?.split(',').filter(Boolean) ?? null
+
+// Impact-sync: authored impact frames live in art/animation-impact-markers.json
+// (clip-local index, 0..frameCount-1, keyed by SOURCE clip name like
+// 'attack'/'ult'/'cast-linh_bao'). This packer validates them and emits
+// impactFrameIndex into each clip's manifest entry; the runtime reads the
+// same JSON through the registries, so the manifest is a drift-check.
+const IMPACT_MARKERS = loadImpactMarkers().characters ?? {}
 
 if (!SRC_ARG) {
   throw new Error('Usage: pack-character-art.mjs --src <NEWSPRITE character dir> [--dry-run]')
@@ -425,11 +432,20 @@ async function emitVariant(emission) {
       atlas: sheetFile?.json ?? null,
       synthetic: list.some((f) => f.syntheticDeath) || undefined,
     }
+    const marker = IMPACT_MARKERS[emission.out]?.[clip]
+    if (marker !== undefined) {
+      assertMarkerInRange(emission.out, clip, marker, entry.frameCount)
+      entry.impactFrameIndex = marker
+    }
     // `cast-<key>` clips report under `cast` keyed by the bare key - the
     // registry reads `cast.linh_bao` / `cast.special` without the prefix.
     if (clip.startsWith('cast-')) castReport[clip.slice(5)] = entry
     else clipReport[clip] = entry
   }
+
+  // Marker hygiene: a marker naming a clip this variant never packed is
+  // dead data - fail loudly instead of shipping drift.
+  assertKnownMarkerClips(emission.out, IMPACT_MARKERS[emission.out], orderedClips)
 
   return {
     out: emission.out,
@@ -467,6 +483,9 @@ async function main() {
       `sheets=${report.sheets} avatar=${report.avatar} avatars=${Object.keys(report.avatars).length} portraits=${Object.keys(report.portraits).length}`,
     )
   }
+  // Marker hygiene: a marker naming a variant this pack never emitted is
+  // dead data - fail loudly instead of shipping drift.
+  assertKnownMarkerVariants('character', IMPACT_MARKERS, Object.keys(manifest.variants))
   if (!DRY_RUN) {
     mkdirSync(OUT_ROOT, { recursive: true })
     writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`)

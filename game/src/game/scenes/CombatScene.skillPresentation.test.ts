@@ -10,7 +10,8 @@ const ref = { sessionId: 1, requestId: '1', token: 'playback-1' }
 const source = { entityId: 'player', row: 1, column: 1 }
 const target = { entityId: 'enemy', row: 1, column: 8 }
 const cast: SkillCastPresentation = { ref, rootSkillId: 'ngu_kiem_thuat', resolvedSkillId: 'ngu_kiem_thuat',
-  presetId: 'ngu_kiem_flight', source, declaredTargets: [target], candidateInstanceCount: 1, disposition: 'action' }
+  presetId: 'ngu_kiem_flight', source, declaredTargets: [target], candidateInstanceCount: 1, disposition: 'action',
+  slotRole: 'basic' }
 const resolved: SkillPresentationResolved = { ref, sealed: true, groups: [{
   groupId: 'g', role: 'primary', resolvedSkillId: 'ngu_kiem_thuat', presetId: 'ngu_kiem_flight',
   source, actualTargets: [target], footprint: { kind: 'cells', cells: [{ row: 1, column: 8 }] },
@@ -37,10 +38,10 @@ describe('CombatScene shared skill playback wiring', () => {
     const names = scene.getCombatEventBindings().map(([name]: [string]) => name)
     expect(names).toContain('skill_presentation_cast')
     expect(names).toContain('skill_presentation_resolved')
-    // Art waves: 'turn_cast_start' stays bound clip-only via playCastClip
-    // (authored attack/ult clips). It must never drive skill visuals -
-    // the runner owns lunge, impacts and both action ACKs.
-    expect(names).toContain('turn_cast_start')
+    // Impact-sync: 'turn_cast_start' is gone - the authored cast/attack/ult
+    // clip resolves inside the skill_presentation_cast handler
+    // (startCastPlayback), so ONE binding drives visuals, clips and ACKs.
+    expect(names).not.toContain('turn_cast_start')
     expect(names).not.toContain('action_impact')
   })
   it('runs the production recipe with exactly one captured impact and complete ACK', () => {

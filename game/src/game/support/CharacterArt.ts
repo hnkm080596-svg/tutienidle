@@ -18,6 +18,7 @@
 // values when the art lands; no other file changes.
 import type { ArtExtent } from '@/presentation/art/CombatEntityPresentation'
 import type { PlayerVisualProfileId } from '@/core/player/PlayerVisualForm'
+import IMPACT_MARKERS from '../../../art/animation-impact-markers.json'
 
 export interface CharacterClipRange {
   /** `<slug>-<clip>-` - matches pack-character-art.mjs frameName(). */
@@ -28,6 +29,25 @@ export interface CharacterClipRange {
   sheetKey: string
   sheetUrl: string
   atlasUrl: string
+  /**
+   * Authored impact frame, CLIP-LOCAL (0..frameCount-1) - the frame where
+   * the strike visually connects, authored by contact-sheet inspection
+   * into art/animation-impact-markers.json and propagated onto the packed
+   * manifest by pack-character-art.mjs. Absent when unmarked.
+   */
+  impactFrameIndex?: number
+}
+
+/**
+ * Marker lookup for one variant + SOURCE clip name ('attack', 'ult',
+ * 'cast-linh_bao' - the same names the packer reports and this file's
+ * `name` argument produces). The JSON is the single authoring surface;
+ * manifest injection and this registry read the same value so the runtime
+ * never parses the manifest.
+ */
+function impactMarker(slug: string, clipName: string): number | undefined {
+  const table = IMPACT_MARKERS.characters as Record<string, Record<string, number>>
+  return table[slug]?.[clipName]
 }
 
 export interface CharacterArtVariant {
@@ -52,10 +72,12 @@ export interface CharacterArtVariant {
     ult?: CharacterClipRange
   }
   /**
-   * Per-skill cast clips, keyed by Skill.id (or a slot role like 'special'
-   * when one sheet covers every skill of that role). Resolved by
-   * playCastClip ahead of the slot-role pick; clip names in the atlases are
-   * `<slug>-cast-<key>-NNN.png` (packer `cast-<key>` dirs).
+   * Per-skill cast clips, keyed by Skill.id; a slot-role clip is keyed
+   * `role:<slotRole>` ('role:special') so a skill literally named 'basic'/
+   * 'special'/'ultimate' can not collide with the role lookup. startCastPlayback
+   * resolves them ahead of the slot-role pick (impact-sync sec.22); clip
+   * names in the atlases are `<slug>-cast-<key>-NNN.png` (packer
+   * `cast-<key>` dirs; the `role:` prefix is not part of the clip name).
    */
   castClips?: Record<string, CharacterClipRange>
 }
@@ -72,6 +94,7 @@ function clip(slug: string, name: string, first: number, last: number, sheet: nu
     sheetKey: `${slug}-sheet-${sheet}`,
     sheetUrl: `${ART_ROOT}/${slug}/${slug}-sheet-${sheet}.png`,
     atlasUrl: `${ART_ROOT}/${slug}/${slug}-sheet-${sheet}.atlas.json`,
+    impactFrameIndex: impactMarker(slug, name),
   }
 }
 
@@ -85,11 +108,15 @@ function variant(
     attack?: [number, number, number]
     ult?: [number, number, number]
   },
-  opts: { avatarSize?: { w: number; h: number }; cast?: Record<string, [number, number, number]> } = {},
+  opts: { avatarSize?: { w: number; h: number }; cast?: Record<string, { src?: string; range: [number, number, number] }> } = {},
 ): CharacterArtVariant {
   const castClips: Record<string, CharacterClipRange> = {}
-  for (const [key, r] of Object.entries(opts.cast ?? {})) {
-    castClips[key] = clip(slug, `cast-${key}`, r[0], r[1], r[2])
+  for (const [key, entry] of Object.entries(opts.cast ?? {})) {
+    // `src` is the SOURCE clip name in the atlas (what markers and the
+    // manifest call it); it defaults to `cast-<key>` with the `role:`
+    // selector prefix stripped so `role:special` -> clip 'cast-special'.
+    const src = entry.src ?? `cast-${key.replace(/^role:/, '')}`
+    castClips[key] = clip(slug, src, entry.range[0], entry.range[1], entry.range[2])
   }
   return {
     slug,
@@ -140,7 +167,7 @@ export const CHARACTER_ART: Record<string, CharacterArtVariant> = {
     { w: 348, h: 514 },
     { x: 0.008621, y: 0, w: 0.971264, h: 1 },
     { idle: [1, 33, 1], attack: [1, 17, 1], death: [1, 17, 2] },
-    { avatarSize: { w: 512, h: 512 }, cast: { linh_bao: [1, 17, 2] } },
+    { avatarSize: { w: 512, h: 512 }, cast: { linh_bao: { range: [1, 17, 2] } } },
   ),
   ngu_kiem: variant(
     'ngu_kiem',
@@ -156,7 +183,7 @@ export const CHARACTER_ART: Record<string, CharacterArtVariant> = {
     { w: 444, h: 518 },
     { x: 0.009009, y: 0, w: 0.975225, h: 1 },
     { idle: [1, 33, 1], attack: [1, 17, 2], death: [1, 17, 2] },
-    { avatarSize: { w: 512, h: 512 }, cast: { special: [1, 17, 3] } },
+    { avatarSize: { w: 512, h: 512 }, cast: { 'role:special': { range: [1, 17, 3] } } },
   ),
 }
 
@@ -207,6 +234,52 @@ export function resolveCharacterArtSlugs(profileId: string): string[] {
  */
 export const ANIMATED_CHARACTER_KEYS: ReadonlySet<string> = new Set(
   Object.values(CHARACTER_RESKIN_MAP).flatMap((b) => (typeof b === 'string' ? [b] : [b.armed, b.unarmed])),
+)
+
+/**
+ * Companion readiness seam (impact-sync sec.46): companion.id -> a packed
+ * CHARACTER_ART slug. Empty until real companion art mappings land - do
+ * NOT invent mappings here; unmapped companions keep their placeholder
+ * registration. Resolution stays LAZY (functions, not a derived record) so
+ * the catalogue build and preload enumeration read the live map - a fixture
+ * that injects a mapping flows through the same code path real content will.
+ */
+export const COMPANION_RESKIN_MAP: Record<string, string> = {}
+
+/** The character variant a companion id binds, or undefined when unmapped. */
+export function companionArtVariant(companionId: string): CharacterArtVariant | undefined {
+  // Object.hasOwn: a companion id colliding with an Object.prototype member
+  // ('constructor', 'hasOwnProperty', ...) must not resolve a builtin truthy.
+  const slug = Object.hasOwn(COMPANION_RESKIN_MAP, companionId)
+    ? COMPANION_RESKIN_MAP[companionId]
+    : undefined
+  if (slug === undefined) {
+    return undefined
+  }
+  const variant = CHARACTER_ART[slug]
+  if (!variant) {
+    throw new Error(
+      `COMPANION_RESKIN_MAP maps '${companionId}' to unknown character art '${slug}'`,
+    )
+  }
+  return variant
+}
+
+/** Every mapped companion's art variant - the preload parity enumeration. */
+export function companionArtVariants(): CharacterArtVariant[] {
+  return Object.keys(COMPANION_RESKIN_MAP)
+    .map((companionId) => companionArtVariant(companionId))
+    .filter((variant): variant is CharacterArtVariant => variant !== undefined)
+}
+
+/**
+ * Forced-animation set for companions uses the MAP KEYS (companion ids),
+ * never the art slugs - catalogue identity is the companion id (sec.48).
+ * Derived snapshot for the uniformity test; runtime membership checks read
+ * COMPANION_RESKIN_MAP live through isForcedAnimatedEntity.
+ */
+export const ANIMATED_COMPANION_KEYS: ReadonlySet<string> = new Set(
+  Object.keys(COMPANION_RESKIN_MAP),
 )
 
 export const CHARACTER_ZERO_PAD = ZERO_PAD

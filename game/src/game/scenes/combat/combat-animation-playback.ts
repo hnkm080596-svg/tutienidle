@@ -15,10 +15,12 @@ import {
   type CombatAnimationName,
 } from '@/presentation/art/CombatEntityPresentation'
 import {
+  animatedArtFormFor,
   presentationFor,
   resolveCombatEntityKey,
   resolvePlayerEntityKey,
 } from '@/presentation/art/CombatPresentationCatalogue'
+import type { SkillCastPresentation } from '@/core/battle/turn/SkillPresentationFacts'
 
 import type { CombatScene, CombatScenePayload } from '../CombatScene'
 import { PLAYER_ID } from './combatConstants'
@@ -99,6 +101,18 @@ export function registerClipCatalogue(
       anims.remove?.(clip.key)
     }
   }
+}
+
+/**
+ * Which candidate in the canonical cast-clip order actually played
+ * (impact-sync). 'none' reports that NO authored animation went out - the
+ * caller runs the cast on recipe timing. The source is reported, not
+ * guessed: a test can distinguish a resolved-skill cast clip from the
+ * generic attack fallthrough instead of only seeing "some clip played".
+ */
+export interface ResolvedCastPlayback {
+  clip?: AtlasClip
+  source: 'resolved-skill' | 'root-skill' | 'slot-role' | 'ultimate' | 'attack' | 'none'
 }
 
 export class CombatAnimationPlayback {
@@ -248,16 +262,20 @@ export class CombatAnimationPlayback {
   }
 
   /**
-   * Per-skill cast clip (art-seam S1): playCastClip resolves the AtlasClip
-   * from the variant's `castClips` map; this plays it through the same
-   * deferral + one-shot-completion -> standby machinery a named clip takes.
-   * A cast clip missing from the AnimationManager (atlas-miss, or registered
-   * empty on partial sheet loss) degrades to 'attack' - which itself walks
-   * the chain down to 'standby', mirroring MISSING_CLIP_FALLBACK's ult hop.
+   * Play exactly ONE authored clip, or nothing (impact-sync): same guards
+   * as the generic path - real sprite, live actor, registered non-empty
+   * anim - and then the clip itself, with NO fallback inside. A clip that
+   * cannot play returns false so the caller's own resolution order decides
+   * what tries next; the old silent 'attack' hop here is what made a
+   * missing cast clip report timing for an animation that never played.
    */
-  playAtlasClip(sprite: EntitySprite, actorId: string | undefined, clip: AtlasClip): void {
-    if (sprite.kind !== 'sprite' || actorId === undefined) {
-      return
+  tryPlayExactAtlasClip(
+    sprite: EntitySprite,
+    actorId: string | undefined,
+    clip: AtlasClip | undefined,
+  ): boolean {
+    if (clip === undefined || sprite.kind !== 'sprite' || actorId === undefined) {
+      return false
     }
 
     const dying = actorId === PLAYER_ID
@@ -265,17 +283,80 @@ export class CombatAnimationPlayback {
       : this.scene.dyingIds.has(actorId)
 
     if (dying) {
-      return
+      return false
     }
 
     const empty = this.scene.anims.get?.(clip.key)?.frames.length === 0
 
     if (!this.scene.anims.exists(clip.key) || empty) {
-      this.playCombatAnimation(sprite, actorId, 'attack')
-      return
+      return false
     }
 
     this.playResolvedClip(sprite, actorId, clip.key, 'standby')
+    return true
+  }
+
+  /**
+   * The ONE cast-clip resolver (impact-sync canonical order). Returns the
+   * clip that ACTUALLY played - the caller passes its impact timing to the
+   * presentation runner, so the timing clip IS the played clip and no
+   * silent fallback can drive an ACK the viewer never saw.
+   *
+   * Order (plan sec.22): the resolved skill id's cast clip -> the root
+   * skill id's (queued/composite wrappers resolve to the skill that
+   * authored them) -> the declared slot role's -> the authored ult clip
+   * (only for slot role 'ultimate') -> the authored attack clip -> none.
+   * slotRole 'none' is not a lookup miss: it marks a turn that is not a
+   * cast at all, so no authored animation is attempted.
+   */
+  startCastPlayback(
+    sprite: EntitySprite,
+    actorId: string | undefined,
+    cast: SkillCastPresentation,
+  ): ResolvedCastPlayback {
+    if (cast.slotRole === 'none') {
+      return { source: 'none' }
+    }
+
+    const entityKey = actorId !== undefined ? this.entityAnimationKeyPrefix(actorId) : undefined
+    // A static-kind entity has no clips at all - not a degraded animated
+    // one (same contract playCombatAnimation states). Resolution ends at
+    // 'none' so the cast runs on recipe timing instead of pulling a
+    // placeholder clip over the entity's still art.
+    if (entityKey === undefined || !this.isAnimatedEntity(entityKey)) {
+      return { source: 'none' }
+    }
+    const catalogue = animatedArtFormFor(entityKey)
+    const castClips = catalogue?.castClips
+
+    const resolved = castClips?.[cast.resolvedSkillId]
+    if (resolved && this.tryPlayExactAtlasClip(sprite, actorId, resolved)) {
+      return { clip: resolved, source: 'resolved-skill' }
+    }
+
+    const root = castClips?.[cast.rootSkillId]
+    if (root && this.tryPlayExactAtlasClip(sprite, actorId, root)) {
+      return { clip: root, source: 'root-skill' }
+    }
+
+    const bySlot = castClips?.[`role:${cast.slotRole}`]
+    if (bySlot && this.tryPlayExactAtlasClip(sprite, actorId, bySlot)) {
+      return { clip: bySlot, source: 'slot-role' }
+    }
+
+    if (
+      cast.slotRole === 'ultimate' &&
+      catalogue?.ult &&
+      this.tryPlayExactAtlasClip(sprite, actorId, catalogue.ult)
+    ) {
+      return { clip: catalogue.ult, source: 'ultimate' }
+    }
+
+    if (catalogue?.attack && this.tryPlayExactAtlasClip(sprite, actorId, catalogue.attack)) {
+      return { clip: catalogue.attack, source: 'attack' }
+    }
+
+    return { source: 'none' }
   }
 
   /**

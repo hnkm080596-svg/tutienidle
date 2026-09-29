@@ -1,4 +1,5 @@
 import type { PlaybackRef, SkillCastPresentation, SkillPresentationResolved } from '@/core/battle/turn/SkillPresentationFacts'
+import { ANIMATION_FALLBACK_MS } from '@/core/battle/turn/TurnBattleConstants'
 import type { DomainCommandPort } from '@/presentation/gate/PresentationGate'
 import { FALLBACK_SKILL_RECIPE, validateSkillRecipe } from './SkillPresentationRecipe'
 import type { SkillCue, SkillCueContext, SkillCueHandle, SkillPresentationDriver, SkillPresentationRecipe, SkillRecipeResolver } from './SkillPresentationRecipe'
@@ -58,14 +59,41 @@ export class SkillPresentationRunner {
       return FALLBACK_SKILL_RECIPE
     }
   }
-  start(cast: SkillCastPresentation, port: PlaybackPort): void {
-    if (port.getPendingPlaybackToken() !== cast.ref.token) return
-    if (this.active && sameRef(this.active.ref, cast.ref) && this.active.port === port) return
+  /**
+   * Shared admission gate for a cast playback (impact-sync): the cast's
+   * fresh token must still be the pending playback token (a stale replay or
+   * a resumed-away turn is refused), and a same-ref/same-port replay of the
+   * ALREADY-ACTIVE playback is a duplicate, not a restart. start() reuses
+   * this; callers that need admission without starting (e.g. binding a cast
+   * animation to the played clip before timing is known) ask it first.
+   */
+  canStart(cast: SkillCastPresentation, port: PlaybackPort): boolean {
+    if (port.getPendingPlaybackToken() !== cast.ref.token) return false
+    if (this.active && sameRef(this.active.ref, cast.ref) && this.active.port === port) return false
+    return true
+  }
+  /**
+   * `timing.castMs` is the animation-driven impact override: when the cast
+   * actually played an authored clip, the caller passes that clip's impact
+   * moment so the impact ACK lands on the authored contact frame instead of
+   * the recipe's fixed castMs. Rejects non-finite / <=0 / >=
+   * ANIMATION_FALLBACK_MS - a clip whose impact lands at or past the step
+   * fallback would be beaten by the mechanical settle, so recipe timing
+   * wins and the bad marker surfaces as a diagnostic fault (sec.37).
+   */
+  start(cast: SkillCastPresentation, port: PlaybackPort, timing?: { castMs?: number }): void {
+    if (!this.canStart(cast, port)) return
     this.cancel()
     const recipe = this.recipe(cast.presetId)
+    const castMs = timing?.castMs
+    const duration =
+      castMs === undefined ? recipe.castMs
+        : Number.isFinite(castMs) && castMs > 0 && castMs < ANIMATION_FALLBACK_MS ? castMs
+        : (this.fault(new Error(`cast timing override ${castMs}ms rejected - recipe castMs used`)),
+          recipe.castMs)
     const context: SkillCueContext = { ref: cast.ref, recipe, phase: 'cast', cast }
     this.active = {
-      ref: cast.ref, port, phase: 'cast', elapsed: 0, duration: recipe.castMs,
+      ref: cast.ref, port, phase: 'cast', elapsed: 0, duration,
       cues: recipe.cast.map(cue => ({ cue, context, offset: cue.offsetMs, ended: false })),
     }
     this.sample(this.active)

@@ -112,10 +112,13 @@ describe('combat animation catalogue', () => {
         )
       }
 
-      // Every cast clip's anim key follows `${slug}-cast-${key}` - the name
-      // playCastClip looks up by Skill.id / slot role.
+      // Every cast clip's anim key follows `${slug}-cast-<clip>` (the
+      // `role:` selector prefix is stripped) - the name playCastClip looks
+      // up by Skill.id / `role:<slotRole>`.
       for (const [key, clip] of Object.entries(clips.castClips ?? {})) {
-        expect(clip.key, `${entityKey}.castClips.${key} key`).toBe(`${entityKey}-cast-${key}`)
+        expect(clip.key, `${entityKey}.castClips.${key} key`).toBe(
+          `${entityKey}-cast-${key.replace(/^role:/, '')}`,
+        )
       }
     }
   })
@@ -188,5 +191,38 @@ describe('combat animation catalogue', () => {
     // CALLERS (sprite factory, animation prefix), not fabricated inside the
     // catalogue lookup - so a typo'd key still cannot masquerade as real art.
     expect(presentationFor('no-such-entity-key')).toBeUndefined()
+  })
+
+  // Impact-sync sec.66: atlasClipsOf is the ONLY enumeration - it must
+  // flatten the named clips AND the castClips map into plain AtlasClips,
+  // never a nested map and never a present-but-undefined entry.
+  it('atlasClipsOf flattens named clips + castClips into plain AtlasClips', () => {
+    for (const { entityKey, clips } of allAnimatedForms()) {
+      const named = Object.entries(clips)
+        .filter(([name]) => name !== 'castClips')
+        .map(([, clip]) => clip)
+      const casts = Object.values(clips.castClips ?? {})
+      const flat = atlasClipsOf(clips)
+
+      expect(flat.length, `${entityKey}: flatten lost clips`).toBe(
+        named.length + casts.length,
+      )
+
+      // Every element is a real clip - a leaked castClips map would lack
+      // frame fields and would crash frame iteration downstream.
+      for (const clip of flat) {
+        expect(clip, `${entityKey}: undefined clip entry`).toBeDefined()
+        expect(typeof clip.firstFrame, `${entityKey}: '${clip?.key}' is not an AtlasClip`)
+          .toBe('number')
+        expect(typeof clip.lastFrame).toBe('number')
+      }
+    }
+
+    // Corpus proof - the pins above are vacuous on a catalogue with no
+    // cast clips at all.
+    const withCasts = allAnimatedForms().filter(
+      ({ clips }) => Object.keys(clips.castClips ?? {}).length > 0,
+    )
+    expect(withCasts.length).toBeGreaterThanOrEqual(2)
   })
 })

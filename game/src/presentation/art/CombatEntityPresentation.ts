@@ -110,6 +110,22 @@ export interface AtlasClip {
    * event the playback layer chains on - the uniformity test pins repeat 0.
    */
   repeat: number
+
+  /**
+   * The authored IMPACT frame of a play-once cast clip (impact-sync): the
+   * CLIP-LOCAL frame index (0..frameCount-1, matching the packer marker)
+   * at which the strike visually connects - the weapon lands, the blast
+   * touches the target.
+   * Authored by visual frame inspection into
+   * `art/animation-impact-markers.json` and propagated onto every clip the
+   * marker names; the generated manifest carries the same number so a
+   * drifted registry row fails a test instead of moving the impact.
+   *
+   * Absent on clips that are not cast candidates (idle/standby/death,
+   * transitions) and on unmarked cast clips, where clipImpactMs falls back
+   * to the clip's end (sec.32-33 unmarked policy).
+   */
+  impactFrameIndex?: number
 }
 
 /**
@@ -133,7 +149,7 @@ export interface CombatAnimationCatalogue {
   attack?: AtlasClip
   /**
    * Authored ultimate clip (character-art-infra, 2026-09-28). Optional like
-   * `attack`: it plays only when `turn_cast_start` reports slot role
+   * `attack`: it plays only when the cast fact carries slot role
    * 'ultimate', is play-once, and returns to `standby`.
    */
   ult?: AtlasClip
@@ -144,12 +160,29 @@ export interface CombatAnimationCatalogue {
   /**
    * Per-skill cast clips (art-seam wave, 2026-09-29 user ruling Q1): a KEYED
    * map, not new CombatAnimationName members - the key is a Skill.id or a
-   * slot role like 'special', and the anim key is `${slug}-cast-${key}`.
-   * Played by `playCastClip` before the slot-role fallback chain; absent
-   * entries fall through to it unchanged. Omit the field when the variant
-   * authors no cast clips (omit-don't-declare, same as the optional clips).
+   * slot role as `role:<slotRole>` ('role:special'; the `role:` prefix keeps
+   * a hypothetical skill named 'basic'/'special'/'ultimate' out of the role
+   * lookup), and the anim key is `${slug}-cast-<clip>` with the prefix
+   * stripped. Played by `playCastClip` before the slot-role fallback chain;
+   * absent entries fall through to it unchanged. Omit the field when the
+   * variant authors no cast clips (omit-don't-declare, same as the optional
+   * clips).
    */
   castClips?: Record<string, AtlasClip>
+}
+
+/**
+ * The clips a cast MAY resolve to (impact-sync sec.12): attack, ult, and
+ * every keyed castClips entry - the set impact markers must cover before
+ * any clip can drive impact timing. idle/standby/death are deliberately
+ * absent: they never carry a domain impact.
+ */
+export function castTimingClipsOf(clips: CombatAnimationCatalogue): AtlasClip[] {
+  return [
+    clips.attack,
+    clips.ult,
+    ...Object.values(clips.castClips ?? {}),
+  ].filter((clip): clip is AtlasClip => clip !== undefined)
 }
 
 /** One still image. What a `kind: 'static'` entity actually draws. */
@@ -216,3 +249,28 @@ export function atlasClipsOf(clips: CombatAnimationCatalogue): AtlasClip[] {
 
   return [...named, ...Object.values(clips.castClips ?? {})]
 }
+
+/**
+ * The impact moment of a cast clip, in ms from clip start (impact-sync
+ * sec.31): the authored impact frame plays at its MIDPOINT -
+ * (impactFrameIndex + 0.5) / frameRate - so the ACK lands inside the
+ * contact frame's display window rather than on its boundary.
+ *
+ * impactFrameIndex is CLIP-LOCAL (0..frameCount-1): the packer rejects a
+ * marker >= frameCount, so this never indexes outside the clip.
+ *
+ * Unmarked policy (sec.32-33): a clip with no marker resolves its impact
+ * at the last frame's midpoint - visually the end of the swing - and a
+ * LONG unmarked clip (>UNMARKED_CAST_CLIP_FRAME_LIMIT frames) additionally
+ * gets flagged as art debt by the caller (the shipping gate forbids a
+ * reachable long-unmarked clip). Short clips resolve quietly: the whole
+ * clip is contact-range motion.
+ */
+export function clipImpactMs(clip: AtlasClip): number {
+  const frameCount = clip.lastFrame - clip.firstFrame + 1
+  const marker = clip.impactFrameIndex ?? frameCount - 1
+  return (marker + 0.5) * (1000 / clip.frameRate)
+}
+
+/** frameCount-derived length bound used by the unmarked art-debt policy. */
+export const UNMARKED_CAST_CLIP_FRAME_LIMIT = 4

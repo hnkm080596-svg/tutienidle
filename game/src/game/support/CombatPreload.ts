@@ -19,7 +19,7 @@ import {
   MORTAL_ENEMY_TEMPLATE_IDS,
 } from './EnemyArt'
 import { MONSTER_ART, reskinnedTemplateIds } from './MonsterArt'
-import { CHARACTER_ART } from './CharacterArt'
+import { CHARACTER_ART, companionArtVariants } from './CharacterArt'
 import { PLAYER_VISUAL_PROFILES } from '@/presentation/art/PlayerVisualProfiles'
 import { peekThanhVanVariant, thanhVanLoadList } from './ThanhVanArt'
 import {
@@ -160,6 +160,14 @@ export function queueCombatAssets(scene: Phaser.Scene): void {
 
   // Reskinned characters (character-art-infra): same fallback contract.
   for (const variant of Object.values(CHARACTER_ART)) {
+    queueOnce(variant.avatarKey, variant.avatarUrl)
+  }
+
+  // Mapped companions (impact-sync sec.52): the borrowed character avatar is
+  // the companion's static fallback. Today the same avatars are already
+  // queued by the CHARACTER_ART loop above; this enumeration is what keeps
+  // the contract honest if a companion ever maps to non-character art.
+  for (const variant of companionArtVariants()) {
     queueOnce(variant.avatarKey, variant.avatarUrl)
   }
 
