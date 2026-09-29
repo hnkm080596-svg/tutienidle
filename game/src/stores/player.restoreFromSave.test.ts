@@ -140,8 +140,12 @@ describe('player.restoreFromSave — idempotency (QA-002, Task 9.2)', () => {
     expect(result.elapsedSeconds).toBe(30)
   })
 
-  it('buff tu luyện đã hết hạn trước khi save → rate lưu trừ hết phần buff', () => {
+  it('buff tu luyện đã hết hạn trước khi save → snapshot cũ không được trả tiếp phần buff (F-BX-30)', () => {
     const player = usePlayerStore()
+    // Snapshot 20/s was written by the last tick while the buff still
+    // lived; the buff died inside the (last tick -> save] gap, so the
+    // snapshot is stale high. The restore must re-derive the un-buffed
+    // base from the saved fields (10/s), never trust the snapshot.
     const save = buildMinimalSave({
       cultivationPerSecond: 20,
       lastSavedAt: currentMs - 20_000,
@@ -160,7 +164,36 @@ describe('player.restoreFromSave — idempotency (QA-002, Task 9.2)', () => {
 
     const result = player.restoreFromSave(save)
 
-    // percentAtSave = 0 -> base = snapshot 20/s -> 20*20 = 400.
+    // BASE 10/s x 20s = 200; the stale boosted snapshot would pay 400.
+    expect(result.cultivation).toBe(200)
+  })
+
+  it('buff tu luyện sống lúc save nhưng snapshot chưa kịp buff → vẫn được trả phần buff (F-BX-30 chiều ngược)', () => {
+    const player = usePlayerStore()
+    // Reverse staleness: the buff activated inside the (last tick ->
+    // save] gap, so the 10/s snapshot folds NO buff while the saved
+    // effect list already holds it. Un-buffing the snapshot by the live
+    // percent would underpay to 5/s; the honest base stays 10/s and the
+    // segment pays the live percent.
+    const save = buildMinimalSave({
+      cultivationPerSecond: 10,
+      lastSavedAt: currentMs - 20_000,
+      persistentTimedEffects: [
+        {
+          id: 'fx1',
+          sourceItemId: 'tu_linh_tran',
+          effectGroup: 'tu_linh_tran',
+          appliedAtMs: currentMs - 20_000 - 500,
+          expiresAtMs: currentMs + 999_000_000, // live past window end
+          cultivationSpeedPercent: 1,
+          modifiers: [],
+        },
+      ],
+    })
+
+    const result = player.restoreFromSave(save)
+
+    // 10/s x (1 + 1) x 20s = 400; the un-buff divide would pay 200.
     expect(result.cultivation).toBe(400)
   })
 

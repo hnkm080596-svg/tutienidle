@@ -13,6 +13,29 @@ import { accrueCultivationInsight } from './CultivationInsight'
 import { addCultivation } from './CultivationSystem'
 
 /**
+ * The un-buffed per-second rate the tick composes: BASE x talent speed
+ * multiplier x per-realm-level ramp, BEFORE any tu_linh_tran percent.
+ * Exported for the offline-restore path (stores/player.ts): the saved
+ * cultivationPerSecond snapshot is written only on the 1s tick, so a
+ * buff that activates or expires inside the (last tick -> save] gap
+ * leaves it stale in BOTH directions - restore must re-derive this
+ * from the saved talent/realm fields, not un-buff the snapshot
+ * (F-BX-30).
+ */
+export function computeUnbuffedCultivationRate(player: PlayerData): number {
+  return (
+    BASE_CULTIVATION_PER_SECOND *
+    // Guard 0.01 (plan sec.6) - negative percent is legal (Pham Cot
+    // -75% -> 0.25x) but never reaches 0/negative.
+    Math.max(0.01, getCultivationSpeedMultiplier(player.selectedTalentIds, player.talentLevels)) *
+    // M2 - Hau Tich Bat Phat: per-realm-level ramp (neutral 1 when
+    // absent). Multiplied into the saved rate so the offline grant
+    // (cultivationPerSecond * elapsed) inherits the same curve.
+    getCultivationRampMultiplier(player.selectedTalentIds, player.realmLevel, player.talentLevels)
+  )
+}
+
+/**
  * Advance cultivation by `deltaSeconds` of real-time progress. Returns
  * the ACTUAL tu vi granted (addCultivation clamps at the current level's
  * required). Writes `player.cultivationPerSecond` - the snapshot saved
@@ -24,15 +47,7 @@ export function cultivateTick(
   deltaSeconds: number,
   nowMs: number,
 ): number {
-  // Guard 0.01 (plan sec.6) - negative percent is legal (Pham Cot -75%
-  // -> 0.25x) but never reaches 0/negative.
-  player.cultivationPerSecond =
-    BASE_CULTIVATION_PER_SECOND *
-    Math.max(0.01, getCultivationSpeedMultiplier(player.selectedTalentIds, player.talentLevels)) *
-    // M2 - Hau Tich Bat Phat: per-realm-level ramp (neutral 1 when
-    // absent). Multiplied into the saved rate so the offline grant
-    // (cultivationPerSecond * elapsed) inherits the same curve.
-    getCultivationRampMultiplier(player.selectedTalentIds, player.realmLevel, player.talentLevels)
+  player.cultivationPerSecond = computeUnbuffedCultivationRate(player)
 
   // Tu Linh Tran (economy-fixes-sinks-plan sec.3.2 B1, 2026-08-29) -
   // sums % from active tu_linh_tran effects. Read through the domain
