@@ -336,4 +336,35 @@ describe('mid-trial lineage closure guard', () => {
     expect(player.realmId).toBe('mortal')
     expect(player.hiddenPerfection.realms['mortal']?.frozen).not.toBe(true)
   })
+
+  it('F-BX-86: startAutoFarm refuses while a trial battle is live - the slot belongs to the resume', () => {
+    setActivePinia(createPinia())
+    vi.spyOn(Math, 'random').mockReturnValue(0)
+
+    const gameManager = makeManager()
+    const combatSource = new ManualClockSource()
+    gameManager.setCombatClockSource(combatSource)
+    const player = mortalEligiblePlayer()
+    const stage = registerFixtureStage(gameManager)
+
+    // A second, already-perfected stage is the only valid farm target.
+    const farmStage: Stage = { ...stage, id: 'fixture_farm_stage' }
+    gameManager.catalogOps.registerStages([farmStage])
+    player.perfectClearStageIds.push(farmStage.id)
+    player.perfectClearSeconds[farmStage.id] = 10
+
+    gameManager.setActivePlayer(player)
+
+    // The roll fires: the trial battle runs a 'fresh' cycle - it holds
+    // NO stage lease, so without a live-battle gate startAutoFarm would
+    // acquire the free slot, zero pendingTechniqueMastery at its settle
+    // and leave the trial's post-victory resume.startStage refused.
+    expect(gameManager.turnBattleOps.startStage(player, stage, false)).toBe(true)
+    expect(gameManager.turnBattleOps.isTurnBattleInProgress()).toBe(true)
+
+    expect(
+      gameManager.turnBattleOps.autoFarmOps.startAutoFarm(player, farmStage.id),
+    ).toBe(false)
+    expect(player.autoFarmStage).toBeNull()
+  })
 })

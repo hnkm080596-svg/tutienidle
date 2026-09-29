@@ -53,6 +53,7 @@ export class GameManagerAutoFarmOps {
       enemySystem: EnemySystem
       buildPlayerRewardReceiver: (player: PlayerData) => RewardReceiver
       eventBus: EventBus
+      isTurnBattleInProgress: () => boolean
     },
   ) {}
 
@@ -82,6 +83,14 @@ export class GameManagerAutoFarmOps {
    * uniform) - no TurnBattleSystem, no animation; reward rolls by wall-clock.
    */
   startAutoFarm(player: PlayerData, stageId: string): boolean {
+    // F-BX-86: never arm while a battle is live. A 'fresh' cycle (hidden
+    // trial) holds NO stage lease, so the acquire below would succeed
+    // and steal the single slot from the post-trial resume - and the
+    // armed farm's settle would zero pendingTechniqueMastery mid-trial.
+    if (this.deps.isTurnBattleInProgress()) {
+      return false
+    }
+
     const stage = this.resolveValidAutoFarmStage(player, stageId)
 
     if (!stage) {
