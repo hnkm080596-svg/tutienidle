@@ -102,6 +102,14 @@ export function assertSaveAcceptable(save: GameSave, catalogs: SaveAcceptanceCat
     if (!catalogs.hasBuilding(instance.buildingId)) {
       throw new Error(`Unknown building in save: ${instance.buildingId}`)
     }
+    // Clean-A ACCRUAL-REALM-UNVALIDATED - a pinned accrual realm must be a
+    // known realm id; unknown ids would silently price windows at tier 1.
+    if (
+      instance.accrualRealmId !== undefined &&
+      getRealmIndex(instance.accrualRealmId) < 0
+    ) {
+      throw new Error(`Unknown accrualRealmId in save: ${instance.accrualRealmId}`)
+    }
   }
 
   // Mission A review (MA-R1-04) - an unknown siteId previously passed

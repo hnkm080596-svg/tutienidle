@@ -106,14 +106,20 @@ describe('TalentPassives v4 — shape & nhịp engine của 11 passive', () => {
     // Phan passive cong finalDamageReductionPercent AM (tuc +5% nhan vao).
     // CP-01 - flat channel: base rate-stat = 0 so percent is a dead value.
     expect(phan.passiveModifiers![0]!.flat).toBeLessThan(0)
+    // CP01-CANTHAN-RAMP - each leg is a static band, not a per-second ramp.
+    expect(chinh.passiveModifiers![0]!.maxStacks).toBe(1)
+    expect(phan.passiveModifiers![0]!.maxStacks).toBe(1)
   })
 
-  it('Hấp Linh — condition hpBelow 0.5, stack vô hạn (chỉ hiệu lực khi thấp HP)', () => {
+  it('Hấp Linh — condition hpBelow 0.5, single x2.5 leech multiplier while low HP', () => {
     const skill = passiveById.get('talent_passive_hap_linh')!
 
     expect(skill.passiveCondition).toEqual({ kind: 'hpBelow', percent: 0.5 })
-    expect(skill.passiveModifiers![0]!.maxStacks).toBeUndefined()
+    // CP01-CANTHAN-RAMP class - spec is a static x2.5 leech band, so the
+    // percent channel stays (multiplies gear leech) and stacks cap at 1.
+    expect(skill.passiveModifiers![0]!.maxStacks).toBe(1)
     expect(skill.passiveModifiers![0]!.stat).toBe('leechPercent')
+    expect(skill.passiveModifiers![0]!.percent).toBeCloseTo(1.5)
   })
 
   it('Trọng Kích — trigger critical, 3 tầng crit damage → bùng trong_kich_burst', () => {

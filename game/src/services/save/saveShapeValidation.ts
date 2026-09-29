@@ -1494,7 +1494,11 @@ function validateBuildingsSave(entries: unknown[], path: string, issues: ShapeIs
       typeof entry.buildingId !== 'string' ||
       !Number.isInteger(entry.level) ||
       (entry.level as number) < 1 ||
-      !isNonNegativeFiniteNumber(entry.lastCollectedAt)
+      !isNonNegativeFiniteNumber(entry.lastCollectedAt) ||
+      // Clean-A ACCRUAL-REALM-UNVALIDATED - accrualRealmId is a serialized
+      // string field; absent is fine (legacy save fallback), anything else
+      // is a malformed save.
+      (entry.accrualRealmId !== undefined && typeof entry.accrualRealmId !== 'string')
     ) {
       issues.push({ path: `${path}[${i}]`, message: 'building sai shape' })
     }

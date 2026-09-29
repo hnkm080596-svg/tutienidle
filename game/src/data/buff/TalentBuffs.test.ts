@@ -36,4 +36,24 @@ describe('TalentBuffs / TalentPassives zero-base stat channel (CP-01)', () => {
     )
     expect(missing).toEqual([])
   })
+
+  // CP01-CANTHAN-RAMP class - a per_second passive addStack()s every second
+  // the condition holds; an uncapped modifier is a runaway ramp, never a
+  // static band. leechPercent legitimately keeps the percent channel
+  // (x2.5 multiplier over gear-provided flat leech) - bounded, not flat.
+  it('every per_second passive modifier declares maxStacks', () => {
+    const unbounded = TALENT_PASSIVE_SKILLS.filter(
+      (s) => s.passiveTrigger === 'per_second',
+    ).flatMap((s) =>
+      (s.passiveModifiers ?? []).filter((m) => m.maxStacks === undefined),
+    )
+    expect(unbounded).toEqual([])
+  })
+
+  it('per_second modifier ids are unique across passives', () => {
+    const ids = TALENT_PASSIVE_SKILLS.filter(
+      (s) => s.passiveTrigger === 'per_second',
+    ).flatMap((s) => (s.passiveModifiers ?? []).map((m) => m.id))
+    expect(new Set(ids).size).toBe(ids.length)
+  })
 })

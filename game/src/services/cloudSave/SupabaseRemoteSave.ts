@@ -173,14 +173,15 @@ export async function syncRemoteSaveOnLogin(config: SupabaseConfig): Promise<Rem
         return 'unavailable'
       }
     } else {
-      // No remote row yet - plain insert. A concurrent first-push loses to
-      // the PK conflict (throws -> 'unavailable') and pulls on next login.
+      // No remote row yet - strict insert (no merge-duplicates): with
+      // character_id as PK a concurrent first-push hits a real 409 conflict
+      // (throws -> 'unavailable') instead of silently upserting over it,
+      // and pulls on next login.
       await requestSupabase<unknown>(
         config,
         '/rest/v1/character_saves',
         {
           method: 'POST',
-          headers: { Prefer: 'resolution=merge-duplicates' },
           body,
         },
         session.accessToken,

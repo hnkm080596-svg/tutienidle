@@ -140,3 +140,44 @@ describe('hidden_spell_pathway kit coherence (saveAcceptance)', () => {
     expect(isSaveAcceptable(save, catalogs)).toBe(true)
   })
 })
+
+// ACCRUAL-REALM-UNVALIDATED - EM-01 pins each building's accrual window to
+// the realm at build/claim time. A hand-edited save carrying a fabricated
+// realm id would price the backlog at that realm's tier silently; the
+// acceptance seam must reject unknown ids like it does unknown buildings.
+describe('building accrualRealmId coherence (saveAcceptance)', () => {
+  function buildingSave(accrualRealmId: string | undefined): GameSave {
+    const save = spellPathwaySave()
+    save.buildings = [
+      {
+        instanceId: 'b1',
+        buildingId: 'tong_mon_dan_phong',
+        level: 1,
+        lastCollectedAt: 0,
+        accrualRealmId,
+      },
+    ]
+    return save
+  }
+
+  it('unknown accrualRealmId -> hard reject', () => {
+    const save = buildingSave('not_a_realm')
+
+    expect(() => assertSaveAcceptable(save, catalogs)).toThrow(
+      'Unknown accrualRealmId',
+    )
+    expect(isSaveAcceptable(save, catalogs)).toBe(false)
+  })
+
+  it('known accrualRealmId -> accepted', () => {
+    const save = buildingSave('qi_refining')
+
+    expect(isSaveAcceptable(save, catalogs)).toBe(true)
+  })
+
+  it('absent accrualRealmId (legacy save) -> accepted', () => {
+    const save = buildingSave(undefined)
+
+    expect(isSaveAcceptable(save, catalogs)).toBe(true)
+  })
+})

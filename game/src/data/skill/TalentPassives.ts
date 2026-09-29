@@ -56,13 +56,17 @@ function stat(
 
 // CP-01 — variant flat cho stat base-0 (rate stat): percent nhân lên
 // (base+flat)=0 vẫn ra 0, nên các passive dưới đây phải cộng tuyệt đối.
+// CP01-CANTHAN-RAMP - a per_second flatStat without maxStacks ramps one
+// stack per second forever; and two modifiers sharing stat+maxStacks
+// would collide on the generated id, so callers pass an idSuffix.
 function flatStat(
   stat: StatModifier['stat'],
   flat: number,
   maxStacks?: number,
+  idSuffix?: string,
 ): StatModifier {
   return {
-    id: `talent:${stat}:${maxStacks ?? 'inf'}:flat`,
+    id: `talent:${stat}:${maxStacks ?? 'inf'}:flat${idSuffix ? `:${idSuffix}` : ''}`,
     sourceId: 'talent',
     sourceType: 'talent',
     stat,
@@ -117,7 +121,10 @@ export const TALENT_PASSIVE_SKILLS: Skill[] = [
     'Hấp Linh',
     'Nội tại Hấp Linh của thiên phú — hút máu bùng phát khi thân thương.',
     'per_second',
-    [stat('leechPercent', 0.0125)],
+    // Spec is a static x2.5 leech multiplier while hpBelow 0.5 - percent
+    // channel stays (it scales gear-provided leech), stacks cap at 1 so
+    // per_second ticking cannot ramp it.
+    [stat('leechPercent', 1.5, 1)],
     { passiveCondition: { kind: 'hpBelow', percent: 0.5 } },
   ),
   // 6. Thach Giap - phong thu: block thanh cong +2% defense (max 10)
@@ -139,15 +146,17 @@ export const TALENT_PASSIVE_SKILLS: Skill[] = [
     [stat('evasionRate', 0.02, 5)],
     { passiveConvertsTo: { buffId: 'sat_na' } },
   ),
-  // 8. Can Than - endurance: duoi nguong HP nhan −10% (finalDamage
-  // ReductionPercent), tren nguong nhan +5% - dao doi sinh tu: 2
-  // passive trai dau theo condition.
+  // 8. Can Than - endurance: below HP threshold takes -10%
+  // (finalDamageReductionPercent), above takes +5% - mirrored pair:
+  // two opposite-sign legs keyed on condition.
   talentPassive(
     'talent_passive_can_than',
     'Cẩn Thận',
     'Nội tại Cẩn Thận của thiên phú — lạnh lòng khi sát tử đường.',
     'per_second',
-    [flatStat('finalDamageReductionPercent', 0.1)],
+    // Static -10% taken band while low HP - capped at one stack; the two
+    // Can Than legs share stat+cap so each leg gets a distinct id suffix.
+    [flatStat('finalDamageReductionPercent', 0.1, 1, 'hpBelow')],
     { passiveCondition: { kind: 'hpBelow', percent: 0.35 } },
   ),
   talentPassive(
@@ -155,9 +164,9 @@ export const TALENT_PASSIVE_SKILLS: Skill[] = [
     'Cẩn Thận (phản)',
     'Nội tại Cẩn Thận của thiên phú — chủ quan khi an toàn.',
     'per_second',
-    [flatStat('finalDamageReductionPercent', -0.05)],
-    // CP-01 — downside leg chỉ áp TRÊN ngưỡng; không condition thì nó
-    // luôn active và triệt tiêu một nửa leg 'hpBelow' phía trên.
+    [flatStat('finalDamageReductionPercent', -0.05, 1, 'hpNotBelow')],
+    // CP-01 - the downside leg applies only ABOVE the threshold; without
+    // the condition it would be always active and eat half the upside leg.
     { passiveCondition: { kind: 'hpNotBelow', percent: 0.35 } },
   ),
   // 9. Ho The - ward vo no AoE + hoi ward: phan bung no ward-break nam

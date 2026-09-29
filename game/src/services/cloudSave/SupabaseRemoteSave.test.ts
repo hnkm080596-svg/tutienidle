@@ -305,6 +305,12 @@ describe('syncRemoteSaveOnLogin - newest-wins reconciliation (spec F8)', () => {
     expect(await syncRemoteSaveOnLogin(config)).toBe('pushed')
     const post = calls.find((call) => call.init.method === 'POST')
     expect(post).toBeDefined()
+    // CLOUD-INSERT-UPSERT - a strict insert must NOT carry merge-duplicates;
+    // with a PK on character_id that preference turns the POST into an
+    // upsert and a concurrent first push would silently overwrite instead
+    // of conflict-losing.
+    const postHeaders = post?.init.headers as Record<string, string> | undefined
+    expect(postHeaders?.Prefer ?? '').not.toContain('merge-duplicates')
     const body = JSON.parse(String(post?.init.body)) as Record<string, unknown>
     expect(body.save_revision).toBe(2)
 
