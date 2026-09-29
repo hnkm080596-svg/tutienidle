@@ -354,18 +354,26 @@ export const usePlayerStore = defineStore('player', {
       // and the earned points stay visible to every baseStats reader.
       // Main stats fold under the shared effective cap; other valid
       // stat keys fold uncapped (no main-cap concept applies).
-      const isRetiredPillPermanent = (modifier: StatModifier): boolean =>
-        modifier.id.startsWith('pill-permanent:')
+      const isRetiredPillPermanent = (modifier: StatModifier | null | undefined): boolean =>
+        typeof modifier?.id === 'string' && modifier.id.startsWith('pill-permanent:')
       const mainCap = getEffectiveMainStatCap(restoredPlayer)
+      const foldedRetiredIds = new Set<string>()
       const foldRetiredPillPermanents = (modifiers: StatModifier[] | undefined): void => {
         for (const modifier of modifiers ?? []) {
           if (!isRetiredPillPermanent(modifier) || !allowedStatKeys.has(modifier.stat)) {
+            continue
+          }
+          // A legacy save could carry the same entry in two buckets;
+          // the fold credits it once. An invalid-flat copy does not
+          // consume the id - a later valid copy still credits.
+          if (foldedRetiredIds.has(modifier.id)) {
             continue
           }
           const gain = modifier.flat ?? 0
           if (!Number.isFinite(gain) || gain <= 0) {
             continue
           }
+          foldedRetiredIds.add(modifier.id)
           const key = modifier.stat
           const bound = (MAIN_STAT_KEYS as readonly string[]).includes(key)
             ? mainCap
@@ -375,11 +383,15 @@ export const usePlayerStore = defineStore('player', {
       }
 
       // Same one-shot fold in every static-modifier bucket a legacy
-      // save could carry: player.modifiers and player.externalModifiers
-      // are both filtered by isCurrentShapeModifier below, so a folded
-      // zombie is dropped from either channel exactly once.
+      // save could carry: player.modifiers, player.externalModifiers
+      // and persistentTimedEffects[].modifiers are all filtered by
+      // isCurrentShapeModifier below, so a folded zombie is dropped
+      // from whichever channel carried it.
       foldRetiredPillPermanents(restoredPlayer.modifiers)
       foldRetiredPillPermanents(restoredPlayer.externalModifiers)
+      for (const effect of restoredPlayer.persistentTimedEffects ?? []) {
+        foldRetiredPillPermanents(effect?.modifiers)
+      }
 
       // Value-domain coherence on the persisted pool: main stats clamp
       // to the shared cap (a save claiming more is corrupt or crafted -
@@ -395,6 +407,9 @@ export const usePlayerStore = defineStore('player', {
       // wrong tag would be rejected by applyDomainGate on every
       // recompute, so the inert zombie is dropped at restore instead.
       const isCurrentShapeModifier = (modifier: StatModifier): boolean => {
+        if (modifier === null || typeof modifier !== 'object') {
+          return false
+        }
         if (isRetiredPillPermanent(modifier)) {
           return false
         }

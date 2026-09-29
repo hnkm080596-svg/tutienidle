@@ -57,6 +57,7 @@ interface EffectiveCapPlayer {
  * may round differently.
  */
 export function getEffectiveMainStatCap(player: EffectiveCapPlayer): number {
-  const completed = player.hiddenPerfection?.completedHiddenBodyRealmIds.length ?? 0
+  const realmIds = player.hiddenPerfection?.completedHiddenBodyRealmIds
+  const completed = Array.isArray(realmIds) ? realmIds.length : 0
   return Math.floor(getMainStatCap(player.realmId) * (1 + completed * HIDDEN_BODY_CAP_BONUS_PER_REALM))
 }
