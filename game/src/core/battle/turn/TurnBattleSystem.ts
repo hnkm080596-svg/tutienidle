@@ -1110,9 +1110,13 @@ export class TurnBattleSystem {
     }
 
     if ((battle.followUpChainDepth ?? 0) >= MAX_FOLLOW_UP_CHAIN_DEPTH) {
-      // Reciprocity guard tripped -- drop phần còn lại của queue, quay về
-      // normal gauge order thay vì bounce vô hạn.
-      battle.queuedFollowUps = undefined
+      // Reciprocity guard tripped -- DEFER the remaining queue, never
+      // drop it: every entry is already-committed work whose cost or
+      // reactive trigger was paid when it was enqueued, so voiding the
+      // queue here silently steals paid follow-ups (F-BX-41). Fall back
+      // to normal gauge order once; the gauge pick resets chain depth
+      // and the next dequeue drains the remainder, so consecutive
+      // bounces stay bounded without an infinite chain.
       battle.followUpChainDepth = 0
       return null
     }
