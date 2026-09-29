@@ -7,6 +7,7 @@
 // qua layout() — resize gọi lại layout, KHÔNG hardcode px màn hình dev.
 import Phaser from 'phaser'
 import { DEPTH_OVERLAY_UI } from '@/game/support/BattleLayers'
+import { GOURD_PLACEHOLDER_SIZE, GOURD_SAFE_MARGIN_PX } from '@/game/support/RewardGourd'
 import { formatNumber } from '@/core/format/NumberFormatter'
 
 import {
@@ -169,7 +170,11 @@ export class PlayerHudLayer {
   layout(width: number, height: number): void {
     this.viewport = { width, height }
 
-    const leftX = HUD_MARGIN
+    // FE-08 — the reward gourd anchors bottom-left (GOURD_SAFE_MARGIN
+    // + 52px wide, RewardGourd.ts §6.2) and collided with the label/bar
+    // column at HUD_MARGIN. The HUD stack starts right of the gourd's
+    // footprint so "102 / 108" never prints on top of the medallion.
+    const leftX = GOURD_SAFE_MARGIN_PX + GOURD_PLACEHOLDER_SIZE.w + HUD_GAP
     const hpBarY = height - HUD_MARGIN - HUD_HP_HEIGHT
     const sub1Y = hpBarY - HUD_GAP - HUD_SUB_HEIGHT
     const sub2Y = sub1Y - HUD_GAP - HUD_SUB_HEIGHT

@@ -582,6 +582,7 @@
         "met": "Met",
         "unmet": "Not met"
       },
+      "ceilingNote": "{realm} is not available in this build — {ceiling} is the highest realm of this version.",
       "bodyRefinement": {
         "title": "Body Refinement",
         "summary": "Tiers completed: {completed}/6",
