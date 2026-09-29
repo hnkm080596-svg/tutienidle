@@ -60,6 +60,17 @@ describe('BuffSystem.apply -- new instance', () => {
     expect(failed[0]!.reason).toBe('application_roll_failed')
     expect(w.sink.events).toHaveLength(1)
   })
+
+  it.each([0, -3])('apply with stacks=%i floors the created instance at 1 stack (F-BX-46)', (stacks) => {
+    const w = makeBuffSystemWorld()
+    def(w, { stacking: { maxStacks: 5, onReapplyStacks: 'add', onReapplyDuration: 'refresh' } })
+    const r = w.system.apply(req({ stacks }), w.makeCtx())
+    expect(r.applied).toBe(true)
+    expect(r.created).toBe(true)
+    // stacks<=0 used to mint a live dead instance: getStatModifiers x 0
+    // delivered nothing while buff_applied reported created:true.
+    expect(w.store.get(r.instanceId!)!.stacks).toBe(1)
+  })
 })
 
 describe('BuffSystem.apply -- reapply axes (9 combos)', () => {
@@ -115,6 +126,36 @@ describe('BuffSystem.apply -- reapply axes (9 combos)', () => {
     expect(r.overflowStacks).toBe(2)
     expect(instance.stacks).toBe(2)
     expect(instance.remaining).toBe(3) // refreshed
+  })
+
+  it("onReapplyDuration:'extend' leaves a durationless instance durationless (F-BX-45)", () => {
+    const w = makeBuffSystemWorld()
+    def(w, {
+      lifetime: { clock: 'permanent', scaling: 'fixed' },
+      stacking: { maxStacks: 5, onReapplyStacks: 'add', onReapplyDuration: 'extend' },
+    })
+    const first = w.system.apply(req({ stacks: 1 }), w.makeCtx())
+    const instance = w.store.get(first.instanceId!)!
+    expect(instance.remaining).toBeUndefined()
+
+    const second = w.system.apply(req({ stacks: 1 }), w.makeCtx())
+    expect(second.instanceId).toBe(first.instanceId)
+    // (undefined ?? 0) + (undefined ?? 0) used to mint remaining=0, so
+    // the permanent instance expired on the next Phase B tick.
+    expect(instance.remaining).toBeUndefined()
+  })
+
+  it("onReapplyDuration:'extend' on a timed instance adds the resolved duration (F-BX-45)", () => {
+    const w = makeBuffSystemWorld()
+    def(w, {
+      stacking: { maxStacks: 5, onReapplyStacks: 'add', onReapplyDuration: 'extend' },
+    })
+    const first = w.system.apply(req({ stacks: 1 }), w.makeCtx())
+    const instance = w.store.get(first.instanceId!)!
+    instance.remaining = 1 // simulate elapsed time
+
+    w.system.apply(req({ stacks: 1 }), w.makeCtx())
+    expect(instance.remaining).toBe(4) // 1 + def lifetime.duration 3
   })
 
   it("per_target + sourceOwnership:'latest' keeps instanceId, transfers sourceId", () => {

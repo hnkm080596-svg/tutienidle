@@ -232,7 +232,12 @@ export class BuffSystem implements BuffAuthority, BuffReadPort {
         definitionId: def.id,
         sourceId: req.sourceId,
         targetId: req.targetId,
-        stacks: Math.min(req.stacks, maxStacks),
+        // F-BX-46 - zero/negative-stack create requests minted a live
+        // dead instance (getStatModifiers x stacks<=0 delivered nothing
+        // while buff_applied reported created:true). The ZERO-STACK
+        // rule already governs the mutation paths; the create path
+        // floors at 1 the same way the production lanes do.
+        stacks: Math.max(1, Math.min(req.stacks, maxStacks)),
         remaining: duration,
         continuousTurns: 0,
         continuousSeconds: 0,
@@ -265,8 +270,14 @@ export class BuffSystem implements BuffAuthority, BuffReadPort {
           instance.remaining = duration
           break
         case 'extend':
-          instance.remaining =
-            (instance.remaining ?? 0) + (duration ?? 0) // uncapped (open q5)
+          // F-BX-45 - extending needs a timed base AND a finite delta:
+          // (undefined ?? 0) + (undefined ?? 0) minted remaining=0 so a
+          // permanent instance expired next Phase B, and a finite
+          // reapply silently converted it to timed. Either side
+          // durationless means there is nothing to extend.
+          if (instance.remaining !== undefined && duration !== undefined) {
+            instance.remaining = instance.remaining + duration // uncapped (open q5)
+          }
           break
         case 'keep':
         default:
