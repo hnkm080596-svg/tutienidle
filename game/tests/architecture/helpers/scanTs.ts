@@ -120,14 +120,85 @@ export function srcCorpus(srcDir: string): SourceFile[] {
  * nothing unless production imports it, and that import is itself flagged).
  */
 const TEST_EXT_RE = /\.test\.(ts|tsx|js|jsx|mjs|cjs|mts|cts)$/
-const TEST_MARKER_RE = /from\s+['"]vitest['"]|require\(\s*['"]vitest['"]\)|\b(?:describe|it|test)\s*\(/
+const TEST_MARKER_RE =
+  /from\s+['"](?:vitest|@vitest\/|vitest\/)[^'"]*['"]|require\(\s*['"]vitest['"]\)|\b(?:describe|it|test|bench|suite|expect)(?:\.\w+)*\s*\(/
 
 export function looksLikeTestFile(path: string, text: string): boolean {
   return TEST_EXT_RE.test(path) && TEST_MARKER_RE.test(text)
 }
 
-/** True when an import/export/require specifier text names a `*.test*` module,
- *  extensionless spellings included. */
+/** True when an import/export/require specifier text names a `*.test*` module -
+ *  extensionless spellings and query suffixes (`?import`, `?worker`, `?raw`)
+ *  included. */
 export function isTestSpecifier(specText: string): boolean {
-  return /\.test(?:\.|$)/.test(specText)
+  return /\.test(?:\.|\?|$)/.test(specText)
+}
+
+/**
+ * Expression-bearing text regions inside a .vue template: attribute
+ * values on directive-ish names (`v-`, `@`, `:`, `#`), mustache
+ * interpolations and dynamic directive arguments (`@[expr]`, `#[expr]`).
+ * HTML comments and <script>/<style> bodies are stripped first so
+ * inert text and script-literal strings are never scanned. Mustaches
+ * match by brace depth so `{{ {a:{b:1}} }}` resolves fully.
+ */
+/** Vue SFC text minus inert regions: <script>/<style> bodies and
+ *  HTML comments are blanked so directive/mustache scans never see
+ *  script-literal strings or commented-out template. */
+export function stripVueInert(text: string): string {
+  return text
+    .replace(/<script\b[^>]*>[\s\S]*?<\/script\s*>/gi, ' ')
+    .replace(/<style\b[^>]*>[\s\S]*?<\/style\s*>/gi, ' ')
+    .replace(/<!--[\s\S]*?-->/g, ' ')
+}
+
+export function templateExpressions(text: string): string[] {
+  const tpl = stripVueInert(text)
+  const exprs: string[] = []
+  const attrRe = /(?:^|\s)(?:v-|@|:|#)[\w:._[\]-]*\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/g
+  const dynRe = /(?:@|:|#)\[((?:[^\[\]"']|"[^"]*"|'[^']*')*)\]\s*=/g
+  let m: RegExpExecArray | null
+  while ((m = attrRe.exec(tpl)) !== null) {
+    const v = m[1] ?? m[2] ?? m[3]
+    if (v !== undefined && v.length > 0) exprs.push(v)
+  }
+  while ((m = dynRe.exec(tpl)) !== null) {
+    const v = m[1]
+    if (v !== undefined && v.length > 0) exprs.push(v)
+  }
+  // Mustaches: find `{{` then scan to the matching `}}` counting brace
+  // depth and skipping string literals.
+  let i = 0
+  for (;;) {
+    const start = tpl.indexOf('{{', i)
+    if (start === -1) break
+    let j = start + 2
+    let depth = 0
+    let quote: string | null = null
+    for (; j < tpl.length; j++) {
+      const ch = tpl[j]
+      if (quote !== null) {
+        if (ch === '\\') {
+          j++
+        } else if (ch === quote) {
+          quote = null
+        }
+        continue
+      }
+      if (ch === '"' || ch === "'" || ch === '`') {
+        quote = ch
+      } else if (ch === '{') {
+        depth++
+      } else if (ch === '}') {
+        if (tpl[j + 1] === '}' && depth === 0) break
+        depth--
+      }
+    }
+    if (j < tpl.length) {
+      const v = tpl.slice(start + 2, j)
+      if (v.trim().length > 0) exprs.push(v)
+    }
+    i = j + 2
+  }
+  return exprs
 }
