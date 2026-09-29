@@ -673,7 +673,9 @@
         "save": "Lưu Trữ",
         "saveAria": "Lưu trữ",
         "language": "Ngôn Ngữ",
-        "languageAria": "Ngôn ngữ"
+        "languageAria": "Ngôn ngữ",
+        "build": "Phiên Bản",
+        "buildAria": "Thông tin phiên bản"
       },
       "audio": {
         "on": "Bật",
@@ -690,6 +692,15 @@
           "vi": "Tiếng Việt",
           "en": "English"
         }
+      },
+      "build": {
+        "version": "Phiên bản",
+        "build": "Bản dựng",
+        "commit": "Commit",
+        "schema": "Lược đồ save",
+        "environment": "Môi trường",
+        "channel": "Kênh",
+        "builtAt": "Thời điểm dựng"
       }
     },
     "quest": {
@@ -1421,7 +1432,8 @@
     "app": {
       "title": "Đã xảy ra lỗi",
       "close": "Đóng",
-      "reload": "Tải Lại Trang"
+      "reload": "Tải Lại Trang",
+      "build": "{product} {version} · bản dựng {build} · {sha} · {env}"
     },
     "boot": {
       "title": "Không thể khởi động",
