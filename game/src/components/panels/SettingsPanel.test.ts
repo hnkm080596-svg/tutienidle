@@ -8,6 +8,7 @@ import { GAME_MANAGER_KEY } from '@/composables/useGameState'
 import { SAVE_RESET_REQUEST_EVENT } from '@/services/save/SaveSystem'
 import { useNotificationStore } from '@/stores/notification'
 import { i18n } from '@/i18n'
+import { BUILD_IDENTITY, shortGitSha } from '@/shared/build/BuildIdentity'
 
 afterEach(() => {
   document.body.innerHTML = ''
@@ -102,6 +103,55 @@ describe('SettingsPanel — toast kind khi save thất bại', () => {
 
     expect(failureToast).toBeDefined()
     expect(failureToast!.kind).toBe('error')
+
+    mounted.unmount()
+  })
+})
+
+// BETA-FINAL PR1 / spec B2 - Settings shows the injected build identity;
+// the rendered values must equal the manifest fields verbatim.
+describe('SettingsPanel — build identity section', () => {
+  function mountPanel() {
+    const container = document.createElement('div')
+    const app = createApp({ render: () => h(SettingsPanel) })
+
+    document.body.appendChild(container)
+    app.use(createPinia())
+    app.use(i18n)
+    app.provide(GAME_MANAGER_KEY, new GameManager())
+    app.mount(container)
+
+    return {
+      container,
+      unmount: () => {
+        app.unmount()
+        container.remove()
+      },
+    }
+  }
+
+  it('renders every manifest field in the Build section', () => {
+    const mounted = mountPanel()
+    const { container } = mounted
+
+    const value = (testid: string) =>
+      container.querySelector<HTMLElement>(`[data-testid="${testid}"]`)!.textContent
+
+    expect(value('build-version')).toBe(BUILD_IDENTITY.appVersion)
+    expect(value('build-id')).toBe(BUILD_IDENTITY.buildId)
+    expect(value('build-commit')).toBe(shortGitSha())
+    expect(value('build-schema')).toBe(String(BUILD_IDENTITY.saveSchemaVersion))
+    expect(value('build-environment')).toBe(BUILD_IDENTITY.backendEnvironment)
+    expect(value('build-channel')).toBe(BUILD_IDENTITY.releaseChannel)
+    expect(value('build-built-at')).toBe(BUILD_IDENTITY.builtAtUtc)
+
+    mounted.unmount()
+  })
+
+  it('shows the short sha, not the full 40-char sha', () => {
+    const mounted = mountPanel()
+
+    expect(mounted.container.textContent).not.toContain(BUILD_IDENTITY.gitSha)
 
     mounted.unmount()
   })

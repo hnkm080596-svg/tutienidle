@@ -4,6 +4,7 @@ import GameButton from '@/components/common/GameButton.vue'
 import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
 import { useErrorStore } from '@/stores/error'
 import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
+import { BUILD_IDENTITY, shortGitSha } from '@/shared/build/BuildIdentity'
 
 const errorStore = useErrorStore()
 const { t } = useI18n()
@@ -38,6 +39,20 @@ function reloadPage() {
 
           <GameButton variant="secondary" @click="reloadPage">{{ t('errors.app.reload') }}</GameButton>
         </div>
+
+        <!-- BETA-FINAL PR1 / spec B2 - build identity on the error surface
+             so a screenshot of a crash carries the release manifest values. -->
+        <p class="error-screen__build" data-testid="error-build">
+          {{
+            t('errors.app.build', {
+              product: BUILD_IDENTITY.productName,
+              version: BUILD_IDENTITY.appVersion,
+              build: BUILD_IDENTITY.buildId,
+              sha: shortGitSha(),
+              env: BUILD_IDENTITY.backendEnvironment,
+            })
+          }}
+        </p>
       </div>
     </div>
   </div>
@@ -97,5 +112,13 @@ function reloadPage() {
   display: flex;
   gap: 10px;
   justify-content: center;
+}
+
+.error-screen__build {
+  margin: 16px 0 0;
+  color: var(--paper-text-soft);
+  font-family: var(--font-mono, monospace);
+  font-size: var(--text-xs);
+  word-break: break-all;
 }
 </style>

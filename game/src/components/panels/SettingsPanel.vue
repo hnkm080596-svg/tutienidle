@@ -8,6 +8,7 @@ import { useNotificationStore } from '@/stores/notification'
 import { exportSaveToFile, getRawSave, importSaveRaw, SAVE_RESET_REQUEST_EVENT } from '@/services/save/SaveSystem'
 import { UI_SCALE_OPTIONS, loadUiScale, saveUiScale } from '@/composables/uiScale'
 import { LOCALE_OPTIONS, saveLocale, type AppLocale } from '@/composables/locale'
+import { BUILD_IDENTITY, shortGitSha } from '@/shared/build/BuildIdentity'
 import ConfirmModal from '@/components/common/ConfirmModal.vue'
 import GameButton from '@/components/common/GameButton.vue'
 import Chip from '@/components/common/primitives/Chip.vue'
@@ -54,6 +55,19 @@ function handleUiScale(scale: number) {
 function handleLocale(next: AppLocale) {
   saveLocale(next)
 }
+
+// BETA-FINAL PR1 - one read of the injected build identity for the Build
+// section below (frozen; same literal the Electron main process logged).
+const build = BUILD_IDENTITY
+const BUILD_ROWS = [
+  { labelKey: 'version', testid: 'build-version', value: build.appVersion },
+  { labelKey: 'build', testid: 'build-id', value: build.buildId },
+  { labelKey: 'commit', testid: 'build-commit', value: shortGitSha() },
+  { labelKey: 'schema', testid: 'build-schema', value: build.saveSchemaVersion },
+  { labelKey: 'environment', testid: 'build-environment', value: build.backendEnvironment },
+  { labelKey: 'channel', testid: 'build-channel', value: build.releaseChannel },
+  { labelKey: 'builtAt', testid: 'build-built-at', value: build.builtAtUtc },
+] as const
 
 const lastSavedLabel = ref('')
 
@@ -286,6 +300,19 @@ function handleReset() {
         </Chip>
       </div>
     </section>
+
+    <!-- BETA-FINAL PR1 / spec B2 - support-visible build identity. Values
+         match the release manifest and the error screen footer. -->
+    <section class="settings-panel__section settings-panel__build" :aria-label="t('panels.settings.sections.buildAria')">
+      <h4>{{ t('panels.settings.sections.build') }}</h4>
+
+      <dl class="settings-panel__build-list">
+        <div v-for="row in BUILD_ROWS" :key="row.testid" class="settings-panel__build-row">
+          <dt>{{ t(`panels.settings.build.${row.labelKey}`) }}</dt>
+          <dd :data-testid="row.testid">{{ row.value }}</dd>
+        </div>
+      </dl>
+    </section>
     </div>
 
     <p v-if="lastSavedLabel" class="settings-panel__hint">{{ t('panels.settings.hints.savedAt', { time: lastSavedLabel }) }}</p>
@@ -463,5 +490,32 @@ function handleReset() {
 
 .settings-panel__language-option:hover {
   border-color: var(--chrome-500);
+}
+
+/* Build identity - read-only dl for support/diagnostics. */
+.settings-panel__build-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  font-size: var(--text-xs);
+}
+
+.settings-panel__build-row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.settings-panel__build-row dt {
+  color: var(--paper-text-soft);
+}
+
+.settings-panel__build-row dd {
+  margin: 0;
+  color: var(--paper-text);
+  font-family: var(--font-mono, monospace);
+  word-break: break-all;
+  text-align: right;
 }
 </style>

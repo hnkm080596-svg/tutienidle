@@ -673,7 +673,18 @@
         "save": "Save Data",
         "saveAria": "Save data",
         "language": "Language",
-        "languageAria": "Language"
+        "languageAria": "Language",
+        "build": "Build",
+        "buildAria": "Build information"
+      },
+      "build": {
+        "version": "Version",
+        "build": "Build",
+        "commit": "Commit",
+        "schema": "Save schema",
+        "environment": "Environment",
+        "channel": "Channel",
+        "builtAt": "Built at"
       },
       "audio": {
         "on": "On",
@@ -1421,7 +1432,8 @@
     "app": {
       "title": "An error occurred",
       "close": "Close",
-      "reload": "Reload Page"
+      "reload": "Reload Page",
+      "build": "{product} {version} · build {build} · {sha} · {env}"
     },
     "boot": {
       "title": "Unable to start",
