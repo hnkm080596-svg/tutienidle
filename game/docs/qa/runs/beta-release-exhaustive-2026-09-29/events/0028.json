@@ -1,0 +1,34 @@
+{
+  "action": "admit",
+  "assignment": {
+    "id": "ASG-BX-UIA",
+    "parentId": null,
+    "capacityScope": "swe2-slot",
+    "inputBundleHash": "7e7cf7e63e179b7b2db9aaeff5b03c38ed0e3ab4e457d342a00dede6ba0020c5",
+    "dependencies": [],
+    "requiredCapabilities": [
+      "exec",
+      "repo-read"
+    ],
+    "writeSurface": [
+      "blind correctness audit ui/i18n/a11y/phaser/audio"
+    ],
+    "readiness": "READY",
+    "status": "READY",
+    "observedRuntimeId": "devin-fb50372a4d554b77afaf14db08dbae60",
+    "history": [
+      {
+        "at": "2026-09-29T14:40:00Z",
+        "from": "-",
+        "to": "CREATED",
+        "reason": "wave-2 dispatch"
+      },
+      {
+        "at": "2026-09-29T14:45:00Z",
+        "from": "CREATED",
+        "to": "READY",
+        "reason": "prompt delivered"
+      }
+    ]
+  }
+}

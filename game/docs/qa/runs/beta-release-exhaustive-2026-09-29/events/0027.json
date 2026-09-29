@@ -1,0 +1,34 @@
+{
+  "action": "admit",
+  "assignment": {
+    "id": "ASG-BX-QCF",
+    "parentId": null,
+    "capacityScope": "swe2-slot",
+    "inputBundleHash": "29c5fea6b07b9d4f0a8fc1c77844362a93d800d373867ce377ac6d80b1c45d53",
+    "dependencies": [],
+    "requiredCapabilities": [
+      "exec",
+      "repo-read"
+    ],
+    "writeSurface": [
+      "blind correctness audit quests/companions/formation/stages"
+    ],
+    "readiness": "READY",
+    "status": "READY",
+    "observedRuntimeId": "devin-fe5baa9431f14b95b10db7ca02df2369",
+    "history": [
+      {
+        "at": "2026-09-29T14:40:00Z",
+        "from": "-",
+        "to": "CREATED",
+        "reason": "wave-2 dispatch"
+      },
+      {
+        "at": "2026-09-29T14:45:00Z",
+        "from": "CREATED",
+        "to": "READY",
+        "reason": "prompt delivered"
+      }
+    ]
+  }
+}

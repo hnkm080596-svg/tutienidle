@@ -1,0 +1,34 @@
+{
+  "action": "admit",
+  "assignment": {
+    "id": "ASG-BX-ECO",
+    "parentId": null,
+    "capacityScope": "swe2-slot",
+    "inputBundleHash": "540cfcaa44eea506d1d74c096110bfcb3b536f0c356e2d81009975094ad09c16",
+    "dependencies": [],
+    "requiredCapabilities": [
+      "exec",
+      "repo-read"
+    ],
+    "writeSurface": [
+      "blind correctness audit economy/inventory/equipment/rewards/offline"
+    ],
+    "readiness": "READY",
+    "status": "READY",
+    "observedRuntimeId": "devin-f17e9bc914614b96a55296b3423148cc",
+    "history": [
+      {
+        "at": "2026-09-29T14:40:00Z",
+        "from": "-",
+        "to": "CREATED",
+        "reason": "wave-2 dispatch"
+      },
+      {
+        "at": "2026-09-29T14:45:00Z",
+        "from": "CREATED",
+        "to": "READY",
+        "reason": "prompt delivered"
+      }
+    ]
+  }
+}

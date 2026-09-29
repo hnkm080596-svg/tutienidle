@@ -1,0 +1,34 @@
+{
+  "action": "admit",
+  "assignment": {
+    "id": "ASG-BX-REPAIR-W2",
+    "parentId": null,
+    "capacityScope": "swe2-slot",
+    "inputBundleHash": "7c88b02625b6564387e7b9061176b72ff9542e9fb3239aa47d68e428d2e494cc",
+    "dependencies": [],
+    "requiredCapabilities": [
+      "exec",
+      "repo-read"
+    ],
+    "writeSurface": [
+      "adjudicate+repair Medium+ findings F-BX-30..52 on branch beta-repair-wave2"
+    ],
+    "readiness": "READY",
+    "status": "READY",
+    "observedRuntimeId": "devin-b28e0d6d4d90470e87023938392c7e09",
+    "history": [
+      {
+        "at": "2026-09-29T14:40:00Z",
+        "from": "-",
+        "to": "CREATED",
+        "reason": "wave-2 dispatch"
+      },
+      {
+        "at": "2026-09-29T14:45:00Z",
+        "from": "CREATED",
+        "to": "READY",
+        "reason": "prompt delivered"
+      }
+    ]
+  }
+}
