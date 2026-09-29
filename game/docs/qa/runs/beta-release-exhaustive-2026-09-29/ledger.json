@@ -25,7 +25,7 @@
     "base": "",
     "head": "",
     "state": {
-      "productStateId": "b3ade7e3f442eb2a98da5b317248dd469440631e950f0b3f1ad24cfe116060f4",
+      "productStateId": "8d7ea1cd7ca3df591edd09011e5c8a123a59536dd71d831c886f8ba2c016c435",
       "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
       "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
       "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
@@ -737,7 +737,7 @@
         "branch beta-repair-wave3"
       ],
       "readiness": "READY",
-      "status": "RESERVED",
+      "status": "FINISHED",
       "observedRuntimeId": "devin-45bbfbdcc152457594faf67390c03b20",
       "history": [
         {
@@ -751,9 +751,17 @@
           "from": "READY",
           "to": "RESERVED",
           "reason": "admitted at 3/5 (incl. external 0)"
+        },
+        {
+          "at": "2026-09-29T16:21:31.574Z",
+          "from": "RESERVED",
+          "to": "FINISHED",
+          "reason": "lifecycle verified released via 'exited'"
         }
       ],
-      "reservedAt": "2026-09-29T15:38:52.593Z"
+      "reservedAt": "2026-09-29T15:38:52.593Z",
+      "releaseEvidence": "8 findings repaired on beta-repair-wave3 @40a25df1, merged; tsc+729 scoped tests green",
+      "resultRef": "beta-repair-wave3"
     },
     {
       "id": "ASG-BX-PROP",
@@ -769,7 +777,7 @@
         "property/fuzz/mutation probe"
       ],
       "readiness": "READY",
-      "status": "RESERVED",
+      "status": "FINISHED",
       "observedRuntimeId": "devin-61e4aa39fc294f9d98ab289fd6085f52",
       "history": [
         {
@@ -783,9 +791,17 @@
           "from": "READY",
           "to": "RESERVED",
           "reason": "admitted at 3/5 (incl. external 0)"
+        },
+        {
+          "at": "2026-09-29T16:21:55.000Z",
+          "from": "RESERVED",
+          "to": "FINISHED",
+          "reason": "lifecycle verified released via 'exited'"
         }
       ],
-      "reservedAt": "2026-09-29T15:50:00.647Z"
+      "reservedAt": "2026-09-29T15:50:00.647Z",
+      "releaseEvidence": "F-BX-89 HIGH NaN vitals; F-BX-90 dup->38 upgrade; 3 mutation survivors F-BX-91..93; 12/15 mutants killed; property coverage clean otherwise",
+      "resultRef": "evidence/wave4-prop-fuzz-mutation.txt"
     },
     {
       "id": "ASG-BX-DGATE",
@@ -4341,7 +4357,7 @@
         "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
         "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
       },
-      "severity": "Low",
+      "severity": "Medium",
       "classification": "REAL_DEFECT",
       "actionable": true,
       "reachability": "HYPOTHETICAL",
@@ -4365,7 +4381,9 @@
       "rootClass": "non-idempotent-primitive",
       "subsystem": "production-offline-buildings",
       "siblingSearch": [],
-      "siblingFindingIds": [],
+      "siblingFindingIds": [
+        "F-BX-90"
+      ],
       "repair": null,
       "pinEvidenceIds": [],
       "verificationEvidenceIds": [],
@@ -4373,7 +4391,8 @@
       "status": "OBSERVED",
       "duplicateOf": null,
       "rejectionReason": null,
-      "exception": null
+      "exception": null,
+      "closeReason": null
     },
     {
       "id": "F-BX-39",
@@ -5822,13 +5841,13 @@
       "pinEvidenceIds": [],
       "verificationEvidenceIds": [],
       "closureReviewIds": [],
-      "status": "OBSERVED",
+      "status": "CLOSED",
       "duplicateOf": null,
       "rejectionReason": null,
       "exception": null,
-      "fixedInRevision": null,
-      "closedAt": null,
-      "closeReason": null
+      "fixedInRevision": "2046eb21",
+      "closedAt": "2026-09-29T16:25:00Z",
+      "closeReason": "REPAIRED 2046eb21: refresh catch clears only on 400/401 invalid_grant; transient keeps token"
     },
     {
       "id": "F-BX-71",
@@ -5914,13 +5933,13 @@
       "pinEvidenceIds": [],
       "verificationEvidenceIds": [],
       "closureReviewIds": [],
-      "status": "OBSERVED",
+      "status": "CLOSED",
       "duplicateOf": null,
       "rejectionReason": null,
       "exception": null,
-      "fixedInRevision": null,
-      "closedAt": null,
-      "closeReason": null
+      "fixedInRevision": "2dc11741",
+      "closedAt": "2026-09-29T16:25:00Z",
+      "closeReason": "REPAIRED 2dc11741: PostgREST 400 message map -> name_taken/invalid_talents/invalid_skill/session_revoked"
     },
     {
       "id": "F-BX-73",
@@ -5960,13 +5979,13 @@
       "pinEvidenceIds": [],
       "verificationEvidenceIds": [],
       "closureReviewIds": [],
-      "status": "OBSERVED",
+      "status": "CLOSED",
       "duplicateOf": null,
       "rejectionReason": null,
       "exception": null,
-      "fixedInRevision": null,
-      "closedAt": null,
-      "closeReason": null
+      "fixedInRevision": "e69ca96a",
+      "closedAt": "2026-09-29T16:25:00Z",
+      "closeReason": "REPAIRED e69ca96a: register 422/fake-200 -> id_taken; login 400 -> invalid_credentials"
     },
     {
       "id": "F-BX-74",
@@ -6052,13 +6071,13 @@
       "pinEvidenceIds": [],
       "verificationEvidenceIds": [],
       "closureReviewIds": [],
-      "status": "OBSERVED",
+      "status": "CLOSED",
       "duplicateOf": null,
       "rejectionReason": null,
       "exception": null,
-      "fixedInRevision": null,
-      "closedAt": null,
-      "closeReason": null
+      "fixedInRevision": "2046eb21",
+      "closedAt": "2026-09-29T16:25:00Z",
+      "closeReason": "REPAIRED 2046eb21: refreshInFlight single-flight rotation"
     },
     {
       "id": "F-BX-76",
@@ -6420,13 +6439,13 @@
       "pinEvidenceIds": [],
       "verificationEvidenceIds": [],
       "closureReviewIds": [],
-      "status": "OBSERVED",
+      "status": "CLOSED",
       "duplicateOf": null,
       "rejectionReason": null,
       "exception": null,
-      "fixedInRevision": null,
-      "closedAt": null,
-      "closeReason": null
+      "fixedInRevision": "a75a35af",
+      "closedAt": "2026-09-29T16:25:00Z",
+      "closeReason": "REPAIRED a75a35af: realm-entry grant mirrors tinh_thong_* into purchasedNodeIds; pin spell-path save loads ok"
     },
     {
       "id": "F-BX-84",
@@ -6466,13 +6485,13 @@
       "pinEvidenceIds": [],
       "verificationEvidenceIds": [],
       "closureReviewIds": [],
-      "status": "OBSERVED",
+      "status": "CLOSED",
       "duplicateOf": null,
       "rejectionReason": null,
       "exception": null,
-      "fixedInRevision": null,
-      "closedAt": null,
-      "closeReason": null
+      "fixedInRevision": "22d066aa",
+      "closedAt": "2026-09-29T16:25:00Z",
+      "closeReason": "REPAIRED 22d066aa: MIN_PERFECT_CLEAR_SECONDS floor 0.001"
     },
     {
       "id": "F-BX-85",
@@ -6515,13 +6534,13 @@
       "pinEvidenceIds": [],
       "verificationEvidenceIds": [],
       "closureReviewIds": [],
-      "status": "OBSERVED",
+      "status": "CLOSED",
       "duplicateOf": null,
       "rejectionReason": null,
       "exception": null,
-      "fixedInRevision": null,
-      "closedAt": null,
-      "closeReason": null
+      "fixedInRevision": "22d066aa",
+      "closedAt": "2026-09-29T16:25:00Z",
+      "closeReason": "REPAIRED 22d066aa: per-cycle re-anchor + fastest-clear rewrite"
     },
     {
       "id": "F-BX-86",
@@ -6561,13 +6580,13 @@
       "pinEvidenceIds": [],
       "verificationEvidenceIds": [],
       "closureReviewIds": [],
-      "status": "OBSERVED",
+      "status": "CLOSED",
       "duplicateOf": null,
       "rejectionReason": null,
       "exception": null,
-      "fixedInRevision": null,
-      "closedAt": null,
-      "closeReason": null
+      "fixedInRevision": "91cd8fb8",
+      "closedAt": "2026-09-29T16:25:00Z",
+      "closeReason": "REPAIRED 91cd8fb8: startAutoFarm refuses while isTurnBattleInProgress"
     },
     {
       "id": "F-BX-87",
@@ -6607,13 +6626,13 @@
       "pinEvidenceIds": [],
       "verificationEvidenceIds": [],
       "closureReviewIds": [],
-      "status": "OBSERVED",
+      "status": "CLOSED",
       "duplicateOf": null,
       "rejectionReason": null,
       "exception": null,
-      "fixedInRevision": null,
-      "closedAt": null,
-      "closeReason": null
+      "fixedInRevision": "on",
+      "closedAt": "2026-09-29T16:25:00Z",
+      "closeReason": "REPAIRED on run branch: Skill.ts comment ascii-fied; ratchet green"
     },
     {
       "id": "F-BX-88",
@@ -6650,6 +6669,243 @@
       "siblingSearch": [],
       "siblingFindingIds": [],
       "repair": "CONFIRM with release owner: beta players on old saves must accept incompatible path",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "OBSERVED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "fixedInRevision": null,
+      "closedAt": null,
+      "closeReason": null
+    },
+    {
+      "id": "F-BX-89",
+      "title": "Vitals ops accept NaN/Infinity - pools poison permanently, NaN hp silently executes entity",
+      "state": {
+        "productStateId": "8d7ea1cd7ca3df591edd09011e5c8a123a59536dd71d831c886f8ba2c016c435",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "severity": "High",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/core/combat/EntityVitalsSystem.ts",
+          "symbolOrSection": "applyDamage:36 applyHealing:115 grantWard:98 spendWard:76 applyTurnRegen:165; entry CombatSystem.ts:618,669",
+          "revision": "f93acd39",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "property/mutation devin-61e4aa39",
+      "invariantIds": [
+        "I-AGGREGATE-RELEASE"
+      ],
+      "evidenceIds": [],
+      "counterexample": "property rig 200x150 ops; mutation survivors verified",
+      "expected": "hardened/contract-covered",
+      "actual": "applyDamage(e,NaN) -> hp=NaN (Math.max(0,hp-NaN)); killIfDead NaN>0 false -> NOT early return -> entity dead silently; no isFinite gate vs MaterialBag's coercion",
+      "rootCause": "missing finite guard on hostile amounts; asymmetric hardening",
+      "rootClass": "missing-guard",
+      "subsystem": "combat",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": "Reject/coerce non-finite at vitals boundary like MaterialBag.add/remove",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "OBSERVED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "fixedInRevision": null,
+      "closedAt": null,
+      "closeReason": null
+    },
+    {
+      "id": "F-BX-90",
+      "title": "[dup/upgrade] settleAutoFarmOffline not idempotent at ops layer",
+      "state": {
+        "productStateId": "8d7ea1cd7ca3df591edd09011e5c8a123a59536dd71d831c886f8ba2c016c435",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/core/game/GameManagerAutoFarmOps.ts",
+          "symbolOrSection": ":199-237",
+          "revision": "f93acd39",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "property/mutation devin-61e4aa39",
+      "invariantIds": [
+        "I-AGGREGATE-RELEASE"
+      ],
+      "evidenceIds": [],
+      "counterexample": "property rig 200x150 ops; mutation survivors verified",
+      "expected": "hardened/contract-covered",
+      "actual": "settle twice same elapsed re-ran reward rolls 120/120; once-only lives only in caller hash guard",
+      "rootCause": "ops layer has no once-only notion",
+      "rootClass": "contract",
+      "subsystem": "economy",
+      "siblingSearch": [],
+      "siblingFindingIds": [
+        "F-BX-38"
+      ],
+      "repair": "Same repair as F-BX-38: enforce exactly-once at payment authority or persisted lastCheckedMs",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "DUPLICATE_LINKED",
+      "duplicateOf": "F-BX-38",
+      "rejectionReason": null,
+      "exception": null,
+      "fixedInRevision": null,
+      "closedAt": null,
+      "closeReason": "independent repro upgrades F-BX-38 Low->Medium: defense-in-depth gap real"
+    },
+    {
+      "id": "F-BX-91",
+      "title": "Mutation survivor: saveShapeValidation node-level max bound untested",
+      "state": {
+        "productStateId": "8d7ea1cd7ca3df591edd09011e5c8a123a59536dd71d831c886f8ba2c016c435",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/services/save/saveShapeValidation.ts",
+          "symbolOrSection": ":713",
+          "revision": "f93acd39",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "property/mutation devin-61e4aa39",
+      "invariantIds": [
+        "I-AGGREGATE-RELEASE"
+      ],
+      "evidenceIds": [],
+      "counterexample": "property rig 200x150 ops; mutation survivors verified",
+      "expected": "hardened/contract-covered",
+      "actual": "mutant level>(max*10) survives all 506 save tests - over-max node levels pass shape gate",
+      "rootCause": "missing over-max assertion",
+      "rootClass": "test-gap",
+      "subsystem": "test-infra",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": "Add pin: nodeLevels > authored max rejected",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "OBSERVED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "fixedInRevision": null,
+      "closedAt": null,
+      "closeReason": null
+    },
+    {
+      "id": "F-BX-92",
+      "title": "Mutation survivor: equal-rev clock tie-break untested",
+      "state": {
+        "productStateId": "8d7ea1cd7ca3df591edd09011e5c8a123a59536dd71d831c886f8ba2c016c435",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/services/cloudSave/SupabaseRemoteSave.ts",
+          "symbolOrSection": ":132",
+          "revision": "f93acd39",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "property/mutation devin-61e4aa39",
+      "invariantIds": [
+        "I-AGGREGATE-RELEASE"
+      ],
+      "evidenceIds": [],
+      "counterexample": "property rig 200x150 ops; mutation survivors verified",
+      "expected": "hardened/contract-covered",
+      "actual": "dropping remoteRev===localRev && remoteUpdatedMs>localLastSavedAt survives 39 tests - stale local lineage could push over newer remote",
+      "rootCause": "same-rev-newer-remote pull arm unasserted",
+      "rootClass": "test-gap",
+      "subsystem": "save-cloud",
+      "siblingSearch": [],
+      "siblingFindingIds": [
+        "F-BX-31"
+      ],
+      "repair": "Add pin: equal-rev newer-remote pulls; older-local does not overwrite",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "OBSERVED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "fixedInRevision": null,
+      "closedAt": null,
+      "closeReason": null
+    },
+    {
+      "id": "F-BX-93",
+      "title": "Mutation survivor: divergence-gate adopt arm remoteAhead clause untested",
+      "state": {
+        "productStateId": "8d7ea1cd7ca3df591edd09011e5c8a123a59536dd71d831c886f8ba2c016c435",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/services/cloudSave/SupabaseRemoteSave.ts",
+          "symbolOrSection": ":161",
+          "revision": "f93acd39",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "property/mutation devin-61e4aa39",
+      "invariantIds": [
+        "I-AGGREGATE-RELEASE"
+      ],
+      "evidenceIds": [],
+      "counterexample": "property rig 200x150 ops; mutation survivors verified",
+      "expected": "hardened/contract-covered",
+      "actual": "mutant sameContent||localRevision===base survives - rewound remote adoption (remote-rewound-below-base conflict) uncovered",
+      "rootCause": "adopt arm missing remoteAhead coverage",
+      "rootClass": "test-gap",
+      "subsystem": "save-cloud",
+      "siblingSearch": [],
+      "siblingFindingIds": [
+        "F-BX-31",
+        "F-BX-32"
+      ],
+      "repair": "Add pin: rewound remote does NOT adopt",
       "pinEvidenceIds": [],
       "verificationEvidenceIds": [],
       "closureReviewIds": [],
@@ -7645,6 +7901,86 @@
       "payloadPath": "events/0053.json",
       "payloadHash": "7eec72174a62d0d65cab768dc37cb322c030b2fcc415be3d49643056553c006c",
       "eventHash": "6c4e8ee46d2ee178391a13fac4a5c338081e77ac9858e3b2d42ee1dac4e11510"
+    },
+    {
+      "seq": 54,
+      "at": "2026-09-29T16:21:31.163Z",
+      "kind": "SNAPSHOT",
+      "actor": "coordinator-beta",
+      "state": {
+        "productStateId": "8d7ea1cd7ca3df591edd09011e5c8a123a59536dd71d831c886f8ba2c016c435",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "previousEventHash": "6c4e8ee46d2ee178391a13fac4a5c338081e77ac9858e3b2d42ee1dac4e11510",
+      "payloadPath": "events/0054.json",
+      "payloadHash": "0a28d48d030bbe0bff7840af590b1ff08f54f835383c31bceba11da72d138565",
+      "eventHash": "bf230e07559fb93c2a0aa9de8f23d48b1299f2d919478a6b74a57508e10bb2da"
+    },
+    {
+      "seq": 55,
+      "at": "2026-09-29T16:21:31.431Z",
+      "kind": "FINDING",
+      "actor": "coordinator-beta",
+      "state": {
+        "productStateId": "8d7ea1cd7ca3df591edd09011e5c8a123a59536dd71d831c886f8ba2c016c435",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "previousEventHash": "bf230e07559fb93c2a0aa9de8f23d48b1299f2d919478a6b74a57508e10bb2da",
+      "payloadPath": "events/0055.json",
+      "payloadHash": "34d20cd8937668db36d5b5868df42732e6d30ad660f006523ba60341be13b08b",
+      "eventHash": "f9f7cae215ede978c616d70017a2e5d1b7a54dfd3d60dabc8a36e7fa2a6992ea"
+    },
+    {
+      "seq": 56,
+      "at": "2026-09-29T16:21:31.575Z",
+      "kind": "SCHEDULE",
+      "actor": "coordinator-beta",
+      "state": {
+        "productStateId": "8d7ea1cd7ca3df591edd09011e5c8a123a59536dd71d831c886f8ba2c016c435",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "previousEventHash": "f9f7cae215ede978c616d70017a2e5d1b7a54dfd3d60dabc8a36e7fa2a6992ea",
+      "payloadPath": "events/0056.json",
+      "payloadHash": "8f23e0f982ffcd44f9529239e7007ffcbc4a80f52a6932a23f840b50998d37a0",
+      "eventHash": "b3952de59a26faf8b6d68a4f63165a1d64e8a6c0863833c0be0a6473ca803215"
+    },
+    {
+      "seq": 57,
+      "at": "2026-09-29T16:21:54.861Z",
+      "kind": "FINDING",
+      "actor": "coordinator-beta",
+      "state": {
+        "productStateId": "8d7ea1cd7ca3df591edd09011e5c8a123a59536dd71d831c886f8ba2c016c435",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "previousEventHash": "b3952de59a26faf8b6d68a4f63165a1d64e8a6c0863833c0be0a6473ca803215",
+      "payloadPath": "events/0057.json",
+      "payloadHash": "a0705b32091c1863e88394c75d0d9b462dba4d67acfe489135393ac98b9f93ba",
+      "eventHash": "492f34aae184ae858e16137f0b3bd160d281ef3845ba7e1b29b333903b673582"
+    },
+    {
+      "seq": 58,
+      "at": "2026-09-29T16:21:55.001Z",
+      "kind": "SCHEDULE",
+      "actor": "coordinator-beta",
+      "state": {
+        "productStateId": "8d7ea1cd7ca3df591edd09011e5c8a123a59536dd71d831c886f8ba2c016c435",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "previousEventHash": "492f34aae184ae858e16137f0b3bd160d281ef3845ba7e1b29b333903b673582",
+      "payloadPath": "events/0058.json",
+      "payloadHash": "8eaad44941a93ccd75cc8b7ec7cd401a0c41aad26e2232d6e69aa3a743c0d4d7",
+      "eventHash": "ecb762c38b507d14a8288f8044a733da397ad60115e1d0ab55fcf1428dcdf5e4"
     }
   ]
 }

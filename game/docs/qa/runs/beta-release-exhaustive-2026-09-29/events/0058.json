@@ -1,0 +1,7 @@
+{
+  "action": "observe",
+  "assignmentId": "ASG-BX-PROP",
+  "observedStatus": "exited",
+  "evidence": "F-BX-89 HIGH NaN vitals; F-BX-90 dup->38 upgrade; 3 mutation survivors F-BX-91..93; 12/15 mutants killed; property coverage clean otherwise",
+  "resultRef": "evidence/wave4-prop-fuzz-mutation.txt"
+}

@@ -1,0 +1,48 @@
+Event details (4 events):
+
+--- event-01a0eddb99517225b4115aef72178585 ---
+  type: initial_user_message (message)
+  direction: incoming
+  created_at: 2026-09-29 15:49:46 UTC
+  contents: {
+  "type": "initial_user_message",
+  "email": "hnkm080596@gmail.com",
+  "origin": "api",
+  "message": "ROLE: property/fuzz/mutation probe for QA run beta-release-exhaustive-2026-09-29 on repo tutienidle (Vue3+TS+Pinia+Phaser; app root game/).\nCLONE: your own clone \u2014 git fetch origin && git checkout beta-release-exhaustive (current tip); report commit. Node: export PATH=/home/linuxbrew/.linuxbrew/opt/node@22/bin:$PATH. Scratch to /tmp only \u2014 do NOT commit.\nBLIND: never read game/docs/qa/**, .agent-*, commit messages, PR text.\nMISSION:\n1. PROPERTY-BASED: randomized-input property tests on the most-trusted primitives \u2014 save round-trip (buildGameSave->writeGameSave->loadGame preserves fields, never 'corrupted' on valid data), offline accrual (any elapsed >0 credits exactly once, monotonic), currency/material bag (never negative, never NaN), combat entity stats (hp in [0,maxHp]), perfectClear/farm cycle math (always positive, decreasing repeats). Drive REAL systems via vitest scratch rig in /tmp (composition patterns in game/src/**/*.test.ts). Property failures = findings.\n2. MUTATION SPOT-CHECK: pick the 3 highest-stakes validators/gates (saveShapeValidation, breakthrough gates, sync-base divergence/conflict gate) \u2014 hand-apply ~5 targeted mutations each (invert a guard, drop a check, off-by-one a bound) in a scratch copy and verify the existing test suite KILLS them. Survivors = findings (test-quality defects).\nOUTPUT: per-finding {severity,title,location,evidence,expected,actual,repro} + property/mutation coverage table. Keep messages under 4000 chars \u2014 split.",
+  "user_id": "devin-bot",
+  "username": "Devin Bot",
+  "timestamp": "2026-09-29T15:49:46.904980+00:00",
+  "rich_content": null,
+  "github_username": "hnkm080596-svg",
+  "sender_devin_session_id": "5bf2143f50154f09bbdb6b8a1f7cb508"
+}
+
+--- event-01a0eddbc7b27d13945a660e7f9a9ca6 ---
+  type: devin_message (message)
+  direction: outgoing
+  created_at: 2026-09-29 15:49:59 UTC
+  contents: {
+  "type": "devin_message",
+  "message": "On it \u2014 cloning `beta-release-exhaustive`, then property rig + mutation spot-checks in /tmp.",
+  "timestamp": "2026-09-29T15:49:58.834000Z"
+}
+
+--- event-01a0edf59e7775d0a39734a3cab80187 ---
+  type: devin_message (message)
+  direction: outgoing
+  created_at: 2026-09-29 16:18:12 UTC
+  contents: {
+  "type": "devin_message",
+  "message": "PROPERTY/MUTATION PROBE \u2014 beta-release-exhaustive @ f93acd39 (own /tmp clone, scratch only, nothing committed). Part 1/2: property-test findings.\n\nF1 \u2014 HIGH \u2014 vitals ops accept NaN/Infinity; pools poison permanently, NaN hp \u21d2 silent kill\nlocation: src/core/combat/EntityVitalsSystem.ts L36 (applyDamage), L115 (applyHealing), L98 (grantWard), L76 (spendWard), L165 (applyTurnRegen); chain entry src/core/combat/CombatSystem.ts L618 (applyDotDamage, no finite guard), L669 (killIfDead)\nevidence: 200 runs \u00d7 150 randomized ops incl. NaN/\u00b1Inf/negative amounts \u2014 applyDamage(e, NaN) \u21d2 currentHp=NaN (Math.max(0, hp-NaN)=NaN, no isFinite gate anywhere). Same poison in heal/ward/regen/spend. killIfDead gates on `entity.currentHp > 0` \u2014 NaN>0 is false, so it does NOT early-return \u2192 undefeatable/survive checks \u2192 else alive=false: a single NaN damage SILENTLY EXECUTES the entity (no throw, no log). Post-death heals rejected, so NaN is unrecoverable.\nexpected: hostile non-finite amounts rejected/coerced to 0 \u2014 exactly what MaterialBag.add/remove already does (`!Number.isFinite(amount) \u2192 0`).\nactual: NaN propagates end-to-end (applyDotDamage computes NaN*(1-res)=NaN \u2192 applyDamage \u2192 hp=NaN \u2192 treated as dead). Asymmetric hardening vs sibling authority.\nrepro: vitals.applyDamage(e, NaN, 'damage'); e.currentHp === NaN; killIfDead \u21d2 e.alive=false. Scratch rig: /tmp/probe-tutienidle/game/src/qa-probe/property.test.ts P4.\n\nF2 \u2014 MEDIUM \u2014 settleAutoFarmOffline is not idempotent: re-settling the same window re-pays every cycle\nlocation: src/core/game/GameManagerAutoFarmOps.ts L199-237\nevidence: calling settle twice with the same elapsed argument re-ran `floor(elapsed/cycleMs)` reward rolls in 120/120 randomized trials. Settle keys the window off the elapsed argument (computed from save.player.lastSavedAt by the restore path), NOT the persisted autoFarmStage.lastCheckedMs it re-anchors \u2014 the ops layer itself has no once-only notion.\nexpected: farm offline income credited exactly once per window; once-only enforced at the payment authority or via persisted lastCheckedMs.\nactual: exactly-once lives solely in the caller's hash guard (GameManagerSaveRestore.lastAppliedPayloadHash). Any second settle for an overlapping window double-pays (e.g. a second distinct armed-farm payload restored in-session). Single call site today \u21d2 latent defense-in-depth gap, not a live exploit.\nrepro: startAutoFarm\u2192settle(player, 86400) counts N reward rolls via beginBattle spy; settle again \u21d2 another N.\n\nCoverage: save round-trip 300/300 valid, offline accrual 2600+80 cases clean, MaterialBag 30k ops clean, farm math 120 cases exact, breakthrough 1000 cases exact \u2014 details in part 2.",
+  "timestamp": "2026-09-29T16:18:12.215000Z"
+}
+
+--- event-01a0edf5f1f878a0b6672df3deac9874 ---
+  type: devin_message (message)
+  direction: outgoing
+  created_at: 2026-09-29 16:18:33 UTC
+  contents: {
+  "type": "devin_message",
+  "message": "Part 2/2: mutation survivors (test-quality defects) + coverage table.\n\nF3 \u2014 MEDIUM \u2014 saveShapeValidation node-level max bound untested. Mutant `level > (core.maxLevel ?? 1) * 10` at saveShapeValidation.ts L713 survived all 506 save tests \u2014 a save carrying nodeLevels 10\u00d7 over a core's authored max passes the shape gate silently; suite only exercises \u22641/<1/over-nothing. Survivor = missing over-max assertion.\n\nF4 \u2014 MEDIUM \u2014 sync-gate equal-revision clock tie-break untested. Mutant dropping `remoteRev === localRev && remoteUpdatedMs > localLastSavedAt` from remoteAhead (SupabaseRemoteSave.ts L132) survived all 39 cloudSave tests. The same-rev-newer-remote pull branch (base === remoteRev path) has no assertion \u2014 a regression keeps stale local lineage and pushes it over the newer remote row.\n\nF5 \u2014 MEDIUM \u2014 divergence-gate `remoteAhead` clause in the adopt arm untested. Mutant `sameContent || localRevision === base` (dropping && remoteAhead, SupabaseRemoteSave.ts L161) survived all 39 tests. Original requires remote ahead to adopt a moved remote when local stayed at base; mutant also adopts a REWOUND remote (writes base=remoteRev, newest-wins then pushes local over it) \u2014 the remote-rewound-below-base conflict path is uncovered.\n\nMutant scoreboard \u2014 15 mutants, 12 killed, 3 survived:\n- saveShapeValidation (scope: 506 tests): V1 realmLevel<1\u2192<0 KILLED; V2 skillLevels forbidden-key dropped KILLED; V3 autoFarmStage.lastCheckedMs\u22650 dropped KILLED; V4 forgeUses '>'\u2192'<' KILLED; V5 node level>max\u2192>10\u00d7max SURVIVED.\n- CultivationSystem (scope: 153 tests): C1 canBreakthrough \u2265\u2192> KILLED; C2 realmLevel<max\u2192\u2264max KILLED; C3 addCultivation clamp removed KILLED; C4 overflow-bank talent check dropped KILLED; C5 breakthrough cult=0 reset removed KILLED.\n- SupabaseRemoteSave (scope: 39 tests): S1 equal-rev tie-break dropped SURVIVED; S2 adopt-arm remoteAhead dropped SURVIVED; S3 pushRevision +1 dropped KILLED; S4 CAS eq.readRev\u2192readRev+1 KILLED; S5 stale-side conflict arm dropped KILLED.\n\nProperty coverage \u2014 rig drives REAL systems (no mocks of the unit under test):\n- save round-trip: 300 seeds build\u2192JSON\u2192validate\u2192write\u2192load \u2192 300/300 'ok', fields preserved; identity hash stable + single-field sensitive + lastSavedAt-excluded (50).\n- offline accrual: calculateOfflineTime bounded/monotone/rewind (2000), calculateOfflineProgress exact product + NaN/Inf\u21920 (2000), window-split tiling + percent non-increasing (500), real Pinia restoreFromSave conservation + once-only per payload (80).\n- MaterialBag: 150 runs \u00d7 200 ops vs model \u2014 conservation, [0,limit], hostile NaN/Inf/neg/zero.\n- vitals: 200 \u00d7 150 ops \u2014 F1.\n- farm: 120 seeds exact cycle count via beginBattle spy + hostile cycleSeconds (5) + re-settle seam \u2014 F2.\n- breakthrough: 1000 gate/addCultivation cases.\n\nScratch rig: /tmp/probe-tutienidle/game/src/qa-probe/property.test.ts (14 tests; only the F1 stream fails). All source files verified byte-identical post-mutation (md5). Nothing committed.",
+  "timestamp": "2026-09-29T16:18:33.592000Z"
+}

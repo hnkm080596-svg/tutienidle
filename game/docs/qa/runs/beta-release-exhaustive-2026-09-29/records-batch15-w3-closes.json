@@ -1,0 +1,448 @@
+{
+ "records": [
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-BX-70",
+    "title": "Transient refresh error destroys session (forced re-login)",
+    "state": {
+     "productStateId": "b3ade7e3f442eb2a98da5b317248dd469440631e950f0b3f1ad24cfe116060f4",
+     "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+     "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+     "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+    },
+    "severity": "Medium",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "PRODUCTION",
+    "locations": [
+     {
+      "path": "game/src/services/supabase/SupabaseSession.ts",
+      "symbolOrSection": ":83-85",
+      "revision": "5efdf9a9",
+      "basis": "SOURCE"
+     }
+    ],
+    "discoveredBy": "auth-electron auditor devin-45aa74bb",
+    "invariantIds": [
+     "I-AGGREGATE-RELEASE"
+    ],
+    "evidenceIds": [],
+    "counterexample": "none recorded by auditor",
+    "expected": "per design intent",
+    "actual": "catch{} covers every failure (timeout/DNS/5xx) -> clearSupabaseSession wipes refresh token",
+    "rootCause": "catch-all treats transient like invalid_grant",
+    "rootClass": "error-mapping",
+    "subsystem": "auth-electron",
+    "siblingSearch": [],
+    "siblingFindingIds": [],
+    "repair": "Only clear session on 4xx invalid_grant; keep token + retry transient",
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "status": "CLOSED",
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "fixedInRevision": "2046eb21",
+    "closedAt": "2026-09-29T16:25:00Z",
+    "closeReason": "REPAIRED 2046eb21: refresh catch clears only on 400/401 invalid_grant; transient keeps token"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-BX-72",
+    "title": "createCharacter error mapping collapses domain errors to server_unavailable",
+    "state": {
+     "productStateId": "b3ade7e3f442eb2a98da5b317248dd469440631e950f0b3f1ad24cfe116060f4",
+     "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+     "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+     "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+    },
+    "severity": "Medium",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "PRODUCTION",
+    "locations": [
+     {
+      "path": "game/src/services/character/SupabaseCharacterCreationService.ts",
+      "symbolOrSection": ":75-79",
+      "revision": "5efdf9a9",
+      "basis": "SOURCE"
+     }
+    ],
+    "discoveredBy": "auth-electron auditor devin-45aa74bb",
+    "invariantIds": [
+     "I-AGGREGATE-RELEASE"
+    ],
+    "evidenceIds": [],
+    "counterexample": "none recorded by auditor",
+    "expected": "per design intent",
+    "actual": "PostgREST raise exception -> 400; 'character name unavailable'/'invalid talent roll'/'invalid mortal basic skill'/'session revoked' all -> generic error",
+    "rootCause": "only 409 mapped; 400 domain messages dropped",
+    "rootClass": "error-mapping",
+    "subsystem": "auth-electron",
+    "siblingSearch": [],
+    "siblingFindingIds": [],
+    "repair": "Map 400 payload message -> name_taken/invalid_roll/invalid_skill/session_revoked",
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "status": "CLOSED",
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "fixedInRevision": "2dc11741",
+    "closedAt": "2026-09-29T16:25:00Z",
+    "closeReason": "REPAIRED 2dc11741: PostgREST 400 message map -> name_taken/invalid_talents/invalid_skill/session_revoked"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-BX-73",
+    "title": "Register id_taken unreachable; non-atomic signup->claim",
+    "state": {
+     "productStateId": "b3ade7e3f442eb2a98da5b317248dd469440631e950f0b3f1ad24cfe116060f4",
+     "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+     "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+     "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+    },
+    "severity": "Medium",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "PRODUCTION",
+    "locations": [
+     {
+      "path": "game/src/services/auth/SupabaseAuthService.ts",
+      "symbolOrSection": ":23-53",
+      "revision": "5efdf9a9",
+      "basis": "SOURCE"
+     }
+    ],
+    "discoveredBy": "auth-electron auditor devin-45aa74bb",
+    "invariantIds": [
+     "I-AGGREGATE-RELEASE"
+    ],
+    "evidenceIds": [],
+    "counterexample": "none recorded by auditor",
+    "expected": "per design intent",
+    "actual": "GoTrue duplicate returns 422 or fake-200 user w/o access_token -> 'server_unavailable'; signup succeeds but claim fails -> retry hits taken",
+    "rootCause": "400-only mapping; two-step create not transactional",
+    "rootClass": "error-mapping",
+    "subsystem": "auth-electron",
+    "siblingSearch": [],
+    "siblingFindingIds": [],
+    "repair": "Handle 422 + fake-200 shapes; surface created-but-unclaimed distinctly",
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "status": "CLOSED",
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "fixedInRevision": "e69ca96a",
+    "closedAt": "2026-09-29T16:25:00Z",
+    "closeReason": "REPAIRED e69ca96a: register 422/fake-200 -> id_taken; login 400 -> invalid_credentials"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-BX-75",
+    "title": "Concurrent resolveSupabaseSession rotation race wipes session (latent)",
+    "state": {
+     "productStateId": "b3ade7e3f442eb2a98da5b317248dd469440631e950f0b3f1ad24cfe116060f4",
+     "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+     "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+     "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+    },
+    "severity": "Low",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "PRODUCTION",
+    "locations": [
+     {
+      "path": "game/src/services/supabase/SupabaseSession.ts",
+      "symbolOrSection": ":63-87",
+      "revision": "5efdf9a9",
+      "basis": "SOURCE"
+     }
+    ],
+    "discoveredBy": "auth-electron auditor devin-45aa74bb",
+    "invariantIds": [
+     "I-AGGREGATE-RELEASE"
+    ],
+    "evidenceIds": [],
+    "counterexample": "none recorded by auditor",
+    "expected": "per design intent",
+    "actual": "no single-flight guard; parallel resolves -> winner stores, loser clears and wipes stored session",
+    "rootCause": "no mutex",
+    "rootClass": "race",
+    "subsystem": "auth-electron",
+    "siblingSearch": [],
+    "siblingFindingIds": [],
+    "repair": "Single-flight resolve via promise memoization",
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "status": "CLOSED",
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "fixedInRevision": "2046eb21",
+    "closedAt": "2026-09-29T16:25:00Z",
+    "closeReason": "REPAIRED 2046eb21: refreshInFlight single-flight rotation"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-BX-83",
+    "title": "Save permanently corrupted for every spell-path player after foundation breakthrough (phap_tu + ngu_hanh)",
+    "state": {
+     "productStateId": "b3ade7e3f442eb2a98da5b317248dd469440631e950f0b3f1ad24cfe116060f4",
+     "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+     "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+     "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+    },
+    "severity": "High",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "PRODUCTION",
+    "locations": [
+     {
+      "path": "game/src/core/player/CultivationPathSystem.ts",
+      "symbolOrSection": ":404-454 masteryGrantRecord vs saveShapeValidation.ts:756-764",
+      "revision": "5efdf9a9",
+      "basis": "SOURCE"
+     }
+    ],
+    "discoveredBy": "playthrough-matrix devin-48584b80",
+    "invariantIds": [
+     "I-AGGREGATE-RELEASE"
+    ],
+    "evidenceIds": [],
+    "counterexample": "vitest rig: spell-path profile + foundation victory -> write+load = corrupted (100% deterministic)",
+    "expected": "a save produced by normal play loads cleanly",
+    "actual": "masteryGrantRecord(1|2) writes nodeLevels.tinh_thong_* but never mirrors into purchasedNodeIds -> validateGameSaveShape -> status 'corrupted' -> reload loses character. grantSkillCore writes both channels (sword/body ways unaffected)",
+    "rootCause": "granted-node seam writes only the level channel, not the purchase ledger",
+    "rootClass": "writer-validator-mismatch",
+    "subsystem": "progression",
+    "siblingSearch": [],
+    "siblingFindingIds": [],
+    "repair": "Write tinh_thong_* grants through the same both-channel path (or mirror into purchasedNodeIds at grant time); add save-shape pin for granted-node ways",
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "status": "CLOSED",
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "fixedInRevision": "a75a35af",
+    "closedAt": "2026-09-29T16:25:00Z",
+    "closeReason": "REPAIRED a75a35af: realm-entry grant mirrors tinh_thong_* into purchasedNodeIds; pin spell-path save loads ok"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-BX-84",
+    "title": "perfectClearSeconds=0 writer/validator mismatch corrupts save",
+    "state": {
+     "productStateId": "b3ade7e3f442eb2a98da5b317248dd469440631e950f0b3f1ad24cfe116060f4",
+     "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+     "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+     "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+    },
+    "severity": "Low",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "PRODUCTION",
+    "locations": [
+     {
+      "path": "game/src/core/game/GameManagerBattleRewardOps.ts",
+      "symbolOrSection": ":214-218 clearSeconds Math.max(0,...) vs validator requiring >0",
+      "revision": "5efdf9a9",
+      "basis": "SOURCE"
+     }
+    ],
+    "discoveredBy": "playthrough-matrix devin-48584b80",
+    "invariantIds": [
+     "I-AGGREGATE-RELEASE"
+    ],
+    "evidenceIds": [],
+    "counterexample": "vitest rig: spell-path profile + foundation victory -> write+load = corrupted (100% deterministic)",
+    "expected": "a save produced by normal play loads cleanly",
+    "actual": "writer can emit 0 (same-ms perfect clear) -> validator rejects -> 'corrupted'",
+    "rootCause": "contract hole between writer and validator",
+    "rootClass": "writer-validator-mismatch",
+    "subsystem": "combat",
+    "siblingSearch": [],
+    "siblingFindingIds": [],
+    "repair": "Floor clearSeconds at >0 epsilon or relax validator to >=0; one-sided contract",
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "status": "CLOSED",
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "fixedInRevision": "22d066aa",
+    "closedAt": "2026-09-29T16:25:00Z",
+    "closeReason": "REPAIRED 22d066aa: MIN_PERFECT_CLEAR_SECONDS floor 0.001"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-BX-85",
+    "title": "perfectClearSeconds anchored to repeat-run start, not clearing cycle - permanent farm slowdown",
+    "state": {
+     "productStateId": "b3ade7e3f442eb2a98da5b317248dd469440631e950f0b3f1ad24cfe116060f4",
+     "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+     "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+     "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+    },
+    "severity": "Medium",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "PRODUCTION",
+    "locations": [
+     {
+      "path": "game/src/core/game/GameManagerBattleRewardOps.ts",
+      "symbolOrSection": ":214-218 + GameManagerTurnBattleOps.ts:2270",
+      "revision": "5efdf9a9",
+      "basis": "SOURCE"
+     }
+    ],
+    "discoveredBy": "cross-system attacker devin-edf0652e",
+    "invariantIds": [
+     "I-AGGREGATE-RELEASE"
+    ],
+    "evidenceIds": [],
+    "counterexample": "/tmp/xqa/crossSystem.test.ts executable repro",
+    "expected": "per contract",
+    "actual": "first eligible clear on cycle N>1 records whole-run wall clock (e.g. +90s) -> farm cycleMs ~45s vs true ~1s, forever; perfectClearStageIds blocks rewrites",
+    "rootCause": "anchor uses getStartedAtMs once at launch; repeat policy preserves it",
+    "rootClass": "contract",
+    "subsystem": "combat",
+    "siblingSearch": [],
+    "siblingFindingIds": [
+     "F-BX-53",
+     "F-BX-84"
+    ],
+    "repair": "Anchor clearSeconds to cycle start; allow rewrite when a faster clear lands",
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "status": "CLOSED",
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "fixedInRevision": "22d066aa",
+    "closedAt": "2026-09-29T16:25:00Z",
+    "closeReason": "REPAIRED 22d066aa: per-cycle re-anchor + fastest-clear rewrite"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-BX-86",
+    "title": "startAutoFarm missing isTurnBattleInProgress gate - mastery loss + dead hidden-trial resume",
+    "state": {
+     "productStateId": "b3ade7e3f442eb2a98da5b317248dd469440631e950f0b3f1ad24cfe116060f4",
+     "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+     "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+     "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+    },
+    "severity": "Low",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "PRODUCTION",
+    "locations": [
+     {
+      "path": "game/src/core/game/GameManagerAutoFarmOps.ts",
+      "symbolOrSection": "startAutoFarm slot take + BattleLootSystem.ts:182-187,327",
+      "revision": "5efdf9a9",
+      "basis": "SOURCE"
+     }
+    ],
+    "discoveredBy": "cross-system attacker devin-edf0652e",
+    "invariantIds": [
+     "I-AGGREGATE-RELEASE"
+    ],
+    "evidenceIds": [],
+    "counterexample": "/tmp/xqa/crossSystem.test.ts executable repro",
+    "expected": "per contract",
+    "actual": "hidden trial runs as 'fresh' cycle w/o stage lease -> farm armed mid-battle -> farm ticks zero pendingTechniqueMastery + victory summary; trial victory resume refused (farm holds slot) -> dead terminal",
+    "rootCause": "missing battle-in-progress invariant gate",
+    "rootClass": "missing-gate",
+    "subsystem": "combat",
+    "siblingSearch": [],
+    "siblingFindingIds": [],
+    "repair": "Gate startAutoFarm on isTurnBattleInProgress; drain trial resume before farm slot",
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "status": "CLOSED",
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "fixedInRevision": "91cd8fb8",
+    "closedAt": "2026-09-29T16:25:00Z",
+    "closeReason": "REPAIRED 91cd8fb8: startAutoFarm refuses while isTurnBattleInProgress"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-BX-87",
+    "title": "P15 ascii ratchet fails on branch tip - verify red (Skill.ts:125 non-ASCII comment)",
+    "state": {
+     "productStateId": "b3ade7e3f442eb2a98da5b317248dd469440631e950f0b3f1ad24cfe116060f4",
+     "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+     "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+     "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+    },
+    "severity": "Medium",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "PRODUCTION",
+    "locations": [
+     {
+      "path": "game/src/core/skill/Skill.ts",
+      "symbolOrSection": ":125",
+      "revision": "f93acd39",
+      "basis": "SOURCE"
+     }
+    ],
+    "discoveredBy": "deterministic-gates devin-d52d8062",
+    "invariantIds": [
+     "I-AGGREGATE-RELEASE"
+    ],
+    "evidenceIds": [],
+    "counterexample": "asciiComments.test.ts failing on tip",
+    "expected": "verify green / gate premise current",
+    "actual": "non-ASCII 'sec.'/em-dash comment introduced on branch -> asciiComments.test.ts fails -> npm run verify exits 1",
+    "rootCause": "comment wrote non-ASCII despite P15",
+    "rootClass": "test-infra",
+    "subsystem": "test-infra",
+    "siblingSearch": [],
+    "siblingFindingIds": [],
+    "repair": "REPAIRED on run branch: 'sec.'/dash ascii-fied + ratchet green",
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "status": "CLOSED",
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "fixedInRevision": "on",
+    "closedAt": "2026-09-29T16:25:00Z",
+    "closeReason": "REPAIRED on run branch: Skill.ts comment ascii-fied; ratchet green"
+   }
+  }
+ ]
+}

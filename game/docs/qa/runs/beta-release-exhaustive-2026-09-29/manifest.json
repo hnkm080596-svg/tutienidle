@@ -22452,7 +22452,7 @@
       "path": "game/src/core/game/GameManager.ancientBeastTrial.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "e7788d9ed1830f064cfb5a3d69718fcb9c89e625f2f79efe2bedf8ee3f6cebbd"
+      "hash": "fdf2a52a3f5b2a73c439a1fa72fd780d008bea8285d922eec645884b130ccab2"
     },
     {
       "path": "game/src/core/game/GameManager.artifactGradeUpgrade.test.ts",
@@ -22476,7 +22476,7 @@
       "path": "game/src/core/game/GameManager.autoFarmAdversarial.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "0b5117e6f80ddb7c010ad0da8490e81b10edab2204253bd55f5ff71e842dd09a"
+      "hash": "a2d3b97a32a8d9c489a3973ad3ce90b2e1e9dc3a2f4b871196d48b92fe10e4fe"
     },
     {
       "path": "game/src/core/game/GameManager.autoFarmOffline.test.ts",
@@ -22566,7 +22566,7 @@
       "path": "game/src/core/game/GameManager.cultivationPathRewards.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "fef461730137b72cf13aa577950cee8f26a47cb69f5150672638c3da998b8454"
+      "hash": "4b4d93e09d8fe42c4a2e91e119f588be0130fffc01cb08df032add1c0d7a1150"
     },
     {
       "path": "game/src/core/game/GameManager.deadIds.test.ts",
@@ -22746,7 +22746,7 @@
       "path": "game/src/core/game/GameManager.perfectClear.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "543dc924c105b506768b0c832de8bc5051c62d2e473a49cc74a7c06ffef0e283"
+      "hash": "33f6c75c4c875146495d3dc61602768b125bca1b5fb6e77843f58984385d32e4"
     },
     {
       "path": "game/src/core/game/GameManager.phaGiapCarry.test.ts",
@@ -23058,13 +23058,13 @@
       "path": "game/src/core/game/GameManagerAutoFarmOps.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "740d49a9d709e4f15caab77f0f9f2b4d056aef88d2e2c59f2f88833680e8407e"
+      "hash": "d01583bc561379dcec547cec2ebc622c36f73a427d259d43f35fb9aa0b29857f"
     },
     {
       "path": "game/src/core/game/GameManagerBattleRewardOps.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "f961c7c3b7c5e179208595eec62c51b7ac04ee82a7991dbd5cc77ce753f52f69"
+      "hash": "90b14162cab5b05b559b3aedc5303caf676a4032127428f5891e9adce60b70d7"
     },
     {
       "path": "game/src/core/game/GameManagerBuildingOps.ts",
@@ -23226,7 +23226,7 @@
       "path": "game/src/core/game/GameManagerTurnBattleOps.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "6eac2a7eabcfc2570533ea9759a973bc4375e615e5b751bca9826c2e62461417"
+      "hash": "e92b02f3b8083aeb449b6da415b9e246476aabddfbc1892bc01d13353191e36b"
     },
     {
       "path": "game/src/core/game/GameManagerTurnBattleOps.turnEngine.test.ts",
@@ -23688,7 +23688,7 @@
       "path": "game/src/core/player/CultivationPathSystem.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "d5db2518589b8f085c07271ba31e629efeddf40a24ea326ffa3fbfb64a321d4f"
+      "hash": "99ca46f2970db5c7a0ea4b8ee96d8f1af2f5f3966c49c5f3cfb8122759068de5"
     },
     {
       "path": "game/src/core/player/PersistentTimedEffect.ts",
@@ -24774,7 +24774,7 @@
       "path": "game/src/core/skill/Skill.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "e496d4d40959a4324a36d6ce60ad843c10f7889108d50c57b21b0f8b653e0705"
+      "hash": "08e4e0d513399a5015a2f9174ff02bfa31df9ea2e54331faf7705e9bd8823d23"
     },
     {
       "path": "game/src/core/skill/SkillAction.ts",
@@ -27429,10 +27429,16 @@
       "hash": "adcec57958fc689d3ead0dde103d6e11741288c2861977040993010dc221a10b"
     },
     {
+      "path": "game/src/services/auth/SupabaseAuthService.contract.test.ts",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "ccd7caffb9bd7b25aec820c2a69cbb18b7a88b6027431954237a467b472c1b0f"
+    },
+    {
       "path": "game/src/services/auth/SupabaseAuthService.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "6254a1bc31e2b29f2f064b086d3369e733260b7451e869705300d5b033bf8b9e"
+      "hash": "feb0338060f3e07143c72eec79d6ae6250a36a84ff5a9d39e9ba2583b4393bc8"
     },
     {
       "path": "game/src/services/character/CharacterCreationService.test.ts",
@@ -27444,7 +27450,7 @@
       "path": "game/src/services/character/CharacterCreationService.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "2160b69e88d428f4a26eb3c4ca42d1d7ac77303754b881b7e1a000073d20b605"
+      "hash": "690551439e3bfa4b915860071720d734acc3b445a418a3631387ba783afda8dc"
     },
     {
       "path": "game/src/services/character/CharacterCreationServiceFactory.ts",
@@ -27462,13 +27468,13 @@
       "path": "game/src/services/character/SupabaseCharacterCreationService.contract.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "8c2d614f875f49b9399048322eaeb1c8b6a1e56ef7b55273d13e468bbc07afc0"
+      "hash": "48520c4281e388868d4d1ea9c973451c2c42761495e242a5486d9102c55f708f"
     },
     {
       "path": "game/src/services/character/SupabaseCharacterCreationService.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "3fc96b7c88922df958911a381d0eaa0bc4e054acd660c3780f6d99bcee151a51"
+      "hash": "1ea949da0c032bdbc0859297752f0da1209ba2ff4e14f0432630be503cc70ab2"
     },
     {
       "path": "game/src/services/cloudSave/BOUNDS.md",
@@ -27612,7 +27618,7 @@
       "path": "game/src/services/save/SaveSystem.saveLoadRoundTrip.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "abcf8dfb243b16d67e35e03edb160486669712b23860cc7812f9a4d43133faae"
+      "hash": "e7cc807785d08a2aeedbcbf004c7f7de99e3c4fffb843697282368ef5ea73c04"
     },
     {
       "path": "game/src/services/save/SaveSystem.snapshotIsolation.test.ts",
@@ -27684,13 +27690,13 @@
       "path": "game/src/services/supabase/SupabaseSession.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "8e9467194ff3b56517916dd996ead2637674897d5da33cf90f93f314f906e3f3"
+      "hash": "cbde4f7db4dd0bb46445694c2b2947ee89ff225f78022e43069c56b6b5dad484"
     },
     {
       "path": "game/src/services/supabase/SupabaseSession.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "92117b863084c05f943111c804947736129e376e28c0cee0c23f59b55237de41"
+      "hash": "8bdba442f0932e9e3167c7b7e654f4e1546197e0db82a907541526969116916f"
     },
     {
       "path": "game/src/stores/actionFeedback.test.ts",
@@ -28515,5 +28521,5 @@
       "hash": "4f888fe1084d2a9091583d5093693d81453c0b8d06dfd6192b096972bae551d4"
     }
   ],
-  "productStateId": "b3ade7e3f442eb2a98da5b317248dd469440631e950f0b3f1ad24cfe116060f4"
+  "productStateId": "8d7ea1cd7ca3df591edd09011e5c8a123a59536dd71d831c886f8ba2c016c435"
 }
