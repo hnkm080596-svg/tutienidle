@@ -204,6 +204,22 @@ describe('QuestSystem', () => {
     const notResetTwice = system.checkAndResetDaily(registry, manager, player, Date.now() + 25 * 60 * 60 * 1000)
     expect(notResetTwice).toBe(false)
   })
+
+  it('a future lastDailyResetAtMs self-heals instead of freezing dailies (F-BX-39)', () => {
+    const { registry, manager, system } = setup()
+    const player = createPlayer()
+
+    // A clock-forward jump persisted a future marker; comparing
+    // day-buckets alone then freezes the daily board until real time
+    // crosses it.
+    const future = Date.now() + 30 * 24 * 60 * 60 * 1000
+    manager.resetDaily(['kill_test'], future)
+    expect(manager.getLastDailyResetAtMs()).toBe(future)
+
+    const now = Date.now()
+    expect(system.checkAndResetDaily(registry, manager, player, now)).toBe(true)
+    expect(manager.getLastDailyResetAtMs()).toBe(now)
+  })
 })
 
 describe('QuestSystem - domain-scoped reward material gate (F-W-10)', () => {

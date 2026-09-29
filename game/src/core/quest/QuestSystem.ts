@@ -322,7 +322,13 @@ export class QuestSystem {
     player: PlayerData,
     now: number = Date.now(),
   ): boolean {
-    if (dayBucket(now) <= dayBucket(manager.getLastDailyResetAtMs())) {
+    const last = manager.getLastDailyResetAtMs()
+
+    // F-BX-39 - a future marker (clock-forward jump, crafted save) made
+    // dayBucket(last) > dayBucket(now) and froze the daily board until
+    // real time crossed it. A marker in the future is still stale, so
+    // treat it as due: resetDaily(now) overwrites it and self-heals.
+    if (last <= now && dayBucket(now) <= dayBucket(last)) {
       return false
     }
 
