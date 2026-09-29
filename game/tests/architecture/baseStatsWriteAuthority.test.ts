@@ -21,143 +21,25 @@
  * Explicitly OUT of scope: test/simulation files (fixtures and driven
  * sessions set up state directly; they are not production authority).
  *
- * SCAN MODEL (honest bound): each file is normalized before scanning -
- * comments are stripped string-aware, then newlines collapse into one
- * line - so interposed comments (`baseStats/*c*.x`) and multi-line
- * writes (`x.baseStats\n  .s = 1`, `Object.assign(t, {\n baseStats })`)
- * cannot hide. Lexical scanning still cannot prove a payload carried
- * inside a variable (`Object.assign(t, blob)`) - the store-targeted
- * arms below flag indirect writes into $state/$patch so they surface
- * for review rather than passing silently. Transitive aliases
- * (`const b = a`) and parameter/loop-bound aliases stay uncovered by
- * design; that residual is recorded here, not hidden.
+ * SCAN MODEL: the guard walks the real TypeScript AST (typescript is
+ * already a dev dep via vue-tsc), so whitespace, comments, parens,
+ * template/unicode string forms and multi-line layouts cannot hide a
+ * write. Honest residual bound (documented, not hidden): computed
+ * keys carried through non-literal expressions (`p[k]` with a
+ * computed k), transitive aliases (`const b = a`), parameter or
+ * loop-bound aliases, and writes authored inside the allowlisted
+ * files themselves (the allowlist IS the trust boundary). Those are
+ * human-review lanes, not detectable-by-lexicon lanes.
  */
 import { describe, expect, it } from 'vitest'
+import ts from 'typescript'
 import { join, relative } from 'node:path'
+import { readFileSync } from 'node:fs'
 import { srcCorpus, SCAN_TIMEOUT } from './helpers/scanTs'
+import { scriptBlocksOf } from './helpers/commentStrip'
 
 const GAME_ROOT = process.cwd()
 const SRC_DIR = join(GAME_ROOT, 'src')
-
-/**
- * Strip block and line comments without touching string literals so
- * `//` inside 'https://x' or "a//b" survives and /*c*\/ inside a write
- * expression does not shield it. Template-literal bodies are treated
- * as opaque strings (${} expressions inside them are not scanned -
- * bracket arms still catch `x.baseStats[`k`]` key syntax itself).
- */
-function stripComments(src: string): string {
-  let out = ''
-  let i = 0
-  let inString: '"' | "'" | '`' | null = null
-  let inLine = false
-  let inBlock = false
-  while (i < src.length) {
-    const c = src[i]
-    const next = src[i + 1]
-    if (inLine) {
-      if (c === '\n') inLine = false
-      i += 1
-      continue
-    }
-    if (inBlock) {
-      if (c === '*' && next === '/') {
-        inBlock = false
-        i += 2
-        continue
-      }
-      i += 1
-      continue
-    }
-    if (inString !== null) {
-      out += c
-      if (c === '\\') {
-        out += next ?? ''
-        i += 2
-        continue
-      }
-      if (c === inString) inString = null
-      i += 1
-      continue
-    }
-    if (c === '/' && next === '/') {
-      inLine = true
-      i += 2
-      continue
-    }
-    if (c === '/' && next === '*') {
-      inBlock = true
-      i += 2
-      continue
-    }
-    if (c === '"' || c === "'" || c === '`') {
-      inString = c
-      out += c
-      i += 1
-      continue
-    }
-    out += c
-    i += 1
-  }
-  return out
-}
-
-/** Member access is spelled `.baseStats` or `["baseStats"]`/`['..']`/`[`..`]`. */
-const DOT_MEMBER = String.raw`\.baseStats\!?(?:\s*\.\w+\!?|\s*\[[^\]]{0,80}\])`
-const WRITE_OP =
-  String.raw`(?:=(?!=)|\+=|-=|\*=|/=|%=|\*\*=|<<=|>>>=|>>=|&=|\^=|\|=|\?\?=|\|\|=|&&=|\+\+|--)`
-
-// Every arm is global: non-global exec() ignores lastIndex and would
-// loop forever on the first hit.
-const WRITE_RES: RegExp[] = [
-  // x.baseStats = / += / ++ / x.baseStats.s = / x.baseStats[k] -=
-  new RegExp(String.raw`\.baseStats\!?\s*` + WRITE_OP, 'g'),
-  new RegExp(DOT_MEMBER + String.raw`\s*` + WRITE_OP, 'g'),
-  // x['baseStats'].s = / x[`baseStats`][k] +=
-  new RegExp(
-    String.raw`\[(?:"baseStats"|'baseStats'|` + '`' + String.raw`baseStats` + '`' +
-      String.raw`)\]\!?(?:\s*\.\w+\!?|\s*\[[^\]]{0,80}\])?\s*` + WRITE_OP,
-    'g',
-  ),
-  // ++x.baseStats.s / --x.baseStats[k]
-  new RegExp(String.raw`(?:\+\+|--)\s*\w+` + DOT_MEMBER, 'g'),
-  // destructuring / for-of targets carrying baseStats: [p.baseStats.x]=a, for(p.baseStats.x of a)
-  new RegExp(String.raw`[\[\{][^\]\}]{0,120}\.baseStats[^\]\}]{0,120}[\]\}]\s*=`, 'g'),
-  // for-of/for-in with baseStats as the loop TARGET (before of/in);
-  // `for (x of Object.entries(y.baseStats))` is a read - the pool
-  // reference sits after the keyword, so it does not match.
-  new RegExp(String.raw`for\s*\(\s*(?:const|let|var\s+)?[^)]{0,80}?\.baseStats\b[^)]*?\s+(?:of|in)\s`, 'g'),
-  // structural APIs
-  new RegExp(String.raw`Object\.assign\([^)]{0,200}\bbaseStats\b`, 'g'),
-  new RegExp(String.raw`Object\.assign\(\s*(?:this\.\$state|\w+\.\$state|\w+Store)\s*,`, 'g'),
-  new RegExp(String.raw`\.\$patch\s*\(\s*\{[^}]{0,400}\bbaseStats\b`, 'g'),
-  new RegExp(String.raw`\.\$patch\s*\(\s*\w+\s*\)`, 'g'),
-  new RegExp(String.raw`Reflect\.(?:set|defineProperty|deleteProperty)\([^)]{0,160}\bbaseStats\b`, 'g'),
-  new RegExp(String.raw`Object\.definePropert(?:y|ies)\([^)]{0,160}\bbaseStats\b`, 'g'),
-  new RegExp(String.raw`delete\s+[^;]{0,120}\bbaseStats\b`, 'g'),
-  // .vue two-way binding into the pool
-  new RegExp(String.raw`v-model="[^"]{0,120}\bbaseStats\b`, 'g'),
-]
-
-/**
- * Pool-alias escape hatches:
- *   const s = x.baseStats | const s = x['baseStats'] | s = x.baseStats
- *   const { baseStats } = x | const { baseStats: b } = x
- * `const copy = { ...x.baseStats }` is a fresh object - RHS `{` excluded.
- */
-const ALIAS_DECL_RES: RegExp[] = [
-  /(?:const|let|var)\s+(\w+)\s*=\s*(?!\s*\{)[^;=]{0,160}(?:\.baseStats\b|\[(?:"baseStats"|'baseStats'|`baseStats`)\])/g,
-  /\b(\w+)\s*=\s*(?!\s*=|\s*\{)[^;]{0,120}\.baseStats\b/g,
-  /\{\s*baseStats\s*:\s*(\w+)\s*\}\s*=/g,
-  /\{\s*(baseStats)\s*\}\s*=/g,
-]
-const aliasWriteRe = (id: string): RegExp =>
-  new RegExp(
-    `\\b${id}\\s*(?:\\.\\w+|\\[[^\\]]{0,80}\\])\\s*(?:=(?!=)|\\+=|-=|\\*=|/=|%=|\\*\\*=|<<=|>>>=|>>=|&=|\\^=|\\|=|\\?\\?=|\\|\\|=|&&=|\\+\\+|--)` +
-      `|(?:\\+\\+|--)\\s*${id}\\s*(?:\\.\\w+|\\[[^\\]]{0,80}\\])` +
-      `|Object\\.assign\\(\\s*${id}\\b|delete\\s+${id}\\s*\\.`,
-    'g',
-  )
 
 const TEST_EXT_RE = /\.test\.(ts|tsx|js|jsx|mjs|cjs|mts|cts)$/
 
@@ -184,9 +66,83 @@ const ALLOWED: AllowedFile[] = [
   },
 ]
 
+/** Script text of a source file (vue SFCs contribute script blocks only). */
+function scriptText(path: string, text: string): { body: string; jsx: boolean }[] {
+  if (path.endsWith('.vue')) {
+    return scriptBlocksOf(text).map((b) => ({ body: b.body, jsx: b.jsx }))
+  }
+  return [{ body: text, jsx: path.endsWith('.tsx') || path.endsWith('.jsx') }]
+}
+
+/** Is `node` a property/element access naming baseStats? */
+function isBaseStatsAccess(node: ts.Node): boolean {
+  if (ts.isPropertyAccessExpression(node)) {
+    return node.name.text === 'baseStats'
+  }
+  if (ts.isElementAccessExpression(node)) {
+    const arg = node.argumentExpression
+    return (
+      arg !== undefined &&
+      (ts.isStringLiteral(arg) || ts.isNoSubstitutionTemplateLiteral(arg)) &&
+      arg.text === 'baseStats'
+    )
+  }
+  return false
+}
+
+/** Does the subtree contain a baseStats access or an alias-rooted member access? */
+function containsPoolAccess(node: ts.Node, aliases: ReadonlySet<string>, constKeys: ReadonlySet<string>): boolean {
+  let found = false
+  const visit = (n: ts.Node): void => {
+    if (found) return
+    if (isBaseStatsAccess(n)) {
+      found = true
+      return
+    }
+    if (
+      ts.isElementAccessExpression(n) &&
+      n.argumentExpression !== undefined &&
+      ts.isIdentifier(n.argumentExpression) &&
+      constKeys.has(n.argumentExpression.text)
+    ) {
+      found = true
+      return
+    }
+    if (
+      (ts.isPropertyAccessExpression(n) || ts.isElementAccessExpression(n)) &&
+      ts.isIdentifier(n.expression) &&
+      aliases.has(n.expression.text)
+    ) {
+      found = true
+      return
+    }
+    ts.forEachChild(n, visit)
+  }
+  visit(node)
+  return found
+}
+
+const COMPOUND_ASSIGN = new Set([
+  ts.SyntaxKind.EqualsToken,
+  ts.SyntaxKind.PlusEqualsToken,
+  ts.SyntaxKind.MinusEqualsToken,
+  ts.SyntaxKind.AsteriskEqualsToken,
+  ts.SyntaxKind.SlashEqualsToken,
+  ts.SyntaxKind.PercentEqualsToken,
+  ts.SyntaxKind.AsteriskAsteriskEqualsToken,
+  ts.SyntaxKind.LessThanLessThanEqualsToken,
+  ts.SyntaxKind.GreaterThanGreaterThanEqualsToken,
+  ts.SyntaxKind.GreaterThanGreaterThanGreaterThanEqualsToken,
+  ts.SyntaxKind.AmpersandEqualsToken,
+  ts.SyntaxKind.CaretEqualsToken,
+  ts.SyntaxKind.BarEqualsToken,
+  ts.SyntaxKind.QuestionQuestionEqualsToken,
+  ts.SyntaxKind.BarBarEqualsToken,
+  ts.SyntaxKind.AmpersandAmpersandEqualsToken,
+])
+
 interface Offender {
   file: string
-  line: number
   text: string
 }
 
@@ -198,23 +154,10 @@ function collectOffenders(): { violations: Offender[]; unclassified: Offender[] 
     if (TEST_EXT_RE.test(file.path)) continue
     const rel = relative(GAME_ROOT, file.path).replaceAll('\\', '/')
     const allowed = ALLOWED.find((a) => a.path === rel)
+    const text = readFileSync(file.path, 'utf8')
 
-    // Normalize: strip comments string-aware, then collapse newlines so
-    // multi-line writes and comment-interposed tokens cannot hide.
-    const normalized = stripComments(file.text).replace(/\n+/g, ' ')
-
-    const aliasIds = new Set<string>()
-    for (const re of ALIAS_DECL_RES) {
-      re.lastIndex = 0
-      let m: RegExpExecArray | null
-      while ((m = re.exec(normalized)) !== null) {
-        if (m[1]) aliasIds.add(m[1])
-      }
-    }
-    const aliasRes = [...aliasIds].map(aliasWriteRe)
-
-    const flag = (text: string): void => {
-      const offender = { file: rel, line: 0, text }
+    const flag = (snippet: string): void => {
+      const offender = { file: rel, text: snippet.slice(0, 160).replace(/\s+/g, ' ').trim() }
       if (allowed) {
         violations.push(offender)
       } else {
@@ -222,19 +165,209 @@ function collectOffenders(): { violations: Offender[]; unclassified: Offender[] 
       }
     }
 
-    for (const re of WRITE_RES) {
-      re.lastIndex = 0
+    // .vue template lane: two-way binding into the pool.
+    if (rel.endsWith('.vue')) {
+      const vm = /v-model\s*=\s*"[^"]*\bbaseStats\b[^"]*"|v-model\s*=\s*'[^']*\bbaseStats\b[^']*'/g
       let m: RegExpExecArray | null
-      while ((m = re.exec(normalized)) !== null) {
-        flag(m[0].slice(0, 120))
-      }
+      while ((m = vm.exec(text)) !== null) flag(m[0])
     }
-    for (const re of aliasRes) {
-      re.lastIndex = 0
-      let m: RegExpExecArray | null
-      while ((m = re.exec(normalized)) !== null) {
-        flag(m[0].slice(0, 120))
+
+    for (const block of scriptText(rel, text)) {
+      const sf = ts.createSourceFile(
+        block.jsx ? 'probe.tsx' : 'probe.ts',
+        block.body,
+        ts.ScriptTarget.ESNext,
+        true,
+        block.jsx ? ts.ScriptKind.TSX : ts.ScriptKind.TS,
+      )
+
+      // Pass 1: collect pool aliases and const string keys.
+      const aliases = new Set<string>()
+      const constKeys = new Set<string>()
+      const collect = (n: ts.Node): void => {
+        // const { baseStats } = x / const { baseStats: b } = x
+        if (ts.isVariableDeclaration(n) && ts.isObjectBindingPattern(n.name)) {
+          for (const el of n.name.elements) {
+            const prop = el.propertyName
+            if (
+              prop !== undefined &&
+              ts.isIdentifier(prop) &&
+              prop.text === 'baseStats' &&
+              ts.isIdentifier(el.name)
+            ) {
+              aliases.add(el.name.text)
+            } else if (prop === undefined && ts.isIdentifier(el.name) && el.name.text === 'baseStats') {
+              aliases.add('baseStats')
+            }
+          }
+        }
+        // const s = x.baseStats / const s = x['baseStats'] - the
+        // initializer must BE the pool reference (a call or literal
+        // merely mentioning it - `f(x.baseStats)`, `{...x.baseStats}` -
+        // produces a different object and is not an alias).
+        if (
+          ts.isVariableDeclaration(n) &&
+          ts.isIdentifier(n.name) &&
+          n.initializer !== undefined &&
+          isPoolRootAccess(n.initializer)
+        ) {
+          aliases.add(n.name.text)
+        }
+        // s = x.baseStats (outer-scope assign)
+        if (
+          ts.isBinaryExpression(n) &&
+          n.operatorToken.kind === ts.SyntaxKind.EqualsToken &&
+          ts.isIdentifier(n.left) &&
+          isPoolRootAccess(n.right)
+        ) {
+          aliases.add(n.left.text)
+        }
+        // const K = 'baseStats'
+        if (
+          ts.isVariableDeclaration(n) &&
+          ts.isIdentifier(n.name) &&
+          n.initializer !== undefined &&
+          (ts.isStringLiteral(n.initializer) ||
+            ts.isNoSubstitutionTemplateLiteral(n.initializer)) &&
+          n.initializer.text === 'baseStats'
+        ) {
+          constKeys.add(n.name.text)
+        }
+        ts.forEachChild(n, collect)
       }
+
+      // `x.baseStats`, `x['baseStats']`, `(x.baseStats)`, `x.baseStats!`
+      // - the expression rooted exactly at the pool, nothing deeper.
+      const isPoolRootAccess = (n: ts.Node): boolean => {
+        let cur = n
+        while (ts.isParenthesizedExpression(cur) || ts.isNonNullExpression(cur)) {
+          cur = cur.expression
+        }
+        return isBaseStatsAccess(cur)
+      }
+
+      ts.forEachChild(sf, collect)
+
+      const pool = (n: ts.Node): boolean => containsPoolAccess(n, aliases, constKeys)
+
+      // Pass 2: flag write sites whose subtree touches the pool.
+      const inspect = (n: ts.Node): void => {
+        // assignment / compound assignment target
+        if (
+          ts.isBinaryExpression(n) &&
+          COMPOUND_ASSIGN.has(n.operatorToken.kind) &&
+          pool(n.left)
+        ) {
+          flag(n.getText(sf))
+        }
+        // ++/-- operand
+        if (
+          (ts.isPrefixUnaryExpression(n) || ts.isPostfixUnaryExpression(n)) &&
+          (n.operator === ts.SyntaxKind.PlusPlusToken ||
+            n.operator === ts.SyntaxKind.MinusMinusToken) &&
+          pool(n.operand)
+        ) {
+          flag(n.getText(sf))
+        }
+        // delete expr
+        if (ts.isDeleteExpression(n) && pool(n.expression)) {
+          flag(n.getText(sf))
+        }
+        // for-of / for-in target
+        if (
+          (ts.isForOfStatement(n) || ts.isForInStatement(n)) &&
+          pool(n.initializer)
+        ) {
+          flag(n.initializer.getText(sf))
+        }
+        if (ts.isCallExpression(n)) {
+          const callee = n.expression
+          const calleeName = ts.isPropertyAccessExpression(callee)
+            ? callee.name.text
+            : ts.isIdentifier(callee)
+              ? callee.text
+              : ''
+          const calleeRoot = ts.isPropertyAccessExpression(callee)
+            ? callee.expression.getText(sf)
+            : ''
+          // Object.assign / Reflect.set|defineProperty|deleteProperty /
+          // Object.defineProperty|defineProperties with pool in any arg
+          if (
+            (calleeName === 'assign' && calleeRoot === 'Object') ||
+            (calleeName === 'set' && calleeRoot === 'Reflect') ||
+            (calleeName === 'defineProperty' &&
+              (calleeRoot === 'Object' || calleeRoot === 'Reflect')) ||
+            (calleeName === 'defineProperties' && calleeRoot === 'Object') ||
+            (calleeName === 'deleteProperty' && calleeRoot === 'Reflect')
+          ) {
+            if (
+              n.arguments.some(
+                (a) =>
+                  pool(a) ||
+                  hasBaseStatsProp(a) ||
+                  ((ts.isStringLiteral(a) ||
+                    ts.isNoSubstitutionTemplateLiteral(a)) &&
+                    a.text === 'baseStats'),
+              )
+            ) {
+              flag(n.getText(sf))
+            }
+          }
+          // Object.assign(<store-ish target>, payload) - indirect write
+          if (calleeName === 'assign' && calleeRoot === 'Object') {
+            const first = n.arguments[0]
+            if (
+              first !== undefined &&
+              ts.isPropertyAccessExpression(first) &&
+              (first.name.text === '$state' ||
+                (ts.isIdentifier(first.expression) &&
+                  /Store$/.test(first.expression.text)))
+            ) {
+              flag(n.getText(sf))
+            }
+          }
+          // store.$patch({baseStats...}) literal OR $patch(var) indirect
+          if (calleeName === '$patch') {
+            const arg = n.arguments[0]
+            if (arg !== undefined && !ts.isObjectLiteralExpression(arg)) {
+              flag(n.getText(sf))
+            } else if (arg !== undefined && hasBaseStatsProp(arg)) {
+              flag(n.getText(sf))
+            }
+          }
+        }
+        // x.$state = { ...baseStats: forged... } - forged state replace
+        if (
+          ts.isBinaryExpression(n) &&
+          n.operatorToken.kind === ts.SyntaxKind.EqualsToken &&
+          ts.isPropertyAccessExpression(n.left) &&
+          n.left.name.text === '$state' &&
+          hasBaseStatsProp(n.right)
+        ) {
+          flag(n.getText(sf))
+        }
+        ts.forEachChild(n, inspect)
+      }
+
+      const hasBaseStatsProp = (n: ts.Node): boolean => {
+        let hit = false
+        const walk = (x: ts.Node): void => {
+          if (hit) return
+          if (
+            (ts.isPropertyAssignment(x) || ts.isShorthandPropertyAssignment(x)) &&
+            ts.isIdentifier(x.name) &&
+            x.name.text === 'baseStats'
+          ) {
+            hit = true
+            return
+          }
+          ts.forEachChild(x, walk)
+        }
+        walk(n)
+        return hit
+      }
+
+      ts.forEachChild(sf, inspect)
     }
   }
 
