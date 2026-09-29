@@ -153,16 +153,17 @@ export async function syncRemoteSaveOnLogin(config: SupabaseConfig): Promise<Rem
     //     as 'conflict' instead of regressing a newer remote lineage.
     if (remoteUsable && remoteRow && localSave) {
       const base = readSyncBaseRevision()
+      const sameContent =
+        canonicalJson(remoteUsable.normalizedSave) === canonicalJson(localSave)
+
       if (base !== null && base !== remoteRow.save_revision) {
-        if (canonicalJson(remoteUsable.normalizedSave) === canonicalJson(localSave)) {
-          writeSyncBaseRevision(remoteRow.save_revision)
-        } else if (localRevision === base && remoteAhead) {
+        if (sameContent || (localRevision === base && remoteAhead)) {
           writeSyncBaseRevision(remoteRow.save_revision)
         } else {
           return 'conflict'
         }
       } else if (base === null) {
-        if (canonicalJson(remoteUsable.normalizedSave) === canonicalJson(localSave)) {
+        if (sameContent) {
           writeSyncBaseRevision(remoteRow.save_revision)
         } else if (
           localRevision > remoteRow.save_revision &&
