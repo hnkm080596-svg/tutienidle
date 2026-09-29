@@ -140,6 +140,16 @@ export interface CombatAnimationCatalogue {
   idle_to_standby?: AtlasClip
   standby_to_idle?: AtlasClip
   cultivate?: AtlasClip
+
+  /**
+   * Per-skill cast clips (art-seam wave, 2026-09-29 user ruling Q1): a KEYED
+   * map, not new CombatAnimationName members - the key is a Skill.id or a
+   * slot role like 'special', and the anim key is `${slug}-cast-${key}`.
+   * Played by `playCastClip` before the slot-role fallback chain; absent
+   * entries fall through to it unchanged. Omit the field when the variant
+   * authors no cast clips (omit-don't-declare, same as the optional clips).
+   */
+  castClips?: Record<string, AtlasClip>
 }
 
 /** One still image. What a `kind: 'static'` entity actually draws. */
@@ -187,4 +197,22 @@ export type CombatEntityPresentation =
  */
 export function combatAnimationKey(entityKey: string, name: CombatAnimationName): string {
   return `${entityKey}-${name}`
+}
+
+/**
+ * Every AtlasClip in a catalogue, flattening the keyed `castClips` map - a
+ * bare `Object.values(clips)` yields the map itself as one element and drops
+ * each per-skill clip. Registration, preload, and the drift tests all
+ * iterate clips through this.
+ */
+export function atlasClipsOf(clips: CombatAnimationCatalogue): AtlasClip[] {
+  const named: AtlasClip[] = []
+
+  for (const value of Object.values(clips)) {
+    if (value !== undefined && value !== clips.castClips) {
+      named.push(value)
+    }
+  }
+
+  return [...named, ...Object.values(clips.castClips ?? {})]
 }

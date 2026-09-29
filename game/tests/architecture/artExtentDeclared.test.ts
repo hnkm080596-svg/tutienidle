@@ -7,9 +7,10 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { PLAYER_VISUAL_PROFILES } from '@/presentation/art/PlayerVisualProfiles'
 import { animatedArtFormFor } from '@/presentation/art/CombatPresentationCatalogue'
-import type {
-  AtlasClip,
-  CombatAnimationCatalogue,
+import {
+  atlasClipsOf,
+  type AtlasClip,
+  type CombatAnimationCatalogue,
 } from '@/presentation/art/CombatEntityPresentation'
 import { SCAN_TIMEOUT } from './helpers/scanTs'
 
@@ -59,9 +60,7 @@ describe('mortal art extents', () => {
   it(
     'declares the measured tallest trimmed frame for every clip',
     () => {
-      for (const clip of Object.values(clips).filter(
-        (c): c is AtlasClip => c !== undefined,
-      )) {
+      for (const clip of atlasClipsOf(clips)) {
 
         let tallest: AtlasFrame | undefined
 

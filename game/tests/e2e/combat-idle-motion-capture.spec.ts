@@ -16,13 +16,13 @@ import { bootToGuestHome, createCharacterThroughUi, enterHome } from './helpers'
  * ENTITY_ART_MODE is 'static': unmapped entities bob via tween and play NO
  * animation. The sanctioned exceptions are the reskin registries - mapped
  * NEWSPRITE enemies play authored atlas clips, and the player's visual
- * profile resolves to the `zuofeng` character atlas the same way - so this
+ * profile resolves to the `pham_nhan` character atlas the same way - so this
  * spec samples the WHOLE first combat, not a fixed 2s window: floor 1's pool
  * is boar(w5, animated) + bandit(w3, static), and which species stand up
  * first is RNG. Sampling until combat ends (or the cap hits) makes "at least
  * one animated enemy actually animated" near-deterministic.
  *
- *  - the player plays an authored atlas clip (`zuofeng-*`) whose CURRENT
+ *  - the player plays an authored atlas clip (`pham_nhan-*`) whose CURRENT
  *    FRAME changes - a frozen sprite reports a frame too;
  *  - every static enemy bobs within the declared amplitude and plays no
  *    animation (they are stills, the mode contract);
@@ -240,9 +240,10 @@ test.describe('Combat idle motion (static mode + wave-1 reskins)', { tag: '@capt
 
     expect(probeGone, 'probe sprite still present after death sequence').toBe(true)
 
-    // Player probe (character-art-infra): the `ult` clip is the one authored
-    // sequence combat may never fire on floor 1 (ult slot gating is deep
-    // progression). Drive the same call the binding makes for an ultimate cast -
+    // Player probe (character-art-infra): `ult` is the one clip combat may
+    // never fire on floor 1 (ult slot gating is deep progression). pham_nhan
+    // authors no ult clip (Minh wave 2026-09-29), so driving the ultimate
+    // call exercises the live MISSING_CLIP_FALLBACK degrade onto 'attack' -
     // play-once, then TRANSITION_DESTINATION lands it on standby.
     const ultAnim = await page.evaluate(() => {
       const w = window as unknown as {
@@ -261,8 +262,8 @@ test.describe('Combat idle motion (static mode + wave-1 reskins)', { tag: '@capt
       }
     })
 
-    expect(ultAnim.anim, `player ult clip did not start (got '${ultAnim.anim}')`).toBe(
-      'zuofeng-ult',
+    expect(ultAnim.anim, `player ult degrade did not start attack (got '${ultAnim.anim}')`).toBe(
+      'pham_nhan-attack',
     )
 
     await page
@@ -270,7 +271,7 @@ test.describe('Combat idle motion (static mode + wave-1 reskins)', { tag: '@capt
       .first()
       .screenshot({ path: path.join(outDir, 'player-ult.png') })
 
-    // 14 frames at 10fps = 1.4s; give the completion listener margin. The
+    // 17 frames at 8fps = ~2.1s; give the completion listener margin. The
     // one-shot must have ENDED - which loop follows (standby vs idle) is the
     // live engine's call, so the pin is "settles on a loop", not a specific
     // destination. Poll rather than fixed-wait: live combat keeps running
@@ -285,7 +286,7 @@ test.describe('Combat idle motion (static mode + wave-1 reskins)', { tag: '@capt
           sprites: Map<string, { rect: { anims?: { currentAnim?: { key: string } } } }>
         }
         const key = scene.sprites.get('player')?.rect.anims?.currentAnim?.key
-        return typeof key === 'string' && /^zuofeng-(idle|standby)$/.test(key)
+        return typeof key === 'string' && /^pham_nhan-(idle|standby)$/.test(key)
       },
       undefined,
       { timeout: 12_000, polling: 200 },
@@ -472,7 +473,7 @@ test.describe('Combat idle motion (static mode + wave-1 reskins)', { tag: '@capt
     expect(anyEnemies, 'no enemy sprites on screen across the whole capture').toBe(true)
 
     // 1. Reskinned player (character-art-infra): the visual profile resolves
-    //    to the `zuofeng` atlas and plays an authored clip whose frame must
+    //    to the `pham_nhan` atlas and plays an authored clip whose frame must
     //    actually advance. Idle is the standing state; attack/ult may
     //    legitimately interleave while turns run.
     const playerSamples = samples.filter((sample) => sample.playerY !== undefined)
@@ -482,8 +483,8 @@ test.describe('Combat idle motion (static mode + wave-1 reskins)', { tag: '@capt
     for (const sample of playerSamples) {
       expect(
         sample.playerAnim,
-        `reskinned player is not playing a zuofeng clip (got '${sample.playerAnim}')`,
-      ).toMatch(/^zuofeng-(idle|standby|attack|ult|death|idle_to_standby|standby_to_idle)$/)
+        `reskinned player is not playing a pham_nhan clip (got '${sample.playerAnim}')`,
+      ).toMatch(/^pham_nhan-(idle|standby|attack|death|idle_to_standby|standby_to_idle)$/)
     }
 
     const playerFrames = new Set(playerSamples.map((sample) => sample.playerFrame))

@@ -15,6 +15,7 @@ import type { TurnBattleEntitySnapshotEvent } from '@/core/battle/turn/TurnActio
 import type { EventBus } from '@/core/events/EventBus'
 import type { BattlefieldGeometrySnapshot } from '@/presentation/geometry/BattleGridProjection'
 import type { PlayerVisualProfileId } from '@/presentation/art/PlayerVisualProfiles'
+import type { CultivationWayId } from '@/core/player/CultivationPathKit'
 import type { KiemBarReader } from '@/presentation/bridges/kiemBarBridge'
 import type { TheBarReader } from '@/presentation/bridges/theBarBridge'
 import type { HoTheReader } from '@/presentation/bridges/hoTheBridge'
@@ -111,6 +112,11 @@ export interface PresentationGateContents {
   sceneAdapter: SceneReadyPort
   bundleManager: AssetLoaderHostPort
   playerVisualProfileId: PlayerVisualProfileId
+  // Armed/unarmed pick for the mortal reskin + hidden-way cultivate
+  // selector (art-seam wave, user rulings Q2/Q3). Seeded by the same
+  // publishProfile pass as playerVisualProfileId.
+  playerVisualArmed: boolean
+  playerCultivationWay: CultivationWayId | undefined
   lastBattlePositionsSnapshot: PositionsSnapshotEntry | null
   battlefieldGeometry: BattlefieldGeometrySnapshot
   kiemBarReader: KiemBarReader

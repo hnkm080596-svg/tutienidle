@@ -8,7 +8,9 @@
 import Phaser from 'phaser'
 
 import {
+  atlasClipsOf,
   combatAnimationKey,
+  type AtlasClip,
   type CombatAnimationCatalogue,
   type CombatAnimationName,
 } from '@/presentation/art/CombatEntityPresentation'
@@ -67,7 +69,7 @@ export function registerClipCatalogue(
   anims: Phaser.Animations.AnimationManager,
   clips: CombatAnimationCatalogue,
 ): void {
-  for (const clip of Object.values(clips)) {
+  for (const clip of atlasClipsOf(clips)) {
     if (anims.exists(clip.key)) {
       continue
     }
@@ -128,7 +130,11 @@ export class CombatAnimationPlayback {
       // Character reskin (character-art-infra): a mapped profile resolves to
       // its character slug before the static texture key, same amendment as
       // the enemy branch below.
-      return resolvePlayerEntityKey(this.scene.playerProfile.id, this.scene.playerProfile.combatTextureKey)
+      return resolvePlayerEntityKey(
+        this.scene.playerProfile.id,
+        this.scene.playerProfile.combatTextureKey,
+        { armed: this.scene.playerArmed },
+      )
     }
 
     // Uniformity (2026-09-19): an unregistered entity resolves to the shared
@@ -238,23 +244,67 @@ export class CombatAnimationPlayback {
       return
     }
 
-    const key = combatAnimationKey(prefix, resolved)
+    this.playResolvedClip(sprite, actorId, combatAnimationKey(prefix, resolved), destination)
+  }
+
+  /**
+   * Per-skill cast clip (art-seam S1): playCastClip resolves the AtlasClip
+   * from the variant's `castClips` map; this plays it through the same
+   * deferral + one-shot-completion -> standby machinery a named clip takes.
+   * A cast clip missing from the AnimationManager (atlas-miss, or registered
+   * empty on partial sheet loss) degrades to 'attack' - which itself walks
+   * the chain down to 'standby', mirroring MISSING_CLIP_FALLBACK's ult hop.
+   */
+  playAtlasClip(sprite: EntitySprite, actorId: string | undefined, clip: AtlasClip): void {
+    if (sprite.kind !== 'sprite' || actorId === undefined) {
+      return
+    }
+
+    const dying = actorId === PLAYER_ID
+      ? this.scene.playerDying
+      : this.scene.dyingIds.has(actorId)
+
+    if (dying) {
+      return
+    }
+
+    const empty = this.scene.anims.get?.(clip.key)?.frames.length === 0
+
+    if (!this.scene.anims.exists(clip.key) || empty) {
+      this.playCombatAnimation(sprite, actorId, 'attack')
+      return
+    }
+
+    this.playResolvedClip(sprite, actorId, clip.key, 'standby')
+  }
+
+  /**
+   * Shared tail of the one-shot paths: swap the sprite onto `key`, then arm
+   * the completion listener that lands the entity on `destination` (or on a
+   * deferred loop request that arrived mid-clip). `destination ===
+   * undefined` means the playing key is a loop - no listener is armed, and
+   * the pre-one-shot base texture reference is cleared.
+   */
+  private playResolvedClip(
+    sprite: EntitySprite,
+    actorId: string,
+    key: string,
+    destination: CombatAnimationName | undefined,
+  ): void {
     const gameSprite = sprite.rect as Phaser.GameObjects.Sprite
 
     if (destination !== undefined && sprite.pendingBaseTextureKey === undefined) {
       // Capture the still art before the one-shot swaps it - the restore
-      // path above needs it if the whole loop chain turns out unplayable.
+      // path needs it if the whole loop chain turns out unplayable.
       sprite.pendingBaseTextureKey = gameSprite.texture?.key
     }
 
     gameSprite.play(key)
 
     // Arm the completion handler only when the clip ACTUALLY playing is a
-    // one-shot - key on `resolved`, not `name`. Loops ('idle'/'standby'/
-    // 'cultivate') never emit ANIMATION_COMPLETE so a listener on them sits
-    // dead forever (Clean-B2 CR2-F1: asking for an unauthored transition
-    // resolved straight to the loop used to arm one dead closure per turn);
-    // 'death' has its own lifecycle in beginDeathSequence.
+    // one-shot. Loops ('idle'/'standby'/'cultivate') never emit
+    // ANIMATION_COMPLETE so a listener on them sits dead forever
+    // (Clean-B2 CR2-F1); 'death' has its own lifecycle in beginDeathSequence.
     if (destination === undefined) {
       sprite.pendingBaseTextureKey = undefined
       return

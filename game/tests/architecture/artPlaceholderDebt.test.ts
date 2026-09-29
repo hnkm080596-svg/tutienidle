@@ -36,7 +36,7 @@ const COMPANION_ENTITY_KEYS = COMPANIONS.map((companion) => companion.id)
 const EXPECTED_PLACEHOLDER_KEYS: readonly string[] =
   ENTITY_ART_MODE === 'animated'
     ? [
-        'player-phap-tu-v1',
+        'player-phap-tu-ngu-hanh-v1',
         ...MORTAL_ENEMY_TEMPLATE_IDS.map(
           (templateId) => resolveEnemyTextureKey(templateId) ?? templateId,
         ),

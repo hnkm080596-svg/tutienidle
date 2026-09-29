@@ -149,6 +149,18 @@ export const usePlayerStore = defineStore('player', {
         cultivationPath: state.cultivationPath,
       })
     },
+
+    // Armed/unarmed art discriminator (user ruling 2026-09-29, Q2):
+    // mortal-only - the basic-skill pick decides the reskin: 'tram' fights
+    // with a sword ('pham_nhan'), 'linh_bao'/'huy_quyen' go unarmed
+    // ('pham_nhan_unarmed'). Resolved once here; every visual surface reads
+    // it through the playerVisualArmed registry gate or the payload mirror.
+    visualArmed(state): boolean {
+      const mortal =
+        state.cultivationPath === undefined ||
+        (state.cultivationPath as string) === 'mortal'
+      return mortal && (state.mortalBasicSkillId ?? 'tram') === 'tram'
+    },
   },
 
   actions: {

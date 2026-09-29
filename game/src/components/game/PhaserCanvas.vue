@@ -102,13 +102,19 @@ function seedRegion(registry: GateRegistry): () => void {
   // đổi. Scenes chỉ nhận PROFILE ID.
   const publishProfile = () => {
     const profileId: PlayerVisualProfileId = player.visualProfileId
+    const armed = player.visualArmed
+    const cultivationWay = player.cultivationWay ?? undefined
 
     writeGate(registry, 'playerVisualProfileId', profileId)
+    writeGate(registry, 'playerVisualArmed', armed)
+    writeGate(registry, 'playerCultivationWay', cultivationWay)
 
     gameManager.eventBus.emit('player_visual_profile_changed', {
       type: 'player_visual_profile_changed',
 
       profileId,
+      armed,
+      cultivationWay,
     })
   }
 
@@ -118,7 +124,8 @@ function seedRegion(registry: GateRegistry): () => void {
   // component's effect scope and Vue will not stop it. It used to leak for
   // exactly that reason; the seed cleanup stops it now.
   const stopProfileWatch = watch(
-    () => [player.realmId, player.cultivationPath] as const,
+    () =>
+      [player.realmId, player.cultivationPath, player.cultivationWay, player.mortalBasicSkillId] as const,
 
     () => publishProfile(),
   )

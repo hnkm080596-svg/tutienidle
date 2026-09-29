@@ -124,10 +124,11 @@ export class TribulationScene extends Phaser.Scene {
       // Static mode - the profile's cultivate PNG; size from the live source
       // image so a differently-shaped artwork never distorts.
       const registryProfileId = readOptionalGate(this.registry, 'playerVisualProfileId')
+      const cultivationWay = readOptionalGate(this.registry, 'playerCultivationWay')
       const profile =
         (registryProfileId && PLAYER_VISUAL_PROFILES[registryProfileId]) ||
         PLAYER_VISUAL_PROFILES.mortal
-      const textureKey = getCultivateTexture(profile).key
+      const textureKey = getCultivateTexture(profile, cultivationWay).key
 
       this.player = this.add.sprite(width / 2, height * 0.62, textureKey)
 

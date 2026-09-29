@@ -154,9 +154,9 @@ describe('CombatScene â€” entityAnimationKeyPrefix()', () => {
   it('player â†’ character slug for a reskin-mapped profile (character-art-infra)', () => {
     const scene = createScene()
 
-    // 'mortal' maps to 'zuofeng' in CHARACTER_RESKIN_MAP - the slug is the
+    // 'mortal' maps to 'pham_nhan' in CHARACTER_RESKIN_MAP - the slug is the
     // entity key now, the profile texture key only for unmapped profiles.
-    expect(scene.entityAnimationKeyPrefix(PLAYER_ID)).toBe('zuofeng')
+    expect(scene.entityAnimationKeyPrefix(PLAYER_ID)).toBe('pham_nhan')
   })
 
   it('enemy trong batch Mortal â†’ resolveEnemyTextureKey()', () => {
@@ -261,8 +261,8 @@ describe('CombatScene â€” playCombatAnimation()', () => {
   })
 
   it('player + clip Ä‘Ã£ Ä‘Äƒng kÃ½ â†’ play(Ä‘Ãºng key theo entity key hiá»‡n hÃ nh)', () => {
-    // character-art-infra: the reskinned profile resolves to 'zuofeng', which
-    // IS animated in the real catalogue - no promotion needed.
+    // character-art-infra: the reskinned profile resolves to 'pham_nhan',
+    // which IS animated in the real catalogue - no promotion needed.
     const scene = createScene()
     const sprite = makeSprite('sprite')
     const playerKey = scene.entityAnimationKeyPrefix(PLAYER_ID)!
@@ -398,6 +398,61 @@ describe('CombatScene â€” playCombatAnimation()', () => {
     gameSprite.playCalls.length = 0
     fireCastStart(scene, { sourceId: PLAYER_ID })
     expect(gameSprite.playCalls).toEqual([combatAnimationKey(playerKey, 'attack')])
+  })
+
+  // Art-seam S1 (2026-09-29, user ruling Q1): a per-skill cast clip outranks
+  // the slot-role pick - linh_bao on the unarmed mortal resolves its own
+  // authored clip instead of the huy_quyen punch attack.
+  it('turn_cast_start plays the per-skill cast clip ahead of the slot-role pick', () => {
+    const scene = createScene()
+    const sprite = makeSprite('sprite')
+    const gameSprite = sprite.rect as ReturnType<typeof fakeGameSprite>
+
+    scene.sprites.set(PLAYER_ID, sprite)
+    patchScene(scene, { _vfxSpawner: { playHorizontalImpulse: vi.fn() } })
+    scene.anims = { exists: () => true }
+
+    // Unarmed mortal (linh_bao/huy_quyen pick) -> 'pham_nhan_unarmed'.
+    scene.playerArmed = false
+
+    fireCastStart(scene, { sourceId: PLAYER_ID, slotRole: 'basic', skillId: 'linh_bao' })
+    expect(gameSprite.playCalls).toEqual(['pham_nhan_unarmed-cast-linh_bao'])
+
+    // The cast clip is a one-shot: completion routes to standby through
+    // the same deferred-loop machinery attack clips use.
+    gameSprite.emit('animationcomplete', { key: 'pham_nhan_unarmed-cast-linh_bao' })
+    expect(gameSprite.playCalls).toEqual([
+      'pham_nhan_unarmed-cast-linh_bao',
+      'pham_nhan_unarmed-standby',
+    ])
+
+    // A skillId the variant never authored falls back to the slot-role
+    // pick - same 'attack' the pre-seam path played.
+    gameSprite.playCalls.length = 0
+    fireCastStart(scene, { sourceId: PLAYER_ID, slotRole: 'basic', skillId: 'huy_quyen' })
+    expect(gameSprite.playCalls).toEqual(['pham_nhan_unarmed-attack'])
+  })
+
+  // Slot-role keyed castClips: ngu_hanh authors ONE 'special' cast covering
+  // every element - the skillId lookup misses, the slot-role lookup hits.
+  it("turn_cast_start falls back to the slot-role cast clip when the skillId isn't keyed", () => {
+    const scene = createScene()
+    const sprite = makeSprite('sprite')
+    const gameSprite = sprite.rect as ReturnType<typeof fakeGameSprite>
+
+    scene.playerProfileId = 'phap_tu'
+    scene.playerProfile = PLAYER_VISUAL_PROFILES.phap_tu
+    scene.sprites.set(PLAYER_ID, sprite)
+    patchScene(scene, { _vfxSpawner: { playHorizontalImpulse: vi.fn() } })
+    scene.anims = { exists: () => true }
+
+    fireCastStart(scene, {
+      sourceId: PLAYER_ID,
+      slotRole: 'special',
+      skillId: 'ngu_hanh_tho_thuan',
+    })
+
+    expect(gameSprite.playCalls).toEqual(['ngu_hanh-cast-special'])
   })
 
   // Clean-B F-CB2-02: slotRole 'none' marks a declared turn that is not a
@@ -579,8 +634,8 @@ describe('CombatScene â€” playCombatAnimation()', () => {
     const standbyKey = combatAnimationKey(playerKey, 'standby')
     const idleKey = combatAnimationKey(playerKey, 'idle')
 
-    gameSprite.texture = { key: 'zuofeng-avatar' }
-    scene.textures = { exists: (key: string) => key === 'zuofeng-avatar' }
+    gameSprite.texture = { key: 'pham_nhan-avatar' }
+    scene.textures = { exists: (key: string) => key === 'pham_nhan-avatar' }
     scene.anims = {
       exists: () => true,
       get: (key: string) => ({ frames: key === standbyKey || key === idleKey ? [] : [{ f: 1 }] }),
@@ -590,7 +645,7 @@ describe('CombatScene â€” playCombatAnimation()', () => {
     gameSprite.emit('animationcomplete', { key: attackKey })
 
     // standby empty -> idle empty -> terminate -> avatar still art restored.
-    expect(gameSprite.textureCalls).toEqual(['zuofeng-avatar'])
+    expect(gameSprite.textureCalls).toEqual(['pham_nhan-avatar'])
     expect(gameSprite.playCalls).toEqual([attackKey])
   })
 
