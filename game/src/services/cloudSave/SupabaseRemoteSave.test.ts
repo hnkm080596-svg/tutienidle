@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { syncRemoteSaveOnLogin } from './SupabaseRemoteSave'
 import { storeSupabaseSession } from '../supabase/SupabaseSession'
 import {
+  resolveBackupKey,
   resolveImportHandoffKey,
   resolveRevisionKey,
   resolveSaveKey,
@@ -247,7 +248,7 @@ describe('syncRemoteSaveOnLogin - newest-wins reconciliation (spec F8)', () => {
     vi.unstubAllGlobals()
   })
 
-  it('same revision on both sides -> timestamp tie-break still applies', async () => {
+  it('same revision + different content (fork, no base recorded) -> conflict: wall-clock must not pick a side (F-BX-31)', async () => {
     loginSession()
     localStorage.setItem(resolveSaveKey(), JSON.stringify(validGameSave(1_000)))
     localStorage.setItem(resolveRevisionKey(), '5')
@@ -255,7 +256,7 @@ describe('syncRemoteSaveOnLogin - newest-wins reconciliation (spec F8)', () => {
     const remoteSave = validGameSave(5_000_000)
     remoteSave.player.name = 'remote-char'
 
-    stubFetch((call) => {
+    const calls = stubFetch((call) => {
       if (call.url.includes('/rest/v1/characters?')) return json([{ id: 'char-1' }])
       if (call.url.includes('/rest/v1/character_saves?')) {
         return json([{ payload: remoteSave, save_revision: 5, updated_at: new Date(10_000_000).toISOString() }])
@@ -263,7 +264,76 @@ describe('syncRemoteSaveOnLogin - newest-wins reconciliation (spec F8)', () => {
       return json(null)
     })
 
+    // Two independent devices each reached revision 5 with different
+    // content - the counters offer no ordering, so neither a pull nor a
+    // push may silently destroy one lineage.
+    expect(await syncRemoteSaveOnLogin(config)).toBe('conflict')
+    expect(calls.some((call) => call.init.method === 'PATCH')).toBe(false)
+    expect(calls.some((call) => call.init.method === 'POST')).toBe(false)
+    const written = JSON.parse(localStorage.getItem(resolveSaveKey()) ?? 'null') as GameSave
+    expect(written.player.name).not.toBe('remote-char')
+    expect(localStorage.getItem(resolveRevisionKey())).toBe('5')
+
+    vi.unstubAllGlobals()
+  })
+
+  it('pull writes the pre-pull local save to the backup slot first (F-BX-31)', async () => {
+    loginSession()
+    const priorLocal = validGameSave(1_000)
+    priorLocal.player.name = 'local-char'
+    localStorage.setItem(resolveSaveKey(), JSON.stringify(priorLocal))
+
+    const remoteSave = validGameSave(5_000_000)
+    remoteSave.player.name = 'remote-char'
+
+    stubFetch((call) => {
+      if (call.url.includes('/rest/v1/characters?')) return json([{ id: 'char-1' }])
+      if (call.url.includes('/rest/v1/character_saves?')) {
+        return json([{ payload: remoteSave, save_revision: 7, updated_at: new Date(10_000_000).toISOString() }])
+      }
+      return json(null)
+    })
+
     expect(await syncRemoteSaveOnLogin(config)).toBe('pulled')
+
+    // Same safety net as deleteSave/importSaveRaw: the pulled bytes
+    // overwrite the only copy of this device's unpushed progress.
+    const backup = JSON.parse(localStorage.getItem(resolveBackupKey()) ?? 'null') as GameSave
+    expect(backup.player.name).toBe('local-char')
+    const written = JSON.parse(localStorage.getItem(resolveSaveKey()) ?? 'null') as GameSave
+    expect(written.player.name).toBe('remote-char')
+
+    vi.unstubAllGlobals()
+  })
+
+  it('first-push insert carries no merge-duplicates Prefer header; a PK conflict surfaces as unavailable (F-BX-33)', async () => {
+    loginSession()
+    localStorage.setItem(resolveSaveKey(), JSON.stringify(validGameSave(50_000_000)))
+    localStorage.setItem(resolveRevisionKey(), '2')
+
+    const calls = stubFetch((call) => {
+      if (call.url.includes('/rest/v1/characters?')) return json([{ id: 'char-1' }])
+      // Read races with a concurrent first-push: the row is absent at
+      // read time but exists by insert time -> Postgres 23505.
+      if (call.init.method === 'POST') {
+        return new Response('duplicate key value violates unique constraint', { status: 409 })
+      }
+      if (call.url.includes('/rest/v1/character_saves?')) return json([])
+      return json(null)
+    })
+
+    expect(await syncRemoteSaveOnLogin(config)).toBe('unavailable')
+
+    const post = calls.find((call) => call.init.method === 'POST')
+    expect(post).toBeDefined()
+    const headers = (post?.init.headers ?? {}) as Record<string, string>
+    expect(headers.Prefer ?? '').not.toContain('merge-duplicates')
+
+    // Local slot and revision untouched - the next login re-reads the
+    // winning row and converges.
+    const written = JSON.parse(localStorage.getItem(resolveSaveKey()) ?? 'null') as GameSave
+    expect(written.player.lastSavedAt).toBe(50_000_000)
+    expect(localStorage.getItem(resolveRevisionKey())).toBe('2')
 
     vi.unstubAllGlobals()
   })
