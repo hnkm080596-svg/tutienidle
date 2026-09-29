@@ -35,6 +35,7 @@ import type { FormationAssignmentsPayload } from '@/presentation/contracts/regio
 import { PLAYER_ID } from './combat/combatConstants'
 import { PLAYER_TEXTURE_KEY } from '@/game/support/CombatPreload'
 import type { BattleGridProjection } from '@/presentation/geometry/BattleGridProjection'
+import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import { STANDING_SLOT_COUNT } from '@/core/battle/BattlefieldRegions'
 import type { FormationSlotAssignment } from '@/core/player/Player'
 import type { LaneIndex } from '@/core/battle/BattleLane'
@@ -154,7 +155,7 @@ export class TranPhapCombatPreviewScene extends Phaser.Scene implements CombatGr
           }
 
           queued.add(clip.sheetKey)
-          this.load.atlas(clip.sheetKey, clip.sheetUrl, clip.atlasUrl)
+          this.load.atlas(clip.sheetKey, resolveAssetUrl(clip.sheetUrl), resolveAssetUrl(clip.atlasUrl))
         }
       }
 
@@ -163,11 +164,11 @@ export class TranPhapCombatPreviewScene extends Phaser.Scene implements CombatGr
 
     // Static mode - the placeholder silhouette plus every profile's combat
     // PNG (same source CombatScene's bundle queues).
-    this.load.image(PLACEHOLDER_STATIC_TEXTURE_KEY, PLACEHOLDER_STATIC_TEXTURE_URL)
+    this.load.image(PLACEHOLDER_STATIC_TEXTURE_KEY, resolveAssetUrl(PLACEHOLDER_STATIC_TEXTURE_URL))
 
     for (const profile of Object.values(PLAYER_VISUAL_PROFILES)) {
       if (!this.textures.exists(profile.combatTextureKey)) {
-        this.load.image(profile.combatTextureKey, profile.combatTextureUrl.replace(/^\/+/, ''))
+        this.load.image(profile.combatTextureKey, resolveAssetUrl(profile.combatTextureUrl))
       }
     }
 
@@ -188,7 +189,7 @@ export class TranPhapCombatPreviewScene extends Phaser.Scene implements CombatGr
         }
 
         characterSheets.add(range.sheetKey)
-        this.load.atlas(range.sheetKey, range.sheetUrl, range.atlasUrl)
+        this.load.atlas(range.sheetKey, resolveAssetUrl(range.sheetUrl), resolveAssetUrl(range.atlasUrl))
       }
     }
 
@@ -196,7 +197,7 @@ export class TranPhapCombatPreviewScene extends Phaser.Scene implements CombatGr
     // atlas miss, for both registries.
     for (const variant of [...Object.values(MONSTER_ART), ...Object.values(CHARACTER_ART)]) {
       if (!this.textures.exists(variant.avatarKey)) {
-        this.load.image(variant.avatarKey, variant.avatarUrl)
+        this.load.image(variant.avatarKey, resolveAssetUrl(variant.avatarUrl))
       }
     }
   }

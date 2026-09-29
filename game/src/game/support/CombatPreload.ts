@@ -12,6 +12,7 @@
 // entry queued 0 textures).
 import type Phaser from 'phaser'
 import { GOURD_TEXTURE_KEY, GOURD_TEXTURE_URL } from './RewardGourd'
+import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import {
   ENEMY_SOURCE_SIZE,
   enemyTextureUrl,
@@ -101,7 +102,7 @@ export function queueCombatAssets(scene: Phaser.Scene): void {
 
     queuedKeys.add(key)
 
-    scene.load.image(key, url)
+    scene.load.image(key, resolveAssetUrl(url))
   }
 
   const queueAtlasOnce = (clips: CombatAnimationCatalogue) => {
@@ -114,7 +115,7 @@ export function queueCombatAssets(scene: Phaser.Scene): void {
 
       // Atlas, not spritesheet (Spec B sec.3.1): frames are addressed by name so
       // the JSON's per-frame trim data survives to spec C.
-      scene.load.atlas(clip.sheetKey, clip.sheetUrl, clip.atlasUrl)
+      scene.load.atlas(clip.sheetKey, resolveAssetUrl(clip.sheetUrl), resolveAssetUrl(clip.atlasUrl))
     }
   }
 

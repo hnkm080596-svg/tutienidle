@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '@/stores/player'
 import { useUiStore } from '@/stores/ui'
 import { getCurrentRealm } from '@/core/realm/realmSystem'
+import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import PlayerPortrait from '../common/PlayerPortrait.vue'
 import GameButton from '../common/GameButton.vue'
 import type { Stats } from '@/core/stats/StatBlock'
@@ -158,7 +159,7 @@ function meridianNode(key: string): { style: { left: string; top: string }; modi
 // Bound dynamically on purpose: a literal src="/assets/..." in the
 // template is rewritten to a file import by @vitejs/plugin-vue, which
 // breaks jsdom mounts (CharacterPanel.meridian.test.ts).
-const MERIDIAN_FIGURE_SRC = '/assets/ui/stat-meridian-figure.png'
+const MERIDIAN_FIGURE_SRC = resolveAssetUrl('/assets/ui/stat-meridian-figure.png')
 
 // Không còn "Hướng" (ElementAffinity đã xoá — vai trò khuếch đại
 // Power giờ do Linh Căn/Attunement đảm nhiệm, xem StatCalculator.ts)
@@ -185,12 +186,12 @@ const PRIMORDIAL_COLOR = 'var(--el-primordial)'
 
 // Static src="/..." gets rewritten to an import by the vite plugin and
 // breaks under jsdom — bind dynamically like the element discs above.
-const primordialDiscUrl = '/assets/ui/elements/el-primordial.png'
+const primordialDiscUrl = resolveAssetUrl('/assets/ui/elements/el-primordial.png')
 
 // 3 concentric formation rings from the same sprite sheet - the formation base layer.
-const formationRingUrl = '/assets/ui/elements/el-formation-ring.png'
-const formationOrbsUrl = '/assets/ui/elements/el-formation-orbs.png'
-const formationStarUrl = '/assets/ui/elements/el-formation-star.png'
+const formationRingUrl = resolveAssetUrl('/assets/ui/elements/el-formation-ring.png')
+const formationOrbsUrl = resolveAssetUrl('/assets/ui/elements/el-formation-orbs.png')
+const formationStarUrl = resolveAssetUrl('/assets/ui/elements/el-formation-star.png')
 
 // "Chiến Lực" — chỉ số tổng hợp THUẦN HIỂN THỊ (không dùng ở đâu khác
 // trong game logic/combat thật), lấy cảm hứng từ số "Mastery" tổng
@@ -368,7 +369,7 @@ const pillPermanentRows = computed(() => {
             :style="{ '--node-color': row.color }"
             v-tooltip="{ kind: 'element', element: row.element, title: row.label, description: t('panels.character.tooltips.elementStat', { power: Math.round(row.power), resistance: Math.round(row.resistance), penetration: Math.round(row.penetration) }) }"
           >
-            <img class="element-node__disc" :src="`/assets/ui/elements/el-${row.element}.png`" :alt="row.label" />
+            <img class="element-node__disc" :src="resolveAssetUrl(`/assets/ui/elements/el-${row.element}.png`)" :alt="row.label" />
           </div>
 
           <div
