@@ -364,7 +364,7 @@ export function isForcedAnimatedEntity(entityKey: string): boolean {
   return (
     ANIMATED_ENEMY_KEYS.has(entityKey) ||
     ANIMATED_CHARACTER_KEYS.has(entityKey) ||
-    entityKey in COMPANION_RESKIN_MAP
+    Object.hasOwn(COMPANION_RESKIN_MAP, entityKey)
   )
 }
 
