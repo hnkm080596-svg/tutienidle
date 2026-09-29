@@ -32,6 +32,17 @@ export class SupabaseAuthService implements AuthService {
               : { email: accountEmail(credentials!.loginId), password: credentials!.password, data: { login_id: credentials!.loginId.toLowerCase(), account_kind: 'registered' } }),
           })
 
+      // F-BX-73: GoTrue duplicate signup can answer a fake-200 stub user
+      // with NO access_token (anti-enumeration). For register that shape
+      // means the id is taken; for other modes a tokenless 200 is simply
+      // an unreachable backend answer - fail as server_unavailable, and
+      // never call claim_active_session with an undefined bearer.
+      if (!auth.access_token) {
+        return mode === 'register'
+          ? { ok: false, code: 'id_taken', message: 'ID này đã được sử dụng.' }
+          : { ok: false, code: 'server_unavailable', message: 'Không thể kết nối máy chủ. Vui lòng thử lại.' }
+      }
+
       const sessionId = await requestSupabase<string>(this.config, '/rest/v1/rpc/claim_active_session', {
         method: 'POST', body: JSON.stringify({ p_device_label: navigator.userAgent.slice(0, 160) }),
       }, auth.access_token)
@@ -46,7 +57,10 @@ export class SupabaseAuthService implements AuthService {
       })
       return { ok: true, session: { sessionId, mode, loginId: credentials?.loginId.toLowerCase(), userId: auth.user.id } }
     } catch (error) {
-      if (error instanceof SupabaseHttpError && error.status === 400) {
+      // F-BX-73: GoTrue answers a duplicate signup either as 400 or as
+      // 422 {error_code: 'user_already_exists'} - both mean the login id
+      // is taken for register mode.
+      if (error instanceof SupabaseHttpError && (error.status === 400 || (mode === 'register' && error.status === 422))) {
         return { ok: false, code: mode === 'register' ? 'id_taken' : 'invalid_credentials', message: mode === 'register' ? 'ID này đã được sử dụng.' : 'ID hoặc mật khẩu không chính xác.' }
       }
       return { ok: false, code: 'server_unavailable', message: 'Không thể kết nối máy chủ. Vui lòng thử lại.' }

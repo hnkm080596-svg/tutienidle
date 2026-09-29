@@ -1,5 +1,5 @@
 import type { SupabaseConfig } from './SupabaseConfig'
-import { requestSupabase } from './SupabaseHttp'
+import { requestSupabase, SupabaseHttpError } from './SupabaseHttp'
 
 export type SupabaseSessionMode = 'guest' | 'login' | 'register'
 
@@ -57,8 +57,8 @@ interface GoTrueRefreshResponse {
 /**
  * Stored session with a live access token. Refreshes via GoTrue when the
  * token is expired (or was stored before expiry tracking existed); on
- * refresh failure the session is cleared and the caller treats the user
- * as signed out - never a silent stall (spec F8).
+ * refresh failure the caller treats the user as signed out for THIS call
+ * - never a silent stall (spec F8).
  */
 export async function resolveSupabaseSession(config: SupabaseConfig): Promise<StoredSupabaseSession | null> {
   const session = readSupabaseSession()
@@ -67,6 +67,21 @@ export async function resolveSupabaseSession(config: SupabaseConfig): Promise<St
     return session
   }
 
+  // F-BX-75 single-flight: GoTrue rotates refresh_token on every POST, so
+  // two parallel refreshes send the second one with the dead token - its
+  // invalid_grant would wipe the session the first call just stored.
+  refreshInFlight ??= refreshSupabaseSession(config, session).finally(() => {
+    refreshInFlight = null
+  })
+  return refreshInFlight
+}
+
+let refreshInFlight: Promise<StoredSupabaseSession | null> | null = null
+
+async function refreshSupabaseSession(
+  config: SupabaseConfig,
+  session: StoredSupabaseSession,
+): Promise<StoredSupabaseSession | null> {
   try {
     const auth = await requestSupabase<GoTrueRefreshResponse>(config, '/auth/v1/token?grant_type=refresh_token', {
       method: 'POST',
@@ -80,8 +95,14 @@ export async function resolveSupabaseSession(config: SupabaseConfig): Promise<St
     }
     storeSupabaseSession(next)
     return next
-  } catch {
-    clearSupabaseSession()
+  } catch (error) {
+    // F-BX-70: only an auth rejection destroys the stored session - the
+    // credential is provably dead (GoTrue answers invalid_grant as 400,
+    // a revoked/disabled user as 401). Transient failures (network, 5xx,
+    // 429) keep the refresh token so the next resolve can retry.
+    if (error instanceof SupabaseHttpError && (error.status === 400 || error.status === 401)) {
+      clearSupabaseSession()
+    }
     return null
   }
 }

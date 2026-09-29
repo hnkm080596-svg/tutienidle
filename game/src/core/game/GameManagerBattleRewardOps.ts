@@ -7,6 +7,14 @@ import type { BattleLootSystem } from './BattleLootSystem'
 import type { StageWaveSystem } from './StageWaveSystem'
 
 /**
+ * F-BX-84 floor for recorded clearSeconds: saveShapeValidation requires
+ * perfectClearSeconds > 0 (and auto-farm's isValidCycleSeconds treats 0
+ * as an Infinity-reward degenerate), so a sub-ms wall-clock clear can
+ * never be written as 0.
+ */
+const MIN_PERFECT_CLEAR_SECONDS = 0.001
+
+/**
  * Per-kill reward grant + victory/defeat terminal for the live turn battle.
  * Extracted from GameManagerTurnBattleOps (Wave-2 large-file split); moved
  * verbatim.
@@ -186,18 +194,15 @@ export class GameManagerBattleRewardOps {
    * perfectClearTurnLimit - counted in ROUNDS (roundsElapsed), not actor
    * actions, so wave size does not inflate the count. HP-loss is not
    * consulted. Only the ACTIVE mode can ever evaluate this (idle runs no
-   * battle). Records perfectClearStageIds + perfectClearSeconds ONCE -
-   * the first achievement is never overwritten (B4).
+   * battle). Records perfectClearStageIds + perfectClearSeconds - the
+   * seconds channel is the BEST time: a later qualifying clear rewrites
+   * it only when it is faster (F-BX-85).
    */
   private recordPerfectClearIfEligible(turnBattle: TurnBattle) {
     const stage = this.deps.getActiveStage()
     const player = this.deps.getPlayerData()
 
     if (!stage || !player || stage.perfectClearTurnLimit === undefined) {
-      return
-    }
-
-    if (player.perfectClearStageIds.includes(stage.id)) {
       return
     }
 
@@ -212,13 +217,25 @@ export class GameManagerBattleRewardOps {
     }
 
     const startedAtMs = this.deps.getStartedAtMs() ?? Date.now()
-    const clearSeconds = Math.max(0, (Date.now() - startedAtMs) / 1000)
+    // F-BX-84: the save validator requires a finite record > 0 (a 0 would
+    // also mint degenerate auto-farm cycles) - floor to the smallest
+    // positive measurement the wall clock can produce.
+    const clearSeconds = Math.max(MIN_PERFECT_CLEAR_SECONDS, (Date.now() - startedAtMs) / 1000)
 
-    player.perfectClearStageIds.push(stage.id)
+    // F-BX-85: the record is the FASTEST qualifying clear, not the first.
+    // A non-faster repeat changes nothing; a faster one rewrites the
+    // seconds and re-emits the observation (perfectClearStageIds itself
+    // is still once-only - the achievement is permanent).
+    const recorded = player.perfectClearSeconds[stage.id]
+    if (recorded !== undefined && clearSeconds >= recorded) {
+      return
+    }
+
+    if (!player.perfectClearStageIds.includes(stage.id)) {
+      player.perfectClearStageIds.push(stage.id)
+    }
     player.perfectClearSeconds[stage.id] = clearSeconds
 
-    // Sound System W6: first-record-only emit (the includes() early-return
-    // above makes second runs unreachable here). Observation only.
     this.deps.eventBus.emit('perfect_clear', {
       type: 'perfect_clear',
       stageId: stage.id,

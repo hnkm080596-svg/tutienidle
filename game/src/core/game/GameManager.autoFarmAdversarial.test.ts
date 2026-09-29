@@ -125,6 +125,8 @@ function buildAutoFarmOps(
     buildPlayerRewardReceiver: () => ({}),
     // Real bus, not a stub - W6 farm_cycle tests subscribe to it.
     eventBus: (out ? (out.eventBus = new EventBus()) : new EventBus()),
+    // F-BX-86 gate - these tests exercise the tick, never a live battle.
+    isTurnBattleInProgress: () => false,
   } as unknown as ConstructorParameters<typeof GameManagerAutoFarmOps>[0]
 
   return new GameManagerAutoFarmOps(deps)

@@ -108,4 +108,51 @@ describe('SupabaseCharacterCreationService - create_character RPC contract (v82)
     const second = await service.createCharacter(draft)
     expect(second.ok).toBe(false)
   })
+
+  // F-BX-72 - PostgREST raise exception payloads arrive as HTTP 400
+  // {code, message}; each authored domain message maps onto an existing
+  // UI-facing error code instead of collapsing to server_unavailable.
+  it.each<[string, string]>([
+    ['character name unavailable', 'name_taken'],
+    ['invalid talent roll', 'invalid_talents'],
+    ['invalid talent selection', 'invalid_talents'],
+    ['not enough enabled talents', 'invalid_talents'],
+    ['invalid mortal basic skill', 'invalid_skill'],
+    ['session revoked', 'session_revoked'],
+    ['authentication required', 'session_revoked'],
+  ])('F-BX-72: 400 domain message "%s" maps to code "%s"', async (serverMessage, expectedCode) => {
+    stubFetch((call) => {
+      if (call.url.endsWith('/rpc/create_talent_roll')) {
+        return json({ rollId: 'roll-1', talents: [{ id: 'talent-a' }] })
+      }
+      if (call.url.endsWith('/rpc/is_character_name_available')) return json(true)
+      if (call.url.endsWith('/rpc/create_character')) {
+        return json({ code: 'P0001', message: serverMessage }, 400)
+      }
+      return json({}, 404)
+    })
+
+    const service = new SupabaseCharacterCreationService(config)
+    await service.rollTalents()
+    const result = await service.createCharacter(draft)
+    expect(result).toEqual({ ok: false, code: expectedCode, message: expect.any(String) })
+  })
+
+  it('F-BX-72: a 400 without a known domain message stays server_unavailable', async () => {
+    stubFetch((call) => {
+      if (call.url.endsWith('/rpc/create_talent_roll')) {
+        return json({ rollId: 'roll-1', talents: [{ id: 'talent-a' }] })
+      }
+      if (call.url.endsWith('/rpc/is_character_name_available')) return json(true)
+      if (call.url.endsWith('/rpc/create_character')) {
+        return json({ code: 'P0001', message: 'some unforeseen rejection' }, 400)
+      }
+      return json({}, 404)
+    })
+
+    const service = new SupabaseCharacterCreationService(config)
+    await service.rollTalents()
+    const result = await service.createCharacter(draft)
+    expect(result).toEqual({ ok: false, code: 'server_unavailable', message: expect.any(String) })
+  })
 })

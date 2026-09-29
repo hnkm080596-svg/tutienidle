@@ -13,6 +13,8 @@ import { materials } from '../../data/materials/materials'
 import { equipment } from '../../data/equipment/equipment'
 import { affixes } from '../../data/equipment/affixes'
 import { buildings } from '../../data/building/buildings'
+import { TECHNIQUES } from '../../data/technique/Techniques'
+import { ALL_PROGRESSION_NODES } from '../../data/progression/ProgressionNodeCatalog'
 import type { Quest } from '../../core/quest/Quest'
 import { buildGameSave, loadGame, writeGameSave } from './SaveSystem'
 
@@ -241,5 +243,36 @@ describe('SaveSystem — build/write/load round-trip (Task 3, double-serialize a
     fresh.saveOps.restoreFromSave(outcome.save)
 
     expect(fresh.productionSystem.getState(siteId)?.assignedWorkers).toBe(2)
+  })
+
+  // F-BX-83 (release blocker): mastery tinh_thong_* granted through the
+  // realm-entry reward path (Phap Tu Truc Co) - nodeLevels AND
+  // purchasedNodeIds must rise together; the validator requires the
+  // mirror, so a pre-fix save is rejected as 'corrupted' on loadGame().
+  it('F-BX-83: spell-path foundation mastery grant -> build/write/load save clean', () => {
+    const gameManager = createBootedGameManager()
+    const player = createDefaultPlayer()
+
+    gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
+    gameManager.catalogOps.registerProgressionNodes(ALL_PROGRESSION_NODES)
+    player.cultivationPath = 'spell'
+    player.cultivationWay = 'spell_pathway'
+    player.realmId = 'foundation_establishment'
+
+    expect(gameManager.realmAdvanceOps.grantCultivationPathRealmReward(player, player.realmId)).toBe(true)
+    expect(player.nodeLevels['tinh_thong_hoa']).toBe(1)
+    expect(player.purchasedNodeIds).toContain('tinh_thong_hoa')
+
+    primeMortalCreationPick(player, gameManager.skillManager)
+
+    const save = buildGameSave(player, gameManager)
+    const writeResult = writeGameSave(save)
+    expect(writeResult).toEqual({ status: 'ok' })
+
+    const outcome = loadGame()
+    expect(outcome.status).toBe('ok')
+    if (outcome.status === 'ok') {
+      expect(outcome.save.player.nodeLevels?.['tinh_thong_hoa']).toBe(1)
+    }
   })
 })

@@ -389,6 +389,7 @@ export class GameManagerTurnBattleOps {
       enemySystem: deps.enemySystem,
       buildPlayerRewardReceiver: deps.buildPlayerRewardReceiver,
       eventBus: deps.eventBus,
+      isTurnBattleInProgress: () => this.isTurnBattleInProgress(),
     })
 
     this.detachClockStep = this.combatClock.onStep((steps) => this.advanceCombat(steps))
@@ -2187,6 +2188,13 @@ export class GameManagerTurnBattleOps {
     if (hiddenPlan !== undefined && runHiddenBattleReplacement({ player, stage, plan: hiddenPlan, ops: this, resumeRepeat: this.turnBattleRepeatContinuously })) {
       return
     }
+
+    // F-BX-85: the perfect-clear clock measures THIS cycle - the repeat
+    // policy preserves the stage aggregate (run timer included), so the
+    // anchor must be re-armed at every cycle restart or a cycle N>1
+    // clear records the whole run's wall-clock time.
+    this.turnBattleStartedAtMs = Date.now()
+
     this.beginBattleCycle(BATTLE_CYCLE_POLICIES.repeat, { player, stage })
   }
 
