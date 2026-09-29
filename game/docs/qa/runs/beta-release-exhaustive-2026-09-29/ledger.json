@@ -4035,14 +4035,14 @@
     },
     {
       "id": "F-BX-39",
-      "title": "Frozen dailies from future quests.lastDailyResetAtMs: clock-forward jump persists future marker, dailies frozen until real time crosses",
+      "title": "Frozen dailies from future lastDailyResetAtMs (raised Medium: QCF wave-2 executable repro - claimed dailies stay claimed, clock-forward reachable)",
       "state": {
         "productStateId": "9a1c175ad81880d11956a2af84c417d28a5c4e392fa1ec7234c3a7e1159592e6",
         "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
         "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
         "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
       },
-      "severity": "Low",
+      "severity": "Medium",
       "classification": "REAL_DEFECT",
       "actionable": true,
       "reachability": "PRODUCTION",
@@ -4648,12 +4648,765 @@
         "I-GATE-FAIL-CLOSED"
       ],
       "evidenceIds": [],
-      "counterexample": "all authored values valid today - data-drift hazard only",
+      "counterexample": "QCF wave-2 confirmed with executable repro on orphan stage",
       "expected": "fail closed like NodeSystem T8-75 (requiredIndex<0 -> warn+false)",
       "actual": "typo'd/retired requiredRealmId silently unlocks content for all realms",
       "rootCause": "getRealmIndex(-1) passes both comparisons",
       "rootClass": "fail-open-gate",
       "subsystem": "quests-companions-formation-stages",
+      "siblingSearch": [],
+      "siblingFindingIds": [
+        "F-BX-59"
+      ],
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "OBSERVED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-BX-53",
+      "title": "perfectClearSeconds = raw wall clock (pauses/throttle included); first-write-only pin drives farm income - inflated run halves farm output permanently; x1-x4 speed scales income ~4x",
+      "state": {
+        "productStateId": "8c280581a5cd7f61bb134a642b3a9a949170922eb47070b0c6969446ca8d46e9",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/core/game/GameManagerBattleRewardOps.ts",
+          "symbolOrSection": "recordPerfectClearIfEligible",
+          "revision": "5f38d26a",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "game/src/core/game/GameManagerTurnBattleOps.ts",
+          "symbolOrSection": "mintCombatSessionForLaunch",
+          "revision": "5f38d26a",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "qcf auditor devin-fe5baa94",
+      "invariantIds": [
+        "I-OFFLINE-PRICING"
+      ],
+      "evidenceIds": [],
+      "counterexample": "repro: 300s pin for 5-round fight; later 5s victory rejected",
+      "expected": "clear time on combat rounds or freeze-aware clock; faster later clear improves pin",
+      "actual": "wall-clock spans intro+frozen intervals; pin never overwritten; farm cycleMs = pinned*1000/2",
+      "rootCause": "wall-clock pin not combat-time",
+      "rootClass": "pin-inflation",
+      "subsystem": "quests-companions-formation-stages",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "OBSERVED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-BX-54",
+      "title": "Transition error card unreachable by keyboard: window capture keydown suppresses Tab outside errorCardRef; card never focused, no role=dialog",
+      "state": {
+        "productStateId": "8c280581a5cd7f61bb134a642b3a9a949170922eb47070b0c6969446ca8d46e9",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/components/game/PresentationTransitionOverlay.vue",
+          "symbolOrSection": ":153-166,220-248",
+          "revision": "5f38d26a",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "ui auditor devin-fb50372a",
+      "invariantIds": [
+        "I-A11Y-KEYBOARD"
+      ],
+      "evidenceIds": [],
+      "counterexample": "none recorded by auditor",
+      "expected": "error controls remain reachable while gameplay locked",
+      "actual": "Tab dead-locked on error; only pointer users reach Retry/Back",
+      "rootCause": "capture-phase suppression without card autofocus",
+      "rootClass": "a11y-keyboard",
+      "subsystem": "ui-i18n-a11y-phaser-audio",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "OBSERVED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-BX-55",
+      "title": "Global Tab-hijack: DongFuCommandWheel consumes every plain-Tab app-wide on home; forward keyboard nav dead; wheel itself unreachable by Tab",
+      "state": {
+        "productStateId": "8c280581a5cd7f61bb134a642b3a9a949170922eb47070b0c6969446ca8d46e9",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/components/game/DongFuCommandWheel.vue",
+          "symbolOrSection": ":224-252",
+          "revision": "5f38d26a",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "ui auditor devin-fb50372a",
+      "invariantIds": [
+        "I-A11Y-KEYBOARD"
+      ],
+      "evidenceIds": [],
+      "counterexample": "deliberate mechanic but silently breaks keyboard operability",
+      "expected": "Tab moves focus; Esc toggles UI",
+      "actual": "all hotspots/panels/settings only Shift+Tab; wheel slots unreachable",
+      "rootCause": "overlay toggle bound to navigation key",
+      "rootClass": "a11y-keyboard",
+      "subsystem": "ui-i18n-a11y-phaser-audio",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "OBSERVED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-BX-56",
+      "title": "Victory receipt inflates delivered loot on bag-full: toast+summary record rolled amount not delivered",
+      "state": {
+        "productStateId": "8c280581a5cd7f61bb134a642b3a9a949170922eb47070b0c6969446ca8d46e9",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/core/game/BattleLootSystem.ts",
+          "symbolOrSection": ":585-626 material, 640-667 pill",
+          "revision": "5f38d26a",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "economy auditor devin-f17e9bc9",
+      "invariantIds": [
+        "I-AGGREGATE-RELEASE"
+      ],
+      "evidenceIds": [],
+      "counterexample": "none recorded by auditor",
+      "expected": "receipt reports delivered amount",
+      "actual": "rolled amount recorded; quest hooks already use amount-overflow",
+      "rootCause": "rolled vs delivered conflated",
+      "rootClass": "receipt-inflation",
+      "subsystem": "inventory-equipment-rewards-economy",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "OBSERVED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-BX-57",
+      "title": "Paid wash/refine preview destroyed by ANY commit attempt incl mismatched: pendingSlot.set(null) before binding validation",
+      "state": {
+        "productStateId": "8c280581a5cd7f61bb134a642b3a9a949170922eb47070b0c6969446ca8d46e9",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/core/equipment/EquipmentWash.ts",
+          "symbolOrSection": ":393-414",
+          "revision": "5f38d26a",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "game/src/core/equipment/EquipmentRefine.ts",
+          "symbolOrSection": ":191-234",
+          "revision": "5f38d26a",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "economy auditor devin-f17e9bc9",
+      "invariantIds": [
+        "I-AGGREGATE-RELEASE"
+      ],
+      "evidenceIds": [],
+      "counterexample": "reachable via stale UI selection / API misuse",
+      "expected": "mismatched commit rejected without consuming, or refunded",
+      "actual": "wrong-instance commit consumes paid ticket -> unrecoverable",
+      "rootCause": "slot cleared before validation",
+      "rootClass": "consume-before-validate",
+      "subsystem": "inventory-equipment-rewards-economy",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "OBSERVED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-BX-58",
+      "title": "feedCompanion burns materials for 0 gain when companion above player realm at own realm-max",
+      "state": {
+        "productStateId": "8c280581a5cd7f61bb134a642b3a9a949170922eb47070b0c6969446ca8d46e9",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/core/companion/CompanionProgression.ts",
+          "symbolOrSection": ":80",
+          "revision": "5f38d26a",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "qcf auditor devin-fe5baa94",
+      "invariantIds": [
+        "I-AGGREGATE-RELEASE"
+      ],
+      "evidenceIds": [],
+      "counterexample": "none recorded by auditor",
+      "expected": "feed rejected or no-op when capped",
+      "actual": "materials debited, no gain",
+      "rootCause": "missing cap check",
+      "rootClass": "missing-guard",
+      "subsystem": "quests-companions-formation-stages",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "OBSERVED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-BX-59",
+      "title": "Stage missing from every zone.stageIds bypasses completion chain: zone===undefined -> return true",
+      "state": {
+        "productStateId": "8c280581a5cd7f61bb134a642b3a9a949170922eb47070b0c6969446ca8d46e9",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "HYPOTHETICAL",
+      "locations": [
+        {
+          "path": "game/src/core/game/GameManagerCatalogOps.ts",
+          "symbolOrSection": ":292-299",
+          "revision": "5f38d26a",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "qcf auditor devin-fe5baa94",
+      "invariantIds": [
+        "I-GATE-FAIL-CLOSED"
+      ],
+      "evidenceIds": [],
+      "counterexample": "none recorded by auditor",
+      "expected": "orphan stage surfaces loudly or fails closed",
+      "actual": "dropped stage becomes always-unlocked silently (intended only for tribulation/test)",
+      "rootCause": "same fail-open class as F-BX-52",
+      "rootClass": "fail-open-gate",
+      "subsystem": "quests-companions-formation-stages",
+      "siblingSearch": [],
+      "siblingFindingIds": [
+        "F-BX-52"
+      ],
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "OBSERVED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-BX-60",
+      "title": "CombatResultModal: fullscreen blocking scrim with no dialog semantics/focus handling",
+      "state": {
+        "productStateId": "8c280581a5cd7f61bb134a642b3a9a949170922eb47070b0c6969446ca8d46e9",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/components/game/combat/CombatResultModal.vue",
+          "symbolOrSection": ":31-37",
+          "revision": "5f38d26a",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "ui auditor devin-fb50372a",
+      "invariantIds": [
+        "I-A11Y-KEYBOARD"
+      ],
+      "evidenceIds": [],
+      "counterexample": "none recorded by auditor",
+      "expected": "consistent useDialogFocus treatment",
+      "actual": "no role=dialog/aria-modal/focus trap/restore",
+      "rootCause": "modal bypasses dialog helper",
+      "rootClass": "a11y-dialog",
+      "subsystem": "ui-i18n-a11y-phaser-audio",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "OBSERVED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-BX-61",
+      "title": "TribulationScene resize re-frames viewport but never repositions create()-time content",
+      "state": {
+        "productStateId": "8c280581a5cd7f61bb134a642b3a9a949170922eb47070b0c6969446ca8d46e9",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/game/scenes/TribulationScene.ts",
+          "symbolOrSection": "resizeHandler only viewportFrame.setSize",
+          "revision": "5f38d26a",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "ui auditor devin-fb50372a",
+      "invariantIds": [
+        "I-AGGREGATE-RELEASE"
+      ],
+      "evidenceIds": [],
+      "counterexample": "code-path flagged; runtime verify pending",
+      "expected": "content re-centers like CombatScene",
+      "actual": "mid-scene resize leaves content at stale coords (cosmetic)",
+      "rootCause": "no content reposition",
+      "rootClass": "resize-drift",
+      "subsystem": "ui-i18n-a11y-phaser-audio",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "OBSERVED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-BX-62",
+      "title": "Pill restore ignores add() overflow on reload",
+      "state": {
+        "productStateId": "8c280581a5cd7f61bb134a642b3a9a949170922eb47070b0c6969446ca8d46e9",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "severity": "Nit",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/core/pill/",
+          "symbolOrSection": "restore add() overflow",
+          "revision": "5f38d26a",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "economy auditor devin-f17e9bc9",
+      "invariantIds": [
+        "I-AGGREGATE-RELEASE"
+      ],
+      "evidenceIds": [],
+      "counterexample": "none recorded by auditor",
+      "expected": "overflow accounted",
+      "actual": "restore ignores overflow result",
+      "rootCause": "overflow dropped silently",
+      "rootClass": "overflow-ignored",
+      "subsystem": "inventory-equipment-rewards-economy",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "OBSERVED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-BX-63",
+      "title": "Dev-flag build still debits cost entries: isTestModeUnlockAll bypasses check then build() removes costs",
+      "state": {
+        "productStateId": "8c280581a5cd7f61bb134a642b3a9a949170922eb47070b0c6969446ca8d46e9",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "severity": "Nit",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "HYPOTHETICAL",
+      "locations": [
+        {
+          "path": "game/src/core/building/BuildingSystem.ts",
+          "symbolOrSection": ":112-114,156-160",
+          "revision": "5f38d26a",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "economy auditor devin-f17e9bc9",
+      "invariantIds": [
+        "I-AGGREGATE-RELEASE"
+      ],
+      "evidenceIds": [],
+      "counterexample": "none recorded by auditor",
+      "expected": "dev unlock skips debit",
+      "actual": "partial drain; DEV-gated only",
+      "rootCause": "dev-only debit",
+      "rootClass": "dev-only",
+      "subsystem": "tests-qa-tooling",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "OBSERVED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-BX-64",
+      "title": "Mojibake comment EquipmentSystem.ts ~339",
+      "state": {
+        "productStateId": "8c280581a5cd7f61bb134a642b3a9a949170922eb47070b0c6969446ca8d46e9",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "severity": "Nit",
+      "classification": "DOCUMENTATION_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/core/equipment/EquipmentSystem.ts",
+          "symbolOrSection": "~339",
+          "revision": "5f38d26a",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "economy auditor devin-f17e9bc9",
+      "invariantIds": [
+        "I-AGGREGATE-RELEASE"
+      ],
+      "evidenceIds": [],
+      "counterexample": "none recorded by auditor",
+      "expected": "clean UTF-8",
+      "actual": "corrupted bytes",
+      "rootCause": "mojibake",
+      "rootClass": "cosmetic",
+      "subsystem": "inventory-equipment-rewards-economy",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "OBSERVED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-BX-65",
+      "title": "resolveDrops.rollAmount unclamped (rng()==1 or min>max); zero degenerate ranges authored today",
+      "state": {
+        "productStateId": "8c280581a5cd7f61bb134a642b3a9a949170922eb47070b0c6969446ca8d46e9",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "severity": "Nit",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "HYPOTHETICAL",
+      "locations": [
+        {
+          "path": "game/src/core/drop/resolveDrops.ts",
+          "symbolOrSection": "roll math",
+          "revision": "5f38d26a",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "economy auditor devin-f17e9bc9",
+      "invariantIds": [
+        "I-AGGREGATE-RELEASE"
+      ],
+      "evidenceIds": [],
+      "counterexample": "none recorded by auditor",
+      "expected": "clamped/validated",
+      "actual": "latent robustness",
+      "rootCause": "unclamped",
+      "rootClass": "latent-robustness",
+      "subsystem": "inventory-equipment-rewards-economy",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "OBSERVED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-BX-66",
+      "title": "Zombie quest ids persist in state.active forever: inverse reconcile requires registry.has(questId)",
+      "state": {
+        "productStateId": "8c280581a5cd7f61bb134a642b3a9a949170922eb47070b0c6969446ca8d46e9",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "severity": "Nit",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/core/quest/QuestSystem.ts",
+          "symbolOrSection": ":115-119",
+          "revision": "5f38d26a",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "qcf auditor devin-fe5baa94",
+      "invariantIds": [
+        "I-AGGREGATE-RELEASE"
+      ],
+      "evidenceIds": [],
+      "counterexample": "none recorded by auditor",
+      "expected": "registry-removed ids dropped",
+      "actual": "inert accumulating state",
+      "rootCause": "inverse-gate misses zombies",
+      "rootClass": "zombie-state",
+      "subsystem": "quests-companions-formation-stages",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "OBSERVED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-BX-67",
+      "title": "Stale doc: Stage.requiredRealmLevel documented display-only but actually gates",
+      "state": {
+        "productStateId": "8c280581a5cd7f61bb134a642b3a9a949170922eb47070b0c6969446ca8d46e9",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "severity": "Nit",
+      "classification": "DOCUMENTATION_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/core/stage/Stage.ts",
+          "symbolOrSection": ":22-28",
+          "revision": "5f38d26a",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "qcf auditor devin-fe5baa94",
+      "invariantIds": [
+        "I-AGGREGATE-RELEASE"
+      ],
+      "evidenceIds": [],
+      "counterexample": "none recorded by auditor",
+      "expected": "doc matches behavior",
+      "actual": "comment wrong; gate intentional",
+      "rootCause": "stale-doc",
+      "rootClass": "stale-doc",
+      "subsystem": "quests-companions-formation-stages",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "OBSERVED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-BX-68",
+      "title": "TranPhap preview ignores playerArmed changes while panel open (watch omits visualArmed)",
+      "state": {
+        "productStateId": "8c280581a5cd7f61bb134a642b3a9a949170922eb47070b0c6969446ca8d46e9",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "severity": "Nit",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/components/panels/TranPhapPanel.vue",
+          "symbolOrSection": ":342-344",
+          "revision": "5f38d26a",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "ui auditor devin-fb50372a",
+      "invariantIds": [
+        "I-AGGREGATE-RELEASE"
+      ],
+      "evidenceIds": [],
+      "counterexample": "none recorded by auditor",
+      "expected": "reactive preview",
+      "actual": "stale until next dispatch",
+      "rootCause": "missing watch dep",
+      "rootClass": "stale-watch",
+      "subsystem": "ui-i18n-a11y-phaser-audio",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "OBSERVED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-BX-69",
+      "title": "Retired event-routing comments in CombatScene/MainScene headers",
+      "state": {
+        "productStateId": "8c280581a5cd7f61bb134a642b3a9a949170922eb47070b0c6969446ca8d46e9",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "severity": "Nit",
+      "classification": "DOCUMENTATION_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/game/scenes/CombatScene.ts",
+          "symbolOrSection": "header",
+          "revision": "5f38d26a",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "game/src/game/scenes/MainScene.ts",
+          "symbolOrSection": ":89-91",
+          "revision": "5f38d26a",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "ui auditor devin-fb50372a",
+      "invariantIds": [
+        "I-AGGREGATE-RELEASE"
+      ],
+      "evidenceIds": [],
+      "counterexample": "none recorded by auditor",
+      "expected": "comments match routing",
+      "actual": "stale docs",
+      "rootCause": "stale-doc",
+      "rootClass": "stale-doc",
+      "subsystem": "ui-i18n-a11y-phaser-audio",
       "siblingSearch": [],
       "siblingFindingIds": [],
       "repair": null,
@@ -5249,6 +6002,22 @@
       "payloadPath": "events/0028.json",
       "payloadHash": "7a761597b05b2d8dbdda101232d5535ef239014d04a9f7ce80a52aa43a6ddbc0",
       "eventHash": "644aa8ed06530e5dd92cabd9afbf9157fcb76e580b6c38eb498aca25b3b94d55"
+    },
+    {
+      "seq": 29,
+      "at": "2026-09-29T15:00:15.765Z",
+      "kind": "FINDING",
+      "actor": "coordinator-beta",
+      "state": {
+        "productStateId": "8c280581a5cd7f61bb134a642b3a9a949170922eb47070b0c6969446ca8d46e9",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "previousEventHash": "644aa8ed06530e5dd92cabd9afbf9157fcb76e580b6c38eb498aca25b3b94d55",
+      "payloadPath": "events/0029.json",
+      "payloadHash": "ccbb848157db03bdbff437704c38309470e1152512d22b86f8ce21dacd192589",
+      "eventHash": "bcc0109c6fedd290a17eaec79fdf3ca0387fde1ef0ee9cba63a33280d6fa6822"
     }
   ]
 }
