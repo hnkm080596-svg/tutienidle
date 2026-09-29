@@ -11,7 +11,7 @@
     "base": "21a5f8c5",
     "head": "791a7903",
     "state": {
-      "productStateId": "df4741f521af2f2c82931da6e608cc3dc34386f7668e2fb905db1ada4a06292c",
+      "productStateId": "f7cf06069ec04137fcdb9ea40965d53187add22d2dd422d48b6ebc93de3c4cf6",
       "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
       "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
       "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
@@ -27655,7 +27655,7 @@
         "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
         "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
       },
-      "status": "CURRENT",
+      "status": "STALE",
       "producer": "coordinator",
       "startedAt": "2026-09-29T05:25:00Z",
       "finishedAt": "2026-09-29T05:35:00Z",
@@ -29841,7 +29841,7 @@
         "F-SND-470"
       ],
       "novelAttackIds": [],
-      "status": "SEALED"
+      "status": "STALE"
     },
     {
       "id": "REV-SND-AUT-18",
@@ -29888,7 +29888,7 @@
         "F-SND-486"
       ],
       "novelAttackIds": [],
-      "status": "SEALED"
+      "status": "STALE"
     },
     {
       "id": "REV-SND-INT-18",
@@ -29938,7 +29938,7 @@
         "F-SND-489"
       ],
       "novelAttackIds": [],
-      "status": "SEALED"
+      "status": "STALE"
     }
   ],
   "cycles": [
@@ -30345,7 +30345,7 @@
       "noveltyEvidenceIds": [],
       "startedAt": "2026-09-29T05:00:00Z",
       "finishedAt": "2026-09-29T05:40:00Z",
-      "status": "FINDINGS"
+      "status": "STALE"
     }
   ],
   "mutations": [],
@@ -31519,6 +31519,22 @@
       "payloadPath": "events/0069.json",
       "payloadHash": "10b2bfcdf03ae109e02be8a8b6fbf172457177ae9506a80b1c83919ae1cf89c2",
       "eventHash": "29a95d73903a1ad08484f7a7e2ce6b91789ef92304e6d6a95baaecccf60975e4"
+    },
+    {
+      "seq": 70,
+      "at": "2026-09-29T07:35:26.562Z",
+      "kind": "SNAPSHOT",
+      "actor": "coordinator-56995",
+      "state": {
+        "productStateId": "f7cf06069ec04137fcdb9ea40965d53187add22d2dd422d48b6ebc93de3c4cf6",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+      },
+      "previousEventHash": "29a95d73903a1ad08484f7a7e2ce6b91789ef92304e6d6a95baaecccf60975e4",
+      "payloadPath": "events/0070.json",
+      "payloadHash": "57ffcba986450eb9e727a86e936c4f52e59a1916fa51cc89335aff6629771271",
+      "eventHash": "c3d1687151a65b583007616c25e7ca294896f0b4d3abcdfe41415694b4a9348f"
     }
   ]
 }

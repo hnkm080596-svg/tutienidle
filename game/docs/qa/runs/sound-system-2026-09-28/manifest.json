@@ -2793,6 +2793,12 @@
       "hash": "06a9962912a3872187eae76e93c6885eb69e8b19f754ab29cf076a5f68b12d0a"
     },
     {
+      "path": "docs/qa/2026-09-27-enemy-art-wave1-quick.md",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "c9e75195bf449a192027a9fa23cc047a61c7c2ade41b04d1e633ccf86a8c5f12"
+    },
+    {
       "path": "docs/qa/2026-09-27-qa-scripts-repair-quick.md",
       "kind": "file",
       "mode": 33188,
@@ -2821,6 +2827,12 @@
       "kind": "file",
       "mode": 33188,
       "hash": "046cc26864c2178de6bc102ab46e8bbe6a1a44e3eda7d93734cc944c0c3515b3"
+    },
+    {
+      "path": "docs/qa/2026-09-29-pr51-aggregate-merge-gate-deep.md",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "b7346f44fc63919a9765f946dd9f115611d1cee59c9e629cc2a5da3b89330426"
     },
     {
       "path": "docs/qa/2026-10-01-md-perfection-sim-quick.md",
@@ -3069,6 +3081,36 @@
       "hash": "1550b08251599b28ae47f9964021a796b236c3cf7040c76cf0f2a05b7804b8f3"
     },
     {
+      "path": "docs/qa/local-audit/combat-progression-findings.md",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "5308504e7012e598541e80f4c77062043f8ce38cbb4494ab7c795e14a53828a1"
+    },
+    {
+      "path": "docs/qa/local-audit/economy-meta-findings.md",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "6cdb6e3e5eabccf83d3f907ec7cf89b69552eaf3239f311d120caec052145f4a"
+    },
+    {
+      "path": "docs/qa/local-audit/frontend-findings.md",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "5cb15e3c52d0317364ac3556ea67d68ab3913b2b8deab5fe95ab1725db81ccb2"
+    },
+    {
+      "path": "docs/qa/local-audit/index.md",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "70d174023e7dd59e643eb1b662cdb0d910ea8651ccfb9ca2026eb9c2aa45cfc6"
+    },
+    {
+      "path": "docs/qa/local-audit/infra-state-findings.md",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "54e2479932f28ba6a4e992fda9d5db046af67e7559d7839ba261e4053b64bb32"
+    },
+    {
       "path": "docs/qa/protocol/agent-instructions.md",
       "kind": "file",
       "mode": 33188,
@@ -3103,6 +3145,12 @@
       "kind": "file",
       "mode": 33188,
       "hash": "04e9cf7b9d85434274a1e11b0ec162aefc9bdfda1cc4ae067310228248cf7285"
+    },
+    {
+      "path": "docs/qa/requests-enemy-art-wave1.json",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "b34d2059620fbb6c8d615e590c9f52319d366484ba2da032b12e7ab7a4d07c1a"
     },
     {
       "path": "docs/reference/xianxia-name-seed.json",
@@ -4047,6 +4095,192 @@
       "hash": "c8f082f3315d0514b8b8304529f53a3fa59abdbeda3259eda7175347741fc239"
     },
     {
+      "path": "docs/ui-audit/combat/report.md",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "4b0aee1ecffd4658bf1c8a55e3b3cd101a3a7cb5db158c50a68b75f49a110d4b"
+    },
+    {
+      "path": "docs/ui-audit/combat/shots/08-stage-select.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "0ef515e3c060cb96eae53fde730790a0ff1301a454c24d3d583222951fdd5ecd"
+    },
+    {
+      "path": "docs/ui-audit/combat/shots/10-combat-intro.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "50bd339a676cdb77389af7b23deb6a9f191e9c4a23900b22598b98609846baa0"
+    },
+    {
+      "path": "docs/ui-audit/combat/shots/11-fight-00.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "95bd632e2e111b3b980f17863c0d5f80c77c94f8d1dd48578f3fe26a76b252c9"
+    },
+    {
+      "path": "docs/ui-audit/combat/shots/11-fight-01.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "f06bbb18761ded678e579cfac1658006c2fbc7dfbbec9578b33f728cd8fc69e9"
+    },
+    {
+      "path": "docs/ui-audit/combat/shots/11-fight-02.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "66f35ed29cd57ea300de36ec27b7e555ab0062cfc7435509b575c5f41d4a8bff"
+    },
+    {
+      "path": "docs/ui-audit/combat/shots/11-fight-03.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "f7e12941580c5af1f5122ebe694481448b4ce4cec62cedd5bde0e82e7fb032b0"
+    },
+    {
+      "path": "docs/ui-audit/combat/shots/11-fight-04.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "275d4fd4ce0b7e3edf3e4933e5287540c6e980eb1169b394c5ac60b1ed575c0c"
+    },
+    {
+      "path": "docs/ui-audit/combat/shots/11-fight-05.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "3a5d04d065af7b3627fa50a46462f7a98a03bbf9b5aee88b56774ed5b9524ac7"
+    },
+    {
+      "path": "docs/ui-audit/combat/shots/11-fight-06.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "8132ae2a52125ead176e4347eec3b3836e03fa30ea872cb283967634de398109"
+    },
+    {
+      "path": "docs/ui-audit/combat/shots/11-fight-07.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "05a88cc3e965a560998f955964e9f6d7cd0d2619885d8a6b5a227cc1e6edceea"
+    },
+    {
+      "path": "docs/ui-audit/combat/shots/12-combat-early.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "534e96b9a560300499e61e8e0837d9e86fc33ece4582fecc8cb53aaf9689fb27"
+    },
+    {
+      "path": "docs/ui-audit/combat/shots/12-combat-hud-live.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "50f51603319d9ed514bbf9ee2741e2fdbee732950b871d31681c5b44f84c29aa"
+    },
+    {
+      "path": "docs/ui-audit/combat/shots/40-manual-mode-entered.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "f9411633514ef8b8ad8542ba9166bb4efad06b96019c049910777c24e71190f4"
+    },
+    {
+      "path": "docs/ui-audit/combat/shots/41-manual-awaiting-choice.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "f7d8789058af00db210b7cfc5ba67de6cee810b37e103b196e8e7f0c7675f620"
+    },
+    {
+      "path": "docs/ui-audit/combat/shots/42-dock-manual.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "a97e96d7189f218d1c56bbdf051c9d00261c669a6ebda3ec986d14e6607aea7b"
+    },
+    {
+      "path": "docs/ui-audit/combat/shots/43-manual-full.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "49dad6602cba963546ef27115166d067300653b9901fe1777734e575ac8e4f8e"
+    },
+    {
+      "path": "docs/ui-audit/combat/shots/44-slotrow-zoom.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "41cc720a24928efd60a28d949636976433f3a6a50d549b6fe4b46466d416d63b"
+    },
+    {
+      "path": "docs/ui-audit/combat/shots/45-slot-hover-tooltip.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "ebcdf1ab70eaea519cd0b603fab86ea92d1b49776cc720fdfa1939f2dbd96ed0"
+    },
+    {
+      "path": "docs/ui-audit/combat/shots/46-after-basic-skill.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "c5a804ed1d19166c3bd3e020cceb2449175e7478a81b12f4bf42f5084f1b61ee"
+    },
+    {
+      "path": "docs/ui-audit/combat/shots/47-after-skill-state.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "51a72d97b62d00402f3dfabd21706118ce02f39b0597ee64bdbd412adf013bf1"
+    },
+    {
+      "path": "docs/ui-audit/combat/shots/50-victory-panel.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "c7826e2af0f3702e2acb1d358e563bd4e9f2bcb7a6ecc99c3c024a43c3ea37cc"
+    },
+    {
+      "path": "docs/ui-audit/combat/shots/51-victory-panel-2.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "091a673fc4fa6ecd5154f7ebb29e56dfbbede0046fca4c8d36a0cb2c757cc7ef"
+    },
+    {
+      "path": "docs/ui-audit/combat/shots/60-exit-confirm-modal.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "e084a604b2209263ba993208e4b66eab0437808683890ee68ec6af1ed9f1cf4a"
+    },
+    {
+      "path": "docs/ui-audit/combat/shots/61-pause-overlay.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "0735ba26aa1dc9d6e2dba40d551162a8ea7172fa240ae79f88520009e3bfe9f8"
+    },
+    {
+      "path": "docs/ui-audit/combat/shots/62-battle-log-live.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "d02a91a484cc21ce585cbad13b5c9268972293d4df73cbb8c6861635ed63fbc9"
+    },
+    {
+      "path": "docs/ui-audit/combat/shots/63-log-toggled.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "2f08019b3eadf59eb7e4f94e0aa76d1b50a0ff20a3b5a31f2ca938a4faddbcff"
+    },
+    {
+      "path": "docs/ui-audit/combat/shots/70-narrow-820.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "daa4131b7123dd15e0fd2217a901f16ef3bd066e29408aaa00693c41643d89b9"
+    },
+    {
+      "path": "docs/ui-audit/combat/shots/71-narrow-480.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "b7818b77f41db16ae0a1432f78e0947b49ff51ef784efd7c5760b09ef0b9c452"
+    },
+    {
+      "path": "docs/ui-audit/combat/shots/80-en-locale-combat.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "d8f13e28d02047a86ab7cc7b2e5ab44c3516ef215013b4ceba8106185c1ce101"
+    },
+    {
+      "path": "docs/ui-audit/consistency.md",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "6bfce8f93e9dbc10132a998f315a3e275b947a88b3825757ac7a87438918372e"
+    },
+    {
       "path": "docs/ui-audit/creation-meta/fix-report.md",
       "kind": "file",
       "mode": 33188,
@@ -4161,6 +4395,264 @@
       "hash": "487b2e59a00b5f490288025c6514551353f856feca1bb0ba0207b2fbb28d17ec"
     },
     {
+      "path": "docs/ui-audit/creation-meta/report.md",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "d2e48514fe88cb2c93985a9c7502cb6e7aef8dac51b43a03fb05486c11dd6959"
+    },
+    {
+      "path": "docs/ui-audit/creation-meta/shots/01-boot-intro.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "839ca662d41e5ab7545388009a738b14c3ea657a87c7d1c6c77c4a293cbf1dea"
+    },
+    {
+      "path": "docs/ui-audit/creation-meta/shots/03-auth-register.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "ea83094dd769f1d65d44dd53f63ef9f0f84202423a060a49dc60b15fcd948403"
+    },
+    {
+      "path": "docs/ui-audit/creation-meta/shots/04-auth-invalid-id.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "043f9597170820607ad9a6872d297058b0e7885f91ccc3641a657f7df679d683"
+    },
+    {
+      "path": "docs/ui-audit/creation-meta/shots/05-creation-empty.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "7d310950d9eee733cf73d56f94e2cf933ce84069755a8fa3e55ae0596394dae1"
+    },
+    {
+      "path": "docs/ui-audit/creation-meta/shots/06-creation-name-short.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "530590b6acb81f8305954304c07191fdce72d3bc26ee1f80b1e78fb3b911563e"
+    },
+    {
+      "path": "docs/ui-audit/creation-meta/shots/07-creation-named.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "30ba576542d006c68ff192578b8cec2e4a9bea434c376a3e489de736d3333cbe"
+    },
+    {
+      "path": "docs/ui-audit/creation-meta/shots/08-creation-talents.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "30ba576542d006c68ff192578b8cec2e4a9bea434c376a3e489de736d3333cbe"
+    },
+    {
+      "path": "docs/ui-audit/creation-meta/shots/09-creation-skills.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "aac806ea92afad1b1fa3c4870ccf9bcb7b387ba2c83db5ca3d57cd35c45e3ee1"
+    },
+    {
+      "path": "docs/ui-audit/creation-meta/shots/10-creation-ready.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "7ffbca17af24c7aa1b826d29d048b0cb3fb1e8f60b7ad90efeba9b06301e10a4"
+    },
+    {
+      "path": "docs/ui-audit/creation-meta/shots/11-post-create-boot.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "c9b1c0f4898e4fc7280bdf101f04d4ae00f38cf51c55d94357870069782d70e1"
+    },
+    {
+      "path": "docs/ui-audit/creation-meta/shots/12-tutorial-step1.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "b938cebde6fb63fac08e1f7b51dd79f330f0926485fe49b86c15e218e93bc028"
+    },
+    {
+      "path": "docs/ui-audit/creation-meta/shots/13-home-after-tutorial.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "c26c340ffff18b4ce3cf05374441e490dfad26c99e7a2a932df0f3bd8a03a9bd"
+    },
+    {
+      "path": "docs/ui-audit/creation-meta/shots/14-home-idle.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "43b25f6c6b139eb560e275a3289985e195a43fb619b941d8c16849c63c89b559"
+    },
+    {
+      "path": "docs/ui-audit/creation-meta/shots/21-reload-auth.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "d444c1d84329f19ad666353e74f458a22aa15d9ff55d3e17abe96037f3296df5"
+    },
+    {
+      "path": "docs/ui-audit/creation-meta/shots/22-after-relogin.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "c13ba6558ad6c158471600fee41b0fe4fa8fbcdfbf5da8b928b03f6b52e248fc"
+    },
+    {
+      "path": "docs/ui-audit/creation-meta/shots/23-command-wheel.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "cc98ae22bd59ee2667e2ddb0212ec0b754832437a094ba8517530df7bf5c9cd1"
+    },
+    {
+      "path": "docs/ui-audit/creation-meta/shots/24-wheel-disabled-tooltip.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "5596f8934da0155a89bf580abfdb0f8f0b9a57ce96849440dd74f8c6a477dd4f"
+    },
+    {
+      "path": "docs/ui-audit/creation-meta/shots/25-settings.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "23387af772f4492dde8313de5dbf1a32e59f898374358f6051836428510e8c69"
+    },
+    {
+      "path": "docs/ui-audit/creation-meta/shots/26-settings-saved-toast.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "73b2911f8ec899ada21b2a240551a86940b5e4e201d1c0cfe155d1f73eb1ef5f"
+    },
+    {
+      "path": "docs/ui-audit/creation-meta/shots/27-settings-audio-off.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "ed02081ef050a10ce6c0522f4ee58266f52fe1fca131e11354234bd35a8c99ec"
+    },
+    {
+      "path": "docs/ui-audit/creation-meta/shots/28-settings-reset-confirm.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "21963810e5b05c7c8372f42b16af5adc64b73b0763e0805c95ef543c1b28026f"
+    },
+    {
+      "path": "docs/ui-audit/creation-meta/shots/32-error-screen.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "9c8777edb4cb01497be4b5982c42fd3acd2385a721b6352d536a724858e92fff"
+    },
+    {
+      "path": "docs/ui-audit/creation-meta/shots/40-creation-en.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "673d4a74cbecda6ace057b14f0b094454688982ab398d654e6d9d767478e4161"
+    },
+    {
+      "path": "docs/ui-audit/creation-meta/shots/41-creation-en-ready.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "71a56b03540d53d9527a939851e4357f95c1ec19bf498f3dcaf717732fb140e5"
+    },
+    {
+      "path": "docs/ui-audit/creation-meta/shots/42-tutorial-en.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "a553bf56517c223f1c0e221bbaaf98dfea59bde1166cd1718b5ef84f026441ee"
+    },
+    {
+      "path": "docs/ui-audit/creation-meta/shots/43-home-en.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "8a0c151dee85f066524c9a8c64582a1089cb86acfb662bf64c697a984f0217cf"
+    },
+    {
+      "path": "docs/ui-audit/creation-meta/shots/44-wheel-en.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "0dd605ee45bf459ecfb6de2d35a4f05e2bc08de50b2115a827bed81ab9fcd388"
+    },
+    {
+      "path": "docs/ui-audit/creation-meta/shots/45-settings-en.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "aee9a8ae657b33b6c02f5c5e46cf3be888da24bd483566796c6be2e1093bc901"
+    },
+    {
+      "path": "docs/ui-audit/creation-meta/shots/46-world-announcement.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "f74fa7672dd592e325fd39dcd4f9255e9b15e874fa6e05fae284d28cba1af2f5"
+    },
+    {
+      "path": "docs/ui-audit/creation-meta/shots/47-scripture-codex.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "5a746e026a2a0f421d6d1a4e00fd2db6f1074209fa3daee9333ec98198c3f254"
+    },
+    {
+      "path": "docs/ui-audit/creation-meta/shots/49-character-drawers.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "3d923b6be73f56ee4cf4a40b0047d3945c6b80ae1bc1a026919a72aa85dd63ad"
+    },
+    {
+      "path": "docs/ui-audit/creation-meta/shots/50-home-820.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "778d0cc6d6291df10be0ca1199851858835eca311d97769643a4bcb1bc6f4206"
+    },
+    {
+      "path": "docs/ui-audit/creation-meta/shots/51-wheel-820.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "326085ee15b1edee270c707dc401ed3b6bf4f995d7bd0eb31483b167486a01b4"
+    },
+    {
+      "path": "docs/ui-audit/creation-meta/shots/52-settings-820.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "455c40fd3bdc3df49e1c3e69ccd466c85ae38f33c6b61c100e65e7ccd93141c8"
+    },
+    {
+      "path": "docs/ui-audit/creation-meta/shots/60-offline-summary.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "24927beacfed8705fe3a1c2c4481a4b96adc7d97184ba1abf013f9df8d1d6e0c"
+    },
+    {
+      "path": "docs/ui-audit/creation-meta/shots/62-offline-summary-3h.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "274db9423e4cdcf72934b8dec39b056597ec9c530702f8106f3aa0af881cdda0"
+    },
+    {
+      "path": "docs/ui-audit/creation-meta/shots/70-save-incompatible.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "60eb0f8c6c3eb9931851ab96ff1d9b76c2c5e78b2ee42c5c0ca879c1f6580796"
+    },
+    {
+      "path": "docs/ui-audit/creation-meta/shots/71-incompatible-reset-confirm.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "776a8abe22af0cd8dfd34ee130ad6e84c20b8f4d3d3aa03a699bea36faf16089"
+    },
+    {
+      "path": "docs/ui-audit/creation-meta/shots/72-after-incompatible-reset.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "9eb19bda1cfa17eaf3928ecfbb37f96db0ecfb34f098d68e4a6388ba4ee1ec02"
+    },
+    {
+      "path": "docs/ui-audit/creation-meta/shots/80-auth-820.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "ebad0c52c4a130d5d3c98e061ffb8f6833c9013c757f0a3a621aff6684b57d32"
+    },
+    {
+      "path": "docs/ui-audit/creation-meta/shots/81-creation-820.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "fda02c80990badefb6c0c87c38522f907be4ae3454f99cdde62995a8078ba66e"
+    },
+    {
+      "path": "docs/ui-audit/creation-meta/shots/82-creation-820-bottom.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "fda02c80990badefb6c0c87c38522f907be4ae3454f99cdde62995a8078ba66e"
+    },
+    {
       "path": "docs/ui-audit/economy/fix-report.md",
       "kind": "file",
       "mode": 33188,
@@ -4257,6 +4749,294 @@
       "hash": "82c23ccd172e9b77923fdd15aa4e8e044b0d31f2bc161e8681f329b3a2b18dec"
     },
     {
+      "path": "docs/ui-audit/economy/report.md",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "f44fc315418af7e67848f5769e5d24200b771c9aa6758f209406e2acc087e42f"
+    },
+    {
+      "path": "docs/ui-audit/economy/shots/10-offline-summary-modal.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "78b0b91f2f911c1c165f707e5a91f529d9c60d465fabea1ad67ddae008e6b4b0"
+    },
+    {
+      "path": "docs/ui-audit/economy/shots/11-offline-summary-820w.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "4f4ba5a68df4dd9ffb5e676c38702a3bcfc88f2fe44a49b6f33063222fea4693"
+    },
+    {
+      "path": "docs/ui-audit/economy/shots/12-home-loaded.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "6add32e0e79f5b49cefba776ca4ec56eed408c5c701210d926be8a0c798a5d7a"
+    },
+    {
+      "path": "docs/ui-audit/economy/shots/20-command-wheel.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "a0d51be92b439974150b49eebce1d602413e4f2f0ab8303b54ced9ecb1f325e8"
+    },
+    {
+      "path": "docs/ui-audit/economy/shots/21-character-bag-equipment.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "f9e285fc39b17dcaf470aef1528d85807f299200f0c4b5cf59a55b655be28190"
+    },
+    {
+      "path": "docs/ui-audit/economy/shots/22-equipment-tooltip.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "f1185c96e17936323f82e7d61985c4e21114692b735528b128661b692bb794be"
+    },
+    {
+      "path": "docs/ui-audit/economy/shots/23-bag-material.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "63fc223c43da3329861d6137b626f7b1aa66eeaaffda117704103b7c6eae3fce"
+    },
+    {
+      "path": "docs/ui-audit/economy/shots/24-bag-pill.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "ad7d76d6697deb94709264504c2b7d554f17354dd52ceb835e07b6bdf795de21"
+    },
+    {
+      "path": "docs/ui-audit/economy/shots/25-leftpanel-scrolled.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "bf926f8a9987d049442914c30f38541eb6c388b84fb48c55fb902147b4be8243"
+    },
+    {
+      "path": "docs/ui-audit/economy/shots/26-after-equip-click.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "93baace2afd4cfea388f205b8d5142319d7282360307b38e1e6980bae2a4929d"
+    },
+    {
+      "path": "docs/ui-audit/economy/shots/27-ngu-hanh-visible.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "3dca5e367cae5d19aba3d86fb4d89c06e10e4805900954934fdaf629c363ba0b"
+    },
+    {
+      "path": "docs/ui-audit/economy/shots/30-vendor.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "2b3b13ba41e9a5495ae6313e12fa372ef71ba363f1efd07355e0d1cdc876e0b9"
+    },
+    {
+      "path": "docs/ui-audit/economy/shots/31-equipment-hall.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "3b1615751fb3c7ce5cbc66ae9507051d53276e263ac3a6a8a40186c956cad5ad"
+    },
+    {
+      "path": "docs/ui-audit/economy/shots/32-pill-room.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "4a9e21094beb1a597da97d1b5f36737573fad83ba8b0ac97332d09e7e791b3da"
+    },
+    {
+      "path": "docs/ui-audit/economy/shots/33-worker-lodge-chieumo.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "a442dd3de6b6f08565ca5cbb21eb4d439fbdfadf617976a00829262e824438e4"
+    },
+    {
+      "path": "docs/ui-audit/economy/shots/34-production.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "ef451fa01b47988294444e6c79d99cbaa25d2c6ae01895be82e3b9e0237b1b7a"
+    },
+    {
+      "path": "docs/ui-audit/economy/shots/35-quest.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "5ecbe005968098d549c92b832890e218b7e8e84a910ed22ae85cfba2780e8cad"
+    },
+    {
+      "path": "docs/ui-audit/economy/shots/36-companion.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "f8c906489bef5547901a13a3c35dbb37bd46dbd53f0301f599c280af95101ac5"
+    },
+    {
+      "path": "docs/ui-audit/economy/shots/40-gacha-chieu-mo.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "be967f841816a249560eab03588fe840f55d369cfbccf160150a864923c4b2d0"
+    },
+    {
+      "path": "docs/ui-audit/economy/shots/41-gift-qua-tang.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "feea18e8f9dfcaebb0180457c00579e9f5886bd9fe2f3cde82d79f548d28c1a8"
+    },
+    {
+      "path": "docs/ui-audit/economy/shots/42-duyen-phan.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "c70fffc48d634428e823f9f6bc8822d722638ef8743da92909885c7d002e5133"
+    },
+    {
+      "path": "docs/ui-audit/economy/shots/44-enhance-after.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "3f622d0727df8eedbe76286d5f7ae17e9e49a095a794b9e9a1a66a55fc86e47f"
+    },
+    {
+      "path": "docs/ui-audit/economy/shots/45-wash.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "6c04b4375060a17194cd832a517ac59f3b5955cf6c857e47273987557ac570b2"
+    },
+    {
+      "path": "docs/ui-audit/economy/shots/46-refine.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "6fa1e1c99503d9066588c3bf53b88c3e6618057bc67bead3a7f60c6319bba0b7"
+    },
+    {
+      "path": "docs/ui-audit/economy/shots/47-hoa-luyen.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "5c5d2807d8b715cb372cea858733d98c2cce00e546c08d10ada94bb05a6ef876"
+    },
+    {
+      "path": "docs/ui-audit/economy/shots/48-decompose.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "8079d258e12397c949ae0967919da57ea35281e5820ffc50c38c5e31cb40ebaa"
+    },
+    {
+      "path": "docs/ui-audit/economy/shots/49-wash-item-selected.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "ca77b2b8f295d6962a9992f10278041f0c9988a15ead2ffaec2ec0d48af05ac1"
+    },
+    {
+      "path": "docs/ui-audit/economy/shots/50-quest-claimable.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "40a0a3b8964a5ed5257d5796bbc8c2d32621aabcfccc2109749c4d4397e2ee71"
+    },
+    {
+      "path": "docs/ui-audit/economy/shots/51-quest-claimed.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "afc287b392c4947f5ecd15720980de9553907fc7f4e2a077db0ff86d460a2bfe"
+    },
+    {
+      "path": "docs/ui-audit/economy/shots/52-alchemy-active-job.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "5842e12ba05b2573f3691fa16e7e1e953e0dc42c12e67c624e6e453003c7a32d"
+    },
+    {
+      "path": "docs/ui-audit/economy/shots/53-vendor-after-sell.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "37b72f703494d9c7f46ec7ec9019aeadb982938828ae94d088bc2de4c5424aa8"
+    },
+    {
+      "path": "docs/ui-audit/economy/shots/54-vendor-sell-toast.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "3cc0a9e731fa8323fc8436f3b3c448ed96df435cd4e03a3b16f6c93eaa98a73f"
+    },
+    {
+      "path": "docs/ui-audit/economy/shots/55-companion-fed.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "a8ff01775160a52222ed3df5c1e42a0b0bbe8efffc4e6b8e79f81d1c79ea6c2a"
+    },
+    {
+      "path": "docs/ui-audit/economy/shots/56-production-claimed.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "891544add9bd43247fe8e40decf3084c0033484f6ce505c7bd2a8ab4876ee9d5"
+    },
+    {
+      "path": "docs/ui-audit/economy/shots/57-pill-clicked.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "288710c7e9d03b933f4b1528c8fe9e9a26010961efa8bd3261aae241cacd680c"
+    },
+    {
+      "path": "docs/ui-audit/economy/shots/58-bag-material-filter-khac.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "c8680f1328cb4a33a47897cd6a3064a5195f99fde561b8fadf7848c87387c8d3"
+    },
+    {
+      "path": "docs/ui-audit/economy/shots/60-en-equipment-hall.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "f7b6e11fbf75ca328182373fc7f6ac5b0908a7a5f4026cbf5293328391ed60a7"
+    },
+    {
+      "path": "docs/ui-audit/economy/shots/61-en-quest.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "5a3c284733ae9f8c9fa4b6f064d4de6924d8d9decac5db6ac0f671c2a15e90b3"
+    },
+    {
+      "path": "docs/ui-audit/economy/shots/62-en-character.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "0fffa898bd8e286d23305289ff8c0099817ba7a528f1d8128130edfca748fda5"
+    },
+    {
+      "path": "docs/ui-audit/economy/shots/64-en-gacha.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "a8a7406994c272dc0fbf0871a5d5ff0ae1580a1bab350abbd07b0071bc186898"
+    },
+    {
+      "path": "docs/ui-audit/economy/shots/65-gift-pending.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "9b8c99df8c1d23acb8cfc919d7030150294aa3eb440d397acae1184c9a78c2ea"
+    },
+    {
+      "path": "docs/ui-audit/economy/shots/66-gift-claimed.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "b3df6af37f8dbd61e783d1344f6e211a332c241415f4d1b734a0ea623c4fd03c"
+    },
+    {
+      "path": "docs/ui-audit/economy/shots/70-narrow-character-bag.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "e984cac815ebdb487c1d73f954383b7e279606da2d34ee6641a9c3e82bb9b3ba"
+    },
+    {
+      "path": "docs/ui-audit/economy/shots/71-narrow-equipment-hall.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "f198dc66fe992510f64b4c1ec4e97193e80ae851237fcb5e58a88b9f9ac9dbcd"
+    },
+    {
+      "path": "docs/ui-audit/economy/shots/72-narrow-vendor.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "c7fe9214a94cdb4b2d941769d3f5e5a613316c0dd03b07f7cab3061b66a26145"
+    },
+    {
+      "path": "docs/ui-audit/economy/shots/73-narrow-companion.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "9368d524c30638428c1e8365cec804ace42cb5afad8ca0eaf5e0bafaf3c67193"
+    },
+    {
+      "path": "docs/ui-audit/economy/shots/74-narrow-pill-room.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "acea335226a48e08312bb50f7ee012c4bcd743b7b85ce01473f08e29aff9fc03"
+    },
+    {
       "path": "docs/ui-audit/progression/fix-report.md",
       "kind": "file",
       "mode": 33188,
@@ -4323,6 +5103,300 @@
       "hash": "48d5b08209d00b9dad551873b251d3d3b07414825a1dd825f77902f4ffb07e10"
     },
     {
+      "path": "docs/ui-audit/progression/report.md",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "9ad463d5098325bab459658e460f732e340c6646b5a93b571630193735d36295"
+    },
+    {
+      "path": "docs/ui-audit/progression/shots/00-auth.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "a8544cd7ead430dc37ac2d662e54cdf8e38fbfac96a1ac9747fbe4ed4b5cb1bf"
+    },
+    {
+      "path": "docs/ui-audit/progression/shots/01-creation-picked.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "c008a81e6dabe578d9669307f2b5e81542cbb7b996d9f1092a09e56b311b5ffe"
+    },
+    {
+      "path": "docs/ui-audit/progression/shots/01-home-dongfu.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "da7aed9165ed1084950e630056226b63256cef3d8ce4ad1f25242f8f6aa79e75"
+    },
+    {
+      "path": "docs/ui-audit/progression/shots/02-command-wheel.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "da6d36ea040506827440c17ad22e1bcfcf76b6451e52d967713edd337f81f148"
+    },
+    {
+      "path": "docs/ui-audit/progression/shots/03-wheel-open.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "921980a590cf2dfee9bd86e55fd80fdb7f606b6af4f90dcdf883edd66f665555"
+    },
+    {
+      "path": "docs/ui-audit/progression/shots/04-realm-panel.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "f787df8407edcf49230886c8e63cd7261985c80762a7de502a92e21140049074"
+    },
+    {
+      "path": "docs/ui-audit/progression/shots/05-realm-breakthrough-hover.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "a1f6e779f7707a7f3b634684a0311d7194993403a8b77df3f9d7642e60770bbd"
+    },
+    {
+      "path": "docs/ui-audit/progression/shots/05-realm-panel-bottom.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "ddcf9353882b499dc103ca8cec5dc8956faa7715ffc6837a84a0c970adebf9fa"
+    },
+    {
+      "path": "docs/ui-audit/progression/shots/06-realm-lv12-ready.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "0528088d062b38d3e8d4b0e0086727c8edde95d8e6f49aa56440088de90665c5"
+    },
+    {
+      "path": "docs/ui-audit/progression/shots/07-breakthrough-confirm.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "24694b6446493c1c7ffd8a8fa6c4d0bb65a4383b7bf7b8379e097f74f36785b5"
+    },
+    {
+      "path": "docs/ui-audit/progression/shots/08-after-confirm.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "19e38d9c1b4b18be3e0e47f2ae6ababe45db32a3be6fd2b16c5f361f8bccee0b"
+    },
+    {
+      "path": "docs/ui-audit/progression/shots/10-talent-entitlement-modal.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "91f57c1257aca03ca2f9790c3f1debfbac67a480deac5fa0d395bf7aa994805d"
+    },
+    {
+      "path": "docs/ui-audit/progression/shots/11-after-talent-pick.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "340f4b6466424537e6768ca3a97143db9859ef0534a937ea6b9aa558a10d61dd"
+    },
+    {
+      "path": "docs/ui-audit/progression/shots/12-post-tribulation.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "645a5587b16b536bbdf0e943a7adf059454ecff551f34c6fc9ef2deca1533eac"
+    },
+    {
+      "path": "docs/ui-audit/progression/shots/13-quankhi-path-panel.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "f0548cea54375bc194d939ec04ed06c9a462ac64af0172808ba0f03e1f2b8c3c"
+    },
+    {
+      "path": "docs/ui-audit/progression/shots/14-quankhi-confirm-modal.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "7d851803e22ec69a6690405e6775b0cc171a26531eea5781436620aa0be2fc14"
+    },
+    {
+      "path": "docs/ui-audit/progression/shots/15-after-path-chosen.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "5920a3090b5f1f85b085360ea09b32bbebcdeca970048ea76a1ac89e7071f4d5"
+    },
+    {
+      "path": "docs/ui-audit/progression/shots/16-settled-qi-refining.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "298f1e7eb0584fad22b730ef180021e3b8fb0ae44589a5eecb49c7afb481c302"
+    },
+    {
+      "path": "docs/ui-audit/progression/shots/17-wheel-qi.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "ca6ccc49f27f10ec2e4fffe5c8601923f8fdc7e59951b66a2bc349eba7a9121a"
+    },
+    {
+      "path": "docs/ui-audit/progression/shots/18-realm-panel-qi.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "806c1b7f3fb3835004a00fc7ff6a62fbf437e1ea55b22576b8a055e4271894bc"
+    },
+    {
+      "path": "docs/ui-audit/progression/shots/19-realm-qi-top.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "bb6e615a9845cd4192b29ffa0fc7bad55f32ecf2e220a59601f5e3a662c5c7b0"
+    },
+    {
+      "path": "docs/ui-audit/progression/shots/20-skill-panel.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "c258a5f1f7a54fb0a93ae1305532d48b4b77362e7e332d9e646cf89dc0c24688"
+    },
+    {
+      "path": "docs/ui-audit/progression/shots/20a-wheel-check.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "f2001c5f5dcc7fcdd5d1cf819328b04b938a04c75c5074f3f737a892f3d9de72"
+    },
+    {
+      "path": "docs/ui-audit/progression/shots/21-tree-zoomed.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "357a0c99804a8485f1dfe85971dafb9d468435710daa49921290b5828efc5f07"
+    },
+    {
+      "path": "docs/ui-audit/progression/shots/22-stage-select.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "7579bdc0a389a1f10aed78c136f428b10e0a4f210f325d542cdab510f93a8765"
+    },
+    {
+      "path": "docs/ui-audit/progression/shots/23-stage-floor5.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "4957a97cf1cdcaf5d57f09a940af2d13259de08e51c1a09ca6f31322dfec0254"
+    },
+    {
+      "path": "docs/ui-audit/progression/shots/24-character-panel.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "a9ad559ccc61106040a89a6bcc911c5107869a9960ac7169e10facf68c02a71f"
+    },
+    {
+      "path": "docs/ui-audit/progression/shots/25-stage-automode.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "d85e08ff03d22e591bdebe7746c2443a58908a29321ad5229b44a43997bbcf34"
+    },
+    {
+      "path": "docs/ui-audit/progression/shots/26-autofarm-running.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "bc2a77f979a4ca6715c19ee041dec4f95c49ef172621957c97726031de515979"
+    },
+    {
+      "path": "docs/ui-audit/progression/shots/27-battle-settled.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "656e90843dc0b78c14e7f701e838dc6fbfc6fe9842885913fcd8a676c7d7f14d"
+    },
+    {
+      "path": "docs/ui-audit/progression/shots/28-battle-end.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "485cd0d4ae70a36c2a517de30fd266f09c9187693a271939f73a9041a38bf6d9"
+    },
+    {
+      "path": "docs/ui-audit/progression/shots/29-home-autofarm.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "fce81ede81ba030ff4400e2a03e7851cc6025de86698d0e015e27aa2ea7bc9d5"
+    },
+    {
+      "path": "docs/ui-audit/progression/shots/30-skill-dock-right.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "d8ff4a76c6450da947dbbd33f48ac32c631b67a6e94cc7f8eba459aef569c754"
+    },
+    {
+      "path": "docs/ui-audit/progression/shots/31-autofarm-indicator.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "70a4cade8b355451ae574317723bc6bd45b38d4847da9d0d9efb85fa870e8a6b"
+    },
+    {
+      "path": "docs/ui-audit/progression/shots/32-realm-qi-bottom.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "9b11e5ceffd481c37f6a136c337bc97d925a547941a10a2915ee3eed5db92892"
+    },
+    {
+      "path": "docs/ui-audit/progression/shots/33-realm-qi-meridian.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "3e015763db5570c2a07fc664c0ec2816bc2fc72540865131788b2a36933325e3"
+    },
+    {
+      "path": "docs/ui-audit/progression/shots/34-realm-qi-sections.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "fbe636f0dbba9b100b9810d85a4d47c365b8b6e78f65296b0b6cfec1d284c448"
+    },
+    {
+      "path": "docs/ui-audit/progression/shots/35-realm-qi-mid.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "63fec9ce58194f570ecf980ff607328c2e72d9368c1662fa6826254d8335f35b"
+    },
+    {
+      "path": "docs/ui-audit/progression/shots/36-quan-the-hidden.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "2a39a5eec9f3a44e356f7b3b61c5edc98043edbfb3818284d3d2708d1423d516"
+    },
+    {
+      "path": "docs/ui-audit/progression/shots/40-narrow-home.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "61f8eb5ae2164a96112231ef247fb2d04f25398146926c2925b3ad0f70aaf131"
+    },
+    {
+      "path": "docs/ui-audit/progression/shots/41-narrow-wheel.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "24c0dadd4757b9e04cafe0c1aeddefd8d9ba9861e710eb94adc59921b31793a4"
+    },
+    {
+      "path": "docs/ui-audit/progression/shots/43-narrow-stage.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "03de2a32b8dc51cd14c238436cd7577c08fd3f2d9580bec80a135c85282add14"
+    },
+    {
+      "path": "docs/ui-audit/progression/shots/50-en-home.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "1d9b446d235e9cce7b2830da66a97a5c1c323cc29c680edac44397dfec69efe2"
+    },
+    {
+      "path": "docs/ui-audit/progression/shots/50b-en-wheel.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "a77838a6c2d1d5b675be7b91ac265612fb6f82276e364d5e032e103d5b3532d2"
+    },
+    {
+      "path": "docs/ui-audit/progression/shots/51-en-realm.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "eb2f067776b7ff002f74514b58ff5b7b4e14aecf9a13efbb8b7c26eea35dcbf1"
+    },
+    {
+      "path": "docs/ui-audit/progression/shots/53-settings.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "ce8e588ea391cb519bccd24e937398ba9411da8875617b5f218d715768ec82ff"
+    },
+    {
+      "path": "docs/ui-audit/progression/shots/55-en-home.jpg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "a01ad280dc9c94a38fc2ac32567b8e5b8d655d99807581ba346d862f39ebf87e"
+    },
+    {
+      "path": "docs/ui-audit/README.md",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "c000a0c99fb2d96a842be0cb05276e6066959ff62c76f8d5afd48789d8f4f01a"
+    },
+    {
       "path": "docs/ui-components.md",
       "kind": "file",
       "mode": 33188,
@@ -4359,12 +5433,6 @@
       "hash": "c2729e5d396cd815e2356235747654dcdc8f35716a99ee9d60c08d6b66f56daa"
     },
     {
-      "path": "home.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "0813f6321a692bd69888929bd9ca9eab6eef18367a7eeec1836bd018380ae515"
-    },
-    {
       "path": "index.html",
       "kind": "file",
       "mode": 33188,
@@ -4383,12 +5451,6 @@
       "hash": "af2620e6ece2b1fb6c2bf27d62db2d21ffbcab150a79f59b3866f274e3615b1e"
     },
     {
-      "path": "panel-nhanvat.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "ca8eecf0673dc000a5968f02e3f01f8199406ddff7dd57cef7df4b73002b2317"
-    },
-    {
       "path": "playwright.config.ts",
       "kind": "file",
       "mode": 33188,
@@ -4399,6 +5461,138 @@
       "kind": "file",
       "mode": 33188,
       "hash": "22aaaf03679c25abb41bc2a2db60529c0598b77413dadda4b7fc8a0c31498b70"
+    },
+    {
+      "path": "public/assets/audio/enemies/blood-locust-elder/blood-locust-elder-attack.ogg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "a3447497db2c5d34ac5bd7b61a3aefb2f3a4150c572a070ffd1860b048e838ef"
+    },
+    {
+      "path": "public/assets/audio/enemies/blood-locust-elder/blood-locust-elder-bloodwood-devour-x1.5.ogg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "f761548ebed36eb72c01589d55c503512527d07aae51ffc134bf6181932fdc94"
+    },
+    {
+      "path": "public/assets/audio/enemies/blood-locust-elder/blood-locust-elder-bloodwood-devour-x2.ogg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "67ae87a7270812613de28cdfd8885d9dc685841b0498fa6693cb45ffdc760641"
+    },
+    {
+      "path": "public/assets/audio/enemies/blood-locust-elder/blood-locust-elder-bloodwood-devour.ogg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "25d5823154794cbbfb4060ab98807ba2d217b92f652aa4d4445d69f045eedbcb"
+    },
+    {
+      "path": "public/assets/audio/enemies/bloodarm-ox-demon-ferocious/bloodarm-ox-demon-attack.ogg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "a6878621e293afeaf243fc7039778bd987eb7884e64f43ae36baeb188e9663e0"
+    },
+    {
+      "path": "public/assets/audio/enemies/bloodarm-ox-demon/bloodarm-ox-demon-attack.ogg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "a6878621e293afeaf243fc7039778bd987eb7884e64f43ae36baeb188e9663e0"
+    },
+    {
+      "path": "public/assets/audio/enemies/graymane-wolf-ferocious/graymane-wolf-attack.ogg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "4c235202e50ba81a60c8ecbf758c9345fb4c3134d8f58c49e070ede54775f0cd"
+    },
+    {
+      "path": "public/assets/audio/enemies/graymane-wolf/graymane-wolf-attack.ogg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "4c235202e50ba81a60c8ecbf758c9345fb4c3134d8f58c49e070ede54775f0cd"
+    },
+    {
+      "path": "public/assets/audio/enemies/mudbelly-green-toad-ferocious/mudbelly-green-toad-attack.ogg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "9e2cfb5c3bbaddceb9463c251f0439c8110d42931d2ecda94d0ee7a281613205"
+    },
+    {
+      "path": "public/assets/audio/enemies/mudbelly-green-toad/mudbelly-green-toad-attack.ogg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "9e2cfb5c3bbaddceb9463c251f0439c8110d42931d2ecda94d0ee7a281613205"
+    },
+    {
+      "path": "public/assets/audio/enemies/streamgrudge-nymph/streamgrudge-nymph-attack-x1.5.ogg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "bd7b1cef9f16145e5738ce92c2a948ac5a81526457f99a0ca26892417b6a2db0"
+    },
+    {
+      "path": "public/assets/audio/enemies/streamgrudge-nymph/streamgrudge-nymph-attack-x2.ogg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "8b329669f99ac9cd3f114ea3ff29b0a65940dd5cf73b162123e44b2988e3e109"
+    },
+    {
+      "path": "public/assets/audio/enemies/streamgrudge-nymph/streamgrudge-nymph-attack.ogg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "921129e88158cc3e94b8af01a09495e458f8b9a0cde2a6cc9aaa200651261d83"
+    },
+    {
+      "path": "public/assets/audio/enemies/streamscale-forkman-floodserpent-ferocious/streamscale-forkman-attack.ogg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "0828d876117ad60627e44200461b00baa0297e02be75deb2372938b53a3cbde6"
+    },
+    {
+      "path": "public/assets/audio/enemies/streamscale-forkman-floodserpent/streamscale-forkman-attack.ogg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "0828d876117ad60627e44200461b00baa0297e02be75deb2372938b53a3cbde6"
+    },
+    {
+      "path": "public/assets/audio/enemies/whiteshell-venom-beetle-ferocious/whiteshell-venom-beetle-attack-x1.5.ogg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "d17ff15c5327e67ab462ac4b84ea64c243ee8c59ab0184564768b31eae90523a"
+    },
+    {
+      "path": "public/assets/audio/enemies/whiteshell-venom-beetle-ferocious/whiteshell-venom-beetle-attack-x2.ogg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "197a28d74a8156b8d4dc6558f29c237c079f704b7479504a54719ccae0489c9a"
+    },
+    {
+      "path": "public/assets/audio/enemies/whiteshell-venom-beetle-ferocious/whiteshell-venom-beetle-attack.ogg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "1ac31788fbed09f0af29cb105848ca02ded4deee4cff7a588f810ac347739bc7"
+    },
+    {
+      "path": "public/assets/audio/enemies/whiteshell-venom-beetle/whiteshell-venom-beetle-attack-x1.5.ogg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "d17ff15c5327e67ab462ac4b84ea64c243ee8c59ab0184564768b31eae90523a"
+    },
+    {
+      "path": "public/assets/audio/enemies/whiteshell-venom-beetle/whiteshell-venom-beetle-attack-x2.ogg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "197a28d74a8156b8d4dc6558f29c237c079f704b7479504a54719ccae0489c9a"
+    },
+    {
+      "path": "public/assets/audio/enemies/whiteshell-venom-beetle/whiteshell-venom-beetle-attack.ogg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "1ac31788fbed09f0af29cb105848ca02ded4deee4cff7a588f810ac347739bc7"
+    },
+    {
+      "path": "public/assets/audio/enemies/witherfir-vineman/witherfir-vineman-attack.ogg",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "6d0d082394b99b0269ba9a97ff313e9bb6091f973db83d6f9b65d9140049e8a7"
     },
     {
       "path": "public/assets/audio/music/.gitkeep",
@@ -4417,114 +5611,6 @@
       "kind": "file",
       "mode": 33188,
       "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-    },
-    {
-      "path": "public/assets/backgrounds/dong-fu/dong-fu-layout-preview.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "66b03e79dd04abd7ccc74013934758a5fc8f6aa30392ec2d345b24900468e709"
-    },
-    {
-      "path": "public/assets/backgrounds/dong-fu/modular/previews/all-16-contact-sheet.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "f26e7096159c9277588a0d8fa7cb6dac9b78bb944482a82fdc266a0191e996fb"
-    },
-    {
-      "path": "public/assets/backgrounds/dong-fu/modular/previews/autumn-evening.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "c50f2d5993436ac01091a176e8b733a28f99cb9b98507899e6d05bd0a021c7e8"
-    },
-    {
-      "path": "public/assets/backgrounds/dong-fu/modular/previews/autumn-morning.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "69cf9c093bf145c126698d9cc30e8e5f7c10424954f26023611d76f8d8f03ad3"
-    },
-    {
-      "path": "public/assets/backgrounds/dong-fu/modular/previews/autumn-night.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "d2c5df5ae3732dd716b15b7de380cd49352a10095c540ce8feffed9c332f417b"
-    },
-    {
-      "path": "public/assets/backgrounds/dong-fu/modular/previews/autumn-noon.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "eaf6ef3726573445ef25e729070884ed8e27bed1644d3279cca33fff184c0538"
-    },
-    {
-      "path": "public/assets/backgrounds/dong-fu/modular/previews/spring-evening.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "79e94730c7fb827b4673078b5d2b4a94b15528b3931c3314fc14bbcef6c5dc9d"
-    },
-    {
-      "path": "public/assets/backgrounds/dong-fu/modular/previews/spring-morning.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "6a0bce7219e0218b991db5beb914604c0ae9fdd55744a0733cbf5f62f9a10e2d"
-    },
-    {
-      "path": "public/assets/backgrounds/dong-fu/modular/previews/spring-night.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "3a3c332047f6e223699c5892886d6d7b955f9ef8ec6b5a42de4007a6da6d0c87"
-    },
-    {
-      "path": "public/assets/backgrounds/dong-fu/modular/previews/spring-noon.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "b466811f7b47ebd8d89e2525c559ee21f7b1c5111c9ad626f70adaca3c850586"
-    },
-    {
-      "path": "public/assets/backgrounds/dong-fu/modular/previews/summer-evening.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "260456d6868de2b5d76726065644217a44cae1df7ce24b0580f5d9c1f378c441"
-    },
-    {
-      "path": "public/assets/backgrounds/dong-fu/modular/previews/summer-morning.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "c526a590af07e6b5aee82191957985bccad0ad7f6f18d932b813b18bc13187f0"
-    },
-    {
-      "path": "public/assets/backgrounds/dong-fu/modular/previews/summer-night.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "30821696c68331ff88f05b169244dddba56059806af5e5d77674ebd8530b3310"
-    },
-    {
-      "path": "public/assets/backgrounds/dong-fu/modular/previews/summer-noon.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "2e639cfce6d4dcfb19514ef1e94db9196c2cb7fced8a15fdaae268ccf8f69683"
-    },
-    {
-      "path": "public/assets/backgrounds/dong-fu/modular/previews/winter-evening.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "956a41dfbc583da4c17910b1b03a2f8d6d4bc3fbe25ee321826e5015893f6b78"
-    },
-    {
-      "path": "public/assets/backgrounds/dong-fu/modular/previews/winter-morning.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "4967d2085ef9f9ec45cfc67a18dea605cd5ca7381d8ba22e1349ceb60a6336d4"
-    },
-    {
-      "path": "public/assets/backgrounds/dong-fu/modular/previews/winter-night.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "fb27c4e35c3a656fe63fa04836057763f92e7d47ba734cdfbb6a3b3e78979718"
-    },
-    {
-      "path": "public/assets/backgrounds/dong-fu/modular/previews/winter-noon.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "fc06cf71e6f98a5580d35c30fd51a074c950fd631704b269a180fee32039ac05"
     },
     {
       "path": "public/assets/backgrounds/dong-fu/modular/README.md",
@@ -4785,120 +5871,6 @@
       "hash": "ad64fcfde605f2449b622908c0553dc7ebcc875d323c1e6e2730f7fe393ee961"
     },
     {
-      "path": "public/assets/backgrounds/dong-fu/thanh-van-dong-fu-master-buildings-v1.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "31577a6a1425dac904999bef9edeb9ee312046a4499ccc50a0fe29bc9d5b9dcc"
-    },
-    {
-      "path": "public/assets/backgrounds/thanh-van/modular/previews/all-16-contact-sheet.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "1b9b90dc928182370137459862918bd164a19e8dbd9bd6ba3977e197b81aab1c"
-    },
-    {
-      "path": "public/assets/backgrounds/thanh-van/modular/previews/autumn-evening.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "6d5582ade2fcd6f7cc3844b4a8cf388008ee6d7127a856ae5713ed2a16c7ed61"
-    },
-    {
-      "path": "public/assets/backgrounds/thanh-van/modular/previews/autumn-morning.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "cde26dc8278859efcb26cc338c0256f9a56073a632fb0a7d56e44d608662b0c4"
-    },
-    {
-      "path": "public/assets/backgrounds/thanh-van/modular/previews/autumn-night.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "7fafaf19daee9d3815e3a13481151324df2681b2f0cbc170b4e99ec8c8370d38"
-    },
-    {
-      "path": "public/assets/backgrounds/thanh-van/modular/previews/autumn-noon.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "1a1ce92d89d9d2894919507a997d43ae8eb6cc5af800d32bd96a0eaae96d84c6"
-    },
-    {
-      "path": "public/assets/backgrounds/thanh-van/modular/previews/seasons-contact-sheet.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "79a66a4882e0a05f9f1635ea893eb7b7770314d5f29d6887322453cd9dc549c1"
-    },
-    {
-      "path": "public/assets/backgrounds/thanh-van/modular/previews/spring-evening.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "89d369da577e88b780ef5ac5b782fae02147cdc2839041147e3c4ea1fe0998cb"
-    },
-    {
-      "path": "public/assets/backgrounds/thanh-van/modular/previews/spring-morning.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "6648b2f3d1898a176d0833fec550a7746c8c9f0a7d6b77551072558ec4b1d751"
-    },
-    {
-      "path": "public/assets/backgrounds/thanh-van/modular/previews/spring-night.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "e89fc1c56297fe7407c30d5ffcb73af89b448eb9669e546af4833459a817a1d0"
-    },
-    {
-      "path": "public/assets/backgrounds/thanh-van/modular/previews/spring-noon.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "89c6c35e6b7d121d8eb9767f330a921e1cec333022ab9a49aac0fe0fd3d4473c"
-    },
-    {
-      "path": "public/assets/backgrounds/thanh-van/modular/previews/summer-evening.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "6d01d6a18a63518372a15a59a36640a4a9e5223c554d109e3afbaab5a5e31c7e"
-    },
-    {
-      "path": "public/assets/backgrounds/thanh-van/modular/previews/summer-morning.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "f0156d894cb63d5780301a7c6b4231ea10aa0a03ba38ed8b188df0d53836f166"
-    },
-    {
-      "path": "public/assets/backgrounds/thanh-van/modular/previews/summer-night.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "e18e0137b4bf4721853f6bb3eccd0d86f389ea3b17ac76839a6173b630bc9f74"
-    },
-    {
-      "path": "public/assets/backgrounds/thanh-van/modular/previews/summer-noon.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "7f6116c29759642872ca397b8a3b2d4a0c4114125d4a77e6d13ab549a0c234c2"
-    },
-    {
-      "path": "public/assets/backgrounds/thanh-van/modular/previews/winter-evening.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "1409093b489a8b84bc2afac131ff12e4e667aabc138c3bfc65f8839b56fd4ef2"
-    },
-    {
-      "path": "public/assets/backgrounds/thanh-van/modular/previews/winter-morning.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "97386aeb996c111cc62ebaf3b1a9e21191c41bd4d16f40d58c8f3d5816b14f77"
-    },
-    {
-      "path": "public/assets/backgrounds/thanh-van/modular/previews/winter-night.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "f64bf71a4da57064c7dd890876e40e600cd277584a56f0b1f80a4408610663ac"
-    },
-    {
-      "path": "public/assets/backgrounds/thanh-van/modular/previews/winter-noon.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "edc46519c45968510fae7e92c8008035299d68aadbc5f2d7a5a7ee71ce237bc1"
-    },
-    {
       "path": "public/assets/backgrounds/thanh-van/modular/README.md",
       "kind": "file",
       "mode": 33188,
@@ -5115,46 +6087,10 @@
       "hash": "14fa2bc52d01a139818789f959f5d2218cd80e151d00a28d7b60f306bd3da53f"
     },
     {
-      "path": "public/assets/backgrounds/thanh-van/spring/morning/preview-composite.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "95db5cbc425c60c9b978702f378d29cfbd400b2a72bbc8e938a6ddb7ac27c613"
-    },
-    {
       "path": "public/assets/backgrounds/thanh-van/spring/morning/README.md",
       "kind": "file",
       "mode": 33188,
       "hash": "e859095ddcdc32fc05bd2d2dc92a35d3c1622e2994c7e8d308deff313b3ec32c"
-    },
-    {
-      "path": "public/assets/backgrounds/thanh-van/spring/morning/thanh-van-spring-morning-master.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "3e601cd7c46f496db8f377c3ad7d4a8d28b52d1563cef5ce11b079554bf1e79b"
-    },
-    {
-      "path": "public/assets/buildings/dong-fu/buildings-contact-sheet.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "49176ad690d677f7590e0e04b8120fac46e160006731f6aebbd0b0528255e627"
-    },
-    {
-      "path": "public/assets/buildings/dong-fu/dong-fu-layout-preview-v2.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "fb999056631e4579ace7a818d186a89c9a3e87a31c717cb594632c12338ad457"
-    },
-    {
-      "path": "public/assets/buildings/dong-fu/dong-fu-layout-preview-v3.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "b69d655e2194e7d4e4c65414fc87f72432ee4015bbe899a70f13f0a5d37fdbaa"
-    },
-    {
-      "path": "public/assets/buildings/dong-fu/equipment_hall_stone_v2.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "3ba18bca62acca5bb4aa007e01605a08fef0c4ee268d52d0892c74a30a4b665f"
     },
     {
       "path": "public/assets/buildings/dong-fu/equipment_hall.png",
@@ -5163,154 +6099,10 @@
       "hash": "9c57e6e9d76c43e5269cb1245a5744eac82b6ba20b0e659ccab9247ea17a9189"
     },
     {
-      "path": "public/assets/buildings/dong-fu/gathering_outpost_stone_v2.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "73e9346885ffbc0a1d94ac908d69eeb13462d35d1ed10354e3b6db11f690b575"
-    },
-    {
       "path": "public/assets/buildings/dong-fu/gathering_outpost.png",
       "kind": "file",
       "mode": 33188,
       "hash": "5d3dfba388aea6bd3e2018c6ccb69736996ed6658c1ae8781a8c93c0e7b16695"
-    },
-    {
-      "path": "public/assets/buildings/dong-fu/master-v1-crops/artisan_workshop.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "a54b7a1285443abf07326faf29ec928eebe207c64d7740eeccdb61a7eda72cef"
-    },
-    {
-      "path": "public/assets/buildings/dong-fu/master-v1-crops/contact-sheet-v2.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "0ef6db9f2eacea3e1a4ed7b477869a9714562594fbc0c5aa0f8943a25868eb22"
-    },
-    {
-      "path": "public/assets/buildings/dong-fu/master-v1-crops/contact-sheet.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "2bf66692d9623fea00301d84fa4e96b6605406f80d9ef2eb49f364c491b69cee"
-    },
-    {
-      "path": "public/assets/buildings/dong-fu/master-v1-crops/equipment_hall.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "95d3da064469e540899e7700f64ef2d3f0d34f9a3f5b22bd68f4cbab6359688f"
-    },
-    {
-      "path": "public/assets/buildings/dong-fu/master-v1-crops/formation_altar.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "db92d6c3051bdaa0e9cacad1a883d4d3ba0fcd3305ae855690cb04a76fc086d9"
-    },
-    {
-      "path": "public/assets/buildings/dong-fu/master-v1-crops/gathering_outpost.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "ac546e0862961c31e272648b848727d345abf42acaa07492f92cb29fd27d1ccb"
-    },
-    {
-      "path": "public/assets/buildings/dong-fu/master-v1-crops/herb_garden.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "b308e0c519d59fb84597bcb26cf0196ff0341738d760e638a54431277f281c1d"
-    },
-    {
-      "path": "public/assets/buildings/dong-fu/master-v1-crops/pill_room.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "e0c0a714f8e51d2b9345acd919f721ea6571409129a12391905456ff68a9d7c0"
-    },
-    {
-      "path": "public/assets/buildings/dong-fu/master-v1-crops/smelter.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "ddb3a023110e2825f31615df3fec942bbe31047d8a92819a4af1b8aeca47554a"
-    },
-    {
-      "path": "public/assets/buildings/dong-fu/master-v1-crops/spirit_spring.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "8251aa5f050709b43ea934292300b377faa8e3ad15b1f546ecc8e5af44653421"
-    },
-    {
-      "path": "public/assets/buildings/dong-fu/master-v1-crops/talisman_institute.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "a659e837c2204d3ecff1e976b529f5dc19fbe9c67c4364e44b16d458f0c8abe2"
-    },
-    {
-      "path": "public/assets/buildings/dong-fu/master-v1-crops/teleport_gate.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "4b89b16c481a54c3d94c5eac00d786ab3b980ad49e5b545fa2d6cb683498875c"
-    },
-    {
-      "path": "public/assets/buildings/dong-fu/master-v1-masks/artisan_workshop-mask.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "12a8963b8a1861ae1e5060e80dc436f0c1503499ddd7e10fdafeefe87bc29bba"
-    },
-    {
-      "path": "public/assets/buildings/dong-fu/master-v1-masks/equipment_hall-mask.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "ef4f103610312c4edb4f70e41ed9ed8da62cfa5d129535a89c7875a239a067b3"
-    },
-    {
-      "path": "public/assets/buildings/dong-fu/master-v1-masks/formation_altar-mask.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "a7adab819d2a44927e1333e3fc299bea5e8f4787f3040530e451b2aa44441d76"
-    },
-    {
-      "path": "public/assets/buildings/dong-fu/master-v1-masks/gathering_outpost-mask.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "d0a15654e320ba664774f8137e25a73fd05b2211a80f6be4f2d21215e77cd6eb"
-    },
-    {
-      "path": "public/assets/buildings/dong-fu/master-v1-masks/herb_garden-mask.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "1b3c0b1b17c034d7ee80f772fe635436c17b773d4b3608f60ac3f01f5e4c9033"
-    },
-    {
-      "path": "public/assets/buildings/dong-fu/master-v1-masks/pill_room-mask.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "29bcd280322ba2bbf4e0304ddddeaca8bfc0385f288a07b4cec1b0663e4c2321"
-    },
-    {
-      "path": "public/assets/buildings/dong-fu/master-v1-masks/smelter-mask.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "522d2b8c42cfd97f551d7005d69fae6693dd9452aa0c547a6acf07db0bcdb621"
-    },
-    {
-      "path": "public/assets/buildings/dong-fu/master-v1-masks/spirit_spring-mask.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "51b85f83ca0f3598f7b1c0c9b17e4b5ef1684aa6fea14f28319915c155ed0028"
-    },
-    {
-      "path": "public/assets/buildings/dong-fu/master-v1-masks/talisman_institute-mask.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "ecf48bd1ef4fe9b0d42460963b3c434076750cb61e11030b5764469b0cb7ebd6"
-    },
-    {
-      "path": "public/assets/buildings/dong-fu/master-v1-masks/teleport_gate-mask.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "26b663bb762876611e589edd27277438bd7a8ba92298e4d571478b041c21adcd"
-    },
-    {
-      "path": "public/assets/buildings/dong-fu/pill_room_stone_v2.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "41eb3ba7bc25d9467a1cb96e66ea37fac91257b5fa70b2fbd3036d8fa3c0d2ed"
     },
     {
       "path": "public/assets/buildings/dong-fu/pill_room.png",
@@ -5331,154 +6123,10 @@
       "hash": "855f2faf007dc9ef20e512b56e35df25d55f4c54197d4ff6d9817957bcd7c00c"
     },
     {
-      "path": "public/assets/buildings/dong-fu/separated-v1/artisan_workshop.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "919590c302cfb85b757d4425aea50905dd77cd013d3c07ebb339f09873ad747e"
-    },
-    {
-      "path": "public/assets/buildings/dong-fu/separated-v1/contact-sheet.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "2b54b8f75f6328415d46609f6df2ae20368481490e8901b15e2649d193b627c2"
-    },
-    {
-      "path": "public/assets/buildings/dong-fu/separated-v1/equipment_hall.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "a38301dadb9e8001ec1cc0d3f7d48652f1e4483b51b8c880b661e372be2b28b0"
-    },
-    {
-      "path": "public/assets/buildings/dong-fu/separated-v1/formation_altar.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "0d235ac59572ae2cf4d735670047c16e6052ae5f31e04a57bb5472ef4f76ff72"
-    },
-    {
-      "path": "public/assets/buildings/dong-fu/separated-v1/gathering_outpost.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "f824ad37a374f88bc7645687c649d49599a862da448bac0d3f9a8dad6ef9dd4d"
-    },
-    {
-      "path": "public/assets/buildings/dong-fu/separated-v1/herb_garden.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "8edfcf3827c9c2e5e3d52c74b19bbd00f07ee26ab09d7a1f618c5f590e3457eb"
-    },
-    {
-      "path": "public/assets/buildings/dong-fu/separated-v1/pill_room.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "352a53bccf673e6a1c2867e7f5e88fda3c990198833157f4fdda34d322fb8816"
-    },
-    {
-      "path": "public/assets/buildings/dong-fu/separated-v1/preview-cells/artisan_workshop.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "635a29c252535bc0f6afb476dc8c3dbc0f4212e624cc133310937858a10ecf1b"
-    },
-    {
-      "path": "public/assets/buildings/dong-fu/separated-v1/preview-cells/equipment_hall.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "51f24ce82a2b07b05932d86c4c2fc91c428e620bac1230724b074e8befc79853"
-    },
-    {
-      "path": "public/assets/buildings/dong-fu/separated-v1/preview-cells/formation_altar.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "aa37763f871f504834526ebe853b15f4006db2d50f0152cced7ba2017fc6cdf8"
-    },
-    {
-      "path": "public/assets/buildings/dong-fu/separated-v1/preview-cells/gathering_outpost.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "36e824eeeed7c6622f11c32ffe97ad381a5417105863a63231d86b363be5ed48"
-    },
-    {
-      "path": "public/assets/buildings/dong-fu/separated-v1/preview-cells/herb_garden.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "9fd42da4e9e272ca028c35ee38c774f0a90d942a392c9d7671223c1689f3068e"
-    },
-    {
-      "path": "public/assets/buildings/dong-fu/separated-v1/preview-cells/pill_room.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "0848c0f56355f3394d8122ec1d6fde316b3c47d96a6cd5c698c4315022549919"
-    },
-    {
-      "path": "public/assets/buildings/dong-fu/separated-v1/preview-cells/smelter.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "8a5f48e5e17dd8ab72d739bcd98fd58340cba797be2dc8d28460e65571ebd1fd"
-    },
-    {
-      "path": "public/assets/buildings/dong-fu/separated-v1/preview-cells/spirit_spring.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "73594cffff7c63661b2cc99bfd9aeb1a80b928bbe1e8e8ca00fd464aa2c4ace8"
-    },
-    {
-      "path": "public/assets/buildings/dong-fu/separated-v1/preview-cells/talisman_institute.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "9c28c6b409ba4122d7a2aa0cc7ed1430221b21514bc84e5274bc714f3555adc1"
-    },
-    {
-      "path": "public/assets/buildings/dong-fu/separated-v1/preview-cells/teleport_gate.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "4ea843fe5c7bd426d3ff0a41c4e26426f6172e1a822a202209d9bd8d5f7ff4c1"
-    },
-    {
-      "path": "public/assets/buildings/dong-fu/separated-v1/recomposite-validation.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "cdbda960464774e8c08828e8ea433b0769e6e292eb4fde6ee9722cd6a9324768"
-    },
-    {
-      "path": "public/assets/buildings/dong-fu/separated-v1/smelter.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "7f6c64a6121a8efb8592bcb13f7ba7e436f534fedc7e06c2941328c20e9b4123"
-    },
-    {
-      "path": "public/assets/buildings/dong-fu/separated-v1/spirit_spring.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "1af9bfce56d4935cbc776c898d2ff0318841eb43afe1f25877dc3fb5ede38b78"
-    },
-    {
-      "path": "public/assets/buildings/dong-fu/separated-v1/talisman_institute.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "e6d50c4714919a6126cc35f91f8273f391144124e8e837e579c41d3ed58bcdb9"
-    },
-    {
-      "path": "public/assets/buildings/dong-fu/separated-v1/teleport_gate.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "23b2aec0ae608e9dc64c7c748af2b60e9b85d5f432c95e1967dc8e8e07f0b800"
-    },
-    {
-      "path": "public/assets/buildings/dong-fu/spirit_spring_stone_v2.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "f7a4dc341d42b33c98458f59cd225f7b1e13de93b8d52902accc3f0941b3693b"
-    },
-    {
       "path": "public/assets/buildings/dong-fu/spirit_spring.png",
       "kind": "file",
       "mode": 33188,
       "hash": "b68d6185882c8771220f6065d8aa9f6164e886fb7533eb62a643951e3903bf42"
-    },
-    {
-      "path": "public/assets/buildings/dong-fu/teleport_array_stone_v2.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "546c866629b89fadaa1869b2a565c508fd935082036024cc8737bfcb17013b10"
     },
     {
       "path": "public/assets/buildings/dong-fu/teleport_array.png",
@@ -5583,60 +6231,6 @@
       "hash": "bf5728dae9de0dab2b71ca557e5310b0fa69fdaa9e4761056ad4eba2124bb837"
     },
     {
-      "path": "public/assets/buildings/dong-fu/v2/previews/gameplay-scale.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "25dbc820afc89c1ef412eb594d9e2f7e4d5de827cdfa47915228842ffc170de3"
-    },
-    {
-      "path": "public/assets/buildings/dong-fu/v2/previews/night-readability.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "59a125a809c473bf87bd13b89c0e2439a2c10e1c28ad860c7a5c8b901130e6ee"
-    },
-    {
-      "path": "public/assets/buildings/dong-fu/v2/previews/redesign-contact-sheet.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "1bd84aea59aff1d88452a44b7b1dd17613da74bcb8671db24e1704834daeab60"
-    },
-    {
-      "path": "public/assets/buildings/dong-fu/v2/previews/redesign-scene-morning.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "11768258a86664cc247c93faa267be178bd87781831ffac8f71a8b0a955dd0f3"
-    },
-    {
-      "path": "public/assets/buildings/dong-fu/v2/previews/redesign-scene-night.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "60f38cd4b77250f563fb4ae29a3047a9007dc4ae4f78da15c0d5b1d1e2bb93f0"
-    },
-    {
-      "path": "public/assets/buildings/dong-fu/v2/previews/redesign-scene-placement.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "11768258a86664cc247c93faa267be178bd87781831ffac8f71a8b0a955dd0f3"
-    },
-    {
-      "path": "public/assets/buildings/dong-fu/v2/previews/scene-placement.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "c648f02600dc01e95c82090cd9668c49fa32e9cf78962a0d15f9714cac7df857"
-    },
-    {
-      "path": "public/assets/buildings/dong-fu/v2/previews/seasons.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "88645d5461e3069fabc7beceadcc7953a5f4dd5e9ddf7a56efe4ed4eb8f27f60"
-    },
-    {
-      "path": "public/assets/buildings/dong-fu/v2/previews/states.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "d06e75e38ffc351861313bf239f3470ae73b9df74c4e4e9196dc6b6fef894923"
-    },
-    {
       "path": "public/assets/buildings/dong-fu/v2/README.md",
       "kind": "file",
       "mode": 33188,
@@ -5739,6 +6333,852 @@
       "hash": "51d1f2fbeb82890f9e5787f84fc26325719ffeb95c903ff8f8aa5951d66e381a"
     },
     {
+      "path": "public/assets/characters/animated/fenli/avatar.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "7ee1b8fb227c6b5081845c0b1aa805c0232cef6779a1d6780755749bfc905558"
+    },
+    {
+      "path": "public/assets/characters/animated/fenli/avatar/fenli-battle-card-avatar.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "3865f342026f48663b535f96f3e6e2999a75ec743011159cf11bf8bedf9ff0f2"
+    },
+    {
+      "path": "public/assets/characters/animated/fenli/avatar/fenli.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "64473e01477faedbd50d81ba966da0573f1fac60f720dfac7ca430f2ae994f37"
+    },
+    {
+      "path": "public/assets/characters/animated/fenli/fenli-sheet-1.atlas.json",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "f39b98e39f25dd37e15047c1cb1ef6fa4ebbe72a0b50fb5a992cc261961a3718"
+    },
+    {
+      "path": "public/assets/characters/animated/fenli/fenli-sheet-1.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "60b7dd99dd5033a6f8f79ebe1a3b7e96da772a69c8bd817d01d3f1e106e710e4"
+    },
+    {
+      "path": "public/assets/characters/animated/fenli/portrait/fenli-full-body.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "58a3618e436b0364f7386b180d8ab10b4a77f2afbd9b40b5f77b76edce703de9"
+    },
+    {
+      "path": "public/assets/characters/animated/fenli/portrait/fenli-half-body.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "9a6fb24e258f791d7a96b9823db9376e47f7787a58c5720eea6a6a674fbebdc0"
+    },
+    {
+      "path": "public/assets/characters/animated/fenli/portrait/fenli-queue.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "18e52a58cd83dfb043b2a94ce6b0bef7dc831d907e23f2950741f1e2e6bd00d7"
+    },
+    {
+      "path": "public/assets/characters/animated/gaosheng/avatar.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "313e78cfbaf1c2cd30de397f6eb151abde8a2dae318e3c7eafa961add6fcdf84"
+    },
+    {
+      "path": "public/assets/characters/animated/gaosheng/avatar/gaosheng-action-bar-avatar.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "d0e3183ff801b87503e158bc071e7115b55a2925d60c08dae5daba6cd0eaecb1"
+    },
+    {
+      "path": "public/assets/characters/animated/gaosheng/avatar/gaosheng-battle-card-avatar.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "155a0ae9dbbade6e0b001658ea4f0c228aab7af76bc4d0c05d979359d3d48e68"
+    },
+    {
+      "path": "public/assets/characters/animated/gaosheng/avatar/gaosheng-battle-status-avatar.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "116fdeadef5d1c76c596a88b913a4c1cc1e2469fe22414df60e5f376a083c4c0"
+    },
+    {
+      "path": "public/assets/characters/animated/gaosheng/avatar/gaosheng-roster-avatar.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "093b3ea6dcbd1dfbb29f759a56667949ac8634df3841ebc5634f312b0dc99ec6"
+    },
+    {
+      "path": "public/assets/characters/animated/gaosheng/avatar/gaosheng.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "266d237ebf0730e084befb5d70e77c98e61d1ee9b8c24005c569c2c03dd90bd9"
+    },
+    {
+      "path": "public/assets/characters/animated/gaosheng/closeup/gaosheng-bloodfate-unyielding-closeup.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "230e1d14259588cbeb3b20b900bb5280577b1cc47223037777c644688ec9bcf7"
+    },
+    {
+      "path": "public/assets/characters/animated/gaosheng/gaosheng-sheet-1.atlas.json",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "bb78cc5fd84d5f12a0ac70ba177192e7ae86dca315afc0b93437c9893f56a696"
+    },
+    {
+      "path": "public/assets/characters/animated/gaosheng/gaosheng-sheet-1.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "72368b2b69cda3935ce3189cf819fca4f96615fb7e6225347b037e8906ec92d3"
+    },
+    {
+      "path": "public/assets/characters/animated/gaosheng/gaosheng-sheet-2.atlas.json",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "1cade8b7a5341a7f509d818d7626608c8672da7a5ff83749e547c2d2947e6467"
+    },
+    {
+      "path": "public/assets/characters/animated/gaosheng/gaosheng-sheet-2.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "05ce9bd70a57648b55e910450b22ce4c8b7d0bd6d0ab6b6268faf109ca6e8060"
+    },
+    {
+      "path": "public/assets/characters/animated/gaosheng/portrait/gaosheng-full-body.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "bf62f49ac61bed8967a87191c11204b1385b18095099cc8e0f5493a4978a202f"
+    },
+    {
+      "path": "public/assets/characters/animated/gaosheng/portrait/gaosheng-half-body.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "bec73f03da71e486aff99cadfc5eb910d6556b872752d8422a5b4b21f1bcda27"
+    },
+    {
+      "path": "public/assets/characters/animated/gaosheng/portrait/gaosheng-queue.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "17bfd677a3686e90eac9e44c2daf30f7ec89c8db5390085c9197dd37796039e2"
+    },
+    {
+      "path": "public/assets/characters/animated/gaosheng/radar-chart/gaosheng-main-menu-radar.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "8c82085681d525594cb5834d2faa93eaa541c9f6672dc9e5a80fbb1870c19ddb"
+    },
+    {
+      "path": "public/assets/characters/animated/gaosheng/radar-chart/gaosheng-zhenmosi-radar.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "5a187189e86b335ecb88a97e9661453f4d161c3f7d53439c44cf565a60c28771"
+    },
+    {
+      "path": "public/assets/characters/animated/jinglian/avatar.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "a9acca3e2ead86a91ee5ce066ad2d58610d8ac4bed115bae57f6c0416a619f7c"
+    },
+    {
+      "path": "public/assets/characters/animated/jinglian/avatar/jinglian-battle-card-avatar.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "296466007ff5b18c7cc993ef1d1193907ec2f6a8f5a69a85e6dc4333272eefee"
+    },
+    {
+      "path": "public/assets/characters/animated/jinglian/avatar/jinglian.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "e324ed7930e52bb827c86de2b9e0e813cc951c65105d964a76f5743db8dab2ef"
+    },
+    {
+      "path": "public/assets/characters/animated/jinglian/jinglian-sheet-1.atlas.json",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "9b68c421c8e2f4df70d0bef39d6a5bad9662b99df6138e2984e8afd8398b5895"
+    },
+    {
+      "path": "public/assets/characters/animated/jinglian/jinglian-sheet-1.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "952b55e7b558dd8bced252f2d1c5904d783a4fcd55aab2697cec9783672f77bc"
+    },
+    {
+      "path": "public/assets/characters/animated/jinglian/portrait/jinglian-full-body.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "a53c97efa48943fcb6dec29a7cc6e6dcdace2f7b334320a5c7692825dbbdba32"
+    },
+    {
+      "path": "public/assets/characters/animated/jinglian/portrait/jinglian-half-body.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "02b33bbbf0b2f9a56d8cc4c2e9f26e671e1c912dac18153ce7c307c4bff94ebd"
+    },
+    {
+      "path": "public/assets/characters/animated/jinglian/portrait/jinglian-queue.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "3843bb06f7e0424e79e6834587ab2e03e7916633ebf18cce2ae8f292a9831491"
+    },
+    {
+      "path": "public/assets/characters/animated/manifest.json",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "2e69a85463bb9097aec7dffb2785f2c0eed187fd523a0d2a9886e03f6b8ccfff"
+    },
+    {
+      "path": "public/assets/characters/animated/ngu_hanh/avatar.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "a42704c968789e8df2e4ae50ed9723633d8f133490e1410d68dc022dfae5da16"
+    },
+    {
+      "path": "public/assets/characters/animated/ngu_hanh/ngu_hanh-sheet-1.atlas.json",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "eca2ab90750348df2cd28266c9e88d7c2540d89198733406091cc250fde7dcc8"
+    },
+    {
+      "path": "public/assets/characters/animated/ngu_hanh/ngu_hanh-sheet-1.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "1637a22f296487a4243a176838a0f7ea30370d36af2bcab112350f4e0882ebfe"
+    },
+    {
+      "path": "public/assets/characters/animated/ngu_hanh/ngu_hanh-sheet-2.atlas.json",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "24718100790bae8a9dc9923f91121d8702ffc12981bc20a641825740367558e2"
+    },
+    {
+      "path": "public/assets/characters/animated/ngu_hanh/ngu_hanh-sheet-2.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "51520c1cca360e3c148574703e06c7fbd6ec6a3e34c061db43bc1b5d420c35eb"
+    },
+    {
+      "path": "public/assets/characters/animated/ngu_hanh/ngu_hanh-sheet-3.atlas.json",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "f51fd696cbbcf0baeadffb087221c8f2f34cc5f5096775704bc91d7c22704f26"
+    },
+    {
+      "path": "public/assets/characters/animated/ngu_hanh/ngu_hanh-sheet-3.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "c0386f18da543923fe8aef4c4b033f6288d2d15e4a4a0dbdaf1bc0c378d99734"
+    },
+    {
+      "path": "public/assets/characters/animated/ngu_kiem/avatar.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "df5d9c993e953ab2c0a47eb6afa21e93ca9602ad9434de13a69d8de12419f19e"
+    },
+    {
+      "path": "public/assets/characters/animated/ngu_kiem/ngu_kiem-sheet-1.atlas.json",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "4ff01c299fa9adac731cd20a04db6016aa9b03096fa15a11155d48c47925cc36"
+    },
+    {
+      "path": "public/assets/characters/animated/ngu_kiem/ngu_kiem-sheet-1.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "e1d76446cfdd1d10a5625c7de702db51533e232b7d17f5b3b5fc8cbe4b2e0157"
+    },
+    {
+      "path": "public/assets/characters/animated/pham_nhan_unarmed/avatar.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "51ce2301294f4a30bb90d5397bbe3328dfb1efce804f0cbd6a3b56ccc193ce61"
+    },
+    {
+      "path": "public/assets/characters/animated/pham_nhan_unarmed/pham_nhan_unarmed-sheet-1.atlas.json",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "4dc4ee53f6abba2a73c1bc1d33bfb2531c722aec3271103c0e2e756405fd2a45"
+    },
+    {
+      "path": "public/assets/characters/animated/pham_nhan_unarmed/pham_nhan_unarmed-sheet-1.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "d16a5e6058f01e76120870d9a1582a6669e4ed2dd86f3cdc0ed2e3d9b4baa9dc"
+    },
+    {
+      "path": "public/assets/characters/animated/pham_nhan_unarmed/pham_nhan_unarmed-sheet-2.atlas.json",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "d5df2f7dbb60a241e3557d5b72b93598e9da22bfc61ab2da87ff9e8b1dad717f"
+    },
+    {
+      "path": "public/assets/characters/animated/pham_nhan_unarmed/pham_nhan_unarmed-sheet-2.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "c992f4863eed15e516fb88337d550599f7bd5a26bd10084e51f3ce9f28503570"
+    },
+    {
+      "path": "public/assets/characters/animated/pham_nhan/avatar.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "529bd6c0e521b904b841c2f951714d5d7745b7a5eb785e3211c9dd036c98ce5f"
+    },
+    {
+      "path": "public/assets/characters/animated/pham_nhan/pham_nhan-sheet-1.atlas.json",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "97d743c596d90394908f70150734b7d5372b10f2007fb9508ddaf40f1ec602cf"
+    },
+    {
+      "path": "public/assets/characters/animated/pham_nhan/pham_nhan-sheet-1.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "7c8b66fa02de8d5e3568c83ac650448c90591992515d127aaeaddad5df42d6ec"
+    },
+    {
+      "path": "public/assets/characters/animated/pham_nhan/pham_nhan-sheet-2.atlas.json",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "f3830e26ea9743955a160ccb60a12fedc0f96f019063c13dc62fe1fa821f0e54"
+    },
+    {
+      "path": "public/assets/characters/animated/pham_nhan/pham_nhan-sheet-2.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "b8d66a74ede34d2cdd9bc0bce74640e1da63a15420e511c2c10dd26cc4c3c28e"
+    },
+    {
+      "path": "public/assets/characters/animated/qingshuangzi/avatar.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "99ee9dd2fbfa4105cbb1376beb802a89b6c9ca4fc7082edf46c69414919acd7e"
+    },
+    {
+      "path": "public/assets/characters/animated/qingshuangzi/avatar/qingshuangzi-action-bar-avatar.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "974bc90b66570e33d238353236c18bbfc05485ca8da0067abfd706ad844485d8"
+    },
+    {
+      "path": "public/assets/characters/animated/qingshuangzi/avatar/qingshuangzi-battle-card-avatar.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "f86391eac36ba6f52522534e2021f14868d44d46ac9aa98aba8d615275fb8f1c"
+    },
+    {
+      "path": "public/assets/characters/animated/qingshuangzi/avatar/qingshuangzi-battle-status-avatar.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "e78f68fa93f81a899ac0f97a02eeb214147ee4bf6194268075cdb9d9c669d33b"
+    },
+    {
+      "path": "public/assets/characters/animated/qingshuangzi/avatar/qingshuangzi-roster-avatar.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "2b933917fae3781b9cb0ab2595df4b7d510f2a53b9a6b39ff57ac184eda26cb9"
+    },
+    {
+      "path": "public/assets/characters/animated/qingshuangzi/avatar/qingshuangzi.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "018f1e578ad061768f65a7fad8be0f3a13128b4bb52ba4b1acaa3d246a7fba59"
+    },
+    {
+      "path": "public/assets/characters/animated/qingshuangzi/closeup/qingshuangzi-sky-thunder-prison-closeup.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "a4a6db127ce68456e5f6bd68535d2a5c3847aae8a5fadf96a55826f0714f3d44"
+    },
+    {
+      "path": "public/assets/characters/animated/qingshuangzi/portrait/qingshuangzi-full-body.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "6b74a453d313f5688ee7c90a4d2a9f57494319526a525b26dc5084b3ad8c3b85"
+    },
+    {
+      "path": "public/assets/characters/animated/qingshuangzi/portrait/qingshuangzi-half-body.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "98c3a72f96196fc6f3a5266bc6fb320a85e0a418162e6ab2c3fdc7dea3de7724"
+    },
+    {
+      "path": "public/assets/characters/animated/qingshuangzi/portrait/qingshuangzi-queue.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "a70a26510fdba6bbb8c5010de854ff95b9337cf889642f2b706fe55af90537cf"
+    },
+    {
+      "path": "public/assets/characters/animated/qingshuangzi/qingshuangzi-sheet-1.atlas.json",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "ad4434a11f889b99a6abecc31015c1098d63b3dcbac52cad4f007a170fe33a59"
+    },
+    {
+      "path": "public/assets/characters/animated/qingshuangzi/qingshuangzi-sheet-1.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "a1e5beb1ab782a7fb998718b65a5c8f66e43dd1b96f31fffc0ab17de9722bd91"
+    },
+    {
+      "path": "public/assets/characters/animated/qingshuangzi/radar-chart/qingshuangzi-main-menu-radar.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "c7937efa5148b549d7e31a31c4caf775b8a007e2131a9975bf6782ea50f71e7c"
+    },
+    {
+      "path": "public/assets/characters/animated/qingshuangzi/radar-chart/qingshuangzi-zhenmosi-radar.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "c9074874fe778f457cb396937bb43e6987b1efe86ec1ec90aada6742f3a7cb0e"
+    },
+    {
+      "path": "public/assets/characters/animated/weiqi/avatar.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "2e5840574ebce5cb1df68a2fb3ad55b4832f523ce514d94c9f828c8afccae4d1"
+    },
+    {
+      "path": "public/assets/characters/animated/weiqi/avatar/weiqi-battle-card-avatar.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "e75c5c3bd140652cf99068f6c014f585bb1c8bdd6e5f9794c270d2267c66685b"
+    },
+    {
+      "path": "public/assets/characters/animated/weiqi/avatar/weiqi.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "936557e9e0e8185f1fce58f20186fbc2cce651555a3eb5b36894b9d4cf65fa5c"
+    },
+    {
+      "path": "public/assets/characters/animated/weiqi/portrait/weiqi-full-body.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "dbfdd591aa4a730e9761f99ab08733f5484f445343e55a3037c2e193b01bd745"
+    },
+    {
+      "path": "public/assets/characters/animated/weiqi/portrait/weiqi-half-body.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "37510f6930baeee8f167f6ccaa28dce0989861e739319843beaea13abab47a24"
+    },
+    {
+      "path": "public/assets/characters/animated/weiqi/portrait/weiqi-queue.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "4748e611bddd66639e420dbea7327ee273c5261e6ff052941990e405113a444d"
+    },
+    {
+      "path": "public/assets/characters/animated/weiqi/weiqi-sheet-1.atlas.json",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "7b447eaeebb8b0604e0a704d266f5920218eef44476daa8ad246693f485f9e7a"
+    },
+    {
+      "path": "public/assets/characters/animated/weiqi/weiqi-sheet-1.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "36b4f2d17808afb19786149d532a12f9c9dd4140a3f80e34d19f04a5418dcb56"
+    },
+    {
+      "path": "public/assets/characters/animated/xuandao/avatar.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "5b1d6fa189cc22b00f2044f7c88c6e097f8a89e1b79585cb84c48371c2c6d4c7"
+    },
+    {
+      "path": "public/assets/characters/animated/xuandao/avatar/xuandao-battle-card-avatar.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "63d79564389e942de3d28e589ca6297b7782fa0897405d0cba32cf567a92f1bd"
+    },
+    {
+      "path": "public/assets/characters/animated/xuandao/avatar/xuandao.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "e90cc43a2a126d22e7d811a4af77cea3cf7d2b0595a5ad7923b05294a65dba1f"
+    },
+    {
+      "path": "public/assets/characters/animated/xuandao/portrait/xuandao-full-body.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "4596f342dc31d95cca9a56ca7e6b24d52a1488d9d81bd231d2a9283eb81e968e"
+    },
+    {
+      "path": "public/assets/characters/animated/xuandao/portrait/xuandao-half-body.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "ffb80681257130010d71b0d4eea6ef2f1174c647b37d6e8cacdac61c58a87e55"
+    },
+    {
+      "path": "public/assets/characters/animated/xuandao/portrait/xuandao-queue.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "4060c6279985eff13009a4563d2e15093d0f5cbfe914bbb319cde668b255e5ff"
+    },
+    {
+      "path": "public/assets/characters/animated/xuandao/xuandao-sheet-1.atlas.json",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "929797edd4476cd6ae5e2d743bbde1750a43882dc2912ab04474f4f7d14d2ccb"
+    },
+    {
+      "path": "public/assets/characters/animated/xuandao/xuandao-sheet-1.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "75136a05f84bf854febd63a39dd9c540003979844bce113aa93e2ec7bd6bfa40"
+    },
+    {
+      "path": "public/assets/characters/animated/youzhu/avatar.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "b87d4b8bd185baf40f39f5186d958337abb9e2b09e891e3c95df95855b8d7b37"
+    },
+    {
+      "path": "public/assets/characters/animated/youzhu/avatar/youzhu-action-bar-avatar.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "bf0e973fd9afee2e7eae4bae8496dc09b91c3cbf6f3c6bf05f0376d271ff832e"
+    },
+    {
+      "path": "public/assets/characters/animated/youzhu/avatar/youzhu-battle-card-avatar.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "6679e58c0d40f63d677e0b410c30263c4be6b6f0d74ae9b5e2adc56b3d488ef5"
+    },
+    {
+      "path": "public/assets/characters/animated/youzhu/avatar/youzhu-battle-status-avatar.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "50ec881b98f07db7e42e30b0511edcf490b6ceb35e87210027111c94bbefbca1"
+    },
+    {
+      "path": "public/assets/characters/animated/youzhu/avatar/youzhu-roster-avatar.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "0729fcad0349f1f0f509a87ce8af43289bdb0d2144cfdd0de91ab075aa6196e9"
+    },
+    {
+      "path": "public/assets/characters/animated/youzhu/avatar/youzhu.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "776960dba20ed926b0555cab83ccec52db24cc3326997a954657a2c665e3637f"
+    },
+    {
+      "path": "public/assets/characters/animated/youzhu/closeup/youzhu-greenwood-revival-closeup.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "95cfe7c19749f960d6dc5055bc3b3c3615f43cfd3d8c7cc139d66028f71627d5"
+    },
+    {
+      "path": "public/assets/characters/animated/youzhu/portrait/youzhu-full-body.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "9f3023bc61f0c8113bc132f19911fd569b6424e81e75cae5a5fc55e7bd98efa5"
+    },
+    {
+      "path": "public/assets/characters/animated/youzhu/portrait/youzhu-half-body.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "f1dd9d3d88480a1cfc41c72bdfa47afee43cb8c29efcb888212fd00ee798ec58"
+    },
+    {
+      "path": "public/assets/characters/animated/youzhu/portrait/youzhu-queue.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "2ad6e12037f992eff9c5f25849b901d8f316ccd12e2b6fd56062b9242b0f09d8"
+    },
+    {
+      "path": "public/assets/characters/animated/youzhu/radar-chart/youzhu-main-menu-radar.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "881f05851a0f779f071314acef98e10073672fdfa7646baa40ce89bf61db3400"
+    },
+    {
+      "path": "public/assets/characters/animated/youzhu/radar-chart/youzhu-zhenmosi-radar.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "7f05e3d973b1471d05ace2dd0738187cabab3ed88c6933490e91b860b63cdf47"
+    },
+    {
+      "path": "public/assets/characters/animated/youzhu/youzhu-sheet-1.atlas.json",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "8a01cdae819e4e10c6a3980318405f3a48411fd9c17c3b8b78fb78f54af2cf50"
+    },
+    {
+      "path": "public/assets/characters/animated/youzhu/youzhu-sheet-1.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "6d4a2c482519fa9c81090d7f5877d4a6aac8f3100609fbf771cb5cabf858bc7c"
+    },
+    {
+      "path": "public/assets/characters/animated/youzhu/youzhu-sheet-2.atlas.json",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "2475579a7f045e9c006503428979387965c8c3c753ecc812fe92600aa557695d"
+    },
+    {
+      "path": "public/assets/characters/animated/youzhu/youzhu-sheet-2.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "64c6589f6ddd0ad673dad873e12ea8eed72d48799ee457d64423120ee5a9bc98"
+    },
+    {
+      "path": "public/assets/characters/animated/yuejianxin/avatar.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "dfd1e2dce93c43731fc95c8f17d84b38f9c938a0e5fdd107d0a8e5b62c084c79"
+    },
+    {
+      "path": "public/assets/characters/animated/yuejianxin/avatar/yuejianxin-action-bar-avatar.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "e7ecfcde98f95b7d89d8eaae125ce48cfc8286643daac92872ef09494a4b06c1"
+    },
+    {
+      "path": "public/assets/characters/animated/yuejianxin/avatar/yuejianxin-battle-card-avatar.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "75a6ea258b6aa975d3bff86976ff796501ba58b9839a45140c363b4069f62327"
+    },
+    {
+      "path": "public/assets/characters/animated/yuejianxin/avatar/yuejianxin-battle-status-avatar.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "210304de8464426fefac4d260bf8be1a5f77b8e70933c13158335f861a6b1d76"
+    },
+    {
+      "path": "public/assets/characters/animated/yuejianxin/avatar/yuejianxin-roster-avatar.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "98321e449899f905a65d5c5ee89596f663283a2909c77590f1474dda18dfcae7"
+    },
+    {
+      "path": "public/assets/characters/animated/yuejianxin/avatar/yuejianxin.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "e71f110c1749143293eb724065e87baf1156e51da15e1d7f26cdc300398cc6b1"
+    },
+    {
+      "path": "public/assets/characters/animated/yuejianxin/closeup/yuejianxin.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "3e4fa7f48780f8001d70e47021aefac4376e86a342378f9094e602b96059457d"
+    },
+    {
+      "path": "public/assets/characters/animated/yuejianxin/portrait/yuejianxin-full-body.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "1b09fcbf137795f783d4afa49e6bdba7f1cdd15701901fb91a8df5b4713863f1"
+    },
+    {
+      "path": "public/assets/characters/animated/yuejianxin/portrait/yuejianxin-half-body.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "291f07ee4b54704b3f3bc2b88f9b2d28c84728d479c2226e98c6a3812179fbf6"
+    },
+    {
+      "path": "public/assets/characters/animated/yuejianxin/portrait/yuejianxin-queue.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "f91a2ab85ea7242fbe34f0ea21ffdc067974cf8d248c0c1e2f9835f808c21feb"
+    },
+    {
+      "path": "public/assets/characters/animated/yuejianxin/radar-chart/yuejianxin-main-menu-radar.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "1a2f0b08ec4035665ef35d05058acc6682de74e6f6057f64ffce758fc82ee3a6"
+    },
+    {
+      "path": "public/assets/characters/animated/yuejianxin/radar-chart/yuejianxin-zhenmosi-radar.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "8bef2f6b9eef201d75ae80d19eccc11024fbeec907a97162bbd826fccdbdc413"
+    },
+    {
+      "path": "public/assets/characters/animated/yuejianxin/yuejianxin-sheet-1.atlas.json",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "5112d545c3fad2a768221d63585600b8eef5337360c7b058f84a655442834ea9"
+    },
+    {
+      "path": "public/assets/characters/animated/yuejianxin/yuejianxin-sheet-1.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "a91544a9a9c7c1a7f7bfcb86f287bfd51695baf6e2b5d24ab90a19bc2c272a15"
+    },
+    {
+      "path": "public/assets/characters/animated/yuejianxin/yuejianxin-sheet-2.atlas.json",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "3d6740649e21c5574e5f885c4c4e2fc4cc2abac51940d2a1a954d2fff6ce7738"
+    },
+    {
+      "path": "public/assets/characters/animated/yuejianxin/yuejianxin-sheet-2.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "20eb20ed4841521327b43cc6ae76edd7d4922c0eef9baa7c834b8596d42e28e2"
+    },
+    {
+      "path": "public/assets/characters/animated/ziyuan/avatar.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "fe05ea4f354fb9ecb227d6a4b2905401783562a8f5c768e0a8b91424093b1c06"
+    },
+    {
+      "path": "public/assets/characters/animated/ziyuan/avatar/ziyuan-battle-card-avatar.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "33aac3812ec96bfb935cc4f031dbce25d6228cbb75d316451e708188f91dd09c"
+    },
+    {
+      "path": "public/assets/characters/animated/ziyuan/avatar/ziyuan.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "bdeeddff3f413ea64eaf06c84570672b2bc05b5c8b9d742f3e477cd4f1cca6f6"
+    },
+    {
+      "path": "public/assets/characters/animated/ziyuan/portrait/ziyuan-full-body.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "e6d29adf8b0ce8fe5936455f7c0f75627d6aa187f57f07ab41ea5fa336557171"
+    },
+    {
+      "path": "public/assets/characters/animated/ziyuan/portrait/ziyuan-half-body.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "43b3db7f0b22ceca0b0c15561a4fab69e17868b7e85d1a75cc8ef3665a01c380"
+    },
+    {
+      "path": "public/assets/characters/animated/ziyuan/portrait/ziyuan-queue.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "39e724b9b8414e90d85b1fab0582c5a868a979e3e8a0af1e8603eb39a9bf3ecd"
+    },
+    {
+      "path": "public/assets/characters/animated/ziyuan/ziyuan-sheet-1.atlas.json",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "f46d8d2f75deaead2842a4e938da7e7e02e390e8ca4d14f5fc4ad23cd735a95d"
+    },
+    {
+      "path": "public/assets/characters/animated/ziyuan/ziyuan-sheet-1.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "648db07ed0b15afc1114ecd37e78d1380f630843a1bf38436f4e82570b9c05b8"
+    },
+    {
+      "path": "public/assets/characters/animated/zuofeng/avatar.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "4c525c4076b6aa69ebdb61bc182532bf92b9bf77c66868bb0196bf965dd2cd79"
+    },
+    {
+      "path": "public/assets/characters/animated/zuofeng/avatar/zuofeng-action-bar-avatar.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "cc7b99501e09259750060cde845f37ed9503401bef76c41e8c761297dc3f1dce"
+    },
+    {
+      "path": "public/assets/characters/animated/zuofeng/avatar/zuofeng-battle-card-avatar.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "20f505d2df9d80ae18a972b8c15bd30387e0589c25fc8fa525838caa0dd58c02"
+    },
+    {
+      "path": "public/assets/characters/animated/zuofeng/avatar/zuofeng-battle-status-avatar.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "fc943a90803b24bacf9e0a9a0ef29851d68c3ae2b408471a0e0a8ea575003ef0"
+    },
+    {
+      "path": "public/assets/characters/animated/zuofeng/avatar/zuofeng-roster-avatar.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "21b0488c258e244cdeb7482c4f945b10a47633c1d9f2d5c76129252e5adb0cfe"
+    },
+    {
+      "path": "public/assets/characters/animated/zuofeng/avatar/zuofeng.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "5bd9e207a1b6bb4f644010391eedca6177eed29a81f3a8b24e45e90a79e9a26b"
+    },
+    {
+      "path": "public/assets/characters/animated/zuofeng/closeup/zuofeng-sky-sword-closeup.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "901481b3963ab77ba4d0a2bab4554217881ad8cdc36d11212534de18b3a9c51f"
+    },
+    {
+      "path": "public/assets/characters/animated/zuofeng/portrait/zuofeng-full-body.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "d10ff4fdef2bf5d0824de90dd8eff43bf26e406086ca57d178f7b4057be45e25"
+    },
+    {
+      "path": "public/assets/characters/animated/zuofeng/portrait/zuofeng-half-body.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "ad057a1c9506996dc5e9a0a59ce84e4cad9b32a4a4cbc48210bb887b6ca74107"
+    },
+    {
+      "path": "public/assets/characters/animated/zuofeng/portrait/zuofeng-queue.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "30e84fd3f86ff4e0f85161e5d668d0a4c3c80777f6fb97510e2ec80d5936f0dc"
+    },
+    {
+      "path": "public/assets/characters/animated/zuofeng/radar-chart/zuofeng-main-menu-radar.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "70916419e0e238326a120ccf727da773a1490400b352ff6bbfd8efc23053c77a"
+    },
+    {
+      "path": "public/assets/characters/animated/zuofeng/radar-chart/zuofeng-zhenmosi-radar.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "5cbfcaaba79cbd0cafcddb98cfc655b0968df833ce09882e8512b047243d7797"
+    },
+    {
+      "path": "public/assets/characters/animated/zuofeng/zuofeng-sheet-1.atlas.json",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "386e2588b86db7f0c629781f5ac9435656f29f72a12d62f0a9fffe160fa44277"
+    },
+    {
+      "path": "public/assets/characters/animated/zuofeng/zuofeng-sheet-1.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "5e1a5242f845dc798c8d7fef8aeb5f49e6c8428ae24b01a96d1e87458c0c21c2"
+    },
+    {
+      "path": "public/assets/characters/animated/zuofeng/zuofeng-sheet-2.atlas.json",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "74980401a615ab45b3daeb2de351a61059600004ed9cce7dd5e6184298ddd0f1"
+    },
+    {
+      "path": "public/assets/characters/animated/zuofeng/zuofeng-sheet-2.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "54f643f8608e1d0c99fb88bddb3cae79786e83e1398efe42ffc867748bab9437"
+    },
+    {
+      "path": "public/assets/characters/animated/zuofeng/zuofeng-sheet-3.atlas.json",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "47498e8dfed60199f1ed33aa0d6d5970971fd85a229589885efdde59b543d24a"
+    },
+    {
+      "path": "public/assets/characters/animated/zuofeng/zuofeng-sheet-3.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "c3e5c24e009fdb6c789ca4bdb87cda0e5dd53e81ce248ef0f74607283431c738"
+    },
+    {
       "path": "public/assets/characters/placeholder/combat-anim-32frame.json",
       "kind": "file",
       "mode": 33188,
@@ -5757,64 +7197,16 @@
       "hash": "1669d22bde9acda77daf3548aa2830c4527dd3f922e37dd8c2862f62d4995eb5"
     },
     {
-      "path": "public/assets/characters/player/kiem-tu/player-kiem-tu-equipment-set-04-no-guan-concept-v2.png",
+      "path": "public/assets/characters/player/kiem-tu/player-kiem-tu-cultivate-v1.png",
       "kind": "file",
       "mode": 33188,
-      "hash": "fe1f55c71c2e100c461b4ac86bba17b8b6d8f65dc68b59d3b72af18968e467a6"
+      "hash": "eedd60d3f73e475936138db9fc23d423d24a99c5acdf5080118790283baa88ca"
     },
     {
-      "path": "public/assets/characters/player/kiem-tu/player-kiem-tu-one-sword-black-white-concept-v2.png",
+      "path": "public/assets/characters/player/kiem-tu/player-kiem-tu-v1.png",
       "kind": "file",
       "mode": 33188,
-      "hash": "09516aee1da590aac37826ba5d6ec1fc6821cc07517e37cf77d1a951d663d3d2"
-    },
-    {
-      "path": "public/assets/characters/player/kiem-tu/player-kiem-tu-one-sword-black-white-concept-v3.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "3c90cf67467658eaaa5bafc7bc5bf69d56d3e121b5e01fa71b634c3368280975"
-    },
-    {
-      "path": "public/assets/characters/player/kiem-tu/player-kiem-tu-seven-swords-concept-v5.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "8c3ca1af2b5c9911b54f834c2ac1cf1977192d7ce37c9fe42e618235d219d7ca"
-    },
-    {
-      "path": "public/assets/characters/player/mortal/idle/player-mortal-idle-v1-frame-00.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "694beb93c3824745ec83a94fad4ba7fef0b44bab551a0ee12a391abf807d7e25"
-    },
-    {
-      "path": "public/assets/characters/player/mortal/idle/player-mortal-idle-v1-frame-01.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "41dd387b18d5259397300395acdd61390e5ee2a671e2a3b2286046f3dd19f5fb"
-    },
-    {
-      "path": "public/assets/characters/player/mortal/idle/player-mortal-idle-v1-frame-02.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "3e79db83d5a2f89b1de5bfe09f21f90d981a2a0698a97291f99f17588e2d7ab3"
-    },
-    {
-      "path": "public/assets/characters/player/mortal/idle/player-mortal-idle-v1-frame-03.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "c3ee1e77bf85d214fb86104f2a3795991f41d57b4d2ba5869ff89d03d0b742f0"
-    },
-    {
-      "path": "public/assets/characters/player/mortal/idle/player-mortal-idle-v1-frame-04.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "cf0d821def29481fdd932386a484669759b0a2412b4fe50f13847e755bdb6e13"
-    },
-    {
-      "path": "public/assets/characters/player/mortal/idle/player-mortal-idle-v1.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "b9399a3833abbb3cabe24c7e7b4d351677d04a69e47a5a7c58554a3af6ab499e"
+      "hash": "c4ff4eec5a9b5a4f5343d704487a32e0107059cb19b0b94a3248589121405aa2"
     },
     {
       "path": "public/assets/characters/player/mortal/player-mortal-combat-atlas-v1.json",
@@ -5847,10 +7239,22 @@
       "hash": "9b7660f4b77fc0de4e8b9806fc38fc3d232f2328758bbedba6972c6aace2f7b7"
     },
     {
+      "path": "public/assets/characters/player/mortal/player-mortal-cultivate-v2.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "f9867795227c9eb60c9349f5e44b645fa29bc9607e71b09ebfb5f0dda58bef3c"
+    },
+    {
       "path": "public/assets/characters/player/mortal/player-mortal-ink-sword-concept-v2.png",
       "kind": "file",
       "mode": 33188,
       "hash": "899c4199256b501133635c589e4f5b6c45896cbe0362ef733de2f2450562612d"
+    },
+    {
+      "path": "public/assets/characters/player/mortal/player-mortal-pham-nhan-v1.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "438d2fd16d2796acc7eb64c2278162586246041cb60dc077fc347ebbe67c6faf"
     },
     {
       "path": "public/assets/characters/player/mortal/player-mortal-v1.png",
@@ -5859,88 +7263,28 @@
       "hash": "ae70318ba2d17e0911b60dd62ad9fe34e35630597b6610f2736e2df7bda31526"
     },
     {
-      "path": "public/assets/characters/player/mortal/poses/player-mortal-sword-ready-v1.png",
+      "path": "public/assets/characters/player/phap-tu/player-phap-tu-an-cultivate-van-dao-v1.png",
       "kind": "file",
       "mode": 33188,
-      "hash": "10afd016d9c3fee03fd742d8fe5e5c3067d2757df40e8afdc8f805905f6d86a3"
+      "hash": "b5e21cef17e54f0a4d885832adb3bbde9521890d9e9b4737e0b96765424fe8c0"
     },
     {
-      "path": "public/assets/characters/player/mortal/poses/player-mortal-unarmed-ready-v1.png",
+      "path": "public/assets/characters/player/phap-tu/player-phap-tu-cultivate-ngu-hanh-v1.png",
       "kind": "file",
       "mode": 33188,
-      "hash": "dd0ac0c6b5f3d691e07fd99b228ee5e7bf0e41a0327ed0f168b11d741cf14b78"
+      "hash": "5f76a004b03b4cfb4301ad17d0bca836ddf1f69a9e64359f33410d0b46e64890"
+    },
+    {
+      "path": "public/assets/characters/player/phap-tu/player-phap-tu-ngu-hanh-v1.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "493896be362c24e797599596e4704376919c97cfeaeef4bd6b206084421cf8ac"
     },
     {
       "path": "public/assets/characters/player/phap-tu/player-phap-tu-v1.png",
       "kind": "file",
       "mode": 33188,
       "hash": "038622343d65bf124f3190fed636864385f2f5c27e50310b2bf5b656f7a2933f"
-    },
-    {
-      "path": "public/assets/characters/spell-cultivator/spell-cultivator.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "4b5d15f0a198416abee42d4427ffb7f63369a5549f96ae690784ba42411a0df5"
-    },
-    {
-      "path": "public/assets/characters/sword-cultivator/sword-cultivator.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "eb5dfb2b728223402a0b204137e336986a4e758ae7b8448e1513462acb918c12"
-    },
-    {
-      "path": "public/assets/combat/thanh-van/combat-bg-thanh-van-v1.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "3cccbba4d708ef7cd8defe67ecaea667aa9579e245a95532485d9bd86bdc6178"
-    },
-    {
-      "path": "public/assets/combat/thanh-van/combat-bg-thanh-van-v2.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "25841aa184bc904ad0d23fea8e9e0eae78a38749a182240748d95e13128afa23"
-    },
-    {
-      "path": "public/assets/combat/thanh-van/combat-foreground-mist-thanh-van-v1.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "5ce975a3ce82468a46420f70046cd3da0244db7f861ca74f90065f16f7410823"
-    },
-    {
-      "path": "public/assets/combat/thanh-van/enemy-seat-right-thanh-van-v1.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "8c073c53e54bdecd44a698737f8845f1418fd9b5d142c23f417d507127d05749"
-    },
-    {
-      "path": "public/assets/combat/thanh-van/go-board-frame-thanh-van-v1.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "371c9498980c6af168661ec7b1d1a032cd735d112c742826822c8d6813da6529"
-    },
-    {
-      "path": "public/assets/combat/thanh-van/go-board-frame-thanh-van-v2.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "ea12aaedf429d25efece1042e1abce1ecf295e05240ad37ead2bc0fe2e4b58c7"
-    },
-    {
-      "path": "public/assets/combat/thanh-van/go-board-surface-thanh-van-v1.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "6040dcd74a8272b6f8d06aff1453779f60da86a268c7f43b1297f1120ee428dc"
-    },
-    {
-      "path": "public/assets/combat/thanh-van/go-board-surface-thanh-van-v2.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "404260b9c7bf9cd0d8600ff57631e4860ac9c39bb6530c773666d14ff5c0cbde"
-    },
-    {
-      "path": "public/assets/combat/thanh-van/player-seat-left-thanh-van-v1.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "fc41cf4322cc41a08d6f76f520814e09d32f98a69af0085d01090c735c9ec068"
     },
     {
       "path": "public/assets/cultivate.json",
@@ -5955,22 +7299,442 @@
       "hash": "b2cdf5c53855693b709b5b2d32ddfbcaaca7c8e90f1a5fcd7e7dc96b5bf2c4fd"
     },
     {
-      "path": "public/assets/enemies/mortal/mortal-feral-dog-v1.png",
+      "path": "public/assets/enemies/animated/blood-locust-elder/avatar.png",
       "kind": "file",
       "mode": 33188,
-      "hash": "f82aef2d517b0a093d7068fcb9bf55ed737ca9e5139f4c7790b1a8689ce329af"
+      "hash": "a8180e279a3e5d2f39631d089a803026e513300b5c7b62d730f438307bd52863"
     },
     {
-      "path": "public/assets/enemies/mortal/mortal-ferocious-feral-dog-v1.png",
+      "path": "public/assets/enemies/animated/blood-locust-elder/blood-locust-elder-sheet-1.atlas.json",
       "kind": "file",
       "mode": 33188,
-      "hash": "231cae2bd524a21cb9dd7551282216a88de679c68a868dbd87c1ffa29f5fc799"
+      "hash": "e00857c964330b4710fdf04c334fcfae927e51b4be1041195844ea9d5ac6f039"
     },
     {
-      "path": "public/assets/enemies/mortal/mortal-ferocious-giant-crocodile-v1.png",
+      "path": "public/assets/enemies/animated/blood-locust-elder/blood-locust-elder-sheet-1.png",
       "kind": "file",
       "mode": 33188,
-      "hash": "fdf04faaea9ed5ec10fc1af4a4d7805b6084448e177ab5fb592d868a2b3a0c04"
+      "hash": "caa8d4990151267bd9ec8ebaa69bf389a3e14ba80914b683ec513c27cf579345"
+    },
+    {
+      "path": "public/assets/enemies/animated/bloodarm-ox-demon-ferocious/avatar.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "32adf65bd1e01ed888adeab7b93520ad64fa8647323b04d432e9f46b6a043547"
+    },
+    {
+      "path": "public/assets/enemies/animated/bloodarm-ox-demon-ferocious/bloodarm-ox-demon-ferocious-sheet-1.atlas.json",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "a274c515e76851e4291050be2ab5faaf2dd1a5077e41fb452ceb8d266c748136"
+    },
+    {
+      "path": "public/assets/enemies/animated/bloodarm-ox-demon-ferocious/bloodarm-ox-demon-ferocious-sheet-1.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "aad975e1cd2c606c1dddbec14a21abe3b7a70da33eef38aac3303a3ab00f527b"
+    },
+    {
+      "path": "public/assets/enemies/animated/bloodarm-ox-demon/avatar.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "32adf65bd1e01ed888adeab7b93520ad64fa8647323b04d432e9f46b6a043547"
+    },
+    {
+      "path": "public/assets/enemies/animated/bloodarm-ox-demon/bloodarm-ox-demon-sheet-1.atlas.json",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "373d3da37f6e85c443cb90f6c6e0b39971d27ef751b1fe7bc044d458b0b6697f"
+    },
+    {
+      "path": "public/assets/enemies/animated/bloodarm-ox-demon/bloodarm-ox-demon-sheet-1.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "7f7da0a825e68424fa059dd7e090aa028bbc78755caa880d09ead3dfece6f599"
+    },
+    {
+      "path": "public/assets/enemies/animated/bloodflower-tree-fiend-mudboss-ferocious/avatar.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "98ee1c0df59e8c5f0fc134e7303add830a123ba2f4a41740a5331fdd34e5ae9a"
+    },
+    {
+      "path": "public/assets/enemies/animated/bloodflower-tree-fiend-mudboss-ferocious/bloodflower-tree-fiend-mudboss-ferocious-sheet-1.atlas.json",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "48b7ec26c3edbd8d45dac504cb76885898abd34cbecf319d6d8e73d844cc7367"
+    },
+    {
+      "path": "public/assets/enemies/animated/bloodflower-tree-fiend-mudboss-ferocious/bloodflower-tree-fiend-mudboss-ferocious-sheet-1.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "960fbfc7587e72e98b9b7b7082ef3d2019d33bf36f10d991efc1027034fc831f"
+    },
+    {
+      "path": "public/assets/enemies/animated/bloodflower-tree-fiend-mudboss/avatar.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "98ee1c0df59e8c5f0fc134e7303add830a123ba2f4a41740a5331fdd34e5ae9a"
+    },
+    {
+      "path": "public/assets/enemies/animated/bloodflower-tree-fiend-mudboss/bloodflower-tree-fiend-mudboss-sheet-1.atlas.json",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "0755c95f5265e5d3294f7e66768efcca71f3f3d89b9bbcb7b6bc9dd4933dc6a9"
+    },
+    {
+      "path": "public/assets/enemies/animated/bloodflower-tree-fiend-mudboss/bloodflower-tree-fiend-mudboss-sheet-1.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "5f947350d1a04a0627967e1146375cbeaed69113a7976a0110fda9d26f68ac30"
+    },
+    {
+      "path": "public/assets/enemies/animated/drybranch-treant-ferocious/avatar.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "eff54e6286000b1494aede5fc129f4ef8682a76d0bf99200af3ea33f0ab737b6"
+    },
+    {
+      "path": "public/assets/enemies/animated/drybranch-treant-ferocious/drybranch-treant-ferocious-sheet-1.atlas.json",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "e06d91332f3fb5793c581c6438dec1f8ac64ff91d04bf5f450c562376a6b2cde"
+    },
+    {
+      "path": "public/assets/enemies/animated/drybranch-treant-ferocious/drybranch-treant-ferocious-sheet-1.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "273a7d2f65f09e98452f4f0540ee3282763765eb33126c87f9e1295c6559f287"
+    },
+    {
+      "path": "public/assets/enemies/animated/drybranch-treant/avatar.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "eff54e6286000b1494aede5fc129f4ef8682a76d0bf99200af3ea33f0ab737b6"
+    },
+    {
+      "path": "public/assets/enemies/animated/drybranch-treant/drybranch-treant-sheet-1.atlas.json",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "b650f6059705e019d8aef9b6ce9b70a05d5cd76307afb819e7deb4db15f1a4e4"
+    },
+    {
+      "path": "public/assets/enemies/animated/drybranch-treant/drybranch-treant-sheet-1.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "93b0f0faca6ee4e51a438770bbfceb4654dd9d0b09f7424cffcd41a1746d4fc3"
+    },
+    {
+      "path": "public/assets/enemies/animated/graymane-wolf-ferocious/avatar.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "0a47e3d5bc29b5900fdc9311234fb9fa7b4f9ede575f12ef84a6fb021506949c"
+    },
+    {
+      "path": "public/assets/enemies/animated/graymane-wolf-ferocious/graymane-wolf-ferocious-sheet-1.atlas.json",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "052bdb175c5145fd93249989c6493adb19873715e80977ec820df49109025eff"
+    },
+    {
+      "path": "public/assets/enemies/animated/graymane-wolf-ferocious/graymane-wolf-ferocious-sheet-1.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "0b1151aaa68e20f1e264515fa32a344571a2d6b26482a24f82023bc27e7bf821"
+    },
+    {
+      "path": "public/assets/enemies/animated/graymane-wolf/avatar.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "0a47e3d5bc29b5900fdc9311234fb9fa7b4f9ede575f12ef84a6fb021506949c"
+    },
+    {
+      "path": "public/assets/enemies/animated/graymane-wolf/graymane-wolf-sheet-1.atlas.json",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "e1f23826d470aa564da08203d966258b2c4930dcbd22e4be0e9e1e268e0b811f"
+    },
+    {
+      "path": "public/assets/enemies/animated/graymane-wolf/graymane-wolf-sheet-1.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "0aefaf7d571b66fb776fccbdadf0dac5225a4c57ef5e9d1c1772c68ebcc49383"
+    },
+    {
+      "path": "public/assets/enemies/animated/manifest.json",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "563279debca497c4c0a211119bbb2f39b041798e7b8ca2c19aae5255cafe70e1"
+    },
+    {
+      "path": "public/assets/enemies/animated/mudbelly-green-toad-ferocious/avatar.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "bbf40cf7525c3179ed0a6a0b37f73b563312eaa7d30814befdb607817daae6e4"
+    },
+    {
+      "path": "public/assets/enemies/animated/mudbelly-green-toad-ferocious/mudbelly-green-toad-ferocious-sheet-1.atlas.json",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "6434c9314277cba4640a7aa9f410e4da232163a1da82406e228000222caac972"
+    },
+    {
+      "path": "public/assets/enemies/animated/mudbelly-green-toad-ferocious/mudbelly-green-toad-ferocious-sheet-1.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "45ada0d3733b88220e0387a8bfb438dbf0913039bb09674fb7378c60fb9906e5"
+    },
+    {
+      "path": "public/assets/enemies/animated/mudbelly-green-toad/avatar.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "bbf40cf7525c3179ed0a6a0b37f73b563312eaa7d30814befdb607817daae6e4"
+    },
+    {
+      "path": "public/assets/enemies/animated/mudbelly-green-toad/mudbelly-green-toad-sheet-1.atlas.json",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "58c2e839939326ff54f910c052036e82bc5eb3fe36a117a43c2418423c9dc855"
+    },
+    {
+      "path": "public/assets/enemies/animated/mudbelly-green-toad/mudbelly-green-toad-sheet-1.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "d150c9389e08c40a9c2505817646e5e7adcfd09e05e8bd61a41aa290d3a94742"
+    },
+    {
+      "path": "public/assets/enemies/animated/spore-flower-spirit-ferocious/avatar.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "4ebda6d5cb4399d952297854421aa6986045e7c06b851af168074c436a436465"
+    },
+    {
+      "path": "public/assets/enemies/animated/spore-flower-spirit-ferocious/spore-flower-spirit-ferocious-sheet-1.atlas.json",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "cc62c65b7a5c13f2f1ccfa28618be1391486cf3f8893897714213e431b873c1d"
+    },
+    {
+      "path": "public/assets/enemies/animated/spore-flower-spirit-ferocious/spore-flower-spirit-ferocious-sheet-1.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "5bc66f934a04b9ab3c04905f84b68349238b31634315a722b5a2276de61672b6"
+    },
+    {
+      "path": "public/assets/enemies/animated/spore-flower-spirit/avatar.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "4ebda6d5cb4399d952297854421aa6986045e7c06b851af168074c436a436465"
+    },
+    {
+      "path": "public/assets/enemies/animated/spore-flower-spirit/spore-flower-spirit-sheet-1.atlas.json",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "d8abfc3bcabad38cd0cb73e284a1b4915fcadf2fc1e8013f0786a5211b48b231"
+    },
+    {
+      "path": "public/assets/enemies/animated/spore-flower-spirit/spore-flower-spirit-sheet-1.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "18f029db611b60460111f632a10816e79fab41c5bce6bdcbf19adb7e5a8f254c"
+    },
+    {
+      "path": "public/assets/enemies/animated/streamgrudge-nymph/avatar.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "bd5ce6465db74220a09d082d83896253f699700d5eb474122f50a808646d0b4c"
+    },
+    {
+      "path": "public/assets/enemies/animated/streamgrudge-nymph/streamgrudge-nymph-sheet-1.atlas.json",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "11be05c6dec02c0952e440f6f42ef88cc0db8df0cb1d671bdb3df238c54ce39d"
+    },
+    {
+      "path": "public/assets/enemies/animated/streamgrudge-nymph/streamgrudge-nymph-sheet-1.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "9b2bc0cc7e23f59d853ad5365d69b289109d8bc6c5c40b565ed937eb65975f12"
+    },
+    {
+      "path": "public/assets/enemies/animated/streamscale-forkman-floodserpent-ferocious/avatar.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "225682673a18b0e47e8c4262d9e088ee64b583a8a6643658637e11023d3384f1"
+    },
+    {
+      "path": "public/assets/enemies/animated/streamscale-forkman-floodserpent-ferocious/streamscale-forkman-floodserpent-ferocious-sheet-1.atlas.json",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "cb8068c868e7350bff7436257ddb672cfa90e29ba4df89d4955fb0f45ce240b3"
+    },
+    {
+      "path": "public/assets/enemies/animated/streamscale-forkman-floodserpent-ferocious/streamscale-forkman-floodserpent-ferocious-sheet-1.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "ee49b5ccf93786a04d1d1cb3af233fd5b60284791e6492cdcf6c875c0e27e157"
+    },
+    {
+      "path": "public/assets/enemies/animated/streamscale-forkman-floodserpent/avatar.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "225682673a18b0e47e8c4262d9e088ee64b583a8a6643658637e11023d3384f1"
+    },
+    {
+      "path": "public/assets/enemies/animated/streamscale-forkman-floodserpent/streamscale-forkman-floodserpent-sheet-1.atlas.json",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "c995912a121a8099d2ec36e06126d1ed5fe96cc041b225ff3c962bda96d8f953"
+    },
+    {
+      "path": "public/assets/enemies/animated/streamscale-forkman-floodserpent/streamscale-forkman-floodserpent-sheet-1.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "b8b90f1692da2484dafdb8d47ffdac16f95bcb38eb2fe2f01fe4ad3cc612c0da"
+    },
+    {
+      "path": "public/assets/enemies/animated/tusked-mountain-boar-ferocious/avatar.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "29ef92284ff42e56339c318d26363e0edd9ad80cc796922d709f614a5f7c9ad5"
+    },
+    {
+      "path": "public/assets/enemies/animated/tusked-mountain-boar-ferocious/tusked-mountain-boar-ferocious-sheet-1.atlas.json",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "f54fe2b17d52c7e9a35f619760f46055cfb8b313cba776508856f0d952e70188"
+    },
+    {
+      "path": "public/assets/enemies/animated/tusked-mountain-boar-ferocious/tusked-mountain-boar-ferocious-sheet-1.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "5b5ba88b4390dbb93b1baeb3453b01745252c53372811f059205d71741f8229e"
+    },
+    {
+      "path": "public/assets/enemies/animated/tusked-mountain-boar/avatar.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "29ef92284ff42e56339c318d26363e0edd9ad80cc796922d709f614a5f7c9ad5"
+    },
+    {
+      "path": "public/assets/enemies/animated/tusked-mountain-boar/tusked-mountain-boar-sheet-1.atlas.json",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "d7483ae0e0f115add0007eb94bd3fb92ed7770fde432ed29ab85c476a18433d2"
+    },
+    {
+      "path": "public/assets/enemies/animated/tusked-mountain-boar/tusked-mountain-boar-sheet-1.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "93124053b296a699d92d89b9de24d231c8eca5f7c4fbf44232de46d093b81445"
+    },
+    {
+      "path": "public/assets/enemies/animated/whiteshell-venom-beetle-ferocious/avatar.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "bbf40cf7525c3179ed0a6a0b37f73b563312eaa7d30814befdb607817daae6e4"
+    },
+    {
+      "path": "public/assets/enemies/animated/whiteshell-venom-beetle-ferocious/whiteshell-venom-beetle-ferocious-sheet-1.atlas.json",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "ed599acc2099c0627cc3c2afdde73cfc4d5cc5d290606423cbbf4c91ab7a079b"
+    },
+    {
+      "path": "public/assets/enemies/animated/whiteshell-venom-beetle-ferocious/whiteshell-venom-beetle-ferocious-sheet-1.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "c2647464399ce8a53e988034b2ca1af0a85e1b97851a4d30798ca8405ce485f5"
+    },
+    {
+      "path": "public/assets/enemies/animated/whiteshell-venom-beetle/avatar.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "bbf40cf7525c3179ed0a6a0b37f73b563312eaa7d30814befdb607817daae6e4"
+    },
+    {
+      "path": "public/assets/enemies/animated/whiteshell-venom-beetle/whiteshell-venom-beetle-sheet-1.atlas.json",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "f1340892e4ffcbfddeb8aef6285e98c03e7b93853845a42b60a014bd5ee46274"
+    },
+    {
+      "path": "public/assets/enemies/animated/whiteshell-venom-beetle/whiteshell-venom-beetle-sheet-1.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "871ad83d8e39db6d4a57c63e6f044818201c378a7f7f265f7558e0362708dd68"
+    },
+    {
+      "path": "public/assets/enemies/animated/witherfir-vineman/avatar.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "f72d89db90094f33baedc6b2e3d3a521073f99734abf657cd6aa383a472199e3"
+    },
+    {
+      "path": "public/assets/enemies/animated/witherfir-vineman/witherfir-vineman-sheet-1.atlas.json",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "86f95bc4cf072ba7510377549e5327de8533ebfd6235cb7e816cf8f9ffda85bd"
+    },
+    {
+      "path": "public/assets/enemies/animated/witherfir-vineman/witherfir-vineman-sheet-1.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "710adee86ea89d674d54d70e5ed2acdfc6400bd4790700ec931bbf62c718b1ec"
+    },
+    {
+      "path": "public/assets/enemies/animated/wugu-demon-king/avatar.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "71d6f11621b4bf5330a106b964f4f55c942ab26efa2774dc99aa6347f4b2bbf6"
+    },
+    {
+      "path": "public/assets/enemies/animated/wugu-demon-king/wugu-demon-king-sheet-1.atlas.json",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "8970532d5da5d06f06aa2ff7076b5b05f5641d45a0416330f80ca6a20d3ea005"
+    },
+    {
+      "path": "public/assets/enemies/animated/wugu-demon-king/wugu-demon-king-sheet-1.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "83d397e651f1cc7435dcb6d2aef272c9db259395801078453c80bd683ade4f7e"
+    },
+    {
+      "path": "public/assets/enemies/animated/wugu-demon-king/wugu-demon-king-sheet-2.atlas.json",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "7330e25f454d3c8461b2db9f8344163ac2880bf43079bfb02d1481627ba389be"
+    },
+    {
+      "path": "public/assets/enemies/animated/wugu-demon-king/wugu-demon-king-sheet-2.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "bc6056ecacfc26036687fbb5ee1de7a1630bac35f0f06bb42dda56c8368a0af8"
+    },
+    {
+      "path": "public/assets/enemies/animated/wugu-demon-king/wugu-demon-king-sheet-3.atlas.json",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "cac167a8bdb993a60483cd2e46f585886720450ffd39deb5ec56de21039ce25e"
+    },
+    {
+      "path": "public/assets/enemies/animated/wugu-demon-king/wugu-demon-king-sheet-3.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "6961723007c048c394824d97d401926840eb12f330840f448aba643893bc6afe"
+    },
+    {
+      "path": "public/assets/enemies/animated/wugu-demon-king/wugu-demon-king-sheet-4.atlas.json",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "8daa31423153a17ff98b906b378bb8b58ea8216862927499086783bd364d8aad"
+    },
+    {
+      "path": "public/assets/enemies/animated/wugu-demon-king/wugu-demon-king-sheet-4.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "16559dc4a1f553f7ae909f7de9960b44e3410d05a965f87b41fe72630d4e6471"
     },
     {
       "path": "public/assets/enemies/mortal/mortal-ferocious-iron-boar-v1.png",
@@ -5983,12 +7747,6 @@
       "kind": "file",
       "mode": 33188,
       "hash": "aa8bcd7508eeef68fe342432f69bd2678dd2834bd07af5caff310a4e54fc74b5"
-    },
-    {
-      "path": "public/assets/enemies/mortal/mortal-ferocious-mud-ox-v1.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "71d35a2fc258b2cdd7de105e8cd82611b4f02aca83b8bdf00e113f96199874fc"
     },
     {
       "path": "public/assets/enemies/mortal/mortal-ferocious-savage-tiger-v1.png",
@@ -6015,18 +7773,6 @@
       "hash": "32a1b2c1f56a7b05a46a8f982e51468fcd2f23a9622a889b50f441dcee6b1c1d"
     },
     {
-      "path": "public/assets/enemies/mortal/mortal-ferocious-wild-boar-v1.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "c508f30699e91be69ce7039ec3d23606b7ede2824a3a03e5530a79e96a71a620"
-    },
-    {
-      "path": "public/assets/enemies/mortal/mortal-giant-crocodile-v1.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "8ac897ab559216d429b41f960360dbdd18120f2cdf0040e265703eb682b21d5c"
-    },
-    {
       "path": "public/assets/enemies/mortal/mortal-iron-boar-v1.png",
       "kind": "file",
       "mode": 33188,
@@ -6037,12 +7783,6 @@
       "kind": "file",
       "mode": 33188,
       "hash": "f215e70e5e6b2a879c80b0bbb0ea78bcb562d5f3888590111e0c5be63f523d0d"
-    },
-    {
-      "path": "public/assets/enemies/mortal/mortal-mud-ox-v1.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "7849dde408e1063c6fafb533e145169dbdbfc8faeb3adfb2f8b6c34f95a2fa12"
     },
     {
       "path": "public/assets/enemies/mortal/mortal-savage-tiger-v1.png",
@@ -6067,12 +7807,6 @@
       "kind": "file",
       "mode": 33188,
       "hash": "eb261de2ae6c0755bff16341c73cdf0897924e4319acfc6ecd4f50392b58699a"
-    },
-    {
-      "path": "public/assets/enemies/mortal/mortal-wild-boar-v1.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "d662f046d602935c7eafcec60cb6bbe98ce77fb7b71c8a4b3118612a3fbb5c98"
     },
     {
       "path": "public/assets/equipment-slots/armor.png",
@@ -7053,18 +8787,6 @@
       "hash": "e09dda01e860fa928ecb43dc9fb8ab29c58078184372addea6ddfc3939d3be6d"
     },
     {
-      "path": "public/assets/ui/skill/ink-go-board-19x19-v1.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "b9f67451ebeb8df196917924df9fe89bb3d8c266cdcaaa7522b5caeb46af86b8"
-    },
-    {
-      "path": "public/assets/ui/Slot/alchemy-room.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "da0f0fdffa639d844d6bb74bc6d99fa1319ba727e52136e794f1df0c0e6975fe"
-    },
-    {
       "path": "public/assets/ui/Slot/bag-slot-hover.png",
       "kind": "file",
       "mode": 33188,
@@ -7111,12 +8833,6 @@
       "kind": "file",
       "mode": 33188,
       "hash": "d316f9821fd475e238a64fabbf36984cf0a4d8554212ecb15a9b22a6d0ae71d1"
-    },
-    {
-      "path": "public/assets/vfx/kiem-tu/yin-yang-dragon-sword-vfx-concept-v3.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "e720f7bfc2be34ff47bfdd400aba3dffa639cc5ce1fb0c28433dfc9a7405eafa"
     },
     {
       "path": "public/assets/vfx/README.md",
@@ -7183,54 +8899,6 @@
       "kind": "file",
       "mode": 33188,
       "hash": "4d514903aec6d76b4ba5e720250d50bf84c9f8fba6f4899e0d5b382193ead668"
-    },
-    {
-      "path": "public/assets/vfx/spritesheets/2D Cartoon FX (Blobs & Blotches) #2.json",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "66938ca3f6025c429dc04c75535186aa57dc78d1c2516bbc30e2bd361cd0f828"
-    },
-    {
-      "path": "public/assets/vfx/spritesheets/2D Cartoon FX (Blobs & Blotches) #2.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "9df88a71adafcdf016de8cc0a5e3e1c18854da7b0de99829ac27579dfb5bd8ed"
-    },
-    {
-      "path": "public/assets/vfx/spritesheets/2D Cartoon FX (Blobs & Blotches) #3.json",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "cbd861600665b0b149c352df38aee8b4622f0a3a63c420202953e55fae6b9a93"
-    },
-    {
-      "path": "public/assets/vfx/spritesheets/2D Cartoon FX (Blobs & Blotches) #3.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "1ecc70b7a857eacf344a3c4e0fb5812d006421fb99d93a8000cce54a0a53a226"
-    },
-    {
-      "path": "public/assets/vfx/spritesheets/2D Cartoon FX (Blobs & Blotches) #4.json",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "811e1d36cf7e6c6a56acb8636f26558fa42a80f09e01f60ea852d5e69f917d51"
-    },
-    {
-      "path": "public/assets/vfx/spritesheets/2D Cartoon FX (Blobs & Blotches) #4.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "9eae732640f11401e7614e37826ba8bc607529b65778889bb279cf60d2f6c2a2"
-    },
-    {
-      "path": "public/assets/vfx/spritesheets/2D Cartoon FX (Blobs & Blotches) #5.json",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "b5a8f0528d1366ed16c75ca814f0b4b64a5ae935ca2b30797c5a8bcfe93c1cff"
-    },
-    {
-      "path": "public/assets/vfx/spritesheets/2D Cartoon FX (Blobs & Blotches) #5.png",
-      "kind": "file",
-      "mode": 33188,
-      "hash": "4e184dab7afa6d232b125b62b950ce33044ec20fe90019831c5623c958235d13"
     },
     {
       "path": "public/assets/vfx/spritesheets/2D Cartoon FX (Energy Explosion) #15.json",
@@ -14025,6 +15693,18 @@
       "hash": "25b145a1ee59add08bc53beef71acf9d486d160f4e30afd31c77475e9089a04d"
     },
     {
+      "path": "scripts/pack-character-art.mjs",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "c3ec1f3a626d2ad56d1add202c65f96122a3aeb0813917f5097ebf4e591d882c"
+    },
+    {
+      "path": "scripts/pack-enemy-art.mjs",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "0eff4a4e68da729c14ca65f75d62d58a5c746ff721722ce51a3d3599005f35be"
+    },
+    {
       "path": "scripts/pack-mortal-combat-art.mjs",
       "kind": "file",
       "mode": 33188,
@@ -14424,7 +16104,7 @@
       "path": "src/components/common/PlayerPortrait.vue",
       "kind": "file",
       "mode": 33188,
-      "hash": "a3d6a28b07c4bd59fb75e1a228e71813147e4a63a27b9e1d746c96df27eedbf2"
+      "hash": "8cb6e3703b94385c23e0363590ef1fb6e66ad5a926c3ee724aeda0f26c2fbc9b"
     },
     {
       "path": "src/components/common/primitives/Bar.vue",
@@ -14832,7 +16512,7 @@
       "path": "src/components/game/PhaserCanvas.vue",
       "kind": "file",
       "mode": 33188,
-      "hash": "ee81e8921c2467ff687baa2d0abfd9a6ec6dbfe2c64440efa42c79d12018bb97"
+      "hash": "ec2e2ecd6ced2fce8a96ba654ccee6160ac8ea4121c5393903472364452175d0"
     },
     {
       "path": "src/components/game/PresentationTransitionOverlay.test.ts",
@@ -15234,7 +16914,7 @@
       "path": "src/components/panels/RealmPanel.vue",
       "kind": "file",
       "mode": 33188,
-      "hash": "2971fd0d3e572a73b80e40dcc742d37c884c3132686a327b603c88768159e8ea"
+      "hash": "7ddc33040a5f752e20fd3fa7e8482d562f5999d990afd5de1887d2e0e3443701"
     },
     {
       "path": "src/components/panels/scripture/LoreCodex.vue",
@@ -15390,13 +17070,13 @@
       "path": "src/components/panels/TranPhapPanel.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "7d663207a69aa96e11557d1d8875721f1e767b7e158d089b74704cf7ed07af2e"
+      "hash": "31abf842758cc124330efe776d8fa18eff06dc8f8025eec517b318eb9491335a"
     },
     {
       "path": "src/components/panels/TranPhapPanel.vue",
       "kind": "file",
       "mode": 33188,
-      "hash": "318cf06326fbf28b773e8831c261326d5f81ada8e11aade475c5b75e367c8865"
+      "hash": "dc23644f6da994a2ec1cacf4be678a9dbe5ce6336223ce127aa697681700f0d2"
     },
     {
       "path": "src/components/panels/VendorPanel.test.ts",
@@ -15894,7 +17574,7 @@
       "path": "src/core/battle/CombatAnimationTypes.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "944d5ebd5dd9680198e60b9db15e8e7ef960354fb63f057c782db80eaa2c3fdf"
+      "hash": "adbe513fbb308ad5c6f1e791aa9b5d2798592a649ab345ec98ea521b54bea4bc"
     },
     {
       "path": "src/core/battle/contracts/capability.ts",
@@ -16290,13 +17970,13 @@
       "path": "src/core/battle/turn/CombatAnimationRuntime.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "81e570be9b860874a705d8fc837842ede5eace865f7935b762fd5aea8a1219ec"
+      "hash": "8533ea4b34fae6487ef7627b88f030dca856ee9f2e3a156b1cf0c7afe4ef8447"
     },
     {
       "path": "src/core/battle/turn/CombatAnimationRuntime.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "0b108e8a6330999fd1a8c7ca2262767c6caf9bd5f277a6db69635ff700c7f1d7"
+      "hash": "b140958b660fcf418d07066adac7dde476cf354a0625631b41c21058c6b40bad"
     },
     {
       "path": "src/core/battle/turn/CombatClock.test.ts",
@@ -16368,7 +18048,7 @@
       "path": "src/core/battle/turn/TurnActionPresentationEvents.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "d6dbf0f47951b98bae09c01f974ded979894442f9b38222fec7cb4adb110afc8"
+      "hash": "a1c6a685e09a65f8c8d2332d4cd0be01273aaa30c1e1e61b6d801c25a0dbb529"
     },
     {
       "path": "src/core/battle/turn/TurnBattleConstants.ts",
@@ -17028,7 +18708,7 @@
       "path": "src/core/building/BuildingInstance.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "78beb18b0e8d996a128cef36306cbf734ff7bf6cbc5816bd4a7c28ec01c1bbe9"
+      "hash": "127d0cef4d4cb6a5d2db81ef5ad09198129bd65a7907d9740a287dafd20168f2"
     },
     {
       "path": "src/core/building/BuildingLevelEffect.ts",
@@ -17052,13 +18732,13 @@
       "path": "src/core/building/BuildingSystem.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "28a52b85c0b3b1ab9fca6bf40edb94456ef36007faf27a0a98565e82cf8eef06"
+      "hash": "e4bbae22e4abdeacc7921c92fdaa91c87fd8d5fdfbdfc8468b2298c4181a2121"
     },
     {
       "path": "src/core/building/BuildingSystem.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "a1d0def25e2ad96efb4b88dbcabafda62ce1382e25c622ba372cb9d6c01c923e"
+      "hash": "a217c425ce8993c920dcc22e0c1b26400b4d6d93846794ca55a3542ec66851cf"
     },
     {
       "path": "src/core/combat/Accuracy.test.ts",
@@ -17472,13 +19152,13 @@
       "path": "src/core/economy/TuLinhTranBalance.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "1c6fcf82f3695bd25c09bc73e71c9785ea5dacd808a6e029631d1bd858b83fe5"
+      "hash": "203a06fd053d06042a7cb9b8af5593f72675a16643eae2d27aa91aa51a1b7371"
     },
     {
       "path": "src/core/economy/TuLinhTranBalance.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "b95ad8092675f7989db1ad140a6b0a82b7f086235357943de5a86e1a9029fdb9"
+      "hash": "340e5dc694e3c23451a82c02edca4f15fb62982ee948ee575e081b4ddc11b88f"
     },
     {
       "path": "src/core/economy/VendorBalance.ts",
@@ -18600,7 +20280,7 @@
       "path": "src/core/game/GameManager.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "061c846b02ad6f924c5db0490c2afa415f6da78cde0135da3c2e5c63a9ec71c3"
+      "hash": "1efedf99609f07301152b2da0e58c536bb5be98f78591d21144ea521c1c6c7b5"
     },
     {
       "path": "src/core/game/GameManager.tuLinhTran.test.ts",
@@ -19338,7 +21018,7 @@
       "path": "src/core/player/PlayerStatAssembly.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "fd3759ce78f80ab02e8b8dea717f4446e848cd691d76b98c3b804ea2e7be6660"
+      "hash": "dde2040429fb8dd3340a9081c0a16583530ab481770761ae1d1940ddf7e2de41"
     },
     {
       "path": "src/core/player/PlayerVisualForm.ts",
@@ -20394,13 +22074,13 @@
       "path": "src/core/skill/PassiveSystem.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "c98236468500fd685cec0f6c08dffeb0c14e3c29bfc1a734a9bcaca63c477b51"
+      "hash": "8f16f33edea110b1ed6329d5a676e5e0b3ba07cd3be3753f5e9a3002f8adeb5d"
     },
     {
       "path": "src/core/skill/Skill.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "d7abbc2a07f13e181d382aca6f4d4c02524f7eaa3d51d8f19fdd46c4022d2451"
+      "hash": "dd42ea24290d8c10976db2ae1b7ab22b3aa8d7dfd6f4f761f20e7cbe4f243ba5"
     },
     {
       "path": "src/core/skill/SkillAction.ts",
@@ -20850,7 +22530,7 @@
       "path": "src/core/stats/StatMetadata.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "5d88c7fc3bc3ad3e5b85c3db48933e3e9cbe50bc228c6e084d61554c853ee34a"
+      "hash": "5580a0e9327c87c2d083f390c03fb0a15aa8482dc0ca8f20e0669ff72e58ada0"
     },
     {
       "path": "src/core/stats/StatTypes.ts",
@@ -20916,7 +22596,7 @@
       "path": "src/core/talent/TalentsV4Wiring.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "2573c30867172ca60a0dfe4ae8953a54bb3220eb4985ced7de90f256c2c21950"
+      "hash": "49814f5bf76326e5a500c3d83a3b2290c44381ad8e1c5348e0b8b619ab9faa8f"
     },
     {
       "path": "src/core/talisman/Talisman.ts",
@@ -21270,7 +22950,7 @@
       "path": "src/data/buff/TalentBuffs.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "aa18890eb3ec55b4289f1d8902950ef786cc575333aa6d0ec8af284a7d1464b2"
+      "hash": "ac4827b17a050c5eab1ca3323d0f6daa4407e820de678d95c64fd0e2b0af46a9"
     },
     {
       "path": "src/data/buff/TheTuBuffs.test.ts",
@@ -21684,13 +23364,13 @@
       "path": "src/data/realm/RealmPassiveNodes.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "2b3456a8d05b02a2800b35de97cd2cb6b42d3cf0eb96af2ff1979fcece78db3a"
+      "hash": "5a842245c2e81b97b57a67fbde0d2f937689b1b90558fd1e2c50b9eafafc6d94"
     },
     {
       "path": "src/data/realm/RealmPassiveNodes.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "ee9dd51b58defc8e4b71aa5739db41863fcb9b98dec3d13a5878b7aab0df63b0"
+      "hash": "31d478e3c97b91ddbb15362ff1c96aef067b87653be522f3f9524f7f3d8edab4"
     },
     {
       "path": "src/data/realm/RealmPassives.ts",
@@ -21792,7 +23472,7 @@
       "path": "src/data/skill/TalentPassives.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "f38d89055945aeb564d76d04572b48a782bdd2254f88047240543144d7af3922"
+      "hash": "10747096dcfecaeb612997284bb54bd795fa485bfdf5e718b135117870e8f70a"
     },
     {
       "path": "src/data/skill/TheTuSkills.test.ts",
@@ -22002,13 +23682,13 @@
       "path": "src/game/scenes/combat/combat-action-feedback.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "3754a6627a2fd1b9e47097cd66a67166e08ad8c0127724e6b282b361377db14a"
+      "hash": "5f2369b32906a2b10f10b2a49dfd8e531aae580c68a7c985a382780a706ea01e"
     },
     {
       "path": "src/game/scenes/combat/combat-animation-playback.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "93e9c22995db2cf4074eea5f66a62575287412d7bc585b39274aac979676c54f"
+      "hash": "d1d1e2c4479239ee20ce6dcae2451ac79d42a7b3f18747d5303ad8c7bb8abf85"
     },
     {
       "path": "src/game/scenes/combat/combat-cast-bar.ts",
@@ -22068,13 +23748,13 @@
       "path": "src/game/scenes/combat/combat-grid-view.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "ec4e880b9ea0ea3c521655864bb9197b40772ab6f448376b796d919880d6f1ea"
+      "hash": "f7f2dff2edbd2656241b93b093881d2fe506c7f802246a9b0fe469b5a88642dc"
     },
     {
       "path": "src/game/scenes/combat/combat-grid-view.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "42063664a9603221cc4bf859000191bf68655471a9a6de043a0dd12a00798e17"
+      "hash": "3cb64a203fc6226dc418998d3903f2abebb9275a541f19395e0ef6934eb8bd9c"
     },
     {
       "path": "src/game/scenes/combat/combat-helpers-encapsulation.qa.test.ts",
@@ -22083,10 +23763,16 @@
       "hash": "923d0a6adc32d57cc2618b39e92a9adba87029ec6e8993794198008b56d996a2"
     },
     {
+      "path": "src/game/scenes/combat/combat-player-visual.test.ts",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "0a5495624791f8d0d75fb98346d775be73d1a2346f60118af0453e0902918469"
+    },
+    {
       "path": "src/game/scenes/combat/combat-player-visual.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "15a1c795edfc96c5cc08eb09a57cdac012e89a903423951b58b7d88c8389bbad"
+      "hash": "c79a3c2e91f9bfaf86d2626feebebe2fce24929eea7cf4be453449c9d527e2ad"
     },
     {
       "path": "src/game/scenes/combat/combat-position-interpolation.ts",
@@ -22110,7 +23796,7 @@
       "path": "src/game/scenes/combat/combat-snapshot-reconcile.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "f5f809cd4593e649a8d9e697e06148b5a141612cd3d69f6456d189be0cf641dc"
+      "hash": "c7279f26a5b4ccdc06d8f915e0c180537bf989489f52e73ea43a7cdeeb0e9c56"
     },
     {
       "path": "src/game/scenes/combat/combat-status-tooltip.test.ts",
@@ -22158,7 +23844,7 @@
       "path": "src/game/scenes/combat/CombatGridViewHost.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "eaa94314b6dab625f388dee79fc52be3fbd59c7f606613ae26cb67e70ac38d42"
+      "hash": "157fe808a6ca5045b361b7306ca97685476ab0ae0ced24cbdd72d23e3b44ba7d"
     },
     {
       "path": "src/game/scenes/combat/combatTestHarness.ts",
@@ -22182,7 +23868,7 @@
       "path": "src/game/scenes/combat/combatTypes.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "1adfe94f5c13671a17d60a61ff845ab75476fbe58ea535b8bb6a2eca0650271d"
+      "hash": "03c69fa7f5d4c86f06b2c871c7711f2ed54154cd4dc420f7de4e8ad718999a7f"
     },
     {
       "path": "src/game/scenes/combat/PlayerHudLayer.test.ts",
@@ -22194,7 +23880,7 @@
       "path": "src/game/scenes/combat/PlayerHudLayer.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "c116cf664688da5f0908f6c00b7952dce2fb0a32dd6d41ee7f6db5012b466807"
+      "hash": "d63780a7987e4e84f4ff7583466032c39f9c7252edaf5c3c15fce45db5d5ac3e"
     },
     {
       "path": "src/game/scenes/CombatScene.actionPlayback.test.ts",
@@ -22218,7 +23904,7 @@
       "path": "src/game/scenes/CombatScene.combatAnimations.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "dd1d1376674a99126fe969f022b3e37e01ef4b0566a27dcde5f2596ffe4c9fdd"
+      "hash": "9dbfcf6f846f08f9e110b7070d284a7e9c2088fdc80311f252687c7edee24a33"
     },
     {
       "path": "src/game/scenes/CombatScene.dotPresentation.test.ts",
@@ -22290,7 +23976,7 @@
       "path": "src/game/scenes/CombatScene.skillPresentation.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "70b887a194e2fe92e64205a2981521f812c06bce3c53d9feffb4e703717b06ad"
+      "hash": "1ebcfad2fa2525691540117fd32bb857b25e5b3df92e2eff381faeae9e28ee90"
     },
     {
       "path": "src/game/scenes/CombatScene.spawnVfx.test.ts",
@@ -22302,7 +23988,7 @@
       "path": "src/game/scenes/CombatScene.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "771a9708fd62f1085e0c4919454328db3db85cbf6a9bfe6de1d5522ef7cef861"
+      "hash": "971fdf16cf0dadab430626285f57c97a343b93d94da2858f8d1fbd188c741c23"
     },
     {
       "path": "src/game/scenes/CombatScene.turnCountdownSpawn.test.ts",
@@ -22320,19 +24006,19 @@
       "path": "src/game/scenes/MainScene.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "555e09befe5172754ed25d7165170b09d4827e8b387748234de4ae7e46dc7c9d"
+      "hash": "b9c2be6249615a4e60c53338fa16cff3dcfc116f6e70ece8c5ed171e52c63b82"
     },
     {
       "path": "src/game/scenes/TranPhapCombatPreviewScene.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "33a00aafe5b5e91f699f51093c965b8c0758c60296559bc5ad44f8f667386228"
+      "hash": "16c23f1e55acb3138512b7d6e5e76d494e31977aade59c2738fe3f1d1d64d659"
     },
     {
       "path": "src/game/scenes/TranPhapCombatPreviewScene.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "b994c14ae74f1ecf4bed635b4abf6482f3c0a1713621ae65e8c26280b846b582"
+      "hash": "741b25800a79e8b722c0fc55c8200e7d8e69d207f091e172ac3fdcda9daa1988"
     },
     {
       "path": "src/game/scenes/TribulationScene.damageNumbers.test.ts",
@@ -22350,7 +24036,7 @@
       "path": "src/game/scenes/TribulationScene.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "875fa2b6a350f582d634b91487c31b8dc22e12004e3ebf1dd17efb48c3ab7ce3"
+      "hash": "0dc1fbd1a1c4e932e9bc277cd22e75b40bc5a617d3c30971cb75abad379aa0a5"
     },
     {
       "path": "src/game/support/ActionImpactVfx.test.ts",
@@ -22383,16 +24069,22 @@
       "hash": "19a49b0ddd76ca564bc173ac2dfaf7aec65c2ea1bc3d5b37c06061f289206036"
     },
     {
+      "path": "src/game/support/CharacterArt.ts",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "0cc9d3dd9415bfc70fcf679d43edaabfa44135ca5df16136e086096d776b0fa7"
+    },
+    {
       "path": "src/game/support/CombatPreload.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "016f8738d1c00e6a2ce18966372413c701fbf22f5bd2d2b3d1ee1fd7b90b473e"
+      "hash": "533ebf5336e547e2862791fa91632869c3bc8bf75bd56a2f4250dd2d1427bd95"
     },
     {
       "path": "src/game/support/CombatPreload.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "915689da6759466db04080521f15e881864008c58fc427a8a47ae474529001c4"
+      "hash": "ab860a8dd8d434944a90faed09a8d6fe9fbf4fa5459a6318b0e7bdead409d178"
     },
     {
       "path": "src/game/support/EnemyArt.test.ts",
@@ -22429,6 +24121,12 @@
       "kind": "file",
       "mode": 33188,
       "hash": "e064a5979c84b2254fd8b6e02b45b96066b14618cb44749048210756c0e5ab25"
+    },
+    {
+      "path": "src/game/support/MonsterArt.ts",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "827a01c754da14f297fe91d0c95a836d3e06023178c9660b07bf35afe47cc60b"
     },
     {
       "path": "src/game/support/RewardGourd.test.ts",
@@ -22524,13 +24222,13 @@
       "path": "src/locales/en.json",
       "kind": "file",
       "mode": 33188,
-      "hash": "696c3e2f68f9e5ecf2360999bbe9eed828c7660ffa5e4240972002625f3e1105"
+      "hash": "c2f7ac57ecc2b5e6f2bab6fc5caabdfd6ebd30f975ab1066146bf071429cc55f"
     },
     {
       "path": "src/locales/vi.json",
       "kind": "file",
       "mode": 33188,
-      "hash": "a1eeaa130ff701e9d80c451173d5dfda5e88009bf778fbea5a91e33fb3b7dbc8"
+      "hash": "4c4fe784af4145fcd7026d9d1fbc84c544b78f3a751f869e33322ff8c0103bcc"
     },
     {
       "path": "src/main-process/combatClockHost.test.ts",
@@ -22566,43 +24264,43 @@
       "path": "src/presentation/art/CombatEntityPresentation.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "595628645e209d1793e6721d7e8fdab5162e3d8dee0beb2ae83583ce175b40da"
+      "hash": "19b295e0d5e47349e153d6f6cbc0ec23459e25dafed9086822e8d94cbaf78721"
     },
     {
       "path": "src/presentation/art/CombatPresentationCatalogue.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "d1e983541fb079584652e7a16f16d6b583aae75355a4c86be9228db1afed665e"
+      "hash": "95536d3921c656cd71a6acf8aa6d8b1d323a57df1821b80cf42404fb4b613dbd"
     },
     {
       "path": "src/presentation/art/EntityArtMode.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "0ea4fd2db593f3f4db234f8c54e1a110770281a6e1acaf02621a0f779324285e"
+      "hash": "b374745c8680a608942e671b012c5f0e070684e0849b50b6409268345fed2d3e"
     },
     {
       "path": "src/presentation/art/PlayerVisualProfiles.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "c24e548d068d830d73a3f277ac9eb6ba5faf7ccca73e011b3437f0c1c148499c"
+      "hash": "77797d4ee3a1cec3c4c563868735926090844a9ebbc023c45b9f1f48573613e1"
     },
     {
       "path": "src/presentation/art/PlayerVisualProfiles.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "25a89215cc8a3897ab0982e5a95eb54c3cbf8a3dec6da4fb84c0ebfe951516d4"
+      "hash": "82d09e5f28ab725887b5e90d2748fd618dd88f4ba9f494fa309dd431a0bcb443"
     },
     {
       "path": "src/presentation/assets/AssetBundleCatalog.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "944c26603208f239155cdb0e77f2afe028b42ab3d6fb9dee5c1c0f5496ed2077"
+      "hash": "cbfb0fd5f6b85ea0c248557176600860c56d1a6973d8fc02943ff1ee5be7e9cd"
     },
     {
       "path": "src/presentation/assets/AssetBundleCatalog.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "6167ecfc99be866d3d1707cf2152848c4bfbb15f99020884818e3022a9ebf8be"
+      "hash": "e2cd220ee775659dc47932f35570ed1319df9387322a5958f75d2d10ad026466"
     },
     {
       "path": "src/presentation/assets/AssetBundleManager.test.ts",
@@ -22614,7 +24312,7 @@
       "path": "src/presentation/assets/AssetBundleManager.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "baf03eaa6eb762218c60f687184a0d4adaf07fe64016e2886584280cb16e6928"
+      "hash": "e8d0f3dd654ca68a6fc094d3ab1497fac81f50bf8efae6a3d391da11b489fb6a"
     },
     {
       "path": "src/presentation/audio/ambientAudioDriver.test.ts",
@@ -22782,7 +24480,7 @@
       "path": "src/presentation/contracts/regionEvents.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "30929da1ee8880a7be97117b6c46585ab5c84b1aed1476ea2346bc553748eb86"
+      "hash": "141d65ca3deedc435dea5870c533a1c155473e0d80ac3d7b73dd259193ea9f9f"
     },
     {
       "path": "src/presentation/contracts/SlotState.ts",
@@ -22824,7 +24522,7 @@
       "path": "src/presentation/gate/PresentationGate.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "567907599b0b0e3e8af377d22fe3d0587f8cfab09e57e4dec2f930f00a46214c"
+      "hash": "ff8cffd1a82f1f450037f7868d34cb13fb98650da6e93dc11ff12b9b608b31e6"
     },
     {
       "path": "src/presentation/geometry/BattlefieldRenderMode.test.ts",
@@ -23130,13 +24828,13 @@
       "path": "src/services/cloudSave/SupabaseRemoteSave.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "452301bfaae352db6942e2340831f18fff8fa1a132f62873d25939ffac458ac7"
+      "hash": "c4698fe563ea8b7c9760c50b5100fd8ffc0f141b25915c865e322c3152d2c550"
     },
     {
       "path": "src/services/cloudSave/SupabaseRemoteSave.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "6b051588cf3352000b2e3b1f32ca5e6f4f61f7f3d12864833d25e2ecd3fa7a64"
+      "hash": "31722d9f48ad263503bb7dd28989fed8edccc85d3029717237ac287e0899da1f"
     },
     {
       "path": "src/services/save/GameSave.fixture.ts",
@@ -23394,7 +25092,7 @@
       "path": "src/stores/player.restoreFromSave.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "55bf76ea5820e0fcc68cc242d89f77e9c2850b394d8854dc43e6815dc631aa9b"
+      "hash": "ca68ed8a540afd95b6c87d599af2ec226ab5c89953be2e13213b884a1a9d6ef4"
     },
     {
       "path": "src/stores/player.save.test.ts",
@@ -23418,7 +25116,7 @@
       "path": "src/stores/player.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "ef68d98587fe7b84dd4dd36ce1fba4dea0dd8165c7a3780fc7112373cac3e721"
+      "hash": "505e43aebab0fc29e372890db5319c78be52840b2d8f6b8c602976cafba135d2"
     },
     {
       "path": "src/stores/player.visualProfile.test.ts",
@@ -23481,6 +25179,12 @@
       "hash": "e657c8507fba49b5ec4d5bf0f7e57763dacb985482b5de228484f0df22861df9"
     },
     {
+      "path": "supabase/migrations/202609290001_character_saves_server_timestamp.sql",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "6e255c0b34eb90531eeac9c9edc8198c6c43761e232af2aaf8cffbe0178f41ad"
+    },
+    {
       "path": "tests/architecture/ackTokenContract.test.ts",
       "kind": "file",
       "mode": 33188,
@@ -23490,25 +25194,25 @@
       "path": "tests/architecture/animationCatalogue.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "fdfb014531ced0d6825ced05196aeb5dd9f3d0df3706fdfa9bf68cc29f7f15b6"
+      "hash": "4d49ee86ca85082e4c6ee50a655462b88c4ee3dc5644eba024d4fe74ea87c39c"
     },
     {
       "path": "tests/architecture/artExtentDeclared.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "8b0769d81d43c7cfb2e0e5f83175c17d087e64e1811f70bae5551e1609ebb437"
+      "hash": "d59d3c9b6b5422009e6221204fce33fb0b1ca4ee8251b2252d51e12a0d5d1c64"
     },
     {
       "path": "tests/architecture/artModeUniformity.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "07c7b0a0956dc2006e792a641df8fb4ec23eb1803b2600e01e3f2feb6e520c19"
+      "hash": "2db2a9bf4de60f42032cd4a8e4adf4bed8bfbe94ce528d0f764366b3e2c19778"
     },
     {
       "path": "tests/architecture/artPlaceholderDebt.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "1a1f8ab024abd86cd796f70e5284fb095788725fb0b10eb1f15fe283afc7a1f4"
+      "hash": "fd475ef69a9c64f1f8ffcfe3b50c92e7d9874feeb481da66935860f93c58120e"
     },
     {
       "path": "tests/architecture/asciiComments.test.ts",
@@ -23526,19 +25230,19 @@
       "path": "tests/architecture/atlasFramesExist.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "a1b1df1d2c2a825d15c0d2900018ba921747d269964ac2f42e98f8d96e7253a7"
+      "hash": "375d50ca5516a82ff703f26688d76df6b2fed2819d718070c36702935c5812c7"
     },
     {
       "path": "tests/architecture/audioBindingWiring.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "8631e51fa8c557ca2c66cc0eb12e1294e51b4c7ef3db62f53c2e1ed1f065cfaf"
+      "hash": "2f187b33304420835b92d00413e6c1e24b46d826d9d8462439099bfc120aad22"
     },
     {
       "path": "tests/architecture/audioBoundary.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "d25bb281708e89cbec1da9cbb5ded86cb0b729d86da6ca80c8b7bd1d9999284f"
+      "hash": "756c831eaf5426f509dbaa33bae444a6181eea4342daf87aae375c6aba33724d"
     },
     {
       "path": "tests/architecture/audioManifestCompleteness.test.ts",
@@ -23575,6 +25279,12 @@
       "kind": "file",
       "mode": 33188,
       "hash": "6eea437bde305579bc7cc9f5d284d0f38572d4ae4cae32ee8be7bbc27f020a6f"
+    },
+    {
+      "path": "tests/architecture/characterArtReskin.test.ts",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "1b942b1ee22bbfa170cd4c081b4d97bf5262383c08baa2f46855434a2bcb54c8"
     },
     {
       "path": "tests/architecture/combatContract.test.ts",
@@ -23625,6 +25335,12 @@
       "hash": "945e840e9dd913cb0c5919cd59606a16a223a994f1f808058948a99b3b7657d6"
     },
     {
+      "path": "tests/architecture/enemyArtReskin.test.ts",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "d2ed06156f3d4cb5d31ac3ea465f85e02770189245ab7ac2f1299785324ec493"
+    },
+    {
       "path": "tests/architecture/entityVisualLifecycle.test.ts",
       "kind": "file",
       "mode": 33188,
@@ -23658,7 +25374,7 @@
       "path": "tests/architecture/helpers/commentStrip.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "3b10f9addfdf1769ac09218a7bf1243260bad678b62423de690f0f0f1dc2c268"
+      "hash": "4d1f77ddbbde6f8d0fb54db483b2a3dad5941cc4610f5eb37435548972170a48"
     },
     {
       "path": "tests/architecture/helpers/scanTs.ts",
@@ -23706,7 +25422,7 @@
       "path": "tests/architecture/presentationGate.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "227bd9f416a8f041a7e54488e2d790aa5e778981ee02e8155811d0a9e9a5575d"
+      "hash": "a7e934f46badc288b501aa638863025f6a04108fc0a2fc71fc2a4add8666cf1b"
     },
     {
       "path": "tests/architecture/probeW17.test.ts",
@@ -23742,7 +25458,7 @@
       "path": "tests/architecture/screenShakeAuthority.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "73e986a4278e0cfc8185c2b1bbc99b7bbd4b282284f9dcdbe47dd1c3a94c7420"
+      "hash": "ba869b2c4a7e088eed1717668d26474f535e3011035642737a90b2e262b350f9"
     },
     {
       "path": "tests/architecture/skillDefProducerSources.test.ts",
@@ -23832,7 +25548,7 @@
       "path": "tests/e2e/combat-idle-motion-capture.spec.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "00f39b51ab6dd14eb71602c7c19a7d65b0de4546a63708de360b6aa2677a17c9"
+      "hash": "1ecd6721c36b410726b6907d871875c343e591bee87913cfb6f2cdcb53ded38a"
     },
     {
       "path": "tests/e2e/combat-overlay-layout.spec.ts",
@@ -24015,6 +25731,30 @@
       "hash": "ed5da36c9386f3a92c2ebb23579660c634d364bf501ea5dd0e5652d6449ea5fe"
     },
     {
+      "path": "verify-fe17-realm.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "068edfe9610cb484963782e9642f8d77e70014ce66fc1c6b0e6773d54fdc19ec"
+    },
+    {
+      "path": "verify-fe17.mjs",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "fb6b25e25f65d7a760d5c94e3850d6c7f7fcf2ed0719f53f1deddf07e1a49a24"
+    },
+    {
+      "path": "verify-fixes-combat.png",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "385e78c53dd3d58f18863bc19fb0f8c94733c3738c4ce48ddad8501fc26dd3d6"
+    },
+    {
+      "path": "verify-fixes.mjs",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "78b4e3bd613f5da1bd062467c2d7ef9caddc02d982b6d597e053d382a7c35f12"
+    },
+    {
       "path": "vite.config.ts",
       "kind": "file",
       "mode": 33188,
@@ -24033,5 +25773,5 @@
       "hash": "e69b4133ed37ca9a4f05e66d90521d0bb749c4764bf1f454d0eb13de601f7940"
     }
   ],
-  "productStateId": "df4741f521af2f2c82931da6e608cc3dc34386f7668e2fb905db1ada4a06292c"
+  "productStateId": "f7cf06069ec04137fcdb9ea40965d53187add22d2dd422d48b6ebc93de3c4cf6"
 }
