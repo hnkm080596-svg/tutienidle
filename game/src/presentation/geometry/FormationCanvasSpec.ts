@@ -30,14 +30,6 @@ export const FORMATION_CANVAS_WIDTH = 420
 export const FORMATION_CANVAS_HEIGHT = 480
 
 /**
- * Derived, not imposed: whatever the two constants above say. Exported so a
- * container can reserve the right shape without restating either number.
- * Portrait today (0.875), because the preview shows a battlefield receding away
- * from the viewer rather than a wide landscape.
- */
-export const FORMATION_CANVAS_ASPECT_RATIO = FORMATION_CANVAS_WIDTH / FORMATION_CANVAS_HEIGHT
-
-/**
  * Minimum road height for the preview panel. Smaller than combat's, because
  * the panel is short and the road would otherwise be squeezed to nothing by
  * the scenery band. Moved here from the scene (V7/§3.6.2): the shell needs it

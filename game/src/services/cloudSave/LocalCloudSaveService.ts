@@ -1,10 +1,26 @@
 import { loadGame, writeGameSave, type GameSave } from '../save/SaveSystem'
-import { resolveRevisionKey } from '../save/saveKeys'
+import { resolveRevisionKey, resolveSyncBaseKey } from '../save/saveKeys'
 import type { CloudSaveLoadResult, CloudSaveService, CloudSaveWriteResult } from './CloudSaveService'
 
 export function readLocalSaveRevision(): number {
   const value = Number(localStorage.getItem(resolveRevisionKey()))
   return Number.isSafeInteger(value) && value >= 0 ? value : 0
+}
+
+/**
+ * F1 lineage anchor: the remote save_revision the local lineage last
+ * descended from (adopted on every successful pull/push). null means the
+ * account has never completed a sync under base tracking - the login
+ * reconcile treats that as the migration case.
+ */
+export function readSyncBaseRevision(): number | null {
+  const raw = localStorage.getItem(resolveSyncBaseKey())
+  const value = raw === null ? Number.NaN : Number(raw)
+  return Number.isSafeInteger(value) && value >= 0 ? value : null
+}
+
+export function writeSyncBaseRevision(revision: number): void {
+  localStorage.setItem(resolveSyncBaseKey(), String(revision))
 }
 
 export class LocalCloudSaveService implements CloudSaveService {

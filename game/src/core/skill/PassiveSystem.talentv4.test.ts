@@ -28,6 +28,9 @@ interface Harness {
 function makeHarness(options: {
   skill: Partial<Skill>
   hpRatio?: number
+  // Reader present but out of battle: returns undefined each call -
+  // the GameManager wiring shape outside combat.
+  hpReader?: () => number | undefined
 }): Harness {
   const skill: Skill = {
     id: 'test_passive',
@@ -61,7 +64,7 @@ function makeHarness(options: {
     (buffId: string) => {
       appliedBuffs.push(buffId)
     },
-    hpRatio === undefined ? undefined : () => hpRatio,
+    options.hpReader ?? (hpRatio === undefined ? undefined : () => hpRatio),
   )
 
   return { system, bus, appliedBuffs, hpRatio: options.hpRatio }
@@ -170,6 +173,54 @@ describe('PassiveSystem — E2 passiveCondition + passiveConvertsTo (spec talent
     system.tick(3)
 
     // Điều kiện chặn trước khi tích — stacks chưa được gán lần nào.
+    expect(mod.stacks).toBeUndefined()
+  })
+
+  it('tick per_second + passiveCondition out of battle (reader returns undefined) — no stacks (F4 fail-closed)', () => {
+    const mod = modifier({ maxStacks: 10 })
+    const { system } = makeHarness({
+      skill: {
+        passiveTrigger: 'per_second',
+        passiveModifiers: [mod],
+        passiveCondition: { kind: 'hpBelow', percent: 0.35 },
+      },
+      // Out of battle the GameManager closure exists but has no battle
+      // player to ratio - before F4 this silently counted as satisfied
+      // and stacked the passive every game tick.
+      hpReader: () => undefined,
+    })
+
+    system.tick(3)
+
+    expect(mod.stacks).toBeUndefined()
+  })
+
+  it('passiveCondition + no hpReader (legacy wiring) — matching event still does not stack (F4 fail-closed)', () => {
+    const mod = modifier({ maxStacks: 10 })
+    const skill: Skill = {
+      id: 'test_passive',
+      name: 'Test Passive',
+      description: '',
+      type: 'passive',
+      level: 1,
+      maxLevel: 1,
+      cooldown: 0,
+      target: 'self',
+      effects: [],
+      passiveTrigger: 'damage_taken',
+      passiveModifiers: [mod],
+      passiveCondition: { kind: 'hpBelow', percent: 0.35 },
+    }
+
+    const bus = new EventBus()
+    const _legacy = new PassiveSystem(
+      bus,
+      { getPassiveSkills: () => [skill] } as unknown as SkillManager,
+      { getEffectiveSkill: (input: Skill) => input } as unknown as SkillSystem,
+    )
+
+    bus.emit('damage', { type: 'damage', targetId: PLAYER_ID } satisfies CombatEventPayload)
+
     expect(mod.stacks).toBeUndefined()
   })
 

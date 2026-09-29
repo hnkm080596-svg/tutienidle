@@ -64,7 +64,7 @@ export class PassiveSystem {
     // cung cap, optional theo pattern CombatSystem (moi call site hien
     // co compile khong doi): buffApplier ap buff "bung no" len player
     // entity trong tran; hpReader tra HP ratio hien tai cua player
-    // (undefined ngoai tran -> passiveCondition coi nhu thoa).
+    // (undefined outside battle -> passiveCondition fails closed, F4).
     private readonly buffApplier?: (buffId: string) => void,
     private readonly hpReader?: () => number | undefined,
   ) {
@@ -74,17 +74,26 @@ export class PassiveSystem {
   }
 
   // Talent v4 E2 - passiveCondition union 'hpBelow' | 'hpNotBelow'
-  // (CP-01 - can_than_phi leg). Vang condition hoac vang reader -> luon
-  // true (khong chan passive cu); kind khong biet cung fail-open.
+  // (CP-01 - can_than_phi leg). F4 - FAIL-CLOSED when unevaluable:
+  // absent condition -> unconditional passive -> true; otherwise an HP
+  // condition that cannot be evaluated (no hpReader, or a reader that
+  // returns undefined outside battle) never counts as satisfied - the
+  // old pass-through silently stacked conditioned passives every tick
+  // out of battle (tick runs outside combat too). An unknown kind also
+  // fails closed - meaning may only come from authored data.
   private meetsCondition(condition: Skill['passiveCondition']): boolean {
-    if (!condition || (condition.kind !== 'hpBelow' && condition.kind !== 'hpNotBelow')) {
+    if (!condition) {
       return true
+    }
+
+    if (condition.kind !== 'hpBelow' && condition.kind !== 'hpNotBelow') {
+      return false
     }
 
     const hpRatio = this.hpReader?.()
 
     if (hpRatio === undefined) {
-      return true
+      return false
     }
 
     return condition.kind === 'hpBelow' ? hpRatio < condition.percent : hpRatio >= condition.percent

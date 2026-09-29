@@ -2008,6 +2008,91 @@ describe('validateGameSaveShape — player record/array deep checks (Mission A r
     expect(pathsOf(result)).toContain('player.persistentTimedEffects[0].expiresAtMs')
   })
 
+  // F3 - the optional timed-effect fields reach fold math (offline
+  // window rate) and group-stack merge unchecked: each must reject.
+  it.each([Number.NaN, -0.5, 'x', Infinity])(
+    'từ chối persistentTimedEffects có cultivationSpeedPercent = %j',
+    (value) => {
+      const save = validSave()
+
+      playerOf(save).persistentTimedEffects = [
+        {
+          id: 'e1',
+          sourceItemId: 'tu_linh_tran',
+          appliedAtMs: 1,
+          expiresAtMs: 2,
+          cultivationSpeedPercent: value,
+          modifiers: [],
+        },
+      ]
+
+      const result = validateGameSaveShape(save)
+
+      expect(result.ok).toBe(false)
+      expect(pathsOf(result)).toContain('player.persistentTimedEffects[0].cultivationSpeedPercent')
+    },
+  )
+
+  it.each([5, '', '   ', null])('từ chối persistentTimedEffects có effectGroup = %j', (value) => {
+    const save = validSave()
+
+    playerOf(save).persistentTimedEffects = [
+      {
+        id: 'e1',
+        sourceItemId: 'tu_linh_tran',
+        appliedAtMs: 1,
+        expiresAtMs: 2,
+        effectGroup: value,
+        modifiers: [],
+      },
+    ]
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.persistentTimedEffects[0].effectGroup')
+  })
+
+  it.each([1, 'yes'])('từ chối persistentTimedEffects có durationStackable = %j', (value) => {
+    const save = validSave()
+
+    playerOf(save).persistentTimedEffects = [
+      {
+        id: 'e1',
+        sourceItemId: 'pill_x',
+        appliedAtMs: 1,
+        expiresAtMs: 2,
+        durationStackable: value,
+        modifiers: [],
+      },
+    ]
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.persistentTimedEffects[0].durationStackable')
+  })
+
+  it('chấp nhận persistentTimedEffects có optional fields hợp lệ', () => {
+    const save = validSave()
+
+    playerOf(save).persistentTimedEffects = [
+      {
+        id: 'e1',
+        sourceItemId: 'tu_linh_tran',
+        appliedAtMs: 1,
+        expiresAtMs: 2,
+        effectGroup: 'tu_linh_tran',
+        durationStackable: true,
+        cultivationSpeedPercent: 0.25,
+        modifiers: [],
+      },
+      { id: 'e2', sourceItemId: 'pill_x', appliedAtMs: 1, expiresAtMs: 2, modifiers: [] },
+    ]
+
+    expect(validateGameSaveShape(save).ok).toBe(true)
+  })
+
   it.each(['warp_speed', 5, null])('từ chối combatAiStrategy = %j', (value) => {
     const save = validSave()
 

@@ -554,6 +554,24 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
         issues.push({ path: `${effectPath}.expiresAtMs`, message: 'phải là số hữu hạn' })
       }
 
+      // F3 - optional fields still gate the fold math below: a NaN or
+      // negative cultivationSpeedPercent poisons the offline-window
+      // rate (unbuffed = rate / (1 + percent)), and a non-string
+      // effectGroup / non-boolean durationStackable corrupts the
+      // group-stack merge.
+      if (
+        effect.effectGroup !== undefined &&
+        (typeof effect.effectGroup !== 'string' || effect.effectGroup.trim().length === 0)
+      ) {
+        issues.push({ path: `${effectPath}.effectGroup`, message: 'phải là string không rỗng' })
+      }
+      if (effect.durationStackable !== undefined && typeof effect.durationStackable !== 'boolean') {
+        issues.push({ path: `${effectPath}.durationStackable`, message: 'phải là boolean' })
+      }
+      if (effect.cultivationSpeedPercent !== undefined && !isNonNegativeFiniteNumber(effect.cultivationSpeedPercent)) {
+        issues.push({ path: `${effectPath}.cultivationSpeedPercent`, message: 'phải là số hữu hạn không âm' })
+      }
+
       const effectModifiers = requireArray(effect, 'modifiers', effectPath, issues)
 
       if (effectModifiers) {

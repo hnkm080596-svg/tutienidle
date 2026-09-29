@@ -6,6 +6,7 @@ import {
   resolveImportHandoffKey,
   resolveRevisionKey,
   resolveSaveKey,
+  resolveSyncBaseKey,
   setSaveAccountId,
 } from '../save/saveKeys'
 import { CURRENT_SAVE_VERSION, loadGame } from '../save/SaveSystem'
@@ -524,6 +525,177 @@ describe('shared save acceptance gate (qa-authority-01 / F-INT-02 / F-INT-03)', 
       expect(outcome.discardedEquipmentCount).toBe(1)
     }
     expect(localStorage.getItem(resolveImportHandoffKey())).toBeNull()
+
+    vi.unstubAllGlobals()
+  })
+})
+
+describe('F1 lineage divergence - sync-base tracking (carried defect)', () => {
+  function remoteSaveRow(save: GameSave, revision: number, updatedMs: number) {
+    return { payload: save, save_revision: revision, updated_at: new Date(updatedMs).toISOString() }
+  }
+
+  it('stale-side migration push (offline device, local rev ahead, remote clock-newer) -> conflict: remote untouched, local untouched', async () => {
+    loginSession()
+    // The carried F1 scenario, replayed on the stale device (B): 2 months
+    // offline, local counter ran to 400 while the account's remote row
+    // moved to 115 on device A. remoteAhead(115 > 400) is false, so the
+    // old code PATCHed the stale lineage over A's work.
+    const staleLocal = validGameSave(1_000)
+    staleLocal.player.name = 'stale-device'
+    localStorage.setItem(resolveSaveKey(), JSON.stringify(staleLocal))
+    localStorage.setItem(resolveRevisionKey(), '400')
+
+    const calls = stubFetch((call) => {
+      if (call.url.includes('/rest/v1/characters?')) return json([{ id: 'char-1' }])
+      if (call.url.includes('/rest/v1/character_saves?')) {
+        return json([remoteSaveRow(validGameSave(9_000_000), 115, 8_000_000)])
+      }
+      return json(null)
+    })
+
+    expect(await syncRemoteSaveOnLogin(config)).toBe('conflict')
+    expect(calls.some((call) => call.init.method === 'PATCH')).toBe(false)
+    expect(calls.some((call) => call.init.method === 'POST')).toBe(false)
+    // Neither side was written: B keeps its lineage locally, A's remote
+    // row is never regressed.
+    const written = JSON.parse(localStorage.getItem(resolveSaveKey()) ?? 'null') as GameSave
+    expect(written.player.name).toBe('stale-device')
+    expect(localStorage.getItem(resolveRevisionKey())).toBe('400')
+
+    vi.unstubAllGlobals()
+  })
+
+  it('diverged lineages (base set, remote moved, local advanced) -> conflict holds both sides', async () => {
+    loginSession()
+    // Device A replay: base=115 records the last shared point; A saved
+    // locally to rev 130 while B's stale push already moved the remote
+    // row to 400. Pulling would regress A's unpushed work; pushing would
+    // regress B's row - neither may be picked silently.
+    const localSave = validGameSave(50_000_000)
+    localSave.player.name = 'device-a'
+    localStorage.setItem(resolveSaveKey(), JSON.stringify(localSave))
+    localStorage.setItem(resolveRevisionKey(), '130')
+    localStorage.setItem(resolveSyncBaseKey(), '115')
+
+    const remoteSave = validGameSave(9_000_000)
+    remoteSave.player.name = 'device-b'
+    const calls = stubFetch((call) => {
+      if (call.url.includes('/rest/v1/characters?')) return json([{ id: 'char-1' }])
+      if (call.url.includes('/rest/v1/character_saves?')) {
+        return json([remoteSaveRow(remoteSave, 400, 10_000_000)])
+      }
+      return json(null)
+    })
+
+    expect(await syncRemoteSaveOnLogin(config)).toBe('conflict')
+    expect(calls.some((call) => call.init.method === 'PATCH')).toBe(false)
+    expect(calls.some((call) => call.init.method === 'POST')).toBe(false)
+    const written = JSON.parse(localStorage.getItem(resolveSaveKey()) ?? 'null') as GameSave
+    expect(written.player.name).toBe('device-a')
+    expect(localStorage.getItem(resolveRevisionKey())).toBe('130')
+    expect(localStorage.getItem(resolveSyncBaseKey())).toBe('115')
+
+    vi.unstubAllGlobals()
+  })
+
+  it('remote advanced past base while local stayed at base -> pulled, base adopted', async () => {
+    loginSession()
+    // The routine multi-device path: base=115, local still at 115 (no
+    // unsynced work), A pushed rev 130 elsewhere - pulling loses nothing.
+    localStorage.setItem(resolveSaveKey(), JSON.stringify(validGameSave(5_000)))
+    localStorage.setItem(resolveRevisionKey(), '115')
+    localStorage.setItem(resolveSyncBaseKey(), '115')
+
+    const remoteSave = validGameSave(9_000_000)
+    remoteSave.player.name = 'advanced-remote'
+    stubFetch((call) => {
+      if (call.url.includes('/rest/v1/characters?')) return json([{ id: 'char-1' }])
+      if (call.url.includes('/rest/v1/character_saves?')) {
+        return json([remoteSaveRow(remoteSave, 130, 10_000_000)])
+      }
+      return json(null)
+    })
+
+    expect(await syncRemoteSaveOnLogin(config)).toBe('pulled')
+    expect(localStorage.getItem(resolveSyncBaseKey())).toBe('130')
+    expect(localStorage.getItem(resolveRevisionKey())).toBe('130')
+    const written = JSON.parse(localStorage.getItem(resolveSaveKey()) ?? 'null') as GameSave
+    expect(written.player.name).toBe('advanced-remote')
+
+    vi.unstubAllGlobals()
+  })
+
+  it('identical content under a base mismatch adopts the base instead of forking', async () => {
+    loginSession()
+    // Torn-adoption self-heal: save + base were written but the revision
+    // write was lost, so the row and the bytes already agree.
+    const shared = validGameSave(5_000)
+    localStorage.setItem(resolveSaveKey(), JSON.stringify(shared))
+    localStorage.setItem(resolveRevisionKey(), '115')
+    localStorage.setItem(resolveSyncBaseKey(), '115')
+
+    stubFetch((call) => {
+      if (call.url.includes('/rest/v1/characters?')) return json([{ id: 'char-1' }])
+      if (call.url.includes('/rest/v1/character_saves?')) {
+        return json([remoteSaveRow(shared, 130, 10_000_000)])
+      }
+      return json(null)
+    })
+
+    // Same content, remote rev ahead -> the pull is idempotent and the
+    // base lands at the real remote revision.
+    expect(await syncRemoteSaveOnLogin(config)).toBe('pulled')
+    expect(localStorage.getItem(resolveSyncBaseKey())).toBe('130')
+
+    vi.unstubAllGlobals()
+  })
+
+  it('same-lineage push adopts the pushed revision as the new base', async () => {
+    loginSession()
+    localStorage.setItem(resolveSaveKey(), JSON.stringify(validGameSave(50_000_000)))
+    localStorage.setItem(resolveRevisionKey(), '3')
+    localStorage.setItem(resolveSyncBaseKey(), '2')
+
+    stubFetch((call) => {
+      if (call.url.includes('/rest/v1/characters?')) return json([{ id: 'char-1' }])
+      if (call.url.includes('/rest/v1/character_saves?')) {
+        return json([remoteSaveRow(validGameSave(1_000), 2, 2_000)])
+      }
+      return json(null)
+    })
+
+    expect(await syncRemoteSaveOnLogin(config)).toBe('pushed')
+    expect(localStorage.getItem(resolveSyncBaseKey())).toBe('3')
+
+    vi.unstubAllGlobals()
+  })
+
+  it('pull writes the save before the revision (F5 torn-state order)', async () => {
+    loginSession()
+    localStorage.setItem(resolveSaveKey(), JSON.stringify(validGameSave(1_000)))
+
+    const remoteSave = validGameSave(5_000_000)
+    remoteSave.player.name = 'remote-char'
+    stubFetch((call) => {
+      if (call.url.includes('/rest/v1/characters?')) return json([{ id: 'char-1' }])
+      if (call.url.includes('/rest/v1/character_saves?')) {
+        return json([remoteSaveRow(remoteSave, 7, 10_000_000)])
+      }
+      return json(null)
+    })
+
+    const writeOrder: string[] = []
+    const originalSet = localStorage.setItem.bind(localStorage)
+    localStorage.setItem = (key: string, value: string) => {
+      writeOrder.push(key)
+      originalSet(key, value)
+    }
+
+    expect(await syncRemoteSaveOnLogin(config)).toBe('pulled')
+    expect(writeOrder.indexOf(resolveSaveKey())).toBeLessThan(
+      writeOrder.indexOf(resolveRevisionKey()),
+    )
 
     vi.unstubAllGlobals()
   })
