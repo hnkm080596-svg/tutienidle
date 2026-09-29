@@ -207,3 +207,85 @@ describe('PassiveSystem — E2 passiveCondition + passiveConvertsTo (spec talent
     expect(mod.stacks).toBe(0)
   })
 })
+
+// CP01-CANTHAN-RAMP - a conditioned per_second band must release when the
+// condition stops holding: stacks latch on the modifier object, so without
+// decay a one-time HP dip would keep the band for the whole battle.
+describe('PassiveSystem - conditioned per_second band release', () => {
+  it('hpBelow band gains a capped stack while low HP and clears when HP recovers', () => {
+    const mod = modifier({ flat: 0.1, percent: undefined, maxStacks: 1 })
+    const skill: Skill = {
+      id: 'test_band',
+      name: 'Test Band',
+      description: '',
+      type: 'passive',
+      level: 1,
+      maxLevel: 1,
+      cooldown: 0,
+      target: 'self',
+      effects: [],
+      passiveTrigger: 'per_second',
+      passiveModifiers: [mod],
+      passiveCondition: { kind: 'hpBelow', percent: 0.35 },
+    }
+
+    let hp = 0.2
+    const bus = new EventBus()
+    const system = new PassiveSystem(
+      bus,
+      { getPassiveSkills: () => [skill] } as unknown as SkillManager,
+      { getEffectiveSkill: (input: Skill) => input } as unknown as SkillSystem,
+      undefined,
+      () => hp,
+    )
+
+    system.tick(5)
+    // Capped at the designed single stack, never a ramp.
+    expect(mod.stacks).toBe(1)
+
+    hp = 0.8
+    system.tick(1)
+    // Band releases once HP recovers - no latch across the threshold.
+    expect(mod.stacks).toBe(0)
+
+    hp = 0.2
+    system.tick(2)
+    // Re-arms on the next qualifying second.
+    expect(mod.stacks).toBe(1)
+  })
+
+  it('hpNotBelow mirrored leg stays mutually exclusive at the threshold', () => {
+    const mod = modifier({ flat: -0.05, percent: undefined, maxStacks: 1 })
+    const skill: Skill = {
+      id: 'test_band_neg',
+      name: 'Test Band Neg',
+      description: '',
+      type: 'passive',
+      level: 1,
+      maxLevel: 1,
+      cooldown: 0,
+      target: 'self',
+      effects: [],
+      passiveTrigger: 'per_second',
+      passiveModifiers: [mod],
+      passiveCondition: { kind: 'hpNotBelow', percent: 0.35 },
+    }
+
+    let hp = 0.5
+    const bus = new EventBus()
+    const system = new PassiveSystem(
+      bus,
+      { getPassiveSkills: () => [skill] } as unknown as SkillManager,
+      { getEffectiveSkill: (input: Skill) => input } as unknown as SkillSystem,
+      undefined,
+      () => hp,
+    )
+
+    system.tick(3)
+    expect(mod.stacks).toBe(1)
+
+    hp = 0.2
+    system.tick(1)
+    expect(mod.stacks).toBe(0)
+  })
+})

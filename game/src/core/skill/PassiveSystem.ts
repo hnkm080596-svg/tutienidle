@@ -277,7 +277,16 @@ export class PassiveSystem {
 
       // Talent v4 E2 - per_second chiu cung passiveCondition nhu passive
       // theo event (chan truoc khi tich, phan le accumulator giu nguyen).
+      // CP01-CANTHAN-RAMP - a conditioned band must also RELEASE when the
+      // condition stops holding: stacks latch on the modifier object, so
+      // without decay a one-time HP dip would keep the band for the whole
+      // battle. Clearing here keeps the band dynamic.
       if (!this.meetsCondition(effective.passiveCondition)) {
+        for (const modifier of effective.passiveModifiers ?? []) {
+          if ((modifier.stacks ?? 0) > 0) {
+            modifier.stacks = 0
+          }
+        }
         this.perSecondAccumulator.set(skill.id, accumulated)
 
         continue
