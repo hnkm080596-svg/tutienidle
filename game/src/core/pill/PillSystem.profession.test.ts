@@ -5,6 +5,9 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi, afterEach } from 'vitest'
 import { GameManager } from '../game/GameManager'
+import { PillSystem } from './PillSystem'
+import { pills } from '../../data/pill/pills'
+import { MAIN_STAT_KEYS } from '../stats/StatTypes'
 import { createDefaultPlayer } from '../player/Player'
 import { getMainStatCap } from '../stats/StatCap'
 import { getRequiredCultivation } from '../realm/realmSystem'
@@ -356,6 +359,94 @@ describe('PR54 fixpoint repairs', () => {
     expect(player.baseStats.might).toBe(before)
     if (!result.ok) {
       expect(gameManager.pillBag.has('test_drift_pill', 1)).toBe(true)
+    }
+  })
+
+  it('flat {cultivation, value} trong đan lai trả qua residual adapter - không bị nhánh percent nuốt thành 0', async () => {
+    const { gameManager, player } = setup()
+
+    const mixedPill = {
+      id: 'test_mixed_flat_cult',
+      name: 'Đan Lai Tu Vi Test',
+      type: 'permanent',
+      grade: 'hoang',
+      realmId: 'mortal',
+      effects: [
+        { type: 'permanent_stat', stat: 'strength', value: 1 },
+        { type: 'cultivation', value: 500 },
+      ],
+    } as never
+
+    gameManager.catalogOps.registerPills([mixedPill])
+    gameManager.pillBag.add(gameManager.pillRegistry.get('test_mixed_flat_cult'), 1)
+
+    let gained = 0
+    const target = {
+      addCultivation: (amount: number) => (gained += amount),
+      heal: () => {},
+      applyBuff: () => {},
+    }
+
+    const before = player.baseStats.strength
+    const result = gameManager.pillOps.usePillDetailed('test_mixed_flat_cult', target, player)
+
+    expect(result.ok).toBe(true)
+    expect(player.baseStats.strength).toBe(before + 1)
+    expect(gained).toBe(500)
+    expect(gameManager.pillBag.has('test_mixed_flat_cult', 1)).toBe(false)
+  })
+
+  it('residual numeric effects scale with potencyMultiplier', () => {
+    const system = new PillSystem()
+    const player = createDefaultPlayer()
+    player.realmId = 'mortal'
+
+    const mixedPill = {
+      id: 'test_mixed_potency',
+      name: 'Đan Potency Test',
+      effects: [{ type: 'heal', value: 100 }],
+    } as never
+
+    const target = { heal: vi.fn(), applyBuff: vi.fn(), addCultivation: vi.fn() }
+    system.useProfessionPill(mixedPill, player, () => 0, 1.5, target as never)
+
+    expect(target.heal).toHaveBeenCalledWith(150)
+  })
+
+  it('gate bỏ qua grant không ghi được (non-main / NaN / <=0) - apply cũng bỏ qua, hai phía nhất quán', async () => {
+    const { gameManager, player } = setup()
+
+    const driftPill = {
+      id: 'test_drift_values',
+      name: 'Đan Drift Values Test',
+      type: 'permanent',
+      grade: 'hoang',
+      realmId: 'mortal',
+      effects: [
+        { type: 'permanent_stat', stat: 'maxMp', value: 5 },
+        { type: 'permanent_stat', stat: 'strength', value: Number.NaN },
+        { type: 'permanent_stat', stat: 'strength', value: -3 },
+      ],
+    } as never
+
+    gameManager.catalogOps.registerPills([driftPill])
+    gameManager.pillBag.add(gameManager.pillRegistry.get('test_drift_values'), 1)
+
+    const strengthBefore = player.baseStats.strength
+    const result = gameManager.pillOps.usePillDetailed('test_drift_values', pillTarget(), player)
+
+    expect(result.ok).toBe(true)
+    expect(player.baseStats.strength).toBe(strengthBefore)
+    expect(player.baseStats.maxMp).toBe(0)
+  })
+
+  it('authored data: mọi grant permanent_stat nhắm MAIN_STAT_KEYS với value hữu hạn dương', () => {
+    for (const pill of pills) {
+      for (const effect of pill.effects) {
+        if (effect.type !== 'permanent_stat') continue
+        expect(MAIN_STAT_KEYS as readonly string[], `${pill.id}`).toContain(effect.stat)
+        expect(Number.isFinite(effect.value ?? NaN) && (effect.value ?? 0) > 0, `${pill.id}`).toBe(true)
+      }
     }
   })
 })

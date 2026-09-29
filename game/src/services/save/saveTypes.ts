@@ -75,8 +75,9 @@ export interface FormationStackSave {
 // `affixes: RolledAffix[]` (xem core/equipment/RolledAffix.ts) + them
 // field `rarity: EquipmentRarity` (xem core/equipment/EquipmentRarity.ts).
 // version 10: Dot Pha Truc Co (Phase 1) - xoa PlayerData.pillUsageCount
-// + Pill.usageLimit, thay bang tran theo canh gioi (RealmData.attributeCap,
-// xem PillSystem.canUse()).
+// + Pill.usageLimit, thay bang tran theo canh gioi (luc do la
+// RealmData.attributeCap - truong da bo, tran hien tai doc qua
+// getEffectiveMainStatCap).
 // version 11: Dot Pha Truc Co (Phase 5) - them
 // PlayerData.highestFoundationAchieved (muc 16 spec `breakthrough`).
 // version 12: Home Hub (Phase 2).

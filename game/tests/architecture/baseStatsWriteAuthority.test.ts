@@ -20,6 +20,17 @@
  *
  * Explicitly OUT of scope: test/simulation files (fixtures and driven
  * sessions set up state directly; they are not production authority).
+ *
+ * SCAN MODEL (honest bound): each file is normalized before scanning -
+ * comments are stripped string-aware, then newlines collapse into one
+ * line - so interposed comments (`baseStats/*c*.x`) and multi-line
+ * writes (`x.baseStats\n  .s = 1`, `Object.assign(t, {\n baseStats })`)
+ * cannot hide. Lexical scanning still cannot prove a payload carried
+ * inside a variable (`Object.assign(t, blob)`) - the store-targeted
+ * arms below flag indirect writes into $state/$patch so they surface
+ * for review rather than passing silently. Transitive aliases
+ * (`const b = a`) and parameter/loop-bound aliases stay uncovered by
+ * design; that residual is recorded here, not hidden.
  */
 import { describe, expect, it } from 'vitest'
 import { join, relative } from 'node:path'
@@ -29,32 +40,123 @@ const GAME_ROOT = process.cwd()
 const SRC_DIR = join(GAME_ROOT, 'src')
 
 /**
- * Matches writes to the baseStats pool:
- * - field writes: `x.baseStats.str =`, `x.baseStats[stat] +=`, `++`/`--`
- * - whole-object reassignment: `x.baseStats = {...}` (the `=` is not
- *   preceded by a member key here because `.baseStats` itself carries it)
- * - structural mutation: `Object.assign(x.baseStats, ...)`,
- *   `delete x.baseStats.k`
- *
- * Reads (`< cap`, `?? 0`) and construction (`baseStats: createBaseStats()`)
- * do not match - the `:` form is an object literal, not a `.` member write.
+ * Strip block and line comments without touching string literals so
+ * `//` inside 'https://x' or "a//b" survives and /*c*\/ inside a write
+ * expression does not shield it. Template-literal bodies are treated
+ * as opaque strings (${} expressions inside them are not scanned -
+ * bracket arms still catch `x.baseStats[`k`]` key syntax itself).
  */
-const BASESTATS_WRITE_RE =
-  /\.baseStats\s*(?:[+\-*/]?=(?!=)|\+\+|--)|\.baseStats\s*(?:\.\w+|\[[^\]]*\])\s*(?:[+\-*/]?=(?!=)|\+\+|--)|\[(?:"baseStats"|'baseStats')\]\s*(?:\.\w+|\[[^\]]*\])?\s*(?:[+\-*/]?=(?!=)|\+\+|--)|Object\.assign\([^)]*\.baseStats|Object\.assign\(\s*\w+\s*,\s*\{[^}]*\bbaseStats\b|\.\$patch\(\s*\{[^}]*\bbaseStats\b|Reflect\.set\([^)]*\bbaseStats\b|delete\s+\w+\.baseStats/
+function stripComments(src: string): string {
+  let out = ''
+  let i = 0
+  let inString: '"' | "'" | '`' | null = null
+  let inLine = false
+  let inBlock = false
+  while (i < src.length) {
+    const c = src[i]
+    const next = src[i + 1]
+    if (inLine) {
+      if (c === '\n') inLine = false
+      i += 1
+      continue
+    }
+    if (inBlock) {
+      if (c === '*' && next === '/') {
+        inBlock = false
+        i += 2
+        continue
+      }
+      i += 1
+      continue
+    }
+    if (inString !== null) {
+      out += c
+      if (c === '\\') {
+        out += next ?? ''
+        i += 2
+        continue
+      }
+      if (c === inString) inString = null
+      i += 1
+      continue
+    }
+    if (c === '/' && next === '/') {
+      inLine = true
+      i += 2
+      continue
+    }
+    if (c === '/' && next === '*') {
+      inBlock = true
+      i += 2
+      continue
+    }
+    if (c === '"' || c === "'" || c === '`') {
+      inString = c
+      out += c
+      i += 1
+      continue
+    }
+    out += c
+    i += 1
+  }
+  return out
+}
+
+/** Member access is spelled `.baseStats` or `["baseStats"]`/`['..']`/`[`..`]`. */
+const DOT_MEMBER = String.raw`\.baseStats\!?(?:\s*\.\w+\!?|\s*\[[^\]]{0,80}\])`
+const WRITE_OP =
+  String.raw`(?:=(?!=)|\+=|-=|\*=|/=|%=|\*\*=|<<=|>>>=|>>=|&=|\^=|\|=|\?\?=|\|\|=|&&=|\+\+|--)`
+
+// Every arm is global: non-global exec() ignores lastIndex and would
+// loop forever on the first hit.
+const WRITE_RES: RegExp[] = [
+  // x.baseStats = / += / ++ / x.baseStats.s = / x.baseStats[k] -=
+  new RegExp(String.raw`\.baseStats\!?\s*` + WRITE_OP, 'g'),
+  new RegExp(DOT_MEMBER + String.raw`\s*` + WRITE_OP, 'g'),
+  // x['baseStats'].s = / x[`baseStats`][k] +=
+  new RegExp(
+    String.raw`\[(?:"baseStats"|'baseStats'|` + '`' + String.raw`baseStats` + '`' +
+      String.raw`)\]\!?(?:\s*\.\w+\!?|\s*\[[^\]]{0,80}\])?\s*` + WRITE_OP,
+    'g',
+  ),
+  // ++x.baseStats.s / --x.baseStats[k]
+  new RegExp(String.raw`(?:\+\+|--)\s*\w+` + DOT_MEMBER, 'g'),
+  // destructuring / for-of targets carrying baseStats: [p.baseStats.x]=a, for(p.baseStats.x of a)
+  new RegExp(String.raw`[\[\{][^\]\}]{0,120}\.baseStats[^\]\}]{0,120}[\]\}]\s*=`, 'g'),
+  // for-of/for-in with baseStats as the loop TARGET (before of/in);
+  // `for (x of Object.entries(y.baseStats))` is a read - the pool
+  // reference sits after the keyword, so it does not match.
+  new RegExp(String.raw`for\s*\(\s*(?:const|let|var\s+)?[^)]{0,80}?\.baseStats\b[^)]*?\s+(?:of|in)\s`, 'g'),
+  // structural APIs
+  new RegExp(String.raw`Object\.assign\([^)]{0,200}\bbaseStats\b`, 'g'),
+  new RegExp(String.raw`Object\.assign\(\s*(?:this\.\$state|\w+\.\$state|\w+Store)\s*,`, 'g'),
+  new RegExp(String.raw`\.\$patch\s*\(\s*\{[^}]{0,400}\bbaseStats\b`, 'g'),
+  new RegExp(String.raw`\.\$patch\s*\(\s*\w+\s*\)`, 'g'),
+  new RegExp(String.raw`Reflect\.(?:set|defineProperty|deleteProperty)\([^)]{0,160}\bbaseStats\b`, 'g'),
+  new RegExp(String.raw`Object\.definePropert(?:y|ies)\([^)]{0,160}\bbaseStats\b`, 'g'),
+  new RegExp(String.raw`delete\s+[^;]{0,120}\bbaseStats\b`, 'g'),
+  // .vue two-way binding into the pool
+  new RegExp(String.raw`v-model="[^"]{0,120}\bbaseStats\b`, 'g'),
+]
 
 /**
- * Pool-alias escape hatch: `const s = x.baseStats; s.strength = 1` writes
- * the same pool without spelling `.baseStats` on the write line. Track
- * per-file alias declarations, then flag member writes on the alias.
- * Store `$state.baseStats` inside an SFC (`player.$state.baseStats`) is
- * caught by the main regex; the alias arm covers the rest.
+ * Pool-alias escape hatches:
+ *   const s = x.baseStats | const s = x['baseStats'] | s = x.baseStats
+ *   const { baseStats } = x | const { baseStats: b } = x
+ * `const copy = { ...x.baseStats }` is a fresh object - RHS `{` excluded.
  */
-// `const copy = { ...x.baseStats }` is a fresh object - writes go to
-// the copy, not the pool - so an RHS opening with `{` is excluded.
-const ALIAS_DECL_RE = /(?:const|let|var)\s+(\w+)\s*=\s*(?!\s*\{)[^;=]*\.baseStats\b/g
+const ALIAS_DECL_RES: RegExp[] = [
+  /(?:const|let|var)\s+(\w+)\s*=\s*(?!\s*\{)[^;=]{0,160}(?:\.baseStats\b|\[(?:"baseStats"|'baseStats'|`baseStats`)\])/g,
+  /\b(\w+)\s*=\s*(?!\s*=|\s*\{)[^;]{0,120}\.baseStats\b/g,
+  /\{\s*baseStats\s*:\s*(\w+)\s*\}\s*=/g,
+  /\{\s*(baseStats)\s*\}\s*=/g,
+]
 const aliasWriteRe = (id: string): RegExp =>
   new RegExp(
-    `\\b${id}\\s*(?:\\.\\w+|\\[[^\\]]*\\])\\s*(?:[+\\-*/]?=(?!=)|\\+\\+|--)|Object\\.assign\\(\\s*${id}\\b|delete\\s+${id}\\s*\\.`,
+    `\\b${id}\\s*(?:\\.\\w+|\\[[^\\]]{0,80}\\])\\s*(?:=(?!=)|\\+=|-=|\\*=|/=|%=|\\*\\*=|<<=|>>>=|>>=|&=|\\^=|\\|=|\\?\\?=|\\|\\|=|&&=|\\+\\+|--)` +
+      `|(?:\\+\\+|--)\\s*${id}\\s*(?:\\.\\w+|\\[[^\\]]{0,80}\\])` +
+      `|Object\\.assign\\(\\s*${id}\\b|delete\\s+${id}\\s*\\.`,
+    'g',
   )
 
 const TEST_EXT_RE = /\.test\.(ts|tsx|js|jsx|mjs|cjs|mts|cts)$/
@@ -97,26 +199,43 @@ function collectOffenders(): { violations: Offender[]; unclassified: Offender[] 
     const rel = relative(GAME_ROOT, file.path).replaceAll('\\', '/')
     const allowed = ALLOWED.find((a) => a.path === rel)
 
-    const lines = file.text.split('\n')
+    // Normalize: strip comments string-aware, then collapse newlines so
+    // multi-line writes and comment-interposed tokens cannot hide.
+    const normalized = stripComments(file.text).replace(/\n+/g, ' ')
+
     const aliasIds = new Set<string>()
-    for (const line of lines) {
-      ALIAS_DECL_RE.lastIndex = 0
+    for (const re of ALIAS_DECL_RES) {
+      re.lastIndex = 0
       let m: RegExpExecArray | null
-      while ((m = ALIAS_DECL_RE.exec(line)) !== null) {
+      while ((m = re.exec(normalized)) !== null) {
         if (m[1]) aliasIds.add(m[1])
       }
     }
     const aliasRes = [...aliasIds].map(aliasWriteRe)
 
-    lines.forEach((line, idx) => {
-      if (!BASESTATS_WRITE_RE.test(line) && !aliasRes.some((re) => re.test(line))) return
-      const offender = { file: rel, line: idx + 1, text: line.trim() }
+    const flag = (text: string): void => {
+      const offender = { file: rel, line: 0, text }
       if (allowed) {
         violations.push(offender)
       } else {
         unclassified.push(offender)
       }
-    })
+    }
+
+    for (const re of WRITE_RES) {
+      re.lastIndex = 0
+      let m: RegExpExecArray | null
+      while ((m = re.exec(normalized)) !== null) {
+        flag(m[0].slice(0, 120))
+      }
+    }
+    for (const re of aliasRes) {
+      re.lastIndex = 0
+      let m: RegExpExecArray | null
+      while ((m = re.exec(normalized)) !== null) {
+        flag(m[0].slice(0, 120))
+      }
+    }
   }
 
   return { violations, unclassified }

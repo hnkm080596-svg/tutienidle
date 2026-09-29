@@ -47,15 +47,15 @@ export class PillSystem {
     }
   }
 
-  private applyEffect(effect: PillEffect, target: PillTarget): void {
+  private applyEffect(effect: PillEffect, target: PillTarget, potencyMultiplier = 1): void {
     switch (effect.type) {
       case 'cultivation':
-        target.addCultivation(effect.value ?? 0)
+        target.addCultivation((effect.value ?? 0) * potencyMultiplier)
 
         return
 
       case 'heal':
-        target.heal(effect.value ?? 0)
+        target.heal((effect.value ?? 0) * potencyMultiplier)
 
         return
 
@@ -114,7 +114,16 @@ export class PillSystem {
     const pendingByStat = new Map<string, number>()
     const mainCap = getEffectiveMainStatCap(player)
     for (const effect of pill.effects) {
-      if (effect.type !== 'permanent_stat' || !effect.stat) {
+      // Mirror apply's writability rule exactly: non-main/stat-less
+      // targets and non-finite or <=0 values never write, so they must
+      // not gate the pill either (a skipped grant is not a block).
+      if (
+        effect.type !== 'permanent_stat' ||
+        !effect.stat ||
+        !(MAIN_STAT_KEYS as readonly string[]).includes(effect.stat) ||
+        !Number.isFinite(effect.value ?? NaN) ||
+        (effect.value ?? 0) <= 0
+      ) {
         continue
       }
 
@@ -170,10 +179,15 @@ export class PillSystem {
         // the shared bound honest even if a future caller skips
         // canUseProfessionPill's cap gate.
         if (effect.stat) {
-          if (!(MAIN_STAT_KEYS as readonly string[]).includes(effect.stat)) {
+          if (
+            !(MAIN_STAT_KEYS as readonly string[]).includes(effect.stat) ||
+            !Number.isFinite(effect.value ?? NaN) ||
+            (effect.value ?? 0) <= 0
+          ) {
             // baseStats accepts every StatType, but the main-stat bound
-            // only has meaning for MAIN_STAT_KEYS - a non-main target
-            // here is authored-data drift, refuse the write.
+            // only has meaning for MAIN_STAT_KEYS - and a grant value
+            // must be a finite positive. Anything else is authored-data
+            // drift, refuse the write.
             continue
           }
           const cap = getEffectiveMainStatCap(player)
@@ -242,12 +256,15 @@ export class PillSystem {
         continue
       }
 
-      if (effect.type === 'cultivation') {
+      // Only the percent-of-tier form is profession vocabulary; a flat
+      // {cultivation, value:N} is residual (legacy use() semantics) and
+      // must fall through to the adapter below, not pay floor(x * 0)=0.
+      if (effect.type === 'cultivation' && effect.cultivationPercent !== undefined) {
         // Tu Vi theo % yêu cầu tầng HIỆN TẠI lúc uống (plan §5.5), qua
         // addCultivation để giữ cap tầng.
         const required = getRequiredCultivation(player.realmId, player.realmLevel)
 
-        addCultivation(player, Math.floor(required * (effect.cultivationPercent ?? 0) * potencyMultiplier))
+        addCultivation(player, Math.floor(required * effect.cultivationPercent * potencyMultiplier))
 
         continue
       }
@@ -265,9 +282,10 @@ export class PillSystem {
 
       // Residual vocabulary (heal/buff/flat-cultivation/...): apply via
       // the target adapter rather than dropping - a pill mixing a
-      // profession effect with a legacy effect must pay both.
+      // profession effect with a legacy effect must pay both. Numeric
+      // residuals scale with potency like every profession magnitude.
       if (target) {
-        this.applyEffect(effect, target)
+        this.applyEffect(effect, target, potencyMultiplier)
       }
     }
 

@@ -221,9 +221,10 @@ export const usePlayerStore = defineStore('player', {
 
     // Modifier "tĩnh" từ equipment (xem ghi chú kiểu PlayerData).
     // Gọi ngay sau equip/unequip/enhance, không phải mỗi tick —
-    // khác setExternalModifiers ở trên. player.modifiers là bucket
-    // DÙNG CHUNG cho nhiều nguồn tĩnh khác (realm passive, Luyện Thể,
-    // pill vĩnh viễn — phân biệt qua sourceType/id prefix), nên chỉ
+    // khac setExternalModifiers o tren. player.modifiers is the SHARED
+    // bucket for many static sources (realm passive, Luyen The -
+    // distinguished by sourceType/id prefix; permanent pills now write
+    // baseStats directly, no longer a modifier bucket), so it may only
     // được thay THẾ phần sourceType 'equipment', không được gán đè cả
     // mảng — gán đè từng xoá sạch mọi nguồn khác mỗi lần equip/reload.
     setEquipmentModifiers(modifiers: StatModifier[]) {
@@ -356,20 +357,29 @@ export const usePlayerStore = defineStore('player', {
       const isRetiredPillPermanent = (modifier: StatModifier): boolean =>
         modifier.id.startsWith('pill-permanent:')
       const mainCap = getEffectiveMainStatCap(restoredPlayer)
-      for (const modifier of restoredPlayer.modifiers ?? []) {
-        if (!isRetiredPillPermanent(modifier) || !allowedStatKeys.has(modifier.stat)) {
-          continue
+      const foldRetiredPillPermanents = (modifiers: StatModifier[] | undefined): void => {
+        for (const modifier of modifiers ?? []) {
+          if (!isRetiredPillPermanent(modifier) || !allowedStatKeys.has(modifier.stat)) {
+            continue
+          }
+          const gain = modifier.flat ?? 0
+          if (!Number.isFinite(gain) || gain <= 0) {
+            continue
+          }
+          const key = modifier.stat
+          const bound = (MAIN_STAT_KEYS as readonly string[]).includes(key)
+            ? mainCap
+            : Number.POSITIVE_INFINITY
+          restoredPlayer.baseStats[key] = Math.min(bound, (restoredPlayer.baseStats[key] ?? 0) + gain)
         }
-        const gain = modifier.flat ?? 0
-        if (gain <= 0) {
-          continue
-        }
-        const key = modifier.stat
-        const bound = (MAIN_STAT_KEYS as readonly string[]).includes(key)
-          ? mainCap
-          : Number.POSITIVE_INFINITY
-        restoredPlayer.baseStats[key] = Math.min(bound, (restoredPlayer.baseStats[key] ?? 0) + gain)
       }
+
+      // Same one-shot fold in every static-modifier bucket a legacy
+      // save could carry: player.modifiers and player.externalModifiers
+      // are both filtered by isCurrentShapeModifier below, so a folded
+      // zombie is dropped from either channel exactly once.
+      foldRetiredPillPermanents(restoredPlayer.modifiers)
+      foldRetiredPillPermanents(restoredPlayer.externalModifiers)
 
       // Value-domain coherence on the persisted pool: main stats clamp
       // to the shared cap (a save claiming more is corrupt or crafted -
