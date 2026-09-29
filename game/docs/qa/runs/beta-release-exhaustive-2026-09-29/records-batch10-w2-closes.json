@@ -1,0 +1,745 @@
+{
+ "records": [
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-BX-30",
+    "title": "Offline cultivation priced off one-tick-stale cultivationPerSecond snapshot; buff activate/expire inside [last tick -> save] gap corrupts whole window both directions",
+    "state": {
+     "productStateId": "9a1c175ad81880d11956a2af84c417d28a5c4e392fa1ec7234c3a7e1159592e6",
+     "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+     "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+     "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+    },
+    "severity": "High",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "PRODUCTION",
+    "locations": [
+     {
+      "path": "game/src/stores/player.ts",
+      "symbolOrSection": ":277-284 restore math",
+      "revision": "f1049b5e",
+      "basis": "SOURCE"
+     },
+     {
+      "path": "game/src/core/cultivation/CultivationTick.ts",
+      "symbolOrSection": ":29-47",
+      "revision": "f1049b5e",
+      "basis": "SOURCE"
+     },
+     {
+      "path": "game/src/core/economy/TuLinhTranBalance.ts",
+      "symbolOrSection": ":39-46,62-91",
+      "revision": "f1049b5e",
+      "basis": "SOURCE"
+     }
+    ],
+    "discoveredBy": "save auditor devin-caa5f312 (wave1-save-audit.md)",
+    "invariantIds": [
+     "I-OFFLINE-PRICING"
+    ],
+    "evidenceIds": [],
+    "counterexample": "control case (honest snapshot + mid-window expiry) prices correctly - isolates staleness",
+    "expected": "offline window priced at rates actually held (EM-02 intent)",
+    "actual": "snapshot from different buff-state than live at lastSavedAt -> un-buff divides by wrong factor; expired buff pays x1.25 whole window (+216k on 24h repro); fresh buff benefit silently dead",
+    "rootCause": "cultivationPerSecond written only by 1s tick",
+    "rootClass": "stale-snapshot",
+    "subsystem": "save-restore-cloud",
+    "siblingSearch": [],
+    "siblingFindingIds": [
+     "F-BX-04"
+    ],
+    "repair": null,
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "status": "CLOSED",
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "closeReason": "REPAIRED 967b9ace: computeUnbuffedCultivationRate exported; ticks write un-buffed rate; restore recomputes from effects held at lastSavedAt",
+    "closedAt": "2026-09-29T15:20:00Z",
+    "fixedInRevision": "967b9ace"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-BX-31",
+    "title": "Same-revision remote fork resolved by raw wall-clock compare; pull destroys local save with no backup",
+    "state": {
+     "productStateId": "9a1c175ad81880d11956a2af84c417d28a5c4e392fa1ec7234c3a7e1159592e6",
+     "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+     "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+     "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+    },
+    "severity": "Medium",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "PRODUCTION",
+    "locations": [
+     {
+      "path": "game/src/services/cloudSave/SupabaseRemoteSave.ts",
+      "symbolOrSection": ":102-135 remoteAhead + pull writes, no backupCurrentSave",
+      "revision": "f1049b5e",
+      "basis": "SOURCE"
+     }
+    ],
+    "discoveredBy": "save auditor devin-caa5f312 (wave1-save-audit.md)",
+    "invariantIds": [
+     "I-CLOUD-LINEAGE-ORDER"
+    ],
+    "evidenceIds": [],
+    "counterexample": "repro: local rev5/cult777 vs remote rev5/+30s -> pulled, destroyed, backup null",
+    "expected": "tie-break on lineage, and pull backs up before overwrite",
+    "actual": "remoteUpdatedMs > localLastSavedAt compares server clock vs client field; losing device has genuinely-newer local progress overwritten; *-backup not written",
+    "rootCause": "no sync-base tie-break on equal revisions; pull path never backs up",
+    "rootClass": "lineage-tie-break",
+    "subsystem": "save-restore-cloud",
+    "siblingSearch": [],
+    "siblingFindingIds": [
+     "F-BX-01"
+    ],
+    "repair": null,
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "status": "CLOSED",
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "closeReason": "REPAIRED c45c0ef6: same-rev divergent fork in base===null branch -> conflict; pull runs backupCurrentSave before overwrite",
+    "closedAt": "2026-09-29T15:20:00Z",
+    "fixedInRevision": "c45c0ef6"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-BX-32",
+    "title": "Two tabs on one account ping-pong LWW: stale tab resyncs then blind whole-payload overwrite; no merge, no user signal",
+    "state": {
+     "productStateId": "9a1c175ad81880d11956a2af84c417d28a5c4e392fa1ec7234c3a7e1159592e6",
+     "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+     "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+     "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+    },
+    "severity": "Medium",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "PRODUCTION",
+    "locations": [
+     {
+      "path": "game/src/services/cloudSave/CloudSaveCoordinator.ts",
+      "symbolOrSection": "conflict -> load() -> one retry",
+      "revision": "f1049b5e",
+      "basis": "SOURCE"
+     },
+     {
+      "path": "game/src/services/cloudSave/LocalCloudSaveService.ts",
+      "symbolOrSection": ":29-63",
+      "revision": "f1049b5e",
+      "basis": "SOURCE"
+     }
+    ],
+    "discoveredBy": "save auditor devin-caa5f312 (wave1-save-audit.md)",
+    "invariantIds": [
+     "I-CLOUD-LINEAGE-ORDER"
+    ],
+    "evidenceIds": [],
+    "counterexample": "none recorded by auditor",
+    "expected": "conflict surfaces to user or merges",
+    "actual": "alternating silent rollback until a tab closes; CAS prevents corruption not data loss",
+    "rootCause": "retry writes whole payload without lineage check",
+    "rootClass": "lww-clobber",
+    "subsystem": "save-restore-cloud",
+    "siblingSearch": [],
+    "siblingFindingIds": [
+     "F-BX-31"
+    ],
+    "repair": null,
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "status": "CLOSED",
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "closeReason": "REPAIRED 14d40ed0: recoveredFromConflict now surfaces save.conflict toast once per recovered write; LWW documented as product decision",
+    "closedAt": "2026-09-29T15:20:00Z",
+    "fixedInRevision": "14d40ed0"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-BX-33",
+    "title": "First-push insert race: Prefer: resolution=merge-duplicates silently upserts on PK conflict - code comment claims it throws",
+    "state": {
+     "productStateId": "9a1c175ad81880d11956a2af84c417d28a5c4e392fa1ec7234c3a7e1159592e6",
+     "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+     "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+     "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+    },
+    "severity": "Medium",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "PRODUCTION",
+    "locations": [
+     {
+      "path": "game/src/services/cloudSave/SupabaseRemoteSave.ts",
+      "symbolOrSection": ":176-187",
+      "revision": "f1049b5e",
+      "basis": "SOURCE"
+     }
+    ],
+    "discoveredBy": "save auditor devin-caa5f312 (wave1-save-audit.md)",
+    "invariantIds": [
+     "I-CLOUD-LINEAGE-ORDER"
+    ],
+    "evidenceIds": [],
+    "counterexample": "none recorded by auditor",
+    "expected": "concurrent first-push loses to PK conflict -> 'unavailable' as comment claims",
+    "actual": "merge-duplicates upserts over winner's row; both return 'pushed'; remote holds stale write. No CAS on insert path",
+    "rootCause": "insert branch lacks CAS guard present on PATCH branch",
+    "rootClass": "cas-gap",
+    "subsystem": "save-restore-cloud",
+    "siblingSearch": [],
+    "siblingFindingIds": [
+     "F-BX-31"
+    ],
+    "repair": null,
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "status": "CLOSED",
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "closeReason": "REPAIRED c45c0ef6: merge-duplicates header removed; PK conflict -> unavailable",
+    "closedAt": "2026-09-29T15:20:00Z",
+    "fixedInRevision": "c45c0ef6"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-BX-34",
+    "title": "importSaveRaw never bumps save revision: next login pull destroys the just-imported save",
+    "state": {
+     "productStateId": "9a1c175ad81880d11956a2af84c417d28a5c4e392fa1ec7234c3a7e1159592e6",
+     "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+     "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+     "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+    },
+    "severity": "Medium",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "PRODUCTION",
+    "locations": [
+     {
+      "path": "game/src/services/save/SaveSystem.ts",
+      "symbolOrSection": ":706-801 writes backup+save+marker, revision untouched",
+      "revision": "f1049b5e",
+      "basis": "SOURCE"
+     }
+    ],
+    "discoveredBy": "save auditor devin-caa5f312 (wave1-save-audit.md)",
+    "invariantIds": [
+     "I-CLOUD-LINEAGE-ORDER"
+    ],
+    "evidenceIds": [],
+    "counterexample": "none recorded by auditor",
+    "expected": "import adopts revision >= remote lineage or marks slot dirty",
+    "actual": "imported save inherits pre-import lineage; if remote revision higher, next login remoteAhead pull overwrites it unplayed",
+    "rootCause": "revision key not written on import",
+    "rootClass": "lineage-gap",
+    "subsystem": "save-restore-cloud",
+    "siblingSearch": [],
+    "siblingFindingIds": [
+     "F-BX-31"
+    ],
+    "repair": null,
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "status": "CLOSED",
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "closeReason": "REPAIRED a8057449: import bumps revision prior+1 before save write; torn write rolls marker back",
+    "closedAt": "2026-09-29T15:20:00Z",
+    "fixedInRevision": "a8057449"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-BX-37",
+    "title": "Crafted-save economy magnitudes unbounded: cultivationPerSecond and persistentTimedEffects percent/expiresAtMs pass gate into offline pricing",
+    "state": {
+     "productStateId": "9a1c175ad81880d11956a2af84c417d28a5c4e392fa1ec7234c3a7e1159592e6",
+     "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+     "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+     "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+    },
+    "severity": "Low",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "HYPOTHETICAL",
+    "locations": [
+     {
+      "path": "game/src/services/save/saveShapeValidation.ts",
+      "symbolOrSection": ":258-259,533-563",
+      "revision": "f1049b5e",
+      "basis": "SOURCE"
+     }
+    ],
+    "discoveredBy": "save auditor devin-caa5f312 (wave1-save-audit.md)",
+    "invariantIds": [
+     "I-SAVE-VALIDATE-COMPLETE"
+    ],
+    "evidenceIds": [],
+    "counterexample": "arguably outside anti-corruption threat model - noted since gate is sole integrity barrier",
+    "expected": "magnitude bounds on fields feeding money/accrued value",
+    "actual": "non-neg finite only; crafted values flow straight into offline grant math",
+    "rootCause": "gate covers shape/boundaries not magnitudes",
+    "rootClass": "unbounded-magnitude",
+    "subsystem": "save-restore-cloud",
+    "siblingSearch": [],
+    "siblingFindingIds": [
+     "F-BX-05"
+    ],
+    "repair": null,
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "status": "REJECTED_WITH_PROOF",
+    "duplicateOf": null,
+    "rejectionReason": "Gate threat model is anti-corruption not anti-cheat; F-BX-30 repair removes snapshot-pricing channel entirely",
+    "exception": null,
+    "closeReason": "Gate threat model is anti-corruption not anti-cheat; F-BX-30 repair removes snapshot-pricing channel entirely",
+    "closedAt": "2026-09-29T15:20:00Z"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-BX-39",
+    "title": "Frozen dailies from future lastDailyResetAtMs (raised Medium: QCF wave-2 executable repro - claimed dailies stay claimed, clock-forward reachable)",
+    "state": {
+     "productStateId": "9a1c175ad81880d11956a2af84c417d28a5c4e392fa1ec7234c3a7e1159592e6",
+     "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+     "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+     "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+    },
+    "severity": "Medium",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "PRODUCTION",
+    "locations": [
+     {
+      "path": "game/src/services/save/saveShapeValidation.ts",
+      "symbolOrSection": "restore clamp >=0 no upper bound",
+      "revision": "f1049b5e",
+      "basis": "SOURCE"
+     },
+     {
+      "path": "game/src/core/quest/QuestSystem.ts",
+      "symbolOrSection": "checkAndResetDaily dayBucket compare",
+      "revision": "f1049b5e",
+      "basis": "SOURCE"
+     }
+    ],
+    "discoveredBy": "save auditor devin-caa5f312 (wave1-save-audit.md)",
+    "invariantIds": [
+     "I-SAVE-VALIDATE-COMPLETE"
+    ],
+    "evidenceIds": [],
+    "counterexample": "none recorded by auditor",
+    "expected": "marker clamped to <=now on restore",
+    "actual": "future marker is saved and durable; checkAndResetDaily skips while dayBucket(now) <= dayBucket(last)",
+    "rootCause": "restore clamps >=0 only",
+    "rootClass": "unbounded-timestamp",
+    "subsystem": "quests-companions-formation-stages",
+    "siblingSearch": [],
+    "siblingFindingIds": [],
+    "repair": null,
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "status": "CLOSED",
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "closeReason": "REPAIRED a88d8f59: future lastDailyResetAtMs treated as stale -> reset fires + rewrites marker (self-heal)",
+    "closedAt": "2026-09-29T15:20:00Z",
+    "fixedInRevision": "a88d8f59"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-BX-41",
+    "title": "Reciprocity cap silently voids PAID committed reactive follow-ups: queuedFollowUps dropped at depth>=4 after The/debt/gauge costs committed",
+    "state": {
+     "productStateId": "9a1c175ad81880d11956a2af84c417d28a5c4e392fa1ec7234c3a7e1159592e6",
+     "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+     "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+     "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+    },
+    "severity": "Medium",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "PRODUCTION",
+    "locations": [
+     {
+      "path": "game/src/core/combat/TurnBattleSystem.ts",
+      "symbolOrSection": "~1112-1118 dequeueFollowUpActor; cost commit ~682",
+      "revision": "f1049b5e",
+      "basis": "SOURCE"
+     }
+    ],
+    "discoveredBy": "combat auditor devin-8ff83640 (wave1-combat-audit.md)",
+    "invariantIds": [
+     "I-BUFF-PROC-CARDINALITY"
+    ],
+    "evidenceIds": [],
+    "counterexample": "none recorded by auditor",
+    "expected": "cap rejects uncommitted rolls or defers entries - never voids paid work",
+    "actual": "cost kept (The, reactionDebt+1, -400 gauge); counter silently dropped, no event/log. >=5 committed reactive entries reachable via Phan/Ally windows + Tro",
+    "rootCause": "depth cap clears queue without refunding committed costs",
+    "rootClass": "paid-work-void",
+    "subsystem": "combat-vitals-skills",
+    "siblingSearch": [],
+    "siblingFindingIds": [],
+    "repair": null,
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "status": "CLOSED",
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "closeReason": "REPAIRED 6531926d: cap no longer drops queuedFollowUps; paid committed entries drain on later dequeues",
+    "closedAt": "2026-09-29T15:20:00Z",
+    "fixedInRevision": "6531926d"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-BX-42",
+    "title": "Effective-stat pipeline has no floor: negative maxHp/speed produces zombie + stall paths",
+    "state": {
+     "productStateId": "9a1c175ad81880d11956a2af84c417d28a5c4e392fa1ec7234c3a7e1159592e6",
+     "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+     "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+     "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+    },
+    "severity": "Low",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "HYPOTHETICAL",
+    "locations": [
+     {
+      "path": "game/src/core/stats/StatCalculator.ts",
+      "symbolOrSection": "runPipeline no output clamp",
+      "revision": "f1049b5e",
+      "basis": "SOURCE"
+     },
+     {
+      "path": "game/src/core/combat/TurnBattleSystem.ts",
+      "symbolOrSection": "~1041-1044 refreshParticipantStats",
+      "revision": "f1049b5e",
+      "basis": "SOURCE"
+     },
+     {
+      "path": "game/src/core/combat/EntityVitalsSystem.ts",
+      "symbolOrSection": "~61-68 clampToMaxHp",
+      "revision": "f1049b5e",
+      "basis": "SOURCE"
+     }
+    ],
+    "discoveredBy": "combat auditor devin-8ff83640 (wave1-combat-audit.md)",
+    "invariantIds": [
+     "I-STAT-PIPELINE"
+    ],
+    "evidenceIds": [],
+    "counterexample": "latent: no authored -100% debuff reaches production today",
+    "expected": "effective maxHp/speed floored at sane minimums",
+    "actual": "refreshParticipantStats writes entity.maxHp unconditionally; clampToMaxHp min() with no max(0); alive flag never flips -> zombie",
+    "rootCause": "no min clamp on derived vitals",
+    "rootClass": "missing-floor",
+    "subsystem": "combat-vitals-skills",
+    "siblingSearch": [],
+    "siblingFindingIds": [],
+    "repair": null,
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "status": "CLOSED",
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "closeReason": "REPAIRED c2e38b60: floors at refreshParticipantStats (speed>=0, maxHp>=1); clampToMaxHp floors hp>=0",
+    "closedAt": "2026-09-29T15:20:00Z",
+    "fixedInRevision": "c2e38b60"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-BX-44",
+    "title": "preparePresentationResume does not re-mint playback token on 'manual' phase - stale pre-detach callbacks stay valid",
+    "state": {
+     "productStateId": "9a1c175ad81880d11956a2af84c417d28a5c4e392fa1ec7234c3a7e1159592e6",
+     "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+     "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+     "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+    },
+    "severity": "Low",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "PRODUCTION",
+    "locations": [
+     {
+      "path": "game/src/game/combat/CombatAnimationRuntime.ts",
+      "symbolOrSection": "~575-620",
+      "revision": "f1049b5e",
+      "basis": "SOURCE"
+     }
+    ],
+    "discoveredBy": "combat auditor devin-8ff83640 (wave1-combat-audit.md)",
+    "invariantIds": [
+     "I-CAST-IMPACT-ORDER"
+    ],
+    "evidenceIds": [],
+    "counterexample": "none recorded by auditor",
+    "expected": "detach/reattach invalidates stale callbacks on every phase",
+    "actual": "manual phase returns token unchanged; stale acknowledgeActionImpact(oldToken) can fire applyActionImpact early (bounded: same battle+actor, single-consume)",
+    "rootCause": "token rotation missing on manual branch",
+    "rootClass": "stale-token",
+    "subsystem": "combat-vitals-skills",
+    "siblingSearch": [],
+    "siblingFindingIds": [],
+    "repair": null,
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "status": "CLOSED",
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "closeReason": "REPAIRED 50eb631e: manual-phase resume re-mints playback token; stale token rejected",
+    "closedAt": "2026-09-29T15:20:00Z",
+    "fixedInRevision": "50eb631e"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-BX-45",
+    "title": "BuffSystem onReapplyDuration:'extend' corrupts durationless instances: remaining=0 expires next Phase B; finite converts permanent silently",
+    "state": {
+     "productStateId": "9a1c175ad81880d11956a2af84c417d28a5c4e392fa1ec7234c3a7e1159592e6",
+     "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+     "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+     "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+    },
+    "severity": "Low",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "HYPOTHETICAL",
+    "locations": [
+     {
+      "path": "game/src/core/buff/BuffSystem.ts",
+      "symbolOrSection": "~267-270 (instance.remaining ?? 0) + (duration ?? 0)",
+      "revision": "f1049b5e",
+      "basis": "SOURCE"
+     }
+    ],
+    "discoveredBy": "combat auditor devin-8ff83640 (wave1-combat-audit.md)",
+    "invariantIds": [
+     "I-BUFF-PROC-CARDINALITY"
+    ],
+    "evidenceIds": [],
+    "counterexample": "latent: zero live defs use 'extend'",
+    "expected": "extend preserves durationless semantics",
+    "actual": "permanent instance re-applied with duration undefined -> remaining=0; finite duration converts permanent -> finite",
+    "rootCause": "?? 0 collapses undefined duration",
+    "rootClass": "durationless-corruption",
+    "subsystem": "combat-vitals-skills",
+    "siblingSearch": [],
+    "siblingFindingIds": [],
+    "repair": null,
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "status": "CLOSED",
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "closeReason": "REPAIRED 90f431f0: extend only when both instance+reapply timed; durationless is no-op",
+    "closedAt": "2026-09-29T15:20:00Z",
+    "fixedInRevision": "90f431f0"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-BX-46",
+    "title": "BuffSystem.apply create path mints <=0-stack instances; getStatModifiers x stacks<=0 inverts while buff_applied reports created:true",
+    "state": {
+     "productStateId": "9a1c175ad81880d11956a2af84c417d28a5c4e392fa1ec7234c3a7e1159592e6",
+     "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+     "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+     "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+    },
+    "severity": "Low",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "HYPOTHETICAL",
+    "locations": [
+     {
+      "path": "game/src/core/buff/BuffSystem.ts",
+      "symbolOrSection": "~235 stacks: Math.min(req.stacks,maxStacks) no >=1 floor",
+      "revision": "f1049b5e",
+      "basis": "SOURCE"
+     }
+    ],
+    "discoveredBy": "combat auditor devin-8ff83640 (wave1-combat-audit.md)",
+    "invariantIds": [
+     "I-BUFF-PROC-CARDINALITY"
+    ],
+    "evidenceIds": [],
+    "counterexample": "latent: production lanes floor >=1",
+    "expected": "create path floors stacks >=1 like mutation paths (~408,~433)",
+    "actual": "stacks<=0 creates live instance with dead/inverted delivery",
+    "rootCause": "missing floor on create",
+    "rootClass": "missing-floor",
+    "subsystem": "combat-vitals-skills",
+    "siblingSearch": [],
+    "siblingFindingIds": [],
+    "repair": null,
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "status": "CLOSED",
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "closeReason": "REPAIRED 90f431f0: apply create path floors stacks>=1 matching mutation paths",
+    "closedAt": "2026-09-29T15:20:00Z",
+    "fixedInRevision": "90f431f0"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-BX-51",
+    "title": "TribulationDirector.start() clobbers pending committedOutcome: restored victory/defeat consequences destroyed before settle",
+    "state": {
+     "productStateId": "9a1c175ad81880d11956a2af84c417d28a5c4e392fa1ec7234c3a7e1159592e6",
+     "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+     "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+     "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+    },
+    "severity": "Medium",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "PRODUCTION",
+    "locations": [
+     {
+      "path": "game/src/core/tribulation/TribulationDirector.ts",
+      "symbolOrSection": ":216-218 guards, :260 unconditional committedOutcome=null",
+      "revision": "f1049b5e",
+      "basis": "SOURCE"
+     }
+    ],
+    "discoveredBy": "progression auditor devin-37285e3f (wave1-progression-audit.md)",
+    "invariantIds": [
+     "I-TRIBULATION-ONCE"
+    ],
+    "evidenceIds": [],
+    "counterexample": "post-victory foundation holds coincidentally protected by release-closed transition gate, not pending check",
+    "expected": "pending-outcome refusal in start() per module contract (stays pending until clear() drains)",
+    "actual": "restored victory -> start() passes guards -> realm advance/talent/first-entry rewards never applied; defeat penalties escape once cooldown expires",
+    "rootCause": "guards check only cooldown/active, not pending committedOutcome",
+    "rootClass": "pending-clobber",
+    "subsystem": "paths-ways-nodes-technique-body-realm",
+    "siblingSearch": [],
+    "siblingFindingIds": [],
+    "repair": null,
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "status": "CLOSED",
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "closeReason": "REPAIRED d6cdc534: start() refuses while committedOutcome !== null; restored pending victory survives refusal",
+    "closedAt": "2026-09-29T15:20:00Z",
+    "fixedInRevision": "d6cdc534"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-BX-52",
+    "title": "Realm-gate fail-open on unknown requiredRealmId: QuestSystem.isUnlocked + GameManagerCatalogOps.isStageUnlocked (getRealmIndex -1 always >=)",
+    "state": {
+     "productStateId": "9a1c175ad81880d11956a2af84c417d28a5c4e392fa1ec7234c3a7e1159592e6",
+     "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+     "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+     "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+    },
+    "severity": "Low",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "HYPOTHETICAL",
+    "locations": [
+     {
+      "path": "game/src/core/quest/QuestSystem.ts",
+      "symbolOrSection": ":48-54",
+      "revision": "f1049b5e",
+      "basis": "SOURCE"
+     },
+     {
+      "path": "game/src/core/game/GameManagerCatalogOps.ts",
+      "symbolOrSection": ":272-290",
+      "revision": "f1049b5e",
+      "basis": "SOURCE"
+     }
+    ],
+    "discoveredBy": "progression auditor devin-37285e3f (wave1-progression-audit.md)",
+    "invariantIds": [
+     "I-GATE-FAIL-CLOSED"
+    ],
+    "evidenceIds": [],
+    "counterexample": "QCF wave-2 confirmed with executable repro on orphan stage",
+    "expected": "fail closed like NodeSystem T8-75 (requiredIndex<0 -> warn+false)",
+    "actual": "typo'd/retired requiredRealmId silently unlocks content for all realms",
+    "rootCause": "getRealmIndex(-1) passes both comparisons",
+    "rootClass": "fail-open-gate",
+    "subsystem": "quests-companions-formation-stages",
+    "siblingSearch": [],
+    "siblingFindingIds": [
+     "F-BX-59"
+    ],
+    "repair": null,
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "status": "CLOSED",
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "closeReason": "REPAIRED d89d6729: QuestSystem.isUnlocked + isStageUnlocked warn + fail closed on requiredRealmIndex<0 (T8-75 parity)",
+    "closedAt": "2026-09-29T15:20:00Z",
+    "fixedInRevision": "d89d6729"
+   }
+  }
+ ]
+}

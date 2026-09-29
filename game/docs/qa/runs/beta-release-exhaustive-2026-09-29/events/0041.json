@@ -1,0 +1,7 @@
+{
+  "action": "observe",
+  "assignmentId": "ASG-BX-REPAIR-W2",
+  "observedStatus": "exited",
+  "evidence": "all findings adjudicated on beta-repair-wave2 @9bca59cf, merged to run branch; verified tsc+939 scoped tests",
+  "resultRef": "beta-repair-wave2"
+}

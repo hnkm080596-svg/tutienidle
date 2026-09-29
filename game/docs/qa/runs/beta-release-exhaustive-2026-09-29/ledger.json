@@ -25,7 +25,7 @@
     "base": "",
     "head": "",
     "state": {
-      "productStateId": "8c280581a5cd7f61bb134a642b3a9a949170922eb47070b0c6969446ca8d46e9",
+      "productStateId": "b3ade7e3f442eb2a98da5b317248dd469440631e950f0b3f1ad24cfe116060f4",
       "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
       "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
       "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
@@ -396,7 +396,7 @@
         "adjudicate+repair Medium+ findings F-BX-30..52 on branch beta-repair-wave2"
       ],
       "readiness": "READY",
-      "status": "RESERVED",
+      "status": "FINISHED",
       "observedRuntimeId": "devin-b28e0d6d4d90470e87023938392c7e09",
       "history": [
         {
@@ -416,9 +416,17 @@
           "from": "READY",
           "to": "RESERVED",
           "reason": "admitted at 2/5 (incl. external 0)"
+        },
+        {
+          "at": "2026-09-29T15:15:16.128Z",
+          "from": "RESERVED",
+          "to": "FINISHED",
+          "reason": "lifecycle verified released via 'exited'"
         }
       ],
-      "reservedAt": "2026-09-29T14:28:03.442Z"
+      "reservedAt": "2026-09-29T14:28:03.442Z",
+      "releaseEvidence": "all findings adjudicated on beta-repair-wave2 @9bca59cf, merged to run branch; verified tsc+939 scoped tests",
+      "resultRef": "beta-repair-wave2"
     },
     {
       "id": "ASG-BX-ECO",
@@ -3818,10 +3826,13 @@
       "pinEvidenceIds": [],
       "verificationEvidenceIds": [],
       "closureReviewIds": [],
-      "status": "OBSERVED",
+      "status": "CLOSED",
       "duplicateOf": null,
       "rejectionReason": null,
-      "exception": null
+      "exception": null,
+      "closeReason": "REPAIRED 967b9ace: computeUnbuffedCultivationRate exported; ticks write un-buffed rate; restore recomputes from effects held at lastSavedAt",
+      "closedAt": "2026-09-29T15:20:00Z",
+      "fixedInRevision": "967b9ace"
     },
     {
       "id": "F-BX-31",
@@ -3863,10 +3874,13 @@
       "pinEvidenceIds": [],
       "verificationEvidenceIds": [],
       "closureReviewIds": [],
-      "status": "OBSERVED",
+      "status": "CLOSED",
       "duplicateOf": null,
       "rejectionReason": null,
-      "exception": null
+      "exception": null,
+      "closeReason": "REPAIRED c45c0ef6: same-rev divergent fork in base===null branch -> conflict; pull runs backupCurrentSave before overwrite",
+      "closedAt": "2026-09-29T15:20:00Z",
+      "fixedInRevision": "c45c0ef6"
     },
     {
       "id": "F-BX-32",
@@ -3914,10 +3928,13 @@
       "pinEvidenceIds": [],
       "verificationEvidenceIds": [],
       "closureReviewIds": [],
-      "status": "OBSERVED",
+      "status": "CLOSED",
       "duplicateOf": null,
       "rejectionReason": null,
-      "exception": null
+      "exception": null,
+      "closeReason": "REPAIRED 14d40ed0: recoveredFromConflict now surfaces save.conflict toast once per recovered write; LWW documented as product decision",
+      "closedAt": "2026-09-29T15:20:00Z",
+      "fixedInRevision": "14d40ed0"
     },
     {
       "id": "F-BX-33",
@@ -3959,10 +3976,13 @@
       "pinEvidenceIds": [],
       "verificationEvidenceIds": [],
       "closureReviewIds": [],
-      "status": "OBSERVED",
+      "status": "CLOSED",
       "duplicateOf": null,
       "rejectionReason": null,
-      "exception": null
+      "exception": null,
+      "closeReason": "REPAIRED c45c0ef6: merge-duplicates header removed; PK conflict -> unavailable",
+      "closedAt": "2026-09-29T15:20:00Z",
+      "fixedInRevision": "c45c0ef6"
     },
     {
       "id": "F-BX-34",
@@ -4004,10 +4024,13 @@
       "pinEvidenceIds": [],
       "verificationEvidenceIds": [],
       "closureReviewIds": [],
-      "status": "OBSERVED",
+      "status": "CLOSED",
       "duplicateOf": null,
       "rejectionReason": null,
-      "exception": null
+      "exception": null,
+      "closeReason": "REPAIRED a8057449: import bumps revision prior+1 before save write; torn write rolls marker back",
+      "closedAt": "2026-09-29T15:20:00Z",
+      "fixedInRevision": "a8057449"
     },
     {
       "id": "F-BX-35",
@@ -4141,10 +4164,12 @@
       "pinEvidenceIds": [],
       "verificationEvidenceIds": [],
       "closureReviewIds": [],
-      "status": "OBSERVED",
+      "status": "REJECTED_WITH_PROOF",
       "duplicateOf": null,
-      "rejectionReason": null,
-      "exception": null
+      "rejectionReason": "Gate threat model is anti-corruption not anti-cheat; F-BX-30 repair removes snapshot-pricing channel entirely",
+      "exception": null,
+      "closeReason": "Gate threat model is anti-corruption not anti-cheat; F-BX-30 repair removes snapshot-pricing channel entirely",
+      "closedAt": "2026-09-29T15:20:00Z"
     },
     {
       "id": "F-BX-38",
@@ -4233,10 +4258,13 @@
       "pinEvidenceIds": [],
       "verificationEvidenceIds": [],
       "closureReviewIds": [],
-      "status": "OBSERVED",
+      "status": "CLOSED",
       "duplicateOf": null,
       "rejectionReason": null,
-      "exception": null
+      "exception": null,
+      "closeReason": "REPAIRED a88d8f59: future lastDailyResetAtMs treated as stale -> reset fires + rewrites marker (self-heal)",
+      "closedAt": "2026-09-29T15:20:00Z",
+      "fixedInRevision": "a88d8f59"
     },
     {
       "id": "F-BX-40",
@@ -4319,10 +4347,13 @@
       "pinEvidenceIds": [],
       "verificationEvidenceIds": [],
       "closureReviewIds": [],
-      "status": "OBSERVED",
+      "status": "CLOSED",
       "duplicateOf": null,
       "rejectionReason": null,
-      "exception": null
+      "exception": null,
+      "closeReason": "REPAIRED 6531926d: cap no longer drops queuedFollowUps; paid committed entries drain on later dequeues",
+      "closedAt": "2026-09-29T15:20:00Z",
+      "fixedInRevision": "6531926d"
     },
     {
       "id": "F-BX-42",
@@ -4374,10 +4405,13 @@
       "pinEvidenceIds": [],
       "verificationEvidenceIds": [],
       "closureReviewIds": [],
-      "status": "OBSERVED",
+      "status": "CLOSED",
       "duplicateOf": null,
       "rejectionReason": null,
-      "exception": null
+      "exception": null,
+      "closeReason": "REPAIRED c2e38b60: floors at refreshParticipantStats (speed>=0, maxHp>=1); clampToMaxHp floors hp>=0",
+      "closedAt": "2026-09-29T15:20:00Z",
+      "fixedInRevision": "c2e38b60"
     },
     {
       "id": "F-BX-43",
@@ -4466,10 +4500,13 @@
       "pinEvidenceIds": [],
       "verificationEvidenceIds": [],
       "closureReviewIds": [],
-      "status": "OBSERVED",
+      "status": "CLOSED",
       "duplicateOf": null,
       "rejectionReason": null,
-      "exception": null
+      "exception": null,
+      "closeReason": "REPAIRED 50eb631e: manual-phase resume re-mints playback token; stale token rejected",
+      "closedAt": "2026-09-29T15:20:00Z",
+      "fixedInRevision": "50eb631e"
     },
     {
       "id": "F-BX-45",
@@ -4509,10 +4546,13 @@
       "pinEvidenceIds": [],
       "verificationEvidenceIds": [],
       "closureReviewIds": [],
-      "status": "OBSERVED",
+      "status": "CLOSED",
       "duplicateOf": null,
       "rejectionReason": null,
-      "exception": null
+      "exception": null,
+      "closeReason": "REPAIRED 90f431f0: extend only when both instance+reapply timed; durationless is no-op",
+      "closedAt": "2026-09-29T15:20:00Z",
+      "fixedInRevision": "90f431f0"
     },
     {
       "id": "F-BX-46",
@@ -4552,10 +4592,13 @@
       "pinEvidenceIds": [],
       "verificationEvidenceIds": [],
       "closureReviewIds": [],
-      "status": "OBSERVED",
+      "status": "CLOSED",
       "duplicateOf": null,
       "rejectionReason": null,
-      "exception": null
+      "exception": null,
+      "closeReason": "REPAIRED 90f431f0: apply create path floors stacks>=1 matching mutation paths",
+      "closedAt": "2026-09-29T15:20:00Z",
+      "fixedInRevision": "90f431f0"
     },
     {
       "id": "F-BX-47",
@@ -4767,10 +4810,13 @@
       "pinEvidenceIds": [],
       "verificationEvidenceIds": [],
       "closureReviewIds": [],
-      "status": "OBSERVED",
+      "status": "CLOSED",
       "duplicateOf": null,
       "rejectionReason": null,
-      "exception": null
+      "exception": null,
+      "closeReason": "REPAIRED d6cdc534: start() refuses while committedOutcome !== null; restored pending victory survives refusal",
+      "closedAt": "2026-09-29T15:20:00Z",
+      "fixedInRevision": "d6cdc534"
     },
     {
       "id": "F-BX-52",
@@ -4818,10 +4864,13 @@
       "pinEvidenceIds": [],
       "verificationEvidenceIds": [],
       "closureReviewIds": [],
-      "status": "OBSERVED",
+      "status": "CLOSED",
       "duplicateOf": null,
       "rejectionReason": null,
-      "exception": null
+      "exception": null,
+      "closeReason": "REPAIRED d89d6729: QuestSystem.isUnlocked + isStageUnlocked warn + fail closed on requiredRealmIndex<0 (T8-75 parity)",
+      "closedAt": "2026-09-29T15:20:00Z",
+      "fixedInRevision": "d89d6729"
     },
     {
       "id": "F-BX-53",
@@ -5699,7 +5748,7 @@
       "limitations": [
         "scoped suite - full verify pending"
       ],
-      "status": "CURRENT"
+      "status": "STALE"
     }
   ],
   "coverage": [],
@@ -6318,6 +6367,54 @@
       "payloadPath": "events/0038.json",
       "payloadHash": "8de03bee15fe9a28fa01a8db23dc21351503d69a3792cff5c05d237dba4ba107",
       "eventHash": "7a55c4e6879ead783a2385549b1458fc0ad05daad91378464e0f775e39b931c9"
+    },
+    {
+      "seq": 39,
+      "at": "2026-09-29T15:14:51.984Z",
+      "kind": "SNAPSHOT",
+      "actor": "coordinator-beta",
+      "state": {
+        "productStateId": "b3ade7e3f442eb2a98da5b317248dd469440631e950f0b3f1ad24cfe116060f4",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "previousEventHash": "7a55c4e6879ead783a2385549b1458fc0ad05daad91378464e0f775e39b931c9",
+      "payloadPath": "events/0039.json",
+      "payloadHash": "46cb23c2fc33998a3ef04eb7e73b466e1e6c05e0b19189b292642b54bbb12754",
+      "eventHash": "f18a7ca045d7af44090c86f84167fc2dcbacfb4a114f11d95967201766423bfb"
+    },
+    {
+      "seq": 40,
+      "at": "2026-09-29T15:15:15.990Z",
+      "kind": "FINDING",
+      "actor": "coordinator-beta",
+      "state": {
+        "productStateId": "b3ade7e3f442eb2a98da5b317248dd469440631e950f0b3f1ad24cfe116060f4",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "previousEventHash": "f18a7ca045d7af44090c86f84167fc2dcbacfb4a114f11d95967201766423bfb",
+      "payloadPath": "events/0040.json",
+      "payloadHash": "1f0e5a743b3d318d304605178b4452850dd9eddc11c7bab822e26f280805cca0",
+      "eventHash": "bdc8bb04cc7f3443ad9d7ba50b53ca7c3c8ce992a4e4f475c270be28e0b5be19"
+    },
+    {
+      "seq": 41,
+      "at": "2026-09-29T15:15:16.129Z",
+      "kind": "SCHEDULE",
+      "actor": "coordinator-beta",
+      "state": {
+        "productStateId": "b3ade7e3f442eb2a98da5b317248dd469440631e950f0b3f1ad24cfe116060f4",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "previousEventHash": "bdc8bb04cc7f3443ad9d7ba50b53ca7c3c8ce992a4e4f475c270be28e0b5be19",
+      "payloadPath": "events/0041.json",
+      "payloadHash": "4dcfe7bf9e4339cea5ffdc812aff1d36532ad4da217431d8d3d849edb1c5a473",
+      "eventHash": "4c5622d36f76d834ba42a5c0ae14c0f7dfbc5e5e3454a929fd9b9adccff6f580"
     }
   ]
 }

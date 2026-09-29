@@ -18552,13 +18552,13 @@
       "path": "game/src/App.vue",
       "kind": "file",
       "mode": 33188,
-      "hash": "86cf86feccfffa647fa3b7f998fe30840f41c61a28a681027280e677e1e1c036"
+      "hash": "392ddc0ffe446064bcf1a311df3180be36fffdf7d18aba3f2e3cff51c0b5d62f"
     },
     {
       "path": "game/src/App.wiring.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "349f6022df5bd2bff2f9a8a843a807f2e1df29cf184449b6a280fc8844cc5a5d"
+      "hash": "ca3747a8cf15c65a8b4171652aa857909b505a4f7c6f96ca0a5b4644dde14af8"
     },
     {
       "path": "game/src/assets/dongFuBackgroundAssets.test.ts",
@@ -20664,13 +20664,13 @@
       "path": "game/src/core/battle/turn/CombatAnimationRuntime.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "4c6ba1d0fa855d76ee1b3f9e9089ebf6de25d13a4dec4d24b82b29aba672e449"
+      "hash": "6fad20854a7b777c63ffb88a45f74d7278c21881d12ca438d78fa6601f2d471a"
     },
     {
       "path": "game/src/core/battle/turn/CombatAnimationRuntime.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "ed469fdb2b987dffab07e6336f2ea8c09fa0cd6a3c46e0df842928e787ec7adf"
+      "hash": "28b16328868c47d603be86d76c102e648d72313a809932eb409745daa2713732"
     },
     {
       "path": "game/src/core/battle/turn/CombatClock.test.ts",
@@ -20874,13 +20874,13 @@
       "path": "game/src/core/battle/turn/TurnBattleSystem.externalWard.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "4a13795d9d393dd22ff949cbead76bf596bd3029f1f4d412f21a57c8dd40a91a"
+      "hash": "a4c463cb6a91328d38b7aa22768e7cd3a56afa5af58fda02a6f2e82b655789e7"
     },
     {
       "path": "game/src/core/battle/turn/TurnBattleSystem.followUpQueue.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "448bc4aa390b01c9a7f39cd1fbc30a8a778986c9243848e2a3b481c86f9ee6ca"
+      "hash": "ceb7fae59d05f653ddee1cb5bca779750bee2ee14751a3b3decffc772bac38b5"
     },
     {
       "path": "game/src/core/battle/turn/TurnBattleSystem.hitResolution.qa.test.ts",
@@ -20922,7 +20922,7 @@
       "path": "game/src/core/battle/turn/TurnBattleSystem.reactiveBypass.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "e293e7df1a15cb960e8e9a1d276671e7e09cddf0392c182b505b026f929992a0"
+      "hash": "a1dd20163a9849e6190e0e23b4684573c91d6302d81501269f07b50d543ac9ab"
     },
     {
       "path": "game/src/core/battle/turn/TurnBattleSystem.reflection.test.ts",
@@ -21036,7 +21036,7 @@
       "path": "game/src/core/battle/turn/TurnBattleSystem.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "90de155fe2904d566d0280b4aa30f18d13e6a86af12d1d545590fa5b3d58bdd5"
+      "hash": "5d6e3ffc1bfc712ca6a403e4e74e74b2addcafaaa303cf84681b05e7e128ebc3"
     },
     {
       "path": "game/src/core/battle/turn/TurnBattleSystem.ttNovelAttack.test.ts",
@@ -21366,13 +21366,13 @@
       "path": "game/src/core/buff2/BuffSystem.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "abed04ff5147f78cf18150b6605ec38ba0ae16f794beaddb8892014e355ee02e"
+      "hash": "8f97ffcdc53d7514da072e1e309ffce291cb95c10e50a90588b7ff16adcd3a8e"
     },
     {
       "path": "game/src/core/buff2/BuffSystemApply.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "3a823a239b0a0b91e994260a5a32a84bcc56ca8f411934ea1eefcd4ff3e80db7"
+      "hash": "0cbb0faad376301d11360af0f3bb16ce6c052e2613634e6e452679613bd37395"
     },
     {
       "path": "game/src/core/buff2/PeriodicGrowthCapabilities.ts",
@@ -21612,7 +21612,7 @@
       "path": "game/src/core/combat/EntityVitalsSystem.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "6d9694d921e55d4490633f46229997ced088918bf4c33aa700b5378f55087bb8"
+      "hash": "e49017b24e04c45e3c6ecf07c20fcd04a819bd869729638add2247ff2941bd5d"
     },
     {
       "path": "game/src/core/combat/hoTheDamageReduction.ts",
@@ -21756,7 +21756,7 @@
       "path": "game/src/core/cultivation/CultivationTick.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "f5c4578ed52c9e1b9437ad2f85b95ca4529f9cd76e0da1a25edfaef6c49ce182"
+      "hash": "76a44652ce96dcf7952bd0e650d63c394f3199e1ef7d6289f09516728879ecd3"
     },
     {
       "path": "game/src/core/dev/DevMode.ts",
@@ -23046,7 +23046,7 @@
       "path": "game/src/core/game/GameManager.zone.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "b1257bb1f97315b1675d50aa23512b20c11cc6974779aa26b696a814ef16acb6"
+      "hash": "ee9677da28765cd7e85d4798f36c55cb5354c4c9684ee3fa18d5f2c2d5e86e2e"
     },
     {
       "path": "game/src/core/game/GameManagerAlchemyOps.ts",
@@ -23076,7 +23076,7 @@
       "path": "game/src/core/game/GameManagerCatalogOps.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "f035d7a6bacb0cae51feec4a11ebf8675f0183d1be4bf6be376a0551163c729b"
+      "hash": "3c9c93f094f88329ce99e9ea322272ab9e0ca3e5d158ab8c8735b11ead5adf76"
     },
     {
       "path": "game/src/core/game/GameManagerCompanionOps.test.ts",
@@ -24114,13 +24114,13 @@
       "path": "game/src/core/quest/QuestSystem.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "8f128544e833548063a3bc198557c31332be0fe9669afa508bf96d7c0353519b"
+      "hash": "9e2a3d70490e8a0413d3ee643dfbf5774ba21044b5931566528d5816c2e89d4f"
     },
     {
       "path": "game/src/core/quest/QuestSystem.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "83aa5350e56f34a76d6c2e9fc61121245b4f535ef5b8ff3e37ee48a256d00adc"
+      "hash": "28c6db0514e9bd90351913988bc9861ecb38068cf2ddb30891d4e38e9453c41c"
     },
     {
       "path": "game/src/core/reaction/CanonicalSealBinding.test.ts",
@@ -25428,7 +25428,7 @@
       "path": "game/src/core/tribulation/TribulationDirector.persist.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "f5a6e2b0f75cae85b54f606e7fb296634ffa0dbf6f0fb8939ea84da9e11876cf"
+      "hash": "1977defd769227aba2f4316dfcef375c1a50971278779b24e681923dd95b5078"
     },
     {
       "path": "game/src/core/tribulation/TribulationDirector.restoreLeak.qa.test.ts",
@@ -25452,7 +25452,7 @@
       "path": "game/src/core/tribulation/TribulationDirector.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "933ed17645d962f9b8d976bf160f945492345b737003d3de27be4c02ccf2c003"
+      "hash": "a4f45c2c60ed6c60ab35978f3d2a04fe4b6000f36f218175b948ed34668c173e"
     },
     {
       "path": "game/src/core/tribulation/TribulationOutcomeService.loiKiep.test.ts",
@@ -27516,19 +27516,19 @@
       "path": "game/src/services/cloudSave/LocalCloudSaveService.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "488ce61c64dd5a311c013af89885b4242404096c4c735c7fc0089b1fa5031c35"
+      "hash": "6bc056af8583cccfff35b3d377adbaf95563a06cb49d9cc54bdfd88df1149395"
     },
     {
       "path": "game/src/services/cloudSave/SupabaseRemoteSave.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "873eed18e937284b80c7368dd8d22387ffb987f7721eb4fd2fc4dbcc45b15e34"
+      "hash": "2e6f432fd3bbd370b5646eb5326b22c5f8c03743fa7dd556272ef468f03e10e3"
     },
     {
       "path": "game/src/services/cloudSave/SupabaseRemoteSave.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "69e5c5256f12aa5fb5570f22b0faf5313b8ea32cc5753abf627bb3fcc453e7b9"
+      "hash": "01a41b168e61a7ce8ce7659f97222312f747c2330466ba9ac2a300833fdd88c4"
     },
     {
       "path": "game/src/services/save/GameSave.fixture.ts",
@@ -27558,7 +27558,7 @@
       "path": "game/src/services/save/saveKeys.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "4a57e44e7837f33fa122e972d0516980f0652c4ef9eb68f22d56a09e221e5c32"
+      "hash": "d297c1ed9d1016f4623f501dca9f1b00532a917115dad30928121a6151fef35b"
     },
     {
       "path": "game/src/services/save/SaveMigration.test.ts",
@@ -27630,13 +27630,13 @@
       "path": "game/src/services/save/SaveSystem.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "c58897a2d18586b2a441f12627ca38149d9c51d6447add062cf41387d33ab9d5"
+      "hash": "f9c5b9c4ccdbe6b134477a08ba4283ea649727b4194f4d5aa8a5f749b665d1bb"
     },
     {
       "path": "game/src/services/save/SaveSystem.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "f9598503964106d8123b541408ee1265366b5b168c4704eee4a9cfca2aa89847"
+      "hash": "390f01deef52a9c26179c83c18768a335f76f511a87d1fa04a0fec624cb3e65d"
     },
     {
       "path": "game/src/services/save/saveTheTuCrafted.qa.test.ts",
@@ -27786,7 +27786,7 @@
       "path": "game/src/stores/player.restoreFromSave.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "ca68ed8a540afd95b6c87d599af2ec226ab5c89953be2e13213b884a1a9d6ef4"
+      "hash": "5a80812d2084e020547134de035c41b77393478c608e392c332bb5f9700376d4"
     },
     {
       "path": "game/src/stores/player.save.test.ts",
@@ -27810,7 +27810,7 @@
       "path": "game/src/stores/player.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "505e43aebab0fc29e372890db5319c78be52840b2d8f6b8c602976cafba135d2"
+      "hash": "724efd93abfe467c7270699c7908e26bcad4ec2f7d10ed190af28ce3e952fae6"
     },
     {
       "path": "game/src/stores/player.visualProfile.test.ts",
@@ -28515,5 +28515,5 @@
       "hash": "4f888fe1084d2a9091583d5093693d81453c0b8d06dfd6192b096972bae551d4"
     }
   ],
-  "productStateId": "8c280581a5cd7f61bb134a642b3a9a949170922eb47070b0c6969446ca8d46e9"
+  "productStateId": "b3ade7e3f442eb2a98da5b317248dd469440631e950f0b3f1ad24cfe116060f4"
 }
