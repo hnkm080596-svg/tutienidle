@@ -68,6 +68,8 @@ describe('GameManager.isStageUnlocked — mở tuần tự theo hoàn thành', (
         requiredRealmId: 'typo_realm',
         enemyPool: [],
         totalEnemyCount: 0,
+        waves: [0],
+        spawnIntervalSeconds: 1,
       },
     ])
     const player = createDefaultPlayer()
