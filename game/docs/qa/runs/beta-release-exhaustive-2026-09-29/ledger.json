@@ -713,6 +713,39 @@
       "reservedAt": "2026-09-29T15:01:53.552Z",
       "releaseEvidence": "matrix 46/48 pass; HIGH spell-path save corruption F-BX-83; Low perfectClearSeconds=0 F-BX-84; edges all pass",
       "resultRef": "evidence/wave3-playthrough-matrix.txt"
+    },
+    {
+      "id": "ASG-BX-REPAIR-W3",
+      "parentId": null,
+      "capacityScope": "swe2-slot",
+      "inputBundleHash": "45bbfbdcc152457594faf67390c03b20",
+      "dependencies": [],
+      "requiredCapabilities": [
+        "exec",
+        "repo-read",
+        "repo-write"
+      ],
+      "writeSurface": [
+        "branch beta-repair-wave3"
+      ],
+      "readiness": "READY",
+      "status": "RESERVED",
+      "observedRuntimeId": "devin-45bbfbdcc152457594faf67390c03b20",
+      "history": [
+        {
+          "at": "2026-09-29T15:40:00Z",
+          "from": "-",
+          "to": "READY",
+          "reason": "repair w3 dispatch: F-BX-83 HIGH + auth Mediums + Lows"
+        },
+        {
+          "at": "2026-09-29T15:38:52.592Z",
+          "from": "READY",
+          "to": "RESERVED",
+          "reason": "admitted at 3/5 (incl. external 0)"
+        }
+      ],
+      "reservedAt": "2026-09-29T15:38:52.593Z"
     }
   ],
   "consumptions": [],
@@ -7185,6 +7218,22 @@
       "payloadPath": "events/0045.json",
       "payloadHash": "9248ceef71ed9c47ccf79f8a4cdab28a4fbfb8775b6dcd5ce2befac460ca005d",
       "eventHash": "7310f23cd73576b9137e35fc0b5f600c073803e192e9621d44411d25b3d13cff"
+    },
+    {
+      "seq": 46,
+      "at": "2026-09-29T15:38:52.594Z",
+      "kind": "SCHEDULE",
+      "actor": "coordinator-beta",
+      "state": {
+        "productStateId": "b3ade7e3f442eb2a98da5b317248dd469440631e950f0b3f1ad24cfe116060f4",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "previousEventHash": "7310f23cd73576b9137e35fc0b5f600c073803e192e9621d44411d25b3d13cff",
+      "payloadPath": "events/0046.json",
+      "payloadHash": "3808eb1252bb8ea779e78e27d6a3729b8c2ffc9fec6059c69be6d0d81fa383e0",
+      "eventHash": "d5b86751dc6d2e35c2566d0ef16f1f617c50d6eca9ec631c8bdfea5d1f49929f"
     }
   ]
 }

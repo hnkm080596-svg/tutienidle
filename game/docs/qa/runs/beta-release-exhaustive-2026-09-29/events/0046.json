@@ -1,0 +1,29 @@
+{
+  "action": "admit",
+  "assignment": {
+    "id": "ASG-BX-REPAIR-W3",
+    "parentId": null,
+    "capacityScope": "swe2-slot",
+    "inputBundleHash": "45bbfbdcc152457594faf67390c03b20",
+    "dependencies": [],
+    "requiredCapabilities": [
+      "exec",
+      "repo-read",
+      "repo-write"
+    ],
+    "writeSurface": [
+      "branch beta-repair-wave3"
+    ],
+    "readiness": "READY",
+    "status": "READY",
+    "observedRuntimeId": "devin-45bbfbdcc152457594faf67390c03b20",
+    "history": [
+      {
+        "at": "2026-09-29T15:40:00Z",
+        "from": "-",
+        "to": "READY",
+        "reason": "repair w3 dispatch: F-BX-83 HIGH + auth Mediums + Lows"
+      }
+    ]
+  }
+}
