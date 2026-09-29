@@ -73,17 +73,21 @@ export class PassiveSystem {
     }
   }
 
-  // Talent v4 E2 - passiveCondition chi co 1 kind hien nay ('hpBelow'),
-  // de union mo duoc sau nay ma khong doi call site. Vang condition hoac
-  // vang reader -> luon true (khong chan passive cu).
+  // Talent v4 E2 - passiveCondition union 'hpBelow' | 'hpNotBelow'
+  // (CP-01 - can_than_phi leg). Vang condition hoac vang reader -> luon
+  // true (khong chan passive cu); kind khong biet cung fail-open.
   private meetsCondition(condition: Skill['passiveCondition']): boolean {
-    if (!condition || condition.kind !== 'hpBelow') {
+    if (!condition || (condition.kind !== 'hpBelow' && condition.kind !== 'hpNotBelow')) {
       return true
     }
 
     const hpRatio = this.hpReader?.()
 
-    return hpRatio === undefined ? true : hpRatio < condition.percent
+    if (hpRatio === undefined) {
+      return true
+    }
+
+    return condition.kind === 'hpBelow' ? hpRatio < condition.percent : hpRatio >= condition.percent
   }
 
   // Talent v4 E2 - modifier vua tich cham maxStacks: ap buff bung no

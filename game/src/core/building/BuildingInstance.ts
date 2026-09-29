@@ -18,4 +18,10 @@ export interface BuildingInstance {
   // hoạch lần nào) — dùng tính sản lượng đã tích luỹ, kể cả khi offline
   // (xem MASTER SPEC Mục VII).
   lastCollectedAt: number
+
+  // EM-01 - realm the CURRENT accrual window runs under. Pinned at
+  // build/claim; realm only grows so a mid-window breakthrough cannot
+  // retroactively reprice the whole backlog at the new rate.
+  // undefined (old save) -> current-realm fallback = old behavior.
+  accrualRealmId?: string
 }

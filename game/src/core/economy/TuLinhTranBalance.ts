@@ -44,3 +44,49 @@ export function getActiveCultivationSpeedPercent(
     .filter((e) => e.effectGroup === TU_LINH_TRAN_EFFECT_GROUP && e.expiresAtMs > nowMs)
     .reduce((sum, e) => sum + (e.cultivationSpeedPercent ?? 0), 0)
 }
+
+export interface CultivationSpeedSegment {
+  seconds: number
+  /** Sum of cultivationSpeedPercent live at this segment's start. */
+  percent: number
+}
+
+/**
+ * EM-02 - split the offline window [windowStartMs, windowEndMs] into
+ * segments at each effect's expiry boundary: every segment carries the
+ * percent live at its own start (getActiveCultivationSpeedPercent;
+ * expiresAtMs > start counts as live). The saved cultivationPerSecond
+ * snapshot only reflects buffs at save time - a buff expiring mid-window
+ * must not be stretched across the whole window.
+ */
+export function splitCultivationSpeedWindow(
+  effects: readonly PersistentTimedEffect[],
+  windowStartMs: number,
+  windowEndMs: number,
+): CultivationSpeedSegment[] {
+  const bounds = new Set<number>([windowStartMs, windowEndMs])
+
+  for (const effect of effects) {
+    if (
+      effect.effectGroup === TU_LINH_TRAN_EFFECT_GROUP &&
+      effect.expiresAtMs > windowStartMs &&
+      effect.expiresAtMs < windowEndMs
+    ) {
+      bounds.add(effect.expiresAtMs)
+    }
+  }
+
+  const sorted = [...bounds].sort((a, b) => a - b)
+  const segments: CultivationSpeedSegment[] = []
+
+  for (let index = 0; index + 1 < sorted.length; index += 1) {
+    const start = sorted[index]!
+
+    segments.push({
+      seconds: (sorted[index + 1]! - start) / 1000,
+      percent: getActiveCultivationSpeedPercent(effects, start),
+    })
+  }
+
+  return segments
+}

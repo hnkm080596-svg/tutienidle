@@ -89,8 +89,22 @@ export async function syncRemoteSaveOnLogin(config: SupabaseConfig): Promise<Rem
     const localSave =
       local.status === 'ok' && isSaveAcceptable(local.save, catalogs) ? local.save : null
     const localLastSavedAt = localSave?.player.lastSavedAt ?? Number.NEGATIVE_INFINITY
+    const localRevision = localSave ? readLocalSaveRevision() : 0
 
-    if (remoteUsable && remoteUpdatedMs > localLastSavedAt && remoteRow) {
+    // INFRA-01 — ordering authority is save_revision, NOT timestamps:
+    // revision is a shared clock-free sequence (the pull below adopts
+    // remoteRow.save_revision into local storage, so the counter rides
+    // the remote row's lineage across devices), while updated_at was
+    // written by whichever client's wall clock pushed last — two machine
+    // clocks compared directly regressed newer saves whenever one device
+    // ran ahead. Timestamps survive only as the same-revision fork
+    // tie-break (two devices that each reached rev N independently).
+    const remoteAhead =
+      remoteRow !== undefined &&
+      (remoteRow.save_revision > localRevision ||
+        (remoteRow.save_revision === localRevision && remoteUpdatedMs > localLastSavedAt))
+
+    if (remoteUsable && remoteAhead && remoteRow) {
       // Revision-first, same convention as LocalCloudSaveService: a crash
       // between the two writes leaves new-revision + old-save -> the next
       // CAS mismatches and the coordinator resyncs - never a stale-
@@ -122,27 +136,67 @@ export async function syncRemoteSaveOnLogin(config: SupabaseConfig): Promise<Rem
 
     if (!localSave) return 'skipped'
 
-    // Remote absent/unusable/older - local is the freshest copy.
-    // updated_at is sent explicitly: the column default only applies on
-    // INSERT, so every later UPDATE would keep the insert timestamp and
-    // newest-wins would go stale after the first push.
-    await requestSupabase<unknown>(
-      config,
-      '/rest/v1/character_saves',
-      {
-        method: 'POST',
-        headers: { Prefer: 'resolution=merge-duplicates' },
-        body: JSON.stringify({
-          character_id: characterId,
-          user_id: session.userId,
-          schema_version: CURRENT_SAVE_VERSION,
-          save_revision: readLocalSaveRevision(),
-          payload: localSave,
-          updated_at: new Date().toISOString(),
-        }),
-      },
-      session.accessToken,
-    )
+    // Remote absent/unusable/behind - local is the freshest copy.
+    // The pushed revision never regresses below remote+1: overwriting a
+    // stale-but-higher-revision row with a smaller number would flip the
+    // shared sequence and poison every later comparison. When the remote
+    // row was ahead (or unusable), we adopt remote+1 into local storage
+    // after a successful write so the sequences stay one lineage.
+    const pushRevision = Math.max(localRevision, (remoteRow?.save_revision ?? 0) + 1)
+
+    const body = JSON.stringify({
+      character_id: characterId,
+      user_id: session.userId,
+      schema_version: CURRENT_SAVE_VERSION,
+      save_revision: pushRevision,
+      payload: localSave,
+      updated_at: new Date().toISOString(),
+    })
+
+    if (remoteRow) {
+      // INFRA-02 — CAS push: PATCH guarded by the revision we just read.
+      // Two live sessions on one account can no longer blind-upsert over
+      // each other; the loser sees 0 rows updated and reports
+      // 'unavailable' (the caller logs and continues on the local slot -
+      // the next login re-compares fresh and converges).
+      const updated = await requestSupabase<RemoteSaveRow[]>(
+        config,
+        `/rest/v1/character_saves?character_id=eq.${characterId}&save_revision=eq.${remoteRow.save_revision}`,
+        {
+          method: 'PATCH',
+          headers: { Prefer: 'return=representation' },
+          body,
+        },
+        session.accessToken,
+      )
+      if (updated.length === 0) {
+        return 'unavailable'
+      }
+    } else {
+      // No remote row yet - plain insert. A concurrent first-push loses to
+      // the PK conflict (throws -> 'unavailable') and pulls on next login.
+      await requestSupabase<unknown>(
+        config,
+        '/rest/v1/character_saves',
+        {
+          method: 'POST',
+          headers: { Prefer: 'resolution=merge-duplicates' },
+          body,
+        },
+        session.accessToken,
+      )
+    }
+
+    if (pushRevision !== localRevision) {
+      // Adopt the pushed revision locally so the shared sequence stays
+      // aligned (same convention as the pull path above).
+      try {
+        localStorage.setItem(resolveRevisionKey(), String(pushRevision))
+      } catch {
+        // Revision-adoption failure: next save CAS-mismatches and the
+        // coordinator resyncs - degraded, never inconsistent.
+      }
+    }
     return 'pushed'
   } catch {
     return 'unavailable'

@@ -979,6 +979,12 @@ export class GameManager {
    * carrying PathCapabilityDeps themselves. False when no player is
    * active - fail closed, same as the resolver.
    */
+  /** Presentation-gate query (FE-06): active player's authored name for
+      scene nameplates — null when no player is active. */
+  getActivePlayerName(): string | null {
+    return this.activePlayer?.name ?? null
+  }
+
   hasPathCapability(capability: PathCapability): boolean {
     const player = this.activePlayer
     if (player === undefined) {
