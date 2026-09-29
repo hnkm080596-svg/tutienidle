@@ -1,0 +1,5 @@
+EV-SND-FIX27 wave-20 fix verification log
+- 35 reports -> 28 deduped records; all actionable fixed incl Low/Nit
+- probes: src/dev/__smuggle_w20_{boundary,emit,cue,shake,shake2}.ts - every new arm fired; expected silents clean; deleted
+- gates: npx vitest run tests/architecture -> 216 pass + 2 (node-v24 staticArtExtentDeclared); audio scopes 104 pass; npm run type-check clean
+- perf: boundary wrapped-member regex replaced by positional scan (suite 12.8s, no hang)
