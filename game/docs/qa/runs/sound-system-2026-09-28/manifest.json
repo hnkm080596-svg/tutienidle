@@ -22614,7 +22614,7 @@
       "path": "src/presentation/assets/AssetBundleManager.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "3ed5766e725d87f92bf8c546dbb754a6a40d03357d24327a8446c6f4c9f2feec"
+      "hash": "e7d3bd19351bec6dbdeb590e19fce2c66e7307a39e72f5e5ba2e6b37f80bbdf1"
     },
     {
       "path": "src/presentation/audio/ambientAudioDriver.test.ts",
@@ -23532,13 +23532,13 @@
       "path": "tests/architecture/audioBindingWiring.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "82eb1b9046b60375724b97aa497851923ad03ddd78581d66c8827b8b9e00287b"
+      "hash": "dd814572aa07b43e3e8f98d6703ad8cbb24c210033ca4183288f16341d63e78f"
     },
     {
       "path": "tests/architecture/audioBoundary.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "6bf10d3c08aed27c7abcfdea6c37fb7ba371ff2184864162484e6039781de63d"
+      "hash": "a2e0d6f30b6047af3c23541bc7d4ef9088cb5e23e3fc7f81d3cbc835b75caae2"
     },
     {
       "path": "tests/architecture/audioManifestCompleteness.test.ts",
@@ -23658,7 +23658,7 @@
       "path": "tests/architecture/helpers/commentStrip.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "5afb315ed45d3576bb94c3885b1ee89e02131efd2745f5527864c4be10aaca8c"
+      "hash": "d650684fd2e68d45ba7fbdb2ef4c87ad208d7d899d41c7598bffc26e2c577c83"
     },
     {
       "path": "tests/architecture/helpers/scanTs.ts",
@@ -23736,7 +23736,7 @@
       "path": "tests/architecture/screenShakeAuthority.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "17c431d807d9a41009c7a64ef7a07d4e5ca91422b1f70e6e91179b2aff1e8f53"
+      "hash": "1ceb53afb4432cd0b4ec9731ab7a07f7c943140d8f33b3e8486be46f33a53b6b"
     },
     {
       "path": "tests/architecture/skillDefProducerSources.test.ts",
@@ -24027,5 +24027,5 @@
       "hash": "e69b4133ed37ca9a4f05e66d90521d0bb749c4764bf1f454d0eb13de601f7940"
     }
   ],
-  "productStateId": "53bceb6a627ba89f20dd70ff1f79e76fd7d09726d28a12e1ec7771ce3d825878"
+  "productStateId": "26eb25ff741ca420e4f5c4da3f3fdc97e2845ddcbbaac95a785410b29184b2df"
 }
