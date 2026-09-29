@@ -214,3 +214,29 @@ Method: fresh mortal boot on mobile emulation; measured bounding boxes + viewpor
 - **Inventory (Kho Vật)** mobile layout clean: tabs Trang Bị/Nguyên Liệu/Đan Dược + filter chips, empty grid state.
 - **Wheel on mobile works by tap**; all 14 slots ≥57×57px — touch-target compliant.
 - **Zero page errors** in mobile session; only the known AudioContext/WebGL warnings.
+
+---
+
+# Round 5 — closure: unresolved item resolution
+
+**"Thủ công" checkbox (combat manual mode)** — previously flagged as "never engaged" in the scripted probe. Source-verified `TurnCombatSkillBar.vue:199-206`: plain `<input type=checkbox>` → `setManualMode` → `ui.setCombatInputMode('manual')` + `gameManager.setBattleManualMode(enabled)`, and the bar only renders while `isBattleFighting` (`:89`). The earlier non-engagement was a probe artifact (click fired while the bar was hidden/pre-fight), not a product defect — wiring is correct end-to-end including the mount-time persisted-flag resync (`:85-87`). **Downgraded from suspected bug to verified-correct; no finding.**
+
+## Audit coverage ledger (final)
+
+| Surface | Depth | Result |
+|---|---|---|
+| Onboarding (intro/auth/creation/talent/skill pick) | played | FE-01 tutorial contrast; creation flow good |
+| Home/Động Phủ | played | FE-05 zero HUD |
+| Command wheel ×3 realms | played | locks correct + tooltips; FE-16 flake, FE-23 label clip |
+| All panels (character/realm/skill/quest/phap_bao/formation/companion/teleport/pill/gathering/chi_hien/equipment/scripture/settings) | played @ mortal+qi+ foundation | FE-02, FE-11, FE-18, FE-19 |
+| Realm panel all 3 states | played | FE-12, FE-17, FE-20 |
+| Stage select 3 realm tabs | played | FE-10, FE-15, FE-21; realm gate verified both directions |
+| Combat (mortal stage, desktop+mobile) | played | FE-03, FE-04, FE-06, FE-08, FE-22, FE-24 |
+| Quán Khí ritual | won live | legible; FE-14 banner truncation |
+| Tâm Ma Kiếp tribulation (qi→foundation) | won live + defeat path | good UX; warnings correct |
+| Talent entitlement + way pick + ceremony | played | readable; FE-14 |
+| Luyện Khí + Trúc Cơ unlocks | played | predicates verified; FE-13 no forward pointer |
+| Save preflight rejection | probed | fail-closed + recovery modal — strength |
+| Mobile 390×844 | played | FE-22 High; rest adapted |
+
+**Frontend ledger: 30 findings — 2 High (FE-01, FE-22), 8 Medium, 17 Low, 2 Nit, 1 Cosmetic.**
