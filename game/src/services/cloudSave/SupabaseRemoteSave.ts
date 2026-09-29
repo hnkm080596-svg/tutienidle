@@ -8,9 +8,35 @@ import {
   staticSaveAcceptanceCatalogs,
 } from '../save/saveAcceptance'
 import { resolveImportHandoffKey, resolveRevisionKey, resolveSaveKey } from '../save/saveKeys'
-import { readLocalSaveRevision } from './LocalCloudSaveService'
+import {
+  readLocalSaveRevision,
+  readSyncBaseRevision,
+  writeSyncBaseRevision,
+} from './LocalCloudSaveService'
 
-export type RemoteSyncOutcome = 'pulled' | 'pushed' | 'skipped' | 'unavailable'
+export type RemoteSyncOutcome = 'pulled' | 'pushed' | 'skipped' | 'unavailable' | 'conflict'
+
+/**
+ * Order-insensitive structural equality for save payloads: Postgres jsonb
+ * reorders object keys, so a byte compare cannot prove a remote row and a
+ * local save carry identical content.
+ */
+function canonicalJson(value: unknown): string {
+  return JSON.stringify(sortKeysDeep(value))
+}
+
+function sortKeysDeep(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(sortKeysDeep)
+  if (value !== null && typeof value === 'object') {
+    const record = value as Record<string, unknown>
+    const out: Record<string, unknown> = {}
+    for (const key of Object.keys(record).sort()) {
+      out[key] = sortKeysDeep(record[key])
+    }
+    return out
+  }
+  return value
+}
 
 interface CharacterRow { id: string }
 interface RemoteSaveRow {
@@ -104,6 +130,49 @@ export async function syncRemoteSaveOnLogin(config: SupabaseConfig): Promise<Rem
       (remoteRow.save_revision > localRevision ||
         (remoteRow.save_revision === localRevision && remoteUpdatedMs > localLastSavedAt))
 
+    // F1 — lineage divergence gate. Per-device counters cannot order
+    // lineages that forked: a stale device whose counter ran far ahead of
+    // the remote's still compares ">" and would push its stale lineage
+    // over a newer one. The sync base (LocalCloudSaveService) records the
+    // remote revision the local lineage last descended from, adopted on
+    // every successful pull/push:
+    //   base === remote rev -> same lineage point; newest-wins as before.
+    //   base !== remote rev -> the remote row moved under us:
+    //     * identical normalized content -> one save seen twice; adopt
+    //       the base and let the normal comparison run.
+    //     * local never advanced past base and remote moved ahead ->
+    //       adopt: pulling loses nothing this device uniquely holds.
+    //     * local moved past base (diverged) or remote rewound below it
+    //       -> 'conflict': hold BOTH sides untouched so a user decision -
+    //       never a silent pick - resolves the fork. Conflicting writes
+    //       nothing; the remote row and local slot stay as they are.
+    //   base absent -> migration (first sync under base tracking): same-
+    //     content adopts; differing content runs the legacy newest-wins
+    //     path once, except a stale-side push (local revision ahead while
+    //     the remote row is clock-newer - the carried F1 scenario) holds
+    //     as 'conflict' instead of regressing a newer remote lineage.
+    if (remoteUsable && remoteRow && localSave) {
+      const base = readSyncBaseRevision()
+      if (base !== null && base !== remoteRow.save_revision) {
+        if (canonicalJson(remoteUsable.normalizedSave) === canonicalJson(localSave)) {
+          writeSyncBaseRevision(remoteRow.save_revision)
+        } else if (localRevision === base && remoteAhead) {
+          writeSyncBaseRevision(remoteRow.save_revision)
+        } else {
+          return 'conflict'
+        }
+      } else if (base === null) {
+        if (canonicalJson(remoteUsable.normalizedSave) === canonicalJson(localSave)) {
+          writeSyncBaseRevision(remoteRow.save_revision)
+        } else if (
+          localRevision > remoteRow.save_revision &&
+          remoteUpdatedMs > localLastSavedAt
+        ) {
+          return 'conflict'
+        }
+      }
+    }
+
     if (remoteUsable && remoteAhead && remoteRow) {
       // Save-first (F5): a crash after the save write but before the
       // revision write leaves old-revision + new-save -> the next login
@@ -113,6 +182,10 @@ export async function syncRemoteSaveOnLogin(config: SupabaseConfig): Promise<Rem
       // over the remote row that was just pulled.
       const pulledRaw = JSON.stringify(remoteUsable.normalizedSave)
       localStorage.setItem(resolveSaveKey(), pulledRaw)
+      // Sync base adopts the pulled remote revision before the local
+      // counter - a torn pair (new base, old revision) self-heals through
+      // the same-content adoption above on the next login.
+      writeSyncBaseRevision(remoteRow.save_revision)
       localStorage.setItem(resolveRevisionKey(), String(remoteRow.save_revision))
       // Discard-notice parity with importSaveRaw: equipment dropped by
       // normalization on the pull seam reports through the same one-shot
@@ -198,6 +271,14 @@ export async function syncRemoteSaveOnLogin(config: SupabaseConfig): Promise<Rem
         // Revision-adoption failure: next save CAS-mismatches and the
         // coordinator resyncs - degraded, never inconsistent.
       }
+    }
+    // The committed remote row IS the new lineage base - a lost write
+    // here leaves base behind, which the same-content adoption repairs
+    // on the next login (local bytes still equal the row we just wrote).
+    try {
+      writeSyncBaseRevision(pushRevision)
+    } catch {
+      // Auxiliary write - degraded to a later adoption, never to a fork.
     }
     return 'pushed'
   } catch {

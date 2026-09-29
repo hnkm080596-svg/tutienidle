@@ -43,4 +43,9 @@ export function accountIdForSession(session: { mode: string; userId?: string; lo
 export function resolveSaveKey(): string { return `${SAVE_KEY_BASE}:${resolveSaveAccountId()}` }
 export function resolveBackupKey(): string { return `${BACKUP_KEY_BASE}:${resolveSaveAccountId()}` }
 export function resolveRevisionKey(): string { return `${REVISION_KEY_BASE}:${resolveSaveAccountId()}` }
+// Sync base (F1 lineage anchor): the remote save_revision the local
+// lineage last descended from - set when a pull lands or a push commits.
+// Remote rev != base means the remote row moved under us (divergence).
+const SYNC_BASE_KEY_BASE = 'tien-hiep-idle-save-sync-base'
+export function resolveSyncBaseKey(): string { return `${SYNC_BASE_KEY_BASE}:${resolveSaveAccountId()}` }
 export function resolveImportHandoffKey(): string { return `${IMPORT_HANDOFF_KEY_BASE}:${resolveSaveAccountId()}` }
