@@ -18,4 +18,10 @@ export interface BuildingInstance {
   // hoạch lần nào) — dùng tính sản lượng đã tích luỹ, kể cả khi offline
   // (xem MASTER SPEC Mục VII).
   lastCollectedAt: number
+
+  // EM-01 — realm mà CỬA SỔ tích luỹ hiện tại đang chạy dưới. Ghim lúc
+  // build/claim; realm chỉ tăng nên đột phá giữa cửa sổ không reprice
+  // ngược toàn bộ backlog theo rate mới. undefined (save cũ) → fallback
+  // realm hiện tại = hành vi cũ.
+  accrualRealmId?: string
 }

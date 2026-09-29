@@ -6,7 +6,7 @@
 
 ---
 
-### EM-01 — MEDIUM — Spirit-spring accrual is priced at the claim-time realm rate for the entire elapsed window
+### EM-01 — MEDIUM → **FIXED (round 7)** — Spirit-spring accrual is priced at the claim-time realm rate for the entire elapsed window
 
 - **Severity:** Medium
 - **Location:** `game/src/core/building/BuildingSystem.ts:343-366` (`getStoredAmount`), `:324-335` (`getEffectiveCapacity`), `:56-76` (`getSpiritSpringTargetRatePerMinute` — ~3× step per realm tier: mortal 5.5/min, qi_refining 31/min, foundation 93/min); caller `game/src/core/game/GameManagerBuildingOps.ts:224-230` passes `player.realmId` = **current** realm.
@@ -16,7 +16,7 @@
 
 ---
 
-### EM-02 — MEDIUM — Offline cultivation grant uses the save-time `cultivationPerSecond` snapshot including the transient Tu Linh Tran buff — an expired buff still applies to the whole offline window
+### EM-02 — MEDIUM → **FIXED (round 7)** — Offline cultivation grant uses the save-time `cultivationPerSecond` snapshot including the transient Tu Linh Tran buff — an expired buff still applies to the whole offline window
 
 - **Severity:** Medium
 - **Location:** `game/src/core/cultivation/CultivationTick.ts:29-47` — `player.cultivationPerSecond` is recomputed per tick as `base × talents × ramp × (1 + tuLinhPercent)` where `tuLinhPercent` comes from deadline-checked timed effects; `game/src/stores/player.ts:252-256` — `restoreFromSave` feeds `save.player.cultivationPerSecond` into `calculateOfflineProgress(offlineSeconds, …)` for the entire offline window (cap 24h, `game/src/core/idle/GameClock.ts:44,68`).
@@ -46,13 +46,11 @@
 
 ---
 
-### EM-05 — MEDIUM — Offline production settles every cycle at login-time realm (cycle seconds AND reward band) — same class as EM-01
+### EM-05 — MEDIUM → **CLEARED (round 7, 2026-09-29)** — Offline production settle dùng đúng save-time realm
 
-- **Severity:** Medium
-- **Location:** `game/src/core/production/ProductionOffline.ts:137` (`CYCLE_BASE_SECONDS_BY_REALM[currentRealmId]`), `:151-163` (`advanceWorkerLanes` gets `collectionRealmId: currentRealmId` for every lane); entry point `game/src/core/production/ProductionSystem.ts` `settleOffline` resolves `currentRealmId` at call time and passes it down for the whole window.
-- **Root cause:** Online `tickWorkers` pins `collectionRealmId` per cycle at creation time (the cycle records the realm it was produced under). The offline path collapses the whole `[offlineSinceMs, nowMs]` window to the realm at login — so every retroactively-completed cycle is timed AND paid at the post-breakthrough realm (cycle base seconds differ per realm, and `rollRewards`/hidden-channel band eligibility read `cycle.collectionRealmId`, `ProductionSystem.ts:528-535`).
-- **Repro:** Player near a breakthrough quits with workers running; breakthrough-granting state at next login (or the save's realm already advanced pre-quit) → all offline cycles settle at the new realm's cycle time/reward band instead of the realm they ran under — over-pays on every breakthrough-across-offline transition; also prices cycles shorter/longer than they actually were.
-- **Impact:** Same over-grant class as EM-01 (realm repricing across the offline window); magnitude scales with realm step.
+- **Original concern:** `settleOffline` resolves `currentRealmId` at login and collapses the whole offline window to it — cycles retro-priced at post-breakthrough realm.
+- **Why not live:** the realm argument is `offlinePlayer.realmId` (`GameManagerSaveRestore.ts:390-413`) read from the freshly-restored save — i.e. the SAVE-time realm, not a post-login realm. Realm cannot advance during the offline window (every breakthrough is an online ritual) nor inside the synchronous restore block; a pending tribulation outcome drains on the app tick AFTER `restoreFromSave` returns, so settle still sees the realm the window actually ran under. In-flight cycles additionally keep their own `collectionRealmId` pin via `WorkerLaneAdvance`; newly-spawned offline cycles correctly use save-time realm for the whole window. No repricing path exists.
+- **Residual:** EM-01 (building stored-amount repricing) was the real instance of this class and is fixed separately.
 
 ---
 

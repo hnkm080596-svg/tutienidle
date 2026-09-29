@@ -272,4 +272,60 @@ describe('BuildingSystem Linh Tuyá»n (engine offline, balance 2026-08-28)', 
     expect(result.amount).toBe(0)
     expect(manager.get('i1')!.lastCollectedAt).toBe(0)
   })
+
+  // EM-01 - dot pha giua cua so tich luy KHONG reprice nguoc backlog:
+  // claim tra theo realm cua cua so (accrualRealmId), roi pin chuyen
+  // sang realm hien tai cho cua so ke tiep.
+  it('claim sau dot pha tra theo realm cua cua so tich luy, khong phai realm luc claim', () => {
+    const s = spring()
+    const registry = new BuildingRegistry()
+    const manager = new BuildingManager()
+    registry.register(s)
+
+    // Cua so accrue o mortal L9 (~0.0917/s); player len qi_refining giua chung.
+    const instance: BuildingInstance = {
+      ...springInstance(9),
+      lastCollectedAt: 0,
+      accrualRealmId: 'mortal',
+    }
+    manager.add(instance)
+
+    const first = system.claim('i1', registry, manager, 100, 'qi_refining')
+
+    // 100s x 0.0917 ~ 9.17 -> 9; reprice qi_refining (~0.517/s) se la 51.
+    expect(first.amount).toBe(9)
+    expect(manager.get('i1')!.accrualRealmId).toBe('qi_refining')
+
+    // Cua so ke tiep accrue o realm moi.
+    const second = system.claim('i1', registry, manager, 200, 'qi_refining')
+    expect(second.amount).toBeGreaterThan(9)
+  })
+
+  it('instance khong co accrualRealmId (save cu) -> fallback realm hien tai, hanh vi cu', () => {
+    const s = spring()
+    const registry = new BuildingRegistry()
+    const manager = new BuildingManager()
+    registry.register(s)
+
+    const instance = { ...springInstance(9), lastCollectedAt: 0 }
+    manager.add(instance)
+
+    const result = system.claim('i1', registry, manager, 100, 'qi_refining')
+
+    // Khong pin -> gia claim-time realm: 100s x 0.517 ~ 51.7 -> 51.
+    expect(result.amount).toBe(51)
+    expect(manager.get('i1')!.accrualRealmId).toBe('qi_refining')
+  })
+
+  it('build moi pin accrualRealmId = realm luc xay', () => {
+    const registry = new BuildingRegistry()
+    const manager = new BuildingManager()
+    const bag = new MaterialBag()
+    registry.register({ ...spring(), upgradeCost: [[]] })
+
+    const player = { realmId: 'mortal' } as never
+    const built = system.build('gathering_outpost', registry, manager, player, bag, 1_000)
+
+    expect(built?.accrualRealmId).toBe('mortal')
+  })
 })

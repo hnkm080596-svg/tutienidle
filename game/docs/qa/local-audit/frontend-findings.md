@@ -21,7 +21,7 @@ Findings use `### FE-<id> — <SEVERITY> — <title>`.
 
 ---
 
-### FE-01 — HIGH — Tutorial overlay renders paper-palette text on dark scrim (≈1.2:1)
+### FE-01 — HIGH → **FIXED UPSTREAM** (verified on merged tree) — Tutorial overlay renders paper-palette text on dark scrim (≈1.2:1)
 
 - **File:** `game/src/components/common/TutorialOverlay.vue:82-120`
 - **Measured (computed):** title `color: rgb(33,31,26)` (--paper-text, near-black) on `rgba(8,9,13,0.76)` scrim → **1.21:1**; step counter `--paper-eyebrow` cinnabar → **3.64:1**; body `--paper-text-soft` similarly dark.
@@ -29,34 +29,34 @@ Findings use `### FE-<id> — <SEVERITY> — <title>`.
 - **Root cause:** overlay surfaces are ink-dark (`--scrim` + `ink-nine-slice` art), but the panel styles use the **light-paper token family** (`--paper-text`, `--paper-text-soft`, `--paper-eyebrow`). The paper→dark remap exists only inside `.ink-drawer` (`theme.css:458-470`) — this overlay is not inside it.
 - **Impact:** the first thing every new player sees is illegible. Blocks tutorial comprehension (menu hint, building intro).
 
-### FE-02 — MEDIUM — `.building-heading__name` (and sibling ink-overlay headings) render dark-on-dark
+### FE-02 — MEDIUM → **FIXED UPSTREAM** — `.building-heading__name` (and sibling ink-overlay headings) render dark-on-dark
 
 - **File:** `game/src/components/layout/FunctionOverlayPanel.vue:135` (`color: var(--paper-text, #211f1a)`)
 - **Measured (computed):** "Truyền Tống Trận" title `rgb(33,31,26)` on `rgba(5,5,8,0.92)` `overlay-panel--ink` → **1.24:1**. Same pattern observed on Đan Phòng + Khai Vật Đường headers and `SettingsPanel` section labels (`SettingsPanel.vue:234/239/329` use `--paper-text*` on the ink overlay).
 - **Root cause:** same class as FE-01 — `overlay-panel--ink` surfaces don't remap the paper token family; components authored for parchment inherit dark fallback colors.
 - **Impact:** every building overlay's title is a ghost; players can't tell which building is open except by content.
 
-### FE-03 — MEDIUM — Combat skill dock renders slots as ~10px slivers; dock is an empty black column outside fighting
+### FE-03 — MEDIUM → **FIXED UPSTREAM** — Combat skill dock renders slots as ~10px slivers; dock is an empty black column outside fighting
 
 - **Files:** `game/src/components/game/combat/CombatSkillDockPanel.vue:61-76` (fixed `width: clamp(340px,27vw,440px)`, always mounted), `hud/TurnCombatSkillBar.vue:134` (`v-if="visible"` = `isBattleFighting`), `hud/CombatSkillSlot.vue:173-176` (root has **no intrinsic size**).
 - **Measured (DOM):** dock occupies `414×854` at all times. Pre-fight: `.turn-combat-skill-bar` absent → column is a black void (shot 61). During fight: slot buttons exist but measure ~10px apart at x=1039/1049/1059, y=67 (shot 60) — visually nothing renders; only the "Thủ công" checkbox shows.
 - **Impact:** the entire manual-combat interaction surface is invisible. Manual mode cannot be played — slots can't be seen or aimed at; the right quarter of the combat screen is dead space.
 - **Note:** `CombatSkillSlot` root is `position: relative` with no width/height; if all children are absolutely positioned/conditional, the slot collapses — consistent with measured ~10px spacing.
 
-### FE-04 — MEDIUM — Battle log panel is rendered but visually occluded by the skill dock
+### FE-04 — MEDIUM → **FIXED UPSTREAM** — Battle log panel is rendered but visually occluded by the skill dock
 
 - **Files:** `game/src/components/game/combat/BattleLogPanel.vue:72+`, mounted `CombatSceneOverlay.vue:116`; dock z-index 12 (`CombatSkillDockPanel.vue:75`).
 - **Measured (DOM):** `.battle-log-panel` visible at x=1172 y=838 (260×54) — **inside the dock's opaque 1026–1440 region**. Not visible in screenshots (shot 60/61 bottom-right is pure black).
 - **Root cause:** UI-013 comment acknowledges "dock mép phải đè lên log" and added a collapse toggle, but the log still positions under the dock's opaque `dark-drawer-fill` column → hidden regardless of collapse state.
 - **Impact:** turn-based combat log (damage, skill names, targets) unreachable in practice.
 
-### FE-05 — MEDIUM — Động Phủ home exposes zero player state (no HUD)
+### FE-05 — MEDIUM → **FIXED UPSTREAM** — Động Phủ home exposes zero player state (no HUD)
 
 - **Measured (DOM):** on home, the only `data-testid` present is `presentation-overlay`; a class scan for `hud|status|vitals|resource|currency|realm|topbar` finds **nothing**. No tu-vi progress, linh thạch, realm, chiến lực, or HP shown. Player must press Tab and open panels for any state.
 - **Impact:** for an idle game, the accrual loop (the product) has no at-a-glance feedback on the main screen — no "+X tu vi/min" ticker, no currency counter, no progress bar toward next realm.
 - **Note:** building labels (level + locked state) do render on the scene; the gap is purely player-state.
 
-### FE-06 — LOW — Combat/main-scene nameplate shows literal "Player"
+### FE-06 — LOW → **FIXED (round 7)** — Combat/main-scene nameplate shows literal "Player"
 
 - **Files:** `game/src/game/scenes/CombatScene.ts:767` (`'Player'` label), `MainScene.ts:186,410`.
 - **Evidence:** all combat shots show the sprite captioned "Player" while the turn-queue chip correctly shows the character name "Kiểm Toán Giả".
@@ -67,7 +67,7 @@ Findings use `### FE-<id> — <SEVERITY> — <title>`.
 - **Measured (DOM):** `.quest-panel__card` contains name, desc, `0/5` progress, and a "Nhận Thưởng" button — but no reward contents (item/currency/amount). Description text is generic ("...để nhận thưởng").
 - **Impact:** players can't evaluate quest value before doing it; reward discovery only after completion.
 
-### FE-08 — LOW — Bottom-left vitals medallion shows overlapping duplicate HP text
+### FE-08 — LOW → **FIXED (round 7)** — Bottom-left vitals medallion shows overlapping duplicate HP text
 
 - **Evidence:** shots 52/53/60 bottom-left corner — two HP text runs overlap ("103/108" over a second `10x/108`), slightly offset, illegible.
 - **Impact:** the only persistent vitals readout in combat is garbled. Likely two stacked labels (medallion + bar label) both rendering the same value.
@@ -102,13 +102,13 @@ Findings use `### FE-<id> — <SEVERITY> — <title>`.
 
 Method: real breakthrough ritual driven live (seed `realmLevel=12` → Quán Khí → Tâm Ma Kiếp tribulation → talent entitlement → way pick (Pháp Tu) → Lễ Nhập Môn → qi_refining), plus direct realm-seed probes into `foundation_establishment`.
 
-### FE-11 — MEDIUM — Building construction popover clips cost rows; no visible build action
+### FE-11 — MEDIUM → **FIXED UPSTREAM** — Building construction popover clips cost rows; no visible build action
 
 - **Files:** building popover (FunctionOverlayPanel building path; observed on `chi_hien_quan`, `equipment_hall`, `pill_room`).
 - **Evidence:** shots `qq-chi_hien_quan`, `qq-equipment_hall`, `22-panel-pill_room` — the compact card shows name + description + "CHI PHÍ XÂY DỰNG" heading then ends: Chiêu Hiền Quán shows **zero** cost rows, Khí Đường shows **one truncated row** ("Thập Niên Linh Mộc Phàm Nhân ?/6"), Đan Phòng two rows — and **no build/upgrade button is visible in the card** at 1440×900.
 - **Impact:** player cannot see full construction cost nor confirm building; the primary build action is undiscoverable in the popover (must find another entry point or scroll if it exists).
 
-### FE-12 — LOW — Realm "ladder" in Cảnh Giới panel is a passive-node list that mislabels reachable realms "Sắp ra mắt"
+### FE-12 — LOW → **FIXED (round 7)** — Realm "ladder" in Cảnh Giới panel is a passive-node list that mislabels reachable realms "Sắp ra mắt"
 
 - **Files:** `src/data/realm/RealmPassiveNodes.ts:23-28` (`comingSoon: index >= 2`), `src/components/panels/RealmPanel.vue:102-113`.
 - **Evidence:** mortal panel shows "1 Nhập Đạo · Chưa mở / 2 Kiến Cơ · Chưa mở / 3 Trúc Cơ · Sắp ra mắt …" — reads as a realm ladder claiming **Trúc Cơ isn't in the release**, while `progressionCeilingRealmId = 'foundation_establishment'` (Trúc Cơ IS the reachable beta ceiling) and the stage select has a functional Trúc Cơ tab.
@@ -153,7 +153,7 @@ Method: real breakthrough ritual driven live (seed `realmLevel=12` → Quán Kh�
 
 Method: fresh boot → creation → seed mortal L12 → **win Quán Khí live** (quiz answers driven via `tribulationDirector.getState().currentQuestion.correctAnswerIndex`) → way pick → qi_refining → seed qi L12 + `qi_refining_abyssal_pool` → **win Trúc Cơ tribulation live** (mind chapter answered; tank/lightning chapters survived via runtime test-only defense override on the director ghost — audit tooling, not a product path) → foundation_establishment reached legitimately through the release-window chain.
 
-### FE-17 — MEDIUM — Release-ceiling gate (Kim Đan) shows a dead button with zero explanation
+### FE-17 — MEDIUM → **FIXED (round 7)** — Release-ceiling gate (Kim Đan) shows a dead button with zero explanation
 
 - **Evidence:** shot `f14-realm-foundation` — at Trúc Cơ · Tầng 1 the realm panel renders a dim "Kim Đan" button with **no requirement rows, no "Sắp ra mắt"/"Chưa mở" label, no tooltip** (BreakthroughGate returns `[]` for closed transitions, so the requirements section is empty and the button just sits disabled). Compounds with FE-12: the same panel simultaneously shows the *passive node* for the realm the player is standing in as "Sắp ra mắt".
 - **Impact:** at the exact content ceiling a paying player's progression screen is a dead end with no "this is the current beta cap" message. One line of copy fixes it.
@@ -192,7 +192,7 @@ Method: fresh boot → creation → seed mortal L12 → **win Quán Khí live** 
 
 Method: fresh mortal boot on mobile emulation; measured bounding boxes + viewport overflow + touch targets.
 
-### FE-22 — HIGH — Combat on mobile: ~50% of the viewport is a dead black column
+### FE-22 — HIGH → **FIXED UPSTREAM** — Combat on mobile: ~50% of the viewport is a dead black column
 
 - **Evidence:** shot `m9-combat` at 390×844 — the vertical divider sits at x≈197; the Phaser scene + countdown + sprites render only in the left half while the entire right half is the fixed dock column rendered as empty black (same FE-03 root, catastrophic at mobile width). `dockW=197` measured ≈ 50.5% of `vw=390`.
 - **Impact:** the single most important screen is effectively half-width on phones; sprites, turn queue, and telegraphs all compress into 197px.

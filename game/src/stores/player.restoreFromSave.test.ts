@@ -110,6 +110,85 @@ describe('player.restoreFromSave — idempotency (QA-002, Task 9.2)', () => {
     expect(player.cultivationPerSecond).toBe(20) // Object.assign của save2 đã chạy
   })
 
+  // EM-02 — cultivationPerSecond trong save đã gấp buff Tụ Linh Trận
+  // vào; buff hết hạn giữa cửa sổ offline phải ngừng trả, không được
+  // boosted-rate × toàn cửa sổ.
+  it('buff tu luyện hết hạn giữa offline → chỉ đoạn còn sống được buff (EM-02)', () => {
+    const player = usePlayerStore()
+    const windowMs = 30_000
+    const save = buildMinimalSave({
+      // base rate 10/s × (1 + 1.0) buff → snapshot 20/s.
+      cultivationPerSecond: 20,
+      lastSavedAt: currentMs - windowMs,
+      persistentTimedEffects: [
+        {
+          id: 'fx1',
+          sourceItemId: 'tu_linh_tran',
+          effectGroup: 'tu_linh_tran',
+          appliedAtMs: currentMs - windowMs - 10_000,
+          expiresAtMs: currentMs - windowMs + 10_000, // chết sau 10s offline
+          cultivationSpeedPercent: 1,
+          modifiers: [],
+        },
+      ],
+    })
+
+    const result = player.restoreFromSave(save)
+
+    // 10×(1+1)×10s + 10×20s = 400 (< cap 600); pre-fix = 20×30 = 600.
+    expect(result.cultivation).toBe(400)
+    expect(result.elapsedSeconds).toBe(30)
+  })
+
+  it('buff tu luyện đã hết hạn trước khi save → rate lưu trừ hết phần buff', () => {
+    const player = usePlayerStore()
+    const save = buildMinimalSave({
+      cultivationPerSecond: 20,
+      lastSavedAt: currentMs - 20_000,
+      persistentTimedEffects: [
+        {
+          id: 'fx1',
+          sourceItemId: 'tu_linh_tran',
+          effectGroup: 'tu_linh_tran',
+          appliedAtMs: 0,
+          expiresAtMs: currentMs - 200_000, // chết trước save
+          cultivationSpeedPercent: 1,
+          modifiers: [],
+        },
+      ],
+    })
+
+    const result = player.restoreFromSave(save)
+
+    // percentAtSave = 0 → base = snapshot 20/s → 20×20 = 400.
+    expect(result.cultivation).toBe(400)
+  })
+
+  it('buff tu luyện sống hết cửa sổ → toàn bộ thời gian được buff', () => {
+    const player = usePlayerStore()
+    const save = buildMinimalSave({
+      cultivationPerSecond: 20,
+      lastSavedAt: currentMs - 20_000,
+      persistentTimedEffects: [
+        {
+          id: 'fx1',
+          sourceItemId: 'tu_linh_tran',
+          effectGroup: 'tu_linh_tran',
+          appliedAtMs: 0,
+          expiresAtMs: currentMs + 999_000_000, // còn sống quá window end
+          cultivationSpeedPercent: 1,
+          modifiers: [],
+        },
+      ],
+    })
+
+    const result = player.restoreFromSave(save)
+
+    // base 10 × (1+1) × 20s = 400 — bằng snapshot-rate nhưng đi qua
+    // segment math, không qua phép nhân phẳng.
+    expect(result.cultivation).toBe(400)
+  })
+
   it('guard không phá normalization: nodeLevels fallback vẫn chạy', () => {
     const player = usePlayerStore()
     const save = buildMinimalSave({})

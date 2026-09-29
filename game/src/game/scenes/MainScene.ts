@@ -186,7 +186,10 @@ export class MainScene extends Phaser.Scene {
         : resolvePlayerVisualProfileId({})
 
     const sprite = this.add.sprite(0, 0, PLAYER_VISUAL_PROFILES[profileId].combatTextureKey)
-    const label = this.add.text(0, 0, 'Player', { fontSize: '14px', color: '#ffffff' }).setOrigin(0.5, 0)
+    // FE-06 — authored player name on the nameplate (was literal 'Player').
+    const playerName =
+      readOptionalGate(this.registry, 'gameManager')?.getActivePlayerName?.() ?? 'Player'
+    const label = this.add.text(0, 0, playerName, { fontSize: '14px', color: '#ffffff' }).setOrigin(0.5, 0)
 
     this.player = { sprite, label, sitting: false, profileId }
 
@@ -418,7 +421,9 @@ export class MainScene extends Phaser.Scene {
 
     this.player.sitting = event.isCultivating
 
-    this.player.label.setText(event.isCultivating ? CULTIVATION_LABEL : 'Player')
+    const playerName =
+      readOptionalGate(this.registry, 'gameManager')?.getActivePlayerName?.() ?? 'Player'
+    this.player.label.setText(event.isCultivating ? CULTIVATION_LABEL : playerName)
 
     this.refreshPlayerTexture()
 

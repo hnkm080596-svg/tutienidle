@@ -167,6 +167,9 @@ export class BuildingSystem {
       level: 1,
 
       lastCollectedAt: currentTime,
+
+      // EM-01 — cửa sổ tích luỹ đầu tiên chạy dưới realm lúc xây.
+      accrualRealmId: player.realmId,
     }
 
     manager.add(instance)
@@ -356,8 +359,12 @@ export class BuildingSystem {
         return 0
       }
 
-      const rate = this.getEffectiveRate(template, instance.level, realmId)
-      const capacity = this.getEffectiveCapacity(template, instance.level, realmId)
+      // EM-01 — rate/capacity follow the realm the window accrued under,
+      // not the claim-time realm: a breakthrough inside the window must
+      // not retroactively reprice the whole backlog.
+      const accrualRealmId = instance.accrualRealmId ?? realmId
+      const rate = this.getEffectiveRate(template, instance.level, accrualRealmId)
+      const capacity = this.getEffectiveCapacity(template, instance.level, accrualRealmId)
 
       return Math.min(elapsedSeconds * rate, capacity)
     }
@@ -366,13 +373,14 @@ export class BuildingSystem {
   }
 
   // UI đọc sức chứa + tốc độ (Linh Tuyền) để hiển thị, cùng nguồn với
-  // getStoredAmount/claim nên luôn khớp (2026-08-28).
+  // getStoredAmount/claim nên luôn khớp (2026-08-28). EM-01: cùng pin
+  // accrualRealmId — con số UI hiển thị đúng thứ claim() sẽ trả.
   getCapacity(instance: BuildingInstance, template: Building, realmId?: string): number {
-    return this.getEffectiveCapacity(template, instance.level, realmId)
+    return this.getEffectiveCapacity(template, instance.level, instance.accrualRealmId ?? realmId)
   }
 
   getRatePerMinute(instance: BuildingInstance, template: Building, realmId?: string): number {
-    return this.getEffectiveRate(template, instance.level, realmId) * 60
+    return this.getEffectiveRate(template, instance.level, instance.accrualRealmId ?? realmId) * 60
   }
 
   /**
@@ -429,14 +437,18 @@ export class BuildingSystem {
 
     // Giữ phần lẻ: lùi mốc về quá khứ đúng bằng thời gian sản xuất phần
     // lẻ (stored - amount), thay vì reset về currentTime làm mất phần đó.
-    const rate = this.getEffectiveRate(template, instance.level, currentRealmId)
+    // EM-01 — rate/material phẩm vẫn theo realm của cửa sổ vừa kết (pin),
+    // rồi pin chuyển sang realm hiện tại cho cửa sổ tích luỹ tiếp theo.
+    const accrualRealmId = instance.accrualRealmId ?? currentRealmId
+    const rate = this.getEffectiveRate(template, instance.level, accrualRealmId)
 
     const fraction = stored - amount
 
     instance.lastCollectedAt =
       rate > 0 ? currentTime - fraction / rate : currentTime
 
-    const materialId = this.resolveProducesMaterialId(template, currentRealmId)
+    const materialId = this.resolveProducesMaterialId(template, accrualRealmId)
+    instance.accrualRealmId = currentRealmId
 
     return { amount, materialId }
   }

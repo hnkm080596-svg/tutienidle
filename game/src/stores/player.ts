@@ -11,6 +11,7 @@ import {
 
 import { calculateOfflineProgress, type OfflineResult } from '../core/idle/OfflineProgressSystem'
 import { calculateOfflineTime } from '../core/idle/GameClock'
+import { getActiveCultivationSpeedPercent, splitCultivationSpeedWindow } from '../core/economy/TuLinhTranBalance'
 import { buildGameSave, computeRestoreIdentity, type GameSave } from '../services/save/SaveSystem'
 import { cloudSaveCoordinator } from '../services/cloudSave/CloudSaveServiceFactory'
 import { asBaseStats, createBaseStats } from '@/core/stats/StatBlock'
@@ -253,7 +254,26 @@ export const usePlayerStore = defineStore('player', {
         lastOnlineAt: save.player.lastSavedAt,
       })
 
-      const offline = calculateOfflineProgress(offlineSeconds, save.player.cultivationPerSecond)
+      // EM-02 — the saved cultivationPerSecond snapshot folds in timed
+      // buffs (Tụ Linh Trận) that expire mid-window; boosted-rate ×
+      // whole-window over-grants. Re-derive the un-buffed base rate and
+      // pay each expiry-boundary segment its own live percent through
+      // the same seconds→cultivation conversion authority.
+      const savedTimedEffects = save.player.persistentTimedEffects ?? []
+      const windowStartMs = save.player.lastSavedAt
+      const windowEndMs = windowStartMs + offlineSeconds * 1000
+      const percentAtSave = getActiveCultivationSpeedPercent(savedTimedEffects, windowStartMs)
+      const unbuffedCultivationPerSecond = save.player.cultivationPerSecond / (1 + percentAtSave)
+      const offline: OfflineResult = {
+        elapsedSeconds: offlineSeconds,
+        cultivation: splitCultivationSpeedWindow(savedTimedEffects, windowStartMs, windowEndMs).reduce(
+          (sum, segment) =>
+            sum +
+            calculateOfflineProgress(segment.seconds, unbuffedCultivationPerSecond * (1 + segment.percent))
+              .cultivation,
+          0,
+        ),
+      }
 
       // R10 (AR-12, S4 follow-up) — deep-clone before assigning: a plain
       // Object.assign shallow-copies nested fields (baseStats, modifiers,

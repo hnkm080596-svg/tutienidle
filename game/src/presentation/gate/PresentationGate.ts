@@ -61,6 +61,11 @@ export interface DomainSnapshotPort {
   } | null
 
   preparePresentationResume?(): ResumePlayback | null
+
+  /** Reports the active player's authored name (FE-06 audit: sprite
+      nameplates rendered a literal 'Player'). A read — it reports
+      identity, it never decides anything. */
+  getActivePlayerName?(): string | null
 }
 
 /**

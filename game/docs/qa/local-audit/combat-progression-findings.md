@@ -6,7 +6,7 @@
 
 ---
 
-### CP-01 — HIGH — `percent` modifiers authored on zero-base stats are silent no-ops (5 sites; 2 talents fully dead)
+### CP-01 — HIGH → **FIXED (round 7)** — `percent` modifiers authored on zero-base stats are silent no-ops (5 sites; 2 talents fully dead)
 
 - **Severity:** High
 - **Location:** `game/src/core/stats/StatCalculator.ts:231-279` (`runPipeline`: `value = (base + Σflat) × (1 + Σpercent)`), `:76-77` (codebase's own documentation of the rule), `:250` (percent × stacks)

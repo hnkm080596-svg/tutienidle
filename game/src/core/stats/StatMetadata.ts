@@ -24,7 +24,10 @@ export const STAT_METADATA: Partial<Record<StatType, StatMetadata>> = {
   linhLucHoTheCap: { unit: 'percent', min: 0, max: 0.75 },
   leechPercent: { unit: 'percent', min: 0, max: 0.25 },
   finalDamagePercent: { unit: 'percent', min: -1 },
-  finalDamageReductionPercent: { unit: 'percent', min: 0, max: 0.75 },
+  // CP-01 — min -1 (signed, như finalDamagePercent/dotResistancePercent):
+  // Cẩn Thận (phản) thiết kế +5% sát thương nhận qua flat -0.05; min:0
+  // chặn downside đó ở clampStatValue ngay consumer (CombatSystem).
+  finalDamageReductionPercent: { unit: 'percent', min: -1, max: 0.75 },
   chanceToIgnoreResistance: { unit: 'percent', min: 0, max: 1 },
   ailmentResistPercent: { unit: 'percent', min: 0, max: 0.75 },
   ailmentPotencyPercent: { unit: 'percent', min: 0 },

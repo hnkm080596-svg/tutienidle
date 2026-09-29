@@ -154,7 +154,7 @@ describe('syncRemoteSaveOnLogin - newest-wins reconciliation (spec F8)', () => {
     vi.unstubAllGlobals()
   })
 
-  it('remote older -> pushed: POST merge-duplicates with explicit updated_at', async () => {
+  it('remote behind local revision -> pushed via CAS PATCH guarded on the read revision', async () => {
     loginSession()
     const localSave = validGameSave(50_000_000)
     localStorage.setItem(resolveSaveKey(), JSON.stringify(localSave))
@@ -163,29 +163,155 @@ describe('syncRemoteSaveOnLogin - newest-wins reconciliation (spec F8)', () => {
     const calls = stubFetch((call) => {
       if (call.url.includes('/rest/v1/characters?')) return json([{ id: 'char-1' }])
       if (call.url.includes('/rest/v1/character_saves?')) {
-        return json([{ payload: validGameSave(1_000), save_revision: 7, updated_at: new Date(2_000).toISOString() }])
+        return json([{ payload: validGameSave(1_000), save_revision: 2, updated_at: new Date(2_000).toISOString() }])
       }
       return json(null)
     })
 
     expect(await syncRemoteSaveOnLogin(config)).toBe('pushed')
 
-    const post = calls.find((call) => call.init.method === 'POST')
-    expect(post).toBeDefined()
-    expect(post?.url).toContain('/rest/v1/character_saves')
-    const headers = post?.init.headers as Record<string, string>
-    expect(headers.Prefer).toContain('merge-duplicates')
-    const body = JSON.parse(String(post?.init.body)) as Record<string, unknown>
+    // INFRA-02 — the write is a PATCH guarded on the just-read revision,
+    // not a blind merge-duplicates upsert.
+    const patch = calls.find((call) => call.init.method === 'PATCH')
+    expect(patch).toBeDefined()
+    expect(patch?.url).toContain('/rest/v1/character_saves')
+    expect(patch?.url).toContain('character_id=eq.char-1')
+    expect(patch?.url).toContain('save_revision=eq.2')
+    const headers = patch?.init.headers as Record<string, string>
+    expect(headers.Prefer).toContain('return=representation')
+    const body = JSON.parse(String(patch?.init.body)) as Record<string, unknown>
     expect(body.character_id).toBe('char-1')
     expect(body.user_id).toBe('u1')
     expect(body.schema_version).toBe(CURRENT_SAVE_VERSION)
+    // Local counter is ahead -> the push keeps it, no adoption needed.
     expect(body.save_revision).toBe(3)
-    expect(typeof body.updated_at).toBe('string')
+    expect(localStorage.getItem(resolveRevisionKey())).toBe('3')
+    expect(calls.some((call) => call.init.method === 'POST')).toBe(false)
 
     vi.unstubAllGlobals()
   })
 
-  it('remote payload {} (the p_initial_save shape) counts as absent -> push when local ok', async () => {
+  it('unusable remote with HIGHER revision -> CAS push at remote+1, adopted locally so sequences stay one lineage', async () => {
+    loginSession()
+    localStorage.setItem(resolveSaveKey(), JSON.stringify(validGameSave(50_000_000)))
+    localStorage.setItem(resolveRevisionKey(), '3')
+
+    const badRemote = validGameSave(60_000_000)
+    badRemote.player = { ...badRemote.player, mortalBasicSkillId: undefined }
+
+    const calls = stubFetch((call) => {
+      if (call.url.includes('/rest/v1/characters?')) return json([{ id: 'char-1' }])
+      if (call.url.includes('/rest/v1/character_saves?')) {
+        return json([{ payload: badRemote, save_revision: 9, updated_at: new Date().toISOString() }])
+      }
+      return json(null)
+    })
+
+    expect(await syncRemoteSaveOnLogin(config)).toBe('pushed')
+
+    const patch = calls.find((call) => call.init.method === 'PATCH')
+    expect(patch?.url).toContain('save_revision=eq.9')
+    const body = JSON.parse(String(patch?.init.body)) as Record<string, unknown>
+    // INFRA-01 — pushRevision never regresses below remote+1 even when
+    // the local counter is behind (remote 9 -> pushed 10, adopted).
+    expect(body.save_revision).toBe(10)
+    expect(localStorage.getItem(resolveRevisionKey())).toBe('10')
+
+    vi.unstubAllGlobals()
+  })
+
+  it('remote newer revision wins over a NEWER local timestamp — clock skew cannot resurrect stale saves (INFRA-01)', async () => {
+    loginSession()
+    // Local clock ran far ahead: lastSavedAt is bigger than remote's
+    // updated_at, but remote carries the higher shared revision.
+    localStorage.setItem(resolveSaveKey(), JSON.stringify(validGameSave(9_000_000_000)))
+    localStorage.setItem(resolveRevisionKey(), '3')
+
+    const remoteSave = validGameSave(1_000)
+    remoteSave.player.name = 'remote-char'
+
+    stubFetch((call) => {
+      if (call.url.includes('/rest/v1/characters?')) return json([{ id: 'char-1' }])
+      if (call.url.includes('/rest/v1/character_saves?')) {
+        return json([{ payload: remoteSave, save_revision: 5, updated_at: new Date(2_000).toISOString() }])
+      }
+      return json(null)
+    })
+
+    expect(await syncRemoteSaveOnLogin(config)).toBe('pulled')
+    const written = JSON.parse(localStorage.getItem(resolveSaveKey()) ?? 'null') as GameSave
+    expect(written.player.name).toBe('remote-char')
+    expect(localStorage.getItem(resolveRevisionKey())).toBe('5')
+
+    vi.unstubAllGlobals()
+  })
+
+  it('same revision on both sides -> timestamp tie-break still applies', async () => {
+    loginSession()
+    localStorage.setItem(resolveSaveKey(), JSON.stringify(validGameSave(1_000)))
+    localStorage.setItem(resolveRevisionKey(), '5')
+
+    const remoteSave = validGameSave(5_000_000)
+    remoteSave.player.name = 'remote-char'
+
+    stubFetch((call) => {
+      if (call.url.includes('/rest/v1/characters?')) return json([{ id: 'char-1' }])
+      if (call.url.includes('/rest/v1/character_saves?')) {
+        return json([{ payload: remoteSave, save_revision: 5, updated_at: new Date(10_000_000).toISOString() }])
+      }
+      return json(null)
+    })
+
+    expect(await syncRemoteSaveOnLogin(config)).toBe('pulled')
+
+    vi.unstubAllGlobals()
+  })
+
+  it('CAS PATCH losing the race (0 rows updated) -> unavailable, local slot untouched (INFRA-02)', async () => {
+    loginSession()
+    localStorage.setItem(resolveSaveKey(), JSON.stringify(validGameSave(50_000_000)))
+    localStorage.setItem(resolveRevisionKey(), '3')
+
+    const calls = stubFetch((call) => {
+      if (call.url.includes('/rest/v1/characters?')) return json([{ id: 'char-1' }])
+      if (call.init.method === 'PATCH') return json([]) // another session moved the revision first
+      if (call.url.includes('/rest/v1/character_saves?')) {
+        return json([{ payload: validGameSave(1_000), save_revision: 2, updated_at: new Date(2_000).toISOString() }])
+      }
+      return json(null)
+    })
+
+    expect(await syncRemoteSaveOnLogin(config)).toBe('unavailable')
+    // Local slot and revision untouched - the next login re-compares.
+    const written = JSON.parse(localStorage.getItem(resolveSaveKey()) ?? 'null') as GameSave
+    expect(written.player.lastSavedAt).toBe(50_000_000)
+    expect(localStorage.getItem(resolveRevisionKey())).toBe('3')
+    expect(calls.some((call) => call.init.method === 'PATCH')).toBe(true)
+
+    vi.unstubAllGlobals()
+  })
+
+  it('no remote row at all -> plain POST insert (first push)', async () => {
+    loginSession()
+    localStorage.setItem(resolveSaveKey(), JSON.stringify(validGameSave(50_000_000)))
+    localStorage.setItem(resolveRevisionKey(), '2')
+
+    const calls = stubFetch((call) => {
+      if (call.url.includes('/rest/v1/characters?')) return json([{ id: 'char-1' }])
+      if (call.url.includes('/rest/v1/character_saves?')) return json([])
+      return json(null)
+    })
+
+    expect(await syncRemoteSaveOnLogin(config)).toBe('pushed')
+    const post = calls.find((call) => call.init.method === 'POST')
+    expect(post).toBeDefined()
+    const body = JSON.parse(String(post?.init.body)) as Record<string, unknown>
+    expect(body.save_revision).toBe(2)
+
+    vi.unstubAllGlobals()
+  })
+
+  it('remote payload {} (the p_initial_save shape) counts as absent -> CAS push heals over the empty row', async () => {
     loginSession()
     localStorage.setItem(resolveSaveKey(), JSON.stringify(validGameSave(50_000_000)))
 
@@ -198,7 +324,7 @@ describe('syncRemoteSaveOnLogin - newest-wins reconciliation (spec F8)', () => {
     })
 
     expect(await syncRemoteSaveOnLogin(config)).toBe('pushed')
-    expect(calls.some((call) => call.init.method === 'POST')).toBe(true)
+    expect(calls.some((call) => call.init.method === 'PATCH')).toBe(true)
 
     vi.unstubAllGlobals()
   })
@@ -223,7 +349,7 @@ describe('syncRemoteSaveOnLogin - newest-wins reconciliation (spec F8)', () => {
     })
 
     expect(await syncRemoteSaveOnLogin(config)).toBe('pushed')
-    expect(calls.some((call) => call.init.method === 'POST')).toBe(true)
+    expect(calls.some((call) => call.init.method === 'PATCH')).toBe(true)
     // Local slot untouched - the bad remote was never written down.
     const written = JSON.parse(localStorage.getItem(resolveSaveKey()) ?? '{}') as GameSave
     expect(written.player.lastSavedAt).toBe(50_000_000)
@@ -264,7 +390,7 @@ describe('shared save acceptance gate (qa-authority-01 / F-INT-02 / F-INT-03)', 
     })
 
     expect(await syncRemoteSaveOnLogin(config)).toBe('pushed')
-    expect(calls.some((call) => call.init.method === 'POST')).toBe(true)
+    expect(calls.some((call) => call.init.method === 'PATCH')).toBe(true)
 
     vi.unstubAllGlobals()
   })
@@ -285,7 +411,7 @@ describe('shared save acceptance gate (qa-authority-01 / F-INT-02 / F-INT-03)', 
     })
 
     expect(await syncRemoteSaveOnLogin(config)).toBe('pushed')
-    expect(calls.some((call) => call.init.method === 'POST')).toBe(true)
+    expect(calls.some((call) => call.init.method === 'PATCH')).toBe(true)
 
     vi.unstubAllGlobals()
   })

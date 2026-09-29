@@ -32,7 +32,10 @@ export const TALENT_BUFFS: BuffDefinition[] = [
     instanceScope: 'per_source',
     stacking: { maxStacks: 1, onReapplyStacks: 'keep', onReapplyDuration: 'refresh' },
     lifetime: { clock: 'holder_turns', duration: 8, scaling: 'ailment_scaled' },
-    statModifiers: [{ stat: 'finalDamagePercent', percent: 0.3 }],
+    // CP-01 — flat, không percent: base của rate stat này là 0 nên
+    // percent×(0+0)=0 (silent no-op). Convention rate-stat = flat
+    // fraction (TheTuBuffs/affixes/node riders).
+    statModifiers: [{ stat: 'finalDamagePercent', flat: 0.3 }],
     dispellable: false,
   },
   // Thạch Giáp — Thạch Nham 5s: −50% sát thương nhận vào.
@@ -45,7 +48,7 @@ export const TALENT_BUFFS: BuffDefinition[] = [
     instanceScope: 'per_source',
     stacking: { maxStacks: 1, onReapplyStacks: 'keep', onReapplyDuration: 'refresh' },
     lifetime: { clock: 'holder_turns', duration: 5, scaling: 'ailment_scaled' },
-    statModifiers: [{ stat: 'finalDamageReductionPercent', percent: 0.5 }],
+    statModifiers: [{ stat: 'finalDamageReductionPercent', flat: 0.5 }],
     dispellable: false,
   },
   // Vô Ảnh — Sát Na 6s: +30% chí mạng + 20% tốc đánh.
@@ -76,8 +79,8 @@ export const TALENT_BUFFS: BuffDefinition[] = [
     stacking: { maxStacks: 1, onReapplyStacks: 'keep', onReapplyDuration: 'refresh' },
     lifetime: { clock: 'holder_turns', duration: 10, scaling: 'ailment_scaled' },
     statModifiers: [
-      { stat: 'finalDamagePercent', percent: 0.3 },
-      { stat: 'criticalAvoidance', percent: 0.2 },
+      { stat: 'finalDamagePercent', flat: 0.3 },
+      { stat: 'criticalAvoidance', flat: 0.2 },
     ],
     dispellable: false,
   },

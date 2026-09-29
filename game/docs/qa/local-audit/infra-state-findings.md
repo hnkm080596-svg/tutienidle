@@ -8,7 +8,7 @@ Overall observation: this slice has already been through several audit rounds (c
 
 ---
 
-### INFRA-01 — MEDIUM — Remote newest-wins compares timestamps from two different machine clocks
+### INFRA-01 — MEDIUM → **FIXED (round 7)** — Remote newest-wins compares timestamps from two different machine clocks
 
 - **Severity:** Medium
 - **Location:** `game/src/services/cloudSave/SupabaseRemoteSave.ts:78` (parse remote `updated_at`), `:91` (local `lastSavedAt`), `:93` (the comparison `remoteUpdatedMs > localLastSavedAt`), `:141` (push writes `updated_at: new Date().toISOString()` — client wall clock, not Postgres `now()`)
@@ -18,7 +18,7 @@ Overall observation: this slice has already been through several audit rounds (c
 
 ---
 
-### INFRA-02 — MEDIUM — Remote `character_saves` push is unconditional upsert — no CAS/conflict detection on the remote row
+### INFRA-02 — MEDIUM → **FIXED (round 7)** — Remote `character_saves` push is unconditional upsert — no CAS/conflict detection on the remote row
 
 - **Severity:** Medium (design gap)
 - **Location:** `game/src/services/cloudSave/SupabaseRemoteSave.ts:129-146`

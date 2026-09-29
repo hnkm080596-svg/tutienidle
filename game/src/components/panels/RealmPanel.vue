@@ -14,6 +14,7 @@ import { usePlayerStore } from '@/stores/player'
 import { useGameManager } from '@/composables/useGameState'
 import { useBreakthroughRequirementStore } from '@/stores/breakthroughRequirement'
 import { CORE_REALM_LEVEL, getCurrentRealm, getNextRealm } from '@/core/realm/realmSystem'
+import { isBeyondReleaseCeiling, progressionCeilingRealmId } from '@/core/realm/ReleasePolicy'
 import { formatNumber } from '@/core/format/NumberFormatter'
 import { formatDuration } from '@/core/format/formatDuration'
 import { getRealmTier } from '@/core/realm/RealmTierMap'
@@ -42,6 +43,14 @@ const requirements = computed(() =>
   gameManager.realmAdvanceOps.getBreakthroughRequirements(player.$state),
 )
 const nextRealmName = computed(() => getNextRealm(player.realmId)?.name ?? '')
+// FE-17 — release-ceiling readout: at Trúc Cơ the "Kim Đan" button is
+// disabled by ReleasePolicy (authored but dormant), not by an unmet
+// requirement, so the requirements list alone gives no explanation.
+const nextRealmBeyondCeiling = computed(() => {
+  const next = getNextRealm(player.realmId)
+  return next != null && isBeyondReleaseCeiling(next.id)
+})
+const ceilingRealmName = computed(() => getCurrentRealm(progressionCeilingRealmId).name)
 const realmName = computed(() => getCurrentRealm(player.realmId).name)
 // Idle-game readout under the cultivation bar: the live per-second rate
 // (same snapshot the tick writes) plus the ETA to filling this floor.
@@ -109,6 +118,10 @@ function majorBreakthrough() {
 
       <div class="realm-panel__actions">
         <GameButton :disabled="!canBreakthrough" @click="majorBreakthrough">{{ majorBreakthroughLabel }}</GameButton>
+
+        <p v-if="nextRealmBeyondCeiling" class="realm-ceiling-note">
+          {{ t('panels.realm.ceilingNote', { realm: nextRealmName, ceiling: ceilingRealmName }) }}
+        </p>
 
         <ul v-if="requirements.length" class="realm-requirements">
         <li
@@ -195,6 +208,8 @@ function majorBreakthrough() {
 .realm-requirement { display: flex; align-items: center; gap: 6px; font-size: var(--text-sm); color: var(--text-muted); }
 .realm-requirement--met { color: var(--jade); }
 .realm-requirement__marker { font-weight: 700; width: 1em; text-align: center; }
+/* FE-17 — release-ceiling explanation under the dead major-realm button. */
+.realm-ceiling-note { flex: 0 0 100%; margin: 0; text-align: center; font-size: var(--text-sm); color: var(--text-muted); }
 .realm-panel__cultivation { width: min(560px, 90%); margin: 0 auto; }
 .realm-panel__cultivation-bar { --bar-track: var(--sys-bg-0, var(--ink-950)); border: 1px solid var(--sys-line-soft, var(--ink-line)); }
 /* Fit-refactor dot 3 - grid node canh gioi auto-fit theo CARD: 9 cot khi

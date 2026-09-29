@@ -44,3 +44,48 @@ export function getActiveCultivationSpeedPercent(
     .filter((e) => e.effectGroup === TU_LINH_TRAN_EFFECT_GROUP && e.expiresAtMs > nowMs)
     .reduce((sum, e) => sum + (e.cultivationSpeedPercent ?? 0), 0)
 }
+
+export interface CultivationSpeedSegment {
+  seconds: number
+  /** Sum of cultivationSpeedPercent live at this segment's start. */
+  percent: number
+}
+
+/**
+ * EM-02 — chia cửa sổ offline [windowStartMs, windowEndMs] thành các
+ * đoạn theo mốc hết hạn của từng effect: mỗi đoạn mang % sống tại đầu
+ * đoạn (getActiveCultivationSpeedPercent, expiresAtMs > start là sống).
+ * Snapshot cultivationPerSecond chỉ phản ánh buff lúc save — buff hết
+ * hạn giữa chừng không được kéo dài tới hết cửa sổ.
+ */
+export function splitCultivationSpeedWindow(
+  effects: readonly PersistentTimedEffect[],
+  windowStartMs: number,
+  windowEndMs: number,
+): CultivationSpeedSegment[] {
+  const bounds = new Set<number>([windowStartMs, windowEndMs])
+
+  for (const effect of effects) {
+    if (
+      effect.effectGroup === TU_LINH_TRAN_EFFECT_GROUP &&
+      effect.expiresAtMs > windowStartMs &&
+      effect.expiresAtMs < windowEndMs
+    ) {
+      bounds.add(effect.expiresAtMs)
+    }
+  }
+
+  const sorted = [...bounds].sort((a, b) => a - b)
+  const segments: CultivationSpeedSegment[] = []
+
+  for (let index = 0; index + 1 < sorted.length; index += 1) {
+    const start = sorted[index]!
+
+    segments.push({
+      seconds: (sorted[index + 1]! - start) / 1000,
+      percent: getActiveCultivationSpeedPercent(effects, start),
+    })
+  }
+
+  return segments
+}
