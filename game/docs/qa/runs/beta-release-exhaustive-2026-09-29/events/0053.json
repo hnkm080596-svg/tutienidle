@@ -1,0 +1,7 @@
+{
+  "action": "observe",
+  "assignmentId": "ASG-BX-DGATE",
+  "observedStatus": "exited",
+  "evidence": "3/4 gates pass; 1 branch-caused P15 fail repaired on tip; determinism+migration+build pass; 1 product-question finding",
+  "resultRef": "evidence/wave4-dgate-verdict.txt"
+}
