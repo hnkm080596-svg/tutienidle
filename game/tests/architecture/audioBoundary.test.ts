@@ -43,14 +43,14 @@ const NONLITERAL_IMPORT_RE = /(?:^|[^\w.])(?:import|require)\s*\(\s*(?!['"`])[^)
 // Bracket member access (`import.meta['glob'](x)`) carries the same
 // bundling lanes - dot and bracket spellings both count.
 const IMPORT_META_SPEC_RE =
-  /\bimport\s*\.\s*meta\s*(?:(?:\?\s*)?(?:\.|!)\s*(?:glob|resolve)\s*!?\s*(?:\?\s*\.\s*)?|\[\s*['"`](?:glob|resolve)['"`]\s*\]\s*(?:\?\s*\.\s*)?)\(\s*['"`]([^'"`]+)['"`]/g
+  /\bimport\s*\.\s*meta\s*(?:(?:[?!]\s*)?(?:\.|!)\s*(?:glob|resolve)\s*!?\s*(?:\?\s*\.\s*)?|\[\s*['"`](?:glob|resolve)['"`]\s*\]\s*(?:\?\s*\.\s*)?)\(\s*['"`]([^'"`]+)['"`]/g
 // The same lanes with a computed specifier (`import.meta.glob(dir)`)
 // carry no literal to screen - flag the call shape itself. A computed
 // MEMBER (`import.meta[k](dir)`) is likewise unverifiable: the
 // `[(?!['"`])` alternative covers bracket members whose content is not
 // a quoted `glob`/`resolve` lane name.
 const NONLITERAL_META_RE =
-  /\bimport\s*\.\s*meta\s*(?:(?:\?\s*)?(?:\.|!)\s*(?:glob|resolve)\s*!?\s*(?:\?\s*\.\s*)?|\[\s*['"`](?:glob|resolve)['"`]\s*\]\s*(?:\?\s*\.\s*)?|\[\s*(?!['"`])(?![A-Za-z_$][\w$]*\s*\])[^\]]*\]\s*(?:\?\s*\.\s*)?)\(\s*(?!['"`])[^)]*\)/g
+  /\bimport\s*\.\s*meta\s*(?:(?:[?!]\s*)?(?:\.|!)\s*(?:glob|resolve)\s*!?\s*(?:\?\s*\.\s*)?|\[\s*['"`](?:glob|resolve)['"`]\s*\]\s*(?:\?\s*\.\s*)?|\[\s*(?!['"`])(?![A-Za-z_$][\w$]*\s*\])[^\]]*\]\s*(?:\?\s*\.\s*)?)\(\s*(?!['"`])[^)]*\)/g
 // `import('to' + 'ne')` is a literal-shaped call whose specifier is a
 // concat - the extractor reads only 'to' and misses the spell. The same
 // holds for every operator/wrapper that follows the literal (`||`, `??`,
@@ -317,30 +317,16 @@ describe('audio boundary', () => {
         // `import.meta['gl'+'ob']` spells the bundling lane through a
         // concat bracket the single-quote arm can't see - decode+join
         // the quoted segments like the shake/cue bracket arms.
-        for (const m of clean.matchAll(
-          /\bimport\s*\.\s*meta\s*(?:\?\s*)?(?:\.|!)?\s*\[\s*([^\]]*)\]/g,
-        )) {
-          const i = m.index ?? 0
-          if (inLit(i)) continue
-          const segs = [...m[1]!.matchAll(/'([^']*)'|"([^"]*)"|`([^`]*)`/g)].map(
-            (sm) =>
-              (sm[1] ?? sm[2] ?? sm[3]!)
-                .replace(/\\x([0-9a-fA-F]{2})/g, (_, h: string) => String.fromCharCode(parseInt(h, 16)))
-                .replace(/\\u\{([0-9a-fA-F]+)\}/g, (_, h: string) => String.fromCodePoint(parseInt(h, 16)))
-                .replace(/\\u([0-9a-fA-F]{4})/g, (_, h: string) => String.fromCharCode(parseInt(h, 16))),
-          )
-          if (segs.length === 0) continue
-          if (/^(?:glob|resolve)$/.test(segs.join(''))) {
-            offenders.push(`${file.fromSrc} -> import.meta bracket ${m[0].slice(0, 60)}`)
-          }
-        }
         // `import.meta[K]` - the quoted-seg arm above skips bare
         // identifiers, so resolve the key through an in-file const
-        // literal the way the shake arm's identLit does.
+        // literal the way the shake arm's identLit does. Decl arms
+        // require the literal to run to statement end - `const K = 'gl'
+        // + 'ob'` binds the concat, not the 'gl' prefix, and stays
+        // unresolved.
         const metaIdentLit = new Map<string, string>()
         const metaDeclKind = new Map<string, string>()
         for (const m of clean.matchAll(
-          /\b(const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*(?:'([^']*)'|"([^"]*)"|`([^`]*)`)/g,
+          /\b(const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*(?:'([^']*)'|"([^"]*)"|`([^`]*)`)(?=\s*[;\n,)\]}]|$)/g,
         )) {
           // Every single-literal const is stored, not only lane names -
           // `const K = 'env'` then `import.meta[K]` resolves to a benign
@@ -359,8 +345,63 @@ describe('audio boundary', () => {
           )
           if ([...clean.matchAll(reAssign)].length > 1) metaIdentLit.delete(name)
         }
+        // `const K = K2` rebinds a resolved literal - follow ident hops
+        // (bounded; `const K3 = K` where K='glob' resolves equally).
+        for (let hop = 0; hop < 4; hop++) {
+          let added = false
+          for (const rm of clean.matchAll(
+            /\b(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*([A-Za-z_$][\w$]*)\s*(?=[;\n]|$)/g,
+          )) {
+            const src = metaIdentLit.get(rm[2]!)
+            if (src !== undefined && !metaIdentLit.has(rm[1]!)) {
+              metaIdentLit.set(rm[1]!, src)
+              metaDeclKind.set(rm[1]!, 'const')
+              added = true
+            }
+          }
+          if (!added) break
+        }
+        // Rebuilds a bracket key expression: quoted segs decode to their
+        // content, bare idents resolve through metaIdentLit; `+`/spaces
+        // flatten away. Returns { flat, unres } - `unres` marks an
+        // unverifiable dynamic remainder.
+        const rebuildBracketKey = (keyText: string): { flat: string; unres: boolean; segs: string[] } => {
+          const segs = [...keyText.matchAll(/'([^']*)'|"([^"]*)"|`([^`]*)`/g)].map(
+            (sm) =>
+              (sm[1] ?? sm[2] ?? sm[3]!)
+                .replace(/\\x([0-9a-fA-F]{2})/g, (_, h: string) => String.fromCharCode(parseInt(h, 16)))
+                .replace(/\\u\{([0-9a-fA-F]+)\}/g, (_, h: string) => String.fromCodePoint(parseInt(h, 16)))
+                .replace(/\\u([0-9a-fA-F]{4})/g, (_, h: string) => String.fromCharCode(parseInt(h, 16))),
+          )
+          let si = 0
+          let unres = false
+          const tmp = keyText.replace(/'[^']*'|"[^"]*"|`[^`]*`/g, () => `\x01${si++}\x01`)
+          const resolvedTmp = tmp.replace(/[A-Za-z_$][\w$]*/g, (id) => {
+            const v = metaIdentLit.get(id)
+            if (v === undefined) unres = true
+            return v ?? '\0'
+          })
+          const flat = resolvedTmp
+            .replace(/\x01(\d+)\x01/g, (_p, n: string) => segs[+n]!)
+            .replace(/[\s+]/g, '')
+          return { flat, unres, segs }
+        }
+        // `import.meta['gl'+'ob']` spells the bundling lane through a
+        // concat bracket - rebuild the key; a lane join or an
+        // unresolvable dynamic (`['g'+x]`, `['gl'+KX]`) flags alike.
         for (const m of clean.matchAll(
-          /\bimport\s*\.\s*meta\s*(?:\?\s*)?(?:\.|!)?\s*\[\s*([A-Za-z_$][\w$]*)\s*\]/g,
+          /\bimport\s*\.\s*meta\s*(?:(?:[?!]\s*\.?\s*|\.|!)\s*)?\[\s*([^\]]*)\]/g,
+        )) {
+          const i = m.index ?? 0
+          if (inLit(i)) continue
+          const { flat, unres, segs } = rebuildBracketKey(m[1]!)
+          if (segs.length === 0) continue
+          if (unres || /^(?:glob|resolve)$/.test(flat)) {
+            offenders.push(`${file.fromSrc} -> import.meta bracket ${m[0].slice(0, 60)}`)
+          }
+        }
+        for (const m of clean.matchAll(
+          /\bimport\s*\.\s*meta\s*(?:(?:[?!]\s*\.?\s*|\.|!)\s*)?\[\s*([A-Za-z_$][\w$]*)\s*\]/g,
         )) {
           const i = m.index ?? 0
           if (inLit(i)) continue
@@ -378,7 +419,7 @@ describe('audio boundary', () => {
         // local name - flag the destructure itself (every later use of
         // the name is the same bundling channel).
         for (const m of clean.matchAll(
-          /\b(?:const|let|var)\s*\{([^}]*)\}\s*=\s*import\s*\.\s*meta\b/g,
+          /(?<![\w$.])(?:\b(?:const|let|var)\s+)?\{([^}]*)\}\s*=\s*import\s*\.\s*meta\b/g,
         )) {
           const i = m.index ?? 0
           if (inLit(i)) continue
@@ -387,43 +428,59 @@ describe('audio boundary', () => {
           }
         }
         // `const ns = import.meta` mints a receiver alias - flag every
-        // `ns.glob`/`ns.resolve` member on it.
+        // `ns.glob`/`ns.resolve` member on it. `ns = import.meta`
+        // without a decl keyword, `(0, import.meta)` comma-seq wraps
+        // (`(0, import.meta)`/`((import.meta))`), and `const ns2 = ns`
+        // rebinds mint the same alias (bounded ident hops).
+        const metaAliases = new Set<string>()
         for (const m of clean.matchAll(
-          /\b(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*import\s*\.\s*meta\b/g,
+          /(?<![\w$.])(?:\b(?:const|let|var)\s+)?([A-Za-z_$][\w$]*)\s*=\s*(?:\(\s*)*(?:0\s*,\s*)*import\s*\.\s*meta\b/g,
         )) {
-          const i = m.index ?? 0
-          if (inLit(i)) continue
+          if (!inLit(m.index ?? 0)) metaAliases.add(m[1]!)
+        }
+        for (let hop = 0; hop < 4; hop++) {
+          let added = false
+          for (const a of [...metaAliases]) {
+            for (const rm of clean.matchAll(
+              new RegExp(`\\b(?:const|let|var)\\s+([A-Za-z_$][\\w$]*)\\s*=\\s*${a}\\s*(?=[;,\n)]|$)`, 'g'),
+            )) {
+              if (!inLit(rm.index ?? 0) && !metaAliases.has(rm[1]!)) {
+                metaAliases.add(rm[1]!)
+                added = true
+              }
+            }
+          }
+          if (!added) break
+        }
+        for (const alias of metaAliases) {
           const reMember = new RegExp(
             // `?.`/`!.`/bracket members on the alias reach the same lane:
             // `ns?.glob`, `ns!.resolve`, `ns['glob']`, `ns?.['resolve']`.
-            `\\b${m[1]!}\\s*(?:[?!]?\\s*\\.\\s*(?:glob|resolve)\\b|[?!]?\\s*\\.?\\s*\\[\\s*(?:'glob'|"glob"|\\x60glob\\x60|'resolve'|"resolve"|\\x60resolve\\x60)\\s*\\])`,
+            `\\b${alias}\\s*(?:[?!]?\\s*\\.\\s*(?:glob|resolve)\\b|[?!]?\\s*\\.?\\s*\\[\\s*(?:'glob'|"glob"|\\x60glob\\x60|'resolve'|"resolve"|\\x60resolve\\x60)\\s*\\])`,
             'g',
           )
           for (const mm of clean.matchAll(reMember)) {
             if (inLit(mm.index ?? 0)) continue
             offenders.push(`${file.fromSrc} -> import.meta alias ${mm[0].slice(0, 60)}`)
           }
-          // Concat/ident keys on the alias (`ns['glo'+'b']`, `ns[K3]`)
-          // decode through the same segment-join/decl-resolution the
-          // direct `import.meta[...]` arms use.
+          // Concat/ident keys on the alias (`ns['glo'+'b']`, `ns[K3]`,
+          // `ns['g'+x]`) rebuild through the same key-expression arm as
+          // the direct `import.meta[...]` scan.
           const reAliasBracket = new RegExp(
-            `\\b${m[1]!}\\s*(?:[?!]\\s*\\.?\\s*|\\.\\s*)?\\[\\s*([^\\]]*)\\]`,
+            `\\b${alias}\\s*(?:[?!]\\s*\\.?\\s*|\\.\\s*)?\\[\\s*([^\\]]*)\\]`,
             'g',
           )
           for (const bm of clean.matchAll(reAliasBracket)) {
             if (inLit(bm.index ?? 0)) continue
-            const segs = [...bm[1]!.matchAll(/'([^']*)'|"([^"]*)"|`([^`]*)`/g)].map(
-              (sm) =>
-                (sm[1] ?? sm[2] ?? sm[3]!)
-                  .replace(/\\x([0-9a-fA-F]{2})/g, (_, h: string) => String.fromCharCode(parseInt(h, 16)))
-                  .replace(/\\u\{([0-9a-fA-F]+)\}/g, (_, h: string) => String.fromCodePoint(parseInt(h, 16)))
-                  .replace(/\\u([0-9a-fA-F]{4})/g, (_, h: string) => String.fromCharCode(parseInt(h, 16))),
-            )
+            const { flat, unres, segs } = rebuildBracketKey(bm[1]!)
             if (segs.length > 0) {
-              // A single literal `'glob'` is already flagged by reMember -
-              // only joined multi-segment spellings report here.
-              if (segs.length > 1 && /^(?:glob|resolve)$/.test(segs.join(''))) {
-                offenders.push(`${file.fromSrc} -> import.meta alias bracket ${bm[0].slice(0, 60)}`)
+              // A single literal `'glob'` is already flagged by reMember
+              // - here flag joined multi-segment spellings and mixed
+              // literal+dynamic keys that stay unverifiable.
+              if (unres || /^(?:glob|resolve)$/.test(flat)) {
+                if (segs.length > 1 || unres || !/^(?:glob|resolve)$/.test(bm[1]!.trim().slice(1, -1))) {
+                  offenders.push(`${file.fromSrc} -> import.meta alias bracket ${bm[0].slice(0, 60)}`)
+                }
               }
               continue
             }
@@ -441,7 +498,7 @@ describe('audio boundary', () => {
         // a VALUE - no `(` means nothing to screen, so flag the shape.
         // `typeof import.meta.glob` is a type query, not a lane use.
         for (const m of clean.matchAll(
-          /\bimport\s*\.\s*meta\s*(?:\?\s*)?(?:\.|!)\s*(?:glob|resolve)\b(?!\s*\()/g,
+          /\bimport\s*\.\s*meta\s*(?:[?!]\s*)?(?:\.|!)\s*(?:glob|resolve)\b(?!\s*\()/g,
         )) {
           const i = m.index ?? 0
           if (inLit(i)) continue

@@ -423,6 +423,9 @@ export class AssetBundleManager implements AssetPort {
           this.domLoadedKeys.add(desc.key)
         }
       } catch {
+        // A post-dispose rejection is teardown fallout, not a fetch
+        // failure - it must not spend a fetch attempt.
+        if (this.disposed) return
         // The deduped loader never carries a caller's signal, so every
         // rejection here is a real fetch/decode failure and counts against
         // the attempt bound. Read-modify-write against the current count:

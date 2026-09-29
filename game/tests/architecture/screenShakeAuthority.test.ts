@@ -123,7 +123,24 @@ describe('screen shake authority', () => {
           let flaggedBracket = false
           for (const alt of alts) {
             const segMatches = [...alt.matchAll(/'([^']*)'|"([^"]*)"|`([^`]*)`/g)]
-            const segs = segMatches.map((sm) => decodeSeg(sm[1] ?? sm[2] ?? sm[3]!))
+            // `''+k` - an empty literal launders the dynamic concat (the
+            // segs.length===0 path skips it); drop empty segs before the
+            // count check so the dynamic remainder still flags.
+            const segs = segMatches
+              .map((sm) => decodeSeg(sm[1] ?? sm[2] ?? sm[3]!))
+              .filter((s) => s !== '')
+            if (segs.length === 0) {
+              // `''+k` - quoted segments existed but all decoded empty;
+              // the dynamic remainder is unverifiable and flags. A
+              // quote-free computed key (`[k]`, `[k.prop]`) is ordinary
+              // member access and stays on the ident lane below.
+              const leftover = alt.replace(/'[^']*'|"[^"]*"|`[^`]*`|[\s+]/g, '')
+              if (segMatches.length > 0 && /[A-Za-z_$]/.test(leftover)) {
+                offenders.push(`${file.fromSrc}:${i} (mixed concat member: ${alt.slice(0, 60)})`)
+                flaggedBracket = true
+                continue
+              }
+            }
             if (segs.length === 0) {
               // `cam[key]` / `cam[k ? KEY : 'x']` with a bare identifier
               // key resolves against the file's own `const KEY = '...'`
@@ -237,7 +254,9 @@ describe('screen shake authority', () => {
           let depth = 0
           let cur = ''
           const segs: string[] = []
-          const open = inner.indexOf(inner.includes('{') ? '{' : '[')
+          // First bracket wins: `[s, {shake}]` prefers '[' over the
+          // later '{' - a `{`-preferred opener misframes the pattern.
+          const open = inner.search(/[{[]/)
           for (let i = open + 1; i < inner.length; i++) {
             const c = inner[i]!
             if (c === '{' || c === '[') depth++
@@ -275,19 +294,61 @@ describe('screen shake authority', () => {
         }
         const flagBoundCalls = (names: string[]) => {
           for (const name of new Set(names)) {
+            // A signature paren rebinding `name` shadows the extracted
+            // member inside its body - `function g(s) { s(1) }` calls
+            // the param, not `cam.shake`.
+            const shadowSpans: Array<[number, number]> = []
+            for (const pm of text.matchAll(/\(([^()]*)\)\s*(=>|\{)/g)) {
+              if (inLit(pm.index ?? 0)) continue
+              if (!new RegExp(`\\b${name}\\b`).test(pm[1]!)) continue
+              const gateIdx = pm.index! + pm[0].length - pm[2]!.length
+              if (pm[2] === '=>') {
+                // expression body to a depth-0 `,`/`;`/`)`/`]`/`}`
+                let d = 0
+                let be = pm.index! + pm[0].length
+                for (let i = be; i < text.length; i++) {
+                  if (inLit(i)) continue
+                  const c = text[i]!
+                  if (c === '(' || c === '[' || c === '{') d++
+                  else if (c === ')' || c === ']' || c === '}') {
+                    if (d === 0) break
+                    d--
+                  } else if (d === 0 && (c === ',' || c === ';')) break
+                  be = i + 1
+                }
+                shadowSpans.push([gateIdx, be])
+              } else {
+                let d = 0
+                let be = -1
+                for (let i = gateIdx; i < text.length; i++) {
+                  if (inLit(i)) continue
+                  if (text[i] === '{') d++
+                  else if (text[i] === '}') {
+                    d--
+                    if (d === 0) {
+                      be = i + 1
+                      break
+                    }
+                  }
+                }
+                if (be >= 0) shadowSpans.push([gateIdx, be])
+              }
+            }
             for (const sm of text.matchAll(
               // `(?<![\w$.])` keeps `obj.s(` (member call) out when `s`
               // is the bound name; `s?.(`/`s.call|apply|bind(` invoke
-              // the same binding through another shape. `(s)(x)` is the
-              // paren-wrapped callee; bare-value fences cover
-              // `forEach(s)`, `hand = s`, `{go: s}`, `cond ? s : alt`
+              // the same binding through another shape. `s['call'](x)`
+              // is the bracket spelling of the same indirect call.
+              // `(s)(x)` is the paren-wrapped callee; bare-value fences
+              // cover `forEach(s)`, `hand = s`, `{go: s}`, `cond ? s :`
               // reads; `case s:` is the label-position read.
               new RegExp(
-                `(?<![\\w$.])${name}\\s*!?\\s*\\(|\\b${name}\\s*[?!]*\\s*\\.\\s*(?:call|apply|bind)\\s*(?:\\?\\s*\\.)?\\s*\\(|(?<![\\w$.])${name}\\s*\\?\\.\\s*\\(|\\(\\s*${name}\\s*\\)\\s*(?:\\?\\s*\\.)?\\s*\\(|(?:[(,=\\[:;{!&|?:+\\-*\\/%^~<>]|\\.\\.\\.|\\b(?:return|yield|await|typeof|void|in|of|instanceof|new|delete)\\s)\\s*${name}\\s*(?=[,)\\]};])|\\bcase\\s+${name}\\b[^:\\n]*:|\\?\\s*${name}\\s*:`,
+                `(?<![\\w$.])${name}\\s*!?\\s*\\(|\\b${name}\\s*[?!]*\\s*\\.\\s*(?:call|apply|bind)\\s*(?:\\?\\s*\\.)?\\s*\\(|\\b${name}\\s*[?!]*\\s*\\.?\\s*\\[\\s*['"\`](?:call|apply|bind)['"\`]\\s*\\]\\s*\\(|(?<![\\w$.])${name}\\s*\\?\\.\\s*\\(|\\(\\s*${name}\\s*\\)\\s*(?:\\?\\s*\\.)?\\s*\\(|(?:[(,=\\[:;{!&|?:+\\-*\\/%^~<>]|\\.\\.\\.|\\b(?:return|yield|await|typeof|void|in|of|instanceof|new|delete)\\s)\\s*${name}\\s*(?=[,)\\]};])|\\bcase\\s+${name}\\b[^:]*:|\\?\\s*${name}\\s*:`,
                 'g',
               ),
             )) {
               if (inLit(sm.index ?? 0)) continue
+              if (shadowSpans.some(([a, b]) => sm.index! >= a && sm.index! < b)) continue
               offenders.push(`${file.fromSrc}:${sm.index} (destructure-bound call)`)
             }
           }
@@ -333,8 +394,11 @@ describe('screen shake authority', () => {
         // or `items.map(({ shake }) => ...)`. A `(` whose `)` is
         // followed by `=>`/`{`/`:` is a signature paren; call/arg parens
         // fail the gate, and control-structure parens are excluded.
+        // `catch (e)` is deliberately absent: `catch ({shake: s})` is
+        // a binding position (catch clause param), not an expression
+        // paren.
         const CONTROL_PAREN =
-          /(?:\b(?:if|for|while|switch|catch|with|return|typeof|case|throw|new|in|of|do|else|yield|await|delete|void|instanceof)|\?)\s*$/
+          /(?:\b(?:if|for|while|switch|with|return|typeof|case|throw|new|in|of|do|else|yield|await|delete|void|instanceof)|\?)\s*$/
         for (const pm of text.matchAll(/\(/g)) {
           if (inLit(pm.index ?? 0)) continue
           const ctrlParen = CONTROL_PAREN.test(text.slice(0, pm.index!))
@@ -357,8 +421,15 @@ describe('screen shake authority', () => {
           // `case f({shake}):` - the case colon satisfies the `:` gate
           // while `{shake}` is a call argument, not a param pattern.
           if (/^\s*:/.test(afterParen)) {
-            const ls = text.lastIndexOf('\n', pm.index!) + 1
-            if (/\b(?:case|default)\b/.test(text.slice(ls, pm.index!))) continue
+            // Statement-boundary lookback (`;`/`{`/`}`), not the line:
+            // `x = f(); case f({shake}):` splits on a mid-line case.
+            const stmtStart =
+              Math.max(
+                text.lastIndexOf(';', pm.index!),
+                text.lastIndexOf('{', pm.index!),
+                text.lastIndexOf('}', pm.index!),
+              ) + 1
+            if (/\b(?:case|default)\b[^:]*$/.test(text.slice(stmtStart, pm.index!))) continue
           }
           // Control-keyword parens (`return (...)`, `await (...)`) can
           // still hold an arrow signature `({shake}: T) => x` - the `=>`

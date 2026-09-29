@@ -478,29 +478,69 @@ export function templateExprText(text: string): string {
   // Position matters: an <i18n>/<style> ELEMENT nested inside <template>
   // is live markup whose {{ }} interpolations still compile, so only
   // blocks whose open tag sits OUTSIDE the <template> span blank out.
-  const templateOpen = /<template(?:\s[^>]*)?>/i.exec(base)
-  const templateSpan = templateOpen
+  // Literal `</template>`/`<template` bytes inside quoted attr values,
+  // {{ }} string literals, rawtext bodies (<style>/<textarea>/<script>)
+  // or a top-level foreign block (<docs>/<i18n>) must not move the
+  // depth counter: the scan runs on a copy with those regions masked,
+  // skips stray closes at depth 0 (a `</template>` before the root
+  // open would push depth negative and pin `end` to EOF), and never
+  // anchors on a `<template` sitting inside a foreign pair.
+  const maskedChars = base.split('')
+  const wipe = (a: number, b: number) => {
+    for (let i = a; i < b; i++) {
+      if (maskedChars[i] !== '\n') maskedChars[i] = ' '
+    }
+  }
+  for (const tm of base.matchAll(/<[a-zA-Z](?:[^<>"']|"[^"]*"|'[^']*')*>/g)) {
+    for (const am of tm[0].matchAll(/=\s*(["'])[\s\S]*?\1/g)) {
+      const qs = tm.index! + am.index! + am[0].indexOf(am[1]!)
+      wipe(qs, qs + am[0].length - am[0].indexOf(am[1]!))
+    }
+  }
+  for (const im of base.matchAll(/\{\{[\s\S]*?\}\}/g)) {
+    wipe(im.index!, im.index! + im[0].length)
+  }
+  for (const rm of base.matchAll(
+    /<(style|textarea|script)(?:\s[^>]*)?>[\s\S]*?<\/\s*\1\s*>/gi,
+  )) {
+    wipe(rm.index!, rm.index! + rm[0].length)
+  }
+  const masked = maskedChars.join('')
+  const foreignPairs: Array<[number, number]> = []
+  for (const fm of masked.matchAll(/<([a-zA-Z][\w-]*)(?:\s[^>]*)?>[\s\S]*?<\/\s*\1\s*>/g)) {
+    if (fm[1]!.toLowerCase() !== 'template') {
+      foreignPairs.push([fm.index!, fm.index! + fm[0].length])
+    }
+  }
+  const inForeign = (i: number) => foreignPairs.some(([a, b]) => i >= a && i < b)
+  let templateOpenIdx = -1
+  for (const om of masked.matchAll(/<template(?:\s[^>]*)?>/gi)) {
+    if (!inForeign(om.index!)) {
+      templateOpenIdx = om.index!
+      break
+    }
+  }
+  const templateSpan = templateOpenIdx >= 0
     ? (() => {
         // Nested <template v-if> elements share the tag name - the ROOT
         // template's close is the `</template>` that returns depth to 0.
-        // A `</template>` sitting in a top-level foreign block's BODY
-        // (`<docs>` carrying a literal close tag) appears only AFTER the
-        // root already closed, so depth counting never reads it - the
-        // old last-match scan extended the span into inert text.
+        // Stray closes at depth 0 and tokens inside foreign pairs are
+        // not span boundaries.
         let depth = 0
         let end = base.length
-        for (const tm of base.matchAll(/<template(?:\s[^>]*)?>|<\/\s*template\s*>/gi)) {
+        for (const tm of masked.matchAll(/<template(?:\s[^>]*)?>|<\/\s*template\s*>/gi)) {
           if (tm[0].startsWith('</')) {
+            if (depth === 0 || inForeign(tm.index!)) continue
             depth--
             if (depth === 0) {
               end = tm.index! + tm[0].length
               break
             }
-          } else if (!/\/\s*>$/.test(tm[0])) {
+          } else if (!/\/\s*>$/.test(tm[0]) && !inForeign(tm.index!)) {
             depth++
           }
         }
-        return { pos: templateOpen.index!, end }
+        return { pos: templateOpenIdx, end }
       })()
     : null
   for (const fm of base.matchAll(/<([a-zA-Z][\w-]*)(?:\s[^>]*)?>[\s\S]*?<\/\s*\1\s*>/g)) {
@@ -537,7 +577,13 @@ export function templateExprText(text: string): string {
     for (const fm of exprText.matchAll(/<[a-zA-Z][^<>]*>/g)) {
       if (covered.has(fm.index!)) continue
       tagSpans.push([fm.index!, fm.index! + fm[0].length])
-      for (const am of fm[0].matchAll(/=\s*(["'])[\s\S]*?\1/g)) {
+      // A `b='` opener in a quote-broken tag can MISPARE with a `'`
+      // inside a later directive (`b=' @click="cue('x')"` pairs `b='`
+      // against the `'` in `cue(`): real HTML treats the value as
+      // unquoted. A closing quote only counts when followed by
+      // `[\s/>]` or tag end - a `'` inside an identifier/expression is
+      // text, not a close.
+      for (const am of fm[0].matchAll(/=\s*(["'])(?:(?!\1)[\s\S])*\1(?=[\s/>]|$)/g)) {
         const qStart = fm.index! + am.index! + am[0].indexOf(am[1]!)
         quotedAttr.push([qStart, qStart + am[0].length - am[0].indexOf(am[1]!)])
       }
