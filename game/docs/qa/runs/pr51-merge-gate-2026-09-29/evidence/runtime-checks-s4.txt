@@ -1,0 +1,11 @@
+Playwright chromium vs vite dev :5608 on S4 tree:
+  FE-06 main nameplate = authored name            PASS
+  FE-06 combat sprite label = authored name       PASS
+  FE-08 no HUD text inside gourd footprint        PASS
+  FE-17 ceiling note at Truc Co                   PASS
+       "Kim Dan chua mo trong ban hien tai - Truc Co la canh gioi cao nhat..."
+  Ritual commit chain (probe-ritual.mjs diag):    PASS
+       victory committed -> entitlement lock -> modal resolved ->
+       announcement + quan_khi standalone panel -> realm advance
+  Harness flakes fixed: wheel-open (pill click + overlays), talent-modal
+  single-click -> resolve loop. Game flow itself healthy.

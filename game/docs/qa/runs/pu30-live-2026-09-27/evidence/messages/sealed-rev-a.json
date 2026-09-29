@@ -1,0 +1,37 @@
+{
+  "requestId": "REQ-R6-SLOT",
+  "reviewerRuntimeId": "run_subagent:ca27c584",
+  "verdict": "SEALED_RESULT",
+  "independence": "fresh context; priorFindingsVisible=NO attested; exposure: run artifacts (finding titles, probe inputs) encountered during verification — disclosed, corroborating not formative",
+  "access": "read prevention.mjs, cli.mjs, state.mjs, validate.mjs, decision.mjs, ledger.schema.json, agent-instructions.md, prevention.test.mjs, run artifacts; read-only, no CLI exec",
+  "attacks": [
+    "T1 RUNNING reachability: no writer produces RUNNING — unreachable via schedule",
+    "T2 observe timeout/result on QUEUED record -> RELEASE_PENDING/RESULT_RECEIVED phantom slot occupancy",
+    "T3 re-admission of active id with readiness!=READY or full cap demotes to BLOCKED/QUEUED — unverified release + destroys reservedAt/releaseEvidence/history",
+    "T4 observe terminated on any status: QUEUED->FINISHED, BLOCKED->FINISHED, FINISHED->RESULT_RECEIVED resurrection all accepted",
+    "T5 fabricated terminated: evidence optional free text, FINISHED with null accepted at write time",
+    "T6 externalOccupied unvalidated: non-numeric -> NaN -> unconditional RESERVED; negative under-counts; capacityLimit unbounded by schema (min 1, no max)",
+    "T7 readiness non-READY/non-BLOCKED -> QUEUED fail-safe but demotes active record on re-admission",
+    "T8 appendEvent expectedSeq CAS exists but no CLI caller passes it — same-lease concurrent schedule = lost update",
+    "T9 decide/validate never count active vs cap, never require FINISHED before outcome, no transition-legality table",
+    "T10 record-injected assignment without history -> observe crashes (TypeError)"
+  ],
+  "findings": [
+    "R6-01 High REAL_DEFECT I-SLOT-CAPACITY cli.mjs:357+prevention.mjs:130-146 — externalOccupied unvalidated, fail-open on NaN; negative under-counts",
+    "R6-02 High REAL_DEFECT I-AGENT-BINDING cli.mjs:129-171 — record kind=assignment bypasses admission AND replace-in-place unconditional (comment at :164 not enforced); live: ASG-FORGED",
+    "R6-03 High REAL_DEFECT I-SLOT-RELEASE cli.mjs:356-360+prevention.mjs:136-146 — re-admission demotes active records = unverified release channel destroying reservedAt/releaseEvidence/history (extends F-PU30-05)",
+    "R6-04 High REAL_DEFECT I-SLOT-RELEASE prevention.mjs:153-173 — no source-state check: QUEUED->FINISHED, FINISHED->RESULT_RECEIVED resurrection re-occupying slots",
+    "R6-05 Medium REAL_DEFECT I-AGENT-BINDING prevention.mjs:166-170 — 'verified' is coordinator-asserted; observedRuntimeId never written; resultRef never set by observe result",
+    "R6-06 Medium SPEC_DEFECT prevention.mjs:9-11 — RUNNING unreachable; observe never yields CANCELLED/BLOCKED ('cancelled'->FINISHED, 'blocked' throws)",
+    "R6-07 Medium COVERAGE_GAP validate.mjs:490-504, decision.mjs — no check counts active vs cap; no transition table; decide ignores assignments — QA_FIXED_POINT_REACHED claimable with live reservations",
+    "R6-08 Medium REAL_DEFECT I-SLOT-CAPACITY state.mjs:126+schema:351-354 — capacityLimit unbounded request-controlled integer; 'hard cap 5' is a suggestion",
+    "R6-09 Low REAL_DEFECT cli.mjs:347-369+state.mjs:199-227 — no CAS on ledger writes; concurrent same-lease schedule loses updates",
+    "R6-10 Nit REAL_DEFECT prevention.mjs:156 — observe crashes on history-less record; admitAssignment never checks asg.id present"
+  ],
+  "hypotheses": [
+    "H1 externalOccupied is per-call unrecorded — forgetting it once raises effective concurrency to 6",
+    "H2 inputBundleHash binding to real frozen bundle is coordinator-asserted, never verified at admit",
+    "H3 observe-side guards (transition legality, externalOccupied validation, re-admission demotion) untested — mutants there would survive static suite"
+  ],
+  "result": "SEALED_RESULT"
+}

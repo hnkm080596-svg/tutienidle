@@ -1,0 +1,9 @@
+{
+  "requestId": "REQ-R5-JOURNAL",
+  "lens": "journal/event-chain integrity",
+  "files": [
+    "scripts/qa/state.mjs",
+    "scripts/qa/cli.mjs"
+  ],
+  "task": "audit appendEvent hash chain, lease CAS, atomic save"
+}

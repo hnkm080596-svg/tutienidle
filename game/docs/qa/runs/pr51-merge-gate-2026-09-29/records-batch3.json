@@ -1,0 +1,757 @@
+{
+  "records": [
+    {
+      "kind": "coverage",
+      "body": {
+        "id": "COV-STAT-DET",
+        "invariantId": "I-STAT-ZEROBASE-FLAT",
+        "surface": "DETERMINISTIC",
+        "attackIds": [],
+        "taxonomyIds": [],
+        "applicability": "REQUIRED",
+        "reason": "TalentsV4Wiring + StatCalculator + PlayerStatAssembly tests green",
+        "evidenceIds": [
+          "EV-FOCUSED-S4"
+        ],
+        "reviewerIds": [
+          "coordinator"
+        ],
+        "status": "SATISFIED",
+        "weakProtection": false
+      }
+    },
+    {
+      "kind": "coverage",
+      "body": {
+        "id": "COV-STAT-STATIC",
+        "invariantId": "I-STAT-ZEROBASE-FLAT",
+        "surface": "STATIC_SEMANTIC",
+        "attackIds": [],
+        "taxonomyIds": [],
+        "applicability": "REQUIRED",
+        "reason": "flat x stacks parity + clamp chain probed",
+        "evidenceIds": [
+          "EV-ADVERSARIAL-S4"
+        ],
+        "reviewerIds": [
+          "coordinator"
+        ],
+        "status": "SATISFIED",
+        "weakProtection": false
+      }
+    },
+    {
+      "kind": "coverage",
+      "body": {
+        "id": "COV-STAT-INDEP",
+        "invariantId": "I-STAT-ZEROBASE-FLAT",
+        "surface": "INDEPENDENT_REVIEW",
+        "attackIds": [],
+        "taxonomyIds": [],
+        "applicability": "REQUIRED",
+        "reason": "awaiting Clean A/B sealed reviews",
+        "evidenceIds": [],
+        "reviewerIds": [],
+        "status": "PENDING",
+        "weakProtection": true
+      }
+    },
+    {
+      "kind": "coverage",
+      "body": {
+        "id": "COV-BLDG-DET",
+        "invariantId": "I-BUILDING-ACCRUAL-PIN",
+        "surface": "DETERMINISTIC",
+        "attackIds": [],
+        "taxonomyIds": [],
+        "applicability": "REQUIRED",
+        "reason": "BuildingSystem.test.ts EM-01 cases green",
+        "evidenceIds": [
+          "EV-FOCUSED-S4"
+        ],
+        "reviewerIds": [
+          "coordinator"
+        ],
+        "status": "SATISFIED",
+        "weakProtection": false
+      }
+    },
+    {
+      "kind": "coverage",
+      "body": {
+        "id": "COV-BLDG-STATIC",
+        "invariantId": "I-BUILDING-ACCRUAL-PIN",
+        "surface": "STATIC_SEMANTIC",
+        "attackIds": [],
+        "taxonomyIds": [],
+        "applicability": "REQUIRED",
+        "reason": "pin ordering + garbage-realm soft fallback probed",
+        "evidenceIds": [
+          "EV-ADVERSARIAL-S4"
+        ],
+        "reviewerIds": [
+          "coordinator"
+        ],
+        "status": "SATISFIED",
+        "weakProtection": false
+      }
+    },
+    {
+      "kind": "coverage",
+      "body": {
+        "id": "COV-BLDG-INDEP",
+        "invariantId": "I-BUILDING-ACCRUAL-PIN",
+        "surface": "INDEPENDENT_REVIEW",
+        "attackIds": [],
+        "taxonomyIds": [],
+        "applicability": "REQUIRED",
+        "reason": "awaiting Clean A/B sealed reviews",
+        "evidenceIds": [],
+        "reviewerIds": [],
+        "status": "PENDING",
+        "weakProtection": true
+      }
+    },
+    {
+      "kind": "coverage",
+      "body": {
+        "id": "COV-OFFLINE-DET",
+        "invariantId": "I-OFFLINE-BUFF-SEGMENT",
+        "surface": "DETERMINISTIC",
+        "attackIds": [],
+        "taxonomyIds": [],
+        "applicability": "REQUIRED",
+        "reason": "segmentation + restore tests green",
+        "evidenceIds": [
+          "EV-FOCUSED-S4"
+        ],
+        "reviewerIds": [
+          "coordinator"
+        ],
+        "status": "SATISFIED",
+        "weakProtection": false
+      }
+    },
+    {
+      "kind": "coverage",
+      "body": {
+        "id": "COV-OFFLINE-STATIC",
+        "invariantId": "I-OFFLINE-BUFF-SEGMENT",
+        "surface": "STATIC_SEMANTIC",
+        "attackIds": [],
+        "taxonomyIds": [],
+        "applicability": "REQUIRED",
+        "reason": "shape-gate ordering + idempotency probed",
+        "evidenceIds": [
+          "EV-ADVERSARIAL-S4"
+        ],
+        "reviewerIds": [
+          "coordinator"
+        ],
+        "status": "SATISFIED",
+        "weakProtection": false
+      }
+    },
+    {
+      "kind": "coverage",
+      "body": {
+        "id": "COV-OFFLINE-INDEP",
+        "invariantId": "I-OFFLINE-BUFF-SEGMENT",
+        "surface": "INDEPENDENT_REVIEW",
+        "attackIds": [],
+        "taxonomyIds": [],
+        "applicability": "REQUIRED",
+        "reason": "awaiting Clean A/B sealed reviews",
+        "evidenceIds": [],
+        "reviewerIds": [],
+        "status": "PENDING",
+        "weakProtection": true
+      }
+    },
+    {
+      "kind": "coverage",
+      "body": {
+        "id": "COV-CLOUD-DET",
+        "invariantId": "I-CLOUD-REV-CAS",
+        "surface": "DETERMINISTIC",
+        "attackIds": [],
+        "taxonomyIds": [],
+        "applicability": "REQUIRED",
+        "reason": "SupabaseRemoteSave.test.ts 19 tests incl. CAS race green",
+        "evidenceIds": [
+          "EV-FOCUSED-S4"
+        ],
+        "reviewerIds": [
+          "coordinator"
+        ],
+        "status": "SATISFIED",
+        "weakProtection": false
+      }
+    },
+    {
+      "kind": "coverage",
+      "body": {
+        "id": "COV-CLOUD-STATIC",
+        "invariantId": "I-CLOUD-REV-CAS",
+        "surface": "STATIC_SEMANTIC",
+        "attackIds": [],
+        "taxonomyIds": [],
+        "applicability": "REQUIRED",
+        "reason": "CAS path + tie-break + adoption probed",
+        "evidenceIds": [
+          "EV-ADVERSARIAL-S4"
+        ],
+        "reviewerIds": [
+          "coordinator"
+        ],
+        "status": "SATISFIED",
+        "weakProtection": false
+      }
+    },
+    {
+      "kind": "coverage",
+      "body": {
+        "id": "COV-CLOUD-INDEP",
+        "invariantId": "I-CLOUD-REV-CAS",
+        "surface": "INDEPENDENT_REVIEW",
+        "attackIds": [],
+        "taxonomyIds": [],
+        "applicability": "REQUIRED",
+        "reason": "awaiting Clean A/B sealed reviews",
+        "evidenceIds": [],
+        "reviewerIds": [],
+        "status": "PENDING",
+        "weakProtection": true
+      }
+    },
+    {
+      "kind": "coverage",
+      "body": {
+        "id": "COV-NAME-STATIC",
+        "invariantId": "I-NAMEPLATE-AUTHOR",
+        "surface": "STATIC_SEMANTIC",
+        "attackIds": [],
+        "taxonomyIds": [],
+        "applicability": "REQUIRED",
+        "reason": "optional-member fallback + reconcile sync probed",
+        "evidenceIds": [
+          "EV-ADVERSARIAL-S4"
+        ],
+        "reviewerIds": [
+          "coordinator"
+        ],
+        "status": "SATISFIED",
+        "weakProtection": false
+      }
+    },
+    {
+      "kind": "coverage",
+      "body": {
+        "id": "COV-NAME-E2E",
+        "invariantId": "I-NAMEPLATE-AUTHOR",
+        "surface": "RUNTIME_E2E",
+        "attackIds": [],
+        "taxonomyIds": [],
+        "applicability": "REQUIRED",
+        "reason": "Playwright nameplate checks green",
+        "evidenceIds": [
+          "EV-RUNTIME-S4"
+        ],
+        "reviewerIds": [
+          "coordinator"
+        ],
+        "status": "SATISFIED",
+        "weakProtection": false
+      }
+    },
+    {
+      "kind": "coverage",
+      "body": {
+        "id": "COV-NAME-INDEP",
+        "invariantId": "I-NAMEPLATE-AUTHOR",
+        "surface": "INDEPENDENT_REVIEW",
+        "attackIds": [],
+        "taxonomyIds": [],
+        "applicability": "REQUIRED",
+        "reason": "awaiting Clean A/B sealed reviews",
+        "evidenceIds": [],
+        "reviewerIds": [],
+        "status": "PENDING",
+        "weakProtection": true
+      }
+    },
+    {
+      "kind": "coverage",
+      "body": {
+        "id": "COV-LADDER-DET",
+        "invariantId": "I-REALM-LADDER-LABELS",
+        "surface": "DETERMINISTIC",
+        "attackIds": [],
+        "taxonomyIds": [],
+        "applicability": "REQUIRED",
+        "reason": "RealmPassiveNodes.test.ts green",
+        "evidenceIds": [
+          "EV-FOCUSED-S4"
+        ],
+        "reviewerIds": [
+          "coordinator"
+        ],
+        "status": "SATISFIED",
+        "weakProtection": false
+      }
+    },
+    {
+      "kind": "coverage",
+      "body": {
+        "id": "COV-LADDER-STATIC",
+        "invariantId": "I-REALM-LADDER-LABELS",
+        "surface": "STATIC_SEMANTIC",
+        "attackIds": [],
+        "taxonomyIds": [],
+        "applicability": "REQUIRED",
+        "reason": "label semantics + ReleasePolicy pin reviewed",
+        "evidenceIds": [
+          "EV-ADVERSARIAL-S4"
+        ],
+        "reviewerIds": [
+          "coordinator"
+        ],
+        "status": "SATISFIED",
+        "weakProtection": false
+      }
+    },
+    {
+      "kind": "coverage",
+      "body": {
+        "id": "COV-LADDER-E2E",
+        "invariantId": "I-REALM-LADDER-LABELS",
+        "surface": "RUNTIME_E2E",
+        "attackIds": [],
+        "taxonomyIds": [],
+        "applicability": "REQUIRED",
+        "reason": "ceiling note verified live at Truc Co",
+        "evidenceIds": [
+          "EV-RUNTIME-S4"
+        ],
+        "reviewerIds": [
+          "coordinator"
+        ],
+        "status": "SATISFIED",
+        "weakProtection": false
+      }
+    },
+    {
+      "kind": "coverage",
+      "body": {
+        "id": "COV-LADDER-INDEP",
+        "invariantId": "I-REALM-LADDER-LABELS",
+        "surface": "INDEPENDENT_REVIEW",
+        "attackIds": [],
+        "taxonomyIds": [],
+        "applicability": "REQUIRED",
+        "reason": "awaiting Clean A/B sealed reviews",
+        "evidenceIds": [],
+        "reviewerIds": [],
+        "status": "PENDING",
+        "weakProtection": true
+      }
+    },
+    {
+      "kind": "coverage",
+      "body": {
+        "id": "COV-MERGE-STATIC",
+        "invariantId": "I-MERGE-INTEGRITY",
+        "surface": "STATIC_SEMANTIC",
+        "attackIds": [],
+        "taxonomyIds": [],
+        "applicability": "REQUIRED",
+        "reason": "coexistence + deleted-path census probed",
+        "evidenceIds": [
+          "EV-ADVERSARIAL-S4"
+        ],
+        "reviewerIds": [
+          "coordinator"
+        ],
+        "status": "SATISFIED",
+        "weakProtection": false
+      }
+    },
+    {
+      "kind": "coverage",
+      "body": {
+        "id": "COV-MERGE-DET",
+        "invariantId": "I-MERGE-INTEGRITY",
+        "surface": "DETERMINISTIC",
+        "attackIds": [],
+        "taxonomyIds": [],
+        "applicability": "REQUIRED",
+        "reason": "typecheck+build green; suite failures all pre-existing",
+        "evidenceIds": [
+          "EV-VERIFY-S4",
+          "EV-FOCUSED-S4"
+        ],
+        "reviewerIds": [
+          "coordinator"
+        ],
+        "status": "SATISFIED",
+        "weakProtection": false
+      }
+    },
+    {
+      "kind": "coverage",
+      "body": {
+        "id": "COV-MERGE-INDEP",
+        "invariantId": "I-MERGE-INTEGRITY",
+        "surface": "INDEPENDENT_REVIEW",
+        "attackIds": [],
+        "taxonomyIds": [],
+        "applicability": "REQUIRED",
+        "reason": "awaiting Clean A/B sealed reviews",
+        "evidenceIds": [],
+        "reviewerIds": [],
+        "status": "PENDING",
+        "weakProtection": true
+      }
+    },
+    {
+      "kind": "review",
+      "body": {
+        "id": "RV-S4-P1",
+        "state": {
+          "productStateId": "b84d7928774ecbf0d8179a71ef9d8752622ffa98b065c5c61dd714592d71d95f",
+          "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+          "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+          "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+        },
+        "round": 2,
+        "phase": "CORRECTNESS",
+        "reviewerId": "coordinator",
+        "contextId": "primary-context",
+        "model": "swe-2-max",
+        "role": "COORDINATOR_SELF_REVIEW",
+        "inputBundleHash": "a368f8f3a53744077e980e766c8aaef0dc634b07053f2e50f559994c588702cf",
+        "priorFindingsVisible": true,
+        "accessLimitations": [
+          "same-context review - no independence credit"
+        ],
+        "startedAt": "2026-09-29T14:50:00Z",
+        "sealedAt": "2026-09-29T14:55:00Z",
+        "previousPhaseReviewId": null,
+        "reviewedAfterPreviousFixes": true,
+        "coverageIds": [],
+        "evidenceIds": [
+          "EV-VERIFY-S4",
+          "EV-FOCUSED-S4",
+          "EV-MUT-S4"
+        ],
+        "findingIds": [
+          "F-MG-07",
+          "F-MG-08"
+        ],
+        "novelAttackIds": [],
+        "status": "SEALED"
+      }
+    },
+    {
+      "kind": "review",
+      "body": {
+        "id": "RV-S4-P2",
+        "state": {
+          "productStateId": "b84d7928774ecbf0d8179a71ef9d8752622ffa98b065c5c61dd714592d71d95f",
+          "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+          "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+          "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+        },
+        "round": 2,
+        "phase": "AUTHORITY",
+        "reviewerId": "coordinator",
+        "contextId": "primary-context",
+        "model": "swe-2-max",
+        "role": "COORDINATOR_SELF_REVIEW",
+        "inputBundleHash": "cb4c03c7e52d7e9208c88b9c536deba0c300fb55ba7bc369cb15431e8eb1855b",
+        "priorFindingsVisible": true,
+        "accessLimitations": [
+          "same-context review - no independence credit"
+        ],
+        "startedAt": "2026-09-29T14:50:00Z",
+        "sealedAt": "2026-09-29T14:55:00Z",
+        "previousPhaseReviewId": "RV-S4-P1",
+        "reviewedAfterPreviousFixes": true,
+        "coverageIds": [],
+        "evidenceIds": [
+          "EV-ADVERSARIAL-S4"
+        ],
+        "findingIds": [],
+        "novelAttackIds": [],
+        "status": "SEALED"
+      }
+    },
+    {
+      "kind": "review",
+      "body": {
+        "id": "RV-S4-P3",
+        "state": {
+          "productStateId": "b84d7928774ecbf0d8179a71ef9d8752622ffa98b065c5c61dd714592d71d95f",
+          "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+          "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+          "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+        },
+        "round": 2,
+        "phase": "INTEGRATION",
+        "reviewerId": "coordinator",
+        "contextId": "primary-context",
+        "model": "swe-2-max",
+        "role": "COORDINATOR_SELF_REVIEW",
+        "inputBundleHash": "ce19d508fd4593a444f2f737322e965c74690fed1fd81026d03eb62ddb54e967",
+        "priorFindingsVisible": true,
+        "accessLimitations": [
+          "same-context review - no independence credit"
+        ],
+        "startedAt": "2026-09-29T14:50:00Z",
+        "sealedAt": "2026-09-29T14:55:00Z",
+        "previousPhaseReviewId": "RV-S4-P2",
+        "reviewedAfterPreviousFixes": true,
+        "coverageIds": [],
+        "evidenceIds": [
+          "EV-ADVERSARIAL-S4",
+          "EV-RUNTIME-S4"
+        ],
+        "findingIds": [
+          "F-MG-03",
+          "F-MG-04",
+          "F-MG-05"
+        ],
+        "novelAttackIds": [],
+        "status": "SEALED"
+      }
+    },
+    {
+      "kind": "cycle",
+      "body": {
+        "id": "CYC-P5-2",
+        "state": {
+          "productStateId": "b84d7928774ecbf0d8179a71ef9d8752622ffa98b065c5c61dd714592d71d95f",
+          "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+          "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+          "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+        },
+        "reviewIds": [
+          "RV-S4-P1",
+          "RV-S4-P2",
+          "RV-S4-P3"
+        ],
+        "coverageIds": [
+          "COV-STAT-DET",
+          "COV-STAT-STATIC",
+          "COV-STAT-INDEP",
+          "COV-BLDG-DET",
+          "COV-BLDG-STATIC",
+          "COV-BLDG-INDEP",
+          "COV-OFFLINE-DET",
+          "COV-OFFLINE-STATIC",
+          "COV-OFFLINE-INDEP",
+          "COV-CLOUD-DET",
+          "COV-CLOUD-STATIC",
+          "COV-CLOUD-INDEP",
+          "COV-NAME-STATIC",
+          "COV-NAME-E2E",
+          "COV-NAME-INDEP",
+          "COV-LADDER-DET",
+          "COV-LADDER-STATIC",
+          "COV-LADDER-E2E",
+          "COV-LADDER-INDEP",
+          "COV-MERGE-STATIC",
+          "COV-MERGE-DET",
+          "COV-MERGE-INDEP"
+        ],
+        "evidenceIds": [
+          "EV-VERIFY-S4",
+          "EV-FOCUSED-S4",
+          "EV-RUNTIME-S4",
+          "EV-MUT-S4",
+          "EV-ADVERSARIAL-S4"
+        ],
+        "noveltyEvidenceIds": [
+          "EV-MUT-S4"
+        ],
+        "startedAt": "2026-09-29T14:50:00Z",
+        "finishedAt": "2026-09-29T14:55:00Z",
+        "status": "FINDINGS"
+      }
+    },
+    {
+      "kind": "finding",
+      "body": {
+        "id": "F-MG-03",
+        "title": "PRE-EXISTING on master: combatContract R14.4 searches 'onBattleStart()' while signature is onBattleStart(options?) - guard cannot run",
+        "state": {
+          "productStateId": "b84d7928774ecbf0d8179a71ef9d8752622ffa98b065c5c61dd714592d71d95f",
+          "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+          "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+          "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+        },
+        "severity": "Medium",
+        "classification": "TEST_DEFECT",
+        "actionable": true,
+        "reachability": "PRODUCTION",
+        "locations": [
+          {
+            "path": "game/tests/architecture/combatContract.test.ts",
+            "symbolOrSection": "R14.4 indexOf match",
+            "revision": "51b9efdb",
+            "basis": "SOURCE"
+          }
+        ],
+        "discoveredBy": "coordinator",
+        "invariantIds": [],
+        "evidenceIds": [
+          "EV-VERIFY-MERGED"
+        ],
+        "counterexample": "indexOf('\\n  onBattleStart()') == -1 on master too (identical file+signature)",
+        "expected": "guard executes the clear-check",
+        "actual": "startIdx -1 -> assertion fails",
+        "rootCause": "method signature gained options param; test oracle not updated",
+        "rootClass": "oracle-stale",
+        "subsystem": "test-infra",
+        "siblingSearch": [
+          {
+            "roots": [
+              "game/tests/architecture"
+            ],
+            "termsAndMethod": "same indexOf signature-matching pattern",
+            "evidenceIds": [],
+            "hitDispositions": [
+              "none other flagged"
+            ],
+            "coverageLimits": []
+          }
+        ],
+        "siblingFindingIds": [],
+        "repair": "none - outside this run's authorization (not introduced by PR51; needs master-side test repair)",
+        "pinEvidenceIds": [],
+        "verificationEvidenceIds": [],
+        "closureReviewIds": [],
+        "status": "OBSERVED",
+        "duplicateOf": null,
+        "rejectionReason": null,
+        "exception": null
+      }
+    },
+    {
+      "kind": "finding",
+      "body": {
+        "id": "F-MG-04",
+        "title": "PRE-EXISTING on master: src/dev/skill-vfx.ts constructs new Game() outside the dynamic-region host; also uses skillVfxLab.* keys absent from locales (two guard failures)",
+        "state": {
+          "productStateId": "b84d7928774ecbf0d8179a71ef9d8752622ffa98b065c5c61dd714592d71d95f",
+          "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+          "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+          "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+        },
+        "severity": "Medium",
+        "classification": "REAL_DEFECT",
+        "actionable": true,
+        "reachability": "SUPPORTED_BOUNDARY",
+        "locations": [
+          {
+            "path": "game/src/dev/skill-vfx.ts",
+            "symbolOrSection": "dev-lab Game construction + t() keys",
+            "revision": "342b95c8",
+            "basis": "SOURCE"
+          }
+        ],
+        "discoveredBy": "coordinator",
+        "invariantIds": [],
+        "evidenceIds": [
+          "EV-VERIFY-MERGED"
+        ],
+        "counterexample": "dynamicRegionHost + i18nKeyParity both fail on master identically (file unchanged by this branch)",
+        "expected": "dev lab either sanctioned-exempt or host-composed; i18n keys registered",
+        "actual": "guard violation + missing locale keys on master",
+        "rootCause": "dev lab predates/bypasses the V4 host boundary and P16 parity",
+        "rootClass": "boundary-exception-undocumented",
+        "subsystem": "dev-tooling",
+        "siblingSearch": [
+          {
+            "roots": [
+              "game/src/dev"
+            ],
+            "termsAndMethod": "dir census",
+            "evidenceIds": [],
+            "hitDispositions": [
+              "sole file"
+            ],
+            "coverageLimits": []
+          }
+        ],
+        "siblingFindingIds": [],
+        "repair": "none - outside this run's authorization (pre-existing on master; needs an explicit dev-lab boundary ruling)",
+        "pinEvidenceIds": [],
+        "verificationEvidenceIds": [],
+        "closureReviewIds": [],
+        "status": "OBSERVED",
+        "duplicateOf": null,
+        "rejectionReason": null,
+        "exception": null
+      }
+    },
+    {
+      "kind": "finding",
+      "body": {
+        "id": "F-MG-05",
+        "title": "PRE-EXISTING on master: PlayerPortrait.test mounts without Pinia while component setup() calls usePlayerStore() (PR48)",
+        "state": {
+          "productStateId": "b84d7928774ecbf0d8179a71ef9d8752622ffa98b065c5c61dd714592d71d95f",
+          "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+          "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+          "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+        },
+        "severity": "Medium",
+        "classification": "TEST_DEFECT",
+        "actionable": true,
+        "reachability": "FIXTURE_INJECTED",
+        "locations": [
+          {
+            "path": "game/src/components/common/PlayerPortrait.test.ts",
+            "symbolOrSection": "mount without pinia",
+            "revision": "51b9efdb",
+            "basis": "SOURCE"
+          }
+        ],
+        "discoveredBy": "coordinator",
+        "invariantIds": [],
+        "evidenceIds": [
+          "EV-VERIFY-MERGED"
+        ],
+        "counterexample": "component+test byte-identical to origin/master (empty diff) - failure lands with PR48, not this branch",
+        "expected": "test provides pinia or component tolerates absence",
+        "actual": "getActivePinia throws in setup",
+        "rootCause": "PR48 added usePlayerStore() to PlayerPortrait.setup without updating the test harness",
+        "rootClass": "fixture-gap-after-change",
+        "subsystem": "component-test",
+        "siblingSearch": [
+          {
+            "roots": [
+              "game/src/components"
+            ],
+            "termsAndMethod": "other tests mounting store-consuming components",
+            "evidenceIds": [],
+            "hitDispositions": [
+              "no other failures observed in suite"
+            ],
+            "coverageLimits": []
+          }
+        ],
+        "siblingFindingIds": [],
+        "repair": "none - landed via PR48 on master; outside this run's authorization to rewrite its test",
+        "pinEvidenceIds": [],
+        "verificationEvidenceIds": [],
+        "closureReviewIds": [],
+        "status": "OBSERVED",
+        "duplicateOf": null,
+        "rejectionReason": null,
+        "exception": null
+      }
+    }
+  ]
+}

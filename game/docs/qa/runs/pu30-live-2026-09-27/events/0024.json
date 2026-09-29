@@ -1,0 +1,6 @@
+{
+  "action": "observe",
+  "assignmentId": "ASG-FORGED",
+  "observedStatus": "timeout",
+  "evidence": "synthetic probe: lease elapsed, no lifecycle proof"
+}

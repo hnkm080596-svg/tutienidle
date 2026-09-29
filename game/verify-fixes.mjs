@@ -70,7 +70,7 @@ console.log('FE-06 combat:', combat.playerLabel === NAME ? 'PASS' : 'FAIL')
 const overlap = combat.bottomLeft.filter((t) => t.visible !== false && t.x < 70 && t.x !== 0)
 console.log('FE-08 overlap candidates:', JSON.stringify(overlap))
 
-await page.screenshot({ path: 'verify-fixes-combat.png' })
+await page.screenshot({ path: 're-fixes-combat.png' })
 
 // ---- FE-17: seed realmLevel-12 mortal, drive Quan Khi, bump to
 // foundation_establishment, open the realm panel, look for the note.
@@ -107,10 +107,25 @@ if (!save) {
   await page.waitForTimeout(3500)
   await page.getByTestId('auth-guest-button').click().catch(() => {})
   await page.waitForTimeout(1500)
+  const tut2 = page.locator('.tutorial-overlay')
+  if (await tut2.isVisible({ timeout: 3000 }).catch(() => false)) {
+    await page.getByRole('button', { name: 'Bỏ Qua' }).click()
+    await page.waitForTimeout(600)
+  }
+  const off2 = page.locator('.offline-summary')
+  if (await off2.isVisible({ timeout: 2000 }).catch(() => false)) {
+    await off2.getByRole('button', { name: 'Tiếp Tục' }).click()
+    await page.waitForTimeout(600)
+  }
 
   // Quan Khi drive (mirrors ui-audit-progression-fixed.spec.ts)
-  await page.keyboard.press('Tab')
-  await page.waitForTimeout(500)
+  for (let i = 0; i < 12; i += 1) {
+    const pill = page.locator('text=BẢNG LỆNH').first()
+    if (await pill.isVisible().catch(() => false)) await pill.click({ force: true }).catch(() => {})
+    else await page.keyboard.press('Tab')
+    await page.waitForTimeout(700)
+    if (await page.locator('[data-wheel-slot="realm"]').isVisible().catch(() => false)) break
+  }
   await page.locator('[data-wheel-slot="realm"]').click()
   await page.waitForTimeout(1200)
   const realmDialog = page.getByRole('dialog', { name: 'Cảnh Giới' })
@@ -190,7 +205,7 @@ if (!save) {
     const note = page.locator('.realm-ceiling-note')
     const noteVisible = await note.isVisible({ timeout: 8000 }).catch(() => false)
     console.log('FE-17 ceiling note:', noteVisible ? 'PASS' : 'FAIL', noteVisible ? await note.textContent() : '')
-    await page.screenshot({ path: 'verify-fixes-realm.png' })
+    await page.screenshot({ path: 're-fixes-realm.png' })
   }
 }
 

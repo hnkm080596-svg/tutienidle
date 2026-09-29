@@ -1,0 +1,4 @@
+Focused verification on S4 (all exit 0):
+  asciiComments.test.ts + TalentBuffs.test.ts: PASS (ratchet clean; new pin green)
+  touched-scope rerun (TalentsV4Wiring, BuildingSystem, TuLinhTranBalance,
+    SupabaseRemoteSave, player.restoreFromSave, RealmPassiveNodes): 85/85 PASS

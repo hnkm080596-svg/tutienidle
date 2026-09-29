@@ -1,0 +1,475 @@
+{
+  "records": [
+    {
+      "kind": "evidence",
+      "body": {
+        "id": "EV-QUALIFY-PARSE",
+        "state": {
+          "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+          "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+          "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+          "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+        },
+        "kind": "EXECUTED_UNIT_STRUCTURAL",
+        "producer": "coordinator-7604",
+        "startedAt": "2026-09-27T15:55:35.867Z",
+        "finishedAt": "2026-09-27T15:55:35.868Z",
+        "commandOrMethod": "npm run qa:internal qualify -> \"0 passed, 0 failed\" then PROTOCOL_ADOPTION_QUALIFIED; direct node --test shows 48 pass",
+        "cwd": "game",
+        "exitCode": 1,
+        "result": "FAIL",
+        "artifactPath": "evidence/inputs-01-invariants.json",
+        "artifactHash": "c24205b54c122bd0421baff9d945a855876478fcbefc82d6c9fe99ae7a3a0dc9",
+        "inputPaths": [
+          "evidence/inputs-01-invariants.json"
+        ],
+        "inputEvidenceIds": [],
+        "invariantIds": [
+          "I-LEDGER-AUTHORITY"
+        ],
+        "claims": [
+          "qualify verdict emitted on vacuously-parsed counts"
+        ],
+        "limitations": [
+          "console transcript not captured to file; cli.mjs:231-267 is the defect site"
+        ],
+        "status": "CURRENT"
+      }
+    },
+    {
+      "kind": "evidence",
+      "body": {
+        "id": "EV-STATIC-BIND",
+        "state": {
+          "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+          "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+          "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+          "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+        },
+        "kind": "SOURCE_PROOF",
+        "producer": "coordinator-7604",
+        "startedAt": "2026-09-27T15:55:35.869Z",
+        "finishedAt": "2026-09-27T15:55:35.869Z",
+        "commandOrMethod": "observeAssignment trusts coordinator-asserted observedStatus token; no mechanical link to real process exit",
+        "cwd": "game",
+        "exitCode": 0,
+        "result": "PASS",
+        "artifactPath": "evidence/inputs-01-invariants.json",
+        "artifactHash": "c24205b54c122bd0421baff9d945a855876478fcbefc82d6c9fe99ae7a3a0dc9",
+        "inputPaths": [
+          "evidence/inputs-01-invariants.json"
+        ],
+        "inputEvidenceIds": [],
+        "invariantIds": [
+          "I-AGENT-BINDING"
+        ],
+        "claims": [
+          "release decision = honesty-boundary: TERMINAL_OBSERVED token asserted by coordinator, not platform-verified"
+        ],
+        "limitations": [
+          "live dispatches did terminate; unverifiable-in-principle without runtime introspection"
+        ],
+        "status": "CURRENT"
+      }
+    },
+    {
+      "kind": "finding",
+      "body": {
+        "id": "F-PU30-01",
+        "title": "Stale flag computed but never persisted on message records",
+        "state": {
+          "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+          "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+          "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+          "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+        },
+        "severity": "Medium",
+        "classification": "REAL_DEFECT",
+        "actionable": true,
+        "reachability": "SUPPORTED_BOUNDARY",
+        "locations": [
+          {
+            "path": "scripts/qa/state.mjs",
+            "symbolOrSection": "recordMessage:229-251",
+            "revision": "68621987",
+            "basis": "SOURCE"
+          }
+        ],
+        "discoveredBy": "coordinator-7604 live PU-30 probes",
+        "invariantIds": [
+          "I-MSG-TERMINAL"
+        ],
+        "evidenceIds": [
+          "EV-MSG-STALE"
+        ],
+        "counterexample": "MSG-INTEG-STALE1 (ACK bound to all-zero state) was appended with no stale marker",
+        "expected": "stale-bound message carries persisted flag so downstream counting/exclusion can distinguish it",
+        "actual": "staleness only surfaced as transient stdout note; ledger record indistinguishable from current; a stale SEALED_RESULT would still establish the terminal payloadHash for its requestId (poison vector)",
+        "rootCause": "recordMessage computes msgStale for the return value but pushes msg unchanged",
+        "rootClass": "implementation",
+        "subsystem": "scripts/qa",
+        "siblingSearch": [],
+        "siblingFindingIds": [],
+        "repair": "out of run scope - authorizedRepairs=docs/qa/** only; routed to a future scripts/qa repair mission",
+        "pinEvidenceIds": [],
+        "verificationEvidenceIds": [],
+        "closureReviewIds": [],
+        "status": "TRIAGED",
+        "duplicateOf": null,
+        "rejectionReason": null,
+        "exception": null
+      }
+    },
+    {
+      "kind": "finding",
+      "body": {
+        "id": "F-PU30-02",
+        "title": "record --kind assignment mints RESERVED records bypassing admission",
+        "state": {
+          "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+          "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+          "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+          "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+        },
+        "severity": "Medium",
+        "classification": "REAL_DEFECT",
+        "actionable": true,
+        "reachability": "SUPPORTED_BOUNDARY",
+        "locations": [
+          {
+            "path": "scripts/qa/cli.mjs",
+            "symbolOrSection": "cmdRecord RECORD_COLLECTION assignment:133,160-171",
+            "revision": "68621987",
+            "basis": "SOURCE"
+          }
+        ],
+        "discoveredBy": "coordinator-7604 live PU-30 probes",
+        "invariantIds": [
+          "I-SLOT-CAPACITY",
+          "I-LEDGER-AUTHORITY"
+        ],
+        "evidenceIds": [
+          "EV-ASG-BYPASS"
+        ],
+        "counterexample": "ASG-FORGED admitted via plain record with status RESERVED, zero capacity accounting, occupied an active slot until schedule-cancelled",
+        "expected": "schedule is the sole reservation path per law G",
+        "actual": "any leased writer can mint active assignments directly into the ledger",
+        "rootCause": "RECORD_COLLECTION maps kind=assignment straight into ledger.assignments with replace-in-place, no admitAssignment call",
+        "rootClass": "implementation",
+        "subsystem": "scripts/qa",
+        "siblingSearch": [],
+        "siblingFindingIds": [],
+        "repair": "out of run scope - authorizedRepairs=docs/qa/** only; routed to a future scripts/qa repair mission",
+        "pinEvidenceIds": [],
+        "verificationEvidenceIds": [],
+        "closureReviewIds": [],
+        "status": "TRIAGED",
+        "duplicateOf": null,
+        "rejectionReason": null,
+        "exception": null
+      }
+    },
+    {
+      "kind": "finding",
+      "body": {
+        "id": "F-PU30-03",
+        "title": "Terminal results accepted on requestIds that never had an ASSIGN",
+        "state": {
+          "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+          "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+          "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+          "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+        },
+        "severity": "Low",
+        "classification": "REAL_DEFECT",
+        "actionable": true,
+        "reachability": "SUPPORTED_BOUNDARY",
+        "locations": [
+          {
+            "path": "scripts/qa/state.mjs",
+            "symbolOrSection": "recordMessage:229-251",
+            "revision": "68621987",
+            "basis": "SOURCE"
+          }
+        ],
+        "discoveredBy": "coordinator-7604 live PU-30 probes",
+        "invariantIds": [
+          "I-MSG-TERMINAL"
+        ],
+        "evidenceIds": [
+          "EV-MSG-NOASSIGN"
+        ],
+        "counterexample": "REQ-INTEG received SEALED_RESULT with no prior ASSIGN for that requestId",
+        "expected": "reject or flag messages on unknown requestIds; enforce ASSIGN<ACK<SEALED_RESULT ordering",
+        "actual": "no requestId-existence or ordering enforcement",
+        "rootCause": "recordMessage only checks id-dedup and terminal-hash conflict",
+        "rootClass": "implementation",
+        "subsystem": "scripts/qa",
+        "siblingSearch": [],
+        "siblingFindingIds": [],
+        "repair": "out of run scope - authorizedRepairs=docs/qa/** only; routed to a future scripts/qa repair mission",
+        "pinEvidenceIds": [],
+        "verificationEvidenceIds": [],
+        "closureReviewIds": [],
+        "status": "TRIAGED",
+        "duplicateOf": null,
+        "rejectionReason": null,
+        "exception": null
+      }
+    },
+    {
+      "kind": "finding",
+      "body": {
+        "id": "F-PU30-04",
+        "title": "cmdQualify parses TAP counters but Node 24 emits spec reporter -> vacuous QUALIFIED",
+        "state": {
+          "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+          "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+          "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+          "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+        },
+        "severity": "High",
+        "classification": "REAL_DEFECT",
+        "actionable": true,
+        "reachability": "SUPPORTED_BOUNDARY",
+        "locations": [
+          {
+            "path": "scripts/qa/cli.mjs",
+            "symbolOrSection": "cmdQualify:231-267",
+            "revision": "68621987",
+            "basis": "SOURCE"
+          }
+        ],
+        "discoveredBy": "coordinator-7604 live PU-30 probes",
+        "invariantIds": [
+          "I-LEDGER-AUTHORITY"
+        ],
+        "evidenceIds": [
+          "EV-QUALIFY-PARSE"
+        ],
+        "counterexample": "qa:internal qualify printed \"0 passed, 0 failed\" then emitted PROTOCOL_ADOPTION_QUALIFIED while node --test ran 48 passing tests",
+        "expected": "parse real pass/fail counts or pass --test-reporter tap",
+        "actual": "regex /# pass (d+)/ matches nothing under default spec reporter; gaps[] stays empty; qualification emitted vacuously",
+        "rootCause": "reporter output format changed; parser not updated",
+        "rootClass": "implementation",
+        "subsystem": "scripts/qa",
+        "siblingSearch": [],
+        "siblingFindingIds": [],
+        "repair": "out of run scope - authorizedRepairs=docs/qa/** only; routed to a future scripts/qa repair mission",
+        "pinEvidenceIds": [],
+        "verificationEvidenceIds": [],
+        "closureReviewIds": [],
+        "status": "TRIAGED",
+        "duplicateOf": null,
+        "rejectionReason": null,
+        "exception": null
+      }
+    },
+    {
+      "kind": "finding",
+      "body": {
+        "id": "F-PU30-05",
+        "title": "Re-admission replaces record wholesale; history dropped unless coordinator resupplies",
+        "state": {
+          "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+          "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+          "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+          "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+        },
+        "severity": "Low",
+        "classification": "REAL_DEFECT",
+        "actionable": true,
+        "reachability": "SUPPORTED_BOUNDARY",
+        "locations": [
+          {
+            "path": "scripts/qa/cli.mjs",
+            "symbolOrSection": "cmdSchedule admit path:356-360",
+            "revision": "68621987",
+            "basis": "SOURCE"
+          }
+        ],
+        "discoveredBy": "coordinator-7604 live PU-30 probes",
+        "invariantIds": [
+          "I-SLOT-CAPACITY"
+        ],
+        "evidenceIds": [
+          "EV-STATIC-SLOT"
+        ],
+        "counterexample": "sched-r5-admit2 required manually copying prior history into input.assignment or it would be lost",
+        "expected": "re-admission merges with existing record preserving ledger-side history",
+        "actual": "record = {...input.assignment} fully replaces ledger.assignments[i]",
+        "rootCause": "admitAssignment builds record from caller input only",
+        "rootClass": "implementation",
+        "subsystem": "scripts/qa",
+        "siblingSearch": [],
+        "siblingFindingIds": [],
+        "repair": "out of run scope - authorizedRepairs=docs/qa/** only; routed to a future scripts/qa repair mission",
+        "pinEvidenceIds": [],
+        "verificationEvidenceIds": [],
+        "closureReviewIds": [],
+        "status": "TRIAGED",
+        "duplicateOf": null,
+        "rejectionReason": null,
+        "exception": null
+      }
+    },
+    {
+      "kind": "finding",
+      "body": {
+        "id": "F-PU30-07",
+        "title": "cli.mjs usage string omits prepare/preflight/checkpoint/learn/schedule/migrate",
+        "state": {
+          "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+          "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+          "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+          "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+        },
+        "severity": "Nit",
+        "classification": "DOCUMENTATION_DEFECT",
+        "actionable": true,
+        "reachability": "SUPPORTED_BOUNDARY",
+        "locations": [
+          {
+            "path": "scripts/qa/cli.mjs",
+            "symbolOrSection": "usage text",
+            "revision": "68621987",
+            "basis": "SOURCE"
+          }
+        ],
+        "discoveredBy": "coordinator-7604 live PU-30 probes",
+        "invariantIds": [],
+        "evidenceIds": [],
+        "counterexample": "npm run qa:internal (no args) prints init|snapshot|record|validate|decide|render|qualify only",
+        "expected": "usage lists all implemented commands",
+        "actual": "stale string, commands exist and dispatch",
+        "rootCause": "usage text not updated when commands added",
+        "rootClass": "implementation",
+        "subsystem": "scripts/qa",
+        "siblingSearch": [],
+        "siblingFindingIds": [],
+        "repair": "out of run scope - authorizedRepairs=docs/qa/** only; routed to a future scripts/qa repair mission",
+        "pinEvidenceIds": [],
+        "verificationEvidenceIds": [],
+        "closureReviewIds": [],
+        "status": "TRIAGED",
+        "duplicateOf": null,
+        "rejectionReason": null,
+        "exception": null
+      }
+    },
+    {
+      "kind": "finding",
+      "body": {
+        "id": "F-PU30-06",
+        "title": "Coordinator requestId typo on ASG-R5 re-admission (REQ-R5-BYPASS vs bundle REQ-R5-JOURNAL)",
+        "state": {
+          "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+          "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+          "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+          "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+        },
+        "severity": "Nit",
+        "classification": "NON_ACTIONABLE",
+        "actionable": false,
+        "reachability": "HYPOTHETICAL",
+        "locations": [
+          {
+            "path": "docs/qa/runs/pu30-live-2026-09-27/evidence/sched-r5-admit2.json",
+            "symbolOrSection": "requestId",
+            "revision": "68621987",
+            "basis": "SOURCE"
+          }
+        ],
+        "discoveredBy": "coordinator-7604 live PU-30 probes",
+        "invariantIds": [],
+        "evidenceIds": [
+          "EV-LIVE-ADMIT"
+        ],
+        "counterexample": "assignment record requestId differs from immutable bundle requestId",
+        "expected": "correlation fields consistent",
+        "actual": "recorded as REQ-R5-BYPASS; ASSIGN message uses bundle-canonical REQ-R5-JOURNAL",
+        "rootCause": "coordinator input error, honestly journaled",
+        "rootClass": "implementation",
+        "subsystem": "scripts/qa",
+        "siblingSearch": [],
+        "siblingFindingIds": [],
+        "repair": null,
+        "pinEvidenceIds": [],
+        "verificationEvidenceIds": [],
+        "closureReviewIds": [],
+        "status": "REJECTED_WITH_PROOF",
+        "duplicateOf": null,
+        "rejectionReason": "coordinator input typo, not a product/protocol defect; corrected via ledger repair (inputs-11)",
+        "exception": null
+      }
+    },
+    {
+      "kind": "finding",
+      "body": {
+        "id": "F-PU30-08",
+        "title": "admitAssignment derives history \"from\" from caller input, not ledger truth",
+        "state": {
+          "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+          "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+          "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+          "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+        },
+        "severity": "Medium",
+        "classification": "REAL_DEFECT",
+        "actionable": true,
+        "reachability": "SUPPORTED_BOUNDARY",
+        "locations": [
+          {
+            "path": "scripts/qa/prevention.mjs",
+            "symbolOrSection": "admitAssignment push():134",
+            "revision": "68621987",
+            "basis": "SOURCE"
+          }
+        ],
+        "discoveredBy": "MC14 discontinuity on PU-30 live run",
+        "invariantIds": [
+          "I-LEDGER-AUTHORITY"
+        ],
+        "evidenceIds": [
+          "EV-STATIC-SLOT"
+        ],
+        "counterexample": "coordinator input status=QUEUED while registration had already written to=READY -> journal recorded QUEUED->RESERVED, a transition that never happened",
+        "expected": "history.from bound to prior ledger status mechanically",
+        "actual": "\"from\" is caller-controlled; coordinator can write discontinuous or forged transition chains; only post-hoc MC14 catches it",
+        "rootCause": "push() reads record.status (caller input) as from-field",
+        "rootClass": "implementation",
+        "subsystem": "scripts/qa",
+        "siblingSearch": [],
+        "siblingFindingIds": [
+          "F-PU30-05"
+        ],
+        "repair": "out of run scope - scripts/qa repair mission",
+        "pinEvidenceIds": [],
+        "verificationEvidenceIds": [],
+        "closureReviewIds": [],
+        "status": "TRIAGED",
+        "duplicateOf": null,
+        "rejectionReason": null,
+        "exception": null
+      }
+    },
+    {
+      "kind": "coverage",
+      "body": {
+        "id": "COV-BIND-STATIC",
+        "invariantId": "I-AGENT-BINDING",
+        "surface": "STATIC_SEMANTIC",
+        "attackIds": [],
+        "taxonomyIds": [],
+        "applicability": "REQUIRED",
+        "reason": "honesty-boundary analysis of observedStatus claims",
+        "evidenceIds": [
+          "EV-STATIC-BIND"
+        ],
+        "reviewerIds": [],
+        "status": "SATISFIED",
+        "weakProtection": false
+      }
+    }
+  ]
+}

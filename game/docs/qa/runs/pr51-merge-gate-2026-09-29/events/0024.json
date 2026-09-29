@@ -1,0 +1,10 @@
+{
+  "action": "observe",
+  "assignmentId": "ASGN-CLEAN-B",
+  "observedStatus": "finished",
+  "observedRuntimeId": "subagent-clean-b1-explore",
+  "resultRef": "RV-CLEAN-B1",
+  "evidence": [
+    "sealed SEALED_RESULT in coordinator transcript; PASS_WITH_GAPS zero findings; exec unavailable in context - superseded by exec-capable dispatch"
+  ]
+}

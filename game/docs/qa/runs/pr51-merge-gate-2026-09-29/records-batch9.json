@@ -1,0 +1,76 @@
+{
+ "records": [
+  {
+   "kind": "evidence",
+   "body": {
+    "kind": "EXECUTED_INTEGRATION",
+    "id": "EV-VERIFY-S9-SCOPED",
+    "state": {
+     "productStateId": "b1b1c5ff0d9772d9362be9feac89e052e638f32f3eab4ff545636b52ca42b5b1",
+     "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+     "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+     "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+    },
+    "producer": "coordinator",
+    "startedAt": "2026-09-29T16:59:00Z",
+    "finishedAt": "2026-09-29T17:03:00Z",
+    "commandOrMethod": "npx vitest run --exclude 4 files adjudicated REJECTED_WITH_PROOF (F-MG-03/04/05)",
+    "cwd": "game",
+    "exitCode": 0,
+    "result": "PASS",
+    "artifactPath": "evidence/verify-s9-scoped.txt",
+    "artifactHash": "1dcc7b7f3d52fbda1402d3e16d70271ef2c6be8747597c7d5e8c34a7f1b5126c",
+    "inputPaths": [],
+    "inputEvidenceIds": [
+     "EV-VERIFY-S9"
+    ],
+    "invariantIds": [],
+    "claims": [
+     "800 files 7114 tests 0 fail; typecheck+build clean"
+    ],
+    "limitations": [
+     "excludes 4 files whose failures are adjudicated pre-existing on base; unscoped run EV-VERIFY-S9 remains FAIL in ledger"
+    ],
+    "status": "CURRENT"
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "kind": "EXECUTED_RUNTIME",
+    "id": "EV-RUNTIME-S9",
+    "state": {
+     "productStateId": "b1b1c5ff0d9772d9362be9feac89e052e638f32f3eab4ff545636b52ca42b5b1",
+     "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+     "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+     "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+    },
+    "producer": "coordinator",
+    "startedAt": "2026-09-29T17:08:00Z",
+    "finishedAt": "2026-09-29T17:12:00Z",
+    "commandOrMethod": "verify-fixes.mjs + verify-fe17.mjs vs dev server :5608 (Playwright)",
+    "cwd": "game",
+    "exitCode": 0,
+    "result": "PASS",
+    "artifactPath": "evidence/runtime-s9.txt",
+    "artifactHash": "8118308fe33817061e17b5d297e89d2d41da59b89b565ed2c39821a382f2b294",
+    "inputPaths": [
+     "verify-fixes.mjs",
+     "verify-fe17.mjs"
+    ],
+    "inputEvidenceIds": [],
+    "invariantIds": [
+     "I-NAMEPLATE-AUTHOR",
+     "I-REALM-LADDER-LABELS"
+    ],
+    "claims": [
+     "FE-06 nameplate home+combat PASS; FE-08 HUD overlap 0 candidates; FE-17 ritual->qi_refining->ceiling note PASS"
+    ],
+    "limitations": [
+     "local dev server; not a production build"
+    ],
+    "status": "CURRENT"
+   }
+  }
+ ]
+}

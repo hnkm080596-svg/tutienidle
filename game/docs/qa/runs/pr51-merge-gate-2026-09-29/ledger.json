@@ -1,0 +1,3938 @@
+{
+  "schemaVersion": 2,
+  "run": {
+    "id": "pr51-merge-gate-2026-09-29",
+    "createdAt": "2026-09-29T06:47:55.833Z",
+    "scope": "AGGREGATE_REPOSITORY",
+    "authorizedRepairs": [
+      "findings introduced by the PR51 aggregate diff or its merge with master; anything else is QA_BLOCKED_SCOPE"
+    ],
+    "nonGoals": [
+      "gameplay redesign",
+      "pre-existing master-side test failures (combatContract R14.4, dynamicRegionHost, i18nKeyParity, PlayerPortrait pinia-in-setup) - recorded, not repaired",
+      "documented deferred Low/Nit audit findings listed in docs/qa/local-audit and docs/ui-audit"
+    ],
+    "checkout": "",
+    "branch": "",
+    "base": "",
+    "head": "",
+    "state": {
+      "productStateId": "b1b1c5ff0d9772d9362be9feac89e052e638f32f3eab4ff545636b52ca42b5b1",
+      "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+      "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+      "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+    },
+    "manifestPath": "manifest.json",
+    "environmentPath": "environment.json",
+    "learningPolicyId": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+    "consumedLessonIds": [],
+    "aggregateParents": [],
+    "requiredDomains": [
+      "stats-and-talents",
+      "economy-progression",
+      "time-offline",
+      "save-cloud",
+      "presentation-identity",
+      "merge-integrity"
+    ],
+    "exclusions": [],
+    "briefIds": [],
+    "capacityLimit": 5,
+    "requiredReadiness": false,
+    "phase": "SNAPSHOT",
+    "cleanRoundA": null,
+    "cleanRoundB": null,
+    "finalEvidenceIds": [],
+    "outcome": null,
+    "readinessNote": "opt-out: request.json never declared requiredReadiness (init default); merge-gate audit run has no construction phase - no binding guidance to conform to"
+  },
+  "briefs": [],
+  "assignments": [
+    {
+      "id": "ASGN-CLEAN-A",
+      "parentId": null,
+      "capacityScope": "worker-slot",
+      "inputBundleHash": "d6b541e349c794479ad873ab3554aaa9d47d021e0bd0f1048aca44eaef9fb167",
+      "dependencies": [],
+      "requiredCapabilities": [
+        "read",
+        "exec-tests"
+      ],
+      "writeSurface": "none",
+      "readiness": "READY",
+      "status": "FINISHED",
+      "reservedAt": "2026-09-29T07:20:16.127Z",
+      "observedRuntimeId": "subagent-clean-a",
+      "releaseEvidence": "sealed FAIL report delivered; findings F-MG-09..13 recorded by coordinator in batch-4",
+      "resultRef": "RV-CLEAN-A",
+      "timeoutState": null,
+      "history": [
+        {
+          "at": "2026-09-29T14:45:00Z",
+          "from": "QUEUED",
+          "to": "RESERVED",
+          "reason": "briefs/clean-a.md dispatched to isolated reviewer"
+        },
+        {
+          "at": "2026-09-29T14:50:00Z",
+          "from": "RESERVED",
+          "to": "RUNNING",
+          "reason": "reviewer began blind analysis"
+        },
+        {
+          "at": "2026-09-29T15:00:00Z",
+          "from": "RUNNING",
+          "to": "RESULT_RECEIVED",
+          "reason": "SEALED_RESULT verdict FAIL, 5 findings"
+        },
+        {
+          "at": "2026-09-29T15:05:00Z",
+          "from": "RESULT_RECEIVED",
+          "to": "FINISHED",
+          "reason": "result consumed; slot released"
+        }
+      ]
+    },
+    {
+      "id": "ASGN-CLEAN-A2",
+      "parentId": null,
+      "capacityScope": "clean-review-slot-1-of-2",
+      "inputBundleHash": "f7895882cf5398a009aca5bc62284c972e5a842c8f4a4d1ee140cc7b3c70a012",
+      "dependencies": [],
+      "requiredCapabilities": [
+        "read-source",
+        "run-vitest",
+        "grep"
+      ],
+      "writeSurface": [],
+      "readiness": "READY",
+      "status": "FINISHED",
+      "reservedAt": "2026-09-29T15:40:00Z",
+      "observedRuntimeId": "subagent-clean-a2",
+      "releaseEvidence": "sealed FAIL report delivered; findings F-MG-14..17 recorded by coordinator in batch-6",
+      "resultRef": "RV-CLEAN-A2",
+      "timeoutState": null,
+      "history": [
+        {
+          "at": "2026-09-29T15:40:00Z",
+          "from": "QUEUED",
+          "to": "RESERVED",
+          "reason": "clean-a2 brief dispatched to a second isolated context"
+        },
+        {
+          "at": "2026-09-29T15:45:00Z",
+          "from": "RESERVED",
+          "to": "RUNNING",
+          "reason": "reviewer began blind analysis"
+        },
+        {
+          "at": "2026-09-29T16:05:00Z",
+          "from": "RUNNING",
+          "to": "RESULT_RECEIVED",
+          "reason": "SEALED_RESULT verdict FAIL, 4 findings (1 Medium)"
+        },
+        {
+          "at": "2026-09-29T16:10:00Z",
+          "from": "RESULT_RECEIVED",
+          "to": "FINISHED",
+          "reason": "result consumed; slot released"
+        }
+      ]
+    },
+    {
+      "id": "ASGN-CLEAN-B",
+      "parentId": null,
+      "capacityScope": "worker-slot",
+      "inputBundleHash": "e0a15137abc05d22bcf6af25ec24a4d340f25eae07f4f18d6fe6f58df3a885e2",
+      "dependencies": [
+        "ASGN-CLEAN-A"
+      ],
+      "requiredCapabilities": [
+        "read",
+        "exec-tests"
+      ],
+      "writeSurface": "none",
+      "readiness": "QUEUED",
+      "status": "CANCELLED",
+      "reservedAt": null,
+      "observedRuntimeId": null,
+      "releaseEvidence": [
+        "sealed SEALED_RESULT in coordinator transcript; PASS_WITH_GAPS zero findings; exec unavailable in context - superseded by exec-capable dispatch"
+      ],
+      "resultRef": null,
+      "timeoutState": null,
+      "history": [
+        {
+          "at": "2026-09-29T09:30:52.875Z",
+          "from": "CREATED",
+          "to": "QUEUED",
+          "reason": "registered by coordinator"
+        },
+        {
+          "at": "2026-09-29T09:58:40.360Z",
+          "from": "QUEUED",
+          "to": "CANCELLED",
+          "reason": "lifecycle ended while waiting via 'finished'"
+        }
+      ]
+    },
+    {
+      "id": "ASGN-CLEAN-A-FINAL",
+      "parentId": null,
+      "capacityScope": "worker-slot",
+      "inputBundleHash": "71a50bfe8e088ed4358cc0187f108a4d98d049247937e922e92622e92d1c307d",
+      "dependencies": [],
+      "requiredCapabilities": [
+        "read",
+        "exec-tests"
+      ],
+      "writeSurface": "none",
+      "readiness": "QUEUED",
+      "status": "QUEUED",
+      "reservedAt": null,
+      "observedRuntimeId": null,
+      "releaseEvidence": [],
+      "resultRef": null,
+      "timeoutState": null,
+      "history": [
+        {
+          "at": "2026-09-29T10:00:22.779Z",
+          "from": "CREATED",
+          "to": "QUEUED",
+          "reason": "registered by coordinator"
+        }
+      ]
+    },
+    {
+      "id": "ASGN-CLEAN-B-FINAL",
+      "parentId": null,
+      "capacityScope": "worker-slot",
+      "inputBundleHash": "e0a15137abc05d22bcf6af25ec24a4d340f25eae07f4f18d6fe6f58df3a885e2",
+      "dependencies": [
+        "ASGN-CLEAN-A-FINAL"
+      ],
+      "requiredCapabilities": [
+        "read",
+        "exec-tests"
+      ],
+      "writeSurface": "none",
+      "readiness": "QUEUED",
+      "status": "QUEUED",
+      "reservedAt": null,
+      "observedRuntimeId": null,
+      "releaseEvidence": [],
+      "resultRef": null,
+      "timeoutState": null,
+      "history": [
+        {
+          "at": "2026-09-29T10:00:32.058Z",
+          "from": "CREATED",
+          "to": "QUEUED",
+          "reason": "registered by coordinator"
+        }
+      ]
+    }
+  ],
+  "consumptions": [],
+  "invariants": [
+    {
+      "id": "I-STAT-ZEROBASE-FLAT",
+      "statement": "A modifier on a rate stat whose base is 0 must use the flat channel; percent on zero base is a dead value. finalDamageReductionPercent is signed (min -1) so designed damage-taken downsides land. hpBelow/hpNotBelow passive conditions partition disjointly at the threshold.",
+      "domain": "stats-and-talents",
+      "risk": "HIGH",
+      "sources": [
+        {
+          "path": "game/docs/qa/local-audit/combat-progression-findings.md",
+          "symbolOrSection": "CP-01",
+          "revision": "d3e7c7d4",
+          "basis": "SOURCE"
+        }
+      ],
+      "owner": {
+        "path": "game/src/core/stats/StatCalculator.ts",
+        "symbolOrSection": "runPipeline pools",
+        "revision": "d3e7c7d4",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "TalentBuffs.ts",
+        "TalentPassives.ts",
+        "StatMetadata.ts",
+        "PassiveSystem.ts",
+        "Skill.ts"
+      ],
+      "legalReaders": [
+        "StatCalculator.ts",
+        "PlayerStatAssembly.ts",
+        "CombatSystem.ts"
+      ],
+      "projections": [
+        "n/a"
+      ],
+      "caches": [
+        "n/a"
+      ],
+      "validStates": [
+        "flat modifiers on zero-base stats; signed clamps admit -1 floor"
+      ],
+      "forbiddenStates": [
+        "percent modifier on a stat whose base+flat is always 0"
+      ],
+      "preconditions": [
+        "n/a"
+      ],
+      "postconditions": [
+        "n/a"
+      ],
+      "legalTransitions": [
+        "n/a"
+      ],
+      "illegalTransitions": [
+        "n/a"
+      ],
+      "failureBehavior": "clampStatValue clamps to min/max; -2 -> -1 for finalDamageReductionPercent",
+      "atomicity": "n/a",
+      "inverseBehavior": "hpNotBelow active iff ratio >= percent; hpBelow iff ratio < percent",
+      "persistence": "n/a",
+      "migration": "n/a",
+      "lifecycle": "n/a",
+      "runtimeConsequences": [
+        "talent passives apply once live"
+      ],
+      "uiConsequences": [
+        "n/a"
+      ],
+      "oracles": [
+        "TalentsV4Wiring.test.ts asserts flat<0 + hpNotBelow condition; StatCalculator pool math"
+      ],
+      "requiredEvidenceSurfaces": [
+        "DETERMINISTIC",
+        "STATIC_SEMANTIC",
+        "INDEPENDENT_REVIEW"
+      ],
+      "taxonomyIds": [],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-BUILDING-ACCRUAL-PIN",
+      "statement": "A building's unclaimed accrual window prices rate/capacity/material under the realm pinned when the window opened; claim() settles under the pin, then re-pins to the current realm. Legacy saves without accrualRealmId fall back to current realm (unchanged behavior).",
+      "domain": "economy-progression",
+      "risk": "HIGH",
+      "sources": [
+        {
+          "path": "game/docs/qa/local-audit/economy-meta-findings.md",
+          "symbolOrSection": "EM-01",
+          "revision": "d3e7c7d4",
+          "basis": "SOURCE"
+        }
+      ],
+      "owner": {
+        "path": "game/src/core/building/BuildingSystem.ts",
+        "symbolOrSection": "claim/getStoredAmount",
+        "revision": "d3e7c7d4",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "BuildingSystem.ts",
+        "BuildingInstance.ts"
+      ],
+      "legalReaders": [
+        "production panels",
+        "GameManagerBuildingOps"
+      ],
+      "projections": [
+        "n/a"
+      ],
+      "caches": [
+        "n/a"
+      ],
+      "validStates": [
+        "accrualRealmId == realm of window start"
+      ],
+      "forbiddenStates": [
+        "accrued backlog repriced at a newer realm on claim"
+      ],
+      "preconditions": [
+        "n/a"
+      ],
+      "postconditions": [
+        "after claim, accrualRealmId == current realm"
+      ],
+      "legalTransitions": [
+        "pin moves at claim only"
+      ],
+      "illegalTransitions": [
+        "pin changes mid-window without claim"
+      ],
+      "failureBehavior": "unknown realm id -> index -1 -> default rate/tier 1 (soft)",
+      "atomicity": "claim computes remainder under pinned rate before re-pin",
+      "inverseBehavior": "n/a",
+      "persistence": "accrualRealmId round-trips through structuredClone save/load",
+      "migration": "absent field -> current realm fallback",
+      "lifecycle": "n/a",
+      "runtimeConsequences": [
+        "n/a"
+      ],
+      "uiConsequences": [
+        "capacity/rate display equals what claim pays"
+      ],
+      "oracles": [
+        "BuildingSystem.test.ts EM-01 cases: breakthrough mid-window, claim re-pin, legacy fallback"
+      ],
+      "requiredEvidenceSurfaces": [
+        "DETERMINISTIC",
+        "STATIC_SEMANTIC",
+        "INDEPENDENT_REVIEW"
+      ],
+      "taxonomyIds": [],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-OFFLINE-BUFF-SEGMENT",
+      "statement": "Offline cultivation splits the save->now window at persistent-effect expiry boundaries; each segment converts seconds via calculateOfflineProgress at its own live percent. A buff expiring mid-window stops paying at expiry. Repeated restores of an identical payload are no-ops.",
+      "domain": "time-offline",
+      "risk": "HIGH",
+      "sources": [
+        {
+          "path": "game/docs/qa/local-audit/economy-meta-findings.md",
+          "symbolOrSection": "EM-02",
+          "revision": "d3e7c7d4",
+          "basis": "SOURCE"
+        }
+      ],
+      "owner": {
+        "path": "game/src/stores/player.ts",
+        "symbolOrSection": "restoreFromSave offline block",
+        "revision": "d3e7c7d4",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "player.ts restoreFromSave",
+        "TuLinhTranBalance.ts"
+      ],
+      "legalReaders": [
+        "OfflineProgressSystem",
+        "cultivation consumers"
+      ],
+      "projections": [
+        "n/a"
+      ],
+      "caches": [
+        "n/a"
+      ],
+      "validStates": [
+        "sum(segment seconds) == window"
+      ],
+      "forbiddenStates": [
+        "boosted-rate x whole window when buff expired mid-window"
+      ],
+      "preconditions": [
+        "persistentTimedEffects is an array (shape gate enforced)"
+      ],
+      "postconditions": [
+        "lastSavedAt advances to now"
+      ],
+      "legalTransitions": [
+        "expiresAtMs inside window creates a boundary"
+      ],
+      "illegalTransitions": [
+        "effect with expiresAtMs <= start still pays"
+      ],
+      "failureBehavior": "calculateOfflineProgress clamps negative/NaN seconds",
+      "atomicity": "n/a",
+      "inverseBehavior": "no effects -> single unbuffed segment",
+      "persistence": "lastSavedAt is the dedup authority",
+      "migration": "n/a",
+      "lifecycle": "n/a",
+      "runtimeConsequences": [
+        "n/a"
+      ],
+      "uiConsequences": [
+        "offline summary shows actual post-cap amount"
+      ],
+      "oracles": [
+        "TuLinhTranBalance.test.ts segment boundaries; player.restoreFromSave.test.ts EM-02 cases"
+      ],
+      "requiredEvidenceSurfaces": [
+        "DETERMINISTIC",
+        "STATIC_SEMANTIC",
+        "INDEPENDENT_REVIEW"
+      ],
+      "taxonomyIds": [],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-CLOUD-REV-CAS",
+      "statement": "Remote reconcile orders by save_revision first (shared clock-free sequence) with updated_at only as same-revision tie-break. Pushes are CAS PATCH guarded on the just-read revision; a lost race returns 'unavailable' without regressing local data. Push revision never goes below remote+1. updated_at is server-owned via DB trigger.",
+      "domain": "save-cloud",
+      "risk": "HIGH",
+      "sources": [
+        {
+          "path": "game/docs/qa/local-audit/infra-state-findings.md",
+          "symbolOrSection": "INFRA-01/INFRA-02",
+          "revision": "d3e7c7d4",
+          "basis": "SOURCE"
+        }
+      ],
+      "owner": {
+        "path": "game/src/services/cloudSave/SupabaseRemoteSave.ts",
+        "symbolOrSection": "syncRemoteSaveOnLogin",
+        "revision": "d3e7c7d4",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "SupabaseRemoteSave.ts",
+        "migration 202609290001 trigger"
+      ],
+      "legalReaders": [
+        "CloudSaveCoordinator",
+        "useBootFlow"
+      ],
+      "projections": [
+        "n/a"
+      ],
+      "caches": [
+        "n/a"
+      ],
+      "validStates": [
+        "remote revision strictly advances on push"
+      ],
+      "forbiddenStates": [
+        "older-revision remote row resurrects via client clock skew; push overwrites a newer remote revision"
+      ],
+      "preconditions": [
+        "n/a"
+      ],
+      "postconditions": [
+        "local revision adopts remote+1 lineage after successful push"
+      ],
+      "legalTransitions": [
+        "pull when remote ahead; push when local ahead; same-rev -> timestamp tie-break"
+      ],
+      "illegalTransitions": [
+        "push writes revision <= remote"
+      ],
+      "failureBehavior": "CAS 0 rows -> 'unavailable', local state intact",
+      "atomicity": "single PATCH statement is the CAS",
+      "inverseBehavior": "n/a",
+      "persistence": "localStorage revision key adopts pushed revision",
+      "migration": "trigger makes updated_at server-owned",
+      "lifecycle": "n/a",
+      "runtimeConsequences": [
+        "n/a"
+      ],
+      "uiConsequences": [
+        "conflict -> unavailable surfaces a retry, not silent loss"
+      ],
+      "oracles": [
+        "SupabaseRemoteSave.test.ts: CAS PATCH shape, zero-row conflict, revision-adopt, clock-skew pull"
+      ],
+      "requiredEvidenceSurfaces": [
+        "DETERMINISTIC",
+        "STATIC_SEMANTIC",
+        "INDEPENDENT_REVIEW"
+      ],
+      "taxonomyIds": [],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-NAMEPLATE-AUTHOR",
+      "statement": "Player sprite nameplates render the authored player name obtained through the optional getActivePlayerName() reporting member; a gate without it falls back to 'Player'. The pre-created combat sprite label is synced on snapshot reconcile.",
+      "domain": "presentation-identity",
+      "risk": "STANDARD",
+      "sources": [
+        {
+          "path": "game/docs/qa/local-audit/frontend-findings.md",
+          "symbolOrSection": "FE-06",
+          "revision": "d3e7c7d4",
+          "basis": "SOURCE"
+        }
+      ],
+      "owner": {
+        "path": "game/src/core/game/GameManager.ts",
+        "symbolOrSection": "getActivePlayerName",
+        "revision": "d3e7c7d4",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "GameManager.ts (report)"
+      ],
+      "legalReaders": [
+        "MainScene.ts",
+        "CombatScene.ts",
+        "combat-snapshot-reconcile.ts"
+      ],
+      "projections": [
+        "n/a"
+      ],
+      "caches": [
+        "n/a"
+      ],
+      "validStates": [
+        "label text == activePlayer.name"
+      ],
+      "forbiddenStates": [
+        "literal 'Player' while an authored name exists"
+      ],
+      "preconditions": [
+        "n/a"
+      ],
+      "postconditions": [
+        "n/a"
+      ],
+      "legalTransitions": [
+        "reconcile updates label on each snapshot"
+      ],
+      "illegalTransitions": [
+        "n/a"
+      ],
+      "failureBehavior": "absent member -> 'Player' fallback (pre-fix behavior)",
+      "atomicity": "n/a",
+      "inverseBehavior": "n/a",
+      "persistence": "n/a",
+      "migration": "n/a",
+      "lifecycle": "n/a",
+      "runtimeConsequences": [
+        "n/a"
+      ],
+      "uiConsequences": [
+        "player sees their chosen name"
+      ],
+      "oracles": [
+        "Playwright nameplate check in verify-fixes.mjs"
+      ],
+      "requiredEvidenceSurfaces": [
+        "STATIC_SEMANTIC",
+        "RUNTIME_E2E",
+        "INDEPENDENT_REVIEW"
+      ],
+      "taxonomyIds": [],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-REALM-LADDER-LABELS",
+      "statement": "Realm passive nodes label the destination realm and derive comingSoon from ReleasePolicy, so the player's current realm never shows 'coming soon'. When the next realm is authored but dormant above the release ceiling, RealmPanel shows a localized explanation.",
+      "domain": "presentation-identity",
+      "risk": "STANDARD",
+      "sources": [
+        {
+          "path": "game/docs/qa/local-audit/frontend-findings.md",
+          "symbolOrSection": "FE-12/FE-17",
+          "revision": "d3e7c7d4",
+          "basis": "SOURCE"
+        }
+      ],
+      "owner": {
+        "path": "game/src/data/realm/RealmPassiveNodes.ts",
+        "symbolOrSection": "REALM_PASSIVE_NODES",
+        "revision": "d3e7c7d4",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "RealmPassiveNodes.ts",
+        "RealmPanel.vue",
+        "locales"
+      ],
+      "legalReaders": [
+        "RealmPanel.vue",
+        "useRealmStatPassives"
+      ],
+      "projections": [
+        "n/a"
+      ],
+      "caches": [
+        "n/a"
+      ],
+      "validStates": [
+        "node label == destination realm name"
+      ],
+      "forbiddenStates": [
+        "reachable realm marked comingSoon"
+      ],
+      "preconditions": [
+        "n/a"
+      ],
+      "postconditions": [
+        "n/a"
+      ],
+      "legalTransitions": [
+        "n/a"
+      ],
+      "illegalTransitions": [
+        "n/a"
+      ],
+      "failureBehavior": "missing locale key -> i18n parity guard fails",
+      "atomicity": "n/a",
+      "inverseBehavior": "n/a",
+      "persistence": "n/a",
+      "migration": "n/a",
+      "lifecycle": "n/a",
+      "runtimeConsequences": [
+        "n/a"
+      ],
+      "uiConsequences": [
+        "Truc Co players see the Kim Dan ceiling explained"
+      ],
+      "oracles": [
+        "RealmPassiveNodes.test.ts label/comingSoon assertions; verify-fe17.mjs runtime check"
+      ],
+      "requiredEvidenceSurfaces": [
+        "DETERMINISTIC",
+        "STATIC_SEMANTIC",
+        "RUNTIME_E2E",
+        "INDEPENDENT_REVIEW"
+      ],
+      "taxonomyIds": [],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-MERGE-INTEGRITY",
+      "statement": "The PR48 x PR51 auto-merge preserved both sides' semantics: armed/way registry reads coexist with getActivePlayerName call sites; PR50-deleted assets have zero live references on the merged tree including the new animated manifest.",
+      "domain": "merge-integrity",
+      "risk": "HIGH",
+      "sources": [
+        {
+          "path": "game/docs/qa/2026-09-29-pr51-aggregate-merge-gate-deep.md",
+          "symbolOrSection": "merge-integrity probes",
+          "revision": "d3e7c7d4",
+          "basis": "SOURCE"
+        }
+      ],
+      "owner": {
+        "path": "game/src/game/scenes/MainScene.ts",
+        "symbolOrSection": "merged create/profile blocks",
+        "revision": "d3e7c7d4",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "n/a - merge outcome"
+      ],
+      "legalReaders": [
+        "whole tree"
+      ],
+      "projections": [
+        "n/a"
+      ],
+      "caches": [
+        "n/a"
+      ],
+      "validStates": [
+        "both feature sets live"
+      ],
+      "forbiddenStates": [
+        "one side's call site silently dropped"
+      ],
+      "preconditions": [
+        "n/a"
+      ],
+      "postconditions": [
+        "n/a"
+      ],
+      "legalTransitions": [
+        "n/a"
+      ],
+      "illegalTransitions": [
+        "n/a"
+      ],
+      "failureBehavior": "build/typecheck + suite is the net",
+      "atomicity": "n/a",
+      "inverseBehavior": "n/a",
+      "persistence": "n/a",
+      "migration": "n/a",
+      "lifecycle": "n/a",
+      "runtimeConsequences": [
+        "n/a"
+      ],
+      "uiConsequences": [
+        "n/a"
+      ],
+      "oracles": [
+        "grep census of deleted paths; coexistence of both call sites in merged files"
+      ],
+      "requiredEvidenceSurfaces": [
+        "STATIC_SEMANTIC",
+        "DETERMINISTIC",
+        "INDEPENDENT_REVIEW"
+      ],
+      "taxonomyIds": [],
+      "status": "ACTIVE"
+    }
+  ],
+  "census": [],
+  "findings": [
+    {
+      "id": "F-MG-01",
+      "title": "P15 asciiComments ratchet violated by fix-commit comments (em dash/arrow/Vietnamese tokens)",
+      "state": {
+        "productStateId": "f99322f89cd7be7842677d320d52865620a53380e60ef10aa117ac891287bd6c",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/core/building/BuildingInstance.ts",
+          "symbolOrSection": "accrualRealmId comment",
+          "revision": "d3e7c7d4",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "coordinator",
+      "invariantIds": [],
+      "evidenceIds": [
+        "EV-VERIFY-MERGED"
+      ],
+      "counterexample": "57 new non-ASCII comment tokens flagged by the ratchet on first full verify",
+      "expected": "comments plain ASCII English",
+      "actual": "em dashes, arrows, Vietnamese tokens in new comments",
+      "rootCause": "coordinator authored comments in Vietnamese/mixed symbols despite P15",
+      "rootClass": "contract-comment-hygiene",
+      "subsystem": "repo-hygiene",
+      "siblingSearch": [
+        {
+          "roots": [
+            "game/src",
+            "game/*.mjs"
+          ],
+          "termsAndMethod": "ratchet output enumerated all offenders",
+          "evidenceIds": [
+            "EV-VERIFY-MERGED"
+          ],
+          "hitDispositions": [
+            "all 57 sites rewritten ASCII"
+          ],
+          "coverageLimits": []
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": "rewrote every flagged comment to ASCII English (3111ff18)",
+      "pinEvidenceIds": [
+        "EV-FOCUSED"
+      ],
+      "verificationEvidenceIds": [
+        "EV-FOCUSED"
+      ],
+      "closureReviewIds": [
+        "RV-P1-CORRECTNESS"
+      ],
+      "status": "CLOSED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "fixedInRevision": "3111ff18",
+      "closedAt": "2026-09-29T13:22:00Z",
+      "closeReason": "ratchet green on rerun"
+    },
+    {
+      "id": "F-MG-02",
+      "title": "PlayerStatAssembly.test pinned pre-CP-01 min (finalDamageReductionPercent -1 -> 0)",
+      "state": {
+        "productStateId": "f99322f89cd7be7842677d320d52865620a53380e60ef10aa117ac891287bd6c",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "severity": "Low",
+      "classification": "TEST_DEFECT",
+      "actionable": true,
+      "reachability": "FIXTURE_INJECTED",
+      "locations": [
+        {
+          "path": "game/src/core/player/PlayerStatAssembly.test.ts",
+          "symbolOrSection": "clamp under-min case",
+          "revision": "d3e7c7d4",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "coordinator",
+      "invariantIds": [
+        "I-STAT-ZEROBASE-FLAT"
+      ],
+      "evidenceIds": [
+        "EV-VERIFY-MERGED"
+      ],
+      "counterexample": "expect(clampStatValue('finalDamageReductionPercent', -1)).toBe(0) fails after intended min=-1",
+      "expected": "-1 (new min) then -2 -> -1",
+      "actual": "expected 0",
+      "rootCause": "test pinned the old clamp; CP-01 intentionally widened the min",
+      "rootClass": "oracle-stale-after-intended-change",
+      "subsystem": "stats",
+      "siblingSearch": [
+        {
+          "roots": [
+            "game/src"
+          ],
+          "termsAndMethod": "grep finalDamageReductionPercent clamps/tests",
+          "evidenceIds": [],
+          "hitDispositions": [
+            "only this pin found"
+          ],
+          "coverageLimits": []
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": "assert -1 plus below-min probe (3111ff18)",
+      "pinEvidenceIds": [
+        "EV-FOCUSED"
+      ],
+      "verificationEvidenceIds": [
+        "EV-FOCUSED"
+      ],
+      "closureReviewIds": [
+        "RV-P1-CORRECTNESS"
+      ],
+      "status": "CLOSED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "fixedInRevision": "3111ff18",
+      "closedAt": "2026-09-29T13:22:00Z",
+      "closeReason": "test green; behavior is the intended CP-01 semantic"
+    },
+    {
+      "id": "F-MG-03",
+      "state": {
+        "productStateId": "b1b1c5ff0d9772d9362be9feac89e052e638f32f3eab4ff545636b52ca42b5b1",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "title": "PRE-EXISTING on master: combatContract R14.4 searches parameterless onBattleStart()",
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "discoveredBy": "coordinator",
+      "invariantIds": [],
+      "evidenceIds": [
+        "EV-VERIFY-S9"
+      ],
+      "counterexample": "identical failure reproduces on base ref f196b8d0 without the delta",
+      "expected": "suite green",
+      "actual": "pre-existing failure on master",
+      "rootCause": "predates the reviewed aggregate",
+      "rootClass": "pre-existing-master",
+      "subsystem": "test-infra",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": "none - outside delta surface; defect exists on master tip independent of this change",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [
+        "EV-VERIFY-S9"
+      ],
+      "closureReviewIds": [
+        "RV-S9-P1"
+      ],
+      "status": "REJECTED_WITH_PROOF",
+      "duplicateOf": null,
+      "rejectionReason": "PRE-EXISTING ON BASE: failure reproduces identically on f196b8d0; file+test unchanged by the delta; out of this run scope per P5 pre-existing rule",
+      "exception": null,
+      "fixedInRevision": null,
+      "closedAt": "2026-09-29T17:05:00Z",
+      "closeReason": "rejected as defect-of-this-delta with base-repro proof",
+      "locations": [
+        {
+          "path": "game/tests/architecture/combatContract.test.ts",
+          "symbolOrSection": "R14.4",
+          "revision": "HEAD",
+          "basis": "SOURCE"
+        }
+      ]
+    },
+    {
+      "id": "F-MG-04",
+      "state": {
+        "productStateId": "b1b1c5ff0d9772d9362be9feac89e052e638f32f3eab4ff545636b52ca42b5b1",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "title": "PRE-EXISTING on master: src/dev/skill-vfx.ts constructs new Game() outside region host",
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "discoveredBy": "coordinator",
+      "invariantIds": [],
+      "evidenceIds": [
+        "EV-VERIFY-S9"
+      ],
+      "counterexample": "identical failure reproduces on base ref f196b8d0 without the delta",
+      "expected": "suite green",
+      "actual": "pre-existing failure on master",
+      "rootCause": "predates the reviewed aggregate",
+      "rootClass": "pre-existing-master",
+      "subsystem": "test-infra",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": "none - outside delta surface; defect exists on master tip independent of this change",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [
+        "EV-VERIFY-S9"
+      ],
+      "closureReviewIds": [
+        "RV-S9-P1"
+      ],
+      "status": "REJECTED_WITH_PROOF",
+      "duplicateOf": null,
+      "rejectionReason": "PRE-EXISTING ON BASE: failure reproduces identically on f196b8d0; file+test unchanged by the delta; out of this run scope per P5 pre-existing rule",
+      "exception": null,
+      "fixedInRevision": null,
+      "closedAt": "2026-09-29T17:05:00Z",
+      "closeReason": "rejected as defect-of-this-delta with base-repro proof",
+      "locations": [
+        {
+          "path": "game/src/dev/skill-vfx.ts",
+          "symbolOrSection": "Phaser.Game construction",
+          "revision": "HEAD",
+          "basis": "SOURCE"
+        }
+      ]
+    },
+    {
+      "id": "F-MG-05",
+      "state": {
+        "productStateId": "b1b1c5ff0d9772d9362be9feac89e052e638f32f3eab4ff545636b52ca42b5b1",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "title": "PRE-EXISTING on master: PlayerPortrait.test mounts component without active Pinia",
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "discoveredBy": "coordinator",
+      "invariantIds": [],
+      "evidenceIds": [
+        "EV-VERIFY-S9"
+      ],
+      "counterexample": "identical failure reproduces on base ref f196b8d0 without the delta",
+      "expected": "suite green",
+      "actual": "pre-existing failure on master",
+      "rootCause": "predates the reviewed aggregate",
+      "rootClass": "pre-existing-master",
+      "subsystem": "test-infra",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": "none - outside delta surface; defect exists on master tip independent of this change",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [
+        "EV-VERIFY-S9"
+      ],
+      "closureReviewIds": [
+        "RV-S9-P1"
+      ],
+      "status": "REJECTED_WITH_PROOF",
+      "duplicateOf": null,
+      "rejectionReason": "PRE-EXISTING ON BASE: failure reproduces identically on f196b8d0; file+test unchanged by the delta; out of this run scope per P5 pre-existing rule",
+      "exception": null,
+      "fixedInRevision": null,
+      "closedAt": "2026-09-29T17:05:00Z",
+      "closeReason": "rejected as defect-of-this-delta with base-repro proof",
+      "locations": [
+        {
+          "path": "game/src/components/common/PlayerPortrait.test.ts",
+          "symbolOrSection": "mount",
+          "revision": "HEAD",
+          "basis": "SOURCE"
+        }
+      ]
+    },
+    {
+      "id": "F-MG-06",
+      "title": "Documented deferred audit items (frontend Lows/Nits: quest reward disclosure, kicker contrast, stage-select hints, label overflow; backend Lows: CP-02, EM-03/04, INFRA-03..08) - human-accepted deferral",
+      "state": {
+        "productStateId": "f99322f89cd7be7842677d320d52865620a53380e60ef10aa117ac891287bd6c",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/docs/qa/local-audit/",
+          "symbolOrSection": "frontend-findings.md + infra-state-findings.md",
+          "revision": "d3e7c7d4",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "coordinator",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "enumerated in the audit findings files carried by this branch",
+      "expected": "all actionable findings closed or excepted",
+      "actual": "deferred with documented reasoning",
+      "rootCause": "deliberate scope containment - low-severity UX/docs improvements parked",
+      "rootClass": "deferred-scope",
+      "subsystem": "mixed",
+      "siblingSearch": [
+        {
+          "roots": [
+            "game/docs/qa/local-audit",
+            "game/docs/ui-audit"
+          ],
+          "termsAndMethod": "findings inventory",
+          "evidenceIds": [],
+          "hitDispositions": [
+            "all items listed in docs"
+          ],
+          "coverageLimits": []
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": "deferred - documented in findings files; user ordered the merge with the deferral list disclosed",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "HUMAN_EXCEPTION",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": {
+        "humanInstructionRef": "user instruction 2026-09-29: 'ok thi merge vao master git' after the deferred Low/Nit list was disclosed in the fix summary",
+        "scope": "documented Low/Nit findings in docs/qa/local-audit and docs/ui-audit",
+        "reason": "explicit deferral accepted at merge authorization",
+        "expiresWhen": "a dedicated UX/backlog mission picks them up"
+      }
+    },
+    {
+      "id": "F-MG-07",
+      "title": "Coverage gap: no detector pinned the TalentBuffs-side flat channel (mutation SURVIVED first pass)",
+      "state": {
+        "productStateId": "b84d7928774ecbf0d8179a71ef9d8752622ffa98b065c5c61dd714592d71d95f",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "severity": "Medium",
+      "classification": "COVERAGE_GAP",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/data/buff/TalentBuffs.ts",
+          "symbolOrSection": "statModifiers on zero-base stats",
+          "revision": "8c6c7954",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "mutation-campaign",
+      "invariantIds": [
+        "I-STAT-ZEROBASE-FLAT"
+      ],
+      "evidenceIds": [
+        "EV-MUT-S4"
+      ],
+      "counterexample": "flat->percent on TalentBuffs.ts:51 survived the full TalentsV4Wiring suite (19/19 green)",
+      "expected": "a detector kills any nonzero percent modifier on a zero-base rate stat",
+      "actual": "channel change was undetectable",
+      "rootCause": "existing tests pin only the TalentPassives leg, not buff-side modifiers",
+      "rootClass": "detector-missing",
+      "subsystem": "stats",
+      "siblingSearch": [
+        {
+          "roots": [
+            "game/src/data/buff",
+            "game/src/data/skill"
+          ],
+          "termsAndMethod": "all talent buff+passive modifiers enumerated",
+          "evidenceIds": [],
+          "hitDispositions": [
+            "pin test covers every modifier on the four zero-base stats across both files"
+          ],
+          "coverageLimits": []
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": "new pin test src/data/buff/TalentBuffs.test.ts (commit 8c6c7954)",
+      "pinEvidenceIds": [
+        "EV-FOCUSED-S4"
+      ],
+      "verificationEvidenceIds": [
+        "EV-MUT-S4"
+      ],
+      "closureReviewIds": [
+        "RV-S3-P1"
+      ],
+      "status": "CLOSED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "fixedInRevision": "8c6c7954",
+      "closedAt": "2026-09-29T14:40:00Z",
+      "closeReason": "re-mutated under pin -> killed; suite green"
+    },
+    {
+      "id": "F-MG-08",
+      "title": "Coverage gap: claim-path accrual pin fed rate-carry + materialId unasserted (mutation SURVIVED first pass)",
+      "state": {
+        "productStateId": "b84d7928774ecbf0d8179a71ef9d8752622ffa98b065c5c61dd714592d71d95f",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "severity": "Medium",
+      "classification": "COVERAGE_GAP",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/core/building/BuildingSystem.ts",
+          "symbolOrSection": "claim() pin use",
+          "revision": "8c6c7954",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "mutation-campaign",
+      "invariantIds": [
+        "I-BUILDING-ACCRUAL-PIN"
+      ],
+      "evidenceIds": [
+        "EV-MUT-S4"
+      ],
+      "counterexample": "claim() pin removal survived 21/21 - payable amount is pinned upstream; the carry-back rate + material tier were unasserted",
+      "expected": "claim-path pin verified end-to-end",
+      "actual": "carry/material leg unprotected",
+      "rootCause": "EM-01 test asserted amount + re-pin but not the carry computation",
+      "rootClass": "detector-missing",
+      "subsystem": "production",
+      "siblingSearch": [
+        {
+          "roots": [
+            "game/src/core/building"
+          ],
+          "termsAndMethod": "pin consumers enumerated (stored/capacity/rate/materialId/re-pin)",
+          "evidenceIds": [],
+          "hitDispositions": [
+            "all consumers covered by existing tests + new carry assertion"
+          ],
+          "coverageLimits": []
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": "lastCollectedAt carry bound added to EM-01 claim test (commit 8c6c7954)",
+      "pinEvidenceIds": [
+        "EV-FOCUSED-S4"
+      ],
+      "verificationEvidenceIds": [
+        "EV-MUT-S4"
+      ],
+      "closureReviewIds": [
+        "RV-S3-P1"
+      ],
+      "status": "CLOSED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "fixedInRevision": "8c6c7954",
+      "closedAt": "2026-09-29T14:40:00Z",
+      "closeReason": "re-mutated under pin -> killed; suite green"
+    },
+    {
+      "id": "F-MG-09",
+      "state": {
+        "productStateId": "476ecc92a14df13401d15a036554fb9920fe46451677204df8a0c133ab6146bc",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "title": "CP01-CANTHAN-RAMP: per_second flatStat with no maxStacks ramps one stack per second unbounded",
+      "severity": "High",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/data/skill/TalentPassives.ts",
+          "symbolOrSection": "can_than legs",
+          "revision": "768b9ac0",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "game/src/core/skill/PassiveSystem.ts",
+          "symbolOrSection": "tick addStack",
+          "revision": "768b9ac0",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "clean-a",
+      "invariantIds": [
+        "I-STAT-ZEROBASE-FLAT"
+      ],
+      "evidenceIds": [],
+      "counterexample": "uncapped flat on per_second ramped to clamp (-75% taken / +100% taken) instead of the designed static band; stacks also latched across the threshold for the rest of a battle",
+      "expected": "static +/- band following HP",
+      "actual": "unbounded ramp + battle-long latch",
+      "rootCause": "CP-01 converted dead percent to live flat without bounding accumulation or release",
+      "rootClass": "unbounded-accumulation",
+      "subsystem": "stats",
+      "siblingSearch": [],
+      "siblingFindingIds": [
+        "F-MG-11",
+        "F-MG-12"
+      ],
+      "repair": "maxStacks 1 + distinct ids + condition-false stack release in PassiveSystem.tick",
+      "pinEvidenceIds": [
+        "EV-FOCUSED-S7"
+      ],
+      "verificationEvidenceIds": [
+        "EV-FOCUSED-S7",
+        "EV-VERIFY-S7"
+      ],
+      "closureReviewIds": [
+        "RV-S7-P1"
+      ],
+      "status": "CLOSED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "fixedInRevision": "a61c53a5",
+      "closedAt": "2026-09-29T15:35:00Z",
+      "closeReason": "cap + release + pins; mutants MUT-RAMP-1 and MUT-DECAY-1 killed"
+    },
+    {
+      "id": "F-MG-10",
+      "state": {
+        "productStateId": "476ecc92a14df13401d15a036554fb9920fe46451677204df8a0c133ab6146bc",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "title": "CLOUD-INSERT-UPSERT: first-push POST carried merge-duplicates preference",
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/services/cloudSave/SupabaseRemoteSave.ts",
+          "symbolOrSection": "insert branch",
+          "revision": "768b9ac0",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "clean-a",
+      "invariantIds": [
+        "I-CLOUD-REV-CAS"
+      ],
+      "evidenceIds": [],
+      "counterexample": "PK upsert silently overwrites a concurrent first push",
+      "expected": "strict insert, PK conflict loses",
+      "actual": "merge-duplicates upsert",
+      "rootCause": "stale header from pre-CAS design",
+      "rootClass": "stale-contract-header",
+      "subsystem": "cloudSave",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": "header removed; strict insert; POST Prefer pin added",
+      "pinEvidenceIds": [
+        "EV-FOCUSED-S7"
+      ],
+      "verificationEvidenceIds": [
+        "EV-FOCUSED-S7",
+        "EV-VERIFY-S7"
+      ],
+      "closureReviewIds": [
+        "RV-S7-P1"
+      ],
+      "status": "CLOSED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "fixedInRevision": "67fd0356",
+      "closedAt": "2026-09-29T15:35:00Z",
+      "closeReason": "strict insert + pin; MUT-UPSERT-1 killed"
+    },
+    {
+      "id": "F-MG-11",
+      "state": {
+        "productStateId": "476ecc92a14df13401d15a036554fb9920fe46451677204df8a0c133ab6146bc",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "title": "HAPLINH-DEAD-PERCENT: leechPercent percent modifier dead on zero base + unbounded per-second stack vs spec x2.5",
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/data/skill/TalentPassives.ts",
+          "symbolOrSection": "talent_passive_hap_linh",
+          "revision": "768b9ac0",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "clean-a",
+      "invariantIds": [
+        "I-STAT-ZEROBASE-FLAT"
+      ],
+      "evidenceIds": [],
+      "counterexample": "percent over zero base + no cap",
+      "expected": "x2.5 leech while hpBelow 0.5",
+      "actual": "0.0125 accumulating unbounded",
+      "rootCause": "mistranslated magnitude + missing cap",
+      "rootClass": "unbounded-accumulation",
+      "subsystem": "stats",
+      "siblingSearch": [],
+      "siblingFindingIds": [
+        "F-MG-09"
+      ],
+      "repair": "percent 1.5 (x2.5 multiplier over flat leech) capped at 1 stack",
+      "pinEvidenceIds": [
+        "EV-FOCUSED-S7"
+      ],
+      "verificationEvidenceIds": [
+        "EV-FOCUSED-S7",
+        "EV-VERIFY-S7"
+      ],
+      "closureReviewIds": [
+        "RV-S7-P1"
+      ],
+      "status": "CLOSED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "fixedInRevision": "67fd0356",
+      "closedAt": "2026-09-29T15:35:00Z",
+      "closeReason": "corrected to spec + capped; MUT-HAPLINH-1 killed"
+    },
+    {
+      "id": "F-MG-12",
+      "state": {
+        "productStateId": "476ecc92a14df13401d15a036554fb9920fe46451677204df8a0c133ab6146bc",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "title": "MOD-ID-COLLISION: identical generated modifier ids for same-stat same-cap modifiers",
+      "severity": "Nit",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "HYPOTHETICAL",
+      "locations": [
+        {
+          "path": "game/src/data/skill/TalentPassives.ts",
+          "symbolOrSection": "flatStat id template",
+          "revision": "768b9ac0",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "clean-a",
+      "invariantIds": [
+        "I-STAT-ZEROBASE-FLAT"
+      ],
+      "evidenceIds": [],
+      "counterexample": "both can_than legs share talent:finalDamageReductionPercent:1:flat",
+      "expected": "unique ids",
+      "actual": "colliding ids",
+      "rootCause": "no discriminator in id template",
+      "rootClass": "identity-collision",
+      "subsystem": "stats",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": "idSuffix parameter on flatStat; per-second id uniqueness pinned",
+      "pinEvidenceIds": [
+        "EV-FOCUSED-S7"
+      ],
+      "verificationEvidenceIds": [
+        "EV-FOCUSED-S7"
+      ],
+      "closureReviewIds": [
+        "RV-S7-P1"
+      ],
+      "status": "CLOSED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "fixedInRevision": "67fd0356",
+      "closedAt": "2026-09-29T15:35:00Z",
+      "closeReason": "distinct suffixes + uniqueness pin"
+    },
+    {
+      "id": "F-MG-13",
+      "state": {
+        "productStateId": "476ecc92a14df13401d15a036554fb9920fe46451677204df8a0c133ab6146bc",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "title": "ACCRUAL-REALM-UNVALIDATED: accrualRealmId accepted unchecked at save shape + acceptance gates",
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/services/save/saveShapeValidation.ts",
+          "symbolOrSection": "validateBuildingsSave",
+          "revision": "768b9ac0",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "game/src/services/save/saveAcceptance.ts",
+          "symbolOrSection": "buildings loop",
+          "revision": "768b9ac0",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "clean-a",
+      "invariantIds": [
+        "I-BUILDING-ACCRUAL-PIN"
+      ],
+      "evidenceIds": [],
+      "counterexample": "fabricated realm id silently prices backlog at wrong tier",
+      "expected": "unknown realm ids rejected like unknown buildingId",
+      "actual": "accepted silently",
+      "rootCause": "EM-01 field added without extending the acceptance seam",
+      "rootClass": "acceptance-gap",
+      "subsystem": "save",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": "shape gate requires string-or-absent; acceptance rejects unknown realm; 3 pins added",
+      "pinEvidenceIds": [
+        "EV-FOCUSED-S7"
+      ],
+      "verificationEvidenceIds": [
+        "EV-FOCUSED-S7",
+        "EV-VERIFY-S7"
+      ],
+      "closureReviewIds": [
+        "RV-S7-P1"
+      ],
+      "status": "CLOSED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "fixedInRevision": "67fd0356",
+      "closedAt": "2026-09-29T15:35:00Z",
+      "closeReason": "gates + pins; MUT-ACCRUAL-1 killed"
+    },
+    {
+      "id": "F-MG-14",
+      "state": {
+        "productStateId": "0d0921a5ddd9279694539c3c611b37cb8fd01ca217141843fc2f0fd43e5dd85d",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "title": "STARTER-ACCRUAL-PIN: starter gathering_outpost without accrualRealmId",
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/App.vue",
+          "symbolOrSection": "onNewCharacter",
+          "revision": "a7a14b62",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "game/src/components/panels/BuildingConstructionGate.vue",
+          "symbolOrSection": "dev grant",
+          "revision": "a7a14b62",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "clean-a2",
+      "invariantIds": [
+        "I-BUILDING-ACCRUAL-PIN"
+      ],
+      "evidenceIds": [],
+      "counterexample": "breakthrough before first claim repriced whole backlog",
+      "expected": "build-time realm pinned at construction",
+      "actual": "unpinned -> ?? fallback to current realm",
+      "rootCause": "EM-01 missed the grant sites",
+      "rootClass": "migration-miss",
+      "subsystem": "building",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": "accrualRealmId pinned at both grant sites + arch pin test",
+      "pinEvidenceIds": [
+        "EV-NOVEL-S9"
+      ],
+      "verificationEvidenceIds": [
+        "EV-VERIFY-S9"
+      ],
+      "closureReviewIds": [
+        "RV-S9-P1"
+      ],
+      "status": "CLOSED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "fixedInRevision": "36601ca9",
+      "closedAt": "2026-09-29T16:35:00Z",
+      "closeReason": "pins at all 3 construction sites; MUT-STARTER-PIN-1 killed"
+    },
+    {
+      "id": "F-MG-15",
+      "state": {
+        "productStateId": "0d0921a5ddd9279694539c3c611b37cb8fd01ca217141843fc2f0fd43e5dd85d",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "title": "collectBuilding pre-check uses current realm instead of pinned",
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/core/game/GameManagerBuildingOps.ts",
+          "symbolOrSection": "expectedMaterialId",
+          "revision": "a7a14b62",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "clean-a2",
+      "invariantIds": [
+        "I-BUILDING-ACCRUAL-PIN"
+      ],
+      "evidenceIds": [],
+      "counterexample": "latent silent yield loss if tiers diverge in registry",
+      "expected": "pre-check uses pinned realm like claim()",
+      "actual": "uses player.realmId",
+      "rootCause": "pre-existing line not migrated",
+      "rootClass": "stale-reference",
+      "subsystem": "building",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": "resolves accrualRealmId ?? realmId",
+      "pinEvidenceIds": [
+        "EV-NOVEL-S9"
+      ],
+      "verificationEvidenceIds": [
+        "EV-VERIFY-S9"
+      ],
+      "closureReviewIds": [
+        "RV-S9-P1"
+      ],
+      "status": "CLOSED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "fixedInRevision": "36601ca9",
+      "closedAt": "2026-09-29T16:35:00Z",
+      "closeReason": "pre-check aligned with claim() source"
+    },
+    {
+      "id": "F-MG-16",
+      "state": {
+        "productStateId": "0d0921a5ddd9279694539c3c611b37cb8fd01ca217141843fc2f0fd43e5dd85d",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "title": "kiem_vuc burst self-sustains after first trigger (crit feedback loop)",
+      "severity": "Low",
+      "classification": "NON_ACTIONABLE",
+      "actionable": false,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/data/skill/TalentPassives.ts",
+          "symbolOrSection": "talent_passive_kiem_quang + kiem_vuc",
+          "revision": "a7a14b62",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "clean-a2",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "kiem_vuc grants +1 flat critRate; stacks rebuild during the burst and re-apply with onReapplyDuration refresh - effectively permanent once first reached",
+      "expected": "bounded 8s window per description",
+      "actual": "self-sustaining given >=10 attacks per window",
+      "rootCause": "design ambiguity - the tick->threshold->burst->re-tick loop is documented intent",
+      "rootClass": "design-ambiguity",
+      "subsystem": "combat",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": "none - recorded NON_ACTIONABLE: data executes its contract; balance question is out of merge-gate scope",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "CLOSED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "fixedInRevision": null,
+      "closedAt": "2026-09-29T16:10:00Z",
+      "closeReason": "coordinator ruling: documented re-trigger loop, no spec violation provable; kept visible as a balance observation"
+    },
+    {
+      "id": "F-MG-17",
+      "state": {
+        "productStateId": "0d0921a5ddd9279694539c3c611b37cb8fd01ca217141843fc2f0fd43e5dd85d",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "title": "bat_tu_the description crit-only vs any-lethal implementation",
+      "severity": "Nit",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/data/talent/Talents.ts",
+          "symbolOrSection": "bat_tu_the",
+          "revision": "a7a14b62",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "clean-a2",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "tryConsumeUse fires on any lethal hit",
+      "expected": "copy matches impl",
+      "actual": "crit-only wording",
+      "rootCause": "copy drift",
+      "rootClass": "copy-mismatch",
+      "subsystem": "talent",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": "description now says any lethal hit",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [
+        "EV-VERIFY-S9"
+      ],
+      "closureReviewIds": [
+        "RV-S9-P1"
+      ],
+      "status": "CLOSED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "fixedInRevision": "36601ca9",
+      "closedAt": "2026-09-29T16:35:00Z",
+      "closeReason": "copy corrected"
+    }
+  ],
+  "evidence": [
+    {
+      "kind": "EXECUTED_INTEGRATION",
+      "id": "EV-VERIFY-MERGED",
+      "state": {
+        "productStateId": "f99322f89cd7be7842677d320d52865620a53380e60ef10aa117ac891287bd6c",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "producer": "coordinator",
+      "startedAt": "2026-09-29T13:27:44Z",
+      "finishedAt": "2026-09-29T13:31:35Z",
+      "commandOrMethod": "npm run verify (vue-tsc --build && vite build && vitest run) on merged aggregate",
+      "cwd": "game",
+      "exitCode": 1,
+      "result": "FAIL",
+      "artifactPath": "evidence/verify-merged.txt",
+      "artifactHash": "bf824fee52edbd73e59390e466dbf4420113af21353fc8062dc7e2a6f442efc2",
+      "inputPaths": [],
+      "inputEvidenceIds": [],
+      "invariantIds": [],
+      "claims": [
+        "type-check clean; vite build clean; vitest 7115 pass / 4 fail; every failure byte-identical pre-existing on origin/master (combatContract R14.4, dynamicRegionHost, i18nKeyParity, PlayerPortrait pinia)"
+      ],
+      "limitations": [
+        "full-suite red but no failure attributable to the branch diff"
+      ],
+      "status": "STALE"
+    },
+    {
+      "kind": "EXECUTED_UNIT_STRUCTURAL",
+      "id": "EV-FOCUSED",
+      "state": {
+        "productStateId": "f99322f89cd7be7842677d320d52865620a53380e60ef10aa117ac891287bd6c",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "producer": "coordinator",
+      "startedAt": "2026-09-29T13:21:22Z",
+      "finishedAt": "2026-09-29T13:22:20Z",
+      "commandOrMethod": "npx vitest run asciiComments + PlayerStatAssembly; then 6-file touched-scope rerun",
+      "cwd": "game",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/focused-tests.txt",
+      "artifactHash": "cfe81382d6ae7b3911616059224143a1707303b4b361fa3bf5b785d504297a11",
+      "inputPaths": [],
+      "inputEvidenceIds": [],
+      "invariantIds": [
+        "I-STAT-ZEROBASE-FLAT",
+        "I-BUILDING-ACCRUAL-PIN",
+        "I-OFFLINE-BUFF-SEGMENT",
+        "I-CLOUD-REV-CAS",
+        "I-REALM-LADDER-LABELS"
+      ],
+      "claims": [
+        "asciiComments ratchet clean post-fix; stat clamp repinned to -1; 83/83 touched-scope tests green"
+      ],
+      "limitations": [],
+      "status": "STALE"
+    },
+    {
+      "kind": "EXECUTED_RUNTIME",
+      "id": "EV-RUNTIME",
+      "state": {
+        "productStateId": "f99322f89cd7be7842677d320d52865620a53380e60ef10aa117ac891287bd6c",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "producer": "coordinator",
+      "startedAt": "2026-09-29T12:00:00Z",
+      "finishedAt": "2026-09-29T12:30:00Z",
+      "commandOrMethod": "Playwright chromium vs vite dev server (verify-fixes.mjs, verify-fe17.mjs)",
+      "cwd": "game",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/runtime-checks.txt",
+      "artifactHash": "4044245e029d66e4734eac64a008c2571cffcea0a6bf7184776833c2cb20ff05",
+      "inputPaths": [],
+      "inputEvidenceIds": [],
+      "invariantIds": [
+        "I-NAMEPLATE-AUTHOR",
+        "I-REALM-LADDER-LABELS"
+      ],
+      "claims": [
+        "FE-06 nameplate authored name in MainScene+CombatScene; FE-08 no HUD text inside gourd footprint; FE-17 ceiling note visible at Truc Co"
+      ],
+      "limitations": [
+        "captured on the pre-master-merge branch tree; the merged surfaces' code is unchanged - coexistence re-verified by source inspection in EV-ADVERSARIAL"
+      ],
+      "status": "STALE"
+    },
+    {
+      "kind": "SOURCE_PROOF",
+      "id": "EV-ADVERSARIAL",
+      "state": {
+        "productStateId": "f99322f89cd7be7842677d320d52865620a53380e60ef10aa117ac891287bd6c",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "producer": "coordinator",
+      "startedAt": "2026-09-29T12:40:00Z",
+      "finishedAt": "2026-09-29T13:20:00Z",
+      "commandOrMethod": "9 source-level falsification probes against merged code paths",
+      "cwd": "game",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/adversarial-probes.txt",
+      "artifactHash": "345db68c6e49c132cc73082d890d4d43343bb77c607d407eb5173242ddc8e641",
+      "inputPaths": [],
+      "inputEvidenceIds": [],
+      "invariantIds": [
+        "I-STAT-ZEROBASE-FLAT",
+        "I-BUILDING-ACCRUAL-PIN",
+        "I-OFFLINE-BUFF-SEGMENT",
+        "I-CLOUD-REV-CAS",
+        "I-MERGE-INTEGRITY",
+        "I-NAMEPLATE-AUTHOR"
+      ],
+      "claims": [
+        "shape gate precedes EM-02 segmentation; flat*stacks parity; CAS zero-row path; garbage realm soft fallback; restore idempotency; absent gate member fallback; claim re-pin ordering; merge coexistence; deleted-asset zero references"
+      ],
+      "limitations": [
+        "source proof, not executed reproductions"
+      ],
+      "status": "STALE"
+    },
+    {
+      "kind": "EXECUTED_INTEGRATION",
+      "id": "EV-VERIFY-S4",
+      "state": {
+        "productStateId": "b84d7928774ecbf0d8179a71ef9d8752622ffa98b065c5c61dd714592d71d95f",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "producer": "coordinator",
+      "startedAt": "2026-09-29T14:30:00Z",
+      "finishedAt": "2026-09-29T14:48:00Z",
+      "commandOrMethod": "npm run verify (vue-tsc && vite build && vitest run)",
+      "cwd": "game",
+      "exitCode": 1,
+      "result": "FAIL",
+      "artifactPath": "evidence/verify-s4.txt",
+      "artifactHash": "c0f119aab7d00f0b7690bbe6cd78d3a48ee12cb79526f87dcef9a8ef0bdfd89f",
+      "inputPaths": [],
+      "inputEvidenceIds": [],
+      "invariantIds": [],
+      "claims": [
+        "typecheck clean; build clean; 7117 pass / 4 fail - all 4 pre-existing on master (combatContract oracle, dynamicRegionHost+i18nKeyParity via src/dev/skill-vfx.ts, PlayerPortrait pinia fixture); asciiComments ratchet green"
+      ],
+      "limitations": [
+        "canonical suite remains red on pre-existing master failures"
+      ],
+      "status": "STALE"
+    },
+    {
+      "kind": "EXECUTED_UNIT_STRUCTURAL",
+      "id": "EV-FOCUSED-S4",
+      "state": {
+        "productStateId": "b84d7928774ecbf0d8179a71ef9d8752622ffa98b065c5c61dd714592d71d95f",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "producer": "coordinator",
+      "startedAt": "2026-09-29T14:37:00Z",
+      "finishedAt": "2026-09-29T14:39:00Z",
+      "commandOrMethod": "npx vitest run asciiComments + TalentBuffs.test.ts + touched-scope rerun",
+      "cwd": "game",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/focused-tests-s4.txt",
+      "artifactHash": "31d8fb9053f82e1d33aca26544e1cc4851989ee607c2e62d928dfd07565ad90e",
+      "inputPaths": [],
+      "inputEvidenceIds": [],
+      "invariantIds": [
+        "I-STAT-ZEROBASE-FLAT",
+        "I-BUILDING-ACCRUAL-PIN",
+        "I-OFFLINE-BUFF-SEGMENT",
+        "I-CLOUD-REV-CAS",
+        "I-REALM-LADDER-LABELS"
+      ],
+      "claims": [
+        "ratchet clean; new pin tests green; touched-scope 85/85 green"
+      ],
+      "limitations": [],
+      "status": "STALE"
+    },
+    {
+      "kind": "EXECUTED_RUNTIME",
+      "id": "EV-RUNTIME-S4",
+      "state": {
+        "productStateId": "b84d7928774ecbf0d8179a71ef9d8752622ffa98b065c5c61dd714592d71d95f",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "producer": "coordinator",
+      "startedAt": "2026-09-29T14:45:00Z",
+      "finishedAt": "2026-09-29T14:50:00Z",
+      "commandOrMethod": "Playwright chromium vs vite dev :5608 (verify-fixes.mjs, verify-fe17.mjs, probe-ritual.mjs)",
+      "cwd": "game",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/runtime-checks-s4.txt",
+      "artifactHash": "9db1a2775aadfe5a399376825bf4c67f1ba9e35101bc059f2b237c4fee7548fa",
+      "inputPaths": [],
+      "inputEvidenceIds": [],
+      "invariantIds": [
+        "I-NAMEPLATE-AUTHOR",
+        "I-REALM-LADDER-LABELS"
+      ],
+      "claims": [
+        "FE-06 authored nameplate main+combat; FE-08 gourd footprint clean; FE-17 ceiling note at Truc Co; ritual commit chain verified end-to-end (victory -> entitlement lock -> announcement -> quan_khi panel -> realm advance)"
+      ],
+      "limitations": [
+        "two harness flakes fixed en route (wheel-open + talent-modal single-click) - game flow itself verified healthy via probe-ritual diag"
+      ],
+      "status": "STALE"
+    },
+    {
+      "kind": "EXECUTED_MUTATION",
+      "id": "EV-MUT-S4",
+      "state": {
+        "productStateId": "b84d7928774ecbf0d8179a71ef9d8752622ffa98b065c5c61dd714592d71d95f",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "producer": "coordinator",
+      "startedAt": "2026-09-29T14:09:00Z",
+      "finishedAt": "2026-09-29T14:16:00Z",
+      "commandOrMethod": "5-site in-place mutation campaign, focused vitest per site, git revert verified",
+      "cwd": "game",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/mutation-campaign.txt",
+      "artifactHash": "ab2847ca7594bf9a3412b52302bf662c52c52cfeadac260ef1691051f7a9f5d0",
+      "inputPaths": [],
+      "inputEvidenceIds": [],
+      "invariantIds": [
+        "I-STAT-ZEROBASE-FLAT",
+        "I-BUILDING-ACCRUAL-PIN",
+        "I-OFFLINE-BUFF-SEGMENT",
+        "I-CLOUD-REV-CAS"
+      ],
+      "claims": [
+        "3 mutants killed immediately; 2 survived -> pinned via new tests -> re-killed; all reverts verified clean"
+      ],
+      "limitations": [
+        "in-place transient mutants rather than isolated worktrees"
+      ],
+      "status": "STALE"
+    },
+    {
+      "kind": "SOURCE_PROOF",
+      "id": "EV-ADVERSARIAL-S4",
+      "state": {
+        "productStateId": "b84d7928774ecbf0d8179a71ef9d8752622ffa98b065c5c61dd714592d71d95f",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "producer": "coordinator",
+      "startedAt": "2026-09-29T12:40:00Z",
+      "finishedAt": "2026-09-29T14:50:00Z",
+      "commandOrMethod": "9 falsification probes + tribulation-commit-path re-verification on merged source",
+      "cwd": "game",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/adversarial-probes.txt",
+      "artifactHash": "345db68c6e49c132cc73082d890d4d43343bb77c607d407eb5173242ddc8e641",
+      "inputPaths": [],
+      "inputEvidenceIds": [],
+      "invariantIds": [
+        "I-STAT-ZEROBASE-FLAT",
+        "I-BUILDING-ACCRUAL-PIN",
+        "I-OFFLINE-BUFF-SEGMENT",
+        "I-CLOUD-REV-CAS",
+        "I-MERGE-INTEGRITY",
+        "I-NAMEPLATE-AUTHOR"
+      ],
+      "claims": [
+        "all 9 probes closed; tribulation commit path unchanged by merge (only texture param + read-only getter) - earlier commit failure was harness flake, proven by probe-ritual diag"
+      ],
+      "limitations": [
+        "source-level proof, not executed reproductions"
+      ],
+      "status": "STALE"
+    },
+    {
+      "kind": "EXECUTED_INTEGRATION",
+      "producer": "coordinator",
+      "startedAt": "2026-09-29T15:28:00Z",
+      "finishedAt": "2026-09-29T15:32:00Z",
+      "commandOrMethod": "npm run verify (vue-tsc --build && vite build && vitest run) on post-repair aggregate",
+      "cwd": "game",
+      "exitCode": 1,
+      "result": "FAIL",
+      "artifactPath": "evidence/verify-s7.txt",
+      "artifactHash": "95ea85f8d2bcfa33a5404a486011a214aa7f60074633d806385f1f620a43ad8a",
+      "inputPaths": [],
+      "inputEvidenceIds": [],
+      "invariantIds": [],
+      "claims": [
+        "type-check clean; vite build clean; vitest 7124 pass / 5 expected-fail / 4 fail; all 4 failures byte-identical pre-existing on origin/master; zero branch-caused or repair-caused failures"
+      ],
+      "limitations": [
+        "suite is red only for pre-existing master failures; baseline causality documented in run journal"
+      ],
+      "status": "STALE",
+      "id": "EV-VERIFY-S7",
+      "state": {
+        "productStateId": "0d0921a5ddd9279694539c3c611b37cb8fd01ca217141843fc2f0fd43e5dd85d",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      }
+    },
+    {
+      "kind": "EXECUTED_INTEGRATION",
+      "producer": "coordinator",
+      "startedAt": "2026-09-29T15:00:00Z",
+      "finishedAt": "2026-09-29T15:27:00Z",
+      "commandOrMethod": "npx vitest run on Clean-A repair surface + 6 mutation kills incl. live-runtime merge mutant",
+      "cwd": "game",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/focused-s7.txt",
+      "artifactHash": "a39c435711b7b19d9e5fd6306e5bb8bb83ad1fa02860520f696e2b6e81292102",
+      "inputPaths": [],
+      "inputEvidenceIds": [],
+      "invariantIds": [
+        "I-STAT-ZEROBASE-FLAT",
+        "I-CLOUD-REV-CAS",
+        "I-BUILDING-ACCRUAL-PIN",
+        "I-MERGE-INTEGRITY"
+      ],
+      "claims": [
+        "all repair-surface suites green; per_second cap class pin + id-uniqueness pin + band-release pins + POST header pin + accrualRealmId coherence pins all land",
+        "6 mutants on the repair surface killed (RAMP, HAPLINH, UPSERT, ACCRUAL, DECAY, MERGE)"
+      ],
+      "limitations": [],
+      "status": "STALE",
+      "id": "EV-FOCUSED-S7",
+      "state": {
+        "productStateId": "0d0921a5ddd9279694539c3c611b37cb8fd01ca217141843fc2f0fd43e5dd85d",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      }
+    },
+    {
+      "kind": "EXECUTED_INTEGRATION",
+      "id": "EV-VERIFY-S9",
+      "state": {
+        "productStateId": "b1b1c5ff0d9772d9362be9feac89e052e638f32f3eab4ff545636b52ca42b5b1",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "producer": "coordinator",
+      "startedAt": "2026-09-29T16:22:00Z",
+      "finishedAt": "2026-09-29T16:26:00Z",
+      "commandOrMethod": "npm run verify on final repaired aggregate",
+      "cwd": "game",
+      "exitCode": 1,
+      "result": "FAIL",
+      "artifactPath": "evidence/verify-s9.txt",
+      "artifactHash": "a384c67912e37b3135a7220b3a1d7a506b61a0b9e3e525a9c7723790d97fe2b2",
+      "inputPaths": [],
+      "inputEvidenceIds": [],
+      "invariantIds": [],
+      "claims": [
+        "typecheck+build clean; vitest 7129 pass / 5 expected-fail / 4 fail - all 4 pre-existing on master; zero repair-caused"
+      ],
+      "limitations": [
+        "suite red only on documented pre-existing failures"
+      ],
+      "status": "CURRENT"
+    },
+    {
+      "kind": "EXECUTED_INTEGRATION",
+      "id": "EV-NOVEL-S9",
+      "state": {
+        "productStateId": "b1b1c5ff0d9772d9362be9feac89e052e638f32f3eab4ff545636b52ca42b5b1",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "producer": "coordinator",
+      "startedAt": "2026-09-29T16:15:00Z",
+      "finishedAt": "2026-09-29T16:25:00Z",
+      "commandOrMethod": "band oscillation probes + starter-pin mutant + threshold partition check",
+      "cwd": "game",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/novel-attacks-s9.txt",
+      "artifactHash": "825c439609e9348646f804bd488787541328f7a0a83195ddd854cf8bf1857144",
+      "inputPaths": [
+        "src/core/skill/PassiveSystem.bandOscillation.qa.test.ts"
+      ],
+      "inputEvidenceIds": [],
+      "invariantIds": [
+        "I-STAT-ZEROBASE-FLAT",
+        "I-BUILDING-ACCRUAL-PIN"
+      ],
+      "claims": [
+        "band toggles across 10 oscillations; fraction accumulator preserved; starter-pin mutant killed"
+      ],
+      "limitations": [],
+      "status": "CURRENT"
+    },
+    {
+      "kind": "EXECUTED_INTEGRATION",
+      "id": "EV-VERIFY-S9-SCOPED",
+      "state": {
+        "productStateId": "b1b1c5ff0d9772d9362be9feac89e052e638f32f3eab4ff545636b52ca42b5b1",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "producer": "coordinator",
+      "startedAt": "2026-09-29T16:59:00Z",
+      "finishedAt": "2026-09-29T17:03:00Z",
+      "commandOrMethod": "npx vitest run --exclude 4 files adjudicated REJECTED_WITH_PROOF (F-MG-03/04/05)",
+      "cwd": "game",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/verify-s9-scoped.txt",
+      "artifactHash": "1dcc7b7f3d52fbda1402d3e16d70271ef2c6be8747597c7d5e8c34a7f1b5126c",
+      "inputPaths": [],
+      "inputEvidenceIds": [
+        "EV-VERIFY-S9"
+      ],
+      "invariantIds": [],
+      "claims": [
+        "800 files 7114 tests 0 fail; typecheck+build clean"
+      ],
+      "limitations": [
+        "excludes 4 files whose failures are adjudicated pre-existing on base; unscoped run EV-VERIFY-S9 remains FAIL in ledger"
+      ],
+      "status": "CURRENT"
+    },
+    {
+      "kind": "EXECUTED_RUNTIME",
+      "id": "EV-RUNTIME-S9",
+      "state": {
+        "productStateId": "b1b1c5ff0d9772d9362be9feac89e052e638f32f3eab4ff545636b52ca42b5b1",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "producer": "coordinator",
+      "startedAt": "2026-09-29T17:08:00Z",
+      "finishedAt": "2026-09-29T17:12:00Z",
+      "commandOrMethod": "verify-fixes.mjs + verify-fe17.mjs vs dev server :5608 (Playwright)",
+      "cwd": "game",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/runtime-s9.txt",
+      "artifactHash": "8118308fe33817061e17b5d297e89d2d41da59b89b565ed2c39821a382f2b294",
+      "inputPaths": [
+        "verify-fixes.mjs",
+        "verify-fe17.mjs"
+      ],
+      "inputEvidenceIds": [],
+      "invariantIds": [
+        "I-NAMEPLATE-AUTHOR",
+        "I-REALM-LADDER-LABELS"
+      ],
+      "claims": [
+        "FE-06 nameplate home+combat PASS; FE-08 HUD overlap 0 candidates; FE-17 ritual->qi_refining->ceiling note PASS"
+      ],
+      "limitations": [
+        "local dev server; not a production build"
+      ],
+      "status": "CURRENT"
+    }
+  ],
+  "coverage": [
+    {
+      "id": "COV-STAT-DET",
+      "invariantId": "I-STAT-ZEROBASE-FLAT",
+      "surface": "DETERMINISTIC",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "TalentsV4Wiring + StatCalculator + PlayerStatAssembly tests green",
+      "evidenceIds": [
+        "EV-FOCUSED-S4"
+      ],
+      "reviewerIds": [
+        "coordinator"
+      ],
+      "status": "STALE",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-STAT-STATIC",
+      "invariantId": "I-STAT-ZEROBASE-FLAT",
+      "surface": "STATIC_SEMANTIC",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "flat x stacks parity + clamp chain probed",
+      "evidenceIds": [
+        "EV-ADVERSARIAL-S4"
+      ],
+      "reviewerIds": [
+        "coordinator"
+      ],
+      "status": "STALE",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-STAT-INDEP",
+      "invariantId": "I-STAT-ZEROBASE-FLAT",
+      "surface": "INDEPENDENT_REVIEW",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "awaiting Clean A/B sealed reviews",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": true
+    },
+    {
+      "id": "COV-BLDG-DET",
+      "invariantId": "I-BUILDING-ACCRUAL-PIN",
+      "surface": "DETERMINISTIC",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "BuildingSystem.test.ts EM-01 cases green",
+      "evidenceIds": [
+        "EV-FOCUSED-S4"
+      ],
+      "reviewerIds": [
+        "coordinator"
+      ],
+      "status": "STALE",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-BLDG-STATIC",
+      "invariantId": "I-BUILDING-ACCRUAL-PIN",
+      "surface": "STATIC_SEMANTIC",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "pin ordering + garbage-realm soft fallback probed",
+      "evidenceIds": [
+        "EV-ADVERSARIAL-S4"
+      ],
+      "reviewerIds": [
+        "coordinator"
+      ],
+      "status": "STALE",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-BLDG-INDEP",
+      "invariantId": "I-BUILDING-ACCRUAL-PIN",
+      "surface": "INDEPENDENT_REVIEW",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "awaiting Clean A/B sealed reviews",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": true
+    },
+    {
+      "id": "COV-OFFLINE-DET",
+      "invariantId": "I-OFFLINE-BUFF-SEGMENT",
+      "surface": "DETERMINISTIC",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "segmentation + restore tests green",
+      "evidenceIds": [
+        "EV-FOCUSED-S4"
+      ],
+      "reviewerIds": [
+        "coordinator"
+      ],
+      "status": "STALE",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-OFFLINE-STATIC",
+      "invariantId": "I-OFFLINE-BUFF-SEGMENT",
+      "surface": "STATIC_SEMANTIC",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "shape-gate ordering + idempotency probed",
+      "evidenceIds": [
+        "EV-ADVERSARIAL-S4"
+      ],
+      "reviewerIds": [
+        "coordinator"
+      ],
+      "status": "STALE",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-OFFLINE-INDEP",
+      "invariantId": "I-OFFLINE-BUFF-SEGMENT",
+      "surface": "INDEPENDENT_REVIEW",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "awaiting Clean A/B sealed reviews",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": true
+    },
+    {
+      "id": "COV-CLOUD-DET",
+      "invariantId": "I-CLOUD-REV-CAS",
+      "surface": "DETERMINISTIC",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "SupabaseRemoteSave.test.ts 19 tests incl. CAS race green",
+      "evidenceIds": [
+        "EV-FOCUSED-S4"
+      ],
+      "reviewerIds": [
+        "coordinator"
+      ],
+      "status": "STALE",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-CLOUD-STATIC",
+      "invariantId": "I-CLOUD-REV-CAS",
+      "surface": "STATIC_SEMANTIC",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "CAS path + tie-break + adoption probed",
+      "evidenceIds": [
+        "EV-ADVERSARIAL-S4"
+      ],
+      "reviewerIds": [
+        "coordinator"
+      ],
+      "status": "STALE",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-CLOUD-INDEP",
+      "invariantId": "I-CLOUD-REV-CAS",
+      "surface": "INDEPENDENT_REVIEW",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "awaiting Clean A/B sealed reviews",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": true
+    },
+    {
+      "id": "COV-NAME-STATIC",
+      "invariantId": "I-NAMEPLATE-AUTHOR",
+      "surface": "STATIC_SEMANTIC",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "optional-member fallback + reconcile sync probed",
+      "evidenceIds": [
+        "EV-ADVERSARIAL-S4"
+      ],
+      "reviewerIds": [
+        "coordinator"
+      ],
+      "status": "STALE",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-NAME-E2E",
+      "invariantId": "I-NAMEPLATE-AUTHOR",
+      "surface": "RUNTIME_E2E",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "Playwright nameplate checks green",
+      "evidenceIds": [
+        "EV-RUNTIME-S4"
+      ],
+      "reviewerIds": [
+        "coordinator"
+      ],
+      "status": "STALE",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-NAME-INDEP",
+      "invariantId": "I-NAMEPLATE-AUTHOR",
+      "surface": "INDEPENDENT_REVIEW",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "awaiting Clean A/B sealed reviews",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": true
+    },
+    {
+      "id": "COV-LADDER-DET",
+      "invariantId": "I-REALM-LADDER-LABELS",
+      "surface": "DETERMINISTIC",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "RealmPassiveNodes.test.ts green",
+      "evidenceIds": [
+        "EV-FOCUSED-S4"
+      ],
+      "reviewerIds": [
+        "coordinator"
+      ],
+      "status": "STALE",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-LADDER-STATIC",
+      "invariantId": "I-REALM-LADDER-LABELS",
+      "surface": "STATIC_SEMANTIC",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "label semantics + ReleasePolicy pin reviewed",
+      "evidenceIds": [
+        "EV-ADVERSARIAL-S4"
+      ],
+      "reviewerIds": [
+        "coordinator"
+      ],
+      "status": "STALE",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-LADDER-E2E",
+      "invariantId": "I-REALM-LADDER-LABELS",
+      "surface": "RUNTIME_E2E",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "ceiling note verified live at Truc Co",
+      "evidenceIds": [
+        "EV-RUNTIME-S4"
+      ],
+      "reviewerIds": [
+        "coordinator"
+      ],
+      "status": "STALE",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-LADDER-INDEP",
+      "invariantId": "I-REALM-LADDER-LABELS",
+      "surface": "INDEPENDENT_REVIEW",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "awaiting Clean A/B sealed reviews",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": true
+    },
+    {
+      "id": "COV-MERGE-STATIC",
+      "invariantId": "I-MERGE-INTEGRITY",
+      "surface": "STATIC_SEMANTIC",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "coexistence + deleted-path census probed",
+      "evidenceIds": [
+        "EV-ADVERSARIAL-S4"
+      ],
+      "reviewerIds": [
+        "coordinator"
+      ],
+      "status": "STALE",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-MERGE-DET",
+      "invariantId": "I-MERGE-INTEGRITY",
+      "surface": "DETERMINISTIC",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "typecheck+build green; suite failures all pre-existing",
+      "evidenceIds": [
+        "EV-VERIFY-S4",
+        "EV-FOCUSED-S4"
+      ],
+      "reviewerIds": [
+        "coordinator"
+      ],
+      "status": "STALE",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-MERGE-INDEP",
+      "invariantId": "I-MERGE-INTEGRITY",
+      "surface": "INDEPENDENT_REVIEW",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "awaiting Clean A/B sealed reviews",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": true
+    }
+  ],
+  "attacks": [],
+  "reviews": [
+    {
+      "id": "RV-P1-CORRECTNESS",
+      "state": {
+        "productStateId": "f99322f89cd7be7842677d320d52865620a53380e60ef10aa117ac891287bd6c",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "round": 1,
+      "phase": "CORRECTNESS",
+      "reviewerId": "coordinator",
+      "contextId": "primary-context",
+      "model": "swe-2-max",
+      "role": "COORDINATOR_SELF_REVIEW",
+      "inputBundleHash": "a54b87ca69e944a29c6330274283723260001b8dd81e422a5779ba3e2915c04b",
+      "priorFindingsVisible": true,
+      "accessLimitations": [
+        "same-context review - no independence credit"
+      ],
+      "startedAt": "2026-09-29T13:00:00Z",
+      "sealedAt": "2026-09-29T13:35:00Z",
+      "previousPhaseReviewId": null,
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-VERIFY-MERGED",
+        "EV-FOCUSED",
+        "EV-ADVERSARIAL"
+      ],
+      "findingIds": [
+        "F-MG-01",
+        "F-MG-02"
+      ],
+      "novelAttackIds": [],
+      "status": "STALE"
+    },
+    {
+      "id": "RV-P2-AUTHORITY",
+      "state": {
+        "productStateId": "f99322f89cd7be7842677d320d52865620a53380e60ef10aa117ac891287bd6c",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "round": 1,
+      "phase": "AUTHORITY",
+      "reviewerId": "coordinator",
+      "contextId": "primary-context",
+      "model": "swe-2-max",
+      "role": "COORDINATOR_SELF_REVIEW",
+      "inputBundleHash": "b01825a48733c9685991cefdfb5192bc3a99ffd2a56c761bfadae4e57b9eb5b0",
+      "priorFindingsVisible": true,
+      "accessLimitations": [
+        "same-context review - no independence credit"
+      ],
+      "startedAt": "2026-09-29T13:35:00Z",
+      "sealedAt": "2026-09-29T13:45:00Z",
+      "previousPhaseReviewId": "RV-P1-CORRECTNESS",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-ADVERSARIAL"
+      ],
+      "findingIds": [],
+      "novelAttackIds": [],
+      "status": "STALE"
+    },
+    {
+      "id": "RV-P3-INTEGRATION",
+      "state": {
+        "productStateId": "f99322f89cd7be7842677d320d52865620a53380e60ef10aa117ac891287bd6c",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "round": 1,
+      "phase": "INTEGRATION",
+      "reviewerId": "coordinator",
+      "contextId": "primary-context",
+      "model": "swe-2-max",
+      "role": "COORDINATOR_SELF_REVIEW",
+      "inputBundleHash": "55a736a760fac98ed5bc9e4c0b860eab21252807d21e443faa2a3485d9d72eec",
+      "priorFindingsVisible": true,
+      "accessLimitations": [
+        "same-context review - no independence credit"
+      ],
+      "startedAt": "2026-09-29T13:45:00Z",
+      "sealedAt": "2026-09-29T14:00:00Z",
+      "previousPhaseReviewId": "RV-P2-AUTHORITY",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-ADVERSARIAL",
+        "EV-RUNTIME"
+      ],
+      "findingIds": [
+        "F-MG-03",
+        "F-MG-04",
+        "F-MG-05"
+      ],
+      "novelAttackIds": [],
+      "status": "STALE"
+    },
+    {
+      "id": "RV-S4-P1",
+      "state": {
+        "productStateId": "b84d7928774ecbf0d8179a71ef9d8752622ffa98b065c5c61dd714592d71d95f",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "round": 2,
+      "phase": "CORRECTNESS",
+      "reviewerId": "coordinator",
+      "contextId": "primary-context",
+      "model": "swe-2-max",
+      "role": "COORDINATOR_SELF_REVIEW",
+      "inputBundleHash": "a368f8f3a53744077e980e766c8aaef0dc634b07053f2e50f559994c588702cf",
+      "priorFindingsVisible": true,
+      "accessLimitations": [
+        "same-context review - no independence credit"
+      ],
+      "startedAt": "2026-09-29T14:50:00Z",
+      "sealedAt": "2026-09-29T14:55:00Z",
+      "previousPhaseReviewId": null,
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-VERIFY-S4",
+        "EV-FOCUSED-S4",
+        "EV-MUT-S4"
+      ],
+      "findingIds": [
+        "F-MG-07",
+        "F-MG-08"
+      ],
+      "novelAttackIds": [],
+      "status": "STALE"
+    },
+    {
+      "id": "RV-S4-P2",
+      "state": {
+        "productStateId": "b84d7928774ecbf0d8179a71ef9d8752622ffa98b065c5c61dd714592d71d95f",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "round": 2,
+      "phase": "AUTHORITY",
+      "reviewerId": "coordinator",
+      "contextId": "primary-context",
+      "model": "swe-2-max",
+      "role": "COORDINATOR_SELF_REVIEW",
+      "inputBundleHash": "cb4c03c7e52d7e9208c88b9c536deba0c300fb55ba7bc369cb15431e8eb1855b",
+      "priorFindingsVisible": true,
+      "accessLimitations": [
+        "same-context review - no independence credit"
+      ],
+      "startedAt": "2026-09-29T14:50:00Z",
+      "sealedAt": "2026-09-29T14:55:00Z",
+      "previousPhaseReviewId": "RV-S4-P1",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-ADVERSARIAL-S4"
+      ],
+      "findingIds": [],
+      "novelAttackIds": [],
+      "status": "STALE"
+    },
+    {
+      "id": "RV-S4-P3",
+      "state": {
+        "productStateId": "b84d7928774ecbf0d8179a71ef9d8752622ffa98b065c5c61dd714592d71d95f",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "round": 2,
+      "phase": "INTEGRATION",
+      "reviewerId": "coordinator",
+      "contextId": "primary-context",
+      "model": "swe-2-max",
+      "role": "COORDINATOR_SELF_REVIEW",
+      "inputBundleHash": "ce19d508fd4593a444f2f737322e965c74690fed1fd81026d03eb62ddb54e967",
+      "priorFindingsVisible": true,
+      "accessLimitations": [
+        "same-context review - no independence credit"
+      ],
+      "startedAt": "2026-09-29T14:50:00Z",
+      "sealedAt": "2026-09-29T14:55:00Z",
+      "previousPhaseReviewId": "RV-S4-P2",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-ADVERSARIAL-S4",
+        "EV-RUNTIME-S4"
+      ],
+      "findingIds": [
+        "F-MG-03",
+        "F-MG-04",
+        "F-MG-05"
+      ],
+      "novelAttackIds": [],
+      "status": "STALE"
+    },
+    {
+      "id": "RV-CLEAN-A",
+      "state": {
+        "productStateId": "476ecc92a14df13401d15a036554fb9920fe46451677204df8a0c133ab6146bc",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "round": 1,
+      "phase": "CORRECTNESS",
+      "reviewerId": "clean-a",
+      "contextId": "subagent-clean-a",
+      "model": "swe-2-max",
+      "role": "CLEAN_REVIEW",
+      "inputBundleHash": "d6b541e349c794479ad873ab3554aaa9d47d021e0bd0f1048aca44eaef9fb167",
+      "priorFindingsVisible": false,
+      "accessLimitations": [],
+      "startedAt": "2026-09-29T14:50:00Z",
+      "sealedAt": "2026-09-29T15:00:00Z",
+      "previousPhaseReviewId": null,
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [],
+      "findingIds": [
+        "F-MG-09",
+        "F-MG-10",
+        "F-MG-11",
+        "F-MG-12",
+        "F-MG-13"
+      ],
+      "novelAttackIds": [],
+      "status": "STALE"
+    },
+    {
+      "id": "RV-S7-P1",
+      "state": {
+        "productStateId": "0d0921a5ddd9279694539c3c611b37cb8fd01ca217141843fc2f0fd43e5dd85d",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "round": 2,
+      "phase": "CORRECTNESS",
+      "reviewerId": "coordinator",
+      "contextId": "primary-context",
+      "model": "swe-2-max",
+      "role": "COORDINATOR_SELF_REVIEW",
+      "inputBundleHash": "a39c435711b7b19d9e5fd6306e5bb8bb83ad1fa02860520f696e2b6e81292102",
+      "priorFindingsVisible": true,
+      "accessLimitations": [
+        "same-context review - no independence credit"
+      ],
+      "startedAt": "2026-09-29T15:20:00Z",
+      "sealedAt": "2026-09-29T15:30:00Z",
+      "previousPhaseReviewId": null,
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-VERIFY-S7",
+        "EV-FOCUSED-S7"
+      ],
+      "findingIds": [
+        "F-MG-09",
+        "F-MG-10",
+        "F-MG-11",
+        "F-MG-12",
+        "F-MG-13"
+      ],
+      "novelAttackIds": [],
+      "status": "STALE"
+    },
+    {
+      "id": "RV-S7-P2",
+      "state": {
+        "productStateId": "0d0921a5ddd9279694539c3c611b37cb8fd01ca217141843fc2f0fd43e5dd85d",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "round": 2,
+      "phase": "AUTHORITY",
+      "reviewerId": "coordinator",
+      "contextId": "primary-context",
+      "model": "swe-2-max",
+      "role": "COORDINATOR_SELF_REVIEW",
+      "inputBundleHash": "a39c435711b7b19d9e5fd6306e5bb8bb83ad1fa02860520f696e2b6e81292102",
+      "priorFindingsVisible": true,
+      "accessLimitations": [
+        "same-context review - no independence credit"
+      ],
+      "startedAt": "2026-09-29T15:30:00Z",
+      "sealedAt": "2026-09-29T15:33:00Z",
+      "previousPhaseReviewId": "RV-S7-P1",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-FOCUSED-S7"
+      ],
+      "findingIds": [],
+      "novelAttackIds": [],
+      "status": "STALE"
+    },
+    {
+      "id": "RV-S7-P3",
+      "state": {
+        "productStateId": "0d0921a5ddd9279694539c3c611b37cb8fd01ca217141843fc2f0fd43e5dd85d",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "round": 2,
+      "phase": "INTEGRATION",
+      "reviewerId": "coordinator",
+      "contextId": "primary-context",
+      "model": "swe-2-max",
+      "role": "COORDINATOR_SELF_REVIEW",
+      "inputBundleHash": "a39c435711b7b19d9e5fd6306e5bb8bb83ad1fa02860520f696e2b6e81292102",
+      "priorFindingsVisible": true,
+      "accessLimitations": [
+        "same-context review - no independence credit"
+      ],
+      "startedAt": "2026-09-29T15:33:00Z",
+      "sealedAt": "2026-09-29T15:37:00Z",
+      "previousPhaseReviewId": "RV-S7-P2",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-VERIFY-S7",
+        "EV-FOCUSED-S7"
+      ],
+      "findingIds": [],
+      "novelAttackIds": [],
+      "status": "STALE"
+    },
+    {
+      "id": "RV-CLEAN-A2",
+      "state": {
+        "productStateId": "0d0921a5ddd9279694539c3c611b37cb8fd01ca217141843fc2f0fd43e5dd85d",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "round": 2,
+      "phase": "CORRECTNESS",
+      "reviewerId": "clean-a2",
+      "contextId": "subagent-clean-a2",
+      "model": "swe-2-max",
+      "role": "CLEAN_REVIEW",
+      "inputBundleHash": "f7895882cf5398a009aca5bc62284c972e5a842c8f4a4d1ee140cc7b3c70a012",
+      "priorFindingsVisible": false,
+      "accessLimitations": [],
+      "startedAt": "2026-09-29T15:45:00Z",
+      "sealedAt": "2026-09-29T16:05:00Z",
+      "previousPhaseReviewId": null,
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [],
+      "findingIds": [
+        "F-MG-14",
+        "F-MG-15",
+        "F-MG-16",
+        "F-MG-17"
+      ],
+      "novelAttackIds": [],
+      "status": "STALE"
+    },
+    {
+      "id": "RV-S9-P1",
+      "state": {
+        "productStateId": "b1b1c5ff0d9772d9362be9feac89e052e638f32f3eab4ff545636b52ca42b5b1",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "round": 3,
+      "phase": "CORRECTNESS",
+      "reviewerId": "coordinator",
+      "contextId": "primary-context",
+      "model": "swe-2-max",
+      "role": "COORDINATOR_SELF_REVIEW",
+      "inputBundleHash": "a384c67912e37b3135a7220b3a1d7a506b61a0b9e3e525a9c7723790d97fe2b2",
+      "priorFindingsVisible": true,
+      "accessLimitations": [
+        "same-context review - no independence credit"
+      ],
+      "startedAt": "2026-09-29T16:28:00Z",
+      "sealedAt": "2026-09-29T16:31:00Z",
+      "previousPhaseReviewId": null,
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-VERIFY-S9",
+        "EV-NOVEL-S9"
+      ],
+      "findingIds": [
+        "F-MG-14",
+        "F-MG-15",
+        "F-MG-17"
+      ],
+      "novelAttackIds": [],
+      "status": "SEALED"
+    },
+    {
+      "id": "RV-S9-P2",
+      "state": {
+        "productStateId": "b1b1c5ff0d9772d9362be9feac89e052e638f32f3eab4ff545636b52ca42b5b1",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "round": 3,
+      "phase": "AUTHORITY",
+      "reviewerId": "coordinator",
+      "contextId": "primary-context",
+      "model": "swe-2-max",
+      "role": "COORDINATOR_SELF_REVIEW",
+      "inputBundleHash": "a384c67912e37b3135a7220b3a1d7a506b61a0b9e3e525a9c7723790d97fe2b2",
+      "priorFindingsVisible": true,
+      "accessLimitations": [
+        "same-context review - no independence credit"
+      ],
+      "startedAt": "2026-09-29T16:31:00Z",
+      "sealedAt": "2026-09-29T16:33:00Z",
+      "previousPhaseReviewId": "RV-S9-P1",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-NOVEL-S9"
+      ],
+      "findingIds": [],
+      "novelAttackIds": [],
+      "status": "SEALED"
+    },
+    {
+      "id": "RV-S9-P3",
+      "state": {
+        "productStateId": "b1b1c5ff0d9772d9362be9feac89e052e638f32f3eab4ff545636b52ca42b5b1",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "round": 3,
+      "phase": "INTEGRATION",
+      "reviewerId": "coordinator",
+      "contextId": "primary-context",
+      "model": "swe-2-max",
+      "role": "COORDINATOR_SELF_REVIEW",
+      "inputBundleHash": "a384c67912e37b3135a7220b3a1d7a506b61a0b9e3e525a9c7723790d97fe2b2",
+      "priorFindingsVisible": true,
+      "accessLimitations": [
+        "same-context review - no independence credit"
+      ],
+      "startedAt": "2026-09-29T16:33:00Z",
+      "sealedAt": "2026-09-29T16:35:00Z",
+      "previousPhaseReviewId": "RV-S9-P2",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-VERIFY-S9",
+        "EV-NOVEL-S9"
+      ],
+      "findingIds": [],
+      "novelAttackIds": [],
+      "status": "SEALED"
+    },
+    {
+      "id": "RV-CLEAN-B1",
+      "state": {
+        "productStateId": "b1b1c5ff0d9772d9362be9feac89e052e638f32f3eab4ff545636b52ca42b5b1",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "round": 4,
+      "phase": "CORRECTNESS",
+      "reviewerId": "subagent-clean-b1",
+      "contextId": "subagent-clean-b1-explore",
+      "model": "swe-2-max",
+      "role": "CLEAN_REVIEW",
+      "inputBundleHash": "e0a15137abc05d22bcf6af25ec24a4d340f25eae07f4f18d6fe6f58df3a885e2",
+      "priorFindingsVisible": false,
+      "accessLimitations": [
+        "no exec tool in review context - source inspection only; could not produce Confirmed-class evidence or enumerate the git index"
+      ],
+      "startedAt": "2026-09-29T16:40:00Z",
+      "sealedAt": "2026-09-29T17:05:00Z",
+      "previousPhaseReviewId": null,
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [],
+      "findingIds": [],
+      "novelAttackIds": [],
+      "status": "SEALED"
+    },
+    {
+      "id": "RV-TERMINAL-B1",
+      "state": {
+        "productStateId": "b1b1c5ff0d9772d9362be9feac89e052e638f32f3eab4ff545636b52ca42b5b1",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "round": 4,
+      "phase": "TERMINAL_CHECK",
+      "reviewerId": "subagent-clean-b1",
+      "contextId": "subagent-clean-b1-explore",
+      "model": "swe-2-max",
+      "role": "TERMINAL_VERIFIER",
+      "inputBundleHash": "e0a15137abc05d22bcf6af25ec24a4d340f25eae07f4f18d6fe6f58df3a885e2",
+      "priorFindingsVisible": false,
+      "accessLimitations": [
+        "no exec tool - source inspection only"
+      ],
+      "startedAt": "2026-09-29T16:55:00Z",
+      "sealedAt": "2026-09-29T17:05:00Z",
+      "previousPhaseReviewId": null,
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [],
+      "findingIds": [],
+      "novelAttackIds": [],
+      "status": "SEALED"
+    }
+  ],
+  "cycles": [
+    {
+      "id": "CYC-P5-1",
+      "state": {
+        "productStateId": "f99322f89cd7be7842677d320d52865620a53380e60ef10aa117ac891287bd6c",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "reviewIds": [
+        "RV-P1-CORRECTNESS",
+        "RV-P2-AUTHORITY",
+        "RV-P3-INTEGRATION"
+      ],
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-VERIFY-MERGED",
+        "EV-FOCUSED",
+        "EV-RUNTIME",
+        "EV-ADVERSARIAL"
+      ],
+      "noveltyEvidenceIds": [],
+      "startedAt": "2026-09-29T13:00:00Z",
+      "finishedAt": "2026-09-29T14:00:00Z",
+      "status": "STALE"
+    },
+    {
+      "id": "CYC-P5-2",
+      "state": {
+        "productStateId": "b84d7928774ecbf0d8179a71ef9d8752622ffa98b065c5c61dd714592d71d95f",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "reviewIds": [
+        "RV-S4-P1",
+        "RV-S4-P2",
+        "RV-S4-P3"
+      ],
+      "coverageIds": [
+        "COV-STAT-DET",
+        "COV-STAT-STATIC",
+        "COV-STAT-INDEP",
+        "COV-BLDG-DET",
+        "COV-BLDG-STATIC",
+        "COV-BLDG-INDEP",
+        "COV-OFFLINE-DET",
+        "COV-OFFLINE-STATIC",
+        "COV-OFFLINE-INDEP",
+        "COV-CLOUD-DET",
+        "COV-CLOUD-STATIC",
+        "COV-CLOUD-INDEP",
+        "COV-NAME-STATIC",
+        "COV-NAME-E2E",
+        "COV-NAME-INDEP",
+        "COV-LADDER-DET",
+        "COV-LADDER-STATIC",
+        "COV-LADDER-E2E",
+        "COV-LADDER-INDEP",
+        "COV-MERGE-STATIC",
+        "COV-MERGE-DET",
+        "COV-MERGE-INDEP"
+      ],
+      "evidenceIds": [
+        "EV-VERIFY-S4",
+        "EV-FOCUSED-S4",
+        "EV-RUNTIME-S4",
+        "EV-MUT-S4",
+        "EV-ADVERSARIAL-S4"
+      ],
+      "noveltyEvidenceIds": [
+        "EV-MUT-S4"
+      ],
+      "startedAt": "2026-09-29T14:50:00Z",
+      "finishedAt": "2026-09-29T14:55:00Z",
+      "status": "STALE"
+    },
+    {
+      "id": "CYC-P5-3",
+      "state": {
+        "productStateId": "0d0921a5ddd9279694539c3c611b37cb8fd01ca217141843fc2f0fd43e5dd85d",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "reviewIds": [
+        "RV-S7-P1",
+        "RV-S7-P2",
+        "RV-S7-P3"
+      ],
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-VERIFY-S7",
+        "EV-FOCUSED-S7"
+      ],
+      "noveltyEvidenceIds": [],
+      "startedAt": "2026-09-29T15:20:00Z",
+      "finishedAt": "2026-09-29T15:37:00Z",
+      "status": "STALE"
+    },
+    {
+      "id": "CYC-P5-4",
+      "state": {
+        "productStateId": "b1b1c5ff0d9772d9362be9feac89e052e638f32f3eab4ff545636b52ca42b5b1",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "reviewIds": [
+        "RV-S9-P1",
+        "RV-S9-P2",
+        "RV-S9-P3"
+      ],
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-VERIFY-S9",
+        "EV-NOVEL-S9"
+      ],
+      "noveltyEvidenceIds": [
+        "EV-NOVEL-S9"
+      ],
+      "startedAt": "2026-09-29T16:28:00Z",
+      "finishedAt": "2026-09-29T16:35:00Z",
+      "status": "CLEAN"
+    },
+    {
+      "id": "CYC-CLEAN-B-ATTEMPT",
+      "state": {
+        "productStateId": "b1b1c5ff0d9772d9362be9feac89e052e638f32f3eab4ff545636b52ca42b5b1",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "reviewIds": [
+        "RV-CLEAN-B1",
+        "RV-TERMINAL-B1"
+      ],
+      "coverageIds": [],
+      "evidenceIds": [],
+      "noveltyEvidenceIds": [],
+      "startedAt": "2026-09-29T16:40:00Z",
+      "finishedAt": "2026-09-29T17:05:00Z",
+      "status": "INCOMPLETE"
+    }
+  ],
+  "mutations": [
+    {
+      "id": "MUT-STAT-ZB-1",
+      "candidateState": {
+        "productStateId": "b84d7928774ecbf0d8179a71ef9d8752622ffa98b065c5c61dd714592d71d95f",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "invariantIds": [
+        "I-STAT-ZEROBASE-FLAT"
+      ],
+      "rootClass": "channel-dead-value",
+      "operator": "flat->percent on finalDamageReductionPercent (TalentBuffs)",
+      "isolationPath": "in-place + revert (git checkout)",
+      "mutantHash": "fa3bd26d1a84fa67ee8303bb93d02e0f1f61be377674d3139d53a1a1465c380d",
+      "expectedDetector": "TalentBuffs.test.ts (added during run)",
+      "result": "KILLED_EXPECTED",
+      "evidenceIds": [
+        "EV-MUT-S4"
+      ],
+      "equivalenceReason": "first run SURVIVED (no detector on buff channel) -> coverage gap F-MG-07 -> pin test added -> re-run killed",
+      "candidateUnchanged": true
+    },
+    {
+      "id": "MUT-BLDG-CLAIM-1",
+      "candidateState": {
+        "productStateId": "b84d7928774ecbf0d8179a71ef9d8752622ffa98b065c5c61dd714592d71d95f",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "invariantIds": [
+        "I-BUILDING-ACCRUAL-PIN"
+      ],
+      "rootClass": "accrual-repricing",
+      "operator": "drop pin in claim() (accrualRealmId ?? currentRealmId -> currentRealmId)",
+      "isolationPath": "in-place + revert (git checkout)",
+      "mutantHash": "13be9acee8e84a6cb370d0fd7f6da4f09fa3a0022b0b2574806599804bd3e102",
+      "expectedDetector": "BuildingSystem.test.ts EM-01 carry assertion (added during run)",
+      "result": "KILLED_EXPECTED",
+      "evidenceIds": [
+        "EV-MUT-S4"
+      ],
+      "equivalenceReason": "first run SURVIVED (claim-path pin feeds rate-carry + materialId, unasserted) -> F-MG-08 -> pin assertion added -> re-run killed",
+      "candidateUnchanged": true
+    },
+    {
+      "id": "MUT-BLDG-STORED-1",
+      "candidateState": {
+        "productStateId": "b84d7928774ecbf0d8179a71ef9d8752622ffa98b065c5c61dd714592d71d95f",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "invariantIds": [
+        "I-BUILDING-ACCRUAL-PIN"
+      ],
+      "rootClass": "accrual-repricing",
+      "operator": "drop pin in getStoredAmount (?? realmId -> realmId)",
+      "isolationPath": "in-place + revert (git checkout)",
+      "mutantHash": "7a7bcf6c7ab48032b5b960de2b72e4165d9260f4e4bae22ed5730c5345c5245e",
+      "expectedDetector": "BuildingSystem.test.ts EM-01 amount assertion",
+      "result": "KILLED_EXPECTED",
+      "evidenceIds": [
+        "EV-MUT-S4"
+      ],
+      "equivalenceReason": null,
+      "candidateUnchanged": true
+    },
+    {
+      "id": "MUT-OFFLINE-SEG-1",
+      "candidateState": {
+        "productStateId": "b84d7928774ecbf0d8179a71ef9d8752622ffa98b065c5c61dd714592d71d95f",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "invariantIds": [
+        "I-OFFLINE-BUFF-SEGMENT"
+      ],
+      "rootClass": "offline-snapshot-rate",
+      "operator": "revert segmented reduce to snapshot-rate x whole window",
+      "isolationPath": "in-place + revert (git checkout)",
+      "mutantHash": "67831a6270de32dd653ff9b7d445548e690cfae483338144dc690b280b9a0791",
+      "expectedDetector": "player.restoreFromSave.test.ts EM-02 case",
+      "result": "KILLED_EXPECTED",
+      "evidenceIds": [
+        "EV-MUT-S4"
+      ],
+      "equivalenceReason": null,
+      "candidateUnchanged": true
+    },
+    {
+      "id": "MUT-CLOUD-CAS-1",
+      "candidateState": {
+        "productStateId": "b84d7928774ecbf0d8179a71ef9d8752622ffa98b065c5c61dd714592d71d95f",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "invariantIds": [
+        "I-CLOUD-REV-CAS"
+      ],
+      "rootClass": "cas-guard-drop",
+      "operator": "remove save_revision=eq guard from PATCH url",
+      "isolationPath": "in-place + revert (git checkout)",
+      "mutantHash": "343448fe45c4fffc0fc319e5330c6a439f73ffdebfd15247069036b035e6dea8",
+      "expectedDetector": "SupabaseRemoteSave.test.ts CAS assertions",
+      "result": "KILLED_EXPECTED",
+      "evidenceIds": [
+        "EV-MUT-S4"
+      ],
+      "equivalenceReason": null,
+      "candidateUnchanged": true
+    },
+    {
+      "id": "MUT-RAMP-1",
+      "candidateState": {
+        "productStateId": "a11c36fd5839ee08f1d7d81bad4be9874983fa0ac82dd57c188f8d43a5ce3553",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "invariantIds": [
+        "I-STAT-ZEROBASE-FLAT"
+      ],
+      "rootClass": "unbounded-accumulation",
+      "operator": "maxStacks:1 -> undefined on can_than legs (restores runaway ramp)",
+      "isolationPath": "in-place edit + revert",
+      "mutantHash": "0758362feded49733ceff4dbabd844dc178295c16688c4e603bdfcf8bf72dbf3",
+      "expectedDetector": "TalentBuffs.test.ts per_second maxStacks class pin + TalentsV4Wiring can_than assertions",
+      "result": "KILLED_EXPECTED",
+      "evidenceIds": [],
+      "equivalenceReason": "2 tests failed as designed (class pin + wiring oracle)",
+      "candidateUnchanged": true
+    },
+    {
+      "id": "MUT-HAPLINH-1",
+      "candidateState": {
+        "productStateId": "a11c36fd5839ee08f1d7d81bad4be9874983fa0ac82dd57c188f8d43a5ce3553",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "invariantIds": [
+        "I-STAT-ZEROBASE-FLAT"
+      ],
+      "rootClass": "unbounded-accumulation",
+      "operator": "stat('leechPercent',1.5,1) -> stat('leechPercent',1.5) uncapped",
+      "isolationPath": "in-place edit + revert",
+      "mutantHash": "facaf89ce5449765cb5a385e5dc39ec66fdfec86c943b63e882fbd131694a548",
+      "expectedDetector": "TalentBuffs.test.ts class pin + TalentsV4Wiring hap_linh maxStacks assertion",
+      "result": "KILLED_EXPECTED",
+      "evidenceIds": [],
+      "equivalenceReason": "2 tests failed as designed",
+      "candidateUnchanged": true
+    },
+    {
+      "id": "MUT-UPSERT-1",
+      "candidateState": {
+        "productStateId": "a11c36fd5839ee08f1d7d81bad4be9874983fa0ac82dd57c188f8d43a5ce3553",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "invariantIds": [
+        "I-CLOUD-REV-CAS"
+      ],
+      "rootClass": "stale-contract-header",
+      "operator": "re-add Prefer: resolution=merge-duplicates to first-push POST",
+      "isolationPath": "in-place edit + revert",
+      "mutantHash": "9bf90fecb38090aa8e943cd2be12fb2b8347c5e3775458b315193e64bc3345d5",
+      "expectedDetector": "SupabaseRemoteSave.test.ts POST header pin (added during repair)",
+      "result": "KILLED_EXPECTED",
+      "evidenceIds": [],
+      "equivalenceReason": "new header assertion fails as designed",
+      "candidateUnchanged": true
+    },
+    {
+      "id": "MUT-ACCRUAL-1",
+      "candidateState": {
+        "productStateId": "a11c36fd5839ee08f1d7d81bad4be9874983fa0ac82dd57c188f8d43a5ce3553",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "invariantIds": [
+        "I-BUILDING-ACCRUAL-PIN"
+      ],
+      "rootClass": "acceptance-gap",
+      "operator": "getRealmIndex(...) < 0 -> < -99 (accept any realm id)",
+      "isolationPath": "in-place edit + revert",
+      "mutantHash": "731698e298f3b4f119f2060894ad85597eed76b20a76c1655ffe6eb16831279c",
+      "expectedDetector": "saveAcceptance.test.ts accrualRealmId coherence pins (added during repair)",
+      "result": "KILLED_EXPECTED",
+      "evidenceIds": [],
+      "equivalenceReason": "unknown-realm reject test fails as designed",
+      "candidateUnchanged": true
+    },
+    {
+      "id": "MUT-DECAY-1",
+      "candidateState": {
+        "productStateId": "0d0921a5ddd9279694539c3c611b37cb8fd01ca217141843fc2f0fd43e5dd85d",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "invariantIds": [
+        "I-STAT-ZEROBASE-FLAT"
+      ],
+      "rootClass": "latched-condition",
+      "operator": "remove the condition-false stack-release block in PassiveSystem.tick (restores battle-long latch)",
+      "isolationPath": "in-place edit + revert",
+      "mutantHash": "ec5c1c19ce76b0f8879ea9ac769212c5ba4c8461387986a7088f7fbf79e0f25d",
+      "expectedDetector": "PassiveSystem.talentv4.test.ts band-release pins",
+      "result": "KILLED_EXPECTED",
+      "evidenceIds": [
+        "EV-FOCUSED-S7"
+      ],
+      "equivalenceReason": "both band-release tests fail as designed",
+      "candidateUnchanged": true
+    },
+    {
+      "id": "MUT-MERGE-1",
+      "candidateState": {
+        "productStateId": "0d0921a5ddd9279694539c3c611b37cb8fd01ca217141843fc2f0fd43e5dd85d",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "invariantIds": [
+        "I-MERGE-INTEGRITY"
+      ],
+      "rootClass": "merge-drop",
+      "operator": "drop getActivePlayerName call site in MainScene nameplate (falls back to 'Player')",
+      "isolationPath": "in-place edit + revert",
+      "mutantHash": "95c8e570349c5c85917485078c6ee325c51d2301d5060b1f7057e70fa71f2e1f",
+      "expectedDetector": "runtime FE-06 nameplate check (Playwright, authored name visible in scene texts)",
+      "result": "KILLED_EXPECTED",
+      "evidenceIds": [
+        "EV-FOCUSED-S7"
+      ],
+      "equivalenceReason": "mutant shows NAME_MISSING (label 'Player' only); reverted state shows NAME_SHOWN ('Nghiep Chung'); durable static pin added at tests/architecture/playerNameplate.test.ts",
+      "candidateUnchanged": true
+    },
+    {
+      "id": "MUT-STARTER-PIN-1",
+      "candidateState": {
+        "productStateId": "54dd7b82d50114031500ad9243cd99f5de1e6fcf8cd3312d1c24ff80754defd9",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "invariantIds": [
+        "I-BUILDING-ACCRUAL-PIN"
+      ],
+      "rootClass": "migration-miss",
+      "operator": "remove accrualRealmId from the App.vue starter grant (restores unpinned window)",
+      "isolationPath": "in-place edit + revert",
+      "mutantHash": "d3fb968d81e3ce7020cdcbb876fa06820a6e7b95cee9367472b0f33949c8d271",
+      "expectedDetector": "tests/architecture/buildingAccrualPin.test.ts (every buildingManager.add site pins)",
+      "result": "KILLED_EXPECTED",
+      "evidenceIds": [],
+      "equivalenceReason": "arch pin fails with '1 add call but 0 pins' as designed",
+      "candidateUnchanged": true
+    }
+  ],
+  "corpus": [],
+  "lessons": [],
+  "messages": [],
+  "events": [
+    {
+      "seq": 1,
+      "at": "2026-09-29T06:47:55.835Z",
+      "kind": "PHASE",
+      "actor": "coordinator-pr51",
+      "state": {
+        "productStateId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567",
+        "contractId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567",
+        "attackModelId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567",
+        "environmentId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567"
+      },
+      "previousEventHash": null,
+      "payloadPath": "events/0001.json",
+      "payloadHash": "fd7f50d89af26120f3ac4c2b4a9af4de558eb4dc83779c526ee6b08da8dd49ae",
+      "eventHash": "f80d4223f2630ced88532c81103ba865bdc4e256425bb22d93ed2f98490f9358"
+    },
+    {
+      "seq": 2,
+      "at": "2026-09-29T06:52:10.348Z",
+      "kind": "SNAPSHOT",
+      "actor": "coordinator-pr51",
+      "state": {
+        "productStateId": "e1519f5128f2d0fe4eb110bd6c03b7650cb1911df7b66606dcc6bddc8dbeb962",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+      },
+      "previousEventHash": "f80d4223f2630ced88532c81103ba865bdc4e256425bb22d93ed2f98490f9358",
+      "payloadPath": "events/0002.json",
+      "payloadHash": "0f554c60fa65d1e0333084d58709e5535608467383be2cbe543a39c481bf7e1f",
+      "eventHash": "d0657f2ac50adbf73fd1cc32207bd1c061683d4d3e3797375bc06acb34c6b949"
+    },
+    {
+      "seq": 3,
+      "at": "2026-09-29T06:53:38.482Z",
+      "kind": "SNAPSHOT",
+      "actor": "coordinator-pr51",
+      "state": {
+        "productStateId": "d3ce3581c04cbdc4c6b28fac9434a2a7df67d3c99da7231b47cdc5faeab988c4",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "previousEventHash": "d0657f2ac50adbf73fd1cc32207bd1c061683d4d3e3797375bc06acb34c6b949",
+      "payloadPath": "events/0003.json",
+      "payloadHash": "e4b5e83293521974c7a6e3b0fd560d491c3f8cbdd7f412b08b87855112897c23",
+      "eventHash": "0e9af3439318df4391fd970e9f3f0809f98b8ea35cc72ec9d58860b3a7a501ee"
+    },
+    {
+      "seq": 4,
+      "at": "2026-09-29T06:55:34.710Z",
+      "kind": "SNAPSHOT",
+      "actor": "coordinator-pr51",
+      "state": {
+        "productStateId": "f99322f89cd7be7842677d320d52865620a53380e60ef10aa117ac891287bd6c",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "previousEventHash": "0e9af3439318df4391fd970e9f3f0809f98b8ea35cc72ec9d58860b3a7a501ee",
+      "payloadPath": "events/0004.json",
+      "payloadHash": "21a01c4603a359d3fad629758c7ff005a22b269e4d697836791e30aa84f065a3",
+      "eventHash": "3b6bdb9371280b53c3225607797abf75ea1ec327c0ba3b4bc1a5297f7197bafc"
+    },
+    {
+      "seq": 5,
+      "at": "2026-09-29T07:09:08.063Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-pr51",
+      "state": {
+        "productStateId": "f99322f89cd7be7842677d320d52865620a53380e60ef10aa117ac891287bd6c",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "previousEventHash": "3b6bdb9371280b53c3225607797abf75ea1ec327c0ba3b4bc1a5297f7197bafc",
+      "payloadPath": "events/0005.json",
+      "payloadHash": "bc76f4c1b28ecd8ad906a8e3f7a15fe7b9f2fe6878f1b6ed2074ddb9343ab0a4",
+      "eventHash": "84077f4e2e29b7c7c7b5b2dd5157b1847575d83a454868ef19efc5f8dc3df53e"
+    },
+    {
+      "seq": 6,
+      "at": "2026-09-29T07:18:47.707Z",
+      "kind": "SNAPSHOT",
+      "actor": "coordinator-pr51",
+      "state": {
+        "productStateId": "476ecc92a14df13401d15a036554fb9920fe46451677204df8a0c133ab6146bc",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "previousEventHash": "84077f4e2e29b7c7c7b5b2dd5157b1847575d83a454868ef19efc5f8dc3df53e",
+      "payloadPath": "events/0006.json",
+      "payloadHash": "ea24eb1b5656a53ab23bc2098bae3e06c8761c11fdf839df698a20bc4f0f5543",
+      "eventHash": "7edce510b1cc0d4f6b3875f2d53035c5e6f22d970c004e20810ee1f5a81dc6c7"
+    },
+    {
+      "seq": 7,
+      "at": "2026-09-29T07:20:16.128Z",
+      "kind": "SCHEDULE",
+      "actor": "coordinator-pr51",
+      "state": {
+        "productStateId": "476ecc92a14df13401d15a036554fb9920fe46451677204df8a0c133ab6146bc",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "previousEventHash": "7edce510b1cc0d4f6b3875f2d53035c5e6f22d970c004e20810ee1f5a81dc6c7",
+      "payloadPath": "events/0007.json",
+      "payloadHash": "2f801a8d4f2d45b345f7c75d7afdaf0aa8ca672ed8b43522445190ec5d0f80a1",
+      "eventHash": "a4d980a0d7860e1cd082366b922ddd968315787be04492f36615903ce411ed7c"
+    },
+    {
+      "seq": 8,
+      "at": "2026-09-29T07:24:05.669Z",
+      "kind": "SNAPSHOT",
+      "actor": "coordinator-pr51",
+      "state": {
+        "productStateId": "ebe1892f1ea8a9fb9ee985bd5b27ea08a4784089e74c2e741b28033461daaf05",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "previousEventHash": "a4d980a0d7860e1cd082366b922ddd968315787be04492f36615903ce411ed7c",
+      "payloadPath": "events/0008.json",
+      "payloadHash": "d8afee76f680ec8c4190e0ea2926b87de452f3956efe18bc2a0f9bda34bbfd92",
+      "eventHash": "4a4a29145cb353515fe74cc6d68d0a0fb4e96ac9d97ffaaf3d6a91db79bab112"
+    },
+    {
+      "seq": 9,
+      "at": "2026-09-29T07:41:33.683Z",
+      "kind": "SNAPSHOT",
+      "actor": "coordinator-pr51",
+      "state": {
+        "productStateId": "6abff612aa457e0956e1c2981ca0e13bd5809830a6532118ef5305d78aedb205",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "previousEventHash": "4a4a29145cb353515fe74cc6d68d0a0fb4e96ac9d97ffaaf3d6a91db79bab112",
+      "payloadPath": "events/0009.json",
+      "payloadHash": "361755f42cc4dc0be0f5f89e1e15054d73c0ae31fc10fc39f46bd9a2fd715186",
+      "eventHash": "0d9009aba716374f5c9c8b7d2a368718d8581003ba4ef6a9b4eabfb84f124699"
+    },
+    {
+      "seq": 10,
+      "at": "2026-09-29T07:49:45.979Z",
+      "kind": "SNAPSHOT",
+      "actor": "coordinator-pr51",
+      "state": {
+        "productStateId": "b84d7928774ecbf0d8179a71ef9d8752622ffa98b065c5c61dd714592d71d95f",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "previousEventHash": "0d9009aba716374f5c9c8b7d2a368718d8581003ba4ef6a9b4eabfb84f124699",
+      "payloadPath": "events/0010.json",
+      "payloadHash": "4e65ff434ba1406c16470e67fa781f92971a954581805c5fab6cb650ff907fbe",
+      "eventHash": "21fe7f8ab19af42b2cd35fe70a899568ec21e88f5eebec24d528f9471d515198"
+    },
+    {
+      "seq": 11,
+      "at": "2026-09-29T07:53:19.491Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-pr51",
+      "state": {
+        "productStateId": "b84d7928774ecbf0d8179a71ef9d8752622ffa98b065c5c61dd714592d71d95f",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "previousEventHash": "21fe7f8ab19af42b2cd35fe70a899568ec21e88f5eebec24d528f9471d515198",
+      "payloadPath": "events/0011.json",
+      "payloadHash": "877bd39bec58f55a945195c66e6f23c5f652cd4cb0f96111d4ac10da6a170331",
+      "eventHash": "2866db9c786c3e01aad671a271ba4ac391bc3107f468ccc8afdef7361a2b9b61"
+    },
+    {
+      "seq": 12,
+      "at": "2026-09-29T07:54:21.810Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-pr51",
+      "state": {
+        "productStateId": "b84d7928774ecbf0d8179a71ef9d8752622ffa98b065c5c61dd714592d71d95f",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "previousEventHash": "2866db9c786c3e01aad671a271ba4ac391bc3107f468ccc8afdef7361a2b9b61",
+      "payloadPath": "events/0012.json",
+      "payloadHash": "0264658f2426be95c703a178a3ee0547454e782a8d2fab6cd062a9ab149b85c8",
+      "eventHash": "4c0b2c0d0b95b7ba1d4c0ace025bc4473d46436275e3cfcbbf38823a5b0c59dc"
+    },
+    {
+      "seq": 13,
+      "at": "2026-09-29T08:11:37.060Z",
+      "kind": "SNAPSHOT",
+      "actor": "coordinator-pr51",
+      "state": {
+        "productStateId": "a11c36fd5839ee08f1d7d81bad4be9874983fa0ac82dd57c188f8d43a5ce3553",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "previousEventHash": "4c0b2c0d0b95b7ba1d4c0ace025bc4473d46436275e3cfcbbf38823a5b0c59dc",
+      "payloadPath": "events/0013.json",
+      "payloadHash": "e773ee520c573a568b0cab48eb6d53d60338195fde4d09bf740d30140983729e",
+      "eventHash": "044a78c3e6dd0c3f2ddf2953197958716b4c79f9e29cb475736d2fbff111bcdc"
+    },
+    {
+      "seq": 14,
+      "at": "2026-09-29T08:14:35.453Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-pr51",
+      "state": {
+        "productStateId": "a11c36fd5839ee08f1d7d81bad4be9874983fa0ac82dd57c188f8d43a5ce3553",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "previousEventHash": "044a78c3e6dd0c3f2ddf2953197958716b4c79f9e29cb475736d2fbff111bcdc",
+      "payloadPath": "events/0014.json",
+      "payloadHash": "270c6312ad7b6bb8a5a46047176aa3a734a00c111dd9174318e36b3cc15b741d",
+      "eventHash": "de3b1db8bf4a415919b5a1f0a096740729fae5947b72cc09faf949b6f9c0c395"
+    },
+    {
+      "seq": 15,
+      "at": "2026-09-29T08:26:21.584Z",
+      "kind": "SNAPSHOT",
+      "actor": "coordinator-pr51",
+      "state": {
+        "productStateId": "2d160781069a58b666aeb2fb0a8d6e4a6989e9d1cdec84bf6b4fb5991962b3e3",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "previousEventHash": "de3b1db8bf4a415919b5a1f0a096740729fae5947b72cc09faf949b6f9c0c395",
+      "payloadPath": "events/0015.json",
+      "payloadHash": "22c1f3187f8737c823d278e2e1144d557bd73b3506dae2d064248f933b6db5ca",
+      "eventHash": "86eb0416be5b12ffa6745a590220c7fb4baf2733717ffc551361167338f6c861"
+    },
+    {
+      "seq": 16,
+      "at": "2026-09-29T08:33:45.057Z",
+      "kind": "SNAPSHOT",
+      "actor": "coordinator-pr51",
+      "state": {
+        "productStateId": "0d0921a5ddd9279694539c3c611b37cb8fd01ca217141843fc2f0fd43e5dd85d",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "previousEventHash": "86eb0416be5b12ffa6745a590220c7fb4baf2733717ffc551361167338f6c861",
+      "payloadPath": "events/0016.json",
+      "payloadHash": "65dde018311f882193729b00915510ba1d6a7aed82e2c1855a3b796366c4c59b",
+      "eventHash": "18a1d6ea272fc30fb7675c783e1ffff4ae91f500bf47ba43d8001b42c0f1c722"
+    },
+    {
+      "seq": 17,
+      "at": "2026-09-29T08:38:46.985Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-pr51",
+      "state": {
+        "productStateId": "0d0921a5ddd9279694539c3c611b37cb8fd01ca217141843fc2f0fd43e5dd85d",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "previousEventHash": "18a1d6ea272fc30fb7675c783e1ffff4ae91f500bf47ba43d8001b42c0f1c722",
+      "payloadPath": "events/0017.json",
+      "payloadHash": "02094e292fcb893ea6c62b40422058767688b8736067796c9ef05a2a24d7095c",
+      "eventHash": "0bc528a6ef3d00124b76d3296e128504bfdd7bf57cb547ef2428d9222ac8b64f"
+    },
+    {
+      "seq": 18,
+      "at": "2026-09-29T09:20:51.805Z",
+      "kind": "SNAPSHOT",
+      "actor": "coordinator-pr51",
+      "state": {
+        "productStateId": "54dd7b82d50114031500ad9243cd99f5de1e6fcf8cd3312d1c24ff80754defd9",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "previousEventHash": "0bc528a6ef3d00124b76d3296e128504bfdd7bf57cb547ef2428d9222ac8b64f",
+      "payloadPath": "events/0018.json",
+      "payloadHash": "f0020e3ea5546e44dfc664ffb6655bd6bd353727a1ca725f136fcb07c3c9dddf",
+      "eventHash": "05cb60b8fc3a143dfd01c91a35f8eeafb818dd2f16ff31f3f0dc38ac05dcd3c3"
+    },
+    {
+      "seq": 19,
+      "at": "2026-09-29T09:22:54.782Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-pr51",
+      "state": {
+        "productStateId": "54dd7b82d50114031500ad9243cd99f5de1e6fcf8cd3312d1c24ff80754defd9",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "previousEventHash": "05cb60b8fc3a143dfd01c91a35f8eeafb818dd2f16ff31f3f0dc38ac05dcd3c3",
+      "payloadPath": "events/0019.json",
+      "payloadHash": "69a2300a0aadfcd3eab2f228f908a0d775210e341161350e6fff955fb9e3302b",
+      "eventHash": "a8b262ca74fe2902f2bde2c6928748193c3e9cad2531e1b98cc29288146b96f4"
+    },
+    {
+      "seq": 20,
+      "at": "2026-09-29T09:27:47.989Z",
+      "kind": "SNAPSHOT",
+      "actor": "coordinator-pr51",
+      "state": {
+        "productStateId": "b1b1c5ff0d9772d9362be9feac89e052e638f32f3eab4ff545636b52ca42b5b1",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "previousEventHash": "a8b262ca74fe2902f2bde2c6928748193c3e9cad2531e1b98cc29288146b96f4",
+      "payloadPath": "events/0020.json",
+      "payloadHash": "5856728a44e736aaa5cfc63f6c4aefa8c6e2783c05d67c92c24127481e8c43fe",
+      "eventHash": "a21c74f79e7b12e095171e86d6a8dc6f384e03fdbd731284267bba5a762c85e5"
+    },
+    {
+      "seq": 21,
+      "at": "2026-09-29T09:29:58.816Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-pr51",
+      "state": {
+        "productStateId": "b1b1c5ff0d9772d9362be9feac89e052e638f32f3eab4ff545636b52ca42b5b1",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "previousEventHash": "a21c74f79e7b12e095171e86d6a8dc6f384e03fdbd731284267bba5a762c85e5",
+      "payloadPath": "events/0021.json",
+      "payloadHash": "d5b7ab9225760ade42c0671010ec81805165b6b3698be30e1ec0238c5ec1a769",
+      "eventHash": "8ba0f980ded94a788a55b5f55f8d6a00ea4eea9600cd7f48ec8b2b466061c3fd"
+    },
+    {
+      "seq": 22,
+      "at": "2026-09-29T09:30:52.879Z",
+      "kind": "SCHEDULE",
+      "actor": "coordinator-pr51",
+      "state": {
+        "productStateId": "b1b1c5ff0d9772d9362be9feac89e052e638f32f3eab4ff545636b52ca42b5b1",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "previousEventHash": "8ba0f980ded94a788a55b5f55f8d6a00ea4eea9600cd7f48ec8b2b466061c3fd",
+      "payloadPath": "events/0022.json",
+      "payloadHash": "30889c178472a4a3fde97ec6b1d5324f0ac57a7cfe5a715a1f2393a02a710b42",
+      "eventHash": "abee2737a7e0c6623b643a868672aba18c0bfcd63021c617821a9307cfd36899"
+    },
+    {
+      "seq": 23,
+      "at": "2026-09-29T09:57:42.953Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-pr51",
+      "state": {
+        "productStateId": "b1b1c5ff0d9772d9362be9feac89e052e638f32f3eab4ff545636b52ca42b5b1",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "previousEventHash": "abee2737a7e0c6623b643a868672aba18c0bfcd63021c617821a9307cfd36899",
+      "payloadPath": "events/0023.json",
+      "payloadHash": "9b425507f367678357a163b9ff6d391de155449d37726767137d0c58fad08f26",
+      "eventHash": "0de962d7b9addb733041146db1c9fd33162d3f90950afc253057359301926750"
+    },
+    {
+      "seq": 24,
+      "at": "2026-09-29T09:58:40.364Z",
+      "kind": "SCHEDULE",
+      "actor": "coordinator-pr51",
+      "state": {
+        "productStateId": "b1b1c5ff0d9772d9362be9feac89e052e638f32f3eab4ff545636b52ca42b5b1",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "previousEventHash": "0de962d7b9addb733041146db1c9fd33162d3f90950afc253057359301926750",
+      "payloadPath": "events/0024.json",
+      "payloadHash": "3e3dc040e75c1d4916457a8bf652c3ef498212286b46b651a0b57e2790110ef7",
+      "eventHash": "24cc717e4021a9e49a1766c66a2f09a2343991866e51885ff6ba21affb743585"
+    },
+    {
+      "seq": 25,
+      "at": "2026-09-29T10:00:22.785Z",
+      "kind": "SCHEDULE",
+      "actor": "coordinator-pr51",
+      "state": {
+        "productStateId": "b1b1c5ff0d9772d9362be9feac89e052e638f32f3eab4ff545636b52ca42b5b1",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "previousEventHash": "24cc717e4021a9e49a1766c66a2f09a2343991866e51885ff6ba21affb743585",
+      "payloadPath": "events/0025.json",
+      "payloadHash": "2f16dc83d83b095b39f44d2ef2a410359b4726c0d6cc3e5a2c8388bd769dffcb",
+      "eventHash": "ab1c960a25c24de242fa451a25cb3c041f5ae5121d8aaccbe22a4c178b43cdfb"
+    },
+    {
+      "seq": 26,
+      "at": "2026-09-29T10:00:32.157Z",
+      "kind": "SCHEDULE",
+      "actor": "coordinator-pr51",
+      "state": {
+        "productStateId": "b1b1c5ff0d9772d9362be9feac89e052e638f32f3eab4ff545636b52ca42b5b1",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "previousEventHash": "ab1c960a25c24de242fa451a25cb3c041f5ae5121d8aaccbe22a4c178b43cdfb",
+      "payloadPath": "events/0026.json",
+      "payloadHash": "828509887e3f8a3dd8976d7dc81b457c288f80c33c00611b8ddc1555d08271fb",
+      "eventHash": "18ca4359eb6938da91595e9e6effae97c40882fdebe60c435dfd68e060be442d"
+    },
+    {
+      "seq": 27,
+      "at": "2026-09-29T10:07:21.066Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-pr51",
+      "state": {
+        "productStateId": "b1b1c5ff0d9772d9362be9feac89e052e638f32f3eab4ff545636b52ca42b5b1",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "previousEventHash": "18ca4359eb6938da91595e9e6effae97c40882fdebe60c435dfd68e060be442d",
+      "payloadPath": "events/0027.json",
+      "payloadHash": "3fb8cb12f74f09c88e57b111fa8583baf13c9cd3bc01e7f0739dac445f41eca9",
+      "eventHash": "aa3bbd7197e94f76fdad5691bd61b926ba65292cf8b1d01206c3eb3fc06a0382"
+    }
+  ]
+}

@@ -1,0 +1,452 @@
+{
+  "records": [
+    {
+      "kind": "mutation",
+      "body": {
+        "id": "MUT-STAT-ZB-1",
+        "candidateState": {
+          "productStateId": "b84d7928774ecbf0d8179a71ef9d8752622ffa98b065c5c61dd714592d71d95f",
+          "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+          "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+          "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+        },
+        "invariantIds": [
+          "I-STAT-ZEROBASE-FLAT"
+        ],
+        "rootClass": "channel-dead-value",
+        "operator": "flat->percent on finalDamageReductionPercent (TalentBuffs)",
+        "isolationPath": "in-place + revert (git checkout)",
+        "mutantHash": "fa3bd26d1a84fa67ee8303bb93d02e0f1f61be377674d3139d53a1a1465c380d",
+        "expectedDetector": "TalentBuffs.test.ts (added during run)",
+        "result": "KILLED_EXPECTED",
+        "evidenceIds": [
+          "EV-MUT-S4"
+        ],
+        "equivalenceReason": "first run SURVIVED (no detector on buff channel) -> coverage gap F-MG-07 -> pin test added -> re-run killed",
+        "candidateUnchanged": true
+      }
+    },
+    {
+      "kind": "mutation",
+      "body": {
+        "id": "MUT-BLDG-CLAIM-1",
+        "candidateState": {
+          "productStateId": "b84d7928774ecbf0d8179a71ef9d8752622ffa98b065c5c61dd714592d71d95f",
+          "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+          "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+          "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+        },
+        "invariantIds": [
+          "I-BUILDING-ACCRUAL-PIN"
+        ],
+        "rootClass": "accrual-repricing",
+        "operator": "drop pin in claim() (accrualRealmId ?? currentRealmId -> currentRealmId)",
+        "isolationPath": "in-place + revert (git checkout)",
+        "mutantHash": "13be9acee8e84a6cb370d0fd7f6da4f09fa3a0022b0b2574806599804bd3e102",
+        "expectedDetector": "BuildingSystem.test.ts EM-01 carry assertion (added during run)",
+        "result": "KILLED_EXPECTED",
+        "evidenceIds": [
+          "EV-MUT-S4"
+        ],
+        "equivalenceReason": "first run SURVIVED (claim-path pin feeds rate-carry + materialId, unasserted) -> F-MG-08 -> pin assertion added -> re-run killed",
+        "candidateUnchanged": true
+      }
+    },
+    {
+      "kind": "mutation",
+      "body": {
+        "id": "MUT-BLDG-STORED-1",
+        "candidateState": {
+          "productStateId": "b84d7928774ecbf0d8179a71ef9d8752622ffa98b065c5c61dd714592d71d95f",
+          "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+          "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+          "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+        },
+        "invariantIds": [
+          "I-BUILDING-ACCRUAL-PIN"
+        ],
+        "rootClass": "accrual-repricing",
+        "operator": "drop pin in getStoredAmount (?? realmId -> realmId)",
+        "isolationPath": "in-place + revert (git checkout)",
+        "mutantHash": "7a7bcf6c7ab48032b5b960de2b72e4165d9260f4e4bae22ed5730c5345c5245e",
+        "expectedDetector": "BuildingSystem.test.ts EM-01 amount assertion",
+        "result": "KILLED_EXPECTED",
+        "evidenceIds": [
+          "EV-MUT-S4"
+        ],
+        "equivalenceReason": null,
+        "candidateUnchanged": true
+      }
+    },
+    {
+      "kind": "mutation",
+      "body": {
+        "id": "MUT-OFFLINE-SEG-1",
+        "candidateState": {
+          "productStateId": "b84d7928774ecbf0d8179a71ef9d8752622ffa98b065c5c61dd714592d71d95f",
+          "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+          "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+          "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+        },
+        "invariantIds": [
+          "I-OFFLINE-BUFF-SEGMENT"
+        ],
+        "rootClass": "offline-snapshot-rate",
+        "operator": "revert segmented reduce to snapshot-rate x whole window",
+        "isolationPath": "in-place + revert (git checkout)",
+        "mutantHash": "67831a6270de32dd653ff9b7d445548e690cfae483338144dc690b280b9a0791",
+        "expectedDetector": "player.restoreFromSave.test.ts EM-02 case",
+        "result": "KILLED_EXPECTED",
+        "evidenceIds": [
+          "EV-MUT-S4"
+        ],
+        "equivalenceReason": null,
+        "candidateUnchanged": true
+      }
+    },
+    {
+      "kind": "mutation",
+      "body": {
+        "id": "MUT-CLOUD-CAS-1",
+        "candidateState": {
+          "productStateId": "b84d7928774ecbf0d8179a71ef9d8752622ffa98b065c5c61dd714592d71d95f",
+          "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+          "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+          "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+        },
+        "invariantIds": [
+          "I-CLOUD-REV-CAS"
+        ],
+        "rootClass": "cas-guard-drop",
+        "operator": "remove save_revision=eq guard from PATCH url",
+        "isolationPath": "in-place + revert (git checkout)",
+        "mutantHash": "343448fe45c4fffc0fc319e5330c6a439f73ffdebfd15247069036b035e6dea8",
+        "expectedDetector": "SupabaseRemoteSave.test.ts CAS assertions",
+        "result": "KILLED_EXPECTED",
+        "evidenceIds": [
+          "EV-MUT-S4"
+        ],
+        "equivalenceReason": null,
+        "candidateUnchanged": true
+      }
+    },
+    {
+      "kind": "finding",
+      "body": {
+        "id": "F-MG-07",
+        "title": "Coverage gap: no detector pinned the TalentBuffs-side flat channel (mutation SURVIVED first pass)",
+        "state": {
+          "productStateId": "b84d7928774ecbf0d8179a71ef9d8752622ffa98b065c5c61dd714592d71d95f",
+          "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+          "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+          "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+        },
+        "severity": "Medium",
+        "classification": "COVERAGE_GAP",
+        "actionable": true,
+        "reachability": "PRODUCTION",
+        "locations": [
+          {
+            "path": "game/src/data/buff/TalentBuffs.ts",
+            "symbolOrSection": "statModifiers on zero-base stats",
+            "revision": "8c6c7954",
+            "basis": "SOURCE"
+          }
+        ],
+        "discoveredBy": "mutation-campaign",
+        "invariantIds": [
+          "I-STAT-ZEROBASE-FLAT"
+        ],
+        "evidenceIds": [
+          "EV-MUT-S4"
+        ],
+        "counterexample": "flat->percent on TalentBuffs.ts:51 survived the full TalentsV4Wiring suite (19/19 green)",
+        "expected": "a detector kills any nonzero percent modifier on a zero-base rate stat",
+        "actual": "channel change was undetectable",
+        "rootCause": "existing tests pin only the TalentPassives leg, not buff-side modifiers",
+        "rootClass": "detector-missing",
+        "subsystem": "stats",
+        "siblingSearch": [
+          {
+            "roots": [
+              "game/src/data/buff",
+              "game/src/data/skill"
+            ],
+            "termsAndMethod": "all talent buff+passive modifiers enumerated",
+            "evidenceIds": [],
+            "hitDispositions": [
+              "pin test covers every modifier on the four zero-base stats across both files"
+            ],
+            "coverageLimits": []
+          }
+        ],
+        "siblingFindingIds": [],
+        "repair": "new pin test src/data/buff/TalentBuffs.test.ts (commit 8c6c7954)",
+        "pinEvidenceIds": [
+          "EV-FOCUSED-S4"
+        ],
+        "verificationEvidenceIds": [
+          "EV-MUT-S4"
+        ],
+        "closureReviewIds": [
+          "RV-S3-P1"
+        ],
+        "status": "CLOSED",
+        "duplicateOf": null,
+        "rejectionReason": null,
+        "exception": null,
+        "fixedInRevision": "8c6c7954",
+        "closedAt": "2026-09-29T14:40:00Z",
+        "closeReason": "re-mutated under pin -> killed; suite green"
+      }
+    },
+    {
+      "kind": "finding",
+      "body": {
+        "id": "F-MG-08",
+        "title": "Coverage gap: claim-path accrual pin fed rate-carry + materialId unasserted (mutation SURVIVED first pass)",
+        "state": {
+          "productStateId": "b84d7928774ecbf0d8179a71ef9d8752622ffa98b065c5c61dd714592d71d95f",
+          "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+          "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+          "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+        },
+        "severity": "Medium",
+        "classification": "COVERAGE_GAP",
+        "actionable": true,
+        "reachability": "PRODUCTION",
+        "locations": [
+          {
+            "path": "game/src/core/building/BuildingSystem.ts",
+            "symbolOrSection": "claim() pin use",
+            "revision": "8c6c7954",
+            "basis": "SOURCE"
+          }
+        ],
+        "discoveredBy": "mutation-campaign",
+        "invariantIds": [
+          "I-BUILDING-ACCRUAL-PIN"
+        ],
+        "evidenceIds": [
+          "EV-MUT-S4"
+        ],
+        "counterexample": "claim() pin removal survived 21/21 - payable amount is pinned upstream; the carry-back rate + material tier were unasserted",
+        "expected": "claim-path pin verified end-to-end",
+        "actual": "carry/material leg unprotected",
+        "rootCause": "EM-01 test asserted amount + re-pin but not the carry computation",
+        "rootClass": "detector-missing",
+        "subsystem": "production",
+        "siblingSearch": [
+          {
+            "roots": [
+              "game/src/core/building"
+            ],
+            "termsAndMethod": "pin consumers enumerated (stored/capacity/rate/materialId/re-pin)",
+            "evidenceIds": [],
+            "hitDispositions": [
+              "all consumers covered by existing tests + new carry assertion"
+            ],
+            "coverageLimits": []
+          }
+        ],
+        "siblingFindingIds": [],
+        "repair": "lastCollectedAt carry bound added to EM-01 claim test (commit 8c6c7954)",
+        "pinEvidenceIds": [
+          "EV-FOCUSED-S4"
+        ],
+        "verificationEvidenceIds": [
+          "EV-MUT-S4"
+        ],
+        "closureReviewIds": [
+          "RV-S3-P1"
+        ],
+        "status": "CLOSED",
+        "duplicateOf": null,
+        "rejectionReason": null,
+        "exception": null,
+        "fixedInRevision": "8c6c7954",
+        "closedAt": "2026-09-29T14:40:00Z",
+        "closeReason": "re-mutated under pin -> killed; suite green"
+      }
+    },
+    {
+      "kind": "evidence",
+      "body": {
+        "kind": "EXECUTED_INTEGRATION",
+        "id": "EV-VERIFY-S4",
+        "state": {
+          "productStateId": "b84d7928774ecbf0d8179a71ef9d8752622ffa98b065c5c61dd714592d71d95f",
+          "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+          "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+          "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+        },
+        "producer": "coordinator",
+        "startedAt": "2026-09-29T14:30:00Z",
+        "finishedAt": "2026-09-29T14:48:00Z",
+        "commandOrMethod": "npm run verify (vue-tsc && vite build && vitest run)",
+        "cwd": "game",
+        "exitCode": 1,
+        "result": "FAIL",
+        "artifactPath": "evidence/verify-s4.txt",
+        "artifactHash": "c0f119aab7d00f0b7690bbe6cd78d3a48ee12cb79526f87dcef9a8ef0bdfd89f",
+        "inputPaths": [],
+        "inputEvidenceIds": [],
+        "invariantIds": [],
+        "claims": [
+          "typecheck clean; build clean; 7117 pass / 4 fail - all 4 pre-existing on master (combatContract oracle, dynamicRegionHost+i18nKeyParity via src/dev/skill-vfx.ts, PlayerPortrait pinia fixture); asciiComments ratchet green"
+        ],
+        "limitations": [
+          "canonical suite remains red on pre-existing master failures"
+        ],
+        "status": "CURRENT"
+      }
+    },
+    {
+      "kind": "evidence",
+      "body": {
+        "kind": "EXECUTED_UNIT_STRUCTURAL",
+        "id": "EV-FOCUSED-S4",
+        "state": {
+          "productStateId": "b84d7928774ecbf0d8179a71ef9d8752622ffa98b065c5c61dd714592d71d95f",
+          "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+          "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+          "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+        },
+        "producer": "coordinator",
+        "startedAt": "2026-09-29T14:37:00Z",
+        "finishedAt": "2026-09-29T14:39:00Z",
+        "commandOrMethod": "npx vitest run asciiComments + TalentBuffs.test.ts + touched-scope rerun",
+        "cwd": "game",
+        "exitCode": 0,
+        "result": "PASS",
+        "artifactPath": "evidence/focused-tests-s4.txt",
+        "artifactHash": "31d8fb9053f82e1d33aca26544e1cc4851989ee607c2e62d928dfd07565ad90e",
+        "inputPaths": [],
+        "inputEvidenceIds": [],
+        "invariantIds": [
+          "I-STAT-ZEROBASE-FLAT",
+          "I-BUILDING-ACCRUAL-PIN",
+          "I-OFFLINE-BUFF-SEGMENT",
+          "I-CLOUD-REV-CAS",
+          "I-REALM-LADDER-LABELS"
+        ],
+        "claims": [
+          "ratchet clean; new pin tests green; touched-scope 85/85 green"
+        ],
+        "limitations": [],
+        "status": "CURRENT"
+      }
+    },
+    {
+      "kind": "evidence",
+      "body": {
+        "kind": "EXECUTED_RUNTIME",
+        "id": "EV-RUNTIME-S4",
+        "state": {
+          "productStateId": "b84d7928774ecbf0d8179a71ef9d8752622ffa98b065c5c61dd714592d71d95f",
+          "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+          "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+          "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+        },
+        "producer": "coordinator",
+        "startedAt": "2026-09-29T14:45:00Z",
+        "finishedAt": "2026-09-29T14:50:00Z",
+        "commandOrMethod": "Playwright chromium vs vite dev :5608 (verify-fixes.mjs, verify-fe17.mjs, probe-ritual.mjs)",
+        "cwd": "game",
+        "exitCode": 0,
+        "result": "PASS",
+        "artifactPath": "evidence/runtime-checks-s4.txt",
+        "artifactHash": "9db1a2775aadfe5a399376825bf4c67f1ba9e35101bc059f2b237c4fee7548fa",
+        "inputPaths": [],
+        "inputEvidenceIds": [],
+        "invariantIds": [
+          "I-NAMEPLATE-AUTHOR",
+          "I-REALM-LADDER-LABELS"
+        ],
+        "claims": [
+          "FE-06 authored nameplate main+combat; FE-08 gourd footprint clean; FE-17 ceiling note at Truc Co; ritual commit chain verified end-to-end (victory -> entitlement lock -> announcement -> quan_khi panel -> realm advance)"
+        ],
+        "limitations": [
+          "two harness flakes fixed en route (wheel-open + talent-modal single-click) - game flow itself verified healthy via probe-ritual diag"
+        ],
+        "status": "CURRENT"
+      }
+    },
+    {
+      "kind": "evidence",
+      "body": {
+        "kind": "EXECUTED_MUTATION",
+        "id": "EV-MUT-S4",
+        "state": {
+          "productStateId": "b84d7928774ecbf0d8179a71ef9d8752622ffa98b065c5c61dd714592d71d95f",
+          "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+          "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+          "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+        },
+        "producer": "coordinator",
+        "startedAt": "2026-09-29T14:09:00Z",
+        "finishedAt": "2026-09-29T14:16:00Z",
+        "commandOrMethod": "5-site in-place mutation campaign, focused vitest per site, git revert verified",
+        "cwd": "game",
+        "exitCode": 0,
+        "result": "PASS",
+        "artifactPath": "evidence/mutation-campaign.txt",
+        "artifactHash": "ab2847ca7594bf9a3412b52302bf662c52c52cfeadac260ef1691051f7a9f5d0",
+        "inputPaths": [],
+        "inputEvidenceIds": [],
+        "invariantIds": [
+          "I-STAT-ZEROBASE-FLAT",
+          "I-BUILDING-ACCRUAL-PIN",
+          "I-OFFLINE-BUFF-SEGMENT",
+          "I-CLOUD-REV-CAS"
+        ],
+        "claims": [
+          "3 mutants killed immediately; 2 survived -> pinned via new tests -> re-killed; all reverts verified clean"
+        ],
+        "limitations": [
+          "in-place transient mutants rather than isolated worktrees"
+        ],
+        "status": "CURRENT"
+      }
+    },
+    {
+      "kind": "evidence",
+      "body": {
+        "kind": "SOURCE_PROOF",
+        "id": "EV-ADVERSARIAL-S4",
+        "state": {
+          "productStateId": "b84d7928774ecbf0d8179a71ef9d8752622ffa98b065c5c61dd714592d71d95f",
+          "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+          "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+          "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+        },
+        "producer": "coordinator",
+        "startedAt": "2026-09-29T12:40:00Z",
+        "finishedAt": "2026-09-29T14:50:00Z",
+        "commandOrMethod": "9 falsification probes + tribulation-commit-path re-verification on merged source",
+        "cwd": "game",
+        "exitCode": 0,
+        "result": "PASS",
+        "artifactPath": "evidence/adversarial-probes.txt",
+        "artifactHash": "345db68c6e49c132cc73082d890d4d43343bb77c607d407eb5173242ddc8e641",
+        "inputPaths": [],
+        "inputEvidenceIds": [],
+        "invariantIds": [
+          "I-STAT-ZEROBASE-FLAT",
+          "I-BUILDING-ACCRUAL-PIN",
+          "I-OFFLINE-BUFF-SEGMENT",
+          "I-CLOUD-REV-CAS",
+          "I-MERGE-INTEGRITY",
+          "I-NAMEPLATE-AUTHOR"
+        ],
+        "claims": [
+          "all 9 probes closed; tribulation commit path unchanged by merge (only texture param + read-only getter) - earlier commit failure was harness flake, proven by probe-ritual diag"
+        ],
+        "limitations": [
+          "source-level proof, not executed reproductions"
+        ],
+        "status": "CURRENT"
+      }
+    }
+  ]
+}

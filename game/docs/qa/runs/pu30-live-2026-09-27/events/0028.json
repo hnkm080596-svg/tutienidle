@@ -1,0 +1,6 @@
+{
+  "action": "observe",
+  "assignmentId": "ASG-R2",
+  "observedStatus": "cancelled",
+  "evidence": "run_subagent agent_id=1f76f08f cancelled by user (verified termination)"
+}

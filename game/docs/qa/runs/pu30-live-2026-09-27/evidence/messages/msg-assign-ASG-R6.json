@@ -1,0 +1,10 @@
+{
+  "assignment": "ASG-R6",
+  "bundleFile": "evidence/bundles/ASG-R6.json",
+  "frozenState": {
+    "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+    "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+    "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+    "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+  }
+}

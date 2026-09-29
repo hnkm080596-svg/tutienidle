@@ -1,0 +1,12 @@
+Playwright (chromium) vs vite dev server on http://localhost:5173 - run on the pre-merge branch
+tree; merged surfaces verified unchanged in the aggregate by source inspection (see adversarial-probes.txt).
+
+  verify-fixes.mjs:
+    FE-06 MainScene nameplate = authored name          PASS
+    FE-06 CombatScene sprite label = authored name      PASS
+    FE-08 no HUD Text objects inside reward-gourd
+           footprint (gourd constants as authority)     PASS
+
+  verify-fe17.mjs (Truc Co save, realm panel open):
+    FE-17 ceiling note rendered: "Kim Dan chua mo trong ban hien tai -
+         Truc Co la canh gioi cao nhat cua phien ban nay."   PASS

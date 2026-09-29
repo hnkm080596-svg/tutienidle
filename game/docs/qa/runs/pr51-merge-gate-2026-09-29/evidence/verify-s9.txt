@@ -1,0 +1,9 @@
+FINAL_FULL_VERIFY on productStateId b1b1c5ff0d97... (commit bc530a6, audit-combined)
+= npm run type-check && npm run build && npx vitest run
+typecheck: clean; vite build: clean (1871 modules)
+vitest: 7129 passed, 5 expected-fail, 4 failed - the SAME 4 pre-existing master failures:
+  combatContract R14.4 (anchor searches parameterless onBattleStart(); master signature takes options)
+  dynamicRegionHost (src/dev/skill-vfx.ts tracked on master, untouched by branch)
+  i18nKeyParity (same file's skillVfxLab.* keys)
+  PlayerPortrait (usePlayerStore in setup, PR48 master-side; file+test byte-identical)
+New pins all green: buildingAccrualPin 2/2, playerNameplate 3/3, bandOscillation probes 2/2.

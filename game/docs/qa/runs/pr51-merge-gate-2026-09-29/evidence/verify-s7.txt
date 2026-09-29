@@ -1,0 +1,10 @@
+FINAL_FULL_VERIFY on productStateId 0d0921a5ddd9... (commit a7a14b62, audit-combined)
+= npm run type-check && npm run build && npx vitest run
+typecheck: clean
+vite build: clean (1871 modules)
+vitest: 7124 passed, 5 expected-fail, 4 failed - ALL PRE-EXISTING ON origin/master:
+  combatContract R14.4 (searches '\n  onBattleStart()' but master signature is onBattleStart(options?:..); identical on master)
+  dynamicRegionHost (src/dev/skill-vfx.ts new Game(, tracked on master, unchanged by branch)
+  i18nKeyParity (same file's skillVfxLab.* keys)
+  PlayerPortrait (usePlayerStore() in setup, added by PR48 on master; file+test byte-identical to master)
+Zero branch-caused or repair-caused failures.

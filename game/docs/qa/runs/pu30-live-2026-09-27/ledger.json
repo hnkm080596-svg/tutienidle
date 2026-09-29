@@ -1,0 +1,4393 @@
+{
+  "schemaVersion": 2,
+  "run": {
+    "id": "pu30-live-2026-09-27",
+    "createdAt": "2026-09-27T15:29:11.457Z",
+    "scope": "AGGREGATE_REPOSITORY",
+    "authorizedRepairs": [
+      "docs/qa/**"
+    ],
+    "nonGoals": [
+      "production code repair",
+      "scripts/qa repair",
+      "gameplay",
+      "release",
+      "fixed-point claim on the game"
+    ],
+    "checkout": "master @ 68621987 (post-pull)",
+    "branch": "master",
+    "base": "origin/master",
+    "head": "master",
+    "state": {
+      "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+      "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+      "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+      "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+    },
+    "manifestPath": "manifest.json",
+    "environmentPath": "environment.json",
+    "learningPolicyId": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+    "consumedLessonIds": [],
+    "aggregateParents": [],
+    "requiredDomains": [
+      "scripts/qa",
+      "docs/qa/protocol"
+    ],
+    "exclusions": [],
+    "briefIds": [],
+    "capacityLimit": 5,
+    "requiredReadiness": false,
+    "phase": "DECIDE",
+    "cleanRoundA": null,
+    "cleanRoundB": null,
+    "finalEvidenceIds": [],
+    "outcome": "QA_BLOCKED_SCOPE"
+  },
+  "briefs": [],
+  "assignments": [
+    {
+      "id": "ASG-WAIT",
+      "parentId": null,
+      "capacityScope": "worker",
+      "inputBundleHash": "f50167e51b3add886565aa858a5ff2c8016515bfc4122d9c48e8fd4577198a34",
+      "dependencies": [],
+      "requiredCapabilities": [
+        "read-only repo access"
+      ],
+      "writeSurface": [],
+      "readiness": "WAITING_INPUT",
+      "status": "QUEUED",
+      "reservedAt": "2026-09-27T15:37:55.571Z",
+      "observedRuntimeId": null,
+      "releaseEvidence": null,
+      "resultRef": null,
+      "timeoutState": null,
+      "history": [
+        {
+          "at": "2026-09-27T15:37:55.571Z",
+          "from": "CREATED",
+          "to": "QUEUED",
+          "reason": "registered by coordinator"
+        },
+        {
+          "at": "2026-09-27T15:37:56.261Z",
+          "from": "QUEUED",
+          "to": "QUEUED",
+          "reason": "readiness=WAITING_INPUT - waiting work holds no slot"
+        }
+      ]
+    },
+    {
+      "id": "ASG-BLOCKED",
+      "parentId": null,
+      "capacityScope": "worker",
+      "inputBundleHash": "931b78d30da311e8c287f39b74bf8c3ad872abc664eabe1c67b6092f72d4cac9",
+      "dependencies": [],
+      "requiredCapabilities": [
+        "read-only repo access"
+      ],
+      "writeSurface": [],
+      "readiness": "BLOCKED",
+      "status": "BLOCKED",
+      "reservedAt": "2026-09-27T15:37:55.571Z",
+      "observedRuntimeId": null,
+      "releaseEvidence": null,
+      "resultRef": null,
+      "timeoutState": null,
+      "history": [
+        {
+          "at": "2026-09-27T15:37:55.571Z",
+          "from": "CREATED",
+          "to": "BLOCKED",
+          "reason": "registered by coordinator"
+        },
+        {
+          "at": "2026-09-27T15:37:57.193Z",
+          "from": "BLOCKED",
+          "to": "BLOCKED",
+          "reason": "readiness=BLOCKED - waiting work holds no slot"
+        }
+      ]
+    },
+    {
+      "id": "ASG-R1",
+      "parentId": "REQ-R1-SLOT",
+      "capacityScope": "worker",
+      "inputBundleHash": "86153434f3a8141cff08436767767441d2e649a215db12a2557c03ee69472dbe",
+      "dependencies": [],
+      "requiredCapabilities": [
+        "read-only repo access"
+      ],
+      "writeSurface": [],
+      "readiness": "READY",
+      "status": "FINISHED",
+      "reservedAt": "2026-09-27T15:37:58.194Z",
+      "observedRuntimeId": "run_subagent:6555a82e",
+      "releaseEvidence": "run_subagent agent_id=6555a82e cancelled by user (verified termination)",
+      "resultRef": null,
+      "timeoutState": null,
+      "history": [
+        {
+          "at": "2026-09-27T15:37:55.571Z",
+          "from": "CREATED",
+          "to": "READY",
+          "reason": "registered by coordinator"
+        },
+        {
+          "at": "2026-09-27T15:37:58.194Z",
+          "from": "READY",
+          "to": "RESERVED",
+          "reason": "admitted at 2/5 (incl. external 1)"
+        },
+        {
+          "at": "2026-09-27T15:51:11.677Z",
+          "from": "RESERVED",
+          "to": "FINISHED",
+          "reason": "lifecycle verified released via 'cancelled'"
+        }
+      ]
+    },
+    {
+      "id": "ASG-R2",
+      "parentId": "REQ-R2-MSG",
+      "capacityScope": "worker",
+      "inputBundleHash": "fdd3f4a923267f793f2da7b862a3e4925b81d2104a4febb46e933bf38cabf69e",
+      "dependencies": [],
+      "requiredCapabilities": [
+        "read-only repo access"
+      ],
+      "writeSurface": [],
+      "readiness": "READY",
+      "status": "FINISHED",
+      "reservedAt": "2026-09-27T15:37:58.942Z",
+      "observedRuntimeId": "run_subagent:1f76f08f",
+      "releaseEvidence": "run_subagent agent_id=1f76f08f cancelled by user (verified termination)",
+      "resultRef": null,
+      "timeoutState": null,
+      "history": [
+        {
+          "at": "2026-09-27T15:37:55.571Z",
+          "from": "CREATED",
+          "to": "READY",
+          "reason": "registered by coordinator"
+        },
+        {
+          "at": "2026-09-27T15:37:58.941Z",
+          "from": "READY",
+          "to": "RESERVED",
+          "reason": "admitted at 3/5 (incl. external 1)"
+        },
+        {
+          "at": "2026-09-27T15:51:12.645Z",
+          "from": "RESERVED",
+          "to": "FINISHED",
+          "reason": "lifecycle verified released via 'cancelled'"
+        }
+      ]
+    },
+    {
+      "id": "ASG-R3",
+      "parentId": "REQ-R3-NEEDCTX",
+      "capacityScope": "worker",
+      "inputBundleHash": "2e5655d2e2c15fc30558fa67b4257689f0f6c49d66005c09ee12266d7e7df235",
+      "dependencies": [],
+      "requiredCapabilities": [
+        "read-only repo access"
+      ],
+      "writeSurface": [],
+      "readiness": "READY",
+      "status": "FINISHED",
+      "reservedAt": "2026-09-27T15:37:59.700Z",
+      "observedRuntimeId": "run_subagent:49db4b21",
+      "releaseEvidence": "run_subagent agent_id=49db4b21 completion notification received; context ended",
+      "resultRef": "MSG-NEEDCTX-R3",
+      "timeoutState": null,
+      "history": [
+        {
+          "at": "2026-09-27T15:37:55.571Z",
+          "from": "CREATED",
+          "to": "READY",
+          "reason": "registered by coordinator"
+        },
+        {
+          "at": "2026-09-27T15:37:59.699Z",
+          "from": "READY",
+          "to": "RESERVED",
+          "reason": "admitted at 4/5 (incl. external 1)"
+        },
+        {
+          "at": "2026-09-27T15:41:07.502Z",
+          "from": "RESERVED",
+          "to": "RESULT_RECEIVED",
+          "reason": "terminal result observed - slot still occupied"
+        },
+        {
+          "at": "2026-09-27T15:41:08.608Z",
+          "from": "RESULT_RECEIVED",
+          "to": "FINISHED",
+          "reason": "lifecycle verified released via 'terminated'"
+        }
+      ]
+    },
+    {
+      "id": "ASG-R4",
+      "parentId": "REQ-R4-HONESTY",
+      "capacityScope": "worker",
+      "inputBundleHash": "171dc77032fe52c1209bfaf00db453d26f15a8de8413d4d0ea33b2d0ff19e1b9",
+      "dependencies": [],
+      "requiredCapabilities": [
+        "read-only repo access"
+      ],
+      "writeSurface": [],
+      "readiness": "READY",
+      "status": "FINISHED",
+      "reservedAt": "2026-09-27T15:38:00.437Z",
+      "observedRuntimeId": "run_subagent:55645acf",
+      "releaseEvidence": "run_subagent agent_id=55645acf cancelled by user (verified termination)",
+      "resultRef": null,
+      "timeoutState": null,
+      "history": [
+        {
+          "at": "2026-09-27T15:37:55.571Z",
+          "from": "CREATED",
+          "to": "READY",
+          "reason": "registered by coordinator"
+        },
+        {
+          "at": "2026-09-27T15:38:00.436Z",
+          "from": "READY",
+          "to": "RESERVED",
+          "reason": "admitted at 5/5 (incl. external 1)"
+        },
+        {
+          "at": "2026-09-27T15:51:13.702Z",
+          "from": "RESERVED",
+          "to": "FINISHED",
+          "reason": "lifecycle verified released via 'cancelled'"
+        }
+      ]
+    },
+    {
+      "id": "ASG-R5",
+      "parentId": "REQ-R5-JOURNAL",
+      "capacityScope": "worker",
+      "inputBundleHash": "d9f6434d39d74290a30ade39f10065f32721c1e66278c1b9b163de1c49749e75",
+      "dependencies": [],
+      "requiredCapabilities": [
+        "read-only repo access"
+      ],
+      "writeSurface": [],
+      "readiness": "READY",
+      "status": "FINISHED",
+      "reservedAt": "2026-09-27T15:43:00.758Z",
+      "observedRuntimeId": "run_subagent:b0f652b2",
+      "releaseEvidence": "run_subagent agent_id=b0f652b2 cancelled by user (verified termination)",
+      "resultRef": null,
+      "timeoutState": null,
+      "history": [
+        {
+          "at": "2026-09-27T15:37:55.571Z",
+          "from": "CREATED",
+          "to": "READY",
+          "reason": "registered by coordinator"
+        },
+        {
+          "at": "2026-09-27T15:38:01.150Z",
+          "from": "READY",
+          "to": "QUEUED",
+          "reason": "capacity 5/5 occupied - queued, no slot consumed by queue record"
+        },
+        {
+          "at": "2026-09-27T15:43:00.757Z",
+          "from": "QUEUED",
+          "to": "RESERVED",
+          "reason": "admitted at 5/5 (incl. external 1)"
+        },
+        {
+          "at": "2026-09-27T15:51:14.594Z",
+          "from": "RESERVED",
+          "to": "FINISHED",
+          "reason": "lifecycle verified released via 'cancelled'"
+        }
+      ]
+    },
+    {
+      "id": "ASG-FORGED",
+      "parentId": null,
+      "capacityScope": "worker (forged - bypassed admission)",
+      "inputBundleHash": "3be99dafc8b0d508d3f0ce6d68cfadf4064a1368255353fee3fc6bb982874238",
+      "dependencies": [],
+      "requiredCapabilities": [],
+      "writeSurface": [],
+      "readiness": "READY",
+      "status": "FINISHED",
+      "reservedAt": "2026-09-27T15:45:58.841Z",
+      "observedRuntimeId": null,
+      "releaseEvidence": "forged record cleaned via schedule-observed cancellation",
+      "resultRef": null,
+      "timeoutState": "timeout",
+      "history": [
+        {
+          "at": "2026-09-27T15:45:58.842Z",
+          "from": "CREATED",
+          "to": "RESERVED",
+          "reason": "forged"
+        },
+        {
+          "at": "2026-09-27T15:49:41.163Z",
+          "from": "RESERVED",
+          "to": "RELEASE_PENDING",
+          "reason": "lease/timeout elapsed WITHOUT lifecycle proof - authority revoked, slot retained"
+        },
+        {
+          "at": "2026-09-27T15:49:49.833Z",
+          "from": "RELEASE_PENDING",
+          "to": "FINISHED",
+          "reason": "lifecycle verified released via 'cancelled'"
+        }
+      ]
+    },
+    {
+      "id": "ASG-R6",
+      "parentId": "REQ-R6-SLOT",
+      "capacityScope": "worker",
+      "inputBundleHash": "843c3cf99e3f35f40beafa24fa2ca3e6d09f7b8f64f3b284d0b9b3befd597637",
+      "dependencies": [],
+      "requiredCapabilities": [
+        "read-only repo access"
+      ],
+      "writeSurface": [],
+      "readiness": "READY",
+      "status": "FINISHED",
+      "reservedAt": "2026-09-27T16:05:43.344Z",
+      "observedRuntimeId": "run_subagent:ca27c584",
+      "releaseEvidence": "run_subagent agent_id=ca27c584 completed - context ended",
+      "resultRef": "MSG-SEALED-R6",
+      "timeoutState": null,
+      "history": [
+        {
+          "at": "2026-09-27T16:05:43.343Z",
+          "from": "QUEUED",
+          "to": "RESERVED",
+          "reason": "admitted at 2/5 (incl. external 1)"
+        },
+        {
+          "at": "2026-09-27T16:28:04.221Z",
+          "from": "RESERVED",
+          "to": "RESULT_RECEIVED",
+          "reason": "terminal result observed - slot still occupied"
+        },
+        {
+          "at": "2026-09-27T16:28:05.105Z",
+          "from": "RESULT_RECEIVED",
+          "to": "FINISHED",
+          "reason": "lifecycle verified released via 'terminated'"
+        }
+      ]
+    },
+    {
+      "id": "ASG-R7",
+      "parentId": "REQ-R7-MSGLED",
+      "capacityScope": "worker",
+      "inputBundleHash": "90705113a194b993c1b04fdb64d2b68ccfadbb0180f9dc561ba66268c5035897",
+      "dependencies": [],
+      "requiredCapabilities": [
+        "read-only repo access"
+      ],
+      "writeSurface": [],
+      "readiness": "READY",
+      "status": "FINISHED",
+      "reservedAt": "2026-09-27T16:05:45.161Z",
+      "observedRuntimeId": "run_subagent:f6a1d784",
+      "releaseEvidence": "run_subagent agent_id=f6a1d784 completed - context ended",
+      "resultRef": "MSG-SEALED-R7",
+      "timeoutState": null,
+      "history": [
+        {
+          "at": "2026-09-27T16:05:45.156Z",
+          "from": "QUEUED",
+          "to": "RESERVED",
+          "reason": "admitted at 3/5 (incl. external 1)"
+        },
+        {
+          "at": "2026-09-27T16:28:06.112Z",
+          "from": "RESERVED",
+          "to": "RESULT_RECEIVED",
+          "reason": "terminal result observed - slot still occupied"
+        },
+        {
+          "at": "2026-09-27T16:28:07.107Z",
+          "from": "RESULT_RECEIVED",
+          "to": "FINISHED",
+          "reason": "lifecycle verified released via 'terminated'"
+        }
+      ]
+    }
+  ],
+  "consumptions": [],
+  "invariants": [
+    {
+      "id": "I-SLOT-CAPACITY",
+      "statement": "Ledger admission never allows more than capacityLimit occupied agent slots at once, counting ledger-active assignments plus declared externalOccupied; QUEUED and BLOCKED records hold no slot",
+      "domain": "scripts/qa",
+      "risk": "HIGH",
+      "sources": [
+        {
+          "path": "docs/qa/protocol/agent-instructions.md",
+          "symbolOrSection": "section G + G.1",
+          "revision": "68621987",
+          "basis": "MAINTAINED_CONTRACT"
+        }
+      ],
+      "owner": {
+        "path": "scripts/qa/prevention.mjs",
+        "symbolOrSection": "admitAssignment",
+        "revision": "68621987",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "coordinator via qa:internal schedule"
+      ],
+      "legalReaders": [
+        "coordinator",
+        "reviewers"
+      ],
+      "projections": [],
+      "caches": [],
+      "validStates": [
+        "active occupied count <= capacityLimit - externalOccupied"
+      ],
+      "forbiddenStates": [
+        "QUEUED/BLOCKED holding a slot",
+        "active exceeding cap"
+      ],
+      "preconditions": [
+        "assignment input supplies readiness"
+      ],
+      "postconditions": [
+        "RESERVED only when capacity permits"
+      ],
+      "legalTransitions": [
+        "READY->RESERVED",
+        "READY->QUEUED",
+        "WAITING_INPUT->QUEUED",
+        "BLOCKED->BLOCKED",
+        "QUEUED->RESERVED on re-admission after release"
+      ],
+      "illegalTransitions": [
+        "QUEUED->RUNNING without admission",
+        "any transition while cap reached"
+      ],
+      "failureBehavior": "overflow queues without consuming capacity",
+      "atomicity": "single-writer lease; admission decision is synchronous",
+      "inverseBehavior": "release via verified lifecycle only (I-SLOT-RELEASE)",
+      "persistence": "assignment records persist in ledger.json",
+      "migration": "n/a",
+      "lifecycle": "admission to FINISHED",
+      "runtimeConsequences": [
+        "too many live agents violates the platform 5-agent cap"
+      ],
+      "uiConsequences": [],
+      "oracles": [
+        "assignment history + status transitions recorded per admission",
+        "active-count recomputation"
+      ],
+      "requiredEvidenceSurfaces": [
+        "DETERMINISTIC",
+        "STATIC_SEMANTIC",
+        "INDEPENDENT_REVIEW"
+      ],
+      "taxonomyIds": [
+        "TRN-08",
+        "QAI-08"
+      ],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-SLOT-RELEASE",
+      "statement": "A reserved slot is freed only by observed terminal lifecycle (terminated/finished/exited/cancelled/closed); a result message or lease timeout alone retains the slot",
+      "domain": "scripts/qa",
+      "risk": "HIGH",
+      "sources": [
+        {
+          "path": "docs/qa/protocol/agent-instructions.md",
+          "symbolOrSection": "section G.1",
+          "revision": "68621987",
+          "basis": "MAINTAINED_CONTRACT"
+        }
+      ],
+      "owner": {
+        "path": "scripts/qa/prevention.mjs",
+        "symbolOrSection": "observeAssignment",
+        "revision": "68621987",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "coordinator via qa:internal schedule observe"
+      ],
+      "legalReaders": [
+        "coordinator"
+      ],
+      "projections": [],
+      "caches": [],
+      "validStates": [
+        "RESULT_RECEIVED and RELEASE_PENDING keep occupancy",
+        "FINISHED frees"
+      ],
+      "forbiddenStates": [
+        "release on result alone",
+        "release on timeout alone"
+      ],
+      "preconditions": [
+        "assignment is ledger-active"
+      ],
+      "postconditions": [
+        "FINISHED carries releaseEvidence"
+      ],
+      "legalTransitions": [
+        "RESERVED->RESULT_RECEIVED->RELEASE_PENDING->FINISHED",
+        "RESERVED->FINISHED"
+      ],
+      "illegalTransitions": [
+        "RESULT_RECEIVED->free",
+        "timeout->free"
+      ],
+      "failureBehavior": "unverifiable release keeps slot (fail-closed)",
+      "atomicity": "single observe call per transition",
+      "inverseBehavior": "none",
+      "persistence": "assignment record + SCHEDULE events",
+      "migration": "n/a",
+      "lifecycle": "admission->active->terminal observed->FINISHED",
+      "runtimeConsequences": [
+        "slot leak if release never verified"
+      ],
+      "uiConsequences": [],
+      "oracles": [
+        "status transitions via observeAssignment",
+        "slot still counted during RESULT_RECEIVED/RELEASE_PENDING"
+      ],
+      "requiredEvidenceSurfaces": [
+        "DETERMINISTIC",
+        "STATIC_SEMANTIC",
+        "MUTATION",
+        "INDEPENDENT_REVIEW"
+      ],
+      "taxonomyIds": [
+        "TRN-03",
+        "ASY-05"
+      ],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-MSG-TERMINAL",
+      "statement": "Exactly one terminal SEALED_RESULT is accepted per requestId; identical replay is idempotent; changed payload for same id or conflicting terminal content is rejected; foreign-state messages are flagged stale and cannot advance phase",
+      "domain": "scripts/qa",
+      "risk": "STANDARD",
+      "sources": [
+        {
+          "path": "docs/qa/protocol/agent-instructions.md",
+          "symbolOrSection": "section E",
+          "revision": "68621987",
+          "basis": "MAINTAINED_CONTRACT"
+        }
+      ],
+      "owner": {
+        "path": "scripts/qa/state.mjs",
+        "symbolOrSection": "recordMessage",
+        "revision": "68621987",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "coordinator via qa:internal record kind=message"
+      ],
+      "legalReaders": [
+        "coordinator",
+        "decide"
+      ],
+      "projections": [],
+      "caches": [],
+      "validStates": [
+        "one terminal per requestId"
+      ],
+      "forbiddenStates": [
+        "two different SEALED_RESULT payloads on one requestId",
+        "same message id different payload"
+      ],
+      "preconditions": [
+        "message carries run/request/state/bundle correlation tuple"
+      ],
+      "postconditions": [
+        "rejected mutations leave ledger unchanged"
+      ],
+      "legalTransitions": [
+        "ASSIGN->ACK->SEALED_RESULT",
+        "ASSIGN->NEED_CONTEXT"
+      ],
+      "illegalTransitions": [
+        "second conflicting SEALED_RESULT",
+        "payload mutation under same id"
+      ],
+      "failureBehavior": "integrity error thrown before mutation",
+      "atomicity": "check-then-append inside single-writer ledger save",
+      "inverseBehavior": "none",
+      "persistence": "messages[] in ledger.json",
+      "migration": "n/a",
+      "lifecycle": "delivery->dedup/conflict check->append",
+      "runtimeConsequences": [
+        "forged/late results cannot advance phases"
+      ],
+      "uiConsequences": [],
+      "oracles": [
+        "recorded messages and rejected attempts in transcript"
+      ],
+      "requiredEvidenceSurfaces": [
+        "DETERMINISTIC",
+        "STATIC_SEMANTIC",
+        "INDEPENDENT_REVIEW"
+      ],
+      "taxonomyIds": [
+        "ASY-04",
+        "QAI-05"
+      ],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-LEDGER-AUTHORITY",
+      "statement": "All ledger mutations run under the coordinator lease; saves are atomic via tmp+rename; events form a hash chain with contiguous sequence",
+      "domain": "scripts/qa",
+      "risk": "STANDARD",
+      "sources": [
+        {
+          "path": "docs/qa/protocol/agent-instructions.md",
+          "symbolOrSection": "section E shared-state writes",
+          "revision": "68621987",
+          "basis": "MAINTAINED_CONTRACT"
+        }
+      ],
+      "owner": {
+        "path": "scripts/qa/state.mjs",
+        "symbolOrSection": "acquireLease/checkLease/saveLedgerAtomic/appendEvent",
+        "revision": "68621987",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "lease holder only"
+      ],
+      "legalReaders": [
+        "any reader of ledger.json"
+      ],
+      "projections": [],
+      "caches": [],
+      "validStates": [
+        "single coordinator lease",
+        "contiguous hash-chained events"
+      ],
+      "forbiddenStates": [
+        "second coordinator lease",
+        "torn ledger write"
+      ],
+      "preconditions": [
+        "init acquired lease"
+      ],
+      "postconditions": [
+        "every mutation appends an event"
+      ],
+      "legalTransitions": [],
+      "illegalTransitions": [
+        "write without lease",
+        "event seq gap or broken prev-hash"
+      ],
+      "failureBehavior": "non-lease commands throw before write",
+      "atomicity": "tmp file + rename",
+      "inverseBehavior": "none",
+      "persistence": "ledger.json + journal.jsonl + events/*.json",
+      "migration": "v1->v2 via qa:internal migrate",
+      "lifecycle": "init->lease->records->decide",
+      "runtimeConsequences": [
+        "concurrent coordinator splits authority if lease bypassed"
+      ],
+      "uiConsequences": [],
+      "oracles": [
+        "MC1/MC2 machine checks recompute hashes",
+        "lease file exists"
+      ],
+      "requiredEvidenceSurfaces": [
+        "STATIC_SEMANTIC",
+        "DETERMINISTIC",
+        "INDEPENDENT_REVIEW"
+      ],
+      "taxonomyIds": [
+        "AUT-08",
+        "SEC-01"
+      ],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-AGENT-BINDING",
+      "statement": "Assignment records claiming live occupancy bind a real dispatched context via observedRuntimeId, and independent-review evidence requires genuine fresh contexts - fabricated occupancy is a limitation that must be recorded, not claimed as verified",
+      "domain": "scripts/qa",
+      "risk": "STANDARD",
+      "sources": [
+        {
+          "path": "docs/qa/protocol/README.md",
+          "symbolOrSection": "section 10",
+          "revision": "68621987",
+          "basis": "MAINTAINED_CONTRACT"
+        }
+      ],
+      "owner": {
+        "path": "docs/qa/protocol/agent-instructions.md",
+        "symbolOrSection": "section G.1 assignment records",
+        "revision": "68621987",
+        "basis": "MAINTAINED_CONTRACT"
+      },
+      "legalWriters": [
+        "coordinator"
+      ],
+      "legalReaders": [
+        "coordinator",
+        "verifiers"
+      ],
+      "projections": [],
+      "caches": [],
+      "validStates": [
+        "RESERVED assignments correspond to dispatched or dispatchable work"
+      ],
+      "forbiddenStates": [
+        "phantom agents counted as real concurrency"
+      ],
+      "preconditions": [
+        "harness supplies agent runtime ids"
+      ],
+      "postconditions": [
+        "releaseEvidence names the observed termination proof"
+      ],
+      "legalTransitions": [],
+      "illegalTransitions": [
+        "claiming verified exit with no agent"
+      ],
+      "failureBehavior": "unverifiable binding reported as limitation, not success",
+      "atomicity": "n/a",
+      "inverseBehavior": "n/a",
+      "persistence": "assignment record",
+      "migration": "n/a",
+      "lifecycle": "admit->dispatch->observe",
+      "runtimeConsequences": [
+        "overclaimed independence undermines clean rounds"
+      ],
+      "uiConsequences": [],
+      "oracles": [
+        "observedRuntimeId = run_subagent agent id",
+        "releaseEvidence references verified completion"
+      ],
+      "requiredEvidenceSurfaces": [
+        "INDEPENDENT_REVIEW",
+        "STATIC_SEMANTIC"
+      ],
+      "taxonomyIds": [
+        "QAI-04",
+        "QAI-03"
+      ],
+      "status": "ACTIVE"
+    }
+  ],
+  "census": [
+    {
+      "id": "CEN-CLI",
+      "invariantIds": [
+        "I-LEDGER-AUTHORITY"
+      ],
+      "location": {
+        "path": "scripts/qa/cli.mjs",
+        "symbolOrSection": "command dispatch table",
+        "revision": "68621987",
+        "basis": "SOURCE"
+      },
+      "classification": "CANONICAL",
+      "reads": [
+        "request.json",
+        "ledger.json"
+      ],
+      "writes": [
+        "ledger.json",
+        "journal.jsonl",
+        "events/"
+      ],
+      "eventsIn": [],
+      "eventsOut": [
+        "PHASE",
+        "SNAPSHOT",
+        "EVIDENCE",
+        "FINDING",
+        "REVIEW_SEALED",
+        "SCHEDULE",
+        "DECISION",
+        "MIGRATION"
+      ],
+      "consumerIds": [],
+      "searchEvidenceIds": [],
+      "disposition": "sole CLI entry; all 13 commands present (usage string lists only 7 - cosmetic drift)"
+    },
+    {
+      "id": "CEN-STATE",
+      "invariantIds": [
+        "I-MSG-TERMINAL",
+        "I-LEDGER-AUTHORITY"
+      ],
+      "location": {
+        "path": "scripts/qa/state.mjs",
+        "symbolOrSection": "ledger primitives",
+        "revision": "68621987",
+        "basis": "SOURCE"
+      },
+      "classification": "CANONICAL",
+      "reads": [
+        "ledger.json"
+      ],
+      "writes": [
+        "ledger.json"
+      ],
+      "eventsIn": [],
+      "eventsOut": [],
+      "consumerIds": [
+        "cli.mjs",
+        "prevention.mjs",
+        "validate.mjs",
+        "decision.mjs"
+      ],
+      "searchEvidenceIds": [],
+      "disposition": "ledger write authority, manifest builder, message integrity"
+    },
+    {
+      "id": "CEN-PREVENTION",
+      "invariantIds": [
+        "I-SLOT-CAPACITY",
+        "I-SLOT-RELEASE"
+      ],
+      "location": {
+        "path": "scripts/qa/prevention.mjs",
+        "symbolOrSection": "admitAssignment/observeAssignment",
+        "revision": "68621987",
+        "basis": "SOURCE"
+      },
+      "classification": "CANONICAL",
+      "reads": [
+        "ledger.assignments"
+      ],
+      "writes": [
+        "assignment records"
+      ],
+      "eventsIn": [],
+      "eventsOut": [],
+      "consumerIds": [
+        "cli.mjs cmdSchedule"
+      ],
+      "searchEvidenceIds": [],
+      "disposition": "sole admission/release authority - see finding on record-kind bypass"
+    },
+    {
+      "id": "CEN-VALIDATE",
+      "invariantIds": [
+        "I-LEDGER-AUTHORITY"
+      ],
+      "location": {
+        "path": "scripts/qa/validate.mjs",
+        "symbolOrSection": "validateLedger MC1-MC14",
+        "revision": "68621987",
+        "basis": "SOURCE"
+      },
+      "classification": "CANONICAL",
+      "reads": [
+        "ledger.json",
+        "manifest.json",
+        "run dir artifacts"
+      ],
+      "writes": [],
+      "eventsIn": [],
+      "eventsOut": [],
+      "consumerIds": [
+        "cli.mjs cmdValidate/cmdDecide/cmdRender"
+      ],
+      "searchEvidenceIds": [],
+      "disposition": "machine checks"
+    },
+    {
+      "id": "CEN-DECIDE",
+      "invariantIds": [
+        "I-LEDGER-AUTHORITY"
+      ],
+      "location": {
+        "path": "scripts/qa/decision.mjs",
+        "symbolOrSection": "evaluateTerminal/decide C1-C9",
+        "revision": "68621987",
+        "basis": "SOURCE"
+      },
+      "classification": "CANONICAL",
+      "reads": [
+        "ledger.json"
+      ],
+      "writes": [
+        "report.md"
+      ],
+      "eventsIn": [],
+      "eventsOut": [],
+      "consumerIds": [
+        "cli.mjs"
+      ],
+      "searchEvidenceIds": [],
+      "disposition": "sole outcome authority"
+    },
+    {
+      "id": "CEN-PROTOCOL",
+      "invariantIds": [
+        "I-SLOT-CAPACITY",
+        "I-SLOT-RELEASE",
+        "I-MSG-TERMINAL",
+        "I-AGENT-BINDING"
+      ],
+      "location": {
+        "path": "docs/qa/protocol",
+        "symbolOrSection": "README+agent-instructions+schema+qualification",
+        "revision": "68621987",
+        "basis": "MAINTAINED_CONTRACT"
+      },
+      "classification": "CANONICAL",
+      "reads": [],
+      "writes": [],
+      "eventsIn": [],
+      "eventsOut": [],
+      "consumerIds": [
+        "all QA runs"
+      ],
+      "searchEvidenceIds": [],
+      "disposition": "governing law; contract hash bound at snapshot"
+    }
+  ],
+  "findings": [
+    {
+      "id": "F-PU30-01",
+      "title": "Stale flag computed but never persisted on message records",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "locations": [
+        {
+          "path": "scripts/qa/state.mjs",
+          "symbolOrSection": "recordMessage:229-251",
+          "revision": "68621987",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "coordinator-7604 live PU-30 probes",
+      "invariantIds": [
+        "I-MSG-TERMINAL"
+      ],
+      "evidenceIds": [
+        "EV-MSG-STALE"
+      ],
+      "counterexample": "MSG-INTEG-STALE1 (ACK bound to all-zero state) was appended with no stale marker",
+      "expected": "stale-bound message carries persisted flag so downstream counting/exclusion can distinguish it",
+      "actual": "staleness only surfaced as transient stdout note; ledger record indistinguishable from current; a stale SEALED_RESULT would still establish the terminal payloadHash for its requestId (poison vector)",
+      "rootCause": "recordMessage computes msgStale for the return value but pushes msg unchanged",
+      "rootClass": "implementation",
+      "subsystem": "scripts/qa",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": "out of run scope - authorizedRepairs=docs/qa/** only; routed to a future scripts/qa repair mission",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "TRIAGED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-PU30-02",
+      "title": "record --kind assignment mints RESERVED records bypassing admission",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "locations": [
+        {
+          "path": "scripts/qa/cli.mjs",
+          "symbolOrSection": "cmdRecord RECORD_COLLECTION assignment:133,160-171",
+          "revision": "68621987",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "coordinator-7604 live PU-30 probes",
+      "invariantIds": [
+        "I-SLOT-CAPACITY",
+        "I-LEDGER-AUTHORITY"
+      ],
+      "evidenceIds": [
+        "EV-ASG-BYPASS"
+      ],
+      "counterexample": "ASG-FORGED admitted via plain record with status RESERVED, zero capacity accounting, occupied an active slot until schedule-cancelled",
+      "expected": "schedule is the sole reservation path per law G",
+      "actual": "any leased writer can mint active assignments directly into the ledger",
+      "rootCause": "RECORD_COLLECTION maps kind=assignment straight into ledger.assignments with replace-in-place, no admitAssignment call",
+      "rootClass": "implementation",
+      "subsystem": "scripts/qa",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": "out of run scope - authorizedRepairs=docs/qa/** only; routed to a future scripts/qa repair mission",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "TRIAGED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-PU30-03",
+      "title": "Terminal results accepted on requestIds that never had an ASSIGN",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "locations": [
+        {
+          "path": "scripts/qa/state.mjs",
+          "symbolOrSection": "recordMessage:229-251",
+          "revision": "68621987",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "coordinator-7604 live PU-30 probes",
+      "invariantIds": [
+        "I-MSG-TERMINAL"
+      ],
+      "evidenceIds": [
+        "EV-MSG-NOASSIGN"
+      ],
+      "counterexample": "REQ-INTEG received SEALED_RESULT with no prior ASSIGN for that requestId",
+      "expected": "reject or flag messages on unknown requestIds; enforce ASSIGN<ACK<SEALED_RESULT ordering",
+      "actual": "no requestId-existence or ordering enforcement",
+      "rootCause": "recordMessage only checks id-dedup and terminal-hash conflict",
+      "rootClass": "implementation",
+      "subsystem": "scripts/qa",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": "out of run scope - authorizedRepairs=docs/qa/** only; routed to a future scripts/qa repair mission",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "TRIAGED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-PU30-04",
+      "title": "cmdQualify parses TAP counters but Node 24 emits spec reporter -> vacuous QUALIFIED",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "severity": "High",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "locations": [
+        {
+          "path": "scripts/qa/cli.mjs",
+          "symbolOrSection": "cmdQualify:231-267",
+          "revision": "68621987",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "coordinator-7604 live PU-30 probes",
+      "invariantIds": [
+        "I-LEDGER-AUTHORITY"
+      ],
+      "evidenceIds": [
+        "EV-QUALIFY-PARSE"
+      ],
+      "counterexample": "qa:internal qualify printed \"0 passed, 0 failed\" then emitted PROTOCOL_ADOPTION_QUALIFIED while node --test ran 48 passing tests",
+      "expected": "parse real pass/fail counts or pass --test-reporter tap",
+      "actual": "regex /# pass (d+)/ matches nothing under default spec reporter; gaps[] stays empty; qualification emitted vacuously",
+      "rootCause": "reporter output format changed; parser not updated",
+      "rootClass": "implementation",
+      "subsystem": "scripts/qa",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": "out of run scope - authorizedRepairs=docs/qa/** only; routed to a future scripts/qa repair mission",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "TRIAGED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-PU30-05",
+      "title": "Re-admission replaces record wholesale; history dropped unless coordinator resupplies",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "locations": [
+        {
+          "path": "scripts/qa/cli.mjs",
+          "symbolOrSection": "cmdSchedule admit path:356-360",
+          "revision": "68621987",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "coordinator-7604 live PU-30 probes",
+      "invariantIds": [
+        "I-SLOT-CAPACITY"
+      ],
+      "evidenceIds": [
+        "EV-STATIC-SLOT"
+      ],
+      "counterexample": "sched-r5-admit2 required manually copying prior history into input.assignment or it would be lost",
+      "expected": "re-admission merges with existing record preserving ledger-side history",
+      "actual": "record = {...input.assignment} fully replaces ledger.assignments[i]",
+      "rootCause": "admitAssignment builds record from caller input only",
+      "rootClass": "implementation",
+      "subsystem": "scripts/qa",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": "out of run scope - authorizedRepairs=docs/qa/** only; routed to a future scripts/qa repair mission",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "TRIAGED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-PU30-06",
+      "title": "Coordinator requestId typo on ASG-R5 re-admission (REQ-R5-BYPASS vs bundle REQ-R5-JOURNAL)",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "severity": "Nit",
+      "classification": "NON_ACTIONABLE",
+      "actionable": false,
+      "reachability": "HYPOTHETICAL",
+      "locations": [
+        {
+          "path": "docs/qa/runs/pu30-live-2026-09-27/evidence/sched-r5-admit2.json",
+          "symbolOrSection": "requestId",
+          "revision": "68621987",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "coordinator-7604 live PU-30 probes",
+      "invariantIds": [],
+      "evidenceIds": [
+        "EV-LIVE-ADMIT"
+      ],
+      "counterexample": "assignment record requestId differs from immutable bundle requestId",
+      "expected": "correlation fields consistent",
+      "actual": "recorded as REQ-R5-BYPASS; ASSIGN message uses bundle-canonical REQ-R5-JOURNAL",
+      "rootCause": "coordinator input error, honestly journaled",
+      "rootClass": "implementation",
+      "subsystem": "scripts/qa",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "REJECTED_WITH_PROOF",
+      "duplicateOf": null,
+      "rejectionReason": "coordinator input typo, not a product/protocol defect; corrected via ledger repair (inputs-11)",
+      "exception": null
+    },
+    {
+      "id": "F-PU30-07",
+      "title": "cli.mjs usage string omits prepare/preflight/checkpoint/learn/schedule/migrate",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "severity": "Nit",
+      "classification": "DOCUMENTATION_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "locations": [
+        {
+          "path": "scripts/qa/cli.mjs",
+          "symbolOrSection": "usage text",
+          "revision": "68621987",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "coordinator-7604 live PU-30 probes",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "npm run qa:internal (no args) prints init|snapshot|record|validate|decide|render|qualify only",
+      "expected": "usage lists all implemented commands",
+      "actual": "stale string, commands exist and dispatch",
+      "rootCause": "usage text not updated when commands added",
+      "rootClass": "implementation",
+      "subsystem": "scripts/qa",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": "out of run scope - authorizedRepairs=docs/qa/** only; routed to a future scripts/qa repair mission",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "TRIAGED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-PU30-08",
+      "title": "admitAssignment derives history \"from\" from caller input, not ledger truth",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "locations": [
+        {
+          "path": "scripts/qa/prevention.mjs",
+          "symbolOrSection": "admitAssignment push():134",
+          "revision": "68621987",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "MC14 discontinuity on PU-30 live run",
+      "invariantIds": [
+        "I-LEDGER-AUTHORITY"
+      ],
+      "evidenceIds": [
+        "EV-STATIC-SLOT"
+      ],
+      "counterexample": "coordinator input status=QUEUED while registration had already written to=READY -> journal recorded QUEUED->RESERVED, a transition that never happened",
+      "expected": "history.from bound to prior ledger status mechanically",
+      "actual": "\"from\" is caller-controlled; coordinator can write discontinuous or forged transition chains; only post-hoc MC14 catches it",
+      "rootCause": "push() reads record.status (caller input) as from-field",
+      "rootClass": "implementation",
+      "subsystem": "scripts/qa",
+      "siblingSearch": [],
+      "siblingFindingIds": [
+        "F-PU30-05"
+      ],
+      "repair": "out of run scope - scripts/qa repair mission",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "TRIAGED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-PU30-09",
+      "title": "externalOccupied unvalidated: NaN fails open, negatives under-count",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "severity": "High",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "locations": [
+        {
+          "path": "scripts/qa/cli.mjs",
+          "symbolOrSection": "cmdSchedule:357",
+          "revision": "68621987",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "scripts/qa/prevention.mjs",
+          "symbolOrSection": "admitAssignment:130-146",
+          "revision": "68621987",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "REV-A sealed reviewer (run_subagent:ca27c584)",
+      "invariantIds": [
+        "I-SLOT-CAPACITY"
+      ],
+      "evidenceIds": [],
+      "counterexample": "admit with externalOccupied non-numeric -> NaN+1>cap false -> unconditional RESERVED",
+      "expected": "non-numeric/negative external occupancy rejected",
+      "actual": "any malformed value admitted; NaN comparison fails open",
+      "rootCause": "no input validation on externalOccupied",
+      "rootClass": "implementation",
+      "subsystem": "scripts/qa",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": "out of run scope - authorizedRepairs=docs/qa/** only; routed to a future scripts/qa repair mission",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "TRIAGED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-PU30-10",
+      "title": "Re-admission of active assignment demotes it = unverified release channel",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "severity": "High",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "locations": [
+        {
+          "path": "scripts/qa/cli.mjs",
+          "symbolOrSection": "cmdSchedule:356-360",
+          "revision": "68621987",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "scripts/qa/prevention.mjs",
+          "symbolOrSection": "admitAssignment:136-146",
+          "revision": "68621987",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "REV-A sealed reviewer (run_subagent:ca27c584)",
+      "invariantIds": [
+        "I-SLOT-RELEASE",
+        "I-SLOT-CAPACITY"
+      ],
+      "evidenceIds": [],
+      "counterexample": "re-admit RESERVED id with readiness=WAITING_INPUT -> BLOCKED, slot freed, reservedAt/releaseEvidence/history destroyed",
+      "expected": "active records not re-admittable; release only via verified lifecycle",
+      "actual": "wholesale record replace + capacity re-eval frees slot without lifecycle proof",
+      "rootCause": "admit path does not check existing record state",
+      "rootClass": "implementation",
+      "subsystem": "scripts/qa",
+      "siblingSearch": [],
+      "siblingFindingIds": [
+        "F-PU30-05"
+      ],
+      "repair": "out of run scope - authorizedRepairs=docs/qa/** only; routed to a future scripts/qa repair mission",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "TRIAGED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-PU30-11",
+      "title": "observeAssignment has no transition legality: QUEUED->FINISHED, FINISHED->RESULT_RECEIVED resurrection",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "severity": "High",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "locations": [
+        {
+          "path": "scripts/qa/prevention.mjs",
+          "symbolOrSection": "observeAssignment:153-173",
+          "revision": "68621987",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "REV-A sealed reviewer (run_subagent:ca27c584)",
+      "invariantIds": [
+        "I-SLOT-RELEASE"
+      ],
+      "evidenceIds": [],
+      "counterexample": "observe terminated on QUEUED -> FINISHED; observe result on FINISHED -> RESULT_RECEIVED re-occupying slot",
+      "expected": "legal transitions only from lawful source states",
+      "actual": "any-to-any transitions accepted; terminal states not absorbing",
+      "rootCause": "no source-state guard on observe",
+      "rootClass": "implementation",
+      "subsystem": "scripts/qa",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": "out of run scope - authorizedRepairs=docs/qa/** only; routed to a future scripts/qa repair mission",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "TRIAGED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-PU30-12",
+      "title": "Verified release is coordinator-asserted: evidence optional, observedRuntimeId/resultRef never written",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "locations": [
+        {
+          "path": "scripts/qa/prevention.mjs",
+          "symbolOrSection": "observeAssignment:166-170",
+          "revision": "68621987",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "scripts/qa/cli.mjs",
+          "symbolOrSection": "observe path:362",
+          "revision": "68621987",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "REV-A sealed reviewer (run_subagent:ca27c584)",
+      "invariantIds": [
+        "I-AGENT-BINDING",
+        "I-SLOT-RELEASE"
+      ],
+      "evidenceIds": [],
+      "counterexample": "observe terminated with evidence=null -> FINISHED; no link between assignment and dispatched runtime or result message",
+      "expected": "FINISHED requires bound observedRuntimeId+resultRef",
+      "actual": "evidence free-text optional; binding fields never populated",
+      "rootCause": "observeAssignment accepts empty evidence",
+      "rootClass": "implementation",
+      "subsystem": "scripts/qa",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": "out of run scope - authorizedRepairs=docs/qa/** only; routed to a future scripts/qa repair mission",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "TRIAGED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-PU30-13",
+      "title": "Lifecycle spec incomplete: RUNNING unreachable, CANCELLED/BLOCKED never produced by observe",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "severity": "Medium",
+      "classification": "SPEC_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "locations": [
+        {
+          "path": "scripts/qa/prevention.mjs",
+          "symbolOrSection": "states:9-11,153-173",
+          "revision": "68621987",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "REV-A sealed reviewer (run_subagent:ca27c584)",
+      "invariantIds": [
+        "I-SLOT-RELEASE"
+      ],
+      "evidenceIds": [],
+      "counterexample": "every run record goes RESERVED->FINISHED skipping RUNNING; cancelled maps to FINISHED; blocked throws",
+      "expected": "declared lifecycle mechanically walkable",
+      "actual": "RUNNING/CANCELLED/BLOCKED only reachable via record bypass",
+      "rootCause": "status enum vs transition functions mismatch",
+      "rootClass": "implementation",
+      "subsystem": "scripts/qa",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": "out of run scope - authorizedRepairs=docs/qa/** only; routed to a future scripts/qa repair mission",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "TRIAGED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-PU30-14",
+      "title": "No machine check enforces active-count vs cap or requires FINISHED before outcome",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "severity": "Medium",
+      "classification": "COVERAGE_GAP",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "locations": [
+        {
+          "path": "scripts/qa/validate.mjs",
+          "symbolOrSection": "MC14:490-504",
+          "revision": "68621987",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "scripts/qa/decision.mjs",
+          "symbolOrSection": "decide",
+          "revision": "68621987",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "REV-A sealed reviewer (run_subagent:ca27c584)",
+      "invariantIds": [
+        "I-SLOT-CAPACITY",
+        "I-LEDGER-AUTHORITY"
+      ],
+      "evidenceIds": [],
+      "counterexample": "decide succeeds while RESERVED/RESULT_RECEIVED hold slots; fabricated single-entry QUEUED->FINISHED passes MC14",
+      "expected": "MC/decision clauses bound reservation authority",
+      "actual": "only adjacent from/to chaining checked; decide ignores assignments",
+      "rootCause": "missing checks",
+      "rootClass": "implementation",
+      "subsystem": "scripts/qa",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": "out of run scope - authorizedRepairs=docs/qa/** only; routed to a future scripts/qa repair mission",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "TRIAGED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-PU30-15",
+      "title": "capacityLimit is request-controlled unbounded integer - hard cap 5 is a suggestion",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "locations": [
+        {
+          "path": "scripts/qa/state.mjs",
+          "symbolOrSection": "capacityLimit:126",
+          "revision": "68621987",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "scripts/qa/ledger.schema.json",
+          "symbolOrSection": "capacityLimit:351-354",
+          "revision": "68621987",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "REV-A sealed reviewer (run_subagent:ca27c584)",
+      "invariantIds": [
+        "I-SLOT-CAPACITY"
+      ],
+      "evidenceIds": [],
+      "counterexample": "request with capacityLimit=99 bypasses platform cap",
+      "expected": "mechanism-level ceiling on capacityLimit",
+      "actual": "schema min 1 no max; run controls its own cap",
+      "rootCause": "no ceiling enforcement",
+      "rootClass": "implementation",
+      "subsystem": "scripts/qa",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": "out of run scope - authorizedRepairs=docs/qa/** only; routed to a future scripts/qa repair mission",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "TRIAGED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-PU30-16",
+      "title": "No CAS on ledger writes: concurrent same-lease commands lose updates",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "locations": [
+        {
+          "path": "scripts/qa/state.mjs",
+          "symbolOrSection": "appendEvent expectedSeq:199-227",
+          "revision": "68621987",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "scripts/qa/cli.mjs",
+          "symbolOrSection": "cmdSchedule:347-369",
+          "revision": "68621987",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "REV-A sealed reviewer (run_subagent:ca27c584)",
+      "invariantIds": [
+        "I-LEDGER-AUTHORITY"
+      ],
+      "evidenceIds": [],
+      "counterexample": "two concurrent schedule calls load same seq, last-wins drops one record",
+      "expected": "expectedSeq CAS enforced on writers",
+      "actual": "CAS exists but no CLI caller passes it",
+      "rootCause": "zero production callers of expectedSeq",
+      "rootClass": "implementation",
+      "subsystem": "scripts/qa",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": "out of run scope - authorizedRepairs=docs/qa/** only; routed to a future scripts/qa repair mission",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "TRIAGED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-PU30-17",
+      "title": "observeAssignment crashes on history-less record; admitAssignment never checks asg.id",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "severity": "Nit",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "locations": [
+        {
+          "path": "scripts/qa/prevention.mjs",
+          "symbolOrSection": "observeAssignment:156",
+          "revision": "68621987",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "REV-A sealed reviewer (run_subagent:ca27c584)",
+      "invariantIds": [
+        "I-SLOT-RELEASE"
+      ],
+      "evidenceIds": [],
+      "counterexample": "record-injected assignment lacking history -> TypeError on observe",
+      "expected": "graceful rejection",
+      "actual": "crash, no corruption",
+      "rootCause": "missing field guards",
+      "rootClass": "implementation",
+      "subsystem": "scripts/qa",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": "out of run scope - authorizedRepairs=docs/qa/** only; routed to a future scripts/qa repair mission",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "TRIAGED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-PU30-18",
+      "title": "Lease guard bypassed by omission; journal append precedes atomic save; expectedSeq dead code",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "severity": "High",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "locations": [
+        {
+          "path": "scripts/qa/cli.mjs",
+          "symbolOrSection": "leaseFromDir:123-127",
+          "revision": "68621987",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "scripts/qa/state.mjs",
+          "symbolOrSection": "appendEvent/save:199-227",
+          "revision": "68621987",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "REV-B sealed reviewer (run_subagent:f6a1d784)",
+      "invariantIds": [
+        "I-LEDGER-AUTHORITY"
+      ],
+      "evidenceIds": [],
+      "counterexample": "record without --lease passes checkLease trivially; crash between journal append and save -> divergence",
+      "expected": "lease proof required; journal/ledger consistent under crash",
+      "actual": "default path bypasses lease check; journal never reconciled",
+      "rootCause": "checkLease compares file to itself; no fsync; CAS unused",
+      "rootClass": "implementation",
+      "subsystem": "scripts/qa",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": "out of run scope - authorizedRepairs=docs/qa/** only; routed to a future scripts/qa repair mission",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "TRIAGED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-PU30-19",
+      "title": "record replace-in-place unconditional: CLOSED findings / SEALED reviews silently rewritable",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "severity": "High",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "locations": [
+        {
+          "path": "scripts/qa/cli.mjs",
+          "symbolOrSection": "cmdRecord:161-170",
+          "revision": "68621987",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "REV-B sealed reviewer (run_subagent:f6a1d784)",
+      "invariantIds": [
+        "I-LEDGER-AUTHORITY"
+      ],
+      "evidenceIds": [],
+      "counterexample": "re-record a SEALED review id -> silently replaced; event logs only applied ids",
+      "expected": "terminal records immutable; comment at :164 claims guard that does not exist",
+      "actual": "unconditional replace for any existing id",
+      "rootCause": "no lifecycle check on record path",
+      "rootClass": "implementation",
+      "subsystem": "scripts/qa",
+      "siblingSearch": [],
+      "siblingFindingIds": [
+        "F-PU30-02"
+      ],
+      "repair": "out of run scope - authorizedRepairs=docs/qa/** only; routed to a future scripts/qa repair mission",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "TRIAGED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-PU30-20",
+      "title": "Message ordering/direction unenforced: SEALED_RESULT on never-assigned requestId, traffic after CANCEL, self-addressed results",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "locations": [
+        {
+          "path": "scripts/qa/state.mjs",
+          "symbolOrSection": "recordMessage:229-252",
+          "revision": "68621987",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "REV-B sealed reviewer (run_subagent:f6a1d784)",
+      "invariantIds": [
+        "I-MSG-TERMINAL"
+      ],
+      "evidenceIds": [],
+      "counterexample": "REQ-INTEG first message is SEALED_RESULT (live); SEALED_RESULT claiming sender=coordinator accepted",
+      "expected": "ASSIGN creates pending request; ordering+direction bound",
+      "actual": "no requestId-existence, ordering, or direction checks",
+      "rootCause": "recordMessage only checks id-dedup + terminal-hash conflict",
+      "rootClass": "implementation",
+      "subsystem": "scripts/qa",
+      "siblingSearch": [],
+      "siblingFindingIds": [
+        "F-PU30-03"
+      ],
+      "repair": "out of run scope - authorizedRepairs=docs/qa/** only; routed to a future scripts/qa repair mission",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "TRIAGED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-PU30-21",
+      "title": "Declared runId silently overwritten; missing state skips staleness yet can occupy terminal",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "locations": [
+        {
+          "path": "scripts/qa/cli.mjs",
+          "symbolOrSection": "cmdRecord:157",
+          "revision": "68621987",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "scripts/qa/state.mjs",
+          "symbolOrSection": "recordMessage:231",
+          "revision": "68621987",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "REV-B sealed reviewer (run_subagent:f6a1d784)",
+      "invariantIds": [
+        "I-MSG-TERMINAL"
+      ],
+      "evidenceIds": [],
+      "counterexample": "foreign-runId message stored under this runId; message without state bypasses staleness and can establish terminal hash",
+      "expected": "declared runId verified; absent state rejected",
+      "actual": "silent overwrite; staleness check optional",
+      "rootCause": "no verification of declared tuple fields",
+      "rootClass": "implementation",
+      "subsystem": "scripts/qa",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": "out of run scope - authorizedRepairs=docs/qa/** only; routed to a future scripts/qa repair mission",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "TRIAGED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-PU30-22",
+      "title": "decide runs structural validation only - MC1-MC14 skipped on decision path",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "locations": [
+        {
+          "path": "scripts/qa/cli.mjs",
+          "symbolOrSection": "cmdDecide:205",
+          "revision": "68621987",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "REV-B sealed reviewer (run_subagent:f6a1d784)",
+      "invariantIds": [
+        "I-LEDGER-AUTHORITY"
+      ],
+      "evidenceIds": [],
+      "counterexample": "decide succeeds on ledger with broken event chain or missing payload files",
+      "expected": "outcome written only over integrity-checked ledger",
+      "actual": "validateStructure only; full validate is separate manual gate",
+      "rootCause": "decide skips machine checks",
+      "rootClass": "implementation",
+      "subsystem": "scripts/qa",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": "out of run scope - authorizedRepairs=docs/qa/** only; routed to a future scripts/qa repair mission",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "TRIAGED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-PU30-23",
+      "title": "Second SEALED_RESULT with new id + same payloadHash stored -> two terminal records per requestId",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "locations": [
+        {
+          "path": "scripts/qa/state.mjs",
+          "symbolOrSection": "recordMessage:243-250",
+          "revision": "68621987",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "REV-B sealed reviewer (run_subagent:f6a1d784)",
+      "invariantIds": [
+        "I-MSG-TERMINAL"
+      ],
+      "evidenceIds": [],
+      "counterexample": "dup replay with different message id stored -> requestId has two terminals",
+      "expected": "identical replay idempotent only with same id",
+      "actual": "stored; bounded impact since no consumer reads messages",
+      "rootCause": "terminal check keyed on requestId+kind+hash not id-set",
+      "rootClass": "implementation",
+      "subsystem": "scripts/qa",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": "out of run scope - authorizedRepairs=docs/qa/** only; routed to a future scripts/qa repair mission",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "TRIAGED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-PU30-24",
+      "title": "Hardening: no fsync on save; mixed-kind batch events mislabeled; empty batch emits no-op event; --run accepts absolute paths",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "severity": "Nit",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "locations": [
+        {
+          "path": "scripts/qa/state.mjs",
+          "symbolOrSection": "saveLedgerAtomic:163-168",
+          "revision": "68621987",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "scripts/qa/cli.mjs",
+          "symbolOrSection": "cmdRecord:174",
+          "revision": "68621987",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "REV-B sealed reviewer (run_subagent:f6a1d784)",
+      "invariantIds": [
+        "I-LEDGER-AUTHORITY"
+      ],
+      "evidenceIds": [],
+      "counterexample": "batch event kind from records[0] only; {records:[]} appends EVIDENCE event",
+      "expected": "consistent journalling",
+      "actual": "minor journalling/robustness gaps",
+      "rootCause": "cosmetic implementation gaps",
+      "rootClass": "implementation",
+      "subsystem": "scripts/qa",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": "out of run scope - authorizedRepairs=docs/qa/** only; routed to a future scripts/qa repair mission",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "TRIAGED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-PU30-25",
+      "title": "reviewer duplicate of F-PU30-02",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "locations": [],
+      "discoveredBy": "REV-A sealed reviewer (run_subagent:ca27c584)",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "see F-PU30-02",
+      "expected": "canonical finding tracks the defect",
+      "actual": "reviewer independently rediscovered F-PU30-02 (corroboration)",
+      "rootCause": "see F-PU30-02",
+      "rootClass": null,
+      "subsystem": "scripts/qa",
+      "siblingSearch": [],
+      "siblingFindingIds": [
+        "F-PU30-02"
+      ],
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "DUPLICATE_LINKED",
+      "duplicateOf": "F-PU30-02",
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-PU30-26",
+      "title": "reviewer duplicate of F-PU30-01",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "locations": [],
+      "discoveredBy": "REV-B sealed reviewer (run_subagent:f6a1d784)",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "see F-PU30-01",
+      "expected": "canonical finding tracks the defect",
+      "actual": "reviewer independently rediscovered F-PU30-01 (corroboration)",
+      "rootCause": "see F-PU30-01",
+      "rootClass": null,
+      "subsystem": "scripts/qa",
+      "siblingSearch": [],
+      "siblingFindingIds": [
+        "F-PU30-01"
+      ],
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "DUPLICATE_LINKED",
+      "duplicateOf": "F-PU30-01",
+      "rejectionReason": null,
+      "exception": null
+    }
+  ],
+  "evidence": [
+    {
+      "id": "EV-LIVE-ADMIT",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "kind": "EXECUTED_INTEGRATION",
+      "producer": "coordinator-7604",
+      "startedAt": "2026-09-27T15:48:56.579Z",
+      "finishedAt": "2026-09-27T15:48:56.579Z",
+      "commandOrMethod": "qa:internal schedule admit x5 under cap=5 externalOccupied=1 -> R1..R4 RESERVED, R5 QUEUED",
+      "cwd": "game",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/journal-snap-1.jsonl",
+      "artifactHash": "c2152d9ca29c7b68a4a17874a69fe75dd5ecd21fb64e2322822cb80179b86856",
+      "inputPaths": [
+        "evidence/journal-snap-1.jsonl"
+      ],
+      "inputEvidenceIds": [],
+      "invariantIds": [
+        "I-SLOT-CAPACITY"
+      ],
+      "claims": [
+        "admission counted ledger-active+external; queue held no slot"
+      ],
+      "limitations": [
+        "externalOccupied=1 asserted by coordinator, not platform-queried"
+      ],
+      "status": "CURRENT"
+    },
+    {
+      "id": "EV-NEEDCTX-REL",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "kind": "EXECUTED_INTEGRATION",
+      "producer": "coordinator-7604",
+      "startedAt": "2026-09-27T15:48:56.580Z",
+      "finishedAt": "2026-09-27T15:48:56.580Z",
+      "commandOrMethod": "ASG-R3 NEED_CONTEXT -> observe result -> observe terminated -> FINISHED",
+      "cwd": "game",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/messages/msg-needctx-r3.json",
+      "artifactHash": "0fe9b9d00a28cc70d85915439093c8ec213fe3c50624568ca3fde1040e05531f",
+      "inputPaths": [
+        "evidence/messages/msg-needctx-r3.json"
+      ],
+      "inputEvidenceIds": [],
+      "invariantIds": [
+        "I-SLOT-RELEASE"
+      ],
+      "claims": [
+        "result alone retained slot; only verified termination freed it"
+      ],
+      "limitations": [
+        "termination evidence = subagent completion notification, coordinator-asserted"
+      ],
+      "status": "CURRENT"
+    },
+    {
+      "id": "EV-QUEUE-NOSLOT",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "kind": "EXECUTED_INTEGRATION",
+      "producer": "coordinator-7604",
+      "startedAt": "2026-09-27T15:48:56.581Z",
+      "finishedAt": "2026-09-27T15:48:56.581Z",
+      "commandOrMethod": "ASG-WAIT QUEUED + ASG-BLOCKED BLOCKED while 4 workers reserved",
+      "cwd": "game",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/journal-snap-1.jsonl",
+      "artifactHash": "c2152d9ca29c7b68a4a17874a69fe75dd5ecd21fb64e2322822cb80179b86856",
+      "inputPaths": [
+        "evidence/journal-snap-1.jsonl"
+      ],
+      "inputEvidenceIds": [],
+      "invariantIds": [
+        "I-SLOT-CAPACITY"
+      ],
+      "claims": [
+        "waiting/blocked records consume no active slot"
+      ],
+      "limitations": [],
+      "status": "CURRENT"
+    },
+    {
+      "id": "EV-MSG-DUP",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "kind": "EXECUTED_INTEGRATION",
+      "producer": "coordinator-7604",
+      "startedAt": "2026-09-27T15:48:56.581Z",
+      "finishedAt": "2026-09-27T15:48:56.581Z",
+      "commandOrMethod": "record MSG-INTEG-1 twice identical -> duplicate idempotent",
+      "cwd": "game",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/inputs-04-integ-dup.json",
+      "artifactHash": "8863a53f137859893756fc983512d7c8f8a833eb62818a41ff1074d3fb00aca9",
+      "inputPaths": [
+        "evidence/inputs-04-integ-dup.json"
+      ],
+      "inputEvidenceIds": [],
+      "invariantIds": [
+        "I-MSG-TERMINAL"
+      ],
+      "claims": [
+        "id+payloadHash dedup works"
+      ],
+      "limitations": [],
+      "status": "CURRENT"
+    },
+    {
+      "id": "EV-MSG-TAMPER",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "kind": "EXECUTED_INTEGRATION",
+      "producer": "coordinator-7604",
+      "startedAt": "2026-09-27T15:48:56.581Z",
+      "finishedAt": "2026-09-27T15:48:56.581Z",
+      "commandOrMethod": "record MSG-INTEG-1 with different payloadHash -> integrity error",
+      "cwd": "game",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/inputs-04-integ-mut2.json",
+      "artifactHash": "f36f58655247b97b7b215acca97702db0adb4cac063a643235bc294a3295191f",
+      "inputPaths": [
+        "evidence/inputs-04-integ-mut2.json"
+      ],
+      "inputEvidenceIds": [],
+      "invariantIds": [
+        "I-MSG-TERMINAL"
+      ],
+      "claims": [
+        "payload substitution under same id rejected"
+      ],
+      "limitations": [],
+      "status": "CURRENT"
+    },
+    {
+      "id": "EV-MSG-CONFLICT",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "kind": "EXECUTED_INTEGRATION",
+      "producer": "coordinator-7604",
+      "startedAt": "2026-09-27T15:48:56.581Z",
+      "finishedAt": "2026-09-27T15:48:56.581Z",
+      "commandOrMethod": "second SEALED_RESULT REQ-INTEG different hash -> rejected, demands parentRequestId",
+      "cwd": "game",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/inputs-04-integ-conflict.json",
+      "artifactHash": "6af9ac39bb522ab5c0e9d96996ec30ea52d60529d390ecfc8ae2fdb6ae1cda9b",
+      "inputPaths": [
+        "evidence/inputs-04-integ-conflict.json"
+      ],
+      "inputEvidenceIds": [],
+      "invariantIds": [
+        "I-MSG-TERMINAL"
+      ],
+      "claims": [
+        "conflicting terminal requires linked new request"
+      ],
+      "limitations": [],
+      "status": "CURRENT"
+    },
+    {
+      "id": "EV-MSG-STALE",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "kind": "EXECUTED_INTEGRATION",
+      "producer": "coordinator-7604",
+      "startedAt": "2026-09-27T15:48:56.581Z",
+      "finishedAt": "2026-09-27T15:48:56.581Z",
+      "commandOrMethod": "stale-state ACK MSG-INTEG-STALE1 recorded; console flags STALE but record carries no stale flag",
+      "cwd": "game",
+      "exitCode": 1,
+      "result": "FAIL",
+      "artifactPath": "evidence/inputs-04-integ-stale2.json",
+      "artifactHash": "9aab0badba1eaa3433ea0998e546eb9af2a88133b91df7deae5f10331cb54077",
+      "inputPaths": [
+        "evidence/inputs-04-integ-stale2.json"
+      ],
+      "inputEvidenceIds": [],
+      "invariantIds": [
+        "I-MSG-TERMINAL"
+      ],
+      "claims": [
+        "staleness computed but not persisted; stale SEALED_RESULT could still establish terminal hash"
+      ],
+      "limitations": [],
+      "status": "CURRENT"
+    },
+    {
+      "id": "EV-MSG-NOASSIGN",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "kind": "EXECUTED_INTEGRATION",
+      "producer": "coordinator-7604",
+      "startedAt": "2026-09-27T15:48:56.581Z",
+      "finishedAt": "2026-09-27T15:48:56.581Z",
+      "commandOrMethod": "SEALED_RESULT accepted on REQ-INTEG with no prior ASSIGN message",
+      "cwd": "game",
+      "exitCode": 1,
+      "result": "FAIL",
+      "artifactPath": "evidence/inputs-04-integ-1.json",
+      "artifactHash": "88f4acab1fd9fb30863a41d765c29e09c482ad246000fb1e1bda4095d7e16df9",
+      "inputPaths": [
+        "evidence/inputs-04-integ-1.json"
+      ],
+      "inputEvidenceIds": [],
+      "invariantIds": [
+        "I-MSG-TERMINAL"
+      ],
+      "claims": [
+        "no requestId-existence or ordering check in recordMessage"
+      ],
+      "limitations": [],
+      "status": "CURRENT"
+    },
+    {
+      "id": "EV-LEASE-NEG",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "kind": "EXECUTED_INTEGRATION",
+      "producer": "coordinator-7604",
+      "startedAt": "2026-09-27T15:48:56.581Z",
+      "finishedAt": "2026-09-27T15:48:56.581Z",
+      "commandOrMethod": "record+schedule with --lease intruder-x -> rejected",
+      "cwd": "game",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/inputs-04-integ-1.json",
+      "artifactHash": "88f4acab1fd9fb30863a41d765c29e09c482ad246000fb1e1bda4095d7e16df9",
+      "inputPaths": [
+        "evidence/inputs-04-integ-1.json"
+      ],
+      "inputEvidenceIds": [],
+      "invariantIds": [
+        "I-LEDGER-AUTHORITY"
+      ],
+      "claims": [
+        "lease guard enforced on both write paths"
+      ],
+      "limitations": [],
+      "status": "CURRENT"
+    },
+    {
+      "id": "EV-ASG-BYPASS",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "kind": "EXECUTED_INTEGRATION",
+      "producer": "coordinator-7604",
+      "startedAt": "2026-09-27T15:48:56.582Z",
+      "finishedAt": "2026-09-27T15:48:56.582Z",
+      "commandOrMethod": "record kind=assignment wrote ASG-FORGED status=RESERVED bypassing admission/capacity",
+      "cwd": "game",
+      "exitCode": 1,
+      "result": "FAIL",
+      "artifactPath": "evidence/inputs-07-forged-asg.json",
+      "artifactHash": "3be99dafc8b0d508d3f0ce6d68cfadf4064a1368255353fee3fc6bb982874238",
+      "inputPaths": [
+        "evidence/inputs-07-forged-asg.json"
+      ],
+      "inputEvidenceIds": [],
+      "invariantIds": [
+        "I-SLOT-CAPACITY",
+        "I-LEDGER-AUTHORITY"
+      ],
+      "claims": [
+        "schedule is not the sole reservation path; record can mint active assignments"
+      ],
+      "limitations": [],
+      "status": "CURRENT"
+    },
+    {
+      "id": "EV-MUT-REL",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "kind": "EXECUTED_MUTATION",
+      "producer": "coordinator-7604",
+      "startedAt": "2026-09-27T15:48:56.582Z",
+      "finishedAt": "2026-09-27T15:48:56.582Z",
+      "commandOrMethod": "mutant m1 (RESULT_RECEIVED removed from ASSIGNMENT_ACTIVE): control QUEUED, mutant ADMITTED -> killed",
+      "cwd": "game",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/mutants/m1/prevention.mjs",
+      "artifactHash": "8bcbada6cb827361a6aa14ee8904105b4b5441314d6bafb959bba0f5b7da791b",
+      "inputPaths": [
+        "evidence/mutants/m1/prevention.mjs"
+      ],
+      "inputEvidenceIds": [],
+      "invariantIds": [
+        "I-SLOT-RELEASE"
+      ],
+      "claims": [
+        "representative mutant killed by admission probe"
+      ],
+      "limitations": [],
+      "status": "CURRENT"
+    },
+    {
+      "id": "EV-MUT-CAP",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "kind": "EXECUTED_MUTATION",
+      "producer": "coordinator-7604",
+      "startedAt": "2026-09-27T15:48:56.582Z",
+      "finishedAt": "2026-09-27T15:48:56.582Z",
+      "commandOrMethod": "mutant m2 (capacity check removed): control QUEUED, mutant ADMITTED -> killed",
+      "cwd": "game",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/mutants/m2/prevention.mjs",
+      "artifactHash": "f4f48b0498d2ccdd204bc15503a4aad94e02f8748b9e74f82ad5086f734f5969",
+      "inputPaths": [
+        "evidence/mutants/m2/prevention.mjs"
+      ],
+      "inputEvidenceIds": [],
+      "invariantIds": [
+        "I-SLOT-CAPACITY"
+      ],
+      "claims": [
+        "representative mutant killed by admission probe"
+      ],
+      "limitations": [],
+      "status": "CURRENT"
+    },
+    {
+      "id": "EV-STATIC-SLOT",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "kind": "SOURCE_PROOF",
+      "producer": "coordinator-7604",
+      "startedAt": "2026-09-27T15:48:56.583Z",
+      "finishedAt": "2026-09-27T15:48:56.583Z",
+      "commandOrMethod": "read admitAssignment+observeAssignment+ASSIGNMENT_ACTIVE+TERMINAL_OBSERVED (prevention.mjs:127-173, cli.mjs:347-370)",
+      "cwd": "game",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/inputs-01-invariants.json",
+      "artifactHash": "c24205b54c122bd0421baff9d945a855876478fcbefc82d6c9fe99ae7a3a0dc9",
+      "inputPaths": [
+        "evidence/inputs-01-invariants.json"
+      ],
+      "inputEvidenceIds": [],
+      "invariantIds": [
+        "I-SLOT-CAPACITY",
+        "I-SLOT-RELEASE"
+      ],
+      "claims": [
+        "code inspected: no RUNNING transition exists; re-admission replaces record wholesale"
+      ],
+      "limitations": [],
+      "status": "CURRENT"
+    },
+    {
+      "id": "EV-STATIC-MSG",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "kind": "SOURCE_PROOF",
+      "producer": "coordinator-7604",
+      "startedAt": "2026-09-27T15:48:56.583Z",
+      "finishedAt": "2026-09-27T15:48:56.583Z",
+      "commandOrMethod": "read recordMessage (state.mjs:229-251) + cmdRecord message path (cli.mjs:144-177)",
+      "cwd": "game",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/inputs-01-invariants.json",
+      "artifactHash": "c24205b54c122bd0421baff9d945a855876478fcbefc82d6c9fe99ae7a3a0dc9",
+      "inputPaths": [
+        "evidence/inputs-01-invariants.json"
+      ],
+      "inputEvidenceIds": [],
+      "invariantIds": [
+        "I-MSG-TERMINAL"
+      ],
+      "claims": [
+        "dedup/conflict/stale logic inspected"
+      ],
+      "limitations": [],
+      "status": "CURRENT"
+    },
+    {
+      "id": "EV-REL-CANCEL",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "kind": "EXECUTED_INTEGRATION",
+      "producer": "coordinator-7604",
+      "startedAt": "2026-09-27T15:51:31.047Z",
+      "finishedAt": "2026-09-27T15:51:31.047Z",
+      "commandOrMethod": "observe cancelled on ASG-R1/R2/R4/R5 after user-terminated subagents -> FINISHED, active=0",
+      "cwd": "game",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/journal-snap-1.jsonl",
+      "artifactHash": "c2152d9ca29c7b68a4a17874a69fe75dd5ecd21fb64e2322822cb80179b86856",
+      "inputPaths": [
+        "evidence/journal-snap-1.jsonl"
+      ],
+      "inputEvidenceIds": [],
+      "invariantIds": [
+        "I-SLOT-RELEASE"
+      ],
+      "claims": [
+        "verified termination (cancel) releases slots; run drained to 0 active with WAIT/BLOCKED untouched"
+      ],
+      "limitations": [
+        "reviewer results absent - user cancelled dispatches; INDEPENDENT_REVIEW surfaces remain uncovered"
+      ],
+      "status": "CURRENT"
+    },
+    {
+      "id": "EV-QUALIFY-PARSE",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "kind": "EXECUTED_UNIT_STRUCTURAL",
+      "producer": "coordinator-7604",
+      "startedAt": "2026-09-27T15:55:35.867Z",
+      "finishedAt": "2026-09-27T15:55:35.868Z",
+      "commandOrMethod": "npm run qa:internal qualify -> \"0 passed, 0 failed\" then PROTOCOL_ADOPTION_QUALIFIED; direct node --test shows 48 pass",
+      "cwd": "game",
+      "exitCode": 1,
+      "result": "FAIL",
+      "artifactPath": "evidence/inputs-01-invariants.json",
+      "artifactHash": "c24205b54c122bd0421baff9d945a855876478fcbefc82d6c9fe99ae7a3a0dc9",
+      "inputPaths": [
+        "evidence/inputs-01-invariants.json"
+      ],
+      "inputEvidenceIds": [],
+      "invariantIds": [
+        "I-LEDGER-AUTHORITY"
+      ],
+      "claims": [
+        "qualify verdict emitted on vacuously-parsed counts"
+      ],
+      "limitations": [
+        "console transcript not captured to file; cli.mjs:231-267 is the defect site"
+      ],
+      "status": "CURRENT"
+    },
+    {
+      "id": "EV-STATIC-BIND",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "kind": "SOURCE_PROOF",
+      "producer": "coordinator-7604",
+      "startedAt": "2026-09-27T15:55:35.869Z",
+      "finishedAt": "2026-09-27T15:55:35.869Z",
+      "commandOrMethod": "observeAssignment trusts coordinator-asserted observedStatus token; no mechanical link to real process exit",
+      "cwd": "game",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/inputs-01-invariants.json",
+      "artifactHash": "c24205b54c122bd0421baff9d945a855876478fcbefc82d6c9fe99ae7a3a0dc9",
+      "inputPaths": [
+        "evidence/inputs-01-invariants.json"
+      ],
+      "inputEvidenceIds": [],
+      "invariantIds": [
+        "I-AGENT-BINDING"
+      ],
+      "claims": [
+        "release decision = honesty-boundary: TERMINAL_OBSERVED token asserted by coordinator, not platform-verified"
+      ],
+      "limitations": [
+        "live dispatches did terminate; unverifiable-in-principle without runtime introspection"
+      ],
+      "status": "CURRENT"
+    }
+  ],
+  "coverage": [
+    {
+      "id": "COV-CAP-DET",
+      "invariantId": "I-SLOT-CAPACITY",
+      "surface": "DETERMINISTIC",
+      "attackIds": [
+        "AT-CAP-OVERFLOW",
+        "AT-CAP-NONREADY"
+      ],
+      "taxonomyIds": [
+        "TRN-08",
+        "QAI-08"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "live admission exercises under real concurrency",
+      "evidenceIds": [
+        "EV-LIVE-ADMIT",
+        "EV-QUEUE-NOSLOT"
+      ],
+      "reviewerIds": [],
+      "status": "SATISFIED",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-CAP-STATIC",
+      "invariantId": "I-SLOT-CAPACITY",
+      "surface": "STATIC_SEMANTIC",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "admitAssignment source review + reviewer lens",
+      "evidenceIds": [
+        "EV-STATIC-SLOT"
+      ],
+      "reviewerIds": [],
+      "status": "SATISFIED",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-CAP-REV",
+      "invariantId": "I-SLOT-CAPACITY",
+      "surface": "INDEPENDENT_REVIEW",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "sealed reviewer R1 covers the slot law",
+      "evidenceIds": [],
+      "reviewerIds": [
+        "REV-A"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-REL-DET",
+      "invariantId": "I-SLOT-RELEASE",
+      "surface": "DETERMINISTIC",
+      "attackIds": [
+        "AT-REL-RESULT",
+        "AT-REL-TIMEOUT",
+        "AT-REL-VERIFIED"
+      ],
+      "taxonomyIds": [
+        "TRN-03",
+        "ASY-05"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "live observe sequence on real dispatched agent",
+      "evidenceIds": [
+        "EV-NEEDCTX-REL",
+        "EV-ASG-BYPASS"
+      ],
+      "reviewerIds": [],
+      "status": "SATISFIED",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-REL-STATIC",
+      "invariantId": "I-SLOT-RELEASE",
+      "surface": "STATIC_SEMANTIC",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "observeAssignment source review",
+      "evidenceIds": [
+        "EV-STATIC-SLOT"
+      ],
+      "reviewerIds": [],
+      "status": "SATISFIED",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-REL-MUT",
+      "invariantId": "I-SLOT-RELEASE",
+      "surface": "MUTATION",
+      "attackIds": [
+        "AT-REL-MUTANT"
+      ],
+      "taxonomyIds": [
+        "TRN-03"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "disposable mutant: drop RESULT_RECEIVED/RELEASE_PENDING from active set",
+      "evidenceIds": [
+        "EV-MUT-REL"
+      ],
+      "reviewerIds": [],
+      "status": "SATISFIED",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-REL-REV",
+      "invariantId": "I-SLOT-RELEASE",
+      "surface": "INDEPENDENT_REVIEW",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "sealed reviewer R1/R4",
+      "evidenceIds": [],
+      "reviewerIds": [
+        "REV-A"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-MSG-DET",
+      "invariantId": "I-MSG-TERMINAL",
+      "surface": "DETERMINISTIC",
+      "attackIds": [
+        "AT-MSG-DUP",
+        "AT-MSG-CONFLICT",
+        "AT-MSG-STALE"
+      ],
+      "taxonomyIds": [
+        "ASY-04",
+        "QAI-05"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "negative tests through record kind=message",
+      "evidenceIds": [
+        "EV-MSG-DUP",
+        "EV-MSG-TAMPER",
+        "EV-MSG-CONFLICT",
+        "EV-MSG-STALE"
+      ],
+      "reviewerIds": [],
+      "status": "SATISFIED",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-MSG-STATIC",
+      "invariantId": "I-MSG-TERMINAL",
+      "surface": "STATIC_SEMANTIC",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "recordMessage source review",
+      "evidenceIds": [
+        "EV-STATIC-MSG"
+      ],
+      "reviewerIds": [],
+      "status": "SATISFIED",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-MSG-REV",
+      "invariantId": "I-MSG-TERMINAL",
+      "surface": "INDEPENDENT_REVIEW",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "sealed reviewer R2",
+      "evidenceIds": [],
+      "reviewerIds": [
+        "REV-B"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-LED-STATIC",
+      "invariantId": "I-LEDGER-AUTHORITY",
+      "surface": "STATIC_SEMANTIC",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "lease/atomic/event-chain source review",
+      "evidenceIds": [
+        "EV-STATIC-SLOT",
+        "EV-STATIC-MSG"
+      ],
+      "reviewerIds": [],
+      "status": "SATISFIED",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-LED-DET",
+      "invariantId": "I-LEDGER-AUTHORITY",
+      "surface": "DETERMINISTIC",
+      "attackIds": [
+        "AT-LEDGER-WRONGLEASE"
+      ],
+      "taxonomyIds": [
+        "AUT-08"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "wrong-lease write attempt rejected",
+      "evidenceIds": [
+        "EV-LEASE-NEG"
+      ],
+      "reviewerIds": [],
+      "status": "SATISFIED",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-LED-REV",
+      "invariantId": "I-LEDGER-AUTHORITY",
+      "surface": "INDEPENDENT_REVIEW",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "sealed reviewer R5 journal/lease audit",
+      "evidenceIds": [],
+      "reviewerIds": [
+        "REV-B"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-BIND-REV",
+      "invariantId": "I-AGENT-BINDING",
+      "surface": "INDEPENDENT_REVIEW",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "reviewer attestations of fresh context + no prior findings",
+      "evidenceIds": [],
+      "reviewerIds": [
+        "REV-A"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-BIND-STATIC",
+      "invariantId": "I-AGENT-BINDING",
+      "surface": "STATIC_SEMANTIC",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "honesty-boundary analysis of observedStatus claims",
+      "evidenceIds": [
+        "EV-STATIC-BIND"
+      ],
+      "reviewerIds": [],
+      "status": "SATISFIED",
+      "weakProtection": false
+    }
+  ],
+  "attacks": [
+    {
+      "id": "AT-CAP-OVERFLOW",
+      "invariantIds": [
+        "I-SLOT-CAPACITY"
+      ],
+      "taxonomyIds": [
+        "TRN-08"
+      ],
+      "challengedAssumption": "a 6th READY admission is refused while cap is occupied",
+      "sequenceOrInput": "admit R1..R4 READY with externalOccupied=1 (coordinator), then admit R5",
+      "oracle": "R5 status QUEUED, active count stays <= cap, R5 holds no slot",
+      "noveltyReason": "first live multi-agent exercise of admission",
+      "evidenceIds": [
+        "EV-LIVE-ADMIT",
+        "EV-MUT-CAP"
+      ]
+    },
+    {
+      "id": "AT-CAP-NONREADY",
+      "invariantIds": [
+        "I-SLOT-CAPACITY"
+      ],
+      "taxonomyIds": [
+        "TRN-08"
+      ],
+      "challengedAssumption": "waiting/blocked work never consumes capacity",
+      "sequenceOrInput": "admit WAITING_INPUT and BLOCKED readiness records",
+      "oracle": "status QUEUED/BLOCKED; active count unchanged",
+      "noveltyReason": "exercises non-READY intake live",
+      "evidenceIds": [
+        "EV-QUEUE-NOSLOT"
+      ]
+    },
+    {
+      "id": "AT-REL-RESULT",
+      "invariantIds": [
+        "I-SLOT-RELEASE"
+      ],
+      "taxonomyIds": [
+        "TRN-03"
+      ],
+      "challengedAssumption": "receiving a result does not free the slot",
+      "sequenceOrInput": "dispatch real subagent; record its result; observe 'result'",
+      "oracle": "status RESULT_RECEIVED; active count unchanged; further admission still queued",
+      "noveltyReason": "result-vs-release on a real agent",
+      "evidenceIds": [
+        "EV-NEEDCTX-REL"
+      ]
+    },
+    {
+      "id": "AT-REL-TIMEOUT",
+      "invariantIds": [
+        "I-SLOT-RELEASE"
+      ],
+      "taxonomyIds": [
+        "ASY-05"
+      ],
+      "challengedAssumption": "lease expiry alone cannot free the slot",
+      "sequenceOrInput": "observe 'expired' on RESULT_RECEIVED assignment",
+      "oracle": "status RELEASE_PENDING; occupancy retained",
+      "noveltyReason": "timeout-without-proof path",
+      "evidenceIds": [
+        "EV-ASG-BYPASS"
+      ]
+    },
+    {
+      "id": "AT-REL-VERIFIED",
+      "invariantIds": [
+        "I-SLOT-RELEASE"
+      ],
+      "taxonomyIds": [
+        "ASY-05"
+      ],
+      "challengedAssumption": "only verified termination releases",
+      "sequenceOrInput": "after agent termination is confirmed, observe 'terminated'",
+      "oracle": "FINISHED with releaseEvidence; capacity freed; queued admission now admits",
+      "noveltyReason": "verified exit against real agent id",
+      "evidenceIds": [
+        "EV-NEEDCTX-REL"
+      ]
+    },
+    {
+      "id": "AT-REL-MUTANT",
+      "invariantIds": [
+        "I-SLOT-RELEASE"
+      ],
+      "taxonomyIds": [
+        "TRN-03"
+      ],
+      "challengedAssumption": "removing RESULT_RECEIVED/RELEASE_PENDING from the active set lets capacity overflow",
+      "sequenceOrInput": "disposable copy of prevention.mjs minus those statuses; probe admit at cap",
+      "oracle": "probe catches mutant admitting beyond cap; unmutated control queues",
+      "noveltyReason": "mutant on the release law itself",
+      "evidenceIds": [
+        "EV-MUT-REL"
+      ]
+    },
+    {
+      "id": "AT-MSG-DUP",
+      "invariantIds": [
+        "I-MSG-TERMINAL"
+      ],
+      "taxonomyIds": [
+        "ASY-04"
+      ],
+      "challengedAssumption": "identical terminal replay is idempotent, not double-counted",
+      "sequenceOrInput": "record same SEALED_RESULT twice",
+      "oracle": "second is flagged duplicate, ledger gains no second record",
+      "noveltyReason": "live replay",
+      "evidenceIds": [
+        "EV-MSG-DUP",
+        "EV-MSG-TAMPER"
+      ]
+    },
+    {
+      "id": "AT-MSG-CONFLICT",
+      "invariantIds": [
+        "I-MSG-TERMINAL"
+      ],
+      "taxonomyIds": [
+        "QAI-05"
+      ],
+      "challengedAssumption": "conflicting terminal payload on one requestId is rejected",
+      "sequenceOrInput": "record SEALED_RESULT then a second with different payloadHash",
+      "oracle": "integrity error; ledger unchanged",
+      "noveltyReason": "live conflict injection",
+      "evidenceIds": [
+        "EV-MSG-CONFLICT"
+      ]
+    },
+    {
+      "id": "AT-MSG-STALE",
+      "invariantIds": [
+        "I-MSG-TERMINAL"
+      ],
+      "taxonomyIds": [
+        "QAI-02"
+      ],
+      "challengedAssumption": "a message bound to a foreign state is flagged stale",
+      "sequenceOrInput": "record message with fabricated prior-state tuple",
+      "oracle": "recorded as stale:true; cannot masquerade as current",
+      "noveltyReason": "live stale injection",
+      "evidenceIds": [
+        "EV-MSG-STALE"
+      ]
+    },
+    {
+      "id": "AT-LEDGER-WRONGLEASE",
+      "invariantIds": [
+        "I-LEDGER-AUTHORITY"
+      ],
+      "taxonomyIds": [
+        "AUT-08"
+      ],
+      "challengedAssumption": "a write under a foreign lease id is refused",
+      "sequenceOrInput": "qa:internal record --lease intruder-x",
+      "oracle": "checkLease throws; no mutation",
+      "noveltyReason": "live lease attack",
+      "evidenceIds": [
+        "EV-LEASE-NEG"
+      ]
+    },
+    {
+      "id": "AT-NEED-CONTEXT",
+      "invariantIds": [
+        "I-AGENT-BINDING"
+      ],
+      "taxonomyIds": [
+        "QAI-03"
+      ],
+      "challengedAssumption": "a reviewer missing required material returns NEED_CONTEXT and holds no slot after verified exit",
+      "sequenceOrInput": "dispatch reviewer whose bundle names a nonexistent required doc",
+      "oracle": "NEED_CONTEXT message naming the gap; slot freed only after verified exit",
+      "noveltyReason": "real NEED_CONTEXT lifecycle",
+      "evidenceIds": [
+        "EV-NEEDCTX-REL"
+      ]
+    }
+  ],
+  "reviews": [
+    {
+      "id": "REV-A",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "round": 1,
+      "phase": "NOVEL_SYNTHESIS",
+      "reviewerId": "subagent:ca27c584",
+      "contextId": "ca27c584",
+      "model": "swe-subagent",
+      "role": "sealed falsification reviewer (slot law)",
+      "inputBundleHash": "843c3cf99e3f35f40beafa24fa2ca3e6d09f7b8f64f3b284d0b9b3befd597637",
+      "priorFindingsVisible": false,
+      "accessLimitations": [
+        "read-only; run artifacts incl. finding titles encountered during verification - disclosed, corroborating not formative"
+      ],
+      "startedAt": "2026-09-27T16:27:52.372Z",
+      "sealedAt": "2026-09-27T16:27:52.372Z",
+      "previousPhaseReviewId": null,
+      "reviewedAfterPreviousFixes": false,
+      "coverageIds": [
+        "COV-CAP-REV",
+        "COV-REL-REV",
+        "COV-BIND-REV"
+      ],
+      "evidenceIds": [],
+      "findingIds": [
+        "F-PU30-09",
+        "F-PU30-10",
+        "F-PU30-11",
+        "F-PU30-12",
+        "F-PU30-13",
+        "F-PU30-14",
+        "F-PU30-15",
+        "F-PU30-16",
+        "F-PU30-17"
+      ],
+      "novelAttackIds": [],
+      "status": "SEALED"
+    },
+    {
+      "id": "REV-B",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "round": 1,
+      "phase": "NOVEL_SYNTHESIS",
+      "reviewerId": "subagent:f6a1d784",
+      "contextId": "f6a1d784",
+      "model": "swe-subagent",
+      "role": "sealed falsification reviewer (message+ledger)",
+      "inputBundleHash": "90705113a194b993c1b04fdb64d2b68ccfadbb0180f9dc561ba66268c5035897",
+      "priorFindingsVisible": false,
+      "accessLimitations": [
+        "read-only; ledger counterexample strings + invariants via grep during verification - disclosed, derived-from-source-first"
+      ],
+      "startedAt": "2026-09-27T16:27:52.372Z",
+      "sealedAt": "2026-09-27T16:27:52.372Z",
+      "previousPhaseReviewId": null,
+      "reviewedAfterPreviousFixes": false,
+      "coverageIds": [
+        "COV-MSG-REV",
+        "COV-LED-REV"
+      ],
+      "evidenceIds": [],
+      "findingIds": [
+        "F-PU30-18",
+        "F-PU30-19",
+        "F-PU30-20",
+        "F-PU30-21",
+        "F-PU30-22",
+        "F-PU30-23",
+        "F-PU30-24"
+      ],
+      "novelAttackIds": [],
+      "status": "SEALED"
+    }
+  ],
+  "cycles": [],
+  "mutations": [
+    {
+      "id": "MUT-REL-01",
+      "candidateState": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "invariantIds": [
+        "I-SLOT-RELEASE"
+      ],
+      "rootClass": "implementation",
+      "operator": "remove RESULT_RECEIVED from ASSIGNMENT_ACTIVE",
+      "isolationPath": "evidence/mutants/m1/prevention.mjs",
+      "mutantHash": "8bcbada6cb827361a6aa14ee8904105b4b5441314d6bafb959bba0f5b7da791b",
+      "expectedDetector": "admission probe: 5 slots held must queue next READY assignment",
+      "result": "KILLED_EXPECTED",
+      "evidenceIds": [
+        "EV-MUT-REL"
+      ],
+      "equivalenceReason": "non-equivalent: removes slot-retention semantics",
+      "candidateUnchanged": true
+    },
+    {
+      "id": "MUT-CAP-01",
+      "candidateState": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "invariantIds": [
+        "I-SLOT-CAPACITY"
+      ],
+      "rootClass": "implementation",
+      "operator": "remove capacity check total+1>cap",
+      "isolationPath": "evidence/mutants/m2/prevention.mjs",
+      "mutantHash": "f4f48b0498d2ccdd204bc15503a4aad94e02f8748b9e74f82ad5086f734f5969",
+      "expectedDetector": "admission probe: 5 slots held must queue next READY assignment",
+      "result": "KILLED_EXPECTED",
+      "evidenceIds": [
+        "EV-MUT-CAP"
+      ],
+      "equivalenceReason": "non-equivalent: removes admission bound",
+      "candidateUnchanged": true
+    }
+  ],
+  "corpus": [],
+  "lessons": [
+    {
+      "id": "L-PU30-QUALIFY-PARSE",
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "findingIds": [
+        "F-PU30-04"
+      ],
+      "incidentEvidenceIds": [
+        "EV-QUALIFY-PARSE"
+      ],
+      "originatingRun": "pu30-live-2026-09-27",
+      "rootClass": "implementation",
+      "missedInvariantIds": [],
+      "escapeReason": "qualify emitted vacuous PROTOCOL_ADOPTION_QUALIFIED because TAP regex matched nothing under Node24 spec reporter",
+      "applicability": [
+        "scripts/qa",
+        "coordinator workflow"
+      ],
+      "exclusions": [],
+      "proposedProtection": [
+        "pin qualify parser to --test-reporter tap or parse spec output; add QF case asserting nonzero pass count"
+      ],
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [],
+      "capabilityDelta": "tighter verdict gating",
+      "status": "CAPTURED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "recurrenceFindingIds": [],
+      "preventionEvidenceIds": [],
+      "guidance": null
+    },
+    {
+      "id": "L-PU30-ASG-BYPASS",
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "findingIds": [
+        "F-PU30-02",
+        "F-PU30-25"
+      ],
+      "incidentEvidenceIds": [
+        "EV-ASG-BYPASS"
+      ],
+      "originatingRun": "pu30-live-2026-09-27",
+      "rootClass": "implementation",
+      "missedInvariantIds": [],
+      "escapeReason": "record kind=assignment writes active-status records with zero admission accounting",
+      "applicability": [
+        "scripts/qa",
+        "coordinator workflow"
+      ],
+      "exclusions": [],
+      "proposedProtection": [
+        "route kind=assignment writes through admitAssignment or restrict to non-active statuses"
+      ],
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [],
+      "capabilityDelta": "reservation authority integrity",
+      "status": "CAPTURED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "recurrenceFindingIds": [],
+      "preventionEvidenceIds": [],
+      "guidance": null
+    },
+    {
+      "id": "L-PU30-REQID-TYPO",
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "findingIds": [
+        "F-PU30-06"
+      ],
+      "incidentEvidenceIds": [],
+      "originatingRun": "pu30-live-2026-09-27",
+      "rootClass": "implementation",
+      "missedInvariantIds": [],
+      "escapeReason": "coordinator retyped requestId instead of copying from immutable bundle -> REQ-R5-BYPASS vs REQ-R5-JOURNAL divergence",
+      "applicability": [
+        "scripts/qa",
+        "coordinator workflow"
+      ],
+      "exclusions": [],
+      "proposedProtection": [
+        "copy correlation ids from bundle files, never retype; validate assignment.requestId==message.requestId"
+      ],
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [],
+      "capabilityDelta": "correlation discipline",
+      "status": "CAPTURED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "recurrenceFindingIds": [],
+      "preventionEvidenceIds": [],
+      "guidance": null
+    },
+    {
+      "id": "L-PU30-STALE-FLAG",
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "findingIds": [
+        "F-PU30-01",
+        "F-PU30-26"
+      ],
+      "incidentEvidenceIds": [
+        "EV-MSG-STALE"
+      ],
+      "originatingRun": "pu30-live-2026-09-27",
+      "rootClass": "implementation",
+      "missedInvariantIds": [
+        "I-MSG-TERMINAL"
+      ],
+      "escapeReason": "staleness computed transiently; record stored unmarked; stale SEALED_RESULT can poison requestId terminal hash",
+      "applicability": [
+        "scripts/qa",
+        "recordMessage"
+      ],
+      "exclusions": [],
+      "proposedProtection": [
+        "persist stale flag on message record; exclude stale messages from terminal-hash establishment; emit STALE_RESULT kind"
+      ],
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [],
+      "capabilityDelta": "staleness visibility",
+      "status": "CAPTURED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "recurrenceFindingIds": [],
+      "preventionEvidenceIds": [],
+      "guidance": null
+    }
+  ],
+  "messages": [
+    {
+      "id": "MSG-ASSIGN-ASG_R1",
+      "requestId": "REQ-R1-SLOT",
+      "parentRequestId": null,
+      "sender": "coordinator-7604",
+      "recipient": "worker:ASG_R1",
+      "kind": "ASSIGN",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "phase": "ATTACK",
+      "bundleHash": "86153434f3a8141cff08436767767441d2e649a215db12a2557c03ee69472dbe",
+      "payloadPath": "evidence/messages/msg-assign-ASG_R1.json",
+      "payloadHash": "a93b6ead258ead07afcf9ba61e3c0d3d41f30e6b47923e1dfdf3264ec40c10be",
+      "createdAt": "2026-09-27T15:38:53.299Z",
+      "leaseId": "coordinator-7604",
+      "runId": "pu30-live-2026-09-27"
+    },
+    {
+      "id": "MSG-ASSIGN-ASG_R2",
+      "requestId": "REQ-R2-MSG",
+      "parentRequestId": null,
+      "sender": "coordinator-7604",
+      "recipient": "worker:ASG_R2",
+      "kind": "ASSIGN",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "phase": "ATTACK",
+      "bundleHash": "fdd3f4a923267f793f2da7b862a3e4925b81d2104a4febb46e933bf38cabf69e",
+      "payloadPath": "evidence/messages/msg-assign-ASG_R2.json",
+      "payloadHash": "e6e9b675a5613fb1dc9b20f37bc0b8885cc14bbbf998b225c1b53a28a87bc5f9",
+      "createdAt": "2026-09-27T15:38:53.304Z",
+      "leaseId": "coordinator-7604",
+      "runId": "pu30-live-2026-09-27"
+    },
+    {
+      "id": "MSG-ASSIGN-ASG_R3",
+      "requestId": "REQ-R3-NEEDCTX",
+      "parentRequestId": null,
+      "sender": "coordinator-7604",
+      "recipient": "worker:ASG_R3",
+      "kind": "ASSIGN",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "phase": "ATTACK",
+      "bundleHash": "2e5655d2e2c15fc30558fa67b4257689f0f6c49d66005c09ee12266d7e7df235",
+      "payloadPath": "evidence/messages/msg-assign-ASG_R3.json",
+      "payloadHash": "14e3bf1422bd2b7ecf828353f77aa6cd2d341ca7f20e4ecf07d864315f17fa07",
+      "createdAt": "2026-09-27T15:38:53.306Z",
+      "leaseId": "coordinator-7604",
+      "runId": "pu30-live-2026-09-27"
+    },
+    {
+      "id": "MSG-ASSIGN-ASG_R4",
+      "requestId": "REQ-R4-HONESTY",
+      "parentRequestId": null,
+      "sender": "coordinator-7604",
+      "recipient": "worker:ASG_R4",
+      "kind": "ASSIGN",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "phase": "ATTACK",
+      "bundleHash": "171dc77032fe52c1209bfaf00db453d26f15a8de8413d4d0ea33b2d0ff19e1b9",
+      "payloadPath": "evidence/messages/msg-assign-ASG_R4.json",
+      "payloadHash": "224a6bbeea92654cb049f9f66848a882d4b5f3b345477d06d961a77715d6136d",
+      "createdAt": "2026-09-27T15:38:53.307Z",
+      "leaseId": "coordinator-7604",
+      "runId": "pu30-live-2026-09-27"
+    },
+    {
+      "id": "MSG-NEEDCTX-R3",
+      "requestId": "REQ-R3-NEEDCTX",
+      "parentRequestId": null,
+      "sender": "worker:49db4b21",
+      "recipient": "coordinator-7604",
+      "kind": "NEED_CONTEXT",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "phase": "ATTACK",
+      "bundleHash": "2e5655d2e2c15fc30558fa67b4257689f0f6c49d66005c09ee12266d7e7df235",
+      "payloadPath": "evidence/messages/msg-needctx-r3.json",
+      "payloadHash": "0fe9b9d00a28cc70d85915439093c8ec213fe3c50624568ca3fde1040e05531f",
+      "createdAt": "2026-09-27T15:41:05.410Z",
+      "leaseId": null,
+      "runId": "pu30-live-2026-09-27"
+    },
+    {
+      "id": "MSG-ASSIGN-R5",
+      "requestId": "REQ-R5-JOURNAL",
+      "parentRequestId": null,
+      "sender": "coordinator-7604",
+      "recipient": "worker:ASG-R5",
+      "kind": "ASSIGN",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "phase": "ATTACK",
+      "bundleHash": "d9f6434d39d74290a30ade39f10065f32721c1e66278c1b9b163de1c49749e75",
+      "payloadPath": "evidence/messages/msg-assign-r5.json",
+      "payloadHash": "e901e4d9d4689bf47629f29e0d6f3cab136a44d902202541235d6b053cf21543",
+      "createdAt": "2026-09-27T15:43:41.245Z",
+      "leaseId": "coordinator-7604",
+      "runId": "pu30-live-2026-09-27"
+    },
+    {
+      "id": "MSG-INTEG-1",
+      "requestId": "REQ-INTEG",
+      "parentRequestId": null,
+      "sender": "worker:test",
+      "recipient": "coordinator-7604",
+      "kind": "SEALED_RESULT",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "phase": "ATTACK",
+      "bundleHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "payloadPath": "evidence/messages/integ-sealed-1.json",
+      "payloadHash": "7fc0575cce3da9714e9618ba5db0d9e179ae20abf71352731a42d07422f19fd9",
+      "createdAt": "2026-09-27T15:40:30.886Z",
+      "leaseId": "coordinator-7604",
+      "runId": "pu30-live-2026-09-27"
+    },
+    {
+      "id": "MSG-INTEG-STALE1",
+      "requestId": "REQ-INTEG2",
+      "parentRequestId": null,
+      "sender": "worker:test",
+      "recipient": "coordinator-7604",
+      "kind": "ACK",
+      "state": {
+        "productStateId": "0000000000000000000000000000000000000000000000000000000000000000",
+        "contractId": "0000000000000000000000000000000000000000000000000000000000000000",
+        "attackModelId": "0000000000000000000000000000000000000000000000000000000000000000",
+        "environmentId": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "phase": "ATTACK",
+      "bundleHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "payloadPath": "evidence/messages/integ-stale.json",
+      "payloadHash": "1ee31aa2632e2b76803b7781414bebb48a5643c1cd7a41c32ff018fb33d67464",
+      "createdAt": "2026-09-27T15:45:09.597Z",
+      "leaseId": null,
+      "runId": "pu30-live-2026-09-27"
+    },
+    {
+      "id": "MSG-ASSIGN-ASG-R6",
+      "requestId": "REQ-R6-SLOT",
+      "parentRequestId": null,
+      "sender": "coordinator-7604",
+      "recipient": "worker:ASG-R6",
+      "kind": "ASSIGN",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "phase": "ATTACK",
+      "bundleHash": "843c3cf99e3f35f40beafa24fa2ca3e6d09f7b8f64f3b284d0b9b3befd597637",
+      "payloadPath": "evidence/messages/msg-assign-ASG-R6.json",
+      "payloadHash": "95cbf6f1de15805c5344f180655090a6a02ba4e3c8eea5d516926d1d1c78c299",
+      "createdAt": "2026-09-27T16:05:42.348Z",
+      "leaseId": "coordinator-7604",
+      "runId": "pu30-live-2026-09-27"
+    },
+    {
+      "id": "MSG-ASSIGN-ASG-R7",
+      "requestId": "REQ-R7-MSGLED",
+      "parentRequestId": null,
+      "sender": "coordinator-7604",
+      "recipient": "worker:ASG-R7",
+      "kind": "ASSIGN",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "phase": "ATTACK",
+      "bundleHash": "90705113a194b993c1b04fdb64d2b68ccfadbb0180f9dc561ba66268c5035897",
+      "payloadPath": "evidence/messages/msg-assign-ASG-R7.json",
+      "payloadHash": "89441dd868b2dd2bd5e3c44fedd22f8f08b3f715106be0ae6549a488e72fe48f",
+      "createdAt": "2026-09-27T16:05:42.354Z",
+      "leaseId": "coordinator-7604",
+      "runId": "pu30-live-2026-09-27"
+    },
+    {
+      "id": "MSG-SEALED-R6",
+      "requestId": "REQ-R6-SLOT",
+      "parentRequestId": null,
+      "sender": "worker:ca27c584",
+      "recipient": "coordinator-7604",
+      "kind": "SEALED_RESULT",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "phase": "ATTACK",
+      "bundleHash": "843c3cf99e3f35f40beafa24fa2ca3e6d09f7b8f64f3b284d0b9b3befd597637",
+      "payloadPath": "evidence/messages/sealed-rev-a.json",
+      "payloadHash": "529f5ebe2b507630b583f0ccfa1f4bd1fa6a789ba47309eeaf84b0f759611c67",
+      "createdAt": "2026-09-27T16:27:52.372Z",
+      "leaseId": null,
+      "runId": "pu30-live-2026-09-27"
+    },
+    {
+      "id": "MSG-SEALED-R7",
+      "requestId": "REQ-R7-MSGLED",
+      "parentRequestId": null,
+      "sender": "worker:f6a1d784",
+      "recipient": "coordinator-7604",
+      "kind": "SEALED_RESULT",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "phase": "ATTACK",
+      "bundleHash": "90705113a194b993c1b04fdb64d2b68ccfadbb0180f9dc561ba66268c5035897",
+      "payloadPath": "evidence/messages/sealed-rev-b.json",
+      "payloadHash": "50dbff16daba121a98132267261751137646b9b12b52323395a6b5550c6639d1",
+      "createdAt": "2026-09-27T16:27:52.372Z",
+      "leaseId": null,
+      "runId": "pu30-live-2026-09-27"
+    }
+  ],
+  "events": [
+    {
+      "seq": 1,
+      "at": "2026-09-27T15:29:11.458Z",
+      "kind": "PHASE",
+      "actor": "coordinator-7604",
+      "state": {
+        "productStateId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567",
+        "contractId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567",
+        "attackModelId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567",
+        "environmentId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567"
+      },
+      "previousEventHash": null,
+      "payloadPath": "events/0001.json",
+      "payloadHash": "ef7ba011ab187e2cd086630d2ebc384a348032bb2b57c7f8400737cfe9dadd4b",
+      "eventHash": "7a20ba198e95bf1ab31e8c64f8ff6d153086e70b6d3f0b420600f00e4deb8dfb"
+    },
+    {
+      "seq": 2,
+      "at": "2026-09-27T15:32:38.703Z",
+      "kind": "SNAPSHOT",
+      "actor": "coordinator-7604",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "previousEventHash": "7a20ba198e95bf1ab31e8c64f8ff6d153086e70b6d3f0b420600f00e4deb8dfb",
+      "payloadPath": "events/0002.json",
+      "payloadHash": "899a239cb99a2c605679a3f70a28cacad19cc56a5aa8ee97efb74cefc6a8a5f9",
+      "eventHash": "825fd899c5dc5b5eecfdba874698457eb1e07c8900c0d6107b914595fa509a8f"
+    },
+    {
+      "seq": 3,
+      "at": "2026-09-27T15:36:16.674Z",
+      "kind": "PHASE",
+      "actor": "coordinator-7604",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "previousEventHash": "825fd899c5dc5b5eecfdba874698457eb1e07c8900c0d6107b914595fa509a8f",
+      "payloadPath": "events/0003.json",
+      "payloadHash": "37207082f6a0861cd351687f8672c1083baa3bf404d0fba405130115f7e3b2ab",
+      "eventHash": "7ea17439a8cef49027ae4b737c8524a55be133ef902bab309bede475fd9368ed"
+    },
+    {
+      "seq": 4,
+      "at": "2026-09-27T15:37:06.495Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-7604",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "previousEventHash": "7ea17439a8cef49027ae4b737c8524a55be133ef902bab309bede475fd9368ed",
+      "payloadPath": "events/0004.json",
+      "payloadHash": "73837e0c87ffc297c690f1b76f0bae4f57317cf0198631776967c6e1f43a7daa",
+      "eventHash": "7332cd5a8b93320dd0036ba614348bb599bc14288f4046e26819442e046ab60d"
+    },
+    {
+      "seq": 5,
+      "at": "2026-09-27T15:37:56.264Z",
+      "kind": "SCHEDULE",
+      "actor": "coordinator-7604",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "previousEventHash": "7332cd5a8b93320dd0036ba614348bb599bc14288f4046e26819442e046ab60d",
+      "payloadPath": "events/0005.json",
+      "payloadHash": "6f5fe6126e00cfaf940e655ed845e02f19c3dce63fbfb41a4094c144642e6ab8",
+      "eventHash": "d6342fb7c5ee4dbe4dfad37b0d36bdda95ecc6f8d9a9d7007b6761baa961cda4"
+    },
+    {
+      "seq": 6,
+      "at": "2026-09-27T15:37:57.195Z",
+      "kind": "SCHEDULE",
+      "actor": "coordinator-7604",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "previousEventHash": "d6342fb7c5ee4dbe4dfad37b0d36bdda95ecc6f8d9a9d7007b6761baa961cda4",
+      "payloadPath": "events/0006.json",
+      "payloadHash": "d8110c6ff0ba128ab2cd59c4452e04507af8d3edb0a8ee144e247389fb9a7b57",
+      "eventHash": "d88cfee0f0fe9d822d91162b702799262b5ee09438bad9b9ba8959e72707a2c6"
+    },
+    {
+      "seq": 7,
+      "at": "2026-09-27T15:37:58.196Z",
+      "kind": "SCHEDULE",
+      "actor": "coordinator-7604",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "previousEventHash": "d88cfee0f0fe9d822d91162b702799262b5ee09438bad9b9ba8959e72707a2c6",
+      "payloadPath": "events/0007.json",
+      "payloadHash": "e395f74cb195638de353dd7e2103451b1a2a8914470878bb5b33c73e204e3a71",
+      "eventHash": "19988b76994927d5a3e5f37ca6af1164c93d89fbd4f8fc2f0dc0562aedcf4b94"
+    },
+    {
+      "seq": 8,
+      "at": "2026-09-27T15:37:58.943Z",
+      "kind": "SCHEDULE",
+      "actor": "coordinator-7604",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "previousEventHash": "19988b76994927d5a3e5f37ca6af1164c93d89fbd4f8fc2f0dc0562aedcf4b94",
+      "payloadPath": "events/0008.json",
+      "payloadHash": "3b6277c33f702c91d500479d977d96f07a530f9128f786f456f4e38ac1094226",
+      "eventHash": "6a4329386b304d39d6939cdcbdcf14c2a0fcbada62d642ec5b335df2b4f8bb3f"
+    },
+    {
+      "seq": 9,
+      "at": "2026-09-27T15:37:59.701Z",
+      "kind": "SCHEDULE",
+      "actor": "coordinator-7604",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "previousEventHash": "6a4329386b304d39d6939cdcbdcf14c2a0fcbada62d642ec5b335df2b4f8bb3f",
+      "payloadPath": "events/0009.json",
+      "payloadHash": "902f421da3d54640e790dc616443cbb187dc67483315aa81ab183b4c68d9aae7",
+      "eventHash": "41d4fe2e43aa422ec79c1c89e958e8b67987e2e9329a18c07f4df3c47950a43d"
+    },
+    {
+      "seq": 10,
+      "at": "2026-09-27T15:38:00.439Z",
+      "kind": "SCHEDULE",
+      "actor": "coordinator-7604",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "previousEventHash": "41d4fe2e43aa422ec79c1c89e958e8b67987e2e9329a18c07f4df3c47950a43d",
+      "payloadPath": "events/0010.json",
+      "payloadHash": "0d0c17a563173f07ad882c28a7dae71c90c88678a7add5c25b1cfc9213ebbf3f",
+      "eventHash": "c4990bb6bde4501e8628cb94cc2e2791d8270ba3d028b35d108e597ad8f9e720"
+    },
+    {
+      "seq": 11,
+      "at": "2026-09-27T15:38:01.152Z",
+      "kind": "SCHEDULE",
+      "actor": "coordinator-7604",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "previousEventHash": "c4990bb6bde4501e8628cb94cc2e2791d8270ba3d028b35d108e597ad8f9e720",
+      "payloadPath": "events/0011.json",
+      "payloadHash": "e69453d814e16bf1eba0cb5a67d64743e9c5c6378eb9e17618e2603612f8f2d8",
+      "eventHash": "fd15c730ecf15643fe094ed0ed4cac24d26644e317917ef7c9eb8d2be7030452"
+    },
+    {
+      "seq": 12,
+      "at": "2026-09-27T15:38:54.113Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-7604",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "previousEventHash": "fd15c730ecf15643fe094ed0ed4cac24d26644e317917ef7c9eb8d2be7030452",
+      "payloadPath": "events/0012.json",
+      "payloadHash": "22405d4149230d5c045aa688cf9c4c8d5de93accc14154c7966ff9a54f84252d",
+      "eventHash": "f2ff554775d75479be0eb0b088bbcbb8eb5bfacd7b555a7e927f88b9b9c9bc8e"
+    },
+    {
+      "seq": 13,
+      "at": "2026-09-27T15:41:06.419Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-7604",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "previousEventHash": "f2ff554775d75479be0eb0b088bbcbb8eb5bfacd7b555a7e927f88b9b9c9bc8e",
+      "payloadPath": "events/0013.json",
+      "payloadHash": "67a818fe1d7eb846d982e3cadf0784092d71ad3b93ee7c231467c9594f0de862",
+      "eventHash": "bc57e853dab8c662299d359e4f2f2d2084bf872795f515e7ddfadbc18071efa9"
+    },
+    {
+      "seq": 14,
+      "at": "2026-09-27T15:41:07.506Z",
+      "kind": "SCHEDULE",
+      "actor": "coordinator-7604",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "previousEventHash": "bc57e853dab8c662299d359e4f2f2d2084bf872795f515e7ddfadbc18071efa9",
+      "payloadPath": "events/0014.json",
+      "payloadHash": "b0b49faf1b49d3f6d60b84846efde108599225a199e34b4aa91caf9913a7f318",
+      "eventHash": "10af31a6fc7ed0d38176ded99ac1bed7b1cbb863746b07b2e235dcbda9f9eb4a"
+    },
+    {
+      "seq": 15,
+      "at": "2026-09-27T15:41:08.612Z",
+      "kind": "SCHEDULE",
+      "actor": "coordinator-7604",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "previousEventHash": "10af31a6fc7ed0d38176ded99ac1bed7b1cbb863746b07b2e235dcbda9f9eb4a",
+      "payloadPath": "events/0015.json",
+      "payloadHash": "cd0d442ea495a4df0b296ed30639b5848e25d8f073574cf7f5ae7d17605dfbd2",
+      "eventHash": "aa59b975061da385dd9c096d2c502d3d340f9c02e79c5c8dc458c00247889457"
+    },
+    {
+      "seq": 16,
+      "at": "2026-09-27T15:43:00.759Z",
+      "kind": "SCHEDULE",
+      "actor": "coordinator-7604",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "previousEventHash": "aa59b975061da385dd9c096d2c502d3d340f9c02e79c5c8dc458c00247889457",
+      "payloadPath": "events/0016.json",
+      "payloadHash": "51a5572ee2b765a27460a06389ead5658e52a78f83acc52a00ad769c85600265",
+      "eventHash": "89fa6297f443eac8fde48469e14fda4448a28629144c51780a69e7c223005ee3"
+    },
+    {
+      "seq": 17,
+      "at": "2026-09-27T15:43:42.032Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-7604",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "previousEventHash": "89fa6297f443eac8fde48469e14fda4448a28629144c51780a69e7c223005ee3",
+      "payloadPath": "events/0017.json",
+      "payloadHash": "a7440b04578c7027d5776662818101e22e9618f3818215991dfe5d25d5eb0d5f",
+      "eventHash": "bdc0cdcf72bded8fd0240f1f5c78017df133ce3c655f8844e8442d6d942081a3"
+    },
+    {
+      "seq": 18,
+      "at": "2026-09-27T15:44:14.924Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-7604",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "previousEventHash": "bdc0cdcf72bded8fd0240f1f5c78017df133ce3c655f8844e8442d6d942081a3",
+      "payloadPath": "events/0018.json",
+      "payloadHash": "17d2c84297a7804399d75c2caf28c5660eaff4f9829fb359185ce754b2cd727c",
+      "eventHash": "ec380eea4c22674994e70e9892cac041dc441d59d50815777501cb36e290056b"
+    },
+    {
+      "seq": 19,
+      "at": "2026-09-27T15:44:15.831Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-7604",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "previousEventHash": "ec380eea4c22674994e70e9892cac041dc441d59d50815777501cb36e290056b",
+      "payloadPath": "events/0019.json",
+      "payloadHash": "686fce89935347746bb93fd89bc93f34b526fe27fd3951945a78a6c4a5948164",
+      "eventHash": "9b9cb6eb055e6fe1ef2e11a7306915eac7639fa42e451056cec427df76fb3aab"
+    },
+    {
+      "seq": 20,
+      "at": "2026-09-27T15:44:16.744Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-7604",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "previousEventHash": "9b9cb6eb055e6fe1ef2e11a7306915eac7639fa42e451056cec427df76fb3aab",
+      "payloadPath": "events/0020.json",
+      "payloadHash": "686fce89935347746bb93fd89bc93f34b526fe27fd3951945a78a6c4a5948164",
+      "eventHash": "473138e9e0bae3ea2749ac6c9ce5234e3c293870cdeaf73a54cb098d73f6f8d1"
+    },
+    {
+      "seq": 21,
+      "at": "2026-09-27T15:45:10.394Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-7604",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "previousEventHash": "473138e9e0bae3ea2749ac6c9ce5234e3c293870cdeaf73a54cb098d73f6f8d1",
+      "payloadPath": "events/0021.json",
+      "payloadHash": "6e9fd6b436f0a0a856e15140b3cec6939baa27d12dc3b853a7ca8a70f7b5a7ee",
+      "eventHash": "9b54500a80cde6876630d92ce6a85fd2410d9d4edd4aa6799b1cb7445e0e11f9"
+    },
+    {
+      "seq": 22,
+      "at": "2026-09-27T15:45:59.744Z",
+      "kind": "SCHEDULE",
+      "actor": "coordinator-7604",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "previousEventHash": "9b54500a80cde6876630d92ce6a85fd2410d9d4edd4aa6799b1cb7445e0e11f9",
+      "payloadPath": "events/0022.json",
+      "payloadHash": "96477e3b53ef7d8fa102d15d69cab628513a7e7cf60967c9705b7a7662b997ae",
+      "eventHash": "9e038b3e8875d4c7d5422a93c82bcd794ce71c6dae97674e6c869068a8e3a941"
+    },
+    {
+      "seq": 23,
+      "at": "2026-09-27T15:48:57.411Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-7604",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "previousEventHash": "9e038b3e8875d4c7d5422a93c82bcd794ce71c6dae97674e6c869068a8e3a941",
+      "payloadPath": "events/0023.json",
+      "payloadHash": "4dc4a43b5ca053056630a3c18b1e4db57a58afb29a93ebeffbf28f017c5af4f3",
+      "eventHash": "b8da52a7245ac4cfe841bd0e41fa0bb051125c200c3d956f2e907a2c8fc6ecff"
+    },
+    {
+      "seq": 24,
+      "at": "2026-09-27T15:49:41.165Z",
+      "kind": "SCHEDULE",
+      "actor": "coordinator-7604",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "previousEventHash": "b8da52a7245ac4cfe841bd0e41fa0bb051125c200c3d956f2e907a2c8fc6ecff",
+      "payloadPath": "events/0024.json",
+      "payloadHash": "6975361bb320ee60bfcbcbdb319c3de347a4ce1379e8cf92fe983fed57e4a9f7",
+      "eventHash": "b32071ff8545b4ca56b1ee131366ad92e4f75731a5626e750b6f4bd00ddb42c6"
+    },
+    {
+      "seq": 25,
+      "at": "2026-09-27T15:49:49.835Z",
+      "kind": "SCHEDULE",
+      "actor": "coordinator-7604",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "previousEventHash": "b32071ff8545b4ca56b1ee131366ad92e4f75731a5626e750b6f4bd00ddb42c6",
+      "payloadPath": "events/0025.json",
+      "payloadHash": "b3eed1c43595849a37c4be9d6dd0057e451f3a2df6b73526cdb361e32106d2c2",
+      "eventHash": "7653257a9ebbae7c98e114a27b08c3a174d5fd35a19083b817a00b452692fca4"
+    },
+    {
+      "seq": 26,
+      "at": "2026-09-27T15:50:37.587Z",
+      "kind": "FINDING",
+      "actor": "coordinator-7604",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "previousEventHash": "7653257a9ebbae7c98e114a27b08c3a174d5fd35a19083b817a00b452692fca4",
+      "payloadPath": "events/0026.json",
+      "payloadHash": "ec9c82dbd7760bf991e6773deeab54bcc7daa108078b1947f466f59d2fa0faed",
+      "eventHash": "fa57bcb0dd3f460531708b2fb3b8d727ba3a6dd61db18c2a1f406fc9474687f6"
+    },
+    {
+      "seq": 27,
+      "at": "2026-09-27T15:51:11.679Z",
+      "kind": "SCHEDULE",
+      "actor": "coordinator-7604",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "previousEventHash": "fa57bcb0dd3f460531708b2fb3b8d727ba3a6dd61db18c2a1f406fc9474687f6",
+      "payloadPath": "events/0027.json",
+      "payloadHash": "f770071a6928111807bc3b5b1c99c316066e2b6fafe9d888113112a216654ce8",
+      "eventHash": "cf57a918a9216ca512d8997c234679c966e6d0f77d53de6478e556aeb67aa805"
+    },
+    {
+      "seq": 28,
+      "at": "2026-09-27T15:51:12.651Z",
+      "kind": "SCHEDULE",
+      "actor": "coordinator-7604",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "previousEventHash": "cf57a918a9216ca512d8997c234679c966e6d0f77d53de6478e556aeb67aa805",
+      "payloadPath": "events/0028.json",
+      "payloadHash": "58a87efa1def8e956dff666a61519ad90847542bdfcc3d61641dfd7c0e63e9d3",
+      "eventHash": "ea1b62ce6f6693223a55c38f521cb0893ba560dc481cf2b4bdaaff614a400c14"
+    },
+    {
+      "seq": 29,
+      "at": "2026-09-27T15:51:13.704Z",
+      "kind": "SCHEDULE",
+      "actor": "coordinator-7604",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "previousEventHash": "ea1b62ce6f6693223a55c38f521cb0893ba560dc481cf2b4bdaaff614a400c14",
+      "payloadPath": "events/0029.json",
+      "payloadHash": "6972bb7c3863daa10a3ce8b4ad31020ccee6eeecf4d23d2f27cb328bdac03f9e",
+      "eventHash": "326efe9d855dc6409789e0b9e90eddd7d36f6befaa2de3983adccb585feeccb4"
+    },
+    {
+      "seq": 30,
+      "at": "2026-09-27T15:51:14.599Z",
+      "kind": "SCHEDULE",
+      "actor": "coordinator-7604",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "previousEventHash": "326efe9d855dc6409789e0b9e90eddd7d36f6befaa2de3983adccb585feeccb4",
+      "payloadPath": "events/0030.json",
+      "payloadHash": "74ab79bfd970b47c79e1b13e5af7a2b3066d0b3fd8543feedf7d3413c0aa5084",
+      "eventHash": "867ff7c76c83ae99ba08c4903e03c327306d37e72eb4fa4e30959981d256bdd3"
+    },
+    {
+      "seq": 31,
+      "at": "2026-09-27T15:51:31.816Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-7604",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "previousEventHash": "867ff7c76c83ae99ba08c4903e03c327306d37e72eb4fa4e30959981d256bdd3",
+      "payloadPath": "events/0031.json",
+      "payloadHash": "9ec2f0679620d2b9bcd844cdf0fa3b2576dff55e7d9532ac7bdd754f6ae413aa",
+      "eventHash": "b6eff5da05419d3ee157dad25ad3b172a049937a212e0e8a3e4b954e37851679"
+    },
+    {
+      "seq": 32,
+      "at": "2026-09-27T15:55:08.298Z",
+      "kind": "SCHEDULE",
+      "actor": "coordinator-7604",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "previousEventHash": "b6eff5da05419d3ee157dad25ad3b172a049937a212e0e8a3e4b954e37851679",
+      "payloadPath": "events/0032.json",
+      "payloadHash": "4e8f6cbf4ecf8bf5feb950bb508ca5d5ae822a36674657ee0f3c110074dbf478",
+      "eventHash": "fdfd772ed1ea767ddf3a61cd4d6a5110c4c7d8caf17ef54a85cca0199de6d069"
+    },
+    {
+      "seq": 33,
+      "at": "2026-09-27T15:55:36.593Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-7604",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "previousEventHash": "fdfd772ed1ea767ddf3a61cd4d6a5110c4c7d8caf17ef54a85cca0199de6d069",
+      "payloadPath": "events/0033.json",
+      "payloadHash": "d55d4c9c5308c7617665ce71bf330b31457352f727074fba290acfd84f267cb3",
+      "eventHash": "36c52c97c54e61de89e164ccec3d7f95eef5bfd38aaff4327e7225aadc20858f"
+    },
+    {
+      "seq": 34,
+      "at": "2026-09-27T15:56:17.571Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-7604",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "previousEventHash": "36c52c97c54e61de89e164ccec3d7f95eef5bfd38aaff4327e7225aadc20858f",
+      "payloadPath": "events/0034.json",
+      "payloadHash": "fd240e173408d405673269338bad0e020e1e53ab70e5a1b639fc918e78dd130b",
+      "eventHash": "4f835441f70909f7ab939623e486e78167378ad0b2594d1c3b21e0768b27c9a1"
+    },
+    {
+      "seq": 35,
+      "at": "2026-09-27T15:56:29.349Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-7604",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "previousEventHash": "4f835441f70909f7ab939623e486e78167378ad0b2594d1c3b21e0768b27c9a1",
+      "payloadPath": "events/0035.json",
+      "payloadHash": "0fa0b9a0e49c4a634e53223629031a810af32403aa11da788d2c4a11549ce961",
+      "eventHash": "27b42e85203a00d1bcc5ac4afcc688ec020156c64b090c47de4ad9d82dcfc3d7"
+    },
+    {
+      "seq": 36,
+      "at": "2026-09-27T15:56:41.336Z",
+      "kind": "DECISION",
+      "actor": "coordinator-7604",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "previousEventHash": "27b42e85203a00d1bcc5ac4afcc688ec020156c64b090c47de4ad9d82dcfc3d7",
+      "payloadPath": "events/0036.json",
+      "payloadHash": "1382605cebd0acc13818da7edb8689ab983d6325fc236f9ba71284dda23f53a3",
+      "eventHash": "985e99c95c8b86f2f300e25b6f378c69e407688e351e760b223820e6de53f454"
+    },
+    {
+      "seq": 37,
+      "at": "2026-09-27T16:05:43.346Z",
+      "kind": "SCHEDULE",
+      "actor": "coordinator-7604",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "previousEventHash": "985e99c95c8b86f2f300e25b6f378c69e407688e351e760b223820e6de53f454",
+      "payloadPath": "events/0037.json",
+      "payloadHash": "ff931a125cc47548a4b0a81b90930075e0f1501363d6f4df9601241dec499b58",
+      "eventHash": "a83875bac9450aa1291d7286fa3f54b8c6a73d826bf3c9752e4b5671e885fc22"
+    },
+    {
+      "seq": 38,
+      "at": "2026-09-27T16:05:45.166Z",
+      "kind": "SCHEDULE",
+      "actor": "coordinator-7604",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "previousEventHash": "a83875bac9450aa1291d7286fa3f54b8c6a73d826bf3c9752e4b5671e885fc22",
+      "payloadPath": "events/0038.json",
+      "payloadHash": "96c8027d1c0eded2ec9d887d99ff974cc43a17915fbfb1e04b2810f3ca052260",
+      "eventHash": "a4d5943cb347e680e5f6ebd1ad550250050d5ec79156208798cb905ad7cfa851"
+    },
+    {
+      "seq": 39,
+      "at": "2026-09-27T16:05:46.438Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-7604",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "previousEventHash": "a4d5943cb347e680e5f6ebd1ad550250050d5ec79156208798cb905ad7cfa851",
+      "payloadPath": "events/0039.json",
+      "payloadHash": "14b884e75579d9507d118d272fb1d989d03f355332cd3f4940e15d3a283a751f",
+      "eventHash": "deb560cf270c4525885e02f03e82c58fe5b8b78b404d70a1b4a35d861cc695eb"
+    },
+    {
+      "seq": 40,
+      "at": "2026-09-27T16:27:53.159Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-7604",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "previousEventHash": "deb560cf270c4525885e02f03e82c58fe5b8b78b404d70a1b4a35d861cc695eb",
+      "payloadPath": "events/0040.json",
+      "payloadHash": "49f2b30d7e53e002428ab7319ddf042eb0619b4d6a2b200abcd38dd6ed5e8a41",
+      "eventHash": "69f7a885b7790ad85b7d8db8478e5c9466b0fff2ec67b74a194930b0987bb42b"
+    },
+    {
+      "seq": 41,
+      "at": "2026-09-27T16:28:04.223Z",
+      "kind": "SCHEDULE",
+      "actor": "coordinator-7604",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "previousEventHash": "69f7a885b7790ad85b7d8db8478e5c9466b0fff2ec67b74a194930b0987bb42b",
+      "payloadPath": "events/0041.json",
+      "payloadHash": "972c12120409428b8360e55e1b78023ce7a81f06923c8ac277176da9b5065722",
+      "eventHash": "83daf6d57e6d5ec54ede7e4b2ae881e1374c02e34b766ce34f3a11605fcbb518"
+    },
+    {
+      "seq": 42,
+      "at": "2026-09-27T16:28:05.107Z",
+      "kind": "SCHEDULE",
+      "actor": "coordinator-7604",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "previousEventHash": "83daf6d57e6d5ec54ede7e4b2ae881e1374c02e34b766ce34f3a11605fcbb518",
+      "payloadPath": "events/0042.json",
+      "payloadHash": "fcf5f9055c12345e02c3db6db85ce02321ab47ef623b52d58a0a16991f13a7be",
+      "eventHash": "0227a0f33d65c003cd899be831f702380e357804682e7873a90365940a608394"
+    },
+    {
+      "seq": 43,
+      "at": "2026-09-27T16:28:06.114Z",
+      "kind": "SCHEDULE",
+      "actor": "coordinator-7604",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "previousEventHash": "0227a0f33d65c003cd899be831f702380e357804682e7873a90365940a608394",
+      "payloadPath": "events/0043.json",
+      "payloadHash": "6da2cfc5f2373e7f8943a86615d113fa015c4eb4f5b0fa42c8e0b46474da2bff",
+      "eventHash": "a8fb2e3a4ac270f2512d84a73891ee929b773447c88f050b406ed49a8dfaab69"
+    },
+    {
+      "seq": 44,
+      "at": "2026-09-27T16:28:07.111Z",
+      "kind": "SCHEDULE",
+      "actor": "coordinator-7604",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "previousEventHash": "a8fb2e3a4ac270f2512d84a73891ee929b773447c88f050b406ed49a8dfaab69",
+      "payloadPath": "events/0044.json",
+      "payloadHash": "70fc1dcb77c53cb08d7dafaf1397523531a80c0312fd636f09abf458d3576ae6",
+      "eventHash": "6d02a1f2e18e05dcd93f7e4fdc128e8772c467e3ef2efe693123d3cd33340d0f"
+    },
+    {
+      "seq": 45,
+      "at": "2026-09-27T16:28:37.658Z",
+      "kind": "FINDING",
+      "actor": "coordinator-7604",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "previousEventHash": "6d02a1f2e18e05dcd93f7e4fdc128e8772c467e3ef2efe693123d3cd33340d0f",
+      "payloadPath": "events/0045.json",
+      "payloadHash": "515d9698fcec069cc3888afa1fa511c31714076e9a57f3b19c1720f4c7342964",
+      "eventHash": "f6ceb5e283db07fa61602f41347382cb89d8778c4e6ae80399e3e19a6028ae96"
+    },
+    {
+      "seq": 46,
+      "at": "2026-09-27T16:28:47.920Z",
+      "kind": "DECISION",
+      "actor": "coordinator-7604",
+      "state": {
+        "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+        "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+        "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+        "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+      },
+      "previousEventHash": "f6ceb5e283db07fa61602f41347382cb89d8778c4e6ae80399e3e19a6028ae96",
+      "payloadPath": "events/0046.json",
+      "payloadHash": "f96b2a8c667a1265090fdb327c6dd154ea88323f96ac6c473b9a81f9ff65a71b",
+      "eventHash": "e66002d6d142ac740f53030d848ce067315eab8990d0a716c12546fe40f4c72c"
+    }
+  ]
+}

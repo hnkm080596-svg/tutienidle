@@ -1,0 +1,11 @@
+NOVEL ATTACKS (coordinator synthesis between clean rounds; fresh schedules/partitions):
+1. Oscillation probe: hpBelow band toggled 10x across the 0.35 boundary in one battle
+   -> stack toggles 1/0 each crossing, never accumulates past cap, never latches.
+2. Partial-second below-threshold then recovery: fraction accumulator preserved,
+   band arms on re-entry with a full qualifying second.
+3. F-01 regression mutant: accrualRealmId removed from App.vue starter grant
+   -> buildingAccrualPin arch test fails (1 add, 0 pins). KILLED.
+4. Boundary partition check: hpBelow(<0.35) / hpNotBelow(>=0.35) are a strict
+   partition - no HP value can activate both can_than legs simultaneously.
+All executed on the S9 file set; probe file committed as durable pin
+(src/core/skill/PassiveSystem.bandOscillation.qa.test.ts).

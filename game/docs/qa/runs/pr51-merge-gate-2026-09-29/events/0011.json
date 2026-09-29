@@ -1,0 +1,16 @@
+{
+  "applied": [
+    "mutation:MUT-STAT-ZB-1",
+    "mutation:MUT-BLDG-CLAIM-1",
+    "mutation:MUT-BLDG-STORED-1",
+    "mutation:MUT-OFFLINE-SEG-1",
+    "mutation:MUT-CLOUD-CAS-1",
+    "finding:F-MG-07",
+    "finding:F-MG-08",
+    "evidence:EV-VERIFY-S4",
+    "evidence:EV-FOCUSED-S4",
+    "evidence:EV-RUNTIME-S4",
+    "evidence:EV-MUT-S4",
+    "evidence:EV-ADVERSARIAL-S4"
+  ]
+}

@@ -1,0 +1,96 @@
+{
+  "records": [
+    {
+      "kind": "message",
+      "body": {
+        "id": "MSG-ASSIGN-ASG_R1",
+        "requestId": "REQ-R1-SLOT",
+        "parentRequestId": null,
+        "sender": "coordinator-7604",
+        "recipient": "worker:ASG_R1",
+        "kind": "ASSIGN",
+        "state": {
+          "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+          "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+          "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+          "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+        },
+        "phase": "ATTACK",
+        "bundleHash": "86153434f3a8141cff08436767767441d2e649a215db12a2557c03ee69472dbe",
+        "payloadPath": "evidence/messages/msg-assign-ASG_R1.json",
+        "payloadHash": "a93b6ead258ead07afcf9ba61e3c0d3d41f30e6b47923e1dfdf3264ec40c10be",
+        "createdAt": "2026-09-27T15:38:53.299Z",
+        "leaseId": "coordinator-7604"
+      }
+    },
+    {
+      "kind": "message",
+      "body": {
+        "id": "MSG-ASSIGN-ASG_R2",
+        "requestId": "REQ-R2-MSG",
+        "parentRequestId": null,
+        "sender": "coordinator-7604",
+        "recipient": "worker:ASG_R2",
+        "kind": "ASSIGN",
+        "state": {
+          "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+          "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+          "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+          "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+        },
+        "phase": "ATTACK",
+        "bundleHash": "fdd3f4a923267f793f2da7b862a3e4925b81d2104a4febb46e933bf38cabf69e",
+        "payloadPath": "evidence/messages/msg-assign-ASG_R2.json",
+        "payloadHash": "e6e9b675a5613fb1dc9b20f37bc0b8885cc14bbbf998b225c1b53a28a87bc5f9",
+        "createdAt": "2026-09-27T15:38:53.304Z",
+        "leaseId": "coordinator-7604"
+      }
+    },
+    {
+      "kind": "message",
+      "body": {
+        "id": "MSG-ASSIGN-ASG_R3",
+        "requestId": "REQ-R3-NEEDCTX",
+        "parentRequestId": null,
+        "sender": "coordinator-7604",
+        "recipient": "worker:ASG_R3",
+        "kind": "ASSIGN",
+        "state": {
+          "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+          "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+          "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+          "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+        },
+        "phase": "ATTACK",
+        "bundleHash": "2e5655d2e2c15fc30558fa67b4257689f0f6c49d66005c09ee12266d7e7df235",
+        "payloadPath": "evidence/messages/msg-assign-ASG_R3.json",
+        "payloadHash": "14e3bf1422bd2b7ecf828353f77aa6cd2d341ca7f20e4ecf07d864315f17fa07",
+        "createdAt": "2026-09-27T15:38:53.306Z",
+        "leaseId": "coordinator-7604"
+      }
+    },
+    {
+      "kind": "message",
+      "body": {
+        "id": "MSG-ASSIGN-ASG_R4",
+        "requestId": "REQ-R4-HONESTY",
+        "parentRequestId": null,
+        "sender": "coordinator-7604",
+        "recipient": "worker:ASG_R4",
+        "kind": "ASSIGN",
+        "state": {
+          "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+          "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+          "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+          "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+        },
+        "phase": "ATTACK",
+        "bundleHash": "171dc77032fe52c1209bfaf00db453d26f15a8de8413d4d0ea33b2d0ff19e1b9",
+        "payloadPath": "evidence/messages/msg-assign-ASG_R4.json",
+        "payloadHash": "224a6bbeea92654cb049f9f66848a882d4b5f3b345477d06d961a77715d6136d",
+        "createdAt": "2026-09-27T15:38:53.307Z",
+        "leaseId": "coordinator-7604"
+      }
+    }
+  ]
+}

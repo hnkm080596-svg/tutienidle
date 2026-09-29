@@ -1,0 +1,360 @@
+{
+ "records": [
+  {
+   "kind": "evidence",
+   "body": {
+    "kind": "EXECUTED_INTEGRATION",
+    "id": "EV-VERIFY-S9",
+    "state": {
+     "productStateId": "b1b1c5ff0d9772d9362be9feac89e052e638f32f3eab4ff545636b52ca42b5b1",
+     "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+     "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+     "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+    },
+    "producer": "coordinator",
+    "startedAt": "2026-09-29T16:22:00Z",
+    "finishedAt": "2026-09-29T16:26:00Z",
+    "commandOrMethod": "npm run verify on final repaired aggregate",
+    "cwd": "game",
+    "exitCode": 1,
+    "result": "FAIL",
+    "artifactPath": "evidence/verify-s9.txt",
+    "artifactHash": "a384c67912e37b3135a7220b3a1d7a506b61a0b9e3e525a9c7723790d97fe2b2",
+    "inputPaths": [],
+    "inputEvidenceIds": [],
+    "invariantIds": [],
+    "claims": [
+     "typecheck+build clean; vitest 7129 pass / 5 expected-fail / 4 fail - all 4 pre-existing on master; zero repair-caused"
+    ],
+    "limitations": [
+     "suite red only on documented pre-existing failures"
+    ],
+    "status": "CURRENT"
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "kind": "EXECUTED_INTEGRATION",
+    "id": "EV-NOVEL-S9",
+    "state": {
+     "productStateId": "b1b1c5ff0d9772d9362be9feac89e052e638f32f3eab4ff545636b52ca42b5b1",
+     "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+     "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+     "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+    },
+    "producer": "coordinator",
+    "startedAt": "2026-09-29T16:15:00Z",
+    "finishedAt": "2026-09-29T16:25:00Z",
+    "commandOrMethod": "band oscillation probes + starter-pin mutant + threshold partition check",
+    "cwd": "game",
+    "exitCode": 0,
+    "result": "PASS",
+    "artifactPath": "evidence/novel-attacks-s9.txt",
+    "artifactHash": "825c439609e9348646f804bd488787541328f7a0a83195ddd854cf8bf1857144",
+    "inputPaths": [
+     "src/core/skill/PassiveSystem.bandOscillation.qa.test.ts"
+    ],
+    "inputEvidenceIds": [],
+    "invariantIds": [
+     "I-STAT-ZEROBASE-FLAT",
+     "I-BUILDING-ACCRUAL-PIN"
+    ],
+    "claims": [
+     "band toggles across 10 oscillations; fraction accumulator preserved; starter-pin mutant killed"
+    ],
+    "limitations": [],
+    "status": "CURRENT"
+   }
+  },
+  {
+   "kind": "finding",
+   "id": "F-MG-14",
+   "state": {
+    "productStateId": "0d0921a5ddd9279694539c3c611b37cb8fd01ca217141843fc2f0fd43e5dd85d",
+    "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+    "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+    "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+   },
+   "title": "STARTER-ACCRUAL-PIN: starter gathering_outpost without accrualRealmId",
+   "severity": "Medium",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "game/src/App.vue",
+     "symbolOrSection": "onNewCharacter",
+     "revision": "a7a14b62",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "game/src/components/panels/BuildingConstructionGate.vue",
+     "symbolOrSection": "dev grant",
+     "revision": "a7a14b62",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "clean-a2",
+   "invariantIds": [
+    "I-BUILDING-ACCRUAL-PIN"
+   ],
+   "evidenceIds": [],
+   "counterexample": "breakthrough before first claim repriced whole backlog",
+   "expected": "build-time realm pinned at construction",
+   "actual": "unpinned -> ?? fallback to current realm",
+   "rootCause": "EM-01 missed the grant sites",
+   "rootClass": "migration-miss",
+   "subsystem": "building",
+   "siblingSearch": [],
+   "siblingFindingIds": [],
+   "repair": "accrualRealmId pinned at both grant sites + arch pin test",
+   "pinEvidenceIds": [
+    "EV-NOVEL-S9"
+   ],
+   "verificationEvidenceIds": [
+    "EV-VERIFY-S9"
+   ],
+   "closureReviewIds": [
+    "RV-S9-P1"
+   ],
+   "status": "CLOSED",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null,
+   "fixedInRevision": "36601ca9",
+   "closedAt": "2026-09-29T16:35:00Z",
+   "closeReason": "pins at all 3 construction sites; MUT-STARTER-PIN-1 killed"
+  },
+  {
+   "kind": "finding",
+   "id": "F-MG-15",
+   "state": {
+    "productStateId": "0d0921a5ddd9279694539c3c611b37cb8fd01ca217141843fc2f0fd43e5dd85d",
+    "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+    "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+    "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+   },
+   "title": "collectBuilding pre-check uses current realm instead of pinned",
+   "severity": "Low",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "game/src/core/game/GameManagerBuildingOps.ts",
+     "symbolOrSection": "expectedMaterialId",
+     "revision": "a7a14b62",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "clean-a2",
+   "invariantIds": [
+    "I-BUILDING-ACCRUAL-PIN"
+   ],
+   "evidenceIds": [],
+   "counterexample": "latent silent yield loss if tiers diverge in registry",
+   "expected": "pre-check uses pinned realm like claim()",
+   "actual": "uses player.realmId",
+   "rootCause": "pre-existing line not migrated",
+   "rootClass": "stale-reference",
+   "subsystem": "building",
+   "siblingSearch": [],
+   "siblingFindingIds": [],
+   "repair": "resolves accrualRealmId ?? realmId",
+   "pinEvidenceIds": [
+    "EV-NOVEL-S9"
+   ],
+   "verificationEvidenceIds": [
+    "EV-VERIFY-S9"
+   ],
+   "closureReviewIds": [
+    "RV-S9-P1"
+   ],
+   "status": "CLOSED",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null,
+   "fixedInRevision": "36601ca9",
+   "closedAt": "2026-09-29T16:35:00Z",
+   "closeReason": "pre-check aligned with claim() source"
+  },
+  {
+   "kind": "finding",
+   "id": "F-MG-17",
+   "state": {
+    "productStateId": "0d0921a5ddd9279694539c3c611b37cb8fd01ca217141843fc2f0fd43e5dd85d",
+    "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+    "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+    "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+   },
+   "title": "bat_tu_the description crit-only vs any-lethal implementation",
+   "severity": "Nit",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "game/src/data/talent/Talents.ts",
+     "symbolOrSection": "bat_tu_the",
+     "revision": "a7a14b62",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "clean-a2",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "tryConsumeUse fires on any lethal hit",
+   "expected": "copy matches impl",
+   "actual": "crit-only wording",
+   "rootCause": "copy drift",
+   "rootClass": "copy-mismatch",
+   "subsystem": "talent",
+   "siblingSearch": [],
+   "siblingFindingIds": [],
+   "repair": "description now says any lethal hit",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [
+    "EV-VERIFY-S9"
+   ],
+   "closureReviewIds": [
+    "RV-S9-P1"
+   ],
+   "status": "CLOSED",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null,
+   "fixedInRevision": "36601ca9",
+   "closedAt": "2026-09-29T16:35:00Z",
+   "closeReason": "copy corrected"
+  },
+  {
+   "kind": "review",
+   "id": "RV-S9-P1",
+   "state": {
+    "productStateId": "b1b1c5ff0d9772d9362be9feac89e052e638f32f3eab4ff545636b52ca42b5b1",
+    "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+    "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+    "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+   },
+   "round": 3,
+   "phase": "CORRECTNESS",
+   "reviewerId": "coordinator",
+   "contextId": "primary-context",
+   "model": "swe-2-max",
+   "role": "COORDINATOR_SELF_REVIEW",
+   "inputBundleHash": "a384c67912e37b3135a7220b3a1d7a506b61a0b9e3e525a9c7723790d97fe2b2",
+   "priorFindingsVisible": true,
+   "accessLimitations": [
+    "same-context review - no independence credit"
+   ],
+   "startedAt": "2026-09-29T16:28:00Z",
+   "sealedAt": "2026-09-29T16:31:00Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [
+    "EV-VERIFY-S9",
+    "EV-NOVEL-S9"
+   ],
+   "findingIds": [
+    "F-MG-14",
+    "F-MG-15",
+    "F-MG-17"
+   ],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  },
+  {
+   "kind": "review",
+   "id": "RV-S9-P2",
+   "state": {
+    "productStateId": "b1b1c5ff0d9772d9362be9feac89e052e638f32f3eab4ff545636b52ca42b5b1",
+    "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+    "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+    "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+   },
+   "round": 3,
+   "phase": "AUTHORITY",
+   "reviewerId": "coordinator",
+   "contextId": "primary-context",
+   "model": "swe-2-max",
+   "role": "COORDINATOR_SELF_REVIEW",
+   "inputBundleHash": "a384c67912e37b3135a7220b3a1d7a506b61a0b9e3e525a9c7723790d97fe2b2",
+   "priorFindingsVisible": true,
+   "accessLimitations": [
+    "same-context review - no independence credit"
+   ],
+   "startedAt": "2026-09-29T16:31:00Z",
+   "sealedAt": "2026-09-29T16:33:00Z",
+   "previousPhaseReviewId": "RV-S9-P1",
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [
+    "EV-NOVEL-S9"
+   ],
+   "findingIds": [],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  },
+  {
+   "kind": "review",
+   "id": "RV-S9-P3",
+   "state": {
+    "productStateId": "b1b1c5ff0d9772d9362be9feac89e052e638f32f3eab4ff545636b52ca42b5b1",
+    "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+    "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+    "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+   },
+   "round": 3,
+   "phase": "INTEGRATION",
+   "reviewerId": "coordinator",
+   "contextId": "primary-context",
+   "model": "swe-2-max",
+   "role": "COORDINATOR_SELF_REVIEW",
+   "inputBundleHash": "a384c67912e37b3135a7220b3a1d7a506b61a0b9e3e525a9c7723790d97fe2b2",
+   "priorFindingsVisible": true,
+   "accessLimitations": [
+    "same-context review - no independence credit"
+   ],
+   "startedAt": "2026-09-29T16:33:00Z",
+   "sealedAt": "2026-09-29T16:35:00Z",
+   "previousPhaseReviewId": "RV-S9-P2",
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [
+    "EV-VERIFY-S9",
+    "EV-NOVEL-S9"
+   ],
+   "findingIds": [],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  },
+  {
+   "kind": "cycle",
+   "id": "CYC-P5-4",
+   "state": {
+    "productStateId": "b1b1c5ff0d9772d9362be9feac89e052e638f32f3eab4ff545636b52ca42b5b1",
+    "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+    "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+    "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+   },
+   "reviewIds": [
+    "RV-S9-P1",
+    "RV-S9-P2",
+    "RV-S9-P3"
+   ],
+   "coverageIds": [],
+   "evidenceIds": [
+    "EV-VERIFY-S9",
+    "EV-NOVEL-S9"
+   ],
+   "noveltyEvidenceIds": [
+    "EV-NOVEL-S9"
+   ],
+   "startedAt": "2026-09-29T16:28:00Z",
+   "finishedAt": "2026-09-29T16:35:00Z",
+   "status": "CLEAN"
+  }
+ ]
+}

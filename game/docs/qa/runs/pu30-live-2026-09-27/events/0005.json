@@ -1,0 +1,30 @@
+{
+  "action": "admit",
+  "assignment": {
+    "id": "ASG-WAIT",
+    "parentId": null,
+    "capacityScope": "worker",
+    "inputBundleHash": "f50167e51b3add886565aa858a5ff2c8016515bfc4122d9c48e8fd4577198a34",
+    "dependencies": [],
+    "requiredCapabilities": [
+      "read-only repo access"
+    ],
+    "writeSurface": [],
+    "readiness": "WAITING_INPUT",
+    "status": "QUEUED",
+    "reservedAt": "2026-09-27T15:37:55.571Z",
+    "observedRuntimeId": null,
+    "releaseEvidence": null,
+    "resultRef": null,
+    "timeoutState": null,
+    "history": [
+      {
+        "at": "2026-09-27T15:37:55.571Z",
+        "from": "CREATED",
+        "to": "QUEUED",
+        "reason": "registered by coordinator"
+      }
+    ]
+  },
+  "externalOccupied": 1
+}

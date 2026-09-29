@@ -1,0 +1,486 @@
+{
+  "records": [
+    {
+      "kind": "evidence",
+      "body": {
+        "id": "EV-LIVE-ADMIT",
+        "state": {
+          "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+          "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+          "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+          "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+        },
+        "kind": "EXECUTED_INTEGRATION",
+        "producer": "coordinator-7604",
+        "startedAt": "2026-09-27T15:48:56.579Z",
+        "finishedAt": "2026-09-27T15:48:56.579Z",
+        "commandOrMethod": "qa:internal schedule admit x5 under cap=5 externalOccupied=1 -> R1..R4 RESERVED, R5 QUEUED",
+        "cwd": "game",
+        "exitCode": 0,
+        "result": "PASS",
+        "artifactPath": "journal.jsonl",
+        "artifactHash": "42bf2ffe22b8ef5d75255bfb3e9a4700f3cf95e0078c7a3b4ab3612f275d2157",
+        "inputPaths": [
+          "journal.jsonl"
+        ],
+        "inputEvidenceIds": [],
+        "invariantIds": [
+          "I-SLOT-CAPACITY"
+        ],
+        "claims": [
+          "admission counted ledger-active+external; queue held no slot"
+        ],
+        "limitations": [
+          "externalOccupied=1 asserted by coordinator, not platform-queried"
+        ],
+        "status": "CURRENT"
+      }
+    },
+    {
+      "kind": "evidence",
+      "body": {
+        "id": "EV-NEEDCTX-REL",
+        "state": {
+          "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+          "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+          "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+          "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+        },
+        "kind": "EXECUTED_INTEGRATION",
+        "producer": "coordinator-7604",
+        "startedAt": "2026-09-27T15:48:56.580Z",
+        "finishedAt": "2026-09-27T15:48:56.580Z",
+        "commandOrMethod": "ASG-R3 NEED_CONTEXT -> observe result -> observe terminated -> FINISHED",
+        "cwd": "game",
+        "exitCode": 0,
+        "result": "PASS",
+        "artifactPath": "evidence/messages/msg-needctx-r3.json",
+        "artifactHash": "0fe9b9d00a28cc70d85915439093c8ec213fe3c50624568ca3fde1040e05531f",
+        "inputPaths": [
+          "evidence/messages/msg-needctx-r3.json"
+        ],
+        "inputEvidenceIds": [],
+        "invariantIds": [
+          "I-SLOT-RELEASE"
+        ],
+        "claims": [
+          "result alone retained slot; only verified termination freed it"
+        ],
+        "limitations": [
+          "termination evidence = subagent completion notification, coordinator-asserted"
+        ],
+        "status": "CURRENT"
+      }
+    },
+    {
+      "kind": "evidence",
+      "body": {
+        "id": "EV-QUEUE-NOSLOT",
+        "state": {
+          "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+          "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+          "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+          "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+        },
+        "kind": "EXECUTED_INTEGRATION",
+        "producer": "coordinator-7604",
+        "startedAt": "2026-09-27T15:48:56.581Z",
+        "finishedAt": "2026-09-27T15:48:56.581Z",
+        "commandOrMethod": "ASG-WAIT QUEUED + ASG-BLOCKED BLOCKED while 4 workers reserved",
+        "cwd": "game",
+        "exitCode": 0,
+        "result": "PASS",
+        "artifactPath": "journal.jsonl",
+        "artifactHash": "42bf2ffe22b8ef5d75255bfb3e9a4700f3cf95e0078c7a3b4ab3612f275d2157",
+        "inputPaths": [
+          "journal.jsonl"
+        ],
+        "inputEvidenceIds": [],
+        "invariantIds": [
+          "I-SLOT-CAPACITY"
+        ],
+        "claims": [
+          "waiting/blocked records consume no active slot"
+        ],
+        "limitations": [],
+        "status": "CURRENT"
+      }
+    },
+    {
+      "kind": "evidence",
+      "body": {
+        "id": "EV-MSG-DUP",
+        "state": {
+          "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+          "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+          "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+          "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+        },
+        "kind": "EXECUTED_INTEGRATION",
+        "producer": "coordinator-7604",
+        "startedAt": "2026-09-27T15:48:56.581Z",
+        "finishedAt": "2026-09-27T15:48:56.581Z",
+        "commandOrMethod": "record MSG-INTEG-1 twice identical -> duplicate idempotent",
+        "cwd": "game",
+        "exitCode": 0,
+        "result": "PASS",
+        "artifactPath": "evidence/inputs-04-integ-dup.json",
+        "artifactHash": "8863a53f137859893756fc983512d7c8f8a833eb62818a41ff1074d3fb00aca9",
+        "inputPaths": [
+          "evidence/inputs-04-integ-dup.json"
+        ],
+        "inputEvidenceIds": [],
+        "invariantIds": [
+          "I-MSG-TERMINAL"
+        ],
+        "claims": [
+          "id+payloadHash dedup works"
+        ],
+        "limitations": [],
+        "status": "CURRENT"
+      }
+    },
+    {
+      "kind": "evidence",
+      "body": {
+        "id": "EV-MSG-TAMPER",
+        "state": {
+          "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+          "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+          "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+          "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+        },
+        "kind": "EXECUTED_INTEGRATION",
+        "producer": "coordinator-7604",
+        "startedAt": "2026-09-27T15:48:56.581Z",
+        "finishedAt": "2026-09-27T15:48:56.581Z",
+        "commandOrMethod": "record MSG-INTEG-1 with different payloadHash -> integrity error",
+        "cwd": "game",
+        "exitCode": 0,
+        "result": "PASS",
+        "artifactPath": "evidence/inputs-04-integ-mut2.json",
+        "artifactHash": "f36f58655247b97b7b215acca97702db0adb4cac063a643235bc294a3295191f",
+        "inputPaths": [
+          "evidence/inputs-04-integ-mut2.json"
+        ],
+        "inputEvidenceIds": [],
+        "invariantIds": [
+          "I-MSG-TERMINAL"
+        ],
+        "claims": [
+          "payload substitution under same id rejected"
+        ],
+        "limitations": [],
+        "status": "CURRENT"
+      }
+    },
+    {
+      "kind": "evidence",
+      "body": {
+        "id": "EV-MSG-CONFLICT",
+        "state": {
+          "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+          "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+          "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+          "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+        },
+        "kind": "EXECUTED_INTEGRATION",
+        "producer": "coordinator-7604",
+        "startedAt": "2026-09-27T15:48:56.581Z",
+        "finishedAt": "2026-09-27T15:48:56.581Z",
+        "commandOrMethod": "second SEALED_RESULT REQ-INTEG different hash -> rejected, demands parentRequestId",
+        "cwd": "game",
+        "exitCode": 0,
+        "result": "PASS",
+        "artifactPath": "evidence/inputs-04-integ-conflict.json",
+        "artifactHash": "6af9ac39bb522ab5c0e9d96996ec30ea52d60529d390ecfc8ae2fdb6ae1cda9b",
+        "inputPaths": [
+          "evidence/inputs-04-integ-conflict.json"
+        ],
+        "inputEvidenceIds": [],
+        "invariantIds": [
+          "I-MSG-TERMINAL"
+        ],
+        "claims": [
+          "conflicting terminal requires linked new request"
+        ],
+        "limitations": [],
+        "status": "CURRENT"
+      }
+    },
+    {
+      "kind": "evidence",
+      "body": {
+        "id": "EV-MSG-STALE",
+        "state": {
+          "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+          "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+          "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+          "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+        },
+        "kind": "EXECUTED_INTEGRATION",
+        "producer": "coordinator-7604",
+        "startedAt": "2026-09-27T15:48:56.581Z",
+        "finishedAt": "2026-09-27T15:48:56.581Z",
+        "commandOrMethod": "stale-state ACK MSG-INTEG-STALE1 recorded; console flags STALE but record carries no stale flag",
+        "cwd": "game",
+        "exitCode": 1,
+        "result": "FAIL",
+        "artifactPath": "evidence/inputs-04-integ-stale2.json",
+        "artifactHash": "9aab0badba1eaa3433ea0998e546eb9af2a88133b91df7deae5f10331cb54077",
+        "inputPaths": [
+          "evidence/inputs-04-integ-stale2.json"
+        ],
+        "inputEvidenceIds": [],
+        "invariantIds": [
+          "I-MSG-TERMINAL"
+        ],
+        "claims": [
+          "staleness computed but not persisted; stale SEALED_RESULT could still establish terminal hash"
+        ],
+        "limitations": [],
+        "status": "CURRENT"
+      }
+    },
+    {
+      "kind": "evidence",
+      "body": {
+        "id": "EV-MSG-NOASSIGN",
+        "state": {
+          "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+          "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+          "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+          "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+        },
+        "kind": "EXECUTED_INTEGRATION",
+        "producer": "coordinator-7604",
+        "startedAt": "2026-09-27T15:48:56.581Z",
+        "finishedAt": "2026-09-27T15:48:56.581Z",
+        "commandOrMethod": "SEALED_RESULT accepted on REQ-INTEG with no prior ASSIGN message",
+        "cwd": "game",
+        "exitCode": 1,
+        "result": "FAIL",
+        "artifactPath": "evidence/inputs-04-integ-1.json",
+        "artifactHash": "88f4acab1fd9fb30863a41d765c29e09c482ad246000fb1e1bda4095d7e16df9",
+        "inputPaths": [
+          "evidence/inputs-04-integ-1.json"
+        ],
+        "inputEvidenceIds": [],
+        "invariantIds": [
+          "I-MSG-TERMINAL"
+        ],
+        "claims": [
+          "no requestId-existence or ordering check in recordMessage"
+        ],
+        "limitations": [],
+        "status": "CURRENT"
+      }
+    },
+    {
+      "kind": "evidence",
+      "body": {
+        "id": "EV-LEASE-NEG",
+        "state": {
+          "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+          "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+          "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+          "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+        },
+        "kind": "EXECUTED_INTEGRATION",
+        "producer": "coordinator-7604",
+        "startedAt": "2026-09-27T15:48:56.581Z",
+        "finishedAt": "2026-09-27T15:48:56.581Z",
+        "commandOrMethod": "record+schedule with --lease intruder-x -> rejected",
+        "cwd": "game",
+        "exitCode": 0,
+        "result": "PASS",
+        "artifactPath": "evidence/inputs-04-integ-1.json",
+        "artifactHash": "88f4acab1fd9fb30863a41d765c29e09c482ad246000fb1e1bda4095d7e16df9",
+        "inputPaths": [
+          "evidence/inputs-04-integ-1.json"
+        ],
+        "inputEvidenceIds": [],
+        "invariantIds": [
+          "I-LEDGER-AUTHORITY"
+        ],
+        "claims": [
+          "lease guard enforced on both write paths"
+        ],
+        "limitations": [],
+        "status": "CURRENT"
+      }
+    },
+    {
+      "kind": "evidence",
+      "body": {
+        "id": "EV-ASG-BYPASS",
+        "state": {
+          "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+          "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+          "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+          "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+        },
+        "kind": "EXECUTED_INTEGRATION",
+        "producer": "coordinator-7604",
+        "startedAt": "2026-09-27T15:48:56.582Z",
+        "finishedAt": "2026-09-27T15:48:56.582Z",
+        "commandOrMethod": "record kind=assignment wrote ASG-FORGED status=RESERVED bypassing admission/capacity",
+        "cwd": "game",
+        "exitCode": 1,
+        "result": "FAIL",
+        "artifactPath": "evidence/inputs-07-forged-asg.json",
+        "artifactHash": "3be99dafc8b0d508d3f0ce6d68cfadf4064a1368255353fee3fc6bb982874238",
+        "inputPaths": [
+          "evidence/inputs-07-forged-asg.json"
+        ],
+        "inputEvidenceIds": [],
+        "invariantIds": [
+          "I-SLOT-CAPACITY",
+          "I-LEDGER-AUTHORITY"
+        ],
+        "claims": [
+          "schedule is not the sole reservation path; record can mint active assignments"
+        ],
+        "limitations": [],
+        "status": "CURRENT"
+      }
+    },
+    {
+      "kind": "evidence",
+      "body": {
+        "id": "EV-MUT-REL",
+        "state": {
+          "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+          "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+          "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+          "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+        },
+        "kind": "EXECUTED_MUTATION",
+        "producer": "coordinator-7604",
+        "startedAt": "2026-09-27T15:48:56.582Z",
+        "finishedAt": "2026-09-27T15:48:56.582Z",
+        "commandOrMethod": "mutant m1 (RESULT_RECEIVED removed from ASSIGNMENT_ACTIVE): control QUEUED, mutant ADMITTED -> killed",
+        "cwd": "game",
+        "exitCode": 0,
+        "result": "PASS",
+        "artifactPath": "evidence/mutants/m1/prevention.mjs",
+        "artifactHash": "8bcbada6cb827361a6aa14ee8904105b4b5441314d6bafb959bba0f5b7da791b",
+        "inputPaths": [
+          "evidence/mutants/m1/prevention.mjs"
+        ],
+        "inputEvidenceIds": [],
+        "invariantIds": [
+          "I-SLOT-RELEASE"
+        ],
+        "claims": [
+          "representative mutant killed by admission probe"
+        ],
+        "limitations": [],
+        "status": "CURRENT"
+      }
+    },
+    {
+      "kind": "evidence",
+      "body": {
+        "id": "EV-MUT-CAP",
+        "state": {
+          "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+          "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+          "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+          "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+        },
+        "kind": "EXECUTED_MUTATION",
+        "producer": "coordinator-7604",
+        "startedAt": "2026-09-27T15:48:56.582Z",
+        "finishedAt": "2026-09-27T15:48:56.582Z",
+        "commandOrMethod": "mutant m2 (capacity check removed): control QUEUED, mutant ADMITTED -> killed",
+        "cwd": "game",
+        "exitCode": 0,
+        "result": "PASS",
+        "artifactPath": "evidence/mutants/m2/prevention.mjs",
+        "artifactHash": "f4f48b0498d2ccdd204bc15503a4aad94e02f8748b9e74f82ad5086f734f5969",
+        "inputPaths": [
+          "evidence/mutants/m2/prevention.mjs"
+        ],
+        "inputEvidenceIds": [],
+        "invariantIds": [
+          "I-SLOT-CAPACITY"
+        ],
+        "claims": [
+          "representative mutant killed by admission probe"
+        ],
+        "limitations": [],
+        "status": "CURRENT"
+      }
+    },
+    {
+      "kind": "evidence",
+      "body": {
+        "id": "EV-STATIC-SLOT",
+        "state": {
+          "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+          "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+          "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+          "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+        },
+        "kind": "SOURCE_PROOF",
+        "producer": "coordinator-7604",
+        "startedAt": "2026-09-27T15:48:56.583Z",
+        "finishedAt": "2026-09-27T15:48:56.583Z",
+        "commandOrMethod": "read admitAssignment+observeAssignment+ASSIGNMENT_ACTIVE+TERMINAL_OBSERVED (prevention.mjs:127-173, cli.mjs:347-370)",
+        "cwd": "game",
+        "exitCode": 0,
+        "result": "PASS",
+        "artifactPath": "evidence/inputs-01-invariants.json",
+        "artifactHash": "c24205b54c122bd0421baff9d945a855876478fcbefc82d6c9fe99ae7a3a0dc9",
+        "inputPaths": [
+          "evidence/inputs-01-invariants.json"
+        ],
+        "inputEvidenceIds": [],
+        "invariantIds": [
+          "I-SLOT-CAPACITY",
+          "I-SLOT-RELEASE"
+        ],
+        "claims": [
+          "code inspected: no RUNNING transition exists; re-admission replaces record wholesale"
+        ],
+        "limitations": [],
+        "status": "CURRENT"
+      }
+    },
+    {
+      "kind": "evidence",
+      "body": {
+        "id": "EV-STATIC-MSG",
+        "state": {
+          "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+          "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+          "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+          "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+        },
+        "kind": "SOURCE_PROOF",
+        "producer": "coordinator-7604",
+        "startedAt": "2026-09-27T15:48:56.583Z",
+        "finishedAt": "2026-09-27T15:48:56.583Z",
+        "commandOrMethod": "read recordMessage (state.mjs:229-251) + cmdRecord message path (cli.mjs:144-177)",
+        "cwd": "game",
+        "exitCode": 0,
+        "result": "PASS",
+        "artifactPath": "evidence/inputs-01-invariants.json",
+        "artifactHash": "c24205b54c122bd0421baff9d945a855876478fcbefc82d6c9fe99ae7a3a0dc9",
+        "inputPaths": [
+          "evidence/inputs-01-invariants.json"
+        ],
+        "inputEvidenceIds": [],
+        "invariantIds": [
+          "I-MSG-TERMINAL"
+        ],
+        "claims": [
+          "dedup/conflict/stale logic inspected"
+        ],
+        "limitations": [],
+        "status": "CURRENT"
+      }
+    }
+  ]
+}

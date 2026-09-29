@@ -1,0 +1,47 @@
+{
+ "kind": "assignment",
+ "id": "ASGN-CLEAN-A",
+ "parentId": null,
+ "capacityScope": "clean-review-slot-1-of-2",
+ "inputBundleHash": "d6b541e349c794479ad873ab3554aaa9d47d021e0bd0f1048aca44eaef9fb167",
+ "dependencies": [],
+ "requiredCapabilities": [
+  "read-source",
+  "run-vitest",
+  "grep"
+ ],
+ "writeSurface": [],
+ "readiness": "READY",
+ "status": "FINISHED",
+ "reservedAt": "2026-09-29T14:45:00Z",
+ "observedRuntimeId": "subagent-clean-a",
+ "releaseEvidence": "sealed FAIL report delivered to coordinator; findings F-MG-09..13 recorded by coordinator",
+ "resultRef": "RV-CLEAN-A",
+ "timeoutState": null,
+ "history": [
+  {
+   "at": "2026-09-29T14:45:00Z",
+   "from": "QUEUED",
+   "to": "RESERVED",
+   "reason": "brief briefs/clean-a.md dispatched to isolated reviewer"
+  },
+  {
+   "at": "2026-09-29T14:50:00Z",
+   "from": "RESERVED",
+   "to": "RUNNING",
+   "reason": "reviewer began blind analysis"
+  },
+  {
+   "at": "2026-09-29T15:00:00Z",
+   "from": "RUNNING",
+   "to": "RESULT_RECEIVED",
+   "reason": "SEALED_RESULT verdict FAIL with 5 findings"
+  },
+  {
+   "at": "2026-09-29T15:05:00Z",
+   "from": "RESULT_RECEIVED",
+   "to": "FINISHED",
+   "reason": "result consumed by coordinator; slot released"
+  }
+ ]
+}

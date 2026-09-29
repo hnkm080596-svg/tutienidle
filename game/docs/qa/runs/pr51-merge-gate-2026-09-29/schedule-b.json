@@ -1,0 +1,25 @@
+{
+ "action": "admit",
+ "assignment": {
+  "id": "ASGN-CLEAN-B",
+  "parentId": null,
+  "capacityScope": "worker-slot",
+  "inputBundleHash": "e0a15137abc05d22bcf6af25ec24a4d340f25eae07f4f18d6fe6f58df3a885e2",
+  "dependencies": [
+   "ASGN-CLEAN-A"
+  ],
+  "requiredCapabilities": [
+   "read",
+   "exec-tests"
+  ],
+  "writeSurface": "none",
+  "readiness": "QUEUED",
+  "status": "QUEUED",
+  "reservedAt": null,
+  "observedRuntimeId": null,
+  "releaseEvidence": [],
+  "resultRef": null,
+  "timeoutState": null,
+  "history": []
+ }
+}

@@ -1,0 +1,742 @@
+{
+  "records": [
+    {
+      "kind": "finding",
+      "body": {
+        "id": "F-PU30-01",
+        "title": "Stale flag computed but never persisted on message records",
+        "state": {
+          "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+          "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+          "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+          "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+        },
+        "severity": "Medium",
+        "classification": "REAL_DEFECT",
+        "actionable": true,
+        "reachability": "SUPPORTED_BOUNDARY",
+        "locations": [
+          {
+            "path": "scripts/qa/state.mjs",
+            "symbolOrSection": "recordMessage:229-251",
+            "revision": "68621987",
+            "basis": "SOURCE"
+          }
+        ],
+        "discoveredBy": "coordinator-7604 live PU-30 probes",
+        "invariantIds": [
+          "I-MSG-TERMINAL"
+        ],
+        "evidenceIds": [
+          "EV-MSG-STALE"
+        ],
+        "counterexample": "MSG-INTEG-STALE1 (ACK bound to all-zero state) was appended with no stale marker",
+        "expected": "stale-bound message carries persisted flag so downstream counting/exclusion can distinguish it",
+        "actual": "staleness only surfaced as transient stdout note; ledger record indistinguishable from current; a stale SEALED_RESULT would still establish the terminal payloadHash for its requestId (poison vector)",
+        "rootCause": "recordMessage computes msgStale for the return value but pushes msg unchanged",
+        "rootClass": "implementation",
+        "subsystem": "scripts/qa",
+        "siblingSearch": [],
+        "siblingFindingIds": [],
+        "repair": null,
+        "pinEvidenceIds": [],
+        "verificationEvidenceIds": [],
+        "closureReviewIds": [],
+        "status": "OBSERVED",
+        "duplicateOf": null,
+        "rejectionReason": null,
+        "exception": null
+      }
+    },
+    {
+      "kind": "finding",
+      "body": {
+        "id": "F-PU30-02",
+        "title": "record --kind assignment mints RESERVED records bypassing admission",
+        "state": {
+          "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+          "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+          "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+          "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+        },
+        "severity": "Medium",
+        "classification": "REAL_DEFECT",
+        "actionable": true,
+        "reachability": "SUPPORTED_BOUNDARY",
+        "locations": [
+          {
+            "path": "scripts/qa/cli.mjs",
+            "symbolOrSection": "cmdRecord RECORD_COLLECTION assignment:133,160-171",
+            "revision": "68621987",
+            "basis": "SOURCE"
+          }
+        ],
+        "discoveredBy": "coordinator-7604 live PU-30 probes",
+        "invariantIds": [
+          "I-SLOT-CAPACITY",
+          "I-LEDGER-AUTHORITY"
+        ],
+        "evidenceIds": [
+          "EV-ASG-BYPASS"
+        ],
+        "counterexample": "ASG-FORGED admitted via plain record with status RESERVED, zero capacity accounting, occupied an active slot until schedule-cancelled",
+        "expected": "schedule is the sole reservation path per law G",
+        "actual": "any leased writer can mint active assignments directly into the ledger",
+        "rootCause": "RECORD_COLLECTION maps kind=assignment straight into ledger.assignments with replace-in-place, no admitAssignment call",
+        "rootClass": "implementation",
+        "subsystem": "scripts/qa",
+        "siblingSearch": [],
+        "siblingFindingIds": [],
+        "repair": null,
+        "pinEvidenceIds": [],
+        "verificationEvidenceIds": [],
+        "closureReviewIds": [],
+        "status": "OBSERVED",
+        "duplicateOf": null,
+        "rejectionReason": null,
+        "exception": null
+      }
+    },
+    {
+      "kind": "finding",
+      "body": {
+        "id": "F-PU30-03",
+        "title": "Terminal results accepted on requestIds that never had an ASSIGN",
+        "state": {
+          "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+          "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+          "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+          "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+        },
+        "severity": "Low",
+        "classification": "REAL_DEFECT",
+        "actionable": true,
+        "reachability": "SUPPORTED_BOUNDARY",
+        "locations": [
+          {
+            "path": "scripts/qa/state.mjs",
+            "symbolOrSection": "recordMessage:229-251",
+            "revision": "68621987",
+            "basis": "SOURCE"
+          }
+        ],
+        "discoveredBy": "coordinator-7604 live PU-30 probes",
+        "invariantIds": [
+          "I-MSG-TERMINAL"
+        ],
+        "evidenceIds": [
+          "EV-MSG-NOASSIGN"
+        ],
+        "counterexample": "REQ-INTEG received SEALED_RESULT with no prior ASSIGN for that requestId",
+        "expected": "reject or flag messages on unknown requestIds; enforce ASSIGN<ACK<SEALED_RESULT ordering",
+        "actual": "no requestId-existence or ordering enforcement",
+        "rootCause": "recordMessage only checks id-dedup and terminal-hash conflict",
+        "rootClass": "implementation",
+        "subsystem": "scripts/qa",
+        "siblingSearch": [],
+        "siblingFindingIds": [],
+        "repair": null,
+        "pinEvidenceIds": [],
+        "verificationEvidenceIds": [],
+        "closureReviewIds": [],
+        "status": "OBSERVED",
+        "duplicateOf": null,
+        "rejectionReason": null,
+        "exception": null
+      }
+    },
+    {
+      "kind": "finding",
+      "body": {
+        "id": "F-PU30-04",
+        "title": "cmdQualify parses TAP counters but Node 24 emits spec reporter -> vacuous QUALIFIED",
+        "state": {
+          "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+          "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+          "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+          "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+        },
+        "severity": "High",
+        "classification": "REAL_DEFECT",
+        "actionable": true,
+        "reachability": "SUPPORTED_BOUNDARY",
+        "locations": [
+          {
+            "path": "scripts/qa/cli.mjs",
+            "symbolOrSection": "cmdQualify:231-267",
+            "revision": "68621987",
+            "basis": "SOURCE"
+          }
+        ],
+        "discoveredBy": "coordinator-7604 live PU-30 probes",
+        "invariantIds": [
+          "I-LEDGER-AUTHORITY"
+        ],
+        "evidenceIds": [
+          "EV-MSG-NOASSIGN"
+        ],
+        "counterexample": "qa:internal qualify printed \"0 passed, 0 failed\" then emitted PROTOCOL_ADOPTION_QUALIFIED while node --test ran 48 passing tests",
+        "expected": "parse real pass/fail counts or pass --test-reporter tap",
+        "actual": "regex /# pass (d+)/ matches nothing under default spec reporter; gaps[] stays empty; qualification emitted vacuously",
+        "rootCause": "reporter output format changed; parser not updated",
+        "rootClass": "implementation",
+        "subsystem": "scripts/qa",
+        "siblingSearch": [],
+        "siblingFindingIds": [],
+        "repair": null,
+        "pinEvidenceIds": [],
+        "verificationEvidenceIds": [],
+        "closureReviewIds": [],
+        "status": "OBSERVED",
+        "duplicateOf": null,
+        "rejectionReason": null,
+        "exception": null
+      }
+    },
+    {
+      "kind": "finding",
+      "body": {
+        "id": "F-PU30-05",
+        "title": "Re-admission replaces record wholesale; history dropped unless coordinator resupplies",
+        "state": {
+          "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+          "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+          "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+          "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+        },
+        "severity": "Low",
+        "classification": "REAL_DEFECT",
+        "actionable": true,
+        "reachability": "SUPPORTED_BOUNDARY",
+        "locations": [
+          {
+            "path": "scripts/qa/cli.mjs",
+            "symbolOrSection": "cmdSchedule admit path:356-360",
+            "revision": "68621987",
+            "basis": "SOURCE"
+          }
+        ],
+        "discoveredBy": "coordinator-7604 live PU-30 probes",
+        "invariantIds": [
+          "I-SLOT-CAPACITY"
+        ],
+        "evidenceIds": [
+          "EV-STATIC-SLOT"
+        ],
+        "counterexample": "sched-r5-admit2 required manually copying prior history into input.assignment or it would be lost",
+        "expected": "re-admission merges with existing record preserving ledger-side history",
+        "actual": "record = {...input.assignment} fully replaces ledger.assignments[i]",
+        "rootCause": "admitAssignment builds record from caller input only",
+        "rootClass": "implementation",
+        "subsystem": "scripts/qa",
+        "siblingSearch": [],
+        "siblingFindingIds": [],
+        "repair": null,
+        "pinEvidenceIds": [],
+        "verificationEvidenceIds": [],
+        "closureReviewIds": [],
+        "status": "OBSERVED",
+        "duplicateOf": null,
+        "rejectionReason": null,
+        "exception": null
+      }
+    },
+    {
+      "kind": "finding",
+      "body": {
+        "id": "F-PU30-06",
+        "title": "Coordinator requestId typo on ASG-R5 re-admission (REQ-R5-BYPASS vs bundle REQ-R5-JOURNAL)",
+        "state": {
+          "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+          "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+          "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+          "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+        },
+        "severity": "Nit",
+        "classification": "NON_ACTIONABLE",
+        "actionable": true,
+        "reachability": "HYPOTHETICAL",
+        "locations": [
+          {
+            "path": "docs/qa/runs/pu30-live-2026-09-27/evidence/sched-r5-admit2.json",
+            "symbolOrSection": "requestId",
+            "revision": "68621987",
+            "basis": "SOURCE"
+          }
+        ],
+        "discoveredBy": "coordinator-7604 live PU-30 probes",
+        "invariantIds": [],
+        "evidenceIds": [
+          "EV-LIVE-ADMIT"
+        ],
+        "counterexample": "assignment record requestId differs from immutable bundle requestId",
+        "expected": "correlation fields consistent",
+        "actual": "recorded as REQ-R5-BYPASS; ASSIGN message uses bundle-canonical REQ-R5-JOURNAL",
+        "rootCause": "coordinator input error, honestly journaled",
+        "rootClass": "implementation",
+        "subsystem": "scripts/qa",
+        "siblingSearch": [],
+        "siblingFindingIds": [],
+        "repair": null,
+        "pinEvidenceIds": [],
+        "verificationEvidenceIds": [],
+        "closureReviewIds": [],
+        "status": "OBSERVED",
+        "duplicateOf": null,
+        "rejectionReason": null,
+        "exception": null
+      }
+    },
+    {
+      "kind": "finding",
+      "body": {
+        "id": "F-PU30-07",
+        "title": "cli.mjs usage string omits prepare/preflight/checkpoint/learn/schedule/migrate",
+        "state": {
+          "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+          "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+          "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+          "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+        },
+        "severity": "Nit",
+        "classification": "DOCUMENTATION_DEFECT",
+        "actionable": true,
+        "reachability": "SUPPORTED_BOUNDARY",
+        "locations": [
+          {
+            "path": "scripts/qa/cli.mjs",
+            "symbolOrSection": "usage text",
+            "revision": "68621987",
+            "basis": "SOURCE"
+          }
+        ],
+        "discoveredBy": "coordinator-7604 live PU-30 probes",
+        "invariantIds": [],
+        "evidenceIds": [],
+        "counterexample": "npm run qa:internal (no args) prints init|snapshot|record|validate|decide|render|qualify only",
+        "expected": "usage lists all implemented commands",
+        "actual": "stale string, commands exist and dispatch",
+        "rootCause": "usage text not updated when commands added",
+        "rootClass": "implementation",
+        "subsystem": "scripts/qa",
+        "siblingSearch": [],
+        "siblingFindingIds": [],
+        "repair": null,
+        "pinEvidenceIds": [],
+        "verificationEvidenceIds": [],
+        "closureReviewIds": [],
+        "status": "OBSERVED",
+        "duplicateOf": null,
+        "rejectionReason": null,
+        "exception": null
+      }
+    },
+    {
+      "kind": "coverage",
+      "body": {
+        "id": "COV-CAP-DET",
+        "invariantId": "I-SLOT-CAPACITY",
+        "surface": "DETERMINISTIC",
+        "attackIds": [
+          "AT-CAP-OVERFLOW",
+          "AT-CAP-NONREADY"
+        ],
+        "taxonomyIds": [
+          "TRN-08",
+          "QAI-08"
+        ],
+        "applicability": "REQUIRED",
+        "reason": "live admission exercises under real concurrency",
+        "evidenceIds": [
+          "EV-LIVE-ADMIT",
+          "EV-QUEUE-NOSLOT"
+        ],
+        "reviewerIds": [],
+        "status": "SATISFIED",
+        "weakProtection": false
+      }
+    },
+    {
+      "kind": "coverage",
+      "body": {
+        "id": "COV-CAP-STATIC",
+        "invariantId": "I-SLOT-CAPACITY",
+        "surface": "STATIC_SEMANTIC",
+        "attackIds": [],
+        "taxonomyIds": [],
+        "applicability": "REQUIRED",
+        "reason": "admitAssignment source review + reviewer lens",
+        "evidenceIds": [
+          "EV-STATIC-SLOT"
+        ],
+        "reviewerIds": [],
+        "status": "SATISFIED",
+        "weakProtection": false
+      }
+    },
+    {
+      "kind": "coverage",
+      "body": {
+        "id": "COV-REL-DET",
+        "invariantId": "I-SLOT-RELEASE",
+        "surface": "DETERMINISTIC",
+        "attackIds": [
+          "AT-REL-RESULT",
+          "AT-REL-TIMEOUT",
+          "AT-REL-VERIFIED"
+        ],
+        "taxonomyIds": [
+          "TRN-03",
+          "ASY-05"
+        ],
+        "applicability": "REQUIRED",
+        "reason": "live observe sequence on real dispatched agent",
+        "evidenceIds": [
+          "EV-NEEDCTX-REL",
+          "EV-ASG-BYPASS"
+        ],
+        "reviewerIds": [],
+        "status": "SATISFIED",
+        "weakProtection": false
+      }
+    },
+    {
+      "kind": "coverage",
+      "body": {
+        "id": "COV-REL-STATIC",
+        "invariantId": "I-SLOT-RELEASE",
+        "surface": "STATIC_SEMANTIC",
+        "attackIds": [],
+        "taxonomyIds": [],
+        "applicability": "REQUIRED",
+        "reason": "observeAssignment source review",
+        "evidenceIds": [
+          "EV-STATIC-SLOT"
+        ],
+        "reviewerIds": [],
+        "status": "SATISFIED",
+        "weakProtection": false
+      }
+    },
+    {
+      "kind": "coverage",
+      "body": {
+        "id": "COV-REL-MUT",
+        "invariantId": "I-SLOT-RELEASE",
+        "surface": "MUTATION",
+        "attackIds": [
+          "AT-REL-MUTANT"
+        ],
+        "taxonomyIds": [
+          "TRN-03"
+        ],
+        "applicability": "REQUIRED",
+        "reason": "disposable mutant: drop RESULT_RECEIVED/RELEASE_PENDING from active set",
+        "evidenceIds": [
+          "EV-MUT-REL"
+        ],
+        "reviewerIds": [],
+        "status": "SATISFIED",
+        "weakProtection": false
+      }
+    },
+    {
+      "kind": "coverage",
+      "body": {
+        "id": "COV-MSG-DET",
+        "invariantId": "I-MSG-TERMINAL",
+        "surface": "DETERMINISTIC",
+        "attackIds": [
+          "AT-MSG-DUP",
+          "AT-MSG-CONFLICT",
+          "AT-MSG-STALE"
+        ],
+        "taxonomyIds": [
+          "ASY-04",
+          "QAI-05"
+        ],
+        "applicability": "REQUIRED",
+        "reason": "negative tests through record kind=message",
+        "evidenceIds": [
+          "EV-MSG-DUP",
+          "EV-MSG-TAMPER",
+          "EV-MSG-CONFLICT",
+          "EV-MSG-STALE"
+        ],
+        "reviewerIds": [],
+        "status": "SATISFIED",
+        "weakProtection": false
+      }
+    },
+    {
+      "kind": "coverage",
+      "body": {
+        "id": "COV-MSG-STATIC",
+        "invariantId": "I-MSG-TERMINAL",
+        "surface": "STATIC_SEMANTIC",
+        "attackIds": [],
+        "taxonomyIds": [],
+        "applicability": "REQUIRED",
+        "reason": "recordMessage source review",
+        "evidenceIds": [
+          "EV-STATIC-MSG"
+        ],
+        "reviewerIds": [],
+        "status": "SATISFIED",
+        "weakProtection": false
+      }
+    },
+    {
+      "kind": "coverage",
+      "body": {
+        "id": "COV-LED-STATIC",
+        "invariantId": "I-LEDGER-AUTHORITY",
+        "surface": "STATIC_SEMANTIC",
+        "attackIds": [],
+        "taxonomyIds": [],
+        "applicability": "REQUIRED",
+        "reason": "lease/atomic/event-chain source review",
+        "evidenceIds": [
+          "EV-STATIC-SLOT",
+          "EV-STATIC-MSG"
+        ],
+        "reviewerIds": [],
+        "status": "SATISFIED",
+        "weakProtection": false
+      }
+    },
+    {
+      "kind": "coverage",
+      "body": {
+        "id": "COV-LED-DET",
+        "invariantId": "I-LEDGER-AUTHORITY",
+        "surface": "DETERMINISTIC",
+        "attackIds": [
+          "AT-LEDGER-WRONGLEASE"
+        ],
+        "taxonomyIds": [
+          "AUT-08"
+        ],
+        "applicability": "REQUIRED",
+        "reason": "wrong-lease write attempt rejected",
+        "evidenceIds": [
+          "EV-LEASE-NEG"
+        ],
+        "reviewerIds": [],
+        "status": "SATISFIED",
+        "weakProtection": false
+      }
+    },
+    {
+      "kind": "attack",
+      "body": {
+        "id": "AT-CAP-OVERFLOW",
+        "invariantIds": [
+          "I-SLOT-CAPACITY"
+        ],
+        "taxonomyIds": [
+          "TRN-08"
+        ],
+        "challengedAssumption": "a 6th READY admission is refused while cap is occupied",
+        "sequenceOrInput": "admit R1..R4 READY with externalOccupied=1 (coordinator), then admit R5",
+        "oracle": "R5 status QUEUED, active count stays <= cap, R5 holds no slot",
+        "noveltyReason": "first live multi-agent exercise of admission",
+        "evidenceIds": [
+          "EV-LIVE-ADMIT",
+          "EV-MUT-CAP"
+        ]
+      }
+    },
+    {
+      "kind": "attack",
+      "body": {
+        "id": "AT-CAP-NONREADY",
+        "invariantIds": [
+          "I-SLOT-CAPACITY"
+        ],
+        "taxonomyIds": [
+          "TRN-08"
+        ],
+        "challengedAssumption": "waiting/blocked work never consumes capacity",
+        "sequenceOrInput": "admit WAITING_INPUT and BLOCKED readiness records",
+        "oracle": "status QUEUED/BLOCKED; active count unchanged",
+        "noveltyReason": "exercises non-READY intake live",
+        "evidenceIds": [
+          "EV-QUEUE-NOSLOT"
+        ]
+      }
+    },
+    {
+      "kind": "attack",
+      "body": {
+        "id": "AT-REL-RESULT",
+        "invariantIds": [
+          "I-SLOT-RELEASE"
+        ],
+        "taxonomyIds": [
+          "TRN-03"
+        ],
+        "challengedAssumption": "receiving a result does not free the slot",
+        "sequenceOrInput": "dispatch real subagent; record its result; observe 'result'",
+        "oracle": "status RESULT_RECEIVED; active count unchanged; further admission still queued",
+        "noveltyReason": "result-vs-release on a real agent",
+        "evidenceIds": [
+          "EV-NEEDCTX-REL"
+        ]
+      }
+    },
+    {
+      "kind": "attack",
+      "body": {
+        "id": "AT-REL-TIMEOUT",
+        "invariantIds": [
+          "I-SLOT-RELEASE"
+        ],
+        "taxonomyIds": [
+          "ASY-05"
+        ],
+        "challengedAssumption": "lease expiry alone cannot free the slot",
+        "sequenceOrInput": "observe 'expired' on RESULT_RECEIVED assignment",
+        "oracle": "status RELEASE_PENDING; occupancy retained",
+        "noveltyReason": "timeout-without-proof path",
+        "evidenceIds": [
+          "EV-ASG-BYPASS"
+        ]
+      }
+    },
+    {
+      "kind": "attack",
+      "body": {
+        "id": "AT-REL-VERIFIED",
+        "invariantIds": [
+          "I-SLOT-RELEASE"
+        ],
+        "taxonomyIds": [
+          "ASY-05"
+        ],
+        "challengedAssumption": "only verified termination releases",
+        "sequenceOrInput": "after agent termination is confirmed, observe 'terminated'",
+        "oracle": "FINISHED with releaseEvidence; capacity freed; queued admission now admits",
+        "noveltyReason": "verified exit against real agent id",
+        "evidenceIds": [
+          "EV-NEEDCTX-REL"
+        ]
+      }
+    },
+    {
+      "kind": "attack",
+      "body": {
+        "id": "AT-REL-MUTANT",
+        "invariantIds": [
+          "I-SLOT-RELEASE"
+        ],
+        "taxonomyIds": [
+          "TRN-03"
+        ],
+        "challengedAssumption": "removing RESULT_RECEIVED/RELEASE_PENDING from the active set lets capacity overflow",
+        "sequenceOrInput": "disposable copy of prevention.mjs minus those statuses; probe admit at cap",
+        "oracle": "probe catches mutant admitting beyond cap; unmutated control queues",
+        "noveltyReason": "mutant on the release law itself",
+        "evidenceIds": [
+          "EV-MUT-REL"
+        ]
+      }
+    },
+    {
+      "kind": "attack",
+      "body": {
+        "id": "AT-MSG-DUP",
+        "invariantIds": [
+          "I-MSG-TERMINAL"
+        ],
+        "taxonomyIds": [
+          "ASY-04"
+        ],
+        "challengedAssumption": "identical terminal replay is idempotent, not double-counted",
+        "sequenceOrInput": "record same SEALED_RESULT twice",
+        "oracle": "second is flagged duplicate, ledger gains no second record",
+        "noveltyReason": "live replay",
+        "evidenceIds": [
+          "EV-MSG-DUP",
+          "EV-MSG-TAMPER"
+        ]
+      }
+    },
+    {
+      "kind": "attack",
+      "body": {
+        "id": "AT-MSG-CONFLICT",
+        "invariantIds": [
+          "I-MSG-TERMINAL"
+        ],
+        "taxonomyIds": [
+          "QAI-05"
+        ],
+        "challengedAssumption": "conflicting terminal payload on one requestId is rejected",
+        "sequenceOrInput": "record SEALED_RESULT then a second with different payloadHash",
+        "oracle": "integrity error; ledger unchanged",
+        "noveltyReason": "live conflict injection",
+        "evidenceIds": [
+          "EV-MSG-CONFLICT"
+        ]
+      }
+    },
+    {
+      "kind": "attack",
+      "body": {
+        "id": "AT-MSG-STALE",
+        "invariantIds": [
+          "I-MSG-TERMINAL"
+        ],
+        "taxonomyIds": [
+          "QAI-02"
+        ],
+        "challengedAssumption": "a message bound to a foreign state is flagged stale",
+        "sequenceOrInput": "record message with fabricated prior-state tuple",
+        "oracle": "recorded as stale:true; cannot masquerade as current",
+        "noveltyReason": "live stale injection",
+        "evidenceIds": [
+          "EV-MSG-STALE"
+        ]
+      }
+    },
+    {
+      "kind": "attack",
+      "body": {
+        "id": "AT-LEDGER-WRONGLEASE",
+        "invariantIds": [
+          "I-LEDGER-AUTHORITY"
+        ],
+        "taxonomyIds": [
+          "AUT-08"
+        ],
+        "challengedAssumption": "a write under a foreign lease id is refused",
+        "sequenceOrInput": "qa:internal record --lease intruder-x",
+        "oracle": "checkLease throws; no mutation",
+        "noveltyReason": "live lease attack",
+        "evidenceIds": [
+          "EV-LEASE-NEG"
+        ]
+      }
+    },
+    {
+      "kind": "attack",
+      "body": {
+        "id": "AT-NEED-CONTEXT",
+        "invariantIds": [
+          "I-AGENT-BINDING"
+        ],
+        "taxonomyIds": [
+          "QAI-03"
+        ],
+        "challengedAssumption": "a reviewer missing required material returns NEED_CONTEXT and holds no slot after verified exit",
+        "sequenceOrInput": "dispatch reviewer whose bundle names a nonexistent required doc",
+        "oracle": "NEED_CONTEXT message naming the gap; slot freed only after verified exit",
+        "noveltyReason": "real NEED_CONTEXT lifecycle",
+        "evidenceIds": [
+          "EV-NEEDCTX-REL"
+        ]
+      }
+    }
+  ]
+}

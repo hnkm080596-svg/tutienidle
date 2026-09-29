@@ -1,0 +1,30 @@
+{
+  "applied": [
+    "coverage:COV-CAP-DET",
+    "coverage:COV-CAP-STATIC",
+    "coverage:COV-CAP-REV",
+    "coverage:COV-REL-DET",
+    "coverage:COV-REL-STATIC",
+    "coverage:COV-REL-MUT",
+    "coverage:COV-REL-REV",
+    "coverage:COV-MSG-DET",
+    "coverage:COV-MSG-STATIC",
+    "coverage:COV-MSG-REV",
+    "coverage:COV-LED-STATIC",
+    "coverage:COV-LED-DET",
+    "coverage:COV-LED-REV",
+    "coverage:COV-BIND-REV",
+    "coverage:COV-BIND-STATIC",
+    "attack:AT-CAP-OVERFLOW",
+    "attack:AT-CAP-NONREADY",
+    "attack:AT-REL-RESULT",
+    "attack:AT-REL-TIMEOUT",
+    "attack:AT-REL-VERIFIED",
+    "attack:AT-REL-MUTANT",
+    "attack:AT-MSG-DUP",
+    "attack:AT-MSG-CONFLICT",
+    "attack:AT-MSG-STALE",
+    "attack:AT-LEDGER-WRONGLEASE",
+    "attack:AT-NEED-CONTEXT"
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "applied": [
+    "review:RV-CLEAN-A2",
+    "finding:F-MG-14",
+    "finding:F-MG-15",
+    "finding:F-MG-16",
+    "finding:F-MG-17",
+    "mutation:MUT-STARTER-PIN-1"
+  ]
+}

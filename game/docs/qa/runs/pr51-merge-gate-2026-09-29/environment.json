@@ -1,0 +1,12 @@
+{
+  "tools": {
+    "node": "v24.19.0",
+    "vitest": "4.1.11",
+    "@playwright/test": "1.62.x",
+    "vite": "8.2.2",
+    "vue-tsc": "build mode"
+  },
+  "os": "win32",
+  "profile": "local-dev-windows",
+  "note": "Merge-gate run on coordinator's checkout == merged origin/master tree (89135530). Runtime/browser evidence gathered via Playwright chromium against vite dev server."
+}

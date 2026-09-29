@@ -1,0 +1,38 @@
+{
+  "requestId": "REQ-R7-MSGLED",
+  "reviewerRuntimeId": "run_subagent:f6a1d784",
+  "verdict": "SEALED_RESULT",
+  "independence": "fresh context; priorFindingsVisible=NO attested; exposure: ledger counterexample one-liners + invariants surfaced via grep during verification — disclosed, derived-from-source-first",
+  "access": "read state.mjs, cli.mjs, validate.mjs, decision.mjs, prevention.mjs, agent-instructions.md, ledger.schema.json, tests; live ledger ranges for reachability proof; read-only, no exec",
+  "attacks": [
+    "stale SEALED_RESULT first -> terminal poisoning of requestId",
+    "SEALED_RESULT on requestId with no ASSIGN (live: REQ-INTEG)",
+    "SEALED_RESULT before ACK / traffic after CANCEL",
+    "wrong-direction sender/recipient",
+    "missing state -> staleness skipped",
+    "foreign runId silently overwritten",
+    "second SEALED_RESULT new id same payloadHash -> double terminal",
+    "--lease omitted -> leaseFromDir auto-passes checkLease (default path IS the bypass)",
+    "two concurrent record procs -> dup seq, clobbered events, lost update",
+    "crash between journal append and saveLedgerAtomic -> journal-ahead divergence",
+    "record same id on CLOSED finding / SEALED review -> silent replace",
+    "kind=assignment via record bypasses admitAssignment (live: ASG-FORGED)",
+    "decide on broken event chain -> succeeds (validateStructure only)"
+  ],
+  "findings": [
+    "F-MSGLED-1 High REAL_DEFECT state.mjs:231-251 — stale flag computed not persisted; stale SEALED_RESULT establishes terminal hash, permanently blocks valid result; STALE_RESULT kind never emitted",
+    "F-MSGLED-2 High REAL_DEFECT cli.mjs:123-127+state.mjs:199-227 — checkLease compares file to itself when --lease omitted; expectedSeq CAS has zero production callers; journal append precedes save -> divergence on crash",
+    "F-MSGLED-3 High REAL_DEFECT cli.mjs:161-170 — unconditional replace-in-place on ANY id: CLOSED finding/SEALED review rewritable unauditably; comment claims guard that does not exist",
+    "F-MSGLED-4 Medium REAL_DEFECT state.mjs:229-252 — no ASSIGN-before-traffic check, no ordering, no direction binding (corroborates F-PU30-03, broader)",
+    "F-MSGLED-5 Medium REAL_DEFECT cli.mjs:157+state.mjs:231 — declared runId silently overwritten; missing state skips staleness yet can occupy terminal; no message-removal path",
+    "F-MSGLED-6 Medium REAL_DEFECT cli.mjs:205 — decide runs validateStructure only; MC1-MC14 semantics not run on decision path",
+    "F-MSGLED-7 Low REAL_DEFECT state.mjs:243-250 — second SEALED_RESULT with NEW id same payloadHash stored -> two terminal records per requestId",
+    "F-MSGLED-8 Nit hardening — no fsync on save; mixed-kind batch event kind from records[0]; {records:[]} emits no-op event; --run accepts absolute/dotdot paths"
+  ],
+  "hypotheses": [
+    "whole-ledger forgery undetectable — no external anchor; non-event collections have no integrity protection",
+    "stale MSG-INTEG-3 absent from messages because fresh terminal won the race by 3ms — ordering flip would have poisoned REQ-INTEG",
+    "single-process crash between journal append and save reproduces concurrent divergence"
+  ],
+  "result": "SEALED_RESULT"
+}

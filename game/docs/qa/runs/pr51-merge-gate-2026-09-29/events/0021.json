@@ -1,0 +1,13 @@
+{
+  "applied": [
+    "evidence:EV-VERIFY-S9",
+    "evidence:EV-NOVEL-S9",
+    "finding:F-MG-14 (updated)",
+    "finding:F-MG-15 (updated)",
+    "finding:F-MG-17 (updated)",
+    "review:RV-S9-P1",
+    "review:RV-S9-P2",
+    "review:RV-S9-P3",
+    "cycle:CYC-P5-4"
+  ]
+}

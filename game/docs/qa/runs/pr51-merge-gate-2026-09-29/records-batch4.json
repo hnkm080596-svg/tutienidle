@@ -1,0 +1,443 @@
+{
+ "records": [
+  {
+   "kind": "review",
+   "id": "RV-CLEAN-A",
+   "state": {
+    "productStateId": "476ecc92a14df13401d15a036554fb9920fe46451677204df8a0c133ab6146bc",
+    "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+    "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+    "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+   },
+   "round": 1,
+   "phase": "CORRECTNESS",
+   "reviewerId": "clean-a",
+   "contextId": "subagent-clean-a",
+   "model": "swe-2-max",
+   "role": "CLEAN_REVIEW",
+   "inputBundleHash": "d6b541e349c794479ad873ab3554aaa9d47d021e0bd0f1048aca44eaef9fb167",
+   "priorFindingsVisible": false,
+   "accessLimitations": [],
+   "startedAt": "2026-09-29T14:50:00Z",
+   "sealedAt": "2026-09-29T15:00:00Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [
+    "F-MG-09",
+    "F-MG-10",
+    "F-MG-11",
+    "F-MG-12",
+    "F-MG-13"
+   ],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  },
+  {
+   "kind": "finding",
+   "id": "F-MG-09",
+   "title": "CP01-CANTHAN-RAMP: per_second flatStat with no maxStacks ramps one stack per second unbounded",
+   "severity": "High",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "game/src/data/skill/TalentPassives.ts",
+     "symbolOrSection": "talent_passive_can_than / can_than_phi flatStat modifiers",
+     "revision": "768b9ac0",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "game/src/core/skill/PassiveSystem.ts",
+     "symbolOrSection": "tick -> addStack per second",
+     "revision": "768b9ac0",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "game/src/core/stats/StatCalculator.ts",
+     "symbolOrSection": "flat x stacks accumulation",
+     "revision": "768b9ac0",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "clean-a",
+   "invariantIds": [
+    "I-STAT-ZEROBASE-FLAT"
+   ],
+   "evidenceIds": [],
+   "counterexample": "flatStat('finalDamageReductionPercent', 0.1) under per_second trigger adds +0.1 every second the condition holds; after ~7s hits the -75% damage-taken cap instead of the designed -10% band; the -0.05 leg ramps to the -1 floor (+100% taken) instead of +5%.",
+   "expected": "each Can Than leg is a static band of +/-0.1/-0.05",
+   "actual": "unbounded per-second ramp to the stat clamp",
+   "rootCause": "CP-01 converted dead percent modifiers to live flat modifiers but did not bound the per_second accumulation; spec is a static band",
+   "rootClass": "unbounded-accumulation",
+   "subsystem": "stats",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src/data/skill"
+     ],
+     "termsAndMethod": "all per_second passiveModifiers enumerated for missing maxStacks",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "talent_passive_hap_linh shares the same unbounded per_second pattern -> F-MG-11"
+     ],
+     "coverageLimits": []
+    }
+   ],
+   "siblingFindingIds": [
+    "F-MG-11"
+   ],
+   "repair": "maxStacks:1 + distinct id suffix per leg (hpBelow / hpNotBelow)",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "status": "OBSERVED",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null,
+   "fixedInRevision": "67fd0356",
+   "closedAt": null,
+   "closeReason": null,
+   "state": {
+    "productStateId": "476ecc92a14df13401d15a036554fb9920fe46451677204df8a0c133ab6146bc",
+    "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+    "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+    "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+   }
+  },
+  {
+   "kind": "finding",
+   "id": "F-MG-10",
+   "title": "CLOUD-INSERT-UPSERT: first-push POST carried Prefer: resolution=merge-duplicates (silent upsert, contradicts conflict semantics)",
+   "severity": "Low",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "game/src/services/cloudSave/SupabaseRemoteSave.ts",
+     "symbolOrSection": "push insert branch ~line 180",
+     "revision": "768b9ac0",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "game/supabase/migrations/202608240001_online_auth_character.sql",
+     "symbolOrSection": "character_id primary key",
+     "revision": "768b9ac0",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "clean-a",
+   "invariantIds": [
+    "I-CLOUD-CAS"
+   ],
+   "evidenceIds": [],
+   "counterexample": "POST with merge-duplicates + PK on character_id is a PostgREST upsert: a concurrent first push silently overwrites instead of conflict-losing, contradicting the adjacent comment and the CAS design",
+   "expected": "strict insert; concurrent first push gets a PK conflict -> unavailable -> resync",
+   "actual": "merge-duplicates silently upserts",
+   "rootCause": "leftover prefer header from pre-CAS design",
+   "rootClass": "stale-contract-header",
+   "subsystem": "cloudSave",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src/services/cloudSave"
+     ],
+     "termsAndMethod": "all requestSupabase calls audited for prefer headers",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "PATCH CAS branch correctly carries return=representation only"
+     ],
+     "coverageLimits": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "removed merge-duplicates header; strict insert; POST Prefer header pinned in test",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "status": "OBSERVED",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null,
+   "fixedInRevision": "67fd0356",
+   "closedAt": null,
+   "closeReason": null,
+   "state": {
+    "productStateId": "476ecc92a14df13401d15a036554fb9920fe46451677204df8a0c133ab6146bc",
+    "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+    "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+    "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+   }
+  },
+  {
+   "kind": "finding",
+   "id": "F-MG-11",
+   "title": "HAPLINH-DEAD-PERCENT: leechPercent is zero-base so percent modifier was dead; spec is a static x2.5 leech multiplier, code had unbounded per-second stack",
+   "severity": "Low",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "game/src/data/skill/TalentPassives.ts",
+     "symbolOrSection": "talent_passive_hap_linh",
+     "revision": "768b9ac0",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "game/src/core/stats/StatBlock.ts",
+     "symbolOrSection": "leechPercent base 0",
+     "revision": "768b9ac0",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "clean-a",
+   "invariantIds": [
+    "I-STAT-ZEROBASE-FLAT"
+   ],
+   "evidenceIds": [],
+   "counterexample": "stat('leechPercent', 0.0125) on a per_second trigger: percent over zero base multiplies flat leech only; unbounded stacks let it grow past the spec x2.5",
+   "expected": "leechPercent x2.5 while hpBelow 0.5, static",
+   "actual": "percent 0.0125 accumulating every second without cap",
+   "rootCause": "spec magnitude mistranslated + missing per_second cap",
+   "rootClass": "unbounded-accumulation",
+   "subsystem": "stats",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src/data/skill"
+     ],
+     "termsAndMethod": "all per_second modifiers enumerated",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "can_than legs -> F-MG-09"
+     ],
+     "coverageLimits": []
+    }
+   ],
+   "siblingFindingIds": [
+    "F-MG-09"
+   ],
+   "repair": "percent 1.5 (x2.5 multiplier over existing flat leech), maxStacks 1",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "status": "OBSERVED",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null,
+   "fixedInRevision": "67fd0356",
+   "closedAt": null,
+   "closeReason": null,
+   "state": {
+    "productStateId": "476ecc92a14df13401d15a036554fb9920fe46451677204df8a0c133ab6146bc",
+    "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+    "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+    "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+   }
+  },
+  {
+   "kind": "finding",
+   "id": "F-MG-12",
+   "title": "MOD-ID-COLLISION: generated modifier id `talent:<stat>:<cap>:flat` collides for the two can_than legs once both are capped",
+   "severity": "Nit",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "HYPOTHETICAL",
+   "locations": [
+    {
+     "path": "game/src/data/skill/TalentPassives.ts",
+     "symbolOrSection": "flatStat id template",
+     "revision": "768b9ac0",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "clean-a",
+   "invariantIds": [
+    "I-STAT-ZEROBASE-FLAT"
+   ],
+   "evidenceIds": [],
+   "counterexample": "both can_than legs produce id talent:finalDamageReductionPercent:1:flat after capping; stacks live on the modifier object so today it is latent, but any id-keyed dedup/merge would merge the legs",
+   "expected": "distinct ids per modifier",
+   "actual": "identical generated ids",
+   "rootCause": "id template has no discriminator for same-stat same-cap modifiers",
+   "rootClass": "identity-collision",
+   "subsystem": "stats",
+   "siblingSearch": [],
+   "siblingFindingIds": [],
+   "repair": "flatStat gained an idSuffix parameter; legs use hpBelow / hpNotBelow suffixes",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "status": "OBSERVED",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null,
+   "fixedInRevision": "67fd0356",
+   "closedAt": null,
+   "closeReason": null,
+   "state": {
+    "productStateId": "476ecc92a14df13401d15a036554fb9920fe46451677204df8a0c133ab6146bc",
+    "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+    "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+    "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+   }
+  },
+  {
+   "kind": "finding",
+   "id": "F-MG-13",
+   "title": "ACCRUAL-REALM-UNVALIDATED: saveShapeValidation/saveAcceptance accept any accrualRealmId string; a fabricated realm id silently prices the backlog at a wrong tier",
+   "severity": "Low",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "game/src/services/save/saveShapeValidation.ts",
+     "symbolOrSection": "validateBuildingsSave",
+     "revision": "768b9ac0",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "game/src/services/save/saveAcceptance.ts",
+     "symbolOrSection": "buildings loop",
+     "revision": "768b9ac0",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "clean-a",
+   "invariantIds": [
+    "I-BLDG-ACCRUAL-REALM"
+   ],
+   "evidenceIds": [],
+   "counterexample": "hand-edited save with accrualRealmId:'made_up_realm' passes shape+acceptance; getRealmIndex returns -1 and the window prices at default tier silently",
+   "expected": "unknown accrualRealmId rejected like unknown buildingId",
+   "actual": "accepted silently",
+   "rootCause": "EM-01 added the field without extending the acceptance seam",
+   "rootClass": "acceptance-gap",
+   "subsystem": "save",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src/services/save"
+     ],
+     "termsAndMethod": "all EM-01 fields checked against shape+acceptance gates",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "buildingId already validated; accrualRealmId was the only new unvalidated reference"
+     ],
+     "coverageLimits": []
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "shape gate rejects non-string accrualRealmId; acceptance rejects unknown realm ids; 3 pin tests added",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "status": "OBSERVED",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null,
+   "fixedInRevision": "67fd0356",
+   "closedAt": null,
+   "closeReason": null,
+   "state": {
+    "productStateId": "476ecc92a14df13401d15a036554fb9920fe46451677204df8a0c133ab6146bc",
+    "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+    "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+    "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+   }
+  },
+  {
+   "kind": "mutation",
+   "id": "MUT-RAMP-1",
+   "candidateState": {
+    "productStateId": "a11c36fd5839ee08f1d7d81bad4be9874983fa0ac82dd57c188f8d43a5ce3553",
+    "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+    "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+    "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+   },
+   "invariantIds": [
+    "I-STAT-ZEROBASE-FLAT"
+   ],
+   "rootClass": "unbounded-accumulation",
+   "operator": "maxStacks:1 -> undefined on can_than legs (restores runaway ramp)",
+   "isolationPath": "in-place edit + revert",
+   "mutantHash": "0758362feded49733ceff4dbabd844dc178295c16688c4e603bdfcf8bf72dbf3",
+   "expectedDetector": "TalentBuffs.test.ts per_second maxStacks class pin + TalentsV4Wiring can_than assertions",
+   "result": "KILLED_EXPECTED",
+   "evidenceIds": [],
+   "equivalenceReason": "2 tests failed as designed (class pin + wiring oracle)",
+   "candidateUnchanged": true
+  },
+  {
+   "kind": "mutation",
+   "id": "MUT-HAPLINH-1",
+   "candidateState": {
+    "productStateId": "a11c36fd5839ee08f1d7d81bad4be9874983fa0ac82dd57c188f8d43a5ce3553",
+    "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+    "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+    "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+   },
+   "invariantIds": [
+    "I-STAT-ZEROBASE-FLAT"
+   ],
+   "rootClass": "unbounded-accumulation",
+   "operator": "stat('leechPercent',1.5,1) -> stat('leechPercent',1.5) uncapped",
+   "isolationPath": "in-place edit + revert",
+   "mutantHash": "facaf89ce5449765cb5a385e5dc39ec66fdfec86c943b63e882fbd131694a548",
+   "expectedDetector": "TalentBuffs.test.ts class pin + TalentsV4Wiring hap_linh maxStacks assertion",
+   "result": "KILLED_EXPECTED",
+   "evidenceIds": [],
+   "equivalenceReason": "2 tests failed as designed",
+   "candidateUnchanged": true
+  },
+  {
+   "kind": "mutation",
+   "id": "MUT-UPSERT-1",
+   "candidateState": {
+    "productStateId": "a11c36fd5839ee08f1d7d81bad4be9874983fa0ac82dd57c188f8d43a5ce3553",
+    "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+    "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+    "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+   },
+   "invariantIds": [
+    "I-CLOUD-CAS"
+   ],
+   "rootClass": "stale-contract-header",
+   "operator": "re-add Prefer: resolution=merge-duplicates to first-push POST",
+   "isolationPath": "in-place edit + revert",
+   "mutantHash": "9bf90fecb38090aa8e943cd2be12fb2b8347c5e3775458b315193e64bc3345d5",
+   "expectedDetector": "SupabaseRemoteSave.test.ts POST header pin (added during repair)",
+   "result": "KILLED_EXPECTED",
+   "evidenceIds": [],
+   "equivalenceReason": "new header assertion fails as designed",
+   "candidateUnchanged": true
+  },
+  {
+   "kind": "mutation",
+   "id": "MUT-ACCRUAL-1",
+   "candidateState": {
+    "productStateId": "a11c36fd5839ee08f1d7d81bad4be9874983fa0ac82dd57c188f8d43a5ce3553",
+    "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+    "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+    "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+   },
+   "invariantIds": [
+    "I-BLDG-ACCRUAL-REALM"
+   ],
+   "rootClass": "acceptance-gap",
+   "operator": "getRealmIndex(...) < 0 -> < -99 (accept any realm id)",
+   "isolationPath": "in-place edit + revert",
+   "mutantHash": "731698e298f3b4f119f2060894ad85597eed76b20a76c1655ffe6eb16831279c",
+   "expectedDetector": "saveAcceptance.test.ts accrualRealmId coherence pins (added during repair)",
+   "result": "KILLED_EXPECTED",
+   "evidenceIds": [],
+   "equivalenceReason": "unknown-realm reject test fails as designed",
+   "candidateUnchanged": true
+  }
+ ]
+}

@@ -1,0 +1,40 @@
+Mutation campaign on S3 (product=6abff612aa45) — each mutant applied in place,
+focused vitest run, then `git checkout` revert (candidateUnchanged=true verified
+by empty diff after revert).
+
+MUT-1  I-STAT-ZEROBASE-FLAT   SURVIVED -> KILLED after pin added
+  site: src/data/buff/TalentBuffs.ts  'flat: 0.5' -> 'percent: 0.5' on
+        finalDamageReductionPercent
+  first run: TalentsV4Wiring.test.ts 19/19 PASSED (survivor - no detector
+        pinned the buff-side channel; test only covers the passive leg)
+  pin added: src/data/buff/TalentBuffs.test.ts (structural: nonzero modifiers
+        on zero-base rate stats must use flat; covers buffs AND passives)
+  re-run under pin: FAILED 2/2 -> KILLED
+  hash: fa3bd26d1a84fa67ee8303bb93d02e0f1f61be377674d3139d53a1a1465c380d13
+
+MUT-2a I-BUILDING-ACCRUAL-PIN  SURVIVED -> KILLED after pin added
+  site: src/core/building/BuildingSystem.ts claim() line ~443
+        'instance.accrualRealmId ?? currentRealmId' -> 'currentRealmId'
+  first run: BuildingSystem.test.ts 21/21 PASSED (survivor - the payable
+        amount is pinned upstream in getStoredAmount; the claim-path pin
+        feeds rate(fraction carry) + materialId, unasserted)
+  pin added: lastCollectedAt carry-bound assertion in the EM-01 claim test
+  re-run under pin: FAILED -> KILLED
+  hash: be9acee8e84a6cb370d0fd7f6da4f09fa3a0022b0b2574806599804bd3e1027a
+
+MUT-2b I-BUILDING-ACCRUAL-PIN  KILLED first try
+  site: getStoredAmount 'instance.accrualRealmId ?? realmId' -> 'realmId'
+  run: BuildingSystem.test.ts FAILED (toBe(9) became ~51) -> KILLED
+  hash: 7bcf6c7ab48032b5b960de2b72e4165d9260f4e4bae22ed5730c5345c5245e
+
+MUT-3  I-OFFLINE-BUFF-SEGMENT  KILLED first try
+  site: src/stores/player.ts - segmented reduce replaced by the pre-fix
+        calculateOfflineProgress(offlineSeconds, save.player.cultivationPerSecond)
+  run: player.restoreFromSave.test.ts FAILED 1/11 (EM-02 case) -> KILLED
+  hash: 67831a6270de32dd653ff9b7d445548e690cfae483338144dc690b280b9a0791
+
+MUT-4  I-CLOUD-REV-CAS  KILLED first try
+  site: src/services/cloudSave/SupabaseRemoteSave.ts - dropped
+        '&save_revision=eq.<remote>' guard from the PATCH url
+  run: SupabaseRemoteSave.test.ts FAILED 2/19 -> KILLED
+  hash: 3434438fe45c4fffc0fc319e5330c6a439f73ffdebfd15247069036b035e6dea

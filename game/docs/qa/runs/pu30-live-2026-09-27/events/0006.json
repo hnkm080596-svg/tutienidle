@@ -1,0 +1,30 @@
+{
+  "action": "admit",
+  "assignment": {
+    "id": "ASG-BLOCKED",
+    "parentId": null,
+    "capacityScope": "worker",
+    "inputBundleHash": "931b78d30da311e8c287f39b74bf8c3ad872abc664eabe1c67b6092f72d4cac9",
+    "dependencies": [],
+    "requiredCapabilities": [
+      "read-only repo access"
+    ],
+    "writeSurface": [],
+    "readiness": "BLOCKED",
+    "status": "QUEUED",
+    "reservedAt": "2026-09-27T15:37:55.571Z",
+    "observedRuntimeId": null,
+    "releaseEvidence": null,
+    "resultRef": null,
+    "timeoutState": null,
+    "history": [
+      {
+        "at": "2026-09-27T15:37:55.571Z",
+        "from": "CREATED",
+        "to": "BLOCKED",
+        "reason": "registered by coordinator"
+      }
+    ]
+  },
+  "externalOccupied": 1
+}

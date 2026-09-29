@@ -1,0 +1,68 @@
+{"records":[
+{"kind":"invariant","id":"I-SLOT-CAPACITY","statement":"Ledger admission never allows more than capacityLimit occupied agent slots at once, counting ledger-active assignments plus declared externalOccupied; QUEUED and BLOCKED records hold no slot","domain":"scripts/qa","risk":"HIGH",
+ "sources":[{"path":"docs/qa/protocol/agent-instructions.md","symbolOrSection":"section G + G.1","revision":"68621987","basis":"MAINTAINED_CONTRACT"}],
+ "owner":{"path":"scripts/qa/prevention.mjs","symbolOrSection":"admitAssignment","revision":"68621987","basis":"SOURCE"},
+ "legalWriters":["coordinator via qa:internal schedule"],"legalReaders":["coordinator","reviewers"],
+ "projections":[],"caches":[],
+ "validStates":["active occupied count <= capacityLimit - externalOccupied"],"forbiddenStates":["QUEUED/BLOCKED holding a slot","active exceeding cap"],
+ "preconditions":["assignment input supplies readiness"],"postconditions":["RESERVED only when capacity permits"],"legalTransitions":["READY->RESERVED","READY->QUEUED","WAITING_INPUT->QUEUED","BLOCKED->BLOCKED","QUEUED->RESERVED on re-admission after release"],"illegalTransitions":["QUEUED->RUNNING without admission","any transition while cap reached"],
+ "failureBehavior":"overflow queues without consuming capacity","atomicity":"single-writer lease; admission decision is synchronous","inverseBehavior":"release via verified lifecycle only (I-SLOT-RELEASE)","persistence":"assignment records persist in ledger.json","migration":"n/a","lifecycle":"admission to FINISHED",
+ "runtimeConsequences":["too many live agents violates the platform 5-agent cap"],"uiConsequences":[],
+ "oracles":["assignment history + status transitions recorded per admission","active-count recomputation"],"requiredEvidenceSurfaces":["DETERMINISTIC","STATIC_SEMANTIC","INDEPENDENT_REVIEW"],"taxonomyIds":["TRN-08","QAI-08"],"status":"ACTIVE"},
+
+{"kind":"invariant","id":"I-SLOT-RELEASE","statement":"A reserved slot is freed only by observed terminal lifecycle (terminated/finished/exited/cancelled/closed); a result message or lease timeout alone retains the slot","domain":"scripts/qa","risk":"HIGH",
+ "sources":[{"path":"docs/qa/protocol/agent-instructions.md","symbolOrSection":"section G.1","revision":"68621987","basis":"MAINTAINED_CONTRACT"}],
+ "owner":{"path":"scripts/qa/prevention.mjs","symbolOrSection":"observeAssignment","revision":"68621987","basis":"SOURCE"},
+ "legalWriters":["coordinator via qa:internal schedule observe"],"legalReaders":["coordinator"],
+ "projections":[],"caches":[],
+ "validStates":["RESULT_RECEIVED and RELEASE_PENDING keep occupancy","FINISHED frees"],"forbiddenStates":["release on result alone","release on timeout alone"],
+ "preconditions":["assignment is ledger-active"],"postconditions":["FINISHED carries releaseEvidence"],"legalTransitions":["RESERVED->RESULT_RECEIVED->RELEASE_PENDING->FINISHED","RESERVED->FINISHED"],"illegalTransitions":["RESULT_RECEIVED->free","timeout->free"],
+ "failureBehavior":"unverifiable release keeps slot (fail-closed)","atomicity":"single observe call per transition","inverseBehavior":"none","persistence":"assignment record + SCHEDULE events","migration":"n/a","lifecycle":"admission->active->terminal observed->FINISHED",
+ "runtimeConsequences":["slot leak if release never verified"],"uiConsequences":[],
+ "oracles":["status transitions via observeAssignment","slot still counted during RESULT_RECEIVED/RELEASE_PENDING"],"requiredEvidenceSurfaces":["DETERMINISTIC","STATIC_SEMANTIC","MUTATION","INDEPENDENT_REVIEW"],"taxonomyIds":["TRN-03","ASY-05"],"status":"ACTIVE"},
+
+{"kind":"invariant","id":"I-MSG-TERMINAL","statement":"Exactly one terminal SEALED_RESULT is accepted per requestId; identical replay is idempotent; changed payload for same id or conflicting terminal content is rejected; foreign-state messages are flagged stale and cannot advance phase","domain":"scripts/qa","risk":"STANDARD",
+ "sources":[{"path":"docs/qa/protocol/agent-instructions.md","symbolOrSection":"section E","revision":"68621987","basis":"MAINTAINED_CONTRACT"}],
+ "owner":{"path":"scripts/qa/state.mjs","symbolOrSection":"recordMessage","revision":"68621987","basis":"SOURCE"},
+ "legalWriters":["coordinator via qa:internal record kind=message"],"legalReaders":["coordinator","decide"],
+ "projections":[],"caches":[],
+ "validStates":["one terminal per requestId"],"forbiddenStates":["two different SEALED_RESULT payloads on one requestId","same message id different payload"],
+ "preconditions":["message carries run/request/state/bundle correlation tuple"],"postconditions":["rejected mutations leave ledger unchanged"],"legalTransitions":["ASSIGN->ACK->SEALED_RESULT","ASSIGN->NEED_CONTEXT"],"illegalTransitions":["second conflicting SEALED_RESULT","payload mutation under same id"],
+ "failureBehavior":"integrity error thrown before mutation","atomicity":"check-then-append inside single-writer ledger save","inverseBehavior":"none","persistence":"messages[] in ledger.json","migration":"n/a","lifecycle":"delivery->dedup/conflict check->append",
+ "runtimeConsequences":["forged/late results cannot advance phases"],"uiConsequences":[],
+ "oracles":["recorded messages and rejected attempts in transcript"],"requiredEvidenceSurfaces":["DETERMINISTIC","STATIC_SEMANTIC","INDEPENDENT_REVIEW"],"taxonomyIds":["ASY-04","QAI-05"],"status":"ACTIVE"},
+
+{"kind":"invariant","id":"I-LEDGER-AUTHORITY","statement":"All ledger mutations run under the coordinator lease; saves are atomic via tmp+rename; events form a hash chain with contiguous sequence","domain":"scripts/qa","risk":"STANDARD",
+ "sources":[{"path":"docs/qa/protocol/agent-instructions.md","symbolOrSection":"section E shared-state writes","revision":"68621987","basis":"MAINTAINED_CONTRACT"}],
+ "owner":{"path":"scripts/qa/state.mjs","symbolOrSection":"acquireLease/checkLease/saveLedgerAtomic/appendEvent","revision":"68621987","basis":"SOURCE"},
+ "legalWriters":["lease holder only"],"legalReaders":["any reader of ledger.json"],
+ "projections":[],"caches":[],
+ "validStates":["single coordinator lease","contiguous hash-chained events"],"forbiddenStates":["second coordinator lease","torn ledger write"],
+ "preconditions":["init acquired lease"],"postconditions":["every mutation appends an event"],"legalTransitions":[],"illegalTransitions":["write without lease","event seq gap or broken prev-hash"],
+ "failureBehavior":"non-lease commands throw before write","atomicity":"tmp file + rename","inverseBehavior":"none","persistence":"ledger.json + journal.jsonl + events/*.json","migration":"v1->v2 via qa:internal migrate","lifecycle":"init->lease->records->decide",
+ "runtimeConsequences":["concurrent coordinator splits authority if lease bypassed"],"uiConsequences":[],
+ "oracles":["MC1/MC2 machine checks recompute hashes","lease file exists"],"requiredEvidenceSurfaces":["STATIC_SEMANTIC","DETERMINISTIC","INDEPENDENT_REVIEW"],"taxonomyIds":["AUT-08","SEC-01"],"status":"ACTIVE"},
+
+{"kind":"invariant","id":"I-AGENT-BINDING","statement":"Assignment records claiming live occupancy bind a real dispatched context via observedRuntimeId, and independent-review evidence requires genuine fresh contexts - fabricated occupancy is a limitation that must be recorded, not claimed as verified","domain":"scripts/qa","risk":"STANDARD",
+ "sources":[{"path":"docs/qa/protocol/README.md","symbolOrSection":"section 10","revision":"68621987","basis":"MAINTAINED_CONTRACT"}],
+ "owner":{"path":"docs/qa/protocol/agent-instructions.md","symbolOrSection":"section G.1 assignment records","revision":"68621987","basis":"MAINTAINED_CONTRACT"},
+ "legalWriters":["coordinator"],"legalReaders":["coordinator","verifiers"],
+ "projections":[],"caches":[],
+ "validStates":["RESERVED assignments correspond to dispatched or dispatchable work"],"forbiddenStates":["phantom agents counted as real concurrency"],
+ "preconditions":["harness supplies agent runtime ids"],"postconditions":["releaseEvidence names the observed termination proof"],"legalTransitions":[],"illegalTransitions":["claiming verified exit with no agent"],
+ "failureBehavior":"unverifiable binding reported as limitation, not success","atomicity":"n/a","inverseBehavior":"n/a","persistence":"assignment record","migration":"n/a","lifecycle":"admit->dispatch->observe",
+ "runtimeConsequences":["overclaimed independence undermines clean rounds"],"uiConsequences":[],
+ "oracles":["observedRuntimeId = run_subagent agent id","releaseEvidence references verified completion"],"requiredEvidenceSurfaces":["INDEPENDENT_REVIEW","STATIC_SEMANTIC"],"taxonomyIds":["QAI-04","QAI-03"],"status":"ACTIVE"},
+
+{"kind":"census","id":"CEN-CLI","invariantIds":["I-LEDGER-AUTHORITY"],"location":{"path":"scripts/qa/cli.mjs","symbolOrSection":"command dispatch table","revision":"68621987","basis":"SOURCE"},"classification":"CANONICAL","reads":["request.json","ledger.json"],"writes":["ledger.json","journal.jsonl","events/"],"eventsIn":[],"eventsOut":["PHASE","SNAPSHOT","EVIDENCE","FINDING","REVIEW_SEALED","SCHEDULE","DECISION","MIGRATION"],"consumerIds":[],"searchEvidenceIds":[],"disposition":"sole CLI entry; all 13 commands present (usage string lists only 7 - cosmetic drift)"},
+
+{"kind":"census","id":"CEN-STATE","invariantIds":["I-MSG-TERMINAL","I-LEDGER-AUTHORITY"],"location":{"path":"scripts/qa/state.mjs","symbolOrSection":"ledger primitives","revision":"68621987","basis":"SOURCE"},"classification":"CANONICAL","reads":["ledger.json"],"writes":["ledger.json"],"eventsIn":[],"eventsOut":[],"consumerIds":["cli.mjs","prevention.mjs","validate.mjs","decision.mjs"],"searchEvidenceIds":[],"disposition":"ledger write authority, manifest builder, message integrity"},
+
+{"kind":"census","id":"CEN-PREVENTION","invariantIds":["I-SLOT-CAPACITY","I-SLOT-RELEASE"],"location":{"path":"scripts/qa/prevention.mjs","symbolOrSection":"admitAssignment/observeAssignment","revision":"68621987","basis":"SOURCE"},"classification":"CANONICAL","reads":["ledger.assignments"],"writes":["assignment records"],"eventsIn":[],"eventsOut":[],"consumerIds":["cli.mjs cmdSchedule"],"searchEvidenceIds":[],"disposition":"sole admission/release authority - see finding on record-kind bypass"},
+
+{"kind":"census","id":"CEN-VALIDATE","invariantIds":["I-LEDGER-AUTHORITY"],"location":{"path":"scripts/qa/validate.mjs","symbolOrSection":"validateLedger MC1-MC14","revision":"68621987","basis":"SOURCE"},"classification":"CANONICAL","reads":["ledger.json","manifest.json","run dir artifacts"],"writes":[],"eventsIn":[],"eventsOut":[],"consumerIds":["cli.mjs cmdValidate/cmdDecide/cmdRender"],"searchEvidenceIds":[],"disposition":"machine checks"},
+
+{"kind":"census","id":"CEN-DECIDE","invariantIds":["I-LEDGER-AUTHORITY"],"location":{"path":"scripts/qa/decision.mjs","symbolOrSection":"evaluateTerminal/decide C1-C9","revision":"68621987","basis":"SOURCE"},"classification":"CANONICAL","reads":["ledger.json"],"writes":["report.md"],"eventsIn":[],"eventsOut":[],"consumerIds":["cli.mjs"],"searchEvidenceIds":[],"disposition":"sole outcome authority"},
+
+{"kind":"census","id":"CEN-PROTOCOL","invariantIds":["I-SLOT-CAPACITY","I-SLOT-RELEASE","I-MSG-TERMINAL","I-AGENT-BINDING"],"location":{"path":"docs/qa/protocol","symbolOrSection":"README+agent-instructions+schema+qualification","revision":"68621987","basis":"MAINTAINED_CONTRACT"},"classification":"CANONICAL","reads":[],"writes":[],"eventsIn":[],"eventsOut":[],"consumerIds":["all QA runs"],"searchEvidenceIds":[],"disposition":"governing law; contract hash bound at snapshot"}
+]}

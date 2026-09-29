@@ -1,0 +1,51 @@
+{
+  "outcome": "QA_BLOCKED_SCOPE",
+  "detail": "repairs outside authorized scope: F-PU30-01,F-PU30-02,F-PU30-03,F-PU30-04,F-PU30-05,F-PU30-07,F-PU30-08,F-PU30-09,F-PU30-10,F-PU30-11,F-PU30-12,F-PU30-13,F-PU30-14,F-PU30-15,F-PU30-16,F-PU30-17,F-PU30-18,F-PU30-19,F-PU30-20,F-PU30-21,F-PU30-22,F-PU30-23,F-PU30-24",
+  "clauses": [
+    {
+      "id": "C1-identity",
+      "ok": true,
+      "reason": "all final evidence binds the declared state"
+    },
+    {
+      "id": "C2-census-coverage",
+      "ok": false,
+      "reason": "domain docs/qa/protocol uncovered"
+    },
+    {
+      "id": "C3-no-open",
+      "ok": false,
+      "reason": "open F-PU30-01; open F-PU30-02; open F-PU30-03; open F-PU30-04; open F-PU30-05; open F-PU30-07; open F-PU30-08; open F-PU30-09; open F-PU30-10; open F-PU30-11; open F-PU30-12; open F-PU30-13; open F-PU30-14; open F-PU30-15; open F-PU30-16; open F-PU30-17; open F-PU30-18; open F-PU30-19; open F-PU30-20; open F-PU30-21; open F-PU30-22; open F-PU30-23; open F-PU30-24"
+    },
+    {
+      "id": "C4-final-gates",
+      "ok": false,
+      "reason": "no final evidence recorded"
+    },
+    {
+      "id": "C5-sequential",
+      "ok": false,
+      "reason": "sequential CORRECTNESS→AUTHORITY→INTEGRATION reviews missing"
+    },
+    {
+      "id": "C6-clean-pair",
+      "ok": false,
+      "reason": "Clean A missing/not CLEAN; Clean B missing/not CLEAN"
+    },
+    {
+      "id": "C7-mutation-corpus",
+      "ok": true,
+      "reason": "mutation + corpus satisfied"
+    },
+    {
+      "id": "C8-terminal-check",
+      "ok": false,
+      "reason": "no sealed independent TERMINAL_CHECK on the final state"
+    },
+    {
+      "id": "C9-readiness",
+      "ok": true,
+      "reason": "readiness not required for this run (v1 or opt-out)"
+    }
+  ]
+}

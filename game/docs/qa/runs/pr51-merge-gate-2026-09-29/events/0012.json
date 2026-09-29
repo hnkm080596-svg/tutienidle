@@ -1,0 +1,33 @@
+{
+  "applied": [
+    "coverage:COV-STAT-DET (updated)",
+    "coverage:COV-STAT-STATIC (updated)",
+    "coverage:COV-STAT-INDEP (updated)",
+    "coverage:COV-BLDG-DET (updated)",
+    "coverage:COV-BLDG-STATIC (updated)",
+    "coverage:COV-BLDG-INDEP (updated)",
+    "coverage:COV-OFFLINE-DET (updated)",
+    "coverage:COV-OFFLINE-STATIC (updated)",
+    "coverage:COV-OFFLINE-INDEP (updated)",
+    "coverage:COV-CLOUD-DET (updated)",
+    "coverage:COV-CLOUD-STATIC (updated)",
+    "coverage:COV-CLOUD-INDEP (updated)",
+    "coverage:COV-NAME-STATIC (updated)",
+    "coverage:COV-NAME-E2E (updated)",
+    "coverage:COV-NAME-INDEP (updated)",
+    "coverage:COV-LADDER-DET (updated)",
+    "coverage:COV-LADDER-STATIC (updated)",
+    "coverage:COV-LADDER-E2E (updated)",
+    "coverage:COV-LADDER-INDEP (updated)",
+    "coverage:COV-MERGE-STATIC (updated)",
+    "coverage:COV-MERGE-DET (updated)",
+    "coverage:COV-MERGE-INDEP (updated)",
+    "review:RV-S4-P1",
+    "review:RV-S4-P2",
+    "review:RV-S4-P3",
+    "cycle:CYC-P5-2",
+    "finding:F-MG-03 (updated)",
+    "finding:F-MG-04 (updated)",
+    "finding:F-MG-05 (updated)"
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "applied": [
+    "evidence:EV-QUALIFY-PARSE",
+    "evidence:EV-STATIC-BIND",
+    "finding:F-PU30-01 (updated)",
+    "finding:F-PU30-02 (updated)",
+    "finding:F-PU30-03 (updated)",
+    "finding:F-PU30-04 (updated)",
+    "finding:F-PU30-05 (updated)",
+    "finding:F-PU30-07 (updated)",
+    "finding:F-PU30-06 (updated)",
+    "finding:F-PU30-08",
+    "coverage:COV-BIND-STATIC (updated)"
+  ]
+}

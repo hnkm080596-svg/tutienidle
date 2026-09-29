@@ -1,0 +1,16 @@
+{
+  "applied": [
+    "assignment:ASG-BLOCKED (updated)",
+    "assignment:ASG-R1 (updated)",
+    "assignment:ASG-R2 (updated)",
+    "assignment:ASG-R3 (updated)",
+    "assignment:ASG-R4 (updated)",
+    "assignment:ASG-R5 (updated)",
+    "assignment:ASG-FORGED (updated)",
+    "mutation:MUT-REL-01",
+    "mutation:MUT-CAP-01",
+    "evidence:EV-LIVE-ADMIT (updated)",
+    "evidence:EV-QUEUE-NOSLOT (updated)",
+    "evidence:EV-REL-CANCEL (updated)"
+  ]
+}

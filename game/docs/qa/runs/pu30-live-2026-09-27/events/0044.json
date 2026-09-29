@@ -1,0 +1,6 @@
+{
+  "action": "observe",
+  "assignmentId": "ASG-R7",
+  "observedStatus": "terminated",
+  "evidence": "run_subagent agent_id=f6a1d784 completed - context ended"
+}

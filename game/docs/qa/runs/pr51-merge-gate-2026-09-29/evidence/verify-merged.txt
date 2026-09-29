@@ -1,0 +1,18 @@
+npm run verify on merged aggregate (audit-combined d3e7c7d4, tree-identical to master 89135530)
+Exit code: 1
+  vue-tsc --build: PASS (clean)
+  vite build:    PASS (built in ~30s)
+  vitest run:    795 files / 7115 tests pass / 4 files fail / 1 each:
+    1. tests/architecture/combatContract.test.ts  -> PRE-EXISTING on master
+       (searches '\n  onBattleStart()' but master signature is onBattleStart(options?: { rebind?: boolean });
+        identical test + identical source on 51b9efdb -> same failure)
+    2. tests/architecture/dynamicRegionHost.test.ts -> PRE-EXISTING on master
+       (src/dev/skill-vfx.ts constructs new Game(); file unchanged vs master, baseline does not cover it)
+    3. tests/architecture/i18nKeyParity.test.ts -> PRE-EXISTING on master
+       (src/dev/skill-vfx.ts uses skillVfxLab.* keys absent from locales)
+    4. src/components/common/PlayerPortrait.test.ts -> PRE-EXISTING on master via PR48
+       (component setup() calls usePlayerStore(); test mounts without Pinia; byte-identical to 51b9efdb)
+
+Post-verify branch-caused failures fixed in 3111ff18 and re-green (see focused-tests.txt):
+    - asciiComments ratchet: 57 new non-ASCII comment tokens -> rewritten ASCII English
+    - PlayerStatAssembly clamp pin: repinned to the intended CP-01 min (-1)

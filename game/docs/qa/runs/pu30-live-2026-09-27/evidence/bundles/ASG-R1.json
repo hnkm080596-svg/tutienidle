@@ -1,0 +1,10 @@
+{
+  "requestId": "REQ-R1-SLOT",
+  "lens": "slot/capacity law",
+  "files": [
+    "scripts/qa/prevention.mjs",
+    "scripts/qa/cli.mjs",
+    "docs/qa/protocol/agent-instructions.md"
+  ],
+  "task": "verify admitAssignment/observeAssignment against section G/G.1; find transition holes"
+}

@@ -1,0 +1,18 @@
+{
+  "applied": [
+    "evidence:EV-LIVE-ADMIT",
+    "evidence:EV-NEEDCTX-REL",
+    "evidence:EV-QUEUE-NOSLOT",
+    "evidence:EV-MSG-DUP",
+    "evidence:EV-MSG-TAMPER",
+    "evidence:EV-MSG-CONFLICT",
+    "evidence:EV-MSG-STALE",
+    "evidence:EV-MSG-NOASSIGN",
+    "evidence:EV-LEASE-NEG",
+    "evidence:EV-ASG-BYPASS",
+    "evidence:EV-MUT-REL",
+    "evidence:EV-MUT-CAP",
+    "evidence:EV-STATIC-SLOT",
+    "evidence:EV-STATIC-MSG"
+  ]
+}

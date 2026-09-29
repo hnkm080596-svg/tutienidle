@@ -1,0 +1,30 @@
+{
+  "action": "admit",
+  "assignment": {
+    "id": "ASG-R1",
+    "parentId": "REQ-R1-SLOT",
+    "capacityScope": "worker",
+    "inputBundleHash": "86153434f3a8141cff08436767767441d2e649a215db12a2557c03ee69472dbe",
+    "dependencies": [],
+    "requiredCapabilities": [
+      "read-only repo access"
+    ],
+    "writeSurface": [],
+    "readiness": "READY",
+    "status": "QUEUED",
+    "reservedAt": "2026-09-27T15:37:55.571Z",
+    "observedRuntimeId": null,
+    "releaseEvidence": null,
+    "resultRef": null,
+    "timeoutState": null,
+    "history": [
+      {
+        "at": "2026-09-27T15:37:55.571Z",
+        "from": "CREATED",
+        "to": "READY",
+        "reason": "registered by coordinator"
+      }
+    ]
+  },
+  "externalOccupied": 1
+}

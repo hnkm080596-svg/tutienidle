@@ -1,0 +1,19 @@
+Coordinator adversarial probes over the merged aggregate (source-level falsification, all closed):
+
+  1. Malformed persistentTimedEffects in a hand-edited save -> saveShapeValidation.ts:535 requireArray
+     rejects before restoreFromSave runs; ?? [] covers the absent case. CLOSED.
+  2. flat x maxStacks parity -> StatCalculator.ts:241-250 accumulates flat identically to percent;
+     maxStacks clamps uniformly at :449. Dead->live conversion is exact. CLOSED.
+  3. CAS race -> PATCH 0 rows -> syncRemoteSaveOnLogin returns 'unavailable'; local state intact;
+     converges on next login. CLOSED.
+  4. Garbage accrualRealmId (hand-edited save) -> getRealmIndex returns -1 -> default rate/tier-1
+     soft fallback; no crash, backlog not zeroed. CLOSED.
+  5. EM-02 double-apply -> identical payload re-restore short-circuits; lastSavedAt advances to now.
+     CLOSED.
+  6. Absent getActivePlayerName gate member -> ?. -> 'Player' literal fallback (pre-fix behavior).
+     CLOSED.
+  7. Claim re-pin ordering -> pinned realm drives rate+capacity+material of the ending window;
+     pin moves to current realm only after settle. CLOSED.
+  8. Merge coexistence (PR48 x PR51) -> getActivePlayerName intact at all call sites in merged
+     CombatScene/MainScene; master's new cultivation-label path uses resolved name. CLOSED.
+  9. PR50 deleted-path census -> zero references in merged src + generated manifest. CLOSED.

@@ -1,0 +1,33 @@
+{
+  "applied": [
+    "message:MSG-SEALED-R6",
+    "message:MSG-SEALED-R7",
+    "review:REV-A",
+    "review:REV-B",
+    "finding:F-PU30-09",
+    "finding:F-PU30-10",
+    "finding:F-PU30-11",
+    "finding:F-PU30-12",
+    "finding:F-PU30-13",
+    "finding:F-PU30-14",
+    "finding:F-PU30-15",
+    "finding:F-PU30-16",
+    "finding:F-PU30-17",
+    "finding:F-PU30-18",
+    "finding:F-PU30-19",
+    "finding:F-PU30-20",
+    "finding:F-PU30-21",
+    "finding:F-PU30-22",
+    "finding:F-PU30-23",
+    "finding:F-PU30-24",
+    "finding:F-PU30-25",
+    "finding:F-PU30-26",
+    "coverage:COV-CAP-REV (updated)",
+    "coverage:COV-REL-REV (updated)",
+    "coverage:COV-BIND-REV (updated)",
+    "coverage:COV-MSG-REV (updated)",
+    "coverage:COV-LED-REV (updated)",
+    "assignment:ASG-R6 (updated)",
+    "assignment:ASG-R7 (updated)"
+  ]
+}

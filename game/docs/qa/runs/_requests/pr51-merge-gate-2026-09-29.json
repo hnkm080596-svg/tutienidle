@@ -1,0 +1,63 @@
+{
+  "runId": "pr51-merge-gate-2026-09-29",
+  "productRoot": "..",
+  "task": "Post-merge fixed-point QA over origin/master @ 89135530: the aggregate PR #51 merge carrying UI-audit docs, local backend/frontend audit docs, repo cleanup deletions, and the audited-findings fixes (CP-01 flat-on-zero-base stat modifiers + signed finalDamageReductionPercent min + hpNotBelow condition; EM-01 building accrual realm pin; EM-02 offline cultivation expiry segmentation; INFRA-01/02 revision-first reconcile + CAS PATCH push + server-owned updated_at migration; FE-06 authored nameplate via getActivePlayerName reporting gate member; FE-08 HUD/gourd spacing; FE-12 destination-realm ladder labels; FE-17 release-ceiling note), plus semantic merge integrity with the concurrently landed PR #48 character-art wave.",
+  "authorizedRepairs": [
+    "game/src/",
+    "game/tests/",
+    "game/scripts/",
+    "game/supabase/",
+    "game/locales/",
+    "game/verify-fixes.mjs",
+    "game/verify-fe17.mjs",
+    "game/docs/"
+  ],
+  "nonGoals": [
+    "gameplay redesign",
+    "pre-existing master-side test failures (combatContract R14.4, dynamicRegionHost, i18nKeyParity, PlayerPortrait pinia-in-setup) - recorded, not repaired",
+    "documented deferred Low/Nit audit findings listed in docs/qa/local-audit and docs/ui-audit"
+  ],
+  "budget": "1 coordinator + 2 sequential blind reviewers (Clean A, then Clean B + terminal check); platform cap 5 concurrent",
+  "priorEvidence": [
+    "npm run verify on merged aggregate: type-check + vite build clean, vitest 7115 pass / 4 fail - all 4 proven byte-identical pre-existing on origin/master",
+    "targeted vitest re-run of touched scopes: 83/83 green post-fix",
+    "Playwright runtime evidence: FE-06 nameplate, FE-08 gourd spacing, FE-17 ceiling note (pre-merge tree)",
+    "adversarial source probes: malformed persistentTimedEffects gated by requireArray, flat x stacks parity in StatCalculator, CAS zero-row conflict path, accrualRealmId garbage-realm soft fallback",
+    "P5 sequential passes (coordinator self-review): correctness, authority, integration"
+  ],
+  "contractPaths": [
+    "AGENTS.md",
+    "game/docs/qa/protocol/README.md",
+    "game/CLAUDE.md"
+  ],
+  "attackModelPath": "attack-model.json",
+  "requiredDomains": [
+    "stats-and-talents",
+    "economy-progression",
+    "time-offline",
+    "save-cloud",
+    "presentation-identity",
+    "merge-integrity"
+  ],
+  "extraExclude": [
+    "game/play-contrast.mjs",
+    "game/play-foundation.mjs",
+    "game/play-foundation2.mjs",
+    "game/play-mobile.mjs",
+    "game/play-qi.mjs",
+    "game/play-qi2.mjs",
+    "game/play-qi3.mjs",
+    "game/play-realm.mjs",
+    "game/play-ritual.mjs",
+    "game/probe-ritual.mjs",
+    "game/re-dom.mjs",
+    "game/re-hud.mjs",
+    "game/reaudit.mjs",
+    "game/verify-fe17.mjs",
+    "game/verify-fixes.mjs",
+    "game/verify-fe17-*.png",
+    "game/probe-ritual.png",
+    "game/re-*.png",
+    "game/play-*.png"
+  ]
+}

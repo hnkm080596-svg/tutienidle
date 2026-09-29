@@ -1,0 +1,62 @@
+{
+  "id": "pu30-live-attack-model",
+  "version": 1,
+  "objective": "PU-30: qualify the just-in-time 5-slot scheduling law (agent-instructions.md section G) and the message protocol (section E) under live concurrency with real isolated agents.",
+  "families": [
+    {
+      "id": "FAM-ADMISSION",
+      "challengedAssumption": "admitAssignment enforces capacityLimit including externalOccupied; non-READY work never holds a slot",
+      "cases": [
+        "admit READY assignment while total occupied < cap -> RESERVED",
+        "admit READY assignment when active + externalOccupied = cap -> QUEUED with no slot consumed",
+        "admit WAITING_INPUT readiness -> QUEUED without slot",
+        "admit BLOCKED readiness -> BLOCKED without slot",
+        "re-admit a QUEUED assignment after a verified release -> RESERVED"
+      ]
+    },
+    {
+      "id": "FAM-RELEASE",
+      "challengedAssumption": "only observed terminal lifecycle frees a slot; a result message or timeout alone never does (PU-15/PU-16)",
+      "cases": [
+        "observe 'result' on RESERVED -> RESULT_RECEIVED, slot still counted active",
+        "observe 'expired' on RESULT_RECEIVED -> RELEASE_PENDING, slot still counted active",
+        "while an assignment is RELEASE_PENDING, a new READY admission -> QUEUED",
+        "observe terminal 'terminated' after verifying the real agent exited -> FINISHED with releaseEvidence"
+      ]
+    },
+    {
+      "id": "FAM-MESSAGE-INTEGRITY",
+      "challengedAssumption": "recordMessage enforces one terminal SEALED_RESULT per requestId, idempotent identical replay, and rejects changed payloads",
+      "cases": [
+        "deliver identical SEALED_RESULT twice -> second is idempotent duplicate",
+        "deliver SEALED_RESULT with same requestId but different payloadHash -> rejected with integrity error",
+        "deliver a message bound to a foreign state tuple -> recorded stale, cannot advance phase",
+        "message with same id but changed payloadHash -> rejected"
+      ]
+    },
+    {
+      "id": "FAM-NEED-CONTEXT",
+      "challengedAssumption": "a reviewer missing required inputs returns NEED_CONTEXT naming the gap and holds no slot after verified exit; re-dispatch uses a new requestId (parentRequestId link)",
+      "cases": [
+        "dispatch reviewer whose bundle names a nonexistent required document -> NEED_CONTEXT",
+        "redispatch with corrected bundle under new requestId linked by parentRequestId -> SEALED_RESULT"
+      ]
+    },
+    {
+      "id": "FAM-LIVE-INDEPENDENCE",
+      "challengedAssumption": "dispatched workers are genuinely isolated fresh contexts that attest their exposure; their sealed outputs are immutable files hashed into evidence",
+      "cases": [
+        "4 concurrent sealed reviewers on disjoint lenses of scripts/qa + protocol law",
+        "each result attests priorFindingsVisible=NO and actual access limits",
+        "assignment observedRuntimeId binds the real dispatched context id"
+      ]
+    },
+    {
+      "id": "FAM-BYPASS",
+      "challengedAssumption": "qa:internal schedule is the only path that should create admission records; direct 'record kind=assignment' cannot reserve capacity bypassing admission",
+      "cases": [
+        "attempt direct record of an assignment with status RESERVED -> observe whether the runner accepts it without capacity accounting"
+      ]
+    }
+  ]
+}

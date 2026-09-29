@@ -1,0 +1,1 @@
+{"records":[{"kind":"assignment","body":{"id":"ASG-FORGED","agentId":"ghost","task":"forged reservation","requestId":"REQ-FORGED","status":"RESERVED","readiness":"READY","reservedAt":"2026-09-27T15:45:58.841Z","history":[{"at":"2026-09-27T15:45:58.842Z","from":"CREATED","to":"RESERVED","reason":"forged"}]}}]}

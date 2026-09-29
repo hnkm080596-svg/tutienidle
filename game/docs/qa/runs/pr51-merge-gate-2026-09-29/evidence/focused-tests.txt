@@ -1,0 +1,15 @@
+Focused re-verification after fix commits 2d551760 + 3111ff18 (all PASS, exit 0):
+
+  npx vitest run tests/architecture/asciiComments.test.ts src/core/player/PlayerStatAssembly.test.ts
+    -> 20/20 pass (ratchet clean; clamp repinned + below-min probe)
+
+  npx vitest run src/core/talent/TalentsV4Wiring.test.ts src/core/building/BuildingSystem.test.ts
+      src/core/economy/TuLinhTranBalance.test.ts src/services/cloudSave/SupabaseRemoteSave.test.ts
+      src/stores/player.restoreFromSave.test.ts src/data/realm/RealmPassiveNodes.test.ts
+    -> 83/83 pass
+       incl. new regression tests: 7 segmentation cases, 3 EM-01 pin cases, 5 CAS/revision cases,
+       2 destination-label cases
+
+  npm run type-check (vue-tsc --build): PASS
+  vite build: PASS
+  eslint touched files: 0 errors (31 pre-existing unused-var warnings elsewhere in those files)

@@ -1,0 +1,534 @@
+{
+ "records": [
+  {
+   "kind": "evidence",
+   "body": {
+    "kind": "EXECUTED_INTEGRATION",
+    "producer": "coordinator",
+    "startedAt": "2026-09-29T15:28:00Z",
+    "finishedAt": "2026-09-29T15:32:00Z",
+    "commandOrMethod": "npm run verify (vue-tsc --build && vite build && vitest run) on post-repair aggregate",
+    "cwd": "game",
+    "exitCode": 1,
+    "result": "FAIL",
+    "artifactPath": "evidence/verify-s7.txt",
+    "artifactHash": "95ea85f8d2bcfa33a5404a486011a214aa7f60074633d806385f1f620a43ad8a",
+    "inputPaths": [],
+    "inputEvidenceIds": [],
+    "invariantIds": [],
+    "claims": [
+     "type-check clean; vite build clean; vitest 7124 pass / 5 expected-fail / 4 fail; all 4 failures byte-identical pre-existing on origin/master; zero branch-caused or repair-caused failures"
+    ],
+    "limitations": [
+     "suite is red only for pre-existing master failures; baseline causality documented in run journal"
+    ],
+    "status": "CURRENT",
+    "id": "EV-VERIFY-S7",
+    "state": {
+     "productStateId": "0d0921a5ddd9279694539c3c611b37cb8fd01ca217141843fc2f0fd43e5dd85d",
+     "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+     "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+     "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+    }
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "kind": "EXECUTED_INTEGRATION",
+    "producer": "coordinator",
+    "startedAt": "2026-09-29T15:00:00Z",
+    "finishedAt": "2026-09-29T15:27:00Z",
+    "commandOrMethod": "npx vitest run on Clean-A repair surface + 6 mutation kills incl. live-runtime merge mutant",
+    "cwd": "game",
+    "exitCode": 0,
+    "result": "PASS",
+    "artifactPath": "evidence/focused-s7.txt",
+    "artifactHash": "a39c435711b7b19d9e5fd6306e5bb8bb83ad1fa02860520f696e2b6e81292102",
+    "inputPaths": [],
+    "inputEvidenceIds": [],
+    "invariantIds": [
+     "I-STAT-ZEROBASE-FLAT",
+     "I-CLOUD-REV-CAS",
+     "I-BUILDING-ACCRUAL-PIN",
+     "I-MERGE-INTEGRITY"
+    ],
+    "claims": [
+     "all repair-surface suites green; per_second cap class pin + id-uniqueness pin + band-release pins + POST header pin + accrualRealmId coherence pins all land",
+     "6 mutants on the repair surface killed (RAMP, HAPLINH, UPSERT, ACCRUAL, DECAY, MERGE)"
+    ],
+    "limitations": [],
+    "status": "CURRENT",
+    "id": "EV-FOCUSED-S7",
+    "state": {
+     "productStateId": "0d0921a5ddd9279694539c3c611b37cb8fd01ca217141843fc2f0fd43e5dd85d",
+     "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+     "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+     "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+    }
+   }
+  },
+  {
+   "kind": "mutation",
+   "id": "MUT-DECAY-1",
+   "candidateState": {
+    "productStateId": "0d0921a5ddd9279694539c3c611b37cb8fd01ca217141843fc2f0fd43e5dd85d",
+    "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+    "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+    "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+   },
+   "invariantIds": [
+    "I-STAT-ZEROBASE-FLAT"
+   ],
+   "rootClass": "latched-condition",
+   "operator": "remove the condition-false stack-release block in PassiveSystem.tick (restores battle-long latch)",
+   "isolationPath": "in-place edit + revert",
+   "mutantHash": "ec5c1c19ce76b0f8879ea9ac769212c5ba4c8461387986a7088f7fbf79e0f25d",
+   "expectedDetector": "PassiveSystem.talentv4.test.ts band-release pins",
+   "result": "KILLED_EXPECTED",
+   "evidenceIds": [
+    "EV-FOCUSED-S7"
+   ],
+   "equivalenceReason": "both band-release tests fail as designed",
+   "candidateUnchanged": true
+  },
+  {
+   "kind": "mutation",
+   "id": "MUT-MERGE-1",
+   "candidateState": {
+    "productStateId": "0d0921a5ddd9279694539c3c611b37cb8fd01ca217141843fc2f0fd43e5dd85d",
+    "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+    "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+    "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+   },
+   "invariantIds": [
+    "I-MERGE-INTEGRITY"
+   ],
+   "rootClass": "merge-drop",
+   "operator": "drop getActivePlayerName call site in MainScene nameplate (falls back to 'Player')",
+   "isolationPath": "in-place edit + revert",
+   "mutantHash": "95c8e570349c5c85917485078c6ee325c51d2301d5060b1f7057e70fa71f2e1f",
+   "expectedDetector": "runtime FE-06 nameplate check (Playwright, authored name visible in scene texts)",
+   "result": "KILLED_EXPECTED",
+   "evidenceIds": [
+    "EV-FOCUSED-S7"
+   ],
+   "equivalenceReason": "mutant shows NAME_MISSING (label 'Player' only); reverted state shows NAME_SHOWN ('Nghiep Chung'); durable static pin added at tests/architecture/playerNameplate.test.ts",
+   "candidateUnchanged": true
+  },
+  {
+   "kind": "finding",
+   "id": "F-MG-09",
+   "state": {
+    "productStateId": "476ecc92a14df13401d15a036554fb9920fe46451677204df8a0c133ab6146bc",
+    "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+    "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+    "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+   },
+   "title": "CP01-CANTHAN-RAMP: per_second flatStat with no maxStacks ramps one stack per second unbounded",
+   "severity": "High",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "game/src/data/skill/TalentPassives.ts",
+     "symbolOrSection": "can_than legs",
+     "revision": "768b9ac0",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "game/src/core/skill/PassiveSystem.ts",
+     "symbolOrSection": "tick addStack",
+     "revision": "768b9ac0",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "clean-a",
+   "invariantIds": [
+    "I-STAT-ZEROBASE-FLAT"
+   ],
+   "evidenceIds": [],
+   "counterexample": "uncapped flat on per_second ramped to clamp (-75% taken / +100% taken) instead of the designed static band; stacks also latched across the threshold for the rest of a battle",
+   "expected": "static +/- band following HP",
+   "actual": "unbounded ramp + battle-long latch",
+   "rootCause": "CP-01 converted dead percent to live flat without bounding accumulation or release",
+   "rootClass": "unbounded-accumulation",
+   "subsystem": "stats",
+   "siblingSearch": [],
+   "siblingFindingIds": [
+    "F-MG-11",
+    "F-MG-12"
+   ],
+   "repair": "maxStacks 1 + distinct ids + condition-false stack release in PassiveSystem.tick",
+   "pinEvidenceIds": [
+    "EV-FOCUSED-S7"
+   ],
+   "verificationEvidenceIds": [
+    "EV-FOCUSED-S7",
+    "EV-VERIFY-S7"
+   ],
+   "closureReviewIds": [
+    "RV-S7-P1"
+   ],
+   "status": "CLOSED",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null,
+   "fixedInRevision": "a61c53a5",
+   "closedAt": "2026-09-29T15:35:00Z",
+   "closeReason": "cap + release + pins; mutants MUT-RAMP-1 and MUT-DECAY-1 killed"
+  },
+  {
+   "kind": "finding",
+   "id": "F-MG-10",
+   "state": {
+    "productStateId": "476ecc92a14df13401d15a036554fb9920fe46451677204df8a0c133ab6146bc",
+    "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+    "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+    "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+   },
+   "title": "CLOUD-INSERT-UPSERT: first-push POST carried merge-duplicates preference",
+   "severity": "Low",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "game/src/services/cloudSave/SupabaseRemoteSave.ts",
+     "symbolOrSection": "insert branch",
+     "revision": "768b9ac0",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "clean-a",
+   "invariantIds": [
+    "I-CLOUD-REV-CAS"
+   ],
+   "evidenceIds": [],
+   "counterexample": "PK upsert silently overwrites a concurrent first push",
+   "expected": "strict insert, PK conflict loses",
+   "actual": "merge-duplicates upsert",
+   "rootCause": "stale header from pre-CAS design",
+   "rootClass": "stale-contract-header",
+   "subsystem": "cloudSave",
+   "siblingSearch": [],
+   "siblingFindingIds": [],
+   "repair": "header removed; strict insert; POST Prefer pin added",
+   "pinEvidenceIds": [
+    "EV-FOCUSED-S7"
+   ],
+   "verificationEvidenceIds": [
+    "EV-FOCUSED-S7",
+    "EV-VERIFY-S7"
+   ],
+   "closureReviewIds": [
+    "RV-S7-P1"
+   ],
+   "status": "CLOSED",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null,
+   "fixedInRevision": "67fd0356",
+   "closedAt": "2026-09-29T15:35:00Z",
+   "closeReason": "strict insert + pin; MUT-UPSERT-1 killed"
+  },
+  {
+   "kind": "finding",
+   "id": "F-MG-11",
+   "state": {
+    "productStateId": "476ecc92a14df13401d15a036554fb9920fe46451677204df8a0c133ab6146bc",
+    "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+    "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+    "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+   },
+   "title": "HAPLINH-DEAD-PERCENT: leechPercent percent modifier dead on zero base + unbounded per-second stack vs spec x2.5",
+   "severity": "Low",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "game/src/data/skill/TalentPassives.ts",
+     "symbolOrSection": "talent_passive_hap_linh",
+     "revision": "768b9ac0",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "clean-a",
+   "invariantIds": [
+    "I-STAT-ZEROBASE-FLAT"
+   ],
+   "evidenceIds": [],
+   "counterexample": "percent over zero base + no cap",
+   "expected": "x2.5 leech while hpBelow 0.5",
+   "actual": "0.0125 accumulating unbounded",
+   "rootCause": "mistranslated magnitude + missing cap",
+   "rootClass": "unbounded-accumulation",
+   "subsystem": "stats",
+   "siblingSearch": [],
+   "siblingFindingIds": [
+    "F-MG-09"
+   ],
+   "repair": "percent 1.5 (x2.5 multiplier over flat leech) capped at 1 stack",
+   "pinEvidenceIds": [
+    "EV-FOCUSED-S7"
+   ],
+   "verificationEvidenceIds": [
+    "EV-FOCUSED-S7",
+    "EV-VERIFY-S7"
+   ],
+   "closureReviewIds": [
+    "RV-S7-P1"
+   ],
+   "status": "CLOSED",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null,
+   "fixedInRevision": "67fd0356",
+   "closedAt": "2026-09-29T15:35:00Z",
+   "closeReason": "corrected to spec + capped; MUT-HAPLINH-1 killed"
+  },
+  {
+   "kind": "finding",
+   "id": "F-MG-12",
+   "state": {
+    "productStateId": "476ecc92a14df13401d15a036554fb9920fe46451677204df8a0c133ab6146bc",
+    "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+    "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+    "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+   },
+   "title": "MOD-ID-COLLISION: identical generated modifier ids for same-stat same-cap modifiers",
+   "severity": "Nit",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "HYPOTHETICAL",
+   "locations": [
+    {
+     "path": "game/src/data/skill/TalentPassives.ts",
+     "symbolOrSection": "flatStat id template",
+     "revision": "768b9ac0",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "clean-a",
+   "invariantIds": [
+    "I-STAT-ZEROBASE-FLAT"
+   ],
+   "evidenceIds": [],
+   "counterexample": "both can_than legs share talent:finalDamageReductionPercent:1:flat",
+   "expected": "unique ids",
+   "actual": "colliding ids",
+   "rootCause": "no discriminator in id template",
+   "rootClass": "identity-collision",
+   "subsystem": "stats",
+   "siblingSearch": [],
+   "siblingFindingIds": [],
+   "repair": "idSuffix parameter on flatStat; per-second id uniqueness pinned",
+   "pinEvidenceIds": [
+    "EV-FOCUSED-S7"
+   ],
+   "verificationEvidenceIds": [
+    "EV-FOCUSED-S7"
+   ],
+   "closureReviewIds": [
+    "RV-S7-P1"
+   ],
+   "status": "CLOSED",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null,
+   "fixedInRevision": "67fd0356",
+   "closedAt": "2026-09-29T15:35:00Z",
+   "closeReason": "distinct suffixes + uniqueness pin"
+  },
+  {
+   "kind": "finding",
+   "id": "F-MG-13",
+   "state": {
+    "productStateId": "476ecc92a14df13401d15a036554fb9920fe46451677204df8a0c133ab6146bc",
+    "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+    "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+    "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+   },
+   "title": "ACCRUAL-REALM-UNVALIDATED: accrualRealmId accepted unchecked at save shape + acceptance gates",
+   "severity": "Low",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "game/src/services/save/saveShapeValidation.ts",
+     "symbolOrSection": "validateBuildingsSave",
+     "revision": "768b9ac0",
+     "basis": "SOURCE"
+    },
+    {
+     "path": "game/src/services/save/saveAcceptance.ts",
+     "symbolOrSection": "buildings loop",
+     "revision": "768b9ac0",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "clean-a",
+   "invariantIds": [
+    "I-BUILDING-ACCRUAL-PIN"
+   ],
+   "evidenceIds": [],
+   "counterexample": "fabricated realm id silently prices backlog at wrong tier",
+   "expected": "unknown realm ids rejected like unknown buildingId",
+   "actual": "accepted silently",
+   "rootCause": "EM-01 field added without extending the acceptance seam",
+   "rootClass": "acceptance-gap",
+   "subsystem": "save",
+   "siblingSearch": [],
+   "siblingFindingIds": [],
+   "repair": "shape gate requires string-or-absent; acceptance rejects unknown realm; 3 pins added",
+   "pinEvidenceIds": [
+    "EV-FOCUSED-S7"
+   ],
+   "verificationEvidenceIds": [
+    "EV-FOCUSED-S7",
+    "EV-VERIFY-S7"
+   ],
+   "closureReviewIds": [
+    "RV-S7-P1"
+   ],
+   "status": "CLOSED",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null,
+   "fixedInRevision": "67fd0356",
+   "closedAt": "2026-09-29T15:35:00Z",
+   "closeReason": "gates + pins; MUT-ACCRUAL-1 killed"
+  },
+  {
+   "kind": "review",
+   "id": "RV-S7-P1",
+   "state": {
+    "productStateId": "0d0921a5ddd9279694539c3c611b37cb8fd01ca217141843fc2f0fd43e5dd85d",
+    "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+    "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+    "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+   },
+   "round": 2,
+   "phase": "CORRECTNESS",
+   "reviewerId": "coordinator",
+   "contextId": "primary-context",
+   "model": "swe-2-max",
+   "role": "COORDINATOR_SELF_REVIEW",
+   "inputBundleHash": "a39c435711b7b19d9e5fd6306e5bb8bb83ad1fa02860520f696e2b6e81292102",
+   "priorFindingsVisible": true,
+   "accessLimitations": [
+    "same-context review - no independence credit"
+   ],
+   "startedAt": "2026-09-29T15:20:00Z",
+   "sealedAt": "2026-09-29T15:30:00Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [
+    "EV-VERIFY-S7",
+    "EV-FOCUSED-S7"
+   ],
+   "findingIds": [
+    "F-MG-09",
+    "F-MG-10",
+    "F-MG-11",
+    "F-MG-12",
+    "F-MG-13"
+   ],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  },
+  {
+   "kind": "review",
+   "id": "RV-S7-P2",
+   "state": {
+    "productStateId": "0d0921a5ddd9279694539c3c611b37cb8fd01ca217141843fc2f0fd43e5dd85d",
+    "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+    "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+    "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+   },
+   "round": 2,
+   "phase": "AUTHORITY",
+   "reviewerId": "coordinator",
+   "contextId": "primary-context",
+   "model": "swe-2-max",
+   "role": "COORDINATOR_SELF_REVIEW",
+   "inputBundleHash": "a39c435711b7b19d9e5fd6306e5bb8bb83ad1fa02860520f696e2b6e81292102",
+   "priorFindingsVisible": true,
+   "accessLimitations": [
+    "same-context review - no independence credit"
+   ],
+   "startedAt": "2026-09-29T15:30:00Z",
+   "sealedAt": "2026-09-29T15:33:00Z",
+   "previousPhaseReviewId": "RV-S7-P1",
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [
+    "EV-FOCUSED-S7"
+   ],
+   "findingIds": [],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  },
+  {
+   "kind": "review",
+   "id": "RV-S7-P3",
+   "state": {
+    "productStateId": "0d0921a5ddd9279694539c3c611b37cb8fd01ca217141843fc2f0fd43e5dd85d",
+    "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+    "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+    "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+   },
+   "round": 2,
+   "phase": "INTEGRATION",
+   "reviewerId": "coordinator",
+   "contextId": "primary-context",
+   "model": "swe-2-max",
+   "role": "COORDINATOR_SELF_REVIEW",
+   "inputBundleHash": "a39c435711b7b19d9e5fd6306e5bb8bb83ad1fa02860520f696e2b6e81292102",
+   "priorFindingsVisible": true,
+   "accessLimitations": [
+    "same-context review - no independence credit"
+   ],
+   "startedAt": "2026-09-29T15:33:00Z",
+   "sealedAt": "2026-09-29T15:37:00Z",
+   "previousPhaseReviewId": "RV-S7-P2",
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [
+    "EV-VERIFY-S7",
+    "EV-FOCUSED-S7"
+   ],
+   "findingIds": [],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  },
+  {
+   "kind": "cycle",
+   "id": "CYC-P5-3",
+   "state": {
+    "productStateId": "0d0921a5ddd9279694539c3c611b37cb8fd01ca217141843fc2f0fd43e5dd85d",
+    "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+    "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+    "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+   },
+   "reviewIds": [
+    "RV-S7-P1",
+    "RV-S7-P2",
+    "RV-S7-P3"
+   ],
+   "coverageIds": [],
+   "evidenceIds": [
+    "EV-VERIFY-S7",
+    "EV-FOCUSED-S7"
+   ],
+   "noveltyEvidenceIds": [],
+   "startedAt": "2026-09-29T15:20:00Z",
+   "finishedAt": "2026-09-29T15:37:00Z",
+   "status": "CLEAN"
+  }
+ ]
+}

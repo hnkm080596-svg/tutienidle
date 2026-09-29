@@ -1,0 +1,237 @@
+{
+ "records": [
+  {
+   "kind": "finding",
+   "id": "F-MG-03",
+   "state": {
+    "productStateId": "b1b1c5ff0d9772d9362be9feac89e052e638f32f3eab4ff545636b52ca42b5b1",
+    "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+    "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+    "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+   },
+   "title": "PRE-EXISTING on master: combatContract R14.4 searches parameterless onBattleStart()",
+   "severity": "Medium",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "discoveredBy": "coordinator",
+   "invariantIds": [],
+   "evidenceIds": [
+    "EV-VERIFY-S9"
+   ],
+   "counterexample": "identical failure reproduces on base ref f196b8d0 without the delta",
+   "expected": "suite green",
+   "actual": "pre-existing failure on master",
+   "rootCause": "predates the reviewed aggregate",
+   "rootClass": "pre-existing-master",
+   "subsystem": "test-infra",
+   "siblingSearch": [],
+   "siblingFindingIds": [],
+   "repair": "none - outside delta surface; defect exists on master tip independent of this change",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [
+    "EV-VERIFY-S9"
+   ],
+   "closureReviewIds": [
+    "RV-S9-P1"
+   ],
+   "status": "REJECTED_WITH_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": "PRE-EXISTING ON BASE: failure reproduces identically on f196b8d0; file+test unchanged by the delta; out of this run scope per P5 pre-existing rule",
+   "exception": null,
+   "fixedInRevision": null,
+   "closedAt": "2026-09-29T17:05:00Z",
+   "closeReason": "rejected as defect-of-this-delta with base-repro proof",
+   "locations": [
+    {
+     "path": "game/tests/architecture/combatContract.test.ts",
+     "symbolOrSection": "R14.4",
+     "revision": "HEAD",
+     "basis": "SOURCE"
+    }
+   ]
+  },
+  {
+   "kind": "finding",
+   "id": "F-MG-04",
+   "state": {
+    "productStateId": "b1b1c5ff0d9772d9362be9feac89e052e638f32f3eab4ff545636b52ca42b5b1",
+    "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+    "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+    "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+   },
+   "title": "PRE-EXISTING on master: src/dev/skill-vfx.ts constructs new Game() outside region host",
+   "severity": "Medium",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "discoveredBy": "coordinator",
+   "invariantIds": [],
+   "evidenceIds": [
+    "EV-VERIFY-S9"
+   ],
+   "counterexample": "identical failure reproduces on base ref f196b8d0 without the delta",
+   "expected": "suite green",
+   "actual": "pre-existing failure on master",
+   "rootCause": "predates the reviewed aggregate",
+   "rootClass": "pre-existing-master",
+   "subsystem": "test-infra",
+   "siblingSearch": [],
+   "siblingFindingIds": [],
+   "repair": "none - outside delta surface; defect exists on master tip independent of this change",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [
+    "EV-VERIFY-S9"
+   ],
+   "closureReviewIds": [
+    "RV-S9-P1"
+   ],
+   "status": "REJECTED_WITH_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": "PRE-EXISTING ON BASE: failure reproduces identically on f196b8d0; file+test unchanged by the delta; out of this run scope per P5 pre-existing rule",
+   "exception": null,
+   "fixedInRevision": null,
+   "closedAt": "2026-09-29T17:05:00Z",
+   "closeReason": "rejected as defect-of-this-delta with base-repro proof",
+   "locations": [
+    {
+     "path": "game/src/dev/skill-vfx.ts",
+     "symbolOrSection": "Phaser.Game construction",
+     "revision": "HEAD",
+     "basis": "SOURCE"
+    }
+   ]
+  },
+  {
+   "kind": "finding",
+   "id": "F-MG-05",
+   "state": {
+    "productStateId": "b1b1c5ff0d9772d9362be9feac89e052e638f32f3eab4ff545636b52ca42b5b1",
+    "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+    "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+    "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+   },
+   "title": "PRE-EXISTING on master: PlayerPortrait.test mounts component without active Pinia",
+   "severity": "Medium",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "discoveredBy": "coordinator",
+   "invariantIds": [],
+   "evidenceIds": [
+    "EV-VERIFY-S9"
+   ],
+   "counterexample": "identical failure reproduces on base ref f196b8d0 without the delta",
+   "expected": "suite green",
+   "actual": "pre-existing failure on master",
+   "rootCause": "predates the reviewed aggregate",
+   "rootClass": "pre-existing-master",
+   "subsystem": "test-infra",
+   "siblingSearch": [],
+   "siblingFindingIds": [],
+   "repair": "none - outside delta surface; defect exists on master tip independent of this change",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [
+    "EV-VERIFY-S9"
+   ],
+   "closureReviewIds": [
+    "RV-S9-P1"
+   ],
+   "status": "REJECTED_WITH_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": "PRE-EXISTING ON BASE: failure reproduces identically on f196b8d0; file+test unchanged by the delta; out of this run scope per P5 pre-existing rule",
+   "exception": null,
+   "fixedInRevision": null,
+   "closedAt": "2026-09-29T17:05:00Z",
+   "closeReason": "rejected as defect-of-this-delta with base-repro proof",
+   "locations": [
+    {
+     "path": "game/src/components/common/PlayerPortrait.test.ts",
+     "symbolOrSection": "mount",
+     "revision": "HEAD",
+     "basis": "SOURCE"
+    }
+   ]
+  },
+  {
+   "kind": "review",
+   "id": "RV-CLEAN-B1",
+   "state": {
+    "productStateId": "b1b1c5ff0d9772d9362be9feac89e052e638f32f3eab4ff545636b52ca42b5b1",
+    "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+    "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+    "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+   },
+   "round": 4,
+   "phase": "CORRECTNESS",
+   "reviewerId": "subagent-clean-b1",
+   "contextId": "subagent-clean-b1-explore",
+   "model": "swe-2-max",
+   "role": "CLEAN_REVIEW",
+   "inputBundleHash": "e0a15137abc05d22bcf6af25ec24a4d340f25eae07f4f18d6fe6f58df3a885e2",
+   "priorFindingsVisible": false,
+   "accessLimitations": [
+    "no exec tool in review context - source inspection only; could not produce Confirmed-class evidence or enumerate the git index"
+   ],
+   "startedAt": "2026-09-29T16:40:00Z",
+   "sealedAt": "2026-09-29T17:05:00Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  },
+  {
+   "kind": "review",
+   "id": "RV-TERMINAL-B1",
+   "state": {
+    "productStateId": "b1b1c5ff0d9772d9362be9feac89e052e638f32f3eab4ff545636b52ca42b5b1",
+    "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+    "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+    "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+   },
+   "round": 4,
+   "phase": "TERMINAL_CHECK",
+   "reviewerId": "subagent-clean-b1",
+   "contextId": "subagent-clean-b1-explore",
+   "model": "swe-2-max",
+   "role": "TERMINAL_VERIFIER",
+   "inputBundleHash": "e0a15137abc05d22bcf6af25ec24a4d340f25eae07f4f18d6fe6f58df3a885e2",
+   "priorFindingsVisible": false,
+   "accessLimitations": [
+    "no exec tool - source inspection only"
+   ],
+   "startedAt": "2026-09-29T16:55:00Z",
+   "sealedAt": "2026-09-29T17:05:00Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  },
+  {
+   "kind": "cycle",
+   "id": "CYC-CLEAN-B-ATTEMPT",
+   "state": {
+    "productStateId": "b1b1c5ff0d9772d9362be9feac89e052e638f32f3eab4ff545636b52ca42b5b1",
+    "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+    "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+    "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+   },
+   "reviewIds": [
+    "RV-CLEAN-B1",
+    "RV-TERMINAL-B1"
+   ],
+   "coverageIds": [],
+   "evidenceIds": [],
+   "noveltyEvidenceIds": [],
+   "startedAt": "2026-09-29T16:40:00Z",
+   "finishedAt": "2026-09-29T17:05:00Z",
+   "status": "INCOMPLETE"
+  }
+ ]
+}

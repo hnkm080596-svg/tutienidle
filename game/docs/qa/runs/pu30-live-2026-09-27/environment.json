@@ -1,0 +1,12 @@
+{
+  "tools": {
+    "node": "v24.19.0",
+    "npm": "11.x",
+    "harness": "devin-desktop run_subagent (isolated contexts, read-only explore profile for reviewers)"
+  },
+  "os": "win32 (Windows, Git Bash)",
+  "profile": "mechanism-qualification: scripts/qa exercised via qa:internal CLI; agents dispatched via run_subagent background tasks",
+  "clock": "wall-clock UTC (utcNow from state.mjs)",
+  "rng": "not applicable - deterministic mechanism exercise",
+  "notes": "No browser/runtime game surface exercised; scope is QA machinery. Platform agent cap honored as capacityLimit=5 with coordinator counted via externalOccupied=1."
+}

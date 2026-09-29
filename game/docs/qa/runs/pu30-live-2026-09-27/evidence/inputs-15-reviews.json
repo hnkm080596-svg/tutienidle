@@ -1,0 +1,1164 @@
+{
+  "records": [
+    {
+      "kind": "message",
+      "body": {
+        "id": "MSG-SEALED-R6",
+        "requestId": "REQ-R6-SLOT",
+        "parentRequestId": null,
+        "sender": "worker:ca27c584",
+        "recipient": "coordinator-7604",
+        "kind": "SEALED_RESULT",
+        "state": {
+          "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+          "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+          "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+          "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+        },
+        "phase": "ATTACK",
+        "bundleHash": "843c3cf99e3f35f40beafa24fa2ca3e6d09f7b8f64f3b284d0b9b3befd597637",
+        "payloadPath": "evidence/messages/sealed-rev-a.json",
+        "payloadHash": "529f5ebe2b507630b583f0ccfa1f4bd1fa6a789ba47309eeaf84b0f759611c67",
+        "createdAt": "2026-09-27T16:27:52.372Z",
+        "leaseId": null
+      }
+    },
+    {
+      "kind": "message",
+      "body": {
+        "id": "MSG-SEALED-R7",
+        "requestId": "REQ-R7-MSGLED",
+        "parentRequestId": null,
+        "sender": "worker:f6a1d784",
+        "recipient": "coordinator-7604",
+        "kind": "SEALED_RESULT",
+        "state": {
+          "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+          "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+          "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+          "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+        },
+        "phase": "ATTACK",
+        "bundleHash": "90705113a194b993c1b04fdb64d2b68ccfadbb0180f9dc561ba66268c5035897",
+        "payloadPath": "evidence/messages/sealed-rev-b.json",
+        "payloadHash": "50dbff16daba121a98132267261751137646b9b12b52323395a6b5550c6639d1",
+        "createdAt": "2026-09-27T16:27:52.372Z",
+        "leaseId": null
+      }
+    },
+    {
+      "kind": "review",
+      "body": {
+        "id": "REV-A",
+        "state": {
+          "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+          "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+          "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+          "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+        },
+        "round": 1,
+        "phase": "NOVEL_SYNTHESIS",
+        "reviewerId": "subagent:ca27c584",
+        "contextId": "ca27c584",
+        "model": "swe-subagent",
+        "role": "sealed falsification reviewer (slot law)",
+        "inputBundleHash": "843c3cf99e3f35f40beafa24fa2ca3e6d09f7b8f64f3b284d0b9b3befd597637",
+        "priorFindingsVisible": false,
+        "accessLimitations": [
+          "read-only; run artifacts incl. finding titles encountered during verification - disclosed, corroborating not formative"
+        ],
+        "startedAt": "2026-09-27T16:27:52.372Z",
+        "sealedAt": "2026-09-27T16:27:52.372Z",
+        "previousPhaseReviewId": null,
+        "reviewedAfterPreviousFixes": false,
+        "coverageIds": [
+          "COV-CAP-REV",
+          "COV-REL-REV",
+          "COV-BIND-REV"
+        ],
+        "evidenceIds": [],
+        "findingIds": [
+          "F-PU30-09",
+          "F-PU30-10",
+          "F-PU30-11",
+          "F-PU30-12",
+          "F-PU30-13",
+          "F-PU30-14",
+          "F-PU30-15",
+          "F-PU30-16",
+          "F-PU30-17"
+        ],
+        "novelAttackIds": [],
+        "status": "SEALED"
+      }
+    },
+    {
+      "kind": "review",
+      "body": {
+        "id": "REV-B",
+        "state": {
+          "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+          "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+          "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+          "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+        },
+        "round": 1,
+        "phase": "NOVEL_SYNTHESIS",
+        "reviewerId": "subagent:f6a1d784",
+        "contextId": "f6a1d784",
+        "model": "swe-subagent",
+        "role": "sealed falsification reviewer (message+ledger)",
+        "inputBundleHash": "90705113a194b993c1b04fdb64d2b68ccfadbb0180f9dc561ba66268c5035897",
+        "priorFindingsVisible": false,
+        "accessLimitations": [
+          "read-only; ledger counterexample strings + invariants via grep during verification - disclosed, derived-from-source-first"
+        ],
+        "startedAt": "2026-09-27T16:27:52.372Z",
+        "sealedAt": "2026-09-27T16:27:52.372Z",
+        "previousPhaseReviewId": null,
+        "reviewedAfterPreviousFixes": false,
+        "coverageIds": [
+          "COV-MSG-REV",
+          "COV-LED-REV"
+        ],
+        "evidenceIds": [],
+        "findingIds": [
+          "F-PU30-18",
+          "F-PU30-19",
+          "F-PU30-20",
+          "F-PU30-21",
+          "F-PU30-22",
+          "F-PU30-23",
+          "F-PU30-24"
+        ],
+        "novelAttackIds": [],
+        "status": "SEALED"
+      }
+    },
+    {
+      "kind": "finding",
+      "body": {
+        "id": "F-PU30-09",
+        "title": "externalOccupied unvalidated: NaN fails open, negatives under-count",
+        "state": {
+          "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+          "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+          "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+          "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+        },
+        "severity": "High",
+        "classification": "REAL_DEFECT",
+        "actionable": true,
+        "reachability": "SUPPORTED_BOUNDARY",
+        "locations": [
+          {
+            "path": "scripts/qa/cli.mjs",
+            "symbolOrSection": "cmdSchedule:357",
+            "revision": "68621987",
+            "basis": "SOURCE"
+          },
+          {
+            "path": "scripts/qa/prevention.mjs",
+            "symbolOrSection": "admitAssignment:130-146",
+            "revision": "68621987",
+            "basis": "SOURCE"
+          }
+        ],
+        "discoveredBy": "REV-A sealed reviewer (run_subagent:ca27c584)",
+        "invariantIds": [
+          "I-SLOT-CAPACITY"
+        ],
+        "evidenceIds": [],
+        "counterexample": "admit with externalOccupied non-numeric -> NaN+1>cap false -> unconditional RESERVED",
+        "expected": "non-numeric/negative external occupancy rejected",
+        "actual": "any malformed value admitted; NaN comparison fails open",
+        "rootCause": "no input validation on externalOccupied",
+        "rootClass": "implementation",
+        "subsystem": "scripts/qa",
+        "siblingSearch": [],
+        "siblingFindingIds": [],
+        "repair": "out of run scope - authorizedRepairs=docs/qa/** only; routed to a future scripts/qa repair mission",
+        "pinEvidenceIds": [],
+        "verificationEvidenceIds": [],
+        "closureReviewIds": [],
+        "status": "TRIAGED",
+        "duplicateOf": null,
+        "rejectionReason": null,
+        "exception": null
+      }
+    },
+    {
+      "kind": "finding",
+      "body": {
+        "id": "F-PU30-10",
+        "title": "Re-admission of active assignment demotes it = unverified release channel",
+        "state": {
+          "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+          "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+          "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+          "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+        },
+        "severity": "High",
+        "classification": "REAL_DEFECT",
+        "actionable": true,
+        "reachability": "SUPPORTED_BOUNDARY",
+        "locations": [
+          {
+            "path": "scripts/qa/cli.mjs",
+            "symbolOrSection": "cmdSchedule:356-360",
+            "revision": "68621987",
+            "basis": "SOURCE"
+          },
+          {
+            "path": "scripts/qa/prevention.mjs",
+            "symbolOrSection": "admitAssignment:136-146",
+            "revision": "68621987",
+            "basis": "SOURCE"
+          }
+        ],
+        "discoveredBy": "REV-A sealed reviewer (run_subagent:ca27c584)",
+        "invariantIds": [
+          "I-SLOT-RELEASE",
+          "I-SLOT-CAPACITY"
+        ],
+        "evidenceIds": [],
+        "counterexample": "re-admit RESERVED id with readiness=WAITING_INPUT -> BLOCKED, slot freed, reservedAt/releaseEvidence/history destroyed",
+        "expected": "active records not re-admittable; release only via verified lifecycle",
+        "actual": "wholesale record replace + capacity re-eval frees slot without lifecycle proof",
+        "rootCause": "admit path does not check existing record state",
+        "rootClass": "implementation",
+        "subsystem": "scripts/qa",
+        "siblingSearch": [],
+        "siblingFindingIds": [
+          "F-PU30-05"
+        ],
+        "repair": "out of run scope - authorizedRepairs=docs/qa/** only; routed to a future scripts/qa repair mission",
+        "pinEvidenceIds": [],
+        "verificationEvidenceIds": [],
+        "closureReviewIds": [],
+        "status": "TRIAGED",
+        "duplicateOf": null,
+        "rejectionReason": null,
+        "exception": null
+      }
+    },
+    {
+      "kind": "finding",
+      "body": {
+        "id": "F-PU30-11",
+        "title": "observeAssignment has no transition legality: QUEUED->FINISHED, FINISHED->RESULT_RECEIVED resurrection",
+        "state": {
+          "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+          "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+          "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+          "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+        },
+        "severity": "High",
+        "classification": "REAL_DEFECT",
+        "actionable": true,
+        "reachability": "SUPPORTED_BOUNDARY",
+        "locations": [
+          {
+            "path": "scripts/qa/prevention.mjs",
+            "symbolOrSection": "observeAssignment:153-173",
+            "revision": "68621987",
+            "basis": "SOURCE"
+          }
+        ],
+        "discoveredBy": "REV-A sealed reviewer (run_subagent:ca27c584)",
+        "invariantIds": [
+          "I-SLOT-RELEASE"
+        ],
+        "evidenceIds": [],
+        "counterexample": "observe terminated on QUEUED -> FINISHED; observe result on FINISHED -> RESULT_RECEIVED re-occupying slot",
+        "expected": "legal transitions only from lawful source states",
+        "actual": "any-to-any transitions accepted; terminal states not absorbing",
+        "rootCause": "no source-state guard on observe",
+        "rootClass": "implementation",
+        "subsystem": "scripts/qa",
+        "siblingSearch": [],
+        "siblingFindingIds": [],
+        "repair": "out of run scope - authorizedRepairs=docs/qa/** only; routed to a future scripts/qa repair mission",
+        "pinEvidenceIds": [],
+        "verificationEvidenceIds": [],
+        "closureReviewIds": [],
+        "status": "TRIAGED",
+        "duplicateOf": null,
+        "rejectionReason": null,
+        "exception": null
+      }
+    },
+    {
+      "kind": "finding",
+      "body": {
+        "id": "F-PU30-12",
+        "title": "Verified release is coordinator-asserted: evidence optional, observedRuntimeId/resultRef never written",
+        "state": {
+          "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+          "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+          "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+          "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+        },
+        "severity": "Medium",
+        "classification": "REAL_DEFECT",
+        "actionable": true,
+        "reachability": "SUPPORTED_BOUNDARY",
+        "locations": [
+          {
+            "path": "scripts/qa/prevention.mjs",
+            "symbolOrSection": "observeAssignment:166-170",
+            "revision": "68621987",
+            "basis": "SOURCE"
+          },
+          {
+            "path": "scripts/qa/cli.mjs",
+            "symbolOrSection": "observe path:362",
+            "revision": "68621987",
+            "basis": "SOURCE"
+          }
+        ],
+        "discoveredBy": "REV-A sealed reviewer (run_subagent:ca27c584)",
+        "invariantIds": [
+          "I-AGENT-BINDING",
+          "I-SLOT-RELEASE"
+        ],
+        "evidenceIds": [],
+        "counterexample": "observe terminated with evidence=null -> FINISHED; no link between assignment and dispatched runtime or result message",
+        "expected": "FINISHED requires bound observedRuntimeId+resultRef",
+        "actual": "evidence free-text optional; binding fields never populated",
+        "rootCause": "observeAssignment accepts empty evidence",
+        "rootClass": "implementation",
+        "subsystem": "scripts/qa",
+        "siblingSearch": [],
+        "siblingFindingIds": [],
+        "repair": "out of run scope - authorizedRepairs=docs/qa/** only; routed to a future scripts/qa repair mission",
+        "pinEvidenceIds": [],
+        "verificationEvidenceIds": [],
+        "closureReviewIds": [],
+        "status": "TRIAGED",
+        "duplicateOf": null,
+        "rejectionReason": null,
+        "exception": null
+      }
+    },
+    {
+      "kind": "finding",
+      "body": {
+        "id": "F-PU30-13",
+        "title": "Lifecycle spec incomplete: RUNNING unreachable, CANCELLED/BLOCKED never produced by observe",
+        "state": {
+          "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+          "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+          "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+          "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+        },
+        "severity": "Medium",
+        "classification": "SPEC_DEFECT",
+        "actionable": true,
+        "reachability": "SUPPORTED_BOUNDARY",
+        "locations": [
+          {
+            "path": "scripts/qa/prevention.mjs",
+            "symbolOrSection": "states:9-11,153-173",
+            "revision": "68621987",
+            "basis": "SOURCE"
+          }
+        ],
+        "discoveredBy": "REV-A sealed reviewer (run_subagent:ca27c584)",
+        "invariantIds": [
+          "I-SLOT-RELEASE"
+        ],
+        "evidenceIds": [],
+        "counterexample": "every run record goes RESERVED->FINISHED skipping RUNNING; cancelled maps to FINISHED; blocked throws",
+        "expected": "declared lifecycle mechanically walkable",
+        "actual": "RUNNING/CANCELLED/BLOCKED only reachable via record bypass",
+        "rootCause": "status enum vs transition functions mismatch",
+        "rootClass": "implementation",
+        "subsystem": "scripts/qa",
+        "siblingSearch": [],
+        "siblingFindingIds": [],
+        "repair": "out of run scope - authorizedRepairs=docs/qa/** only; routed to a future scripts/qa repair mission",
+        "pinEvidenceIds": [],
+        "verificationEvidenceIds": [],
+        "closureReviewIds": [],
+        "status": "TRIAGED",
+        "duplicateOf": null,
+        "rejectionReason": null,
+        "exception": null
+      }
+    },
+    {
+      "kind": "finding",
+      "body": {
+        "id": "F-PU30-14",
+        "title": "No machine check enforces active-count vs cap or requires FINISHED before outcome",
+        "state": {
+          "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+          "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+          "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+          "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+        },
+        "severity": "Medium",
+        "classification": "COVERAGE_GAP",
+        "actionable": true,
+        "reachability": "SUPPORTED_BOUNDARY",
+        "locations": [
+          {
+            "path": "scripts/qa/validate.mjs",
+            "symbolOrSection": "MC14:490-504",
+            "revision": "68621987",
+            "basis": "SOURCE"
+          },
+          {
+            "path": "scripts/qa/decision.mjs",
+            "symbolOrSection": "decide",
+            "revision": "68621987",
+            "basis": "SOURCE"
+          }
+        ],
+        "discoveredBy": "REV-A sealed reviewer (run_subagent:ca27c584)",
+        "invariantIds": [
+          "I-SLOT-CAPACITY",
+          "I-LEDGER-AUTHORITY"
+        ],
+        "evidenceIds": [],
+        "counterexample": "decide succeeds while RESERVED/RESULT_RECEIVED hold slots; fabricated single-entry QUEUED->FINISHED passes MC14",
+        "expected": "MC/decision clauses bound reservation authority",
+        "actual": "only adjacent from/to chaining checked; decide ignores assignments",
+        "rootCause": "missing checks",
+        "rootClass": "implementation",
+        "subsystem": "scripts/qa",
+        "siblingSearch": [],
+        "siblingFindingIds": [],
+        "repair": "out of run scope - authorizedRepairs=docs/qa/** only; routed to a future scripts/qa repair mission",
+        "pinEvidenceIds": [],
+        "verificationEvidenceIds": [],
+        "closureReviewIds": [],
+        "status": "TRIAGED",
+        "duplicateOf": null,
+        "rejectionReason": null,
+        "exception": null
+      }
+    },
+    {
+      "kind": "finding",
+      "body": {
+        "id": "F-PU30-15",
+        "title": "capacityLimit is request-controlled unbounded integer - hard cap 5 is a suggestion",
+        "state": {
+          "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+          "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+          "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+          "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+        },
+        "severity": "Medium",
+        "classification": "REAL_DEFECT",
+        "actionable": true,
+        "reachability": "SUPPORTED_BOUNDARY",
+        "locations": [
+          {
+            "path": "scripts/qa/state.mjs",
+            "symbolOrSection": "capacityLimit:126",
+            "revision": "68621987",
+            "basis": "SOURCE"
+          },
+          {
+            "path": "scripts/qa/ledger.schema.json",
+            "symbolOrSection": "capacityLimit:351-354",
+            "revision": "68621987",
+            "basis": "SOURCE"
+          }
+        ],
+        "discoveredBy": "REV-A sealed reviewer (run_subagent:ca27c584)",
+        "invariantIds": [
+          "I-SLOT-CAPACITY"
+        ],
+        "evidenceIds": [],
+        "counterexample": "request with capacityLimit=99 bypasses platform cap",
+        "expected": "mechanism-level ceiling on capacityLimit",
+        "actual": "schema min 1 no max; run controls its own cap",
+        "rootCause": "no ceiling enforcement",
+        "rootClass": "implementation",
+        "subsystem": "scripts/qa",
+        "siblingSearch": [],
+        "siblingFindingIds": [],
+        "repair": "out of run scope - authorizedRepairs=docs/qa/** only; routed to a future scripts/qa repair mission",
+        "pinEvidenceIds": [],
+        "verificationEvidenceIds": [],
+        "closureReviewIds": [],
+        "status": "TRIAGED",
+        "duplicateOf": null,
+        "rejectionReason": null,
+        "exception": null
+      }
+    },
+    {
+      "kind": "finding",
+      "body": {
+        "id": "F-PU30-16",
+        "title": "No CAS on ledger writes: concurrent same-lease commands lose updates",
+        "state": {
+          "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+          "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+          "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+          "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+        },
+        "severity": "Low",
+        "classification": "REAL_DEFECT",
+        "actionable": true,
+        "reachability": "SUPPORTED_BOUNDARY",
+        "locations": [
+          {
+            "path": "scripts/qa/state.mjs",
+            "symbolOrSection": "appendEvent expectedSeq:199-227",
+            "revision": "68621987",
+            "basis": "SOURCE"
+          },
+          {
+            "path": "scripts/qa/cli.mjs",
+            "symbolOrSection": "cmdSchedule:347-369",
+            "revision": "68621987",
+            "basis": "SOURCE"
+          }
+        ],
+        "discoveredBy": "REV-A sealed reviewer (run_subagent:ca27c584)",
+        "invariantIds": [
+          "I-LEDGER-AUTHORITY"
+        ],
+        "evidenceIds": [],
+        "counterexample": "two concurrent schedule calls load same seq, last-wins drops one record",
+        "expected": "expectedSeq CAS enforced on writers",
+        "actual": "CAS exists but no CLI caller passes it",
+        "rootCause": "zero production callers of expectedSeq",
+        "rootClass": "implementation",
+        "subsystem": "scripts/qa",
+        "siblingSearch": [],
+        "siblingFindingIds": [],
+        "repair": "out of run scope - authorizedRepairs=docs/qa/** only; routed to a future scripts/qa repair mission",
+        "pinEvidenceIds": [],
+        "verificationEvidenceIds": [],
+        "closureReviewIds": [],
+        "status": "TRIAGED",
+        "duplicateOf": null,
+        "rejectionReason": null,
+        "exception": null
+      }
+    },
+    {
+      "kind": "finding",
+      "body": {
+        "id": "F-PU30-17",
+        "title": "observeAssignment crashes on history-less record; admitAssignment never checks asg.id",
+        "state": {
+          "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+          "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+          "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+          "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+        },
+        "severity": "Nit",
+        "classification": "REAL_DEFECT",
+        "actionable": true,
+        "reachability": "SUPPORTED_BOUNDARY",
+        "locations": [
+          {
+            "path": "scripts/qa/prevention.mjs",
+            "symbolOrSection": "observeAssignment:156",
+            "revision": "68621987",
+            "basis": "SOURCE"
+          }
+        ],
+        "discoveredBy": "REV-A sealed reviewer (run_subagent:ca27c584)",
+        "invariantIds": [
+          "I-SLOT-RELEASE"
+        ],
+        "evidenceIds": [],
+        "counterexample": "record-injected assignment lacking history -> TypeError on observe",
+        "expected": "graceful rejection",
+        "actual": "crash, no corruption",
+        "rootCause": "missing field guards",
+        "rootClass": "implementation",
+        "subsystem": "scripts/qa",
+        "siblingSearch": [],
+        "siblingFindingIds": [],
+        "repair": "out of run scope - authorizedRepairs=docs/qa/** only; routed to a future scripts/qa repair mission",
+        "pinEvidenceIds": [],
+        "verificationEvidenceIds": [],
+        "closureReviewIds": [],
+        "status": "TRIAGED",
+        "duplicateOf": null,
+        "rejectionReason": null,
+        "exception": null
+      }
+    },
+    {
+      "kind": "finding",
+      "body": {
+        "id": "F-PU30-18",
+        "title": "Lease guard bypassed by omission; journal append precedes atomic save; expectedSeq dead code",
+        "state": {
+          "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+          "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+          "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+          "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+        },
+        "severity": "High",
+        "classification": "REAL_DEFECT",
+        "actionable": true,
+        "reachability": "SUPPORTED_BOUNDARY",
+        "locations": [
+          {
+            "path": "scripts/qa/cli.mjs",
+            "symbolOrSection": "leaseFromDir:123-127",
+            "revision": "68621987",
+            "basis": "SOURCE"
+          },
+          {
+            "path": "scripts/qa/state.mjs",
+            "symbolOrSection": "appendEvent/save:199-227",
+            "revision": "68621987",
+            "basis": "SOURCE"
+          }
+        ],
+        "discoveredBy": "REV-B sealed reviewer (run_subagent:f6a1d784)",
+        "invariantIds": [
+          "I-LEDGER-AUTHORITY"
+        ],
+        "evidenceIds": [],
+        "counterexample": "record without --lease passes checkLease trivially; crash between journal append and save -> divergence",
+        "expected": "lease proof required; journal/ledger consistent under crash",
+        "actual": "default path bypasses lease check; journal never reconciled",
+        "rootCause": "checkLease compares file to itself; no fsync; CAS unused",
+        "rootClass": "implementation",
+        "subsystem": "scripts/qa",
+        "siblingSearch": [],
+        "siblingFindingIds": [],
+        "repair": "out of run scope - authorizedRepairs=docs/qa/** only; routed to a future scripts/qa repair mission",
+        "pinEvidenceIds": [],
+        "verificationEvidenceIds": [],
+        "closureReviewIds": [],
+        "status": "TRIAGED",
+        "duplicateOf": null,
+        "rejectionReason": null,
+        "exception": null
+      }
+    },
+    {
+      "kind": "finding",
+      "body": {
+        "id": "F-PU30-19",
+        "title": "record replace-in-place unconditional: CLOSED findings / SEALED reviews silently rewritable",
+        "state": {
+          "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+          "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+          "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+          "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+        },
+        "severity": "High",
+        "classification": "REAL_DEFECT",
+        "actionable": true,
+        "reachability": "SUPPORTED_BOUNDARY",
+        "locations": [
+          {
+            "path": "scripts/qa/cli.mjs",
+            "symbolOrSection": "cmdRecord:161-170",
+            "revision": "68621987",
+            "basis": "SOURCE"
+          }
+        ],
+        "discoveredBy": "REV-B sealed reviewer (run_subagent:f6a1d784)",
+        "invariantIds": [
+          "I-LEDGER-AUTHORITY"
+        ],
+        "evidenceIds": [],
+        "counterexample": "re-record a SEALED review id -> silently replaced; event logs only applied ids",
+        "expected": "terminal records immutable; comment at :164 claims guard that does not exist",
+        "actual": "unconditional replace for any existing id",
+        "rootCause": "no lifecycle check on record path",
+        "rootClass": "implementation",
+        "subsystem": "scripts/qa",
+        "siblingSearch": [],
+        "siblingFindingIds": [
+          "F-PU30-02"
+        ],
+        "repair": "out of run scope - authorizedRepairs=docs/qa/** only; routed to a future scripts/qa repair mission",
+        "pinEvidenceIds": [],
+        "verificationEvidenceIds": [],
+        "closureReviewIds": [],
+        "status": "TRIAGED",
+        "duplicateOf": null,
+        "rejectionReason": null,
+        "exception": null
+      }
+    },
+    {
+      "kind": "finding",
+      "body": {
+        "id": "F-PU30-20",
+        "title": "Message ordering/direction unenforced: SEALED_RESULT on never-assigned requestId, traffic after CANCEL, self-addressed results",
+        "state": {
+          "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+          "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+          "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+          "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+        },
+        "severity": "Medium",
+        "classification": "REAL_DEFECT",
+        "actionable": true,
+        "reachability": "SUPPORTED_BOUNDARY",
+        "locations": [
+          {
+            "path": "scripts/qa/state.mjs",
+            "symbolOrSection": "recordMessage:229-252",
+            "revision": "68621987",
+            "basis": "SOURCE"
+          }
+        ],
+        "discoveredBy": "REV-B sealed reviewer (run_subagent:f6a1d784)",
+        "invariantIds": [
+          "I-MSG-TERMINAL"
+        ],
+        "evidenceIds": [],
+        "counterexample": "REQ-INTEG first message is SEALED_RESULT (live); SEALED_RESULT claiming sender=coordinator accepted",
+        "expected": "ASSIGN creates pending request; ordering+direction bound",
+        "actual": "no requestId-existence, ordering, or direction checks",
+        "rootCause": "recordMessage only checks id-dedup + terminal-hash conflict",
+        "rootClass": "implementation",
+        "subsystem": "scripts/qa",
+        "siblingSearch": [],
+        "siblingFindingIds": [
+          "F-PU30-03"
+        ],
+        "repair": "out of run scope - authorizedRepairs=docs/qa/** only; routed to a future scripts/qa repair mission",
+        "pinEvidenceIds": [],
+        "verificationEvidenceIds": [],
+        "closureReviewIds": [],
+        "status": "TRIAGED",
+        "duplicateOf": null,
+        "rejectionReason": null,
+        "exception": null
+      }
+    },
+    {
+      "kind": "finding",
+      "body": {
+        "id": "F-PU30-21",
+        "title": "Declared runId silently overwritten; missing state skips staleness yet can occupy terminal",
+        "state": {
+          "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+          "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+          "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+          "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+        },
+        "severity": "Medium",
+        "classification": "REAL_DEFECT",
+        "actionable": true,
+        "reachability": "SUPPORTED_BOUNDARY",
+        "locations": [
+          {
+            "path": "scripts/qa/cli.mjs",
+            "symbolOrSection": "cmdRecord:157",
+            "revision": "68621987",
+            "basis": "SOURCE"
+          },
+          {
+            "path": "scripts/qa/state.mjs",
+            "symbolOrSection": "recordMessage:231",
+            "revision": "68621987",
+            "basis": "SOURCE"
+          }
+        ],
+        "discoveredBy": "REV-B sealed reviewer (run_subagent:f6a1d784)",
+        "invariantIds": [
+          "I-MSG-TERMINAL"
+        ],
+        "evidenceIds": [],
+        "counterexample": "foreign-runId message stored under this runId; message without state bypasses staleness and can establish terminal hash",
+        "expected": "declared runId verified; absent state rejected",
+        "actual": "silent overwrite; staleness check optional",
+        "rootCause": "no verification of declared tuple fields",
+        "rootClass": "implementation",
+        "subsystem": "scripts/qa",
+        "siblingSearch": [],
+        "siblingFindingIds": [],
+        "repair": "out of run scope - authorizedRepairs=docs/qa/** only; routed to a future scripts/qa repair mission",
+        "pinEvidenceIds": [],
+        "verificationEvidenceIds": [],
+        "closureReviewIds": [],
+        "status": "TRIAGED",
+        "duplicateOf": null,
+        "rejectionReason": null,
+        "exception": null
+      }
+    },
+    {
+      "kind": "finding",
+      "body": {
+        "id": "F-PU30-22",
+        "title": "decide runs structural validation only - MC1-MC14 skipped on decision path",
+        "state": {
+          "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+          "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+          "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+          "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+        },
+        "severity": "Medium",
+        "classification": "REAL_DEFECT",
+        "actionable": true,
+        "reachability": "SUPPORTED_BOUNDARY",
+        "locations": [
+          {
+            "path": "scripts/qa/cli.mjs",
+            "symbolOrSection": "cmdDecide:205",
+            "revision": "68621987",
+            "basis": "SOURCE"
+          }
+        ],
+        "discoveredBy": "REV-B sealed reviewer (run_subagent:f6a1d784)",
+        "invariantIds": [
+          "I-LEDGER-AUTHORITY"
+        ],
+        "evidenceIds": [],
+        "counterexample": "decide succeeds on ledger with broken event chain or missing payload files",
+        "expected": "outcome written only over integrity-checked ledger",
+        "actual": "validateStructure only; full validate is separate manual gate",
+        "rootCause": "decide skips machine checks",
+        "rootClass": "implementation",
+        "subsystem": "scripts/qa",
+        "siblingSearch": [],
+        "siblingFindingIds": [],
+        "repair": "out of run scope - authorizedRepairs=docs/qa/** only; routed to a future scripts/qa repair mission",
+        "pinEvidenceIds": [],
+        "verificationEvidenceIds": [],
+        "closureReviewIds": [],
+        "status": "TRIAGED",
+        "duplicateOf": null,
+        "rejectionReason": null,
+        "exception": null
+      }
+    },
+    {
+      "kind": "finding",
+      "body": {
+        "id": "F-PU30-23",
+        "title": "Second SEALED_RESULT with new id + same payloadHash stored -> two terminal records per requestId",
+        "state": {
+          "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+          "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+          "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+          "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+        },
+        "severity": "Low",
+        "classification": "REAL_DEFECT",
+        "actionable": true,
+        "reachability": "SUPPORTED_BOUNDARY",
+        "locations": [
+          {
+            "path": "scripts/qa/state.mjs",
+            "symbolOrSection": "recordMessage:243-250",
+            "revision": "68621987",
+            "basis": "SOURCE"
+          }
+        ],
+        "discoveredBy": "REV-B sealed reviewer (run_subagent:f6a1d784)",
+        "invariantIds": [
+          "I-MSG-TERMINAL"
+        ],
+        "evidenceIds": [],
+        "counterexample": "dup replay with different message id stored -> requestId has two terminals",
+        "expected": "identical replay idempotent only with same id",
+        "actual": "stored; bounded impact since no consumer reads messages",
+        "rootCause": "terminal check keyed on requestId+kind+hash not id-set",
+        "rootClass": "implementation",
+        "subsystem": "scripts/qa",
+        "siblingSearch": [],
+        "siblingFindingIds": [],
+        "repair": "out of run scope - authorizedRepairs=docs/qa/** only; routed to a future scripts/qa repair mission",
+        "pinEvidenceIds": [],
+        "verificationEvidenceIds": [],
+        "closureReviewIds": [],
+        "status": "TRIAGED",
+        "duplicateOf": null,
+        "rejectionReason": null,
+        "exception": null
+      }
+    },
+    {
+      "kind": "finding",
+      "body": {
+        "id": "F-PU30-24",
+        "title": "Hardening: no fsync on save; mixed-kind batch events mislabeled; empty batch emits no-op event; --run accepts absolute paths",
+        "state": {
+          "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+          "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+          "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+          "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+        },
+        "severity": "Nit",
+        "classification": "REAL_DEFECT",
+        "actionable": true,
+        "reachability": "SUPPORTED_BOUNDARY",
+        "locations": [
+          {
+            "path": "scripts/qa/state.mjs",
+            "symbolOrSection": "saveLedgerAtomic:163-168",
+            "revision": "68621987",
+            "basis": "SOURCE"
+          },
+          {
+            "path": "scripts/qa/cli.mjs",
+            "symbolOrSection": "cmdRecord:174",
+            "revision": "68621987",
+            "basis": "SOURCE"
+          }
+        ],
+        "discoveredBy": "REV-B sealed reviewer (run_subagent:f6a1d784)",
+        "invariantIds": [
+          "I-LEDGER-AUTHORITY"
+        ],
+        "evidenceIds": [],
+        "counterexample": "batch event kind from records[0] only; {records:[]} appends EVIDENCE event",
+        "expected": "consistent journalling",
+        "actual": "minor journalling/robustness gaps",
+        "rootCause": "cosmetic implementation gaps",
+        "rootClass": "implementation",
+        "subsystem": "scripts/qa",
+        "siblingSearch": [],
+        "siblingFindingIds": [],
+        "repair": "out of run scope - authorizedRepairs=docs/qa/** only; routed to a future scripts/qa repair mission",
+        "pinEvidenceIds": [],
+        "verificationEvidenceIds": [],
+        "closureReviewIds": [],
+        "status": "TRIAGED",
+        "duplicateOf": null,
+        "rejectionReason": null,
+        "exception": null
+      }
+    },
+    {
+      "kind": "finding",
+      "body": {
+        "id": "F-PU30-25",
+        "title": "reviewer duplicate of F-PU30-02",
+        "state": {
+          "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+          "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+          "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+          "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+        },
+        "severity": "Medium",
+        "classification": "REAL_DEFECT",
+        "actionable": false,
+        "reachability": "SUPPORTED_BOUNDARY",
+        "locations": [],
+        "discoveredBy": "REV-A sealed reviewer (run_subagent:ca27c584)",
+        "invariantIds": [],
+        "evidenceIds": [],
+        "counterexample": "see F-PU30-02",
+        "expected": "",
+        "actual": "reviewer independently rediscovered F-PU30-02 (corroboration)",
+        "rootCause": "",
+        "rootClass": null,
+        "subsystem": "scripts/qa",
+        "siblingSearch": [],
+        "siblingFindingIds": [
+          "F-PU30-02"
+        ],
+        "repair": null,
+        "pinEvidenceIds": [],
+        "verificationEvidenceIds": [],
+        "closureReviewIds": [],
+        "status": "DUPLICATE_LINKED",
+        "duplicateOf": "F-PU30-02",
+        "rejectionReason": null,
+        "exception": null
+      }
+    },
+    {
+      "kind": "finding",
+      "body": {
+        "id": "F-PU30-26",
+        "title": "reviewer duplicate of F-PU30-01",
+        "state": {
+          "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+          "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+          "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+          "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+        },
+        "severity": "Medium",
+        "classification": "REAL_DEFECT",
+        "actionable": false,
+        "reachability": "SUPPORTED_BOUNDARY",
+        "locations": [],
+        "discoveredBy": "REV-B sealed reviewer (run_subagent:f6a1d784)",
+        "invariantIds": [],
+        "evidenceIds": [],
+        "counterexample": "see F-PU30-01",
+        "expected": "",
+        "actual": "reviewer independently rediscovered F-PU30-01 (corroboration)",
+        "rootCause": "",
+        "rootClass": null,
+        "subsystem": "scripts/qa",
+        "siblingSearch": [],
+        "siblingFindingIds": [
+          "F-PU30-01"
+        ],
+        "repair": null,
+        "pinEvidenceIds": [],
+        "verificationEvidenceIds": [],
+        "closureReviewIds": [],
+        "status": "DUPLICATE_LINKED",
+        "duplicateOf": "F-PU30-01",
+        "rejectionReason": null,
+        "exception": null
+      }
+    },
+    {
+      "kind": "coverage",
+      "body": {
+        "id": "COV-CAP-REV",
+        "invariantId": "I-SLOT-CAPACITY",
+        "surface": "INDEPENDENT_REVIEW",
+        "attackIds": [],
+        "taxonomyIds": [],
+        "applicability": "REQUIRED",
+        "reason": "sealed reviewer R1 covers the slot law",
+        "evidenceIds": [],
+        "reviewerIds": [
+          "REV-A"
+        ],
+        "status": "SATISFIED",
+        "weakProtection": false
+      }
+    },
+    {
+      "kind": "coverage",
+      "body": {
+        "id": "COV-REL-REV",
+        "invariantId": "I-SLOT-RELEASE",
+        "surface": "INDEPENDENT_REVIEW",
+        "attackIds": [],
+        "taxonomyIds": [],
+        "applicability": "REQUIRED",
+        "reason": "sealed reviewer R1/R4",
+        "evidenceIds": [],
+        "reviewerIds": [
+          "REV-A"
+        ],
+        "status": "SATISFIED",
+        "weakProtection": false
+      }
+    },
+    {
+      "kind": "coverage",
+      "body": {
+        "id": "COV-BIND-REV",
+        "invariantId": "I-AGENT-BINDING",
+        "surface": "INDEPENDENT_REVIEW",
+        "attackIds": [],
+        "taxonomyIds": [],
+        "applicability": "REQUIRED",
+        "reason": "reviewer attestations of fresh context + no prior findings",
+        "evidenceIds": [],
+        "reviewerIds": [
+          "REV-A"
+        ],
+        "status": "SATISFIED",
+        "weakProtection": false
+      }
+    },
+    {
+      "kind": "coverage",
+      "body": {
+        "id": "COV-MSG-REV",
+        "invariantId": "I-MSG-TERMINAL",
+        "surface": "INDEPENDENT_REVIEW",
+        "attackIds": [],
+        "taxonomyIds": [],
+        "applicability": "REQUIRED",
+        "reason": "sealed reviewer R2",
+        "evidenceIds": [],
+        "reviewerIds": [
+          "REV-B"
+        ],
+        "status": "SATISFIED",
+        "weakProtection": false
+      }
+    },
+    {
+      "kind": "coverage",
+      "body": {
+        "id": "COV-LED-REV",
+        "invariantId": "I-LEDGER-AUTHORITY",
+        "surface": "INDEPENDENT_REVIEW",
+        "attackIds": [],
+        "taxonomyIds": [],
+        "applicability": "REQUIRED",
+        "reason": "sealed reviewer R5 journal/lease audit",
+        "evidenceIds": [],
+        "reviewerIds": [
+          "REV-B"
+        ],
+        "status": "SATISFIED",
+        "weakProtection": false
+      }
+    },
+    {
+      "kind": "assignment",
+      "body": {
+        "id": "ASG-R6",
+        "parentId": "REQ-R6-SLOT",
+        "capacityScope": "worker",
+        "inputBundleHash": "843c3cf99e3f35f40beafa24fa2ca3e6d09f7b8f64f3b284d0b9b3befd597637",
+        "dependencies": [],
+        "requiredCapabilities": [
+          "read-only repo access"
+        ],
+        "writeSurface": [],
+        "readiness": "READY",
+        "status": "RESERVED",
+        "reservedAt": "2026-09-27T16:05:43.344Z",
+        "observedRuntimeId": "run_subagent:ca27c584",
+        "releaseEvidence": null,
+        "resultRef": "MSG-SEALED-R6",
+        "timeoutState": null,
+        "history": [
+          {
+            "at": "2026-09-27T16:05:43.343Z",
+            "from": "QUEUED",
+            "to": "RESERVED",
+            "reason": "admitted at 2/5 (incl. external 1)"
+          }
+        ]
+      }
+    },
+    {
+      "kind": "assignment",
+      "body": {
+        "id": "ASG-R7",
+        "parentId": "REQ-R7-MSGLED",
+        "capacityScope": "worker",
+        "inputBundleHash": "90705113a194b993c1b04fdb64d2b68ccfadbb0180f9dc561ba66268c5035897",
+        "dependencies": [],
+        "requiredCapabilities": [
+          "read-only repo access"
+        ],
+        "writeSurface": [],
+        "readiness": "READY",
+        "status": "RESERVED",
+        "reservedAt": "2026-09-27T16:05:45.161Z",
+        "observedRuntimeId": "run_subagent:f6a1d784",
+        "releaseEvidence": null,
+        "resultRef": "MSG-SEALED-R7",
+        "timeoutState": null,
+        "history": [
+          {
+            "at": "2026-09-27T16:05:45.156Z",
+            "from": "QUEUED",
+            "to": "RESERVED",
+            "reason": "admitted at 3/5 (incl. external 1)"
+          }
+        ]
+      }
+    }
+  ]
+}

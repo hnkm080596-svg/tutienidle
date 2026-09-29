@@ -1,0 +1,8 @@
+{
+  "requestId": "REQ-R3-NEEDCTX",
+  "lens": "missing-input lifecycle",
+  "files": [
+    "docs/qa/protocol/slot-scheduling-law.md"
+  ],
+  "task": "intentionally names a nonexistent required doc - expect NEED_CONTEXT"
+}

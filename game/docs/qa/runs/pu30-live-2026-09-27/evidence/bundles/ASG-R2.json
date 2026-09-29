@@ -1,0 +1,10 @@
+{
+  "requestId": "REQ-R2-MSG",
+  "lens": "message protocol integrity",
+  "files": [
+    "scripts/qa/state.mjs",
+    "scripts/qa/cli.mjs",
+    "docs/qa/protocol/agent-instructions.md"
+  ],
+  "task": "verify recordMessage dedup/terminal-conflict/stale vs section E"
+}

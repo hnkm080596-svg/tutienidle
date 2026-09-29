@@ -1,0 +1,17 @@
+{
+  "runId": "pu30-live-2026-09-27",
+  "productRoot": ".",
+  "checkout": "master @ 68621987 (post-pull)",
+  "branch": "master",
+  "base": "origin/master",
+  "head": "master",
+  "authorizedRepairs": ["docs/qa/**"],
+  "nonGoals": ["production code repair", "scripts/qa repair", "gameplay", "release", "fixed-point claim on the game"],
+  "requiredDomains": ["scripts/qa", "docs/qa/protocol"],
+  "contractPaths": ["../AGENTS.md", "docs/qa/protocol/README.md", "docs/qa/protocol/agent-instructions.md", "docs/qa/protocol/qualification.md"],
+  "attackModelPath": "attack-model.json",
+  "environmentPath": "environment.json",
+  "capacityLimit": 5,
+  "requiredReadiness": false,
+  "notes": "PU-30 qualification: exercise qa:internal schedule/message machinery against real concurrent isolated agents (run_subagent) under the 5-slot JIT law (agent-instructions.md section G). Coordinator = primary Devin session occupying 1 external slot; workers = dispatched subagent contexts. Objective is mechanism evidence, not an aggregate fixed point."
+}

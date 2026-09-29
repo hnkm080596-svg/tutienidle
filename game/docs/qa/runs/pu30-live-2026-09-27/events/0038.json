@@ -1,0 +1,23 @@
+{
+  "action": "admit",
+  "externalOccupied": 1,
+  "assignment": {
+    "id": "ASG-R7",
+    "parentId": "REQ-R7-MSGLED",
+    "capacityScope": "worker",
+    "inputBundleHash": "90705113a194b993c1b04fdb64d2b68ccfadbb0180f9dc561ba66268c5035897",
+    "dependencies": [],
+    "requiredCapabilities": [
+      "read-only repo access"
+    ],
+    "writeSurface": [],
+    "readiness": "READY",
+    "status": "QUEUED",
+    "reservedAt": null,
+    "observedRuntimeId": null,
+    "releaseEvidence": null,
+    "resultRef": null,
+    "timeoutState": null,
+    "history": []
+  }
+}

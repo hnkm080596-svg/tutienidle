@@ -1,0 +1,5 @@
+{
+  "verdict": "NEED_CONTEXT",
+  "missing": "game/docs/qa/protocol/slot-scheduling-law.md",
+  "note": "agent 49db4b21 refused to proceed without required material"
+}

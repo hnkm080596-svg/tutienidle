@@ -1,0 +1,13 @@
+npm run verify on S4 (product b84d7928774e, tree = merged master 89135530 + pin-test commit 8c6c7954)
+Exit code: 1
+  vue-tsc --build: PASS
+  vite build:    PASS (~30s)
+  vitest run:    797 files / 7117 tests pass / 4 files fail - all PRE-EXISTING on master:
+    1. combatContract.test.ts R14.4 - stale indexOf('onBattleStart()') oracle vs
+       parameterized signature; identical on master.
+    2. dynamicRegionHost.test.ts - src/dev/skill-vfx.ts constructs new Game();
+       file unchanged vs master.
+    3. i18nKeyParity.test.ts - same file uses skillVfxLab.* keys absent from locales.
+    4. PlayerPortrait.test.ts - component setup() calls usePlayerStore() (PR48);
+       test mounts without Pinia; byte-identical to master.
+  asciiComments ratchet: GREEN (post-fix)

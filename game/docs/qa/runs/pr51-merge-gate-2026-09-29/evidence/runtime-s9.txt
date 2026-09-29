@@ -1,0 +1,6 @@
+RUNTIME CHECKS on S9 (dev server :5608, Playwright-driven, same tree as snapshot)
+FE-06 nameplate home: PASS - 'Nghiep Chung' label renders (GameManager.getActivePlayerName)
+FE-06 nameplate combat: PASS - label present at expected slot
+FE-08 HUD/gourd overlap: PASS - zero overlap candidates
+FE-17 realm ceiling: PASS - mortal->qi_refining ritual commits, seeded Truc Co renders
+      'Kim Dan chua mo trong ban hien tai' ceiling note

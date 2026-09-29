@@ -1,0 +1,6 @@
+{
+  "action": "observe",
+  "assignmentId": "ASG-FORGED",
+  "observedStatus": "cancelled",
+  "evidence": "forged record cleaned via schedule-observed cancellation"
+}

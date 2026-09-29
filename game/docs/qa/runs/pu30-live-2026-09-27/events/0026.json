@@ -1,0 +1,31 @@
+{
+  "applied": [
+    "finding:F-PU30-01",
+    "finding:F-PU30-02",
+    "finding:F-PU30-03",
+    "finding:F-PU30-04",
+    "finding:F-PU30-05",
+    "finding:F-PU30-06",
+    "finding:F-PU30-07",
+    "coverage:COV-CAP-DET (updated)",
+    "coverage:COV-CAP-STATIC (updated)",
+    "coverage:COV-REL-DET (updated)",
+    "coverage:COV-REL-STATIC (updated)",
+    "coverage:COV-REL-MUT (updated)",
+    "coverage:COV-MSG-DET (updated)",
+    "coverage:COV-MSG-STATIC (updated)",
+    "coverage:COV-LED-STATIC (updated)",
+    "coverage:COV-LED-DET (updated)",
+    "attack:AT-CAP-OVERFLOW (updated)",
+    "attack:AT-CAP-NONREADY (updated)",
+    "attack:AT-REL-RESULT (updated)",
+    "attack:AT-REL-TIMEOUT (updated)",
+    "attack:AT-REL-VERIFIED (updated)",
+    "attack:AT-REL-MUTANT (updated)",
+    "attack:AT-MSG-DUP (updated)",
+    "attack:AT-MSG-CONFLICT (updated)",
+    "attack:AT-MSG-STALE (updated)",
+    "attack:AT-LEDGER-WRONGLEASE (updated)",
+    "attack:AT-NEED-CONTEXT (updated)"
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "surfaces": [
+    "stat-modifier-pipeline (TalentBuffs/TalentPassives flat-vs-percent, StatMetadata clamps, StatCalculator pooling, PassiveSystem hpBelow/hpNotBelow)",
+    "building-accrual (BuildingInstance.accrualRealmId pin, getStoredAmount/claim/getCapacity/getRatePerMinute/resolveProducesMaterialId realm resolution, save round-trip)",
+    "offline-cultivation (player.restoreFromSave segmentation via splitCultivationSpeedWindow, calculateOfflineProgress conversion, Tu Linh Tran expiry boundaries, payload idempotency)",
+    "cloud-save (SupabaseRemoteSave revision-first reconcile, updated_at tie-break, CAS PATCH revision guard, adoption of remote+1, migration 202609290001 trigger)",
+    "presentation-identity (PresentationGate.getActivePlayerName optional member, MainScene/CombatScene nameplates, combat-snapshot-reconcile label sync)",
+    "realm-ui (RealmPassiveNodes destination labels + ReleasePolicy comingSoon, RealmPanel ceiling note, i18n keys en/vi)",
+    "hud-layout (PlayerHudLayer gourd-safe offset constants)",
+    "merge-integrity (PR48 art wave x PR51 overlap: CombatScene/MainScene/PresentationGate/player.ts auto-merge semantics; PR50 deletions vs art-wave manifest references)",
+    "repo-cleanup (deleted tracked files vs remaining references; loaders/skip-lists)"
+  ],
+  "attacks": [
+    "percent->flat conversion: a rate stat with nonzero base somewhere silently changes scaling (regression vs old percent semantics)",
+    "finalDamageReductionPercent min -1: negative value reaches a consumer that assumed >=0 (invert/multiplier math)",
+    "hpNotBelow boundary: at hp == threshold exactly, both legs of Can Than pair live or neither (partition leak at boundary)",
+    "accrualRealmId absent in old save -> fallback picks current realm but capacity/material disagree with getStoredAmount (display/claim divergence)",
+    "accrualRealmId present but realm id unknown/dangling -> getRealmIndex -1 path yields NaN or wrong tier instead of soft default",
+    "claim() partial-fraction path: re-pin happens before or after rate used for fraction rollback (window reprice on remainder)",
+    "splitCultivationSpeedWindow: segment boundaries where expiresAtMs == windowStart or == windowEnd create empty/zero-time segments paying a nonzero rate",
+    "EM-02 double segmentation: save restored twice in a row within the same ms (idempotency guard bypass via different reference)",
+    "persistentTimedEffects present in save but filtered/dropped by restore whitelist before segmentation runs (buff silently ignored)",
+    "CAS PATCH: remote row deleted between GET and PATCH -> 0 rows -> 'unavailable' but local revision counter already advanced (revision divergence)",
+    "same-revision timestamp tie-break: remote updated_at NULL or unparsable -> ordering flips silently",
+    "migration trigger: updated_at server-owned but client PATCH still sends updated_at field -> trigger override vs column update conflict",
+    "getActivePlayerName absent on a non-GameManager gate impl -> 'Player' fallback on some surfaces but authored name on others (split identity)",
+    "combat-snapshot-reconcile label sync runs before sprite creation completes -> setText on stale/undefined label",
+    "RealmPassiveNodes destination labeling: node[0] label now differs from realm unlockTier's own name in any other consumer (docs/UI/tooltip assumes source realm)",
+    "RealmPanel ceiling note shows when next realm is genuinely unimplemented vs merely dormant -> misleading text on a future unlock",
+    "auto-merge of art wave: registryArmed/playerCultivationWay reads coexist with nameplate gate calls; ordering inside create() re-reads profile after my label setText (name overwritten or art overwritten)",
+    "PR50 deleted files still referenced by PR48 manifest/atlas json -> 404 texture at runtime on merged tree",
+    "localStorage revision key adoption: push success adopts remote+1 locally; next local save's revision computed from stale base -> regression"
+  ]
+}

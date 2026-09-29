@@ -1,0 +1,10 @@
+{
+  "requestId": "REQ-R4-HONESTY",
+  "lens": "forgery/trust boundary",
+  "files": [
+    "scripts/qa/cli.mjs",
+    "scripts/qa/prevention.mjs",
+    "scripts/qa/ledger.schema.json"
+  ],
+  "task": "attack honesty surface: can coordinator fabricate slot evidence; can record kind=assignment bypass admission"
+}

@@ -1,0 +1,3011 @@
+{
+  "records": [
+    {
+      "id": "I-STAT-ZEROBASE-FLAT",
+      "statement": "A modifier on a rate stat whose base is 0 must use the flat channel; percent on zero base is a dead value. finalDamageReductionPercent is signed (min -1) so designed damage-taken downsides land. hpBelow/hpNotBelow passive conditions partition disjointly at the threshold.",
+      "domain": "stats-and-talents",
+      "risk": "HIGH",
+      "sources": [
+        {
+          "path": "game/docs/qa/local-audit/combat-progression-findings.md",
+          "symbolOrSection": "CP-01",
+          "revision": "d3e7c7d4",
+          "basis": "SOURCE"
+        }
+      ],
+      "owner": {
+        "path": "game/src/core/stats/StatCalculator.ts",
+        "symbolOrSection": "runPipeline pools",
+        "revision": "d3e7c7d4",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "TalentBuffs.ts",
+        "TalentPassives.ts",
+        "StatMetadata.ts",
+        "PassiveSystem.ts",
+        "Skill.ts"
+      ],
+      "legalReaders": [
+        "StatCalculator.ts",
+        "PlayerStatAssembly.ts",
+        "CombatSystem.ts"
+      ],
+      "projections": [
+        "n/a"
+      ],
+      "caches": [
+        "n/a"
+      ],
+      "validStates": [
+        "flat modifiers on zero-base stats; signed clamps admit -1 floor"
+      ],
+      "forbiddenStates": [
+        "percent modifier on a stat whose base+flat is always 0"
+      ],
+      "preconditions": [
+        "n/a"
+      ],
+      "postconditions": [
+        "n/a"
+      ],
+      "legalTransitions": [
+        "n/a"
+      ],
+      "illegalTransitions": [
+        "n/a"
+      ],
+      "failureBehavior": "clampStatValue clamps to min/max; -2 -> -1 for finalDamageReductionPercent",
+      "atomicity": "n/a",
+      "inverseBehavior": "hpNotBelow active iff ratio >= percent; hpBelow iff ratio < percent",
+      "persistence": "n/a",
+      "migration": "n/a",
+      "lifecycle": "n/a",
+      "runtimeConsequences": [
+        "talent passives apply once live"
+      ],
+      "uiConsequences": [
+        "n/a"
+      ],
+      "oracles": [
+        "TalentsV4Wiring.test.ts asserts flat<0 + hpNotBelow condition; StatCalculator pool math"
+      ],
+      "requiredEvidenceSurfaces": [
+        "DETERMINISTIC",
+        "STATIC_SEMANTIC",
+        "INDEPENDENT_REVIEW"
+      ],
+      "taxonomyIds": [],
+      "status": "ACTIVE",
+      "body": {
+        "id": "I-STAT-ZEROBASE-FLAT",
+        "statement": "A modifier on a rate stat whose base is 0 must use the flat channel; percent on zero base is a dead value. finalDamageReductionPercent is signed (min -1) so designed damage-taken downsides land. hpBelow/hpNotBelow passive conditions partition disjointly at the threshold.",
+        "domain": "stats-and-talents",
+        "risk": "HIGH",
+        "sources": [
+          {
+            "path": "game/docs/qa/local-audit/combat-progression-findings.md",
+            "symbolOrSection": "CP-01",
+            "revision": "d3e7c7d4",
+            "basis": "SOURCE"
+          }
+        ],
+        "owner": {
+          "path": "game/src/core/stats/StatCalculator.ts",
+          "symbolOrSection": "runPipeline pools",
+          "revision": "d3e7c7d4",
+          "basis": "SOURCE"
+        },
+        "legalWriters": [
+          "TalentBuffs.ts",
+          "TalentPassives.ts",
+          "StatMetadata.ts",
+          "PassiveSystem.ts",
+          "Skill.ts"
+        ],
+        "legalReaders": [
+          "StatCalculator.ts",
+          "PlayerStatAssembly.ts",
+          "CombatSystem.ts"
+        ],
+        "projections": [
+          "n/a"
+        ],
+        "caches": [
+          "n/a"
+        ],
+        "validStates": [
+          "flat modifiers on zero-base stats; signed clamps admit -1 floor"
+        ],
+        "forbiddenStates": [
+          "percent modifier on a stat whose base+flat is always 0"
+        ],
+        "preconditions": [
+          "n/a"
+        ],
+        "postconditions": [
+          "n/a"
+        ],
+        "legalTransitions": [
+          "n/a"
+        ],
+        "illegalTransitions": [
+          "n/a"
+        ],
+        "failureBehavior": "clampStatValue clamps to min/max; -2 -> -1 for finalDamageReductionPercent",
+        "atomicity": "n/a",
+        "inverseBehavior": "hpNotBelow active iff ratio >= percent; hpBelow iff ratio < percent",
+        "persistence": "n/a",
+        "migration": "n/a",
+        "lifecycle": "n/a",
+        "runtimeConsequences": [
+          "talent passives apply once live"
+        ],
+        "uiConsequences": [
+          "n/a"
+        ],
+        "oracles": [
+          "TalentsV4Wiring.test.ts asserts flat<0 + hpNotBelow condition; StatCalculator pool math"
+        ],
+        "requiredEvidenceSurfaces": [
+          "DETERMINISTIC",
+          "STATIC_SEMANTIC",
+          "INDEPENDENT_REVIEW"
+        ],
+        "taxonomyIds": [],
+        "status": "ACTIVE"
+      },
+      "kind": "invariant"
+    },
+    {
+      "id": "I-BUILDING-ACCRUAL-PIN",
+      "statement": "A building's unclaimed accrual window prices rate/capacity/material under the realm pinned when the window opened; claim() settles under the pin, then re-pins to the current realm. Legacy saves without accrualRealmId fall back to current realm (unchanged behavior).",
+      "domain": "economy-progression",
+      "risk": "HIGH",
+      "sources": [
+        {
+          "path": "game/docs/qa/local-audit/economy-meta-findings.md",
+          "symbolOrSection": "EM-01",
+          "revision": "d3e7c7d4",
+          "basis": "SOURCE"
+        }
+      ],
+      "owner": {
+        "path": "game/src/core/building/BuildingSystem.ts",
+        "symbolOrSection": "claim/getStoredAmount",
+        "revision": "d3e7c7d4",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "BuildingSystem.ts",
+        "BuildingInstance.ts"
+      ],
+      "legalReaders": [
+        "production panels",
+        "GameManagerBuildingOps"
+      ],
+      "projections": [
+        "n/a"
+      ],
+      "caches": [
+        "n/a"
+      ],
+      "validStates": [
+        "accrualRealmId == realm of window start"
+      ],
+      "forbiddenStates": [
+        "accrued backlog repriced at a newer realm on claim"
+      ],
+      "preconditions": [
+        "n/a"
+      ],
+      "postconditions": [
+        "after claim, accrualRealmId == current realm"
+      ],
+      "legalTransitions": [
+        "pin moves at claim only"
+      ],
+      "illegalTransitions": [
+        "pin changes mid-window without claim"
+      ],
+      "failureBehavior": "unknown realm id -> index -1 -> default rate/tier 1 (soft)",
+      "atomicity": "claim computes remainder under pinned rate before re-pin",
+      "inverseBehavior": "n/a",
+      "persistence": "accrualRealmId round-trips through structuredClone save/load",
+      "migration": "absent field -> current realm fallback",
+      "lifecycle": "n/a",
+      "runtimeConsequences": [
+        "n/a"
+      ],
+      "uiConsequences": [
+        "capacity/rate display equals what claim pays"
+      ],
+      "oracles": [
+        "BuildingSystem.test.ts EM-01 cases: breakthrough mid-window, claim re-pin, legacy fallback"
+      ],
+      "requiredEvidenceSurfaces": [
+        "DETERMINISTIC",
+        "STATIC_SEMANTIC",
+        "INDEPENDENT_REVIEW"
+      ],
+      "taxonomyIds": [],
+      "status": "ACTIVE",
+      "body": {
+        "id": "I-BUILDING-ACCRUAL-PIN",
+        "statement": "A building's unclaimed accrual window prices rate/capacity/material under the realm pinned when the window opened; claim() settles under the pin, then re-pins to the current realm. Legacy saves without accrualRealmId fall back to current realm (unchanged behavior).",
+        "domain": "economy-progression",
+        "risk": "HIGH",
+        "sources": [
+          {
+            "path": "game/docs/qa/local-audit/economy-meta-findings.md",
+            "symbolOrSection": "EM-01",
+            "revision": "d3e7c7d4",
+            "basis": "SOURCE"
+          }
+        ],
+        "owner": {
+          "path": "game/src/core/building/BuildingSystem.ts",
+          "symbolOrSection": "claim/getStoredAmount",
+          "revision": "d3e7c7d4",
+          "basis": "SOURCE"
+        },
+        "legalWriters": [
+          "BuildingSystem.ts",
+          "BuildingInstance.ts"
+        ],
+        "legalReaders": [
+          "production panels",
+          "GameManagerBuildingOps"
+        ],
+        "projections": [
+          "n/a"
+        ],
+        "caches": [
+          "n/a"
+        ],
+        "validStates": [
+          "accrualRealmId == realm of window start"
+        ],
+        "forbiddenStates": [
+          "accrued backlog repriced at a newer realm on claim"
+        ],
+        "preconditions": [
+          "n/a"
+        ],
+        "postconditions": [
+          "after claim, accrualRealmId == current realm"
+        ],
+        "legalTransitions": [
+          "pin moves at claim only"
+        ],
+        "illegalTransitions": [
+          "pin changes mid-window without claim"
+        ],
+        "failureBehavior": "unknown realm id -> index -1 -> default rate/tier 1 (soft)",
+        "atomicity": "claim computes remainder under pinned rate before re-pin",
+        "inverseBehavior": "n/a",
+        "persistence": "accrualRealmId round-trips through structuredClone save/load",
+        "migration": "absent field -> current realm fallback",
+        "lifecycle": "n/a",
+        "runtimeConsequences": [
+          "n/a"
+        ],
+        "uiConsequences": [
+          "capacity/rate display equals what claim pays"
+        ],
+        "oracles": [
+          "BuildingSystem.test.ts EM-01 cases: breakthrough mid-window, claim re-pin, legacy fallback"
+        ],
+        "requiredEvidenceSurfaces": [
+          "DETERMINISTIC",
+          "STATIC_SEMANTIC",
+          "INDEPENDENT_REVIEW"
+        ],
+        "taxonomyIds": [],
+        "status": "ACTIVE"
+      },
+      "kind": "invariant"
+    },
+    {
+      "id": "I-OFFLINE-BUFF-SEGMENT",
+      "statement": "Offline cultivation splits the save->now window at persistent-effect expiry boundaries; each segment converts seconds via calculateOfflineProgress at its own live percent. A buff expiring mid-window stops paying at expiry. Repeated restores of an identical payload are no-ops.",
+      "domain": "time-offline",
+      "risk": "HIGH",
+      "sources": [
+        {
+          "path": "game/docs/qa/local-audit/economy-meta-findings.md",
+          "symbolOrSection": "EM-02",
+          "revision": "d3e7c7d4",
+          "basis": "SOURCE"
+        }
+      ],
+      "owner": {
+        "path": "game/src/stores/player.ts",
+        "symbolOrSection": "restoreFromSave offline block",
+        "revision": "d3e7c7d4",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "player.ts restoreFromSave",
+        "TuLinhTranBalance.ts"
+      ],
+      "legalReaders": [
+        "OfflineProgressSystem",
+        "cultivation consumers"
+      ],
+      "projections": [
+        "n/a"
+      ],
+      "caches": [
+        "n/a"
+      ],
+      "validStates": [
+        "sum(segment seconds) == window"
+      ],
+      "forbiddenStates": [
+        "boosted-rate x whole window when buff expired mid-window"
+      ],
+      "preconditions": [
+        "persistentTimedEffects is an array (shape gate enforced)"
+      ],
+      "postconditions": [
+        "lastSavedAt advances to now"
+      ],
+      "legalTransitions": [
+        "expiresAtMs inside window creates a boundary"
+      ],
+      "illegalTransitions": [
+        "effect with expiresAtMs <= start still pays"
+      ],
+      "failureBehavior": "calculateOfflineProgress clamps negative/NaN seconds",
+      "atomicity": "n/a",
+      "inverseBehavior": "no effects -> single unbuffed segment",
+      "persistence": "lastSavedAt is the dedup authority",
+      "migration": "n/a",
+      "lifecycle": "n/a",
+      "runtimeConsequences": [
+        "n/a"
+      ],
+      "uiConsequences": [
+        "offline summary shows actual post-cap amount"
+      ],
+      "oracles": [
+        "TuLinhTranBalance.test.ts segment boundaries; player.restoreFromSave.test.ts EM-02 cases"
+      ],
+      "requiredEvidenceSurfaces": [
+        "DETERMINISTIC",
+        "STATIC_SEMANTIC",
+        "INDEPENDENT_REVIEW"
+      ],
+      "taxonomyIds": [],
+      "status": "ACTIVE",
+      "body": {
+        "id": "I-OFFLINE-BUFF-SEGMENT",
+        "statement": "Offline cultivation splits the save->now window at persistent-effect expiry boundaries; each segment converts seconds via calculateOfflineProgress at its own live percent. A buff expiring mid-window stops paying at expiry. Repeated restores of an identical payload are no-ops.",
+        "domain": "time-offline",
+        "risk": "HIGH",
+        "sources": [
+          {
+            "path": "game/docs/qa/local-audit/economy-meta-findings.md",
+            "symbolOrSection": "EM-02",
+            "revision": "d3e7c7d4",
+            "basis": "SOURCE"
+          }
+        ],
+        "owner": {
+          "path": "game/src/stores/player.ts",
+          "symbolOrSection": "restoreFromSave offline block",
+          "revision": "d3e7c7d4",
+          "basis": "SOURCE"
+        },
+        "legalWriters": [
+          "player.ts restoreFromSave",
+          "TuLinhTranBalance.ts"
+        ],
+        "legalReaders": [
+          "OfflineProgressSystem",
+          "cultivation consumers"
+        ],
+        "projections": [
+          "n/a"
+        ],
+        "caches": [
+          "n/a"
+        ],
+        "validStates": [
+          "sum(segment seconds) == window"
+        ],
+        "forbiddenStates": [
+          "boosted-rate x whole window when buff expired mid-window"
+        ],
+        "preconditions": [
+          "persistentTimedEffects is an array (shape gate enforced)"
+        ],
+        "postconditions": [
+          "lastSavedAt advances to now"
+        ],
+        "legalTransitions": [
+          "expiresAtMs inside window creates a boundary"
+        ],
+        "illegalTransitions": [
+          "effect with expiresAtMs <= start still pays"
+        ],
+        "failureBehavior": "calculateOfflineProgress clamps negative/NaN seconds",
+        "atomicity": "n/a",
+        "inverseBehavior": "no effects -> single unbuffed segment",
+        "persistence": "lastSavedAt is the dedup authority",
+        "migration": "n/a",
+        "lifecycle": "n/a",
+        "runtimeConsequences": [
+          "n/a"
+        ],
+        "uiConsequences": [
+          "offline summary shows actual post-cap amount"
+        ],
+        "oracles": [
+          "TuLinhTranBalance.test.ts segment boundaries; player.restoreFromSave.test.ts EM-02 cases"
+        ],
+        "requiredEvidenceSurfaces": [
+          "DETERMINISTIC",
+          "STATIC_SEMANTIC",
+          "INDEPENDENT_REVIEW"
+        ],
+        "taxonomyIds": [],
+        "status": "ACTIVE"
+      },
+      "kind": "invariant"
+    },
+    {
+      "id": "I-CLOUD-REV-CAS",
+      "statement": "Remote reconcile orders by save_revision first (shared clock-free sequence) with updated_at only as same-revision tie-break. Pushes are CAS PATCH guarded on the just-read revision; a lost race returns 'unavailable' without regressing local data. Push revision never goes below remote+1. updated_at is server-owned via DB trigger.",
+      "domain": "save-cloud",
+      "risk": "HIGH",
+      "sources": [
+        {
+          "path": "game/docs/qa/local-audit/infra-state-findings.md",
+          "symbolOrSection": "INFRA-01/INFRA-02",
+          "revision": "d3e7c7d4",
+          "basis": "SOURCE"
+        }
+      ],
+      "owner": {
+        "path": "game/src/services/cloudSave/SupabaseRemoteSave.ts",
+        "symbolOrSection": "syncRemoteSaveOnLogin",
+        "revision": "d3e7c7d4",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "SupabaseRemoteSave.ts",
+        "migration 202609290001 trigger"
+      ],
+      "legalReaders": [
+        "CloudSaveCoordinator",
+        "useBootFlow"
+      ],
+      "projections": [
+        "n/a"
+      ],
+      "caches": [
+        "n/a"
+      ],
+      "validStates": [
+        "remote revision strictly advances on push"
+      ],
+      "forbiddenStates": [
+        "older-revision remote row resurrects via client clock skew; push overwrites a newer remote revision"
+      ],
+      "preconditions": [
+        "n/a"
+      ],
+      "postconditions": [
+        "local revision adopts remote+1 lineage after successful push"
+      ],
+      "legalTransitions": [
+        "pull when remote ahead; push when local ahead; same-rev -> timestamp tie-break"
+      ],
+      "illegalTransitions": [
+        "push writes revision <= remote"
+      ],
+      "failureBehavior": "CAS 0 rows -> 'unavailable', local state intact",
+      "atomicity": "single PATCH statement is the CAS",
+      "inverseBehavior": "n/a",
+      "persistence": "localStorage revision key adopts pushed revision",
+      "migration": "trigger makes updated_at server-owned",
+      "lifecycle": "n/a",
+      "runtimeConsequences": [
+        "n/a"
+      ],
+      "uiConsequences": [
+        "conflict -> unavailable surfaces a retry, not silent loss"
+      ],
+      "oracles": [
+        "SupabaseRemoteSave.test.ts: CAS PATCH shape, zero-row conflict, revision-adopt, clock-skew pull"
+      ],
+      "requiredEvidenceSurfaces": [
+        "DETERMINISTIC",
+        "STATIC_SEMANTIC",
+        "INDEPENDENT_REVIEW"
+      ],
+      "taxonomyIds": [],
+      "status": "ACTIVE",
+      "body": {
+        "id": "I-CLOUD-REV-CAS",
+        "statement": "Remote reconcile orders by save_revision first (shared clock-free sequence) with updated_at only as same-revision tie-break. Pushes are CAS PATCH guarded on the just-read revision; a lost race returns 'unavailable' without regressing local data. Push revision never goes below remote+1. updated_at is server-owned via DB trigger.",
+        "domain": "save-cloud",
+        "risk": "HIGH",
+        "sources": [
+          {
+            "path": "game/docs/qa/local-audit/infra-state-findings.md",
+            "symbolOrSection": "INFRA-01/INFRA-02",
+            "revision": "d3e7c7d4",
+            "basis": "SOURCE"
+          }
+        ],
+        "owner": {
+          "path": "game/src/services/cloudSave/SupabaseRemoteSave.ts",
+          "symbolOrSection": "syncRemoteSaveOnLogin",
+          "revision": "d3e7c7d4",
+          "basis": "SOURCE"
+        },
+        "legalWriters": [
+          "SupabaseRemoteSave.ts",
+          "migration 202609290001 trigger"
+        ],
+        "legalReaders": [
+          "CloudSaveCoordinator",
+          "useBootFlow"
+        ],
+        "projections": [
+          "n/a"
+        ],
+        "caches": [
+          "n/a"
+        ],
+        "validStates": [
+          "remote revision strictly advances on push"
+        ],
+        "forbiddenStates": [
+          "older-revision remote row resurrects via client clock skew; push overwrites a newer remote revision"
+        ],
+        "preconditions": [
+          "n/a"
+        ],
+        "postconditions": [
+          "local revision adopts remote+1 lineage after successful push"
+        ],
+        "legalTransitions": [
+          "pull when remote ahead; push when local ahead; same-rev -> timestamp tie-break"
+        ],
+        "illegalTransitions": [
+          "push writes revision <= remote"
+        ],
+        "failureBehavior": "CAS 0 rows -> 'unavailable', local state intact",
+        "atomicity": "single PATCH statement is the CAS",
+        "inverseBehavior": "n/a",
+        "persistence": "localStorage revision key adopts pushed revision",
+        "migration": "trigger makes updated_at server-owned",
+        "lifecycle": "n/a",
+        "runtimeConsequences": [
+          "n/a"
+        ],
+        "uiConsequences": [
+          "conflict -> unavailable surfaces a retry, not silent loss"
+        ],
+        "oracles": [
+          "SupabaseRemoteSave.test.ts: CAS PATCH shape, zero-row conflict, revision-adopt, clock-skew pull"
+        ],
+        "requiredEvidenceSurfaces": [
+          "DETERMINISTIC",
+          "STATIC_SEMANTIC",
+          "INDEPENDENT_REVIEW"
+        ],
+        "taxonomyIds": [],
+        "status": "ACTIVE"
+      },
+      "kind": "invariant"
+    },
+    {
+      "id": "I-NAMEPLATE-AUTHOR",
+      "statement": "Player sprite nameplates render the authored player name obtained through the optional getActivePlayerName() reporting member; a gate without it falls back to 'Player'. The pre-created combat sprite label is synced on snapshot reconcile.",
+      "domain": "presentation-identity",
+      "risk": "STANDARD",
+      "sources": [
+        {
+          "path": "game/docs/qa/local-audit/frontend-findings.md",
+          "symbolOrSection": "FE-06",
+          "revision": "d3e7c7d4",
+          "basis": "SOURCE"
+        }
+      ],
+      "owner": {
+        "path": "game/src/core/game/GameManager.ts",
+        "symbolOrSection": "getActivePlayerName",
+        "revision": "d3e7c7d4",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "GameManager.ts (report)"
+      ],
+      "legalReaders": [
+        "MainScene.ts",
+        "CombatScene.ts",
+        "combat-snapshot-reconcile.ts"
+      ],
+      "projections": [
+        "n/a"
+      ],
+      "caches": [
+        "n/a"
+      ],
+      "validStates": [
+        "label text == activePlayer.name"
+      ],
+      "forbiddenStates": [
+        "literal 'Player' while an authored name exists"
+      ],
+      "preconditions": [
+        "n/a"
+      ],
+      "postconditions": [
+        "n/a"
+      ],
+      "legalTransitions": [
+        "reconcile updates label on each snapshot"
+      ],
+      "illegalTransitions": [
+        "n/a"
+      ],
+      "failureBehavior": "absent member -> 'Player' fallback (pre-fix behavior)",
+      "atomicity": "n/a",
+      "inverseBehavior": "n/a",
+      "persistence": "n/a",
+      "migration": "n/a",
+      "lifecycle": "n/a",
+      "runtimeConsequences": [
+        "n/a"
+      ],
+      "uiConsequences": [
+        "player sees their chosen name"
+      ],
+      "oracles": [
+        "Playwright nameplate check in verify-fixes.mjs"
+      ],
+      "requiredEvidenceSurfaces": [
+        "STATIC_SEMANTIC",
+        "RUNTIME_E2E",
+        "INDEPENDENT_REVIEW"
+      ],
+      "taxonomyIds": [],
+      "status": "ACTIVE",
+      "body": {
+        "id": "I-NAMEPLATE-AUTHOR",
+        "statement": "Player sprite nameplates render the authored player name obtained through the optional getActivePlayerName() reporting member; a gate without it falls back to 'Player'. The pre-created combat sprite label is synced on snapshot reconcile.",
+        "domain": "presentation-identity",
+        "risk": "STANDARD",
+        "sources": [
+          {
+            "path": "game/docs/qa/local-audit/frontend-findings.md",
+            "symbolOrSection": "FE-06",
+            "revision": "d3e7c7d4",
+            "basis": "SOURCE"
+          }
+        ],
+        "owner": {
+          "path": "game/src/core/game/GameManager.ts",
+          "symbolOrSection": "getActivePlayerName",
+          "revision": "d3e7c7d4",
+          "basis": "SOURCE"
+        },
+        "legalWriters": [
+          "GameManager.ts (report)"
+        ],
+        "legalReaders": [
+          "MainScene.ts",
+          "CombatScene.ts",
+          "combat-snapshot-reconcile.ts"
+        ],
+        "projections": [
+          "n/a"
+        ],
+        "caches": [
+          "n/a"
+        ],
+        "validStates": [
+          "label text == activePlayer.name"
+        ],
+        "forbiddenStates": [
+          "literal 'Player' while an authored name exists"
+        ],
+        "preconditions": [
+          "n/a"
+        ],
+        "postconditions": [
+          "n/a"
+        ],
+        "legalTransitions": [
+          "reconcile updates label on each snapshot"
+        ],
+        "illegalTransitions": [
+          "n/a"
+        ],
+        "failureBehavior": "absent member -> 'Player' fallback (pre-fix behavior)",
+        "atomicity": "n/a",
+        "inverseBehavior": "n/a",
+        "persistence": "n/a",
+        "migration": "n/a",
+        "lifecycle": "n/a",
+        "runtimeConsequences": [
+          "n/a"
+        ],
+        "uiConsequences": [
+          "player sees their chosen name"
+        ],
+        "oracles": [
+          "Playwright nameplate check in verify-fixes.mjs"
+        ],
+        "requiredEvidenceSurfaces": [
+          "STATIC_SEMANTIC",
+          "RUNTIME_E2E",
+          "INDEPENDENT_REVIEW"
+        ],
+        "taxonomyIds": [],
+        "status": "ACTIVE"
+      },
+      "kind": "invariant"
+    },
+    {
+      "id": "I-REALM-LADDER-LABELS",
+      "statement": "Realm passive nodes label the destination realm and derive comingSoon from ReleasePolicy, so the player's current realm never shows 'coming soon'. When the next realm is authored but dormant above the release ceiling, RealmPanel shows a localized explanation.",
+      "domain": "presentation-identity",
+      "risk": "STANDARD",
+      "sources": [
+        {
+          "path": "game/docs/qa/local-audit/frontend-findings.md",
+          "symbolOrSection": "FE-12/FE-17",
+          "revision": "d3e7c7d4",
+          "basis": "SOURCE"
+        }
+      ],
+      "owner": {
+        "path": "game/src/data/realm/RealmPassiveNodes.ts",
+        "symbolOrSection": "REALM_PASSIVE_NODES",
+        "revision": "d3e7c7d4",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "RealmPassiveNodes.ts",
+        "RealmPanel.vue",
+        "locales"
+      ],
+      "legalReaders": [
+        "RealmPanel.vue",
+        "useRealmStatPassives"
+      ],
+      "projections": [
+        "n/a"
+      ],
+      "caches": [
+        "n/a"
+      ],
+      "validStates": [
+        "node label == destination realm name"
+      ],
+      "forbiddenStates": [
+        "reachable realm marked comingSoon"
+      ],
+      "preconditions": [
+        "n/a"
+      ],
+      "postconditions": [
+        "n/a"
+      ],
+      "legalTransitions": [
+        "n/a"
+      ],
+      "illegalTransitions": [
+        "n/a"
+      ],
+      "failureBehavior": "missing locale key -> i18n parity guard fails",
+      "atomicity": "n/a",
+      "inverseBehavior": "n/a",
+      "persistence": "n/a",
+      "migration": "n/a",
+      "lifecycle": "n/a",
+      "runtimeConsequences": [
+        "n/a"
+      ],
+      "uiConsequences": [
+        "Truc Co players see the Kim Dan ceiling explained"
+      ],
+      "oracles": [
+        "RealmPassiveNodes.test.ts label/comingSoon assertions; verify-fe17.mjs runtime check"
+      ],
+      "requiredEvidenceSurfaces": [
+        "DETERMINISTIC",
+        "STATIC_SEMANTIC",
+        "RUNTIME_E2E",
+        "INDEPENDENT_REVIEW"
+      ],
+      "taxonomyIds": [],
+      "status": "ACTIVE",
+      "body": {
+        "id": "I-REALM-LADDER-LABELS",
+        "statement": "Realm passive nodes label the destination realm and derive comingSoon from ReleasePolicy, so the player's current realm never shows 'coming soon'. When the next realm is authored but dormant above the release ceiling, RealmPanel shows a localized explanation.",
+        "domain": "presentation-identity",
+        "risk": "STANDARD",
+        "sources": [
+          {
+            "path": "game/docs/qa/local-audit/frontend-findings.md",
+            "symbolOrSection": "FE-12/FE-17",
+            "revision": "d3e7c7d4",
+            "basis": "SOURCE"
+          }
+        ],
+        "owner": {
+          "path": "game/src/data/realm/RealmPassiveNodes.ts",
+          "symbolOrSection": "REALM_PASSIVE_NODES",
+          "revision": "d3e7c7d4",
+          "basis": "SOURCE"
+        },
+        "legalWriters": [
+          "RealmPassiveNodes.ts",
+          "RealmPanel.vue",
+          "locales"
+        ],
+        "legalReaders": [
+          "RealmPanel.vue",
+          "useRealmStatPassives"
+        ],
+        "projections": [
+          "n/a"
+        ],
+        "caches": [
+          "n/a"
+        ],
+        "validStates": [
+          "node label == destination realm name"
+        ],
+        "forbiddenStates": [
+          "reachable realm marked comingSoon"
+        ],
+        "preconditions": [
+          "n/a"
+        ],
+        "postconditions": [
+          "n/a"
+        ],
+        "legalTransitions": [
+          "n/a"
+        ],
+        "illegalTransitions": [
+          "n/a"
+        ],
+        "failureBehavior": "missing locale key -> i18n parity guard fails",
+        "atomicity": "n/a",
+        "inverseBehavior": "n/a",
+        "persistence": "n/a",
+        "migration": "n/a",
+        "lifecycle": "n/a",
+        "runtimeConsequences": [
+          "n/a"
+        ],
+        "uiConsequences": [
+          "Truc Co players see the Kim Dan ceiling explained"
+        ],
+        "oracles": [
+          "RealmPassiveNodes.test.ts label/comingSoon assertions; verify-fe17.mjs runtime check"
+        ],
+        "requiredEvidenceSurfaces": [
+          "DETERMINISTIC",
+          "STATIC_SEMANTIC",
+          "RUNTIME_E2E",
+          "INDEPENDENT_REVIEW"
+        ],
+        "taxonomyIds": [],
+        "status": "ACTIVE"
+      },
+      "kind": "invariant"
+    },
+    {
+      "id": "I-MERGE-INTEGRITY",
+      "statement": "The PR48 x PR51 auto-merge preserved both sides' semantics: armed/way registry reads coexist with getActivePlayerName call sites; PR50-deleted assets have zero live references on the merged tree including the new animated manifest.",
+      "domain": "merge-integrity",
+      "risk": "HIGH",
+      "sources": [
+        {
+          "path": "game/docs/qa/2026-09-29-pr51-aggregate-merge-gate-deep.md",
+          "symbolOrSection": "merge-integrity probes",
+          "revision": "d3e7c7d4",
+          "basis": "SOURCE"
+        }
+      ],
+      "owner": {
+        "path": "game/src/game/scenes/MainScene.ts",
+        "symbolOrSection": "merged create/profile blocks",
+        "revision": "d3e7c7d4",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "n/a - merge outcome"
+      ],
+      "legalReaders": [
+        "whole tree"
+      ],
+      "projections": [
+        "n/a"
+      ],
+      "caches": [
+        "n/a"
+      ],
+      "validStates": [
+        "both feature sets live"
+      ],
+      "forbiddenStates": [
+        "one side's call site silently dropped"
+      ],
+      "preconditions": [
+        "n/a"
+      ],
+      "postconditions": [
+        "n/a"
+      ],
+      "legalTransitions": [
+        "n/a"
+      ],
+      "illegalTransitions": [
+        "n/a"
+      ],
+      "failureBehavior": "build/typecheck + suite is the net",
+      "atomicity": "n/a",
+      "inverseBehavior": "n/a",
+      "persistence": "n/a",
+      "migration": "n/a",
+      "lifecycle": "n/a",
+      "runtimeConsequences": [
+        "n/a"
+      ],
+      "uiConsequences": [
+        "n/a"
+      ],
+      "oracles": [
+        "grep census of deleted paths; coexistence of both call sites in merged files"
+      ],
+      "requiredEvidenceSurfaces": [
+        "STATIC_SEMANTIC",
+        "DETERMINISTIC",
+        "INDEPENDENT_REVIEW"
+      ],
+      "taxonomyIds": [],
+      "status": "ACTIVE",
+      "body": {
+        "id": "I-MERGE-INTEGRITY",
+        "statement": "The PR48 x PR51 auto-merge preserved both sides' semantics: armed/way registry reads coexist with getActivePlayerName call sites; PR50-deleted assets have zero live references on the merged tree including the new animated manifest.",
+        "domain": "merge-integrity",
+        "risk": "HIGH",
+        "sources": [
+          {
+            "path": "game/docs/qa/2026-09-29-pr51-aggregate-merge-gate-deep.md",
+            "symbolOrSection": "merge-integrity probes",
+            "revision": "d3e7c7d4",
+            "basis": "SOURCE"
+          }
+        ],
+        "owner": {
+          "path": "game/src/game/scenes/MainScene.ts",
+          "symbolOrSection": "merged create/profile blocks",
+          "revision": "d3e7c7d4",
+          "basis": "SOURCE"
+        },
+        "legalWriters": [
+          "n/a - merge outcome"
+        ],
+        "legalReaders": [
+          "whole tree"
+        ],
+        "projections": [
+          "n/a"
+        ],
+        "caches": [
+          "n/a"
+        ],
+        "validStates": [
+          "both feature sets live"
+        ],
+        "forbiddenStates": [
+          "one side's call site silently dropped"
+        ],
+        "preconditions": [
+          "n/a"
+        ],
+        "postconditions": [
+          "n/a"
+        ],
+        "legalTransitions": [
+          "n/a"
+        ],
+        "illegalTransitions": [
+          "n/a"
+        ],
+        "failureBehavior": "build/typecheck + suite is the net",
+        "atomicity": "n/a",
+        "inverseBehavior": "n/a",
+        "persistence": "n/a",
+        "migration": "n/a",
+        "lifecycle": "n/a",
+        "runtimeConsequences": [
+          "n/a"
+        ],
+        "uiConsequences": [
+          "n/a"
+        ],
+        "oracles": [
+          "grep census of deleted paths; coexistence of both call sites in merged files"
+        ],
+        "requiredEvidenceSurfaces": [
+          "STATIC_SEMANTIC",
+          "DETERMINISTIC",
+          "INDEPENDENT_REVIEW"
+        ],
+        "taxonomyIds": [],
+        "status": "ACTIVE"
+      },
+      "kind": "invariant"
+    },
+    {
+      "id": "EV-VERIFY-MERGED",
+      "state": {
+        "productStateId": "f99322f89cd7be7842677d320d52865620a53380e60ef10aa117ac891287bd6c",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "producer": "coordinator",
+      "startedAt": "2026-09-29T13:27:44Z",
+      "finishedAt": "2026-09-29T13:31:35Z",
+      "commandOrMethod": "npm run verify (vue-tsc --build && vite build && vitest run) on merged aggregate",
+      "cwd": "game",
+      "exitCode": 1,
+      "result": "FAIL",
+      "artifactPath": "evidence/verify-merged.txt",
+      "artifactHash": "bf824fee52edbd73e59390e466dbf4420113af21353fc8062dc7e2a6f442efc2",
+      "inputPaths": [],
+      "inputEvidenceIds": [],
+      "invariantIds": [],
+      "claims": [
+        "type-check clean; vite build clean; vitest 7115 pass / 4 fail; every failure byte-identical pre-existing on origin/master (combatContract R14.4, dynamicRegionHost, i18nKeyParity, PlayerPortrait pinia)"
+      ],
+      "limitations": [
+        "full-suite red but no failure attributable to the branch diff"
+      ],
+      "status": "CURRENT",
+      "body": {
+        "kind": "EXECUTED_INTEGRATION",
+        "id": "EV-VERIFY-MERGED",
+        "state": {
+          "productStateId": "f99322f89cd7be7842677d320d52865620a53380e60ef10aa117ac891287bd6c",
+          "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+          "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+          "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+        },
+        "producer": "coordinator",
+        "startedAt": "2026-09-29T13:27:44Z",
+        "finishedAt": "2026-09-29T13:31:35Z",
+        "commandOrMethod": "npm run verify (vue-tsc --build && vite build && vitest run) on merged aggregate",
+        "cwd": "game",
+        "exitCode": 1,
+        "result": "FAIL",
+        "artifactPath": "evidence/verify-merged.txt",
+        "artifactHash": "bf824fee52edbd73e59390e466dbf4420113af21353fc8062dc7e2a6f442efc2",
+        "inputPaths": [],
+        "inputEvidenceIds": [],
+        "invariantIds": [],
+        "claims": [
+          "type-check clean; vite build clean; vitest 7115 pass / 4 fail; every failure byte-identical pre-existing on origin/master (combatContract R14.4, dynamicRegionHost, i18nKeyParity, PlayerPortrait pinia)"
+        ],
+        "limitations": [
+          "full-suite red but no failure attributable to the branch diff"
+        ],
+        "status": "CURRENT"
+      },
+      "kind": "evidence"
+    },
+    {
+      "id": "EV-FOCUSED",
+      "state": {
+        "productStateId": "f99322f89cd7be7842677d320d52865620a53380e60ef10aa117ac891287bd6c",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "producer": "coordinator",
+      "startedAt": "2026-09-29T13:21:22Z",
+      "finishedAt": "2026-09-29T13:22:20Z",
+      "commandOrMethod": "npx vitest run asciiComments + PlayerStatAssembly; then 6-file touched-scope rerun",
+      "cwd": "game",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/focused-tests.txt",
+      "artifactHash": "cfe81382d6ae7b3911616059224143a1707303b4b361fa3bf5b785d504297a11",
+      "inputPaths": [],
+      "inputEvidenceIds": [],
+      "invariantIds": [
+        "I-STAT-ZEROBASE-FLAT",
+        "I-BUILDING-ACCRUAL-PIN",
+        "I-OFFLINE-BUFF-SEGMENT",
+        "I-CLOUD-REV-CAS",
+        "I-REALM-LADDER-LABELS"
+      ],
+      "claims": [
+        "asciiComments ratchet clean post-fix; stat clamp repinned to -1; 83/83 touched-scope tests green"
+      ],
+      "limitations": [],
+      "status": "CURRENT",
+      "body": {
+        "kind": "EXECUTED_UNIT_STRUCTURAL",
+        "id": "EV-FOCUSED",
+        "state": {
+          "productStateId": "f99322f89cd7be7842677d320d52865620a53380e60ef10aa117ac891287bd6c",
+          "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+          "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+          "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+        },
+        "producer": "coordinator",
+        "startedAt": "2026-09-29T13:21:22Z",
+        "finishedAt": "2026-09-29T13:22:20Z",
+        "commandOrMethod": "npx vitest run asciiComments + PlayerStatAssembly; then 6-file touched-scope rerun",
+        "cwd": "game",
+        "exitCode": 0,
+        "result": "PASS",
+        "artifactPath": "evidence/focused-tests.txt",
+        "artifactHash": "cfe81382d6ae7b3911616059224143a1707303b4b361fa3bf5b785d504297a11",
+        "inputPaths": [],
+        "inputEvidenceIds": [],
+        "invariantIds": [
+          "I-STAT-ZEROBASE-FLAT",
+          "I-BUILDING-ACCRUAL-PIN",
+          "I-OFFLINE-BUFF-SEGMENT",
+          "I-CLOUD-REV-CAS",
+          "I-REALM-LADDER-LABELS"
+        ],
+        "claims": [
+          "asciiComments ratchet clean post-fix; stat clamp repinned to -1; 83/83 touched-scope tests green"
+        ],
+        "limitations": [],
+        "status": "CURRENT"
+      },
+      "kind": "evidence"
+    },
+    {
+      "id": "EV-RUNTIME",
+      "state": {
+        "productStateId": "f99322f89cd7be7842677d320d52865620a53380e60ef10aa117ac891287bd6c",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "producer": "coordinator",
+      "startedAt": "2026-09-29T12:00:00Z",
+      "finishedAt": "2026-09-29T12:30:00Z",
+      "commandOrMethod": "Playwright chromium vs vite dev server (verify-fixes.mjs, verify-fe17.mjs)",
+      "cwd": "game",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/runtime-checks.txt",
+      "artifactHash": "4044245e029d66e4734eac64a008c2571cffcea0a6bf7184776833c2cb20ff05",
+      "inputPaths": [],
+      "inputEvidenceIds": [],
+      "invariantIds": [
+        "I-NAMEPLATE-AUTHOR",
+        "I-REALM-LADDER-LABELS"
+      ],
+      "claims": [
+        "FE-06 nameplate authored name in MainScene+CombatScene; FE-08 no HUD text inside gourd footprint; FE-17 ceiling note visible at Truc Co"
+      ],
+      "limitations": [
+        "captured on the pre-master-merge branch tree; the merged surfaces' code is unchanged - coexistence re-verified by source inspection in EV-ADVERSARIAL"
+      ],
+      "status": "CURRENT",
+      "body": {
+        "kind": "EXECUTED_RUNTIME",
+        "id": "EV-RUNTIME",
+        "state": {
+          "productStateId": "f99322f89cd7be7842677d320d52865620a53380e60ef10aa117ac891287bd6c",
+          "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+          "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+          "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+        },
+        "producer": "coordinator",
+        "startedAt": "2026-09-29T12:00:00Z",
+        "finishedAt": "2026-09-29T12:30:00Z",
+        "commandOrMethod": "Playwright chromium vs vite dev server (verify-fixes.mjs, verify-fe17.mjs)",
+        "cwd": "game",
+        "exitCode": 0,
+        "result": "PASS",
+        "artifactPath": "evidence/runtime-checks.txt",
+        "artifactHash": "4044245e029d66e4734eac64a008c2571cffcea0a6bf7184776833c2cb20ff05",
+        "inputPaths": [],
+        "inputEvidenceIds": [],
+        "invariantIds": [
+          "I-NAMEPLATE-AUTHOR",
+          "I-REALM-LADDER-LABELS"
+        ],
+        "claims": [
+          "FE-06 nameplate authored name in MainScene+CombatScene; FE-08 no HUD text inside gourd footprint; FE-17 ceiling note visible at Truc Co"
+        ],
+        "limitations": [
+          "captured on the pre-master-merge branch tree; the merged surfaces' code is unchanged - coexistence re-verified by source inspection in EV-ADVERSARIAL"
+        ],
+        "status": "CURRENT"
+      },
+      "kind": "evidence"
+    },
+    {
+      "id": "EV-ADVERSARIAL",
+      "state": {
+        "productStateId": "f99322f89cd7be7842677d320d52865620a53380e60ef10aa117ac891287bd6c",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "producer": "coordinator",
+      "startedAt": "2026-09-29T12:40:00Z",
+      "finishedAt": "2026-09-29T13:20:00Z",
+      "commandOrMethod": "9 source-level falsification probes against merged code paths",
+      "cwd": "game",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/adversarial-probes.txt",
+      "artifactHash": "345db68c6e49c132cc73082d890d4d43343bb77c607d407eb5173242ddc8e641",
+      "inputPaths": [],
+      "inputEvidenceIds": [],
+      "invariantIds": [
+        "I-STAT-ZEROBASE-FLAT",
+        "I-BUILDING-ACCRUAL-PIN",
+        "I-OFFLINE-BUFF-SEGMENT",
+        "I-CLOUD-REV-CAS",
+        "I-MERGE-INTEGRITY",
+        "I-NAMEPLATE-AUTHOR"
+      ],
+      "claims": [
+        "shape gate precedes EM-02 segmentation; flat*stacks parity; CAS zero-row path; garbage realm soft fallback; restore idempotency; absent gate member fallback; claim re-pin ordering; merge coexistence; deleted-asset zero references"
+      ],
+      "limitations": [
+        "source proof, not executed reproductions"
+      ],
+      "status": "CURRENT",
+      "body": {
+        "kind": "SOURCE_PROOF",
+        "id": "EV-ADVERSARIAL",
+        "state": {
+          "productStateId": "f99322f89cd7be7842677d320d52865620a53380e60ef10aa117ac891287bd6c",
+          "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+          "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+          "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+        },
+        "producer": "coordinator",
+        "startedAt": "2026-09-29T12:40:00Z",
+        "finishedAt": "2026-09-29T13:20:00Z",
+        "commandOrMethod": "9 source-level falsification probes against merged code paths",
+        "cwd": "game",
+        "exitCode": 0,
+        "result": "PASS",
+        "artifactPath": "evidence/adversarial-probes.txt",
+        "artifactHash": "345db68c6e49c132cc73082d890d4d43343bb77c607d407eb5173242ddc8e641",
+        "inputPaths": [],
+        "inputEvidenceIds": [],
+        "invariantIds": [
+          "I-STAT-ZEROBASE-FLAT",
+          "I-BUILDING-ACCRUAL-PIN",
+          "I-OFFLINE-BUFF-SEGMENT",
+          "I-CLOUD-REV-CAS",
+          "I-MERGE-INTEGRITY",
+          "I-NAMEPLATE-AUTHOR"
+        ],
+        "claims": [
+          "shape gate precedes EM-02 segmentation; flat*stacks parity; CAS zero-row path; garbage realm soft fallback; restore idempotency; absent gate member fallback; claim re-pin ordering; merge coexistence; deleted-asset zero references"
+        ],
+        "limitations": [
+          "source proof, not executed reproductions"
+        ],
+        "status": "CURRENT"
+      },
+      "kind": "evidence"
+    },
+    {
+      "id": "F-MG-01",
+      "title": "P15 asciiComments ratchet violated by fix-commit comments (em dash/arrow/Vietnamese tokens)",
+      "state": {
+        "productStateId": "f99322f89cd7be7842677d320d52865620a53380e60ef10aa117ac891287bd6c",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/core/building/BuildingInstance.ts",
+          "symbolOrSection": "accrualRealmId comment",
+          "revision": "d3e7c7d4",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "coordinator",
+      "invariantIds": [],
+      "evidenceIds": [
+        "EV-VERIFY-MERGED"
+      ],
+      "counterexample": "57 new non-ASCII comment tokens flagged by the ratchet on first full verify",
+      "expected": "comments plain ASCII English",
+      "actual": "em dashes, arrows, Vietnamese tokens in new comments",
+      "rootCause": "coordinator authored comments in Vietnamese/mixed symbols despite P15",
+      "rootClass": "contract-comment-hygiene",
+      "subsystem": "repo-hygiene",
+      "siblingSearch": [
+        {
+          "roots": [
+            "game/src",
+            "game/*.mjs"
+          ],
+          "termsAndMethod": "ratchet output enumerated all offenders",
+          "evidenceIds": [
+            "EV-VERIFY-MERGED"
+          ],
+          "hitDispositions": [
+            "all 57 sites rewritten ASCII"
+          ],
+          "coverageLimits": []
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": "rewrote every flagged comment to ASCII English (3111ff18)",
+      "pinEvidenceIds": [
+        "EV-FOCUSED"
+      ],
+      "verificationEvidenceIds": [
+        "EV-FOCUSED"
+      ],
+      "closureReviewIds": [
+        "RV-P1-CORRECTNESS"
+      ],
+      "status": "CLOSED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "fixedInRevision": "3111ff18",
+      "closedAt": "2026-09-29T13:22:00Z",
+      "closeReason": "ratchet green on rerun",
+      "body": {
+        "id": "F-MG-01",
+        "title": "P15 asciiComments ratchet violated by fix-commit comments (em dash/arrow/Vietnamese tokens)",
+        "state": {
+          "productStateId": "f99322f89cd7be7842677d320d52865620a53380e60ef10aa117ac891287bd6c",
+          "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+          "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+          "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+        },
+        "severity": "Low",
+        "classification": "REAL_DEFECT",
+        "actionable": true,
+        "reachability": "PRODUCTION",
+        "locations": [
+          {
+            "path": "game/src/core/building/BuildingInstance.ts",
+            "symbolOrSection": "accrualRealmId comment",
+            "revision": "d3e7c7d4",
+            "basis": "SOURCE"
+          }
+        ],
+        "discoveredBy": "coordinator",
+        "invariantIds": [],
+        "evidenceIds": [
+          "EV-VERIFY-MERGED"
+        ],
+        "counterexample": "57 new non-ASCII comment tokens flagged by the ratchet on first full verify",
+        "expected": "comments plain ASCII English",
+        "actual": "em dashes, arrows, Vietnamese tokens in new comments",
+        "rootCause": "coordinator authored comments in Vietnamese/mixed symbols despite P15",
+        "rootClass": "contract-comment-hygiene",
+        "subsystem": "repo-hygiene",
+        "siblingSearch": [
+          {
+            "roots": [
+              "game/src",
+              "game/*.mjs"
+            ],
+            "termsAndMethod": "ratchet output enumerated all offenders",
+            "evidenceIds": [
+              "EV-VERIFY-MERGED"
+            ],
+            "hitDispositions": [
+              "all 57 sites rewritten ASCII"
+            ],
+            "coverageLimits": []
+          }
+        ],
+        "siblingFindingIds": [],
+        "repair": "rewrote every flagged comment to ASCII English (3111ff18)",
+        "pinEvidenceIds": [
+          "EV-FOCUSED"
+        ],
+        "verificationEvidenceIds": [
+          "EV-FOCUSED"
+        ],
+        "closureReviewIds": [
+          "RV-P1-CORRECTNESS"
+        ],
+        "status": "CLOSED",
+        "duplicateOf": null,
+        "rejectionReason": null,
+        "exception": null,
+        "fixedInRevision": "3111ff18",
+        "closedAt": "2026-09-29T13:22:00Z",
+        "closeReason": "ratchet green on rerun"
+      },
+      "kind": "finding"
+    },
+    {
+      "id": "F-MG-02",
+      "title": "PlayerStatAssembly.test pinned pre-CP-01 min (finalDamageReductionPercent -1 -> 0)",
+      "state": {
+        "productStateId": "f99322f89cd7be7842677d320d52865620a53380e60ef10aa117ac891287bd6c",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "severity": "Low",
+      "classification": "TEST_DEFECT",
+      "actionable": true,
+      "reachability": "FIXTURE_INJECTED",
+      "locations": [
+        {
+          "path": "game/src/core/player/PlayerStatAssembly.test.ts",
+          "symbolOrSection": "clamp under-min case",
+          "revision": "d3e7c7d4",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "coordinator",
+      "invariantIds": [
+        "I-STAT-ZEROBASE-FLAT"
+      ],
+      "evidenceIds": [
+        "EV-VERIFY-MERGED"
+      ],
+      "counterexample": "expect(clampStatValue('finalDamageReductionPercent', -1)).toBe(0) fails after intended min=-1",
+      "expected": "-1 (new min) then -2 -> -1",
+      "actual": "expected 0",
+      "rootCause": "test pinned the old clamp; CP-01 intentionally widened the min",
+      "rootClass": "oracle-stale-after-intended-change",
+      "subsystem": "stats",
+      "siblingSearch": [
+        {
+          "roots": [
+            "game/src"
+          ],
+          "termsAndMethod": "grep finalDamageReductionPercent clamps/tests",
+          "evidenceIds": [],
+          "hitDispositions": [
+            "only this pin found"
+          ],
+          "coverageLimits": []
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": "assert -1 plus below-min probe (3111ff18)",
+      "pinEvidenceIds": [
+        "EV-FOCUSED"
+      ],
+      "verificationEvidenceIds": [
+        "EV-FOCUSED"
+      ],
+      "closureReviewIds": [
+        "RV-P1-CORRECTNESS"
+      ],
+      "status": "CLOSED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "fixedInRevision": "3111ff18",
+      "closedAt": "2026-09-29T13:22:00Z",
+      "closeReason": "test green; behavior is the intended CP-01 semantic",
+      "body": {
+        "id": "F-MG-02",
+        "title": "PlayerStatAssembly.test pinned pre-CP-01 min (finalDamageReductionPercent -1 -> 0)",
+        "state": {
+          "productStateId": "f99322f89cd7be7842677d320d52865620a53380e60ef10aa117ac891287bd6c",
+          "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+          "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+          "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+        },
+        "severity": "Low",
+        "classification": "TEST_DEFECT",
+        "actionable": true,
+        "reachability": "FIXTURE_INJECTED",
+        "locations": [
+          {
+            "path": "game/src/core/player/PlayerStatAssembly.test.ts",
+            "symbolOrSection": "clamp under-min case",
+            "revision": "d3e7c7d4",
+            "basis": "SOURCE"
+          }
+        ],
+        "discoveredBy": "coordinator",
+        "invariantIds": [
+          "I-STAT-ZEROBASE-FLAT"
+        ],
+        "evidenceIds": [
+          "EV-VERIFY-MERGED"
+        ],
+        "counterexample": "expect(clampStatValue('finalDamageReductionPercent', -1)).toBe(0) fails after intended min=-1",
+        "expected": "-1 (new min) then -2 -> -1",
+        "actual": "expected 0",
+        "rootCause": "test pinned the old clamp; CP-01 intentionally widened the min",
+        "rootClass": "oracle-stale-after-intended-change",
+        "subsystem": "stats",
+        "siblingSearch": [
+          {
+            "roots": [
+              "game/src"
+            ],
+            "termsAndMethod": "grep finalDamageReductionPercent clamps/tests",
+            "evidenceIds": [],
+            "hitDispositions": [
+              "only this pin found"
+            ],
+            "coverageLimits": []
+          }
+        ],
+        "siblingFindingIds": [],
+        "repair": "assert -1 plus below-min probe (3111ff18)",
+        "pinEvidenceIds": [
+          "EV-FOCUSED"
+        ],
+        "verificationEvidenceIds": [
+          "EV-FOCUSED"
+        ],
+        "closureReviewIds": [
+          "RV-P1-CORRECTNESS"
+        ],
+        "status": "CLOSED",
+        "duplicateOf": null,
+        "rejectionReason": null,
+        "exception": null,
+        "fixedInRevision": "3111ff18",
+        "closedAt": "2026-09-29T13:22:00Z",
+        "closeReason": "test green; behavior is the intended CP-01 semantic"
+      },
+      "kind": "finding"
+    },
+    {
+      "id": "F-MG-03",
+      "title": "PRE-EXISTING on master: combatContract R14.4 searches 'onBattleStart()' while signature is onBattleStart(options?) - guard cannot run",
+      "state": {
+        "productStateId": "f99322f89cd7be7842677d320d52865620a53380e60ef10aa117ac891287bd6c",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "severity": "Medium",
+      "classification": "TEST_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/tests/architecture/combatContract.test.ts",
+          "symbolOrSection": "R14.4 indexOf match",
+          "revision": "51b9efdb",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "coordinator",
+      "invariantIds": [],
+      "evidenceIds": [
+        "EV-VERIFY-MERGED"
+      ],
+      "counterexample": "indexOf('\\n  onBattleStart()') == -1 on master too (identical file+signature)",
+      "expected": "guard executes the clear-check",
+      "actual": "startIdx -1 -> assertion fails",
+      "rootCause": "method signature gained options param; test oracle not updated",
+      "rootClass": "oracle-stale",
+      "subsystem": "test-infra",
+      "siblingSearch": [
+        {
+          "roots": [
+            "game/tests/architecture"
+          ],
+          "termsAndMethod": "same indexOf signature-matching pattern",
+          "evidenceIds": [],
+          "hitDispositions": [
+            "none other flagged"
+          ],
+          "coverageLimits": []
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": "none - outside this run's authorization (not introduced by PR51; needs master-side test repair)",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "OBSERVED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "body": {
+        "id": "F-MG-03",
+        "title": "PRE-EXISTING on master: combatContract R14.4 searches 'onBattleStart()' while signature is onBattleStart(options?) - guard cannot run",
+        "state": {
+          "productStateId": "f99322f89cd7be7842677d320d52865620a53380e60ef10aa117ac891287bd6c",
+          "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+          "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+          "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+        },
+        "severity": "Medium",
+        "classification": "TEST_DEFECT",
+        "actionable": true,
+        "reachability": "PRODUCTION",
+        "locations": [
+          {
+            "path": "game/tests/architecture/combatContract.test.ts",
+            "symbolOrSection": "R14.4 indexOf match",
+            "revision": "51b9efdb",
+            "basis": "SOURCE"
+          }
+        ],
+        "discoveredBy": "coordinator",
+        "invariantIds": [],
+        "evidenceIds": [
+          "EV-VERIFY-MERGED"
+        ],
+        "counterexample": "indexOf('\\n  onBattleStart()') == -1 on master too (identical file+signature)",
+        "expected": "guard executes the clear-check",
+        "actual": "startIdx -1 -> assertion fails",
+        "rootCause": "method signature gained options param; test oracle not updated",
+        "rootClass": "oracle-stale",
+        "subsystem": "test-infra",
+        "siblingSearch": [
+          {
+            "roots": [
+              "game/tests/architecture"
+            ],
+            "termsAndMethod": "same indexOf signature-matching pattern",
+            "evidenceIds": [],
+            "hitDispositions": [
+              "none other flagged"
+            ],
+            "coverageLimits": []
+          }
+        ],
+        "siblingFindingIds": [],
+        "repair": "none - outside this run's authorization (not introduced by PR51; needs master-side test repair)",
+        "pinEvidenceIds": [],
+        "verificationEvidenceIds": [],
+        "closureReviewIds": [],
+        "status": "OBSERVED",
+        "duplicateOf": null,
+        "rejectionReason": null,
+        "exception": null
+      },
+      "kind": "finding"
+    },
+    {
+      "id": "F-MG-04",
+      "title": "PRE-EXISTING on master: src/dev/skill-vfx.ts constructs new Game() outside the dynamic-region host; also uses skillVfxLab.* keys absent from locales (two guard failures)",
+      "state": {
+        "productStateId": "f99322f89cd7be7842677d320d52865620a53380e60ef10aa117ac891287bd6c",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "locations": [
+        {
+          "path": "game/src/dev/skill-vfx.ts",
+          "symbolOrSection": "dev-lab Game construction + t() keys",
+          "revision": "342b95c8",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "coordinator",
+      "invariantIds": [],
+      "evidenceIds": [
+        "EV-VERIFY-MERGED"
+      ],
+      "counterexample": "dynamicRegionHost + i18nKeyParity both fail on master identically (file unchanged by this branch)",
+      "expected": "dev lab either sanctioned-exempt or host-composed; i18n keys registered",
+      "actual": "guard violation + missing locale keys on master",
+      "rootCause": "dev lab predates/bypasses the V4 host boundary and P16 parity",
+      "rootClass": "boundary-exception-undocumented",
+      "subsystem": "dev-tooling",
+      "siblingSearch": [
+        {
+          "roots": [
+            "game/src/dev"
+          ],
+          "termsAndMethod": "dir census",
+          "evidenceIds": [],
+          "hitDispositions": [
+            "sole file"
+          ],
+          "coverageLimits": []
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": "none - outside this run's authorization (pre-existing on master; needs an explicit dev-lab boundary ruling)",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "OBSERVED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "body": {
+        "id": "F-MG-04",
+        "title": "PRE-EXISTING on master: src/dev/skill-vfx.ts constructs new Game() outside the dynamic-region host; also uses skillVfxLab.* keys absent from locales (two guard failures)",
+        "state": {
+          "productStateId": "f99322f89cd7be7842677d320d52865620a53380e60ef10aa117ac891287bd6c",
+          "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+          "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+          "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+        },
+        "severity": "Medium",
+        "classification": "REAL_DEFECT",
+        "actionable": true,
+        "reachability": "SUPPORTED_BOUNDARY",
+        "locations": [
+          {
+            "path": "game/src/dev/skill-vfx.ts",
+            "symbolOrSection": "dev-lab Game construction + t() keys",
+            "revision": "342b95c8",
+            "basis": "SOURCE"
+          }
+        ],
+        "discoveredBy": "coordinator",
+        "invariantIds": [],
+        "evidenceIds": [
+          "EV-VERIFY-MERGED"
+        ],
+        "counterexample": "dynamicRegionHost + i18nKeyParity both fail on master identically (file unchanged by this branch)",
+        "expected": "dev lab either sanctioned-exempt or host-composed; i18n keys registered",
+        "actual": "guard violation + missing locale keys on master",
+        "rootCause": "dev lab predates/bypasses the V4 host boundary and P16 parity",
+        "rootClass": "boundary-exception-undocumented",
+        "subsystem": "dev-tooling",
+        "siblingSearch": [
+          {
+            "roots": [
+              "game/src/dev"
+            ],
+            "termsAndMethod": "dir census",
+            "evidenceIds": [],
+            "hitDispositions": [
+              "sole file"
+            ],
+            "coverageLimits": []
+          }
+        ],
+        "siblingFindingIds": [],
+        "repair": "none - outside this run's authorization (pre-existing on master; needs an explicit dev-lab boundary ruling)",
+        "pinEvidenceIds": [],
+        "verificationEvidenceIds": [],
+        "closureReviewIds": [],
+        "status": "OBSERVED",
+        "duplicateOf": null,
+        "rejectionReason": null,
+        "exception": null
+      },
+      "kind": "finding"
+    },
+    {
+      "id": "F-MG-05",
+      "title": "PRE-EXISTING on master: PlayerPortrait.test mounts without Pinia while component setup() calls usePlayerStore() (PR48)",
+      "state": {
+        "productStateId": "f99322f89cd7be7842677d320d52865620a53380e60ef10aa117ac891287bd6c",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "severity": "Medium",
+      "classification": "TEST_DEFECT",
+      "actionable": true,
+      "reachability": "FIXTURE_INJECTED",
+      "locations": [
+        {
+          "path": "game/src/components/common/PlayerPortrait.test.ts",
+          "symbolOrSection": "mount without pinia",
+          "revision": "51b9efdb",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "coordinator",
+      "invariantIds": [],
+      "evidenceIds": [
+        "EV-VERIFY-MERGED"
+      ],
+      "counterexample": "component+test byte-identical to origin/master (empty diff) - failure lands with PR48, not this branch",
+      "expected": "test provides pinia or component tolerates absence",
+      "actual": "getActivePinia throws in setup",
+      "rootCause": "PR48 added usePlayerStore() to PlayerPortrait.setup without updating the test harness",
+      "rootClass": "fixture-gap-after-change",
+      "subsystem": "component-test",
+      "siblingSearch": [
+        {
+          "roots": [
+            "game/src/components"
+          ],
+          "termsAndMethod": "other tests mounting store-consuming components",
+          "evidenceIds": [],
+          "hitDispositions": [
+            "no other failures observed in suite"
+          ],
+          "coverageLimits": []
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": "none - landed via PR48 on master; outside this run's authorization to rewrite its test",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "OBSERVED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "body": {
+        "id": "F-MG-05",
+        "title": "PRE-EXISTING on master: PlayerPortrait.test mounts without Pinia while component setup() calls usePlayerStore() (PR48)",
+        "state": {
+          "productStateId": "f99322f89cd7be7842677d320d52865620a53380e60ef10aa117ac891287bd6c",
+          "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+          "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+          "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+        },
+        "severity": "Medium",
+        "classification": "TEST_DEFECT",
+        "actionable": true,
+        "reachability": "FIXTURE_INJECTED",
+        "locations": [
+          {
+            "path": "game/src/components/common/PlayerPortrait.test.ts",
+            "symbolOrSection": "mount without pinia",
+            "revision": "51b9efdb",
+            "basis": "SOURCE"
+          }
+        ],
+        "discoveredBy": "coordinator",
+        "invariantIds": [],
+        "evidenceIds": [
+          "EV-VERIFY-MERGED"
+        ],
+        "counterexample": "component+test byte-identical to origin/master (empty diff) - failure lands with PR48, not this branch",
+        "expected": "test provides pinia or component tolerates absence",
+        "actual": "getActivePinia throws in setup",
+        "rootCause": "PR48 added usePlayerStore() to PlayerPortrait.setup without updating the test harness",
+        "rootClass": "fixture-gap-after-change",
+        "subsystem": "component-test",
+        "siblingSearch": [
+          {
+            "roots": [
+              "game/src/components"
+            ],
+            "termsAndMethod": "other tests mounting store-consuming components",
+            "evidenceIds": [],
+            "hitDispositions": [
+              "no other failures observed in suite"
+            ],
+            "coverageLimits": []
+          }
+        ],
+        "siblingFindingIds": [],
+        "repair": "none - landed via PR48 on master; outside this run's authorization to rewrite its test",
+        "pinEvidenceIds": [],
+        "verificationEvidenceIds": [],
+        "closureReviewIds": [],
+        "status": "OBSERVED",
+        "duplicateOf": null,
+        "rejectionReason": null,
+        "exception": null
+      },
+      "kind": "finding"
+    },
+    {
+      "id": "F-MG-06",
+      "title": "Documented deferred audit items (frontend Lows/Nits: quest reward disclosure, kicker contrast, stage-select hints, label overflow; backend Lows: CP-02, EM-03/04, INFRA-03..08) - human-accepted deferral",
+      "state": {
+        "productStateId": "f99322f89cd7be7842677d320d52865620a53380e60ef10aa117ac891287bd6c",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/docs/qa/local-audit/",
+          "symbolOrSection": "frontend-findings.md + infra-state-findings.md",
+          "revision": "d3e7c7d4",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "coordinator",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "enumerated in the audit findings files carried by this branch",
+      "expected": "all actionable findings closed or excepted",
+      "actual": "deferred with documented reasoning",
+      "rootCause": "deliberate scope containment - low-severity UX/docs improvements parked",
+      "rootClass": "deferred-scope",
+      "subsystem": "mixed",
+      "siblingSearch": [
+        {
+          "roots": [
+            "game/docs/qa/local-audit",
+            "game/docs/ui-audit"
+          ],
+          "termsAndMethod": "findings inventory",
+          "evidenceIds": [],
+          "hitDispositions": [
+            "all items listed in docs"
+          ],
+          "coverageLimits": []
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": "deferred - documented in findings files; user ordered the merge with the deferral list disclosed",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "HUMAN_EXCEPTION",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": {
+        "humanInstructionRef": "user instruction 2026-09-29: 'ok thi merge vao master git' after the deferred Low/Nit list was disclosed in the fix summary",
+        "scope": "documented Low/Nit findings in docs/qa/local-audit and docs/ui-audit",
+        "reason": "explicit deferral accepted at merge authorization",
+        "expiresWhen": "a dedicated UX/backlog mission picks them up"
+      },
+      "body": {
+        "id": "F-MG-06",
+        "title": "Documented deferred audit items (frontend Lows/Nits: quest reward disclosure, kicker contrast, stage-select hints, label overflow; backend Lows: CP-02, EM-03/04, INFRA-03..08) - human-accepted deferral",
+        "state": {
+          "productStateId": "f99322f89cd7be7842677d320d52865620a53380e60ef10aa117ac891287bd6c",
+          "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+          "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+          "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+        },
+        "severity": "Low",
+        "classification": "REAL_DEFECT",
+        "actionable": true,
+        "reachability": "PRODUCTION",
+        "locations": [
+          {
+            "path": "game/docs/qa/local-audit/",
+            "symbolOrSection": "frontend-findings.md + infra-state-findings.md",
+            "revision": "d3e7c7d4",
+            "basis": "SOURCE"
+          }
+        ],
+        "discoveredBy": "coordinator",
+        "invariantIds": [],
+        "evidenceIds": [],
+        "counterexample": "enumerated in the audit findings files carried by this branch",
+        "expected": "all actionable findings closed or excepted",
+        "actual": "deferred with documented reasoning",
+        "rootCause": "deliberate scope containment - low-severity UX/docs improvements parked",
+        "rootClass": "deferred-scope",
+        "subsystem": "mixed",
+        "siblingSearch": [
+          {
+            "roots": [
+              "game/docs/qa/local-audit",
+              "game/docs/ui-audit"
+            ],
+            "termsAndMethod": "findings inventory",
+            "evidenceIds": [],
+            "hitDispositions": [
+              "all items listed in docs"
+            ],
+            "coverageLimits": []
+          }
+        ],
+        "siblingFindingIds": [],
+        "repair": "deferred - documented in findings files; user ordered the merge with the deferral list disclosed",
+        "pinEvidenceIds": [],
+        "verificationEvidenceIds": [],
+        "closureReviewIds": [],
+        "status": "HUMAN_EXCEPTION",
+        "duplicateOf": null,
+        "rejectionReason": null,
+        "exception": {
+          "humanInstructionRef": "user instruction 2026-09-29: 'ok thi merge vao master git' after the deferred Low/Nit list was disclosed in the fix summary",
+          "scope": "documented Low/Nit findings in docs/qa/local-audit and docs/ui-audit",
+          "reason": "explicit deferral accepted at merge authorization",
+          "expiresWhen": "a dedicated UX/backlog mission picks them up"
+        }
+      },
+      "kind": "finding"
+    },
+    {
+      "id": "RV-P1-CORRECTNESS",
+      "state": {
+        "productStateId": "f99322f89cd7be7842677d320d52865620a53380e60ef10aa117ac891287bd6c",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "round": 1,
+      "phase": "CORRECTNESS",
+      "reviewerId": "coordinator",
+      "contextId": "primary-context",
+      "model": "swe-2-max",
+      "role": "COORDINATOR_SELF_REVIEW",
+      "inputBundleHash": "a54b87ca69e944a29c6330274283723260001b8dd81e422a5779ba3e2915c04b",
+      "priorFindingsVisible": true,
+      "accessLimitations": [
+        "same-context review - no independence credit"
+      ],
+      "startedAt": "2026-09-29T13:00:00Z",
+      "sealedAt": "2026-09-29T13:35:00Z",
+      "previousPhaseReviewId": null,
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-VERIFY-MERGED",
+        "EV-FOCUSED",
+        "EV-ADVERSARIAL"
+      ],
+      "findingIds": [
+        "F-MG-01",
+        "F-MG-02"
+      ],
+      "novelAttackIds": [],
+      "status": "SEALED",
+      "body": {
+        "id": "RV-P1-CORRECTNESS",
+        "state": {
+          "productStateId": "f99322f89cd7be7842677d320d52865620a53380e60ef10aa117ac891287bd6c",
+          "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+          "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+          "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+        },
+        "round": 1,
+        "phase": "CORRECTNESS",
+        "reviewerId": "coordinator",
+        "contextId": "primary-context",
+        "model": "swe-2-max",
+        "role": "COORDINATOR_SELF_REVIEW",
+        "inputBundleHash": "a54b87ca69e944a29c6330274283723260001b8dd81e422a5779ba3e2915c04b",
+        "priorFindingsVisible": true,
+        "accessLimitations": [
+          "same-context review - no independence credit"
+        ],
+        "startedAt": "2026-09-29T13:00:00Z",
+        "sealedAt": "2026-09-29T13:35:00Z",
+        "previousPhaseReviewId": null,
+        "reviewedAfterPreviousFixes": true,
+        "coverageIds": [],
+        "evidenceIds": [
+          "EV-VERIFY-MERGED",
+          "EV-FOCUSED",
+          "EV-ADVERSARIAL"
+        ],
+        "findingIds": [
+          "F-MG-01",
+          "F-MG-02"
+        ],
+        "novelAttackIds": [],
+        "status": "SEALED"
+      },
+      "kind": "review"
+    },
+    {
+      "id": "RV-P2-AUTHORITY",
+      "state": {
+        "productStateId": "f99322f89cd7be7842677d320d52865620a53380e60ef10aa117ac891287bd6c",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "round": 1,
+      "phase": "AUTHORITY",
+      "reviewerId": "coordinator",
+      "contextId": "primary-context",
+      "model": "swe-2-max",
+      "role": "COORDINATOR_SELF_REVIEW",
+      "inputBundleHash": "b01825a48733c9685991cefdfb5192bc3a99ffd2a56c761bfadae4e57b9eb5b0",
+      "priorFindingsVisible": true,
+      "accessLimitations": [
+        "same-context review - no independence credit"
+      ],
+      "startedAt": "2026-09-29T13:35:00Z",
+      "sealedAt": "2026-09-29T13:45:00Z",
+      "previousPhaseReviewId": "RV-P1-CORRECTNESS",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-ADVERSARIAL"
+      ],
+      "findingIds": [],
+      "novelAttackIds": [],
+      "status": "SEALED",
+      "body": {
+        "id": "RV-P2-AUTHORITY",
+        "state": {
+          "productStateId": "f99322f89cd7be7842677d320d52865620a53380e60ef10aa117ac891287bd6c",
+          "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+          "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+          "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+        },
+        "round": 1,
+        "phase": "AUTHORITY",
+        "reviewerId": "coordinator",
+        "contextId": "primary-context",
+        "model": "swe-2-max",
+        "role": "COORDINATOR_SELF_REVIEW",
+        "inputBundleHash": "b01825a48733c9685991cefdfb5192bc3a99ffd2a56c761bfadae4e57b9eb5b0",
+        "priorFindingsVisible": true,
+        "accessLimitations": [
+          "same-context review - no independence credit"
+        ],
+        "startedAt": "2026-09-29T13:35:00Z",
+        "sealedAt": "2026-09-29T13:45:00Z",
+        "previousPhaseReviewId": "RV-P1-CORRECTNESS",
+        "reviewedAfterPreviousFixes": true,
+        "coverageIds": [],
+        "evidenceIds": [
+          "EV-ADVERSARIAL"
+        ],
+        "findingIds": [],
+        "novelAttackIds": [],
+        "status": "SEALED"
+      },
+      "kind": "review"
+    },
+    {
+      "id": "RV-P3-INTEGRATION",
+      "state": {
+        "productStateId": "f99322f89cd7be7842677d320d52865620a53380e60ef10aa117ac891287bd6c",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "round": 1,
+      "phase": "INTEGRATION",
+      "reviewerId": "coordinator",
+      "contextId": "primary-context",
+      "model": "swe-2-max",
+      "role": "COORDINATOR_SELF_REVIEW",
+      "inputBundleHash": "55a736a760fac98ed5bc9e4c0b860eab21252807d21e443faa2a3485d9d72eec",
+      "priorFindingsVisible": true,
+      "accessLimitations": [
+        "same-context review - no independence credit"
+      ],
+      "startedAt": "2026-09-29T13:45:00Z",
+      "sealedAt": "2026-09-29T14:00:00Z",
+      "previousPhaseReviewId": "RV-P2-AUTHORITY",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-ADVERSARIAL",
+        "EV-RUNTIME"
+      ],
+      "findingIds": [
+        "F-MG-03",
+        "F-MG-04",
+        "F-MG-05"
+      ],
+      "novelAttackIds": [],
+      "status": "SEALED",
+      "body": {
+        "id": "RV-P3-INTEGRATION",
+        "state": {
+          "productStateId": "f99322f89cd7be7842677d320d52865620a53380e60ef10aa117ac891287bd6c",
+          "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+          "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+          "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+        },
+        "round": 1,
+        "phase": "INTEGRATION",
+        "reviewerId": "coordinator",
+        "contextId": "primary-context",
+        "model": "swe-2-max",
+        "role": "COORDINATOR_SELF_REVIEW",
+        "inputBundleHash": "55a736a760fac98ed5bc9e4c0b860eab21252807d21e443faa2a3485d9d72eec",
+        "priorFindingsVisible": true,
+        "accessLimitations": [
+          "same-context review - no independence credit"
+        ],
+        "startedAt": "2026-09-29T13:45:00Z",
+        "sealedAt": "2026-09-29T14:00:00Z",
+        "previousPhaseReviewId": "RV-P2-AUTHORITY",
+        "reviewedAfterPreviousFixes": true,
+        "coverageIds": [],
+        "evidenceIds": [
+          "EV-ADVERSARIAL",
+          "EV-RUNTIME"
+        ],
+        "findingIds": [
+          "F-MG-03",
+          "F-MG-04",
+          "F-MG-05"
+        ],
+        "novelAttackIds": [],
+        "status": "SEALED"
+      },
+      "kind": "review"
+    },
+    {
+      "id": "CYC-P5-1",
+      "state": {
+        "productStateId": "f99322f89cd7be7842677d320d52865620a53380e60ef10aa117ac891287bd6c",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "reviewIds": [
+        "RV-P1-CORRECTNESS",
+        "RV-P2-AUTHORITY",
+        "RV-P3-INTEGRATION"
+      ],
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-VERIFY-MERGED",
+        "EV-FOCUSED",
+        "EV-RUNTIME",
+        "EV-ADVERSARIAL"
+      ],
+      "noveltyEvidenceIds": [],
+      "startedAt": "2026-09-29T13:00:00Z",
+      "finishedAt": "2026-09-29T14:00:00Z",
+      "status": "FINDINGS",
+      "body": {
+        "id": "CYC-P5-1",
+        "state": {
+          "productStateId": "f99322f89cd7be7842677d320d52865620a53380e60ef10aa117ac891287bd6c",
+          "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+          "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+          "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+        },
+        "reviewIds": [
+          "RV-P1-CORRECTNESS",
+          "RV-P2-AUTHORITY",
+          "RV-P3-INTEGRATION"
+        ],
+        "coverageIds": [],
+        "evidenceIds": [
+          "EV-VERIFY-MERGED",
+          "EV-FOCUSED",
+          "EV-RUNTIME",
+          "EV-ADVERSARIAL"
+        ],
+        "noveltyEvidenceIds": [],
+        "startedAt": "2026-09-29T13:00:00Z",
+        "finishedAt": "2026-09-29T14:00:00Z",
+        "status": "FINDINGS"
+      },
+      "kind": "cycle"
+    },
+    {
+      "id": "COV-STAT-DET",
+      "invariantId": "I-STAT-ZEROBASE-FLAT",
+      "surface": "DETERMINISTIC",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "TalentsV4Wiring + StatCalculator + PlayerStatAssembly tests green",
+      "evidenceIds": [
+        "EV-FOCUSED"
+      ],
+      "reviewerIds": [
+        "coordinator"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": false,
+      "body": {
+        "id": "COV-STAT-DET",
+        "invariantId": "I-STAT-ZEROBASE-FLAT",
+        "surface": "DETERMINISTIC",
+        "attackIds": [],
+        "taxonomyIds": [],
+        "applicability": "REQUIRED",
+        "reason": "TalentsV4Wiring + StatCalculator + PlayerStatAssembly tests green",
+        "evidenceIds": [
+          "EV-FOCUSED"
+        ],
+        "reviewerIds": [
+          "coordinator"
+        ],
+        "status": "SATISFIED",
+        "weakProtection": false
+      },
+      "kind": "coverage"
+    },
+    {
+      "id": "COV-STAT-STATIC",
+      "invariantId": "I-STAT-ZEROBASE-FLAT",
+      "surface": "STATIC_SEMANTIC",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "flat x stacks parity + clamp chain probed",
+      "evidenceIds": [
+        "EV-ADVERSARIAL"
+      ],
+      "reviewerIds": [
+        "coordinator"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": false,
+      "body": {
+        "id": "COV-STAT-STATIC",
+        "invariantId": "I-STAT-ZEROBASE-FLAT",
+        "surface": "STATIC_SEMANTIC",
+        "attackIds": [],
+        "taxonomyIds": [],
+        "applicability": "REQUIRED",
+        "reason": "flat x stacks parity + clamp chain probed",
+        "evidenceIds": [
+          "EV-ADVERSARIAL"
+        ],
+        "reviewerIds": [
+          "coordinator"
+        ],
+        "status": "SATISFIED",
+        "weakProtection": false
+      },
+      "kind": "coverage"
+    },
+    {
+      "id": "COV-STAT-INDEP",
+      "invariantId": "I-STAT-ZEROBASE-FLAT",
+      "surface": "INDEPENDENT_REVIEW",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "pending Clean A/B sealed reviews",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": true,
+      "body": {
+        "id": "COV-STAT-INDEP",
+        "invariantId": "I-STAT-ZEROBASE-FLAT",
+        "surface": "INDEPENDENT_REVIEW",
+        "attackIds": [],
+        "taxonomyIds": [],
+        "applicability": "REQUIRED",
+        "reason": "pending Clean A/B sealed reviews",
+        "evidenceIds": [],
+        "reviewerIds": [],
+        "status": "PENDING",
+        "weakProtection": true
+      },
+      "kind": "coverage"
+    },
+    {
+      "id": "COV-BLDG-DET",
+      "invariantId": "I-BUILDING-ACCRUAL-PIN",
+      "surface": "DETERMINISTIC",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "BuildingSystem.test.ts EM-01 cases green",
+      "evidenceIds": [
+        "EV-FOCUSED"
+      ],
+      "reviewerIds": [
+        "coordinator"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": false,
+      "body": {
+        "id": "COV-BLDG-DET",
+        "invariantId": "I-BUILDING-ACCRUAL-PIN",
+        "surface": "DETERMINISTIC",
+        "attackIds": [],
+        "taxonomyIds": [],
+        "applicability": "REQUIRED",
+        "reason": "BuildingSystem.test.ts EM-01 cases green",
+        "evidenceIds": [
+          "EV-FOCUSED"
+        ],
+        "reviewerIds": [
+          "coordinator"
+        ],
+        "status": "SATISFIED",
+        "weakProtection": false
+      },
+      "kind": "coverage"
+    },
+    {
+      "id": "COV-BLDG-STATIC",
+      "invariantId": "I-BUILDING-ACCRUAL-PIN",
+      "surface": "STATIC_SEMANTIC",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "pin ordering + garbage-realm soft fallback probed",
+      "evidenceIds": [
+        "EV-ADVERSARIAL"
+      ],
+      "reviewerIds": [
+        "coordinator"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": false,
+      "body": {
+        "id": "COV-BLDG-STATIC",
+        "invariantId": "I-BUILDING-ACCRUAL-PIN",
+        "surface": "STATIC_SEMANTIC",
+        "attackIds": [],
+        "taxonomyIds": [],
+        "applicability": "REQUIRED",
+        "reason": "pin ordering + garbage-realm soft fallback probed",
+        "evidenceIds": [
+          "EV-ADVERSARIAL"
+        ],
+        "reviewerIds": [
+          "coordinator"
+        ],
+        "status": "SATISFIED",
+        "weakProtection": false
+      },
+      "kind": "coverage"
+    },
+    {
+      "id": "COV-BLDG-INDEP",
+      "invariantId": "I-BUILDING-ACCRUAL-PIN",
+      "surface": "INDEPENDENT_REVIEW",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "pending Clean A/B sealed reviews",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": true,
+      "body": {
+        "id": "COV-BLDG-INDEP",
+        "invariantId": "I-BUILDING-ACCRUAL-PIN",
+        "surface": "INDEPENDENT_REVIEW",
+        "attackIds": [],
+        "taxonomyIds": [],
+        "applicability": "REQUIRED",
+        "reason": "pending Clean A/B sealed reviews",
+        "evidenceIds": [],
+        "reviewerIds": [],
+        "status": "PENDING",
+        "weakProtection": true
+      },
+      "kind": "coverage"
+    },
+    {
+      "id": "COV-OFFLINE-DET",
+      "invariantId": "I-OFFLINE-BUFF-SEGMENT",
+      "surface": "DETERMINISTIC",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "segmentation + restore tests green",
+      "evidenceIds": [
+        "EV-FOCUSED"
+      ],
+      "reviewerIds": [
+        "coordinator"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": false,
+      "body": {
+        "id": "COV-OFFLINE-DET",
+        "invariantId": "I-OFFLINE-BUFF-SEGMENT",
+        "surface": "DETERMINISTIC",
+        "attackIds": [],
+        "taxonomyIds": [],
+        "applicability": "REQUIRED",
+        "reason": "segmentation + restore tests green",
+        "evidenceIds": [
+          "EV-FOCUSED"
+        ],
+        "reviewerIds": [
+          "coordinator"
+        ],
+        "status": "SATISFIED",
+        "weakProtection": false
+      },
+      "kind": "coverage"
+    },
+    {
+      "id": "COV-OFFLINE-STATIC",
+      "invariantId": "I-OFFLINE-BUFF-SEGMENT",
+      "surface": "STATIC_SEMANTIC",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "shape-gate ordering + idempotency probed",
+      "evidenceIds": [
+        "EV-ADVERSARIAL"
+      ],
+      "reviewerIds": [
+        "coordinator"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": false,
+      "body": {
+        "id": "COV-OFFLINE-STATIC",
+        "invariantId": "I-OFFLINE-BUFF-SEGMENT",
+        "surface": "STATIC_SEMANTIC",
+        "attackIds": [],
+        "taxonomyIds": [],
+        "applicability": "REQUIRED",
+        "reason": "shape-gate ordering + idempotency probed",
+        "evidenceIds": [
+          "EV-ADVERSARIAL"
+        ],
+        "reviewerIds": [
+          "coordinator"
+        ],
+        "status": "SATISFIED",
+        "weakProtection": false
+      },
+      "kind": "coverage"
+    },
+    {
+      "id": "COV-OFFLINE-INDEP",
+      "invariantId": "I-OFFLINE-BUFF-SEGMENT",
+      "surface": "INDEPENDENT_REVIEW",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "pending Clean A/B sealed reviews",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": true,
+      "body": {
+        "id": "COV-OFFLINE-INDEP",
+        "invariantId": "I-OFFLINE-BUFF-SEGMENT",
+        "surface": "INDEPENDENT_REVIEW",
+        "attackIds": [],
+        "taxonomyIds": [],
+        "applicability": "REQUIRED",
+        "reason": "pending Clean A/B sealed reviews",
+        "evidenceIds": [],
+        "reviewerIds": [],
+        "status": "PENDING",
+        "weakProtection": true
+      },
+      "kind": "coverage"
+    },
+    {
+      "id": "COV-CLOUD-DET",
+      "invariantId": "I-CLOUD-REV-CAS",
+      "surface": "DETERMINISTIC",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "SupabaseRemoteSave.test.ts 19 tests incl. CAS race green",
+      "evidenceIds": [
+        "EV-FOCUSED"
+      ],
+      "reviewerIds": [
+        "coordinator"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": false,
+      "body": {
+        "id": "COV-CLOUD-DET",
+        "invariantId": "I-CLOUD-REV-CAS",
+        "surface": "DETERMINISTIC",
+        "attackIds": [],
+        "taxonomyIds": [],
+        "applicability": "REQUIRED",
+        "reason": "SupabaseRemoteSave.test.ts 19 tests incl. CAS race green",
+        "evidenceIds": [
+          "EV-FOCUSED"
+        ],
+        "reviewerIds": [
+          "coordinator"
+        ],
+        "status": "SATISFIED",
+        "weakProtection": false
+      },
+      "kind": "coverage"
+    },
+    {
+      "id": "COV-CLOUD-STATIC",
+      "invariantId": "I-CLOUD-REV-CAS",
+      "surface": "STATIC_SEMANTIC",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "CAS path + tie-break + adoption probed",
+      "evidenceIds": [
+        "EV-ADVERSARIAL"
+      ],
+      "reviewerIds": [
+        "coordinator"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": false,
+      "body": {
+        "id": "COV-CLOUD-STATIC",
+        "invariantId": "I-CLOUD-REV-CAS",
+        "surface": "STATIC_SEMANTIC",
+        "attackIds": [],
+        "taxonomyIds": [],
+        "applicability": "REQUIRED",
+        "reason": "CAS path + tie-break + adoption probed",
+        "evidenceIds": [
+          "EV-ADVERSARIAL"
+        ],
+        "reviewerIds": [
+          "coordinator"
+        ],
+        "status": "SATISFIED",
+        "weakProtection": false
+      },
+      "kind": "coverage"
+    },
+    {
+      "id": "COV-CLOUD-INDEP",
+      "invariantId": "I-CLOUD-REV-CAS",
+      "surface": "INDEPENDENT_REVIEW",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "pending Clean A/B sealed reviews",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": true,
+      "body": {
+        "id": "COV-CLOUD-INDEP",
+        "invariantId": "I-CLOUD-REV-CAS",
+        "surface": "INDEPENDENT_REVIEW",
+        "attackIds": [],
+        "taxonomyIds": [],
+        "applicability": "REQUIRED",
+        "reason": "pending Clean A/B sealed reviews",
+        "evidenceIds": [],
+        "reviewerIds": [],
+        "status": "PENDING",
+        "weakProtection": true
+      },
+      "kind": "coverage"
+    },
+    {
+      "id": "COV-NAME-STATIC",
+      "invariantId": "I-NAMEPLATE-AUTHOR",
+      "surface": "STATIC_SEMANTIC",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "optional-member fallback + reconcile sync probed",
+      "evidenceIds": [
+        "EV-ADVERSARIAL"
+      ],
+      "reviewerIds": [
+        "coordinator"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": false,
+      "body": {
+        "id": "COV-NAME-STATIC",
+        "invariantId": "I-NAMEPLATE-AUTHOR",
+        "surface": "STATIC_SEMANTIC",
+        "attackIds": [],
+        "taxonomyIds": [],
+        "applicability": "REQUIRED",
+        "reason": "optional-member fallback + reconcile sync probed",
+        "evidenceIds": [
+          "EV-ADVERSARIAL"
+        ],
+        "reviewerIds": [
+          "coordinator"
+        ],
+        "status": "SATISFIED",
+        "weakProtection": false
+      },
+      "kind": "coverage"
+    },
+    {
+      "id": "COV-NAME-E2E",
+      "invariantId": "I-NAMEPLATE-AUTHOR",
+      "surface": "RUNTIME_E2E",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "Playwright nameplate checks green",
+      "evidenceIds": [
+        "EV-RUNTIME"
+      ],
+      "reviewerIds": [
+        "coordinator"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": false,
+      "body": {
+        "id": "COV-NAME-E2E",
+        "invariantId": "I-NAMEPLATE-AUTHOR",
+        "surface": "RUNTIME_E2E",
+        "attackIds": [],
+        "taxonomyIds": [],
+        "applicability": "REQUIRED",
+        "reason": "Playwright nameplate checks green",
+        "evidenceIds": [
+          "EV-RUNTIME"
+        ],
+        "reviewerIds": [
+          "coordinator"
+        ],
+        "status": "SATISFIED",
+        "weakProtection": false
+      },
+      "kind": "coverage"
+    },
+    {
+      "id": "COV-NAME-INDEP",
+      "invariantId": "I-NAMEPLATE-AUTHOR",
+      "surface": "INDEPENDENT_REVIEW",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "pending Clean A/B sealed reviews",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": true,
+      "body": {
+        "id": "COV-NAME-INDEP",
+        "invariantId": "I-NAMEPLATE-AUTHOR",
+        "surface": "INDEPENDENT_REVIEW",
+        "attackIds": [],
+        "taxonomyIds": [],
+        "applicability": "REQUIRED",
+        "reason": "pending Clean A/B sealed reviews",
+        "evidenceIds": [],
+        "reviewerIds": [],
+        "status": "PENDING",
+        "weakProtection": true
+      },
+      "kind": "coverage"
+    },
+    {
+      "id": "COV-LADDER-DET",
+      "invariantId": "I-REALM-LADDER-LABELS",
+      "surface": "DETERMINISTIC",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "RealmPassiveNodes.test.ts green",
+      "evidenceIds": [
+        "EV-FOCUSED"
+      ],
+      "reviewerIds": [
+        "coordinator"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": false,
+      "body": {
+        "id": "COV-LADDER-DET",
+        "invariantId": "I-REALM-LADDER-LABELS",
+        "surface": "DETERMINISTIC",
+        "attackIds": [],
+        "taxonomyIds": [],
+        "applicability": "REQUIRED",
+        "reason": "RealmPassiveNodes.test.ts green",
+        "evidenceIds": [
+          "EV-FOCUSED"
+        ],
+        "reviewerIds": [
+          "coordinator"
+        ],
+        "status": "SATISFIED",
+        "weakProtection": false
+      },
+      "kind": "coverage"
+    },
+    {
+      "id": "COV-LADDER-STATIC",
+      "invariantId": "I-REALM-LADDER-LABELS",
+      "surface": "STATIC_SEMANTIC",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "label semantics + ReleasePolicy pin reviewed",
+      "evidenceIds": [
+        "EV-ADVERSARIAL"
+      ],
+      "reviewerIds": [
+        "coordinator"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": false,
+      "body": {
+        "id": "COV-LADDER-STATIC",
+        "invariantId": "I-REALM-LADDER-LABELS",
+        "surface": "STATIC_SEMANTIC",
+        "attackIds": [],
+        "taxonomyIds": [],
+        "applicability": "REQUIRED",
+        "reason": "label semantics + ReleasePolicy pin reviewed",
+        "evidenceIds": [
+          "EV-ADVERSARIAL"
+        ],
+        "reviewerIds": [
+          "coordinator"
+        ],
+        "status": "SATISFIED",
+        "weakProtection": false
+      },
+      "kind": "coverage"
+    },
+    {
+      "id": "COV-LADDER-E2E",
+      "invariantId": "I-REALM-LADDER-LABELS",
+      "surface": "RUNTIME_E2E",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "ceiling note verified live at Truc Co",
+      "evidenceIds": [
+        "EV-RUNTIME"
+      ],
+      "reviewerIds": [
+        "coordinator"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": false,
+      "body": {
+        "id": "COV-LADDER-E2E",
+        "invariantId": "I-REALM-LADDER-LABELS",
+        "surface": "RUNTIME_E2E",
+        "attackIds": [],
+        "taxonomyIds": [],
+        "applicability": "REQUIRED",
+        "reason": "ceiling note verified live at Truc Co",
+        "evidenceIds": [
+          "EV-RUNTIME"
+        ],
+        "reviewerIds": [
+          "coordinator"
+        ],
+        "status": "SATISFIED",
+        "weakProtection": false
+      },
+      "kind": "coverage"
+    },
+    {
+      "id": "COV-LADDER-INDEP",
+      "invariantId": "I-REALM-LADDER-LABELS",
+      "surface": "INDEPENDENT_REVIEW",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "pending Clean A/B sealed reviews",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": true,
+      "body": {
+        "id": "COV-LADDER-INDEP",
+        "invariantId": "I-REALM-LADDER-LABELS",
+        "surface": "INDEPENDENT_REVIEW",
+        "attackIds": [],
+        "taxonomyIds": [],
+        "applicability": "REQUIRED",
+        "reason": "pending Clean A/B sealed reviews",
+        "evidenceIds": [],
+        "reviewerIds": [],
+        "status": "PENDING",
+        "weakProtection": true
+      },
+      "kind": "coverage"
+    },
+    {
+      "id": "COV-MERGE-STATIC",
+      "invariantId": "I-MERGE-INTEGRITY",
+      "surface": "STATIC_SEMANTIC",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "coexistence + deleted-path census probed",
+      "evidenceIds": [
+        "EV-ADVERSARIAL"
+      ],
+      "reviewerIds": [
+        "coordinator"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": false,
+      "body": {
+        "id": "COV-MERGE-STATIC",
+        "invariantId": "I-MERGE-INTEGRITY",
+        "surface": "STATIC_SEMANTIC",
+        "attackIds": [],
+        "taxonomyIds": [],
+        "applicability": "REQUIRED",
+        "reason": "coexistence + deleted-path census probed",
+        "evidenceIds": [
+          "EV-ADVERSARIAL"
+        ],
+        "reviewerIds": [
+          "coordinator"
+        ],
+        "status": "SATISFIED",
+        "weakProtection": false
+      },
+      "kind": "coverage"
+    },
+    {
+      "id": "COV-MERGE-DET",
+      "invariantId": "I-MERGE-INTEGRITY",
+      "surface": "DETERMINISTIC",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "typecheck+build green; suite failures all pre-existing",
+      "evidenceIds": [
+        "EV-VERIFY-MERGED",
+        "EV-FOCUSED"
+      ],
+      "reviewerIds": [
+        "coordinator"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": false,
+      "body": {
+        "id": "COV-MERGE-DET",
+        "invariantId": "I-MERGE-INTEGRITY",
+        "surface": "DETERMINISTIC",
+        "attackIds": [],
+        "taxonomyIds": [],
+        "applicability": "REQUIRED",
+        "reason": "typecheck+build green; suite failures all pre-existing",
+        "evidenceIds": [
+          "EV-VERIFY-MERGED",
+          "EV-FOCUSED"
+        ],
+        "reviewerIds": [
+          "coordinator"
+        ],
+        "status": "SATISFIED",
+        "weakProtection": false
+      },
+      "kind": "coverage"
+    },
+    {
+      "id": "COV-MERGE-INDEP",
+      "invariantId": "I-MERGE-INTEGRITY",
+      "surface": "INDEPENDENT_REVIEW",
+      "attackIds": [],
+      "taxonomyIds": [],
+      "applicability": "REQUIRED",
+      "reason": "pending Clean A/B sealed reviews",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": true,
+      "body": {
+        "id": "COV-MERGE-INDEP",
+        "invariantId": "I-MERGE-INTEGRITY",
+        "surface": "INDEPENDENT_REVIEW",
+        "attackIds": [],
+        "taxonomyIds": [],
+        "applicability": "REQUIRED",
+        "reason": "pending Clean A/B sealed reviews",
+        "evidenceIds": [],
+        "reviewerIds": [],
+        "status": "PENDING",
+        "weakProtection": true
+      },
+      "kind": "coverage"
+    }
+  ]
+}

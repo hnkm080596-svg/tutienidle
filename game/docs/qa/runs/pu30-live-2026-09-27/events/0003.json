@@ -1,0 +1,15 @@
+{
+  "applied": [
+    "invariant:I-SLOT-CAPACITY",
+    "invariant:I-SLOT-RELEASE",
+    "invariant:I-MSG-TERMINAL",
+    "invariant:I-LEDGER-AUTHORITY",
+    "invariant:I-AGENT-BINDING",
+    "census:CEN-CLI",
+    "census:CEN-STATE",
+    "census:CEN-PREVENTION",
+    "census:CEN-VALIDATE",
+    "census:CEN-DECIDE",
+    "census:CEN-PROTOCOL"
+  ]
+}

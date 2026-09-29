@@ -1,0 +1,453 @@
+{
+  "records": [
+    {
+      "kind": "assignment",
+      "body": {
+        "id": "ASG-BLOCKED",
+        "parentId": null,
+        "capacityScope": "worker",
+        "inputBundleHash": "931b78d30da311e8c287f39b74bf8c3ad872abc664eabe1c67b6092f72d4cac9",
+        "dependencies": [],
+        "requiredCapabilities": [
+          "read-only repo access"
+        ],
+        "writeSurface": [],
+        "readiness": "BLOCKED",
+        "status": "BLOCKED",
+        "reservedAt": "2026-09-27T15:37:55.571Z",
+        "observedRuntimeId": null,
+        "releaseEvidence": null,
+        "resultRef": null,
+        "timeoutState": null,
+        "history": [
+          {
+            "at": "2026-09-27T15:37:55.571Z",
+            "from": "CREATED",
+            "to": "BLOCKED",
+            "reason": "registered by coordinator"
+          },
+          {
+            "at": "2026-09-27T15:37:57.193Z",
+            "from": "BLOCKED",
+            "to": "BLOCKED",
+            "reason": "readiness=BLOCKED - waiting work holds no slot"
+          }
+        ]
+      }
+    },
+    {
+      "kind": "assignment",
+      "body": {
+        "id": "ASG-R1",
+        "parentId": "REQ-R1-SLOT",
+        "capacityScope": "worker",
+        "inputBundleHash": "86153434f3a8141cff08436767767441d2e649a215db12a2557c03ee69472dbe",
+        "dependencies": [],
+        "requiredCapabilities": [
+          "read-only repo access"
+        ],
+        "writeSurface": [],
+        "readiness": "READY",
+        "status": "FINISHED",
+        "reservedAt": "2026-09-27T15:37:58.194Z",
+        "observedRuntimeId": "run_subagent:6555a82e",
+        "releaseEvidence": "run_subagent agent_id=6555a82e cancelled by user (verified termination)",
+        "resultRef": null,
+        "timeoutState": null,
+        "history": [
+          {
+            "at": "2026-09-27T15:37:55.571Z",
+            "from": "CREATED",
+            "to": "READY",
+            "reason": "registered by coordinator"
+          },
+          {
+            "at": "2026-09-27T15:37:58.194Z",
+            "from": "READY",
+            "to": "RESERVED",
+            "reason": "admitted at 2/5 (incl. external 1)"
+          },
+          {
+            "at": "2026-09-27T15:51:11.677Z",
+            "from": "RESERVED",
+            "to": "FINISHED",
+            "reason": "lifecycle verified released via 'cancelled'"
+          }
+        ]
+      }
+    },
+    {
+      "kind": "assignment",
+      "body": {
+        "id": "ASG-R2",
+        "parentId": "REQ-R2-MSG",
+        "capacityScope": "worker",
+        "inputBundleHash": "fdd3f4a923267f793f2da7b862a3e4925b81d2104a4febb46e933bf38cabf69e",
+        "dependencies": [],
+        "requiredCapabilities": [
+          "read-only repo access"
+        ],
+        "writeSurface": [],
+        "readiness": "READY",
+        "status": "FINISHED",
+        "reservedAt": "2026-09-27T15:37:58.942Z",
+        "observedRuntimeId": "run_subagent:1f76f08f",
+        "releaseEvidence": "run_subagent agent_id=1f76f08f cancelled by user (verified termination)",
+        "resultRef": null,
+        "timeoutState": null,
+        "history": [
+          {
+            "at": "2026-09-27T15:37:55.571Z",
+            "from": "CREATED",
+            "to": "READY",
+            "reason": "registered by coordinator"
+          },
+          {
+            "at": "2026-09-27T15:37:58.941Z",
+            "from": "READY",
+            "to": "RESERVED",
+            "reason": "admitted at 3/5 (incl. external 1)"
+          },
+          {
+            "at": "2026-09-27T15:51:12.645Z",
+            "from": "RESERVED",
+            "to": "FINISHED",
+            "reason": "lifecycle verified released via 'cancelled'"
+          }
+        ]
+      }
+    },
+    {
+      "kind": "assignment",
+      "body": {
+        "id": "ASG-R3",
+        "parentId": "REQ-R3-NEEDCTX",
+        "capacityScope": "worker",
+        "inputBundleHash": "2e5655d2e2c15fc30558fa67b4257689f0f6c49d66005c09ee12266d7e7df235",
+        "dependencies": [],
+        "requiredCapabilities": [
+          "read-only repo access"
+        ],
+        "writeSurface": [],
+        "readiness": "READY",
+        "status": "FINISHED",
+        "reservedAt": "2026-09-27T15:37:59.700Z",
+        "observedRuntimeId": "run_subagent:49db4b21",
+        "releaseEvidence": "run_subagent agent_id=49db4b21 completion notification received; context ended",
+        "resultRef": "MSG-NEEDCTX-R3",
+        "timeoutState": null,
+        "history": [
+          {
+            "at": "2026-09-27T15:37:55.571Z",
+            "from": "CREATED",
+            "to": "READY",
+            "reason": "registered by coordinator"
+          },
+          {
+            "at": "2026-09-27T15:37:59.699Z",
+            "from": "READY",
+            "to": "RESERVED",
+            "reason": "admitted at 4/5 (incl. external 1)"
+          },
+          {
+            "at": "2026-09-27T15:41:07.502Z",
+            "from": "RESERVED",
+            "to": "RESULT_RECEIVED",
+            "reason": "terminal result observed - slot still occupied"
+          },
+          {
+            "at": "2026-09-27T15:41:08.608Z",
+            "from": "RESULT_RECEIVED",
+            "to": "FINISHED",
+            "reason": "lifecycle verified released via 'terminated'"
+          }
+        ]
+      }
+    },
+    {
+      "kind": "assignment",
+      "body": {
+        "id": "ASG-R4",
+        "parentId": "REQ-R4-HONESTY",
+        "capacityScope": "worker",
+        "inputBundleHash": "171dc77032fe52c1209bfaf00db453d26f15a8de8413d4d0ea33b2d0ff19e1b9",
+        "dependencies": [],
+        "requiredCapabilities": [
+          "read-only repo access"
+        ],
+        "writeSurface": [],
+        "readiness": "READY",
+        "status": "FINISHED",
+        "reservedAt": "2026-09-27T15:38:00.437Z",
+        "observedRuntimeId": "run_subagent:55645acf",
+        "releaseEvidence": "run_subagent agent_id=55645acf cancelled by user (verified termination)",
+        "resultRef": null,
+        "timeoutState": null,
+        "history": [
+          {
+            "at": "2026-09-27T15:37:55.571Z",
+            "from": "CREATED",
+            "to": "READY",
+            "reason": "registered by coordinator"
+          },
+          {
+            "at": "2026-09-27T15:38:00.436Z",
+            "from": "READY",
+            "to": "RESERVED",
+            "reason": "admitted at 5/5 (incl. external 1)"
+          },
+          {
+            "at": "2026-09-27T15:51:13.702Z",
+            "from": "RESERVED",
+            "to": "FINISHED",
+            "reason": "lifecycle verified released via 'cancelled'"
+          }
+        ]
+      }
+    },
+    {
+      "kind": "assignment",
+      "body": {
+        "id": "ASG-R5",
+        "parentId": "REQ-R5-JOURNAL",
+        "capacityScope": "worker",
+        "inputBundleHash": "d9f6434d39d74290a30ade39f10065f32721c1e66278c1b9b163de1c49749e75",
+        "dependencies": [],
+        "requiredCapabilities": [
+          "read-only repo access"
+        ],
+        "writeSurface": [],
+        "readiness": "READY",
+        "status": "FINISHED",
+        "reservedAt": "2026-09-27T15:43:00.758Z",
+        "observedRuntimeId": "run_subagent:b0f652b2",
+        "releaseEvidence": "run_subagent agent_id=b0f652b2 cancelled by user (verified termination)",
+        "resultRef": null,
+        "timeoutState": null,
+        "history": [
+          {
+            "at": "2026-09-27T15:37:55.571Z",
+            "from": "CREATED",
+            "to": "READY",
+            "reason": "registered by coordinator"
+          },
+          {
+            "at": "2026-09-27T15:38:01.150Z",
+            "from": "READY",
+            "to": "QUEUED",
+            "reason": "capacity 5/5 occupied - queued, no slot consumed by queue record"
+          },
+          {
+            "at": "2026-09-27T15:43:00.757Z",
+            "from": "QUEUED",
+            "to": "RESERVED",
+            "reason": "admitted at 5/5 (incl. external 1)"
+          },
+          {
+            "at": "2026-09-27T15:51:14.594Z",
+            "from": "RESERVED",
+            "to": "FINISHED",
+            "reason": "lifecycle verified released via 'cancelled'"
+          }
+        ]
+      }
+    },
+    {
+      "kind": "assignment",
+      "body": {
+        "id": "ASG-FORGED",
+        "parentId": null,
+        "capacityScope": "worker (forged - bypassed admission)",
+        "inputBundleHash": "3be99dafc8b0d508d3f0ce6d68cfadf4064a1368255353fee3fc6bb982874238",
+        "dependencies": [],
+        "requiredCapabilities": [],
+        "writeSurface": [],
+        "readiness": "READY",
+        "status": "FINISHED",
+        "reservedAt": "2026-09-27T15:45:58.841Z",
+        "observedRuntimeId": null,
+        "releaseEvidence": "forged record cleaned via schedule-observed cancellation",
+        "resultRef": null,
+        "timeoutState": "timeout",
+        "history": [
+          {
+            "at": "2026-09-27T15:45:58.842Z",
+            "from": "CREATED",
+            "to": "RESERVED",
+            "reason": "forged"
+          },
+          {
+            "at": "2026-09-27T15:49:41.163Z",
+            "from": "RESERVED",
+            "to": "RELEASE_PENDING",
+            "reason": "lease/timeout elapsed WITHOUT lifecycle proof - authority revoked, slot retained"
+          },
+          {
+            "at": "2026-09-27T15:49:49.833Z",
+            "from": "RELEASE_PENDING",
+            "to": "FINISHED",
+            "reason": "lifecycle verified released via 'cancelled'"
+          }
+        ]
+      }
+    },
+    {
+      "kind": "mutation",
+      "body": {
+        "id": "MUT-REL-01",
+        "candidateState": {
+          "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+          "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+          "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+          "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+        },
+        "invariantIds": [
+          "I-SLOT-RELEASE"
+        ],
+        "rootClass": "implementation",
+        "operator": "remove RESULT_RECEIVED from ASSIGNMENT_ACTIVE",
+        "isolationPath": "evidence/mutants/m1/prevention.mjs",
+        "mutantHash": "8bcbada6cb827361a6aa14ee8904105b4b5441314d6bafb959bba0f5b7da791b",
+        "expectedDetector": "admission probe: 5 slots held must queue next READY assignment",
+        "result": "KILLED_EXPECTED",
+        "evidenceIds": [
+          "EV-MUT-REL"
+        ],
+        "equivalenceReason": "non-equivalent: removes slot-retention semantics",
+        "candidateUnchanged": true
+      }
+    },
+    {
+      "kind": "mutation",
+      "body": {
+        "id": "MUT-CAP-01",
+        "candidateState": {
+          "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+          "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+          "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+          "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+        },
+        "invariantIds": [
+          "I-SLOT-CAPACITY"
+        ],
+        "rootClass": "implementation",
+        "operator": "remove capacity check total+1>cap",
+        "isolationPath": "evidence/mutants/m2/prevention.mjs",
+        "mutantHash": "f4f48b0498d2ccdd204bc15503a4aad94e02f8748b9e74f82ad5086f734f5969",
+        "expectedDetector": "admission probe: 5 slots held must queue next READY assignment",
+        "result": "KILLED_EXPECTED",
+        "evidenceIds": [
+          "EV-MUT-CAP"
+        ],
+        "equivalenceReason": "non-equivalent: removes admission bound",
+        "candidateUnchanged": true
+      }
+    },
+    {
+      "kind": "evidence",
+      "body": {
+        "id": "EV-LIVE-ADMIT",
+        "state": {
+          "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+          "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+          "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+          "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+        },
+        "kind": "EXECUTED_INTEGRATION",
+        "producer": "coordinator-7604",
+        "startedAt": "2026-09-27T15:48:56.579Z",
+        "finishedAt": "2026-09-27T15:48:56.579Z",
+        "commandOrMethod": "qa:internal schedule admit x5 under cap=5 externalOccupied=1 -> R1..R4 RESERVED, R5 QUEUED",
+        "cwd": "game",
+        "exitCode": 0,
+        "result": "PASS",
+        "artifactPath": "evidence/journal-snap-1.jsonl",
+        "artifactHash": "c2152d9ca29c7b68a4a17874a69fe75dd5ecd21fb64e2322822cb80179b86856",
+        "inputPaths": [
+          "evidence/journal-snap-1.jsonl"
+        ],
+        "inputEvidenceIds": [],
+        "invariantIds": [
+          "I-SLOT-CAPACITY"
+        ],
+        "claims": [
+          "admission counted ledger-active+external; queue held no slot"
+        ],
+        "limitations": [
+          "externalOccupied=1 asserted by coordinator, not platform-queried"
+        ],
+        "status": "CURRENT"
+      }
+    },
+    {
+      "kind": "evidence",
+      "body": {
+        "id": "EV-QUEUE-NOSLOT",
+        "state": {
+          "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+          "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+          "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+          "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+        },
+        "kind": "EXECUTED_INTEGRATION",
+        "producer": "coordinator-7604",
+        "startedAt": "2026-09-27T15:48:56.581Z",
+        "finishedAt": "2026-09-27T15:48:56.581Z",
+        "commandOrMethod": "ASG-WAIT QUEUED + ASG-BLOCKED BLOCKED while 4 workers reserved",
+        "cwd": "game",
+        "exitCode": 0,
+        "result": "PASS",
+        "artifactPath": "evidence/journal-snap-1.jsonl",
+        "artifactHash": "c2152d9ca29c7b68a4a17874a69fe75dd5ecd21fb64e2322822cb80179b86856",
+        "inputPaths": [
+          "evidence/journal-snap-1.jsonl"
+        ],
+        "inputEvidenceIds": [],
+        "invariantIds": [
+          "I-SLOT-CAPACITY"
+        ],
+        "claims": [
+          "waiting/blocked records consume no active slot"
+        ],
+        "limitations": [],
+        "status": "CURRENT"
+      }
+    },
+    {
+      "kind": "evidence",
+      "body": {
+        "id": "EV-REL-CANCEL",
+        "state": {
+          "productStateId": "eaa246f93e7033974de7818669174d226f17cd6a8fadd2b670487350d353e50b",
+          "contractId": "3be7709c18bf6b2454cb6f07b9f3f315ba10d9e7df317ece820f2356cf9d8351",
+          "attackModelId": "d794cb338d1a377f3b87e7165beb0854b7a77b6a41d4c133c26701d951e5a041",
+          "environmentId": "3cd1c7fc3e83bce176f391dc2c63b29937abed7930f486713886c2a9ce080642"
+        },
+        "kind": "EXECUTED_INTEGRATION",
+        "producer": "coordinator-7604",
+        "startedAt": "2026-09-27T15:51:31.047Z",
+        "finishedAt": "2026-09-27T15:51:31.047Z",
+        "commandOrMethod": "observe cancelled on ASG-R1/R2/R4/R5 after user-terminated subagents -> FINISHED, active=0",
+        "cwd": "game",
+        "exitCode": 0,
+        "result": "PASS",
+        "artifactPath": "evidence/journal-snap-1.jsonl",
+        "artifactHash": "c2152d9ca29c7b68a4a17874a69fe75dd5ecd21fb64e2322822cb80179b86856",
+        "inputPaths": [
+          "evidence/journal-snap-1.jsonl"
+        ],
+        "inputEvidenceIds": [],
+        "invariantIds": [
+          "I-SLOT-RELEASE"
+        ],
+        "claims": [
+          "verified termination (cancel) releases slots; run drained to 0 active with WAIT/BLOCKED untouched"
+        ],
+        "limitations": [
+          "reviewer results absent - user cancelled dispatches; INDEPENDENT_REVIEW surfaces remain uncovered"
+        ],
+        "status": "CURRENT"
+      }
+    }
+  ]
+}

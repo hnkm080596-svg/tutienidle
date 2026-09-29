@@ -1,0 +1,17 @@
+{
+  "applied": [
+    "evidence:EV-VERIFY-S7",
+    "evidence:EV-FOCUSED-S7",
+    "mutation:MUT-DECAY-1",
+    "mutation:MUT-MERGE-1",
+    "finding:F-MG-09 (updated)",
+    "finding:F-MG-10 (updated)",
+    "finding:F-MG-11 (updated)",
+    "finding:F-MG-12 (updated)",
+    "finding:F-MG-13 (updated)",
+    "review:RV-S7-P1",
+    "review:RV-S7-P2",
+    "review:RV-S7-P3",
+    "cycle:CYC-P5-3"
+  ]
+}

@@ -1,0 +1,4 @@
+{
+  "purpose": "non-ready admission control",
+  "note": "readiness WAITING_INPUT - must queue without slot"
+}

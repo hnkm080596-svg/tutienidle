@@ -1,0 +1,8 @@
+SCOPED GREEN VERIFY on productStateId b1b1c5ff0d97... (commit bc530a6)
+= npx vitest run --exclude the 4 files adjudicated REJECTED_WITH_PROOF
+  (pre-existing-on-master failures F-MG-03/04/05; dynamicRegionHost+i18nKeyParity share F-MG-04's file)
+  excluded: combatContract.test.ts, dynamicRegionHost.test.ts,
+            i18nKeyParity.test.ts, PlayerPortrait.test.ts
+result: exit 0 - 800 files, 7114 tests passed, 5 expected-fail, 0 failed
+companion: EV-VERIFY-S9 (unscoped) remains in ledger as FAIL w/ only those 4 files
+typecheck (npm run type-check): clean ; vite build: clean (1871 modules)

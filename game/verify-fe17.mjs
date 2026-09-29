@@ -106,10 +106,18 @@ for (let i = 0; i < 240; i += 1) {
 }
 await page.waitForTimeout(2000)
 
+// Talent entitlement holds the drain until resolved - keep resolving
+// (card select then confirm) until the modal is gone, not just once.
 const modal = page.locator('[data-testid="talent-entitlement-modal"]')
-if (await modal.isVisible({ timeout: 15000 }).catch(() => false)) {
-  await modal.locator('button').first().click()
-  await page.waitForTimeout(1000)
+for (let i = 0; i < 40; i += 1) {
+  if (!(await modal.isVisible().catch(() => false))) break
+  const card = modal.locator('.talent-card').first()
+  if (await card.isVisible().catch(() => false)) await card.click().catch(() => {})
+  await page.waitForTimeout(400)
+  const btn = modal.getByRole('button', { name: /Chọn|Xác|Nhận|Đồng/ }).first()
+  if (await btn.isVisible().catch(() => false)) await btn.click().catch(() => {})
+  else await modal.locator('button').first().click().catch(() => {})
+  await page.waitForTimeout(800)
 }
 // The outcome commits on the drain tick; the QuanKhi panel auto-opens
 // via standalonePanel after the curtain. Poll for it generously.
