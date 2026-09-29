@@ -1,0 +1,7 @@
+{
+  "action": "observe",
+  "assignmentId": "ASG-BX-AUTE",
+  "observedStatus": "exited",
+  "evidence": "13 findings: 1 HIGH(=F-BX-24 sibling/dup), 4 Medium auth, 4 Low, 4 Nit",
+  "resultRef": "messages"
+}

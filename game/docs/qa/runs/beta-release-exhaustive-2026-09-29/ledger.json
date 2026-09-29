@@ -580,7 +580,7 @@
         "blind audit auth/electron/adapters"
       ],
       "readiness": "READY",
-      "status": "RESERVED",
+      "status": "FINISHED",
       "observedRuntimeId": "devin-45aa74bb55b64499809dd91c0d127df2",
       "history": [
         {
@@ -606,9 +606,17 @@
           "from": "QUEUED",
           "to": "RESERVED",
           "reason": "admitted at 3/5 (incl. external 0)"
+        },
+        {
+          "at": "2026-09-29T15:26:06.061Z",
+          "from": "RESERVED",
+          "to": "FINISHED",
+          "reason": "lifecycle verified released via 'exited'"
         }
       ],
-      "reservedAt": "2026-09-29T15:01:53.282Z"
+      "reservedAt": "2026-09-29T15:01:53.282Z",
+      "releaseEvidence": "13 findings: 1 HIGH(=F-BX-24 sibling/dup), 4 Medium auth, 4 Low, 4 Nit",
+      "resultRef": "messages"
     },
     {
       "id": "ASG-BX-XSYS",
@@ -5622,6 +5630,604 @@
       "duplicateOf": null,
       "rejectionReason": null,
       "exception": null
+    },
+    {
+      "id": "F-BX-70",
+      "title": "Transient refresh error destroys session (forced re-login)",
+      "state": {
+        "productStateId": "b3ade7e3f442eb2a98da5b317248dd469440631e950f0b3f1ad24cfe116060f4",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/services/supabase/SupabaseSession.ts",
+          "symbolOrSection": ":83-85",
+          "revision": "5efdf9a9",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "auth-electron auditor devin-45aa74bb",
+      "invariantIds": [
+        "I-AGGREGATE-RELEASE"
+      ],
+      "evidenceIds": [],
+      "counterexample": "none recorded by auditor",
+      "expected": "per design intent",
+      "actual": "catch{} covers every failure (timeout/DNS/5xx) -> clearSupabaseSession wipes refresh token",
+      "rootCause": "catch-all treats transient like invalid_grant",
+      "rootClass": "error-mapping",
+      "subsystem": "auth-electron",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": "Only clear session on 4xx invalid_grant; keep token + retry transient",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "OBSERVED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "fixedInRevision": null,
+      "closedAt": null,
+      "closeReason": null
+    },
+    {
+      "id": "F-BX-71",
+      "title": "Auth session never survives restart; silent guest-slot fallback resumes wrong save",
+      "state": {
+        "productStateId": "b3ade7e3f442eb2a98da5b317248dd469440631e950f0b3f1ad24cfe116060f4",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/services/supabase/SupabaseSession.ts",
+          "symbolOrSection": ":21 + resumeSession.ts:29-54",
+          "revision": "5efdf9a9",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "auth-electron auditor devin-45aa74bb",
+      "invariantIds": [
+        "I-AGGREGATE-RELEASE"
+      ],
+      "evidenceIds": [],
+      "counterexample": "none recorded by auditor",
+      "expected": "per design intent",
+      "actual": "refresh token in sessionStorage -> every tab-close/app-quit ends session; after restart accountId 'guest' -> Continue resumes GUEST save while account save parked until re-login",
+      "rootCause": "sessionStorage chosen; no fallback ordering",
+      "rootClass": "lifecycle",
+      "subsystem": "auth-electron",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": "Persist session durably or surface 'session expired' instead of silently resuming guest",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "OBSERVED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "fixedInRevision": null,
+      "closedAt": null,
+      "closeReason": null
+    },
+    {
+      "id": "F-BX-72",
+      "title": "createCharacter error mapping collapses domain errors to server_unavailable",
+      "state": {
+        "productStateId": "b3ade7e3f442eb2a98da5b317248dd469440631e950f0b3f1ad24cfe116060f4",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/services/character/SupabaseCharacterCreationService.ts",
+          "symbolOrSection": ":75-79",
+          "revision": "5efdf9a9",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "auth-electron auditor devin-45aa74bb",
+      "invariantIds": [
+        "I-AGGREGATE-RELEASE"
+      ],
+      "evidenceIds": [],
+      "counterexample": "none recorded by auditor",
+      "expected": "per design intent",
+      "actual": "PostgREST raise exception -> 400; 'character name unavailable'/'invalid talent roll'/'invalid mortal basic skill'/'session revoked' all -> generic error",
+      "rootCause": "only 409 mapped; 400 domain messages dropped",
+      "rootClass": "error-mapping",
+      "subsystem": "auth-electron",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": "Map 400 payload message -> name_taken/invalid_roll/invalid_skill/session_revoked",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "OBSERVED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "fixedInRevision": null,
+      "closedAt": null,
+      "closeReason": null
+    },
+    {
+      "id": "F-BX-73",
+      "title": "Register id_taken unreachable; non-atomic signup->claim",
+      "state": {
+        "productStateId": "b3ade7e3f442eb2a98da5b317248dd469440631e950f0b3f1ad24cfe116060f4",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/services/auth/SupabaseAuthService.ts",
+          "symbolOrSection": ":23-53",
+          "revision": "5efdf9a9",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "auth-electron auditor devin-45aa74bb",
+      "invariantIds": [
+        "I-AGGREGATE-RELEASE"
+      ],
+      "evidenceIds": [],
+      "counterexample": "none recorded by auditor",
+      "expected": "per design intent",
+      "actual": "GoTrue duplicate returns 422 or fake-200 user w/o access_token -> 'server_unavailable'; signup succeeds but claim fails -> retry hits taken",
+      "rootCause": "400-only mapping; two-step create not transactional",
+      "rootClass": "error-mapping",
+      "subsystem": "auth-electron",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": "Handle 422 + fake-200 shapes; surface created-but-unclaimed distinctly",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "OBSERVED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "fixedInRevision": null,
+      "closedAt": null,
+      "closeReason": null
+    },
+    {
+      "id": "F-BX-74",
+      "title": "Advertised guest realm cap does not exist",
+      "state": {
+        "productStateId": "b3ade7e3f442eb2a98da5b317248dd469440631e950f0b3f1ad24cfe116060f4",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/locales (en/vi)",
+          "symbolOrSection": "copy vs full-src grep",
+          "revision": "5efdf9a9",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "auth-electron auditor devin-45aa74bb",
+      "invariantIds": [
+        "I-AGGREGATE-RELEASE"
+      ],
+      "evidenceIds": [],
+      "counterexample": "none recorded by auditor",
+      "expected": "per design intent",
+      "actual": "'Guest progress stops at Foundation Establishment' advertised; zero gating code anywhere",
+      "rootCause": "stale copy or missing gate",
+      "rootClass": "doc-code-drift",
+      "subsystem": "auth-electron",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": "Decide product rule: implement guest realm gate or fix copy",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "OBSERVED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "fixedInRevision": null,
+      "closedAt": null,
+      "closeReason": null
+    },
+    {
+      "id": "F-BX-75",
+      "title": "Concurrent resolveSupabaseSession rotation race wipes session (latent)",
+      "state": {
+        "productStateId": "b3ade7e3f442eb2a98da5b317248dd469440631e950f0b3f1ad24cfe116060f4",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/services/supabase/SupabaseSession.ts",
+          "symbolOrSection": ":63-87",
+          "revision": "5efdf9a9",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "auth-electron auditor devin-45aa74bb",
+      "invariantIds": [
+        "I-AGGREGATE-RELEASE"
+      ],
+      "evidenceIds": [],
+      "counterexample": "none recorded by auditor",
+      "expected": "per design intent",
+      "actual": "no single-flight guard; parallel resolves -> winner stores, loser clears and wipes stored session",
+      "rootCause": "no mutex",
+      "rootClass": "race",
+      "subsystem": "auth-electron",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": "Single-flight resolve via promise memoization",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "OBSERVED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "fixedInRevision": null,
+      "closedAt": null,
+      "closeReason": null
+    },
+    {
+      "id": "F-BX-76",
+      "title": "quitFlush: webContents.send() throw wedges window permanently",
+      "state": {
+        "productStateId": "b3ade7e3f442eb2a98da5b317248dd469440631e950f0b3f1ad24cfe116060f4",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/main-process/quitFlush.ts",
+          "symbolOrSection": ":51-73",
+          "revision": "5efdf9a9",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "auth-electron auditor devin-45aa74bb",
+      "invariantIds": [
+        "I-AGGREGATE-RELEASE"
+      ],
+      "evidenceIds": [],
+      "counterexample": "none recorded by auditor",
+      "expected": "per design intent",
+      "actual": "send throw after flushingWindows.add -> every later close preventDefault'd -> unclosable except kill",
+      "rootCause": "ordering: add->once->send->setTimeout",
+      "rootClass": "lifecycle",
+      "subsystem": "auth-electron",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": "Arm timeout before send / wrap send in try",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "OBSERVED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "fixedInRevision": null,
+      "closedAt": null,
+      "closeReason": null
+    },
+    {
+      "id": "F-BX-77",
+      "title": "Session lifecycle incomplete: no sign-out, no kick handling",
+      "state": {
+        "productStateId": "b3ade7e3f442eb2a98da5b317248dd469440631e950f0b3f1ad24cfe116060f4",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/services/auth (logout) + error mapping",
+          "symbolOrSection": "logout() zero call sites; 28000 'session revoked' -> server_unavailable",
+          "revision": "5efdf9a9",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "auth-electron auditor devin-45aa74bb",
+      "invariantIds": [
+        "I-AGGREGATE-RELEASE"
+      ],
+      "evidenceIds": [],
+      "counterexample": "none recorded by auditor",
+      "expected": "per design intent",
+      "actual": "revoked session mid-creation shows generic error; kicked device keeps writing local silently",
+      "rootCause": "missing-feature",
+      "rootClass": "auth-electron",
+      "subsystem": "Add sign-out affordance + map 28000 -> re-auth prompt",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "OBSERVED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "fixedInRevision": null,
+      "closedAt": null,
+      "closeReason": null
+    },
+    {
+      "id": "F-BX-78",
+      "title": "Legacy stored session resumes into guest slot",
+      "state": {
+        "productStateId": "b3ade7e3f442eb2a98da5b317248dd469440631e950f0b3f1ad24cfe116060f4",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/services/save/resumeSession.ts",
+          "symbolOrSection": "legacy key path",
+          "revision": "5efdf9a9",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "auth-electron auditor devin-45aa74bb",
+      "invariantIds": [
+        "I-AGGREGATE-RELEASE"
+      ],
+      "evidenceIds": [],
+      "counterexample": "none recorded by auditor",
+      "expected": "per design intent",
+      "actual": "pre-userId sessions -> login mode with undefined ids -> accountId 'guest'; account save invisible",
+      "rootCause": "aging edge",
+      "rootClass": "migration",
+      "subsystem": "auth-electron",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": "Migrate legacy key or ignore pre-userId sessions",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "OBSERVED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "fixedInRevision": null,
+      "closedAt": null,
+      "closeReason": null
+    },
+    {
+      "id": "F-BX-79",
+      "title": "Same-rev fork tie-break compares server-clock vs client-clock",
+      "state": {
+        "productStateId": "b3ade7e3f442eb2a98da5b317248dd469440631e950f0b3f1ad24cfe116060f4",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "severity": "Nit",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/services/cloudSave/SupabaseRemoteSave.ts",
+          "symbolOrSection": ":131",
+          "revision": "5efdf9a9",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "auth-electron auditor devin-45aa74bb",
+      "invariantIds": [
+        "I-AGGREGATE-RELEASE"
+      ],
+      "evidenceIds": [],
+      "counterexample": "none recorded by auditor",
+      "expected": "per design intent",
+      "actual": "updated_at (server-owned trigger) vs client lastSavedAt residual cross-clock dependence",
+      "rootCause": "INFRA-01 residual",
+      "rootClass": "clock",
+      "subsystem": "auth-electron",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": "Prefer revision-only ordering where possible",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "OBSERVED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "fixedInRevision": null,
+      "closedAt": null,
+      "closeReason": null
+    },
+    {
+      "id": "F-BX-80",
+      "title": "Mock-Supabase parity gaps make error paths untestable in dev",
+      "state": {
+        "productStateId": "b3ade7e3f442eb2a98da5b317248dd469440631e950f0b3f1ad24cfe116060f4",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "severity": "Nit",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/services/auth mocks",
+          "symbolOrSection": "MockAuthService + MockCharacterCreationService",
+          "revision": "5efdf9a9",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "auth-electron auditor devin-45aa74bb",
+      "invariantIds": [
+        "I-AGGREGATE-RELEASE"
+      ],
+      "evidenceIds": [],
+      "counterexample": "none recorded by auditor",
+      "expected": "per design intent",
+      "actual": "mock never returns error codes; checkNameAvailable ignores arg; create never enforces",
+      "rootCause": "mock fidelity gap",
+      "rootClass": "test-infra",
+      "subsystem": "auth-electron",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": "Add mock error modes for UI path coverage",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "OBSERVED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "fixedInRevision": null,
+      "closedAt": null,
+      "closeReason": null
+    },
+    {
+      "id": "F-BX-81",
+      "title": "Electron misc hardening (quit unconditional; no window-open guard; combat-clock interval unowned)",
+      "state": {
+        "productStateId": "b3ade7e3f442eb2a98da5b317248dd469440631e950f0b3f1ad24cfe116060f4",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "severity": "Nit",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/main-process/*",
+          "symbolOrSection": "window-all-closed/quitFlush/combatClockHost",
+          "revision": "5efdf9a9",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "auth-electron auditor devin-45aa74bb",
+      "invariantIds": [
+        "I-AGGREGATE-RELEASE"
+      ],
+      "evidenceIds": [],
+      "counterexample": "none recorded by auditor",
+      "expected": "per design intent",
+      "actual": "window-all-closed->quit unconditional; no setWindowOpenHandler; combat-clock:start fire-and-forget",
+      "rootCause": "electron lifecycle nits",
+      "rootClass": "hardening",
+      "subsystem": "auth-electron",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": "Optional hardening sweep",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "OBSERVED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "fixedInRevision": null,
+      "closedAt": null,
+      "closeReason": null
+    },
+    {
+      "id": "F-BX-82",
+      "title": "[dup] Save reset silently reversed by login sync",
+      "state": {
+        "productStateId": "b3ade7e3f442eb2a98da5b317248dd469440631e950f0b3f1ad24cfe116060f4",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "severity": "High",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/services/save/SaveSystem.ts",
+          "symbolOrSection": ":660-680 deleteSave + pull path",
+          "revision": "5efdf9a9",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "auth-electron auditor devin-45aa74bb",
+      "invariantIds": [
+        "I-AGGREGATE-RELEASE"
+      ],
+      "evidenceIds": [],
+      "counterexample": "none recorded by auditor",
+      "expected": "per design intent",
+      "actual": "deleteSave removes only local keys; remote row survives; next boot pull resurrects deleted save before loadGame",
+      "rootCause": "no remote delete path",
+      "rootClass": "sync",
+      "subsystem": "save-cloud",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "DUPLICATE_LINKED",
+      "duplicateOf": "F-BX-24",
+      "rejectionReason": null,
+      "exception": null,
+      "fixedInRevision": null,
+      "closedAt": null,
+      "closeReason": "independent rediscovery confirms F-BX-24"
     }
   ],
   "evidence": [
@@ -6415,6 +7021,38 @@
       "payloadPath": "events/0041.json",
       "payloadHash": "4dcfe7bf9e4339cea5ffdc812aff1d36532ad4da217431d8d3d849edb1c5a473",
       "eventHash": "4c5622d36f76d834ba42a5c0ae14c0f7dfbc5e5e3454a929fd9b9adccff6f580"
+    },
+    {
+      "seq": 42,
+      "at": "2026-09-29T15:26:06.062Z",
+      "kind": "SCHEDULE",
+      "actor": "coordinator-beta",
+      "state": {
+        "productStateId": "b3ade7e3f442eb2a98da5b317248dd469440631e950f0b3f1ad24cfe116060f4",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "previousEventHash": "4c5622d36f76d834ba42a5c0ae14c0f7dfbc5e5e3454a929fd9b9adccff6f580",
+      "payloadPath": "events/0042.json",
+      "payloadHash": "b7d674eab4cb09da1256a779f7f535ea734c56c82e539d15f0469cd87485286f",
+      "eventHash": "a1fc6c777d896ff7a0df89f17f6225ed941f5b43b137790cc9771df3fa4ff1e4"
+    },
+    {
+      "seq": 43,
+      "at": "2026-09-29T15:27:41.062Z",
+      "kind": "FINDING",
+      "actor": "coordinator-beta",
+      "state": {
+        "productStateId": "b3ade7e3f442eb2a98da5b317248dd469440631e950f0b3f1ad24cfe116060f4",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "previousEventHash": "a1fc6c777d896ff7a0df89f17f6225ed941f5b43b137790cc9771df3fa4ff1e4",
+      "payloadPath": "events/0043.json",
+      "payloadHash": "fc62df047892604848f0c76af0a32f40a39e0c4ea48265731a3b6154dc88f6e2",
+      "eventHash": "0abb8e976a9b6b260ec78dc9755abe8cbc99a3f55e81f1bfde39403c9b013de3"
     }
   ]
 }
