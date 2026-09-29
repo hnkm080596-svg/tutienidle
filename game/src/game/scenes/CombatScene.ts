@@ -868,7 +868,9 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     // sprite dÃ¡Â»Â±ng NGAY nhÃ†Â°ng Ã¡ÂºÂ¨N cho tÃ¡Â»â€ºi khi snapshot bÃƒÂ¡o materialize
     // (plan Ã‚Â§12.2): pending telegraph vÃƒÂ  materialized sprite loÃ¡ÂºÂ¡i trÃ¡Â»Â«
     // nhau. QuÃƒÂ¡i tÃ¡Â»â€ºi qua 'positions' Ã„â€˜Ã¡ÂºÂ§u tiÃƒÂªn nhÃ†Â° bÃƒÂ¬nh thÃ†Â°Ã¡Â»Âng.
-    const player = this.getOrCreateSprite(PLAYER_ID, PLAYER_COLOR, 'Player', HERO_LANE_INDEX)
+    const playerName =
+      readOptionalGate(this.registry, 'gameManager')?.getActivePlayerName?.() ?? 'Player'
+    const player = this.getOrCreateSprite(PLAYER_ID, PLAYER_COLOR, playerName, HERO_LANE_INDEX)
 
     this.entityVisual.hidePlayer(player)
 

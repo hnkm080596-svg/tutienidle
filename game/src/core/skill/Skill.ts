@@ -126,7 +126,10 @@ export interface Skill {
   // điều kiện này đúng (PassiveSystem đọc HP ratio của player qua
   // hpReader closure; vắng reader thì coi như điều kiện thoả —
   // defensive cho PassiveSystem dựng kiểu cũ ngoài combat).
-  passiveCondition?: { kind: 'hpBelow'; percent: number }
+  // CP-01 - 'hpNotBelow' added for the mirrored talent pair Can Than /
+  // Can Than (phan): the downside leg must apply only above the same
+  // threshold, otherwise it halves the upside leg when both are live.
+  passiveCondition?: { kind: 'hpBelow' | 'hpNotBelow'; percent: number }
 
   // Talent v4 — khi 1 modifier chạm maxStacks: apply buff này lên
   // player qua buffApplier closure rồi reset stack của modifier về 0

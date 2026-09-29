@@ -68,3 +68,6 @@ __pycache__/
 # playwright-cli scratch output (snapshots/screenshots from P14 checks)
 .playwright-cli/
 game/.playwright-cli/
+
+# C2C bridge state (local session artifacts)
+.c2c/

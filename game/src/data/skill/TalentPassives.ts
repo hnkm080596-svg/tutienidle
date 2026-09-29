@@ -54,6 +54,23 @@ function stat(
   }
 }
 
+// CP-01 — variant flat cho stat base-0 (rate stat): percent nhân lên
+// (base+flat)=0 vẫn ra 0, nên các passive dưới đây phải cộng tuyệt đối.
+function flatStat(
+  stat: StatModifier['stat'],
+  flat: number,
+  maxStacks?: number,
+): StatModifier {
+  return {
+    id: `talent:${stat}:${maxStacks ?? 'inf'}:flat`,
+    sourceId: 'talent',
+    sourceType: 'talent',
+    stat,
+    flat,
+    maxStacks,
+  }
+}
+
 export const TALENT_PASSIVE_SKILLS: Skill[] = [
   // 1. Kiem Quang - chi mang: moi crit +1% crit (max 10) -> Kiem Vuc 8s.
   talentPassive(
@@ -70,7 +87,7 @@ export const TALENT_PASSIVE_SKILLS: Skill[] = [
     'Phá Giáp',
     'Nội tại Phá Giáp của thiên phú — tích Mổ Tạc bằng mỗi đòn trúng.',
     'hit',
-    [stat('metalPenetration', 0.02, 5)],
+    [flatStat('metalPenetration', 0.02, 5)],
   ),
   // 3. Tat Phong - toc danh: moi kill +2% attackSpeed, stack vo han
   // trong tran, bi trung don reset (reset thuc thi o consumer event
@@ -130,7 +147,7 @@ export const TALENT_PASSIVE_SKILLS: Skill[] = [
     'Cẩn Thận',
     'Nội tại Cẩn Thận của thiên phú — lạnh lòng khi sát tử đường.',
     'per_second',
-    [stat('finalDamageReductionPercent', 0.1)],
+    [flatStat('finalDamageReductionPercent', 0.1)],
     { passiveCondition: { kind: 'hpBelow', percent: 0.35 } },
   ),
   talentPassive(
@@ -138,7 +155,10 @@ export const TALENT_PASSIVE_SKILLS: Skill[] = [
     'Cẩn Thận (phản)',
     'Nội tại Cẩn Thận của thiên phú — chủ quan khi an toàn.',
     'per_second',
-    [stat('finalDamageReductionPercent', -0.05)],
+    [flatStat('finalDamageReductionPercent', -0.05)],
+    // CP-01 — downside leg chỉ áp TRÊN ngưỡng; không condition thì nó
+    // luôn active và triệt tiêu một nửa leg 'hpBelow' phía trên.
+    { passiveCondition: { kind: 'hpNotBelow', percent: 0.35 } },
   ),
   // 9. Ho The - ward vo no AoE + hoi ward: phan bung no ward-break nam
   // o CombatSystem (Task 4) - passive nay giu phan hoi ward sau vo

@@ -582,6 +582,7 @@
         "met": "Đã đạt",
         "unmet": "Chưa đạt"
       },
+      "ceilingNote": "{realm} chưa mở trong bản hiện tại — {ceiling} là cảnh giới cao nhất của phiên bản này.",
       "bodyRefinement": {
         "title": "Luyện Thể",
         "summary": "Bậc đã hoàn thành: {completed}/6",

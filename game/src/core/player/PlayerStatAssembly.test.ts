@@ -123,7 +123,10 @@ describe('clampStatValue — tôn trọng min/max trong StatMetadata', () => {
 
   it('giá trị dưới min bị kẹp lên min', () => {
     expect(clampStatValue('criticalRate', -1)).toBe(0)
-    expect(clampStatValue('finalDamageReductionPercent', -1)).toBe(0)
+    // CP-01 - finalDamageReductionPercent is signed (min -1) so the
+    // designed +damage-taken downside can land.
+    expect(clampStatValue('finalDamageReductionPercent', -1)).toBe(-1)
+    expect(clampStatValue('finalDamageReductionPercent', -2)).toBe(-1)
     expect(clampStatValue('finalDamagePercent', -2)).toBe(-1)
     expect(clampStatValue('accuracyRating', -5)).toBe(0)
   })
