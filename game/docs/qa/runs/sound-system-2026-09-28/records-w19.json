@@ -1871,7 +1871,7 @@
     "exitCode": 0,
     "result": "PASS",
     "artifactPath": "evidence/EV-SND-FIX26.log",
-    "artifactHash": "",
+    "artifactHash": "a254646474ec42f66d00dd734a46597ad6d5683496c407a1ea157d5ed9f44b45",
     "claims": [
      "39 wave-19 reports -> 30 unique findings (incl dedupe), all actionable fixed incl Low; every new arm probe-verified via smuggle file; suite green on real corpus"
     ],

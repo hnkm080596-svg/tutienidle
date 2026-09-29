@@ -15822,7 +15822,7 @@
       "path": "scripts/qa/validate.mjs",
       "kind": "file",
       "mode": 33188,
-      "hash": "2cf7e41f51595dcdf65efefdc670d39c8159f621a4e905db73f72aee6e08bf10"
+      "hash": "007a5d7881d26a55956cd591e2b944f44d67331ada2bc949d9e35d8b10cf114f"
     },
     {
       "path": "scripts/refine-dong-fu-sect-ground-alpha.ps1",
@@ -25236,13 +25236,13 @@
       "path": "tests/architecture/audioBindingWiring.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "2f187b33304420835b92d00413e6c1e24b46d826d9d8462439099bfc120aad22"
+      "hash": "2ca1b1b4af7c8b8ef39fb5ae1e6412430a6180895939b6dff6a08872a4e578a9"
     },
     {
       "path": "tests/architecture/audioBoundary.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "756c831eaf5426f509dbaa33bae444a6181eea4342daf87aae375c6aba33724d"
+      "hash": "a7d6d5b8ab8e9f4718ab6aa119f3ccca9778e36ce46fd0b2322ccbc4750b2395"
     },
     {
       "path": "tests/architecture/audioManifestCompleteness.test.ts",
@@ -25374,7 +25374,7 @@
       "path": "tests/architecture/helpers/commentStrip.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "4d1f77ddbbde6f8d0fb54db483b2a3dad5941cc4610f5eb37435548972170a48"
+      "hash": "3813f7b9ea1bf879df8dedd3ce8f5fa80a0f7c39b90e1be30521ca97189b749f"
     },
     {
       "path": "tests/architecture/helpers/scanTs.ts",
@@ -25458,7 +25458,7 @@
       "path": "tests/architecture/screenShakeAuthority.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "ba869b2c4a7e088eed1717668d26474f535e3011035642737a90b2e262b350f9"
+      "hash": "3cadbbc1e74f2fe86bc0463f3f82c208722407e87e72ef2b1bf6e353eddfd1ef"
     },
     {
       "path": "tests/architecture/skillDefProducerSources.test.ts",
@@ -25773,5 +25773,5 @@
       "hash": "e69b4133ed37ca9a4f05e66d90521d0bb749c4764bf1f454d0eb13de601f7940"
     }
   ],
-  "productStateId": "f7cf06069ec04137fcdb9ea40965d53187add22d2dd422d48b6ebc93de3c4cf6"
+  "productStateId": "ad427d8c3774e9e96ee9d3b274e547c5f8e0e99eff793d6546bc26c22ee6d3fa"
 }
