@@ -400,6 +400,61 @@ describe('CombatScene â€” playCombatAnimation()', () => {
     expect(gameSprite.playCalls).toEqual([combatAnimationKey(playerKey, 'attack')])
   })
 
+  // Art-seam S1 (2026-09-29, user ruling Q1): a per-skill cast clip outranks
+  // the slot-role pick - linh_bao on the unarmed mortal resolves its own
+  // authored clip instead of the huy_quyen punch attack.
+  it('turn_cast_start plays the per-skill cast clip ahead of the slot-role pick', () => {
+    const scene = createScene()
+    const sprite = makeSprite('sprite')
+    const gameSprite = sprite.rect as ReturnType<typeof fakeGameSprite>
+
+    scene.sprites.set(PLAYER_ID, sprite)
+    patchScene(scene, { _vfxSpawner: { playHorizontalImpulse: vi.fn() } })
+    scene.anims = { exists: () => true }
+
+    // Unarmed mortal (linh_bao/huy_quyen pick) -> 'pham_nhan_unarmed'.
+    scene.playerArmed = false
+
+    fireCastStart(scene, { sourceId: PLAYER_ID, slotRole: 'basic', skillId: 'linh_bao' })
+    expect(gameSprite.playCalls).toEqual(['pham_nhan_unarmed-cast-linh_bao'])
+
+    // The cast clip is a one-shot: completion routes to standby through
+    // the same deferred-loop machinery attack clips use.
+    gameSprite.emit('animationcomplete', { key: 'pham_nhan_unarmed-cast-linh_bao' })
+    expect(gameSprite.playCalls).toEqual([
+      'pham_nhan_unarmed-cast-linh_bao',
+      'pham_nhan_unarmed-standby',
+    ])
+
+    // A skillId the variant never authored falls back to the slot-role
+    // pick - same 'attack' the pre-seam path played.
+    gameSprite.playCalls.length = 0
+    fireCastStart(scene, { sourceId: PLAYER_ID, slotRole: 'basic', skillId: 'huy_quyen' })
+    expect(gameSprite.playCalls).toEqual(['pham_nhan_unarmed-attack'])
+  })
+
+  // Slot-role keyed castClips: ngu_hanh authors ONE 'special' cast covering
+  // every element - the skillId lookup misses, the slot-role lookup hits.
+  it("turn_cast_start falls back to the slot-role cast clip when the skillId isn't keyed", () => {
+    const scene = createScene()
+    const sprite = makeSprite('sprite')
+    const gameSprite = sprite.rect as ReturnType<typeof fakeGameSprite>
+
+    scene.playerProfileId = 'phap_tu'
+    scene.playerProfile = PLAYER_VISUAL_PROFILES.phap_tu
+    scene.sprites.set(PLAYER_ID, sprite)
+    patchScene(scene, { _vfxSpawner: { playHorizontalImpulse: vi.fn() } })
+    scene.anims = { exists: () => true }
+
+    fireCastStart(scene, {
+      sourceId: PLAYER_ID,
+      slotRole: 'special',
+      skillId: 'ngu_hanh_tho_thuan',
+    })
+
+    expect(gameSprite.playCalls).toEqual(['ngu_hanh-cast-special'])
+  })
+
   // Clean-B F-CB2-02: slotRole 'none' marks a declared turn that is not a
   // slot cast (charge-continuation/skipped) - no lunge, no clip.
   it("turn_cast_start with slotRole 'none' plays neither impulse nor clip", () => {

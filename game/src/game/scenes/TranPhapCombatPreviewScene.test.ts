@@ -178,7 +178,7 @@ describe('TranPhapCombatPreviewScene — real art resolution', () => {
     // on atlas-miss, the profile PNG on double-miss (grid-view terminal
     // fallback), the shared placeholder. Missing any one would rebuild the
     // sprite on every sync under that failure mode.
-    for (const textureKey of ['pham_nhan-sheet-1', 'pham_nhan-avatar', 'player-mortal-ink-sword-concept-v2']) {
+    for (const textureKey of ['pham_nhan-sheet-1', 'pham_nhan-avatar', 'player-mortal-pham-nhan-v1']) {
       scene.sprites.clear()
       scene.destroyCalls.length = 0
       scene.sprites.set('player', fakeSprite('player', textureKey))

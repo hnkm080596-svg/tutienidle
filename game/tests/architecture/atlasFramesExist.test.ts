@@ -7,9 +7,10 @@ import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { basename, join } from 'node:path'
 import { PLAYER_VISUAL_PROFILES } from '@/presentation/art/PlayerVisualProfiles'
 import { animatedArtFormFor } from '@/presentation/art/CombatPresentationCatalogue'
-import type {
-  AtlasClip,
-  CombatAnimationCatalogue,
+import {
+  atlasClipsOf,
+  type AtlasClip,
+  type CombatAnimationCatalogue,
 } from '@/presentation/art/CombatEntityPresentation'
 import { SCAN_TIMEOUT } from './helpers/scanTs'
 
@@ -45,9 +46,9 @@ function mortalClips(): CombatAnimationCatalogue {
   return clips
 }
 
-/** Every declared clip as a flat list - optional members absent, never undefined. */
+/** Every declared clip as a flat list - optional members absent, castClips flattened. */
 function clipList(catalogue: CombatAnimationCatalogue): AtlasClip[] {
-  return Object.values(catalogue).filter((clip): clip is AtlasClip => clip !== undefined)
+  return atlasClipsOf(catalogue)
 }
 
 function frameName(clip: AtlasClip, index: number): string {

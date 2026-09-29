@@ -262,7 +262,11 @@ const previewContainerRef = ref<HTMLDivElement | null>(null)
 // scene resolves art from it through the shared combat catalogue — without
 // it the scene would have to guess or hardcode a placeholder.
 function assignmentsPayload(): FormationAssignmentsPayload {
-  return { assignments: currentAssignments.value, playerProfileId: player.visualProfileId }
+  return {
+    assignments: currentAssignments.value,
+    playerProfileId: player.visualProfileId,
+    playerArmed: player.visualArmed,
+  }
 }
 
 // V4/V10 — the hosting mechanics (dynamic import, construction, teardown

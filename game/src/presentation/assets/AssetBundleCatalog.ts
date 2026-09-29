@@ -37,8 +37,11 @@ import {
   resolveEnemyTextureKey,
 } from '@/game/support/EnemyArt'
 import { MONSTER_ART, reskinnedTemplateIds } from '@/game/support/MonsterArt'
-import { CHARACTER_ART } from '@/game/support/CharacterArt'
-import { PLAYER_VISUAL_PROFILES } from '@/presentation/art/PlayerVisualProfiles'
+import { CHARACTER_ART, resolveCharacterArtSlugs } from '@/game/support/CharacterArt'
+import {
+  CULTIVATE_TEXTURE_OVERRIDES,
+  PLAYER_VISUAL_PROFILES,
+} from '@/presentation/art/PlayerVisualProfiles'
 import {
   animatedCombatEntities,
   animatedArtFormFor,
@@ -47,6 +50,7 @@ import {
   PLACEHOLDER_STATIC_TEXTURE_URL,
 } from '@/presentation/art/CombatPresentationCatalogue'
 import { ENTITY_ART_MODE } from '@/presentation/art/EntityArtMode'
+import { atlasClipsOf } from '@/presentation/art/CombatEntityPresentation'
 
 export type AssetBundleId = 'core-ui' | 'home' | 'combat' | 'tribulation'
 
@@ -127,6 +131,20 @@ export function getHomeDescriptors(): readonly AssetResourceDescriptor[] {
     }
   }
 
+  // Hidden-way cultivate PNGs (art-seam wave) - same enumerate-everything
+  // rule as the profiles: the way read happens at draw time, so the bundle
+  // cannot know which override the session will need.
+  for (const override of Object.values(CULTIVATE_TEXTURE_OVERRIDES)) {
+    if (override && !seenKeys.has(override.key)) {
+      seenKeys.add(override.key)
+      descriptors.push({
+        kind: 'image',
+        key: override.key,
+        url: override.url,
+      })
+    }
+  }
+
   if (ENTITY_ART_MODE === 'animated') {
     // Animated mode - MainScene plays the player atlas's idle clip (standing)
     // and the cultivate bridge (sitting). The PNGs above stay loaded too:
@@ -134,27 +152,35 @@ export function getHomeDescriptors(): readonly AssetResourceDescriptor[] {
     for (const profile of Object.values(PLAYER_VISUAL_PROFILES)) {
       // Resolve through the same entity-key authority MainScene uses - the
       // raw combatTextureKey misses reskin-mapped character sheets and
-      // under-enumerates the bundle (dormant-mode divergence).
-      const clips = animatedArtFormFor(
+      // under-enumerates the bundle (dormant-mode divergence). Enumerate
+      // EVERY mapped slug (armed AND unarmed): the armed pick resolves at
+      // spawn/profile-change time, so preloading only one leaves the other
+      // sheet unloadable mid-scene.
+      const entityKeys = new Set([
+        ...resolveCharacterArtSlugs(profile.id),
         resolvePlayerEntityKey(profile.id, profile.combatTextureKey),
-      )
+      ])
 
-      if (!clips) {
-        continue
-      }
+      for (const entityKey of entityKeys) {
+        const clips = animatedArtFormFor(entityKey)
 
-      for (const clip of Object.values(clips)) {
-        if (seenKeys.has(clip.sheetKey)) {
+        if (!clips) {
           continue
         }
 
-        seenKeys.add(clip.sheetKey)
-        descriptors.push({
-          kind: 'atlas',
-          key: clip.sheetKey,
-          textureUrl: clip.sheetUrl,
-          atlasUrl: clip.atlasUrl,
-        })
+        for (const clip of atlasClipsOf(clips)) {
+          if (seenKeys.has(clip.sheetKey)) {
+            continue
+          }
+
+          seenKeys.add(clip.sheetKey)
+          descriptors.push({
+            kind: 'atlas',
+            key: clip.sheetKey,
+            textureUrl: clip.sheetUrl,
+            atlasUrl: clip.atlasUrl,
+          })
+        }
       }
     }
 
@@ -245,10 +271,18 @@ export function getCombatDescriptors(): readonly AssetResourceDescriptor[] {
     }
   }
 
+  // Hidden-way cultivate overrides (art-seam wave): the cultivate pose in
+  // the combat-side paths reads these when the way is hidden.
+  for (const override of Object.values(CULTIVATE_TEXTURE_OVERRIDES)) {
+    if (override) {
+      addImage(override.key, override.url)
+    }
+  }
+
   // Character animation atlases (Spec B sec.3.1) - one entry per distinct sheet,
   // however many entities and clips share it.
   for (const { clips } of animatedCombatEntities()) {
-    for (const clip of Object.values(clips)) {
+    for (const clip of atlasClipsOf(clips)) {
       if (seenKeys.has(clip.sheetKey)) continue
       seenKeys.add(clip.sheetKey)
       descriptors.push({
@@ -291,6 +325,19 @@ export function getTribulationDescriptors(): readonly AssetResourceDescriptor[] 
           kind: 'image',
           key: profile.cultivateTextureKey,
           url: profile.cultivateTextureUrl,
+        })
+      }
+    }
+
+    // Hidden-way cultivate overrides (art-seam wave) - TribulationScene
+    // resolves the way before picking its texture.
+    for (const override of Object.values(CULTIVATE_TEXTURE_OVERRIDES)) {
+      if (override && !seenKeys.has(override.key)) {
+        seenKeys.add(override.key)
+        descriptors.push({
+          kind: 'image',
+          key: override.key,
+          url: override.url,
         })
       }
     }

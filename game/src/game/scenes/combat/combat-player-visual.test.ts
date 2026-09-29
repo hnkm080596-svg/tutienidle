@@ -133,10 +133,10 @@ describe('CombatPlayerVisual.applyPlayerVisualProfile', () => {
 
   it('atlas-miss + profile PNG drawn: sizing follows the surviving texture, not atlas dims', () => {
     const gs = fakeGameSprite()
-    gs.texture = { key: 'player-mortal-ink-sword-concept-v2' }
+    gs.texture = { key: 'player-mortal-pham-nhan-v1' }
     const sprite = makeSprite(gs)
 
-    const scene = createScene(new Set(['player-mortal-ink-sword-concept-v2'])) // no sheets, no avatar
+    const scene = createScene(new Set(['player-mortal-pham-nhan-v1'])) // no sheets, no avatar
     scene.sprites.set(PLAYER_ID, sprite)
     const visual = new CombatPlayerVisual(scene as unknown as CombatScene)
 

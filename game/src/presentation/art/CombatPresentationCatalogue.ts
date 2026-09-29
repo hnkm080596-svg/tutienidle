@@ -45,6 +45,7 @@ import {
 } from '@/game/support/CharacterArt'
 import { ENTITY_ART_MODE } from './EntityArtMode'
 import {
+  atlasClipsOf,
   combatAnimationKey,
   type ArtExtent,
   type AtlasClip,
@@ -107,18 +108,6 @@ export const PLACEHOLDER_STATIC_SOURCE_SIZE = { w: 128, h: 128 } as const
  * pack-mortal-combat-art.mjs). Painted art has real margins: `{0,0,1,1}`
  * would oversize the figure. Re-run the script when a PNG changes.
  */
-export const PLAYER_STATIC_EXTENT_MORTAL: ArtExtent = {
-  x: 0,
-  y: 0,
-  w: 0.946646,
-  h: 0.98749,
-}
-export const PLAYER_STATIC_EXTENT_PHAP_TU: ArtExtent = {
-  x: 0.061872,
-  y: 0,
-  w: 0.843001,
-  h: 0.985197,
-}
 export const PLAYER_STATIC_EXTENT_KIEM_TU: ArtExtent = {
   x: 0.169355,
   y: 0.096774,
@@ -133,8 +122,21 @@ export const PLACEHOLDER_STATIC_EXTENT: ArtExtent = {
 }
 
 const PLAYER_STATIC_EXTENTS: Record<string, ArtExtent> = {
-  'player-mortal-ink-sword-concept-v2': PLAYER_STATIC_EXTENT_MORTAL,
-  'player-phap-tu-v1': PLAYER_STATIC_EXTENT_PHAP_TU,
+  // Reskin-matched statics (art-seam wave, 2026-09-29): one entity = one art
+  // family, so the still is the armed variant's portrait PNG - measured
+  // alpha bboxes, same convention as every other declared extent.
+  'player-mortal-pham-nhan-v1': {
+    x: 0.048387,
+    y: 0.044355,
+    w: 0.887097,
+    h: 0.91129,
+  },
+  'player-phap-tu-ngu-hanh-v1': {
+    x: 0.012295,
+    y: 0.063492,
+    w: 0.786885,
+    h: 0.912698,
+  },
   'player-kiem-tu-v1': PLAYER_STATIC_EXTENT_KIEM_TU,
 }
 
@@ -301,7 +303,7 @@ const ENEMY_IDLE_PERIOD_JITTER_MS = 600
  */
 /**
  * A player profile's measured static extent - hard-fail when a distinct
- * texture key has none. A silent `?? PLAYER_STATIC_EXTENT_MORTAL` fallback
+ * texture key has none. A silent `?? <some default extent>` fallback
  * would size a NEW profile's PNG by the mortal margins instead of its own,
  * and nothing would notice until the figure rendered wrong.
  */
@@ -412,7 +414,9 @@ function buildCatalogue(): {
       textureKey: FALLBACK_PLAYER_ENTITY_KEY,
       textureUrl: PLAYER_VISUAL_PROFILES.mortal.combatTextureUrl.replace(/^\/+/, ''),
       sourceSize: { ...PLAYER_VISUAL_PROFILES.mortal.combatSourceSize },
-      extent: PLAYER_STATIC_EXTENT_MORTAL,
+      // Same PNG as the mortal profile, so the same measured extent - the
+      // old per-key export went stale the moment the PNG was swapped.
+      extent: playerStaticExtent(PLAYER_VISUAL_PROFILES.mortal.combatTextureKey),
     },
     playerMortalCatalogue(FALLBACK_PLAYER_ENTITY_KEY),
   )
@@ -519,6 +523,21 @@ function buildCatalogue(): {
 
     if (variant.clips.ult) {
       clips.ult = characterClip(variant.slug, 'ult', variant.clips.ult, 10, 0, variant.extent, variant.sourceSize)
+    }
+
+    // Per-skill cast clips (art-seam S1) - keyed map on the catalogue, anim
+    // key `${slug}-cast-${key}`; play-once at the attack clip's frameRate.
+    if (variant.castClips) {
+      const castClips: Record<string, AtlasClip> = {}
+
+      for (const [key, range] of Object.entries(variant.castClips)) {
+        castClips[key] = {
+          ...characterClip(variant.slug, 'attack', range, 8, 0, variant.extent, variant.sourceSize),
+          key: `${variant.slug}-cast-${key}`,
+        }
+      }
+
+      clips.castClips = castClips
     }
 
     return clips
@@ -670,7 +689,7 @@ export function placeholderEntityKeys(): readonly string[] {
     }
 
     if (presentation.kind === 'animated') {
-      const clips = Object.values(presentation.clips)
+      const clips = atlasClipsOf(presentation.clips)
 
       if (clips.every((clip) => clip.sheetKey === PLACEHOLDER_SHEET_KEY)) {
         keys.push(entityKey)
@@ -721,8 +740,12 @@ export function resolveCombatEntityKey(runtimeId: string): string {
  * playback, sprite creation and the TranPhap panel can never disagree about
  * which entity the player IS.
  */
-export function resolvePlayerEntityKey(profileId: string, fallbackTextureKey: string): string {
-  const reskinSlug = resolveCharacterArtSlug(profileId)
+export function resolvePlayerEntityKey(
+  profileId: string,
+  fallbackTextureKey: string,
+  opts?: { armed?: boolean },
+): string {
+  const reskinSlug = resolveCharacterArtSlug(profileId, opts)
 
   if (reskinSlug !== undefined && CATALOGUE.has(reskinSlug)) {
     return reskinSlug

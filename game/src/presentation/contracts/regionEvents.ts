@@ -29,4 +29,11 @@ export interface FormationAssignmentsPayload {
   assignments: FormationSlotAssignment[]
 
   playerProfileId?: PlayerVisualProfileId
+
+  /**
+   * The player's armed pick (art-seam wave, user ruling Q2): the mortal
+   * reskin resolves 'pham_nhan' vs 'pham_nhan_unarmed' from it. Optional
+   * like `playerProfileId`; absent keeps the armed resolver default.
+   */
+  playerArmed?: boolean
 }

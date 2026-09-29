@@ -12,7 +12,7 @@
 // `ult` is the character-only clip (enemy packer emits skill/enrage/...
 // instead). It is OPTIONAL downstream: catalogues emit it when the variant
 // carries one, playback treats it like `attack` (play-once -> standby).
-// `<slug>-cast-<key>` dirs emit per-skill cast clips into `manifest.cast` —
+// `<slug>-cast-<key>` dirs emit per-skill cast clips into `manifest.cast` -
 // keyed by skillId or slot role, resolved by playCastClip before slot-role.
 //
 // Missing pieces are SYNTHESIZED where the contract requires them:

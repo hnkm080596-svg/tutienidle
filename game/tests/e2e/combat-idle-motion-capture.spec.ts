@@ -240,9 +240,10 @@ test.describe('Combat idle motion (static mode + wave-1 reskins)', { tag: '@capt
 
     expect(probeGone, 'probe sprite still present after death sequence').toBe(true)
 
-    // Player probe (character-art-infra): the `ult` clip is the one authored
-    // sequence combat may never fire on floor 1 (ult slot gating is deep
-    // progression). Drive the same call the binding makes for an ultimate cast -
+    // Player probe (character-art-infra): `ult` is the one clip combat may
+    // never fire on floor 1 (ult slot gating is deep progression). pham_nhan
+    // authors no ult clip (Minh wave 2026-09-29), so driving the ultimate
+    // call exercises the live MISSING_CLIP_FALLBACK degrade onto 'attack' -
     // play-once, then TRANSITION_DESTINATION lands it on standby.
     const ultAnim = await page.evaluate(() => {
       const w = window as unknown as {
@@ -261,8 +262,8 @@ test.describe('Combat idle motion (static mode + wave-1 reskins)', { tag: '@capt
       }
     })
 
-    expect(ultAnim.anim, `player ult clip did not start (got '${ultAnim.anim}')`).toBe(
-      'pham_nhan-ult',
+    expect(ultAnim.anim, `player ult degrade did not start attack (got '${ultAnim.anim}')`).toBe(
+      'pham_nhan-attack',
     )
 
     await page
@@ -270,7 +271,7 @@ test.describe('Combat idle motion (static mode + wave-1 reskins)', { tag: '@capt
       .first()
       .screenshot({ path: path.join(outDir, 'player-ult.png') })
 
-    // 14 frames at 10fps = 1.4s; give the completion listener margin. The
+    // 17 frames at 8fps = ~2.1s; give the completion listener margin. The
     // one-shot must have ENDED - which loop follows (standby vs idle) is the
     // live engine's call, so the pin is "settles on a loop", not a specific
     // destination. Poll rather than fixed-wait: live combat keeps running
@@ -483,7 +484,7 @@ test.describe('Combat idle motion (static mode + wave-1 reskins)', { tag: '@capt
       expect(
         sample.playerAnim,
         `reskinned player is not playing a pham_nhan clip (got '${sample.playerAnim}')`,
-      ).toMatch(/^pham_nhan-(idle|standby|attack|ult|death|idle_to_standby|standby_to_idle)$/)
+      ).toMatch(/^pham_nhan-(idle|standby|attack|death|idle_to_standby|standby_to_idle)$/)
     }
 
     const playerFrames = new Set(playerSamples.map((sample) => sample.playerFrame))

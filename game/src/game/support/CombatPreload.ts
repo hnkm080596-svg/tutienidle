@@ -29,7 +29,11 @@ import {
   PLACEHOLDER_STATIC_TEXTURE_URL,
 } from '@/presentation/art/CombatPresentationCatalogue'
 import { ENTITY_ART_MODE } from '@/presentation/art/EntityArtMode'
-import type { CombatAnimationCatalogue } from '@/presentation/art/CombatEntityPresentation'
+import {
+  atlasClipsOf,
+  type CombatAnimationCatalogue,
+} from '@/presentation/art/CombatEntityPresentation'
+import { CULTIVATE_TEXTURE_OVERRIDES } from '@/presentation/art/PlayerVisualProfiles'
 
 // The mortal entity key - the shared player fallback. MainScene keeps its
 // own atlas; the scenes intentionally use separate texture keys. Re-exported
@@ -101,7 +105,7 @@ export function queueCombatAssets(scene: Phaser.Scene): void {
   }
 
   const queueAtlasOnce = (clips: CombatAnimationCatalogue) => {
-    for (const clip of Object.values(clips)) {
+    for (const clip of atlasClipsOf(clips)) {
       if (queuedKeys.has(clip.sheetKey) || scene.textures.exists(clip.sheetKey)) {
         continue
       }
@@ -166,6 +170,14 @@ export function queueCombatAssets(scene: Phaser.Scene): void {
 
     if (profile.cultivateTextureKey && profile.cultivateTextureUrl) {
       queueOnce(profile.cultivateTextureKey, profile.cultivateTextureUrl)
+    }
+  }
+
+  // Hidden-way cultivate overrides (art-seam wave): the PNG must be in the
+  // parity list so catalogPreloadParity sees bundle+queue enumerate alike.
+  for (const override of Object.values(CULTIVATE_TEXTURE_OVERRIDES)) {
+    if (override) {
+      queueOnce(override.key, override.url)
     }
   }
 

@@ -52,7 +52,7 @@ function createFakeScene() {
     characterWidth: 40,
     characterHeight: 50,
     playerSourceSize: { w: 1244, h: 1264 },
-    playerProfile: { id: 'mortal', combatTextureKey: 'player-mortal-ink-sword-concept-v2' },
+    playerProfile: { id: 'mortal', combatTextureKey: 'player-mortal-pham-nhan-v1' },
     add: {
       text: () => chainable(),
       sprite: vi.fn(() => chainable()),

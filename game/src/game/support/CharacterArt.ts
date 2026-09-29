@@ -190,6 +190,18 @@ export function resolveCharacterArtSlug(profileId: string, opts?: { armed?: bool
 }
 
 /**
+ * Every slug a profile's binding covers: bare bindings answer [slug],
+ * {armed,unarmed} pairs answer BOTH. Preload enumerates this (not the armed
+ * pick) because the armed state resolves at spawn - the unarmed sheets must
+ * be queued before mortalBasicSkillId is ever read.
+ */
+export function resolveCharacterArtSlugs(profileId: string): string[] {
+  const binding = (CHARACTER_RESKIN_MAP as Record<string, string | CharacterReskinBinding>)[profileId]
+  if (binding === undefined) return []
+  return typeof binding === 'string' ? [binding] : [binding.armed, binding.unarmed]
+}
+
+/**
  * Entity keys that emit `kind: 'animated'` even while ENTITY_ART_MODE is
  * 'static' - same sanctioned exception as ANIMATED_ENEMY_KEYS.
  */
