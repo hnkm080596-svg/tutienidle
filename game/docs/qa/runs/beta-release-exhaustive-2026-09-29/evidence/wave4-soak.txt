@@ -1,0 +1,38 @@
+Event details (3 events):
+
+--- event-01a0eddb9d627f3e8f87cbc6a948fe66 ---
+  type: initial_user_message (message)
+  direction: incoming
+  created_at: 2026-09-29 15:49:48 UTC
+  contents: {
+  "type": "initial_user_message",
+  "email": "hnkm080596@gmail.com",
+  "origin": "api",
+  "message": "ROLE: soak runner for QA run beta-release-exhaustive-2026-09-29 on repo tutienidle (Vue3+TS+Pinia+Phaser; app root game/).\nCLONE: own clone \u2014 git fetch origin && git checkout beta-release-exhaustive (current tip); report commit. Node: export PATH=/home/linuxbrew/.linuxbrew/opt/node@22/bin:$PATH. Scratch to /tmp only \u2014 do NOT commit.\nBLIND: never read game/docs/qa/**, .agent-*, commit messages, PR text.\nMISSION \u2014 long-horizon soak of the REAL game systems headless (vitest rig in /tmp, real GameManager + stores + ManualClockSource):\n- 200+ simulated in-game days of cultivation ticks + periodic saves/loads (state stays coherent, no drift/NaN).\n- 50+ turn battles back-to-back incl. repeat farm arming \u2014 watch pendingMastery/follow-up queues/entity leaks; memory-shaped state doesn't grow unboundedly.\n- Offline accrual across many save/restore cycles \u2014 exactly-once crediting, no double-count.\n- Quest/companion/equipment churn loops \u2014 idempotency + no orphaned records.\n- Final save must validate clean after the whole soak.\nOUTPUT: soak stats (battles, ticks, saves, elapsed sim-time) + any anomaly findings [{severity,title,location,evidence,expected,actual,repro}].",
+  "user_id": "devin-bot",
+  "username": "Devin Bot",
+  "timestamp": "2026-09-29T15:49:47.957477+00:00",
+  "rich_content": null,
+  "github_username": "hnkm080596-svg",
+  "sender_devin_session_id": "5bf2143f50154f09bbdb6b8a1f7cb508"
+}
+
+--- event-01a0eddbc8d57700ad25db10c6805246 ---
+  type: devin_message (message)
+  direction: outgoing
+  created_at: 2026-09-29 15:49:59 UTC
+  contents: {
+  "type": "devin_message",
+  "message": "Starting soak run beta-release-exhaustive-2026-09-29: checking out beta-release-exhaustive, then building a headless vitest rig in /tmp against the real GameManager/stores. Will report commit, soak stats, and any anomalies.",
+  "timestamp": "2026-09-29T15:49:59.125000Z"
+}
+
+--- event-01a0ee0d8e457d03b71b7f85b491013b ---
+  type: devin_message (message)
+  direction: outgoing
+  created_at: 2026-09-29 16:44:24 UTC
+  contents: {
+  "type": "devin_message",
+  "message": "SOAK REPORT \u2014 beta-release-exhaustive-2026-09-29\ncommit: f93acd39b550418cebfc516d69f1a3075510ab3f (beta-release-exhaustive)\nrig: vitest in /tmp, real GameManager+stores, App.vue-faithful boot (16 catalog registrations, creation profile, early-game bootstrap, starter buildings), ManualClockSource for combat, fake-wall-clock ticks, seeded battle/loot/session rng. Nothing committed; all scratch in /tmp.\n\nSOAK STATS\n- 240 sim-days, 69,120 ticks (300s chunks), 20.74M sim-seconds; 240s wall\n- 73 saves / 72 restores ok, 0 rejected; 4 cold-boot restores; final save: shapeOk+acceptable+inspect ok+restore ok\n- exactly-once: 47/48 identical-payload re-restores byte-identical no-ops; 24/24 sub-60s fidelity checks clean; offline accrual deltas finite and \u22650 every cycle (materialsTotal 113\u2192~3.87M)\n- 190 battles: 4V/180D/0 timeout; 6 repeat-farm cycles; 8 auto-farm windows; 8 slot-busy skips (farm\u2194battle mutual exclusion working)\n- 4.56M notifications drained, 0 residual backlog; 34 breakthroughs; NaN/drift scan clean every 10 days\n- Heap 61\u219293MB across run; questState const 407B; equipment cap held\n\nFINDINGS\n1. [high] Enemy entity residue accumulates unboundedly across battles\n   location: EnemyManager / beginBattleCycle entry teardown\n   evidence: checkpoint enemies 9\u2192598; maxPostDefeatResidue=594 over 190 battles (~3.1/defeat, monotonic). enemyManager.clear() exists but only runs via abandonBattle + live-battle teardown; a battle already at state 'defeat' never triggers it, so each defeat adds its roster to getAll() permanently.\n   expected: residue bounded to last roster, reclaimed at next cycle entry\n   actual: unbounded growth across the session (victory path also leaves residue \u2014 enemies=4 post-victory \u2014 same class, smaller)\n   repro: back-to-back defeats -> getAll().length grows each battle\n\n2. [medium] Identical-payload restore still mutates state via unconditional setActivePlayer talent-passive sync\n   location: SaveSystem.restoreGameSession -> GameManager.setActivePlayer -> progressionOps.syncTalentCombatPassive\n   evidence: res2=ok, save object byte-identical before/after both restores (saveMutated=false x2), yet save.skills[3] changed content (talent_passive_kiem_quang \u2194 passive_linh_khi_cam_ung swap, 26 leaf diffs). gm.saveOps.restoreFromSave called directly a 3rd time \u2192 0 diffs, so both payload guards hold; the writer is setActivePlayer's syncTalentCombatPassive (revoke + re-grant \u2192 reorders skillManager, resets passive stacks). Triggered once (day5) \u2014 afterward the talent passive sits at end so subsequent restores are stable.\n   expected: identical payload re-restore is a true no-op (comment claims \"no-op \u0111\u00fang ngh\u0129a\")\n   actual: skill order + passive runtime stacks mutate on every identical restore\n   repro: restoreGameSession(save) twice; diff buildGameSave\n\n3. [low] Persisted passiveModifier[].stacks dropped on restore (\u00d724)\n   location: GameManagerSaveRestore skills slice (template re-derive)\n   evidence: save.skills[i].passiveModifiers[0].stacks 4\u2192undefined, 22\u21920 on every fidelity check \u2014 restore replaces modifiers with template clones.\n   expected: either stacks survive or are deliberately reset\n   actual: payload persists runtime stacks that restore silently discards; consistent policy-wise (authored data owns the slot, in-battle stacks are ephemeral) but worth confirming it's intended \u2014 kiem_quang-type stacking passives lose built stacks on reload.\n\nCOVERAGE NOTES (gated, not defects)\n- Companion pulls 0: realm gate foundation_establishment never reached (player clamped at qi_refining L18, 23400/23400 \u2014 tribulation gate held all 240d).\n- Quest claims 0, duplicate-claim path untested: no quest reached claimable state headless despite 3.8M material throughput.\n- Victory path thin (4V/180D): L18-locked player loses most mortal stages; repeat-farm chains break on first defeat (6 cycles).\n- battleTimeout 0 \u2014 step-budget fix verified (earlier 171 phantom timeouts were a harness bug: getElapsedCombatSteps is cumulative across battles).\n\nTwo harness artifacts from run-1 were root-caused and fixed (cumulative combat-step counter; non-existent player.spiritStone field \u2014 accrual now tracked via materialBag totals). Nothing in game/ modified; no commits.\n\nATTACHMENT:{\"url\":\"https://app.devin.ai/attachments/0a7cba6a-f8bb-42ae-9134-119ec04c0db9/soak-report.json\",\"fileSize\":11709}",
+  "timestamp": "2026-09-29T16:44:20.933000Z"
+}

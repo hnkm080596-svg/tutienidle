@@ -25,7 +25,7 @@
     "base": "",
     "head": "",
     "state": {
-      "productStateId": "8d7ea1cd7ca3df591edd09011e5c8a123a59536dd71d831c886f8ba2c016c435",
+      "productStateId": "a145206f13aa610d749d2fecd0747a50539b74b43946f7cf389c308a052dd1dc",
       "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
       "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
       "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
@@ -857,7 +857,7 @@
         "long-run soak runner"
       ],
       "readiness": "READY",
-      "status": "RESERVED",
+      "status": "FINISHED",
       "observedRuntimeId": "devin-1d8e740e4dde406ea78b54b85d164461",
       "history": [
         {
@@ -871,9 +871,17 @@
           "from": "READY",
           "to": "RESERVED",
           "reason": "admitted at 5/5 (incl. external 0)"
+        },
+        {
+          "at": "2026-09-29T16:50:27.769Z",
+          "from": "RESERVED",
+          "to": "FINISHED",
+          "reason": "lifecycle verified released via 'exited'"
         }
       ],
-      "reservedAt": "2026-09-29T15:50:00.917Z"
+      "reservedAt": "2026-09-29T15:50:00.917Z",
+      "releaseEvidence": "240d soak: HIGH enemy residue F-BX-94, MED restore-mutation F-BX-95, LOW stacks F-BX-96",
+      "resultRef": "evidence/wave4-soak.txt"
     },
     {
       "id": "ASG-BX-REPAIR-W4A",
@@ -923,7 +931,7 @@
         "branch beta-repair-wave4b"
       ],
       "readiness": "READY",
-      "status": "RESERVED",
+      "status": "FINISHED",
       "observedRuntimeId": "devin-0dbdf05361c84a3f8790754e5eff1603",
       "history": [
         {
@@ -937,9 +945,17 @@
           "from": "READY",
           "to": "RESERVED",
           "reason": "admitted at 4/5 (incl. external 0)"
+        },
+        {
+          "at": "2026-09-29T16:50:27.618Z",
+          "from": "RESERVED",
+          "to": "FINISHED",
+          "reason": "lifecycle verified released via 'exited'"
         }
       ],
-      "reservedAt": "2026-09-29T16:22:46.305Z"
+      "reservedAt": "2026-09-29T16:22:46.305Z",
+      "releaseEvidence": "6 findings repaired @72bd134e merged; tsc+796 scoped green",
+      "resultRef": "beta-repair-wave4b"
     }
   ],
   "consumptions": [],
@@ -5205,10 +5221,13 @@
       "pinEvidenceIds": [],
       "verificationEvidenceIds": [],
       "closureReviewIds": [],
-      "status": "OBSERVED",
+      "status": "CLOSED",
       "duplicateOf": null,
       "rejectionReason": null,
-      "exception": null
+      "exception": null,
+      "closeReason": "REPAIRED 24d670f3: error card real alertdialog via useDialogFocus; window guard fixed",
+      "closedAt": "2026-09-29T16:55:00Z",
+      "fixedInRevision": "24d670f3"
     },
     {
       "id": "F-BX-55",
@@ -5248,10 +5267,13 @@
       "pinEvidenceIds": [],
       "verificationEvidenceIds": [],
       "closureReviewIds": [],
-      "status": "OBSERVED",
+      "status": "CLOSED",
       "duplicateOf": null,
       "rejectionReason": null,
-      "exception": null
+      "exception": null,
+      "closeReason": "REPAIRED 24d670f3: app-wide Tab hijack removed; wheel owns Tab-cycle + focus-in",
+      "closedAt": "2026-09-29T16:55:00Z",
+      "fixedInRevision": "24d670f3"
     },
     {
       "id": "F-BX-56",
@@ -6789,13 +6811,13 @@
       "pinEvidenceIds": [],
       "verificationEvidenceIds": [],
       "closureReviewIds": [],
-      "status": "OBSERVED",
+      "status": "CLOSED",
       "duplicateOf": null,
       "rejectionReason": null,
       "exception": null,
-      "fixedInRevision": null,
-      "closedAt": null,
-      "closeReason": null
+      "fixedInRevision": "24d670f3",
+      "closedAt": "2026-09-29T16:55:00Z",
+      "closeReason": "REPAIRED 24d670f3: finitePoolValue boundary on all vitals writes + dotDamage entry guard; NaN can no longer execute entity"
     },
     {
       "id": "F-BX-90",
@@ -6883,13 +6905,13 @@
       "pinEvidenceIds": [],
       "verificationEvidenceIds": [],
       "closureReviewIds": [],
-      "status": "OBSERVED",
+      "status": "CLOSED",
       "duplicateOf": null,
       "rejectionReason": null,
       "exception": null,
-      "fixedInRevision": null,
-      "closedAt": null,
-      "closeReason": null
+      "fixedInRevision": "24d670f3",
+      "closedAt": "2026-09-29T16:55:00Z",
+      "closeReason": "REPAIRED 24d670f3: pins at-max accepted / over-max rejected"
     },
     {
       "id": "F-BX-92",
@@ -6931,13 +6953,13 @@
       "pinEvidenceIds": [],
       "verificationEvidenceIds": [],
       "closureReviewIds": [],
-      "status": "OBSERVED",
+      "status": "CLOSED",
       "duplicateOf": null,
       "rejectionReason": null,
       "exception": null,
-      "fixedInRevision": null,
-      "closedAt": null,
-      "closeReason": null
+      "fixedInRevision": "24d670f3",
+      "closedAt": "2026-09-29T16:55:00Z",
+      "closeReason": "REPAIRED 24d670f3: pins equal-rev newer-remote pulls, older-local pushed"
     },
     {
       "id": "F-BX-93",
@@ -6977,6 +6999,144 @@
         "F-BX-32"
       ],
       "repair": "Add pin: rewound remote does NOT adopt",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "CLOSED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "fixedInRevision": "24d670f3",
+      "closedAt": "2026-09-29T16:55:00Z",
+      "closeReason": "REPAIRED 24d670f3: pin rewound remote -> conflict, no writes"
+    },
+    {
+      "id": "F-BX-94",
+      "title": "Enemy entity residue accumulates unboundedly across defeats (~3.1/defeat)",
+      "state": {
+        "productStateId": "a145206f13aa610d749d2fecd0747a50539b74b43946f7cf389c308a052dd1dc",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "severity": "High",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/core/enemy/EnemyManager (or equivalent)",
+          "symbolOrSection": "beginBattleCycle entry teardown",
+          "revision": "f93acd39",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "soak runner devin-1d8e740e",
+      "invariantIds": [
+        "I-AGGREGATE-RELEASE"
+      ],
+      "evidenceIds": [],
+      "counterexample": "240-day soak evidence",
+      "expected": "bounded residue / true no-op restore",
+      "actual": "enemyManager.clear() only runs on abandonBattle + live-battle teardown; battle ending at 'defeat' never clears roster -> getAll() grows permanently (9->598 over 190 battles); victory leaves ~4",
+      "rootCause": "defeat/victory exit path skips teardown",
+      "rootClass": "lifecycle",
+      "subsystem": "combat",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": "Clear enemy roster at cycle entry/exit for ALL terminal states, not just abandon",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "OBSERVED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "fixedInRevision": null,
+      "closedAt": null,
+      "closeReason": null
+    },
+    {
+      "id": "F-BX-95",
+      "title": "Identical-payload restore mutates state via setActivePlayer talent-passive sync",
+      "state": {
+        "productStateId": "a145206f13aa610d749d2fecd0747a50539b74b43946f7cf389c308a052dd1dc",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/services/save/SaveSystem.ts",
+          "symbolOrSection": "restoreGameSession -> setActivePlayer -> syncTalentCombatPassive",
+          "revision": "f93acd39",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "soak runner devin-1d8e740e",
+      "invariantIds": [
+        "I-AGGREGATE-RELEASE"
+      ],
+      "evidenceIds": [],
+      "counterexample": "240-day soak evidence",
+      "expected": "bounded residue / true no-op restore",
+      "actual": "identical re-restore reorders skills (talent_passive swap) + resets passive stacks (26 leaf diffs); direct restoreFromSave 3rd time -> 0 diffs",
+      "rootCause": "unconditional revoke+re-grant on every restore",
+      "rootClass": "sync",
+      "subsystem": "save-cloud",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": "Skip sync when already-synced marker holds, or order-stable + stack-preserving",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "OBSERVED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "fixedInRevision": null,
+      "closedAt": null,
+      "closeReason": null
+    },
+    {
+      "id": "F-BX-96",
+      "title": "Persisted passiveModifier[].stacks dropped on restore",
+      "state": {
+        "productStateId": "a145206f13aa610d749d2fecd0747a50539b74b43946f7cf389c308a052dd1dc",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/core/game/GameManagerSaveRestore.ts",
+          "symbolOrSection": "skills slice template re-derive",
+          "revision": "f93acd39",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "soak runner devin-1d8e740e",
+      "invariantIds": [
+        "I-AGGREGATE-RELEASE"
+      ],
+      "evidenceIds": [],
+      "counterexample": "240-day soak evidence",
+      "expected": "bounded residue / true no-op restore",
+      "actual": "save persists runtime stacks but restore replaces modifiers with template clones (4->undefined, 22->0)",
+      "rootCause": "authored-template owns slot; runtime stacks ephemeral",
+      "rootClass": "persistence",
+      "subsystem": "combat",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": "Confirm intent: persist+restore stacks or explicit reset with comment",
       "pinEvidenceIds": [],
       "verificationEvidenceIds": [],
       "closureReviewIds": [],
@@ -8100,6 +8260,70 @@
       "payloadPath": "events/0061.json",
       "payloadHash": "78fcbf8d8a41e831a08f4ea3123e98d65abb6f9f53e3cb6f697cf139eac6be0b",
       "eventHash": "f0d9c1ec271b04cee28bd680072b7c3416e1ec2026b37f4a0cbe58723089fb85"
+    },
+    {
+      "seq": 62,
+      "at": "2026-09-29T16:50:27.268Z",
+      "kind": "SNAPSHOT",
+      "actor": "coordinator-beta",
+      "state": {
+        "productStateId": "a145206f13aa610d749d2fecd0747a50539b74b43946f7cf389c308a052dd1dc",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "previousEventHash": "f0d9c1ec271b04cee28bd680072b7c3416e1ec2026b37f4a0cbe58723089fb85",
+      "payloadPath": "events/0062.json",
+      "payloadHash": "2402218db5e723df3b7f7cbc2a1b6548dcb750c391702a0684d09242ce55dcec",
+      "eventHash": "460e92fb17720ad06e3302546ece4be4465bce04d51859385375a5b280c4ce72"
+    },
+    {
+      "seq": 63,
+      "at": "2026-09-29T16:50:27.619Z",
+      "kind": "SCHEDULE",
+      "actor": "coordinator-beta",
+      "state": {
+        "productStateId": "a145206f13aa610d749d2fecd0747a50539b74b43946f7cf389c308a052dd1dc",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "previousEventHash": "460e92fb17720ad06e3302546ece4be4465bce04d51859385375a5b280c4ce72",
+      "payloadPath": "events/0063.json",
+      "payloadHash": "320b4c05c3bdef8166f6f0c2b53c86c361a7a39913426eaaf360eeb5a762afae",
+      "eventHash": "08898652fd3dda20947d5d590ec2f3db4476b4eecd46d7d50a9c32f05d80dc9a"
+    },
+    {
+      "seq": 64,
+      "at": "2026-09-29T16:50:27.772Z",
+      "kind": "SCHEDULE",
+      "actor": "coordinator-beta",
+      "state": {
+        "productStateId": "a145206f13aa610d749d2fecd0747a50539b74b43946f7cf389c308a052dd1dc",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "previousEventHash": "08898652fd3dda20947d5d590ec2f3db4476b4eecd46d7d50a9c32f05d80dc9a",
+      "payloadPath": "events/0064.json",
+      "payloadHash": "de4337d0acf29b774f22e81e4f7727803c5e2df3530048df47926f97d0e3714c",
+      "eventHash": "5d21c4b30792c9d44d5478167e8498be38e118d93d351a3020568873c9748ce0"
+    },
+    {
+      "seq": 65,
+      "at": "2026-09-29T16:50:38.527Z",
+      "kind": "FINDING",
+      "actor": "coordinator-beta",
+      "state": {
+        "productStateId": "a145206f13aa610d749d2fecd0747a50539b74b43946f7cf389c308a052dd1dc",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "previousEventHash": "5d21c4b30792c9d44d5478167e8498be38e118d93d351a3020568873c9748ce0",
+      "payloadPath": "events/0065.json",
+      "payloadHash": "eef99ce3d51c0bd6e1b7aab6a7488d69593bdbf56b7aec9a619f17b47ccd4f38",
+      "eventHash": "e0de8344210a9f9a60a41feb2b45119c42035f15f7bca971dcd1ad8a12033d22"
     }
   ]
 }

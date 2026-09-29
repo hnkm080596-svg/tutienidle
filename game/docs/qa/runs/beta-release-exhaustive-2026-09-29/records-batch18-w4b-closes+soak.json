@@ -1,0 +1,450 @@
+{
+ "records": [
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-BX-54",
+    "title": "Transition error card unreachable by keyboard: window capture keydown suppresses Tab outside errorCardRef; card never focused, no role=dialog",
+    "state": {
+     "productStateId": "8c280581a5cd7f61bb134a642b3a9a949170922eb47070b0c6969446ca8d46e9",
+     "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+     "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+     "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+    },
+    "severity": "Medium",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "PRODUCTION",
+    "locations": [
+     {
+      "path": "game/src/components/game/PresentationTransitionOverlay.vue",
+      "symbolOrSection": ":153-166,220-248",
+      "revision": "5f38d26a",
+      "basis": "SOURCE"
+     }
+    ],
+    "discoveredBy": "ui auditor devin-fb50372a",
+    "invariantIds": [
+     "I-A11Y-KEYBOARD"
+    ],
+    "evidenceIds": [],
+    "counterexample": "none recorded by auditor",
+    "expected": "error controls remain reachable while gameplay locked",
+    "actual": "Tab dead-locked on error; only pointer users reach Retry/Back",
+    "rootCause": "capture-phase suppression without card autofocus",
+    "rootClass": "a11y-keyboard",
+    "subsystem": "ui-i18n-a11y-phaser-audio",
+    "siblingSearch": [],
+    "siblingFindingIds": [],
+    "repair": null,
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "status": "CLOSED",
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "closeReason": "REPAIRED 24d670f3: error card real alertdialog via useDialogFocus; window guard fixed",
+    "closedAt": "2026-09-29T16:55:00Z",
+    "fixedInRevision": "24d670f3"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-BX-55",
+    "title": "Global Tab-hijack: DongFuCommandWheel consumes every plain-Tab app-wide on home; forward keyboard nav dead; wheel itself unreachable by Tab",
+    "state": {
+     "productStateId": "8c280581a5cd7f61bb134a642b3a9a949170922eb47070b0c6969446ca8d46e9",
+     "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+     "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+     "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+    },
+    "severity": "Medium",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "PRODUCTION",
+    "locations": [
+     {
+      "path": "game/src/components/game/DongFuCommandWheel.vue",
+      "symbolOrSection": ":224-252",
+      "revision": "5f38d26a",
+      "basis": "SOURCE"
+     }
+    ],
+    "discoveredBy": "ui auditor devin-fb50372a",
+    "invariantIds": [
+     "I-A11Y-KEYBOARD"
+    ],
+    "evidenceIds": [],
+    "counterexample": "deliberate mechanic but silently breaks keyboard operability",
+    "expected": "Tab moves focus; Esc toggles UI",
+    "actual": "all hotspots/panels/settings only Shift+Tab; wheel slots unreachable",
+    "rootCause": "overlay toggle bound to navigation key",
+    "rootClass": "a11y-keyboard",
+    "subsystem": "ui-i18n-a11y-phaser-audio",
+    "siblingSearch": [],
+    "siblingFindingIds": [],
+    "repair": null,
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "status": "CLOSED",
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "closeReason": "REPAIRED 24d670f3: app-wide Tab hijack removed; wheel owns Tab-cycle + focus-in",
+    "closedAt": "2026-09-29T16:55:00Z",
+    "fixedInRevision": "24d670f3"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-BX-89",
+    "title": "Vitals ops accept NaN/Infinity - pools poison permanently, NaN hp silently executes entity",
+    "state": {
+     "productStateId": "8d7ea1cd7ca3df591edd09011e5c8a123a59536dd71d831c886f8ba2c016c435",
+     "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+     "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+     "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+    },
+    "severity": "High",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "PRODUCTION",
+    "locations": [
+     {
+      "path": "game/src/core/combat/EntityVitalsSystem.ts",
+      "symbolOrSection": "applyDamage:36 applyHealing:115 grantWard:98 spendWard:76 applyTurnRegen:165; entry CombatSystem.ts:618,669",
+      "revision": "f93acd39",
+      "basis": "SOURCE"
+     }
+    ],
+    "discoveredBy": "property/mutation devin-61e4aa39",
+    "invariantIds": [
+     "I-AGGREGATE-RELEASE"
+    ],
+    "evidenceIds": [],
+    "counterexample": "property rig 200x150 ops; mutation survivors verified",
+    "expected": "hardened/contract-covered",
+    "actual": "applyDamage(e,NaN) -> hp=NaN (Math.max(0,hp-NaN)); killIfDead NaN>0 false -> NOT early return -> entity dead silently; no isFinite gate vs MaterialBag's coercion",
+    "rootCause": "missing finite guard on hostile amounts; asymmetric hardening",
+    "rootClass": "missing-guard",
+    "subsystem": "combat",
+    "siblingSearch": [],
+    "siblingFindingIds": [],
+    "repair": "Reject/coerce non-finite at vitals boundary like MaterialBag.add/remove",
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "status": "CLOSED",
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "fixedInRevision": "24d670f3",
+    "closedAt": "2026-09-29T16:55:00Z",
+    "closeReason": "REPAIRED 24d670f3: finitePoolValue boundary on all vitals writes + dotDamage entry guard; NaN can no longer execute entity"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-BX-91",
+    "title": "Mutation survivor: saveShapeValidation node-level max bound untested",
+    "state": {
+     "productStateId": "8d7ea1cd7ca3df591edd09011e5c8a123a59536dd71d831c886f8ba2c016c435",
+     "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+     "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+     "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+    },
+    "severity": "Medium",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "PRODUCTION",
+    "locations": [
+     {
+      "path": "game/src/services/save/saveShapeValidation.ts",
+      "symbolOrSection": ":713",
+      "revision": "f93acd39",
+      "basis": "SOURCE"
+     }
+    ],
+    "discoveredBy": "property/mutation devin-61e4aa39",
+    "invariantIds": [
+     "I-AGGREGATE-RELEASE"
+    ],
+    "evidenceIds": [],
+    "counterexample": "property rig 200x150 ops; mutation survivors verified",
+    "expected": "hardened/contract-covered",
+    "actual": "mutant level>(max*10) survives all 506 save tests - over-max node levels pass shape gate",
+    "rootCause": "missing over-max assertion",
+    "rootClass": "test-gap",
+    "subsystem": "test-infra",
+    "siblingSearch": [],
+    "siblingFindingIds": [],
+    "repair": "Add pin: nodeLevels > authored max rejected",
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "status": "CLOSED",
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "fixedInRevision": "24d670f3",
+    "closedAt": "2026-09-29T16:55:00Z",
+    "closeReason": "REPAIRED 24d670f3: pins at-max accepted / over-max rejected"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-BX-92",
+    "title": "Mutation survivor: equal-rev clock tie-break untested",
+    "state": {
+     "productStateId": "8d7ea1cd7ca3df591edd09011e5c8a123a59536dd71d831c886f8ba2c016c435",
+     "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+     "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+     "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+    },
+    "severity": "Medium",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "PRODUCTION",
+    "locations": [
+     {
+      "path": "game/src/services/cloudSave/SupabaseRemoteSave.ts",
+      "symbolOrSection": ":132",
+      "revision": "f93acd39",
+      "basis": "SOURCE"
+     }
+    ],
+    "discoveredBy": "property/mutation devin-61e4aa39",
+    "invariantIds": [
+     "I-AGGREGATE-RELEASE"
+    ],
+    "evidenceIds": [],
+    "counterexample": "property rig 200x150 ops; mutation survivors verified",
+    "expected": "hardened/contract-covered",
+    "actual": "dropping remoteRev===localRev && remoteUpdatedMs>localLastSavedAt survives 39 tests - stale local lineage could push over newer remote",
+    "rootCause": "same-rev-newer-remote pull arm unasserted",
+    "rootClass": "test-gap",
+    "subsystem": "save-cloud",
+    "siblingSearch": [],
+    "siblingFindingIds": [
+     "F-BX-31"
+    ],
+    "repair": "Add pin: equal-rev newer-remote pulls; older-local does not overwrite",
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "status": "CLOSED",
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "fixedInRevision": "24d670f3",
+    "closedAt": "2026-09-29T16:55:00Z",
+    "closeReason": "REPAIRED 24d670f3: pins equal-rev newer-remote pulls, older-local pushed"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-BX-93",
+    "title": "Mutation survivor: divergence-gate adopt arm remoteAhead clause untested",
+    "state": {
+     "productStateId": "8d7ea1cd7ca3df591edd09011e5c8a123a59536dd71d831c886f8ba2c016c435",
+     "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+     "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+     "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+    },
+    "severity": "Medium",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "PRODUCTION",
+    "locations": [
+     {
+      "path": "game/src/services/cloudSave/SupabaseRemoteSave.ts",
+      "symbolOrSection": ":161",
+      "revision": "f93acd39",
+      "basis": "SOURCE"
+     }
+    ],
+    "discoveredBy": "property/mutation devin-61e4aa39",
+    "invariantIds": [
+     "I-AGGREGATE-RELEASE"
+    ],
+    "evidenceIds": [],
+    "counterexample": "property rig 200x150 ops; mutation survivors verified",
+    "expected": "hardened/contract-covered",
+    "actual": "mutant sameContent||localRevision===base survives - rewound remote adoption (remote-rewound-below-base conflict) uncovered",
+    "rootCause": "adopt arm missing remoteAhead coverage",
+    "rootClass": "test-gap",
+    "subsystem": "save-cloud",
+    "siblingSearch": [],
+    "siblingFindingIds": [
+     "F-BX-31",
+     "F-BX-32"
+    ],
+    "repair": "Add pin: rewound remote does NOT adopt",
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "status": "CLOSED",
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "fixedInRevision": "24d670f3",
+    "closedAt": "2026-09-29T16:55:00Z",
+    "closeReason": "REPAIRED 24d670f3: pin rewound remote -> conflict, no writes"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-BX-94",
+    "title": "Enemy entity residue accumulates unboundedly across defeats (~3.1/defeat)",
+    "state": {
+     "productStateId": "a145206f13aa610d749d2fecd0747a50539b74b43946f7cf389c308a052dd1dc",
+     "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+     "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+     "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+    },
+    "severity": "High",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "PRODUCTION",
+    "locations": [
+     {
+      "path": "game/src/core/enemy/EnemyManager (or equivalent)",
+      "symbolOrSection": "beginBattleCycle entry teardown",
+      "revision": "f93acd39",
+      "basis": "SOURCE"
+     }
+    ],
+    "discoveredBy": "soak runner devin-1d8e740e",
+    "invariantIds": [
+     "I-AGGREGATE-RELEASE"
+    ],
+    "evidenceIds": [],
+    "counterexample": "240-day soak evidence",
+    "expected": "bounded residue / true no-op restore",
+    "actual": "enemyManager.clear() only runs on abandonBattle + live-battle teardown; battle ending at 'defeat' never clears roster -> getAll() grows permanently (9->598 over 190 battles); victory leaves ~4",
+    "rootCause": "defeat/victory exit path skips teardown",
+    "rootClass": "lifecycle",
+    "subsystem": "combat",
+    "siblingSearch": [],
+    "siblingFindingIds": [],
+    "repair": "Clear enemy roster at cycle entry/exit for ALL terminal states, not just abandon",
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "status": "OBSERVED",
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "fixedInRevision": null,
+    "closedAt": null,
+    "closeReason": null
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-BX-95",
+    "title": "Identical-payload restore mutates state via setActivePlayer talent-passive sync",
+    "state": {
+     "productStateId": "a145206f13aa610d749d2fecd0747a50539b74b43946f7cf389c308a052dd1dc",
+     "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+     "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+     "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+    },
+    "severity": "Medium",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "PRODUCTION",
+    "locations": [
+     {
+      "path": "game/src/services/save/SaveSystem.ts",
+      "symbolOrSection": "restoreGameSession -> setActivePlayer -> syncTalentCombatPassive",
+      "revision": "f93acd39",
+      "basis": "SOURCE"
+     }
+    ],
+    "discoveredBy": "soak runner devin-1d8e740e",
+    "invariantIds": [
+     "I-AGGREGATE-RELEASE"
+    ],
+    "evidenceIds": [],
+    "counterexample": "240-day soak evidence",
+    "expected": "bounded residue / true no-op restore",
+    "actual": "identical re-restore reorders skills (talent_passive swap) + resets passive stacks (26 leaf diffs); direct restoreFromSave 3rd time -> 0 diffs",
+    "rootCause": "unconditional revoke+re-grant on every restore",
+    "rootClass": "sync",
+    "subsystem": "save-cloud",
+    "siblingSearch": [],
+    "siblingFindingIds": [],
+    "repair": "Skip sync when already-synced marker holds, or order-stable + stack-preserving",
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "status": "OBSERVED",
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "fixedInRevision": null,
+    "closedAt": null,
+    "closeReason": null
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-BX-96",
+    "title": "Persisted passiveModifier[].stacks dropped on restore",
+    "state": {
+     "productStateId": "a145206f13aa610d749d2fecd0747a50539b74b43946f7cf389c308a052dd1dc",
+     "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+     "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+     "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+    },
+    "severity": "Low",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "PRODUCTION",
+    "locations": [
+     {
+      "path": "game/src/core/game/GameManagerSaveRestore.ts",
+      "symbolOrSection": "skills slice template re-derive",
+      "revision": "f93acd39",
+      "basis": "SOURCE"
+     }
+    ],
+    "discoveredBy": "soak runner devin-1d8e740e",
+    "invariantIds": [
+     "I-AGGREGATE-RELEASE"
+    ],
+    "evidenceIds": [],
+    "counterexample": "240-day soak evidence",
+    "expected": "bounded residue / true no-op restore",
+    "actual": "save persists runtime stacks but restore replaces modifiers with template clones (4->undefined, 22->0)",
+    "rootCause": "authored-template owns slot; runtime stacks ephemeral",
+    "rootClass": "persistence",
+    "subsystem": "combat",
+    "siblingSearch": [],
+    "siblingFindingIds": [],
+    "repair": "Confirm intent: persist+restore stacks or explicit reset with comment",
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "status": "OBSERVED",
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "fixedInRevision": null,
+    "closedAt": null,
+    "closeReason": null
+   }
+  }
+ ]
+}

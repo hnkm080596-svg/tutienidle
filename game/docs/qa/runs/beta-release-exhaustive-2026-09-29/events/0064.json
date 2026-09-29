@@ -1,0 +1,7 @@
+{
+  "action": "observe",
+  "assignmentId": "ASG-BX-SOAK",
+  "observedStatus": "exited",
+  "evidence": "240d soak: HIGH enemy residue F-BX-94, MED restore-mutation F-BX-95, LOW stacks F-BX-96",
+  "resultRef": "evidence/wave4-soak.txt"
+}
