@@ -72,11 +72,12 @@ export interface CharacterArtVariant {
     ult?: CharacterClipRange
   }
   /**
-   * Per-skill cast clips, keyed by Skill.id (or a slot role like 'special'
-   * when one sheet covers every skill of that role). startCastPlayback
+   * Per-skill cast clips, keyed by Skill.id; a slot-role clip is keyed
+   * `role:<slotRole>` ('role:special') so a skill literally named 'basic'/
+   * 'special'/'ultimate' can not collide with the role lookup. startCastPlayback
    * resolves them ahead of the slot-role pick (impact-sync sec.22); clip
    * names in the atlases are `<slug>-cast-<key>-NNN.png` (packer
-   * `cast-<key>` dirs).
+   * `cast-<key>` dirs; the `role:` prefix is not part of the clip name).
    */
   castClips?: Record<string, CharacterClipRange>
 }
@@ -112,9 +113,9 @@ function variant(
   const castClips: Record<string, CharacterClipRange> = {}
   for (const [key, entry] of Object.entries(opts.cast ?? {})) {
     // `src` is the SOURCE clip name in the atlas (what markers and the
-    // manifest call it); it defaults to `cast-${key}` so the selector key
-    // can differ from the authored clip name (impact-sync sec.20).
-    const src = entry.src ?? `cast-${key}`
+    // manifest call it); it defaults to `cast-<key>` with the `role:`
+    // selector prefix stripped so `role:special` -> clip 'cast-special'.
+    const src = entry.src ?? `cast-${key.replace(/^role:/, '')}`
     castClips[key] = clip(slug, src, entry.range[0], entry.range[1], entry.range[2])
   }
   return {
@@ -182,7 +183,7 @@ export const CHARACTER_ART: Record<string, CharacterArtVariant> = {
     { w: 444, h: 518 },
     { x: 0.009009, y: 0, w: 0.975225, h: 1 },
     { idle: [1, 33, 1], attack: [1, 17, 2], death: [1, 17, 2] },
-    { avatarSize: { w: 512, h: 512 }, cast: { special: { range: [1, 17, 3] } } },
+    { avatarSize: { w: 512, h: 512 }, cast: { 'role:special': { range: [1, 17, 3] } } },
   ),
 }
 
@@ -247,7 +248,11 @@ export const COMPANION_RESKIN_MAP: Record<string, string> = {}
 
 /** The character variant a companion id binds, or undefined when unmapped. */
 export function companionArtVariant(companionId: string): CharacterArtVariant | undefined {
-  const slug = COMPANION_RESKIN_MAP[companionId]
+  // Object.hasOwn: a companion id colliding with an Object.prototype member
+  // ('constructor', 'hasOwnProperty', ...) must not resolve a builtin truthy.
+  const slug = Object.hasOwn(COMPANION_RESKIN_MAP, companionId)
+    ? COMPANION_RESKIN_MAP[companionId]
+    : undefined
   if (slug === undefined) {
     return undefined
   }
@@ -262,9 +267,9 @@ export function companionArtVariant(companionId: string): CharacterArtVariant | 
 
 /** Every mapped companion's art variant - the preload parity enumeration. */
 export function companionArtVariants(): CharacterArtVariant[] {
-  return Object.keys(COMPANION_RESKIN_MAP).map(
-    (companionId) => companionArtVariant(companionId)!,
-  )
+  return Object.keys(COMPANION_RESKIN_MAP)
+    .map((companionId) => companionArtVariant(companionId))
+    .filter((variant): variant is CharacterArtVariant => variant !== undefined)
 }
 
 /**

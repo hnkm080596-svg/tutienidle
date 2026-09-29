@@ -38,9 +38,7 @@ const ONLY_ARG = args[args.indexOf('--only') + 1]?.split(',').filter(Boolean) ??
 // 'attack'/'ult'/'cast-linh_bao'). This packer validates them and emits
 // impactFrameIndex into each clip's manifest entry; the runtime reads the
 // same JSON through the registries, so the manifest is a drift-check.
-const IMPACT_MARKERS = JSON.parse(
-  readFileSync(new URL('../art/animation-impact-markers.json', import.meta.url), 'utf8'),
-).characters ?? {}
+const IMPACT_MARKERS = loadImpactMarkers().characters ?? {}
 
 if (!SRC_ARG) {
   throw new Error('Usage: pack-character-art.mjs --src <NEWSPRITE character dir> [--dry-run]')
@@ -436,9 +434,7 @@ async function emitVariant(emission) {
     }
     const marker = IMPACT_MARKERS[emission.out]?.[clip]
     if (marker !== undefined) {
-      if (!Number.isInteger(marker) || marker < 0 || marker >= entry.frameCount) {
-        throw new Error(`${emission.out}: impact marker '${clip}'=${marker} out of range 0..${entry.frameCount - 1}`)
-      }
+      assertMarkerInRange(emission.out, clip, marker, entry.frameCount)
       entry.impactFrameIndex = marker
     }
     // `cast-<key>` clips report under `cast` keyed by the bare key - the
@@ -449,11 +445,7 @@ async function emitVariant(emission) {
 
   // Marker hygiene: a marker naming a clip this variant never packed is
   // dead data - fail loudly instead of shipping drift.
-  for (const name of Object.keys(IMPACT_MARKERS[emission.out] ?? {})) {
-    if (!orderedClips.includes(name)) {
-      throw new Error(`${emission.out}: impact marker names unknown clip '${name}'`)
-    }
-  }
+  assertKnownMarkerClips(emission.out, IMPACT_MARKERS[emission.out], orderedClips)
 
   return {
     out: emission.out,
@@ -493,11 +485,7 @@ async function main() {
   }
   // Marker hygiene: a marker naming a variant this pack never emitted is
   // dead data - fail loudly instead of shipping drift.
-  for (const slug of Object.keys(IMPACT_MARKERS)) {
-    if (!(slug in manifest.variants)) {
-      throw new Error(`impact marker names unknown character variant '${slug}'`)
-    }
-  }
+  assertKnownMarkerVariants('character', IMPACT_MARKERS, Object.keys(manifest.variants))
   if (!DRY_RUN) {
     mkdirSync(OUT_ROOT, { recursive: true })
     writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`)

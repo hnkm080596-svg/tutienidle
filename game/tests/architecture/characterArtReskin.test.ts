@@ -289,8 +289,9 @@ describe('character art reskin registry (infra)', () => {
     // range exists in the sheet the registry names.
     for (const variant of Object.values(CHARACTER_ART)) {
       for (const [key, range] of Object.entries(variant.castClips ?? {})) {
+        // `role:` selector prefix is not part of the authored clip name.
         expect(range.framePrefix, `${variant.slug}.castClips.${key} prefix`).toBe(
-          `${variant.slug}-cast-${key}-`,
+          `${variant.slug}-cast-${key.replace(/^role:/, '')}-`,
         )
         const atlas = JSON.parse(readFileSync(publicPath(range.atlasUrl), 'utf8')) as AtlasFile
         for (let index = range.firstFrame; index <= range.lastFrame; index++) {
@@ -301,19 +302,20 @@ describe('character art reskin registry (infra)', () => {
     }
 
     // The wired picks (art-seam wave): unarmed linh_bao casts on sheet-2,
-    // ngu_hanh's role-keyed 'special' covers every element on sheet-3.
+    // ngu_hanh's role-keyed 'role:special' covers every element on sheet-3.
     expect(CHARACTER_ART.pham_nhan_unarmed?.castClips?.linh_bao?.sheetKey).toBe(
       'pham_nhan_unarmed-sheet-2',
     )
-    expect(CHARACTER_ART.ngu_hanh?.castClips?.special?.sheetKey).toBe('ngu_hanh-sheet-3')
+    expect(CHARACTER_ART.ngu_hanh?.castClips?.['role:special']?.sheetKey).toBe('ngu_hanh-sheet-3')
     expect(CHARACTER_ART.pham_nhan?.castClips).toBeUndefined()
 
-    // The catalogue emits them as `${slug}-cast-${key}` anim keys, play-once.
+    // The catalogue emits them as `${slug}-cast-<clip>` anim keys (the
+    // `role:` selector prefix is stripped), play-once.
     for (const slug of ['pham_nhan_unarmed', 'ngu_hanh']) {
       const entity = animatedArtFormFor(slug)
       expect(entity?.castClips, `${slug} catalogue castClips`).toBeDefined()
       for (const [key, clip] of Object.entries(entity?.castClips ?? {})) {
-        expect(clip.key).toBe(`${slug}-cast-${key}`)
+        expect(clip.key).toBe(`${slug}-cast-${key.replace(/^role:/, '')}`)
         expect(clip.repeat, `${slug}-cast-${key} repeat`).toBe(0)
       }
     }

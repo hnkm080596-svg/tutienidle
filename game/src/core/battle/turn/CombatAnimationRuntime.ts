@@ -113,6 +113,8 @@ export class CombatAnimationRuntime {
 
   /** Đã áp damage, chờ acknowledgeActionComplete(). */
   private pendingImpact: { actor: TurnBattleParticipant; declared: TurnDeclaredAction; targetIds: string[]; resolved: SkillPresentationResolved } | null = null
+  /** Cast object already emitted via publishPendingCast - dedupe guard. */
+  private publishedCast: SkillCastPresentation | null = null
   private requestSequence = 0
   private publishingImpact = false
   private deferredCompleteToken: string | undefined
@@ -306,9 +308,12 @@ export class CombatAnimationRuntime {
    */
   publishPendingCast(): boolean {
     const pending = this.pendingDeclaredAction
-    if (!pending) {
+    if (!pending || pending.cast === this.publishedCast) {
+      // Same declared action already published and still pending its ACK -
+      // a repeat emit would replay the runner; the call is a no-op.
       return false
     }
+    this.publishedCast = pending.cast
     this.deps.eventBus.emit('skill_presentation_cast', pending.cast)
     return true
   }

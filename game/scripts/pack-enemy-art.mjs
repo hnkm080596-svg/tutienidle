@@ -37,9 +37,7 @@ const DRY_RUN = args.includes('--dry-run')
 // (clip-local index, 0..frameCount-1). This packer validates them and emits
 // impactFrameIndex into each clip's manifest entry; the runtime reads the same
 // JSON through the registries, so the manifest is a drift-check, not a source.
-const IMPACT_MARKERS = JSON.parse(
-  readFileSync(new URL('../art/animation-impact-markers.json', import.meta.url), 'utf8'),
-).enemies ?? {}
+const IMPACT_MARKERS = loadImpactMarkers().enemies ?? {}
 
 if (!SRC_ARG) {
   throw new Error('Usage: pack-enemy-art.mjs --src <NEWSPRITE enemy dir> [--dry-run]')
@@ -51,7 +49,6 @@ const AUDIO_ROOT = path.resolve('public/assets/audio/enemies')
 // Canvas size varies per dump family (monster-library 960x960, forest-region
 // 624x624). Derived per variant from the first loaded frame; a mixed-size
 // species is rejected (all clips must share one authored box).
-const EXPECTED_SIZE = { w: 960, h: 960 }
 const PADDING = 2
 const MAX_SHEET = 4096
 const ZERO_PAD = 3
@@ -488,9 +485,7 @@ async function emitVariant(emission) {
     }
     const marker = IMPACT_MARKERS[emission.out]?.[clip]
     if (marker !== undefined) {
-      if (!Number.isInteger(marker) || marker < 0 || marker >= entry.frameCount) {
-        throw new Error(`${emission.out}: impact marker '${clip}'=${marker} out of range 0..${entry.frameCount - 1}`)
-      }
+      assertMarkerInRange(emission.out, clip, marker, entry.frameCount)
       entry.impactFrameIndex = marker
     }
     clipReport[clip] = entry
@@ -498,11 +493,7 @@ async function emitVariant(emission) {
 
   // Marker hygiene: a marker naming a clip this variant never packed is
   // dead data - fail loudly instead of shipping drift.
-  for (const name of Object.keys(IMPACT_MARKERS[emission.out] ?? {})) {
-    if (!orderedClips.includes(name)) {
-      throw new Error(`${emission.out}: impact marker names unknown clip '${name}'`)
-    }
-  }
+  assertKnownMarkerClips(emission.out, IMPACT_MARKERS[emission.out], orderedClips)
 
   return {
     out: emission.out,
@@ -532,11 +523,7 @@ async function main() {
   }
   // Marker hygiene: a marker naming a variant this pack never emitted is
   // dead data - fail loudly instead of shipping drift.
-  for (const slug of Object.keys(IMPACT_MARKERS)) {
-    if (!(slug in manifest.variants)) {
-      throw new Error(`impact marker names unknown enemy variant '${slug}'`)
-    }
-  }
+  assertKnownMarkerVariants('enemy', IMPACT_MARKERS, Object.keys(manifest.variants))
   if (!DRY_RUN) {
     mkdirSync(OUT_ROOT, { recursive: true })
     writeFileSync(path.join(OUT_ROOT, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`)

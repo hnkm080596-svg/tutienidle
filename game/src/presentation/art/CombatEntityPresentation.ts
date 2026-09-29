@@ -149,7 +149,7 @@ export interface CombatAnimationCatalogue {
   attack?: AtlasClip
   /**
    * Authored ultimate clip (character-art-infra, 2026-09-28). Optional like
-   * `attack`: it plays only when `turn_cast_start` reports slot role
+   * `attack`: it plays only when the cast fact carries slot role
    * 'ultimate', is play-once, and returns to `standby`.
    */
   ult?: AtlasClip
@@ -160,10 +160,13 @@ export interface CombatAnimationCatalogue {
   /**
    * Per-skill cast clips (art-seam wave, 2026-09-29 user ruling Q1): a KEYED
    * map, not new CombatAnimationName members - the key is a Skill.id or a
-   * slot role like 'special', and the anim key is `${slug}-cast-${key}`.
-   * Played by `playCastClip` before the slot-role fallback chain; absent
-   * entries fall through to it unchanged. Omit the field when the variant
-   * authors no cast clips (omit-don't-declare, same as the optional clips).
+   * slot role as `role:<slotRole>` ('role:special'; the `role:` prefix keeps
+   * a hypothetical skill named 'basic'/'special'/'ultimate' out of the role
+   * lookup), and the anim key is `${slug}-cast-<clip>` with the prefix
+   * stripped. Played by `playCastClip` before the slot-role fallback chain;
+   * absent entries fall through to it unchanged. Omit the field when the
+   * variant authors no cast clips (omit-don't-declare, same as the optional
+   * clips).
    */
   castClips?: Record<string, AtlasClip>
 }

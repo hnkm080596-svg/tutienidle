@@ -143,7 +143,7 @@ describe('PlayerVisualProfiles - hidden-way cultivate override', () => {
 
     expect(override).toEqual({
       key: 'player-phap-tu-an-cultivate-van-dao-v1',
-      url: 'assets/characters/player/phap-tu/player-phap-tu-an-cultivate-van-dao-v1.png',
+      url: '/assets/characters/player/phap-tu/player-phap-tu-an-cultivate-van-dao-v1.png',
       sourceSize: { w: 1254, h: 1254 },
       extent: { x: 0, y: 0.039075, w: 1, h: 0.960925 },
     })

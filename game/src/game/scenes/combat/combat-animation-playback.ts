@@ -339,7 +339,7 @@ export class CombatAnimationPlayback {
       return { clip: root, source: 'root-skill' }
     }
 
-    const bySlot = castClips?.[cast.slotRole]
+    const bySlot = castClips?.[`role:${cast.slotRole}`]
     if (bySlot && this.tryPlayExactAtlasClip(sprite, actorId, bySlot)) {
       return { clip: bySlot, source: 'slot-role' }
     }

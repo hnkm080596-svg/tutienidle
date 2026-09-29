@@ -190,6 +190,22 @@ describe('enemy art reskin registry (wave 1)', () => {
     }
   })
 
+  it('no reskin key is a runtime-suffix prefix of an UNMAPPED enemy template id', () => {
+    // resolveMonsterArtSlug matches `<key>_` prefixes for spawned runtime ids
+    // (`<templateId>_<nonce>`). A future template named `<key>_<word>` would
+    // silently inherit the key's art unless it is mapped too - pin that no
+    // unmapped template id sits inside another reskin key's prefix reach.
+    for (const templateId of KNOWN_ENEMY_IDS) {
+      if (ENEMY_RESKIN_MAP[templateId] !== undefined) continue
+      for (const key of Object.keys(ENEMY_RESKIN_MAP)) {
+        expect(
+          templateId.startsWith(`${key}_`),
+          `'${templateId}' falls inside reskin key '${key}_' reach - map it or rename`,
+        ).toBe(false)
+      }
+    }
+  })
+
   it('runtime ids resolve by longest prefix - ferocious beats base, unmapped returns undefined', () => {
     expect(resolveMonsterArtSlug('mortal_feral_dog')).toBe('graymane-wolf')
     expect(resolveMonsterArtSlug('mortal_feral_dog_9f2c')).toBe('graymane-wolf')

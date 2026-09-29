@@ -3,6 +3,7 @@ import type { GridPosition, CellArea } from '../BattleGrid'
 import { entityGridPosition } from '../BattleGrid'
 import type { CombatVfxPresetId, ActionTargetingShape, EnemySpawnVfxPresetId } from '../CombatAction'
 import type { TurnBattle, TurnBattleParticipant, PendingEnemySpawn, TurnBattleState } from './TurnBattleSystem'
+import type { CastSlotRole } from './SkillPresentationFacts'
 import { COUNTDOWN_TOTAL_TICKS } from './TurnBattleConstants'
 
 // Turn-based combat presentation event emitter; GameManager is the sole
@@ -12,7 +13,12 @@ import { COUNTDOWN_TOTAL_TICKS } from './TurnBattleConstants'
 // Signals:
 //   turn_ready             - actor's turn; scene plays the ready flourish
 //                            then acknowledgeTurnReady()
-//   turn_cast_start        - observation feed - no production subscribers
+//   turn_cast_start        - declare-time observation feed; no production
+//                            subscribers (CombatScene.skillPresentation.test
+//                            pins the scene unbound). Cast presentation reads
+//                            ONLY the impact-time skill_presentation_cast
+//                            emit in CombatAnimationRuntime - a subscriber
+//                            here would read cast info at a divergent time.
 //   action_impact          - observation feed - no production subscribers
 //   turn_standby_complete  - tail event, presentation-only bookkeeping
 
@@ -28,7 +34,7 @@ export function emitTurnCastStart(
   sourceId: string,
   skillId: string,
   targetIds: string[],
-  slotRole?: 'basic' | 'special' | 'ultimate' | 'none',
+  slotRole?: CastSlotRole,
 ): void {
   eventBus.emit('turn_cast_start', {
     type: 'turn_cast_start',

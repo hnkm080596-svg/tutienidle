@@ -112,10 +112,13 @@ describe('combat animation catalogue', () => {
         )
       }
 
-      // Every cast clip's anim key follows `${slug}-cast-${key}` - the name
-      // playCastClip looks up by Skill.id / slot role.
+      // Every cast clip's anim key follows `${slug}-cast-<clip>` (the
+      // `role:` selector prefix is stripped) - the name playCastClip looks
+      // up by Skill.id / `role:<slotRole>`.
       for (const [key, clip] of Object.entries(clips.castClips ?? {})) {
-        expect(clip.key, `${entityKey}.castClips.${key} key`).toBe(`${entityKey}-cast-${key}`)
+        expect(clip.key, `${entityKey}.castClips.${key} key`).toBe(
+          `${entityKey}-cast-${key.replace(/^role:/, '')}`,
+        )
       }
     }
   })

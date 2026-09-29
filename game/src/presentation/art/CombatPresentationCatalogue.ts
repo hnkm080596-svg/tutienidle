@@ -560,9 +560,11 @@ export function buildCatalogue(): {
       const castClips: Record<string, AtlasClip> = {}
 
       for (const [key, range] of Object.entries(variant.castClips)) {
+        // The anim key drops the `role:` selector prefix so it names the
+        // authored atlas clip ('cast-special'), not the selector.
         castClips[key] = {
           ...characterClip(entityKey, 'attack', range, 8, 0, variant.extent, variant.sourceSize),
-          key: `${entityKey}-cast-${key}`,
+          key: `${entityKey}-cast-${key.replace(/^role:/, '')}`,
         }
       }
 
