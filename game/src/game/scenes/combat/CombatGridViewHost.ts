@@ -22,7 +22,10 @@ export interface CombatGridViewHost {
   readonly characterWidth: number
   readonly characterHeight: number
   readonly playerSourceSize: { w: number; h: number }
-  readonly playerProfile: { combatTextureKey: string }
+  readonly playerProfile: { id: string; combatTextureKey: string }
+  // Armed/unarmed discriminator for the mortal reskin (art-seam wave,
+  // 2026-09-29): undefined resolves the canonical armed default.
+  readonly playerArmed?: boolean
   readonly sprites: Map<string, EntitySprite>
   // resetVisual() only — host không cần interpolate thật vẫn thoả type
   // bằng 1 Map rỗng (xem TranPhapCombatPreviewScene, Task 4).

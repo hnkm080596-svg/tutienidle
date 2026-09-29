@@ -1,0 +1,32 @@
+[
+ {
+  "id": "MUT-10",
+  "inv": [
+   "I-CLIP-LIFECYCLE"
+  ],
+  "file": "E:/tutienidle/.agent-worktrees/character-art-infra/game/src/game/scenes/combat/combat-animation-playback.ts",
+  "old": "    if (typeof gameSprite.once !== 'function') {\n      return\n    }\n\n    const listener",
+  "new": "    if (!this.scene.anims.exists(combatAnimationKey(prefix, destination)) || typeof gameSprite.once !== 'function') {\n      return\n    }\n\n    const listener",
+  "oracle": "src/game/scenes/CombatScene.combatAnimations.test.ts",
+  "desc": "one-shot listener no longer arms when destination registration missing",
+  "result": "KILLED_EXPECTED",
+  "mutantHash": "13f7b96e1d55a5bd06ccfb27e2db0491595ef9798bef9fe7c4b6fcd557f95998",
+  "exitCode": 1,
+  "candidateUnchanged": true
+ },
+ {
+  "id": "MUT-11",
+  "inv": [
+   "I-CLIP-LIFECYCLE"
+  ],
+  "file": "E:/tutienidle/.agent-worktrees/character-art-infra/game/src/game/scenes/combat/combat-animation-playback.ts",
+  "old": "    if (sprite.pendingTransitionListener && typeof gameSprite.off === 'function') {\n      gameSprite.off(Phaser.Animations.Events.ANIMATION_COMPLETE, sprite.pendingTransitionListener)\n    }\n\n    sprite.pendingTransitionListener = listener",
+  "new": "    sprite.pendingTransitionListener = listener",
+  "oracle": "src/game/scenes/CombatScene.combatAnimations.test.ts",
+  "desc": "superseded same-key listener is left orphaned on the emitter",
+  "result": "KILLED_EXPECTED",
+  "mutantHash": "52304ef208504cdd1a77731cb4ccc702b711b8d537ab4263ab0bc12d08a9eb21",
+  "exitCode": 1,
+  "candidateUnchanged": true
+ }
+]

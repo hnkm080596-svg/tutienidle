@@ -4,6 +4,7 @@
 import type Phaser from 'phaser'
 
 import type { LaneIndex } from '@/core/battle/BattleLane'
+import type { CombatAnimationName } from '@/core/battle/CombatAnimationTypes'
 
 export interface EntitySprite {
   // Player = Sprite profile art, enemy = Sprite authored art hoac shared
@@ -64,6 +65,31 @@ export interface EntitySprite {
    * Absent on animated entities, which move because their frames do.
    */
   idle?: { offsetY: number }
+
+  /**
+   * The pending one-shot -> destination transition listener armed by
+   * playCombatAnimation, if any. Tracked so a mid-clip profile swap can
+   * remove exactly this listener instead of blanket-clearing the sprite's
+   * whole animationcomplete channel (Clean-B2 IN3-F1).
+   */
+  pendingTransitionListener?: (anim: Phaser.Animations.Animation) => void
+
+  /**
+   * A loop request (idle/standby) that arrived while a one-shot clip was
+   * still playing. Consumed by the armed completion listener in place of the
+   * clip's default destination, so a turn-end standby_to_idle waits for the
+   * cast instead of truncating its strike frames (Clean-B F-CB2-01).
+   */
+  deferredLoopRequest?: CombatAnimationName
+
+  /**
+   * The texture key the sprite drew before the current one-shot clip - the
+   * avatar/static art for a partially-missed atlas set. Restored when every
+   * destination in the fallback chain is unplayable, so the sprite returns
+   * to its still art instead of freezing on the clip's last frame
+   * (Clean-B F-CB2-03).
+   */
+  pendingBaseTextureKey?: string
   footY: number
   columnFloat: number
 }

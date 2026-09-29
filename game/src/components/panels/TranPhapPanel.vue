@@ -144,9 +144,10 @@ function combatantCards(): { combatantId: string; label: string; artUrl?: string
   const cards: { combatantId: string; label: string; artUrl?: string }[] = []
 
   if (!placed.has('player')) {
-    // The queue stand shows the entity's own art — the same profile PNG the
-    // combat surfaces draw (entity-derived visualProfileId -> shared profile
-    // catalogue). The player art is a static texture in battle too. Companions
+    // The queue stand shows the entity's own art - its profile PNG
+    // (visualProfileId -> shared profile catalogue). Note combat surfaces may
+    // now draw a reskin atlas (CHARACTER_RESKIN_MAP) instead, so this card
+    // intentionally keeps the profile art, not the battle sprite. Companions
     // have no authored art yet: they mirror the battlefield's placeholder idle
     // loop (AtlasIdleSprite) until companion art exists.
     cards.push({
@@ -261,7 +262,11 @@ const previewContainerRef = ref<HTMLDivElement | null>(null)
 // scene resolves art from it through the shared combat catalogue — without
 // it the scene would have to guess or hardcode a placeholder.
 function assignmentsPayload(): FormationAssignmentsPayload {
-  return { assignments: currentAssignments.value, playerProfileId: player.visualProfileId }
+  return {
+    assignments: currentAssignments.value,
+    playerProfileId: player.visualProfileId,
+    playerArmed: player.visualArmed,
+  }
 }
 
 // V4/V10 — the hosting mechanics (dynamic import, construction, teardown

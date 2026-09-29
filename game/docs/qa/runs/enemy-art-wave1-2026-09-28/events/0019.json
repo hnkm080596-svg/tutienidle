@@ -1,0 +1,18 @@
+{
+  "applied": [
+    "invariant:INV-RESKIN-RESOLVE (updated)",
+    "invariant:INV-ANIMATED-OVERRIDE (updated)",
+    "invariant:INV-FEET-ANCHOR (updated)",
+    "invariant:INV-LOADER-PARITY (updated)",
+    "invariant:INV-DEATH-LIFECYCLE (updated)",
+    "invariant:INV-REGISTRY-MANIFEST-PARITY (updated)",
+    "invariant:INV-ATTACK-RETURN (updated)",
+    "evidence:EV-VERIFY-FULL (updated)",
+    "evidence:EV-VERIFY-FLAKE-RERUN (updated)",
+    "evidence:EV-E2E-IDLE (updated)",
+    "evidence:EV-FOCUSED (updated)",
+    "evidence:EV-OCR (updated)",
+    "evidence:EV-P4-QUICK (updated)",
+    "evidence:EV-P5-PASSES (updated)"
+  ]
+}

@@ -1,0 +1,1015 @@
+{
+  "frames": {
+    "pham_nhan_unarmed-idle-001.png": {
+      "frame": {
+        "x": 2,
+        "y": 2,
+        "w": 338,
+        "h": 514
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 3,
+        "y": 0,
+        "w": 338,
+        "h": 514
+      },
+      "sourceSize": {
+        "w": 348,
+        "h": 514
+      }
+    },
+    "pham_nhan_unarmed-idle-002.png": {
+      "frame": {
+        "x": 504,
+        "y": 2,
+        "w": 340,
+        "h": 514
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 3,
+        "y": 0,
+        "w": 340,
+        "h": 514
+      },
+      "sourceSize": {
+        "w": 348,
+        "h": 514
+      }
+    },
+    "pham_nhan_unarmed-idle-003.png": {
+      "frame": {
+        "x": 1006,
+        "y": 2,
+        "w": 342,
+        "h": 514
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 3,
+        "y": 0,
+        "w": 342,
+        "h": 514
+      },
+      "sourceSize": {
+        "w": 348,
+        "h": 514
+      }
+    },
+    "pham_nhan_unarmed-idle-004.png": {
+      "frame": {
+        "x": 1508,
+        "y": 2,
+        "w": 345,
+        "h": 514
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 345,
+        "h": 514
+      },
+      "sourceSize": {
+        "w": 348,
+        "h": 514
+      }
+    },
+    "pham_nhan_unarmed-idle-005.png": {
+      "frame": {
+        "x": 2010,
+        "y": 2,
+        "w": 348,
+        "h": 514
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 348,
+        "h": 514
+      },
+      "sourceSize": {
+        "w": 348,
+        "h": 514
+      }
+    },
+    "pham_nhan_unarmed-idle-006.png": {
+      "frame": {
+        "x": 2512,
+        "y": 2,
+        "w": 342,
+        "h": 514
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 3,
+        "y": 0,
+        "w": 342,
+        "h": 514
+      },
+      "sourceSize": {
+        "w": 348,
+        "h": 514
+      }
+    },
+    "pham_nhan_unarmed-idle-007.png": {
+      "frame": {
+        "x": 3014,
+        "y": 2,
+        "w": 338,
+        "h": 514
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 3,
+        "y": 0,
+        "w": 338,
+        "h": 514
+      },
+      "sourceSize": {
+        "w": 348,
+        "h": 514
+      }
+    },
+    "pham_nhan_unarmed-idle-008.png": {
+      "frame": {
+        "x": 3516,
+        "y": 2,
+        "w": 336,
+        "h": 514
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 3,
+        "y": 0,
+        "w": 336,
+        "h": 514
+      },
+      "sourceSize": {
+        "w": 348,
+        "h": 514
+      }
+    },
+    "pham_nhan_unarmed-idle-009.png": {
+      "frame": {
+        "x": 2,
+        "y": 522,
+        "w": 333,
+        "h": 514
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 3,
+        "y": 0,
+        "w": 333,
+        "h": 514
+      },
+      "sourceSize": {
+        "w": 348,
+        "h": 514
+      }
+    },
+    "pham_nhan_unarmed-idle-010.png": {
+      "frame": {
+        "x": 504,
+        "y": 522,
+        "w": 334,
+        "h": 514
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 5,
+        "y": 0,
+        "w": 334,
+        "h": 514
+      },
+      "sourceSize": {
+        "w": 348,
+        "h": 514
+      }
+    },
+    "pham_nhan_unarmed-idle-011.png": {
+      "frame": {
+        "x": 1006,
+        "y": 522,
+        "w": 334,
+        "h": 514
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 5,
+        "y": 0,
+        "w": 334,
+        "h": 514
+      },
+      "sourceSize": {
+        "w": 348,
+        "h": 514
+      }
+    },
+    "pham_nhan_unarmed-idle-012.png": {
+      "frame": {
+        "x": 1508,
+        "y": 522,
+        "w": 338,
+        "h": 514
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 3,
+        "y": 0,
+        "w": 338,
+        "h": 514
+      },
+      "sourceSize": {
+        "w": 348,
+        "h": 514
+      }
+    },
+    "pham_nhan_unarmed-idle-013.png": {
+      "frame": {
+        "x": 2010,
+        "y": 522,
+        "w": 338,
+        "h": 514
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 3,
+        "y": 0,
+        "w": 338,
+        "h": 514
+      },
+      "sourceSize": {
+        "w": 348,
+        "h": 514
+      }
+    },
+    "pham_nhan_unarmed-idle-014.png": {
+      "frame": {
+        "x": 2512,
+        "y": 522,
+        "w": 340,
+        "h": 514
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 3,
+        "y": 0,
+        "w": 340,
+        "h": 514
+      },
+      "sourceSize": {
+        "w": 348,
+        "h": 514
+      }
+    },
+    "pham_nhan_unarmed-idle-015.png": {
+      "frame": {
+        "x": 3014,
+        "y": 522,
+        "w": 345,
+        "h": 514
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 345,
+        "h": 514
+      },
+      "sourceSize": {
+        "w": 348,
+        "h": 514
+      }
+    },
+    "pham_nhan_unarmed-idle-016.png": {
+      "frame": {
+        "x": 3516,
+        "y": 522,
+        "w": 345,
+        "h": 514
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 3,
+        "y": 0,
+        "w": 345,
+        "h": 514
+      },
+      "sourceSize": {
+        "w": 348,
+        "h": 514
+      }
+    },
+    "pham_nhan_unarmed-idle-017.png": {
+      "frame": {
+        "x": 2,
+        "y": 1042,
+        "w": 342,
+        "h": 514
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 3,
+        "y": 0,
+        "w": 342,
+        "h": 514
+      },
+      "sourceSize": {
+        "w": 348,
+        "h": 514
+      }
+    },
+    "pham_nhan_unarmed-idle-018.png": {
+      "frame": {
+        "x": 504,
+        "y": 1042,
+        "w": 340,
+        "h": 514
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 3,
+        "y": 0,
+        "w": 340,
+        "h": 514
+      },
+      "sourceSize": {
+        "w": 348,
+        "h": 514
+      }
+    },
+    "pham_nhan_unarmed-idle-019.png": {
+      "frame": {
+        "x": 1006,
+        "y": 1042,
+        "w": 338,
+        "h": 514
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 3,
+        "y": 0,
+        "w": 338,
+        "h": 514
+      },
+      "sourceSize": {
+        "w": 348,
+        "h": 514
+      }
+    },
+    "pham_nhan_unarmed-idle-020.png": {
+      "frame": {
+        "x": 1508,
+        "y": 1042,
+        "w": 336,
+        "h": 514
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 3,
+        "y": 0,
+        "w": 336,
+        "h": 514
+      },
+      "sourceSize": {
+        "w": 348,
+        "h": 514
+      }
+    },
+    "pham_nhan_unarmed-idle-021.png": {
+      "frame": {
+        "x": 2010,
+        "y": 1042,
+        "w": 333,
+        "h": 514
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 3,
+        "y": 0,
+        "w": 333,
+        "h": 514
+      },
+      "sourceSize": {
+        "w": 348,
+        "h": 514
+      }
+    },
+    "pham_nhan_unarmed-idle-022.png": {
+      "frame": {
+        "x": 2512,
+        "y": 1042,
+        "w": 331,
+        "h": 514
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 5,
+        "y": 0,
+        "w": 331,
+        "h": 514
+      },
+      "sourceSize": {
+        "w": 348,
+        "h": 514
+      }
+    },
+    "pham_nhan_unarmed-idle-023.png": {
+      "frame": {
+        "x": 3014,
+        "y": 1042,
+        "w": 334,
+        "h": 514
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 5,
+        "y": 0,
+        "w": 334,
+        "h": 514
+      },
+      "sourceSize": {
+        "w": 348,
+        "h": 514
+      }
+    },
+    "pham_nhan_unarmed-idle-024.png": {
+      "frame": {
+        "x": 3516,
+        "y": 1042,
+        "w": 338,
+        "h": 514
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 3,
+        "y": 0,
+        "w": 338,
+        "h": 514
+      },
+      "sourceSize": {
+        "w": 348,
+        "h": 514
+      }
+    },
+    "pham_nhan_unarmed-idle-025.png": {
+      "frame": {
+        "x": 2,
+        "y": 1562,
+        "w": 338,
+        "h": 514
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 3,
+        "y": 0,
+        "w": 338,
+        "h": 514
+      },
+      "sourceSize": {
+        "w": 348,
+        "h": 514
+      }
+    },
+    "pham_nhan_unarmed-idle-026.png": {
+      "frame": {
+        "x": 504,
+        "y": 1562,
+        "w": 342,
+        "h": 514
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 3,
+        "y": 0,
+        "w": 342,
+        "h": 514
+      },
+      "sourceSize": {
+        "w": 348,
+        "h": 514
+      }
+    },
+    "pham_nhan_unarmed-idle-027.png": {
+      "frame": {
+        "x": 1006,
+        "y": 1562,
+        "w": 345,
+        "h": 514
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 345,
+        "h": 514
+      },
+      "sourceSize": {
+        "w": 348,
+        "h": 514
+      }
+    },
+    "pham_nhan_unarmed-idle-028.png": {
+      "frame": {
+        "x": 1508,
+        "y": 1562,
+        "w": 348,
+        "h": 514
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 348,
+        "h": 514
+      },
+      "sourceSize": {
+        "w": 348,
+        "h": 514
+      }
+    },
+    "pham_nhan_unarmed-idle-029.png": {
+      "frame": {
+        "x": 2010,
+        "y": 1562,
+        "w": 342,
+        "h": 514
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 3,
+        "y": 0,
+        "w": 342,
+        "h": 514
+      },
+      "sourceSize": {
+        "w": 348,
+        "h": 514
+      }
+    },
+    "pham_nhan_unarmed-idle-030.png": {
+      "frame": {
+        "x": 2512,
+        "y": 1562,
+        "w": 338,
+        "h": 514
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 3,
+        "y": 0,
+        "w": 338,
+        "h": 514
+      },
+      "sourceSize": {
+        "w": 348,
+        "h": 514
+      }
+    },
+    "pham_nhan_unarmed-idle-031.png": {
+      "frame": {
+        "x": 3014,
+        "y": 1562,
+        "w": 336,
+        "h": 514
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 3,
+        "y": 0,
+        "w": 336,
+        "h": 514
+      },
+      "sourceSize": {
+        "w": 348,
+        "h": 514
+      }
+    },
+    "pham_nhan_unarmed-idle-032.png": {
+      "frame": {
+        "x": 3516,
+        "y": 1562,
+        "w": 333,
+        "h": 514
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 3,
+        "y": 0,
+        "w": 333,
+        "h": 514
+      },
+      "sourceSize": {
+        "w": 348,
+        "h": 514
+      }
+    },
+    "pham_nhan_unarmed-idle-033.png": {
+      "frame": {
+        "x": 2,
+        "y": 2082,
+        "w": 331,
+        "h": 514
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 5,
+        "y": 0,
+        "w": 331,
+        "h": 514
+      },
+      "sourceSize": {
+        "w": 348,
+        "h": 514
+      }
+    },
+    "pham_nhan_unarmed-attack-001.png": {
+      "frame": {
+        "x": 504,
+        "y": 2082,
+        "w": 338,
+        "h": 514
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 3,
+        "y": 0,
+        "w": 338,
+        "h": 514
+      },
+      "sourceSize": {
+        "w": 348,
+        "h": 514
+      }
+    },
+    "pham_nhan_unarmed-attack-002.png": {
+      "frame": {
+        "x": 1006,
+        "y": 2082,
+        "w": 338,
+        "h": 514
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 3,
+        "y": 0,
+        "w": 338,
+        "h": 514
+      },
+      "sourceSize": {
+        "w": 348,
+        "h": 514
+      }
+    },
+    "pham_nhan_unarmed-attack-003.png": {
+      "frame": {
+        "x": 1508,
+        "y": 2082,
+        "w": 338,
+        "h": 514
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 3,
+        "y": 0,
+        "w": 338,
+        "h": 514
+      },
+      "sourceSize": {
+        "w": 348,
+        "h": 514
+      }
+    },
+    "pham_nhan_unarmed-attack-004.png": {
+      "frame": {
+        "x": 2010,
+        "y": 2082,
+        "w": 358,
+        "h": 512
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 3,
+        "y": 2,
+        "w": 358,
+        "h": 512
+      },
+      "sourceSize": {
+        "w": 348,
+        "h": 514
+      }
+    },
+    "pham_nhan_unarmed-attack-005.png": {
+      "frame": {
+        "x": 2512,
+        "y": 2082,
+        "w": 387,
+        "h": 507
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 3,
+        "y": 7,
+        "w": 387,
+        "h": 507
+      },
+      "sourceSize": {
+        "w": 348,
+        "h": 514
+      }
+    },
+    "pham_nhan_unarmed-attack-006.png": {
+      "frame": {
+        "x": 3014,
+        "y": 2082,
+        "w": 394,
+        "h": 507
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 3,
+        "y": 7,
+        "w": 394,
+        "h": 507
+      },
+      "sourceSize": {
+        "w": 348,
+        "h": 514
+      }
+    },
+    "pham_nhan_unarmed-attack-007.png": {
+      "frame": {
+        "x": 3516,
+        "y": 2082,
+        "w": 381,
+        "h": 505
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 14,
+        "y": 7,
+        "w": 381,
+        "h": 505
+      },
+      "sourceSize": {
+        "w": 348,
+        "h": 514
+      }
+    },
+    "pham_nhan_unarmed-attack-008.png": {
+      "frame": {
+        "x": 2,
+        "y": 2602,
+        "w": 460,
+        "h": 509
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 45,
+        "y": 5,
+        "w": 460,
+        "h": 509
+      },
+      "sourceSize": {
+        "w": 348,
+        "h": 514
+      }
+    },
+    "pham_nhan_unarmed-attack-009.png": {
+      "frame": {
+        "x": 504,
+        "y": 2602,
+        "w": 460,
+        "h": 507
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 45,
+        "y": 7,
+        "w": 460,
+        "h": 507
+      },
+      "sourceSize": {
+        "w": 348,
+        "h": 514
+      }
+    },
+    "pham_nhan_unarmed-attack-010.png": {
+      "frame": {
+        "x": 1006,
+        "y": 2602,
+        "w": 460,
+        "h": 509
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 45,
+        "y": 5,
+        "w": 460,
+        "h": 509
+      },
+      "sourceSize": {
+        "w": 348,
+        "h": 514
+      }
+    },
+    "pham_nhan_unarmed-attack-011.png": {
+      "frame": {
+        "x": 1508,
+        "y": 2602,
+        "w": 460,
+        "h": 509
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 45,
+        "y": 5,
+        "w": 460,
+        "h": 509
+      },
+      "sourceSize": {
+        "w": 348,
+        "h": 514
+      }
+    },
+    "pham_nhan_unarmed-attack-012.png": {
+      "frame": {
+        "x": 2010,
+        "y": 2602,
+        "w": 460,
+        "h": 509
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 45,
+        "y": 5,
+        "w": 460,
+        "h": 509
+      },
+      "sourceSize": {
+        "w": 348,
+        "h": 514
+      }
+    },
+    "pham_nhan_unarmed-attack-013.png": {
+      "frame": {
+        "x": 2512,
+        "y": 2602,
+        "w": 406,
+        "h": 507
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 34,
+        "y": 7,
+        "w": 406,
+        "h": 507
+      },
+      "sourceSize": {
+        "w": 348,
+        "h": 514
+      }
+    },
+    "pham_nhan_unarmed-attack-014.png": {
+      "frame": {
+        "x": 3014,
+        "y": 2602,
+        "w": 374,
+        "h": 505
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 23,
+        "y": 7,
+        "w": 374,
+        "h": 505
+      },
+      "sourceSize": {
+        "w": 348,
+        "h": 514
+      }
+    },
+    "pham_nhan_unarmed-attack-015.png": {
+      "frame": {
+        "x": 3516,
+        "y": 2602,
+        "w": 378,
+        "h": 507
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 12,
+        "y": 7,
+        "w": 378,
+        "h": 507
+      },
+      "sourceSize": {
+        "w": 348,
+        "h": 514
+      }
+    },
+    "pham_nhan_unarmed-attack-016.png": {
+      "frame": {
+        "x": 2,
+        "y": 3122,
+        "w": 356,
+        "h": 509
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 5,
+        "y": 5,
+        "w": 356,
+        "h": 509
+      },
+      "sourceSize": {
+        "w": 348,
+        "h": 514
+      }
+    },
+    "pham_nhan_unarmed-attack-017.png": {
+      "frame": {
+        "x": 504,
+        "y": 3122,
+        "w": 338,
+        "h": 514
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 3,
+        "y": 0,
+        "w": 338,
+        "h": 514
+      },
+      "sourceSize": {
+        "w": 348,
+        "h": 514
+      }
+    }
+  },
+  "meta": {
+    "app": "pack-character-art.mjs",
+    "version": "1.0",
+    "image": "pham_nhan_unarmed-sheet-1.png",
+    "format": "RGBA8888",
+    "size": {
+      "w": 4016,
+      "h": 3640
+    },
+    "scale": "1"
+  }
+}

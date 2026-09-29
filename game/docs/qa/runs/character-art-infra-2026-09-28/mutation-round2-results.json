@@ -1,0 +1,34 @@
+[
+ {
+  "id": "MUT-02",
+  "inv": [
+   "I-ANIMATED-CHAR-OVERRIDE"
+  ],
+  "file": "src/presentation/art/CombatPresentationCatalogue.ts",
+  "old": "    return reskinSlug",
+  "new": "    return fallbackTextureKey // MUTANT: entity key ignores reskin slug",
+  "oracle": "tests/architecture/characterArtReskin.test.ts",
+  "desc": "mapped profile falls back to legacy texture key inside combat",
+  "occurrence": 2,
+  "result": "KILLED_EXPECTED",
+  "mutantHash": "0912c1c424384c170e0dd938108c6e7a9250d865afd70e9fa01c74d7117fcba1",
+  "candidateUnchanged": true,
+  "exitCode": 1
+ },
+ {
+  "id": "MUT-04",
+  "inv": [
+   "I-AVATAR-FALLBACK"
+  ],
+  "file": "src/game/scenes/combat/combat-grid-view.ts",
+  "old": "      if (staticForm && this.host.textures.exists(staticForm.texture.textureKey)) {",
+  "new": "      if (false && staticForm && this.host.textures.exists(staticForm.texture.textureKey)) { // MUTANT: avatar fallback skipped",
+  "oracle": "src/game/scenes/combat/combat-grid-view.test.ts",
+  "desc": "atlas-miss falls straight to placeholder, skipping the avatar",
+  "occurrence": 2,
+  "result": "KILLED_EXPECTED",
+  "mutantHash": "176de92ece4a5f943c4e8383125c94e642d94b0ccd8c3f12eb9a06b2a194f267",
+  "candidateUnchanged": true,
+  "exitCode": 1
+ }
+]

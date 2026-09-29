@@ -1,0 +1,31 @@
+{
+  "phase": "INTAKE",
+  "request": {
+    "runId": "enemy-art-wave1-2026-09-28",
+    "productRoot": "..",
+    "task": "NEWSPRITE enemy reskin wave 1 (Mortal through Foundation): pack-enemy-art.mjs pipeline, MonsterArt.ts registry, per-entity animated contract amendment (ANIMATED_ENEMY_KEYS + optional attack clip), loader wiring, generated atlases/avatars under public/assets/enemies/animated, architecture + e2e tests. No roster/stat/name changes. SFX staged only; wugu reserved unwired.",
+    "authorizedRepairs": [
+      "task-owned files only: art pipeline, presentation wiring, registry, loaders, tests"
+    ],
+    "nonGoals": [
+      "new enemy roster or stats",
+      "SFX design",
+      "VFX",
+      "boss multi-skill clips",
+      "master modifications"
+    ],
+    "budget": "max 1 dispatched verifier agent (user ruling); Clean B = single blind reviewer",
+    "priorEvidence": [
+      "npm run verify green (type-check+build+6976 vitest)",
+      "playwright combat-idle-motion-capture green x2",
+      "P18 OCR pass",
+      "P4 quick report docs/qa/2026-09-27-enemy-art-wave1-quick.md",
+      "P5 three sequential passes"
+    ],
+    "contractPaths": [
+      "AGENTS.md",
+      "game/docs/qa/protocol/README.md",
+      "game/CLAUDE.md"
+    ]
+  }
+}

@@ -1,0 +1,1175 @@
+{
+  "frames": {
+    "xuandao-idle-001.png": {
+      "frame": {
+        "x": 2,
+        "y": 2,
+        "w": 185,
+        "h": 255
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 1,
+        "y": 3,
+        "w": 185,
+        "h": 255
+      },
+      "sourceSize": {
+        "w": 187,
+        "h": 258
+      }
+    },
+    "xuandao-idle-002.png": {
+      "frame": {
+        "x": 328,
+        "y": 2,
+        "w": 184,
+        "h": 255
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 1,
+        "y": 3,
+        "w": 184,
+        "h": 255
+      },
+      "sourceSize": {
+        "w": 187,
+        "h": 258
+      }
+    },
+    "xuandao-idle-003.png": {
+      "frame": {
+        "x": 654,
+        "y": 2,
+        "w": 184,
+        "h": 255
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 2,
+        "y": 3,
+        "w": 184,
+        "h": 255
+      },
+      "sourceSize": {
+        "w": 187,
+        "h": 258
+      }
+    },
+    "xuandao-idle-004.png": {
+      "frame": {
+        "x": 980,
+        "y": 2,
+        "w": 184,
+        "h": 255
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 3,
+        "y": 3,
+        "w": 184,
+        "h": 255
+      },
+      "sourceSize": {
+        "w": 187,
+        "h": 258
+      }
+    },
+    "xuandao-idle-005.png": {
+      "frame": {
+        "x": 1306,
+        "y": 2,
+        "w": 183,
+        "h": 255
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 3,
+        "y": 3,
+        "w": 183,
+        "h": 255
+      },
+      "sourceSize": {
+        "w": 187,
+        "h": 258
+      }
+    },
+    "xuandao-idle-006.png": {
+      "frame": {
+        "x": 1632,
+        "y": 2,
+        "w": 180,
+        "h": 256
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 2,
+        "w": 180,
+        "h": 256
+      },
+      "sourceSize": {
+        "w": 187,
+        "h": 258
+      }
+    },
+    "xuandao-idle-007.png": {
+      "frame": {
+        "x": 1958,
+        "y": 2,
+        "w": 178,
+        "h": 256
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 5,
+        "y": 2,
+        "w": 178,
+        "h": 256
+      },
+      "sourceSize": {
+        "w": 187,
+        "h": 258
+      }
+    },
+    "xuandao-idle-008.png": {
+      "frame": {
+        "x": 2284,
+        "y": 2,
+        "w": 177,
+        "h": 257
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 6,
+        "y": 1,
+        "w": 177,
+        "h": 257
+      },
+      "sourceSize": {
+        "w": 187,
+        "h": 258
+      }
+    },
+    "xuandao-idle-009.png": {
+      "frame": {
+        "x": 2610,
+        "y": 2,
+        "w": 177,
+        "h": 258
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 7,
+        "y": 0,
+        "w": 177,
+        "h": 258
+      },
+      "sourceSize": {
+        "w": 187,
+        "h": 258
+      }
+    },
+    "xuandao-idle-010.png": {
+      "frame": {
+        "x": 2936,
+        "y": 2,
+        "w": 174,
+        "h": 258
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 9,
+        "y": 0,
+        "w": 174,
+        "h": 258
+      },
+      "sourceSize": {
+        "w": 187,
+        "h": 258
+      }
+    },
+    "xuandao-idle-011.png": {
+      "frame": {
+        "x": 3262,
+        "y": 2,
+        "w": 173,
+        "h": 258
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 9,
+        "y": 0,
+        "w": 173,
+        "h": 258
+      },
+      "sourceSize": {
+        "w": 187,
+        "h": 258
+      }
+    },
+    "xuandao-idle-012.png": {
+      "frame": {
+        "x": 3588,
+        "y": 2,
+        "w": 168,
+        "h": 258
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 9,
+        "y": 0,
+        "w": 168,
+        "h": 258
+      },
+      "sourceSize": {
+        "w": 187,
+        "h": 258
+      }
+    },
+    "xuandao-idle-013.png": {
+      "frame": {
+        "x": 2,
+        "y": 375,
+        "w": 172,
+        "h": 258
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 8,
+        "y": 0,
+        "w": 172,
+        "h": 258
+      },
+      "sourceSize": {
+        "w": 187,
+        "h": 258
+      }
+    },
+    "xuandao-idle-014.png": {
+      "frame": {
+        "x": 328,
+        "y": 375,
+        "w": 176,
+        "h": 258
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 7,
+        "y": 0,
+        "w": 176,
+        "h": 258
+      },
+      "sourceSize": {
+        "w": 187,
+        "h": 258
+      }
+    },
+    "xuandao-idle-015.png": {
+      "frame": {
+        "x": 654,
+        "y": 375,
+        "w": 180,
+        "h": 257
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 5,
+        "y": 1,
+        "w": 180,
+        "h": 257
+      },
+      "sourceSize": {
+        "w": 187,
+        "h": 258
+      }
+    },
+    "xuandao-idle-016.png": {
+      "frame": {
+        "x": 980,
+        "y": 375,
+        "w": 181,
+        "h": 256
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 3,
+        "y": 2,
+        "w": 181,
+        "h": 256
+      },
+      "sourceSize": {
+        "w": 187,
+        "h": 258
+      }
+    },
+    "xuandao-idle-017.png": {
+      "frame": {
+        "x": 1306,
+        "y": 375,
+        "w": 184,
+        "h": 255
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 1,
+        "y": 3,
+        "w": 184,
+        "h": 255
+      },
+      "sourceSize": {
+        "w": 187,
+        "h": 258
+      }
+    },
+    "xuandao-idle-018.png": {
+      "frame": {
+        "x": 1632,
+        "y": 375,
+        "w": 185,
+        "h": 255
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 3,
+        "w": 185,
+        "h": 255
+      },
+      "sourceSize": {
+        "w": 187,
+        "h": 258
+      }
+    },
+    "xuandao-attack-001.png": {
+      "frame": {
+        "x": 1958,
+        "y": 375,
+        "w": 187,
+        "h": 253
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -3,
+        "y": 5,
+        "w": 187,
+        "h": 253
+      },
+      "sourceSize": {
+        "w": 187,
+        "h": 258
+      }
+    },
+    "xuandao-attack-002.png": {
+      "frame": {
+        "x": 2284,
+        "y": 375,
+        "w": 248,
+        "h": 231
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -54,
+        "y": 27,
+        "w": 248,
+        "h": 231
+      },
+      "sourceSize": {
+        "w": 187,
+        "h": 258
+      }
+    },
+    "xuandao-attack-003.png": {
+      "frame": {
+        "x": 2610,
+        "y": 375,
+        "w": 285,
+        "h": 219
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -102,
+        "y": 39,
+        "w": 285,
+        "h": 219
+      },
+      "sourceSize": {
+        "w": 187,
+        "h": 258
+      }
+    },
+    "xuandao-attack-004.png": {
+      "frame": {
+        "x": 2936,
+        "y": 375,
+        "w": 178,
+        "h": 335
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 5,
+        "y": -77,
+        "w": 178,
+        "h": 335
+      },
+      "sourceSize": {
+        "w": 187,
+        "h": 258
+      }
+    },
+    "xuandao-attack-005.png": {
+      "frame": {
+        "x": 3262,
+        "y": 375,
+        "w": 274,
+        "h": 249
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -76,
+        "y": 9,
+        "w": 274,
+        "h": 249
+      },
+      "sourceSize": {
+        "w": 187,
+        "h": 258
+      }
+    },
+    "xuandao-attack-006.png": {
+      "frame": {
+        "x": 3588,
+        "y": 375,
+        "w": 288,
+        "h": 206
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -29,
+        "y": 52,
+        "w": 288,
+        "h": 206
+      },
+      "sourceSize": {
+        "w": 187,
+        "h": 258
+      }
+    },
+    "xuandao-attack-007.png": {
+      "frame": {
+        "x": 2,
+        "y": 748,
+        "w": 204,
+        "h": 261
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 12,
+        "y": -3,
+        "w": 204,
+        "h": 261
+      },
+      "sourceSize": {
+        "w": 187,
+        "h": 258
+      }
+    },
+    "xuandao-attack-008.png": {
+      "frame": {
+        "x": 328,
+        "y": 748,
+        "w": 189,
+        "h": 262
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 12,
+        "y": 8,
+        "w": 189,
+        "h": 262
+      },
+      "sourceSize": {
+        "w": 187,
+        "h": 258
+      }
+    },
+    "xuandao-attack-009.png": {
+      "frame": {
+        "x": 654,
+        "y": 748,
+        "w": 190,
+        "h": 260
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 11,
+        "y": 9,
+        "w": 190,
+        "h": 260
+      },
+      "sourceSize": {
+        "w": 187,
+        "h": 258
+      }
+    },
+    "xuandao-attack-010.png": {
+      "frame": {
+        "x": 980,
+        "y": 748,
+        "w": 198,
+        "h": 251
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 3,
+        "y": 13,
+        "w": 198,
+        "h": 251
+      },
+      "sourceSize": {
+        "w": 187,
+        "h": 258
+      }
+    },
+    "xuandao-attack-011.png": {
+      "frame": {
+        "x": 1306,
+        "y": 748,
+        "w": 194,
+        "h": 242
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 3,
+        "y": 16,
+        "w": 194,
+        "h": 242
+      },
+      "sourceSize": {
+        "w": 187,
+        "h": 258
+      }
+    },
+    "xuandao-attack-012.png": {
+      "frame": {
+        "x": 1632,
+        "y": 748,
+        "w": 222,
+        "h": 214
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 5,
+        "y": 44,
+        "w": 222,
+        "h": 214
+      },
+      "sourceSize": {
+        "w": 187,
+        "h": 258
+      }
+    },
+    "xuandao-attack-013.png": {
+      "frame": {
+        "x": 1958,
+        "y": 748,
+        "w": 255,
+        "h": 237
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -87,
+        "y": 21,
+        "w": 255,
+        "h": 237
+      },
+      "sourceSize": {
+        "w": 187,
+        "h": 258
+      }
+    },
+    "xuandao-attack-014.png": {
+      "frame": {
+        "x": 2284,
+        "y": 748,
+        "w": 277,
+        "h": 202
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -111,
+        "y": 56,
+        "w": 277,
+        "h": 202
+      },
+      "sourceSize": {
+        "w": 187,
+        "h": 258
+      }
+    },
+    "xuandao-attack-015.png": {
+      "frame": {
+        "x": 2610,
+        "y": 748,
+        "w": 202,
+        "h": 235
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -22,
+        "y": 23,
+        "w": 202,
+        "h": 235
+      },
+      "sourceSize": {
+        "w": 187,
+        "h": 258
+      }
+    },
+    "xuandao-attack-016.png": {
+      "frame": {
+        "x": 2936,
+        "y": 748,
+        "w": 209,
+        "h": 261
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -42,
+        "y": -3,
+        "w": 209,
+        "h": 261
+      },
+      "sourceSize": {
+        "w": 187,
+        "h": 258
+      }
+    },
+    "xuandao-attack-017.png": {
+      "frame": {
+        "x": 3262,
+        "y": 748,
+        "w": 182,
+        "h": 261
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -12,
+        "y": -3,
+        "w": 182,
+        "h": 261
+      },
+      "sourceSize": {
+        "w": 187,
+        "h": 258
+      }
+    },
+    "xuandao-attack-018.png": {
+      "frame": {
+        "x": 3588,
+        "y": 748,
+        "w": 180,
+        "h": 254
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -3,
+        "y": 4,
+        "w": 180,
+        "h": 254
+      },
+      "sourceSize": {
+        "w": 187,
+        "h": 258
+      }
+    },
+    "xuandao-ult-001.png": {
+      "frame": {
+        "x": 2,
+        "y": 1121,
+        "w": 187,
+        "h": 253
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -3,
+        "y": 5,
+        "w": 187,
+        "h": 253
+      },
+      "sourceSize": {
+        "w": 187,
+        "h": 258
+      }
+    },
+    "xuandao-ult-002.png": {
+      "frame": {
+        "x": 328,
+        "y": 1121,
+        "w": 264,
+        "h": 277
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -56,
+        "y": -19,
+        "w": 264,
+        "h": 277
+      },
+      "sourceSize": {
+        "w": 187,
+        "h": 258
+      }
+    },
+    "xuandao-ult-003.png": {
+      "frame": {
+        "x": 654,
+        "y": 1121,
+        "w": 174,
+        "h": 369
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 53,
+        "y": -111,
+        "w": 174,
+        "h": 369
+      },
+      "sourceSize": {
+        "w": 187,
+        "h": 258
+      }
+    },
+    "xuandao-ult-004.png": {
+      "frame": {
+        "x": 980,
+        "y": 1121,
+        "w": 263,
+        "h": 344
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 20,
+        "y": -86,
+        "w": 263,
+        "h": 344
+      },
+      "sourceSize": {
+        "w": 187,
+        "h": 258
+      }
+    },
+    "xuandao-ult-005.png": {
+      "frame": {
+        "x": 1306,
+        "y": 1121,
+        "w": 265,
+        "h": 317
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 15,
+        "y": -59,
+        "w": 265,
+        "h": 317
+      },
+      "sourceSize": {
+        "w": 187,
+        "h": 258
+      }
+    },
+    "xuandao-ult-006.png": {
+      "frame": {
+        "x": 1632,
+        "y": 1121,
+        "w": 283,
+        "h": 278
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -30,
+        "y": -20,
+        "w": 283,
+        "h": 278
+      },
+      "sourceSize": {
+        "w": 187,
+        "h": 258
+      }
+    },
+    "xuandao-ult-007.png": {
+      "frame": {
+        "x": 1958,
+        "y": 1121,
+        "w": 308,
+        "h": 226
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -77,
+        "y": 32,
+        "w": 308,
+        "h": 226
+      },
+      "sourceSize": {
+        "w": 187,
+        "h": 258
+      }
+    },
+    "xuandao-ult-008.png": {
+      "frame": {
+        "x": 2284,
+        "y": 1121,
+        "w": 269,
+        "h": 333
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -60,
+        "y": -75,
+        "w": 269,
+        "h": 333
+      },
+      "sourceSize": {
+        "w": 187,
+        "h": 258
+      }
+    },
+    "xuandao-ult-009.png": {
+      "frame": {
+        "x": 2610,
+        "y": 1121,
+        "w": 209,
+        "h": 328
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 1,
+        "y": -70,
+        "w": 209,
+        "h": 328
+      },
+      "sourceSize": {
+        "w": 187,
+        "h": 258
+      }
+    },
+    "xuandao-ult-010.png": {
+      "frame": {
+        "x": 2936,
+        "y": 1121,
+        "w": 213,
+        "h": 328
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 1,
+        "y": -70,
+        "w": 213,
+        "h": 328
+      },
+      "sourceSize": {
+        "w": 187,
+        "h": 258
+      }
+    },
+    "xuandao-ult-011.png": {
+      "frame": {
+        "x": 3262,
+        "y": 1121,
+        "w": 213,
+        "h": 328
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 1,
+        "y": -70,
+        "w": 213,
+        "h": 328
+      },
+      "sourceSize": {
+        "w": 187,
+        "h": 258
+      }
+    },
+    "xuandao-ult-012.png": {
+      "frame": {
+        "x": 3588,
+        "y": 1121,
+        "w": 213,
+        "h": 328
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 1,
+        "y": -70,
+        "w": 213,
+        "h": 328
+      },
+      "sourceSize": {
+        "w": 187,
+        "h": 258
+      }
+    },
+    "xuandao-ult-013.png": {
+      "frame": {
+        "x": 2,
+        "y": 1494,
+        "w": 213,
+        "h": 328
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 1,
+        "y": -70,
+        "w": 213,
+        "h": 328
+      },
+      "sourceSize": {
+        "w": 187,
+        "h": 258
+      }
+    },
+    "xuandao-ult-014.png": {
+      "frame": {
+        "x": 328,
+        "y": 1494,
+        "w": 214,
+        "h": 328
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": -70,
+        "w": 214,
+        "h": 328
+      },
+      "sourceSize": {
+        "w": 187,
+        "h": 258
+      }
+    },
+    "xuandao-ult-015.png": {
+      "frame": {
+        "x": 654,
+        "y": 1494,
+        "w": 230,
+        "h": 328
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -14,
+        "y": -70,
+        "w": 230,
+        "h": 328
+      },
+      "sourceSize": {
+        "w": 187,
+        "h": 258
+      }
+    },
+    "xuandao-ult-016.png": {
+      "frame": {
+        "x": 980,
+        "y": 1494,
+        "w": 284,
+        "h": 293
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -68,
+        "y": -35,
+        "w": 284,
+        "h": 293
+      },
+      "sourceSize": {
+        "w": 187,
+        "h": 258
+      }
+    },
+    "xuandao-ult-017.png": {
+      "frame": {
+        "x": 1306,
+        "y": 1494,
+        "w": 322,
+        "h": 222
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -107,
+        "y": 36,
+        "w": 322,
+        "h": 222
+      },
+      "sourceSize": {
+        "w": 187,
+        "h": 258
+      }
+    },
+    "xuandao-ult-018.png": {
+      "frame": {
+        "x": 1632,
+        "y": 1494,
+        "w": 276,
+        "h": 216
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -56,
+        "y": 42,
+        "w": 276,
+        "h": 216
+      },
+      "sourceSize": {
+        "w": 187,
+        "h": 258
+      }
+    },
+    "xuandao-ult-019.png": {
+      "frame": {
+        "x": 1958,
+        "y": 1494,
+        "w": 251,
+        "h": 232
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -42,
+        "y": 26,
+        "w": 251,
+        "h": 232
+      },
+      "sourceSize": {
+        "w": 187,
+        "h": 258
+      }
+    },
+    "xuandao-ult-020.png": {
+      "frame": {
+        "x": 2284,
+        "y": 1494,
+        "w": 209,
+        "h": 249
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -19,
+        "y": 9,
+        "w": 209,
+        "h": 249
+      },
+      "sourceSize": {
+        "w": 187,
+        "h": 258
+      }
+    },
+    "xuandao-ult-021.png": {
+      "frame": {
+        "x": 2610,
+        "y": 1494,
+        "w": 187,
+        "h": 253
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -3,
+        "y": 5,
+        "w": 187,
+        "h": 253
+      },
+      "sourceSize": {
+        "w": 187,
+        "h": 258
+      }
+    },
+    "xuandao-death-001.png": {
+      "frame": {
+        "x": 2936,
+        "y": 1494,
+        "w": 180,
+        "h": 254
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -3,
+        "y": 4,
+        "w": 180,
+        "h": 254
+      },
+      "sourceSize": {
+        "w": 187,
+        "h": 258
+      }
+    }
+  },
+  "meta": {
+    "app": "pack-character-art.mjs",
+    "version": "1.0",
+    "image": "xuandao-sheet-1.png",
+    "format": "RGBA8888",
+    "size": {
+      "w": 3912,
+      "h": 1865
+    },
+    "scale": "1"
+  }
+}

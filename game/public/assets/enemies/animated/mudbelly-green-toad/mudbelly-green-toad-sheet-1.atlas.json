@@ -1,0 +1,335 @@
+{
+  "frames": {
+    "mudbelly-green-toad-idle-001.png": {
+      "frame": {
+        "x": 2,
+        "y": 2,
+        "w": 474,
+        "h": 338
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 1,
+        "y": 7,
+        "w": 474,
+        "h": 338
+      },
+      "sourceSize": {
+        "w": 475,
+        "h": 345
+      }
+    },
+    "mudbelly-green-toad-idle-002.png": {
+      "frame": {
+        "x": 481,
+        "y": 2,
+        "w": 474,
+        "h": 339
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 1,
+        "y": 6,
+        "w": 474,
+        "h": 339
+      },
+      "sourceSize": {
+        "w": 475,
+        "h": 345
+      }
+    },
+    "mudbelly-green-toad-idle-003.png": {
+      "frame": {
+        "x": 960,
+        "y": 2,
+        "w": 474,
+        "h": 340
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 1,
+        "y": 5,
+        "w": 474,
+        "h": 340
+      },
+      "sourceSize": {
+        "w": 475,
+        "h": 345
+      }
+    },
+    "mudbelly-green-toad-idle-004.png": {
+      "frame": {
+        "x": 1439,
+        "y": 2,
+        "w": 474,
+        "h": 342
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 1,
+        "y": 3,
+        "w": 474,
+        "h": 342
+      },
+      "sourceSize": {
+        "w": 475,
+        "h": 345
+      }
+    },
+    "mudbelly-green-toad-idle-005.png": {
+      "frame": {
+        "x": 1918,
+        "y": 2,
+        "w": 474,
+        "h": 343
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 1,
+        "y": 2,
+        "w": 474,
+        "h": 343
+      },
+      "sourceSize": {
+        "w": 475,
+        "h": 345
+      }
+    },
+    "mudbelly-green-toad-idle-006.png": {
+      "frame": {
+        "x": 2397,
+        "y": 2,
+        "w": 475,
+        "h": 345
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 475,
+        "h": 345
+      },
+      "sourceSize": {
+        "w": 475,
+        "h": 345
+      }
+    },
+    "mudbelly-green-toad-idle-007.png": {
+      "frame": {
+        "x": 2876,
+        "y": 2,
+        "w": 475,
+        "h": 345
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 475,
+        "h": 345
+      },
+      "sourceSize": {
+        "w": 475,
+        "h": 345
+      }
+    },
+    "mudbelly-green-toad-idle-008.png": {
+      "frame": {
+        "x": 3355,
+        "y": 2,
+        "w": 475,
+        "h": 343
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 1,
+        "w": 475,
+        "h": 343
+      },
+      "sourceSize": {
+        "w": 475,
+        "h": 345
+      }
+    },
+    "mudbelly-green-toad-idle-009.png": {
+      "frame": {
+        "x": 2,
+        "y": 351,
+        "w": 475,
+        "h": 345
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 475,
+        "h": 345
+      },
+      "sourceSize": {
+        "w": 475,
+        "h": 345
+      }
+    },
+    "mudbelly-green-toad-idle-010.png": {
+      "frame": {
+        "x": 481,
+        "y": 351,
+        "w": 475,
+        "h": 343
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 2,
+        "w": 475,
+        "h": 343
+      },
+      "sourceSize": {
+        "w": 475,
+        "h": 345
+      }
+    },
+    "mudbelly-green-toad-idle-011.png": {
+      "frame": {
+        "x": 960,
+        "y": 351,
+        "w": 475,
+        "h": 342
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 3,
+        "w": 475,
+        "h": 342
+      },
+      "sourceSize": {
+        "w": 475,
+        "h": 345
+      }
+    },
+    "mudbelly-green-toad-idle-012.png": {
+      "frame": {
+        "x": 1439,
+        "y": 351,
+        "w": 475,
+        "h": 340
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 5,
+        "w": 475,
+        "h": 340
+      },
+      "sourceSize": {
+        "w": 475,
+        "h": 345
+      }
+    },
+    "mudbelly-green-toad-idle-013.png": {
+      "frame": {
+        "x": 1918,
+        "y": 351,
+        "w": 475,
+        "h": 339
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 6,
+        "w": 475,
+        "h": 339
+      },
+      "sourceSize": {
+        "w": 475,
+        "h": 345
+      }
+    },
+    "mudbelly-green-toad-attack-001.png": {
+      "frame": {
+        "x": 2397,
+        "y": 351,
+        "w": 474,
+        "h": 338
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 1,
+        "y": 7,
+        "w": 474,
+        "h": 338
+      },
+      "sourceSize": {
+        "w": 475,
+        "h": 345
+      }
+    },
+    "mudbelly-green-toad-attack-002.png": {
+      "frame": {
+        "x": 2876,
+        "y": 351,
+        "w": 474,
+        "h": 338
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 1,
+        "y": 7,
+        "w": 474,
+        "h": 338
+      },
+      "sourceSize": {
+        "w": 475,
+        "h": 345
+      }
+    },
+    "mudbelly-green-toad-death-001.png": {
+      "frame": {
+        "x": 3355,
+        "y": 351,
+        "w": 474,
+        "h": 338
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 1,
+        "y": 7,
+        "w": 474,
+        "h": 338
+      },
+      "sourceSize": {
+        "w": 475,
+        "h": 345
+      }
+    }
+  },
+  "meta": {
+    "app": "pack-enemy-art.mjs",
+    "version": "1.0",
+    "image": "mudbelly-green-toad-sheet-1.png",
+    "format": "RGBA8888",
+    "size": {
+      "w": 3832,
+      "h": 698
+    },
+    "scale": "1"
+  }
+}

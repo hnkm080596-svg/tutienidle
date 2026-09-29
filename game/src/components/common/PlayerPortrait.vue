@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { ENTITY_ART_MODE } from '@/presentation/art/EntityArtMode'
 import { animatedArtFormFor } from '@/presentation/art/CombatPresentationCatalogue'
 import { PLAYER_VISUAL_PROFILES } from '@/presentation/art/PlayerVisualProfiles'
+import { usePlayerStore } from '@/stores/player'
 import EntitySpriteCanvas from './EntitySpriteCanvas.vue'
 
 // Trinh bay nhan vat dung CHUNG (plan Workstream A) - mode-aware figure:
@@ -34,13 +35,19 @@ const props = withDefaults(defineProps<PlayerPortraitProps>(), {
   animated: false,
 })
 
-const IMAGE_URLS = {
-  cultivate: '/assets/characters/player/mortal/player-mortal-cultivate-v1.png',
+// Profile-derived art (art-seam wave, user ruling Q4 2026-09-29): the
+// same statics the visual profile publishes, not a hard-coded mortal URL
+// (the old table also pinned cultivate to the dead v1 while the profile
+// carried v2).
+const player = usePlayerStore()
 
-  portrait: '/assets/characters/player/mortal/player-mortal-ink-sword-concept-v2.png',
-} as const
+const imageUrl = computed(() => {
+  const profile = PLAYER_VISUAL_PROFILES[player.visualProfileId] ?? PLAYER_VISUAL_PROFILES.mortal
 
-const imageUrl = IMAGE_URLS[props.variant]
+  return props.variant === 'cultivate'
+    ? (profile.cultivateTextureUrl ?? PLAYER_VISUAL_PROFILES.mortal.cultivateTextureUrl)
+    : profile.combatTextureUrl
+})
 
 // Animated mode - the figure plays the same clips combat would. `portrait`
 // draws the mortal idle loop from the catalogue's dormant animated form;

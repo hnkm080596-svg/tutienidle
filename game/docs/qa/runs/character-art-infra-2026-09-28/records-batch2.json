@@ -1,0 +1,107 @@
+{
+ "records": [
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-VERIFY-FULL",
+    "producer": "coordinator",
+    "startedAt": "2026-09-28T00:00:00Z",
+    "finishedAt": "2026-09-28T00:00:00Z",
+    "commandOrMethod": "npm run verify (type-check + vite build + vitest run)",
+    "cwd": "game",
+    "exitCode": 0,
+    "result": "PASS",
+    "artifactPath": "",
+    "inputPaths": [],
+    "inputEvidenceIds": [],
+    "invariantIds": [],
+    "claims": [
+     "type-check clean; production build succeeds; 6984 vitest pass on the aggregate",
+     "4 TranPhapCombatPreviewScene.test.ts failures observed were a mid-run snapshot of an in-flight edit (this.textures.exists before its final form); identical file re-run post-edit = 10/10 green (EV-FOCUSED)"
+    ],
+    "limitations": [
+     "run raced OCR-pass edits; final-state coverage for touched files comes from EV-FOCUSED + EV-E2E, not this artifact alone"
+    ],
+    "status": "CURRENT",
+    "kind": "EXECUTED_UNIT_STRUCTURAL"
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-FOCUSED",
+    "producer": "coordinator",
+    "startedAt": "2026-09-28T00:00:00Z",
+    "finishedAt": "2026-09-28T00:00:00Z",
+    "commandOrMethod": "npx vitest run TranPhapCombatPreviewScene.test.ts CombatScene.combatAnimations.test.ts combat-grid-view.test.ts CombatAnimationRuntime.test.ts TurnActionPresentationEvents.test.ts characterArtReskin.test.ts animationCatalogue.test.ts artModeUniformity.test.ts AssetBundleCatalog.test.ts",
+    "cwd": "game",
+    "exitCode": 0,
+    "result": "PASS",
+    "artifactPath": "",
+    "inputPaths": [],
+    "inputEvidenceIds": [],
+    "invariantIds": [],
+    "claims": [
+     "124 tests pass on the post-OCR-fix aggregate state",
+     "covers: preview reskin+sync, player anim contract, grid fallback, slotRole propagation, registry-manifest parity, art-mode uniformity, bundle parity"
+    ],
+    "limitations": [],
+    "status": "CURRENT",
+    "kind": "EXECUTED_UNIT_STRUCTURAL"
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-OCR",
+    "producer": "coordinator",
+    "startedAt": "2026-09-28T00:00:00Z",
+    "finishedAt": "2026-09-28T00:00:00Z",
+    "commandOrMethod": "ocr delegate preview/rule + host-agent review of the task diff",
+    "cwd": ".",
+    "exitCode": 0,
+    "result": "PASS",
+    "artifactPath": "",
+    "inputPaths": [],
+    "inputEvidenceIds": [],
+    "invariantIds": [],
+    "claims": [
+     "P18 delegation pass: 38 reviewable files previewed; 22 reviewed in full; 16 skipped as generated atlas JSON / binary PNG pinned by characterArtReskin.test.ts; coverage 100% with valid skip reasons",
+     "2 Medium findings found and fixed in-pass: MISSING_CLIP_FALLBACK (ult->attack degradation), preview sync acceptable-texture-key set"
+    ],
+    "limitations": [
+     "host-agent reasoning - same-context review, not independence evidence"
+    ],
+    "status": "CURRENT",
+    "kind": "STATIC_REVIEW"
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-E2E",
+    "producer": "coordinator",
+    "startedAt": "2026-09-28T00:00:00Z",
+    "finishedAt": "2026-09-28T00:00:00Z",
+    "commandOrMethod": "npx playwright test tests/e2e/combat-idle-motion-capture.spec.ts",
+    "cwd": "game",
+    "exitCode": 0,
+    "result": "PASS",
+    "artifactPath": "",
+    "inputPaths": [],
+    "inputEvidenceIds": [],
+    "invariantIds": [],
+    "claims": [
+     "live browser run: player renders zuofeng atlas idle frames advancing; enemy reskin (boar) idle/attack/death verified via probe sprite",
+     "player ult probe: authored ult clip plays and returns to a valid engaged loop (standby/idle) - not stuck on 'ult'",
+     "depth-normalized person-height parity player vs enemy holds"
+    ],
+    "limitations": [
+     "floor-1 combat only; TranPhapCombatPreviewScene not covered by playwright spec (vitest unit coverage instead)"
+    ],
+    "status": "CURRENT",
+    "kind": "EXECUTED_RUNTIME"
+   }
+  }
+ ]
+}

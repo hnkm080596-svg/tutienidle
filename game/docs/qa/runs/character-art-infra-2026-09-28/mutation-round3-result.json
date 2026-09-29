@@ -1,0 +1,10 @@
+{
+ "id": "MUT-08",
+ "inv": [
+  "I-ULT-SLOT-SELECT"
+ ],
+ "file": "src/core/battle/turn/CombatAnimationRuntime.ts",
+ "result": "KILLED_EXPECTED",
+ "mutantHash": "13c92d64c831671cba466dc78c61bbf4056daf46905c0a9902187a424ef6f17c",
+ "candidateUnchanged": true
+}

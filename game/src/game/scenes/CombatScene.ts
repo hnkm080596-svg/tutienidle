@@ -89,6 +89,7 @@ import {
 } from '@/game/support/ThanhVanArt'
 import { attachThanhVanBackdrop, type ThanhVanBackdropHandle } from '@/game/support/ThanhVanBackdrop'
 import { animatedCombatAnimationSets } from '@/game/support/CombatPreload'
+import { animatedArtFormFor } from '@/presentation/art/CombatPresentationCatalogue'
 import type {
   CombatAnimationCatalogue,
   CombatAnimationName,
@@ -185,9 +186,18 @@ export interface CombatScenePayload {
   sourceId?: string
   targetId?: string
   skillId?: string
+  /** Kit slot the cast came from - lets the renderer pick the authored ult
+   *  clip for ultimate casts. 'none' marks a declared turn that is not a
+   *  slot cast at all (charge-continuation/skipped turns): no lunge, no
+   *  clip, just the impact ack pacing (Clean-B F-CB2-02). */
+  slotRole?: 'basic' | 'special' | 'ultimate' | 'none'
   // Player visual profile bridge (body-anchor plan Ã‚Â§4.2) Ã¢â‚¬â€ event
   // 'player_visual_profile_changed' gÃ¡Â»Â­i kÃƒÂ¨m ID hÃƒÂ¬nh thÃƒÂ¡i mÃ¡Â»â€ºi.
   profileId?: string
+  // Armed/unarmed discriminator (art-seam wave, user ruling Q2): mortal
+  // resolves 'pham_nhan' when armed, 'pham_nhan_unarmed' when not. Absent
+  // keeps the current state.
+  armed?: boolean
 }
 
 interface ResizeSize {
@@ -241,6 +251,15 @@ interface EntitySprite {
   // scale/geometry mÃƒÂ  projection ghi mÃ¡Â»â€”i frame.
   shadow?: Phaser.GameObjects.Ellipse
   boost: { value: number }
+  // Mirrors combatTypes.ts EntitySprite (see the note above): procedural
+  // idle-bob target (Clean-A3 A-9 mirror drift), the pending one-shot
+  // transition listener removed selectively on profile swap (Clean-B2
+  // IN3-F1), and the deferred loop / pre-clip base texture used by
+  // playCombatAnimation's deferral + restore paths (Clean-B F-CB2-01/03).
+  idle?: { offsetY: number }
+  pendingTransitionListener?: (anim: Phaser.Animations.Animation) => void
+  deferredLoopRequest?: CombatAnimationName
+  pendingBaseTextureKey?: string
   footY: number
   columnFloat: number
 }
@@ -532,6 +551,12 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   playerProfileId: PlayerVisualProfileId = 'mortal'
   playerProfile: PlayerVisualProfile = PLAYER_VISUAL_PROFILES.mortal
 
+  // Armed/unarmed pick for the mortal reskin (user ruling Q2, 2026-09-29):
+  // tram => armed 'pham_nhan'; linh_bao/huy_quyen => 'pham_nhan_unarmed'.
+  // True matches the resolver's canonical default when the gate is absent.
+  // Internal (module boundary - combat-animation-playback, grid view).
+  playerArmed = true
+
   /** KÃƒÂ­ch thÃ†Â°Ã¡Â»â€ºc nguÃ¡Â»â€œn cÃ¡Â»Â§a texture combat Ã„â€˜ang gÃ¡ÂºÂ¯n trÃƒÂªn player sprite. */
   playerSourceSize = { ...PLAYER_VISUAL_PROFILES.mortal.combatSourceSize }
 
@@ -647,6 +672,11 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   private getCombatEventBindings(): Array<[string, EventHandler<never>]> {
     return [
       ['skill_presentation_cast', (event: SkillCastPresentation) => this.onSkillCast(event)],
+      // Art waves (2026-09-28): authored attack/ult clip at cast start -
+      // clip-only, the lunge and both action ACKs belong to the skill
+      // presentation runner. slotRole 'none' marks non-cast declared turns.
+      ['turn_cast_start', (event: CombatScenePayload) =>
+        this.playCastClip(event.sourceId, event.slotRole, event.skillId)],
       ['skill_presentation_resolved', (event: SkillPresentationResolved) => this.onSkillResolved(event)],
       ['critical', (event: CombatScenePayload) => this.onCritical(event)],
       ['hit', (event: CombatScenePayload) => this.onHit(event)],
@@ -675,6 +705,10 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
         'player_visual_profile_changed',
         (event: CombatScenePayload) => {
           const profileId = event.profileId as PlayerVisualProfileId | undefined
+
+          if (typeof event.armed === 'boolean') {
+            this.playerArmed = event.armed
+          }
 
           if (profileId && PLAYER_VISUAL_PROFILES[profileId]) {
             this.applyPlayerVisualProfile(profileId)
@@ -792,6 +826,11 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     // khÃ¡Â»Å¸i Ã„â€˜Ã¡Â»â„¢ng; cÃ¡ÂºÂ­p nhÃ¡ÂºÂ­t vÃ¡Â»Â sau qua event
     // 'player_visual_profile_changed' (subscribeCombatEvents).
     const registryProfileId = readOptionalGate(this.registry, 'playerVisualProfileId')
+    const registryArmed = readOptionalGate(this.registry, 'playerVisualArmed')
+
+    if (registryArmed !== undefined) {
+      this.playerArmed = registryArmed
+    }
 
     if (registryProfileId && PLAYER_VISUAL_PROFILES[registryProfileId]) {
       this.applyPlayerVisualProfile(registryProfileId)
@@ -1432,6 +1471,37 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     this.animationPlayback.playCombatAnimation(sprite, actorId, name)
   }
 
+  // Art waves (2026-09-28): authored 'attack'/'ult' clip trigger shared by
+  // the turn_cast_start binding and the resume replay. slotRole 'none'
+  // (charge continuation, skipped/non-cast turns) plays nothing; 'ultimate'
+  // prefers the authored ult clip and falls back to 'attack' via the
+  // playback table. No-op for static catalogues. The lunge and both action
+  // ACKs are owned by the skill presentation runner, not here.
+  private playCastClip(
+    actorId: string | undefined,
+    slotRole: 'basic' | 'special' | 'ultimate' | 'none' | undefined,
+    skillId?: string,
+  ): void {
+    if (!actorId || slotRole === 'none') return
+    const sprite = this.spriteFor(actorId)
+    if (!sprite) return
+
+    // Per-skill cast clip first (art-seam S1): castClips keyed by Skill.id,
+    // then by slot role ('special'), ahead of the slot-role fallback chain.
+    const entityKey = this.entityAnimationKeyPrefix(actorId)
+    const castClips = entityKey ? animatedArtFormFor(entityKey)?.castClips : undefined
+    const castClip =
+      (skillId !== undefined ? castClips?.[skillId] : undefined) ??
+      (slotRole !== undefined ? castClips?.[slotRole] : undefined)
+
+    if (castClip) {
+      this.animationPlayback.playAtlasClip(sprite, actorId, castClip)
+      return
+    }
+
+    this.playCombatAnimation(sprite, actorId, slotRole === 'ultimate' ? 'ult' : 'attack')
+  }
+
   // CombatGridViewHost - kick idle right after sprite creation. No-op for
   // static-mode entities (playCombatAnimation guards on kind); animated-mode
   // entities would otherwise sit on a frozen first frame until their first
@@ -1879,6 +1949,12 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     this.vfxSpawner.statusTooltip?.hide()
     this.floatedStatusKeys?.clear()
 
+    // A new battle resurrects the player: clear the dying flag BEFORE the
+    // idle replay below - playCombatAnimation gates on playerDying so death
+    // owns the channel, and without this ordering the restart replay is
+    // swallowed by that very guard.
+    this.playerDying = false
+
     const player = this.sprites.get(PLAYER_ID)
 
     if (player) {
@@ -1897,9 +1973,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
       this.positionSprite(player, HERO_COLUMN)
     }
 
-    this.playerDying = false
-
-    // Scene restart / trÃ¡ÂºÂ­n mÃ¡Â»â€ºi trong cÃƒÂ¹ng scene Ã¢â‚¬â€ dÃ¡Â»Ân Player spawn VFX cÃ…Â©.
+    // Scene restart / same-scene refight - clean stale Player spawn VFX.
     this.playerSpawnHandle?.destroy()
     this.playerSpawnHandle = undefined
 
@@ -1986,6 +2060,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
       this.onTurnReady({ actorId: resume.actorId })
     } else if (resume.phase === 'cast') {
       this.onSkillCast(resume.cast)
+      this.playCastClip(resume.actorId, resume.slotRole, resume.skillId)
     } else if (resume.phase === 'complete') {
       const port = this.gameManagerRef
       if (port) this.skillPlayback.resumeResolved(resume.resolved, port)

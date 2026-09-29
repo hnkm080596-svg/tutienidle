@@ -1,0 +1,123 @@
+{
+ "records": [
+  {
+   "kind": "invariant",
+   "body": {
+    "id": "INV-CHAR-RESKIN-RESOLVE",
+    "statement": "A mapped player profile id resolves to its character slug before any texture/clip lookup (resolvePlayerEntityKey); unmapped profiles keep the legacy combatTextureKey path.",
+    "domain": "combat presentation",
+    "risk": "HIGH",
+    "sources": ["task spec game/docs/p7/missions/character-art-infra.spec.md", "code comments + tests"],
+    "owner": "", "legalWriters": [], "legalReaders": [], "projections": [], "caches": [],
+    "validStates": [], "forbiddenStates": [], "preconditions": [], "postconditions": [],
+    "legalTransitions": [], "illegalTransitions": [], "failureBehavior": "", "atomicity": "",
+    "inverseBehavior": "", "persistence": "", "migration": "", "lifecycle": "",
+    "runtimeConsequences": "", "uiConsequences": "", "oracles": [],
+    "requiredEvidenceSurfaces": ["DETERMINISTIC", "STATIC_SEMANTIC", "RUNTIME_E2E", "INDEPENDENT_REVIEW"],
+    "taxonomyIds": [], "status": "ACTIVE"
+   }
+  },
+  {
+   "kind": "invariant",
+   "body": {
+    "id": "INV-ANIMATED-CHAR-OVERRIDE",
+    "statement": "Under ENTITY_ART_MODE=static exactly ANIMATED_CHARACTER_KEYS (plus ANIMATED_ENEMY_KEYS) emit kind:animated; no other entity drifts animated, and unmapped character variants never enter the catalogue.",
+    "domain": "presentation contract",
+    "risk": "HIGH",
+    "sources": ["task spec", "artModeUniformity.test.ts", "animationCatalogue.test.ts"],
+    "owner": "", "legalWriters": [], "legalReaders": [], "projections": [], "caches": [],
+    "validStates": [], "forbiddenStates": [], "preconditions": [], "postconditions": [],
+    "legalTransitions": [], "illegalTransitions": [], "failureBehavior": "", "atomicity": "",
+    "inverseBehavior": "", "persistence": "", "migration": "", "lifecycle": "",
+    "runtimeConsequences": "", "uiConsequences": "", "oracles": [],
+    "requiredEvidenceSurfaces": ["DETERMINISTIC", "STATIC_SEMANTIC", "INDEPENDENT_REVIEW"],
+    "taxonomyIds": [], "status": "ACTIVE"
+   }
+  },
+  {
+   "kind": "invariant",
+   "body": {
+    "id": "INV-ULT-SLOT-SELECT",
+    "statement": "The 'ult' clip plays iff turn_cast_start carries slotRole==='ultimate' AND the entity's catalogue authors an ult clip; a missing ult clip degrades to 'attack', a missing attack degrades to standby - the cast tell never silently vanishes.",
+    "domain": "combat animation",
+    "risk": "HIGH",
+    "sources": ["combat-action-feedback.ts", "combat-animation-playback.ts MISSING_CLIP_FALLBACK", "CombatAnimationRuntime.castSlotRole"],
+    "owner": "", "legalWriters": [], "legalReaders": [], "projections": [], "caches": [],
+    "validStates": [], "forbiddenStates": [], "preconditions": [], "postconditions": [],
+    "legalTransitions": [], "illegalTransitions": [], "failureBehavior": "", "atomicity": "",
+    "inverseBehavior": "", "persistence": "", "migration": "", "lifecycle": "",
+    "runtimeConsequences": "", "uiConsequences": "", "oracles": [],
+    "requiredEvidenceSurfaces": ["DETERMINISTIC", "STATIC_SEMANTIC", "RUNTIME_E2E", "INDEPENDENT_REVIEW"],
+    "taxonomyIds": [], "status": "ACTIVE"
+   }
+  },
+  {
+   "kind": "invariant",
+   "body": {
+    "id": "INV-AVATAR-FALLBACK",
+    "statement": "An animated entity whose atlas sheet is absent draws its avatar static form (own sourceSize/extent), never a colored Rectangle while an avatar texture exists.",
+    "domain": "combat presentation",
+    "risk": "MEDIUM",
+    "sources": ["combat-grid-view.ts atlas-miss branch", "F-EAW-09 repair precedent"],
+    "owner": "", "legalWriters": [], "legalReaders": [], "projections": [], "caches": [],
+    "validStates": [], "forbiddenStates": [], "preconditions": [], "postconditions": [],
+    "legalTransitions": [], "illegalTransitions": [], "failureBehavior": "", "atomicity": "",
+    "inverseBehavior": "", "persistence": "", "migration": "", "lifecycle": "",
+    "runtimeConsequences": "", "uiConsequences": "", "oracles": [],
+    "requiredEvidenceSurfaces": ["DETERMINISTIC", "STATIC_SEMANTIC"],
+    "taxonomyIds": [], "status": "ACTIVE"
+   }
+  },
+  {
+   "kind": "invariant",
+   "body": {
+    "id": "INV-REGISTRY-MANIFEST-PARITY",
+    "statement": "CHARACTER_ART clip ranges, sheet names, frame prefixes, sourceSize, extent and avatarSize equal the generated manifest.json; drift fails characterArtReskin.test.ts.",
+    "domain": "asset pipeline",
+    "risk": "HIGH",
+    "sources": ["characterArtReskin.test.ts", "pack-character-art.mjs"],
+    "owner": "", "legalWriters": [], "legalReaders": [], "projections": [], "caches": [],
+    "validStates": [], "forbiddenStates": [], "preconditions": [], "postconditions": [],
+    "legalTransitions": [], "illegalTransitions": [], "failureBehavior": "", "atomicity": "",
+    "inverseBehavior": "", "persistence": "", "migration": "", "lifecycle": "",
+    "runtimeConsequences": "", "uiConsequences": "", "oracles": [],
+    "requiredEvidenceSurfaces": ["DETERMINISTIC", "STATIC_SEMANTIC", "INDEPENDENT_REVIEW"],
+    "taxonomyIds": [], "status": "ACTIVE"
+   }
+  },
+  {
+   "kind": "invariant",
+   "body": {
+    "id": "INV-PREVIEW-PARITY",
+    "statement": "TranPhapCombatPreviewScene resolves the same reskin/fallback chain as CombatScene and its sync never destroys+rebuilds a sprite whose texture is already valid for the current state (no rebuild loop).",
+    "domain": "preview parity",
+    "risk": "MEDIUM",
+    "sources": ["TranPhapCombatPreviewScene.ts acceptableTextureKeys", "TranPhapCombatPreviewScene.test.ts"],
+    "owner": "", "legalWriters": [], "legalReaders": [], "projections": [], "caches": [],
+    "validStates": [], "forbiddenStates": [], "preconditions": [], "postconditions": [],
+    "legalTransitions": [], "illegalTransitions": [], "failureBehavior": "", "atomicity": "",
+    "inverseBehavior": "", "persistence": "", "migration": "", "lifecycle": "",
+    "runtimeConsequences": "", "uiConsequences": "", "oracles": [],
+    "requiredEvidenceSurfaces": ["DETERMINISTIC", "STATIC_SEMANTIC", "INDEPENDENT_REVIEW"],
+    "taxonomyIds": [], "status": "ACTIVE"
+   }
+  },
+  {
+   "kind": "invariant",
+   "body": {
+    "id": "INV-CLIP-LIFECYCLE",
+    "statement": "One-shot clips (attack/ult/transitions) return to standby via ANIMATION_COMPLETE filtered by anim key; death clips finalize before sprite destroy; scene shutdown, re-entry and profile-swap cannot strand stale listeners or resurrect sprites.",
+    "domain": "combat lifecycle",
+    "risk": "HIGH",
+    "sources": ["combat-animation-playback.ts", "combat-player-visual.ts", "CombatScene.combatAnimations.test.ts"],
+    "owner": "", "legalWriters": [], "legalReaders": [], "projections": [], "caches": [],
+    "validStates": [], "forbiddenStates": [], "preconditions": [], "postconditions": [],
+    "legalTransitions": [], "illegalTransitions": [], "failureBehavior": "", "atomicity": "",
+    "inverseBehavior": "", "persistence": "", "migration": "", "lifecycle": "",
+    "runtimeConsequences": "", "uiConsequences": "", "oracles": [],
+    "requiredEvidenceSurfaces": ["DETERMINISTIC", "RUNTIME_E2E", "INDEPENDENT_REVIEW"],
+    "taxonomyIds": [], "status": "ACTIVE"
+   }
+  }
+ ]
+}

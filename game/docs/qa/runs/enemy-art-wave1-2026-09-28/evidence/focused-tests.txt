@@ -1,0 +1,1 @@
+vitest focused: tests/architecture/artModeUniformity.test.ts + enemyArtReskin.test.ts + src/game/scenes/combat/combat-grid-view.test.ts = 33 passed on post-repair state. Includes atlas-miss avatar-fallback regression for F-EAW-09.

@@ -1,0 +1,528 @@
+{
+ "records": [
+  {
+   "kind": "finding",
+   "id": "F-CAI-12",
+   "title": "beginDeathSequence plays a registered-but-empty death clip (atlas-miss) -> play() throws on frames[0], corpse freezes fully opaque; playCombatAnimation guarded this but the death path bypasses it",
+   "state": {
+    "productStateId": "08eabb3b0a87bee2319883182c76f5e32754c01b124442385601856b4bfd98e1",
+    "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+    "attackModelId": "a4ec1e669112c29f48c6fb9439c9b82710aebc43a811ccd6dce62048d9f2349f",
+    "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+   },
+   "severity": "Medium",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [],
+   "discoveredBy": "agent-clean-a-context",
+   "invariantIds": [
+    "I-CLIP-LIFECYCLE",
+    "I-AVATAR-FALLBACK"
+   ],
+   "evidenceIds": [],
+   "counterexample": "n/a - see evidenceIds",
+   "expected": "n/a - see evidenceIds",
+   "actual": "n/a - see evidenceIds",
+   "rootCause": "same-class guard dropped on the bypass path",
+   "rootClass": "guard-drift-between-paths",
+   "subsystem": "combat-presentation",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "reviewer sibling census + coordinator check - empty-anim and resume surfaces audited",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "F-CAI-16 same-class site in TranPhapCombatPreviewScene closed in same batch"
+     ],
+     "coverageLimits": [
+      "name-aliased consumers may evade literal search"
+     ]
+    }
+   ],
+   "siblingFindingIds": [
+    "F-CAI-16"
+   ],
+   "repair": "deathEmpty zero-frame check added; empty clip falls to the tween death path; regression test in CombatScene.combatAnimations.test.ts",
+   "pinEvidenceIds": [
+    "EV-FOCUSED"
+   ],
+   "verificationEvidenceIds": [
+    "EV-FOCUSED"
+   ],
+   "closureReviewIds": [
+    "RV-CA-3"
+   ],
+   "status": "CLOSED",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null
+  },
+  {
+   "kind": "finding",
+   "id": "F-CAI-13",
+   "title": "ResumePlayback cast variant drops slotRole -> a cast resumed via create()/rebindSession() replays onAttack without the role and an ultimate presents as attack",
+   "state": {
+    "productStateId": "08eabb3b0a87bee2319883182c76f5e32754c01b124442385601856b4bfd98e1",
+    "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+    "attackModelId": "a4ec1e669112c29f48c6fb9439c9b82710aebc43a811ccd6dce62048d9f2349f",
+    "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+   },
+   "severity": "Medium",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [],
+   "discoveredBy": "agent-clean-a-context",
+   "invariantIds": [
+    "I-ULT-SLOT-SELECT"
+   ],
+   "evidenceIds": [],
+   "counterexample": "n/a - see evidenceIds",
+   "expected": "n/a - see evidenceIds",
+   "actual": "n/a - see evidenceIds",
+   "rootCause": "resume payload schema not extended when slotRole was introduced",
+   "rootClass": "payload-schema-drift",
+   "subsystem": "combat-presentation",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "reviewer sibling census + coordinator check - empty-anim and resume surfaces audited",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "F-CAI-16 same-class site in TranPhapCombatPreviewScene closed in same batch"
+     ],
+     "coverageLimits": [
+      "name-aliased consumers may evade literal search"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "slotRole field on ResumePlayback cast + castSlotRole emitted in preparePresentationResume + passthrough in applyResumePlayback; pinned by runtime resume tests",
+   "pinEvidenceIds": [
+    "EV-FOCUSED"
+   ],
+   "verificationEvidenceIds": [
+    "EV-FOCUSED"
+   ],
+   "closureReviewIds": [
+    "RV-CA-3"
+   ],
+   "status": "CLOSED",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null
+  },
+  {
+   "kind": "finding",
+   "id": "F-CAI-14",
+   "title": "Queued repeat/multicast executions emit slotRole basic even for repeated ultimates",
+   "state": {
+    "productStateId": "08eabb3b0a87bee2319883182c76f5e32754c01b124442385601856b4bfd98e1",
+    "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+    "attackModelId": "a4ec1e669112c29f48c6fb9439c9b82710aebc43a811ccd6dce62048d9f2349f",
+    "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+   },
+   "severity": "Low",
+   "classification": "NON_ACTIONABLE",
+   "actionable": false,
+   "reachability": "PRODUCTION",
+   "locations": [],
+   "discoveredBy": "agent-clean-a-context",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "n/a - see evidenceIds",
+   "expected": "n/a - see evidenceIds",
+   "actual": "n/a - see evidenceIds",
+   "rootCause": "declared.action.slot is null on queued/repeat executions",
+   "rootClass": "intended-label",
+   "subsystem": "combat-presentation",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "reviewer sibling census + coordinator check - empty-anim and resume surfaces audited",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "F-CAI-16 same-class site in TranPhapCombatPreviewScene closed in same batch"
+     ],
+     "coverageLimits": [
+      "name-aliased consumers may evade literal search"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "ruled intended: follow-up strikes are not slot casts; basic is the honest label; pinned by the slotless-declare slotRole test + castSlotRole doc",
+   "pinEvidenceIds": [
+    "EV-FOCUSED"
+   ],
+   "verificationEvidenceIds": [
+    "EV-FOCUSED"
+   ],
+   "closureReviewIds": [
+    "RV-CA-3"
+   ],
+   "status": "REJECTED_WITH_PROOF",
+   "duplicateOf": null,
+   "rejectionReason": "intended: queued/repeat executions carry slot null; they are follow-up strikes not slot casts, basic label is correct per contract",
+   "exception": null
+  },
+  {
+   "kind": "finding",
+   "id": "F-CAI-15",
+   "title": "Player-never-destroyed death test was vacuous: emitted animationcomplete with the profile texture key while the played key is the reskin slug - animDone never resolved so the isPlayer guard was untested",
+   "state": {
+    "productStateId": "08eabb3b0a87bee2319883182c76f5e32754c01b124442385601856b4bfd98e1",
+    "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+    "attackModelId": "a4ec1e669112c29f48c6fb9439c9b82710aebc43a811ccd6dce62048d9f2349f",
+    "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+   },
+   "severity": "Low",
+   "classification": "TEST_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [],
+   "discoveredBy": "agent-clean-a-context",
+   "invariantIds": [
+    "I-CLIP-LIFECYCLE"
+   ],
+   "evidenceIds": [],
+   "counterexample": "n/a - see evidenceIds",
+   "expected": "n/a - see evidenceIds",
+   "actual": "n/a - see evidenceIds",
+   "rootCause": "test written against pre-reskin key",
+   "rootClass": "stale-oracle",
+   "subsystem": "combat-presentation",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "reviewer sibling census + coordinator check - empty-anim and resume surfaces audited",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "F-CAI-16 same-class site in TranPhapCombatPreviewScene closed in same batch"
+     ],
+     "coverageLimits": [
+      "name-aliased consumers may evade literal search"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "emit uses entityAnimationKeyPrefix(PLAYER_ID) (zuofeng) so finalize actually runs and exercises the isPlayer guard",
+   "pinEvidenceIds": [
+    "EV-FOCUSED"
+   ],
+   "verificationEvidenceIds": [
+    "EV-FOCUSED"
+   ],
+   "closureReviewIds": [
+    "RV-CA-3"
+   ],
+   "status": "CLOSED",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null
+  },
+  {
+   "kind": "finding",
+   "id": "F-CAI-16",
+   "title": "TranPhapCombatPreviewScene.startEntityIdle plays a zero-frame registered idle clip -> play() throws on frames[0] (same class as F-CAI-12, preview surface)",
+   "state": {
+    "productStateId": "08eabb3b0a87bee2319883182c76f5e32754c01b124442385601856b4bfd98e1",
+    "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+    "attackModelId": "a4ec1e669112c29f48c6fb9439c9b82710aebc43a811ccd6dce62048d9f2349f",
+    "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+   },
+   "severity": "Low",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [],
+   "discoveredBy": "agent-clean-a-context",
+   "invariantIds": [
+    "I-PREVIEW-PARITY",
+    "I-CLIP-LIFECYCLE"
+   ],
+   "evidenceIds": [],
+   "counterexample": "n/a - see evidenceIds",
+   "expected": "n/a - see evidenceIds",
+   "actual": "n/a - see evidenceIds",
+   "rootCause": "same-class guard absent on preview idle path",
+   "rootClass": "guard-drift-between-paths",
+   "subsystem": "combat-presentation",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "reviewer sibling census + coordinator check - empty-anim and resume surfaces audited",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "F-CAI-16 same-class site in TranPhapCombatPreviewScene closed in same batch"
+     ],
+     "coverageLimits": [
+      "name-aliased consumers may evade literal search"
+     ]
+    }
+   ],
+   "siblingFindingIds": [
+    "F-CAI-12"
+   ],
+   "repair": "zero-frame check added before play; pinned by preview test",
+   "pinEvidenceIds": [
+    "EV-FOCUSED"
+   ],
+   "verificationEvidenceIds": [
+    "EV-FOCUSED"
+   ],
+   "closureReviewIds": [
+    "RV-CA-3"
+   ],
+   "status": "CLOSED",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null
+  },
+  {
+   "kind": "finding",
+   "id": "F-CAI-17",
+   "title": "Player branch add.sprite in combat-grid-view lacks the textures.exists(drawKey) gate the enemy branch has - double asset miss yields a __MISSING sprite instead of the fallback chain",
+   "state": {
+    "productStateId": "08eabb3b0a87bee2319883182c76f5e32754c01b124442385601856b4bfd98e1",
+    "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+    "attackModelId": "a4ec1e669112c29f48c6fb9439c9b82710aebc43a811ccd6dce62048d9f2349f",
+    "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+   },
+   "severity": "Nit",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [],
+   "discoveredBy": "agent-clean-a-context",
+   "invariantIds": [
+    "I-AVATAR-FALLBACK"
+   ],
+   "evidenceIds": [],
+   "counterexample": "n/a - see evidenceIds",
+   "expected": "n/a - see evidenceIds",
+   "actual": "n/a - see evidenceIds",
+   "rootCause": "asymmetric guard between player/enemy draw branches",
+   "rootClass": "missing-guard",
+   "subsystem": "combat-presentation",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "reviewer sibling census + coordinator check - empty-anim and resume surfaces audited",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "F-CAI-16 same-class site in TranPhapCombatPreviewScene closed in same batch"
+     ],
+     "coverageLimits": [
+      "name-aliased consumers may evade literal search"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "deferred: requires TWO asset failures (atlas+avatar) to trigger; cosmetic outcome",
+   "pinEvidenceIds": [
+    "EV-FOCUSED"
+   ],
+   "verificationEvidenceIds": [
+    "EV-FOCUSED"
+   ],
+   "closureReviewIds": [
+    "RV-CA-3"
+   ],
+   "status": "HUMAN_EXCEPTION",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null
+  },
+  {
+   "kind": "finding",
+   "id": "F-CAI-18",
+   "title": "Character/monster slugs are not pinned disjoint from profile texture keys / FALLBACK / PLACEHOLDER entity keys (unrealistic under naming conventions)",
+   "state": {
+    "productStateId": "08eabb3b0a87bee2319883182c76f5e32754c01b124442385601856b4bfd98e1",
+    "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+    "attackModelId": "a4ec1e669112c29f48c6fb9439c9b82710aebc43a811ccd6dce62048d9f2349f",
+    "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+   },
+   "severity": "Nit",
+   "classification": "COVERAGE_GAP",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [],
+   "discoveredBy": "agent-clean-a-context",
+   "invariantIds": [
+    "I-CHAR-RESKIN-RESOLVE"
+   ],
+   "evidenceIds": [],
+   "counterexample": "n/a - see evidenceIds",
+   "expected": "n/a - see evidenceIds",
+   "actual": "n/a - see evidenceIds",
+   "rootCause": "keyspace pin covers characters-vs-monsters/companions but not profile keys",
+   "rootClass": "incomplete-pin",
+   "subsystem": "combat-presentation",
+   "siblingSearch": [
+    {
+     "roots": [
+      "game/src"
+     ],
+     "termsAndMethod": "reviewer sibling census + coordinator check - empty-anim and resume surfaces audited",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "F-CAI-16 same-class site in TranPhapCombatPreviewScene closed in same batch"
+     ],
+     "coverageLimits": [
+      "name-aliased consumers may evade literal search"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "deferred: naming conventions make collision unrealistic",
+   "pinEvidenceIds": [
+    "EV-FOCUSED"
+   ],
+   "verificationEvidenceIds": [
+    "EV-FOCUSED"
+   ],
+   "closureReviewIds": [
+    "RV-CA-3"
+   ],
+   "status": "HUMAN_EXCEPTION",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null
+  },
+  {
+   "kind": "review",
+   "id": "RV-CA-1",
+   "state": {
+    "productStateId": "08eabb3b0a87bee2319883182c76f5e32754c01b124442385601856b4bfd98e1",
+    "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+    "attackModelId": "a4ec1e669112c29f48c6fb9439c9b82710aebc43a811ccd6dce62048d9f2349f",
+    "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+   },
+   "round": 2,
+   "phase": "CORRECTNESS",
+   "reviewerId": "clean-a-agent",
+   "contextId": "agent-clean-a-context",
+   "model": "subagent_explore",
+   "role": "CLEAN_ROOM_A",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [
+    "read-only review - cannot run tests, source inspection only"
+   ],
+   "startedAt": "2026-09-28T09:55:00Z",
+   "sealedAt": "2026-09-28T09:55:00Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [
+    "F-CAI-12",
+    "F-CAI-13",
+    "F-CAI-14",
+    "F-CAI-15"
+   ],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  },
+  {
+   "kind": "review",
+   "id": "RV-CA-2",
+   "state": {
+    "productStateId": "08eabb3b0a87bee2319883182c76f5e32754c01b124442385601856b4bfd98e1",
+    "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+    "attackModelId": "a4ec1e669112c29f48c6fb9439c9b82710aebc43a811ccd6dce62048d9f2349f",
+    "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+   },
+   "round": 2,
+   "phase": "AUTHORITY",
+   "reviewerId": "clean-a-agent",
+   "contextId": "agent-clean-a-context",
+   "model": "subagent_explore",
+   "role": "CLEAN_ROOM_A",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [
+    "read-only review"
+   ],
+   "startedAt": "2026-09-28T09:55:00Z",
+   "sealedAt": "2026-09-28T09:55:00Z",
+   "previousPhaseReviewId": "RV-CA-1",
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [
+    "F-CAI-18"
+   ],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  },
+  {
+   "kind": "review",
+   "id": "RV-CA-3",
+   "state": {
+    "productStateId": "08eabb3b0a87bee2319883182c76f5e32754c01b124442385601856b4bfd98e1",
+    "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+    "attackModelId": "a4ec1e669112c29f48c6fb9439c9b82710aebc43a811ccd6dce62048d9f2349f",
+    "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+   },
+   "round": 2,
+   "phase": "INTEGRATION",
+   "reviewerId": "clean-a-agent",
+   "contextId": "agent-clean-a-context",
+   "model": "subagent_explore",
+   "role": "CLEAN_ROOM_A",
+   "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+   "priorFindingsVisible": false,
+   "accessLimitations": [
+    "read-only review"
+   ],
+   "startedAt": "2026-09-28T09:55:00Z",
+   "sealedAt": "2026-09-28T09:55:00Z",
+   "previousPhaseReviewId": "RV-CA-2",
+   "reviewedAfterPreviousFixes": true,
+   "coverageIds": [],
+   "evidenceIds": [],
+   "findingIds": [
+    "F-CAI-16",
+    "F-CAI-17"
+   ],
+   "novelAttackIds": [],
+   "status": "SEALED"
+  },
+  {
+   "kind": "cycle",
+   "id": "CYC-CLEAN-A",
+   "state": {
+    "productStateId": "08eabb3b0a87bee2319883182c76f5e32754c01b124442385601856b4bfd98e1",
+    "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+    "attackModelId": "a4ec1e669112c29f48c6fb9439c9b82710aebc43a811ccd6dce62048d9f2349f",
+    "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+   },
+   "reviewIds": [
+    "RV-CA-1",
+    "RV-CA-2",
+    "RV-CA-3"
+   ],
+   "coverageIds": [],
+   "evidenceIds": [],
+   "noveltyEvidenceIds": [],
+   "startedAt": "2026-09-28T09:55:00Z",
+   "finishedAt": "2026-09-28T09:55:00Z",
+   "status": "FINDINGS"
+  }
+ ]
+}

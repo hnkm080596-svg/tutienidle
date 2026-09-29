@@ -141,9 +141,20 @@ export class CombatActionFeedback {
       // through its transition; entities without it snap straight to idle.
       scene.playCombatAnimation(sprite, event.actorId, 'standby_to_idle')
 
-      scene.tweens.killTweensOf(sprite.rect)
+      // CR1-F1 - a dying entity's death sequence owns sprite.rect's tween
+      // channel (fall/fade -> finalize). A standby tail arriving after a
+      // lethal action-end flush must not kill that tween or the corpse
+      // wedges mid-fall forever.
+      const dying =
+        event.actorId === PLAYER_ID
+          ? scene.playerDying
+          : scene.dyingIds.has(event.actorId)
 
-      sprite.rect.setScale(1)
+      if (!dying) {
+        scene.tweens.killTweensOf(sprite.rect)
+
+        sprite.rect.setScale(1)
+      }
     }
   }
 

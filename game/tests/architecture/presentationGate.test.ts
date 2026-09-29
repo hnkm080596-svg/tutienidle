@@ -30,6 +30,10 @@ const GATE_KEYS = [
   'sceneAdapter',
   'bundleManager',
   'playerVisualProfileId',
+  // Art-seam wave (2026-09-29): armed pick + hidden-way selector join the
+  // same publishProfile pass.
+  'playerVisualArmed',
+  'playerCultivationWay',
   'lastBattlePositionsSnapshot',
   'battlefieldGeometry',
   'kiemBarReader',

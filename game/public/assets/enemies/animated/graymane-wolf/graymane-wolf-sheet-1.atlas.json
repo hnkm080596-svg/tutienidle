@@ -1,0 +1,255 @@
+{
+  "frames": {
+    "graymane-wolf-idle-001.png": {
+      "frame": {
+        "x": 2,
+        "y": 2,
+        "w": 496,
+        "h": 283
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 496,
+        "h": 283
+      },
+      "sourceSize": {
+        "w": 504,
+        "h": 283
+      }
+    },
+    "graymane-wolf-idle-002.png": {
+      "frame": {
+        "x": 510,
+        "y": 2,
+        "w": 496,
+        "h": 281
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 1,
+        "w": 496,
+        "h": 281
+      },
+      "sourceSize": {
+        "w": 504,
+        "h": 283
+      }
+    },
+    "graymane-wolf-idle-003.png": {
+      "frame": {
+        "x": 1018,
+        "y": 2,
+        "w": 499,
+        "h": 280
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 2,
+        "w": 499,
+        "h": 280
+      },
+      "sourceSize": {
+        "w": 504,
+        "h": 283
+      }
+    },
+    "graymane-wolf-idle-004.png": {
+      "frame": {
+        "x": 1526,
+        "y": 2,
+        "w": 501,
+        "h": 279
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 3,
+        "w": 501,
+        "h": 279
+      },
+      "sourceSize": {
+        "w": 504,
+        "h": 283
+      }
+    },
+    "graymane-wolf-idle-005.png": {
+      "frame": {
+        "x": 2034,
+        "y": 2,
+        "w": 503,
+        "h": 279
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 3,
+        "w": 503,
+        "h": 279
+      },
+      "sourceSize": {
+        "w": 504,
+        "h": 283
+      }
+    },
+    "graymane-wolf-idle-006.png": {
+      "frame": {
+        "x": 2542,
+        "y": 2,
+        "w": 504,
+        "h": 279
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 3,
+        "w": 504,
+        "h": 279
+      },
+      "sourceSize": {
+        "w": 504,
+        "h": 283
+      }
+    },
+    "graymane-wolf-idle-007.png": {
+      "frame": {
+        "x": 3050,
+        "y": 2,
+        "w": 502,
+        "h": 278
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 4,
+        "w": 502,
+        "h": 278
+      },
+      "sourceSize": {
+        "w": 504,
+        "h": 283
+      }
+    },
+    "graymane-wolf-idle-008.png": {
+      "frame": {
+        "x": 3558,
+        "y": 2,
+        "w": 499,
+        "h": 279
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 3,
+        "w": 499,
+        "h": 279
+      },
+      "sourceSize": {
+        "w": 504,
+        "h": 283
+      }
+    },
+    "graymane-wolf-idle-009.png": {
+      "frame": {
+        "x": 2,
+        "y": 289,
+        "w": 497,
+        "h": 279
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 3,
+        "w": 497,
+        "h": 279
+      },
+      "sourceSize": {
+        "w": 504,
+        "h": 283
+      }
+    },
+    "graymane-wolf-attack-001.png": {
+      "frame": {
+        "x": 510,
+        "y": 289,
+        "w": 496,
+        "h": 283
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 496,
+        "h": 283
+      },
+      "sourceSize": {
+        "w": 504,
+        "h": 283
+      }
+    },
+    "graymane-wolf-attack-002.png": {
+      "frame": {
+        "x": 1018,
+        "y": 289,
+        "w": 496,
+        "h": 283
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 496,
+        "h": 283
+      },
+      "sourceSize": {
+        "w": 504,
+        "h": 283
+      }
+    },
+    "graymane-wolf-death-001.png": {
+      "frame": {
+        "x": 1526,
+        "y": 289,
+        "w": 496,
+        "h": 283
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 496,
+        "h": 283
+      },
+      "sourceSize": {
+        "w": 504,
+        "h": 283
+      }
+    }
+  },
+  "meta": {
+    "app": "pack-enemy-art.mjs",
+    "version": "1.0",
+    "image": "graymane-wolf-sheet-1.png",
+    "format": "RGBA8888",
+    "size": {
+      "w": 4064,
+      "h": 574
+    },
+    "scale": "1"
+  }
+}

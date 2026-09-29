@@ -21,6 +21,7 @@ import { resolveEnemyTextureKey } from '@/game/support/EnemyArt'
 import { PLAYER_VISUAL_PROFILES } from '@/presentation/art/PlayerVisualProfiles'
 import { animatedCombatEntities } from '@/presentation/art/CombatPresentationCatalogue'
 import { ENTITY_ART_MODE } from '@/presentation/art/EntityArtMode'
+import { atlasClipsOf } from '@/presentation/art/CombatEntityPresentation'
 
 describe('AssetBundleCatalog', () => {
   it('core-ui contains ink-wash-ui atlas descriptor', () => {
@@ -76,9 +77,9 @@ describe('AssetBundleCatalog', () => {
       expect(catalogKeys.has(key)).toBe(true)
     }
 
-    // Must contain animation sheet keys
+    // Must contain animation sheet keys - castClips sheets included.
     for (const { clips } of animatedCombatEntities()) {
-      for (const clip of Object.values(clips)) {
+      for (const clip of atlasClipsOf(clips)) {
         expect(catalogKeys.has(clip.sheetKey)).toBe(true)
       }
     }

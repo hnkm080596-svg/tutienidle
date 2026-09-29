@@ -1,0 +1,455 @@
+{
+  "frames": {
+    "yuejianxin-ult-001.png": {
+      "frame": {
+        "x": 2,
+        "y": 2,
+        "w": 450,
+        "h": 495
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 5,
+        "y": 1,
+        "w": 450,
+        "h": 495
+      },
+      "sourceSize": {
+        "w": 456,
+        "h": 496
+      }
+    },
+    "yuejianxin-ult-002.png": {
+      "frame": {
+        "x": 622,
+        "y": 2,
+        "w": 511,
+        "h": 496
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -52,
+        "y": 0,
+        "w": 511,
+        "h": 496
+      },
+      "sourceSize": {
+        "w": 456,
+        "h": 496
+      }
+    },
+    "yuejianxin-ult-003.png": {
+      "frame": {
+        "x": 1242,
+        "y": 2,
+        "w": 273,
+        "h": 637
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 187,
+        "y": -141,
+        "w": 273,
+        "h": 637
+      },
+      "sourceSize": {
+        "w": 456,
+        "h": 496
+      }
+    },
+    "yuejianxin-ult-004.png": {
+      "frame": {
+        "x": 1862,
+        "y": 2,
+        "w": 273,
+        "h": 637
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 187,
+        "y": -141,
+        "w": 273,
+        "h": 637
+      },
+      "sourceSize": {
+        "w": 456,
+        "h": 496
+      }
+    },
+    "yuejianxin-ult-005.png": {
+      "frame": {
+        "x": 2482,
+        "y": 2,
+        "w": 273,
+        "h": 637
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 187,
+        "y": -141,
+        "w": 273,
+        "h": 637
+      },
+      "sourceSize": {
+        "w": 456,
+        "h": 496
+      }
+    },
+    "yuejianxin-ult-006.png": {
+      "frame": {
+        "x": 3102,
+        "y": 2,
+        "w": 273,
+        "h": 637
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 187,
+        "y": -141,
+        "w": 273,
+        "h": 637
+      },
+      "sourceSize": {
+        "w": 456,
+        "h": 496
+      }
+    },
+    "yuejianxin-ult-007.png": {
+      "frame": {
+        "x": 2,
+        "y": 690,
+        "w": 273,
+        "h": 637
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 187,
+        "y": -141,
+        "w": 273,
+        "h": 637
+      },
+      "sourceSize": {
+        "w": 456,
+        "h": 496
+      }
+    },
+    "yuejianxin-ult-008.png": {
+      "frame": {
+        "x": 622,
+        "y": 690,
+        "w": 274,
+        "h": 637
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 187,
+        "y": -141,
+        "w": 274,
+        "h": 637
+      },
+      "sourceSize": {
+        "w": 456,
+        "h": 496
+      }
+    },
+    "yuejianxin-ult-009.png": {
+      "frame": {
+        "x": 1242,
+        "y": 690,
+        "w": 276,
+        "h": 638
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 186,
+        "y": -142,
+        "w": 276,
+        "h": 638
+      },
+      "sourceSize": {
+        "w": 456,
+        "h": 496
+      }
+    },
+    "yuejianxin-ult-010.png": {
+      "frame": {
+        "x": 1862,
+        "y": 690,
+        "w": 276,
+        "h": 638
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 186,
+        "y": -142,
+        "w": 276,
+        "h": 638
+      },
+      "sourceSize": {
+        "w": 456,
+        "h": 496
+      }
+    },
+    "yuejianxin-ult-011.png": {
+      "frame": {
+        "x": 2482,
+        "y": 690,
+        "w": 274,
+        "h": 637
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 187,
+        "y": -141,
+        "w": 274,
+        "h": 637
+      },
+      "sourceSize": {
+        "w": 456,
+        "h": 496
+      }
+    },
+    "yuejianxin-ult-012.png": {
+      "frame": {
+        "x": 3102,
+        "y": 690,
+        "w": 274,
+        "h": 638
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 187,
+        "y": -142,
+        "w": 274,
+        "h": 638
+      },
+      "sourceSize": {
+        "w": 456,
+        "h": 496
+      }
+    },
+    "yuejianxin-ult-013.png": {
+      "frame": {
+        "x": 2,
+        "y": 1378,
+        "w": 274,
+        "h": 638
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 187,
+        "y": -142,
+        "w": 274,
+        "h": 638
+      },
+      "sourceSize": {
+        "w": 456,
+        "h": 496
+      }
+    },
+    "yuejianxin-ult-014.png": {
+      "frame": {
+        "x": 622,
+        "y": 1378,
+        "w": 274,
+        "h": 638
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 187,
+        "y": -142,
+        "w": 274,
+        "h": 638
+      },
+      "sourceSize": {
+        "w": 456,
+        "h": 496
+      }
+    },
+    "yuejianxin-ult-015.png": {
+      "frame": {
+        "x": 1242,
+        "y": 1378,
+        "w": 273,
+        "h": 638
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 187,
+        "y": -142,
+        "w": 273,
+        "h": 638
+      },
+      "sourceSize": {
+        "w": 456,
+        "h": 496
+      }
+    },
+    "yuejianxin-ult-016.png": {
+      "frame": {
+        "x": 1862,
+        "y": 1378,
+        "w": 275,
+        "h": 651
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 187,
+        "y": -155,
+        "w": 275,
+        "h": 651
+      },
+      "sourceSize": {
+        "w": 456,
+        "h": 496
+      }
+    },
+    "yuejianxin-ult-017.png": {
+      "frame": {
+        "x": 2482,
+        "y": 1378,
+        "w": 276,
+        "h": 648
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 186,
+        "y": -152,
+        "w": 276,
+        "h": 648
+      },
+      "sourceSize": {
+        "w": 456,
+        "h": 496
+      }
+    },
+    "yuejianxin-ult-018.png": {
+      "frame": {
+        "x": 3102,
+        "y": 1378,
+        "w": 276,
+        "h": 639
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 186,
+        "y": -143,
+        "w": 276,
+        "h": 639
+      },
+      "sourceSize": {
+        "w": 456,
+        "h": 496
+      }
+    },
+    "yuejianxin-ult-019.png": {
+      "frame": {
+        "x": 2,
+        "y": 2066,
+        "w": 274,
+        "h": 638
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 187,
+        "y": -142,
+        "w": 274,
+        "h": 638
+      },
+      "sourceSize": {
+        "w": 456,
+        "h": 496
+      }
+    },
+    "yuejianxin-ult-020.png": {
+      "frame": {
+        "x": 622,
+        "y": 2066,
+        "w": 276,
+        "h": 638
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 186,
+        "y": -142,
+        "w": 276,
+        "h": 638
+      },
+      "sourceSize": {
+        "w": 456,
+        "h": 496
+      }
+    },
+    "yuejianxin-ult-021.png": {
+      "frame": {
+        "x": 1242,
+        "y": 2066,
+        "w": 450,
+        "h": 495
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 5,
+        "y": 1,
+        "w": 450,
+        "h": 495
+      },
+      "sourceSize": {
+        "w": 456,
+        "h": 496
+      }
+    },
+    "yuejianxin-death-001.png": {
+      "frame": {
+        "x": 1862,
+        "y": 2066,
+        "w": 456,
+        "h": 496
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 456,
+        "h": 496
+      },
+      "sourceSize": {
+        "w": 456,
+        "h": 496
+      }
+    }
+  },
+  "meta": {
+    "app": "pack-character-art.mjs",
+    "version": "1.0",
+    "image": "yuejianxin-sheet-2.png",
+    "format": "RGBA8888",
+    "size": {
+      "w": 3720,
+      "h": 2752
+    },
+    "scale": "1"
+  }
+}

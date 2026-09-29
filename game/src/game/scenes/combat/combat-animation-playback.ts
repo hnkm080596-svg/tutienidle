@@ -8,13 +8,16 @@
 import Phaser from 'phaser'
 
 import {
+  atlasClipsOf,
   combatAnimationKey,
+  type AtlasClip,
   type CombatAnimationCatalogue,
   type CombatAnimationName,
 } from '@/presentation/art/CombatEntityPresentation'
 import {
   presentationFor,
   resolveCombatEntityKey,
+  resolvePlayerEntityKey,
 } from '@/presentation/art/CombatPresentationCatalogue'
 
 import type { CombatScene, CombatScenePayload } from '../CombatScene'
@@ -30,6 +33,29 @@ import type { EntitySprite } from './combatTypes'
 const TRANSITION_DESTINATION: Partial<Record<CombatAnimationName, CombatAnimationName>> = {
   idle_to_standby: 'standby',
   standby_to_idle: 'idle',
+  // Authored attack clips are play-once fired from inside the standby state
+  // (a turn is always engaged when 'attack' fires) - return there, not to
+  // idle, or the sprite would drop out of its engaged loop mid-turn.
+  attack: 'standby',
+  // Character ults follow the attack contract (play-once cast inside the
+  // engaged state) - same destination.
+  ult: 'standby',
+}
+
+/**
+ * Degradation for one-shot clips the entity never authored - checked when
+ * `anims.exists(name)` fails, BEFORE TRANSITION_DESTINATION. An 'ult' cast
+ * on a set without an authored ult still deserves its attack tell; 'attack'
+ * itself falls through to the standby snap like before.
+ */
+const MISSING_CLIP_FALLBACK: Partial<Record<CombatAnimationName, CombatAnimationName>> = {
+  ult: 'attack',
+  // A loop whose sheet is missing must not freeze the sprite on the last
+  // transition frame (Clean-R2 F3): degrade to the sibling loop. idle<->standby
+  // cross-reference, so chain resolution below tracks visited names to break
+  // the cycle when BOTH loops are unplayable.
+  standby: 'idle',
+  idle: 'standby',
 }
 
 /**
@@ -43,7 +69,7 @@ export function registerClipCatalogue(
   anims: Phaser.Animations.AnimationManager,
   clips: CombatAnimationCatalogue,
 ): void {
-  for (const clip of Object.values(clips)) {
+  for (const clip of atlasClipsOf(clips)) {
     if (anims.exists(clip.key)) {
       continue
     }
@@ -63,6 +89,15 @@ export function registerClipCatalogue(
       frameRate: clip.frameRate,
       repeat: clip.repeat,
     })
+
+    // A zero-frame registration (atlas not loaded yet) must not lock the key
+    // forever: anims.exists() would then veto a later re-registration for the
+    // Game's whole lifetime even if the texture arrives (Clean-A2 CR1-F2).
+    // Drop the empty entry - playback already treats a missing key exactly
+    // like an empty one, so the degrade path is unchanged.
+    if (anims.get?.(clip.key)?.frames.length === 0) {
+      anims.remove?.(clip.key)
+    }
   }
 }
 
@@ -92,7 +127,14 @@ export class CombatAnimationPlayback {
    */
   entityAnimationKeyPrefix(actorId: string): string | undefined {
     if (actorId === PLAYER_ID) {
-      return this.scene.playerProfile.combatTextureKey
+      // Character reskin (character-art-infra): a mapped profile resolves to
+      // its character slug before the static texture key, same amendment as
+      // the enemy branch below.
+      return resolvePlayerEntityKey(
+        this.scene.playerProfile.id,
+        this.scene.playerProfile.combatTextureKey,
+        { armed: this.scene.playerArmed },
+      )
     }
 
     // Uniformity (2026-09-19): an unregistered entity resolves to the shared
@@ -133,56 +175,180 @@ export class CombatAnimationPlayback {
       return
     }
 
+    // Death owns the sprite's animation channel (Clean-A2 R2-F1): a late
+    // turn_cast_start / turn_standby_complete arriving mid-death would
+    // replace the death clip, and the key-filtered ANIMATION_COMPLETE
+    // listener would then never fire - animDone stays false forever and the
+    // corpse wedges (enemies) or replays casts under the result overlay
+    // (player). Same guard as combat-player-visual's dying check.
+    const dying = actorId === PLAYER_ID
+      ? this.scene.playerDying
+      : this.scene.dyingIds.has(actorId)
+
+    if (dying) {
+      return
+    }
+
     const prefix = this.entityAnimationKeyPrefix(actorId)
 
     if (!prefix || !this.isAnimatedEntity(prefix)) {
       return
     }
 
-    const key = combatAnimationKey(prefix, name)
+    // Resolve the requested clip through the degradation chain BEFORE
+    // playing (iterative, not recursive - idle<->standby cross-reference
+    // would ping-pong forever when both loops are unplayable). Atlas-miss
+    // registers the clip NAME with zero frames - an empty anim exists()
+    // but must not play (`anims.get` is absent on sparse test doubles;
+    // then exists() rules).
+    let resolved: CombatAnimationName | undefined = name
+    const visited = new Set<CombatAnimationName>([name])
 
-    if (!this.scene.anims.exists(key)) {
-      // A transition the entity never authored snaps to its destination
-      // loop - the engaged state is still reached, just without the road.
-      const destination = TRANSITION_DESTINATION[name]
+    while (resolved !== undefined) {
+      const candidateKey = combatAnimationKey(prefix, resolved)
+      const empty = this.scene.anims.get?.(candidateKey)?.frames.length === 0
 
-      if (destination !== undefined) {
-        this.playCombatAnimation(sprite, actorId, destination)
+      if (this.scene.anims.exists(candidateKey) && !empty) {
+        break
       }
 
+      const next: CombatAnimationName | undefined = MISSING_CLIP_FALLBACK[resolved] ?? TRANSITION_DESTINATION[resolved]
+      resolved = next !== undefined && !visited.has(next) ? next : undefined
+      if (resolved !== undefined) {
+        visited.add(resolved)
+      }
+    }
+
+    if (resolved === undefined) {
+      // Every link in the chain is unplayable (partial multi-sheet loss):
+      // restore the still art the sprite drew before the one-shot rather
+      // than freezing on the clip's last frame (Clean-B F-CB2-03).
+      const base = sprite.pendingBaseTextureKey
+      sprite.pendingBaseTextureKey = undefined
+      sprite.deferredLoopRequest = undefined
+      if (base !== undefined && this.scene.textures?.exists?.(base)) {
+        ;(sprite.rect as Phaser.GameObjects.Sprite).setTexture?.(base)
+      }
       return
     }
 
+    // A loop request arriving while a one-shot is mid-flight must wait for
+    // the clip to finish - playing it now truncates the cast's strike
+    // frames every routine turn (Clean-B F-CB2-01). The armed completion
+    // listener consumes the deferred request in place of the clip's own
+    // default destination (latest intent wins).
+    const destination = TRANSITION_DESTINATION[resolved]
+
+    if (destination === undefined && sprite.pendingTransitionListener) {
+      sprite.deferredLoopRequest = resolved
+      return
+    }
+
+    this.playResolvedClip(sprite, actorId, combatAnimationKey(prefix, resolved), destination)
+  }
+
+  /**
+   * Per-skill cast clip (art-seam S1): playCastClip resolves the AtlasClip
+   * from the variant's `castClips` map; this plays it through the same
+   * deferral + one-shot-completion -> standby machinery a named clip takes.
+   * A cast clip missing from the AnimationManager (atlas-miss, or registered
+   * empty on partial sheet loss) degrades to 'attack' - which itself walks
+   * the chain down to 'standby', mirroring MISSING_CLIP_FALLBACK's ult hop.
+   */
+  playAtlasClip(sprite: EntitySprite, actorId: string | undefined, clip: AtlasClip): void {
+    if (sprite.kind !== 'sprite' || actorId === undefined) {
+      return
+    }
+
+    const dying = actorId === PLAYER_ID
+      ? this.scene.playerDying
+      : this.scene.dyingIds.has(actorId)
+
+    if (dying) {
+      return
+    }
+
+    const empty = this.scene.anims.get?.(clip.key)?.frames.length === 0
+
+    if (!this.scene.anims.exists(clip.key) || empty) {
+      this.playCombatAnimation(sprite, actorId, 'attack')
+      return
+    }
+
+    this.playResolvedClip(sprite, actorId, clip.key, 'standby')
+  }
+
+  /**
+   * Shared tail of the one-shot paths: swap the sprite onto `key`, then arm
+   * the completion listener that lands the entity on `destination` (or on a
+   * deferred loop request that arrived mid-clip). `destination ===
+   * undefined` means the playing key is a loop - no listener is armed, and
+   * the pre-one-shot base texture reference is cleared.
+   */
+  private playResolvedClip(
+    sprite: EntitySprite,
+    actorId: string,
+    key: string,
+    destination: CombatAnimationName | undefined,
+  ): void {
     const gameSprite = sprite.rect as Phaser.GameObjects.Sprite
+
+    if (destination !== undefined && sprite.pendingBaseTextureKey === undefined) {
+      // Capture the still art before the one-shot swaps it - the restore
+      // path needs it if the whole loop chain turns out unplayable.
+      sprite.pendingBaseTextureKey = gameSprite.texture?.key
+    }
 
     gameSprite.play(key)
 
-    // Only one-shot transitions need a completion handler - they land on their
-    // destination loop. Loops ('idle'/'standby'/'cultivate') never emit
-    // ANIMATION_COMPLETE so a listener would sit stale, and 'death' has its
-    // own lifecycle in beginDeathSequence.
-    const destination = TRANSITION_DESTINATION[name]
-
+    // Arm the completion handler only when the clip ACTUALLY playing is a
+    // one-shot. Loops ('idle'/'standby'/'cultivate') never emit
+    // ANIMATION_COMPLETE so a listener on them sits dead forever
+    // (Clean-B2 CR2-F1); 'death' has its own lifecycle in beginDeathSequence.
     if (destination === undefined) {
+      sprite.pendingBaseTextureKey = undefined
       return
     }
 
-    const destinationKey = combatAnimationKey(prefix, destination)
-
-    if (!this.scene.anims.exists(destinationKey) || typeof gameSprite.once !== 'function') {
+    // Arm whenever the clip ACTUALLY playing is a one-shot - even when the
+    // destination registration is missing/empty. The listener routes through
+    // playCombatAnimation, which walks the same exists/empty/substitute chain,
+    // so an unloadable destination degrades to base-restore instead of leaving
+    // the door open for a later loop request to truncate the in-flight clip
+    // (deferral keys on this listener's presence).
+    if (typeof gameSprite.once !== 'function') {
       return
     }
 
-    gameSprite.once(
-      Phaser.Animations.Events.ANIMATION_COMPLETE,
-      (anim: Phaser.Animations.Animation) => {
-        if (anim.key !== key) {
-          return
-        }
+    const listener = (anim: Phaser.Animations.Animation) => {
+      if (anim.key !== key || sprite.pendingTransitionListener !== listener) {
+        return
+      }
 
-        gameSprite.play(destinationKey)
-      },
-    )
+      sprite.pendingTransitionListener = undefined
+
+      // Newest intent wins: a loop requested mid-clip (deferredLoopRequest)
+      // supersedes the clip's default destination.
+      const next = sprite.deferredLoopRequest ?? destination
+      sprite.deferredLoopRequest = undefined
+
+      // Route through playCombatAnimation: the destination may be an
+      // atlas-miss clip on ANOTHER sheet (zuofeng splits clips across
+      // sheets - partial load failure leaves it registered-but-empty),
+      // and the guarded path applies the same exists/empty/substitute
+      // chain instead of throwing on frames[0].
+      this.playCombatAnimation(sprite, actorId, next)
+    }
+
+    // A same-key re-arm while the previous one-shot is still mid-flight
+    // leaves the old once-listener orphaned on the emitter - remove it so a
+    // stale handler cannot consume the deferred intent ahead of the live one.
+    if (sprite.pendingTransitionListener && typeof gameSprite.off === 'function') {
+      gameSprite.off(Phaser.Animations.Events.ANIMATION_COMPLETE, sprite.pendingTransitionListener)
+    }
+
+    sprite.pendingTransitionListener = listener
+    gameSprite.once(Phaser.Animations.Events.ANIMATION_COMPLETE, listener)
   }
 
   onDeath(event: CombatScenePayload): void {
@@ -218,6 +384,14 @@ export class CombatAnimationPlayback {
   beginDeathSequence(sprite: EntitySprite, id: string): void {
     const scene = this.scene
     const isPlayer = id === PLAYER_ID
+    const alreadyDying = isPlayer ? scene.playerDying : scene.dyingIds.has(id)
+
+    // Re-entry guard (Clean-A2 CR1-F3): a second death trigger for the same id
+    // would replay the clip and stack duplicate fades. Real callers dedup
+    // upstream, but the sequence itself owns the invariant.
+    if (alreadyDying) {
+      return
+    }
 
     if (isPlayer) {
       scene.playerDying = true
@@ -237,6 +411,16 @@ export class CombatAnimationPlayback {
     scene.tweens.killTweensOf(sprite.rect)
     scene.tweens.killTweensOf(sprite)
     scene.tweens.killTweensOf(sprite.boost)
+    // The idle-bob tween lives on sprite.idle - a static corpse would keep
+    // breathing through its fall/fade without this kill (Clean-A2 CR1-F4).
+    if (sprite.idle) {
+      scene.tweens.killTweensOf(sprite.idle)
+    }
+    // Death also voids any armed/deferred playback bookkeeping - the corpse
+    // owns the animation channel from here on.
+    sprite.pendingTransitionListener = undefined
+    sprite.deferredLoopRequest = undefined
+    sprite.pendingBaseTextureKey = undefined
     sprite.offsetX = 0
 
     let tweenDone = false
@@ -270,7 +454,12 @@ export class CombatAnimationPlayback {
       const animated = prefix !== undefined && this.isAnimatedEntity(prefix)
       const deathKey = animated && prefix ? combatAnimationKey(prefix, 'death') : undefined
 
-      if (deathKey && scene.anims.exists(deathKey)) {
+      // Same atlas-miss hazard playCombatAnimation guards above: an empty
+      // clip registers under its name (exists() true) but play() throws on
+      // frames[0] - skip to the tween path exactly as if no clip existed.
+      const deathEmpty = deathKey ? scene.anims.get?.(deathKey)?.frames.length === 0 : false
+
+      if (deathKey && scene.anims.exists(deathKey) && !deathEmpty) {
         animDone = false
         deathClipPlaying = true
 

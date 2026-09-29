@@ -1,0 +1,455 @@
+{
+  "frames": {
+    "youzhu-ult-001.png": {
+      "frame": {
+        "x": 2,
+        "y": 2,
+        "w": 313,
+        "h": 490
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 1,
+        "w": 313,
+        "h": 490
+      },
+      "sourceSize": {
+        "w": 318,
+        "h": 492
+      }
+    },
+    "youzhu-ult-002.png": {
+      "frame": {
+        "x": 596,
+        "y": 2,
+        "w": 347,
+        "h": 527
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -30,
+        "y": -36,
+        "w": 347,
+        "h": 527
+      },
+      "sourceSize": {
+        "w": 318,
+        "h": 492
+      }
+    },
+    "youzhu-ult-003.png": {
+      "frame": {
+        "x": 1190,
+        "y": 2,
+        "w": 373,
+        "h": 548
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -57,
+        "y": -57,
+        "w": 373,
+        "h": 548
+      },
+      "sourceSize": {
+        "w": 318,
+        "h": 492
+      }
+    },
+    "youzhu-ult-004.png": {
+      "frame": {
+        "x": 1784,
+        "y": 2,
+        "w": 400,
+        "h": 544
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -42,
+        "y": -55,
+        "w": 400,
+        "h": 544
+      },
+      "sourceSize": {
+        "w": 318,
+        "h": 492
+      }
+    },
+    "youzhu-ult-005.png": {
+      "frame": {
+        "x": 2378,
+        "y": 2,
+        "w": 434,
+        "h": 543
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -50,
+        "y": -54,
+        "w": 434,
+        "h": 543
+      },
+      "sourceSize": {
+        "w": 318,
+        "h": 492
+      }
+    },
+    "youzhu-ult-006.png": {
+      "frame": {
+        "x": 2972,
+        "y": 2,
+        "w": 536,
+        "h": 541
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -147,
+        "y": -52,
+        "w": 536,
+        "h": 541
+      },
+      "sourceSize": {
+        "w": 318,
+        "h": 492
+      }
+    },
+    "youzhu-ult-007.png": {
+      "frame": {
+        "x": 2,
+        "y": 629,
+        "w": 513,
+        "h": 537
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -125,
+        "y": -48,
+        "w": 513,
+        "h": 537
+      },
+      "sourceSize": {
+        "w": 318,
+        "h": 492
+      }
+    },
+    "youzhu-ult-008.png": {
+      "frame": {
+        "x": 596,
+        "y": 629,
+        "w": 517,
+        "h": 570
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -130,
+        "y": -81,
+        "w": 517,
+        "h": 570
+      },
+      "sourceSize": {
+        "w": 318,
+        "h": 492
+      }
+    },
+    "youzhu-ult-009.png": {
+      "frame": {
+        "x": 1190,
+        "y": 629,
+        "w": 538,
+        "h": 573
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -157,
+        "y": -84,
+        "w": 538,
+        "h": 573
+      },
+      "sourceSize": {
+        "w": 318,
+        "h": 492
+      }
+    },
+    "youzhu-ult-010.png": {
+      "frame": {
+        "x": 1784,
+        "y": 629,
+        "w": 503,
+        "h": 575
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -131,
+        "y": -85,
+        "w": 503,
+        "h": 575
+      },
+      "sourceSize": {
+        "w": 318,
+        "h": 492
+      }
+    },
+    "youzhu-ult-011.png": {
+      "frame": {
+        "x": 2378,
+        "y": 629,
+        "w": 443,
+        "h": 572
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -145,
+        "y": -84,
+        "w": 443,
+        "h": 572
+      },
+      "sourceSize": {
+        "w": 318,
+        "h": 492
+      }
+    },
+    "youzhu-ult-012.png": {
+      "frame": {
+        "x": 2972,
+        "y": 629,
+        "w": 590,
+        "h": 561
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -149,
+        "y": -76,
+        "w": 590,
+        "h": 561
+      },
+      "sourceSize": {
+        "w": 318,
+        "h": 492
+      }
+    },
+    "youzhu-ult-013.png": {
+      "frame": {
+        "x": 2,
+        "y": 1256,
+        "w": 567,
+        "h": 498
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -148,
+        "y": -13,
+        "w": 567,
+        "h": 498
+      },
+      "sourceSize": {
+        "w": 318,
+        "h": 492
+      }
+    },
+    "youzhu-ult-014.png": {
+      "frame": {
+        "x": 596,
+        "y": 1256,
+        "w": 574,
+        "h": 559
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -146,
+        "y": -72,
+        "w": 574,
+        "h": 559
+      },
+      "sourceSize": {
+        "w": 318,
+        "h": 492
+      }
+    },
+    "youzhu-ult-015.png": {
+      "frame": {
+        "x": 1190,
+        "y": 1256,
+        "w": 561,
+        "h": 570
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -132,
+        "y": -79,
+        "w": 561,
+        "h": 570
+      },
+      "sourceSize": {
+        "w": 318,
+        "h": 492
+      }
+    },
+    "youzhu-ult-016.png": {
+      "frame": {
+        "x": 1784,
+        "y": 1256,
+        "w": 433,
+        "h": 564
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -9,
+        "y": -74,
+        "w": 433,
+        "h": 564
+      },
+      "sourceSize": {
+        "w": 318,
+        "h": 492
+      }
+    },
+    "youzhu-ult-017.png": {
+      "frame": {
+        "x": 2378,
+        "y": 1256,
+        "w": 496,
+        "h": 566
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -73,
+        "y": -76,
+        "w": 496,
+        "h": 566
+      },
+      "sourceSize": {
+        "w": 318,
+        "h": 492
+      }
+    },
+    "youzhu-ult-018.png": {
+      "frame": {
+        "x": 2972,
+        "y": 1256,
+        "w": 516,
+        "h": 570
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -90,
+        "y": -81,
+        "w": 516,
+        "h": 570
+      },
+      "sourceSize": {
+        "w": 318,
+        "h": 492
+      }
+    },
+    "youzhu-ult-019.png": {
+      "frame": {
+        "x": 2,
+        "y": 1883,
+        "w": 448,
+        "h": 567
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -96,
+        "y": -78,
+        "w": 448,
+        "h": 567
+      },
+      "sourceSize": {
+        "w": 318,
+        "h": 492
+      }
+    },
+    "youzhu-ult-020.png": {
+      "frame": {
+        "x": 596,
+        "y": 1883,
+        "w": 410,
+        "h": 479
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -71,
+        "y": 9,
+        "w": 410,
+        "h": 479
+      },
+      "sourceSize": {
+        "w": 318,
+        "h": 492
+      }
+    },
+    "youzhu-ult-021.png": {
+      "frame": {
+        "x": 1190,
+        "y": 1883,
+        "w": 389,
+        "h": 481
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": -56,
+        "y": 8,
+        "w": 389,
+        "h": 481
+      },
+      "sourceSize": {
+        "w": 318,
+        "h": 492
+      }
+    },
+    "youzhu-death-001.png": {
+      "frame": {
+        "x": 1784,
+        "y": 1883,
+        "w": 311,
+        "h": 490
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 5,
+        "y": 1,
+        "w": 311,
+        "h": 490
+      },
+      "sourceSize": {
+        "w": 318,
+        "h": 492
+      }
+    }
+  },
+  "meta": {
+    "app": "pack-character-art.mjs",
+    "version": "1.0",
+    "image": "youzhu-sheet-2.png",
+    "format": "RGBA8888",
+    "size": {
+      "w": 3564,
+      "h": 2508
+    },
+    "scale": "1"
+  }
+}

@@ -1,0 +1,275 @@
+{
+  "frames": {
+    "wugu-demon-king-idle-001.png": {
+      "frame": {
+        "x": 2,
+        "y": 2,
+        "w": 456,
+        "h": 376
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 0,
+        "w": 456,
+        "h": 376
+      },
+      "sourceSize": {
+        "w": 463,
+        "h": 376
+      }
+    },
+    "wugu-demon-king-idle-002.png": {
+      "frame": {
+        "x": 730,
+        "y": 2,
+        "w": 457,
+        "h": 376
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 0,
+        "w": 457,
+        "h": 376
+      },
+      "sourceSize": {
+        "w": 463,
+        "h": 376
+      }
+    },
+    "wugu-demon-king-idle-003.png": {
+      "frame": {
+        "x": 1458,
+        "y": 2,
+        "w": 461,
+        "h": 374
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 2,
+        "y": 2,
+        "w": 461,
+        "h": 374
+      },
+      "sourceSize": {
+        "w": 463,
+        "h": 376
+      }
+    },
+    "wugu-demon-king-idle-004.png": {
+      "frame": {
+        "x": 2186,
+        "y": 2,
+        "w": 460,
+        "h": 372
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 2,
+        "y": 4,
+        "w": 460,
+        "h": 372
+      },
+      "sourceSize": {
+        "w": 463,
+        "h": 376
+      }
+    },
+    "wugu-demon-king-idle-005.png": {
+      "frame": {
+        "x": 2914,
+        "y": 2,
+        "w": 461,
+        "h": 370
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 1,
+        "y": 6,
+        "w": 461,
+        "h": 370
+      },
+      "sourceSize": {
+        "w": 463,
+        "h": 376
+      }
+    },
+    "wugu-demon-king-idle-006.png": {
+      "frame": {
+        "x": 2,
+        "y": 616,
+        "w": 461,
+        "h": 369
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 7,
+        "w": 461,
+        "h": 369
+      },
+      "sourceSize": {
+        "w": 463,
+        "h": 376
+      }
+    },
+    "wugu-demon-king-idle-007.png": {
+      "frame": {
+        "x": 730,
+        "y": 616,
+        "w": 460,
+        "h": 368
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 1,
+        "y": 8,
+        "w": 460,
+        "h": 368
+      },
+      "sourceSize": {
+        "w": 463,
+        "h": 376
+      }
+    },
+    "wugu-demon-king-idle-008.png": {
+      "frame": {
+        "x": 1458,
+        "y": 616,
+        "w": 459,
+        "h": 369
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 1,
+        "y": 7,
+        "w": 459,
+        "h": 369
+      },
+      "sourceSize": {
+        "w": 463,
+        "h": 376
+      }
+    },
+    "wugu-demon-king-idle-009.png": {
+      "frame": {
+        "x": 2186,
+        "y": 616,
+        "w": 456,
+        "h": 370
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 1,
+        "y": 6,
+        "w": 456,
+        "h": 370
+      },
+      "sourceSize": {
+        "w": 463,
+        "h": 376
+      }
+    },
+    "wugu-demon-king-idle-010.png": {
+      "frame": {
+        "x": 2914,
+        "y": 616,
+        "w": 455,
+        "h": 372
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 2,
+        "y": 4,
+        "w": 455,
+        "h": 372
+      },
+      "sourceSize": {
+        "w": 463,
+        "h": 376
+      }
+    },
+    "wugu-demon-king-idle-011.png": {
+      "frame": {
+        "x": 2,
+        "y": 1230,
+        "w": 455,
+        "h": 373
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 3,
+        "y": 3,
+        "w": 455,
+        "h": 373
+      },
+      "sourceSize": {
+        "w": 463,
+        "h": 376
+      }
+    },
+    "wugu-demon-king-idle-012.png": {
+      "frame": {
+        "x": 730,
+        "y": 1230,
+        "w": 455,
+        "h": 376
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 0,
+        "w": 455,
+        "h": 376
+      },
+      "sourceSize": {
+        "w": 463,
+        "h": 376
+      }
+    },
+    "wugu-demon-king-idle-013.png": {
+      "frame": {
+        "x": 1458,
+        "y": 1230,
+        "w": 456,
+        "h": 376
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 0,
+        "w": 456,
+        "h": 376
+      },
+      "sourceSize": {
+        "w": 463,
+        "h": 376
+      }
+    }
+  },
+  "meta": {
+    "app": "pack-enemy-art.mjs",
+    "version": "1.0",
+    "image": "wugu-demon-king-sheet-1.png",
+    "format": "RGBA8888",
+    "size": {
+      "w": 3640,
+      "h": 1842
+    },
+    "scale": "1"
+  }
+}

@@ -21,6 +21,8 @@
  */
 import { describe, expect, it } from 'vitest'
 import { ENTITY_ART_MODE } from '@/presentation/art/EntityArtMode'
+import { ANIMATED_ENEMY_KEYS } from '@/game/support/MonsterArt'
+import { ANIMATED_CHARACTER_KEYS } from '@/game/support/CharacterArt'
 import {
   animatedArtFormFor,
   animatedCombatEntities,
@@ -30,9 +32,10 @@ import {
   presentationFor,
   REQUIRED_COMBAT_ANIMATION_NAMES,
 } from '@/presentation/art/CombatPresentationCatalogue'
-import type {
-  AtlasClip,
-  CombatAnimationCatalogue,
+import {
+  atlasClipsOf,
+  type AtlasClip,
+  type CombatAnimationCatalogue,
 } from '@/presentation/art/CombatEntityPresentation'
 import { PLAYER_VISUAL_PROFILES } from '@/presentation/art/PlayerVisualProfiles'
 import { getCombatDescriptors } from '@/presentation/assets/AssetBundleCatalog'
@@ -60,7 +63,18 @@ describe('combat animation catalogue', () => {
 
   it('every clip is internally coherent: a real range, a real rate', () => {
     for (const { entityKey, clips } of allAnimatedForms()) {
-      for (const [name, clip] of Object.entries(clips)) {
+      // castClips is a keyed MAP of AtlasClips, not a clip - flatten it in
+      // alongside the named entries so its ranges get policed too.
+      const namedClips: Array<[string, AtlasClip]> = [
+        ...Object.entries(clips).filter(
+          (entry): entry is [string, AtlasClip] => entry[0] !== 'castClips',
+        ),
+        ...Object.entries(clips.castClips ?? {}).map(
+          ([key, clip]): [string, AtlasClip] => [`castClips.${key}`, clip],
+        ),
+      ]
+
+      for (const [name, clip] of namedClips) {
         const where = `${entityKey}.${name}`
 
         expect(clip.lastFrame, `${where}: lastFrame before firstFrame`).toBeGreaterThanOrEqual(
@@ -88,9 +102,20 @@ describe('combat animation catalogue', () => {
       }
 
       for (const name of Object.keys(clips)) {
+        // castClips is a keyed map member, not a CombatAnimationName
+        // (user ruling Q1 2026-09-29) - allowed here; its CONTENTS are
+        // pinned below.
+        if (name === 'castClips') continue
+
         expect(validNames.has(name), `${entityKey}: '${name}' is not a CombatAnimationName`).toBe(
           true,
         )
+      }
+
+      // Every cast clip's anim key follows `${slug}-cast-${key}` - the name
+      // playCastClip looks up by Skill.id / slot role.
+      for (const [key, clip] of Object.entries(clips.castClips ?? {})) {
+        expect(clip.key, `${entityKey}.castClips.${key} key`).toBe(`${entityKey}-cast-${key}`)
       }
     }
   })
@@ -129,16 +154,21 @@ describe('combat animation catalogue', () => {
     const loadedKeys = new Set(getCombatDescriptors().map((descriptor) => descriptor.key))
 
     for (const { entityKey, clips } of animatedCombatEntities()) {
-      for (const [name, clip] of Object.entries(clips)) {
+      for (const clip of atlasClipsOf(clips)) {
         expect(
           loadedKeys.has(clip.sheetKey),
-          `${entityKey}.${name}: sheetKey '${clip.sheetKey}' is in no combat bundle`,
+          `${entityKey} clip '${clip.key}': sheetKey '${clip.sheetKey}' is in no combat bundle`,
         ).toBe(true)
       }
     }
 
     if (ENTITY_ART_MODE === 'static') {
-      expect(animatedCombatEntities()).toEqual([])
+      // enemy-art-wave1 + character-art-infra amendments: the ONLY animated
+      // entities under 'static' are the enumerated reskin sets - nothing
+      // else may drift animated.
+      expect(new Set(animatedCombatEntities().map((e) => e.entityKey))).toEqual(
+        new Set([...ANIMATED_ENEMY_KEYS, ...ANIMATED_CHARACTER_KEYS]),
+      )
     }
   })
 
@@ -146,7 +176,7 @@ describe('combat animation catalogue', () => {
     const seen = new Set<string>()
 
     for (const { clips } of allAnimatedForms()) {
-      for (const clip of Object.values(clips)) {
+      for (const clip of atlasClipsOf(clips)) {
         expect(seen.has(clip.key), `duplicate animation key '${clip.key}'`).toBe(false)
         seen.add(clip.key)
       }

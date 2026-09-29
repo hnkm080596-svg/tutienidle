@@ -1,0 +1,1355 @@
+{
+  "generated": "pack-character-art.mjs",
+  "zeroPad": 3,
+  "frameSuffix": ".png",
+  "variants": {
+    "zuofeng": {
+      "out": "zuofeng",
+      "src": "zuofeng",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      },
+      "extent": {
+        "x": 0,
+        "y": 0,
+        "w": 0.9977220956719818,
+        "h": 1
+      },
+      "sourceSize": {
+        "w": 439,
+        "h": 647
+      },
+      "canvasSize": {
+        "w": 960,
+        "h": 960
+      },
+      "sheets": 3,
+      "clips": {
+        "idle": {
+          "framePrefix": "zuofeng-idle-",
+          "firstFrame": 1,
+          "lastFrame": 8,
+          "frameCount": 8,
+          "sheet": "zuofeng-sheet-1.png",
+          "atlas": "zuofeng-sheet-1.atlas.json"
+        },
+        "attack": {
+          "framePrefix": "zuofeng-attack-",
+          "firstFrame": 1,
+          "lastFrame": 18,
+          "frameCount": 18,
+          "sheet": "zuofeng-sheet-2.png",
+          "atlas": "zuofeng-sheet-2.atlas.json"
+        },
+        "ult": {
+          "framePrefix": "zuofeng-ult-",
+          "firstFrame": 1,
+          "lastFrame": 14,
+          "frameCount": 14,
+          "sheet": "zuofeng-sheet-3.png",
+          "atlas": "zuofeng-sheet-3.atlas.json"
+        },
+        "death": {
+          "framePrefix": "zuofeng-death-",
+          "firstFrame": 1,
+          "lastFrame": 1,
+          "frameCount": 1,
+          "sheet": "zuofeng-sheet-3.png",
+          "atlas": "zuofeng-sheet-3.atlas.json"
+        }
+      },
+      "avatar": "full-body",
+      "avatarSize": {
+        "w": 512,
+        "h": 512
+      },
+      "avatars": {
+        "action-bar-avatar": {
+          "file": "avatar/zuofeng-action-bar-avatar.png",
+          "w": 74,
+          "h": 76
+        },
+        "battle-card-avatar": {
+          "file": "avatar/zuofeng-battle-card-avatar.png",
+          "w": 234,
+          "h": 235
+        },
+        "battle-status-avatar": {
+          "file": "avatar/zuofeng-battle-status-avatar.png",
+          "w": 242,
+          "h": 200
+        },
+        "roster-avatar": {
+          "file": "avatar/zuofeng-roster-avatar.png",
+          "w": 280,
+          "h": 131
+        },
+        "base": {
+          "file": "avatar/zuofeng.png",
+          "w": 102,
+          "h": 102
+        }
+      },
+      "portraits": {
+        "full-body": {
+          "file": "portrait/zuofeng-full-body.png",
+          "w": 1254,
+          "h": 1254
+        },
+        "half-body": {
+          "file": "portrait/zuofeng-half-body.png",
+          "w": 883,
+          "h": 662
+        },
+        "queue": {
+          "file": "portrait/zuofeng-queue.png",
+          "w": 325,
+          "h": 327
+        }
+      },
+      "closeups": {
+        "sky-sword-closeup": {
+          "file": "closeup/zuofeng-sky-sword-closeup.png",
+          "w": 1254,
+          "h": 1254
+        }
+      },
+      "radars": {
+        "main-menu-radar": {
+          "file": "radar-chart/zuofeng-main-menu-radar.png",
+          "w": 331,
+          "h": 318
+        },
+        "zhenmosi-radar": {
+          "file": "radar-chart/zuofeng-zhenmosi-radar.png",
+          "w": 344,
+          "h": 340
+        }
+      }
+    },
+    "fenli": {
+      "out": "fenli",
+      "src": "fenli",
+      "pivot": {
+        "x": 0.52635926,
+        "y": 0.017523024
+      },
+      "extent": {
+        "x": 0.07894736842105263,
+        "y": 0,
+        "w": 0.9210526315789473,
+        "h": 1
+      },
+      "sourceSize": {
+        "w": 228,
+        "h": 373
+      },
+      "canvasSize": {
+        "w": 624,
+        "h": 624
+      },
+      "sheets": 1,
+      "clips": {
+        "idle": {
+          "framePrefix": "fenli-idle-",
+          "firstFrame": 1,
+          "lastFrame": 25,
+          "frameCount": 25,
+          "sheet": "fenli-sheet-1.png",
+          "atlas": "fenli-sheet-1.atlas.json"
+        },
+        "attack": {
+          "framePrefix": "fenli-attack-",
+          "firstFrame": 1,
+          "lastFrame": 15,
+          "frameCount": 15,
+          "sheet": "fenli-sheet-1.png",
+          "atlas": "fenli-sheet-1.atlas.json"
+        },
+        "ult": {
+          "framePrefix": "fenli-ult-",
+          "firstFrame": 1,
+          "lastFrame": 18,
+          "frameCount": 18,
+          "sheet": "fenli-sheet-1.png",
+          "atlas": "fenli-sheet-1.atlas.json"
+        },
+        "death": {
+          "framePrefix": "fenli-death-",
+          "firstFrame": 1,
+          "lastFrame": 1,
+          "frameCount": 1,
+          "sheet": "fenli-sheet-1.png",
+          "atlas": "fenli-sheet-1.atlas.json",
+          "synthetic": true
+        }
+      },
+      "avatar": "full-body",
+      "avatarSize": {
+        "w": 395,
+        "h": 512
+      },
+      "avatars": {
+        "battle-card-avatar": {
+          "file": "avatar/fenli-battle-card-avatar.png",
+          "w": 234,
+          "h": 235
+        },
+        "base": {
+          "file": "avatar/fenli.png",
+          "w": 102,
+          "h": 102
+        }
+      },
+      "portraits": {
+        "full-body": {
+          "file": "portrait/fenli-full-body.png",
+          "w": 674,
+          "h": 874
+        },
+        "half-body": {
+          "file": "portrait/fenli-half-body.png",
+          "w": 674,
+          "h": 874
+        },
+        "queue": {
+          "file": "portrait/fenli-queue.png",
+          "w": 303,
+          "h": 309
+        }
+      },
+      "closeups": {},
+      "radars": {}
+    },
+    "gaosheng": {
+      "out": "gaosheng",
+      "src": "gaosheng",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      },
+      "extent": {
+        "x": 0.0024813895781637717,
+        "y": 0,
+        "w": 0.9925558312655087,
+        "h": 1
+      },
+      "sourceSize": {
+        "w": 403,
+        "h": 501
+      },
+      "canvasSize": {
+        "w": 870,
+        "h": 870
+      },
+      "sheets": 2,
+      "clips": {
+        "idle": {
+          "framePrefix": "gaosheng-idle-",
+          "firstFrame": 1,
+          "lastFrame": 8,
+          "frameCount": 8,
+          "sheet": "gaosheng-sheet-1.png",
+          "atlas": "gaosheng-sheet-1.atlas.json"
+        },
+        "attack": {
+          "framePrefix": "gaosheng-attack-",
+          "firstFrame": 1,
+          "lastFrame": 14,
+          "frameCount": 14,
+          "sheet": "gaosheng-sheet-1.png",
+          "atlas": "gaosheng-sheet-1.atlas.json"
+        },
+        "ult": {
+          "framePrefix": "gaosheng-ult-",
+          "firstFrame": 1,
+          "lastFrame": 22,
+          "frameCount": 22,
+          "sheet": "gaosheng-sheet-2.png",
+          "atlas": "gaosheng-sheet-2.atlas.json"
+        },
+        "death": {
+          "framePrefix": "gaosheng-death-",
+          "firstFrame": 1,
+          "lastFrame": 1,
+          "frameCount": 1,
+          "sheet": "gaosheng-sheet-2.png",
+          "atlas": "gaosheng-sheet-2.atlas.json"
+        }
+      },
+      "avatar": "full-body",
+      "avatarSize": {
+        "w": 512,
+        "h": 512
+      },
+      "avatars": {
+        "action-bar-avatar": {
+          "file": "avatar/gaosheng-action-bar-avatar.png",
+          "w": 74,
+          "h": 76
+        },
+        "battle-card-avatar": {
+          "file": "avatar/gaosheng-battle-card-avatar.png",
+          "w": 234,
+          "h": 235
+        },
+        "battle-status-avatar": {
+          "file": "avatar/gaosheng-battle-status-avatar.png",
+          "w": 242,
+          "h": 200
+        },
+        "roster-avatar": {
+          "file": "avatar/gaosheng-roster-avatar.png",
+          "w": 280,
+          "h": 131
+        },
+        "base": {
+          "file": "avatar/gaosheng.png",
+          "w": 102,
+          "h": 102
+        }
+      },
+      "portraits": {
+        "full-body": {
+          "file": "portrait/gaosheng-full-body.png",
+          "w": 1254,
+          "h": 1254
+        },
+        "half-body": {
+          "file": "portrait/gaosheng-half-body.png",
+          "w": 883,
+          "h": 662
+        },
+        "queue": {
+          "file": "portrait/gaosheng-queue.png",
+          "w": 325,
+          "h": 327
+        }
+      },
+      "closeups": {
+        "bloodfate-unyielding-closeup": {
+          "file": "closeup/gaosheng-bloodfate-unyielding-closeup.png",
+          "w": 1254,
+          "h": 1254
+        }
+      },
+      "radars": {
+        "main-menu-radar": {
+          "file": "radar-chart/gaosheng-main-menu-radar.png",
+          "w": 331,
+          "h": 318
+        },
+        "zhenmosi-radar": {
+          "file": "radar-chart/gaosheng-zhenmosi-radar.png",
+          "w": 344,
+          "h": 340
+        }
+      }
+    },
+    "jinglian": {
+      "out": "jinglian",
+      "src": "jinglian",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      },
+      "extent": {
+        "x": 0,
+        "y": 0,
+        "w": 0.9583333333333334,
+        "h": 1
+      },
+      "sourceSize": {
+        "w": 144,
+        "h": 263
+      },
+      "canvasSize": {
+        "w": 468,
+        "h": 468
+      },
+      "sheets": 1,
+      "clips": {
+        "idle": {
+          "framePrefix": "jinglian-idle-",
+          "firstFrame": 1,
+          "lastFrame": 16,
+          "frameCount": 16,
+          "sheet": "jinglian-sheet-1.png",
+          "atlas": "jinglian-sheet-1.atlas.json"
+        },
+        "attack": {
+          "framePrefix": "jinglian-attack-",
+          "firstFrame": 1,
+          "lastFrame": 17,
+          "frameCount": 17,
+          "sheet": "jinglian-sheet-1.png",
+          "atlas": "jinglian-sheet-1.atlas.json"
+        },
+        "ult": {
+          "framePrefix": "jinglian-ult-",
+          "firstFrame": 1,
+          "lastFrame": 23,
+          "frameCount": 23,
+          "sheet": "jinglian-sheet-1.png",
+          "atlas": "jinglian-sheet-1.atlas.json"
+        },
+        "death": {
+          "framePrefix": "jinglian-death-",
+          "firstFrame": 1,
+          "lastFrame": 1,
+          "frameCount": 1,
+          "sheet": "jinglian-sheet-1.png",
+          "atlas": "jinglian-sheet-1.atlas.json",
+          "synthetic": true
+        }
+      },
+      "avatar": "full-body",
+      "avatarSize": {
+        "w": 395,
+        "h": 512
+      },
+      "avatars": {
+        "battle-card-avatar": {
+          "file": "avatar/jinglian-battle-card-avatar.png",
+          "w": 234,
+          "h": 235
+        },
+        "base": {
+          "file": "avatar/jinglian.png",
+          "w": 102,
+          "h": 102
+        }
+      },
+      "portraits": {
+        "full-body": {
+          "file": "portrait/jinglian-full-body.png",
+          "w": 674,
+          "h": 874
+        },
+        "half-body": {
+          "file": "portrait/jinglian-half-body.png",
+          "w": 674,
+          "h": 874
+        },
+        "queue": {
+          "file": "portrait/jinglian-queue.png",
+          "w": 303,
+          "h": 309
+        }
+      },
+      "closeups": {},
+      "radars": {}
+    },
+    "qingshuangzi": {
+      "out": "qingshuangzi",
+      "src": "qingshuangzi",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      },
+      "extent": {
+        "x": 0,
+        "y": 0,
+        "w": 0.9972144846796658,
+        "h": 1
+      },
+      "sourceSize": {
+        "w": 359,
+        "h": 540
+      },
+      "canvasSize": {
+        "w": 870,
+        "h": 870
+      },
+      "sheets": 1,
+      "clips": {
+        "idle": {
+          "framePrefix": "qingshuangzi-idle-",
+          "firstFrame": 1,
+          "lastFrame": 10,
+          "frameCount": 10,
+          "sheet": "qingshuangzi-sheet-1.png",
+          "atlas": "qingshuangzi-sheet-1.atlas.json"
+        },
+        "attack": {
+          "framePrefix": "qingshuangzi-attack-",
+          "firstFrame": 1,
+          "lastFrame": 17,
+          "frameCount": 17,
+          "sheet": "qingshuangzi-sheet-1.png",
+          "atlas": "qingshuangzi-sheet-1.atlas.json"
+        },
+        "ult": {
+          "framePrefix": "qingshuangzi-ult-",
+          "firstFrame": 1,
+          "lastFrame": 16,
+          "frameCount": 16,
+          "sheet": "qingshuangzi-sheet-1.png",
+          "atlas": "qingshuangzi-sheet-1.atlas.json"
+        },
+        "death": {
+          "framePrefix": "qingshuangzi-death-",
+          "firstFrame": 1,
+          "lastFrame": 1,
+          "frameCount": 1,
+          "sheet": "qingshuangzi-sheet-1.png",
+          "atlas": "qingshuangzi-sheet-1.atlas.json"
+        }
+      },
+      "avatar": "full-body",
+      "avatarSize": {
+        "w": 512,
+        "h": 512
+      },
+      "avatars": {
+        "action-bar-avatar": {
+          "file": "avatar/qingshuangzi-action-bar-avatar.png",
+          "w": 74,
+          "h": 76
+        },
+        "battle-card-avatar": {
+          "file": "avatar/qingshuangzi-battle-card-avatar.png",
+          "w": 234,
+          "h": 235
+        },
+        "battle-status-avatar": {
+          "file": "avatar/qingshuangzi-battle-status-avatar.png",
+          "w": 242,
+          "h": 200
+        },
+        "roster-avatar": {
+          "file": "avatar/qingshuangzi-roster-avatar.png",
+          "w": 280,
+          "h": 131
+        },
+        "base": {
+          "file": "avatar/qingshuangzi.png",
+          "w": 102,
+          "h": 102
+        }
+      },
+      "portraits": {
+        "full-body": {
+          "file": "portrait/qingshuangzi-full-body.png",
+          "w": 1254,
+          "h": 1254
+        },
+        "half-body": {
+          "file": "portrait/qingshuangzi-half-body.png",
+          "w": 883,
+          "h": 662
+        },
+        "queue": {
+          "file": "portrait/qingshuangzi-queue.png",
+          "w": 325,
+          "h": 327
+        }
+      },
+      "closeups": {
+        "sky-thunder-prison-closeup": {
+          "file": "closeup/qingshuangzi-sky-thunder-prison-closeup.png",
+          "w": 1254,
+          "h": 1254
+        }
+      },
+      "radars": {
+        "main-menu-radar": {
+          "file": "radar-chart/qingshuangzi-main-menu-radar.png",
+          "w": 331,
+          "h": 317
+        },
+        "zhenmosi-radar": {
+          "file": "radar-chart/qingshuangzi-zhenmosi-radar.png",
+          "w": 344,
+          "h": 340
+        }
+      }
+    },
+    "weiqi": {
+      "out": "weiqi",
+      "src": "weiqi",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      },
+      "extent": {
+        "x": 0,
+        "y": 0,
+        "w": 1,
+        "h": 1
+      },
+      "sourceSize": {
+        "w": 210,
+        "h": 250
+      },
+      "canvasSize": {
+        "w": 492,
+        "h": 456
+      },
+      "sheets": 1,
+      "clips": {
+        "idle": {
+          "framePrefix": "weiqi-idle-",
+          "firstFrame": 1,
+          "lastFrame": 9,
+          "frameCount": 9,
+          "sheet": "weiqi-sheet-1.png",
+          "atlas": "weiqi-sheet-1.atlas.json"
+        },
+        "attack": {
+          "framePrefix": "weiqi-attack-",
+          "firstFrame": 1,
+          "lastFrame": 11,
+          "frameCount": 11,
+          "sheet": "weiqi-sheet-1.png",
+          "atlas": "weiqi-sheet-1.atlas.json"
+        },
+        "ult": {
+          "framePrefix": "weiqi-ult-",
+          "firstFrame": 1,
+          "lastFrame": 14,
+          "frameCount": 14,
+          "sheet": "weiqi-sheet-1.png",
+          "atlas": "weiqi-sheet-1.atlas.json"
+        },
+        "death": {
+          "framePrefix": "weiqi-death-",
+          "firstFrame": 1,
+          "lastFrame": 1,
+          "frameCount": 1,
+          "sheet": "weiqi-sheet-1.png",
+          "atlas": "weiqi-sheet-1.atlas.json",
+          "synthetic": true
+        }
+      },
+      "avatar": "full-body",
+      "avatarSize": {
+        "w": 395,
+        "h": 512
+      },
+      "avatars": {
+        "battle-card-avatar": {
+          "file": "avatar/weiqi-battle-card-avatar.png",
+          "w": 234,
+          "h": 235
+        },
+        "base": {
+          "file": "avatar/weiqi.png",
+          "w": 102,
+          "h": 102
+        }
+      },
+      "portraits": {
+        "full-body": {
+          "file": "portrait/weiqi-full-body.png",
+          "w": 674,
+          "h": 874
+        },
+        "half-body": {
+          "file": "portrait/weiqi-half-body.png",
+          "w": 674,
+          "h": 874
+        },
+        "queue": {
+          "file": "portrait/weiqi-queue.png",
+          "w": 303,
+          "h": 309
+        }
+      },
+      "closeups": {},
+      "radars": {}
+    },
+    "xuandao": {
+      "out": "xuandao",
+      "src": "xuandao",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      },
+      "extent": {
+        "x": 0.0374331550802139,
+        "y": 0,
+        "w": 0.946524064171123,
+        "h": 1
+      },
+      "sourceSize": {
+        "w": 187,
+        "h": 258
+      },
+      "canvasSize": {
+        "w": 504,
+        "h": 432
+      },
+      "sheets": 1,
+      "clips": {
+        "idle": {
+          "framePrefix": "xuandao-idle-",
+          "firstFrame": 1,
+          "lastFrame": 18,
+          "frameCount": 18,
+          "sheet": "xuandao-sheet-1.png",
+          "atlas": "xuandao-sheet-1.atlas.json"
+        },
+        "attack": {
+          "framePrefix": "xuandao-attack-",
+          "firstFrame": 1,
+          "lastFrame": 18,
+          "frameCount": 18,
+          "sheet": "xuandao-sheet-1.png",
+          "atlas": "xuandao-sheet-1.atlas.json"
+        },
+        "ult": {
+          "framePrefix": "xuandao-ult-",
+          "firstFrame": 1,
+          "lastFrame": 21,
+          "frameCount": 21,
+          "sheet": "xuandao-sheet-1.png",
+          "atlas": "xuandao-sheet-1.atlas.json"
+        },
+        "death": {
+          "framePrefix": "xuandao-death-",
+          "firstFrame": 1,
+          "lastFrame": 1,
+          "frameCount": 1,
+          "sheet": "xuandao-sheet-1.png",
+          "atlas": "xuandao-sheet-1.atlas.json",
+          "synthetic": true
+        }
+      },
+      "avatar": "full-body",
+      "avatarSize": {
+        "w": 395,
+        "h": 512
+      },
+      "avatars": {
+        "battle-card-avatar": {
+          "file": "avatar/xuandao-battle-card-avatar.png",
+          "w": 234,
+          "h": 235
+        },
+        "base": {
+          "file": "avatar/xuandao.png",
+          "w": 102,
+          "h": 102
+        }
+      },
+      "portraits": {
+        "full-body": {
+          "file": "portrait/xuandao-full-body.png",
+          "w": 674,
+          "h": 874
+        },
+        "half-body": {
+          "file": "portrait/xuandao-half-body.png",
+          "w": 674,
+          "h": 874
+        },
+        "queue": {
+          "file": "portrait/xuandao-queue.png",
+          "w": 303,
+          "h": 309
+        }
+      },
+      "closeups": {},
+      "radars": {}
+    },
+    "youzhu": {
+      "out": "youzhu",
+      "src": "youzhu",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      },
+      "extent": {
+        "x": 0,
+        "y": 0,
+        "w": 1,
+        "h": 1
+      },
+      "sourceSize": {
+        "w": 318,
+        "h": 492
+      },
+      "canvasSize": {
+        "w": 870,
+        "h": 870
+      },
+      "sheets": 2,
+      "clips": {
+        "idle": {
+          "framePrefix": "youzhu-idle-",
+          "firstFrame": 1,
+          "lastFrame": 10,
+          "frameCount": 10,
+          "sheet": "youzhu-sheet-1.png",
+          "atlas": "youzhu-sheet-1.atlas.json"
+        },
+        "attack": {
+          "framePrefix": "youzhu-attack-",
+          "firstFrame": 1,
+          "lastFrame": 14,
+          "frameCount": 14,
+          "sheet": "youzhu-sheet-1.png",
+          "atlas": "youzhu-sheet-1.atlas.json"
+        },
+        "ult": {
+          "framePrefix": "youzhu-ult-",
+          "firstFrame": 1,
+          "lastFrame": 21,
+          "frameCount": 21,
+          "sheet": "youzhu-sheet-2.png",
+          "atlas": "youzhu-sheet-2.atlas.json"
+        },
+        "death": {
+          "framePrefix": "youzhu-death-",
+          "firstFrame": 1,
+          "lastFrame": 1,
+          "frameCount": 1,
+          "sheet": "youzhu-sheet-2.png",
+          "atlas": "youzhu-sheet-2.atlas.json"
+        }
+      },
+      "avatar": "full-body",
+      "avatarSize": {
+        "w": 512,
+        "h": 512
+      },
+      "avatars": {
+        "action-bar-avatar": {
+          "file": "avatar/youzhu-action-bar-avatar.png",
+          "w": 74,
+          "h": 76
+        },
+        "battle-card-avatar": {
+          "file": "avatar/youzhu-battle-card-avatar.png",
+          "w": 234,
+          "h": 235
+        },
+        "battle-status-avatar": {
+          "file": "avatar/youzhu-battle-status-avatar.png",
+          "w": 242,
+          "h": 200
+        },
+        "roster-avatar": {
+          "file": "avatar/youzhu-roster-avatar.png",
+          "w": 280,
+          "h": 131
+        },
+        "base": {
+          "file": "avatar/youzhu.png",
+          "w": 102,
+          "h": 102
+        }
+      },
+      "portraits": {
+        "full-body": {
+          "file": "portrait/youzhu-full-body.png",
+          "w": 1254,
+          "h": 1254
+        },
+        "half-body": {
+          "file": "portrait/youzhu-half-body.png",
+          "w": 883,
+          "h": 662
+        },
+        "queue": {
+          "file": "portrait/youzhu-queue.png",
+          "w": 325,
+          "h": 327
+        }
+      },
+      "closeups": {
+        "greenwood-revival-closeup": {
+          "file": "closeup/youzhu-greenwood-revival-closeup.png",
+          "w": 1254,
+          "h": 1254
+        }
+      },
+      "radars": {
+        "main-menu-radar": {
+          "file": "radar-chart/youzhu-main-menu-radar.png",
+          "w": 331,
+          "h": 317
+        },
+        "zhenmosi-radar": {
+          "file": "radar-chart/youzhu-zhenmosi-radar.png",
+          "w": 344,
+          "h": 340
+        }
+      }
+    },
+    "yuejianxin": {
+      "out": "yuejianxin",
+      "src": "yuejianxin",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      },
+      "extent": {
+        "x": 0,
+        "y": 0,
+        "w": 1,
+        "h": 1
+      },
+      "sourceSize": {
+        "w": 456,
+        "h": 496
+      },
+      "canvasSize": {
+        "w": 870,
+        "h": 870
+      },
+      "sheets": 2,
+      "clips": {
+        "idle": {
+          "framePrefix": "yuejianxin-idle-",
+          "firstFrame": 1,
+          "lastFrame": 7,
+          "frameCount": 7,
+          "sheet": "yuejianxin-sheet-1.png",
+          "atlas": "yuejianxin-sheet-1.atlas.json"
+        },
+        "attack": {
+          "framePrefix": "yuejianxin-attack-",
+          "firstFrame": 1,
+          "lastFrame": 11,
+          "frameCount": 11,
+          "sheet": "yuejianxin-sheet-1.png",
+          "atlas": "yuejianxin-sheet-1.atlas.json"
+        },
+        "ult": {
+          "framePrefix": "yuejianxin-ult-",
+          "firstFrame": 1,
+          "lastFrame": 21,
+          "frameCount": 21,
+          "sheet": "yuejianxin-sheet-2.png",
+          "atlas": "yuejianxin-sheet-2.atlas.json"
+        },
+        "death": {
+          "framePrefix": "yuejianxin-death-",
+          "firstFrame": 1,
+          "lastFrame": 1,
+          "frameCount": 1,
+          "sheet": "yuejianxin-sheet-2.png",
+          "atlas": "yuejianxin-sheet-2.atlas.json"
+        }
+      },
+      "avatar": "full-body",
+      "avatarSize": {
+        "w": 512,
+        "h": 512
+      },
+      "avatars": {
+        "action-bar-avatar": {
+          "file": "avatar/yuejianxin-action-bar-avatar.png",
+          "w": 74,
+          "h": 76
+        },
+        "battle-card-avatar": {
+          "file": "avatar/yuejianxin-battle-card-avatar.png",
+          "w": 234,
+          "h": 235
+        },
+        "battle-status-avatar": {
+          "file": "avatar/yuejianxin-battle-status-avatar.png",
+          "w": 242,
+          "h": 200
+        },
+        "roster-avatar": {
+          "file": "avatar/yuejianxin-roster-avatar.png",
+          "w": 280,
+          "h": 131
+        },
+        "base": {
+          "file": "avatar/yuejianxin.png",
+          "w": 102,
+          "h": 102
+        }
+      },
+      "portraits": {
+        "full-body": {
+          "file": "portrait/yuejianxin-full-body.png",
+          "w": 1254,
+          "h": 1254
+        },
+        "half-body": {
+          "file": "portrait/yuejianxin-half-body.png",
+          "w": 883,
+          "h": 662
+        },
+        "queue": {
+          "file": "portrait/yuejianxin-queue.png",
+          "w": 325,
+          "h": 327
+        }
+      },
+      "closeups": {
+        "base": {
+          "file": "closeup/yuejianxin.png",
+          "w": 1254,
+          "h": 1254
+        }
+      },
+      "radars": {
+        "main-menu-radar": {
+          "file": "radar-chart/yuejianxin-main-menu-radar.png",
+          "w": 331,
+          "h": 318
+        },
+        "zhenmosi-radar": {
+          "file": "radar-chart/yuejianxin-zhenmosi-radar.png",
+          "w": 344,
+          "h": 340
+        }
+      }
+    },
+    "ziyuan": {
+      "out": "ziyuan",
+      "src": "ziyuan",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      },
+      "extent": {
+        "x": 0,
+        "y": 0,
+        "w": 1,
+        "h": 1
+      },
+      "sourceSize": {
+        "w": 199,
+        "h": 275
+      },
+      "canvasSize": {
+        "w": 492,
+        "h": 456
+      },
+      "sheets": 1,
+      "clips": {
+        "idle": {
+          "framePrefix": "ziyuan-idle-",
+          "firstFrame": 1,
+          "lastFrame": 14,
+          "frameCount": 14,
+          "sheet": "ziyuan-sheet-1.png",
+          "atlas": "ziyuan-sheet-1.atlas.json"
+        },
+        "attack": {
+          "framePrefix": "ziyuan-attack-",
+          "firstFrame": 1,
+          "lastFrame": 14,
+          "frameCount": 14,
+          "sheet": "ziyuan-sheet-1.png",
+          "atlas": "ziyuan-sheet-1.atlas.json"
+        },
+        "ult": {
+          "framePrefix": "ziyuan-ult-",
+          "firstFrame": 1,
+          "lastFrame": 15,
+          "frameCount": 15,
+          "sheet": "ziyuan-sheet-1.png",
+          "atlas": "ziyuan-sheet-1.atlas.json"
+        },
+        "death": {
+          "framePrefix": "ziyuan-death-",
+          "firstFrame": 1,
+          "lastFrame": 1,
+          "frameCount": 1,
+          "sheet": "ziyuan-sheet-1.png",
+          "atlas": "ziyuan-sheet-1.atlas.json",
+          "synthetic": true
+        }
+      },
+      "avatar": "full-body",
+      "avatarSize": {
+        "w": 395,
+        "h": 512
+      },
+      "avatars": {
+        "battle-card-avatar": {
+          "file": "avatar/ziyuan-battle-card-avatar.png",
+          "w": 234,
+          "h": 235
+        },
+        "base": {
+          "file": "avatar/ziyuan.png",
+          "w": 102,
+          "h": 102
+        }
+      },
+      "portraits": {
+        "full-body": {
+          "file": "portrait/ziyuan-full-body.png",
+          "w": 674,
+          "h": 874
+        },
+        "half-body": {
+          "file": "portrait/ziyuan-half-body.png",
+          "w": 674,
+          "h": 874
+        },
+        "queue": {
+          "file": "portrait/ziyuan-queue.png",
+          "w": 303,
+          "h": 309
+        }
+      },
+      "closeups": {},
+      "radars": {}
+    },
+    "pham_nhan": {
+      "out": "pham_nhan",
+      "src": "pham_nhan",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      },
+      "extent": {
+        "x": 0.00808080808080808,
+        "y": 0,
+        "w": 0.9919191919191919,
+        "h": 1
+      },
+      "sourceSize": {
+        "w": 495,
+        "h": 512
+      },
+      "canvasSize": {
+        "w": 558,
+        "h": 558
+      },
+      "sheets": 2,
+      "clips": {
+        "idle": {
+          "framePrefix": "pham_nhan-idle-",
+          "firstFrame": 1,
+          "lastFrame": 33,
+          "frameCount": 33,
+          "sheet": "pham_nhan-sheet-1.png",
+          "atlas": "pham_nhan-sheet-1.atlas.json"
+        },
+        "attack": {
+          "framePrefix": "pham_nhan-attack-",
+          "firstFrame": 1,
+          "lastFrame": 17,
+          "frameCount": 17,
+          "sheet": "pham_nhan-sheet-2.png",
+          "atlas": "pham_nhan-sheet-2.atlas.json"
+        },
+        "death": {
+          "framePrefix": "pham_nhan-death-",
+          "firstFrame": 1,
+          "lastFrame": 17,
+          "frameCount": 17,
+          "sheet": "pham_nhan-sheet-2.png",
+          "atlas": "pham_nhan-sheet-2.atlas.json"
+        }
+      },
+      "cast": {},
+      "avatar": "derived",
+      "avatarSize": {
+        "w": 512,
+        "h": 512
+      },
+      "avatars": {},
+      "portraits": {},
+      "closeups": {},
+      "radars": {}
+    },
+    "ngu_kiem": {
+      "out": "ngu_kiem",
+      "src": "ngu_kiem",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      },
+      "extent": {
+        "x": 0.02,
+        "y": 0,
+        "w": 0.9085714285714286,
+        "h": 1
+      },
+      "sourceSize": {
+        "w": 350,
+        "h": 475
+      },
+      "canvasSize": {
+        "w": 558,
+        "h": 558
+      },
+      "sheets": 1,
+      "clips": {
+        "idle": {
+          "framePrefix": "ngu_kiem-idle-",
+          "firstFrame": 1,
+          "lastFrame": 33,
+          "frameCount": 33,
+          "sheet": "ngu_kiem-sheet-1.png",
+          "atlas": "ngu_kiem-sheet-1.atlas.json"
+        },
+        "attack": {
+          "framePrefix": "ngu_kiem-attack-",
+          "firstFrame": 1,
+          "lastFrame": 17,
+          "frameCount": 17,
+          "sheet": "ngu_kiem-sheet-1.png",
+          "atlas": "ngu_kiem-sheet-1.atlas.json"
+        },
+        "death": {
+          "framePrefix": "ngu_kiem-death-",
+          "firstFrame": 1,
+          "lastFrame": 17,
+          "frameCount": 17,
+          "sheet": "ngu_kiem-sheet-1.png",
+          "atlas": "ngu_kiem-sheet-1.atlas.json"
+        }
+      },
+      "avatar": "derived",
+      "avatarSize": {
+        "w": 512,
+        "h": 512
+      },
+      "avatars": {},
+      "portraits": {},
+      "closeups": {},
+      "radars": {}
+    },
+    "ngu_hanh": {
+      "out": "ngu_hanh",
+      "src": "ngu_hanh",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      },
+      "extent": {
+        "x": 0.009009009009009009,
+        "y": 0,
+        "w": 0.9752252252252253,
+        "h": 1
+      },
+      "sourceSize": {
+        "w": 444,
+        "h": 518
+      },
+      "canvasSize": {
+        "w": 549,
+        "h": 567
+      },
+      "sheets": 3,
+      "clips": {
+        "idle": {
+          "framePrefix": "ngu_hanh-idle-",
+          "firstFrame": 1,
+          "lastFrame": 33,
+          "frameCount": 33,
+          "sheet": "ngu_hanh-sheet-1.png",
+          "atlas": "ngu_hanh-sheet-1.atlas.json"
+        },
+        "attack": {
+          "framePrefix": "ngu_hanh-attack-",
+          "firstFrame": 1,
+          "lastFrame": 17,
+          "frameCount": 17,
+          "sheet": "ngu_hanh-sheet-2.png",
+          "atlas": "ngu_hanh-sheet-2.atlas.json"
+        },
+        "death": {
+          "framePrefix": "ngu_hanh-death-",
+          "firstFrame": 1,
+          "lastFrame": 17,
+          "frameCount": 17,
+          "sheet": "ngu_hanh-sheet-2.png",
+          "atlas": "ngu_hanh-sheet-2.atlas.json"
+        }
+      },
+      "cast": {
+        "special": {
+          "framePrefix": "ngu_hanh-cast-special-",
+          "firstFrame": 1,
+          "lastFrame": 17,
+          "frameCount": 17,
+          "sheet": "ngu_hanh-sheet-3.png",
+          "atlas": "ngu_hanh-sheet-3.atlas.json"
+        }
+      },
+      "avatar": "derived",
+      "avatarSize": {
+        "w": 512,
+        "h": 512
+      },
+      "avatars": {},
+      "portraits": {},
+      "closeups": {},
+      "radars": {}
+    },
+    "pham_nhan_unarmed": {
+      "out": "pham_nhan_unarmed",
+      "src": "pham_nhan_unarmed",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      },
+      "extent": {
+        "x": 0.008620689655172414,
+        "y": 0,
+        "w": 0.9712643678160919,
+        "h": 1
+      },
+      "sourceSize": {
+        "w": 348,
+        "h": 514
+      },
+      "canvasSize": {
+        "w": 558,
+        "h": 558
+      },
+      "sheets": 2,
+      "clips": {
+        "idle": {
+          "framePrefix": "pham_nhan_unarmed-idle-",
+          "firstFrame": 1,
+          "lastFrame": 33,
+          "frameCount": 33,
+          "sheet": "pham_nhan_unarmed-sheet-1.png",
+          "atlas": "pham_nhan_unarmed-sheet-1.atlas.json"
+        },
+        "attack": {
+          "framePrefix": "pham_nhan_unarmed-attack-",
+          "firstFrame": 1,
+          "lastFrame": 17,
+          "frameCount": 17,
+          "sheet": "pham_nhan_unarmed-sheet-1.png",
+          "atlas": "pham_nhan_unarmed-sheet-1.atlas.json"
+        },
+        "death": {
+          "framePrefix": "pham_nhan_unarmed-death-",
+          "firstFrame": 1,
+          "lastFrame": 17,
+          "frameCount": 17,
+          "sheet": "pham_nhan_unarmed-sheet-2.png",
+          "atlas": "pham_nhan_unarmed-sheet-2.atlas.json"
+        }
+      },
+      "cast": {
+        "linh_bao": {
+          "framePrefix": "pham_nhan_unarmed-cast-linh_bao-",
+          "firstFrame": 1,
+          "lastFrame": 17,
+          "frameCount": 17,
+          "sheet": "pham_nhan_unarmed-sheet-2.png",
+          "atlas": "pham_nhan_unarmed-sheet-2.atlas.json"
+        }
+      },
+      "avatar": "derived",
+      "avatarSize": {
+        "w": 512,
+        "h": 512
+      },
+      "avatars": {},
+      "portraits": {},
+      "closeups": {},
+      "radars": {}
+    }
+  }
+}

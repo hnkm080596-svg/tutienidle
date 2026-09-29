@@ -1,4 +1,4 @@
-// R5 (AR-24) — Canonical animation name types for combat presentation.
+// R5 (AR-24) - Canonical animation name types for combat presentation.
 // Lives in core/battle to prevent upward dependencies from core runtime
 // into game support.
 
@@ -26,11 +26,24 @@
  * Each name returns the day it has a clip and a caller together. A name in
  * this union with nothing behind it is what let that cast lie for as long as
  * it did.
+ *
+ * `attack` re-entered the union on 2026-09-28 (enemy-art-wave1): the
+ * NEWSPRITE batch carries authored attack frames, so `attack` is an
+ * OPTIONAL catalogue clip - entities without it keep the shared lunge
+ * tween; entities with it play the clip on the 'attack' event and return
+ * to `standby` (the engaged loop a turn is always inside).
+ *
+ * `ult` entered on 2026-09-28 (character-art-infra): NEWSPRITE character
+ * dumps carry an authored ultimate sequence. Same OPTIONAL status as
+ * `attack` - it plays only when the cast's slot role is 'ultimate'
+ * (carried on `turn_cast_start`), and returns to `standby`.
  */
 export type CombatAnimationName =
   | 'idle'
   | 'standby'
   | 'death'
+  | 'attack'
+  | 'ult'
   | 'idle_to_standby'
   | 'standby_to_idle'
   | 'cultivate'

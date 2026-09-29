@@ -1,0 +1,227 @@
+[
+ {
+  "id": "F-CB2-01",
+  "title": "standby_to_idle interrupts in-flight one-shot clip every routine cast",
+  "state": {
+   "productStateId": "e0cf96b39874d7b5f343c34d06f9600856f7c6107108f97df0519ba937bed124",
+   "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+   "attackModelId": "a4ec1e669112c29f48c6fb9439c9b82710aebc43a811ccd6dce62048d9f2349f",
+   "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+  },
+  "severity": "MEDIUM",
+  "classification": "DEFECT",
+  "actionable": true,
+  "reachability": "CONFIRMED",
+  "locations": [
+   {
+    "path": "src/game/scenes/combat/combat-action-feedback.ts:220"
+   }
+  ],
+  "discoveredBy": "clean-B-f0c42b3b",
+  "invariantIds": [
+   "I-CLIP-LIFECYCLE"
+  ],
+  "evidenceIds": [],
+  "counterexample": null,
+  "expected": "play-once attack/ult clip completes then returns to standby; loop requests queue behind it",
+  "actual": "standby_to_idle resolves to idle loop and plays immediately at ~0.4-0.9s, truncating the 2.25s/1.4s clip before its strike frames render",
+  "rootCause": "loop requests do not defer to an armed one-shot transition",
+  "rootClass": "missing-state",
+  "subsystem": "combat-presentation",
+  "siblingSearch": [
+   "searched same-class sites across combat-*.ts + preview scene"
+  ],
+  "siblingFindingIds": [],
+  "repair": {
+   "summary": "pending",
+   "filesChanged": []
+  },
+  "pinEvidenceIds": [],
+  "verificationEvidenceIds": [],
+  "closureReviewIds": [],
+  "status": "OPEN",
+  "duplicateOf": null,
+  "rejectionReason": null,
+  "exception": null
+ },
+ {
+  "id": "F-CB2-02",
+  "title": "charge-continuation turns emit slotRole basic and play the full attack tell",
+  "state": {
+   "productStateId": "e0cf96b39874d7b5f343c34d06f9600856f7c6107108f97df0519ba937bed124",
+   "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+   "attackModelId": "a4ec1e669112c29f48c6fb9439c9b82710aebc43a811ccd6dce62048d9f2349f",
+   "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+  },
+  "severity": "LOW",
+  "classification": "DEFECT",
+  "actionable": true,
+  "reachability": "CONFIRMED",
+  "locations": [
+   {
+    "path": "src/core/battle/turn/CombatAnimationRuntime.ts:20"
+   }
+  ],
+  "discoveredBy": "clean-B-f0c42b3b",
+  "invariantIds": [
+   "I-CLIP-LIFECYCLE"
+  ],
+  "evidenceIds": [],
+  "counterexample": null,
+  "expected": "a mid-channel turn is not a slot cast and should not lunge/play attack",
+  "actual": "declared.action==null && chargedSkill==null falls through to basic -> lunge + attack clip each channeling turn",
+  "rootCause": "castSlotRole cannot distinguish non-cast declared turns",
+  "rootClass": "wrong-value",
+  "subsystem": "combat-presentation",
+  "siblingSearch": [
+   "searched same-class sites across combat-*.ts + preview scene"
+  ],
+  "siblingFindingIds": [],
+  "repair": {
+   "summary": "pending",
+   "filesChanged": []
+  },
+  "pinEvidenceIds": [],
+  "verificationEvidenceIds": [],
+  "closureReviewIds": [],
+  "status": "OPEN",
+  "duplicateOf": null,
+  "rejectionReason": null,
+  "exception": null
+ },
+ {
+  "id": "F-CB2-03",
+  "title": "partial multi-sheet loss freezes sprite on last one-shot frame and squashes clip into avatar box",
+  "state": {
+   "productStateId": "e0cf96b39874d7b5f343c34d06f9600856f7c6107108f97df0519ba937bed124",
+   "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+   "attackModelId": "a4ec1e669112c29f48c6fb9439c9b82710aebc43a811ccd6dce62048d9f2349f",
+   "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+  },
+  "severity": "LOW",
+  "classification": "DEFECT",
+  "actionable": true,
+  "reachability": "CONFIRMED",
+  "locations": [
+   {
+    "path": "src/game/scenes/combat/combat-animation-playback.ts:216"
+   }
+  ],
+  "discoveredBy": "clean-B-f0c42b3b",
+  "invariantIds": [
+   "I-CLIP-LIFECYCLE"
+  ],
+  "evidenceIds": [],
+  "counterexample": null,
+  "expected": "empty destination chain restores the still art the sprite drew before the one-shot",
+  "actual": "resolved===undefined returns leaving the last clip frame displayed at avatar-derived displaySize",
+  "rootCause": "no base-texture restore when every destination/loop registration is empty",
+  "rootClass": "missing-state",
+  "subsystem": "combat-presentation",
+  "siblingSearch": [
+   "searched same-class sites across combat-*.ts + preview scene"
+  ],
+  "siblingFindingIds": [],
+  "repair": {
+   "summary": "pending",
+   "filesChanged": []
+  },
+  "pinEvidenceIds": [],
+  "verificationEvidenceIds": [],
+  "closureReviewIds": [],
+  "status": "OPEN",
+  "duplicateOf": null,
+  "rejectionReason": null,
+  "exception": null
+ },
+ {
+  "id": "F-CB2-04",
+  "title": "resume-path attack replays horizontal impulse on a dying actor",
+  "state": {
+   "productStateId": "e0cf96b39874d7b5f343c34d06f9600856f7c6107108f97df0519ba937bed124",
+   "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+   "attackModelId": "a4ec1e669112c29f48c6fb9439c9b82710aebc43a811ccd6dce62048d9f2349f",
+   "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+  },
+  "severity": "NIT",
+  "classification": "DEFECT",
+  "actionable": true,
+  "reachability": "CONFIRMED",
+  "locations": [
+   {
+    "path": "src/game/scenes/combat/combat-action-feedback.ts:40"
+   }
+  ],
+  "discoveredBy": "clean-B-f0c42b3b",
+  "invariantIds": [
+   "I-CLIP-LIFECYCLE"
+  ],
+  "evidenceIds": [],
+  "counterexample": null,
+  "expected": "dying check precedes the impulse so corpses do not drift",
+  "actual": "playHorizontalImpulse runs before playCombatAnimations dying guard; corpse drifts a few px",
+  "rootCause": "guard ordering",
+  "rootClass": "missing-guard",
+  "subsystem": "combat-presentation",
+  "siblingSearch": [
+   "searched same-class sites across combat-*.ts + preview scene"
+  ],
+  "siblingFindingIds": [],
+  "repair": {
+   "summary": "pending",
+   "filesChanged": []
+  },
+  "pinEvidenceIds": [],
+  "verificationEvidenceIds": [],
+  "closureReviewIds": [],
+  "status": "OPEN",
+  "duplicateOf": null,
+  "rejectionReason": null,
+  "exception": null
+ },
+ {
+  "id": "F-CB2-05",
+  "title": "MainScene dormant animated mode resolves legacy atlas, not resolvePlayerEntityKey",
+  "state": {
+   "productStateId": "e0cf96b39874d7b5f343c34d06f9600856f7c6107108f97df0519ba937bed124",
+   "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+   "attackModelId": "a4ec1e669112c29f48c6fb9439c9b82710aebc43a811ccd6dce62048d9f2349f",
+   "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+  },
+  "severity": "NIT",
+  "classification": "DEFECT",
+  "actionable": true,
+  "reachability": "CONFIRMED",
+  "locations": [
+   {
+    "path": "src/game/scenes/MainScene.ts:309"
+   }
+  ],
+  "discoveredBy": "clean-B-f0c42b3b",
+  "invariantIds": [
+   "I-CLIP-LIFECYCLE"
+  ],
+  "evidenceIds": [],
+  "counterexample": null,
+  "expected": "dormant mode uses same player-key resolution as combat",
+  "actual": "animatedArtFormFor(profile.combatTextureKey) resolves mortal atlas while mode disabled (static) - latent divergence",
+  "rootCause": "dormant-mode path bypasses the reskin resolver",
+  "rootClass": "stale-reference",
+  "subsystem": "combat-presentation",
+  "siblingSearch": [
+   "searched same-class sites across combat-*.ts + preview scene"
+  ],
+  "siblingFindingIds": [],
+  "repair": {
+   "summary": "pending",
+   "filesChanged": []
+  },
+  "pinEvidenceIds": [],
+  "verificationEvidenceIds": [],
+  "closureReviewIds": [],
+  "status": "OPEN",
+  "duplicateOf": null,
+  "rejectionReason": null,
+  "exception": null
+ }
+]

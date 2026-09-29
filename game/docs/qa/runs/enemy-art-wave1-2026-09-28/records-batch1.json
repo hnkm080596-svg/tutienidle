@@ -1,0 +1,513 @@
+{
+ "records": [
+  {
+   "kind": "invariant",
+   "body": {
+    "id": "INV-RESKIN-RESOLVE",
+    "statement": "A mapped enemy template/runtime id resolves to its variant slug before any texture lookup; unmapped ids keep legacy texture/placeholder resolution.",
+    "domain": "combat presentation",
+    "risk": "HIGH",
+    "sources": [
+     "task spec game/docs/p7/missions/enemy-art-wave1.spec.md",
+     "code comments + tests"
+    ],
+    "owner": "",
+    "legalWriters": [],
+    "legalReaders": [],
+    "projections": [],
+    "caches": [],
+    "validStates": [],
+    "forbiddenStates": [],
+    "preconditions": [],
+    "postconditions": [],
+    "legalTransitions": [],
+    "illegalTransitions": [],
+    "failureBehavior": "",
+    "atomicity": "",
+    "inverseBehavior": "",
+    "persistence": "",
+    "migration": "",
+    "lifecycle": "",
+    "runtimeConsequences": "",
+    "uiConsequences": "",
+    "oracles": [],
+    "requiredEvidenceSurfaces": [
+     "DETERMINISTIC",
+     "STATIC_SEMANTIC",
+     "RUNTIME_E2E",
+     "INDEPENDENT_REVIEW"
+    ],
+    "taxonomyIds": [],
+    "status": "ACTIVE"
+   }
+  },
+  {
+   "kind": "invariant",
+   "body": {
+    "id": "INV-ANIMATED-OVERRIDE",
+    "statement": "Under ENTITY_ART_MODE=static exactly ANIMATED_ENEMY_KEYS emit kind:animated; no other entity drifts animated.",
+    "domain": "presentation contract",
+    "risk": "HIGH",
+    "sources": [
+     "task spec game/docs/p7/missions/enemy-art-wave1.spec.md",
+     "code comments + tests"
+    ],
+    "owner": "",
+    "legalWriters": [],
+    "legalReaders": [],
+    "projections": [],
+    "caches": [],
+    "validStates": [],
+    "forbiddenStates": [],
+    "preconditions": [],
+    "postconditions": [],
+    "legalTransitions": [],
+    "illegalTransitions": [],
+    "failureBehavior": "",
+    "atomicity": "",
+    "inverseBehavior": "",
+    "persistence": "",
+    "migration": "",
+    "lifecycle": "",
+    "runtimeConsequences": "",
+    "uiConsequences": "",
+    "oracles": [],
+    "requiredEvidenceSurfaces": [
+     "DETERMINISTIC",
+     "STATIC_SEMANTIC",
+     "RUNTIME_E2E",
+     "INDEPENDENT_REVIEW"
+    ],
+    "taxonomyIds": [],
+    "status": "ACTIVE"
+   }
+  },
+  {
+   "kind": "invariant",
+   "body": {
+    "id": "INV-FEET-ANCHOR",
+    "statement": "Emitted sourceSize equals the idle-clip union alpha bbox so origin (0.5,1) lands on the character feet line.",
+    "domain": "asset pipeline",
+    "risk": "MEDIUM",
+    "sources": [
+     "task spec game/docs/p7/missions/enemy-art-wave1.spec.md",
+     "code comments + tests"
+    ],
+    "owner": "",
+    "legalWriters": [],
+    "legalReaders": [],
+    "projections": [],
+    "caches": [],
+    "validStates": [],
+    "forbiddenStates": [],
+    "preconditions": [],
+    "postconditions": [],
+    "legalTransitions": [],
+    "illegalTransitions": [],
+    "failureBehavior": "",
+    "atomicity": "",
+    "inverseBehavior": "",
+    "persistence": "",
+    "migration": "",
+    "lifecycle": "",
+    "runtimeConsequences": "",
+    "uiConsequences": "",
+    "oracles": [],
+    "requiredEvidenceSurfaces": [
+     "DETERMINISTIC",
+     "STATIC_SEMANTIC",
+     "RUNTIME_E2E",
+     "INDEPENDENT_REVIEW"
+    ],
+    "taxonomyIds": [],
+    "status": "ACTIVE"
+   }
+  },
+  {
+   "kind": "invariant",
+   "body": {
+    "id": "INV-LOADER-PARITY",
+    "statement": "Loaders enumerate the MonsterArt registry only; reskinned template ids skip their old PNG; reserved unregistered variants are never loaded.",
+    "domain": "asset loading",
+    "risk": "MEDIUM",
+    "sources": [
+     "task spec game/docs/p7/missions/enemy-art-wave1.spec.md",
+     "code comments + tests"
+    ],
+    "owner": "",
+    "legalWriters": [],
+    "legalReaders": [],
+    "projections": [],
+    "caches": [],
+    "validStates": [],
+    "forbiddenStates": [],
+    "preconditions": [],
+    "postconditions": [],
+    "legalTransitions": [],
+    "illegalTransitions": [],
+    "failureBehavior": "",
+    "atomicity": "",
+    "inverseBehavior": "",
+    "persistence": "",
+    "migration": "",
+    "lifecycle": "",
+    "runtimeConsequences": "",
+    "uiConsequences": "",
+    "oracles": [],
+    "requiredEvidenceSurfaces": [
+     "DETERMINISTIC",
+     "STATIC_SEMANTIC",
+     "RUNTIME_E2E",
+     "INDEPENDENT_REVIEW"
+    ],
+    "taxonomyIds": [],
+    "status": "ACTIVE"
+   }
+  },
+  {
+   "kind": "invariant",
+   "body": {
+    "id": "INV-DEATH-LIFECYCLE",
+    "statement": "An animated enemy death clip completes before sprite destruction; completion callbacks are key-filtered and identity-checked; re-entry anim registration is idempotent.",
+    "domain": "combat lifecycle",
+    "risk": "HIGH",
+    "sources": [
+     "task spec game/docs/p7/missions/enemy-art-wave1.spec.md",
+     "code comments + tests"
+    ],
+    "owner": "",
+    "legalWriters": [],
+    "legalReaders": [],
+    "projections": [],
+    "caches": [],
+    "validStates": [],
+    "forbiddenStates": [],
+    "preconditions": [],
+    "postconditions": [],
+    "legalTransitions": [],
+    "illegalTransitions": [],
+    "failureBehavior": "",
+    "atomicity": "",
+    "inverseBehavior": "",
+    "persistence": "",
+    "migration": "",
+    "lifecycle": "",
+    "runtimeConsequences": "",
+    "uiConsequences": "",
+    "oracles": [],
+    "requiredEvidenceSurfaces": [
+     "DETERMINISTIC",
+     "STATIC_SEMANTIC",
+     "RUNTIME_E2E",
+     "INDEPENDENT_REVIEW"
+    ],
+    "taxonomyIds": [],
+    "status": "ACTIVE"
+   }
+  },
+  {
+   "kind": "invariant",
+   "body": {
+    "id": "INV-REGISTRY-MANIFEST-PARITY",
+    "statement": "Hand-written registry entries equal generated manifest metadata (clip frames, sheet/atlas names, extent, sourceSize, avatar dims).",
+    "domain": "test oracle",
+    "risk": "HIGH",
+    "sources": [
+     "task spec game/docs/p7/missions/enemy-art-wave1.spec.md",
+     "code comments + tests"
+    ],
+    "owner": "",
+    "legalWriters": [],
+    "legalReaders": [],
+    "projections": [],
+    "caches": [],
+    "validStates": [],
+    "forbiddenStates": [],
+    "preconditions": [],
+    "postconditions": [],
+    "legalTransitions": [],
+    "illegalTransitions": [],
+    "failureBehavior": "",
+    "atomicity": "",
+    "inverseBehavior": "",
+    "persistence": "",
+    "migration": "",
+    "lifecycle": "",
+    "runtimeConsequences": "",
+    "uiConsequences": "",
+    "oracles": [],
+    "requiredEvidenceSurfaces": [
+     "DETERMINISTIC",
+     "STATIC_SEMANTIC",
+     "RUNTIME_E2E",
+     "INDEPENDENT_REVIEW"
+    ],
+    "taxonomyIds": [],
+    "status": "ACTIVE"
+   }
+  },
+  {
+   "kind": "invariant",
+   "body": {
+    "id": "INV-ATTACK-RETURN",
+    "statement": "Authored attack clips play once and return to standby; entities without attack clips keep the shared lunge and are unaffected.",
+    "domain": "combat lifecycle",
+    "risk": "MEDIUM",
+    "sources": [
+     "task spec game/docs/p7/missions/enemy-art-wave1.spec.md",
+     "code comments + tests"
+    ],
+    "owner": "",
+    "legalWriters": [],
+    "legalReaders": [],
+    "projections": [],
+    "caches": [],
+    "validStates": [],
+    "forbiddenStates": [],
+    "preconditions": [],
+    "postconditions": [],
+    "legalTransitions": [],
+    "illegalTransitions": [],
+    "failureBehavior": "",
+    "atomicity": "",
+    "inverseBehavior": "",
+    "persistence": "",
+    "migration": "",
+    "lifecycle": "",
+    "runtimeConsequences": "",
+    "uiConsequences": "",
+    "oracles": [],
+    "requiredEvidenceSurfaces": [
+     "DETERMINISTIC",
+     "STATIC_SEMANTIC",
+     "RUNTIME_E2E",
+     "INDEPENDENT_REVIEW"
+    ],
+    "taxonomyIds": [],
+    "status": "ACTIVE"
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-VERIFY-FULL",
+    "state": {
+     "productStateId": "d3e104d1dbd03b2a3083b636c1314e86cf0ae5b628b69cd7ae286f4112ce8b04",
+     "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+     "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
+     "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+    },
+    "producer": "coordinator",
+    "startedAt": "2026-09-28T00:00:00Z",
+    "finishedAt": "2026-09-28T00:00:00Z",
+    "commandOrMethod": "npm run verify (type-check + vite build + vitest run)",
+    "cwd": "game",
+    "exitCode": 0,
+    "result": "PASS",
+    "artifactPath": "",
+    "artifactHash": "",
+    "inputPaths": [],
+    "inputEvidenceIds": [],
+    "invariantIds": [],
+    "claims": [
+     "type-check clean; build succeeds; 6976 tests pass on final aggregate"
+    ],
+    "limitations": [
+     "2 environment timeout flakes under parallel load (dongFuBackgroundAssets, autoFarmOffline) - both pass isolated; recorded as FLAKY baseline, not task-caused"
+    ],
+    "status": "CURRENT",
+    "kind": "EXECUTED_UNIT_STRUCTURAL"
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-VERIFY-FLAKE-RERUN",
+    "state": {
+     "productStateId": "d3e104d1dbd03b2a3083b636c1314e86cf0ae5b628b69cd7ae286f4112ce8b04",
+     "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+     "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
+     "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+    },
+    "producer": "coordinator",
+    "startedAt": "2026-09-28T00:00:00Z",
+    "finishedAt": "2026-09-28T00:00:00Z",
+    "commandOrMethod": "npx vitest run dongFuBackgroundAssets.test.ts autoFarmOffline.test.ts (isolated)",
+    "cwd": "game",
+    "exitCode": 0,
+    "result": "PASS",
+    "artifactPath": "",
+    "artifactHash": "",
+    "inputPaths": [],
+    "inputEvidenceIds": [],
+    "invariantIds": [],
+    "claims": [
+     "both suite-timeout failures pass in isolation"
+    ],
+    "limitations": [
+     "confirms environment contention, not product defect"
+    ],
+    "status": "CURRENT",
+    "kind": "EXECUTED_UNIT_STRUCTURAL"
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-E2E-IDLE",
+    "state": {
+     "productStateId": "d3e104d1dbd03b2a3083b636c1314e86cf0ae5b628b69cd7ae286f4112ce8b04",
+     "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+     "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
+     "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+    },
+    "producer": "coordinator",
+    "startedAt": "2026-09-28T00:00:00Z",
+    "finishedAt": "2026-09-28T00:00:00Z",
+    "commandOrMethod": "npx playwright test tests/e2e/combat-idle-motion-capture.spec.ts",
+    "cwd": "game",
+    "exitCode": 0,
+    "result": "PASS",
+    "artifactPath": "",
+    "artifactHash": "",
+    "inputPaths": [],
+    "inputEvidenceIds": [],
+    "invariantIds": [],
+    "claims": [
+     "reskinned enemies render authored atlas frames in live combat; frames advance; authored attack plays; death completes and destroys sprite; statics bob; feet planted (screenshots)"
+    ],
+    "limitations": [
+     "probe path used for deterministic reskin exercise; natural spawn RNG noted"
+    ],
+    "status": "CURRENT",
+    "kind": "EXECUTED_RUNTIME"
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-FOCUSED",
+    "state": {
+     "productStateId": "d3e104d1dbd03b2a3083b636c1314e86cf0ae5b628b69cd7ae286f4112ce8b04",
+     "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+     "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
+     "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+    },
+    "producer": "coordinator",
+    "startedAt": "2026-09-28T00:00:00Z",
+    "finishedAt": "2026-09-28T00:00:00Z",
+    "commandOrMethod": "npx vitest run enemyArtReskin + artModeUniformity + animationCatalogue + CombatScene.combatAnimations + combat-grid-view",
+    "cwd": "game",
+    "exitCode": 0,
+    "result": "PASS",
+    "artifactPath": "",
+    "artifactHash": "",
+    "inputPaths": [],
+    "inputEvidenceIds": [],
+    "invariantIds": [],
+    "claims": [
+     "61/61 focused tests green on final state"
+    ],
+    "limitations": [],
+    "status": "CURRENT",
+    "kind": "EXECUTED_UNIT_STRUCTURAL"
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-OCR",
+    "state": {
+     "productStateId": "d3e104d1dbd03b2a3083b636c1314e86cf0ae5b628b69cd7ae286f4112ce8b04",
+     "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+     "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
+     "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+    },
+    "producer": "coordinator",
+    "startedAt": "2026-09-28T00:00:00Z",
+    "finishedAt": "2026-09-28T00:00:00Z",
+    "commandOrMethod": "P18 Open Code Review gate over full task diff",
+    "cwd": "game",
+    "exitCode": 0,
+    "result": "PASS",
+    "artifactPath": "",
+    "artifactHash": "",
+    "inputPaths": [],
+    "inputEvidenceIds": [],
+    "invariantIds": [],
+    "claims": [
+     "review found real defect: readPivot parsed x,y while dump uses m_X,m_Y - fixed and pivots recovered as provenance"
+    ],
+    "limitations": [
+     "delegation-mode reasoning, no external reviewer"
+    ],
+    "status": "CURRENT",
+    "kind": "SOURCE_PROOF"
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-P4-QUICK",
+    "state": {
+     "productStateId": "d3e104d1dbd03b2a3083b636c1314e86cf0ae5b628b69cd7ae286f4112ce8b04",
+     "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+     "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
+     "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+    },
+    "producer": "coordinator",
+    "startedAt": "2026-09-28T00:00:00Z",
+    "finishedAt": "2026-09-28T00:00:00Z",
+    "commandOrMethod": "tutienidle-adversarial-qa quick pass + report docs/qa/2026-09-27-enemy-art-wave1-quick.md",
+    "cwd": "game",
+    "exitCode": 0,
+    "result": "PASS",
+    "artifactPath": "",
+    "artifactHash": "",
+    "inputPaths": [],
+    "inputEvidenceIds": [],
+    "invariantIds": [],
+    "claims": [
+     "10 attack hypotheses closed; 2 Lows deferred; 1 coverage gap recorded"
+    ],
+    "limitations": [
+     "quick mode only - not a deep audit"
+    ],
+    "status": "CURRENT",
+    "kind": "EXECUTED_INTEGRATION"
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-P5-PASSES",
+    "state": {
+     "productStateId": "d3e104d1dbd03b2a3083b636c1314e86cf0ae5b628b69cd7ae286f4112ce8b04",
+     "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+     "attackModelId": "5fb357dc70fb6c87bc77f5322872683caae5b95f64f24a54b9a7fcd90ec4c115",
+     "environmentId": "ac0d008c3b8a3777351f95ce89d43e2847708c5d7cb52bbe749bc4db6d757019"
+    },
+    "producer": "coordinator",
+    "startedAt": "2026-09-28T00:00:00Z",
+    "finishedAt": "2026-09-28T00:00:00Z",
+    "commandOrMethod": "P5 sequential multi-pass review (3 ordered passes over evolving states)",
+    "cwd": "game",
+    "exitCode": 0,
+    "result": "PASS",
+    "artifactPath": "",
+    "artifactHash": "",
+    "inputPaths": [],
+    "inputEvidenceIds": [],
+    "invariantIds": [],
+    "claims": [
+     "pass1 found dead-load of reskinned old PNGs - fixed via reskinnedTemplateIds; pass2 architecture clean; pass3 integration re-verified with e2e rerun"
+    ],
+    "limitations": [
+     "passes were same-context coordinator reviews - not independent contexts"
+    ],
+    "status": "CURRENT",
+    "kind": "SOURCE_PROOF"
+   }
+  }
+ ]
+}

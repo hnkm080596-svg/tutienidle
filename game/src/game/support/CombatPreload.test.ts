@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest'
 import { PLAYER_TEXTURE_KEY, PLAYER_TEXTURE_URL, queueCombatAssets } from './CombatPreload'
 
 describe('CombatPreload.queueCombatAssets — dedupe theo texture key', () => {
-  it('queues the ink-sword v2 art for the Mortal fallback texture', () => {
+  it('queues the reskin-matched pham_nhan static for the Mortal fallback texture', () => {
     const queued = new Map<string, string>()
 
     const fakeScene = {
@@ -25,7 +25,7 @@ describe('CombatPreload.queueCombatAssets — dedupe theo texture key', () => {
     queueCombatAssets(fakeScene)
 
     expect(PLAYER_TEXTURE_URL).toBe(
-      'assets/characters/player/mortal/player-mortal-ink-sword-concept-v2.png',
+      'assets/characters/player/mortal/player-mortal-pham-nhan-v1.png',
     )
     expect(queued.get(PLAYER_TEXTURE_KEY)).toBe(PLAYER_TEXTURE_URL)
   })

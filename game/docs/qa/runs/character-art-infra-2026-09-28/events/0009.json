@@ -1,0 +1,14 @@
+{
+  "applied": [
+    "finding:F-CAI-19",
+    "finding:F-CAI-20",
+    "finding:F-CAI-21",
+    "finding:F-CAI-22",
+    "finding:F-CAI-23",
+    "finding:F-CAI-24",
+    "review:RV-R1-1",
+    "review:RV-R1-2",
+    "review:RV-R1-3",
+    "cycle:CYC-CLEAN-R1"
+  ]
+}
