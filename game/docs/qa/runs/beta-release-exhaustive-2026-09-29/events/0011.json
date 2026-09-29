@@ -1,0 +1,38 @@
+{
+  "action": "admit",
+  "assignment": {
+    "id": "ASG-BX-SAV",
+    "parentId": null,
+    "capacityScope": "swe2-slot",
+    "inputBundleHash": "726531283354e94030a4ada79b0112c57158a13c7e07c2aa40593ccbe48c0408",
+    "dependencies": [],
+    "requiredCapabilities": [
+      "exec",
+      "repo-read"
+    ],
+    "writeSurface": [
+      "blind audit save/cloud/offline on S0"
+    ],
+    "readiness": "READY",
+    "status": "QUEUED",
+    "reservedAt": null,
+    "observedRuntimeId": "devin-caa5f312c5e14c7d871f0ab8109bebc6",
+    "releaseEvidence": null,
+    "resultRef": null,
+    "timeoutState": null,
+    "history": [
+      {
+        "at": "2026-09-29T13:48:00Z",
+        "from": "-",
+        "to": "CREATED",
+        "reason": "wave-1 dispatch"
+      },
+      {
+        "at": "2026-09-29T13:48:00Z",
+        "from": "CREATED",
+        "to": "QUEUED",
+        "reason": "prompt delivered"
+      }
+    ]
+  }
+}

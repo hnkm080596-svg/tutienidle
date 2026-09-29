@@ -222,6 +222,117 @@
           "reason": "admitted at 4/5 (incl. external 0)"
         }
       ]
+    },
+    {
+      "id": "ASG-BX-SAV",
+      "parentId": null,
+      "capacityScope": "swe2-slot",
+      "inputBundleHash": "726531283354e94030a4ada79b0112c57158a13c7e07c2aa40593ccbe48c0408",
+      "dependencies": [],
+      "requiredCapabilities": [
+        "exec",
+        "repo-read"
+      ],
+      "writeSurface": [
+        "blind audit save/cloud/offline on S0"
+      ],
+      "readiness": "READY",
+      "status": "RESERVED",
+      "reservedAt": "2026-09-29T13:44:00.131Z",
+      "observedRuntimeId": "devin-caa5f312c5e14c7d871f0ab8109bebc6",
+      "releaseEvidence": null,
+      "resultRef": null,
+      "timeoutState": null,
+      "history": [
+        {
+          "at": "2026-09-29T13:48:00Z",
+          "from": "-",
+          "to": "CREATED",
+          "reason": "wave-1 dispatch"
+        },
+        {
+          "at": "2026-09-29T13:48:00Z",
+          "from": "CREATED",
+          "to": "QUEUED",
+          "reason": "prompt delivered"
+        },
+        {
+          "at": "2026-09-29T13:44:00.131Z",
+          "from": "QUEUED",
+          "to": "RESERVED",
+          "reason": "admitted at 5/5 (incl. external 0)"
+        }
+      ]
+    },
+    {
+      "id": "ASG-BX-CBT",
+      "parentId": null,
+      "capacityScope": "swe2-slot",
+      "inputBundleHash": "b259b9803a552cbef85c698384693114418d7fac056a14348d62d9c12ec3ef6b",
+      "dependencies": [],
+      "requiredCapabilities": [
+        "exec",
+        "repo-read"
+      ],
+      "writeSurface": [
+        "blind audit combat/skills/stats on S0"
+      ],
+      "readiness": "READY",
+      "status": "QUEUED",
+      "reservedAt": null,
+      "observedRuntimeId": "devin-8ff836401b90435e9c18dbdd9e14435e",
+      "releaseEvidence": null,
+      "resultRef": null,
+      "timeoutState": null,
+      "history": [
+        {
+          "at": "2026-09-29T13:48:00Z",
+          "from": "-",
+          "to": "CREATED",
+          "reason": "wave-1 dispatch"
+        },
+        {
+          "at": "2026-09-29T13:48:00Z",
+          "from": "CREATED",
+          "to": "QUEUED",
+          "reason": "prompt delivered"
+        }
+      ]
+    },
+    {
+      "id": "ASG-BX-PRG",
+      "parentId": null,
+      "capacityScope": "swe2-slot",
+      "inputBundleHash": "950a5bce64bba4a1eabce0c005445c8ff5b24ba1bd08e061bd1d1ff2f84c1b57",
+      "dependencies": [],
+      "requiredCapabilities": [
+        "exec",
+        "repo-read"
+      ],
+      "writeSurface": [
+        "blind audit progression on S0"
+      ],
+      "readiness": "READY",
+      "status": "QUEUED",
+      "reservedAt": null,
+      "observedRuntimeId": "devin-37285e3f74e84b99aaf2238b8bb115db",
+      "releaseEvidence": null,
+      "resultRef": null,
+      "timeoutState": null,
+      "history": [
+        {
+          "at": "2026-09-29T13:48:00Z",
+          "from": "-",
+          "to": "CREATED",
+          "reason": "wave-1 dispatch"
+        },
+        {
+          "at": "2026-09-29T13:48:00Z",
+          "from": "CREATED",
+          "to": "QUEUED",
+          "reason": "prompt delivered"
+        }
+      ]
     }
   ],
   "consumptions": [],
@@ -2667,6 +2778,593 @@
       "closeReason": "PlayerPortrait pinia test PASSES on S0 - defect absent on master tip",
       "closedAt": "2026-09-27T12:46:00Z",
       "fixedInRevision": "f1049b5e (fix landed upstream of S0)"
+    },
+    {
+      "id": "F-BX-16",
+      "title": "Truc Co Dan icon file missing - breakthrough-gate pill renders monogram fallback",
+      "state": {
+        "productStateId": "9a1c175ad81880d11956a2af84c417d28a5c4e392fa1ec7234c3a7e1159592e6",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "severity": "High",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/data/pill/pills.ts",
+          "symbolOrSection": ":89 icon -> public/assets/pills/truc_co_dan.png (absent)",
+          "revision": "f1049b5e",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "registry probe (devin-7dbc5d19)",
+      "invariantIds": [
+        "I-REGISTRY-INTEGRITY",
+        "I-LOCAL-ART-ABSENT"
+      ],
+      "evidenceIds": [],
+      "counterexample": "graceful SlotView fallback confirmed - degrades, no crash",
+      "expected": "icon PNG present like all 8 regular pill icons",
+      "actual": "file absent; renders monogram fallback",
+      "rootCause": "asset never authored/staged",
+      "rootClass": "asset-missing",
+      "subsystem": "inventory-equipment-rewards-economy",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "OBSERVED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-BX-17",
+      "title": "Thong Mach Dan icon file missing - meridian chapter pill",
+      "state": {
+        "productStateId": "9a1c175ad81880d11956a2af84c417d28a5c4e392fa1ec7234c3a7e1159592e6",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/data/pill/pills.ts",
+          "symbolOrSection": ":78 icon -> public/assets/pills/thong_mach_dan.png (absent)",
+          "revision": "f1049b5e",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "registry probe (devin-7dbc5d19)",
+      "invariantIds": [
+        "I-REGISTRY-INTEGRITY"
+      ],
+      "evidenceIds": [],
+      "counterexample": "monogram fallback applies",
+      "expected": "PNG exists",
+      "actual": "absent",
+      "rootCause": "asset never authored",
+      "rootClass": "asset-missing",
+      "subsystem": "inventory-equipment-rewards-economy",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "OBSERVED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-BX-18",
+      "title": "attackSfxUrl/SFX_ROOT dead seam - 22 variants declare URLs, zero consumers; 9 shipped enemy OGGs orphaned",
+      "state": {
+        "productStateId": "9a1c175ad81880d11956a2af84c417d28a5c4e392fa1ec7234c3a7e1159592e6",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/game/support/MonsterArt.ts",
+          "symbolOrSection": ":53,63 SFX_ROOT + attackSfxUrl builder",
+          "revision": "f1049b5e",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "registry probe (devin-7dbc5d19)",
+      "invariantIds": [
+        "I-AUDIO-SCAFFOLD"
+      ],
+      "evidenceIds": [],
+      "counterexample": "consistent with audio-deferred state (all AUDIO_CUES src empty)",
+      "expected": "sfx URLs consumed by audio resolver or field removed",
+      "actual": "dead field + orphaned OGGs ship unreferenced",
+      "rootCause": "presentation field predates audio scaffold",
+      "rootClass": "dead-seam",
+      "subsystem": "ui-i18n-a11y-phaser-audio",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "OBSERVED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-BX-19",
+      "title": "5 Phap Tu An skill icons missing (documented placeholders)",
+      "state": {
+        "productStateId": "9a1c175ad81880d11956a2af84c417d28a5c4e392fa1ec7234c3a7e1159592e6",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/data/skill/SkillIconManifest.ts",
+          "symbolOrSection": ":19-23",
+          "revision": "f1049b5e",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "registry probe (devin-7dbc5d19)",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "authored placeholder state - degrades to monogram",
+      "expected": "5 PNGs under assets/skills",
+      "actual": "absent",
+      "rootCause": "art pending user draw",
+      "rootClass": "asset-missing",
+      "subsystem": "presentation-identity",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "OBSERVED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-BX-20",
+      "title": "Orphaned art + dead v1 files: 6 equipment-slot PNGs, dong-fu v1 building flats + spring v2 orphans + morning flats, mortal/phap-tu v1 player art, packer manifests under public/",
+      "state": {
+        "productStateId": "9a1c175ad81880d11956a2af84c417d28a5c4e392fa1ec7234c3a7e1159592e6",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "locations": [
+        {
+          "path": "game/public/assets/",
+          "symbolOrSection": "equipment-slots/*, buildings/dong-fu v1+v2 orphans, characters/player v1 files, animated/manifest.json x2, ui/ink-wash-slices.json",
+          "revision": "f1049b5e",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "registry probe (devin-7dbc5d19)",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "zero references in src/ - ship weight only",
+      "expected": "dead art removed",
+      "actual": "~20+ files orphaned",
+      "rootCause": "superseded art never cleaned",
+      "rootClass": "hygiene-dead-asset",
+      "subsystem": "presentation-identity",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "OBSERVED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-BX-21",
+      "title": "Shared StatModifier id across mutually-exclusive talent legs (can_than +1% hpBelow vs can_than_phi -5% hpNotBelow)",
+      "state": {
+        "productStateId": "9a1c175ad81880d11956a2af84c417d28a5c4e392fa1ec7234c3a7e1159592e6",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/data/skill/TalentPassives.ts",
+          "symbolOrSection": ":65 flatStat id talent:${stat}:inf:flat",
+          "revision": "f1049b5e",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "registry probe (devin-7dbc5d19)",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "exclusive conditions make collision inert today",
+      "expected": "distinct modifier ids per leg",
+      "actual": "same generated id; remove(id)/find(id) treats as one",
+      "rootCause": "id template omits leg discriminator",
+      "rootClass": "id-collision",
+      "subsystem": "stats",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "OBSERVED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-BX-22",
+      "title": "STAGES declaration order differs from canonical progression order (cosmetic only; consumers read zone.stageIds)",
+      "state": {
+        "productStateId": "9a1c175ad81880d11956a2af84c417d28a5c4e392fa1ec7234c3a7e1159592e6",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "severity": "Nit",
+      "classification": "NON_ACTIONABLE",
+      "actionable": false,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "locations": [
+        {
+          "path": "game/src/data/stage/Stages.ts",
+          "symbolOrSection": ":151-156",
+          "revision": "f1049b5e",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "registry probe (devin-7dbc5d19)",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "set identical; order cosmetic",
+      "expected": "canonical order",
+      "actual": "declaration order differs",
+      "rootCause": "style drift",
+      "rootClass": "hygiene",
+      "subsystem": "tests-qa-tooling",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "OBSERVED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-BX-23",
+      "title": "the_tu cultivateSourceSize declares v1 dims (1233x1275) while pointing at v2 texture (1254x1254)",
+      "state": {
+        "productStateId": "9a1c175ad81880d11956a2af84c417d28a5c4e392fa1ec7234c3a7e1159592e6",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "severity": "Nit",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "locations": [
+        {
+          "path": "game/src/presentation/art/PlayerVisualProfiles.ts",
+          "symbolOrSection": ":186-189",
+          "revision": "f1049b5e",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "registry probe (devin-7dbc5d19)",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "inert - no consumer sizes from it",
+      "expected": "dims match texture",
+      "actual": "stale dims",
+      "rootCause": "v1->v2 retarget forgot dims",
+      "rootClass": "stale-metadata",
+      "subsystem": "presentation-identity",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "OBSERVED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-BX-24",
+      "title": "Reset save is a deterministic no-op for synced accounts - remote pull resurrects deleted save (no tombstone path exists)",
+      "state": {
+        "productStateId": "9a1c175ad81880d11956a2af84c417d28a5c4e392fa1ec7234c3a7e1159592e6",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "severity": "High",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/services/cloudSave/SupabaseRemoteSave.ts",
+          "symbolOrSection": ":92,102-114 pull + App.vue:444 resetSaveFromSettings + SaveSystem.ts:660 deleteSave",
+          "revision": "f1049b5e",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "creation audit (devin-bcdb6981)",
+      "invariantIds": [
+        "I-CLOUD-LINEAGE-ORDER",
+        "I-BOOT-ENTRY-CHAIN"
+      ],
+      "evidenceIds": [],
+      "counterexample": "code-path proof: once local empty, remoteRow.save_revision>0 is unconditional; no DELETE exists in remote layer",
+      "expected": "reset reaches character creation next login",
+      "actual": "every login pulls the deleted save back",
+      "rootCause": "remote layer lacks tombstone/delete; reset deletes local only",
+      "rootClass": "save-ordering",
+      "subsystem": "save-restore-cloud",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "OBSERVED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-BX-25",
+      "title": "Failed remote create_character permanently burns the character name; unordered characters?limit=1 can misroute remote saves to orphan row",
+      "state": {
+        "productStateId": "9a1c175ad81880d11956a2af84c417d28a5c4e392fa1ec7234c3a7e1159592e6",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/services/character/SupabaseCharacterCreationService.ts",
+          "symbolOrSection": ":56-74 + SupabaseRemoteSave.ts:49",
+          "revision": "f1049b5e",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "creation audit (devin-bcdb6981)",
+      "invariantIds": [
+        "I-BOOT-ENTRY-CHAIN",
+        "I-CREATION-CONTRACT"
+      ],
+      "evidenceIds": [],
+      "counterexample": "create_character commits row before local save; crash after -> name_taken forever; retry commits second row and limit=1 order is arbitrary",
+      "expected": "partial creation recoverable (row reuse or rollback); deterministic character selection",
+      "actual": "name permanently unavailable; possible save-to-orphan binding",
+      "rootCause": "no delete-character RPC; missing order= clause",
+      "rootClass": "transaction-gap",
+      "subsystem": "bootstrap-lifecycle",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "OBSERVED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-BX-26",
+      "title": "visualArmed uses second divergent mortal predicate (path===mortal dead clause; omits realmId)",
+      "state": {
+        "productStateId": "9a1c175ad81880d11956a2af84c417d28a5c4e392fa1ec7234c3a7e1159592e6",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "FIXTURE_INJECTED",
+      "locations": [
+        {
+          "path": "game/src/stores/player.ts",
+          "symbolOrSection": ":158-163",
+          "revision": "f1049b5e",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "creation audit (devin-bcdb6981)",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "latent: applyPathChoice sets path+way atomically; save rejects corrupt pair; repro-crafted state yields armed reskin on non-mortal",
+      "expected": "one canonical mortal predicate (realmId===mortal && path===undefined)",
+      "actual": "divergent predicate",
+      "rootCause": "predicate fork",
+      "rootClass": "predicate-consistency",
+      "subsystem": "presentation-identity",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "OBSERVED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-BX-27",
+      "title": "QuanKhiPanel.swordPathWay re-derives way via hasStaticPathCapability instead of reading cultivationWay - second identity authority",
+      "state": {
+        "productStateId": "9a1c175ad81880d11956a2af84c417d28a5c4e392fa1ec7234c3a7e1159592e6",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/components/panels/QuanKhiPanel.vue",
+          "symbolOrSection": ":173-177",
+          "revision": "f1049b5e",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "creation audit (devin-bcdb6981)",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "correct only while exactly one sword way declares sword.sword_riding",
+      "expected": "read canonical cultivationWay",
+      "actual": "capability-implied identity",
+      "rootCause": "identity derivation fork",
+      "rootClass": "identity-fork",
+      "subsystem": "paths-ways-nodes-technique-body-realm",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "OBSERVED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-BX-28",
+      "title": "Legacy stored session {mode:undefined,userId:set} misbinds local slot to guest while remote sync keys on userId - cross-account contamination window",
+      "state": {
+        "productStateId": "9a1c175ad81880d11956a2af84c417d28a5c4e392fa1ec7234c3a7e1159592e6",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "FIXTURE_INJECTED",
+      "locations": [
+        {
+          "path": "game/src/services/save/saveKeys.ts",
+          "symbolOrSection": "accountIdForSession vs SupabaseRemoteSave.ts:41 guest check",
+          "revision": "f1049b5e",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "creation audit (devin-bcdb6981)",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "self-limiting: tokens expire; refresh-failure clears session",
+      "expected": "consistent slot/identity binding for both predicates",
+      "actual": "remote pull stamps into guest slot / guest save pushes to user row",
+      "rootCause": "mode field optional on pre-Mission-F sessions",
+      "rootClass": "session-shape",
+      "subsystem": "save-restore-cloud",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "OBSERVED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-BX-29",
+      "title": "Stale comments: CultivationPathKit nodeTreeTag list; SkillPathPanel same; stores/player.ts identity-hash comment",
+      "state": {
+        "productStateId": "9a1c175ad81880d11956a2af84c417d28a5c4e392fa1ec7234c3a7e1159592e6",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "severity": "Nit",
+      "classification": "DOCUMENTATION_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "locations": [
+        {
+          "path": "game/src/data/skill/CultivationPathKit.ts",
+          "symbolOrSection": "doc comments",
+          "revision": "f1049b5e",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "creation audit (devin-bcdb6981)",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "comments only",
+      "expected": "comments match implementation",
+      "actual": "stale names",
+      "rootCause": "doc drift",
+      "rootClass": "doc-drift",
+      "subsystem": "tests-qa-tooling",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "OBSERVED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
     }
   ],
   "evidence": [
@@ -2724,6 +3422,40 @@
         "type-check PASS; build PASS; vitest green on S0; scenes 49f/328t"
       ],
       "limitations": [],
+      "status": "CURRENT"
+    },
+    {
+      "id": "EV-LEARNED-REPLAY-S0",
+      "state": {
+        "productStateId": "9a1c175ad81880d11956a2af84c417d28a5c4e392fa1ec7234c3a7e1159592e6",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "kind": "SOURCE_PROOF",
+      "producer": "learned probe (devin-8c1d32bb)",
+      "startedAt": "2026-09-29T13:10:00Z",
+      "finishedAt": "2026-09-29T13:25:00Z",
+      "commandOrMethod": "learned-defects.md replay: 40 families, detector located + owner re-read + delta re-verified f196b8d0..f1049b5e",
+      "cwd": "game/",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "game/docs/qa/learned-defects.md",
+      "artifactHash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "inputPaths": [
+        "game/docs/qa/learned-defects.md"
+      ],
+      "inputEvidenceIds": [],
+      "invariantIds": [],
+      "claims": [
+        "39/40 families COVERED (detector live + sweep clean)",
+        "1 LIVE-INSTANCES family documented/user-locked (intentional)",
+        "0 DETECTOR-MISSING, 0 PIN-STALE",
+        "delta re-verify on tip: no verdict changes"
+      ],
+      "limitations": [
+        "first pass ran on f196b8d0 ancestor tree; delta-scoped re-verification performed on tip files"
+      ],
       "status": "CURRENT"
     }
   ],
@@ -2879,6 +3611,70 @@
       "payloadPath": "events/0009.json",
       "payloadHash": "b55826fc696a1ebe2165580cbbbc81dd761f56347751bfab33327b9be7668588",
       "eventHash": "50304776172ab2fddd606f40159a39731314100832e89c0dd43cd3975ddf3a06"
+    },
+    {
+      "seq": 10,
+      "at": "2026-09-29T13:43:47.898Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-beta",
+      "state": {
+        "productStateId": "9a1c175ad81880d11956a2af84c417d28a5c4e392fa1ec7234c3a7e1159592e6",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "previousEventHash": "50304776172ab2fddd606f40159a39731314100832e89c0dd43cd3975ddf3a06",
+      "payloadPath": "events/0010.json",
+      "payloadHash": "f00ef56dd5bc2127d2aaa261d9b2f14d3636d7110007298eb2618b0ef303895a",
+      "eventHash": "4eef6575383c1882196a2b8ba3ec6377a67facee7e4a7eee529262ddea63cc14"
+    },
+    {
+      "seq": 11,
+      "at": "2026-09-29T13:44:00.132Z",
+      "kind": "SCHEDULE",
+      "actor": "coordinator-beta",
+      "state": {
+        "productStateId": "9a1c175ad81880d11956a2af84c417d28a5c4e392fa1ec7234c3a7e1159592e6",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "previousEventHash": "4eef6575383c1882196a2b8ba3ec6377a67facee7e4a7eee529262ddea63cc14",
+      "payloadPath": "events/0011.json",
+      "payloadHash": "66512ef41989846e6f833b30f6577e07bd056868fadff1ded60563c397ba6e09",
+      "eventHash": "791424a1361b89e62d5c87c849c2eb9452a221585048ea7eb0da933ddbc17f27"
+    },
+    {
+      "seq": 12,
+      "at": "2026-09-29T13:44:00.262Z",
+      "kind": "SCHEDULE",
+      "actor": "coordinator-beta",
+      "state": {
+        "productStateId": "9a1c175ad81880d11956a2af84c417d28a5c4e392fa1ec7234c3a7e1159592e6",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "previousEventHash": "791424a1361b89e62d5c87c849c2eb9452a221585048ea7eb0da933ddbc17f27",
+      "payloadPath": "events/0012.json",
+      "payloadHash": "6e88c3a1bcb8bf9f5d11bbf6d242ad798ee4a5bf9f0ed1589c60e4ebf6feb8da",
+      "eventHash": "040a2d9cee3f3203190232fd0375b871f5c36305e4ad031f90b30c6ae16820be"
+    },
+    {
+      "seq": 13,
+      "at": "2026-09-29T13:44:00.390Z",
+      "kind": "SCHEDULE",
+      "actor": "coordinator-beta",
+      "state": {
+        "productStateId": "9a1c175ad81880d11956a2af84c417d28a5c4e392fa1ec7234c3a7e1159592e6",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "previousEventHash": "040a2d9cee3f3203190232fd0375b871f5c36305e4ad031f90b30c6ae16820be",
+      "payloadPath": "events/0013.json",
+      "payloadHash": "c95f6e5e837e9badff84bc44eef37167e561afcb468f62d177bfa256b44514fd",
+      "eventHash": "3f2a89f3f5493dfe7ca29a3766855c4452e5c2e8ec2855d93fd2ecd9bfebc150"
     }
   ]
 }

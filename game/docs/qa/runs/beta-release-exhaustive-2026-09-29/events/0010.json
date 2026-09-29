@@ -1,0 +1,19 @@
+{
+  "applied": [
+    "finding:F-BX-16",
+    "finding:F-BX-17",
+    "finding:F-BX-18",
+    "finding:F-BX-19",
+    "finding:F-BX-20",
+    "finding:F-BX-21",
+    "finding:F-BX-22",
+    "finding:F-BX-23",
+    "finding:F-BX-24",
+    "finding:F-BX-25",
+    "finding:F-BX-26",
+    "finding:F-BX-27",
+    "finding:F-BX-28",
+    "finding:F-BX-29",
+    "evidence:EV-LEARNED-REPLAY-S0"
+  ]
+}
