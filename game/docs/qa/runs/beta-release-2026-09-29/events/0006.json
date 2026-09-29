@@ -1,0 +1,23 @@
+{
+  "applied": [
+    "census:CENS-SIX_WAYS",
+    "census:CENS-COMBAT_CORE",
+    "census:CENS-IMPACT_SYNC",
+    "census:CENS-BUFFS_REACTIONS",
+    "census:CENS-STATS_VITALS",
+    "census:CENS-TALENTS",
+    "census:CENS-INVENTORY_EQUIPMENT",
+    "census:CENS-ECONOMY_PRODUCTION",
+    "census:CENS-STAGES_DROPS",
+    "census:CENS-IDLE_OFFLINE",
+    "census:CENS-COMPANIONS_FORMATION",
+    "census:CENS-ARTIFACT_NEGATIVE",
+    "census:CENS-QUESTS_UI",
+    "census:CENS-RUNTIME_PHASER",
+    "census:CENS-AUDIO",
+    "census:CENS-A11Y_I18N",
+    "census:CENS-LIFECYCLE",
+    "census:CENS-REGISTRIES_DATA",
+    "census:CENS-TEST_QUALITY"
+  ]
+}

@@ -187,8 +187,10 @@ describe('audio manifest completeness', () => {
       join(process.cwd(), 'src/core/battle/CombatAction.ts'),
       'utf8',
     )
+    // CRLF checkouts produce \r\n\r\n - the blank-line terminator must
+    // tolerate either ending or the read is environment-fragile.
     const unionBody = combatActionSrc.match(
-      /export type CombatVfxPresetId\s*=([\s\S]*?)\n\n/,
+      /export type CombatVfxPresetId\s*=([\s\S]*?)\r?\n\r?\n/,
     )![1]!
     // Strip // comments first: prose apostrophes ("design's") shift the
     // quote parity and would silently corrupt the member list.

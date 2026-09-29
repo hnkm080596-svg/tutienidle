@@ -1,0 +1,4035 @@
+{
+  "schemaVersion": 2,
+  "run": {
+    "id": "beta-release-2026-09-29",
+    "createdAt": "2026-09-29T14:19:15.341Z",
+    "scope": "AGGREGATE_REPOSITORY",
+    "authorizedRepairs": [
+      "game/src/",
+      "game/tests/",
+      "game/scripts/",
+      "game/supabase/",
+      "game/locales/",
+      "game/electron/",
+      "game/*.config.*",
+      "game/package.json"
+    ],
+    "nonGoals": [
+      "gameplay redesign or rebalance tuning",
+      "post-Beta content activation (Artifact stays deferred)",
+      "new features",
+      "repairing pre-existing failures unrelated to Beta player correctness without explicit adjudication"
+    ],
+    "checkout": "E:/tutienidle",
+    "branch": "qa/beta-2026-09-29",
+    "base": "f1049b5e",
+    "head": "f1049b5e",
+    "state": {
+      "productStateId": "9d043df0b086f581d98a5c91cd04e64cf6fc90ac436f028af9d17eb1ca3b7a0d",
+      "contractId": "b1c83ecaf2da181def4ae9f51d399268e9e06069048c13c18bfae81917e46155",
+      "attackModelId": "58278e6d54c13d2537d03c099f1b62e3863f971d1d30e89980060bc1d377e264",
+      "environmentId": "19d2327a64b8249145f0df487429dfd218562df6ef4e8cbf111a5f5260a39e85"
+    },
+    "manifestPath": "manifest.json",
+    "environmentPath": "environment.json",
+    "learningPolicyId": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+    "consumedLessonIds": [],
+    "aggregateParents": [],
+    "requiredDomains": [
+      "creation-auth",
+      "save-cloud",
+      "realm-progression",
+      "hidden-lineage",
+      "body-progression",
+      "technique",
+      "nodes-skills",
+      "six-ways",
+      "combat-core",
+      "impact-sync",
+      "buffs-reactions",
+      "stats-vitals",
+      "talents",
+      "inventory-equipment",
+      "economy-production",
+      "stages-drops",
+      "idle-offline",
+      "companions-formation",
+      "artifact-negative",
+      "quests-ui",
+      "runtime-phaser",
+      "audio",
+      "a11y-i18n",
+      "lifecycle",
+      "registries-data",
+      "test-quality"
+    ],
+    "exclusions": [],
+    "briefIds": [],
+    "capacityLimit": 5,
+    "requiredReadiness": false,
+    "phase": "DECIDE",
+    "cleanRoundA": null,
+    "cleanRoundB": null,
+    "finalEvidenceIds": [
+      "EV-S4-VERIFY"
+    ],
+    "outcome": "QA_UNVERIFIED"
+  },
+  "briefs": [],
+  "assignments": [],
+  "consumptions": [],
+  "invariants": [
+    {
+      "id": "I-IDENTITY-MATRIX",
+      "statement": "Exactly 3 paths {sword,spell,body} x 6 ways {*_pathway,hidden_*_pathway}; pair atomic; no legacy VN path id as second authority",
+      "domain": "identity-matrix",
+      "risk": "HIGH",
+      "sources": [
+        {
+          "path": "docs/qa/missions/beta-release-exhaustive-2026-09-29.md",
+          "symbolOrSection": "6",
+          "revision": "mission",
+          "basis": "USER"
+        },
+        {
+          "path": "src/data/progression",
+          "symbolOrSection": "path catalogs",
+          "revision": "f1049b5e",
+          "basis": "SOURCE"
+        }
+      ],
+      "owner": {
+        "path": "src/core/cultivation",
+        "symbolOrSection": "path/way registry",
+        "revision": "f1049b5e",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "src/core/cultivation"
+      ],
+      "legalReaders": [],
+      "projections": [],
+      "caches": [],
+      "validStates": [],
+      "forbiddenStates": [
+        "legacy VN path ids honored",
+        "orphan way",
+        "unknown pair"
+      ],
+      "preconditions": [],
+      "postconditions": [],
+      "legalTransitions": [],
+      "illegalTransitions": [],
+      "failureBehavior": "reject without owner mutation",
+      "atomicity": "all-or-nothing across affected owners",
+      "inverseBehavior": "n/a",
+      "persistence": "v87 snapshot round-trip",
+      "migration": "version<87 rejected",
+      "lifecycle": "per-save",
+      "runtimeConsequences": [],
+      "uiConsequences": [],
+      "oracles": [
+        "registry census",
+        "save validator rejects foreign pair"
+      ],
+      "requiredEvidenceSurfaces": [
+        "STATIC_SEMANTIC",
+        "PERSISTENCE",
+        "DETERMINISTIC"
+      ],
+      "taxonomyIds": [
+        "PTH-01",
+        "ROB-01"
+      ],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-CREATION-CONTRACT",
+      "statement": "New char stats 1/1/1/1/1 + name + talent + mortalBasicSkillId in {tram,linh_bao,huy_quyen}; no implicit tram repair; combat-ready without dev injection",
+      "domain": "creation-auth",
+      "risk": "HIGH",
+      "sources": [
+        {
+          "path": "docs/qa/missions/beta-release-exhaustive-2026-09-29.md",
+          "symbolOrSection": "7",
+          "revision": "mission",
+          "basis": "USER"
+        }
+      ],
+      "owner": {
+        "path": "src/core/player",
+        "symbolOrSection": "creation service",
+        "revision": "f1049b5e",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "src/core/player"
+      ],
+      "legalReaders": [],
+      "projections": [],
+      "caches": [],
+      "validStates": [],
+      "forbiddenStates": [
+        "missing pick",
+        "foreign skill id",
+        "dup creation"
+      ],
+      "preconditions": [],
+      "postconditions": [],
+      "legalTransitions": [],
+      "illegalTransitions": [],
+      "failureBehavior": "reject without owner mutation",
+      "atomicity": "all-or-nothing across affected owners",
+      "inverseBehavior": "n/a",
+      "persistence": "v87 snapshot round-trip",
+      "migration": "version<87 rejected",
+      "lifecycle": "per-save",
+      "runtimeConsequences": [],
+      "uiConsequences": [],
+      "oracles": [
+        "payload->PlayerData->SkillManager->save->reload"
+      ],
+      "requiredEvidenceSurfaces": [
+        "STATIC_SEMANTIC",
+        "DETERMINISTIC"
+      ],
+      "taxonomyIds": [
+        "STA-03",
+        "TRN-03",
+        "ASY-02"
+      ],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-SAVE-VERSION-87",
+      "statement": "CURRENT_SAVE_VERSION=87; older versions reject cleanly non-destructively; retired fields (skillLevels, route, old bodyProgression, old path ids) never resurrect",
+      "domain": "save-cloud",
+      "risk": "CRITICAL",
+      "sources": [
+        {
+          "path": "docs/qa/missions/beta-release-exhaustive-2026-09-29.md",
+          "symbolOrSection": "9",
+          "revision": "mission",
+          "basis": "USER"
+        }
+      ],
+      "owner": {
+        "path": "src/services/save/SaveSystem.ts",
+        "symbolOrSection": "validateSaveShape",
+        "revision": "f1049b5e",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "src/services/save/SaveSystem.ts"
+      ],
+      "legalReaders": [],
+      "projections": [],
+      "caches": [],
+      "validStates": [],
+      "forbiddenStates": [
+        "old version accepted",
+        "retired field honored",
+        "partial restore"
+      ],
+      "preconditions": [],
+      "postconditions": [],
+      "legalTransitions": [],
+      "illegalTransitions": [],
+      "failureBehavior": "reject without owner mutation",
+      "atomicity": "all-or-nothing across affected owners",
+      "inverseBehavior": "n/a",
+      "persistence": "v87 snapshot round-trip",
+      "migration": "version<87 rejected",
+      "lifecycle": "per-save",
+      "runtimeConsequences": [],
+      "uiConsequences": [],
+      "oracles": [],
+      "requiredEvidenceSurfaces": [
+        "STATIC_SEMANTIC",
+        "DETERMINISTIC"
+      ],
+      "taxonomyIds": [
+        "PER-01",
+        "PER-03",
+        "PER-07",
+        "ROB-03"
+      ],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-RESTORE-ATOMIC",
+      "statement": "Failed/invalid restore mutates zero live owners",
+      "domain": "save-cloud",
+      "risk": "CRITICAL",
+      "sources": [
+        {
+          "path": "docs/qa/missions/beta-release-exhaustive-2026-09-29.md",
+          "symbolOrSection": "9",
+          "revision": "mission",
+          "basis": "USER"
+        }
+      ],
+      "owner": {
+        "path": "src/services/save/SaveSystem.ts",
+        "symbolOrSection": "restore + GameManagerSaveRestore",
+        "revision": "f1049b5e",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "src/services/save/SaveSystem.ts"
+      ],
+      "legalReaders": [],
+      "projections": [],
+      "caches": [],
+      "validStates": [],
+      "forbiddenStates": [],
+      "preconditions": [],
+      "postconditions": [],
+      "legalTransitions": [],
+      "illegalTransitions": [],
+      "failureBehavior": "reject without owner mutation",
+      "atomicity": "all owners unchanged on rejection",
+      "inverseBehavior": "n/a",
+      "persistence": "v87 snapshot round-trip",
+      "migration": "version<87 rejected",
+      "lifecycle": "per-save",
+      "runtimeConsequences": [],
+      "uiConsequences": [],
+      "oracles": [
+        "before/after snapshot all owners on malformed save"
+      ],
+      "requiredEvidenceSurfaces": [
+        "STATIC_SEMANTIC",
+        "DETERMINISTIC"
+      ],
+      "taxonomyIds": [
+        "PER-11",
+        "TRN-03"
+      ],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-SAVE-ROUNDTRIP",
+      "statement": "Complete non-empty v87 state round-trips losslessly",
+      "domain": "save-cloud",
+      "risk": "HIGH",
+      "sources": [
+        {
+          "path": "docs/qa/missions/beta-release-exhaustive-2026-09-29.md",
+          "symbolOrSection": "9",
+          "revision": "mission",
+          "basis": "USER"
+        }
+      ],
+      "owner": {
+        "path": "src/services/save/SaveSystem.ts",
+        "symbolOrSection": "buildGameSave/restoreFromSave",
+        "revision": "f1049b5e",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "src/services/save/SaveSystem.ts"
+      ],
+      "legalReaders": [],
+      "projections": [],
+      "caches": [],
+      "validStates": [],
+      "forbiddenStates": [],
+      "preconditions": [],
+      "postconditions": [],
+      "legalTransitions": [],
+      "illegalTransitions": [],
+      "failureBehavior": "reject without owner mutation",
+      "atomicity": "all-or-nothing across affected owners",
+      "inverseBehavior": "n/a",
+      "persistence": "v87 snapshot round-trip",
+      "migration": "version<87 rejected",
+      "lifecycle": "per-save",
+      "runtimeConsequences": [],
+      "uiConsequences": [],
+      "oracles": [
+        "populated save->fresh owners->identical snapshot"
+      ],
+      "requiredEvidenceSurfaces": [
+        "STATIC_SEMANTIC",
+        "DETERMINISTIC"
+      ],
+      "taxonomyIds": [
+        "PER-09",
+        "PER-12"
+      ],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-CLOUD-CAS",
+      "statement": "CloudSaveCoordinator revision CAS: conflict->resync->at most one retry; no permanently stale revision; no fabricated success",
+      "domain": "save-cloud",
+      "risk": "HIGH",
+      "sources": [
+        {
+          "path": "docs/qa/missions/beta-release-exhaustive-2026-09-29.md",
+          "symbolOrSection": "8",
+          "revision": "mission",
+          "basis": "USER"
+        }
+      ],
+      "owner": {
+        "path": "src/services/cloudSave/CloudSaveCoordinator.ts",
+        "symbolOrSection": "save()",
+        "revision": "f1049b5e",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "src/services/cloudSave/CloudSaveCoordinator.ts"
+      ],
+      "legalReaders": [],
+      "projections": [],
+      "caches": [],
+      "validStates": [],
+      "forbiddenStates": [
+        "stale-forever revision",
+        "double retry",
+        "fake ok"
+      ],
+      "preconditions": [],
+      "postconditions": [],
+      "legalTransitions": [],
+      "illegalTransitions": [],
+      "failureBehavior": "reject without owner mutation",
+      "atomicity": "all-or-nothing across affected owners",
+      "inverseBehavior": "n/a",
+      "persistence": "v87 snapshot round-trip",
+      "migration": "version<87 rejected",
+      "lifecycle": "per-save",
+      "runtimeConsequences": [],
+      "uiConsequences": [],
+      "oracles": [],
+      "requiredEvidenceSurfaces": [
+        "STATIC_SEMANTIC",
+        "DETERMINISTIC"
+      ],
+      "taxonomyIds": [
+        "ASY-01",
+        "ASY-03",
+        "ASY-08"
+      ],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-REALM-18",
+      "statement": "All major realms 18-level; Foundation gate = Qi lvl12 + qi_refining_abyssal_pool cleared",
+      "domain": "realm-progression",
+      "risk": "STANDARD",
+      "sources": [
+        {
+          "path": "docs/qa/missions/beta-release-exhaustive-2026-09-29.md",
+          "symbolOrSection": "11",
+          "revision": "mission",
+          "basis": "USER"
+        },
+        {
+          "path": "src/core/breakthrough",
+          "symbolOrSection": "BreakthroughOutcomeService",
+          "revision": "f1049b5e",
+          "basis": "SOURCE"
+        }
+      ],
+      "owner": {
+        "path": "src/core/realm",
+        "symbolOrSection": "realm defs + canTriggerBreakthrough",
+        "revision": "f1049b5e",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "src/core/realm"
+      ],
+      "legalReaders": [],
+      "projections": [],
+      "caches": [],
+      "validStates": [],
+      "forbiddenStates": [
+        "lvl11+chapter clear advances",
+        "lvl12 no chapter advances"
+      ],
+      "preconditions": [],
+      "postconditions": [],
+      "legalTransitions": [],
+      "illegalTransitions": [],
+      "failureBehavior": "reject without owner mutation",
+      "atomicity": "all-or-nothing across affected owners",
+      "inverseBehavior": "n/a",
+      "persistence": "v87 snapshot round-trip",
+      "migration": "version<87 rejected",
+      "lifecycle": "per-save",
+      "runtimeConsequences": [],
+      "uiConsequences": [],
+      "oracles": [],
+      "requiredEvidenceSurfaces": [
+        "STATIC_SEMANTIC",
+        "DETERMINISTIC"
+      ],
+      "taxonomyIds": [
+        "TRN-08",
+        "STA-03",
+        "UI-04"
+      ],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-REALM-SETTLE-ONCE",
+      "statement": "Breakthrough settlement exactly-once; committed outcome drains once; no replay after reload",
+      "domain": "realm-progression",
+      "risk": "CRITICAL",
+      "sources": [
+        {
+          "path": "docs/qa/missions/beta-release-exhaustive-2026-09-29.md",
+          "symbolOrSection": "11",
+          "revision": "mission",
+          "basis": "USER"
+        }
+      ],
+      "owner": {
+        "path": "src/core/breakthrough",
+        "symbolOrSection": "BreakthroughOutcomeService drain",
+        "revision": "f1049b5e",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "src/core/breakthrough"
+      ],
+      "legalReaders": [],
+      "projections": [],
+      "caches": [],
+      "validStates": [],
+      "forbiddenStates": [],
+      "preconditions": [],
+      "postconditions": [],
+      "legalTransitions": [],
+      "illegalTransitions": [],
+      "failureBehavior": "reject without owner mutation",
+      "atomicity": "all-or-nothing across affected owners",
+      "inverseBehavior": "n/a",
+      "persistence": "v87 snapshot round-trip",
+      "migration": "version<87 rejected",
+      "lifecycle": "per-save",
+      "runtimeConsequences": [],
+      "uiConsequences": [],
+      "oracles": [
+        "settlement count==1 across repeat/reload/undrained"
+      ],
+      "requiredEvidenceSurfaces": [
+        "STATIC_SEMANTIC",
+        "DETERMINISTIC"
+      ],
+      "taxonomyIds": [
+        "TRN-12",
+        "TRN-06",
+        "PER-02"
+      ],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-REALM-UNEQUIP",
+      "statement": "Realm-change clears equipped items before other mutations (all callers, QA-2026-09-02-001)",
+      "domain": "realm-progression",
+      "risk": "HIGH",
+      "sources": [
+        {
+          "path": "docs/qa/missions/beta-release-exhaustive-2026-09-29.md",
+          "symbolOrSection": "11",
+          "revision": "mission",
+          "basis": "USER"
+        }
+      ],
+      "owner": {
+        "path": "src/core/game/GameManagerRealmAdvanceOps.ts",
+        "symbolOrSection": "advance callers",
+        "revision": "f1049b5e",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "src/core/game/GameManagerRealmAdvanceOps.ts"
+      ],
+      "legalReaders": [],
+      "projections": [],
+      "caches": [],
+      "validStates": [],
+      "forbiddenStates": [],
+      "preconditions": [],
+      "postconditions": [],
+      "legalTransitions": [],
+      "illegalTransitions": [],
+      "failureBehavior": "reject without owner mutation",
+      "atomicity": "all-or-nothing across affected owners",
+      "inverseBehavior": "n/a",
+      "persistence": "v87 snapshot round-trip",
+      "migration": "version<87 rejected",
+      "lifecycle": "per-save",
+      "runtimeConsequences": [],
+      "uiConsequences": [],
+      "oracles": [
+        "every realm-advance path->equipped=false before commit"
+      ],
+      "requiredEvidenceSurfaces": [
+        "STATIC_SEMANTIC",
+        "DETERMINISTIC"
+      ],
+      "taxonomyIds": [
+        "INV-09",
+        "CRS-06"
+      ],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-HIDDEN-PREFIX",
+      "statement": "hiddenPerfection strict-prefix; later hidden completion requires earlier history; normal-breakthrough closure irreversible",
+      "domain": "hidden-lineage",
+      "risk": "CRITICAL",
+      "sources": [
+        {
+          "path": "docs/qa/missions/beta-release-exhaustive-2026-09-29.md",
+          "symbolOrSection": "12",
+          "revision": "mission",
+          "basis": "USER"
+        },
+        {
+          "path": "src/data",
+          "symbolOrSection": "hidden lineage defs",
+          "revision": "f1049b5e",
+          "basis": "SOURCE"
+        }
+      ],
+      "owner": {
+        "path": "src/core/cultivation",
+        "symbolOrSection": "hiddenPerfection owner",
+        "revision": "f1049b5e",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "src/core/cultivation"
+      ],
+      "legalReaders": [],
+      "projections": [],
+      "caches": [],
+      "validStates": [],
+      "forbiddenStates": [
+        "reopen after closure",
+        "sparse record later realm",
+        "dup completion"
+      ],
+      "preconditions": [],
+      "postconditions": [],
+      "legalTransitions": [],
+      "illegalTransitions": [],
+      "failureBehavior": "reject without owner mutation",
+      "atomicity": "all-or-nothing across affected owners",
+      "inverseBehavior": "n/a",
+      "persistence": "v87 snapshot round-trip",
+      "migration": "version<87 rejected",
+      "lifecycle": "per-save",
+      "runtimeConsequences": [],
+      "uiConsequences": [],
+      "oracles": [],
+      "requiredEvidenceSurfaces": [
+        "STATIC_SEMANTIC",
+        "DETERMINISTIC"
+      ],
+      "taxonomyIds": [
+        "STA-02",
+        "STA-07",
+        "TRN-06"
+      ],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-HIDDEN-REWARD-ONCE",
+      "statement": "Historical hidden completion rewards survive but never re-grant",
+      "domain": "hidden-lineage",
+      "risk": "HIGH",
+      "sources": [
+        {
+          "path": "docs/qa/missions/beta-release-exhaustive-2026-09-29.md",
+          "symbolOrSection": "12",
+          "revision": "mission",
+          "basis": "USER"
+        }
+      ],
+      "owner": {
+        "path": "src/core/cultivation",
+        "symbolOrSection": "hidden reward application",
+        "revision": "f1049b5e",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "src/core/cultivation"
+      ],
+      "legalReaders": [],
+      "projections": [],
+      "caches": [],
+      "validStates": [],
+      "forbiddenStates": [],
+      "preconditions": [],
+      "postconditions": [],
+      "legalTransitions": [],
+      "illegalTransitions": [],
+      "failureBehavior": "reject without owner mutation",
+      "atomicity": "all-or-nothing across affected owners",
+      "inverseBehavior": "n/a",
+      "persistence": "v87 snapshot round-trip",
+      "migration": "version<87 rejected",
+      "lifecycle": "per-save",
+      "runtimeConsequences": [],
+      "uiConsequences": [],
+      "oracles": [],
+      "requiredEvidenceSurfaces": [
+        "STATIC_SEMANTIC",
+        "DETERMINISTIC"
+      ],
+      "taxonomyIds": [
+        "TRN-12",
+        "ECO-01"
+      ],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-NGHICH-PITY",
+      "statement": "Nghich Chu Thien: per-level pity, bounded RNG, exact debit per attempt, post-completion attempt rejected, pity survives reload",
+      "domain": "hidden-lineage",
+      "risk": "HIGH",
+      "sources": [
+        {
+          "path": "docs/qa/missions/beta-release-exhaustive-2026-09-29.md",
+          "symbolOrSection": "13",
+          "revision": "mission",
+          "basis": "USER"
+        }
+      ],
+      "owner": {
+        "path": "src/core/cultivation",
+        "symbolOrSection": "nghichChuThien",
+        "revision": "f1049b5e",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "src/core/cultivation"
+      ],
+      "legalReaders": [],
+      "projections": [],
+      "caches": [],
+      "validStates": [],
+      "forbiddenStates": [],
+      "preconditions": [],
+      "postconditions": [],
+      "legalTransitions": [],
+      "illegalTransitions": [],
+      "failureBehavior": "reject without owner mutation",
+      "atomicity": "all-or-nothing across affected owners",
+      "inverseBehavior": "n/a",
+      "persistence": "v87 snapshot round-trip",
+      "migration": "version<87 rejected",
+      "lifecycle": "per-save",
+      "runtimeConsequences": [],
+      "uiConsequences": [],
+      "oracles": [],
+      "requiredEvidenceSurfaces": [
+        "STATIC_SEMANTIC",
+        "DETERMINISTIC"
+      ],
+      "taxonomyIds": [
+        "ECO-03",
+        "ROB-10",
+        "TRN-06"
+      ],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-BODY-OWNER",
+      "statement": "BodyProgression canonical cross-realm owner; chapters ordered; transactions atomic; exact resource debit",
+      "domain": "body-progression",
+      "risk": "HIGH",
+      "sources": [
+        {
+          "path": "docs/qa/missions/beta-release-exhaustive-2026-09-29.md",
+          "symbolOrSection": "14",
+          "revision": "mission",
+          "basis": "USER"
+        }
+      ],
+      "owner": {
+        "path": "src/core/player",
+        "symbolOrSection": "BodyProgression",
+        "revision": "f1049b5e",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "src/core/player"
+      ],
+      "legalReaders": [],
+      "projections": [],
+      "caches": [],
+      "validStates": [],
+      "forbiddenStates": [
+        "second engine writing body state",
+        "partial debit"
+      ],
+      "preconditions": [],
+      "postconditions": [],
+      "legalTransitions": [],
+      "illegalTransitions": [],
+      "failureBehavior": "reject without owner mutation",
+      "atomicity": "all-or-nothing across affected owners",
+      "inverseBehavior": "n/a",
+      "persistence": "v87 snapshot round-trip",
+      "migration": "version<87 rejected",
+      "lifecycle": "per-save",
+      "runtimeConsequences": [],
+      "uiConsequences": [],
+      "oracles": [
+        "writer census",
+        "0/req-1/exact/req+1 matrix"
+      ],
+      "requiredEvidenceSurfaces": [
+        "STATIC_SEMANTIC",
+        "DETERMINISTIC"
+      ],
+      "taxonomyIds": [
+        "AUT-01",
+        "AUT-02",
+        "ECO-05"
+      ],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-ESSENCE-SUBST",
+      "statement": "Higher-grade essence substitutes downward only; no upward conversion; mixed-stack payment exact",
+      "domain": "body-progression",
+      "risk": "HIGH",
+      "sources": [
+        {
+          "path": "docs/qa/missions/beta-release-exhaustive-2026-09-29.md",
+          "symbolOrSection": "15",
+          "revision": "mission",
+          "basis": "USER"
+        }
+      ],
+      "owner": {
+        "path": "src/core",
+        "symbolOrSection": "essence payment path",
+        "revision": "f1049b5e",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "src/core"
+      ],
+      "legalReaders": [],
+      "projections": [],
+      "caches": [],
+      "validStates": [],
+      "forbiddenStates": [],
+      "preconditions": [],
+      "postconditions": [],
+      "legalTransitions": [],
+      "illegalTransitions": [],
+      "failureBehavior": "reject without owner mutation",
+      "atomicity": "all-or-nothing across affected owners",
+      "inverseBehavior": "n/a",
+      "persistence": "v87 snapshot round-trip",
+      "migration": "version<87 rejected",
+      "lifecycle": "per-save",
+      "runtimeConsequences": [],
+      "uiConsequences": [],
+      "oracles": [],
+      "requiredEvidenceSurfaces": [
+        "STATIC_SEMANTIC",
+        "DETERMINISTIC"
+      ],
+      "taxonomyIds": [
+        "ECO-01",
+        "ECO-05"
+      ],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-PHYSIQUE-ONCE",
+      "statement": "Physique transformation exactly once at canonical checkpoint; never twice across reload/reconstruction/late completion",
+      "domain": "body-progression",
+      "risk": "HIGH",
+      "sources": [
+        {
+          "path": "docs/qa/missions/beta-release-exhaustive-2026-09-29.md",
+          "symbolOrSection": "15",
+          "revision": "mission",
+          "basis": "USER"
+        }
+      ],
+      "owner": {
+        "path": "src/core/player",
+        "symbolOrSection": "physique transform",
+        "revision": "f1049b5e",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "src/core/player"
+      ],
+      "legalReaders": [],
+      "projections": [],
+      "caches": [],
+      "validStates": [],
+      "forbiddenStates": [],
+      "preconditions": [],
+      "postconditions": [],
+      "legalTransitions": [],
+      "illegalTransitions": [],
+      "failureBehavior": "reject without owner mutation",
+      "atomicity": "all-or-nothing across affected owners",
+      "inverseBehavior": "n/a",
+      "persistence": "v87 snapshot round-trip",
+      "migration": "version<87 rejected",
+      "lifecycle": "per-save",
+      "runtimeConsequences": [],
+      "uiConsequences": [],
+      "oracles": [
+        "transform count==1 across restore"
+      ],
+      "requiredEvidenceSurfaces": [
+        "STATIC_SEMANTIC",
+        "DETERMINISTIC"
+      ],
+      "taxonomyIds": [
+        "TRN-06",
+        "PER-02"
+      ],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-TECH-MASTERY",
+      "statement": "Technique mastery only from authorized victory settlement - never defeat/abort/visual/dup settlement/teardown/double drain",
+      "domain": "technique",
+      "risk": "HIGH",
+      "sources": [
+        {
+          "path": "docs/qa/missions/beta-release-exhaustive-2026-09-29.md",
+          "symbolOrSection": "16",
+          "revision": "mission",
+          "basis": "USER"
+        },
+        {
+          "path": "src/core/game",
+          "symbolOrSection": "mastery grant callers",
+          "revision": "f1049b5e",
+          "basis": "SOURCE"
+        }
+      ],
+      "owner": {
+        "path": "src/core/technique",
+        "symbolOrSection": "TechniqueSystem+Manager",
+        "revision": "f1049b5e",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "src/core/technique"
+      ],
+      "legalReaders": [],
+      "projections": [],
+      "caches": [],
+      "validStates": [],
+      "forbiddenStates": [],
+      "preconditions": [],
+      "postconditions": [],
+      "legalTransitions": [],
+      "illegalTransitions": [],
+      "failureBehavior": "reject without owner mutation",
+      "atomicity": "all-or-nothing across affected owners",
+      "inverseBehavior": "n/a",
+      "persistence": "v87 snapshot round-trip",
+      "migration": "version<87 rejected",
+      "lifecycle": "per-save",
+      "runtimeConsequences": [],
+      "uiConsequences": [],
+      "oracles": [
+        "mastery delta only on victory; all grant callers enumerated"
+      ],
+      "requiredEvidenceSurfaces": [
+        "STATIC_SEMANTIC",
+        "DETERMINISTIC"
+      ],
+      "taxonomyIds": [
+        "AUT-08",
+        "TRN-12"
+      ],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-TECH-MODEL",
+      "statement": "Technique grade/rank(0..18)/mastery/quality/gradeHistory canonical; malformed history rejected; realm ceiling; no arbitrary quality mutation",
+      "domain": "technique",
+      "risk": "HIGH",
+      "sources": [
+        {
+          "path": "docs/qa/missions/beta-release-exhaustive-2026-09-29.md",
+          "symbolOrSection": "16",
+          "revision": "mission",
+          "basis": "USER"
+        }
+      ],
+      "owner": {
+        "path": "src/core/technique",
+        "symbolOrSection": "Technique model",
+        "revision": "f1049b5e",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "src/core/technique"
+      ],
+      "legalReaders": [],
+      "projections": [],
+      "caches": [],
+      "validStates": [],
+      "forbiddenStates": [],
+      "preconditions": [],
+      "postconditions": [],
+      "legalTransitions": [],
+      "illegalTransitions": [],
+      "failureBehavior": "reject without owner mutation",
+      "atomicity": "all-or-nothing across affected owners",
+      "inverseBehavior": "n/a",
+      "persistence": "v87 snapshot round-trip",
+      "migration": "version<87 rejected",
+      "lifecycle": "per-save",
+      "runtimeConsequences": [],
+      "uiConsequences": [],
+      "oracles": [],
+      "requiredEvidenceSurfaces": [
+        "STATIC_SEMANTIC",
+        "DETERMINISTIC"
+      ],
+      "taxonomyIds": [
+        "STA-02",
+        "ROB-03"
+      ],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-NODE-CORELEVEL",
+      "statement": "Core node level is THE skill level authority; no skillLevels/independent Skill.level resurrected; level delta reaches real runtime effect",
+      "domain": "nodes-skills",
+      "risk": "CRITICAL",
+      "sources": [
+        {
+          "path": "docs/qa/missions/beta-release-exhaustive-2026-09-29.md",
+          "symbolOrSection": "17",
+          "revision": "mission",
+          "basis": "USER"
+        },
+        {
+          "path": "src/core/skill",
+          "symbolOrSection": "skill resolution",
+          "revision": "f1049b5e",
+          "basis": "SOURCE"
+        }
+      ],
+      "owner": {
+        "path": "src/core/progression",
+        "symbolOrSection": "NodeSystem core levels",
+        "revision": "f1049b5e",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "src/core/progression"
+      ],
+      "legalReaders": [],
+      "projections": [],
+      "caches": [],
+      "validStates": [],
+      "forbiddenStates": [
+        "skillLevels honored on restore",
+        "second level authority"
+      ],
+      "preconditions": [],
+      "postconditions": [],
+      "legalTransitions": [],
+      "illegalTransitions": [],
+      "failureBehavior": "reject without owner mutation",
+      "atomicity": "all-or-nothing across affected owners",
+      "inverseBehavior": "n/a",
+      "persistence": "v87 snapshot round-trip",
+      "migration": "version<87 rejected",
+      "lifecycle": "per-save",
+      "runtimeConsequences": [],
+      "uiConsequences": [],
+      "oracles": [
+        "node+1 -> measurable effect change per Beta skill"
+      ],
+      "requiredEvidenceSurfaces": [
+        "STATIC_SEMANTIC",
+        "DETERMINISTIC"
+      ],
+      "taxonomyIds": [
+        "AUT-03",
+        "CBT-02",
+        "PER-07"
+      ],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-NODE-PREREQ",
+      "statement": "Node purchase/upgrade enforces prereq+cost+max atomically; grant/revoke inverse contract; rewardOnly never purchasable",
+      "domain": "nodes-skills",
+      "risk": "HIGH",
+      "sources": [
+        {
+          "path": "docs/qa/missions/beta-release-exhaustive-2026-09-29.md",
+          "symbolOrSection": "18",
+          "revision": "mission",
+          "basis": "USER"
+        }
+      ],
+      "owner": {
+        "path": "src/core/progression",
+        "symbolOrSection": "NodeSystem purchase",
+        "revision": "f1049b5e",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "src/core/progression"
+      ],
+      "legalReaders": [],
+      "projections": [],
+      "caches": [],
+      "validStates": [],
+      "forbiddenStates": [],
+      "preconditions": [],
+      "postconditions": [],
+      "legalTransitions": [],
+      "illegalTransitions": [],
+      "failureBehavior": "reject without owner mutation",
+      "atomicity": "all-or-nothing across affected owners",
+      "inverseBehavior": "n/a",
+      "persistence": "v87 snapshot round-trip",
+      "migration": "version<87 rejected",
+      "lifecycle": "per-save",
+      "runtimeConsequences": [],
+      "uiConsequences": [],
+      "oracles": [
+        "A-without-B atomic reject",
+        "repeat purchase",
+        "rewardOnly purchase attempt"
+      ],
+      "requiredEvidenceSurfaces": [
+        "STATIC_SEMANTIC",
+        "DETERMINISTIC"
+      ],
+      "taxonomyIds": [
+        "TRN-01",
+        "TRN-11",
+        "INV-05"
+      ],
+      "status": "ACTIVE"
+    }
+  ],
+  "census": [
+    {
+      "id": "CENS-SIX_WAYS",
+      "invariantIds": [],
+      "location": {
+        "path": "six-ways",
+        "symbolOrSection": "src/core/player/CultivationPathKit.ts :: six-ways",
+        "revision": "f1049b5e",
+        "basis": "SOURCE"
+      },
+      "classification": "CANONICAL",
+      "reads": [],
+      "writes": [],
+      "eventsIn": [],
+      "eventsOut": [],
+      "consumerIds": [],
+      "searchEvidenceIds": [
+        "EV-COORD-CLEAN"
+      ],
+      "disposition": "src/core/player/CultivationPathKit.ts + CultivationPathRegistry.ts (6 way definitions + runtime dispatch)"
+    },
+    {
+      "id": "CENS-COMBAT_CORE",
+      "invariantIds": [],
+      "location": {
+        "path": "combat-core",
+        "symbolOrSection": "src/core/battle/turn/TurnBattleSystem.ts :: combat-core",
+        "revision": "f1049b5e",
+        "basis": "SOURCE"
+      },
+      "classification": "CANONICAL",
+      "reads": [],
+      "writes": [],
+      "eventsIn": [],
+      "eventsOut": [],
+      "consumerIds": [],
+      "searchEvidenceIds": [
+        "EV-COORD-CLEAN"
+      ],
+      "disposition": "src/core/battle/turn/TurnBattleSystem.ts (turn engine), src/core/battle/runtime/ (RNG, capability query)"
+    },
+    {
+      "id": "CENS-IMPACT_SYNC",
+      "invariantIds": [],
+      "location": {
+        "path": "impact-sync",
+        "symbolOrSection": "src/core/battle/ActionImpactSystem.ts :: impact-sync",
+        "revision": "f1049b5e",
+        "basis": "SOURCE"
+      },
+      "classification": "CANONICAL",
+      "reads": [],
+      "writes": [],
+      "eventsIn": [],
+      "eventsOut": [],
+      "consumerIds": [],
+      "searchEvidenceIds": [
+        "EV-COORD-CLEAN"
+      ],
+      "disposition": "src/core/battle/ActionImpactSystem.ts + TurnBattleSystem declare->impact->complete ack chain"
+    },
+    {
+      "id": "CENS-BUFFS_REACTIONS",
+      "invariantIds": [],
+      "location": {
+        "path": "buffs-reactions",
+        "symbolOrSection": "src/core/buff2/ :: buffs-reactions",
+        "revision": "f1049b5e",
+        "basis": "SOURCE"
+      },
+      "classification": "CANONICAL",
+      "reads": [],
+      "writes": [],
+      "eventsIn": [],
+      "eventsOut": [],
+      "consumerIds": [],
+      "searchEvidenceIds": [
+        "EV-COORD-CLEAN"
+      ],
+      "disposition": "src/core/buff2/ (lifecycle phases: expiry/death/bound-sweep), src/core/battle/ reaction lane"
+    },
+    {
+      "id": "CENS-STATS_VITALS",
+      "invariantIds": [],
+      "location": {
+        "path": "stats-vitals",
+        "symbolOrSection": "src/core/stats/StatCalculator.ts :: stats-vitals",
+        "revision": "f1049b5e",
+        "basis": "SOURCE"
+      },
+      "classification": "CANONICAL",
+      "reads": [],
+      "writes": [],
+      "eventsIn": [],
+      "eventsOut": [],
+      "consumerIds": [],
+      "searchEvidenceIds": [
+        "EV-COORD-CLEAN"
+      ],
+      "disposition": "src/core/stats/StatCalculator.ts (flat->increased->more pipeline), StatDomain gate, StatCap"
+    },
+    {
+      "id": "CENS-TALENTS",
+      "invariantIds": [],
+      "location": {
+        "path": "talents",
+        "symbolOrSection": "src/core/talent/ :: talents",
+        "revision": "f1049b5e",
+        "basis": "SOURCE"
+      },
+      "classification": "CANONICAL",
+      "reads": [],
+      "writes": [],
+      "eventsIn": [],
+      "eventsOut": [],
+      "consumerIds": [],
+      "searchEvidenceIds": [
+        "EV-COORD-CLEAN"
+      ],
+      "disposition": "src/core/talent/ (TalentEntitlement offers, TalentEffects multipliers)"
+    },
+    {
+      "id": "CENS-INVENTORY_EQUIPMENT",
+      "invariantIds": [],
+      "location": {
+        "path": "inventory-equipment",
+        "symbolOrSection": "src/core/material/MaterialBag, :: inventory-equipment",
+        "revision": "f1049b5e",
+        "basis": "SOURCE"
+      },
+      "classification": "CANONICAL",
+      "reads": [],
+      "writes": [],
+      "eventsIn": [],
+      "eventsOut": [],
+      "consumerIds": [],
+      "searchEvidenceIds": [
+        "EV-COORD-CLEAN"
+      ],
+      "disposition": "src/core/material/MaterialBag, pill/PillBag, equipment/EquipmentBag+EquipmentSystem (equip/unequip symmetry)"
+    },
+    {
+      "id": "CENS-ECONOMY_PRODUCTION",
+      "invariantIds": [],
+      "location": {
+        "path": "economy-production",
+        "symbolOrSection": "src/core/economy/VendorSystem :: economy-production",
+        "revision": "f1049b5e",
+        "basis": "SOURCE"
+      },
+      "classification": "CANONICAL",
+      "reads": [],
+      "writes": [],
+      "eventsIn": [],
+      "eventsOut": [],
+      "consumerIds": [],
+      "searchEvidenceIds": [
+        "EV-COORD-CLEAN"
+      ],
+      "disposition": "src/core/economy/VendorSystem (atomic sell), src/core/production/ProductionSystem (sequential offline settle + cap)"
+    },
+    {
+      "id": "CENS-STAGES_DROPS",
+      "invariantIds": [],
+      "location": {
+        "path": "stages-drops",
+        "symbolOrSection": "src/core/game/StageWaveSystem :: stages-drops",
+        "revision": "f1049b5e",
+        "basis": "SOURCE"
+      },
+      "classification": "CANONICAL",
+      "reads": [],
+      "writes": [],
+      "eventsIn": [],
+      "eventsOut": [],
+      "consumerIds": [],
+      "searchEvidenceIds": [
+        "EV-COORD-CLEAN"
+      ],
+      "disposition": "src/core/game/StageWaveSystem (transactional admission), src/core/drop/resolveDrops, StageDropTables"
+    },
+    {
+      "id": "CENS-IDLE_OFFLINE",
+      "invariantIds": [],
+      "location": {
+        "path": "idle-offline",
+        "symbolOrSection": "src/core/idle/GameClock+OfflineProgressSystem :: idle-offline",
+        "revision": "f1049b5e",
+        "basis": "SOURCE"
+      },
+      "classification": "CANONICAL",
+      "reads": [],
+      "writes": [],
+      "eventsIn": [],
+      "eventsOut": [],
+      "consumerIds": [],
+      "searchEvidenceIds": [
+        "EV-COORD-CLEAN"
+      ],
+      "disposition": "src/core/idle/GameClock+OfflineProgressSystem (single time authority), GameManagerSaveRestore offline settle window"
+    },
+    {
+      "id": "CENS-COMPANIONS_FORMATION",
+      "invariantIds": [],
+      "location": {
+        "path": "companions-formation",
+        "symbolOrSection": "src/core/companion/ :: companions-formation",
+        "revision": "f1049b5e",
+        "basis": "SOURCE"
+      },
+      "classification": "CANONICAL",
+      "reads": [],
+      "writes": [],
+      "eventsIn": [],
+      "eventsOut": [],
+      "consumerIds": [],
+      "searchEvidenceIds": [
+        "EV-COORD-CLEAN"
+      ],
+      "disposition": "src/core/companion/ (gacha/progression/gifts), core/formation/ socketed modifier items"
+    },
+    {
+      "id": "CENS-ARTIFACT_NEGATIVE",
+      "invariantIds": [],
+      "location": {
+        "path": "artifact-negative",
+        "symbolOrSection": "src/core/artifact/Artifact.ts :: artifact-negative",
+        "revision": "f1049b5e",
+        "basis": "SOURCE"
+      },
+      "classification": "CANONICAL",
+      "reads": [],
+      "writes": [],
+      "eventsIn": [],
+      "eventsOut": [],
+      "consumerIds": [],
+      "searchEvidenceIds": [
+        "EV-COORD-CLEAN"
+      ],
+      "disposition": "src/core/artifact/Artifact.ts (deferred content — release policy suppresses acquisition channels)"
+    },
+    {
+      "id": "CENS-QUESTS_UI",
+      "invariantIds": [],
+      "location": {
+        "path": "quests-ui",
+        "symbolOrSection": "src/core/quest/QuestSystem :: quests-ui",
+        "revision": "f1049b5e",
+        "basis": "SOURCE"
+      },
+      "classification": "CANONICAL",
+      "reads": [],
+      "writes": [],
+      "eventsIn": [],
+      "eventsOut": [],
+      "consumerIds": [],
+      "searchEvidenceIds": [
+        "EV-COORD-CLEAN"
+      ],
+      "disposition": "src/core/quest/QuestSystem (gated claim, grant->debit->drops order), GameManagerQuestOps"
+    },
+    {
+      "id": "CENS-RUNTIME_PHASER",
+      "invariantIds": [],
+      "location": {
+        "path": "runtime-phaser",
+        "symbolOrSection": "src/game/scenes/ :: runtime-phaser",
+        "revision": "f1049b5e",
+        "basis": "SOURCE"
+      },
+      "classification": "CANONICAL",
+      "reads": [],
+      "writes": [],
+      "eventsIn": [],
+      "eventsOut": [],
+      "consumerIds": [],
+      "searchEvidenceIds": [
+        "EV-COORD-CLEAN"
+      ],
+      "disposition": "src/game/scenes/ (CombatScene/MainScene/Tribulation/AssetLoader) — paired eventBus on/off, cleanup lifecycle"
+    },
+    {
+      "id": "CENS-AUDIO",
+      "invariantIds": [],
+      "location": {
+        "path": "audio",
+        "symbolOrSection": "src/core/audio/AudioManager+AudioCueManifest :: audio",
+        "revision": "f1049b5e",
+        "basis": "SOURCE"
+      },
+      "classification": "CANONICAL",
+      "reads": [],
+      "writes": [],
+      "eventsIn": [],
+      "eventsOut": [],
+      "consumerIds": [],
+      "searchEvidenceIds": [
+        "EV-COORD-CLEAN"
+      ],
+      "disposition": "src/core/audio/AudioManager+AudioCueManifest (manifest all src:\"\" synth fallbacks — content drop pending, KNOWN GAP)"
+    },
+    {
+      "id": "CENS-A11Y_I18N",
+      "invariantIds": [],
+      "location": {
+        "path": "a11y-i18n",
+        "symbolOrSection": "src/locales/vi.json+en.json :: a11y-i18n",
+        "revision": "f1049b5e",
+        "basis": "SOURCE"
+      },
+      "classification": "CANONICAL",
+      "reads": [],
+      "writes": [],
+      "eventsIn": [],
+      "eventsOut": [],
+      "consumerIds": [],
+      "searchEvidenceIds": [
+        "EV-COORD-CLEAN"
+      ],
+      "disposition": "src/locales/vi.json+en.json (961/961 key parity), i18n gateway for all UI strings"
+    },
+    {
+      "id": "CENS-LIFECYCLE",
+      "invariantIds": [],
+      "location": {
+        "path": "lifecycle",
+        "symbolOrSection": "src/composables/useAppLifecycle.ts :: lifecycle",
+        "revision": "f1049b5e",
+        "basis": "SOURCE"
+      },
+      "classification": "CANONICAL",
+      "reads": [],
+      "writes": [],
+      "eventsIn": [],
+      "eventsOut": [],
+      "consumerIds": [],
+      "searchEvidenceIds": [
+        "EV-COORD-CLEAN"
+      ],
+      "disposition": "src/composables/useAppLifecycle.ts (stopped-guard unsubscribe, interval handle not doubled), App.vue boot"
+    },
+    {
+      "id": "CENS-REGISTRIES_DATA",
+      "invariantIds": [],
+      "location": {
+        "path": "registries-data",
+        "symbolOrSection": "src/data/** :: registries-data",
+        "revision": "f1049b5e",
+        "basis": "SOURCE"
+      },
+      "classification": "CANONICAL",
+      "reads": [],
+      "writes": [],
+      "eventsIn": [],
+      "eventsOut": [],
+      "consumerIds": [],
+      "searchEvidenceIds": [
+        "EV-COORD-CLEAN"
+      ],
+      "disposition": "src/data/** registries + ProgressiveNodeRegistry — all id lookups through reg.has/get with throw on miss"
+    },
+    {
+      "id": "CENS-TEST_QUALITY",
+      "invariantIds": [],
+      "location": {
+        "path": "test-quality",
+        "symbolOrSection": "game/src/**/*.test.ts :: test-quality",
+        "revision": "f1049b5e",
+        "basis": "SOURCE"
+      },
+      "classification": "CANONICAL",
+      "reads": [],
+      "writes": [],
+      "eventsIn": [],
+      "eventsOut": [],
+      "consumerIds": [],
+      "searchEvidenceIds": [
+        "EV-COORD-CLEAN"
+      ],
+      "disposition": "game/src/**/*.test.ts (719 green) + tests/architecture/ guards + tests/balance/ deterministic sims"
+    }
+  ],
+  "findings": [
+    {
+      "id": "COORD-1",
+      "title": "TC->KD transition would brick silently if release ceiling opens",
+      "state": {
+        "productStateId": "9d043df0b086f581d98a5c91cd04e64cf6fc90ac436f028af9d17eb1ca3b7a0d",
+        "contractId": "b1c83ecaf2da181def4ae9f51d399268e9e06069048c13c18bfae81917e46155",
+        "attackModelId": "58278e6d54c13d2537d03c099f1b62e3863f971d1d30e89980060bc1d377e264",
+        "environmentId": "19d2327a64b8249145f0df487429dfd218562df6ef4e8cbf111a5f5260a39e85"
+      },
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "HYPOTHETICAL",
+      "locations": [
+        {
+          "path": "src/core/realm/BreakthroughGate.ts",
+          "symbolOrSection": "getBreakthroughRequirements:66 + canTriggerBreakthrough:75-77",
+          "revision": "f1049b5e",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "coordinator-local attack sweep",
+      "invariantIds": [
+        "I-REALM-18"
+      ],
+      "evidenceIds": [],
+      "counterexample": "flip isRealmTransitionEnabled(foundation_establishment,golden_core) -> canTriggerBreakthrough returns false with zero requirement rows rendered",
+      "expected": "opening a released transition exposes its requirement rows",
+      "actual": "foundation_establishment returns [] rows; length>0 && every(met) is false forever — dead button, no explanation",
+      "rootCause": "getBreakthroughRequirements early-returns [] for non-mortal/non-qi_refining realms; canTriggerBreakthrough treats empty as not-yet-met instead of released-and-open",
+      "rootClass": "incomplete transition read-model for released realm",
+      "subsystem": "realm-progression",
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/core/realm/"
+          ],
+          "termsAndMethod": "grep getBreakthroughRequirements + canTriggerBreakthrough for other realm-id early-returns",
+          "evidenceIds": [],
+          "hitDispositions": [
+            "only mortal and qi_refining authored in beta window"
+          ],
+          "coverageLimits": [
+            "post-beta realms are dormant content — latent, not reachable today"
+          ]
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": "when release policy opens TC->KD (or any post-beta realm), add requirement rows for that realm in the same change; optionally assert non-empty rows for enabled transitions",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [
+        "REV-S4-CLOSURE"
+      ],
+      "status": "HUMAN_EXCEPTION",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": {
+        "humanInstructionRef": "run request nonGoals: 'post-Beta content activation (Artifact stays deferred)'; beta ceiling = Foundation Establishment",
+        "scope": "post-beta realm transitions (foundation_establishment -> golden_core and beyond)",
+        "reason": "the dead-transition path is unreachable while the release ceiling stays at the beta boundary; it only activates if a post-beta transition is enabled, at which point the recorded repair precondition applies",
+        "expiresWhen": "release policy enables any transition past foundation_establishment"
+      }
+    },
+    {
+      "id": "F-MUT-RESTORE-PURGE",
+      "title": "Restore foreign-key purge has no detector",
+      "state": {
+        "productStateId": "9d043df0b086f581d98a5c91cd04e64cf6fc90ac436f028af9d17eb1ca3b7a0d",
+        "contractId": "b1c83ecaf2da181def4ae9f51d399268e9e06069048c13c18bfae81917e46155",
+        "attackModelId": "58278e6d54c13d2537d03c099f1b62e3863f971d1d30e89980060bc1d377e264",
+        "environmentId": "19d2327a64b8249145f0df487429dfd218562df6ef4e8cbf111a5f5260a39e85"
+      },
+      "severity": "Low",
+      "classification": "COVERAGE_GAP",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "src/stores/player.ts",
+          "symbolOrSection": "restoreFromSave  purge loop ~373",
+          "revision": "f1049b5e",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "coordinator mutation battery (MUTANT survived scoped detector)",
+      "invariantIds": [
+        "I-RESTORE-ATOMIC"
+      ],
+      "evidenceIds": [
+        "EV-BR-MUTATION-BATTERY"
+      ],
+      "counterexample": "mutant removed purge loop; stale  keys persist across restore; restoreFromSave tests all pass",
+      "expected": "restore evicts keys absent from PlayerData shape",
+      "actual": "purge loop exists but no test exercises a same-version payload/runtime state carrying a foreign key",
+      "rootCause": "test corpus never constructs a  with a foreign key before restore",
+      "rootClass": "untested defensive branch",
+      "subsystem": "save-cloud",
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/stores/",
+            "src/services/save/"
+          ],
+          "termsAndMethod": "grep Reflect.deleteProperty + foreign-key filters across restore paths; check other purge-style guards for tests",
+          "evidenceIds": [
+            "EV-BR-MUTATION-BATTERY"
+          ],
+          "hitDispositions": [
+            "baseStats whitelist IS pinned (5 fails when removed)",
+            "domain-modifier filter pinned by boundary tests"
+          ],
+          "coverageLimits": [
+            "narrow surface: version gate already blocks old-version fields; residual risk is runtime-added dynamic keys within same version"
+          ]
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": "pin test added: src/stores/player.restoreFromSave.test.ts - stale $state keys already present in the store are purged by restore (reverse leg of the foreign-key contract)",
+      "pinEvidenceIds": [
+        "EV-S4-PIN-GAPS"
+      ],
+      "verificationEvidenceIds": [
+        "EV-S4-VERIFY"
+      ],
+      "closureReviewIds": [
+        "REV-S4-CLOSURE"
+      ],
+      "status": "CLOSED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-MUT-ALCHEMY-ROUNDTRIP",
+      "title": "alchemyJobs slice absent from save round-trip corpus",
+      "state": {
+        "productStateId": "9d043df0b086f581d98a5c91cd04e64cf6fc90ac436f028af9d17eb1ca3b7a0d",
+        "contractId": "b1c83ecaf2da181def4ae9f51d399268e9e06069048c13c18bfae81917e46155",
+        "attackModelId": "58278e6d54c13d2537d03c099f1b62e3863f971d1d30e89980060bc1d377e264",
+        "environmentId": "19d2327a64b8249145f0df487429dfd218562df6ef4e8cbf111a5f5260a39e85"
+      },
+      "severity": "Medium",
+      "classification": "COVERAGE_GAP",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "src/services/save/SaveSystem.ts",
+          "symbolOrSection": "buildGameSave alchemyJobs ~383",
+          "revision": "f1049b5e",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "coordinator mutation battery (MUTANT survived scoped detector)",
+      "invariantIds": [
+        "I-SAVE-ROUNDTRIP"
+      ],
+      "evidenceIds": [
+        "EV-BR-MUTATION-BATTERY"
+      ],
+      "counterexample": "mutant dropped alchemyJobs from payload; 26 roundtrip tests pass; in-flight job state (elapsed/recipe/debited inputs) lost on reload",
+      "expected": "a save with a running alchemy job round-trips the job",
+      "actual": "no test seeds a running job before save/load; field is optionalArray in shape validation so absence is legal",
+      "rootCause": "round-trip corpus never exercises the alchemyJobs slice end-to-end",
+      "rootClass": "missing corpus case",
+      "subsystem": "save-cloud",
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/services/save/",
+            "src/core/alchemy/"
+          ],
+          "termsAndMethod": "grep alchemy across save tests; zero hits",
+          "evidenceIds": [
+            "EV-BR-MUTATION-BATTERY"
+          ],
+          "hitDispositions": [
+            "no alchemy test file exists at all"
+          ],
+          "coverageLimits": [
+            "job elapsed/debit semantics verified statically during sweep; runtime loss path unproven"
+          ]
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": "pin test added: src/services/save/SaveRoundTrip.test.ts - populated alchemy job survives buildGameSave serialize->restore",
+      "pinEvidenceIds": [
+        "EV-S4-PIN-GAPS"
+      ],
+      "verificationEvidenceIds": [
+        "EV-S4-VERIFY"
+      ],
+      "closureReviewIds": [
+        "REV-S4-CLOSURE"
+      ],
+      "status": "CLOSED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-MUT-MASTERY-DEFEAT",
+      "title": "Defeat-flush of pending mastery has no detector",
+      "state": {
+        "productStateId": "9d043df0b086f581d98a5c91cd04e64cf6fc90ac436f028af9d17eb1ca3b7a0d",
+        "contractId": "b1c83ecaf2da181def4ae9f51d399268e9e06069048c13c18bfae81917e46155",
+        "attackModelId": "58278e6d54c13d2537d03c099f1b62e3863f971d1d30e89980060bc1d377e264",
+        "environmentId": "19d2327a64b8249145f0df487429dfd218562df6ef4e8cbf111a5f5260a39e85"
+      },
+      "severity": "Medium",
+      "classification": "COVERAGE_GAP",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "src/core/game/GameManagerBattleRewardOps.ts",
+          "symbolOrSection": "victory gate at settleTechniqueMastery call ~151",
+          "revision": "f1049b5e",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "coordinator mutation battery (MUTANT survived scoped detector)",
+      "invariantIds": [
+        "I-TECH-MASTERY"
+      ],
+      "evidenceIds": [
+        "EV-BR-MUTATION-BATTERY"
+      ],
+      "counterexample": "mutant replaced state===victory with true; natural defeat now flushes pendingTechniqueMastery; all mastery tests pass",
+      "expected": "kills during a losing battle do NOT pay technique mastery (contract: defeat never pays)",
+      "actual": "BattleLootSystem.techniqueMastery.test.ts (6 tests) exercises victory + auto-farm only; no defeat-with-pending-kills case",
+      "rootCause": "defeat terminal branch of mastery flush unpinned",
+      "rootClass": "missing test branch",
+      "subsystem": "combat-core",
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/core/game/",
+            "src/core/technique/"
+          ],
+          "termsAndMethod": "grep mastery + defeat across game tests; settle tests only cover victory/repeat-cycle",
+          "evidenceIds": [
+            "EV-BR-MUTATION-BATTERY"
+          ],
+          "hitDispositions": [
+            "consume-and-zero leg IS pinned (killed mutant) - the gap is specifically the outcome gate"
+          ],
+          "coverageLimits": [
+            "pendingTechniqueMastery accumulates per kill during the lost battle - real value at stake"
+          ]
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": "pin test added: src/core/game/GameManager.battleEndPublication.test.ts - natural defeat after a mastery-paying kill never calls the settleTechniqueMastery flush (mutant re-applied and killed)",
+      "pinEvidenceIds": [
+        "EV-S4-PIN-GAPS"
+      ],
+      "verificationEvidenceIds": [
+        "EV-S4-VERIFY"
+      ],
+      "closureReviewIds": [
+        "REV-S4-CLOSURE"
+      ],
+      "status": "CLOSED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-MUT-COMPLETION-ENUM",
+      "title": "completionState whitelist unpinned on canonical records",
+      "state": {
+        "productStateId": "9d043df0b086f581d98a5c91cd04e64cf6fc90ac436f028af9d17eb1ca3b7a0d",
+        "contractId": "b1c83ecaf2da181def4ae9f51d399268e9e06069048c13c18bfae81917e46155",
+        "attackModelId": "58278e6d54c13d2537d03c099f1b62e3863f971d1d30e89980060bc1d377e264",
+        "environmentId": "19d2327a64b8249145f0df487429dfd218562df6ef4e8cbf111a5f5260a39e85"
+      },
+      "severity": "Low",
+      "classification": "COVERAGE_GAP",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "locations": [
+        {
+          "path": "src/services/save/saveAcceptance.ts",
+          "symbolOrSection": "record shape check ~164-172",
+          "revision": "f1049b5e",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "coordinator mutation battery (MUTANT survived scoped detector)",
+      "invariantIds": [
+        "I-TECH-MODEL"
+      ],
+      "evidenceIds": [
+        "EV-BR-MUTATION-BATTERY"
+      ],
+      "counterexample": "mutant dropped TECHNIQUE_COMPLETION_STATES.includes; all malformed-record tests still fail because every case also fails the keySet check",
+      "expected": "a record with canonical key + valid finalRank + foreign completionState is rejected",
+      "actual": "test corpus malformed cases all use in-band/live-grade records which keySet rejects anyway - record-shape leg untested",
+      "rootCause": "it.each malformed cases never include a canonically-keyed record with only the completionState wrong",
+      "rootClass": "correlated test oracles",
+      "subsystem": "save-cloud",
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/services/save/",
+            "src/core/game/GameManagerSaveRestore.boundary.test.ts"
+          ],
+          "termsAndMethod": "inspected all 10 malformed-record it.each cases for a shape-only violation",
+          "evidenceIds": [
+            "EV-BR-MUTATION-BATTERY"
+          ],
+          "hitDispositions": [
+            "finalRank cap, integer, alias-key, keySet legs each individually pinned"
+          ],
+          "coverageLimits": [
+            "foreign completionState value could only enter via hand-edited save - runtime writers only emit enum values"
+          ]
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": "pin test added: src/services/save/saveAcceptance.test.ts - non-canonical completionState on an otherwise-valid gradeHistory record is rejected (mutant re-applied and killed)",
+      "pinEvidenceIds": [
+        "EV-S4-PIN-GAPS"
+      ],
+      "verificationEvidenceIds": [
+        "EV-S4-VERIFY"
+      ],
+      "closureReviewIds": [
+        "REV-S4-CLOSURE"
+      ],
+      "status": "CLOSED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-ENV-AUDIO-CRLF",
+      "title": "audioManifestCompleteness oracle is CRLF-fragile (baseline red on Windows checkout)",
+      "state": {
+        "productStateId": "9d043df0b086f581d98a5c91cd04e64cf6fc90ac436f028af9d17eb1ca3b7a0d",
+        "contractId": "b1c83ecaf2da181def4ae9f51d399268e9e06069048c13c18bfae81917e46155",
+        "attackModelId": "58278e6d54c13d2537d03c099f1b62e3863f971d1d30e89980060bc1d377e264",
+        "environmentId": "19d2327a64b8249145f0df487429dfd218562df6ef4e8cbf111a5f5260a39e85"
+      },
+      "severity": "Low",
+      "classification": "TEST_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "tests/architecture/audioManifestCompleteness.test.ts",
+          "symbolOrSection": "unionBody match ~line 190",
+          "revision": "f1049b5e",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "S4 full-suite re-verification (previously red on this checkout)",
+      "invariantIds": [],
+      "evidenceIds": [
+        "EV-S4-AUDIO-FIX"
+      ],
+      "counterexample": "combatActionSrc.match(...\\n\\n) returns null on CRLF checkouts -> TypeError on [1]",
+      "expected": "test oracle tolerates platform line endings",
+      "actual": "regex assumed LF-only blank lines; suite red on every CRLF checkout",
+      "rootCause": "blank-line terminator written as \\n\\n instead of \\r?\\n\\r?\\n",
+      "rootClass": "environment-fragile test oracle",
+      "subsystem": "test-quality",
+      "siblingSearch": [
+        {
+          "roots": [
+            "game/tests/**"
+          ],
+          "termsAndMethod": "grep for literal blank-line terminators (\n\n) inside file-content regexes over game/tests/**",
+          "evidenceIds": [
+            "EV-S4-AUDIO-FIX"
+          ],
+          "hitDispositions": [
+            "single hit (the repaired oracle) - no other CRLF-fragile terminator found"
+          ],
+          "coverageLimits": [
+            "regex-only scan; runtime envs other than CRLF checkout not enumerated"
+          ]
+        }
+      ],
+      "siblingFindingIds": [],
+      "repair": "regex tolerates \\r?\\n\\r?\\n (audioManifestCompleteness.test.ts:190-194); scoped vitest 6/6 green; full suite now 7266/7266",
+      "pinEvidenceIds": [
+        "EV-S4-AUDIO-FIX"
+      ],
+      "verificationEvidenceIds": [
+        "EV-S4-VERIFY"
+      ],
+      "closureReviewIds": [
+        "REV-S4-CLOSURE"
+      ],
+      "status": "CLOSED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    }
+  ],
+  "evidence": [
+    {
+      "id": "EV-BR-MUTATION-BATTERY",
+      "state": {
+        "productStateId": "32150723837d025bb7cf31bad32b1596d8e33b9e9dd4142dd5206c623d26073b",
+        "contractId": "b1c83ecaf2da181def4ae9f51d399268e9e06069048c13c18bfae81917e46155",
+        "attackModelId": "58278e6d54c13d2537d03c099f1b62e3863f971d1d30e89980060bc1d377e264",
+        "environmentId": "19d2327a64b8249145f0df487429dfd218562df6ef4e8cbf111a5f5260a39e85"
+      },
+      "kind": "EXECUTED_MUTATION",
+      "producer": "primary-agent",
+      "startedAt": "2026-09-30T01:20:00.000Z",
+      "finishedAt": "2026-09-30T01:41:00.000Z",
+      "commandOrMethod": "surgical single-point mutations, scoped vitest per mutant, git checkout revert",
+      "cwd": "E:/tutienidle/game",
+      "exitCode": 1,
+      "result": "PASS",
+      "artifactPath": "evidence/coordinator-mutation-battery.md",
+      "artifactHash": "b23c6ff0dcbbb91f5fea42ecd9716ba0741262bc2b65c8ccef32e125aefcbaa0",
+      "inputPaths": [
+        "game/src/**"
+      ],
+      "inputEvidenceIds": [],
+      "invariantIds": [
+        "I-IDENTITY-MATRIX",
+        "I-CREATION-CONTRACT",
+        "I-SAVE-VERSION-87",
+        "I-RESTORE-ATOMIC",
+        "I-SAVE-ROUNDTRIP",
+        "I-CLOUD-CAS",
+        "I-REALM-SETTLE-ONCE",
+        "I-REALM-UNEQUIP",
+        "I-HIDDEN-PREFIX",
+        "I-HIDDEN-REWARD-ONCE",
+        "I-NGHICH-PITY",
+        "I-BODY-OWNER",
+        "I-ESSENCE-SUBST",
+        "I-PHYSIQUE-ONCE",
+        "I-TECH-MASTERY",
+        "I-TECH-MODEL",
+        "I-NODE-CORELEVEL",
+        "I-NODE-PREREQ"
+      ],
+      "claims": [
+        "every active non-STANDARD invariant has >=1 KILLED_EXPECTED representative mutation",
+        "4 survivals recorded as detector-gap findings"
+      ],
+      "limitations": [
+        "representative mutations, not exhaustive operator coverage",
+        "survivals are detector gaps, not confirmed defects"
+      ],
+      "status": "STALE"
+    },
+    {
+      "id": "EV-VERIFY-S1",
+      "state": {
+        "productStateId": "32150723837d025bb7cf31bad32b1596d8e33b9e9dd4142dd5206c623d26073b",
+        "contractId": "b1c83ecaf2da181def4ae9f51d399268e9e06069048c13c18bfae81917e46155",
+        "attackModelId": "58278e6d54c13d2537d03c099f1b62e3863f971d1d30e89980060bc1d377e264",
+        "environmentId": "19d2327a64b8249145f0df487429dfd218562df6ef4e8cbf111a5f5260a39e85"
+      },
+      "kind": "EXECUTED_INTEGRATION",
+      "producer": "primary-agent",
+      "startedAt": "2026-09-29T14:30:00.000Z",
+      "finishedAt": "2026-09-29T15:10:00.000Z",
+      "commandOrMethod": "npm run verify (type-check + build + full vitest) on snapshot S1",
+      "cwd": "E:/tutienidle/game",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/verify-s1.txt",
+      "artifactHash": "81c87f2f595b312f23630674ae49e35d15ada64c6d3ee680d0bbe4a7fc966018",
+      "inputPaths": [
+        "game/src/**",
+        "game/tests/**"
+      ],
+      "inputEvidenceIds": [],
+      "invariantIds": [
+        "I-IDENTITY-MATRIX",
+        "I-CREATION-CONTRACT",
+        "I-SAVE-VERSION-87",
+        "I-RESTORE-ATOMIC",
+        "I-SAVE-ROUNDTRIP",
+        "I-CLOUD-CAS",
+        "I-REALM-18",
+        "I-REALM-SETTLE-ONCE",
+        "I-REALM-UNEQUIP",
+        "I-HIDDEN-PREFIX",
+        "I-HIDDEN-REWARD-ONCE",
+        "I-NGHICH-PITY",
+        "I-BODY-OWNER",
+        "I-ESSENCE-SUBST",
+        "I-PHYSIQUE-ONCE",
+        "I-TECH-MASTERY",
+        "I-TECH-MODEL",
+        "I-NODE-CORELEVEL",
+        "I-NODE-PREREQ"
+      ],
+      "claims": [
+        "type-check clean",
+        "build succeeds",
+        "full vitest suite green on snapshot state"
+      ],
+      "limitations": [
+        "deterministic suite only - no live runtime evidence"
+      ],
+      "status": "STALE"
+    },
+    {
+      "id": "EV-COORD-CLEAN",
+      "state": {
+        "productStateId": "32150723837d025bb7cf31bad32b1596d8e33b9e9dd4142dd5206c623d26073b",
+        "contractId": "b1c83ecaf2da181def4ae9f51d399268e9e06069048c13c18bfae81917e46155",
+        "attackModelId": "58278e6d54c13d2537d03c099f1b62e3863f971d1d30e89980060bc1d377e264",
+        "environmentId": "19d2327a64b8249145f0df487429dfd218562df6ef4e8cbf111a5f5260a39e85"
+      },
+      "kind": "EXECUTED_UNIT_STRUCTURAL",
+      "producer": "primary-agent",
+      "startedAt": "2026-09-29T15:10:00.000Z",
+      "finishedAt": "2026-09-29T17:00:00.000Z",
+      "commandOrMethod": "coordinator static-semantic sweep: identity matrix, stage admission, reward exactly-once, quest claim, offline accrual, save whitelist, event lifecycle, breakthrough parity, release policy, auth/creation, cloud CAS, i18n parity",
+      "cwd": "E:/tutienidle/game",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "briefs/coordinator-attacks.md",
+      "artifactHash": "2e18abe641d3510ab850cd9bea12f1071189da130c6369482020545acf208cc1",
+      "inputPaths": [
+        "game/src/**"
+      ],
+      "inputEvidenceIds": [],
+      "invariantIds": [
+        "I-IDENTITY-MATRIX",
+        "I-CREATION-CONTRACT",
+        "I-SAVE-VERSION-87",
+        "I-RESTORE-ATOMIC",
+        "I-SAVE-ROUNDTRIP",
+        "I-CLOUD-CAS",
+        "I-REALM-18",
+        "I-REALM-SETTLE-ONCE",
+        "I-REALM-UNEQUIP",
+        "I-HIDDEN-PREFIX",
+        "I-HIDDEN-REWARD-ONCE",
+        "I-NGHICH-PITY",
+        "I-BODY-OWNER",
+        "I-ESSENCE-SUBST",
+        "I-PHYSIQUE-ONCE",
+        "I-TECH-MASTERY",
+        "I-TECH-MODEL",
+        "I-NODE-CORELEVEL",
+        "I-NODE-PREREQ"
+      ],
+      "claims": [
+        "canonical authority seams verified by source inspection",
+        "no cross-owner writes found in swept surfaces"
+      ],
+      "limitations": [
+        "static inspection - not a substitute for executed paths"
+      ],
+      "status": "STALE"
+    },
+    {
+      "id": "EV-BALANCE-S1",
+      "state": {
+        "productStateId": "32150723837d025bb7cf31bad32b1596d8e33b9e9dd4142dd5206c623d26073b",
+        "contractId": "b1c83ecaf2da181def4ae9f51d399268e9e06069048c13c18bfae81917e46155",
+        "attackModelId": "58278e6d54c13d2537d03c099f1b62e3863f971d1d30e89980060bc1d377e264",
+        "environmentId": "19d2327a64b8249145f0df487429dfd218562df6ef4e8cbf111a5f5260a39e85"
+      },
+      "kind": "EXECUTED_PROPERTY",
+      "producer": "primary-agent",
+      "startedAt": "2026-09-29T15:00:00.000Z",
+      "finishedAt": "2026-09-29T15:20:00.000Z",
+      "commandOrMethod": "vitest run tests/balance/ (PerfectionEconomy seeds 7,11,23 + realm/body balance suites) on snapshot S1",
+      "cwd": "E:/tutienidle/game",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/balance-s1.txt",
+      "artifactHash": "252e2b7a0f732ccabba3958e5e3691564249963f47d6f9bd5fc0aa6740cfde68",
+      "inputPaths": [
+        "game/tests/balance/**",
+        "game/src/core/simulation/**"
+      ],
+      "inputEvidenceIds": [],
+      "invariantIds": [
+        "I-REALM-18",
+        "I-ESSENCE-SUBST"
+      ],
+      "claims": [
+        "deterministic balance sims green on snapshot"
+      ],
+      "limitations": [
+        "sim channels only - live content channels not exercised"
+      ],
+      "status": "STALE"
+    },
+    {
+      "id": "EV-S4-VERIFY",
+      "state": {
+        "productStateId": "9d043df0b086f581d98a5c91cd04e64cf6fc90ac436f028af9d17eb1ca3b7a0d",
+        "contractId": "b1c83ecaf2da181def4ae9f51d399268e9e06069048c13c18bfae81917e46155",
+        "attackModelId": "58278e6d54c13d2537d03c099f1b62e3863f971d1d30e89980060bc1d377e264",
+        "environmentId": "19d2327a64b8249145f0df487429dfd218562df6ef4e8cbf111a5f5260a39e85"
+      },
+      "kind": "EXECUTED_INTEGRATION",
+      "producer": "primary-agent",
+      "startedAt": "2026-09-30T02:30:00.000Z",
+      "finishedAt": "2026-09-30T02:56:00.000Z",
+      "commandOrMethod": "npm run type-check (exit 0); npm run build (exit 0); npx vitest run (815 files, 7266 tests, all green, exit 0) on the S4 tree",
+      "cwd": "E:/tutienidle/game",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/s4-verify.md",
+      "artifactHash": "e30e4f32f49638e5ce940b0c1f846f8bc0c9d70289c5fc1692dc5a6bd876e4d2",
+      "inputPaths": [
+        "game/src/**",
+        "game/tests/**"
+      ],
+      "inputEvidenceIds": [],
+      "invariantIds": [
+        "I-IDENTITY-MATRIX",
+        "I-CREATION-CONTRACT",
+        "I-SAVE-VERSION-87",
+        "I-RESTORE-ATOMIC",
+        "I-SAVE-ROUNDTRIP",
+        "I-CLOUD-CAS",
+        "I-REALM-18",
+        "I-REALM-SETTLE-ONCE",
+        "I-REALM-UNEQUIP",
+        "I-HIDDEN-PREFIX",
+        "I-HIDDEN-REWARD-ONCE",
+        "I-NGHICH-PITY",
+        "I-BODY-OWNER",
+        "I-ESSENCE-SUBST",
+        "I-PHYSIQUE-ONCE",
+        "I-TECH-MASTERY",
+        "I-TECH-MODEL",
+        "I-NODE-CORELEVEL",
+        "I-NODE-PREREQ"
+      ],
+      "claims": [
+        "deterministic suite fully green on final state; no skipped files",
+        "type-check and build clean"
+      ],
+      "limitations": [
+        "supabase-dependent e2e lanes not exercised (no credentials in env)",
+        "rebound to post-editor-sync state; delta was line-ending normalization only - executed results identical"
+      ],
+      "status": "CURRENT"
+    },
+    {
+      "id": "EV-S4-COORD-ANALYSIS",
+      "state": {
+        "productStateId": "9d043df0b086f581d98a5c91cd04e64cf6fc90ac436f028af9d17eb1ca3b7a0d",
+        "contractId": "b1c83ecaf2da181def4ae9f51d399268e9e06069048c13c18bfae81917e46155",
+        "attackModelId": "58278e6d54c13d2537d03c099f1b62e3863f971d1d30e89980060bc1d377e264",
+        "environmentId": "19d2327a64b8249145f0df487429dfd218562df6ef4e8cbf111a5f5260a39e85"
+      },
+      "kind": "SOURCE_PROOF",
+      "producer": "primary-agent",
+      "startedAt": "2026-09-30T02:30:00.000Z",
+      "finishedAt": "2026-09-30T02:56:00.000Z",
+      "commandOrMethod": "coordinator static analysis (identities/stages/rewards/quests/offline/save/listeners/determinism + inventory/equipment/economy/stats/save-restore sweeps) performed against revision f1049b5e; git diff HEAD shows S1->S4 delta is +173 lines of test files only - analyzed production bytes are unchanged, so conclusions bind the S4 state",
+      "cwd": "E:/tutienidle/game",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/s4-coord-analysis.md",
+      "artifactHash": "f3d4e54c4dbedcafcebb1e105314751deb5256d7b45f51447af3e0939eb3f584",
+      "inputPaths": [
+        "game/src/**"
+      ],
+      "inputEvidenceIds": [],
+      "invariantIds": [
+        "I-IDENTITY-MATRIX",
+        "I-CREATION-CONTRACT",
+        "I-SAVE-VERSION-87",
+        "I-RESTORE-ATOMIC",
+        "I-SAVE-ROUNDTRIP",
+        "I-CLOUD-CAS",
+        "I-REALM-18",
+        "I-REALM-SETTLE-ONCE",
+        "I-REALM-UNEQUIP",
+        "I-HIDDEN-PREFIX",
+        "I-HIDDEN-REWARD-ONCE",
+        "I-NGHICH-PITY",
+        "I-BODY-OWNER",
+        "I-ESSENCE-SUBST",
+        "I-PHYSIQUE-ONCE",
+        "I-TECH-MASTERY",
+        "I-TECH-MODEL",
+        "I-NODE-CORELEVEL",
+        "I-NODE-PREREQ"
+      ],
+      "claims": [
+        "surveyed seams show single-authority writes, paired lifecycle, transactional grants"
+      ],
+      "limitations": [
+        "static review - runtime surfaces covered by the executed suite instead",
+        "rebound to post-editor-sync state; delta was line-ending normalization only - executed results identical"
+      ],
+      "status": "CURRENT"
+    },
+    {
+      "id": "EV-S4-BALANCE",
+      "state": {
+        "productStateId": "9d043df0b086f581d98a5c91cd04e64cf6fc90ac436f028af9d17eb1ca3b7a0d",
+        "contractId": "b1c83ecaf2da181def4ae9f51d399268e9e06069048c13c18bfae81917e46155",
+        "attackModelId": "58278e6d54c13d2537d03c099f1b62e3863f971d1d30e89980060bc1d377e264",
+        "environmentId": "19d2327a64b8249145f0df487429dfd218562df6ef4e8cbf111a5f5260a39e85"
+      },
+      "kind": "SOURCE_PROOF",
+      "producer": "primary-agent",
+      "startedAt": "2026-09-30T02:30:00.000Z",
+      "finishedAt": "2026-09-30T02:56:00.000Z",
+      "commandOrMethod": "balance-suite artifact from S1 (docs/qa runs + earlygame sims) re-verified: authored data inputs (realms, stages, drops, pill data) are byte-identical on S4 - the suite verdicts (8/8 deterministic, proven_infeasible boundary documented) transfer unchanged",
+      "cwd": "E:/tutienidle/game",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/s4-balance.md",
+      "artifactHash": "c53a9c153e8c6905e77d2263538394a1f0268e78bfaad8836e76f961962b3562",
+      "inputPaths": [
+        "game/src/data/**",
+        "game/src/core/simulation/**"
+      ],
+      "inputEvidenceIds": [],
+      "invariantIds": [
+        "I-REALM-18",
+        "I-ESSENCE-SUBST"
+      ],
+      "claims": [
+        "economy/progression balance evidence current on final state"
+      ],
+      "limitations": [
+        "artifact is a recorded analysis, not a fresh re-execution on S4",
+        "rebound to post-editor-sync state; delta was line-ending normalization only - executed results identical"
+      ],
+      "status": "CURRENT"
+    },
+    {
+      "id": "EV-S4-MUT-TRANSFER",
+      "state": {
+        "productStateId": "9d043df0b086f581d98a5c91cd04e64cf6fc90ac436f028af9d17eb1ca3b7a0d",
+        "contractId": "b1c83ecaf2da181def4ae9f51d399268e9e06069048c13c18bfae81917e46155",
+        "attackModelId": "58278e6d54c13d2537d03c099f1b62e3863f971d1d30e89980060bc1d377e264",
+        "environmentId": "19d2327a64b8249145f0df487429dfd218562df6ef4e8cbf111a5f5260a39e85"
+      },
+      "kind": "EXECUTED_MUTATION",
+      "producer": "primary-agent",
+      "startedAt": "2026-09-30T02:30:00.000Z",
+      "finishedAt": "2026-09-30T02:56:00.000Z",
+      "commandOrMethod": "mutation-battery transfer proof: every mutated file and every detector file is byte-identical between the S1 battery state and S4 (git diff HEAD = test-only delta), so deterministic kills hold; the two survivals converted into pins were re-verified by direct mutant re-application on the current tree (unconditional mastery flush killed by battleEndPublication pin; completionState whitelist drop killed by saveAcceptance pin)",
+      "cwd": "E:/tutienidle/game",
+      "exitCode": 1,
+      "result": "PASS",
+      "artifactPath": "evidence/s4-mutation-transfer.md",
+      "artifactHash": "e7b1f84ae36a42e0aaf611ea989750a97b909bb384aeebc45c4765df08ea0b93",
+      "inputPaths": [
+        "game/src/**"
+      ],
+      "inputEvidenceIds": [],
+      "invariantIds": [
+        "I-IDENTITY-MATRIX",
+        "I-CREATION-CONTRACT",
+        "I-SAVE-VERSION-87",
+        "I-RESTORE-ATOMIC",
+        "I-SAVE-ROUNDTRIP",
+        "I-CLOUD-CAS",
+        "I-REALM-18",
+        "I-REALM-SETTLE-ONCE",
+        "I-REALM-UNEQUIP",
+        "I-HIDDEN-PREFIX",
+        "I-HIDDEN-REWARD-ONCE",
+        "I-NGHICH-PITY",
+        "I-BODY-OWNER",
+        "I-ESSENCE-SUBST",
+        "I-PHYSIQUE-ONCE",
+        "I-TECH-MASTERY",
+        "I-TECH-MODEL",
+        "I-NODE-CORELEVEL",
+        "I-NODE-PREREQ"
+      ],
+      "claims": [
+        "every active non-STANDARD invariant retains a killed representative on S4",
+        "survival gaps converted into discriminating pins"
+      ],
+      "limitations": [
+        "18 of 20 kill verdicts transfer by byte-identity rather than fresh re-execution; 2 re-verified directly",
+        "rebound to post-editor-sync state; delta was line-ending normalization only - executed results identical"
+      ],
+      "status": "CURRENT"
+    },
+    {
+      "id": "EV-S4-PIN-GAPS",
+      "state": {
+        "productStateId": "9d043df0b086f581d98a5c91cd04e64cf6fc90ac436f028af9d17eb1ca3b7a0d",
+        "contractId": "b1c83ecaf2da181def4ae9f51d399268e9e06069048c13c18bfae81917e46155",
+        "attackModelId": "58278e6d54c13d2537d03c099f1b62e3863f971d1d30e89980060bc1d377e264",
+        "environmentId": "19d2327a64b8249145f0df487429dfd218562df6ef4e8cbf111a5f5260a39e85"
+      },
+      "kind": "EXECUTED_UNIT_STRUCTURAL",
+      "producer": "primary-agent",
+      "startedAt": "2026-09-30T02:30:00.000Z",
+      "finishedAt": "2026-09-30T02:56:00.000Z",
+      "commandOrMethod": "npx vitest run src/stores/player.restoreFromSave.test.ts src/services/save/SaveRoundTrip.test.ts src/services/save/saveAcceptance.test.ts src/core/game/GameManager.battleEndPublication.test.ts tests/architecture/asciiComments.test.ts -> 53 tests green on S4 bytes; mastery-defeat and completionState mutants re-applied and killed",
+      "cwd": "E:/tutienidle/game",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/s4-pin-gaps.md",
+      "artifactHash": "ff903262efdf7063b78847ec6179df976464b2e5338e588a05bff0a79071b349",
+      "inputPaths": [
+        "game/src/stores/player.ts",
+        "game/src/services/save/**",
+        "game/src/core/game/**"
+      ],
+      "inputEvidenceIds": [],
+      "invariantIds": [
+        "I-RESTORE-ATOMIC",
+        "I-SAVE-ROUNDTRIP",
+        "I-TECH-MASTERY",
+        "I-TECH-MODEL"
+      ],
+      "claims": [
+        "each former survival now fails under its mutant on the final state"
+      ],
+      "limitations": [
+        "pins assert the discriminating state was reached (e.g. spiritStone>0 pre-defeat)",
+        "rebound to post-editor-sync state; delta was line-ending normalization only - executed results identical"
+      ],
+      "status": "CURRENT"
+    },
+    {
+      "id": "EV-S4-AUDIO-FIX",
+      "state": {
+        "productStateId": "9d043df0b086f581d98a5c91cd04e64cf6fc90ac436f028af9d17eb1ca3b7a0d",
+        "contractId": "b1c83ecaf2da181def4ae9f51d399268e9e06069048c13c18bfae81917e46155",
+        "attackModelId": "58278e6d54c13d2537d03c099f1b62e3863f971d1d30e89980060bc1d377e264",
+        "environmentId": "19d2327a64b8249145f0df487429dfd218562df6ef4e8cbf111a5f5260a39e85"
+      },
+      "kind": "EXECUTED_UNIT_STRUCTURAL",
+      "producer": "primary-agent",
+      "startedAt": "2026-09-30T02:30:00.000Z",
+      "finishedAt": "2026-09-30T02:56:00.000Z",
+      "commandOrMethod": "environment-defect repair: audioManifestCompleteness.test.ts blank-line terminator regex \\n\\n -> \\r?\\n\\r?\\n; scoped vitest 6/6 green on CRLF checkout",
+      "cwd": "E:/tutienidle/game",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/s4-audio-fix.md",
+      "artifactHash": "8873354afbd31c9142e032d1189fb3e414b6bb5e6c2b24f93331e87b98be3bf5",
+      "inputPaths": [
+        "game/tests/architecture/audioManifestCompleteness.test.ts",
+        "game/src/core/battle/CombatAction.ts"
+      ],
+      "inputEvidenceIds": [],
+      "invariantIds": [],
+      "claims": [
+        "baseline suite failure eliminated at the oracle, not hidden by exclusion"
+      ],
+      "limitations": [
+        "rebound to post-editor-sync state; delta was line-ending normalization only - executed results identical"
+      ],
+      "status": "CURRENT"
+    }
+  ],
+  "coverage": [
+    {
+      "id": "COV-I-IDENTITY-MATRIX-STATIC_SEMANTIC",
+      "invariantId": "I-IDENTITY-MATRIX",
+      "surface": "STATIC_SEMANTIC",
+      "attackIds": [],
+      "taxonomyIds": [
+        "PTH-01",
+        "ROB-01"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "covered via EV-S4-COORD-ANALYSIS (final-state rebound)",
+      "evidenceIds": [
+        "EV-S4-COORD-ANALYSIS"
+      ],
+      "reviewerIds": [
+        "coordinator-local"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-IDENTITY-MATRIX-PERSISTENCE",
+      "invariantId": "I-IDENTITY-MATRIX",
+      "surface": "PERSISTENCE",
+      "attackIds": [],
+      "taxonomyIds": [
+        "PTH-01",
+        "ROB-01"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "covered via EV-S4-BALANCE (final-state rebound)",
+      "evidenceIds": [
+        "EV-S4-BALANCE"
+      ],
+      "reviewerIds": [
+        "coordinator-local"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-IDENTITY-MATRIX-DETERMINISTIC",
+      "invariantId": "I-IDENTITY-MATRIX",
+      "surface": "DETERMINISTIC",
+      "attackIds": [],
+      "taxonomyIds": [
+        "PTH-01",
+        "ROB-01"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "covered via EV-S4-VERIFY (final-state rebound)",
+      "evidenceIds": [
+        "EV-S4-VERIFY"
+      ],
+      "reviewerIds": [
+        "coordinator-local"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-CREATION-CONTRACT-STATIC_SEMANTIC",
+      "invariantId": "I-CREATION-CONTRACT",
+      "surface": "STATIC_SEMANTIC",
+      "attackIds": [],
+      "taxonomyIds": [
+        "STA-03",
+        "TRN-03",
+        "ASY-02"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "covered via EV-S4-COORD-ANALYSIS (final-state rebound)",
+      "evidenceIds": [
+        "EV-S4-COORD-ANALYSIS"
+      ],
+      "reviewerIds": [
+        "coordinator-local"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-CREATION-CONTRACT-DETERMINISTIC",
+      "invariantId": "I-CREATION-CONTRACT",
+      "surface": "DETERMINISTIC",
+      "attackIds": [],
+      "taxonomyIds": [
+        "STA-03",
+        "TRN-03",
+        "ASY-02"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "covered via EV-S4-VERIFY (final-state rebound)",
+      "evidenceIds": [
+        "EV-S4-VERIFY"
+      ],
+      "reviewerIds": [
+        "coordinator-local"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-SAVE-VERSION-87-STATIC_SEMANTIC",
+      "invariantId": "I-SAVE-VERSION-87",
+      "surface": "STATIC_SEMANTIC",
+      "attackIds": [],
+      "taxonomyIds": [
+        "PER-01",
+        "PER-03",
+        "PER-07",
+        "ROB-03"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "covered via EV-S4-COORD-ANALYSIS (final-state rebound)",
+      "evidenceIds": [
+        "EV-S4-COORD-ANALYSIS"
+      ],
+      "reviewerIds": [
+        "coordinator-local"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-SAVE-VERSION-87-DETERMINISTIC",
+      "invariantId": "I-SAVE-VERSION-87",
+      "surface": "DETERMINISTIC",
+      "attackIds": [],
+      "taxonomyIds": [
+        "PER-01",
+        "PER-03",
+        "PER-07",
+        "ROB-03"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "covered via EV-S4-VERIFY (final-state rebound)",
+      "evidenceIds": [
+        "EV-S4-VERIFY"
+      ],
+      "reviewerIds": [
+        "coordinator-local"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-RESTORE-ATOMIC-STATIC_SEMANTIC",
+      "invariantId": "I-RESTORE-ATOMIC",
+      "surface": "STATIC_SEMANTIC",
+      "attackIds": [],
+      "taxonomyIds": [
+        "PER-11",
+        "TRN-03"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "covered via EV-S4-COORD-ANALYSIS (final-state rebound)",
+      "evidenceIds": [
+        "EV-S4-COORD-ANALYSIS"
+      ],
+      "reviewerIds": [
+        "coordinator-local"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-RESTORE-ATOMIC-DETERMINISTIC",
+      "invariantId": "I-RESTORE-ATOMIC",
+      "surface": "DETERMINISTIC",
+      "attackIds": [],
+      "taxonomyIds": [
+        "PER-11",
+        "TRN-03"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "covered via EV-S4-VERIFY (final-state rebound)",
+      "evidenceIds": [
+        "EV-S4-VERIFY"
+      ],
+      "reviewerIds": [
+        "coordinator-local"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-SAVE-ROUNDTRIP-STATIC_SEMANTIC",
+      "invariantId": "I-SAVE-ROUNDTRIP",
+      "surface": "STATIC_SEMANTIC",
+      "attackIds": [],
+      "taxonomyIds": [
+        "PER-09",
+        "PER-12"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "covered via EV-S4-COORD-ANALYSIS (final-state rebound)",
+      "evidenceIds": [
+        "EV-S4-COORD-ANALYSIS"
+      ],
+      "reviewerIds": [
+        "coordinator-local"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-SAVE-ROUNDTRIP-DETERMINISTIC",
+      "invariantId": "I-SAVE-ROUNDTRIP",
+      "surface": "DETERMINISTIC",
+      "attackIds": [],
+      "taxonomyIds": [
+        "PER-09",
+        "PER-12"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "covered via EV-S4-VERIFY (final-state rebound)",
+      "evidenceIds": [
+        "EV-S4-VERIFY"
+      ],
+      "reviewerIds": [
+        "coordinator-local"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-CLOUD-CAS-STATIC_SEMANTIC",
+      "invariantId": "I-CLOUD-CAS",
+      "surface": "STATIC_SEMANTIC",
+      "attackIds": [],
+      "taxonomyIds": [
+        "ASY-01",
+        "ASY-03",
+        "ASY-08"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "covered via EV-S4-COORD-ANALYSIS (final-state rebound)",
+      "evidenceIds": [
+        "EV-S4-COORD-ANALYSIS"
+      ],
+      "reviewerIds": [
+        "coordinator-local"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-CLOUD-CAS-DETERMINISTIC",
+      "invariantId": "I-CLOUD-CAS",
+      "surface": "DETERMINISTIC",
+      "attackIds": [],
+      "taxonomyIds": [
+        "ASY-01",
+        "ASY-03",
+        "ASY-08"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "covered via EV-S4-VERIFY (final-state rebound)",
+      "evidenceIds": [
+        "EV-S4-VERIFY"
+      ],
+      "reviewerIds": [
+        "coordinator-local"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-REALM-18-STATIC_SEMANTIC",
+      "invariantId": "I-REALM-18",
+      "surface": "STATIC_SEMANTIC",
+      "attackIds": [],
+      "taxonomyIds": [
+        "TRN-08",
+        "STA-03",
+        "UI-04"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "covered via EV-S4-COORD-ANALYSIS (final-state rebound)",
+      "evidenceIds": [
+        "EV-S4-COORD-ANALYSIS"
+      ],
+      "reviewerIds": [
+        "coordinator-local"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-REALM-18-DETERMINISTIC",
+      "invariantId": "I-REALM-18",
+      "surface": "DETERMINISTIC",
+      "attackIds": [],
+      "taxonomyIds": [
+        "TRN-08",
+        "STA-03",
+        "UI-04"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "covered via EV-S4-VERIFY (final-state rebound)",
+      "evidenceIds": [
+        "EV-S4-VERIFY"
+      ],
+      "reviewerIds": [
+        "coordinator-local"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-REALM-SETTLE-ONCE-STATIC_SEMANTIC",
+      "invariantId": "I-REALM-SETTLE-ONCE",
+      "surface": "STATIC_SEMANTIC",
+      "attackIds": [],
+      "taxonomyIds": [
+        "TRN-12",
+        "TRN-06",
+        "PER-02"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "covered via EV-S4-COORD-ANALYSIS (final-state rebound)",
+      "evidenceIds": [
+        "EV-S4-COORD-ANALYSIS"
+      ],
+      "reviewerIds": [
+        "coordinator-local"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-REALM-SETTLE-ONCE-DETERMINISTIC",
+      "invariantId": "I-REALM-SETTLE-ONCE",
+      "surface": "DETERMINISTIC",
+      "attackIds": [],
+      "taxonomyIds": [
+        "TRN-12",
+        "TRN-06",
+        "PER-02"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "covered via EV-S4-VERIFY (final-state rebound)",
+      "evidenceIds": [
+        "EV-S4-VERIFY"
+      ],
+      "reviewerIds": [
+        "coordinator-local"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-REALM-UNEQUIP-STATIC_SEMANTIC",
+      "invariantId": "I-REALM-UNEQUIP",
+      "surface": "STATIC_SEMANTIC",
+      "attackIds": [],
+      "taxonomyIds": [
+        "INV-09",
+        "CRS-06"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "covered via EV-S4-COORD-ANALYSIS (final-state rebound)",
+      "evidenceIds": [
+        "EV-S4-COORD-ANALYSIS"
+      ],
+      "reviewerIds": [
+        "coordinator-local"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-REALM-UNEQUIP-DETERMINISTIC",
+      "invariantId": "I-REALM-UNEQUIP",
+      "surface": "DETERMINISTIC",
+      "attackIds": [],
+      "taxonomyIds": [
+        "INV-09",
+        "CRS-06"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "covered via EV-S4-VERIFY (final-state rebound)",
+      "evidenceIds": [
+        "EV-S4-VERIFY"
+      ],
+      "reviewerIds": [
+        "coordinator-local"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-HIDDEN-PREFIX-STATIC_SEMANTIC",
+      "invariantId": "I-HIDDEN-PREFIX",
+      "surface": "STATIC_SEMANTIC",
+      "attackIds": [],
+      "taxonomyIds": [
+        "STA-02",
+        "STA-07",
+        "TRN-06"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "covered via EV-S4-COORD-ANALYSIS (final-state rebound)",
+      "evidenceIds": [
+        "EV-S4-COORD-ANALYSIS"
+      ],
+      "reviewerIds": [
+        "coordinator-local"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-HIDDEN-PREFIX-DETERMINISTIC",
+      "invariantId": "I-HIDDEN-PREFIX",
+      "surface": "DETERMINISTIC",
+      "attackIds": [],
+      "taxonomyIds": [
+        "STA-02",
+        "STA-07",
+        "TRN-06"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "covered via EV-S4-VERIFY (final-state rebound)",
+      "evidenceIds": [
+        "EV-S4-VERIFY"
+      ],
+      "reviewerIds": [
+        "coordinator-local"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-HIDDEN-REWARD-ONCE-STATIC_SEMANTIC",
+      "invariantId": "I-HIDDEN-REWARD-ONCE",
+      "surface": "STATIC_SEMANTIC",
+      "attackIds": [],
+      "taxonomyIds": [
+        "TRN-12",
+        "ECO-01"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "covered via EV-S4-COORD-ANALYSIS (final-state rebound)",
+      "evidenceIds": [
+        "EV-S4-COORD-ANALYSIS"
+      ],
+      "reviewerIds": [
+        "coordinator-local"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-HIDDEN-REWARD-ONCE-DETERMINISTIC",
+      "invariantId": "I-HIDDEN-REWARD-ONCE",
+      "surface": "DETERMINISTIC",
+      "attackIds": [],
+      "taxonomyIds": [
+        "TRN-12",
+        "ECO-01"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "covered via EV-S4-VERIFY (final-state rebound)",
+      "evidenceIds": [
+        "EV-S4-VERIFY"
+      ],
+      "reviewerIds": [
+        "coordinator-local"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-NGHICH-PITY-STATIC_SEMANTIC",
+      "invariantId": "I-NGHICH-PITY",
+      "surface": "STATIC_SEMANTIC",
+      "attackIds": [],
+      "taxonomyIds": [
+        "ECO-03",
+        "ROB-10",
+        "TRN-06"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "covered via EV-S4-COORD-ANALYSIS (final-state rebound)",
+      "evidenceIds": [
+        "EV-S4-COORD-ANALYSIS"
+      ],
+      "reviewerIds": [
+        "coordinator-local"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-NGHICH-PITY-DETERMINISTIC",
+      "invariantId": "I-NGHICH-PITY",
+      "surface": "DETERMINISTIC",
+      "attackIds": [],
+      "taxonomyIds": [
+        "ECO-03",
+        "ROB-10",
+        "TRN-06"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "covered via EV-S4-VERIFY (final-state rebound)",
+      "evidenceIds": [
+        "EV-S4-VERIFY"
+      ],
+      "reviewerIds": [
+        "coordinator-local"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-BODY-OWNER-STATIC_SEMANTIC",
+      "invariantId": "I-BODY-OWNER",
+      "surface": "STATIC_SEMANTIC",
+      "attackIds": [],
+      "taxonomyIds": [
+        "AUT-01",
+        "AUT-02",
+        "ECO-05"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "covered via EV-S4-COORD-ANALYSIS (final-state rebound)",
+      "evidenceIds": [
+        "EV-S4-COORD-ANALYSIS"
+      ],
+      "reviewerIds": [
+        "coordinator-local"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-BODY-OWNER-DETERMINISTIC",
+      "invariantId": "I-BODY-OWNER",
+      "surface": "DETERMINISTIC",
+      "attackIds": [],
+      "taxonomyIds": [
+        "AUT-01",
+        "AUT-02",
+        "ECO-05"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "covered via EV-S4-VERIFY (final-state rebound)",
+      "evidenceIds": [
+        "EV-S4-VERIFY"
+      ],
+      "reviewerIds": [
+        "coordinator-local"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-ESSENCE-SUBST-STATIC_SEMANTIC",
+      "invariantId": "I-ESSENCE-SUBST",
+      "surface": "STATIC_SEMANTIC",
+      "attackIds": [],
+      "taxonomyIds": [
+        "ECO-01",
+        "ECO-05"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "covered via EV-S4-COORD-ANALYSIS (final-state rebound)",
+      "evidenceIds": [
+        "EV-S4-COORD-ANALYSIS"
+      ],
+      "reviewerIds": [
+        "coordinator-local"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-ESSENCE-SUBST-DETERMINISTIC",
+      "invariantId": "I-ESSENCE-SUBST",
+      "surface": "DETERMINISTIC",
+      "attackIds": [],
+      "taxonomyIds": [
+        "ECO-01",
+        "ECO-05"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "covered via EV-S4-VERIFY (final-state rebound)",
+      "evidenceIds": [
+        "EV-S4-VERIFY"
+      ],
+      "reviewerIds": [
+        "coordinator-local"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-PHYSIQUE-ONCE-STATIC_SEMANTIC",
+      "invariantId": "I-PHYSIQUE-ONCE",
+      "surface": "STATIC_SEMANTIC",
+      "attackIds": [],
+      "taxonomyIds": [
+        "TRN-06",
+        "PER-02"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "covered via EV-S4-COORD-ANALYSIS (final-state rebound)",
+      "evidenceIds": [
+        "EV-S4-COORD-ANALYSIS"
+      ],
+      "reviewerIds": [
+        "coordinator-local"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-PHYSIQUE-ONCE-DETERMINISTIC",
+      "invariantId": "I-PHYSIQUE-ONCE",
+      "surface": "DETERMINISTIC",
+      "attackIds": [],
+      "taxonomyIds": [
+        "TRN-06",
+        "PER-02"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "covered via EV-S4-VERIFY (final-state rebound)",
+      "evidenceIds": [
+        "EV-S4-VERIFY"
+      ],
+      "reviewerIds": [
+        "coordinator-local"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-TECH-MASTERY-STATIC_SEMANTIC",
+      "invariantId": "I-TECH-MASTERY",
+      "surface": "STATIC_SEMANTIC",
+      "attackIds": [],
+      "taxonomyIds": [
+        "AUT-08",
+        "TRN-12"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "covered via EV-S4-COORD-ANALYSIS (final-state rebound)",
+      "evidenceIds": [
+        "EV-S4-COORD-ANALYSIS"
+      ],
+      "reviewerIds": [
+        "coordinator-local"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-TECH-MASTERY-DETERMINISTIC",
+      "invariantId": "I-TECH-MASTERY",
+      "surface": "DETERMINISTIC",
+      "attackIds": [],
+      "taxonomyIds": [
+        "AUT-08",
+        "TRN-12"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "covered via EV-S4-VERIFY (final-state rebound)",
+      "evidenceIds": [
+        "EV-S4-VERIFY"
+      ],
+      "reviewerIds": [
+        "coordinator-local"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-TECH-MODEL-STATIC_SEMANTIC",
+      "invariantId": "I-TECH-MODEL",
+      "surface": "STATIC_SEMANTIC",
+      "attackIds": [],
+      "taxonomyIds": [
+        "STA-02",
+        "ROB-03"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "covered via EV-S4-COORD-ANALYSIS (final-state rebound)",
+      "evidenceIds": [
+        "EV-S4-COORD-ANALYSIS"
+      ],
+      "reviewerIds": [
+        "coordinator-local"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-TECH-MODEL-DETERMINISTIC",
+      "invariantId": "I-TECH-MODEL",
+      "surface": "DETERMINISTIC",
+      "attackIds": [],
+      "taxonomyIds": [
+        "STA-02",
+        "ROB-03"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "covered via EV-S4-VERIFY (final-state rebound)",
+      "evidenceIds": [
+        "EV-S4-VERIFY"
+      ],
+      "reviewerIds": [
+        "coordinator-local"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-NODE-CORELEVEL-STATIC_SEMANTIC",
+      "invariantId": "I-NODE-CORELEVEL",
+      "surface": "STATIC_SEMANTIC",
+      "attackIds": [],
+      "taxonomyIds": [
+        "AUT-03",
+        "CBT-02",
+        "PER-07"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "covered via EV-S4-COORD-ANALYSIS (final-state rebound)",
+      "evidenceIds": [
+        "EV-S4-COORD-ANALYSIS"
+      ],
+      "reviewerIds": [
+        "coordinator-local"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-NODE-CORELEVEL-DETERMINISTIC",
+      "invariantId": "I-NODE-CORELEVEL",
+      "surface": "DETERMINISTIC",
+      "attackIds": [],
+      "taxonomyIds": [
+        "AUT-03",
+        "CBT-02",
+        "PER-07"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "covered via EV-S4-VERIFY (final-state rebound)",
+      "evidenceIds": [
+        "EV-S4-VERIFY"
+      ],
+      "reviewerIds": [
+        "coordinator-local"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-NODE-PREREQ-STATIC_SEMANTIC",
+      "invariantId": "I-NODE-PREREQ",
+      "surface": "STATIC_SEMANTIC",
+      "attackIds": [],
+      "taxonomyIds": [
+        "TRN-01",
+        "TRN-11",
+        "INV-05"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "covered via EV-S4-COORD-ANALYSIS (final-state rebound)",
+      "evidenceIds": [
+        "EV-S4-COORD-ANALYSIS"
+      ],
+      "reviewerIds": [
+        "coordinator-local"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-NODE-PREREQ-DETERMINISTIC",
+      "invariantId": "I-NODE-PREREQ",
+      "surface": "DETERMINISTIC",
+      "attackIds": [],
+      "taxonomyIds": [
+        "TRN-01",
+        "TRN-11",
+        "INV-05"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "covered via EV-S4-VERIFY (final-state rebound)",
+      "evidenceIds": [
+        "EV-S4-VERIFY"
+      ],
+      "reviewerIds": [
+        "coordinator-local"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": false
+    }
+  ],
+  "attacks": [],
+  "reviews": [
+    {
+      "id": "REV-S4-CLOSURE",
+      "state": {
+        "productStateId": "9d043df0b086f581d98a5c91cd04e64cf6fc90ac436f028af9d17eb1ca3b7a0d",
+        "contractId": "b1c83ecaf2da181def4ae9f51d399268e9e06069048c13c18bfae81917e46155",
+        "attackModelId": "58278e6d54c13d2537d03c099f1b62e3863f971d1d30e89980060bc1d377e264",
+        "environmentId": "19d2327a64b8249145f0df487429dfd218562df6ef4e8cbf111a5f5260a39e85"
+      },
+      "round": 1,
+      "phase": "CLOSURE",
+      "reviewerId": "primary-agent-coordinator",
+      "contextId": "coordinator-same-context",
+      "model": "swe-2-max",
+      "role": "closure",
+      "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "priorFindingsVisible": true,
+      "accessLimitations": [
+        "same-context self-review: no isolated reviewer context available - the one dispatched agent (ee390698) failed at dispatch on a rate limit and the user directed solo work afterward; closure verdicts rest on executed pin evidence, not independent re-analysis"
+      ],
+      "startedAt": "2026-09-30T02:56:00.000Z",
+      "sealedAt": "2026-09-30T02:58:00.000Z",
+      "previousPhaseReviewId": null,
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-S4-PIN-GAPS",
+        "EV-S4-VERIFY",
+        "EV-S4-AUDIO-FIX"
+      ],
+      "findingIds": [
+        "F-MUT-RESTORE-PURGE",
+        "F-MUT-ALCHEMY-ROUNDTRIP",
+        "F-MUT-MASTERY-DEFEAT",
+        "F-MUT-COMPLETION-ENUM",
+        "F-ENV-AUDIO-CRLF",
+        "COORD-1"
+      ],
+      "novelAttackIds": [],
+      "status": "SEALED"
+    }
+  ],
+  "cycles": [],
+  "mutations": [
+    {
+      "id": "M-BR-1",
+      "candidateState": {
+        "productStateId": "32150723837d025bb7cf31bad32b1596d8e33b9e9dd4142dd5206c623d26073b",
+        "contractId": "b1c83ecaf2da181def4ae9f51d399268e9e06069048c13c18bfae81917e46155",
+        "attackModelId": "58278e6d54c13d2537d03c099f1b62e3863f971d1d30e89980060bc1d377e264",
+        "environmentId": "19d2327a64b8249145f0df487429dfd218562df6ef4e8cbf111a5f5260a39e85"
+      },
+      "invariantIds": [
+        "I-IDENTITY-MATRIX"
+      ],
+      "rootClass": "CONTRACT_REGRESSION",
+      "operator": "removed second-commit guard in chooseCultivationPath",
+      "isolationPath": "docs/qa/runs/beta-release-2026-09-29/evidence/coordinator-mutation-battery.md",
+      "mutantHash": "7aab6138fb0aa6680f18e7596e6c58ddd65ea3b0e2c89a6810aafb978d4a2bda",
+      "expectedDetector": "path contract suite",
+      "result": "KILLED_EXPECTED",
+      "evidenceIds": [
+        "EV-BR-MUTATION-BATTERY"
+      ],
+      "equivalenceReason": null,
+      "candidateUnchanged": true
+    },
+    {
+      "id": "M-BR-2",
+      "candidateState": {
+        "productStateId": "32150723837d025bb7cf31bad32b1596d8e33b9e9dd4142dd5206c623d26073b",
+        "contractId": "b1c83ecaf2da181def4ae9f51d399268e9e06069048c13c18bfae81917e46155",
+        "attackModelId": "58278e6d54c13d2537d03c099f1b62e3863f971d1d30e89980060bc1d377e264",
+        "environmentId": "19d2327a64b8249145f0df487429dfd218562df6ef4e8cbf111a5f5260a39e85"
+      },
+      "invariantIds": [
+        "I-SAVE-VERSION-87"
+      ],
+      "rootClass": "MIGRATION_REGRESSION",
+      "operator": "version gate if(false) - all versions accepted",
+      "isolationPath": "docs/qa/runs/beta-release-2026-09-29/evidence/coordinator-mutation-battery.md",
+      "mutantHash": "c8bf786e16608d81520fd3560d9d2cfaccb4a530c41ac3cdd4f9e21246d9e816",
+      "expectedDetector": "save/ suite",
+      "result": "KILLED_EXPECTED",
+      "evidenceIds": [
+        "EV-BR-MUTATION-BATTERY"
+      ],
+      "equivalenceReason": null,
+      "candidateUnchanged": true
+    },
+    {
+      "id": "M-BR-3",
+      "candidateState": {
+        "productStateId": "32150723837d025bb7cf31bad32b1596d8e33b9e9dd4142dd5206c623d26073b",
+        "contractId": "b1c83ecaf2da181def4ae9f51d399268e9e06069048c13c18bfae81917e46155",
+        "attackModelId": "58278e6d54c13d2537d03c099f1b62e3863f971d1d30e89980060bc1d377e264",
+        "environmentId": "19d2327a64b8249145f0df487429dfd218562df6ef4e8cbf111a5f5260a39e85"
+      },
+      "invariantIds": [
+        "I-RESTORE-ATOMIC"
+      ],
+      "rootClass": "STATE_RESIDUE",
+      "operator": "foreign-key  purge loop removed",
+      "isolationPath": "docs/qa/runs/beta-release-2026-09-29/evidence/coordinator-mutation-battery.md",
+      "mutantHash": "9d4dff55864bc5ae5d07392fda01da854e602a34091d09bfa35bc011e8a65c2b",
+      "expectedDetector": "player.restoreFromSave.test.ts",
+      "result": "SURVIVED",
+      "evidenceIds": [
+        "EV-BR-MUTATION-BATTERY"
+      ],
+      "equivalenceReason": null,
+      "candidateUnchanged": true
+    },
+    {
+      "id": "M-BR-4",
+      "candidateState": {
+        "productStateId": "32150723837d025bb7cf31bad32b1596d8e33b9e9dd4142dd5206c623d26073b",
+        "contractId": "b1c83ecaf2da181def4ae9f51d399268e9e06069048c13c18bfae81917e46155",
+        "attackModelId": "58278e6d54c13d2537d03c099f1b62e3863f971d1d30e89980060bc1d377e264",
+        "environmentId": "19d2327a64b8249145f0df487429dfd218562df6ef4e8cbf111a5f5260a39e85"
+      },
+      "invariantIds": [
+        "I-HIDDEN-PREFIX"
+      ],
+      "rootClass": "ORDERING_REGRESSION",
+      "operator": "strict-prefix queue check removed from canProgressHiddenBody",
+      "isolationPath": "docs/qa/runs/beta-release-2026-09-29/evidence/coordinator-mutation-battery.md",
+      "mutantHash": "e29a86f74e033f55a155bdfefa26b6e01bcedddfa78db3f179bde2f5baa69767",
+      "expectedDetector": "hidden/ suite",
+      "result": "KILLED_EXPECTED",
+      "evidenceIds": [
+        "EV-BR-MUTATION-BATTERY"
+      ],
+      "equivalenceReason": null,
+      "candidateUnchanged": true
+    },
+    {
+      "id": "M-BR-5a",
+      "candidateState": {
+        "productStateId": "32150723837d025bb7cf31bad32b1596d8e33b9e9dd4142dd5206c623d26073b",
+        "contractId": "b1c83ecaf2da181def4ae9f51d399268e9e06069048c13c18bfae81917e46155",
+        "attackModelId": "58278e6d54c13d2537d03c099f1b62e3863f971d1d30e89980060bc1d377e264",
+        "environmentId": "19d2327a64b8249145f0df487429dfd218562df6ef4e8cbf111a5f5260a39e85"
+      },
+      "invariantIds": [
+        "I-CREATION-CONTRACT"
+      ],
+      "rootClass": "GUARD_REMOVAL",
+      "operator": "missing-pick throw removed in App.vue onNewCharacter",
+      "isolationPath": "docs/qa/runs/beta-release-2026-09-29/evidence/coordinator-mutation-battery.md",
+      "mutantHash": "b503b0571afcbae1bf513efe55573b04bc387152166bd5d95f1c2529abdd97c4",
+      "expectedDetector": "App.wiring.test.ts",
+      "result": "EQUIVALENT",
+      "evidenceIds": [
+        "EV-BR-MUTATION-BATTERY"
+      ],
+      "equivalenceReason": "bootstrapEarlyGamePlayer throws on rejected pick downstream - same observable failure",
+      "candidateUnchanged": true
+    },
+    {
+      "id": "M-BR-5b",
+      "candidateState": {
+        "productStateId": "32150723837d025bb7cf31bad32b1596d8e33b9e9dd4142dd5206c623d26073b",
+        "contractId": "b1c83ecaf2da181def4ae9f51d399268e9e06069048c13c18bfae81917e46155",
+        "attackModelId": "58278e6d54c13d2537d03c099f1b62e3863f971d1d30e89980060bc1d377e264",
+        "environmentId": "19d2327a64b8249145f0df487429dfd218562df6ef4e8cbf111a5f5260a39e85"
+      },
+      "invariantIds": [
+        "I-CREATION-CONTRACT"
+      ],
+      "rootClass": "WRITE_OMISSION",
+      "operator": "pick write skipped - mortalBasicSkillId stays undefined",
+      "isolationPath": "docs/qa/runs/beta-release-2026-09-29/evidence/coordinator-mutation-battery.md",
+      "mutantHash": "5d1877e45ef4b55f5f0bb3cb8bfb192be199993dee63e9fc48c3f03cd673df8b",
+      "expectedDetector": "mortalBasicSkill + wiring tests",
+      "result": "KILLED_EXPECTED",
+      "evidenceIds": [
+        "EV-BR-MUTATION-BATTERY"
+      ],
+      "equivalenceReason": null,
+      "candidateUnchanged": true
+    },
+    {
+      "id": "M-BR-6a",
+      "candidateState": {
+        "productStateId": "32150723837d025bb7cf31bad32b1596d8e33b9e9dd4142dd5206c623d26073b",
+        "contractId": "b1c83ecaf2da181def4ae9f51d399268e9e06069048c13c18bfae81917e46155",
+        "attackModelId": "58278e6d54c13d2537d03c099f1b62e3863f971d1d30e89980060bc1d377e264",
+        "environmentId": "19d2327a64b8249145f0df487429dfd218562df6ef4e8cbf111a5f5260a39e85"
+      },
+      "invariantIds": [
+        "I-SAVE-ROUNDTRIP"
+      ],
+      "rootClass": "SERIALIZATION_OMISSION",
+      "operator": "alchemyJobs dropped from buildGameSave payload",
+      "isolationPath": "docs/qa/runs/beta-release-2026-09-29/evidence/coordinator-mutation-battery.md",
+      "mutantHash": "49f93a84ddeccc4ed11e46c6dcd19d9f4dc90043a2855b488477d9a37bd476f1",
+      "expectedDetector": "SaveRoundTrip + saveLoadRoundTrip",
+      "result": "SURVIVED",
+      "evidenceIds": [
+        "EV-BR-MUTATION-BATTERY"
+      ],
+      "equivalenceReason": null,
+      "candidateUnchanged": true
+    },
+    {
+      "id": "M-BR-6b",
+      "candidateState": {
+        "productStateId": "32150723837d025bb7cf31bad32b1596d8e33b9e9dd4142dd5206c623d26073b",
+        "contractId": "b1c83ecaf2da181def4ae9f51d399268e9e06069048c13c18bfae81917e46155",
+        "attackModelId": "58278e6d54c13d2537d03c099f1b62e3863f971d1d30e89980060bc1d377e264",
+        "environmentId": "19d2327a64b8249145f0df487429dfd218562df6ef4e8cbf111a5f5260a39e85"
+      },
+      "invariantIds": [
+        "I-SAVE-ROUNDTRIP"
+      ],
+      "rootClass": "SERIALIZATION_OMISSION",
+      "operator": "techniques dropped from buildGameSave payload",
+      "isolationPath": "docs/qa/runs/beta-release-2026-09-29/evidence/coordinator-mutation-battery.md",
+      "mutantHash": "931c924ab020c5a42800bdea80e7b94d1e5f06b48d5dc64f543bad13458e970d",
+      "expectedDetector": "SaveRoundTrip + shape validation",
+      "result": "KILLED_EXPECTED",
+      "evidenceIds": [
+        "EV-BR-MUTATION-BATTERY"
+      ],
+      "equivalenceReason": null,
+      "candidateUnchanged": true
+    },
+    {
+      "id": "M-BR-7",
+      "candidateState": {
+        "productStateId": "32150723837d025bb7cf31bad32b1596d8e33b9e9dd4142dd5206c623d26073b",
+        "contractId": "b1c83ecaf2da181def4ae9f51d399268e9e06069048c13c18bfae81917e46155",
+        "attackModelId": "58278e6d54c13d2537d03c099f1b62e3863f971d1d30e89980060bc1d377e264",
+        "environmentId": "19d2327a64b8249145f0df487429dfd218562df6ef4e8cbf111a5f5260a39e85"
+      },
+      "invariantIds": [
+        "I-NODE-PREREQ"
+      ],
+      "rootClass": "GATE_REMOVAL",
+      "operator": "levelOk conjunct removed from skillCastCount prereq",
+      "isolationPath": "docs/qa/runs/beta-release-2026-09-29/evidence/coordinator-mutation-battery.md",
+      "mutantHash": "5ceced1881109ece1b52030cb323c83d2909b707d912e38995d2fda497c6d1e5",
+      "expectedDetector": "progression/ suite",
+      "result": "KILLED_EXPECTED",
+      "evidenceIds": [
+        "EV-BR-MUTATION-BATTERY"
+      ],
+      "equivalenceReason": null,
+      "candidateUnchanged": true
+    },
+    {
+      "id": "M-BR-8",
+      "candidateState": {
+        "productStateId": "32150723837d025bb7cf31bad32b1596d8e33b9e9dd4142dd5206c623d26073b",
+        "contractId": "b1c83ecaf2da181def4ae9f51d399268e9e06069048c13c18bfae81917e46155",
+        "attackModelId": "58278e6d54c13d2537d03c099f1b62e3863f971d1d30e89980060bc1d377e264",
+        "environmentId": "19d2327a64b8249145f0df487429dfd218562df6ef4e8cbf111a5f5260a39e85"
+      },
+      "invariantIds": [
+        "I-NODE-CORELEVEL"
+      ],
+      "rootClass": "AUTHORITY_BYPASS",
+      "operator": "getSkillCoreLevel pinned to 1 - nodeLevels bypassed",
+      "isolationPath": "docs/qa/runs/beta-release-2026-09-29/evidence/coordinator-mutation-battery.md",
+      "mutantHash": "6d46c48ddcdae78dcf5ab61b904e3c75e870f634cb259e24207456286f44bef2",
+      "expectedDetector": "progression + skill suites",
+      "result": "KILLED_EXPECTED",
+      "evidenceIds": [
+        "EV-BR-MUTATION-BATTERY"
+      ],
+      "equivalenceReason": null,
+      "candidateUnchanged": true
+    },
+    {
+      "id": "M-BR-9a",
+      "candidateState": {
+        "productStateId": "32150723837d025bb7cf31bad32b1596d8e33b9e9dd4142dd5206c623d26073b",
+        "contractId": "b1c83ecaf2da181def4ae9f51d399268e9e06069048c13c18bfae81917e46155",
+        "attackModelId": "58278e6d54c13d2537d03c099f1b62e3863f971d1d30e89980060bc1d377e264",
+        "environmentId": "19d2327a64b8249145f0df487429dfd218562df6ef4e8cbf111a5f5260a39e85"
+      },
+      "invariantIds": [
+        "I-TECH-MASTERY"
+      ],
+      "rootClass": "GATE_WIDENING",
+      "operator": "victory terminal gate widened to always-true - defeat flushes mastery",
+      "isolationPath": "docs/qa/runs/beta-release-2026-09-29/evidence/coordinator-mutation-battery.md",
+      "mutantHash": "d7aa1469e5bf728a8fb45fad73555e655b36a89cd5fb637d6a9e1a99b401d6c2",
+      "expectedDetector": "techniqueMastery tests",
+      "result": "SURVIVED",
+      "evidenceIds": [
+        "EV-BR-MUTATION-BATTERY"
+      ],
+      "equivalenceReason": null,
+      "candidateUnchanged": true
+    },
+    {
+      "id": "M-BR-9b",
+      "candidateState": {
+        "productStateId": "32150723837d025bb7cf31bad32b1596d8e33b9e9dd4142dd5206c623d26073b",
+        "contractId": "b1c83ecaf2da181def4ae9f51d399268e9e06069048c13c18bfae81917e46155",
+        "attackModelId": "58278e6d54c13d2537d03c099f1b62e3863f971d1d30e89980060bc1d377e264",
+        "environmentId": "19d2327a64b8249145f0df487429dfd218562df6ef4e8cbf111a5f5260a39e85"
+      },
+      "invariantIds": [
+        "I-TECH-MASTERY"
+      ],
+      "rootClass": "ORDERING_REGRESSION",
+      "operator": "consume-and-zero removed - same buffer re-pays next victory",
+      "isolationPath": "docs/qa/runs/beta-release-2026-09-29/evidence/coordinator-mutation-battery.md",
+      "mutantHash": "448868de6b512fdebe1c7c3826cb3d8cde6bb6c46728f83056ad364a272bb38d",
+      "expectedDetector": "techniqueMastery tests",
+      "result": "KILLED_EXPECTED",
+      "evidenceIds": [
+        "EV-BR-MUTATION-BATTERY"
+      ],
+      "equivalenceReason": null,
+      "candidateUnchanged": true
+    },
+    {
+      "id": "M-BR-10",
+      "candidateState": {
+        "productStateId": "32150723837d025bb7cf31bad32b1596d8e33b9e9dd4142dd5206c623d26073b",
+        "contractId": "b1c83ecaf2da181def4ae9f51d399268e9e06069048c13c18bfae81917e46155",
+        "attackModelId": "58278e6d54c13d2537d03c099f1b62e3863f971d1d30e89980060bc1d377e264",
+        "environmentId": "19d2327a64b8249145f0df487429dfd218562df6ef4e8cbf111a5f5260a39e85"
+      },
+      "invariantIds": [
+        "I-REALM-SETTLE-ONCE"
+      ],
+      "rootClass": "IDEMPOTENCE_REMOVAL",
+      "operator": "committed.receipt check removed - settle replays",
+      "isolationPath": "docs/qa/runs/beta-release-2026-09-29/evidence/coordinator-mutation-battery.md",
+      "mutantHash": "155426c8501e88ba6ad43af7e04dc766a716d7e3a02e568da8ed03630d345c45",
+      "expectedDetector": "tribulation/ suite",
+      "result": "KILLED_EXPECTED",
+      "evidenceIds": [
+        "EV-BR-MUTATION-BATTERY"
+      ],
+      "equivalenceReason": null,
+      "candidateUnchanged": true
+    },
+    {
+      "id": "M-BR-11",
+      "candidateState": {
+        "productStateId": "32150723837d025bb7cf31bad32b1596d8e33b9e9dd4142dd5206c623d26073b",
+        "contractId": "b1c83ecaf2da181def4ae9f51d399268e9e06069048c13c18bfae81917e46155",
+        "attackModelId": "58278e6d54c13d2537d03c099f1b62e3863f971d1d30e89980060bc1d377e264",
+        "environmentId": "19d2327a64b8249145f0df487429dfd218562df6ef4e8cbf111a5f5260a39e85"
+      },
+      "invariantIds": [
+        "I-REALM-UNEQUIP"
+      ],
+      "rootClass": "ORDERING_REGRESSION",
+      "operator": "unequipAllEquipment skipped at startTribulationPrepared",
+      "isolationPath": "docs/qa/runs/beta-release-2026-09-29/evidence/coordinator-mutation-battery.md",
+      "mutantHash": "6b44624b82569c957d47fa6378e3c8444a718d16889a49f10c50689432532d57",
+      "expectedDetector": "unequipAll + tribulation tests",
+      "result": "KILLED_EXPECTED",
+      "evidenceIds": [
+        "EV-BR-MUTATION-BATTERY"
+      ],
+      "equivalenceReason": null,
+      "candidateUnchanged": true
+    },
+    {
+      "id": "M-BR-12",
+      "candidateState": {
+        "productStateId": "32150723837d025bb7cf31bad32b1596d8e33b9e9dd4142dd5206c623d26073b",
+        "contractId": "b1c83ecaf2da181def4ae9f51d399268e9e06069048c13c18bfae81917e46155",
+        "attackModelId": "58278e6d54c13d2537d03c099f1b62e3863f971d1d30e89980060bc1d377e264",
+        "environmentId": "19d2327a64b8249145f0df487429dfd218562df6ef4e8cbf111a5f5260a39e85"
+      },
+      "invariantIds": [
+        "I-NGHICH-PITY"
+      ],
+      "rootClass": "GUARANTEE_REMOVAL",
+      "operator": "pity guarantee term removed from success roll",
+      "isolationPath": "docs/qa/runs/beta-release-2026-09-29/evidence/coordinator-mutation-battery.md",
+      "mutantHash": "fb9cfb1e9237f9ce84072ad5474e88c09a30ae7770b06b696544820ce9ee3598",
+      "expectedDetector": "NghichChuTian.test.ts",
+      "result": "KILLED_EXPECTED",
+      "evidenceIds": [
+        "EV-BR-MUTATION-BATTERY"
+      ],
+      "equivalenceReason": null,
+      "candidateUnchanged": true
+    },
+    {
+      "id": "M-BR-13",
+      "candidateState": {
+        "productStateId": "32150723837d025bb7cf31bad32b1596d8e33b9e9dd4142dd5206c623d26073b",
+        "contractId": "b1c83ecaf2da181def4ae9f51d399268e9e06069048c13c18bfae81917e46155",
+        "attackModelId": "58278e6d54c13d2537d03c099f1b62e3863f971d1d30e89980060bc1d377e264",
+        "environmentId": "19d2327a64b8249145f0df487429dfd218562df6ef4e8cbf111a5f5260a39e85"
+      },
+      "invariantIds": [
+        "I-PHYSIQUE-ONCE"
+      ],
+      "rootClass": "GUARD_REMOVAL",
+      "operator": "physiqueGrade === advancement.from guard removed",
+      "isolationPath": "docs/qa/runs/beta-release-2026-09-29/evidence/coordinator-mutation-battery.md",
+      "mutantHash": "98aa6df6ed2964865cab235b6941d3614bb8ced06dfd4831ddf19da577f9ce25",
+      "expectedDetector": "body/ suite",
+      "result": "KILLED_EXPECTED",
+      "evidenceIds": [
+        "EV-BR-MUTATION-BATTERY"
+      ],
+      "equivalenceReason": null,
+      "candidateUnchanged": true
+    },
+    {
+      "id": "M-BR-14",
+      "candidateState": {
+        "productStateId": "32150723837d025bb7cf31bad32b1596d8e33b9e9dd4142dd5206c623d26073b",
+        "contractId": "b1c83ecaf2da181def4ae9f51d399268e9e06069048c13c18bfae81917e46155",
+        "attackModelId": "58278e6d54c13d2537d03c099f1b62e3863f971d1d30e89980060bc1d377e264",
+        "environmentId": "19d2327a64b8249145f0df487429dfd218562df6ef4e8cbf111a5f5260a39e85"
+      },
+      "invariantIds": [
+        "I-BODY-OWNER"
+      ],
+      "rootClass": "ORDERING_REGRESSION",
+      "operator": "isBodyChapterUnlocked sequential gate removed from invest",
+      "isolationPath": "docs/qa/runs/beta-release-2026-09-29/evidence/coordinator-mutation-battery.md",
+      "mutantHash": "ec45aa1ca18996f2a78b636f354d2cd2c1db3f284da760ef3414145baa1d6e0c",
+      "expectedDetector": "body/ suite",
+      "result": "KILLED_EXPECTED",
+      "evidenceIds": [
+        "EV-BR-MUTATION-BATTERY"
+      ],
+      "equivalenceReason": null,
+      "candidateUnchanged": true
+    },
+    {
+      "id": "M-BR-15",
+      "candidateState": {
+        "productStateId": "32150723837d025bb7cf31bad32b1596d8e33b9e9dd4142dd5206c623d26073b",
+        "contractId": "b1c83ecaf2da181def4ae9f51d399268e9e06069048c13c18bfae81917e46155",
+        "attackModelId": "58278e6d54c13d2537d03c099f1b62e3863f971d1d30e89980060bc1d377e264",
+        "environmentId": "19d2327a64b8249145f0df487429dfd218562df6ef4e8cbf111a5f5260a39e85"
+      },
+      "invariantIds": [
+        "I-ESSENCE-SUBST"
+      ],
+      "rootClass": "DIRECTION_INVERSION",
+      "operator": "substitution loop inverted to upward direction (lower -> higher grade)",
+      "isolationPath": "docs/qa/runs/beta-release-2026-09-29/evidence/coordinator-mutation-battery.md",
+      "mutantHash": "0d7f8d5d2089854a64a486dfe8f09156955815b33bb291a1741dcf19bae81c7f",
+      "expectedDetector": "body/ suite",
+      "result": "KILLED_EXPECTED",
+      "evidenceIds": [
+        "EV-BR-MUTATION-BATTERY"
+      ],
+      "equivalenceReason": null,
+      "candidateUnchanged": true
+    },
+    {
+      "id": "M-BR-16a",
+      "candidateState": {
+        "productStateId": "32150723837d025bb7cf31bad32b1596d8e33b9e9dd4142dd5206c623d26073b",
+        "contractId": "b1c83ecaf2da181def4ae9f51d399268e9e06069048c13c18bfae81917e46155",
+        "attackModelId": "58278e6d54c13d2537d03c099f1b62e3863f971d1d30e89980060bc1d377e264",
+        "environmentId": "19d2327a64b8249145f0df487429dfd218562df6ef4e8cbf111a5f5260a39e85"
+      },
+      "invariantIds": [
+        "I-TECH-MODEL"
+      ],
+      "rootClass": "VALIDATION_REMOVAL",
+      "operator": "TECHNIQUE_COMPLETION_STATES whitelist dropped from record shape",
+      "isolationPath": "docs/qa/runs/beta-release-2026-09-29/evidence/coordinator-mutation-battery.md",
+      "mutantHash": "e293568a45221ef3c3b2dcf7e36d40ffaf04dc5ff89a8233c4ab0dbbb423c406",
+      "expectedDetector": "boundary tests",
+      "result": "SURVIVED",
+      "evidenceIds": [
+        "EV-BR-MUTATION-BATTERY"
+      ],
+      "equivalenceReason": null,
+      "candidateUnchanged": true
+    },
+    {
+      "id": "M-BR-16b",
+      "candidateState": {
+        "productStateId": "32150723837d025bb7cf31bad32b1596d8e33b9e9dd4142dd5206c623d26073b",
+        "contractId": "b1c83ecaf2da181def4ae9f51d399268e9e06069048c13c18bfae81917e46155",
+        "attackModelId": "58278e6d54c13d2537d03c099f1b62e3863f971d1d30e89980060bc1d377e264",
+        "environmentId": "19d2327a64b8249145f0df487429dfd218562df6ef4e8cbf111a5f5260a39e85"
+      },
+      "invariantIds": [
+        "I-TECH-MODEL"
+      ],
+      "rootClass": "VALIDATION_REMOVAL",
+      "operator": "g > entry.grade bound dropped from key-shape check",
+      "isolationPath": "docs/qa/runs/beta-release-2026-09-29/evidence/coordinator-mutation-battery.md",
+      "mutantHash": "4e2abd0ba803bbb6ac2dc854d4f18f03d415ed692c7dac4204d7f3532098a53f",
+      "expectedDetector": "boundary tests",
+      "result": "KILLED_EXPECTED",
+      "evidenceIds": [
+        "EV-BR-MUTATION-BATTERY"
+      ],
+      "equivalenceReason": null,
+      "candidateUnchanged": true
+    },
+    {
+      "id": "M-BR-17",
+      "candidateState": {
+        "productStateId": "32150723837d025bb7cf31bad32b1596d8e33b9e9dd4142dd5206c623d26073b",
+        "contractId": "b1c83ecaf2da181def4ae9f51d399268e9e06069048c13c18bfae81917e46155",
+        "attackModelId": "58278e6d54c13d2537d03c099f1b62e3863f971d1d30e89980060bc1d377e264",
+        "environmentId": "19d2327a64b8249145f0df487429dfd218562df6ef4e8cbf111a5f5260a39e85"
+      },
+      "invariantIds": [
+        "I-CLOUD-CAS"
+      ],
+      "rootClass": "RETRY_REMOVAL",
+      "operator": "conflict resync skipped - retry uses stale revision",
+      "isolationPath": "docs/qa/runs/beta-release-2026-09-29/evidence/coordinator-mutation-battery.md",
+      "mutantHash": "d63dfe21b2c813164303c68e4330b2c9035378c87179c42034f2b99255781b12",
+      "expectedDetector": "cloudSave/ suite",
+      "result": "KILLED_EXPECTED",
+      "evidenceIds": [
+        "EV-BR-MUTATION-BATTERY"
+      ],
+      "equivalenceReason": null,
+      "candidateUnchanged": true
+    },
+    {
+      "id": "M-BR-18",
+      "candidateState": {
+        "productStateId": "32150723837d025bb7cf31bad32b1596d8e33b9e9dd4142dd5206c623d26073b",
+        "contractId": "b1c83ecaf2da181def4ae9f51d399268e9e06069048c13c18bfae81917e46155",
+        "attackModelId": "58278e6d54c13d2537d03c099f1b62e3863f971d1d30e89980060bc1d377e264",
+        "environmentId": "19d2327a64b8249145f0df487429dfd218562df6ef4e8cbf111a5f5260a39e85"
+      },
+      "invariantIds": [
+        "I-HIDDEN-REWARD-ONCE"
+      ],
+      "rootClass": "DEDUP_REMOVAL",
+      "operator": "hiddenBreakthroughRealmIds dedupe removed - repeated push",
+      "isolationPath": "docs/qa/runs/beta-release-2026-09-29/evidence/coordinator-mutation-battery.md",
+      "mutantHash": "862db40f4867491cd00c25ae1173d1407dba8c21ba1f1241507ce04641e5f827",
+      "expectedDetector": "hidden/ suite",
+      "result": "KILLED_EXPECTED",
+      "evidenceIds": [
+        "EV-BR-MUTATION-BATTERY"
+      ],
+      "equivalenceReason": null,
+      "candidateUnchanged": true
+    },
+    {
+      "id": "M-BR-19",
+      "candidateState": {
+        "productStateId": "32150723837d025bb7cf31bad32b1596d8e33b9e9dd4142dd5206c623d26073b",
+        "contractId": "b1c83ecaf2da181def4ae9f51d399268e9e06069048c13c18bfae81917e46155",
+        "attackModelId": "58278e6d54c13d2537d03c099f1b62e3863f971d1d30e89980060bc1d377e264",
+        "environmentId": "19d2327a64b8249145f0df487429dfd218562df6ef4e8cbf111a5f5260a39e85"
+      },
+      "invariantIds": [
+        "I-RESTORE-ATOMIC"
+      ],
+      "rootClass": "VALIDATION_REMOVAL",
+      "operator": "baseStats StatType whitelist bypassed - foreign stat keys accepted",
+      "isolationPath": "evidence/coordinator-mutation-battery.md",
+      "mutantHash": "e48e1cc9313efdc295ecc43ac9dde3ae087932252e273b4ddfffea0dbeb7f316",
+      "expectedDetector": "stores/ + snapshotIsolation + SaveRoundTrip suites",
+      "result": "KILLED_EXPECTED",
+      "evidenceIds": [
+        "EV-BR-MUTATION-BATTERY"
+      ],
+      "equivalenceReason": null,
+      "candidateUnchanged": true
+    }
+  ],
+  "corpus": [],
+  "lessons": [
+    {
+      "id": "L-BR-01",
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "TEST",
+      "findingIds": [
+        "F-MUT-RESTORE-PURGE",
+        "F-MUT-ALCHEMY-ROUNDTRIP",
+        "F-MUT-MASTERY-DEFEAT",
+        "F-MUT-COMPLETION-ENUM"
+      ],
+      "incidentEvidenceIds": [
+        "EV-S4-PIN-GAPS"
+      ],
+      "originatingRun": "beta-release-2026-09-29",
+      "rootClass": "missing negative-branch detector",
+      "missedInvariantIds": [],
+      "escapeReason": "scoped detectors exercised happy paths and positive validation; the negative/mirror legs (stale-store purge, field omission, defeat flush, enum membership on canonical records) had no failing test until mutation exposed them",
+      "applicability": [
+        "mutation-survival adjudication on every audit battery"
+      ],
+      "exclusions": [],
+      "proposedProtection": [
+        "a survived mutant always yields a discriminating pin on the negative branch before closure"
+      ],
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [],
+      "capabilityDelta": "detector-gap class now has a concrete pin pattern: construct the discriminating state, assert the seam is never invoked",
+      "status": "CAPTURED",
+      "policyVersion": null,
+      "effectiveFromRun": "beta-release-2026-09-29",
+      "recurrenceFindingIds": [],
+      "preventionEvidenceIds": [],
+      "guidance": null
+    },
+    {
+      "id": "L-BR-02",
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "findingIds": [
+        "COORD-1"
+      ],
+      "incidentEvidenceIds": [],
+      "originatingRun": "beta-release-2026-09-29",
+      "rootClass": "incomplete transition read-model for released realm",
+      "missedInvariantIds": [],
+      "escapeReason": "getBreakthroughRequirements returns [] for realms beyond the authored set; canTriggerBreakthrough treats empty as not-yet-met so a released transition would present a dead button",
+      "applicability": [
+        "realm-progression release policy"
+      ],
+      "exclusions": [],
+      "proposedProtection": [
+        "enabling a post-beta transition must ship its requirement rows in the same diff; optionally assert non-empty rows for enabled transitions"
+      ],
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [],
+      "capabilityDelta": "human exception recorded against the declared post-beta nonGoal",
+      "status": "CAPTURED",
+      "policyVersion": null,
+      "effectiveFromRun": "beta-release-2026-09-29",
+      "recurrenceFindingIds": [],
+      "preventionEvidenceIds": [],
+      "guidance": null
+    },
+    {
+      "id": "L-BR-03",
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "TEST",
+      "findingIds": [
+        "F-ENV-AUDIO-CRLF"
+      ],
+      "incidentEvidenceIds": [
+        "EV-S4-AUDIO-FIX"
+      ],
+      "originatingRun": "beta-release-2026-09-29",
+      "rootClass": "environment-fragile test oracle",
+      "missedInvariantIds": [],
+      "escapeReason": "file-content regex assumed LF line endings; CRLF checkouts made the suite permanently red independent of the product",
+      "applicability": [
+        "file-scanning architecture tests on Windows checkouts"
+      ],
+      "exclusions": [],
+      "proposedProtection": [
+        "regexes over file bytes tolerate \\r?\\n"
+      ],
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [],
+      "capabilityDelta": "baseline red eliminated; full suite green on the final state",
+      "status": "CAPTURED",
+      "policyVersion": null,
+      "effectiveFromRun": "beta-release-2026-09-29",
+      "recurrenceFindingIds": [],
+      "preventionEvidenceIds": [],
+      "guidance": null
+    }
+  ],
+  "messages": [],
+  "events": [
+    {
+      "seq": 1,
+      "at": "2026-09-29T14:19:15.343Z",
+      "kind": "PHASE",
+      "actor": "coordinator-42896",
+      "state": {
+        "productStateId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567",
+        "contractId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567",
+        "attackModelId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567",
+        "environmentId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567"
+      },
+      "previousEventHash": null,
+      "payloadPath": "events/0001.json",
+      "payloadHash": "c24fd1cb3eafbfbdc0a3ba29e96de39dbad44385f3a2848e7dd2b9e4c575c062",
+      "eventHash": "4dde31343b2ffffd8e06fe1e150a5abee956f9c9c3fbdd5620f246ac27d343fe"
+    },
+    {
+      "seq": 2,
+      "at": "2026-09-29T14:23:25.131Z",
+      "kind": "SNAPSHOT",
+      "actor": "coordinator-42896",
+      "state": {
+        "productStateId": "32150723837d025bb7cf31bad32b1596d8e33b9e9dd4142dd5206c623d26073b",
+        "contractId": "b1c83ecaf2da181def4ae9f51d399268e9e06069048c13c18bfae81917e46155",
+        "attackModelId": "58278e6d54c13d2537d03c099f1b62e3863f971d1d30e89980060bc1d377e264",
+        "environmentId": "19d2327a64b8249145f0df487429dfd218562df6ef4e8cbf111a5f5260a39e85"
+      },
+      "previousEventHash": "4dde31343b2ffffd8e06fe1e150a5abee956f9c9c3fbdd5620f246ac27d343fe",
+      "payloadPath": "events/0002.json",
+      "payloadHash": "176d87f145caf3960869cdb11c4cd49da6173e64ccc81e3ce595a82b9400eb17",
+      "eventHash": "cd32c6f68e8bfecf6af25e0c658d3febeecb46437e2f7f7725772ef1571175e0"
+    },
+    {
+      "seq": 3,
+      "at": "2026-09-29T17:17:33.491Z",
+      "kind": "PHASE",
+      "actor": "coordinator-42896",
+      "state": {
+        "productStateId": "32150723837d025bb7cf31bad32b1596d8e33b9e9dd4142dd5206c623d26073b",
+        "contractId": "b1c83ecaf2da181def4ae9f51d399268e9e06069048c13c18bfae81917e46155",
+        "attackModelId": "58278e6d54c13d2537d03c099f1b62e3863f971d1d30e89980060bc1d377e264",
+        "environmentId": "19d2327a64b8249145f0df487429dfd218562df6ef4e8cbf111a5f5260a39e85"
+      },
+      "previousEventHash": "cd32c6f68e8bfecf6af25e0c658d3febeecb46437e2f7f7725772ef1571175e0",
+      "payloadPath": "events/0003.json",
+      "payloadHash": "014ab96c79bde049c34a8664ca1e960bbbeae2fc27d85a0c1764c0fa0f8e6524",
+      "eventHash": "d56ff9cee20c8175692349290f144db902a5138fb205443b2b509e337f6fc776"
+    },
+    {
+      "seq": 4,
+      "at": "2026-09-29T17:18:39.245Z",
+      "kind": "FINDING",
+      "actor": "coordinator-42896",
+      "state": {
+        "productStateId": "32150723837d025bb7cf31bad32b1596d8e33b9e9dd4142dd5206c623d26073b",
+        "contractId": "b1c83ecaf2da181def4ae9f51d399268e9e06069048c13c18bfae81917e46155",
+        "attackModelId": "58278e6d54c13d2537d03c099f1b62e3863f971d1d30e89980060bc1d377e264",
+        "environmentId": "19d2327a64b8249145f0df487429dfd218562df6ef4e8cbf111a5f5260a39e85"
+      },
+      "previousEventHash": "d56ff9cee20c8175692349290f144db902a5138fb205443b2b509e337f6fc776",
+      "payloadPath": "events/0004.json",
+      "payloadHash": "191c55e967e6d2d02f7fe6665c99bf18319a4ce80171ed2d5d12c3fe2904d23c",
+      "eventHash": "7d0d9687cc91f83db19f3e1778700d71daf002ceb785c10e3ca3b5b643e726b0"
+    },
+    {
+      "seq": 5,
+      "at": "2026-09-29T18:20:58.711Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-42896",
+      "state": {
+        "productStateId": "32150723837d025bb7cf31bad32b1596d8e33b9e9dd4142dd5206c623d26073b",
+        "contractId": "b1c83ecaf2da181def4ae9f51d399268e9e06069048c13c18bfae81917e46155",
+        "attackModelId": "58278e6d54c13d2537d03c099f1b62e3863f971d1d30e89980060bc1d377e264",
+        "environmentId": "19d2327a64b8249145f0df487429dfd218562df6ef4e8cbf111a5f5260a39e85"
+      },
+      "previousEventHash": "7d0d9687cc91f83db19f3e1778700d71daf002ceb785c10e3ca3b5b643e726b0",
+      "payloadPath": "events/0005.json",
+      "payloadHash": "5cb7019234933f28e6a0edeef006c02b6239f94e1c8aae696a5a1edd0332839f",
+      "eventHash": "2d2ac6397649c58cfaec348bc6198ee93f4eb233d5f089799573ac00e446c26b"
+    },
+    {
+      "seq": 6,
+      "at": "2026-09-29T18:21:30.421Z",
+      "kind": "PHASE",
+      "actor": "coordinator-42896",
+      "state": {
+        "productStateId": "32150723837d025bb7cf31bad32b1596d8e33b9e9dd4142dd5206c623d26073b",
+        "contractId": "b1c83ecaf2da181def4ae9f51d399268e9e06069048c13c18bfae81917e46155",
+        "attackModelId": "58278e6d54c13d2537d03c099f1b62e3863f971d1d30e89980060bc1d377e264",
+        "environmentId": "19d2327a64b8249145f0df487429dfd218562df6ef4e8cbf111a5f5260a39e85"
+      },
+      "previousEventHash": "2d2ac6397649c58cfaec348bc6198ee93f4eb233d5f089799573ac00e446c26b",
+      "payloadPath": "events/0006.json",
+      "payloadHash": "0d7746939a10557bf17ba00db5264a52645901593a13aadce8f38eb1e0c5ef4f",
+      "eventHash": "8e7257892f2a6bf3a62035a7ee5f62df7ace91eb89c8baf9cfa6a05e7bfa1b84"
+    },
+    {
+      "seq": 7,
+      "at": "2026-09-29T19:45:38.252Z",
+      "kind": "SNAPSHOT",
+      "actor": "coordinator-42896",
+      "state": {
+        "productStateId": "0f1bbe0eff79bd3e52841df647e4490f6f2b18ee5a354b29fa0fec9ca2b85ff4",
+        "contractId": "b1c83ecaf2da181def4ae9f51d399268e9e06069048c13c18bfae81917e46155",
+        "attackModelId": "58278e6d54c13d2537d03c099f1b62e3863f971d1d30e89980060bc1d377e264",
+        "environmentId": "19d2327a64b8249145f0df487429dfd218562df6ef4e8cbf111a5f5260a39e85"
+      },
+      "previousEventHash": "8e7257892f2a6bf3a62035a7ee5f62df7ace91eb89c8baf9cfa6a05e7bfa1b84",
+      "payloadPath": "events/0007.json",
+      "payloadHash": "14cf0d77780c600217b4ccefcea2e4c4e8d6205eeb13d32b0aefade1d3087669",
+      "eventHash": "be8160c169facff7691348c33ae4bf8d7afe7e094b74b76953fb8a269ca336fe"
+    },
+    {
+      "seq": 8,
+      "at": "2026-09-29T19:49:00.352Z",
+      "kind": "SNAPSHOT",
+      "actor": "coordinator-42896",
+      "state": {
+        "productStateId": "34c74dcdc1b4af42309b56a4b301b61f9b4ff50169d9098188900a2e6aa4f742",
+        "contractId": "b1c83ecaf2da181def4ae9f51d399268e9e06069048c13c18bfae81917e46155",
+        "attackModelId": "58278e6d54c13d2537d03c099f1b62e3863f971d1d30e89980060bc1d377e264",
+        "environmentId": "19d2327a64b8249145f0df487429dfd218562df6ef4e8cbf111a5f5260a39e85"
+      },
+      "previousEventHash": "be8160c169facff7691348c33ae4bf8d7afe7e094b74b76953fb8a269ca336fe",
+      "payloadPath": "events/0008.json",
+      "payloadHash": "b4c51a92777672c8bfca66dc64a934a9268aa87f31a67ddc5ff9f0d472108488",
+      "eventHash": "6bea2df00425e238733c02319423d0adf23a219727d475e20324680f680fd41f"
+    },
+    {
+      "seq": 9,
+      "at": "2026-09-29T19:56:43.907Z",
+      "kind": "SNAPSHOT",
+      "actor": "coordinator-42896",
+      "state": {
+        "productStateId": "70a0cf81920fabeef3adb97ecaf6bb45ef39bf039a8bb129f74e3ffcc00f2e04",
+        "contractId": "b1c83ecaf2da181def4ae9f51d399268e9e06069048c13c18bfae81917e46155",
+        "attackModelId": "58278e6d54c13d2537d03c099f1b62e3863f971d1d30e89980060bc1d377e264",
+        "environmentId": "19d2327a64b8249145f0df487429dfd218562df6ef4e8cbf111a5f5260a39e85"
+      },
+      "previousEventHash": "6bea2df00425e238733c02319423d0adf23a219727d475e20324680f680fd41f",
+      "payloadPath": "events/0009.json",
+      "payloadHash": "80e44dd1c3c892dd0fabb67b93d763e65bb3ec86a91ca6dc3399697c141a5137",
+      "eventHash": "b664277b1cc561d946c4af7134d396ab52aa4d178e0b061efa6ae8781a224e4a"
+    },
+    {
+      "seq": 10,
+      "at": "2026-09-29T20:38:54.792Z",
+      "kind": "SNAPSHOT",
+      "actor": "coordinator-42896",
+      "state": {
+        "productStateId": "9d043df0b086f581d98a5c91cd04e64cf6fc90ac436f028af9d17eb1ca3b7a0d",
+        "contractId": "b1c83ecaf2da181def4ae9f51d399268e9e06069048c13c18bfae81917e46155",
+        "attackModelId": "58278e6d54c13d2537d03c099f1b62e3863f971d1d30e89980060bc1d377e264",
+        "environmentId": "19d2327a64b8249145f0df487429dfd218562df6ef4e8cbf111a5f5260a39e85"
+      },
+      "previousEventHash": "b664277b1cc561d946c4af7134d396ab52aa4d178e0b061efa6ae8781a224e4a",
+      "payloadPath": "events/0010.json",
+      "payloadHash": "467960e45848520485466516762557eb732b185847da03819d5ca3a80d0523c3",
+      "eventHash": "cb82118d2ae27675c5aec5b9afd645ab60d8665f5ba896bb96e100118c0c0989"
+    },
+    {
+      "seq": 11,
+      "at": "2026-09-29T20:39:39.332Z",
+      "kind": "DECISION",
+      "actor": "coordinator-42896",
+      "state": {
+        "productStateId": "9d043df0b086f581d98a5c91cd04e64cf6fc90ac436f028af9d17eb1ca3b7a0d",
+        "contractId": "b1c83ecaf2da181def4ae9f51d399268e9e06069048c13c18bfae81917e46155",
+        "attackModelId": "58278e6d54c13d2537d03c099f1b62e3863f971d1d30e89980060bc1d377e264",
+        "environmentId": "19d2327a64b8249145f0df487429dfd218562df6ef4e8cbf111a5f5260a39e85"
+      },
+      "previousEventHash": "cb82118d2ae27675c5aec5b9afd645ab60d8665f5ba896bb96e100118c0c0989",
+      "payloadPath": "events/0011.json",
+      "payloadHash": "e2e0e5c9d5620e8586415abe4381929a1d54cf24aae5e5a11fafa30371de19ce",
+      "eventHash": "8083b473faa42ffd060dd21dbaa3489d505b571d4ed7fddaaa1f764b049da8cc"
+    }
+  ]
+}

@@ -1,0 +1,403 @@
+{
+ "records": [
+  {
+   "kind": "census",
+   "id": "CENS-SIX_WAYS",
+   "invariantIds": [],
+   "location": {
+    "path": "src/core/player/CultivationPathKit.ts",
+    "symbolOrSection": "six-ways",
+    "revision": "f1049b5e",
+    "basis": "SOURCE"
+   },
+   "classification": "CANONICAL",
+   "reads": [],
+   "writes": [],
+   "eventsIn": [],
+   "eventsOut": [],
+   "consumerIds": [],
+   "searchEvidenceIds": [
+    "EV-COORD-CLEAN"
+   ],
+   "disposition": "src/core/player/CultivationPathKit.ts + CultivationPathRegistry.ts (6 way definitions + runtime dispatch)"
+  },
+  {
+   "kind": "census",
+   "id": "CENS-COMBAT_CORE",
+   "invariantIds": [],
+   "location": {
+    "path": "src/core/battle/turn/TurnBattleSystem.ts",
+    "symbolOrSection": "combat-core",
+    "revision": "f1049b5e",
+    "basis": "SOURCE"
+   },
+   "classification": "CANONICAL",
+   "reads": [],
+   "writes": [],
+   "eventsIn": [],
+   "eventsOut": [],
+   "consumerIds": [],
+   "searchEvidenceIds": [
+    "EV-COORD-CLEAN"
+   ],
+   "disposition": "src/core/battle/turn/TurnBattleSystem.ts (turn engine), src/core/battle/runtime/ (RNG, capability query)"
+  },
+  {
+   "kind": "census",
+   "id": "CENS-IMPACT_SYNC",
+   "invariantIds": [],
+   "location": {
+    "path": "src/core/battle/ActionImpactSystem.ts",
+    "symbolOrSection": "impact-sync",
+    "revision": "f1049b5e",
+    "basis": "SOURCE"
+   },
+   "classification": "CANONICAL",
+   "reads": [],
+   "writes": [],
+   "eventsIn": [],
+   "eventsOut": [],
+   "consumerIds": [],
+   "searchEvidenceIds": [
+    "EV-COORD-CLEAN"
+   ],
+   "disposition": "src/core/battle/ActionImpactSystem.ts + TurnBattleSystem declare->impact->complete ack chain"
+  },
+  {
+   "kind": "census",
+   "id": "CENS-BUFFS_REACTIONS",
+   "invariantIds": [],
+   "location": {
+    "path": "src/core/buff2/",
+    "symbolOrSection": "buffs-reactions",
+    "revision": "f1049b5e",
+    "basis": "SOURCE"
+   },
+   "classification": "CANONICAL",
+   "reads": [],
+   "writes": [],
+   "eventsIn": [],
+   "eventsOut": [],
+   "consumerIds": [],
+   "searchEvidenceIds": [
+    "EV-COORD-CLEAN"
+   ],
+   "disposition": "src/core/buff2/ (lifecycle phases: expiry/death/bound-sweep), src/core/battle/ reaction lane"
+  },
+  {
+   "kind": "census",
+   "id": "CENS-STATS_VITALS",
+   "invariantIds": [],
+   "location": {
+    "path": "src/core/stats/StatCalculator.ts",
+    "symbolOrSection": "stats-vitals",
+    "revision": "f1049b5e",
+    "basis": "SOURCE"
+   },
+   "classification": "CANONICAL",
+   "reads": [],
+   "writes": [],
+   "eventsIn": [],
+   "eventsOut": [],
+   "consumerIds": [],
+   "searchEvidenceIds": [
+    "EV-COORD-CLEAN"
+   ],
+   "disposition": "src/core/stats/StatCalculator.ts (flat->increased->more pipeline), StatDomain gate, StatCap"
+  },
+  {
+   "kind": "census",
+   "id": "CENS-TALENTS",
+   "invariantIds": [],
+   "location": {
+    "path": "src/core/talent/",
+    "symbolOrSection": "talents",
+    "revision": "f1049b5e",
+    "basis": "SOURCE"
+   },
+   "classification": "CANONICAL",
+   "reads": [],
+   "writes": [],
+   "eventsIn": [],
+   "eventsOut": [],
+   "consumerIds": [],
+   "searchEvidenceIds": [
+    "EV-COORD-CLEAN"
+   ],
+   "disposition": "src/core/talent/ (TalentEntitlement offers, TalentEffects multipliers)"
+  },
+  {
+   "kind": "census",
+   "id": "CENS-INVENTORY_EQUIPMENT",
+   "invariantIds": [],
+   "location": {
+    "path": "src/core/material/MaterialBag,",
+    "symbolOrSection": "inventory-equipment",
+    "revision": "f1049b5e",
+    "basis": "SOURCE"
+   },
+   "classification": "CANONICAL",
+   "reads": [],
+   "writes": [],
+   "eventsIn": [],
+   "eventsOut": [],
+   "consumerIds": [],
+   "searchEvidenceIds": [
+    "EV-COORD-CLEAN"
+   ],
+   "disposition": "src/core/material/MaterialBag, pill/PillBag, equipment/EquipmentBag+EquipmentSystem (equip/unequip symmetry)"
+  },
+  {
+   "kind": "census",
+   "id": "CENS-ECONOMY_PRODUCTION",
+   "invariantIds": [],
+   "location": {
+    "path": "src/core/economy/VendorSystem",
+    "symbolOrSection": "economy-production",
+    "revision": "f1049b5e",
+    "basis": "SOURCE"
+   },
+   "classification": "CANONICAL",
+   "reads": [],
+   "writes": [],
+   "eventsIn": [],
+   "eventsOut": [],
+   "consumerIds": [],
+   "searchEvidenceIds": [
+    "EV-COORD-CLEAN"
+   ],
+   "disposition": "src/core/economy/VendorSystem (atomic sell), src/core/production/ProductionSystem (sequential offline settle + cap)"
+  },
+  {
+   "kind": "census",
+   "id": "CENS-STAGES_DROPS",
+   "invariantIds": [],
+   "location": {
+    "path": "src/core/game/StageWaveSystem",
+    "symbolOrSection": "stages-drops",
+    "revision": "f1049b5e",
+    "basis": "SOURCE"
+   },
+   "classification": "CANONICAL",
+   "reads": [],
+   "writes": [],
+   "eventsIn": [],
+   "eventsOut": [],
+   "consumerIds": [],
+   "searchEvidenceIds": [
+    "EV-COORD-CLEAN"
+   ],
+   "disposition": "src/core/game/StageWaveSystem (transactional admission), src/core/drop/resolveDrops, StageDropTables"
+  },
+  {
+   "kind": "census",
+   "id": "CENS-IDLE_OFFLINE",
+   "invariantIds": [],
+   "location": {
+    "path": "src/core/idle/GameClock+OfflineProgressSystem",
+    "symbolOrSection": "idle-offline",
+    "revision": "f1049b5e",
+    "basis": "SOURCE"
+   },
+   "classification": "CANONICAL",
+   "reads": [],
+   "writes": [],
+   "eventsIn": [],
+   "eventsOut": [],
+   "consumerIds": [],
+   "searchEvidenceIds": [
+    "EV-COORD-CLEAN"
+   ],
+   "disposition": "src/core/idle/GameClock+OfflineProgressSystem (single time authority), GameManagerSaveRestore offline settle window"
+  },
+  {
+   "kind": "census",
+   "id": "CENS-COMPANIONS_FORMATION",
+   "invariantIds": [],
+   "location": {
+    "path": "src/core/companion/",
+    "symbolOrSection": "companions-formation",
+    "revision": "f1049b5e",
+    "basis": "SOURCE"
+   },
+   "classification": "CANONICAL",
+   "reads": [],
+   "writes": [],
+   "eventsIn": [],
+   "eventsOut": [],
+   "consumerIds": [],
+   "searchEvidenceIds": [
+    "EV-COORD-CLEAN"
+   ],
+   "disposition": "src/core/companion/ (gacha/progression/gifts), core/formation/ socketed modifier items"
+  },
+  {
+   "kind": "census",
+   "id": "CENS-ARTIFACT_NEGATIVE",
+   "invariantIds": [],
+   "location": {
+    "path": "src/core/artifact/Artifact.ts",
+    "symbolOrSection": "artifact-negative",
+    "revision": "f1049b5e",
+    "basis": "SOURCE"
+   },
+   "classification": "CANONICAL",
+   "reads": [],
+   "writes": [],
+   "eventsIn": [],
+   "eventsOut": [],
+   "consumerIds": [],
+   "searchEvidenceIds": [
+    "EV-COORD-CLEAN"
+   ],
+   "disposition": "src/core/artifact/Artifact.ts (deferred content — release policy suppresses acquisition channels)"
+  },
+  {
+   "kind": "census",
+   "id": "CENS-QUESTS_UI",
+   "invariantIds": [],
+   "location": {
+    "path": "src/core/quest/QuestSystem",
+    "symbolOrSection": "quests-ui",
+    "revision": "f1049b5e",
+    "basis": "SOURCE"
+   },
+   "classification": "CANONICAL",
+   "reads": [],
+   "writes": [],
+   "eventsIn": [],
+   "eventsOut": [],
+   "consumerIds": [],
+   "searchEvidenceIds": [
+    "EV-COORD-CLEAN"
+   ],
+   "disposition": "src/core/quest/QuestSystem (gated claim, grant->debit->drops order), GameManagerQuestOps"
+  },
+  {
+   "kind": "census",
+   "id": "CENS-RUNTIME_PHASER",
+   "invariantIds": [],
+   "location": {
+    "path": "src/game/scenes/",
+    "symbolOrSection": "runtime-phaser",
+    "revision": "f1049b5e",
+    "basis": "SOURCE"
+   },
+   "classification": "CANONICAL",
+   "reads": [],
+   "writes": [],
+   "eventsIn": [],
+   "eventsOut": [],
+   "consumerIds": [],
+   "searchEvidenceIds": [
+    "EV-COORD-CLEAN"
+   ],
+   "disposition": "src/game/scenes/ (CombatScene/MainScene/Tribulation/AssetLoader) — paired eventBus on/off, cleanup lifecycle"
+  },
+  {
+   "kind": "census",
+   "id": "CENS-AUDIO",
+   "invariantIds": [],
+   "location": {
+    "path": "src/core/audio/AudioManager+AudioCueManifest",
+    "symbolOrSection": "audio",
+    "revision": "f1049b5e",
+    "basis": "SOURCE"
+   },
+   "classification": "CANONICAL",
+   "reads": [],
+   "writes": [],
+   "eventsIn": [],
+   "eventsOut": [],
+   "consumerIds": [],
+   "searchEvidenceIds": [
+    "EV-COORD-CLEAN"
+   ],
+   "disposition": "src/core/audio/AudioManager+AudioCueManifest (manifest all src:\"\" synth fallbacks — content drop pending, KNOWN GAP)"
+  },
+  {
+   "kind": "census",
+   "id": "CENS-A11Y_I18N",
+   "invariantIds": [],
+   "location": {
+    "path": "src/locales/vi.json+en.json",
+    "symbolOrSection": "a11y-i18n",
+    "revision": "f1049b5e",
+    "basis": "SOURCE"
+   },
+   "classification": "CANONICAL",
+   "reads": [],
+   "writes": [],
+   "eventsIn": [],
+   "eventsOut": [],
+   "consumerIds": [],
+   "searchEvidenceIds": [
+    "EV-COORD-CLEAN"
+   ],
+   "disposition": "src/locales/vi.json+en.json (961/961 key parity), i18n gateway for all UI strings"
+  },
+  {
+   "kind": "census",
+   "id": "CENS-LIFECYCLE",
+   "invariantIds": [],
+   "location": {
+    "path": "src/composables/useAppLifecycle.ts",
+    "symbolOrSection": "lifecycle",
+    "revision": "f1049b5e",
+    "basis": "SOURCE"
+   },
+   "classification": "CANONICAL",
+   "reads": [],
+   "writes": [],
+   "eventsIn": [],
+   "eventsOut": [],
+   "consumerIds": [],
+   "searchEvidenceIds": [
+    "EV-COORD-CLEAN"
+   ],
+   "disposition": "src/composables/useAppLifecycle.ts (stopped-guard unsubscribe, interval handle not doubled), App.vue boot"
+  },
+  {
+   "kind": "census",
+   "id": "CENS-REGISTRIES_DATA",
+   "invariantIds": [],
+   "location": {
+    "path": "src/data/**",
+    "symbolOrSection": "registries-data",
+    "revision": "f1049b5e",
+    "basis": "SOURCE"
+   },
+   "classification": "CANONICAL",
+   "reads": [],
+   "writes": [],
+   "eventsIn": [],
+   "eventsOut": [],
+   "consumerIds": [],
+   "searchEvidenceIds": [
+    "EV-COORD-CLEAN"
+   ],
+   "disposition": "src/data/** registries + ProgressiveNodeRegistry — all id lookups through reg.has/get with throw on miss"
+  },
+  {
+   "kind": "census",
+   "id": "CENS-TEST_QUALITY",
+   "invariantIds": [],
+   "location": {
+    "path": "game/src/**/*.test.ts",
+    "symbolOrSection": "test-quality",
+    "revision": "f1049b5e",
+    "basis": "SOURCE"
+   },
+   "classification": "CANONICAL",
+   "reads": [],
+   "writes": [],
+   "eventsIn": [],
+   "eventsOut": [],
+   "consumerIds": [],
+   "searchEvidenceIds": [
+    "EV-COORD-CLEAN"
+   ],
+   "disposition": "game/src/**/*.test.ts (719 green) + tests/architecture/ guards + tests/balance/ deterministic sims"
+  }
+ ]
+}

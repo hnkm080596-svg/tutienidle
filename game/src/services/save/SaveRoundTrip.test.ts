@@ -545,4 +545,47 @@ describe('SaveRoundTrip — buildGameSave() luôn qua validateGameSaveShape()', 
       },
     ])
   })
+
+  // Mutation finding F-MUT-ALCHEMY-ROUNDTRIP (beta-release-2026-09-29):
+  // dropping alchemyJobs from buildGameSave passed the whole corpus — an
+  // in-flight job (elapsed / recipe / inputs already debited) would
+  // silently evaporate on reload. Pin: a running job survives the
+  // detach -> JSON -> shape-validate pipeline.
+  it('alchemyJobs round-trip nguyên vẹn khi có job đang chạy', () => {
+    const gameManager = createBootedGameManager()
+    const player = createDefaultPlayer()
+
+    gameManager.alchemySystem.restoreJobs([
+      {
+        jobId: 'job_pin_1',
+        recipeId: 'tu_linh_dan',
+        pillId: 'tu_linh_dan',
+        herbMaterialId: 'tu_linh_thao_qi_refining_0',
+        startedAtMs: 1_000,
+        completesAtMs: 601_000,
+        roomLevelAtStart: 1,
+      },
+    ])
+
+    const save = buildGameSave(player, gameManager)
+    const roundTripped: unknown = JSON.parse(JSON.stringify(save))
+
+    const result = validateGameSaveShape(roundTripped)
+    expect(result).toMatchObject({ ok: true, issues: [] })
+
+    const restored = roundTripped as {
+      alchemyJobs?: Array<Record<string, unknown>>
+    }
+    expect(restored.alchemyJobs).toEqual([
+      {
+        jobId: 'job_pin_1',
+        recipeId: 'tu_linh_dan',
+        pillId: 'tu_linh_dan',
+        herbMaterialId: 'tu_linh_thao_qi_refining_0',
+        startedAtMs: 1_000,
+        completesAtMs: 601_000,
+        roomLevelAtStart: 1,
+      },
+    ])
+  })
 })

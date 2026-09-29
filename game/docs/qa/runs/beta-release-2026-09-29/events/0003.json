@@ -1,0 +1,23 @@
+{
+  "applied": [
+    "invariant:I-IDENTITY-MATRIX",
+    "invariant:I-CREATION-CONTRACT",
+    "invariant:I-SAVE-VERSION-87",
+    "invariant:I-RESTORE-ATOMIC",
+    "invariant:I-SAVE-ROUNDTRIP",
+    "invariant:I-CLOUD-CAS",
+    "invariant:I-REALM-18",
+    "invariant:I-REALM-SETTLE-ONCE",
+    "invariant:I-REALM-UNEQUIP",
+    "invariant:I-HIDDEN-PREFIX",
+    "invariant:I-HIDDEN-REWARD-ONCE",
+    "invariant:I-NGHICH-PITY",
+    "invariant:I-BODY-OWNER",
+    "invariant:I-ESSENCE-SUBST",
+    "invariant:I-PHYSIQUE-ONCE",
+    "invariant:I-TECH-MASTERY",
+    "invariant:I-TECH-MODEL",
+    "invariant:I-NODE-CORELEVEL",
+    "invariant:I-NODE-PREREQ"
+  ]
+}
