@@ -276,6 +276,15 @@ export class GameManagerCatalogOps {
       const requiredRealmIndex = getRealmIndex(stage.requiredRealmId)
       const playerRealmIndex = getRealmIndex(player.realmId)
 
+      // T8-75 parity (NodeSystem): an unknown required realm resolves to
+      // -1 and `playerRealmIndex < -1` was unreachable, so a typo'd or
+      // retired requiredRealmId silently unlocked the stage for every
+      // player. Content drift fails closed (F-BX-52).
+      if (requiredRealmIndex < 0) {
+        console.warn(`[GameManagerCatalogOps] isStageUnlocked: unknown requiredRealmId '${stage.requiredRealmId}' on stage '${stageId}' - failing closed`)
+        return false
+      }
+
       if (playerRealmIndex < requiredRealmIndex) {
         return false
       }

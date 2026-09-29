@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { GameManager } from './GameManager'
 import type { Zone } from '../stage/Zone'
 import { createDefaultPlayer } from '../player/Player'
@@ -56,6 +56,31 @@ describe('GameManager.isStageUnlocked — mở tuần tự theo hoàn thành', (
     player.completedStageIds.push('stage_1', 'stage_2', 'stage_3')
     expect(gameManager.catalogOps.isStageUnlocked('stage_2', player)).toBe(true)
     expect(gameManager.catalogOps.isStageUnlocked('stage_x', player)).toBe(true)
+  })
+
+  it('unknown requiredRealmId fails closed - T8-75 parity (F-BX-52)', () => {
+    const gameManager = setup()
+    gameManager.catalogOps.registerStages([
+      {
+        id: 'stage_typo',
+        name: 'Typo realm gate',
+        description: '',
+        requiredRealmId: 'typo_realm',
+        enemyPool: [],
+        totalEnemyCount: 0,
+      },
+    ])
+    const player = createDefaultPlayer()
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+
+    try {
+      // getRealmIndex('typo_realm') === -1 used to make
+      // `playerRealmIndex < -1` unreachable - the gate passed everyone.
+      expect(gameManager.catalogOps.isStageUnlocked('stage_typo', player)).toBe(false)
+      expect(warn).toHaveBeenCalled()
+    } finally {
+      warn.mockRestore()
+    }
   })
 })
 

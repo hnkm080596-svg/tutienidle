@@ -46,11 +46,25 @@ export interface QuestBagDeps {
 }
 
 function isUnlocked(quest: Quest, player: PlayerData): boolean {
-  return (
-    (!quest.requiredRealmId ||
-      getRealmIndex(player.realmId) >= getRealmIndex(quest.requiredRealmId)) &&
-    !questIsTokenOnlySource(quest)
-  )
+  if (quest.requiredRealmId) {
+    // T8-75 parity (NodeSystem): an unknown prerequisite realm resolves
+    // to index -1 and `playerIndex >= -1` passed every player. Content
+    // drift must fail closed - the player's own unknown realmId still
+    // fails via `>=` since -1 >= required is false for a valid index.
+    const requiredIndex = getRealmIndex(quest.requiredRealmId)
+
+    if (requiredIndex < 0) {
+      console.warn(`[QuestSystem] isUnlocked: unknown requiredRealmId '${quest.requiredRealmId}' on quest '${quest.id}' - failing closed`)
+
+      return false
+    }
+
+    if (getRealmIndex(player.realmId) < requiredIndex) {
+      return false
+    }
+  }
+
+  return !questIsTokenOnlySource(quest)
 }
 
 // M-F-COMPANION-GIFT - a quest whose ENTIRE reward set is censused
