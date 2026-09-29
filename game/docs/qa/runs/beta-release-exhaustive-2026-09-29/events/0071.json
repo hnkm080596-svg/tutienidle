@@ -1,0 +1,7 @@
+{
+  "action": "observe",
+  "assignmentId": "ASG-BX-REP1",
+  "observedStatus": "exited",
+  "evidence": "repair-carried findings merged @1d83cf46 (wave-0 closeout)",
+  "resultRef": "beta-repair-carried"
+}

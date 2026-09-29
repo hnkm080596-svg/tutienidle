@@ -1,0 +1,7 @@
+{
+  "action": "observe",
+  "assignmentId": "ASG-BX-REPAIR-W4A",
+  "observedStatus": "exited",
+  "evidence": "6 findings repaired @ba5b0734, merged b50aa8a3; EV-REPAIR-W45",
+  "resultRef": "beta-repair-wave4a"
+}

@@ -19266,7 +19266,7 @@
       "path": "game/src/components/onboarding/AuthEntryScreen.vue",
       "kind": "file",
       "mode": 33188,
-      "hash": "6f9401e7c121ff5e1ae342106b853f72e142048123c3ca2b53dac90ebdf5b230"
+      "hash": "42a8cdd96a5289f6d23d63dc72f2a029774b6e4c87d8d400b9707c93196eb088"
     },
     {
       "path": "game/src/components/onboarding/CharacterCreationScreen.test.ts",
@@ -19821,10 +19821,16 @@
       "hash": "9def88206be4a09c4799521c0613d5497b1cc02a42aa4280e2874f2fff3604c7"
     },
     {
+      "path": "game/src/composables/resumeSession.test.ts",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "40ede6c2ef5573b99e7b48d0415208ee60ffb04dff7c7c26aaadf8e89b5b8553"
+    },
+    {
       "path": "game/src/composables/resumeSession.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "62438a45216d8d6c6483be165e398448f7495a04892031d5310ffef523f1914a"
+      "hash": "3650fb188fec91ef1099aabefdeccfa432cf0ecb71cdadb6726c17ea6398b357"
     },
     {
       "path": "game/src/composables/uiScale.test.ts",
@@ -20154,7 +20160,7 @@
       "path": "game/src/core/audio/AudioCueManifest.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "e36f746745c01311901c836b4545ad8bea89b45820c17d17ded9020ac934ecb9"
+      "hash": "e856774450dd6da900c015601f64011dc8cb24f5921291cb10a5f80009e26d58"
     },
     {
       "path": "game/src/core/audio/AudioManager.test.ts",
@@ -21684,7 +21690,7 @@
       "path": "game/src/core/companion/CompanionGifts.wiring.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "5668ec56ce1e84db5408057623d4ad6513ca9eb4158e19b99ea417b7d9bdb2f4"
+      "hash": "329d78e0e4482926eb1d84f168798de5e2523db006cc74ee6a94b8e347fdb4fa"
     },
     {
       "path": "game/src/core/companion/CompanionProgression.test.ts",
@@ -22482,7 +22488,7 @@
       "path": "game/src/core/game/GameManager.autoFarmOffline.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "e9ae34888191f08fb7a2a27010829e12bef454dc04679c49dac5be75686a559e"
+      "hash": "349b2587cc1b9a9a70e5f1608c63fd0ccb9a26143f3d6ed853ed5b199b0e80ec"
     },
     {
       "path": "game/src/core/game/GameManager.autoFarmRestore.test.ts",
@@ -22602,7 +22608,7 @@
       "path": "game/src/core/game/GameManager.enemyClear.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "3510bf1723fa1d92a370b4fe8e7ac7fa1eda60d0fe5b691c0dcdec928763b71d"
+      "hash": "3dfc2a67a6c27dff6d98e06484c0e781b3b87847788f11db4d51c763262adaff"
     },
     {
       "path": "game/src/core/game/GameManager.equipGate.test.ts",
@@ -22746,7 +22752,7 @@
       "path": "game/src/core/game/GameManager.perfectClear.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "33f6c75c4c875146495d3dc61602768b125bca1b5fb6e77843f58984385d32e4"
+      "hash": "b1c92c383fc7fd02f8d47233c1988720cdb2f0d7f4da168ec1db5d02a9b53407"
     },
     {
       "path": "game/src/core/game/GameManager.phaGiapCarry.test.ts",
@@ -23058,13 +23064,13 @@
       "path": "game/src/core/game/GameManagerAutoFarmOps.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "d01583bc561379dcec547cec2ebc622c36f73a427d259d43f35fb9aa0b29857f"
+      "hash": "d491aea7aea8a507009340a952b9e5532be76881888d5abe1e708b155464fc25"
     },
     {
       "path": "game/src/core/game/GameManagerBattleRewardOps.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "90b14162cab5b05b559b3aedc5303caf676a4032127428f5891e9adce60b70d7"
+      "hash": "2cc79d0aceda650dda5e13b72c95259533e053c6d0fbb60e8837b96b4e9f6e01"
     },
     {
       "path": "game/src/core/game/GameManagerBuildingOps.ts",
@@ -23136,7 +23142,7 @@
       "path": "game/src/core/game/GameManagerProgressionOps.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "83f4e12ce1d1af406531caf3764a0b3fb2e56106ab9f541b0dc416977d4a960c"
+      "hash": "7b1e0f3c1f3eb9ac832e705ef5adf0310ff40bc1918237349077e3d87834eefe"
     },
     {
       "path": "game/src/core/game/GameManagerQuestOps.ts",
@@ -23184,7 +23190,7 @@
       "path": "game/src/core/game/GameManagerSaveRestore.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "4178a4a5da722e5c5b0e5fd0e323f2fd6035d0c1b170c2917e282d531a1f8272"
+      "hash": "3f0e43a38a1c53c36785f574b7394dc1808ed8cf9b83fb5e46dad0f368643533"
     },
     {
       "path": "game/src/core/game/GameManagerTickOps.ts",
@@ -23226,7 +23232,7 @@
       "path": "game/src/core/game/GameManagerTurnBattleOps.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "e92b02f3b8083aeb449b6da415b9e246476aabddfbc1892bc01d13353191e36b"
+      "hash": "df402a2b536d76a5c56f0b48546adaa93ad20def6a70862f6d8bc1f3339b71cb"
     },
     {
       "path": "game/src/core/game/GameManagerTurnBattleOps.turnEngine.test.ts",
@@ -26916,13 +26922,13 @@
       "path": "game/src/locales/en.json",
       "kind": "file",
       "mode": 33188,
-      "hash": "f2b64924aa42d028df234d8492f6adf370e74af9c896bc7a1d0e06c8fc17788f"
+      "hash": "1ba80101a5c276c3f3afc2a6b6d2ece5fd7e6fc857ca850ba6fdd9b1d13c52b5"
     },
     {
       "path": "game/src/locales/vi.json",
       "kind": "file",
       "mode": 33188,
-      "hash": "42d23096991240183902328ddc76ac754ba378d980ec27ba6636e0f8ffa9ca5d"
+      "hash": "d7eb5019e4ee8555d135e02837cf6637c67e50a1cba2f97b5ab011352dcd3658"
     },
     {
       "path": "game/src/main-process/combatClockHost.test.ts",
@@ -26988,7 +26994,7 @@
       "path": "game/src/presentation/assets/AssetBundleCatalog.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "cbfb0fd5f6b85ea0c248557176600860c56d1a6973d8fc02943ff1ee5be7e9cd"
+      "hash": "9e708f35b007df72733ab78bec4dca7f52778cf05320105d73595a8cdc44f21d"
     },
     {
       "path": "game/src/presentation/assets/AssetBundleCatalog.ts",
@@ -27000,7 +27006,7 @@
       "path": "game/src/presentation/assets/AssetBundleManager.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "aaf0a2a76f0317cd1c001215fe9988fb41f3dcc9de32aa34eca5bc7c3484a5e8"
+      "hash": "9d7c1374609b995de09f340fc70884888e9503af8872637262706a58082f96e7"
     },
     {
       "path": "game/src/presentation/assets/AssetBundleManager.ts",
@@ -27030,13 +27036,13 @@
       "path": "game/src/presentation/audio/combatAudioBinding.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "0a48c7c8716635ca78615ea3ec80b34b98ceedbe5e628d5c6aed3dedec18d2d2"
+      "hash": "35f09f4ddb30a29ece7974830a01821db63065b4ad7f43ef25c75d156cff39cc"
     },
     {
       "path": "game/src/presentation/audio/combatAudioBinding.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "04576e2d89b343b6918cbaf7796128fb3dadd40881624d02961eefd1552a6963"
+      "hash": "7765867bc6133189e8f19a759a3ab2095aaaf192d08ec8dc6a01747b2ca57b48"
     },
     {
       "path": "game/src/presentation/audio/uiAudioBinding.test.ts",
@@ -27438,7 +27444,7 @@
       "path": "game/src/services/auth/SupabaseAuthService.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "feb0338060f3e07143c72eec79d6ae6250a36a84ff5a9d39e9ba2583b4393bc8"
+      "hash": "74c117696ded2a715302907505eb81ab909767fa9238df6e3b0d4f5278fd2a83"
     },
     {
       "path": "game/src/services/character/CharacterCreationService.test.ts",
@@ -27468,13 +27474,13 @@
       "path": "game/src/services/character/SupabaseCharacterCreationService.contract.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "48520c4281e388868d4d1ea9c973451c2c42761495e242a5486d9102c55f708f"
+      "hash": "92b77257434e84045d2dc4ee0a1c5155aabb3ddf14dbc7d8f41b0f09b8d21ee9"
     },
     {
       "path": "game/src/services/character/SupabaseCharacterCreationService.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "1ea949da0c032bdbc0859297752f0da1209ba2ff4e14f0432630be503cc70ab2"
+      "hash": "452f01a0a53abb30152d9a1cb33c106dd4d6b8b2dd64c4356043d66deb733b53"
     },
     {
       "path": "game/src/services/cloudSave/BOUNDS.md",
@@ -27522,19 +27528,19 @@
       "path": "game/src/services/cloudSave/LocalCloudSaveService.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "6bc056af8583cccfff35b3d377adbaf95563a06cb49d9cc54bdfd88df1149395"
+      "hash": "ed99a9e938f36a3756d6442e3bcd96164c71380107ee005c847a3c32469630e5"
     },
     {
       "path": "game/src/services/cloudSave/SupabaseRemoteSave.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "856d4b39fef515464990a1b70ba739302524c92f08f47e28099c97a0233ab596"
+      "hash": "a67450a6c1aa5ee5b715366feb87403da043b826fe80726297e058106f216cbc"
     },
     {
       "path": "game/src/services/cloudSave/SupabaseRemoteSave.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "01a41b168e61a7ce8ce7659f97222312f747c2330466ba9ac2a300833fdd88c4"
+      "hash": "d95b537f342da972b90c8a28b8acd49341188e18b3f14aa046a01be88e5f9144"
     },
     {
       "path": "game/src/services/save/GameSave.fixture.ts",
@@ -27564,7 +27570,7 @@
       "path": "game/src/services/save/saveKeys.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "d297c1ed9d1016f4623f501dca9f1b00532a917115dad30928121a6151fef35b"
+      "hash": "cff95068a04168234ce6783a3dbfdd6a22cc23d68fe18d429b471df14fd44d5b"
     },
     {
       "path": "game/src/services/save/SaveMigration.test.ts",
@@ -27630,7 +27636,7 @@
       "path": "game/src/services/save/SaveSystem.talentPassiveRestore.qa.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "e660448dab53fe6a331401d3b6687ba5fa47186d5a5be39113c427e274c9e0da"
+      "hash": "08cd657cb2c8465e6cdaa132b87b38c950670ff744303b577d77d8ac4d07cdf9"
     },
     {
       "path": "game/src/services/save/SaveSystem.test.ts",
@@ -27642,7 +27648,7 @@
       "path": "game/src/services/save/SaveSystem.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "390f01deef52a9c26179c83c18768a335f76f511a87d1fa04a0fec624cb3e65d"
+      "hash": "f5d2cd07dd3fef27acef445157d895989635fd860306129840f0c338a6adae24"
     },
     {
       "path": "game/src/services/save/saveTheTuCrafted.qa.test.ts",
@@ -27690,13 +27696,13 @@
       "path": "game/src/services/supabase/SupabaseSession.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "cbde4f7db4dd0bb46445694c2b2947ee89ff225f78022e43069c56b6b5dad484"
+      "hash": "8f818443ae6c3707b31a3646236abf2a0298b71b78728160d8ec7d9cb7aed3d5"
     },
     {
       "path": "game/src/services/supabase/SupabaseSession.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "8bdba442f0932e9e3167c7b7e654f4e1546197e0db82a907541526969116916f"
+      "hash": "cb5df1b263c4b5713af8093090ff9c1ce62534a320744978a1c96b8c56b988b7"
     },
     {
       "path": "game/src/stores/actionFeedback.test.ts",
@@ -27885,6 +27891,12 @@
       "hash": "6e255c0b34eb90531eeac9c9edc8198c6c43761e232af2aaf8cffbe0178f41ad"
     },
     {
+      "path": "game/supabase/migrations/202609290002_character_saves_delete.sql",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "30f35ca316f216067642a36fe29494294f39fbe281b164150532963b30508b38"
+    },
+    {
       "path": "game/tests/architecture/ackTokenContract.test.ts",
       "kind": "file",
       "mode": 33188,
@@ -27948,7 +27960,7 @@
       "path": "game/tests/architecture/audioManifestCompleteness.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "dab10172ff3cc49c1af8045b1f140c83f399899515a3e0470509cf4d894aa5fa"
+      "hash": "f647221b26bf47ef18dc33a62c68506e0c0f838fe57cb795de9ce716474f621d"
     },
     {
       "path": "game/tests/architecture/baselines/asciiComments.json",
@@ -28521,5 +28533,5 @@
       "hash": "4f888fe1084d2a9091583d5093693d81453c0b8d06dfd6192b096972bae551d4"
     }
   ],
-  "productStateId": "a145206f13aa610d749d2fecd0747a50539b74b43946f7cf389c308a052dd1dc"
+  "productStateId": "7764ce216537d68ea96522b65cf9614dabaeafaceb91bc1b5c23bf9f8d71a4e2"
 }

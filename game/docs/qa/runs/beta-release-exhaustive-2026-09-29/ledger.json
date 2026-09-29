@@ -20,12 +20,12 @@
       "real Supabase project credentials / deployed remote verification (mock/local seam only - declared coverage boundary)",
       "locally-held untracked art assets (user requires art stay local-only; verify zero runtime-referenced assets are untracked/missing)"
     ],
-    "checkout": "",
-    "branch": "",
-    "base": "",
-    "head": "",
+    "checkout": "/home/ubuntu/repos/tutienidle/.agent-worktrees/beta-exhaustive",
+    "branch": "beta-release-exhaustive",
+    "base": "f1049b5e42757f14aebee18bab3569dc43c37d09",
+    "head": "2ebed815c1daba3076c4809889ad4cf579ec1b58",
     "state": {
-      "productStateId": "a145206f13aa610d749d2fecd0747a50539b74b43946f7cf389c308a052dd1dc",
+      "productStateId": "7764ce216537d68ea96522b65cf9614dabaeafaceb91bc1b5c23bf9f8d71a4e2",
       "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
       "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
       "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
@@ -51,11 +51,11 @@
     "briefIds": [],
     "capacityLimit": 5,
     "requiredReadiness": true,
-    "phase": "SNAPSHOT",
+    "phase": "DECIDE",
     "cleanRoundA": null,
     "cleanRoundB": null,
     "finalEvidenceIds": [],
-    "outcome": null
+    "outcome": "QA_FINDINGS_OPEN"
   },
   "briefs": [],
   "assignments": [
@@ -73,19 +73,13 @@
         "worktree beta-repair-carried: production fixes F-BX-01,04,05,06,07 + verify F-BX-08..12"
       ],
       "readiness": "READY",
-      "status": "RESERVED",
+      "status": "FINISHED",
       "reservedAt": "2026-09-29T12:50:44.459Z",
       "observedRuntimeId": "devin-1d053a775d0743819a3edc55e08b78e2",
-      "releaseEvidence": null,
-      "resultRef": null,
+      "releaseEvidence": "repair-carried findings merged @1d83cf46 (wave-0 closeout)",
+      "resultRef": "beta-repair-carried",
       "timeoutState": null,
       "history": [
-        {
-          "at": "2026-09-27T13:56:00Z",
-          "from": "-",
-          "to": "CREATED",
-          "reason": "wave-0 dispatch"
-        },
         {
           "at": "2026-09-27T13:56:00Z",
           "from": "CREATED",
@@ -97,6 +91,12 @@
           "from": "QUEUED",
           "to": "RESERVED",
           "reason": "admitted at 1/5 (incl. external 0)"
+        },
+        {
+          "at": "2026-09-29T17:21:26.858Z",
+          "from": "RESERVED",
+          "to": "FINISHED",
+          "reason": "lifecycle verified released via 'exited'"
         }
       ]
     },
@@ -121,12 +121,6 @@
       "resultRef": "session-messages",
       "timeoutState": null,
       "history": [
-        {
-          "at": "2026-09-27T13:56:00Z",
-          "from": "-",
-          "to": "CREATED",
-          "reason": "wave-0 dispatch"
-        },
         {
           "at": "2026-09-27T13:56:00Z",
           "from": "CREATED",
@@ -170,12 +164,6 @@
       "history": [
         {
           "at": "2026-09-27T13:56:00Z",
-          "from": "-",
-          "to": "CREATED",
-          "reason": "wave-0 dispatch"
-        },
-        {
-          "at": "2026-09-27T13:56:00Z",
           "from": "CREATED",
           "to": "QUEUED",
           "reason": "prompt delivered"
@@ -215,12 +203,6 @@
       "resultRef": "session-messages",
       "timeoutState": null,
       "history": [
-        {
-          "at": "2026-09-27T13:56:00Z",
-          "from": "-",
-          "to": "CREATED",
-          "reason": "wave-0 dispatch"
-        },
         {
           "at": "2026-09-27T13:56:00Z",
           "from": "CREATED",
@@ -264,12 +246,6 @@
       "history": [
         {
           "at": "2026-09-29T13:48:00Z",
-          "from": "-",
-          "to": "CREATED",
-          "reason": "wave-1 dispatch"
-        },
-        {
-          "at": "2026-09-29T13:48:00Z",
           "from": "CREATED",
           "to": "QUEUED",
           "reason": "prompt delivered"
@@ -309,12 +285,6 @@
       "resultRef": null,
       "timeoutState": null,
       "history": [
-        {
-          "at": "2026-09-29T13:48:00Z",
-          "from": "-",
-          "to": "CREATED",
-          "reason": "wave-1 dispatch"
-        },
         {
           "at": "2026-09-29T13:48:00Z",
           "from": "CREATED",
@@ -358,12 +328,6 @@
       "history": [
         {
           "at": "2026-09-29T13:48:00Z",
-          "from": "-",
-          "to": "CREATED",
-          "reason": "wave-1 dispatch"
-        },
-        {
-          "at": "2026-09-29T13:48:00Z",
           "from": "CREATED",
           "to": "QUEUED",
           "reason": "prompt delivered"
@@ -400,12 +364,6 @@
       "observedRuntimeId": "devin-b28e0d6d4d90470e87023938392c7e09",
       "history": [
         {
-          "at": "2026-09-29T14:40:00Z",
-          "from": "-",
-          "to": "CREATED",
-          "reason": "wave-2 dispatch"
-        },
-        {
           "at": "2026-09-29T14:45:00Z",
           "from": "CREATED",
           "to": "READY",
@@ -426,7 +384,8 @@
       ],
       "reservedAt": "2026-09-29T14:28:03.442Z",
       "releaseEvidence": "all findings adjudicated on beta-repair-wave2 @9bca59cf, merged to run branch; verified tsc+939 scoped tests",
-      "resultRef": "beta-repair-wave2"
+      "resultRef": "beta-repair-wave2",
+      "timeoutState": null
     },
     {
       "id": "ASG-BX-ECO",
@@ -445,12 +404,6 @@
       "status": "FINISHED",
       "observedRuntimeId": "devin-f17e9bc914614b96a55296b3423148cc",
       "history": [
-        {
-          "at": "2026-09-29T14:40:00Z",
-          "from": "-",
-          "to": "CREATED",
-          "reason": "wave-2 dispatch"
-        },
         {
           "at": "2026-09-29T14:45:00Z",
           "from": "CREATED",
@@ -472,7 +425,8 @@
       ],
       "reservedAt": "2026-09-29T14:28:03.574Z",
       "releaseEvidence": "report delivered; findings recorded F-BX-53..69; session terminated",
-      "resultRef": "wave2"
+      "resultRef": "wave2",
+      "timeoutState": null
     },
     {
       "id": "ASG-BX-QCF",
@@ -491,12 +445,6 @@
       "status": "FINISHED",
       "observedRuntimeId": "devin-fe5baa9431f14b95b10db7ca02df2369",
       "history": [
-        {
-          "at": "2026-09-29T14:40:00Z",
-          "from": "-",
-          "to": "CREATED",
-          "reason": "wave-2 dispatch"
-        },
         {
           "at": "2026-09-29T14:45:00Z",
           "from": "CREATED",
@@ -518,7 +466,8 @@
       ],
       "reservedAt": "2026-09-29T14:28:03.706Z",
       "releaseEvidence": "report delivered; findings recorded F-BX-53..69; session terminated",
-      "resultRef": "wave2"
+      "resultRef": "wave2",
+      "timeoutState": null
     },
     {
       "id": "ASG-BX-UIA",
@@ -537,12 +486,6 @@
       "status": "FINISHED",
       "observedRuntimeId": "devin-fb50372a4d554b77afaf14db08dbae60",
       "history": [
-        {
-          "at": "2026-09-29T14:40:00Z",
-          "from": "-",
-          "to": "CREATED",
-          "reason": "wave-2 dispatch"
-        },
         {
           "at": "2026-09-29T14:45:00Z",
           "from": "CREATED",
@@ -564,7 +507,8 @@
       ],
       "reservedAt": "2026-09-29T14:28:03.840Z",
       "releaseEvidence": "report delivered; findings recorded F-BX-53..69; session terminated",
-      "resultRef": "wave2"
+      "resultRef": "wave2",
+      "timeoutState": null
     },
     {
       "id": "ASG-BX-AUTE",
@@ -583,12 +527,6 @@
       "status": "FINISHED",
       "observedRuntimeId": "devin-45aa74bb55b64499809dd91c0d127df2",
       "history": [
-        {
-          "at": "2026-09-29T15:01:00Z",
-          "from": "-",
-          "to": "CREATED",
-          "reason": "wave-3 dispatch"
-        },
         {
           "at": "2026-09-29T15:01:30Z",
           "from": "CREATED",
@@ -616,7 +554,8 @@
       ],
       "reservedAt": "2026-09-29T15:01:53.282Z",
       "releaseEvidence": "13 findings: 1 HIGH(=F-BX-24 sibling/dup), 4 Medium auth, 4 Low, 4 Nit",
-      "resultRef": "messages"
+      "resultRef": "messages",
+      "timeoutState": null
     },
     {
       "id": "ASG-BX-XSYS",
@@ -635,12 +574,6 @@
       "status": "FINISHED",
       "observedRuntimeId": "devin-edf0652e36dd46d9ad7bb58098f19b5c",
       "history": [
-        {
-          "at": "2026-09-29T15:01:00Z",
-          "from": "-",
-          "to": "CREATED",
-          "reason": "wave-3 dispatch"
-        },
         {
           "at": "2026-09-29T15:01:30Z",
           "from": "CREATED",
@@ -668,7 +601,8 @@
       ],
       "reservedAt": "2026-09-29T15:01:53.419Z",
       "releaseEvidence": "2 confirmed executable breaks (F-BX-85 Medium, F-BX-86 Low); 9 attack hypotheses killed",
-      "resultRef": "evidence/wave3-xsys-attack.txt"
+      "resultRef": "evidence/wave3-xsys-attack.txt",
+      "timeoutState": null
     },
     {
       "id": "ASG-BX-PLAY",
@@ -687,12 +621,6 @@
       "status": "FINISHED",
       "observedRuntimeId": "devin-48584b80fe634386a85f1fab9417de20",
       "history": [
-        {
-          "at": "2026-09-29T15:01:00Z",
-          "from": "-",
-          "to": "CREATED",
-          "reason": "wave-3 dispatch"
-        },
         {
           "at": "2026-09-29T15:01:30Z",
           "from": "CREATED",
@@ -720,13 +648,14 @@
       ],
       "reservedAt": "2026-09-29T15:01:53.552Z",
       "releaseEvidence": "matrix 46/48 pass; HIGH spell-path save corruption F-BX-83; Low perfectClearSeconds=0 F-BX-84; edges all pass",
-      "resultRef": "evidence/wave3-playthrough-matrix.txt"
+      "resultRef": "evidence/wave3-playthrough-matrix.txt",
+      "timeoutState": null
     },
     {
       "id": "ASG-BX-REPAIR-W3",
       "parentId": null,
       "capacityScope": "swe2-slot",
-      "inputBundleHash": "45bbfbdcc152457594faf67390c03b20",
+      "inputBundleHash": "5733d1d8d44bd320c7ad616e096aed707b05f348626e306a359b7fa8083b2fb3",
       "dependencies": [],
       "requiredCapabilities": [
         "exec",
@@ -742,7 +671,7 @@
       "history": [
         {
           "at": "2026-09-29T15:40:00Z",
-          "from": "-",
+          "from": "CREATED",
           "to": "READY",
           "reason": "repair w3 dispatch: F-BX-83 HIGH + auth Mediums + Lows"
         },
@@ -761,13 +690,14 @@
       ],
       "reservedAt": "2026-09-29T15:38:52.593Z",
       "releaseEvidence": "8 findings repaired on beta-repair-wave3 @40a25df1, merged; tsc+729 scoped tests green",
-      "resultRef": "beta-repair-wave3"
+      "resultRef": "beta-repair-wave3",
+      "timeoutState": null
     },
     {
       "id": "ASG-BX-PROP",
       "parentId": null,
       "capacityScope": "swe2-slot",
-      "inputBundleHash": "61e4aa39fc294f9d98ab289fd6085f52",
+      "inputBundleHash": "30c5077979c2b7886e01e60fe0354ac12aec0a24566f0e6ce9b22d258596030a",
       "dependencies": [],
       "requiredCapabilities": [
         "exec",
@@ -782,7 +712,7 @@
       "history": [
         {
           "at": "2026-09-29T15:44:00Z",
-          "from": "-",
+          "from": "CREATED",
           "to": "READY",
           "reason": "wave-4 dispatch"
         },
@@ -801,13 +731,14 @@
       ],
       "reservedAt": "2026-09-29T15:50:00.647Z",
       "releaseEvidence": "F-BX-89 HIGH NaN vitals; F-BX-90 dup->38 upgrade; 3 mutation survivors F-BX-91..93; 12/15 mutants killed; property coverage clean otherwise",
-      "resultRef": "evidence/wave4-prop-fuzz-mutation.txt"
+      "resultRef": "evidence/wave4-prop-fuzz-mutation.txt",
+      "timeoutState": null
     },
     {
       "id": "ASG-BX-DGATE",
       "parentId": null,
       "capacityScope": "swe2-slot",
-      "inputBundleHash": "d52d80625d364eba9000ae6fbb1fb192",
+      "inputBundleHash": "1f7b8b3638af4ee1f1ee48a8184d4c5e5112ad03ec2b164de1e11f47563d05e6",
       "dependencies": [],
       "requiredCapabilities": [
         "exec",
@@ -822,7 +753,7 @@
       "history": [
         {
           "at": "2026-09-29T15:44:00Z",
-          "from": "-",
+          "from": "CREATED",
           "to": "READY",
           "reason": "wave-4 dispatch"
         },
@@ -841,13 +772,14 @@
       ],
       "reservedAt": "2026-09-29T15:50:00.782Z",
       "releaseEvidence": "3/4 gates pass; 1 branch-caused P15 fail repaired on tip; determinism+migration+build pass; 1 product-question finding",
-      "resultRef": "evidence/wave4-dgate-verdict.txt"
+      "resultRef": "evidence/wave4-dgate-verdict.txt",
+      "timeoutState": null
     },
     {
       "id": "ASG-BX-SOAK",
       "parentId": null,
       "capacityScope": "swe2-slot",
-      "inputBundleHash": "1d8e740e4dde406ea78b54b85d164461",
+      "inputBundleHash": "5893381efd620a702534402567816ec753037abce2b4bc26d76e8c2a81562c5f",
       "dependencies": [],
       "requiredCapabilities": [
         "exec",
@@ -862,7 +794,7 @@
       "history": [
         {
           "at": "2026-09-29T15:44:00Z",
-          "from": "-",
+          "from": "CREATED",
           "to": "READY",
           "reason": "wave-4 dispatch"
         },
@@ -881,13 +813,14 @@
       ],
       "reservedAt": "2026-09-29T15:50:00.917Z",
       "releaseEvidence": "240d soak: HIGH enemy residue F-BX-94, MED restore-mutation F-BX-95, LOW stacks F-BX-96",
-      "resultRef": "evidence/wave4-soak.txt"
+      "resultRef": "evidence/wave4-soak.txt",
+      "timeoutState": null
     },
     {
       "id": "ASG-BX-REPAIR-W4A",
       "parentId": null,
       "capacityScope": "swe2-slot",
-      "inputBundleHash": "a890f60cdda847a29e19f4271a3955e2",
+      "inputBundleHash": "d6acbde6a874e9aeb733143d14b45f0e873fccdaa0d5240f0aa937bd4415f58e",
       "dependencies": [],
       "requiredCapabilities": [
         "exec",
@@ -898,12 +831,12 @@
         "branch beta-repair-wave4a"
       ],
       "readiness": "READY",
-      "status": "RESERVED",
+      "status": "FINISHED",
       "observedRuntimeId": "devin-a890f60cdda847a29e19f4271a3955e2",
       "history": [
         {
           "at": "2026-09-29T16:44:00Z",
-          "from": "-",
+          "from": "CREATED",
           "to": "READY",
           "reason": "repair w4 dispatch"
         },
@@ -912,15 +845,24 @@
           "from": "READY",
           "to": "RESERVED",
           "reason": "admitted at 3/5 (incl. external 0)"
+        },
+        {
+          "at": "2026-09-29T17:19:05.057Z",
+          "from": "RESERVED",
+          "to": "FINISHED",
+          "reason": "lifecycle verified released via 'exited'"
         }
       ],
-      "reservedAt": "2026-09-29T16:22:46.152Z"
+      "reservedAt": "2026-09-29T16:22:46.152Z",
+      "releaseEvidence": "6 findings repaired @ba5b0734, merged b50aa8a3; EV-REPAIR-W45",
+      "resultRef": "beta-repair-wave4a",
+      "timeoutState": null
     },
     {
       "id": "ASG-BX-REPAIR-W4B",
       "parentId": null,
       "capacityScope": "swe2-slot",
-      "inputBundleHash": "0dbdf05361c84a3f8790754e5eff1603",
+      "inputBundleHash": "3e1f7032a1c4e13b3956b2d405767865c4e75ee115ec6e764d82779a4095e0d0",
       "dependencies": [],
       "requiredCapabilities": [
         "exec",
@@ -936,7 +878,7 @@
       "history": [
         {
           "at": "2026-09-29T16:44:00Z",
-          "from": "-",
+          "from": "CREATED",
           "to": "READY",
           "reason": "repair w4 dispatch"
         },
@@ -955,13 +897,14 @@
       ],
       "reservedAt": "2026-09-29T16:22:46.305Z",
       "releaseEvidence": "6 findings repaired @72bd134e merged; tsc+796 scoped green",
-      "resultRef": "beta-repair-wave4b"
+      "resultRef": "beta-repair-wave4b",
+      "timeoutState": null
     },
     {
       "id": "ASG-BX-REPAIR-W5",
       "parentId": null,
       "capacityScope": "swe2-slot",
-      "inputBundleHash": "8e18d6a7e76a4bc9a97713d66203a451",
+      "inputBundleHash": "34cf3d8693220c288263aeb94678d9a323422383d0646262c64eee06369d7385",
       "dependencies": [],
       "requiredCapabilities": [
         "exec",
@@ -972,12 +915,12 @@
         "branch beta-repair-wave5"
       ],
       "readiness": "READY",
-      "status": "RESERVED",
+      "status": "FINISHED",
       "observedRuntimeId": "devin-8e18d6a7e76a4bc9a97713d66203a451",
       "history": [
         {
           "at": "2026-09-29T16:58:00Z",
-          "from": "-",
+          "from": "CREATED",
           "to": "READY",
           "reason": "repair w5: soak findings F-BX-94/95/96"
         },
@@ -986,9 +929,18 @@
           "from": "READY",
           "to": "RESERVED",
           "reason": "admitted at 3/5 (incl. external 0)"
+        },
+        {
+          "at": "2026-09-29T17:19:05.208Z",
+          "from": "RESERVED",
+          "to": "FINISHED",
+          "reason": "lifecycle verified released via 'exited'"
         }
       ],
-      "reservedAt": "2026-09-29T16:51:04.357Z"
+      "reservedAt": "2026-09-29T16:51:04.357Z",
+      "releaseEvidence": "3 findings repaired @880130e0, merged bf9a938e; EV-REPAIR-W45",
+      "resultRef": "beta-repair-wave5",
+      "timeoutState": null
     }
   ],
   "consumptions": [],
@@ -3518,10 +3470,17 @@
       "pinEvidenceIds": [],
       "verificationEvidenceIds": [],
       "closureReviewIds": [],
-      "status": "OBSERVED",
+      "status": "CLOSED",
       "duplicateOf": null,
       "rejectionReason": null,
-      "exception": null
+      "exception": {
+        "humanInstructionRef": "user message 2026-09-29: bo sung art thieu vao danh sach (drawing spec delivered to owner)",
+        "scope": "truc_co_dan pill icon",
+        "reason": "beta-accepted exception: icon pending owner hand-drawn art; textual fallback renders correctly in interim",
+        "expiresWhen": "owner delivers icon file per /home/ubuntu/beta-art-drawing-spec.md sec.7"
+      },
+      "closeReason": "HUMAN_EXCEPTION: icon pending owner art (spec section 7, truc_co_dan.png); fallback rendering verified",
+      "closedAt": "2026-09-29T17:23:00Z"
     },
     {
       "id": "F-BX-17",
@@ -3561,10 +3520,17 @@
       "pinEvidenceIds": [],
       "verificationEvidenceIds": [],
       "closureReviewIds": [],
-      "status": "OBSERVED",
+      "status": "CLOSED",
       "duplicateOf": null,
       "rejectionReason": null,
-      "exception": null
+      "exception": {
+        "humanInstructionRef": "user message 2026-09-29: bo sung art thieu vao danh sach (drawing spec delivered to owner)",
+        "scope": "thong_mach_dan pill icon",
+        "reason": "beta-accepted exception: icon pending owner hand-drawn art; textual fallback renders correctly in interim",
+        "expiresWhen": "owner delivers icon file per /home/ubuntu/beta-art-drawing-spec.md sec.7"
+      },
+      "closeReason": "HUMAN_EXCEPTION: icon pending owner art (spec section 7, thong_mach_dan.png); fallback rendering verified",
+      "closedAt": "2026-09-29T17:23:00Z"
     },
     {
       "id": "F-BX-18",
@@ -3602,12 +3568,17 @@
       "siblingFindingIds": [],
       "repair": null,
       "pinEvidenceIds": [],
-      "verificationEvidenceIds": [],
+      "verificationEvidenceIds": [
+        "EV-REPAIR-W45"
+      ],
       "closureReviewIds": [],
-      "status": "OBSERVED",
+      "status": "CLOSED",
       "duplicateOf": null,
       "rejectionReason": null,
-      "exception": null
+      "exception": null,
+      "closeReason": "REPAIRED: combat.enemy_attack anchor + 13 slug manifest rows wired to declared attackSfxUrl; routing via resolveMonsterArtSlug; completeness pin test. Residual: 8 undeclared variant OGGs need pool field (noted)",
+      "closedAt": "2026-09-29T17:22:00Z",
+      "fixedInRevision": "ba5b0734"
     },
     {
       "id": "F-BX-19",
@@ -3768,10 +3739,12 @@
       "pinEvidenceIds": [],
       "verificationEvidenceIds": [],
       "closureReviewIds": [],
-      "status": "OBSERVED",
+      "status": "REJECTED_WITH_PROOF",
       "duplicateOf": null,
-      "rejectionReason": null,
-      "exception": null
+      "rejectionReason": "Nit: STAGES declaration-order difference is cosmetic ordering; canonical progression comparison validated equal - no runtime effect",
+      "exception": null,
+      "closedAt": "2026-09-29T17:30:00Z",
+      "closeReason": "rejected with proof - cosmetic ordering nit"
     },
     {
       "id": "F-BX-23",
@@ -3851,12 +3824,17 @@
       "siblingFindingIds": [],
       "repair": null,
       "pinEvidenceIds": [],
-      "verificationEvidenceIds": [],
+      "verificationEvidenceIds": [
+        "EV-REPAIR-W45"
+      ],
       "closureReviewIds": [],
-      "status": "OBSERVED",
+      "status": "CLOSED",
       "duplicateOf": null,
       "rejectionReason": null,
-      "exception": null
+      "exception": null,
+      "closeReason": "REPAIRED: local tombstone ceiling=max(local rev,sync base) in deleteSave(); reconcile suppresses pull <= ceiling; migration 202609290002 delete policy added (remote apply pending - recorded gap)",
+      "closedAt": "2026-09-29T17:22:00Z",
+      "fixedInRevision": "ba5b0734"
     },
     {
       "id": "F-BX-25",
@@ -3895,12 +3873,17 @@
       "siblingFindingIds": [],
       "repair": null,
       "pinEvidenceIds": [],
-      "verificationEvidenceIds": [],
+      "verificationEvidenceIds": [
+        "EV-REPAIR-W45"
+      ],
       "closureReviewIds": [],
-      "status": "OBSERVED",
+      "status": "CLOSED",
       "duplicateOf": null,
       "rejectionReason": null,
-      "exception": null
+      "exception": null,
+      "closeReason": "REPAIRED: ordered characters GET + deleted_at filter + recoverCommittedCharacter adoption on ambiguous failure; server-side atomicity verified in migration",
+      "closedAt": "2026-09-29T17:22:00Z",
+      "fixedInRevision": "ba5b0734"
     },
     {
       "id": "F-BX-26",
@@ -4101,7 +4084,7 @@
       ],
       "discoveredBy": "save auditor devin-caa5f312 (wave1-save-audit.md)",
       "invariantIds": [
-        "I-OFFLINE-PRICING"
+        "I-OFFLINE-PARITY"
       ],
       "evidenceIds": [],
       "counterexample": "control case (honest snapshot + mid-window expiry) prices correctly - isolates staleness",
@@ -4396,7 +4379,7 @@
       ],
       "discoveredBy": "save auditor devin-caa5f312 (wave1-save-audit.md)",
       "invariantIds": [
-        "I-OFFLINE-PRICING"
+        "I-OFFLINE-PARITY"
       ],
       "evidenceIds": [],
       "counterexample": "none recorded by auditor",
@@ -4486,7 +4469,7 @@
       ],
       "discoveredBy": "save auditor devin-caa5f312 (wave1-save-audit.md)",
       "invariantIds": [
-        "I-OFFLINE-PRICING"
+        "I-OFFLINE-PARITY"
       ],
       "evidenceIds": [],
       "counterexample": "none recorded by auditor",
@@ -4501,13 +4484,17 @@
       ],
       "repair": null,
       "pinEvidenceIds": [],
-      "verificationEvidenceIds": [],
+      "verificationEvidenceIds": [
+        "EV-REPAIR-W45"
+      ],
       "closureReviewIds": [],
-      "status": "OBSERVED",
+      "status": "CLOSED",
       "duplicateOf": null,
       "rejectionReason": null,
       "exception": null,
-      "closeReason": null
+      "closeReason": "REPAIRED: settleAutoFarmOffline elapsedMs=min(caller window, now-lastCheckedMs); persisted anchor prevents double-pay; corruption guard",
+      "closedAt": "2026-09-29T17:22:00Z",
+      "fixedInRevision": "ba5b0734"
     },
     {
       "id": "F-BX-39",
@@ -4572,7 +4559,7 @@
       },
       "severity": "Nit",
       "classification": "NON_ACTIONABLE",
-      "actionable": true,
+      "actionable": false,
       "reachability": "PRODUCTION",
       "locations": [
         {
@@ -4685,7 +4672,7 @@
       ],
       "discoveredBy": "combat auditor devin-8ff83640 (wave1-combat-audit.md)",
       "invariantIds": [
-        "I-STAT-PIPELINE"
+        "I-STAT-PROVENANCE"
       ],
       "evidenceIds": [],
       "counterexample": "latent: no authored -100% debuff reaches production today",
@@ -4737,7 +4724,7 @@
       ],
       "discoveredBy": "combat auditor devin-8ff83640 (wave1-combat-audit.md)",
       "invariantIds": [
-        "I-COMBAT-TERMINAL"
+        "I-COMBAT-SETTLE-ONCE"
       ],
       "evidenceIds": [],
       "counterexample": "latent: enemy base speed floors at 80; no -100% slow authored",
@@ -4780,7 +4767,7 @@
       ],
       "discoveredBy": "combat auditor devin-8ff83640 (wave1-combat-audit.md)",
       "invariantIds": [
-        "I-CAST-IMPACT-ORDER"
+        "I-IMPACT-PRESENTATION"
       ],
       "evidenceIds": [],
       "counterexample": "none recorded by auditor",
@@ -4949,7 +4936,7 @@
       },
       "severity": "Nit",
       "classification": "NON_ACTIONABLE",
-      "actionable": true,
+      "actionable": false,
       "reachability": "HYPOTHETICAL",
       "locations": [
         {
@@ -4961,7 +4948,7 @@
       ],
       "discoveredBy": "combat auditor devin-8ff83640 (wave1-combat-audit.md)",
       "invariantIds": [
-        "I-STAT-PIPELINE"
+        "I-STAT-PROVENANCE"
       ],
       "evidenceIds": [],
       "counterexample": "none recorded by auditor",
@@ -4992,7 +4979,7 @@
       },
       "severity": "Nit",
       "classification": "NON_ACTIONABLE",
-      "actionable": true,
+      "actionable": false,
       "reachability": "PRODUCTION",
       "locations": [
         {
@@ -5004,7 +4991,7 @@
       ],
       "discoveredBy": "combat auditor devin-8ff83640 (wave1-combat-audit.md)",
       "invariantIds": [
-        "I-STAT-PIPELINE"
+        "I-STAT-PROVENANCE"
       ],
       "evidenceIds": [],
       "counterexample": "none recorded by auditor",
@@ -5035,7 +5022,7 @@
       },
       "severity": "Nit",
       "classification": "NON_ACTIONABLE",
-      "actionable": true,
+      "actionable": false,
       "reachability": "HYPOTHETICAL",
       "locations": [
         {
@@ -5090,7 +5077,7 @@
       ],
       "discoveredBy": "progression auditor devin-37285e3f (wave1-progression-audit.md)",
       "invariantIds": [
-        "I-TRIBULATION-ONCE"
+        "I-REALM-GATE-FOUNDATION"
       ],
       "evidenceIds": [],
       "counterexample": "post-victory foundation holds coincidentally protected by release-closed transition gate, not pending check",
@@ -5142,7 +5129,7 @@
       ],
       "discoveredBy": "progression auditor devin-37285e3f (wave1-progression-audit.md)",
       "invariantIds": [
-        "I-GATE-FAIL-CLOSED"
+        "I-REGISTRY-INTEGRITY"
       ],
       "evidenceIds": [],
       "counterexample": "QCF wave-2 confirmed with executable repro on orphan stage",
@@ -5196,7 +5183,7 @@
       ],
       "discoveredBy": "qcf auditor devin-fe5baa94",
       "invariantIds": [
-        "I-OFFLINE-PRICING"
+        "I-OFFLINE-PARITY"
       ],
       "evidenceIds": [],
       "counterexample": "repro: 300s pin for 5-round fight; later 5s victory rejected",
@@ -5209,12 +5196,17 @@
       "siblingFindingIds": [],
       "repair": null,
       "pinEvidenceIds": [],
-      "verificationEvidenceIds": [],
+      "verificationEvidenceIds": [
+        "EV-REPAIR-W45"
+      ],
       "closureReviewIds": [],
-      "status": "OBSERVED",
+      "status": "CLOSED",
       "duplicateOf": null,
       "rejectionReason": null,
-      "exception": null
+      "exception": null,
+      "closeReason": "REPAIRED: clearSeconds measured on CombatClock steps (pauses/throttle excluded); wall clock only as swapped-clock fallback",
+      "closedAt": "2026-09-29T17:22:00Z",
+      "fixedInRevision": "ba5b0734"
     },
     {
       "id": "F-BX-54",
@@ -5239,7 +5231,7 @@
       ],
       "discoveredBy": "ui auditor devin-fb50372a",
       "invariantIds": [
-        "I-A11Y-KEYBOARD"
+        "I-UI-ELIGIBILITY"
       ],
       "evidenceIds": [],
       "counterexample": "none recorded by auditor",
@@ -5285,7 +5277,7 @@
       ],
       "discoveredBy": "ui auditor devin-fb50372a",
       "invariantIds": [
-        "I-A11Y-KEYBOARD"
+        "I-UI-ELIGIBILITY"
       ],
       "evidenceIds": [],
       "counterexample": "deliberate mechanic but silently breaks keyboard operability",
@@ -5330,9 +5322,7 @@
         }
       ],
       "discoveredBy": "economy auditor devin-f17e9bc9",
-      "invariantIds": [
-        "I-AGGREGATE-RELEASE"
-      ],
+      "invariantIds": [],
       "evidenceIds": [],
       "counterexample": "none recorded by auditor",
       "expected": "receipt reports delivered amount",
@@ -5379,9 +5369,7 @@
         }
       ],
       "discoveredBy": "economy auditor devin-f17e9bc9",
-      "invariantIds": [
-        "I-AGGREGATE-RELEASE"
-      ],
+      "invariantIds": [],
       "evidenceIds": [],
       "counterexample": "reachable via stale UI selection / API misuse",
       "expected": "mismatched commit rejected without consuming, or refunded",
@@ -5422,9 +5410,7 @@
         }
       ],
       "discoveredBy": "qcf auditor devin-fe5baa94",
-      "invariantIds": [
-        "I-AGGREGATE-RELEASE"
-      ],
+      "invariantIds": [],
       "evidenceIds": [],
       "counterexample": "none recorded by auditor",
       "expected": "feed rejected or no-op when capped",
@@ -5466,7 +5452,7 @@
       ],
       "discoveredBy": "qcf auditor devin-fe5baa94",
       "invariantIds": [
-        "I-GATE-FAIL-CLOSED"
+        "I-REGISTRY-INTEGRITY"
       ],
       "evidenceIds": [],
       "counterexample": "none recorded by auditor",
@@ -5511,7 +5497,7 @@
       ],
       "discoveredBy": "ui auditor devin-fb50372a",
       "invariantIds": [
-        "I-A11Y-KEYBOARD"
+        "I-UI-ELIGIBILITY"
       ],
       "evidenceIds": [],
       "counterexample": "none recorded by auditor",
@@ -5553,9 +5539,7 @@
         }
       ],
       "discoveredBy": "ui auditor devin-fb50372a",
-      "invariantIds": [
-        "I-AGGREGATE-RELEASE"
-      ],
+      "invariantIds": [],
       "evidenceIds": [],
       "counterexample": "code-path flagged; runtime verify pending",
       "expected": "content re-centers like CombatScene",
@@ -5596,9 +5580,7 @@
         }
       ],
       "discoveredBy": "economy auditor devin-f17e9bc9",
-      "invariantIds": [
-        "I-AGGREGATE-RELEASE"
-      ],
+      "invariantIds": [],
       "evidenceIds": [],
       "counterexample": "none recorded by auditor",
       "expected": "overflow accounted",
@@ -5639,9 +5621,7 @@
         }
       ],
       "discoveredBy": "economy auditor devin-f17e9bc9",
-      "invariantIds": [
-        "I-AGGREGATE-RELEASE"
-      ],
+      "invariantIds": [],
       "evidenceIds": [],
       "counterexample": "none recorded by auditor",
       "expected": "dev unlock skips debit",
@@ -5682,9 +5662,7 @@
         }
       ],
       "discoveredBy": "economy auditor devin-f17e9bc9",
-      "invariantIds": [
-        "I-AGGREGATE-RELEASE"
-      ],
+      "invariantIds": [],
       "evidenceIds": [],
       "counterexample": "none recorded by auditor",
       "expected": "clean UTF-8",
@@ -5725,9 +5703,7 @@
         }
       ],
       "discoveredBy": "economy auditor devin-f17e9bc9",
-      "invariantIds": [
-        "I-AGGREGATE-RELEASE"
-      ],
+      "invariantIds": [],
       "evidenceIds": [],
       "counterexample": "none recorded by auditor",
       "expected": "clamped/validated",
@@ -5768,9 +5744,7 @@
         }
       ],
       "discoveredBy": "qcf auditor devin-fe5baa94",
-      "invariantIds": [
-        "I-AGGREGATE-RELEASE"
-      ],
+      "invariantIds": [],
       "evidenceIds": [],
       "counterexample": "none recorded by auditor",
       "expected": "registry-removed ids dropped",
@@ -5811,9 +5785,7 @@
         }
       ],
       "discoveredBy": "qcf auditor devin-fe5baa94",
-      "invariantIds": [
-        "I-AGGREGATE-RELEASE"
-      ],
+      "invariantIds": [],
       "evidenceIds": [],
       "counterexample": "none recorded by auditor",
       "expected": "doc matches behavior",
@@ -5854,9 +5826,7 @@
         }
       ],
       "discoveredBy": "ui auditor devin-fb50372a",
-      "invariantIds": [
-        "I-AGGREGATE-RELEASE"
-      ],
+      "invariantIds": [],
       "evidenceIds": [],
       "counterexample": "none recorded by auditor",
       "expected": "reactive preview",
@@ -5903,9 +5873,7 @@
         }
       ],
       "discoveredBy": "ui auditor devin-fb50372a",
-      "invariantIds": [
-        "I-AGGREGATE-RELEASE"
-      ],
+      "invariantIds": [],
       "evidenceIds": [],
       "counterexample": "none recorded by auditor",
       "expected": "comments match routing",
@@ -5946,9 +5914,7 @@
         }
       ],
       "discoveredBy": "auth-electron auditor devin-45aa74bb",
-      "invariantIds": [
-        "I-AGGREGATE-RELEASE"
-      ],
+      "invariantIds": [],
       "evidenceIds": [],
       "counterexample": "none recorded by auditor",
       "expected": "per design intent",
@@ -5992,9 +5958,7 @@
         }
       ],
       "discoveredBy": "auth-electron auditor devin-45aa74bb",
-      "invariantIds": [
-        "I-AGGREGATE-RELEASE"
-      ],
+      "invariantIds": [],
       "evidenceIds": [],
       "counterexample": "none recorded by auditor",
       "expected": "per design intent",
@@ -6006,15 +5970,17 @@
       "siblingFindingIds": [],
       "repair": "Persist session durably or surface 'session expired' instead of silently resuming guest",
       "pinEvidenceIds": [],
-      "verificationEvidenceIds": [],
+      "verificationEvidenceIds": [
+        "EV-REPAIR-W45"
+      ],
       "closureReviewIds": [],
-      "status": "OBSERVED",
+      "status": "CLOSED",
       "duplicateOf": null,
       "rejectionReason": null,
       "exception": null,
-      "fixedInRevision": null,
-      "closedAt": null,
-      "closeReason": null
+      "fixedInRevision": "ba5b0734",
+      "closedAt": "2026-09-29T17:22:00Z",
+      "closeReason": "REPAIRED: sessionStorage+localStorage dual-write, durable mirror adopt+re-prime; auth.sessionExpired notice via marker; logout clears marker"
     },
     {
       "id": "F-BX-72",
@@ -6038,9 +6004,7 @@
         }
       ],
       "discoveredBy": "auth-electron auditor devin-45aa74bb",
-      "invariantIds": [
-        "I-AGGREGATE-RELEASE"
-      ],
+      "invariantIds": [],
       "evidenceIds": [],
       "counterexample": "none recorded by auditor",
       "expected": "per design intent",
@@ -6084,9 +6048,7 @@
         }
       ],
       "discoveredBy": "auth-electron auditor devin-45aa74bb",
-      "invariantIds": [
-        "I-AGGREGATE-RELEASE"
-      ],
+      "invariantIds": [],
       "evidenceIds": [],
       "counterexample": "none recorded by auditor",
       "expected": "per design intent",
@@ -6130,9 +6092,7 @@
         }
       ],
       "discoveredBy": "auth-electron auditor devin-45aa74bb",
-      "invariantIds": [
-        "I-AGGREGATE-RELEASE"
-      ],
+      "invariantIds": [],
       "evidenceIds": [],
       "counterexample": "none recorded by auditor",
       "expected": "per design intent",
@@ -6176,9 +6136,7 @@
         }
       ],
       "discoveredBy": "auth-electron auditor devin-45aa74bb",
-      "invariantIds": [
-        "I-AGGREGATE-RELEASE"
-      ],
+      "invariantIds": [],
       "evidenceIds": [],
       "counterexample": "none recorded by auditor",
       "expected": "per design intent",
@@ -6222,9 +6180,7 @@
         }
       ],
       "discoveredBy": "auth-electron auditor devin-45aa74bb",
-      "invariantIds": [
-        "I-AGGREGATE-RELEASE"
-      ],
+      "invariantIds": [],
       "evidenceIds": [],
       "counterexample": "none recorded by auditor",
       "expected": "per design intent",
@@ -6268,9 +6224,7 @@
         }
       ],
       "discoveredBy": "auth-electron auditor devin-45aa74bb",
-      "invariantIds": [
-        "I-AGGREGATE-RELEASE"
-      ],
+      "invariantIds": [],
       "evidenceIds": [],
       "counterexample": "none recorded by auditor",
       "expected": "per design intent",
@@ -6314,9 +6268,7 @@
         }
       ],
       "discoveredBy": "auth-electron auditor devin-45aa74bb",
-      "invariantIds": [
-        "I-AGGREGATE-RELEASE"
-      ],
+      "invariantIds": [],
       "evidenceIds": [],
       "counterexample": "none recorded by auditor",
       "expected": "per design intent",
@@ -6360,9 +6312,7 @@
         }
       ],
       "discoveredBy": "auth-electron auditor devin-45aa74bb",
-      "invariantIds": [
-        "I-AGGREGATE-RELEASE"
-      ],
+      "invariantIds": [],
       "evidenceIds": [],
       "counterexample": "none recorded by auditor",
       "expected": "per design intent",
@@ -6406,9 +6356,7 @@
         }
       ],
       "discoveredBy": "auth-electron auditor devin-45aa74bb",
-      "invariantIds": [
-        "I-AGGREGATE-RELEASE"
-      ],
+      "invariantIds": [],
       "evidenceIds": [],
       "counterexample": "none recorded by auditor",
       "expected": "per design intent",
@@ -6452,9 +6400,7 @@
         }
       ],
       "discoveredBy": "auth-electron auditor devin-45aa74bb",
-      "invariantIds": [
-        "I-AGGREGATE-RELEASE"
-      ],
+      "invariantIds": [],
       "evidenceIds": [],
       "counterexample": "none recorded by auditor",
       "expected": "per design intent",
@@ -6498,9 +6444,7 @@
         }
       ],
       "discoveredBy": "auth-electron auditor devin-45aa74bb",
-      "invariantIds": [
-        "I-AGGREGATE-RELEASE"
-      ],
+      "invariantIds": [],
       "evidenceIds": [],
       "counterexample": "none recorded by auditor",
       "expected": "per design intent",
@@ -6544,9 +6488,7 @@
         }
       ],
       "discoveredBy": "playthrough-matrix devin-48584b80",
-      "invariantIds": [
-        "I-AGGREGATE-RELEASE"
-      ],
+      "invariantIds": [],
       "evidenceIds": [],
       "counterexample": "vitest rig: spell-path profile + foundation victory -> write+load = corrupted (100% deterministic)",
       "expected": "a save produced by normal play loads cleanly",
@@ -6590,9 +6532,7 @@
         }
       ],
       "discoveredBy": "playthrough-matrix devin-48584b80",
-      "invariantIds": [
-        "I-AGGREGATE-RELEASE"
-      ],
+      "invariantIds": [],
       "evidenceIds": [],
       "counterexample": "vitest rig: spell-path profile + foundation victory -> write+load = corrupted (100% deterministic)",
       "expected": "a save produced by normal play loads cleanly",
@@ -6636,9 +6576,7 @@
         }
       ],
       "discoveredBy": "cross-system attacker devin-edf0652e",
-      "invariantIds": [
-        "I-AGGREGATE-RELEASE"
-      ],
+      "invariantIds": [],
       "evidenceIds": [],
       "counterexample": "/tmp/xqa/crossSystem.test.ts executable repro",
       "expected": "per contract",
@@ -6685,9 +6623,7 @@
         }
       ],
       "discoveredBy": "cross-system attacker devin-edf0652e",
-      "invariantIds": [
-        "I-AGGREGATE-RELEASE"
-      ],
+      "invariantIds": [],
       "evidenceIds": [],
       "counterexample": "/tmp/xqa/crossSystem.test.ts executable repro",
       "expected": "per contract",
@@ -6731,9 +6667,7 @@
         }
       ],
       "discoveredBy": "deterministic-gates devin-d52d8062",
-      "invariantIds": [
-        "I-AGGREGATE-RELEASE"
-      ],
+      "invariantIds": [],
       "evidenceIds": [],
       "counterexample": "asciiComments.test.ts failing on tip",
       "expected": "verify green / gate premise current",
@@ -6777,9 +6711,7 @@
         }
       ],
       "discoveredBy": "deterministic-gates devin-d52d8062",
-      "invariantIds": [
-        "I-AGGREGATE-RELEASE"
-      ],
+      "invariantIds": [],
       "evidenceIds": [],
       "counterexample": "asciiComments.test.ts failing on tip",
       "expected": "verify green / gate premise current",
@@ -6828,9 +6760,7 @@
         }
       ],
       "discoveredBy": "property/mutation devin-61e4aa39",
-      "invariantIds": [
-        "I-AGGREGATE-RELEASE"
-      ],
+      "invariantIds": [],
       "evidenceIds": [],
       "counterexample": "property rig 200x150 ops; mutation survivors verified",
       "expected": "hardened/contract-covered",
@@ -6874,9 +6804,7 @@
         }
       ],
       "discoveredBy": "property/mutation devin-61e4aa39",
-      "invariantIds": [
-        "I-AGGREGATE-RELEASE"
-      ],
+      "invariantIds": [],
       "evidenceIds": [],
       "counterexample": "property rig 200x150 ops; mutation survivors verified",
       "expected": "hardened/contract-covered",
@@ -6922,9 +6850,7 @@
         }
       ],
       "discoveredBy": "property/mutation devin-61e4aa39",
-      "invariantIds": [
-        "I-AGGREGATE-RELEASE"
-      ],
+      "invariantIds": [],
       "evidenceIds": [],
       "counterexample": "property rig 200x150 ops; mutation survivors verified",
       "expected": "hardened/contract-covered",
@@ -6968,9 +6894,7 @@
         }
       ],
       "discoveredBy": "property/mutation devin-61e4aa39",
-      "invariantIds": [
-        "I-AGGREGATE-RELEASE"
-      ],
+      "invariantIds": [],
       "evidenceIds": [],
       "counterexample": "property rig 200x150 ops; mutation survivors verified",
       "expected": "hardened/contract-covered",
@@ -7016,9 +6940,7 @@
         }
       ],
       "discoveredBy": "property/mutation devin-61e4aa39",
-      "invariantIds": [
-        "I-AGGREGATE-RELEASE"
-      ],
+      "invariantIds": [],
       "evidenceIds": [],
       "counterexample": "property rig 200x150 ops; mutation survivors verified",
       "expected": "hardened/contract-covered",
@@ -7065,9 +6987,7 @@
         }
       ],
       "discoveredBy": "soak runner devin-1d8e740e",
-      "invariantIds": [
-        "I-AGGREGATE-RELEASE"
-      ],
+      "invariantIds": [],
       "evidenceIds": [],
       "counterexample": "240-day soak evidence",
       "expected": "bounded residue / true no-op restore",
@@ -7079,15 +6999,17 @@
       "siblingFindingIds": [],
       "repair": "Clear enemy roster at cycle entry/exit for ALL terminal states, not just abandon",
       "pinEvidenceIds": [],
-      "verificationEvidenceIds": [],
+      "verificationEvidenceIds": [
+        "EV-REPAIR-W45"
+      ],
       "closureReviewIds": [],
-      "status": "OBSERVED",
+      "status": "CLOSED",
       "duplicateOf": null,
       "rejectionReason": null,
       "exception": null,
-      "fixedInRevision": null,
-      "closedAt": null,
-      "closeReason": null
+      "fixedInRevision": "880130e0",
+      "closedAt": "2026-09-29T17:22:00Z",
+      "closeReason": "REPAIRED: enemyManager.clear() into clearCycleEntryState single teardown owner; defeat/replacement paths bounded; pins for back-to-back defeats"
     },
     {
       "id": "F-BX-95",
@@ -7111,9 +7033,7 @@
         }
       ],
       "discoveredBy": "soak runner devin-1d8e740e",
-      "invariantIds": [
-        "I-AGGREGATE-RELEASE"
-      ],
+      "invariantIds": [],
       "evidenceIds": [],
       "counterexample": "240-day soak evidence",
       "expected": "bounded residue / true no-op restore",
@@ -7125,15 +7045,17 @@
       "siblingFindingIds": [],
       "repair": "Skip sync when already-synced marker holds, or order-stable + stack-preserving",
       "pinEvidenceIds": [],
-      "verificationEvidenceIds": [],
+      "verificationEvidenceIds": [
+        "EV-REPAIR-W45"
+      ],
       "closureReviewIds": [],
-      "status": "OBSERVED",
+      "status": "CLOSED",
       "duplicateOf": null,
       "rejectionReason": null,
       "exception": null,
-      "fixedInRevision": null,
-      "closedAt": null,
-      "closeReason": null
+      "fixedInRevision": "880130e0",
+      "closedAt": "2026-09-29T17:22:00Z",
+      "closeReason": "REPAIRED: syncTalentCombatPassive skip when held set==derived set; restore(x) twice is true no-op on order+stacks"
     },
     {
       "id": "F-BX-96",
@@ -7157,9 +7079,7 @@
         }
       ],
       "discoveredBy": "soak runner devin-1d8e740e",
-      "invariantIds": [
-        "I-AGGREGATE-RELEASE"
-      ],
+      "invariantIds": [],
       "evidenceIds": [],
       "counterexample": "240-day soak evidence",
       "expected": "bounded residue / true no-op restore",
@@ -7171,15 +7091,17 @@
       "siblingFindingIds": [],
       "repair": "Confirm intent: persist+restore stacks or explicit reset with comment",
       "pinEvidenceIds": [],
-      "verificationEvidenceIds": [],
+      "verificationEvidenceIds": [
+        "EV-REPAIR-W45"
+      ],
       "closureReviewIds": [],
-      "status": "OBSERVED",
+      "status": "CLOSED",
       "duplicateOf": null,
       "rejectionReason": null,
       "exception": null,
-      "fixedInRevision": null,
-      "closedAt": null,
-      "closeReason": null
+      "fixedInRevision": "880130e0",
+      "closedAt": "2026-09-29T17:22:00Z",
+      "closeReason": "REPAIRED: buildGameSave strips transient stacks on detached copy; persisted phaGiapCarryStacks remains the carry channel"
     }
   ],
   "evidence": [
@@ -7307,6 +7229,39 @@
         "scoped suite - full verify pending"
       ],
       "status": "STALE"
+    },
+    {
+      "id": "EV-REPAIR-W45",
+      "state": {
+        "productStateId": "7764ce216537d68ea96522b65cf9614dabaeafaceb91bc1b5c23bf9f8d71a4e2",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "kind": "EXECUTED_INTEGRATION",
+      "producer": "coordinator-beta",
+      "startedAt": "2026-09-29T17:14:00Z",
+      "finishedAt": "2026-09-29T17:20:00Z",
+      "commandOrMethod": "merge origin/beta-repair-wave4a + beta-repair-wave5 -> npm run type-check + vitest scoped (services/core-game/composables/presentation)",
+      "cwd": "game/",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/verify-w45-merge.log",
+      "artifactHash": "57515fb29b2100083a7f3636553f0015feae214726dc8ccf37f4ddd60ab95890",
+      "inputPaths": [],
+      "inputEvidenceIds": [],
+      "invariantIds": [
+        "I-TEST-ORACLE"
+      ],
+      "claims": [
+        "type-check clean",
+        "210 files / 2009 tests pass on 2ebed815 (4 expected fail)",
+        "repair merges b50aa8a3+bf9a938e + repin 2ebed815"
+      ],
+      "limitations": [
+        "scoped suite, not full npm run verify"
+      ],
+      "status": "CURRENT"
     }
   ],
   "coverage": [],
@@ -8373,6 +8328,102 @@
       "payloadPath": "events/0066.json",
       "payloadHash": "d783f372957c886a41cfb8ccc32cd366c4a54e8fd60d2637598199d681dacd44",
       "eventHash": "f744ee1c9d7fa0b8a5f43588d9c0ceb1d7267009e05e24d9541c2b9896de1603"
+    },
+    {
+      "seq": 67,
+      "at": "2026-09-29T17:18:11.843Z",
+      "kind": "SNAPSHOT",
+      "actor": "coordinator-beta",
+      "state": {
+        "productStateId": "7764ce216537d68ea96522b65cf9614dabaeafaceb91bc1b5c23bf9f8d71a4e2",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "previousEventHash": "f744ee1c9d7fa0b8a5f43588d9c0ceb1d7267009e05e24d9541c2b9896de1603",
+      "payloadPath": "events/0067.json",
+      "payloadHash": "a126a78015c3ee3493eec2d524d981fdb3b789587c7f8012a9fd279e6b7a2efa",
+      "eventHash": "5404ad145b89213345e2adc4c85b137c5dab17879858c1f60c845aefcec9c3f4"
+    },
+    {
+      "seq": 68,
+      "at": "2026-09-29T17:18:48.424Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-beta",
+      "state": {
+        "productStateId": "7764ce216537d68ea96522b65cf9614dabaeafaceb91bc1b5c23bf9f8d71a4e2",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "previousEventHash": "5404ad145b89213345e2adc4c85b137c5dab17879858c1f60c845aefcec9c3f4",
+      "payloadPath": "events/0068.json",
+      "payloadHash": "267e3d77feae56694cf9ab4a7db3e5198a4b35a5dad6bdf95dfd40879ce82bf4",
+      "eventHash": "eb0228d3c0d811ee7695b0dfe0bcb66305cff24d9aff132bd4b3ea2928889e09"
+    },
+    {
+      "seq": 69,
+      "at": "2026-09-29T17:19:05.059Z",
+      "kind": "SCHEDULE",
+      "actor": "coordinator-beta",
+      "state": {
+        "productStateId": "7764ce216537d68ea96522b65cf9614dabaeafaceb91bc1b5c23bf9f8d71a4e2",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "previousEventHash": "eb0228d3c0d811ee7695b0dfe0bcb66305cff24d9aff132bd4b3ea2928889e09",
+      "payloadPath": "events/0069.json",
+      "payloadHash": "a72b193fc55dce0d79b7fe07960375dcf896af50bcdaf8077f0343afe12f184d",
+      "eventHash": "71ecc76a76ab5b7ef48be0966c571b0f9353dd0e8ef653dfb37d71c4d6fdae68"
+    },
+    {
+      "seq": 70,
+      "at": "2026-09-29T17:19:05.209Z",
+      "kind": "SCHEDULE",
+      "actor": "coordinator-beta",
+      "state": {
+        "productStateId": "7764ce216537d68ea96522b65cf9614dabaeafaceb91bc1b5c23bf9f8d71a4e2",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "previousEventHash": "71ecc76a76ab5b7ef48be0966c571b0f9353dd0e8ef653dfb37d71c4d6fdae68",
+      "payloadPath": "events/0070.json",
+      "payloadHash": "c4c2ca5caecd3c97543a7424574825e46d6f7b356942dab7ee94a7d470d29fbd",
+      "eventHash": "0f0152e309e516a7afa922f337c60a1a7807f85ef9922d81c0540b4981363abb"
+    },
+    {
+      "seq": 71,
+      "at": "2026-09-29T17:21:26.860Z",
+      "kind": "SCHEDULE",
+      "actor": "coordinator-beta",
+      "state": {
+        "productStateId": "7764ce216537d68ea96522b65cf9614dabaeafaceb91bc1b5c23bf9f8d71a4e2",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "previousEventHash": "0f0152e309e516a7afa922f337c60a1a7807f85ef9922d81c0540b4981363abb",
+      "payloadPath": "events/0071.json",
+      "payloadHash": "e4ff36e9356e2e82ad662ad1ec245c93f44990bd626d52cc15d5474e548d0a94",
+      "eventHash": "02b9f8e806f3c3c9ffb4759cb0a4a34e92ccbaaca4053b2e1d647f3580f9c5ba"
+    },
+    {
+      "seq": 72,
+      "at": "2026-09-29T17:21:27.129Z",
+      "kind": "DECISION",
+      "actor": "coordinator-beta",
+      "state": {
+        "productStateId": "7764ce216537d68ea96522b65cf9614dabaeafaceb91bc1b5c23bf9f8d71a4e2",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "previousEventHash": "02b9f8e806f3c3c9ffb4759cb0a4a34e92ccbaaca4053b2e1d647f3580f9c5ba",
+      "payloadPath": "events/0072.json",
+      "payloadHash": "e36f9c18df4fedb1fe3ef51f0a1d66208bff5fdd897847f08e48448d163230e1",
+      "eventHash": "804c3e989b131f234ac56d97385ee46397d59e9a5c740e90b1568be3586731a6"
     }
   ]
 }
