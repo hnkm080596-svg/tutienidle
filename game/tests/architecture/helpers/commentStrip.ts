@@ -497,7 +497,23 @@ export function templateExprText(text: string): string {
       wipe(qs, qs + am[0].length - am[0].indexOf(am[1]!))
     }
   }
-  for (const im of base.matchAll(/\{\{[\s\S]*?\}\}/g)) {
+  // A stray `'`/`"` inside a tag breaks the strict quote-aware tag
+  // regex above (`<div b=' title="</template>">` never matches) - the
+  // quoted attr values on it stay visible and move the depth counter.
+  // Mask every quoted `="..."`/`='...'` run globally as a fallback: a
+  // close quote only counts when followed by `[\s/>]` or end, so a
+  // `'` inside an expression is text, not a terminator. Over-masking
+  // attr-shaped text is safe - the wipe only hides inert literal text
+  // from the depth scan below.
+  for (const am of base.matchAll(/=\s*(["'])(?:(?!\1)[\s\S])*\1(?=[\s/>]|$)/g)) {
+    const qs = am.index! + am[0].indexOf(am[1]!)
+    wipe(qs, qs + am[0].length - am[0].indexOf(am[1]!))
+  }
+  // The `{{ }}` wipe must be string-aware like the capture arm below:
+  // a `}}` inside a quoted string is text, not the interp close - the
+  // naive `.*?}}` stops there and leaves the real interp tail (and any
+  // `</template>` inside it) visible to the depth scan.
+  for (const im of base.matchAll(/\{\{(?:'(?:\\.|[^'\\])*'|"(?:\\.|[^"\\])*"|`(?:\\.|[^`\\])*`|\/[^/\n]*\/[gimsuy]*|[^'"}]|}(?!}))*\}\}/g)) {
     wipe(im.index!, im.index! + im[0].length)
   }
   for (const rm of base.matchAll(

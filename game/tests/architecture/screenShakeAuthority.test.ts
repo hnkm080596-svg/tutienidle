@@ -37,27 +37,133 @@ describe('screen shake authority', () => {
           lits.some((r) => i >= r.pos && i < r.end)
         // Single-ident constants the bracket arm can resolve statically:
         // `const KEY = 'shake'` then `cam[KEY]` - unresolvable idents are
-        // a documented residual (dynamic keys stay silent). `let`/`var`
-        // names join only when never reassigned in the file - a rebound
-        // name's literal evidence is stale.
-        const identLit = new Map<string, string>()
-        const declKind = new Map<string, string>()
-        for (const cm of text.matchAll(
-          /\b(const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*(?:'([^'\n]*)'|"([^"\n]*)"|`([^`\n]*)`)/g,
-        )) {
-          identLit.set(cm[2]!, cm[3] ?? cm[4] ?? cm[5]!)
-          declKind.set(cm[2]!, cm[1]!)
+        // a documented residual (dynamic keys stay silent). Literal
+        // evidence is POSITIONAL: a name resolves to the nearest literal
+        // assign before the use site, not the file's last write (`const
+        // K='shake'` in one scope must not be clobbered by `K='x'` in
+        // another). A non-literal reassign (`K = expr`) kills earlier
+        // evidence for uses after it; literal and ident-RHS assigns are
+        // decl entries themselves (a `B = A` hop resolves A at B's own
+        // position).
+        const litDecls = new Map<string, Array<{ pos: number; lit: string; kind: string }>>()
+        const litKills = new Map<string, number[]>()
+        const pushLitDecl = (name: string, pos: number, lit: string, kind: string) => {
+          const arr = litDecls.get(name) ?? []
+          arr.push({ pos, lit, kind })
+          litDecls.set(name, arr)
         }
-        for (const [name, kind] of declKind) {
-          if (kind === 'const') continue
-          // Compound/logical assigns (`+=`, `??=`, `&&=`...) rebind the
-          // name exactly like `=` - a stale literal on a rebound name is
-          // the same false evidence.
-          const reAssign = new RegExp(
-            `\\b${name}\\s*(?:=(?!=)|\\+\\+|--|<<=|>>>=|>>=|\\+=|-=|\\*=|/=|%=|&=|\\|=|\\^=|\\?\\?=|&&=|\\|\\|=)`,
-            'g',
-          )
-          if ([...text.matchAll(reAssign)].length > 1) identLit.delete(name)
+        for (const cm of text.matchAll(
+          /\b(?:(const|let|var)\s+)?([A-Za-z_$][\w$]*)\s*=(?!=)\s*(?:'([^'\n]*)'|"([^"\n]*)"|`([^`\n]*)`)/g,
+        )) {
+          pushLitDecl(cm[2]!, cm.index!, cm[3] ?? cm[4] ?? cm[5]!, cm[1] ?? 'let')
+        }
+        // Compound/logical assigns and non-literal `=` rebinds invalidate
+        // earlier evidence; literal (`K = 'x'`) and ident (`B = A`) RHS
+        // assigns mint entries above instead.
+        for (const km of text.matchAll(
+          /\b(?:const\s+|let\s+|var\s+)?([A-Za-z_$][\w$]*)\s*(=(?!=)|\+\+|--|<<=|>>>=|>>=|\+=|-=|\*=|\/=|%=|&=|\|=|\^=|\?\?=|&&=|\|\|=)/g,
+        )) {
+          if (km[2] === '=') {
+            const rhs = text.slice(km.index! + km[0].length)
+            if (/^\s*['"`]/.test(rhs)) continue
+            if (/^\s*[A-Za-z_$][\w$]*\s*(?=[;,\n)]|$)/.test(rhs)) continue
+          }
+          const arr = litKills.get(km[1]!) ?? []
+          arr.push(km.index!)
+          litKills.set(km[1]!, arr)
+        }
+        const resolveLitAt = (name: string, usePos: number): string | undefined => {
+          const decls = litDecls.get(name)
+          if (!decls) return undefined
+          let best: { pos: number; lit: string; kind: string } | undefined
+          for (const d of decls) {
+            if (d.pos < usePos && (!best || d.pos > best.pos)) best = d
+          }
+          if (!best) return undefined
+          if (best.kind !== 'const') {
+            const kills = litKills.get(name) ?? []
+            if (kills.some((k) => k > best!.pos && k <= usePos)) return undefined
+          }
+          return best.lit
+        }
+        for (const rm of text.matchAll(
+          /\b(?:(const|let|var)\s+)?([A-Za-z_$][\w$]*)\s*=(?!=)\s*([A-Za-z_$][\w$]*)\s*(?=[;,\n)]|$)/g,
+        )) {
+          // Runs after literals + kills: the hop's value is whatever the
+          // source resolves to at the hop's own position.
+          const src = resolveLitAt(rm[3]!, rm.index!)
+          if (src !== undefined) pushLitDecl(rm[2]!, rm.index!, src, rm[1] ?? 'let')
+        }
+        // Rebuilds a bracket key expression into ordered literal pieces
+        // plus dynamic gaps: quoted segs decode (escapes unescaped), bare
+        // idents resolve through resolveLitAt (a resolved ident joins the
+        // literal run), a `${x}` interpolation inside a backtick seg is
+        // an unverifiable hole inside the literal, and any other
+        // dynamic/op text is an unverifiable gap between pieces.
+        const rebuildKey = (
+          keyText: string,
+          at: number,
+        ): { flat: string; lits: string[]; leadDyn: boolean; trailDyn: boolean; unres: boolean; hadQuoted: boolean } => {
+          const segMatches = [...keyText.matchAll(/'([^']*)'|"([^"]*)"|`([^`]*)`/g)]
+          // Backtick segs may embed `${x}` holes - split them into the
+          // static pieces so the spell test keeps their order.
+          const segPieces: string[][] = []
+          let unres = false
+          for (const sm of segMatches) {
+            const raw = sm[1] ?? sm[2] ?? sm[3]!
+            const decoded = raw
+              .replace(/\\x([0-9a-fA-F]{2})/g, (_, h: string) => String.fromCharCode(parseInt(h, 16)))
+              .replace(/\\u\{([0-9a-fA-F]+)\}/g, (_, h: string) => String.fromCodePoint(parseInt(h, 16)))
+              .replace(/\\u([0-9a-fA-F]{4})/g, (_, h: string) => String.fromCharCode(parseInt(h, 16)))
+            if (sm[3] !== undefined && decoded.includes('${')) {
+              unres = true
+              segPieces.push(decoded.split(/\$\{[^}]*\}/).filter((p) => p !== ''))
+            } else {
+              segPieces.push([decoded])
+            }
+          }
+          let si = 0
+          const tmp = keyText.replace(/'[^']*'|"[^"]*"|`[^`]*`/g, () => `\x01${si++}\x01`)
+          // Resolved idents mint \x02 markers; unresolved mint \x03 - the
+          // token walk below reads them in order.
+          const resolvedLits: string[] = []
+          let ri = 0
+          const marked = tmp.replace(/[A-Za-z_$][\w$]*/g, (id) => {
+            const v = resolveLitAt(id, at)
+            if (v === undefined) return '\x03'
+            resolvedLits.push(v)
+            return `\x02${ri++}\x02`
+          })
+          const tokens: Array<{ lit: string } | 'dyn'> = []
+          for (const tm of marked.matchAll(/\x01\d+\x01|\x02\d+\x02|\x03+|[^\x01\x02\x03]+/g)) {
+            const t = tm[0]
+            if (t.startsWith('\x01')) {
+              const pieces = segPieces[+t.slice(1, -1)]!
+              if (pieces.length === 0) {
+                tokens.push('dyn')
+              } else {
+                for (let pi = 0; pi < pieces.length; pi++) {
+                  if (pi > 0) tokens.push('dyn')
+                  tokens.push({ lit: pieces[pi]! })
+                }
+              }
+            } else if (t.startsWith('\x02')) {
+              tokens.push({ lit: resolvedLits[+t.slice(1, -1)]! })
+            } else {
+              // `+`/whitespace are connectors; `\x03` (unresolved ident)
+              // or any other text is a dynamic gap.
+              if (t.includes('\x03') || /[^\s+]/.test(t)) tokens.push('dyn')
+            }
+          }
+          const lits = tokens.filter((t): t is { lit: string } => t !== 'dyn').map((t) => t.lit)
+          return {
+            flat: lits.join(''),
+            lits,
+            leadDyn: tokens[0] === 'dyn',
+            trailDyn: tokens.length > 0 && tokens[tokens.length - 1] === 'dyn',
+            unres: unres || tokens.includes('dyn'),
+            hadQuoted: segMatches.length > 0,
+          }
         }
         // Member-position `shake` in ANY invocation shape is the policy
         // bypass surface: `cam.shake(...)`, `cam?.shake(...)`,
@@ -122,62 +228,43 @@ describe('screen shake authority', () => {
           }
           let flaggedBracket = false
           for (const alt of alts) {
-            const segMatches = [...alt.matchAll(/'([^']*)'|"([^"]*)"|`([^`]*)`/g)]
-            // `''+k` - an empty literal launders the dynamic concat (the
-            // segs.length===0 path skips it); drop empty segs before the
-            // count check so the dynamic remainder still flags.
-            const segs = segMatches
-              .map((sm) => decodeSeg(sm[1] ?? sm[2] ?? sm[3]!))
-              .filter((s) => s !== '')
-            if (segs.length === 0) {
-              // `''+k` - quoted segments existed but all decoded empty;
-              // the dynamic remainder is unverifiable and flags. A
-              // quote-free computed key (`[k]`, `[k.prop]`) is ordinary
-              // member access and stays on the ident lane below.
-              const leftover = alt.replace(/'[^']*'|"[^"]*"|`[^`]*`|[\s+]/g, '')
-              if (segMatches.length > 0 && /[A-Za-z_$]/.test(leftover)) {
-                offenders.push(`${file.fromSrc}:${i} (mixed concat member: ${alt.slice(0, 60)})`)
-                flaggedBracket = true
-                continue
-              }
-            }
-            if (segs.length === 0) {
+            const { flat, lits, leadDyn, trailDyn, unres, hadQuoted } = rebuildKey(alt, i)
+            if (!hadQuoted) {
               // `cam[key]` / `cam[k ? KEY : 'x']` with a bare identifier
-              // key resolves against the file's own `const KEY = '...'`
-              // map; anything else is the documented residual.
+              // key resolves against in-file literal decls; anything
+              // else is the documented residual.
               const ident = /^\s*([A-Za-z_$][\w$]*)\s*$/.exec(alt)?.[1]
-              if (ident && identLit.get(ident) === 'shake') {
+              if (ident && resolveLitAt(ident, i) === 'shake') {
                 offenders.push(`${file.fromSrc}:${i} (ident-key ${ident})`)
                 flaggedBracket = true
               }
               continue
             }
-            const joined = segs.join('')
-            if (joined === 'shake') {
+            // Resolved flat keys compare exactly (`cam[''+VOL]` where
+            // VOL='volume' is benign and stays silent; `cam[''+KSH]`
+            // where KSH='shake' flags).
+            if (!unres && flat === 'shake') {
               offenders.push(`${file.fromSrc}:${i}`)
               flaggedBracket = true
               break
             }
-            // `cam['sh' + k]` mixes a quoted segment with a dynamic key -
-            // flag only when the static parts can actually SPELL 'shake'
-            // with some fill for the dynamic gaps: the first quoted seg
-            // must be a PREFIX unless a dynamic precedes it, the last a
-            // SUFFIX unless one follows, and interior segs keep order -
-            // an ordered `seg.*seg` pattern anchored by the dynamic
-            // positions tests all of that at once. `'sh' + k + 'e'` and
-            // `k + 'ake'` spell; `'ke' + x` and `'' + x` cannot.
-            const rest = alt.replace(/'[^']*'|"[^"]*"|`[^`]*`/g, '')
-            const leadDyn = /[A-Za-z_$]/.test(alt.slice(0, segMatches[0]!.index))
-            const trailDyn = /[A-Za-z_$]/.test(
-              alt.slice(segMatches[segMatches.length - 1]!.index! + segMatches[segMatches.length - 1]![0].length),
-            )
-            const spellPattern = new RegExp(
-              `^${leadDyn ? '.*' : ''}${segs
+            if (!unres) continue
+            // An all-dynamic key (`${prefix}${id}`) carries no literal
+            // evidence of 'shake' - same residual as a bare identifier.
+            if (lits.length === 0) continue
+            // Dynamic key with a quoted part: flag only when the known
+            // literal pieces can still SPELL 'shake' with the gaps
+            // filled - leading/trailing gaps widen the pattern at the
+            // ends, interior literals keep order ('sha'+k, k+'ake',
+            // ''+k+'e', `s${k}` all still flag). Resolved-benign keys
+            // (VOL='volume') are not 'shake'-spellable and stay silent.
+            const pattern = new RegExp(
+              `^${leadDyn ? '.*' : ''}${lits
                 .map((s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
                 .join('.*')}${trailDyn ? '.*' : ''}$`,
             )
-            if (joined.length > 0 && /[A-Za-z_$]/.test(rest) && spellPattern.test('shake')) {
-              offenders.push(`${file.fromSrc}:${i} (mixed concat member)`)
+            if (pattern.test('shake')) {
+              offenders.push(`${file.fromSrc}:${i} (mixed concat member: ${alt.slice(0, 60)})`)
               flaggedBracket = true
               break
             }
@@ -292,20 +379,129 @@ describe('screen shake authority', () => {
           }
           return names
         }
+        // Names bound by a param list: depth-0 `,` segments; `{...}` /
+        // `[...]` segments bind via collectAnyBound, `...name`, `name =
+        // x` and `name: T` bind `name`; a `for`/`catch` head's LHS
+        // before `of`/`in` binds the loop/catch variable.
+        const paramBoundNames = (inner: string): string[] => {
+          const names: string[] = []
+          const segs: string[] = []
+          let d = 0
+          let cur = ''
+          for (const ch of inner) {
+            if (ch === '(' || ch === '[' || ch === '{') d++
+            else if (ch === ')' || ch === ']' || ch === '}') d--
+            if (d === 0 && ch === ',') {
+              segs.push(cur)
+              cur = ''
+              continue
+            }
+            cur += ch
+          }
+          segs.push(cur)
+          for (const sRaw of segs) {
+            // `for (const s of x)` / `for (s of x)` - LHS before a
+            // depth-0 `of`/`in` is the bound side.
+            const lhs =
+              /\s(of|in)\s/.test(sRaw) && /^[^=]*\s(?:of|in)\s/.test(sRaw)
+                ? sRaw.slice(0, Math.max(...[' of ', ' in '].map((k) => sRaw.indexOf(k))))
+                : sRaw
+            const s = lhs
+              .replace(/^\s*(?:const|let|var)\s+/, '')
+              .replace(/^\.\.\./, '')
+              .trim()
+            if (s.startsWith('{') || s.startsWith('[')) {
+              names.push(...collectAnyBound(s))
+              continue
+            }
+            const head = /^([\w$]+)/.exec(s.replace(/(=[\s\S]*$)|(:\s*[^=]*)$/, ''))
+            if (head && !/^(?:of|in|const|let|var)$/.test(head[1]!)) names.push(head[1]!)
+          }
+          return names
+        }
         const flagBoundCalls = (names: string[]) => {
           for (const name of new Set(names)) {
-            // A signature paren rebinding `name` shadows the extracted
-            // member inside its body - `function g(s) { s(1) }` calls
-            // the param, not `cam.shake`.
+            // A binding that rebinds `name` shadows the extracted member
+            // inside its scope - `function g(s) { s(1) }` calls the
+            // param, `catch (s) { s(1) }` calls the caught value,
+            // `for (const s of x) s()` calls the item. Signature parens
+            // are BALANCED so nested params (`fn(a, (x, s) => s(1))`)
+            // still cover `s` for the arrow body. A `catch ({x: s})`
+            // destructure rebinding s to something OTHER than shake
+            // shadows; `catch ({shake: s})` mints through the param arm
+            // instead and must not shadow.
             const shadowSpans: Array<[number, number]> = []
-            for (const pm of text.matchAll(/\(([^()]*)\)\s*(=>|\{)/g)) {
+            const braceBlockEnd = (from: number): number => {
+              let d = 0
+              for (let i = from; i < text.length; i++) {
+                if (inLit(i)) continue
+                if (text[i] === '{') d++
+                else if (text[i] === '}') {
+                  d--
+                  if (d === 0) return i + 1
+                }
+              }
+              return -1
+            }
+            for (const pm of text.matchAll(/\(/g)) {
               if (inLit(pm.index ?? 0)) continue
-              if (!new RegExp(`\\b${name}\\b`).test(pm[1]!)) continue
-              const gateIdx = pm.index! + pm[0].length - pm[2]!.length
-              if (pm[2] === '=>') {
-                // expression body to a depth-0 `,`/`;`/`)`/`]`/`}`
+              let depth = 0
+              let end = -1
+              for (let i = pm.index!; i < text.length; i++) {
+                if (inLit(i)) continue
+                const c = text[i]!
+                if (c === '(') depth++
+                else if (c === ')') {
+                  depth--
+                  if (depth === 0) {
+                    end = i
+                    break
+                  }
+                }
+              }
+              if (end < 0) continue
+              const inner = text.slice(pm.index! + 1, end)
+              const afterParen = text.slice(end + 1)
+              const headWord = /(\w+)\s*$/.exec(text.slice(0, pm.index!))?.[1]
+              if (headWord === 'for' || headWord === 'catch') {
+                // Loop/catch head binds names for the body block (or the
+                // single statement it guards).
+                if (!paramBoundNames(inner).includes(name)) continue
+                if (/\{|\[/.test(inner)) {
+                  // A for/catch destructure whose `shake` key rebinds
+                  // `name` is the member rebinding itself - its calls
+                  // flag, so no shadow. Any other destructure shadows.
+                  const bOpen = pm.index! + 1 + inner.indexOf('{')
+                  const bEnd = braceBlockEnd(bOpen) - 1
+                  if (bEnd >= bOpen && shakeBoundNames(bOpen, bEnd).includes(name)) continue
+                }
+                const bodyMatch = /^\s*\{/.test(afterParen)
+                let be: number
+                if (bodyMatch) {
+                  be = braceBlockEnd(end + 1 + afterParen.indexOf('{'))
+                } else {
+                  be = afterParen.indexOf(';')
+                  be = be < 0 ? -1 : end + 2 + be
+                }
+                if (be > 0) shadowSpans.push([pm.index!, be])
+                continue
+              }
+              const gate = /^\s*(=>|\{|:)/.exec(afterParen)?.[1]
+              if (!gate) continue
+              if (!paramBoundNames(inner).includes(name)) continue
+              const gateIdx = end + 1 + afterParen.indexOf(gate)
+              if (gate === '=>') {
+                // expression body to a depth-0 `,`/`;`/`)`/`]`/`}` -
+                // or a `{` block for block bodies.
+                const rest = text.slice(gateIdx + 2)
+                if (/^\s*\{/.test(rest)) {
+                  const bs = gateIdx + 2 + rest.indexOf('{')
+                  const be = braceBlockEnd(bs)
+                  if (be > 0) shadowSpans.push([gateIdx, be])
+                  continue
+                }
                 let d = 0
-                let be = pm.index! + pm[0].length
+                let be = gateIdx + 2
                 for (let i = be; i < text.length; i++) {
                   if (inLit(i)) continue
                   const c = text[i]!
@@ -317,22 +513,34 @@ describe('screen shake authority', () => {
                   be = i + 1
                 }
                 shadowSpans.push([gateIdx, be])
+              } else if (gate === '{') {
+                const be = braceBlockEnd(gateIdx)
+                if (be > 0) shadowSpans.push([gateIdx, be])
               } else {
-                let d = 0
-                let be = -1
-                for (let i = gateIdx; i < text.length; i++) {
-                  if (inLit(i)) continue
-                  if (text[i] === '{') d++
-                  else if (text[i] === '}') {
-                    d--
-                    if (d === 0) {
-                      be = i + 1
-                      break
-                    }
-                  }
-                }
-                if (be >= 0) shadowSpans.push([gateIdx, be])
+                // `:` annotation then a `{` body.
+                const am = /^\s*:[^){}\n]*?(\{)/.exec(afterParen)
+                if (!am) continue
+                const bs = end + 1 + am.index + am[0].length - 1
+                const be = braceBlockEnd(bs)
+                if (be > 0) shadowSpans.push([gateIdx, be])
               }
+            }
+            // `function name` / `class name` declarations shadow uses of
+            // `name` after the decl point.
+            const declShadow: number[] = []
+            for (const dm of text.matchAll(
+              new RegExp(`\\b(?:function\\s*\\*?\\s*|class\\s+)${name}\\b`, 'g'),
+            )) {
+              if (!inLit(dm.index ?? 0)) declShadow.push(dm.index!)
+            }
+            // `name {...}` / `name?.{...}` binding-pattern spans mask
+            // bound-call detection inside them - the `name` token there
+            // is the destructured key, not a call.
+            const bindingMask: Array<[number, number]> = []
+            for (const bm of text.matchAll(new RegExp(`\\b${name}\\s*[?!]*\\s*\\.?\\s*\\{`, 'g'))) {
+              const bStart = bm.index! + bm[0].length - 1
+              const be = braceBlockEnd(bStart)
+              if (be > 0) bindingMask.push([bm.index!, be])
             }
             for (const sm of text.matchAll(
               // `(?<![\w$.])` keeps `obj.s(` (member call) out when `s`
@@ -341,15 +549,34 @@ describe('screen shake authority', () => {
               // is the bracket spelling of the same indirect call.
               // `(s)(x)` is the paren-wrapped callee; bare-value fences
               // cover `forEach(s)`, `hand = s`, `{go: s}`, `cond ? s :`
-              // reads; `case s:` is the label-position read.
+              // reads; `case s:` is the label-position read. A ternary
+              // member tail (`cond ? s. :`) reads the same binding.
               new RegExp(
-                `(?<![\\w$.])${name}\\s*!?\\s*\\(|\\b${name}\\s*[?!]*\\s*\\.\\s*(?:call|apply|bind)\\s*(?:\\?\\s*\\.)?\\s*\\(|\\b${name}\\s*[?!]*\\s*\\.?\\s*\\[\\s*['"\`](?:call|apply|bind)['"\`]\\s*\\]\\s*\\(|(?<![\\w$.])${name}\\s*\\?\\.\\s*\\(|\\(\\s*${name}\\s*\\)\\s*(?:\\?\\s*\\.)?\\s*\\(|(?:[(,=\\[:;{!&|?:+\\-*\\/%^~<>]|\\.\\.\\.|\\b(?:return|yield|await|typeof|void|in|of|instanceof|new|delete)\\s)\\s*${name}\\s*(?=[,)\\]};])|\\bcase\\s+${name}\\b[^:]*:|\\?\\s*${name}\\s*:`,
+                `(?<![\\w$.])${name}\\s*!?\\s*\\(|\\b${name}\\s*[?!]*\\s*\\.\\s*(?:call|apply|bind)\\s*(?:\\?\\s*\\.)?\\s*\\(|(?<![\\w$.])${name}\\s*\\?\\.\\s*\\(|\\(\\s*${name}\\s*\\)\\s*(?:\\?\\s*\\.)?\\s*\\(|(?:[(,=\\[:;{!&|?:+\\-*\\/%^~<>]|\\.\\.\\.|\\b(?:return|yield|await|typeof|void|in|of|instanceof|new|delete)\\s)\\s*${name}\\s*(?=[,)\\]};])|\\bcase\\s+${name}\\b[^:]*:|\\?\\s*${name}\\s*(?:\\.|\\?\\.|\\[|:)`,
                 'g',
               ),
             )) {
               if (inLit(sm.index ?? 0)) continue
               if (shadowSpans.some(([a, b]) => sm.index! >= a && sm.index! < b)) continue
+              if (declShadow.some((d) => sm.index! > d)) continue
+              if (bindingMask.some(([a, b]) => sm.index! >= a && sm.index! < b)) continue
               offenders.push(`${file.fromSrc}:${sm.index} (destructure-bound call)`)
+            }
+            // `s['call'](x)` / `s['c'+'all'](x)` / `s[K](x)` - the
+            // bracket spelling of the indirect call resolves through
+            // rebuildKey the same way `cam['shake']` does.
+            for (const bm of text.matchAll(
+              new RegExp(`\\b${name}\\s*[?!]*\\s*\\.?\\s*\\[\\s*([^\\]]*)\\]\\s*\\(`, 'g'),
+            )) {
+              if (inLit(bm.index ?? 0)) continue
+              if (shadowSpans.some(([a, b]) => bm.index! >= a && bm.index! < b)) continue
+              if (declShadow.some((d) => bm.index! > d)) continue
+              const { flat, unres, hadQuoted } = rebuildKey(bm[1]!, bm.index!)
+              if (!unres && /^(?:call|apply|bind)$/.test(flat)) {
+                offenders.push(`${file.fromSrc}:${bm.index} (destructure-bound bracket call)`)
+              } else if (unres && hadQuoted) {
+                offenders.push(`${file.fromSrc}:${bm.index} (destructure-bound dynamic bracket)`)
+              }
             }
           }
         }
@@ -382,7 +609,9 @@ describe('screen shake authority', () => {
           if (end < 0) continue
           // `const { shake }: Cam = cam` - a type annotation may sit
           // between the brace and the `=`/`of`/`in` extraction marker.
-          if (!/^\s*(?::\s*[\s\S]{0,200}?)?(?:=|of|in)/.test(text.slice(end + 1, end + 1 + 2000))) continue
+          // The annotation may not cross `)`/`;`/`{`/newline - `x =
+          // ({y}: T);` ends at `)` before the `=`, so it never mints.
+          if (!/^\s*(?::[^)\n;{]*?)?(?:=|of|in)/.test(text.slice(end + 1, end + 1 + 2000))) continue
           const boundNames = shakeBoundNames(openIdx, end)
           if (boundNames.length > 0) {
             offenders.push(`${file.fromSrc}:${openIdx} (destructure)`)
@@ -420,16 +649,20 @@ describe('screen shake authority', () => {
           const afterParen = text.slice(end + 1)
           // `case f({shake}):` - the case colon satisfies the `:` gate
           // while `{shake}` is a call argument, not a param pattern.
+          // `cond ? ({shake}: T) : y` - an open `?` in the same segment
+          // makes the `:` a ternary colon, not an annotation.
           if (/^\s*:/.test(afterParen)) {
-            // Statement-boundary lookback (`;`/`{`/`}`), not the line:
-            // `x = f(); case f({shake}):` splits on a mid-line case.
+            // Statement/segment-boundary lookback (`;`/`{`/`}`/`,`), not
+            // the line: `x = f(); case f({shake}):` splits mid-line.
             const stmtStart =
               Math.max(
                 text.lastIndexOf(';', pm.index!),
                 text.lastIndexOf('{', pm.index!),
                 text.lastIndexOf('}', pm.index!),
+                text.lastIndexOf(',', pm.index!),
               ) + 1
             if (/\b(?:case|default)\b[^:]*$/.test(text.slice(stmtStart, pm.index!))) continue
+            if (/\?[^?:]*$/.test(text.slice(stmtStart, pm.index!))) continue
           }
           // Control-keyword parens (`return (...)`, `await (...)`) can
           // still hold an arrow signature `({shake}: T) => x` - the `=>`
@@ -457,6 +690,23 @@ describe('screen shake authority', () => {
               }
             }
             if (bEnd < 0 || bEnd > end) continue
+            // `x ? {shake: s} : y` inside a param default is a ternary
+            // VALUE, not an extraction - a `?` before this `{` in the
+            // same comma-segment marks it. A `?` in an earlier segment
+            // resets at the depth-0 `,`.
+            let ternary = false
+            {
+              let dd = 0
+              for (let ti = pm.index! + 1; ti < openIdx; ti++) {
+                if (inLit(ti)) continue
+                const c = text[ti]!
+                if (c === '(' || c === '[' || c === '{') dd++
+                else if (c === ')' || c === ']' || c === '}') dd--
+                else if (dd === 0 && c === ',') ternary = false
+                else if (dd === 0 && c === '?') ternary = true
+              }
+            }
+            if (ternary) continue
             const boundNames = shakeBoundNames(openIdx, bEnd)
             if (boundNames.length > 0) {
               flagged = boundNames
