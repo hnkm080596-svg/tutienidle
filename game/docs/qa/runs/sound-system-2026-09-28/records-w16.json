@@ -1,0 +1,2303 @@
+{
+ "records": [
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-SND-371",
+    "title": "AssetBundleManager disposed/pre-aborted gates missing: post-dispose waitForLoaderScene dangles waiter; post-dispose setLoaderScene publishes into disposed manager",
+    "state": {
+     "productStateId": "9c48db23660832ad7a4f03da7a7c22049f6106fc60814433e4da0a36d253cd3a",
+     "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+     "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+     "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+    },
+    "subsystem": "audio",
+    "severity": "High",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "SUPPORTED_BOUNDARY",
+    "discoveredBy": "INT-16-01 + AUT-16W-08",
+    "expected": "guard/coverage contract holds on the reviewed state",
+    "actual": "AssetBundleManager disposed/pre-aborted gates missing: post-dispose waitForLoaderScene dangles waiter; post-dispose setLoaderScene publishes into disposed manager",
+    "rootCause": "disposal lifecycle missing guards",
+    "rootClass": "LIFECYCLE_GAP",
+    "counterexample": "reviewer probe + coordinator smuggle-file verification (wave-16 reports)",
+    "locations": [
+     {
+      "path": "game/src/presentation/assets/AssetBundleManager.ts",
+      "symbolOrSection": "guard arm",
+      "revision": "e7253860",
+      "basis": "SOURCE"
+     }
+    ],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src",
+       "tests/architecture"
+      ],
+      "termsAndMethod": "same-class regex/probe sweep over all arms",
+      "evidenceIds": [],
+      "hitDispositions": [],
+      "coverageLimits": []
+     }
+    ],
+    "status": "FIXED_PENDING_PROOF",
+    "repair": null,
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "siblingFindingIds": [],
+    "invariantIds": [],
+    "evidenceIds": []
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-SND-372",
+    "title": "cue call-arm receiver gate requires flush dot: store?.cue, store!.cue, store .cue, (store).cue, useAudioStore()?.cue evade",
+    "state": {
+     "productStateId": "9c48db23660832ad7a4f03da7a7c22049f6106fc60814433e4da0a36d253cd3a",
+     "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+     "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+     "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+    },
+    "subsystem": "audio",
+    "severity": "Medium",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "SUPPORTED_BOUNDARY",
+    "discoveredBy": "INT-16-02 + AUT-16W-02",
+    "expected": "guard/coverage contract holds on the reviewed state",
+    "actual": "cue call-arm receiver gate requires flush dot: store?.cue, store!.cue, store .cue, (store).cue, useAudioStore()?.cue evade",
+    "rootCause": "receiver joiner regex too strict",
+    "rootClass": "GUARD_HARNESS_GAP",
+    "counterexample": "reviewer probe + coordinator smuggle-file verification (wave-16 reports)",
+    "locations": [
+     {
+      "path": "game/tests/architecture/audioBindingWiring.test.ts",
+      "symbolOrSection": "guard arm",
+      "revision": "e7253860",
+      "basis": "SOURCE"
+     }
+    ],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src",
+       "tests/architecture"
+      ],
+      "termsAndMethod": "same-class regex/probe sweep over all arms",
+      "evidenceIds": [],
+      "hitDispositions": [],
+      "coverageLimits": []
+     }
+    ],
+    "status": "FIXED_PENDING_PROOF",
+    "repair": null,
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "siblingFindingIds": [],
+    "invariantIds": [],
+    "evidenceIds": []
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-SND-373",
+    "title": "?. ordering holes in emit/cue call regexes: emit?.<T>(, emit.call?.(, emit!.call?.(, (emit as F).call?.(, store.cue?.<T>(",
+    "state": {
+     "productStateId": "9c48db23660832ad7a4f03da7a7c22049f6106fc60814433e4da0a36d253cd3a",
+     "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+     "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+     "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+    },
+    "subsystem": "audio",
+    "severity": "Medium",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "SUPPORTED_BOUNDARY",
+    "discoveredBy": "INT-16-03",
+    "expected": "guard/coverage contract holds on the reviewed state",
+    "actual": "?. ordering holes in emit/cue call regexes: emit?.<T>(, emit.call?.(, emit!.call?.(, (emit as F).call?.(, store.cue?.<T>(",
+    "rootCause": "optional-chaining ordering not covered",
+    "rootClass": "GUARD_HARNESS_GAP",
+    "counterexample": "reviewer probe + coordinator smuggle-file verification (wave-16 reports)",
+    "locations": [
+     {
+      "path": "game/tests/architecture/audioBindingWiring.test.ts",
+      "symbolOrSection": "guard arm",
+      "revision": "e7253860",
+      "basis": "SOURCE"
+     }
+    ],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src",
+       "tests/architecture"
+      ],
+      "termsAndMethod": "same-class regex/probe sweep over all arms",
+      "evidenceIds": [],
+      "hitDispositions": [],
+      "coverageLimits": []
+     }
+    ],
+    "status": "FIXED_PENDING_PROOF",
+    "repair": null,
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "siblingFindingIds": [],
+    "invariantIds": [],
+    "evidenceIds": []
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-SND-374",
+    "title": "emit: inside any control paren flips file-wide typeEmitDecl exemption (if/while/for/switch/catch parens accepted as param parens)",
+    "state": {
+     "productStateId": "9c48db23660832ad7a4f03da7a7c22049f6106fc60814433e4da0a36d253cd3a",
+     "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+     "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+     "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+    },
+    "subsystem": "audio",
+    "severity": "Medium",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "SUPPORTED_BOUNDARY",
+    "discoveredBy": "INT-16-04 + AUT-16W-03 + COR-16-5",
+    "expected": "guard/coverage contract holds on the reviewed state",
+    "actual": "emit: inside any control paren flips file-wide typeEmitDecl exemption (if/while/for/switch/catch parens accepted as param parens)",
+    "rootCause": "paramParenSpans accepted control parens",
+    "rootClass": "GUARD_HARNESS_GAP",
+    "counterexample": "reviewer probe + coordinator smuggle-file verification (wave-16 reports)",
+    "locations": [
+     {
+      "path": "game/tests/architecture/audioBindingWiring.test.ts",
+      "symbolOrSection": "guard arm",
+      "revision": "e7253860",
+      "basis": "SOURCE"
+     }
+    ],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src",
+       "tests/architecture"
+      ],
+      "termsAndMethod": "same-class regex/probe sweep over all arms",
+      "evidenceIds": [],
+      "hitDispositions": [],
+      "coverageLimits": []
+     }
+    ],
+    "status": "FIXED_PENDING_PROOF",
+    "repair": null,
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "siblingFindingIds": [],
+    "invariantIds": [],
+    "evidenceIds": []
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-SND-375",
+    "title": "import.meta indirection arms missing: {glob|resolve} = import.meta destructure, const ns = import.meta alias, import.meta[K] ident key",
+    "state": {
+     "productStateId": "9c48db23660832ad7a4f03da7a7c22049f6106fc60814433e4da0a36d253cd3a",
+     "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+     "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+     "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+    },
+    "subsystem": "audio",
+    "severity": "Medium",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "SUPPORTED_BOUNDARY",
+    "discoveredBy": "INT-16-05",
+    "expected": "guard/coverage contract holds on the reviewed state",
+    "actual": "import.meta indirection arms missing: {glob|resolve} = import.meta destructure, const ns = import.meta alias, import.meta[K] ident key",
+    "rootCause": "import.meta alias channels not swept",
+    "rootClass": "GUARD_HARNESS_GAP",
+    "counterexample": "reviewer probe + coordinator smuggle-file verification (wave-16 reports)",
+    "locations": [
+     {
+      "path": "game/tests/architecture/audioBoundary.test.ts",
+      "symbolOrSection": "guard arm",
+      "revision": "e7253860",
+      "basis": "SOURCE"
+     }
+    ],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src",
+       "tests/architecture"
+      ],
+      "termsAndMethod": "same-class regex/probe sweep over all arms",
+      "evidenceIds": [],
+      "hitDispositions": [],
+      "coverageLimits": []
+     }
+    ],
+    "status": "FIXED_PENDING_PROOF",
+    "repair": null,
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "siblingFindingIds": [],
+    "invariantIds": [],
+    "evidenceIds": []
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-SND-376",
+    "title": "loadSingleDomAudio stale !signal?.aborted gate under-counts real fetch failures: attempt cap unreachable under caller abort",
+    "state": {
+     "productStateId": "9c48db23660832ad7a4f03da7a7c22049f6106fc60814433e4da0a36d253cd3a",
+     "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+     "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+     "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+    },
+    "subsystem": "audio",
+    "severity": "Medium",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "SUPPORTED_BOUNDARY",
+    "discoveredBy": "INT-16-06",
+    "expected": "guard/coverage contract holds on the reviewed state",
+    "actual": "loadSingleDomAudio stale !signal?.aborted gate under-counts real fetch failures: attempt cap unreachable under caller abort",
+    "rootCause": "stale abort gate after dedupe refactor",
+    "rootClass": "LIFECYCLE_GAP",
+    "counterexample": "reviewer probe + coordinator smuggle-file verification (wave-16 reports)",
+    "locations": [
+     {
+      "path": "game/src/presentation/assets/AssetBundleManager.ts",
+      "symbolOrSection": "guard arm",
+      "revision": "e7253860",
+      "basis": "SOURCE"
+     }
+    ],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src",
+       "tests/architecture"
+      ],
+      "termsAndMethod": "same-class regex/probe sweep over all arms",
+      "evidenceIds": [],
+      "hitDispositions": [],
+      "coverageLimits": []
+     }
+    ],
+    "status": "FIXED_PENDING_PROOF",
+    "repair": null,
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "siblingFindingIds": [],
+    "invariantIds": [],
+    "evidenceIds": []
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-SND-377",
+    "title": "{emit: r} = <non-whitelist receiver> alias destructure gap: whitelist misses common bus synonyms",
+    "state": {
+     "productStateId": "9c48db23660832ad7a4f03da7a7c22049f6106fc60814433e4da0a36d253cd3a",
+     "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+     "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+     "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+    },
+    "subsystem": "audio",
+    "severity": "Low",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "SUPPORTED_BOUNDARY",
+    "discoveredBy": "INT-16-07",
+    "expected": "guard/coverage contract holds on the reviewed state",
+    "actual": "{emit: r} = <non-whitelist receiver> alias destructure gap: whitelist misses common bus synonyms",
+    "rootCause": "receiver whitelist too narrow (decision: keep over-flag direction, rationale recorded)",
+    "rootClass": "GUARD_HARNESS_GAP",
+    "counterexample": "reviewer probe + coordinator smuggle-file verification (wave-16 reports)",
+    "locations": [
+     {
+      "path": "game/tests/architecture/audioBindingWiring.test.ts",
+      "symbolOrSection": "guard arm",
+      "revision": "e7253860",
+      "basis": "SOURCE"
+     }
+    ],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src",
+       "tests/architecture"
+      ],
+      "termsAndMethod": "same-class regex/probe sweep over all arms",
+      "evidenceIds": [],
+      "hitDispositions": [],
+      "coverageLimits": []
+     }
+    ],
+    "status": "FIXED_PENDING_PROOF",
+    "repair": null,
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "siblingFindingIds": [],
+    "invariantIds": [],
+    "evidenceIds": []
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-SND-378",
+    "title": "ternary-:/EOL fence gaps in bare emit/cue value arms: cond ? emit : alt, x : cue at EOL",
+    "state": {
+     "productStateId": "9c48db23660832ad7a4f03da7a7c22049f6106fc60814433e4da0a36d253cd3a",
+     "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+     "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+     "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+    },
+    "subsystem": "audio",
+    "severity": "Low",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "SUPPORTED_BOUNDARY",
+    "discoveredBy": "INT-16-08 + COR-16-9 + AUT-16W-14",
+    "expected": "guard/coverage contract holds on the reviewed state",
+    "actual": "ternary-:/EOL fence gaps in bare emit/cue value arms: cond ? emit : alt, x : cue at EOL",
+    "rootCause": "bare-value fence chars incomplete",
+    "rootClass": "GUARD_HARNESS_GAP",
+    "counterexample": "reviewer probe + coordinator smuggle-file verification (wave-16 reports)",
+    "locations": [
+     {
+      "path": "game/tests/architecture/audioBindingWiring.test.ts",
+      "symbolOrSection": "guard arm",
+      "revision": "e7253860",
+      "basis": "SOURCE"
+     }
+    ],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src",
+       "tests/architecture"
+      ],
+      "termsAndMethod": "same-class regex/probe sweep over all arms",
+      "evidenceIds": [],
+      "hitDispositions": [],
+      "coverageLimits": []
+     }
+    ],
+    "status": "FIXED_PENDING_PROOF",
+    "repair": null,
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "siblingFindingIds": [],
+    "invariantIds": [],
+    "evidenceIds": []
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-SND-379",
+    "title": "typeof import.meta.glob flagged: value-ref arm lacked the emit arm's typeof exemption",
+    "state": {
+     "productStateId": "9c48db23660832ad7a4f03da7a7c22049f6106fc60814433e4da0a36d253cd3a",
+     "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+     "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+     "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+    },
+    "subsystem": "audio",
+    "severity": "Low",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "SUPPORTED_BOUNDARY",
+    "discoveredBy": "INT-16-09 + COR-16-20",
+    "expected": "guard/coverage contract holds on the reviewed state",
+    "actual": "typeof import.meta.glob flagged: value-ref arm lacked the emit arm's typeof exemption",
+    "rootCause": "missing typeof lookback exemption",
+    "rootClass": "GUARD_HARNESS_GAP",
+    "counterexample": "reviewer probe + coordinator smuggle-file verification (wave-16 reports)",
+    "locations": [
+     {
+      "path": "game/tests/architecture/audioBoundary.test.ts",
+      "symbolOrSection": "guard arm",
+      "revision": "e7253860",
+      "basis": "SOURCE"
+     }
+    ],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src",
+       "tests/architecture"
+      ],
+      "termsAndMethod": "same-class regex/probe sweep over all arms",
+      "evidenceIds": [],
+      "hitDispositions": [],
+      "coverageLimits": []
+     }
+    ],
+    "status": "FIXED_PENDING_PROOF",
+    "repair": null,
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "siblingFindingIds": [],
+    "invariantIds": [],
+    "evidenceIds": []
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-SND-380",
+    "title": "shake identLit map is const-only: let/var literal bindings in cam[KEY] escape",
+    "state": {
+     "productStateId": "9c48db23660832ad7a4f03da7a7c22049f6106fc60814433e4da0a36d253cd3a",
+     "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+     "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+     "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+    },
+    "subsystem": "audio",
+    "severity": "Low",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "SUPPORTED_BOUNDARY",
+    "discoveredBy": "INT-16-10 + COR-16-19",
+    "expected": "guard/coverage contract holds on the reviewed state",
+    "actual": "shake identLit map is const-only: let/var literal bindings in cam[KEY] escape",
+    "rootCause": "ident-lit collection covered const only",
+    "rootClass": "GUARD_HARNESS_GAP",
+    "counterexample": "reviewer probe + coordinator smuggle-file verification (wave-16 reports)",
+    "locations": [
+     {
+      "path": "game/tests/architecture/screenShakeAuthority.test.ts",
+      "symbolOrSection": "guard arm",
+      "revision": "e7253860",
+      "basis": "SOURCE"
+     }
+    ],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src",
+       "tests/architecture"
+      ],
+      "termsAndMethod": "same-class regex/probe sweep over all arms",
+      "evidenceIds": [],
+      "hitDispositions": [],
+      "coverageLimits": []
+     }
+    ],
+    "status": "FIXED_PENDING_PROOF",
+    "repair": null,
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "siblingFindingIds": [],
+    "invariantIds": [],
+    "evidenceIds": []
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-SND-381",
+    "title": "{shake} destructure arm requires const|let|var: function-parameter destructures f({shake}) escape",
+    "state": {
+     "productStateId": "9c48db23660832ad7a4f03da7a7c22049f6106fc60814433e4da0a36d253cd3a",
+     "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+     "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+     "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+    },
+    "subsystem": "audio",
+    "severity": "Low",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "SUPPORTED_BOUNDARY",
+    "discoveredBy": "INT-16-11 + COR-16-19",
+    "expected": "guard/coverage contract holds on the reviewed state",
+    "actual": "{shake} destructure arm requires const|let|var: function-parameter destructures f({shake}) escape",
+    "rootCause": "param-paren destructure not swept",
+    "rootClass": "GUARD_HARNESS_GAP",
+    "counterexample": "reviewer probe + coordinator smuggle-file verification (wave-16 reports)",
+    "locations": [
+     {
+      "path": "game/tests/architecture/screenShakeAuthority.test.ts",
+      "symbolOrSection": "guard arm",
+      "revision": "e7253860",
+      "basis": "SOURCE"
+     }
+    ],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src",
+       "tests/architecture"
+      ],
+      "termsAndMethod": "same-class regex/probe sweep over all arms",
+      "evidenceIds": [],
+      "hitDispositions": [],
+      "coverageLimits": []
+     }
+    ],
+    "status": "FIXED_PENDING_PROOF",
+    "repair": null,
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "siblingFindingIds": [],
+    "invariantIds": [],
+    "evidenceIds": []
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-SND-382",
+    "title": "{{ }} interpolation capture truncates at adjacent }} inside regex literals and escaped quotes, hiding expression tail from template sweeps",
+    "state": {
+     "productStateId": "9c48db23660832ad7a4f03da7a7c22049f6106fc60814433e4da0a36d253cd3a",
+     "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+     "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+     "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+    },
+    "subsystem": "audio",
+    "severity": "Medium",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "SUPPORTED_BOUNDARY",
+    "discoveredBy": "INT-16-12 + COR-16-1",
+    "expected": "guard/coverage contract holds on the reviewed state",
+    "actual": "{{ }} interpolation capture truncates at adjacent }} inside regex literals and escaped quotes, hiding expression tail from template sweeps",
+    "rootCause": "template capture not escape/regex aware",
+    "rootClass": "GUARD_HARNESS_GAP",
+    "counterexample": "reviewer probe + coordinator smuggle-file verification (wave-16 reports)",
+    "locations": [
+     {
+      "path": "game/tests/architecture/helpers/commentStrip.ts",
+      "symbolOrSection": "guard arm",
+      "revision": "e7253860",
+      "basis": "SOURCE"
+     }
+    ],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src",
+       "tests/architecture"
+      ],
+      "termsAndMethod": "same-class regex/probe sweep over all arms",
+      "evidenceIds": [],
+      "hitDispositions": [],
+      "coverageLimits": []
+     }
+    ],
+    "status": "FIXED_PENDING_PROOF",
+    "repair": null,
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "siblingFindingIds": [],
+    "invariantIds": [],
+    "evidenceIds": []
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-SND-383",
+    "title": "seam-receiver gate matched by suffix/prefix not word boundary: over-flags lookalike idents and misses store's own alias; capitalized *AudioStore/*AudioMgr evade",
+    "state": {
+     "productStateId": "9c48db23660832ad7a4f03da7a7c22049f6106fc60814433e4da0a36d253cd3a",
+     "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+     "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+     "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+    },
+    "subsystem": "audio",
+    "severity": "High",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "SUPPORTED_BOUNDARY",
+    "discoveredBy": "AUT-16W-01 + COR-16-12",
+    "expected": "guard/coverage contract holds on the reviewed state",
+    "actual": "seam-receiver gate matched by suffix/prefix not word boundary: over-flags lookalike idents and misses store's own alias; capitalized *AudioStore/*AudioMgr evade",
+    "rootCause": "receiver regex lacked left boundary + alias set",
+    "rootClass": "GUARD_HARNESS_GAP",
+    "counterexample": "reviewer probe + coordinator smuggle-file verification (wave-16 reports)",
+    "locations": [
+     {
+      "path": "game/tests/architecture/audioBindingWiring.test.ts",
+      "symbolOrSection": "guard arm",
+      "revision": "e7253860",
+      "basis": "SOURCE"
+     }
+    ],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src",
+       "tests/architecture"
+      ],
+      "termsAndMethod": "same-class regex/probe sweep over all arms",
+      "evidenceIds": [],
+      "hitDispositions": [],
+      "coverageLimits": []
+     }
+    ],
+    "status": "FIXED_PENDING_PROOF",
+    "repair": null,
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "siblingFindingIds": [],
+    "invariantIds": [],
+    "evidenceIds": []
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-SND-384",
+    "title": "emit as X / cue as X arms mint type names as aliases (FP factory)",
+    "state": {
+     "productStateId": "9c48db23660832ad7a4f03da7a7c22049f6106fc60814433e4da0a36d253cd3a",
+     "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+     "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+     "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+    },
+    "subsystem": "audio",
+    "severity": "Medium",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "SUPPORTED_BOUNDARY",
+    "discoveredBy": "AUT-16W-04",
+    "expected": "guard/coverage contract holds on the reviewed state",
+    "actual": "emit as X / cue as X arms mint type names as aliases (FP factory)",
+    "rootCause": "alias mint not scoped to import clauses",
+    "rootClass": "GUARD_HARNESS_GAP",
+    "counterexample": "reviewer probe + coordinator smuggle-file verification (wave-16 reports)",
+    "locations": [
+     {
+      "path": "game/tests/architecture/audioBindingWiring.test.ts",
+      "symbolOrSection": "guard arm",
+      "revision": "e7253860",
+      "basis": "SOURCE"
+     }
+    ],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src",
+       "tests/architecture"
+      ],
+      "termsAndMethod": "same-class regex/probe sweep over all arms",
+      "evidenceIds": [],
+      "hitDispositions": [],
+      "coverageLimits": []
+     }
+    ],
+    "status": "FIXED_PENDING_PROOF",
+    "repair": null,
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "siblingFindingIds": [],
+    "invariantIds": [],
+    "evidenceIds": []
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-SND-385",
+    "title": "dead subset arm (cue)( flags unconditionally -> FP on valid calls, triple-reporting",
+    "state": {
+     "productStateId": "9c48db23660832ad7a4f03da7a7c22049f6106fc60814433e4da0a36d253cd3a",
+     "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+     "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+     "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+    },
+    "subsystem": "audio",
+    "severity": "Medium",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "SUPPORTED_BOUNDARY",
+    "discoveredBy": "AUT-16W-05 + COR-16-15",
+    "expected": "guard/coverage contract holds on the reviewed state",
+    "actual": "dead subset arm (cue)( flags unconditionally -> FP on valid calls, triple-reporting",
+    "rootCause": "overlapping arms not deduped",
+    "rootClass": "GUARD_HARNESS_GAP",
+    "counterexample": "reviewer probe + coordinator smuggle-file verification (wave-16 reports)",
+    "locations": [
+     {
+      "path": "game/tests/architecture/audioBindingWiring.test.ts",
+      "symbolOrSection": "guard arm",
+      "revision": "e7253860",
+      "basis": "SOURCE"
+     }
+    ],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src",
+       "tests/architecture"
+      ],
+      "termsAndMethod": "same-class regex/probe sweep over all arms",
+      "evidenceIds": [],
+      "hitDispositions": [],
+      "coverageLimits": []
+     }
+    ],
+    "status": "FIXED_PENDING_PROOF",
+    "repair": null,
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "siblingFindingIds": [],
+    "invariantIds": [],
+    "evidenceIds": []
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-SND-386",
+    "title": "emit-alias receiver validation incoherent: substring whitelist on one arm, none on the other two",
+    "state": {
+     "productStateId": "9c48db23660832ad7a4f03da7a7c22049f6106fc60814433e4da0a36d253cd3a",
+     "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+     "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+     "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+    },
+    "subsystem": "audio",
+    "severity": "Medium",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "SUPPORTED_BOUNDARY",
+    "discoveredBy": "AUT-16W-06",
+    "expected": "guard/coverage contract holds on the reviewed state",
+    "actual": "emit-alias receiver validation incoherent: substring whitelist on one arm, none on the other two",
+    "rootCause": "inconsistent receiver gating",
+    "rootClass": "GUARD_HARNESS_GAP",
+    "counterexample": "reviewer probe + coordinator smuggle-file verification (wave-16 reports)",
+    "locations": [
+     {
+      "path": "game/tests/architecture/audioBindingWiring.test.ts",
+      "symbolOrSection": "guard arm",
+      "revision": "e7253860",
+      "basis": "SOURCE"
+     }
+    ],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src",
+       "tests/architecture"
+      ],
+      "termsAndMethod": "same-class regex/probe sweep over all arms",
+      "evidenceIds": [],
+      "hitDispositions": [],
+      "coverageLimits": []
+     }
+    ],
+    "status": "FIXED_PENDING_PROOF",
+    "repair": null,
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "siblingFindingIds": [],
+    "invariantIds": [],
+    "evidenceIds": []
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-SND-387",
+    "title": "nested-arg literals inside cue(...) flagged as cue ids",
+    "state": {
+     "productStateId": "9c48db23660832ad7a4f03da7a7c22049f6106fc60814433e4da0a36d253cd3a",
+     "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+     "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+     "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+    },
+    "subsystem": "audio",
+    "severity": "Medium",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "SUPPORTED_BOUNDARY",
+    "discoveredBy": "AUT-16W-07",
+    "expected": "guard/coverage contract holds on the reviewed state",
+    "actual": "nested-arg literals inside cue(...) flagged as cue ids",
+    "rootCause": "literal arm lacked depth-0 walk",
+    "rootClass": "GUARD_HARNESS_GAP",
+    "counterexample": "reviewer probe + coordinator smuggle-file verification (wave-16 reports)",
+    "locations": [
+     {
+      "path": "game/tests/architecture/audioBindingWiring.test.ts",
+      "symbolOrSection": "guard arm",
+      "revision": "e7253860",
+      "basis": "SOURCE"
+     }
+    ],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src",
+       "tests/architecture"
+      ],
+      "termsAndMethod": "same-class regex/probe sweep over all arms",
+      "evidenceIds": [],
+      "hitDispositions": [],
+      "coverageLimits": []
+     }
+    ],
+    "status": "FIXED_PENDING_PROOF",
+    "repair": null,
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "siblingFindingIds": [],
+    "invariantIds": [],
+    "evidenceIds": []
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-SND-388",
+    "title": "templateExprText over-includes: {{ }} inside literal attribute values and foreign-block bodies swept as expressions",
+    "state": {
+     "productStateId": "9c48db23660832ad7a4f03da7a7c22049f6106fc60814433e4da0a36d253cd3a",
+     "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+     "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+     "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+    },
+    "subsystem": "audio",
+    "severity": "Low",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "SUPPORTED_BOUNDARY",
+    "discoveredBy": "AUT-16W-09",
+    "expected": "guard/coverage contract holds on the reviewed state",
+    "actual": "templateExprText over-includes: {{ }} inside literal attribute values and foreign-block bodies swept as expressions",
+    "rootCause": "foreign-block/literal-attr masking absent",
+    "rootClass": "GUARD_HARNESS_GAP",
+    "counterexample": "reviewer probe + coordinator smuggle-file verification (wave-16 reports)",
+    "locations": [
+     {
+      "path": "game/tests/architecture/helpers/commentStrip.ts",
+      "symbolOrSection": "guard arm",
+      "revision": "e7253860",
+      "basis": "SOURCE"
+     }
+    ],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src",
+       "tests/architecture"
+      ],
+      "termsAndMethod": "same-class regex/probe sweep over all arms",
+      "evidenceIds": [],
+      "hitDispositions": [],
+      "coverageLimits": []
+     }
+    ],
+    "status": "FIXED_PENDING_PROOF",
+    "repair": null,
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "siblingFindingIds": [],
+    "invariantIds": [],
+    "evidenceIds": []
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-SND-389",
+    "title": "templateTextOf in audioBoundary.test.ts was third inline copy of scriptless-template blanking",
+    "state": {
+     "productStateId": "9c48db23660832ad7a4f03da7a7c22049f6106fc60814433e4da0a36d253cd3a",
+     "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+     "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+     "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+    },
+    "subsystem": "audio",
+    "severity": "Low",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "SUPPORTED_BOUNDARY",
+    "discoveredBy": "AUT-16W-10",
+    "expected": "guard/coverage contract holds on the reviewed state",
+    "actual": "templateTextOf in audioBoundary.test.ts was third inline copy of scriptless-template blanking",
+    "rootCause": "duplicated helper implementations",
+    "rootClass": "GUARD_HARNESS_GAP",
+    "counterexample": "reviewer probe + coordinator smuggle-file verification (wave-16 reports)",
+    "locations": [
+     {
+      "path": "game/tests/architecture/audioBoundary.test.ts",
+      "symbolOrSection": "guard arm",
+      "revision": "e7253860",
+      "basis": "SOURCE"
+     }
+    ],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src",
+       "tests/architecture"
+      ],
+      "termsAndMethod": "same-class regex/probe sweep over all arms",
+      "evidenceIds": [],
+      "hitDispositions": [],
+      "coverageLimits": []
+     }
+    ],
+    "status": "FIXED_PENDING_PROOF",
+    "repair": null,
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "siblingFindingIds": [],
+    "invariantIds": [],
+    "evidenceIds": []
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-SND-390",
+    "title": "usesJsxBlocks flag not propagated to joined-.vue literalRanges in shake + boundary sweeps",
+    "state": {
+     "productStateId": "9c48db23660832ad7a4f03da7a7c22049f6106fc60814433e4da0a36d253cd3a",
+     "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+     "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+     "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+    },
+    "subsystem": "audio",
+    "severity": "Low",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "SUPPORTED_BOUNDARY",
+    "discoveredBy": "AUT-16W-11",
+    "expected": "guard/coverage contract holds on the reviewed state",
+    "actual": "usesJsxBlocks flag not propagated to joined-.vue literalRanges in shake + boundary sweeps",
+    "rootCause": "flag dropped at call sites",
+    "rootClass": "GUARD_HARNESS_GAP",
+    "counterexample": "reviewer probe + coordinator smuggle-file verification (wave-16 reports)",
+    "locations": [
+     {
+      "path": "game/tests/architecture/screenShakeAuthority.test.ts",
+      "symbolOrSection": "guard arm",
+      "revision": "e7253860",
+      "basis": "SOURCE"
+     }
+    ],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src",
+       "tests/architecture"
+      ],
+      "termsAndMethod": "same-class regex/probe sweep over all arms",
+      "evidenceIds": [],
+      "hitDispositions": [],
+      "coverageLimits": []
+     }
+    ],
+    "status": "FIXED_PENDING_PROOF",
+    "repair": null,
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "siblingFindingIds": [],
+    "invariantIds": [],
+    "evidenceIds": []
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-SND-391",
+    "title": "violation Set deduped file -> literal strings across call sites (distinct sites collapsed)",
+    "state": {
+     "productStateId": "9c48db23660832ad7a4f03da7a7c22049f6106fc60814433e4da0a36d253cd3a",
+     "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+     "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+     "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+    },
+    "subsystem": "audio",
+    "severity": "Nit",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "SUPPORTED_BOUNDARY",
+    "discoveredBy": "AUT-16W-12",
+    "expected": "guard/coverage contract holds on the reviewed state",
+    "actual": "violation Set deduped file -> literal strings across call sites (distinct sites collapsed)",
+    "rootCause": "dedupe key lacked offset",
+    "rootClass": "GUARD_HARNESS_GAP",
+    "counterexample": "reviewer probe + coordinator smuggle-file verification (wave-16 reports)",
+    "locations": [
+     {
+      "path": "game/tests/architecture/audioBindingWiring.test.ts",
+      "symbolOrSection": "guard arm",
+      "revision": "e7253860",
+      "basis": "SOURCE"
+     }
+    ],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src",
+       "tests/architecture"
+      ],
+      "termsAndMethod": "same-class regex/probe sweep over all arms",
+      "evidenceIds": [],
+      "hitDispositions": [],
+      "coverageLimits": []
+     }
+    ],
+    "status": "FIXED_PENDING_PROOF",
+    "repair": null,
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "siblingFindingIds": [],
+    "invariantIds": [],
+    "evidenceIds": []
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-SND-392",
+    "title": "import.meta?.glob / import.meta?.resolve (?. spelling) escaped all meta arms",
+    "state": {
+     "productStateId": "9c48db23660832ad7a4f03da7a7c22049f6106fc60814433e4da0a36d253cd3a",
+     "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+     "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+     "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+    },
+    "subsystem": "audio",
+    "severity": "Nit",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "SUPPORTED_BOUNDARY",
+    "discoveredBy": "AUT-16W-13",
+    "expected": "guard/coverage contract holds on the reviewed state",
+    "actual": "import.meta?.glob / import.meta?.resolve (?. spelling) escaped all meta arms",
+    "rootCause": "meta joiner missed ?.",
+    "rootClass": "GUARD_HARNESS_GAP",
+    "counterexample": "reviewer probe + coordinator smuggle-file verification (wave-16 reports)",
+    "locations": [
+     {
+      "path": "game/tests/architecture/audioBoundary.test.ts",
+      "symbolOrSection": "guard arm",
+      "revision": "e7253860",
+      "basis": "SOURCE"
+     }
+    ],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src",
+       "tests/architecture"
+      ],
+      "termsAndMethod": "same-class regex/probe sweep over all arms",
+      "evidenceIds": [],
+      "hitDispositions": [],
+      "coverageLimits": []
+     }
+    ],
+    "status": "FIXED_PENDING_PROOF",
+    "repair": null,
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "siblingFindingIds": [],
+    "invariantIds": [],
+    "evidenceIds": []
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-SND-393",
+    "title": "param-object destructures function h({emit: q}) flip the exemption and mint no alias",
+    "state": {
+     "productStateId": "9c48db23660832ad7a4f03da7a7c22049f6106fc60814433e4da0a36d253cd3a",
+     "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+     "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+     "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+    },
+    "subsystem": "audio",
+    "severity": "Medium",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "SUPPORTED_BOUNDARY",
+    "discoveredBy": "COR-16-6",
+    "expected": "guard/coverage contract holds on the reviewed state",
+    "actual": "param-object destructures function h({emit: q}) flip the exemption and mint no alias",
+    "rootCause": "param-brace emit flips unhandled",
+    "rootClass": "GUARD_HARNESS_GAP",
+    "counterexample": "reviewer probe + coordinator smuggle-file verification (wave-16 reports)",
+    "locations": [
+     {
+      "path": "game/tests/architecture/audioBindingWiring.test.ts",
+      "symbolOrSection": "guard arm",
+      "revision": "e7253860",
+      "basis": "SOURCE"
+     }
+    ],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src",
+       "tests/architecture"
+      ],
+      "termsAndMethod": "same-class regex/probe sweep over all arms",
+      "evidenceIds": [],
+      "hitDispositions": [],
+      "coverageLimits": []
+     }
+    ],
+    "status": "FIXED_PENDING_PROOF",
+    "repair": null,
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "siblingFindingIds": [],
+    "invariantIds": [],
+    "evidenceIds": []
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-SND-394",
+    "title": "declare-masked spans still flip typeEmitDecl - ambient declarations exempt the file",
+    "state": {
+     "productStateId": "9c48db23660832ad7a4f03da7a7c22049f6106fc60814433e4da0a36d253cd3a",
+     "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+     "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+     "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+    },
+    "subsystem": "audio",
+    "severity": "Low",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "SUPPORTED_BOUNDARY",
+    "discoveredBy": "COR-16-7",
+    "expected": "guard/coverage contract holds on the reviewed state",
+    "actual": "declare-masked spans still flip typeEmitDecl - ambient declarations exempt the file",
+    "rootCause": "declare module/global/namespace bodies not skipped",
+    "rootClass": "GUARD_HARNESS_GAP",
+    "counterexample": "reviewer probe + coordinator smuggle-file verification (wave-16 reports)",
+    "locations": [
+     {
+      "path": "game/tests/architecture/audioBindingWiring.test.ts",
+      "symbolOrSection": "guard arm",
+      "revision": "e7253860",
+      "basis": "SOURCE"
+     }
+    ],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src",
+       "tests/architecture"
+      ],
+      "termsAndMethod": "same-class regex/probe sweep over all arms",
+      "evidenceIds": [],
+      "hitDispositions": [],
+      "coverageLimits": []
+     }
+    ],
+    "status": "FIXED_PENDING_PROOF",
+    "repair": null,
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "siblingFindingIds": [],
+    "invariantIds": [],
+    "evidenceIds": []
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-SND-395",
+    "title": "emit alias gaps: ?.[ / ![ bridges, of/in expression RHS, emit as any",
+    "state": {
+     "productStateId": "9c48db23660832ad7a4f03da7a7c22049f6106fc60814433e4da0a36d253cd3a",
+     "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+     "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+     "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+    },
+    "subsystem": "audio",
+    "severity": "Low",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "SUPPORTED_BOUNDARY",
+    "discoveredBy": "COR-16-8",
+    "expected": "guard/coverage contract holds on the reviewed state",
+    "actual": "emit alias gaps: ?.[ / ![ bridges, of/in expression RHS, emit as any",
+    "rootCause": "alias RHS/bridge arms too narrow",
+    "rootClass": "GUARD_HARNESS_GAP",
+    "counterexample": "reviewer probe + coordinator smuggle-file verification (wave-16 reports)",
+    "locations": [
+     {
+      "path": "game/tests/architecture/audioBindingWiring.test.ts",
+      "symbolOrSection": "guard arm",
+      "revision": "e7253860",
+      "basis": "SOURCE"
+     }
+    ],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src",
+       "tests/architecture"
+      ],
+      "termsAndMethod": "same-class regex/probe sweep over all arms",
+      "evidenceIds": [],
+      "hitDispositions": [],
+      "coverageLimits": []
+     }
+    ],
+    "status": "FIXED_PENDING_PROOF",
+    "repair": null,
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "siblingFindingIds": [],
+    "invariantIds": [],
+    "evidenceIds": []
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-SND-396",
+    "title": "=> inside <> generic windows closes them early - emit<() => ()>(x) args never inspected",
+    "state": {
+     "productStateId": "9c48db23660832ad7a4f03da7a7c22049f6106fc60814433e4da0a36d253cd3a",
+     "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+     "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+     "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+    },
+    "subsystem": "audio",
+    "severity": "Low",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "SUPPORTED_BOUNDARY",
+    "discoveredBy": "COR-16-10",
+    "expected": "guard/coverage contract holds on the reviewed state",
+    "actual": "=> inside <> generic windows closes them early - emit<() => ()>(x) args never inspected",
+    "rootCause": "generic window not =>-safe",
+    "rootClass": "GUARD_HARNESS_GAP",
+    "counterexample": "reviewer probe + coordinator smuggle-file verification (wave-16 reports)",
+    "locations": [
+     {
+      "path": "game/tests/architecture/audioBindingWiring.test.ts",
+      "symbolOrSection": "guard arm",
+      "revision": "e7253860",
+      "basis": "SOURCE"
+     }
+    ],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src",
+       "tests/architecture"
+      ],
+      "termsAndMethod": "same-class regex/probe sweep over all arms",
+      "evidenceIds": [],
+      "hitDispositions": [],
+      "coverageLimits": []
+     }
+    ],
+    "status": "FIXED_PENDING_PROOF",
+    "repair": null,
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "siblingFindingIds": [],
+    "invariantIds": [],
+    "evidenceIds": []
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-SND-397",
+    "title": "(emit) => emit(x) param emits classified as producer calls",
+    "state": {
+     "productStateId": "9c48db23660832ad7a4f03da7a7c22049f6106fc60814433e4da0a36d253cd3a",
+     "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+     "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+     "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+    },
+    "subsystem": "audio",
+    "severity": "Low",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "SUPPORTED_BOUNDARY",
+    "discoveredBy": "COR-16-11",
+    "expected": "guard/coverage contract holds on the reviewed state",
+    "actual": "(emit) => emit(x) param emits classified as producer calls",
+    "rootCause": "param emit bound check missing",
+    "rootClass": "GUARD_HARNESS_GAP",
+    "counterexample": "reviewer probe + coordinator smuggle-file verification (wave-16 reports)",
+    "locations": [
+     {
+      "path": "game/tests/architecture/audioBindingWiring.test.ts",
+      "symbolOrSection": "guard arm",
+      "revision": "e7253860",
+      "basis": "SOURCE"
+     }
+    ],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src",
+       "tests/architecture"
+      ],
+      "termsAndMethod": "same-class regex/probe sweep over all arms",
+      "evidenceIds": [],
+      "hitDispositions": [],
+      "coverageLimits": []
+     }
+    ],
+    "status": "FIXED_PENDING_PROOF",
+    "repair": null,
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "siblingFindingIds": [],
+    "invariantIds": [],
+    "evidenceIds": []
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-SND-398",
+    "title": "cue paren-indirect hole: (cue).call/.apply/.bind, (cue)?.call evade",
+    "state": {
+     "productStateId": "9c48db23660832ad7a4f03da7a7c22049f6106fc60814433e4da0a36d253cd3a",
+     "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+     "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+     "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+    },
+    "subsystem": "audio",
+    "severity": "Low",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "SUPPORTED_BOUNDARY",
+    "discoveredBy": "COR-16-13",
+    "expected": "guard/coverage contract holds on the reviewed state",
+    "actual": "cue paren-indirect hole: (cue).call/.apply/.bind, (cue)?.call evade",
+    "rootCause": "paren-callee arm lacked call/apply/bind tail",
+    "rootClass": "GUARD_HARNESS_GAP",
+    "counterexample": "reviewer probe + coordinator smuggle-file verification (wave-16 reports)",
+    "locations": [
+     {
+      "path": "game/tests/architecture/audioBindingWiring.test.ts",
+      "symbolOrSection": "guard arm",
+      "revision": "e7253860",
+      "basis": "SOURCE"
+     }
+    ],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src",
+       "tests/architecture"
+      ],
+      "termsAndMethod": "same-class regex/probe sweep over all arms",
+      "evidenceIds": [],
+      "hitDispositions": [],
+      "coverageLimits": []
+     }
+    ],
+    "status": "FIXED_PENDING_PROOF",
+    "repair": null,
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "siblingFindingIds": [],
+    "invariantIds": [],
+    "evidenceIds": []
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-SND-399",
+    "title": "cue bare-ref fence gaps + [/expression-of destructure evasion",
+    "state": {
+     "productStateId": "9c48db23660832ad7a4f03da7a7c22049f6106fc60814433e4da0a36d253cd3a",
+     "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+     "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+     "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+    },
+    "subsystem": "audio",
+    "severity": "Low",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "SUPPORTED_BOUNDARY",
+    "discoveredBy": "COR-16-14",
+    "expected": "guard/coverage contract holds on the reviewed state",
+    "actual": "cue bare-ref fence gaps + [/expression-of destructure evasion",
+    "rootCause": "fence char set + destructure RHS incomplete",
+    "rootClass": "GUARD_HARNESS_GAP",
+    "counterexample": "reviewer probe + coordinator smuggle-file verification (wave-16 reports)",
+    "locations": [
+     {
+      "path": "game/tests/architecture/audioBindingWiring.test.ts",
+      "symbolOrSection": "guard arm",
+      "revision": "e7253860",
+      "basis": "SOURCE"
+     }
+    ],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src",
+       "tests/architecture"
+      ],
+      "termsAndMethod": "same-class regex/probe sweep over all arms",
+      "evidenceIds": [],
+      "hitDispositions": [],
+      "coverageLimits": []
+     }
+    ],
+    "status": "FIXED_PENDING_PROOF",
+    "repair": null,
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "siblingFindingIds": [],
+    "invariantIds": [],
+    "evidenceIds": []
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-SND-400",
+    "title": "recv.cue.call(x) produced triple/double violations per site",
+    "state": {
+     "productStateId": "9c48db23660832ad7a4f03da7a7c22049f6106fc60814433e4da0a36d253cd3a",
+     "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+     "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+     "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+    },
+    "subsystem": "audio",
+    "severity": "Low",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "SUPPORTED_BOUNDARY",
+    "discoveredBy": "COR-16-15",
+    "expected": "guard/coverage contract holds on the reviewed state",
+    "actual": "recv.cue.call(x) produced triple/double violations per site",
+    "rootCause": "overlapping indirect arms not deduped",
+    "rootClass": "GUARD_HARNESS_GAP",
+    "counterexample": "reviewer probe + coordinator smuggle-file verification (wave-16 reports)",
+    "locations": [
+     {
+      "path": "game/tests/architecture/audioBindingWiring.test.ts",
+      "symbolOrSection": "guard arm",
+      "revision": "e7253860",
+      "basis": "SOURCE"
+     }
+    ],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src",
+       "tests/architecture"
+      ],
+      "termsAndMethod": "same-class regex/probe sweep over all arms",
+      "evidenceIds": [],
+      "hitDispositions": [],
+      "coverageLimits": []
+     }
+    ],
+    "status": "FIXED_PENDING_PROOF",
+    "repair": null,
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "siblingFindingIds": [],
+    "invariantIds": [],
+    "evidenceIds": []
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-SND-401",
+    "title": "cue concat specifiers evade: cue('ui.click' + n), cue(n + 'ui.click')",
+    "state": {
+     "productStateId": "9c48db23660832ad7a4f03da7a7c22049f6106fc60814433e4da0a36d253cd3a",
+     "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+     "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+     "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+    },
+    "subsystem": "audio",
+    "severity": "Low",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "SUPPORTED_BOUNDARY",
+    "discoveredBy": "COR-16-16",
+    "expected": "guard/coverage contract holds on the reviewed state",
+    "actual": "cue concat specifiers evade: cue('ui.click' + n), cue(n + 'ui.click')",
+    "rootCause": "no depth-0 operator flag",
+    "rootClass": "GUARD_HARNESS_GAP",
+    "counterexample": "reviewer probe + coordinator smuggle-file verification (wave-16 reports)",
+    "locations": [
+     {
+      "path": "game/tests/architecture/audioBindingWiring.test.ts",
+      "symbolOrSection": "guard arm",
+      "revision": "e7253860",
+      "basis": "SOURCE"
+     }
+    ],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src",
+       "tests/architecture"
+      ],
+      "termsAndMethod": "same-class regex/probe sweep over all arms",
+      "evidenceIds": [],
+      "hitDispositions": [],
+      "coverageLimits": []
+     }
+    ],
+    "status": "FIXED_PENDING_PROOF",
+    "repair": null,
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "siblingFindingIds": [],
+    "invariantIds": [],
+    "evidenceIds": []
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-SND-402",
+    "title": "\\x2e/\\u002e dot escapes evade all three guards' escape arms",
+    "state": {
+     "productStateId": "9c48db23660832ad7a4f03da7a7c22049f6106fc60814433e4da0a36d253cd3a",
+     "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+     "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+     "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+    },
+    "subsystem": "audio",
+    "severity": "Low",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "SUPPORTED_BOUNDARY",
+    "discoveredBy": "COR-16-17",
+    "expected": "guard/coverage contract holds on the reviewed state",
+    "actual": "\\x2e/\\u002e dot escapes evade all three guards' escape arms",
+    "rootCause": "\\x form + decoded dot-tail compare missing",
+    "rootClass": "GUARD_HARNESS_GAP",
+    "counterexample": "reviewer probe + coordinator smuggle-file verification (wave-16 reports)",
+    "locations": [
+     {
+      "path": "game/tests/architecture/audioBindingWiring.test.ts",
+      "symbolOrSection": "guard arm",
+      "revision": "e7253860",
+      "basis": "SOURCE"
+     }
+    ],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src",
+       "tests/architecture"
+      ],
+      "termsAndMethod": "same-class regex/probe sweep over all arms",
+      "evidenceIds": [],
+      "hitDispositions": [],
+      "coverageLimits": []
+     }
+    ],
+    "status": "FIXED_PENDING_PROOF",
+    "repair": null,
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "siblingFindingIds": [],
+    "invariantIds": [],
+    "evidenceIds": []
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-SND-403",
+    "title": "shake over-flag lanes: no receiver check on ['shake'], rename destructure, dynamic concat",
+    "state": {
+     "productStateId": "9c48db23660832ad7a4f03da7a7c22049f6106fc60814433e4da0a36d253cd3a",
+     "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+     "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+     "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+    },
+    "subsystem": "audio",
+    "severity": "Low",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "SUPPORTED_BOUNDARY",
+    "discoveredBy": "COR-16-18",
+    "expected": "guard/coverage contract holds on the reviewed state",
+    "actual": "shake over-flag lanes: no receiver check on ['shake'], rename destructure, dynamic concat",
+    "rootCause": "member-context + substring gates missing",
+    "rootClass": "GUARD_HARNESS_GAP",
+    "counterexample": "reviewer probe + coordinator smuggle-file verification (wave-16 reports)",
+    "locations": [
+     {
+      "path": "game/tests/architecture/screenShakeAuthority.test.ts",
+      "symbolOrSection": "guard arm",
+      "revision": "e7253860",
+      "basis": "SOURCE"
+     }
+    ],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src",
+       "tests/architecture"
+      ],
+      "termsAndMethod": "same-class regex/probe sweep over all arms",
+      "evidenceIds": [],
+      "hitDispositions": [],
+      "coverageLimits": []
+     }
+    ],
+    "status": "FIXED_PENDING_PROOF",
+    "repair": null,
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "siblingFindingIds": [],
+    "invariantIds": [],
+    "evidenceIds": []
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-SND-404",
+    "title": "shake evasion lanes: comma/ternary/interp keys, let, annotated/param destructure, bare shake()",
+    "state": {
+     "productStateId": "9c48db23660832ad7a4f03da7a7c22049f6106fc60814433e4da0a36d253cd3a",
+     "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+     "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+     "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+    },
+    "subsystem": "audio",
+    "severity": "Low",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "SUPPORTED_BOUNDARY",
+    "discoveredBy": "COR-16-19",
+    "expected": "guard/coverage contract holds on the reviewed state",
+    "actual": "shake evasion lanes: comma/ternary/interp keys, let, annotated/param destructure, bare shake()",
+    "rootCause": "destructure coverage gaps + bound-call tracking missing",
+    "rootClass": "GUARD_HARNESS_GAP",
+    "counterexample": "reviewer probe + coordinator smuggle-file verification (wave-16 reports)",
+    "locations": [
+     {
+      "path": "game/tests/architecture/screenShakeAuthority.test.ts",
+      "symbolOrSection": "guard arm",
+      "revision": "e7253860",
+      "basis": "SOURCE"
+     }
+    ],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src",
+       "tests/architecture"
+      ],
+      "termsAndMethod": "same-class regex/probe sweep over all arms",
+      "evidenceIds": [],
+      "hitDispositions": [],
+      "coverageLimits": []
+     }
+    ],
+    "status": "FIXED_PENDING_PROOF",
+    "repair": null,
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "siblingFindingIds": [],
+    "invariantIds": [],
+    "evidenceIds": []
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-SND-405",
+    "title": "boundary .vue template sweep lacked wave-16 arms; typeof/['glob'] FP+dup; import.meta[k] computed member unscreened",
+    "state": {
+     "productStateId": "9c48db23660832ad7a4f03da7a7c22049f6106fc60814433e4da0a36d253cd3a",
+     "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+     "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+     "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+    },
+    "subsystem": "audio",
+    "severity": "Low",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "SUPPORTED_BOUNDARY",
+    "discoveredBy": "COR-16-20",
+    "expected": "guard/coverage contract holds on the reviewed state",
+    "actual": "boundary .vue template sweep lacked wave-16 arms; typeof/['glob'] FP+dup; import.meta[k] computed member unscreened",
+    "rootCause": "boundary arms out of sync + NONLITERAL_META computed member",
+    "rootClass": "GUARD_HARNESS_GAP",
+    "counterexample": "reviewer probe + coordinator smuggle-file verification (wave-16 reports)",
+    "locations": [
+     {
+      "path": "game/tests/architecture/audioBoundary.test.ts",
+      "symbolOrSection": "guard arm",
+      "revision": "e7253860",
+      "basis": "SOURCE"
+     }
+    ],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src",
+       "tests/architecture"
+      ],
+      "termsAndMethod": "same-class regex/probe sweep over all arms",
+      "evidenceIds": [],
+      "hitDispositions": [],
+      "coverageLimits": []
+     }
+    ],
+    "status": "FIXED_PENDING_PROOF",
+    "repair": null,
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "siblingFindingIds": [],
+    "invariantIds": [],
+    "evidenceIds": []
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-SND-406",
+    "title": "templateExprText arm-1 swept plain element text - @click=/:x= in prose flagged",
+    "state": {
+     "productStateId": "9c48db23660832ad7a4f03da7a7c22049f6106fc60814433e4da0a36d253cd3a",
+     "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+     "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+     "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+    },
+    "subsystem": "audio",
+    "severity": "Low",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "SUPPORTED_BOUNDARY",
+    "discoveredBy": "COR-16-2",
+    "expected": "guard/coverage contract holds on the reviewed state",
+    "actual": "templateExprText arm-1 swept plain element text - @click=/:x= in prose flagged",
+    "rootCause": "directive arms not gated to tag spans",
+    "rootClass": "GUARD_HARNESS_GAP",
+    "counterexample": "reviewer probe + coordinator smuggle-file verification (wave-16 reports)",
+    "locations": [
+     {
+      "path": "game/tests/architecture/helpers/commentStrip.ts",
+      "symbolOrSection": "guard arm",
+      "revision": "e7253860",
+      "basis": "SOURCE"
+     }
+    ],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src",
+       "tests/architecture"
+      ],
+      "termsAndMethod": "same-class regex/probe sweep over all arms",
+      "evidenceIds": [],
+      "hitDispositions": [],
+      "coverageLimits": []
+     }
+    ],
+    "status": "FIXED_PENDING_PROOF",
+    "repair": null,
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "siblingFindingIds": [],
+    "invariantIds": [],
+    "evidenceIds": []
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-SND-407",
+    "title": "{{ }} inside dead script/foreign bodies swept as expressions",
+    "state": {
+     "productStateId": "9c48db23660832ad7a4f03da7a7c22049f6106fc60814433e4da0a36d253cd3a",
+     "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+     "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+     "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+    },
+    "subsystem": "audio",
+    "severity": "Low",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "SUPPORTED_BOUNDARY",
+    "discoveredBy": "COR-16-3",
+    "expected": "guard/coverage contract holds on the reviewed state",
+    "actual": "{{ }} inside dead script/foreign bodies swept as expressions",
+    "rootCause": "dead-body masking order wrong",
+    "rootClass": "GUARD_HARNESS_GAP",
+    "counterexample": "reviewer probe + coordinator smuggle-file verification (wave-16 reports)",
+    "locations": [
+     {
+      "path": "game/tests/architecture/helpers/commentStrip.ts",
+      "symbolOrSection": "guard arm",
+      "revision": "e7253860",
+      "basis": "SOURCE"
+     }
+    ],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src",
+       "tests/architecture"
+      ],
+      "termsAndMethod": "same-class regex/probe sweep over all arms",
+      "evidenceIds": [],
+      "hitDispositions": [],
+      "coverageLimits": []
+     }
+    ],
+    "status": "FIXED_PENDING_PROOF",
+    "repair": null,
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "siblingFindingIds": [],
+    "invariantIds": [],
+    "evidenceIds": []
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-SND-408",
+    "title": "boundary templateTextOf swept literal attribute values",
+    "state": {
+     "productStateId": "9c48db23660832ad7a4f03da7a7c22049f6106fc60814433e4da0a36d253cd3a",
+     "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+     "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+     "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+    },
+    "subsystem": "audio",
+    "severity": "Low",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "SUPPORTED_BOUNDARY",
+    "discoveredBy": "COR-16-4",
+    "expected": "guard/coverage contract holds on the reviewed state",
+    "actual": "boundary templateTextOf swept literal attribute values",
+    "rootCause": "literal attr masking absent",
+    "rootClass": "GUARD_HARNESS_GAP",
+    "counterexample": "reviewer probe + coordinator smuggle-file verification (wave-16 reports)",
+    "locations": [
+     {
+      "path": "game/tests/architecture/audioBoundary.test.ts",
+      "symbolOrSection": "guard arm",
+      "revision": "e7253860",
+      "basis": "SOURCE"
+     }
+    ],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src",
+       "tests/architecture"
+      ],
+      "termsAndMethod": "same-class regex/probe sweep over all arms",
+      "evidenceIds": [],
+      "hitDispositions": [],
+      "coverageLimits": []
+     }
+    ],
+    "status": "FIXED_PENDING_PROOF",
+    "repair": null,
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "siblingFindingIds": [],
+    "invariantIds": [],
+    "evidenceIds": []
+   }
+  },
+  {
+   "kind": "review",
+   "body": {
+    "id": "REV-SND-COR-16",
+    "state": {
+     "productStateId": "9c48db23660832ad7a4f03da7a7c22049f6106fc60814433e4da0a36d253cd3a",
+     "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+     "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+     "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+    },
+    "round": 16,
+    "phase": "CORRECTNESS",
+    "reviewerId": "devin-5948411a45be411e8a759ad224add5f6",
+    "contextId": "ctx-rev-snd-cor-16",
+    "model": "swe-2",
+    "role": "adversarial-correctness",
+    "inputBundleHash": "9c48db23660832ad7a4f03da7a7c22049f6106fc60814433e4da0a36d253cd3a",
+    "priorFindingsVisible": false,
+    "accessLimitations": [
+     "detached checkout of pinned head e7253860",
+     "e2e spec not run by reviewers"
+    ],
+    "startedAt": "2026-09-28T17:00:00Z",
+    "sealedAt": "2026-09-28T18:30:00Z",
+    "previousPhaseReviewId": "REV-SND-INT-15",
+    "reviewedAfterPreviousFixes": true,
+    "coverageIds": [],
+    "evidenceIds": [],
+    "findingIds": [
+     "F-SND-374",
+     "F-SND-378",
+     "F-SND-379",
+     "F-SND-380",
+     "F-SND-381",
+     "F-SND-382",
+     "F-SND-383",
+     "F-SND-385",
+     "F-SND-393",
+     "F-SND-394",
+     "F-SND-395",
+     "F-SND-396",
+     "F-SND-397",
+     "F-SND-398",
+     "F-SND-399",
+     "F-SND-400",
+     "F-SND-401",
+     "F-SND-402",
+     "F-SND-403",
+     "F-SND-404",
+     "F-SND-405",
+     "F-SND-406",
+     "F-SND-407",
+     "F-SND-408"
+    ],
+    "novelAttackIds": [],
+    "status": "SEALED"
+   }
+  },
+  {
+   "kind": "review",
+   "body": {
+    "id": "REV-SND-AUT-16",
+    "state": {
+     "productStateId": "9c48db23660832ad7a4f03da7a7c22049f6106fc60814433e4da0a36d253cd3a",
+     "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+     "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+     "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+    },
+    "round": 16,
+    "phase": "AUTHORITY",
+    "reviewerId": "devin-aa14e748c1954caf96be7730dfdcd62b",
+    "contextId": "ctx-rev-snd-aut-16",
+    "model": "swe-2",
+    "role": "adversarial-authority",
+    "inputBundleHash": "9c48db23660832ad7a4f03da7a7c22049f6106fc60814433e4da0a36d253cd3a",
+    "priorFindingsVisible": false,
+    "accessLimitations": [
+     "detached checkout of pinned head e7253860",
+     "e2e spec not run by reviewers"
+    ],
+    "startedAt": "2026-09-28T17:00:00Z",
+    "sealedAt": "2026-09-28T18:30:00Z",
+    "previousPhaseReviewId": "REV-SND-COR-16",
+    "reviewedAfterPreviousFixes": true,
+    "coverageIds": [],
+    "evidenceIds": [],
+    "findingIds": [
+     "F-SND-371",
+     "F-SND-372",
+     "F-SND-374",
+     "F-SND-378",
+     "F-SND-383",
+     "F-SND-384",
+     "F-SND-385",
+     "F-SND-386",
+     "F-SND-387",
+     "F-SND-388",
+     "F-SND-389",
+     "F-SND-390",
+     "F-SND-391",
+     "F-SND-392"
+    ],
+    "novelAttackIds": [],
+    "status": "SEALED"
+   }
+  },
+  {
+   "kind": "review",
+   "body": {
+    "id": "REV-SND-INT-16",
+    "state": {
+     "productStateId": "9c48db23660832ad7a4f03da7a7c22049f6106fc60814433e4da0a36d253cd3a",
+     "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+     "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+     "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+    },
+    "round": 16,
+    "phase": "INTEGRATION",
+    "reviewerId": "devin-e28c1861d9374a4c815973815214bf5c",
+    "contextId": "ctx-rev-snd-int-16",
+    "model": "swe-2",
+    "role": "adversarial-integration",
+    "inputBundleHash": "9c48db23660832ad7a4f03da7a7c22049f6106fc60814433e4da0a36d253cd3a",
+    "priorFindingsVisible": false,
+    "accessLimitations": [
+     "detached checkout of pinned head e7253860",
+     "e2e spec not run by reviewers"
+    ],
+    "startedAt": "2026-09-28T17:00:00Z",
+    "sealedAt": "2026-09-28T18:30:00Z",
+    "previousPhaseReviewId": "REV-SND-AUT-16",
+    "reviewedAfterPreviousFixes": true,
+    "coverageIds": [],
+    "evidenceIds": [],
+    "findingIds": [
+     "F-SND-371",
+     "F-SND-372",
+     "F-SND-373",
+     "F-SND-374",
+     "F-SND-375",
+     "F-SND-376",
+     "F-SND-377",
+     "F-SND-378",
+     "F-SND-379",
+     "F-SND-380",
+     "F-SND-381",
+     "F-SND-382"
+    ],
+    "novelAttackIds": [],
+    "status": "SEALED"
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "kind": "EXECUTED_UNIT_STRUCTURAL",
+    "id": "EV-SND-FIX23",
+    "state": {
+     "productStateId": "8e42a1eac967ff3d9b1fb8dd9ee50c24a0bfe61151d4315858133bf43bd75440",
+     "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+     "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+     "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+    },
+    "status": "CURRENT",
+    "producer": "coordinator",
+    "startedAt": "2026-09-28T18:30:00Z",
+    "finishedAt": "2026-09-28T18:55:00Z",
+    "commandOrMethod": "npm run type-check (0 errors); npx vitest run tests/architecture/ (190/190; libuuid suite env failure pre-existing); per-arm smuggle-file probes (w16Smuggle.ts + W16Smuggle.vue, reverted uncommitted)",
+    "cwd": "game/",
+    "exitCode": 0,
+    "result": "PASS",
+    "artifactPath": "records-w16.json",
+    "artifactHash": "db386d20d1417eb3154d0deb470aaa723a9d67f35153f457ce7e9dee7e200510",
+    "claims": [
+     "all 38 unique wave-16 findings fixed at 9f965f5a (46 reports deduped); every new arm probe-verified"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [],
+    "invariantIds": [],
+    "limitations": [
+     "e2e spec not re-run this wave"
+    ]
+   }
+  },
+  {
+   "kind": "cycle",
+   "body": {
+    "id": "CYC-SND-16",
+    "state": {
+     "productStateId": "9c48db23660832ad7a4f03da7a7c22049f6106fc60814433e4da0a36d253cd3a",
+     "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+     "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+     "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+    },
+    "reviewIds": [
+     "REV-SND-COR-16",
+     "REV-SND-AUT-16",
+     "REV-SND-INT-16"
+    ],
+    "coverageIds": [],
+    "evidenceIds": [
+     "EV-SND-FIX23"
+    ],
+    "noveltyEvidenceIds": [],
+    "startedAt": "2026-09-28T17:00:00Z",
+    "finishedAt": "2026-09-28T18:55:00Z",
+    "status": "FINDINGS"
+   }
+  }
+ ]
+}

@@ -22614,7 +22614,7 @@
       "path": "src/presentation/assets/AssetBundleManager.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "e7d3bd19351bec6dbdeb590e19fce2c66e7307a39e72f5e5ba2e6b37f80bbdf1"
+      "hash": "c83c5581403d3c3cc477432e93656dba8ad9fcced2e2c5815451c3e57421ae5f"
     },
     {
       "path": "src/presentation/audio/ambientAudioDriver.test.ts",
@@ -23532,13 +23532,13 @@
       "path": "tests/architecture/audioBindingWiring.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "dd814572aa07b43e3e8f98d6703ad8cbb24c210033ca4183288f16341d63e78f"
+      "hash": "89a1d9eb5c930a7b94a7ebb5689ca0260a46d26a4dec5c4c825ef86416afabb1"
     },
     {
       "path": "tests/architecture/audioBoundary.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "a2e0d6f30b6047af3c23541bc7d4ef9088cb5e23e3fc7f81d3cbc835b75caae2"
+      "hash": "42ed321d773dd7526de211b655bab74e48d48861ab987ea392f5c153ab817b80"
     },
     {
       "path": "tests/architecture/audioManifestCompleteness.test.ts",
@@ -23658,7 +23658,7 @@
       "path": "tests/architecture/helpers/commentStrip.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "d650684fd2e68d45ba7fbdb2ef4c87ad208d7d899d41c7598bffc26e2c577c83"
+      "hash": "fedfe28e66c78d576fe0e0e516d51f36a05970ad84b7f5fdc661352b2dafa06b"
     },
     {
       "path": "tests/architecture/helpers/scanTs.ts",
@@ -23736,7 +23736,7 @@
       "path": "tests/architecture/screenShakeAuthority.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "1ceb53afb4432cd0b4ec9731ab7a07f7c943140d8f33b3e8486be46f33a53b6b"
+      "hash": "3ba7473b6b7377b6f13115c358256bf4858fd72b99f9a50da3bfc07712d170fe"
     },
     {
       "path": "tests/architecture/skillDefProducerSources.test.ts",
@@ -24027,5 +24027,5 @@
       "hash": "e69b4133ed37ca9a4f05e66d90521d0bb749c4764bf1f454d0eb13de601f7940"
     }
   ],
-  "productStateId": "26eb25ff741ca420e4f5c4da3f3fdc97e2845ddcbbaac95a785410b29184b2df"
+  "productStateId": "8e42a1eac967ff3d9b1fb8dd9ee50c24a0bfe61151d4315858133bf43bd75440"
 }

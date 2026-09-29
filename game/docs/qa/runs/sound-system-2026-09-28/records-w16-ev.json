@@ -1,0 +1,36 @@
+{
+ "records": [
+  {
+   "kind": "evidence",
+   "body": {
+    "kind": "EXECUTED_UNIT_STRUCTURAL",
+    "id": "EV-SND-FIX23",
+    "state": {
+     "productStateId": "8e42a1eac967ff3d9b1fb8dd9ee50c24a0bfe61151d4315858133bf43bd75440",
+     "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+     "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+     "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+    },
+    "status": "CURRENT",
+    "producer": "coordinator",
+    "startedAt": "2026-09-28T18:30:00Z",
+    "finishedAt": "2026-09-28T18:55:00Z",
+    "commandOrMethod": "npm run type-check (0 errors); npx vitest run tests/architecture/ (190/190; libuuid suite env failure pre-existing); per-arm smuggle-file probes (w16Smuggle.ts + W16Smuggle.vue, reverted uncommitted)",
+    "cwd": "game/",
+    "exitCode": 0,
+    "result": "PASS",
+    "artifactPath": "evidence/EV-SND-FIX23.log",
+    "artifactHash": "05d87f9916fd3a121553fb780f59c1176816c2cd241ce7592fcec5743b7e5001",
+    "claims": [
+     "all 38 unique wave-16 findings fixed at 9f965f5a (46 reports deduped); every new arm probe-verified"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [],
+    "invariantIds": [],
+    "limitations": [
+     "e2e spec not re-run this wave"
+    ]
+   }
+  }
+ ]
+}
