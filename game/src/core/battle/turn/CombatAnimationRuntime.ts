@@ -9,7 +9,7 @@ export type ResumePlayback =
   | Readonly<{ phase: 'ready'; token: string; actorId: string }>
   | Readonly<{ phase: 'cast'; token: string; cast: SkillCastPresentation }>
   | Readonly<{ phase: 'complete'; token: string; actorId: string; targetIds: readonly string[]; resolved: SkillPresentationResolved }>
-  | Readonly<{ phase: 'manual'; actorId: string }>
+  | Readonly<{ phase: 'manual'; actorId: string; token: string }>
 
 /**
  * Combat Runtime Separation (2026-09-07, AGENTS.md P17) — owns the
@@ -611,9 +611,17 @@ export class CombatAnimationRuntime {
     }
 
     if (this.awaitedManualActor) {
+      // F-BX-44 - renew like every other branch: the token minted at
+      // pauseForManualActor stayed valid across a re-attach, so a stale
+      // renderer callback quoting it still passed the ack identity check
+      // against whatever phase the resumed session entered next. The
+      // replayer ignores resume.token in the manual payload (the choice
+      // affordance re-derives engine-side) - the bump is the fix.
+      const token = this.nextPlaybackToken()
       return {
         phase: 'manual',
         actorId: this.awaitedManualActor.id,
+        token,
       }
     }
 
