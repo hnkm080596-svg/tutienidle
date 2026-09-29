@@ -24,7 +24,7 @@ Each finding uses `### <id> — <SEVERITY> — <title>` with fields: Severity, L
 | Critical | 0 | — |
 | High | 1 | CP-01 |
 | Medium | 5 | EM-01, EM-02, EM-05, INFRA-01, INFRA-02 |
-| Low | 8 | CP-02, EM-03, EM-04, INFRA-03, INFRA-04, INFRA-05, INFRA-06, INFRA-07 |
+| Low | 9 | CP-02, EM-03, EM-04, INFRA-03, INFRA-04, INFRA-05, INFRA-06, INFRA-07, INFRA-08 |
 
 ## Headline items
 

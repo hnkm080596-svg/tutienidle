@@ -66,8 +66,6 @@ Overall observation: this slice has already been through several audit rounds (c
 - **Repro:** Device A local rev 50; device B (fresh install, rev 3) pushes newer-timestamp save. A logs in: pull writes rev 3 into A's revision key; A's next save continues at 4. CAS still self-consistent, but the counter no longer means "number of local writes" and monotonicity assumptions (if any reader relies on it) break.
 - **Impact:** Latent semantic drift; no live defect found in current readers, flagged because revision is dual-purpose (local CAS + remote mirror) with no written contract.
 
----
-
 ### INFRA-07 — LOW — Pill overflow discarded silently at restore (materials report it; pills don't)
 
 - **Severity:** Low
@@ -75,6 +73,16 @@ Overall observation: this slice has already been through several audit rounds (c
 - **Root cause:** `PillBag.add` clamps at `MAX_STACK_AMOUNT` and returns the lost amount (`PillBag.ts:23-29`); the restore loop drops the receipt, so an over-cap pill stack in the payload loses the excess with no event/log.
 - **Repro:** Import/hand-edit a save whose `pills[].amount` exceeds `MAX_STACK_AMOUNT` (import normalizes shape, not caps) → restore → excess pills vanish silently; a material in the same situation would have produced an overflow toast.
 - **Impact:** Inconsistent loss-reporting contract only — legit writes can't produce over-cap stacks, so reachable only via foreign/imported payloads.
+
+---
+
+### INFRA-08 — LOW — `totalCultivationGained` is a dead counter with a stale "feeds technique tier" contract and wrong semantics for an idle game
+
+- **Severity:** Low
+- **Location:** `game/src/core/cultivation/CultivationTick.ts:53-57` (sole writer); declared `game/src/core/player/Player.ts:158`; persisted in saves (`saveShapeValidation.ts:463`).
+- **Root cause:** The only writer tallies `gained = cultivation - before` inside the ONLINE tick. It excludes: (a) the entire offline grant (`stores/player.ts:369` routes through `addCultivation`, never the tally), (b) reward-receiver cultivation (quests — `RewardSystem` → `addCultivation`), (c) Hải Nạp overcharge pours (`pourCultivationOvercharge` writes directly). Meanwhile the comment claims it "feeds technique tier" — but `grep` shows NO production consumer (technique moved to the mastery channel in P7-M3); the comment at `Player.ts:153-158` still describes a Kiếm Ý feed that was re-pointed to `bossKillCount`.
+- **Repro:** Idle-dominant player: log off 8h/day → the counter records only the online sliver; any future consumer reading "lifetime cultivation" sees a fraction of reality. Stale comments mislead implementers into treating it as a technique/tier input.
+- **Impact:** Dead/stale contract — no live defect today, but a persisted field with wrong semantics and misleading ownership docs is a trap for the next feature that consumes it.
 
 ---
 
@@ -89,3 +97,10 @@ Overall observation: this slice has already been through several audit rounds (c
 - **Round-2, offline-window authority:** `GameManagerSaveRestore.ts:401-403` computes raw uncapped `elapsedOfflineSeconds`, but every consumer clamps its own window — production + decompose at `PRODUCTION_OFFLINE_CAP_SECONDS` = 10h (`ProductionBalance.ts:120`, `ProductionOffline.ts:64`, `DecomposeSystem.ts:241`), auto-farm at `DEFAULT_MAX_OFFLINE_SECONDS` = 24h (`GameManagerAutoFarmOps.ts:220-226`), cultivation via `GameClock.calculateOfflineTime`. The raw value only feeds the `>60s` gate. Different caps per subsystem are deliberate, not drift — cleared.
 - **Round-2, wash/refine paid-op tickets:** `EquipmentWash.previewWashAffixes`/`commitWashAffixes` — cost deducted at preview, ticket consumed on EVERY commit attempt, bound by object identity + membership generation + issued-at snapshot, `invalidatePendingOperationTickets` on restore. Airtight — cleared.
 - **Round-2, reward ops:** `GameManagerBattleRewardOps` `rewardsGranted`/`battleEndEmitted` flags give per-kill and terminal exactly-once semantics; abandon shares the once-guard; `bankPassiveCarry` overwrite can't double-count. `StageWaveSystem.start` is transactional (lease rollback on any pick/launch failure); lease release is identity-checked so a stale `stopRepeat` can't stomp a foreign owner. Cleared.
+- **Round-3, restore pipeline depth:** `stores/player.ts:269-347` — deep-clone + REPLACE semantics over `createDefaultPlayer()`, foreign-key whitelist + dynamic-key eviction, baseStats/modifier/timed-effect shape filtering. `structuredClone` at `:276` — payload treated as value, mid-restore throw leaves payload identity uncommitted so retry re-applies (`:390-394`). `save.player.lastSavedAt` drives offline via the pure `calculateOfflineTime` — future timestamps clamp to elapsed 0.
+- **Round-3, timed-effect lifecycle:** `effectOps.tickTimedEffects` deadline-purges per tick + on `setActivePlayer` (`GameManager.ts:1015`); `applyTimedEffect` group merge = refresh-max or explicit `durationStackable` add, modifier merge keeps strongest per flat/percent/multiplier — no duplicate channel stacking.
+- **Round-3, GameClock:** `update()` clamps `currentTime = max(previous, timestamp)` — clock never rewinds (NTP/suspend safe); `calculateOfflineTime` clamps [0, cap]. `setMaxOfflineSeconds` has zero callers (dead configurability — nit, not filed).
+- **Round-3, stage/enemy layer:** `StageManager` opaque lease capability (brand-typed, snapshot can't release); `effectiveTotalEnemyCount` single-sources the boss=1 rule; `applyEnemyTags` dedupe + priority fold + never mutates template; `pickNextEnemyEntry` weighted pick; `weightedRandom` throws on empty table; `hiddenBeast` symmetric per-channel counters with per-band reset.
+- **Round-3, combat build + sessions:** `resolveCombatBuild` pure resolver — maxThe single-write, live-modifier partition via id-gated closure, formation-buff gracefulSkip only for save-derived ids; `PresentationSession` generation-token hold/attach/release with gen-0 fabrication guard; `EventBus` snapshot dispatch + per-handler isolation; `AudioManager` generation counter guards dispose-vs-unlock race.
+- **Round-3, quest internals:** `QuestSystem.claim` grant-before-debit ordering (throwing grant can't eat turn-in cost), overflow receipts on material AND pill rewards, release-policy suppression per reward line, `reconcileActiveQuests` two-way (activate eligible + deactivate stale), `onMaterialCollected` finite-positive guard.
+- **Round-3, stale docs (nit, not filed):** `Player.ts:193` says insight accrual is "online only — offline separate design" but `stores/player.ts:383` DOES accrue offline (M2 T3-26); `CultivationTick.ts:55` "feeds technique tier" is stale (see INFRA-08).
