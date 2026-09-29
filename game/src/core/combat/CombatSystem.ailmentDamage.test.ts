@@ -108,4 +108,52 @@ describe('CombatSystem.applyDotDamage (Plans/magicpathgeneral Phase 9-11)', () =
     expect(target.currentHp).toBeLessThan(1000)
     expect(source.currentHp).toBe(500)
   })
+
+  // F-BX-89 - a hostile NaN tick must not reach the pool as NaN:
+  // hp=NaN makes killIfDead's `currentHp > 0` guard false and the
+  // entity is silently executed with zero real damage. rawDamage and
+  // the resistance stat coerce to 0 at this entry.
+  it.each([Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY])(
+    'rawDamage=%j giữ hp hữu hạn và entity sống (không chết ngầm)',
+    (rawDamage) => {
+      const eventBus = new EventBus()
+      const combatSystem = new CombatSystem(eventBus)
+
+      const target = createCombatant({ id: 'target', currentHp: 1000, maxHp: 1000 })
+
+      combatSystem.applyDotDamage({
+        sourceId: 'source',
+        source: undefined,
+        target,
+        rawDamage,
+        element: 'fire',
+        effectId: 'bong',
+      })
+
+      expect(Number.isFinite(target.currentHp)).toBe(true)
+      expect(target.currentHp).toBe(1000)
+      expect(target.alive).toBe(true)
+    },
+  )
+
+  it('dotResistancePercent=NaN không poison damage tick (mitigation coerce về 0)', () => {
+    const eventBus = new EventBus()
+    const combatSystem = new CombatSystem(eventBus)
+
+    const target = createCombatant({ id: 'target', currentHp: 1000, maxHp: 1000 })
+    target.stats.dotResistancePercent = Number.NaN
+
+    combatSystem.applyDotDamage({
+      sourceId: 'source',
+      source: undefined,
+      target,
+      rawDamage: 10,
+      element: 'fire',
+      effectId: 'bong',
+    })
+
+    expect(Number.isFinite(target.currentHp)).toBe(true)
+    expect(target.currentHp).toBe(990)
+    expect(target.alive).toBe(true)
+  })
 })

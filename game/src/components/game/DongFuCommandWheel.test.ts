@@ -258,15 +258,41 @@ describe('DongFuCommandWheel', () => {
     expect(mounted.ui.isCommandWheelOpen).toBe(false)
   })
 
-  it('Tab toggle mở và đóng wheel ở Động Phủ', async () => {
-    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', cancelable: true }))
+  // F-BX-55 - plain Tab forwards keyboard focus: it must never be
+  // eaten or toggle the wheel app-wide. The portrait trigger button in
+  // DongFuScene owns the keyboard open path; while open, focus lands on
+  // the first slot and Tab cycles inside the wheel.
+  it('Tab thuần KHÔNG bị nuốt và KHÔNG toggle wheel khi đang đóng', async () => {
+    const event = new KeyboardEvent('keydown', { key: 'Tab', cancelable: true })
+    const preventDefaultSpy = vi.spyOn(event, 'preventDefault')
+
+    window.dispatchEvent(event)
     await nextTick()
 
-    expect(mounted.ui.isCommandWheelOpen).toBe(true)
+    expect(preventDefaultSpy).not.toHaveBeenCalled()
+    expect(mounted.ui.isCommandWheelOpen).toBe(false)
+  })
 
-    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', cancelable: true }))
+  it('mở wheel đưa focus vào slot đầu và Tab cycle bên trong wheel', async () => {
+    await mounted.open()
     await nextTick()
 
+    const slots = mounted.slots()
+    expect(slots.length).toBeGreaterThan(1)
+
+    // Focus-on-open lands on the first slot (useDialogFocus).
+    expect(document.activeElement).toBe(slots[0])
+
+    slots[0]!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true }))
+    expect(document.activeElement).toBe(slots[1])
+
+    const last = slots[slots.length - 1]!
+    last.focus()
+    last.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true }))
+    expect(document.activeElement).toBe(slots[0])
+
+    slots[0]!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }))
+    await nextTick()
     expect(mounted.ui.isCommandWheelOpen).toBe(false)
   })
 

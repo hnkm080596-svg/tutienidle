@@ -608,14 +608,20 @@ export class CombatSystem {
   }, execCtx?: CombatAuthorityExecutionContext) {
     const { sourceId, source, sourceGrants, target, rawDamage, element, effectId } = params
 
-    const mitigation = Math.min(DOT_RESISTANCE_CAP, Math.max(DOT_RESISTANCE_FLOOR, target.stats.dotResistancePercent))
+    // F-BX-89 - the DoT entry guards its own arithmetic too: a NaN
+    // resistance stat or rawDamage would produce a NaN finalDamage and a
+    // NaN 'damage' event even though the vitals boundary already refuses
+    // to write NaN pools. Non-finite inputs coerce to 0 here (NaN
+    // resistance -> no mitigation, matching a stat that failed to load).
+    const resistance = Number.isFinite(target.stats.dotResistancePercent) ? target.stats.dotResistancePercent : 0
+    const mitigation = Math.min(DOT_RESISTANCE_CAP, Math.max(DOT_RESISTANCE_FLOOR, resistance))
 
     // stat-system-reimagined Task 6 (D13/INV-4) — DoT is a closed
     // economy: dotResistancePercent (minus authored penetration) is the
     // ONLY mitigation. finalDamageMultiplier (finalDamagePercent/
     // finalDamageReductionPercent) is a HIT-layer lever and does NOT
     // apply here; ward/MP shield/leech never see DoT either.
-    const finalDamage = Math.max(0, rawDamage * (1 - mitigation))
+    const finalDamage = Math.max(0, (Number.isFinite(rawDamage) ? rawDamage : 0) * (1 - mitigation))
 
     // hpDamage contract (review 2026-09-15): DoT has no absorb layers,
     // but the 0-clamp still applies — an overkill tick reports only the

@@ -30,6 +30,17 @@ export interface CombatHealEvent {
   value: number
 }
 
+/**
+ * F-BX-89 - no vitals write may store a non-finite value: hostile
+ * NaN/Infinity amounts and already-poisoned pools coerce to 0, the same
+ * boundary law MaterialBag.add/remove enforces. Without it NaN hp is a
+ * silent execution - killIfDead's `currentHp > 0` early-return is false
+ * on NaN, so the entity dies with no real damage taken.
+ */
+function finitePoolValue(value: number): number {
+  return Number.isFinite(value) ? value : 0
+}
+
 export class EntityVitalsSystem {
   constructor(private readonly eventBus: EventBus) {}
 
@@ -37,12 +48,12 @@ export class EntityVitalsSystem {
     const hpBefore = target.currentHp
     const wardBefore = target.currentWard
     const mpBefore = target.currentMp
-    const applied = Math.max(0, amount)
+    const applied = Math.max(0, finitePoolValue(amount))
 
-    target.currentHp = Math.max(0, target.currentHp - applied)
+    target.currentHp = Math.max(0, finitePoolValue(target.currentHp) - applied)
     this.emit(target, reason, applied, hpBefore, wardBefore, mpBefore, sourceId)
 
-    return hpBefore - target.currentHp
+    return finitePoolValue(hpBefore - target.currentHp)
   }
 
   applyHpDamageFromSnapshot(
@@ -53,9 +64,9 @@ export class EntityVitalsSystem {
     before: { hp: number; ward: number; mp: number },
     sourceId?: string,
   ) {
-    target.currentHp = Math.max(0, target.currentHp - Math.max(0, hpDamage))
-    this.emit(target, reason, totalDamage, before.hp, before.ward, before.mp, sourceId)
-    return before.hp - target.currentHp
+    target.currentHp = Math.max(0, finitePoolValue(target.currentHp) - Math.max(0, finitePoolValue(hpDamage)))
+    this.emit(target, reason, finitePoolValue(totalDamage), before.hp, before.ward, before.mp, sourceId)
+    return finitePoolValue(before.hp - target.currentHp)
   }
 
   clampToMaxHp(target: CombatEntity, reason: VitalsChangeReason, sourceId?: string) {
@@ -64,8 +75,8 @@ export class EntityVitalsSystem {
     const mpBefore = target.currentMp
 
     // A corrupt ceiling must never mint negative hp (F-BX-42).
-    target.currentHp = Math.min(target.currentHp, Math.max(0, target.maxHp))
-    this.emit(target, reason, hpBefore - target.currentHp, hpBefore, wardBefore, mpBefore, sourceId)
+    target.currentHp = Math.min(finitePoolValue(target.currentHp), Math.max(0, finitePoolValue(target.maxHp)))
+    this.emit(target, reason, finitePoolValue(hpBefore - target.currentHp), hpBefore, wardBefore, mpBefore, sourceId)
   }
 
   /**
@@ -78,11 +89,12 @@ export class EntityVitalsSystem {
     const wardBefore = target.currentWard
     const mpBefore = target.currentMp
 
-    target.currentWard = Math.max(0, target.currentWard - Math.max(0, amount))
+    target.currentWard = Math.max(0, finitePoolValue(target.currentWard) - Math.max(0, finitePoolValue(amount)))
 
-    this.emit(target, reason, wardBefore - target.currentWard, hpBefore, wardBefore, mpBefore, sourceId)
+    const applied = finitePoolValue(wardBefore - target.currentWard)
+    this.emit(target, reason, applied, hpBefore, wardBefore, mpBefore, sourceId)
 
-    return wardBefore - target.currentWard
+    return applied
   }
 
   /**
@@ -104,7 +116,10 @@ export class EntityVitalsSystem {
     const wardBefore = target.currentWard
     const mpBefore = target.currentMp
 
-    target.currentWard = Math.min(target.stats.wardMax, target.currentWard + Math.max(0, amount))
+    target.currentWard = Math.min(
+      finitePoolValue(target.stats.wardMax),
+      finitePoolValue(target.currentWard) + Math.max(0, finitePoolValue(amount)),
+    )
 
     const applied = target.currentWard - wardBefore
     this.emit(target, reason, applied, hpBefore, wardBefore, mpBefore, sourceId)
@@ -129,10 +144,12 @@ export class EntityVitalsSystem {
     // with the receiver's healingEffectivenessPercent. Leech output stays
     // hpDamage * leechPercent, bitwise.
     const effectiveness =
-      reason === 'leech' ? 0 : clampStatValue('healingEffectivenessPercent', target.stats.healingEffectivenessPercent)
-    const applied = Math.max(0, amount * (1 + effectiveness))
+      reason === 'leech'
+        ? 0
+        : finitePoolValue(clampStatValue('healingEffectivenessPercent', target.stats.healingEffectivenessPercent))
+    const applied = Math.max(0, finitePoolValue(amount) * (1 + effectiveness))
 
-    target.currentHp = Math.min(target.maxHp, target.currentHp + applied)
+    target.currentHp = Math.min(finitePoolValue(target.maxHp), finitePoolValue(target.currentHp) + applied)
     const actualHealing = target.currentHp - hpBefore
     this.emit(target, reason, applied, hpBefore, wardBefore, mpBefore, sourceId)
 
@@ -177,24 +194,28 @@ export class EntityVitalsSystem {
     const wardBefore = target.currentWard
     const mpBefore = target.currentMp
 
-    if ((deltas.hp ?? 0) > 0) {
+    const hpDelta = finitePoolValue(deltas.hp ?? 0)
+    if (hpDelta > 0) {
       // D18/INV-13 — hpRegenPerTurn ticks are HP restores (not
       // damage-derived), so the receiver's healingEffectivenessPercent
       // amplifies them. The mp/ward legs are not HP and never scale.
       const scaled =
-        deltas.hp! * (1 + clampStatValue('healingEffectivenessPercent', target.stats.healingEffectivenessPercent))
-      target.currentHp = Math.min(target.maxHp, target.currentHp + scaled)
-      applied.hp = target.currentHp - hpBefore
+        hpDelta *
+        (1 + finitePoolValue(clampStatValue('healingEffectivenessPercent', target.stats.healingEffectivenessPercent)))
+      target.currentHp = Math.min(finitePoolValue(target.maxHp), finitePoolValue(target.currentHp) + scaled)
+      applied.hp = finitePoolValue(target.currentHp - hpBefore)
     }
 
-    if ((deltas.mp ?? 0) > 0) {
-      target.currentMp = Math.min(target.stats.maxMp, target.currentMp + deltas.mp!)
-      applied.mp = target.currentMp - mpBefore
+    const mpDelta = finitePoolValue(deltas.mp ?? 0)
+    if (mpDelta > 0) {
+      target.currentMp = Math.min(finitePoolValue(target.stats.maxMp), finitePoolValue(target.currentMp) + mpDelta)
+      applied.mp = finitePoolValue(target.currentMp - mpBefore)
     }
 
-    if ((deltas.ward ?? 0) > 0) {
-      target.currentWard = Math.min(target.stats.wardMax, target.currentWard + deltas.ward!)
-      applied.ward = target.currentWard - wardBefore
+    const wardDelta = finitePoolValue(deltas.ward ?? 0)
+    if (wardDelta > 0) {
+      target.currentWard = Math.min(finitePoolValue(target.stats.wardMax), finitePoolValue(target.currentWard) + wardDelta)
+      applied.ward = finitePoolValue(target.currentWard - wardBefore)
     }
 
     if (applied.hp > 0 || applied.mp > 0 || applied.ward > 0) {
@@ -211,7 +232,7 @@ export class EntityVitalsSystem {
     ward: number
     mp: number
   }, sourceId?: string) {
-    this.emit(target, reason, amount, before.hp, before.ward, before.mp, sourceId)
+    this.emit(target, reason, finitePoolValue(amount), before.hp, before.ward, before.mp, sourceId)
   }
 
   private emit(
@@ -228,16 +249,16 @@ export class EntityVitalsSystem {
       entityId: target.id,
       sourceId,
       reason,
-      hpBefore,
-      hpAfter: target.currentHp,
-      maxHp: target.maxHp,
-      wardBefore,
-      wardAfter: target.currentWard,
-      maxWard: target.stats.wardMax,
-      mpBefore,
-      mpAfter: target.currentMp,
-      maxMp: target.stats.maxMp,
-      amount,
+      hpBefore: finitePoolValue(hpBefore),
+      hpAfter: finitePoolValue(target.currentHp),
+      maxHp: finitePoolValue(target.maxHp),
+      wardBefore: finitePoolValue(wardBefore),
+      wardAfter: finitePoolValue(target.currentWard),
+      maxWard: finitePoolValue(target.stats.wardMax),
+      mpBefore: finitePoolValue(mpBefore),
+      mpAfter: finitePoolValue(target.currentMp),
+      maxMp: finitePoolValue(target.stats.maxMp),
+      amount: finitePoolValue(amount),
       killed: target.currentHp <= 0,
     })
   }

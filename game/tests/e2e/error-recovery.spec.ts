@@ -65,8 +65,8 @@ test.describe('Reload recovery', () => {
 
     await reauthAndEnterHome(page)
 
-    // Home hoạt động lại — command wheel mở được bằng Tab.
-    await page.keyboard.press('Tab')
+    // Home hoạt động lại — command wheel mở được qua portrait trigger.
+    await page.locator('.home-player__trigger').click()
     await expect(page.locator('[data-wheel-slot="teleport_array"]')).toBeVisible({ timeout: 10_000 })
   })
 })

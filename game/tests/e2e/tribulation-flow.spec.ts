@@ -150,8 +150,8 @@ test.describe('Tribulation flow (P13 oracle, F1 regression)', () => {
     await page.reload()
     await reauthAndEnterHome(page)
 
-    // Command wheel (Tab) -> Cảnh Giới slot -> RealmPanel -> "Quan Khi".
-    await page.keyboard.press('Tab')
+    // Command wheel (portrait trigger) -> Cảnh Giới slot -> RealmPanel -> "Quan Khi".
+    await page.locator('.home-player__trigger').click()
     const realmSlot = page.locator('[data-wheel-slot="realm"]')
     await expect(realmSlot).toBeVisible({ timeout: 10_000 })
     await realmSlot.click()
@@ -260,7 +260,7 @@ test.describe('Tribulation flow (P13 oracle, F1 regression)', () => {
       await expect(openPanel).toHaveCount(0, { timeout: 10_000 })
     }
 
-    await page.keyboard.press('Tab')
+    await page.locator('.home-player__trigger').click()
     const realmSlotAfter = page.locator('[data-wheel-slot="realm"]')
     await expect(realmSlotAfter).toBeVisible({ timeout: 10_000 })
     await realmSlotAfter.click()

@@ -82,7 +82,7 @@ async function openWheelSlot(page: import('@playwright/test').Page, slotId: stri
   const slot = page.locator(`[data-wheel-slot="${slotId}"]`)
   for (let attempt = 0; attempt < 4; attempt += 1) {
     if (!(await slot.isVisible().catch(() => false))) {
-      await page.keyboard.press('Tab')
+      await page.locator('.home-player__trigger').click()
     }
     // Orbit animation needs a beat before the slot is click-stable.
     await page.waitForTimeout(700)

@@ -42,7 +42,7 @@ test.describe('system UI skin - rim authority', () => {
     await enterHome(page)
 
     // Character drawer open -> sys surface + sole live rim on the drawer.
-    await page.keyboard.press('Tab')
+    await page.locator('.home-player__trigger').click()
     await page.locator('[data-wheel-slot="character"]').click()
     const drawer = page.locator(DRAWER)
     await expect(drawer).toBeVisible({ timeout: 10_000 })
@@ -52,7 +52,7 @@ test.describe('system UI skin - rim authority', () => {
     // Open the realm modal (OverlayPanel variant=system): sole rim moves
     // to the modal; the drawer's claim is released with its v-if. Wait for
     // the drawer's unmount to flush before counting (render settles async).
-    await page.keyboard.press('Tab')
+    await page.locator('.home-player__trigger').click()
     await page.locator('[data-wheel-slot="realm"]').click()
     const modal = page.locator(REALM_MODAL)
     await expect(modal).toBeVisible({ timeout: 10_000 })
@@ -69,7 +69,7 @@ test.describe('system UI skin - rim authority', () => {
     // Re-open the character drawer -> rim returns to it. The realm panel
     // stays mounted-but-closed (mountedStandalone set): it must hold NO
     // claim, i.e. still zero rims inside its subtree.
-    await page.keyboard.press('Tab')
+    await page.locator('.home-player__trigger').click()
     await page.locator('[data-wheel-slot="character"]').click()
     await expect(drawer).toBeVisible({ timeout: 10_000 })
     expect(await liveRimCount(page)).toBe(1)
@@ -79,7 +79,7 @@ test.describe('system UI skin - rim authority', () => {
 
     // Re-open the already-mounted modal -> activation promotes it back to
     // sole live-rim owner (same drawer-unmount flush wait as above).
-    await page.keyboard.press('Tab')
+    await page.locator('.home-player__trigger').click()
     await page.locator('[data-wheel-slot="realm"]').click()
     await expect(modal).toBeVisible({ timeout: 10_000 })
     await expect(drawer).toHaveCount(0)
@@ -100,7 +100,7 @@ test.describe('system UI skin - rim authority', () => {
     // must not move focus to the background card: Escape then closes only
     // the confirm, and the settings overlay stays open (QA regression -
     // useDialogFocus pointer containment).
-    await page.keyboard.press('Tab')
+    await page.locator('.home-player__trigger').click()
     await page.locator('[data-wheel-slot="settings"]').click()
     const settingsCard = page.locator('.overlay-panel__card').first()
     await expect(settingsCard).toBeVisible({ timeout: 10_000 })
@@ -123,7 +123,7 @@ test.describe('system UI skin - rim authority', () => {
     await createCharacterThroughUi(page, 'Hệ Thống')
     await enterHome(page)
 
-    await page.keyboard.press('Tab')
+    await page.locator('.home-player__trigger').click()
     await page.locator('[data-wheel-slot="character"]').click()
     await expect(page.locator(DRAWER)).toBeVisible({ timeout: 10_000 })
 

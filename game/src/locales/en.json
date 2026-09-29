@@ -1435,7 +1435,7 @@
   "home": {
     "commandWheel": {
       "openAria": "Open the Cave Dwelling command wheel",
-      "hint": "Command · Tab"
+      "hint": "Command"
     }
   },
   "tutorial": {
@@ -1445,7 +1445,7 @@
     "steps": {
       "1": {
         "title": "Welcome, Cultivator",
-        "body": "Your path to immortality starts here. Click the cultivating character (or press Tab) at any time to open the Command Wheel — the entry point to every part of your dwelling."
+        "body": "Your path to immortality starts here. Click the cultivating character at any time to open the Command Wheel — the entry point to every part of your dwelling."
       },
       "2": {
         "title": "The Cave Dwelling",

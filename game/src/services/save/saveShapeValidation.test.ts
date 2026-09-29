@@ -1927,6 +1927,77 @@ describe('validateGameSaveShape — player record/array deep checks (Mission A r
     expect(pathsOf(result)).toContain('player.nodeLevels.node_1')
   })
 
+  // F-BX-91 - authored maxLevel is a hard bound at the save boundary:
+  // a level above the catalog max is a state no purchase path produces,
+  // so the shape gate must reject it (not sanitize down).
+  it('từ chối nodeLevels.core_tram = 4 vượt authored maxLevel 3', () => {
+    const save = validSave()
+    const player = playerOf(save)
+
+    // Canonical ownership is otherwise satisfied (learned template +
+    // mirror) so the only rejectable fact left is the magnitude.
+    save.skills = [{ id: 'tram', name: 'Trảm', type: 'active', level: 1 }]
+    ;(player.nodeLevels as Record<string, number>).core_tram = 4
+    ;(player.purchasedNodeIds as string[]).push('core_tram')
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.nodeLevels.core_tram')
+  })
+
+  it('chấp nhận nodeLevels.core_tram = 3 (đúng authored maxLevel 3)', () => {
+    const save = validSave()
+    const player = playerOf(save)
+
+    save.skills = [{ id: 'tram', name: 'Trảm', type: 'active', level: 1 }]
+    ;(player.nodeLevels as Record<string, number>).core_tram = 3
+    ;(player.purchasedNodeIds as string[]).push('core_tram')
+
+    expect(validateGameSaveShape(save).ok).toBe(true)
+  })
+
+  it('từ chối nodeLevels.minor_trong_quyen = 6 vượt authored maxLevel 5', () => {
+    const save = validSave()
+    const player = playerOf(save)
+
+    player.realmId = 'foundation_establishment'
+    player.cultivationPath = 'body'
+    player.cultivationWay = 'body_pathway'
+
+    // Canonical body context so the magnitude failure is the only
+    // rejectable fact: grant node + kit cores owned with mirrors.
+    for (const nodeId of ['cuong_chien', 'major_loan_dau', 'core_cuong_quyen', 'core_loan_dau']) {
+      ;(player.nodeLevels as Record<string, number>)[nodeId] = 1
+      ;(player.purchasedNodeIds as string[]).push(nodeId)
+    }
+    ;(player.nodeLevels as Record<string, number>).minor_trong_quyen = 6
+    ;(player.purchasedNodeIds as string[]).push('minor_trong_quyen')
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.nodeLevels.minor_trong_quyen')
+  })
+
+  it('chấp nhận nodeLevels.minor_trong_quyen = 5 (đúng authored maxLevel 5)', () => {
+    const save = validSave()
+    const player = playerOf(save)
+
+    player.realmId = 'foundation_establishment'
+    player.cultivationPath = 'body'
+    player.cultivationWay = 'body_pathway'
+
+    for (const nodeId of ['cuong_chien', 'major_loan_dau', 'core_cuong_quyen', 'core_loan_dau']) {
+      ;(player.nodeLevels as Record<string, number>)[nodeId] = 1
+      ;(player.purchasedNodeIds as string[]).push(nodeId)
+    }
+    ;(player.nodeLevels as Record<string, number>).minor_trong_quyen = 5
+    ;(player.purchasedNodeIds as string[]).push('minor_trong_quyen')
+
+    expect(validateGameSaveShape(save).ok).toBe(true)
+  })
+
   it.each([Number.NaN, 'x'])('từ chối nodeFreePurchaseRecord value = %j', (value) => {
     const save = validSave()
 

@@ -145,7 +145,7 @@ async function seedAndReload(
  * 'quan_khi' on the mortal -> qi_refining kiếp).
  */
 async function winQuanKhiAndOpenRitual(page: import('@playwright/test').Page): Promise<void> {
-  await page.keyboard.press('Tab')
+  await page.locator('.home-player__trigger').click()
   const realmSlot = page.locator('[data-wheel-slot="realm"]')
   await expect(realmSlot).toBeVisible({ timeout: 10_000 })
   await realmSlot.click()
@@ -239,12 +239,12 @@ async function saveAndRead(page: import('@playwright/test').Page): Promise<SaveS
  * is already live at that point - no need to wait for the fighting phase.
  */
 async function startStageOneBattle(page: import('@playwright/test').Page): Promise<void> {
-  // Tab toggles the command wheel - press it only when the wheel is
-  // closed, or a second press would close it mid-flow (the caller may
+  // The trigger toggles the command wheel - click it only when the wheel
+  // is closed, or a second click would close it mid-flow (the caller may
   // have left the wheel open from a prior wheel-slot assertion).
   const teleportSlot = page.locator('[data-wheel-slot="teleport_array"]')
   if (!(await teleportSlot.isVisible().catch(() => false))) {
-    await page.keyboard.press('Tab')
+    await page.locator('.home-player__trigger').click()
   }
   await expect(teleportSlot).toBeVisible({ timeout: 10_000 })
   await teleportSlot.click()
@@ -276,7 +276,7 @@ async function startStageOneBattle(page: import('@playwright/test').Page): Promi
 
 /** Reopens the QuanKhiPanel via CharacterPanel's Kiếm Tu-only entry. */
 async function reopenQuanKhiViaCharacter(page: import('@playwright/test').Page): Promise<void> {
-  await page.keyboard.press('Tab')
+  await page.locator('.home-player__trigger').click()
   const characterSlot = page.locator('[data-wheel-slot="character"]')
   await expect(characterSlot).toBeVisible({ timeout: 10_000 })
   await characterSlot.click()
@@ -440,7 +440,7 @@ test.describe('Cultivation Path ritual - six-way matrix (P14)', () => {
     expect(save.techniques.map((t) => t.id)).toEqual(['five_elements_art'])
 
     // Element tree surface - 5 element tabs render for ngu_hanh only.
-    await page.keyboard.press('Tab')
+    await page.locator('.home-player__trigger').click()
     const skillSlot = page.locator('[data-wheel-slot="skill"]')
     await expect(skillSlot).toBeVisible({ timeout: 10_000 })
     await skillSlot.click()
@@ -477,7 +477,7 @@ test.describe('Cultivation Path ritual - six-way matrix (P14)', () => {
     const restored = await saveAndRead(page)
     expect(restored.player.artifact).toBeUndefined()
 
-    await page.keyboard.press('Tab')
+    await page.locator('.home-player__trigger').click()
     const artifactSlot = page.locator('[data-wheel-slot="phap_bao"]')
     await expect(artifactSlot).toBeVisible({ timeout: 10_000 })
     await expect(artifactSlot).toHaveAttribute('aria-disabled', 'true')
@@ -521,7 +521,7 @@ test.describe('Cultivation Path ritual - six-way matrix (P14)', () => {
     expect(learnedIds).toContain('ngo_dao_hon_don')
 
     // ngo_dao owns no element tree.
-    await page.keyboard.press('Tab')
+    await page.locator('.home-player__trigger').click()
     const skillSlot = page.locator('[data-wheel-slot="skill"]')
     await expect(skillSlot).toBeVisible({ timeout: 10_000 })
     await skillSlot.click()
@@ -556,7 +556,7 @@ test.describe('Cultivation Path ritual - six-way matrix (P14)', () => {
     const restored = await saveAndRead(page)
     expect(restored.player.artifact).toBeUndefined()
 
-    await page.keyboard.press('Tab')
+    await page.locator('.home-player__trigger').click()
     const artifactSlot = page.locator('[data-wheel-slot="phap_bao"]')
     await expect(artifactSlot).toBeVisible({ timeout: 10_000 })
     await expect(artifactSlot).toHaveAttribute('aria-disabled', 'true')

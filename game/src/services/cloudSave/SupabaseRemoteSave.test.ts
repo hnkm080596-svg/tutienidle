@@ -769,4 +769,92 @@ describe('F1 lineage divergence - sync-base tracking (carried defect)', () => {
 
     vi.unstubAllGlobals()
   })
+
+  // F-BX-92 - same-revision fork tie-break: when save_revision ties,
+  // the remote updated_at clock is the ONLY ordering left (INFRA-01).
+  // A clock-newer remote at equal revision must pull; a clock-older
+  // remote must not overwrite the newer local save.
+  it('equal revision + remote clock-newer -> pulled, local slot adopts remote bytes', async () => {
+    loginSession()
+    const localSave = validGameSave(1_000)
+    localSave.player.name = 'local-tie'
+    localStorage.setItem(resolveSaveKey(), JSON.stringify(localSave))
+    localStorage.setItem(resolveRevisionKey(), '5')
+    localStorage.setItem(resolveSyncBaseKey(), '5')
+
+    const remoteSave = validGameSave(9_000_000)
+    remoteSave.player.name = 'remote-tie'
+    stubFetch((call) => {
+      if (call.url.includes('/rest/v1/characters?')) return json([{ id: 'char-1' }])
+      if (call.url.includes('/rest/v1/character_saves?')) {
+        return json([remoteSaveRow(remoteSave, 5, 10_000_000)])
+      }
+      return json(null)
+    })
+
+    expect(await syncRemoteSaveOnLogin(config)).toBe('pulled')
+    const written = JSON.parse(localStorage.getItem(resolveSaveKey()) ?? 'null') as GameSave
+    expect(written.player.name).toBe('remote-tie')
+    expect(localStorage.getItem(resolveSyncBaseKey())).toBe('5')
+
+    vi.unstubAllGlobals()
+  })
+
+  it('equal revision + remote clock-older -> pushed, newer local is never regressed', async () => {
+    loginSession()
+    const localSave = validGameSave(50_000_000)
+    localSave.player.name = 'local-newer'
+    localStorage.setItem(resolveSaveKey(), JSON.stringify(localSave))
+    localStorage.setItem(resolveRevisionKey(), '5')
+    localStorage.setItem(resolveSyncBaseKey(), '5')
+
+    const calls = stubFetch((call) => {
+      if (call.url.includes('/rest/v1/characters?')) return json([{ id: 'char-1' }])
+      if (call.url.includes('/rest/v1/character_saves?')) {
+        return json([remoteSaveRow(validGameSave(1_000), 5, 2_000)])
+      }
+      return json(null)
+    })
+
+    expect(await syncRemoteSaveOnLogin(config)).toBe('pushed')
+    const patch = calls.find((call) => call.init.method === 'PATCH')
+    expect(patch?.url).toContain('save_revision=eq.5')
+    const written = JSON.parse(localStorage.getItem(resolveSaveKey()) ?? 'null') as GameSave
+    expect(written.player.name).toBe('local-newer')
+
+    vi.unstubAllGlobals()
+  })
+
+  // F-BX-93 - the adopt arm's `remoteAhead` clause: a remote row that
+  // rewound BELOW the sync base (rev 100 < base 115) can never be
+  // adopted - localRevision === base alone is not license to follow a
+  // regressed lineage. Both sides hold for a user decision.
+  it('rewound remote (remoteRev < base, local still at base) -> conflict, nothing written', async () => {
+    loginSession()
+    const localSave = validGameSave(50_000_000)
+    localSave.player.name = 'local-at-base'
+    localStorage.setItem(resolveSaveKey(), JSON.stringify(localSave))
+    localStorage.setItem(resolveRevisionKey(), '115')
+    localStorage.setItem(resolveSyncBaseKey(), '115')
+
+    const remoteSave = validGameSave(9_000_000)
+    remoteSave.player.name = 'remote-rewound'
+    const calls = stubFetch((call) => {
+      if (call.url.includes('/rest/v1/characters?')) return json([{ id: 'char-1' }])
+      if (call.url.includes('/rest/v1/character_saves?')) {
+        return json([remoteSaveRow(remoteSave, 100, 10_000_000)])
+      }
+      return json(null)
+    })
+
+    expect(await syncRemoteSaveOnLogin(config)).toBe('conflict')
+    expect(calls.some((call) => call.init.method === 'PATCH')).toBe(false)
+    expect(calls.some((call) => call.init.method === 'POST')).toBe(false)
+    const written = JSON.parse(localStorage.getItem(resolveSaveKey()) ?? 'null') as GameSave
+    expect(written.player.name).toBe('local-at-base')
+    expect(localStorage.getItem(resolveRevisionKey())).toBe('115')
+    expect(localStorage.getItem(resolveSyncBaseKey())).toBe('115')
+
+    vi.unstubAllGlobals()
+  })
 })

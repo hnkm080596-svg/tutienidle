@@ -130,6 +130,112 @@ describe('PresentationTransitionOverlay', () => {
     app.unmount()
   })
 
+  // F-BX-54 - the error card is a keyboard-reachable dialog: the
+  // window-capture guard suppresses keys outside the card, so focus must
+  // move in on open and Tab must cycle inside it via useDialogFocus.
+  it('moves focus into the error card on show and cycles Tab inside it', async () => {
+    const { unmount } = mountOverlay({
+      phase: 'failed',
+      isLocked: true,
+      error: {
+        message: 'Physical asset load failed',
+        failedRequest: { target: 'home' },
+        availableRenderer: 'home',
+      },
+    })
+    await nextTick()
+    await nextTick()
+
+    const retryBtn = container.querySelector<HTMLButtonElement>(
+      '[data-testid="presentation-retry-button"]',
+    )
+    const backBtn = container.querySelector<HTMLButtonElement>(
+      '[data-testid="presentation-back-button"]',
+    )
+    expect(retryBtn).not.toBeNull()
+    expect(backBtn).not.toBeNull()
+
+    // Focus-on-open lands on the first action inside the card.
+    expect(document.activeElement).toBe(retryBtn)
+
+    retryBtn!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true }))
+    expect(document.activeElement).toBe(backBtn)
+
+    backBtn!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true }))
+    expect(document.activeElement).toBe(retryBtn)
+
+    retryBtn!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', shiftKey: true, bubbles: true, cancelable: true }))
+    expect(document.activeElement).toBe(backBtn)
+
+    unmount()
+  })
+
+  it('suppresses Tab outside the error card but forwards keys inside it to the trap', async () => {
+    const { unmount } = mountOverlay({
+      phase: 'failed',
+      isLocked: true,
+      error: {
+        message: 'Physical asset load failed',
+        failedRequest: { target: 'home' },
+        availableRenderer: 'home',
+      },
+    })
+    await nextTick()
+    await nextTick()
+
+    // A keydown not targeting the card is still swallowed app-wide.
+    const outside = new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true })
+    const outsideSpy = vi.spyOn(outside, 'preventDefault')
+    window.dispatchEvent(outside)
+    expect(outsideSpy).toHaveBeenCalled()
+
+    // The same key inside the card must reach the focus trap - if the
+    // window-capture guard ate it first, focus would not move.
+    const retryBtn = container.querySelector<HTMLButtonElement>(
+      '[data-testid="presentation-retry-button"]',
+    )
+    const backBtn = container.querySelector<HTMLButtonElement>(
+      '[data-testid="presentation-back-button"]',
+    )
+    retryBtn!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true }))
+    expect(document.activeElement).toBe(backBtn)
+
+    unmount()
+  })
+
+  it('Escape inside the error card emits back when return-home is allowed', async () => {
+    let backEmitted = false
+    const overlayRef = ref<any>(null)
+    const app = createApp({
+      render: () =>
+        h(PresentationTransitionOverlay, {
+          ref: overlayRef,
+          phase: 'failed',
+          isLocked: true,
+          error: {
+            message: 'Physical asset load failed',
+            failedRequest: { target: 'home' },
+            availableRenderer: 'home',
+          },
+          onBack: () => {
+            backEmitted = true
+          },
+        }),
+    })
+    app.use(i18n)
+    app.mount(container)
+    await nextTick()
+    await nextTick()
+
+    const retryBtn = container.querySelector<HTMLButtonElement>(
+      '[data-testid="presentation-retry-button"]',
+    )
+    retryBtn!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }))
+
+    expect(backEmitted).toBe(true)
+    app.unmount()
+  })
+
   it('resolves immediately when the panels already sit at the requested state', async () => {
     vi.useFakeTimers()
     const { instance, unmount } = mountOverlay()

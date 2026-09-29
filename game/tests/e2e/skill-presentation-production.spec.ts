@@ -312,7 +312,7 @@ async function seedAndReload(page: Page, playerPatch: Record<string, unknown>): 
 
 /** Quan Khi tribulation -> victory, leaving the offer list on screen. */
 async function winQuanKhiAndOpenRitual(page: Page): Promise<void> {
-  await page.keyboard.press('Tab')
+  await page.locator('.home-player__trigger').click()
   const realmSlot = page.locator('[data-wheel-slot="realm"]')
   await expect(realmSlot).toBeVisible({ timeout: 10_000 })
   await realmSlot.click()
@@ -389,7 +389,7 @@ async function chooseWay(page: Page, wayNamePattern: RegExp): Promise<void> {
 async function startStageOneBattle(page: Page): Promise<void> {
   const teleportSlot = page.locator('[data-wheel-slot="teleport_array"]')
   if (!(await teleportSlot.isVisible().catch(() => false))) {
-    await page.keyboard.press('Tab')
+    await page.locator('.home-player__trigger').click()
   }
   await expect(teleportSlot).toBeVisible({ timeout: 10_000 })
   await teleportSlot.click()
@@ -476,7 +476,7 @@ test.describe('skill presentation runtime - production path (design section 11)'
 
     // ---- Leg 2: ngu_kiem_thuat on hidden_sword_pathway ----
     // The curtain may still be animating after the abandon - settle it so
-    // openSettingsAndSave's Tab actually opens the command wheel.
+    // openSettingsAndSave's trigger click actually opens the command wheel.
     await waitForPresentationIdle(page)
     await seedAndReload(page, { nodeLevels: { core_tram: 3 }, purchasedNodeIds: ['core_tram'] })
     await winQuanKhiAndOpenRitual(page)

@@ -116,7 +116,7 @@ async function seedAndReload(
 }
 
 async function openRealmDialog(page: import('@playwright/test').Page) {
-  await page.keyboard.press('Tab')
+  await page.locator('.home-player__trigger').click()
   const realmSlot = page.locator('[data-wheel-slot="realm"]')
   await expect(realmSlot).toBeVisible({ timeout: 10_000 })
   await realmSlot.click()
