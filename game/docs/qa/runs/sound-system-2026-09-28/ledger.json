@@ -26698,6 +26698,1518 @@
       "siblingFindingIds": [],
       "invariantIds": [],
       "evidenceIds": []
+    },
+    {
+      "id": "F-SND-520",
+      "title": "ternary `:` satisfies the param-gate and flips the whole-file emit exemption; same class mints cue/shake aliases",
+      "state": {
+        "productStateId": "f7cf06069ec04137fcdb9ea40965d53187add22d2dd422d48b6ebc93de3c4cf6",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+      },
+      "subsystem": "audio",
+      "severity": "High",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "discoveredBy": "COR-1/COR-2",
+      "expected": "guard/coverage contract holds on the reviewed state",
+      "actual": "`: -gate lookback only rejected case/default; an open `?` in the same segment makes the `:` a ternary colon",
+      "rootCause": "`: -gate lookback only rejected case/default; an open `?` in the same segment makes the `:` a ternary colon",
+      "rootClass": "GUARD_HARNESS_GAP",
+      "counterexample": "reviewer probe (wave-20 report) + coordinator smuggle probes (EV-SND-FIX27)",
+      "locations": [
+        {
+          "path": "game/audioBindingWiring.test.ts",
+          "symbolOrSection": "guard arms",
+          "revision": "1214b856",
+          "basis": "SOURCE"
+        }
+      ],
+      "siblingSearch": [
+        {
+          "roots": [
+            "src",
+            "tests/architecture"
+          ],
+          "termsAndMethod": "reviewer probe + coordinator smuggle sweep (src/dev/__smuggle_w20*.ts, deleted)",
+          "evidenceIds": [],
+          "hitDispositions": [],
+          "coverageLimits": []
+        }
+      ],
+      "status": "FIXED_PENDING_PROOF",
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [
+        "EV-SND-FIX27"
+      ],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "evidenceIds": []
+    },
+    {
+      "id": "F-SND-521",
+      "title": "member-tail mints/flags: `store.cue.length`, `bus.emit.length`, `? emit.prop :` read a property, mint an emitter alias",
+      "state": {
+        "productStateId": "f7cf06069ec04137fcdb9ea40965d53187add22d2dd422d48b6ebc93de3c4cf6",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+      },
+      "subsystem": "audio",
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "discoveredBy": "COR-3/INT-20-06",
+      "expected": "guard/coverage contract holds on the reviewed state",
+      "actual": "mint/value-ref lookahead excluded only `(` - `.`/`?.`/`[` member tails minted and flagged",
+      "rootCause": "mint/value-ref lookahead excluded only `(` - `.`/`?.`/`[` member tails minted and flagged",
+      "rootClass": "GUARD_HARNESS_GAP",
+      "counterexample": "reviewer probe (wave-20 report) + coordinator smuggle probes (EV-SND-FIX27)",
+      "locations": [
+        {
+          "path": "game/audioBindingWiring.test.ts",
+          "symbolOrSection": "guard arms",
+          "revision": "1214b856",
+          "basis": "SOURCE"
+        }
+      ],
+      "siblingSearch": [
+        {
+          "roots": [
+            "src",
+            "tests/architecture"
+          ],
+          "termsAndMethod": "reviewer probe + coordinator smuggle sweep (src/dev/__smuggle_w20*.ts, deleted)",
+          "evidenceIds": [],
+          "hitDispositions": [],
+          "coverageLimits": []
+        }
+      ],
+      "status": "FIXED_PENDING_PROOF",
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [
+        "EV-SND-FIX27"
+      ],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "evidenceIds": []
+    },
+    {
+      "id": "F-SND-522",
+      "title": "literal evidence tables are last-write-wins file-wide (identLit/metaIdentLit overwrite; cross-scope clobber)",
+      "state": {
+        "productStateId": "f7cf06069ec04137fcdb9ea40965d53187add22d2dd422d48b6ebc93de3c4cf6",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+      },
+      "subsystem": "audio",
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "discoveredBy": "COR-4",
+      "expected": "guard/coverage contract holds on the reviewed state",
+      "actual": "Map.set per decl ignores position/scope - replaced by positional litDecls + kill-scan resolution",
+      "rootCause": "Map.set per decl ignores position/scope - replaced by positional litDecls + kill-scan resolution",
+      "rootClass": "GUARD_HARNESS_GAP",
+      "counterexample": "reviewer probe (wave-20 report) + coordinator smuggle probes (EV-SND-FIX27)",
+      "locations": [
+        {
+          "path": "game/screenShakeAuthority.test.ts + audioBoundary.test.ts",
+          "symbolOrSection": "guard arms",
+          "revision": "1214b856",
+          "basis": "SOURCE"
+        }
+      ],
+      "siblingSearch": [
+        {
+          "roots": [
+            "src",
+            "tests/architecture"
+          ],
+          "termsAndMethod": "reviewer probe + coordinator smuggle sweep (src/dev/__smuggle_w20*.ts, deleted)",
+          "evidenceIds": [],
+          "hitDispositions": [],
+          "coverageLimits": []
+        }
+      ],
+      "status": "FIXED_PENDING_PROOF",
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [
+        "EV-SND-FIX27"
+      ],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "evidenceIds": []
+    },
+    {
+      "id": "F-SND-523",
+      "title": "hop mints escape the reassign audit: `let B = A` minted const-kind entries, later `B = x` never evicted",
+      "state": {
+        "productStateId": "f7cf06069ec04137fcdb9ea40965d53187add22d2dd422d48b6ebc93de3c4cf6",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+      },
+      "subsystem": "audio",
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "discoveredBy": "COR-5",
+      "expected": "guard/coverage contract holds on the reviewed state",
+      "actual": "ident-RHS assigns now mint decl entries (kind let/var) - the kill scan applies to them",
+      "rootCause": "ident-RHS assigns now mint decl entries (kind let/var) - the kill scan applies to them",
+      "rootClass": "GUARD_HARNESS_GAP",
+      "counterexample": "reviewer probe (wave-20 report) + coordinator smuggle probes (EV-SND-FIX27)",
+      "locations": [
+        {
+          "path": "game/audioBoundary.test.ts",
+          "symbolOrSection": "guard arms",
+          "revision": "1214b856",
+          "basis": "SOURCE"
+        }
+      ],
+      "siblingSearch": [
+        {
+          "roots": [
+            "src",
+            "tests/architecture"
+          ],
+          "termsAndMethod": "reviewer probe + coordinator smuggle sweep (src/dev/__smuggle_w20*.ts, deleted)",
+          "evidenceIds": [],
+          "hitDispositions": [],
+          "coverageLimits": []
+        }
+      ],
+      "status": "FIXED_PENDING_PROOF",
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [
+        "EV-SND-FIX27"
+      ],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "evidenceIds": []
+    },
+    {
+      "id": "F-SND-524",
+      "title": "`:`-annotation window `[\\s\\S]{0,200}` crosses statements - next-statement `=`/`of`/`in` satisfies the gate",
+      "state": {
+        "productStateId": "f7cf06069ec04137fcdb9ea40965d53187add22d2dd422d48b6ebc93de3c4cf6",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+      },
+      "subsystem": "audio",
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "discoveredBy": "COR-6",
+      "expected": "guard/coverage contract holds on the reviewed state",
+      "actual": "annotation scan bounded at `)`/`;`/`{`/`}`/newline",
+      "rootCause": "annotation scan bounded at `)`/`;`/`{`/`}`/newline",
+      "rootClass": "GUARD_HARNESS_GAP",
+      "counterexample": "reviewer probe (wave-20 report) + coordinator smuggle probes (EV-SND-FIX27)",
+      "locations": [
+        {
+          "path": "game/screenShakeAuthority.test.ts",
+          "symbolOrSection": "guard arms",
+          "revision": "1214b856",
+          "basis": "SOURCE"
+        }
+      ],
+      "siblingSearch": [
+        {
+          "roots": [
+            "src",
+            "tests/architecture"
+          ],
+          "termsAndMethod": "reviewer probe + coordinator smuggle sweep (src/dev/__smuggle_w20*.ts, deleted)",
+          "evidenceIds": [],
+          "hitDispositions": [],
+          "coverageLimits": []
+        }
+      ],
+      "status": "FIXED_PENDING_PROOF",
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [
+        "EV-SND-FIX27"
+      ],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "evidenceIds": []
+    },
+    {
+      "id": "F-SND-525",
+      "title": "same-site double-report cluster: CALL vs alias callRe vs fence arms vs paren spans",
+      "state": {
+        "productStateId": "f7cf06069ec04137fcdb9ea40965d53187add22d2dd422d48b6ebc93de3c4cf6",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+      },
+      "subsystem": "audio",
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "discoveredBy": "COR-7/INT-20-15",
+      "expected": "guard/coverage contract holds on the reviewed state",
+      "actual": "parenCueSpans hoisted + bare-alias skip; alias callRe `\\)*`; fence exclusions for `[`/`` ` `` successors",
+      "rootCause": "parenCueSpans hoisted + bare-alias skip; alias callRe `\\)*`; fence exclusions for `[`/`` ` `` successors",
+      "rootClass": "GUARD_HARNESS_GAP",
+      "counterexample": "reviewer probe (wave-20 report) + coordinator smuggle probes (EV-SND-FIX27)",
+      "locations": [
+        {
+          "path": "game/audioBindingWiring.test.ts",
+          "symbolOrSection": "guard arms",
+          "revision": "1214b856",
+          "basis": "SOURCE"
+        }
+      ],
+      "siblingSearch": [
+        {
+          "roots": [
+            "src",
+            "tests/architecture"
+          ],
+          "termsAndMethod": "reviewer probe + coordinator smuggle sweep (src/dev/__smuggle_w20*.ts, deleted)",
+          "evidenceIds": [],
+          "hitDispositions": [],
+          "coverageLimits": []
+        }
+      ],
+      "status": "FIXED_PENDING_PROOF",
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [
+        "EV-SND-FIX27"
+      ],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "evidenceIds": []
+    },
+    {
+      "id": "F-SND-526",
+      "title": "same-name local decls and param sites over-flag (function s(){}, work(s), (s)=>s)",
+      "state": {
+        "productStateId": "f7cf06069ec04137fcdb9ea40965d53187add22d2dd422d48b6ebc93de3c4cf6",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+      },
+      "subsystem": "audio",
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "discoveredBy": "COR-8/AUT-F-7",
+      "expected": "guard/coverage contract holds on the reviewed state",
+      "actual": "declShadow spans + paramBoundNames + =>/`{`/`:`-gated shadow rewrite",
+      "rootCause": "declShadow spans + paramBoundNames + =>/`{`/`:`-gated shadow rewrite",
+      "rootClass": "GUARD_HARNESS_GAP",
+      "counterexample": "reviewer probe (wave-20 report) + coordinator smuggle probes (EV-SND-FIX27)",
+      "locations": [
+        {
+          "path": "game/screenShakeAuthority.test.ts",
+          "symbolOrSection": "guard arms",
+          "revision": "1214b856",
+          "basis": "SOURCE"
+        }
+      ],
+      "siblingSearch": [
+        {
+          "roots": [
+            "src",
+            "tests/architecture"
+          ],
+          "termsAndMethod": "reviewer probe + coordinator smuggle sweep (src/dev/__smuggle_w20*.ts, deleted)",
+          "evidenceIds": [],
+          "hitDispositions": [],
+          "coverageLimits": []
+        }
+      ],
+      "status": "FIXED_PENDING_PROOF",
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [
+        "EV-SND-FIX27"
+      ],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "evidenceIds": []
+    },
+    {
+      "id": "F-SND-527",
+      "title": "`{emit} = <non-bus>` revokes the interface exemption",
+      "state": {
+        "productStateId": "f7cf06069ec04137fcdb9ea40965d53187add22d2dd422d48b6ebc93de3c4cf6",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+      },
+      "subsystem": "audio",
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "discoveredBy": "COR-9",
+      "expected": "guard/coverage contract holds on the reviewed state",
+      "actual": "emitBound mint gated by rhsIsEmitter (bus-idiom-or-catch)",
+      "rootCause": "emitBound mint gated by rhsIsEmitter (bus-idiom-or-catch)",
+      "rootClass": "GUARD_HARNESS_GAP",
+      "counterexample": "reviewer probe (wave-20 report) + coordinator smuggle probes (EV-SND-FIX27)",
+      "locations": [
+        {
+          "path": "game/audioBindingWiring.test.ts",
+          "symbolOrSection": "guard arms",
+          "revision": "1214b856",
+          "basis": "SOURCE"
+        }
+      ],
+      "siblingSearch": [
+        {
+          "roots": [
+            "src",
+            "tests/architecture"
+          ],
+          "termsAndMethod": "reviewer probe + coordinator smuggle sweep (src/dev/__smuggle_w20*.ts, deleted)",
+          "evidenceIds": [],
+          "hitDispositions": [],
+          "coverageLimits": []
+        }
+      ],
+      "status": "FIXED_PENDING_PROOF",
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [
+        "EV-SND-FIX27"
+      ],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "evidenceIds": []
+    },
+    {
+      "id": "F-SND-528",
+      "title": "cue mint site double-report (emit/cue asymmetry)",
+      "state": {
+        "productStateId": "f7cf06069ec04137fcdb9ea40965d53187add22d2dd422d48b6ebc93de3c4cf6",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+      },
+      "subsystem": "audio",
+      "severity": "Nit",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "discoveredBy": "COR-10/INT-20-14",
+      "expected": "guard/coverage contract holds on the reviewed state",
+      "actual": "name guards on LHS dotted/bracket mints",
+      "rootCause": "name guards on LHS dotted/bracket mints",
+      "rootClass": "GUARD_HARNESS_GAP",
+      "counterexample": "reviewer probe (wave-20 report) + coordinator smuggle probes (EV-SND-FIX27)",
+      "locations": [
+        {
+          "path": "game/audioBindingWiring.test.ts",
+          "symbolOrSection": "guard arms",
+          "revision": "1214b856",
+          "basis": "SOURCE"
+        }
+      ],
+      "siblingSearch": [
+        {
+          "roots": [
+            "src",
+            "tests/architecture"
+          ],
+          "termsAndMethod": "reviewer probe + coordinator smuggle sweep (src/dev/__smuggle_w20*.ts, deleted)",
+          "evidenceIds": [],
+          "hitDispositions": [],
+          "coverageLimits": []
+        }
+      ],
+      "status": "FIXED_PENDING_PROOF",
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [
+        "EV-SND-FIX27"
+      ],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "evidenceIds": []
+    },
+    {
+      "id": "F-SND-529",
+      "title": "leading-empty concat `cam['' + k + 'e']` evades the spelling check",
+      "state": {
+        "productStateId": "f7cf06069ec04137fcdb9ea40965d53187add22d2dd422d48b6ebc93de3c4cf6",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+      },
+      "subsystem": "audio",
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "discoveredBy": "COR-11",
+      "expected": "guard/coverage contract holds on the reviewed state",
+      "actual": "spellable `.*` lead/trail widen + interior literal order; empty segs filtered",
+      "rootCause": "spellable `.*` lead/trail widen + interior literal order; empty segs filtered",
+      "rootClass": "GUARD_HARNESS_GAP",
+      "counterexample": "reviewer probe (wave-20 report) + coordinator smuggle probes (EV-SND-FIX27)",
+      "locations": [
+        {
+          "path": "game/screenShakeAuthority.test.ts",
+          "symbolOrSection": "guard arms",
+          "revision": "1214b856",
+          "basis": "SOURCE"
+        }
+      ],
+      "siblingSearch": [
+        {
+          "roots": [
+            "src",
+            "tests/architecture"
+          ],
+          "termsAndMethod": "reviewer probe + coordinator smuggle sweep (src/dev/__smuggle_w20*.ts, deleted)",
+          "evidenceIds": [],
+          "hitDispositions": [],
+          "coverageLimits": []
+        }
+      ],
+      "status": "FIXED_PENDING_PROOF",
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [
+        "EV-SND-FIX27"
+      ],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "evidenceIds": []
+    },
+    {
+      "id": "F-SND-530",
+      "title": "`}}` inside an interp string truncates the `{{ }}` wipe - template depth desync",
+      "state": {
+        "productStateId": "f7cf06069ec04137fcdb9ea40965d53187add22d2dd422d48b6ebc93de3c4cf6",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+      },
+      "subsystem": "audio",
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "discoveredBy": "AUT-F-1",
+      "expected": "guard/coverage contract holds on the reviewed state",
+      "actual": "string-aware `{{ }}` interp wipe + global attr mask after the strict tag loop",
+      "rootCause": "string-aware `{{ }}` interp wipe + global attr mask after the strict tag loop",
+      "rootClass": "GUARD_HARNESS_GAP",
+      "counterexample": "reviewer probe (wave-20 report) + coordinator smuggle probes (EV-SND-FIX27)",
+      "locations": [
+        {
+          "path": "game/helpers/commentStrip.ts",
+          "symbolOrSection": "guard arms",
+          "revision": "1214b856",
+          "basis": "SOURCE"
+        }
+      ],
+      "siblingSearch": [
+        {
+          "roots": [
+            "src",
+            "tests/architecture"
+          ],
+          "termsAndMethod": "reviewer probe + coordinator smuggle sweep (src/dev/__smuggle_w20*.ts, deleted)",
+          "evidenceIds": [],
+          "hitDispositions": [],
+          "coverageLimits": []
+        }
+      ],
+      "status": "FIXED_PENDING_PROOF",
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [
+        "EV-SND-FIX27"
+      ],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "evidenceIds": []
+    },
+    {
+      "id": "F-SND-531",
+      "title": "emit catch-mint fails when the catch annotation contains `)`",
+      "state": {
+        "productStateId": "f7cf06069ec04137fcdb9ea40965d53187add22d2dd422d48b6ebc93de3c4cf6",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+      },
+      "subsystem": "audio",
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "discoveredBy": "AUT-F-2",
+      "expected": "guard/coverage contract holds on the reviewed state",
+      "actual": "catchHeadTail depth-aware annotation head/tail scan",
+      "rootCause": "catchHeadTail depth-aware annotation head/tail scan",
+      "rootClass": "GUARD_HARNESS_GAP",
+      "counterexample": "reviewer probe (wave-20 report) + coordinator smuggle probes (EV-SND-FIX27)",
+      "locations": [
+        {
+          "path": "game/audioBindingWiring.test.ts",
+          "symbolOrSection": "guard arms",
+          "revision": "1214b856",
+          "basis": "SOURCE"
+        }
+      ],
+      "siblingSearch": [
+        {
+          "roots": [
+            "src",
+            "tests/architecture"
+          ],
+          "termsAndMethod": "reviewer probe + coordinator smuggle sweep (src/dev/__smuggle_w20*.ts, deleted)",
+          "evidenceIds": [],
+          "hitDispositions": [],
+          "coverageLimits": []
+        }
+      ],
+      "status": "FIXED_PENDING_PROOF",
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [
+        "EV-SND-FIX27"
+      ],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "evidenceIds": []
+    },
+    {
+      "id": "F-SND-532",
+      "title": "recv.cue['call'](x) / recv.emit['call'](x) double-report on the bracket surface",
+      "state": {
+        "productStateId": "f7cf06069ec04137fcdb9ea40965d53187add22d2dd422d48b6ebc93de3c4cf6",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+      },
+      "subsystem": "audio",
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "discoveredBy": "AUT-F-3",
+      "expected": "guard/coverage contract holds on the reviewed state",
+      "actual": "bracket member tail covered by invoke arm; value-ref exclusions for `['call'](`/`.prop` tails",
+      "rootCause": "bracket member tail covered by invoke arm; value-ref exclusions for `['call'](`/`.prop` tails",
+      "rootClass": "GUARD_HARNESS_GAP",
+      "counterexample": "reviewer probe (wave-20 report) + coordinator smuggle probes (EV-SND-FIX27)",
+      "locations": [
+        {
+          "path": "game/audioBindingWiring.test.ts",
+          "symbolOrSection": "guard arms",
+          "revision": "1214b856",
+          "basis": "SOURCE"
+        }
+      ],
+      "siblingSearch": [
+        {
+          "roots": [
+            "src",
+            "tests/architecture"
+          ],
+          "termsAndMethod": "reviewer probe + coordinator smuggle sweep (src/dev/__smuggle_w20*.ts, deleted)",
+          "evidenceIds": [],
+          "hitDispositions": [],
+          "coverageLimits": []
+        }
+      ],
+      "status": "FIXED_PENDING_PROOF",
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [
+        "EV-SND-FIX27"
+      ],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "evidenceIds": []
+    },
+    {
+      "id": "F-SND-533",
+      "title": "ident-keyed `[C]` bracket-indirect escapes every wiring arm",
+      "state": {
+        "productStateId": "f7cf06069ec04137fcdb9ea40965d53187add22d2dd422d48b6ebc93de3c4cf6",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+      },
+      "subsystem": "audio",
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "discoveredBy": "AUT-F-4/INT-20-04",
+      "expected": "guard/coverage contract holds on the reviewed state",
+      "actual": "ident keys resolve via resolveLitAt in emit/cue/store bracket invoke+read arms",
+      "rootCause": "ident keys resolve via resolveLitAt in emit/cue/store bracket invoke+read arms",
+      "rootClass": "GUARD_HARNESS_GAP",
+      "counterexample": "reviewer probe (wave-20 report) + coordinator smuggle probes (EV-SND-FIX27)",
+      "locations": [
+        {
+          "path": "game/audioBindingWiring.test.ts",
+          "symbolOrSection": "guard arms",
+          "revision": "1214b856",
+          "basis": "SOURCE"
+        }
+      ],
+      "siblingSearch": [
+        {
+          "roots": [
+            "src",
+            "tests/architecture"
+          ],
+          "termsAndMethod": "reviewer probe + coordinator smuggle sweep (src/dev/__smuggle_w20*.ts, deleted)",
+          "evidenceIds": [],
+          "hitDispositions": [],
+          "coverageLimits": []
+        }
+      ],
+      "status": "FIXED_PENDING_PROOF",
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [
+        "EV-SND-FIX27"
+      ],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "evidenceIds": []
+    },
+    {
+      "id": "F-SND-534",
+      "title": "shake bound-name bracket arm narrower than siblings",
+      "state": {
+        "productStateId": "f7cf06069ec04137fcdb9ea40965d53187add22d2dd422d48b6ebc93de3c4cf6",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+      },
+      "subsystem": "audio",
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "discoveredBy": "AUT-F-5",
+      "expected": "guard/coverage contract holds on the reviewed state",
+      "actual": "bound-name bracket-indirect incl member tail",
+      "rootCause": "bound-name bracket-indirect incl member tail",
+      "rootClass": "GUARD_HARNESS_GAP",
+      "counterexample": "reviewer probe (wave-20 report) + coordinator smuggle probes (EV-SND-FIX27)",
+      "locations": [
+        {
+          "path": "game/screenShakeAuthority.test.ts",
+          "symbolOrSection": "guard arms",
+          "revision": "1214b856",
+          "basis": "SOURCE"
+        }
+      ],
+      "siblingSearch": [
+        {
+          "roots": [
+            "src",
+            "tests/architecture"
+          ],
+          "termsAndMethod": "reviewer probe + coordinator smuggle sweep (src/dev/__smuggle_w20*.ts, deleted)",
+          "evidenceIds": [],
+          "hitDispositions": [],
+          "coverageLimits": []
+        }
+      ],
+      "status": "FIXED_PENDING_PROOF",
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [
+        "EV-SND-FIX27"
+      ],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "evidenceIds": []
+    },
+    {
+      "id": "F-SND-535",
+      "title": "flagBoundCalls self-flags bound names at binding sites; `catch ({shake: s})` double-reports",
+      "state": {
+        "productStateId": "f7cf06069ec04137fcdb9ea40965d53187add22d2dd422d48b6ebc93de3c4cf6",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+      },
+      "subsystem": "audio",
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "discoveredBy": "AUT-F-6",
+      "expected": "guard/coverage contract holds on the reviewed state",
+      "actual": "bindingMask on `name {` spans + for/catch destructure shake-key no-shadow guard",
+      "rootCause": "bindingMask on `name {` spans + for/catch destructure shake-key no-shadow guard",
+      "rootClass": "GUARD_HARNESS_GAP",
+      "counterexample": "reviewer probe (wave-20 report) + coordinator smuggle probes (EV-SND-FIX27)",
+      "locations": [
+        {
+          "path": "game/screenShakeAuthority.test.ts",
+          "symbolOrSection": "guard arms",
+          "revision": "1214b856",
+          "basis": "SOURCE"
+        }
+      ],
+      "siblingSearch": [
+        {
+          "roots": [
+            "src",
+            "tests/architecture"
+          ],
+          "termsAndMethod": "reviewer probe + coordinator smuggle sweep (src/dev/__smuggle_w20*.ts, deleted)",
+          "evidenceIds": [],
+          "hitDispositions": [],
+          "coverageLimits": []
+        }
+      ],
+      "status": "FIXED_PENDING_PROOF",
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [
+        "EV-SND-FIX27"
+      ],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "evidenceIds": []
+    },
+    {
+      "id": "F-SND-536",
+      "title": "import.meta receiver-wraps `(0, import.meta).glob` escape the member arms",
+      "state": {
+        "productStateId": "f7cf06069ec04137fcdb9ea40965d53187add22d2dd422d48b6ebc93de3c4cf6",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+      },
+      "subsystem": "audio",
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "discoveredBy": "AUT-F-8/INT-20-08",
+      "expected": "guard/coverage contract holds on the reviewed state",
+      "actual": "positional wrapped-member scan (regex form backtracked catastrophically - replaced)",
+      "rootCause": "positional wrapped-member scan (regex form backtracked catastrophically - replaced)",
+      "rootClass": "GUARD_HARNESS_GAP",
+      "counterexample": "reviewer probe (wave-20 report) + coordinator smuggle probes (EV-SND-FIX27)",
+      "locations": [
+        {
+          "path": "game/audioBoundary.test.ts",
+          "symbolOrSection": "guard arms",
+          "revision": "1214b856",
+          "basis": "SOURCE"
+        }
+      ],
+      "siblingSearch": [
+        {
+          "roots": [
+            "src",
+            "tests/architecture"
+          ],
+          "termsAndMethod": "reviewer probe + coordinator smuggle sweep (src/dev/__smuggle_w20*.ts, deleted)",
+          "evidenceIds": [],
+          "hitDispositions": [],
+          "coverageLimits": []
+        }
+      ],
+      "status": "FIXED_PENDING_PROOF",
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [
+        "EV-SND-FIX27"
+      ],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "evidenceIds": []
+    },
+    {
+      "id": "F-SND-537",
+      "title": "4-hop alias rebind bound leaves a 5th-hop escape",
+      "state": {
+        "productStateId": "f7cf06069ec04137fcdb9ea40965d53187add22d2dd422d48b6ebc93de3c4cf6",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+      },
+      "subsystem": "audio",
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "discoveredBy": "AUT-F-9",
+      "expected": "guard/coverage contract holds on the reviewed state",
+      "actual": "hop bound raised 4 -> 8",
+      "rootCause": "hop bound raised 4 -> 8",
+      "rootClass": "GUARD_HARNESS_GAP",
+      "counterexample": "reviewer probe (wave-20 report) + coordinator smuggle probes (EV-SND-FIX27)",
+      "locations": [
+        {
+          "path": "game/audioBindingWiring.test.ts + audioBoundary.test.ts",
+          "symbolOrSection": "guard arms",
+          "revision": "1214b856",
+          "basis": "SOURCE"
+        }
+      ],
+      "siblingSearch": [
+        {
+          "roots": [
+            "src",
+            "tests/architecture"
+          ],
+          "termsAndMethod": "reviewer probe + coordinator smuggle sweep (src/dev/__smuggle_w20*.ts, deleted)",
+          "evidenceIds": [],
+          "hitDispositions": [],
+          "coverageLimits": []
+        }
+      ],
+      "status": "FIXED_PENDING_PROOF",
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [
+        "EV-SND-FIX27"
+      ],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "evidenceIds": []
+    },
+    {
+      "id": "F-SND-538",
+      "title": "unkeyworded store rebinds (`s2 = store`) mint only `useAudioStore(` shape",
+      "state": {
+        "productStateId": "f7cf06069ec04137fcdb9ea40965d53187add22d2dd422d48b6ebc93de3c4cf6",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+      },
+      "subsystem": "audio",
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "discoveredBy": "INT-20-01",
+      "expected": "guard/coverage contract holds on the reviewed state",
+      "actual": "storeAliases keywordless `(?:(?:const|let|var)\\s+)?` mint",
+      "rootCause": "storeAliases keywordless `(?:(?:const|let|var)\\s+)?` mint",
+      "rootClass": "GUARD_HARNESS_GAP",
+      "counterexample": "reviewer probe (wave-20 report) + coordinator smuggle probes (EV-SND-FIX27)",
+      "locations": [
+        {
+          "path": "game/audioBindingWiring.test.ts",
+          "symbolOrSection": "guard arms",
+          "revision": "1214b856",
+          "basis": "SOURCE"
+        }
+      ],
+      "siblingSearch": [
+        {
+          "roots": [
+            "src",
+            "tests/architecture"
+          ],
+          "termsAndMethod": "reviewer probe + coordinator smuggle sweep (src/dev/__smuggle_w20*.ts, deleted)",
+          "evidenceIds": [],
+          "hitDispositions": [],
+          "coverageLimits": []
+        }
+      ],
+      "status": "FIXED_PENDING_PROOF",
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [
+        "EV-SND-FIX27"
+      ],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "evidenceIds": []
+    },
+    {
+      "id": "F-SND-539",
+      "title": "import.meta destructure only accepts `= import.meta` - alias and of/in forms escape",
+      "state": {
+        "productStateId": "f7cf06069ec04137fcdb9ea40965d53187add22d2dd422d48b6ebc93de3c4cf6",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+      },
+      "subsystem": "audio",
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "discoveredBy": "INT-20-02",
+      "expected": "guard/coverage contract holds on the reviewed state",
+      "actual": "destructure arm `(?:=|of|in)` + metaAliases alternation",
+      "rootCause": "destructure arm `(?:=|of|in)` + metaAliases alternation",
+      "rootClass": "GUARD_HARNESS_GAP",
+      "counterexample": "reviewer probe (wave-20 report) + coordinator smuggle probes (EV-SND-FIX27)",
+      "locations": [
+        {
+          "path": "game/audioBoundary.test.ts",
+          "symbolOrSection": "guard arms",
+          "revision": "1214b856",
+          "basis": "SOURCE"
+        }
+      ],
+      "siblingSearch": [
+        {
+          "roots": [
+            "src",
+            "tests/architecture"
+          ],
+          "termsAndMethod": "reviewer probe + coordinator smuggle sweep (src/dev/__smuggle_w20*.ts, deleted)",
+          "evidenceIds": [],
+          "hitDispositions": [],
+          "coverageLimits": []
+        }
+      ],
+      "status": "FIXED_PENDING_PROOF",
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [
+        "EV-SND-FIX27"
+      ],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "evidenceIds": []
+    },
+    {
+      "id": "F-SND-540",
+      "title": "template-interp bracket keys never flag on any seam",
+      "state": {
+        "productStateId": "f7cf06069ec04137fcdb9ea40965d53187add22d2dd422d48b6ebc93de3c4cf6",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+      },
+      "subsystem": "audio",
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "discoveredBy": "INT-20-03",
+      "expected": "guard/coverage contract holds on the reviewed state",
+      "actual": "decodeKey `${}` splits to unres pieces; unres keys flag when literal pieces spell the seam name",
+      "rootCause": "decodeKey `${}` splits to unres pieces; unres keys flag when literal pieces spell the seam name",
+      "rootClass": "GUARD_HARNESS_GAP",
+      "counterexample": "reviewer probe (wave-20 report) + coordinator smuggle probes (EV-SND-FIX27)",
+      "locations": [
+        {
+          "path": "game/audioBindingWiring.test.ts + audioBoundary.test.ts + screenShakeAuthority.test.ts",
+          "symbolOrSection": "guard arms",
+          "revision": "1214b856",
+          "basis": "SOURCE"
+        }
+      ],
+      "siblingSearch": [
+        {
+          "roots": [
+            "src",
+            "tests/architecture"
+          ],
+          "termsAndMethod": "reviewer probe + coordinator smuggle sweep (src/dev/__smuggle_w20*.ts, deleted)",
+          "evidenceIds": [],
+          "hitDispositions": [],
+          "coverageLimits": []
+        }
+      ],
+      "status": "FIXED_PENDING_PROOF",
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [
+        "EV-SND-FIX27"
+      ],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "evidenceIds": []
+    },
+    {
+      "id": "F-SND-541",
+      "title": "LHS bracket-extraction mint requires a single quoted literal - `store['cu' + 'e']` doesn't mint",
+      "state": {
+        "productStateId": "f7cf06069ec04137fcdb9ea40965d53187add22d2dd422d48b6ebc93de3c4cf6",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+      },
+      "subsystem": "audio",
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "discoveredBy": "INT-20-05",
+      "expected": "guard/coverage contract holds on the reviewed state",
+      "actual": "LHS bracket mint via cueDecodeKey + name guards",
+      "rootCause": "LHS bracket mint via cueDecodeKey + name guards",
+      "rootClass": "GUARD_HARNESS_GAP",
+      "counterexample": "reviewer probe (wave-20 report) + coordinator smuggle probes (EV-SND-FIX27)",
+      "locations": [
+        {
+          "path": "game/audioBindingWiring.test.ts",
+          "symbolOrSection": "guard arms",
+          "revision": "1214b856",
+          "basis": "SOURCE"
+        }
+      ],
+      "siblingSearch": [
+        {
+          "roots": [
+            "src",
+            "tests/architecture"
+          ],
+          "termsAndMethod": "reviewer probe + coordinator smuggle sweep (src/dev/__smuggle_w20*.ts, deleted)",
+          "evidenceIds": [],
+          "hitDispositions": [],
+          "coverageLimits": []
+        }
+      ],
+      "status": "FIXED_PENDING_PROOF",
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [
+        "EV-SND-FIX27"
+      ],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "evidenceIds": []
+    },
+    {
+      "id": "F-SND-542",
+      "title": "statement-led `[cue]`/`{cue}` destructure does not set seamDeclared",
+      "state": {
+        "productStateId": "f7cf06069ec04137fcdb9ea40965d53187add22d2dd422d48b6ebc93de3c4cf6",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+      },
+      "subsystem": "audio",
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "discoveredBy": "INT-20-07",
+      "expected": "guard/coverage contract holds on the reviewed state",
+      "actual": "seamDeclared stmt-led `(?:^|[;{\n])\\s*[{[]` arm",
+      "rootCause": "seamDeclared stmt-led `(?:^|[;{\n])\\s*[{[]` arm",
+      "rootClass": "GUARD_HARNESS_GAP",
+      "counterexample": "reviewer probe (wave-20 report) + coordinator smuggle probes (EV-SND-FIX27)",
+      "locations": [
+        {
+          "path": "game/audioBindingWiring.test.ts",
+          "symbolOrSection": "guard arms",
+          "revision": "1214b856",
+          "basis": "SOURCE"
+        }
+      ],
+      "siblingSearch": [
+        {
+          "roots": [
+            "src",
+            "tests/architecture"
+          ],
+          "termsAndMethod": "reviewer probe + coordinator smuggle sweep (src/dev/__smuggle_w20*.ts, deleted)",
+          "evidenceIds": [],
+          "hitDispositions": [],
+          "coverageLimits": []
+        }
+      ],
+      "status": "FIXED_PENDING_PROOF",
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [
+        "EV-SND-FIX27"
+      ],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "evidenceIds": []
+    },
+    {
+      "id": "F-SND-543",
+      "title": "`{ s: t }` param rename suppresses the outer shake-bound `s` (key-position counted as bound)",
+      "state": {
+        "productStateId": "f7cf06069ec04137fcdb9ea40965d53187add22d2dd422d48b6ebc93de3c4cf6",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+      },
+      "subsystem": "audio",
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "discoveredBy": "INT-20-09",
+      "expected": "guard/coverage contract holds on the reviewed state",
+      "actual": "collectAnyBound collects value-position names only",
+      "rootCause": "collectAnyBound collects value-position names only",
+      "rootClass": "GUARD_HARNESS_GAP",
+      "counterexample": "reviewer probe (wave-20 report) + coordinator smuggle probes (EV-SND-FIX27)",
+      "locations": [
+        {
+          "path": "game/screenShakeAuthority.test.ts",
+          "symbolOrSection": "guard arms",
+          "revision": "1214b856",
+          "basis": "SOURCE"
+        }
+      ],
+      "siblingSearch": [
+        {
+          "roots": [
+            "src",
+            "tests/architecture"
+          ],
+          "termsAndMethod": "reviewer probe + coordinator smuggle sweep (src/dev/__smuggle_w20*.ts, deleted)",
+          "evidenceIds": [],
+          "hitDispositions": [],
+          "coverageLimits": []
+        }
+      ],
+      "status": "FIXED_PENDING_PROOF",
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [
+        "EV-SND-FIX27"
+      ],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "evidenceIds": []
+    },
+    {
+      "id": "F-SND-544",
+      "title": "resolveArgIdent `{pattern}` arm counts rename keys as arg bindings",
+      "state": {
+        "productStateId": "f7cf06069ec04137fcdb9ea40965d53187add22d2dd422d48b6ebc93de3c4cf6",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+      },
+      "subsystem": "audio",
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "discoveredBy": "INT-20-10",
+      "expected": "guard/coverage contract holds on the reviewed state",
+      "actual": "{pattern} arm requires value position or shorthand",
+      "rootCause": "{pattern} arm requires value position or shorthand",
+      "rootClass": "GUARD_HARNESS_GAP",
+      "counterexample": "reviewer probe (wave-20 report) + coordinator smuggle probes (EV-SND-FIX27)",
+      "locations": [
+        {
+          "path": "game/audioBindingWiring.test.ts",
+          "symbolOrSection": "guard arms",
+          "revision": "1214b856",
+          "basis": "SOURCE"
+        }
+      ],
+      "siblingSearch": [
+        {
+          "roots": [
+            "src",
+            "tests/architecture"
+          ],
+          "termsAndMethod": "reviewer probe + coordinator smuggle sweep (src/dev/__smuggle_w20*.ts, deleted)",
+          "evidenceIds": [],
+          "hitDispositions": [],
+          "coverageLimits": []
+        }
+      ],
+      "status": "FIXED_PENDING_PROOF",
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [
+        "EV-SND-FIX27"
+      ],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "evidenceIds": []
+    },
+    {
+      "id": "F-SND-545",
+      "title": "shadowSpans `[^()]*` signature scan cannot span param defaults containing parens",
+      "state": {
+        "productStateId": "f7cf06069ec04137fcdb9ea40965d53187add22d2dd422d48b6ebc93de3c4cf6",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+      },
+      "subsystem": "audio",
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "discoveredBy": "INT-20-11",
+      "expected": "guard/coverage contract holds on the reviewed state",
+      "actual": "balanced-paren signature/head scan",
+      "rootCause": "balanced-paren signature/head scan",
+      "rootClass": "GUARD_HARNESS_GAP",
+      "counterexample": "reviewer probe (wave-20 report) + coordinator smuggle probes (EV-SND-FIX27)",
+      "locations": [
+        {
+          "path": "game/screenShakeAuthority.test.ts",
+          "symbolOrSection": "guard arms",
+          "revision": "1214b856",
+          "basis": "SOURCE"
+        }
+      ],
+      "siblingSearch": [
+        {
+          "roots": [
+            "src",
+            "tests/architecture"
+          ],
+          "termsAndMethod": "reviewer probe + coordinator smuggle sweep (src/dev/__smuggle_w20*.ts, deleted)",
+          "evidenceIds": [],
+          "hitDispositions": [],
+          "coverageLimits": []
+        }
+      ],
+      "status": "FIXED_PENDING_PROOF",
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [
+        "EV-SND-FIX27"
+      ],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "evidenceIds": []
+    },
+    {
+      "id": "F-SND-546",
+      "title": "mixed-concat leftover arm never resolves declared idents - `cam['' + VOL]` FP",
+      "state": {
+        "productStateId": "f7cf06069ec04137fcdb9ea40965d53187add22d2dd422d48b6ebc93de3c4cf6",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+      },
+      "subsystem": "audio",
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "discoveredBy": "INT-20-12",
+      "expected": "guard/coverage contract holds on the reviewed state",
+      "actual": "resolveLitAt inside shake bracket arms; all-dynamic keys are the documented residual",
+      "rootCause": "resolveLitAt inside shake bracket arms; all-dynamic keys are the documented residual",
+      "rootClass": "GUARD_HARNESS_GAP",
+      "counterexample": "reviewer probe (wave-20 report) + coordinator smuggle probes (EV-SND-FIX27)",
+      "locations": [
+        {
+          "path": "game/screenShakeAuthority.test.ts",
+          "symbolOrSection": "guard arms",
+          "revision": "1214b856",
+          "basis": "SOURCE"
+        }
+      ],
+      "siblingSearch": [
+        {
+          "roots": [
+            "src",
+            "tests/architecture"
+          ],
+          "termsAndMethod": "reviewer probe + coordinator smuggle sweep (src/dev/__smuggle_w20*.ts, deleted)",
+          "evidenceIds": [],
+          "hitDispositions": [],
+          "coverageLimits": []
+        }
+      ],
+      "status": "FIXED_PENDING_PROOF",
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [
+        "EV-SND-FIX27"
+      ],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "evidenceIds": []
+    },
+    {
+      "id": "F-SND-547",
+      "title": "rebuildBracketKey strips `[\\s+]` before compare - `import.meta['g l' + 'ob']` FP",
+      "state": {
+        "productStateId": "f7cf06069ec04137fcdb9ea40965d53187add22d2dd422d48b6ebc93de3c4cf6",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+      },
+      "subsystem": "audio",
+      "severity": "Nit",
+      "classification": "NON_ACTIONABLE",
+      "actionable": false,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "discoveredBy": "INT-20-13",
+      "expected": "guard/coverage contract holds on the reviewed state",
+      "actual": "accepted residual: whitespace inside quoted segs preserved, `\\s+` strip applies to structural glue only - edge esoteric, documented",
+      "rootCause": "accepted residual: whitespace inside quoted segs preserved, `\\s+` strip applies to structural glue only - edge esoteric, documented",
+      "rootClass": "GUARD_HARNESS_GAP",
+      "counterexample": "reviewer probe (wave-20 report) + coordinator smuggle probes (EV-SND-FIX27)",
+      "locations": [
+        {
+          "path": "game/audioBoundary.test.ts",
+          "symbolOrSection": "guard arms",
+          "revision": "1214b856",
+          "basis": "SOURCE"
+        }
+      ],
+      "siblingSearch": [
+        {
+          "roots": [
+            "src",
+            "tests/architecture"
+          ],
+          "termsAndMethod": "reviewer probe + coordinator smuggle sweep (src/dev/__smuggle_w20*.ts, deleted)",
+          "evidenceIds": [],
+          "hitDispositions": [],
+          "coverageLimits": []
+        }
+      ],
+      "status": "REJECTED_WITH_PROOF",
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [
+        "EV-SND-FIX27"
+      ],
+      "closureReviewIds": [],
+      "duplicateOf": null,
+      "rejectionReason": "Nit esoteric: whitespace inside quoted concat segs preserved by design; documented residual",
+      "exception": null,
+      "siblingFindingIds": [],
+      "invariantIds": [],
+      "evidenceIds": []
     }
   ],
   "evidence": [
@@ -27673,6 +29185,35 @@
       "invariantIds": [],
       "limitations": [
         "e2e spec not re-run; 3 pre-existing master reds unchanged; 2-level receiver call args deferred; unquoted attr values truncate at quote (HTML rule)"
+      ]
+    },
+    {
+      "kind": "EXECUTED_UNIT_STRUCTURAL",
+      "id": "EV-SND-FIX27",
+      "state": {
+        "productStateId": "f7cf06069ec04137fcdb9ea40965d53187add22d2dd422d48b6ebc93de3c4cf6",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+      },
+      "status": "CURRENT",
+      "producer": "coordinator",
+      "startedAt": "2026-09-29T09:30:00Z",
+      "finishedAt": "2026-09-29T10:30:00Z",
+      "commandOrMethod": "npm run type-check; npx vitest run tests/architecture (216) + audio (104); node-v24 staticArtExtentDeclared (2); smuggle probe sweep src/dev/__smuggle_w20*.ts (deleted)",
+      "cwd": "game/",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/EV-SND-FIX27.log",
+      "artifactHash": "b4cb426e1da98e3b6664d330b6db413bbe9ec7b6657610d82faa3b88e20bd7d8",
+      "claims": [
+        "35 wave-20 reports -> 28 unique records (incl dedupe), all actionable fixed incl Low; every new arm probe-verified via smuggle files; boundary wrapped-member regex replaced by positional scan (perf); suite green on real corpus"
+      ],
+      "inputEvidenceIds": [],
+      "inputPaths": [],
+      "invariantIds": [],
+      "limitations": [
+        "e2e spec not re-run; pre-existing master reds unchanged; all-dynamic unresolved keys remain documented residual (spellable false on empty lits); F-SND-547 Nit accepted residual"
       ]
     }
   ],
@@ -29939,6 +31480,124 @@
       ],
       "novelAttackIds": [],
       "status": "STALE"
+    },
+    {
+      "id": "REV-SND-COR-20",
+      "state": {
+        "productStateId": "f7cf06069ec04137fcdb9ea40965d53187add22d2dd422d48b6ebc93de3c4cf6",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+      },
+      "round": 20,
+      "phase": "CORRECTNESS",
+      "reviewerId": "devin-363ef66856ab4356b5008023e353d502",
+      "contextId": "ctx-rev-snd-correctness-20",
+      "model": "swe-2",
+      "role": "adversarial-correctness",
+      "inputBundleHash": "f7cf06069ec04137fcdb9ea40965d53187add22d2dd422d48b6ebc93de3c4cf6",
+      "priorFindingsVisible": false,
+      "accessLimitations": [
+        "detached checkout of pinned head 1214b856"
+      ],
+      "startedAt": "2026-09-29T08:00:00Z",
+      "sealedAt": "2026-09-29T09:30:00Z",
+      "previousPhaseReviewId": "REV-SND-INT-19",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [],
+      "findingIds": [
+        "F-SND-520",
+        "F-SND-521",
+        "F-SND-522",
+        "F-SND-523",
+        "F-SND-524",
+        "F-SND-525",
+        "F-SND-526",
+        "F-SND-527",
+        "F-SND-528",
+        "F-SND-529"
+      ],
+      "novelAttackIds": [],
+      "status": "SEALED"
+    },
+    {
+      "id": "REV-SND-AUT-20",
+      "state": {
+        "productStateId": "f7cf06069ec04137fcdb9ea40965d53187add22d2dd422d48b6ebc93de3c4cf6",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+      },
+      "round": 20,
+      "phase": "AUTHORITY",
+      "reviewerId": "devin-bd8ab2202c764d3fb069b1201c134cab",
+      "contextId": "ctx-rev-snd-authority-20",
+      "model": "swe-2",
+      "role": "adversarial-authority",
+      "inputBundleHash": "f7cf06069ec04137fcdb9ea40965d53187add22d2dd422d48b6ebc93de3c4cf6",
+      "priorFindingsVisible": false,
+      "accessLimitations": [
+        "detached checkout of pinned head 1214b856"
+      ],
+      "startedAt": "2026-09-29T08:00:00Z",
+      "sealedAt": "2026-09-29T09:30:00Z",
+      "previousPhaseReviewId": "REV-SND-COR-20",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [],
+      "findingIds": [
+        "F-SND-530",
+        "F-SND-531",
+        "F-SND-532",
+        "F-SND-533",
+        "F-SND-534",
+        "F-SND-535",
+        "F-SND-536",
+        "F-SND-537"
+      ],
+      "novelAttackIds": [],
+      "status": "SEALED"
+    },
+    {
+      "id": "REV-SND-INT-20",
+      "state": {
+        "productStateId": "f7cf06069ec04137fcdb9ea40965d53187add22d2dd422d48b6ebc93de3c4cf6",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+      },
+      "round": 20,
+      "phase": "INTEGRATION",
+      "reviewerId": "devin-423456c415764b759114ed1426ea9dba",
+      "contextId": "ctx-rev-snd-integration-20",
+      "model": "swe-2",
+      "role": "adversarial-integration",
+      "inputBundleHash": "f7cf06069ec04137fcdb9ea40965d53187add22d2dd422d48b6ebc93de3c4cf6",
+      "priorFindingsVisible": false,
+      "accessLimitations": [
+        "detached checkout of pinned head 1214b856"
+      ],
+      "startedAt": "2026-09-29T08:00:00Z",
+      "sealedAt": "2026-09-29T09:30:00Z",
+      "previousPhaseReviewId": "REV-SND-AUT-20",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [],
+      "findingIds": [
+        "F-SND-538",
+        "F-SND-539",
+        "F-SND-540",
+        "F-SND-541",
+        "F-SND-542",
+        "F-SND-543",
+        "F-SND-544",
+        "F-SND-545",
+        "F-SND-546",
+        "F-SND-547"
+      ],
+      "novelAttackIds": [],
+      "status": "SEALED"
     }
   ],
   "cycles": [
@@ -30346,6 +32005,28 @@
       "startedAt": "2026-09-29T05:00:00Z",
       "finishedAt": "2026-09-29T05:40:00Z",
       "status": "STALE"
+    },
+    {
+      "id": "CYC-SND-20",
+      "state": {
+        "productStateId": "f7cf06069ec04137fcdb9ea40965d53187add22d2dd422d48b6ebc93de3c4cf6",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+      },
+      "reviewIds": [
+        "REV-SND-COR-20",
+        "REV-SND-AUT-20",
+        "REV-SND-INT-20"
+      ],
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-SND-FIX27"
+      ],
+      "noveltyEvidenceIds": [],
+      "startedAt": "2026-09-29T08:00:00Z",
+      "finishedAt": "2026-09-29T10:30:00Z",
+      "status": "FINDINGS"
     }
   ],
   "mutations": [],
@@ -31535,6 +33216,22 @@
       "payloadPath": "events/0070.json",
       "payloadHash": "57ffcba986450eb9e727a86e936c4f52e59a1916fa51cc89335aff6629771271",
       "eventHash": "c3d1687151a65b583007616c25e7ca294896f0b4d3abcdfe41415694b4a9348f"
+    },
+    {
+      "seq": 71,
+      "at": "2026-09-29T10:13:08.998Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-56995",
+      "state": {
+        "productStateId": "f7cf06069ec04137fcdb9ea40965d53187add22d2dd422d48b6ebc93de3c4cf6",
+        "contractId": "42e4f2876e383a902c36e6e02726e10ba302de2000d06fd6af6a8f50327e6a96",
+        "attackModelId": "204967363e9dda19ec0d6d29ca9b2381e679e81c34695fc4817061cd2c88cc16",
+        "environmentId": "645ac294231cfcd5ce10ddb7ede8cad199e0a57b9357eac2ccf887bec977a519"
+      },
+      "previousEventHash": "c3d1687151a65b583007616c25e7ca294896f0b4d3abcdfe41415694b4a9348f",
+      "payloadPath": "events/0071.json",
+      "payloadHash": "1e4751c1369bf2cfef1cd17515100b25435d0678ef6d811e9f2edc66814fa222",
+      "eventHash": "2da187a18ff2015e6c53f578723b339265804e8b12852fbfa616c5d2df88d8af"
     }
   ]
 }
