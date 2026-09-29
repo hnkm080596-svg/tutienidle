@@ -1,0 +1,56 @@
+{
+  "phase": "INTAKE",
+  "request": {
+    "runId": "beta-release-exhaustive-2026-09-29",
+    "productRoot": "..",
+    "task": "BETA RELEASE EXHAUSTIVE QA over origin/master @ f1049b5e42757f14aebee18bab3569dc43c37d09: falsify the claim that the current master aggregate is ready for a public Beta whose playable ceiling is Truc Co / Foundation Establishment. Release-audit mode: the complete aggregate product is the approval object; every Beta-reachable production path is in scope regardless of recency. Mission brief: docs/qa/missions/beta-release-exhaustive-2026-09-29.md (authored on audit-combined @546859e5, copied into this run dir). Six-Way matrix, creation/auth/save/cloud, realm/breakthrough, hidden perfection lineage, technique/nodes/body, combat end-to-end incl. impact-sync, stats, talents, inventory/equipment, economy/buildings/offline, companions/formation, quests/UI/Phaser/audio/a11y/i18n, Electron lifecycle seams, registries, test-suite quality, learned-defect replay, property/fuzz/mutation campaigns, deterministic gates, soak, six-way playthrough matrix, cross-system attacks, clean A/novel/clean B, final mutation+coverage audit.",
+    "authorizedRepairs": [
+      "game/src/",
+      "game/tests/",
+      "game/scripts/",
+      "game/supabase/",
+      "game/locales/",
+      "game/docs/"
+    ],
+    "nonGoals": [
+      "gameplay redesign",
+      "final numerical balance tuning (structural progression failures ARE in scope)",
+      "post-Foundation / Kim Dan+ feature completeness (Artifact dormancy verified, not built)",
+      "Electron packaged-binary verification (packaging unavailable in this environment - declared coverage boundary)",
+      "real Supabase project credentials / deployed remote verification (mock/local seam only - declared coverage boundary)",
+      "locally-held untracked art assets (user requires art stay local-only; verify zero runtime-referenced assets are untracked/missing)"
+    ],
+    "budget": "1 coordinator + up to 4 concurrent workers (platform cap 5 incl coordinator)",
+    "priorEvidence": [
+      "pr51-merge-gate-2026-09-29 closed QA_BLOCKED_SCOPE: 12 open findings (F-MG-18..31 deduped from clean trio) migrate into THIS run's repair scope - PlayerPortrait way-override, cloud reconcile ordering, offline unbuff fold, save validation gap, visualArmed scope, pinia-test harness, hygiene/doc items",
+      "sound-system run closed QA_BLOCKED_SCOPE at wave-20 (closure-review bookkeeping gap; ~550 wave findings all repaired+probe-verified; guard test suite 9/9 green)",
+      "impact-sync PR #52 wave-1 QA adjudicated on e9dbe8a6 (13 findings repaired), merged 9a767f50",
+      "PR48 art wave-2 merged: pham_nhan/ngu_kiem/ngu_hanh sets + 4 art seams (castClips, armed/unarmed, way-keyed cultivate override, boundary statics)"
+    ],
+    "contractPaths": [
+      "AGENTS.md",
+      "game/docs/qa/protocol/README.md",
+      "game/CLAUDE.md",
+      "game/docs/qa/missions/beta-release-exhaustive-2026-09-29.md"
+    ],
+    "attackModelPath": "attack-model.json",
+    "requiredDomains": [
+      "bootstrap-lifecycle",
+      "combat-vitals-skills",
+      "paths-ways-nodes-technique-body-realm",
+      "inventory-equipment-rewards-economy",
+      "production-offline-buildings",
+      "quests-companions-formation-stages",
+      "save-restore-cloud",
+      "ui-i18n-a11y-phaser-audio",
+      "auth-electron-adapters",
+      "tests-qa-tooling"
+    ],
+    "extraExclude": [
+      "game/docs/qa/runs/",
+      "game/docs/qa/learning/history/",
+      "game/public/assets/",
+      "game/art-source/"
+    ]
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "tools": { "node": "v22 (linuxbrew node@22)", "npm": "bundled", "playwright": "available via Chrome CDP :29229" },
+  "os": "linux (Devin cloud VM)",
+  "profile": "devin-cloud-linux",
+  "declaredLimitations": [
+    "no Electron packaging - lifecycle seams audited via source + browser lifecycle only",
+    "no real Supabase credentials - cloud seam exercised via mock/local implementations + source-level reconcile audit",
+    "no canvas/gl - jsdom vitest failures of that family classify ENVIRONMENT not product",
+    "locally-held untracked art absent on this clone by user requirement - runtime-referenced assets probed for existence instead"
+  ],
+  "note": "real declared profile for cloud execution; unavailable capabilities are coverage boundaries, never simulated success"
+}

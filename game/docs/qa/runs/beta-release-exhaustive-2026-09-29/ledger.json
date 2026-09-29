@@ -1,0 +1,109 @@
+{
+  "schemaVersion": 2,
+  "run": {
+    "id": "beta-release-exhaustive-2026-09-29",
+    "createdAt": "2026-09-29T12:35:55.885Z",
+    "scope": "AGGREGATE_REPOSITORY",
+    "authorizedRepairs": [
+      "game/src/",
+      "game/tests/",
+      "game/scripts/",
+      "game/supabase/",
+      "game/locales/",
+      "game/docs/"
+    ],
+    "nonGoals": [
+      "gameplay redesign",
+      "final numerical balance tuning (structural progression failures ARE in scope)",
+      "post-Foundation / Kim Dan+ feature completeness (Artifact dormancy verified, not built)",
+      "Electron packaged-binary verification (packaging unavailable in this environment - declared coverage boundary)",
+      "real Supabase project credentials / deployed remote verification (mock/local seam only - declared coverage boundary)",
+      "locally-held untracked art assets (user requires art stay local-only; verify zero runtime-referenced assets are untracked/missing)"
+    ],
+    "checkout": "",
+    "branch": "",
+    "base": "",
+    "head": "",
+    "state": {
+      "productStateId": "9a1c175ad81880d11956a2af84c417d28a5c4e392fa1ec7234c3a7e1159592e6",
+      "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+      "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+      "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+    },
+    "manifestPath": "manifest.json",
+    "environmentPath": "environment.json",
+    "learningPolicyId": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+    "consumedLessonIds": [],
+    "aggregateParents": [],
+    "requiredDomains": [
+      "bootstrap-lifecycle",
+      "combat-vitals-skills",
+      "paths-ways-nodes-technique-body-realm",
+      "inventory-equipment-rewards-economy",
+      "production-offline-buildings",
+      "quests-companions-formation-stages",
+      "save-restore-cloud",
+      "ui-i18n-a11y-phaser-audio",
+      "auth-electron-adapters",
+      "tests-qa-tooling"
+    ],
+    "exclusions": [],
+    "briefIds": [],
+    "capacityLimit": 5,
+    "requiredReadiness": true,
+    "phase": "SNAPSHOT",
+    "cleanRoundA": null,
+    "cleanRoundB": null,
+    "finalEvidenceIds": [],
+    "outcome": null
+  },
+  "briefs": [],
+  "assignments": [],
+  "consumptions": [],
+  "invariants": [],
+  "census": [],
+  "findings": [],
+  "evidence": [],
+  "coverage": [],
+  "attacks": [],
+  "reviews": [],
+  "cycles": [],
+  "mutations": [],
+  "corpus": [],
+  "lessons": [],
+  "messages": [],
+  "events": [
+    {
+      "seq": 1,
+      "at": "2026-09-29T12:35:55.885Z",
+      "kind": "PHASE",
+      "actor": "coordinator-beta",
+      "state": {
+        "productStateId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567",
+        "contractId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567",
+        "attackModelId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567",
+        "environmentId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567"
+      },
+      "previousEventHash": null,
+      "payloadPath": "events/0001.json",
+      "payloadHash": "92e56f29e8a8a9d904ab79dab6a03a5928523930f914aab5d793fcbdd02e5992",
+      "eventHash": "9230e1e3494cd9e1bd95a6e37306ac715693e2610f85f68e6a346257d3c139b8"
+    },
+    {
+      "seq": 2,
+      "at": "2026-09-29T12:36:32.486Z",
+      "kind": "SNAPSHOT",
+      "actor": "coordinator-beta",
+      "state": {
+        "productStateId": "9a1c175ad81880d11956a2af84c417d28a5c4e392fa1ec7234c3a7e1159592e6",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "previousEventHash": "9230e1e3494cd9e1bd95a6e37306ac715693e2610f85f68e6a346257d3c139b8",
+      "payloadPath": "events/0002.json",
+      "payloadHash": "62ec3d53eaae5f4db8e144baa4df513db9ba562d685ea3fed9aef107ffd40aee",
+      "eventHash": "41effa703670600448cb582ee960decd0103940aae0ea204201417dafe7fca74"
+    }
+  ]
+}
