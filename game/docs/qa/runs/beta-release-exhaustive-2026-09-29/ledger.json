@@ -114,11 +114,11 @@
         "read-only registry/asset/identity integrity sweep on S0"
       ],
       "readiness": "READY",
-      "status": "RESERVED",
+      "status": "FINISHED",
       "reservedAt": "2026-09-29T12:50:44.589Z",
       "observedRuntimeId": "devin-7dbc5d19a3cf42e69f30ce8ad7a7c25e",
-      "releaseEvidence": null,
-      "resultRef": null,
+      "releaseEvidence": "session terminated post-report (devin_session_interact terminate ok); findings recorded in batch5",
+      "resultRef": "session-messages",
       "timeoutState": null,
       "history": [
         {
@@ -138,6 +138,12 @@
           "from": "QUEUED",
           "to": "RESERVED",
           "reason": "admitted at 2/5 (incl. external 0)"
+        },
+        {
+          "at": "2026-09-29T13:44:28.035Z",
+          "from": "RESERVED",
+          "to": "FINISHED",
+          "reason": "lifecycle verified released via 'exited'"
         }
       ]
     },
@@ -155,11 +161,11 @@
         "read-only learned-defects replay on S0"
       ],
       "readiness": "READY",
-      "status": "RESERVED",
+      "status": "FINISHED",
       "reservedAt": "2026-09-29T12:50:44.716Z",
       "observedRuntimeId": "devin-8c1d32bb66294cc88ea8daadfac3d5ec",
-      "releaseEvidence": null,
-      "resultRef": null,
+      "releaseEvidence": "session terminated post-report (devin_session_interact terminate ok); findings recorded in batch5",
+      "resultRef": "session-messages",
       "timeoutState": null,
       "history": [
         {
@@ -179,6 +185,12 @@
           "from": "QUEUED",
           "to": "RESERVED",
           "reason": "admitted at 3/5 (incl. external 0)"
+        },
+        {
+          "at": "2026-09-29T13:44:28.164Z",
+          "from": "RESERVED",
+          "to": "FINISHED",
+          "reason": "lifecycle verified released via 'exited'"
         }
       ]
     },
@@ -196,11 +208,11 @@
         "blind correctness audit: bootstrap+creation+identity on S0"
       ],
       "readiness": "READY",
-      "status": "RESERVED",
+      "status": "FINISHED",
       "reservedAt": "2026-09-29T12:50:44.842Z",
       "observedRuntimeId": "devin-bcdb6981eb8d4796bfdaba2f0a51b59d",
-      "releaseEvidence": null,
-      "resultRef": null,
+      "releaseEvidence": "session terminated post-report (devin_session_interact terminate ok); findings recorded in batch5",
+      "resultRef": "session-messages",
       "timeoutState": null,
       "history": [
         {
@@ -220,6 +232,12 @@
           "from": "QUEUED",
           "to": "RESERVED",
           "reason": "admitted at 4/5 (incl. external 0)"
+        },
+        {
+          "at": "2026-09-29T13:44:28.295Z",
+          "from": "RESERVED",
+          "to": "FINISHED",
+          "reason": "lifecycle verified released via 'exited'"
         }
       ]
     },
@@ -278,8 +296,8 @@
         "blind audit combat/skills/stats on S0"
       ],
       "readiness": "READY",
-      "status": "QUEUED",
-      "reservedAt": null,
+      "status": "RESERVED",
+      "reservedAt": "2026-09-29T13:44:33.622Z",
       "observedRuntimeId": "devin-8ff836401b90435e9c18dbdd9e14435e",
       "releaseEvidence": null,
       "resultRef": null,
@@ -296,6 +314,12 @@
           "from": "CREATED",
           "to": "QUEUED",
           "reason": "prompt delivered"
+        },
+        {
+          "at": "2026-09-29T13:44:33.622Z",
+          "from": "QUEUED",
+          "to": "RESERVED",
+          "reason": "admitted at 3/5 (incl. external 0)"
         }
       ]
     },
@@ -313,8 +337,8 @@
         "blind audit progression on S0"
       ],
       "readiness": "READY",
-      "status": "QUEUED",
-      "reservedAt": null,
+      "status": "RESERVED",
+      "reservedAt": "2026-09-29T13:44:33.754Z",
       "observedRuntimeId": "devin-37285e3f74e84b99aaf2238b8bb115db",
       "releaseEvidence": null,
       "resultRef": null,
@@ -331,6 +355,12 @@
           "from": "CREATED",
           "to": "QUEUED",
           "reason": "prompt delivered"
+        },
+        {
+          "at": "2026-09-29T13:44:33.754Z",
+          "from": "QUEUED",
+          "to": "RESERVED",
+          "reason": "admitted at 4/5 (incl. external 0)"
         }
       ]
     }
@@ -3675,6 +3705,86 @@
       "payloadPath": "events/0013.json",
       "payloadHash": "c95f6e5e837e9badff84bc44eef37167e561afcb468f62d177bfa256b44514fd",
       "eventHash": "3f2a89f3f5493dfe7ca29a3766855c4452e5c2e8ec2855d93fd2ecd9bfebc150"
+    },
+    {
+      "seq": 14,
+      "at": "2026-09-29T13:44:28.036Z",
+      "kind": "SCHEDULE",
+      "actor": "coordinator-beta",
+      "state": {
+        "productStateId": "9a1c175ad81880d11956a2af84c417d28a5c4e392fa1ec7234c3a7e1159592e6",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "previousEventHash": "3f2a89f3f5493dfe7ca29a3766855c4452e5c2e8ec2855d93fd2ecd9bfebc150",
+      "payloadPath": "events/0014.json",
+      "payloadHash": "8fa12d9d041b981ceb3d726a6cc8a85492cad709d89470be46e9dc7830217fa1",
+      "eventHash": "bf55d5cde04d1e7537c9e7bb5cbdcd998234e10b2d5f7481026aa1156734fa7b"
+    },
+    {
+      "seq": 15,
+      "at": "2026-09-29T13:44:28.165Z",
+      "kind": "SCHEDULE",
+      "actor": "coordinator-beta",
+      "state": {
+        "productStateId": "9a1c175ad81880d11956a2af84c417d28a5c4e392fa1ec7234c3a7e1159592e6",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "previousEventHash": "bf55d5cde04d1e7537c9e7bb5cbdcd998234e10b2d5f7481026aa1156734fa7b",
+      "payloadPath": "events/0015.json",
+      "payloadHash": "b29dac390166a562f9103507fcb028ef939b8b2b47d5f8e06e643dfef53e2ba1",
+      "eventHash": "698206dd8301a9a80bbd256b1cb954f4f60c4f8e76a31dfa8fcb7a28c777785f"
+    },
+    {
+      "seq": 16,
+      "at": "2026-09-29T13:44:28.296Z",
+      "kind": "SCHEDULE",
+      "actor": "coordinator-beta",
+      "state": {
+        "productStateId": "9a1c175ad81880d11956a2af84c417d28a5c4e392fa1ec7234c3a7e1159592e6",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "previousEventHash": "698206dd8301a9a80bbd256b1cb954f4f60c4f8e76a31dfa8fcb7a28c777785f",
+      "payloadPath": "events/0016.json",
+      "payloadHash": "41407c6e8d7e6d46bce68a112eaba7384a382364c43652fbd53da6f21152aa69",
+      "eventHash": "6b1a3ae22ec7021e001f8712dec6a86ae3e8acfd56b7a4ec4568429885317734"
+    },
+    {
+      "seq": 17,
+      "at": "2026-09-29T13:44:33.623Z",
+      "kind": "SCHEDULE",
+      "actor": "coordinator-beta",
+      "state": {
+        "productStateId": "9a1c175ad81880d11956a2af84c417d28a5c4e392fa1ec7234c3a7e1159592e6",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "previousEventHash": "6b1a3ae22ec7021e001f8712dec6a86ae3e8acfd56b7a4ec4568429885317734",
+      "payloadPath": "events/0017.json",
+      "payloadHash": "6e88c3a1bcb8bf9f5d11bbf6d242ad798ee4a5bf9f0ed1589c60e4ebf6feb8da",
+      "eventHash": "543acf430f0e55f19f646b66221605c479f05ed3aaec728be37a667657530af4"
+    },
+    {
+      "seq": 18,
+      "at": "2026-09-29T13:44:33.755Z",
+      "kind": "SCHEDULE",
+      "actor": "coordinator-beta",
+      "state": {
+        "productStateId": "9a1c175ad81880d11956a2af84c417d28a5c4e392fa1ec7234c3a7e1159592e6",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "previousEventHash": "543acf430f0e55f19f646b66221605c479f05ed3aaec728be37a667657530af4",
+      "payloadPath": "events/0018.json",
+      "payloadHash": "c95f6e5e837e9badff84bc44eef37167e561afcb468f62d177bfa256b44514fd",
+      "eventHash": "9506ed51d38d0da82ad3e410ae1f9bdb28ea86e0f95a043c89c661b384808e20"
     }
   ]
 }

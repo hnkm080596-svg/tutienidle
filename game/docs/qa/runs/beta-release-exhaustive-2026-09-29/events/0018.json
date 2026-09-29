@@ -1,0 +1,38 @@
+{
+  "action": "admit",
+  "assignment": {
+    "id": "ASG-BX-PRG",
+    "parentId": null,
+    "capacityScope": "swe2-slot",
+    "inputBundleHash": "950a5bce64bba4a1eabce0c005445c8ff5b24ba1bd08e061bd1d1ff2f84c1b57",
+    "dependencies": [],
+    "requiredCapabilities": [
+      "exec",
+      "repo-read"
+    ],
+    "writeSurface": [
+      "blind audit progression on S0"
+    ],
+    "readiness": "READY",
+    "status": "QUEUED",
+    "reservedAt": null,
+    "observedRuntimeId": "devin-37285e3f74e84b99aaf2238b8bb115db",
+    "releaseEvidence": null,
+    "resultRef": null,
+    "timeoutState": null,
+    "history": [
+      {
+        "at": "2026-09-29T13:48:00Z",
+        "from": "-",
+        "to": "CREATED",
+        "reason": "wave-1 dispatch"
+      },
+      {
+        "at": "2026-09-29T13:48:00Z",
+        "from": "CREATED",
+        "to": "QUEUED",
+        "reason": "prompt delivered"
+      }
+    ]
+  }
+}

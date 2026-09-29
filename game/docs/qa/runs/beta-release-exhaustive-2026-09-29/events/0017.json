@@ -1,0 +1,38 @@
+{
+  "action": "admit",
+  "assignment": {
+    "id": "ASG-BX-CBT",
+    "parentId": null,
+    "capacityScope": "swe2-slot",
+    "inputBundleHash": "b259b9803a552cbef85c698384693114418d7fac056a14348d62d9c12ec3ef6b",
+    "dependencies": [],
+    "requiredCapabilities": [
+      "exec",
+      "repo-read"
+    ],
+    "writeSurface": [
+      "blind audit combat/skills/stats on S0"
+    ],
+    "readiness": "READY",
+    "status": "QUEUED",
+    "reservedAt": null,
+    "observedRuntimeId": "devin-8ff836401b90435e9c18dbdd9e14435e",
+    "releaseEvidence": null,
+    "resultRef": null,
+    "timeoutState": null,
+    "history": [
+      {
+        "at": "2026-09-29T13:48:00Z",
+        "from": "-",
+        "to": "CREATED",
+        "reason": "wave-1 dispatch"
+      },
+      {
+        "at": "2026-09-29T13:48:00Z",
+        "from": "CREATED",
+        "to": "QUEUED",
+        "reason": "prompt delivered"
+      }
+    ]
+  }
+}

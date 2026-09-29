@@ -1,0 +1,7 @@
+{
+  "action": "observe",
+  "assignmentId": "ASG-BX-CRT",
+  "observedStatus": "exited",
+  "evidence": "session terminated post-report (devin_session_interact terminate ok); findings recorded in batch5",
+  "resultRef": "session-messages"
+}
