@@ -1585,11 +1585,18 @@ export class GameManagerTurnBattleOps {
     this.presentationOps.runtime.resetPendingState()
     this.boundaryQueue = []
     this.activeBuild = undefined
+    // F-BX-94 - the outgoing battle's roster residue dies at cycle entry,
+    // not at terminal settlement: a 'defeat' never runs a teardown of its
+    // own and victory intentionally keeps live state for the auto-repeat
+    // spawn chain. Every entry path funnels through here before new
+    // spawns, so back-to-back battles leave getAll() bounded regardless
+    // of how the previous battle ended.
+    this.deps.enemyManager.clear()
     // A live trial torn down by cycle replacement must release its
     // enemies here - the undefeatable beast has no other despawn path,
     // and the watcher is about to be dropped. despawn() is a no-op for
-    // ids already swept by a prior enemyManager.clear() (abandon,
-    // discardFailedCycle), so this is safe on every caller.
+    // ids already swept by the roster clear above, so this is safe on
+    // every caller.
     if (this.activeHiddenTrial !== null) {
       this.releaseHiddenTrialEnemies(this.activeHiddenTrial)
     }
@@ -1633,9 +1640,9 @@ export class GameManagerTurnBattleOps {
     // runs, and release() is idempotent under the identity check.
     this.deps.stageWaves.stopRepeat()
 
-    // Drop surviving enemies + pending spawns - including a half-spawned
-    // bootstrap from the failed cycle - same cleanup abandonBattle runs.
-    this.deps.enemyManager.clear()
+    // Surviving enemies + pending spawns - including a half-spawned
+    // bootstrap from the failed cycle - die inside clearCycleEntryState,
+    // which owns the roster clear for every teardown path.
     this.deps.combatSystem.setSurviveLethalSession(null)
 
     this.clearCycleEntryState()
@@ -2474,16 +2481,11 @@ export class GameManagerTurnBattleOps {
     // terminal can never slip through if the clock were ever restarted.
     this.rewardOps.emitAbandonEnd()
 
-    // Audit fix 2026-08-31 - surviving enemies + pending spawns are dropped
-    // without a victory flow; clear here exactly where the battle is
-    // destroyed (StageWave auto-repeat spawns the next battle right after
-    // victory, so victory itself must not clear).
-    this.deps.enemyManager.clear()
-
     // The battle is destroyed: drop any turn that was in flight,
-    // including its parked fallback timers, and anything queued against
-    // this battle (spec section 9.2). Same teardown block beginBattleCycle
-    // runs on entry - the pending-clear cannot drift.
+    // including its parked fallback timers, anything queued against
+    // this battle (spec section 9.2), and the roster residue (audit fix
+    // 2026-08-31 / F-BX-94). Victory never reaches abandon, so the
+    // auto-repeat spawn chain still keeps its already-spawned enemies.
     this.clearCycleEntryState()
     this.combatClock.stop()
 

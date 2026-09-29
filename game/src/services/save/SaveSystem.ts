@@ -341,7 +341,20 @@ export function buildGameSave(player: PlayerData, gameManager: GameManager): Gam
     // boundary, so every slice in the returned save is a value copy.
     techniques: detachSaveValue(gameManager.techniqueManager.getAll()),
 
-    skills: detachSaveValue(gameManager.skillManager.getAll()),
+    // F-BX-96 - a passive modifier's `stacks` is in-battle runtime
+    // accumulation: resetStacks() at every battle-cycle entry owns its
+    // lifecycle, and the intended cross-battle carry rides on
+    // player.phaGiapCarryStacks. Persisting it froze mid-battle residue
+    // into saves that restore could never return, so the field does not
+    // leave the live state (stripped on the detached copy). Restore
+    // re-derives the authored modifier - including the absent-vs-0
+    // stacks distinction StatCalculator's `stacks ?? 1` default reads.
+    skills: detachSaveValue(gameManager.skillManager.getAll()).map((skill) => {
+      for (const modifier of skill.passiveModifiers ?? []) {
+        delete modifier.stacks
+      }
+      return skill
+    }),
 
     materials: detachSaveValue(gameManager.materialBag.getAll().map((stack) => ({
       materialId: stack.material.id,

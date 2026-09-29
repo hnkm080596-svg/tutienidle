@@ -124,6 +124,28 @@ export class GameManagerProgressionOps {
 
     const allTalentPassiveIds = TALENT_PASSIVE_SKILLS.map((skill) => skill.id)
 
+    const talentEffects = collectTalentEffects(player.selectedTalentIds, player.talentLevels)
+    const expectedPassiveIds = new Set(
+      talentEffects
+        .filter((effect) => effect.kind === 'combat_passive')
+        .map((effect) => effect.passiveSkillId),
+    )
+    const heldTalentPassiveIds = allTalentPassiveIds.filter((passiveId) =>
+      this.deps.skillManager.get(passiveId),
+    )
+
+    // F-BX-95 - the talent-passive roster is a pure derivation of the
+    // selected talents, so when it already matches the sync must do
+    // nothing: the unconditional revoke+re-grant reordered skillManager
+    // (re-grants append at the end) and reset runtime passive stacks,
+    // making an identical-payload restore mutate state for nothing.
+    if (
+      heldTalentPassiveIds.length === expectedPassiveIds.size &&
+      heldTalentPassiveIds.every((passiveId) => expectedPassiveIds.has(passiveId))
+    ) {
+      return
+    }
+
     // Revoke every current talent passive first (granting right after is
     // easy; guarantees idempotent + no stale passive on talent swap).
     for (const passiveId of allTalentPassiveIds) {
@@ -138,7 +160,7 @@ export class GameManagerProgressionOps {
     // canonical learn funnel owns insertion (TALENT_PASSIVE_SKILLS are
     // registered templates; learn()'s structuredClone covers the
     // per-battle passiveModifiers copy the old direct add needed).
-    for (const effect of collectTalentEffects(player.selectedTalentIds, player.talentLevels)) {
+    for (const effect of talentEffects) {
       if (effect.kind === 'combat_passive') {
         this.learnSkill(effect.passiveSkillId, player)
       }

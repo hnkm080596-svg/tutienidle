@@ -238,7 +238,11 @@ export class GameManagerSaveRestore {
       // passiveModifiers/specializations are authored data owned by the
       // template; re-derive so stale authored fields frozen in the save
       // don't stay inert. selectedSpecializationId lives on the instance
-      // (progression) and is untouched.
+      // (progression) and is untouched. Runtime `stacks` are deliberately
+      // not restored either: they are in-battle accumulation reset by
+      // resetStacks() at each cycle entry, the save boundary strips them
+      // (F-BX-96), and re-deriving preserves the authored absent-vs-0
+      // distinction StatCalculator's `stacks ?? 1` default relies on.
       skill.passiveModifiers = structuredClone(template.passiveModifiers)
       skill.specializations = structuredClone(template.specializations)
 

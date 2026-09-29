@@ -158,3 +158,93 @@ describe('abandonBattle — EnemyManager cleanup (audit 2026-08-31, M1)', () => 
     expect(gameManager.enemyManager.getAll()).toHaveLength(0)
   })
 })
+
+// F-BX-94 (soak beta-release-exhaustive-2026-09-29): a battle ending in
+// 'defeat' never ran a roster teardown - only abandonBattle and the
+// live-battle replacement paths did - so each defeat permanently leaked
+// its surviving enemies (~3.1/battle over the soak). The clear now lives
+// in clearCycleEntryState, which every entry path funnels through BEFORE
+// new spawns: terminal coverage comes for free at the next cycle while
+// victory's auto-repeat chain keeps its already-spawned enemies.
+describe('cycle-entry roster teardown (F-BX-94)', () => {
+  function fightUntil(combatSource: ManualClockSource, predicate: () => boolean, label: string) {
+    for (let i = 0; i < 3000; i++) {
+      if (predicate()) return
+      combatSource.advance(COMBAT_STEP_SECONDS)
+    }
+    throw new Error(`${label}: predicate not reached within 3000 combat steps`)
+  }
+
+  function bossTemplate(id: string): EnemyDefinition {
+    return {
+      id,
+      name: id,
+      level: 1,
+      realmId: 'mortal',
+      lane: 'ground',
+      statsInput: {
+        maxHp: 1_000_000,
+        might: 9_999,
+        attackSpeed: 1,
+        criticalRate: 0,
+        criticalDamage: 1.5,
+        armor: 0,
+        evasionRate: 0,
+      },
+      rewards: { techniqueMastery: 0, spiritStone: 0 },
+    }
+  }
+
+  // A raw entity that dies in one hit - drives a REAL natural defeat
+  // (the engine decides), not the ops-forced abandon path.
+  function weakPlayer(): CombatEntity {
+    const stats = createBaseStats({ maxHp: 5, might: 0, speed: 1, criticalRate: 0 })
+    return { ...createPlayer(), baseStats: stats, stats, currentHp: 5, maxHp: 5 }
+  }
+
+  it('back-to-back natural defeats leave EnemyManager.getAll() bounded to the current battle', () => {
+    const gameManager = new GameManager()
+    const combatSource = new ManualClockSource()
+    gameManager.setCombatClockSource(combatSource)
+
+    const survivorIds: string[] = []
+
+    for (let battleIndex = 0; battleIndex < 3; battleIndex++) {
+      gameManager.startBattle(weakPlayer(), defineEnemy(bossTemplate(`soak_boss_${battleIndex}`)))
+      const battle = gameManager.getTurnBattle()!
+      fightUntil(combatSource, () => battle.state === 'defeat', `defeat ${battleIndex}`)
+
+      // The only legitimate residue is THIS battle's own surviving
+      // enemies - pre-fix each defeat's survivors stayed in the roster
+      // forever, so the count grew monotonically.
+      const roster = gameManager.enemyManager.getAll()
+      const liveIds = new Set(battle.enemies.map((enemy) => enemy.entity.id))
+      expect(roster.every((enemy) => liveIds.has(enemy.id))).toBe(true)
+      expect(roster).toHaveLength(
+        battle.enemies.filter((enemy) => enemy.entity.alive).length,
+      )
+      for (const staleId of survivorIds) {
+        expect(liveIds.has(staleId)).toBe(false)
+      }
+      survivorIds.push(...roster.map((enemy) => enemy.id))
+    }
+  })
+
+  it('mid-fight replacement clears the outgoing roster at cycle entry', () => {
+    const gameManager = new GameManager()
+
+    gameManager.startBattle(createPlayer(), defineEnemy(bossTemplate('outgoing_boss')))
+    const outgoingIds = gameManager.enemyManager.getAll().map((enemy) => enemy.id)
+    expect(outgoingIds.length).toBeGreaterThan(0)
+
+    // Replacing a live battle terminalizes the outgoing one, then the
+    // shared cycle-entry teardown runs before the new spawn.
+    gameManager.startBattle(createPlayer(), defineEnemy(bossTemplate('incoming_boss')))
+
+    const battle = gameManager.getTurnBattle()!
+    const liveIds = new Set(battle.enemies.map((enemy) => enemy.entity.id))
+    const roster = gameManager.enemyManager.getAll()
+    expect(roster.every((enemy) => liveIds.has(enemy.id))).toBe(true)
+    expect(outgoingIds.some((id) => liveIds.has(id))).toBe(false)
+  })
+})
