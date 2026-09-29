@@ -2261,8 +2261,8 @@
     "cwd": "game/",
     "exitCode": 0,
     "result": "PASS",
-    "artifactPath": "records-w16.json",
-    "artifactHash": "db386d20d1417eb3154d0deb470aaa723a9d67f35153f457ce7e9dee7e200510",
+    "artifactPath": "evidence/EV-SND-FIX23.log",
+    "artifactHash": "05d87f9916fd3a121553fb780f59c1176816c2cd241ce7592fcec5743b7e5001",
     "claims": [
      "all 38 unique wave-16 findings fixed at 9f965f5a (46 reports deduped); every new arm probe-verified"
     ],
