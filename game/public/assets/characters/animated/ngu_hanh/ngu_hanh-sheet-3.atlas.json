@@ -1,0 +1,355 @@
+{
+  "frames": {
+    "ngu_hanh-death-001.png": {
+      "frame": {
+        "x": 2,
+        "y": 2,
+        "w": 433,
+        "h": 518
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 0,
+        "w": 433,
+        "h": 518
+      },
+      "sourceSize": {
+        "w": 444,
+        "h": 518
+      }
+    },
+    "ngu_hanh-death-002.png": {
+      "frame": {
+        "x": 540,
+        "y": 2,
+        "w": 433,
+        "h": 518
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 0,
+        "w": 433,
+        "h": 518
+      },
+      "sourceSize": {
+        "w": 444,
+        "h": 518
+      }
+    },
+    "ngu_hanh-death-003.png": {
+      "frame": {
+        "x": 1078,
+        "y": 2,
+        "w": 433,
+        "h": 518
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 0,
+        "w": 433,
+        "h": 518
+      },
+      "sourceSize": {
+        "w": 444,
+        "h": 518
+      }
+    },
+    "ngu_hanh-death-004.png": {
+      "frame": {
+        "x": 1616,
+        "y": 2,
+        "w": 451,
+        "h": 505
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 2,
+        "y": 13,
+        "w": 451,
+        "h": 505
+      },
+      "sourceSize": {
+        "w": 444,
+        "h": 518
+      }
+    },
+    "ngu_hanh-death-005.png": {
+      "frame": {
+        "x": 2154,
+        "y": 2,
+        "w": 471,
+        "h": 478
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 40,
+        "w": 471,
+        "h": 478
+      },
+      "sourceSize": {
+        "w": 444,
+        "h": 518
+      }
+    },
+    "ngu_hanh-death-006.png": {
+      "frame": {
+        "x": 2692,
+        "y": 2,
+        "w": 491,
+        "h": 447
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 2,
+        "y": 69,
+        "w": 491,
+        "h": 447
+      },
+      "sourceSize": {
+        "w": 444,
+        "h": 518
+      }
+    },
+    "ngu_hanh-death-007.png": {
+      "frame": {
+        "x": 3230,
+        "y": 2,
+        "w": 500,
+        "h": 421
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 7,
+        "y": 90,
+        "w": 500,
+        "h": 421
+      },
+      "sourceSize": {
+        "w": 444,
+        "h": 518
+      }
+    },
+    "ngu_hanh-death-008.png": {
+      "frame": {
+        "x": 2,
+        "y": 551,
+        "w": 516,
+        "h": 399
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 18,
+        "y": 108,
+        "w": 516,
+        "h": 399
+      },
+      "sourceSize": {
+        "w": 444,
+        "h": 518
+      }
+    },
+    "ngu_hanh-death-009.png": {
+      "frame": {
+        "x": 540,
+        "y": 551,
+        "w": 504,
+        "h": 386
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 43,
+        "y": 130,
+        "w": 504,
+        "h": 386
+      },
+      "sourceSize": {
+        "w": 444,
+        "h": 518
+      }
+    },
+    "ngu_hanh-death-010.png": {
+      "frame": {
+        "x": 1078,
+        "y": 551,
+        "w": 486,
+        "h": 361
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 61,
+        "y": 155,
+        "w": 486,
+        "h": 361
+      },
+      "sourceSize": {
+        "w": 444,
+        "h": 518
+      }
+    },
+    "ngu_hanh-death-011.png": {
+      "frame": {
+        "x": 1616,
+        "y": 551,
+        "w": 466,
+        "h": 334
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 81,
+        "y": 182,
+        "w": 466,
+        "h": 334
+      },
+      "sourceSize": {
+        "w": 444,
+        "h": 518
+      }
+    },
+    "ngu_hanh-death-012.png": {
+      "frame": {
+        "x": 2154,
+        "y": 551,
+        "w": 455,
+        "h": 314
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 92,
+        "y": 202,
+        "w": 455,
+        "h": 314
+      },
+      "sourceSize": {
+        "w": 444,
+        "h": 518
+      }
+    },
+    "ngu_hanh-death-013.png": {
+      "frame": {
+        "x": 2692,
+        "y": 551,
+        "w": 464,
+        "h": 294
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 81,
+        "y": 222,
+        "w": 464,
+        "h": 294
+      },
+      "sourceSize": {
+        "w": 444,
+        "h": 518
+      }
+    },
+    "ngu_hanh-death-014.png": {
+      "frame": {
+        "x": 3230,
+        "y": 551,
+        "w": 477,
+        "h": 287
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 70,
+        "y": 229,
+        "w": 477,
+        "h": 287
+      },
+      "sourceSize": {
+        "w": 444,
+        "h": 518
+      }
+    },
+    "ngu_hanh-death-015.png": {
+      "frame": {
+        "x": 2,
+        "y": 1100,
+        "w": 477,
+        "h": 285
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 70,
+        "y": 231,
+        "w": 477,
+        "h": 285
+      },
+      "sourceSize": {
+        "w": 444,
+        "h": 518
+      }
+    },
+    "ngu_hanh-death-016.png": {
+      "frame": {
+        "x": 540,
+        "y": 1100,
+        "w": 477,
+        "h": 285
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 70,
+        "y": 231,
+        "w": 477,
+        "h": 285
+      },
+      "sourceSize": {
+        "w": 444,
+        "h": 518
+      }
+    },
+    "ngu_hanh-death-017.png": {
+      "frame": {
+        "x": 1078,
+        "y": 1100,
+        "w": 477,
+        "h": 285
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 70,
+        "y": 231,
+        "w": 477,
+        "h": 285
+      },
+      "sourceSize": {
+        "w": 444,
+        "h": 518
+      }
+    }
+  },
+  "meta": {
+    "app": "pack-character-art.mjs",
+    "version": "1.0",
+    "image": "ngu_hanh-sheet-3.png",
+    "format": "RGBA8888",
+    "size": {
+      "w": 3766,
+      "h": 1647
+    },
+    "scale": "1"
+  }
+}

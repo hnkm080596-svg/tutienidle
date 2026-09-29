@@ -679,26 +679,6 @@
         "w": 444,
         "h": 518
       }
-    },
-    "ngu_hanh-death-001.png": {
-      "frame": {
-        "x": 3230,
-        "y": 2198,
-        "w": 433,
-        "h": 518
-      },
-      "rotated": false,
-      "trimmed": true,
-      "spriteSourceSize": {
-        "x": 4,
-        "y": 0,
-        "w": 433,
-        "h": 518
-      },
-      "sourceSize": {
-        "w": 444,
-        "h": 518
-      }
     }
   },
   "meta": {

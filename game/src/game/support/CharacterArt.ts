@@ -129,7 +129,7 @@ export const CHARACTER_ART: Record<string, CharacterArtVariant> = {
     'ngu_hanh',
     { w: 444, h: 518 },
     { x: 0.009009, y: 0, w: 0.975225, h: 1 },
-    { idle: [1, 33, 1], attack: [1, 17, 2], ult: [1, 17, 2], death: [1, 1, 2] },
+    { idle: [1, 33, 1], attack: [1, 17, 2], ult: [1, 17, 2], death: [1, 17, 3] },
     { avatarSize: { w: 512, h: 512 } },
   ),
 }

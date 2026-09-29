@@ -1243,7 +1243,7 @@
         "w": 549,
         "h": 567
       },
-      "sheets": 2,
+      "sheets": 3,
       "clips": {
         "idle": {
           "framePrefix": "ngu_hanh-idle-",
@@ -1272,11 +1272,10 @@
         "death": {
           "framePrefix": "ngu_hanh-death-",
           "firstFrame": 1,
-          "lastFrame": 1,
-          "frameCount": 1,
-          "sheet": "ngu_hanh-sheet-2.png",
-          "atlas": "ngu_hanh-sheet-2.atlas.json",
-          "synthetic": true
+          "lastFrame": 17,
+          "frameCount": 17,
+          "sheet": "ngu_hanh-sheet-3.png",
+          "atlas": "ngu_hanh-sheet-3.atlas.json"
         }
       },
       "avatar": "derived",

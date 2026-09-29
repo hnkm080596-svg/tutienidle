@@ -244,8 +244,8 @@ describe('character art reskin registry (infra)', () => {
         expect(entity.clips.standby.lastFrame).toBe(entity.clips.idle.lastFrame)
       }
     }
-    // ult authored for pham_nhan/ngu_hanh only; ngu_hanh death is the
-    // packer-synthesized 1-frame clip (manifest 'synthetic' flag).
+    // ult authored for pham_nhan/ngu_hanh; all three have authored death
+    // clips (ngu_hanh's replaced the synthetic frame 2026-09-27).
     expect(presentationFor('pham_nhan')?.kind === 'animated' && 
       (presentationFor('pham_nhan') as { clips: { ult?: unknown } }).clips.ult).toBeDefined()
     expect(presentationFor('ngu_hanh')?.kind === 'animated' &&
