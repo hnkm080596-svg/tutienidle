@@ -1,0 +1,28 @@
+{
+  "action": "admit",
+  "assignment": {
+    "id": "ASG-BX-PROP",
+    "parentId": null,
+    "capacityScope": "swe2-slot",
+    "inputBundleHash": "61e4aa39fc294f9d98ab289fd6085f52",
+    "dependencies": [],
+    "requiredCapabilities": [
+      "exec",
+      "repo-read"
+    ],
+    "writeSurface": [
+      "property/fuzz/mutation probe"
+    ],
+    "readiness": "READY",
+    "status": "READY",
+    "observedRuntimeId": "devin-61e4aa39fc294f9d98ab289fd6085f52",
+    "history": [
+      {
+        "at": "2026-09-29T15:44:00Z",
+        "from": "-",
+        "to": "READY",
+        "reason": "wave-4 dispatch"
+      }
+    ]
+  }
+}

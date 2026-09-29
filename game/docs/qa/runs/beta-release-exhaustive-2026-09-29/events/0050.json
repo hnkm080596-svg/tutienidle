@@ -1,0 +1,28 @@
+{
+  "action": "admit",
+  "assignment": {
+    "id": "ASG-BX-DGATE",
+    "parentId": null,
+    "capacityScope": "swe2-slot",
+    "inputBundleHash": "d52d80625d364eba9000ae6fbb1fb192",
+    "dependencies": [],
+    "requiredCapabilities": [
+      "exec",
+      "repo-read"
+    ],
+    "writeSurface": [
+      "deterministic gates verifier"
+    ],
+    "readiness": "READY",
+    "status": "READY",
+    "observedRuntimeId": "devin-d52d80625d364eba9000ae6fbb1fb192",
+    "history": [
+      {
+        "at": "2026-09-29T15:44:00Z",
+        "from": "-",
+        "to": "READY",
+        "reason": "wave-4 dispatch"
+      }
+    ]
+  }
+}
