@@ -1,0 +1,105 @@
+{
+ "records": [
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-BX-85",
+    "title": "perfectClearSeconds anchored to repeat-run start, not clearing cycle - permanent farm slowdown",
+    "state": {
+     "productStateId": "b3ade7e3f442eb2a98da5b317248dd469440631e950f0b3f1ad24cfe116060f4",
+     "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+     "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+     "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+    },
+    "severity": "Medium",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "PRODUCTION",
+    "locations": [
+     {
+      "path": "game/src/core/game/GameManagerBattleRewardOps.ts",
+      "symbolOrSection": ":214-218 + GameManagerTurnBattleOps.ts:2270",
+      "revision": "5efdf9a9",
+      "basis": "SOURCE"
+     }
+    ],
+    "discoveredBy": "cross-system attacker devin-edf0652e",
+    "invariantIds": [
+     "I-AGGREGATE-RELEASE"
+    ],
+    "evidenceIds": [],
+    "counterexample": "/tmp/xqa/crossSystem.test.ts executable repro",
+    "expected": "per contract",
+    "actual": "first eligible clear on cycle N>1 records whole-run wall clock (e.g. +90s) -> farm cycleMs ~45s vs true ~1s, forever; perfectClearStageIds blocks rewrites",
+    "rootCause": "anchor uses getStartedAtMs once at launch; repeat policy preserves it",
+    "rootClass": "contract",
+    "subsystem": "combat",
+    "siblingSearch": [],
+    "siblingFindingIds": [
+     "F-BX-53",
+     "F-BX-84"
+    ],
+    "repair": "Anchor clearSeconds to cycle start; allow rewrite when a faster clear lands",
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "status": "OBSERVED",
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "fixedInRevision": null,
+    "closedAt": null,
+    "closeReason": null
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-BX-86",
+    "title": "startAutoFarm missing isTurnBattleInProgress gate - mastery loss + dead hidden-trial resume",
+    "state": {
+     "productStateId": "b3ade7e3f442eb2a98da5b317248dd469440631e950f0b3f1ad24cfe116060f4",
+     "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+     "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+     "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+    },
+    "severity": "Low",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "PRODUCTION",
+    "locations": [
+     {
+      "path": "game/src/core/game/GameManagerAutoFarmOps.ts",
+      "symbolOrSection": "startAutoFarm slot take + BattleLootSystem.ts:182-187,327",
+      "revision": "5efdf9a9",
+      "basis": "SOURCE"
+     }
+    ],
+    "discoveredBy": "cross-system attacker devin-edf0652e",
+    "invariantIds": [
+     "I-AGGREGATE-RELEASE"
+    ],
+    "evidenceIds": [],
+    "counterexample": "/tmp/xqa/crossSystem.test.ts executable repro",
+    "expected": "per contract",
+    "actual": "hidden trial runs as 'fresh' cycle w/o stage lease -> farm armed mid-battle -> farm ticks zero pendingTechniqueMastery + victory summary; trial victory resume refused (farm holds slot) -> dead terminal",
+    "rootCause": "missing battle-in-progress invariant gate",
+    "rootClass": "missing-gate",
+    "subsystem": "combat",
+    "siblingSearch": [],
+    "siblingFindingIds": [],
+    "repair": "Gate startAutoFarm on isTurnBattleInProgress; drain trial resume before farm slot",
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "status": "OBSERVED",
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "fixedInRevision": null,
+    "closedAt": null,
+    "closeReason": null
+   }
+  }
+ ]
+}

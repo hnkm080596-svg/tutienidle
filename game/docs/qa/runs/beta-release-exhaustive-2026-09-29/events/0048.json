@@ -1,0 +1,7 @@
+{
+  "action": "observe",
+  "assignmentId": "ASG-BX-XSYS",
+  "observedStatus": "exited",
+  "evidence": "2 confirmed executable breaks (F-BX-85 Medium, F-BX-86 Low); 9 attack hypotheses killed",
+  "resultRef": "evidence/wave3-xsys-attack.txt"
+}

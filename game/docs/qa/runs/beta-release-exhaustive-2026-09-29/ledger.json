@@ -632,7 +632,7 @@
         "cross-system adversarial attacks"
       ],
       "readiness": "READY",
-      "status": "RESERVED",
+      "status": "FINISHED",
       "observedRuntimeId": "devin-edf0652e36dd46d9ad7bb58098f19b5c",
       "history": [
         {
@@ -658,9 +658,17 @@
           "from": "QUEUED",
           "to": "RESERVED",
           "reason": "admitted at 4/5 (incl. external 0)"
+        },
+        {
+          "at": "2026-09-29T15:49:02.617Z",
+          "from": "RESERVED",
+          "to": "FINISHED",
+          "reason": "lifecycle verified released via 'exited'"
         }
       ],
-      "reservedAt": "2026-09-29T15:01:53.419Z"
+      "reservedAt": "2026-09-29T15:01:53.419Z",
+      "releaseEvidence": "2 confirmed executable breaks (F-BX-85 Medium, F-BX-86 Low); 9 attack hypotheses killed",
+      "resultRef": "evidence/wave3-xsys-attack.txt"
     },
     {
       "id": "ASG-BX-PLAY",
@@ -6361,6 +6369,101 @@
       "fixedInRevision": null,
       "closedAt": null,
       "closeReason": null
+    },
+    {
+      "id": "F-BX-85",
+      "title": "perfectClearSeconds anchored to repeat-run start, not clearing cycle - permanent farm slowdown",
+      "state": {
+        "productStateId": "b3ade7e3f442eb2a98da5b317248dd469440631e950f0b3f1ad24cfe116060f4",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/core/game/GameManagerBattleRewardOps.ts",
+          "symbolOrSection": ":214-218 + GameManagerTurnBattleOps.ts:2270",
+          "revision": "5efdf9a9",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "cross-system attacker devin-edf0652e",
+      "invariantIds": [
+        "I-AGGREGATE-RELEASE"
+      ],
+      "evidenceIds": [],
+      "counterexample": "/tmp/xqa/crossSystem.test.ts executable repro",
+      "expected": "per contract",
+      "actual": "first eligible clear on cycle N>1 records whole-run wall clock (e.g. +90s) -> farm cycleMs ~45s vs true ~1s, forever; perfectClearStageIds blocks rewrites",
+      "rootCause": "anchor uses getStartedAtMs once at launch; repeat policy preserves it",
+      "rootClass": "contract",
+      "subsystem": "combat",
+      "siblingSearch": [],
+      "siblingFindingIds": [
+        "F-BX-53",
+        "F-BX-84"
+      ],
+      "repair": "Anchor clearSeconds to cycle start; allow rewrite when a faster clear lands",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "OBSERVED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "fixedInRevision": null,
+      "closedAt": null,
+      "closeReason": null
+    },
+    {
+      "id": "F-BX-86",
+      "title": "startAutoFarm missing isTurnBattleInProgress gate - mastery loss + dead hidden-trial resume",
+      "state": {
+        "productStateId": "b3ade7e3f442eb2a98da5b317248dd469440631e950f0b3f1ad24cfe116060f4",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/core/game/GameManagerAutoFarmOps.ts",
+          "symbolOrSection": "startAutoFarm slot take + BattleLootSystem.ts:182-187,327",
+          "revision": "5efdf9a9",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "cross-system attacker devin-edf0652e",
+      "invariantIds": [
+        "I-AGGREGATE-RELEASE"
+      ],
+      "evidenceIds": [],
+      "counterexample": "/tmp/xqa/crossSystem.test.ts executable repro",
+      "expected": "per contract",
+      "actual": "hidden trial runs as 'fresh' cycle w/o stage lease -> farm armed mid-battle -> farm ticks zero pendingTechniqueMastery + victory summary; trial victory resume refused (farm holds slot) -> dead terminal",
+      "rootCause": "missing battle-in-progress invariant gate",
+      "rootClass": "missing-gate",
+      "subsystem": "combat",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": "Gate startAutoFarm on isTurnBattleInProgress; drain trial resume before farm slot",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "OBSERVED",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null,
+      "fixedInRevision": null,
+      "closedAt": null,
+      "closeReason": null
     }
   ],
   "evidence": [
@@ -7234,6 +7337,38 @@
       "payloadPath": "events/0046.json",
       "payloadHash": "3808eb1252bb8ea779e78e27d6a3729b8c2ffc9fec6059c69be6d0d81fa383e0",
       "eventHash": "d5b86751dc6d2e35c2566d0ef16f1f617c50d6eca9ec631c8bdfea5d1f49929f"
+    },
+    {
+      "seq": 47,
+      "at": "2026-09-29T15:49:02.462Z",
+      "kind": "FINDING",
+      "actor": "coordinator-beta",
+      "state": {
+        "productStateId": "b3ade7e3f442eb2a98da5b317248dd469440631e950f0b3f1ad24cfe116060f4",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "previousEventHash": "d5b86751dc6d2e35c2566d0ef16f1f617c50d6eca9ec631c8bdfea5d1f49929f",
+      "payloadPath": "events/0047.json",
+      "payloadHash": "bab5ddbe46360ab1f4cfd3c3f505517972dbc508376510680156d2d5334f0367",
+      "eventHash": "93cefed64e9e501346664f229460e9699048812300c2b399aaa42509b46e5600"
+    },
+    {
+      "seq": 48,
+      "at": "2026-09-29T15:49:02.618Z",
+      "kind": "SCHEDULE",
+      "actor": "coordinator-beta",
+      "state": {
+        "productStateId": "b3ade7e3f442eb2a98da5b317248dd469440631e950f0b3f1ad24cfe116060f4",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "previousEventHash": "93cefed64e9e501346664f229460e9699048812300c2b399aaa42509b46e5600",
+      "payloadPath": "events/0048.json",
+      "payloadHash": "5cd21bc041658db145ffcdc0f6b5b614d9b867fd1e6dffb09b135765e7408166",
+      "eventHash": "76ca3ff4719b7940a8e2acb5ded3b5f85ca05ee9b4dd1241a6436c5a08ffb3a1"
     }
   ]
 }
