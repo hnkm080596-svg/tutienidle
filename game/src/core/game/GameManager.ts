@@ -323,8 +323,8 @@ export class GameManager {
       this.turnBattleOps.applyBuffToPlayer(buffId)
     },
     // hpReader - player entity's HP ratio in the current turn-based
-    // battle; undefined outside battle (passiveCondition treats this as
-    // pass-through). Rewired alongside buffApplier, same reason.
+    // battle; undefined outside battle (F4: passiveCondition fails
+    // closed there). Rewired alongside buffApplier, same reason.
     () => {
       const player = this.turnBattleOps.getTurnBattle()?.players[0]
 

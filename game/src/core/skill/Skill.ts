@@ -122,10 +122,11 @@ export interface Skill {
   // Bắt buộc khi type === 'passive' — xem PassiveSystem.
   passiveTrigger?: PassiveTrigger
 
-  // Talent v4 (spec 2026-09-03 §3.3 E2) — passive chỉ tích stack khi
-  // điều kiện này đúng (PassiveSystem đọc HP ratio của player qua
-  // hpReader closure; vắng reader thì coi như điều kiện thoả —
-  // defensive cho PassiveSystem dựng kiểu cũ ngoài combat).
+  // Talent v4 (spec 2026-09-03 §3.3 E2) — passive only stacks while
+  // this condition holds (PassiveSystem reads the player's HP ratio via
+  // the hpReader closure; F4 - no reader, or a reader returning
+  // undefined outside battle, means the condition does NOT hold:
+  // unevaluable fails closed).
   // CP-01 - 'hpNotBelow' added for the mirrored talent pair Can Than /
   // Can Than (phan): the downside leg must apply only above the same
   // threshold, otherwise it halves the upside leg when both are live.
