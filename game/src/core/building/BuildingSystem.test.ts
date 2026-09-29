@@ -296,6 +296,11 @@ describe('BuildingSystem Linh Tuyá»n (engine offline, balance 2026-08-28)', 
     expect(first.amount).toBe(9)
     expect(manager.get('i1')!.accrualRealmId).toBe('qi_refining')
 
+    // The fraction carry-back also prices under the pinned window realm:
+    // lastCollectedAt = 100 - 0.17/mortalRate ~ 98.1; under the qi_refining
+    // rate it would sit ~99.7.
+    expect(manager.get('i1')!.lastCollectedAt).toBeLessThan(99)
+
     // Cua so ke tiep accrue o realm moi.
     const second = system.claim('i1', registry, manager, 200, 'qi_refining')
     expect(second.amount).toBeGreaterThan(9)
