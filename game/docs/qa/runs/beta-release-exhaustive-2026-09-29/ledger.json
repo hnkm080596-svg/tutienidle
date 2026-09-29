@@ -874,6 +874,72 @@
         }
       ],
       "reservedAt": "2026-09-29T15:50:00.917Z"
+    },
+    {
+      "id": "ASG-BX-REPAIR-W4A",
+      "parentId": null,
+      "capacityScope": "swe2-slot",
+      "inputBundleHash": "a890f60cdda847a29e19f4271a3955e2",
+      "dependencies": [],
+      "requiredCapabilities": [
+        "exec",
+        "repo-read",
+        "repo-write"
+      ],
+      "writeSurface": [
+        "branch beta-repair-wave4a"
+      ],
+      "readiness": "READY",
+      "status": "RESERVED",
+      "observedRuntimeId": "devin-a890f60cdda847a29e19f4271a3955e2",
+      "history": [
+        {
+          "at": "2026-09-29T16:44:00Z",
+          "from": "-",
+          "to": "READY",
+          "reason": "repair w4 dispatch"
+        },
+        {
+          "at": "2026-09-29T16:22:46.152Z",
+          "from": "READY",
+          "to": "RESERVED",
+          "reason": "admitted at 3/5 (incl. external 0)"
+        }
+      ],
+      "reservedAt": "2026-09-29T16:22:46.152Z"
+    },
+    {
+      "id": "ASG-BX-REPAIR-W4B",
+      "parentId": null,
+      "capacityScope": "swe2-slot",
+      "inputBundleHash": "0dbdf05361c84a3f8790754e5eff1603",
+      "dependencies": [],
+      "requiredCapabilities": [
+        "exec",
+        "repo-read",
+        "repo-write"
+      ],
+      "writeSurface": [
+        "branch beta-repair-wave4b"
+      ],
+      "readiness": "READY",
+      "status": "RESERVED",
+      "observedRuntimeId": "devin-0dbdf05361c84a3f8790754e5eff1603",
+      "history": [
+        {
+          "at": "2026-09-29T16:44:00Z",
+          "from": "-",
+          "to": "READY",
+          "reason": "repair w4 dispatch"
+        },
+        {
+          "at": "2026-09-29T16:22:46.305Z",
+          "from": "READY",
+          "to": "RESERVED",
+          "reason": "admitted at 4/5 (incl. external 0)"
+        }
+      ],
+      "reservedAt": "2026-09-29T16:22:46.305Z"
     }
   ],
   "consumptions": [],
@@ -7981,6 +8047,38 @@
       "payloadPath": "events/0058.json",
       "payloadHash": "8eaad44941a93ccd75cc8b7ec7cd401a0c41aad26e2232d6e69aa3a743c0d4d7",
       "eventHash": "ecb762c38b507d14a8288f8044a733da397ad60115e1d0ab55fcf1428dcdf5e4"
+    },
+    {
+      "seq": 59,
+      "at": "2026-09-29T16:22:46.153Z",
+      "kind": "SCHEDULE",
+      "actor": "coordinator-beta",
+      "state": {
+        "productStateId": "8d7ea1cd7ca3df591edd09011e5c8a123a59536dd71d831c886f8ba2c016c435",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "previousEventHash": "ecb762c38b507d14a8288f8044a733da397ad60115e1d0ab55fcf1428dcdf5e4",
+      "payloadPath": "events/0059.json",
+      "payloadHash": "98818d263d599bd2e82d00a1d8045af09e3bda8f1bf12096f89fc2454bdb986b",
+      "eventHash": "5e14d57dfafc2e33cb6bb5b60b58070a0d8db69c8fafa9beb39c2c13d915b3fc"
+    },
+    {
+      "seq": 60,
+      "at": "2026-09-29T16:22:46.306Z",
+      "kind": "SCHEDULE",
+      "actor": "coordinator-beta",
+      "state": {
+        "productStateId": "8d7ea1cd7ca3df591edd09011e5c8a123a59536dd71d831c886f8ba2c016c435",
+        "contractId": "1625f816e8434364a64468f01e3ec6f83c2b853f4c024bb8cf89df29525722a7",
+        "attackModelId": "be7649f904cdb4a89fa7a31826c0ac849ca27d9a1a825c75c4b6fed7cc2a9f69",
+        "environmentId": "d2d445e1f33d5559e46ca0150b3729f1d32947e4f501bb06ff2dd7970cb48e4e"
+      },
+      "previousEventHash": "5e14d57dfafc2e33cb6bb5b60b58070a0d8db69c8fafa9beb39c2c13d915b3fc",
+      "payloadPath": "events/0060.json",
+      "payloadHash": "a708d2a9912b198e26ac31986a762181e5826b6db9c83db78c3131765b81dfea",
+      "eventHash": "f05de2ba4296c7705bc05325bbf2b6109a6938cd00bc4c5333f606f33d825a96"
     }
   ]
 }

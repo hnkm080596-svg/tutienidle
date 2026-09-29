@@ -1,0 +1,29 @@
+{
+  "action": "admit",
+  "assignment": {
+    "id": "ASG-BX-REPAIR-W4B",
+    "parentId": null,
+    "capacityScope": "swe2-slot",
+    "inputBundleHash": "0dbdf05361c84a3f8790754e5eff1603",
+    "dependencies": [],
+    "requiredCapabilities": [
+      "exec",
+      "repo-read",
+      "repo-write"
+    ],
+    "writeSurface": [
+      "branch beta-repair-wave4b"
+    ],
+    "readiness": "READY",
+    "status": "READY",
+    "observedRuntimeId": "devin-0dbdf05361c84a3f8790754e5eff1603",
+    "history": [
+      {
+        "at": "2026-09-29T16:44:00Z",
+        "from": "-",
+        "to": "READY",
+        "reason": "repair w4 dispatch"
+      }
+    ]
+  }
+}
