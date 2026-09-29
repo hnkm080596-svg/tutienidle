@@ -111,14 +111,18 @@ async function handleExport() {
     return
   }
 
-  const raw = getRawSave()
+  // B1-C: remote mode exports the server-ACKed envelope (payload +
+  // revision bound as one identity); local mode's slot is the same
+  // facade. getRawSave stays as a legacy fallback only.
+  const cached = await cloudSaveCoordinator.readCachedSave()
+  const raw = cached?.raw ?? getRawSave()
 
   if (raw) {
     exportSaveToFile(
       raw,
       remoteAuthoritative
-        ? { source: 'cloud', revision: cloudSaveCoordinator.getRevision() }
-        : { source: 'local', revision: cloudSaveCoordinator.getRevision() },
+        ? { source: 'cloud', revision: cached?.revision ?? cloudSaveCoordinator.getRevision() }
+        : { source: 'local', revision: cached?.revision ?? cloudSaveCoordinator.getRevision() },
     )
   }
 }

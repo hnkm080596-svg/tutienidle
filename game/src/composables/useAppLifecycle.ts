@@ -310,6 +310,18 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
         return { status: 'failed' }
       }
 
+      if (loaded.status === 'pending-conflict' || loaded.status === 'pending-quarantined') {
+        // B1-C - a durable pending mutation could not resolve forward:
+        // genuine CAS divergence (record retained in the journal) or a
+        // corrupt/uncommittable record (parked in quarantine). The
+        // pending payload bytes route through the same export/delete
+        // recovery surface as a corrupted save; deleteSave drops the
+        // envelope keys so a resolved pending never wedges the next boot.
+        saveIssue.report('corrupted', loaded.pendingRaw)
+        boot.fail()
+        return { status: 'failed' }
+      }
+
       if (loaded.status === 'empty' && !createNewCharacter) {
         boot.requireCharacter()
         return { status: 'require-character' }

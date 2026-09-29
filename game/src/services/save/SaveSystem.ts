@@ -16,6 +16,7 @@ import {
 } from './saveAcceptance'
 import { CURRENT_SAVE_VERSION } from './saveVersion'
 import {
+  listSaveEnvelopeKeys,
   resolveBackupKey,
   resolveImportHandoffKey,
   resolveRevisionKey,
@@ -665,11 +666,18 @@ export function deleteSave(): boolean {
 
   let ok = true
 
-  for (const key of [
+  // B1-C: a user-confirmed reset also drops the remote-mode durable
+  // envelopes (pending journal / acked cache / quarantine) bound to this
+  // account - the server row stays the authority, and dropping the
+  // journal releases a permanently-unresolved pending for export-or-drop.
+  const keys = [
     resolveSaveKey(),
     resolveImportHandoffKey(),
     resolveRevisionKey(),
-  ]) {
+    ...listSaveEnvelopeKeys(),
+  ]
+
+  for (const key of keys) {
     try {
       localStorage.removeItem(key)
     } catch {

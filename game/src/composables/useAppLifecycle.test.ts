@@ -277,6 +277,45 @@ describe('useAppLifecycle — boot idempotence (Remediation Task 5)', () => {
   })
 })
 
+describe('useAppLifecycle — B1-C pending load surfaces', () => {
+  it("load 'pending-conflict' routes the durable record's bytes to the corrupted surface + boot.fail (B1-C)", async () => {
+    const stubs = makeStubs()
+    ;(stubs.coordinator.load as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      status: 'pending-conflict',
+      currentRevision: 9,
+      pendingRaw: 'pending-payload-bytes',
+    })
+
+    const lifecycle = makeLifecycle(stubs)
+    const outcome = await lifecycle.bootGame({ createNewCharacter: false })
+
+    expect(outcome.status).toBe('failed')
+    expect(stubs.saveIssue.report).toHaveBeenCalledWith('corrupted', 'pending-payload-bytes')
+    expect(stubs.boot.fail).toHaveBeenCalledTimes(1)
+    expect(stubs.onError).not.toHaveBeenCalled()
+
+    lifecycle.stopAll()
+  })
+
+  it("load 'pending-quarantined' routes pendingRaw to the corrupted surface + boot.fail (B1-C)", async () => {
+    const stubs = makeStubs()
+    ;(stubs.coordinator.load as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      status: 'pending-quarantined',
+      reason: 'journal-envelope-corrupt',
+      pendingRaw: 'quarantined-bytes',
+    })
+
+    const lifecycle = makeLifecycle(stubs)
+    const outcome = await lifecycle.bootGame({ createNewCharacter: false })
+
+    expect(outcome.status).toBe('failed')
+    expect(stubs.saveIssue.report).toHaveBeenCalledWith('corrupted', 'quarantined-bytes')
+    expect(stubs.boot.fail).toHaveBeenCalledTimes(1)
+
+    lifecycle.stopAll()
+  })
+})
+
 describe('useAppLifecycle — ARCH-013/L04 boot generation fence', () => {
   // Audit L04 executed: deferred load -> real stopAll -> resolve 'ok'
   // produced {intervals:1, restores:1, entries:1, handle:1} - a disposed

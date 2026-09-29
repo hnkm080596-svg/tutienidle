@@ -12,7 +12,6 @@
     "playwright.supabase.config.ts",
     "eslint.config.*",
     "tests/e2e/**/*",
-    "tests/integration/**/*",
     "electron/**/*.ts"
   ],
   "compilerOptions": {

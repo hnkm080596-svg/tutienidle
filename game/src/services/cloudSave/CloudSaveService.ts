@@ -30,6 +30,24 @@ export type CloudSaveLoadResult =
       character?: RemoteCharacterMetadata
     }
   | {
+      /** remote-authoritative only (B1-C): a durable pending mutation
+       * hit genuine CAS divergence during the load-time replay. The
+       * journal record is retained and pendingRaw carries the pending
+       * payload bytes for the recovery/export surface. */
+      status: 'pending-conflict'
+      currentRevision: number
+      pendingRaw: string
+    }
+  | {
+      /** remote-authoritative only (B1-C): a durable pending record was
+       * corrupt or permanently uncommittable; it was parked in the
+       * quarantine slot and pendingRaw preserves its payload bytes for
+       * explicit export. */
+      status: 'pending-quarantined'
+      reason: string
+      pendingRaw: string
+    }
+  | {
       status: 'unavailable'
       message: string
       /** B1.7 taxonomy: transport/session/config rejections keep their
@@ -41,7 +59,15 @@ export type CloudSaveLoadResult =
     }
 
 export type CloudSaveWriteResult =
-  | { status: 'ok'; revision: number; recoveredFromConflict?: boolean }
+  | {
+      status: 'ok'
+      revision: number
+      recoveredFromConflict?: boolean
+      /** B1-C: the server ACK committed but a durable mirror step
+       *  (cache write / journal clear) reported a storage or quota
+       *  failure - the server ACK remains the authority. */
+      storageWarning?: string
+    }
   | { status: 'conflict'; currentRevision: number }
   | { status: 'unavailable'; message: string; retryable: boolean; code?: BackendErrorCode; detail?: string }
 
@@ -59,4 +85,11 @@ export interface CloudSaveService {
   readonly capability: CloudSaveCapability
   load(): Promise<CloudSaveLoadResult>
   save(save: GameSave, expectedRevision: number): Promise<CloudSaveWriteResult>
+  /** B1-C: the ACKed cache mirror for export/resume seams - null when
+   *  absent or corrupt. Never an authority read. */
+  readCachedSave?(): Promise<{ raw: string; revision: number } | null>
+  /** B1-C: generation fence. Reset/logout/user-switch calls this so
+   *  in-flight continuations of the OLD generation cannot write the
+   *  checkpoint, journal, or cache when their transport resolves. */
+  advanceGeneration?(): void
 }

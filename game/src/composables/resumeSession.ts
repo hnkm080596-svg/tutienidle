@@ -6,6 +6,8 @@
 // save key; no writes, no boot-authority changes.
 import { readSupabaseSession } from '@/services/supabase/SupabaseSession'
 import { getRawSave } from '@/services/save/SaveSystem'
+import { readAnyAckedSaveEnvelope } from '@/services/cloudSave/AckedSaveCache'
+import { resolveSaveAccountId } from '@/services/save/saveKeys'
 import type { AuthSession } from '@/services/auth/AuthService'
 
 export interface ResumeCandidate {
@@ -13,11 +15,21 @@ export interface ResumeCandidate {
   name: string
 }
 
+/** Local save bytes, else the B1-C server-ACKed envelope mirror kept by
+ *  remote mode - same resume affordance either way. */
+function rawSaveForResume(): string | null {
+  try {
+    return getRawSave() ?? readAnyAckedSaveEnvelope(resolveSaveAccountId())?.rawPayload ?? null
+  } catch {
+    return null
+  }
+}
+
 /** True when a stored session or any resolvable save exists - enough to
  *  justify the short intro + continue affordance. */
 export function hasResumeCandidate(): boolean {
   try {
-    return Boolean(readSupabaseSession()) || Boolean(getRawSave())
+    return Boolean(readSupabaseSession()) || Boolean(rawSaveForResume())
   } catch {
     return false
   }
@@ -28,7 +40,7 @@ export function hasResumeCandidate(): boolean {
  *  as a fresh guest session (same shape MockAuthService returns). */
 export function readResumeCandidate(): ResumeCandidate | null {
   const stored = readSupabaseSession()
-  const raw = getRawSave()
+  const raw = rawSaveForResume()
 
   if (!stored && !raw) {
     return null

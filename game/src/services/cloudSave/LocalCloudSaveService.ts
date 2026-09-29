@@ -1,4 +1,4 @@
-import { loadGame, writeGameSave, type GameSave } from '../save/SaveSystem'
+import { getRawSave, loadGame, writeGameSave, type GameSave } from '../save/SaveSystem'
 import { resolveRevisionKey } from '../save/saveKeys'
 import type { CloudSaveLoadResult, CloudSaveService, CloudSaveWriteResult } from './CloudSaveService'
 
@@ -9,6 +9,12 @@ export function readLocalSaveRevision(): number {
 
 export class LocalCloudSaveService implements CloudSaveService {
   readonly capability = 'local-only' as const
+
+  // B1-C cache facade - the local slot IS the mirror here.
+  async readCachedSave(): Promise<{ raw: string; revision: number } | null> {
+    const raw = getRawSave()
+    return raw ? { raw, revision: readLocalSaveRevision() } : null
+  }
 
   async load(): Promise<CloudSaveLoadResult> {
     try {

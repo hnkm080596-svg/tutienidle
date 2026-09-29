@@ -333,6 +333,26 @@ describe('backup / restore', () => {
     expect(localStorage.getItem(SAVE_REVISION_KEY)).toBeNull()
   })
 
+  it('deleteSave() drops this account\'s B1-C envelopes but keeps another account\'s', () => {
+    // B1-C (PR4): a user-confirmed reset must release the durable remote
+    // envelopes (pending journal / acked cache / quarantine) bound to the
+    // resolved account - never another account's, never another env's.
+    const envA = 'beta:example'
+    const envB = 'staging:example'
+    localStorage.setItem(`${'tien-hiep-idle-save-journal'}:${envA}:guest`, 'j')
+    localStorage.setItem(`${'tien-hiep-idle-save-acked'}:${envA}:guest`, 'a')
+    localStorage.setItem(`${'tien-hiep-idle-save-quarantine'}:${envB}:guest`, 'q')
+    localStorage.setItem(`${'tien-hiep-idle-save-journal'}:${envA}:u-other`, 'j2')
+
+    deleteSave()
+
+    expect(localStorage.getItem(`${'tien-hiep-idle-save-journal'}:${envA}:guest`)).toBeNull()
+    expect(localStorage.getItem(`${'tien-hiep-idle-save-acked'}:${envA}:guest`)).toBeNull()
+    expect(localStorage.getItem(`${'tien-hiep-idle-save-quarantine'}:${envB}:guest`)).toBeNull()
+    // Cross-account isolation: u-other's pending record survives intact.
+    expect(localStorage.getItem(`${'tien-hiep-idle-save-journal'}:${envA}:u-other`)).toBe('j2')
+  })
+
   it('restoreBackup() ghi backup trở lại SAVE_KEY', () => {
     localStorage.setItem(SAVE_KEY, VALID_RAW)
     backupCurrentSave()
