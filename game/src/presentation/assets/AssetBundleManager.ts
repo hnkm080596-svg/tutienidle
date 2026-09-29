@@ -139,6 +139,9 @@ export class AssetBundleManager implements AssetPort {
   // immediately without re-fetching a known-missing file.
   private readonly missingResources = new Map<string, number>()
   private readonly inFlightLoads = new Map<string, Promise<void>>()
+  /** DOM-lane keys inside loadedResources — they survive loader-scene swaps
+   *  (browser cache / AudioManager bytes are scene-independent). */
+  private readonly domLoadedKeys = new Set<string>()
   // DOM image/audio loads are scene-independent (browser cache /
   // AudioManager): dedupe them in a map a loader swap does NOT clear,
   // otherwise a mid-flight fetch becomes unjoinable and a second
@@ -174,7 +177,12 @@ export class AssetBundleManager implements AssetPort {
       // from re-publishing its result into the fresh cache when it resolves.
       this.loaderScene = scene
       this.loaderGeneration += 1
-      this.loadedResources.clear()
+      // Only scene-bound records die with the loader swap: DOM-lane keys
+      // (browser image cache / decoded AudioManager bytes) outlive any
+      // loader scene, so they stay loaded across the swap.
+      for (const key of [...this.loadedResources]) {
+        if (!this.domLoadedKeys.has(key)) this.loadedResources.delete(key)
+      }
       // DOM lanes keep their own in-flight map (domInFlightLoads): a DOM
       // fetch's result lives in the browser/AudioManager caches, which are
       // scene-independent, so a loader swap must not detach it into an
@@ -317,6 +325,7 @@ export class AssetBundleManager implements AssetPort {
     this.inFlightLoads.clear()
     this.domInFlightLoads.clear()
     this.loadedResources.clear()
+    this.domLoadedKeys.clear()
     this.missingResources.clear()
     this.knownDescriptors.clear()
   }
@@ -358,7 +367,10 @@ export class AssetBundleManager implements AssetPort {
         // record stays true no matter which Phaser.Game is current - fencing
         // it would turn every first-entry host registration into a spurious
         // "superseded" failure mid-transition.
-        this.loadedResources.add(desc.key)
+        if (!this.disposed) {
+          this.loadedResources.add(desc.key)
+          this.domLoadedKeys.add(desc.key)
+        }
       } finally {
         // Identity-guarded delete: a NEW load may already have registered
         // its own entry for this key — a stale continuation must not
@@ -408,14 +420,15 @@ export class AssetBundleManager implements AssetPort {
         if (!this.disposed) {
           AudioManager.getInstance().attachEncodedBuffer(desc.key, bytes)
           this.loadedResources.add(desc.key)
+          this.domLoadedKeys.add(desc.key)
         }
       } catch {
         // The deduped loader never carries a caller's signal, so every
         // rejection here is a real fetch/decode failure and counts against
         // the attempt bound. Read-modify-write against the current count:
-        // a loader swap clears the dedupe map and lets a second load for
-        // the same key overlap the first - both closures would hold the
-        // same stale `tries` and under-count the rejections.
+        // the shared map survives a loader swap, so a second load for the
+        // same key can still overlap the first - both closures would hold
+        // the same stale `tries` and under-count the rejections.
         this.missingResources.set(
           desc.key,
           Math.max(this.missingResources.get(desc.key) ?? 0, tries) + 1,

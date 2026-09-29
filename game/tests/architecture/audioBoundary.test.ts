@@ -17,7 +17,6 @@ import { describe, expect, it } from 'vitest'
 import { join } from 'node:path'
 import { readTs, SCAN_TIMEOUT, srcCorpus, isTestFile } from './helpers/scanTs'
 import {
-  scriptlessTemplateText,
   templateExprText,
   uncommented,
   literalRanges,
@@ -51,7 +50,7 @@ const IMPORT_META_SPEC_RE =
 // `[(?!['"`])` alternative covers bracket members whose content is not
 // a quoted `glob`/`resolve` lane name.
 const NONLITERAL_META_RE =
-  /\bimport\s*\.\s*meta\s*(?:(?:\?\s*)?(?:\.|!)\s*(?:glob|resolve)\s*!?\s*(?:\?\s*\.\s*)?|\[\s*['"`](?:glob|resolve)['"`]\s*\]\s*(?:\?\s*\.\s*)?|\[\s*(?!['"`])[^\]]*\]\s*(?:\?\s*\.\s*)?)\(\s*(?!['"`])[^)]*\)/g
+  /\bimport\s*\.\s*meta\s*(?:(?:\?\s*)?(?:\.|!)\s*(?:glob|resolve)\s*!?\s*(?:\?\s*\.\s*)?|\[\s*['"`](?:glob|resolve)['"`]\s*\]\s*(?:\?\s*\.\s*)?|\[\s*(?!['"`])(?![A-Za-z_$][\w$]*\s*\])[^\]]*\]\s*(?:\?\s*\.\s*)?)\(\s*(?!['"`])[^)]*\)/g
 // `import('to' + 'ne')` is a literal-shaped call whose specifier is a
 // concat - the extractor reads only 'to' and misses the spell. The same
 // holds for every operator/wrapper that follows the literal (`||`, `??`,
@@ -151,20 +150,6 @@ function importSpecifiers(text: string, fileName: string): string[] {
     out.push(match[1]!)
   }
   return out
-}
-
-// .vue template markup is real code territory too: `@click="import(
-// 'tone')"` compiles into a function body, so the dynamic/concat call
-// tripwires must sweep it. uncommented() sees only the <script>, so the
-// markup text (script pairs and HTML comments removed) is scanned
-// separately - attribute EXPRESSIONS are scanned wholesale (literal
-// attr text with a cue-ish string flags nothing here since only call
-// shapes are checked).
-function templateTextOf(text: string): string {
-  // The shared helper owns the script-span + comment-range blanking - an
-  // unclosed/dead `<script>` or an `<!--` inside a quoted attribute must
-  // not desync a local copy of the same masking logic.
-  return scriptlessTemplateText(text)
 }
 
 // A specifier belongs to the audio subsystem when its path walks through an
@@ -357,8 +342,11 @@ describe('audio boundary', () => {
         for (const m of clean.matchAll(
           /\b(const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*(?:'([^']*)'|"([^"]*)"|`([^`]*)`)/g,
         )) {
-          const lit = m[3] ?? m[4] ?? m[5]!
-          if (lit === 'glob' || lit === 'resolve') metaIdentLit.set(m[2]!, lit)
+          // Every single-literal const is stored, not only lane names -
+          // `const K = 'env'` then `import.meta[K]` resolves to a benign
+          // key and must not flag, while `import.meta[UNRESOLVED]` stays
+          // an unverifiable lane.
+          metaIdentLit.set(m[2]!, m[3] ?? m[4] ?? m[5]!)
           metaDeclKind.set(m[2]!, m[1]!)
         }
         // A rebound non-const name's literal is stale evidence (`let K =
@@ -376,12 +364,13 @@ describe('audio boundary', () => {
         )) {
           const i = m.index ?? 0
           if (inLit(i)) continue
-          if (metaIdentLit.has(m[1]!)) {
+          const resolved = metaIdentLit.get(m[1]!)
+          if (resolved === 'glob' || resolved === 'resolve') {
             offenders.push(`${file.fromSrc} -> import.meta ident-key ${m[0].slice(0, 60)}`)
-          } else {
+          } else if (!metaIdentLit.has(m[1]!)) {
             // `import.meta[k]` on a key this scan cannot resolve is an
             // unverifiable lane - flag the shape instead of assuming it
-            // is benign.
+            // is benign. A resolved benign literal stays silent.
             offenders.push(`${file.fromSrc} -> import.meta unresolved-key ${m[0].slice(0, 60)}`)
           }
         }
@@ -413,6 +402,39 @@ describe('audio boundary', () => {
           for (const mm of clean.matchAll(reMember)) {
             if (inLit(mm.index ?? 0)) continue
             offenders.push(`${file.fromSrc} -> import.meta alias ${mm[0].slice(0, 60)}`)
+          }
+          // Concat/ident keys on the alias (`ns['glo'+'b']`, `ns[K3]`)
+          // decode through the same segment-join/decl-resolution the
+          // direct `import.meta[...]` arms use.
+          const reAliasBracket = new RegExp(
+            `\\b${m[1]!}\\s*(?:[?!]\\s*\\.?\\s*|\\.\\s*)?\\[\\s*([^\\]]*)\\]`,
+            'g',
+          )
+          for (const bm of clean.matchAll(reAliasBracket)) {
+            if (inLit(bm.index ?? 0)) continue
+            const segs = [...bm[1]!.matchAll(/'([^']*)'|"([^"]*)"|`([^`]*)`/g)].map(
+              (sm) =>
+                (sm[1] ?? sm[2] ?? sm[3]!)
+                  .replace(/\\x([0-9a-fA-F]{2})/g, (_, h: string) => String.fromCharCode(parseInt(h, 16)))
+                  .replace(/\\u\{([0-9a-fA-F]+)\}/g, (_, h: string) => String.fromCodePoint(parseInt(h, 16)))
+                  .replace(/\\u([0-9a-fA-F]{4})/g, (_, h: string) => String.fromCharCode(parseInt(h, 16))),
+            )
+            if (segs.length > 0) {
+              // A single literal `'glob'` is already flagged by reMember -
+              // only joined multi-segment spellings report here.
+              if (segs.length > 1 && /^(?:glob|resolve)$/.test(segs.join(''))) {
+                offenders.push(`${file.fromSrc} -> import.meta alias bracket ${bm[0].slice(0, 60)}`)
+              }
+              continue
+            }
+            const keyIdent = /^\s*([A-Za-z_$][\w$]*)\s*$/.exec(bm[1]!)?.[1]
+            if (!keyIdent) continue
+            const resolved = metaIdentLit.get(keyIdent)
+            if (resolved === 'glob' || resolved === 'resolve') {
+              offenders.push(`${file.fromSrc} -> import.meta alias ident-key ${bm[0].slice(0, 60)}`)
+            } else if (!metaIdentLit.has(keyIdent)) {
+              offenders.push(`${file.fromSrc} -> import.meta alias unresolved-key ${bm[0].slice(0, 60)}`)
+            }
           }
         }
         // `const g = import.meta.glob` hands the bundling lane around as
@@ -497,7 +519,7 @@ describe('audio boundary', () => {
         // would otherwise escape the reach check.
         if (
           !TRIGGER.test(uncommented(file.text, file.fromSrc)) &&
-          !(file.fromSrc.endsWith('.vue') && TRIGGER.test(templateTextOf(file.text)))
+          !(file.fromSrc.endsWith('.vue') && TRIGGER.test(templateExprText(file.text)))
         ) {
           continue
         }

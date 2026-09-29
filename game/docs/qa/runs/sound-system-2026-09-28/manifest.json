@@ -22614,7 +22614,7 @@
       "path": "src/presentation/assets/AssetBundleManager.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "64f0c1e79fa1da7d3e64f17dec29de297448095f48e007a4b56ad87bbdb30693"
+      "hash": "baf03eaa6eb762218c60f687184a0d4adaf07fe64016e2886584280cb16e6928"
     },
     {
       "path": "src/presentation/audio/ambientAudioDriver.test.ts",
@@ -23532,13 +23532,13 @@
       "path": "tests/architecture/audioBindingWiring.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "c17d9f51a9432670ef476327089ef359537ea7d0eeb404391f46e0120353c5c1"
+      "hash": "8631e51fa8c557ca2c66cc0eb12e1294e51b4c7ef3db62f53c2e1ed1f065cfaf"
     },
     {
       "path": "tests/architecture/audioBoundary.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "30570cd7fcd4b563a35852d092046857d5c97247a7faaba2d8325e6f3e9077a6"
+      "hash": "d25bb281708e89cbec1da9cbb5ded86cb0b729d86da6ca80c8b7bd1d9999284f"
     },
     {
       "path": "tests/architecture/audioManifestCompleteness.test.ts",
@@ -23658,7 +23658,7 @@
       "path": "tests/architecture/helpers/commentStrip.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "a0ff50839a07d6e035a2459f63f9f6962cd9e7909e83d27e2b5543a5965f03e7"
+      "hash": "3b10f9addfdf1769ac09218a7bf1243260bad678b62423de690f0f0f1dc2c268"
     },
     {
       "path": "tests/architecture/helpers/scanTs.ts",
@@ -23742,7 +23742,7 @@
       "path": "tests/architecture/screenShakeAuthority.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "4fa852af44b0d73a551744b4b3f3d7360b996bf6ab7257a52b622e7bf2ab41af"
+      "hash": "73e986a4278e0cfc8185c2b1bbc99b7bbd4b282284f9dcdbe47dd1c3a94c7420"
     },
     {
       "path": "tests/architecture/skillDefProducerSources.test.ts",
@@ -24033,5 +24033,5 @@
       "hash": "e69b4133ed37ca9a4f05e66d90521d0bb749c4764bf1f454d0eb13de601f7940"
     }
   ],
-  "productStateId": "9424ee8cc8b28554a08c44889e7b2f7dc18d76fc5117e37ccbaeed09997c4752"
+  "productStateId": "df4741f521af2f2c82931da6e608cc3dc34386f7668e2fb905db1ada4a06292c"
 }

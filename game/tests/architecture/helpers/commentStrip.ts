@@ -482,10 +482,23 @@ export function templateExprText(text: string): string {
   const templateSpan = templateOpen
     ? (() => {
         // Nested <template v-if> elements share the tag name - the ROOT
-        // template's close is the LAST `</template>` in the document.
+        // template's close is the `</template>` that returns depth to 0.
+        // A `</template>` sitting in a top-level foreign block's BODY
+        // (`<docs>` carrying a literal close tag) appears only AFTER the
+        // root already closed, so depth counting never reads it - the
+        // old last-match scan extended the span into inert text.
+        let depth = 0
         let end = base.length
-        for (const cm of base.matchAll(/<\/\s*template\s*>/gi)) {
-          end = cm.index! + cm[0].length
+        for (const tm of base.matchAll(/<template(?:\s[^>]*)?>|<\/\s*template\s*>/gi)) {
+          if (tm[0].startsWith('</')) {
+            depth--
+            if (depth === 0) {
+              end = tm.index! + tm[0].length
+              break
+            }
+          } else if (!/\/\s*>$/.test(tm[0])) {
+            depth++
+          }
         }
         return { pos: templateOpen.index!, end }
       })()
@@ -515,6 +528,21 @@ export function templateExprText(text: string): string {
       quotedAttr.push([qStart, qStart + am[0].length - am[0].indexOf(am[1]!)])
     }
   }
+  // A lone `'`/`"` inside a tag (unquoted attr value like `class=don't`)
+  // makes the quote-aware arm fail the WHOLE tag - every directive on it
+  // would go unswept. Fall back to a quote-less extent for `<x` opens the
+  // first arm never matched; malformed markup still gets its sweep.
+  {
+    const covered = new Set(tagSpans.map(([a]) => a))
+    for (const fm of exprText.matchAll(/<[a-zA-Z][^<>]*>/g)) {
+      if (covered.has(fm.index!)) continue
+      tagSpans.push([fm.index!, fm.index! + fm[0].length])
+      for (const am of fm[0].matchAll(/=\s*(["'])[\s\S]*?\1/g)) {
+        const qStart = fm.index! + am.index! + am[0].indexOf(am[1]!)
+        quotedAttr.push([qStart, qStart + am[0].length - am[0].indexOf(am[1]!)])
+      }
+    }
+  }
   const inQuotedAttr = (i: number) => quotedAttr.some(([a, b]) => i >= a && i < b)
   // Directive-attr arms are only real inside a tag - element TEXT like
   // `press @click="x"` is prose, not a binding. `{{ }}` interps (m[6])
@@ -525,15 +553,15 @@ export function templateExprText(text: string): string {
       // Dynamic-arg names are arbitrary expressions inside brackets
       // (`@[ e ]`, `@[e+f]`, `v-on:['click']`) and values may be unquoted
       // (`@click=expr`) - a class limited to word chars missed both shapes.
-      /(?:@|#|:|v-[\w.-]*:)(?:[\w.#:-]*\[[^\]]*\][\w.#:-]*|[\w.#:-]*)\s*=\s*(?:(['"])((?:(?!\1)[\s\S])*)\1|(\{(?:'(?:\\.|[^'\\])*'|"(?:\\.|[^"\\])*"|`(?:\\.|[^`\\])*`|[^'"}]|}(?![\s>]))*\})|([^\s>'"]+))|\bv-[\w.-]+\s*=\s*(?:(['"])((?:(?!\5)[\s\S])*)\5|(\{(?:'(?:\\.|[^'\\])*'|"(?:\\.|[^"\\])*"|`(?:\\.|[^`\\])*`|[^'"}]|}(?![\s>]))*\}))|\{\{((?:'(?:\\.|[^'\\])*'|"(?:\\.|[^"\\])*"|`(?:\\.|[^`\\])*`|\/[^/\n]*\/[gimsuy]*|[^'"}]|}(?!}))*)\}\}/g,
+      /(?:@|#|:|v-[\w.-]*:)(?:[\w.#:-]*\[[^\]]*\][\w.#:-]*|[\w.#:-]*)\s*=\s*(?:(['"])((?:(?!\1)[\s\S])*)\1|(\{(?:'(?:\\.|[^'\\])*'|"(?:\\.|[^"\\])*"|`(?:\\.|[^`\\])*`|[^'"}]|}(?![\s>]))*\})|([^\s>'"]+))|\bv-[\w.-]+\s*=\s*(?:(['"])((?:(?!\5)[\s\S])*)\5|(\{(?:'(?:\\.|[^'\\])*'|"(?:\\.|[^"\\])*"|`(?:\\.|[^`\\])*`|[^'"}]|}(?![\s>]))*\})|([^\s>'"]+))|\{\{((?:'(?:\\.|[^'\\])*'|"(?:\\.|[^"\\])*"|`(?:\\.|[^`\\])*`|\/[^/\n]*\/[gimsuy]*|[^'"}]|}(?!}))*)\}\}/g,
     ),
   ]
     .filter(
       (m) =>
         !inQuotedAttr(m.index ?? 0) &&
-        (m[8] !== undefined || inTag(m.index ?? 0)),
+        (m[9] !== undefined || inTag(m.index ?? 0)),
     )
-    .map((m) => m[2] ?? m[3] ?? m[4] ?? m[6] ?? m[7] ?? m[8]!)
+    .map((m) => m[2] ?? m[3] ?? m[4] ?? m[6] ?? m[7] ?? m[8] ?? m[9]!)
     .join('\n')
 }
 

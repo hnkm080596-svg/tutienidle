@@ -103,7 +103,15 @@ describe('screen shake authority', () => {
             for (const ch of inner) {
               if (ch === '(' || ch === '[' || ch === '{') ad++
               else if (ch === ')' || ch === ']' || ch === '}') ad--
-              if (ad === 0 && (ch === ',' || ch === '?' || ch === ':')) {
+              if (ad === 0 && ch === '?') {
+                // A depth-0 `?` opens a ternary - everything before it
+                // is the CONDITION (`cam[k === 'shake' ? 'a' : 'b']`),
+                // not a member alternative; only `:`/`,` arms carry
+                // key text.
+                cur = ''
+                continue
+              }
+              if (ad === 0 && (ch === ',' || ch === ':')) {
                 alts.push(cur)
                 cur = ''
                 continue
@@ -114,9 +122,8 @@ describe('screen shake authority', () => {
           }
           let flaggedBracket = false
           for (const alt of alts) {
-            const segs = [...alt.matchAll(/'([^']*)'|"([^"]*)"|`([^`]*)`/g)].map(
-              (sm) => decodeSeg(sm[1] ?? sm[2] ?? sm[3]!),
-            )
+            const segMatches = [...alt.matchAll(/'([^']*)'|"([^"]*)"|`([^`]*)`/g)]
+            const segs = segMatches.map((sm) => decodeSeg(sm[1] ?? sm[2] ?? sm[3]!))
             if (segs.length === 0) {
               // `cam[key]` / `cam[k ? KEY : 'x']` with a bare identifier
               // key resolves against the file's own `const KEY = '...'`
@@ -135,11 +142,24 @@ describe('screen shake authority', () => {
               break
             }
             // `cam['sh' + k]` mixes a quoted segment with a dynamic key -
-            // flag only when the static half is a substring of `shake`
-            // (a concat that could actually spell it); `cam['icon' +
-            // kind]` is a resolvable-enough shape to stay silent.
+            // flag only when the static parts can actually SPELL 'shake'
+            // with some fill for the dynamic gaps: the first quoted seg
+            // must be a PREFIX unless a dynamic precedes it, the last a
+            // SUFFIX unless one follows, and interior segs keep order -
+            // an ordered `seg.*seg` pattern anchored by the dynamic
+            // positions tests all of that at once. `'sh' + k + 'e'` and
+            // `k + 'ake'` spell; `'ke' + x` and `'' + x` cannot.
             const rest = alt.replace(/'[^']*'|"[^"]*"|`[^`]*`/g, '')
-            if (/[A-Za-z_$]/.test(rest) && 'shake'.includes(joined)) {
+            const leadDyn = /[A-Za-z_$]/.test(alt.slice(0, segMatches[0]!.index))
+            const trailDyn = /[A-Za-z_$]/.test(
+              alt.slice(segMatches[segMatches.length - 1]!.index! + segMatches[segMatches.length - 1]![0].length),
+            )
+            const spellPattern = new RegExp(
+              `^${leadDyn ? '.*' : ''}${segs
+                .map((s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+                .join('.*')}${trailDyn ? '.*' : ''}$`,
+            )
+            if (joined.length > 0 && /[A-Za-z_$]/.test(rest) && spellPattern.test('shake')) {
               offenders.push(`${file.fromSrc}:${i} (mixed concat member)`)
               flaggedBracket = true
               break
@@ -174,7 +194,12 @@ describe('screen shake authority', () => {
             const keyM = /^\s*(?:\.\.\.\s*)?(?:shake\b|'shake'|"shake"|\['shake'\]|\["shake"\])/.exec(seg)
             if (keyM) {
               const rest = seg.slice(keyM[0].length)
-              if (/^\s*(?::|=|,?\s*$)/.test(rest)) {
+              if (/^\s*:\s*[{[]/.test(rest)) {
+                // `{shake: {s}}` / `{shake: [s]}` - a nested pattern
+                // binds `shake.s`/`shake[0]` to `s`; collect every
+                // local the inner pattern binds.
+                bound.push(...collectAnyBound(rest))
+              } else if (/^\s*(?::|=|,?\s*$)/.test(rest)) {
                 // The bound name is the first ident after `:` (a
                 // `{shake: s = d}` default still binds `s`).
                 const boundM = /^\s*:\s*([\w$]+)/.exec(rest)
@@ -203,14 +228,62 @@ describe('screen shake authority', () => {
         }
         const shakeBoundNames = (openIdx: number, endIdx: number): string[] =>
           collectShakeBound(text.slice(openIdx + 1, endIdx))
+        // Every local name an arbitrary destructure pattern binds:
+        // `s`, `a: b`, `{x: {y}}`, `[x]`, `s = d`, `...rest` - used for
+        // nested patterns under a `shake` key where ANY position can
+        // hold the extracted binding.
+        const collectAnyBound = (inner: string): string[] => {
+          const names: string[] = []
+          let depth = 0
+          let cur = ''
+          const segs: string[] = []
+          const open = inner.indexOf(inner.includes('{') ? '{' : '[')
+          for (let i = open + 1; i < inner.length; i++) {
+            const c = inner[i]!
+            if (c === '{' || c === '[') depth++
+            else if (c === '}' || c === ']') {
+              if (depth === 0) break
+              depth--
+            }
+            if (depth === 0 && c === ',') {
+              segs.push(cur)
+              cur = ''
+              continue
+            }
+            cur += c
+          }
+          segs.push(cur)
+          for (const seg of segs) {
+            const s = seg.replace(/^\s*\.\.\.\s*/, '').trim()
+            if (!s) continue
+            const colon = /^[\w$'"\[\]]+\s*:\s*([\s\S]+)$/.exec(s)
+            if (colon) {
+              const rhs = colon[1]!.trim()
+              if (rhs.startsWith('{') || rhs.startsWith('[')) {
+                names.push(...collectAnyBound(rhs))
+              } else {
+                const nm = /^([\w$]+)/.exec(rhs)
+                if (nm) names.push(nm[1]!)
+              }
+            } else if (/^[\w$]+\s*(=\s*[\s\S]+)?$/.test(s)) {
+              names.push(/^([\w$]+)/.exec(s)![1]!)
+            } else if (s.startsWith('{') || s.startsWith('[')) {
+              names.push(...collectAnyBound(s))
+            }
+          }
+          return names
+        }
         const flagBoundCalls = (names: string[]) => {
           for (const name of new Set(names)) {
             for (const sm of text.matchAll(
               // `(?<![\w$.])` keeps `obj.s(` (member call) out when `s`
               // is the bound name; `s?.(`/`s.call|apply|bind(` invoke
-              // the same binding through another shape.
+              // the same binding through another shape. `(s)(x)` is the
+              // paren-wrapped callee; bare-value fences cover
+              // `forEach(s)`, `hand = s`, `{go: s}`, `cond ? s : alt`
+              // reads; `case s:` is the label-position read.
               new RegExp(
-                `(?<![\\w$.])${name}\\s*!?\\s*\\(|\\b${name}\\s*[?!]*\\s*\\.\\s*(?:call|apply|bind)\\s*(?:\\?\\s*\\.)?\\s*\\(|(?<![\\w$.])${name}\\s*\\?\\.\\s*\\(`,
+                `(?<![\\w$.])${name}\\s*!?\\s*\\(|\\b${name}\\s*[?!]*\\s*\\.\\s*(?:call|apply|bind)\\s*(?:\\?\\s*\\.)?\\s*\\(|(?<![\\w$.])${name}\\s*\\?\\.\\s*\\(|\\(\\s*${name}\\s*\\)\\s*(?:\\?\\s*\\.)?\\s*\\(|(?:[(,=\\[:;{!&|?:+\\-*\\/%^~<>]|\\.\\.\\.|\\b(?:return|yield|await|typeof|void|in|of|instanceof|new|delete)\\s)\\s*${name}\\s*(?=[,)\\]};])|\\bcase\\s+${name}\\b[^:\\n]*:|\\?\\s*${name}\\s*:`,
                 'g',
               ),
             )) {

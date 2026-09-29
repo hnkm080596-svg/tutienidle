@@ -1,0 +1,35 @@
+{
+ "kind": "fix-batch",
+ "run": "sound-system-2026-09-28",
+ "state": "df4741f521af2f2c82931da6e608cc3dc34386f7668e2fb905db1ada4a06292c",
+ "pin": "70fc4ed6",
+ "fixes": [
+  "commentStrip: templateSpan depth-counting close (foreign-block </template> inert); tagSpans quote-kill fallback scan; unquoted v-* value arm (group renumber)",
+  "audioBindingWiring: patternSpans for(/paren shapes; mint lookbehind (?<![\\w$.]); emit-alias ternary/tag/case-expr arms; emit case-expr; parenEmitSpans dedupe; value-ref .call|apply|bind `(`-required; RECEIVER ?.[/.[ bridge; RECV_ALT destructure-mint gate; CONTROL_PAREN_CUE + stmt-case lookback; cue-alias bare/case/ternary + case cue:/playCue:; receiver-indirect [?!]*; parenCueSpans + resolveArgIdent; headMapIndex ?.[/![ ; ...[lit] spread resolution; litViolationCount dedupe; headInfo namePos gate",
+  "audioBoundary: NONLITERAL_META_RE bare-ident exclusion (single report); metaIdentLit all-literals + benign-resolution gate; reAliasBracket concat/ident arm; TRIGGER -> templateExprText (literal attrs excluded); dead templateTextOf removed",
+  "screenShakeAuthority: depth-0 `?` drops ternary condition; ordered-seg spell regex anchored by lead/trail dynamics; collectAnyBound nested-pattern recursion; flagBoundCalls lanes (paren-callee, bare-value fences, case, ternary)",
+  "AssetBundleManager: domLoadedKeys partition survives setLoaderScene (cleared on dispose); image/audio lanes gated on !disposed; stale RMW comment corrected"
+ ],
+ "dups": [
+  "F-W18-01 + INT F5 = F-SND-442 (emit mint self-flag)",
+  "F-W18-02 + INT F13 = F-SND-452 (ctrlParen param mint)",
+  "F-W18-03 + INT F1 = F-SND-445 (cue?.call/!.call + bare .bind/.call/.apply value reads)",
+  "F-W18-04 = F-SND-444 (?.[/.[ receiver bridge)",
+  "F-W18-06 + INT F4 = F-SND-454 (emit-alias ternary/tag)",
+  "F-W18-07 + INT F15a = F-SND-455 (ternary-condition member split)",
+  "INT F15b = F-SND-446 (spell-pattern join rule)",
+  "F-W18-10 + INT F8 = F-SND-447 (templateSpan foreign-body)",
+  "F-W18-11 = F-SND-449 (import.meta alias concat/ident)",
+  "F-W18-12 = F-SND-470 ((emit).call double-report)",
+  "F-W18-13 = F-SND-458 (concat multi-report)",
+  "INT F17 = F-SND-450 (ABM !disposed)",
+  "INT F19 = F-SND-469 ((cue)(x) double-report)"
+ ],
+ "residual": [
+  "useAudioStore(f(g())) 2-level call-arg receivers (F-SND-426 documented)",
+  "emit(factory()) whole-arg single call = forwarded-payload convention",
+  "unquoted attr values truncate at ' (HTML rule) - @click=fn('x') unquoted cannot carry literals",
+  "3 pre-existing master reds inherited post-#43: staticArtExtentDeclared (libuuid env, passes under node v24), combatContract onBattleStart, dynamicRegionHost/i18nKeyParity on dev/skill-vfx.ts"
+ ],
+ "verify": "EV-SND-FIX25: vue-tsc clean; architecture 196/196 (incl canvas test under node v24); audio scopes 100/100; 27-arm smuggle probe sweep (src/__w18probe, deleted) - every new arm fires at marked offset, clean corpus silent"
+}
