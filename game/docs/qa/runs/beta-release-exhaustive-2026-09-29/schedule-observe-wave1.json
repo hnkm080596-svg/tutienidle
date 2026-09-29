@@ -1,0 +1,23 @@
+[
+ {
+  "action": "observe",
+  "assignmentId": "ASG-BX-SAV",
+  "observedStatus": "exited",
+  "evidence": "report delivered and recorded; session terminated at local handoff",
+  "resultRef": "evidence/wave1"
+ },
+ {
+  "action": "observe",
+  "assignmentId": "ASG-BX-CBT",
+  "observedStatus": "exited",
+  "evidence": "report delivered and recorded; session terminated at local handoff",
+  "resultRef": "evidence/wave1"
+ },
+ {
+  "action": "observe",
+  "assignmentId": "ASG-BX-PRG",
+  "observedStatus": "exited",
+  "evidence": "report delivered and recorded; session terminated at local handoff",
+  "resultRef": "evidence/wave1"
+ }
+]
