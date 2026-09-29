@@ -1,0 +1,14 @@
+{
+  "action": "admit",
+  "assignment": {
+    "id": "ASGN-CLEAN-B-FINAL",
+    "readiness": "READY",
+    "capacityScope": "clean-review-slot-2-of-3",
+    "requiredCapabilities": [
+      "read-source",
+      "run-vitest",
+      "grep"
+    ],
+    "observedRuntimeId": "devin-68c33b9edd20466fa58d67afd69e455d"
+  }
+}

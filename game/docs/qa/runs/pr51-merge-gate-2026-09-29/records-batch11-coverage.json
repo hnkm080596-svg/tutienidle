@@ -1,0 +1,499 @@
+{
+ "records": [
+  {
+   "kind": "coverage",
+   "body": {
+    "id": "COV-STAT-DET",
+    "invariantId": "I-STAT-ZEROBASE-FLAT",
+    "surface": "DETERMINISTIC",
+    "attackIds": [],
+    "taxonomyIds": [],
+    "applicability": "REQUIRED",
+    "reason": "S9 evidence + clean-trio seals on frozen state",
+    "evidenceIds": [
+     "EV-VERIFY-S9-SCOPED",
+     "EV-NOVEL-S9"
+    ],
+    "reviewerIds": [
+     "coordinator-pr51"
+    ],
+    "status": "SATISFIED",
+    "weakProtection": false
+   }
+  },
+  {
+   "kind": "coverage",
+   "body": {
+    "id": "COV-STAT-STATIC",
+    "invariantId": "I-STAT-ZEROBASE-FLAT",
+    "surface": "STATIC_SEMANTIC",
+    "attackIds": [],
+    "taxonomyIds": [],
+    "applicability": "REQUIRED",
+    "reason": "S9 evidence + clean-trio seals on frozen state",
+    "evidenceIds": [
+     "EV-NOVEL-S9",
+     "EV-SEAL-A-FINAL",
+     "EV-SEAL-B-FINAL",
+     "EV-SEAL-C-FINAL"
+    ],
+    "reviewerIds": [
+     "coordinator-pr51"
+    ],
+    "status": "SATISFIED",
+    "weakProtection": false
+   }
+  },
+  {
+   "kind": "coverage",
+   "body": {
+    "id": "COV-STAT-INDEP",
+    "invariantId": "I-STAT-ZEROBASE-FLAT",
+    "surface": "INDEPENDENT_REVIEW",
+    "attackIds": [],
+    "taxonomyIds": [],
+    "applicability": "REQUIRED",
+    "reason": "S9 evidence + clean-trio seals on frozen state",
+    "evidenceIds": [
+     "EV-SEAL-A-FINAL",
+     "EV-SEAL-B-FINAL",
+     "EV-SEAL-C-FINAL"
+    ],
+    "reviewerIds": [
+     "RV-CLEAN-A-FINAL",
+     "RV-CLEAN-B-FINAL",
+     "RV-CLEAN-C-FINAL"
+    ],
+    "status": "SATISFIED",
+    "weakProtection": false
+   }
+  },
+  {
+   "kind": "coverage",
+   "body": {
+    "id": "COV-BLDG-DET",
+    "invariantId": "I-BUILDING-ACCRUAL-PIN",
+    "surface": "DETERMINISTIC",
+    "attackIds": [],
+    "taxonomyIds": [],
+    "applicability": "REQUIRED",
+    "reason": "S9 evidence + clean-trio seals on frozen state",
+    "evidenceIds": [
+     "EV-VERIFY-S9-SCOPED",
+     "EV-NOVEL-S9"
+    ],
+    "reviewerIds": [
+     "coordinator-pr51"
+    ],
+    "status": "SATISFIED",
+    "weakProtection": false
+   }
+  },
+  {
+   "kind": "coverage",
+   "body": {
+    "id": "COV-BLDG-STATIC",
+    "invariantId": "I-BUILDING-ACCRUAL-PIN",
+    "surface": "STATIC_SEMANTIC",
+    "attackIds": [],
+    "taxonomyIds": [],
+    "applicability": "REQUIRED",
+    "reason": "S9 evidence + clean-trio seals on frozen state",
+    "evidenceIds": [
+     "EV-NOVEL-S9",
+     "EV-SEAL-A-FINAL",
+     "EV-SEAL-B-FINAL",
+     "EV-SEAL-C-FINAL"
+    ],
+    "reviewerIds": [
+     "coordinator-pr51"
+    ],
+    "status": "SATISFIED",
+    "weakProtection": false
+   }
+  },
+  {
+   "kind": "coverage",
+   "body": {
+    "id": "COV-BLDG-INDEP",
+    "invariantId": "I-BUILDING-ACCRUAL-PIN",
+    "surface": "INDEPENDENT_REVIEW",
+    "attackIds": [],
+    "taxonomyIds": [],
+    "applicability": "REQUIRED",
+    "reason": "S9 evidence + clean-trio seals on frozen state",
+    "evidenceIds": [
+     "EV-SEAL-A-FINAL",
+     "EV-SEAL-B-FINAL",
+     "EV-SEAL-C-FINAL"
+    ],
+    "reviewerIds": [
+     "RV-CLEAN-A-FINAL",
+     "RV-CLEAN-B-FINAL",
+     "RV-CLEAN-C-FINAL"
+    ],
+    "status": "SATISFIED",
+    "weakProtection": false
+   }
+  },
+  {
+   "kind": "coverage",
+   "body": {
+    "id": "COV-OFFLINE-DET",
+    "invariantId": "I-OFFLINE-BUFF-SEGMENT",
+    "surface": "DETERMINISTIC",
+    "attackIds": [],
+    "taxonomyIds": [],
+    "applicability": "REQUIRED",
+    "reason": "S9 evidence + clean-trio seals on frozen state",
+    "evidenceIds": [
+     "EV-VERIFY-S9-SCOPED",
+     "EV-NOVEL-S9"
+    ],
+    "reviewerIds": [
+     "coordinator-pr51"
+    ],
+    "status": "SATISFIED",
+    "weakProtection": false
+   }
+  },
+  {
+   "kind": "coverage",
+   "body": {
+    "id": "COV-OFFLINE-STATIC",
+    "invariantId": "I-OFFLINE-BUFF-SEGMENT",
+    "surface": "STATIC_SEMANTIC",
+    "attackIds": [],
+    "taxonomyIds": [],
+    "applicability": "REQUIRED",
+    "reason": "S9 evidence + clean-trio seals on frozen state",
+    "evidenceIds": [
+     "EV-NOVEL-S9",
+     "EV-SEAL-A-FINAL",
+     "EV-SEAL-B-FINAL",
+     "EV-SEAL-C-FINAL"
+    ],
+    "reviewerIds": [
+     "coordinator-pr51"
+    ],
+    "status": "SATISFIED",
+    "weakProtection": false
+   }
+  },
+  {
+   "kind": "coverage",
+   "body": {
+    "id": "COV-OFFLINE-INDEP",
+    "invariantId": "I-OFFLINE-BUFF-SEGMENT",
+    "surface": "INDEPENDENT_REVIEW",
+    "attackIds": [],
+    "taxonomyIds": [],
+    "applicability": "REQUIRED",
+    "reason": "S9 evidence + clean-trio seals on frozen state",
+    "evidenceIds": [
+     "EV-SEAL-A-FINAL",
+     "EV-SEAL-B-FINAL",
+     "EV-SEAL-C-FINAL"
+    ],
+    "reviewerIds": [
+     "RV-CLEAN-A-FINAL",
+     "RV-CLEAN-B-FINAL",
+     "RV-CLEAN-C-FINAL"
+    ],
+    "status": "SATISFIED",
+    "weakProtection": false
+   }
+  },
+  {
+   "kind": "coverage",
+   "body": {
+    "id": "COV-CLOUD-DET",
+    "invariantId": "I-CLOUD-REV-CAS",
+    "surface": "DETERMINISTIC",
+    "attackIds": [],
+    "taxonomyIds": [],
+    "applicability": "REQUIRED",
+    "reason": "S9 evidence + clean-trio seals on frozen state",
+    "evidenceIds": [
+     "EV-VERIFY-S9-SCOPED",
+     "EV-NOVEL-S9"
+    ],
+    "reviewerIds": [
+     "coordinator-pr51"
+    ],
+    "status": "SATISFIED",
+    "weakProtection": false
+   }
+  },
+  {
+   "kind": "coverage",
+   "body": {
+    "id": "COV-CLOUD-STATIC",
+    "invariantId": "I-CLOUD-REV-CAS",
+    "surface": "STATIC_SEMANTIC",
+    "attackIds": [],
+    "taxonomyIds": [],
+    "applicability": "REQUIRED",
+    "reason": "S9 evidence + clean-trio seals on frozen state",
+    "evidenceIds": [
+     "EV-NOVEL-S9",
+     "EV-SEAL-A-FINAL",
+     "EV-SEAL-B-FINAL",
+     "EV-SEAL-C-FINAL"
+    ],
+    "reviewerIds": [
+     "coordinator-pr51"
+    ],
+    "status": "SATISFIED",
+    "weakProtection": false
+   }
+  },
+  {
+   "kind": "coverage",
+   "body": {
+    "id": "COV-CLOUD-INDEP",
+    "invariantId": "I-CLOUD-REV-CAS",
+    "surface": "INDEPENDENT_REVIEW",
+    "attackIds": [],
+    "taxonomyIds": [],
+    "applicability": "REQUIRED",
+    "reason": "S9 evidence + clean-trio seals on frozen state",
+    "evidenceIds": [
+     "EV-SEAL-A-FINAL",
+     "EV-SEAL-B-FINAL",
+     "EV-SEAL-C-FINAL"
+    ],
+    "reviewerIds": [
+     "RV-CLEAN-A-FINAL",
+     "RV-CLEAN-B-FINAL",
+     "RV-CLEAN-C-FINAL"
+    ],
+    "status": "SATISFIED",
+    "weakProtection": false
+   }
+  },
+  {
+   "kind": "coverage",
+   "body": {
+    "id": "COV-NAME-STATIC",
+    "invariantId": "I-NAMEPLATE-AUTHOR",
+    "surface": "STATIC_SEMANTIC",
+    "attackIds": [],
+    "taxonomyIds": [],
+    "applicability": "REQUIRED",
+    "reason": "S9 evidence + clean-trio seals on frozen state",
+    "evidenceIds": [
+     "EV-NOVEL-S9",
+     "EV-SEAL-A-FINAL",
+     "EV-SEAL-B-FINAL",
+     "EV-SEAL-C-FINAL"
+    ],
+    "reviewerIds": [
+     "coordinator-pr51"
+    ],
+    "status": "SATISFIED",
+    "weakProtection": false
+   }
+  },
+  {
+   "kind": "coverage",
+   "body": {
+    "id": "COV-NAME-E2E",
+    "invariantId": "I-NAMEPLATE-AUTHOR",
+    "surface": "RUNTIME_E2E",
+    "attackIds": [],
+    "taxonomyIds": [],
+    "applicability": "REQUIRED",
+    "reason": "S9 evidence + clean-trio seals on frozen state",
+    "evidenceIds": [
+     "EV-RUNTIME-S9"
+    ],
+    "reviewerIds": [
+     "coordinator-pr51"
+    ],
+    "status": "SATISFIED",
+    "weakProtection": false
+   }
+  },
+  {
+   "kind": "coverage",
+   "body": {
+    "id": "COV-NAME-INDEP",
+    "invariantId": "I-NAMEPLATE-AUTHOR",
+    "surface": "INDEPENDENT_REVIEW",
+    "attackIds": [],
+    "taxonomyIds": [],
+    "applicability": "REQUIRED",
+    "reason": "S9 evidence + clean-trio seals on frozen state",
+    "evidenceIds": [
+     "EV-SEAL-A-FINAL",
+     "EV-SEAL-B-FINAL",
+     "EV-SEAL-C-FINAL"
+    ],
+    "reviewerIds": [
+     "RV-CLEAN-A-FINAL",
+     "RV-CLEAN-B-FINAL",
+     "RV-CLEAN-C-FINAL"
+    ],
+    "status": "SATISFIED",
+    "weakProtection": false
+   }
+  },
+  {
+   "kind": "coverage",
+   "body": {
+    "id": "COV-LADDER-DET",
+    "invariantId": "I-REALM-LADDER-LABELS",
+    "surface": "DETERMINISTIC",
+    "attackIds": [],
+    "taxonomyIds": [],
+    "applicability": "REQUIRED",
+    "reason": "S9 evidence + clean-trio seals on frozen state",
+    "evidenceIds": [
+     "EV-VERIFY-S9-SCOPED",
+     "EV-NOVEL-S9"
+    ],
+    "reviewerIds": [
+     "coordinator-pr51"
+    ],
+    "status": "SATISFIED",
+    "weakProtection": false
+   }
+  },
+  {
+   "kind": "coverage",
+   "body": {
+    "id": "COV-LADDER-STATIC",
+    "invariantId": "I-REALM-LADDER-LABELS",
+    "surface": "STATIC_SEMANTIC",
+    "attackIds": [],
+    "taxonomyIds": [],
+    "applicability": "REQUIRED",
+    "reason": "S9 evidence + clean-trio seals on frozen state",
+    "evidenceIds": [
+     "EV-NOVEL-S9",
+     "EV-SEAL-A-FINAL",
+     "EV-SEAL-B-FINAL",
+     "EV-SEAL-C-FINAL"
+    ],
+    "reviewerIds": [
+     "coordinator-pr51"
+    ],
+    "status": "SATISFIED",
+    "weakProtection": false
+   }
+  },
+  {
+   "kind": "coverage",
+   "body": {
+    "id": "COV-LADDER-E2E",
+    "invariantId": "I-REALM-LADDER-LABELS",
+    "surface": "RUNTIME_E2E",
+    "attackIds": [],
+    "taxonomyIds": [],
+    "applicability": "REQUIRED",
+    "reason": "S9 evidence + clean-trio seals on frozen state",
+    "evidenceIds": [
+     "EV-RUNTIME-S9"
+    ],
+    "reviewerIds": [
+     "coordinator-pr51"
+    ],
+    "status": "SATISFIED",
+    "weakProtection": false
+   }
+  },
+  {
+   "kind": "coverage",
+   "body": {
+    "id": "COV-LADDER-INDEP",
+    "invariantId": "I-REALM-LADDER-LABELS",
+    "surface": "INDEPENDENT_REVIEW",
+    "attackIds": [],
+    "taxonomyIds": [],
+    "applicability": "REQUIRED",
+    "reason": "S9 evidence + clean-trio seals on frozen state",
+    "evidenceIds": [
+     "EV-SEAL-A-FINAL",
+     "EV-SEAL-B-FINAL",
+     "EV-SEAL-C-FINAL"
+    ],
+    "reviewerIds": [
+     "RV-CLEAN-A-FINAL",
+     "RV-CLEAN-B-FINAL",
+     "RV-CLEAN-C-FINAL"
+    ],
+    "status": "SATISFIED",
+    "weakProtection": false
+   }
+  },
+  {
+   "kind": "coverage",
+   "body": {
+    "id": "COV-MERGE-STATIC",
+    "invariantId": "I-MERGE-INTEGRITY",
+    "surface": "STATIC_SEMANTIC",
+    "attackIds": [],
+    "taxonomyIds": [],
+    "applicability": "REQUIRED",
+    "reason": "S9 evidence + clean-trio seals on frozen state",
+    "evidenceIds": [
+     "EV-NOVEL-S9",
+     "EV-SEAL-A-FINAL",
+     "EV-SEAL-B-FINAL",
+     "EV-SEAL-C-FINAL"
+    ],
+    "reviewerIds": [
+     "coordinator-pr51"
+    ],
+    "status": "SATISFIED",
+    "weakProtection": false
+   }
+  },
+  {
+   "kind": "coverage",
+   "body": {
+    "id": "COV-MERGE-DET",
+    "invariantId": "I-MERGE-INTEGRITY",
+    "surface": "DETERMINISTIC",
+    "attackIds": [],
+    "taxonomyIds": [],
+    "applicability": "REQUIRED",
+    "reason": "S9 evidence + clean-trio seals on frozen state",
+    "evidenceIds": [
+     "EV-VERIFY-S9-SCOPED",
+     "EV-NOVEL-S9"
+    ],
+    "reviewerIds": [
+     "coordinator-pr51"
+    ],
+    "status": "SATISFIED",
+    "weakProtection": false
+   }
+  },
+  {
+   "kind": "coverage",
+   "body": {
+    "id": "COV-MERGE-INDEP",
+    "invariantId": "I-MERGE-INTEGRITY",
+    "surface": "INDEPENDENT_REVIEW",
+    "attackIds": [],
+    "taxonomyIds": [],
+    "applicability": "REQUIRED",
+    "reason": "S9 evidence + clean-trio seals on frozen state",
+    "evidenceIds": [
+     "EV-SEAL-A-FINAL",
+     "EV-SEAL-B-FINAL",
+     "EV-SEAL-C-FINAL"
+    ],
+    "reviewerIds": [
+     "RV-CLEAN-A-FINAL",
+     "RV-CLEAN-B-FINAL",
+     "RV-CLEAN-C-FINAL"
+    ],
+    "status": "SATISFIED",
+    "weakProtection": false
+   }
+  }
+ ]
+}

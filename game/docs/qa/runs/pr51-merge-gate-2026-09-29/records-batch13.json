@@ -1,0 +1,28 @@
+{
+ "records": [
+  {
+   "kind": "message",
+   "body": {
+    "id": "MSG-COORD-FINAL-01",
+    "runId": "pr51-merge-gate-2026-09-29",
+    "requestId": "MSG-COORD-FINAL-01",
+    "parentRequestId": null,
+    "sender": "coordinator-pr51",
+    "recipient": "run-ledger",
+    "kind": "COORDINATOR_NOTE",
+    "state": {
+     "productStateId": "b1b1c5ff0d9772d9362be9feac89e052e638f32f3eab4ff545636b52ca42b5b1",
+     "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+     "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+     "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+    },
+    "phase": "DECIDE",
+    "bundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+    "payloadPath": "notes/coordinator-note-final.md",
+    "payloadHash": "728cab7a1e3b4b2b24c6ff49304f83e65be2973bc15ac85c8c145e00cbbc9a1c",
+    "createdAt": "2026-09-29T12:40:00Z",
+    "leaseId": "coordinator-pr51"
+   }
+  }
+ ]
+}

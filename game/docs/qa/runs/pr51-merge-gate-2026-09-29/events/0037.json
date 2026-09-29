@@ -1,0 +1,9 @@
+{
+  "action": "observe",
+  "assignmentId": "ASGN-CLEAN-A-FINAL",
+  "observedStatus": "finished",
+  "evidence": [
+    "SEALED_RESULT received in session devin-f07ea17500d741478dd4f49d8950257c"
+  ],
+  "observedRuntimeId": "devin-f07ea17500d741478dd4f49d8950257c"
+}

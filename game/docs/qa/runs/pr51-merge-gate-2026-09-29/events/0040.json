@@ -1,0 +1,14 @@
+{
+  "applied": [
+    "review:RV-S3-P1",
+    "cycle:CYC-CLEAN-A-FINAL (updated)",
+    "coverage:COV-STAT-STATIC (updated)",
+    "coverage:COV-BLDG-STATIC (updated)",
+    "coverage:COV-OFFLINE-STATIC (updated)",
+    "coverage:COV-CLOUD-STATIC (updated)",
+    "coverage:COV-NAME-STATIC (updated)",
+    "coverage:COV-LADDER-STATIC (updated)",
+    "coverage:COV-MERGE-STATIC (updated)",
+    "finding:F-MG-26 (updated)"
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "outcome": "QA_BLOCKED_SCOPE",
+  "detail": "repairs outside authorized scope: F-MG-18,F-MG-19,F-MG-20,F-MG-21,F-MG-22,F-MG-23,F-MG-24,F-MG-25,F-MG-28,F-MG-29,F-MG-30,F-MG-31",
+  "clauses": [
+    {
+      "id": "C1-identity",
+      "ok": true,
+      "reason": "all final evidence binds the declared state"
+    },
+    {
+      "id": "C2-census-coverage",
+      "ok": true,
+      "reason": "census + coverage complete"
+    },
+    {
+      "id": "C3-no-open",
+      "ok": false,
+      "reason": "open F-MG-18; open F-MG-19; open F-MG-20; open F-MG-21; open F-MG-22; open F-MG-23; open F-MG-24; open F-MG-25; open F-MG-28; open F-MG-29; open F-MG-30; open F-MG-31; exception F-MG-06"
+    },
+    {
+      "id": "C4-final-gates",
+      "ok": true,
+      "reason": "final gates green"
+    },
+    {
+      "id": "C5-sequential",
+      "ok": true,
+      "reason": "sequential phase reviews present"
+    },
+    {
+      "id": "C6-clean-pair",
+      "ok": false,
+      "reason": "Clean A missing/not CLEAN; Clean B missing/not CLEAN"
+    },
+    {
+      "id": "C7-mutation-corpus",
+      "ok": true,
+      "reason": "mutation + corpus satisfied"
+    },
+    {
+      "id": "C8-terminal-check",
+      "ok": true,
+      "reason": "independent terminal verifier sealed"
+    },
+    {
+      "id": "C9-readiness",
+      "ok": true,
+      "reason": "readiness not required for this run (v1 or opt-out)"
+    }
+  ]
+}

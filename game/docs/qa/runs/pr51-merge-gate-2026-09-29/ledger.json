@@ -12,10 +12,10 @@
       "pre-existing master-side test failures (combatContract R14.4, dynamicRegionHost, i18nKeyParity, PlayerPortrait pinia-in-setup) - recorded, not repaired",
       "documented deferred Low/Nit audit findings listed in docs/qa/local-audit and docs/ui-audit"
     ],
-    "checkout": "",
-    "branch": "",
-    "base": "",
-    "head": "",
+    "checkout": "/home/ubuntu/repos/tutienidle/.agent-worktrees/pr51-gate",
+    "branch": "audit-combined",
+    "base": "f196b8d0",
+    "head": "ef1f16f4",
     "state": {
       "productStateId": "b1b1c5ff0d9772d9362be9feac89e052e638f32f3eab4ff545636b52ca42b5b1",
       "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
@@ -39,12 +39,15 @@
     "briefIds": [],
     "capacityLimit": 5,
     "requiredReadiness": false,
-    "phase": "SNAPSHOT",
-    "cleanRoundA": null,
+    "phase": "DECIDE",
+    "cleanRoundA": "CYC-CLEAN-A-FINAL",
     "cleanRoundB": null,
-    "finalEvidenceIds": [],
-    "outcome": null,
-    "readinessNote": "opt-out: request.json never declared requiredReadiness (init default); merge-gate audit run has no construction phase - no binding guidance to conform to"
+    "finalEvidenceIds": [
+      "EV-VERIFY-S9-SCOPED",
+      "EV-RUNTIME-S9",
+      "EV-NOVEL-S9"
+    ],
+    "outcome": "QA_BLOCKED_SCOPE"
   },
   "briefs": [],
   "assignments": [
@@ -58,7 +61,7 @@
         "read",
         "exec-tests"
       ],
-      "writeSurface": "none",
+      "writeSurface": [],
       "readiness": "READY",
       "status": "FINISHED",
       "reservedAt": "2026-09-29T07:20:16.127Z",
@@ -67,6 +70,12 @@
       "resultRef": "RV-CLEAN-A",
       "timeoutState": null,
       "history": [
+        {
+          "at": "2026-09-29T14:44:00Z",
+          "from": "CREATED",
+          "to": "QUEUED",
+          "reason": "registered by coordinator"
+        },
         {
           "at": "2026-09-29T14:45:00Z",
           "from": "QUEUED",
@@ -114,6 +123,12 @@
       "timeoutState": null,
       "history": [
         {
+          "at": "2026-09-29T15:39:00Z",
+          "from": "CREATED",
+          "to": "QUEUED",
+          "reason": "registered by coordinator"
+        },
+        {
           "at": "2026-09-29T15:40:00Z",
           "from": "QUEUED",
           "to": "RESERVED",
@@ -151,14 +166,12 @@
         "read",
         "exec-tests"
       ],
-      "writeSurface": "none",
-      "readiness": "QUEUED",
+      "writeSurface": [],
+      "readiness": "WAITING_INPUT",
       "status": "CANCELLED",
-      "reservedAt": null,
+      "reservedAt": "2026-09-29T09:30:52.875Z",
       "observedRuntimeId": null,
-      "releaseEvidence": [
-        "sealed SEALED_RESULT in coordinator transcript; PASS_WITH_GAPS zero findings; exec unavailable in context - superseded by exec-capable dispatch"
-      ],
+      "releaseEvidence": "sealed SEALED_RESULT in coordinator transcript; PASS_WITH_GAPS zero findings; exec unavailable in context - superseded by exec-capable dispatch",
       "resultRef": null,
       "timeoutState": null,
       "history": [
@@ -179,20 +192,21 @@
     {
       "id": "ASGN-CLEAN-A-FINAL",
       "parentId": null,
-      "capacityScope": "worker-slot",
+      "capacityScope": "clean-review-slot-1-of-3",
       "inputBundleHash": "71a50bfe8e088ed4358cc0187f108a4d98d049247937e922e92622e92d1c307d",
       "dependencies": [],
       "requiredCapabilities": [
-        "read",
-        "exec-tests"
+        "read-source",
+        "run-vitest",
+        "grep"
       ],
-      "writeSurface": "none",
-      "readiness": "QUEUED",
-      "status": "QUEUED",
-      "reservedAt": null,
-      "observedRuntimeId": null,
-      "releaseEvidence": [],
-      "resultRef": null,
+      "writeSurface": [],
+      "readiness": "READY",
+      "status": "FINISHED",
+      "reservedAt": "2026-09-29T11:45:17.491Z",
+      "observedRuntimeId": "devin-f07ea17500d741478dd4f49d8950257c",
+      "releaseEvidence": "SEALED_RESULT received in session devin-f07ea17500d741478dd4f49d8950257c",
+      "resultRef": "RV-CLEAN-A-FINAL",
       "timeoutState": null,
       "history": [
         {
@@ -200,28 +214,47 @@
           "from": "CREATED",
           "to": "QUEUED",
           "reason": "registered by coordinator"
+        },
+        {
+          "at": "2026-09-29T11:45:17.489Z",
+          "from": "QUEUED",
+          "to": "RESERVED",
+          "reason": "admitted at 1/5 (incl. external 0)"
+        },
+        {
+          "at": "2026-09-29T11:45:20.806Z",
+          "from": "RESERVED",
+          "to": "RUNNING",
+          "reason": "dispatch observed running"
+        },
+        {
+          "at": "2026-09-29T12:24:41.785Z",
+          "from": "RUNNING",
+          "to": "FINISHED",
+          "reason": "lifecycle verified released via 'finished'"
         }
       ]
     },
     {
       "id": "ASGN-CLEAN-B-FINAL",
       "parentId": null,
-      "capacityScope": "worker-slot",
+      "capacityScope": "clean-review-slot-2-of-3",
       "inputBundleHash": "e0a15137abc05d22bcf6af25ec24a4d340f25eae07f4f18d6fe6f58df3a885e2",
       "dependencies": [
         "ASGN-CLEAN-A-FINAL"
       ],
       "requiredCapabilities": [
-        "read",
-        "exec-tests"
+        "read-source",
+        "run-vitest",
+        "grep"
       ],
-      "writeSurface": "none",
-      "readiness": "QUEUED",
-      "status": "QUEUED",
-      "reservedAt": null,
-      "observedRuntimeId": null,
-      "releaseEvidence": [],
-      "resultRef": null,
+      "writeSurface": [],
+      "readiness": "READY",
+      "status": "FINISHED",
+      "reservedAt": "2026-09-29T11:45:17.623Z",
+      "observedRuntimeId": "devin-68c33b9edd20466fa58d67afd69e455d",
+      "releaseEvidence": "SEALED_RESULT received in session devin-68c33b9edd20466fa58d67afd69e455d",
+      "resultRef": "RV-CLEAN-B-FINAL",
       "timeoutState": null,
       "history": [
         {
@@ -229,8 +262,78 @@
           "from": "CREATED",
           "to": "QUEUED",
           "reason": "registered by coordinator"
+        },
+        {
+          "at": "2026-09-29T11:45:17.623Z",
+          "from": "QUEUED",
+          "to": "RESERVED",
+          "reason": "admitted at 2/5 (incl. external 0)"
+        },
+        {
+          "at": "2026-09-29T11:45:20.939Z",
+          "from": "RESERVED",
+          "to": "RUNNING",
+          "reason": "dispatch observed running"
+        },
+        {
+          "at": "2026-09-29T12:08:59.781Z",
+          "from": "RUNNING",
+          "to": "RESULT_RECEIVED",
+          "reason": "terminal result observed - slot still occupied"
+        },
+        {
+          "at": "2026-09-29T12:24:41.914Z",
+          "from": "RESULT_RECEIVED",
+          "to": "FINISHED",
+          "reason": "lifecycle verified released via 'finished'"
         }
       ]
+    },
+    {
+      "id": "ASGN-CLEAN-C-FINAL",
+      "parentId": null,
+      "capacityScope": "clean-review-slot-3-of-3",
+      "inputBundleHash": "e0a15137abc05d22bcf6af25ec24a4d340f25eae07f4f18d6fe6f58df3a885e2",
+      "dependencies": [],
+      "requiredCapabilities": [
+        "read-source",
+        "run-vitest",
+        "grep"
+      ],
+      "writeSurface": [],
+      "readiness": "READY",
+      "status": "FINISHED",
+      "observedRuntimeId": "devin-4f6f72bf78c34e49a3631dd44478fc8e",
+      "history": [
+        {
+          "at": "2026-09-29T11:45:17.753Z",
+          "from": "CREATED",
+          "to": "QUEUED",
+          "reason": "registered by coordinator"
+        },
+        {
+          "at": "2026-09-29T11:45:17.753Z",
+          "from": "QUEUED",
+          "to": "RESERVED",
+          "reason": "admitted at 3/5 (incl. external 0)"
+        },
+        {
+          "at": "2026-09-29T11:45:21.078Z",
+          "from": "RESERVED",
+          "to": "RUNNING",
+          "reason": "dispatch observed running"
+        },
+        {
+          "at": "2026-09-29T12:24:42.041Z",
+          "from": "RUNNING",
+          "to": "FINISHED",
+          "reason": "lifecycle verified released via 'finished'"
+        }
+      ],
+      "reservedAt": "2026-09-29T11:45:17.753Z",
+      "releaseEvidence": "SEALED_RESULT received in session devin-4f6f72bf78c34e49a3631dd44478fc8e",
+      "resultRef": "RV-CLEAN-C-FINAL",
+      "timeoutState": null
     }
   ],
   "consumptions": [],
@@ -1717,6 +1820,693 @@
       "fixedInRevision": "36601ca9",
       "closedAt": "2026-09-29T16:35:00Z",
       "closeReason": "copy corrected"
+    },
+    {
+      "id": "F-MG-18",
+      "title": "Cloud reconcile ordering loses progress under device divergence (save_revision is a per-device write counter, not a shared sequence)",
+      "state": {
+        "productStateId": "b1b1c5ff0d9772d9362be9feac89e052e638f32f3eab4ff545636b52ca42b5b1",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "severity": "High",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/services/cloudSave/SupabaseRemoteSave.ts",
+          "symbolOrSection": "remoteAhead comparator ~102-105",
+          "revision": "ef1f16f4",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "game/src/services/cloudSave/LocalCloudSaveService.ts",
+          "symbolOrSection": "29-38",
+          "revision": "ef1f16f4",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "clean-c-integ (devin-4f6f72bf78c34e49a3631dd44478fc8e)",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "device B away 2mo at rev400 stale; A pulls rev115->plays to 130; B remoteAhead=(130>400)=false -> pushes stale at 400; A next login pulls stale -> loses progress since divergence",
+      "expected": "cloud sync never regresses to an older revision / newest-wins reconcile",
+      "actual": "per-device counter cannot order divergent lineages; CAS is sound but ordering key wrong",
+      "rootCause": "revision-first ordering assumes linear lineage; divergence undetectable by count",
+      "rootClass": "save-ordering",
+      "subsystem": "save-cloud",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": "OPEN - fix under beta-release mission on master tip (reconcile ordering redesign)",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "PROVEN",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-MG-19",
+      "title": "PlayerPortrait bypasses CULTIVATE_TEXTURE_OVERRIDES - hidden_spell_pathway player sees phap_tu ngu-hanh cultivate art instead of van-dao on home figure + RealmPanel",
+      "state": {
+        "productStateId": "b1b1c5ff0d9772d9362be9feac89e052e638f32f3eab4ff545636b52ca42b5b1",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/components/common/PlayerPortrait.vue",
+          "symbolOrSection": "imageUrl computed 44-50",
+          "revision": "ef1f16f4",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "game/src/presentation/art/PlayerVisualProfiles.ts",
+          "symbolOrSection": "CULTIVATE_TEXTURE_OVERRIDES 207-225",
+          "revision": "ef1f16f4",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "clean-a-correctness (devin-f07ea17500d741478dd4f49d8950257c)",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "scenes render override via getCultivateTexture(profile,way); component returns profile.cultivateTextureUrl directly; getCultivateTexture returns no url so override unreachable from component API",
+      "expected": "way-keyed override applies wherever cultivate pose renders (declared contract)",
+      "actual": "img path never consults way/override map",
+      "rootCause": "component->profile lookup added in this diff without porting the way override",
+      "rootClass": "way-override-not-consulted",
+      "subsystem": "presentation-identity",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": "OPEN - fix under beta-release mission on master tip",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "PROVEN",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-MG-20",
+      "title": "PlayerPortrait.test.ts mounts without Pinia - getActivePinia throws; suite fails 1 test (delta-caused by usePlayerStore() added in setup)",
+      "state": {
+        "productStateId": "b1b1c5ff0d9772d9362be9feac89e052e638f32f3eab4ff545636b52ca42b5b1",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "severity": "Medium",
+      "classification": "TEST_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/components/common/PlayerPortrait.test.ts",
+          "symbolOrSection": "static mode renders the PNG <img>",
+          "revision": "ef1f16f4",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "game/src/components/common/PlayerPortrait.vue",
+          "symbolOrSection": "usePlayerStore() in setup ~42",
+          "revision": "ef1f16f4",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "clean-c-integ (devin-4f6f72bf78c34e49a3631dd44478fc8e)",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "npx vitest run fails 'static mode renders the PNG <img>' at HEAD",
+      "expected": "suite green at HEAD",
+      "actual": "new component->store coupling not ported into existing test",
+      "rootCause": "component change did not update its test harness",
+      "rootClass": "test-harness-not-updated",
+      "subsystem": "tests",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": "OPEN - fix under beta-release mission on master tip (provide pinia in test mount)",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "PROVEN",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-MG-21",
+      "title": "Offline un-buff derivation divides saved cPS by percent at SAVE time while cPS was folded at LAST-TICK percent - buff flipping in the gap mis-folds the whole offline window",
+      "state": {
+        "productStateId": "b1b1c5ff0d9772d9362be9feac89e052e638f32f3eab4ff545636b52ca42b5b1",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/stores/player.ts",
+          "symbolOrSection": "269-288",
+          "revision": "ef1f16f4",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "game/src/core/cultivation/CultivationTick.ts",
+          "symbolOrSection": "29-46",
+          "revision": "ef1f16f4",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "clean-a-correctness + clean-c-integ (deduped)",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "expiry between last tick and save -> +25% over-grant; activation -> ~-20% under-grant, scaled by offline duration",
+      "expected": "offline accrual prices the window at the rate actually held",
+      "actual": "denominator percentAtSave != numerator's folded percent when a buff flips in the sub-tick gap",
+      "rootCause": "saved snapshot lacks the percent that was actually folded",
+      "rootClass": "snapshot-fold-timestamp-mismatch",
+      "subsystem": "time-offline",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": "OPEN - fix under beta-release mission on master tip",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "PROVEN",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-MG-22",
+      "title": "saveShapeValidation does not check persistentTimedEffects.cultivationSpeedPercent/effectGroup - crafted save yields Infinity/NaN unbuffed rate -> NaN cultivation (permanent progression corruption)",
+      "state": {
+        "productStateId": "b1b1c5ff0d9772d9362be9feac89e052e638f32f3eab4ff545636b52ca42b5b1",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/services/save/saveShapeValidation.ts",
+          "symbolOrSection": "533-563",
+          "revision": "ef1f16f4",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "game/src/core/economy/TuLinhTranBalance.ts",
+          "symbolOrSection": "39-46",
+          "revision": "ef1f16f4",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "clean-c-integ (devin-4f6f72bf78c34e49a3631dd44478fc8e)",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "crafted save/import with percent<=-1 -> Infinity/negative unbuffed rate; NaN percent -> NaN cultivation; addCultivation has no NaN guard",
+      "expected": "every field a new consumer trusts is shape-validated",
+      "actual": "validation covers id/sourceItemId/appliedAtMs/expiresAtMs/modifiers only",
+      "rootCause": "new divide sink added without extending the validator",
+      "rootClass": "validation-coverage-gap",
+      "subsystem": "save-cloud",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": "OPEN - fix under beta-release mission on master tip",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "PROVEN",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-MG-23",
+      "title": "Conditioned per_second passives fail open out of battle (hpReader undefined) - both complementary legs accumulate to cap; stat surfaces display combat band while idle",
+      "state": {
+        "productStateId": "b1b1c5ff0d9772d9362be9feac89e052e638f32f3eab4ff545636b52ca42b5b1",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/core/skill/PassiveSystem.ts",
+          "symbolOrSection": "tick + meetsCondition 84-91",
+          "revision": "ef1f16f4",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "game/src/core/game/GameManagerTickOps.ts",
+          "symbolOrSection": "257",
+          "revision": "ef1f16f4",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "clean-a-correctness + clean-b-authority (deduped)",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "ambient +0.05 finalDamageReductionPercent and +2.5 leech stacks visible out of combat",
+      "expected": "conditioned passives gate on HP ratio; out of battle there is none",
+      "actual": "meetsCondition returns true when hpReader() is undefined (documented fail-open contract, newly observable via flat channels)",
+      "rootCause": "fail-open predates the diff but the flat-leg display made it observable",
+      "rootClass": "condition-reader-fail-open",
+      "subsystem": "stats-and-talents",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": "OPEN - fix under beta-release mission on master tip",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "PROVEN",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-MG-24",
+      "title": "Pull writes revision key before save key - exception in the 2-setItem window leaves revision=N + stale payload; later push writes stale lineage at N+1 (pulled payload lost)",
+      "state": {
+        "productStateId": "b1b1c5ff0d9772d9362be9feac89e052e638f32f3eab4ff545636b52ca42b5b1",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/services/cloudSave/SupabaseRemoteSave.ts",
+          "symbolOrSection": "102-105, 112-114, 145-174",
+          "revision": "ef1f16f4",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "clean-b-authority (devin-68c33b9edd20466fa58d67afd69e455d)",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "storage exception between the two writes + client clock ahead of server",
+      "expected": "a pulled remote payload is either fully adopted or safely re-pulled",
+      "actual": "revision persists while payload stays stale; self-heals only via equal-revision tie-break path",
+      "rootCause": "write order chosen for crash-safe claim but payload-first would be safer",
+      "rootClass": "write-ordering",
+      "subsystem": "save-cloud",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": "OPEN - fix under beta-release mission on master tip",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "PROVEN",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-MG-25",
+      "title": "visualArmed returns false for every non-mortal profile - reports 'unarmed' for states never meant to carry the concept",
+      "state": {
+        "productStateId": "b1b1c5ff0d9772d9362be9feac89e052e638f32f3eab4ff545636b52ca42b5b1",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/stores/player.ts",
+          "symbolOrSection": "visualArmed getter 158-163",
+          "revision": "ef1f16f4",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "clean-c-integ (devin-4f6f72bf78c34e49a3631dd44478fc8e)",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "a future {armed,unarmed} binding on a non-mortal profile silently resolves the unarmed slug",
+      "expected": "armed reflects an actual armed/unarmed pick or is undefined for non-mortals",
+      "actual": "mortal && ... short-circuit returns definitive false",
+      "rootCause": "scope of the armed concept not guarded to mortal",
+      "rootClass": "contract-scope",
+      "subsystem": "presentation-identity",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": "OPEN - fix under beta-release mission on master tip",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "PROVEN",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-MG-26",
+      "title": "per_second accumulator banks full delta while condition fails and burst-applies on re-entry - latent ramp if a future conditioned passive is uncapped",
+      "state": {
+        "productStateId": "b1b1c5ff0d9772d9362be9feac89e052e638f32f3eab4ff545636b52ca42b5b1",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "severity": "Nit",
+      "classification": "NON_ACTIONABLE",
+      "actionable": false,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/core/skill/PassiveSystem.ts",
+          "symbolOrSection": "268-292",
+          "revision": "ef1f16f4",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "clean-a-correctness + clean-b-authority (deduped)",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "all conditioned per_second modifiers cap at maxStacks 1 today; behavior is test-enshrined",
+      "expected": "documented current design; no authored path reaches the ramp",
+      "actual": "n/a",
+      "rootCause": "intentional burst-on-recovery design bounded by maxStacks",
+      "rootClass": "documented-design",
+      "subsystem": "stats-and-talents",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": "none - latent design note only",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "REJECTED_WITH_PROOF",
+      "duplicateOf": null,
+      "rejectionReason": "documented intentional design: per_second accumulator banks delta while condition fails and burst-applies on recovery; bounded by maxStacks=1 for all conditioned passives today; latent ramp note only, not a defect",
+      "exception": null
+    },
+    {
+      "id": "F-MG-27",
+      "title": "remoteAhead uses most-saved-wins across diverged sessions (deterministic counter compare) - policy tradeoff folded into F-MG-18",
+      "state": {
+        "productStateId": "b1b1c5ff0d9772d9362be9feac89e052e638f32f3eab4ff545636b52ca42b5b1",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "severity": "Nit",
+      "classification": "NON_ACTIONABLE",
+      "actionable": false,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/services/cloudSave/SupabaseRemoteSave.ts",
+          "symbolOrSection": "remoteAhead comparator",
+          "revision": "ef1f16f4",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "clean-a-correctness (devin-f07ea17500d741478dd4f49d8950257c)",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "same divergent-lineage scenario as F-MG-18",
+      "expected": "n/a",
+      "actual": "n/a",
+      "rootCause": "documented policy tradeoff; the actionable defect is F-MG-18",
+      "rootClass": "duplicate-of-F-MG-18",
+      "subsystem": "save-cloud",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": "none",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "DUPLICATE_LINKED",
+      "duplicateOf": "F-MG-18",
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-MG-28",
+      "title": "Dead code + unused field + committed dev artifacts: (cultivationPath==='mortal') dead check, CULTIVATE_TEXTURE_OVERRIDES.extent unread, verify-*.mjs+png committed at game root",
+      "state": {
+        "productStateId": "b1b1c5ff0d9772d9362be9feac89e052e638f32f3eab4ff545636b52ca42b5b1",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "severity": "Nit",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/stores/player.ts",
+          "symbolOrSection": "159-162",
+          "revision": "ef1f16f4",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "game/src/presentation/art/PlayerVisualProfiles.ts",
+          "symbolOrSection": "214-222",
+          "revision": "ef1f16f4",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "game/verify-fe17.mjs",
+          "symbolOrSection": "(file level)",
+          "revision": "ef1f16f4",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "game/verify-fixes.mjs",
+          "symbolOrSection": "(file level)",
+          "revision": "ef1f16f4",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "clean-a-correctness + clean-b-authority + clean-c-integ (deduped)",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "'mortal' is not a CultivationPathId (spell/sword/body; mortals are undefined); extent has no reader; ~2.2MB verify scripts+PNGs committed",
+      "expected": "no dead checks/unused fields; dev verification artifacts not committed",
+      "actual": "dead conditional, unread extent field, committed process artifacts",
+      "rootCause": "cleanup wave missed these",
+      "rootClass": "hygiene",
+      "subsystem": "repo-hygiene",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": "OPEN - fix under beta-release mission on master tip",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "PROVEN",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-MG-29",
+      "title": "accrualRealmId is plain string instead of the realm-id brand - contract looseness only (runtime membership enforced by saveAcceptance)",
+      "state": {
+        "productStateId": "b1b1c5ff0d9772d9362be9feac89e052e638f32f3eab4ff545636b52ca42b5b1",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "severity": "Nit",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/core/building/BuildingInstance.ts",
+          "symbolOrSection": "24",
+          "revision": "ef1f16f4",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "clean-b-authority (devin-68c33b9edd20466fa58d67afd69e455d)",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "type is string; expected branded realm id",
+      "expected": "branded realm id type",
+      "actual": "plain string field",
+      "rootCause": "type-level tightening only",
+      "rootClass": "type-looseness",
+      "subsystem": "economy-progression",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": "OPEN - fix under beta-release mission on master tip",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "PROVEN",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-MG-30",
+      "title": "TuLinhTranBalance.ts ends without trailing newline",
+      "state": {
+        "productStateId": "b1b1c5ff0d9772d9362be9feac89e052e638f32f3eab4ff545636b52ca42b5b1",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "severity": "Nit",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/src/core/economy/TuLinhTranBalance.ts",
+          "symbolOrSection": "92",
+          "revision": "ef1f16f4",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "clean-b-authority (devin-68c33b9edd20466fa58d67afd69e455d)",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "file ends without trailing newline",
+      "expected": "trailing newline present",
+      "actual": "missing EOF newline",
+      "rootCause": "hygiene",
+      "rootClass": "eof-newline",
+      "subsystem": "repo-hygiene",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": "OPEN - trivial",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "PROVEN",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-MG-31",
+      "title": "~72 dangling references to deleted art assets remain in asset READMEs/design docs (runtime clean - zero code refs verified)",
+      "state": {
+        "productStateId": "b1b1c5ff0d9772d9362be9feac89e052e638f32f3eab4ff545636b52ca42b5b1",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "severity": "Nit",
+      "classification": "DOCUMENTATION_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/public/assets/**/README.md",
+          "symbolOrSection": "(file level)",
+          "revision": "ef1f16f4",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "game/docs/design/",
+          "symbolOrSection": "(file level)",
+          "revision": "ef1f16f4",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "clean-c-integ (devin-4f6f72bf78c34e49a3631dd44478fc8e)",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "deleted preview/contact-sheet images still referenced in docs",
+      "expected": "no dangling asset references",
+      "actual": "docs not swept for deleted-asset references",
+      "rootCause": "cleanup wave scoped to code refs only",
+      "rootClass": "doc-ref-dangle",
+      "subsystem": "repo-hygiene",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": "OPEN - fix under beta-release mission",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "PROVEN",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-MG-32",
+      "title": "3 test failures observed by clean reviewers are the same adjudicated pre-existing/base-pin failures (combatContract onBattleStart pin, dynamicRegionHost, i18nKeyParity) - duplicate of F-MG-03/04/05",
+      "state": {
+        "productStateId": "b1b1c5ff0d9772d9362be9feac89e052e638f32f3eab4ff545636b52ca42b5b1",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "severity": "Nit",
+      "classification": "TEST_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "game/tests/architecture/combatContract.test.ts",
+          "symbolOrSection": "88-89",
+          "revision": "ef1f16f4",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "game/tests/architecture/dynamicRegionHost.test.ts",
+          "symbolOrSection": "(file level)",
+          "revision": "ef1f16f4",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "game/tests/architecture/i18nKeyParity.test.ts",
+          "symbolOrSection": "(file level)",
+          "revision": "ef1f16f4",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "clean-a-correctness + clean-c-integ (deduped)",
+      "invariantIds": [],
+      "evidenceIds": [],
+      "counterexample": "same 3 failures both reviewers reproduced",
+      "expected": "already adjudicated",
+      "actual": "already adjudicated",
+      "rootCause": "pre-existing at base",
+      "rootClass": "duplicate-of-F-MG-03",
+      "subsystem": "tests",
+      "siblingSearch": [],
+      "siblingFindingIds": [],
+      "repair": "none",
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "DUPLICATE_LINKED",
+      "duplicateOf": "F-MG-03",
+      "rejectionReason": null,
+      "exception": null
     }
   ],
   "evidence": [
@@ -2202,6 +2992,93 @@
         "local dev server; not a production build"
       ],
       "status": "CURRENT"
+    },
+    {
+      "id": "EV-SEAL-A-FINAL",
+      "state": {
+        "productStateId": "b1b1c5ff0d9772d9362be9feac89e052e638f32f3eab4ff545636b52ca42b5b1",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "kind": "SOURCE_PROOF",
+      "producer": "coordinator-pr51",
+      "startedAt": "2026-09-29T11:44:00Z",
+      "finishedAt": "2026-09-29T12:18:00Z",
+      "commandOrMethod": "sealed structured SEALED_RESULT by isolated reviewer session",
+      "cwd": "reviewer-session",
+      "exitCode": null,
+      "result": "PASS",
+      "artifactPath": "reviews/clean-a-final.md",
+      "artifactHash": "8d7705b15fb6858cb9facada2567c4bad00e73cd8ab6a65b16af4e2e7186152b",
+      "inputPaths": [
+        "reviews/clean-a-final.md"
+      ],
+      "inputEvidenceIds": [],
+      "invariantIds": [],
+      "claims": [
+        "clean-A CORRECTNESS seal: FAIL, 1 Medium + 2 Low + 4 Nit"
+      ],
+      "limitations": [],
+      "status": "CURRENT"
+    },
+    {
+      "id": "EV-SEAL-B-FINAL",
+      "state": {
+        "productStateId": "b1b1c5ff0d9772d9362be9feac89e052e638f32f3eab4ff545636b52ca42b5b1",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "kind": "SOURCE_PROOF",
+      "producer": "coordinator-pr51",
+      "startedAt": "2026-09-29T11:44:00Z",
+      "finishedAt": "2026-09-29T12:18:00Z",
+      "commandOrMethod": "sealed structured SEALED_RESULT by isolated reviewer session",
+      "cwd": "reviewer-session",
+      "exitCode": null,
+      "result": "PASS",
+      "artifactPath": "reviews/clean-b-final.md",
+      "artifactHash": "3cc2aa93d86a8c14059db7ec3374363b25edd6d929170500f7f8dc5a5fee3762",
+      "inputPaths": [
+        "reviews/clean-b-final.md"
+      ],
+      "inputEvidenceIds": [],
+      "invariantIds": [],
+      "claims": [
+        "clean-B AUTHORITY+TERMINAL_CHECK seal: PASS WITH EVIDENCE, terminalCheck CLEAN, 0 Medium+"
+      ],
+      "limitations": [],
+      "status": "CURRENT"
+    },
+    {
+      "id": "EV-SEAL-C-FINAL",
+      "state": {
+        "productStateId": "b1b1c5ff0d9772d9362be9feac89e052e638f32f3eab4ff545636b52ca42b5b1",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "kind": "SOURCE_PROOF",
+      "producer": "coordinator-pr51",
+      "startedAt": "2026-09-29T11:44:00Z",
+      "finishedAt": "2026-09-29T12:18:00Z",
+      "commandOrMethod": "sealed structured SEALED_RESULT by isolated reviewer session",
+      "cwd": "reviewer-session",
+      "exitCode": null,
+      "result": "PASS",
+      "artifactPath": "reviews/clean-c-final.md",
+      "artifactHash": "aaa255a1e8b5ddad87a319518d0f64f36923b587bfae60eaa97c1f9030eb6830",
+      "inputPaths": [
+        "reviews/clean-c-final.md"
+      ],
+      "inputEvidenceIds": [],
+      "invariantIds": [],
+      "claims": [
+        "clean-C INTEGRATION seal: FAIL, 1 High + 3 Medium + 1 Low + 2 Nit"
+      ],
+      "limitations": [],
+      "status": "CURRENT"
     }
   ],
   "coverage": [
@@ -2212,14 +3089,15 @@
       "attackIds": [],
       "taxonomyIds": [],
       "applicability": "REQUIRED",
-      "reason": "TalentsV4Wiring + StatCalculator + PlayerStatAssembly tests green",
+      "reason": "S9 evidence + clean-trio seals on frozen state",
       "evidenceIds": [
-        "EV-FOCUSED-S4"
+        "EV-VERIFY-S9-SCOPED",
+        "EV-NOVEL-S9"
       ],
       "reviewerIds": [
-        "coordinator"
+        "coordinator-pr51"
       ],
-      "status": "STALE",
+      "status": "SATISFIED",
       "weakProtection": false
     },
     {
@@ -2229,14 +3107,18 @@
       "attackIds": [],
       "taxonomyIds": [],
       "applicability": "REQUIRED",
-      "reason": "flat x stacks parity + clamp chain probed",
+      "reason": "sealed clean-trio reviews on frozen state S9",
       "evidenceIds": [
-        "EV-ADVERSARIAL-S4"
+        "EV-SEAL-A-FINAL",
+        "EV-SEAL-B-FINAL",
+        "EV-SEAL-C-FINAL"
       ],
       "reviewerIds": [
-        "coordinator"
+        "RV-CLEAN-A-FINAL",
+        "RV-CLEAN-B-FINAL",
+        "RV-CLEAN-C-FINAL"
       ],
-      "status": "STALE",
+      "status": "SATISFIED",
       "weakProtection": false
     },
     {
@@ -2246,11 +3128,19 @@
       "attackIds": [],
       "taxonomyIds": [],
       "applicability": "REQUIRED",
-      "reason": "awaiting Clean A/B sealed reviews",
-      "evidenceIds": [],
-      "reviewerIds": [],
-      "status": "PENDING",
-      "weakProtection": true
+      "reason": "S9 evidence + clean-trio seals on frozen state",
+      "evidenceIds": [
+        "EV-SEAL-A-FINAL",
+        "EV-SEAL-B-FINAL",
+        "EV-SEAL-C-FINAL"
+      ],
+      "reviewerIds": [
+        "RV-CLEAN-A-FINAL",
+        "RV-CLEAN-B-FINAL",
+        "RV-CLEAN-C-FINAL"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": false
     },
     {
       "id": "COV-BLDG-DET",
@@ -2259,14 +3149,15 @@
       "attackIds": [],
       "taxonomyIds": [],
       "applicability": "REQUIRED",
-      "reason": "BuildingSystem.test.ts EM-01 cases green",
+      "reason": "S9 evidence + clean-trio seals on frozen state",
       "evidenceIds": [
-        "EV-FOCUSED-S4"
+        "EV-VERIFY-S9-SCOPED",
+        "EV-NOVEL-S9"
       ],
       "reviewerIds": [
-        "coordinator"
+        "coordinator-pr51"
       ],
-      "status": "STALE",
+      "status": "SATISFIED",
       "weakProtection": false
     },
     {
@@ -2276,14 +3167,18 @@
       "attackIds": [],
       "taxonomyIds": [],
       "applicability": "REQUIRED",
-      "reason": "pin ordering + garbage-realm soft fallback probed",
+      "reason": "sealed clean-trio reviews on frozen state S9",
       "evidenceIds": [
-        "EV-ADVERSARIAL-S4"
+        "EV-SEAL-A-FINAL",
+        "EV-SEAL-B-FINAL",
+        "EV-SEAL-C-FINAL"
       ],
       "reviewerIds": [
-        "coordinator"
+        "RV-CLEAN-A-FINAL",
+        "RV-CLEAN-B-FINAL",
+        "RV-CLEAN-C-FINAL"
       ],
-      "status": "STALE",
+      "status": "SATISFIED",
       "weakProtection": false
     },
     {
@@ -2293,11 +3188,19 @@
       "attackIds": [],
       "taxonomyIds": [],
       "applicability": "REQUIRED",
-      "reason": "awaiting Clean A/B sealed reviews",
-      "evidenceIds": [],
-      "reviewerIds": [],
-      "status": "PENDING",
-      "weakProtection": true
+      "reason": "S9 evidence + clean-trio seals on frozen state",
+      "evidenceIds": [
+        "EV-SEAL-A-FINAL",
+        "EV-SEAL-B-FINAL",
+        "EV-SEAL-C-FINAL"
+      ],
+      "reviewerIds": [
+        "RV-CLEAN-A-FINAL",
+        "RV-CLEAN-B-FINAL",
+        "RV-CLEAN-C-FINAL"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": false
     },
     {
       "id": "COV-OFFLINE-DET",
@@ -2306,14 +3209,15 @@
       "attackIds": [],
       "taxonomyIds": [],
       "applicability": "REQUIRED",
-      "reason": "segmentation + restore tests green",
+      "reason": "S9 evidence + clean-trio seals on frozen state",
       "evidenceIds": [
-        "EV-FOCUSED-S4"
+        "EV-VERIFY-S9-SCOPED",
+        "EV-NOVEL-S9"
       ],
       "reviewerIds": [
-        "coordinator"
+        "coordinator-pr51"
       ],
-      "status": "STALE",
+      "status": "SATISFIED",
       "weakProtection": false
     },
     {
@@ -2323,14 +3227,18 @@
       "attackIds": [],
       "taxonomyIds": [],
       "applicability": "REQUIRED",
-      "reason": "shape-gate ordering + idempotency probed",
+      "reason": "sealed clean-trio reviews on frozen state S9",
       "evidenceIds": [
-        "EV-ADVERSARIAL-S4"
+        "EV-SEAL-A-FINAL",
+        "EV-SEAL-B-FINAL",
+        "EV-SEAL-C-FINAL"
       ],
       "reviewerIds": [
-        "coordinator"
+        "RV-CLEAN-A-FINAL",
+        "RV-CLEAN-B-FINAL",
+        "RV-CLEAN-C-FINAL"
       ],
-      "status": "STALE",
+      "status": "SATISFIED",
       "weakProtection": false
     },
     {
@@ -2340,11 +3248,19 @@
       "attackIds": [],
       "taxonomyIds": [],
       "applicability": "REQUIRED",
-      "reason": "awaiting Clean A/B sealed reviews",
-      "evidenceIds": [],
-      "reviewerIds": [],
-      "status": "PENDING",
-      "weakProtection": true
+      "reason": "S9 evidence + clean-trio seals on frozen state",
+      "evidenceIds": [
+        "EV-SEAL-A-FINAL",
+        "EV-SEAL-B-FINAL",
+        "EV-SEAL-C-FINAL"
+      ],
+      "reviewerIds": [
+        "RV-CLEAN-A-FINAL",
+        "RV-CLEAN-B-FINAL",
+        "RV-CLEAN-C-FINAL"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": false
     },
     {
       "id": "COV-CLOUD-DET",
@@ -2353,14 +3269,15 @@
       "attackIds": [],
       "taxonomyIds": [],
       "applicability": "REQUIRED",
-      "reason": "SupabaseRemoteSave.test.ts 19 tests incl. CAS race green",
+      "reason": "S9 evidence + clean-trio seals on frozen state",
       "evidenceIds": [
-        "EV-FOCUSED-S4"
+        "EV-VERIFY-S9-SCOPED",
+        "EV-NOVEL-S9"
       ],
       "reviewerIds": [
-        "coordinator"
+        "coordinator-pr51"
       ],
-      "status": "STALE",
+      "status": "SATISFIED",
       "weakProtection": false
     },
     {
@@ -2370,14 +3287,18 @@
       "attackIds": [],
       "taxonomyIds": [],
       "applicability": "REQUIRED",
-      "reason": "CAS path + tie-break + adoption probed",
+      "reason": "sealed clean-trio reviews on frozen state S9",
       "evidenceIds": [
-        "EV-ADVERSARIAL-S4"
+        "EV-SEAL-A-FINAL",
+        "EV-SEAL-B-FINAL",
+        "EV-SEAL-C-FINAL"
       ],
       "reviewerIds": [
-        "coordinator"
+        "RV-CLEAN-A-FINAL",
+        "RV-CLEAN-B-FINAL",
+        "RV-CLEAN-C-FINAL"
       ],
-      "status": "STALE",
+      "status": "SATISFIED",
       "weakProtection": false
     },
     {
@@ -2387,11 +3308,19 @@
       "attackIds": [],
       "taxonomyIds": [],
       "applicability": "REQUIRED",
-      "reason": "awaiting Clean A/B sealed reviews",
-      "evidenceIds": [],
-      "reviewerIds": [],
-      "status": "PENDING",
-      "weakProtection": true
+      "reason": "S9 evidence + clean-trio seals on frozen state",
+      "evidenceIds": [
+        "EV-SEAL-A-FINAL",
+        "EV-SEAL-B-FINAL",
+        "EV-SEAL-C-FINAL"
+      ],
+      "reviewerIds": [
+        "RV-CLEAN-A-FINAL",
+        "RV-CLEAN-B-FINAL",
+        "RV-CLEAN-C-FINAL"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": false
     },
     {
       "id": "COV-NAME-STATIC",
@@ -2400,14 +3329,18 @@
       "attackIds": [],
       "taxonomyIds": [],
       "applicability": "REQUIRED",
-      "reason": "optional-member fallback + reconcile sync probed",
+      "reason": "sealed clean-trio reviews on frozen state S9",
       "evidenceIds": [
-        "EV-ADVERSARIAL-S4"
+        "EV-SEAL-A-FINAL",
+        "EV-SEAL-B-FINAL",
+        "EV-SEAL-C-FINAL"
       ],
       "reviewerIds": [
-        "coordinator"
+        "RV-CLEAN-A-FINAL",
+        "RV-CLEAN-B-FINAL",
+        "RV-CLEAN-C-FINAL"
       ],
-      "status": "STALE",
+      "status": "SATISFIED",
       "weakProtection": false
     },
     {
@@ -2417,14 +3350,14 @@
       "attackIds": [],
       "taxonomyIds": [],
       "applicability": "REQUIRED",
-      "reason": "Playwright nameplate checks green",
+      "reason": "S9 evidence + clean-trio seals on frozen state",
       "evidenceIds": [
-        "EV-RUNTIME-S4"
+        "EV-RUNTIME-S9"
       ],
       "reviewerIds": [
-        "coordinator"
+        "coordinator-pr51"
       ],
-      "status": "STALE",
+      "status": "SATISFIED",
       "weakProtection": false
     },
     {
@@ -2434,11 +3367,19 @@
       "attackIds": [],
       "taxonomyIds": [],
       "applicability": "REQUIRED",
-      "reason": "awaiting Clean A/B sealed reviews",
-      "evidenceIds": [],
-      "reviewerIds": [],
-      "status": "PENDING",
-      "weakProtection": true
+      "reason": "S9 evidence + clean-trio seals on frozen state",
+      "evidenceIds": [
+        "EV-SEAL-A-FINAL",
+        "EV-SEAL-B-FINAL",
+        "EV-SEAL-C-FINAL"
+      ],
+      "reviewerIds": [
+        "RV-CLEAN-A-FINAL",
+        "RV-CLEAN-B-FINAL",
+        "RV-CLEAN-C-FINAL"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": false
     },
     {
       "id": "COV-LADDER-DET",
@@ -2447,14 +3388,15 @@
       "attackIds": [],
       "taxonomyIds": [],
       "applicability": "REQUIRED",
-      "reason": "RealmPassiveNodes.test.ts green",
+      "reason": "S9 evidence + clean-trio seals on frozen state",
       "evidenceIds": [
-        "EV-FOCUSED-S4"
+        "EV-VERIFY-S9-SCOPED",
+        "EV-NOVEL-S9"
       ],
       "reviewerIds": [
-        "coordinator"
+        "coordinator-pr51"
       ],
-      "status": "STALE",
+      "status": "SATISFIED",
       "weakProtection": false
     },
     {
@@ -2464,14 +3406,18 @@
       "attackIds": [],
       "taxonomyIds": [],
       "applicability": "REQUIRED",
-      "reason": "label semantics + ReleasePolicy pin reviewed",
+      "reason": "sealed clean-trio reviews on frozen state S9",
       "evidenceIds": [
-        "EV-ADVERSARIAL-S4"
+        "EV-SEAL-A-FINAL",
+        "EV-SEAL-B-FINAL",
+        "EV-SEAL-C-FINAL"
       ],
       "reviewerIds": [
-        "coordinator"
+        "RV-CLEAN-A-FINAL",
+        "RV-CLEAN-B-FINAL",
+        "RV-CLEAN-C-FINAL"
       ],
-      "status": "STALE",
+      "status": "SATISFIED",
       "weakProtection": false
     },
     {
@@ -2481,14 +3427,14 @@
       "attackIds": [],
       "taxonomyIds": [],
       "applicability": "REQUIRED",
-      "reason": "ceiling note verified live at Truc Co",
+      "reason": "S9 evidence + clean-trio seals on frozen state",
       "evidenceIds": [
-        "EV-RUNTIME-S4"
+        "EV-RUNTIME-S9"
       ],
       "reviewerIds": [
-        "coordinator"
+        "coordinator-pr51"
       ],
-      "status": "STALE",
+      "status": "SATISFIED",
       "weakProtection": false
     },
     {
@@ -2498,11 +3444,19 @@
       "attackIds": [],
       "taxonomyIds": [],
       "applicability": "REQUIRED",
-      "reason": "awaiting Clean A/B sealed reviews",
-      "evidenceIds": [],
-      "reviewerIds": [],
-      "status": "PENDING",
-      "weakProtection": true
+      "reason": "S9 evidence + clean-trio seals on frozen state",
+      "evidenceIds": [
+        "EV-SEAL-A-FINAL",
+        "EV-SEAL-B-FINAL",
+        "EV-SEAL-C-FINAL"
+      ],
+      "reviewerIds": [
+        "RV-CLEAN-A-FINAL",
+        "RV-CLEAN-B-FINAL",
+        "RV-CLEAN-C-FINAL"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": false
     },
     {
       "id": "COV-MERGE-STATIC",
@@ -2511,14 +3465,18 @@
       "attackIds": [],
       "taxonomyIds": [],
       "applicability": "REQUIRED",
-      "reason": "coexistence + deleted-path census probed",
+      "reason": "sealed clean-trio reviews on frozen state S9",
       "evidenceIds": [
-        "EV-ADVERSARIAL-S4"
+        "EV-SEAL-A-FINAL",
+        "EV-SEAL-B-FINAL",
+        "EV-SEAL-C-FINAL"
       ],
       "reviewerIds": [
-        "coordinator"
+        "RV-CLEAN-A-FINAL",
+        "RV-CLEAN-B-FINAL",
+        "RV-CLEAN-C-FINAL"
       ],
-      "status": "STALE",
+      "status": "SATISFIED",
       "weakProtection": false
     },
     {
@@ -2528,15 +3486,15 @@
       "attackIds": [],
       "taxonomyIds": [],
       "applicability": "REQUIRED",
-      "reason": "typecheck+build green; suite failures all pre-existing",
+      "reason": "S9 evidence + clean-trio seals on frozen state",
       "evidenceIds": [
-        "EV-VERIFY-S4",
-        "EV-FOCUSED-S4"
+        "EV-VERIFY-S9-SCOPED",
+        "EV-NOVEL-S9"
       ],
       "reviewerIds": [
-        "coordinator"
+        "coordinator-pr51"
       ],
-      "status": "STALE",
+      "status": "SATISFIED",
       "weakProtection": false
     },
     {
@@ -2546,11 +3504,19 @@
       "attackIds": [],
       "taxonomyIds": [],
       "applicability": "REQUIRED",
-      "reason": "awaiting Clean A/B sealed reviews",
-      "evidenceIds": [],
-      "reviewerIds": [],
-      "status": "PENDING",
-      "weakProtection": true
+      "reason": "S9 evidence + clean-trio seals on frozen state",
+      "evidenceIds": [
+        "EV-SEAL-A-FINAL",
+        "EV-SEAL-B-FINAL",
+        "EV-SEAL-C-FINAL"
+      ],
+      "reviewerIds": [
+        "RV-CLEAN-A-FINAL",
+        "RV-CLEAN-B-FINAL",
+        "RV-CLEAN-C-FINAL"
+      ],
+      "status": "SATISFIED",
+      "weakProtection": false
     }
   ],
   "attacks": [],
@@ -3083,6 +4049,188 @@
       "findingIds": [],
       "novelAttackIds": [],
       "status": "SEALED"
+    },
+    {
+      "id": "RV-CLEAN-A-FINAL",
+      "state": {
+        "productStateId": "b1b1c5ff0d9772d9362be9feac89e052e638f32f3eab4ff545636b52ca42b5b1",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "round": 5,
+      "phase": "CORRECTNESS",
+      "reviewerId": "clean-a-correctness",
+      "contextId": "clean-a-correctness-9f3e",
+      "model": "swe-2-max",
+      "role": "CLEAN_REVIEW",
+      "inputBundleHash": "afc48b734b36f04b9d76e99ef7e621531df11be0b523631d1f1024d25517ac18",
+      "priorFindingsVisible": false,
+      "accessLimitations": [
+        "verify-*.mjs unexecuted (needs live dev server)",
+        "e2e spec not executed",
+        "no visual verification of scenes/panels",
+        "PassiveSystem ambient accumulation inferred from call sites not a live loop"
+      ],
+      "startedAt": "2026-09-29T11:44:00Z",
+      "sealedAt": "2026-09-29T12:15:00Z",
+      "previousPhaseReviewId": null,
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-SEAL-A-FINAL"
+      ],
+      "findingIds": [
+        "F-MG-19",
+        "F-MG-21",
+        "F-MG-23",
+        "F-MG-26",
+        "F-MG-27",
+        "F-MG-28",
+        "F-MG-32"
+      ],
+      "novelAttackIds": [],
+      "status": "SEALED"
+    },
+    {
+      "id": "RV-CLEAN-B-FINAL",
+      "state": {
+        "productStateId": "b1b1c5ff0d9772d9362be9feac89e052e638f32f3eab4ff545636b52ca42b5b1",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "round": 5,
+      "phase": "AUTHORITY",
+      "reviewerId": "clean-b-authority",
+      "contextId": "clean-b-authority-t2v9",
+      "model": "swe-2-max",
+      "role": "CLEAN_REVIEW",
+      "inputBundleHash": "eb8b931650954ce146f857ea9463b756731aaf89e95f0345d3f238b975e6a21a",
+      "priorFindingsVisible": false,
+      "accessLimitations": [
+        "e2e spec reviewed statically not executed",
+        "migration verified statically (no live Supabase)",
+        "live-combat cast-clip playback via unit tests + static chain",
+        "no conditioned event-triggered passives exist - release gap untested by construction"
+      ],
+      "startedAt": "2026-09-29T11:44:00Z",
+      "sealedAt": "2026-09-29T12:15:00Z",
+      "previousPhaseReviewId": null,
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-SEAL-B-FINAL"
+      ],
+      "findingIds": [
+        "F-MG-23",
+        "F-MG-24",
+        "F-MG-26",
+        "F-MG-29",
+        "F-MG-30",
+        "F-MG-28"
+      ],
+      "novelAttackIds": [],
+      "status": "SEALED"
+    },
+    {
+      "id": "RV-TERMINAL-B-FINAL",
+      "state": {
+        "productStateId": "b1b1c5ff0d9772d9362be9feac89e052e638f32f3eab4ff545636b52ca42b5b1",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "round": 5,
+      "phase": "TERMINAL_CHECK",
+      "reviewerId": "clean-b-authority",
+      "contextId": "clean-b-authority-t2v9",
+      "model": "swe-2-max",
+      "role": "CLEAN_REVIEW",
+      "inputBundleHash": "eb8b931650954ce146f857ea9463b756731aaf89e95f0345d3f238b975e6a21a",
+      "priorFindingsVisible": false,
+      "accessLimitations": [],
+      "startedAt": "2026-09-29T11:44:00Z",
+      "sealedAt": "2026-09-29T12:15:00Z",
+      "previousPhaseReviewId": "RV-CLEAN-B-FINAL",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-SEAL-B-FINAL"
+      ],
+      "findingIds": [],
+      "novelAttackIds": [],
+      "status": "SEALED"
+    },
+    {
+      "id": "RV-CLEAN-C-FINAL",
+      "state": {
+        "productStateId": "b1b1c5ff0d9772d9362be9feac89e052e638f32f3eab4ff545636b52ca42b5b1",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "round": 5,
+      "phase": "INTEGRATION",
+      "reviewerId": "clean-c-integ",
+      "contextId": "integ-ef1f16f4-a1",
+      "model": "swe-2-max",
+      "role": "CLEAN_REVIEW",
+      "inputBundleHash": "8a3e849e31d126e33e7157fa420e1e2b679f53a30fccf58358d67c33cc397ddb",
+      "priorFindingsVisible": false,
+      "accessLimitations": [
+        "attacksTried/coverageNotes tail truncated by transport - substance recorded in review artifact"
+      ],
+      "startedAt": "2026-09-29T11:44:00Z",
+      "sealedAt": "2026-09-29T12:15:00Z",
+      "previousPhaseReviewId": null,
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-SEAL-C-FINAL"
+      ],
+      "findingIds": [
+        "F-MG-18",
+        "F-MG-20",
+        "F-MG-21",
+        "F-MG-22",
+        "F-MG-25",
+        "F-MG-28",
+        "F-MG-31",
+        "F-MG-32"
+      ],
+      "novelAttackIds": [],
+      "status": "SEALED"
+    },
+    {
+      "id": "RV-S3-P1",
+      "state": {
+        "productStateId": "b84d7928774ecbf0d8179a71ef9d8752622ffa98b065c5c61dd714592d71d95f",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "round": 3,
+      "phase": "CLOSURE",
+      "reviewerId": "coordinator-pr51-local",
+      "contextId": "coordinator-pr51",
+      "model": "local-agent",
+      "role": "COORDINATOR",
+      "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "priorFindingsVisible": true,
+      "accessLimitations": [],
+      "startedAt": "2026-09-29T08:10:00Z",
+      "sealedAt": "2026-09-29T08:20:00Z",
+      "previousPhaseReviewId": null,
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [],
+      "findingIds": [
+        "F-MG-07",
+        "F-MG-08"
+      ],
+      "novelAttackIds": [],
+      "status": "SEALED"
     }
   ],
   "cycles": [
@@ -3228,6 +4376,33 @@
       "startedAt": "2026-09-29T16:40:00Z",
       "finishedAt": "2026-09-29T17:05:00Z",
       "status": "INCOMPLETE"
+    },
+    {
+      "id": "CYC-CLEAN-A-FINAL",
+      "state": {
+        "productStateId": "b1b1c5ff0d9772d9362be9feac89e052e638f32f3eab4ff545636b52ca42b5b1",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "reviewIds": [
+        "RV-CLEAN-A-FINAL",
+        "RV-CLEAN-B-FINAL",
+        "RV-TERMINAL-B-FINAL",
+        "RV-CLEAN-C-FINAL"
+      ],
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-SEAL-A-FINAL",
+        "EV-SEAL-B-FINAL",
+        "EV-SEAL-C-FINAL"
+      ],
+      "noveltyEvidenceIds": [
+        "EV-NOVEL-S9"
+      ],
+      "startedAt": "2026-09-29T11:44:00Z",
+      "finishedAt": "2026-09-29T12:18:00Z",
+      "status": "FINDINGS"
     }
   ],
   "mutations": [
@@ -3933,6 +5108,230 @@
       "payloadPath": "events/0027.json",
       "payloadHash": "3fb8cb12f74f09c88e57b111fa8583baf13c9cd3bc01e7f0739dac445f41eca9",
       "eventHash": "aa3bbd7197e94f76fdad5691bd61b926ba65292cf8b1d01206c3eb3fc06a0382"
+    },
+    {
+      "seq": 28,
+      "at": "2026-09-29T11:45:17.493Z",
+      "kind": "SCHEDULE",
+      "actor": "coordinator-pr51",
+      "state": {
+        "productStateId": "b1b1c5ff0d9772d9362be9feac89e052e638f32f3eab4ff545636b52ca42b5b1",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "previousEventHash": "aa3bbd7197e94f76fdad5691bd61b926ba65292cf8b1d01206c3eb3fc06a0382",
+      "payloadPath": "events/0028.json",
+      "payloadHash": "33283d48bd03d5d8054bb33ff20fa7d94e7fcd348c83aa3c37f55c9149fde767",
+      "eventHash": "4aae33ab919928958db578f14048ce81f059292f78590eac1807f825f9af9f7c"
+    },
+    {
+      "seq": 29,
+      "at": "2026-09-29T11:45:17.624Z",
+      "kind": "SCHEDULE",
+      "actor": "coordinator-pr51",
+      "state": {
+        "productStateId": "b1b1c5ff0d9772d9362be9feac89e052e638f32f3eab4ff545636b52ca42b5b1",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "previousEventHash": "4aae33ab919928958db578f14048ce81f059292f78590eac1807f825f9af9f7c",
+      "payloadPath": "events/0029.json",
+      "payloadHash": "eb397f6ffbda8d2474dbba4e4e278806de88f54d7abe871bdc0f94bd9a92a7de",
+      "eventHash": "dc47a3cea4881934178a6856afaf65df8b6b833464cd97c9a813e538f599b062"
+    },
+    {
+      "seq": 30,
+      "at": "2026-09-29T11:45:17.754Z",
+      "kind": "SCHEDULE",
+      "actor": "coordinator-pr51",
+      "state": {
+        "productStateId": "b1b1c5ff0d9772d9362be9feac89e052e638f32f3eab4ff545636b52ca42b5b1",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "previousEventHash": "dc47a3cea4881934178a6856afaf65df8b6b833464cd97c9a813e538f599b062",
+      "payloadPath": "events/0030.json",
+      "payloadHash": "1aedc63acfef81610ff35082b9ea01ad9af8f5ebeed808d12bb29d48065abf26",
+      "eventHash": "ddac2d3c5bf3809b3a14dd59e9623ec7f344b361a8d1fad6d84b42a173348d7a"
+    },
+    {
+      "seq": 31,
+      "at": "2026-09-29T11:45:20.808Z",
+      "kind": "SCHEDULE",
+      "actor": "coordinator-pr51",
+      "state": {
+        "productStateId": "b1b1c5ff0d9772d9362be9feac89e052e638f32f3eab4ff545636b52ca42b5b1",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "previousEventHash": "ddac2d3c5bf3809b3a14dd59e9623ec7f344b361a8d1fad6d84b42a173348d7a",
+      "payloadPath": "events/0031.json",
+      "payloadHash": "5600bba71131057b155f426cc5baf4da0241dac3e3890496475e4396b51d4d51",
+      "eventHash": "5a43b8fce5f1b2a41e3e6807d1692c5365a5a9f662efe45a2fa9ab23e107c3c5"
+    },
+    {
+      "seq": 32,
+      "at": "2026-09-29T11:45:20.940Z",
+      "kind": "SCHEDULE",
+      "actor": "coordinator-pr51",
+      "state": {
+        "productStateId": "b1b1c5ff0d9772d9362be9feac89e052e638f32f3eab4ff545636b52ca42b5b1",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "previousEventHash": "5a43b8fce5f1b2a41e3e6807d1692c5365a5a9f662efe45a2fa9ab23e107c3c5",
+      "payloadPath": "events/0032.json",
+      "payloadHash": "9d9d733e787e8ae822e042f65859b710dbc15e63e952c8c93811a112d0d411e4",
+      "eventHash": "540c7cb0dff29d84b4411769a70948bec663494c1bbcc88c55d3c64457e0290c"
+    },
+    {
+      "seq": 33,
+      "at": "2026-09-29T11:45:21.079Z",
+      "kind": "SCHEDULE",
+      "actor": "coordinator-pr51",
+      "state": {
+        "productStateId": "b1b1c5ff0d9772d9362be9feac89e052e638f32f3eab4ff545636b52ca42b5b1",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "previousEventHash": "540c7cb0dff29d84b4411769a70948bec663494c1bbcc88c55d3c64457e0290c",
+      "payloadPath": "events/0033.json",
+      "payloadHash": "6c12dd2a5d6d14832ab407f7b80ec39ce11477caedce1b14ebd38b25ac615e4a",
+      "eventHash": "a29eea040bc08198d51dc94975ac4078259a9589257d4192924ec29d78e1a821"
+    },
+    {
+      "seq": 34,
+      "at": "2026-09-29T12:08:59.782Z",
+      "kind": "SCHEDULE",
+      "actor": "coordinator-pr51",
+      "state": {
+        "productStateId": "b1b1c5ff0d9772d9362be9feac89e052e638f32f3eab4ff545636b52ca42b5b1",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "previousEventHash": "a29eea040bc08198d51dc94975ac4078259a9589257d4192924ec29d78e1a821",
+      "payloadPath": "events/0034.json",
+      "payloadHash": "61c4345cff4b2a10bccca54f28ffafb19327a33d34616f7c8e76e4a2b0bf73be",
+      "eventHash": "8e1413f5c30697ffbbd44fb5c1a6eca6241dce91a6d6f1d3255811feca00b95d"
+    },
+    {
+      "seq": 35,
+      "at": "2026-09-29T12:24:14.033Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-pr51",
+      "state": {
+        "productStateId": "b1b1c5ff0d9772d9362be9feac89e052e638f32f3eab4ff545636b52ca42b5b1",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "previousEventHash": "8e1413f5c30697ffbbd44fb5c1a6eca6241dce91a6d6f1d3255811feca00b95d",
+      "payloadPath": "events/0035.json",
+      "payloadHash": "7bb68ac853416d0813b02609b6b4d251126f3484da36b5f07f0185906bcced31",
+      "eventHash": "70927e10001a1ca334df3e1aeadb2bffa2e5f23f64d9b3c52e9cf79098dcac38"
+    },
+    {
+      "seq": 36,
+      "at": "2026-09-29T12:24:37.265Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-pr51",
+      "state": {
+        "productStateId": "b1b1c5ff0d9772d9362be9feac89e052e638f32f3eab4ff545636b52ca42b5b1",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "previousEventHash": "70927e10001a1ca334df3e1aeadb2bffa2e5f23f64d9b3c52e9cf79098dcac38",
+      "payloadPath": "events/0036.json",
+      "payloadHash": "2cb1ebc3c7f740ea0d1b74dcda41920f3f976b8d0973269f5375e9af692dd690",
+      "eventHash": "aa4e04db10cd126c105a40bdf26e3c89b0e83ae11719cc3ad4a47bfc4ad02339"
+    },
+    {
+      "seq": 37,
+      "at": "2026-09-29T12:24:41.786Z",
+      "kind": "SCHEDULE",
+      "actor": "coordinator-pr51",
+      "state": {
+        "productStateId": "b1b1c5ff0d9772d9362be9feac89e052e638f32f3eab4ff545636b52ca42b5b1",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "previousEventHash": "aa4e04db10cd126c105a40bdf26e3c89b0e83ae11719cc3ad4a47bfc4ad02339",
+      "payloadPath": "events/0037.json",
+      "payloadHash": "a2b13ad024c578dbe30921403f71709c78f7b2ed4e64481ef89535ced278f0eb",
+      "eventHash": "e91ea6f15cdc79245888eba68692ef86e423f5326e5a306955856b1b07746727"
+    },
+    {
+      "seq": 38,
+      "at": "2026-09-29T12:24:41.915Z",
+      "kind": "SCHEDULE",
+      "actor": "coordinator-pr51",
+      "state": {
+        "productStateId": "b1b1c5ff0d9772d9362be9feac89e052e638f32f3eab4ff545636b52ca42b5b1",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "previousEventHash": "e91ea6f15cdc79245888eba68692ef86e423f5326e5a306955856b1b07746727",
+      "payloadPath": "events/0038.json",
+      "payloadHash": "cf9564ebf861016ab2994bbbca845d1ab4c46cccc38bf68f037c357208f9e7a3",
+      "eventHash": "8d0e590f2ce888f172c2dd29e8255c39a743b3b9bc832b70129d0d39571afa7d"
+    },
+    {
+      "seq": 39,
+      "at": "2026-09-29T12:24:42.042Z",
+      "kind": "SCHEDULE",
+      "actor": "coordinator-pr51",
+      "state": {
+        "productStateId": "b1b1c5ff0d9772d9362be9feac89e052e638f32f3eab4ff545636b52ca42b5b1",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "previousEventHash": "8d0e590f2ce888f172c2dd29e8255c39a743b3b9bc832b70129d0d39571afa7d",
+      "payloadPath": "events/0039.json",
+      "payloadHash": "955d136818d9b17e38e9b2d2efff6a9df7591cfa2c6bc15c52ee893f0a40cb07",
+      "eventHash": "5e0cbe58ecdcc3e7d26891842cf13cd8a3cc357c76b50e2df3dbf0bf5ef5f16a"
+    },
+    {
+      "seq": 40,
+      "at": "2026-09-29T12:30:34.570Z",
+      "kind": "EVIDENCE",
+      "actor": "coordinator-pr51",
+      "state": {
+        "productStateId": "b1b1c5ff0d9772d9362be9feac89e052e638f32f3eab4ff545636b52ca42b5b1",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "previousEventHash": "5e0cbe58ecdcc3e7d26891842cf13cd8a3cc357c76b50e2df3dbf0bf5ef5f16a",
+      "payloadPath": "events/0040.json",
+      "payloadHash": "cc2f521312b23b6ac75f4a639cce6bb4cd8e55a4407779d1c898225b80c1b7b3",
+      "eventHash": "fda1197db560a5cd21607eaf9d36a19c998cfb801940d77896d155355386faae"
+    },
+    {
+      "seq": 41,
+      "at": "2026-09-29T12:31:55.068Z",
+      "kind": "DECISION",
+      "actor": "coordinator-pr51",
+      "state": {
+        "productStateId": "b1b1c5ff0d9772d9362be9feac89e052e638f32f3eab4ff545636b52ca42b5b1",
+        "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+        "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+        "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+      },
+      "previousEventHash": "fda1197db560a5cd21607eaf9d36a19c998cfb801940d77896d155355386faae",
+      "payloadPath": "events/0041.json",
+      "payloadHash": "bed9f2c7ba703f62ce8df318e1360c42a378e5d41adbd84756338573565c276b",
+      "eventHash": "28176daee37758674ba0ae36358f28f68bd9cec20940e8143cb329042db13909"
     }
   ]
 }

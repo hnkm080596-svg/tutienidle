@@ -1,0 +1,29 @@
+{
+  "applied": [
+    "finding:F-MG-18",
+    "finding:F-MG-19",
+    "finding:F-MG-20",
+    "finding:F-MG-21",
+    "finding:F-MG-22",
+    "finding:F-MG-23",
+    "finding:F-MG-24",
+    "finding:F-MG-25",
+    "finding:F-MG-26",
+    "finding:F-MG-27",
+    "finding:F-MG-28",
+    "finding:F-MG-29",
+    "finding:F-MG-30",
+    "finding:F-MG-31",
+    "finding:F-MG-32",
+    "review:RV-CLEAN-A-FINAL",
+    "review:RV-CLEAN-B-FINAL",
+    "review:RV-TERMINAL-B-FINAL",
+    "review:RV-CLEAN-C-FINAL",
+    "evidence:EV-SEAL-A-FINAL",
+    "evidence:EV-SEAL-B-FINAL",
+    "evidence:EV-SEAL-C-FINAL",
+    "cycle:CYC-CLEAN-A-FINAL",
+    "cycle:CYC-CLEAN-B-FINAL",
+    "cycle:CYC-CLEAN-C-FINAL"
+  ]
+}

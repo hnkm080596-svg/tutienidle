@@ -1,0 +1,279 @@
+{
+ "records": [
+  {
+   "kind": "review",
+   "body": {
+    "id": "RV-S3-P1",
+    "state": {
+     "productStateId": "b84d7928774ecbf0d8179a71ef9d8752622ffa98b065c5c61dd714592d71d95f",
+     "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+     "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+     "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+    },
+    "round": 3,
+    "phase": "CLOSURE",
+    "reviewerId": "coordinator-pr51-local",
+    "contextId": "coordinator-pr51",
+    "model": "local-agent",
+    "role": "COORDINATOR",
+    "inputBundleHash": "0000000000000000000000000000000000000000000000000000000000000000",
+    "priorFindingsVisible": true,
+    "accessLimitations": [],
+    "startedAt": "2026-09-29T08:10:00Z",
+    "sealedAt": "2026-09-29T08:20:00Z",
+    "previousPhaseReviewId": null,
+    "reviewedAfterPreviousFixes": true,
+    "coverageIds": [],
+    "evidenceIds": [],
+    "findingIds": [
+     "F-MG-07",
+     "F-MG-08"
+    ],
+    "novelAttackIds": [],
+    "status": "SEALED"
+   }
+  },
+  {
+   "kind": "cycle",
+   "body": {
+    "id": "CYC-CLEAN-A-FINAL",
+    "state": {
+     "productStateId": "b1b1c5ff0d9772d9362be9feac89e052e638f32f3eab4ff545636b52ca42b5b1",
+     "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+     "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+     "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+    },
+    "reviewIds": [
+     "RV-CLEAN-A-FINAL",
+     "RV-CLEAN-B-FINAL",
+     "RV-TERMINAL-B-FINAL",
+     "RV-CLEAN-C-FINAL"
+    ],
+    "coverageIds": [],
+    "evidenceIds": [
+     "EV-SEAL-A-FINAL",
+     "EV-SEAL-B-FINAL",
+     "EV-SEAL-C-FINAL"
+    ],
+    "noveltyEvidenceIds": [
+     "EV-NOVEL-S9"
+    ],
+    "startedAt": "2026-09-29T11:44:00Z",
+    "finishedAt": "2026-09-29T12:18:00Z",
+    "status": "FINDINGS"
+   }
+  },
+  {
+   "kind": "coverage",
+   "body": {
+    "id": "COV-STAT-STATIC",
+    "invariantId": "I-STAT-ZEROBASE-FLAT",
+    "surface": "STATIC_SEMANTIC",
+    "attackIds": [],
+    "taxonomyIds": [],
+    "applicability": "REQUIRED",
+    "reason": "sealed clean-trio reviews on frozen state S9",
+    "evidenceIds": [
+     "EV-SEAL-A-FINAL",
+     "EV-SEAL-B-FINAL",
+     "EV-SEAL-C-FINAL"
+    ],
+    "reviewerIds": [
+     "RV-CLEAN-A-FINAL",
+     "RV-CLEAN-B-FINAL",
+     "RV-CLEAN-C-FINAL"
+    ],
+    "status": "SATISFIED",
+    "weakProtection": false
+   }
+  },
+  {
+   "kind": "coverage",
+   "body": {
+    "id": "COV-BLDG-STATIC",
+    "invariantId": "I-BUILDING-ACCRUAL-PIN",
+    "surface": "STATIC_SEMANTIC",
+    "attackIds": [],
+    "taxonomyIds": [],
+    "applicability": "REQUIRED",
+    "reason": "sealed clean-trio reviews on frozen state S9",
+    "evidenceIds": [
+     "EV-SEAL-A-FINAL",
+     "EV-SEAL-B-FINAL",
+     "EV-SEAL-C-FINAL"
+    ],
+    "reviewerIds": [
+     "RV-CLEAN-A-FINAL",
+     "RV-CLEAN-B-FINAL",
+     "RV-CLEAN-C-FINAL"
+    ],
+    "status": "SATISFIED",
+    "weakProtection": false
+   }
+  },
+  {
+   "kind": "coverage",
+   "body": {
+    "id": "COV-OFFLINE-STATIC",
+    "invariantId": "I-OFFLINE-BUFF-SEGMENT",
+    "surface": "STATIC_SEMANTIC",
+    "attackIds": [],
+    "taxonomyIds": [],
+    "applicability": "REQUIRED",
+    "reason": "sealed clean-trio reviews on frozen state S9",
+    "evidenceIds": [
+     "EV-SEAL-A-FINAL",
+     "EV-SEAL-B-FINAL",
+     "EV-SEAL-C-FINAL"
+    ],
+    "reviewerIds": [
+     "RV-CLEAN-A-FINAL",
+     "RV-CLEAN-B-FINAL",
+     "RV-CLEAN-C-FINAL"
+    ],
+    "status": "SATISFIED",
+    "weakProtection": false
+   }
+  },
+  {
+   "kind": "coverage",
+   "body": {
+    "id": "COV-CLOUD-STATIC",
+    "invariantId": "I-CLOUD-REV-CAS",
+    "surface": "STATIC_SEMANTIC",
+    "attackIds": [],
+    "taxonomyIds": [],
+    "applicability": "REQUIRED",
+    "reason": "sealed clean-trio reviews on frozen state S9",
+    "evidenceIds": [
+     "EV-SEAL-A-FINAL",
+     "EV-SEAL-B-FINAL",
+     "EV-SEAL-C-FINAL"
+    ],
+    "reviewerIds": [
+     "RV-CLEAN-A-FINAL",
+     "RV-CLEAN-B-FINAL",
+     "RV-CLEAN-C-FINAL"
+    ],
+    "status": "SATISFIED",
+    "weakProtection": false
+   }
+  },
+  {
+   "kind": "coverage",
+   "body": {
+    "id": "COV-NAME-STATIC",
+    "invariantId": "I-NAMEPLATE-AUTHOR",
+    "surface": "STATIC_SEMANTIC",
+    "attackIds": [],
+    "taxonomyIds": [],
+    "applicability": "REQUIRED",
+    "reason": "sealed clean-trio reviews on frozen state S9",
+    "evidenceIds": [
+     "EV-SEAL-A-FINAL",
+     "EV-SEAL-B-FINAL",
+     "EV-SEAL-C-FINAL"
+    ],
+    "reviewerIds": [
+     "RV-CLEAN-A-FINAL",
+     "RV-CLEAN-B-FINAL",
+     "RV-CLEAN-C-FINAL"
+    ],
+    "status": "SATISFIED",
+    "weakProtection": false
+   }
+  },
+  {
+   "kind": "coverage",
+   "body": {
+    "id": "COV-LADDER-STATIC",
+    "invariantId": "I-REALM-LADDER-LABELS",
+    "surface": "STATIC_SEMANTIC",
+    "attackIds": [],
+    "taxonomyIds": [],
+    "applicability": "REQUIRED",
+    "reason": "sealed clean-trio reviews on frozen state S9",
+    "evidenceIds": [
+     "EV-SEAL-A-FINAL",
+     "EV-SEAL-B-FINAL",
+     "EV-SEAL-C-FINAL"
+    ],
+    "reviewerIds": [
+     "RV-CLEAN-A-FINAL",
+     "RV-CLEAN-B-FINAL",
+     "RV-CLEAN-C-FINAL"
+    ],
+    "status": "SATISFIED",
+    "weakProtection": false
+   }
+  },
+  {
+   "kind": "coverage",
+   "body": {
+    "id": "COV-MERGE-STATIC",
+    "invariantId": "I-MERGE-INTEGRITY",
+    "surface": "STATIC_SEMANTIC",
+    "attackIds": [],
+    "taxonomyIds": [],
+    "applicability": "REQUIRED",
+    "reason": "sealed clean-trio reviews on frozen state S9",
+    "evidenceIds": [
+     "EV-SEAL-A-FINAL",
+     "EV-SEAL-B-FINAL",
+     "EV-SEAL-C-FINAL"
+    ],
+    "reviewerIds": [
+     "RV-CLEAN-A-FINAL",
+     "RV-CLEAN-B-FINAL",
+     "RV-CLEAN-C-FINAL"
+    ],
+    "status": "SATISFIED",
+    "weakProtection": false
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-MG-26",
+    "title": "per_second accumulator banks full delta while condition fails and burst-applies on re-entry - latent ramp if a future conditioned passive is uncapped",
+    "state": {
+     "productStateId": "b1b1c5ff0d9772d9362be9feac89e052e638f32f3eab4ff545636b52ca42b5b1",
+     "contractId": "cf9466eb0fb911d2039732d61be60befff0917077575e9bab9a67a6dc3949644",
+     "attackModelId": "750d1a53dd23d28520c90ccde46c91a126193193b12a7c74e9dcbbe5dbc41d5c",
+     "environmentId": "b11d13feb2317104838737db5dbe15a1a241298030987eaf953a9b01b445ccbd"
+    },
+    "severity": "Nit",
+    "classification": "NON_ACTIONABLE",
+    "actionable": true,
+    "reachability": "PRODUCTION",
+    "locations": [
+     {
+      "path": "game/src/core/skill/PassiveSystem.ts",
+      "symbolOrSection": "268-292",
+      "revision": "ef1f16f4",
+      "basis": "SOURCE"
+     }
+    ],
+    "discoveredBy": "clean-a-correctness + clean-b-authority (deduped)",
+    "invariantIds": [],
+    "evidenceIds": [],
+    "counterexample": "all conditioned per_second modifiers cap at maxStacks 1 today; behavior is test-enshrined",
+    "expected": "documented current design; no authored path reaches the ramp",
+    "actual": "n/a",
+    "rootCause": "intentional burst-on-recovery design bounded by maxStacks",
+    "rootClass": "documented-design",
+    "subsystem": "stats-and-talents",
+    "siblingSearch": [],
+    "siblingFindingIds": [],
+    "repair": "none - latent design note only",
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "status": "PROVEN",
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null
+   }
+  }
+ ]
+}

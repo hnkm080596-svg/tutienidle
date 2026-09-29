@@ -1,0 +1,20 @@
+{
+ "action": "admit",
+ "assignment": {
+  "id": "ASGN-CLEAN-C-FINAL",
+  "parentId": null,
+  "capacityScope": "clean-review-slot-3-of-3",
+  "inputBundleHash": "e0a15137abc05d22bcf6af25ec24a4d340f25eae07f4f18d6fe6f58df3a885e2",
+  "dependencies": [],
+  "requiredCapabilities": [
+   "read-source",
+   "run-vitest",
+   "grep"
+  ],
+  "writeSurface": "none",
+  "readiness": "READY",
+  "status": "QUEUED",
+  "observedRuntimeId": "devin-4f6f72bf78c34e49a3631dd44478fc8e",
+  "history": []
+ }
+}
