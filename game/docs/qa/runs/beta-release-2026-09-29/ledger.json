@@ -2124,7 +2124,7 @@
       "exitCode": 0,
       "result": "PASS",
       "artifactPath": "evidence/s4-verify.md",
-      "artifactHash": "e30e4f32f49638e5ce940b0c1f846f8bc0c9d70289c5fc1692dc5a6bd876e4d2",
+      "artifactHash": "43747dd71b60ead1ffda769e5ffaa5ba2b8cc8a2073cb6261aa1e8dca061d69c",
       "inputPaths": [
         "game/src/**",
         "game/tests/**"
@@ -2178,7 +2178,7 @@
       "exitCode": 0,
       "result": "PASS",
       "artifactPath": "evidence/s4-coord-analysis.md",
-      "artifactHash": "f3d4e54c4dbedcafcebb1e105314751deb5256d7b45f51447af3e0939eb3f584",
+      "artifactHash": "652fa5e5a1c4e73a480ec756b3df4163f1d48994ec2c64ec5eb26676eb4a3f16",
       "inputPaths": [
         "game/src/**"
       ],
@@ -2230,7 +2230,7 @@
       "exitCode": 0,
       "result": "PASS",
       "artifactPath": "evidence/s4-balance.md",
-      "artifactHash": "c53a9c153e8c6905e77d2263538394a1f0268e78bfaad8836e76f961962b3562",
+      "artifactHash": "e0f485eba6ddd0d1790c046f65c07a0ce302d09a4874fa378cfd528c896992e3",
       "inputPaths": [
         "game/src/data/**",
         "game/src/core/simulation/**"
@@ -2266,7 +2266,7 @@
       "exitCode": 1,
       "result": "PASS",
       "artifactPath": "evidence/s4-mutation-transfer.md",
-      "artifactHash": "e7b1f84ae36a42e0aaf611ea989750a97b909bb384aeebc45c4765df08ea0b93",
+      "artifactHash": "ccdd0109afcce02fd9d7649ca5037fb434f23b607251717980f7ab2971a25894",
       "inputPaths": [
         "game/src/**"
       ],
@@ -2319,7 +2319,7 @@
       "exitCode": 0,
       "result": "PASS",
       "artifactPath": "evidence/s4-pin-gaps.md",
-      "artifactHash": "ff903262efdf7063b78847ec6179df976464b2e5338e588a05bff0a79071b349",
+      "artifactHash": "19175d6c4d4238fd5f856a979e750b256e1135d5d86fb7996e24b13e759b35c0",
       "inputPaths": [
         "game/src/stores/player.ts",
         "game/src/services/save/**",
@@ -2358,7 +2358,7 @@
       "exitCode": 0,
       "result": "PASS",
       "artifactPath": "evidence/s4-audio-fix.md",
-      "artifactHash": "8873354afbd31c9142e032d1189fb3e414b6bb5e6c2b24f93331e87b98be3bf5",
+      "artifactHash": "6de3a29869431e0c727ba3495266397add17cce60e493bbd34df66bc2212aad3",
       "inputPaths": [
         "game/tests/architecture/audioManifestCompleteness.test.ts",
         "game/src/core/battle/CombatAction.ts"
