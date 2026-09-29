@@ -1029,7 +1029,11 @@ export class TurnBattleSystem {
       this.liveStatModifiers?.(entity) ?? [],
       participant.activeDomains,
     )
-    participant.speed = entity.stats.speed
+    // F-BX-42 -- the pipeline has no output floor and this write is
+    // unconditional, so a stat source reaching <=0 minted a non-positive
+    // vitals ceiling (zombie: alive never flips) or a negative gauge
+    // rate. Clamp at the consumption boundary (StatTypes' convention).
+    participant.speed = Math.max(0, entity.stats.speed)
 
     // ARCH-002 (M7) -- entity.maxHp is the REAL vitals ceiling (heal clamp,
     // regen gate, entity_vitals_changed.maxHp, snapshot maxHp) and is
@@ -1039,7 +1043,7 @@ export class TurnBattleSystem {
     // authority (emits entity_vitals_changed carrying the new ceiling),
     // growth keeps currentHp -- no free heal.
     if (entity.stats.maxHp !== entity.maxHp) {
-      entity.maxHp = entity.stats.maxHp
+      entity.maxHp = Math.max(1, entity.stats.maxHp)
       this.combat.vitals.clampToMaxHp(entity, 'stat_refresh')
     }
   }

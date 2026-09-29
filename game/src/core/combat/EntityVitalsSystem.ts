@@ -63,7 +63,8 @@ export class EntityVitalsSystem {
     const wardBefore = target.currentWard
     const mpBefore = target.currentMp
 
-    target.currentHp = Math.min(target.currentHp, target.maxHp)
+    // A corrupt ceiling must never mint negative hp (F-BX-42).
+    target.currentHp = Math.min(target.currentHp, Math.max(0, target.maxHp))
     this.emit(target, reason, hpBefore - target.currentHp, hpBefore, wardBefore, mpBefore, sourceId)
   }
 
