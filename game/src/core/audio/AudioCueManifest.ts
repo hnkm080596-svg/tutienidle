@@ -207,6 +207,29 @@ const KIEM_COMBO_IDS = [
 // Thanh Van time variants (src/presentation/background/BackgroundVariant.ts).
 const MUSIC_HOME_TIMES = ['morning', 'noon', 'evening', 'night'] as const
 
+// F-BX-18 - every MONSTER_ART variant slug that declares `attackSfxUrl`
+// (src/game/support/MonsterArt.ts) keyed to its declared file. Mirrors
+// the registry exactly the way CAST_SKILL_IDS mirrors the skill
+// catalogs; the W9 completeness test pins the slug set AND the src path
+// against MonsterArt (and that each file exists under public/).
+// Keys are the registry slug; expandSrc sanitizes '-' -> '_' for the
+// cue qualifier (cue-id convention has no dashes).
+const ENEMY_ATTACK_SFX: Readonly<Record<string, string>> = {
+  'graymane-wolf': 'assets/audio/enemies/graymane-wolf/graymane-wolf-attack.ogg',
+  'bloodarm-ox-demon': 'assets/audio/enemies/bloodarm-ox-demon/bloodarm-ox-demon-attack.ogg',
+  'mudbelly-green-toad': 'assets/audio/enemies/mudbelly-green-toad/mudbelly-green-toad-attack.ogg',
+  'whiteshell-venom-beetle': 'assets/audio/enemies/whiteshell-venom-beetle/whiteshell-venom-beetle-attack.ogg',
+  'witherfir-vineman': 'assets/audio/enemies/witherfir-vineman/witherfir-vineman-attack.ogg',
+  'streamgrudge-nymph': 'assets/audio/enemies/streamgrudge-nymph/streamgrudge-nymph-attack.ogg',
+  'blood-locust-elder': 'assets/audio/enemies/blood-locust-elder/blood-locust-elder-attack.ogg',
+  'streamscale-forkman-floodserpent': 'assets/audio/enemies/streamscale-forkman-floodserpent/streamscale-forkman-attack.ogg',
+  'graymane-wolf-ferocious': 'assets/audio/enemies/graymane-wolf-ferocious/graymane-wolf-attack.ogg',
+  'bloodarm-ox-demon-ferocious': 'assets/audio/enemies/bloodarm-ox-demon-ferocious/bloodarm-ox-demon-attack.ogg',
+  'mudbelly-green-toad-ferocious': 'assets/audio/enemies/mudbelly-green-toad-ferocious/mudbelly-green-toad-attack.ogg',
+  'whiteshell-venom-beetle-ferocious': 'assets/audio/enemies/whiteshell-venom-beetle-ferocious/whiteshell-venom-beetle-attack.ogg',
+  'streamscale-forkman-floodserpent-ferocious': 'assets/audio/enemies/streamscale-forkman-floodserpent-ferocious/streamscale-forkman-attack.ogg',
+}
+
 function sfx(overrides?: Partial<AudioCueDef>): AudioCueDef {
   return { src: '', channel: 'sfx', ...overrides }
 }
@@ -227,6 +250,22 @@ function expand(
 ): Record<string, AudioCueDef> {
   const out: Record<string, AudioCueDef> = {}
   for (const id of ids) out[`${prefix}${id}`] = row
+  return out
+}
+
+// Per-slug src expansion (F-BX-18): enemy attack rows share everything
+// EXCEPT src, which keys on the registry slug. The slug's '-' chars are
+// sanitized to '_' for the cue qualifier - the cue-id convention
+// (^[a-z]+(\.[a-z_0-9]+)+$) has no dashes.
+function expandSrc(
+  entries: Readonly<Record<string, string>>,
+  prefix: string,
+  row: AudioCueDef,
+): Record<string, AudioCueDef> {
+  const out: Record<string, AudioCueDef> = {}
+  for (const [id, src] of Object.entries(entries)) {
+    out[`${prefix}${id.replaceAll('-', '_')}`] = { ...row, src }
+  }
   return out
 }
 
@@ -264,6 +303,17 @@ export const AUDIO_CUES: Readonly<Record<string, AudioCueDef>> = {
   // Deliberately unbound: the 'death' emit already routes to
   // combat.death; 'kill' stays armed for a distinct kill-confirm asset.
   'combat.kill': sfx({ synthFallback: 'combatKill' }),
+  // F-BX-18 - wired seam: 'attack' events whose sourceId resolves to a
+  // reskinned enemy variant route here via the registry slug (qualifier
+  // = slug with '-' -> '_'). The anchor row stays the strip fallback;
+  // each slug row's src is the variant's declared attackSfxUrl, and
+  // audio-combat/audio-tribulation bundles already cover 'combat.'.
+  'combat.enemy_attack': sfx({ cooldownMs: 80, synthFallback: 'combatAttack' }),
+  ...expandSrc(
+    ENEMY_ATTACK_SFX,
+    'combat.enemy_attack.',
+    sfx({ cooldownMs: 80, synthFallback: 'combatAttack' }),
+  ),
   'combat.hurt': sfx({ cooldownMs: 80, synthFallback: 'combatHit' }),
   'combat.survive_lethal': sfx({ duckMusic: 0.4, synthFallback: 'combatBlock' }),
   'combat.heal': sfx({ cooldownMs: 100, synthFallback: 'toastSave' }),

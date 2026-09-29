@@ -38,6 +38,11 @@ export class GameManagerBattleRewardOps {
       getActiveStage: () => Stage | null
       getPlayerData: () => PlayerData | null
       getStartedAtMs: () => number | null
+      // F-BX-53: combat-clock seconds elapsed since the cycle anchor -
+      // pause/throttle-aware (steps only count while the clock runs).
+      // null = anchor missing or incomparable (clock source swapped
+      // mid-battle) -> caller falls back to the wall-clock measure.
+      getCombatElapsedSeconds: () => number | null
       getRepeatContinuously: () => boolean
       battleLoot: BattleLootSystem
       stageWaves: StageWaveSystem
@@ -217,10 +222,20 @@ export class GameManagerBattleRewardOps {
     }
 
     const startedAtMs = this.deps.getStartedAtMs() ?? Date.now()
+    // F-BX-53: battle time is the primary measure - CombatClock steps
+    // accumulate only while the clock runs, so tab-hidden/not-revealed/
+    // turn-in-flight freezes and throttled frames stop counting (the
+    // wall clock recorded all of them). The wall-clock value remains the
+    // fallback when the step anchor is missing or incomparable (a
+    // mid-battle clock-source swap re-mints the counter at 0).
     // F-BX-84: the save validator requires a finite record > 0 (a 0 would
     // also mint degenerate auto-farm cycles) - floor to the smallest
-    // positive measurement the wall clock can produce.
-    const clearSeconds = Math.max(MIN_PERFECT_CLEAR_SECONDS, (Date.now() - startedAtMs) / 1000)
+    // positive measurement the clock can produce.
+    const battleSeconds = this.deps.getCombatElapsedSeconds()
+    const clearSeconds = Math.max(
+      MIN_PERFECT_CLEAR_SECONDS,
+      battleSeconds ?? (Date.now() - startedAtMs) / 1000,
+    )
 
     // F-BX-85: the record is the FASTEST qualifying clear, not the first.
     // A non-faster repeat changes nothing; a faster one rewrites the

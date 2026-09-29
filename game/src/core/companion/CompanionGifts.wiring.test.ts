@@ -149,6 +149,7 @@ describe('stage_completed gift seam', () => {
       getActiveStage: () => stage,
       getPlayerData: () => player,
       getStartedAtMs: () => null,
+      getCombatElapsedSeconds: () => null,
       getRepeatContinuously: () => false,
       battleLoot: {
         processDefeatedEnemies: vi.fn(),

@@ -16,10 +16,12 @@ import {
 import { CURRENT_SAVE_VERSION } from './saveVersion'
 import {
   readLocalSaveRevision,
+  readSyncBaseRevision,
   resolveBackupKey,
   resolveImportHandoffKey,
   resolveRevisionKey,
   resolveSaveKey,
+  writeResetTombstone,
 } from './saveKeys'
 
 // large-file-split — save-shape interfaces (GameSave, stack saves,
@@ -662,6 +664,16 @@ export function deleteSave(): boolean {
   // Best-effort: backup fail (quota/SecurityError) KHÔNG chặn xoá —
   // người chơi đã xác nhận mất save.
   void backupCurrentSave()
+
+  // F-BX-24 - reset tombstone BEFORE the counters die: ceiling = the
+  // highest remote save_revision this lineage could know (local CAS
+  // counter, adopted sync base). For a synced account the remote row
+  // survives this delete, and without the tombstone the next login's
+  // remote-ahead pull would resurrect the deleted save. The tombstone
+  // also covers restoreBackup (restored lineage pushes over the stale
+  // row) and SaveIncompatibleScreen's incompatible-local reset, which
+  // funnels through this same function.
+  writeResetTombstone(Math.max(readLocalSaveRevision(), readSyncBaseRevision() ?? 0))
 
   let ok = true
 

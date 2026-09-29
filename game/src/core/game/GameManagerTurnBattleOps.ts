@@ -9,6 +9,7 @@ import {
   type TurnBattleParticipant,
 } from '../battle/turn/TurnBattleSystem'
 import {
+  COMBAT_STEP_SECONDS,
   CombatClock,
   ManualClockSource,
   type ClockSource,
@@ -185,6 +186,15 @@ export class GameManagerTurnBattleOps {
 
   /** Wall-clock timestamp at stage start (Hoan My clearSeconds normalization). */
   private turnBattleStartedAtMs: number | null = null
+
+  // F-BX-53 - combat-clock anchor at the same instant: clearSeconds
+  // must measure BATTLE time (steps count only while the clock runs -
+  // tab-hidden/not-revealed/turn-in-flight freezes and throttled frames
+  // never register), not wall clock including pauses. The anchor pairs
+  // the steps snapshot with the clock INSTANCE it came from: a
+  // mid-battle setCombatClockSource re-mints the counter at 0, making
+  // the snapshot incomparable (callers fall back to wall clock).
+  private turnBattleStartedClock: { clock: CombatClock; steps: number } | null = null
 
   // Reward-flow flags (rewardsGranted set + battleEndEmitted) live in
   // rewardOps - the terminal/grant flow owns them exclusively.
@@ -374,6 +384,11 @@ export class GameManagerTurnBattleOps {
       getActiveStage: () => this.activeStageForTurnBattle,
       getPlayerData: () => this.playerDataForTurnBattle,
       getStartedAtMs: () => this.turnBattleStartedAtMs,
+      getCombatElapsedSeconds: () => {
+        const anchor = this.turnBattleStartedClock
+        if (anchor === null || this.combatClock !== anchor.clock) return null
+        return Math.max(0, (this.combatClock.getElapsedSteps() - anchor.steps) * COMBAT_STEP_SECONDS)
+      },
       getRepeatContinuously: () => this.turnBattleRepeatContinuously,
       battleLoot: deps.battleLoot,
       stageWaves: deps.stageWaves,
@@ -1630,6 +1645,7 @@ export class GameManagerTurnBattleOps {
     this.turnBattleRepeatContinuously = false
     this.playerDataForTurnBattle = null
     this.turnBattleStartedAtMs = null
+    this.turnBattleStartedClock = null
     this.statusVfxSnapshot.clear()
     this.statusVfxBattle = null
     this.reactionEventCursor = 0
@@ -1772,6 +1788,7 @@ export class GameManagerTurnBattleOps {
       this.activeStageForTurnBattle = null
       this.turnBattleRepeatContinuously = false
       this.turnBattleStartedAtMs = null
+      this.turnBattleStartedClock = null
     }
 
     // 3. Player side - ONE canonical composition (P2). The build source
@@ -2194,6 +2211,7 @@ export class GameManagerTurnBattleOps {
     // anchor must be re-armed at every cycle restart or a cycle N>1
     // clear records the whole run's wall-clock time.
     this.turnBattleStartedAtMs = Date.now()
+    this.turnBattleStartedClock = { clock: this.combatClock, steps: this.combatClock.getElapsedSteps() }
 
     this.beginBattleCycle(BATTLE_CYCLE_POLICIES.repeat, { player, stage })
   }
@@ -2276,6 +2294,7 @@ export class GameManagerTurnBattleOps {
     }
 
     this.turnBattleStartedAtMs = Date.now()
+    this.turnBattleStartedClock = { clock: this.combatClock, steps: this.combatClock.getElapsedSteps() }
 
     const session: SessionRef = {
       kind: 'combat',

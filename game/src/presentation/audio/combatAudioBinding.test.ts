@@ -27,7 +27,7 @@ describe('bindCombatAudio', () => {
     bindCombatAudio(bus)
 
     const cases: Array<[string, string, object?]> = [
-      ['attack', 'combat.cast'],
+      // 'attack' is a payload row now (F-BX-18) - pinned below.
       ['hit', 'combat.hit', { sourceId: 'player', targetId: 'enemy_1' }],
       ['critical', 'combat.crit'],
       ['dodge', 'combat.dodge'],
@@ -53,6 +53,32 @@ describe('bindCombatAudio', () => {
       bus.emit(event, { type: event, ...extra })
       expect(cueSpy, event).toHaveBeenCalledWith(expectedCue)
     }
+  })
+
+  it("F-BX-18: enemy attack events voice the variant's declared attackSfxUrl", () => {
+    const bus = new EventBus()
+    bindCombatAudio(bus)
+
+    // Runtime id of a reskinned species that declares attackSfxUrl -
+    // resolveMonsterArtSlug's longest-prefix match maps it to the slug.
+    bus.emit('attack', { type: 'attack', sourceId: 'mortal_feral_dog_x9', targetId: 'player' })
+    expect(cueSpy).toHaveBeenCalledWith('combat.enemy_attack.graymane_wolf')
+
+    bus.emit('attack', { type: 'attack', sourceId: 'mortal_mud_ox_1', targetId: 'player' })
+    expect(cueSpy).toHaveBeenCalledWith('combat.enemy_attack.bloodarm_ox_demon')
+
+    // Player swings keep the legacy cast cue.
+    bus.emit('attack', { type: 'attack', sourceId: 'player', targetId: 'enemy_1' })
+    expect(cueSpy).toHaveBeenCalledWith('combat.cast')
+
+    // Reskinned but SILENT variant (tusked-mountain-boar declares no
+    // attackSfxUrl) and unmapped ids also keep combat.cast.
+    bus.emit('attack', { type: 'attack', sourceId: 'mortal_wild_boar_1', targetId: 'player' })
+    expect(cueSpy).toHaveBeenLastCalledWith('combat.cast')
+    bus.emit('attack', { type: 'attack', sourceId: 'some_unmapped_enemy', targetId: 'player' })
+    expect(cueSpy).toHaveBeenLastCalledWith('combat.cast')
+    bus.emit('attack', { type: 'attack', targetId: 'player' })
+    expect(cueSpy).toHaveBeenLastCalledWith('combat.cast')
   })
 
   it('kill stays silent - it co-fires with death on every entity death', () => {

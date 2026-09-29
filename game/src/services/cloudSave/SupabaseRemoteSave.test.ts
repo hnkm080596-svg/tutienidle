@@ -3,14 +3,17 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { syncRemoteSaveOnLogin } from './SupabaseRemoteSave'
 import { storeSupabaseSession } from '../supabase/SupabaseSession'
 import {
+  readResetTombstone,
   resolveBackupKey,
   resolveImportHandoffKey,
   resolveRevisionKey,
   resolveSaveKey,
   resolveSyncBaseKey,
+  resolveTombstoneKey,
   setSaveAccountId,
+  writeResetTombstone,
 } from '../save/saveKeys'
-import { CURRENT_SAVE_VERSION, loadGame } from '../save/SaveSystem'
+import { CURRENT_SAVE_VERSION, deleteSave, loadGame } from '../save/SaveSystem'
 import { createDefaultPlayer } from '../../core/player/Player'
 import type { GameSave } from '../save/saveTypes'
 
@@ -766,6 +769,138 @@ describe('F1 lineage divergence - sync-base tracking (carried defect)', () => {
     expect(writeOrder.indexOf(resolveSaveKey())).toBeLessThan(
       writeOrder.indexOf(resolveRevisionKey()),
     )
+
+    vi.unstubAllGlobals()
+  })
+})
+
+describe('F-BX-24 - reset tombstone + remote delete (synced-account save reset)', () => {
+  function remoteSaveRow(save: GameSave, revision: number, updatedMs: number) {
+    return { payload: save, save_revision: revision, updated_at: new Date(updatedMs).toISOString() }
+  }
+
+  function deadRemoteFetch(remoteRev: number, deleteStatus = 200): FetchCall[] {
+    return stubFetch((call) => {
+      if (call.url.includes('/rest/v1/characters?')) return json([{ id: 'char-1' }])
+      if (call.init.method === 'DELETE') return json(null, deleteStatus)
+      if (call.url.includes('/rest/v1/character_saves?')) {
+        return json([remoteSaveRow(validGameSave(5_000_000), remoteRev, 10_000_000)])
+      }
+      return json(null)
+    })
+  }
+
+  it('deleteSave records a tombstone ceiling of max(local revision, sync base)', () => {
+    loginSession()
+    localStorage.setItem(resolveSaveKey(), JSON.stringify(validGameSave(1_000)))
+    localStorage.setItem(resolveRevisionKey(), '7')
+    localStorage.setItem(resolveSyncBaseKey(), '3')
+
+    expect(deleteSave()).toBe(true)
+    expect(readResetTombstone()).toEqual({ remoteCeiling: 7 })
+    expect(localStorage.getItem(resolveTombstoneKey())).not.toBeNull()
+
+    vi.unstubAllGlobals()
+  })
+
+  it('remote at/below tombstone ceiling: pull suppressed, stale row DELETEd, tombstone consumed', async () => {
+    loginSession()
+    // The reset path: local slot cleared by deleteSave, tombstone stays.
+    writeResetTombstone(5)
+    const remoteSave = validGameSave(5_000_000)
+    remoteSave.player.name = 'deleted-save'
+
+    const calls = deadRemoteFetch(5)
+
+    expect(await syncRemoteSaveOnLogin(config)).toBe('skipped')
+    // The deleted lineage was never pulled back down ...
+    expect(localStorage.getItem(resolveSaveKey())).toBeNull()
+    // ... and the durable half fired: remote row deleted, tombstone spent.
+    const del = calls.find((call) => call.init.method === 'DELETE')
+    expect(del?.url).toContain('/rest/v1/character_saves')
+    expect(del?.url).toContain('character_id=eq.char-1')
+    expect(readResetTombstone()).toBeNull()
+
+    vi.unstubAllGlobals()
+  })
+
+  it('DELETE denied (pre-migration RLS): tombstone persists and the pull stays suppressed', async () => {
+    loginSession()
+    writeResetTombstone(5)
+
+    const calls = deadRemoteFetch(5, 403)
+
+    expect(await syncRemoteSaveOnLogin(config)).toBe('skipped')
+    expect(localStorage.getItem(resolveSaveKey())).toBeNull()
+    // The tombstone is the standalone half of the fix - it survives a
+    // denied delete and keeps suppressing on the NEXT login too.
+    expect(readResetTombstone()).toEqual({ remoteCeiling: 5 })
+
+    expect(await syncRemoteSaveOnLogin(config)).toBe('skipped')
+    expect(localStorage.getItem(resolveSaveKey())).toBeNull()
+
+    vi.unstubAllGlobals()
+  })
+
+  it('remote moved past the ceiling (another device progressed): tombstone spent, normal pull resumes', async () => {
+    loginSession()
+    writeResetTombstone(5)
+
+    const remoteSave = validGameSave(9_000_000)
+    remoteSave.player.name = 'device-b-progress'
+    stubFetch((call) => {
+      if (call.url.includes('/rest/v1/characters?')) return json([{ id: 'char-1' }])
+      if (call.init.method === 'DELETE') return json(null)
+      if (call.url.includes('/rest/v1/character_saves?')) {
+        return json([remoteSaveRow(remoteSave, 9, 10_000_000)])
+      }
+      return json(null)
+    })
+
+    // rev 9 > ceiling 5: the remote lineage legitimately moved after the
+    // reset, so this is a normal newer-save pull, not a resurrection.
+    expect(await syncRemoteSaveOnLogin(config)).toBe('pulled')
+    expect(readResetTombstone()).toBeNull()
+    const written = JSON.parse(localStorage.getItem(resolveSaveKey()) ?? 'null') as GameSave
+    expect(written.player.name).toBe('device-b-progress')
+
+    vi.unstubAllGlobals()
+  })
+
+  it('post-reset new save INSERTs over the dead lineage instead of pulling it', async () => {
+    loginSession()
+    writeResetTombstone(5)
+    // A fresh character after the reset: local counter restarts at 1.
+    localStorage.setItem(resolveSaveKey(), JSON.stringify(validGameSave(50_000_000)))
+    localStorage.setItem(resolveRevisionKey(), '1')
+    localStorage.setItem(resolveSyncBaseKey(), '5')
+
+    const calls = deadRemoteFetch(5)
+
+    // remote rev 5 <= ceiling: pull suppressed; the delete lands and the
+    // push falls through to a first-push INSERT (the row is gone).
+    expect(await syncRemoteSaveOnLogin(config)).toBe('pushed')
+    const post = calls.find((call) => call.init.method === 'POST')
+    expect(post).toBeDefined()
+    expect(calls.some((call) => call.init.method === 'PATCH')).toBe(false)
+    const body = JSON.parse(String(post?.init.body)) as Record<string, unknown>
+    // pushRevision keeps the shared sequence above the deleted row.
+    expect(body.save_revision).toBe(6)
+    const written = JSON.parse(localStorage.getItem(resolveSaveKey()) ?? 'null') as GameSave
+    expect(written.player.lastSavedAt).toBe(50_000_000)
+
+    vi.unstubAllGlobals()
+  })
+
+  it('F-BX-25 - the characters lookup is deterministic: earliest row, soft-deleted excluded', async () => {
+    loginSession()
+    const calls = stubFetch(() => json([]))
+
+    await syncRemoteSaveOnLogin(config)
+
+    const lookup = calls.find((call) => call.url.includes('/rest/v1/characters?'))
+    expect(lookup?.url).toContain('order=created_at.asc')
+    expect(lookup?.url).toContain('deleted_at=is.null')
 
     vi.unstubAllGlobals()
   })

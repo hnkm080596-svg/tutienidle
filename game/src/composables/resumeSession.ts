@@ -4,7 +4,7 @@
 // card offers a one-click continue instead of a forced re-login.
 // Presentation-side assembly only: reads the session slot and the resolved
 // save key; no writes, no boot-authority changes.
-import { readSupabaseSession } from '@/services/supabase/SupabaseSession'
+import { readSupabaseLoginMarker, readSupabaseSession } from '@/services/supabase/SupabaseSession'
 import { getRawSave } from '@/services/save/SaveSystem'
 import type { AuthSession } from '@/services/auth/AuthService'
 
@@ -51,6 +51,19 @@ export function readResumeCandidate(): ResumeCandidate | null {
   }
 
   return { session, name }
+}
+
+// F-BX-71 - 'session expired' detection: the resume path fabricated a
+// guest session and never told the user their login died. The durable
+// login marker survives session clears (a provably-dead refresh token
+// wipes the session, not the marker) while an explicit logout removes
+// it - so 'marker set, session gone' is exactly an expired login.
+export function hasExpiredLoginMarker(): boolean {
+  try {
+    return !readSupabaseSession() && readSupabaseLoginMarker() !== null
+  } catch {
+    return false
+  }
 }
 
 // Post-reset continuity (ui-audit creation-meta Low): after a save reset the

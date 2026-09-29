@@ -156,3 +156,94 @@ describe('SupabaseCharacterCreationService - create_character RPC contract (v82)
     expect(result).toEqual({ ok: false, code: 'server_unavailable', message: expect.any(String) })
   })
 })
+
+describe('F-BX-25 - ambiguous create failure adopts the committed character', () => {
+  const draft: CharacterCreationDraft = {
+    name: 'Lạc Vân',
+    talentIds: ['talent-a'],
+    mortalBasicSkillId: 'huy_quyen',
+  }
+
+  function stubCreationFlow(handler: (call: FetchCall) => Response): FetchCall[] {
+    return stubFetch((call) => {
+      if (call.url.endsWith('/rpc/create_talent_roll')) {
+        return json({ rollId: 'roll-1', talents: [{ id: 'talent-a' }] })
+      }
+      return handler(call)
+    })
+  }
+
+  it('409 conflict + account row exists -> adopt it (ok), no name burn', async () => {
+    // The RPC committed (or an earlier attempt did): user_id is UNIQUE,
+    // so the existing row IS this account's character.
+    stubCreationFlow((call) => {
+      if (call.url.endsWith('/rpc/is_character_name_available')) return json(true)
+      if (call.url.endsWith('/rpc/create_character')) return json({ message: 'duplicate key' }, 409)
+      if (call.url.includes('/rest/v1/characters?')) return json([{ id: 'char-committed' }])
+      return json({}, 404)
+    })
+
+    const service = new SupabaseCharacterCreationService(config)
+    await service.rollTalents()
+    const result = await service.createCharacter(draft)
+    expect(result).toEqual({ ok: true, characterId: 'char-committed' })
+
+    // The roll was consumed by the committed create - cleared locally too.
+    const second = await service.createCharacter(draft)
+    expect(second.ok).toBe(false)
+  })
+
+  it('409 conflict + NO account row -> name_taken (mapping preserved)', async () => {
+    stubCreationFlow((call) => {
+      if (call.url.endsWith('/rpc/is_character_name_available')) return json(true)
+      if (call.url.endsWith('/rpc/create_character')) return json({ message: 'duplicate key' }, 409)
+      if (call.url.includes('/rest/v1/characters?')) return json([])
+      return json({}, 404)
+    })
+
+    const service = new SupabaseCharacterCreationService(config)
+    await service.rollTalents()
+    const result = await service.createCharacter(draft)
+    expect(result).toEqual({ ok: false, code: 'name_taken', message: expect.any(String) })
+  })
+
+  it('advisory check says taken + OWN row exists -> adopt (crash-retry: the name is held by our own character)', async () => {
+    stubCreationFlow((call) => {
+      if (call.url.endsWith('/rpc/is_character_name_available')) return json(false)
+      if (call.url.includes('/rest/v1/characters?')) return json([{ id: 'char-committed' }])
+      return json({}, 404)
+    })
+
+    const service = new SupabaseCharacterCreationService(config)
+    await service.rollTalents()
+    const result = await service.createCharacter(draft)
+    expect(result).toEqual({ ok: true, characterId: 'char-committed' })
+  })
+
+  it('advisory check says taken + no row -> name_taken (genuine collision)', async () => {
+    stubCreationFlow((call) => {
+      if (call.url.endsWith('/rpc/is_character_name_available')) return json(false)
+      if (call.url.includes('/rest/v1/characters?')) return json([])
+      return json({}, 404)
+    })
+
+    const service = new SupabaseCharacterCreationService(config)
+    await service.rollTalents()
+    const result = await service.createCharacter(draft)
+    expect(result).toEqual({ ok: false, code: 'name_taken', message: expect.any(String) })
+  })
+
+  it('transport failure with a committed row behind it -> adopt, not server_unavailable', async () => {
+    stubCreationFlow((call) => {
+      if (call.url.endsWith('/rpc/is_character_name_available')) return json(true)
+      if (call.url.endsWith('/rpc/create_character')) return json({ message: 'lost' }, 500)
+      if (call.url.includes('/rest/v1/characters?')) return json([{ id: 'char-committed' }])
+      return json({}, 404)
+    })
+
+    const service = new SupabaseCharacterCreationService(config)
+    await service.rollTalents()
+    const result = await service.createCharacter(draft)
+    expect(result).toEqual({ ok: true, characterId: 'char-committed' })
+  })
+})

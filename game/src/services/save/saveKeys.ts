@@ -57,3 +57,60 @@ export function readLocalSaveRevision(): number {
   const value = Number(localStorage.getItem(resolveRevisionKey()))
   return Number.isSafeInteger(value) && value >= 0 ? value : 0
 }
+
+// F1 lineage anchor moved here from LocalCloudSaveService so the leaf key
+// module owns every account-scoped key read - SaveSystem.deleteSave needs
+// the base for the reset tombstone ceiling without a cloudSave import.
+export function readSyncBaseRevision(): number | null {
+  const raw = localStorage.getItem(resolveSyncBaseKey())
+  const value = raw === null ? Number.NaN : Number(raw)
+  return Number.isSafeInteger(value) && value >= 0 ? value : null
+}
+
+export function writeSyncBaseRevision(revision: number): void {
+  localStorage.setItem(resolveSyncBaseKey(), String(revision))
+}
+
+// Reset tombstone (F-BX-24): deleteSave writes it before the slot clears.
+// remoteCeiling is the highest remote save_revision this account's local
+// lineage could legitimately know - max(local revision, adopted sync
+// base). A remote row at or below the ceiling still carries the deleted
+// lineage, so the login reconcile suppresses the pull arm; a row above it
+// moved after the reset on another device and reconciles normally.
+const TOMBSTONE_KEY_BASE = 'tien-hiep-idle-save-reset'
+export function resolveTombstoneKey(): string { return `${TOMBSTONE_KEY_BASE}:${resolveSaveAccountId()}` }
+
+export interface SaveResetTombstone { remoteCeiling: number }
+
+export function writeResetTombstone(remoteCeiling: number): void {
+  try {
+    localStorage.setItem(resolveTombstoneKey(), JSON.stringify({ remoteCeiling }))
+  } catch {
+    // Best-effort: a lost tombstone degrades to pre-fix resurrection, it
+    // must never fail the delete itself.
+  }
+}
+
+export function readResetTombstone(): SaveResetTombstone | null {
+  try {
+    const raw = localStorage.getItem(resolveTombstoneKey())
+    if (raw === null) return null
+    const parsed = JSON.parse(raw) as { remoteCeiling?: unknown }
+    return typeof parsed.remoteCeiling === 'number' &&
+      Number.isSafeInteger(parsed.remoteCeiling) &&
+      parsed.remoteCeiling >= 0
+      ? { remoteCeiling: parsed.remoteCeiling }
+      : null
+  } catch {
+    return null
+  }
+}
+
+export function clearResetTombstone(): void {
+  try {
+    localStorage.removeItem(resolveTombstoneKey())
+  } catch {
+    // Auxiliary write - a stale tombstone only suppresses rows at/below
+    // its recorded ceiling, it cannot corrupt a newer remote.
+  }
+}

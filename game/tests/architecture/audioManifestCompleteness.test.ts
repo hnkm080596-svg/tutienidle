@@ -23,10 +23,11 @@
  *    through MERGE_MAP instead.
  */
 import { describe, expect, it } from 'vitest'
-import { readFileSync, readdirSync } from 'node:fs'
+import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { AUDIO_CUES, resolveAudioCue } from '@/core/audio/AudioCueManifest'
-import { cueForActionImpact } from '@/presentation/audio/combatAudioBinding'
+import { cueForActionImpact, cueForAttack } from '@/presentation/audio/combatAudioBinding'
+import { ENEMY_RESKIN_MAP, MONSTER_ART } from '@/game/support/MonsterArt'
 import {
   AUDIO_BUNDLE_PREFIXES,
   audioBundleIdsForCue,
@@ -220,6 +221,40 @@ describe('audio manifest completeness', () => {
         .filter((p) => cueForActionImpact({ presetId: p }) === `combat.impact.${p}`)
         .sort(),
     )
+
+    // F-BX-18: combat.enemy_attack.<slug> rows mirror MONSTER_ART's
+    // attackSfxUrl declarations - the registry is the declaration
+    // authority (cue qualifier = slug with '-' -> '_'). Pin the row set,
+    // the src parity, the routing end-to-end, and that every declared
+    // file actually ships under public/.
+    const enemyAttackRows = keys
+      .filter((k) => k.startsWith('combat.enemy_attack.'))
+      .map((k) => k.slice('combat.enemy_attack.'.length))
+      .sort()
+    const declaredSlugs = Object.values(MONSTER_ART)
+      .filter((v) => v.attackSfxUrl !== undefined)
+      .map((v) => v.slug)
+      .sort()
+    expect(enemyAttackRows).toEqual(
+      declaredSlugs.map((s) => s.replaceAll('-', '_')).sort(),
+    )
+    for (const v of Object.values(MONSTER_ART)) {
+      if (!v.attackSfxUrl) continue
+      const cueId = `combat.enemy_attack.${v.slug.replaceAll('-', '_')}`
+      expect(AUDIO_CUES[cueId]?.src, cueId).toBe(v.attackSfxUrl)
+      expect(
+        existsSync(join(process.cwd(), 'public', v.attackSfxUrl)),
+        `${cueId} -> ${v.attackSfxUrl}`,
+      ).toBe(true)
+      // End-to-end: a runtime id of a template that reskins to this
+      // variant routes to its cue (longest-prefix match on
+      // `<templateId>_<uuid>` ids, per resolveMonsterArtSlug).
+      const templateId = Object.entries(ENEMY_RESKIN_MAP).find(
+        ([, slug]) => slug === v.slug,
+      )?.[0]
+      expect(templateId, `no ENEMY_RESKIN_MAP route to ${v.slug}`).toBeDefined()
+      expect(cueForAttack({ sourceId: `${templateId}_rt1` }), cueId).toBe(cueId)
+    }
 
     // music.home.* mirrors THANH_VAN_TIMES.
     const bgSrc = readFileSync(

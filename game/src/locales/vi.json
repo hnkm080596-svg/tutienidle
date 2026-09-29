@@ -1015,7 +1015,8 @@
       "continue": "Tiếp Tục — {name}",
       "continueNoName": "Tiếp Tục",
       "language": "Ngôn ngữ",
-      "saveCleared": "Save đã được xoá — hãy bắt đầu lại nào."
+      "saveCleared": "Save đã được xoá — hãy bắt đầu lại nào.",
+      "sessionExpired": "Phiên đăng nhập đã hết hạn — đăng nhập lại để tiếp tục đồng bộ."
     },
     "creation": {
       "back": "← Trở lại",
