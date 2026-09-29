@@ -32,7 +32,7 @@ import { describe, expect, it } from 'vitest'
 import ts from 'typescript'
 import { join, relative } from 'node:path'
 import { existsSync, readFileSync } from 'node:fs'
-import { srcCorpus, SCAN_TIMEOUT } from './helpers/scanTs'
+import { srcCorpus, SCAN_TIMEOUT, looksLikeTestFile, isTestSpecifier } from './helpers/scanTs'
 import { scriptBlocksOf } from './helpers/commentStrip'
 
 const GAME_ROOT = process.cwd()
@@ -94,6 +94,31 @@ function literalize(
     const l = literalize(e.left, constKeys)
     const r = literalize(e.right, constKeys)
     if (l !== undefined && r !== undefined) return l + r
+  }
+  if (ts.isTemplateExpression(e)) {
+    let joined = e.head.text
+    for (const span of e.templateSpans) {
+      const mid = literalize(span.expression, constKeys)
+      if (mid === undefined) return undefined
+      joined += mid + span.literal.text
+    }
+    return joined
+  }
+  if (
+    ts.isCallExpression(e) &&
+    e.arguments.length === 1 &&
+    e.arguments[0] !== undefined
+  ) {
+    const callee = e.expression
+    const isStringCtor = ts.isIdentifier(callee) && callee.text === 'String'
+    const isSymbolFor =
+      ts.isPropertyAccessExpression(callee) &&
+      callee.name.text === 'for' &&
+      ts.isIdentifier(callee.expression) &&
+      callee.expression.text === 'Symbol'
+    if (isStringCtor || isSymbolFor) {
+      return literalize(e.arguments[0], constKeys)
+    }
   }
   return undefined
 }
@@ -201,7 +226,7 @@ describe('pill grant channel - ops wrapper is the only production caller', () =>
       const corpus = [...srcCorpus(SRC_DIR)]
       if (existsSync(ELECTRON_DIR)) corpus.push(...srcCorpus(ELECTRON_DIR))
       for (const file of corpus) {
-        if (TEST_EXT_RE.test(file.path)) continue
+        if (looksLikeTestFile(file.path, file.text)) continue
         const rel = relative(GAME_ROOT, file.path).replaceAll('\\', '/')
         if (ALLOWED_CALLERS.has(rel)) continue
         const text = readFileSync(file.path, 'utf8')
@@ -241,13 +266,51 @@ describe('pill grant channel - ops wrapper is the only production caller', () =>
           // pass 2: flag every syntactic touch (dedupe per file+text -
           // nested arms can match the same node twice)
           const seen = new Set<string>()
+          const note = (text: string): void => {
+            const entry = `${rel}: ${text.slice(0, 120)}`
+            if (!seen.has(entry)) {
+              seen.add(entry)
+              offenders.push(entry)
+            }
+          }
           const visit = (n: ts.Node): void => {
-            if (touchesPinnedName(n, constKeys)) {
-              const entry = `${rel}: ${n.getText(sf).slice(0, 120)}`
-              if (!seen.has(entry)) {
-                seen.add(entry)
-                offenders.push(entry)
+            // Import barrier: `*.test*` modules are outside the funnel
+            // corpus - importing one smuggles an unscanned caller.
+            if (
+              ts.isImportDeclaration(n) ||
+              (ts.isExportDeclaration(n) && n.moduleSpecifier !== undefined)
+            ) {
+              const spec = ts.isImportDeclaration(n)
+                ? n.moduleSpecifier
+                : (n as ts.ExportDeclaration).moduleSpecifier
+              if (spec !== undefined && ts.isStringLiteral(spec) && isTestSpecifier(spec.text)) {
+                note(`imports a test file: ${spec.getText()}`)
               }
+            }
+            if (
+              ts.isImportEqualsDeclaration(n) &&
+              ts.isExternalModuleReference(n.moduleReference) &&
+              ts.isStringLiteral(n.moduleReference.expression) &&
+              isTestSpecifier(n.moduleReference.expression.text)
+            ) {
+              note(`import= of a test file: ${n.moduleReference.getText()}`)
+            }
+            if (
+              ts.isCallExpression(n) &&
+              n.arguments[0] !== undefined &&
+              ts.isStringLiteral(n.arguments[0])
+            ) {
+              const callee = n.expression
+              const isRequire = ts.isIdentifier(callee) && callee.text === 'require'
+              const isDynamic = callee.kind === ts.SyntaxKind.ImportKeyword
+              if ((isRequire || isDynamic) && isTestSpecifier(n.arguments[0].text)) {
+                note(
+                  `${isRequire ? 'require' : 'dynamic import'} of a test file: ${n.arguments[0].getText()}`,
+                )
+              }
+            }
+            if (touchesPinnedName(n, constKeys)) {
+              note(n.getText(sf))
             }
             ts.forEachChild(n, visit)
           }

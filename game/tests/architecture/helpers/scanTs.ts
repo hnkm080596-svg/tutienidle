@@ -79,31 +79,55 @@ export interface SourceFile {
   text: string
 }
 
-let cachedCorpus: SourceFile[] | null = null
+const corpusCache = new Map<string, SourceFile[]>()
 
 /**
- * Every `.ts` and `.vue` file under `src/`, walked and read ONCE.
+ * Every `.ts` and `.vue` file under `srcDir`, walked and read ONCE per dir.
  *
- * The cache is per module graph, so under vitest's default file isolation each
- * guard file still pays for one pass — what it removes is the *repeat* reads
- * inside a guard that makes several content assertions.
+ * The cache is per module graph AND keyed by `srcDir`, so under vitest's
+ * default file isolation each guard file still pays for one pass per dir -
+ * what it removes is the *repeat* reads inside a guard that makes several
+ * content assertions or scans several roots (src/ and electron/).
  *
  * This is not premature optimisation; it is a fix for an observed failure. The
  * frontend-boundary guards scan roughly 750 files, and when each guard walked
- * and read the tree for itself, the full suite starved `eslintCoreSeverity` —
- * which shells out to eslint against a 60s budget — into a timeout. Isolated
+ * and read the tree for itself, the full suite starved `eslintCoreSeverity` -
+ * which shells out to eslint against a 60s budget - into a timeout. Isolated
  * proof: the full suite WITH the extra guard timed out, WITHOUT it passed.
  */
 export function srcCorpus(srcDir: string): SourceFile[] {
-  if (cachedCorpus) return cachedCorpus
+  const cached = corpusCache.get(srcDir)
+  if (cached) return cached
 
   const files = [...listAllTs(srcDir), ...listVue(srcDir)]
 
-  cachedCorpus = files.map((path) => ({
+  const corpus = files.map((path) => ({
     path,
     fromSrc: relative(srcDir, path).split(sep).join('/'),
     text: readFileSync(path, 'utf8'),
   }))
 
-  return cachedCorpus
+  corpusCache.set(srcDir, corpus)
+  return corpus
+}
+
+/**
+ * A `*.test.*` filename alone does not make a file a test - a smuggle lane
+ * just has to end in `.test.ts`. The guard exemption requires the file to
+ * actually LOOK like a test: a vitest import or a `describe`/`it`/`test`
+ * call site in its text. Cheap heuristic, intentionally - the stronger
+ * invariant is the production import barrier (a dead test file writes
+ * nothing unless production imports it, and that import is itself flagged).
+ */
+const TEST_EXT_RE = /\.test\.(ts|tsx|js|jsx|mjs|cjs|mts|cts)$/
+const TEST_MARKER_RE = /from\s+['"]vitest['"]|require\(\s*['"]vitest['"]\)|\b(?:describe|it|test)\s*\(/
+
+export function looksLikeTestFile(path: string, text: string): boolean {
+  return TEST_EXT_RE.test(path) && TEST_MARKER_RE.test(text)
+}
+
+/** True when an import/export/require specifier text names a `*.test*` module,
+ *  extensionless spellings included. */
+export function isTestSpecifier(specText: string): boolean {
+  return /\.test(?:\.|$)/.test(specText)
 }

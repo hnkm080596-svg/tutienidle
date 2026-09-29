@@ -54,19 +54,20 @@
  *
  * Honest residual bound (documented, not hidden): computed keys that
  * never spell the name (`p[k]` with a computed k, Reflect.set with a
- * variable key), split string concatenation (`'base'+'Stats'` - no
- * single literal spells the name; substring heuristics are not used
- * because 'base'/'stat'/'stats' collide with ordinary prop names),
- * opaque payload data flow where no `baseStats`/`$state` token appears
- * (`Object.assign(p, payloadVar)` on a plain object), runtime name
- * enumeration (`Object.keys`/`Reflect.ownKeys` then `ps[name]` without
- * a spelled comparison), eval / imported bindings, deep transitive
- * aliasing beyond the ordered-declaration lanes above, and writes
- * authored inside the allowlisted files themselves - the allowlist IS
- * the trust boundary. Corpus boundary: only `src/` + `electron/`
- * production files are scanned; files at the `game/` root, `tools/`,
- * `scripts/` or `public/` are dev/build tooling that never ships as
- * runtime code - a spelled write there is human-review territory.
+ * variable key), opaque payload data flow where no `baseStats`/`$state`
+ * token appears (`Object.assign(p, payloadVar)` on a plain object),
+ * runtime name enumeration (`Object.keys`/`Reflect.ownKeys` then
+ * `ps[name]` without a spelled comparison), eval / imported bindings,
+ * deep transitive aliasing beyond the ordered-declaration lanes above,
+ * and writes authored inside the allowlisted files themselves - the
+ * allowlist IS the trust boundary. The `*.test.*` exemption requires a
+ * vitest/describe/it/test marker in the file text - a smuggler could
+ * fake the marker inside a comment, which is why the real stop is the
+ * import barrier: a file no production module imports writes nothing.
+ * Corpus boundary: only `src/` + `electron/` production files are
+ * scanned; files at the `game/` root, `tools/`, `scripts/` or
+ * `public/` are dev/build tooling that never ships as runtime code -
+ * a spelled write there is human-review territory.
  * Those are human-review lanes.
  */
 import { describe, expect, it } from 'vitest'
@@ -74,7 +75,7 @@ import ts from 'typescript'
 import { existsSync } from 'node:fs'
 import { join, relative } from 'node:path'
 import { readFileSync } from 'node:fs'
-import { srcCorpus, SCAN_TIMEOUT } from './helpers/scanTs'
+import { srcCorpus, SCAN_TIMEOUT, looksLikeTestFile, isTestSpecifier } from './helpers/scanTs'
 import { scriptBlocksOf } from './helpers/commentStrip'
 
 const GAME_ROOT = process.cwd()
@@ -176,6 +177,29 @@ function literalize(e: ts.Expression | undefined, b: Bindings): string | undefin
     const l = literalize(un.left, b)
     const r = literalize(un.right, b)
     if (l !== undefined && r !== undefined) return l + r
+  }
+  // `base${'S'}tats` - a template whose every embedded expression spells.
+  if (ts.isTemplateExpression(un)) {
+    let joined = un.head.text
+    for (const span of un.templateSpans) {
+      const mid = literalize(span.expression, b)
+      if (mid === undefined) return undefined
+      joined += mid + span.literal.text
+    }
+    return joined
+  }
+  // String('x') / Symbol.for('x') - spelled-through builtins.
+  if (ts.isCallExpression(un) && un.arguments.length === 1) {
+    const callee = unwrapExpr(un.expression)
+    const isStringCtor = ts.isIdentifier(callee) && callee.text === 'String'
+    const isSymbolFor =
+      ts.isPropertyAccessExpression(callee) &&
+      callee.name.text === 'for' &&
+      ts.isIdentifier(callee.expression) &&
+      callee.expression.text === 'Symbol'
+    if (isStringCtor || isSymbolFor) {
+      return literalize(un.arguments[0], b)
+    }
   }
   return undefined
 }
@@ -385,7 +409,7 @@ function collectOffenders(): { violations: Offender[]; unclassified: Offender[] 
   if (existsSync(ELECTRON_DIR)) corpus.push(...srcCorpus(ELECTRON_DIR))
 
   for (const file of corpus) {
-    if (TEST_EXT_RE.test(file.path)) continue
+    if (looksLikeTestFile(file.path, file.text)) continue
     const rel = relative(GAME_ROOT, file.path).replaceAll('\\', '/')
     const allowed = ALLOWED.find((a) => a.path === rel)
     const text = readFileSync(file.path, 'utf8')
@@ -508,19 +532,32 @@ function collectOffenders(): { violations: Offender[]; unclassified: Offender[] 
         if (
           spec !== undefined &&
           ts.isStringLiteral(spec) &&
-          /\.test\.[jt]sx?$|\.test\./.test(spec.text)
+          isTestSpecifier(spec.text)
         ) {
           flag(`imports a test file: ${spec.getText()}`)
         }
       }
       if (
-        ts.isCallExpression(n) &&
-        n.expression.kind === ts.SyntaxKind.ImportKeyword &&
-        n.arguments[0] !== undefined &&
-        ts.isStringLiteral(n.arguments[0]) &&
-        /\.test\.[jt]sx?$|\.test\./.test(n.arguments[0].text)
+        ts.isImportEqualsDeclaration(n) &&
+        ts.isExternalModuleReference(n.moduleReference) &&
+        ts.isStringLiteral(n.moduleReference.expression) &&
+        isTestSpecifier(n.moduleReference.expression.text)
       ) {
-        flag(`dynamic import of a test file: ${n.arguments[0].getText()}`)
+        flag(`import= of a test file: ${n.moduleReference.getText()}`)
+      }
+      if (
+        ts.isCallExpression(n) &&
+        n.arguments[0] !== undefined &&
+        ts.isStringLiteral(n.arguments[0])
+      ) {
+        const callee = unwrapExpr(n.expression)
+        const isRequire = ts.isIdentifier(callee) && callee.text === 'require'
+        const isDynamic = callee.kind === ts.SyntaxKind.ImportKeyword
+        if ((isRequire || isDynamic) && isTestSpecifier(n.arguments[0].text)) {
+          flag(
+            `${isRequire ? 'require' : 'dynamic import'} of a test file: ${n.arguments[0].getText()}`,
+          )
+        }
       }
       // const { baseStats } = x / const { baseStats: b } = x /
       // const { x = p.baseStats } = {} - destructured pool aliases.
