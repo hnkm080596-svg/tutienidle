@@ -324,4 +324,59 @@ describe('ARCH-014 (M12) — battle_end terminal publication, exactly once per o
     ])
     expect(soundCalls('combat.defeat')).toBe(1)
   })
+
+  // Mutation finding F-MUT-MASTERY-DEFEAT (beta-release-2026-09-29): the
+  // victory-only gate on settleTechniqueMastery had no detector - a mutant
+  // flushing pending mastery on defeat passed the whole corpus. Pin:
+  // kills that paid mastery during a LOSING battle must not flush at the
+  // defeat terminal (contract comment: "defeat never pays").
+  it('natural defeat with pending mastery does NOT flush technique mastery', () => {
+    const { gameManager, combatSource } = makeManager()
+    const gainMasterySpy = vi.spyOn(gameManager.techniqueSystem, 'gainMastery')
+
+    // Non-boss floor (a floor-10 boss stage collapses to exactly 1 enemy
+    // via effectiveTotalEnemyCount), 2 sequential enemies of the same
+    // lethal template: enemy #1 is killed mid-battle -> pending mastery
+    // registers (mortal floor band pays 5-8 mastery per kill, guaranteed
+    // currency); enemy #2 then kills the weak player -> defeat terminal
+    // arrives with pendingTechniqueMastery > 0.
+    const lethal = dummyEnemy('pin_lethal', LETHAL_ENEMY)
+
+    const stage: Stage = {
+      id: 'pin_stage_mastery_defeat',
+      name: 'pin_stage_mastery_defeat',
+      description: '',
+      floor: 5,
+      enemyPool: [{ enemyId: 'pin_lethal', weight: 1 }],
+      totalEnemyCount: 2,
+      waves: [1, 1],
+      spawnIntervalSeconds: 0,
+    }
+
+    const player = strongPlayer()
+    player.baseStats = asBaseStats({ ...player.baseStats, maxHp: 50 })
+
+    gameManager.catalogOps.registerEnemyTemplates([lethal])
+    gameManager.catalogOps.registerStages([stage])
+    gameManager.setActivePlayer(player)
+
+    expect(gameManager.turnBattleOps.startStage(player, stage, false)).toBe(true)
+
+    // Wait for the first spawn, then kill it (same seam other suites
+    // use) - the next settle tick registers its guaranteed currency as
+    // pending mastery.
+    runUntil(combatSource, () => (gameManager.getTurnBattle()?.enemies.length ?? 0) > 0, 5_000)
+    gameManager.getTurnBattle()!.enemies[0]!.entity.alive = false
+
+    runUntil(combatSource, () => gameManager.getTurnBattle()?.state === 'defeat', 20_000)
+
+    expect(gameManager.getTurnBattle()?.state).toBe('defeat')
+
+    // The kill registered its guaranteed-currency rewards -> pending
+    // mastery was nonzero at the defeat terminal (otherwise this test
+    // cannot discriminate the mutant).
+    expect(gameManager.getBattleRewardSummary().spiritStone).toBeGreaterThan(0)
+    expect(gainMasterySpy).not.toHaveBeenCalled()
+    expect(gameManager.getBattleRewardSummary().techniqueMastery).toBe(0)
+  })
 })

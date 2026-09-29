@@ -327,4 +327,25 @@ describe('player.restoreFromSave — idempotency (QA-002, Task 9.2)', () => {
     expect((state.baseStats as Record<string, unknown>).__evilStat).toBeUndefined()
     expect(player.name).toBe('clean') // field hợp lệ vẫn restore
   })
+
+  // Mutation finding F-MUT-RESTORE-PURGE (beta-release-2026-09-29): the
+  // reverse leg - a key ALREADY in $state (runtime-added / stale field a
+  // writer left behind) must be evicted when the restored payload does not
+  // declare it. Without the purge loop the foreign key survives restore and
+  // self-replicates into every later buildGameSave payload.
+  it('foreign keys already in $state are evicted by restore', () => {
+    const player = usePlayerStore()
+    const save = buildMinimalSave({ name: 'purge-target' })
+
+    const state = player.$state as unknown as Record<string, unknown>
+    state.__sessionLeftover = 'should-not-survive'
+    state.retiredFieldV42 = { legacy: true }
+
+    player.restoreFromSave(save)
+
+    const after = player.$state as unknown as Record<string, unknown>
+    expect(after.__sessionLeftover).toBeUndefined()
+    expect(after.retiredFieldV42).toBeUndefined()
+    expect(player.name).toBe('purge-target')
+  })
 })

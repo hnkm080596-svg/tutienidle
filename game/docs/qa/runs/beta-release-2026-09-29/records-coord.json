@@ -1,0 +1,62 @@
+{
+ "records": [
+  {
+   "kind": "finding",
+   "id": "COORD-1",
+   "title": "TC->KD transition would brick silently if release ceiling opens",
+   "state": {
+    "productStateId": "32150723837d025bb7cf31bad32b1596d8e33b9e9dd4142dd5206c623d26073b",
+    "contractId": "b1c83ecaf2da181def4ae9f51d399268e9e06069048c13c18bfae81917e46155",
+    "attackModelId": "58278e6d54c13d2537d03c099f1b62e3863f971d1d30e89980060bc1d377e264",
+    "environmentId": "19d2327a64b8249145f0df487429dfd218562df6ef4e8cbf111a5f5260a39e85"
+   },
+   "severity": "Low",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "HYPOTHETICAL",
+   "locations": [
+    {
+     "path": "src/core/realm/BreakthroughGate.ts",
+     "symbolOrSection": "getBreakthroughRequirements:66 + canTriggerBreakthrough:75-77",
+     "revision": "f1049b5e",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "coordinator-local attack sweep",
+   "invariantIds": [
+    "I-REALM-18"
+   ],
+   "evidenceIds": [],
+   "counterexample": "flip isRealmTransitionEnabled(foundation_establishment,golden_core) -> canTriggerBreakthrough returns false with zero requirement rows rendered",
+   "expected": "opening a released transition exposes its requirement rows",
+   "actual": "foundation_establishment returns [] rows; length>0 && every(met) is false forever — dead button, no explanation",
+   "rootCause": "getBreakthroughRequirements early-returns [] for non-mortal/non-qi_refining realms; canTriggerBreakthrough treats empty as not-yet-met instead of released-and-open",
+   "rootClass": "incomplete transition read-model for released realm",
+   "subsystem": "realm-progression",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/realm/"
+     ],
+     "termsAndMethod": "grep getBreakthroughRequirements + canTriggerBreakthrough for other realm-id early-returns",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "only mortal and qi_refining authored in beta window"
+     ],
+     "coverageLimits": [
+      "post-beta realms are dormant content — latent, not reachable today"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": "when release policy opens TC->KD (or any post-beta realm), add requirement rows for that realm in the same change; optionally assert non-empty rows for enabled transitions",
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [],
+   "status": "OBSERVED",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null
+  }
+ ]
+}
