@@ -1119,7 +1119,7 @@
         "w": 558,
         "h": 558
       },
-      "sheets": 3,
+      "sheets": 2,
       "clips": {
         "idle": {
           "framePrefix": "pham_nhan-idle-",
@@ -1137,23 +1137,16 @@
           "sheet": "pham_nhan-sheet-2.png",
           "atlas": "pham_nhan-sheet-2.atlas.json"
         },
-        "ult": {
-          "framePrefix": "pham_nhan-ult-",
-          "firstFrame": 1,
-          "lastFrame": 17,
-          "frameCount": 17,
-          "sheet": "pham_nhan-sheet-2.png",
-          "atlas": "pham_nhan-sheet-2.atlas.json"
-        },
         "death": {
           "framePrefix": "pham_nhan-death-",
           "firstFrame": 1,
           "lastFrame": 17,
           "frameCount": 17,
-          "sheet": "pham_nhan-sheet-3.png",
-          "atlas": "pham_nhan-sheet-3.atlas.json"
+          "sheet": "pham_nhan-sheet-2.png",
+          "atlas": "pham_nhan-sheet-2.atlas.json"
         }
       },
+      "cast": {},
       "avatar": "derived",
       "avatarSize": {
         "w": 512,
@@ -1261,21 +1254,91 @@
           "sheet": "ngu_hanh-sheet-2.png",
           "atlas": "ngu_hanh-sheet-2.atlas.json"
         },
-        "ult": {
-          "framePrefix": "ngu_hanh-ult-",
-          "firstFrame": 1,
-          "lastFrame": 17,
-          "frameCount": 17,
-          "sheet": "ngu_hanh-sheet-2.png",
-          "atlas": "ngu_hanh-sheet-2.atlas.json"
-        },
         "death": {
           "framePrefix": "ngu_hanh-death-",
           "firstFrame": 1,
           "lastFrame": 17,
           "frameCount": 17,
+          "sheet": "ngu_hanh-sheet-2.png",
+          "atlas": "ngu_hanh-sheet-2.atlas.json"
+        }
+      },
+      "cast": {
+        "special": {
+          "framePrefix": "ngu_hanh-cast-special-",
+          "firstFrame": 1,
+          "lastFrame": 17,
+          "frameCount": 17,
           "sheet": "ngu_hanh-sheet-3.png",
           "atlas": "ngu_hanh-sheet-3.atlas.json"
+        }
+      },
+      "avatar": "derived",
+      "avatarSize": {
+        "w": 512,
+        "h": 512
+      },
+      "avatars": {},
+      "portraits": {},
+      "closeups": {},
+      "radars": {}
+    },
+    "pham_nhan_unarmed": {
+      "out": "pham_nhan_unarmed",
+      "src": "pham_nhan_unarmed",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      },
+      "extent": {
+        "x": 0.008620689655172414,
+        "y": 0,
+        "w": 0.9712643678160919,
+        "h": 1
+      },
+      "sourceSize": {
+        "w": 348,
+        "h": 514
+      },
+      "canvasSize": {
+        "w": 558,
+        "h": 558
+      },
+      "sheets": 2,
+      "clips": {
+        "idle": {
+          "framePrefix": "pham_nhan_unarmed-idle-",
+          "firstFrame": 1,
+          "lastFrame": 33,
+          "frameCount": 33,
+          "sheet": "pham_nhan_unarmed-sheet-1.png",
+          "atlas": "pham_nhan_unarmed-sheet-1.atlas.json"
+        },
+        "attack": {
+          "framePrefix": "pham_nhan_unarmed-attack-",
+          "firstFrame": 1,
+          "lastFrame": 17,
+          "frameCount": 17,
+          "sheet": "pham_nhan_unarmed-sheet-1.png",
+          "atlas": "pham_nhan_unarmed-sheet-1.atlas.json"
+        },
+        "death": {
+          "framePrefix": "pham_nhan_unarmed-death-",
+          "firstFrame": 1,
+          "lastFrame": 17,
+          "frameCount": 17,
+          "sheet": "pham_nhan_unarmed-sheet-2.png",
+          "atlas": "pham_nhan_unarmed-sheet-2.atlas.json"
+        }
+      },
+      "cast": {
+        "linh_bao": {
+          "framePrefix": "pham_nhan_unarmed-cast-linh_bao-",
+          "firstFrame": 1,
+          "lastFrame": 17,
+          "frameCount": 17,
+          "sheet": "pham_nhan_unarmed-sheet-2.png",
+          "atlas": "pham_nhan_unarmed-sheet-2.atlas.json"
         }
       },
       "avatar": "derived",

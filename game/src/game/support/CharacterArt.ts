@@ -51,6 +51,13 @@ export interface CharacterArtVariant {
     attack?: CharacterClipRange
     ult?: CharacterClipRange
   }
+  /**
+   * Per-skill cast clips, keyed by Skill.id (or a slot role like 'special'
+   * when one sheet covers every skill of that role). Resolved by
+   * playCastClip ahead of the slot-role pick; clip names in the atlases are
+   * `<slug>-cast-<key>-NNN.png` (packer `cast-<key>` dirs).
+   */
+  castClips?: Record<string, CharacterClipRange>
 }
 
 const ART_ROOT = 'assets/characters/animated'
@@ -78,8 +85,12 @@ function variant(
     attack?: [number, number, number]
     ult?: [number, number, number]
   },
-  opts: { avatarSize?: { w: number; h: number } } = {},
+  opts: { avatarSize?: { w: number; h: number }; cast?: Record<string, [number, number, number]> } = {},
 ): CharacterArtVariant {
+  const castClips: Record<string, CharacterClipRange> = {}
+  for (const [key, r] of Object.entries(opts.cast ?? {})) {
+    castClips[key] = clip(slug, `cast-${key}`, r[0], r[1], r[2])
+  }
   return {
     slug,
     sourceSize,
@@ -93,6 +104,7 @@ function variant(
       attack: ranges.attack ? clip(slug, 'attack', ranges.attack[0], ranges.attack[1], ranges.attack[2]) : undefined,
       ult: ranges.ult ? clip(slug, 'ult', ranges.ult[0], ranges.ult[1], ranges.ult[2]) : undefined,
     },
+    castClips: Object.keys(castClips).length > 0 ? castClips : undefined,
   }
 }
 
@@ -111,12 +123,24 @@ export const CHARACTER_ART: Record<string, CharacterArtVariant> = {
     { idle: [1, 8, 1], attack: [1, 18, 2], ult: [1, 14, 3], death: [1, 1, 3] },
     { avatarSize: { w: 512, h: 512 } },
   ),
+  // Armed mortal (sword): attack IS the tram slash - a tram-picked player's
+  // basic cast resolves to it via the slot-role fallback.
   pham_nhan: variant(
     'pham_nhan',
     { w: 495, h: 512 },
     { x: 0.008081, y: 0, w: 0.991919, h: 1 },
-    { idle: [1, 33, 1], attack: [1, 17, 2], ult: [1, 17, 2], death: [1, 17, 3] },
+    { idle: [1, 33, 1], attack: [1, 17, 2], death: [1, 17, 2] },
     { avatarSize: { w: 512, h: 512 } },
+  ),
+  // Unarmed mortal (fist/treasure): attack IS the huy_quyen punch; the
+  // linh_bao cast is a per-skill clip since the slot-role fallback would
+  // otherwise play the punch for it too.
+  pham_nhan_unarmed: variant(
+    'pham_nhan_unarmed',
+    { w: 348, h: 514 },
+    { x: 0.008621, y: 0, w: 0.971264, h: 1 },
+    { idle: [1, 33, 1], attack: [1, 17, 1], death: [1, 17, 2] },
+    { avatarSize: { w: 512, h: 512 }, cast: { linh_bao: [1, 17, 2] } },
   ),
   ngu_kiem: variant(
     'ngu_kiem',
@@ -125,31 +149,44 @@ export const CHARACTER_ART: Record<string, CharacterArtVariant> = {
     { idle: [1, 33, 1], attack: [1, 17, 1], death: [1, 17, 1] },
     { avatarSize: { w: 512, h: 512 } },
   ),
+  // ngu_hanh's special cast covers every element's special slot (the path
+  // emits slotRole 'special', never 'ultimate') - keyed by role, not skillId.
   ngu_hanh: variant(
     'ngu_hanh',
     { w: 444, h: 518 },
     { x: 0.009009, y: 0, w: 0.975225, h: 1 },
-    { idle: [1, 33, 1], attack: [1, 17, 2], ult: [1, 17, 2], death: [1, 17, 3] },
-    { avatarSize: { w: 512, h: 512 } },
+    { idle: [1, 33, 1], attack: [1, 17, 2], death: [1, 17, 2] },
+    { avatarSize: { w: 512, h: 512 }, cast: { special: [1, 17, 3] } },
   ),
 }
 
 /**
- * PlayerVisualProfileId -> character slug. Every current profile binds the
- * placeholder set until the six player-specific sets arrive (user ruling
- * 2026-09-28). Profiles sharing one slug collapse onto the same atlas.
+ * PlayerVisualProfileId -> character slug binding. A bare string is the one
+ * slug; an {armed,unarmed} pair picks by the entity's armed state (mortal:
+ * tram = sword => armed; linh_bao/huy_quyen => unarmed - user ruling
+ * 2026-09-29). Profiles sharing one slug collapse onto the same atlas.
  */
-export const CHARACTER_RESKIN_MAP: Record<PlayerVisualProfileId, string> = {
-  mortal: 'pham_nhan',
+export interface CharacterReskinBinding {
+  armed: string
+  unarmed: string
+}
+export const CHARACTER_RESKIN_MAP: Record<PlayerVisualProfileId, string | CharacterReskinBinding> = {
+  mortal: { armed: 'pham_nhan', unarmed: 'pham_nhan_unarmed' },
   phap_tu: 'ngu_hanh',
   kiem_tu: 'ngu_kiem',
   // the_tu art not drawn yet - keeps the placeholder set.
   the_tu: 'zuofeng',
 }
 
-/** Player visual profile id -> character slug, or undefined when unmapped. */
-export function resolveCharacterArtSlug(profileId: string): string | undefined {
-  return (CHARACTER_RESKIN_MAP as Record<string, string>)[profileId]
+/**
+ * Player visual profile id -> character slug, or undefined when unmapped.
+ * `opts.armed` selects between an {armed,unarmed} pair; undefined or a bare
+ * string binding resolves the single slug (armed is the canonical default).
+ */
+export function resolveCharacterArtSlug(profileId: string, opts?: { armed?: boolean }): string | undefined {
+  const binding = (CHARACTER_RESKIN_MAP as Record<string, string | CharacterReskinBinding>)[profileId]
+  if (binding === undefined || typeof binding === 'string') return binding
+  return opts?.armed === false ? binding.unarmed : binding.armed
 }
 
 /**
@@ -157,7 +194,7 @@ export function resolveCharacterArtSlug(profileId: string): string | undefined {
  * 'static' - same sanctioned exception as ANIMATED_ENEMY_KEYS.
  */
 export const ANIMATED_CHARACTER_KEYS: ReadonlySet<string> = new Set(
-  Object.values(CHARACTER_RESKIN_MAP),
+  Object.values(CHARACTER_RESKIN_MAP).flatMap((b) => (typeof b === 'string' ? [b] : [b.armed, b.unarmed])),
 )
 
 export const CHARACTER_ZERO_PAD = ZERO_PAD
