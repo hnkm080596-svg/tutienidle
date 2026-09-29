@@ -1,12 +1,22 @@
 # BETA-FINAL — Production Readiness & Distribution
 
-**Status:** SPEC_READY — implementation has not started  
-**Mission owner:** Astra  
-**Target:** Closed Beta, Electron/Windows  
-**Canonical baseline:** `origin/master @ f1049b5e42757f14aebee18bab3569dc43c37d09`  
-**Baseline refreshed:** 2026-09-29 (remote fetched before audit)  
-**Primary backend:** Supabase Auth + PostgreSQL + PostgREST/RPC  
+**Status:** SPEC_READY — implementation has not started
+
+**Mission owner:** Astra
+
+**Target:** Closed Beta, Electron/Windows
+
+**Canonical baseline:** `origin/master @ f1049b5e42757f14aebee18bab3569dc43c37d09`
+
+**Baseline refreshed:** 2026-09-29 (remote fetched before audit)
+
+**Primary backend:** Supabase Auth + PostgreSQL + PostgREST/RPC
+
 **Implementation policy:** one umbrella mission, independently sealed gates, multiple reviewable PRs; never one aggregate implementation PR
+
+**Execution plan:** [Astra implementation plan](../../superpowers/plans/2026-09-29-beta-final-implementation-plan.md)
+
+**Review revision:** 2026-09-29 — authority races, recovery, credential lifecycle, release dependencies and source-consumer census expanded; production gates remain unsealed.
 
 ---
 
@@ -67,7 +77,7 @@ Explicit non-goals:
 
 ## 3. Re-audit of current `master`
 
-The working checkout is `qa/beta-2026-09-29` at the same SHA as `origin/master`, but it contains unrelated modified/untracked work. This audit therefore read the fetched `origin/master` Git object directly. Those unrelated files are not part of this mission candidate and must not be incorporated accidentally.
+The original working checkout was `qa/beta-2026-09-29` at the same SHA as `origin/master`, with unrelated modified/untracked work. The first audit read the fetched Git object directly. The review/plan PR uses the isolated `codex/beta-final-plan` branch at that same freshly fetched baseline. Unrelated work is excluded.
 
 Evidence labels:
 
@@ -141,6 +151,8 @@ Every B1-B9 implementation gate must:
 7. end with zero unresolved actionable findings inside its scope, or remain unsealed with the canonical QA outcome;
 8. update the authority ledger and maintained roadmap only when evidence supports the new status.
 
+PR acceptance and a product gate seal are different milestones. A narrowly scoped foundation PR may merge with its local acceptance proved while dependent packaged/service evidence remains explicitly unsealed. B2's generated identity foundation, B3's packaging plumbing and B4's signing plumbing do not wait for consumers or CI that a later PR creates. B5 first produces a restricted draft candidate; B6/B10 test those exact bytes through a restricted candidate feed; public promotion happens only after B10 and explicit publication authority. Never label a foundation merge as a sealed release gate.
+
 `PASS WITH GAPS`, `QA_UNVERIFIED`, `QA_FINDINGS_OPEN`, and `QA_BLOCKED_SCOPE` do not seal a gate. For final B10, only the canonical protocol terminal predicate may emit `QA_FIXED_POINT_REACHED`.
 
 ---
@@ -179,13 +191,15 @@ Add forward-only migrations. Do not edit applied migration history.
 
 Required RPCs:
 
+- `claim_active_session(p_device_label, p_protocol_version, p_build_id)` admits only supported protocol versions and records that version on the session. Cutover removes the old device-label-only overload; all guarded operations also validate the admitted session protocol. This is compatibility enforcement, not attestation that an unmodified signed client issued the request.
+
 - `load_game_state(p_session_id uuid)`:
   - calls `assert_active_session`;
   - derives owner from `auth.uid()`;
   - derives the account's single active character server-side;
   - returns a structured state: `NO_CHARACTER`, `CHARACTER_UNINITIALIZED`, `SAVE_READY`, `CHARACTER_DELETED`, or deterministic session/auth error;
-  - for `SAVE_READY`, returns character metadata, schema version, save revision, payload, server timestamp, and last client build ID.
-- `write_character_save(p_session_id, p_expected_revision, p_schema_version, p_payload, p_build_id)`:
+  - for `SAVE_READY`, returns character metadata, schema version, save revision, payload, transport timestamp, progression cutoff, server time checkpoint, and last client build ID.
+- `write_character_save(p_session_id, p_expected_revision, p_schema_version, p_payload, p_build_id, p_mutation_id, p_time_checkpoint)`:
   - calls `assert_active_session`;
   - locks/resolves the owned save row in one transaction;
   - inserts revision 1 only when the row is absent and expected revision is 0;
@@ -194,18 +208,29 @@ Required RPCs:
   - sets server-owned `updated_at`; client time is diagnostic only;
   - enforces an evidence-derived payload-byte ceiling and returns `SAVE_TOO_LARGE` without mutation;
   - does not trust renderer-supplied `user_id` or arbitrary `character_id`.
-- `heartbeat_session(p_session_id)` validates the active session and returns server time. Target cadence is approximately 30 seconds while gameplay is active; successful save RPCs also count as health evidence.
+- `heartbeat_session(p_session_id)` validates the active session and returns server time and a bounded time checkpoint/lease. Target cadence is approximately 30 seconds while gameplay is active; successful save RPCs also count as health evidence.
 - `revoke_current_session(p_session_id)` makes logout semantics explicit and idempotent.
+- `get_backend_status()` returns an authenticated, read-only compatibility/maintenance projection needed by boot and B6. Define this in B1-A; B9 adds operational procedures, not a late prerequisite for boot.
+
+**Session linearization:** claim, assertion, revoke, provisioning, load and save serialize on the same per-user lock, acquired before character/save locks. Re-check the active session under that lock and hold it through commit. If a save wins the lock first, it commits before the new claim; if the claim wins first, the old save is rejected. A check followed by an unlocked write is invalid. Parallel claims must serialize rather than fail unpredictably on the partial unique index.
+
+**Ambiguous commit:** `p_mutation_id` is a client-generated UUID persisted before sending. A server receipt, unique by owner + mutation ID, binds character identity, expected revision, schema, build ID, time checkpoint and server-computed canonical payload digest to the committed revision. Under the active-session lock, an identical retry returns the previous receipt without incrementing revision; reuse with different content is rejected. A revoked session cannot use receipt lookup to bypass revocation. Load returns the current revision and the last committed mutation ID. If the acknowledged mutation is older than the current revision, load the current remote state before resuming; never install a stale receipt payload as cache. Retain receipts at least seven days; older/unrecognized retries use normal CAS and conflict recovery without guessing. The client-local byte hash checks journal integrity; it is not compared with a PostgreSQL JSONB digest computed by a different serializer.
+
+**Progression watermark:** `progression_cutoff_at` is stored separately from transport `updated_at`. A server checkpoint binds owner, character, server anchor time and bounded lease; pending data records that checkpoint ID plus elapsed monotonic time through which its snapshot has accounted for progression. The server verifies the issued checkpoint, bounded offset, nondecreasing cutoff and CAS binding before accepting the cutoff. It never accepts an arbitrary client wall-clock date. An identical retry cannot advance this watermark. A fresh active session may present the same owner's historical checkpoint only for the exact persisted pending operation after current-session validation; this does not admit an old session. Retain checkpoint proof while a matching retained receipt/pending replay can be validated; if proof is unavailable, use explicit recovery without inventing elapsed time. Server time bounds provide time/replay safety, not full simulation anti-cheat.
 
 Database hardening:
 
-- remove authenticated direct `INSERT`, `UPDATE`, and `DELETE` policies on `character_saves`; reads use the session-guarded RPC too;
+- remove authenticated direct `SELECT`, `INSERT`, `UPDATE`, and `DELETE` policies/grants on `character_saves`; reads use the session-guarded RPC too; deny both anonymous and registered authenticated identities, including views and obsolete callable overloads;
 - keep RLS as defense in depth;
 - keep `security definer` functions on a fixed search path and restricted grants;
 - enforce that a save's user matches its character owner, using schema/transaction constraints that cannot drift;
 - keep one active session/account and one active character/account constraints;
 - retain server-owned `updated_at`, but never use it as CAS authority;
 - store `client_build_id` only for correlation, never save compatibility.
+
+The database validates a nonempty object, supported `schema_version` equal to `payload.version`, required top-level shape, immutable character/talent/starter identity, finite bounded transport fields and UTF-8 payload size. Client registry preflight remains mandatory. This establishes durable ordering/ownership, not a claim that a client-simulated game has server-authoritative anti-cheat.
+
+Cutover is explicit: apply/test forward migrations in disposable/staging Supabase first. Do not apply a policy-removal migration to a live project whose deployed client still uses direct PostgREST. Upgrade under maintenance with the complete compatible B1 client, revoke legacy game sessions, remove old claim/create overloads, preserve/export existing rows, inventory legacy `{}` rows and incompatible snapshots, and route invalid rows to recovery. Never infer an empty character from a malformed save or automatically delete historical rows. Old binaries are denied backend access; an old local-fallback binary cannot be remotely forced to stop its cached simulation. Require replacement/removal of controlled legacy tester installs before admission to the new Beta, and never promote their local progression automatically.
 
 ### B1.4 Character provisioning and first durable save
 
@@ -237,7 +262,7 @@ tien-hiep-idle-save-revision:<userId> authoritative revision mirror
 tien-hiep-idle-save-pending:<userId>  unacknowledged recovery journal
 ```
 
-The pending record contains at least payload, base revision, created time, build ID, schema version, and a payload hash. Save flow is:
+The pending record contains user/environment/character identity, mutation ID, payload, base revision, time checkpoint, created time, build ID, schema version, and a local byte hash. Resolve environment isolation before using the illustrated keys: prefix by backend environment and project fingerprint (or use physically isolated app data); also check the envelope identity. Save flow is:
 
 ```text
 build detached save -> validate -> persist pending journal
@@ -248,15 +273,19 @@ build detached save -> validate -> persist pending journal
 
 Storage failure is explicit. The client never marks a snapshot synced before server ACK. Cache corruption cannot overwrite a valid server row.
 
+One per-session save queue serves autosave, manual save, initial save, quit, logout and update. It keeps the in-flight journal immutable; a newer requested snapshot waits until the first operation settles, then uses its ACKed revision and a new mutation ID. Clearing a journal compares the full owner/character/mutation identity. Stale generation callbacks cannot change another session's cache, revision, credential or journal. Store ACKed payload+revision in one envelope; old split keys are migration inputs only. On journal quota/write failure pause with explicit recovery/export and retry; do not claim durable progress.
+
 ### B1.6 Conflict, crash, and reconnect policy
 
 Remote conflict is a lifecycle state, not coordinator auto-retry:
 
 - server revision equals pending base revision: retry the same hashed pending snapshot once through CAS;
-- server revision is greater: do not write; pause and expose a conflict/recovery surface;
+- server revision is greater: first resolve an identical committed mutation via the server receipt; otherwise do not write, pause and expose a conflict/recovery surface;
 - server row absent and pending base is 0: retry initial save;
 - no automatic merge of resources, progression, inventory, quests, or timestamps;
 - no blind “load latest then overwrite” path.
+
+Conflict actions are retry authority check, export/quarantine the account-bound pending snapshot, and explicitly accept the current cloud state after preserving pending evidence. No overwrite button re-bases divergent local state onto the new revision. Reset to a fresh runtime before a cloud replacement; do not restore over dirty owners. A malformed/mismatched journal is exportable recovery data and is never uploaded automatically.
 
 Reconnect order is fixed:
 
@@ -273,7 +302,11 @@ pause simulation and stop mutation-producing loops
 
 `navigator.onLine` alone is insufficient. Backend health and authenticated RPC success are required.
 
-Closed-app idle progression is separate from “continue playing offline.” If the Beta keeps the existing offline-reward mechanic, elapsed time is authorized only after a cold boot has loaded a valid remote snapshot and must be derived from server time/last server ACK, not an editable client wall clock. A live reconnect does not replay restore or grant offline progress; generation/restore identity makes the grant exactly once. Existing progression caps and domain owners remain authoritative.
+Closed-app idle progression is separate from “continue playing offline.” Elapsed time is authorized only after a cold boot has loaded a valid remote snapshot and must be derived from server time and its validated progression cutoff, not transport ACK time or an editable client wall clock. A live reconnect does not grant offline progress. Existing progression caps and domain owners remain authoritative.
+
+The existing closed-app reward mechanic is retained. Cold boot reconciles pending writes first, creates a fresh runtime, and injects the server-authorized window from `progression_cutoff_at` to the captured cold-boot server time into the existing offline owners. Retry of a snapshot captured at T0 but uploaded at reopen T1 keeps cutoff T0, so it does not erase the T0..T1 reward window. Persist the post-accrual snapshot and new cutoff through CAS before tick or spend commands can start. A process crash discards uncommitted in-memory grants; retries use the same pending mutation/receipt, preventing a second durable grant. For a live reconnect with matching authority, resume preserved in-memory state without restore; if remote replacement is required, reset owners and restore with an explicit zero-accrual context. Client `lastSavedAt` and a WeakMap guard cannot authorize accrual across process restarts.
+
+The explicit context reaches both `player.restoreFromSave` and `GameManagerSaveRestore.restoreFromSave` through `restoreGameSession`. Production, decomposition, auto-farm and alchemy currently compute separate client-clock windows; every affected owner consumes the same authorized interval while retaining its own cap/formula/delivery rules. A player-only change is an incomplete migration.
 
 ### B1.7 Error taxonomy and lifecycle response
 
@@ -299,13 +332,17 @@ On network loss or unresolved save/session health:
 - preserve pending evidence;
 - never continue from cache offline.
 
+“Immediately” means in the same authority transition when an offline signal, failed/timed-out authenticated request, OS resume or expired health lease is observed. It is not a claim that an idle TCP connection detects a cable cut instantly. Heartbeat runs every 30 seconds with a 10-second request deadline; health lease expires no later than 40 seconds after the last successful authenticated operation, using a monotonic clock. No successful response may extend a lease after its generation was replaced. Gate player mutation commands as well as `useAppLifecycle` ticks, main-process combat ticks, battle settlement callbacks and catch-up/reward timers. Re-anchor clocks on resume so paused time is not fed back as a giant delta. Acceptance measures both detection latency and zero domain mutation after the blocked transition.
+
 On `SESSION_REVOKED`:
 
 - pause;
 - stop heartbeat/autosave/retries;
-- clear the invalid auth session;
+- clear the invalid active game-session binding;
 - show a dedicated “account used on another device” state;
 - return to auth only through the owned acknowledgement flow.
+
+Game-session revocation stops gameplay and clears the active game-session binding, not automatically the durable guest Auth identity. Keep its protected refresh credential for an explicit take-back/sign-in action; auto-reclaim would make two devices fight. Only definitive Auth credential revocation/signout or explicit guest reset removes it. Refresh is single-flight and generation-fenced. Timeout/5xx/network failure preserves the guest credential and journal; only a proven terminal refresh rejection marks the identity unrecoverable, with recovery messaging before creating any new guest.
 
 ### B1.8 Guest persistence and account transition
 
@@ -326,6 +363,8 @@ same user_id -> same character -> same save -> same revision history
 
 The server updates the same profile from `account_kind='guest'` to `registered` and binds the normalized login identity without creating a second profile/character.
 
+This is a provider proof obligation before B1-E implementation: the current client synthesizes `loginId@accounts.tien-hiep-idle.invalid`. Supabase's documented anonymous-to-password conversion requires a linked verified email/phone and manual linking enabled. Do not claim this existing login-ID scheme supports that flow without a disposable-project experiment. Preserve same UUID; if existing login policy cannot satisfy the provider, record EXT-09 and request the credential/recovery product decision before the dependent slice. Neither an unverified-email bypass nor a privileged password-update endpoint is implicitly approved. Profile finalization must derive verified Auth identity server-side and be resumable after Auth succeeds but profile update fails; user-editable metadata cannot establish registered authority. See [Supabase anonymous identities](https://supabase.com/docs/guides/auth/auth-anonymous).
+
 If the platform forces a different target identity, transfer is an explicit server transaction; the client never copies/merges canonical saves. Signing into a different existing account while the guest owns a character is a blocking conflict state with no automatic mutation. The safe Closed-Beta default is cancel or continue as the existing account after explicit acknowledgement; character merge is out of scope.
 
 ### B1.9 Logout
@@ -339,6 +378,14 @@ Logout owns this order:
 5. clear credential/session and explicit account binding;
 6. retain ACKed cache unless user explicitly resets local data;
 7. return to auth.
+
+Guest logout warns that removing its sole credential prevents self-service return; offer upgrade/export/cancel before explicit abandon. Offline logout must distinguish local signout from confirmed server revoke: fence local generations and retain identity-bound pending data, but never report remote revocation succeeded if unreachable. Do not restore/replay the abandoned guest's pending data under the next user's identity.
+
+### B1.9a Existing import, reset, recovery and close consumers
+
+`SettingsPanel.vue` currently calls `importSaveRaw`, `App.vue` calls `deleteSave`, and recovery surfaces can bypass the cloud coordinator. Census and migrate these callers before enabling Beta composition. Closed-Beta local import remains available as validation/export recovery data, not an authoritative overwrite; local reset is explicitly cache-only and reloads cloud. Remote character deletion/reset and arbitrary imported-cloud replacement need their own authorized server transaction and are not exposed as working Beta actions until implemented. Development mock mode keeps its existing local tools.
+
+Main quit, updater restart and logout share one result-bearing flush (`saved | blocked | failed`) with request ID, generation, expected sender and confirmed remote revision. `notifyFlushComplete()` in a `finally` block and the current 2-second auto-close timeout are not remote success. Normal close failure offers retry/cancel/explicit force-close with preserved journal; updater install never runs on a failed/timeout flush. OS kill/power loss is handled by the already-written journal on next boot, not a promise that shutdown can always wait.
 
 ### B1.10 Acceptance tests
 
@@ -355,6 +402,10 @@ Required evidence includes:
 - first durable revision 1 before clock/tick;
 - downloaded malformed/current-version, incompatible-version, and registry-invalid saves reach recovery without mutating live state;
 - production composition test proving a Beta artifact cannot instantiate mock/local authority.
+- deterministic overlapping claim/save/revoke schedules, identical mutation retry after lost ACK, altered mutation replay, expired receipt, older receipt versus newer current revision, and no stale cache/journal clear;
+- overlapping manual/autosave/quit requests, import/reset/recovery bypass attempts, offline guest refresh preservation, explicit guest abandon, and sender/request-bound flush failure;
+- health-lease expiry, blocked user commands and main combat ticks, OS suspend/resume re-anchoring, and post-accrual durable save before cold-boot tick.
+- retry at T1 of pending progression captured at T0 preserves T0..T1 cold-boot accrual; changed/out-of-lease/backward checkpoints reject; lost ACK does not shift the cutoff; old-session replay cannot bypass current admission.
 
 ### B1.11 B1 seal
 
@@ -372,7 +423,7 @@ appVersion             semantic version, e.g. 0.1.0-beta.N
 buildId                unique CI run/release identifier
 gitSha                 full SHA; UI may show short SHA
 saveSchemaVersion      CURRENT_SAVE_VERSION
-backendEnvironment     beta/staging/production, never URL/key
+backendEnvironment     development/staging/beta/production, never URL/key
 releaseChannel         beta
 builtAtUtc
 ```
@@ -387,7 +438,7 @@ Acceptance:
 - save RPC persists the same build ID;
 - missing required identity in release mode fails closed.
 
-Seal: one candidate manifest is byte-retained with the artifact and all identity consumers match it.
+Foundation acceptance occurs in PR1; final seal occurs when one candidate manifest is byte-retained with the artifact and all later identity consumers match it. PR1 is not blocked waiting for B7/B8 to exist.
 
 ---
 
@@ -412,7 +463,7 @@ Acceptance:
 - icon/metadata inspected in Explorer, installer, taskbar, and Apps & Features;
 - quit flush has explicit bounded failure UX; timeout is not reported as saved.
 
-Seal: the inspected unsigned package bytes are the exact input handed to the signer; after signing, the signed artifact hash is frozen, tested, and later published without rebuild or replacement.
+Packaging acceptance can use an unsigned dry-run. Final B3/B4/B5 artifact flow is compile once -> inspect application payload -> sign executable/helpers during packaging -> assemble installer -> sign installer -> generate final update metadata/checksums -> freeze hashes -> clean-machine test -> publish the same bytes. Signing only an already assembled installer leaves embedded executables unsigned. Final B3 seal covers the exact signed artifact; later code/config changes require new artifacts and invalidated evidence.
 
 ---
 
@@ -447,10 +498,10 @@ Create a tag/manual-dispatch release workflow with protected publication:
 2. pin Node/runner/tool versions and run `npm ci` from the lockfile;
 3. validate semantic version, tag, channel, BuildIdentity, migrations, and backend mode;
 4. run full deterministic verification plus required integration/E2E suites;
-5. build once, sign that exact output, and never rebuild between QA and publication;
+5. compile once, sign application binaries during packaging, assemble/sign the installer, then freeze final artifacts; never rebuild between candidate QA and publication;
 6. generate SHA-256 checksums, artifact manifest, dependency/SBOM inventory, and provenance linking tag/SHA/workflow/toolchain;
 7. upload immutable artifacts to a draft GitHub Release;
-8. promote/publish only after required gates approve the exact hashes.
+8. expose the identical draft bytes and generated update metadata on an access-controlled candidate feed for B6/B10, with the production feed still unchanged; promote/publish only after B10 and explicit authorization approve the exact hashes.
 
 “Reproducible” means another authorized run can reconstruct the same source/dependency/toolchain inputs and equivalent unsigned application payload. Authenticode timestamp/signature bytes may differ and are recorded rather than falsely claimed bit-identical. The distributed signed artifact's published checksum is immutable.
 
@@ -462,7 +513,7 @@ Acceptance:
 - downloaded GitHub asset verifies signature and checksum;
 - permissions prevent ordinary PR code from gaining signing/release secrets.
 
-Seal: a draft Beta release is produced entirely by CI from the frozen candidate, then explicitly authorized for publication.
+Pipeline acceptance: CI creates a verifiable draft and the restricted candidate feed, without waiting for B10. Seal: after B10 and publication authority, promote those same hashes. Draft GitHub assets alone are not assumed publicly available to an updater; candidate-feed access uses the approved B6 transport with a tester allowlist, not a shipped GitHub token.
 
 ---
 
@@ -481,7 +532,7 @@ or recoverable error
 Rules:
 
 - Beta checks only the Beta channel over HTTPS;
-- update metadata and package signature/checksum are verified;
+- update metadata is authenticated through the approved HTTPS provider and signed manifest when supported by the pinned toolchain; verify artifact hash and Windows publisher signature independently. The configured trust/publisher policy is fixed in the app; a renderer URL/publisher override is forbidden;
 - no downgrade or cross-environment update;
 - UI shows version, size/progress, retry/later, release notes, and actionable error;
 - install/restart first runs the owned save flush and refuses to claim safety when unsynced;
@@ -551,7 +602,7 @@ Acceptance:
 - log limits/rotation and concurrent writes do not crash the app;
 - packaged error screen can export/copy the report ID and build identity.
 
-Seal: a clean-machine induced error yields a usable redacted bundle that correlates with B7 and B2.
+Seal: a clean-machine induced error yields a usable redacted bundle with B2 identity and a stable report ID. B7 later proves intake correlation using that ID; B8 does not depend on B7 being implemented.
 
 ---
 
@@ -629,16 +680,16 @@ B10 seal is the exact canonical success sentence from the protocol for the froze
 Recommended dependency order:
 
 ```text
-B2 identity foundation
+B2 identity foundation (merge acceptance; full consumer seal later)
   -> B1 database/RPC authority
   -> B1 client adapter/composition
   -> B1 journal/session/reconnect/guest flows
   -> B1 real-Supabase integration seal
   -> B3 packaging
   -> B4 signing
-  -> B5 release pipeline
-  -> B6 updater
+  -> B5 draft release pipeline (promotion after B10)
   -> B8 diagnostics foundation
+  -> B6 updater
   -> B7 feedback
   -> B9 operations and drills
   -> B10 frozen RC certification
@@ -658,8 +709,8 @@ Proposed PRs (each gets its own worktree, task card, QA ledger/evidence, and sea
 | 8 | B3 | Icons, metadata, packaging allowlist, clean install/uninstall proof |
 | 9 | B4 | Signing plumbing and authorized signed-artifact evidence |
 | 10 | B5 | Protected CI release workflow, checksums, provenance, draft GitHub Release |
-| 11 | B6 | Update service/IPC/UX and signed N -> N+1 proof |
-| 12 | B8 | Structured diagnostics, redaction, bundle export, crash-provider boundary |
+| 11 | B8 | Structured diagnostics, redaction, bundle export, crash-provider boundary |
+| 12 | B6 | Update service/IPC/UX and signed N -> N+1 proof |
 | 13 | B7 | In-game feedback service/UI consuming B2/B8 contracts |
 | 14 | B9 | Health/compatibility contract, backup/restore/rollback/quota/incident runbooks and drills |
 | 15 | B10 | Evidence-only frozen RC certification; fixes return to the owning earlier PR/gate |
@@ -673,11 +724,13 @@ PRs may split further when a responsibility cannot be independently reviewed in 
 | EXT-01 | Dedicated Beta Supabase project, admin access, URL/anon key, migration deploy access | B1/B7/B9/B10 | Provision staging + Beta projects; secrets stored only in authorized CI/runtime configuration |
 | EXT-02 | Windows code-signing certificate or signing service | B4-B6/B10 | Choose issuer/service, provision protected secret/hardware access, record subject/expiry/timestamp policy |
 | EXT-03 | GitHub Actions/Release permissions and protected environment | B5/B6/B10 | Repository owner configures least-privilege release workflow and required approvals |
-| EXT-04 | Update artifact visibility/hosting decision | B6 | Public GitHub assets or private authenticated HTTPS provider; never embed repo token |
+| EXT-04 | Update artifact transport and restricted candidate feed | B5/B6 | Repository verified public on 2026-09-29; public GitHub assets are feasible for published Beta, but the draft/candidate transport still needs approval and proof; never embed repo token |
 | EXT-05 | Clean Windows machines/VMs and second device identity | B3/B4/B6/B10 | Provide reproducible clean images and retained environment manifest |
 | EXT-06 | Feedback retention/contact/privacy policy | B7/B8 | Approve collected fields, retention, access, consent copy, deletion process |
 | EXT-07 | Backup destination/encryption/retention owner | B9/B10 | Provision storage and name operator; complete restore drill |
 | EXT-08 | Supported Windows versions/architectures | B3/B10 | Declare matrix before packaging seal; do not imply untested support |
+| EXT-09 | Guest conversion and credential recovery compatible with current login-ID scheme | B1-E/B1 seal/B10 | Prove same-UUID conversion in a disposable project; resolve verified identity/recovery policy if synthetic `.invalid` email cannot meet provider requirements |
+| EXT-10 | Approved icon source and publisher/product metadata | B3/B4 | Select a licensed product asset and actual publisher identity; no invented company or default Electron icon in RC |
 
 If an external dependency is absent, implementation may reach a documented plumbing milestone, but the affected gate remains `QA_UNVERIFIED` or `QA_BLOCKED_SCOPE`; it is not silently waived.
 
@@ -700,17 +753,28 @@ Reject a gate seal when evidence is mock-only, source-only where runtime proof i
 
 ## 19. G0/G1 planning record for this umbrella
 
-**Requested observable behavior:** a real signed Windows Closed Beta install completes the B10 journey against real Supabase.  
-**Single umbrella responsibility:** production readiness and distribution; individual gates own one coherent subordinate responsibility.  
-**Current owners:** auth/session/Supabase services, cloud-save services/coordinator, `useAppLifecycle`, Electron main/preload, electron-builder configuration, save validation/restore, and canonical QA protocol.  
-**Target owners:** authority table in section 4; gate-specific task cards must confirm exact symbols at their current base SHA.  
-**Existing primitives to reuse:** `buildGameSave`, validation/acceptance/restore, `CloudSaveCoordinator` boundary, Supabase HTTP/session/auth, active-session RPC primitives, first-save-before-tick lifecycle, ErrorBoundary/ErrorScreen, Electron narrow preload bridge, Internal QA protocol.  
-**Missing mechanisms:** remote runtime adapter, session-guarded save RPC, journal/reconnect state machine, build identity, packaging assets/metadata, signing, release/update pipeline, feedback, structured diagnostics, operations runbook.  
-**Production chain:** installer/update -> Electron main/preload -> Vue lifecycle -> auth/session -> character -> save adapter -> RPC/Postgres -> cache/journal -> diagnostics/feedback/operations evidence.  
-**State lifecycle:** specified per B1/B2/B6/B8; implementations must enumerate writers/readers/reset/persistence/async cleanup and stale-result policy.  
-**Explicit non-goals:** section 2.  
-**Verification:** gate acceptance plus B10 fixed-point certification.  
-**Stop condition:** B10 sealed for one frozen signed candidate, or canonical blocked/unverified outcome with exact dependency.  
+**Requested observable behavior:** a real signed Windows Closed Beta install completes the B10 journey against real Supabase.
+
+**Single umbrella responsibility:** production readiness and distribution; individual gates own one coherent subordinate responsibility.
+
+**Current owners:** auth/session/Supabase services, cloud-save services/coordinator, `useAppLifecycle`, Electron main/preload, electron-builder configuration, save validation/restore, and canonical QA protocol.
+
+**Target owners:** authority table in section 4; gate-specific task cards must confirm exact symbols at their current base SHA.
+
+**Existing primitives to reuse:** `buildGameSave`, validation/acceptance/restore, `CloudSaveCoordinator` boundary, Supabase HTTP/session/auth, active-session RPC primitives, first-save-before-tick lifecycle, ErrorBoundary/ErrorScreen, Electron narrow preload bridge, Internal QA protocol.
+
+**Missing mechanisms:** remote runtime adapter, session-guarded save RPC, journal/reconnect state machine, build identity, packaging assets/metadata, signing, release/update pipeline, feedback, structured diagnostics, operations runbook.
+
+**Production chain:** installer/update -> Electron main/preload -> Vue lifecycle -> auth/session -> character -> save adapter -> RPC/Postgres -> cache/journal -> diagnostics/feedback/operations evidence.
+
+**State lifecycle:** specified per B1/B2/B6/B8; implementations must enumerate writers/readers/reset/persistence/async cleanup and stale-result policy.
+
+**Explicit non-goals:** section 2.
+
+**Verification:** gate acceptance plus B10 fixed-point certification.
+
+**Stop condition:** B10 sealed for one frozen signed candidate, or canonical blocked/unverified outcome with exact dependency.
+
 **Unresolved external assumptions:** section 17 only; no hidden product assumption is converted to “N/A.”
 
 Q1-Q12 summary:
@@ -743,4 +807,4 @@ Q1-Q12 summary:
 
 ## 21. Astra handoff rule
 
-Astra executes the PR DAG in section 16 from fresh current-base audits. At the start of each PR, Astra re-reads `AGENTS.md`, `AstraDoctrine.md`, the architecture worker workflow, the QA protocol, this spec, the relevant roadmap/source/tests, and refreshes the remote/base identity. Historical reports are hypotheses, not proof. Astra stops at each gate seal, records evidence, and does not describe the umbrella as complete until B10 reaches the canonical terminal predicate.
+Astra executes the PR DAG in section 16 from fresh current-base audits. At the start of each PR, Astra re-reads `AGENTS.md`, `AstraDoctrine.md`, the architecture worker workflow, the QA protocol, this spec, the linked execution plan, the relevant roadmap/source/tests, and refreshes the remote/base identity. Historical reports are hypotheses, not proof. Astra records each scoped implementation acceptance and separately tracks pending environment/artifact seals under section 5, then proceeds to the next admitted dependency. The umbrella is complete only when B10 reaches the canonical terminal predicate.
