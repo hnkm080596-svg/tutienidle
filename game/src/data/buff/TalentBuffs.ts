@@ -32,8 +32,8 @@ export const TALENT_BUFFS: BuffDefinition[] = [
     instanceScope: 'per_source',
     stacking: { maxStacks: 1, onReapplyStacks: 'keep', onReapplyDuration: 'refresh' },
     lifetime: { clock: 'holder_turns', duration: 8, scaling: 'ailment_scaled' },
-    // CP-01 — flat, không percent: base của rate stat này là 0 nên
-    // percent×(0+0)=0 (silent no-op). Convention rate-stat = flat
+    // CP-01 - flat, not percent: this rate stat's base is 0 so
+    // percent*(0+0)=0 (silent no-op). Convention for rate stats is flat
     // fraction (TheTuBuffs/affixes/node riders).
     statModifiers: [{ stat: 'finalDamagePercent', flat: 0.3 }],
     dispellable: false,

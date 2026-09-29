@@ -168,7 +168,7 @@ export class BuildingSystem {
 
       lastCollectedAt: currentTime,
 
-      // EM-01 — cửa sổ tích luỹ đầu tiên chạy dưới realm lúc xây.
+      // EM-01 - the first accrual window runs under the build-time realm.
       accrualRealmId: player.realmId,
     }
 
@@ -359,7 +359,7 @@ export class BuildingSystem {
         return 0
       }
 
-      // EM-01 — rate/capacity follow the realm the window accrued under,
+      // EM-01 - rate/capacity follow the realm the window accrued under,
       // not the claim-time realm: a breakthrough inside the window must
       // not retroactively reprice the whole backlog.
       const accrualRealmId = instance.accrualRealmId ?? realmId
@@ -372,9 +372,9 @@ export class BuildingSystem {
     return 0
   }
 
-  // UI đọc sức chứa + tốc độ (Linh Tuyền) để hiển thị, cùng nguồn với
-  // getStoredAmount/claim nên luôn khớp (2026-08-28). EM-01: cùng pin
-  // accrualRealmId — con số UI hiển thị đúng thứ claim() sẽ trả.
+  // UI reads capacity + rate (Linh Tuyen) for display, same source as
+  // getStoredAmount/claim so they always agree (2026-08-28). EM-01: same
+  // accrualRealmId pin - the UI number is exactly what claim() will pay.
   getCapacity(instance: BuildingInstance, template: Building, realmId?: string): number {
     return this.getEffectiveCapacity(template, instance.level, instance.accrualRealmId ?? realmId)
   }
@@ -437,8 +437,9 @@ export class BuildingSystem {
 
     // Giữ phần lẻ: lùi mốc về quá khứ đúng bằng thời gian sản xuất phần
     // lẻ (stored - amount), thay vì reset về currentTime làm mất phần đó.
-    // EM-01 — rate/material phẩm vẫn theo realm của cửa sổ vừa kết (pin),
-    // rồi pin chuyển sang realm hiện tại cho cửa sổ tích luỹ tiếp theo.
+    // EM-01 - rate/material tier still follow the just-ended window's
+    // realm (pin), then the pin moves to the current realm for the next
+    // accrual window.
     const accrualRealmId = instance.accrualRealmId ?? currentRealmId
     const rate = this.getEffectiveRate(template, instance.level, accrualRealmId)
 

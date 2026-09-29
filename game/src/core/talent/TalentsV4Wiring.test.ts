@@ -99,11 +99,12 @@ describe('TalentPassives v4 — shape & nhịp engine của 11 passive', () => {
     const phan = passiveById.get('talent_passive_can_than_phi')!
 
     expect(chinh.passiveCondition).toEqual({ kind: 'hpBelow', percent: 0.35 })
-    // CP-01 — leg phản phải phân vùng ngược: không condition thì nó
-    // luôn active và triệt tiêu nửa leg chính khi HP thấp.
+    // CP-01 - the downside leg needs the inverse partition: with no
+    // condition it is always active and cancels half the upside leg at
+    // low HP.
     expect(phan.passiveCondition).toEqual({ kind: 'hpNotBelow', percent: 0.35 })
     // Phan passive cong finalDamageReductionPercent AM (tuc +5% nhan vao).
-    // CP-01 — flat channel: base rate-stat = 0 nên percent la dead value.
+    // CP-01 - flat channel: base rate-stat = 0 so percent is a dead value.
     expect(phan.passiveModifiers![0]!.flat).toBeLessThan(0)
   })
 

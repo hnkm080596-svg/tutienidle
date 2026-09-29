@@ -70,8 +70,9 @@ describe('getActiveCultivationSpeedPercent', () => {
   })
 })
 
-// EM-02 — buff hết hạn giữa cửa sổ offline: mỗi đoạn phải mang % sống
-// tại đầu đoạn, không kéo buff snapshot lúc save tới hết cửa sổ.
+// EM-02 - a buff expiring mid-offline-window: each segment must carry
+// the percent live at segment start, not drag the save-time snapshot
+// rate across the whole window.
 describe('splitCultivationSpeedWindow', () => {
   const start = 100_000
 

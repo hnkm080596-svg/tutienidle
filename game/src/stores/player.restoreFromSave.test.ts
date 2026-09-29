@@ -110,14 +110,14 @@ describe('player.restoreFromSave — idempotency (QA-002, Task 9.2)', () => {
     expect(player.cultivationPerSecond).toBe(20) // Object.assign của save2 đã chạy
   })
 
-  // EM-02 — cultivationPerSecond trong save đã gấp buff Tụ Linh Trận
-  // vào; buff hết hạn giữa cửa sổ offline phải ngừng trả, không được
-  // boosted-rate × toàn cửa sổ.
+  // EM-02 - the save's cultivationPerSecond already folds the Tu Linh
+  // Tran buff in; a buff expiring mid-offline-window must stop paying,
+  // not get boosted-rate x the whole window.
   it('buff tu luyện hết hạn giữa offline → chỉ đoạn còn sống được buff (EM-02)', () => {
     const player = usePlayerStore()
     const windowMs = 30_000
     const save = buildMinimalSave({
-      // base rate 10/s × (1 + 1.0) buff → snapshot 20/s.
+      // base rate 10/s x (1 + 1.0) buff -> snapshot 20/s.
       cultivationPerSecond: 20,
       lastSavedAt: currentMs - windowMs,
       persistentTimedEffects: [
@@ -126,7 +126,7 @@ describe('player.restoreFromSave — idempotency (QA-002, Task 9.2)', () => {
           sourceItemId: 'tu_linh_tran',
           effectGroup: 'tu_linh_tran',
           appliedAtMs: currentMs - windowMs - 10_000,
-          expiresAtMs: currentMs - windowMs + 10_000, // chết sau 10s offline
+          expiresAtMs: currentMs - windowMs + 10_000, // dies after 10s offline
           cultivationSpeedPercent: 1,
           modifiers: [],
         },
@@ -135,7 +135,7 @@ describe('player.restoreFromSave — idempotency (QA-002, Task 9.2)', () => {
 
     const result = player.restoreFromSave(save)
 
-    // 10×(1+1)×10s + 10×20s = 400 (< cap 600); pre-fix = 20×30 = 600.
+    // 10*(1+1)*10s + 10*20s = 400 (< cap 600); pre-fix = 20*30 = 600.
     expect(result.cultivation).toBe(400)
     expect(result.elapsedSeconds).toBe(30)
   })
@@ -151,7 +151,7 @@ describe('player.restoreFromSave — idempotency (QA-002, Task 9.2)', () => {
           sourceItemId: 'tu_linh_tran',
           effectGroup: 'tu_linh_tran',
           appliedAtMs: 0,
-          expiresAtMs: currentMs - 200_000, // chết trước save
+          expiresAtMs: currentMs - 200_000, // dies before the save
           cultivationSpeedPercent: 1,
           modifiers: [],
         },
@@ -160,7 +160,7 @@ describe('player.restoreFromSave — idempotency (QA-002, Task 9.2)', () => {
 
     const result = player.restoreFromSave(save)
 
-    // percentAtSave = 0 → base = snapshot 20/s → 20×20 = 400.
+    // percentAtSave = 0 -> base = snapshot 20/s -> 20*20 = 400.
     expect(result.cultivation).toBe(400)
   })
 
@@ -175,7 +175,7 @@ describe('player.restoreFromSave — idempotency (QA-002, Task 9.2)', () => {
           sourceItemId: 'tu_linh_tran',
           effectGroup: 'tu_linh_tran',
           appliedAtMs: 0,
-          expiresAtMs: currentMs + 999_000_000, // còn sống quá window end
+          expiresAtMs: currentMs + 999_000_000, // still live past window end
           cultivationSpeedPercent: 1,
           modifiers: [],
         },
@@ -184,8 +184,8 @@ describe('player.restoreFromSave — idempotency (QA-002, Task 9.2)', () => {
 
     const result = player.restoreFromSave(save)
 
-    // base 10 × (1+1) × 20s = 400 — bằng snapshot-rate nhưng đi qua
-    // segment math, không qua phép nhân phẳng.
+    // base 10 x (1+1) x 20s = 400 - same as snapshot-rate math but
+    // reached through the segment path, not a flat multiply.
     expect(result.cultivation).toBe(400)
   })
 

@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest'
 import { REALM_PASSIVE_NODES } from './RealmPassiveNodes'
 
 describe('RealmPassiveNodes', () => {
-  // FE-12 — nodes carry the DESTINATION realm label: the Trúc Cơ node
-  // lights when the player reaches Trúc Cơ, and only realms above the
-  // release ceiling show "Sắp ra mắt".
+  // FE-12 - nodes carry the DESTINATION realm label: the Truc Co node
+  // lights when the player reaches Truc Co, and only realms above the
+  // release ceiling show the coming-soon state.
   it('mở Kiến Cơ sau Phàm → Luyện Khí và Trúc Cơ sau Luyện Khí → Trúc Cơ', () => {
     expect(REALM_PASSIVE_NODES.slice(0, 2)).toMatchObject([
       { realmId: 'qi_refining', label: 'Kiến Cơ', unlockTier: 2, comingSoon: false },

@@ -66,7 +66,7 @@ console.log('NAME_TEXTS:', JSON.stringify(combat.nameTexts))
 console.log('BOTTOM_LEFT_TEXTS:', JSON.stringify(combat.bottomLeft))
 console.log('FE-06 combat:', combat.playerLabel === NAME ? 'PASS' : 'FAIL')
 // Gourd footprint: x in [18, 70] (margin 18 + width 52). HUD labels must
-// start right of it — flag any HUD text whose left edge sits inside.
+// start right of it - flag any HUD text whose left edge sits inside.
 const overlap = combat.bottomLeft.filter((t) => t.visible !== false && t.x < 70 && t.x !== 0)
 console.log('FE-08 overlap candidates:', JSON.stringify(overlap))
 

@@ -43,7 +43,7 @@ const requirements = computed(() =>
   gameManager.realmAdvanceOps.getBreakthroughRequirements(player.$state),
 )
 const nextRealmName = computed(() => getNextRealm(player.realmId)?.name ?? '')
-// FE-17 — release-ceiling readout: at Trúc Cơ the "Kim Đan" button is
+// FE-17 - release-ceiling readout: at Truc Co the "Kim Dan" button is
 // disabled by ReleasePolicy (authored but dormant), not by an unmet
 // requirement, so the requirements list alone gives no explanation.
 const nextRealmBeyondCeiling = computed(() => {
@@ -208,7 +208,7 @@ function majorBreakthrough() {
 .realm-requirement { display: flex; align-items: center; gap: 6px; font-size: var(--text-sm); color: var(--text-muted); }
 .realm-requirement--met { color: var(--jade); }
 .realm-requirement__marker { font-weight: 700; width: 1em; text-align: center; }
-/* FE-17 — release-ceiling explanation under the dead major-realm button. */
+/* FE-17 - release-ceiling explanation under the dead major-realm button. */
 .realm-ceiling-note { flex: 0 0 100%; margin: 0; text-align: center; font-size: var(--text-sm); color: var(--text-muted); }
 .realm-panel__cultivation { width: min(560px, 90%); margin: 0 auto; }
 .realm-panel__cultivation-bar { --bar-track: var(--sys-bg-0, var(--ink-950)); border: 1px solid var(--sys-line-soft, var(--ink-line)); }

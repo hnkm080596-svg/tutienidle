@@ -254,11 +254,11 @@ export const usePlayerStore = defineStore('player', {
         lastOnlineAt: save.player.lastSavedAt,
       })
 
-      // EM-02 — the saved cultivationPerSecond snapshot folds in timed
-      // buffs (Tụ Linh Trận) that expire mid-window; boosted-rate ×
+      // EM-02 - the saved cultivationPerSecond snapshot folds in timed
+      // buffs (Tu Linh Tran) that expire mid-window; boosted-rate x
       // whole-window over-grants. Re-derive the un-buffed base rate and
       // pay each expiry-boundary segment its own live percent through
-      // the same seconds→cultivation conversion authority.
+      // the same seconds->cultivation conversion authority.
       const savedTimedEffects = save.player.persistentTimedEffects ?? []
       const windowStartMs = save.player.lastSavedAt
       const windowEndMs = windowStartMs + offlineSeconds * 1000

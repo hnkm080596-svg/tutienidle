@@ -259,7 +259,7 @@ export class CombatSnapshotReconcile {
           { currentHp: action.state.currentHp, maxHp: action.state.maxHp, isBoss: action.state.isBoss },
         )
 
-        // FE-06 — the player sprite pre-exists (created hidden at scene
+        // FE-06 - the player sprite pre-exists (created hidden at scene
         // create()) so getOrCreateSprite is a no-op for it; sync the
         // authored name onto the pre-created label instead of leaving
         // the 'Player' placeholder.

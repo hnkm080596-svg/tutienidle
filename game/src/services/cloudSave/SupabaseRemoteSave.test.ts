@@ -170,7 +170,7 @@ describe('syncRemoteSaveOnLogin - newest-wins reconciliation (spec F8)', () => {
 
     expect(await syncRemoteSaveOnLogin(config)).toBe('pushed')
 
-    // INFRA-02 — the write is a PATCH guarded on the just-read revision,
+    // INFRA-02 - the write is a PATCH guarded on the just-read revision,
     // not a blind merge-duplicates upsert.
     const patch = calls.find((call) => call.init.method === 'PATCH')
     expect(patch).toBeDefined()
@@ -212,7 +212,7 @@ describe('syncRemoteSaveOnLogin - newest-wins reconciliation (spec F8)', () => {
     const patch = calls.find((call) => call.init.method === 'PATCH')
     expect(patch?.url).toContain('save_revision=eq.9')
     const body = JSON.parse(String(patch?.init.body)) as Record<string, unknown>
-    // INFRA-01 — pushRevision never regresses below remote+1 even when
+    // INFRA-01 - pushRevision never regresses below remote+1 even when
     // the local counter is behind (remote 9 -> pushed 10, adopted).
     expect(body.save_revision).toBe(10)
     expect(localStorage.getItem(resolveRevisionKey())).toBe('10')

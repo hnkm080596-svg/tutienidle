@@ -21,11 +21,12 @@ export interface RealmPassiveNode {
   comingSoon: boolean
 }
 
-// FE-12 — node được label theo cảnh giới ĐÍCH của lần đột phá: node
-// "Trúc Cơ" sáng khi người chơi BƯỚC VÀO Trúc Cơ, không còn hiện
-// "Sắp ra mắt" cho chính cảnh giới đang đứng. comingSoon ghim theo
-// ReleasePolicy (realm đích nằm trên trần release) thay vì index cứng —
-// "Kim Đan" node vẫn báo sắp ra mắt vì TC → KD đóng.
+// FE-12 - nodes are labeled by the DESTINATION realm of the breakthrough:
+// the "Truc Co" node lights up when the player STEPS INTO Truc Co, so it
+// no longer shows "coming soon" for the realm the player stands in.
+// comingSoon is pinned to ReleasePolicy (destination realm above the
+// release ceiling) instead of a hardcoded index - the "Kim Dan" node
+// still reports coming-soon because TC -> KD is closed.
 export const REALM_PASSIVE_NODES: readonly RealmPassiveNode[] = REALM_TIERS.slice(0, -1).map(
   (_, index) => {
     const targetId = REALM_TIERS[index + 1]!

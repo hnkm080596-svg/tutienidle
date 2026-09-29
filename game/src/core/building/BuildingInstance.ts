@@ -19,9 +19,9 @@ export interface BuildingInstance {
   // (xem MASTER SPEC Mục VII).
   lastCollectedAt: number
 
-  // EM-01 — realm mà CỬA SỔ tích luỹ hiện tại đang chạy dưới. Ghim lúc
-  // build/claim; realm chỉ tăng nên đột phá giữa cửa sổ không reprice
-  // ngược toàn bộ backlog theo rate mới. undefined (save cũ) → fallback
-  // realm hiện tại = hành vi cũ.
+  // EM-01 - realm the CURRENT accrual window runs under. Pinned at
+  // build/claim; realm only grows so a mid-window breakthrough cannot
+  // retroactively reprice the whole backlog at the new rate.
+  // undefined (old save) -> current-realm fallback = old behavior.
   accrualRealmId?: string
 }

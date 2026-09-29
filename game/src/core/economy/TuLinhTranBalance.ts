@@ -52,11 +52,12 @@ export interface CultivationSpeedSegment {
 }
 
 /**
- * EM-02 — chia cửa sổ offline [windowStartMs, windowEndMs] thành các
- * đoạn theo mốc hết hạn của từng effect: mỗi đoạn mang % sống tại đầu
- * đoạn (getActiveCultivationSpeedPercent, expiresAtMs > start là sống).
- * Snapshot cultivationPerSecond chỉ phản ánh buff lúc save — buff hết
- * hạn giữa chừng không được kéo dài tới hết cửa sổ.
+ * EM-02 - split the offline window [windowStartMs, windowEndMs] into
+ * segments at each effect's expiry boundary: every segment carries the
+ * percent live at its own start (getActiveCultivationSpeedPercent;
+ * expiresAtMs > start counts as live). The saved cultivationPerSecond
+ * snapshot only reflects buffs at save time - a buff expiring mid-window
+ * must not be stretched across the whole window.
  */
 export function splitCultivationSpeedWindow(
   effects: readonly PersistentTimedEffect[],

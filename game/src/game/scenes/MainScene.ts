@@ -186,7 +186,7 @@ export class MainScene extends Phaser.Scene {
         : resolvePlayerVisualProfileId({})
 
     const sprite = this.add.sprite(0, 0, PLAYER_VISUAL_PROFILES[profileId].combatTextureKey)
-    // FE-06 — authored player name on the nameplate (was literal 'Player').
+    // FE-06 - authored player name on the nameplate (was literal 'Player').
     const playerName =
       readOptionalGate(this.registry, 'gameManager')?.getActivePlayerName?.() ?? 'Player'
     const label = this.add.text(0, 0, playerName, { fontSize: '14px', color: '#ffffff' }).setOrigin(0.5, 0)
