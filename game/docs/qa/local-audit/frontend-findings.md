@@ -95,3 +95,54 @@ Findings use `### FE-<id> — <SEVERITY> — <title>`.
 - **Combat top bar:** zone name, wave progress `3/10 quái`, round `Hiệp 2/20`, turn-order chips with per-unit HP bars — good. Cleared.
 - **Zero console/page errors** across the entire playthrough; no failed requests.
 - **Settings panel content:** save/load/export/import buttons, font scale 90-125%, audio toggle+slider — all functional; the dark label issue is covered by FE-02.
+
+---
+
+# Round 2 — per-realm playthrough audit (Phàm Nhân → Luyện Khí → Trúc Cơ)
+
+Method: real breakthrough ritual driven live (seed `realmLevel=12` → Quán Khí → Tâm Ma Kiếp tribulation → talent entitlement → way pick (Pháp Tu) → Lễ Nhập Môn → qi_refining), plus direct realm-seed probes into `foundation_establishment`.
+
+### FE-11 — MEDIUM — Building construction popover clips cost rows; no visible build action
+
+- **Files:** building popover (FunctionOverlayPanel building path; observed on `chi_hien_quan`, `equipment_hall`, `pill_room`).
+- **Evidence:** shots `qq-chi_hien_quan`, `qq-equipment_hall`, `22-panel-pill_room` — the compact card shows name + description + "CHI PHÍ XÂY DỰNG" heading then ends: Chiêu Hiền Quán shows **zero** cost rows, Khí Đường shows **one truncated row** ("Thập Niên Linh Mộc Phàm Nhân ?/6"), Đan Phòng two rows — and **no build/upgrade button is visible in the card** at 1440×900.
+- **Impact:** player cannot see full construction cost nor confirm building; the primary build action is undiscoverable in the popover (must find another entry point or scroll if it exists).
+
+### FE-12 — LOW — Realm "ladder" in Cảnh Giới panel is a passive-node list that mislabels reachable realms "Sắp ra mắt"
+
+- **Files:** `src/data/realm/RealmPassiveNodes.ts:23-28` (`comingSoon: index >= 2`), `src/components/panels/RealmPanel.vue:102-113`.
+- **Evidence:** mortal panel shows "1 Nhập Đạo · Chưa mở / 2 Kiến Cơ · Chưa mở / 3 Trúc Cơ · Sắp ra mắt …" — reads as a realm ladder claiming **Trúc Cơ isn't in the release**, while `progressionCeilingRealmId = 'foundation_establishment'` (Trúc Cơ IS the reachable beta ceiling) and the stage select has a functional Trúc Cơ tab.
+- **Also:** label mismatch for the same tier — stage tab says "Luyện Khí" while the passive node for `qi_refining` is labeled "Kiến Cơ".
+- **Impact:** contradictory progression signals; players can't tell whether Trúc Cơ is reachable.
+
+### FE-13 — LOW — No forward guidance after breaking into Luyện Khí
+
+- **Evidence:** after Lễ Nhập Môn, home is visually identical; nothing announces "Luyện Khí stage tab unlocked", "Đan Phòng now buildable", or "new material tier". Unlock discovery is entirely self-driven through tabs. Main-quest names do encode progression goals ("Từng Bước Nhập Đạo", "Lĩnh Ngộ Kỹ Năng") but no pointer appears at the transition moment.
+- **Impact:** the biggest milestone in the game lands silently; a player may keep grinding mortal Tầng and never notice the Luyện Khí tab.
+
+### FE-14 — LOW — Ceremony banner text truncates mid-word at the panel edge
+
+- **Evidence:** shot `rit-07-way-choices` — "QUÁN KHÍ THÀNH CÔNG / Đạo hữu đã vượt lôi kiếp — hãy chọn con đường tu luyện để bước vào Lu…" clipped at right edge; shot `rit-09-announcement` — "LỄ NHẬP MÔN / …chính thức bước vào Pháp Tu — Đại…" clipped. Same on `rit-02` confirm dialog title region.
+- **Impact:** the single most dramatic moment of the loop renders truncated copy.
+
+### FE-15 — LOW — Locked-realm stage tabs are fully browsable; lock affordance only at entry
+
+- **Evidence:** at qi_refining, Trúc Cơ tab lists all 10 `foundation_floor_*` stages with enemy names/levels before any lock message. Code gates correctly — `GameManagerCatalogOps.isStageUnlocked` (`GameManagerCatalogOps.ts:275-289`) refuses entry below realm index — but the UI doesn't mark the tab/nodes as locked while browsing.
+- **Impact:** player can plan around content they can't enter; mild — entry itself is correctly refused.
+
+### FE-16 — LOW — Command wheel can race into an invisible-slot state
+
+- **Evidence:** once during rapid Escape→Tab cycling, wheel DOM kept `[data-wheel-slot]` elements with `data-wheel-orbit` but rendered none visible (click timed out on `pill_room`). Recovered on next toggle.
+- **Impact:** flaky; one-off observation — wheel occasionally needs a second Tab press.
+
+## Per-realm review summary
+
+**Mortal (Phàm Nhân):** creation → tutorial (FE-01 illegible) → home has zero HUD (FE-05); wheel slots for Trúc Cơ/Kim Đan features show correct lock tooltips ("Cần đạt Trúc Cơ", "Chưa mở trong bản hiện tại"); realm panel exposes Quán Khí gate at L12 + passive ladder + Luyện Thể/Kỳ Kinh/Chu Thiên subsystems; stage select gives 10 floors + enemy previews.
+
+**Breakthrough ritual (mortal → qi_refining):** Quán Khí → "Độ kiếp cũng là độ thân" confirm → Tâm Ma Kiếp quiz tribulation (2 chapters, timed questions, HP 108→68 under failed rushes) → talent entitlement pick (3 cards, grade-colored, readable) → way pick with explicit "KHÔNG thể đổi lại" warning → ceremony announcement → realm commits. Flow is functional and legible end-to-end — **best-executed surface in the game** (modulo FE-14 truncation).
+
+**Luyện Khí (qi_refining):** new stage tab with 10 `qi_refining_*` stages and realm-scaled enemies; production costs/upgrade mats rescale to Luyện Khí tier (Linh Mạch +11.9/min vs +2.1 mortal); buildings remain unbuilt with Luyện Khí-tiered material costs (natural economy gating, no hard realm lock); formation/companion still correctly locked; hidden-realm mechanic hooks exist (QuanThe) — not visually audited.
+
+**Trúc Cơ (foundation_establishment):** release ceiling per `ReleasePolicy.progressionCeilingRealmId`; reachable only through the qi_refining breakthrough chain — direct save injection is correctly **fail-closed rejected** ("Invalid technique progression state in save: five_elements_art") with an incompatible-save recovery modal (dark-on-dark title — same FE-02 class). Stage tab browsable but entry gated by `isStageUnlocked`. Formation/companion unlock predicates target this realm — verified wired, not playtested (requires a second live tribulation).
+
+**Save-integrity observations:** realm-seeding attempts confirmed the restore preflight is genuinely fail-closed (naive `realmId` patch rejected outright; committed-path save patched to foundation rejected on technique grade-history consistency). Rejected saves surface a recovery modal — verified twice. This is a strength worth noting for the cloud master.
