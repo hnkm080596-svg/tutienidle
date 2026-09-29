@@ -20,9 +20,16 @@
  * (`const O = Object; O.getOwnPropertyDescriptor`), member captures
  * (`const f = ps.useProfessionPill`, `Reflect.get(ps, K)` bound
  * handles, `.bind/.call` chains, `{f: ps.useProfessionPill}` +
- * `o.f = ps...` member-position aliases), opaque code (`eval`,
- * `new Function`), `*.test*` specifier literals in any position
- * (import.meta.glob, Worker URLs, aliased require), and 4+-char
+ * `o.f = ps...` member-position aliases), opaque code (`eval` and
+ * global-name destructures like `const {eval: e} = globalThis`,
+ * `x.eval(c)`/`x.constructor(c)` member calls, `new Function`,
+ * setTimeout/setInterval string args, `new Worker`/`SharedWorker`,
+ * opaque/data:/blob: `import()` channels), indirect invocation via
+ * `.call/.apply/.bind` on a receiver that resolves to the pinned
+ * handle (`ps.useProfessionPill.call(t)`), `*.test*` specifier
+ * literals in any position or shape (`/` paths, `*`/`{`/`?` glob and
+ * query forms; import.meta.glob, Worker URLs, aliased require,
+ * literalized specifiers), and 4+-char
  * spelled fragments fed to string-search members - all reduce to
  * spelling the name, which is what the scan pins.
  *
@@ -72,6 +79,13 @@ const GLOBAL_ROOTS = new Set([
 ])
 const REFLECTIVE_READ_ROOTS = new Set(['Object', 'Reflect'])
 const INDIRECT_NAMES = new Set(['bind', 'call', 'apply'])
+/** Global names a destructure (`const {eval: e} = globalThis`) can
+ * capture into a local opaque-code handle. */
+const GLOBAL_NAMES = new Set([
+  'eval', 'Function', 'Object', 'Reflect', 'Proxy', 'Worker',
+  'SharedWorker', 'Promise', 'globalThis', 'window', 'setTimeout',
+  'setInterval', 'document', 'import', 'require', 'process',
+])
 const FRAGMENT_CALLS = new Set([
   'startsWith', 'endsWith', 'includes', 'indexOf', 'lastIndexOf',
   'slice', 'substring', 'substr', 'charAt', 'charCodeAt', 'padStart',
@@ -426,6 +440,45 @@ describe('pill grant channel - ops wrapper is the only production caller', () =>
           return undefined
         }
         const collect = (n: ts.Node): void => {
+          // `const {eval: e} = globalThis` / `{Function: F}` -
+          // destructured global names bind local opaque handles.
+          if (
+            ts.isVariableDeclaration(n) &&
+            n.initializer !== undefined &&
+            ts.isObjectBindingPattern(n.name)
+          ) {
+            const src = unwrapExpr(n.initializer)
+            const srcRoot =
+              ts.isIdentifier(src) &&
+              GLOBAL_ROOTS.has(binds.rootAliases.get(src.text) ?? src.text)
+                ? true
+                : (ts.isPropertyAccessExpression(src) ||
+                      ts.isElementAccessExpression(src)) &&
+                    GLOBAL_ROOTS.has(rootOf(src, binds) ?? '')
+            if (srcRoot) {
+              for (const el of n.name.elements) {
+                const key =
+                  el.propertyName !== undefined
+                    ? ts.isIdentifier(el.propertyName) ||
+                        ts.isStringLiteral(el.propertyName) ||
+                        ts.isNumericLiteral(el.propertyName)
+                      ? el.propertyName.text
+                      : ts.isComputedPropertyName(el.propertyName)
+                        ? literalize(el.propertyName.expression, binds)
+                        : undefined
+                    : ts.isIdentifier(el.name)
+                      ? el.name.text
+                      : undefined
+                if (
+                  key !== undefined &&
+                  GLOBAL_NAMES.has(key) &&
+                  ts.isIdentifier(el.name)
+                ) {
+                  binds.rootAliases.set(el.name.text, key)
+                }
+              }
+            }
+          }
           if (
             ts.isVariableDeclaration(n) &&
             ts.isIdentifier(n.name) &&
@@ -553,16 +606,56 @@ describe('pill grant channel - ops wrapper is the only production caller', () =>
           }
           if (
             ts.isCallExpression(n) &&
-            n.arguments[0] !== undefined &&
-            ts.isStringLiteral(n.arguments[0])
+            n.arguments[0] !== undefined
           ) {
-            const callee = n.expression
+            const callee = unwrapExpr(n.expression)
             const isRequire = ts.isIdentifier(callee) && callee.text === 'require'
             const isDynamic = callee.kind === ts.SyntaxKind.ImportKeyword
-            if ((isRequire || isDynamic) && isTestSpecifier(n.arguments[0].text)) {
+            const specLit = literalize(n.arguments[0], binds)
+            if (
+              (isRequire || isDynamic) &&
+              specLit !== undefined &&
+              isTestSpecifier(specLit)
+            ) {
               note(
                 `${isRequire ? 'require' : 'dynamic import'} of a test file: ${n.arguments[0].getText()}`,
               )
+            }
+            // `import()` through a data:/blob: URL or an unspelled
+            // specifier loads code this guard cannot see.
+            if (
+              isDynamic &&
+              (specLit === undefined ||
+                specLit.startsWith('data:') ||
+                specLit.startsWith('blob:'))
+            ) {
+              note(`opaque dynamic import: ${n.getText()}`)
+            }
+            // `x.eval(...)` / `x.constructor(...)` - dynamic code via
+            // ANY member root; setTimeout('code')/setInterval('code')
+            // - a spelled string arg is evaluated as code.
+            const callMember = memberNameOf(callee, binds)
+            if (callMember === 'eval' || callMember === 'constructor') {
+              note(`opaque code member: ${n.getText()}`)
+            }
+            if (
+              ts.isIdentifier(callee) &&
+              (callee.text === 'setTimeout' || callee.text === 'setInterval') &&
+              specLit !== undefined
+            ) {
+              note(`string-eval scheduler: ${n.getText()}`)
+            }
+            // `x.call(...)`/`x.apply(...)`/`x.bind(...)` where the
+            // RECEIVER resolves to the pinned handle - the invocation
+            // spells no pinned token on its own.
+            if (
+              callMember !== undefined &&
+              INDIRECT_NAMES.has(callMember) &&
+              (ts.isPropertyAccessExpression(callee) ||
+                ts.isElementAccessExpression(callee)) &&
+              touchesPinnedName(callee.expression, binds)
+            ) {
+              note(`indirect pinned call: ${n.getText()}`)
             }
           }
           // A spelled `*.test*` specifier literal ANYWHERE in
@@ -572,7 +665,8 @@ describe('pill grant channel - ops wrapper is the only production caller', () =>
           // a path separator; fixture ids like `root.test.1` do not.
           if (
             (ts.isStringLiteral(n) || ts.isNoSubstitutionTemplateLiteral(n)) &&
-            n.text.includes('/') &&
+            (n.text.includes('/') || n.text.includes('*') ||
+              n.text.includes('{') || n.text.includes('?')) &&
             isTestSpecifier(n.text)
           ) {
             note(`test-module specifier: ${n.getText()}`)
@@ -580,7 +674,10 @@ describe('pill grant channel - ops wrapper is the only production caller', () =>
           // Opaque code can spell anything.
           if (ts.isCallExpression(n)) {
             const callee = unwrapExpr(n.expression)
-            if (ts.isIdentifier(callee) && callee.text === 'eval') {
+            if (
+              ts.isIdentifier(callee) &&
+              (binds.rootAliases.get(callee.text) ?? callee.text) === 'eval'
+            ) {
               note(`eval: ${n.getText()}`)
             }
             if (
@@ -605,11 +702,16 @@ describe('pill grant channel - ops wrapper is the only production caller', () =>
           }
           if (
             ts.isNewExpression(n) &&
-            ts.isIdentifier(n.expression) &&
-            (binds.rootAliases.get(n.expression.text) ?? n.expression.text) ===
-              'Function'
+            ts.isIdentifier(n.expression)
           ) {
-            note(`new Function() opaque code: ${n.getText()}`)
+            const ctor =
+              binds.rootAliases.get(n.expression.text) ?? n.expression.text
+            if (ctor === 'Function') {
+              note(`new Function() opaque code: ${n.getText()}`)
+            }
+            if (ctor === 'Worker' || ctor === 'SharedWorker') {
+              note(`new ${ctor}() unscanned code: ${n.getText()}`)
+            }
           }
           if (touchesPinnedName(n, binds)) {
             note(n.getText())

@@ -377,7 +377,11 @@ export const usePlayerStore = defineStore('player', {
           const key = modifier.stat
           const bound = (MAIN_STAT_KEYS as readonly string[]).includes(key)
             ? mainCap
-            : Number.POSITIVE_INFINITY
+            : // No main-cap concept for domain stats, but the fold still
+              // owns the finite-domain invariant the load filter
+              // promises: a crafted save (base+flat each ~1e308) must
+              // not land Infinity.
+              Number.MAX_VALUE
           restoredPlayer.baseStats[key] = Math.min(bound, (restoredPlayer.baseStats[key] ?? 0) + gain)
         }
       }
