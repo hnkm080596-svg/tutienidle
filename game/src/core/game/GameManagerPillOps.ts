@@ -3,7 +3,6 @@ import type { PillRegistry } from '../pill/PillRegistry'
 import type { PillSystem, PillTarget } from '../pill/PillSystem'
 import type { PersistentTimedEffect } from '../player/PersistentTimedEffect'
 import type { PlayerData } from '../player/Player'
-import { getCurrentRealm } from '../realm/realmSystem'
 import { getAlchemyDoublePill } from '../talent/TalentEffects'
 import type { MainStatKey } from '../stats/StatTypes'
 
@@ -20,6 +19,11 @@ export class GameManagerPillOps {
       pillRegistry: PillRegistry
       pillSystem: PillSystem
       applyTimedEffect: (player: PlayerData, effect: PersistentTimedEffect) => void
+      // Same out-of-combat gate the other baseStats writer
+      // (allocateAttributePoint) enforces - a running battle never reads
+      // baseStats it did not mint, so mid-battle grants would be
+      // battle-invisible; the pill stays in the bag instead.
+      isTurnBattleInProgress: () => boolean
     },
   ) {}
 
@@ -37,7 +41,7 @@ export class GameManagerPillOps {
     random: () => number = Math.random,
   ): {
     ok: boolean
-    reason?: 'not_found' | 'wrong_realm' | 'all_main_stats_capped' | 'requires_phap_tu' | 'cap' | 'retired' | 'material_pill'
+    reason?: 'not_found' | 'wrong_realm' | 'all_main_stats_capped' | 'requires_phap_tu' | 'cap' | 'retired' | 'material_pill' | 'in_battle'
     mainStat?: MainStatKey
   } {
     if (!this.deps.pillBag.has(pillId, 1)) {
@@ -61,18 +65,35 @@ export class GameManagerPillOps {
       return { ok: false, reason: 'material_pill' }
     }
 
-    // Exact-realm gate for profession pills (plan S5.2).
-    if (pill.realmId && pill.realmId !== player.realmId) {
+    // Exact-realm gate for profession pills (plan S5.2). A defined-
+    // but-empty tag is authored-data drift - fail closed at any realm.
+    if (pill.realmId !== undefined && pill.realmId !== player.realmId) {
       return { ok: false, reason: 'wrong_realm' }
     }
 
+    // permanent_stat joined the profession path 2026-09-29 (ruling:
+    // pills write baseStats directly - the hidden predicate reads
+    // baseStats only, so a modifier channel could never fund it).
     const isProfessionPill = pill.effects.some(
       (effect) =>
+        effect.type === 'permanent_stat' ||
         effect.type === 'random_main_stat' ||
         effect.type === 'regen' ||
         effect.type === 'skill_insight' ||
         (effect.type === 'cultivation' && effect.cultivationPercent !== undefined),
     )
+
+    // Out-of-combat gate for baseStats-writing effects - mirrors
+    // allocateAttributePoint: a running battle minted its stats already,
+    // so a mid-battle grant would be invisible until post-battle resync.
+    // Only stat-granting pills are refused; heal/regen/buff keep working
+    // mid-fight (their effects land on the live entity).
+    if (
+      this.deps.isTurnBattleInProgress() &&
+      pill.effects.some((e) => e.type === 'permanent_stat' || e.type === 'random_main_stat')
+    ) {
+      return { ok: false, reason: 'in_battle' }
+    }
 
     if (isProfessionPill) {
       const reason = this.deps.pillSystem.canUseProfessionPill(pill, player)
@@ -81,42 +102,42 @@ export class GameManagerPillOps {
         return { ok: false, reason }
       }
 
-      const result = this.deps.pillSystem.useProfessionPill(
-        pill,
-        player,
-        random,
-        // M3 - Hoa Hau Thong Than: +50% effectiveness on crafted pills.
-        getAlchemyDoublePill(player.selectedTalentIds, player.talentLevels)?.potencyMultiplier ?? 1,
-      )
+      // Consume-on-throw: an apply that throws mid-way may already have
+      // mutated (a permanent_stat grant before a later effect failed).
+      // A retained pill would re-grant on retry - consumption is the
+      // fail-closed direction even when the throw mutated nothing.
+      let result: { mainStat?: MainStatKey; timedEffect?: PersistentTimedEffect }
+      try {
+        result = this.deps.pillSystem.useProfessionPill(
+          pill,
+          player,
+          random,
+          // M3 - Hoa Hau Thong Than: +50% effectiveness on crafted pills.
+          getAlchemyDoublePill(player.selectedTalentIds, player.talentLevels)?.potencyMultiplier ?? 1,
+          target,
+        )
+      } catch (error) {
+        this.deps.pillBag.remove(pillId, 1)
+        throw error
+      }
+
+      // Consume BEFORE the timed-effect side channel: if
+      // applyTimedEffect throws, the stat grant is already applied -
+      // a retained pill would double-grant on retry. Losing one timed
+      // effect is strictly less harmful than a free extra grant.
+      this.deps.pillBag.remove(pillId, 1)
 
       if (result.timedEffect) {
         this.deps.applyTimedEffect(player, result.timedEffect)
       }
 
-      this.deps.pillBag.remove(pillId, 1)
-
       return { ok: true, mainStat: result.mainStat }
     }
 
-    // Legacy path - unchanged old behavior (permanent_stat cap + heal/
-    // buff/flat cultivation).
-    const cap = getCurrentRealm(player.realmId).attributeCap
-
-    if (!this.deps.pillSystem.canUse(pill, player, cap)) {
-      return { ok: false, reason: 'cap' }
-    }
-
-    const permanentModifiers = this.deps.pillSystem.use(pill, target)
-
-    for (const modifier of permanentModifiers) {
-      const existing = player.modifiers.find((candidate) => candidate.id === modifier.id)
-
-      if (existing) {
-        existing.flat = (existing.flat ?? 0) + (modifier.flat ?? 0)
-      } else {
-        player.modifiers.push(modifier)
-      }
-    }
+    // Legacy path - heal/buff/flat-cultivation pills with no realmId.
+    // Side effects run through the target adapter; nothing produces
+    // StatModifier anymore (the pill-permanent bucket is retired).
+    this.deps.pillSystem.use(pill, target)
 
     this.deps.pillBag.remove(pillId, 1)
 

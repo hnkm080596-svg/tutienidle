@@ -38,6 +38,60 @@ const buildIdentity = JSON.parse(
 ) as BuildIdentity
 const buildIdentityDefine = JSON.stringify(buildIdentity)
 
+// BETA-FINAL PR8 / spec B3 - Content-Security-Policy for the packaged
+// file:// renderer. Injected only into the BUILT index.html so the dev
+// server keeps an unrestricted page (HMR websockets, devtools). When
+// VITE_ASSET_BASE_URL points assets at a CDN, that origin is added to
+// img/media/connect - same contract the runtime resolver uses.
+const assetBase = (process.env.VITE_ASSET_BASE_URL ?? '').trim().replace(/\/+$/, '')
+let assetOrigin = ''
+if (assetBase) {
+  try {
+    const origin = new URL(assetBase).origin
+    // 'null' (e.g. a file: or opaque-scheme base) is not a usable CSP origin.
+    assetOrigin = origin === 'null' ? '' : origin
+  } catch {
+    throw new Error(`VITE_ASSET_BASE_URL is not a valid URL: ${assetBase}`)
+  }
+}
+const withAssetOrigin = (directive: string) =>
+  assetOrigin ? `${directive} ${assetOrigin}` : directive
+const PRODUCTION_CSP = [
+  "default-src 'self'",
+  "script-src 'self'",
+  "style-src 'self' 'unsafe-inline'",
+  withAssetOrigin("img-src 'self' data: blob:"),
+  withAssetOrigin("media-src 'self' data: blob:"),
+  "font-src 'self' data:",
+  withAssetOrigin("connect-src 'self' https://*.supabase.co wss://*.supabase.co"),
+  "worker-src 'self' blob:",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'none'",
+].join('; ')
+
+function productionCspPlugin(): Plugin {
+  return {
+    name: 'tutien-production-csp',
+    apply: 'build',
+    transformIndexHtml: {
+      order: 'post',
+      handler(html) {
+        // Fail the build rather than silently ship a page without CSP.
+        if (!html.includes('</title>')) {
+          throw new Error(
+            'production CSP: index.html has no </title> anchor to inject after',
+          )
+        }
+        return html.replace(
+          '</title>',
+          `</title>\n    <meta http-equiv="Content-Security-Policy" content="${PRODUCTION_CSP}">`,
+        )
+      },
+    },
+  }
+}
+
 // Emits dist/build-identity.json (and dist-electron/build-identity.json when
 // attached to the main build) - the release manifest for later artifact
 // verification (`node scripts/release/build-identity.mjs check`).
@@ -75,8 +129,11 @@ export default defineConfig({
   },
   plugins: [
     vue(),
+    // vite-plugin-vue-devtools is apply:'serve' internally (dev-only); it is
+    // listed here for the dev server only and contributes nothing to builds.
     vueDevTools(),
     buildIdentityManifestPlugin(),
+    productionCspPlugin(),
     ...(isElectron
       ? [
           electron({

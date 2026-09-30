@@ -1,5 +1,5 @@
 import type { BuffDefinition } from '../buff2/BuffDefinition'
-import type { StatType } from '../stats/StatTypes'
+import type { MainStatKey } from '../stats/StatTypes'
 
 export type PillEffectType =
   | 'heal'
@@ -24,8 +24,10 @@ export interface PillEffect {
   // GameManager.applyPersistentBuff()).
   buff?: BuffDefinition
 
-  // Dạng khi type === 'permanent_stat'.
-  stat?: StatType
+  // For 'permanent_stat'. Writes land in baseStats under the shared
+  // main-stat cap, so only MAIN_STAT_KEYS are meaningful here - the
+  // runtime also refuses non-main entries as authored drift.
+  stat?: MainStatKey
 
   // ---- 'regen' (plan §5.4) — hồi HP/MP theo giây, thời gian thực ----
   hpPerSecond?: number

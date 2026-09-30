@@ -1,9 +1,10 @@
 import { getRealmIndex } from '../realm/realmSystem'
 
 // PLAN HOAN CHINH muc 3 - tran cua MOI Main Stat. CO Y KHONG dung
-// RealmData.attributeCap - field do da co y nghia RIENG (tran cong don
-// vinh vien tu Dan duoc, xem PillSystem.canUse()), chi dinh nghia cho
-// 3/10 canh gioi - tai dung ten/field do cho Main Stat se dung do.
+// RealmData.attributeCap - field do tung la tran cong don rieng cho
+// bonus pill modifier; da bo 2026-09-29 khi permanent_stat pills chuyen
+// sang ghi thang vao baseStats va chung tran nay (level-up + dan duoc
+// viet vao cung mot pool, cung mot bound: getEffectiveMainStatCap).
 //
 // 2026-08-20 (Realm Passive & Pressure follow-up) - thay cong thuc x2
 // moi dai canh gioi cu bang bang so lieu tay cho 3 canh gioi dau (yeu
@@ -56,6 +57,22 @@ interface EffectiveCapPlayer {
  * may round differently.
  */
 export function getEffectiveMainStatCap(player: EffectiveCapPlayer): number {
-  const completed = player.hiddenPerfection?.completedHiddenBodyRealmIds.length ?? 0
+  const realmIds = player.hiddenPerfection?.completedHiddenBodyRealmIds
+  const completed = countCompletedHiddenBodyRealms(realmIds)
   return Math.floor(getMainStatCap(player.realmId) * (1 + completed * HIDDEN_BODY_CAP_BONUS_PER_REALM))
+}
+
+// Each hidden body realm completes at most once - a corrupted save
+// cannot stack duplicates or invent realm ids to inflate the cap.
+export function countCompletedHiddenBodyRealms(realmIds: unknown): number {
+  if (!Array.isArray(realmIds)) {
+    return 0
+  }
+  const distinct = new Set<string>()
+  for (const id of realmIds) {
+    if (typeof id === 'string' && getRealmIndex(id) >= 0) {
+      distinct.add(id)
+    }
+  }
+  return distinct.size
 }

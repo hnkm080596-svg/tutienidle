@@ -58,13 +58,35 @@ function main() {
   // blocked without re-sending the flush request (audit T6-52).
   const onQuitFlushClose = createQuitFlush({ ipcMain })
 
-  ipcMain.on('combat-clock:start', () => {
+  // BETA-FINAL PR8 / spec B3 - privileged IPC accepts messages only from
+  // the one BrowserWindow this app creates. sender identity plus frame URL
+  // must both match: the packaged page is file://, dev is the Vite ORIGIN
+  // (exact match - a startsWith check would pass 'localhost:5173.evil').
+  const isDevOrigin = (url: string): boolean => {
+    const devUrl = process.env.VITE_DEV_SERVER_URL
+    if (!devUrl) return false
+    try {
+      return new URL(url).origin === new URL(devUrl).origin
+    } catch {
+      return false
+    }
+  }
+  const isAppFrame = (frameUrl: string): boolean =>
+    frameUrl.startsWith('file://') || isDevOrigin(frameUrl)
+  const isAppSender = (event: Electron.IpcMainEvent): boolean => {
+    if (event.sender !== mainWindow?.webContents) return false
+    return isAppFrame(event.senderFrame?.url ?? '')
+  }
+
+  ipcMain.on('combat-clock:start', (event) => {
+    if (!isAppSender(event)) return
     clockHost.start(16, (elapsed) => {
       mainWindow?.webContents.send('combat-clock:tick', elapsed)
     })
   })
 
-  ipcMain.on('combat-clock:stop', () => {
+  ipcMain.on('combat-clock:stop', (event) => {
+    if (!isAppSender(event)) return
     clockHost.stop()
   })
 
@@ -114,10 +136,25 @@ function main() {
         nodeIntegration: false,
         sandbox: true,
 
+        // BETA-FINAL PR8 - dev tooling ships OFF in the packaged build.
+        devTools: !app.isPackaged,
+
         // Fix chính của toàn bộ file này — không cho Chromium throttle
         // timer/rAF của cửa sổ này khi bị ẩn/minimize/mất focus.
         backgroundThrottling: false,
       },
+    })
+
+    // BETA-FINAL PR8 / spec B3 - navigation and new-window allowlists. The
+    // app is a single-window SPA booted once via loadFile/loadURL (which do
+    // not fire will-navigate); every user/page-initiated navigation and
+    // window.open is denied. Dev mode still allows in-page navigations
+    // under the Vite origin so HMR-style reloads keep working.
+    win.webContents.setWindowOpenHandler(() => ({ action: 'deny' }))
+    win.webContents.on('will-navigate', (event, url) => {
+      if (!isDevOrigin(url)) {
+        event.preventDefault()
+      }
     })
 
     if (process.env.VITE_DEV_SERVER_URL) {

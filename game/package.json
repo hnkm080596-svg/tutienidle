@@ -1,7 +1,12 @@
 {
   "name": "tien-hiep-idle",
   "version": "0.1.0-beta.0",
+  "productName": "Tien Hiep Idle",
+  "description": "Tien Hiep Idle - cultivation idle RPG (Windows closed beta)",
   "private": true,
+  "author": {
+    "name": "fdlmg-tutienidle"
+  },
   "type": "module",
   "main": "dist-electron/main.js",
   "scripts": {
@@ -27,6 +32,7 @@
     "assets:ink-ui:check": "node scripts/build-ink-wash-assets.mjs --check",
     "electron:dev": "cross-env ELECTRON=1 vite",
     "dist:win": "cross-env ELECTRON=1 npm run build && electron-builder --win",
+    "inspect:package": "node scripts/release/inspect-package.mjs --input release",
     "qa:internal": "node scripts/qa/cli.mjs",
     "test:release": "node --test \"scripts/release/*.test.mjs\""
   },
