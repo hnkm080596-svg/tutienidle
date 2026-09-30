@@ -28,12 +28,12 @@ export const QUESTS: Quest[] = [
     reward: { reward: { spiritStone: 30 } },
     cadence: 'once',
   },
+  // BETA SCOPE LOCK v2 Phase-5 (sec.15): the daily cadence and its
+  // three quests (daily_collect_hoi_xuan_thao, daily_kill_bandit_15,
+  // daily_chieu_hien_lenh) leave the active beta lifecycle entirely -
+  // the entries are removed, not just scope-hidden, so saves holding
+  // their progress simply find no active quest to resume.
   {
-    // BETA SCOPE LOCK v2 Phase-5 (sec.15): the daily cadence and its
-    // three quests (daily_collect_hoi_xuan_thao, daily_kill_bandit_15,
-    // daily_chieu_hien_lenh) leave the active beta lifecycle entirely -
-    // the entries are removed, not just scope-hidden, so saves holding
-    // their progress simply find no active quest to resume.
     id: 'kill_wild_wolf_10',
     name: 'Tiêu Diệt Dã Lang',
     description: 'Đánh bại 10 Dã Lang.',

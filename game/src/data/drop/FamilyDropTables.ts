@@ -35,23 +35,25 @@ export const FAMILY_DROP_TABLES: FamilyDropTable[] = [
   {
     familyId: 'magma_boar',
     guaranteed: [],
-    // BETA SCOPE LOCK v2 Phase-5 (Phase-4 fallout): magma_boar has no
-    // beta-roster species - base_quan re-sourced to 'boar' below. The
-    // authored row stays (empty) so the family data keeps its documented
-    // dormant state rather than deleting the definition.
-    pool: [],
+    // base_quan (helmet slot) is magma_boar's exclusive equipment drop.
+    // BETA SCOPE LOCK v2 Phase-5: off-roster in beta, so the roster
+    // sibling 'boar' below pays the same base; this authored row stays
+    // untouched (dormant, not removed).
+    pool: [{ kind: 'equipment', itemId: 'base_quan', weight: 10 }],
   },
   {
     familyId: 'rock_bear',
     guaranteed: [],
-    // Phase-4 fallout: base_hai re-sourced to 'earthworm' below.
-    pool: [],
+    // base_hai (boots slot) is rock_bear's exclusive equipment drop;
+    // roster sibling 'earthworm' pays the same base in beta.
+    pool: [{ kind: 'equipment', itemId: 'base_hai', weight: 10 }],
   },
   {
     familyId: 'metal_beetle',
     guaranteed: [],
-    // Phase-4 fallout: base_gioi re-sourced to 'sand_scorpion' below.
-    pool: [],
+    // base_gioi (ring slot) is metal_beetle's exclusive equipment drop;
+    // roster sibling 'sand_scorpion' pays the same base in beta.
+    pool: [{ kind: 'equipment', itemId: 'base_gioi', weight: 10 }],
   },
   {
     familyId: 'flood_serpent',
