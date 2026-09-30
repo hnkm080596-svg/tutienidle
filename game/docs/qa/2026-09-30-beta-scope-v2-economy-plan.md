@@ -398,3 +398,20 @@ Deferred findings ledger (all Low, safe to defer):
   2. EquipmentSystem.ts pre-existing unused imports (~lines 20-22) -
      predates this phase; recorded.
   3. Repo-wide 92 pre-existing eslint errors - predates this phase.
+
+Post-merge integration note (2026-09-30):
+  Base branch advanced to 73853e36 (phase-2 creation merged, PR #85)
+  while the draft PR was open; CI runs against the merge result.
+  - Merge: clean, no conflicts (betaScope.ts edits landed in
+    disjoint sections).
+  - CI fallout: phase-2 added a global vitest setup
+    (tests/setup.betaScope.ts) that calls unlockAllWaysForTests() for
+    every file; phase-3's betaScopeSkillDomain.test.ts asserts the way
+    lock itself but never re-pinned -> 3 failures on the merged base.
+    Reproduced on base tip alone (pre-existing on new base, not a
+    regression from this phase). Fixed in 7d9ef781 by calling
+    lockBetaWaysForTests() - the seam authored for exactly this class
+    of suite. No production change.
+  - Re-verification on merged tree: type-check clean;
+    tests/architecture/ 64 files / 331 tests green; CI verify + Vercel
+    + windows dry-run all green.
