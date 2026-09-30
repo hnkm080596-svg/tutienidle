@@ -24,6 +24,8 @@ import { preloadDongFuStack } from '@/presentation/background/DongFuStackLoader'
 import { peekThanhVanVariant } from '@/presentation/background/ThanhVanBackdropArt'
 import type { ThanhVanVariant } from '@/presentation/background/BackgroundVariant'
 import { useUiStore } from '@/stores/ui'
+import { useGameManager } from '@/composables/useGameState'
+import { DONG_FU_BUILDING_ART } from '@/presentation/background/DongFuBuildingArt'
 import HomeBuildingIcons from './HomeBuildingIcons.vue'
 import PlayerPortrait from '../common/PlayerPortrait.vue'
 
@@ -46,6 +48,7 @@ const previousStack = ref<DongFuRenderStack | null>(null)
 const transitionActive = ref(false)
 const stageActive = useStageActive()
 const ui = useUiStore()
+const gameManager = useGameManager()
 const { t } = useI18n()
 
 let reducedMotionQuery: MediaQueryList | undefined
@@ -60,15 +63,77 @@ function variantsMatch(left: ThanhVanVariant, right: ThanhVanVariant): boolean {
   return left.season === right.season && left.time === right.time
 }
 
+// Spec SS14.5 -- clicking a building adds a slight camera drift toward it
+// plus a context dim. Expressed as a blend of the normalized pointer unit
+// with the building anchor's normalized scene position, so it rides the
+// existing parallax mechanism without new pixel constants.
+const FOCUS_BLEND = 0.4
+
+const focusBuildingId = computed<string | null>(() => {
+  if (ui.activeBuildingPopoverId) {
+    return ui.activeBuildingPopoverId
+  }
+
+  const mode = ui.leftPanelMode
+  if (!mode) {
+    return null
+  }
+
+  const template = gameManager.buildingOps
+    .getBuildingDefinitions()
+    .find((building) => building.functionType === mode)
+
+  return template?.id ?? null
+})
+
+const focusAnchor = computed(() => {
+  const buildingId = focusBuildingId.value
+  const art = buildingId
+    ? DONG_FU_BUILDING_ART.find((entry) => entry.buildingId === buildingId)
+    : undefined
+
+  if (!art) {
+    return null
+  }
+
+  return {
+    xUnit: clampUnit((art.scenePlacement.xPercent - 50) / 50),
+    yUnit: clampUnit((art.scenePlacement.yPercent - 50) / 50),
+    xPercent: art.scenePlacement.xPercent,
+    yPercent: art.scenePlacement.yPercent,
+  }
+})
+
+function effectivePointerUnit(axis: 'x' | 'y'): number {
+  const pointer = pointerPosition.value[axis]
+  const anchor = focusAnchor.value
+
+  if (!anchor || reducedMotion.value) {
+    return pointer
+  }
+
+  const anchorUnit = axis === 'x' ? anchor.xUnit : anchor.yUnit
+  return clampUnit(pointer * (1 - FOCUS_BLEND) + anchorUnit * FOCUS_BLEND)
+}
+
 function parallaxStyle(layer: DongFuLayerDescriptor) {
-  const x = reducedMotion.value ? 0 : -pointerPosition.value.x * layer.shiftX
-  const y = reducedMotion.value ? 0 : -pointerPosition.value.y * layer.shiftY
+  const x = reducedMotion.value ? 0 : -effectivePointerUnit('x') * layer.shiftX
+  const y = reducedMotion.value ? 0 : -effectivePointerUnit('y') * layer.shiftY
 
   return {
     '--parallax-x': `${x}px`,
     '--parallax-y': `${y}px`,
   }
 }
+
+const focusDimStyle = computed(() => {
+  const anchor = focusAnchor.value
+
+  return {
+    '--focus-x': `${anchor?.xPercent ?? 50}%`,
+    '--focus-y': `${anchor?.yPercent ?? 50}%`,
+  }
+})
 
 // Building hotspot layer "gắn" vào đúng mặt đất nó đứng trên (bug report
 // 2026-08-30: building không ăn parallax nên trôi so với mặt đất khi mặt
@@ -168,7 +233,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div v-if="!stageActive" class="home-scene">
+  <div v-if="!stageActive" class="home-scene" :class="{ 'is-focusing': focusAnchor !== null }">
     <!-- Fallback gradient cũ — chỉ nhìn thấy trong lúc ảnh base đang load. -->
     <div class="home-scene__sky" />
     <div class="home-scene__mountains home-scene__mountains--far" />
@@ -189,6 +254,8 @@ onBeforeUnmount(() => {
         class="home-scene__parallax-layer"
         :class="`home-scene__parallax-layer--${layer.motion}`"
         :data-layer="layer.name"
+        :data-canonical-layer="layer.canonical"
+        :data-fx-pending="layer.fxPending"
         :data-season="previousStack.variant.season"
         :data-time="previousStack.variant.time"
         :src="layer.url"
@@ -214,6 +281,8 @@ onBeforeUnmount(() => {
         class="home-scene__parallax-layer"
         :class="`home-scene__parallax-layer--${layer.motion}`"
         :data-layer="layer.name"
+        :data-canonical-layer="layer.canonical"
+        :data-fx-pending="layer.fxPending"
         :data-season="activeStack.variant.season"
         :data-time="activeStack.variant.time"
         :src="layer.url"
@@ -224,14 +293,14 @@ onBeforeUnmount(() => {
       />
     </div>
 
-    <div class="home-linhnhan">
+    <div class="home-linhnhan" data-canonical-layer="L5">
       <div class="home-linhnhan__glow" />
       <div class="home-linhnhan__ring home-linhnhan__ring--outer" />
       <div class="home-linhnhan__ring home-linhnhan__ring--mid" />
       <div class="home-linhnhan__ring home-linhnhan__ring--inner" />
     </div>
 
-    <div class="home-motes">
+    <div class="home-motes" data-canonical-layer="L5">
       <span style="left: 44%; top: 54%; --mx: 14px; --my: -18px; animation-delay: 0s;" />
       <span style="left: 58%; top: 58%; --mx: -12px; --my: -16px; animation-delay: 1.4s;" />
       <span style="left: 50%; top: 66%; --mx: 10px; --my: -22px; animation-delay: 2.8s;" />
@@ -244,7 +313,11 @@ onBeforeUnmount(() => {
          tự đọc --parallax-x/y cùng cơ chế .home-scene__parallax-layer. -->
     <HomeBuildingIcons :variant="activeStack.variant" :style="buildingParallaxStyle" />
 
-    <div class="home-player">
+    <!-- Context dim (spec SS14.5): radial mask keeps a clear window around
+         the focused building while the rest of the scene falls back. -->
+    <div class="home-scene__focus-dim" :style="focusDimStyle" aria-hidden="true" />
+
+    <div class="home-player" data-canonical-layer="L4">
       <!-- Command wheel trigger (plan Workstream A/B) — ảnh tu luyện
            PNG tĩnh mới + chuyển động CSS, là trigger DUY NHẤT mở wheel.
            Nút thật (aria-label/focus-visible) cho bàn phím/touch. -->
@@ -377,6 +450,32 @@ onBeforeUnmount(() => {
   position: absolute;
   inset: 0;
   background: radial-gradient(ellipse 70% 60% at 50% 46%, transparent 55%, rgba(0, 0, 0, 0.5) 100%);
+}
+
+/* Spec SS14.5 context dim -- sits above the building hotspots (DOM order)
+   but below the cultivating player, so the focused building stays lit
+   while surroundings recede. */
+.home-scene__focus-dim {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  background: color-mix(in srgb, var(--ink-950) 52%, transparent);
+  -webkit-mask-image: radial-gradient(
+    ellipse 30% 26% at var(--focus-x, 50%) var(--focus-y, 50%),
+    transparent 55%,
+    black 100%
+  );
+  mask-image: radial-gradient(
+    ellipse 30% 26% at var(--focus-x, 50%) var(--focus-y, 50%),
+    transparent 55%,
+    black 100%
+  );
+  transition: opacity var(--hk-motion-scene, 450ms) var(--hk-ease-standard, ease);
+}
+
+.home-scene.is-focusing .home-scene__focus-dim {
+  opacity: 1;
 }
 
 /* ================= Linh Nhãn — vòng trận pháp dưới chân nhân vật ================= */
@@ -520,7 +619,8 @@ onBeforeUnmount(() => {
 
 @media (prefers-reduced-motion: reduce) {
   .home-scene__parallax-stack,
-  .home-scene__parallax-layer {
+  .home-scene__parallax-layer,
+  .home-scene__focus-dim {
     animation: none;
     transition: none;
     transform: none;
