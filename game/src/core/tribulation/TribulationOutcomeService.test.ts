@@ -24,6 +24,7 @@ import type { ResolvableKienCoGrade } from '../../data/breakthrough/Breakthrough
 import { i18n } from '../../i18n'
 import enMessages from '../../locales/en.json'
 import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
+import { commitSpellInitiationForTest } from '../game/__fixtures__/betaWaysUnlock'
 
 /** Walk a dotted i18n key in a raw messages object. */
 function messageAt(messages: object, key: string): unknown {
@@ -152,7 +153,7 @@ describe('TribulationOutcomeService — victory parity', () => {
     player.realmLevel = 18
     player.baseStats = { ...player.baseStats, strength: 11, dexterity: 11, intelligence: 11, attunement: 11, vitality: 11 }
     completeHiddenBody(player.$state, 'mortal')
-    gameManager.realmAdvanceOps.chooseCultivationPath('spell', 'spell_pathway', player.$state)
+    commitSpellInitiationForTest(gameManager, player.$state)
     player.realmLevel = 18
     // Hidden-eligible surface: strict-prefix bodies + effective cap 36
     // + chapter cleared - resolves breakthroughType 'hidden'.

@@ -57,7 +57,7 @@ function elementRoot(element: ElementType): ProgressionNode {
   return {
     id: rootId,
     name: `${ELEMENT_LABELS[element]} Linh Ngộ`,
-    description: `Mở hành ${ELEMENT_LABELS[element]} — chọn nguyên tố Pháp Tu (nguyên tử, qua selectSpellPathElement).`,
+    description: `Mở hành ${ELEMENT_LABELS[element]} — chọn nguyên tố Pháp Tu (nguyên tử, qua nghi lễ nhập môn Ngũ Hành).`,
     type: 'major',
     role: 'root',
     insightCost: 0,

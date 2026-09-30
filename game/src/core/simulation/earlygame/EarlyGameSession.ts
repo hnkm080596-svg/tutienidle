@@ -29,7 +29,8 @@ import {
   BODY_REFINEMENT_TIERS,
   TINH_HOA_PHAM_THE_MATERIAL_ID,
 } from '../../../data/realm/BodyRefinement'
-import type { CultivationPathId, CultivationWayId } from '../../player/CultivationPathKit'
+import { CULTIVATION_PATH_MODULES, declaresElementAxis, type CultivationPathId, type CultivationWayId } from '../../player/CultivationPathKit'
+import type { ElementType } from '../../element/ElementType'
 import {
   applyCreationProfile,
   bootstrapEarlyGamePlayer,
@@ -236,7 +237,7 @@ export class EarlyGameSession {
     this.playerOwner = options.playerOwner
     this.player = options.playerOwner?.$state ?? createDefaultPlayer()
     applyCreationProfile(this.player, options.profile)
-    bootstrapEarlyGamePlayer(this.gameManager, this.player, options.profile.mortalBasicSkillId)
+    bootstrapEarlyGamePlayer(this.gameManager, this.player)
     this.gameManager.setActivePlayer(this.player)
   }
 
@@ -466,7 +467,21 @@ export class EarlyGameSession {
     return player as TribulationPlayerWriter
   }
 
-  performRitual(path: CultivationPathId, way: CultivationWayId): boolean {
+  /** The journey ritual seam. BETA SCOPE LOCK v2 (phase-2): a way
+   * declaring an element subpath axis commits only through the atomic
+   * initiation - pass the element the suite means to commit (defaults
+   * fire); other ways stay on chooseCultivationPath (which itself
+   * rejects non-beta ways and element-axis ways). Returns the op's
+   * boolean success. */
+  performRitual(path: CultivationPathId, way: CultivationWayId, element?: ElementType): boolean {
+    // Data-driven routing - same discriminator as QuanKhiPanel and
+    // runBattle: the element subpath axis, not a literal way id.
+    if (declaresElementAxis(CULTIVATION_PATH_MODULES[path]?.ways[way])) {
+      return this.gameManager.realmAdvanceOps.commitFiveElementInitiation(
+        element ?? 'fire',
+        this.player,
+      ).ok
+    }
     return this.gameManager.realmAdvanceOps.chooseCultivationPath(path, way, this.player)
   }
 

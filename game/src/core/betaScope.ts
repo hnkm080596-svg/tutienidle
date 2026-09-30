@@ -63,6 +63,69 @@ export function isBetaElement(element: string): boolean {
 }
 
 // ---------------------------------------------------------------------------
+// Creation contract
+// ---------------------------------------------------------------------------
+
+/**
+ * The mortal starter pick is fixed in beta: every new character
+ * carries 'linh_bao' as its opening basic. tram/huy_quyen remain
+ * learnable precursors but are never a writable pick - the starter
+ * admission (setMortalBasicSkill), the boot seam and the save
+ * boundary all fail closed on any other id.
+ */
+export const BETA_MORTAL_STARTER_SKILL_ID = 'linh_bao'
+
+/** Beta mortal-starter admission - only 'linh_bao' passes. */
+export function isBetaMortalStarterId(skillId: string): boolean {
+  return skillId === BETA_MORTAL_STARTER_SKILL_ID
+}
+
+/**
+ * Creation talent offers admitted in beta: the creation catalog
+ * minus 'pham_cot' (the hidden/perfection-lineage feeder - its Dai
+ * Dao conversion path is out of beta scope). The allow-list covers
+ * every exclusion class at once: hidden/perfection feeders,
+ * future-realm-only talents, companion/formation/artifact-dependent
+ * talents, and talents only meaningful on non-beta paths simply
+ * never appear here. A talent added to CHARACTER_CREATION_TALENTS
+ * stays unoffered until admitted to this list (fail closed).
+ */
+export const BETA_CREATION_TALENT_IDS: readonly string[] = [
+  // Combat - offense (5)
+  'kiem_quang',
+  'pha_giap',
+  'tat_phong',
+  'trong_kich',
+  'hap_linh',
+  // Combat - defense (6)
+  'thach_giap',
+  'vo_anh',
+  'can_than',
+  'ho_the',
+  'thu_phat',
+  'bat_tu_the',
+  // Cultivation (5)
+  'ho_tich_bat_phat',
+  'loi_kiep',
+  'van_dao',
+  'hai_na',
+  'ngo_dao',
+  // Production (2)
+  'hoa_hau_thong_than',
+  'bach_luyen_thanh_khi',
+  // Excluded from the 19-entry creation catalog:
+  //   pham_cot  - hidden/perfection-lineage feeder (Dai Dao conversion
+  //             is out of beta scope; its only value is the hidden path)
+  // PARKED_TALENTS (tran_tam, phu_van) are already outside the creation
+  // pool - formation/talisman dependent, never admissible here.
+]
+
+/** Beta creation-offer admission check - fails closed for unknown ids. */
+export function isBetaCreationTalentId(talentId: string): boolean {
+  return BETA_CREATION_TALENT_IDS.includes(talentId)
+}
+
+// ---------------------------------------------------------------------------
 // Feature flags and lock classes
 // ---------------------------------------------------------------------------
 

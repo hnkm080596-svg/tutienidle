@@ -33,9 +33,9 @@ function validSave(): GameSave {
 
   // v82 contract (F-INT-03 import gate): the fixture must be a legal
   // save - pick + learned entry + core grant.
-  player.mortalBasicSkillId = 'tram'
-  player.nodeLevels = { ...player.nodeLevels, core_tram: 1 }
-  player.purchasedNodeIds = [...player.purchasedNodeIds, 'core_tram']
+  player.mortalBasicSkillId = 'linh_bao'
+  player.nodeLevels = { ...player.nodeLevels, core_linh_bao: 1 }
+  player.purchasedNodeIds = [...player.purchasedNodeIds, 'core_linh_bao']
 
   return {
     version: CURRENT_SAVE_VERSION,
@@ -43,8 +43,8 @@ function validSave(): GameSave {
     techniques: [],
     skills: [
       {
-        id: 'tram',
-        name: 'Trảm',
+        id: 'linh_bao',
+        name: 'Linh Bão',
         description: 'creation pick',
         type: 'active',
         level: 1,

@@ -40,14 +40,15 @@ const emit = defineEmits<{ unlocked: [node: ProgressionNode] }>()
 const player = usePlayerStore()
 const gameManager = useGameManager()
 const { stateVersion } = useStateVersion()
-const { purchaseNode, upgradeNode, selectSpellPathElement } = useProgressionActions()
+const { purchaseNode, upgradeNode } = useProgressionActions()
 
 const ELEMENT_ROOT_ID_SET = new Set<string>(Object.values(PHAP_TU_ELEMENT_ROOT_IDS))
 
-// Phap Tu Reimagine (spec D5) -- element roots are NOT purchasable
-// through purchaseNode() (the op rejects them): clicking one commits
-// the element directly via selectSpellPathElement() -- routes are
-// retired, no pick modal.
+// BETA SCOPE LOCK v2 (phase-2) -- element roots are NEVER an
+// individual purchase: they commit only inside the atomic
+// commitFiveElementInitiation transaction (the element pick step of
+// the initiation ritual). This affordance renders inert - the
+// purchasable flag the parent computes already excludes roots.
 const isElementRoot = computed(() => props.node !== null && ELEMENT_ROOT_ID_SET.has(props.node.id))
 
 // Level hien tai / max / cost cap ke cua node dang chon.
@@ -209,12 +210,10 @@ function onPurchase() {
 
   const node = props.node
 
-  // Element root -> element-only commit (spec D5); purchaseNode() does
-  // not accept roots.
+  // Element root: not an ordinary purchase - the atomic initiation
+  // transaction owns the commit (rendered unreachable by the
+  // purchasable prop; this guard stays as the inert affordance).
   if (isElementRoot.value) {
-    if (node.elementTag && selectSpellPathElement(node.elementTag)) {
-      emit('unlocked', node)
-    }
     return
   }
 

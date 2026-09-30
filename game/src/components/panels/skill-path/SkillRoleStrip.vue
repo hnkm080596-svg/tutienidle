@@ -5,11 +5,12 @@
 // combat consumes, so what renders here is what fights. No slot count,
 // no locked tiers, no equip/unequip.
 //
-// The ONLY write left in the strip: a MORTAL player picks which learned
-// precursor fights as their basic (setMortalBasicSkill - the game's
-// single role write, pre-path only). Sword ways show their provider
-// label (Kiem Pho / Ngu Kiem Dao); special/ultimate that resolve to
-// nothing render muted.
+// BETA SCOPE LOCK v2 (phase-2): the mortal precursor chooser is gone -
+// the starter pick is fixed to 'linh_bao' at creation and the
+// setMortalBasicSkill write admits only that id, so a repick affordance
+// could only ever fail. Sword ways show their provider label (Kiem
+// Pho / Ngu Kiem Dao); special/ultimate that resolve to nothing render
+// muted.
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import SlotView from '../../common/SlotView.vue'
@@ -18,7 +19,6 @@ import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useTurnBattleInfo } from '@/composables/useTurnBattleInfo'
 import { useProgressionActions } from '@/composables/useProgressionActions'
 import { usePlayerStore } from '@/stores/player'
-import { MORTAL_DEFAULT_BASIC_ID, MORTAL_PRECURSOR_SKILL_IDS } from '@/core/skill/MortalPrecursors'
 import { getNodeLevel, ownedNodeIds, specializationClaimingNodes } from '@/core/progression/NodeSystem'
 import type { Skill } from '@/core/skill/Skill'
 import type { SkillSpecialization } from '@/core/skill/SkillSpecialization'
@@ -26,7 +26,7 @@ import type { SkillSpecialization } from '@/core/skill/SkillSpecialization'
 const gameManager = useGameManager()
 const player = usePlayerStore()
 const { stateVersion } = useStateVersion()
-const { selectSkillSpecialization, setMortalBasicSkill } = useProgressionActions()
+const { selectSkillSpecialization } = useProgressionActions()
 const { t } = useI18n()
 
 type RoleKey = 'basic' | 'special' | 'ultimate'
@@ -44,23 +44,8 @@ const roles = computed(() => {
   return gameManager.progressionOps.getResolvedSkillRoles(player.$state)
 })
 
-// The chooser is mortal-only - the write op rejects post-path anyway,
-// but the card shouldn't offer a dead affordance. Predicate parity with
-// the save contract: mortal = realmId 'mortal' AND pathless.
-const isMortal = computed(
-  () => player.realmId === 'mortal' && player.cultivationPath === undefined,
-)
-
-const mortalChoices = computed<Skill[]>(() => {
-  stateVersion.value
-
-  return MORTAL_PRECURSOR_SKILL_IDS
-    .map((id) => gameManager.skillManager.get(id))
-    .filter((skill): skill is Skill => skill !== undefined)
-})
-
-// mortal-pick + specialization writes reject mid-battle (ops gate) - the
-// chips disable up front so the affordance doesn't look live.
+// Specialization writes reject mid-battle (ops gate) - the chips
+// disable up front so the affordance doesn't look live.
 const { isBattleInProgress: inBattle } = useTurnBattleInfo()
 
 interface RoleCard {
@@ -101,16 +86,9 @@ function isEmptyRole(key: RoleKey): boolean {
   return roleCards.value[key].empty
 }
 
-// A card opens when it has something to show beneath it: the mortal
-// basic card opens the precursor chooser; a def-backed card with a
-// learned specialization-bearing skill opens its chips.
+// A card opens when it has something to show beneath it: a def-backed
+// card with a learned specialization-bearing skill opens its chips.
 function roleHasPanel(key: RoleKey): boolean {
-  if (key === 'basic') {
-    if (isMortal.value) {
-      return mortalChoices.value.length > 0
-    }
-  }
-
   return (skillOf(key)?.specializations?.length ?? 0) > 0
 }
 
@@ -129,13 +107,6 @@ const openedSkill = computed(() => {
 
   return skillOf(openRole.value)
 })
-
-function isPickedPrecursor(skillId: string): boolean {
-  // Save v82 contract: a mortal save always carries the pick. An absent
-  // pick here means an in-memory/crafted player - the tram default below
-  // is the defensive runtime default, not a creation grant.
-  return (player.mortalBasicSkillId ?? MORTAL_DEFAULT_BASIC_ID) === skillId
-}
 
 // Three-path design (2026-09-25) -- capstone/variant nodes own the
 // claim on the specialization they select. A claimed-but-unowned spec
@@ -215,24 +186,6 @@ function specTooltip(skill: Skill, spec: SkillSpecialization) {
           </span>
         </template>
       </button>
-    </div>
-
-    <!-- Mortal precursor chooser - under the opened basic card only. -->
-    <div
-      v-if="openRole === 'basic' && isMortal && mortalChoices.length"
-      class="role-specializations"
-    >
-      <Chip
-        v-for="skill in mortalChoices"
-        :key="skill.id"
-        class="role-specializations__btn"
-        :active="isPickedPrecursor(skill.id)"
-        :disabled="inBattle"
-        v-tooltip="{ title: skill.name, description: skill.description }"
-        @click="setMortalBasicSkill(skill.id)"
-      >
-        {{ skill.name }}
-      </Chip>
     </div>
 
     <!-- Specialization chips - under the opened role card only. -->

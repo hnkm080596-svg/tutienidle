@@ -456,7 +456,7 @@ describe('useAppLifecycle - remote-authoritative boot semantics (B1)', () => {
     name: 'Vo Danh',
     selectedTalentIds: ['talent-a'],
     baseAttributes: { strength: 1, dexterity: 1, intelligence: 1, attunement: 1, vitality: 1 },
-    mortalBasicSkillId: 'tram',
+    mortalBasicSkillId: 'linh_bao',
     realmId: 'mortal',
     realmLevel: 0,
     createdAt: '2026-01-01T00:00:00Z',

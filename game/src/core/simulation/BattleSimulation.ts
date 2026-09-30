@@ -16,7 +16,8 @@ import type { Skill } from '../skill/Skill'
 import type { Technique } from '../technique/Technique'
 import type { Enemy } from '../enemy/Enemy'
 import type { Stage } from '../stage/Stage'
-import type { CultivationPathId, CultivationWayId } from '../player/CultivationPathKit'
+import { CULTIVATION_PATH_MODULES, declaresElementAxis, type CultivationPathId, type CultivationWayId } from '../player/CultivationPathKit'
+import { getActiveElement } from '../player/CultivationPathSystem'
 import { SKILLS } from '../../data/skill/Skills'
 import { TECHNIQUES } from '../../data/technique/Techniques'
 import { ALL_PROGRESSION_NODES } from '../../data/progression/ProgressionNodeCatalog'
@@ -51,16 +52,19 @@ export type SimEncounter =
 // entry maps 1:1 onto a public GameManagerProgressionOps writer.
 // A recipe needing a new setup operation extends the union explicitly.
 export type SimulationCanonicalWrite =
-  | { type: 'select_phap_tu_element'; element: ElementType }
+  | { type: 'assert_phap_tu_element'; element: ElementType }
   | { type: 'purchase_node'; nodeId: string }
 
 export interface BattleSimulationInput {
   seed: number
   build: SimBuildSnapshot
-  // Optional PAIR - both required together. Runs the real
-  // chooseCultivationPath; the snapshot's player must be pre-ritual
-  // (the ritual legitimately rejects an already-chosen player).
-  ritual?: { pathId: CultivationPathId; wayId: CultivationWayId }
+  // Optional PAIR - both required together. Runs the real ritual op;
+  // the snapshot's player must be pre-ritual (the ritual legitimately
+  // rejects an already-chosen player). BETA SCOPE LOCK v2 (phase-2):
+  // spell_pathway commits through commitFiveElementInitiation - `element`
+  // rides the ritual input (the atomic op commits it in the same
+  // transaction; there is no post-ritual element write anymore).
+  ritual?: { pathId: CultivationPathId; wayId: CultivationWayId; element?: ElementType }
   // Ordered canonical post-ritual writes (P5 BaselineRecipe setup) -
   // executed through the public progressionOps surface AFTER the ritual,
   // BEFORE battle start. A write returning false fails the run loudly.
@@ -147,13 +151,23 @@ export function runBattle(input: BattleSimulationInput): BattleSimulationResult 
         'runBattle: ritual requires a pre-ritual player - snapshot already carries cultivationPath',
       )
     }
-    if (
-      !gameManager.realmAdvanceOps.chooseCultivationPath(
-        input.ritual.pathId,
-        input.ritual.wayId,
-        player,
-      )
-    ) {
+    // A way declaring an element subpath axis commits atomically
+    // through commitFiveElementInitiation (element rides the ritual
+    // input); every other way takes the generic choose op.
+    const ritualWay = CULTIVATION_PATH_MODULES[input.ritual.pathId]?.ways[input.ritual.wayId]
+    const ritualOk =
+      declaresElementAxis(ritualWay)
+        ? gameManager.realmAdvanceOps.commitFiveElementInitiation(
+            input.ritual.element ?? 'fire',
+            player,
+          ).ok
+        : gameManager.realmAdvanceOps.chooseCultivationPath(
+            input.ritual.pathId,
+            input.ritual.wayId,
+            player,
+          )
+
+    if (!ritualOk) {
       throw new Error(
         `runBattle: ritual rejected (${input.ritual.pathId}/${input.ritual.wayId})`,
       )
@@ -165,8 +179,12 @@ export function runBattle(input: BattleSimulationInput): BattleSimulationResult 
   for (const write of input.postRitual ?? []) {
     let ok: boolean
     switch (write.type) {
-      case 'select_phap_tu_element':
-        ok = gameManager.progressionOps.selectSpellPathElement(write.element, player)
+      case 'assert_phap_tu_element':
+        // BETA SCOPE LOCK v2 (phase-2): the element commits inside the
+        // initiation transaction - a post-ritual write can only assert
+        // the committed element, never select one. Read through the
+        // canonical element read (getActiveElement), not the slice.
+        ok = getActiveElement(player) === write.element
         break
       case 'purchase_node':
         ok = gameManager.progressionOps.purchaseNode(write.nodeId, player)

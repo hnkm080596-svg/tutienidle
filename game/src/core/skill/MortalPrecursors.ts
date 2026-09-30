@@ -6,6 +6,7 @@
 // is a separate concern: PathWayDefinition.starterBasicSkillId.
 import type { PlayerData } from '../player/Player'
 import { getSkillCoreLevel } from '../progression/SkillCoreLevel'
+import { BETA_MORTAL_STARTER_SKILL_ID } from '../betaScope'
 
 export const MORTAL_PRECURSOR_SKILL_IDS = ['tram', 'linh_bao', 'huy_quyen'] as const
 
@@ -28,12 +29,17 @@ export function isMortalPrecursorSkillId(id: string): boolean {
  * flow can produce it (applyPathChoice writes the path inside the same
  * ritual transaction that advances the realm).
  *
- * Mortal pick contract: present + precursor + learned + core grant
- * (the creation seam's three-channel write). Post-mortal presence is
- * corrupt (the ritual clears the pick inside the commit block).
- * Sibling precursors: learnSkill grants core_<id> atomically with the
- * learn, so a LEARNED precursor missing its grant is only reachable
- * via crafted/corrupted payload.
+ * Mortal pick contract: present + the fixed beta starter ('linh_bao')
+ * + learned + core grant (the creation seam's three-channel write).
+ * Post-mortal presence is corrupt (the ritual clears the pick inside
+ * the commit block). Sibling precursors: learnSkill grants core_<id>
+ * atomically with the learn, so a LEARNED precursor missing its grant
+ * is only reachable via crafted/corrupted payload.
+ *
+ * BETA SCOPE LOCK v2 (phase-2): beta characters always carry the
+ * 'linh_bao' pick - a mortal save holding any other pick can only
+ * come from a crafted payload or a pre-lock dev save (no migration in
+ * dev phase), so it fails closed like every other starter write path.
  */
 export function mortalBoundaryContractViolation(save: {
   player: PlayerData
@@ -43,6 +49,12 @@ export function mortalBoundaryContractViolation(save: {
 
   if (mortalPick !== undefined && !isMortalPrecursorSkillId(mortalPick)) {
     return `Invalid mortalBasicSkillId in save: ${String(mortalPick)}`
+  }
+
+  // Beta scope: 'tram'/'huy_quyen' are legal precursors but never a
+  // legal pick - the only writable starter is the fixed beta constant.
+  if (mortalPick !== undefined && mortalPick !== BETA_MORTAL_STARTER_SKILL_ID) {
+    return `Invalid mortalBasicSkillId in save (beta starter is '${BETA_MORTAL_STARTER_SKILL_ID}'): ${String(mortalPick)}`
   }
 
   // Self-contained pairing (F-INT-05): mortal + a path is contradictory

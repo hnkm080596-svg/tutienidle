@@ -45,7 +45,7 @@ const REMOTE_CHARACTER = {
   name: 'Vo Danh',
   selectedTalentIds: ['talent-a'],
   baseAttributes: { strength: 1, dexterity: 1, intelligence: 1, attunement: 1, vitality: 1 },
-  mortalBasicSkillId: 'tram',
+  mortalBasicSkillId: 'linh_bao',
   realmId: 'mortal',
   realmLevel: 0,
   createdAt: '2026-09-30T00:00:00Z',
@@ -53,9 +53,9 @@ const REMOTE_CHARACTER = {
 
 function validGameSave(marker = 0): GameSave {
   const player = createDefaultPlayer()
-  player.mortalBasicSkillId = 'tram'
-  player.nodeLevels = { ...player.nodeLevels, core_tram: 1 }
-  player.purchasedNodeIds = [...player.purchasedNodeIds, 'core_tram']
+  player.mortalBasicSkillId = 'linh_bao'
+  player.nodeLevels = { ...player.nodeLevels, core_linh_bao: 1 }
+  player.purchasedNodeIds = [...player.purchasedNodeIds, 'core_linh_bao']
   player.name = `Vo Danh ${marker}`
   return {
     version: CURRENT_SAVE_VERSION,
@@ -63,8 +63,8 @@ function validGameSave(marker = 0): GameSave {
     techniques: [],
     skills: [
       {
-        id: 'tram',
-        name: 'Trảm',
+        id: 'linh_bao',
+        name: 'Linh Bão',
         description: 'creation pick',
         type: 'active',
         level: 1,

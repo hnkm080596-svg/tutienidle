@@ -15,6 +15,7 @@ import { freshSwordPathState } from '../kiem-tu/KiemTuState'
 import { ManualClockSource, COMBAT_STEP_SECONDS } from '../battle/turn/CombatClock'
 import { defineEnemy } from '../enemy/Enemy'
 import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
+import { commitSpellInitiationForTest } from './__fixtures__/betaWaysUnlock'
 
 // Phap Tu Reimagined (Task 7) + Cultivation Path Framework M7 — the
 // hidden Phap Tu variant is the 'hidden_spell_pathway' WAY under path 'spell',
@@ -119,7 +120,7 @@ describe('ngo_dao way — ritual offer gate', () => {
     gameManager.setActivePlayer(player)
 
     player.skillCastCounts = { linh_bao: LING_BAO_L3 }
-    expect(gameManager.realmAdvanceOps.chooseCultivationPath('spell', 'spell_pathway', player)).toBe(true)
+    commitSpellInitiationForTest(gameManager, player)
     expect(player.cultivationWay).toBe('spell_pathway')
 
     player.skillCastCounts.linh_bao = LING_BAO_L3 * 2

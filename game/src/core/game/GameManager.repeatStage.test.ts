@@ -101,9 +101,9 @@ describe('GameManager continuous repeat stage', () => {
     gameManager.catalogOps.registerStages([stage])
     gameManager.catalogOps.registerSkillTemplates(SKILLS)
     gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
-    expect(gameManager.progressionOps.learnSkill('tram', player)).toBe(true)
-    // Execution policy rework (plan §8.6) — Trảm chiếm slot mặc định 0.
-    expect(gameManager.progressionOps.setMortalBasicSkill(player, 'tram')).toBe(true)
+    expect(gameManager.progressionOps.learnSkill('linh_bao', player)).toBe(true)
+    // Execution policy rework (plan sec.8.6) - the picked basic occupies default slot 0.
+    expect(gameManager.progressionOps.setMortalBasicSkill(player, 'linh_bao')).toBe(true)
     const rewardParticles: BattleRewardParticleEvent[] = []
     gameManager.eventBus.on<BattleRewardParticleEvent>('reward_particle', event => rewardParticles.push(event))
 
