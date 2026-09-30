@@ -10,6 +10,7 @@ import { reachableKiemPhoComboIds } from '../../kiem-tu/KiemPhoProvider'
 import { SPELL_BASICS } from '../../../data/skill/TurnBasicAttacks'
 import { CORE_SKILLS } from '../../../data/skill/CoreSkills'
 import type { CultivationPathId, CultivationWayId } from '../../player/CultivationPathKit'
+import type { ElementType } from '../../element/ElementType'
 import { freshSwordPathState } from '../../kiem-tu/KiemTuState'
 import type {
   SimBuildSnapshot,
@@ -41,7 +42,7 @@ export interface BaselineRecipe {
   // Optional: recipes starting from a committed way build (the ritual
   // only ever runs from mortal) omit this and carry the way state in
   // `build` instead.
-  ritual?: { pathId: CultivationPathId; wayId: CultivationWayId }
+  ritual?: { pathId: CultivationPathId; wayId: CultivationWayId; element?: ElementType }
   postRitual: readonly SimulationCanonicalWrite[]
   // Optional build override (F-NK-INT-5) - default mortalBuild();
   // recipes whose postRitual writes carry realm prerequisites
@@ -164,12 +165,10 @@ export const BASELINE_RECIPES: readonly BaselineRecipe[] = [
   {
     id: 'phap_tu_ngu_hanh',
     primary: true,
-    ritual: { pathId: 'spell', wayId: 'spell_pathway' },
-    // Element commit is the atomic canonical writer; the free
-    // element root unlocks the kit basic.
-    postRitual: [
-      { type: 'select_phap_tu_element', element: 'fire' },
-    ],
+    // BETA SCOPE LOCK v2 (phase-2): the element rides the atomic
+    // initiation (commitFiveElementInitiation) - no post-ritual write.
+    ritual: { pathId: 'spell', wayId: 'spell_pathway', element: 'fire' },
+    postRitual: [],
     // Element-basic damage ops carry the element skill id as originId.
     // Only the recipe-resolved live set is kit: the committed element
     // resolves hoa_cau_thuat at qi_refining - any other element id on

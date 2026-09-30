@@ -65,8 +65,8 @@ describe('GameManager — turn-based wave spawn position (bug fix 2026-09-06)', 
     const player = createDefaultPlayer()
     player.baseStats = asBaseStats({ ...player.baseStats, might: 999  })
 
-    expect(gameManager.progressionOps.learnSkill('tram', player)).toBe(true)
-    expect(gameManager.progressionOps.setMortalBasicSkill(player, 'tram')).toBe(true)
+    expect(gameManager.progressionOps.learnSkill('linh_bao', player)).toBe(true)
+    expect(gameManager.progressionOps.setMortalBasicSkill(player, 'linh_bao')).toBe(true)
 
     expect(gameManager.turnBattleOps.startStage(player, stage)).toBe(true)
 

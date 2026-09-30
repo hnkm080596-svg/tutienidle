@@ -10,6 +10,8 @@ import { resolveCultivationPathRuntime } from '../player/CultivationPathRegistry
 import type { CultivationPathRuntimeDeps } from '../player/CultivationPathRuntime'
 import { SWORD_BASIC } from '../../data/skill/TurnBasicAttacks'
 import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
+import { PHAP_TU_NODES } from '../../data/progression/PhapTuNodes'
+import { CAST_LEVELING_THRESHOLDS } from '../skill/SkillSystem'
 
 // The sword resolveBasic only reads BASIC_ATTACKS_BY_BUILD — the dep
 // surface is stubbed; nothing here is invoked for this path.
@@ -81,10 +83,15 @@ describe('GameManager — Kiem Tu path choice = fresh hien state', () => {
     expect(gameManager.techniqueManager.getActive()?.id).toBe('sword_control_art')
   })
 
-  it('chooseCultivationPath(spell) leaves swordPath undefined', () => {
+  it('commitFiveElementInitiation(spell) leaves swordPath undefined', () => {
     const { gameManager, player } = setupMortalWithPathReady(10_000)
+    // spell_pathway is beta-only and commits via the atomic element
+    // transaction: needs the phap_tu node catalog + the linh_bao Lv3
+    // offer gate satisfied.
+    gameManager.catalogOps.registerProgressionNodes(PHAP_TU_NODES)
+    player.skillCastCounts = { linh_bao: CAST_LEVELING_THRESHOLDS.linh_bao!.lv3 }
 
-    expect(gameManager.realmAdvanceOps.chooseCultivationPath('spell', 'spell_pathway', player)).toBe(true)
+    expect(gameManager.realmAdvanceOps.commitFiveElementInitiation('fire', player).ok).toBe(true)
     expect(player.swordPath).toBeUndefined()
   })
 
@@ -116,8 +123,12 @@ describe('K3 — mortal precursor pick lock post-path', () => {
 
   it('precursor pick still works for a mortal (no path chosen)', () => {
     const { gameManager, player } = setupMortalWithPathReady(0)
+    // Beta scope: 'linh_bao' is the only writable starter; it still has
+    // to satisfy the learned=>core leg of the pick contract.
+    player.nodeLevels.core_linh_bao = 1
+    gameManager.progressionOps.learnSkill('linh_bao', player)
 
-    expect(gameManager.progressionOps.setMortalBasicSkill(player, 'tram')).toBe(true)
+    expect(gameManager.progressionOps.setMortalBasicSkill(player, 'linh_bao')).toBe(true)
   })
 
   it('sword basic no longer resolves to authored tram (mortal-only)', () => {

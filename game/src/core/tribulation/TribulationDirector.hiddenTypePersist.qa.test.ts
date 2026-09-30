@@ -20,6 +20,7 @@ import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
 import { completeHiddenBody } from '../realm/hidden/HiddenLineage'
 import { getEffectiveMainStatCap } from '../stats/StatCap'
 import { MAIN_STAT_KEYS } from '../stats/StatTypes'
+import { commitSpellInitiationForTest } from '../game/__fixtures__/betaWaysUnlock'
 
 function driveToTerminal(gameManager: GameManager) {
   let guard = 0
@@ -63,9 +64,7 @@ describe('hidden breakthroughType persistence across serializeRuntime/restoreRun
     player.realmLevel = 18
     expect(completeHiddenBody(player.$state, 'mortal')).toBeDefined()
     statsAtEffectiveCap(player)
-    expect(
-      gameManager.realmAdvanceOps.chooseCultivationPath('spell', 'spell_pathway', player.$state),
-    ).toBe(true)
+    commitSpellInitiationForTest(gameManager, player.$state)
     expect(player.hiddenPerfection.hiddenBreakthroughRealmIds).toEqual(['qi_refining'])
 
     // Hidden qi_refining body + full eligibility for the hidden foundation attempt.

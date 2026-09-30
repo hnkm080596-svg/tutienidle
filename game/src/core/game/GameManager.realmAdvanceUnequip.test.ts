@@ -7,6 +7,7 @@ import { SKILLS } from '../../data/skill/Skills'
 import { TECHNIQUES } from '../../data/technique/Techniques'
 import { PHAP_TU_NODES } from '../../data/progression/PhapTuNodes'
 import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
+import { commitSpellInitiationForTest } from './__fixtures__/betaWaysUnlock'
 
 // QA-2026-09-02-001 — RESOLVED 2026-09-02 qua redesign Task 9.1 (spec v6):
 // chooseCultivationPath (Lễ Nhập Môn) là feature-unlock SAU đột phá
@@ -39,7 +40,7 @@ describe('GameManager — chooseCultivationPath realm advance và trang bị đa
     })
     manager.equipmentBag.add(weapon)
 
-    expect(manager.realmAdvanceOps.chooseCultivationPath('spell', 'spell_pathway', player)).toBe(true)
+    commitSpellInitiationForTest(manager, player)
     expect(player.realmId).toBe('qi_refining')
     expect(weapon.equipped).toBe(true)
   })

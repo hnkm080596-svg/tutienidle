@@ -12,6 +12,7 @@ import {
   triggerBreakthroughAction,
 } from './useTribulation'
 import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
+import { commitSpellInitiationForTest } from '../core/game/__fixtures__/betaWaysUnlock'
 
 function tribulationTotalSeconds(targetRealmId: string): number {
   return getTribulationChapters(targetRealmId)!.reduce((total, chapter) => {
@@ -57,7 +58,7 @@ describe('chuỗi nghi lễ tu luyện Pháp Tu', () => {
     expect(player.realmId).toBe('mortal')
     expect(useUiStore().standalonePanel).toBe('quan_khi')
 
-    expect(gameManager.realmAdvanceOps.chooseCultivationPath('spell', 'spell_pathway', player.$state)).toBe(true)
+    commitSpellInitiationForTest(gameManager, player.$state)
     expect(player.realmId).toBe('qi_refining')
     expect(player.realmLevel).toBe(1)
     expect(player.cultivationPath).toBe('spell')
@@ -91,29 +92,29 @@ describe('chuỗi nghi lễ tu luyện Pháp Tu', () => {
     // holder keeps five_elements_art and advances grade via Nang Canh.
     expect(gameManager.techniqueManager.getActive()?.id).toBe('five_elements_art')
     // Three-path design (2026-09-25, sec.4-b): the Truc Co realm reward
-    // also grants the five tinh_thong_<e> mastery nodes. This fixture
-    // never commits an element (spellPath.element === null): a null
-    // element on spell_pathway means 'not yet committed', so the grants
-    // stay DORMANT - only ngo_dao activates all five at once. Committing
-    // an element then activates exactly that element's mastery.
+    // also grants the five tinh_thong_<e> mastery nodes. BETA SCOPE
+    // LOCK v2 (phase-2): the element committed atomically inside the
+    // initiation ('fire' above), so exactly the fire mastery activates
+    // on grant - the other four stay dormant.
     const spellModifiers = () => gameManager.effectOps.getAggregatedModifiers(player.$state).filter(
       modifier => modifier.sourceId === 'spell',
     )
     const masteryModifiers = () => spellModifiers().filter(
       modifier => modifier.id.startsWith('tinh_thong_'),
     )
-    // Phap Tu Reimagine spec D9 -- 2 (was 3): the path-level
-    // manaShieldPercent grant ('phap_tu_ho_the') retired; Ho The is now
-    // the TC-unlocked linhLucHoTheCap DR ratio.
-    expect(spellModifiers()).toHaveLength(2)
-    expect(masteryModifiers()).toHaveLength(0)
+    // Phap Tu Reimagine spec D9 -- 2 base spell grants (the path-level
+    // manaShieldPercent 'phap_tu_ho_the' retired; Ho The is now the
+    // TC-unlocked linhLucHoTheCap DR ratio) + the one committed
+    // element's mastery.
+    expect(spellModifiers()).toHaveLength(3)
+    expect(masteryModifiers().map((modifier) => modifier.id)).toEqual([
+      'tinh_thong_hoa_ailmentPotencyPercent',
+    ])
 
-    // Phap Tu Reimagine (spec D5) -- element-only commit; the route arg
-    // is retired (runtime fails against the pre-rework op signature
-    // until ENGINE lands -- sibling-caused).
-    expect(gameManager.progressionOps.selectSpellPathElement('fire', player.$state)).toBe(true)
-    // Exactly one mastery wakes on commit - the fire one; the other
-    // four stay dormant rather than all firing during the null window.
+    // The element cannot re-commit post-initiation: the op is gated to
+    // an in-flight mortal transaction - a qi_refining caller fails
+    // closed.
+    expect(gameManager.progressionOps.selectSpellPathElement('water', player.$state)).toBe(false)
     expect(masteryModifiers().map((modifier) => modifier.id)).toEqual([
       'tinh_thong_hoa_ailmentPotencyPercent',
     ])

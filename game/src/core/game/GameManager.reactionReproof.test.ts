@@ -26,6 +26,7 @@ import type { ResolvedCombatOperation } from '../battle/contracts/operations'
 import type { TurnSkillDefinition } from '../battle/turn/TurnSkillAction'
 import type { TurnBattle } from '../battle/turn/TurnBattleSystem'
 import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
+import { commitSpellInitiationForTest } from './__fixtures__/betaWaysUnlock'
 
 // Canonical-seals/reaction megaplan S4 (plan sec.11) -- the
 // PRODUCTION-DATA re-proof matrix. The fixture-level reaction suite
@@ -974,9 +975,7 @@ describe('S4 -- capability isolation', () => {
     // The REAL spell_pathway ritual: grants the element kit (the strict
     // authored-basic gate requires it) and leaves no aura -- the
     // visible path never carries van_phap_than_hoa.
-    expect(
-      gameManager.realmAdvanceOps.chooseCultivationPath('spell', 'spell_pathway', player),
-    ).toBe(true)
+    commitSpellInitiationForTest(gameManager, player)
     gameManager.startBattleWithPlayer(player, spawnDummy())
 
     const battle = gameManager.getTurnBattle()!

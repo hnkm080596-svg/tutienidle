@@ -7,6 +7,7 @@ import { createDefaultPlayer } from '../../core/player/Player'
 import { aggregateNodeStatModifiers } from '../../core/progression/NodeSystem'
 import type { ElementType } from '../../core/element/ElementType'
 import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
+import { CAST_LEVELING_THRESHOLDS } from '../../core/skill/CastLeveling'
 
 // Phap Tu Reimagine (2026-09-26 spec sec.1.4) - tree shape test for the
 // reworked branch: 5 mutex element roots committed atomically by
@@ -171,93 +172,106 @@ describe('PhapTuNodes reimagined — per-element branch', () => {
 })
 
 describe('PhapTuNodes reimagined — element authority', () => {
-  function phapTuManager() {
+  // BETA SCOPE LOCK v2 (phase-2): the element commits ONLY inside the
+  // atomic commitFiveElementInitiation transaction - a mortal ritual
+  // player carries no path until the op lands, so this fixture builds
+  // the pre-ritual mortal and each test drives the real op.
+  function mortalManager() {
     const gameManager = new GameManager()
     gameManager.catalogOps.registerSkillTemplates(SKILLS)
     gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
     gameManager.catalogOps.registerProgressionNodes(PHAP_TU_NODES)
     gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
     const player = createDefaultPlayer()
-    player.cultivationPath = 'spell'
-    player.cultivationWay = 'spell_pathway'
+    player.realmId = 'mortal'
+    player.realmLevel = 12
     return { gameManager, player }
   }
 
-  it('purchaseNode() public reject ca 5 element root', () => {
-    const { gameManager, player } = phapTuManager()
+  function commitInitiation(gameManager: GameManager, player: ReturnType<typeof createDefaultPlayer>, element: ElementType) {
+    player.skillCastCounts = { linh_bao: CAST_LEVELING_THRESHOLDS.linh_bao!.lv3 }
+    const result = gameManager.realmAdvanceOps.commitFiveElementInitiation(element, player)
+    if (!result.ok) {
+      throw new Error(`initiation failed: ${result.reason}`)
+    }
+    return player
+  }
+
+  it('purchaseNode() public reject ca 5 element root - chi qua initiation transaction', () => {
+    const { gameManager, player } = mortalManager()
+    commitInitiation(gameManager, player, 'fire')
 
     for (const element of ELEMENTS) {
       expect(
         gameManager.progressionOps.purchaseNode(ELEMENT_ROOT_IDS[element], player),
         ELEMENT_ROOT_IDS[element],
       ).toBe(false)
-      expect(player.nodeLevels[ELEMENT_ROOT_IDS[element]]).toBeUndefined()
+      // The committed element's root came from the transaction itself;
+      // every other root stays unowned - no ordinary purchase path.
+      expect(player.nodeLevels[ELEMENT_ROOT_IDS[element]]).toBe(
+        element === 'fire' ? 1 : undefined,
+      )
     }
   })
 
-  it('selectSpellPathElement commit atomic: root lv1 + basic learned + spellPath {element}', () => {
-    const { gameManager, player } = phapTuManager()
+  it('commitFiveElementInitiation commit atomic: path + way + root lv1 + basic learned + element + realm', () => {
+    const { gameManager, player } = mortalManager()
+    commitInitiation(gameManager, player, 'water')
 
-    expect(gameManager.progressionOps.selectSpellPathElement('water', player)).toBe(true)
-
+    expect(player.cultivationPath).toBe('spell')
+    expect(player.cultivationWay).toBe('spell_pathway')
     expect(player.spellPath).toEqual({ element: 'water' })
     expect(player.nodeLevels['thuy_linh_ngo']).toBe(1)
     expect(gameManager.skillManager.has('thuy_tien_thuat')).toBe(true)
+    expect(player.realmId).toBe('qi_refining')
   })
 
-  it('selectSpellPathElement reject khi khong phai spell, khi da chon', () => {
-    const { gameManager, player } = phapTuManager()
+  it('element khong re-commit duoc: selectSpellPathElement chi song trong initiation transaction', () => {
+    const { gameManager, player } = mortalManager()
+    commitInitiation(gameManager, player, 'fire')
 
-    player.cultivationPath = 'sword'
-    expect(gameManager.progressionOps.selectSpellPathElement('fire', player)).toBe(false)
-    expect(player.spellPath).toEqual({ element: null })
-
-    player.cultivationPath = 'spell'
-    player.cultivationWay = 'spell_pathway'
-    expect(gameManager.progressionOps.selectSpellPathElement('fire', player)).toBe(true)
+    // Post-initiation direct call fails closed - the op is mortal-only
+    // and the element is already committed.
     expect(gameManager.progressionOps.selectSpellPathElement('water', player)).toBe(false)
     expect(player.spellPath).toEqual({ element: 'fire' })
     expect(player.nodeLevels['thuy_linh_ngo']).toBeUndefined()
   })
 
-  it('selectSpellPathElement fails atomically when the root unlock skill template is missing', () => {
-    // Atomicity: the root was once purchased and the element committed
-    // even when learnSkill() could not succeed — leaving an element
-    // committed without its basic. The whole selection must fail BEFORE
-    // any mutation.
+  it('commitFiveElementInitiation fails atomically when the root unlock skill template is missing', () => {
+    // Atomicity: a missing kit template must fail the WHOLE initiation
+    // in preflight - no path, no root, no element, no realm commit.
     const gameManager = new GameManager()
     gameManager.catalogOps.registerSkillTemplates(
       SKILLS.filter((skill) => skill.id !== 'hoa_cau_thuat'),
     )
+    gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
     gameManager.catalogOps.registerProgressionNodes(PHAP_TU_NODES)
     gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
     const player = createDefaultPlayer()
-    player.cultivationPath = 'spell'
-    player.cultivationWay = 'spell_pathway'
-
-    expect(gameManager.progressionOps.selectSpellPathElement('fire', player)).toBe(false)
-    expect(player.spellPath).toEqual({ element: null })
-    expect(player.nodeLevels['hoa_linh_ngo']).toBeUndefined()
-  })
-
-  it('chooseCultivationPath(spell) KHONG auto-chon Fire: spellPath element null, hoa_cau_thuat chua learn', () => {
-    const { gameManager, player } = phapTuManager()
-    player.cultivationPath = undefined
-    player.cultivationWay = undefined
     player.realmId = 'mortal'
     player.realmLevel = 12
+    player.skillCastCounts = { linh_bao: CAST_LEVELING_THRESHOLDS.linh_bao!.lv3 }
+    const before = JSON.stringify(player)
 
-    expect(gameManager.realmAdvanceOps.chooseCultivationPath('spell', 'spell_pathway', player)).toBe(true)
-    expect(player.cultivationPath).toBe('spell')
+    expect(gameManager.realmAdvanceOps.commitFiveElementInitiation('fire', player)).toEqual({
+      ok: false,
+      reason: 'missing_kit_skill',
+    })
+    expect(JSON.stringify(player)).toBe(before)
+  })
+
+  it('chooseCultivationPath KHONG the commit spell_pathway - element way chi vao qua initiation', () => {
+    const { gameManager, player } = mortalManager()
+    player.skillCastCounts = { linh_bao: CAST_LEVELING_THRESHOLDS.linh_bao!.lv3 }
+
+    expect(gameManager.realmAdvanceOps.chooseCultivationPath('spell', 'spell_pathway', player)).toBe(false)
+    expect(player.cultivationPath).toBeUndefined()
     expect(player.spellPath).toEqual({ element: null })
-    expect(player.nodeLevels['hoa_linh_ngo']).toBeUndefined()
-    expect(gameManager.skillManager.has('hoa_cau_thuat')).toBe(false)
   })
 
   it('elementTag gate: node element khac khong aggregate/purchase duoc', () => {
-    const { gameManager, player } = phapTuManager()
-
-    gameManager.progressionOps.selectSpellPathElement('fire', player)
+    const { gameManager, player } = mortalManager()
+    commitInitiation(gameManager, player, 'fire')
 
     player.skillInsight = 100
     player.nodeLevels['water_ailment_mastery'] = 3
