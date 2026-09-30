@@ -113,7 +113,10 @@ test.describe('ink-wash UI visual smoke', () => {
           heading: getComputedStyle(document.querySelector('.settings-panel__ui-scale h4')).color,
         })`,
       )
-      expect(settingsColors).toEqual({ warning: 'rgb(94, 90, 80)', heading: 'rgb(33, 31, 26)' })
+      // .settings-panel .paper-on-dark remaps --paper-text* onto the
+      // dark-surface ramp: heading = --surface-text, warning =
+      // --surface-text-soft.
+      expect(settingsColors).toEqual({ warning: 'rgb(168, 164, 152)', heading: 'rgb(232, 228, 220)' })
       await page.screenshot({
         path: testInfo.outputPath(`ink-wash-home-${viewport.name}.png`),
         animations: 'disabled',
