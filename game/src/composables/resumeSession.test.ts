@@ -45,28 +45,28 @@ beforeEach(() => {
 })
 
 describe('resumeSession - B1-C acked-envelope fallback', () => {
-  it('no local save but a valid acked envelope -> resumable candidate with the character name', () => {
+  it('no local save but a valid acked envelope -> resumable candidate with the character name', async () => {
     putAcked(ENV, ackedPayloadBytes('Vo Danh'))
 
-    expect(hasResumeCandidate()).toBe(true)
-    const candidate = readResumeCandidate()
+    expect(await hasResumeCandidate()).toBe(true)
+    const candidate = await readResumeCandidate()
     expect(candidate?.name).toBe('Vo Danh')
     expect(candidate?.session.mode).toBe('guest')
   })
 
-  it('a corrupt acked envelope is skipped - no candidate, no throw', () => {
+  it('a corrupt acked envelope is skipped - no candidate, no throw', async () => {
     localStorage.setItem(resolveAckedSaveKey(ENV), '{"format":1,"tampered":true}')
 
-    expect(hasResumeCandidate()).toBe(false)
-    expect(readResumeCandidate()).toBeNull()
+    expect(await hasResumeCandidate()).toBe(false)
+    expect(await readResumeCandidate()).toBeNull()
   })
 
-  it('envelopes under another account stay invisible to this account', () => {
+  it('envelopes under another account stay invisible to this account', async () => {
     setSaveAccountId('u-other')
     putAcked(ENV, ackedPayloadBytes('Foreign'))
     setSaveAccountId('u1')
 
-    expect(hasResumeCandidate()).toBe(false)
-    expect(readResumeCandidate()).toBeNull()
+    expect(await hasResumeCandidate()).toBe(false)
+    expect(await readResumeCandidate()).toBeNull()
   })
 })

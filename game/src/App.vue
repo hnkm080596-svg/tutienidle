@@ -5,6 +5,7 @@ import { useUiStore } from './stores/ui'
 import { GameClock, DEFAULT_MAX_OFFLINE_SECONDS } from './core/idle/GameClock'
 import { OVERLAY_LAYERS } from './core/presentation/OverlayLayers'
 import { bindOnlineAuthority, observeAuthoritySaveResult, unbindOnlineAuthority } from './composables/useOnlineAuthority'
+import { bindSessionTeardown, unbindSessionTeardown } from './composables/useSessionAccount'
 import { GameManager } from './core/game/GameManager'
 import {
   initializeCharacter,
@@ -563,6 +564,20 @@ function acknowledgeAuthority() {
   bootFlow.showAuth()
 }
 
+// B1.9 - the return-to-auth teardown the session-account composable
+// invokes after flush/revoke/signout/local clear. Everything a logout
+// abandons here is re-bound by the next onAuthenticated: the save queue
+// resets, the authority dies back to signed-out, and the mounted game
+// tree unmounts before the auth card returns.
+function teardownToAuth() {
+  lifecycle.stopAll()
+  onlineAuthority.stopAll()
+  cloudSaveCoordinator.reset()
+  isBooted.value = false
+  bootFlow.showAuth()
+}
+bindSessionTeardown(teardownToAuth)
+
 function retryQuitFlush() {
   const offer = quitFlushOffer.value
   quitFlushOffer.value = null
@@ -839,9 +854,13 @@ onMounted(() => {
 
   // ui-audit creation-meta - reload used to replay the full 3s title intro
   // even with a session+save on disk; resume candidates get a short beat.
-  introHandle = window.setTimeout(() => {
-    bootFlow.showAuth()
-  }, hasResumeCandidate() ? 450 : 3000)
+  // B1.8: async - the durable guest credential is hydrated here so the
+  // Electron restart path also earns the short intro.
+  void hasResumeCandidate().then((resumable) => {
+    introHandle = window.setTimeout(() => {
+      bootFlow.showAuth()
+    }, resumable ? 450 : 3000)
+  })
 })
 
 onUnmounted(() => {
@@ -874,6 +893,7 @@ onUnmounted(() => {
   // a remount builds a fresh instance.
   onlineAuthority.stopAll()
   unbindOnlineAuthority(onlineAuthority)
+  unbindSessionTeardown(teardownToAuth)
   window.removeEventListener(SAVE_RESET_REQUEST_EVENT, resetSaveFromSettings)
 
   // Presentation teardown: aborts any in-flight transition and drops every
