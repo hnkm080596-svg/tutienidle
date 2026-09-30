@@ -192,6 +192,30 @@ export function loadManifest(manifestPath) {
       throw new InspectPackageError(`manifest ${section}.allow must be an array`)
     }
   }
+  // Optional PR9 signing contract: consumed by verify-signatures.ps1 on
+  // Windows; the inspector only proves the manifest's expected files exist
+  // in the payload (signatures themselves are a Windows-side check).
+  if (manifest.signing !== undefined) {
+    const s = manifest.signing
+    if (
+      s === null ||
+      typeof s !== 'object' ||
+      !Array.isArray(s.expectedSignedFiles) ||
+      s.expectedSignedFiles.some((g) => typeof g !== 'string' || g === '')
+    ) {
+      throw new InspectPackageError('manifest signing.expectedSignedFiles must be an array of globs')
+    }
+    if (
+      s.thirdPartySignedFiles !== undefined &&
+      (!Array.isArray(s.thirdPartySignedFiles) ||
+        s.thirdPartySignedFiles.some((g) => typeof g !== 'string' || g === ''))
+    ) {
+      throw new InspectPackageError('manifest signing.thirdPartySignedFiles must be an array of globs')
+    }
+    if (s.installerSigned !== undefined && typeof s.installerSigned !== 'boolean') {
+      throw new InspectPackageError('manifest signing.installerSigned must be a boolean')
+    }
+  }
   return manifest
 }
 
@@ -234,6 +258,16 @@ export function inspectPackage({ inputDir, manifestPath }) {
   }
   if (!diskFiles.includes(manifest.identity.executableName)) {
     problems.push(`expected executable missing: ${manifest.identity.executableName}`)
+  }
+  // Literal (non-glob) signing expectations must exist in the payload, so the
+  // signature manifest cannot drift ahead of reality. Wildcard entries are
+  // optional by contract (they match zero or more files).
+  for (const section of ['expectedSignedFiles', 'thirdPartySignedFiles']) {
+    for (const rel of manifest.signing?.[section] ?? []) {
+      if (!/[*?]/.test(rel) && !diskFiles.includes(rel)) {
+        problems.push(`manifest signing.${section} entry missing from payload: ${rel}`)
+      }
+    }
   }
 
   // -- entries inside resources/app.asar ------------------------------------
