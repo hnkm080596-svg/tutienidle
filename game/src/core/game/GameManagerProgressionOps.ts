@@ -46,6 +46,16 @@ import { SKILL_CORE_NODES } from '../../data/progression/SkillCoreNodes'
 import { PHAP_TU_ELEMENT_ROOT_IDS } from '../../data/progression/PhapTuNodes.builders'
 import { NGU_KIEM_EVOLUTION_NODE_IDS } from '../../data/progression/KiemTuNodes'
 import { getActiveElement, hasStaticPathCapability } from '../player/CultivationPathSystem'
+import {
+  activeElementTreeFor as betaActiveElementTreeFor,
+  betaCombatRolesFor as betaCombatRolesForDomain,
+  betaCombatSurfacesFor as betaCombatSurfacesForDomain,
+  betaSkillTreeFor as betaSkillTreeForDomain,
+  type BetaCombatRoleEntry,
+  type BetaPrecursorSurfaceVerdict,
+  type BetaSkillTree,
+  type BetaSkillTreeNode,
+} from '../betaScopeSkillDomain'
 import { commitSpellPathElement } from '../phap-tu/PhapTuState'
 import { getEffectiveMainStatCap } from '../stats/StatCap'
 import type { MainStatKey } from '../stats/StatTypes'
@@ -1023,6 +1033,34 @@ export class GameManagerProgressionOps {
       special: decorate(roles.special),
       ultimate: decorate(roles.ultimate),
     }
+  }
+
+  /**
+   * BETA SCOPE LOCK v2 Phase-3 - UI reach for the canonical combat/skill
+   * read-models (core/betaScopeSkillDomain.ts). Same binding pattern as
+   * getResolvedSkillRoles: the domain reads stay pure; only
+   * learned-skill membership is injected here (SkillManager stays the
+   * owner). The frontend renders these verdicts - it must never rederive
+   * rail/tree visibility from realm + skill registry.
+   */
+  betaCombatRolesFor(player: PlayerData): BetaCombatRoleEntry[] {
+    return betaCombatRolesForDomain(player, {
+      hasSkill: (skillId) => this.deps.skillManager.has(skillId),
+    })
+  }
+
+  betaSkillTreeFor(player: PlayerData): BetaSkillTree {
+    return betaSkillTreeForDomain(player)
+  }
+
+  betaActiveElementTreeFor(player: PlayerData): BetaSkillTreeNode[] {
+    return betaActiveElementTreeFor(player)
+  }
+
+  betaCombatSurfacesFor(player: PlayerData): BetaPrecursorSurfaceVerdict[] {
+    return betaCombatSurfacesForDomain(player, {
+      hasSkill: (skillId) => this.deps.skillManager.has(skillId),
+    })
   }
 
   /**

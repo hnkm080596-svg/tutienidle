@@ -18,4 +18,8 @@ export class TemplateRegistry<T> {
   has(id: string): boolean {
     return this.templates.has(id)
   }
+
+  getAll(): T[] {
+    return Array.from(this.templates.values())
+  }
 }

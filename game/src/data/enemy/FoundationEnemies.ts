@@ -111,6 +111,9 @@ function foundationBeast(params: {
   element: 'wood' | 'fire' | 'earth' | 'metal' | 'water'
   power: number
   resistance: number
+  // When true, `resistance` applies to all five elements instead of only
+  // the beast's own element (stage-boss elemental fairness).
+  uniformResistance?: boolean
   tribulationPhases?: TribulationPhase[]
   enrage?: BossEnrage
   // Phase A2 (2026-09-07) — turn-based enrage trigger, threaded through
@@ -159,7 +162,15 @@ function foundationBeast(params: {
       criticalDamage: 2,
       armor: Math.round(armor * mult.armor),
       evasionRate: 20,
-      resistances: { [params.element]: params.resistance },
+      resistances: params.uniformResistance
+        ? {
+            wood: params.resistance,
+            fire: params.resistance,
+            earth: params.resistance,
+            metal: params.resistance,
+            water: params.resistance,
+          }
+        : { [params.element]: params.resistance },
       elemental: { element: params.element, power: params.power },
     },
     rewards: {
@@ -398,6 +409,7 @@ export const FOUNDATION_ENEMIES: Enemy[] = [
     element: 'water',
     power: 14,
     resistance: 20,
+    uniformResistance: true,
     tribulationPhases: FLOOD_DRAGON_PHASES,
     enrage: FLOOD_DRAGON_ENRAGE,
     // Phase A2 (2026-09-07) — turn-based twin of the legacy `enrage`

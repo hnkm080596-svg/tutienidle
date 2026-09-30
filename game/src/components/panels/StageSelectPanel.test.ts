@@ -59,7 +59,9 @@ describe('StageSelectPanel — thông tin Truyền Tống Trận', () => {
     expect(mounted.container.querySelectorAll('.stage-select__filter-group--chapters button')).toHaveLength(3)
     expect(mounted.container.querySelectorAll('.stage-map__node')).toHaveLength(10)
     expect(mounted.container.textContent).toContain('Dã Trư')
-    expect(mounted.container.textContent).toContain('Sơn Khấu')
+    // BETA roster: deep-floor nodes show the band-C species (was Son Khau
+    // under the old 2-species pair mix).
+    expect(mounted.container.textContent).toContain('Man Hổ')
     expect(mounted.container.textContent).toContain(`10 ${t('panels.stageSelect.labels.enemiesSuffix')}`)
 
     // Spec v3 D9 (2026-09-11): bossEnemyId only exists on floor 10 -
