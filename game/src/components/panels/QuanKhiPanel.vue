@@ -35,6 +35,7 @@ import { turnSkillDisplayMetaOf } from '@/data/skill/TurnSkillDisplayMeta'
 import { getRealmIndex } from '@/core/realm/realmSystem'
 import { REALMS } from '@/data/realms/realm'
 import { useAudioStore } from '@/stores/audio'
+import { BETA_SCOPE_LOCKED_PATHWAYS } from '@/core/betaScope'
 
 const { t, te } = useI18n()
 
@@ -71,6 +72,28 @@ const availableWays = computed(() => {
     .filter(
       (entry): entry is { pathId: CultivationPathId; wayId: CultivationWayId; way: PathWayDefinition } =>
         entry.way !== undefined,
+    )
+})
+
+// BETA-SCOPE-LOCK - a scope-locked BASE way (no authored offerGate -
+// every hidden way carries one) renders as a locked card carrying the
+// release-unavailable label, so the ritual still advertises Kiem Tu /
+// The Tu as coming content instead of silently shrinking to one card.
+// Hidden ways stay invisible per spec S11: no locked-card tease for
+// content whose existence is itself the secret.
+const lockedWays = computed(() => {
+  stateVersion.value
+
+  return listOfferableWays(player.$state)
+    .filter((offer) => !offer.eligible && BETA_SCOPE_LOCKED_PATHWAYS.has(offer.wayId))
+    .map((offer) => ({
+      pathId: offer.pathId,
+      wayId: offer.wayId,
+      way: CULTIVATION_PATH_MODULES[offer.pathId].ways[offer.wayId],
+    }))
+    .filter(
+      (entry): entry is { pathId: CultivationPathId; wayId: CultivationWayId; way: PathWayDefinition } =>
+        entry.way !== undefined && entry.way.offerGate === undefined,
     )
 })
 
@@ -287,6 +310,18 @@ function removeOrbAt(index: number) {
             </span>
           </GameButton>
         </template>
+
+        <!-- BETA-SCOPE-LOCK - locked cards for the scope-locked base
+             ways; disabled affordance + the release-unavailable label
+             (same treatment the wheel gives locked systems). -->
+        <div
+          v-for="kit in lockedWays"
+          :key="`locked-${kit.pathId}/${kit.wayId}`"
+          class="quan-khi-panel__locked-card"
+        >
+          <span class="quan-khi-panel__choice-name">{{ kit.way.name }}</span>
+          <span class="quan-khi-panel__locked-label">{{ t('panels.quanKhi.actions.locked') }}</span>
+        </div>
       </div>
     </div>
 
@@ -517,6 +552,26 @@ function removeOrbAt(index: number) {
   font-size: var(--text-sm);
   line-height: 1.5;
   color: var(--gold-500);
+}
+
+/* BETA-SCOPE-LOCK - locked way card: same card chrome as a choice
+   but muted and non-interactive. */
+.quan-khi-panel__locked-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  padding: 10px;
+  background: var(--ink-800);
+  border: 1px solid var(--ink-line-soft);
+  border-radius: var(--radius-sm);
+  opacity: 0.6;
+}
+
+.quan-khi-panel__locked-label {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  white-space: nowrap;
 }
 
 /* Sealed hidden-path card (Task 16) -- distinct frame so the ritual

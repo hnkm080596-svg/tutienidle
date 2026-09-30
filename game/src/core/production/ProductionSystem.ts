@@ -42,6 +42,7 @@ import {
   GROTTO_CHANNEL_SEED_TAG,
   type GrottoChannel,
 } from '../../data/drop/HiddenMaterialChannels'
+import { BETA_HIDDEN_CONTENT_ENABLED } from '../betaScope'
 import { getRealmIndex } from '../realm/realmSystem'
 import { isBreakthroughAcquisitionEnabled } from '../realm/ReleasePolicy'
 
@@ -509,6 +510,14 @@ export class ProductionSystem {
     cycle: ProductionCycle,
     registry: MaterialRegistry,
   ): ResolvedProductionReward[] {
+    // BETA-SCOPE-LOCK - no hidden-channel emissions while hidden content
+    // is locked: counters stay frozen (no hiddenChannelCycles writes),
+    // so a pre-beta save resumes its primed counters on re-enable and a
+    // beta-era save accumulates no hidden state at all.
+    if (!BETA_HIDDEN_CONTENT_ENABLED) {
+      return []
+    }
+
     const definition = this.getSiteDefinition(cycle.siteId)
     const channels = this.deps.hiddenGrottoChannels ?? hiddenGrottoChannels()
 

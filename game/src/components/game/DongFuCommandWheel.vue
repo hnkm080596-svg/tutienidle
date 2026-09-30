@@ -21,9 +21,13 @@ import {
   ARTIFACT_UNLOCK_REALM_ID,
   isArtifactDomainUnlocked,
 } from '@/core/artifact/ArtifactProgression'
-import { isCompanionDomainUnlocked } from '@/core/companion/CompanionAvailability'
+import {
+  isCompanionDomainUnlocked,
+  isCompanionGameplayUnlocked,
+} from '@/core/companion/CompanionAvailability'
 import { isFormationUnlocked } from '@/core/game/FormationPlacement'
 import { isRealmAvailable } from '@/core/realm/ReleasePolicy'
+import { BETA_FORMATION_PANEL_ENABLED } from '@/core/betaScope'
 import NotificationBadge from '@/components/common/NotificationBadge.vue'
 import { useAudioStore } from '@/stores/audio'
 
@@ -50,6 +54,11 @@ const disabledContext = computed<CommandWheelDisabledContext>(() => ({
   // the wheel never drifts from ops/commit gates when a threshold moves.
   companionDomainUnlocked: isCompanionDomainUnlocked(player.realmId),
   formationUnlocked: isFormationUnlocked(player.realmId),
+  // BETA-SCOPE-LOCK - access-layer entries: companion reads the
+  // gameplay authority (scope flag AND domain); Tran Phap reads the
+  // panel flag only, the formation system stays ungated.
+  companionContentEnabled: isCompanionGameplayUnlocked(player.realmId),
+  formationPanelEnabled: BETA_FORMATION_PANEL_ENABLED,
   // M-F-CEILING (C2C-12): distinguishes "locked until Truc Co" from
   // "hidden by the release ceiling" in the slot tooltips.
   realmReleaseUnavailable: !isRealmAvailable(player.realmId),

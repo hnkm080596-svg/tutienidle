@@ -196,5 +196,10 @@ export default defineConfig({
     // its own config (vitest.lab.config.mts, `npm run lab`) and is OUT of
     // the default gate so committed experiments can't pass/fail the suite.
     include: ['src/**/*.test.ts', 'tests/architecture/**/*.test.ts'],
+    // BETA-SCOPE-LOCK: the scope-flag module is mocked to its ENABLED
+    // shape for every test file so mechanism suites keep pinning post-
+    // beta behavior. Flag-off pins live in tests/architecture/
+    // betaScopeLock.test.ts (vi.unmock). See tests/betaScopeTestSetup.ts.
+    setupFiles: ['tests/betaScopeTestSetup.ts'],
   },
 })

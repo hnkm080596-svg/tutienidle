@@ -12,6 +12,7 @@ import { DEFAULT_PARTY_FORMATION, type PartyFormationSlot } from './PartyFormati
 import { TRAN_PHAP_FORMATIONS } from '../../data/formation/TranPhap'
 import { getRealmIndex } from '../realm/realmSystem'
 import { isRealmAvailable } from '../realm/ReleasePolicy'
+import { BETA_COMPANION_CONTENT_ENABLED } from '../betaScope'
 
 // Formation unlock (P7-M9, decisions D3 + M9-F1) - D3 rules Tran Phap
 // is not usable Mortal progression and gates it independently; M9-F1
@@ -86,6 +87,15 @@ export function commitFormationLoadout(player: PlayerData, loadout: FormationLoa
   const seenCells = new Set<string>()
 
   for (const assignment of loadout.assignments) {
+    // BETA-SCOPE-LOCK - companion DEPLOYMENT is gated while the flag is
+    // off: a new loadout carrying a companion combatant refuses (solo
+    // Doc Hanh 'player' assignments stay legal). Already-persisted
+    // loadouts are untouched - resolvePartyFormation still resolves
+    // them so combat never desyncs.
+    if (assignment.combatantId !== 'player' && !BETA_COMPANION_CONTENT_ENABLED) {
+      return false
+    }
+
     const isKnownCombatant =
       assignment.combatantId === 'player' ||
       player.companions.some((instance) => instance.definitionId === assignment.combatantId)

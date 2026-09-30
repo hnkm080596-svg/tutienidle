@@ -6,6 +6,7 @@ import {
   type HiddenBeastChannel,
 } from '../../data/drop/HiddenMaterialChannels'
 import { isRealmAvailable } from '../realm/ReleasePolicy'
+import { BETA_HIDDEN_CONTENT_ENABLED } from '../betaScope'
 
 // Quai an (spec m-f-body-hidden sec.3) - generalized channel-driven
 // spawn substitution: each authored hidden_beast channel opens its own
@@ -46,6 +47,12 @@ export class HiddenBeastSystem {
     stageRealmId: string | undefined,
     rng: () => number = Math.random,
   ): Enemy | undefined {
+    // BETA-SCOPE-LOCK - no Co Thu substitution while hidden content is
+    // locked; persisted window/kill state stays untouched for re-enable.
+    if (!BETA_HIDDEN_CONTENT_ENABLED) {
+      return undefined
+    }
+
     for (const channel of this.channels()) {
       if (channel.bandRealmId !== stageRealmId) {
         continue
@@ -85,6 +92,12 @@ export class HiddenBeastSystem {
    * eventBus-free - return value, not a dep.
    */
   onEnemyDefeated(player: PlayerData, enemyId: string, enemyRealmId: string): string[] {
+    // BETA-SCOPE-LOCK - banded-kill tracking freezes too: no counter
+    // writes and no window-opened events while hidden content is off.
+    if (!BETA_HIDDEN_CONTENT_ENABLED) {
+      return []
+    }
+
     const opened: string[] = []
 
     for (const channel of this.channels()) {

@@ -12,7 +12,10 @@ import { useI18n } from 'vue-i18n'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { usePlayerStore } from '@/stores/player'
 import { getWorkerCapacityForLevel } from '@/core/production/WorkerCapacity'
-import { isCompanionDomainUnlocked } from '@/core/companion/CompanionAvailability'
+import {
+  isCompanionDomainUnlocked,
+  isCompanionGameplayUnlocked,
+} from '@/core/companion/CompanionAvailability'
 import TabBar from '@/components/common/TabBar.vue'
 import QuaTangTab from './worker-lodge/QuaTangTab.vue'
 import ChieuMoTab from './worker-lodge/ChieuMoTab.vue'
@@ -44,6 +47,16 @@ type TabId = (typeof TABS)[number]['id']
 const visibleTabs = computed(() =>
   isCompanionDomainUnlocked(player.realmId) ? TABS : TABS.filter((tab) => tab.id === 'nhan_cong'),
 )
+
+// BETA-SCOPE-LOCK - at Tru Co the companion tabs stay VISIBLE but their
+// bodies render the locked card while companion gameplay is off
+// (consistent with the wheel's locked-slot treatment). Nhan Cong is a
+// production input, never a companion tab - it always stays live.
+const companionGameplayUnlocked = computed(() => {
+  stateVersion.value
+
+  return isCompanionGameplayUnlocked(player.realmId)
+})
 
 const activeTab = ref<TabId>('nhan_cong')
 
@@ -111,6 +124,13 @@ const nextCapacity = computed(() => {
       </p>
     </div>
 
+    <div
+      v-else-if="!companionGameplayUnlocked"
+      class="worker-lodge-panel__card worker-lodge-panel__locked"
+    >
+      <p class="worker-lodge-panel__locked-text">{{ t('workerLodge.companionLocked') }}</p>
+    </div>
+
     <QuaTangTab v-else-if="activeTab === 'qua_tang'" />
 
     <ChieuMoTab v-else-if="activeTab === 'chieu_mo'" />
@@ -170,6 +190,17 @@ const nextCapacity = computed(() => {
 .worker-lodge-panel__hint {
   margin: 0;
   color: var(--paper-text-muted);
+  font-size: var(--text-sm);
+}
+
+.worker-lodge-panel__locked {
+  border-color: var(--paper-line);
+  background: var(--paper-100);
+}
+
+.worker-lodge-panel__locked-text {
+  margin: 0;
+  color: var(--paper-text-soft);
   font-size: var(--text-sm);
 }
 </style>

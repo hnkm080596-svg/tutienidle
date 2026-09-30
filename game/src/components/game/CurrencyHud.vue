@@ -14,7 +14,7 @@ import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { SPIRIT_STONE_MATERIALS } from '@/core/material/SpiritStoneMaterial'
-import { isCompanionDomainUnlocked } from '@/core/companion/CompanionAvailability'
+import { isCompanionGameplayUnlocked } from '@/core/companion/CompanionAvailability'
 import { COMPANION_PULL_TOKEN_ID } from '@/core/game/GameManagerCompanionOps'
 import { materialLabel } from '@/core/presentation/labels'
 import { formatNumber } from '@/core/format/NumberFormatter'
@@ -55,7 +55,10 @@ const spiritStoneChips = computed<CurrencyChip[]>(() => {
 const companionChips = computed<CurrencyChip[]>(() => {
   stateVersion.value
 
-  if (!isCompanionDomainUnlocked(player.realmId)) {
+  // BETA-SCOPE-LOCK - the gameplay authority (realm gate AND scope
+  // flag): gacha currency chips must not promise a feature that is
+  // locked in this build.
+  if (!isCompanionGameplayUnlocked(player.realmId)) {
     return []
   }
 

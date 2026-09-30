@@ -22,6 +22,7 @@ import {
 } from './CultivationPathKit'
 import { registerDomainDeltaDeriver, type StatModifier } from '../stats/StatCalculator'
 import { isRealmAvailable } from '../realm/ReleasePolicy'
+import { BETA_SCOPE_LOCKED_PATHWAYS, BETA_SCOPE_LOCKED_REASON } from '../betaScope'
 import { getRealmTier } from '../realm/RealmTierMap'
 import { type StatDomain } from '../stats/StatDomain'
 import type { MainStatKey } from '../stats/StatTypes'
@@ -96,6 +97,21 @@ function offerGateReason(way: PathWayDefinition): string | undefined {
   return undefined
 }
 
+// BETA-SCOPE-LOCK - an ineligible way reports the scope reason
+// ("Chua mo trong ban hien tai") ahead of its authored gate reason so
+// offer lists explain the operative lock.
+function offerReason(way: PathWayDefinition, eligible: boolean): string | undefined {
+  if (eligible) {
+    return undefined
+  }
+
+  if (BETA_SCOPE_LOCKED_PATHWAYS.has(way.id)) {
+    return BETA_SCOPE_LOCKED_REASON
+  }
+
+  return offerGateReason(way)
+}
+
 /**
  * Every (path, way) pair the ritual may show, with a live `eligible`
  * flag -- gated ways stay listed so the UI can render locked cards.
@@ -117,7 +133,7 @@ export function listOfferableWays(player: PlayerData): readonly PathWayOffer[] {
           pathId,
           wayId: way.id,
           eligible,
-          reason: eligible ? undefined : offerGateReason(way),
+          reason: offerReason(way, eligible),
         })
       }
     }

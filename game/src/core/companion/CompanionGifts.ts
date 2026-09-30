@@ -12,6 +12,7 @@ import {
   type CompanionGiftTrigger,
 } from '../../data/companion/CompanionGiftMoments'
 import type { PlayerData } from '../player/Player'
+import { BETA_COMPANION_CONTENT_ENABLED } from '../betaScope'
 
 function triggerMatches(
   moment: CompanionGiftMoment,
@@ -43,6 +44,14 @@ export function issueCompanionGifts(
   trigger: CompanionGiftTrigger,
   moments: readonly CompanionGiftMoment[] = COMPANION_GIFT_MOMENTS,
 ): CompanionGiftRecord[] {
+  // BETA-SCOPE-LOCK - gift-moment issuance is companion acquisition:
+  // no records are written while the flag is off. A beta-era save that
+  // crosses a one-shot trigger during beta skips that moment; already
+  // persisted records stay intact and claimable post-beta.
+  if (!BETA_COMPANION_CONTENT_ENABLED) {
+    return []
+  }
+
   const appended: CompanionGiftRecord[] = []
 
   for (const moment of moments) {

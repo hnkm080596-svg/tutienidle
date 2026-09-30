@@ -11,6 +11,7 @@ import {
 } from '../realm/ReleasePolicy'
 import { BETA_COMPANIONS } from '../../data/companion/Companions'
 import type { CompanionDefinition } from '../../data/companion/Companions'
+import { BETA_COMPANION_CONTENT_ENABLED } from '../betaScope'
 
 export const COMPANION_UNLOCK_REALM_ID = 'foundation_establishment'
 
@@ -24,6 +25,19 @@ export function isCompanionDomainUnlocked(realmId: string): boolean {
     isRealmAvailable(realmId) &&
     getRealmIndex(realmId) >= getRealmIndex(COMPANION_UNLOCK_REALM_ID)
   )
+}
+
+/**
+ * BETA-SCOPE-LOCK - the companion GAMEPLAY authority: the realm gate
+ * above AND the beta scope flag. Ops (pull/exchange/claim/feed), the
+ * roster wheel slot, worker-lodge companion tabs, the currency HUD
+ * chips, and formation deployment all gate here while the flag is
+ * off. isCompanionDomainUnlocked stays the pure realm gate - UI uses
+ * it to decide whether the companion surfaces exist at all (visible
+ * but locked in beta vs hidden pre-Tru Co).
+ */
+export function isCompanionGameplayUnlocked(realmId: string): boolean {
+  return BETA_COMPANION_CONTENT_ENABLED && isCompanionDomainUnlocked(realmId)
 }
 
 /**

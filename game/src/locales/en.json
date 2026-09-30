@@ -319,7 +319,8 @@
         "body_pathway": "The body road — the Thể Tu tree rooted in Steel War or Mountain Stance; close combat built on soaking and countering."
       },
       "actions": {
-        "enterPath": "Enter {name}"
+        "enterPath": "Enter {name}",
+        "locked": "Not open in this build"
       },
       "messages": {
         "confirmPathTitle": "Confirm Your Path",
@@ -800,7 +801,8 @@
       "nextLevel": "Level {level}: {count} workers",
       "maxLevel": "Max level",
       "hint": "Workers are assigned to extraction sites in the Production panel."
-    }
+    },
+    "companionLocked": "Not open in this build"
   },
   "chieuMo": {
     "tokens": "{name}: {count}",

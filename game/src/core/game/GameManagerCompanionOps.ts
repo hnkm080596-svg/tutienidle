@@ -27,7 +27,7 @@ import {
 } from '../companion/CompanionProgression'
 import {
   companionAcquirablePool,
-  isCompanionDomainUnlocked,
+  isCompanionGameplayUnlocked,
 } from '../companion/CompanionAvailability'
 import { COMPANIONS, isBetaCompanionGift } from '../../data/companion/Companions'
 
@@ -104,7 +104,9 @@ export class GameManagerCompanionOps {
       return { ok: false, reason: 'no_active_player' }
     }
 
-    if (!isCompanionDomainUnlocked(player.realmId)) {
+    // BETA-SCOPE-LOCK - ops gate on the gameplay authority (realm gate
+    // AND scope flag) so acquisition/progression stay closed in beta.
+    if (!isCompanionGameplayUnlocked(player.realmId)) {
       return { ok: false, reason: 'realm_locked' }
     }
 
@@ -173,7 +175,9 @@ export class GameManagerCompanionOps {
       return { ok: false, reason: 'no_active_player' }
     }
 
-    if (!isCompanionDomainUnlocked(player.realmId)) {
+    // BETA-SCOPE-LOCK - ops gate on the gameplay authority (realm gate
+    // AND scope flag) so acquisition/progression stay closed in beta.
+    if (!isCompanionGameplayUnlocked(player.realmId)) {
       return { ok: false, reason: 'realm_locked' }
     }
 
@@ -243,7 +247,9 @@ export class GameManagerCompanionOps {
       return { ok: false, reason: 'no_active_player' }
     }
 
-    if (!isCompanionDomainUnlocked(player.realmId)) {
+    // BETA-SCOPE-LOCK - ops gate on the gameplay authority (realm gate
+    // AND scope flag) so acquisition/progression stay closed in beta.
+    if (!isCompanionGameplayUnlocked(player.realmId)) {
       return { ok: false, reason: 'realm_locked' }
     }
 
@@ -315,7 +321,9 @@ export class GameManagerCompanionOps {
       return { ok: false, reason: 'no_active_player' }
     }
 
-    if (!isCompanionDomainUnlocked(player.realmId)) {
+    // BETA-SCOPE-LOCK - ops gate on the gameplay authority (realm gate
+    // AND scope flag) so acquisition/progression stay closed in beta.
+    if (!isCompanionGameplayUnlocked(player.realmId)) {
       return { ok: false, reason: 'realm_locked' }
     }
 

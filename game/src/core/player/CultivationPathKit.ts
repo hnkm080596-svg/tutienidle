@@ -7,6 +7,7 @@ import type { ArtifactId } from '../artifact/Artifact'
 import type { PlayerData } from './Player'
 import { getCastLeveledSkillLevel } from '../skill/CastLeveling'
 import { getSkillCoreLevel } from '../progression/SkillCoreLevel'
+import { BETA_SCOPE_LOCKED_PATHWAYS } from '../betaScope'
 import {
   HIDDEN_SPELL_PATHWAY,
   SPELL_PATHWAY,
@@ -478,6 +479,13 @@ export function getActiveWayDefinition(player: PathWayRead): PathWayDefinition |
 // cast-leveled skill's level derived from player.skillCastCounts via
 // CAST_LEVELING_THRESHOLDS.
 export function isCultivationPathOffered(way: PathWayDefinition, player: PlayerData): boolean {
+  // BETA-SCOPE-LOCK - a scope-locked way is never offerable, whatever
+  // its authored gate would resolve to. Committed pairs stay resolvable:
+  // this predicates OFFERS only, getActiveWayDefinition is untouched.
+  if (BETA_SCOPE_LOCKED_PATHWAYS.has(way.id)) {
+    return false
+  }
+
   const requiredSkill = way.offerGate?.requiresSkillLevel
 
   if (requiredSkill && getSkillCoreLevel(player, requiredSkill.skillId) < requiredSkill.level) {

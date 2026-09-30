@@ -348,6 +348,10 @@ describe('ReleasePolicy - migrated gates consult the authority', () => {
       hasArtifactDefinition: true,
       companionDomainUnlocked: false,
       formationUnlocked: false,
+      // BETA-SCOPE-LOCK - fixtures model the scope-unlocked shape so
+      // the artifact slot's release-window assertions stay unchanged.
+      companionContentEnabled: true,
+      formationPanelEnabled: true,
       realmReleaseUnavailable: false,
       ...overrides,
     })

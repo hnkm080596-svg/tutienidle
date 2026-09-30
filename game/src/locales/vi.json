@@ -319,7 +319,8 @@
         "body_pathway": "Con đường luyện thể — cây Thể Tu hai gốc Cương Chiến / Trấn Thế; cận chiến, chịu đòn và phản kích."
       },
       "actions": {
-        "enterPath": "Bước Vào {name}"
+        "enterPath": "Bước Vào {name}",
+        "locked": "Chưa mở trong bản hiện tại"
       },
       "messages": {
         "confirmPathTitle": "Xác Nhận Con Đường",
@@ -800,7 +801,8 @@
       "nextLevel": "Cấp {level}: {count} nhân công",
       "maxLevel": "Cấp tối đa",
       "hint": "Nhân công được phân bổ vào các nguồn khai thác ở panel Sản Xuất."
-    }
+    },
+    "companionLocked": "Chưa mở trong bản hiện tại"
   },
   "chieuMo": {
     "tokens": "{name}: {count}",

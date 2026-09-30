@@ -14,6 +14,7 @@ import {
   isAuthoredHiddenRealm,
   nextUncompletedHiddenBodyRealm,
 } from '../../../data/realm/HiddenBodyRealms'
+import { BETA_HIDDEN_CONTENT_ENABLED } from '../../betaScope'
 import { EXTENDED_REALM_LEVEL, getRealmIndex } from '../realmSystem'
 import { MAIN_STAT_KEYS } from '../../stats/StatTypes'
 import { countCompletedHiddenBodyRealms, getEffectiveMainStatCap } from '../../stats/StatCap'
@@ -49,7 +50,10 @@ export function getHiddenPerfection(
 export function isHiddenLineageOpen(
   player: Pick<HiddenLineagePlayer, 'hiddenPerfection'>,
 ): boolean {
-  return player.hiddenPerfection?.lineageActive === true
+  // BETA-SCOPE-LOCK - the persisted lineageActive stays TRUE on disk
+  // (integrity requires it); this read is where beta hides the open
+  // lineage so no consumer can act on it until the flag flips back.
+  return BETA_HIDDEN_CONTENT_ENABLED && player.hiddenPerfection?.lineageActive === true
 }
 
 // Save-restorable arrays must be shape-checked at every read - a string
@@ -121,6 +125,14 @@ export function canProgressHiddenBody(
   player: Pick<HiddenLineagePlayer, 'hiddenPerfection' | 'realmId'>,
   realmId: string,
 ): boolean {
+  // BETA-SCOPE-LOCK - the single progression gate every hidden
+  // mechanism (discovery, Co Thu trial, Quan The diversion, Nghich Chu
+  // Thien, body completion) funnels through: all frozen while the flag
+  // is off. Persisted records stay readable but nothing may progress.
+  if (!BETA_HIDDEN_CONTENT_ENABLED) {
+    return false
+  }
+
   const state = player.hiddenPerfection
   if (state === undefined || !state.lineageActive) {
     return false
@@ -237,6 +249,14 @@ export function closeHiddenLineage(
   player: HiddenLineagePlayer,
   closingRealmId: string,
 ): void {
+  // BETA-SCOPE-LOCK - closure is SUSPENDED, not skipped permanently:
+  // a beta-era normal breakthrough must not burn the open lineage,
+  // otherwise flipping the flag back could never re-enable hidden
+  // content for a save that progressed during beta.
+  if (!BETA_HIDDEN_CONTENT_ENABLED) {
+    return
+  }
+
   const state = player.hiddenPerfection
   if (state === undefined || !state.lineageActive) {
     return
@@ -268,6 +288,13 @@ export function recordHiddenBreakthrough(
   player: HiddenLineagePlayer,
   enteredRealmId: string,
 ): boolean {
+  // BETA-SCOPE-LOCK - unreachable while the flag is off
+  // (resolveBreakthroughType can never return 'hidden'); kept as a
+  // defensive write guard anyway.
+  if (!BETA_HIDDEN_CONTENT_ENABLED) {
+    return false
+  }
+
   const state = player.hiddenPerfection
   if (state === undefined || !state.lineageActive) {
     return false
@@ -311,6 +338,14 @@ export function recordHiddenBreakthrough(
  * surfaces it (sec.5 visibility law).
  */
 export function isHiddenBreakthroughEligible(player: HiddenLineagePlayer): boolean {
+  // BETA-SCOPE-LOCK - eligibility is always false while the flag is
+  // off, so resolveBreakthroughType resolves 'normal' at every commit
+  // seam (mortal ritual + tribulation) and no hidden breakthrough can
+  // ever be entered.
+  if (!BETA_HIDDEN_CONTENT_ENABLED) {
+    return false
+  }
+
   const state = player.hiddenPerfection
   if (state === undefined || !state.lineageActive) {
     return false

@@ -58,6 +58,13 @@ export interface CommandWheelDisabledContext {
   hasArtifactDefinition: boolean
   companionDomainUnlocked: boolean
   formationUnlocked: boolean
+  // BETA-SCOPE-LOCK - access-layer flags resolved in
+  // DongFuCommandWheel.vue: companionContentEnabled is
+  // isCompanionGameplayUnlocked(realmId) (scope flag AND domain);
+  // formationPanelEnabled is BETA_FORMATION_PANEL_ENABLED (access
+  // lock only - the formation system underneath keeps running).
+  companionContentEnabled: boolean
+  formationPanelEnabled: boolean
   // M-F-CEILING (C2C-12): !isRealmAvailable(player.realmId) - the save
   // sits beyond the release ceiling, so a locked slot is release-hidden,
   // not "requires Truc Co". Lets the tooltip distinguish the two locks.
@@ -164,6 +171,12 @@ export const COMMAND_WHEEL_SLOTS: CommandWheelSlot[] = [
     target: { kind: 'standalone', panel: 'tran_phap' },
     available: ALWAYS_AVAILABLE,
     disabledReason: (context) => {
+      // BETA-SCOPE-LOCK - panel access locked for every realm in beta;
+      // the formation machinery underneath is untouched.
+      if (!context.formationPanelEnabled) {
+        return RELEASE_UNAVAILABLE_REASON
+      }
+
       if (context.formationUnlocked) {
         return null
       }
@@ -181,6 +194,12 @@ export const COMMAND_WHEEL_SLOTS: CommandWheelSlot[] = [
     target: { kind: 'standalone', panel: 'companion' },
     available: ALWAYS_AVAILABLE,
     disabledReason: (context) => {
+      // BETA-SCOPE-LOCK - companion gameplay is locked in beta at any
+      // realm; the roster panel cannot open.
+      if (!context.companionContentEnabled) {
+        return RELEASE_UNAVAILABLE_REASON
+      }
+
       if (context.companionDomainUnlocked) {
         return null
       }
