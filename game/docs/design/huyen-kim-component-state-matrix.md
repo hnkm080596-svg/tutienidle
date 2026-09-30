@@ -5,7 +5,7 @@ Contract chính thức giữa ART và CODE: **state nào tồn tại, nhìn th�
 Nguồn token: `src/assets/huyen-kim.tokens.css` (`--hk-*`). Semantic states gốc (spec §46-47): `locked · available · active · complete · danger · milestone · attention · selected · ready`. File này mở rộng thành contract đầy đủ theo runtime thực tế.
 
 
-> **BETA SCOPE v2 note:** states của các feature scope-hidden (orb-picker, passive emblem, Ultimate, companion, formation, artifact) là reference-only — giữ trong contract cho post-beta, nhưng không render trong beta.
+> **BETA SCOPE v2 note:** states của feature scope-hidden — Ultimate slot, Kiếm orb-picker, Pháp Tu Ẩn passive emblem, companion, formation, artifact, workforce manual-assign (worker_lodge/chi_hien_quan), daily quests, Wash/Refine/Decompose tabs, Kiếm/Thể/hidden ways, Kim Đan+ — là reference-only: giữ trong contract cho post-beta, không render trong beta. `scope-hidden` ≠ `locked`: không render kể cả dạng locked/teaser.
 
 ## 1. Interaction states (mọi interactive element)
 
@@ -33,7 +33,7 @@ Nguồn token: `src/assets/huyen-kim.tokens.css` (`--hk-*`). Semantic states g�
 `normal · hover/focus · selected · locked (silhouette/shadow — dùng art locked sẵn có) · ready/action-needed (jade breathing ring) · upgradeable (gold ring) · active/processing (cinnabar ring) · hidden (không render)`. Ring là overlay runtime tint — không vẽ ring vào art building.
 
 ### 2.3 Combat action rail (TurnCombatSkillBar)
-`ready · hover/selected · cooldown (mask + số turn) · blocked_resource (ink + cost đỏ) · locked/unreleased · empty · actionable (awaiting choice — gold pulse) · cast-bar · Kiếm Tu orb-picker (basic slot thành cụm orb) · Pháp Tu Ẩn passive emblem (ult slot là emblem Ngộ Đạo Hỗn Độn, KHÔNG phải button)`. 1 `button-compact` grayscale đủ cho mọi button state; orb/emblem là composite khác — spec riêng nếu cần art.
+`ready · hover/selected · cooldown (mask + số turn) · blocked_resource (ink + cost đỏ) · locked/unreleased · empty · actionable (awaiting choice — gold pulse) · cast-bar`. 1 `button-compact` grayscale đủ cho mọi button state. Beta rail = **Basic + Special only — Ultimate slot scope-hidden, không render**. *Post-beta ref (không render trong beta): Kiếm Tu orb-picker (basic slot thành cụm orb) · Pháp Tu Ẩn passive emblem (ult slot là emblem Ngộ Đạo Hỗn Độn, KHÔNG phải button) — composite riêng, spec riêng nếu cần art.*
 
 ### 2.4 Entity HUD (combat)
 `ally (jade bar) · enemy (cinnabar bar) · targeted (gold outline) · damaged/low-HP (cinnabar pulse) · dead (desaturate + dim)`. `entity-bar` PNG là frame/track chrome — fill HP là runtime gradient, không vẽ fill vào PNG.
