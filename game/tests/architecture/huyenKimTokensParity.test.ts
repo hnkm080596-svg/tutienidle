@@ -3,7 +3,7 @@ import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { HUYEN_KIM_TOKENS, hkVarName } from '@/ui/tokens'
 
-// Spec §54: Vue and Phaser must consume the same semantic tokens. The CSS
+// Spec spec 54: Vue and Phaser must consume the same semantic tokens. The CSS
 // file is the Vue surface; tokens.ts is the Phaser surface. This test pins
 // the parity contract: every token must exist in BOTH with the same value.
 const CSS = readFileSync(join(process.cwd(), 'src/assets/huyen-kim.tokens.css'), 'utf8')

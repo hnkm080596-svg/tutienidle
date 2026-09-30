@@ -5,7 +5,7 @@ import { chromeSlice, HUYEN_KIM_CHROME, pendingChromeIds } from '@/ui/huyenKimCh
 
 // The chrome manifest is Minh's art-drop contract: every slot he draws lands
 // under public/assets/ui/huyen-kim/ and flips status 'pending' -> 'ready' in
-// the JSON — no code edits. These tests pin the manifest shape and the
+// the JSON - no code edits. These tests pin the manifest shape and the
 // pending/ready resolution contract so a bad art drop fails loudly here.
 const PUBLIC_DIR = join(process.cwd(), 'public')
 

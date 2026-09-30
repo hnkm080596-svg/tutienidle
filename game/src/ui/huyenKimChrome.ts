@@ -2,14 +2,14 @@ import rawManifest from './huyen-kim-chrome.json'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 
 /**
- * Huyen Kim Son Thuy chrome slot registry (spec §44/§52).
+ * Huyen Kim Son Thuy chrome slot registry (spec 44/spec 52).
  *
  * Every slot ships in one of two states:
- *   'pending' — Minh's art has not landed yet; consumers MUST render the
+ *   'pending' - Minh's art has not landed yet; consumers MUST render the
  *               CSS/token fallback and MUST NOT attempt to fetch a file.
- *   'ready'   — PNG exists at url1x/url2x; consumers may nine-slice it.
+ *   'ready'   - PNG exists at url1x/url2x; consumers may nine-slice it.
  *
- * Flipping a slot to 'ready' is a manifest-only change — no code edits
+ * Flipping a slot to 'ready' is a manifest-only change - no code edits
  * needed when an art drop lands. Tests (`huyenKimChrome.test.ts`)
  * validate manifest shape and that ready slots point at real files.
  */
@@ -61,7 +61,7 @@ export function chromeSlice(id: string): { url1x: string; url2x: string; slices:
   return { url1x: a.url1x, url2x: a.url2x, slices: a.slices }
 }
 
-/** All ids still awaiting Minh's art — drives the drawing-spec checklist. */
+/** All ids still awaiting Minh's art - drives the drawing-spec checklist. */
 export function pendingChromeIds(): string[] {
   return assets.filter((a) => a.status === 'pending').map((a) => a.id)
 }
