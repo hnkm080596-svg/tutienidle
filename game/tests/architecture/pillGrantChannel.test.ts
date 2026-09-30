@@ -119,6 +119,14 @@ const PINNED = 'useProfessionPill'
 // matching on 'pill' was a proven false positive (R14 FP4); a camelCase
 // `myPill` root is the documented bound instead.
 const PILLISH_NAME_RE = /^pill(?=[A-Z_]|$)|^ps$/i
+/** Channel-ish names only: `ps`, `pillSystem`, `pillOps`,
+ * `useProfessionPill` - the objects that can hold the pinned
+ * function. Pill DATA names (`pill`, `pillBag`, `pillRegistry`,
+ * `pillTemplate`, `pillName`, `PILL_COMPARATORS`) are item records
+ * and never hold the grant function - the arg funnel must not
+ * match them. */
+const CHANNEL_NAME_RE =
+  /^ps$|pill(system|ops|service|channel|manager|store)|useProfessionPill/i
 
 const GLOBAL_ROOTS = new Set([
   'globalThis',
@@ -131,11 +139,20 @@ const GLOBAL_ROOTS = new Set([
 const REFLECTIVE_READ_ROOTS = new Set(['Object', 'Reflect'])
 const INDIRECT_NAMES = new Set(['bind', 'call', 'apply'])
 /** Member names whose first callback arg binds the iterated value:
- * `arr.forEach(x => x[k]())`, `p.then(g => g())` (R16 F17). */
+ * `arr.forEach(x => x[k]())`, `p.then(g => g())` (R16 F17, R17). */
 const CB_PARAM_METHODS = new Set([
   'forEach', 'map', 'filter', 'find', 'findIndex', 'some', 'every',
   'flatMap', 'then', 'mapValues', 'each', 'collect', 'transform',
+  'reduce', 'reduceRight', 'sort', 'catch',
 ])
+/** Callback param indices that carry an ELEMENT of the iterated
+ * receiver: reduce's accumulator is param 0 but the element is
+ * param 1; sort gets two elements (R17). */
+const CB_ELEMENT_PARAM_INDICES: Record<string, number[]> = {
+  reduce: [1],
+  reduceRight: [1],
+  sort: [0, 1],
+}
 /** Global names a destructure (`const {eval: e} = globalThis`) can
  * capture into a local opaque-code handle. */
 const GLOBAL_NAMES = new Set([
@@ -200,6 +217,11 @@ interface Bindings {
    * `const d = getOwnPropertyDescriptor(ps,k).value` - invoking it
    * reaches an opaque member slot. */
   opaqueHandles: Set<string>
+  /** Catch-bound names (`catch (e)`) - opaque like destructure
+   * handles but NEVER a plausible pill argument: `String(err)` is
+   * the norm, so arg funnels must not consult this set. Dispatch
+   * receivers (`e[k]()`, `e.call()`) do. */
+  catchHandles: Set<string>
   /** Identifier bound to a one-step pill carrier whose own name is
    * opaque: `const c = {...ps}`, `const c = {s: ps}`, `const [m] = [ps]`,
    * `new Box(ps)` - member/element reads on it forward pill slots. */
@@ -218,6 +240,14 @@ interface Bindings {
   /** Access path bound to an opaque-code global:
    * `const o = {e: eval}` -> `o.e(code)` (R16 F20). */
   opaqueCodePaths: Set<string>
+  /** Named function whose body dispatches through `this`:
+   * `function f(){ this[k]() }` -> `f.call(ps)` carries the pill
+   * system as `this` (R17). */
+  thisDispatchFns: Set<string>
+  /** Named function declaration whose body returns a pill-ish
+   * value: `function mk(){ return ps }` -> `const m = mk()` is a
+   * carrier (R17 hoisted thunk). */
+  pillThunks: Set<string>
 }
 
 const LITERALIZE_DEPTH_CAP = 400
@@ -395,9 +425,17 @@ function walkAll(root: ts.Node, cb: (n: ts.Node) => boolean | void): void {
   while (stack.length > 0) {
     const n = stack.pop()!
     if (cb(n) === true) continue
+    // Push children reversed so the LIFO pop walks them in SOURCE
+    // order - pass-1 bindings (`const arr = [pillSystem]`) must exist
+    // before a later sibling (`const m = arr[k]`) is collected (R17 P1).
+    const kids: ts.Node[] = []
     n.forEachChild((c) => {
-      stack.push(c)
+      kids.push(c)
     })
+    for (let i = kids.length - 1; i >= 0; i--) {
+      const k = kids[i]
+      if (k !== undefined) stack.push(k)
+    }
   }
 }
 
@@ -574,11 +612,14 @@ describe('pill grant channel - ops wrapper is the only production caller', () =>
           memberPaths: new Map(),
           rootAliases: new Map(),
           opaqueHandles: new Set(),
+          catchHandles: new Set(),
           pillCarriers: new Set(),
           opaquePaths: new Set(),
           carrierPaths: new Set(),
           cbPillish: new Set(),
           opaqueCodePaths: new Set(),
+          thisDispatchFns: new Set(),
+          pillThunks: new Set(),
         }
         // A pill-system-ish root: `ps`, `pillSystem`, a renamed
         // binding of one (`const s2 = ps`), etc.
@@ -674,17 +715,22 @@ describe('pill grant channel - ops wrapper is the only production caller', () =>
           }
           return false
         }
-        // A value carrying an UNRESOLVED member slot of a pill-ish
-        // root: `ps[k]`, `c[k]`/`arr[0][k]` off a carrier, a
-        // Reflect/descriptor read with an opaque key, an earlier
-        // opaque handle, or await/conditional/coalesce wrappers
-        // around any of those (R16 F13/F16).
-        const opaquePillSource = (e: ts.Expression): boolean => {
+        // A channel-scoped receiver for the ARG funnel: same
+        // unwrapping as receiverPillish but rooted only on
+        // CHANNEL_NAME_RE - pill data names (`pill`, `pillBag`,
+        // `PILL_*` consts) are records, never the grant channel.
+        const channelReceiverPillish = (e: ts.Expression): boolean => {
           const u = unwrapExpr(e)
-          if (ts.isAwaitExpression(u)) return opaquePillSource(u.expression)
+          const r = rootOf(u, binds)
+          if (r !== undefined && CHANNEL_NAME_RE.test(r)) return true
+          if (channelCarrierPillish(u)) return true
+          if (ts.isAwaitExpression(u)) {
+            return channelReceiverPillish(u.expression)
+          }
           if (ts.isConditionalExpression(u)) {
             return (
-              opaquePillSource(u.whenTrue) || opaquePillSource(u.whenFalse)
+              channelReceiverPillish(u.whenTrue) ||
+              channelReceiverPillish(u.whenFalse)
             )
           }
           if (
@@ -693,14 +739,135 @@ describe('pill grant channel - ops wrapper is the only production caller', () =>
               u.operatorToken.kind === ts.SyntaxKind.BarBarToken ||
               u.operatorToken.kind === ts.SyntaxKind.AmpersandAmpersandToken)
           ) {
-            return opaquePillSource(u.left) || opaquePillSource(u.right)
+            return (
+              channelReceiverPillish(u.left) ||
+              channelReceiverPillish(u.right)
+            )
+          }
+          return false
+        }
+        // Inline carrier shapes (`[ps]`, `{s: ps}`, `new Box(ps)`,
+        // `clone(ps)`) scoped to the channel - a literal carrying pill
+        // DATA (`[pill]`, `{s: pill}`) is a record, not a handle.
+        const channelCarrierSource = (e: ts.Expression): boolean =>
+          channelReceiverPillish(e) ||
+          opaquePillSource(e, channelReceiverPillish)
+        const channelCarrierPillish = (e: ts.Expression): boolean => {
+          const u = unwrapExpr(e)
+          if (ts.isIdentifier(u)) {
+            return (
+              binds.pillCarriers.has(u.text) || binds.cbPillish.has(u.text)
+            )
+          }
+          if (ts.isAwaitExpression(u)) {
+            return channelCarrierPillish(u.expression)
+          }
+          if (ts.isConditionalExpression(u)) {
+            return (
+              channelCarrierPillish(u.whenTrue) ||
+              channelCarrierPillish(u.whenFalse)
+            )
+          }
+          if (
+            ts.isBinaryExpression(u) &&
+            (u.operatorToken.kind === ts.SyntaxKind.QuestionQuestionToken ||
+              u.operatorToken.kind === ts.SyntaxKind.BarBarToken ||
+              u.operatorToken.kind === ts.SyntaxKind.AmpersandAmpersandToken)
+          ) {
+            return (
+              channelCarrierPillish(u.left) ||
+              channelCarrierPillish(u.right)
+            )
+          }
+          if (
+            ts.isPropertyAccessExpression(u) ||
+            ts.isElementAccessExpression(u)
+          ) {
+            const p = accessPath(u, binds)
+            if (p !== undefined && binds.carrierPaths.has(p)) return true
+            return channelCarrierPillish(u.expression)
+          }
+          if (ts.isArrayLiteralExpression(u)) {
+            return u.elements.some((el) =>
+              channelCarrierSource(
+                ts.isSpreadElement(el) ? el.expression : (el as ts.Expression),
+              ),
+            )
+          }
+          if (ts.isObjectLiteralExpression(u)) {
+            return u.properties.some(
+              (p) =>
+                (ts.isSpreadAssignment(p) &&
+                  channelCarrierSource(p.expression)) ||
+                (ts.isPropertyAssignment(p) &&
+                  channelCarrierSource(p.initializer)),
+            )
+          }
+          if (ts.isNewExpression(u)) {
+            return (
+              u.arguments !== undefined &&
+              u.arguments.some(
+                (a) =>
+                  channelReceiverPillish(unwrapExpr(a)) ||
+                  channelCarrierPillish(a),
+              )
+            )
+          }
+          if (ts.isCallExpression(u)) {
+            const cc = unwrapExpr(u.expression)
+            const cn =
+              memberNameOf(cc, binds) ??
+              (ts.isIdentifier(cc) ? cc.text : undefined)
+            return (
+              cn !== undefined &&
+              /clone|wrap|copy|snapshot|structur|proxy|boxed?|create|assign|freeze|seal/i.test(
+                cn,
+              ) &&
+              u.arguments.some(
+                (a) =>
+                  channelReceiverPillish(unwrapExpr(a)) ||
+                  channelCarrierPillish(a),
+              )
+            )
+          }
+          return false
+        }
+        // A value carrying an UNRESOLVED member slot of a pill-ish
+        // root: `ps[k]`, `c[k]`/`arr[0][k]` off a carrier, a
+        // Reflect/descriptor read with an opaque key, an earlier
+        // opaque handle, or await/conditional/coalesce wrappers
+        // around any of those (R16 F13/F16).
+        const opaquePillSource = (
+          e: ts.Expression,
+          recv: (x: ts.Expression) => boolean = receiverPillish,
+        ): boolean => {
+          const u = unwrapExpr(e)
+          if (ts.isAwaitExpression(u)) {
+            return opaquePillSource(u.expression, recv)
+          }
+          if (ts.isConditionalExpression(u)) {
+            return (
+              opaquePillSource(u.whenTrue, recv) ||
+              opaquePillSource(u.whenFalse, recv)
+            )
+          }
+          if (
+            ts.isBinaryExpression(u) &&
+            (u.operatorToken.kind === ts.SyntaxKind.QuestionQuestionToken ||
+              u.operatorToken.kind === ts.SyntaxKind.BarBarToken ||
+              u.operatorToken.kind === ts.SyntaxKind.AmpersandAmpersandToken)
+          ) {
+            return (
+              opaquePillSource(u.left, recv) ||
+              opaquePillSource(u.right, recv)
+            )
           }
           if (ts.isIdentifier(u)) return binds.opaqueHandles.has(u.text)
           if (ts.isElementAccessExpression(u)) {
             return (
               memberOfExpr(u) !== PINNED &&
               memberNameOf(u, binds) === undefined &&
-              receiverPillish(u.expression)
+              recv(u.expression)
             )
           }
           if (ts.isCallExpression(u)) {
@@ -718,14 +885,14 @@ describe('pill grant channel - ops wrapper is the only production caller', () =>
               cm !== undefined &&
               REFLECTIVE_MEMBERS.has(cm) &&
               arg0 !== undefined &&
-              receiverPillish(arg0) &&
+              recv(arg0) &&
               memberOfExpr(u) !== PINNED
             )
           }
           if (
             ts.isPropertyAccessExpression(u) &&
             u.name.text === 'value' &&
-            opaquePillSource(u.expression)
+            opaquePillSource(u.expression, recv)
           ) {
             return true
           }
@@ -841,7 +1008,7 @@ describe('pill grant channel - ops wrapper is the only production caller', () =>
                 : (ts.isPropertyAccessExpression(src) ||
                       ts.isElementAccessExpression(src)) &&
                     GLOBAL_ROOTS.has(rootOf(src, binds) ?? '')
-            if (srcRoot || pillish(src)) {
+            if (srcRoot || channelReceiverPillish(src)) {
               for (const el of n.name.elements) {
                 const key =
                   el.propertyName !== undefined
@@ -855,7 +1022,23 @@ describe('pill grant channel - ops wrapper is the only production caller', () =>
                     : ts.isIdentifier(el.name)
                       ? el.name.text
                       : undefined
-                if (!ts.isIdentifier(el.name)) continue
+                if (!ts.isIdentifier(el.name)) {
+                  // `{a: {m}} = ps` - a nested pattern whose inner
+                  // identifiers bind unresolvable member slots of a
+                  // pill-ish source (R17). Global roots skip: the
+                  // inner names bind arbitrary globals, not pill.
+                  if (channelReceiverPillish(src)) {
+                    for (const inner of el.name.elements) {
+                      if (
+                        ts.isBindingElement(inner) &&
+                        ts.isIdentifier(inner.name)
+                      ) {
+                        binds.opaqueHandles.add(inner.name.text)
+                      }
+                    }
+                  }
+                  continue
+                }
                 if (srcRoot) {
                   if (key !== undefined && GLOBAL_NAMES.has(key)) {
                     binds.rootAliases.set(el.name.text, key)
@@ -867,10 +1050,16 @@ describe('pill grant channel - ops wrapper is the only production caller', () =>
                 } else {
                   // Destructure on a pill-ish root: `{useProfessionPill:
                   // u} = ps` is a spelled pinned alias; a computed or
-                  // unresolvable key is an opaque handle.
+                  // unresolvable key is an opaque handle; a SPELLED
+                  // non-pinned key (`{fn} = ps`, `{fn} = gm.pill`) still
+                  // binds an unverified member slot of the channel
+                  // object - opaque (R17). A rest element carries every
+                  // remaining slot.
                   if (key === PINNED) {
                     binds.memberAliases.set(el.name.text, PINNED)
-                  } else if (key === undefined) {
+                  } else if (el.dotDotDotToken !== undefined) {
+                    binds.pillCarriers.add(el.name.text)
+                  } else {
                     binds.opaqueHandles.add(el.name.text)
                   }
                 }
@@ -910,9 +1099,9 @@ describe('pill grant channel - ops wrapper is the only production caller', () =>
                   const pv = unwrapExpr(p.initializer)
                   if (memberOfExpr(p.initializer) === PINNED) {
                     binds.memberAliases.set(el.name.text, PINNED)
-                  } else if (opaquePillSource(p.initializer)) {
+                  } else if (opaquePillSource(p.initializer, channelReceiverPillish)) {
                     binds.opaqueHandles.add(el.name.text)
-                  } else if (carrierSource(p.initializer)) {
+                  } else if (channelCarrierSource(p.initializer)) {
                     binds.pillCarriers.add(el.name.text)
                   }
                   if (ts.isIdentifier(pv) && GLOBAL_NAMES.has(pv.text)) {
@@ -940,7 +1129,7 @@ describe('pill grant channel - ops wrapper is the only production caller', () =>
               }
               // `const s2 = ps` - a renamed pill-ish root keeps
               // resolving through rootAliases.
-              if (pillish(init)) {
+              if (channelReceiverPillish(init)) {
                 binds.rootAliases.set(n.name.text, rootOf(init, binds) ?? init.text)
               }
               // `const g = mm` - an opaque handle re-binds without
@@ -994,14 +1183,14 @@ describe('pill grant channel - ops wrapper is the only production caller', () =>
             // (R16 F13).
             if (
               ts.isElementAccessExpression(init) &&
-              receiverPillish(init.expression) &&
+              channelReceiverPillish(init.expression) &&
               memberOfExpr(init) !== PINNED
             ) {
               const keyLit = literalize(init.argumentExpression, binds)
               if (keyLit === undefined || keyLit === PINNED) {
                 if (keyLit === PINNED) {
                   binds.memberAliases.set(n.name.text, PINNED)
-                } else if (carrierPillish(init.expression)) {
+                } else if (channelCarrierPillish(init.expression)) {
                   // `arr[0]` off a carrier IS the carried value; keep
                   // it opaque too - `m()`/`m[k]()` both dispatch.
                   binds.pillCarriers.add(n.name.text)
@@ -1017,17 +1206,35 @@ describe('pill grant channel - ops wrapper is the only production caller', () =>
             if (
               !binds.opaqueHandles.has(n.name.text) &&
               memberOfExpr(init) !== PINNED &&
-              opaquePillSource(init)
+              opaquePillSource(init, channelReceiverPillish)
             ) {
               binds.opaqueHandles.add(n.name.text)
             }
             // `const ps = gm.pill` - a member whose own leaf name is
             // pill-ish binds the identifier to that root, making it a
-            // pass-1 proven dispatch receiver (R16 F19).
+            // pass-1 proven dispatch receiver (R16 F19). The leaf must
+            // be CHANNEL-shaped (`ps`, `pillOps`, `pillSystem`, a bare
+            // `pill` only on a manager-ish receiver) - `ui.bagSorts.pill`
+            // is a sort-mode record, not the grant channel (R18 FP).
             if (
               (ts.isPropertyAccessExpression(init) ||
                 ts.isElementAccessExpression(init)) &&
-              PILLISH_NAME_RE.test(memberNameOf(init, binds) ?? '')
+              (() => {
+                const leaf = memberNameOf(init, binds) ?? ''
+                if (CHANNEL_NAME_RE.test(leaf)) return true
+                if (!/^(ps|pill)$/i.test(leaf)) return false
+                const rp = accessPath(
+                  (init as ts.PropertyAccessExpression | ts.ElementAccessExpression)
+                    .expression,
+                  binds,
+                )
+                return (
+                  rp !== undefined &&
+                  /\b(gm|gameManager|manager|deps|bags|services|systems|ops)\b/i.test(
+                    rp,
+                  )
+                )
+              })()
             ) {
               binds.rootAliases.set(n.name.text, 'ps')
             }
@@ -1046,7 +1253,7 @@ describe('pill grant channel - ops wrapper is the only production caller', () =>
                 cMember !== undefined &&
                 REFLECTIVE_MEMBERS.has(cMember) &&
                 arg0 !== undefined &&
-                pillish(unwrapExpr(arg0)) &&
+                channelReceiverPillish(unwrapExpr(arg0)) &&
                 memberOfExpr(init) !== PINNED
               ) {
                 binds.opaqueHandles.add(n.name.text)
@@ -1067,7 +1274,7 @@ describe('pill grant channel - ops wrapper is the only production caller', () =>
                     binds.opaqueHandles.has(recvE.text)) ||
                   (ts.isElementAccessExpression(recvE) &&
                     memberNameOf(recvE, binds) === undefined &&
-                    pillish(recvE.expression))
+                    channelReceiverPillish(recvE.expression))
                 if (recvOpaque) binds.opaqueHandles.add(n.name.text)
               }
               // `const cp = structuredClone(ps)` / `wrap(ps)` - a
@@ -1082,18 +1289,29 @@ describe('pill grant channel - ops wrapper is the only production caller', () =>
                 if (
                   cn !== undefined &&
                   /clone|wrap|copy|snapshot|structur|proxy|boxed?|create|assign|freeze|seal/i.test(cn) &&
-                  init.arguments.some((a) => pillish(unwrapExpr(a)))
+                  init.arguments.some((a) => channelReceiverPillish(unwrapExpr(a)))
                 ) {
                   binds.rootAliases.set(n.name.text, 'ps')
                 }
               }
+            }
+            // `const m = mk()` where mk's body returns a pill-ish
+            // value - a hoisted thunk carrier (pass 0) (R17).
+            if (
+              ts.isCallExpression(init) &&
+              ts.isIdentifier(unwrapExpr(init.expression)) &&
+              binds.pillThunks.has(
+                (unwrapExpr(init.expression) as ts.Identifier).text,
+              )
+            ) {
+              binds.pillCarriers.add(n.name.text)
             }
             // `const px = new Proxy(ps, {})` - the proxy forwards
             // member reads to the pill-ish target.
             if (
               ts.isNewExpression(init) &&
               init.arguments !== undefined &&
-              init.arguments.some((a) => pillish(unwrapExpr(a)))
+              init.arguments.some((a) => channelReceiverPillish(unwrapExpr(a)))
             ) {
               const nc = unwrapExpr(init.expression)
               const ctor = ts.isIdentifier(nc)
@@ -1112,7 +1330,7 @@ describe('pill grant channel - ops wrapper is the only production caller', () =>
                   (p) =>
                     (ts.isSpreadAssignment(p) ||
                       ts.isPropertyAssignment(p)) &&
-                    pillish(
+                    channelReceiverPillish(
                       unwrapExpr(
                         ts.isSpreadAssignment(p)
                           ? p.expression
@@ -1122,7 +1340,7 @@ describe('pill grant channel - ops wrapper is the only production caller', () =>
                 )) ||
               (ts.isArrayLiteralExpression(init) &&
                 init.elements.some((el) =>
-                  pillish(
+                  channelReceiverPillish(
                     unwrapExpr(
                       ts.isSpreadElement(el) ? el.expression : (el as ts.Expression),
                     ),
@@ -1130,7 +1348,13 @@ describe('pill grant channel - ops wrapper is the only production caller', () =>
                 )) ||
               (ts.isNewExpression(init) &&
                 init.arguments !== undefined &&
-                init.arguments.some((a) => pillish(unwrapExpr(a))))
+                init.arguments.some(
+                  // `new Map([[k, ps]])` - the ctor arg is a literal
+                  // carrier, not a bare pill-ish root (R17).
+                  (a) =>
+                    channelReceiverPillish(unwrapExpr(a)) ||
+                    channelCarrierSource(unwrapExpr(a)),
+                ))
             ) {
               binds.pillCarriers.add(n.name.text)
             }
@@ -1171,7 +1395,7 @@ describe('pill grant channel - ops wrapper is the only production caller', () =>
                 iMember !== undefined &&
                 REFLECTIVE_MEMBERS.has(iMember) &&
                 iArg0 !== undefined &&
-                pillish(unwrapExpr(iArg0))
+                channelReceiverPillish(unwrapExpr(iArg0))
               ) {
                 binds.opaqueHandles.add(n.name.text)
               }
@@ -1216,11 +1440,11 @@ describe('pill grant channel - ops wrapper is the only production caller', () =>
                 }
                 if (memberOfExpr(propInit) === PINNED) {
                   binds.memberPaths.set(`${n.name.text}.${propName}`, PINNED)
-                } else if (opaquePillSource(propInit)) {
+                } else if (opaquePillSource(propInit, channelReceiverPillish)) {
                   // `{f: ps[k]}` - the member slot is opaque;
                   // `o.f()` dispatches it (R16 F12).
                   binds.opaquePaths.add(`${n.name.text}.${propName}`)
-                } else if (carrierSource(propInit)) {
+                } else if (channelCarrierSource(propInit)) {
                   binds.carrierPaths.add(`${n.name.text}.${propName}`)
                 }
                 // `const o = {e: eval}` / `{w: window.setTimeout}` -
@@ -1261,9 +1485,9 @@ describe('pill grant channel - ops wrapper is the only production caller', () =>
                 binds.rootAliases.set(el.name.text, srcU.text)
               } else if (memberOfExpr(srcU) === PINNED) {
                 binds.memberAliases.set(el.name.text, PINNED)
-              } else if (opaquePillSource(srcU)) {
+              } else if (opaquePillSource(srcU, channelReceiverPillish)) {
                 binds.opaqueHandles.add(el.name.text)
-              } else if (carrierSource(srcU)) {
+              } else if (channelCarrierSource(srcU)) {
                 binds.pillCarriers.add(el.name.text)
               }
             })
@@ -1282,9 +1506,9 @@ describe('pill grant channel - ops wrapper is the only production caller', () =>
             if (path !== undefined) {
               if (memberOfExpr(n.right) === PINNED) {
                 binds.memberPaths.set(path, PINNED)
-              } else if (opaquePillSource(n.right)) {
+              } else if (opaquePillSource(n.right, channelReceiverPillish)) {
                 binds.opaquePaths.add(path)
-              } else if (carrierSource(n.right)) {
+              } else if (channelCarrierSource(n.right)) {
                 binds.carrierPaths.add(path)
               }
               const ru = unwrapExpr(n.right)
@@ -1303,7 +1527,7 @@ describe('pill grant channel - ops wrapper is the only production caller', () =>
           ) {
             if (memberOfExpr(n.right) === PINNED) {
               binds.memberAliases.set(n.left.text, PINNED)
-            } else if (opaquePillSource(n.right)) {
+            } else if (opaquePillSource(n.right, channelReceiverPillish)) {
               binds.opaqueHandles.add(n.left.text)
             }
           }
@@ -1318,9 +1542,9 @@ describe('pill grant channel - ops wrapper is the only production caller', () =>
             const fieldInit = n.initializer
             if (memberOfExpr(fieldInit) === PINNED) {
               binds.memberPaths.set(`this.${n.name.text}`, PINNED)
-            } else if (opaquePillSource(fieldInit)) {
+            } else if (opaquePillSource(fieldInit, channelReceiverPillish)) {
               binds.opaquePaths.add(`this.${n.name.text}`)
-            } else if (carrierSource(fieldInit)) {
+            } else if (channelCarrierSource(fieldInit)) {
               binds.carrierPaths.add(`this.${n.name.text}`)
             }
           }
@@ -1334,52 +1558,88 @@ describe('pill grant channel - ops wrapper is the only production caller', () =>
               ts.isFunctionExpression(n.arguments[0]))
           ) {
             const cb = n.arguments[0] as ts.FunctionLikeDeclaration
-            const p0 = cb.parameters[0]
             const pc = unwrapExpr(n.expression)
             const pm = memberNameOf(pc, binds)
             if (
-              p0 !== undefined &&
-              ts.isIdentifier(p0.name) &&
               pm !== undefined &&
               CB_PARAM_METHODS.has(pm) &&
               (ts.isPropertyAccessExpression(pc) ||
                 ts.isElementAccessExpression(pc))
             ) {
               const recv = unwrapExpr(pc.expression)
-              if (
+              const opaqueRecv =
                 ts.isCallExpression(recv) &&
                 recv.arguments.some(
                   (a) =>
-                    opaquePillSource(a) || memberOfExpr(a) === PINNED,
+                    opaquePillSource(a, channelReceiverPillish) || memberOfExpr(a) === PINNED,
                 )
-              ) {
-                binds.opaqueHandles.add(p0.name.text)
-              } else if (receiverPillish(recv) || carrierPillish(recv)) {
-                binds.cbPillish.add(p0.name.text)
+              const pillRecv =
+                channelReceiverPillish(recv) || channelCarrierPillish(recv)
+              if (opaqueRecv || pillRecv) {
+                // The element-carrying param indices differ per
+                // member: reduce's element is param 1, sort binds
+                // both params (R17); a destructured element param
+                // (`([a]) => a[k]()`, `({m}) => m[k]()`) binds each
+                // inner identifier the same way.
+                const indices = CB_ELEMENT_PARAM_INDICES[pm] ?? [0]
+                for (const idx of indices) {
+                  const p = cb.parameters[idx]
+                  if (p === undefined) continue
+                  const bindName = (nm: ts.BindingName): void => {
+                    if (ts.isIdentifier(nm)) {
+                      if (opaqueRecv) binds.opaqueHandles.add(nm.text)
+                      else binds.cbPillish.add(nm.text)
+                      return
+                    }
+                    for (const el of nm.elements) {
+                      if (ts.isBindingElement(el)) bindName(el.name)
+                    }
+                  }
+                  bindName(p.name)
+                }
               }
             }
           }
+          // `catch (e) { e[k]() }` - a thrown pill handle lands in
+          // the catch binding; the bound name is unresolvable. Kept
+          // OUT of opaqueHandles: it is a plausible dispatch receiver
+          // but never a plausible pill argument (R17, FP pass).
+          if (
+            ts.isCatchClause(n) &&
+            n.variableDeclaration !== undefined &&
+            ts.isIdentifier(n.variableDeclaration.name)
+          ) {
+            binds.catchHandles.add(n.variableDeclaration.name.text)
+          }
           // `get f() { return ps.useProfessionPill }` / a class method
-          // returning the pinned handle - `this.f` carries it.
+          // returning the pinned handle - `this.f` carries it. A
+          // return of `ps[k]` (unresolved key) makes the member an
+          // opaque slot instead (R17).
           if (
             (ts.isGetAccessorDeclaration(n) ||
               ts.isMethodDeclaration(n)) &&
             n.body !== undefined
           ) {
             let returnsPinned = false
+            let returnsOpaque = false
             walkAll(n.body, (x) => {
-              if (returnsPinned) return true
+              if (returnsPinned && returnsOpaque) return true
               if (
                 ts.isReturnStatement(x) &&
-                x.expression !== undefined &&
-                memberOfExpr(x.expression) === PINNED
+                x.expression !== undefined
               ) {
-                returnsPinned = true
-                return true
+                if (memberOfExpr(x.expression) === PINNED) {
+                  returnsPinned = true
+                  return true
+                }
+                if (opaquePillSource(x.expression, channelReceiverPillish)) {
+                  returnsOpaque = true
+                  return true
+                }
               }
               return
             })
-            if (returnsPinned && n.name !== undefined) {
+            if ((returnsPinned || returnsOpaque) && n.name !== undefined) {
               const nm =
                 ts.isIdentifier(n.name) || ts.isStringLiteral(n.name)
                   ? n.name.text
@@ -1387,10 +1647,85 @@ describe('pill grant channel - ops wrapper is the only production caller', () =>
                     ? literalize(n.name.expression, binds)
                     : undefined
               if (nm !== undefined) {
-                binds.memberPaths.set(`this.${nm}`, PINNED)
+                if (returnsPinned) {
+                  binds.memberPaths.set(`this.${nm}`, PINNED)
+                }
+                if (returnsOpaque) {
+                  binds.opaquePaths.add(`this.${nm}`)
+                }
               }
             }
           }
+        }
+        // pass 0: function-level facts that HOIST - a decl below its
+        // call site still feeds call-site resolution (R17). Also
+        // `const f = function(){...}` / `=> {...}` bindings.
+        const fnFacts = (
+          body: ts.ConciseBody | undefined,
+        ): { thisDispatch: boolean; returnsPill: boolean } => {
+          const out = { thisDispatch: false, returnsPill: false }
+          if (body === undefined) return out
+          walkAll(body, (x) => {
+            if (out.thisDispatch && out.returnsPill) return true
+            if (ts.isCallExpression(x)) {
+              const xc = unwrapExpr(x.expression)
+              if (
+                (ts.isPropertyAccessExpression(xc) ||
+                  ts.isElementAccessExpression(xc)) &&
+                xc.expression.kind === ts.SyntaxKind.ThisKeyword
+              ) {
+                out.thisDispatch = true
+                return true
+              }
+            }
+            if (
+              ts.isReturnStatement(x) &&
+              x.expression !== undefined &&
+              (channelReceiverPillish(x.expression) || channelCarrierPillish(x.expression))
+            ) {
+              out.returnsPill = true
+              return true
+            }
+            if (
+              !ts.isBlock(body) &&
+              (channelReceiverPillish(body as ts.Expression) ||
+                channelCarrierPillish(body as ts.Expression))
+            ) {
+              out.returnsPill = true
+              return true
+            }
+            return
+          })
+          return out
+        }
+        for (const sf of sfs) {
+          walkAll(sf, (n) => {
+            if (
+              ts.isFunctionDeclaration(n) &&
+              n.name !== undefined &&
+              n.body !== undefined
+            ) {
+              const f = fnFacts(n.body)
+              if (f.thisDispatch) binds.thisDispatchFns.add(n.name.text)
+              if (f.returnsPill) binds.pillThunks.add(n.name.text)
+            }
+            if (
+              ts.isVariableDeclaration(n) &&
+              ts.isIdentifier(n.name) &&
+              n.initializer !== undefined
+            ) {
+              const init = unwrapExpr(n.initializer)
+              if (
+                ts.isArrowFunction(init) ||
+                ts.isFunctionExpression(init)
+              ) {
+                const f = fnFacts(init.body)
+                if (f.thisDispatch) binds.thisDispatchFns.add(n.name.text)
+                if (f.returnsPill) binds.pillThunks.add(n.name.text)
+              }
+            }
+            return
+          })
         }
         for (const sf of sfs) walkAll(sf, collect)
         // pass 2: flag every syntactic touch (dedupe per file+text -
@@ -1428,6 +1763,57 @@ describe('pill grant channel - ops wrapper is the only production caller', () =>
             isTestSpecifier(n.moduleReference.expression.text)
           ) {
             note(`import= of a test file: ${n.moduleReference.getText()}`)
+          }
+          // A pill handle (bound or name-shaped) carried as an
+          // argument/tag operand: bound carriers/handles need no
+          // fileTouchesPill gate, name-shaped roots do (R15 F5, R17).
+          const argPillish = (a: ts.Expression): boolean => {
+            const u = unwrapExpr(a)
+            if (
+              ts.isIdentifier(u) &&
+              (binds.pillCarriers.has(u.text) ||
+                binds.cbPillish.has(u.text) ||
+                binds.opaqueHandles.has(u.text))
+            ) {
+              return true
+            }
+            if (
+              ts.isElementAccessExpression(u) &&
+              memberNameOf(u, binds) === undefined &&
+              ts.isIdentifier(unwrapExpr(u.expression)) &&
+              (binds.pillCarriers.has(
+                (unwrapExpr(u.expression) as ts.Identifier).text,
+              ) ||
+                binds.cbPillish.has(
+                  (unwrapExpr(u.expression) as ts.Identifier).text,
+                ) ||
+                binds.opaqueHandles.has(
+                  (unwrapExpr(u.expression) as ts.Identifier).text,
+                ))
+            ) {
+              return true
+            }
+            if (
+              ts.isCallExpression(u) &&
+              u.arguments.some((x) => argPillish(x))
+            ) {
+              return true
+            }
+            return (
+              fileTouchesPill &&
+              (channelReceiverPillish(u) ||
+                opaquePillSource(u, channelReceiverPillish) ||
+                channelCarrierPillish(u))
+            )
+          }
+          // `f`${ps}`` - a tagged-template arg funnel: the tag callee
+          // receives the pill handle in its operand list (R17).
+          if (
+            ts.isTaggedTemplateExpression(n) &&
+            ts.isTemplateExpression(n.template) &&
+            n.template.templateSpans.some((s) => argPillish(s.expression))
+          ) {
+            note(`pill handle to tagged template: ${n.getText()}`)
           }
           // Every call expression - the callee/member checks are
           // ARG-FREE (a zero-arg `ps[k]()` or `x.eval()` still invokes
@@ -1549,7 +1935,8 @@ describe('pill grant channel - ops wrapper is the only production caller', () =>
               const recvId = unwrapExpr(callee.expression)
               if (
                 (ts.isIdentifier(recvId) &&
-                  binds.opaqueHandles.has(recvId.text)) ||
+                  (binds.opaqueHandles.has(recvId.text) ||
+                    binds.catchHandles.has(recvId.text))) ||
                 (ts.isElementAccessExpression(recvId) &&
                   memberNameOf(recvId, binds) === undefined &&
                   receiverPillish(recvId.expression))
@@ -1748,6 +2135,48 @@ describe('pill grant channel - ops wrapper is the only production caller', () =>
               receiverPillish(n.arguments[0])
             ) {
               note(`slot rebind on pill system: ${n.getText()}`)
+            }
+            // `sink(ps)` / `sink(ps[k])` / `sink([ps])` - a pill
+            // handle handed to an opaque callee is an unverifiable
+            // dispatch funnel: the callee can invoke the pinned
+            // member inside with no spelled token here (R17 P2).
+            // Read-root callees (console/JSON/Math/Promise) are the
+            // exceptions; bound carriers/handles need no
+            // fileTouchesPill gate, name-shaped roots do (R15 F5).
+            {
+              const PILL_READ_ROOTS = new Set([
+                'console',
+                'JSON',
+                'Math',
+                'Promise',
+              ])
+              const calleeReadRooted =
+                callRoot !== undefined && PILL_READ_ROOTS.has(callRoot)
+              if (
+                !calleeReadRooted &&
+                n.arguments.some((a) => argPillish(a))
+              ) {
+                note(`pill handle to opaque callee: ${n.getText()}`)
+              }
+            }
+            // `f.call(ps)` / `f.apply(ps, a)` / `f.bind(ps)` where f's
+            // body dispatches through `this` (pass 0 thisDispatchFns)
+            // - the invocation carries the pill system as `this`.
+            if (
+              callMember !== undefined &&
+              INDIRECT_NAMES.has(callMember) &&
+              (ts.isPropertyAccessExpression(callee) ||
+                ts.isElementAccessExpression(callee))
+            ) {
+              const recvId = unwrapExpr(callee.expression)
+              if (
+                ts.isIdentifier(recvId) &&
+                binds.thisDispatchFns.has(recvId.text) &&
+                n.arguments[0] !== undefined &&
+                receiverPillish(unwrapExpr(n.arguments[0]))
+              ) {
+                note(`this-carried pill dispatch: ${n.getText()}`)
+              }
             }
             // DOM code-injection sinks - arg-free (`x.eval()` counts).
             const DOM_WRITE_CALLS = new Set([

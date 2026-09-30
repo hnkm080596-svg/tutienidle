@@ -522,6 +522,13 @@ interface Bindings {
    * `const o = {e: eval}` / `o.e = eval` -> `o.e(code)` runs code
    * through a path the GLOBAL_NAMES callee scan cannot see (R16 F5). */
   opaqueCodePaths: Set<string>
+  /** Named function whose body writes `this.baseStats`/`this.$state`:
+   * `f.call(player)` / `f.apply` / `f.bind` or `player.m = fn; m()`
+   * carries the owner as `this` (R17 B2). */
+  thisWriters: Set<string>
+  /** Member paths bound to a name in thisWriters: `player.m = fn`
+   * then `player.m()` dispatches the this-writer (R17 B2). */
+  thisWriterPaths: Map<string, string>
 }
 
 /** Evaluate a spelled string position: literal, const-key binding, or
@@ -1505,6 +1512,8 @@ function collectOffenders(): { violations: Offender[]; unclassified: Offender[] 
       ownerThunks: new Set<string>(),
       onActionBound: new Set<string>(),
       fnPoolParams: new Map<string, Set<number>>(),
+      thisWriters: new Set<string>(),
+      thisWriterPaths: new Map<string, string>(),
       enumElems: new Set<string>(),
       enumArrays: new Set<string>(),
       arrayConsts: new Map<string, readonly string[]>(),
@@ -1887,10 +1896,69 @@ function collectOffenders(): { violations: Offender[]; unclassified: Offender[] 
       fn.parameters.forEach((p, i) => {
         if (ts.isIdentifier(p.name)) paramIdx.set(p.name.text, i)
       })
-      if (paramIdx.size === 0) return
       const indices = new Set<number>()
+      // `arguments[i]` addresses param position i even when the param
+      // list is empty or differently named (R17 B1).
+      const argElemPoolIndex = (t: ts.Expression): number | undefined => {
+        const u = unwrapExpr(t)
+        if (
+          !ts.isPropertyAccessExpression(u) &&
+          !ts.isElementAccessExpression(u)
+        ) {
+          return undefined
+        }
+        const leaf = ts.isPropertyAccessExpression(u)
+          ? u.name.text
+          : literalize(u.argumentExpression, binds)
+        if (leaf !== 'baseStats' && leaf !== '$state') return undefined
+        const recv = unwrapExpr(u.expression)
+        if (
+          ts.isElementAccessExpression(recv) &&
+          ts.isIdentifier(unwrapExpr(recv.expression)) &&
+          (unwrapExpr(recv.expression) as ts.Identifier).text ===
+            'arguments' &&
+          recv.argumentExpression !== undefined
+        ) {
+          const lit = literalize(recv.argumentExpression, binds)
+          const idx =
+            lit !== undefined
+              ? Number(lit)
+              : ts.isNumericLiteral(unwrapExpr(recv.argumentExpression))
+                ? Number(
+                    (unwrapExpr(recv.argumentExpression) as ts.NumericLiteral)
+                      .text,
+                  )
+                : NaN
+          if (Number.isInteger(idx) && idx >= 0) return idx
+        }
+        return undefined
+      }
+      if (paramIdx.size === 0) {
+        // No named params - only `arguments[i]` lanes can mark.
+        walkAll(fn.body as ts.Node, (x) => {
+          if (
+            ts.isBinaryExpression(x) &&
+            COMPOUND_ASSIGN.has(x.operatorToken.kind)
+          ) {
+            const i = argElemPoolIndex(x.left)
+            if (i !== undefined) indices.add(i)
+          }
+          return
+        })
+        if (indices.size > 0) binds.fnPoolParams.set(name, indices)
+        return
+      }
       const markFromTarget = (t: ts.Expression): void => {
         walkAll(t, (x) => {
+          // `arguments[i].baseStats = ...` - the receiver is the
+          // arguments object addressing param position i (R17 B1).
+          if (ts.isPropertyAccessExpression(x) || ts.isElementAccessExpression(x)) {
+            const ai = argElemPoolIndex(x as ts.Expression)
+            if (ai !== undefined) {
+              indices.add(ai)
+              return true
+            }
+          }
           if (
             (ts.isPropertyAccessExpression(x) ||
               ts.isElementAccessExpression(x)) &&
@@ -2722,6 +2790,19 @@ function collectOffenders(): { violations: Offender[]; unclassified: Offender[] 
         if (ts.isIdentifier(init) && isOwnerFactoryName(init.text)) {
           binds.ownerFactories.add(n.name.text)
         }
+        // `const c = mk()` where mk is a pass-0 pool thunk - the call
+        // yields the pool even when the decl sits below (R17). An
+        // owner thunk binds ownerAliases the same way.
+        if (ts.isCallExpression(init)) {
+          const cc = unwrapExpr(init.expression)
+          if (ts.isIdentifier(cc)) {
+            if (binds.poolThunks.has(cc.text)) {
+              binds.aliases.add(n.name.text)
+            } else if (binds.ownerThunks.has(cc.text)) {
+              binds.ownerAliases.add(n.name.text)
+            }
+          }
+        }
         // `const f = () => player.baseStats` - a thunk bound to the
         // pool; `f()` resolves the same pool root as an inline IIFE.
         // `const g = () => usePlayerStore()` - an owner thunk.
@@ -3163,6 +3244,92 @@ function collectOffenders(): { violations: Offender[]; unclassified: Offender[] 
       ) {
         const p = accessPath(n.left, binds)
         if (p !== undefined) binds.opaqueCodePaths.add(p)
+      }
+      // `player.m = fn` where fn is a this-writer (pass 0) - the
+      // member path dispatches `this.baseStats` through player (R17).
+      if (
+        ts.isBinaryExpression(n) &&
+        n.operatorToken.kind === ts.SyntaxKind.EqualsToken &&
+        (ts.isPropertyAccessExpression(unwrapExpr(n.left)) ||
+          ts.isElementAccessExpression(unwrapExpr(n.left))) &&
+        ts.isIdentifier(unwrapExpr(n.right)) &&
+        binds.thisWriters.has((unwrapExpr(n.right) as ts.Identifier).text)
+      ) {
+        const p = accessPath(n.left, binds)
+        if (p !== undefined) {
+          binds.thisWriterPaths.set(
+            p,
+            (unwrapExpr(n.right) as ts.Identifier).text,
+          )
+        }
+      }
+      // `x ??= pool` / `x ||= pool` / `x &&= pool` - logical-assign
+      // rebinds bind the same aliases as `=` (R17). And `g = () =>
+      // pool` - the rebind targets a pool-thunk, not a pool source.
+      if (
+        ts.isBinaryExpression(n) &&
+        (n.operatorToken.kind === ts.SyntaxKind.QuestionQuestionEqualsToken ||
+          n.operatorToken.kind === ts.SyntaxKind.BarBarEqualsToken ||
+          n.operatorToken.kind === ts.SyntaxKind.AmpersandAmpersandEqualsToken ||
+          n.operatorToken.kind === ts.SyntaxKind.EqualsToken)
+      ) {
+        const isLogical =
+          n.operatorToken.kind !== ts.SyntaxKind.EqualsToken
+        const rhs = unwrapExpr(n.right)
+        if (
+          isLogical &&
+          poolishBindingSource(n.right) &&
+          ts.isIdentifier(n.left)
+        ) {
+          bindAlias(n.left.text, rhs)
+        } else if (
+          isLogical &&
+          poolishBindingSource(n.right) &&
+          (ts.isPropertyAccessExpression(unwrapExpr(n.left)) ||
+            ts.isElementAccessExpression(unwrapExpr(n.left)))
+        ) {
+          const p = accessPath(n.left, binds)
+          if (p !== undefined) bindPath(p, rhs)
+        }
+        // `g = () => pool` / `let g; g = () => pool` - a function
+        // bound through `=` whose body returns the pool (R17).
+        if (
+          !isLogical &&
+          (ts.isArrowFunction(rhs) || ts.isFunctionExpression(rhs))
+        ) {
+          let returnsPool = false
+          walkAll(rhs.body, (x) => {
+            if (returnsPool) return true
+            if (
+              ts.isReturnStatement(x) &&
+              x.expression !== undefined &&
+              (isPoolRootAccess(x.expression) ||
+                hasPoolCarrier(x.expression))
+            ) {
+              returnsPool = true
+              return true
+            }
+            if (
+              !ts.isBlock(rhs.body) &&
+              (isPoolRootAccess(rhs.body) || hasPoolCarrier(rhs.body))
+            ) {
+              returnsPool = true
+              return true
+            }
+            return
+          })
+          if (returnsPool) {
+            if (ts.isIdentifier(n.left)) {
+              binds.poolThunks.add(n.left.text)
+            } else if (
+              ts.isPropertyAccessExpression(unwrapExpr(n.left)) ||
+              ts.isElementAccessExpression(unwrapExpr(n.left))
+            ) {
+              const p = accessPath(n.left, binds)
+              if (p !== undefined) binds.poolThunks.add(p)
+            }
+          }
+        }
       }
       // function f(x = player.baseStats) - parameter default binding.
       if (
@@ -4348,6 +4515,41 @@ function collectOffenders(): { violations: Offender[]; unclassified: Offender[] 
         ) {
           flag(n.getText(sf))
         }
+        // `f`${pool}`` - a tagged template hands the pool expression
+        // to an opaque tag function (R17).
+        if (
+          ts.isTaggedTemplateExpression(n) &&
+          containsPoolAccess(n.template, binds)
+        ) {
+          flag(`pool handle to tagged template: ${n.getText(sf)}`)
+        }
+        // `try {} catch (e) { e.baseStats.qi = 9 }` - a catch-bound
+        // identifier is an opaque handle; a pool-shaped write through
+        // it is unprovable (R17).
+        if (
+          ts.isCatchClause(n) &&
+          n.variableDeclaration !== undefined &&
+          ts.isIdentifier(n.variableDeclaration.name)
+        ) {
+          const cname = n.variableDeclaration.name.text
+          let caught = false
+          walkAll(n.block, (x) => {
+            if (caught) return true
+            if (
+              ts.isPropertyAccessExpression(x) &&
+              ts.isIdentifier(x.expression) &&
+              x.expression.text === cname &&
+              (x.name.text === 'baseStats' || x.name.text === '$state')
+            ) {
+              caught = true
+              return true
+            }
+            return
+          })
+          if (caught) {
+            flag(`catch-bound opaque pool write: ${n.getText(sf)}`)
+          }
+        }
         // `x.innerHTML = markup` / `x.outerHTML = ...` - DOM code
         // injection write lanes (script-capable markup sinks).
         if (
@@ -4468,7 +4670,8 @@ function collectOffenders(): { violations: Offender[]; unclassified: Offender[] 
         if (
           (ts.isForOfStatement(n) || ts.isForInStatement(n)) &&
           !ts.isVariableDeclarationList(n.initializer) &&
-          writeTargetPoolish(n.initializer)
+          (writeTargetPoolish(n.initializer) ||
+            destructureTargetPoolish(n.initializer))
         ) {
           flag(n.getText(sf))
         }
@@ -4899,6 +5102,72 @@ function collectOffenders(): { violations: Offender[]; unclassified: Offender[] 
             ) {
               flag(n.getText(sf))
             }
+            // `f.call(player)` / `f.apply(player, a)` / `f.bind(player)`
+            // where f is a this-writer (pass 0): the owner arrives as
+            // `this` and `this.baseStats = x` inside f writes the pool.
+            if (
+              (calleeName === 'call' ||
+                calleeName === 'apply' ||
+                calleeName === 'bind') &&
+              calleeRoot !== undefined &&
+              binds.thisWriters.has(calleeRoot) &&
+              n.arguments[0] !== undefined &&
+              (ownerSource(unwrapExpr(n.arguments[0])) ||
+                isPoolRootAccess(unwrapExpr(n.arguments[0])) ||
+                pool(n.arguments[0]))
+            ) {
+              flag(`this-carried pool write dispatch: ${n.getText(sf)}`)
+            }
+            // `player.m()` where `player.m = fn` bound a this-writer:
+            // the member call's implicit `this` is the owner itself.
+            const recvPath = accessPath(unwrapExpr(n.expression), binds)
+            if (
+              recvPath !== undefined &&
+              (binds.thisWriterPaths.has(recvPath) ||
+                binds.thisWriterPaths.has(
+                  recvPath.replace(/\.(call|apply|bind)$/, ''),
+                ))
+            ) {
+              flag(`this-carried pool write dispatch: ${n.getText(sf)}`)
+            }
+            // Object.assign(t, {nested: player}) - a grafted source
+            // prop carrying the owner reaches t.nested.baseStats. Only
+            // the graft is new here: assign's other lanes are covered
+            // above and poolish-source flags keep their old shape.
+            if (calleeName === 'assign' && (calleeRoot === 'Object' || calleeRoot === '')) {
+              for (const src of n.arguments.slice(1)) {
+                const s = unwrapExpr(src)
+                if (ts.isObjectLiteralExpression(s)) {
+                  const grafted = s.properties.some(
+                    (p) =>
+                      ts.isPropertyAssignment(p) &&
+                      (ownerSource(unwrapExpr(p.initializer)) ||
+                        isPoolRootAccess(unwrapExpr(p.initializer)) ||
+                        pool(p.initializer)),
+                  )
+                  if (grafted) {
+                    flag(`pool graft via assign literal: ${n.getText(sf)}`)
+                    break
+                  }
+                }
+              }
+            }
+            // Object.setPrototypeOf(t, pool) / Reflect.setPrototypeOf -
+            // a grafted prototype chain makes pool members writable
+            // through t.
+            if (
+              calleeName === 'setPrototypeOf' &&
+              (calleeRoot === 'Object' ||
+                calleeRoot === 'Reflect' ||
+                calleeRoot === '') &&
+              n.arguments[1] !== undefined &&
+              (ownerSource(unwrapExpr(n.arguments[1])) ||
+                isPoolRootAccess(unwrapExpr(n.arguments[1])) ||
+                pool(n.arguments[1]) ||
+                receiverPoolish(n.arguments[1], binds))
+            ) {
+              flag(`pool graft via setPrototypeOf: ${n.getText(sf)}`)
+            }
           } else {
             // Unresolvable callee: `(0, fn)(pool)`, `(getFn())(pool)`,
             // `x[K](pool)` with opaque K - an IIFE-invoked opaque fn
@@ -4998,6 +5267,76 @@ function collectOffenders(): { violations: Offender[]; unclassified: Offender[] 
         flag('pathological expression depth - unverifiable')
         break
       }
+      // pass 0: HOISTED function facts - a decl below its call site
+      // still feeds call-site resolution (R17: `mk()` used before
+      // decl, `f.call(player)` on a decl-level this-writer).
+      const fnFacts = (
+        body: ts.ConciseBody | undefined,
+      ): { thisWrites: boolean; returnsPool: boolean } => {
+        const out = { thisWrites: false, returnsPool: false }
+        if (body === undefined) return out
+        walkAll(body, (x) => {
+          if (out.thisWrites && out.returnsPool) return true
+          // `this.baseStats.qi = 9` / `this.$state = ...` - a write
+          // target rooted at `this`.
+          if (
+            (ts.isPropertyAccessExpression(x) ||
+              ts.isElementAccessExpression(x)) &&
+            x.expression.kind === ts.SyntaxKind.ThisKeyword
+          ) {
+            const leaf = ts.isPropertyAccessExpression(x)
+              ? x.name.text
+              : literalize(x.argumentExpression, binds)
+            if (leaf === 'baseStats' || leaf === '$state') {
+              out.thisWrites = true
+              return true
+            }
+          }
+          if (
+            ts.isReturnStatement(x) &&
+            x.expression !== undefined &&
+            (isPoolRootAccess(x.expression) || hasPoolCarrier(x.expression))
+          ) {
+            out.returnsPool = true
+            return true
+          }
+          if (
+            !ts.isBlock(body) &&
+            (isPoolRootAccess(body) || hasPoolCarrier(body))
+          ) {
+            out.returnsPool = true
+            return true
+          }
+          return
+        })
+        return out
+      }
+      walkAll(sf, (n) => {
+        if (
+          ts.isFunctionDeclaration(n) &&
+          n.name !== undefined &&
+          n.body !== undefined
+        ) {
+          const f = fnFacts(n.body)
+          if (f.thisWrites) binds.thisWriters.add(n.name.text)
+          if (f.returnsPool) binds.poolThunks.add(n.name.text)
+          recordPoolParams(n.name.text, n)
+        }
+        if (
+          ts.isVariableDeclaration(n) &&
+          ts.isIdentifier(n.name) &&
+          n.initializer !== undefined
+        ) {
+          const init = unwrapExpr(n.initializer)
+          if (ts.isArrowFunction(init) || ts.isFunctionExpression(init)) {
+            const f = fnFacts(init.body)
+            if (f.thisWrites) binds.thisWriters.add(n.name.text)
+            if (f.returnsPool) binds.poolThunks.add(n.name.text)
+            recordPoolParams(n.name.text, init)
+          }
+        }
+        return
+      })
       walkAll(sf, collect)
     }
     for (const { block } of parsed) scanBody(block.body, block.jsx)
