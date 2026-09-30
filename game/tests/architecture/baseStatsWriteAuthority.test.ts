@@ -212,6 +212,27 @@
  * expression (`v-for="v in Object.values(player)"`, `v-for="v in
  * player"`) as a pool-carrying iterable (S12).
  *
+ * R17 (AUT-R16 adjudication): destructure-pattern write targets now
+ * walk pattern interiors (`({a: pool.qi} = src)`, `[x.baseStats] =
+ * ...` - R16 F1); `new C(pool)` / `new Map([[k,pool]])` constructor
+ * args mark the result a pool carrier (F2); reflective proto/
+ * descriptor reads yield poolish carriers
+ * (`Object.getPrototypeOf(player)`, `getOwnPropertyDescriptors`,
+ * `getOwnPropertyDescriptor` with a spelled key - F3); spelled
+ * path-key args flag beside a poolish arg (`f(player,
+ * 'baseStats.qi', v)` / `f(player, ['baseStats','qi'], v)` - lodash
+ * .set-style funnels, F4); opaque-code globals bind through literal
+ * members (`{e: eval}`, `o.e = eval`, `[eval]`, `{F2} = {F2:
+ * Function}`) into opaqueCodePaths/rootAliases, member-rooted
+ * indirect calls flag (`globalThis.eval.call(null, code)`), and
+ * aliased schedulers flag on any arg (F5/F6); array bindings of
+ * pool-carrying elements mark containers (F7). FP adjudications:
+ * `assign({...fresh}, pool)` under isStructuralCall drops the bare
+ * `pool(a)` clause (clone, FP9); `{ $state } = cfg` destructure
+ * requires a state-ish source (FP10). Bound: `getPlayer().baseStats
+ * .qi` through an opaque getter (F8 - getter origin unprovable);
+ * rooted schedulers with an opaque arg (function-vs-string).
+ *
  * Honest residual bound (documented, not hidden): computed keys that
  * never spell the name (`p[k]` with a computed k, Reflect.set with a
  * variable key), opaque payload data flow where no `baseStats`/`$state`
@@ -497,6 +518,10 @@ interface Bindings {
   /** `import * as ns` namespace bindings - `ns.usePlayerStore()`
    * resolves through the namespace (R15 S5). */
   nsNamespaces: Set<string>
+  /** Dotted member paths bound to an opaque-code global:
+   * `const o = {e: eval}` / `o.e = eval` -> `o.e(code)` runs code
+   * through a path the GLOBAL_NAMES callee scan cannot see (R16 F5). */
+  opaqueCodePaths: Set<string>
 }
 
 /** Evaluate a spelled string position: literal, const-key binding, or
@@ -1014,6 +1039,15 @@ function receiverPoolish(e: ts.Expression, b: Bindings): boolean {
     ) {
       return true
     }
+    // `new C(pool)` / `new Map([[k, pool]])` - a constructor fed the
+    // pool yields a carrier whose member reads can surface it (R16 F2).
+    if (
+      ts.isNewExpression(u) &&
+      u.arguments !== undefined &&
+      u.arguments.some((a) => receiverPoolish(a, b))
+    ) {
+      return true
+    }
     // `ns.usePlayerStore()` - an owner factory reached through a
     // namespace import (R15 S5).
     if (
@@ -1118,6 +1152,20 @@ function receiverPoolish(e: ts.Expression, b: Bindings): boolean {
       // writing `.baseStats.qi` on it hits the live pool (R15 S10).
       if (m === 'create' && arg0 !== undefined) {
         return receiverPoolish(arg0, b)
+      }
+      // `Object.getPrototypeOf(player)` yields the proto carrying the
+      // pool member by reference; `Object.getOwnPropertyDescriptors
+      // (player)` yields a descriptor map that resurfaces it (R16 F3).
+      // `Object.getOwnPropertyDescriptor(player, 'baseStats')` - the
+      // pinned name spelled in the key position.
+      if (
+        (m === 'getPrototypeOf' || m === 'getOwnPropertyDescriptors') &&
+        arg0 !== undefined
+      ) {
+        return receiverPoolish(arg0, b)
+      }
+      if (m === 'getOwnPropertyDescriptor' && u.arguments !== undefined) {
+        return u.arguments.some((a) => spellsToken(a, 'baseStats', b))
       }
       // Member callee on a poolish receiver yields a pool member -
       // `this.pool.get()`, `s.factory()` semantics resolve at the
@@ -1465,6 +1513,7 @@ function collectOffenders(): { violations: Offender[]; unclassified: Offender[] 
       refAliases: new Set<string>(),
       ownerFactories: new Set<string>(),
       nsNamespaces: new Set<string>(),
+      opaqueCodePaths: new Set<string>(),
     }
 
     // Literal property with a given name: `{ name: x }`, `{ 'name': x }`,
@@ -2296,6 +2345,16 @@ function collectOffenders(): { violations: Offender[]; unclassified: Offender[] 
               ) {
                 bindAlias(el.name.text, unwrapExpr(p.initializer))
               }
+              // `const { F2 } = { F2: Function }` - the literal prop
+              // hands an opaque-code global to the bound name (R16 F5).
+              const pInit = unwrapExpr(p.initializer)
+              if (
+                pk === propNameText &&
+                ts.isIdentifier(pInit) &&
+                GLOBAL_NAMES.has(pInit.text)
+              ) {
+                binds.rootAliases.set(el.name.text, pInit.text)
+              }
             }
           }
           // `const { baseStats: bs } = storeToRefs(store)` - a ref
@@ -2754,10 +2813,16 @@ function collectOffenders(): { violations: Offender[]; unclassified: Offender[] 
         }
       }
       // `const { $state } = store` / `const { $state: st } = store` -
-      // the state slot destructure binds the pool owner object.
+      // the state slot destructure binds the pool owner object. The
+      // source must itself be state-ish - `{ $state } = cfg` on a
+      // plain config is a shape, not the pool (R16 FP10).
       if (
         ts.isVariableDeclaration(n) &&
-        ts.isObjectBindingPattern(n.name)
+        ts.isObjectBindingPattern(n.name) &&
+        n.initializer !== undefined &&
+        (isStateSlot(n.initializer) ||
+          receiverPoolish(n.initializer, binds) ||
+          ownerSource(n.initializer))
       ) {
         for (const el of n.name.elements) {
           if (!ts.isBindingElement(el)) continue
@@ -2982,8 +3047,24 @@ function collectOffenders(): { violations: Offender[]; unclassified: Offender[] 
             i < initElems.length
           ) {
             const src = initElems[i]
+            const srcU = src !== undefined ? unwrapExpr(src) : undefined
             if (src !== undefined && poolishBindingSource(src)) {
               bindAlias(el.name.text, unwrapExpr(src as ts.Expression))
+            } else if (
+              srcU !== undefined &&
+              ts.isIdentifier(srcU) &&
+              GLOBAL_NAMES.has(srcU.text)
+            ) {
+              // `const [e2] = [eval]` / `[W] = [Worker]` - the element
+              // is an opaque-code global handle (R16 F5).
+              binds.rootAliases.set(el.name.text, srcU.text)
+            } else if (
+              src !== undefined &&
+              hasPoolCarrier(src)
+            ) {
+              // `const [c] = [[pool]]` / `[{wrap: pool}]` - the bound
+              // element is itself a carrier of the pool (R16 F7).
+              binds.poolContainers.add(el.name.text)
             } else if (
               src !== undefined &&
               ts.isObjectLiteralExpression(src)
@@ -3046,6 +3127,11 @@ function collectOffenders(): { violations: Offender[]; unclassified: Offender[] 
             // a spelled value resolves `x[o.k]` element keys.
             const lit = literalize(p.initializer, binds)
             if (lit !== undefined) binds.constPropKeys.set(path, lit)
+            // `const o = {e: eval}` - a member position holding an
+            // opaque-code global resolves `o.e(code)` (R16 F5).
+            if (ts.isIdentifier(init) && GLOBAL_NAMES.has(init.text)) {
+              binds.opaqueCodePaths.add(path)
+            }
             if (ts.isObjectLiteralExpression(init)) walkProps(init, path)
           }
         }
@@ -3065,6 +3151,18 @@ function collectOffenders(): { violations: Offender[]; unclassified: Offender[] 
           const p = accessPath(n.left, binds)
           if (p !== undefined) bindPath(p, unwrapExpr(n.right))
         }
+      }
+      // `o.e = eval` - a member-position opaque-code global (R16 F5).
+      if (
+        ts.isBinaryExpression(n) &&
+        n.operatorToken.kind === ts.SyntaxKind.EqualsToken &&
+        (ts.isPropertyAccessExpression(unwrapExpr(n.left)) ||
+          ts.isElementAccessExpression(unwrapExpr(n.left))) &&
+        ts.isIdentifier(unwrapExpr(n.right)) &&
+        GLOBAL_NAMES.has((unwrapExpr(n.right) as ts.Identifier).text)
+      ) {
+        const p = accessPath(n.left, binds)
+        if (p !== undefined) binds.opaqueCodePaths.add(p)
       }
       // function f(x = player.baseStats) - parameter default binding.
       if (
@@ -3453,6 +3551,45 @@ function collectOffenders(): { violations: Offender[]; unclassified: Offender[] 
           return binds.aliases.has(u.text)
         }
         return receiverChainPoolish(t)
+      }
+
+      // Destructure-pattern interiors: `({a: pool.qi} = src)` and
+      // `[t.baseStats] = ...` WRITE through the pattern's value
+      // positions - the object/array literal on the left is not a
+      // receiver chain, so walk its members as targets (R16 F1).
+      const destructureTargetPoolish = (t: ts.Expression): boolean => {
+        const u = unwrapExpr(t)
+        if (ts.isObjectLiteralExpression(u)) {
+          return u.properties.some((p) => {
+            if (ts.isPropertyAssignment(p)) {
+              return destructureTargetPoolish(p.initializer)
+            }
+            if (ts.isShorthandPropertyAssignment(p)) {
+              return writeTargetPoolish(p.name)
+            }
+            if (ts.isSpreadAssignment(p)) {
+              return writeTargetPoolish(p.expression)
+            }
+            return false
+          })
+        }
+        if (ts.isArrayLiteralExpression(u)) {
+          return u.elements.some((el) => {
+            if (ts.isOmittedExpression(el)) return false
+            const tgt = ts.isBinaryExpression(el)
+              ? el.left // `[x = dflt]` default - target is x
+              : el
+            return destructureTargetPoolish(tgt)
+          })
+        }
+        // `{a: x = dflt}` - the destructure default wraps the target.
+        if (
+          ts.isBinaryExpression(u) &&
+          u.operatorToken.kind === ts.SyntaxKind.EqualsToken
+        ) {
+          return destructureTargetPoolish(u.left)
+        }
+        return writeTargetPoolish(t)
       }
 
       // A WRITE through a pool target inside a subtree - distinct from
@@ -4187,7 +4324,7 @@ function collectOffenders(): { violations: Offender[]; unclassified: Offender[] 
         if (
           ts.isBinaryExpression(n) &&
           COMPOUND_ASSIGN.has(n.operatorToken.kind) &&
-          (writeTargetPoolish(n.left) ||
+          (destructureTargetPoolish(n.left) ||
             isStateSlot(n.left) ||
             vForSpelledWrite(n.left))
         ) {
@@ -4394,6 +4531,18 @@ function collectOffenders(): { violations: Offender[]; unclassified: Offender[] 
             if (calleeName === 'eval' || calleeName === 'constructor') {
               flag(`opaque code member: ${n.getText(sf)}`)
             }
+            // `o.e(code)` where `o.e` was bound to an opaque-code
+            // global (`const o = {e: eval}`, `o.e = eval`) - a member
+            // path the GLOBAL_NAMES callee scan cannot see (R16 F5).
+            {
+              const calleePath = accessPath(n.expression, binds)
+              if (
+                calleePath !== undefined &&
+                binds.opaqueCodePaths.has(calleePath)
+              ) {
+                flag(`opaque code member: ${n.getText(sf)}`)
+              }
+            }
             // `eval.call(t, 'code')` / `eval.apply` / `eval.bind` -
             // an indirect call on an eval-shaped receiver. And
             // `Reflect.apply(fn, ...)`/`Reflect.construct` invoke an
@@ -4415,6 +4564,23 @@ function collectOffenders(): { violations: Offender[]; unclassified: Offender[] 
                 : undefined
               if (recvName === 'eval' || recvName === 'Function') {
                 flag(`opaque code indirect: ${n.getText(sf)}`)
+              } else if (
+                ts.isPropertyAccessExpression(recv) ||
+                ts.isElementAccessExpression(recv)
+              ) {
+                // `globalThis.eval.call(null, code)` - the opaque-code
+                // member rooted on a global object (R16 F6).
+                const rp = accessPath(recv, binds)
+                const seg = rp !== undefined ? rp.split('.') : []
+                const leaf = seg.length > 0 ? seg[seg.length - 1] : undefined
+                const root = seg.length > 1 ? seg[0] : undefined
+                if (
+                  (leaf === 'eval' || leaf === 'Function') &&
+                  root !== undefined &&
+                  GLOBAL_ROOTS.has(root)
+                ) {
+                  flag(`opaque code indirect: ${n.getText(sf)}`)
+                }
               }
             }
             if (
@@ -4436,11 +4602,21 @@ function collectOffenders(): { violations: Offender[]; unclassified: Offender[] 
               flag(`DOM code-injection sink: ${n.getText(sf)}`)
             }
             // setTimeout('code')/setInterval('code') - a spelled string
-            // arg is evaluated as code.
+            // arg is evaluated as code. An ALIAS bind (`const s =
+            // setTimeout; s(code)`) is itself the suspicious shape and
+            // flags on any arg; a global-rooted member
+            // (`window.setTimeout(code)`) is common legit code and
+            // keeps the literal-arg requirement - an opaque arg there
+            // is ambiguous with a callback ref (R16 F6: bound -
+            // function-vs-string undecidable).
             if (
-              (calleeName === 'setTimeout' || calleeName === 'setInterval') &&
+              (resolvedCallee === 'setTimeout' ||
+                resolvedCallee === 'setInterval') &&
               n.arguments[0] !== undefined &&
-              literalize(n.arguments[0], binds) !== undefined
+              (literalize(n.arguments[0], binds) !== undefined ||
+                (calleeName !== resolvedCallee &&
+                  (ts.isIdentifier(unwrapExpr(n.expression)) ||
+                    GLOBAL_ROOTS.has(calleeRoot))))
             ) {
               flag(`string-eval scheduler: ${n.getText(sf)}`)
             }
@@ -4480,7 +4656,10 @@ function collectOffenders(): { violations: Offender[]; unclassified: Offender[] 
               n.arguments.some(
                 (a) =>
                   argIsSuspicious(a) ||
-                  ((spelledPayload(a) || hasSpread(a)) &&
+                  // `assign({...fresh}, pool)` is a clone - the spread
+                  // on the literal target is not a write (R16 FP9).
+                  (!assignFreshTarget &&
+                    (spelledPayload(a) || hasSpread(a)) &&
                     n.arguments.some((b) => isPoolishArg(b))),
               )
             ) {
@@ -4502,11 +4681,16 @@ function collectOffenders(): { violations: Offender[]; unclassified: Offender[] 
               if (
                 n.arguments.some(
                   (a) =>
-                    pool(a) ||
+                    // `assign({...fresh}, ...)` is a clone - the bare
+                    // pool arg and the spread on the literal target
+                    // are not writes (R16 FP9); spelled tokens and
+                    // payloads still flag.
+                    ((!assignFreshTarget && pool(a)) ||
                     hasBaseStatsToken(a) ||
                     hasStateToken(a) ||
-                    ((spelledPayload(a) || hasSpread(a)) &&
-                      n.arguments.some((b) => isPoolishArg(b))),
+                    (!assignFreshTarget &&
+                      (spelledPayload(a) || hasSpread(a)) &&
+                      n.arguments.some((b) => isPoolishArg(b)))),
                 )
               ) {
                 flag(n.getText(sf))
@@ -4575,6 +4759,40 @@ function collectOffenders(): { violations: Offender[]; unclassified: Offender[] 
               n.arguments.some((a) => fragmentOfPinned(literalize(a, binds)))
             ) {
               flag(`key-fragment arg: ${n.getText(sf)}`)
+            }
+            // Spelled path-key args: `f(player, 'baseStats.qi', 9)` /
+            // `f(player, ['baseStats','qi'], 9)` - a lodash.set-style
+            // write funnel. The spelled path alone is a shape (route
+            // tables, config keys) - it flags only beside a poolish
+            // arg (R16 F4).
+            {
+              const PATH_KEY_RE = /(^|\.|\[)baseStats(\.|\[|$)/
+              const spelledPathArg = (a: ts.Expression): boolean => {
+                const lit = literalize(a, binds)
+                if (lit !== undefined && PATH_KEY_RE.test(lit)) {
+                  return true
+                }
+                const au = unwrapExpr(a)
+                if (ts.isArrayLiteralExpression(au)) {
+                  return au.elements.some(
+                    (el) =>
+                      !ts.isOmittedExpression(el) &&
+                      spellsToken(el, 'baseStats', binds),
+                  )
+                }
+                return false
+              }
+              if (
+                n.arguments.some(spelledPathArg) &&
+                n.arguments.some(
+                  (a) =>
+                    ownerSource(a) ||
+                    isPoolishArg(a) ||
+                    pool(a),
+                )
+              ) {
+                flag(`spelled path-key arg: ${n.getText(sf)}`)
+              }
             }
             // Object.assign(<store-ish target>, payload) - indirect write
             if (calleeName === 'assign' && (calleeRoot === 'Object' || calleeRoot === '')) {
