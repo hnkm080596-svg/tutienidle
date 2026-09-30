@@ -34,6 +34,7 @@ import {
   getActiveElement,
   getActiveWay,
   hasPathCapability,
+  hasStaticPathCapability,
   isActivePath,
 } from './player/CultivationPathSystem'
 import {
@@ -267,6 +268,15 @@ export interface BetaSkillTree {
   element: ElementType | null
   realmId: string
   way: CultivationWayId | null
+  /** Committed way's display name; null when way is null. */
+  wayName: string | null
+  /** The committed way's declared nodeTreeTag (which fixed tree this
+      way renders); undefined for element-driven or tree-less ways. */
+  wayNodeTreeTag: string | undefined
+  /** 'spell.elemental_casting' capability - the gate that decides
+      whether the element-tree surface exists at all (a collapsed
+      ('spell','hidden_spell_pathway') player owns no branches). */
+  elementCasting: boolean
   /** Every tree-catalog node with its verdict - scope-hidden entries are
       emitted explicitly; renderable nodes are state !== 'scope-hidden'. */
   nodes: BetaSkillTreeNode[]
@@ -404,6 +414,13 @@ function treeNodeFor(
     return { ...entry, state: 'scope-hidden', reason: 'non-beta-way' }
   }
 
+  // Route-stamp gate: a node stamped for a path/way DIFFERENT from the
+  // player's is out of scope for THIS player - hidden, never a locked
+  // branch (a committed way cannot progress into foreign content).
+  if (!nodePathApplies(player, node) || !nodeWayApplies(player, node)) {
+    return { ...entry, state: 'scope-hidden', reason: 'foreign-stamp' }
+  }
+
   // Element gate BEFORE generic gating (spec sec.8): post-commit the
   // other four branches are scope-hidden - not locked branches. The
   // excludesNode prereq on their roots would otherwise read as
@@ -422,12 +439,9 @@ function treeNodeFor(
 
   // Progression gates: authored prereqs + revealWhen rows already sit
   // in entry.prerequisites (gate tags mark the source); path/way stamps
-  // are checked alongside so a hypothetical future beta way still locks
-  // foreign-stamped nodes instead of misreading them as affordable.
-  const progressionGatesMet =
-    entry.prerequisites.every((gate) => gate.met) &&
-    nodePathApplies(player, node) &&
-    nodeWayApplies(player, node)
+  // resolved above as scope-hidden, so only authored gates decide
+  // 'locked' here.
+  const progressionGatesMet = entry.prerequisites.every((gate) => gate.met)
 
   if (!progressionGatesMet) {
     return { ...entry, state: 'progression-locked', reason: 'prerequisites-unmet' }
@@ -453,6 +467,7 @@ export function betaSkillTreeFor(
   tree: readonly ProgressionNode[] = PHAP_TU_NODES,
 ): BetaSkillTree {
   const way = getActiveWay(player) ?? null
+  const wayDefinition = getActiveWayDefinition(player)
   // getActiveElement resolves only through the owning way's element axis
   // (spell_pathway); undefined covers pre-commit, off-way, and mortal
   // realm (a mortal+way corrupt save reports no committed element).
@@ -465,6 +480,9 @@ export function betaSkillTreeFor(
     element: committedElement ?? null,
     realmId: player.realmId,
     way,
+    wayName: wayDefinition?.name ?? null,
+    wayNodeTreeTag: wayDefinition?.nodeTreeTag,
+    elementCasting: hasStaticPathCapability(player, 'spell.elemental_casting'),
     nodes: tree.map((node) => treeNodeFor(player, node, committedElement, way)),
   }
 }

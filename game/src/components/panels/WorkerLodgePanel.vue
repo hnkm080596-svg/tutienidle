@@ -12,7 +12,6 @@ import { useI18n } from 'vue-i18n'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { usePlayerStore } from '@/stores/player'
 import { getWorkerCapacityForLevel } from '@/core/production/WorkerCapacity'
-import { isCompanionDomainUnlocked } from '@/core/companion/CompanionAvailability'
 import TabBar from '@/components/common/TabBar.vue'
 import QuaTangTab from './worker-lodge/QuaTangTab.vue'
 import ChieuMoTab from './worker-lodge/ChieuMoTab.vue'
@@ -28,10 +27,12 @@ const player = usePlayerStore()
 
 const { stateVersion } = useStateVersion()
 
-// P7-M9 (decision D4): the companion tabs only exist once the Companion
-// domain unlocks at Tru Co; nhan_cong (worker capacity) stays available
-// in every realm. The domain ops enforce the same gate - this is the
-// presentation mirror, not a second authority.
+// BETA FE-CONTRACT (sec.4C FINAL POLICY): tab visibility resolves
+// through getWorkerLodgeSurfaceModel - the panel never imports a
+// companion-domain predicate. Under beta every tab is scope-hidden
+// (the whole lodge is out of scope) so this panel renders no tabbed
+// content at all; a progression-locked tab also stays off the bar
+// (below Tru Co the companion tabs keep their old hidden treatment).
 const TABS = [
   { id: 'nhan_cong', label: t('workerLodge.tabs.nhanCong') },
   { id: 'qua_tang', label: t('workerLodge.tabs.quaTang') },
@@ -41,9 +42,18 @@ const TABS = [
 
 type TabId = (typeof TABS)[number]['id']
 
-const visibleTabs = computed(() =>
-  isCompanionDomainUnlocked(player.realmId) ? TABS : TABS.filter((tab) => tab.id === 'nhan_cong'),
-)
+const visibleTabs = computed(() => {
+  stateVersion.value
+
+  const offered = new Set(
+    gameManager.buildingOps
+      .getWorkerLodgeSurfaceModel(player.$state)
+      .tabs.filter((tab) => tab.verdict === 'available')
+      .map((tab) => tab.id),
+  )
+
+  return TABS.filter((tab) => offered.has(tab.id))
+})
 
 const activeTab = ref<TabId>('nhan_cong')
 
@@ -85,37 +95,41 @@ const nextCapacity = computed(() => {
 
 <template>
   <section class="worker-lodge-panel">
-    <p class="worker-lodge-panel__description">{{ template?.description }}</p>
+    <!-- FINAL POLICY (sec.4C): under beta the scope model offers zero
+         tabs, so nothing renders - the lodge is fully hidden. -->
+    <template v-if="visibleTabs.length > 0">
+      <p class="worker-lodge-panel__description">{{ template?.description }}</p>
 
-    <TabBar
-      class="worker-lodge-panel__tabs"
-      :tabs="visibleTabs.map((tab) => ({ id: tab.id, label: tab.label }))"
-      :model-value="activeTab"
-      @update:model-value="switchTab($event as TabId)"
-    />
+      <TabBar
+        class="worker-lodge-panel__tabs"
+        :tabs="visibleTabs.map((tab) => ({ id: tab.id, label: tab.label }))"
+        :model-value="activeTab"
+        @update:model-value="switchTab($event as TabId)"
+      />
 
-    <div v-if="activeTab === 'nhan_cong'" class="worker-lodge-panel__card">
-      <h3>{{ t('workerLodge.nhanCong.title') }}</h3>
+      <div v-if="activeTab === 'nhan_cong'" class="worker-lodge-panel__card">
+        <h3>{{ t('workerLodge.nhanCong.title') }}</h3>
 
-      <p class="worker-lodge-panel__capacity">
-        <strong>{{ capacity }}</strong> {{ t('workerLodge.nhanCong.capacitySuffix') }}
-      </p>
+        <p class="worker-lodge-panel__capacity">
+          <strong>{{ capacity }}</strong> {{ t('workerLodge.nhanCong.capacitySuffix') }}
+        </p>
 
-      <small v-if="nextCapacity !== undefined" class="worker-lodge-panel__next">
-        {{ t('workerLodge.nhanCong.nextLevel', { level: (instance?.level ?? 0) + 1, count: nextCapacity }) }}
-      </small>
-      <small v-else class="worker-lodge-panel__next">{{ t('workerLodge.nhanCong.maxLevel') }}</small>
+        <small v-if="nextCapacity !== undefined" class="worker-lodge-panel__next">
+          {{ t('workerLodge.nhanCong.nextLevel', { level: (instance?.level ?? 0) + 1, count: nextCapacity }) }}
+        </small>
+        <small v-else class="worker-lodge-panel__next">{{ t('workerLodge.nhanCong.maxLevel') }}</small>
 
-      <p class="worker-lodge-panel__hint">
-        {{ t('workerLodge.nhanCong.hint') }}
-      </p>
-    </div>
+        <p class="worker-lodge-panel__hint">
+          {{ t('workerLodge.nhanCong.hint') }}
+        </p>
+      </div>
 
-    <QuaTangTab v-else-if="activeTab === 'qua_tang'" />
+      <QuaTangTab v-else-if="activeTab === 'qua_tang'" />
 
-    <ChieuMoTab v-else-if="activeTab === 'chieu_mo'" />
+      <ChieuMoTab v-else-if="activeTab === 'chieu_mo'" />
 
-    <DuyenPhanTab v-else-if="activeTab === 'duyen_phan'" />
+      <DuyenPhanTab v-else-if="activeTab === 'duyen_phan'" />
+    </template>
   </section>
 </template>
 

@@ -28,7 +28,7 @@ import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useTurnBattleInfo } from '@/composables/useTurnBattleInfo'
 import { useProgressionActions } from '@/composables/useProgressionActions'
-import { canPurchaseNode, canUpgradeNode, getNodeLevel, getNodeMaxLevel, getEffectiveNodeMaxLevel, getNextLevelCost, hasPrerequisite, nodeWayApplies } from '@/core/progression/NodeSystem'
+import type { BetaSkillTreeNode } from '@/core/betaScopeSkillDomain'
 import { ELEMENT_LABELS, ELEMENT_COLOR_VARS } from '@/core/element/ElementLabels'
 import { HIDDEN_BRANCH_TAGS, viewBranchTags } from '@/core/progression/NodeBranchViews'
 import { isBattleInProgress } from '@/core/battle/BattleTypes'
@@ -118,6 +118,25 @@ const branches = computed(() => {
 
   const allNodes = gameManager.nodeRegistry.getAll()
 
+  // BETA FE-CONTRACT (sec.4, relayed scope): per-node state comes from
+  // the canonical skill-tree read-model over the SAME catalog - level /
+  // purchasable / upgradable / costs / prereq gates all resolved
+  // there. 'scope-hidden' rows (grant-only, other-element, foreign
+  // path/way stamps, corrupt-way states) never render; reveal-gated
+  // nodes keep their hide-until-met semantics via the model's gate
+  // rows (no hasPrerequisite call here).
+  const modelRows = new Map(
+    gameManager.progressionOps
+      .betaSkillTreeFor(player.$state, allNodes)
+      .nodes.map((row) => [row.nodeId, row]),
+  )
+
+  const rowOf = (node: ProgressionNode): BetaSkillTreeNode | undefined =>
+    modelRows.get(node.id)
+
+  const revealHidden = (row: BetaSkillTreeNode): boolean =>
+    row.prerequisites.some((gate) => gate.gate === 'reveal' && !gate.met)
+
   // Phap Tu Reimagined (Task 16) -- a node belongs to a view when either
   // its elementTag (reworked Phap Tu tree) or branchTag (Kiem Tu
   // routes) is in the view's tag set; unfiltered views hide
@@ -129,28 +148,21 @@ const branches = computed(() => {
 
   const visibleTags = props.branchTag ? new Set<string>(viewBranchTags(props.branchTag)) : null
   // M-QI-05 - Core Nodes (levelsSkillId) are progression state, never
-  // tree content: excluded in every view regardless of tag filtering.
-  const coreFiltered = allNodes.filter(node => node.levelsSkillId === undefined)
+  // tree content: the model already marks them 'scope-hidden', the tag
+  // filter below only shapes the VIEW (which branch tab renders).
   const tagFiltered = visibleTags
-    ? coreFiltered.filter(node => nodeViewTag(node) !== undefined && visibleTags.has(nodeViewTag(node)!))
-    : coreFiltered.filter(node => !(nodeViewTag(node) !== undefined && (HIDDEN_BRANCH_TAGS as readonly string[]).includes(nodeViewTag(node)!)))
+    ? allNodes.filter(node => nodeViewTag(node) !== undefined && visibleTags.has(nodeViewTag(node)!))
+    : allNodes.filter(node => !(nodeViewTag(node) !== undefined && (HIDDEN_BRANCH_TAGS as readonly string[]).includes(nodeViewTag(node)!)))
 
   // Kiem Tu Reimagined -- revealWhen hides the node until the prereq
-  // holds against the live player (the hidden-path root never renders
-  // early; canPurchaseNode re-checks the same gate). Mode-tagged nodes
-  // only render in their own mode's view: sword_pathway sees the orb branches +
-  // the (unrevealed) hidden root, hidden_sword_pathway sees the hidden branch -- the
-  // abandoned mode's nodes vanish entirely.
-  // M3 -- way-tagged nodes follow the same display rule as mode-tagged
-  // ones: a node authored for another way does not render at all.
-  const nodes = tagFiltered.filter(
-    node =>
-      // Three-path design (2026-09-25) -- realm-reward grants are not tree
-      // content: never rendered, only granted (effect still aggregates).
-      !node.rewardOnly &&
-      (!node.revealWhen || hasPrerequisite(player.$state, node.revealWhen)) &&
-      nodeWayApplies(player.$state, node),
-  )
+  // holds: the model resolves the gate, the panel drops rows whose
+  // 'reveal' gate row is unmet. Way/path-stamped foreign content is
+  // 'scope-hidden' in the model - filtered identically.
+  const nodes = tagFiltered.filter((node) => {
+    const row = rowOf(node)
+
+    return row !== undefined && row.state !== 'scope-hidden' && !revealHidden(row)
+  })
 
   const groups = new Map<string, typeof nodes>()
 
@@ -178,22 +190,19 @@ const branches = computed(() => {
     const entryById = new Map<string, TreeEntry>()
 
     for (const node of branchNodes) {
-      const level = getNodeLevel(player.$state, node.id)
-
-      const maxLevel = getNodeMaxLevel(node)
-
-      const upgradable = canUpgradeNode(player.$state, node)
+      const row = rowOf(node)!
 
       entryById.set(node.id, {
         node,
-        purchased: level >= 1,
-        purchasable: canPurchaseNode(player.$state, node),
-        level,
-        maxLevel,
-        upgradable,
+        purchased: row.level >= 1,
+        purchasable: row.state === 'purchasable',
+        level: row.level,
+        maxLevel: row.maxLevel,
+        upgradable: row.canUpgrade,
         // M-QI-06 - effective cap read: a gate-blocked level previews
-        // no cost (the x/max badge stays authored maxLevel above).
-        nextCost: level >= getEffectiveNodeMaxLevel(player.$state, node) ? null : getNextLevelCost(node, level),
+        // no cost (the x/max badge stays authored maxLevel above) - the
+        // model already resolves null-at-cap.
+        nextCost: row.nextLevelCost,
         parentId: parentOf(node),
         depth: 0,
       })

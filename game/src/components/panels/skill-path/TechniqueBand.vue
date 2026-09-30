@@ -1,22 +1,22 @@
 <script setup lang="ts">
 // P7-M7 - canonical technique band inside SkillPathPanel, ported
 // verbatim from the retired TechniquePanel.vue (hero card + sections +
-// Nang Canh). Reads the 0-or-1 technique through
-// techniqueManager.getActive(); the ONLY player-facing grade mutation
-// stays inside realmAdvanceOps.tryAdvanceTechniqueGrade.
+// Nang Canh).
+//
+// BETA FE-CONTRACT (work-order sec.4A): renders the canonical
+// BetaTechniqueSurfaceModel via realmAdvanceOps - eligibility, cost and
+// bag comparisons resolve inside the model; this panel never calls
+// canAdvanceTechniqueGrade / getTechniqueGradeUpgradeCost /
+// materialBag.getAmount. The ONLY player-facing grade mutation stays
+// inside realmAdvanceOps.tryAdvanceTechniqueGrade.
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import TechniqueSlotCard from './TechniqueSlotCard.vue'
-import { buildTechniqueSections } from '@/composables/useTechniqueSections'
 import StatRow from '@/components/common/primitives/StatRow.vue'
 import Eyebrow from '@/components/common/primitives/Eyebrow.vue'
 import EmptyState from '@/components/common/primitives/EmptyState.vue'
-import {
-  canAdvanceTechniqueGrade,
-  getTechniqueGradeUpgradeCost,
-} from '@/core/technique/TechniqueProgression'
 import { formatNumber } from '@/core/format/NumberFormatter'
 
 const player = usePlayerStore()
@@ -24,48 +24,15 @@ const gameManager = useGameManager()
 const { stateVersion, bumpState } = useStateVersion()
 const { t } = useI18n()
 
-const currentTechnique = computed(() => {
+const model = computed(() => {
   stateVersion.value
 
-  return gameManager.techniqueManager.getActive()
+  return gameManager.realmAdvanceOps.getBetaTechniqueSurfaceModel(player.$state)
 })
 
-const techniqueSections = computed(() => {
-  const technique = currentTechnique.value
+const techniqueSections = computed(() => model.value.sections)
 
-  return technique ? buildTechniqueSections(technique) : []
-})
-
-const gradeUpgradeCost = computed(() => {
-  stateVersion.value
-
-  const technique = currentTechnique.value
-
-  return technique && technique.grade < 99
-    ? getTechniqueGradeUpgradeCost(technique.grade + 1, player.$state.realmId)
-    : undefined
-})
-
-const canUpgradeGrade = computed(() => {
-  stateVersion.value
-
-  const technique = currentTechnique.value
-  const cost = gradeUpgradeCost.value
-
-  return technique !== undefined && cost !== undefined
-    && canAdvanceTechniqueGrade(technique, player.$state.realmId)
-    && gameManager.materialBag.getAmount(cost.materialId) >= cost.amount
-})
-
-function materialName(materialId: string): string {
-  return gameManager.materialRegistry.get(materialId)?.name ?? materialId
-}
-
-function ownedAmount(materialId: string): number {
-  stateVersion.value
-
-  return gameManager.materialBag.getAmount(materialId)
-}
+const gradeAdvance = computed(() => model.value.gradeAdvance)
 
 function upgradeGrade(): void {
   if (gameManager.realmAdvanceOps.tryAdvanceTechniqueGrade(player.$state)) {
@@ -76,7 +43,7 @@ function upgradeGrade(): void {
 
 <template>
   <div class="technique-band">
-    <template v-if="currentTechnique">
+    <template v-if="model.state === 'available'">
       <div class="technique-band__hero">
         <Eyebrow>{{ t('panels.skillPath.technique.title') }}</Eyebrow>
         <TechniqueSlotCard :label="t('panels.skillPath.technique.heroLabel')" size="hero" />
@@ -97,12 +64,12 @@ function upgradeGrade(): void {
 
         <button
           class="technique-band__grade-btn"
-          :disabled="!canUpgradeGrade"
+          :disabled="!gradeAdvance.available"
           @click="upgradeGrade"
         >
           {{ t('panels.skillPath.technique.gradeAction') }}
-          <template v-if="gradeUpgradeCost">
-            — {{ formatNumber(gradeUpgradeCost.amount) }} {{ materialName(gradeUpgradeCost.materialId) }} ({{ formatNumber(ownedAmount(gradeUpgradeCost.materialId)) }})
+          <template v-if="gradeAdvance.cost !== undefined">
+            — {{ formatNumber(gradeAdvance.cost) }} {{ gradeAdvance.materialName }} ({{ formatNumber(gradeAdvance.owned ?? 0) }})
           </template>
         </button>
       </div>

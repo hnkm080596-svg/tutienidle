@@ -11,6 +11,8 @@ import { GAME_MANAGER_KEY, STATE_VERSION_KEY, BUMP_STATE_KEY } from '@/composabl
 import { vTooltip } from '@/directives/tooltip'
 import { i18n } from '@/i18n'
 import type { Technique } from '@/core/technique/Technique'
+import { betaTechniqueSurfaceFor } from '@/core/betaScopeTechniqueDomain'
+import type { PlayerData } from '@/core/player/Player'
 import type { GameManager } from '@/core/game/GameManager'
 
 function fixtureTechnique(overrides: Partial<Technique> = {}): Technique {
@@ -51,6 +53,14 @@ function mountBand(options: MountOptions = {}) {
     } as unknown as GameManager['techniqueManager'],
     realmAdvanceOps: {
       tryAdvanceTechniqueGrade,
+      // Canonical-model seam - the same deps the real facade binds.
+      getBetaTechniqueSurfaceModel: (player: PlayerData) =>
+        betaTechniqueSurfaceFor(player, {
+          activeTechnique: options.technique,
+          materialAmount: () => options.materialAmount ?? 0,
+          materialName: (id: string) => `Mat ${id}`,
+          turnBattleInProgress: false,
+        }),
     } as unknown as GameManager['realmAdvanceOps'],
     materialBag: {
       getAmount: () => options.materialAmount ?? 0,

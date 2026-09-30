@@ -458,15 +458,17 @@ export const BETA_WORKER_LODGE_TABS = [
 export type BetaWorkerLodgeTabId = (typeof BETA_WORKER_LODGE_TABS)[number]
 
 /**
- * Which feature flag a Worker Lodge tab is gated on. nhan_cong is the
- * workforce surface itself (always offered; only its MANUAL assignment
- * controls are governed by manualWorkforce). The other three are
- * companion surfaces.
+ * Which feature flag a Worker Lodge tab is gated on. FINAL POLICY
+ * (sec.4C): the whole Worker Lodge surface is out of beta scope - the
+ * nhan_cong workforce tab is bound to 'manualWorkforce' the same as
+ * the building surface, wheel slot and left-panel mode; the other
+ * three are companion surfaces. Automatic production keeps running in
+ * the background with no UI.
  */
 export const WORKER_LODGE_TAB_FEATURE: Readonly<
-  Record<BetaWorkerLodgeTabId, BetaFeatureName | null>
+  Record<BetaWorkerLodgeTabId, BetaFeatureName>
 > = {
-  nhan_cong: null,
+  nhan_cong: 'manualWorkforce',
   qua_tang: 'companion',
   chieu_mo: 'companion',
   duyen_phan: 'companion',

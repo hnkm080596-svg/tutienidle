@@ -9,6 +9,8 @@ import NodeTreePanel from './NodeTreePanel.vue'
 import { usePlayerStore } from '@/stores/player'
 import { GAME_MANAGER_KEY, STATE_VERSION_KEY, BUMP_STATE_KEY } from '@/composables/useGameState'
 import { i18n } from '@/i18n'
+import { betaSkillTreeFor } from '@/core/betaScopeSkillDomain'
+import type { PlayerData } from '@/core/player/Player'
 import type { ProgressionNode } from '@/core/progression/ProgressionNode'
 import type { GameManager } from '@/core/game/GameManager'
 
@@ -36,6 +38,10 @@ function mockGameManager(nodes: ProgressionNode[]): Partial<GameManager> {
     } as unknown as GameManager['nodeRegistry'],
     getTurnBattle: () => null,
     progressionOps: {
+      // Canonical-model seam - delegate to the real domain function.
+      betaSkillTreeFor: (player: PlayerData, tree?: readonly ProgressionNode[]) =>
+        betaSkillTreeFor(player, tree ?? nodes),
+      previewNodeRespec: () => null,
     } as unknown as GameManager['progressionOps'],
   }
 }
@@ -105,6 +111,12 @@ describe('NodeTreePanel - technique level-gate entry (M-QI-06)', () => {
     // M-F-TECHNIQUE (F5) - grade 1 at qi_refining is in-band: the
     // mirror's rank contributes to the effective rank again.
     view.player.$state.realmId = 'qi_refining'
+    // A non-mortal realm without a committed way is a corrupt save -
+    // the read-model hides the tree for it, so the fixture commits the
+    // beta way + element a real qi_refining player would hold.
+    view.player.$state.cultivationPath = 'spell'
+    view.player.$state.cultivationWay = 'spell_pathway'
+    view.player.$state.spellPath = { element: 'fire' }
     view.player.$state.techniqueProgress = { rank: 3, grade: 1 }
     view.player.$state.nodeLevels[node.id] = 5
     view.player.$state.purchasedNodeIds.push(node.id)

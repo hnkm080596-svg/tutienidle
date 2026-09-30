@@ -11,6 +11,10 @@ import { usePlayerStore } from '@/stores/player'
 import { GAME_MANAGER_KEY, STATE_VERSION_KEY, BUMP_STATE_KEY } from '@/composables/useGameState'
 import { i18n } from '@/i18n'
 import { THE_TU_NODES } from '@/data/progression/TheTuNodes'
+import { betaSkillTreeFor } from '@/core/betaScopeSkillDomain'
+import { getSkillCoreLevel } from '@/core/progression/SkillCoreLevel'
+import type { PlayerData } from '@/core/player/Player'
+import type { ProgressionNode } from '@/core/progression/ProgressionNode'
 import type { GameManager } from '@/core/game/GameManager'
 
 function mockGameManager(state: 'intro' | 'countdown' | 'fighting' | null): Partial<GameManager> {
@@ -23,6 +27,11 @@ function mockGameManager(state: 'intro' | 'countdown' | 'fighting' | null): Part
     getTurnBattle: () =>
       (state === null ? null : { state }) as ReturnType<GameManager['getTurnBattle']>,
     progressionOps: {
+      // Canonical-model seams - delegate to the real domain functions.
+      betaSkillTreeFor: (player: PlayerData, tree?: readonly ProgressionNode[]) =>
+        betaSkillTreeFor(player, tree ?? THE_TU_NODES),
+      getSkillLevel: (skillId: string, player: PlayerData) =>
+        getSkillCoreLevel(player, skillId),
       previewNodeRespec: () => null,
       respecNodeTree: () => 0,
     } as unknown as GameManager['progressionOps'],

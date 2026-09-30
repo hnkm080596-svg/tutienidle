@@ -12,6 +12,7 @@ import GameButton from '@/components/common/GameButton.vue'
 import { PILL_FAMILIES } from '@/data/pill/PillFamilies'
 import { formatStat } from '@/core/stats/StatLabels'
 import { formatDuration } from '@/core/format/formatDuration'
+import { betaSurfaceVisible } from '@/core/betaScope'
 
 // Sản Xuất (2026-08-25, resource-professions-rework plan §9.1) — thay
 // ExplorationPanel: mỗi Địa Giới hiển thị đúng ba card Lâm/Quáng/
@@ -40,6 +41,12 @@ const player = usePlayerStore()
 const gameManager = useGameManager()
 
 const { stateVersion, bumpState } = useStateVersion()
+
+// FINAL POLICY (sec.4C): the manual workforce surface is entirely
+// scope-hidden under beta - the allocation block AND the workers stat
+// are governed by the ONE flag read. Automatic production keeps
+// running; nothing workforce-related renders.
+const workerSurfaceVisible = betaSurfaceVisible('manualWorkforce')
 
 const nowMs = ref(Date.now())
 
@@ -314,7 +321,9 @@ function collectLinMach() {
       </p>
 
       <!-- Chiêu Hiền Quán — phân bổ nhân công (2026-09-02) -->
-      <div class="worker-allocation">
+      <!-- FINAL POLICY (sec.4C): the whole block is scope-hidden under
+           beta via manualWorkforce - hidden, not merely disabled. -->
+      <div v-if="workerSurfaceVisible" class="worker-allocation">
         <header class="worker-allocation__header">
           <strong>{{ t('panels.production.workersHeader', { used: workerMode === 'manual' ? assignedTotal : effectiveTotal, total: workforce.available }) }}</strong>
 
@@ -420,7 +429,7 @@ function collectLinMach() {
               {{ t('panels.production.nextSpeedPrefix') }}{{ formatStat('productionSpeedMultiplier', row.nextProductionSpeedMultiplier) }}
             </span>
 
-            <span>{{ t('panels.production.workers', { count: row.activeWorkerSlots }) }}</span>
+            <span v-if="workerSurfaceVisible">{{ t('panels.production.workers', { count: row.activeWorkerSlots }) }}</span>
           </div>
 
           <!-- Bỏ dòng "Trọng số tier" (2026-08-30, bug report: thông tin

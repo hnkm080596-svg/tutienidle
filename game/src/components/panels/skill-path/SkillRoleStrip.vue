@@ -19,7 +19,8 @@ import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useTurnBattleInfo } from '@/composables/useTurnBattleInfo'
 import { useProgressionActions } from '@/composables/useProgressionActions'
 import { usePlayerStore } from '@/stores/player'
-import { getNodeLevel, ownedNodeIds, specializationClaimingNodes } from '@/core/progression/NodeSystem'
+import { specializationClaimingNodes } from '@/core/progression/NodeSystem'
+import type { BetaSkillTreeNode } from '@/core/betaScopeSkillDomain'
 import type { Skill } from '@/core/skill/Skill'
 import type { SkillSpecialization } from '@/core/skill/SkillSpecialization'
 
@@ -43,6 +44,24 @@ const roles = computed(() => {
 
   return gameManager.progressionOps.getResolvedSkillRoles(player.$state)
 })
+
+// BETA FE-CONTRACT (relayed scope): node ownership reads resolve
+// through the canonical skill-tree model over the registry - level >= 1
+// is the same owned check ownedNodeIds used to provide, without any
+// NodeSystem predicate call in the component.
+const nodeRows = computed(() => {
+  stateVersion.value
+
+  return new Map(
+    gameManager.progressionOps
+      .betaSkillTreeFor(player.$state, gameManager.nodeRegistry.getAll())
+      .nodes.map((row: BetaSkillTreeNode) => [row.nodeId, row]),
+  )
+})
+
+function owned(nodeId: string): boolean {
+  return (nodeRows.value.get(nodeId)?.level ?? 0) >= 1
+}
 
 // Specialization writes reject mid-battle (ops gate) - the chips
 // disable up front so the affordance doesn't look live.
@@ -113,28 +132,25 @@ const openedSkill = computed(() => {
 // renders locked instead of a chip that silently no-ops (the op
 // rejects it anyway); unclaimed specs stay free-switch.
 function specLocked(skillId: string, specId: string): boolean {
-  // Reads the same ownership union as the authoritative gate
-  // (ownedNodeIds = nodeLevels + purchasedNodeIds mirror): any owned
-  // claimant unlocks the spec, not just the first registry hit.
+  // Reads the same ownership as the authoritative gate: any owned
+  // claimant unlocks the spec, not just the first registry hit - the
+  // model's level >= 1 is the owned check (nodeLevels authority).
   const claimants = specializationClaimingNodes(gameManager.nodeRegistry, skillId, specId)
-  const owned = ownedNodeIds(player.$state)
 
-  return claimants.length > 0 && !claimants.some((claimant) => owned.includes(claimant.id))
+  return claimants.length > 0 && !claimants.some((claimant) => owned(claimant.id))
 }
 
 function specTooltip(skill: Skill, spec: SkillSpecialization) {
-  // Same plural-claimant + ownership-union read as specLocked: the locked
+  // Same plural-claimant + ownership read as specLocked: the locked
   // tooltip names an unowned claimant, and any owned claimant frees the spec.
   const claimants = specializationClaimingNodes(gameManager.nodeRegistry, skill.id, spec.id)
-  const owned = ownedNodeIds(player.$state)
 
-  const lockedClaimant = claimants.find((node) => !owned.includes(node.id))
-  const anyOwned = claimants.some((node) => owned.includes(node.id))
+  const lockedClaimant = claimants.find((node) => !owned(node.id))
+  const anyOwned = claimants.some((node) => owned(node.id))
 
   if (claimants.length > 0 && !anyOwned && lockedClaimant !== undefined) {
     const permanentlyExcluded = (lockedClaimant.prerequisites ?? []).some(
-      (prereq) =>
-        prereq.kind === 'excludesNode' && getNodeLevel(player.$state, prereq.nodeId) >= 1,
+      (prereq) => prereq.kind === 'excludesNode' && owned(prereq.nodeId),
     )
 
     if (permanentlyExcluded) {
