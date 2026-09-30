@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import GameButton from '@/components/common/GameButton.vue'
 import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
+import FeedbackDialog from '@/components/common/FeedbackDialog.vue'
 import { useErrorStore } from '@/stores/error'
 import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
 import { BUILD_IDENTITY, shortGitSha } from '@/shared/build/BuildIdentity'
@@ -60,6 +61,12 @@ const updateLabel = computed(() => {
       return state.phase
   }
 })
+
+// BETA-FINAL PR13 / spec B7 - a crash is exactly the moment a feedback
+// report is most valuable. The dialog mounts above this surface (appError
+// layer + 1) prefilled with the error message; submit still goes through
+// the same intake path (and degrades to export-only when auth is dead).
+const feedbackOpen = ref(false)
 
 onMounted(() => {
   reportId.value = getDiagnosticRecorder()?.reportId ?? ''
@@ -137,7 +144,7 @@ async function exportDiagnostics() {
           <GameButton variant="secondary" @click="reloadPage">{{ t('errors.app.reload') }}</GameButton>
         </div>
 
-        <div v-if="reportId !== '' || canExport" class="error-screen__report">
+        <div class="error-screen__report">
           <p v-if="reportId !== ''" class="error-screen__report-id" data-testid="error-report-id">
             {{ t('errors.app.reportId', { id: reportId }) }}
           </p>
@@ -147,6 +154,11 @@ async function exportDiagnostics() {
             </GameButton>
             <GameButton v-if="canExport" variant="secondary" @click="exportDiagnostics">
               {{ t('errors.app.exportDiagnostics') }}
+            </GameButton>
+            <!-- Feedback is always offered: the intake degrades to
+                 export-only when the session is dead (BETA-FINAL PR13). -->
+            <GameButton variant="secondary" data-testid="error-feedback" @click="feedbackOpen = true">
+              {{ t('errors.app.feedback') }}
             </GameButton>
           </div>
           <p v-if="exportState !== 'idle'" class="error-screen__export-state" data-testid="error-export-state">
@@ -174,6 +186,15 @@ async function exportDiagnostics() {
       </div>
     </div>
   </div>
+
+  <!-- BETA-FINAL PR13 / spec B7 - opens ABOVE this surface so the error
+       stays behind the dialog; the error text prefills the report. -->
+  <FeedbackDialog
+    :open="feedbackOpen"
+    :layer="OVERLAY_LAYERS.appError + 1"
+    :initial-description="errorStore.current ?? ''"
+    @close="feedbackOpen = false"
+  />
 </template>
 
 <style scoped>

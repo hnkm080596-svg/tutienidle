@@ -397,3 +397,23 @@ export async function activeSessionCount(pg: Client, userId: string) {
   )
   return r.rows[0].n as number
 }
+
+// BETA-FINAL PR13 / spec B7 - feedback intake assertions (operator-side).
+export async function feedbackRows(pg: Client, userId: string) {
+  const r = await pg.query(
+    `select * from public.feedback_reports where owner_user_id = $1 order by created_at`,
+    [userId],
+  )
+  return r.rows
+}
+
+// Acceptance seed (B7): the count of stored reports attributed to one
+// idempotency key - an identical retry must keep this at 1 forever.
+export async function feedbackCountForIdempotencyKey(pg: Client, userId: string, key: string) {
+  const r = await pg.query(
+    `select count(*)::int as n from public.feedback_reports
+       where owner_user_id = $1 and idempotency_key = $2`,
+    [userId, key],
+  )
+  return r.rows[0].n as number
+}

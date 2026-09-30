@@ -646,7 +646,11 @@
         "reset": "Delete Save & Start New",
         "resetCloud": "Reload From Cloud",
         "upgrade": "Upgrade account",
-        "logout": "Log Out"
+        "logout": "Log Out",
+        "feedback": "Send Feedback"
+      },
+      "feedback": {
+        "note": "Report bugs or ideas to the beta team. Your draft stays local until you send it."
       },
       "notifications": {
         "saved": "Progress saved",
@@ -691,7 +695,9 @@
         "build": "Build",
         "buildAria": "Build information",
         "account": "Account",
-        "accountAria": "Account"
+        "accountAria": "Account",
+        "feedback": "Feedback",
+        "feedbackAria": "Beta feedback"
       },
       "update": {
         "title": "Updates",
@@ -1476,6 +1482,7 @@
       "exportDone": "Diagnostic report saved",
       "exportFailed": "Export failed",
       "updateStatus": "update: {status}",
+      "feedback": "Send Feedback",
       "build": "{product} {version} · build {build} · {sha} · {env}"
     },
     "boot": {
@@ -1560,6 +1567,58 @@
     "notify": {
       "deleteFailed": "Could not delete the save — the browser is refusing storage access.",
       "importValidatedRemote": "Save file is valid — normalized copy exported. Server save unchanged."
+    }
+  },
+  "betaFeedback": {
+    "title": "Send Feedback",
+    "intro": "Report a bug or share an idea. Diagnostics attach only if you opt in below.",
+    "categories": {
+      "bug": "Bug",
+      "balance": "Balance",
+      "performance": "Performance",
+      "ui": "Interface",
+      "feature-request": "Feature request",
+      "other": "Other"
+    },
+    "fields": {
+      "category": "Category",
+      "description": "What happened? *",
+      "steps": "Steps to reproduce (optional)",
+      "contact": "Contact (optional)"
+    },
+    "placeholders": {
+      "description": "Describe the problem...",
+      "steps": "1. ...",
+      "contact": "Discord / email (only if you want a reply)"
+    },
+    "hints": {
+      "redaction": "Text is scrubbed for tokens and local paths before sending.",
+      "reportId": "Include this ID if you contact support."
+    },
+    "attach": {
+      "label": "Attach {count} redacted diagnostic events",
+      "hint": "Preview exactly what ships - events are redacted locally first.",
+      "more": "+ {count} more events",
+      "truncated": "Only the newest {count} events fit within the report limits."
+    },
+    "summary": {
+      "build": "Build",
+      "environment": "Environment",
+      "size": "Payload size"
+    },
+    "status": {
+      "accepted": "Thanks - your report was received.",
+      "invalid": "The report was rejected: {detail}",
+      "rateLimited": "Too many reports - try again in about {seconds}s.",
+      "unavailable": "The report could not be sent - your draft is preserved below; you can also export it.",
+      "sessionRevoked": "Your session has expired - sign in again to submit. Your draft is preserved; export keeps a local copy."
+    },
+    "actions": {
+      "submit": "Send report",
+      "export": "Export draft (.json)",
+      "exported": "Exported",
+      "copyId": "Copy report ID",
+      "copied": "Copied"
     }
   },
   "authority": {
