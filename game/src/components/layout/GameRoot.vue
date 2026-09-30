@@ -35,6 +35,7 @@ import TutorialOverlay from '../common/TutorialOverlay.vue'
 import { useOfflineSummaryStore } from '@/stores/offlineSummary'
 import { useUiStore } from '@/stores/ui'
 import { useCombatSceneActive } from '@/composables/useCombatSceneActive'
+import { isBetaStandalonePanel } from '@/core/betaScopeSurface'
 
 const offlineSummary = useOfflineSummaryStore()
 
@@ -73,7 +74,11 @@ const mountedStandalone = reactive(new Set<Exclude<StandalonePanel, null>>())
 watch(
   () => ui.standalonePanel,
   (panel) => {
-    if (panel) mountedStandalone.add(panel)
+    // BETA SCOPE LOCK v2 (Phase-6): the mount seam is the deep-link
+    // chokepoint - a scope-hidden panel can never mount even when a
+    // caller bypasses ui.openStandalonePanel and assigns the state
+    // field directly (e.g. the tribulation outcome seam).
+    if (panel && isBetaStandalonePanel(panel)) mountedStandalone.add(panel)
   },
   { immediate: true },
 )

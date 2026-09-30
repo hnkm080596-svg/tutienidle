@@ -1,5 +1,6 @@
 import { useGameManager } from './useGameState'
 import { useUiStore, type LeftPanelMode } from '@/stores/ui'
+import { isBetaBuildingSurface } from '@/core/betaScopeSurface'
 import type { Building } from '@/core/building/Building'
 
 // Building navigation controller (plan Workstream C) — logic điều hướng
@@ -109,6 +110,14 @@ export function useBuildingNavigation() {
   }
 
   function openBuilding(buildingId: string): void {
+    // BETA SCOPE LOCK v2 (Phase-6): the single navigation funnel fails
+    // closed - a scope-hidden building (chi_hien_quan) opens no popover
+    // and no function panel from ANY caller (hotspot, wheel, popover
+    // deep-link).
+    if (!isBetaBuildingSurface(buildingId)) {
+      return
+    }
+
     const presentation = getBuildingPresentation(buildingId)
 
     if (!presentation.template) {

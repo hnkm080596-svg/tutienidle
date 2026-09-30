@@ -13,6 +13,7 @@
  */
 import { describe, expect, it } from 'vitest'
 import { lockBetaWaysForTests } from '@/core/game/__fixtures__/betaWaysUnlock'
+import { lockBetaFeaturesForTests } from '@/core/game/__fixtures__/betaFeaturesUnlock'
 import {
   BETA_ACT_COUNT,
   BETA_BOSSES_PER_ACT,
@@ -43,9 +44,11 @@ import { STAGES } from '@/data/stage/Stages'
 import { alchemyRecipes } from '@/data/alchemy/alchemyRecipes'
 import { QUESTS } from '@/data/quest/quests'
 
-// The global test setup unlocks every catalog way for suites written
-// pre-lock; this suite asserts the canonical beta set, so re-pin it.
+// The global test setup unlocks every catalog way + feature for
+// suites written pre-lock; this suite asserts the canonical beta
+// allow-lists, so re-pin them.
 lockBetaWaysForTests()
+lockBetaFeaturesForTests()
 
 describe('beta scope v2 - way and element allow-lists', () => {
   it('offers spell_pathway and only spell_pathway', () => {
