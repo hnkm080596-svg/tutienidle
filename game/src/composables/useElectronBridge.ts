@@ -7,6 +7,7 @@ import type { CombatClockBridge } from '../presentation/clock/MainProcessClockSo
 import type { FlushResult, QuitFlushFailedNotice } from '../shared/session/FlushResult'
 import type { DiagnosticExportResult } from '../main-process/DiagnosticBundle'
 import { recordDiagnostic } from '../services/diagnostics/DiagnosticRecorder'
+import type { GuestCredentialBridge } from '../services/supabase/SupabaseSession'
 
 // Uncommitted audit followup plan, Ưu tiên 2 "xử lý khi đóng gói Electron"
 // (2026-08-24) — cầu nối renderer ↔ main process, CHỈ tồn tại khi chạy
@@ -55,6 +56,11 @@ export interface ElectronBridgeAPI {
   // CombatClockBridge exactly; kept as that imported type rather than
   // redeclared here so the two cannot drift.
   combatClock: CombatClockBridge
+  // B1.8 - durable guest credential seam (OS-protected, main-owned).
+  // Operations only: the renderer never sees the file path or raw bytes.
+  // Absent on older preloads; SupabaseSession treats a missing bridge as
+  // 'no durable store', which keeps browser behavior session-scoped.
+  guestCredentials?: GuestCredentialBridge
 }
 
 declare global {

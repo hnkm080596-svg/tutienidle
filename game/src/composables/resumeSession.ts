@@ -4,7 +4,7 @@
 // card offers a one-click continue instead of a forced re-login.
 // Presentation-side assembly only: reads the session slot and the resolved
 // save key; no writes, no boot-authority changes.
-import { readSupabaseSession } from '@/services/supabase/SupabaseSession'
+import { readSupabaseSession, restoreDurableGuestSession } from '@/services/supabase/SupabaseSession'
 import { getRawSave } from '@/services/save/SaveSystem'
 import { readAnyAckedSaveEnvelope } from '@/services/cloudSave/AckedSaveCache'
 import { resolveSaveAccountId } from '@/services/save/saveKeys'
@@ -13,6 +13,15 @@ import type { AuthSession } from '@/services/auth/AuthService'
 export interface ResumeCandidate {
   session: AuthSession
   name: string
+  /** True when the session came from a stored Supabase credential (vs the
+   *  synthetic guest minted for a local-only save). Drives whether
+   *  Continue claims through resumeStoredSession. */
+  stored: boolean
+  /** EXT-09 pending-confirm upgrade marker carried by the stored session. */
+  pendingUpgradeLoginId?: string
+  /** Set when the durable guest credential exists but could not be read -
+   *  a recovery error surface, never silently ignored. */
+  durableError?: 'unavailable' | 'corrupted'
 }
 
 /** Local save bytes, else the B1-C server-ACKed envelope mirror kept by
@@ -25,10 +34,14 @@ function rawSaveForResume(): string | null {
   }
 }
 
-/** True when a stored session or any resolvable save exists - enough to
- *  justify the short intro + continue affordance. */
-export function hasResumeCandidate(): boolean {
+/** True when a stored session (including the OS-protected durable guest
+ *  credential restored across a process restart) or any resolvable save
+ *  exists - enough to justify the short intro + continue affordance.
+ *  Async because the durable seam lives behind IPC on Electron. */
+export async function hasResumeCandidate(): Promise<boolean> {
   try {
+    const restore = await restoreDurableGuestSession()
+    if (restore === 'restored') return true
     return Boolean(readSupabaseSession()) || Boolean(rawSaveForResume())
   } catch {
     return false
@@ -37,17 +50,37 @@ export function hasResumeCandidate(): boolean {
 
 /** Session + character name for the continue button, or null when there is
  *  genuinely nothing to resume. Guest saves without a stored session resume
- *  as a fresh guest session (same shape MockAuthService returns). */
-export function readResumeCandidate(): ResumeCandidate | null {
+ *  as a fresh guest session (same shape MockAuthService returns).
+ *
+ *  B1.8: the durable guest credential is hydrated here first (Electron
+ *  process restart) - an 'unavailable'/'corrupted' store is surfaced on
+ *  the candidate as a recovery error, never a plaintext fallback and
+ *  never an implicit new anonymous signup. */
+export async function readResumeCandidate(): Promise<ResumeCandidate | null> {
+  const restore = await restoreDurableGuestSession()
   const stored = readSupabaseSession()
   const raw = rawSaveForResume()
+  const durableError =
+    restore === 'unavailable' || restore === 'corrupted' ? restore : undefined
 
   if (!stored && !raw) {
-    return null
+    return durableError
+      ? {
+          session: { sessionId: crypto.randomUUID(), mode: 'guest' },
+          name: '',
+          stored: false,
+          durableError,
+        }
+      : null
   }
 
   const session: AuthSession = stored
-    ? { sessionId: stored.sessionId, mode: stored.mode ?? 'guest', userId: stored.userId }
+    ? {
+        sessionId: stored.sessionId,
+        mode: stored.mode ?? 'guest',
+        userId: stored.userId,
+        loginId: stored.pendingUpgrade?.loginId,
+      }
     : { sessionId: crypto.randomUUID(), mode: 'guest' }
 
   let name = ''
@@ -62,7 +95,13 @@ export function readResumeCandidate(): ResumeCandidate | null {
     }
   }
 
-  return { session, name }
+  return {
+    session,
+    name,
+    stored: Boolean(stored),
+    pendingUpgradeLoginId: stored?.pendingUpgrade?.loginId,
+    durableError,
+  }
 }
 
 // Post-reset continuity (ui-audit creation-meta Low): after a save reset the

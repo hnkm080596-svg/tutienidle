@@ -644,7 +644,9 @@
         "export": "Export Save (.json)",
         "import": "Import Save",
         "reset": "Delete Save & Start New",
-        "resetCloud": "Reload From Cloud"
+        "resetCloud": "Reload From Cloud",
+        "upgrade": "Upgrade account",
+        "logout": "Log Out"
       },
       "notifications": {
         "saved": "Progress saved",
@@ -665,7 +667,12 @@
         "resetBody": "Delete all progress and start a new character? Remember to \"Export Save\" first if you haven't — this action cannot be undone.",
         "resetCloudTitle": "Reload From Cloud",
         "resetCloudBody": "Clear the local cache and reload progress from the server? The cloud save is NOT deleted — the server version will be restored.",
-        "importBodyRemote": "Cloud mode: the imported file is only VALIDATED and a normalized copy is exported — the server save is not replaced. Continue?"
+        "importBodyRemote": "Cloud mode: the imported file is only VALIDATED and a normalized copy is exported — the server save is not replaced. Continue?",
+        "logoutTitle": "Log out",
+        "logoutBody": "Log out of this account? Progress already synced stays on the server.",
+        "logoutUnsyncedTitle": "Sync incomplete",
+        "logoutUnsyncedBody": "Your latest progress has not reached the server. Retry to sync before logging out, or log out anyway and lose the unsynced part.",
+        "logoutUnsyncedConfirm": "Log out unsynced"
       },
       "errors": {
         "invalidSaveFile": "Invalid save file."
@@ -680,7 +687,9 @@
         "language": "Language",
         "languageAria": "Language",
         "build": "Build",
-        "buildAria": "Build information"
+        "buildAria": "Build information",
+        "account": "Account",
+        "accountAria": "Account"
       },
       "build": {
         "version": "Version",
@@ -706,6 +715,10 @@
           "vi": "Tiếng Việt",
           "en": "English"
         }
+      },
+      "account": {
+        "guestNote": "Guest account - its credential lives only on this device. Upgrade to keep progress across machines.",
+        "registeredNote": "Registered account - sign back in with your ID and password."
       }
     },
     "quest": {
@@ -1031,7 +1044,14 @@
       "continue": "Continue — {name}",
       "continueNoName": "Continue",
       "language": "Language",
-      "saveCleared": "Your save was cleared — start fresh when ready."
+      "saveCleared": "Your save was cleared — start fresh when ready.",
+      "credentialError": "The guest credential stored on this device could not be read — sign in again or start a new guest to continue.",
+      "upgradeLink": "Upgrade guest account",
+      "crossAccount": {
+        "title": "Leave the current guest session",
+        "body": "This device holds a guest account. Continuing will leave that guest session — its progress is kept, but returning requires the guest session to still be valid on the server.",
+        "confirm": "Leave guest session"
+      }
     },
     "creation": {
       "back": "← Back",
@@ -1342,6 +1362,7 @@
         "retired": "This pill is retired — its old effect is no longer supported.",
         "cap": "The related stat has reached the realm cap.",
         "material_pill": "This pill is not consumed directly — it is spent through its own system.",
+        "in_battle": "Stat-granting pills cannot be used mid-battle.",
         "fallback": "Cannot use this pill."
       }
     },
@@ -1546,5 +1567,24 @@
     "retry": "Retry",
     "cancel": "Stay",
     "force": "Quit without saving"
+  },
+  "account": {
+    "upgrade": {
+      "hint": "Set a Cultivator ID to keep your character, realm and progress - you will choose the password after the server confirms.",
+      "submit": "Upgrade account",
+      "pendingBody": "Account {id} is waiting for server confirmation. Your progress stays safe - check again once the server confirms.",
+      "pendingCheck": "Check again",
+      "pendingSwitch": "Use a different ID",
+      "done": "Account upgraded - your character is unchanged.",
+      "passwordBody": "Account {id} is confirmed. Set the password that will sign this account back in.",
+      "passwordSubmit": "Set password"
+    },
+    "abandon": {
+      "title": "Leave guest session",
+      "body": "Logging out erases the guest credential on this device - the only way back into this account. Upgrade the account or export your save first if you want to keep your progress.",
+      "upgrade": "Upgrade account",
+      "export": "Export save",
+      "confirm": "Log out forever"
+    }
   }
 }

@@ -672,6 +672,7 @@ export class GameManager {
       pillRegistry: this.pillRegistry,
       pillSystem: this.pillSystem,
       applyTimedEffect: (player, effect) => this.effectOps.applyTimedEffect(player, effect),
+      isTurnBattleInProgress: () => this.turnBattleOps?.isTurnBattleInProgress() ?? false,
     })
 
     this.hiddenBeastSystem = new HiddenBeastSystem({

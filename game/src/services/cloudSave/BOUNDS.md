@@ -71,6 +71,14 @@ caching — never an independent authority:
   `SAVE_TOO_LARGE`, `CONFIGURATION_ERROR`); server `REJECTED` codes keep
   their meaning through `detail`.
 
-**Release admission stays `blocked`** until PR4–PR6 seal the durable
-journal, online admission, and identity surfaces — the composition
-resolves and is testable, but it is not launchable.
+**Release admission stays `blocked`.** PR4–PR6 landed the durable journal,
+online admission, and identity surfaces; PR7 (B1-F) staged the compatibility
+matrix + cutover runbook and proved the contract on the staging project
+(`beta_contract_phase() = 'cutover'` there). What still holds the gate:
+the **beta project cutover is UNSEALED** (no DB deployment authority yet —
+the runbook in `docs/operations/beta/backend-cutover.md` is the executable
+procedure for it), EXT-05 device-level two-device proof on real installs,
+and the signed release candidate at PR15. The composition resolves and is
+testable, but it is not launchable. Gate-lift criteria + the client SHA /
+migration hashes they bind to are recorded in
+`docs/qa/runs/beta-final-b1/admission-record.md`.
