@@ -40,6 +40,7 @@ import { isBattleInProgress } from './core/battle/BattleTypes'
 import { registerEnemySpawnDebug } from './core/dev/enemySpawnDebug'
 import { useBreakthrough } from './composables/useBreakthrough'
 import { useElectronBridge } from './composables/useElectronBridge'
+import { bindUpdateSurface, unbindUpdateSurface, useUpdates } from './composables/useUpdates'
 import { useCombatPause } from './composables/useCombatPause'
 import { useNotificationStore } from './stores/notification'
 import { useI18n } from 'vue-i18n'
@@ -62,6 +63,7 @@ import CombatPauseOverlay from './components/game/combat/CombatPauseOverlay.vue'
 import LoadingScreen from './components/common/LoadingScreen.vue'
 import ErrorBoundary from './components/common/ErrorBoundary.vue'
 import ErrorScreen from './components/common/ErrorScreen.vue'
+import UpdateBanner from './components/common/UpdateBanner.vue'
 import SaveIncompatibleScreen from './components/common/SaveIncompatibleScreen.vue'
 import AuthEntryScreen from './components/onboarding/AuthEntryScreen.vue'
 import CharacterCreationScreen, {
@@ -616,6 +618,25 @@ const onlineAuthority = bindOnlineAuthority(new OnlineSessionController({
   },
 }))
 
+// BETA-FINAL PR12 / spec B6 - the ONE update surface: the sanitized
+// UpdateState projection plus the prepare-install handshake. Install
+// admission pauses the SIMULATION (authority.pause would bump the
+// generation and self-sabotage the request-time equality fence), drains
+// the ONE save queue through the same result-bearing flush, and installs
+// only on 'saved' - a failure keeps the candidate parked, never installs.
+const updateSurface = bindUpdateSurface(
+  useUpdates(
+    {
+      flush: (requestId) => onlineAuthority.flush(requestId),
+      pauseAdmission: () => lifecycle.pauseSimulation(),
+      resumeAdmission: () => lifecycle.resumeSimulation(),
+      generation: () => onlineAuthority.currentGeneration,
+    },
+    gameManager,
+  ),
+)
+const updateInstallFailed = computed(() => updateSurface?.installFailed.value ?? null)
+
 const AUTHORITY_TERMINAL_STATES: ReadonlySet<AuthorityState> = new Set([
   'conflict',
   'revoked',
@@ -995,6 +1016,8 @@ onUnmounted(() => {
   unbindFeedbackService()
   unbindFeedbackProviders()
   unbindOnlineAuthority(onlineAuthority)
+  updateSurface?.dispose()
+  unbindUpdateSurface(updateSurface)
   unbindSessionTeardown(teardownToAuth)
   window.removeEventListener(SAVE_RESET_REQUEST_EVENT, resetSaveFromSettings)
 
@@ -1100,6 +1123,16 @@ onUnmounted(() => {
       <button type="button" @click="acknowledgeAuthority">
         {{ t('authority.reauth') }}
       </button>
+      <!-- 'update-required' is terminal FOR THE SESSION - the update
+           surface stays reachable so the user can fetch the build the
+           backend demands instead of dead-ending at the gate. -->
+      <button
+        v-if="authorityState === 'update-required' && updateSurface"
+        type="button"
+        @click="updateSurface.check()"
+      >
+        {{ t('updates.check') }}
+      </button>
     </div>
   </div>
 
@@ -1114,6 +1147,23 @@ onUnmounted(() => {
       </div>
     </div>
   </div>
+
+  <!-- BETA-FINAL PR12 - the install admission failed (blocked/failed
+       flush or timeout): explicit recovery only - retry mints a NEW
+       requestId; 'later' keeps the verified candidate parked. Neither
+       path turns a failed flush into an install. -->
+  <div v-if="updateInstallFailed" class="authority-overlay" :style="{ zIndex: OVERLAY_LAYERS.authority }">
+    <div class="authority-card">
+      <h2>{{ t('updates.installFailed.title') }}</h2>
+      <p>{{ t('updates.installFailed.message', { code: updateInstallFailed.code ?? updateInstallFailed.status }) }}</p>
+      <div class="authority-actions">
+        <button type="button" @click="updateSurface?.retryInstall()">{{ t('updates.installFailed.retry') }}</button>
+        <button type="button" @click="updateSurface?.later()">{{ t('updates.installFailed.later') }}</button>
+      </div>
+    </div>
+  </div>
+
+  <UpdateBanner v-if="isBooted" />
 
   <ErrorScreen />
 </template>

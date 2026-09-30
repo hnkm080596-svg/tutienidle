@@ -91,6 +91,67 @@ contextBridge.exposeInMainWorld('electronAPI', {
     return ipcRenderer.invoke('diagnostic:export', context)
   },
 
+  // BETA-FINAL PR12 / spec B6 - the allowlisted update surface. The
+  // renderer receives ONLY the sanitized UpdateState projection plus the
+  // install request/result handshake - no feed URL, no file path, no
+  // publisher blob, no setFeedURL, no arbitrary updater primitive.
+  getUpdateState() {
+    return ipcRenderer.invoke('update:get-state')
+  },
+
+  onUpdateState(callback: (state: unknown) => void) {
+    const handler = (_event: Electron.IpcRendererEvent, state: unknown) => callback(state)
+    ipcRenderer.on('update:state', handler)
+    return () => {
+      ipcRenderer.removeListener('update:state', handler)
+    }
+  },
+
+  checkForUpdate() {
+    ipcRenderer.send('update:check')
+  },
+
+  downloadUpdate() {
+    ipcRenderer.send('update:download')
+  },
+
+  cancelUpdateDownload() {
+    ipcRenderer.send('update:cancel-download')
+  },
+
+  // The install admission gate: the request carries the authority
+  // generation captured at click time; the result must quote the pending
+  // requestId and that same generation (see src/main-process/UpdateService.ts).
+  requestUpdateInstall(generation: number) {
+    ipcRenderer.send('update:install-request', { generation })
+  },
+
+  onUpdatePrepareInstall(callback: (request: { requestId: string }) => void) {
+    const handler = (_event: Electron.IpcRendererEvent, request: { requestId?: string }) =>
+      callback({ requestId: typeof request?.requestId === 'string' ? request.requestId : '' })
+    ipcRenderer.on('update:prepare-install', handler)
+    return () => {
+      ipcRenderer.removeListener('update:prepare-install', handler)
+    }
+  },
+
+  notifyUpdateInstallResult(result: unknown) {
+    ipcRenderer.send('update:install-result', result)
+  },
+
+  onUpdateInstallFailed(
+    callback: (notice: { requestId: string; status: string; code?: string }) => void,
+  ) {
+    const handler = (
+      _event: Electron.IpcRendererEvent,
+      notice: { requestId: string; status: string; code?: string },
+    ) => callback(notice)
+    ipcRenderer.on('update:install-failed', handler)
+    return () => {
+      ipcRenderer.removeListener('update:install-failed', handler)
+    }
+  },
+
   combatClock: {
     onTick(callback: (elapsedSeconds: number) => void) {
       const handler = (_event: Electron.IpcRendererEvent, elapsed: number) => callback(elapsed)

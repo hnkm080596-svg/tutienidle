@@ -59,6 +59,17 @@ function makeApi() {
     reportDiagnosticEvent: vi.fn(),
     getDiagnosticReportId: vi.fn(() => Promise.resolve('test-report-id')),
     exportDiagnostics: vi.fn(() => Promise.resolve({ status: 'cancelled' as const })),
+    // BETA-FINAL PR12 - the update surface fields the preload added;
+    // unused by these quit-flush tests but required by the interface.
+    getUpdateState: vi.fn(() => Promise.resolve(null)),
+    onUpdateState: vi.fn(() => () => {}),
+    checkForUpdate: vi.fn(),
+    downloadUpdate: vi.fn(),
+    cancelUpdateDownload: vi.fn(),
+    requestUpdateInstall: vi.fn(),
+    onUpdatePrepareInstall: vi.fn(() => () => {}),
+    notifyUpdateInstallResult: vi.fn(),
+    onUpdateInstallFailed: vi.fn(() => () => {}),
     combatClock: {
       onTick: vi.fn(() => vi.fn()),
       stop: vi.fn(),

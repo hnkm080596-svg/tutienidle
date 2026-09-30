@@ -22,6 +22,7 @@ export const DIAGNOSTIC_CATEGORIES = [
   'quit-flush',
   'lifecycle',
   'export',
+  'update',
 ] as const
 export type DiagnosticCategory = (typeof DIAGNOSTIC_CATEGORIES)[number]
 

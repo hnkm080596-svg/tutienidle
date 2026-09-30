@@ -690,12 +690,21 @@
         "saveAria": "Lưu trữ",
         "language": "Ngôn Ngữ",
         "languageAria": "Ngôn ngữ",
+        "update": "Cập Nhật",
+        "updateAria": "Cập nhật ứng dụng",
         "build": "Phiên Bản",
         "buildAria": "Thông tin phiên bản",
         "account": "Tài Khoản",
         "accountAria": "Tài khoản",
         "feedback": "Phản Hồi",
         "feedbackAria": "Phản hồi beta"
+      },
+      "update": {
+        "title": "Cập Nhật",
+        "note": "Phiên bản hiện tại: {version}",
+        "statusChecking": "Đang kiểm tra cập nhật…",
+        "statusAvailable": "Bản cập nhật {version} đã sẵn sàng",
+        "statusUpToDate": "Bạn đang ở phiên bản mới nhất"
       },
       "audio": {
         "on": "Bật",
@@ -1472,6 +1481,7 @@
       "exportDiagnostics": "Xuất gói chẩn đoán",
       "exportDone": "Đã lưu báo cáo chẩn đoán",
       "exportFailed": "Xuất thất bại",
+      "updateStatus": "cập nhật: {status}",
       "feedback": "Gửi Phản Hồi",
       "build": "{product} {version} · bản dựng {build} · {sha} · {env}"
     },
@@ -1644,6 +1654,26 @@
       "upgrade": "Nâng cấp tài khoản",
       "export": "Xuất save",
       "confirm": "Đăng xuất vĩnh viễn"
+    }
+  },
+  "updates": {
+    "available": "Bản cập nhật {version} đã sẵn sàng",
+    "notes": "Ghi chú phát hành",
+    "download": "Tải bản cập nhật",
+    "downloading": "Đang tải bản cập nhật… {percent}%",
+    "cancel": "Hủy tải",
+    "ready": "Bản cập nhật {version} đã tải xong, sẵn sàng cài đặt",
+    "install": "Cài đặt và khởi động lại",
+    "installing": "Đang cài đặt bản cập nhật…",
+    "later": "Để sau",
+    "retry": "Thử lại",
+    "check": "Kiểm tra cập nhật",
+    "failed": "Cập nhật thất bại — tiến trình của bạn vẫn an toàn.",
+    "installFailed": {
+      "title": "Không cài được bản cập nhật",
+      "message": "Lần lưu trước khi cài không hoàn tất ({code}) — bản cập nhật CHƯA được cài. Thử lại, hoặc chơi tiếp và cài sau.",
+      "retry": "Thử cài lại",
+      "later": "Để sau"
     }
   }
 }

@@ -103,6 +103,10 @@ nsis:
 # Uploads NEVER go through electron-builder's own publisher (no --publish
 # flag is ever passed); the restricted draft feed is owned by
 # scripts/release/publish-candidate.mjs via GitHub draft releases (EXT-04).
+# BETA-FINAL PR12 / spec B6 - the same publish block is the update feed the
+# main-process UpdateService verifies verbatim against EXPECTED_UPDATE_FEED
+# in src/shared/update/UpdateState.ts; scripts/release/update-feed.test.mjs
+# asserts the two declarations stay equal.
 publish:
   provider: github
   owner: hnkm080596-svg

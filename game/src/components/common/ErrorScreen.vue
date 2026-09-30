@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import GameButton from '@/components/common/GameButton.vue'
 import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
@@ -11,6 +11,7 @@ import {
   getDiagnosticRecorder,
   recordDiagnostic,
 } from '@/services/diagnostics/DiagnosticRecorder'
+import { useActiveUpdates } from '@/composables/useUpdates'
 
 const errorStore = useErrorStore()
 const { t } = useI18n()
@@ -37,6 +38,29 @@ const reportId = ref('')
 const reportCopied = ref(false)
 const exportState = ref<'idle' | 'exported' | 'failed'>('idle')
 const canExport = typeof window.electronAPI?.exportDiagnostics === 'function'
+
+// BETA-FINAL PR12 - support-visible update status on the error surface:
+// a crash screenshot also carries whether a verified update was pending,
+// plus a manual re-check escape when the feed is reachable.
+const updates = useActiveUpdates()
+const updateState = computed(() => updates?.state.value ?? null)
+const updateLabel = computed(() => {
+  const state = updateState.value
+  if (state === null) return null
+  switch (state.phase) {
+    case 'available':
+    case 'downloading':
+    case 'downloaded':
+    case 'installing':
+      return `${state.phase}:${state.candidate?.version ?? ''}`
+    case 'error':
+      return `error:${state.error?.code ?? 'UNKNOWN'}`
+    case 'unavailable':
+      return 'up-to-date'
+    default:
+      return state.phase
+  }
+})
 
 // BETA-FINAL PR13 / spec B7 - a crash is exactly the moment a feedback
 // report is most valuable. The dialog mounts above this surface (appError
@@ -141,6 +165,10 @@ async function exportDiagnostics() {
             {{ exportState === 'exported' ? t('errors.app.exportDone') : t('errors.app.exportFailed') }}
           </p>
         </div>
+
+        <p v-if="updateLabel !== null" class="error-screen__build" data-testid="error-update-status">
+          {{ t('errors.app.updateStatus', { status: updateLabel }) }}
+        </p>
 
         <!-- BETA-FINAL PR1 / spec B2 - build identity on the error surface
              so a screenshot of a crash carries the release manifest values. -->
