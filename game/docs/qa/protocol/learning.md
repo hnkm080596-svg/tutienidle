@@ -137,3 +137,16 @@ These are candidate lesson specifications, not promoted or executed results:
 | L-ZERO-DELIVERY | Subscribers fired even when delivery was zero | Delivered-quantity invariant across every producer with event/receipt cardinality |
 
 Each candidate must pass the promotion predicate during Devin adoption before being described as learned protection.
+
+## Incident records
+
+### 2026-09-30 BETA-FINAL PR12 (updater) - two escapes caught inside the gate
+
+- **Incident:** `recordMain` TDZ crash on invalid-feed boot. UpdateService's constructor records eagerly on a rejected packaged feed; the service was constructed before `const recordMain` in main(), so the `record` arrow hit the TDZ - the exact guarded-failure path crashed main().
+  - **Root class:** L-ORDER-EAGER - a dependency captured by a lazy callback is invoked synchronously by the constructor, before the binding is initialized. Declaration order, not call order, was wrong.
+  - **Detector escape:** type-check/build green (TDZ is a runtime fault); no unit harness exists for electron/main.ts by convention; OCR delegation read the deps object but not cross-block ordering.
+  - **Pin/attack proposal:** construct eager-recording services AFTER their record/callback dependencies are initialized; P5 passes must trace constructor-time side effects, not only method bodies. Qualify as CANDIDATE.
+- **Incident:** `quitAndInstall()` called without `isForceRunAfter` - the NSIS wizard would install but not relaunch, silently truncating the update journey; and a synchronous throw left phase 'installing' forever after a successful flush.
+  - **Root class:** L-API-DEFAULT-SEMANTICS - a library call taken verbatim adopted defaults that negate the caller's invariant (relaunch-after-install); plus unguarded terminal call post-commit.
+  - **Detector escape:** the FakeUpdater in tests accepted any signature; semantics only live in electron-updater docs, not types.
+  - **Pin/attack proposal:** for provider-boundary adapters, pin every defaulted argument that carries a journey invariant in the adapter comment AND verify launch-failure recovery (state returns to a retryable phase). Qualify as CANDIDATE.

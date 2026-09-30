@@ -679,8 +679,17 @@
         "saveAria": "Save data",
         "language": "Language",
         "languageAria": "Language",
+        "update": "Updates",
+        "updateAria": "App updates",
         "build": "Build",
         "buildAria": "Build information"
+      },
+      "update": {
+        "title": "Updates",
+        "note": "Current version: {version}",
+        "statusChecking": "Checking for updates…",
+        "statusAvailable": "Update {version} is available",
+        "statusUpToDate": "You are on the latest version"
       },
       "build": {
         "version": "Version",
@@ -1445,6 +1454,7 @@
       "exportDiagnostics": "Export diagnostics",
       "exportDone": "Diagnostic report saved",
       "exportFailed": "Export failed",
+      "updateStatus": "update: {status}",
       "build": "{product} {version} · build {build} · {sha} · {env}"
     },
     "boot": {
@@ -1546,5 +1556,25 @@
     "retry": "Retry",
     "cancel": "Stay",
     "force": "Quit without saving"
+  },
+  "updates": {
+    "available": "Update {version} is available",
+    "notes": "Release notes",
+    "download": "Download update",
+    "downloading": "Downloading update… {percent}%",
+    "cancel": "Cancel download",
+    "ready": "Update {version} is ready to install",
+    "install": "Install and restart",
+    "installing": "Installing update…",
+    "later": "Later",
+    "retry": "Retry",
+    "check": "Check for updates",
+    "failed": "Update failed — your game progress is safe.",
+    "installFailed": {
+      "title": "Could not install the update",
+      "message": "The pre-install save did not complete ({code}) — the update was NOT installed. Retry, or keep playing and install later.",
+      "retry": "Retry install",
+      "later": "Later"
+    }
   }
 }

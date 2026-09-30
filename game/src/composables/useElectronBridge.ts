@@ -5,6 +5,7 @@ import { i18n } from '@/i18n'
 import type { GameManager } from '../core/game/GameManager'
 import type { CombatClockBridge } from '../presentation/clock/MainProcessClockSource'
 import type { FlushResult, QuitFlushFailedNotice } from '../shared/session/FlushResult'
+import type { UpdateInstallFailedNotice, UpdateInstallRequest, UpdateInstallResult } from '../shared/update/UpdateState'
 import type { DiagnosticExportResult } from '../main-process/DiagnosticBundle'
 import { recordDiagnostic } from '../services/diagnostics/DiagnosticRecorder'
 
@@ -50,6 +51,21 @@ export interface ElectronBridgeAPI {
   exportDiagnostics(
     context: unknown,
   ): Promise<DiagnosticExportResult | { status: 'cancelled' }>
+  // BETA-FINAL PR12 / spec B6 - the allowlisted update surface. Only the
+  // sanitized UpdateState projection and the request/result handshake
+  // cross the bridge; there is no setFeedURL, path or publisher escape
+  // hatch. Shape must match the update block in electron/preload.ts.
+  getUpdateState(): Promise<unknown>
+  onUpdateState(callback: (state: unknown) => void): () => void
+  checkForUpdate(): void
+  downloadUpdate(): void
+  cancelUpdateDownload(): void
+  /** Carries the authority generation captured at click time; the install
+   *  result must quote the pending requestId AND this generation. */
+  requestUpdateInstall(generation: number): void
+  onUpdatePrepareInstall(callback: (request: UpdateInstallRequest) => void): () => void
+  notifyUpdateInstallResult(result: UpdateInstallResult): void
+  onUpdateInstallFailed(callback: (notice: UpdateInstallFailedNotice) => void): () => void
   // Task 7 (2026-09-10) - main-process clock host bridge, consumed by
   // MainProcessClockSource (src/presentation/clock/). Shape must match
   // CombatClockBridge exactly; kept as that imported type rather than

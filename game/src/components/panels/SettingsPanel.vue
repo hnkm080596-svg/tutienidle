@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '@/stores/player'
 import { useAudioStore } from '@/stores/audio'
@@ -12,6 +12,7 @@ import { observeAuthoritySaveResult } from '@/composables/useOnlineAuthority'
 import { UI_SCALE_OPTIONS, loadUiScale, saveUiScale } from '@/composables/uiScale'
 import { LOCALE_OPTIONS, saveLocale, type AppLocale } from '@/composables/locale'
 import { BUILD_IDENTITY, shortGitSha } from '@/shared/build/BuildIdentity'
+import { useActiveUpdates } from '@/composables/useUpdates'
 import ConfirmModal from '@/components/common/ConfirmModal.vue'
 import GameButton from '@/components/common/GameButton.vue'
 import Chip from '@/components/common/primitives/Chip.vue'
@@ -80,6 +81,13 @@ const BUILD_ROWS = [
 ] as const
 
 const lastSavedLabel = ref('')
+
+// BETA-FINAL PR12 - the bound update surface (null on web builds; the
+// section hides itself then). Renders the sanitized UpdateState only.
+const updates = useActiveUpdates()
+const updateState = computed(() => updates?.state.value ?? null)
+const updatePhase = computed(() => updateState.value?.phase ?? null)
+const updateProgressPercent = computed(() => Math.round(updateState.value?.progress?.percent ?? 0))
 
 // Lưu thủ công phải await và kiểm tra kết quả — trước đây toast
 // "Đã lưu tiến trình" hiện cả khi writeGameSave fail (quota), người
@@ -347,6 +355,80 @@ function handleReset() {
         >
           {{ t(`panels.settings.language.names.${option}`) }}
         </Chip>
+      </div>
+    </section>
+
+    <!-- BETA-FINAL PR12 / spec B6 - the update surface. Hidden entirely
+         on builds with no verified feed (web/dev render 'unsupported' -
+         there is nothing honest to offer). -->
+    <section
+      v-if="updateState !== null && updatePhase !== 'unsupported'"
+      class="settings-panel__section settings-panel__update"
+      :aria-label="t('panels.settings.sections.updateAria')"
+    >
+      <h4>{{ t('panels.settings.update.title') }}</h4>
+
+      <p class="settings-panel__section-note">
+        {{ t('panels.settings.update.note', { version: updateState.currentVersion }) }}
+      </p>
+
+      <p v-if="updatePhase === 'available'" class="settings-panel__update-status" data-testid="update-status">
+        {{ t('panels.settings.update.statusAvailable', { version: updateState.candidate?.version }) }}
+      </p>
+      <p v-else-if="updatePhase === 'downloading'" class="settings-panel__update-status" data-testid="update-status">
+        {{ t('updates.downloading', { percent: updateProgressPercent }) }}
+      </p>
+      <p v-else-if="updatePhase === 'downloaded'" class="settings-panel__update-status" data-testid="update-status">
+        {{ t('updates.ready', { version: updateState.candidate?.version }) }}
+      </p>
+      <p v-else-if="updatePhase === 'checking'" class="settings-panel__update-status" data-testid="update-status">
+        {{ t('panels.settings.update.statusChecking') }}
+      </p>
+      <p v-else-if="updatePhase === 'unavailable'" class="settings-panel__update-status" data-testid="update-status">
+        {{ t('panels.settings.update.statusUpToDate') }}
+      </p>
+      <p v-else-if="updatePhase === 'error'" class="settings-panel__update-status" data-testid="update-status">
+        {{ t('updates.failed') }}
+      </p>
+
+      <div class="settings-panel__actions">
+        <GameButton
+          v-if="updatePhase === 'available'"
+          size="md"
+          variant="primary"
+          data-testid="update-download"
+          @click="updates?.download()"
+        >
+          {{ t('updates.download') }}
+        </GameButton>
+        <GameButton
+          v-else-if="updatePhase === 'downloading'"
+          size="md"
+          variant="secondary"
+          data-testid="update-cancel"
+          @click="updates?.cancelDownload()"
+        >
+          {{ t('updates.cancel') }}
+        </GameButton>
+        <GameButton
+          v-else-if="updatePhase === 'downloaded'"
+          size="md"
+          variant="primary"
+          data-testid="update-install"
+          @click="updates?.install()"
+        >
+          {{ t('updates.install') }}
+        </GameButton>
+        <GameButton
+          v-else
+          size="md"
+          variant="secondary"
+          :disabled="updatePhase === 'checking' || updatePhase === 'installing'"
+          data-testid="update-check"
+          @click="updates?.check()"
+        >
+          {{ t('updates.check') }}
+        </GameButton>
       </div>
     </section>
 

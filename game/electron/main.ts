@@ -1,6 +1,7 @@
 import { app, BrowserWindow, dialog, ipcMain, powerMonitor } from 'electron'
 import path from 'node:path'
 import os from 'node:os'
+import { readFileSync } from 'node:fs'
 import fs from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 import {
@@ -8,6 +9,9 @@ import {
   attachPowerMonitorToClockHost,
 } from '../src/main-process/combatClockHost'
 import { createQuitFlush } from '../src/main-process/quitFlush'
+import { UpdateService, type UpdateProvider } from '../src/main-process/UpdateService'
+import { createElectronUpdateProvider } from '../src/main-process/electronUpdater'
+import { EXPECTED_UPDATE_FEED } from '../src/shared/update/UpdateState'
 import {
   DiagnosticBundle,
   sanitizeReportIdForFilename,
@@ -40,6 +44,13 @@ if (!gotSingleInstanceLock) {
 function main() {
   let mainWindow: BrowserWindow | null = null
 
+  // BETA-FINAL PR12 / spec B6 - the update journey spec seeds a known
+  // userData dir (saves + diagnostics land in a readable place). Packaged
+  // release binaries ship with the env unset and this block is inert.
+  if (process.env.TID_USERDATA_DIR) {
+    app.setPath('userData', path.resolve(process.env.TID_USERDATA_DIR))
+  }
+
   // Main-process clock host (Task 7) - see src/main-process/combatClockHost.ts
   // for why this exists: Chromium can throttle the renderer's rAF, so the
   // production ClockSource under Electron ticks from here instead, over IPC.
@@ -63,6 +74,12 @@ function main() {
   // window state; a second user close during the flush window stays
   // blocked without re-sending the flush request (audit T6-52).
   const onQuitFlushClose = createQuitFlush({ ipcMain })
+
+  // BETA-FINAL PR12 / spec B6 - the update authority block lives BELOW
+  // the diagnostics section: the service's constructor can record()
+  // eagerly (an invalid packaged feed parks the service at 'unsupported'
+  // with an event), so recordMain must already be initialized - a const
+  // above this block would hit the TDZ.
 
   // BETA-FINAL PR11 / spec B8 - the local diagnostic bundle. One writer
   // owns <userData>/diagnostics; renderer events arrive over
@@ -125,6 +142,66 @@ function main() {
   })
 
   ipcMain.handle('diagnostic:report-id', () => diagnostics.reportId())
+
+  // BETA-FINAL PR12 / spec B6 - the update authority. installApproved
+  // marks the window once the install flush returned 'saved': the
+  // install's own app.quit() must then bypass the quit-flush interceptor,
+  // whose second drain would deadlock the relaunch.
+  const installApproved = new WeakSet<BrowserWindow>()
+
+  // Dev/unpackaged builds have no app-update.yml: the service parks at
+  // 'unsupported' from feed verification and never touches the provider.
+  const neverCalledProvider: UpdateProvider = {
+    check: () => Promise.reject(new Error('updates unsupported on this build')),
+    download: () => Promise.reject(new Error('updates unsupported on this build')),
+    cancelDownload: () => {},
+    quitAndInstall: () => {},
+    onProgress: () => () => {},
+  }
+
+  const updateService: UpdateService = new UpdateService({
+    provider: neverCalledProvider,
+    ipcMain,
+    send: (channel, payload) => {
+      mainWindow?.webContents.send(channel, payload)
+    },
+    senderIsTrusted: (sender) => sender === mainWindow?.webContents,
+    identity: BUILD_IDENTITY,
+    expectedFeed: EXPECTED_UPDATE_FEED,
+    readFeedText: () => {
+      if (!app.isPackaged) return null
+      try {
+        return readFileSync(path.join(process.resourcesPath, 'app-update.yml'), 'utf8')
+      } catch {
+        return null
+      }
+    },
+    record: (input) => recordMain(input),
+    onInstallApproved: () => {
+      if (mainWindow) installApproved.add(mainWindow)
+    },
+  })
+
+  // Rebind the real provider for packaged builds: electron-updater is
+  // imported lazily so the dev path never constructs autoUpdater (its
+  // instance reads app paths that only exist packaged).
+  const bindUpdateProvider = async () => {
+    if (!app.isPackaged) return
+    try {
+      const { autoUpdater, CancellationToken } = await import('electron-updater')
+      updateService.bindProvider(
+        createElectronUpdateProvider(autoUpdater, () => new CancellationToken()),
+      )
+    } catch (error) {
+      recordMain({
+        source: 'main',
+        severity: 'error',
+        category: 'update',
+        code: 'UPDATE_PROVIDER_UNAVAILABLE',
+        message: error instanceof Error ? error.message : 'update provider failed to load',
+      })
+    }
+  }
 
   // The renderer supplies the save/revision metadata only - the PATH comes
   // exclusively from the main-side save dialog, and the bundle bytes are
@@ -210,6 +287,22 @@ function main() {
 
   app.whenReady().then(() => {
     mainWindow = createWindow()
+    // One boot check per launch, gated on BOTH the provider bind and the
+    // renderer finishing load: the listener must attach synchronously
+    // (inside .then it could miss did-finish-load) and the state push
+    // must land on a live webContents.
+    const didFinishLoad = new Promise<void>((resolve) => {
+      mainWindow?.webContents.once('did-finish-load', () => resolve())
+    })
+    void Promise.all([bindUpdateProvider(), didFinishLoad]).then(() => {
+      // Packaged builds only reach the provider; a dev/unsupported build
+      // no-ops inside check().
+      void updateService.check()
+    })
+  })
+
+  app.once('will-quit', () => {
+    updateService.dispose()
   })
 
   app.on('window-all-closed', () => {
@@ -266,7 +359,12 @@ function main() {
       })
     })
 
-    win.on('close', event => onQuitFlushClose(win, event))
+    win.on('close', event => {
+      // The install path already ran the same result-bearing flush; let
+      // the updater's own quit through instead of re-draining it.
+      if (installApproved.has(win)) return
+      onQuitFlushClose(win, event)
+    })
 
     win.on('closed', () => {
       mainWindow = null

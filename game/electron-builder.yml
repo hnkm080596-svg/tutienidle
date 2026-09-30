@@ -30,3 +30,23 @@ win:
 nsis:
   oneClick: false
   allowToChangeInstallationDirectory: true
+
+# BETA-FINAL PR12 / spec B6 - the update feed: GitHub Releases on this
+# repo's own origin, 'beta' channel (prerelease-tagged builds only). This
+# block generates resources/app-update.yml at pack time; the main-process
+# UpdateService verifies that packaged manifest verbatim against
+# EXPECTED_UPDATE_FEED in src/shared/update/UpdateState.ts - the two
+# declarations are asserted equal by scripts/release/update-feed.test.mjs
+# so they cannot drift apart silently.
+# Minimal/additive on purpose: PR10 owns the wider release-workflow
+# provider config on the parallel chain - expect a small merge conflict
+# here rather than re-implementing it. No token lives in this file:
+# publishing reads CI's GH_TOKEN env; the installer never bakes one in.
+# publisherName stays unset while EXT-02 (signing) is pending - the
+# packaged manifest declaring none is exactly what the pinned expectation
+# (publisherName: null) accepts.
+publish:
+  provider: github
+  owner: hnkm080596-svg
+  repo: tutienidle
+  channel: beta
