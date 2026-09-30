@@ -191,7 +191,6 @@ describe('sec.12 alchemy - dormant families stay unreachable and off the read-mo
 
   it('startJob fails closed on dormant families - direct API bypass', () => {
     const gm = new GameManager()
-    const player = foundationPlayer()
 
     expect(
       gm.alchemySystem.startJob(

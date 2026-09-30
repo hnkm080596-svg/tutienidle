@@ -31,13 +31,14 @@ import {
   THANH_VAN_GROTTO_HERBS,
   THANH_VAN_MINE_REWARDS,
 } from '@/core/production/ProductionCatalog'
-import { HERB_AGES } from '@/core/production/ProductionTypes'
 import { alchemyRecipes } from '@/data/alchemy/alchemyRecipes'
 import { QUESTS } from '@/data/quest/quests'
 import { buildings as BUILDINGS } from '@/data/building/buildings'
 import { createDefaultEquipmentOperationCostCatalog } from '@/core/equipment/EquipmentOperationCostCatalog'
-import { SUPPORTED_PROFESSION_REALMS } from '@/core/profession/ProfessionMaterial'
-import { buildProfessionMaterialId } from '@/core/profession/ProfessionMaterial'
+import {
+  SUPPORTED_PROFESSION_REALMS,
+  buildProfessionMaterialId,
+} from '@/core/profession/ProfessionMaterial'
 import { ENEMIES } from '@/data/enemy/Enemies'
 import {
   BETA_ENEMY_ROSTER,
