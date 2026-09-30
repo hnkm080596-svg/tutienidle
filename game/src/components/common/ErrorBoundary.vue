@@ -11,7 +11,10 @@ import { useErrorStore } from '@/stores/error'
 const errorStore = useErrorStore()
 
 onErrorCaptured(err => {
-  errorStore.report(err instanceof Error ? err.message : String(err))
+  errorStore.report(err instanceof Error ? err.message : String(err), {
+    error: err,
+    code: 'VUE_BOUNDARY',
+  })
 
   return false
 })

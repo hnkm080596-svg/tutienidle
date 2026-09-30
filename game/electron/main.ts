@@ -1,5 +1,7 @@
-import { app, BrowserWindow, ipcMain, powerMonitor, safeStorage } from 'electron'
+import { app, BrowserWindow, dialog, ipcMain, powerMonitor, safeStorage } from 'electron'
 import path from 'node:path'
+import os from 'node:os'
+import fs from 'node:fs/promises'
 import { promises as fsp } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import {
@@ -7,6 +9,10 @@ import {
   attachPowerMonitorToClockHost,
 } from '../src/main-process/combatClockHost'
 import { createQuitFlush } from '../src/main-process/quitFlush'
+import {
+  DiagnosticBundle,
+  sanitizeReportIdForFilename,
+} from '../src/main-process/DiagnosticBundle'
 import {
   GuestCredentialStore,
   registerGuestCredentialIpc,
@@ -83,6 +89,128 @@ function main() {
   // window state; a second user close during the flush window stays
   // blocked without re-sending the flush request (audit T6-52).
   const onQuitFlushClose = createQuitFlush({ ipcMain })
+
+  // BETA-FINAL PR11 / spec B8 - the local diagnostic bundle. One writer
+  // owns <userData>/diagnostics; renderer events arrive over
+  // 'diagnostic:record' and are re-validated before persistence (a hostile
+  // renderer can never smuggle payloads - freeform/unknown keys reject).
+  // Built eagerly so early process-level failures still land in the trail;
+  // denied disk access degrades to no-op inside the bundle itself.
+  const diagnostics = new DiagnosticBundle({
+    directory: path.join(app.getPath('userData'), 'diagnostics'),
+    identity: BUILD_IDENTITY,
+    fs,
+    platform: {
+      platform: process.platform,
+      arch: process.arch,
+      osRelease: os.release(),
+      osType: os.type(),
+      versions: {
+        electron: process.versions.electron,
+        chrome: process.versions.chrome,
+        node: process.versions.node,
+      },
+    },
+  })
+
+  const recordMain = (input: unknown) => {
+    void diagnostics.append(input)
+  }
+
+  process.on('uncaughtException', (error) => {
+    recordMain({
+      source: 'main',
+      severity: 'fatal',
+      category: 'main-error',
+      code: 'UNCAUGHT_EXCEPTION',
+      message: error.message,
+      stack: error.stack,
+      details: { errorName: error.name },
+    })
+  })
+
+  process.on('unhandledRejection', (reason) => {
+    recordMain({
+      source: 'main',
+      severity: 'error',
+      category: 'main-error',
+      code: 'UNHANDLED_REJECTION',
+      message: reason instanceof Error ? reason.message : String(reason),
+      ...(reason instanceof Error && reason.stack ? { stack: reason.stack } : {}),
+    })
+  })
+
+  ipcMain.on('diagnostic:record', (_event, payload) => {
+    // The renderer asserts 'renderer' as source; anything else it claims is
+    // rewritten - a forged 'main' label can never masquerade as main-side.
+    const tagged =
+      payload !== null && typeof payload === 'object' && !Array.isArray(payload)
+        ? { ...(payload as Record<string, unknown>), source: 'renderer' }
+        : payload
+    recordMain(tagged)
+  })
+
+  ipcMain.handle('diagnostic:report-id', () => diagnostics.reportId())
+
+  // The renderer supplies the save/revision metadata only - the PATH comes
+  // exclusively from the main-side save dialog, and the bundle bytes are
+  // generated here: nothing renderer-controlled can reach the filesystem
+  // outside this channel.
+  ipcMain.handle('diagnostic:export', async (_event, payload) => {
+    const context: { revision?: number; saveHash?: string } = {}
+    if (payload !== null && typeof payload === 'object' && !Array.isArray(payload)) {
+      const raw = payload as Record<string, unknown>
+      if (Number.isSafeInteger(raw.revision) && (raw.revision as number) >= 0) {
+        context.revision = raw.revision as number
+      }
+      if (
+        typeof raw.saveHash === 'string' &&
+        /^[a-zA-Z0-9]{1,128}$/.test(raw.saveHash)
+      ) {
+        context.saveHash = raw.saveHash
+      }
+    }
+    const reportId = await diagnostics.reportId()
+    const dialogOptions = {
+      title: 'Export diagnostic report',
+      defaultPath: path.join(
+        app.getPath('documents'),
+        `tutienidle-diagnostics-${sanitizeReportIdForFilename(reportId)}.json`,
+      ),
+      filters: [{ name: 'Diagnostic report', extensions: ['json'] }],
+    }
+    const parent = BrowserWindow.getFocusedWindow() ?? mainWindow
+    const picked = parent
+      ? await dialog.showSaveDialog(parent, dialogOptions)
+      : await dialog.showSaveDialog(dialogOptions)
+    if (picked.canceled || !picked.filePath) {
+      return { status: 'cancelled' }
+    }
+    return diagnostics.export(picked.filePath, context)
+  })
+
+  ipcMain.on('app:flush-result', (_event, payload) => {
+    // Parallel observation only: quitFlush's own listener still drives the
+    // close protocol. Field-picked (never spread) so a crafted payload can
+    // carry at most these scalars into the trail.
+    if (payload === null || typeof payload !== 'object') return
+    const raw = payload as Record<string, unknown>
+    const status = raw.status
+    if (status !== 'saved' && status !== 'blocked' && status !== 'failed') return
+    const details: Record<string, string | number> = { status }
+    if (typeof raw.requestId === 'string') details.requestId = raw.requestId
+    if (Number.isSafeInteger(raw.generation)) details.generation = raw.generation as number
+    if (Number.isSafeInteger(raw.revision)) details.revision = raw.revision as number
+    if (typeof raw.code === 'string') details.code = raw.code
+    recordMain({
+      source: 'main',
+      severity: status === 'saved' ? 'info' : 'error',
+      category: 'quit-flush',
+      code: `FLUSH_RESULT_${status.toUpperCase()}`,
+      message: `quit flush result observed: ${status}`,
+      details,
+    })
+  })
 
   // BETA-FINAL PR8 / spec B3 - privileged IPC accepts messages only from
   // the one BrowserWindow this app creates. sender identity plus frame URL
@@ -205,6 +333,18 @@ function main() {
     } else {
       win.loadFile(path.join(__dirname, '../dist/index.html'))
     }
+
+    // A crashed/killed renderer still leaves a marker in the trail.
+    win.webContents.on('render-process-gone', (_event, details) => {
+      recordMain({
+        source: 'main',
+        severity: 'fatal',
+        category: 'render-process-gone',
+        code: 'RENDER_PROCESS_GONE',
+        message: `render process gone: ${details.reason}`,
+        details: { reason: details.reason, exitCode: details.exitCode },
+      })
+    })
 
     win.on('close', event => onQuitFlushClose(win, event))
 

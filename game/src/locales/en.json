@@ -1460,6 +1460,12 @@
       "title": "An error occurred",
       "close": "Close",
       "reload": "Reload Page",
+      "reportId": "Report ID: {id}",
+      "copyReport": "Copy report info",
+      "copied": "Copied",
+      "exportDiagnostics": "Export diagnostics",
+      "exportDone": "Diagnostic report saved",
+      "exportFailed": "Export failed",
       "build": "{product} {version} · build {build} · {sha} · {env}"
     },
     "boot": {

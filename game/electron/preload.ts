@@ -75,6 +75,22 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.send('app:force-close', { requestId })
   },
 
+  // BETA-FINAL PR11 / spec B8 - diagnostics bridge. record is fire-and-
+  // forget; main re-validates every payload before it touches the bundle.
+  // Export takes NO path - main owns the save dialog, so a hostile renderer
+  // can never write a bundle somewhere unexpected or inject a path.
+  reportDiagnosticEvent(event: unknown) {
+    ipcRenderer.send('diagnostic:record', event)
+  },
+
+  getDiagnosticReportId(): Promise<string> {
+    return ipcRenderer.invoke('diagnostic:report-id')
+  },
+
+  exportDiagnostics(context: unknown) {
+    return ipcRenderer.invoke('diagnostic:export', context)
+  },
+
   combatClock: {
     onTick(callback: (elapsedSeconds: number) => void) {
       const handler = (_event: Electron.IpcRendererEvent, elapsed: number) => callback(elapsed)

@@ -1460,6 +1460,12 @@
       "title": "Đã xảy ra lỗi",
       "close": "Đóng",
       "reload": "Tải Lại Trang",
+      "reportId": "Mã báo cáo: {id}",
+      "copyReport": "Sao chép thông tin báo cáo",
+      "copied": "Đã sao chép",
+      "exportDiagnostics": "Xuất gói chẩn đoán",
+      "exportDone": "Đã lưu báo cáo chẩn đoán",
+      "exportFailed": "Xuất thất bại",
       "build": "{product} {version} · bản dựng {build} · {sha} · {env}"
     },
     "boot": {
