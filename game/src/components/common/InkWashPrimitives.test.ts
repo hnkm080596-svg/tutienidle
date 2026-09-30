@@ -36,13 +36,19 @@ describe('ink-wash shared primitives', () => {
     expect(ghost.querySelector('[data-ink-slice]')).toBeNull()
   })
 
-  it('keeps circular buttons round with their CSS border instead of a rectangular slice', () => {
+  it('maps circular buttons to the icon-button-utility seal slot', () => {
     const circle = mount(GameButton, { shape: 'circle' })
     const button = circle.querySelector('button')
 
-    expect(circle.querySelector('[data-hk-slice]')).toBeNull()
-    expect(circle.querySelector('[data-ink-slice]')).toBeNull()
+    expect(circle.querySelector('[data-hk-slice="icon-button-utility"]')).not.toBeNull()
     expect(button?.classList).toContain('game-button--circle')
+  })
+
+  it('keeps ghost circles a bare hairline - no slice layer', () => {
+    const ghostCircle = mount(GameButton, { shape: 'circle', variant: 'ghost' })
+
+    expect(ghostCircle.querySelector('[data-hk-slice]')).toBeNull()
+    expect(ghostCircle.querySelector('[data-ink-slice]')).toBeNull()
   })
 
   it('keeps enabled, disabled, and loading click behavior unchanged', () => {
