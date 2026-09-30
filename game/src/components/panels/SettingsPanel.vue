@@ -15,6 +15,7 @@ import { BUILD_IDENTITY, shortGitSha } from '@/shared/build/BuildIdentity'
 import ConfirmModal from '@/components/common/ConfirmModal.vue'
 import GameButton from '@/components/common/GameButton.vue'
 import Chip from '@/components/common/primitives/Chip.vue'
+import FeedbackDialog from '@/components/common/FeedbackDialog.vue'
 
 const player = usePlayerStore()
 const gameManager = useGameManager()
@@ -80,6 +81,10 @@ const BUILD_ROWS = [
 ] as const
 
 const lastSavedLabel = ref('')
+
+// BETA-FINAL PR13 / spec B7 - feedback intake lives here as a normal
+// settings surface; the dialog itself owns draft/idempotency/result state.
+const feedbackOpen = ref(false)
 
 // Lưu thủ công phải await và kiểm tra kết quả — trước đây toast
 // "Đã lưu tiến trình" hiện cả khi writeGameSave fail (quota), người
@@ -330,6 +335,18 @@ function handleReset() {
       </div>
     </section>
 
+    <!-- BETA-FINAL PR13 / spec B7 - feedback intake: opens the intake
+         dialog (form + opt-in redacted diagnostics + local export). -->
+    <section class="settings-panel__section settings-panel__feedback" :aria-label="t('panels.settings.sections.feedbackAria')">
+      <h4>{{ t('panels.settings.sections.feedback') }}</h4>
+
+      <p class="settings-panel__section-note">{{ t('panels.settings.feedback.note') }}</p>
+
+      <GameButton variant="secondary" data-testid="settings-feedback-button" @click="feedbackOpen = true">
+        {{ t('panels.settings.actions.feedback') }}
+      </GameButton>
+    </section>
+
     <!-- Language - UI locale, persisted via composables/locale. -->
     <section class="settings-panel__section settings-panel__language" :aria-label="t('panels.settings.sections.languageAria')">
       <h4>{{ t('panels.settings.sections.language') }}</h4>
@@ -365,6 +382,8 @@ function handleReset() {
     </div>
 
     <p v-if="lastSavedLabel" class="settings-panel__hint">{{ t('panels.settings.hints.savedAt', { time: lastSavedLabel }) }}</p>
+
+    <FeedbackDialog :open="feedbackOpen" @close="feedbackOpen = false" />
 
     <ConfirmModal
       :open="pendingConfirm !== null"

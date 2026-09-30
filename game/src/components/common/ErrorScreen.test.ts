@@ -42,12 +42,16 @@ describe('ErrorScreen — diagnostic report block', () => {
     app.unmount()
   })
 
-  it('hides the report block when no recorder and no bridge exist', async () => {
+  it('hides report id + export when no recorder and no bridge exist', async () => {
     const { container, app } = mountScreen()
     useErrorStore().report('boom')
     await nextTick()
 
-    expect(container.querySelector('.error-screen__report')).toBeNull()
+    expect(container.querySelector('[data-testid="error-report-id"]')).toBeNull()
+    expect(container.querySelector('[data-testid="error-export-state"]')).toBeNull()
+    // BETA-FINAL PR13 / spec B7 - the feedback path stays offered regardless
+    // of recorder/bridge state: the intake degrades to export-only.
+    expect(container.querySelector('[data-testid="error-feedback"]')).not.toBeNull()
     app.unmount()
   })
 })

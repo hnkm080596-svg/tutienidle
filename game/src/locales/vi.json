@@ -644,7 +644,11 @@
         "export": "Xuất Save (.json)",
         "import": "Nhập Save",
         "reset": "Xoá Save & Bắt Đầu Mới",
-        "resetCloud": "Tải Lại Từ Cloud"
+        "resetCloud": "Tải Lại Từ Cloud",
+        "feedback": "Gửi Phản Hồi"
+      },
+      "feedback": {
+        "note": "Báo lỗi hoặc góp ý cho đội beta. Bản nháp chỉ ở local cho tới khi bạn gửi."
       },
       "notifications": {
         "saved": "Đã lưu tiến trình",
@@ -680,7 +684,9 @@
         "language": "Ngôn Ngữ",
         "languageAria": "Ngôn ngữ",
         "build": "Phiên Bản",
-        "buildAria": "Thông tin phiên bản"
+        "buildAria": "Thông tin phiên bản",
+        "feedback": "Phản Hồi",
+        "feedbackAria": "Phản hồi beta"
       },
       "audio": {
         "on": "Bật",
@@ -1445,6 +1451,7 @@
       "exportDiagnostics": "Xuất gói chẩn đoán",
       "exportDone": "Đã lưu báo cáo chẩn đoán",
       "exportFailed": "Xuất thất bại",
+      "feedback": "Gửi Phản Hồi",
       "build": "{product} {version} · bản dựng {build} · {sha} · {env}"
     },
     "boot": {
@@ -1529,6 +1536,58 @@
     "notify": {
       "deleteFailed": "Không xoá được save — trình duyệt đang từ chối truy cập bộ nhớ.",
       "importValidatedRemote": "File save hợp lệ — đã xuất bản chuẩn hoá. Save trên máy chủ không đổi."
+    }
+  },
+  "betaFeedback": {
+    "title": "Gửi Phản Hồi",
+    "intro": "Báo lỗi hoặc góp ý. Chẩn đoán chỉ đính kèm nếu bạn chọn bên dưới.",
+    "categories": {
+      "bug": "Lỗi",
+      "balance": "Cân Bằng",
+      "performance": "Hiệu Năng",
+      "ui": "Giao Diện",
+      "feature-request": "Đề Xuất",
+      "other": "Khác"
+    },
+    "fields": {
+      "category": "Loại",
+      "description": "Chuyện gì đã xảy ra? *",
+      "steps": "Các bước tái hiện (không bắt buộc)",
+      "contact": "Liên hệ (không bắt buộc)"
+    },
+    "placeholders": {
+      "description": "Mô tả vấn đề...",
+      "steps": "1. ...",
+      "contact": "Discord / email (chỉ nếu muốn nhận phản hồi)"
+    },
+    "hints": {
+      "redaction": "Nội dung được lọc token và đường dẫn cục bộ trước khi gửi.",
+      "reportId": "Gửi kèm mã này nếu bạn liên hệ hỗ trợ."
+    },
+    "attach": {
+      "label": "Đính kèm {count} sự kiện chẩn đoán đã lọc",
+      "hint": "Xem trước chính xác nội dung gửi đi - sự kiện được lọc ngay trên máy.",
+      "more": "+ {count} sự kiện nữa",
+      "truncated": "Chỉ {count} sự kiện mới nhất vừa giới hạn báo cáo."
+    },
+    "summary": {
+      "build": "Bản build",
+      "environment": "Môi trường",
+      "size": "Dung lượng gói"
+    },
+    "status": {
+      "accepted": "Cảm ơn - báo cáo đã được nhận.",
+      "invalid": "Báo cáo bị từ chối: {detail}",
+      "rateLimited": "Gửi quá nhiều - thử lại sau khoảng {seconds}s.",
+      "unavailable": "Không gửi được báo cáo - bản nháp được giữ lại bên dưới; bạn cũng có thể xuất ra file.",
+      "sessionRevoked": "Phiên đăng nhập đã hết hạn - đăng nhập lại để gửi. Bản nháp vẫn được giữ; xuất file để lưu bản cục bộ."
+    },
+    "actions": {
+      "submit": "Gửi báo cáo",
+      "export": "Xuất nháp (.json)",
+      "exported": "Đã xuất",
+      "copyId": "Sao chép mã",
+      "copied": "Đã sao chép"
     }
   },
   "authority": {

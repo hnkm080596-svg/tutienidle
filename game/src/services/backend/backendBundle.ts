@@ -9,6 +9,12 @@ import { LocalCloudSaveService } from '../cloudSave/LocalCloudSaveService'
 import { SupabaseCloudSaveService } from '../cloudSave/SupabaseCloudSaveService'
 import type { CloudSaveLoadResult, CloudSaveWriteResult } from '../cloudSave/CloudSaveService'
 import type { CloudSaveService } from '../cloudSave/CloudSaveService'
+import {
+  LocalFeedbackService,
+  UnavailableFeedbackService,
+  type FeedbackService,
+} from '../feedback/FeedbackService'
+import { SupabaseFeedbackService } from '../feedback/SupabaseFeedbackService'
 import { CURRENT_SAVE_VERSION } from '../save/SaveSystem'
 import { resolveClientBuildInfo, type ClientBuildEnv, type ClientBuildInfo } from './ClientBuildInfo'
 import { resolveBackendComposition, type BackendComposition, type BackendMode, type BackendRuntime, type BackendAdmission } from './backendMode'
@@ -26,6 +32,10 @@ export interface BackendBundle {
   authService: AuthService
   characterCreationService: CharacterCreationService
   cloudSaveCoordinator: CloudSaveCoordinator
+  /** BETA-FINAL PR13 / spec B7 - the intake surface. Supabase mode gets the
+   *  guarded-RPC adapter; mock mode gets the honest unavailable stand-in
+   *  (export stays local, nothing fabricates acceptance). */
+  feedbackService: FeedbackService
   buildInfo: ClientBuildInfo
 }
 
@@ -55,6 +65,7 @@ export function createBackendBundle(
         cloudSaveCoordinator: new CloudSaveCoordinator(
           new SupabaseCloudSaveService(composition.config, buildInfo),
         ),
+        feedbackService: new SupabaseFeedbackService(composition.config),
         buildInfo,
       },
     }
@@ -69,6 +80,7 @@ export function createBackendBundle(
       authService: new MockAuthService(),
       characterCreationService: new MockCharacterCreationService(),
       cloudSaveCoordinator: new CloudSaveCoordinator(new LocalCloudSaveService()),
+      feedbackService: new LocalFeedbackService(),
       buildInfo,
     },
   }
@@ -116,6 +128,7 @@ export function createUnavailableBackendBundle(message: string, mode: BackendMod
       },
     },
     cloudSaveCoordinator: new CloudSaveCoordinator(new UnavailableCloudSaveService(message)),
+    feedbackService: new UnavailableFeedbackService(message),
     buildInfo: resolveClientBuildInfo(import.meta.env, CURRENT_SAVE_VERSION),
   }
 }
