@@ -4,6 +4,14 @@ import type { Stage, StageEnemyEntry } from '../../core/stage/Stage'
  * Chapter config - the ONLY hand-authored content per chapter (spec v3
  * D9). Everything else about the 10 floors comes from the shared rules
  * inside defineChapterStages - one owner for all floor rules.
+ *
+ * BETA SCOPE LOCK v2: a chapter declares exactly one ROSTER - three
+ * distinct normal species (floor bands A/B/C) and one act boss - so the
+ * stage domain data IS the allow-list: no stage can roll a species that
+ * is not on its act roster. Difficulty climbs via the enemy-count
+ * ladder, wave shape, and the elite-chance ramp - never via new
+ * species. "Hung" elites stay a runtime modifier (tinh_anh tag), not an
+ * identity.
  */
 export interface ChapterConfig {
   realmId: string
@@ -20,16 +28,15 @@ export interface ChapterConfig {
   /** Flavor text per floor (1-indexed by floor). */
   descriptions: string[]
 
-  /** Species pair per floor: common (weight 5) + elite-eligible (weight 3). */
-  speciesByFloor: Array<{ common: string; elite: string }>
-
   /**
-   * Escape hatch for floors whose pool is NOT the standard 2-species
-   * pair (1-indexed by floor). Only Quat 1 uses this today - its 4-species
-   * tutorial pool. The override REPLACES the standard pool for that floor,
-   * so it must carry its own eliteChance entries.
+   * The act roster: three DISTINCT normal species on the floor bands
+   * 1-3 / 4-6 / 7-9 (in that order), and the act boss fought on
+   * floor 10. The boss is a fourth identity, not a band species.
    */
-  poolOverrides?: Record<number, StageEnemyEntry[]>
+  roster: {
+    normals: [string, string, string]
+    boss: string
+  }
 }
 
 /**
@@ -48,6 +55,27 @@ const NORMAL_PERFECT_CLEAR_ROUND_MARGIN = 10
 const BOSS_PERFECT_CLEAR_ROUNDS = 15
 
 const SPAWN_INTERVAL_SECONDS = 3
+
+/** Tin-tinh (elite) tag roll for the boss pool entry (spec v3 2.2). */
+const BOSS_ELITE_CHANCE = 0.1
+
+/**
+ * Elite-chance ramp - the authored difficulty dial for normal floors.
+ * With one roster species per floor, difficulty leans on the count
+ * ladder and this ramp: deeper floors roll the tinh_anh stat-multiplier
+ * tag more often (5% on floor 1 up to 21% on floor 9). Values are whole
+ * percents to keep floating-point comparisons exact.
+ */
+function eliteChanceForFloor(floor: number): number {
+  return (5 + (floor - 1) * 2) / 100
+}
+
+/** Map a floor to its roster band species (floors 1-9; 10 is the boss). */
+function bandSpeciesForFloor(config: ChapterConfig, floor: number): string {
+  if (floor <= 3) return config.roster.normals[0]
+  if (floor <= 6) return config.roster.normals[1]
+  return config.roster.normals[2]
+}
 
 /**
  * Distribute the remainder from the LAST wave upward - matches the
@@ -68,29 +96,31 @@ function splitEvenly3(total: number): [number, number, number] {
  * Build the 10 stages of one chapter from its config (spec v3 D9).
  * Shared floor rules (single owner):
  * - totalEnemyCount = 9 + floor (matches all play-tested literals).
- * - floors 1-9: waves split evenly in 3; floor 10: raw [total]
- *   (effectiveWaves applies the solo-boss override downstream).
- * - pool = [common w5, elite w3 + eliteChance 0.1] on every floor.
+ * - floors 1-9: single-species pool [roster band w1 + eliteChance
+ *   ramp]; floor 10: [roster boss w1 + eliteChance 0.1].
  * - bossEnemyId ONLY on floor 10 (floor 1-9 declarations were fake
  *   metadata that made the UI badge lie on 27 nodes).
  * - perfectClearTurnLimit in ROUNDS: totalEnemyCount + 10 normal /
  *   15 boss (D2 revised).
  */
 export function defineChapterStages(config: ChapterConfig): Stage[] {
-  if (config.ids.length !== 10 || config.descriptions.length !== 10 || config.speciesByFloor.length !== 10) {
+  // Shape validation only. Roster distinctness is a content policy for
+  // shipped chapters, enforced by the data census test - fixtures may
+  // legitimately repeat one species across bands.
+  if (config.roster.normals.length !== 3 || !config.roster.boss) {
+    throw new Error('defineChapterStages: roster must declare 3 normals + 1 boss')
+  }
+  if (config.ids.length !== 10 || config.descriptions.length !== 10) {
     throw new Error('defineChapterStages: a chapter must declare exactly 10 floors of content')
   }
 
   return config.ids.map((id, index) => {
     const floor = index + 1
-    const species = config.speciesByFloor[index]!
     const totalEnemyCount = 9 + floor
     const isBossFloor = floor === 10
-    const poolOverride = config.poolOverrides?.[floor]
-    const enemyPool: StageEnemyEntry[] = poolOverride ?? [
-      { enemyId: species.common, weight: 5 },
-      { enemyId: species.elite, weight: 3, eliteChance: 0.1 },
-    ]
+    const enemyPool: StageEnemyEntry[] = isBossFloor
+      ? [{ enemyId: config.roster.boss, weight: 1, eliteChance: BOSS_ELITE_CHANCE }]
+      : [{ enemyId: bandSpeciesForFloor(config, floor), weight: 1, eliteChance: eliteChanceForFloor(floor) }]
 
     return {
       id,
@@ -108,7 +138,7 @@ export function defineChapterStages(config: ChapterConfig): Stage[] {
       totalEnemyCount,
       waves: isBossFloor ? [totalEnemyCount] : splitEvenly3(totalEnemyCount),
       spawnIntervalSeconds: SPAWN_INTERVAL_SECONDS,
-      bossEnemyId: isBossFloor ? species.elite : undefined,
+      bossEnemyId: isBossFloor ? config.roster.boss : undefined,
       perfectClearTurnLimit: isBossFloor
         ? BOSS_PERFECT_CLEAR_ROUNDS
         : totalEnemyCount + NORMAL_PERFECT_CLEAR_ROUND_MARGIN,

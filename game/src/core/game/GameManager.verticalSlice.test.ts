@@ -94,9 +94,11 @@ describe('vertical slice - seeded real stage-1 battle (ngo_dao)', () => {
     expect(sealsSeen).toEqual(new Set(['hoa_an', 'han_tuc', 'doc_can', 'liet_thuong', 'tran_an']))
     // Deterministic reaction proof: under this seed the battle resolves
     // exactly these canonical reactions (seeded stream pinned - an
-    // engine/pipeline regression changes this set).
+    // engine/pipeline regression changes this set). BETA roster: the
+    // single-species pool narrows the enemy element mix vs the old
+    // 2-species pair, so duong_viem/nhuan_moc no longer resolve here.
     expect([...new Set(reactions)].sort()).toEqual(
-      ['duong_viem', 'nhuan_moc', 'tu_thuy', 'tuc_viem', 'xuyen_tho'].sort(),
+      ['tu_thuy', 'tuc_viem', 'xuyen_tho'].sort(),
     )
   })
 

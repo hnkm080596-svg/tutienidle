@@ -358,11 +358,15 @@ export function applyBossMultiplier(stats: Stats): Stats {
     defense: stats.defense * BOSS_DEFENSE_MULTIPLIER,
     accuracyRating: stats.accuracyRating * BOSS_ACCURACY_MULTIPLIER,
     criticalAvoidance: Math.max(stats.criticalAvoidance, BOSS_CRITICAL_AVOIDANCE),
-    woodResistance: stats.woodPower > 0 ? stats.woodResistance + BOSS_RESISTANCE_BONUS : stats.woodResistance,
-    fireResistance: stats.firePower > 0 ? stats.fireResistance + BOSS_RESISTANCE_BONUS : stats.fireResistance,
-    earthResistance: stats.earthPower > 0 ? stats.earthResistance + BOSS_RESISTANCE_BONUS : stats.earthResistance,
-    metalResistance: stats.metalPower > 0 ? stats.metalResistance + BOSS_RESISTANCE_BONUS : stats.metalResistance,
-    waterResistance: stats.waterPower > 0 ? stats.waterResistance + BOSS_RESISTANCE_BONUS : stats.waterResistance,
+    // Uniform five-element bonus: the bonus must not single out players
+    // whose damage element matches the boss's own power element (the
+    // three beta stage bosses all lean water). Rebalance knob lives with
+    // the balance matrix.
+    woodResistance: stats.woodResistance + BOSS_RESISTANCE_BONUS,
+    fireResistance: stats.fireResistance + BOSS_RESISTANCE_BONUS,
+    earthResistance: stats.earthResistance + BOSS_RESISTANCE_BONUS,
+    metalResistance: stats.metalResistance + BOSS_RESISTANCE_BONUS,
+    waterResistance: stats.waterResistance + BOSS_RESISTANCE_BONUS,
     // Spec 2026-08-30-phap-tu-dao-sac §5 — boss resistance bonus cho
     // Phong/Lôi đã xoá cùng stat.
   }
