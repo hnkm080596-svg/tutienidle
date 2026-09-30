@@ -31,7 +31,12 @@
  * query forms; import.meta.glob, Worker URLs, aliased require,
  * literalized specifiers), and 4+-char
  * spelled fragments fed to string-search members - all reduce to
- * spelling the name, which is what the scan pins.
+ * spelling the name, which is what the scan pins. R13 additions:
+ * opaque handles carry through re-alias (`const g = mm`),
+ * `.bind/.call/.apply` (`const b = mm.bind(t)`, `mm.call(t)`),
+ * `new mm()` construction, and clone-carrier dispatch
+ * (`structuredClone(ps)[k]()`, `wrap(ps)[k]()`) - a call fed the
+ * pill system returns a pill-ish carrier.
  *
  * Honest residual bound: name enumeration with no literal in sight
  * (`Object.keys(ps)` -> `ps[name]`), keys assembled at runtime
@@ -590,6 +595,11 @@ describe('pill grant channel - ops wrapper is the only production caller', () =>
               if (pillish(init)) {
                 binds.rootAliases.set(n.name.text, rootOf(init, binds) ?? init.text)
               }
+              // `const g = mm` - an opaque handle re-binds without
+              // losing its unresolved-slot status.
+              if (binds.opaqueHandles.has(init.text)) {
+                binds.opaqueHandles.add(n.name.text)
+              }
             } else if (
               (ts.isPropertyAccessExpression(init) ||
                 ts.isElementAccessExpression(init)) &&
@@ -639,6 +649,26 @@ describe('pill grant channel - ops wrapper is the only production caller', () =>
                 memberOfExpr(init) !== PINNED
               ) {
                 binds.opaqueHandles.add(n.name.text)
+              }
+              // `const g = mm.bind(t)` - .bind/.call/.apply on an
+              // opaque handle yields a handle to the same slot.
+              if (
+                cMember !== undefined &&
+                INDIRECT_NAMES.has(cMember) &&
+                (ts.isPropertyAccessExpression(cCallee) ||
+                  ts.isElementAccessExpression(cCallee)) &&
+                ts.isIdentifier(unwrapExpr(cCallee.expression)) &&
+                binds.opaqueHandles.has(
+                  (unwrapExpr(cCallee.expression) as ts.Identifier).text,
+                )
+              ) {
+                binds.opaqueHandles.add(n.name.text)
+              }
+              // `const cp = structuredClone(ps)` / `wrap(ps)` - a
+              // call fed the pill system returns a pill-ish carrier
+              // (a clone forwards its member slots verbatim).
+              if (init.arguments.some((a) => pillish(unwrapExpr(a)))) {
+                binds.rootAliases.set(n.name.text, 'ps')
               }
             }
             // `x.getOwnPropertyDescriptor(ps, k).value` - member
@@ -851,6 +881,23 @@ describe('pill grant channel - ops wrapper is the only production caller', () =>
             ) {
               note(`indirect pinned call: ${n.getText()}`)
             }
+            // `mm.call(t)` / `mm.apply` / `mm.bind` where mm is an
+            // opaque handle - same indirect invocation lane as the
+            // pinned receiver, but the slot is unresolved.
+            if (
+              callMember !== undefined &&
+              INDIRECT_NAMES.has(callMember) &&
+              (ts.isPropertyAccessExpression(callee) ||
+                ts.isElementAccessExpression(callee))
+            ) {
+              const recvId = unwrapExpr(callee.expression)
+              if (
+                ts.isIdentifier(recvId) &&
+                binds.opaqueHandles.has(recvId.text)
+              ) {
+                note(`indirect opaque handle call: ${n.getText()}`)
+              }
+            }
             // `eval.call(t, 'code')` / `eval.apply` / `eval.bind` -
             // indirect invocation of an opaque-code receiver.
             if (
@@ -894,7 +941,14 @@ describe('pill grant channel - ops wrapper is the only production caller', () =>
             if (
               ts.isElementAccessExpression(callee) &&
               memberNameOf(callee, binds) === undefined &&
-              pillish(callee.expression)
+              (pillish(callee.expression) ||
+                // `structuredClone(ps)[k]()` / `wrap(ps)[k]()` -
+                // a call fed the pill system returns a carrier whose
+                // member slots mirror the pill-ish arg.
+                (ts.isCallExpression(unwrapExpr(callee.expression)) &&
+                  (
+                    unwrapExpr(callee.expression) as ts.CallExpression
+                  ).arguments.some((a) => pillish(unwrapExpr(a)))))
             ) {
               note(`opaque member dispatch: ${n.getText()}`)
             }
@@ -985,6 +1039,11 @@ describe('pill grant channel - ops wrapper is the only production caller', () =>
             }
             if (ctor === 'Worker' || ctor === 'SharedWorker') {
               note(`new ${ctor}() unscanned code: ${n.getText()}`)
+            }
+            // `new mm()` where mm is an opaque handle - constructing
+            // an unresolved member slot of the pill system.
+            if (binds.opaqueHandles.has(n.expression.text)) {
+              note(`opaque handle construction: ${n.getText()}`)
             }
           }
           // `x.innerHTML = markup` - DOM code-injection write lane.

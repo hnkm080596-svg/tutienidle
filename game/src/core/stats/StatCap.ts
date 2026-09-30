@@ -58,6 +58,21 @@ interface EffectiveCapPlayer {
  */
 export function getEffectiveMainStatCap(player: EffectiveCapPlayer): number {
   const realmIds = player.hiddenPerfection?.completedHiddenBodyRealmIds
-  const completed = Array.isArray(realmIds) ? realmIds.length : 0
+  const completed = countCompletedHiddenBodyRealms(realmIds)
   return Math.floor(getMainStatCap(player.realmId) * (1 + completed * HIDDEN_BODY_CAP_BONUS_PER_REALM))
+}
+
+// Each hidden body realm completes at most once - a corrupted save
+// cannot stack duplicates or invent realm ids to inflate the cap.
+export function countCompletedHiddenBodyRealms(realmIds: unknown): number {
+  if (!Array.isArray(realmIds)) {
+    return 0
+  }
+  const distinct = new Set<string>()
+  for (const id of realmIds) {
+    if (typeof id === 'string' && getRealmIndex(id) >= 0) {
+      distinct.add(id)
+    }
+  }
+  return distinct.size
 }

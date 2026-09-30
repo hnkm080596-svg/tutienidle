@@ -87,7 +87,9 @@ export class PillSystem {
 
   canUseProfessionPill(pill: Pill, player: PlayerData): PillUseReason {
     // Exact-realm gate (plan sec.5.2) - only NEW pills carry realmId.
-    if (pill.realmId && pill.realmId !== player.realmId) {
+    // A defined-but-empty tag is authored-data drift, not an untagged
+    // legacy pill - it must fail closed at every realm.
+    if (pill.realmId !== undefined && pill.realmId !== player.realmId) {
       return 'wrong_realm'
     }
 
@@ -115,6 +117,20 @@ export class PillSystem {
       }
     }
 
+    // Cultivation% effects resolve getRequiredCultivation at apply
+    // time - it throws on an incoherent realm, and the throw lands
+    // mid-apply AFTER earlier effects (a permanent_stat grant) already
+    // mutated. Preflight here keeps every throw ahead of any mutation,
+    // so a failed use never leaves a partially-applied pill that could
+    // re-grant on retry.
+    if (
+      pill.effects.some(
+        (effect) => effect.type === 'cultivation' && effect.cultivationPercent !== undefined,
+      )
+    ) {
+      getRequiredCultivation(player.realmId, player.realmLevel)
+    }
+
     // permanent_stat writes baseStats now - same bound as every other
     // baseStats writer (level-up + pills share getEffectiveMainStatCap).
     // Accumulate per stat: two same-stat grants in one pill must not
@@ -123,13 +139,16 @@ export class PillSystem {
     const mainCap = getEffectiveMainStatCap(player)
     for (const effect of pill.effects) {
       // Mirror apply's writability rule exactly: non-main/stat-less
-      // targets and non-finite or <=0 values never write, so they must
-      // not gate the pill either (a skipped grant is not a block).
+      // targets and non-finite, non-integer or <=0 values never write,
+      // so they must not gate the pill either (a skipped grant is not a
+      // block). Stat grants are indivisible points - a fractional claim
+      // is authored-data drift.
       if (
         effect.type !== 'permanent_stat' ||
         !effect.stat ||
         !(MAIN_STAT_KEYS as readonly string[]).includes(effect.stat) ||
         !Number.isFinite(effect.value ?? NaN) ||
+        !Number.isInteger(effect.value ?? NaN) ||
         (effect.value ?? 0) <= 0
       ) {
         continue
@@ -190,12 +209,13 @@ export class PillSystem {
           if (
             !(MAIN_STAT_KEYS as readonly string[]).includes(effect.stat) ||
             !Number.isFinite(effect.value ?? NaN) ||
+            !Number.isInteger(effect.value ?? NaN) ||
             (effect.value ?? 0) <= 0
           ) {
             // baseStats accepts every StatType, but the main-stat bound
             // only has meaning for MAIN_STAT_KEYS - and a grant value
-            // must be a finite positive. Anything else is authored-data
-            // drift, refuse the write.
+            // must be a finite positive integer. Anything else is
+            // authored-data drift, refuse the write.
             continue
           }
           const cap = getEffectiveMainStatCap(player)

@@ -330,7 +330,14 @@ export const usePlayerStore = defineStore('player', {
       const filteredBaseStats: Record<string, number> = {}
 
       for (const [key, value] of Object.entries(clonedPlayer.baseStats)) {
-        if (allowedStatKeys.has(key) && Number.isFinite(value) && value >= 0) {
+        if (
+          allowedStatKeys.has(key) &&
+          Number.isFinite(value) &&
+          value >= 0 &&
+          // Main stats are indivisible points (level-up and pills only
+          // ever grant integers) - a fractional claim is crafted data.
+          (!(MAIN_STAT_KEYS as readonly string[]).includes(key) || Number.isInteger(value))
+        ) {
           filteredBaseStats[key] = value
         }
       }
@@ -352,15 +359,21 @@ export const usePlayerStore = defineStore('player', {
       // are folded into baseStats once, then dropped below: the bucket
       // must not keep paying while the cap gate only reads baseStats,
       // and the earned points stay visible to every baseStats reader.
-      // Main stats fold under the shared effective cap; other valid
-      // stat keys fold uncapped (no main-cap concept applies).
+      // Only MAIN_STAT_KEYS fold - every legit legacy entry was a
+      // main-stat grant, so the shared effective cap binds every fold.
       const isRetiredPillPermanent = (modifier: StatModifier | null | undefined): boolean =>
         typeof modifier?.id === 'string' && modifier.id.startsWith('pill-permanent:')
       const mainCap = getEffectiveMainStatCap(restoredPlayer)
       const foldedRetiredIds = new Set<string>()
       const foldRetiredPillPermanents = (modifiers: StatModifier[] | undefined): void => {
         for (const modifier of modifiers ?? []) {
-          if (!isRetiredPillPermanent(modifier) || !allowedStatKeys.has(modifier.stat)) {
+          // Only main-stat zombies fold: pill-permanent:* was always a
+          // main-stat grant channel, so a non-main claim (domain stat,
+          // foreign key) is crafted data, not a legacy save.
+          if (
+            !isRetiredPillPermanent(modifier) ||
+            !(MAIN_STAT_KEYS as readonly string[]).includes(modifier.stat)
+          ) {
             continue
           }
           // A legacy save could carry the same entry in two buckets;
@@ -375,14 +388,10 @@ export const usePlayerStore = defineStore('player', {
           }
           foldedRetiredIds.add(modifier.id)
           const key = modifier.stat
-          const bound = (MAIN_STAT_KEYS as readonly string[]).includes(key)
-            ? mainCap
-            : // No main-cap concept for domain stats, but the fold still
-              // owns the finite-domain invariant the load filter
-              // promises: a crafted save (base+flat each ~1e308) must
-              // not land Infinity.
-              Number.MAX_VALUE
-          restoredPlayer.baseStats[key] = Math.min(bound, (restoredPlayer.baseStats[key] ?? 0) + gain)
+          restoredPlayer.baseStats[key] = Math.min(
+            mainCap,
+            (restoredPlayer.baseStats[key] ?? 0) + gain,
+          )
         }
       }
 

@@ -65,8 +65,9 @@ export class GameManagerPillOps {
       return { ok: false, reason: 'material_pill' }
     }
 
-    // Exact-realm gate for profession pills (plan S5.2).
-    if (pill.realmId && pill.realmId !== player.realmId) {
+    // Exact-realm gate for profession pills (plan S5.2). A defined-
+    // but-empty tag is authored-data drift - fail closed at any realm.
+    if (pill.realmId !== undefined && pill.realmId !== player.realmId) {
       return { ok: false, reason: 'wrong_realm' }
     }
 
@@ -101,14 +102,24 @@ export class GameManagerPillOps {
         return { ok: false, reason }
       }
 
-      const result = this.deps.pillSystem.useProfessionPill(
-        pill,
-        player,
-        random,
-        // M3 - Hoa Hau Thong Than: +50% effectiveness on crafted pills.
-        getAlchemyDoublePill(player.selectedTalentIds, player.talentLevels)?.potencyMultiplier ?? 1,
-        target,
-      )
+      // Consume-on-throw: an apply that throws mid-way may already have
+      // mutated (a permanent_stat grant before a later effect failed).
+      // A retained pill would re-grant on retry - consumption is the
+      // fail-closed direction even when the throw mutated nothing.
+      let result: { mainStat?: MainStatKey; timedEffect?: PersistentTimedEffect }
+      try {
+        result = this.deps.pillSystem.useProfessionPill(
+          pill,
+          player,
+          random,
+          // M3 - Hoa Hau Thong Than: +50% effectiveness on crafted pills.
+          getAlchemyDoublePill(player.selectedTalentIds, player.talentLevels)?.potencyMultiplier ?? 1,
+          target,
+        )
+      } catch (error) {
+        this.deps.pillBag.remove(pillId, 1)
+        throw error
+      }
 
       // Consume BEFORE the timed-effect side channel: if
       // applyTimedEffect throws, the stat grant is already applied -
