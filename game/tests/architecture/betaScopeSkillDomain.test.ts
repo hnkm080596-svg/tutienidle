@@ -32,8 +32,9 @@ import type { ProgressionNode } from '@/core/progression/ProgressionNode'
 import type { ElementType } from '@/core/element/ElementType'
 import { lockBetaWaysForTests } from '@/core/game/__fixtures__/betaWaysUnlock'
 
-// This suite asserts the beta way lock; undo the global setup's
-// full-catalog unlock so non-beta ways fail closed again.
+// The global test setup admits every catalog way so legacy suites keep
+// working; this suite asserts the beta lock itself, so re-pin the
+// canonical {spell_pathway} allow-list before any expectation runs.
 lockBetaWaysForTests()
 
 const BETA_ELEMENTS: ElementType[] = ['fire', 'water', 'wood', 'metal', 'earth']

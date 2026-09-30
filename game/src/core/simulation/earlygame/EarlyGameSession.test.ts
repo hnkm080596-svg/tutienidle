@@ -62,19 +62,19 @@ describe('EarlyGameSession', () => {
     const s = new EarlyGameSession({ seed: 11, profile: PINNED })
     const report = runLoop(s, CANONICAL_EARLY_LOOP)
     console.log('LOOP\n' + JSON.stringify(report, null, 1))
-    // Re-characterization 2026-09-30 (BETA SCOPE LOCK v2): the pinned
-    // linh_bao starter is intentionally weak (flat primordial, no
-    // cast-XP flat bonus - the initiation gate, not a combat basic),
-    // so the wall pulled all the way forward to mortal_dong_1 even
-    // after eight grind-fed attempts. The floors only open past the
-    // fire initiation kit - a real balance consequence of the pinned
-    // starter to carry into the tuning pass, not a harness defect.
-    const dong1Index = report.steps.findIndex(
-      (r) => r.step.kind === 'stage_until_victory' && r.step.stageId === 'mortal_dong_1',
+    // Re-characterization 2026-09-30 (BETA SCOPE LOCK v2, second):
+    // linh_bao now shares the tram flat-damage mechanic (+1 per 10
+    // casts, uncapped), which pulls the wall back to mortal_dong_4 -
+    // the band-B/species-B floor under the beta roster. Still a
+    // balance finding for the Phase-8 matrix (grind pacing / drops),
+    // not a harness defect; flip back to `toBeNull()` + the two
+    // asserts below once tuning lands.
+    const dong4Index = report.steps.findIndex(
+      (r) => r.step.kind === 'stage_until_victory' && r.step.stageId === 'mortal_dong_4',
     )
-    expect(dong1Index).toBe(0)
-    expect(report.failedAt).toBe(dong1Index)
-    expect(report.snapshot.completedStageIds).toEqual([])
+    expect(dong4Index).toBeGreaterThan(0)
+    expect(report.failedAt).toBe(dong4Index)
+    expect(report.snapshot.completedStageIds).toContain('mortal_dong_3')
     // TODO(balance): expect(report.failedAt).toBeNull()
     // expect(report.snapshot.cultivationPath).toBe('spell')
     // expect(report.snapshot.completedStageIds).toContain('qi_refining_forest')
