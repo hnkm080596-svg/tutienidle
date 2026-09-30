@@ -258,7 +258,7 @@ begin
       if jsonb_typeof(v_event) is distinct from 'object' then
         return jsonb_build_object('code', 'FEEDBACK_INVALID', 'detail', 'diagnostic event must be an object');
       end if;
-      select array_agg(key) into v_event_keys from jsonb_object_keys(v_event);
+      select array_agg(k) into v_event_keys from jsonb_object_keys(v_event) as k;
       if not (v_event_keys <@ v_allowed_event) then
         return jsonb_build_object('code', 'FEEDBACK_INVALID', 'detail', 'diagnostic event carries a foreign key');
       end if;
