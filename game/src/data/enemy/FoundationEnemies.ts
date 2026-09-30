@@ -411,17 +411,13 @@ export const FOUNDATION_ENEMIES: Enemy[] = [
     power: 14,
     resistance: 14,
   }),
-  foundationBeast({
+  defineEnemy({
     id: 'foundation_ferocious_flood_dragon_whelp',
     name: 'Hung Giao Sủng',
-    t: 10,
+    level: 10,
+    realmId: 'foundation_establishment',
     lane: 'ground',
     archetype: 'caster',
-    bossEligible: true,
-    element: 'water',
-    power: 14,
-    resistance: 20,
-    uniformResistance: true,
     tribulationPhases: FLOOD_DRAGON_PHASES,
     enrage: FLOOD_DRAGON_ENRAGE,
     // Phase A2 (2026-09-07) — turn-based twin of the legacy `enrage`
@@ -436,6 +432,29 @@ export const FOUNDATION_ENEMIES: Enemy[] = [
     // TurnBattleSystem's specialAttackCounter), so this existing example
     // is live in turn-based combat as of A3.
     specialAttacks: [{ everyNth: 4, damageMultiplier: 2.5, presetId: 'water_surge' }],
+    statsInput: {
+      // Beta P8 (2026-09-30) - literal stats replace the shared
+      // foundationBeast formula for the act-3 boss only. The formula
+      // (t10 boss-eligible: 2532 hp / 207 might) put the floor-10 boss
+      // variant at ~17.7k/414 - far past every beta element kit's legal
+      // output (~300-350/cast, ~600hp at foundation:10 geared). Retuned
+      // so the variant lands ~3850/70: a ~13-cast duel the strong
+      // element build wins narrowly, ~1.2x the act-2 boss variant.
+      maxHp: 550,
+      might: 35,
+      attackSpeed: 1.2,
+      criticalRate: 0.08,
+      criticalDamage: 2,
+      armor: 34,
+      evasionRate: 20,
+      // Uniform across the five elements (stage-boss fairness).
+      resistances: { wood: 20, fire: 20, earth: 20, metal: 20, water: 20 },
+      elemental: { element: 'water', power: 14 },
+    },
+    rewards: {
+      techniqueMastery: 100,
+      spiritStone: 28,
+    },
     signatureDrops: [
       // Companion gacha (Task 6) - chapter-3 floor-10 boss drops 3x
       // Chieu Hien Lenh; boss-only via requiresModifier.

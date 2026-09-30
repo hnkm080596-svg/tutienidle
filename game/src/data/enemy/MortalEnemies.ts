@@ -22,8 +22,8 @@ export const MORTAL_ENEMIES: Enemy[] = [
     family: 'wolf',
 
     statsInput: {
-      maxHp: 200,
-      might: 20,
+      maxHp: 90,
+      might: 10,
       attackSpeed: 1.1,
       criticalRate: 0.05,
       criticalDamage: 2,
@@ -196,8 +196,8 @@ export const MORTAL_ENEMIES: Enemy[] = [
     lane: 'ground',
     family: 'wolf',
     statsInput: {
-      maxHp: 235,
-      might: 23,
+      maxHp: 105,
+      might: 12,
       attackSpeed: 1.1,
       criticalRate: 0.07,
       criticalDamage: 2.1,
@@ -627,12 +627,20 @@ export const MORTAL_ENEMIES: Enemy[] = [
     // multiplier proportional to realm tier; playtesting starting points.
     specialAttacks: [{ everyNth: 4, damageMultiplier: 2.5, presetId: 'water_surge' }],
     statsInput: {
-      maxHp: 1320,
-      might: 102,
+      // Beta P8 (2026-09-30) - floor-10 fight is the solo boss variant
+      // (x7 hp / x2 might / x1.2 armor via createBossVariant). The old
+      // 1320/102 template put the variant at 9240/204 - an order of
+      // magnitude past every beta element kit's legal output
+      // (~250/cast, ~500hp at qi:10 geared). Retuned so the variant
+      // lands ~2450/38: a ~12-18-cast duel the strong element build
+      // wins narrowly - wood's ramped DoT kit needs the longer fight
+      // the lower might buys, and it stays the tightest cell.
+      maxHp: 350,
+      might: 19,
       attackSpeed: 1.05,
       criticalRate: 0.08,
       criticalDamage: 2.2,
-      armor: 39,
+      armor: 30,
       evasionRate: 15,
       // Uniform across the five elements (stage-boss fairness).
       resistances: { wood: 20, fire: 20, earth: 20, metal: 20, water: 20 },
@@ -1047,8 +1055,8 @@ export const MORTAL_ENEMIES: Enemy[] = [
     family: 'wolf',
     statsInput: {
       maxHp: 211,
-      might: 19,
-      attackSpeed: 1.0,
+      might: 14,
+      attackSpeed: 0.9,
       criticalRate: 0.05,
       criticalDamage: 2,
       armor: 14,
@@ -1094,7 +1102,7 @@ export const MORTAL_ENEMIES: Enemy[] = [
     family: 'wolf',
     statsInput: {
       maxHp: 247,
-      might: 22,
+      might: 16,
       attackSpeed: 1.0,
       criticalRate: 0.05,
       criticalDamage: 2,

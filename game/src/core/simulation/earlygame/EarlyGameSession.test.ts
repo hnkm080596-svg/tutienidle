@@ -62,22 +62,13 @@ describe('EarlyGameSession', () => {
     const s = new EarlyGameSession({ seed: 11, profile: PINNED })
     const report = runLoop(s, CANONICAL_EARLY_LOOP)
     console.log('LOOP\n' + JSON.stringify(report, null, 1))
-    // Re-characterization 2026-09-30 (BETA SCOPE LOCK v2, second):
-    // linh_bao now shares the tram flat-damage mechanic (+1 per 10
-    // casts, uncapped), which pulls the wall back to mortal_dong_4 -
-    // the band-B/species-B floor under the beta roster. Still a
-    // balance finding for the Phase-8 matrix (grind pacing / drops),
-    // not a harness defect; flip back to `toBeNull()` + the two
-    // asserts below once tuning lands.
-    const dong4Index = report.steps.findIndex(
-      (r) => r.step.kind === 'stage_until_victory' && r.step.stageId === 'mortal_dong_4',
-    )
-    expect(dong4Index).toBeGreaterThan(0)
-    expect(report.failedAt).toBe(dong4Index)
-    expect(report.snapshot.completedStageIds).toContain('mortal_dong_3')
-    // TODO(balance): expect(report.failedAt).toBeNull()
-    // expect(report.snapshot.cultivationPath).toBe('spell')
-    // expect(report.snapshot.completedStageIds).toContain('qi_refining_forest')
+    // Phase-8 tuning landed 2026-09-30: the dong-band enemy pacing
+    // retune plus the loop's grind_to_level-12 repetition let the
+    // fresh linh_bao mortal clear the mortal chapter, commit
+    // spell_pathway, and clear qi_refining_forest. failedAt is null.
+    expect(report.failedAt).toBeNull()
+    expect(report.snapshot.cultivationPath).toBe('spell')
+    expect(report.snapshot.completedStageIds).toContain('qi_refining_forest')
   })
 
   it('persists one player/GameManager across the whole session', () => {

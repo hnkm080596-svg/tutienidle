@@ -68,6 +68,9 @@ export const CANONICAL_EARLY_LOOP: readonly LoopStep[] = [
   { kind: 'growth_cycle', runs: 5 },
   { kind: 'stage_until_victory', stageId: 'mortal_dong_10', maxAttempts: 8 },
   { kind: 'growth_cycle', runs: 10 },
+  // Quan Khi gates at mortal:12; a real player hitting the realm
+  // refusal grinds cultivation to the gate, same as every floor gate.
+  { kind: 'grind_to_level', level: 12 },
   { kind: 'tribulation', targetRealmId: 'qi_refining' },
   // Beta scope: spell_pathway is the only beta way; the ritual routes
   // through the atomic initiation transaction (fire).
