@@ -150,3 +150,15 @@ Each candidate must pass the promotion predicate during Devin adoption before be
   - **Root class:** L-API-DEFAULT-SEMANTICS - a library call taken verbatim adopted defaults that negate the caller's invariant (relaunch-after-install); plus unguarded terminal call post-commit.
   - **Detector escape:** the FakeUpdater in tests accepted any signature; semantics only live in electron-updater docs, not types.
   - **Pin/attack proposal:** for provider-boundary adapters, pin every defaulted argument that carries a journey invariant in the adapter comment AND verify launch-failure recovery (state returns to a retryable phase). Qualify as CANDIDATE.
+
+### 2026-09-30 huyen-kim-primitives (Phase-1 reskin worker) - escapes + one base defect
+
+- **Incident:** New `InkNineSlice` chrome layer mounted inside `ToastContainer` painted an opaque fill ABOVE the toast's non-positioned text/icon children (absolute z=1 beats static content inside an isolated stacking context) - toasts would have rendered as blank tinted boxes.
+  - **Root class:** L-ZINDEX-OVERLAY - adding a positioned chrome layer under a "sibling" content tree without lifting the content. Same pattern was already pinned in `ConfirmModal` (`> :not(.ink-nine-slice)` lift) but the rule was not generalized to every new slice consumer.
+  - **Detector escape:** jsdom unit tests assert attribute presence, never paint order; scoped vitest stayed green while the render was visually empty.
+  - **Pin/attack proposal:** for every new InkNineSlice/chrome mount, enumerate the sibling content tree and require `position + z-index >= slice layer` on each (or a `> :not(.ink-nine-slice)` lift rule); P5 passes must inspect stacking context, not just DOM presence. Qualify as CANDIDATE.
+- **Incident:** `--hk-shadow-low/high` (declared as rgba COLOR tokens) were dropped into bare `box-shadow: var(--hk-shadow-low)` declarations - invalid, so the whole declaration was discarded in 5 sites (tooltip/toast/overlay/confirm/slot-shadow).
+  - **Root class:** L-TOKEN-SHAPE-MISMATCH - reusing a token under a shorthand position that requires a different value shape (full shadow spec vs color).
+  - **Detector escape:** CSS declarations fail silently; no lint asserts token/shape fit; unit tests don't read computed styles.
+  - **Pin/attack proposal:** when retokening, verify each token's VALUE SHAPE against the property grammar (color vs length vs list); a grep for `box-shadow: var(--` with color-valued tokens is a cheap pin. Qualify as CANDIDATE.
+- **Out-of-scope finding (base defect, frozen file):** `src/assets/huyen-kim.tokens.css:9` doc comment contains `--ink-*/--paper-*`; the `*/` inside `--ink-*` terminates the comment early and the browser discards the ENTIRE `:root` block - every `--hk-*` var resolves empty at runtime AND `lightningcss` minify fails `npm run build` (`Unexpected token Delim('*')`). Verified: dev server serves the file, computed `getPropertyValue('--hk-density-ceremonial-height')` is `''`, and injecting a vars shim restores the reskinned primitives (48px ceremonial button, tinted slice). Reported to coordinator; foundation file was not modified per scope.
