@@ -1,11 +1,9 @@
 import { useGameManager, useStateVersion } from './useGameState'
 import { usePlayerStore } from '../stores/player'
 import type { MainStatKey } from '../core/stats/StatTypes'
-import type { ElementType } from '../core/element/ElementType'
 
 /**
- * Generic progression actions (attributes, nodes, spell-path selection,
- * specialization). Modifier tu technique/skill khong "tinh" nhu equipment
+ * Generic progression actions (attributes, nodes, specialization). Modifier tu technique/skill khong "tinh" nhu equipment
  * - da duoc gop lai moi tick qua getAggregatedModifiers() (xem tick()
  * trong App.vue), nen cac ghi progression o day chi can bumpState() de
  * UI re-render, khong can dong bo modifiers thu cong nhu
@@ -30,11 +28,10 @@ export function useProgressionActions() {
     // GameManager.chooseCultivationPath() (P7-M3: canonical grant, 0-or-1
     // holder). Da go 2 wrapper action tuong ung.
 
-    // P7-M4 - the ONLY role write left in the UI: pick which learned
-    // precursor the MORTAL player fights with. Post-path the op rejects
-    // (the K3 precursor gate) - way kits own roles from then on.
-    setMortalBasicSkill: (skillId: string) =>
-      withBump(gameManager.progressionOps.setMortalBasicSkill(player.$state, skillId)),
+    // BETA SCOPE LOCK v2 (phase-2) - the mortal repick surface is gone
+    // (the starter pick is a fixed constant, not a choice) and the
+    // element commit moved inside commitFiveElementInitiation - no UI
+    // seam may write either field directly anymore.
 
     // Core Loop Foundation checklist (Muc SKILL) - "behavior-changing
     // node".
@@ -46,11 +43,6 @@ export function useProgressionActions() {
 
     // Node level (plan sec.6.2) - nang node da linh ngo len +1 cap.
     upgradeNode: (nodeId: string) => withBump(gameManager.progressionOps.upgradeNode(nodeId, player.$state)),
-
-    // Phap Tu Reimagine (spec D5) -- element-only commit at the element
-    // root; routes are retired, no pick modal.
-    selectSpellPathElement: (element: ElementType) =>
-      withBump(gameManager.progressionOps.selectSpellPathElement(element, player.$state)),
 
     // Reset development mot nhanh (plan sec.6.10) - hoan Cam Ngo da tieu;
     // bump vo dieu kien (reset ve 0 level cung la thay doi state UI).

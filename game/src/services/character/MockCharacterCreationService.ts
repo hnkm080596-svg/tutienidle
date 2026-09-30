@@ -1,4 +1,5 @@
 import { rollCharacterCreationTalents } from '@/data/talent/Talents'
+import { isBetaCreationTalentId } from '@/core/betaScope'
 import {
   validateCharacterCreationDraft,
   type CharacterCreationDraft,
@@ -10,7 +11,12 @@ export class MockCharacterCreationService implements CharacterCreationService {
   private availableTalentIds = new Set<string>()
 
   async rollTalents() {
-    const talents = rollCharacterCreationTalents()
+    // Beta scope: the offer list is produced here at the service seam -
+    // the roll can only return beta-admitted talents, so the UI never
+    // filters the registry itself.
+    const talents = rollCharacterCreationTalents().filter(talent =>
+      isBetaCreationTalentId(talent.id),
+    )
     this.availableTalentIds = new Set(talents.map(talent => talent.id))
     return talents
   }

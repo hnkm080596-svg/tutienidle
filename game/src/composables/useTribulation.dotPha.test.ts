@@ -14,6 +14,7 @@ import { completeHiddenBody } from '../core/realm/hidden/HiddenLineage'
 import { makeInstance } from '../core/equipment/EquipmentInstance.fixture'
 import { PROFESSION_GRADE_BY_REALM } from '../core/profession/ProfessionGrade'
 import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
+import { commitSpellInitiationForTest } from '../core/game/__fixtures__/betaWaysUnlock'
 
 // Hidden Perfection Lineage (2026-09-23 design, master spec sec.3/sec.5) -
 // the lineage latch and the Dai Dao path, integration qua GameManager +
@@ -46,7 +47,7 @@ describe('Chốt dòng Hoàn Hảo khi đột phá THƯỜNG (design §3)', () =
     player.realmLevel = 12
 
     expect(player.hiddenPerfection.lineageActive).toBe(true)
-    expect(gameManager.realmAdvanceOps.chooseCultivationPath('spell', 'spell_pathway', player.$state)).toBe(true)
+    commitSpellInitiationForTest(gameManager, player.$state)
     expect(player.hiddenPerfection.lineageActive).toBe(false)
     expect(player.hiddenPerfection.lineageClosedByRealmId).toBe('mortal')
   })
@@ -60,7 +61,7 @@ describe('Chốt dòng Hoàn Hảo khi đột phá THƯỜNG (design §3)', () =
     const player = usePlayerStore()
     player.realmLevel = 12
 
-    gameManager.realmAdvanceOps.chooseCultivationPath('spell', 'spell_pathway', player.$state)
+    commitSpellInitiationForTest(gameManager, player.$state)
     expect(player.realmId).toBe('qi_refining')
     expect(player.hiddenPerfection.lineageActive).toBe(false)
 
@@ -93,7 +94,7 @@ describe('Chốt dòng Hoàn Hảo khi đột phá THƯỜNG (design §3)', () =
     player.realmLevel = 18
     player.baseStats = { ...player.baseStats, strength: 12, dexterity: 12, intelligence: 12, attunement: 12, vitality: 12 }
 
-    expect(gameManager.realmAdvanceOps.chooseCultivationPath('spell', 'spell_pathway', player.$state)).toBe(true)
+    commitSpellInitiationForTest(gameManager, player.$state)
     expect(player.realmId).toBe('qi_refining')
     expect(player.hiddenPerfection.lineageActive).toBe(true)
     expect(player.hiddenPerfection.hiddenBreakthroughRealmIds).toEqual(['qi_refining'])
@@ -134,7 +135,7 @@ describe('Phàm Nhân Chi Cốt (spec §4.4)', () => {
     player.realmLevel = 18
     player.baseStats = { ...player.baseStats, strength: 12, dexterity: 12, intelligence: 12, attunement: 12, vitality: 12 }
 
-    gameManager.realmAdvanceOps.chooseCultivationPath('spell', 'spell_pathway', player.$state)
+    commitSpellInitiationForTest(gameManager, player.$state)
     expect(player.realmId).toBe('qi_refining')
     expect(player.hiddenPerfection.hiddenBreakthroughRealmIds).toEqual(['qi_refining'])
 
@@ -199,7 +200,7 @@ describe('Phàm Nhân Chi Cốt (spec §4.4)', () => {
     completeHiddenBody(player.$state, 'mortal')
     player.realmLevel = 18
     player.baseStats = { ...player.baseStats, strength: 12, dexterity: 12, intelligence: 12, attunement: 12, vitality: 12 }
-    gameManager.realmAdvanceOps.chooseCultivationPath('spell', 'spell_pathway', player.$state)
+    commitSpellInitiationForTest(gameManager, player.$state)
 
     completeHiddenBody(player.$state, 'qi_refining')
     player.realmLevel = 18
@@ -266,7 +267,7 @@ describe('Đột phá tháo toàn bộ trang bị (rework P5, Task 17)', () => {
     player.bodyProgression.body_refinement.completedTiers = 6
     player.physiqueGrade = 'bao'
     player.baseStats = { ...player.baseStats, strength: 10, dexterity: 10, intelligence: 10, attunement: 10, vitality: 10 }
-    gameManager.realmAdvanceOps.chooseCultivationPath('spell', 'spell_pathway', player.$state)
+    commitSpellInitiationForTest(gameManager, player.$state)
     expect(player.realmId).toBe('qi_refining')
 
     // Mac 1 mon do DUNG pham hien tai (qi_refining -> bat_pham, Task 16 gate).

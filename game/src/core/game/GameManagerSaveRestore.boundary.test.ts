@@ -84,7 +84,7 @@ function baseSave(player: PlayerData, overrides: Partial<GameSave> = {}): GameSa
   // path - a non-mortal realm fixture never carries a pick.
   if (save.player.realmId === 'mortal' && save.player.cultivationPath === undefined) {
     if (save.player.mortalBasicSkillId === undefined) {
-      save.player.mortalBasicSkillId = 'tram'
+      save.player.mortalBasicSkillId = 'linh_bao'
     }
     if (overrides.skills === undefined) {
       save.skills = [precursorSkillEntry(save.player.mortalBasicSkillId)]
@@ -678,10 +678,10 @@ describe('M1 (ARCH-001) — pending paid-op invalidation (M2 hook)', () => {
     // and the canonical core grant alongside them (three-channel write).
     // Direct fixture writes - this manager registers no progression
     // nodes, so the learn op cannot run here.
-    player.mortalBasicSkillId = 'tram'
-    player.nodeLevels['core_tram'] = 1
-    player.purchasedNodeIds.push('core_tram')
-    manager.skillManager.add(precursorSkillEntry('tram'))
+    player.mortalBasicSkillId = 'linh_bao'
+    player.nodeLevels['core_linh_bao'] = 1
+    player.purchasedNodeIds.push('core_linh_bao')
+    manager.skillManager.add(precursorSkillEntry('linh_bao'))
     const save = seedWashableItem(manager, player)
 
     const preview = manager.equipmentOps.previewWashItem('wash-boundary-item')
@@ -733,10 +733,10 @@ describe('M1 (ARCH-001) — pending paid-op invalidation (M2 hook)', () => {
   it('a session restore clears a pending refine preview — commit rejects invalid_refine_preview', () => {
     const manager = makeManager()
     const player = createDefaultPlayer()
-    player.mortalBasicSkillId = 'tram'
-    player.nodeLevels['core_tram'] = 1
-    player.purchasedNodeIds.push('core_tram')
-    manager.skillManager.add(precursorSkillEntry('tram'))
+    player.mortalBasicSkillId = 'linh_bao'
+    player.nodeLevels['core_linh_bao'] = 1
+    player.purchasedNodeIds.push('core_linh_bao')
+    manager.skillManager.add(precursorSkillEntry('linh_bao'))
     const save = seedWashableItem(manager, player)
 
     const preview = manager.equipmentOps.previewRefineItem('wash-boundary-item', [])
@@ -791,7 +791,7 @@ describe('stat-key handling on techniques[]/skills[] restore', () => {
     )
     ;(legacy.passiveModifiers![0] as { stat: string }).stat = 'attack'
 
-    manager.saveOps.restoreFromSave(baseSave(player, { skills: [legacy, precursorSkillEntry('tram')] }))
+    manager.saveOps.restoreFromSave(baseSave(player, { skills: [legacy, precursorSkillEntry('linh_bao')] }))
 
     const restored = manager.skillManager.get('passive_linh_khi_cam_ung')!
     expect(restored.passiveModifiers![0]!.stat).toBe('might')
@@ -814,7 +814,7 @@ describe('stat-key handling on techniques[]/skills[] restore', () => {
     )
     stale.effects = []
 
-    manager.saveOps.restoreFromSave(baseSave(player, { skills: [stale, precursorSkillEntry('tram')] }))
+    manager.saveOps.restoreFromSave(baseSave(player, { skills: [stale, precursorSkillEntry('linh_bao')] }))
 
     const restored = manager.skillManager.get('da_phap_lien_tuyen')!
     expect(restored.effects).toEqual(
@@ -844,7 +844,7 @@ describe('stat-key handling on techniques[]/skills[] restore', () => {
 
     manager.saveOps.restoreFromSave(
       baseSave(player, {
-        skills: [orphanSkill, validSkill, precursorSkillEntry('tram')],
+        skills: [orphanSkill, validSkill, precursorSkillEntry('linh_bao')],
       }),
     )
 
@@ -1085,8 +1085,22 @@ describe('v75 technique gradeHistory coherence preflight', () => {
 // contract violation - reject, never silently default to tram). The
 // pick must also be LEARNED (id membership in the skills payload).
 describe('v82 mortalBasicSkillId preflight', () => {
-  it.each(['tram', 'linh_bao', 'huy_quyen'])(
-    'restores a mortal save carrying a learned, valid pick (%s)',
+  it('restores a mortal save carrying a learned, valid pick (linh_bao)', () => {
+    const manager = makeManager()
+    const player = createDefaultPlayer()
+    player.mortalBasicSkillId = 'linh_bao'
+    const save = baseSave(player, {
+      skills: [{ ...structuredClone(SAVED_SKILL), id: 'linh_bao' }],
+    })
+
+    expect(() => manager.saveOps.restoreFromSave(save)).not.toThrow()
+  })
+
+  // BETA SCOPE LOCK v2: 'tram'/'huy_quyen' stay legal precursors but
+  // are never a legal pick - the only writable starter is the fixed
+  // beta constant, so a save carrying either pick fails closed.
+  it.each(['tram', 'huy_quyen'])(
+    'rejects a mortal save whose pick is the non-beta starter (%s)',
     (skillId) => {
       const manager = makeManager()
       const player = createDefaultPlayer()
@@ -1095,7 +1109,8 @@ describe('v82 mortalBasicSkillId preflight', () => {
         skills: [{ ...structuredClone(SAVED_SKILL), id: skillId }],
       })
 
-      expect(() => manager.saveOps.restoreFromSave(save)).not.toThrow()
+      expect(() => manager.saveOps.restoreFromSave(save)).toThrow(/beta starter/i)
+      expect(manager.skillManager.getAll()).toEqual([])
     },
   )
 
@@ -1125,11 +1140,11 @@ describe('v82 mortalBasicSkillId preflight', () => {
   it('rejects a learned pick missing its core grant', () => {
     const manager = makeManager()
     const player = createDefaultPlayer()
-    player.mortalBasicSkillId = 'tram'
+    player.mortalBasicSkillId = 'linh_bao'
     const save = baseSave(player, {
-      skills: [precursorSkillEntry('tram')],
+      skills: [precursorSkillEntry('linh_bao')],
     })
-    delete save.player.nodeLevels['core_tram']
+    delete save.player.nodeLevels['core_linh_bao']
 
     expect(() => manager.saveOps.restoreFromSave(save)).toThrow(/missing core grant/i)
     expect(manager.skillManager.getAll()).toEqual([])
@@ -1153,7 +1168,7 @@ describe('v82 mortalBasicSkillId preflight', () => {
   it('rejects a post-path pick before any owner mutation', () => {
     const manager = makeManager()
     const player = swordCommittedPlayer()
-    player.mortalBasicSkillId = 'huy_quyen'
+    player.mortalBasicSkillId = 'linh_bao'
     const save = baseSave(player, {
       techniques: [structuredClone(SAVED_TECHNIQUE)],
       skills: [structuredClone(SAVED_SKILL)],
@@ -1173,9 +1188,9 @@ describe('v82 mortalBasicSkillId preflight', () => {
     const manager = makeManager()
     const player = createDefaultPlayer()
     player.realmId = 'qi_refining'
-    player.mortalBasicSkillId = 'tram'
+    player.mortalBasicSkillId = 'linh_bao'
     const save = baseSave(player, {
-      skills: [{ ...structuredClone(SAVED_SKILL), id: 'tram' }],
+      skills: [{ ...structuredClone(SAVED_SKILL), id: 'linh_bao' }],
     })
 
     expect(() => manager.saveOps.restoreFromSave(save)).toThrow(/missing cultivationPath/i)
@@ -1200,9 +1215,9 @@ describe('v82 mortalBasicSkillId preflight', () => {
   it('rejects a learned sibling precursor missing its core grant', () => {
     const manager = makeManager()
     const player = createDefaultPlayer()
-    player.mortalBasicSkillId = 'tram'
+    player.mortalBasicSkillId = 'linh_bao'
     const save = baseSave(player, {
-      skills: [precursorSkillEntry('tram'), precursorSkillEntry('linh_bao')],
+      skills: [precursorSkillEntry('linh_bao'), precursorSkillEntry('tram')],
     })
 
     expect(() => manager.saveOps.restoreFromSave(save)).toThrow(
@@ -1240,7 +1255,7 @@ describe('v72 bodyProgression preflight + rehydration', () => {
     const manager = makeManager()
     const player = createDefaultPlayer()
     corrupt(player)
-    const save = baseSave(player, { skills: [structuredClone(SAVED_SKILL), precursorSkillEntry('tram')] })
+    const save = baseSave(player, { skills: [structuredClone(SAVED_SKILL), precursorSkillEntry('linh_bao')] })
 
     expect(() => manager.saveOps.restoreFromSave(save)).toThrow(/BodyProgression integrity/i)
     // Zero-mutation: preflight threw before the skills slice replaced
@@ -1395,7 +1410,7 @@ describe('v77 zhou_tian slice + sequential coherence preflight', () => {
     const crafted = swordCommittedPlayer()
     corrupt(crafted)
     const save = baseSave(crafted, {
-      skills: [structuredClone(SAVED_SKILL), precursorSkillEntry('tram')],
+      skills: [structuredClone(SAVED_SKILL), precursorSkillEntry('linh_bao')],
       techniques: [committedTechniqueSlice(crafted)],
     })
 
