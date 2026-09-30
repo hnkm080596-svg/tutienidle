@@ -1358,7 +1358,8 @@
       "missing_fuel_wood": "Not enough fuel wood matching the herb's realm and age",
       "missing_spirit_stone": "Not enough Spirit Stones",
       "missing_special_ingredient": "Missing the recipe's special ingredient",
-      "fallback": "Cannot start brewing"
+      "fallback": "Cannot start brewing",
+      "scope_hidden": "This recipe is outside the beta scope"
     },
     "outcomeNone": "This run yields no pills."
   },

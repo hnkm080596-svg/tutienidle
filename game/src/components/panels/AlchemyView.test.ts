@@ -24,7 +24,7 @@ import {
 import { useNotificationStore } from '@/stores/notification'
 
 const TEST_RECIPE: AlchemyRecipe = {
-  id: 'alchemy_test',
+  id: 'alchemy_tu_linh_dan_qi_refining',
   pillId: 'test_pill',
   realmId: 'mortal',
   herbVariants: [{ materialId: 'test_herb', age: 'decade', label: 'Thảo Test' }],

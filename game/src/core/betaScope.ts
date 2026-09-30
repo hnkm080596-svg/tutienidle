@@ -24,6 +24,12 @@ import type { CultivationWayId } from './player/CultivationPathKit'
 import type { ElementType } from './element/ElementType'
 import type { Quest } from './quest/Quest'
 import { REALM_TIERS } from './realm/RealmTierMap'
+import {
+  SPIRIT_STONE_MATERIAL_ID,
+  SPIRIT_STONE_THUONG_PHAM_MATERIAL_ID,
+  SPIRIT_STONE_TRUNG_PHAM_MATERIAL_ID,
+} from './material/SpiritStoneMaterial'
+import { LUYEN_KHI_TINH_HOA_ID } from './equipment/TinhHoaMaterial'
 
 // ---------------------------------------------------------------------------
 // Ways and elements
@@ -363,4 +369,85 @@ export function isBetaQuestEnabled(
     return isBetaEnemyId(condition.enemyId)
   }
   return true
+}
+
+// ---------------------------------------------------------------------------
+// Economy census classifications (work-order sec.17)
+// ---------------------------------------------------------------------------
+
+/**
+ * Economy classes exempt from the beta source>0 && sink>0 census. The
+ * census test treats a material as needing BOTH a live beta faucet and a
+ * live beta sink; these named classes are the legal exceptions.
+ *
+ *   lore           - narrative drops deliberately sink-free by design
+ *                    (mirrors LORE_ALLOWLIST in EnemyDropSinkInvariant).
+ *   store_of_value - banked value whose only consumers are hidden
+ *                    systems; the faucet is itself a beta action
+ *                    (equipment dissolve cannot pay "nothing"), so the
+ *                    material stockpiles for post-beta instead of the
+ *                    action being broken.
+ *   base_currency  - spirit stone tiers: the settlement currency, not a
+ *                    crafting material.
+ */
+export type BetaEconomyClass = 'lore' | 'store_of_value' | 'base_currency'
+
+/**
+ * The ONE classification table the beta economy census consults. Ids not
+ * listed here and not suppressed by a domain flag must carry a live beta
+ * source AND a live beta sink or the census test fails.
+ */
+export const BETA_ECONOMY_EXEMPTIONS: ReadonlyMap<string, BetaEconomyClass> =
+  new Map([
+    ['broken_foundation_scroll', 'lore'],
+    ['old_jade_slip', 'lore'],
+    ['cultivator_diary', 'lore'],
+    ['stele_fragment', 'lore'],
+    // Luyen Khi Tinh Hoa is paid by the beta-visible Dissolve action; its
+    // only consumers (wash/refine) are scope-hidden this phase, so it is
+    // held as banked equipment value rather than suppressed outright.
+    [LUYEN_KHI_TINH_HOA_ID, 'store_of_value'],
+    [SPIRIT_STONE_MATERIAL_ID, 'base_currency'],
+    [SPIRIT_STONE_TRUNG_PHAM_MATERIAL_ID, 'base_currency'],
+    [SPIRIT_STONE_THUONG_PHAM_MATERIAL_ID, 'base_currency'],
+  ])
+
+/** Exemption lookup for the census test - fails closed (undefined). */
+export function betaEconomyClassOf(materialId: string): BetaEconomyClass | undefined {
+  return BETA_ECONOMY_EXEMPTIONS.get(materialId)
+}
+
+// ---------------------------------------------------------------------------
+// Worker Lodge tabs (work-order sec.13)
+// ---------------------------------------------------------------------------
+
+/**
+ * Worker Lodge tab ids as the panel authors them today: the workforce
+ * tab plus the companion-bound tabs. The read-model
+ * (GameManagerBuildingOps.getWorkerLodgeSurfaceModel) resolves each tab's
+ * verdict here so the frontend never imports CompanionAvailability to
+ * decide which tabs exist.
+ */
+export const BETA_WORKER_LODGE_TABS = [
+  'nhan_cong',
+  'qua_tang',
+  'chieu_mo',
+  'duyen_phan',
+] as const
+
+export type BetaWorkerLodgeTabId = (typeof BETA_WORKER_LODGE_TABS)[number]
+
+/**
+ * Which feature flag a Worker Lodge tab is gated on. nhan_cong is the
+ * workforce surface itself (always offered; only its MANUAL assignment
+ * controls are governed by manualWorkforce). The other three are
+ * companion surfaces.
+ */
+export const WORKER_LODGE_TAB_FEATURE: Readonly<
+  Record<BetaWorkerLodgeTabId, BetaFeatureName | null>
+> = {
+  nhan_cong: null,
+  qua_tang: 'companion',
+  chieu_mo: 'companion',
+  duyen_phan: 'companion',
 }

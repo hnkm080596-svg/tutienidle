@@ -2,9 +2,22 @@
 // lifecycle at restore boundaries. Written to PASS against correct
 // behavior; failure = confirmed defect with intended-reason evidence.
 import { withMortalCreationPick } from '../../services/save/GameSave.fixture'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
+
+// BETA SCOPE LOCK v2 Phase-5 - this suite exercises the scope-hidden
+// system's ENABLED implementation (sec.11-15: dormant, not deleted),
+// so the scope authority reports in-scope for this file.
+vi.mock('../betaScope', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../betaScope')>()),
+  isBetaFeature: () => true,
+  isScopeHidden: () => false,
+  isBetaQuestEnabled: () => true,
+  betaRecipeFamilyOfId: () => 'tu_linh_dan',
+}))
+
 import { GameManager } from './GameManager'
 import { QUESTS } from '../../data/quest/quests'
+import type { Quest } from '../quest/Quest'
 import { createDefaultPlayer } from '../player/Player'
 import type { PlayerData } from '../player/Player'
 import type { GameSave } from '../../services/save/SaveSystem'
@@ -39,6 +52,18 @@ function buildSave(player: PlayerData, quests: GameSave['quests']): GameSave {
 const DAILY_ID = 'daily_kill_bandit_15'
 const ONCE_ID = 'kill_wild_wolf_10'
 
+// BETA SCOPE LOCK v2 sec.15 - authored dailies retired from the quest
+// set, so the rollover-rebuild test registers a fabricated daily: the
+// day-boundary machinery is dormant (not deleted) and stays exercised.
+const TEST_DAILY: Quest = {
+  id: 'daily_test_rollover',
+  name: 'Test Daily',
+  description: '',
+  cadence: 'daily',
+  condition: { kind: 'kill', enemyId: 'wild_wolf', amount: 3 },
+  reward: { reward: { skillInsight: 5 } },
+}
+
 describe('QA R8.1 - restore-boundary quest lifecycle', () => {
   it('boot reconcile PRESERVES existing progress (no reset)', () => {
     const source = makeManager()
@@ -51,7 +76,8 @@ describe('QA R8.1 - restore-boundary quest lifecycle', () => {
     const target = makeManager()
     target.manager.saveOps.restoreFromSave(save)
 
-    // Reconcile must converge eligibility WITHOUT zeroing banked progress.
+    // Reconcile must converge eligibility WITHOUT zeroing banked
+    // progress - including inert residue for a retired quest id.
     expect(target.manager.questManager.getProgress(DAILY_ID)!.progress).toBe(7)
     // And the other eligible quests joined the active set.
     expect(target.manager.questManager.getProgress(ONCE_ID)).toBeDefined()
@@ -73,30 +99,32 @@ describe('QA R8.1 - restore-boundary quest lifecycle', () => {
 
   it('restoring a stale-day save rebuilds the daily board through the reset tick', () => {
     const source = makeManager()
+    source.manager.questRegistry.register(TEST_DAILY)
     // lastDailyResetAtMs = yesterday -> first update tick resets the day.
     const save = buildSave(source.player, {
-      active: [{ questId: DAILY_ID, progress: 7, claimed: false }],
+      active: [{ questId: TEST_DAILY.id, progress: 7, claimed: false }],
       completedOnceIds: [],
       lastDailyResetAtMs: Date.now() - 25 * 60 * 60 * 1000,
     })
 
     const target = makeManager()
+    target.manager.questRegistry.register(TEST_DAILY)
     target.manager.saveOps.restoreFromSave(save)
     target.manager.tickOps.update(1)
 
     // Day rolled over: board rebuilt with zero progress (v1 semantics),
     // then normal kills count without any UI read.
-    const rebuilt = target.manager.questManager.getProgress(DAILY_ID)
+    const rebuilt = target.manager.questManager.getProgress(TEST_DAILY.id)
     expect(rebuilt).toBeDefined()
     expect(rebuilt!.progress).toBe(0)
 
     target.manager.questSystem.onEnemyDefeated(
       target.manager.questRegistry,
       target.manager.questManager,
-      'bandit',
+      'wild_wolf',
       undefined,
     )
-    expect(target.manager.questManager.getProgress(DAILY_ID)!.progress).toBe(1)
+    expect(target.manager.questManager.getProgress(TEST_DAILY.id)!.progress).toBe(1)
   })
 
   it('double reconcile across boot + tick does not duplicate active entries', () => {

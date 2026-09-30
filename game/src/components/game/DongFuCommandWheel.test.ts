@@ -7,6 +7,16 @@
 // - Ring 4: Tàng Kinh Các TRÁI / Cài Đặt PHẢI đối xứng ngang cùng ring.
 // - Building shortcut đi qua building navigation controller.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+
+// BETA SCOPE LOCK v2 Phase-5 - this suite exercises the scope-hidden
+// system's ENABLED implementation (sec.11-15: dormant, not deleted),
+// so the scope authority reports in-scope for this file.
+vi.mock('../../core/betaScope', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../../core/betaScope')>()),
+  isBetaFeature: () => true,
+  isScopeHidden: () => false,
+}))
+
 import { computed, nextTick, ref } from 'vue'
 import { createApp, defineComponent, h } from 'vue'
 import { createPinia } from 'pinia'

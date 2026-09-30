@@ -25,6 +25,7 @@ import {
 } from '../profession/ProfessionGrade'
 import type { MaterialBag } from '../material/MaterialBag'
 import { PRODUCTION_OFFLINE_CAP_SECONDS } from './ProductionBalance'
+import { isScopeHidden } from '../betaScope'
 
 export interface DecomposeSettings {
   gradeFilter: ProfessionGrade | 'all'
@@ -91,11 +92,27 @@ export class DecomposeSystem {
     return this.capacity
   }
 
+  /**
+   * BETA SCOPE LOCK v2 sec.11 - the consumer-facing settings read model.
+   * While equipmentOreDecompose is scope-hidden the worker claim reports 0
+   * so the shared worker pool (resolveProductionWorkerCapacity, fed from
+   * this accessor every tick) routes the WHOLE capacity to production.
+   * Persistence is unaffected: getSaveState reads the raw `this.settings`.
+   */
   getSettings(): DecomposeSettings {
+    if (isScopeHidden('equipmentOreDecompose')) {
+      return { ...this.settings, workers: 0 }
+    }
+
     return { ...this.settings }
   }
 
   setSetting(patch: Partial<DecomposeSettings>): void {
+    // BETA SCOPE LOCK v2 - hidden tab writes fail closed (direct API too).
+    if (isScopeHidden('equipmentOreDecompose')) {
+      return
+    }
+
     this.settings = {
       gradeFilter: patch.gradeFilter ?? this.settings.gradeFilter,
       ageFilter: patch.ageFilter ?? this.settings.ageFilter,
@@ -113,6 +130,11 @@ export class DecomposeSystem {
    * (A9: oreMatchesFilter stays the single implementation).
    */
   listMatchingOres(): DecomposeOutputEntry[] {
+    // BETA SCOPE LOCK v2 - the hidden tab's query fails closed as well.
+    if (isScopeHidden('equipmentOreDecompose')) {
+      return []
+    }
+
     return this.bag
       .getAll()
       .filter((stack) =>
@@ -127,6 +149,12 @@ export class DecomposeSystem {
    * không nhân burst).
    */
   tick(nowMs: number): void {
+    // BETA SCOPE LOCK v2 - the cycle engine never runs while the tab is
+    // scope-hidden; restored `started`/`nextCycleAt` state is left intact.
+    if (isScopeHidden('equipmentOreDecompose')) {
+      return
+    }
+
     if (this.settings.workers <= 0) {
       this.started = false
 
@@ -244,6 +272,11 @@ export class DecomposeSystem {
    * nextCycleAt, so a repeated call over the same window settles 0.
    */
   settleOffline(nowMs: number, offlineSinceMs: number): number {
+    // BETA SCOPE LOCK v2 - offline cycles cannot accrue while hidden.
+    if (isScopeHidden('equipmentOreDecompose')) {
+      return 0
+    }
+
     if (this.settings.workers <= 0 || !this.started) {
       return 0
     }

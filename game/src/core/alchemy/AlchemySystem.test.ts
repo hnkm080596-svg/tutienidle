@@ -1,4 +1,15 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
+
+// BETA SCOPE LOCK v2 Phase-5 - this suite exercises dormant alchemy
+// recipes' ENABLED implementation (sec.12: dormant, not deleted), so
+// the scope authority reports every recipe id as a beta family here.
+vi.mock('../betaScope', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../betaScope')>()),
+  isBetaFeature: () => true,
+  isScopeHidden: () => false,
+  betaRecipeFamilyOfId: () => 'tu_linh_dan',
+}))
+
 import {
   AlchemySystem,
   resolveFuelWood,
