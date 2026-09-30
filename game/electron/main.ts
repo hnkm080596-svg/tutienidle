@@ -1,7 +1,8 @@
-import { app, BrowserWindow, dialog, ipcMain, powerMonitor } from 'electron'
+import { app, BrowserWindow, dialog, ipcMain, powerMonitor, safeStorage } from 'electron'
 import path from 'node:path'
 import os from 'node:os'
 import fs from 'node:fs/promises'
+import { promises as fsp } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import {
   createCombatClockHost,
@@ -12,6 +13,10 @@ import {
   DiagnosticBundle,
   sanitizeReportIdForFilename,
 } from '../src/main-process/DiagnosticBundle'
+import {
+  GuestCredentialStore,
+  registerGuestCredentialIpc,
+} from '../src/main-process/GuestCredentialStore'
 import { BUILD_IDENTITY, shortGitSha } from '../src/shared/build/BuildIdentity'
 
 // Uncommitted audit followup plan, Ưu tiên 2 "xử lý khi đóng gói Electron"
@@ -26,6 +31,27 @@ import { BUILD_IDENTITY, shortGitSha } from '../src/shared/build/BuildIdentity'
 //    không bị Chromium throttle giống rAF, kể cả khi backgroundThrottling
 //    có lỡ bị bật lại. Xem src/main-process/combatClockHost.ts.
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
+
+// B1.8 test accommodation: headless/CI boxes ship no OS keyring
+// (safeStorage.isEncryptionAvailable() is false there and kwallet prompts
+// for a wallet it cannot create unattended). TUTIEN_E2E_CREDENTIAL_CIPHER=e2e
+// swaps ONLY the cipher primitive inside the real GuestCredentialStore -
+// base64 with an integrity marker, so corrupted-detection still works -
+// while the store, IPC allowlist, atomic write and disk path stay the
+// production ones. Never set on packaged builds; the e2e spec asserts the
+// file is not plaintext.
+const e2eCipher = process.env.TUTIEN_E2E_CREDENTIAL_CIPHER === 'e2e'
+  ? {
+      canEncrypt: () => true,
+      encrypt: (plaintext: string) =>
+        Buffer.from(Buffer.from(`e2e:${plaintext}`, 'utf8').toString('base64'), 'utf8'),
+      decrypt: (ciphertext: Uint8Array) => {
+        const decoded = Buffer.from(Buffer.from(ciphertext).toString('utf8'), 'base64').toString('utf8')
+        if (!decoded.startsWith('e2e:')) throw new Error('e2e cipher integrity marker missing')
+        return decoded.slice(4)
+      },
+    }
+  : null
 
 // Save (SaveSystem.ts) là localStorage đồng bộ, không có coordination giữa
 // nhiều tiến trình — 2 cửa sổ cùng ghi sẽ đè lẫn nhau.
@@ -186,13 +212,35 @@ function main() {
     })
   })
 
-  ipcMain.on('combat-clock:start', () => {
+  // BETA-FINAL PR8 / spec B3 - privileged IPC accepts messages only from
+  // the one BrowserWindow this app creates. sender identity plus frame URL
+  // must both match: the packaged page is file://, dev is the Vite ORIGIN
+  // (exact match - a startsWith check would pass 'localhost:5173.evil').
+  const isDevOrigin = (url: string): boolean => {
+    const devUrl = process.env.VITE_DEV_SERVER_URL
+    if (!devUrl) return false
+    try {
+      return new URL(url).origin === new URL(devUrl).origin
+    } catch {
+      return false
+    }
+  }
+  const isAppFrame = (frameUrl: string): boolean =>
+    frameUrl.startsWith('file://') || isDevOrigin(frameUrl)
+  const isAppSender = (event: Electron.IpcMainEvent): boolean => {
+    if (event.sender !== mainWindow?.webContents) return false
+    return isAppFrame(event.senderFrame?.url ?? '')
+  }
+
+  ipcMain.on('combat-clock:start', (event) => {
+    if (!isAppSender(event)) return
     clockHost.start(16, (elapsed) => {
       mainWindow?.webContents.send('combat-clock:tick', elapsed)
     })
   })
 
-  ipcMain.on('combat-clock:stop', () => {
+  ipcMain.on('combat-clock:stop', (event) => {
+    if (!isAppSender(event)) return
     clockHost.stop()
   })
 
@@ -209,6 +257,23 @@ function main() {
   })
 
   app.whenReady().then(() => {
+    // B1.8 - the OS-protected durable guest credential (spec: safeStorage
+    // behind a fixed app-data path, allowlisted IPC only). Registration is
+    // inside whenReady so userData is resolved; safeStorage availability is
+    // queried per-call - unavailability surfaces as a typed recovery error,
+    // never a plaintext fallback.
+    const guestCredentialStore = new GuestCredentialStore({
+      credentialPath: path.join(app.getPath('userData'), 'guest-credential.bin'),
+      canEncrypt: e2eCipher?.canEncrypt ?? (() => safeStorage.isEncryptionAvailable()),
+      encrypt: e2eCipher?.encrypt ?? (plaintext => safeStorage.encryptString(plaintext)),
+      decrypt: e2eCipher?.decrypt ?? (ciphertext => safeStorage.decryptString(Buffer.from(ciphertext))),
+      readFile: p => fsp.readFile(p),
+      writeFile: (p, data) => fsp.writeFile(p, data),
+      renameFile: (from, to) => fsp.rename(from, to),
+      removeFile: p => fsp.rm(p, { force: true }),
+    })
+    registerGuestCredentialIpc(guestCredentialStore, ipcMain)
+
     mainWindow = createWindow()
   })
 
@@ -242,10 +307,25 @@ function main() {
         nodeIntegration: false,
         sandbox: true,
 
+        // BETA-FINAL PR8 - dev tooling ships OFF in the packaged build.
+        devTools: !app.isPackaged,
+
         // Fix chính của toàn bộ file này — không cho Chromium throttle
         // timer/rAF của cửa sổ này khi bị ẩn/minimize/mất focus.
         backgroundThrottling: false,
       },
+    })
+
+    // BETA-FINAL PR8 / spec B3 - navigation and new-window allowlists. The
+    // app is a single-window SPA booted once via loadFile/loadURL (which do
+    // not fire will-navigate); every user/page-initiated navigation and
+    // window.open is denied. Dev mode still allows in-page navigations
+    // under the Vite origin so HMR-style reloads keep working.
+    win.webContents.setWindowOpenHandler(() => ({ action: 'deny' }))
+    win.webContents.on('will-navigate', (event, url) => {
+      if (!isDevOrigin(url)) {
+        event.preventDefault()
+      }
     })
 
     if (process.env.VITE_DEV_SERVER_URL) {

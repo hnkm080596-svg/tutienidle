@@ -240,6 +240,7 @@ function drinkPill(pillId: string, pillName: string) {
     cap: 'bag.pill.reason.cap',
     retired: 'bag.pill.reason.retired',
     material_pill: 'bag.pill.reason.material_pill',
+    in_battle: 'bag.pill.reason.in_battle',
   }
 
   useNotificationStore().push('warning', t(reasonKeys[result.reason ?? 'not_found']))

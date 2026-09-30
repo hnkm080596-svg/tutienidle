@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '@/stores/player'
 import { useAudioStore } from '@/stores/audio'
@@ -16,6 +16,10 @@ import ConfirmModal from '@/components/common/ConfirmModal.vue'
 import GameButton from '@/components/common/GameButton.vue'
 import Chip from '@/components/common/primitives/Chip.vue'
 import FeedbackDialog from '@/components/common/FeedbackDialog.vue'
+import GuestUpgradeCard from '@/components/onboarding/GuestUpgradeCard.vue'
+import GuestAbandonDialog from '@/components/panels/GuestAbandonDialog.vue'
+import { readSupabaseSession } from '@/services/supabase/SupabaseSession'
+import { requestSessionLogout } from '@/composables/useSessionAccount'
 
 const player = usePlayerStore()
 const gameManager = useGameManager()
@@ -221,6 +225,71 @@ function handleReset() {
     true,
   )
 }
+
+// B1.8/B1.9 - account surface (remote mode only): the guest -> registered
+// upgrade card with its pending-confirm state, and the ordered logout.
+// The ordered legs live in useSessionAccount; the return-to-auth teardown
+// is bound by App.vue, so a successful requestSessionLogout unmounts this
+// panel with the rest of the game tree.
+const storedAccount = ref(remoteAuthoritative ? readSupabaseSession() : null)
+const accountIsGuest = computed(() => !storedAccount.value || storedAccount.value.mode === 'guest')
+const pendingUpgradeLoginId = computed(() => storedAccount.value?.pendingUpgrade?.loginId)
+const showAccountUpgrade = ref(!!pendingUpgradeLoginId.value)
+
+/** A finalize inside the panel flips account_kind; re-read the session so
+ *  the account surface (note text, logout path) stops treating the now-
+ *  registered account as a guest. */
+function refreshStoredAccount() {
+  storedAccount.value = remoteAuthoritative ? readSupabaseSession() : null
+}
+
+// 'abandon' = guest sole-credential warning (multi-action dialog);
+// 'unsynced' = flush failed, offer retry or explicit unsynced abandon.
+// Registered logout reuses the shared requestConfirm chrome.
+const logoutDialog = ref<'none' | 'abandon' | 'unsynced'>('none')
+const logoutBusy = ref(false)
+
+function startLogout() {
+  refreshStoredAccount()
+  if (accountIsGuest.value) {
+    logoutDialog.value = 'abandon'
+    return
+  }
+  requestConfirm(
+    t('panels.settings.confirm.logoutTitle'),
+    t('panels.settings.confirm.logoutBody'),
+    () => void runLogout(),
+    true,
+  )
+}
+
+async function runLogout(acknowledgeUnsynced = false) {
+  if (logoutBusy.value) return
+  logoutBusy.value = true
+
+  const result = await requestSessionLogout({ acknowledgeUnsynced })
+
+  logoutBusy.value = false
+  if (result.status === 'done') {
+    // The bound teardown already routed to auth; drop the dialog state so
+    // a remount of this panel never sees a stale modal.
+    logoutDialog.value = 'none'
+    return
+  }
+
+  // flush-blocked: pending writes could not reach the cloud - the spec's
+  // retry / explicit-unsynced-abandon fork.
+  logoutDialog.value = 'unsynced'
+}
+
+function onAbandonUpgrade() {
+  logoutDialog.value = 'none'
+  showAccountUpgrade.value = true
+}
+
+function onAbandonExport() {
+  void handleExport()
+}
 </script>
 
 <template>
@@ -347,6 +416,42 @@ function handleReset() {
       </GameButton>
     </section>
 
+    <!-- B1.8/B1.9 - account: guest upgrade surface (pending-confirm
+         replay included) and the ordered logout. Remote mode only. -->
+    <section v-if="remoteAuthoritative" class="settings-panel__section settings-panel__account" :aria-label="t('panels.settings.sections.accountAria')">
+      <h4>{{ t('panels.settings.sections.account') }}</h4>
+
+      <p class="settings-panel__section-note">
+        {{ accountIsGuest ? t('panels.settings.account.guestNote') : t('panels.settings.account.registeredNote') }}
+      </p>
+
+      <GuestUpgradeCard
+        v-if="accountIsGuest && showAccountUpgrade"
+        :pending-login-id="pendingUpgradeLoginId"
+        @finalized="showAccountUpgrade = false; refreshStoredAccount()"
+      />
+
+      <div class="settings-panel__actions">
+        <GameButton
+          v-if="accountIsGuest && !showAccountUpgrade"
+          variant="secondary"
+          data-testid="settings-upgrade-button"
+          @click="showAccountUpgrade = true"
+        >
+{{ t('panels.settings.actions.upgrade') }}
+</GameButton>
+
+        <GameButton
+          variant="danger"
+          :disabled="logoutBusy"
+          data-testid="settings-logout-button"
+          @click="startLogout"
+        >
+{{ t('panels.settings.actions.logout') }}
+</GameButton>
+      </div>
+    </section>
+
     <!-- Language - UI locale, persisted via composables/locale. -->
     <section class="settings-panel__section settings-panel__language" :aria-label="t('panels.settings.sections.languageAria')">
       <h4>{{ t('panels.settings.sections.language') }}</h4>
@@ -392,6 +497,29 @@ function handleReset() {
       :danger="pendingConfirm?.danger ?? false"
       @confirm="resolvePendingConfirm"
       @cancel="cancelPendingConfirm"
+    />
+
+    <!-- B1.9 - guest-abandon: explains sole-credential loss, offers
+         upgrade / export / cancel before the destructive choice. -->
+    <GuestAbandonDialog
+      :open="logoutDialog === 'abandon'"
+      :busy="logoutBusy"
+      @upgrade="onAbandonUpgrade"
+      @export="onAbandonExport"
+      @abandon="void runLogout()"
+      @cancel="logoutDialog = 'none'"
+    />
+
+    <!-- B1.9 - flush failed: retry the ordered logout or take the
+         explicit unsynced-progress acknowledgement. -->
+    <ConfirmModal
+      :open="logoutDialog === 'unsynced'"
+      :title="t('panels.settings.confirm.logoutUnsyncedTitle')"
+      :message="t('panels.settings.confirm.logoutUnsyncedBody')"
+      :confirm-label="t('panels.settings.confirm.logoutUnsyncedConfirm')"
+      danger
+      @confirm="void runLogout(true)"
+      @cancel="logoutDialog = 'none'"
     />
   </div>
 </template>

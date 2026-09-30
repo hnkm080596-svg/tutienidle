@@ -1,32 +1,111 @@
-# Uncommitted audit followup plan, Ưu tiên 2 (Electron packaging,
-# 2026-08-24) — file YAML thuần (không dùng key "build" trong package.json)
-# để tránh mọi ràng buộc ESM/CJS: package.json là "type":"module", còn YAML
-# không qua bất kỳ module loader JS nào.
-appId: com.tienhiepidle.app
+# BETA-FINAL PR8 / spec B3 — Windows beta package configuration.
+# YAML thuần (không dùng key "build" trong package.json) để tránh mọi ràng
+# buộc ESM/CJS: package.json là "type":"module", còn YAML không qua bất kỳ
+# module loader JS nào.
+
+# Stable identity (EXT-10 approved publisher value = "fdlmg-tutienidle").
+# appId drives the NSIS install GUID/registry keys — it must never change
+# after first release or update/uninstall lineage breaks.
+# productName must stay here AND in package.json: scripts/release/
+# build-identity.mjs reads this file, while only the package.json copy is
+# shipped inside app.asar so app.getName()/userData resolve to
+# "Tien Hiep Idle" at runtime. Keep both values identical.
+appId: com.fdlmg.tutienidle
 productName: Tien Hiep Idle
+copyright: Copyright © 2026 fdlmg-tutienidle
 
 # BẮT BUỘC override — mặc định electron-builder là "dist", sẽ đè lên
 # game/dist (output bản web build hiện có).
 directories:
   output: release
 
+asar: true
+# Runtime icon must be a REAL file on disk for nativeImage/taskbar. Electron
+# redirects fs access under app.asar to app.asar.unpacked/, so the file stays
+# reachable at the path electron/main.ts loads:
+#   path.join(__dirname, '../build/icon.ico')
+#   -> resources/app.asar/build/icon.ico -> app.asar.unpacked/build/icon.ico
+asarUnpack:
+  - build/icon.ico
+
 # Chỉ đóng gói output đã build sẵn — không ship source TypeScript.
 # '!node_modules/**/*' BẮT BUỘC: electron-builder có riêng
 # nodeModuleFilePatterns mặc định '**/*' (đóng gói TOÀN BỘ node_modules cho
 # app cần require() runtime deps), độc lập với 2 dòng trên — không loại trừ
 # tường minh thì asar phình to vô ích (đã thấy thật: 127MB gồm @babel/vite/...).
-# main.ts/preload.ts đã được vite-plugin-electron BUNDLE hết vào 1 file, chỉ
-# còn import 'electron' (Electron runtime tự cấp, không cần node_modules).
+#
+# PR8 review of the blanket exclusion: main.ts/preload.ts are fully BUNDLED
+# by vite-plugin-electron into dist-electron/*.js; the only remaining runtime
+# import is 'electron', provided by the Electron runtime itself — so zero
+# production dependencies load from node_modules in the packaged app and the
+# blanket exclusion is correct TODAY. It is NOT automatically correct after
+# dependency changes: when a real runtime dependency lands (the planned case
+# is electron-updater in PR12), either keep it bundled into dist-electron or
+# un-exclude it explicitly AFTER this rule, e.g.
+#   - 'node_modules/electron-updater/**'
+# and extend build/package-manifest.json's asar.allow the same day. The
+# inspect-package manifest refuses unlisted node_modules content either way.
 files:
   - dist/**/*
   - dist-electron/**/*
+  - build/icon.ico
   - '!node_modules/**/*'
 
 win:
   target: nsis
-  # No custom icon yet — electron-builder falls back to the default
-  # Electron icon until a real build/icon.ico ships.
+  # 'TienHiepIdle.exe' - no spaces in the binary name; display name stays
+  # productName. Executable identity is part of the release contract.
+  executableName: TienHiepIdle
+  # INTERIM icon pending EXT-10 hand-drawn art — see build/asset-provenance.md.
+  icon: build/icon.ico
+  # PR9 / spec B4 - signing pins. Credential material is NEVER committed here:
+  # electron-builder resolves the certificate itself (app-builder-lib 26.15.3
+  # codeSign/windowsSignToolManager.js) - first signtoolOptions.certificateSha1
+  # /certificateSubjectName/certificateFile if configured, else the protected
+  # env references WIN_CSC_LINK/WIN_CSC_KEY_PASSWORD (fallback CSC_LINK/
+  # CSC_KEY_PASSWORD). ${env.X} macros are NOT expanded inside signtoolOptions
+  # (they only expand in artifact/output patterns), so no env-macro trickery is
+  # used. Absent credentials -> "no signing info identified, signing is
+  # skipped" -> clean unsigned build (the current state while EXT-02 is open).
+  # The fail-closed gate lives in scripts/release/signing-preflight.mjs and
+  # verify-signatures.ps1, documented in docs/operations/beta/signing.md.
+  signtoolOptions:
+    # Single SHA-256 signature (plan B4). The electron-builder default
+    # [sha1, sha256] dual-signs; SHA-1 is deprecated for code signing.
+    signingHashAlgorithms:
+      - sha256
+    # RFC3161 timestamp authority, pinned explicitly so the contract is
+    # auditable (electron-builder falls back to the same URL when unset).
+    rfc3161TimeStampServer: http://timestamp.digicert.com
 
 nsis:
+  # Assisted per-user install: no admin rights, user may pick the directory.
   oneClick: false
+  perMachine: false
   allowToChangeInstallationDirectory: true
+  createStartMenuShortcut: true
+  createDesktopShortcut: true
+  shortcutName: Tien Hiep Idle
+  # 'Tien Hiep Idle-<version>-Setup.exe' - stable naming for manifests and
+  # checksum tooling. ${executableName} is not an artifactName macro.
+  artifactName: ${productName}-${version}-Setup.${ext}
+  installerIcon: build/icon.ico
+  uninstallerIcon: build/icon.ico
+  # Guest userData (%APPDATA%\Tien Hiep Idle) is PRESERVED on uninstall by
+  # default. Deletion is the user's explicit opt-in via the uninstaller
+  # prompt in build/installer.nsh — see docs/operations/beta/windows-install.md.
+  deleteAppDataOnUninstall: false
+  include: build/installer.nsh
+
+# PR10 / spec B5 - update metadata + candidate feed contract. Declaring the
+# github provider makes electron-builder emit channel-named update metadata
+# (beta.yml) and the differential-update .blockmap during packaging.
+# Uploads NEVER go through electron-builder's own publisher (no --publish
+# flag is ever passed); the restricted draft feed is owned by
+# scripts/release/publish-candidate.mjs via GitHub draft releases (EXT-04).
+publish:
+  provider: github
+  owner: hnkm080596-svg
+  repo: tutienidle
+  channel: beta
+  releaseType: draft

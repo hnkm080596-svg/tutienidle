@@ -16,13 +16,6 @@ export interface RealmData {
   // curve. x = 1 day -> Luyen Khi = 10 days, each later major realm x3
   // the previous.
   realmDurationMultiplier?: number
-
-  // Trần tổng bonus vĩnh viễn (cộng dồn qua các pill permanent_stat
-  // cùng target 1 stat) mà nhân vật có thể hấp thu ở cảnh giới này —
-  // undefined = cảnh giới chưa thiết kế trần, không giới hạn. Thay
-  // thế cơ chế Pill.usageLimit cũ (giới hạn theo số lần uống 1 pill
-  // cụ thể) — xem PillSystem.canUse().
-  attributeCap?: number
 }
 
 export const REALMS: RealmData[] = [
@@ -50,16 +43,14 @@ export const REALMS: RealmData[] = [
     // (tầng cuối Luyện Mạch cũng mở ở 12, xem data/realm/LuyenThe.ts)
     // hoặc grind thêm điểm thuộc tính trước khi quyết định Quán Khí.
     maxLevel: 18,
-    baseCultivationMinutes: 1,
-    attributeCap: 10,
+    baseCultivationMinutes: 1
   },
 
   {
     id: 'qi_refining',
     name: 'Luyện Khí',
     maxLevel: 18,
-    baseCultivationMinutes: 22,
-    attributeCap: 20,
+    baseCultivationMinutes: 22
   },
 
   {
@@ -67,8 +58,7 @@ export const REALMS: RealmData[] = [
     name: 'Trúc Cơ',
     // Mốc kết thúc nội dung progression hiện tại, không có đột phá Kim Đan.
     maxLevel: 18,
-    baseCultivationMinutes: 64,
-    attributeCap: 100,
+    baseCultivationMinutes: 64
   },
 
   {

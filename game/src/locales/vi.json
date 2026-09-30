@@ -645,6 +645,8 @@
         "import": "Nhập Save",
         "reset": "Xoá Save & Bắt Đầu Mới",
         "resetCloud": "Tải Lại Từ Cloud",
+        "upgrade": "Nâng cấp tài khoản",
+        "logout": "Đăng Xuất",
         "feedback": "Gửi Phản Hồi"
       },
       "feedback": {
@@ -669,7 +671,12 @@
         "resetBody": "Xoá toàn bộ tiến trình và bắt đầu nhân vật mới? Nhớ \"Xuất Save\" trước nếu chưa làm — hành động này không thể hoàn tác.",
         "resetCloudTitle": "Tải Lại Từ Cloud",
         "resetCloudBody": "Xoá bộ nhớ đệm local và tải lại tiến trình từ máy chủ? Save trên máy chủ KHÔNG bị xoá — phiên bản server sẽ được khôi phục.",
-        "importBodyRemote": "Chế độ cloud: file nhập chỉ được KIỂM TRA và xuất lại bản đã chuẩn hoá — save trên máy chủ không bị thay thế. Tiếp tục?"
+        "importBodyRemote": "Chế độ cloud: file nhập chỉ được KIỂM TRA và xuất lại bản đã chuẩn hoá — save trên máy chủ không bị thay thế. Tiếp tục?",
+        "logoutTitle": "Đăng xuất",
+        "logoutBody": "Đăng xuất khỏi tài khoản này? Tiến trình đã đồng bộ vẫn giữ trên máy chủ.",
+        "logoutUnsyncedTitle": "Chưa đồng bộ xong",
+        "logoutUnsyncedBody": "Tiến trình mới nhất chưa ghi lên máy chủ. Thử lại để đồng bộ trước khi đăng xuất, hoặc đăng xuất luôn và mất phần chưa đồng bộ.",
+        "logoutUnsyncedConfirm": "Đăng xuất chưa đồng bộ"
       },
       "errors": {
         "invalidSaveFile": "File save không hợp lệ."
@@ -685,6 +692,8 @@
         "languageAria": "Ngôn ngữ",
         "build": "Phiên Bản",
         "buildAria": "Thông tin phiên bản",
+        "account": "Tài Khoản",
+        "accountAria": "Tài khoản",
         "feedback": "Phản Hồi",
         "feedbackAria": "Phản hồi beta"
       },
@@ -712,6 +721,10 @@
         "environment": "Môi trường",
         "channel": "Kênh",
         "builtAt": "Thời điểm dựng"
+      },
+      "account": {
+        "guestNote": "Tài khoản khách — chỉ lưu khóa trên máy này. Nâng cấp để giữ tiến trình khi đổi máy.",
+        "registeredNote": "Tài khoản đã đăng ký — đăng nhập lại bằng ID và mật khẩu."
       }
     },
     "quest": {
@@ -1037,7 +1050,14 @@
       "continue": "Tiếp Tục — {name}",
       "continueNoName": "Tiếp Tục",
       "language": "Ngôn ngữ",
-      "saveCleared": "Save đã được xoá — hãy bắt đầu lại nào."
+      "saveCleared": "Save đã được xoá — hãy bắt đầu lại nào.",
+      "credentialError": "Không đọc được khóa khách đã lưu trên máy này — đăng nhập lại hoặc chơi khách mới để tiếp tục.",
+      "upgradeLink": "Nâng cấp tài khoản khách",
+      "crossAccount": {
+        "title": "Rời phiên khách hiện tại",
+        "body": "Máy này đang giữ một tài khoản khách. Tiếp tục sẽ rời phiên khách đó — tiến trình khách vẫn giữ nguyên, nhưng để quay lại bạn cần phiên khách còn hiệu lực trên máy chủ.",
+        "confirm": "Rời phiên khách"
+      }
     },
     "creation": {
       "back": "← Trở lại",
@@ -1348,6 +1368,7 @@
         "retired": "Đan dược này đã ngừng lưu hành — hiệu ứng cũ không còn được hỗ trợ.",
         "cap": "Chỉ số liên quan đã đạt trần cảnh giới.",
         "material_pill": "Đan dược này không uống trực tiếp — nó được tiêu qua hệ thống riêng.",
+        "in_battle": "Đan dược cộng chỉ số không dùng được giữa trận.",
         "fallback": "Không thể dùng đan dược."
       }
     },
@@ -1605,5 +1626,24 @@
     "retry": "Thử lại",
     "cancel": "Ở lại",
     "force": "Thoát không lưu"
+  },
+  "account": {
+    "upgrade": {
+      "hint": "Đặt ID đạo hữu để giữ nguyên nhân vật, cảnh giới và tiến trình — bạn sẽ chọn mật khẩu sau khi máy chủ xác nhận.",
+      "submit": "Nâng cấp tài khoản",
+      "pendingBody": "Tài khoản {id} đang chờ máy chủ xác nhận. Tiến trình của bạn vẫn an toàn — kiểm tra lại sau khi máy chủ xác nhận xong.",
+      "pendingCheck": "Kiểm tra lại",
+      "pendingSwitch": "Đổi ID khác",
+      "done": "Tài khoản đã nâng cấp — nhân vật giữ nguyên.",
+      "passwordBody": "Tài khoản {id} đã được xác nhận. Đặt mật khẩu để đăng nhập lại tài khoản này.",
+      "passwordSubmit": "Đặt mật khẩu"
+    },
+    "abandon": {
+      "title": "Rời phiên khách",
+      "body": "Đăng xuất sẽ xóa khóa khách trên máy này — cách duy nhất quay lại tài khoản. Hãy nâng cấp tài khoản hoặc xuất save trước nếu muốn giữ tiến trình.",
+      "upgrade": "Nâng cấp tài khoản",
+      "export": "Xuất save",
+      "confirm": "Đăng xuất vĩnh viễn"
+    }
   }
 }

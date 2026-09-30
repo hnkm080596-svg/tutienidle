@@ -172,6 +172,36 @@ export function uniqueName(prefix = 'T'): string {
   return `${prefix}${Date.now().toString(36)}${nameCounter.toString(36)}`.slice(0, 20)
 }
 
+// Faithful post-confirm auth state, proven live on staging GoTrue (PR6
+// verdict): a confirmed email link leaves the bound email, its confirmation
+// timestamp, a verified `email` identity row AND is_anonymous=false on
+// auth.users. Any subset that leaves the user anonymous fails the
+// post-finalize password bind (updateUser({password}) -> 422 while
+// is_anonymous stays true).
+export async function confirmEmailIdentity(pg: Client, userId: string, email: string) {
+  await pg.query(
+    'update auth.users set email = $2, email_confirmed_at = now(), is_anonymous = false, updated_at = now() where id = $1',
+    [userId, email],
+  )
+  await pg.query(
+    `insert into auth.identities (id, user_id, identity_data, provider, provider_id, last_sign_in_at, created_at, updated_at)
+     values (gen_random_uuid(), $1::uuid, jsonb_build_object('sub', $1::text, 'email', $2::text, 'email_verified', true), 'email', $2::text, now(), now(), now())
+     on conflict do nothing`,
+    [userId, email],
+  )
+}
+
+// Anonymous signup that keeps the refresh token - the fixture's
+// createAnonymousUser drops it, but token-refresh scenarios need the pair.
+export async function signupAnonymousWithRefresh(env: ContractEnv) {
+  const res = await gotruePost(env, '/auth/v1/signup', {})
+  const body = await res.json()
+  if (!res.ok || !body.access_token || !body.refresh_token) {
+    throw new Error(`anonymous signup failed: ${res.status} ${JSON.stringify(body)}`)
+  }
+  return { userId: body.user.id as string, token: body.access_token as string, refreshToken: body.refresh_token as string }
+}
+
 // claim_active_session through the versioned admission overload; throws unless
 // the server admitted the session.
 export async function claimSession(

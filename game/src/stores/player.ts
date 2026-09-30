@@ -16,8 +16,10 @@ import { buildGameSave, computeRestoreIdentity, type GameSave, type RestoreTimeA
 import { cloudSaveCoordinator } from '../services/cloudSave/CloudSaveServiceFactory'
 import { asBaseStats, createBaseStats } from '@/core/stats/StatBlock'
 import { STAT_DOMAIN } from '@/core/stats/StatDomain'
+import { getEffectiveMainStatCap } from '@/core/stats/StatCap'
+import { MAIN_STAT_KEYS } from '@/core/stats/StatTypes'
 import type { GameManager } from '@/core/game/GameManager'
-import { getRequiredCultivation } from '@/core/realm/realmSystem'
+import { getCurrentRealm, getRequiredCultivation } from '@/core/realm/realmSystem'
 import { cultivateTick } from '@/core/cultivation/CultivationTick'
 import { accrueCultivationInsight } from '@/core/cultivation/CultivationInsight'
 import type { StatModifier } from '@/core/stats/StatCalculator'
@@ -219,9 +221,10 @@ export const usePlayerStore = defineStore('player', {
 
     // Modifier "tĩnh" từ equipment (xem ghi chú kiểu PlayerData).
     // Gọi ngay sau equip/unequip/enhance, không phải mỗi tick —
-    // khác setExternalModifiers ở trên. player.modifiers là bucket
-    // DÙNG CHUNG cho nhiều nguồn tĩnh khác (realm passive, Luyện Thể,
-    // pill vĩnh viễn — phân biệt qua sourceType/id prefix), nên chỉ
+    // khac setExternalModifiers o tren. player.modifiers is the SHARED
+    // bucket for many static sources (realm passive, Luyen The -
+    // distinguished by sourceType/id prefix; permanent pills now write
+    // baseStats directly, no longer a modifier bucket), so it may only
     // được thay THẾ phần sourceType 'equipment', không được gán đè cả
     // mảng — gán đè từng xoá sạch mọi nguồn khác mỗi lần equip/reload.
     setEquipmentModifiers(modifiers: StatModifier[]) {
@@ -340,7 +343,14 @@ export const usePlayerStore = defineStore('player', {
       const filteredBaseStats: Record<string, number> = {}
 
       for (const [key, value] of Object.entries(clonedPlayer.baseStats)) {
-        if (allowedStatKeys.has(key)) {
+        if (
+          allowedStatKeys.has(key) &&
+          Number.isFinite(value) &&
+          value >= 0 &&
+          // Main stats are indivisible points (level-up and pills only
+          // ever grant integers) - a fractional claim is crafted data.
+          (!(MAIN_STAT_KEYS as readonly string[]).includes(key) || Number.isInteger(value))
+        ) {
           filteredBaseStats[key] = value
         }
       }
@@ -358,6 +368,62 @@ export const usePlayerStore = defineStore('player', {
         }),
       }
 
+      // Retired pill-permanent:<stat> flat modifiers (pre-rework saves)
+      // are folded into baseStats once, then dropped below: the bucket
+      // must not keep paying while the cap gate only reads baseStats,
+      // and the earned points stay visible to every baseStats reader.
+      // Only MAIN_STAT_KEYS fold - every legit legacy entry was a
+      // main-stat grant, so the shared effective cap binds every fold.
+      const isRetiredPillPermanent = (modifier: StatModifier | null | undefined): boolean =>
+        typeof modifier?.id === 'string' && modifier.id.startsWith('pill-permanent:')
+      const mainCap = getEffectiveMainStatCap(restoredPlayer)
+      const foldedRetiredIds = new Set<string>()
+      const foldRetiredPillPermanents = (modifiers: StatModifier[] | undefined): void => {
+        for (const modifier of modifiers ?? []) {
+          // Only main-stat zombies fold: pill-permanent:* was always a
+          // main-stat grant channel, so a non-main claim (domain stat,
+          // foreign key) is crafted data, not a legacy save.
+          if (
+            !isRetiredPillPermanent(modifier) ||
+            !(MAIN_STAT_KEYS as readonly string[]).includes(modifier.stat)
+          ) {
+            continue
+          }
+          // A legacy save could carry the same entry in two buckets;
+          // the fold credits it once. An invalid-flat copy does not
+          // consume the id - a later valid copy still credits.
+          if (foldedRetiredIds.has(modifier.id)) {
+            continue
+          }
+          const gain = modifier.flat ?? 0
+          if (!Number.isFinite(gain) || gain <= 0) {
+            continue
+          }
+          foldedRetiredIds.add(modifier.id)
+          const key = modifier.stat
+          restoredPlayer.baseStats[key] = Math.min(
+            mainCap,
+            (restoredPlayer.baseStats[key] ?? 0) + gain,
+          )
+        }
+      }
+
+      // Same one-shot fold in every static-modifier bucket a legacy
+      // save could carry: player.modifiers, player.externalModifiers
+      // and persistentTimedEffects[].modifiers are all filtered by
+      // isCurrentShapeModifier below, so a folded zombie is dropped
+      // from whichever channel carried it.
+      foldRetiredPillPermanents(restoredPlayer.modifiers)
+      foldRetiredPillPermanents(restoredPlayer.externalModifiers)
+      for (const effect of restoredPlayer.persistentTimedEffects ?? []) {
+        foldRetiredPillPermanents(effect?.modifiers)
+      }
+
+      // The main-stat clamp runs AFTER normalizeArtifactProgress below:
+      // the effective cap depends on the realm, and a crafted save can
+      // pair a big realm claim with a big stat claim - normalize fixes
+      // the realm first, then the clamp reads the corrected cap.
+
       // Same whitelist for StatModifier.stat fields persisted on the
       // player slice - a modifier whose stat is not a current StatType
       // drops (never renamed), and a modifier on a domain-gated stat
@@ -365,6 +431,12 @@ export const usePlayerStore = defineStore('player', {
       // wrong tag would be rejected by applyDomainGate on every
       // recompute, so the inert zombie is dropped at restore instead.
       const isCurrentShapeModifier = (modifier: StatModifier): boolean => {
+        if (modifier === null || typeof modifier !== 'object') {
+          return false
+        }
+        if (isRetiredPillPermanent(modifier)) {
+          return false
+        }
         if (!allowedStatKeys.has(modifier.stat)) {
           return false
         }
@@ -382,6 +454,13 @@ export const usePlayerStore = defineStore('player', {
           modifiers: (effect.modifiers ?? []).filter(isCurrentShapeModifier),
         }),
       )
+
+      // Reject a nonsense realmId BEFORE the assign lands it: a crafted
+      // save with an unresolvable realm survives Object.assign then
+      // throws inside addCultivation below - leaving the live store
+      // poisoned and the payload uncommitted, so every retry replays
+      // the crash. Fail before the payload mutates anything.
+      getCurrentRealm(restoredPlayer.realmId)
 
       for (const key of Object.keys(this.$state)) {
         if (!(key in restoredPlayer)) {
@@ -432,7 +511,17 @@ export const usePlayerStore = defineStore('player', {
       // đủ gate, grade/path sai enum, realm/level/EXP vượt trần.
       normalizeArtifactProgress(this)
 
-      // M1 (ARCH-001) - commit the payload identity only AFTER the whole
+      // Value-domain coherence on the persisted pool: main stats clamp
+      // to the shared cap (a save claiming more is corrupt or crafted -
+      // same bound every legitimate writer already enforces). Runs
+      // AFTER normalize: the cap is realm-derived, so the clamp reads
+      // the corrected realm claim, not the crafted one.
+      const normalizedCap = getEffectiveMainStatCap(this)
+      for (const key of MAIN_STAT_KEYS) {
+        this.baseStats[key] = Math.min(normalizedCap, this.baseStats[key] ?? 0)
+      }
+
+      // M1 (ARCH-001) — commit the payload identity only AFTER the whole
       // apply succeeded: a mid-restore throw leaves it uncommitted so a
       // retry with the same payload re-applies instead of being skipped
       // by the guard above.

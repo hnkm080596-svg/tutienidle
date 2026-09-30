@@ -13,18 +13,112 @@ export interface StoredSupabaseSession {
   mode?: SupabaseSessionMode
   /** Access-token deadline (ms) for proactive refresh. */
   expiresAtMs?: number
+  /** EXT-09 pending-confirm upgrade: the login id the anonymous account
+   *  linked, awaiting the authoritative finalize_guest_upgrade verdict.
+   *  Finalization is resumable - a crash between link and finalize
+   *  replays this field on the next entry. */
+  pendingUpgrade?: { loginId: string }
 }
 
 const SESSION_KEY = 'tien-hiep-idle-auth-session'
+
+/** B1.8 durable guest identity: the OS-protected record the main process
+ *  owns behind Electron safeStorage (see main-process/GuestCredentialStore).
+ *  The renderer sees ONLY this operations surface through the preload
+ *  bridge - never a filesystem path or raw bytes. Browser builds expose no
+ *  bridge: guest identity stays session-scoped there, unchanged. */
+export interface GuestCredentialRecord {
+  refreshToken: string
+  sessionId: string
+  userId?: string
+  pendingUpgradeLoginId?: string
+}
+
+export type GuestCredentialResult<T> =
+  | { ok: true; value: T }
+  | { ok: false; code: 'unavailable' | 'corrupted' | 'invalid' }
+
+export interface GuestCredentialBridge {
+  load(): Promise<GuestCredentialResult<GuestCredentialRecord | null>>
+  save(record: GuestCredentialRecord): Promise<GuestCredentialResult<null>>
+  clear(): Promise<GuestCredentialResult<null>>
+}
+
+interface ElectronLikeWindow {
+  electronAPI?: { guestCredentials?: GuestCredentialBridge }
+}
+
+function resolveGuestCredentialBridge(): GuestCredentialBridge | undefined {
+  const api = (globalThis as { window?: ElectronLikeWindow }).window?.electronAPI
+    ?? (globalThis as ElectronLikeWindow).electronAPI
+  const bridge = api?.guestCredentials
+  return bridge &&
+    typeof bridge.load === 'function' &&
+    typeof bridge.save === 'function' &&
+    typeof bridge.clear === 'function'
+    ? bridge
+    : undefined
+}
+
+/** Serialized durable operations: ordering is the correctness contract -
+ *  a later store/clear always wins over an earlier queued write. A failed
+ *  op never wedges the chain; 'unavailable' latches the seam off so a dead
+ *  safeStorage is not hammered for the rest of the process. */
+let durableChain: Promise<void> = Promise.resolve()
+let durableSeamDown = false
+
+function enqueueDurable(op: (bridge: GuestCredentialBridge) => Promise<GuestCredentialResult<null>>): void {
+  const bridge = resolveGuestCredentialBridge()
+  if (!bridge || durableSeamDown) return
+  durableChain = durableChain.then(async () => {
+    try {
+      const result = await op(bridge)
+      if (!result.ok) {
+        // Recovery error - NEVER a plaintext fallback, NEVER a silent new
+        // anonymous signup. The caller surfaces 'unavailable'; we only log.
+        durableSeamDown = true
+        console.error('[session] durable guest credential store unavailable:', result.code)
+      }
+    } catch (error) {
+      console.error('[session] durable guest credential operation failed', error)
+    }
+  })
+}
+
+/** Drop the durable guest record without touching the live session (upgrade
+ *  finalize: the account converts to session-scoped registered persistence,
+ *  the conservative Closed-Beta default). Queued after any in-flight durable
+ *  op so ordering semantics hold. */
+export function clearDurableGuestCredential(): void {
+  enqueueDurable(bridge => bridge.clear())
+}
 
 /** Epoch counter on the stored credential: every store/clear bumps it, so
  *  an async refresh that resolves after a sign-out or a re-sign cannot
  *  resurrect the credential it refreshed for the OLD binding. */
 let sessionGeneration = 0
 
-export function storeSupabaseSession(session: StoredSupabaseSession): void {
+function writeSessionSlot(session: StoredSupabaseSession): void {
   sessionStorage.setItem(SESSION_KEY, JSON.stringify(session))
   sessionGeneration++
+}
+
+export function storeSupabaseSession(session: StoredSupabaseSession): void {
+  writeSessionSlot(session)
+  // Guest sessions are the ONLY durable identity (B1.8): the protected
+  // record is replaced atomically so the newest rotated credential is
+  // persisted BEFORE the old one is retired. Registered sessions stay
+  // session-scoped (no remember-me without a product ruling).
+  if (session.mode === 'guest') {
+    enqueueDurable(bridge =>
+      bridge.save({
+        refreshToken: session.refreshToken,
+        sessionId: session.sessionId,
+        userId: session.userId,
+        pendingUpgradeLoginId: session.pendingUpgrade?.loginId,
+      }),
+    )
+  }
 }
 
 export function readSupabaseSession(): StoredSupabaseSession | null {
@@ -33,7 +127,9 @@ export function readSupabaseSession(): StoredSupabaseSession | null {
 
   try {
     const parsed = JSON.parse(raw) as Partial<StoredSupabaseSession>
-    return parsed.accessToken && parsed.refreshToken && parsed.sessionId
+    // accessToken may be '' - a durable-restored guest waits on its first
+    // refresh before any call may use it (see restoreDurableGuestSession).
+    return typeof parsed.accessToken === 'string' && parsed.refreshToken && parsed.sessionId
       ? {
           accessToken: parsed.accessToken,
           refreshToken: parsed.refreshToken,
@@ -41,6 +137,10 @@ export function readSupabaseSession(): StoredSupabaseSession | null {
           userId: parsed.userId,
           mode: parsed.mode,
           expiresAtMs: parsed.expiresAtMs,
+          pendingUpgrade:
+            typeof parsed.pendingUpgrade?.loginId === 'string'
+              ? { loginId: parsed.pendingUpgrade.loginId }
+              : undefined,
         }
       : null
   } catch {
@@ -49,8 +149,52 @@ export function readSupabaseSession(): StoredSupabaseSession | null {
 }
 
 export function clearSupabaseSession(): void {
+  // Snapshot before removeItem: only a GUEST binding owns the durable
+  // record - a registered sign-out must never touch it (the durable seam
+  // belongs to guest persistence alone).
+  const removed = readSupabaseSession()
   sessionStorage.removeItem(SESSION_KEY)
   sessionGeneration++
+  if (removed?.mode === 'guest') {
+    enqueueDurable(bridge => bridge.clear())
+  }
+}
+
+export type DurableRestoreStatus = 'restored' | 'absent' | 'unavailable' | 'corrupted'
+
+/** B1.8 process-restart resume: hydrate sessionStorage from the
+ *  OS-protected durable record. The hydrated session carries NO access
+ *  token and NO expiresAtMs, so the first resolve always proves liveness
+ *  through the persisted refresh credential - the durable record is never
+ *  trusted as an authenticated token on its own.
+ *  'corrupted'/'unavailable' are recovery errors: never a plaintext
+ *  fallback, never an implicit new anonymous signup. */
+export async function restoreDurableGuestSession(): Promise<DurableRestoreStatus> {
+  if (readSupabaseSession()) return 'restored'
+
+  const bridge = resolveGuestCredentialBridge()
+  if (!bridge) return 'absent'
+
+  let result: GuestCredentialResult<GuestCredentialRecord | null>
+  try {
+    result = await bridge.load()
+  } catch {
+    return 'unavailable'
+  }
+  if (!result.ok) return result.code === 'corrupted' ? 'corrupted' : 'unavailable'
+  if (!result.value?.refreshToken || !result.value.sessionId) return 'absent'
+
+  writeSessionSlot({
+    accessToken: '',
+    refreshToken: result.value.refreshToken,
+    sessionId: result.value.sessionId,
+    userId: result.value.userId,
+    mode: 'guest',
+    pendingUpgrade: result.value.pendingUpgradeLoginId
+      ? { loginId: result.value.pendingUpgradeLoginId }
+      : undefined,
+  })
+  return 'restored'
 }
 
 const REFRESH_SKEW_MS = 30_000
