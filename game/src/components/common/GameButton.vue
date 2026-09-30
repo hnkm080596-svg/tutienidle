@@ -185,9 +185,8 @@ const sliceTint = computed(() => {
   box-shadow: none;
 }
 
-/* Dạng tròn — nút icon (+/−). The element border is the fallback when
-   no slice is mounted (ghost-circle); a mounted chrome slice owns the
-   ring instead. */
+/* Circle icon buttons. The element border is the fallback when no slice
+   is mounted (ghost-circle); a mounted chrome slice owns the ring. */
 .game-button--circle {
   min-width: var(--hk-density-compact-height);
   min-height: var(--hk-density-compact-height);
