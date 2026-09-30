@@ -1,0 +1,131 @@
+/*
+ * Huyền Kim Sơn Thủy — semantic token layer (spec §54).
+ *
+ * Vue components consume these CSS variables; Phaser scenes consume the
+ * same values via `src/ui/tokens.ts` (HUYEN_KIM_TOKENS). The two are kept
+ * identical by `tokens.parity.test.ts` — never edit one without the other.
+ *
+ * No component may hardcode a visual semantic that has a token here.
+ * These vars sit beside (not on top of) the legacy --ink-*/--paper-*
+ * tokens; the new skin opts in per-surface during migration.
+ */
+
+:root {
+  /* Surfaces — Huyền: dark lacquer / dark jade, never pure black */
+  --hk-surface-base: #0B0F0D;
+  --hk-surface-raised: #131B17;
+  --hk-surface-overlay: #1B2621;
+
+  /* Borders — gold intensity: muted frame / active / ceremony */
+  --hk-border-muted: #2A352F;
+  --hk-border-active: #7A6234;
+  --hk-border-ceremony: #E8C35A;
+
+  /* Text — ivory/paper */
+  --hk-text-primary: #EDE6D6;
+  --hk-text-secondary: #B8AE97;
+  --hk-text-muted: #7A7260;
+
+  /* Ngọc — player, cultivation energy, learned, positive */
+  --hk-jade: #3FA68B;
+  --hk-jade-soft: #67C4AB;
+  --hk-jade-deep: #1F6B58;
+
+  /* Kim — gold intensity ladder: frame / active / actionable / milestone */
+  --hk-gold-muted: #7A6234;
+  --hk-gold: #C99A4A;
+  --hk-gold-bright: #E8C35A;
+  --hk-gold-radiant: #F4D98B;
+
+  /* Chu Sa — enemy, danger, damage, defeat accent */
+  --hk-cinnabar: #B54432;
+  --hk-cinnabar-bright: #D4654F;
+  --hk-cinnabar-deep: #7E2E21;
+
+  /* Locked / information semantics */
+  --hk-ink: #5B6266;
+  --hk-ivory: #EDE6D6;
+
+  /* Elevation & glow */
+  --hk-shadow-low: rgba(0, 0, 0, 0.40);
+  --hk-shadow-high: rgba(0, 0, 0, 0.55);
+  --hk-glow-jade: rgba(63, 166, 139, 0.35);
+  --hk-glow-gold: rgba(232, 195, 90, 0.35);
+
+  /* Spacing scale */
+  --hk-space-1: 2px;
+  --hk-space-2: 4px;
+  --hk-space-3: 8px;
+  --hk-space-4: 12px;
+  --hk-space-5: 16px;
+  --hk-space-6: 24px;
+  --hk-space-7: 32px;
+  --hk-space-8: 48px;
+
+  /* Radius */
+  --hk-radius-sm: 4px;
+  --hk-radius-md: 8px;
+  --hk-radius-lg: 12px;
+  --hk-radius-pill: 999px;
+
+  /* Motion — restrained, deliberate, non-bouncy */
+  --hk-motion-micro: 150ms;
+  --hk-motion-panel: 280ms;
+  --hk-motion-scene: 450ms;
+  --hk-motion-breath: 2400ms;
+  --hk-ease-standard: cubic-bezier(0.22, 0.61, 0.21, 1);
+
+  /* Density modes — compact / standard / ceremonial */
+  --hk-density-compact-pad-y: 6px;
+  --hk-density-compact-pad-x: 10px;
+  --hk-density-compact-height: 28px;
+  --hk-density-standard-pad-y: 8px;
+  --hk-density-standard-pad-x: 14px;
+  --hk-density-standard-height: 36px;
+  --hk-density-ceremonial-pad-y: 14px;
+  --hk-density-ceremonial-pad-x: 22px;
+  --hk-density-ceremonial-height: 48px;
+
+  /* Typography */
+  --hk-font-display: 'Playfair Display', 'Noto Serif SC', serif;
+  --hk-font-ui: 'Be Vietnam Pro', 'Noto Sans SC', system-ui, sans-serif;
+}
+
+/* Semantic state classes (§46-47) — color is never the sole signal; pair
+   with icon/shape/text in the component that consumes these. */
+.hk-state-available {
+  color: var(--hk-gold);
+}
+.hk-state-active {
+  color: var(--hk-jade);
+}
+.hk-state-complete {
+  color: var(--hk-jade);
+  border-color: var(--hk-border-active);
+}
+.hk-state-danger {
+  color: var(--hk-cinnabar);
+}
+.hk-state-locked {
+  color: var(--hk-ink);
+}
+.hk-state-milestone {
+  color: var(--hk-gold-radiant);
+}
+
+/* Attention — slow breathing gold (§46), not rapid blink. Applied to the
+   element's border/glow by consumers; respects reduced-motion. */
+@keyframes hk-breath {
+  0%, 100% { box-shadow: 0 0 0 0 var(--hk-glow-gold); }
+  50% { box-shadow: 0 0 14px 2px var(--hk-glow-gold); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hk-attention {
+    animation: none !important;
+  }
+}
+
+.hk-attention {
+  animation: hk-breath var(--hk-motion-breath) var(--hk-ease-standard) infinite;
+}
