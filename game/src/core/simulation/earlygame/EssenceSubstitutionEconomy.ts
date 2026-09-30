@@ -29,6 +29,7 @@
 // path may import it (same rule as PerfectionEconomy).
 import { EarlyGameSession } from './EarlyGameSession'
 import { CANONICAL_EARLY_LOOP, runLoop } from './EarlyGameLoop'
+import { SeededCombatRng } from '../../battle/runtime/rng/SeededCombatRng'
 import type { EarlyGameCreationProfile } from '../../game/EarlyGameBootstrap'
 import { BODY_REFINEMENT_TIERS } from '../../../data/realm/BodyRefinement'
 import {
@@ -77,6 +78,27 @@ export interface BandResidencyMeasurement {
  * session post-attempt in every case - callers check
  * `player.realmId === targetRealmId` for the boundary. */
 function driveToBandBoundary(
+  seed: number,
+  targetRealmId: 'qi_refining',
+): EarlyGameSession {
+  // Same-seed replay contract: production loot/equipment rolls draw on
+  // Math.random by design (a seeded battle must not pin drops), which
+  // leaves the drive non-deterministic once battles are close enough
+  // for gear variance to tip outcomes. The measurement pins the
+  // unseeded surface to its own seeded stream for the drive's
+  // duration - a separate salt keeps drops independent of the battle
+  // and loot streams, and the global is restored afterwards.
+  const unseededStream = new SeededCombatRng(seed ^ 0xec0c4e0)
+  const originalRandom = Math.random
+  Math.random = () => unseededStream.roll()
+  try {
+    return driveToBandBoundaryInner(seed, targetRealmId)
+  } finally {
+    Math.random = originalRandom
+  }
+}
+
+function driveToBandBoundaryInner(
   seed: number,
   targetRealmId: 'qi_refining',
 ): EarlyGameSession {
