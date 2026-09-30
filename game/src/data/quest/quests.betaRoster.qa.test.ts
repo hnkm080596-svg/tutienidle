@@ -4,13 +4,17 @@ import { STAGES } from '../stage/Stages'
 import { stageSpawnableEnemyIds } from '../../core/stage/StageSpawnableEnemies'
 
 // QA-2026-09-30-ROSTER-1 - BETA SCOPE LOCK v2 consequence: the locked
-// stage roster (12 identities) leaves several kill-quest targets with
+// stage roster (12 identities) left several kill-quest targets with
 // no spawn source. onEnemyDefeated matches the defeated enemy's
 // TEMPLATE id exactly (BattleLootSystem.processDefeatedEnemies ->
 // QuestSystem), so a quest whose enemyId is spawnable on no beta stage
-// can never progress. it.fails pins each confirmed case - the pin
-// flips green when the owning content phase retargets or removes the
-// quest (do not flip by weakening this assertion).
+// can never progress.
+// Phase-5 resolution: the daily cadence and its three quests left the
+// active lifecycle (entries removed); the two once-cadence fallout
+// quests retargeted onto legitimate roster siblings (mud golem for
+// stone fungus, the ferocious flood-dragon whelp for the whelp). This
+// pin now guards the resolved state: every authored explicit kill
+// target must stay spawnable on some beta stage.
 describe('kill quests vs the beta stage roster (QA repro)', () => {
   const spawnableIds = new Set<string>()
   for (const stage of STAGES) {
@@ -30,24 +34,22 @@ describe('kill quests vs the beta stage roster (QA repro)', () => {
     // template ids (enemyId omitted would be 'any kill').
     expect(killQuestEnemyIds).toContainEqual({ questId: 'kill_wild_wolf_10', enemyId: 'wild_wolf' })
     expect(killQuestEnemyIds).toContainEqual({
-      questId: 'daily_kill_bandit_15',
-      enemyId: 'bandit',
+      questId: 'kill_foundation_stone_fungus_15',
+      enemyId: 'foundation_mud_golem',
     })
     expect(killQuestEnemyIds).toContainEqual({
-      questId: 'kill_foundation_stone_fungus_15',
-      enemyId: 'foundation_stone_fungus',
+      questId: 'kill_foundation_floor_10_boss_1',
+      enemyId: 'foundation_ferocious_flood_dragon_whelp',
     })
     expect(killQuestEnemyIds).toContainEqual({
       questId: 'kill_foundation_flood_dragon_whelp_10',
-      enemyId: 'foundation_flood_dragon_whelp',
+      enemyId: 'foundation_ferocious_flood_dragon_whelp',
     })
   })
 
-  it.fails('every explicit kill target is spawnable on some beta stage', () => {
-    // FAILS now: bandit / foundation_stone_fungus /
-    // foundation_flood_dragon_whelp are dormant identities - no beta
-    // stage declares them, and the hidden-beast substitution is gated
-    // to declared spawnable ids only.
+  it('every explicit kill target is spawnable on some beta stage', () => {
+    // Resolved Phase-5: every remaining explicit kill target is a
+    // beta-roster identity declared spawnable by the stage funnel.
     expect(
       killQuestEnemyIds
         .filter(({ enemyId }) => !spawnableIds.has(enemyId))

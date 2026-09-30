@@ -35,20 +35,23 @@ export const FAMILY_DROP_TABLES: FamilyDropTable[] = [
   {
     familyId: 'magma_boar',
     guaranteed: [],
-    // base_quan (helmet slot) is magma_boar's exclusive equipment drop.
-    pool: [{ kind: 'equipment', itemId: 'base_quan', weight: 10 }],
+    // BETA SCOPE LOCK v2 Phase-5 (Phase-4 fallout): magma_boar has no
+    // beta-roster species - base_quan re-sourced to 'boar' below. The
+    // authored row stays (empty) so the family data keeps its documented
+    // dormant state rather than deleting the definition.
+    pool: [],
   },
   {
     familyId: 'rock_bear',
     guaranteed: [],
-    // base_hai (boots slot) is rock_bear's exclusive equipment drop.
-    pool: [{ kind: 'equipment', itemId: 'base_hai', weight: 10 }],
+    // Phase-4 fallout: base_hai re-sourced to 'earthworm' below.
+    pool: [],
   },
   {
     familyId: 'metal_beetle',
     guaranteed: [],
-    // base_gioi (ring slot) is metal_beetle's exclusive equipment drop.
-    pool: [{ kind: 'equipment', itemId: 'base_gioi', weight: 10 }],
+    // Phase-4 fallout: base_gioi re-sourced to 'sand_scorpion' below.
+    pool: [],
   },
   {
     familyId: 'flood_serpent',
@@ -59,18 +62,41 @@ export const FAMILY_DROP_TABLES: FamilyDropTable[] = [
     pool: [{ kind: 'equipment', itemId: 'base_truy', weight: 10 }],
   },
 
-  // No family-exclusive item in the current data - only the realm-generic
-  // qi_refining ore, already covered by the stage layer.
-  { familyId: 'earthworm', guaranteed: [], pool: [] },
+  // Phase-4 fallout re-source: giant_earthworm is on the beta roster and
+  // carries the same earth heavy-creature theme rock_bear carried, so it
+  // now pays base_hai (boots slot - sole base, cannot stay sourceless).
+  {
+    familyId: 'earthworm',
+    guaranteed: [],
+    pool: [{ kind: 'equipment', itemId: 'base_hai', weight: 10 }],
+  },
   { familyId: 'forest_fiend', guaranteed: [], pool: [] },
   { familyId: 'sand_lynx', guaranteed: [], pool: [] },
   { familyId: 'blade_hawk', guaranteed: [], pool: [] },
+
+  // Phase-4 fallout re-source: foundation_sand_scorpion is on the beta
+  // roster (family field forwarded on the foundation tier by this phase)
+  // and is the arthropod sibling of metal_beetle, so it pays base_gioi
+  // (ring slot - sole base, cannot stay sourceless).
+  {
+    familyId: 'sand_scorpion',
+    guaranteed: [],
+    pool: [{ kind: 'equipment', itemId: 'base_gioi', weight: 10 }],
+  },
 
   // No family-exclusive item in the current data - only the realm-generic
   // mortal essence (tinh_hoa_pham_the) and/or the shared base_kiem drop,
   // both already covered by the mortal stage table.
   { familyId: 'wolf', guaranteed: [], pool: [] },
-  { familyId: 'boar', guaranteed: [], pool: [] },
+
+  // Phase-4 fallout re-source: mortal_wild_boar is on the beta roster and
+  // is the literal species sibling of magma_boar, so it now pays
+  // base_quan (helmet slot - sole base, cannot stay sourceless).
+  {
+    familyId: 'boar',
+    guaranteed: [],
+    pool: [{ kind: 'equipment', itemId: 'base_quan', weight: 10 }],
+  },
   { familyId: 'dog', guaranteed: [], pool: [] },
   { familyId: 'tiger', guaranteed: [], pool: [] },
   { familyId: 'lynx', guaranteed: [], pool: [] },

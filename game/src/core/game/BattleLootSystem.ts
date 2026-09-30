@@ -33,8 +33,10 @@ import { getProfessionGradeForRealm } from '../profession/ProfessionGrade'
 import { itemQualityRank, professionGradeRank } from '../profession/slotRank'
 import { gradeLabel } from '../presentation/labels'
 import { physiqueEssenceGradeOf } from '../../data/realm/PhysiqueEssence'
+import { isScopeHidden } from '../betaScope'
 import {
   isBreakthroughAcquisitionEnabled,
+  COMPANION_PULL_TOKEN_MATERIAL_IDS,
   isCompanionPullTokenSourceSuppressed,
   isDomainScopedAcquisitionEnabled,
 } from '../realm/ReleasePolicy'
@@ -578,6 +580,29 @@ export class BattleLootSystem {
             // only once the player unlocks the domain.
             if (
               !isDomainScopedAcquisitionEnabled(material.domainUnlockRealmId, this.player?.realmId)
+            ) {
+              break
+            }
+
+            // BETA SCOPE LOCK v2 sec.14/sec.17 - physique essences feed
+            // only the scope-hidden body path (BodyChapter invest,
+            // ZhouTian, Nghich Chu Thian): while bodyPath is off the
+            // faucet closes at delivery (post-resolve filter, same seam
+            // as the policy gates above - rng order untouched).
+            if (
+              physiqueEssenceGradeOf(drop.itemId) !== undefined &&
+              isScopeHidden('bodyPath')
+            ) {
+              break
+            }
+
+            // BETA SCOPE LOCK v2 sec.14 - the companion pull token is a
+            // generated currency of the scope-hidden companion domain:
+            // its authored signature drop stays but cannot deliver
+            // (post-resolve filter, same seam as the gates above).
+            if (
+              COMPANION_PULL_TOKEN_MATERIAL_IDS.includes(drop.itemId as 'chieu_hien_lenh') &&
+              isScopeHidden('companion')
             ) {
               break
             }

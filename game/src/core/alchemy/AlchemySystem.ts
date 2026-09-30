@@ -15,6 +15,7 @@ import type { HerbAge } from '../production/ProductionTypes'
 import { HERB_AGE_BASE_SUCCESS_PERCENT } from '../production/ProductionBalance'
 import { buildProfessionMaterialId } from '../profession/ProfessionMaterial'
 import { mulberry32 } from '../production/ProductionBalance'
+import { betaRecipeFamilyOfId } from '../betaScope'
 
 /** Biến thể nguyên liệu của thảo — stack cụ thể trong Bag. */
 export interface AlchemyHerbVariant {
@@ -235,6 +236,15 @@ export class AlchemySystem {
     // fuel wood + spirit stone requirements; herb/specials stay base.
     costMultiplier = 1,
   ): { ok: boolean; reason?: string; spiritStoneCost?: number } {
+    // BETA SCOPE LOCK v2 sec.12 - recipe families outside
+    // BETA_ENABLED_RECIPE_FAMILIES are dormant: their definitions stay in
+    // the registry but jobs cannot start via ANY entry path (the domain
+    // fails closed, not just the ops layer). In-flight/loaded jobs for
+    // dormant families are unaffected - only startJob is gated.
+    if (betaRecipeFamilyOfId(recipe.id) === null) {
+      return { ok: false, reason: 'scope_hidden' }
+    }
+
     // M10 (ARCH-008) — retired pill families (Hoi Xuan Dan) cannot start
     // new jobs; in-flight jobs still settle via the resolvable recipe.
     if (recipe.retired === true) {

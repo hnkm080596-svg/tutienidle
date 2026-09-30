@@ -66,6 +66,7 @@ import {
   type RefineValueEntry,
 } from './EquipmentRefine'
 import { createEquipmentInstance, MAIN_STAT_REALM_SCALE } from './EquipmentRolling'
+import { isScopeHidden } from '../betaScope'
 
 // Task 8 (phase7-gamemanager-split) — rollAffixRange/normalizeRolledAffixValue/
 // getEffectiveAffixValue/GLOBAL_MAX_AFFIXES sống ở EquipmentRollPrimitives.ts
@@ -589,6 +590,13 @@ export class EquipmentSystem {
     affixRegistry: AffixRegistry,
     random: () => number = Math.random,
   ): { ok: boolean; reason?: string } {
+    // BETA SCOPE LOCK v2 sec.11 - equipmentWash is scope-hidden: the
+    // domain itself fails closed so a direct call cannot bypass the
+    // hidden tab (deferred frontend never reaches this in beta anyway).
+    if (isScopeHidden('equipmentWash')) {
+      return { ok: false, reason: 'scope_hidden' }
+    }
+
     return washAffixesImpl(
       instanceId,
       inventory,
@@ -617,6 +625,10 @@ export class EquipmentSystem {
     affixRegistry: AffixRegistry,
     random: () => number = Math.random,
   ): { ok: boolean; reason?: string; ticketId?: string } {
+    if (isScopeHidden('equipmentWash')) {
+      return { ok: false, reason: 'scope_hidden' }
+    }
+
     return previewWashAffixesImpl(
       instanceId,
       inventory,
@@ -630,6 +642,12 @@ export class EquipmentSystem {
 
   /** R9 (AR-21) — display copy of the pending roll (never authoritative). */
   getWashPreviewAffixes(ticketId: string): { affixes: RolledAffix[] } | undefined {
+    // Scope-hidden wash cannot mint a ticket, but fail closed anyway -
+    // a lingering pre-flag ticket must not render through the domain API.
+    if (isScopeHidden('equipmentWash')) {
+      return undefined
+    }
+
     return getWashPreviewAffixesImpl(this.washPendingSlot, ticketId)
   }
 
@@ -683,6 +701,10 @@ export class EquipmentSystem {
     slotManager: EquipmentSlotManager,
     affixRegistry: AffixRegistry,
   ): { ok: boolean; reason?: string } {
+    if (isScopeHidden('equipmentWash')) {
+      return { ok: false, reason: 'scope_hidden' }
+    }
+
     return commitWashAffixesImpl(
       instanceId,
       ticketId,
@@ -737,6 +759,12 @@ export class EquipmentSystem {
     affixRegistry: AffixRegistry,
     _random: () => number = Math.random,
   ): { ok: boolean; reason?: string } {
+    // BETA SCOPE LOCK v2 sec.11 - equipmentRefine is scope-hidden
+    // (domain-level fail closed, same contract as washAffixes above).
+    if (isScopeHidden('equipmentRefine')) {
+      return { ok: false, reason: 'scope_hidden' }
+    }
+
     return refineAffixValuesImpl(
       instanceId,
       lockedIndices,
@@ -764,6 +792,10 @@ export class EquipmentSystem {
     affixRegistry: AffixRegistry,
     random: () => number = Math.random,
   ): { ok: boolean; reason?: string; values?: RefineValueEntry[] } {
+    if (isScopeHidden('equipmentRefine')) {
+      return { ok: false, reason: 'scope_hidden' }
+    }
+
     return previewRefineValuesImpl(
       instanceId,
       lockedIndices,
@@ -789,6 +821,10 @@ export class EquipmentSystem {
     slotManager: EquipmentSlotManager,
     affixRegistry: AffixRegistry,
   ): { ok: boolean; reason?: string } {
+    if (isScopeHidden('equipmentRefine')) {
+      return { ok: false, reason: 'scope_hidden' }
+    }
+
     return commitRefineValuesImpl(
       instanceId,
       values,

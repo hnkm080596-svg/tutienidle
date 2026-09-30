@@ -12,6 +12,7 @@ import {
   type CompanionGiftTrigger,
 } from '../../data/companion/CompanionGiftMoments'
 import type { PlayerData } from '../player/Player'
+import { isScopeHidden } from '../betaScope'
 
 function triggerMatches(
   moment: CompanionGiftMoment,
@@ -43,6 +44,13 @@ export function issueCompanionGifts(
   trigger: CompanionGiftTrigger,
   moments: readonly CompanionGiftMoment[] = COMPANION_GIFT_MOMENTS,
 ): CompanionGiftRecord[] {
+  // BETA SCOPE LOCK v2 sec.14 - no mailbox grants while the companion
+  // domain is scope-hidden: no gift record is appended, so a trigger
+  // fire mid-beta leaves player.companionGifts untouched.
+  if (isScopeHidden('companion')) {
+    return []
+  }
+
   const appended: CompanionGiftRecord[] = []
 
   for (const moment of moments) {
