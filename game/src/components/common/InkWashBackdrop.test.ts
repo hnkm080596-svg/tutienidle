@@ -71,6 +71,6 @@ describe('InkWashBackdrop', () => {
     expect(creationSource).toContain('background: color-mix(in srgb, var(--paper-50')
     // BETA-CREATION - the unified screen has no stepper; the selected
     // skill/talent card is the legibility affordance now.
-    expect(creationSource).toContain('.skill-card.selected { border-color: var(--cinnabar')
+    expect(creationSource).toContain('.skill-card.selected { border-color: var(--hk-border-ceremony')
   })
 })

@@ -237,7 +237,7 @@ function majorBreakthrough() {
         </aside>
       </div>
 
-      <!-- Action rail (SS8.2) - the dominant Đột Phá CTA keeps the
+      <!-- Action rail (SS8.2) - the dominant breakthrough CTA keeps the
            requirements block inside it (spec v2 sec.3.2 pin). -->
       <div class="realm-panel__actions">
         <GameButton :disabled="!canBreakthrough" @click="majorBreakthrough">{{ majorBreakthroughLabel }}</GameButton>

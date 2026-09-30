@@ -441,7 +441,7 @@ function close() {
   flex-direction: column;
 }
 
-/* Phap Tu element tabs (Task 16) — 5 Hành chips above the tree; the
+/* Phap Tu element tabs (Task 16) - 5 Hanh chips above the tree; the
    committed element gets a filled accent, the browsed tab an outline.
    Element identity colors stay per-element; chrome -> hk tokens. */
 .skill-path-panel__element-tabs {
