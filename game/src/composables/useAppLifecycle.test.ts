@@ -68,6 +68,16 @@ function makeStubs() {
       restoreFromSave: vi.fn(),
       $state: {},
     },
+    // B1-D - the admission-authority stub: 'ready' by default so existing
+    // lifecycle behavior stays in place; individual tests flip canMutate
+    // to false to exercise the mutation gate.
+    authority: {
+      canMutate: vi.fn(() => true),
+      beginChecking: vi.fn(),
+      markReady: vi.fn(),
+      markFailed: vi.fn(),
+      observeSaveResult: vi.fn(),
+    },
     gameManager: {
       eventBus: {
         on: vi.fn(),
@@ -81,6 +91,8 @@ function makeStubs() {
       buildingManager: { add: vi.fn() },
       refreshAutoWorkerCapacity: vi.fn(),
       restoreFromSave: vi.fn(),
+      freezeCombat: vi.fn(),
+      resumeCombat: vi.fn(),
     } as unknown as GameManager,
     tick: vi.fn(),
     offlineSummary: { show: vi.fn() },
@@ -104,6 +116,7 @@ function makeLifecycle(stubs: Stubs) {
     removeEventListener: stubs.removeEventListener,
     boot: stubs.boot,
     coordinator: stubs.coordinator,
+    authority: stubs.authority,
     player: stubs.player,
     gameManager: stubs.gameManager,
     tick: stubs.tick,
@@ -678,6 +691,7 @@ describe('useAppLifecycle — entry smoke qua createApp (pattern usePanelPaginat
             removeEventListener: stubs.removeEventListener,
             boot: stubs.boot,
             coordinator: stubs.coordinator,
+            authority: stubs.authority,
             player: stubs.player,
             gameManager: stubs.gameManager,
             tick: stubs.tick,
@@ -729,6 +743,7 @@ describe('useAppLifecycle — entry smoke qua createApp (pattern usePanelPaginat
           removeEventListener: stubs.removeEventListener,
           boot: stubs.boot,
           coordinator: stubs.coordinator,
+          authority: stubs.authority,
           player: stubs.player,
           gameManager: stubs.gameManager,
           tick: stubs.tick,
@@ -990,6 +1005,231 @@ describe('useAppLifecycle — B2 character-creation save transaction (audit T1-8
     // The callback ran exactly once - the first attempt. A re-run would
     // double-apply the partial grants.
     expect(grantStarterContent).toHaveBeenCalledTimes(1)
+
+    lifecycle.stopAll()
+  })
+})
+
+describe('useAppLifecycle — B1-D admission authority', () => {
+  it('tick is gated by authority.canMutate(): a late interval callback while paused does not tick', async () => {
+    const stubs = makeStubs()
+    const lifecycle = makeLifecycle(stubs)
+
+    const outcome = await lifecycle.bootGame({ createNewCharacter: true })
+    expect(outcome.status).toBe('entered')
+    expect(stubs.intervals).toHaveLength(1)
+
+    stubs.authority.canMutate.mockReturnValue(true)
+    stubs.intervals[0]?.()
+    expect(stubs.tick).toHaveBeenCalledTimes(1)
+
+    // Observed authority loss pauses admission - the interval callback
+    // fires but produces no tick.
+    stubs.authority.canMutate.mockReturnValue(false)
+    stubs.intervals[0]?.()
+    expect(stubs.tick).toHaveBeenCalledTimes(1)
+
+    lifecycle.stopAll()
+  })
+
+  it('persistProgress is gated by authority.canMutate() (no write while authority unresolved)', async () => {
+    const stubs = makeStubs()
+    const lifecycle = makeLifecycle(stubs)
+
+    stubs.authority.canMutate.mockReturnValue(false)
+    await lifecycle.persistProgress()
+    expect(stubs.persistPlayer).not.toHaveBeenCalled()
+
+    stubs.authority.canMutate.mockReturnValue(true)
+    await lifecycle.persistProgress()
+    expect(stubs.persistPlayer).toHaveBeenCalledTimes(1)
+
+    lifecycle.stopAll()
+  })
+
+  it('bootGame enters checking, then markReady precedes clock.start (heartbeat arms before the first tick)', async () => {
+    const stubs = makeStubs()
+    const order: string[] = []
+    stubs.authority.beginChecking.mockImplementation(() => order.push('beginChecking'))
+    stubs.authority.markReady.mockImplementation(() => order.push('markReady'))
+    stubs.clock.start.mockImplementation(() => order.push('clock.start'))
+
+    const lifecycle = makeLifecycle(stubs)
+    const outcome = await lifecycle.bootGame({ createNewCharacter: true })
+
+    expect(outcome.status).toBe('entered')
+    expect(order).toEqual(['beginChecking', 'markReady', 'clock.start'])
+
+    lifecycle.stopAll()
+  })
+
+  it('a failed boot admission reports through authority.markFailed', async () => {
+    const stubs = makeStubs()
+    ;(stubs.coordinator.load as ReturnType<typeof vi.fn>).mockResolvedValue({
+      status: 'unavailable',
+      code: 'NETWORK_UNAVAILABLE',
+      message: 'down',
+      retryable: true,
+    })
+
+    const lifecycle = makeLifecycle(stubs)
+    const outcome = await lifecycle.bootGame({ createNewCharacter: false })
+
+    expect(outcome.status).toBe('failed')
+    expect(stubs.authority.beginChecking).toHaveBeenCalledTimes(1)
+    expect(stubs.authority.markFailed).toHaveBeenCalledWith('NETWORK_UNAVAILABLE')
+    expect(stubs.authority.markReady).not.toHaveBeenCalled()
+    expect(stubs.clock.start).not.toHaveBeenCalled()
+  })
+
+  it('remote-authoritative ok boot: restore gets the server-stamped cold-boot window and the post-accrual commit flows through observeSaveResult', async () => {
+    const stubs = makeStubs()
+    stubs.coordinator = { ...stubs.coordinator, capability: 'remote-authoritative' }
+    ;(stubs.coordinator.load as ReturnType<typeof vi.fn>).mockResolvedValue({
+      status: 'ok',
+      revision: 5,
+      save: { player: { lastSavedAt: 1_000 } },
+      serverAuthority: { cutoffMs: 2_000, serverNowMs: 3_000 },
+    })
+
+    const lifecycle = makeLifecycle(stubs)
+    const outcome = await lifecycle.bootGame({ createNewCharacter: false })
+
+    expect(outcome.status).toBe('entered')
+    expect(stubs.restoreGameSession).toHaveBeenCalledWith(
+      stubs.player,
+      stubs.gameManager,
+      { player: { lastSavedAt: 1_000 } },
+      { kind: 'cold-boot', sinceMs: 2_000, untilMs: 3_000 },
+    )
+    // The durability leg: the post-accrual snapshot committed AND the
+    // result flowed into the authority before admission was granted.
+    expect(stubs.player.save).toHaveBeenCalledWith(stubs.gameManager)
+    expect(stubs.authority.observeSaveResult).toHaveBeenCalledWith({ status: 'ok', revision: 1 })
+    expect(stubs.authority.markReady).toHaveBeenCalledTimes(1)
+
+    lifecycle.stopAll()
+  })
+
+  it('remote-authoritative ok boot with a failed post-accrual commit fails the boot - no tick on uncommitted accrual', async () => {
+    const stubs = makeStubs()
+    stubs.coordinator = { ...stubs.coordinator, capability: 'remote-authoritative' }
+    ;(stubs.coordinator.load as ReturnType<typeof vi.fn>).mockResolvedValue({
+      status: 'ok',
+      revision: 5,
+      save: { player: { lastSavedAt: 1_000 } },
+      serverAuthority: { serverNowMs: 3_000 },
+    })
+    ;(stubs.player.save as ReturnType<typeof vi.fn>).mockResolvedValue({
+      status: 'conflict',
+    })
+
+    const lifecycle = makeLifecycle(stubs)
+    const outcome = await lifecycle.bootGame({ createNewCharacter: false })
+
+    expect(outcome.status).toBe('failed')
+    expect(stubs.authority.observeSaveResult).toHaveBeenCalledWith({ status: 'conflict' })
+    expect(stubs.authority.markReady).not.toHaveBeenCalled()
+    expect(stubs.boot.enterGame).not.toHaveBeenCalled()
+
+    lifecycle.stopAll()
+  })
+
+  it('pauseSimulation stops the clock + freezes combat; resumeSimulation re-anchors and resumes', async () => {
+    const stubs = makeStubs()
+    const lifecycle = makeLifecycle(stubs)
+
+    const outcome = await lifecycle.bootGame({ createNewCharacter: true })
+    expect(outcome.status).toBe('entered')
+    expect(stubs.intervals).toHaveLength(1) // tick
+
+    lifecycle.startAutosave() // App.vue arms this after boot
+    expect(stubs.intervals).toHaveLength(2) // tick + autosave
+
+    lifecycle.pauseSimulation()
+    expect(lifecycle.isSimPaused()).toBe(true)
+    expect(stubs.clock.stop).toHaveBeenCalledTimes(1)
+    expect(stubs.gameManager.freezeCombat).toHaveBeenCalledWith('authority-pause')
+    // Both intervals cleared while paused.
+    expect(stubs.clearHandle).toHaveBeenCalled()
+
+    lifecycle.resumeSimulation()
+    expect(lifecycle.isSimPaused()).toBe(false)
+    expect(stubs.gameManager.resumeCombat).toHaveBeenCalledWith('authority-pause')
+    // clock.start called twice: once at boot, once at resume re-anchor.
+    expect(stubs.clock.start).toHaveBeenCalledTimes(2)
+    // Tick loop re-armed (a fresh interval was scheduled).
+    expect(stubs.intervals.length).toBeGreaterThan(2)
+
+    lifecycle.stopAll()
+  })
+})
+
+describe('useAppLifecycle — B1-D production composition', () => {
+  it('the domain snapshot is unchanged while admission is blocked, whatever fires', async () => {
+    const stubs = makeStubs()
+
+    // Real domain values behind the gated drivers: the tick interval
+    // mutates progression, the autosave interval persists it, the combat
+    // clock would step a battle. Blocking admission must leave all of it
+    // untouched - not merely stop the wall clock.
+    const domain = { cultivation: 0, persisted: 0, combatSteps: 0 }
+    stubs.tick.mockImplementation(() => {
+      domain.cultivation += 1
+    })
+    stubs.persistPlayer.mockImplementation(async () => {
+      domain.persisted += 1
+      return { status: 'ok' as const, revision: 1 }
+    })
+    ;(stubs.gameManager.freezeCombat as ReturnType<typeof vi.fn>).mockImplementation(() => {
+      domain.combatSteps = -1 // sentinel: frozen, not stepped
+    })
+
+    const lifecycle = makeLifecycle(stubs)
+    const outcome = await lifecycle.bootGame({ createNewCharacter: true })
+    expect(outcome.status).toBe('entered')
+    lifecycle.startAutosave()
+
+    // Live: drivers pay real domain state.
+    stubs.authority.canMutate.mockReturnValue(true)
+    stubs.intervals[0]?.()
+    stubs.intervals[1]?.()
+    expect(domain.cultivation).toBe(1)
+    expect(domain.persisted).toBe(1)
+
+    // Observed authority loss pauses admission; every autonomous driver
+    // still fires (intervals are only cleared, callbacks may still land)
+    // plus a late manual persist - and the domain stays exactly here.
+    stubs.authority.canMutate.mockReturnValue(false)
+    lifecycle.pauseSimulation()
+    const snapshot = { ...domain }
+
+    for (const fire of [...stubs.intervals]) fire()
+    await lifecycle.persistProgress()
+
+    expect(domain).toEqual(snapshot)
+    expect(domain.combatSteps).toBe(-1) // combat frozen, never stepped
+
+    lifecycle.stopAll()
+  })
+})
+
+describe('useAppLifecycle — B1-D pause latch', () => {
+  it('a terminal during boot does not latch simPaused - the next live pause still applies', async () => {
+    const stubs = makeStubs()
+    stubs.entryStage.value = 'auth' // boot admission still in flight
+    const lifecycle = makeLifecycle(stubs)
+
+    // The authority surface reports a terminal pause pre-game.
+    lifecycle.pauseSimulation()
+    expect(lifecycle.isSimPaused()).toBe(false)
+
+    // The app reaches the game, then a real pause lands.
+    stubs.entryStage.value = 'game'
+    lifecycle.pauseSimulation()
+    expect(lifecycle.isSimPaused()).toBe(true)
+    expect(stubs.clock.stop).toHaveBeenCalledTimes(1)
+    expect(stubs.gameManager.freezeCombat).toHaveBeenCalledWith('authority-pause')
 
     lifecycle.stopAll()
   })

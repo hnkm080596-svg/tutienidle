@@ -57,11 +57,11 @@ export class GameManagerAutoFarmOps {
   ) {}
 
   /**
-   * The ONE eligibility contract for an armed farm — shared by
+   * The ONE eligibility contract for an armed farm - shared by
    * startAutoFarm and reconcileAutoFarmRuntime so both entry points agree
    * on what a valid farm is: perfect-cleared, a resolvable registered
    * stage, AND a valid persisted cycle time (the tick can never complete
-   * a cycle without it — an armed-but-inert farm would hold the single
+   * a cycle without it - an armed-but-inert farm would hold the single
    * slot while blocking manual combat).
    */
   private resolveValidAutoFarmStage(player: PlayerData, stageId: string): Stage | null {
@@ -119,7 +119,7 @@ export class GameManagerAutoFarmOps {
   /**
    * Restore-time reconcile: persisted autoFarmStage is a durable lease
    * that must re-acquire the single StageManager slot on boot. startAutoFarm
-   * is NOT the right entry — it resets lastCheckedMs to Date.now(), wiping
+   * is NOT the right entry - it resets lastCheckedMs to Date.now(), wiping
    * the offline remainder the settle just re-anchored. An unresolvable
    * stage (removed content / corrupt id) drops the dead lease rather than
    * leaving a farm armed-but-inert with a free slot.
@@ -145,7 +145,7 @@ export class GameManagerAutoFarmOps {
       return
     }
 
-    // Eligibility runs on EVERY restore — before the converged check: a
+    // Eligibility runs on EVERY restore - before the converged check: a
     // changed payload can keep the same stageId while revoking the
     // perfect-clear or dropping the cycle time, and tickAutoFarm never
     // re-checks perfectClearStageIds. An unvalidated "converged" lease
@@ -160,7 +160,7 @@ export class GameManagerAutoFarmOps {
     }
 
     // Idempotent: a second restore of a same-farm payload sees the slot
-    // already held by THIS farm's matching lease — that IS the desired
+    // already held by THIS farm's matching lease - that IS the desired
     // end state, not a conflict (acquire() refuses any occupied slot).
     // A foreign lease on the same stage is a different object and falls
     // through to the fail-closed acquire below.
@@ -169,13 +169,13 @@ export class GameManagerAutoFarmOps {
     }
 
     // Different-farm payload: release the old owned lease before
-    // acquiring the new stage — never leave it orphaned on the slot.
+    // acquiring the new stage - never leave it orphaned on the slot.
     this.deps.stageManager.release(this.farmLease)
     this.farmLease = null
 
     const lease = this.deps.stageManager.acquire(stage)
     if (!lease) {
-      // Slot held by a foreign owner (live manual battle mid-restore) —
+      // Slot held by a foreign owner (live manual battle mid-restore) -
       // drop the persisted lease fail-closed.
       player.autoFarmStage = null
       return
@@ -229,6 +229,12 @@ export class GameManagerAutoFarmOps {
     const completedCycles = Math.floor(elapsedMs / cycleMs)
 
     if (completedCycles <= 0) {
+      // B1-D live replacement calls this with elapsed 0 to resume an armed
+      // farm WITHOUT catch-up: re-anchor to now so the saved lastCheckedMs
+      // cannot mint the paused gap on the next live tick.
+      if (elapsedOfflineSeconds === 0) {
+        autoFarm.lastCheckedMs = Date.now()
+      }
       return
     }
 
@@ -236,11 +242,11 @@ export class GameManagerAutoFarmOps {
       this.rollAutoFarmCycleReward(player, stage)
     }
 
-    // T1-12 — anchor to now minus the UNSETTLED remainder, identical to
+    // T1-12 - anchor to now minus the UNSETTLED remainder, identical to
     // tickAutoFarm. A stale/corrupt persisted lastCheckedMs used to
     // survive this line untouched: the settle paid the whole capped
     // window, then the next online tickAutoFarm clamped (now - staleTs)
-    // to the cap and paid the SAME window a second time (double-pay —
+    // to the cap and paid the SAME window a second time (double-pay -
     // also triggered by any honest session longer than the 24h cap).
     autoFarm.lastCheckedMs = Date.now() - (elapsedMs - completedCycles * cycleMs)
   }
@@ -258,7 +264,7 @@ export class GameManagerAutoFarmOps {
     }
 
     // Fail-closed lease check (Mission B audit): the slot must still hold
-    // THIS farm's lease object AND for the stage persisted — identity
+    // THIS farm's lease object AND for the stage persisted - identity
     // alone is not enough when a mid-restore failure leaves the old lease
     // held while persisted state already moved to another stage; stageId
     // alone is not ownership (a foreign owner re-acquiring the same stage
@@ -286,7 +292,7 @@ export class GameManagerAutoFarmOps {
     }
 
     const cycleMs = (cycleSeconds / 2) * 1000
-    // A corrupt save can persist a small-positive lastCheckedMs — the
+    // A corrupt save can persist a small-positive lastCheckedMs - the
     // uncapped remainder (years of "elapsed" time) turned the reward loop
     // below into ~10^8 iterations per tick. Same bound as
     // settleAutoFarmOffline: one GameClock cap, no second constant.

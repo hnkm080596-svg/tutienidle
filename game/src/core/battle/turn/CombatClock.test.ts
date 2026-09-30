@@ -120,4 +120,20 @@ describe('CombatClock', () => {
     expect(steps).toEqual([])
     expect(clock.getState()).toBe('stopped')
   })
+
+  it("'authority-pause' freezes like any other reason and discards the paused delta (B1-D)", () => {
+    const { source, clock, steps } = makeClock()
+
+    clock.freeze('authority-pause')
+    source.advance(COMBAT_STEP_SECONDS * 100)
+
+    // The paused window is discarded, not banked - resuming pays only
+    // post-resume time (tickDeltaOnResume <= normalTickDelta).
+    expect(steps).toEqual([])
+    expect(clock.getFreezeReasons()).toEqual(['authority-pause'])
+
+    clock.resume('authority-pause')
+    source.advance(COMBAT_STEP_SECONDS)
+    expect(steps.reduce((a, b) => a + b, 0)).toBe(1)
+  })
 })

@@ -6,7 +6,7 @@ import { contextBridge, ipcRenderer } from 'electron'
 // phía renderer tiêu thụ các hàm này (interface ElectronBridgeAPI ở đó
 // phải khớp đúng shape object bên dưới).
 //
-// combatClock (Task 7, 2026-09-10) — main-process clock host
+// combatClock (Task 7, 2026-09-10) - main-process clock host
 // (src/main-process/combatClockHost.ts) wrapped as onTick/stop only; không
 // thêm global window.combatClock riêng để giữ đúng bất biến "1 bề mặt duy
 // nhất". MainProcessClockSource (src/presentation/clock/) tiêu thụ field này.
@@ -33,16 +33,46 @@ contextBridge.exposeInMainWorld('electronAPI', {
     }
   },
 
-  onBeforeQuitFlush(callback: () => void) {
-    const handler = () => callback()
+  // B1-D result-bearing quit flush: the request carries an opaque
+  // requestId the reply must quote; the main side closes the window only
+  // on a 'saved' result bound to the pending attempt (see
+  // src/main-process/quitFlush.ts). A failed/blocked/timeout attempt
+  // returns as 'app:flush-failed'; retry/cancel/force-close are explicit
+  // user choices quoting the failed requestId - a timeout NEVER closes.
+  onBeforeQuitFlush(callback: (requestId: string) => void) {
+    const handler = (_event: Electron.IpcRendererEvent, payload: { requestId?: string }) =>
+      callback(typeof payload?.requestId === 'string' ? payload.requestId : '')
     ipcRenderer.on('app:before-quit-flush', handler)
     return () => {
       ipcRenderer.removeListener('app:before-quit-flush', handler)
     }
   },
 
-  notifyFlushComplete() {
-    ipcRenderer.send('app:flush-complete')
+  notifyFlushResult(result: unknown) {
+    ipcRenderer.send('app:flush-result', result)
+  },
+
+  onFlushFailed(callback: (notice: { requestId: string; status: string; code?: string }) => void) {
+    const handler = (
+      _event: Electron.IpcRendererEvent,
+      notice: { requestId: string; status: string; code?: string },
+    ) => callback(notice)
+    ipcRenderer.on('app:flush-failed', handler)
+    return () => {
+      ipcRenderer.removeListener('app:flush-failed', handler)
+    }
+  },
+
+  retryQuitFlush(requestId: string) {
+    ipcRenderer.send('app:flush-retry', { requestId })
+  },
+
+  cancelQuitClose(requestId: string) {
+    ipcRenderer.send('app:close-cancel', { requestId })
+  },
+
+  forceQuitClose(requestId: string) {
+    ipcRenderer.send('app:force-close', { requestId })
   },
 
   combatClock: {
@@ -52,7 +82,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
       ipcRenderer.send('combat-clock:start')
 
       // Only unregisters the renderer-side listener. Sending
-      // 'combat-clock:stop' is left to the dedicated stop() below —
+      // 'combat-clock:stop' is left to the dedicated stop() below -
       // MainProcessClockSource.stop() (src/presentation/clock/) always calls
       // both, and having both send the same IPC message was a redundant
       // double-send noted in Task 7 review.

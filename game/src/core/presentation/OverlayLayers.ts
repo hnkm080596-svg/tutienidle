@@ -1,7 +1,7 @@
 /**
  * App-level overlay stacking order (A2: one rule, one owner).
  *
- * Every full-screen / app-scope overlay takes its z-index from this scale —
+ * Every full-screen / app-scope overlay takes its z-index from this scale -
  * never a hardcoded literal. `.game-root` is positioned but creates no
  * stacking context, and Teleport-to-body overlays share the same root
  * context, so every entry here competes directly with every other.
@@ -13,7 +13,7 @@
  * bounded by the coordinator's transition deadline).
  *
  * Intra-component z-indexes (small values inside one component's own
- * stacking context) do not belong here — this scale is only for elements
+ * stacking context) do not belong here - this scale is only for elements
  * that compete in the app root stacking context.
  */
 export const OVERLAY_LAYERS = {
@@ -29,6 +29,11 @@ export const OVERLAY_LAYERS = {
   toast: 1870,
   /** Blocking modals above panels (OfflineSummaryModal, LoreCodexModal, TutorialOverlay). */
   modal: 1900,
+  /** B1-D authority surfaces - reconnecting/terminal admission + the
+      quit-flush offer. Above every gameplay input surface (their content
+      is also inert while up); below appError/saveGate/curtain, which are
+      boot/fatal-level owners and outrank admission by contract. */
+  authority: 1950,
   /** Tooltip — floating contextual info. */
   tooltip: 2200,
   /** ErrorScreen — app-level error surface. */

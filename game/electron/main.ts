@@ -34,7 +34,7 @@ if (!gotSingleInstanceLock) {
 function main() {
   let mainWindow: BrowserWindow | null = null
 
-  // Main-process clock host (Task 7) — see src/main-process/combatClockHost.ts
+  // Main-process clock host (Task 7) - see src/main-process/combatClockHost.ts
   // for why this exists: Chromium can throttle the renderer's rAF, so the
   // production ClockSource under Electron ticks from here instead, over IPC.
   // One host for the one BrowserWindow this app creates (see the
@@ -50,12 +50,12 @@ function main() {
       `channel=${BUILD_IDENTITY.releaseChannel} at=${BUILD_IDENTITY.builtAtUtc}`,
   )
 
-  // Autosave on window close — the first 'close' is held while the renderer
-  // flushes its save (IPC 'app:flush-complete', see electron/preload.ts),
-  // then win.close() re-enters and passes through. The handler keeps the
-  // flushed/flushing window state (see src/main-process/quitFlush.ts);
-  // a second user close during the flush window stays blocked without
-  // re-sending the flush request (audit T6-52).
+  // Autosave on window close - the first 'close' is held while the renderer
+  // runs the result-bearing flush (see src/main-process/quitFlush.ts for
+  // the request/generation/sender-bound protocol), then win.close()
+  // re-enters and passes through. The handler keeps the flushed/flushing
+  // window state; a second user close during the flush window stays
+  // blocked without re-sending the flush request (audit T6-52).
   const onQuitFlushClose = createQuitFlush({ ipcMain })
 
   // BETA-FINAL PR8 / spec B3 - privileged IPC accepts messages only from
@@ -114,10 +114,10 @@ function main() {
     mainWindow?.webContents.send('system:suspend', Date.now())
   })
 
-  // Task 7, ruling 3 — the precise OS-resume signal re-anchors clockHost's
+  // Task 7, ruling 3 - the precise OS-resume signal re-anchors clockHost's
   // baseline (the elapsed-threshold in combatClockHost.ts stays as a backstop
   // for a stall that raises no power event). Wiring lives in
-  // combatClockHost.ts, not here, so it has test coverage — main.ts itself
+  // combatClockHost.ts, not here, so it has test coverage - main.ts itself
   // has none. reset() runs before the 'system:resume' forward below, in the
   // order attachPowerMonitorToClockHost's own test asserts.
   attachPowerMonitorToClockHost(powerMonitor, clockHost, () => {

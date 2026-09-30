@@ -286,6 +286,10 @@ const INTENTIONALLY_UNWIRED_LIFECYCLE_MEMBERS: Record<string, string> = {
   consumeEssenceArrival: 'R5 (AR-14 / Law A7): investBodyChapter() auto-invests directly in domain tick and is no longer gated on presentation arrival.',
   isEssenceHeadlessTimedOut: 'R5 (AR-14 / Law A7): progression no longer waits for a 2,000ms headless presentation timeout fallback.',
   clearEssenceEmitted: 'R5 (AR-14 / Law A7): retired along with essence arrival gating.',
+  // B1-D - the online-authority pause flag is driven by the controller's
+  // onPause/onResume wiring, not by App.vue reads; the getter exists for
+  // useAppLifecycle.test.ts to assert the pause actually latched.
+  isSimPaused: 'B1-D: observed via the authority controller pause/resume wiring; exported so useAppLifecycle.test.ts can assert the latch.',
 }
 
 describe('useAppLifecycle() exports have a consumer in App.vue', () => {

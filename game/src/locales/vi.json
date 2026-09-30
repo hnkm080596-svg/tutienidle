@@ -1525,5 +1525,21 @@
       "deleteFailed": "Không xoá được save — trình duyệt đang từ chối truy cập bộ nhớ.",
       "importValidatedRemote": "File save hợp lệ — đã xuất bản chuẩn hoá. Save trên máy chủ không đổi."
     }
+  },
+  "authority": {
+    "reconnecting": "Mất kết nối máy chủ — đang kết nối lại…",
+    "revoked": "Phiên đăng nhập đã hết hạn — đăng nhập lại để tiếp tục.",
+    "conflict": "Save đã thay đổi ở một phiên khác — tải lại để đồng bộ.",
+    "maintenance": "Máy chủ đang bảo trì — thử lại sau.",
+    "updateRequired": "Client đã lỗi thời — cập nhật để tiếp tục chơi.",
+    "recovery": "Save không thể khôi phục — cần khôi phục thủ công.",
+    "reauth": "Đăng nhập lại"
+  },
+  "quitFlush": {
+    "title": "Không lưu được trước khi thoát",
+    "message": "Lần lưu cuối không hoàn tất ({code}). Thử lại, hoặc thoát mà không lưu — tiến trình chưa lưu sẽ mất.",
+    "retry": "Thử lại",
+    "cancel": "Ở lại",
+    "force": "Thoát không lưu"
   }
 }

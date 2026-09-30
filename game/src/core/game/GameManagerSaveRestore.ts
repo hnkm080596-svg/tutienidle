@@ -24,7 +24,7 @@ import { getAlchemyDoublePill } from '../talent/TalentEffects'
 import type { PlayerData } from '../player/Player'
 import { applyAllBodyModifiers } from '../realm/body/BodyProgressionSystem'
 import type { StatModifier } from '../stats/StatCalculator'
-import { computeRestoreIdentity, type GameSave } from '../../services/save/saveTypes'
+import { computeRestoreIdentity, type GameSave, type RestoreTimeAuthority } from '../../services/save/saveTypes'
 import { assertSaveAcceptable } from '../../services/save/saveAcceptance'
 import { NotificationQueue } from './NotificationQueue'
 import { createBagOverflowEvent } from '../notification/bagOverflow'
@@ -142,7 +142,7 @@ export class GameManagerSaveRestore {
    * Returns the latest equipment modifiers so the caller can synchronize them
    * into player.modifiers; EquipmentSystem does not own the player store.
    */
-  restoreFromSave(save: GameSave): StatModifier[] {
+  restoreFromSave(save: GameSave, timeAuthority?: RestoreTimeAuthority): StatModifier[] {
     this.preflightSaveRegistryReferences(save)
 
     // R10 (AR-12, S4) - converge on a repeated identical payload (boot
@@ -397,12 +397,25 @@ export class GameManagerSaveRestore {
     this.deps.decomposeSystem.updateCapacity(offlinePlayer?.autoWorkerCapacity ?? 0)
     this.deps.decomposeSystem.restore(save.decompose)
 
-    if (offlinePlayer) {
-      const elapsedOfflineSeconds = Math.max(
-        0,
-        (Date.now() - (save.player.lastSavedAt ?? Date.now())) / 1000,
-      )
+    // B1-D - the settle window is the authorized context, never a
+    // Date.now()/lastSavedAt read of our own: 'cold-boot' accrues the
+    // SERVER-authorized duration (progression_cutoff_at -> serverNowUtc)
+    // positioned inside the payload's own epoch (lastSavedAt + elapsed),
+    // 'live-replacement' accrues zero, undefined keeps legacy local
+    // semantics. The 60s gate and the formula/cap owners are unchanged.
+    const elapsedOfflineSeconds =
+      timeAuthority?.kind === 'live-replacement'
+        ? 0
+        : timeAuthority?.kind === 'cold-boot'
+          ? Math.max(0, (timeAuthority.untilMs - timeAuthority.sinceMs) / 1000)
+          : Math.max(0, (Date.now() - (save.player.lastSavedAt ?? Date.now())) / 1000)
 
+    // End of the authorized window expressed in the payload's epoch -
+    // identical to Date.now() in the legacy branch.
+    const settleNowMs = (save.player.lastSavedAt ?? Date.now()) + elapsedOfflineSeconds * 1000
+    const offlineSinceMs = save.player.lastSavedAt ?? settleNowMs
+
+    if (offlinePlayer) {
       if (elapsedOfflineSeconds > 60) {
         // T3 (economy-ecosystem-plan) - worker chay offline nhu slot tay
         // trong cap: truyen capacity + moc bat dau vang mat de settle
@@ -411,21 +424,18 @@ export class GameManagerSaveRestore {
           this.deps.materialBag,
           this.deps.materialRegistry,
           offlinePlayer.realmId,
-          Date.now(),
+          settleNowMs,
           {
             workerCapacity: resolveProductionWorkerCapacity(
               offlinePlayer.autoWorkerCapacity ?? 0,
               this.deps.decomposeSystem.getSettings().workers,
             ),
-            offlineSinceMs: save.player.lastSavedAt ?? Date.now(),
+            offlineSinceMs,
             workerAssignments: this.deps.getWorkerAssignments(),
           },
         )
 
-        this.deps.decomposeSystem.settleOffline(
-          Date.now(),
-          save.player.lastSavedAt ?? Date.now(),
-        )
+        this.deps.decomposeSystem.settleOffline(settleNowMs, offlineSinceMs)
 
         for (const entry of this.deps.decomposeSystem.drainOutput()) {
           this.deps.deliverDecomposeOutput(entry)
@@ -435,6 +445,11 @@ export class GameManagerSaveRestore {
         // reward offline: roll cac chu ky auto-farm da troi trong cua so
         // offline (cung gate >60s voi Production catch-up).
         this.deps.settleAutoFarmOffline(offlinePlayer, elapsedOfflineSeconds)
+      } else if (timeAuthority?.kind === 'live-replacement' && offlinePlayer.autoFarmStage) {
+        // B1-D zero-accrual live replacement: an armed farm's saved anchor
+        // must not mint the paused gap on the next live tick - re-anchor
+        // at resume time without rolling any cycle.
+        this.deps.settleAutoFarmOffline(offlinePlayer, 0)
       }
 
       // Mission B audit - re-acquire the StageManager lease for a persisted
@@ -446,14 +461,16 @@ export class GameManagerSaveRestore {
       this.deps.reconcileAutoFarmRuntime(offlinePlayer)
     }
 
-    // Dan Phong offline settle (S8.2).
+    // Dan Phong offline settle (S8.2). B1-D: the same authorized window
+    // end - a live replacement delivers only jobs already complete at the
+    // snapshot, and a cold-boot window stops at the server-stamped bound.
     this.deps.alchemySystem.restoreJobs((save.alchemyJobs ?? []) as ActiveAlchemyJob[])
 
     this.deps.alchemySystem.settleOffline(
       this.deps.pillBag,
       (pillId) =>
         this.deps.pillRegistry.has(pillId) ? this.deps.pillRegistry.get(pillId) : undefined,
-      Date.now(),
+      settleNowMs,
       0,
       // M3 - Hoa Hau Thong Than: x2 pill yield applies to offline settle too.
       getAlchemyDoublePill(this.deps.getActivePlayer()?.selectedTalentIds, this.deps.getActivePlayer()?.talentLevels)?.yieldMultiplier ?? 1,

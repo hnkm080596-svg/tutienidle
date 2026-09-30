@@ -12,7 +12,7 @@ import {
   type BackendErrorCode,
   type RemoteTimeCheckpoint,
 } from '../session/BackendStatus'
-import type { CloudSaveLoadResult, CloudSaveService, CloudSaveWriteResult } from './CloudSaveService'
+import type { CloudSaveLoadResult, CloudSaveService, CloudSaveWriteResult, HeartbeatOutcome } from './CloudSaveService'
 import {
   buildPendingSaveRecord,
   PendingSaveJournal,
@@ -131,6 +131,14 @@ function deriveSaveEnvironmentId(config: SupabaseConfig, build: ClientBuildInfo)
     // keep fallback
   }
   return `${build.releaseChannel}:${project}`
+}
+
+/** ISO/timestamptz -> ms epoch; malformed input stays undefined so the
+ *  authorized restore window never fabricates a bound. */
+function parseTimestampMs(value: unknown): number | undefined {
+  if (typeof value !== 'string' || value.length === 0) return undefined
+  const ms = Date.parse(value)
+  return Number.isFinite(ms) ? ms : undefined
 }
 
 type PendingResolution =
@@ -413,6 +421,7 @@ export class SupabaseCloudSaveService implements CloudSaveService {
   private adoptCommittedPending(
     record: PendingSaveRecord,
     committedRevision: number,
+    authority?: { cutoffMs?: number; serverNowMs?: number },
   ): CloudSaveLoadResult {
     let parsed: unknown
     try {
@@ -447,6 +456,11 @@ export class SupabaseCloudSaveService implements CloudSaveService {
       revision: committedRevision,
       discardedEquipmentCount: shape.discardedEquipmentCount,
       raw: record.rawPayload,
+      adoptedPending: true,
+      serverAuthority:
+        authority?.serverNowMs === undefined
+          ? undefined
+          : { cutoffMs: authority.cutoffMs, serverNowMs: authority.serverNowMs },
     }
   }
 
@@ -488,6 +502,32 @@ export class SupabaseCloudSaveService implements CloudSaveService {
 
     this.characterId = character.id
     return null
+  }
+
+  /**
+   * B1-D - the active-session probe: the heartbeat RPC renews the
+   *   server checkpoint lease and proves transport + auth + session-lock
+   *   in ONE call. Errors keep the B1.7 taxonomy for the admission
+   *   controller to classify (never collapse to a generic failure).
+   */
+  async heartbeat(): Promise<HeartbeatOutcome> {
+    const binding = await this.binding()
+    if (!binding) {
+      return { status: 'unavailable', code: 'AUTH_EXPIRED', retryable: false }
+    }
+    try {
+      const response = await this.rpc<HeartbeatResponse>(
+        '/rest/v1/rpc/heartbeat_session',
+        { p_session_id: binding.sessionId },
+        binding.accessToken,
+      )
+      if (response.checkpoint !== undefined) {
+        this.storeCheckpoint(response.checkpoint)
+      }
+      return { status: 'ok' }
+    } catch (error: unknown) {
+      return this.mapError(error)
+    }
   }
 
   async readCachedSave(): Promise<{ raw: string; revision: number } | null> {
@@ -600,7 +640,10 @@ export class SupabaseCloudSaveService implements CloudSaveService {
               if (sameGeneration()) {
                 this.mirrorAcked(pending.userId, resolution.committedRevision, pending.rawPayload)
               }
-              return this.adoptCommittedPending(pending, resolution.committedRevision)
+              return this.adoptCommittedPending(pending, resolution.committedRevision, {
+                cutoffMs: parseTimestampMs(response.save?.progressionCutoffAt),
+                serverNowMs: parseTimestampMs(response.serverTimeUtc),
+              })
             }
           }
 
@@ -700,7 +743,20 @@ export class SupabaseCloudSaveService implements CloudSaveService {
           if (sameGeneration()) {
             this.mirrorAcked(userId, revision, raw, response.serverTimeUtc)
           }
-          return { status: 'ok', save: normalized, revision, discardedEquipmentCount: shape.discardedEquipmentCount, raw }
+          const serverNowMs = parseTimestampMs(response.serverTimeUtc)
+          return {
+            status: 'ok',
+            save: normalized,
+            revision,
+            discardedEquipmentCount: shape.discardedEquipmentCount,
+            raw,
+            serverAuthority: serverNowMs === undefined
+              ? undefined
+              : {
+                  cutoffMs: parseTimestampMs(save.progressionCutoffAt),
+                  serverNowMs,
+                },
+          }
         }
 
         default:

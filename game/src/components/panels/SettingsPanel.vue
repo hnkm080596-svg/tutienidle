@@ -8,6 +8,7 @@ import { useNotificationStore } from '@/stores/notification'
 import { exportSaveToFile, getRawSave, importSaveRaw, SAVE_RESET_REQUEST_EVENT } from '@/services/save/SaveSystem'
 import { validateRecoveryData } from '@/services/save/recoveryApi'
 import { cloudSaveCoordinator } from '@/services/cloudSave/CloudSaveServiceFactory'
+import { observeAuthoritySaveResult } from '@/composables/useOnlineAuthority'
 import { UI_SCALE_OPTIONS, loadUiScale, saveUiScale } from '@/composables/uiScale'
 import { LOCALE_OPTIONS, saveLocale, type AppLocale } from '@/composables/locale'
 import { BUILD_IDENTITY, shortGitSha } from '@/shared/build/BuildIdentity'
@@ -86,6 +87,10 @@ const lastSavedLabel = ref('')
 async function handleSave() {
   const result = await player.save(gameManager)
 
+  // B1-D: every save outcome reports to the admission authority (remote
+  // mode only - the call is a no-op when no remote session is bound).
+  observeAuthoritySaveResult(result)
+
   if (result.status === 'ok') {
     lastSavedLabel.value = new Date().toLocaleTimeString('vi-VN')
 
@@ -119,6 +124,8 @@ async function handleExport() {
   // → LocalCloudSaveService.save đều async); đọc localStorage ngay sau lời
   // gọi sync sẽ lấy save 15s cũ (bug audit 2026-08-31).
   const result = await player.save(gameManager)
+
+  observeAuthoritySaveResult(result)
 
   if (result.status !== 'ok') {
     notification.push('error', t('panels.settings.notifications.exportFailed'))
@@ -183,7 +190,7 @@ function handleImportFile(event: Event) {
         if (ok) {
           window.location.reload()
         } else {
-          // UI-007 (Task 5) — window.alert native → toast store (in-game
+          // UI-007 (Task 5) - window.alert native -> toast store (in-game
           // feedback, tự biến mất, không chặn luồng; giữ import input
           // reset để retry ngay).
           notification.push('error', t('panels.settings.errors.invalidSaveFile'))

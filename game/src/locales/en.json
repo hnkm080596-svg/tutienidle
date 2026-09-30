@@ -1525,5 +1525,21 @@
       "deleteFailed": "Could not delete the save — the browser is refusing storage access.",
       "importValidatedRemote": "Save file is valid — normalized copy exported. Server save unchanged."
     }
+  },
+  "authority": {
+    "reconnecting": "Connection lost — reconnecting…",
+    "revoked": "Your session has expired — sign in again to continue.",
+    "conflict": "The save changed in another session — reload to sync.",
+    "maintenance": "The server is under maintenance — try again later.",
+    "updateRequired": "This client is outdated — update to keep playing.",
+    "recovery": "The save cannot be restored — manual recovery required.",
+    "reauth": "Sign in again"
+  },
+  "quitFlush": {
+    "title": "Could not save before quitting",
+    "message": "The final save did not complete ({code}). Retry, or quit without saving — unsaved progress will be lost.",
+    "retry": "Retry",
+    "cancel": "Stay",
+    "force": "Quit without saving"
   }
 }

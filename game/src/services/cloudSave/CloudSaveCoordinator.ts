@@ -1,5 +1,5 @@
 import type { GameSave } from '../save/SaveSystem'
-import type { CloudSaveCapability, CloudSaveLoadResult, CloudSaveService, CloudSaveWriteResult } from './CloudSaveService'
+import type { CloudSaveCapability, CloudSaveLoadResult, CloudSaveService, CloudSaveWriteResult, HeartbeatOutcome } from './CloudSaveService'
 
 interface QueuedSave {
   /** Callers that arrived while a write was in flight all resolve with
@@ -69,6 +69,12 @@ export class CloudSaveCoordinator {
    *  local slot); null when absent/corrupt. Never an authority read. */
   async readCachedSave(): Promise<{ raw: string; revision: number } | null> {
     return this.service.readCachedSave ? this.service.readCachedSave() : null
+  }
+
+  /** B1-D: the active-session probe for the heartbeat cadence. Local
+   *  adapters have no remote authority - they resolve 'ok' trivially. */
+  async heartbeat(): Promise<HeartbeatOutcome> {
+    return this.service.heartbeat ? this.service.heartbeat() : { status: 'ok' }
   }
 
   async save(snapshot: GameSave): Promise<CloudSaveWriteResult> {
