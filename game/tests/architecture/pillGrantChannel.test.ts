@@ -36,7 +36,16 @@
  * `.bind/.call/.apply` (`const b = mm.bind(t)`, `mm.call(t)`),
  * `new mm()` construction, and clone-carrier dispatch
  * (`structuredClone(ps)[k]()`, `wrap(ps)[k]()`) - a call fed the
- * pill system returns a pill-ish carrier.
+ * pill system returns a pill-ish carrier. R14 additions: resolved
+ * enumeration-member callees (`const k = Object.keys; k(ps)`,
+ * `const rd = Object.getOwnPropertyDescriptor`, `const g =
+ * globalThis.Reflect.get` - a bound global member invoked by name),
+ * the `get` member read (`Reflect.get(ps, k)`, `ps.get(k)` gated on
+ * a Reflect/Object/global/pill-ish root so `map.get(ps)` stays
+ * silent), element-position `.bind/.call/.apply` captures
+ * (`const b = ps[k].bind(ps)`), `new Proxy(ps, {})` forwarding
+ * carriers, and member-position pill carriers (`this.ps[k]`,
+ * `holder.pill[k]`).
  *
  * Honest residual bound: name enumeration with no literal in sight
  * (`Object.keys(ps)` -> `ps[name]`), keys assembled at runtime
