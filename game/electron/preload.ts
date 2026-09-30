@@ -95,4 +95,21 @@ contextBridge.exposeInMainWorld('electronAPI', {
       ipcRenderer.send('combat-clock:stop')
     },
   },
+
+  // B1.8 durable guest identity - the ONLY seam to the OS-protected
+  // credential store (src/main-process/GuestCredentialStore.ts). The
+  // renderer gets operations and the session record; filesystem paths and
+  // raw bytes never cross this bridge. Shape must match
+  // GuestCredentialBridge in src/services/supabase/SupabaseSession.ts.
+  guestCredentials: {
+    load() {
+      return ipcRenderer.invoke('guest-credential:load')
+    },
+    save(record: unknown) {
+      return ipcRenderer.invoke('guest-credential:save', record)
+    },
+    clear() {
+      return ipcRenderer.invoke('guest-credential:clear')
+    },
+  },
 })
