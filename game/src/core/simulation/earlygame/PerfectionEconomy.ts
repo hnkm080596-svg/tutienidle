@@ -99,8 +99,11 @@ export function mortalStatBudget(): MortalStatBudget {
     0,
   )
   const breakthroughPoints = mortal.maxLevel - createDefaultPlayer().realmLevel
-  // Creation grants no points post-BETA-CREATION - the only
-  // enumerated stat source is breakthrough.
+  // Creation grants no points post-BETA-CREATION. Two enumerated
+  // baseStats channels exist (ruling 2026-09-29): level-up allocation
+  // and permanent_stat pills. This budget measures the LEVEL-UP channel
+  // only - pill income is bounded by materials/herbs, not enumerated
+  // points, and is exercised by the driven sim's economy, not here.
   const creationPoints = 0
   const available = creationPoints + breakthroughPoints
   return {
@@ -120,11 +123,13 @@ export interface StatSourceCensus {
   /** Reward is a closed type (skillInsight|cultivation|spiritStone) -
    * no attribute-point channel exists for quests to grant stats. */
   rewardChannelsClosed: boolean
-  /** Authored pills carrying random_main_stat - the only pill path that
-   * writes raw baseStats. Empty = unreachable today. */
+  /** Authored pills carrying random_main_stat - writes raw baseStats. */
   pillsWithRandomMainStat: string[]
-  /** Pill ids reachable via quest itemDrops - transitively clean when
-   * pillsWithRandomMainStat is empty. */
+  /** Authored MORTAL-tier pills carrying permanent_stat - these write
+   * raw baseStats since 2026-09-29 (PillSystem.useProfessionPill), the
+   * second enumerated stat channel beside level-up allocation. */
+  mortalPillsWithPermanentStat: string[]
+  /** Pill ids reachable via quest itemDrops. */
   questItemDropPillIds: string[]
 }
 
@@ -148,12 +153,24 @@ export function reachableStatSourceCensus(): StatSourceCensus {
   const pillsWithRandomMainStat = pills
     .filter((pill) => pill.effects.some((effect) => effect.type === 'random_main_stat'))
     .map((pill) => pill.id)
+  const mortalPillsWithPermanentStat = pills
+    .filter(
+      (pill) =>
+        pill.realmId === 'mortal' &&
+        pill.effects.some((effect) => effect.type === 'permanent_stat'),
+    )
+    .map((pill) => pill.id)
   const questItemDropPillIds = QUESTS.flatMap((quest) =>
     (quest.reward.itemDrops ?? [])
       .filter((drop) => drop.kind === 'pill')
       .map((drop) => drop.itemId),
   )
-  return { rewardChannelsClosed, pillsWithRandomMainStat, questItemDropPillIds }
+  return {
+    rewardChannelsClosed,
+    pillsWithRandomMainStat,
+    mortalPillsWithPermanentStat,
+    questItemDropPillIds,
+  }
 }
 
 /** Expected tinh_hoa_pham_the per kill from the mortal stage table's
@@ -368,6 +385,13 @@ export function measurePerfectionRun(
         statAxisVerdict = 'achieved'
         statAxisResolvedAtSeconds = tWall()
       } else if (player.realmLevel >= mortal.maxLevel && player.attributePoints === 0) {
+        // Coverage boundary (ruling 2026-09-29): the second baseStats
+        // channel - permanent_stat pills funded by the grotto/alchemy
+        // pipeline - is authored and reachable (census proves it), but
+        // day-paced production economies are not acquired in-suite, so
+        // this verdict is "the exercised level-up channel starved", not
+        // "no route exists". mortalStatBudget().shortfall quantifies
+        // what the pill channel must supply.
         statAxisVerdict = 'proven_infeasible'
         statAxisResolvedAtSeconds = tWall()
       }

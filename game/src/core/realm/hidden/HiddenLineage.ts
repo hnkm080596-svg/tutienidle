@@ -16,7 +16,7 @@ import {
 } from '../../../data/realm/HiddenBodyRealms'
 import { EXTENDED_REALM_LEVEL, getRealmIndex } from '../realmSystem'
 import { MAIN_STAT_KEYS } from '../../stats/StatTypes'
-import { getEffectiveMainStatCap } from '../../stats/StatCap'
+import { countCompletedHiddenBodyRealms, getEffectiveMainStatCap } from '../../stats/StatCap'
 import { canTriggerBreakthrough } from '../BreakthroughGate'
 import type {
   HiddenPerfectionState,
@@ -52,18 +52,25 @@ export function isHiddenLineageOpen(
   return player.hiddenPerfection?.lineageActive === true
 }
 
+// Save-restorable arrays must be shape-checked at every read - a string
+// or object in place of the array otherwise leaks string .length /
+// substring .includes semantics into completion predicates.
+function asRealmIdList(value: unknown): readonly string[] {
+  return Array.isArray(value) ? value : []
+}
+
 /** Total completed hidden bodies - the sole source of the +10pp cap bonus. */
 export function getCompletedHiddenBodyCount(
   player: Pick<HiddenLineagePlayer, 'hiddenPerfection'>,
 ): number {
-  return player.hiddenPerfection?.completedHiddenBodyRealmIds.length ?? 0
+  return countCompletedHiddenBodyRealms(player.hiddenPerfection?.completedHiddenBodyRealmIds)
 }
 
 export function isHiddenBodyCompleted(
   player: Pick<HiddenLineagePlayer, 'hiddenPerfection'>,
   realmId: string,
 ): boolean {
-  return player.hiddenPerfection?.completedHiddenBodyRealmIds.includes(realmId) === true
+  return asRealmIdList(player.hiddenPerfection?.completedHiddenBodyRealmIds).includes(realmId)
 }
 
 /** The player broke through INTO realmId via a hidden breakthrough. */
@@ -71,7 +78,7 @@ export function wasHiddenBreakthrough(
   player: Pick<HiddenLineagePlayer, 'hiddenPerfection'>,
   realmId: string,
 ): boolean {
-  return player.hiddenPerfection?.hiddenBreakthroughRealmIds.includes(realmId) === true
+  return asRealmIdList(player.hiddenPerfection?.hiddenBreakthroughRealmIds).includes(realmId)
 }
 
 export function isHiddenRealmDiscovered(
@@ -92,7 +99,7 @@ export function isHiddenRealmFrozen(
 export function getHiddenBreakthroughRealmIds(
   player: Pick<HiddenLineagePlayer, 'hiddenPerfection'>,
 ): readonly string[] {
-  return player.hiddenPerfection?.hiddenBreakthroughRealmIds ?? []
+  return asRealmIdList(player.hiddenPerfection?.hiddenBreakthroughRealmIds)
 }
 
 export function getRealmHiddenState(
@@ -134,7 +141,7 @@ export function canProgressHiddenBody(
     return false
   }
 
-  return nextUncompletedHiddenBodyRealm(state.completedHiddenBodyRealmIds)?.realmId === realmId
+  return nextUncompletedHiddenBodyRealm(asRealmIdList(state.completedHiddenBodyRealmIds))?.realmId === realmId
 }
 
 // ---------------------------------------------------------------------------
@@ -177,6 +184,10 @@ export function completeHiddenBody(
 ): RealmHiddenState | undefined {
   const state = player.hiddenPerfection
   if (state === undefined) {
+    return undefined
+  }
+
+  if (!Array.isArray(state.completedHiddenBodyRealmIds)) {
     return undefined
   }
 
@@ -267,6 +278,10 @@ export function recordHiddenBreakthrough(
     getRealmIndex(enteredRealmId) <= 0 ||
     player.realmId !== enteredRealmId
   ) {
+    return false
+  }
+
+  if (!Array.isArray(state.hiddenBreakthroughRealmIds)) {
     return false
   }
 

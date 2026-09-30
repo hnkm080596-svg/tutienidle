@@ -65,6 +65,109 @@ describe('legacy save -> domain gate on persisted modifiers (QA)', () => {
     vi.spyOn(Date, 'now').mockImplementation(() => NOW)
   })
 
+  it('a retired pill-permanent modifier folds into baseStats at restore, then drops', () => {
+    const player = usePlayerStore()
+    const save = buildMinimalSave({
+      baseStats: { strength: 5 },
+      modifiers: [
+        { id: 'pill-permanent:strength', sourceId: 'to_cot_dan', sourceType: 'pill', stat: 'strength', flat: 3 },
+        { id: 'pill-permanent:might', sourceId: 'x', sourceType: 'pill', stat: 'might', flat: 2 },
+      ],
+    })
+
+    player.restoreFromSave(save)
+
+    expect(player.baseStats.strength).toBe(8)
+    expect(player.baseStats.might).toBe(createBaseStats().might + 2)
+    expect(player.modifiers.every((m) => !m.id.startsWith('pill-permanent:'))).toBe(true)
+  })
+
+  it('the fold respects getEffectiveMainStatCap for main stats', () => {
+    const player = usePlayerStore()
+    const save = buildMinimalSave({
+      baseStats: { strength: 9 },
+      modifiers: [
+        { id: 'pill-permanent:strength', sourceId: 'x', sourceType: 'pill', stat: 'strength', flat: 5 },
+      ],
+    })
+
+    player.restoreFromSave(save)
+
+    // mortal cap = 10, no completed perfection -> 10, not 14.
+    expect(player.baseStats.strength).toBe(10)
+  })
+
+  it('a crafted modifier with a non-string id or null entry cannot crash restore', () => {
+    const player = usePlayerStore()
+    const save = buildMinimalSave({
+      modifiers: [
+        { id: 42, stat: 'strength', flat: 5 },
+        null,
+        { stat: 'strength', flat: 9 },
+      ] as unknown as never[],
+    })
+
+    expect(() => player.restoreFromSave(save)).not.toThrow()
+    expect(player.baseStats.strength).toBe(createBaseStats().strength)
+  })
+
+  it('a crafted hiddenPerfection with a null member cannot crash restore', () => {
+    const player = usePlayerStore()
+    const save = buildMinimalSave({
+      baseStats: { strength: 9 },
+      hiddenPerfection: { completedHiddenBodyRealmIds: null },
+      modifiers: [
+        { id: 'pill-permanent:strength', sourceId: 'x', sourceType: 'pill', stat: 'strength', flat: 5 },
+      ],
+    })
+
+    expect(() => player.restoreFromSave(save)).not.toThrow()
+    // null member -> zero hidden realms -> plain mortal cap 10.
+    expect(player.baseStats.strength).toBe(10)
+  })
+
+  it('a pill-permanent inside persistentTimedEffects folds with credit, once', () => {
+    const player = usePlayerStore()
+    const save = buildMinimalSave({
+      baseStats: { strength: 5 },
+      persistentTimedEffects: [
+        timedEffectWith({
+          id: 'pill-permanent:strength',
+          sourceId: 'to_cot_dan',
+          sourceType: 'pill',
+          stat: 'strength',
+          flat: 3,
+        }),
+      ],
+    })
+
+    player.restoreFromSave(save)
+
+    expect(player.baseStats.strength).toBe(8)
+    expect(player.persistentTimedEffects[0]!.modifiers).toEqual([])
+  })
+
+  it('the same pill-permanent entry in two buckets credits once', () => {
+    const player = usePlayerStore()
+    const entry = {
+      id: 'pill-permanent:strength',
+      sourceId: 'to_cot_dan',
+      sourceType: 'pill',
+      stat: 'strength',
+      flat: 3,
+    }
+    const save = buildMinimalSave({
+      baseStats: { strength: 1 },
+      modifiers: [entry],
+      externalModifiers: [{ ...entry }],
+    })
+
+    player.restoreFromSave(save)
+
+    // credited once: 1 + 3, not 1 + 3 + 3.
+    expect(player.baseStats.strength).toBe(4)
+  })
+
   it('a legacy-keyed persisted modifier is dropped at restore, not backfilled', () => {
     const player = usePlayerStore()
     const save = buildMinimalSave({

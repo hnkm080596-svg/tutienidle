@@ -62,7 +62,7 @@ Legend for proposed disposition column: **[P]** = proposed by this census, **[L]
 
 | System | Files | What it does today | Disposition | Evidence |
 |---|---|---|---|---|
-| Realm data | `data/realms/realm.ts` | mortal/qi_refining/foundation_establishment real (max level 18); 7 higher realms placeholder; `CORE_REALM_LEVEL=12`, `EXTENDED_REALM_LEVEL=18`, `attributeCap` per realm. | KEEP [P] | Content endpoint = Trúc Cơ. |
+| Realm data | `data/realms/realm.ts` | mortal/qi_refining/foundation_establishment real (max level 18); 7 higher realms placeholder; `CORE_REALM_LEVEL=12`, `EXTENDED_REALM_LEVEL=18`. | KEEP [P] | Content endpoint = Trúc Cơ. |
 | realmSystem | `core/realm/realmSystem.ts` | Realm lookup/index, next realm. | KEEP [P] | |
 | CultivationSystem | `core/cultivation/CultivationSystem.ts` | Cultivation accumulation + cap, minor-tier breakthrough (realmLevel++, attributePoints++), overcharge banking; mortal → qi_refining blocked (ritual instead). | KEEP [P] | Single owner of cultivation. |
 | Initiation Ritual | `chooseCultivationPath` (RealmAdvanceOps L168-275) | mortal lv≥12 → applyPathChoice + learn/equip way technique + kit grant + precursor unequip + realm entry + breakthroughGrade + mortalPerfection snapshot + passive syncs. | KEEP [P] | The transaction is right; contents change with technique model. |
