@@ -1563,12 +1563,14 @@
   },
   "account": {
     "upgrade": {
-      "hint": "Set a Cultivator ID and password to keep your character, realm and progress - sign back in with this account next time.",
+      "hint": "Set a Cultivator ID to keep your character, realm and progress - you will choose the password after the server confirms.",
       "submit": "Upgrade account",
       "pendingBody": "Account {id} is waiting for server confirmation. Your progress stays safe - check again once the server confirms.",
       "pendingCheck": "Check again",
       "pendingSwitch": "Use a different ID",
-      "done": "Account upgraded - your character is unchanged."
+      "done": "Account upgraded - your character is unchanged.",
+      "passwordBody": "Account {id} is confirmed. Set the password that will sign this account back in.",
+      "passwordSubmit": "Set password"
     },
     "abandon": {
       "title": "Leave guest session",

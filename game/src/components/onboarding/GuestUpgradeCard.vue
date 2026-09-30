@@ -8,9 +8,10 @@ import { readSupabaseSession, storeSupabaseSession } from '@/services/supabase/S
 
 // B1.8/EXT-09 guest -> registered surface: same-uuid upgrade with the
 // authoritative pending-confirm state machine. The card owns the whole
-// flow - link form, pending-confirm re-check, finalize verdict - so the
-// auth card and the settings account section expose identical behavior.
-// It NEVER claims the upgrade before the server's finalize verdict.
+// flow - link form (email only), pending-confirm re-check, post-finalize
+// password step, done - so the auth card and the settings account
+// section expose identical behavior. The password is collected AFTER
+// finalize and only used for the updateUser call - never persisted.
 const props = defineProps<{ pendingLoginId?: string }>()
 const emit = defineEmits<{ finalized: [] }>()
 
@@ -20,20 +21,22 @@ const loginId = ref('')
 const password = ref('')
 const submitting = ref(false)
 const error = ref('')
-// 'form' collects the new identity; 'pending' mirrors a recorded
-// pending-confirm marker; 'done' is the finalize verdict.
-const view = ref<'form' | 'pending' | 'done'>(props.pendingLoginId ? 'pending' : 'form')
+// 'form' collects the new login id; 'pending' mirrors a recorded
+// pending-confirm marker; 'password' binds the credential after the
+// server's finalize verdict; 'done' is the completed upgrade.
+const view = ref<'form' | 'pending' | 'password' | 'done'>(props.pendingLoginId ? 'pending' : 'form')
 const pendingId = ref<string | undefined>(props.pendingLoginId)
 
 const validId = computed(() => isValidLoginId(loginId.value))
-const canSubmit = computed(() => validId.value && isValidPassword(password.value) && !submitting.value)
+const canSubmitId = computed(() => validId.value && !submitting.value)
+const canSubmitPassword = computed(() => isValidPassword(password.value) && !submitting.value)
 
 async function submitUpgrade() {
-  if (!canSubmit.value) return
+  if (!canSubmitId.value) return
   submitting.value = true
   error.value = ''
 
-  const result = await authService.upgradeGuest({ loginId: loginId.value, password: password.value })
+  const result = await authService.upgradeGuest({ loginId: loginId.value })
   submitting.value = false
 
   if (!result.ok) {
@@ -45,8 +48,8 @@ async function submitUpgrade() {
     view.value = 'pending'
     return
   }
-  view.value = 'done'
-  emit('finalized')
+  // FINALIZED: the linked email is confirmed - move to the password step.
+  view.value = 'password'
 }
 
 /** Re-check the authoritative finalize verdict for a recorded pending
@@ -64,6 +67,25 @@ async function recheckFinalize() {
     return
   }
   if (result.status === 'pending-confirm') return
+  view.value = 'password'
+}
+
+/** Post-finalize password set on the email-bound session. Only once this
+ *  lands does the session flip to registered - the durable guest
+ *  credential is retired by completeUpgrade itself. */
+async function submitPassword() {
+  if (!canSubmitPassword.value) return
+  submitting.value = true
+  error.value = ''
+
+  const result = await authService.completeUpgrade({ password: password.value })
+  submitting.value = false
+  password.value = ''
+
+  if (!result.ok) {
+    error.value = result.message
+    return
+  }
   view.value = 'done'
   emit('finalized')
 }
@@ -98,16 +120,8 @@ function switchIdentity() {
           :aria-invalid="loginId && !validId ? true : undefined"
           data-testid="upgrade-input-id"
         />
-        <input
-          v-model="password"
-          class="upgrade-card__input"
-          autocomplete="new-password"
-          type="password"
-          :placeholder="t('onboarding.auth.placeholders.password')"
-          data-testid="upgrade-input-password"
-        />
         <p v-if="error" class="upgrade-card__error" role="alert">{{ error }}</p>
-        <GameButton variant="secondary" type="submit" :disabled="!canSubmit" :loading="submitting" data-testid="upgrade-submit">
+        <GameButton variant="secondary" type="submit" :disabled="!canSubmitId" :loading="submitting" data-testid="upgrade-submit">
           {{ t('account.upgrade.submit') }}
         </GameButton>
       </form>
@@ -126,6 +140,25 @@ function switchIdentity() {
           {{ t('account.upgrade.pendingSwitch') }}
         </button>
       </div>
+    </template>
+
+    <template v-else-if="view === 'password'">
+      <p class="upgrade-card__hint">{{ t('account.upgrade.passwordBody', { id: pendingId ?? '' }) }}</p>
+      <form class="upgrade-card__form" @submit.prevent="submitPassword">
+        <input
+          v-model="password"
+          class="upgrade-card__input"
+          autocomplete="new-password"
+          type="password"
+          :placeholder="t('onboarding.auth.placeholders.password')"
+          :aria-invalid="password && !isValidPassword(password) ? true : undefined"
+          data-testid="upgrade-input-password"
+        />
+        <p v-if="error" class="upgrade-card__error" role="alert">{{ error }}</p>
+        <GameButton variant="secondary" type="submit" :disabled="!canSubmitPassword" :loading="submitting" data-testid="upgrade-password-submit">
+          {{ t('account.upgrade.passwordSubmit') }}
+        </GameButton>
+      </form>
     </template>
 
     <template v-else>

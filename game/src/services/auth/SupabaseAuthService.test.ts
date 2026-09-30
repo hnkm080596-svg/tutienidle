@@ -156,20 +156,20 @@ describe('resumeStoredSession - B1.7/B1.8 explicit take-back', () => {
 describe('upgradeGuest - EXT-09 same-uuid link', () => {
   it('rejects non-guest sessions and malformed input before any call', async () => {
     storedGuest({ mode: 'login' })
-    const result = await service.upgradeGuest({ loginId: 'valid_id', password: 'secret6' })
+    const result = await service.upgradeGuest({ loginId: 'valid_id' })
     expect(result.ok).toBe(false)
     if (result.ok) return
     expect(result.code).toBe('not_guest')
     expect(calls).toHaveLength(0)
 
     storedGuest()
-    const badId = await service.upgradeGuest({ loginId: 'UP!!', password: 'secret6' })
+    const badId = await service.upgradeGuest({ loginId: 'UP!!' })
     expect(badId.ok).toBe(false)
     if (badId.ok) return
     expect(badId.code).toBe('invalid_id')
   })
 
-  it('PUT /auth/v1/user binds email+password, stores the pending marker, and runs finalize', async () => {
+  it('PUT /auth/v1/user binds the EMAIL ONLY - a combined {email,password} PUT 400s on real GoTrue', async () => {
     storedGuest()
     vi.stubGlobal('fetch', vi.fn(async (url: string | URL | Request, init?: RequestInit) => {
       const u = String(url)
@@ -180,16 +180,55 @@ describe('upgradeGuest - EXT-09 same-uuid link', () => {
       return respond(u, init)
     }))
 
-    const result = await service.upgradeGuest({ loginId: 'Dao_Huu_1', password: 'secret6' })
+    const result = await service.upgradeGuest({ loginId: 'Dao_Huu_1' })
 
     const update = calls.find((c) => c.url.includes('/auth/v1/user'))
     expect(update?.body).toMatchObject({
       email: 'dao_huu_1@accounts.tien-hiep-idle.invalid',
-      password: 'secret6',
     })
+    // The password is bound post-finalize by completeUpgrade - never sent
+    // or persisted during the link step.
+    expect((update?.body as Record<string, unknown>)?.password).toBeUndefined()
     // Same-uuid contract held; pending marker persisted; finalize ran.
     expect(readSupabaseSession()?.pendingUpgrade?.loginId).toBe('dao_huu_1')
     expect(result).toEqual({ ok: true, status: 'pending-confirm' })
+  })
+
+  it('a non-duplicate 400 (email_address_invalid) is NOT id_taken', async () => {
+    storedGuest()
+    vi.stubGlobal('fetch', vi.fn(async (url: string | URL | Request, init?: RequestInit) => {
+      const u = String(url)
+      if (u.includes('/auth/v1/user')) {
+        return new Response(JSON.stringify({ code: 400, error_code: 'email_address_invalid', msg: 'Email address "" is invalid' }), { status: 400 })
+      }
+      return respond(u, init)
+    }))
+
+    const result = await service.upgradeGuest({ loginId: 'dao_huu_1' })
+
+    expect(result.ok).toBe(false)
+    if (result.ok) return
+    expect(result.code).toBe('server_unavailable')
+    expect(result.code).not.toBe('id_taken')
+  })
+
+  it('429 (GoTrue email send rate limit) surfaces rate_limited and keeps the marker', async () => {
+    storedGuest({ pendingUpgrade: { loginId: 'keepme' } })
+    vi.stubGlobal('fetch', vi.fn(async (url: string | URL | Request, init?: RequestInit) => {
+      const u = String(url)
+      if (u.includes('/auth/v1/token') || u.includes('grant_type=refresh_token')) return respond(u, init)
+      if (u.includes('/auth/v1/user')) {
+        return new Response(JSON.stringify({ error_code: 'over_request_rate_limit' }), { status: 429 })
+      }
+      return respond(u, init)
+    }))
+
+    const result = await service.upgradeGuest({ loginId: 'dao_huu_1' })
+
+    expect(result.ok).toBe(false)
+    if (result.ok) return
+    expect(result.code).toBe('rate_limited')
+    expect(readSupabaseSession()?.pendingUpgrade?.loginId).toBe('keepme')
   })
 
   it('a different user.id in the link response is a contract violation - never adopted', async () => {
@@ -202,11 +241,28 @@ describe('upgradeGuest - EXT-09 same-uuid link', () => {
       return respond(u, init)
     }))
 
-    const result = await service.upgradeGuest({ loginId: 'dao_huu_1', password: 'secret6' })
+    const result = await service.upgradeGuest({ loginId: 'dao_huu_1' })
 
     expect(result.ok).toBe(false)
     // No pending marker - a foreign-uuid response binds nothing.
     expect(readSupabaseSession()?.pendingUpgrade).toBeUndefined()
+  })
+
+  it('a 400 whose payload carries email_exists also maps to id_taken', async () => {
+    storedGuest()
+    vi.stubGlobal('fetch', vi.fn(async (url: string | URL | Request, init?: RequestInit) => {
+      const u = String(url)
+      if (u.includes('/auth/v1/user')) {
+        return new Response(JSON.stringify({ error_code: 'email_exists', msg: 'User already registered' }), { status: 400 })
+      }
+      return respond(u, init)
+    }))
+
+    const result = await service.upgradeGuest({ loginId: 'taken_id' })
+
+    expect(result.ok).toBe(false)
+    if (result.ok) return
+    expect(result.code).toBe('id_taken')
   })
 
   it('GoTrue 422 email_exists on the link call maps to id_taken, not server_unavailable', async () => {
@@ -219,7 +275,7 @@ describe('upgradeGuest - EXT-09 same-uuid link', () => {
       return respond(u, init)
     }))
 
-    const result = await service.upgradeGuest({ loginId: 'taken_id', password: 'secret6' })
+    const result = await service.upgradeGuest({ loginId: 'taken_id' })
 
     expect(result.ok).toBe(false)
     if (result.ok) return
@@ -230,7 +286,7 @@ describe('upgradeGuest - EXT-09 same-uuid link', () => {
 })
 
 describe('finalizeUpgrade - resumable server verdict', () => {
-  it('FINALIZED converges mode -> login, clears the durable guest record, drops the marker', async () => {
+  it('FINALIZED keeps the guest session + marker - the flip waits for completeUpgrade', async () => {
     storedGuest({ pendingUpgrade: { loginId: 'dao_huu_1' } })
     vi.stubGlobal('fetch', vi.fn(async (url: string | URL | Request, init?: RequestInit) => {
       const u = String(url)
@@ -245,10 +301,11 @@ describe('finalizeUpgrade - resumable server verdict', () => {
 
     expect(result).toEqual({ ok: true, status: 'finalized' })
     const stored = readSupabaseSession()
-    expect(stored?.mode).toBe('login')
-    expect(stored?.pendingUpgrade).toBeUndefined()
-    // Registered persistence is session-scoped: the durable record retired.
-    await vi.waitFor(() => expect(durableClears).toBe(1))
+    // Lockout-safe: still a guest with the durable credential alive until
+    // the password step lands the registered flip.
+    expect(stored?.mode).toBe('guest')
+    expect(stored?.pendingUpgrade?.loginId).toBe('dao_huu_1')
+    expect(durableClears).toBe(0)
   })
 
   it('PENDING_CONFIRMATION keeps the guest session + marker for the next entry', async () => {
@@ -286,6 +343,63 @@ describe('finalizeUpgrade - resumable server verdict', () => {
     const result = await service.finalizeUpgrade()
 
     expect(result).toEqual({ ok: true, status: 'finalized' })
+    expect(calls).toHaveLength(0)
+  })
+})
+
+describe('completeUpgrade - post-finalize password bind', () => {
+  it('PUT {password} then flips to registered, clears marker + durable record', async () => {
+    storedGuest({ pendingUpgrade: { loginId: 'dao_huu_1' } })
+    vi.stubGlobal('fetch', vi.fn(async (url: string | URL | Request, init?: RequestInit) => {
+      const u = String(url)
+      if (u.includes('/auth/v1/user')) {
+        calls.push({ url: u, body: init?.body ? JSON.parse(String(init.body)) : null })
+        return new Response(JSON.stringify({ id: 'u-guest' }), { status: 200 })
+      }
+      return respond(u, init)
+    }))
+
+    const result = await service.completeUpgrade({ password: 'secret6' })
+
+    expect(result).toEqual({ ok: true, status: 'finalized' })
+    const update = calls.find((c) => c.url.includes('/auth/v1/user'))
+    expect(update?.body).toEqual({ password: 'secret6' })
+    const stored = readSupabaseSession()
+    expect(stored?.mode).toBe('login')
+    expect(stored?.pendingUpgrade).toBeUndefined()
+    await vi.waitFor(() => expect(durableClears).toBe(1))
+  })
+
+  it('a failed password PUT keeps the marker and the guest session alive', async () => {
+    storedGuest({ pendingUpgrade: { loginId: 'dao_huu_1' } })
+    vi.stubGlobal('fetch', vi.fn(async () => new Response('{"error":"upstream"}', { status: 500 })))
+
+    const result = await service.completeUpgrade({ password: 'secret6' })
+
+    expect(result.ok).toBe(false)
+    if (result.ok) return
+    expect(result.code).toBe('server_unavailable')
+    expect(readSupabaseSession()?.mode).toBe('guest')
+    expect(readSupabaseSession()?.pendingUpgrade?.loginId).toBe('dao_huu_1')
+    expect(durableClears).toBe(0)
+  })
+
+  it('rejects weak passwords and missing markers before any call', async () => {
+    storedGuest({ pendingUpgrade: { loginId: 'dao_huu_1' } })
+    const weak = await service.completeUpgrade({ password: '123' })
+    expect(weak.ok).toBe(false)
+    if (weak.ok) return
+    expect(weak.code).toBe('weak_password')
+    expect(calls).toHaveLength(0)
+
+    storeSupabaseSession({
+      accessToken: 'tok-old', refreshToken: 'rt-old', sessionId: 'gs-old',
+      userId: 'u-guest', mode: 'guest',
+    })
+    const noMarker = await service.completeUpgrade({ password: 'secret6' })
+    expect(noMarker.ok).toBe(false)
+    if (noMarker.ok) return
+    expect(noMarker.code).toBe('no_stored_session')
     expect(calls).toHaveLength(0)
   })
 })

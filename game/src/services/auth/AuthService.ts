@@ -29,6 +29,9 @@ export type AuthErrorCode =
   | 'not_guest'
   /** Resume/finalize requested with no stored session at all. */
   | 'no_stored_session'
+  /** The server throttled the request (GoTrue email send rate limit) -
+   *  retryable after a delay, distinct from an outage. */
+  | 'rate_limited'
 
 export type AuthResult =
   | { ok: true; session: AuthSession }
@@ -63,13 +66,22 @@ export interface AuthService {
    *  its finalization from the authoritative Auth state. */
   resumeStoredSession(): Promise<AuthResult>
   /** Anonymous -> permanent link on the SAME auth.users uuid (EXT-09):
-   *  binds email+password, records the pending upgrade, then asks the
-   *  server for the authoritative finalize verdict. */
-  upgradeGuest(credentials: AuthCredentials): Promise<GuestUpgradeResult>
+   *  initiates the link with an EMAIL-ONLY updateUser (GoTrue rejects a
+   *  combined email+password PUT on anonymous users - the email_change
+   *  flow targets the empty current address). Records the pending
+   *  upgrade; the linked identity stays unusable until confirmation. */
+  upgradeGuest(credentials: { loginId: string }): Promise<GuestUpgradeResult>
   /** Re-run the server-side finalize for a pending upgrade - idempotent,
-   *  resumable after an interruption, and the only path that can flip a
-   *  session's mode to a registered account. */
+   *  resumable after an interruption. 'finalized' keeps the guest session
+   *  and the marker: the account is not usable as registered until the
+   *  password step completes, so the durable credential survives until
+   *  completeUpgrade lands it (never a registered-mode lockout). */
   finalizeUpgrade(): Promise<GuestUpgradeResult>
+  /** Post-finalize password set on the email-bound session: sets the
+   *  password via updateUser, THEN flips mode to registered and retires
+   *  the durable guest credential + pending marker. The password is used
+   *  for the call only and is never persisted. */
+  completeUpgrade(credentials: { password: string }): Promise<GuestUpgradeResult>
   /** B1.9: revoke the active game session, sign out of GoTrue, then clear
    *  the stored credential (durable guest record included). Always
    *  resolves; remote effects are reported per-outcome. */

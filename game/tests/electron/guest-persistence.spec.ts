@@ -336,7 +336,7 @@ test.describe('guest persistence across process restarts', () => {
     fs.rmSync(userDataDir, { recursive: true, force: true })
   })
 
-  test('interrupted upgrade replays finalize after restart; FINALIZED converges to registered', async () => {
+  test('interrupted upgrade replays finalize after restart; confirmed -> password -> registered', async () => {
     const userDataDir = makeUserDataDir()
 
     // Launch 1: guest signup writes the durable record, process dies.
@@ -357,7 +357,6 @@ test.describe('guest persistence across process restarts', () => {
     await (await continueButton(second.page)).isVisible()
     await second.page.locator('[data-testid="auth-upgrade-link"]').click()
     await second.page.locator('[data-testid="upgrade-input-id"]').fill('dao_huu_1')
-    await second.page.locator('[data-testid="upgrade-input-password"]').fill('secret6')
     await second.page.locator('[data-testid="upgrade-submit"]').click()
     await expect(second.page.locator('[data-testid="upgrade-recheck"]')).toBeVisible()
     expect(scenario2.finalizeCalls).toBe(1)
@@ -366,8 +365,9 @@ test.describe('guest persistence across process restarts', () => {
 
     await killGame(second.app)
 
-    // Launch 3: Continue -> refresh -> claim -> finalize replays from the
-    // durable pending marker; this time the server confirms.
+    // Launch 3: the auth card replays the pending surface; the recheck
+    // lands FINALIZED, then the post-finalize password step flips the
+    // session to registered and retires the durable guest record.
     const third = await launchGame(userDataDir)
     const scenario3 = newScenario()
     scenario3.finalizeVerdict = { status: 'FINALIZED', loginId: 'dao_huu_1' }
@@ -375,9 +375,14 @@ test.describe('guest persistence across process restarts', () => {
 
     // The auth card replays the recorded pending-confirm surface.
     await expect(third.page.locator('[data-testid="upgrade-recheck"]')).toBeVisible()
+    await third.page.locator('[data-testid="upgrade-recheck"]').click()
 
-    await (await continueButton(third.page)).click()
-    await expect.poll(() => scenario3.finalizeCalls).toBe(1)
+    // FINALIZED keeps the guest session alive until the password binds -
+    // a restart in this window can never strand a registered-mode account
+    // without credentials.
+    await expect(third.page.locator('[data-testid="upgrade-input-password"]')).toBeVisible()
+    await third.page.locator('[data-testid="upgrade-input-password"]').fill('secret6')
+    await third.page.locator('[data-testid="upgrade-password-submit"]').click()
 
     // Converged: same uuid, registered mode, durable guest record retired.
     await expect.poll(async () => (await storedSession(third.page))?.mode).toBe('login')

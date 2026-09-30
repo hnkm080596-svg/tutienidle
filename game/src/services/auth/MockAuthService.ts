@@ -47,6 +47,10 @@ export class MockAuthService implements AuthService {
     return { ok: false, code: 'not_guest', message: 'Không có nâng cấp đang chờ.' }
   }
 
+  async completeUpgrade(): Promise<GuestUpgradeResult> {
+    return { ok: false, code: 'not_guest', message: 'Không có nâng cấp đang chờ.' }
+  }
+
   async logout(): Promise<AuthLogoutOutcome> {
     return { serverRevoke: 'skipped', signout: 'skipped' }
   }

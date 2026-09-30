@@ -62,11 +62,15 @@ test('anonymous user is a guest; unconfirmed link keeps finalize PENDING', async
   expect(before?.account_kind).toBe('guest')
 
   // Anonymous -> email link via the real updateUser surface (EXT-09:
-  // uuid preserved, email identity unusable until confirmed).
+  // uuid preserved, email identity unusable until confirmed). EMAIL-ONLY:
+  // a combined {email,password} PUT 400s on real GoTrue because the
+  // email_change flow targets the anonymous user's empty current address
+  // (staging-verified). The password binds post-finalize via a second
+  // updateUser - see test 2.
   const put = await fetch(`${env.supabaseUrl}/auth/v1/user`, {
     method: 'PUT',
     headers: { apikey: env.anonKey, Authorization: `Bearer ${user.token}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email: `${loginId}@tutien-idle-accounts.invalid`, password: `pw-${Date.now()}` }),
+    body: JSON.stringify({ email: `${loginId}@tutien-idle-accounts.invalid` }),
     signal: AbortSignal.timeout(15_000),
   })
   const putBody = await put.json()
@@ -115,6 +119,17 @@ test('confirmed link finalizes the SAME profile/character; replay is idempotent'
   const fin2 = await rpc(env, user.token, 'finalize_guest_upgrade', { p_login_id: loginId })
   expect(fin2.status).toBe(200)
   expect(fin2.body?.status).toBe('FINALIZED')
+
+  // Post-finalize password bind on the email-linked session (the
+  // completeUpgrade step): updateUser({password}) succeeds, then a real
+  // password-grant login proves the account is usable under the SAME uuid.
+  const setPw = await fetch(`${env.supabaseUrl}/auth/v1/user`, {
+    method: 'PUT',
+    headers: { apikey: env.anonKey, Authorization: `Bearer ${user.token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ password: `pw-${Date.now()}` }),
+    signal: AbortSignal.timeout(15_000),
+  })
+  expect(setPw.status).toBe(200)
 })
 
 test('client metadata cannot elevate; a bound login is never rebindable', async () => {

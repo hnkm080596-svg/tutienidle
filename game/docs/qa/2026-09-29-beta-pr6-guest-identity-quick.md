@@ -56,7 +56,7 @@ a coverage gap, not silently waived.
 | 6 | Logout order flush → revoke → signout → clear; offline signout never claims remote revoke | `requestSessionLogout` legs; `AuthLogoutOutcome` honest states; ordering assertion in unit tests | HOLDS |
 | 7 | Registered sessions stay session-scoped (no durable write) | `storeSupabaseSession` gate `mode === 'guest'`; finalize clears durable | HOLDS |
 | 8 | Cross-account switch is explicit ack, never merge/transfer | `crossAccountAck` ConfirmModal gate on login/register/new-guest submit | HOLDS |
-| 9 | Taken login id surfaces `id_taken`, never `server_unavailable` | was VIOLATED — see finding 1 | FIXED |
+| 9 | Taken login id surfaces `id_taken`, never `server_unavailable`; a non-duplicate 400 (e.g. `email_address_invalid`) is NEVER `id_taken` | `isEmailExistsError` (422, or email_exists payload on any status) -> `id_taken`; all other 400s -> `server_unavailable`; staging-proven defect found and fixed — see finding 1 | HOLDS |
 | 10 | A durable-record mismatch/corruption never resurrects a wrong identity | generation fence on store/clear; e2e rotated-token + rejected-token specs | HOLDS |
 
 ## Verification Evidence
@@ -85,7 +85,7 @@ a coverage gap, not silently waived.
 - Test file: `src/services/auth/SupabaseAuthService.test.ts` (`GoTrue 422 email_exists ... maps to id_taken`)
 - Owner subsystem: `services/auth`
 - Blast radius: upgrade form error reporting only
-- Resolution: FIXED — catch maps 400 and 422 to `id_taken`; repro test added and green.
+- Resolution: FIXED — `isEmailExistsError` maps only true duplicate-email failures (any 422, or `email_exists`/`already registered`/`already in use` in a 400 payload) to `id_taken`. Follow-on staging verification by the coordinator then exposed the larger defect this fixes do not regress: a combined `{email,password}` link PUT returns 400 `email_address_invalid "Email address \"\" is invalid"` on real GoTrue (the email_change flow targets the anonymous user's empty CURRENT address when a password is present) and was itself misreported `id_taken`. Fix: the link PUT is email-only (`{email}`); the password binds post-finalize via `completeUpgrade` -> `updateUser({password})` on the email-bound session — never persisted. New mapping pinned by specs: 400 `email_address_invalid` -> `server_unavailable`, 429 email-send rate limit -> `rate_limited` (marker kept), both green.
 
 ### QA-2026-09-30-PR6-2: durable clear is fire-and-forget; killed-mid-logout can leave the record on disk
 - Severity: Low
@@ -111,6 +111,8 @@ a coverage gap, not silently waived.
 - Deferred: blocking Continue here would remove the only remaining play path when the credential is unrecoverable and nothing is saved; the recovery error is already surfaced loudly.
 
 ## New or Changed QA Tests
+
+Post-gate staging verification (coordinator, real staging + migration `202609300003`): 24/24 prior contract tests pass; the original 3 guest-upgrade specs failed on the `{email,password}` link PUT (400 `email_address_invalid`) — production defect in `upgradeGuest`, fixed above. Spec updated to the email-only PUT plus a post-finalize `updateUser({password})` step; staging re-run pending (no `SUPABASE_STAGING_*` creds on this box). Runbook note: the GoTrue project email-send rate limit (429 on the link PUT) is a real staging/beta constraint — the surface reports "try again in a few minutes" (`rate_limited`) and keeps the pending marker; operators raising email quotas unblocks, no client change needed.
 
 - `src/services/auth/SupabaseAuthService.test.ts` — new `GoTrue 422 email_exists ... maps to id_taken` spec (the fixed defect's pin); plus resume/upgrade/finalize/logout ordering specs asserting call order and stored-session mutation.
 - `src/services/supabase/SupabaseSession.test.ts` — durable seam: guest-only write, ordering, restore statuses, generation fence.

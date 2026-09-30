@@ -1563,12 +1563,14 @@
   },
   "account": {
     "upgrade": {
-      "hint": "Đặt ID đạo hữu và mật khẩu để giữ nguyên nhân vật, cảnh giới và tiến trình — đăng nhập lại bằng tài khoản này từ lần sau.",
+      "hint": "Đặt ID đạo hữu để giữ nguyên nhân vật, cảnh giới và tiến trình — bạn sẽ chọn mật khẩu sau khi máy chủ xác nhận.",
       "submit": "Nâng cấp tài khoản",
       "pendingBody": "Tài khoản {id} đang chờ máy chủ xác nhận. Tiến trình của bạn vẫn an toàn — kiểm tra lại sau khi máy chủ xác nhận xong.",
       "pendingCheck": "Kiểm tra lại",
       "pendingSwitch": "Đổi ID khác",
-      "done": "Tài khoản đã nâng cấp — nhân vật giữ nguyên."
+      "done": "Tài khoản đã nâng cấp — nhân vật giữ nguyên.",
+      "passwordBody": "Tài khoản {id} đã được xác nhận. Đặt mật khẩu để đăng nhập lại tài khoản này.",
+      "passwordSubmit": "Đặt mật khẩu"
     },
     "abandon": {
       "title": "Rời phiên khách",

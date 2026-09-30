@@ -78,6 +78,26 @@ const UPGRADE_UNAVAILABLE: GuestUpgradeResult = {
   code: 'server_unavailable',
   message: 'Không thể kết nối máy chủ. Vui lòng thử lại.',
 }
+const RATE_LIMITED: GuestUpgradeResult = {
+  ok: false,
+  code: 'rate_limited',
+  message: 'Máy chủ đang giới hạn gửi thư xác nhận — vui lòng thử lại sau ít phút.',
+}
+const ID_TAKEN: GuestUpgradeResult = {
+  ok: false,
+  code: 'id_taken',
+  message: 'ID này đã được sử dụng.',
+}
+
+/** GoTrue reports a duplicate email as 422 email_exists on updateUser,
+ *  and as a 400 whose payload carries the same code on some versions.
+ *  Other 4xx (e.g. email_address_invalid) are NOT id collisions. */
+function isEmailExistsError(error: SupabaseHttpError): boolean {
+  if (error.status === 422) return true
+  return /email_exists|already registered|already in use/i.test(
+    JSON.stringify(error.payload ?? ''),
+  )
+}
 
 export class SupabaseAuthService implements AuthService {
   constructor(
@@ -186,12 +206,9 @@ export class SupabaseAuthService implements AuthService {
     }
   }
 
-  async upgradeGuest(credentials: AuthCredentials): Promise<GuestUpgradeResult> {
+  async upgradeGuest(credentials: { loginId: string }): Promise<GuestUpgradeResult> {
     if (!isValidLoginId(credentials.loginId)) {
       return { ok: false, code: 'invalid_id', message: 'ID đăng nhập chưa đúng định dạng.' }
-    }
-    if (!isValidPassword(credentials.password)) {
-      return { ok: false, code: 'weak_password', message: 'Mật khẩu cần tối thiểu 6 ký tự.' }
     }
 
     const stored = readSupabaseSession()
@@ -207,12 +224,14 @@ export class SupabaseAuthService implements AuthService {
           : { ok: false, code: 'invalid_credentials', message: 'Phiên đăng nhập đã hết hạn — đăng nhập lại.' }
       }
 
-      // EXT-09 same-uuid link: updateUser binds email+password onto the
-      // anonymous auth.users row; the linked identity stays unusable
-      // until its confirmation lands server-side (pending-confirm).
+      // EXT-09 same-uuid link, EMAIL-ONLY: on a real GoTrue a combined
+      // {email,password} PUT 400s with email_address_invalid - the
+      // email_change flow then targets the anonymous user's CURRENT
+      // (empty) address. The password is bound after confirmation by
+      // completeUpgrade; it is never persisted here.
       const user = await requestSupabase<GoTrueUserResponse>(this.config, '/auth/v1/user', {
         method: 'PUT',
-        body: JSON.stringify({ email: accountEmail(loginId), password: credentials.password }),
+        body: JSON.stringify({ email: accountEmail(loginId) }),
       }, session.accessToken)
 
       // The upgrade contract is same-uuid by definition - a response for
@@ -224,15 +243,11 @@ export class SupabaseAuthService implements AuthService {
       storeSupabaseSession({ ...session, pendingUpgrade: { loginId } })
       return this.finalizeUpgrade()
     } catch (error) {
-      if (
-        error instanceof SupabaseHttpError &&
-        (error.status === 400 || error.status === 422)
-      ) {
-        // The synthetic email encodes the login id - a conflict is an
-        // id collision, not a credential failure. GoTrue reports a
-        // duplicate email as 422 (email_exists) on updateUser, 400 on
-        // some versions - both map to the same user-facing verdict.
-        return { ok: false, code: 'id_taken', message: 'ID này đã được sử dụng.' }
+      if (error instanceof SupabaseHttpError) {
+        if (isEmailExistsError(error)) return ID_TAKEN
+        // GoTrue's email send rate limit: retryable, the pending marker
+        // is untouched either way.
+        if (error.status === 429) return RATE_LIMITED
       }
       return UPGRADE_UNAVAILABLE
     }
@@ -266,12 +281,11 @@ export class SupabaseAuthService implements AuthService {
       )
 
       if (verdict.status === 'FINALIZED' || verdict.code === 'ALREADY_REGISTERED') {
-        // Registered persistence is session-scoped (conservative beta
-        // default): the durable guest record retires with the upgrade.
-        // ALREADY_REGISTERED converges the same way - the server says
-        // this profile is bound, so the pending marker is done either way.
-        storeSupabaseSession({ ...session, mode: 'login', pendingUpgrade: undefined })
-        clearDurableGuestCredential()
+        // Confirmed server-side, but the account is NOT usable as
+        // registered until a password is bound - keep the marker and the
+        // guest session/durable credential alive so a restart here can
+        // never lock the user out. completeUpgrade lands the flip.
+        storeSupabaseSession({ ...session, pendingUpgrade: { loginId: pendingLoginId } })
         return { ok: true, status: 'finalized' }
       }
       if (verdict.status === 'PENDING_CONFIRMATION') {
@@ -284,6 +298,53 @@ export class SupabaseAuthService implements AuthService {
         ? { ok: false, code: 'id_taken', message: 'ID này đã được sử dụng.' }
         : { ok: false, code: 'invalid_credentials', message: 'Không thể hoàn tất nâng cấp với ID này.' }
     } catch {
+      return UPGRADE_UNAVAILABLE
+    }
+  }
+
+  /** Post-finalize: bind the password on the email-linked session, then
+   *  flip to session-scoped registered and retire the durable guest
+   *  credential. The marker survives every failure - a password step that
+   *  never lands replays from the authoritative Auth state next entry. */
+  async completeUpgrade(credentials: { password: string }): Promise<GuestUpgradeResult> {
+    if (!isValidPassword(credentials.password)) {
+      return { ok: false, code: 'weak_password', message: 'Mật khẩu cần tối thiểu 6 ký tự.' }
+    }
+
+    const stored = readSupabaseSession()
+    if (!stored || stored.mode !== 'guest') {
+      return { ok: false, code: 'not_guest', message: 'Chỉ tài khoản khách mới có thể nâng cấp.' }
+    }
+    const pendingLoginId = stored.pendingUpgrade?.loginId
+    if (!pendingLoginId) {
+      return { ok: false, code: 'no_stored_session', message: 'Không có nâng cấp đang chờ.' }
+    }
+
+    try {
+      const session = await resolveSupabaseSession(this.config)
+      if (!session) {
+        return readSupabaseSession() ? UPGRADE_UNAVAILABLE
+          : { ok: false, code: 'invalid_credentials', message: 'Phiên đăng nhập đã hết hạn — đăng nhập lại.' }
+      }
+
+      await requestSupabase<GoTrueUserResponse>(this.config, '/auth/v1/user', {
+        method: 'PUT',
+        body: JSON.stringify({ password: credentials.password }),
+      }, session.accessToken)
+
+      // Registered persistence is session-scoped (conservative beta
+      // default): the durable guest record retires only now, with the
+      // password bound - the account is genuinely sign-in-able.
+      storeSupabaseSession({ ...session, mode: 'login', pendingUpgrade: undefined })
+      clearDurableGuestCredential()
+      return { ok: true, status: 'finalized' }
+    } catch (error) {
+      if (error instanceof SupabaseHttpError) {
+        if (error.status === 400 || error.status === 422) {
+          return { ok: false, code: 'weak_password', message: 'Mật khẩu cần tối thiểu 6 ký tự.' }
+        }
+        if (error.status === 429) return RATE_LIMITED
+      }
       return UPGRADE_UNAVAILABLE
     }
   }
