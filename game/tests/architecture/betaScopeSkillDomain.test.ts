@@ -17,6 +17,7 @@
  *     scope-hide the whole surface instead of guessing.
  */
 import { describe, expect, it } from 'vitest'
+import { lockBetaWaysForTests } from '@/core/game/__fixtures__/betaWaysUnlock'
 import {
   activeElementTreeFor,
   betaCombatRolesFor,
@@ -30,6 +31,11 @@ import { PHAP_TU_ELEMENT_ROOT_IDS } from '@/data/progression/PhapTuNodes.builder
 import { createDefaultPlayer, type PlayerData } from '@/core/player/Player'
 import type { ProgressionNode } from '@/core/progression/ProgressionNode'
 import type { ElementType } from '@/core/element/ElementType'
+
+// The global test setup unlocks every catalog way for suites written
+// pre-lock; this suite asserts the canonical beta read-models, so
+// re-pin the locked allow-list.
+lockBetaWaysForTests()
 
 const BETA_ELEMENTS: ElementType[] = ['fire', 'water', 'wood', 'metal', 'earth']
 
