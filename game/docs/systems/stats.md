@@ -45,7 +45,7 @@ Mỗi stat chạy 3 tầng kiểu Last Epoch:
 | Linh Căn | +0.5 power CẢ 6 hành (gồm primordial), tag riêng từng hành |
 | Thể Chất | +8 maxHp, +0.1 hpRegen, +1 enduranceThreshold/điểm |
 
-**Trần đầu tư** (`getMainStatCap`): Phàm Nhân 10 / Luyện Khí 30 / Trúc Cơ 100; realm sau fallback nhân đôi neo 100. Riêng `RealmData.attributeCap` là trần **cộng dồn vĩnh viễn từ đan dược** — ý nghĩa khác, đừng lẫn.
+**Trần đầu tư** (`getMainStatCap` / `getEffectiveMainStatCap`): Phàm Nhân 10 / Luyện Khí 30 / Trúc Cơ 100; realm sau fallback nhân đôi neo 100. Trần effective gồm cả bonus trần từ hidden body — là bound chung của MỌI nguồn ghi `baseStats` (level-up + đan permanent_stat; `RealmData.attributeCap` đã bỏ 2026-09-29).
 
 ## StatType đáng chú ý
 
@@ -62,7 +62,7 @@ Core: `attack, defense, maxHp, maxMp, speed, attackRange, criticalRate, critical
 | Node tree | `aggregateNodeStatModifiers(nodeLevels)` |
 | Buff/debuff | `BuffSystem` → external |
 | Trang bị | `EquipmentSystem` → `setEquipmentModifiers` |
-| Đan permanent | `PillSystem` → `player.modifiers` (`pill-permanent:*`) |
+| Đan permanent | `PillSystem.useProfessionPill` → `player.baseStats` (điểm thật, KHÔNG modifier — kênh thứ hai ghi baseStats cạnh allocateAttributePoint) |
 | Talent | `TalentEffects` + hidden passive skill |
 | Kiếm Ý (Ngự Kiếm Đạo forge) | `getKiemYDamageMultipliers` → finalStats |
 

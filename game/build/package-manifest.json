@@ -1,0 +1,98 @@
+{
+  "$comment": "BETA-FINAL PR8 / spec B3 - allowlisted packaged payload contract. scripts/release/inspect-package.mjs refuses any shipped file not matched here; deny always wins over allow. Globs: '*' inside a path segment, '**' across segments, '/' separators. Extend asar.allow the same day a runtime dependency is un-excluded from electron-builder.yml's '!node_modules/**/*' blanket (see that file's PR8 note).",
+  "version": 1,
+  "identity": {
+    "appId": "com.fdlmg.tutienidle",
+    "productName": "Tien Hiep Idle",
+    "executableName": "TienHiepIdle.exe",
+    "publisher": "fdlmg-tutienidle",
+    "installerArtifactPattern": "Tien Hiep Idle-*-Setup.exe"
+  },
+  "required": [
+    "resources/app.asar"
+  ],
+  "unpackedApp": {
+    "allow": [
+      "TienHiepIdle.exe",
+      "chrome_crashpad_handler.exe",
+      "*.dll",
+      "*.bin",
+      "*.dat",
+      "*.pak",
+      "*.json",
+      "*.html",
+      "*.txt",
+      "*.yml",
+      "version",
+      "LICENSE*",
+      "locales/*.pak",
+      "resources/app.asar",
+      "resources/app.asar.unpacked/**",
+      "resources/elevate.exe",
+      "resources/*.yml",
+      "resources/*.json",
+      "swiftshader/**"
+    ],
+    "deny": []
+  },
+  "asar": {
+    "allow": [
+      "package.json",
+      "dist/**",
+      "dist-electron/**",
+      "build/icon.ico"
+    ],
+    "required": [
+      "package.json",
+      "dist/index.html",
+      "dist/build-identity.json",
+      "dist-electron/main.js",
+      "dist-electron/preload.mjs",
+      "build/icon.ico"
+    ],
+    "deny": []
+  },
+  "signing": {
+    "$comment": "BETA-FINAL PR9 / spec B4 - expected-signature contract consumed by scripts/release/verify-signatures.ps1. expectedSignedFiles: .exe files that MUST carry the beta certificate's Authenticode signature (same glob rules as allow lists; wildcard entries match zero or more). Literal entries must exist in the real payload: chrome_crashpad_handler.exe stays only in unpackedApp.allow (allowed if present) because Electron 43.4.1's win-unpacked does not ship it - verified on windows-2022 CI. thirdPartySignedFiles: upstream-signed .exe electron-builder does not re-sign (resources/elevate.exe ships inside Electron's dist, outside the signing walk - see app-builder-lib winPackager.signApp); they must be Valid if signed at all. Any *.exe not matched by either list is rejected as unexpected, so an .exe appearing in a future Electron upgrade is fail-closed until classified. installerSigned: the NSIS -Setup.exe artifact must carry the beta signature too.",
+    "expectedSignedFiles": [
+      "TienHiepIdle.exe",
+      "resources/app.asar.unpacked/**/*.exe",
+      "swiftshader/**/*.exe"
+    ],
+    "thirdPartySignedFiles": [
+      "resources/elevate.exe"
+    ],
+    "installerSigned": true
+  },
+  "deny": [
+    "**/*.ts",
+    "**/*.tsx",
+    "**/*.mts",
+    "**/*.cts",
+    "**/*.vue",
+    "**/*.map",
+    "**/*.test.*",
+    "**/*.spec.*",
+    "**/__tests__/**",
+    "**/test/**",
+    "**/tests/**",
+    "**/.env",
+    "**/.env.*",
+    "**/*.pem",
+    "**/*.key",
+    "**/*.pfx",
+    "**/*.p12",
+    "**/*.crt",
+    "**/*.cer",
+    "**/*.der",
+    "**/*.log",
+    "**/logs/**",
+    "**/node_modules/**",
+    "**/.git/**",
+    "**/.github/**",
+    "**/.vscode/**",
+    "**/.idea/**",
+    "**/devtools/**",
+    "**/*devtools*/**"
+  ]
+}
