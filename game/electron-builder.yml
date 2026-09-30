@@ -58,6 +58,25 @@ win:
   executableName: TienHiepIdle
   # INTERIM icon pending EXT-10 hand-drawn art — see build/asset-provenance.md.
   icon: build/icon.ico
+  # PR9 / spec B4 - signing pins. Credential material is NEVER committed here:
+  # electron-builder resolves the certificate itself (app-builder-lib 26.15.3
+  # codeSign/windowsSignToolManager.js) - first signtoolOptions.certificateSha1
+  # /certificateSubjectName/certificateFile if configured, else the protected
+  # env references WIN_CSC_LINK/WIN_CSC_KEY_PASSWORD (fallback CSC_LINK/
+  # CSC_KEY_PASSWORD). ${env.X} macros are NOT expanded inside signtoolOptions
+  # (they only expand in artifact/output patterns), so no env-macro trickery is
+  # used. Absent credentials -> "no signing info identified, signing is
+  # skipped" -> clean unsigned build (the current state while EXT-02 is open).
+  # The fail-closed gate lives in scripts/release/signing-preflight.mjs and
+  # verify-signatures.ps1, documented in docs/operations/beta/signing.md.
+  signtoolOptions:
+    # Single SHA-256 signature (plan B4). The electron-builder default
+    # [sha1, sha256] dual-signs; SHA-1 is deprecated for code signing.
+    signingHashAlgorithms:
+      - sha256
+    # RFC3161 timestamp authority, pinned explicitly so the contract is
+    # auditable (electron-builder falls back to the same URL when unset).
+    rfc3161TimeStampServer: http://timestamp.digicert.com
 
 nsis:
   # Assisted per-user install: no admin rights, user may pick the directory.

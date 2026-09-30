@@ -73,6 +73,7 @@ const BASE_ASAR_FILES = {
 
 const BASE_DISK_FILES = [
   'TienHiepIdle.exe',
+  'chrome_crashpad_handler.exe',
   'ffmpeg.dll',
   'libGLESv2.dll',
   'icudtl.dat',
@@ -256,6 +257,15 @@ describe('inspectPackage - required entries and identity', () => {
   it('requires the named executable', () => {
     const release = makeRelease({ omitDisk: ['TienHiepIdle.exe'] })
     assert.ok(problemsOf(release).some((p) => p.includes('TienHiepIdle.exe')))
+  })
+
+  it('requires every literal file the signing contract expects to be signed', () => {
+    const release = makeRelease({ omitDisk: ['chrome_crashpad_handler.exe'] })
+    assert.ok(
+      problemsOf(release).some((p) =>
+        p.includes('signing.expectedSignedFiles') && p.includes('chrome_crashpad_handler.exe'),
+      ),
+    )
   })
 
   it('rejects an asar package.json that disagrees with the manifest identity', () => {
