@@ -574,7 +574,8 @@
         "comingSoon": "Sắp ra mắt",
         "current": "Đang tu hành",
         "unlocked": "Đã đạt",
-        "locked": "Chưa mở"
+        "locked": "Chưa mở",
+        "next": "Kế tiếp"
       },
       "requirements": {
         "level": "{realm} tầng {level}",
@@ -634,6 +635,10 @@
         "owned": "Tinh Hoa Pháp Thể sở hữu {count}",
         "stepCost": "Giá bước kế: {cost}",
         "complete": "Đại Chu Thiên đã viên mãn."
+      },
+      "body": {
+        "title": "Đạo Thể — Kinh Mạch",
+        "navAria": "Chương Đạo Thể"
       }
     },
     "settings": {

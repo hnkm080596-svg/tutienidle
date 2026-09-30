@@ -11,7 +11,7 @@ import { formatNumber } from '@/core/format/NumberFormatter'
 import { BASE_STAT_LABELS, formatStat } from '@/core/stats/StatLabels'
 import { ELEMENT_LABELS, ELEMENT_COLOR_VARS, ELEMENT_ORDER } from '@/core/element/ElementLabels'
 import { getActiveWayDefinition } from '@/core/player/CultivationPathKit'
-import { isActivePath } from '@/core/player/CultivationPathSystem'
+import { isActivePath, getActiveElement } from '@/core/player/CultivationPathSystem'
 import { MAIN_STAT_KEYS, type MainStatKey } from '@/core/stats/StatTypes'
 import { getEffectiveMainStatCap } from '@/core/stats/StatCap'
 import { useProgressionActions } from '@/composables/useProgressionActions'
@@ -49,6 +49,18 @@ function openQuanKhi() {
 // (path, way) pair and fails closed on a way-less/corrupt save.
 const chosenKit = computed(() => getActiveWayDefinition(player))
 
+// Huyen Kim SS15 (Dao The) - the elemental disc behind the portrait.
+// Spell-path players resolve their element through the canonical read;
+// other ways declare theirs on the kit. No element yet -> formation ring.
+const heroElement = computed(() => getActiveElement(player) ?? chosenKit.value?.element ?? null)
+const heroDiscUrl = computed(() =>
+  resolveAssetUrl(
+    heroElement.value
+      ? `/assets/ui/elements/el-${heroElement.value}.png`
+      : '/assets/ui/elements/el-formation-ring.png',
+  ),
+)
+
 // Thiên Phú (talent-direction-choice-plan §7) — hiển thị thiên phú đã chọn
 // (tên + description) đọc từ selectedTalentIds qua getTalentDefinition;
 // id lạ trong save cũ bị bỏ qua an toàn (undefined → filter loại).
@@ -80,7 +92,7 @@ const characterAuraColor = computed(() =>
 // Chân dung tĩnh (2026-08-26, dong-fu plan Workstream A) — PNG mortal
 // mới player-mortal-v1.png qua PlayerPortrait; ẢNH TĨNH, không áp
 // animation tu luyện (khác trigger cultivate giữa Động Phủ).
-const characterPortraitHeight = 104
+const characterPortraitHeight = 148
 
 // Đọc tên skill qua skillManager (LEARNED skills, public) thay vì
 // GameManager.skillTemplates (private) — sau chooseCultivationPath(),
@@ -218,6 +230,7 @@ const combatPower = computed(() => {
     <div class="character-panel__header">
       <div class="character-panel__identity">
         <div class="character-panel__figure" :style="{ '--aura': characterAuraColor }">
+          <img class="character-panel__figure-disc" :src="heroDiscUrl" alt="" aria-hidden="true" />
           <span class="character-panel__figure-aura" />
 
           <PlayerPortrait
@@ -236,15 +249,6 @@ const combatPower = computed(() => {
             <span class="character-panel__power-value">{{ formatNumber(combatPower) }}</span>
             <span class="character-panel__power-label">{{ t('panels.character.labels.combatPower') }}</span>
           </p>
-
-          <button
-            v-if="showQuanKhiEntry"
-            type="button"
-            class="character-panel__quan-khi-btn"
-            @click="openQuanKhi"
-          >
-            {{ t('panels.character.actions.quanKhi') }}
-          </button>
         </div>
       </div>
 
@@ -254,16 +258,17 @@ const combatPower = computed(() => {
       <div v-if="selectedTalents.length > 0" class="character-panel__talents">
         <h4 class="character-panel__talents-title"><span class="sys-eyebrow">{{ t('panels.character.sections.talents') }}</span></h4>
 
-        <div
-          v-for="talent in selectedTalents"
-          :key="talent.id"
-          class="talent-block"
-          :class="`talent-tier-${talent.rarity}`"
-        >
-          <span class="talent-block__content">
-            <SysTag :tone="TALENT_RARITY_TONE[talent.rarity]" class="talent-block__rarity">{{ TALENT_RARITY_LABELS[talent.rarity] }}</SysTag>
-            <span class="talent-block__name">{{ talent.name }}</span>
-            <span class="talent-block__description">{{ talent.description }}</span>
+        <!-- Huyen Kim SS15 - compact seal chips; detail on hover. -->
+        <div class="character-panel__talent-seals">
+          <span
+            v-for="talent in selectedTalents"
+            :key="talent.id"
+            class="talent-seal"
+            :class="`talent-tier-${talent.rarity}`"
+            v-tooltip="talent.description"
+          >
+            <SysTag :tone="TALENT_RARITY_TONE[talent.rarity]" class="talent-seal__rarity">{{ TALENT_RARITY_LABELS[talent.rarity] }}</SysTag>
+            <span class="talent-seal__name">{{ talent.name }}</span>
           </span>
         </div>
       </div>
@@ -276,15 +281,6 @@ const combatPower = computed(() => {
             {{ t('panels.character.sections.attribute') }}
             <template v-if="player.attributePoints > 0">({{ t('panels.character.labels.attributePointsRemaining', { count: player.attributePoints }) }})</template>
           </span>
-
-          <!-- Toggle the detail card docked to the drawer's right edge
-               (rendered by LeftPanel). -->
-          <button
-            type="button"
-            class="character-panel__details-btn"
-            :class="{ 'character-panel__details-btn--open': ui.characterDetailOpen }"
-            @click="ui.toggleCharacterDetail()"
-          >{{ t('panels.character.actions.details') }}</button>
         </h4>
 
         <!-- Meridian figure (user art pass) — the five main stats sit
@@ -360,6 +356,27 @@ const combatPower = computed(() => {
         </div>
       </div>
     </div>
+
+    <!-- Study Mode SS8.2 - the bottom action rail gathers the panel's
+         contextual controls (detail card toggle, Quan Khi re-entry,
+         pending attribute points). -->
+    <footer class="character-panel__action-rail">
+      <button
+        type="button"
+        class="character-panel__details-btn"
+        :class="{ 'character-panel__details-btn--open': ui.characterDetailOpen }"
+        @click="ui.toggleCharacterDetail()"
+      >{{ t('panels.character.actions.details') }}</button>
+
+      <button
+        v-if="showQuanKhiEntry"
+        type="button"
+        class="character-panel__quan-khi-btn"
+        @click="openQuanKhi"
+      >
+        {{ t('panels.character.actions.quanKhi') }}
+      </button>
+    </footer>
   </section>
 </template>
 
@@ -397,11 +414,25 @@ const combatPower = computed(() => {
 .character-panel__figure {
   position: relative;
   flex: 0 0 auto;
-  width: 112px;
-  height: 116px;
+  width: 150px;
+  height: 156px;
   display: flex;
   align-items: flex-end;
   justify-content: center;
+}
+
+/* Huyen Kim SS15 - the way's element disc sits behind the portrait
+   (formation ring fallback before a path commits an element). */
+.character-panel__figure-disc {
+  position: absolute;
+  left: 50%;
+  top: 52%;
+  width: 92%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  opacity: 0.85;
+  filter: drop-shadow(0 0 10px color-mix(in srgb, var(--aura, var(--hk-gold)) 30%, transparent));
+  pointer-events: none;
 }
 
 .character-panel__figure-sprite {
@@ -411,7 +442,7 @@ const combatPower = computed(() => {
 
 .character-panel__figure-aura {
   position: absolute;
-  inset: -20%;
+  inset: -18%;
   border-radius: 50%;
   background: radial-gradient(circle, var(--aura), transparent 70%);
   opacity: 0.35;
@@ -480,13 +511,24 @@ const combatPower = computed(() => {
   letter-spacing: 0.04em;
 }
 
+/* Study Mode SS8.2 - action rail: contextual controls pinned at the
+   drawer foot so the scroll body stays pure information. */
+.character-panel__action-rail {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-top: 1px solid var(--paper-line);
+  background: color-mix(in srgb, var(--paper-100) 70%, transparent);
+}
+
 .character-panel__quan-khi-btn {
   align-self: flex-start;
-  margin-top: var(--space-1);
   padding: 3px 10px;
-  background: var(--paper-100);
-  color: var(--mineral-gold);
-  border: 1px solid var(--mineral-gold);
+  background: color-mix(in srgb, var(--hk-gold) 12%, var(--paper-100));
+  color: var(--hk-gold-bright);
+  border: 1px solid var(--hk-gold-muted);
   border-radius: var(--radius-sm);
   font-size: var(--text-xs);
   font-family: var(--font-body);
@@ -495,7 +537,8 @@ const combatPower = computed(() => {
 }
 
 .character-panel__quan-khi-btn:hover {
-  background: var(--paper-50);
+  border-color: var(--hk-gold);
+  color: var(--hk-gold-radiant);
 }
 
 /* Thiên Phú đã chọn (talent-direction-choice-plan §7) — khối nhỏ dưới
@@ -515,71 +558,40 @@ const combatPower = computed(() => {
   color: var(--paper-eyebrow);
 }
 
-/* Talent card (user art pass) - the card IS the paper scroll art
-   (talent-card-scroll.png, 486x830 portrait): the block keeps the
-   image ratio via aspect-ratio so free scaling never distorts; no
-   separate CSS frame - the gilt frame is baked into the art (the old
-   CSS border created a second frame misaligned with the painted one).
-   Text sits on the blank paper area up top (entirely inside the
-   painted gilt frame - the mountain/bird region below is a VERY faint
-   wash, text reads fine over it). Dark ink (--ink-*) because the paper
-   is light - --paper-* tokens are remapped dark by .ink-drawer. Hover
-   swaps to the brighter variant. */
-.talent-block {
-  position: relative;
-  width: min(58%, 196px);
-  aspect-ratio: 486 / 830;
-  margin-inline: auto;
-  background: url('/assets/ui/talent-card-scroll.png') center / 100% 100% no-repeat;
-}
-
-.talent-block:hover {
-  background-image: url('/assets/ui/talent-card-scroll-hover.png');
-  filter: drop-shadow(0 0 10px color-mix(in srgb, var(--talent-tier-color, var(--mineral-gold)) 40%, transparent));
-}
-
-.talent-block__content {
-  position: absolute;
-  /* Full painted-frame interior: x 14-86%, y 9-93% (measured on the
-     486x830 art — the paper is blank to the bottom frame, the
-     mountain/bird wash is faint enough to read over). */
-  inset: 10% 15% 9%;
+/* Huyen Kim SS15 - talents render as compact seals: tier-tinted
+   border + rarity chip + name; the description lives in the hover
+   tooltip instead of a text-heavy card. Tier colors keep the existing
+   --rank-color-* ladder (same vocabulary as creation). */
+.character-panel__talent-seals {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  overflow: hidden;
+  flex-wrap: wrap;
+  gap: var(--space-2);
 }
 
-/* Rarity label sits on the cream scroll - blend the tier color toward
-   ink so it keeps its hue but stays legible on the light art.
-   M-UI-SYSTEM: the chip is a SysTag - the .sys-tag anchor re-tints its
-   neon border toward the tier blend (panel-internal --sys-* remap). */
-.talent-block__rarity.sys-tag {
+.talent-seal {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border: 1px solid color-mix(in srgb, var(--talent-tier-color, var(--hk-gold-muted)) 70%, transparent);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--talent-tier-color, var(--hk-gold-muted)) 10%, var(--paper-100));
+}
+
+.talent-seal__rarity.sys-tag {
   font-size: var(--text-xs);
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.13em;
-  color: color-mix(in srgb, var(--talent-tier-color, var(--mineral-gold)) 55%, var(--ink-900));
-  --sys-tag-line: color-mix(in srgb, var(--talent-tier-color, var(--mineral-gold)) 60%, var(--ink-900));
+  letter-spacing: 0.1em;
+  color: var(--talent-tier-color, var(--hk-gold));
+  --sys-tag-line: color-mix(in srgb, var(--talent-tier-color, var(--hk-gold)) 70%, transparent);
 }
 
-.talent-block__name {
-  display: block;
-  margin: 4px 0 3px;
+.talent-seal__name {
   font-family: var(--font-display);
-  font-size: var(--text-lg);
-  font-weight: 700;
-  color: var(--ink-700);
-}
-
-.talent-block__description {
-  /* No line-clamp — the content box already fills the paper, so the
-     full description flows over the faint wash instead of cutting
-     mid-sentence. */
-  color: color-mix(in srgb, var(--ink-700) 82%, transparent);
-  font-size: var(--text-xs);
-  line-height: 1.5;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--paper-text);
 }
 
 .talent-tier-pham { --talent-tier-color: var(--rank-color-1); }
@@ -628,7 +640,7 @@ const combatPower = computed(() => {
 .stat-group {
   margin-bottom: var(--space-3);
   padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--paper-line);
+  border: 1px solid var(--hk-border-muted, var(--paper-line));
   border-radius: var(--radius-md);
   background: color-mix(in srgb, var(--paper-50) 65%, transparent);
 }
@@ -643,7 +655,7 @@ const combatPower = computed(() => {
   width: 100%;
   margin: 0 0 var(--space-2);
   padding-left: 9px;
-  border-left: 3px solid var(--paper-eyebrow);
+  border-left: 3px solid var(--hk-gold-muted, var(--paper-eyebrow));
   font: 700 var(--text-md) var(--font-display);
   letter-spacing: 0.02em;
   color: var(--paper-text);
@@ -651,9 +663,11 @@ const combatPower = computed(() => {
 }
 
 /* Button opening the detail stat card docked beside the drawer (LeftPanel). */
+/* Button opening the detail stat card docked beside the drawer
+   (LeftPanel) - lives on the action rail. */
 .character-panel__details-btn {
   flex: 0 0 auto;
-  padding: 2px 10px;
+  padding: 3px 10px;
   border: 1px solid var(--paper-line);
   border-radius: var(--radius-sm);
   background: var(--paper-100);
@@ -666,14 +680,14 @@ const combatPower = computed(() => {
 }
 
 .character-panel__details-btn:hover {
-  color: var(--mineral-gold);
-  border-color: var(--mineral-gold);
+  color: var(--hk-gold-bright);
+  border-color: var(--hk-gold-muted);
 }
 
 .character-panel__details-btn--open {
-  color: var(--mineral-gold);
-  border-color: var(--mineral-gold);
-  background: color-mix(in srgb, var(--mineral-gold) 12%, var(--paper-100));
+  color: var(--hk-gold-bright);
+  border-color: var(--hk-gold);
+  background: color-mix(in srgb, var(--hk-gold) 12%, var(--paper-100));
 }
 
 .stat-list {
@@ -764,10 +778,10 @@ const combatPower = computed(() => {
   width: 9px;
   height: 9px;
   border-radius: 50%;
-  background: var(--sys-cyan, var(--mineral-gold));
+  background: var(--hk-jade, var(--sys-cyan, var(--mineral-gold)));
   box-shadow:
     0 0 0 2px color-mix(in srgb, var(--ink-950) 55%, transparent),
-    0 0 7px var(--sys-cyan, var(--mineral-gold));
+    0 0 7px var(--hk-jade, var(--sys-cyan, var(--mineral-gold)));
 }
 
 /* Compact vertical card (label over value+button) — ~80px wide so the

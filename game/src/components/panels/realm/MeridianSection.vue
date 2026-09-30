@@ -10,7 +10,7 @@
 // (gate label + every row locked, no 'next' affordance); an unlocked
 // page keeps the opened/next/locked sequential semantics. The pace
 // label only renders while the player is inside the page's own realm.
-import { computed } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
@@ -80,6 +80,7 @@ const pageViews = computed(() => {
 
       return {
         id: meridian.id,
+        flatIndex,
         name: meridian.name,
         description: meridian.description,
         statLabels: meridian.stats.map(stat => statLabel(stat)).join(' / '),
@@ -101,6 +102,25 @@ const pageViews = computed(() => {
     return { pageRealmId: page.pageRealmId, realmName, unlocked, rows }
   })
 })
+
+// SS20 ignition feedback - the meridian that just opened flashes once
+// (gold wash -> jade settle), then keeps its permanent opened state.
+const ignitedFlatIndex = ref<number | null>(null)
+let igniteTimer: ReturnType<typeof setTimeout> | undefined
+
+watch(() => chapterProgress.value.completed, (now, before) => {
+  if (now <= before) {
+    return
+  }
+
+  ignitedFlatIndex.value = now - 1
+  clearTimeout(igniteTimer)
+  igniteTimer = setTimeout(() => {
+    ignitedFlatIndex.value = null
+  }, 1400)
+})
+
+onBeforeUnmount(() => clearTimeout(igniteTimer))
 
 function invest(): void {
   const consumed = gameManager.realmAdvanceOps.investBodyChapter(player.$state, 'meridian')
@@ -158,7 +178,7 @@ const hiddenQuanThe = computed(() => {
           v-for="row in page.rows"
           :key="row.id"
           class="meridian-section__row"
-          :class="`meridian-section__row--${row.status}`"
+          :class="[`meridian-section__row--${row.status}`, { 'is-ignited': row.flatIndex === ignitedFlatIndex }]"
         >
           <div class="meridian-section__row-head">
             <span class="meridian-section__row-name">{{ row.name }}</span>
@@ -245,7 +265,7 @@ const hiddenQuanThe = computed(() => {
 
 .meridian-section__page-name {
   font-weight: 600;
-  color: var(--chrome-300);
+  color: var(--hk-gold, var(--chrome-300));
   font-size: var(--text-sm);
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -253,7 +273,7 @@ const hiddenQuanThe = computed(() => {
 
 .meridian-section__page-lock {
   font-size: var(--text-xs);
-  color: var(--crimson);
+  color: var(--hk-cinnabar, var(--crimson));
 }
 
 .meridian-section__page--locked .meridian-section__rows {
@@ -266,22 +286,38 @@ const hiddenQuanThe = computed(() => {
   gap: 8px;
 }
 
+/* Huyen Kim SS47 - locked rows ink, next-up gold rim, opened jade. */
 .meridian-section__row {
   padding: 8px 10px;
-  background: var(--ink-800);
-  border: 1px solid var(--ink-line-soft);
-  border-radius: var(--radius-sm);
+  background: var(--hk-surface-raised, var(--ink-800));
+  border: 1px solid var(--hk-border-muted, var(--ink-line-soft));
+  border-radius: var(--hk-radius-sm, var(--radius-sm));
   opacity: 0.55;
 }
 
 .meridian-section__row--opened {
   opacity: 1;
-  border-color: var(--jade);
+  border-color: var(--hk-jade-deep, var(--jade));
 }
 
 .meridian-section__row--next {
-  opacity: 0.9;
-  border-color: var(--chrome-300);
+  opacity: 0.95;
+  border-color: var(--hk-gold, var(--chrome-300));
+}
+
+/* SS20 - node ignition: one gold wash, then the row settles to jade. */
+.meridian-section__row.is-ignited {
+  animation: meridian-ignite-flash 1400ms var(--hk-ease-standard, ease) 1;
+}
+
+@keyframes meridian-ignite-flash {
+  0% { box-shadow: inset 0 0 0 0 var(--hk-glow-gold, rgba(232, 195, 90, 0.35)); }
+  35% { box-shadow: inset 0 0 26px 4px var(--hk-glow-gold, rgba(232, 195, 90, 0.35)); }
+  100% { box-shadow: inset 0 0 0 0 transparent; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .meridian-section__row.is-ignited { animation: none; }
 }
 
 .meridian-section__row-head {
@@ -292,7 +328,7 @@ const hiddenQuanThe = computed(() => {
 
 .meridian-section__row-name {
   font-weight: 600;
-  color: var(--chrome-100);
+  color: var(--hk-text-primary, var(--chrome-100));
   font-size: var(--text-md);
 }
 
@@ -304,7 +340,7 @@ const hiddenQuanThe = computed(() => {
 }
 
 .meridian-section__row--opened .meridian-section__row-state {
-  color: var(--jade);
+  color: var(--hk-jade, var(--jade));
 }
 
 .meridian-section__row-desc {
@@ -322,7 +358,7 @@ const hiddenQuanThe = computed(() => {
 .meridian-section__row-gate {
   margin: 4px 0 0;
   font-size: var(--text-sm);
-  color: var(--crimson);
+  color: var(--hk-cinnabar, var(--crimson));
 }
 
 .meridian-section__row-invest {
@@ -340,6 +376,6 @@ const hiddenQuanThe = computed(() => {
 .meridian-section__row--hidden {
   opacity: 1;
   margin-top: 10px;
-  border-color: var(--jade);
+  border-color: var(--hk-jade, var(--jade));
 }
 </style>

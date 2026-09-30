@@ -118,7 +118,7 @@ function upgradeGrade(): void {
   flex-wrap: wrap;
   gap: 12px 24px;
   padding: 12px 14px;
-  border-bottom: 1px solid var(--ink-line);
+  border-bottom: 1px solid var(--hk-border-muted, var(--ink-line));
 }
 
 .technique-band__hero {
@@ -161,15 +161,17 @@ function upgradeGrade(): void {
   font-family: var(--font-body);
   font-size: var(--text-sm);
   font-weight: 600;
-  color: var(--paper-text);
+  color: var(--hk-text-primary, var(--paper-text));
   background: transparent;
-  border: 1px solid var(--mineral-gold);
-  border-radius: 6px;
+  border: 1px solid var(--hk-gold-muted, var(--mineral-gold));
+  border-radius: var(--hk-radius-sm, 6px);
   cursor: pointer;
+  transition: border-color var(--hk-motion-micro, 150ms) var(--hk-ease-standard, ease);
 }
 
 .technique-band__grade-btn:hover:not(:disabled) {
-  color: var(--mineral-gold);
+  color: var(--hk-gold-bright, var(--mineral-gold));
+  border-color: var(--hk-gold, var(--mineral-gold));
 }
 
 .technique-band__grade-btn:disabled {

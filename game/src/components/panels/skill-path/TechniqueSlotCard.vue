@@ -17,6 +17,7 @@
 // chi luc hover.
 import { computed } from 'vue'
 import SlotView from '../../common/SlotView.vue'
+import TechniqueRuneRing from './TechniqueRuneRing.vue'
 import Bar from '../../common/primitives/Bar.vue'
 import InkNineSlice from '../../common/primitives/InkNineSlice.vue'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
@@ -116,12 +117,20 @@ const tooltipContent = computed<TechniqueTooltipContent | undefined>(() => {
 <template>
   <div class="technique-card" :class="{ 'technique-card--hero': size === 'hero' }" v-tooltip="tooltipContent">
     <InkNineSlice asset-id="frame-m-seal-corner" layer="frame" />
-    <SlotView
-      class="technique-card__icon"
-      :item="technique ?? null"
-      :label="technique?.name ?? label"
-      :icon="technique?.icon"
-    />
+    <div class="technique-card__icon-wrap">
+      <!-- SS18 Dao Quyen - 10-rune rank ring around the hero icon. -->
+      <TechniqueRuneRing
+        v-if="size === 'hero'"
+        class="technique-card__ring"
+        :lit="technique?.rank ?? 0"
+      />
+      <SlotView
+        class="technique-card__icon"
+        :item="technique ?? null"
+        :label="technique?.name ?? label"
+        :icon="technique?.icon"
+      />
+    </div>
 
     <div class="technique-card__info">
       <span class="technique-card__name">
@@ -163,11 +172,27 @@ const tooltipContent = computed<TechniqueTooltipContent | undefined>(() => {
 /* Kích thước icon cố định tường minh — flex-basis (SlotView KHÔNG tự
    set flex) quyết định kích cỡ trên trục row, không còn dựa vào tie
    injection-order với width:100% nội bộ của SlotView.vue. */
-.technique-card__icon {
+.technique-card__icon-wrap {
   position: relative;
   z-index: 3;
   flex: 0 0 56px;
   width: 56px;
+}
+
+.technique-card__icon {
+  position: relative;
+  z-index: 3;
+  width: 100%;
+}
+
+/* SS18 - the rune ring overhangs the icon; dots orbit its rim. */
+.technique-card__ring {
+  position: absolute;
+  inset: -16%;
+  width: 132%;
+  height: 132%;
+  z-index: 2;
+  pointer-events: none;
 }
 
 .technique-card__info {
@@ -227,9 +252,20 @@ const tooltipContent = computed<TechniqueTooltipContent | undefined>(() => {
   padding: 14px 10px;
 }
 
-.technique-card--hero .technique-card__icon {
+.technique-card--hero .technique-card__icon-wrap {
   flex: 0 0 auto;
   width: 46%;
+}
+
+/* SS18 - grade reads as a seal tier: framed gold chip, display font. */
+.technique-card--hero .technique-card__tier {
+  padding: 2px 8px;
+  border: 1px solid var(--hk-gold-muted, #7a6234);
+  border-radius: var(--hk-radius-sm, 4px);
+  background: color-mix(in srgb, var(--hk-gold, #c99a4a) 12%, transparent);
+  color: var(--hk-gold-bright, #e8c35a);
+  font-family: var(--hk-font-display, var(--font-display));
+  letter-spacing: 0.05em;
 }
 
 .technique-card--hero .technique-card__info {

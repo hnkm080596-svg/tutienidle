@@ -668,6 +668,8 @@ onBeforeUnmount(() => {
                   'node-tree__node--child': tier.depth > 0,
                   'is-purchased': entry.purchased,
                   'is-maxed': entry.purchased && !entry.upgradable && entry.level >= entry.maxLevel && entry.maxLevel > 1,
+                  'is-available': !entry.purchased && entry.purchasable,
+                  'is-upgradable': entry.upgradable,
                   'is-locked': !entry.purchased && !entry.purchasable,
                   'is-selected': entry.node.id === selectedNodeId,
                   'is-unlocking': entry.node.id === unlockingNodeId,
@@ -842,33 +844,45 @@ onBeforeUnmount(() => {
   gap: 10px;
 }
 
+/* Huyen Kim SS19 (Dao Mach constellation) + SS47 semantics:
+   locked = ink silhouette, available = gold rim, learned = jade fill,
+   upgradeable = breathing light, selected = strong jade + gold edge. */
 .node-tree__node {
   display: flex;
   flex-direction: column;
   gap: 2px;
   width: 140px;
   padding: 6px 8px;
-  background: var(--sys-bg-0, var(--ink-800));
-  border: 1px solid var(--sys-line-soft, var(--ink-line-soft));
+  background: var(--hk-surface-raised, var(--sys-bg-0, var(--ink-800)));
+  border: 1px solid var(--hk-border-muted, var(--sys-line-soft, var(--ink-line-soft)));
   border-radius: var(--radius-sm);
   cursor: pointer;
   text-align: left;
   font-family: var(--font-body);
-  color: var(--sys-text, var(--text-primary));
+  color: var(--hk-text-primary, var(--sys-text, var(--text-primary)));
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .node-tree__node.is-major {
-  border-color: var(--sys-line-hot, var(--branch-color, var(--ink-line)));
+  border-color: var(--hk-border-active, var(--sys-line-hot, var(--branch-color, var(--ink-line))));
 }
 
 .node-tree__node:hover {
-  border-color: var(--sys-line-hot, var(--branch-color, var(--ink-line)));
+  border-color: var(--hk-gold-muted, var(--sys-line-hot, var(--branch-color, var(--ink-line))));
 }
 
 .node-tree__node.is-purchased {
-  background: color-mix(in srgb, var(--sys-success, var(--branch-color, var(--chrome-300))) 14%, var(--sys-bg-0, var(--ink-800)));
-  border-color: color-mix(in srgb, var(--sys-success, var(--branch-color, var(--chrome-300))) 55%, transparent);
+  background: color-mix(in srgb, var(--hk-jade, #3fa68b) 15%, var(--hk-surface-raised, var(--sys-bg-0, var(--ink-800))));
+  border-color: var(--hk-jade-deep, color-mix(in srgb, var(--branch-color, var(--chrome-300)) 55%, transparent));
+}
+
+.node-tree__node.is-available {
+  border-color: var(--hk-gold, #c99a4a);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--hk-gold, #c99a4a) 20%, transparent);
+}
+
+.node-tree__node.is-upgradable {
+  animation: hk-breath var(--hk-motion-breath, 2400ms) var(--hk-ease-standard, ease) infinite;
 }
 
 /* Locked node van CLICK DUOC (de xem dieu kien o NodeInspector.vue,
@@ -876,11 +890,18 @@ onBeforeUnmount(() => {
    khong con cursor:not-allowed/disabled nhu ban mua-thang cu. */
 .node-tree__node.is-locked {
   opacity: 0.5;
+  filter: grayscale(0.6);
+  color: var(--hk-ink, #5b6266);
 }
 
 .node-tree__node.is-selected {
-  outline: 2px solid var(--sys-focus, var(--chrome-300));
+  outline: 2px solid var(--hk-jade, var(--sys-focus, var(--chrome-300)));
   outline-offset: -2px;
+  box-shadow: inset 0 0 0 1px var(--hk-border-ceremony, #e8c35a);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .node-tree__node.is-upgradable { animation: none; }
 }
 
 /* Skill Node unlock animation muc 2 -- pulse 0.85->1.08->1.0 + glow manh
@@ -890,8 +911,8 @@ onBeforeUnmount(() => {
 .node-tree__node.is-unlocking {
   position: relative;
   animation: skill-node-pulse 500ms ease-out;
-  border-color: var(--sys-violet, var(--chrome-300));
-  box-shadow: 0 0 14px 2px color-mix(in srgb, var(--sys-violet, var(--chrome-300)) 55%, transparent);
+  border-color: var(--hk-jade, var(--sys-violet, var(--chrome-300)));
+  box-shadow: 0 0 14px 2px var(--hk-glow-gold, color-mix(in srgb, var(--chrome-300) 55%, transparent));
 }
 
 .node-tree__node.is-unlocking::after {
@@ -899,7 +920,7 @@ onBeforeUnmount(() => {
   position: absolute;
   inset: -6px;
   border-radius: inherit;
-  border: 1px solid var(--sys-violet, var(--chrome-300));
+  border: 1px solid var(--hk-gold-bright, var(--sys-violet, var(--chrome-300)));
   opacity: 0;
   animation: skill-node-ring 500ms ease-out;
   pointer-events: none;
@@ -943,20 +964,24 @@ onBeforeUnmount(() => {
 .node-tree__node-level {
   padding: 0 4px;
   border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--branch-color, var(--chrome-300)) 55%, transparent);
+  border: 1px solid var(--hk-border-active, color-mix(in srgb, var(--branch-color, var(--chrome-300)) 55%, transparent));
   font-size: var(--text-xs);
   line-height: 1.4;
-  color: var(--chrome-100);
+  color: var(--hk-text-secondary, var(--chrome-100));
 }
 
 .node-tree__node-desc {
   font-size: var(--text-xs);
-  color: var(--sys-text-dim, var(--text-muted));
+  color: var(--hk-text-muted, var(--sys-text-dim, var(--text-muted)));
 }
 
 .node-tree__node-cost {
   font-size: var(--text-xs);
   font-variant-numeric: tabular-nums;
-  color: var(--sys-text-muted, var(--chrome-100));
+  color: var(--hk-gold, var(--sys-text-muted, var(--chrome-100)));
+}
+
+.node-tree__node.is-locked .node-tree__node-cost {
+  color: var(--hk-ink, #5b6266);
 }
 </style>
