@@ -1,4 +1,15 @@
 import { describe, expect, it, vi } from 'vitest'
+
+// BETA SCOPE LOCK v2 Phase-5 - this suite exercises the scope-hidden
+// quest lifecycle's ENABLED implementation (sec.15: dormant, not
+// deleted), so the scope authority reports in-scope for this file.
+vi.mock('../betaScope', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../betaScope')>()),
+  isBetaFeature: () => true,
+  isScopeHidden: () => false,
+  isBetaQuestEnabled: () => true,
+}))
+
 import { QuestSystem } from './QuestSystem'
 import { QuestRegistry } from './QuestRegistry'
 import { QuestManager } from './QuestManager'

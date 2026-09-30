@@ -33,6 +33,7 @@ import { getProfessionGradeForRealm } from '../profession/ProfessionGrade'
 import { itemQualityRank, professionGradeRank } from '../profession/slotRank'
 import { gradeLabel } from '../presentation/labels'
 import { physiqueEssenceGradeOf } from '../../data/realm/PhysiqueEssence'
+import { isScopeHidden } from '../betaScope'
 import {
   isBreakthroughAcquisitionEnabled,
   isCompanionPullTokenSourceSuppressed,
@@ -373,7 +374,12 @@ export class BattleLootSystem {
           // re-resolved per kill (snapshot semantics): a mid-battle
           // formation change only affects the NEXT kill.
           const player = this.player
-          if (player && player.companions.length > 0) {
+          // BETA SCOPE LOCK v2 sec.14 - companion battle EXP is domain
+          // ACCESS (same class as grantArtifactExperience above): it
+          // closes when the domain is scope-hidden, including for a
+          // grandfathered save still carrying companion instances and a
+          // persisted loadout. Ownership data itself is never touched.
+          if (player && player.companions.length > 0 && !isScopeHidden('companion')) {
             const expPerKill = companionBattleExpPerKill(
               stage?.requiredRealmId ?? enemy.realmId,
             )
@@ -578,6 +584,18 @@ export class BattleLootSystem {
             // only once the player unlocks the domain.
             if (
               !isDomainScopedAcquisitionEnabled(material.domainUnlockRealmId, this.player?.realmId)
+            ) {
+              break
+            }
+
+            // BETA SCOPE LOCK v2 sec.14/sec.17 - physique essences feed
+            // only the scope-hidden body path (BodyChapter invest,
+            // ZhouTian, Nghich Chu Thian): while bodyPath is off the
+            // faucet closes at delivery (post-resolve filter, same seam
+            // as the policy gates above - rng order untouched).
+            if (
+              physiqueEssenceGradeOf(drop.itemId) !== undefined &&
+              isScopeHidden('bodyPath')
             ) {
               break
             }

@@ -10,6 +10,16 @@
 // 3. Linh mạch card render khi outpost ĐÃ xây (sau xóa spirit_spring)
 //    + collect gọi collectBuilding
 import { afterEach, describe, expect, it, vi } from 'vitest'
+
+// BETA SCOPE LOCK v2 Phase-5 - this suite exercises the scope-hidden
+// system's ENABLED implementation (sec.11-15: dormant, not deleted),
+// so the scope authority reports in-scope for this file.
+vi.mock('../../core/betaScope', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../../core/betaScope')>()),
+  isBetaFeature: () => true,
+  isScopeHidden: () => false,
+}))
+
 import { createApp, h, nextTick, ref } from 'vue'
 import { createPinia } from 'pinia'
 import ProductionPanel from './ProductionPanel.vue'

@@ -3,6 +3,16 @@
 // select + worker slider) + output preview, mount qua createApp+provide
 // (project pattern, KHÔNG @vue/test-utils).
 import { describe, expect, it, beforeEach, afterEach, vi } from 'vitest'
+
+// BETA SCOPE LOCK v2 Phase-5 - this suite exercises the scope-hidden
+// system's ENABLED implementation (sec.11-15: dormant, not deleted),
+// so the scope authority reports in-scope for this file.
+vi.mock('../../../core/betaScope', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../../../core/betaScope')>()),
+  isBetaFeature: () => true,
+  isScopeHidden: () => false,
+}))
+
 import { createApp, h, nextTick, ref } from 'vue'
 import { createPinia, setActivePinia } from 'pinia'
 import DecomposeTab from './DecomposeTab.vue'

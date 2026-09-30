@@ -14,6 +14,7 @@ import type { MaterialRegistry } from '../material/MaterialRegistry'
 import type { MaterialBag } from '../material/MaterialBag'
 import type { PillRegistry } from '../pill/PillRegistry'
 import type { PillBag } from '../pill/PillBag'
+import { isBetaQuestEnabled } from '../betaScope'
 // 9.8 — CHỈ import TYPE (không runtime import core/game) tránh dependency
 // cycle: NotificationQueue sống ở core/game nhưng event type thuần.
 import type { NotificationEvent } from '../notification/NotificationEvent'
@@ -46,7 +47,12 @@ export interface QuestBagDeps {
 }
 
 function isUnlocked(quest: Quest, player: PlayerData): boolean {
+  // BETA SCOPE LOCK v2 sec.15 - the beta admission predicate composes at
+  // the single activation seam: daily cadence and off-roster kill quests
+  // never activate, and the reconcile inverse pass deactivates stale
+  // progress for them automatically.
   return (
+    isBetaQuestEnabled(quest) &&
     (!quest.requiredRealmId ||
       getRealmIndex(player.realmId) >= getRealmIndex(quest.requiredRealmId)) &&
     !questIsTokenOnlySource(quest)
@@ -141,6 +147,13 @@ export class QuestSystem {
         continue
       }
 
+      // BETA SCOPE LOCK v2 sec.15 - scope-hidden quests never render in
+      // the active projection even if stale progress exists between
+      // reconcile runs (still read-only: no state is touched here).
+      if (!isBetaQuestEnabled(quest)) {
+        continue
+      }
+
       result.push({ quest, progress })
     }
 
@@ -163,6 +176,12 @@ export class QuestSystem {
 
     const quest = registry.get(questId)
     const progress = manager.getProgress(questId)
+
+    // BETA SCOPE LOCK v2 sec.15 - claim fails closed on a scope-hidden
+    // quest even if stale progress sits claimable (pre-flag saves).
+    if (!isBetaQuestEnabled(quest)) {
+      return undefined
+    }
 
     if (!progress || progress.claimed || progress.progress < quest.condition.amount) {
       return undefined

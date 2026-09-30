@@ -123,6 +123,11 @@ function foundationBeast(params: {
   // Per-enemy named drops (Task 6: floor-10 boss Chieu Hien Lenh) -
   // threaded to defineEnemy() unchanged, resolved by resolveDrops.
   signatureDrops?: SignatureDrop[]
+  // BETA SCOPE LOCK v2 Phase-5 - "ho quai" label forwarded to
+  // defineEnemy (the family drop-table layer reads it; the foundation
+  // tier previously never passed it, so only beasts whose family table
+  // needs them declare one).
+  family?: string
 }) {
   const hp = Math.round(450 * 1.15 ** (params.t - 1))
   const atk = Math.round(42 * 1.15 ** (params.t - 1))
@@ -151,6 +156,7 @@ function foundationBeast(params: {
     bossTrigger: params.bossTrigger,
     specialAttacks: params.specialAttacks,
     signatureDrops: params.signatureDrops,
+    family: params.family,
     statsInput: {
       maxHp: Math.round(hp * mult.hp),
       might: Math.round(atk * mult.atk),
@@ -249,6 +255,9 @@ export const FOUNDATION_ENEMIES: Enemy[] = [
     element: 'fire',
     power: 11,
     resistance: 14,
+    // BETA SCOPE LOCK v2 Phase-5 - roster species carrying the
+    // re-sourced base_gioi family drop (was metal_beetle's pool).
+    family: 'sand_scorpion',
   }),
   foundationBeast({
     id: 'foundation_ferocious_lava_hound',
@@ -271,6 +280,9 @@ export const FOUNDATION_ENEMIES: Enemy[] = [
     element: 'fire',
     power: 11,
     resistance: 14,
+    // Same species family as the roster normal (data truth; the ferocious
+    // variant is off-roster in beta so the pool never fires here).
+    family: 'sand_scorpion',
   }),
 
   // --- Tầng 5-6 (Thổ, thạch cốc hậu sơn) ---

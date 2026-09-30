@@ -1,4 +1,14 @@
 import { describe, it, expect, vi } from 'vitest'
+
+// BETA SCOPE LOCK v2 Phase-5 - this suite exercises the scope-hidden
+// system's ENABLED implementation (sec.11-15: dormant, not deleted),
+// so the scope authority reports in-scope for this file.
+vi.mock('../betaScope', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../betaScope')>()),
+  isBetaFeature: () => true,
+  isScopeHidden: () => false,
+}))
+
 import { HiddenBeastSystem } from './HiddenBeastSystem'
 import {
   hiddenBeastChannels,

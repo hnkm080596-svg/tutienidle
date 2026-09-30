@@ -31,6 +31,7 @@ import type { ProgressionNode } from '../progression/ProgressionNode'
 import type { PartyFormationSlot } from './PartyFormation'
 import { DEFAULT_PARTY_FORMATION } from './PartyFormation'
 import { resolvePartyFormation } from './FormationPlacement'
+import { isScopeHidden } from '../betaScope'
 import type { CompanionDefinition, CompanionInstance } from '../../data/companion/Companions'
 import { companionToCombatEntity } from '../companion/CompanionCombat'
 import { resolveCompanionSkillKit } from '../companion/CompanionProgression'
@@ -250,6 +251,10 @@ export function resolveCombatBuild(
 
   // Each companion mints a fresh CombatEntity per battle; a missing
   // definition OR a missing formation slot skips silently (ops parity).
+  // BETA SCOPE LOCK v2 sec.14 - companion participation is domain
+  // ACCESS: a grandfathered save that still carries companion
+  // instances + a persisted loadout must not field them while the
+  // domain is scope-hidden (ownership data itself stays untouched).
   const collectClones = (
     slots: readonly (TurnSkillDefinition | undefined)[],
     ownerId: string,
@@ -262,7 +267,9 @@ export function resolveCombatBuild(
       })),
     )
 
-  const companions: ResolvedCompanionBuild[] = (source.companions ?? []).flatMap((instance, index) => {
+  const companions: ResolvedCompanionBuild[] = isScopeHidden('companion')
+    ? []
+    : (source.companions ?? []).flatMap((instance, index) => {
     const definition = deps.getCompanionDefinition(instance.definitionId)
     const slot = formation.find((entry) => entry.combatantId === instance.definitionId)
 
@@ -299,7 +306,11 @@ export function resolveCombatBuild(
   const allies: readonly CombatEntity[] = [entity, ...companions.map((c) => c.entity)]
   const entryBuffs: ResolvedEntryBuff[] = []
 
-  const formationBuffId = source.formationLoadout
+  // BETA SCOPE LOCK v2 sec.14 - the Tran Phap buff is formation-domain
+  // ACCESS (same class as companion participation): a persisted loadout
+  // on a grandfathered save must not keep applying it while the domain
+  // is scope-hidden.
+  const formationBuffId = source.formationLoadout && !isScopeHidden('formation')
     ? TRAN_PHAP_FORMATIONS.find((c) => c.id === source.formationLoadout!.formationId)?.buff
         .definitionId
     : undefined

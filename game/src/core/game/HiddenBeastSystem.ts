@@ -6,7 +6,7 @@ import {
   type HiddenBeastChannel,
 } from '../../data/drop/HiddenMaterialChannels'
 import { isRealmAvailable } from '../realm/ReleasePolicy'
-import { isBetaFeature } from '../betaScope'
+import { isBetaFeature, isScopeHidden } from '../betaScope'
 
 // Quai an (spec m-f-body-hidden sec.3) - generalized channel-driven
 // spawn substitution: each authored hidden_beast channel opens its own
@@ -93,10 +93,10 @@ export class HiddenBeastSystem {
    * eventBus-free - return value, not a dep.
    */
   onEnemyDefeated(player: PlayerData, enemyId: string, enemyRealmId: string): string[] {
-    // BETA SCOPE LOCK v2 (Phase-6): hidden beasts are scope-hidden -
-    // counters do not advance and no `hidden_window_opened` channel is
-    // ever reported (the Phase-4-flagged audio cue goes silent).
-    if (!isBetaFeature('hiddenContent')) {
+    // BETA SCOPE LOCK v2 sec.14 - no counting means no threshold cross,
+    // which means no `hidden_window_opened` cue and no record mutations:
+    // the cue can never leak into the beta experience.
+    if (isScopeHidden('hiddenContent')) {
       return []
     }
 

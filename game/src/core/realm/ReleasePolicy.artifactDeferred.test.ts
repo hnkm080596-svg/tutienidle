@@ -19,6 +19,16 @@
  * - the breakthrough tier advance runs exactly as before once open.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+
+// BETA SCOPE LOCK v2 Phase-5 - this suite exercises the scope-hidden
+// system's ENABLED implementation (sec.11-15: dormant, not deleted),
+// so the scope authority reports in-scope for this file.
+vi.mock('../betaScope', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../betaScope')>()),
+  isBetaFeature: () => true,
+  isScopeHidden: () => false,
+}))
+
 import { PROGRESSION_NODE_BY_ID } from '../../data/progression/ProgressionNodeCatalog'
 import { createPinia, setActivePinia } from 'pinia'
 
