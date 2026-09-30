@@ -133,6 +133,30 @@ select count(*) from pg_proc p join pg_namespace n on n.oid=p.pronamespace
 - **Inventory triage**: rows classified `owner-mismatch` need manual repair
   (reassign `user_id` to the character owner or archive); everything else is
   recoverable by the client at its current revision.
+- **Operator scripts** (`game/scripts/operations/`, added by the B9 ops
+  track) wrap the procedures above behind the shared target-safety
+  contract: `--target <ref>` must equal the `SUPABASE_URL` ref,
+  `SUPABASE_TARGET_LABEL` must be a non-prod label, mutating commands
+  need `--yes-i-mean-it`, and every mutation has `--dry-run`:
+  - `backend-status.mjs` runs the phase permission queries in one probe
+    (phase, config, ledger summary, grant surface, sessions, save
+    classes);
+  - `migration-ledger.mjs` diffs `supabase_migrations.schema_migrations`
+    against the repo files incl. sha256;
+  - `save-inventory.mjs` reports the classification table (metadata
+    only - it never selects `payload`);
+  - `backend-config.mjs` is the lever for `maintenance`,
+    `minClientVersion`, `supportedClientVersions`,
+    `acceptedSaveSchemaVersions`, `supportedProtocolVersions`, `limits`;
+    `contractPhase` is refused (migration-owned);
+  - `revoke-sessions.mjs` implements session recovery/lockdown
+    (`--user <uuid>` or `--all`, count-then-update);
+  - `prune-jobs.mjs` runs the receipt/checkpoint prunes above with the
+    `receiptRetentionDays` floor read live from `backend_config.limits`;
+  - `backup-export.mjs`/`restore-verify.mjs` implement the backup and
+    restore-drill acceptance in `backup-restore.md`.
+  The raw SQL above remains the reference for what each script does
+  internally; run the scripts, not ad-hoc SQL, on staging/beta targets.
 - **Talent catalog**: the server `talents` table is seeded from the canonical
   authored catalog (`src/data/talent/Talents.ts` CHARACTER_CREATION_TALENTS) —
   the SQL-seeded ids in the legacy migration are drifted leftovers. The
