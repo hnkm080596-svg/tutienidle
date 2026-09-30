@@ -2,7 +2,7 @@
 // P7-M7 - Luyen The tier block inside RealmPanel, ported verbatim from
 // the retired LuyenThePanel.vue (panel chrome stripped). Read-only:
 // Tinh Hoa Pham The auto-invests through the tick (BodyRefinementChapter).
-import { computed } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '@/stores/player'
 import { useStateVersion } from '@/composables/useGameState'
@@ -92,6 +92,25 @@ const tierRows = computed(() => {
     }
   })
 })
+
+// SS20 ignition feedback - the tier that just completed flashes once
+// (gold wash -> jade settle), then stays in its permanent done state.
+const ignitedTierId = ref<string | null>(null)
+let igniteTimer: ReturnType<typeof setTimeout> | undefined
+
+watch(() => chapterProgress.value.completed, (now, before) => {
+  if (now <= before) {
+    return
+  }
+
+  ignitedTierId.value = tierRows.value[now - 1]?.id ?? null
+  clearTimeout(igniteTimer)
+  igniteTimer = setTimeout(() => {
+    ignitedTierId.value = null
+  }, 1400)
+})
+
+onBeforeUnmount(() => clearTimeout(igniteTimer))
 </script>
 
 <template>
@@ -113,7 +132,7 @@ const tierRows = computed(() => {
           v-for="row in tierRows"
           :key="row.id"
           class="body-refinement__tier"
-          :class="`body-refinement__tier--${row.status}`"
+          :class="[`body-refinement__tier--${row.status}`, { 'is-ignited': row.id === ignitedTierId }]"
         >
           <div class="body-refinement__tier-head">
             <span class="body-refinement__tier-name">{{ row.name }}</span>
@@ -170,13 +189,13 @@ const tierRows = computed(() => {
 .body-refinement__physique {
   font-size: var(--text-md);
   font-weight: 600;
-  color: var(--jade);
+  color: var(--hk-jade, var(--jade));
 }
 
 .body-refinement__note {
   margin: 0;
   font-size: var(--text-sm);
-  color: var(--jade);
+  color: var(--hk-jade, var(--jade));
 }
 
 .body-refinement__tiers {
@@ -185,32 +204,49 @@ const tierRows = computed(() => {
   gap: 8px;
 }
 
+/* Huyen Kim SS47 - locked rows ink, active gold-rim, done jade. */
 .body-refinement__tier {
   padding: 8px 10px;
-  background: var(--ink-800);
-  border: 1px solid var(--ink-line-soft);
-  border-radius: var(--radius-sm);
+  background: var(--hk-surface-raised, var(--ink-800));
+  border: 1px solid var(--hk-border-muted, var(--ink-line-soft));
+  border-radius: var(--hk-radius-sm, var(--radius-sm));
   opacity: 0.55;
 }
 
 .body-refinement__tier--active {
   opacity: 1;
-  border-color: var(--chrome-300);
+  border-color: var(--hk-gold, var(--chrome-300));
 }
 
 .body-refinement__tier--realm_locked {
   opacity: 0.8;
-  border-color: var(--ink-line-soft);
+  border-color: var(--hk-border-muted, var(--ink-line-soft));
 }
 
 .body-refinement__tier--done {
   opacity: 1;
+  border-color: var(--hk-jade-deep, var(--jade));
+}
+
+/* SS20 - node ignition: one gold wash, then the row settles to jade. */
+.body-refinement__tier.is-ignited {
+  animation: body-ignite-flash 1400ms var(--hk-ease-standard, ease) 1;
+}
+
+@keyframes body-ignite-flash {
+  0% { box-shadow: inset 0 0 0 0 var(--hk-glow-gold, rgba(232, 195, 90, 0.35)); }
+  35% { box-shadow: inset 0 0 26px 4px var(--hk-glow-gold, rgba(232, 195, 90, 0.35)); }
+  100% { box-shadow: inset 0 0 0 0 transparent; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .body-refinement__tier.is-ignited { animation: none; }
 }
 
 .body-refinement__tier-lock {
   margin: 2px 0 6px;
   font-size: var(--text-sm);
-  color: var(--crimson);
+  color: var(--hk-cinnabar, var(--crimson));
 }
 
 .body-refinement__tier-head {
@@ -221,7 +257,7 @@ const tierRows = computed(() => {
 
 .body-refinement__tier-name {
   font-weight: 600;
-  color: var(--chrome-100);
+  color: var(--hk-text-primary, var(--chrome-100));
   font-size: var(--text-md);
 }
 
@@ -251,13 +287,13 @@ const tierRows = computed(() => {
 
 .body-refinement__tier--hidden {
   opacity: 1;
-  border-color: var(--jade);
+  border-color: var(--hk-jade, var(--jade));
 }
 
 .body-refinement__tier-state {
   font-size: var(--text-xs);
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: var(--jade);
+  color: var(--hk-jade, var(--jade));
 }
 </style>

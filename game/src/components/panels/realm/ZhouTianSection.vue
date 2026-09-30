@@ -5,7 +5,7 @@
 // realmAdvanceOps.investBodyChapter - the chapter stays the sole
 // authority (sequential gate, realm-derived capacity, Phap essence
 // cost are all re-validated on every call). NO tick auto-invest.
-import { computed } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
@@ -175,6 +175,43 @@ function invest(): void {
     bumpState()
   }
 }
+
+// SS20 ignition feedback - a landed step flashes the block once (gold
+// wash), then it settles into its permanent state. Nghich Chu Thien
+// gains ignite its own hidden row the same way.
+const igniting = ref(false)
+const ignitingNghich = ref(false)
+let igniteTimer: ReturnType<typeof setTimeout> | undefined
+let igniteNghichTimer: ReturnType<typeof setTimeout> | undefined
+
+watch(() => chapterProgress.value.completed, (now, before) => {
+  if (now <= before) {
+    return
+  }
+
+  igniting.value = true
+  clearTimeout(igniteTimer)
+  igniteTimer = setTimeout(() => {
+    igniting.value = false
+  }, 1400)
+})
+
+watch(() => nghichLevel.value, (now, before) => {
+  if (now <= before) {
+    return
+  }
+
+  ignitingNghich.value = true
+  clearTimeout(igniteNghichTimer)
+  igniteNghichTimer = setTimeout(() => {
+    ignitingNghich.value = false
+  }, 1400)
+})
+
+onBeforeUnmount(() => {
+  clearTimeout(igniteTimer)
+  clearTimeout(igniteNghichTimer)
+})
 </script>
 
 <template>
@@ -186,7 +223,7 @@ function invest(): void {
 
     <div
       class="zhou-tian-section__row"
-      :class="`zhou-tian-section__row--${status}`"
+      :class="[`zhou-tian-section__row--${status}`, { 'is-ignited': igniting }]"
     >
       <Bar
         class="zhou-tian-section__bar"
@@ -238,7 +275,7 @@ function invest(): void {
       <div
         v-if="nghichRevealed"
         class="zhou-tian-section__row zhou-tian-section__row--hidden"
-        :class="{ 'zhou-tian-section__row--complete': !nghichActive && nghichMechanic }"
+        :class="{ 'zhou-tian-section__row--complete': !nghichActive && nghichMechanic, 'is-ignited': ignitingNghich }"
       >
         <div class="zhou-tian-section__nghich-summary">
           <span>{{ t('hidden.foundation.nghichName') }}</span>
@@ -299,14 +336,15 @@ function invest(): void {
 
 .zhou-tian-section__row--complete .zhou-tian-section__state,
 .zhou-tian-section__milestone--reached {
-  color: var(--jade);
+  color: var(--hk-jade, var(--jade));
 }
 
+/* Huyen Kim SS47 - locked ink, active gold rim, complete jade. */
 .zhou-tian-section__row {
   padding: 8px 10px;
-  background: var(--ink-800);
-  border: 1px solid var(--ink-line-soft);
-  border-radius: var(--radius-sm);
+  background: var(--hk-surface-raised, var(--ink-800));
+  border: 1px solid var(--hk-border-muted, var(--ink-line-soft));
+  border-radius: var(--hk-radius-sm, var(--radius-sm));
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -315,12 +353,27 @@ function invest(): void {
 
 .zhou-tian-section__row--active {
   opacity: 1;
-  border-color: var(--chrome-300);
+  border-color: var(--hk-gold, var(--chrome-300));
 }
 
 .zhou-tian-section__row--complete {
   opacity: 1;
-  border-color: var(--jade);
+  border-color: var(--hk-jade-deep, var(--jade));
+}
+
+/* SS20 - node ignition: one gold wash, then the block settles. */
+.zhou-tian-section__row.is-ignited {
+  animation: zhou-ignite-flash 1400ms var(--hk-ease-standard, ease) 1;
+}
+
+@keyframes zhou-ignite-flash {
+  0% { box-shadow: inset 0 0 0 0 var(--hk-glow-gold, rgba(232, 195, 90, 0.35)); }
+  35% { box-shadow: inset 0 0 26px 4px var(--hk-glow-gold, rgba(232, 195, 90, 0.35)); }
+  100% { box-shadow: inset 0 0 0 0 transparent; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .zhou-tian-section__row.is-ignited { animation: none; }
 }
 
 .zhou-tian-section__bar {
@@ -337,13 +390,13 @@ function invest(): void {
 .zhou-tian-section__gate {
   margin: 0;
   font-size: var(--text-sm);
-  color: var(--crimson);
+  color: var(--hk-cinnabar, var(--crimson));
 }
 
 .zhou-tian-section__complete {
   margin: 0;
   font-size: var(--text-sm);
-  color: var(--jade);
+  color: var(--hk-jade, var(--jade));
 }
 
 .zhou-tian-section__capacity {
@@ -366,7 +419,7 @@ function invest(): void {
 
 .zhou-tian-section__row--hidden {
   margin-top: 4px;
-  border-color: var(--violet, var(--ink-line-soft));
+  border-color: var(--violet, var(--hk-border-muted, var(--ink-line-soft)));
   opacity: 1;
 }
 

@@ -394,7 +394,7 @@ function close() {
 
 .skill-path-panel__points {
   font-size: var(--text-sm);
-  color: var(--gold-700);
+  color: var(--hk-gold, var(--gold-700));
 }
 
 .skill-path-panel__body {
@@ -428,7 +428,7 @@ function close() {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  border-right: 1px solid var(--ink-line);
+  border-right: 1px solid var(--hk-border-muted, var(--ink-line));
 }
 
 /* Cây kỹ năng KHÔNG cuộn nữa (2026-08-30, bug report) — NodeTreePanel
@@ -441,8 +441,9 @@ function close() {
   flex-direction: column;
 }
 
-/* Phap Tu element tabs (Task 16) — 5 Hành chips above the tree; the
-   committed element gets a filled accent, the browsed tab an outline. */
+/* Phap Tu element tabs (Task 16) - 5 Hanh chips above the tree; the
+   committed element gets a filled accent, the browsed tab an outline.
+   Element identity colors stay per-element; chrome -> hk tokens. */
 .skill-path-panel__element-tabs {
   flex: 0 0 auto;
   display: flex;
@@ -453,25 +454,27 @@ function close() {
 
 .skill-path-panel__element-tab {
   padding: 4px 12px;
-  background: var(--ink-800);
-  border: 1px solid var(--ink-line-soft);
+  background: var(--hk-surface-raised, var(--ink-800));
+  border: 1px solid var(--hk-border-muted, var(--ink-line-soft));
   border-radius: 999px;
-  color: var(--element-color, var(--text-secondary));
+  color: var(--element-color, var(--hk-text-secondary, var(--text-secondary)));
   font-family: var(--font-body);
   font-size: var(--text-sm);
   cursor: pointer;
+  transition: border-color var(--hk-motion-micro, 150ms) var(--hk-ease-standard, ease);
 }
 
 .skill-path-panel__element-tab.is-selected {
-  border-color: var(--element-color, var(--chrome-300));
+  border-color: var(--element-color, var(--hk-border-active, var(--chrome-300)));
   font-weight: 600;
 }
 
 .skill-path-panel__element-tab.is-committed {
-  background: color-mix(in srgb, var(--element-color, var(--ink-800)) 22%, var(--ink-800));
+  background: color-mix(in srgb, var(--element-color, var(--ink-800)) 22%, var(--hk-surface-raised, var(--ink-800)));
 }
 
-/* M-QI-05 (D7) - center mode tabs; same chip family as element tabs. */
+/* M-QI-05 (D7) - center mode tabs; selected = jade accent + gold edge
+   (SS47 selected state). */
 .skill-path-panel__mode-tabs {
   flex: 0 0 auto;
   display: flex;
@@ -481,18 +484,19 @@ function close() {
 
 .skill-path-panel__mode-tab {
   padding: 4px 12px;
-  background: var(--ink-800);
-  border: 1px solid var(--ink-line-soft);
+  background: var(--hk-surface-raised, var(--ink-800));
+  border: 1px solid var(--hk-border-muted, var(--ink-line-soft));
   border-radius: 999px;
-  color: var(--text-secondary);
+  color: var(--hk-text-secondary, var(--text-secondary));
   font-family: var(--font-body);
   font-size: var(--text-sm);
   cursor: pointer;
+  transition: border-color var(--hk-motion-micro, 150ms) var(--hk-ease-standard, ease);
 }
 
 .skill-path-panel__mode-tab.is-selected {
-  border-color: var(--chrome-300);
-  color: var(--text-primary);
+  border-color: var(--hk-border-ceremony, var(--chrome-300));
+  color: var(--hk-jade-soft, var(--text-primary));
   font-weight: 600;
 }
 
@@ -501,7 +505,7 @@ function close() {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  border-left: 1px solid var(--ink-line);
+  border-left: 1px solid var(--hk-border-muted, var(--ink-line));
 }
 
 .skill-path-panel__col-title {
@@ -509,6 +513,6 @@ function close() {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.03em;
-  color: var(--paper-eyebrow);
+  color: var(--hk-text-muted, var(--paper-eyebrow));
 }
 </style>

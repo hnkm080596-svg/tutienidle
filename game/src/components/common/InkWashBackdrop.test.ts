@@ -71,6 +71,6 @@ describe('InkWashBackdrop', () => {
     expect(creationSource).toContain('background: color-mix(in srgb, var(--paper-50')
     // BETA-CREATION - name+talent draft only: the selected talent card
     // is the legibility affordance now.
-    expect(creationSource).toContain('.talent-card.selected { border-color: var(--cinnabar')
+    expect(creationSource).toContain('.talent-card.selected { border-color: var(--hk-border-ceremony')
   })
 })

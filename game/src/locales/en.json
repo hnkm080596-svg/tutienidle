@@ -595,7 +595,8 @@
         "comingSoon": "Coming soon",
         "current": "Current",
         "unlocked": "Reached",
-        "locked": "Not unlocked"
+        "locked": "Not unlocked",
+        "next": "Next"
       },
       "requirements": {
         "level": "{realm} floor {level}",
@@ -655,6 +656,10 @@
         "owned": "Dharma Physique Essence owned {count}",
         "stepCost": "Next step cost: {cost}",
         "complete": "Dai Chu Thien circulation complete."
+      },
+      "body": {
+        "title": "Body — Meridians",
+        "navAria": "Body chapters"
       }
     },
     "settings": {
