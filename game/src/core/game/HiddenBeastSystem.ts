@@ -6,7 +6,7 @@ import {
   type HiddenBeastChannel,
 } from '../../data/drop/HiddenMaterialChannels'
 import { isRealmAvailable } from '../realm/ReleasePolicy'
-import { isScopeHidden } from '../betaScope'
+import { isBetaFeature, isScopeHidden } from '../betaScope'
 
 // Quai an (spec m-f-body-hidden sec.3) - generalized channel-driven
 // spawn substitution: each authored hidden_beast channel opens its own
@@ -47,6 +47,13 @@ export class HiddenBeastSystem {
     stageRealmId: string | undefined,
     rng: () => number = Math.random,
   ): Enemy | undefined {
+    // BETA SCOPE LOCK v2 (Phase-6): hidden beasts are scope-hidden -
+    // no substitution regardless of persisted counters (they stay
+    // dormant, not deleted).
+    if (!isBetaFeature('hiddenContent')) {
+      return undefined
+    }
+
     for (const channel of this.channels()) {
       if (channel.bandRealmId !== stageRealmId) {
         continue

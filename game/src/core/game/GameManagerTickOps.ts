@@ -16,6 +16,7 @@ import type { PassiveSystem } from '../skill/PassiveSystem'
 import { getAlchemyDoublePill } from '../talent/TalentEffects'
 import type { TribulationDirector } from '../tribulation/TribulationDirector'
 import { createBagOverflowEvent } from '../notification/bagOverflow'
+import { isBetaFeature } from '../betaScope'
 import type { NotificationQueue } from './NotificationQueue'
 import type { GameManagerTurnBattleOps } from './GameManagerTurnBattleOps'
 
@@ -129,7 +130,11 @@ export class GameManagerTickOps {
 
       // Quest daily reset (Quest System plan) - wall-clock day-bucket,
       // check moi tick nen van reset ke ca khi panel Nhiem Vu dang dong.
+      // BETA SCOPE LOCK v2 (Phase-6): the daily cadence is scope-hidden
+      // - the reset does not run, no "daily refreshed" toast fires,
+      // and the daily board is never rebuilt for beta players.
       if (
+        isBetaFeature('dailyQuest') &&
         this.deps.questSystem.checkAndResetDaily(
           this.deps.questRegistry,
           this.deps.questManager,

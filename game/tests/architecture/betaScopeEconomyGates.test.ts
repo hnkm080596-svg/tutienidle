@@ -53,6 +53,12 @@ import {
   isBetaQuestEnabled,
 } from '@/core/betaScope'
 import type { Quest } from '@/core/quest/Quest'
+import { lockBetaFeaturesForTests, unlockAllFeaturesForTests } from '@/core/game/__fixtures__/betaFeaturesUnlock'
+
+// The global setup admits every feature for legacy suites; this suite
+// asserts the canonical beta lock itself, so re-pin the all-false
+// feature table before any expectation runs.
+lockBetaFeaturesForTests()
 
 function foundationPlayer(): PlayerData {
   const player = createDefaultPlayer()
@@ -401,13 +407,22 @@ describe('sec.14 companion/formation/artifact - all faucets shut', () => {
     expect(opened).toEqual([])
     expect(player.hiddenBeastKills['chan_qi']).toBe(4)
 
-    // The substitution funnel itself stays mechanically live (Phase-4
-    // contract): a primed window + winning roll still resolves the
-    // beast template - the stage roster is what keeps it off stages.
+    // Under the beta lock the substitution funnel itself fails closed
+    // (Phase-6): a grandfathered window can never resolve a hidden beast.
     for (const c of hiddenBeastChannels()) {
       player.hiddenBeastKills[c.id] = c.killThreshold
     }
-    expect(system.maybeReplaceSpawn(player, 'qi_refining', () => 0)?.id).toBe('huyet_mong')
+    expect(system.maybeReplaceSpawn(player, 'qi_refining', () => 0)).toBeUndefined()
+
+    // Dormant preservation (Phase-4 contract): with the feature table
+    // unlocked the funnel is still mechanically live - a primed window
+    // + winning roll resolves the beast template post-beta.
+    unlockAllFeaturesForTests()
+    try {
+      expect(system.maybeReplaceSpawn(player, 'qi_refining', () => 0)?.id).toBe('huyet_mong')
+    } finally {
+      lockBetaFeaturesForTests()
+    }
   })
 })
 

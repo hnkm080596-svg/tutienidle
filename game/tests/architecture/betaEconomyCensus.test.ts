@@ -56,6 +56,12 @@ import { VENDOR_SELLABLE_CATEGORIES } from '@/core/economy/VendorBalance'
 import { getSpiritStoneMaterialIdForRealmTier } from '@/core/material/SpiritStoneMaterial'
 import { getRealmTier } from '@/core/realm/RealmTierMap'
 import { LUYEN_KHI_TINH_HOA_ID } from '@/core/equipment/TinhHoaMaterial'
+import { lockBetaFeaturesForTests } from '@/core/game/__fixtures__/betaFeaturesUnlock'
+
+// The global setup admits every feature for legacy suites; this suite
+// asserts the canonical beta lock itself, so re-pin the all-false
+// feature table before any expectation runs.
+lockBetaFeaturesForTests()
 
 const BETA_REALM_IDS = new Set(SUPPORTED_PROFESSION_REALMS)
 

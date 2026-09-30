@@ -9,6 +9,7 @@ import { useStateVersion } from '@/composables/useGameState'
 import { baseGainKeys, BODY_REFINEMENT_TIERS } from '@/data/realm/BodyRefinement'
 import { getActiveTierIndex, getRefinementCurrentTierProgress, getTierCap, isTierRequiredRealmLevelMet } from '@/core/realm/body/BodyRefinementChapter'
 import { getBodyChapterProgress, getPhysiqueGrade } from '@/core/realm/body/BodyProgressionSystem'
+import { betaHiddenRealmRecordFor } from '@/core/betaScopeSurface'
 import { statLabel } from '@/core/stats/StatLabels'
 import { formatNumber } from '@/core/format/NumberFormatter'
 import Bar from '@/components/common/primitives/Bar.vue'
@@ -42,10 +43,13 @@ const physiqueGradeLabel = computed(() => {
 // HIDDEN-B (design sec.9/sec.19) - display-only "Bac 7 - Pham Cot" row.
 // The hidden realm stays invisible until the trial has actually fired
 // (discovered); once visible it mirrors bodyCompleted, nothing more.
+// BETA SCOPE LOCK v2 (Phase-6): the record read routes through the
+// canonical beta read-model - scope-hidden content resolves undefined,
+// so the row never renders in beta even on a legacy save.
 const hiddenMortalRow = computed(() => {
   stateVersion.value
 
-  const record = player.$state.hiddenPerfection?.realms['mortal']
+  const record = betaHiddenRealmRecordFor(player.$state, 'mortal')
   // A frozen record is permanently inert (lineage closed) - spec
   // sec.3.4: never expose frozen progress as active progression.
   if (record?.discovered !== true || record.frozen === true) {

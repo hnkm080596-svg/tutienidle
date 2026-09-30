@@ -56,6 +56,15 @@ import {
   type BetaSkillTree,
   type BetaSkillTreeNode,
 } from '../betaScopeSkillDomain'
+import {
+  betaCompletionFor as betaCompletionForDomain,
+  betaNextRealmSurfaceFor as betaNextRealmSurfaceForDomain,
+  betaSupportedFor as betaSupportedForDomain,
+  unsupportedReleaseReason as unsupportedReleaseReasonDomain,
+  type BetaCompletion,
+  type BetaNextRealmSurface,
+  type BetaUnsupportedReason,
+} from '../betaScopeSurface'
 import { commitSpellPathElement } from '../phap-tu/PhapTuState'
 import { getEffectiveMainStatCap } from '../stats/StatCap'
 import type { MainStatKey } from '../stats/StatTypes'
@@ -1061,6 +1070,28 @@ export class GameManagerProgressionOps {
     return betaCombatSurfacesForDomain(player, {
       hasSkill: (skillId) => this.deps.skillManager.has(skillId),
     })
+  }
+
+  /**
+   * BETA SCOPE LOCK v2 Phase-6 - UI reach for the global-surface
+   * read-models (core/betaScopeSurface.ts). All four are PlayerData-pure
+   * queries; the bindings give the frontend the same GameManager seam
+   * the Phase-3 read-models use.
+   */
+  betaCompletionFor(player: PlayerData): BetaCompletion {
+    return betaCompletionForDomain(player)
+  }
+
+  betaNextRealmSurfaceFor(player: PlayerData): BetaNextRealmSurface | null {
+    return betaNextRealmSurfaceForDomain(player)
+  }
+
+  betaSupportedFor(player: PlayerData): boolean {
+    return betaSupportedForDomain(player)
+  }
+
+  unsupportedReleaseReason(player: PlayerData): BetaUnsupportedReason | null {
+    return unsupportedReleaseReasonDomain(player)
   }
 
   /**

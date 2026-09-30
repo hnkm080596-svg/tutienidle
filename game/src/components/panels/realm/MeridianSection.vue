@@ -26,6 +26,7 @@ import {
   THONG_MACH_DAN_MATERIAL_ID,
 } from '@/data/realm/Meridians'
 import { getQuanTheMechanic } from '@/core/realm/hidden/QuanTheDiversion'
+import { betaHiddenRealmRecordFor } from '@/core/betaScopeSurface'
 import { formatNumber } from '@/core/format/NumberFormatter'
 import Bar from '@/components/common/primitives/Bar.vue'
 
@@ -114,10 +115,13 @@ function invest(): void {
 // qi_refining hidden realm has been discovered (the first actionable
 // diverted gain creates the record); until then the continuation stays
 // invisible like every hidden-body surface.
+// BETA SCOPE LOCK v2 (Phase-6): the record read routes through the
+// canonical beta read-model - scope-hidden content resolves undefined,
+// so the Quan The row never renders in beta even on a legacy save.
 const hiddenQuanThe = computed(() => {
   stateVersion.value
 
-  const record = player.$state.hiddenPerfection?.realms['qi_refining']
+  const record = betaHiddenRealmRecordFor(player.$state, 'qi_refining')
   // A frozen record is permanently inert (lineage closed) - spec
   // sec.3.4: never expose frozen progress as active progression.
   if (record?.discovered !== true || record.frozen === true) {
