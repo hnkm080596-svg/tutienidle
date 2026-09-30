@@ -71,14 +71,19 @@ describe('legacy save -> domain gate on persisted modifiers (QA)', () => {
       baseStats: { strength: 5 },
       modifiers: [
         { id: 'pill-permanent:strength', sourceId: 'to_cot_dan', sourceType: 'pill', stat: 'strength', flat: 3 },
+        // A non-main-stat claim under the pill-permanent prefix is
+        // crafted data, not a legacy grant: it drops WITHOUT folding
+        // (the MAIN_STAT_KEYS gate in restoreFromSave).
         { id: 'pill-permanent:might', sourceId: 'x', sourceType: 'pill', stat: 'might', flat: 2 },
+        { id: 'pill-permanent:vitality', sourceId: 'x', sourceType: 'pill', stat: 'vitality', flat: 2 },
       ],
     })
 
     player.restoreFromSave(save)
 
     expect(player.baseStats.strength).toBe(8)
-    expect(player.baseStats.might).toBe(createBaseStats().might + 2)
+    expect(player.baseStats.vitality).toBe(createBaseStats().vitality + 2)
+    expect(player.baseStats.might).toBe(createBaseStats().might)
     expect(player.modifiers.every((m) => !m.id.startsWith('pill-permanent:'))).toBe(true)
   })
 
