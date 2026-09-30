@@ -103,6 +103,12 @@ import {
   resolveSupabaseSession,
 } from './services/supabase/SupabaseSession'
 import type { QuitFlushFailedNotice } from './shared/session/FlushResult'
+import {
+  bindFeedbackProviders,
+  bindFeedbackService,
+  unbindFeedbackProviders,
+  unbindFeedbackService,
+} from './services/feedback/FeedbackService'
 
 const player = usePlayerStore()
 const ui = useUiStore()
@@ -359,6 +365,17 @@ if (window.electronAPI?.getDiagnosticReportId) {
     .then((id) => diagnosticsRecorder?.bindContext({ reportId: id }))
     .catch(() => undefined)
 }
+
+// BETA-FINAL PR13 / spec B7 - bind the feedback intake to the bundle's
+// service (supabase adapter or the honest local stand-in) and late-bind the
+// same coarse context the diagnostics ring carries: committed route + live
+// save revision. The server re-derives owner/session/build/revision itself;
+// these providers only fill the client-side context fields.
+bindFeedbackService(backendBundle.feedbackService)
+bindFeedbackProviders({
+  route: () => coordinator.getSnapshot().currentRoute,
+  saveRevision: () => cloudSaveCoordinator.getRevision(),
+})
 
 /** SHA-256 (truncated) of the cached raw save - the manifest's coarse
  *  corruption signal. Never the save bytes themselves. */
@@ -975,6 +992,8 @@ onUnmounted(() => {
   // B1-D - the authority's heartbeat/retry timers die with the mount;
   // a remount builds a fresh instance.
   onlineAuthority.stopAll()
+  unbindFeedbackService()
+  unbindFeedbackProviders()
   unbindOnlineAuthority(onlineAuthority)
   unbindSessionTeardown(teardownToAuth)
   window.removeEventListener(SAVE_RESET_REQUEST_EVENT, resetSaveFromSettings)
