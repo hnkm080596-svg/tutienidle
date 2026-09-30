@@ -124,14 +124,29 @@ const TEST_MARKER_RE =
   /from\s+['"](?:vitest|@vitest\/|vitest\/)[^'"]*['"]|require\(\s*['"]vitest['"]\)|\b(?:describe|it|test|bench|suite|expect)(?:\.\w+)*\s*\(/
 
 export function looksLikeTestFile(path: string, text: string): boolean {
-  return TEST_EXT_RE.test(path) && TEST_MARKER_RE.test(text)
+  if (!TEST_EXT_RE.test(path)) return false
+  // Comment-stripped first: `// describe( it( test(` inside a comment
+  // must not buy the test exemption (R15 S9). A marker inside a real
+  // string literal is likewise uncounted - conservative direction is
+  // to flag, never to exempt.
+  const stripped = text
+    .replace(/\/\*[\s\S]*?\*\//g, ' ')
+    .replace(/\/\/[^\n]*/g, ' ')
+  return TEST_MARKER_RE.test(stripped)
 }
 
 /** True when an import/export/require specifier text names a `*.test*` module -
  *  extensionless spellings and query suffixes (`?import`, `?worker`, `?raw`)
  *  included. */
 export function isTestSpecifier(specText: string): boolean {
-  return /\.test(?:\.|\?|$)/.test(specText)
+  // `*.test*` module spellings (incl. extensionless and `?query`
+  // suffixes) plus specifiers reaching into the test tree itself -
+  // production importing `../tests/writer` sidesteps the corpus
+  // boundary entirely (R15 S8).
+  return (
+    /\.test(?:\.|\?|$)/.test(specText) ||
+    /(?:^|[/\\])(?:tests?|__tests__|e2e)(?:[/\\]|$)/.test(specText)
+  )
 }
 
 /**
@@ -149,6 +164,13 @@ export function stripVueInert(text: string): string {
   const scrubbed = text
     .replace(/<script\b[^>]*>[\s\S]*?<\/script\s*>/gi, ' ')
     .replace(/<style\b[^>]*>[\s\S]*?<\/style\s*>/gi, ' ')
+    // <textarea>/<title> are rawtext elements: mustaches inside are
+    // literal text Vue never evaluates (R15 F4).
+    .replace(/<textarea\b[^>]*>[\s\S]*?<\/textarea\s*>/gi, ' ')
+    .replace(/<title\b[^>]*>[\s\S]*?<\/title\s*>/gi, ' ')
+    // <el v-pre>...</el> - Vue skips compilation inside v-pre, so
+    // directives and mustaches there are literal text (R15 F7).
+    .replace(/<([\w-]+)\b[^>]*\bv-pre\b[^>]*>[\s\S]*?<\/\1\s*>/gi, ' ')
   // Blank HTML comments - but only a `<!--` OUTSIDE a tag's quoted
   // attribute value: `title="<!--"` is literal text, and treating it
   // as a comment start blanks every directive after it. Track

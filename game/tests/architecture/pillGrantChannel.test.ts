@@ -47,6 +47,18 @@
  * carriers, and member-position pill carriers (`this.ps[k]`,
  * `holder.pill[k]`).
  *
+ * R16 (AUT-R15): clone/carrier callees now include create/assign/
+ * freeze/seal so `Object.create(ps)[k]()` and `Object.assign({},ps)
+ * [k]()` dispatch lanes resolve; an immutability wrapper over a
+ * pinned-member literal keeps `memberPaths` (`Object.freeze({m:
+ * useProfessionPill})` -> `c.m()`); the unbound pill-ish-name
+ * dispatch arms require the file to touch the channel so plain
+ * dispatch dictionaries stay silent (F5); `v-pre` regions are
+ * masked as inert (F7). S14 adjudicated BOUND: `engine
+ * [keyFromServer]('a','b',1)` - unbound root AND opaque key, no
+ * spelled token anywhere - is statically invisible and stays in the
+ * honest bound below.
+ *
  * Honest residual bound: name enumeration with no literal in sight
  * (`Object.keys(ps)` -> `ps[name]`), keys assembled at runtime
  * (crypto-style concat of variables), a bound handle passed through
@@ -484,6 +496,13 @@ describe('pill grant channel - ops wrapper is the only production caller', () =>
         const rel = relative(GAME_ROOT, file.path).replaceAll('\\', '/')
         if (ALLOWED_CALLERS.has(rel)) continue
         const text = readFileSync(file.path, 'utf8')
+        // Files that never name the pill channel cannot smuggle its
+        // grant: a bare pill-ish name (`ps`, `pill`) alone is
+        // dispatch-dictionary territory, so the unbound-pillish-name
+        // dispatch arms gate on the file touching the channel
+        // (R15 F5 - `Record<string, () => void>` dicts stay silent).
+        const fileTouchesPill =
+          /PillSystem|useProfessionPill|PillBag/.test(text)
         const blocks = rel.endsWith('.vue')
           ? scriptBlocksOf(text).map((b) => ({ body: b.body, jsx: b.jsx }))
           : [{ body: text, jsx: rel.endsWith('.tsx') || rel.endsWith('.jsx') }]
@@ -563,7 +582,7 @@ describe('pill grant channel - ops wrapper is the only production caller', () =>
               (ts.isIdentifier(cc) ? cc.text : undefined)
             return (
               cn !== undefined &&
-              /clone|wrap|copy|snapshot|structur|proxy|boxed?/i.test(cn) &&
+              /clone|wrap|copy|snapshot|structur|proxy|boxed?|create|assign|freeze|seal/i.test(cn) &&
               u.arguments.some(
                 (a) => pillish(unwrapExpr(a)) || carrierPillish(a),
               )
@@ -837,7 +856,7 @@ describe('pill grant channel - ops wrapper is the only production caller', () =>
                   (ts.isIdentifier(cCallee) ? cCallee.text : undefined)
                 if (
                   cn !== undefined &&
-                  /clone|wrap|copy|snapshot|structur|proxy|boxed?/i.test(cn) &&
+                  /clone|wrap|copy|snapshot|structur|proxy|boxed?|create|assign|freeze|seal/i.test(cn) &&
                   init.arguments.some((a) => pillish(unwrapExpr(a)))
                 ) {
                   binds.rootAliases.set(n.name.text, 'ps')
@@ -933,8 +952,27 @@ describe('pill grant channel - ops wrapper is the only production caller', () =>
               }
             }
             // `const o = {f: ps.useProfessionPill, g: Reflect.get(ps,K)}`
-            if (ts.isObjectLiteralExpression(init)) {
-              for (const prop of init.properties) {
+            // `const c = Object.freeze({m: ps.useProfessionPill})` -
+            // an immutability/clone wrapper over the literal keeps
+            // the pinned member path (R15 S13).
+            let initObj = init
+            if (ts.isCallExpression(initObj)) {
+              const wc = unwrapExpr(initObj.expression)
+              const wcn =
+                memberNameOf(wc, binds) ??
+                (ts.isIdentifier(wc) ? wc.text : undefined)
+              if (
+                wcn !== undefined &&
+                /freeze|seal|preventExtensions|assign|clone|structur|definePropert/i.test(
+                  wcn,
+                ) &&
+                initObj.arguments[0] !== undefined
+              ) {
+                initObj = unwrapExpr(initObj.arguments[0])
+              }
+            }
+            if (ts.isObjectLiteralExpression(initObj)) {
+              for (const prop of initObj.properties) {
                 let propName: string | undefined
                 let propInit: ts.Expression | undefined
                 if (ts.isPropertyAssignment(prop)) {
@@ -1253,7 +1291,9 @@ describe('pill grant channel - ops wrapper is the only production caller', () =>
             if (
               ts.isElementAccessExpression(callee) &&
               memberNameOf(callee, binds) === undefined &&
-              (receiverPillish(callee.expression) ||
+              // A bare pill-ish name only counts as the channel when
+              // the file actually touches it (R15 F5).
+              ((fileTouchesPill && receiverPillish(callee.expression)) ||
                 // `structuredClone(ps)[k]()` / `wrap(ps)[k]()` -
                 // a call fed the pill system returns a carrier whose
                 // member slots mirror the pill-ish arg.
