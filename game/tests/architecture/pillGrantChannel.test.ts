@@ -183,11 +183,7 @@ function literalize(
     }
     return joined
   }
-  if (
-    ts.isCallExpression(un) &&
-    un.arguments.length === 1 &&
-    un.arguments[0] !== undefined
-  ) {
+  if (ts.isCallExpression(un)) {
     const callee = unwrapExpr(un.expression)
     const isStringCtor =
       (ts.isIdentifier(callee) && callee.text === 'String') ||
@@ -195,7 +191,77 @@ function literalize(
         callee.name.text === 'String' &&
         ts.isIdentifier(unwrapExpr(callee.expression)) &&
         GLOBAL_ROOTS.has((unwrapExpr(callee.expression) as ts.Identifier).text))
-    if (isStringCtor) return literalize(un.arguments[0], b, depth + 1)
+    if (
+      isStringCtor &&
+      un.arguments.length === 1 &&
+      un.arguments[0] !== undefined
+    ) {
+      return literalize(un.arguments[0], b, depth + 1)
+    }
+    // Pure string methods on spelled receivers - deterministic name
+    // assembly channels (`['use','Profession','Pill'].join('')`).
+    if (
+      ts.isPropertyAccessExpression(callee) ||
+      ts.isElementAccessExpression(callee)
+    ) {
+      const m =
+        ts.isPropertyAccessExpression(callee)
+          ? callee.name.text
+          : literalize(callee.argumentExpression, b, depth + 1)
+      const recv = unwrapExpr(callee.expression)
+      if (m === 'join' && ts.isArrayLiteralExpression(recv)) {
+        const parts: string[] = []
+        let ok = true
+        for (const el of recv.elements) {
+          const piece = ts.isSpreadElement(el) ? el.expression : (el as ts.Expression)
+          const lit = literalize(piece, b, depth + 1)
+          if (lit === undefined) {
+            ok = false
+            break
+          }
+          parts.push(lit)
+        }
+        const sep =
+          un.arguments[0] !== undefined
+            ? literalize(un.arguments[0], b, depth + 1)
+            : undefined
+        if (ok) return parts.join(sep ?? ',')
+      }
+      const recvLit = literalize(recv, b, depth + 1)
+      if (recvLit !== undefined && m !== undefined) {
+        const arg0 =
+          un.arguments[0] !== undefined
+            ? literalize(un.arguments[0], b, depth + 1)
+            : undefined
+        switch (m) {
+          case 'concat': {
+            const rest: string[] = []
+            let ok = true
+            for (const a of un.arguments) {
+              const lit = literalize(a, b, depth + 1)
+              if (lit === undefined) {
+                ok = false
+                break
+              }
+              rest.push(lit)
+            }
+            if (ok) return recvLit + rest.join('')
+            break
+          }
+          case 'trim':
+            return recvLit.trim()
+          case 'toLowerCase':
+            return recvLit.toLowerCase()
+          case 'toUpperCase':
+            return recvLit.toUpperCase()
+          case 'repeat':
+            if (arg0 !== undefined && /^\d+$/.test(arg0)) {
+              return recvLit.repeat(parseInt(arg0, 10))
+            }
+            break
+        }
+      }
+    }
   }
   return undefined
 }
@@ -492,12 +558,7 @@ describe('pill grant channel - ops wrapper is the only production caller', () =>
             const init = unwrapExpr(n.initializer)
             if (ts.isIdentifier(init)) {
               const p = accessPath(init, binds)
-              if (
-                p !== undefined &&
-                (REFLECTIVE_READ_ROOTS.has(p) ||
-                  p === 'Proxy' ||
-                  p === 'Function')
-              ) {
+              if (p !== undefined && GLOBAL_NAMES.has(p)) {
                 binds.rootAliases.set(n.name.text, p)
               }
             } else if (
@@ -506,9 +567,9 @@ describe('pill grant channel - ops wrapper is the only production caller', () =>
               rootOf(init, binds) !== undefined &&
               GLOBAL_ROOTS.has(rootOf(init, binds)!)
             ) {
-              // `const R = globalThis.Reflect`
+              // `const R = globalThis.Reflect` / `const W = window.Worker`
               const r = memberNameOf(init, binds)
-              if (r !== undefined && REFLECTIVE_READ_ROOTS.has(r)) {
+              if (r !== undefined && GLOBAL_NAMES.has(r)) {
                 binds.rootAliases.set(n.name.text, r)
               }
             }
@@ -563,6 +624,39 @@ describe('pill grant channel - ops wrapper is the only production caller', () =>
               memberOfExpr(n.right) === PINNED
             ) {
               binds.memberPaths.set(path, PINNED)
+            }
+          }
+          // `get f() { return ps.useProfessionPill }` / a class method
+          // returning the pinned handle - `this.f` carries it.
+          if (
+            (ts.isGetAccessorDeclaration(n) ||
+              ts.isMethodDeclaration(n)) &&
+            n.body !== undefined
+          ) {
+            let returnsPinned = false
+            const ret = (x: ts.Node): void => {
+              if (returnsPinned) return
+              if (
+                ts.isReturnStatement(x) &&
+                x.expression !== undefined &&
+                memberOfExpr(x.expression) === PINNED
+              ) {
+                returnsPinned = true
+                return
+              }
+              ts.forEachChild(x, ret)
+            }
+            ret(n.body)
+            if (returnsPinned && n.name !== undefined) {
+              const nm =
+                ts.isIdentifier(n.name) || ts.isStringLiteral(n.name)
+                  ? n.name.text
+                  : ts.isComputedPropertyName(n.name)
+                    ? literalize(n.name.expression, binds)
+                    : undefined
+              if (nm !== undefined) {
+                binds.memberPaths.set(`this.${nm}`, PINNED)
+              }
             }
           }
           ts.forEachChild(n, collect)
@@ -657,6 +751,78 @@ describe('pill grant channel - ops wrapper is the only production caller', () =>
             ) {
               note(`indirect pinned call: ${n.getText()}`)
             }
+            // `eval.call(t, 'code')` / `eval.apply` / `eval.bind` -
+            // indirect invocation of an opaque-code receiver.
+            if (
+              callMember !== undefined &&
+              INDIRECT_NAMES.has(callMember) &&
+              (ts.isPropertyAccessExpression(callee) ||
+                ts.isElementAccessExpression(callee))
+            ) {
+              const recv = unwrapExpr(callee.expression)
+              const recvName = ts.isIdentifier(recv)
+                ? (binds.rootAliases.get(recv.text) ?? recv.text)
+                : undefined
+              if (recvName === 'eval' || recvName === 'Function') {
+                note(`opaque code indirect: ${n.getText()}`)
+              }
+            }
+            // `Reflect.apply(fn,t,args)` / `Reflect.construct` invoke
+            // an opaque callee outright.
+            if (
+              (ts.isPropertyAccessExpression(callee) ||
+                ts.isElementAccessExpression(callee)) &&
+              (callMember === 'apply' || callMember === 'construct') &&
+              rootOf(
+                (
+                  callee as
+                    | ts.PropertyAccessExpression
+                    | ts.ElementAccessExpression
+                ).expression,
+                binds,
+              ) === 'Reflect'
+            ) {
+              note(`Reflect.${callMember} opaque invocation: ${n.getText()}`)
+            }
+            // `ps[k]()` with an UNRESOLVED key on a pill-ish root -
+            // opaque member dispatch can reach the pinned method.
+            // Enumeration over a pill-ish root (`Object.keys(ps)`,
+            // `Reflect.get(ps, k)`, `Object.getOwnPropertyNames(ps)`)
+            // is the assembly step for that dispatch.
+            const pillish = (e: ts.Expression): boolean => {
+              const r = rootOf(e, binds)
+              return r !== undefined && /pill|^ps$/i.test(r)
+            }
+            if (
+              ts.isElementAccessExpression(callee) &&
+              memberNameOf(callee, binds) === undefined &&
+              pillish(callee.expression)
+            ) {
+              note(`opaque member dispatch: ${n.getText()}`)
+            }
+            const ENUMERATE = new Set([
+              'keys', 'values', 'entries', 'ownKeys',
+              'getOwnPropertyNames', 'getOwnPropertyDescriptors',
+            ])
+            if (
+              callMember !== undefined &&
+              ENUMERATE.has(callMember) &&
+              n.arguments.some(
+                (a) => pillish(a) || touchesPinnedName(a, binds),
+              )
+            ) {
+              note(`enumeration over pill system: ${n.getText()}`)
+            }
+            // DOM code-injection sinks.
+            const DOM_WRITE_CALLS = new Set([
+              'insertAdjacentHTML',
+              'write',
+              'writeln',
+              'execCommand',
+            ])
+            if (DOM_WRITE_CALLS.has(callMember ?? '')) {
+              note(`DOM code-injection sink: ${n.getText()}`)
+            }
           }
           // A spelled `*.test*` specifier literal ANYWHERE in
           // production: import.meta.glob, `new Worker(new URL(
@@ -711,6 +877,25 @@ describe('pill grant channel - ops wrapper is the only production caller', () =>
             }
             if (ctor === 'Worker' || ctor === 'SharedWorker') {
               note(`new ${ctor}() unscanned code: ${n.getText()}`)
+            }
+          }
+          // `x.innerHTML = markup` - DOM code-injection write lane.
+          if (
+            ts.isBinaryExpression(n) &&
+            n.operatorToken.kind === ts.SyntaxKind.EqualsToken
+          ) {
+            const l = unwrapExpr(n.left)
+            const leaf = ts.isPropertyAccessExpression(l)
+              ? l.name.text
+              : ts.isElementAccessExpression(l)
+                ? literalize(l.argumentExpression, binds)
+                : undefined
+            if (
+              leaf === 'innerHTML' ||
+              leaf === 'outerHTML' ||
+              leaf === 'srcdoc'
+            ) {
+              note(`DOM code-injection write: ${n.getText()}`)
             }
           }
           if (touchesPinnedName(n, binds)) {

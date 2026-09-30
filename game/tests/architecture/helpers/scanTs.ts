@@ -146,10 +146,39 @@ export function isTestSpecifier(specText: string): boolean {
  *  HTML comments are blanked so directive/mustache scans never see
  *  script-literal strings or commented-out template. */
 export function stripVueInert(text: string): string {
-  return text
+  const scrubbed = text
     .replace(/<script\b[^>]*>[\s\S]*?<\/script\s*>/gi, ' ')
     .replace(/<style\b[^>]*>[\s\S]*?<\/style\s*>/gi, ' ')
-    .replace(/<!--[\s\S]*?-->/g, ' ')
+  // Blank HTML comments - but only a `<!--` OUTSIDE a tag's quoted
+  // attribute value: `title="<!--"` is literal text, and treating it
+  // as a comment start blanks every directive after it. Track
+  // tag/quote state instead of a flat regex.
+  let out = ''
+  let i = 0
+  let inTag = false
+  let quote: string | null = null
+  while (i < scrubbed.length) {
+    if (!inTag && scrubbed.startsWith('<!--', i)) {
+      const end = scrubbed.indexOf('-->', i + 4)
+      i = end === -1 ? scrubbed.length : end + 3
+      continue
+    }
+    const ch = scrubbed[i]!
+    if (inTag) {
+      if (quote !== null) {
+        if (ch === quote) quote = null
+      } else if (ch === '"' || ch === "'") {
+        quote = ch
+      } else if (ch === '>') {
+        inTag = false
+      }
+    } else if (ch === '<') {
+      inTag = true
+    }
+    out += ch
+    i++
+  }
+  return out
 }
 
 export function templateExpressions(text: string): string[] {
