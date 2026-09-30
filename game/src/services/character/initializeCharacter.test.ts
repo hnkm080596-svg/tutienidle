@@ -150,18 +150,27 @@ describe('initializeCharacter - one starter snapshot from canonical metadata', (
   })
 
   it('reconstructing from the same metadata produces the identical snapshot shape', () => {
-    const first = makeOwners()
-    const second = makeOwners()
+    // The deep-equality below compares mock-call snapshots that embed the
+    // whole player object; lastSavedAt is wall-clock stamped per
+    // construction, so pin the clock or two runs 1ms apart diverge.
+    vi.useFakeTimers()
+    try {
+      vi.setSystemTime(new Date('2026-09-30T00:00:00Z'))
+      const first = makeOwners()
+      const second = makeOwners()
 
-    initializeCharacter(initializationMetadataFromRemote(REMOTE_CHARACTER), first.owners)
-    initializeCharacter(initializationMetadataFromRemote(REMOTE_CHARACTER), second.owners)
+      initializeCharacter(initializationMetadataFromRemote(REMOTE_CHARACTER), first.owners)
+      initializeCharacter(initializationMetadataFromRemote(REMOTE_CHARACTER), second.owners)
 
-    // Same picks, same grants - instanceIds are per-snapshot ids, not
-    // rolls (the determinism contract is about picks, not uuid bytes).
-    expect(second.player.name).toBe(first.player.name)
-    expect(second.player.selectedTalentIds).toEqual(first.player.selectedTalentIds)
-    expect(second.player.mortalBasicSkillId).toBe(first.player.mortalBasicSkillId)
-    expect(second.calls.learnSkill.mock.calls).toEqual(first.calls.learnSkill.mock.calls)
-    expect(second.calls.buildingAdd.mock.calls.length).toBe(first.calls.buildingAdd.mock.calls.length)
+      // Same picks, same grants - instanceIds are per-snapshot ids, not
+      // rolls (the determinism contract is about picks, not uuid bytes).
+      expect(second.player.name).toBe(first.player.name)
+      expect(second.player.selectedTalentIds).toEqual(first.player.selectedTalentIds)
+      expect(second.player.mortalBasicSkillId).toBe(first.player.mortalBasicSkillId)
+      expect(second.calls.learnSkill.mock.calls).toEqual(first.calls.learnSkill.mock.calls)
+      expect(second.calls.buildingAdd.mock.calls.length).toBe(first.calls.buildingAdd.mock.calls.length)
+    } finally {
+      vi.useRealTimers()
+    }
   })
 })
