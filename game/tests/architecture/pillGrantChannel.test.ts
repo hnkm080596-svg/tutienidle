@@ -100,6 +100,13 @@ const REFLECTIVE_MEMBERS = new Set([
   'get', 'getOwnPropertyDescriptor', 'getOwnPropertyDescriptors',
   'defineProperty', 'defineProperties', 'apply', 'construct',
 ])
+/** Member names that enumerate or read slots of a pill-ish root:
+ * `Object.keys(ps)`, `Reflect.get(ps, k)`, `Object.getOwnProperty*`. */
+const ENUMERATE_MEMBERS = new Set([
+  'keys', 'values', 'entries', 'ownKeys', 'get',
+  'getOwnPropertyNames', 'getOwnPropertyDescriptors',
+  'getOwnPropertyDescriptor',
+])
 
 /** Transparent wrappers around an expression: parens, nonnull, as,
  * satisfies, angle-bracket casts, comma sequences (`(0, x)` -> x). */
@@ -612,6 +619,32 @@ describe('pill grant channel - ops wrapper is the only production caller', () =>
                 binds.rootAliases.set(n.name.text, r)
               }
             }
+            // `const rd = Object.getOwnPropertyDescriptor` /
+            // `const g = globalThis.Reflect.get` - a bare reflective or
+            // enumeration member captured as a handle: invoking the
+            // bound name runs that member read over its args.
+            if (
+              (ts.isPropertyAccessExpression(init) ||
+                ts.isElementAccessExpression(init)) &&
+              !binds.rootAliases.has(n.name.text)
+            ) {
+              const r = memberNameOf(init, binds)
+              const recvPath = accessPath(init.expression, binds)
+              const iRoot = rootOf(init, binds)
+              const onReflective =
+                iRoot !== undefined &&
+                (REFLECTIVE_READ_ROOTS.has(iRoot) ||
+                  (GLOBAL_ROOTS.has(iRoot) &&
+                    recvPath !== undefined &&
+                    /\.(Object|Reflect)$/.test(recvPath)))
+              if (
+                r !== undefined &&
+                onReflective &&
+                (REFLECTIVE_MEMBERS.has(r) || ENUMERATE_MEMBERS.has(r))
+              ) {
+                binds.rootAliases.set(n.name.text, r)
+              }
+            }
             // Opaque handles OFF a pill-ish root - values whose
             // member slot cannot be resolved: `const mm = ps[k]`,
             // `const g = Reflect.get(ps, k)`,
@@ -651,23 +684,43 @@ describe('pill grant channel - ops wrapper is the only production caller', () =>
                 binds.opaqueHandles.add(n.name.text)
               }
               // `const g = mm.bind(t)` - .bind/.call/.apply on an
-              // opaque handle yields a handle to the same slot.
+              // opaque handle, or on an unresolved element slot of a
+              // pill-ish root (`ps[k].bind(ps)`), yields a handle to
+              // the same slot.
               if (
                 cMember !== undefined &&
                 INDIRECT_NAMES.has(cMember) &&
                 (ts.isPropertyAccessExpression(cCallee) ||
-                  ts.isElementAccessExpression(cCallee)) &&
-                ts.isIdentifier(unwrapExpr(cCallee.expression)) &&
-                binds.opaqueHandles.has(
-                  (unwrapExpr(cCallee.expression) as ts.Identifier).text,
-                )
+                  ts.isElementAccessExpression(cCallee))
               ) {
-                binds.opaqueHandles.add(n.name.text)
+                const recvE = unwrapExpr(cCallee.expression)
+                const recvOpaque =
+                  (ts.isIdentifier(recvE) &&
+                    binds.opaqueHandles.has(recvE.text)) ||
+                  (ts.isElementAccessExpression(recvE) &&
+                    memberNameOf(recvE, binds) === undefined &&
+                    pillish(recvE.expression))
+                if (recvOpaque) binds.opaqueHandles.add(n.name.text)
               }
               // `const cp = structuredClone(ps)` / `wrap(ps)` - a
               // call fed the pill system returns a pill-ish carrier
               // (a clone forwards its member slots verbatim).
               if (init.arguments.some((a) => pillish(unwrapExpr(a)))) {
+                binds.rootAliases.set(n.name.text, 'ps')
+              }
+            }
+            // `const px = new Proxy(ps, {})` - the proxy forwards
+            // member reads to the pill-ish target.
+            if (
+              ts.isNewExpression(init) &&
+              init.arguments !== undefined &&
+              init.arguments.some((a) => pillish(unwrapExpr(a)))
+            ) {
+              const nc = unwrapExpr(init.expression)
+              const ctor = ts.isIdentifier(nc)
+                ? (binds.rootAliases.get(nc.text) ?? nc.text)
+                : undefined
+              if (ctor === 'Proxy') {
                 binds.rootAliases.set(n.name.text, 'ps')
               }
             }
@@ -948,7 +1001,14 @@ describe('pill grant channel - ops wrapper is the only production caller', () =>
                 (ts.isCallExpression(unwrapExpr(callee.expression)) &&
                   (
                     unwrapExpr(callee.expression) as ts.CallExpression
-                  ).arguments.some((a) => pillish(unwrapExpr(a)))))
+                  ).arguments.some((a) => pillish(unwrapExpr(a)))) ||
+                // `this.ps[k]` / `holder.pill[k]` - a member-position
+                // carrier whose own name spells the channel.
+                (ts.isPropertyAccessExpression(unwrapExpr(callee.expression)) &&
+                  /pill|^ps$/i.test(
+                    (unwrapExpr(callee.expression) as ts.PropertyAccessExpression)
+                      .name.text,
+                  )))
             ) {
               note(`opaque member dispatch: ${n.getText()}`)
             }
@@ -961,14 +1021,42 @@ describe('pill grant channel - ops wrapper is the only production caller', () =>
             ) {
               note(`opaque handle invocation: ${n.getText()}`)
             }
-            const ENUMERATE = new Set([
-              'keys', 'values', 'entries', 'ownKeys',
-              'getOwnPropertyNames', 'getOwnPropertyDescriptors',
-              'getOwnPropertyDescriptor',
-            ])
+            // `const k = Object.keys; k(ps)` - an identifier callee
+            // bound to a global member resolves through rootAliases.
+            const resolvedCallMember =
+              callMember ??
+              (ts.isIdentifier(callee)
+                ? binds.rootAliases.get(callee.text)
+                : undefined)
             if (
-              callMember !== undefined &&
-              ENUMERATE.has(callMember) &&
+              resolvedCallMember !== undefined &&
+              ENUMERATE_MEMBERS.has(resolvedCallMember) &&
+              resolvedCallMember !== 'get' &&
+              n.arguments.some(
+                (a) => pillish(a) || touchesPinnedName(a, binds),
+              )
+            ) {
+              note(`enumeration over pill system: ${n.getText()}`)
+            }
+            // `Reflect.get(ps, k)` / `globalThis.Reflect.get(ps,k)` /
+            // `ps.get(k)` - a member READ over the pill-ish root is
+            // the enumeration step feeding opaque dispatch
+            // (`Reflect.get(ps,k).call(ps,...)` needs no binding).
+            // Gated on a Reflect/Object/global/pill-ish root so a
+            // plain `map.get(ps)` key lookup does not flag.
+            const callRoot =
+              ts.isPropertyAccessExpression(callee) ||
+              ts.isElementAccessExpression(callee)
+                ? rootOf(callee.expression, binds)
+                : undefined
+            if (
+              resolvedCallMember === 'get' &&
+              (callRoot === undefined ||
+                REFLECTIVE_READ_ROOTS.has(callRoot) ||
+                GLOBAL_ROOTS.has(callRoot) ||
+                ((ts.isPropertyAccessExpression(callee) ||
+                  ts.isElementAccessExpression(callee)) &&
+                  pillish(callee.expression))) &&
               n.arguments.some(
                 (a) => pillish(a) || touchesPinnedName(a, binds),
               )
