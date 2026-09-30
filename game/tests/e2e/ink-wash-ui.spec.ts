@@ -70,7 +70,8 @@ test.describe('ink-wash UI visual smoke', () => {
 
       const panel = page.locator('.overlay-panel__card').first()
       await expect(panel).toBeVisible()
-      await expect(panel.locator('[data-ink-slice="frame-xl-ceremony"]').first()).toBeVisible()
+      await expect(panel.locator('[data-hk-slice="surface-m-panel"]').first()).toBeVisible()
+      await expect(panel.locator('[data-hk-slice="frame-m-modal"]').first()).toBeVisible()
 
       // Flake fix (2026-09-01): overlay-fade enter transition chạy
       // transform .22s sau khi visible — boundingBox đọc ngay làm

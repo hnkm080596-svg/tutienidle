@@ -36,8 +36,8 @@ describe('ink-wash large surfaces', () => {
     const dialog = container.querySelector<HTMLElement>('[role="dialog"]')!
 
     expect(dialog.getAttribute('aria-modal')).toBe('true')
-    expect(dialog.querySelector('[data-ink-slice="surface-xl-paper-scroll"]')).not.toBeNull()
-    expect(dialog.querySelector('[data-ink-slice="frame-xl-ceremony"]')).not.toBeNull()
+    expect(dialog.querySelector('[data-hk-slice="surface-m-panel"]')).not.toBeNull()
+    expect(dialog.querySelector('[data-hk-slice="frame-m-modal"]')).not.toBeNull()
     overlay.click()
     expect(onClose).toHaveBeenCalledTimes(1)
   })

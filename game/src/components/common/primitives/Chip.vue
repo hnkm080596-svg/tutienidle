@@ -8,7 +8,11 @@ import { AudioManager } from '@/core/audio/AudioManager'
 // --mineral-gold + nền paper sáng nhất, không hoà lẫn nền panel. Nền
 // active điều khiển qua CSS var --chip-active-bg (nơi cần tint thì
 // override).
-withDefaults(defineProps<{
+//
+// Huyen Kim phase 1: the seal-chip manifest slot carries the chrome;
+// --chip-active-bg stays the consumer override and now paints the slice
+// fill so a ready art drop cannot bury it.
+const props = withDefaults(defineProps<{
   active?: boolean
   disabled?: boolean
 }>(), {
@@ -44,9 +48,9 @@ function onClick() {
     @click="onClick"
   >
     <InkNineSlice
-      asset-id="frame-xs-ink-line"
+      :chrome-id="isTab ? 'tab-seal' : 'seal-chip'"
       layer="frame"
-      :tint-var="active ? '--mineral-gold' : undefined"
+      :tint-var="active ? 'var(--chip-active-bg, var(--hk-gold))' : undefined"
     />
     <span class="chip__content"><slot /></span>
   </button>
@@ -56,46 +60,58 @@ function onClick() {
 .chip {
   position: relative;
   isolation: isolate;
-  min-height: var(--tap-min);
-  padding: var(--space-1) var(--space-2);
-  /* Tab "đóng" — giấy trầm hơn panel phía sau, không còn khối mực đen. */
-  background: linear-gradient(160deg, var(--paper-200), var(--paper-100));
-  color: var(--paper-text-soft);
-  border: 1px solid var(--paper-line-soft);
-  border-radius: var(--radius-sm);
-  font-family: var(--font-body);
+  min-height: var(--hk-density-compact-height);
+  padding: var(--hk-density-compact-pad-y) var(--hk-density-compact-pad-x);
+  color: var(--hk-text-secondary);
+  border: 0;
+  border-radius: var(--hk-radius-pill);
+  font-family: var(--hk-font-ui);
   font-weight: 600;
   font-size: var(--text-xs);
   cursor: pointer;
-  transition: border-color 150ms ease, color 150ms ease, background 150ms ease, box-shadow 150ms ease;
+  background: transparent;
+  transition: border-color var(--hk-motion-micro) var(--hk-ease-standard), color var(--hk-motion-micro) var(--hk-ease-standard), background var(--hk-motion-micro) var(--hk-ease-standard), box-shadow var(--hk-motion-micro) var(--hk-ease-standard);
 }
 
 .chip:not(.is-active):not(:disabled):hover {
-  color: var(--paper-text);
-  border-color: var(--paper-line);
+  color: var(--hk-text-primary);
 }
 
-/* "Open" tab - brightest in the group + brass border, lifted clear off
-   the panel background instead of blending into the page color.
-   color-mix instead of hard hex + --paper-text keeps the chip correct
-   when the drawer remaps paper -> surface (.ink-drawer). */
+/* "Open" tab - brightest in the group + gold seal ring, lifted clear off
+   the panel background instead of blending into the page color. */
 .chip.is-active {
-  background: var(--chip-active-bg, linear-gradient(175deg, var(--paper-50), color-mix(in srgb, var(--paper-50) 82%, white)));
-  color: var(--paper-text);
-  border-color: var(--mineral-gold);
+  color: var(--hk-text-primary);
   box-shadow:
-    inset 0 0 0 1px color-mix(in srgb, var(--mineral-gold) 35%, transparent),
-    0 2px 6px rgba(20, 16, 8, 0.14);
+    0 0 8px color-mix(in srgb, var(--hk-glow-gold) 60%, transparent),
+    0 2px 6px var(--hk-shadow-low);
+}
+
+/* The slice paints the idle fill; --chip-active-bg remains the consumer
+   override for the open state (SettingsPanel/StageSelectPanel tints). */
+.chip :deep(.ink-nine-slice--hk-fill) {
+  background: linear-gradient(175deg, var(--hk-surface-overlay), var(--hk-surface-raised));
+}
+
+.chip.is-active :deep(.ink-nine-slice--hk-fill) {
+  background: var(--chip-active-bg, linear-gradient(175deg,
+    color-mix(in srgb, var(--hk-gold) 30%, var(--hk-surface-overlay)),
+    color-mix(in srgb, var(--hk-gold) 16%, var(--hk-surface-raised))));
 }
 
 .chip:focus-visible {
   outline: none;
-  box-shadow: var(--focus-ring-chrome);
+  box-shadow: 0 0 0 2px var(--hk-gold-muted), 0 0 10px var(--hk-glow-gold);
 }
 
 .chip:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chip {
+    transition: none;
+  }
 }
 
 .chip__content {

@@ -84,7 +84,7 @@ function onKeydown(event: KeyboardEvent) {
   display: grid;
   grid-template-columns: repeat(var(--tab-columns), 1fr);
   align-items: stretch;
-  gap: var(--space-1);
+  gap: var(--hk-space-2);
 }
 
 .tab-bar--row {
@@ -97,7 +97,7 @@ function onKeydown(event: KeyboardEvent) {
 
 .tab-bar__item {
   position: relative;
-  min-height: var(--tap-min);
+  min-height: var(--hk-density-compact-height);
   font-size: var(--text-xs);
 }
 
