@@ -6,8 +6,8 @@
  * identical by `tokens.parity.test.ts` — never edit one without the other.
  *
  * No component may hardcode a visual semantic that has a token here.
- * These vars sit beside (not on top of) the legacy --ink-*/--paper-*
- * tokens; the new skin opts in per-surface during migration.
+ * These vars sit beside (not on top of) the legacy --ink-* and
+ * --paper-* tokens; the new skin opts in per-surface during migration.
  */
 
 :root {
