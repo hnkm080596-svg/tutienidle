@@ -110,11 +110,15 @@ export class GameManagerPillOps {
         target,
       )
 
+      // Consume BEFORE the timed-effect side channel: if
+      // applyTimedEffect throws, the stat grant is already applied -
+      // a retained pill would double-grant on retry. Losing one timed
+      // effect is strictly less harmful than a free extra grant.
+      this.deps.pillBag.remove(pillId, 1)
+
       if (result.timedEffect) {
         this.deps.applyTimedEffect(player, result.timedEffect)
       }
-
-      this.deps.pillBag.remove(pillId, 1)
 
       return { ok: true, mainStat: result.mainStat }
     }

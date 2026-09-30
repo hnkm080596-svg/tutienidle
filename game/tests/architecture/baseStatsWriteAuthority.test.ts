@@ -96,6 +96,26 @@
  * insertAdjacentHTML/document.write calls), the Vue attr-comment
  * lane (`title="<!--"` no longer blanks live directives after it),
  * and Vue reader callees (`computed`/`watch`) counted read-shaped.
+ * R11 additions: call/new/conditional/await receivers feeding a
+ * `.<leaf>` write (`usePlayerStore().baseStats.qi = 9`), renamed-root
+ * owners (`const mgr = usePlayerStore()`), bound-identifier carriers
+ * (`opaque(wrap)` where `wrap = {ref: pool}`), Map round-trips and
+ * bound-var for-of iteration (`for (const w of poolArr)`), number
+ * literalize (`.at(-1)`, `String.fromCharCode`, atob/btoa,
+ * repeat/pad), member-position spelled keys (`o.k = 'baseStats'` ->
+ * `x[o.k]` resolves via constPropKeys), `$state` destructure and
+ * `storeToRefs(store)`/`toRefs` destructure aliases, `$subscribe`
+ * callback state params, object-literal rhs destructure match
+ * (`const {ref:r} = {ref: pool}`), owner-copy binding
+ * (`{...player}`, `Object.assign({}, player)`), closure writes
+ * through read-shaped callees (`arr.map(() => pool.qi = 9)`),
+ * guarded-block narrowing (element/pinned/poolish writes only -
+ * plain local writes beside a spelled test stay quiet),
+ * console.warn/error/* and Object.freeze/seal counted read-shaped,
+ * loop-var shadowing (a bound non-pool `player` beats the root
+ * regex), and the .vue lane (v-for alias pool writes, `v-html`
+ * expression sinks, `javascript:` attribute URLs, spelled `v-model`
+ * member segments, mustaches inside tag attrs skipped).
  *
  * Honest residual bound (documented, not hidden): computed keys that
  * never spell the name (`p[k]` with a computed k, Reflect.set with a
@@ -229,6 +249,30 @@ const GLOBAL_NAMES = new Set([
  * over-match - verified FP). */
 const POOLISH_ROOT_RE =
   /player|^ps$|^store$|^usePlayerStore$|^playerStore$|^playerState$/i
+// SCREAMING_CASE names are constants (PLAYER_ID,
+// PLAYER_ANIMATION_PREFIXES, MAIN_STAT_KEYS), never mutable store
+// roots - the `/player/` substring is a deliberate conservatism, not
+// an invitation to flag every constant that spells one.
+const SCREAMING_CONST_RE = /^[A-Z0-9_$]+$/
+const poolishName = (t: string): boolean =>
+  POOLISH_ROOT_RE.test(t) && !SCREAMING_CONST_RE.test(t)
+// A call returning the pool OWNER only when the callee is a
+// store-factory shape: `use*` factories (`usePlayerStore`,
+// `usePlayer`) or an exact poolish name (`playerStore()`, `ps()`).
+// A plain domain function naming `*Player*`
+// (`resolvePlayerFinalStats`, `buildPlayerRewardReceiver`,
+// `createPlayerRewardReceiver`) returns a DERIVED value, not the
+// store - it is not an owner source.
+const isOwnerFactoryCallee = (callee: ts.Expression): boolean => {
+  if (!ts.isIdentifier(callee)) return false
+  if (!poolishName(callee.text)) return false
+  return (
+    /^use[A-Z]/.test(callee.text) ||
+    /^(ps|store|player|playerStore|playerState|usePlayerStore)$/i.test(
+      callee.text,
+    )
+  )
+}
 
 /** Static knowledge a file's declarations yield: which identifiers are
  * bound to what. */
@@ -250,8 +294,20 @@ interface Bindings {
   ownerPropPaths: Set<string>
   /** Identifier bound to a container literal whose elements include
    * the pool: `const arr = [pool]` -> element access `arr[0]` yields
-   * the pool. */
+   * the pool. Also covers object-literal carriers `{ref: pool}`. */
   poolContainers: Set<string>
+  /** Member positions bound to a spelled string: `const o = {k:
+   * 'baseStats'}` or `o.k = 'baseStats'` -> constPropKeys['o.k'].
+   * Feeds `x[o.k]` element keys. */
+  constPropKeys: Map<string, string>
+  /** Loop variables proven NOT pool: `for (const player of rows)`
+   * where the iterable carries no pool - the name shadows the
+   * player-ish root regex but the source pins its domain. */
+  shadowed: Set<string>
+  /** .vue v-for variable names: `<div v-for="row in rows">` -
+   * template expressions share the module binds, and a spelled
+   * baseStats write on a v-for alias is a lane. */
+  vForNames: Set<string>
 }
 
 /** Evaluate a spelled string position: literal, const-key binding, or
@@ -335,25 +391,81 @@ function literalize(e: ts.Expression | undefined, b: Bindings, depth = 0): strin
           ? callee.name.text
           : literalize(callee.argumentExpression, b, depth + 1)
       const recv = unwrapExpr(callee.expression)
-      if (m === 'join' && ts.isArrayLiteralExpression(recv)) {
-        const parts: string[] = []
+      // `['a','b'].join('')` AND its split/reverse precursors:
+      // `'baseStats'.split('').join('')`, `.split('').reverse().join('')`.
+      if (m === 'join') {
+        const piecesOf = (recv0: ts.Expression): string[] | undefined => {
+          const r = unwrapExpr(recv0)
+          if (ts.isArrayLiteralExpression(r)) {
+            const parts: string[] = []
+            for (const el of r.elements) {
+              const piece = ts.isSpreadElement(el)
+                ? el.expression
+                : (el as ts.Expression)
+              const lit = literalize(piece, b, depth + 1)
+              if (lit === undefined) return undefined
+              parts.push(lit)
+            }
+            return parts
+          }
+          if (ts.isCallExpression(r)) {
+            const rc = unwrapExpr(r.expression)
+            if (
+              ts.isPropertyAccessExpression(rc) ||
+              ts.isElementAccessExpression(rc)
+            ) {
+              const rm =
+                ts.isPropertyAccessExpression(rc)
+                  ? rc.name.text
+                  : literalize(rc.argumentExpression, b, depth + 1)
+              if (rm === 'split') {
+                const src = literalize(rc.expression, b, depth + 1)
+                if (src === undefined) return undefined
+                if (r.arguments.length === 0) return [src]
+                const sep = literalize(r.arguments[0], b, depth + 1)
+                return sep === undefined ? undefined : src.split(sep)
+              }
+              if (rm === 'reverse') {
+                const inner = piecesOf(rc.expression)
+                return inner === undefined ? undefined : [...inner].reverse()
+              }
+            }
+          }
+          return undefined
+        }
+        const parts = piecesOf(recv)
+        if (parts !== undefined) {
+          const sep =
+            un.arguments[0] !== undefined
+              ? literalize(un.arguments[0], b, depth + 1)
+              : undefined
+          return parts.join(sep ?? ',')
+        }
+      }
+      // `['a','b'].at(1)` on an array literal of spelled pieces.
+      if (m === 'at' && ts.isArrayLiteralExpression(recv)) {
+        const idx = literalizeNumber(un.arguments[0], b)
+        if (idx !== undefined) {
+          const el = recv.elements[idx < 0 ? recv.elements.length + idx : idx]
+          if (el !== undefined) {
+            const lit = literalize(el as ts.Expression, b, depth + 1)
+            if (lit !== undefined) return lit
+          }
+        }
+      }
+      // `String.fromCharCode(...)` - encoded key assembly.
+      if (m === 'fromCharCode' && resolveRoot(recv, b) === 'String') {
+        const nums: number[] = []
         let ok = true
-        for (const el of recv.elements) {
-          const piece = ts.isSpreadElement(el)
-            ? el.expression
-            : (el as ts.Expression)
-          const lit = literalize(piece, b, depth + 1)
-          if (lit === undefined) {
+        for (const a of un.arguments) {
+          const num = literalizeNumber(a, b)
+          if (num === undefined) {
             ok = false
             break
           }
-          parts.push(lit)
+          nums.push(num)
         }
-        const sep =
-          un.arguments[0] !== undefined
-            ? literalize(un.arguments[0], b, depth + 1)
-            : undefined
-        if (ok) return parts.join(sep ?? ',')
+        if (ok) return String.fromCharCode(...nums)
       }
       const recvLit = literalize(recv, b, depth + 1)
       if (recvLit !== undefined && m !== undefined) {
@@ -382,32 +494,133 @@ function literalize(e: ts.Expression | undefined, b: Bindings, depth = 0): strin
             return recvLit.toLowerCase()
           case 'toUpperCase':
             return recvLit.toUpperCase()
-          case 'repeat':
-            if (arg0 !== undefined && /^\d+$/.test(arg0)) {
-              return recvLit.repeat(parseInt(arg0, 10))
+          case 'repeat': {
+            const n = literalizeNumber(un.arguments[0], b)
+            if (n !== undefined && n >= 0 && n <= 4096) return recvLit.repeat(n)
+            break
+          }
+          case 'slice':
+          case 'substring': {
+            const a = literalizeNumber(un.arguments[0], b)
+            if (a === undefined) break
+            const bArg =
+              un.arguments[1] !== undefined
+                ? literalizeNumber(un.arguments[1], b)
+                : undefined
+            return m === 'slice'
+              ? recvLit.slice(a, bArg)
+              : recvLit.substring(a, bArg)
+          }
+          case 'substr': {
+            const a = literalizeNumber(un.arguments[0], b)
+            if (a === undefined) break
+            const bArg =
+              un.arguments[1] !== undefined
+                ? literalizeNumber(un.arguments[1], b)
+                : undefined
+            return recvLit.substr(a, bArg)
+          }
+          case 'charAt': {
+            const a = literalizeNumber(un.arguments[0], b)
+            if (a !== undefined) return recvLit.charAt(a)
+            break
+          }
+          case 'charCodeAt': {
+            const a = literalizeNumber(un.arguments[0], b)
+            if (a !== undefined) return String(recvLit.charCodeAt(a))
+            break
+          }
+          case 'at': {
+            const a = literalizeNumber(un.arguments[0], b)
+            if (a !== undefined) return recvLit.at(a)
+            break
+          }
+          case 'replace':
+          case 'replaceAll': {
+            const a1 =
+              un.arguments[1] !== undefined
+                ? literalize(un.arguments[1], b, depth + 1)
+                : undefined
+            if (arg0 !== undefined && a1 !== undefined) {
+              return m === 'replace'
+                ? recvLit.replace(arg0, a1)
+                : recvLit.replaceAll(arg0, a1)
             }
             break
-          case 'padStart':
-            if (arg0 !== undefined && /^\d+$/.test(arg0)) {
+          }
+          case 'padStart': {
+            const n = literalizeNumber(un.arguments[0], b)
+            if (n !== undefined) {
               const fill =
                 un.arguments[1] !== undefined
                   ? literalize(un.arguments[1], b, depth + 1)
                   : ' '
-              if (fill !== undefined) return recvLit.padStart(parseInt(arg0, 10), fill)
+              if (fill !== undefined) return recvLit.padStart(n, fill)
             }
             break
-          case 'padEnd':
-            if (arg0 !== undefined && /^\d+$/.test(arg0)) {
+          }
+          case 'padEnd': {
+            const n = literalizeNumber(un.arguments[0], b)
+            if (n !== undefined) {
               const fill =
                 un.arguments[1] !== undefined
                   ? literalize(un.arguments[1], b, depth + 1)
                   : ' '
-              if (fill !== undefined) return recvLit.padEnd(parseInt(arg0, 10), fill)
+              if (fill !== undefined) return recvLit.padEnd(n, fill)
             }
             break
+          }
         }
       }
     }
+    // `atob('...')` / `btoa` - base64-encoded key assembly (browser
+    // globals resolvable through root aliases).
+    if (ts.isIdentifier(callee)) {
+      const name = b.rootAliases.get(callee.text) ?? callee.text
+      if (
+        (name === 'atob' || name === 'btoa') &&
+        un.arguments[0] !== undefined
+      ) {
+        const arg = literalize(un.arguments[0], b, depth + 1)
+        if (arg !== undefined) {
+          return name === 'atob'
+            ? Buffer.from(arg, 'base64').toString('binary')
+            : Buffer.from(arg, 'binary').toString('base64')
+        }
+      }
+    }
+  }
+  // Member-position key binding: `o.k` / `o['k']` where the object
+  // spelled a literal value earlier (`const o = {k:'baseStats'}` or
+  // `o.k = 'x'`).
+  if (
+    ts.isPropertyAccessExpression(un) ||
+    ts.isElementAccessExpression(un)
+  ) {
+    const p = accessPath(un, b)
+    if (p !== undefined) {
+      const v = b.constPropKeys.get(p)
+      if (v !== undefined) return v
+    }
+  }
+  return undefined
+}
+
+/** Evaluate a spelled NUMBER position: literal, const-key digits, or
+ * unary +/- on a spelled operand - feeds index/string-method args. */
+function literalizeNumber(e: ts.Expression | undefined, b: Bindings): number | undefined {
+  if (e === undefined) return undefined
+  const un = unwrapExpr(e)
+  if (ts.isNumericLiteral(un)) return Number(un.text)
+  if (ts.isIdentifier(un)) {
+    const v = b.constKeys.get(un.text)
+    return v !== undefined && /^-?\d+(?:\.\d+)?$/.test(v) ? Number(v) : undefined
+  }
+  if (ts.isPrefixUnaryExpression(un)) {
+    const v = literalizeNumber(un.operand, b)
+    if (v === undefined) return undefined
+    if (un.operator === ts.SyntaxKind.MinusToken) return -v
+    if (un.operator === ts.SyntaxKind.PlusToken) return v
   }
   return undefined
 }
@@ -472,11 +685,12 @@ function resolveCallee(expr: ts.Expression, b: Bindings): CalleeInfo | undefined
 function receiverPoolish(e: ts.Expression, b: Bindings): boolean {
   const u = unwrapExpr(e)
   if (ts.isIdentifier(u)) {
+    if (b.shadowed.has(u.text)) return false
     return (
       b.aliases.has(u.text) ||
       b.ownerAliases.has(u.text) ||
       b.poolContainers.has(u.text) ||
-      POOLISH_ROOT_RE.test(u.text)
+      poolishName(u.text)
     )
   }
   if (ts.isPropertyAccessExpression(u) || ts.isElementAccessExpression(u)) {
@@ -491,8 +705,84 @@ function receiverPoolish(e: ts.Expression, b: Bindings): boolean {
       ts.isPropertyAccessExpression(u)
         ? u.name.text
         : literalize(u.argumentExpression, b)
-    if (leaf !== undefined && POOLISH_ROOT_RE.test(leaf)) return true
+    if (leaf !== undefined && poolishName(leaf)) return true
+    // `$state` is a Pinia-name member: `x.$state.baseStats` reaches
+    // the pool through the state slot even when `x` is opaque.
+    if (leaf === '$state') return true
     return receiverPoolish(u.expression, b)
+  }
+  // `(c ? pool : other).x`, `(pool ?? {}).x`, `(await s).x` - the
+  // receiver of the write is whatever the inner expr yields.
+  if (ts.isConditionalExpression(u)) {
+    return (
+      receiverPoolish(u.whenTrue, b) || receiverPoolish(u.whenFalse, b)
+    )
+  }
+  if (
+    ts.isBinaryExpression(u) &&
+    (u.operatorToken.kind === ts.SyntaxKind.QuestionQuestionToken ||
+      u.operatorToken.kind === ts.SyntaxKind.BarBarToken ||
+      u.operatorToken.kind === ts.SyntaxKind.AmpersandAmpersandToken)
+  ) {
+    return receiverPoolish(u.left, b) || receiverPoolish(u.right, b)
+  }
+  if (ts.isAwaitExpression(u)) {
+    return receiverPoolish(u.expression, b)
+  }
+  // Call/new receivers resolve by callee SHAPE:
+  //  - `usePlayerStore()` / `new PlayerStore()` - a store-factory name
+  //    (`use*` + poolish, or an exact poolish identifier) yields the
+  //    owner. A plain domain function naming `*Player*`
+  //    (`resolvePlayerFinalStats`, `createPlayerRewardReceiver`)
+  //    returns a DERIVED value, not the pool - it is NOT a source.
+  //  - `store.get('baseStats')` / `store.get('$state')` - pinned key.
+  //  - `storeToRefs(store)` / `toRef(store,'baseStats')` - ref factory
+  //    bound to a poolish arg yields a pool-linked ref.
+  //  - `(() => player.baseStats)()` - an IIFE returning the pool.
+  // An opaque call result (`getStore()`, `makePlayer()`) is the
+  // documented bound - no static proof.
+  if (ts.isCallExpression(u) || ts.isNewExpression(u)) {
+    const callee = unwrapExpr(u.expression)
+    if (
+      isOwnerFactoryCallee(callee) ||
+      (ts.isNewExpression(u) &&
+        ts.isIdentifier(callee) &&
+        poolishName(callee.text))
+    ) {
+      return true
+    }
+    if (ts.isArrowFunction(callee) || ts.isFunctionExpression(callee)) {
+      if (containsPoolAccess(callee.body, b)) return true
+    }
+    if (
+      ts.isPropertyAccessExpression(callee) ||
+      ts.isElementAccessExpression(callee)
+    ) {
+      const m =
+        ts.isPropertyAccessExpression(callee)
+          ? callee.name.text
+          : literalize(callee.argumentExpression, b)
+      const arg0 =
+        u.arguments !== undefined && ts.isCallExpression(u)
+          ? u.arguments[0]
+          : u.arguments?.[0]
+      if (m === 'get' && arg0 !== undefined) {
+        const lit = literalize(arg0, b)
+        if (lit === 'baseStats' || lit === '$state') return true
+      }
+      if (
+        m !== undefined &&
+        REF_FACTORIES.has(m) &&
+        u.arguments !== undefined &&
+        u.arguments.some((a) => receiverPoolish(a, b))
+      ) {
+        return true
+      }
+      // Member callee on a poolish receiver yields a pool member -
+      // `this.pool.get()`, `s.factory()` semantics resolve at the
+      // callee-name level only when the receiver itself is poolish.
+      if (receiverPoolish(callee.expression, b)) return true
+    }
   }
   return false
 }
@@ -502,10 +792,11 @@ function isBaseStatsAccess(node: ts.Node, b: Bindings): boolean {
     return node.name.text === 'baseStats' && receiverPoolish(node.expression, b)
   }
   if (ts.isElementAccessExpression(node)) {
-    return (
-      literalize(node.argumentExpression, b) === 'baseStats' &&
-      receiverPoolish(node.expression, b)
-    )
+    // `x['baseStats']` / `x[o.k]` where `o.k = 'baseStats'`: a
+    // computed key that literalizes to the pinned token IS a spelled
+    // pool slot - the receiver binding is irrelevant (the enumeration
+    // smuggle deliberately uses an opaque one).
+    return literalize(node.argumentExpression, b) === 'baseStats'
   }
   if (ts.isCallExpression(node)) {
     const info = resolveCallee(node.expression, b)
@@ -700,6 +991,9 @@ function collectOffenders(): { violations: Offender[]; unclassified: Offender[] 
       propAliases: new Set<string>(),
       ownerPropPaths: new Set<string>(),
       poolContainers: new Set<string>(),
+      constPropKeys: new Map<string, string>(),
+      shadowed: new Set<string>(),
+      vForNames: new Set<string>(),
     }
 
     // Literal property with a given name: `{ name: x }`, `{ 'name': x }`,
@@ -812,6 +1106,13 @@ function collectOffenders(): { violations: Offender[]; unclassified: Offender[] 
       // on a pool carrier that yield the pool element(s).
       if (ts.isCallExpression(e)) {
         const callee = unwrapExpr(e.expression)
+        // `(() => player.baseStats)()` - an IIFE returning the pool.
+        if (
+          ts.isArrowFunction(callee) ||
+          ts.isFunctionExpression(callee)
+        ) {
+          if (containsPoolAccess(callee.body, binds)) return true
+        }
         if (
           ts.isPropertyAccessExpression(callee) ||
           ts.isElementAccessExpression(callee)
@@ -824,6 +1125,16 @@ function collectOffenders(): { violations: Offender[]; unclassified: Offender[] 
             m !== undefined &&
             POOL_ELEMENT_METHODS.has(m) &&
             isPoolRootAccess(callee.expression)
+          ) {
+            return true
+          }
+          // `store.get('baseStats')` / `toRef(store,'baseStats')` - a
+          // pinned-key member call yields the pool itself.
+          const arg0 = e.arguments?.[0]
+          if (
+            arg0 !== undefined &&
+            (m === 'get' || (m !== undefined && REF_FACTORIES.has(m))) &&
+            literalize(arg0, binds) === 'baseStats'
           ) {
             return true
           }
@@ -848,15 +1159,77 @@ function collectOffenders(): { violations: Offender[]; unclassified: Offender[] 
     // Bare poolish-named identifiers count ONLY in binding positions
     // (`const s = player` yields a pool alias); a bare `player` arg to
     // `fn(...)` is the funnel arm's job, not a pool-shaped value.
-    const poolishBindingSource = (e: ts.Expression): boolean =>
-      isPoolRootAccess(e) ||
-      (ts.isIdentifier(e) && POOLISH_ROOT_RE.test(e.text))
     // The pool OWNER itself (not the pool): a bare `player`-ish
-    // identifier used as a binding source.
-    const ownerSource = (e: ts.Expression): boolean =>
-      !isPoolRootAccess(e) &&
-      ts.isIdentifier(e) &&
-      POOLISH_ROOT_RE.test(e.text)
+    // identifier, a call/new yielding an owner (`usePlayerStore()`,
+    // `storeToRefs(store)`, `store.get('$state')`, `new PlayerStore()`),
+    // or a shallow copy carrying the owner's members (`{...player}`,
+    // `Object.assign({}, player)`).
+    const ownerSource = (e: ts.Expression): boolean => {
+      if (isPoolRootAccess(e)) return false
+      if (ts.isIdentifier(e)) return poolishName(e.text)
+      if (ts.isObjectLiteralExpression(e)) {
+        // `{...player}` copies the owner's member refs - the copy is
+        // itself an owner (forged.baseStats is the same pool object).
+        // `{...player.baseStats}` is a SHALLOW CLONE of the pool -
+        // writes land on the clone, so it is not a source.
+        return e.properties.some(
+          (p) =>
+            ts.isSpreadAssignment(p) && ownerSource(p.expression),
+        )
+      }
+      if (ts.isCallExpression(e) || ts.isNewExpression(e)) {
+        const callee = unwrapExpr(e.expression)
+        if (
+          isOwnerFactoryCallee(callee) ||
+          (ts.isNewExpression(e) &&
+            ts.isIdentifier(callee) &&
+            poolishName(callee.text))
+        ) {
+          return true
+        }
+        if (
+          ts.isPropertyAccessExpression(callee) ||
+          ts.isElementAccessExpression(callee)
+        ) {
+          const m =
+            ts.isPropertyAccessExpression(callee)
+              ? callee.name.text
+              : literalize(callee.argumentExpression, binds)
+          const arg0 = e.arguments?.[0]
+          // `store.get('$state')` yields the owner state slot.
+          if (m === 'get' && arg0 !== undefined) {
+            if (literalize(arg0, binds) === '$state') return true
+          }
+          // `storeToRefs(store)` / `toRefs(store)` - the ref map is an
+          // owner proxy: `.baseStats` on it is a pool ref.
+          if (
+            m !== undefined &&
+            REF_FACTORIES.has(m) &&
+            arg0 !== undefined &&
+            (ownerSource(arg0) ||
+              isPoolRootAccess(arg0) ||
+              (ts.isIdentifier(unwrapExpr(arg0)) &&
+                poolishName(
+                  (unwrapExpr(arg0) as ts.Identifier).text,
+                )))
+          ) {
+            return true
+          }
+          // `Object.assign({}, player)` clones the owner's member refs
+          // onto a fresh literal - the result is an owner copy.
+          if (m === 'assign' && e.arguments !== undefined) {
+            return e.arguments
+              .slice(1)
+              .some(
+                (a) => ownerSource(a) || isPoolRootAccess(a),
+              )
+          }
+        }
+      }
+      return false
+    }
+    const poolishBindingSource = (e: ts.Expression): boolean =>
+      isPoolRootAccess(e) || ownerSource(e)
     // Bind `name` to the right set for a pool vs owner source.
     const bindAlias = (name: string, src: ts.Expression): void => {
       if (isPoolRootAccess(src)) {
@@ -876,17 +1249,17 @@ function collectOffenders(): { violations: Offender[]; unclassified: Offender[] 
       const u = unwrapExpr(e)
       if (isPoolRootAccess(u)) return true
       if (isStateSlot(u)) return true
-      if (ts.isIdentifier(u)) return POOLISH_ROOT_RE.test(u.text)
+      if (ts.isIdentifier(u)) return poolishName(u.text)
       if (ts.isPropertyAccessExpression(u)) {
-        return POOLISH_ROOT_RE.test(u.name.text)
+        return poolishName(u.name.text)
       }
       if (ts.isElementAccessExpression(u)) {
         const lit = literalize(u.argumentExpression, binds)
-        return lit !== undefined && POOLISH_ROOT_RE.test(lit)
+        return lit !== undefined && poolishName(lit)
       }
       if (ts.isCallExpression(u)) {
         const c = unwrapExpr(u.expression)
-        return ts.isIdentifier(c) && POOLISH_ROOT_RE.test(c.text)
+        return ts.isIdentifier(c) && poolishName(c.text)
       }
       return false
     }
@@ -896,6 +1269,16 @@ function collectOffenders(): { violations: Offender[]; unclassified: Offender[] 
     // to an opaque callee through a shape that isPoolRootAccess on
     // the arg alone cannot see.
     const hasPoolCarrier = (e: ts.Node): boolean => {
+      // A bound identifier carrier: `const wrap = {ref: pool}` /
+      // `const arr = [pool]` - `opaque(wrap)` hands the pool through.
+      if (ts.isIdentifier(e)) {
+        return (
+          binds.poolContainers.has(e.text) ||
+          [...binds.propAliases].some(
+            (p) => p === e.text || p.startsWith(`${e.text}.`),
+          )
+        )
+      }
       let hit = false
       const walk = (x: ts.Node): void => {
         if (hit) return
@@ -969,18 +1352,40 @@ function collectOffenders(): { violations: Offender[]; unclassified: Offender[] 
       ) {
         flag(`import= of a test file: ${n.moduleReference.getText()}`)
       }
-      if (
-        ts.isCallExpression(n) &&
-        n.arguments[0] !== undefined &&
-        ts.isStringLiteral(n.arguments[0])
-      ) {
+      if (ts.isCallExpression(n) && n.arguments[0] !== undefined) {
         const callee = unwrapExpr(n.expression)
         const isRequire = ts.isIdentifier(callee) && callee.text === 'require'
         const isDynamic = callee.kind === ts.SyntaxKind.ImportKeyword
-        if ((isRequire || isDynamic) && isTestSpecifier(n.arguments[0].text)) {
+        // Literalize, not just StringLiteral: `require('./x'+'.test')`
+        // and `import(K)` assemble the spec at runtime.
+        const specLit = literalize(n.arguments[0], binds)
+        if (
+          (isRequire || isDynamic) &&
+          specLit !== undefined &&
+          isTestSpecifier(specLit)
+        ) {
           flag(
             `${isRequire ? 'require' : 'dynamic import'} of a test file: ${n.arguments[0].getText()}`,
           )
+        }
+      }
+      // `x.$subscribe((mutation, state) => { state.baseStats.qi = 9 })` -
+      // the Pinia subscription callback's SECOND param is the live
+      // state; bind it as an owner so writes through it resolve.
+      if (
+        ts.isCallExpression(n) &&
+        ts.isPropertyAccessExpression(unwrapExpr(n.expression)) &&
+        (unwrapExpr(n.expression) as ts.PropertyAccessExpression).name.text ===
+          '$subscribe'
+      ) {
+        const cb = n.arguments[0]
+        if (
+          cb !== undefined &&
+          (ts.isArrowFunction(cb) || ts.isFunctionExpression(cb)) &&
+          cb.parameters[1] !== undefined &&
+          ts.isIdentifier(cb.parameters[1].name)
+        ) {
+          binds.ownerAliases.add(cb.parameters[1].name.text)
         }
       }
       // const { baseStats } = x / const { baseStats: b } = x /
@@ -1003,17 +1408,17 @@ function collectOffenders(): { violations: Offender[]; unclassified: Offender[] 
       const rhsIsPoolish =
         declRhs !== undefined &&
         (isPoolRootAccess(declRhs) ||
-          (ts.isIdentifier(declRhs) && POOLISH_ROOT_RE.test(declRhs.text)) ||
+          (ts.isIdentifier(declRhs) && poolishName(declRhs.text)) ||
           (ts.isPropertyAccessExpression(declRhs) &&
-            POOLISH_ROOT_RE.test(declRhs.name.text)) ||
+            poolishName(declRhs.name.text)) ||
           (ts.isElementAccessExpression(declRhs) &&
             (() => {
               const lit = literalize(declRhs.argumentExpression, binds)
-              return lit !== undefined && POOLISH_ROOT_RE.test(lit)
+              return lit !== undefined && poolishName(lit)
             })()) ||
           (ts.isCallExpression(declRhs) &&
             ts.isIdentifier(unwrapExpr(declRhs.expression)) &&
-            POOLISH_ROOT_RE.test(
+            poolishName(
               (unwrapExpr(declRhs.expression) as ts.Identifier).text,
             )))
       if (bindPattern !== undefined) {
@@ -1049,6 +1454,13 @@ function collectOffenders(): { violations: Offender[]; unclassified: Offender[] 
           ) {
             binds.aliases.add(el.name.text)
           } else if (
+            propNameText === '$state' &&
+            ts.isIdentifier(el.name) &&
+            (rhsIsPoolish || ts.isParameter(n))
+          ) {
+            // `const { $state } = store` - the state slot is an owner.
+            binds.ownerAliases.add(el.name.text)
+          } else if (
             arrElem !== undefined &&
             poolishBindingSource(arrElem) &&
             ts.isIdentifier(el.name)
@@ -1074,7 +1486,7 @@ function collectOffenders(): { violations: Offender[]; unclassified: Offender[] 
             (ts.isObjectBindingPattern(el.name) ||
               ts.isArrayBindingPattern(el.name)) &&
             propNameText !== undefined &&
-            POOLISH_ROOT_RE.test(propNameText)
+            poolishName(propNameText)
           ) {
             const bindAll = (pat: ts.BindingName): void => {
               if (ts.isIdentifier(pat)) {
@@ -1093,6 +1505,65 @@ function collectOffenders(): { violations: Offender[]; unclassified: Offender[] 
             propNameText ?? (ts.isIdentifier(el.name) ? el.name.text : '')
           if (boundName === '$patch' && ts.isIdentifier(el.name)) {
             binds.memberAliases.set(el.name.text, { member: '$patch', root: '' })
+          }
+          // `const { ref: r } = { ref: player.baseStats }` - an
+          // object-literal rhs hands the pool through a named prop;
+          // match each binding element to its literal initializer.
+          if (
+            ts.isIdentifier(el.name) &&
+            propNameText !== undefined &&
+            declRhs !== undefined &&
+            ts.isObjectLiteralExpression(declRhs)
+          ) {
+            for (const p of declRhs.properties) {
+              if (!ts.isPropertyAssignment(p)) continue
+              const pk =
+                ts.isIdentifier(p.name) || ts.isStringLiteral(p.name)
+                  ? p.name.text
+                  : ts.isComputedPropertyName(p.name)
+                    ? literalize(p.name.expression, binds)
+                    : undefined
+              if (
+                pk === propNameText &&
+                poolishBindingSource(unwrapExpr(p.initializer))
+              ) {
+                bindAlias(el.name.text, unwrapExpr(p.initializer))
+              }
+            }
+          }
+          // `const { baseStats: bs } = storeToRefs(store)` - a ref
+          // factory destructure binds pool-linked refs by name.
+          if (
+            ts.isIdentifier(el.name) &&
+            propNameText !== undefined &&
+            declRhs !== undefined &&
+            ts.isCallExpression(declRhs)
+          ) {
+            const callee = unwrapExpr(declRhs.expression)
+            const cm =
+              ts.isPropertyAccessExpression(callee) ||
+              ts.isElementAccessExpression(callee)
+                ? (ts.isPropertyAccessExpression(callee)
+                    ? callee.name.text
+                    : literalize(callee.argumentExpression, binds))
+                : ts.isIdentifier(callee)
+                  ? callee.text
+                  : undefined
+            if (
+              cm !== undefined &&
+              REF_FACTORIES.has(cm) &&
+              declRhs.arguments[0] !== undefined &&
+              (ts.isIdentifier(unwrapExpr(declRhs.arguments[0])) &&
+                poolishName(
+                  (unwrapExpr(declRhs.arguments[0]) as ts.Identifier).text,
+                ))
+            ) {
+              if (propNameText === 'baseStats') {
+                binds.aliases.add(el.name.text)
+              } else if (propNameText === '$state') {
+                binds.ownerAliases.add(el.name.text)
+              }
+            }
           }
           // const { assign } = Object / const { get } = Reflect -
           // destructured structural/reflective names.
@@ -1134,17 +1605,17 @@ function collectOffenders(): { violations: Offender[]; unclassified: Offender[] 
         const rhs = unwrapExpr(n.right)
         const poolish =
           isPoolRootAccess(rhs) ||
-          (ts.isIdentifier(rhs) && POOLISH_ROOT_RE.test(rhs.text)) ||
+          (ts.isIdentifier(rhs) && poolishName(rhs.text)) ||
           (ts.isPropertyAccessExpression(rhs) &&
-            POOLISH_ROOT_RE.test(rhs.name.text)) ||
+            poolishName(rhs.name.text)) ||
           (ts.isElementAccessExpression(rhs) &&
             (() => {
               const lit = literalize(rhs.argumentExpression, binds)
-              return lit !== undefined && POOLISH_ROOT_RE.test(lit)
+              return lit !== undefined && poolishName(lit)
             })()) ||
           (ts.isCallExpression(rhs) &&
             ts.isIdentifier(unwrapExpr(rhs.expression)) &&
-            POOLISH_ROOT_RE.test(
+            poolishName(
               (unwrapExpr(rhs.expression) as ts.Identifier).text,
             ))
         if (poolish) {
@@ -1170,7 +1641,8 @@ function collectOffenders(): { violations: Offender[]; unclassified: Offender[] 
       }
       // `K = 'baseStats'` - a later literal write into a previously
       // declared identifier (constKeys follow assignment order, not
-      // declaration kind).
+      // declaration kind). Member positions join constPropKeys the
+      // same way (`o.k = 'baseStats'` -> `x[o.k]` resolves).
       if (
         ts.isBinaryExpression(n) &&
         n.operatorToken.kind === ts.SyntaxKind.EqualsToken &&
@@ -1181,9 +1653,22 @@ function collectOffenders(): { violations: Offender[]; unclassified: Offender[] 
           binds.constKeys.set(n.left.text, lit)
         }
       }
-      // `const arr = [player.baseStats]` - container carriers: the pool
-      // lives inside a bound array/object literal; element access on
-      // the binding yields it.
+      if (
+        ts.isBinaryExpression(n) &&
+        n.operatorToken.kind === ts.SyntaxKind.EqualsToken &&
+        (ts.isPropertyAccessExpression(unwrapExpr(n.left)) ||
+          ts.isElementAccessExpression(unwrapExpr(n.left)))
+      ) {
+        const p = accessPath(n.left, binds)
+        const lit = literalize(n.right, binds)
+        if (p !== undefined && lit !== undefined) {
+          binds.constPropKeys.set(p, lit)
+        }
+      }
+      // `const arr = [player.baseStats]` / `const wrap = {ref: pool}` -
+      // container carriers: the pool lives inside a bound literal;
+      // element access on the binding yields it, and `opaque(wrap)`
+      // hands it to a callee.
       if (
         ts.isVariableDeclaration(n) &&
         ts.isIdentifier(n.name) &&
@@ -1196,25 +1681,58 @@ function collectOffenders(): { violations: Offender[]; unclassified: Offender[] 
         ) {
           binds.poolContainers.add(n.name.text)
         }
+        // Only NAMED props carry: `{ref: pool}` hands the callee a
+        // pool-reachable slot. A spread (`{...player}`, `{...pool}`)
+        // either makes an owner copy (bindAlias's domain) or a clone
+        // - never a named container carrier.
+        if (
+          ts.isObjectLiteralExpression(init) &&
+          init.properties.some(
+            (p) =>
+              ts.isPropertyAssignment(p) &&
+              poolishBindingSource(unwrapExpr(p.initializer)),
+          )
+        ) {
+          binds.poolContainers.add(n.name.text)
+        }
       }
-      // `for (const w of [pool])` / `for (const {x} of [pool])` - the
+      // `for (const w of poolArr)` / `for (const w of [pool])` - the
       // loop variable binds to elements of a pool-carrying iterable,
-      // so `w.field = n` writes the pool.
+      // so `w.field = n` writes the pool. A bound identifier carrier
+      // (`const poolArr = [pool]`) resolves through poolContainers.
+      // When the iterable provably does NOT carry the pool, the loop
+      // var's name is shadowed even if it spells `player` - a bound
+      // non-pool beats the root regex.
       if (
-        ts.isForOfStatement(n) &&
-        ts.isVariableDeclarationList(n.initializer) &&
-        hasPoolCarrier(n.expression)
+        (ts.isForOfStatement(n) || ts.isForInStatement(n)) &&
+        ts.isVariableDeclarationList(n.initializer)
       ) {
-        const bindName = (pat: ts.BindingName): void => {
+        const iterable = n.expression
+        const carries =
+          ts.isForOfStatement(n) &&
+          (hasPoolCarrier(iterable) ||
+            (ts.isIdentifier(unwrapExpr(iterable)) &&
+              binds.poolContainers.has(
+                (unwrapExpr(iterable) as ts.Identifier).text,
+              )))
+        const names: string[] = []
+        const collectName = (pat: ts.BindingName): void => {
           if (ts.isIdentifier(pat)) {
-            binds.aliases.add(pat.text)
+            names.push(pat.text)
             return
           }
           for (const el of pat.elements) {
-            if (ts.isBindingElement(el)) bindName(el.name)
+            if (ts.isBindingElement(el)) collectName(el.name)
           }
         }
-        for (const d of n.initializer.declarations) bindName(d.name)
+        for (const d of n.initializer.declarations) collectName(d.name)
+        for (const name of names) {
+          if (carries) {
+            binds.aliases.add(name)
+          } else {
+            binds.shadowed.add(name)
+          }
+        }
       }
       // class { pool = player.baseStats } - field-declared pool
       // carrier. `this.pool` joins propAliases so in-class writes
@@ -1330,6 +1848,10 @@ function collectOffenders(): { violations: Offender[]; unclassified: Offender[] 
             if (poolishBindingSource(init)) {
               bindPath(path, init)
             }
+            // `const o = {k: 'baseStats'}` - a member position holding
+            // a spelled value resolves `x[o.k]` element keys.
+            const lit = literalize(p.initializer, binds)
+            if (lit !== undefined) binds.constPropKeys.set(path, lit)
             if (ts.isObjectLiteralExpression(init)) walkProps(init, path)
           }
         }
@@ -1498,6 +2020,77 @@ function collectOffenders(): { violations: Offender[]; unclassified: Offender[] 
 
       const pool = (n: ts.Node): boolean => containsPoolAccess(n, binds)
 
+      // A WRITE through a pool target inside a subtree - distinct from
+      // containsPoolAccess (reads too): used to keep read-shaped
+      // callees (`arr.map(cb)`) callable only when the closure does
+      // not WRITE the pool.
+      const containsPoolWrite = (node: ts.Node): boolean => {
+        let hit = false
+        const w = (x: ts.Node): void => {
+          if (hit) return
+          if (
+            ts.isBinaryExpression(x) &&
+            COMPOUND_ASSIGN.has(x.operatorToken.kind) &&
+            (pool(x.left) || isStateSlot(x.left))
+          ) {
+            hit = true
+            return
+          }
+          if (
+            (ts.isPrefixUnaryExpression(x) || ts.isPostfixUnaryExpression(x)) &&
+            (x.operator === ts.SyntaxKind.PlusPlusToken ||
+              x.operator === ts.SyntaxKind.MinusMinusToken) &&
+            pool(x.operand)
+          ) {
+            hit = true
+            return
+          }
+          if (
+            ts.isDeleteExpression(x) &&
+            (pool(x.expression) || isStateSlot(x.expression))
+          ) {
+            hit = true
+            return
+          }
+          ts.forEachChild(x, w)
+        }
+        w(node)
+        return hit
+      }
+
+      // `row.baseStats.qi = 9` inside a .vue template where `row` is a
+      // v-for alias: the loop variable is bound nowhere in script, so
+      // only the spelled leaf + v-for membership prove the lane.
+      const vForSpelledWrite = (t: ts.Expression): boolean => {
+        if (binds.vForNames.size === 0) return false
+        let cur: ts.Expression = t
+        let spelled = false
+        let rootIdent: string | undefined
+        for (;;) {
+          const u = unwrapExpr(cur)
+          if (ts.isPropertyAccessExpression(u)) {
+            if (u.name.text === 'baseStats' || u.name.text === '$state') {
+              spelled = true
+            }
+            cur = u.expression
+            continue
+          }
+          if (ts.isElementAccessExpression(u)) {
+            const lit = literalize(u.argumentExpression, binds)
+            if (lit === 'baseStats' || lit === '$state') spelled = true
+            cur = u.expression
+            continue
+          }
+          if (ts.isIdentifier(u)) {
+            rootIdent = u.text
+          }
+          break
+        }
+        return (
+          spelled && rootIdent !== undefined && binds.vForNames.has(rootIdent)
+        )
+      }
+
       // Anywhere a spelled token for `name` appears: literal, const-key
       // identifier, or a concat of spelled pieces.
       const hasTokenNamed = (n: ts.Node, name: string): boolean => {
@@ -1585,6 +2178,10 @@ function collectOffenders(): { violations: Offender[]; unclassified: Offender[] 
         'min', 'max', 'abs', 'floor', 'ceil', 'round', 'trunc', 'sign',
         'pow', 'sqrt', 'log', 'random', 'hypot', 'clamp',
         'has', 'get', 'delete', 'size', 'at', 'fromEntries',
+        // console.* diagnostics - not write lanes.
+        'warn', 'error', 'info', 'debug', 'trace', 'dir', 'table',
+        // Immutability operations - they LOCK the pool, never write it.
+        'freeze', 'seal', 'preventExtensions',
       ])
       const READ_IDENTIFIERS = new Set([
         'isObject', 'isPlainObject', 'isRecord', 'structuredClone',
@@ -1705,12 +2302,40 @@ function collectOffenders(): { violations: Offender[]; unclassified: Offender[] 
           } else if (ts.isDeleteExpression(n)) {
             target = n.expression
           }
-          if (
-            target !== undefined &&
-            (ts.isPropertyAccessExpression(unwrapExpr(target)) ||
-              ts.isElementAccessExpression(unwrapExpr(target)))
-          ) {
-            flag(n.getText(sf))
+          // Inside a spelled-key block the enumeration smuggle is
+          // `for (k of keys) if (k==='baseStats') v[k].x = 9` - an
+          // element write ANYWHERE in the target chain whose key is
+          // dynamic (unresolved literalize) or pinned; plus pinned-leaf
+          // writes and writes on poolish receivers. A plain
+          // `box.mode = 1` beside the narrowing test is the FP shape.
+          if (target !== undefined) {
+            const t = unwrapExpr(target)
+            let elSuspect = false
+            const elWalk = (x: ts.Node): void => {
+              if (elSuspect) return
+              if (ts.isElementAccessExpression(x)) {
+                const lit =
+                  x.argumentExpression !== undefined
+                    ? literalize(x.argumentExpression, binds)
+                    : undefined
+                if (lit === undefined || PINNED_TOKENS.includes(lit)) {
+                  elSuspect = true
+                  return
+                }
+              }
+              ts.forEachChild(x, elWalk)
+            }
+            elWalk(t)
+            if (elSuspect) {
+              flag(n.getText(sf))
+            } else if (ts.isPropertyAccessExpression(t)) {
+              if (
+                PINNED_TOKENS.includes(t.name.text) ||
+                receiverPoolish(t.expression, binds)
+              ) {
+                flag(n.getText(sf))
+              }
+            }
           }
         }
         // assignment / compound assignment target (incl. ??=/&&=/||=
@@ -1718,7 +2343,7 @@ function collectOffenders(): { violations: Offender[]; unclassified: Offender[] 
         if (
           ts.isBinaryExpression(n) &&
           COMPOUND_ASSIGN.has(n.operatorToken.kind) &&
-          (pool(n.left) || isStateSlot(n.left))
+          (pool(n.left) || isStateSlot(n.left) || vForSpelledWrite(n.left))
         ) {
           flag(n.getText(sf))
         }
@@ -1727,14 +2352,16 @@ function collectOffenders(): { violations: Offender[]; unclassified: Offender[] 
           (ts.isPrefixUnaryExpression(n) || ts.isPostfixUnaryExpression(n)) &&
           (n.operator === ts.SyntaxKind.PlusPlusToken ||
             n.operator === ts.SyntaxKind.MinusMinusToken) &&
-          pool(n.operand)
+          (pool(n.operand) || vForSpelledWrite(n.operand))
         ) {
           flag(n.getText(sf))
         }
         // delete expr (pool member OR the $state slot itself)
         if (
           ts.isDeleteExpression(n) &&
-          (pool(n.expression) || isStateSlot(n.expression))
+          (pool(n.expression) ||
+            isStateSlot(n.expression) ||
+            vForSpelledWrite(n.expression))
         ) {
           flag(n.getText(sf))
         }
@@ -2007,11 +2634,20 @@ function collectOffenders(): { violations: Offender[]; unclassified: Offender[] 
                     hasPoolCarrier(a) ||
                     hasPoolClosure(a),
                 ) || hasPoolCarrier(n.expression)
+              // A function arg that WRITES the pool flags even through
+              // a read-shaped callee: `arr.map(function(){ pool.qi=9 })`
+              // is a deferred write, not a read.
+              const closureWrite = n.arguments.some(
+                (a) =>
+                  (ts.isArrowFunction(a) || ts.isFunctionExpression(a)) &&
+                  containsPoolWrite(a),
+              )
               if (
-                !readShaped &&
-                !readIdentifier &&
-                !freshClone &&
-                carried
+                (!readShaped &&
+                  !readIdentifier &&
+                  !freshClone &&
+                  carried) ||
+                closureWrite
               ) {
                 flag(`pool passed to opaque callee: ${n.getText(sf)}`)
               }
@@ -2195,6 +2831,20 @@ function collectOffenders(): { violations: Offender[]; unclassified: Offender[] 
     // .vue template lane: directive attributes, interpolations and
     // v-model share the script's collected aliases.
     if (rel.endsWith('.vue')) {
+      const tplText = stripVueInert(text)
+      // Collect v-for loop-variable names BEFORE scanning any template
+      // expression or directive: `v-for="row in poolRows"` binds `row`
+      // only inside the template, and every child expression
+      // (`@click`, `{{ }}`, `:attr`) must see that binding.
+      const vfRe = /\bv-for\s*=\s*(?:"([^"]*)"|'([^']*)')/g
+      let vfM: RegExpExecArray | null
+      while ((vfM = vfRe.exec(tplText)) !== null) {
+        const src = vfM[1] ?? vfM[2] ?? ''
+        const namesSrc = src.split(/\b(?:in|of)\b/)[0] ?? ''
+        for (const nm of namesSrc.replace(/[()]/g, ' ').split(/[\s,]+/)) {
+          if (/^[A-Za-z_$][\w$]*$/.test(nm)) binds.vForNames.add(nm)
+        }
+      }
       for (const expr of templateExpressions(text)) {
         scanBody(expr)
       }
@@ -2202,7 +2852,30 @@ function collectOffenders(): { violations: Offender[]; unclassified: Offender[] 
       // lane even when the expression does not name the pool
       // (`v-model="rec[key]"`, `v-model=pool.defense`).
       const vmRe = /v-model(?::[\w.-]+)?(?:\.[\w.-]+)?\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/g
-      const tplText = stripVueInert(text)
+      // `href="javascript:..."` (or any attr) is a code sink the
+      // expression scan cannot see - the URL is a static literal.
+      if (/javascript\s*:/i.test(tplText)) {
+        flag('template attr contains a javascript: URL')
+      }
+      // `v-html="x"` - markup injection sink: a pool-carrying or
+      // pinned-name expression behind it is a write/xss lane.
+      const vhRe = /\bv-html\s*=\s*(?:"([^"]*)"|'([^']*)')/g
+      while ((vfM = vhRe.exec(tplText)) !== null) {
+        const expr = vfM[1] ?? vfM[2] ?? ''
+        if (expr === '') continue
+        const sf = ts.createSourceFile('v.ts', `x = ${expr};`, ts.ScriptTarget.ESNext, true)
+        let hit = false
+        const vhVisit = (n: ts.Node): void => {
+          if (hit) return
+          if (containsPoolAccess(n, binds)) {
+            hit = true
+            return
+          }
+          ts.forEachChild(n, vhVisit)
+        }
+        ts.forEachChild(sf, vhVisit)
+        if (hit) flag(`v-html="${expr}"`)
+      }
       let m: RegExpExecArray | null
       while ((m = vmRe.exec(tplText)) !== null) {
         const v = m[1] ?? m[2] ?? m[3]
@@ -2215,14 +2888,30 @@ function collectOffenders(): { violations: Offender[]; unclassified: Offender[] 
             flagged = true
             return
           }
+          // A spelled pinned member on an unbound root is a write
+          // lane (`v-model="row.baseStats.qi"` binds the field).
           if (
-            ts.isElementAccessExpression(n) &&
-            n.argumentExpression !== undefined &&
-            !ts.isStringLiteral(n.argumentExpression) &&
-            !ts.isNoSubstitutionTemplateLiteral(n.argumentExpression)
+            ts.isPropertyAccessExpression(n) &&
+            (n.name.text === 'baseStats' ||
+              n.name.text === '$state' ||
+              n.name.text === '$patch')
           ) {
             flagged = true
             return
+          }
+          if (ts.isElementAccessExpression(n) && n.argumentExpression !== undefined) {
+            const lit = literalize(n.argumentExpression, binds)
+            if (lit === 'baseStats' || lit === '$state') {
+              flagged = true
+              return
+            }
+            if (
+              !ts.isStringLiteral(n.argumentExpression) &&
+              !ts.isNoSubstitutionTemplateLiteral(n.argumentExpression)
+            ) {
+              flagged = true
+              return
+            }
           }
           ts.forEachChild(n, visit)
         }

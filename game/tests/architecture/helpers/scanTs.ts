@@ -195,30 +195,55 @@ export function templateExpressions(text: string): string[] {
     const v = m[1]
     if (v !== undefined && v.length > 0) exprs.push(v)
   }
-  // Mustaches: find `{{` then scan to the matching `}}` counting brace
+  // Mustaches: `{{` opens an expression ONLY in element content -
+  // inside a tag's attribute value (`title="{{x}}"`) it is literal
+  // text Vue never evaluates. Track tag/quote state like
+  // stripVueInert, then scan to the matching `}}` counting brace
   // depth and skipping string literals.
   let i = 0
-  for (;;) {
-    const start = tpl.indexOf('{{', i)
-    if (start === -1) break
+  let inTag = false
+  let tagQuote: string | null = null
+  while (i < tpl.length) {
+    const ch = tpl[i]
+    if (inTag) {
+      if (tagQuote !== null) {
+        if (ch === tagQuote) tagQuote = null
+      } else if (ch === '"' || ch === "'") {
+        tagQuote = ch
+      } else if (ch === '>') {
+        inTag = false
+      }
+      i++
+      continue
+    }
+    if (ch === '<') {
+      inTag = true
+      i++
+      continue
+    }
+    if (ch !== '{' || tpl[i + 1] !== '{') {
+      i++
+      continue
+    }
+    const start = i
     let j = start + 2
     let depth = 0
     let quote: string | null = null
     for (; j < tpl.length; j++) {
-      const ch = tpl[j]
+      const c = tpl[j]
       if (quote !== null) {
-        if (ch === '\\') {
+        if (c === '\\') {
           j++
-        } else if (ch === quote) {
+        } else if (c === quote) {
           quote = null
         }
         continue
       }
-      if (ch === '"' || ch === "'" || ch === '`') {
-        quote = ch
-      } else if (ch === '{') {
+      if (c === '"' || c === "'" || c === '`') {
+        quote = c
+      } else if (c === '{') {
         depth++
-      } else if (ch === '}') {
+      } else if (c === '}') {
         if (tpl[j + 1] === '}' && depth === 0) break
         depth--
       }

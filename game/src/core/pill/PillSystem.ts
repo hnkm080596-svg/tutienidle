@@ -42,6 +42,14 @@ export class PillSystem {
    * pill stat channels share one bound (getEffectiveMainStatCap).
    */
   use(pill: Pill, target: PillTarget): void {
+    // Gate lanes owned by usePillDetailed: a retired, material
+    // (non-consumable) or realm-gated pill must never reach raw apply.
+    // This method accepts only ungated legacy pills - every gated
+    // family routes through the ops wrapper which evaluates the
+    // retired/material/realm/battle gates first.
+    if (pill.retired === true || pill.type === 'material' || pill.realmId !== undefined) {
+      return
+    }
     for (const effect of pill.effects) {
       this.applyEffect(effect, target)
     }
@@ -191,10 +199,18 @@ export class PillSystem {
             continue
           }
           const cap = getEffectiveMainStatCap(player)
-          player.baseStats[effect.stat] = Math.min(
-            cap,
-            (player.baseStats[effect.stat] ?? 0) + (effect.value ?? 0),
-          )
+          const base = player.baseStats[effect.stat] ?? 0
+          // A base that is already non-finite or over-cap is not a
+          // writable slot: `NaN ?? 0` is NaN, and clamping down would
+          // silently DESTROY stat points the cap gate would have
+          // refused to add to anyway (gate reads base >= cap). A
+          // corrupted pool stays corrupted - the fold/restore layer
+          // owns repair - it must not be laundered into a smaller
+          // legal-looking value here.
+          if (!Number.isFinite(base) || base >= cap) {
+            continue
+          }
+          player.baseStats[effect.stat] = Math.min(cap, base + (effect.value ?? 0))
         }
 
         continue

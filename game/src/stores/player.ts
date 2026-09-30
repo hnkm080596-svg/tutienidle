@@ -19,7 +19,7 @@ import { STAT_DOMAIN } from '@/core/stats/StatDomain'
 import { getEffectiveMainStatCap } from '@/core/stats/StatCap'
 import { MAIN_STAT_KEYS } from '@/core/stats/StatTypes'
 import type { GameManager } from '@/core/game/GameManager'
-import { getRequiredCultivation } from '@/core/realm/realmSystem'
+import { getCurrentRealm, getRequiredCultivation } from '@/core/realm/realmSystem'
 import { cultivateTick } from '@/core/cultivation/CultivationTick'
 import { accrueCultivationInsight } from '@/core/cultivation/CultivationInsight'
 import type { StatModifier } from '@/core/stats/StatCalculator'
@@ -397,12 +397,10 @@ export const usePlayerStore = defineStore('player', {
         foldRetiredPillPermanents(effect?.modifiers)
       }
 
-      // Value-domain coherence on the persisted pool: main stats clamp
-      // to the shared cap (a save claiming more is corrupt or crafted -
-      // same bound every legitimate writer already enforces).
-      for (const key of MAIN_STAT_KEYS) {
-        restoredPlayer.baseStats[key] = Math.min(mainCap, restoredPlayer.baseStats[key] ?? 0)
-      }
+      // The main-stat clamp runs AFTER normalizeArtifactProgress below:
+      // the effective cap depends on the realm, and a crafted save can
+      // pair a big realm claim with a big stat claim - normalize fixes
+      // the realm first, then the clamp reads the corrected cap.
 
       // Same whitelist for StatModifier.stat fields persisted on the
       // player slice - a modifier whose stat is not a current StatType
@@ -434,6 +432,13 @@ export const usePlayerStore = defineStore('player', {
           modifiers: (effect.modifiers ?? []).filter(isCurrentShapeModifier),
         }),
       )
+
+      // Reject a nonsense realmId BEFORE the assign lands it: a crafted
+      // save with an unresolvable realm survives Object.assign then
+      // throws inside addCultivation below - leaving the live store
+      // poisoned and the payload uncommitted, so every retry replays
+      // the crash. Fail before the payload mutates anything.
+      getCurrentRealm(restoredPlayer.realmId)
 
       for (const key of Object.keys(this.$state)) {
         if (!(key in restoredPlayer)) {
@@ -483,6 +488,16 @@ export const usePlayerStore = defineStore('player', {
       // blind Object.assign() ở trên: nghề không khớp, thiếu state dù
       // đủ gate, grade/path sai enum, realm/level/EXP vượt trần.
       normalizeArtifactProgress(this)
+
+      // Value-domain coherence on the persisted pool: main stats clamp
+      // to the shared cap (a save claiming more is corrupt or crafted -
+      // same bound every legitimate writer already enforces). Runs
+      // AFTER normalize: the cap is realm-derived, so the clamp reads
+      // the corrected realm claim, not the crafted one.
+      const normalizedCap = getEffectiveMainStatCap(this)
+      for (const key of MAIN_STAT_KEYS) {
+        this.baseStats[key] = Math.min(normalizedCap, this.baseStats[key] ?? 0)
+      }
 
       // M1 (ARCH-001) — commit the payload identity only AFTER the whole
       // apply succeeded: a mid-restore throw leaves it uncommitted so a

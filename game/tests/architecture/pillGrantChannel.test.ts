@@ -131,6 +131,11 @@ interface Bindings {
    * `const o = {f: ps.useProfessionPill}` -> memberPaths['o.f']. */
   memberPaths: Map<string, string>
   rootAliases: Map<string, string>
+  /** Identifier bound to an UNRESOLVED value off a pill-ish root:
+   * `const mm = ps[k]`, `const g = Reflect.get(ps, k)`,
+   * `const d = getOwnPropertyDescriptor(ps,k).value` - invoking it
+   * reaches an opaque member slot. */
+  opaqueHandles: Set<string>
 }
 
 const LITERALIZE_DEPTH_CAP = 400
@@ -441,6 +446,13 @@ describe('pill grant channel - ops wrapper is the only production caller', () =>
           memberAliases: new Map(),
           memberPaths: new Map(),
           rootAliases: new Map(),
+          opaqueHandles: new Set(),
+        }
+        // A pill-system-ish root: `ps`, `pillSystem`, a renamed
+        // binding of one (`const s2 = ps`), etc.
+        const pillish = (e: ts.Expression): boolean => {
+          const r = rootOf(e, binds)
+          return r !== undefined && /pill|^ps$/i.test(r)
         }
         const memberOfExpr = (e: ts.Expression): string | undefined => {
           // resolves `ps.useProfessionPill`, `ps[K]`, `box.f` (memberPath),
@@ -521,7 +533,7 @@ describe('pill grant channel - ops wrapper is the only production caller', () =>
                 : (ts.isPropertyAccessExpression(src) ||
                       ts.isElementAccessExpression(src)) &&
                     GLOBAL_ROOTS.has(rootOf(src, binds) ?? '')
-            if (srcRoot) {
+            if (srcRoot || pillish(src)) {
               for (const el of n.name.elements) {
                 const key =
                   el.propertyName !== undefined
@@ -535,12 +547,24 @@ describe('pill grant channel - ops wrapper is the only production caller', () =>
                     : ts.isIdentifier(el.name)
                       ? el.name.text
                       : undefined
-                if (
-                  key !== undefined &&
-                  GLOBAL_NAMES.has(key) &&
-                  ts.isIdentifier(el.name)
-                ) {
-                  binds.rootAliases.set(el.name.text, key)
+                if (!ts.isIdentifier(el.name)) continue
+                if (srcRoot) {
+                  if (key !== undefined && GLOBAL_NAMES.has(key)) {
+                    binds.rootAliases.set(el.name.text, key)
+                  } else if (key === undefined) {
+                    // `{[K]: e} = globalThis` with an unresolvable K -
+                    // the bound identifier can carry any global name.
+                    binds.opaqueHandles.add(el.name.text)
+                  }
+                } else {
+                  // Destructure on a pill-ish root: `{useProfessionPill:
+                  // u} = ps` is a spelled pinned alias; a computed or
+                  // unresolvable key is an opaque handle.
+                  if (key === PINNED) {
+                    binds.memberAliases.set(el.name.text, PINNED)
+                  } else if (key === undefined) {
+                    binds.opaqueHandles.add(el.name.text)
+                  }
                 }
               }
             }
@@ -561,6 +585,11 @@ describe('pill grant channel - ops wrapper is the only production caller', () =>
               if (p !== undefined && GLOBAL_NAMES.has(p)) {
                 binds.rootAliases.set(n.name.text, p)
               }
+              // `const s2 = ps` - a renamed pill-ish root keeps
+              // resolving through rootAliases.
+              if (pillish(init)) {
+                binds.rootAliases.set(n.name.text, rootOf(init, binds) ?? init.text)
+              }
             } else if (
               (ts.isPropertyAccessExpression(init) ||
                 ts.isElementAccessExpression(init)) &&
@@ -571,6 +600,72 @@ describe('pill grant channel - ops wrapper is the only production caller', () =>
               const r = memberNameOf(init, binds)
               if (r !== undefined && GLOBAL_NAMES.has(r)) {
                 binds.rootAliases.set(n.name.text, r)
+              }
+            }
+            // Opaque handles OFF a pill-ish root - values whose
+            // member slot cannot be resolved: `const mm = ps[k]`,
+            // `const g = Reflect.get(ps, k)`,
+            // `const d = Object.getOwnPropertyDescriptor(ps,k).value`.
+            if (
+              ts.isElementAccessExpression(init) &&
+              pillish(init.expression) &&
+              memberOfExpr(init) !== PINNED
+            ) {
+              const keyLit = literalize(init.argumentExpression, binds)
+              if (keyLit === undefined || keyLit === PINNED) {
+                if (keyLit === PINNED) {
+                  binds.memberAliases.set(n.name.text, PINNED)
+                } else {
+                  binds.opaqueHandles.add(n.name.text)
+                }
+              }
+            }
+            if (ts.isCallExpression(init)) {
+              const cCallee = unwrapExpr(init.expression)
+              const cMember = memberNameOf(cCallee, binds)
+              const cRoot =
+                ts.isPropertyAccessExpression(cCallee) ||
+                ts.isElementAccessExpression(cCallee)
+                  ? rootOf(cCallee.expression, binds)
+                  : undefined
+              const arg0 = init.arguments[0]
+              if (
+                cRoot !== undefined &&
+                REFLECTIVE_READ_ROOTS.has(cRoot) &&
+                cMember !== undefined &&
+                REFLECTIVE_MEMBERS.has(cMember) &&
+                arg0 !== undefined &&
+                pillish(unwrapExpr(arg0)) &&
+                memberOfExpr(init) !== PINNED
+              ) {
+                binds.opaqueHandles.add(n.name.text)
+              }
+            }
+            // `x.getOwnPropertyDescriptor(ps, k).value` - member
+            // access on an opaque descriptor read.
+            if (
+              (ts.isPropertyAccessExpression(init) ||
+                ts.isElementAccessExpression(init)) &&
+              ts.isCallExpression(unwrapExpr(init.expression))
+            ) {
+              const inner = unwrapExpr(init.expression) as ts.CallExpression
+              const iCallee = unwrapExpr(inner.expression)
+              const iMember = memberNameOf(iCallee, binds)
+              const iRoot =
+                ts.isPropertyAccessExpression(iCallee) ||
+                ts.isElementAccessExpression(iCallee)
+                  ? rootOf(iCallee.expression, binds)
+                  : undefined
+              const iArg0 = inner.arguments[0]
+              if (
+                iRoot !== undefined &&
+                REFLECTIVE_READ_ROOTS.has(iRoot) &&
+                iMember !== undefined &&
+                REFLECTIVE_MEMBERS.has(iMember) &&
+                iArg0 !== undefined &&
+                pillish(unwrapExpr(iArg0))
+              ) {
+                binds.opaqueHandles.add(n.name.text)
               }
             }
             // `const o = {f: ps.useProfessionPill, g: Reflect.get(ps,K)}`
@@ -698,46 +793,51 @@ describe('pill grant channel - ops wrapper is the only production caller', () =>
           ) {
             note(`import= of a test file: ${n.moduleReference.getText()}`)
           }
-          if (
-            ts.isCallExpression(n) &&
-            n.arguments[0] !== undefined
-          ) {
+          // Every call expression - the callee/member checks are
+          // ARG-FREE (a zero-arg `ps[k]()` or `x.eval()` still invokes
+          // the resolved member); only the specifier/arg analyses sit
+          // behind the arg gate.
+          if (ts.isCallExpression(n)) {
             const callee = unwrapExpr(n.expression)
             const isRequire = ts.isIdentifier(callee) && callee.text === 'require'
             const isDynamic = callee.kind === ts.SyntaxKind.ImportKeyword
-            const specLit = literalize(n.arguments[0], binds)
-            if (
-              (isRequire || isDynamic) &&
-              specLit !== undefined &&
-              isTestSpecifier(specLit)
-            ) {
-              note(
-                `${isRequire ? 'require' : 'dynamic import'} of a test file: ${n.arguments[0].getText()}`,
-              )
-            }
-            // `import()` through a data:/blob: URL or an unspelled
-            // specifier loads code this guard cannot see.
-            if (
-              isDynamic &&
-              (specLit === undefined ||
-                specLit.startsWith('data:') ||
-                specLit.startsWith('blob:'))
-            ) {
-              note(`opaque dynamic import: ${n.getText()}`)
+            const specLit =
+              n.arguments[0] !== undefined
+                ? literalize(n.arguments[0], binds)
+                : undefined
+            if (n.arguments[0] !== undefined) {
+              if (
+                (isRequire || isDynamic) &&
+                specLit !== undefined &&
+                isTestSpecifier(specLit)
+              ) {
+                note(
+                  `${isRequire ? 'require' : 'dynamic import'} of a test file: ${n.arguments[0].getText()}`,
+                )
+              }
+              // `import()` through a data:/blob: URL or an unspelled
+              // specifier loads code this guard cannot see.
+              if (
+                isDynamic &&
+                (specLit === undefined ||
+                  specLit.startsWith('data:') ||
+                  specLit.startsWith('blob:'))
+              ) {
+                note(`opaque dynamic import: ${n.getText()}`)
+              }
+              if (
+                ts.isIdentifier(callee) &&
+                (callee.text === 'setTimeout' || callee.text === 'setInterval') &&
+                specLit !== undefined
+              ) {
+                note(`string-eval scheduler: ${n.getText()}`)
+              }
             }
             // `x.eval(...)` / `x.constructor(...)` - dynamic code via
-            // ANY member root; setTimeout('code')/setInterval('code')
-            // - a spelled string arg is evaluated as code.
+            // ANY member root, including a bare `x.eval()`.
             const callMember = memberNameOf(callee, binds)
             if (callMember === 'eval' || callMember === 'constructor') {
               note(`opaque code member: ${n.getText()}`)
-            }
-            if (
-              ts.isIdentifier(callee) &&
-              (callee.text === 'setTimeout' || callee.text === 'setInterval') &&
-              specLit !== undefined
-            ) {
-              note(`string-eval scheduler: ${n.getText()}`)
             }
             // `x.call(...)`/`x.apply(...)`/`x.bind(...)` where the
             // RECEIVER resolves to the pinned handle - the invocation
@@ -787,12 +887,10 @@ describe('pill grant channel - ops wrapper is the only production caller', () =>
             // `ps[k]()` with an UNRESOLVED key on a pill-ish root -
             // opaque member dispatch can reach the pinned method.
             // Enumeration over a pill-ish root (`Object.keys(ps)`,
-            // `Reflect.get(ps, k)`, `Object.getOwnPropertyNames(ps)`)
-            // is the assembly step for that dispatch.
-            const pillish = (e: ts.Expression): boolean => {
-              const r = rootOf(e, binds)
-              return r !== undefined && /pill|^ps$/i.test(r)
-            }
+            // `Reflect.get(ps, k)`, `Object.getOwnPropertyNames(ps)`,
+            // `Object.getOwnPropertyDescriptor(ps, k)` - the
+            // descriptor `.value` invokes the member) is the assembly
+            // step for that dispatch.
             if (
               ts.isElementAccessExpression(callee) &&
               memberNameOf(callee, binds) === undefined &&
@@ -800,9 +898,19 @@ describe('pill grant channel - ops wrapper is the only production caller', () =>
             ) {
               note(`opaque member dispatch: ${n.getText()}`)
             }
+            // An opaque handle invoked as callee: `const mm = ps[k];
+            // mm()` - pass 1 proved the binding carries an unresolved
+            // member slot of a pill-ish root.
+            if (
+              ts.isIdentifier(callee) &&
+              binds.opaqueHandles.has(callee.text)
+            ) {
+              note(`opaque handle invocation: ${n.getText()}`)
+            }
             const ENUMERATE = new Set([
               'keys', 'values', 'entries', 'ownKeys',
               'getOwnPropertyNames', 'getOwnPropertyDescriptors',
+              'getOwnPropertyDescriptor',
             ])
             if (
               callMember !== undefined &&
@@ -813,7 +921,7 @@ describe('pill grant channel - ops wrapper is the only production caller', () =>
             ) {
               note(`enumeration over pill system: ${n.getText()}`)
             }
-            // DOM code-injection sinks.
+            // DOM code-injection sinks - arg-free (`x.eval()` counts).
             const DOM_WRITE_CALLS = new Set([
               'insertAdjacentHTML',
               'write',
