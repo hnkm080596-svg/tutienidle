@@ -14,8 +14,11 @@
 #   EXT-04 transport          -> token lives on this job only, never shipped
 #
 # Release concurrency serializes candidate builds so two runs can never race
-# the same draft tag. Job permissions are minimal and scoped per job. No step
-# dumps the environment or logs credential material.
+# the same draft tag. Job permissions are minimal and scoped per job. Secrets
+# are scoped per STEP (least privilege): npm ci, checkout and SBOM steps see
+# no credential material, so dependency install scripts cannot exfiltrate the
+# signing certificate or the upload token. No step dumps the environment or
+# logs credential material.
 
 name: beta-release
 
@@ -47,6 +50,7 @@ jobs:
   verify-source:
     name: validate tag/identity + full verify
     runs-on: ubuntu-24.04
+    timeout-minutes: 45
     permissions:
       contents: read
     steps:
@@ -121,20 +125,11 @@ jobs:
     # secrets (signing credentials, beta backend anon key) only materialize
     # after human approval. Until then this job blocks, honestly unsealed.
     environment: beta-release
+    timeout-minutes: 90
     permissions:
       contents: write      # create draft release + upload assets
       id-token: write      # Sigstore build provenance attestation
       attestations: write  # upload attestations
-    env:
-      # Protected environment references only - values never in git, logs,
-      # or artifacts. Empty while EXT-02/EXT-03 stay unresolved -> the gates
-      # below fail closed.
-      VITE_SUPABASE_URL: ${{ vars.BETA_SUPABASE_URL }}
-      VITE_SUPABASE_ANON_KEY: ${{ secrets.BETA_SUPABASE_ANON_KEY }}
-      WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
-      WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
-      BETA_CERT_THUMBPRINT: ${{ vars.BETA_CERT_THUMBPRINT }}
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Checkout the exact tag/commit
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
@@ -160,7 +155,7 @@ jobs:
           if ($tagSha -ne $head) { throw "tag $tag -> $tagSha but HEAD is $head" }
           $described = (git describe --tags --exact-match HEAD).Trim()
           if ($described -ne $tag) { throw "HEAD describes $described, not $tag" }
-          if ((git status --porcelain) -ne '') { throw 'dirty working tree' }
+          if (git status --porcelain) { throw 'dirty working tree' }
           $version = (node -p "require('./game/package.json').version").Trim()
           if ($tag -ne "v$version") { throw "tag $tag does not match package version v$version" }
           "validated: tag=$tag sha=$head version=$version clean=yes"
@@ -181,6 +176,9 @@ jobs:
         # boot to the fatal-configuration screen - useless for QA, so it
         # blocks the release instead of shipping.
         shell: pwsh
+        env:
+          VITE_SUPABASE_URL: ${{ vars.BETA_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.BETA_SUPABASE_ANON_KEY }}
         run: |
           $missing = @()
           if ([string]::IsNullOrEmpty($env:VITE_SUPABASE_URL)) { $missing += 'BETA_SUPABASE_URL (vars)' }
@@ -192,6 +190,9 @@ jobs:
 
       - name: Signing preflight (fail-closed, EXT-02)
         working-directory: game
+        env:
+          WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
+          WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
         run: npm run signing:preflight:release
 
       - name: Compile once + package + sign (electron-builder)
@@ -200,11 +201,17 @@ jobs:
         working-directory: game
         env:
           GIT_TAG: ${{ env.RELEASE_TAG }}
+          VITE_SUPABASE_URL: ${{ vars.BETA_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.BETA_SUPABASE_ANON_KEY }}
+          WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
+          WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
         run: npm run dist:win
 
       - name: Verify Authenticode signatures
         working-directory: game
         shell: pwsh
+        env:
+          BETA_CERT_THUMBPRINT: ${{ vars.BETA_CERT_THUMBPRINT }}
         run: |
           if ($env:BETA_CERT_THUMBPRINT -notmatch '^[0-9A-Fa-f]{40}$') {
             throw 'BETA_CERT_THUMBPRINT var missing/malformed - EXT-02 record incomplete'
@@ -224,6 +231,8 @@ jobs:
 
       - name: Generate manifest + checksums (after final signing)
         working-directory: game
+        env:
+          BETA_CERT_THUMBPRINT: ${{ vars.BETA_CERT_THUMBPRINT }}
         run: |
           node scripts/release/manifest.mjs `
             --input release `
@@ -242,8 +251,11 @@ jobs:
       - name: Upload draft candidate (idempotent, digest-verified)
         # Same-bytes retry -> unchanged; different bytes under the same tag
         # -> rejected; a published release for the tag -> blocked. The
-        # production feed is never touched.
+        # production feed is never touched. The token exists only inside
+        # this step - it is never baked into or shipped with the installer.
         working-directory: game
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           node scripts/release/publish-candidate.mjs `
             --manifest release/release-manifest.json `

@@ -44,7 +44,9 @@ credentials, because none exist in that context.
    - `publish-candidate.mjs --verify-download` — idempotent draft upload.
 
 No step dumps the environment or logs credentials; all secrets are referenced
-by name through the protected environment only.
+by name through the protected environment only, and each is scoped to the
+individual step that needs it (least privilege): `npm ci`, checkout and SBOM
+steps receive no credential material at all.
 
 ## Required configuration (when EXT-02/03 resolve)
 
