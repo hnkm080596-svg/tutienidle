@@ -11,16 +11,7 @@ import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useProgressionActions } from '@/composables/useProgressionActions'
 import GameButton from '@/components/common/GameButton.vue'
 import EmptyState from '@/components/common/primitives/EmptyState.vue'
-import {
-  getNodeLevel,
-  getNodeMaxLevel,
-  getEffectiveNodeMaxLevel,
-  getBlockingNodeLevelGates,
-  hasPrerequisite,
-  canUpgradeNode,
-  isNodeElementActive,
-  nodeWayApplies,
-} from '@/core/progression/NodeSystem'
+import type { BetaSkillTreeNode } from '@/core/betaScopeSkillDomain'
 import { PHAP_TU_ELEMENT_ROOT_IDS } from '@/data/progression/PhapTuNodes.builders'
 import { ELEMENT_LABELS } from '@/core/element/ElementLabels'
 import { REALMS } from '@/data/realms/realm'
@@ -30,6 +21,11 @@ const { t } = useI18n()
 
 const props = defineProps<{
   node: ProgressionNode | null
+  /** Canonical model row for `node` (betaSkillTreeFor). Optional: the
+      parent passes its already-computed row; absent, the inspector
+      resolves the row itself through the same ops read-model - it
+      never calls a NodeSystem predicate either way. */
+  row?: BetaSkillTreeNode | null
   purchased: boolean
   purchasable: boolean
   inBattle?: boolean
@@ -51,29 +47,46 @@ const ELEMENT_ROOT_ID_SET = new Set<string>(Object.values(PHAP_TU_ELEMENT_ROOT_I
 // purchasable flag the parent computes already excludes roots.
 const isElementRoot = computed(() => props.node !== null && ELEMENT_ROOT_ID_SET.has(props.node.id))
 
-// Level hien tai / max / cost cap ke cua node dang chon.
-const level = computed(() => {
+// The canonical row: the parent's when supplied, else resolved through
+// the ops read-model over the full registry (same authority).
+const resolvedRow = computed<BetaSkillTreeNode | null>(() => {
   stateVersion.value
 
-  return props.node ? getNodeLevel(player.$state, props.node.id) : 0
-})
-
-const maxLevel = computed(() => (props.node ? getNodeMaxLevel(props.node) : 1))
-
-const nextCost = computed(() => {
-  stateVersion.value
+  if (props.row !== undefined && props.row !== null) {
+    return props.row
+  }
 
   if (!props.node) {
     return null
   }
 
-  return gameManager.progressionOps.getNextNodeCost(props.node.id, player.$state) ?? null
+  return (
+    gameManager.progressionOps
+      .betaSkillTreeFor(player.$state, gameManager.nodeRegistry.getAll())
+      .nodes.find((entry) => entry.nodeId === props.node!.id) ?? null
+  )
+})
+
+// Level hien tai / max / cost cap ke cua node dang chon - resolved by
+// the model row, not re-derived here.
+const level = computed(() => {
+  stateVersion.value
+
+  return resolvedRow.value?.level ?? 0
+})
+
+const maxLevel = computed(() => resolvedRow.value?.maxLevel ?? 1)
+
+const nextCost = computed(() => {
+  stateVersion.value
+
+  return resolvedRow.value?.nextLevelCost ?? null
 })
 
 const upgradable = computed(() => {
   stateVersion.value
 
-  return props.node ? canUpgradeNode(player.$state, props.node) : false
+  return resolvedRow.value?.canUpgrade ?? false
 })
 
 const isMaxed = computed(() => level.value >= maxLevel.value && maxLevel.value > 1)
@@ -84,7 +97,7 @@ const isMaxed = computed(() => level.value >= maxLevel.value && maxLevel.value >
 const effectiveMax = computed(() => {
   stateVersion.value
 
-  return props.node ? getEffectiveNodeMaxLevel(player.$state, props.node) : 1
+  return resolvedRow.value?.effectiveMaxLevel ?? 1
 })
 
 // M-QI-06 - ONE prereq -> localized reason formatter shared by
@@ -142,19 +155,22 @@ function nodePrereqReason(prereq: NodePrerequisite): string {
   return t('panels.skillPath.nodeInspector.lockedReasons.skillUpgrade')
 }
 
-// Ly do khoa -- thuan suy ra tu hasPrerequisite() da co (khong dung
-// core), chi de hien goi y, KHONG phai nguon su that.
+// Ly do khoa -- gate verdicts read from the model row (its
+// prerequisites/levelGates arrays preserve authored order, so row[i]
+// pairs with node.prerequisites[i] for the reason text). KHONG phai
+// nguon su that - the model is.
 const lockedReasons = computed(() => {
-  if (!props.node || props.purchased || props.purchasable || level.value >= 1) {
+  if (!props.node || !resolvedRow.value || props.purchased || props.purchasable || level.value >= 1) {
     return []
   }
 
+  const row = resolvedRow.value
   const reasons: string[] = []
 
-  // Phap Tu Reimagine -- element membership (isNodeElementActive) is
-  // not a prerequisite, so hasPrerequisite() cannot explain it;
-  // surface the real lock reason here. Route membership is retired.
-  if (!isNodeElementActive(player.$state, props.node) && props.node.elementTag) {
+  // Phap Tu Reimagine -- element membership is not a prerequisite, so
+  // authored gate rows cannot explain it; the model's scope-hidden
+  // reason names it instead.
+  if (row.reason === 'other-element-branch' && props.node.elementTag) {
     reasons.push(t('panels.skillPath.nodeInspector.lockedReasons.elementMismatch', {
       element: ELEMENT_LABELS[props.node.elementTag],
     }))
@@ -163,7 +179,7 @@ const lockedReasons = computed(() => {
   // M3 -- way-membership gate is not a prerequisite either; surface the
   // real lock reason (normally the tree filter hides these nodes, but
   // the inspector still explains a stale/edge selection).
-  if (!nodeWayApplies(player.$state, props.node) && props.node.requiredWay) {
+  if ((row.reason === 'foreign-stamp' || row.reason === 'non-beta-way') && props.node.requiredWay) {
     reasons.push(t('panels.skillPath.nodeInspector.lockedReasons.wayMismatch'))
   }
 
@@ -176,8 +192,8 @@ const lockedReasons = computed(() => {
     }))
   }
 
-  for (const prereq of props.node.prerequisites ?? []) {
-    if (!hasPrerequisite(player.$state, prereq)) {
+  for (const [index, prereq] of (props.node.prerequisites ?? []).entries()) {
+    if (row.prerequisites[index]?.met === false) {
       reasons.push(nodePrereqReason(prereq))
     }
   }
@@ -187,20 +203,38 @@ const lockedReasons = computed(() => {
 
 // M-QI-06 - upgrade-gate reasons: shown ONLY when the upgrade is
 // gate-blocked (level >= 1, below authored max, at/above the
-// effective cap). Renders the BINDING gate(s) via
-// getBlockingNodeLevelGates - the same authority that sets the
-// effective max - so frozen-surplus levels above the binding gate
-// still explain themselves. Never a forecast of later gates.
+// effective cap). Renders the BINDING gate(s) - the same selection
+// getBlockingNodeLevelGates owns (unmet relevant gates at the minimum
+// atLevel), replayed over the model's gate rows - so frozen-surplus
+// levels above the binding gate still explain themselves. Never a
+// forecast of later gates.
 const upgradeGateReasons = computed(() => {
   stateVersion.value
 
-  if (!props.node || level.value < 1 || level.value >= maxLevel.value || level.value < effectiveMax.value) {
+  if (!props.node || !resolvedRow.value || level.value < 1 || level.value >= maxLevel.value || level.value < effectiveMax.value) {
     return []
   }
 
-  return getBlockingNodeLevelGates(player.$state, props.node).map((gate) =>
-    nodePrereqReason(gate.prerequisite),
-  )
+  const authored = props.node.levelGates ?? []
+  const unmet = authored
+    .map((gate, index) => ({ authored: gate, row: resolvedRow.value!.levelGates[index] }))
+    .filter(
+      ({ authored, row }) =>
+        row !== undefined &&
+        !row.met &&
+        authored.atLevel >= 2 &&
+        authored.atLevel <= maxLevel.value,
+    )
+
+  if (unmet.length === 0) {
+    return []
+  }
+
+  const minAtLevel = Math.min(...unmet.map(({ authored }) => authored.atLevel))
+
+  return unmet
+    .filter(({ authored }) => authored.atLevel === minAtLevel)
+    .map(({ authored }) => nodePrereqReason(authored.prerequisite))
 })
 
 function onPurchase() {

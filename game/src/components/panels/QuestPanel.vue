@@ -1,4 +1,9 @@
 <script setup lang="ts">
+// BETA FE-CONTRACT (work-order sec.4B): renders the canonical
+// BetaQuestSurfaceModel rows via questOps - reward admission, target
+// labels, the collect shortfall and claimability all resolve inside
+// the domain model. The panel maps verdict -> i18n label / CSS class
+// and never rebuilds release gating or reward admission itself.
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useUiStore } from '@/stores/ui'
@@ -7,122 +12,52 @@ import OverlayPanel from '@/components/common/OverlayPanel.vue'
 import Bar from '@/components/common/primitives/Bar.vue'
 import GameButton from '@/components/common/GameButton.vue'
 import EmptyState from '@/components/common/primitives/EmptyState.vue'
-import type { Quest } from '@/core/quest/Quest'
-import type { QuestProgress } from '@/core/quest/QuestProgress'
-import { usePlayerStore } from '@/stores/player'
+import type { BetaQuestSurfaceModel } from '@/core/betaScopeQuestDomain'
 import { formatNumber } from '@/core/format/NumberFormatter'
-import {
-  isBreakthroughAcquisitionEnabled,
-  isCompanionPullTokenSourceSuppressed,
-  isDomainScopedAcquisitionEnabled,
-} from '@/core/realm/ReleasePolicy'
 
 const ui = useUiStore()
 const gameManager = useGameManager()
-const player = usePlayerStore()
 const { stateVersion, bumpState } = useStateVersion()
 const { t } = useI18n()
 
-interface QuestRow {
-  quest: Quest
-  progress: QuestProgress
-  targetLabel: string
-  canClaim: boolean
-  rewardChips: string[]
-  bagShortfall: { have: number; need: number } | null
-}
-
 // ui-audit economy M6 (2026-09-28) - reward chips preview WHAT a quest
-// pays. The item-drop lines are filtered by the same ReleasePolicy
-// gates claimQuest applies, so a dormant drop (closed pull pool,
-// gated breakthrough/domain material) never shows as a promised
-// reward (A9: same predicates, never a second copy).
-function rewardChips(quest: Quest): string[] {
-  const chips: string[] = []
-  const reward = quest.reward.reward
-
-  if (reward?.spiritStone) {
-    chips.push(t('panels.quest.rewards.spiritStone', { amount: formatNumber(reward.spiritStone) }))
-  }
-
-  if (reward?.cultivation) {
-    chips.push(t('panels.quest.rewards.cultivation', { amount: formatNumber(reward.cultivation) }))
-  }
-
-  if (reward?.skillInsight) {
-    chips.push(t('panels.quest.rewards.skillInsight', { amount: formatNumber(reward.skillInsight) }))
-  }
-
-  for (const drop of quest.reward.itemDrops ?? []) {
-    const amount = drop.amount ?? 1
-
-    if (drop.kind === 'material' && gameManager.materialRegistry.has(drop.itemId)) {
-      const material = gameManager.materialRegistry.get(drop.itemId)
-
-      if (!isBreakthroughAcquisitionEnabled(material.breakthroughRealmId)) continue
-      if (isCompanionPullTokenSourceSuppressed(drop.itemId)) continue
-      if (!isDomainScopedAcquisitionEnabled(material.domainUnlockRealmId, player.realmId)) continue
-
-      chips.push(`${material.name} ×${formatNumber(amount)}`)
+// pays. The model emits admitted lines only; this maps each entry to
+// its i18n chip - it does NOT decide admission.
+function rewardChips(model: BetaQuestSurfaceModel): string[] {
+  return model.rewards.map((entry) => {
+    if (entry.kind === 'material' || entry.kind === 'pill') {
+      return `${entry.name ?? entry.itemId ?? ''} ×${formatNumber(entry.amount)}`
     }
 
-    if (drop.kind === 'pill' && gameManager.pillRegistry.has(drop.itemId)) {
-      const pill = gameManager.pillRegistry.get(drop.itemId)
+    return t(`panels.quest.rewards.${entry.kind}`, { amount: formatNumber(entry.amount) })
+  })
+}
 
-      if (!isBreakthroughAcquisitionEnabled(pill.breakthroughRealmId)) continue
-
-      chips.push(`${pill.name} ×${formatNumber(amount)}`)
-    }
+// Collect quests have a SECOND gate: progress counting keeps running
+// even after the items left the bag, so "5/5" can still refuse to
+// claim. The model resolves the shortfall; the panel renders it.
+function bagShortfall(model: BetaQuestSurfaceModel): { have: number; need: number } | null {
+  if (model.claim.disabledReason !== 'missing-turnin-items' || !model.turnIn) {
+    return null
   }
 
-  return chips
+  return { have: model.turnIn.owned, need: model.turnIn.required }
 }
 
-// Collect quests have a SECOND hidden gate: progress counting keeps
-// running even after the items left the bag, so "5/5" can still refuse
-// to claim because materialBag.has(id, amount) is false. Surface the
-// actual bag count so the gate is legible instead of a dead button.
-function collectShortfall(quest: Quest, progress: QuestProgress): { have: number; need: number } | null {
-  if (quest.condition.kind !== 'collect') return null
-  if (progress.claimed || progress.progress < quest.condition.amount) return null
-
-  const have = gameManager.materialBag.getAmount(quest.condition.materialId)
-
-  return have < quest.condition.amount ? { have, need: quest.condition.amount } : null
+function targetLabel(model: BetaQuestSurfaceModel): string {
+  return model.targetLabel ?? t('panels.quest.anyEnemy')
 }
 
-function targetLabel(quest: Quest): string {
-  if (quest.condition.kind === 'collect') {
-    const materialId = quest.condition.materialId
-    const name = gameManager.materialRegistry.has(materialId)
-      ? gameManager.materialRegistry.get(materialId).name
-      : materialId
-
-    return name
-  }
-
-  const enemyId = quest.condition.enemyId
-  const enemyName = enemyId ? gameManager.catalogOps.getEnemyTemplate(enemyId)?.name ?? enemyId : t('panels.quest.anyEnemy')
-
-  return enemyName
-}
-
-const rows = computed<QuestRow[]>(() => {
+const rows = computed(() => {
   stateVersion.value
 
-  return gameManager.questOps.getActiveQuests().map(({ quest, progress }) => ({
-    quest,
-    progress,
-    targetLabel: targetLabel(quest),
-    canClaim: gameManager.questOps.canClaimQuest(quest.id),
-    rewardChips: rewardChips(quest),
-    bagShortfall: collectShortfall(quest, progress),
-  }))
+  return gameManager.questOps.getBetaQuestSurfaceModels()
 })
 
+// Beta admits once-quests only (the model's cadence is 'once') - a
+// single group; the template groups stay for post-beta reopening.
 const groups = computed(() => [
-  { title: t('panels.quest.groups.daily'), rows: rows.value.filter((row) => row.quest.cadence === 'daily') },
-  { title: t('panels.quest.groups.once'), rows: rows.value.filter((row) => row.quest.cadence === 'once') },
+  { title: t('panels.quest.groups.once'), rows: rows.value },
 ])
 
 function onClaim(questId: string) {
@@ -148,34 +83,34 @@ function close() {
       <section v-for="group in groups" v-show="group.rows.length" :key="group.title" class="quest-panel__section">
         <h4 class="quest-panel__section-title">{{ group.title }}</h4>
         <ul class="quest-panel__list">
-          <li v-for="row in group.rows" :key="row.quest.id" class="quest-panel__card">
+          <li v-for="row in group.rows" :key="row.id" class="quest-panel__card">
             <div class="quest-panel__info">
-              <div class="quest-panel__name">{{ row.quest.name }}</div>
-              <div class="quest-panel__desc">{{ row.quest.description }}</div>
+              <div class="quest-panel__name">{{ row.name }}</div>
+              <div class="quest-panel__desc">{{ row.description }}</div>
               <Bar
                 class="quest-panel__progress-bar"
-                :value="row.progress.progress"
-                :max="row.quest.condition.amount"
+                :value="row.progress"
+                :max="row.target"
                 :height="6"
               />
               <div class="quest-panel__progress-label">
-                {{ row.targetLabel }} · {{ Math.min(row.progress.progress, row.quest.condition.amount) }}/{{ row.quest.condition.amount }}
+                {{ targetLabel(row) }} · {{ Math.min(row.progress, row.target) }}/{{ row.target }}
               </div>
-              <div v-if="row.rewardChips.length" class="quest-panel__rewards">
-                <span v-for="(chip, chipIndex) in row.rewardChips" :key="chipIndex" class="quest-panel__reward">
+              <div v-if="rewardChips(row).length" class="quest-panel__rewards">
+                <span v-for="(chip, chipIndex) in rewardChips(row)" :key="chipIndex" class="quest-panel__reward">
                   {{ chip }}
                 </span>
               </div>
-              <div v-if="row.bagShortfall" class="quest-panel__shortfall">
-                {{ t('panels.quest.bagShortfall', { have: row.bagShortfall.have, need: row.bagShortfall.need }) }}
+              <div v-if="bagShortfall(row)" class="quest-panel__shortfall">
+                {{ t('panels.quest.bagShortfall', { have: bagShortfall(row)!.have, need: bagShortfall(row)!.need }) }}
               </div>
             </div>
             <GameButton
               class="quest-panel__claim"
-              :disabled="row.progress.claimed || !row.canClaim"
-              @click="onClaim(row.quest.id)"
+              :disabled="row.claim.claimed || !row.claim.available"
+              @click="onClaim(row.id)"
             >
-              {{ row.progress.claimed ? t('panels.quest.actions.claimed') : t('panels.quest.actions.claim') }}
+              {{ row.claim.claimed ? t('panels.quest.actions.claimed') : t('panels.quest.actions.claim') }}
             </GameButton>
           </li>
         </ul>

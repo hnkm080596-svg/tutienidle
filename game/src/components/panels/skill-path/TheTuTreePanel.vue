@@ -18,8 +18,7 @@ import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useTurnBattleInfo } from '@/composables/useTurnBattleInfo'
 import { useProgressionActions } from '@/composables/useProgressionActions'
-import { canPurchaseNode, getEffectiveNodeMaxLevel, getNodeLevel } from '@/core/progression/NodeSystem'
-import { getSkillCoreLevel } from '@/core/progression/SkillCoreLevel'
+import type { BetaSkillTreeNode } from '@/core/betaScopeSkillDomain'
 import { getRealmIndex } from '@/core/realm/realmSystem'
 import { turnSkillDisplayMetaOf } from '@/data/skill/TurnSkillDisplayMeta'
 import ConfirmModal from '@/components/common/ConfirmModal.vue'
@@ -97,6 +96,18 @@ for (const id of columnNodeIds) {
   }
 }
 
+// BETA FE-CONTRACT (relayed scope): every node read (level, effective
+// cap, purchasable) resolves through the canonical skill-tree model
+// over the registry - this panel never calls a NodeSystem predicate.
+const nodeRows = computed(() => {
+  stateVersion.value
+  return new Map(
+    gameManager.progressionOps
+      .betaSkillTreeFor(player.$state, gameManager.nodeRegistry.getAll())
+      .nodes.map((row: BetaSkillTreeNode) => [row.nodeId, row]),
+  )
+})
+
 const tcReached = computed(() => {
   stateVersion.value
   return getRealmIndex(player.realmId) >= getRealmIndex('foundation_establishment')
@@ -104,33 +115,35 @@ const tcReached = computed(() => {
 
 const chosenRootId = computed(() => {
   stateVersion.value
-  return COLUMNS.find(col => getNodeLevel(player.$state, col.rootNodeId) > 0)?.rootNodeId ?? null
+  return COLUMNS.find(col => (nodeRows.value.get(col.rootNodeId)?.level ?? 0) > 0)?.rootNodeId ?? null
 })
 
 function nodeState(nodeId: string) {
   stateVersion.value
   const node = nodeOf(nodeId)
-  if (node === undefined) {
+  const row = nodeRows.value.get(nodeId)
+  if (node === undefined || row === undefined) {
     return { node: undefined, level: 0, maxLevel: 0, purchased: false, purchasable: false }
   }
-  const level = getNodeLevel(player.$state, node.id)
   return {
     node,
-    level,
-    maxLevel: getEffectiveNodeMaxLevel(player.$state, node),
-    purchased: level >= 1,
-    purchasable: canPurchaseNode(player.$state, node),
+    level: row.level,
+    // The model's effectiveMaxLevel is the reachable cap the old
+    // getEffectiveNodeMaxLevel call returned - same authority.
+    maxLevel: row.effectiveMaxLevel,
+    purchased: row.level >= 1,
+    purchasable: row.state === 'purchasable',
   }
 }
 
 function isAbandoned(col: RootColumn): boolean {
   stateVersion.value
-  return getNodeLevel(player.$state, col.abandonedByNodeId) > 0
+  return (nodeRows.value.get(col.abandonedByNodeId)?.level ?? 0) > 0
 }
 
 function coreLevel(skillId: string): number {
   stateVersion.value
-  return getSkillCoreLevel(player.$state, skillId)
+  return gameManager.progressionOps.getSkillLevel(skillId, player.$state)
 }
 
 function selectNode(nodeId: string) {
@@ -168,7 +181,7 @@ const hasOwnedNodes = computed(() => {
   stateVersion.value
   return COLUMNS.some(col =>
     [col.rootNodeId, col.special.nodeId, ...col.basicBranchNodeIds, ...col.specialBranchNodeIds]
-      .some(nodeId => getNodeLevel(player.$state, nodeId) > 0),
+      .some(nodeId => (nodeRows.value.get(nodeId)?.level ?? 0) > 0),
   )
 })
 

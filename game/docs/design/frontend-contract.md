@@ -62,9 +62,13 @@ Never render an ultimate slot as "locked"; it is absent.
 
 ## D. Skill tree (Đạo Luân)
 
-`betaSkillTreeFor(player, deps)` / `activeElementTreeFor(player, deps)` → `BetaSkillTree`:
-`{ element, realmId, way, nodes: BetaSkillTreeNode[] }`. Node `state`:
-`purchased | purchasable | available | progression-locked | scope-hidden`.
+`betaSkillTreeFor(player, tree?)` / `activeElementTreeFor(player, tree?)` → `BetaSkillTree`:
+`{ element, realmId, way, wayName, wayNodeTreeTag, elementCasting,
+nodes: BetaSkillTreeNode[] }`. Node `state`:
+`purchased | purchasable | available | progression-locked | scope-hidden`
+(`reason`: `initiation-pending | prerequisites-unmet |
+insufficient-insight | unresolved-way-state | non-beta-way |
+grant-only-node | foreign-stamp | other-element-branch | undefined`).
 
 - Mortal: whole tree `progression-locked` `initiation-pending` (in scope, behind ritual).
 - Post-commit: the 4 non-committed element branches are `scope-hidden` (NOT locked);
@@ -72,6 +76,18 @@ Never render an ultimate slot as "locked"; it is absent.
 - Per-node `prerequisites[]` + `levelGates[]` carry `met` flags + display targets —
   render them verbatim; never recompute.
 - `nextLevelCost`, `affordable`, `canUpgrade`, `effectiveMaxLevel` are precomputed.
+- `wayName`, `wayNodeTreeTag`, `elementCasting` are the canonical identity
+  fields - `SkillPathPanel` reads them instead of `CultivationPathSystem`/
+  `getActiveWayDefinition`/`hasStaticPathCapability` calls.
+- `SkillPathPanel`, `NodeTreePanel`, `NodeInspector`, `SkillRoleStrip`,
+  `TheTuTreePanel` render ONLY from this model (via
+  `progressionOps.betaSkillTreeFor`) - no `NodeSystem` predicate
+  (`canPurchaseNode`, `getNodeLevel`, `getEffectiveNodeMaxLevel`,
+  `getNextLevelCost`, `hasPrerequisite`, `nodePathApplies`, `nodeWayApplies`,
+  `isNodeElementActive`, `ownedNodeIds`, `getBlockingNodeLevelGates`) and no
+  `getSkillCoreLevel` may be imported into `components/`. Reveal-hide stays
+  the `gate:'reveal'` row's `met` flag; route-stamp mismatches surface as
+  `scope-hidden` `foreign-stamp`.
 - Mutation: existing `progressionOps` purchase/upgrade calls; rejection reasons unchanged.
 
 ## E. Encounter / stage surfaces
@@ -94,11 +110,27 @@ Only roster enemies ever appear in `displayEnemy`/rewards — the spawn funnel
   Each recipe carries `variants[].sufficient`, `spiritStoneCost/Owned`,
   `specialIngredients[].sufficient`, `craftable`, `realmMatchesPlayer`,
   `breakthroughAvailable`, `activeJob?`. Render `recipes` directly.
-- **Worker lodge** — `getWorkerLodgeSurfaceModel()` resolves authored tabs:
-  `nhan_cong` available (+`manualAssignOffered`); the 3 companion tabs are `scope-hidden`.
-  Never import `CompanionAvailability`.
-- **Quests** — only `isBetaQuestEnabled`-admitted quests ever appear in
-  `getActiveQuests`/`resolveClaimable`; no daily cadence exists.
+- **Technique** — `gameManager.realmAdvanceOps.getBetaTechniqueSurfaceModel(player)` →
+  `BetaTechniqueSurfaceModel{techniqueId?, state('unavailable'|'available'), name?, grade?,
+  rank?, mastery?, icon?, description?, element?, quality?, tier?, masteryForNextRank?,
+  rankCapped?, sections, gradeAdvance{available, disabledReason
+  ('no-technique'|'grade-ceiling'|'realm-gate'|'insufficient-material'|'busy'|null),
+  targetGrade?, materialId?, materialName?, cost?, owned?}}`. The UI never calls
+  `canAdvanceTechniqueGrade`/cost functions or compares bag quantities itself —
+  the model resolves all of it. Mutation stays `tryAdvanceTechniqueGrade`.
+- **Worker lodge (FINAL POLICY)** — Chi Hiền Quán is **hidden completely** from
+  the beta UI: `getWorkerLodgeSurfaceModel()` resolves EVERY authored tab —
+  `nhan_cong` included — to `scope-hidden` (`nhan_cong` is bound to
+  `manualWorkforce` via `WORKER_LODGE_TAB_FEATURE`). Automatic production keeps
+  running as a background system with no UI. Never import `CompanionAvailability`.
+- **Quests** — `gameManager.questOps.getBetaQuestSurfaceModels()` →
+  `BetaQuestSurfaceModel[]{id, name, description, cadence:'once', progress, target,
+  targetLabel|null, rewards[] (admitted lines only), claim{available, claimed,
+  disabledReason('incomplete'|'missing-turnin-items'|'already-claimed'|null)},
+  turnIn?{materialId, required, owned}}`. The panel never imports `ReleasePolicy`
+  or touches `itemDrops` — `isQuestRewardDropAdmitted` is the ONE predicate,
+  shared by `claim()` and the model. Only `isBetaQuestEnabled`-admitted quests
+  ever appear; no daily cadence exists.
 - **Realm ladder** — `betaRealmLadderNodes()` = mortal rung + in-window passives only;
   `betaNextRealmSurfaceFor(player)` returns `null` at the ceiling (Trúc Cơ → Kim Đan) —
   render NO major-breakthrough CTA there.
@@ -128,7 +160,9 @@ Only roster enemies ever appear in `displayEnemy`/rewards — the spawn funnel
 
 Companion (all surfaces incl. pulls/gifts/EXP), Trận Pháp, artifact/pháp_bảo,
 hidden content (beasts/lineage/ngo_dao, Nghịch Chu Thiên, `hidden_window_opened` cue),
-manual workforce, Kiếm/Thể/hidden ways, wash/refine/decompose, daily quests, ultimate slot.
+manual workforce (incl. the whole Worker Lodge surface, `nhan_cong` tab and
+Production-panel allocation UI), Kiếm/Thể/hidden ways, wash/refine/decompose,
+daily quests, ultimate slot.
 These stay implemented + unit-tested behind the feature table — they are dormant,
 not deleted, so no UI may mention them.
 

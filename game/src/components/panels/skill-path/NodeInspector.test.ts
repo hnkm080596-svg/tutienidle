@@ -15,6 +15,7 @@ import {
   getNextLevelCost,
   getNodeLevel,
 } from '@/core/progression/NodeSystem'
+import { betaSkillTreeFor } from '@/core/betaScopeSkillDomain'
 import type { PlayerData } from '@/core/player/Player'
 import type { ProgressionNode } from '@/core/progression/ProgressionNode'
 import type { GameManager } from '@/core/game/GameManager'
@@ -30,15 +31,20 @@ function fixtureNode(overrides: Partial<ProgressionNode> = {}): ProgressionNode 
   }
 }
 
-function mockGameManager(): Partial<GameManager> {
+function mockGameManager(nodes: ProgressionNode[] = [fixtureNode()]): Partial<GameManager> {
   return {
     nodeRegistry: {
-      get: (id: string) => fixtureNode({ id, name: id }),
+      getAll: () => nodes,
+      get: (id: string) => nodes.find((node) => node.id === id) ?? fixtureNode({ id, name: id }),
     } as GameManager['nodeRegistry'],
     skillManager: {
       get: () => undefined,
     } as unknown as GameManager['skillManager'],
     progressionOps: {
+      // BETA FE-CONTRACT seam - delegate to the canonical model, not a
+      // hand-built row (the component only ever reads the model).
+      betaSkillTreeFor: (player: PlayerData, tree?: readonly ProgressionNode[]) =>
+        betaSkillTreeFor(player, tree ?? nodes),
       getNextNodeCost: () => 1,
       purchaseNode: () => false,
       upgradeNode: () => false,
@@ -73,7 +79,7 @@ function mountInspector(
   const pinia = createPinia()
   app.use(pinia)
   app.use(i18n)
-  app.provide(GAME_MANAGER_KEY, mockGameManager() as GameManager)
+  app.provide(GAME_MANAGER_KEY, mockGameManager([node]) as GameManager)
   app.provide(STATE_VERSION_KEY, ref(0))
   app.provide(BUMP_STATE_KEY, () => {})
 
@@ -171,12 +177,16 @@ function mountOwnedInspector(
 
   const gm: Partial<GameManager> = {
     nodeRegistry: {
-      get: (id: string) => fixtureNode({ id, name: id }),
+      getAll: () => [node],
+      get: (id: string) => (id === node.id ? node : fixtureNode({ id, name: id })),
     } as GameManager['nodeRegistry'],
     skillManager: {
       get: () => undefined,
     } as unknown as GameManager['skillManager'],
     progressionOps: {
+      // Same canonical-model seam as the production ops facade.
+      betaSkillTreeFor: (player: PlayerData, tree?: readonly ProgressionNode[]) =>
+        betaSkillTreeFor(player, tree ?? [node]),
       getNextNodeCost: (nodeId: string, player: PlayerData) => {
         const target = node.id === nodeId ? node : fixtureNode({ id: nodeId, name: nodeId })
         const level = getNodeLevel(player, nodeId)

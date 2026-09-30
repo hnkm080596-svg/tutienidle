@@ -785,6 +785,7 @@ export class GameManager {
       pillRegistry: this.pillRegistry,
       pillBag: this.pillBag,
       notifications: this.notifications,
+      getEnemyTemplate: (enemyId) => this.catalogOps.getEnemyTemplate(enemyId),
       getActivePlayer: () => this.activePlayer,
       buildPlayerRewardReceiver: (player) => this.rewardOps.buildPlayerRewardReceiver(player),
     })

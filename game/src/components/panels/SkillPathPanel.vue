@@ -28,12 +28,7 @@ import SkillDetailView from './skill-path/SkillDetailView.vue'
 import NativeCoreDetail from './skill-path/NativeCoreDetail.vue'
 import SkillRoleStrip from './skill-path/SkillRoleStrip.vue'
 import TechniqueBand from './skill-path/TechniqueBand.vue'
-import { canPurchaseNode, getNodeLevel } from '@/core/progression/NodeSystem'
-import { getActiveWayDefinition } from '@/core/player/CultivationPathKit'
-import {
-  getActiveElement,
-  hasStaticPathCapability,
-} from '@/core/player/CultivationPathSystem'
+import type { BetaSkillTreeNode } from '@/core/betaScopeSkillDomain'
 import { ELEMENT_ORDER, ELEMENT_LABELS, ELEMENT_COLOR_VARS } from '@/core/element/ElementLabels'
 import type { ProgressionNode } from '@/core/progression/ProgressionNode'
 import type { ElementType } from '@/core/element/ElementType'
@@ -41,7 +36,6 @@ import type { Skill } from '@/core/skill/Skill'
 import type { SkillPathEntry, NativeSkillPathEntry } from './skill-path/SkillPathEntry'
 import { NATIVE_CORE_SKILL_IDS } from '@/data/progression/SkillCoreNodes'
 import { turnSkillDisplayMetaOf } from '@/data/skill/TurnSkillDisplayMeta'
-import { getSkillCoreLevel } from '@/core/progression/SkillCoreLevel'
 import { useTurnBattleInfo } from '@/composables/useTurnBattleInfo'
 import OverlayPanel from '@/components/common/OverlayPanel.vue'
 import { useAudioStore } from '@/stores/audio'
@@ -60,23 +54,37 @@ const { stateVersion } = useStateVersion()
 // pass-through view qua viewBranchTags(), toàn bộ root (mutex cho Hiện,
 // non-mutex cho Ẩn) render trong cùng một tree.
 //
+// BETA FE-CONTRACT (sec.4, relayed scope): the canonical skill-tree
+// read-model (progressionOps.betaSkillTreeFor) resolves every
+// progression predicate this panel used to derive - way name/tag,
+// committed element, the casting capability, per-node purchased /
+// purchasable state. The panel reads the model; it never calls
+// NodeSystem/CultivationPathSystem predicates itself.
+const skillTree = computed(() => {
+  stateVersion.value
+
+  // The full registry catalog - the way-tagged trees (kiem_pho/body/
+  // hidden_body) resolve rows for any selection, not just phap-tu.
+  return gameManager.progressionOps.betaSkillTreeFor(
+    player.$state,
+    gameManager.nodeRegistry.getAll(),
+  )
+})
+
 // P1 - tree selection resolves on the WAY's declared nodeTreeTag, never
 // a concrete way predicate: kiem hien -> 'kiem_pho', ngu -> 'ngu_kiem',
 // body hien -> 'body', ung_the -> 'hidden_body'. Ways without a fixed
-// tree (spell_pathway - element-driven; ngo_dao - none) declare no tag; the
-// resolver fails closed on a corrupt pair.
-const wayNodeTreeTag = computed(() => getActiveWayDefinition(player)?.nodeTreeTag)
+// tree (spell_pathway - element-driven; ngo_dao - none) declare no tag.
+const wayNodeTreeTag = computed(() => skillTree.value.wayNodeTreeTag)
 
 // P7-M7 - way identity line: the committed way's self-describing name
 // (e.g. 'Kiem Tu - Ngu Kiem Tam Kinh'), or Phan Nhan for a way-less
-// mortal. Resolved through the canonical way read, never an id literal.
+// mortal - model-resolved.
 const wayIdentity = computed(
-  () => getActiveWayDefinition(player)?.name ?? t('panels.skillPath.mortalName'),
+  () => skillTree.value.wayName ?? t('panels.skillPath.mortalName'),
 )
 
-const hasElementalCasting = computed(
-  () => hasStaticPathCapability(player, 'spell.elemental_casting'),
-)
+const hasElementalCasting = computed(() => skillTree.value.elementCasting)
 
 const showTree = computed(
   () =>
@@ -91,7 +99,7 @@ const showTree = computed(
 // element-root pick happens IN the tree (element-only commit), so the
 // tree must render before any elemental skill is learned. Default tab
 // = the committed element once the element axis resolves one.
-const committedElement = computed(() => getActiveElement(player))
+const committedElement = computed(() => skillTree.value.element ?? undefined)
 
 const selectedBranch = ref<ElementType>(committedElement.value ?? 'fire')
 
@@ -148,20 +156,28 @@ function onSelectNode(node: ProgressionNode, purchased: boolean, purchasable: bo
 // buttons instead of offering a dead click.
 const { isBattleInProgress: inBattle } = useTurnBattleInfo()
 
-// Node vừa mua xong vẫn đang là selectedNode — refresh trạng thái
-// purchased/purchasable hiển thị ở inspector theo state mới nhất mỗi
-// khi nodeLevels/skillInsight đổi, không chờ người chơi bấm lại vào node.
-watch(
-  () => [Object.keys(player.nodeLevels).length, player.skillInsight] as const,
-  () => {
-    if (!selectedNode.value) {
-      return
-    }
+// A just-purchased selected node stays selected - the model row
+// refreshes purchased/purchasable reactively on every
+// nodeLevels/skillInsight change; the inspector reads them via
+// computeds, not a manual watch.
+const selectedRow = computed<BetaSkillTreeNode | null>(() => {
+  const node = selectedNode.value
 
-    selectedNodePurchased.value = getNodeLevel(player.$state, selectedNode.value.id) >= 1
-    selectedNodePurchasable.value = canPurchaseNode(player.$state, selectedNode.value)
-  },
-)
+  if (!node) {
+    return null
+  }
+
+  return skillTree.value.nodes.find((entry) => entry.nodeId === node.id) ?? null
+})
+
+watch(selectedRow, (row) => {
+  if (!row) {
+    return
+  }
+
+  selectedNodePurchased.value = row.state === 'purchased'
+  selectedNodePurchasable.value = row.state === 'purchasable'
+})
 
 // The single library: every learned active skill, independent of role/path.
 // M-QI-05 - the list renders the shared SkillPathEntry union: learned
@@ -186,7 +202,9 @@ const skillPathEntries = computed<SkillPathEntry[]>(() => {
     }))
 
   for (const skillId of NATIVE_CORE_SKILL_IDS) {
-    const level = getSkillCoreLevel(player.$state, skillId)
+    // Canonical core-level read via the ops facade - same seam the
+    // skill rows above already consume.
+    const level = gameManager.progressionOps.getSkillLevel(skillId, player.$state)
 
     if (level < 1) {
       continue
@@ -370,6 +388,7 @@ function close() {
         <NodeInspector
           v-if="showTree && !showDetail"
           :node="selectedNode"
+          :row="selectedRow"
           :purchased="selectedNodePurchased"
           :purchasable="selectedNodePurchasable"
           :in-battle="inBattle"

@@ -4,31 +4,23 @@
 // TechniqueBand.vue (hero variant) - doc chung nguon qua
 // techniqueManager, tranh nhieu noi tu ve nhieu kieu khac nhau.
 //
-// P7-M3 - canonical 0-or-1 technique: doc thang
-// gameManager.techniqueManager.getActive() (khong can tham so). Card
-// gio THUAN hien thi rank/mastery/grade/quality: band label suy tu
-// rank (getTechniqueTierForRank), thanh exp = mastery / cost(grade),
-// day khi rank cham cap 10 (xem TechniqueProgression.ts).
+// BETA FE-CONTRACT (work-order sec.4A): card gio THUAN hien thi
+// BetaTechniqueSurfaceModel (realmAdvanceOps) - band label suy tu
+// model.tier, thanh exp = model.mastery / model.masteryForNextRank,
+// day khi model.rankCapped. Khong tu suy ra tier/cost/rank-cap nua.
 //
 // Tooltip co cau truc (xem TechniqueTooltipContent trong
-// composables/useTooltip.ts) - hinh + khoi Chien Dau, xay qua
-// buildTechniqueSections() (composables/useTechniqueSections.ts) -
-// TechniqueBand.vue dung lai y het cho khoi thong tin inline, khong
-// chi luc hover.
+// composables/useTooltip.ts) - hinh + khoi Chien Dau lay tu
+// model.sections.
 import { computed } from 'vue'
 import SlotView from '../../common/SlotView.vue'
 import Bar from '../../common/primitives/Bar.vue'
 import InkNineSlice from '../../common/primitives/InkNineSlice.vue'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
+import { usePlayerStore } from '@/stores/player'
 import type { TechniqueTooltipContent } from '@/composables/useTooltip'
-import { buildTechniqueSections } from '@/composables/useTechniqueSections'
 import { ELEMENT_LABELS } from '@/core/element/ElementLabels'
-import {
-  getTechniqueMasteryForNextRank,
-  getTechniqueTierForRank,
-  TECHNIQUE_RANK_CAP,
-  TECHNIQUE_TIER_LABELS,
-} from '@/core/technique/TechniqueProgression'
+import { TECHNIQUE_TIER_LABELS } from '@/core/technique/TechniqueProgression'
 import { ITEM_QUALITY_LABELS } from '@/core/item/ItemQuality'
 import { formatNumber } from '@/core/format/NumberFormatter'
 
@@ -45,35 +37,41 @@ withDefaults(defineProps<{
 })
 
 const gameManager = useGameManager()
+const player = usePlayerStore()
 const { stateVersion } = useStateVersion()
 
-const technique = computed(() => {
+const model = computed(() => {
   stateVersion.value
 
-  return gameManager.techniqueManager.getActive()
+  return gameManager.realmAdvanceOps.getBetaTechniqueSurfaceModel(player.$state)
 })
 
-// Band badge: four-tier vocabulary suy tu rank + Canh (grade) hien tai.
+const technique = computed(() =>
+  model.value.state === 'available' ? model.value : undefined,
+)
+
+// Band badge: four-tier vocabulary suy tu model.tier + Canh (grade)
+// hien tai - label table lookup only, no band derivation.
 const currentTierLabel = computed(() => {
   const active = technique.value
 
-  return active ? `${TECHNIQUE_TIER_LABELS[getTechniqueTierForRank(active.rank)]} · Cảnh ${active.grade}` : ''
+  return active?.tier !== undefined && active.grade !== undefined
+    ? `${TECHNIQUE_TIER_LABELS[active.tier]} · Cảnh ${active.grade}`
+    : ''
 })
 
-// Thanh exp = mastery / cost(grade); rank cap -> full (không còn rank
-// kế để tiến).
+// Thanh exp = mastery / masteryForNextRank; rankCapped -> full
+// (không còn rank kế để tiến).
 const tierExpValue = computed(() => {
   const active = technique.value
 
-  return active && active.rank < TECHNIQUE_RANK_CAP ? active.mastery : 1
+  return active && !active.rankCapped ? active.mastery ?? 0 : 1
 })
 
 const tierExpMax = computed(() => {
   const active = technique.value
 
-  return active && active.rank < TECHNIQUE_RANK_CAP
-    ? getTechniqueMasteryForNextRank(active.grade)
-    : 1
+  return active && !active.rankCapped ? active.masteryForNextRank ?? 1 : 1
 })
 
 const tierExpLabel = computed(() => {
@@ -83,11 +81,11 @@ const tierExpLabel = computed(() => {
     return ''
   }
 
-  if (active.rank >= TECHNIQUE_RANK_CAP) {
-    return `Cấp ${TECHNIQUE_RANK_CAP} · Viên Mãn · ${ITEM_QUALITY_LABELS[active.quality]}`
+  if (active.rankCapped) {
+    return `Cấp ${active.rank} · Viên Mãn · ${active.quality ? ITEM_QUALITY_LABELS[active.quality] : ''}`
   }
 
-  return `Cấp ${active.rank} · ${formatNumber(active.mastery)} / ${formatNumber(getTechniqueMasteryForNextRank(active.grade))} · ${ITEM_QUALITY_LABELS[active.quality]}`
+  return `Cấp ${active.rank} · ${formatNumber(active.mastery ?? 0)} / ${formatNumber(active.masteryForNextRank ?? 0)} · ${active.quality ? ITEM_QUALITY_LABELS[active.quality] : ''}`
 })
 
 const tooltipContent = computed<TechniqueTooltipContent | undefined>(() => {
@@ -100,7 +98,7 @@ const tooltipContent = computed<TechniqueTooltipContent | undefined>(() => {
   return {
     kind: 'technique',
 
-    name: active.name,
+    name: active.name ?? '',
 
     imagePath: active.icon,
 
@@ -108,7 +106,7 @@ const tooltipContent = computed<TechniqueTooltipContent | undefined>(() => {
 
     description: active.description,
 
-    sections: buildTechniqueSections(active),
+    sections: [...active.sections],
   }
 })
 </script>
