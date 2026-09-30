@@ -634,7 +634,8 @@ export const MORTAL_ENEMIES: Enemy[] = [
       criticalDamage: 2.2,
       armor: 39,
       evasionRate: 15,
-      resistances: { water: 20 },
+      // Uniform across the five elements (stage-boss fairness).
+      resistances: { wood: 20, fire: 20, earth: 20, metal: 20, water: 20 },
       elemental: { element: 'water', power: 14 },
     },
     rewards: {
@@ -1128,7 +1129,8 @@ export const MORTAL_ENEMIES: Enemy[] = [
       criticalDamage: 2,
       armor: 20,
       evasionRate: 15,
-      resistances: { water: 8 },
+      // Uniform across the five elements (stage-boss fairness).
+      resistances: { wood: 8, fire: 8, earth: 8, metal: 8, water: 8 },
       elemental: { element: 'water', power: 12 },
     },
     rewards: {

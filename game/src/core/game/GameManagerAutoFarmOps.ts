@@ -77,6 +77,15 @@ export class GameManagerAutoFarmOps {
   }
 
   /**
+   * Read-model probe (stageOps): does this stage currently satisfy the
+   * auto-farm eligibility contract? Delegates to the one eligibility
+   * authority above - no second rule.
+   */
+  isAutoFarmStageEligible(player: PlayerData, stageId: string): boolean {
+    return this.resolveValidAutoFarmStage(player, stageId) !== null
+  }
+
+  /**
    * Enable auto-farm for a stage that reached Hoan My. Shares the SAME
    * single-slot StageManager with manual/repeat/progress (exclusivity
    * uniform) - no TurnBattleSystem, no animation; reward rolls by wall-clock.

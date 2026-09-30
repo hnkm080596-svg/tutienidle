@@ -66,7 +66,9 @@ describe('enemy combat stat normalization', () => {
     expect(elite.accuracyRating).toBeCloseTo(88)
   })
 
-  it('Boss có profile công thủ riêng và kháng hành chủ đạo', () => {
+  // BETA SCOPE LOCK v2 section 10: the +15 resistance bonus is uniform across
+  // the five elements - no player damage element gets singled out.
+  it('Boss có profile công thủ riêng và kháng đồng đều ngũ hành', () => {
     const boss = applyBossMultiplier(baseEnemyStats())
 
     expect(boss.maxHp).toBe(700)
@@ -74,8 +76,15 @@ describe('enemy combat stat normalization', () => {
     expect(boss.defense).toBe(12)
     expect(boss.accuracyRating).toBeCloseTo(92)
     expect(boss.criticalAvoidance).toBe(0.15)
-    expect(boss.fireResistance).toBe(15)
-    expect(boss.woodResistance).toBe(0)
+    for (const resistance of [
+      boss.woodResistance,
+      boss.fireResistance,
+      boss.earthResistance,
+      boss.metalResistance,
+      boss.waterResistance,
+    ]) {
+      expect(resistance).toBe(15)
+    }
   })
 })
 

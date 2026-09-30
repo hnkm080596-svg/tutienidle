@@ -57,20 +57,24 @@ describe('EarlyGameSession', () => {
   // growth cycle) - the locked "mortal holds no technique" cut is an
   // intentional power loss whose compensation is deferred (mortal
   // starter basics = M4 scope, plus the same pending balance pass).
-  // Still a balance/content finding, not a harness defect; flip back to
-  // `toBeNull()` + the two asserts below once tuning lands.
+  // BETA SCOPE LOCK v2 (2026-09-30): the single-species band pools put
+  // the stronger band-B species (Man Ho) on every floor-4+ spawn and
+  // pulled the wall forward again to mortal_dong_4 - still a
+  // balance/content finding for the Phase-8 matrix, not a harness
+  // defect; flip back to `toBeNull()` + the two asserts below once
+  // tuning lands.
   it('canonical loop: fresh pinned character reaches qi_refining floor 1 victory', { timeout: 60000 }, () => {
     const s = new EarlyGameSession({ seed: 11, profile: PINNED })
     const report = runLoop(s, CANONICAL_EARLY_LOOP)
     console.log('LOOP\n' + JSON.stringify(report, null, 1))
-    const dong5Index = report.steps.findIndex(
-      (r) => r.step.kind === 'stage_until_victory' && r.step.stageId === 'mortal_dong_5',
+    const dong4Index = report.steps.findIndex(
+      (r) => r.step.kind === 'stage_until_victory' && r.step.stageId === 'mortal_dong_4',
     )
     // Characterization: every step before the wall succeeds, and the
-    // wall is exactly mortal_dong_5 under the M3 no-starter-technique model.
-    expect(dong5Index).toBeGreaterThan(0)
-    expect(report.failedAt).toBe(dong5Index)
-    expect(report.snapshot.completedStageIds).toContain('mortal_dong_4')
+    // wall is exactly mortal_dong_4 under the beta roster band mix.
+    expect(dong4Index).toBeGreaterThan(0)
+    expect(report.failedAt).toBe(dong4Index)
+    expect(report.snapshot.completedStageIds).toContain('mortal_dong_3')
     // TODO(balance): expect(report.failedAt).toBeNull()
     // expect(report.snapshot.cultivationPath).toBe('sword')
     // expect(report.snapshot.completedStageIds).toContain('qi_refining_forest')

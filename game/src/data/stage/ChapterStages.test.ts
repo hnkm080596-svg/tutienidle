@@ -1,14 +1,11 @@
 // Builder unit test for defineChapterStages (spec v3 D9). Uses one
 // small hand-written ChapterConfig fixture - NOT the shipped Stages.ts
 // configs - so the floor rules are verified independently of content.
+// BETA SCOPE LOCK v2: the fixture is a roster (3 normals + 1 boss); the
+// shipped distinct-4 policy lives in BetaStageRoster.test.ts.
 import { describe, expect, it } from 'vitest'
 import { defineChapterStages, type ChapterConfig } from './ChapterStages'
 import type { Stage } from '../../core/stage/Stage'
-
-const OVERRIDE_POOL = [
-  { enemyId: 'override_alpha', weight: 7 },
-  { enemyId: 'override_beta', weight: 2, eliteChance: 0.25 },
-]
 
 const FIXTURE: ChapterConfig = {
   realmId: 'test_realm',
@@ -16,11 +13,10 @@ const FIXTURE: ChapterConfig = {
   ids: Array.from({ length: 10 }, (_, i) => `test_stage_${i + 1}`),
   names: (floor) => `Fixture Floor ${floor}`,
   descriptions: Array.from({ length: 10 }, (_, i) => `desc ${i + 1}`),
-  speciesByFloor: Array.from({ length: 10 }, (_, i) => ({
-    common: `f${i + 1}_common`,
-    elite: `f${i + 1}_elite`,
-  })),
-  poolOverrides: { 3: OVERRIDE_POOL },
+  roster: {
+    normals: ['fixture_band_a', 'fixture_band_b', 'fixture_band_c'],
+    boss: 'fixture_boss',
+  },
 }
 
 const built: Stage[] = defineChapterStages(FIXTURE)
@@ -63,25 +59,37 @@ describe('defineChapterStages - floor rules (spec v3 D9)', () => {
     expect(boss.waves).toEqual([boss.totalEnemyCount])
   })
 
-  it('standard pool is [common w5, elite w3 + eliteChance 0.1]', () => {
-    for (const stage of built) {
-      if (stage.floor === 3) continue // overridden floor
-      const species = FIXTURE.speciesByFloor[stage.floor! - 1]!
-      expect(stage.enemyPool).toEqual([
-        { enemyId: species.common, weight: 5 },
-        { enemyId: species.elite, weight: 3, eliteChance: 0.1 },
-      ])
+  it.each([
+    [1, 'fixture_band_a'],
+    [3, 'fixture_band_a'],
+    [4, 'fixture_band_b'],
+    [6, 'fixture_band_b'],
+    [7, 'fixture_band_c'],
+    [9, 'fixture_band_c'],
+  ] as const)('floor %i: pool is the single band species %s', (floor, species) => {
+    const stage = byFloor.get(floor)!
+    expect(stage.enemyPool).toHaveLength(1)
+    expect(stage.enemyPool[0]!.enemyId).toBe(species)
+    expect(stage.enemyPool[0]!.weight).toBe(1)
+  })
+
+  it('normal-floor eliteChance ramps 5% -> 21% (floors 1-9)', () => {
+    const expected = [0.05, 0.07, 0.09, 0.11, 0.13, 0.15, 0.17, 0.19, 0.21]
+    for (let floor = 1; floor <= 9; floor++) {
+      expect(byFloor.get(floor)!.enemyPool[0]!.eliteChance).toBe(expected[floor - 1])
     }
   })
 
-  it('poolOverrides REPLACES the standard pool for that floor', () => {
-    expect(byFloor.get(3)!.enemyPool).toEqual(OVERRIDE_POOL)
+  it('floor 10: pool is the roster boss with the 10% elite stack chance', () => {
+    expect(byFloor.get(10)!.enemyPool).toEqual([
+      { enemyId: 'fixture_boss', weight: 1, eliteChance: 0.1 },
+    ])
   })
 
-  it('bossEnemyId = elite species on floor 10 only', () => {
+  it('bossEnemyId = roster boss on floor 10 only', () => {
     for (const stage of built) {
       if (stage.floor === 10) {
-        expect(stage.bossEnemyId).toBe('f10_elite')
+        expect(stage.bossEnemyId).toBe('fixture_boss')
       } else {
         expect(stage.bossEnemyId).toBeUndefined()
       }
@@ -112,5 +120,20 @@ describe('defineChapterStages - floor rules (spec v3 D9)', () => {
     expect(() =>
       defineChapterStages({ ...FIXTURE, ids: FIXTURE.ids.slice(0, 9) }),
     ).toThrow(/exactly 10 floors/)
+  })
+
+  it('rejects a roster without 3 normals + boss', () => {
+    expect(() =>
+      defineChapterStages({
+        ...FIXTURE,
+        roster: { normals: ['a', 'b'] as unknown as [string, string, string], boss: 'boss' },
+      }),
+    ).toThrow(/roster/)
+    expect(() =>
+      defineChapterStages({
+        ...FIXTURE,
+        roster: { normals: ['a', 'b', 'c'], boss: '' },
+      }),
+    ).toThrow(/roster/)
   })
 })
