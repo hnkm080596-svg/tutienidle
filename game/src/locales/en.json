@@ -1517,6 +1517,51 @@
     "commandWheel": {
       "openAria": "Open the Cave Dwelling command wheel",
       "hint": "Command · Tab"
+    },
+    "daoLuan": {
+      "center": "Cultivate"
+    },
+    "topBar": {
+      "aria": "Cave Dwelling status bar",
+      "identityAria": "Open the Character panel",
+      "cultivation": "Cultivation progress",
+      "realmLine": "{realm} · Stage {level}",
+      "feedback": "Mail",
+      "feedbackAria": "Mailbox / feedback",
+      "bag": "Bag",
+      "bagAria": "Open the Bag",
+      "settings": "Set",
+      "settingsAria": "Open Settings"
+    },
+    "thienCo": {
+      "title": "Heaven's Insight",
+      "aria": "Heaven's Insight — what is worth doing now",
+      "empty": "A calm Dao heart — nothing urgent.",
+      "breakthrough": {
+        "title": "Breakthrough ready",
+        "detail": "Cultivation is full — open Realm to break through.",
+        "cta": "Break through"
+      },
+      "quest": {
+        "title": "Quests complete",
+        "detail": "{count} quest(s) await rewards.",
+        "cta": "Claim"
+      },
+      "ready": {
+        "title": "{name} ready to harvest",
+        "detail": "Storage is full.",
+        "cta": "Harvest"
+      },
+      "active": {
+        "title": "Pill Room is refining",
+        "detail": "{count} batch(es) · soonest in {minutes} min.",
+        "cta": "View furnace"
+      },
+      "upgradeable": {
+        "title": "{name} can be upgraded",
+        "detail": "Materials ready for the next level.",
+        "cta": "Upgrade"
+      }
     }
   },
   "tutorial": {

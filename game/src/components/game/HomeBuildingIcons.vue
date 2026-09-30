@@ -119,7 +119,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div v-if="!stageActive" class="home-building-hotspots">
+  <div v-if="!stageActive" class="home-building-hotspots" data-canonical-layer="L3">
     <div class="home-building-hotspots__art-space">
       <div
         v-for="scene in sceneBuildings"

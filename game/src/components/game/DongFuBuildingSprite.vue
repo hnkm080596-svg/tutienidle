@@ -182,7 +182,39 @@ function reportAssetError(): void {
   filter: sepia(1) saturate(2.5) hue-rotate(352deg) brightness(0.8);
 }
 
-.dong-fu-building-sprite.is-selected .dong-fu-building-sprite__ring { opacity: 0.68; }
+/* Spec SS14.5 action-ready ambient cue -- a slow breathing ground ring
+   tinted per status; local and quiet, no badge spam. */
+@keyframes building-ring-breath {
+  0%, 100% { opacity: 0.18; }
+  50% { opacity: 0.55; }
+}
+
+.dong-fu-building-sprite.is-status-ready .dong-fu-building-sprite__ring {
+  border-color: color-mix(in srgb, var(--hk-jade, #3fa68b) 78%, transparent);
+  box-shadow: 0 0 10px var(--hk-glow-jade, rgba(63, 166, 139, 0.35));
+  animation: building-ring-breath var(--hk-motion-breath, 2400ms) var(--hk-ease-standard, ease-in-out) infinite;
+}
+
+.dong-fu-building-sprite.is-status-upgradeable .dong-fu-building-sprite__ring {
+  border-color: color-mix(in srgb, var(--hk-gold, #c99a4a) 78%, transparent);
+  box-shadow: 0 0 10px var(--hk-glow-gold, rgba(232, 195, 90, 0.35));
+  animation: building-ring-breath var(--hk-motion-breath, 2400ms) var(--hk-ease-standard, ease-in-out) infinite;
+}
+
+.dong-fu-building-sprite.is-status-active .dong-fu-building-sprite__ring {
+  border-color: color-mix(in srgb, var(--hk-cinnabar, #b54432) 60%, transparent);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--hk-cinnabar, #b54432) 35%, transparent);
+  animation: building-ring-breath calc(var(--hk-motion-breath, 2400ms) * 1.4)
+    var(--hk-ease-standard, ease-in-out) infinite;
+}
+
+/* Selected wins over the ambient breath cue (declared after the status
+   rules so the cascade settles it). */
+.dong-fu-building-sprite.is-selected .dong-fu-building-sprite__ring {
+  opacity: 0.68;
+  animation: none;
+}
+
 .dong-fu-building-sprite.is-locked .dong-fu-building-sprite__base { filter: saturate(0.35) brightness(0.8); opacity: 0.42; }
 .dong-fu-building-sprite.is-disabled .dong-fu-building-sprite__base,
 .dong-fu-building-sprite.has-asset-error .dong-fu-building-sprite__base { opacity: 0.32; }
@@ -190,6 +222,11 @@ function reportAssetError(): void {
 .dong-fu-building-sprite.is-time-noon .dong-fu-building-sprite__content { filter: brightness(1.04) saturate(0.96); }
 .dong-fu-building-sprite.is-time-evening .dong-fu-building-sprite__content { filter: sepia(0.14) saturate(0.92) brightness(0.94); }
 .dong-fu-building-sprite.is-time-night .dong-fu-building-sprite__content { filter: saturate(0.72) brightness(0.78) contrast(1.08) hue-rotate(8deg); }
+
+.dong-fu-building-sprite.is-reduced-motion:is(.is-status-ready, .is-status-upgradeable, .is-status-active) .dong-fu-building-sprite__ring {
+  animation: none;
+  opacity: 0.45;
+}
 
 .dong-fu-building-sprite.is-reduced-motion .dong-fu-building-sprite__content,
 .dong-fu-building-sprite.is-reduced-motion .dong-fu-building-sprite__outline {

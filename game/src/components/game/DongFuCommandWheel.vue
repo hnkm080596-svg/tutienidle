@@ -77,6 +77,32 @@ const renderedSlots = computed(() => betaWheelSlots().filter((slot) => slot.avai
 const ORBIT_COUNT = 2
 const ORBIT_SWEEP_DEGREES = 112
 const MOTION_DURATION_MS = 320
+const IGNITION_DURATION_MS = 700
+
+// Dao Luan treatment (spec SS10.1): catalog ring 1 (cultivation core)
+// rides the inner orbit; every other rendered slot rides the outer orbit.
+const INNER_ORBIT_RING = 1
+
+const orbitSlots = computed<CommandWheelSlot[][]>(() => [
+  renderedSlots.value.filter((slot) => slot.ring === INNER_ORBIT_RING),
+  renderedSlots.value.filter((slot) => slot.ring !== INNER_ORBIT_RING),
+])
+
+const slotOrbitLayout = computed(() => {
+  const layout = new Map<string, { orbitIndex: number; indexInOrbit: number; slotsInOrbit: number }>()
+
+  orbitSlots.value.forEach((slots, orbitIndex) => {
+    slots.forEach((slot, indexInOrbit) => {
+      layout.set(slot.id, { orbitIndex, indexInOrbit, slotsInOrbit: slots.length })
+    })
+  })
+
+  return layout
+})
+
+function slotOrbitIndex(slot: CommandWheelSlot): number {
+  return slotOrbitLayout.value.get(slot.id)?.orbitIndex ?? 0
+}
 
 // ================= Circular orbit layout — clamp() thích nghi viewport =======
 const viewportSize = ref({ width: window.innerWidth, height: window.innerHeight })
@@ -126,10 +152,13 @@ function orbitStyle(orbitIndex: number) {
   }
 }
 
-function slotStyle(_slot: CommandWheelSlot, index: number, total: number) {
-  const orbitIndex = index % ORBIT_COUNT
-  const indexInOrbit = Math.floor(index / ORBIT_COUNT)
-  const slotsInOrbit = Math.ceil((total - orbitIndex) / ORBIT_COUNT)
+function slotStyle(slot: CommandWheelSlot) {
+  const placement = slotOrbitLayout.value.get(slot.id) ?? {
+    orbitIndex: 0,
+    indexInOrbit: 0,
+    slotsInOrbit: 1,
+  }
+  const { orbitIndex, indexInOrbit, slotsInOrbit } = placement
   const ringOffsetAngle = orbitIndex === 0 ? 0 : 180 / slotsInOrbit
   const endAngle = (indexInOrbit / slotsInOrbit) * 360 + ringOffsetAngle
   const direction = getCommandWheelOrbitDirection(orbitIndex)
@@ -150,8 +179,42 @@ const isVisible = ref(false)
 const isReady = ref(false)
 const isClosing = ref(false)
 
+// Rune ignition (spec SS10.1): a slot whose lock cleared since the last
+// wheel open flashes once. Tracked per open, cleared after the cue.
+const lastDisabledIds = ref<Set<string>>(new Set())
+const ignitedIds = ref<ReadonlySet<string>>(new Set())
+
 let readyHandle: number | undefined
 let closeHandle: number | undefined
+let igniteHandle: number | undefined
+
+function captureIgnitionOnOpen(): void {
+  const nowDisabled = new Set<string>()
+  const ignited = new Set<string>()
+
+  for (const slot of renderedSlots.value) {
+    if (disabledReason(slot)) {
+      nowDisabled.add(slot.id)
+    } else if (lastDisabledIds.value.has(slot.id)) {
+      ignited.add(slot.id)
+    }
+  }
+
+  lastDisabledIds.value = nowDisabled
+  ignitedIds.value = ignited
+
+  if (igniteHandle !== undefined) {
+    clearTimeout(igniteHandle)
+    igniteHandle = undefined
+  }
+
+  if (ignited.size > 0) {
+    igniteHandle = window.setTimeout(() => {
+      igniteHandle = undefined
+      ignitedIds.value = new Set()
+    }, IGNITION_DURATION_MS)
+  }
+}
 
 // Component sống cùng GameRoot, nên mỗi lần store chuyển closed → open
 // phải render trạng thái co tại tâm trước, rồi mới bật class đích ở frame
@@ -192,6 +255,7 @@ watch(
     isVisible.value = true
     isReady.value = false
     isClosing.value = false
+    captureIgnitionOnOpen()
 
     await nextTick()
 
@@ -214,6 +278,10 @@ onBeforeUnmount(() => {
 
   if (closeHandle !== undefined) {
     clearTimeout(closeHandle)
+  }
+
+  if (igniteHandle !== undefined) {
+    clearTimeout(igniteHandle)
   }
 })
 
@@ -354,6 +422,10 @@ function activate(slot: CommandWheelSlot) {
       :aria-label="t('panels.wheel.aria.group')"
       :class="{ 'is-ready': isReady, 'is-closing': isClosing }"
     >
+      <!-- Dao Luan center (spec SS10.1) -- Tu Luyen seal. Chrome slot
+           'dao-luan-center' is pending art; CSS seal is the fallback. -->
+      <span class="command-wheel__center-seal" aria-hidden="true">{{ t('home.daoLuan.center') }}</span>
+
       <span
         v-for="orbitIndex in orbitIndexes"
         :key="orbitIndex"
@@ -363,16 +435,21 @@ function activate(slot: CommandWheelSlot) {
       />
 
       <button
-        v-for="(slot, index) in renderedSlots"
+        v-for="slot in renderedSlots"
         :key="slot.id"
         type="button"
         class="command-wheel__slot"
         :class="[
           `command-wheel__slot--ring${slot.ring}`,
-          { 'is-active': isActive(slot), 'is-upgradeable': isUpgradeable(slot), 'is-disabled': disabledReason(slot) },
+          {
+            'is-active': isActive(slot),
+            'is-upgradeable': isUpgradeable(slot),
+            'is-disabled': disabledReason(slot),
+            'is-ignited': ignitedIds.has(slot.id),
+          },
         ]"
-        :style="slotStyle(slot, index, renderedSlots.length)"
-        :data-wheel-orbit="index % ORBIT_COUNT"
+        :style="slotStyle(slot)"
+        :data-wheel-orbit="slotOrbitIndex(slot)"
         :aria-label="slotLabel(slot)"
         :data-wheel-slot="slot.id"
         :aria-disabled="Boolean(disabledReason(slot))"
@@ -421,7 +498,7 @@ function activate(slot: CommandWheelSlot) {
 .command-wheel-layer__backdrop {
   position: absolute;
   inset: 0;
-  background: color-mix(in srgb, var(--ink-950) 42%, transparent);
+  background: color-mix(in srgb, var(--hk-surface-base, var(--ink-950)) 52%, transparent);
   cursor: pointer;
 }
 
@@ -445,7 +522,7 @@ function activate(slot: CommandWheelSlot) {
   top: 0;
   width: var(--orbit-diameter);
   height: var(--orbit-diameter);
-  border: 1px solid color-mix(in srgb, var(--mineral-gold) 40%, transparent);
+  border: 1px solid color-mix(in srgb, var(--hk-gold-muted, var(--mineral-gold)) 55%, transparent);
   border-radius: 50%;
   pointer-events: none;
   opacity: 0;
@@ -460,6 +537,42 @@ function activate(slot: CommandWheelSlot) {
   transform: translate(-50%, -50%) scale(1);
 }
 
+/* Dao Luan center seal (spec SS10.1) -- decorative Tu Luyen marker at the
+   hub; falls back to CSS while chrome slot 'dao-luan-center' is pending. */
+.command-wheel__center-seal {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+  border: 1px solid var(--hk-border-active, var(--mineral-gold));
+  border-radius: 50%;
+  background:
+    radial-gradient(120% 120% at 50% 20%, var(--hk-surface-overlay, var(--ink-800)) 0%, var(--hk-surface-base, var(--ink-950)) 78%);
+  box-shadow:
+    inset 0 0 0 4px var(--hk-surface-base, var(--ink-950)),
+    inset 0 0 0 5px color-mix(in srgb, var(--hk-gold-muted, var(--mineral-gold)) 55%, transparent),
+    0 0 18px var(--hk-glow-gold, rgba(232, 195, 90, 0.35));
+  color: var(--hk-gold, var(--mineral-gold));
+  font-family: var(--hk-font-display, var(--font-display));
+  font-size: var(--text-sm);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.6);
+  transition:
+    opacity 0.24s ease-out,
+    transform 0.32s cubic-bezier(0.2, 0.75, 0.3, 1);
+}
+
+.command-wheel.is-ready .command-wheel__center-seal {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
 .command-wheel__slot {
   position: absolute;
   left: 0;
@@ -470,15 +583,13 @@ function activate(slot: CommandWheelSlot) {
   max-width: 81px;
   min-height: 57px;
   padding: 6px 8px;
-  border: 1px solid var(--frame-outer);
+  border: 1px solid var(--hk-border-muted, var(--frame-outer));
   border-radius: 999px;
   background:
-    var(--paper-grain) 0 0 / 100px 100px repeat,
-    radial-gradient(120% 120% at 50% 20%, rgba(255, 255, 255, 0.35), transparent 60%),
-    linear-gradient(175deg, var(--paper-50) 0%, var(--paper-200) 100%);
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4);
-  color: var(--paper-text);
-  font-family: var(--font-body);
+    radial-gradient(120% 120% at 50% 16%, var(--hk-surface-overlay, var(--ink-800)) 0%, var(--hk-surface-raised, var(--ink-900)) 72%);
+  box-shadow: 0 3px 10px var(--hk-shadow-low, rgba(0, 0, 0, 0.4));
+  color: var(--hk-text-primary, var(--paper-text));
+  font-family: var(--hk-font-ui, var(--font-body));
   font-size: var(--text-xs);
   line-height: var(--lh-tight);
   text-align: center;
@@ -504,13 +615,13 @@ function activate(slot: CommandWheelSlot) {
 
 .command-wheel__slot:hover,
 .command-wheel__slot:focus-visible {
-  border-color: var(--cinnabar);
-  color: var(--cinnabar);
+  border-color: var(--hk-gold, var(--cinnabar));
+  color: var(--hk-gold-bright, var(--cinnabar));
 }
 
 .command-wheel__slot:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--cinnabar) 55%, transparent);
+  box-shadow: 0 0 0 2px var(--hk-glow-gold, color-mix(in srgb, var(--cinnabar) 55%, transparent));
 }
 
 /* Bản Mệnh Pháp Bảo (2026-08-27) — slot render được nhưng tạm chưa bấm
@@ -523,32 +634,52 @@ function activate(slot: CommandWheelSlot) {
 
 .command-wheel__slot.is-disabled:hover,
 .command-wheel__slot.is-disabled:focus-visible {
-  border-color: var(--frame-outer);
-  color: var(--paper-text);
+  border-color: var(--hk-border-muted, var(--frame-outer));
+  color: var(--hk-ink, var(--paper-text));
 }
 
 /* Active state suy ra từ uiStore (panel/popover đang mở). */
 .command-wheel__slot.is-active {
-  border-color: var(--mineral-gold);
-  box-shadow: inset 0 0 0 2px var(--mineral-gold);
-  color: var(--paper-text);
+  border-color: var(--hk-gold, var(--mineral-gold));
+  box-shadow: inset 0 0 0 2px var(--hk-border-active, var(--mineral-gold));
+  color: var(--hk-text-primary, var(--paper-text));
+}
+
+/* Rune ignition (spec SS10.1) -- one-shot gold flash when a slot's lock
+   cleared since the previous wheel open. */
+@keyframes dao-luan-ignite {
+  0% {
+    box-shadow:
+      0 0 22px 4px var(--hk-glow-gold, rgba(232, 195, 90, 0.35)),
+      inset 0 0 0 2px var(--hk-gold-bright, var(--mineral-gold));
+    filter: brightness(1.6);
+  }
+  100% {
+    box-shadow: 0 3px 10px var(--hk-shadow-low, rgba(0, 0, 0, 0.4));
+    filter: none;
+  }
+}
+
+.command-wheel__slot.is-ignited {
+  animation: dao-luan-ignite 700ms var(--hk-ease-standard, ease-out) both;
 }
 
 /* Ring màu nhận diện nhẹ theo tầng. */
 .command-wheel__slot--ring1 {
-  border-left: 3px solid var(--chrome-500);
+  border-left: 3px solid var(--hk-jade, var(--chrome-500));
 }
 .command-wheel__slot--ring2 {
-  border-left: 3px solid var(--azure);
+  border-left: 3px solid var(--hk-gold, var(--azure));
 }
 .command-wheel__slot--ring3 {
-  border-left: 3px solid var(--jade);
+  border-left: 3px solid var(--hk-jade-deep, var(--jade));
 }
 .command-wheel__slot--ring4 {
-  border-left: 3px solid var(--el-primordial);
+  border-left: 3px solid var(--hk-ink, var(--el-primordial));
 }
 
-/* Cùng indicator nâng cấp với hotspot (Workstream C). */
+/* Same upgrade indicator as the hotspot (Workstream C) -- slow breath,
+   not rapid blink (spec SS10.1 unread/ready cue). */
 .command-wheel__upgrade-dot {
   position: absolute;
   right: 6px;
@@ -556,13 +687,16 @@ function activate(slot: CommandWheelSlot) {
   width: 9px;
   height: 9px;
   border-radius: 50%;
-  background: var(--chrome-500);
+  background: var(--hk-gold-bright, var(--chrome-500));
+  animation: hk-breath var(--hk-motion-breath, 2400ms) var(--hk-ease-standard, ease-in-out) infinite;
 }
 
 .command-wheel__notification-badge {
   position: absolute;
   left: 6px;
   top: 6px;
+  border-radius: 50%;
+  animation: hk-breath var(--hk-motion-breath, 2400ms) var(--hk-ease-standard, ease-in-out) infinite;
 }
 
 .command-wheel__lock-badge {
@@ -576,9 +710,16 @@ function activate(slot: CommandWheelSlot) {
 
 @media (prefers-reduced-motion: reduce) {
   .command-wheel__orbit,
-  .command-wheel__slot {
+  .command-wheel__slot,
+  .command-wheel__center-seal {
     transition-duration: 0.01ms;
     transition-delay: 0ms;
+  }
+
+  .command-wheel__slot.is-ignited,
+  .command-wheel__upgrade-dot,
+  .command-wheel__notification-badge {
+    animation: none;
   }
 }
 </style>

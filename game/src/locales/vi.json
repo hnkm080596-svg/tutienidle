@@ -1517,6 +1517,51 @@
     "commandWheel": {
       "openAria": "Mở bảng lệnh Động Phủ",
       "hint": "Bảng Lệnh · Tab"
+    },
+    "daoLuan": {
+      "center": "Tu Luyện"
+    },
+    "topBar": {
+      "aria": "Thanh trạng thái Động Phủ",
+      "identityAria": "Mở bảng Nhân Vật",
+      "cultivation": "Tiến độ tu vi",
+      "realmLine": "{realm} · Tầng {level}",
+      "feedback": "Thư",
+      "feedbackAria": "Hộp thư / phản hồi",
+      "bag": "Túi",
+      "bagAria": "Mở Túi Đồ",
+      "settings": "Cài",
+      "settingsAria": "Mở Cài Đặt"
+    },
+    "thienCo": {
+      "title": "Thiên Cơ Bảng",
+      "aria": "Thiên Cơ Bảng — việc đáng làm lúc này",
+      "empty": "Đạo tâm an nhiên — chưa có việc gấp.",
+      "breakthrough": {
+        "title": "Đột phá sẵn sàng",
+        "detail": "Tu vi đã đủ — mở Cảnh Giới để đột phá.",
+        "cta": "Đột phá"
+      },
+      "quest": {
+        "title": "Nhiệm vụ hoàn thành",
+        "detail": "{count} nhiệm vụ chờ nhận thưởng.",
+        "cta": "Nhận thưởng"
+      },
+      "ready": {
+        "title": "{name} sẵn sàng thu hoạch",
+        "detail": "Sản lượng đã đầy kho.",
+        "cta": "Thu hoạch"
+      },
+      "active": {
+        "title": "Đan phòng đang luyện",
+        "detail": "{count} mẻ · sớm nhất còn {minutes} phút.",
+        "cta": "Xem lò đan"
+      },
+      "upgradeable": {
+        "title": "{name} có thể nâng cấp",
+        "detail": "Đủ nguyên liệu cho cấp kế tiếp.",
+        "cta": "Nâng cấp"
+      }
     }
   },
   "tutorial": {
