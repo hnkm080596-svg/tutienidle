@@ -230,10 +230,31 @@ export interface TribulationSaveSlice {
   cooldownUntil?: number
 }
 
+/**
+ * B1-D - the explicit authorized time context for a restore. Under remote
+ * authority the client clock and the payload's editable timestamps are
+ * NEVER the accrual bound: the server stamps progression_cutoff_at and
+ * serverNowUtc, and only the window between them may accrue.
+ *
+ * - 'cold-boot': accrue the authorized window. `sinceMs`/`untilMs` are
+ *   SERVER epoch values (progression_cutoff_at -> serverNowUtc); the
+ *   owner converts them into a duration and positions the settle window
+ *   inside the payload's own epoch (lastSavedAt + elapsed), so persisted
+ *   client-epoch deadlines keep working.
+ * - 'live-replacement': a divergent remote state was loaded while the
+ *   client was live. Zero accrual - queues/jobs restore but never catch
+ *   up over the paused window. `nowMs` anchors live-resume clocks.
+ *
+ * Undefined = legacy local semantics (client clock owns the window).
+ */
+export type RestoreTimeAuthority =
+  | { kind: 'cold-boot'; sinceMs: number; untilMs: number }
+  | { kind: 'live-replacement'; nowMs: number }
+
 export interface GameSessionPlayerOwner {
   readonly $state: PlayerData
 
-  restoreFromSave(save: GameSave): OfflineResult
+  restoreFromSave(save: GameSave, timeAuthority?: RestoreTimeAuthority): OfflineResult
 
   setEquipmentModifiers(modifiers: StatModifier[]): void
 }

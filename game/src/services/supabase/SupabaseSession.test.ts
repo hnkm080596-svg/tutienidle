@@ -89,3 +89,86 @@ describe('resolveSupabaseSession - refresh-aware accessor (spec F8)', () => {
     vi.unstubAllGlobals()
   })
 })
+
+describe('resolveSupabaseSession - B1-D/R8 single-flight + transient retention', () => {
+  it('concurrent resolves share ONE GoTrue refresh request (rotating refresh token)', async () => {
+    storeSupabaseSession({
+      accessToken: 'old', refreshToken: 'rt', sessionId: 's1',
+      expiresAtMs: Date.now() - 1000,
+    })
+    let calls = 0
+    vi.stubGlobal('fetch', vi.fn(async () => {
+      calls++
+      await new Promise((resolve) => setTimeout(resolve, 5))
+      return new Response(JSON.stringify({
+        access_token: 'new', refresh_token: 'rt2', expires_in: 3600,
+      }), { status: 200 })
+    }))
+
+    const [a, b, c] = await Promise.all([
+      resolveSupabaseSession(config),
+      resolveSupabaseSession(config),
+      resolveSupabaseSession(config),
+    ])
+
+    expect(calls).toBe(1)
+    expect(a?.accessToken).toBe('new')
+    expect(b?.accessToken).toBe('new')
+    expect(c?.accessToken).toBe('new')
+    vi.unstubAllGlobals()
+  })
+
+  it('a transient refresh failure (5xx) returns null but RETAINS the credential', async () => {
+    storeSupabaseSession({
+      accessToken: 'old', refreshToken: 'rt', sessionId: 's1',
+      expiresAtMs: Date.now() - 1000,
+    })
+    vi.stubGlobal('fetch', vi.fn(async () => new Response('{"error":"upstream"}', { status: 500 })))
+
+    const session = await resolveSupabaseSession(config)
+
+    expect(session).toBeNull()
+    // R8: transient refresh errors NEVER delete the credential - the
+    // stored refresh token survives for the next reconnect attempt.
+    expect(readSupabaseSession()?.refreshToken).toBe('rt')
+    vi.unstubAllGlobals()
+  })
+
+  it('a transport failure (fetch rejection) retains the credential too', async () => {
+    storeSupabaseSession({
+      accessToken: 'old', refreshToken: 'rt', sessionId: 's1',
+      expiresAtMs: Date.now() - 1000,
+    })
+    vi.stubGlobal('fetch', vi.fn(async () => {
+      throw new TypeError('fetch failed')
+    }))
+
+    expect(await resolveSupabaseSession(config)).toBeNull()
+    expect(readSupabaseSession()?.refreshToken).toBe('rt')
+    vi.unstubAllGlobals()
+  })
+
+  it('a refresh resolving after sign-out cannot resurrect the old binding (generation guard)', async () => {
+    storeSupabaseSession({
+      accessToken: 'old', refreshToken: 'rt', sessionId: 's1',
+      expiresAtMs: Date.now() - 1000,
+    })
+    let releaseFetch: (response: Response) => void = () => undefined
+    vi.stubGlobal('fetch', vi.fn(async () => new Promise<Response>((resolve) => {
+      releaseFetch = resolve
+    })))
+
+    const pending = resolveSupabaseSession(config)
+    // Sign-out lands mid-refresh: the binding changed underneath it.
+    const { clearSupabaseSession } = await import('./SupabaseSession')
+    clearSupabaseSession()
+    releaseFetch(new Response(JSON.stringify({
+      access_token: 'new', refresh_token: 'rt2', expires_in: 3600,
+    }), { status: 200 }))
+
+    expect(await pending).toBeNull()
+    // Storage stays empty - the in-flight write was fenced by generation.
+    expect(readSupabaseSession()).toBeNull()
+    vi.unstubAllGlobals()
+  })
+})

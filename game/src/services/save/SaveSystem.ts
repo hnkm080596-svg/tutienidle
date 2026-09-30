@@ -7,6 +7,7 @@ import type {
   ProductionCycleSave,
   ProductionSiteStateSave,
   RestoreGameSessionResult,
+  RestoreTimeAuthority,
 } from './saveTypes'
 import { validateGameSaveShape } from './saveShapeValidation'
 import { exportFilename, type ExportProvenance } from './recoveryApi'
@@ -273,6 +274,7 @@ export function restoreGameSession(
   player: GameSessionPlayerOwner,
   gameManager: GameManager,
   save: GameSave,
+  timeAuthority?: RestoreTimeAuthority,
 ): RestoreGameSessionResult {
   try {
     gameManager.saveOps.preflightSaveRegistryReferences(save)
@@ -288,11 +290,11 @@ export function restoreGameSession(
   // finished applying, so retrying the same payload re-applies the
   // un-committed slices instead of skipping them.
   try {
-    const offline = player.restoreFromSave(save)
+    const offline = player.restoreFromSave(save, timeAuthority)
 
     gameManager.setActivePlayer(player.$state)
 
-    const equipmentModifiers = gameManager.saveOps.restoreFromSave(save)
+    const equipmentModifiers = gameManager.saveOps.restoreFromSave(save, timeAuthority)
 
     player.setEquipmentModifiers(equipmentModifiers)
 

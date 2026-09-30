@@ -12,7 +12,7 @@ import {
 import { calculateOfflineProgress, type OfflineResult } from '../core/idle/OfflineProgressSystem'
 import { calculateOfflineTime } from '../core/idle/GameClock'
 import { getActiveCultivationSpeedPercent, splitCultivationSpeedWindow } from '../core/economy/TuLinhTranBalance'
-import { buildGameSave, computeRestoreIdentity, type GameSave } from '../services/save/SaveSystem'
+import { buildGameSave, computeRestoreIdentity, type GameSave, type RestoreTimeAuthority } from '../services/save/SaveSystem'
 import { cloudSaveCoordinator } from '../services/cloudSave/CloudSaveServiceFactory'
 import { asBaseStats, createBaseStats } from '@/core/stats/StatBlock'
 import { STAT_DOMAIN } from '@/core/stats/StatDomain'
@@ -56,7 +56,7 @@ interface ExternalModifierSnapshot {
 
 const lastExternalModifiers = new WeakMap<object, ExternalModifierSnapshot>()
 
-// QA-002 idempotency (Task 9.2) — payload-identity guard cho
+// QA-002 idempotency (Task 9.2) - payload-identity guard cho
 // restoreFromSave(), cùng pattern lastExternalModifiers phía trên:
 // WeakMap theo store instance, non-reactive, không persist vào save
 // (dev phase — không migration). Lưu kết quả OfflineResult của lần
@@ -96,7 +96,7 @@ function externalModifierSignature(modifiers: StatModifier[]): string {
       modifier.stat,
       modifier.tag ?? '',
       // stat-system-reimagined review fix: domain decides whether the
-      // gate delivers a gated-stat modifier — same-fields-different-
+      // gate delivers a gated-stat modifier - same-fields-different-
       // domain MUST break the signature or the new grant never lands.
       modifier.domain ?? '',
       modifier.flat ?? '',
@@ -130,19 +130,19 @@ export const usePlayerStore = defineStore('player', {
     // Stats cuối cùng = baseStats + modifiers (equipment/talent, tĩnh)
     // + externalModifiers (buff/technique, do GameManager gộp mỗi tick).
     // Đây là nguồn duy nhất UI/CombatEntity nên đọc.
-    // ARCH-002 (M7): formula lives in resolvePlayerFinalStats() — the same
+    // ARCH-002 (M7): formula lives in resolvePlayerFinalStats() - the same
     // owner the battle entry path resolves through (post-reset, fresh
     // aggregation instead of this mirror field).
     finalStats(state) {
       return resolvePlayerFinalStats(state, state.externalModifiers)
     },
 
-    // The character's visual form — derived FROM the entity itself
+    // The character's visual form - derived FROM the entity itself
     // (realmId + cultivationPath), one single source. Everywhere the
     // character appears reads from here: PhaserCanvas writes the registry
     // gate for CombatScene/MainScene, TranPhapPanel sends it to the
     // preview scene. Art content (textures/anchors) lives in
-    // PLAYER_VISUAL_PROFILES on the presentation side — this is only the id.
+    // PLAYER_VISUAL_PROFILES on the presentation side - this is only the id.
     visualProfileId(state): PlayerVisualProfileId {
       return resolvePlayerVisualProfileId({
         realmId: state.realmId,
@@ -248,8 +248,8 @@ export const usePlayerStore = defineStore('player', {
       return cloudSaveCoordinator.save(buildGameSave(this.$state, gameManager))
     },
 
-    restoreFromSave(save: GameSave) {
-      // R10 (AR-12) — payload-identity guard: WHOLE-payload hash (qua
+    restoreFromSave(save: GameSave, timeAuthority?: RestoreTimeAuthority) {
+      // R10 (AR-12) - payload-identity guard: WHOLE-payload hash (qua
       // computeRestoreIdentity — exclude lastSavedAt), không còn
       // fingerprint 2-field. Cùng save gọi lại = no-op; save KHÁC (dù
       // cùng lastSavedAt|cultivation) áp đầy đủ.
@@ -262,9 +262,22 @@ export const usePlayerStore = defineStore('player', {
 
       // GameClock là nguồn duy nhất tính thời gian offline.
       // lastSavedAt của save file chính là lastOnlineAt của GameClockState.
-      const { offlineSeconds } = calculateOfflineTime({
-        lastOnlineAt: save.player.lastSavedAt,
-      })
+      // B1-D - under remote authority the accrual bound is the SERVER
+      // window (progression_cutoff_at -> serverNowUtc), never the client
+      // clock or the editable payload marker; a live replacement accrues
+      // zero by definition. The bound still flows through
+      // calculateOfflineTime so the max cap applies.
+      const offlineSeconds =
+        timeAuthority?.kind === 'cold-boot'
+          ? calculateOfflineTime(
+              { lastOnlineAt: timeAuthority.sinceMs },
+              timeAuthority.untilMs,
+            ).offlineSeconds
+          : timeAuthority?.kind === 'live-replacement'
+            ? 0
+            : calculateOfflineTime({
+                lastOnlineAt: save.player.lastSavedAt,
+              }).offlineSeconds
 
       // EM-02 - the saved cultivationPerSecond snapshot folds in timed
       // buffs (Tu Linh Tran) that expire mid-window; boosted-rate x
@@ -287,31 +300,31 @@ export const usePlayerStore = defineStore('player', {
         ),
       }
 
-      // R10 (AR-12, S4 follow-up) — deep-clone before assigning: a plain
+      // R10 (AR-12, S4 follow-up) - deep-clone before assigning: a plain
       // Object.assign shallow-copies nested fields (baseStats, modifiers,
       // ...), so this.baseStats becomes the SAME object as
       // save.player.baseStats. A later in-place store mutation then
       // leaked back into the
-      // caller's `save` object — corrupting it for any later reuse (the
+      // caller's `save` object - corrupting it for any later reuse (the
       // payload-identity guard above included: a second restoreFromSave
       // call with the SAME `save` reference would see a hash that changed
       // out from under it and wrongly treat it as a new payload). A
       // restore input must be treated as a value, same principle as
       // buildGameSave's snapshot-is-a-value fix (S1).
       //
-      // M1 (ARCH-001) — the player slice is REPLACE semantics, not merge:
+      // M1 (ARCH-001) - the player slice is REPLACE semantics, not merge:
       // overlay the payload onto createDefaultPlayer() so fields the save
       // does not declare reset to defaults instead of keeping the previous
       // session's values, then drop state keys the result does not have
       // (any dynamic $state key outside PlayerData would otherwise survive
-      // a restore — a plain assign only overwrites, never removes).
+      // a restore - a plain assign only overwrites, never removes).
       const clonedPlayer = structuredClone(save.player)
 
-      // Mission A6 — whitelist before the spread: only keys declared by
+      // Mission A6 - whitelist before the spread: only keys declared by
       // createDefaultPlayer() may enter $state. A foreign key in the
       // payload (hand-edited save, foreign payload) would otherwise be
       // spread onto the store AND re-serialized by every later
-      // buildGameSave — self-replicating junk.
+      // buildGameSave - self-replicating junk.
       const allowedPlayerKeys = new Set(Object.keys(createDefaultPlayer()))
 
       for (const key of Object.keys(clonedPlayer)) {
@@ -392,7 +405,7 @@ export const usePlayerStore = defineStore('player', {
         ? save.player.combatAiStrategy
         : DEFAULT_COMBAT_AI_STRATEGY
 
-      // Route the offline grant through addCultivation() — same
+      // Route the offline grant through addCultivation() - same
       // clamp-at-required rule as before (the old `+=` then
       // Math.min was a copy of that rule), plus the M2 Hai Nap
       // overflow bank.
@@ -419,7 +432,7 @@ export const usePlayerStore = defineStore('player', {
       // đủ gate, grade/path sai enum, realm/level/EXP vượt trần.
       normalizeArtifactProgress(this)
 
-      // M1 (ARCH-001) — commit the payload identity only AFTER the whole
+      // M1 (ARCH-001) - commit the payload identity only AFTER the whole
       // apply succeeded: a mid-restore throw leaves it uncommitted so a
       // retry with the same payload re-applies instead of being skipped
       // by the guard above.

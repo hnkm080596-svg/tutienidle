@@ -12,6 +12,21 @@ export type CloudSaveLoadResult =
       /** Stored bytes - mirrors LoadOutcome.ok so a rejected-after-shape
        * save exports byte-identically at the recovery surface. */
       raw: string
+      /** remote-authoritative only (B1-D): the remote head adopted our
+       * durable pending record - the payload IS the same-lineage write
+       * this client issued, so a reconnect resumes in-memory instead of
+       * restoring. */
+      adoptedPending?: boolean
+      /** remote-authoritative only (B1-D): server-authorized cold-boot
+       * time bounds - every offline-accrual owner consumes these instead
+       * of the client clock or the payload's editable timestamps. */
+      serverAuthority?: {
+        /** progression_cutoff_at of the loaded save row (ms epoch).
+         *  Undefined when the row predates the checkpoint contract. */
+        cutoffMs?: number
+        /** serverTimeUtc of the load response (ms epoch). */
+        serverNowMs: number
+      }
     }
   | Extract<LoadOutcome, { status: 'incompatible' | 'corrupted' }>
   | {
@@ -81,6 +96,17 @@ export type CloudSaveWriteResult =
 //                   the local load-latest/retry-overwrite branch.
 export type CloudSaveCapability = 'local-only' | 'remote-authoritative'
 
+/** B1-D: one authenticated probe of the active session - the heartbeat
+ *  RPC. 'ok' renews the server checkpoint lease; 'unavailable' keeps the
+ *  B1.7 error taxonomy for the admission controller to classify. */
+export interface HeartbeatOutcome {
+  status: 'ok' | 'unavailable'
+  code?: BackendErrorCode
+  message?: string
+  retryable?: boolean
+  detail?: string
+}
+
 export interface CloudSaveService {
   readonly capability: CloudSaveCapability
   load(): Promise<CloudSaveLoadResult>
@@ -92,4 +118,7 @@ export interface CloudSaveService {
    *  in-flight continuations of the OLD generation cannot write the
    *  checkpoint, journal, or cache when their transport resolves. */
   advanceGeneration?(): void
+  /** B1-D: heartbeat the active session (30s cadence per B1.7). Absent
+   *  on local-only adapters - there is no remote authority to probe. */
+  heartbeat?(): Promise<HeartbeatOutcome>
 }

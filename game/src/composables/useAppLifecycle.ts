@@ -2,7 +2,8 @@ import { onBeforeUnmount, type Ref } from 'vue'
 import type { GameManager } from '../core/game/GameManager'
 import type { CloudSaveCoordinator } from '../services/cloudSave/CloudSaveCoordinator'
 import type { CloudSaveWriteResult } from '../services/cloudSave/CloudSaveService'
-import type { RemoteCharacterMetadata } from '../services/session/BackendStatus'
+import type { BackendErrorCode, RemoteCharacterMetadata } from '../services/session/BackendStatus'
+import type { RestoreTimeAuthority } from '../services/save/saveTypes'
 import { ESSENCE_STREAM_ARRIVAL_EVENT } from '../core/battle/BattleEvents'
 import { TICK_INTERVAL_MS } from '../core/idle/SpeedSettings'
 import { i18n } from '@/i18n'
@@ -47,6 +48,16 @@ export interface UseAppLifecycleDeps {
     showAuth: () => void
   }
   coordinator: Pick<CloudSaveCoordinator, 'load' | 'save' | 'reset' | 'capability'>
+  /** B1-D - the online-admission authority: the lifecycle marks boot
+   *  admission, gates the tick/autosave on it and exposes the reversible
+   *  pause/resume the controller calls on authority loss/recovery. */
+  authority: {
+    canMutate: () => boolean
+    beginChecking: () => void
+    markReady: () => void
+    markFailed: (code: BackendErrorCode | 'recovery' | undefined) => void
+    observeSaveResult: (result: CloudSaveWriteResult) => void
+  }
   player: {
     save: (gameManager: GameManager) => Promise<CloudSaveWriteResult>
     $state: object
@@ -71,6 +82,7 @@ export interface UseAppLifecycleDeps {
     player: unknown,
     gameManager: GameManager,
     save: unknown,
+    timeAuthority?: RestoreTimeAuthority,
   ) => { status: string; message?: string; offline?: { elapsedSeconds: number; cultivation: number } }
   persistPlayer: () => Promise<unknown>
   onError: (message: string) => void
@@ -108,6 +120,7 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
     removeEventListener,
     boot,
     coordinator,
+    authority,
     player,
     gameManager,
     tick,
@@ -124,6 +137,12 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
   let saveInFlight = false
   let persistenceSuppressed = false
   let stopped = false
+  // B1-D - reversible authority pause: the OnlineSessionController calls
+  // pauseSimulation() on OBSERVED authority loss and resumeSimulation()
+  // once the reconnect pipeline lands. Distinct from `stopped` (terminal
+  // teardown): intervals come back and the clock re-anchors so the
+  // paused delta is discarded rather than paid as catch-up.
+  let simPaused = false
   // B2 (audit T1-8 follow-up) - starter grants commit to runtime state
   // BEFORE the first save; if that save fails, the buildings/materials/
   // activePlayer already applied cannot be rolled back in memory. A
@@ -188,7 +207,14 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
     }
 
     onTick = tick
-    tickHandle = scheduleInterval(() => onTick?.(), TICK_INTERVAL_MS)
+    // B1-D - the callback still checks admission at fire time: a late
+    // interval callback that outlives pause() must not tick (the paused
+    // delta is discarded by the clock re-anchor on resume, not paid).
+    tickHandle = scheduleInterval(() => {
+      if (authority.canMutate()) {
+        onTick?.()
+      }
+    }, TICK_INTERVAL_MS)
   }
 
   function startAutosave(): void {
@@ -199,6 +225,54 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
     autosaveHandle = scheduleInterval(() => void persistProgress(), AUTOSAVE_INTERVAL_MS)
     addEventListener('visibilitychange', onVisibilityChange)
     addEventListener('pagehide', onPageHide)
+  }
+
+  // --- B1-D reversible pause/resume (authority-driven) ---
+
+  function pauseSimulation(): void {
+    // Only a live simulation pauses: an authority terminal during boot
+    // admission must not latch simPaused - a stale flag would turn the
+    // NEXT live pause into a no-op (clock running, combat unfrozen).
+    if (stopped || simPaused || entryStage.value !== 'game') {
+      return
+    }
+    simPaused = true
+
+    if (tickHandle !== undefined) {
+      clearHandle(tickHandle)
+      tickHandle = undefined
+    }
+    if (autosaveHandle !== undefined) {
+      clearHandle(autosaveHandle)
+      autosaveHandle = undefined
+    }
+    removeEventListener('visibilitychange', onVisibilityChange)
+    removeEventListener('pagehide', onPageHide)
+
+    // Stop the live clock so resume() re-anchors at real-now: the paused
+    // window is discarded, not paid as offline catch-up (B1.7).
+    clock.stop()
+    // Combat domain freeze under its own reason - the combat clock
+    // resumes when the reason clears, never by a plain stop/start.
+    gameManager.freezeCombat('authority-pause')
+  }
+
+  function resumeSimulation(): void {
+    if (stopped || !simPaused || entryStage.value !== 'game') {
+      return
+    }
+    simPaused = false
+
+    // Re-anchor the live clock at now: the next tick sees a ~interval
+    // delta (tickDeltaOnResume <= normalTickDelta), the paused window is
+    // gone for good.
+    clock.start()
+    gameManager.resumeCombat('authority-pause')
+
+    if (onTick) {
+      startTickLoop(onTick)
+    }
+    startAutosave()
   }
 
   // --- Persistence ---
@@ -212,7 +286,7 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
     // TRƯỚC onUnmounted, nếu stopped chặn save thì "persist first so a
     // development reload cannot roll the player back" là dead code
     // (review round 1 - ARCH-013/L04).
-    if (persistenceSuppressed || entryStage.value !== 'game' || saveInFlight) {
+    if (persistenceSuppressed || entryStage.value !== 'game' || saveInFlight || !authority.canMutate()) {
       return
     }
 
@@ -240,6 +314,11 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
     // flight makes every later side effect (restore, clock, intervals,
     // route requests) stale work for a disposed lifecycle.
     const bootGeneration = lifecycleGeneration
+
+    // B1-D - boot admission opens here: 'ready' is only reached after
+    // auth/session/compatibility/load/pending/restore/durability all pass
+    // (the durability leg is the post-accrual commit below).
+    authority.beginChecking()
 
     try {
       const { createNewCharacter, onRestoreOk, onNewCharacter } = options
@@ -286,6 +365,7 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
       }
 
       if (loaded.status === 'unavailable') {
+        authority.markFailed(loaded.code)
         onError(loaded.message)
         boot.fail()
         return { status: 'failed' }
@@ -295,12 +375,14 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
         // Terminal remote state (B1.10) - the character row is
         // soft-deleted; no in-client recovery path exists, so this
         // surfaces as a plain boot failure, not the recovery surface.
+        authority.markFailed('recovery')
         onError(i18n.global.t('save.characterDeleted'))
         boot.fail()
         return { status: 'failed' }
       }
 
       if (loaded.status === 'incompatible' || loaded.status === 'corrupted') {
+        authority.markFailed('recovery')
         saveIssue.report(
           loaded.status,
           'raw' in loaded && typeof loaded.raw === 'string' ? loaded.raw : '',
@@ -317,6 +399,7 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
         // pending payload bytes route through the same export/delete
         // recovery surface as a corrupted save; deleteSave drops the
         // envelope keys so a resolved pending never wedges the next boot.
+        authority.markFailed('recovery')
         saveIssue.report('corrupted', loaded.pendingRaw)
         boot.fail()
         return { status: 'failed' }
@@ -330,7 +413,24 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
       boot.startInitializing()
 
       if (loaded.status === 'ok') {
-        const restored = restoreGameSession(player, gameManager, loaded.save)
+        // B1-D cold boot: the SERVER-authorized window bounds every
+        // offline-accrual owner - progression_cutoff_at -> serverNowUtc
+        // from the load row; a missing cutoff (pre-checkpoint saves)
+        // degrades to the payload's own lastSavedAt marker under the
+        // same server 'until' bound. Never the editable client clock.
+        const timeAuthority: RestoreTimeAuthority | undefined =
+          remoteAuthoritative && loaded.serverAuthority
+            ? {
+                kind: 'cold-boot',
+                sinceMs:
+                  loaded.serverAuthority.cutoffMs
+                  ?? loaded.save.player.lastSavedAt
+                  ?? loaded.serverAuthority.serverNowMs,
+                untilMs: loaded.serverAuthority.serverNowMs,
+              }
+            : undefined
+
+        const restored = restoreGameSession(player, gameManager, loaded.save, timeAuthority)
 
         if (restored.status === 'rejected') {
           // A save the boot path cannot consume must reach a recovery
@@ -339,6 +439,7 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
           // every subsequent boot (QA F-INT-01). The precise rejection
           // reason stays in the diagnostics channel; the recovery
           // surface deliberately shows a generic corrupted state.
+          authority.markFailed('recovery')
           console.warn('[boot] save rejected by restore preflight:', restored.message)
           saveIssue.report('corrupted', loaded.raw)
           boot.fail()
@@ -357,6 +458,42 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
         }
 
         onRestoreOk?.(offline)
+
+        // B1-D durability leg: the post-accrual snapshot + the new
+        // progression cutoff must COMMIT (CAS) before any tick or spend
+        // command runs. A lost write is unresolvable authority - the
+        // journal keeps it retriable on the next authoritative load, but
+        // this boot must surface, never tick on uncommitted accrual.
+        if (remoteAuthoritative) {
+          let commit: CloudSaveWriteResult
+
+          try {
+            commit = await player.save(gameManager)
+          } catch (error: unknown) {
+            console.error('[boot] post-accrual commit threw', error)
+            commit = {
+              status: 'unavailable',
+              message: i18n.global.t('panels.settings.notifications.saveFailed'),
+              retryable: true,
+            }
+          }
+
+          if (bootGeneration !== lifecycleGeneration) {
+            return { status: 'skipped' }
+          }
+
+          authority.observeSaveResult(commit)
+
+          if (commit.status !== 'ok') {
+            onError(
+              commit.status === 'conflict'
+                ? i18n.global.t('save.conflict')
+                : commit.message,
+            )
+            boot.fail()
+            return { status: 'failed' }
+          }
+        }
       } else {
         // Dirty-transaction guard, checked for EVERY grant-path entry -
         // not only createNewCharacter: remote CHARACTER_UNINITIALIZED
@@ -439,6 +576,7 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
         }
 
         if (firstSave.status !== 'ok') {
+          authority.observeSaveResult(firstSave)
           onError(
             firstSave.status === 'conflict'
               ? i18n.global.t('save.conflict')
@@ -448,6 +586,10 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
           return { status: 'failed' }
         }
       }
+
+      // B1-D - admission granted only now: heartbeat arms, the health
+      // lease starts, and the mutation gate opens for the clock below.
+      authority.markReady()
 
       clock.start()
 
@@ -544,6 +686,11 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
     startAutosave,
     persistProgress,
     bootGame,
+    /** B1-D - reversible authority pause/resume (the
+     *  OnlineSessionController drives these); idempotent. */
+    pauseSimulation,
+    resumeSimulation,
+    isSimPaused: () => simPaused,
     stopAll,
     suppressPersistence,
     isPersistenceSuppressed,

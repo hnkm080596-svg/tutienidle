@@ -3,6 +3,8 @@ import { computed, onMounted, onUnmounted, provide, ref, watch } from 'vue'
 import { usePlayerStore } from './stores/player'
 import { useUiStore } from './stores/ui'
 import { GameClock, DEFAULT_MAX_OFFLINE_SECONDS } from './core/idle/GameClock'
+import { OVERLAY_LAYERS } from './core/presentation/OverlayLayers'
+import { bindOnlineAuthority, observeAuthoritySaveResult, unbindOnlineAuthority } from './composables/useOnlineAuthority'
 import { GameManager } from './core/game/GameManager'
 import {
   initializeCharacter,
@@ -79,12 +81,22 @@ import { QUESTS } from './data/quest/quests'
 import { isCultivationPoseActive } from './core/cultivation/CultivationPose'
 import { useBootFlow } from './composables/useBootFlow'
 import { cloudSaveCoordinator } from './services/cloudSave/CloudSaveServiceFactory'
-import { backendBundle, backendFatal } from './services/backend/backendBundle'
+import { backendBundle, backendComposition, backendFatal } from './services/backend/backendBundle'
 import {
   deleteSave,
   restoreGameSession,
   SAVE_RESET_REQUEST_EVENT,
 } from './services/save/SaveSystem'
+import {
+  OnlineSessionController,
+  type AuthorityState,
+} from './services/session/OnlineSessionController'
+import { runReconnectPipeline } from './services/session/reconnectPipeline'
+import {
+  readSupabaseSession,
+  resolveSupabaseSession,
+} from './services/supabase/SupabaseSession'
+import type { QuitFlushFailedNotice } from './shared/session/FlushResult'
 
 const player = usePlayerStore()
 const ui = useUiStore()
@@ -397,6 +409,17 @@ const lifecycle = useAppLifecycle({
   },
   boot: bootFlow,
   coordinator: cloudSaveCoordinator,
+  // B1-D - thin closures over the authority instance declared below: the
+  // lifecycle runs them only inside bootGame/tick calls, by which time
+  // the const is initialized (TDZ is a call-time concern, not a
+  // construction-order one).
+  authority: {
+    canMutate: () => onlineAuthority.canMutate(),
+    beginChecking: () => onlineAuthority.beginChecking(),
+    markReady: () => onlineAuthority.markReady(),
+    markFailed: (code) => onlineAuthority.markFailed(code),
+    observeSaveResult: (result) => onlineAuthority.observeSaveResult(result),
+  },
   player,
   gameManager,
   // Fix (2026-09-06) - bootGame() tu startTickLoop(tick) khi boot thanh
@@ -408,10 +431,19 @@ const lifecycle = useAppLifecycle({
   entryStage,
   // Composable giu player dang loose (khong import Pinia store type vao
   // core-facing signature) - cast TAI BIEN nay khop dung loai that.
-  restoreGameSession: (playerOwner, manager, save) =>
-    restoreGameSession(playerOwner as Parameters<typeof restoreGameSession>[0], manager, save as Parameters<typeof restoreGameSession>[2]),
+  restoreGameSession: (playerOwner, manager, save, timeAuthority) =>
+    restoreGameSession(
+      playerOwner as Parameters<typeof restoreGameSession>[0],
+      manager,
+      save as Parameters<typeof restoreGameSession>[2],
+      timeAuthority,
+    ),
   persistPlayer: async () => {
     const result = await player.save(gameManager)
+
+    // B1-D - every save outcome renews the health lease or pauses/
+    // terminates admission by its error class.
+    observeAuthoritySaveResult(result)
 
     // Canh bao autosave fail chi 1 lan cho moi chuoi fail - reset co khi
     // ghi thanh cong lai de chuoi fail ke tiep van duoc bao.
@@ -433,6 +465,127 @@ const lifecycle = useAppLifecycle({
   // recover on a clean process (same convention as resetSaveFromSettings).
   hardReset: () => window.location.reload(),
 })
+
+// B1-D - the online-admission authority (30s heartbeat / <=40s health
+// lease / spec-ordered reconnect / result-bearing flush). In remote mode
+// probe+reconnect are bound to the supabase adapter and GoTrue refresh;
+// in local/mock mode the gate is uniform but the lease is unbounded.
+const authorityState = ref<AuthorityState>('signed-out')
+const quitFlushOffer = ref<QuitFlushFailedNotice | null>(null)
+const remoteAuthority = cloudSaveCoordinator.capability === 'remote-authoritative'
+const supabaseConfig =
+  backendComposition.status === 'ready' ? backendComposition.config : null
+
+const onlineAuthority = bindOnlineAuthority(new OnlineSessionController({
+  probe: remoteAuthority ? () => cloudSaveCoordinator.heartbeat() : undefined,
+  reconnect:
+    remoteAuthority && supabaseConfig
+      ? () =>
+          runReconnectPipeline({
+            refreshAuth: async () => {
+              const resolved = await resolveSupabaseSession(supabaseConfig)
+              if (resolved) {
+                return 'ok'
+              }
+              // The credential's presence distinguishes a transient
+              // transport failure (retained - retry later) from a proven
+              // terminal rejection (cleared inside resolveSupabaseSession).
+              return readSupabaseSession() ? 'unavailable' : 'expired'
+            },
+            heartbeat: () => cloudSaveCoordinator.heartbeat(),
+            load: () => cloudSaveCoordinator.load(),
+            expectedRevision: () => cloudSaveCoordinator.getRevision(),
+          })
+      : undefined,
+  // The ONE save queue: quit/logout/flush join the same queue a manual
+  // or autosave does - there is never a second write path.
+  flushSave: () => player.save(gameManager),
+  monotonicNow: () => performance.now(),
+  scheduleInterval: (callback, timeoutMs) => window.setInterval(callback, timeoutMs),
+  clearHandle: (handle) => window.clearInterval(handle),
+  onPause: () => lifecycle.pauseSimulation(),
+  onResume: (lineage, save, serverAuthority) => {
+    if (lineage === 'replaced' && save) {
+      // Zero-accrual live replacement (B1-D): queues/jobs restore from
+      // the authoritative payload with the reconnect's server clock bound
+      // as 'now' - no offline catch-up is owed (the sim stayed admitted
+      // or was paused; nothing accrued).
+      restoreGameSession(player, gameManager, save, {
+        kind: 'live-replacement',
+        nowMs: serverAuthority?.serverNowMs ?? Date.now(),
+      })
+    }
+    lifecycle.resumeSimulation()
+  },
+  onStateChange: (state) => {
+    authorityState.value = state
+  },
+}))
+
+const AUTHORITY_TERMINAL_STATES: ReadonlySet<AuthorityState> = new Set([
+  'conflict',
+  'revoked',
+  'recovery',
+  'maintenance',
+  'update-required',
+])
+
+const authorityTerminal = computed(() => AUTHORITY_TERMINAL_STATES.has(authorityState.value))
+
+// While an authority overlay is up every surface behind it is inert:
+// pointer is already covered by the overlay element, and inert removes
+// the keyboard path too (a stale-focused button behind the overlay would
+// otherwise still fire on Enter/Tab-activation - spec: no mutation path
+// may reach the domain while admission is blocked).
+const authorityOverlayActive = computed(
+  () => isBooted.value && (authorityState.value === 'reconnecting' || authorityTerminal.value),
+)
+
+const authorityMessage = computed(() => {
+  switch (authorityState.value) {
+    case 'revoked':
+      return t('authority.revoked')
+    case 'conflict':
+      return t('authority.conflict')
+    case 'maintenance':
+      return t('authority.maintenance')
+    case 'update-required':
+      return t('authority.updateRequired')
+    default:
+      return t('authority.recovery')
+  }
+})
+
+/** The ONLY path back to auth from a terminal authority state - the
+ *  owned acknowledgement the controller requires before signing out. */
+function acknowledgeAuthority() {
+  onlineAuthority.acknowledge()
+  bootFlow.showAuth()
+}
+
+function retryQuitFlush() {
+  const offer = quitFlushOffer.value
+  quitFlushOffer.value = null
+  if (offer) {
+    window.electronAPI?.retryQuitFlush(offer.requestId)
+  }
+}
+
+function cancelQuitFlush() {
+  const offer = quitFlushOffer.value
+  quitFlushOffer.value = null
+  if (offer) {
+    window.electronAPI?.cancelQuitClose(offer.requestId)
+  }
+}
+
+function forceQuitFlush() {
+  const offer = quitFlushOffer.value
+  quitFlushOffer.value = null
+  if (offer) {
+    window.electronAPI?.forceQuitClose(offer.requestId)
+  }
+}
 
 // Canh bao autosave fail chi 1 lan cho moi chuoi fail - autosave chay
 // moi 15s nen neu toast moi tick thi spam; reset co khi ghi thanh cong
@@ -613,7 +766,17 @@ async function bootGame(createNewCharacter = false): Promise<BootOutcome> {
     // Dispose lan truoc neu co: boot 'entered' hai lan khong duoc chong
     // subscription.
     electronBridgeDispose?.()
-    electronBridgeDispose = useElectronBridge(gameManager)
+    electronBridgeDispose = useElectronBridge(gameManager, {
+      // B1-D - the quit/update/logout flush is the authority's
+      // result-bearing one; a failed attempt surfaces the
+      // retry/cancel/force-close offer instead of closing.
+      flush: (requestId) => onlineAuthority.flush(requestId),
+      onFlushFailed: (notice) => {
+        quitFlushOffer.value = notice
+      },
+      suspend: () => onlineAuthority.suspend(),
+      resume: () => onlineAuthority.resumeFromSuspend(),
+    })
 
     // Dev-only console helpers (spec v3 B5) - registered here so BOTH
     // new-character and restored-save entries get them; the function
@@ -707,6 +870,10 @@ onUnmounted(() => {
   // Remediation Task 5 - symmetric cleanup: event-bus handlers, DOM
   // listeners, tick + autosave intervals (idempotent, goi lai mot cach an toan).
   lifecycle.stopAll()
+  // B1-D - the authority's heartbeat/retry timers die with the mount;
+  // a remount builds a fresh instance.
+  onlineAuthority.stopAll()
+  unbindOnlineAuthority(onlineAuthority)
   window.removeEventListener(SAVE_RESET_REQUEST_EVENT, resetSaveFromSettings)
 
   // Presentation teardown: aborts any in-flight transition and drops every
@@ -765,8 +932,9 @@ onUnmounted(() => {
          transition into the game has not entered). -->
     <LoadingScreen v-if="!isBooted" />
 
-    <!-- GameRoot chi hien khi boot xong -->
-    <GameRoot v-if="isBooted" />
+    <!-- GameRoot chi hien khi boot xong; inert while an authority
+         overlay owns the surface (B1-D). -->
+    <GameRoot v-if="isBooted" :inert="authorityOverlayActive" />
   </ErrorBoundary>
 
   <!-- Task 8 (A11) - the unwatched pause. Data-driven by useCombatPause()
@@ -774,12 +942,13 @@ onUnmounted(() => {
        above: separate owner (the battle vs. the presentation coordinator),
        separate z-layer (OVERLAY_LAYERS.combatPause < curtain so the
        curtain can always cover it), neither may drive the other. -->
-  <CombatPauseOverlay v-if="isCombatPaused" @continue="continueBattle" />
+  <CombatPauseOverlay v-if="isCombatPaused" :inert="authorityOverlayActive" @continue="continueBattle" />
 
   <!-- Curtain/loading/error cover lives ABOVE every entry branch so cold boot
        and boot failures are covered too, not just in-game transitions. -->
   <PresentationTransitionOverlay
     ref="transitionOverlayRef"
+    :inert="authorityOverlayActive"
     :phase="routeAdapter.phase.value"
     :is-locked="routeAdapter.isLocked.value"
     :error="routeAdapter.error.value"
@@ -787,6 +956,42 @@ onUnmounted(() => {
     @retry="onTransitionRetry"
     @back="onTransitionBack"
   />
+
+  <!-- B1-D - the authority surface is ALWAYS blocking: while the sim is
+       paused no pointer/keyboard path may reach a mutator (spec: actions
+       cannot mutate while the overlay is visible). 'reconnecting' shows
+       the reconnect status plus the owned give-up escape back to auth;
+       terminal states require the same owned acknowledgement; the
+       quit-flush retry/cancel/force-close offer comes from Electron main. -->
+  <div v-if="authorityState === 'reconnecting' && isBooted" class="authority-overlay" :style="{ zIndex: OVERLAY_LAYERS.authority }">
+    <div class="authority-card">
+      <p>{{ t('authority.reconnecting') }}</p>
+      <button type="button" @click="acknowledgeAuthority">
+        {{ t('authority.reauth') }}
+      </button>
+    </div>
+  </div>
+
+  <div v-else-if="authorityTerminal && isBooted" class="authority-overlay" :style="{ zIndex: OVERLAY_LAYERS.authority }">
+    <div class="authority-card">
+      <p>{{ authorityMessage }}</p>
+      <button type="button" @click="acknowledgeAuthority">
+        {{ t('authority.reauth') }}
+      </button>
+    </div>
+  </div>
+
+  <div v-if="quitFlushOffer" class="authority-overlay" :style="{ zIndex: OVERLAY_LAYERS.authority }">
+    <div class="authority-card">
+      <h2>{{ t('quitFlush.title') }}</h2>
+      <p>{{ t('quitFlush.message', { code: quitFlushOffer.code ?? quitFlushOffer.status }) }}</p>
+      <div class="authority-actions">
+        <button type="button" @click="retryQuitFlush">{{ t('quitFlush.retry') }}</button>
+        <button type="button" @click="cancelQuitFlush">{{ t('quitFlush.cancel') }}</button>
+        <button type="button" @click="forceQuitFlush">{{ t('quitFlush.force') }}</button>
+      </div>
+    </div>
+  </div>
 
   <ErrorScreen />
 </template>
@@ -825,6 +1030,40 @@ body {
   color: var(--text-secondary);
 }
 .boot-error button {
+  padding: 10px 16px;
+  border: 1px solid var(--paper-line);
+  background: var(--paper-100);
+  color: var(--paper-text);
+  cursor: pointer;
+}
+
+/* B1-D authority surface - blocking reconnect/terminal/quit-flush card. */
+.authority-overlay {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  background: rgba(20, 16, 12, 0.72);
+}
+
+.authority-card {
+  min-width: 320px;
+  max-width: 420px;
+  padding: 20px 24px;
+  background: var(--paper-50);
+  border: 1px solid var(--paper-line);
+  color: var(--paper-text);
+  text-align: center;
+}
+
+.authority-card h2 {
+  margin: 0 0 8px;
+  font-family: var(--font-display);
+  color: var(--crimson);
+}
+
+.authority-card button {
+  margin: 12px 4px 0;
   padding: 10px 16px;
   border: 1px solid var(--paper-line);
   background: var(--paper-100);
