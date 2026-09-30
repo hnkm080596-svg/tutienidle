@@ -9,10 +9,11 @@
 // Presentation only (A7): reads materialBag + player state through the
 // stateVersion bridge; mutating commands stay in the ops layer. The
 // 1-second App.vue tick keeps the counts live.
-import { computed } from 'vue'
+import { computed, type CSSProperties } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
+import { chromeSlice, HUYEN_KIM_CHROME } from '@/ui/huyenKimChrome'
 import { SPIRIT_STONE_MATERIALS } from '@/core/material/SpiritStoneMaterial'
 import { isCompanionDomainUnlocked } from '@/core/companion/CompanionAvailability'
 import { COMPANION_PULL_TOKEN_ID } from '@/core/game/GameManagerCompanionOps'
@@ -77,6 +78,46 @@ const companionChips = computed<CurrencyChip[]>(() => {
 })
 
 const chips = computed(() => [...spiritStoneChips.value, ...companionChips.value])
+
+// Huyen Kim chrome slot `resource-pill` (160x48, non-tintable) is spec'd
+// for these counters. While the manifest keeps the slot 'pending',
+// chromeSlice() returns null and the chips keep the CSS capsule below -
+// identical render to today. Once the PNG drops and status flips to
+// 'ready', this style paints the nine-slice instead: manifest-only
+// change, no code edits (huyen-kim-chrome.json header contract).
+const resourcePill = HUYEN_KIM_CHROME['resource-pill']
+const resourcePillSlice = chromeSlice('resource-pill')
+
+const chipChromeStyle = computed<CSSProperties[] | undefined>(() => {
+  if (!resourcePill || !resourcePillSlice) return undefined
+
+  const { url1x, url2x, slices } = resourcePillSlice
+  // Render at the manifest's minimumHeight/sourceHeight ratio (the pill
+  // capsule art is authored for ~0.5x source). image-set reports each
+  // candidate's intrinsic size in density-aware CSS px, so the same px
+  // slice numbers cut correctly on the 2x sheet; the plain url() entry
+  // keeps engines without image-set support working.
+  const scale = resourcePill.minimumHeight / resourcePill.sourceHeight
+  const fill = resourcePill.center === 'transparent' ? '' : ' fill'
+  const slice = `${slices.top} ${slices.right} ${slices.bottom} ${slices.left}${fill}`
+  const width =
+    `${slices.top * scale}px ${slices.right * scale}px ` +
+    `${slices.bottom * scale}px ${slices.left * scale}px`
+  return [
+    {
+      borderStyle: 'solid',
+      borderWidth: width,
+      borderColor: 'transparent',
+      borderRadius: '0px',
+      background: 'none',
+      borderImageSource: `url("${url1x}")`,
+      borderImageSlice: slice,
+      borderImageWidth: width,
+      borderImageRepeat: resourcePill.edgeMode === 'tile' ? 'repeat' : 'stretch',
+    },
+    { borderImageSource: `image-set(url("${url1x}") 1x, url("${url2x}") 2x)` },
+  ]
+})
 </script>
 
 <template>
@@ -85,7 +126,8 @@ const chips = computed(() => [...spiritStoneChips.value, ...companionChips.value
       v-for="chip in chips"
       :key="chip.id"
       class="currency-hud__chip"
-      :class="`currency-hud__chip--${chip.id}`"
+      :class="[`currency-hud__chip--${chip.id}`, { 'currency-hud__chip--sliced': Boolean(resourcePillSlice) }]"
+      :style="chipChromeStyle"
     >
       <span class="currency-hud__label">{{ chip.label }}</span>
       <strong class="currency-hud__amount">{{ formatNumber(chip.amount) }}</strong>
