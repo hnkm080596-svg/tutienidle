@@ -4,6 +4,7 @@ import { usePlayerStore } from '@/stores/player'
 import { useUiStore } from '@/stores/ui'
 import { useBuildingNavigation } from '@/composables/useBuildingNavigation'
 import { DONG_FU_BUILDING_IDS } from '@/presentation/background/DongFuBuildingArt'
+import { isBetaBuildingSurface } from '@/core/betaScopeSurface'
 
 // Spec SS12 Thien Co Bang -- "what is worth doing right now", max a few
 // actionable entries, never a quest log. Read-only over existing
@@ -97,6 +98,13 @@ export function useThienCoEntries() {
     const alchemyJobs = gameManager.alchemyOps.getAlchemyJobs()
 
     for (const buildingId of DONG_FU_BUILDING_IDS) {
+      // BETA SCOPE LOCK v2: a scope-hidden building (chi_hien_quan) earns
+      // no opportunity entry - openBuilding fails closed on it, so a CTA
+      // here would render dead.
+      if (!isBetaBuildingSurface(buildingId)) {
+        continue
+      }
+
       const status = navigation.getBuildingStatus(buildingId)
       const { template } = navigation.getBuildingPresentation(buildingId)
 
