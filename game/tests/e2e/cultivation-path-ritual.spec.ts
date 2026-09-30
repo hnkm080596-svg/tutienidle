@@ -346,6 +346,13 @@ test.describe('Cultivation Path ritual - six-way matrix (P14)', () => {
       page.locator('.quan-khi-panel__preset-slot:not(.quan-khi-panel__preset-slot--empty)'),
     ).toHaveCount(slotsBefore + 1)
 
+    // The preset editor is a focus-trapped overlay: while it is open Tab
+    // stays inside the dialog and cannot toggle the command wheel, so
+    // startStageOneBattle would wait forever on a hidden slot. Close it
+    // through the same affordance a player uses before heading out.
+    await page.locator('.overlay-panel__close').click()
+    await expect(page.locator('.overlay-panel__close')).toHaveCount(0)
+
     // P1-M7 - combat assertion: the hien way attaches its Kiem Pho
     // provider as the participant's dynamic basic at battle build (the
     // matcher the kiem bar bridge reads). snapshot() + preset array is

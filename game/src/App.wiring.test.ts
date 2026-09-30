@@ -1,4 +1,4 @@
-// Wiring guard — the test that would have caught the 2026-09-05 freeze
+// Wiring guard - the test that would have caught the 2026-09-05 freeze
 // (commit d6d9a1d, "lifecycle idempotence").
 //
 // Bối cảnh: refactor đó extract boot/tick logic của App.vue sang
@@ -407,15 +407,17 @@ describe('onRestoreOk starter backfill — huy_quyen granted through one seam', 
   })
 })
 
-// --- BETA-CREATION: the creation pick is consumed exactly once ---
+// --- BETA-CREATION: the creation metadata is consumed exactly once ---
 
 /**
- * pendingCreationPick is a module-slot bridging the creation screen's emit
- * to the boot transaction. If onNewCharacter reads it without clearing, a
- * second callback invocation would silently reuse a stale pick. This guard
- * pins the consume-once order inside onNewCharacter: read -> clear -> use.
+ * pendingCreationMetadata is a module-slot bridging the creation screen's
+ * emit (or the canonical character the create_character RPC committed) to
+ * the boot transaction. If onNewCharacter reads it without clearing, a
+ * second callback invocation would silently reuse stale metadata. This
+ * guard pins the consume-once order inside onNewCharacter: read -> clear
+ * -> use.
  */
-describe('onNewCharacter creation pick — consume-once', () => {
+describe('onNewCharacter creation metadata - consume-once', () => {
   const { scriptSetup } = readAppVueBlocks()
   const appSourceFile = parseScript(scriptSetup, 'App.vue.script-setup.ts')
 
@@ -434,37 +436,38 @@ describe('onNewCharacter creation pick — consume-once', () => {
       ts.forEachChild(node, visit)
     }
     visit(appSourceFile)
-    if (!found) throw new Error('onNewCharacter callback not found in App.vue — wiring changed?')
+    if (!found) throw new Error('onNewCharacter callback not found in App.vue - wiring changed?')
     return found
   }
 
-  it('clears the module slot after reading it and before the bootstrap call', () => {
+  it('clears the module slot after reading it and before the grant transaction', () => {
     const body = findOnNewCharacterBody()
     let readPos = -1
     let clearPos = -1
     let usePos = -1
     const visit = (node: ts.Node): void => {
-      // read: const <x> = pendingCreationPick
+      // read: pendingCreationMetadata referenced anywhere (the ?:
+      // fallback in `const resolved = metadata ? ... : pendingCreationMetadata`)
       if (
-        ts.isVariableDeclaration(node)
-        && node.initializer
-        && ts.isIdentifier(node.initializer)
-        && node.initializer.text === 'pendingCreationPick'
+        readPos < 0
+        && ts.isIdentifier(node)
+        && node.text === 'pendingCreationMetadata'
+        && !(ts.isBinaryExpression(node.parent) && node.parent.left === node)
       ) readPos = node.getStart(appSourceFile)
-      // clear: pendingCreationPick = undefined
+      // clear: pendingCreationMetadata = undefined
       if (
         ts.isBinaryExpression(node)
         && ts.isIdentifier(node.left)
-        && node.left.text === 'pendingCreationPick'
+        && node.left.text === 'pendingCreationMetadata'
         && node.operatorToken.kind === ts.SyntaxKind.EqualsToken
         && ts.isIdentifier(node.right)
         && node.right.text === 'undefined'
       ) clearPos = node.getStart(appSourceFile)
-      // use: bootstrapEarlyGamePlayer(gameManager, player.$state, pick)
+      // use: initializeCharacter(resolved, {...})
       if (
         ts.isCallExpression(node)
         && ts.isIdentifier(node.expression)
-        && node.expression.text === 'bootstrapEarlyGamePlayer'
+        && node.expression.text === 'initializeCharacter'
       ) usePos = node.getStart(appSourceFile)
       ts.forEachChild(node, visit)
     }

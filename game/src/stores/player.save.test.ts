@@ -42,4 +42,26 @@ describe('usePlayerStore.save (R10, AR-12)', () => {
     if (outcome.status !== 'ok') throw new Error(`expected a valid save, got ${outcome.status}`)
     expect(outcome.save.player.name).toBe('saved-name')
   })
+
+  it('overlapping save callers join the shared coordinator queue - both settle, latest snapshot wins (B1-C)', async () => {
+    setActivePinia(createPinia())
+    const player = usePlayerStore()
+    const gameManager = new GameManager()
+    gameManager.setActivePlayer(player.$state)
+    player.name = 'first-write'
+
+    // Two overlapping callers must not start independent writes: the
+    // second joins the coordinator's single queue entry.
+    const s1 = player.save(gameManager)
+    player.name = 'second-write'
+    const s2 = player.save(gameManager)
+    const [r1, r2] = await Promise.all([s1, s2])
+
+    expect(r1.status).toBe('ok')
+    expect(r2.status).toBe('ok')
+
+    const outcome = loadGame()
+    if (outcome.status !== 'ok') throw new Error(`expected a valid save, got ${outcome.status}`)
+    expect(outcome.save.player.name).toBe('second-write')
+  })
 })

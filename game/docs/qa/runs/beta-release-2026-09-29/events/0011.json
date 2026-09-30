@@ -1,0 +1,51 @@
+{
+  "outcome": "QA_UNVERIFIED",
+  "detail": "required evidence/coverage/independence missing",
+  "clauses": [
+    {
+      "id": "C1-identity",
+      "ok": true,
+      "reason": "all final evidence binds the declared state"
+    },
+    {
+      "id": "C2-census-coverage",
+      "ok": false,
+      "reason": "domain six-ways uncovered; domain combat-core uncovered; domain impact-sync uncovered; domain buffs-reactions uncovered; domain stats-vitals uncovered; domain talents uncovered; domain inventory-equipment uncovered; domain economy-production uncovered; domain stages-drops uncovered; domain idle-offline uncovered; domain companions-formation uncovered; domain artifact-negative uncovered; domain quests-ui uncovered; domain runtime-phaser uncovered; domain audio uncovered; domain a11y-i18n uncovered; domain lifecycle uncovered; domain registries-data uncovered; domain test-quality uncovered"
+    },
+    {
+      "id": "C3-no-open",
+      "ok": false,
+      "reason": "exception COORD-1"
+    },
+    {
+      "id": "C4-final-gates",
+      "ok": true,
+      "reason": "final gates green"
+    },
+    {
+      "id": "C5-sequential",
+      "ok": false,
+      "reason": "sequential CORRECTNESS→AUTHORITY→INTEGRATION reviews missing"
+    },
+    {
+      "id": "C6-clean-pair",
+      "ok": false,
+      "reason": "Clean A missing/not CLEAN; Clean B missing/not CLEAN"
+    },
+    {
+      "id": "C7-mutation-corpus",
+      "ok": true,
+      "reason": "mutation + corpus satisfied"
+    },
+    {
+      "id": "C8-terminal-check",
+      "ok": false,
+      "reason": "no sealed independent TERMINAL_CHECK on the final state"
+    },
+    {
+      "id": "C9-readiness",
+      "ok": true,
+      "reason": "readiness not required for this run (v1 or opt-out)"
+    }
+  ]
+}

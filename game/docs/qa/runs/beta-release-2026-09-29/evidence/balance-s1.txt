@@ -1,0 +1,32 @@
+
+> tien-hiep-idle@0.0.0 test:balance
+> vitest run --config vitest.balance.config.mts
+
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.11 [39m[90mE:/tutienidle/game[39m
+
+[90mstdout[2m | tests/balance/PerfectionEconomy.test.ts[2m > [22m[2mthree-seed measurement evidence (spec §3.5)[2m > [22m[2mseed 11 resolves with income inside tolerance
+[22m[39m[md-econ] seed=11 outcome=proven_infeasible kills=26267 essence=36801 income=1.4010 wall=54877.9999999983 battle=45771.3999999983 idle=9106.599999999999 stageRuns=2026 statAt=9949.199999999999 bodyAt=54877.9999999983
+
+[90mstdout[2m | tests/balance/PerfectionEconomy.test.ts[2m > [22m[2mthree-seed measurement evidence (spec §3.5)[2m > [22m[2mseed 23 resolves with income inside tolerance
+[22m[39m[md-econ] seed=23 outcome=proven_infeasible kills=26370 essence=36790 income=1.3951 wall=53480.300000000774 battle=44372.50000000078 idle=9107.8 stageRuns=2035 statAt=9923.899999999998 bodyAt=53480.300000000774
+
+[90mstdout[2m | tests/balance/PerfectionEconomy.test.ts[2m > [22m[2mthree-seed measurement evidence (spec §3.5)[2m > [22m[2mseed 7 resolves with income inside tolerance
+[22m[39m[md-econ] seed=7 outcome=proven_infeasible kills=26323 essence=36801 income=1.3981 wall=59166.100000001476 battle=50083.100000001476 idle=9083 stageRuns=2197 statAt=9872.5 bodyAt=59166.100000001476
+
+ [32m✓[39m tests/balance/PerfectionEconomy.test.ts [2m([22m[2m8 tests[22m[2m)[22m[33m 1246270[2mms[22m[39m
+     [33m[2m✓[22m[39m ends at qi_refining right after the ritual with measured counters [33m 1584[2mms[22m[39m
+     [33m[2m✓[22m[39m runs to a measured outcome with full accounting [33m 448651[2mms[22m[39m
+     [33m[2m✓[22m[39m determinism: same seed → identical measurement [33m 261309[2mms[22m[39m
+     [33m[2m✓[22m[39m a shrunk kill bound reports safety_bound with the max_kills reason [33m 1003[2mms[22m[39m
+     [33m[2m✓[22m[39m seed 11 resolves with income inside tolerance [33m 81323[2mms[22m[39m
+     [33m[2m✓[22m[39m seed 23 resolves with income inside tolerance [33m 220416[2mms[22m[39m
+     [33m[2m✓[22m[39m seed 7 resolves with income inside tolerance [33m 142018[2mms[22m[39m
+     [33m[2m✓[22m[39m normal run reaches qi_refining while perfection stays mortal [33m 89961[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m8 passed[39m[22m[90m (8)[39m
+[2m   Start at [22m 21:43:16
+[2m   Duration [22m 1249.85s[2m (transform 2.50s, setup 0ms, import 3.33s, tests 1246.27s, environment 0ms)[22m
+
+EXIT=0

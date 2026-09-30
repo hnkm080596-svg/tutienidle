@@ -10,6 +10,7 @@ import {
   PLAYER_VISUAL_PROFILES,
 } from '@/presentation/art/PlayerVisualProfiles'
 import { usePlayerStore } from '@/stores/player'
+import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import EntitySpriteCanvas from './EntitySpriteCanvas.vue'
 
 // Trinh bay nhan vat dung CHUNG (plan Workstream A) - mode-aware figure:
@@ -78,8 +79,8 @@ const idleClip = computed(
 )
 
 const CULTIVATE_BRIDGE = {
-  sheetUrl: '/assets/cultivate.png',
-  atlasUrl: '/assets/cultivate.json',
+  sheetUrl: resolveAssetUrl('/assets/cultivate.png'),
+  atlasUrl: resolveAssetUrl('/assets/cultivate.json'),
   framePrefix: 'frame_',
   frameSuffix: '.png',
   zeroPad: 3,

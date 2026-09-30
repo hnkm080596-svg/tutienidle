@@ -1,0 +1,1070 @@
+{
+ "records": [
+  {
+   "kind": "invariant",
+   "id": "I-IDENTITY-MATRIX",
+   "statement": "Exactly 3 paths {sword,spell,body} x 6 ways {*_pathway,hidden_*_pathway}; pair atomic; no legacy VN path id as second authority",
+   "domain": "identity-matrix",
+   "risk": "HIGH",
+   "sources": [
+    {
+     "path": "docs/qa/missions/beta-release-exhaustive-2026-09-29.md",
+     "symbolOrSection": "6",
+     "revision": "mission",
+     "basis": "USER"
+    },
+    {
+     "path": "src/data/progression",
+     "symbolOrSection": "path catalogs",
+     "revision": "f1049b5e",
+     "basis": "SOURCE"
+    }
+   ],
+   "owner": {
+    "path": "src/core/cultivation",
+    "symbolOrSection": "path/way registry",
+    "revision": "f1049b5e",
+    "basis": "SOURCE"
+   },
+   "legalWriters": [
+    "src/core/cultivation"
+   ],
+   "legalReaders": [],
+   "projections": [],
+   "caches": [],
+   "validStates": [],
+   "forbiddenStates": [
+    "legacy VN path ids honored",
+    "orphan way",
+    "unknown pair"
+   ],
+   "preconditions": [],
+   "postconditions": [],
+   "legalTransitions": [],
+   "illegalTransitions": [],
+   "failureBehavior": "reject without owner mutation",
+   "atomicity": "all-or-nothing across affected owners",
+   "inverseBehavior": "n/a",
+   "persistence": "v87 snapshot round-trip",
+   "migration": "version<87 rejected",
+   "lifecycle": "per-save",
+   "runtimeConsequences": [],
+   "uiConsequences": [],
+   "oracles": [
+    "registry census",
+    "save validator rejects foreign pair"
+   ],
+   "requiredEvidenceSurfaces": [
+    "STATIC_SEMANTIC",
+    "PERSISTENCE",
+    "DETERMINISTIC"
+   ],
+   "taxonomyIds": [
+    "PTH-01",
+    "ROB-01"
+   ],
+   "status": "ACTIVE"
+  },
+  {
+   "kind": "invariant",
+   "id": "I-CREATION-CONTRACT",
+   "statement": "New char stats 1/1/1/1/1 + name + talent + mortalBasicSkillId in {tram,linh_bao,huy_quyen}; no implicit tram repair; combat-ready without dev injection",
+   "domain": "creation-auth",
+   "risk": "HIGH",
+   "sources": [
+    {
+     "path": "docs/qa/missions/beta-release-exhaustive-2026-09-29.md",
+     "symbolOrSection": "7",
+     "revision": "mission",
+     "basis": "USER"
+    }
+   ],
+   "owner": {
+    "path": "src/core/player",
+    "symbolOrSection": "creation service",
+    "revision": "f1049b5e",
+    "basis": "SOURCE"
+   },
+   "legalWriters": [
+    "src/core/player"
+   ],
+   "legalReaders": [],
+   "projections": [],
+   "caches": [],
+   "validStates": [],
+   "forbiddenStates": [
+    "missing pick",
+    "foreign skill id",
+    "dup creation"
+   ],
+   "preconditions": [],
+   "postconditions": [],
+   "legalTransitions": [],
+   "illegalTransitions": [],
+   "failureBehavior": "reject without owner mutation",
+   "atomicity": "all-or-nothing across affected owners",
+   "inverseBehavior": "n/a",
+   "persistence": "v87 snapshot round-trip",
+   "migration": "version<87 rejected",
+   "lifecycle": "per-save",
+   "runtimeConsequences": [],
+   "uiConsequences": [],
+   "oracles": [
+    "payload->PlayerData->SkillManager->save->reload"
+   ],
+   "requiredEvidenceSurfaces": [
+    "STATIC_SEMANTIC",
+    "DETERMINISTIC"
+   ],
+   "taxonomyIds": [
+    "STA-03",
+    "TRN-03",
+    "ASY-02"
+   ],
+   "status": "ACTIVE"
+  },
+  {
+   "kind": "invariant",
+   "id": "I-SAVE-VERSION-87",
+   "statement": "CURRENT_SAVE_VERSION=87; older versions reject cleanly non-destructively; retired fields (skillLevels, route, old bodyProgression, old path ids) never resurrect",
+   "domain": "save-cloud",
+   "risk": "CRITICAL",
+   "sources": [
+    {
+     "path": "docs/qa/missions/beta-release-exhaustive-2026-09-29.md",
+     "symbolOrSection": "9",
+     "revision": "mission",
+     "basis": "USER"
+    }
+   ],
+   "owner": {
+    "path": "src/services/save/SaveSystem.ts",
+    "symbolOrSection": "validateSaveShape",
+    "revision": "f1049b5e",
+    "basis": "SOURCE"
+   },
+   "legalWriters": [
+    "src/services/save/SaveSystem.ts"
+   ],
+   "legalReaders": [],
+   "projections": [],
+   "caches": [],
+   "validStates": [],
+   "forbiddenStates": [
+    "old version accepted",
+    "retired field honored",
+    "partial restore"
+   ],
+   "preconditions": [],
+   "postconditions": [],
+   "legalTransitions": [],
+   "illegalTransitions": [],
+   "failureBehavior": "reject without owner mutation",
+   "atomicity": "all-or-nothing across affected owners",
+   "inverseBehavior": "n/a",
+   "persistence": "v87 snapshot round-trip",
+   "migration": "version<87 rejected",
+   "lifecycle": "per-save",
+   "runtimeConsequences": [],
+   "uiConsequences": [],
+   "oracles": [],
+   "requiredEvidenceSurfaces": [
+    "STATIC_SEMANTIC",
+    "DETERMINISTIC"
+   ],
+   "taxonomyIds": [
+    "PER-01",
+    "PER-03",
+    "PER-07",
+    "ROB-03"
+   ],
+   "status": "ACTIVE"
+  },
+  {
+   "kind": "invariant",
+   "id": "I-RESTORE-ATOMIC",
+   "statement": "Failed/invalid restore mutates zero live owners",
+   "domain": "save-cloud",
+   "risk": "CRITICAL",
+   "sources": [
+    {
+     "path": "docs/qa/missions/beta-release-exhaustive-2026-09-29.md",
+     "symbolOrSection": "9",
+     "revision": "mission",
+     "basis": "USER"
+    }
+   ],
+   "owner": {
+    "path": "src/services/save/SaveSystem.ts",
+    "symbolOrSection": "restore + GameManagerSaveRestore",
+    "revision": "f1049b5e",
+    "basis": "SOURCE"
+   },
+   "legalWriters": [
+    "src/services/save/SaveSystem.ts"
+   ],
+   "legalReaders": [],
+   "projections": [],
+   "caches": [],
+   "validStates": [],
+   "forbiddenStates": [],
+   "preconditions": [],
+   "postconditions": [],
+   "legalTransitions": [],
+   "illegalTransitions": [],
+   "failureBehavior": "reject without owner mutation",
+   "atomicity": "all owners unchanged on rejection",
+   "inverseBehavior": "n/a",
+   "persistence": "v87 snapshot round-trip",
+   "migration": "version<87 rejected",
+   "lifecycle": "per-save",
+   "runtimeConsequences": [],
+   "uiConsequences": [],
+   "oracles": [
+    "before/after snapshot all owners on malformed save"
+   ],
+   "requiredEvidenceSurfaces": [
+    "STATIC_SEMANTIC",
+    "DETERMINISTIC"
+   ],
+   "taxonomyIds": [
+    "PER-11",
+    "TRN-03"
+   ],
+   "status": "ACTIVE"
+  },
+  {
+   "kind": "invariant",
+   "id": "I-SAVE-ROUNDTRIP",
+   "statement": "Complete non-empty v87 state round-trips losslessly",
+   "domain": "save-cloud",
+   "risk": "HIGH",
+   "sources": [
+    {
+     "path": "docs/qa/missions/beta-release-exhaustive-2026-09-29.md",
+     "symbolOrSection": "9",
+     "revision": "mission",
+     "basis": "USER"
+    }
+   ],
+   "owner": {
+    "path": "src/services/save/SaveSystem.ts",
+    "symbolOrSection": "buildGameSave/restoreFromSave",
+    "revision": "f1049b5e",
+    "basis": "SOURCE"
+   },
+   "legalWriters": [
+    "src/services/save/SaveSystem.ts"
+   ],
+   "legalReaders": [],
+   "projections": [],
+   "caches": [],
+   "validStates": [],
+   "forbiddenStates": [],
+   "preconditions": [],
+   "postconditions": [],
+   "legalTransitions": [],
+   "illegalTransitions": [],
+   "failureBehavior": "reject without owner mutation",
+   "atomicity": "all-or-nothing across affected owners",
+   "inverseBehavior": "n/a",
+   "persistence": "v87 snapshot round-trip",
+   "migration": "version<87 rejected",
+   "lifecycle": "per-save",
+   "runtimeConsequences": [],
+   "uiConsequences": [],
+   "oracles": [
+    "populated save->fresh owners->identical snapshot"
+   ],
+   "requiredEvidenceSurfaces": [
+    "STATIC_SEMANTIC",
+    "DETERMINISTIC"
+   ],
+   "taxonomyIds": [
+    "PER-09",
+    "PER-12"
+   ],
+   "status": "ACTIVE"
+  },
+  {
+   "kind": "invariant",
+   "id": "I-CLOUD-CAS",
+   "statement": "CloudSaveCoordinator revision CAS: conflict->resync->at most one retry; no permanently stale revision; no fabricated success",
+   "domain": "save-cloud",
+   "risk": "HIGH",
+   "sources": [
+    {
+     "path": "docs/qa/missions/beta-release-exhaustive-2026-09-29.md",
+     "symbolOrSection": "8",
+     "revision": "mission",
+     "basis": "USER"
+    }
+   ],
+   "owner": {
+    "path": "src/services/cloudSave/CloudSaveCoordinator.ts",
+    "symbolOrSection": "save()",
+    "revision": "f1049b5e",
+    "basis": "SOURCE"
+   },
+   "legalWriters": [
+    "src/services/cloudSave/CloudSaveCoordinator.ts"
+   ],
+   "legalReaders": [],
+   "projections": [],
+   "caches": [],
+   "validStates": [],
+   "forbiddenStates": [
+    "stale-forever revision",
+    "double retry",
+    "fake ok"
+   ],
+   "preconditions": [],
+   "postconditions": [],
+   "legalTransitions": [],
+   "illegalTransitions": [],
+   "failureBehavior": "reject without owner mutation",
+   "atomicity": "all-or-nothing across affected owners",
+   "inverseBehavior": "n/a",
+   "persistence": "v87 snapshot round-trip",
+   "migration": "version<87 rejected",
+   "lifecycle": "per-save",
+   "runtimeConsequences": [],
+   "uiConsequences": [],
+   "oracles": [],
+   "requiredEvidenceSurfaces": [
+    "STATIC_SEMANTIC",
+    "DETERMINISTIC"
+   ],
+   "taxonomyIds": [
+    "ASY-01",
+    "ASY-03",
+    "ASY-08"
+   ],
+   "status": "ACTIVE"
+  },
+  {
+   "kind": "invariant",
+   "id": "I-REALM-18",
+   "statement": "All major realms 18-level; Foundation gate = Qi lvl12 + qi_refining_abyssal_pool cleared",
+   "domain": "realm-progression",
+   "risk": "STANDARD",
+   "sources": [
+    {
+     "path": "docs/qa/missions/beta-release-exhaustive-2026-09-29.md",
+     "symbolOrSection": "11",
+     "revision": "mission",
+     "basis": "USER"
+    },
+    {
+     "path": "src/core/breakthrough",
+     "symbolOrSection": "BreakthroughOutcomeService",
+     "revision": "f1049b5e",
+     "basis": "SOURCE"
+    }
+   ],
+   "owner": {
+    "path": "src/core/realm",
+    "symbolOrSection": "realm defs + canTriggerBreakthrough",
+    "revision": "f1049b5e",
+    "basis": "SOURCE"
+   },
+   "legalWriters": [
+    "src/core/realm"
+   ],
+   "legalReaders": [],
+   "projections": [],
+   "caches": [],
+   "validStates": [],
+   "forbiddenStates": [
+    "lvl11+chapter clear advances",
+    "lvl12 no chapter advances"
+   ],
+   "preconditions": [],
+   "postconditions": [],
+   "legalTransitions": [],
+   "illegalTransitions": [],
+   "failureBehavior": "reject without owner mutation",
+   "atomicity": "all-or-nothing across affected owners",
+   "inverseBehavior": "n/a",
+   "persistence": "v87 snapshot round-trip",
+   "migration": "version<87 rejected",
+   "lifecycle": "per-save",
+   "runtimeConsequences": [],
+   "uiConsequences": [],
+   "oracles": [],
+   "requiredEvidenceSurfaces": [
+    "STATIC_SEMANTIC",
+    "DETERMINISTIC"
+   ],
+   "taxonomyIds": [
+    "TRN-08",
+    "STA-03",
+    "UI-04"
+   ],
+   "status": "ACTIVE"
+  },
+  {
+   "kind": "invariant",
+   "id": "I-REALM-SETTLE-ONCE",
+   "statement": "Breakthrough settlement exactly-once; committed outcome drains once; no replay after reload",
+   "domain": "realm-progression",
+   "risk": "CRITICAL",
+   "sources": [
+    {
+     "path": "docs/qa/missions/beta-release-exhaustive-2026-09-29.md",
+     "symbolOrSection": "11",
+     "revision": "mission",
+     "basis": "USER"
+    }
+   ],
+   "owner": {
+    "path": "src/core/breakthrough",
+    "symbolOrSection": "BreakthroughOutcomeService drain",
+    "revision": "f1049b5e",
+    "basis": "SOURCE"
+   },
+   "legalWriters": [
+    "src/core/breakthrough"
+   ],
+   "legalReaders": [],
+   "projections": [],
+   "caches": [],
+   "validStates": [],
+   "forbiddenStates": [],
+   "preconditions": [],
+   "postconditions": [],
+   "legalTransitions": [],
+   "illegalTransitions": [],
+   "failureBehavior": "reject without owner mutation",
+   "atomicity": "all-or-nothing across affected owners",
+   "inverseBehavior": "n/a",
+   "persistence": "v87 snapshot round-trip",
+   "migration": "version<87 rejected",
+   "lifecycle": "per-save",
+   "runtimeConsequences": [],
+   "uiConsequences": [],
+   "oracles": [
+    "settlement count==1 across repeat/reload/undrained"
+   ],
+   "requiredEvidenceSurfaces": [
+    "STATIC_SEMANTIC",
+    "DETERMINISTIC"
+   ],
+   "taxonomyIds": [
+    "TRN-12",
+    "TRN-06",
+    "PER-02"
+   ],
+   "status": "ACTIVE"
+  },
+  {
+   "kind": "invariant",
+   "id": "I-REALM-UNEQUIP",
+   "statement": "Realm-change clears equipped items before other mutations (all callers, QA-2026-09-02-001)",
+   "domain": "realm-progression",
+   "risk": "HIGH",
+   "sources": [
+    {
+     "path": "docs/qa/missions/beta-release-exhaustive-2026-09-29.md",
+     "symbolOrSection": "11",
+     "revision": "mission",
+     "basis": "USER"
+    }
+   ],
+   "owner": {
+    "path": "src/core/game/GameManagerRealmAdvanceOps.ts",
+    "symbolOrSection": "advance callers",
+    "revision": "f1049b5e",
+    "basis": "SOURCE"
+   },
+   "legalWriters": [
+    "src/core/game/GameManagerRealmAdvanceOps.ts"
+   ],
+   "legalReaders": [],
+   "projections": [],
+   "caches": [],
+   "validStates": [],
+   "forbiddenStates": [],
+   "preconditions": [],
+   "postconditions": [],
+   "legalTransitions": [],
+   "illegalTransitions": [],
+   "failureBehavior": "reject without owner mutation",
+   "atomicity": "all-or-nothing across affected owners",
+   "inverseBehavior": "n/a",
+   "persistence": "v87 snapshot round-trip",
+   "migration": "version<87 rejected",
+   "lifecycle": "per-save",
+   "runtimeConsequences": [],
+   "uiConsequences": [],
+   "oracles": [
+    "every realm-advance path->equipped=false before commit"
+   ],
+   "requiredEvidenceSurfaces": [
+    "STATIC_SEMANTIC",
+    "DETERMINISTIC"
+   ],
+   "taxonomyIds": [
+    "INV-09",
+    "CRS-06"
+   ],
+   "status": "ACTIVE"
+  },
+  {
+   "kind": "invariant",
+   "id": "I-HIDDEN-PREFIX",
+   "statement": "hiddenPerfection strict-prefix; later hidden completion requires earlier history; normal-breakthrough closure irreversible",
+   "domain": "hidden-lineage",
+   "risk": "CRITICAL",
+   "sources": [
+    {
+     "path": "docs/qa/missions/beta-release-exhaustive-2026-09-29.md",
+     "symbolOrSection": "12",
+     "revision": "mission",
+     "basis": "USER"
+    },
+    {
+     "path": "src/data",
+     "symbolOrSection": "hidden lineage defs",
+     "revision": "f1049b5e",
+     "basis": "SOURCE"
+    }
+   ],
+   "owner": {
+    "path": "src/core/cultivation",
+    "symbolOrSection": "hiddenPerfection owner",
+    "revision": "f1049b5e",
+    "basis": "SOURCE"
+   },
+   "legalWriters": [
+    "src/core/cultivation"
+   ],
+   "legalReaders": [],
+   "projections": [],
+   "caches": [],
+   "validStates": [],
+   "forbiddenStates": [
+    "reopen after closure",
+    "sparse record later realm",
+    "dup completion"
+   ],
+   "preconditions": [],
+   "postconditions": [],
+   "legalTransitions": [],
+   "illegalTransitions": [],
+   "failureBehavior": "reject without owner mutation",
+   "atomicity": "all-or-nothing across affected owners",
+   "inverseBehavior": "n/a",
+   "persistence": "v87 snapshot round-trip",
+   "migration": "version<87 rejected",
+   "lifecycle": "per-save",
+   "runtimeConsequences": [],
+   "uiConsequences": [],
+   "oracles": [],
+   "requiredEvidenceSurfaces": [
+    "STATIC_SEMANTIC",
+    "DETERMINISTIC"
+   ],
+   "taxonomyIds": [
+    "STA-02",
+    "STA-07",
+    "TRN-06"
+   ],
+   "status": "ACTIVE"
+  },
+  {
+   "kind": "invariant",
+   "id": "I-HIDDEN-REWARD-ONCE",
+   "statement": "Historical hidden completion rewards survive but never re-grant",
+   "domain": "hidden-lineage",
+   "risk": "HIGH",
+   "sources": [
+    {
+     "path": "docs/qa/missions/beta-release-exhaustive-2026-09-29.md",
+     "symbolOrSection": "12",
+     "revision": "mission",
+     "basis": "USER"
+    }
+   ],
+   "owner": {
+    "path": "src/core/cultivation",
+    "symbolOrSection": "hidden reward application",
+    "revision": "f1049b5e",
+    "basis": "SOURCE"
+   },
+   "legalWriters": [
+    "src/core/cultivation"
+   ],
+   "legalReaders": [],
+   "projections": [],
+   "caches": [],
+   "validStates": [],
+   "forbiddenStates": [],
+   "preconditions": [],
+   "postconditions": [],
+   "legalTransitions": [],
+   "illegalTransitions": [],
+   "failureBehavior": "reject without owner mutation",
+   "atomicity": "all-or-nothing across affected owners",
+   "inverseBehavior": "n/a",
+   "persistence": "v87 snapshot round-trip",
+   "migration": "version<87 rejected",
+   "lifecycle": "per-save",
+   "runtimeConsequences": [],
+   "uiConsequences": [],
+   "oracles": [],
+   "requiredEvidenceSurfaces": [
+    "STATIC_SEMANTIC",
+    "DETERMINISTIC"
+   ],
+   "taxonomyIds": [
+    "TRN-12",
+    "ECO-01"
+   ],
+   "status": "ACTIVE"
+  },
+  {
+   "kind": "invariant",
+   "id": "I-NGHICH-PITY",
+   "statement": "Nghich Chu Thien: per-level pity, bounded RNG, exact debit per attempt, post-completion attempt rejected, pity survives reload",
+   "domain": "hidden-lineage",
+   "risk": "HIGH",
+   "sources": [
+    {
+     "path": "docs/qa/missions/beta-release-exhaustive-2026-09-29.md",
+     "symbolOrSection": "13",
+     "revision": "mission",
+     "basis": "USER"
+    }
+   ],
+   "owner": {
+    "path": "src/core/cultivation",
+    "symbolOrSection": "nghichChuThien",
+    "revision": "f1049b5e",
+    "basis": "SOURCE"
+   },
+   "legalWriters": [
+    "src/core/cultivation"
+   ],
+   "legalReaders": [],
+   "projections": [],
+   "caches": [],
+   "validStates": [],
+   "forbiddenStates": [],
+   "preconditions": [],
+   "postconditions": [],
+   "legalTransitions": [],
+   "illegalTransitions": [],
+   "failureBehavior": "reject without owner mutation",
+   "atomicity": "all-or-nothing across affected owners",
+   "inverseBehavior": "n/a",
+   "persistence": "v87 snapshot round-trip",
+   "migration": "version<87 rejected",
+   "lifecycle": "per-save",
+   "runtimeConsequences": [],
+   "uiConsequences": [],
+   "oracles": [],
+   "requiredEvidenceSurfaces": [
+    "STATIC_SEMANTIC",
+    "DETERMINISTIC"
+   ],
+   "taxonomyIds": [
+    "ECO-03",
+    "ROB-10",
+    "TRN-06"
+   ],
+   "status": "ACTIVE"
+  },
+  {
+   "kind": "invariant",
+   "id": "I-BODY-OWNER",
+   "statement": "BodyProgression canonical cross-realm owner; chapters ordered; transactions atomic; exact resource debit",
+   "domain": "body-progression",
+   "risk": "HIGH",
+   "sources": [
+    {
+     "path": "docs/qa/missions/beta-release-exhaustive-2026-09-29.md",
+     "symbolOrSection": "14",
+     "revision": "mission",
+     "basis": "USER"
+    }
+   ],
+   "owner": {
+    "path": "src/core/player",
+    "symbolOrSection": "BodyProgression",
+    "revision": "f1049b5e",
+    "basis": "SOURCE"
+   },
+   "legalWriters": [
+    "src/core/player"
+   ],
+   "legalReaders": [],
+   "projections": [],
+   "caches": [],
+   "validStates": [],
+   "forbiddenStates": [
+    "second engine writing body state",
+    "partial debit"
+   ],
+   "preconditions": [],
+   "postconditions": [],
+   "legalTransitions": [],
+   "illegalTransitions": [],
+   "failureBehavior": "reject without owner mutation",
+   "atomicity": "all-or-nothing across affected owners",
+   "inverseBehavior": "n/a",
+   "persistence": "v87 snapshot round-trip",
+   "migration": "version<87 rejected",
+   "lifecycle": "per-save",
+   "runtimeConsequences": [],
+   "uiConsequences": [],
+   "oracles": [
+    "writer census",
+    "0/req-1/exact/req+1 matrix"
+   ],
+   "requiredEvidenceSurfaces": [
+    "STATIC_SEMANTIC",
+    "DETERMINISTIC"
+   ],
+   "taxonomyIds": [
+    "AUT-01",
+    "AUT-02",
+    "ECO-05"
+   ],
+   "status": "ACTIVE"
+  },
+  {
+   "kind": "invariant",
+   "id": "I-ESSENCE-SUBST",
+   "statement": "Higher-grade essence substitutes downward only; no upward conversion; mixed-stack payment exact",
+   "domain": "body-progression",
+   "risk": "HIGH",
+   "sources": [
+    {
+     "path": "docs/qa/missions/beta-release-exhaustive-2026-09-29.md",
+     "symbolOrSection": "15",
+     "revision": "mission",
+     "basis": "USER"
+    }
+   ],
+   "owner": {
+    "path": "src/core",
+    "symbolOrSection": "essence payment path",
+    "revision": "f1049b5e",
+    "basis": "SOURCE"
+   },
+   "legalWriters": [
+    "src/core"
+   ],
+   "legalReaders": [],
+   "projections": [],
+   "caches": [],
+   "validStates": [],
+   "forbiddenStates": [],
+   "preconditions": [],
+   "postconditions": [],
+   "legalTransitions": [],
+   "illegalTransitions": [],
+   "failureBehavior": "reject without owner mutation",
+   "atomicity": "all-or-nothing across affected owners",
+   "inverseBehavior": "n/a",
+   "persistence": "v87 snapshot round-trip",
+   "migration": "version<87 rejected",
+   "lifecycle": "per-save",
+   "runtimeConsequences": [],
+   "uiConsequences": [],
+   "oracles": [],
+   "requiredEvidenceSurfaces": [
+    "STATIC_SEMANTIC",
+    "DETERMINISTIC"
+   ],
+   "taxonomyIds": [
+    "ECO-01",
+    "ECO-05"
+   ],
+   "status": "ACTIVE"
+  },
+  {
+   "kind": "invariant",
+   "id": "I-PHYSIQUE-ONCE",
+   "statement": "Physique transformation exactly once at canonical checkpoint; never twice across reload/reconstruction/late completion",
+   "domain": "body-progression",
+   "risk": "HIGH",
+   "sources": [
+    {
+     "path": "docs/qa/missions/beta-release-exhaustive-2026-09-29.md",
+     "symbolOrSection": "15",
+     "revision": "mission",
+     "basis": "USER"
+    }
+   ],
+   "owner": {
+    "path": "src/core/player",
+    "symbolOrSection": "physique transform",
+    "revision": "f1049b5e",
+    "basis": "SOURCE"
+   },
+   "legalWriters": [
+    "src/core/player"
+   ],
+   "legalReaders": [],
+   "projections": [],
+   "caches": [],
+   "validStates": [],
+   "forbiddenStates": [],
+   "preconditions": [],
+   "postconditions": [],
+   "legalTransitions": [],
+   "illegalTransitions": [],
+   "failureBehavior": "reject without owner mutation",
+   "atomicity": "all-or-nothing across affected owners",
+   "inverseBehavior": "n/a",
+   "persistence": "v87 snapshot round-trip",
+   "migration": "version<87 rejected",
+   "lifecycle": "per-save",
+   "runtimeConsequences": [],
+   "uiConsequences": [],
+   "oracles": [
+    "transform count==1 across restore"
+   ],
+   "requiredEvidenceSurfaces": [
+    "STATIC_SEMANTIC",
+    "DETERMINISTIC"
+   ],
+   "taxonomyIds": [
+    "TRN-06",
+    "PER-02"
+   ],
+   "status": "ACTIVE"
+  },
+  {
+   "kind": "invariant",
+   "id": "I-TECH-MASTERY",
+   "statement": "Technique mastery only from authorized victory settlement - never defeat/abort/visual/dup settlement/teardown/double drain",
+   "domain": "technique",
+   "risk": "HIGH",
+   "sources": [
+    {
+     "path": "docs/qa/missions/beta-release-exhaustive-2026-09-29.md",
+     "symbolOrSection": "16",
+     "revision": "mission",
+     "basis": "USER"
+    },
+    {
+     "path": "src/core/game",
+     "symbolOrSection": "mastery grant callers",
+     "revision": "f1049b5e",
+     "basis": "SOURCE"
+    }
+   ],
+   "owner": {
+    "path": "src/core/technique",
+    "symbolOrSection": "TechniqueSystem+Manager",
+    "revision": "f1049b5e",
+    "basis": "SOURCE"
+   },
+   "legalWriters": [
+    "src/core/technique"
+   ],
+   "legalReaders": [],
+   "projections": [],
+   "caches": [],
+   "validStates": [],
+   "forbiddenStates": [],
+   "preconditions": [],
+   "postconditions": [],
+   "legalTransitions": [],
+   "illegalTransitions": [],
+   "failureBehavior": "reject without owner mutation",
+   "atomicity": "all-or-nothing across affected owners",
+   "inverseBehavior": "n/a",
+   "persistence": "v87 snapshot round-trip",
+   "migration": "version<87 rejected",
+   "lifecycle": "per-save",
+   "runtimeConsequences": [],
+   "uiConsequences": [],
+   "oracles": [
+    "mastery delta only on victory; all grant callers enumerated"
+   ],
+   "requiredEvidenceSurfaces": [
+    "STATIC_SEMANTIC",
+    "DETERMINISTIC"
+   ],
+   "taxonomyIds": [
+    "AUT-08",
+    "TRN-12"
+   ],
+   "status": "ACTIVE"
+  },
+  {
+   "kind": "invariant",
+   "id": "I-TECH-MODEL",
+   "statement": "Technique grade/rank(0..18)/mastery/quality/gradeHistory canonical; malformed history rejected; realm ceiling; no arbitrary quality mutation",
+   "domain": "technique",
+   "risk": "HIGH",
+   "sources": [
+    {
+     "path": "docs/qa/missions/beta-release-exhaustive-2026-09-29.md",
+     "symbolOrSection": "16",
+     "revision": "mission",
+     "basis": "USER"
+    }
+   ],
+   "owner": {
+    "path": "src/core/technique",
+    "symbolOrSection": "Technique model",
+    "revision": "f1049b5e",
+    "basis": "SOURCE"
+   },
+   "legalWriters": [
+    "src/core/technique"
+   ],
+   "legalReaders": [],
+   "projections": [],
+   "caches": [],
+   "validStates": [],
+   "forbiddenStates": [],
+   "preconditions": [],
+   "postconditions": [],
+   "legalTransitions": [],
+   "illegalTransitions": [],
+   "failureBehavior": "reject without owner mutation",
+   "atomicity": "all-or-nothing across affected owners",
+   "inverseBehavior": "n/a",
+   "persistence": "v87 snapshot round-trip",
+   "migration": "version<87 rejected",
+   "lifecycle": "per-save",
+   "runtimeConsequences": [],
+   "uiConsequences": [],
+   "oracles": [],
+   "requiredEvidenceSurfaces": [
+    "STATIC_SEMANTIC",
+    "DETERMINISTIC"
+   ],
+   "taxonomyIds": [
+    "STA-02",
+    "ROB-03"
+   ],
+   "status": "ACTIVE"
+  },
+  {
+   "kind": "invariant",
+   "id": "I-NODE-CORELEVEL",
+   "statement": "Core node level is THE skill level authority; no skillLevels/independent Skill.level resurrected; level delta reaches real runtime effect",
+   "domain": "nodes-skills",
+   "risk": "CRITICAL",
+   "sources": [
+    {
+     "path": "docs/qa/missions/beta-release-exhaustive-2026-09-29.md",
+     "symbolOrSection": "17",
+     "revision": "mission",
+     "basis": "USER"
+    },
+    {
+     "path": "src/core/skill",
+     "symbolOrSection": "skill resolution",
+     "revision": "f1049b5e",
+     "basis": "SOURCE"
+    }
+   ],
+   "owner": {
+    "path": "src/core/progression",
+    "symbolOrSection": "NodeSystem core levels",
+    "revision": "f1049b5e",
+    "basis": "SOURCE"
+   },
+   "legalWriters": [
+    "src/core/progression"
+   ],
+   "legalReaders": [],
+   "projections": [],
+   "caches": [],
+   "validStates": [],
+   "forbiddenStates": [
+    "skillLevels honored on restore",
+    "second level authority"
+   ],
+   "preconditions": [],
+   "postconditions": [],
+   "legalTransitions": [],
+   "illegalTransitions": [],
+   "failureBehavior": "reject without owner mutation",
+   "atomicity": "all-or-nothing across affected owners",
+   "inverseBehavior": "n/a",
+   "persistence": "v87 snapshot round-trip",
+   "migration": "version<87 rejected",
+   "lifecycle": "per-save",
+   "runtimeConsequences": [],
+   "uiConsequences": [],
+   "oracles": [
+    "node+1 -> measurable effect change per Beta skill"
+   ],
+   "requiredEvidenceSurfaces": [
+    "STATIC_SEMANTIC",
+    "DETERMINISTIC"
+   ],
+   "taxonomyIds": [
+    "AUT-03",
+    "CBT-02",
+    "PER-07"
+   ],
+   "status": "ACTIVE"
+  },
+  {
+   "kind": "invariant",
+   "id": "I-NODE-PREREQ",
+   "statement": "Node purchase/upgrade enforces prereq+cost+max atomically; grant/revoke inverse contract; rewardOnly never purchasable",
+   "domain": "nodes-skills",
+   "risk": "HIGH",
+   "sources": [
+    {
+     "path": "docs/qa/missions/beta-release-exhaustive-2026-09-29.md",
+     "symbolOrSection": "18",
+     "revision": "mission",
+     "basis": "USER"
+    }
+   ],
+   "owner": {
+    "path": "src/core/progression",
+    "symbolOrSection": "NodeSystem purchase",
+    "revision": "f1049b5e",
+    "basis": "SOURCE"
+   },
+   "legalWriters": [
+    "src/core/progression"
+   ],
+   "legalReaders": [],
+   "projections": [],
+   "caches": [],
+   "validStates": [],
+   "forbiddenStates": [],
+   "preconditions": [],
+   "postconditions": [],
+   "legalTransitions": [],
+   "illegalTransitions": [],
+   "failureBehavior": "reject without owner mutation",
+   "atomicity": "all-or-nothing across affected owners",
+   "inverseBehavior": "n/a",
+   "persistence": "v87 snapshot round-trip",
+   "migration": "version<87 rejected",
+   "lifecycle": "per-save",
+   "runtimeConsequences": [],
+   "uiConsequences": [],
+   "oracles": [
+    "A-without-B atomic reject",
+    "repeat purchase",
+    "rewardOnly purchase attempt"
+   ],
+   "requiredEvidenceSurfaces": [
+    "STATIC_SEMANTIC",
+    "DETERMINISTIC"
+   ],
+   "taxonomyIds": [
+    "TRN-01",
+    "TRN-11",
+    "INV-05"
+   ],
+   "status": "ACTIVE"
+  }
+ ]
+}

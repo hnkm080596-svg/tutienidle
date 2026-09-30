@@ -4,16 +4,27 @@
 // 2026-08-26 — đổi sang OVERRIDE qua localStorage thay vì hằng số compile-
 // time: người chơi/lead cần BẬT TẮT nhanh khi test chức năng building
 // (xây miễn phí mọi công trình) mà không phải build lại. Cách bật:
-//   localStorage.setItem('dev.testModeUnlockAll', '1')  → reload trang
+//   localStorage.setItem('dev.testModeUnlockAll', '1')  -> reload trang
 // Tắt: removeItem('dev.testModeUnlockAll') hoặc set giá trị khác '1'.
 // Mặc định FALSE cho bản chạy thực tế.
 //
 // 2026-08-28 (review 2026-08-28 bug #11) — cờ này CHỈ còn hiệu lực trong
 // dev build: production build mà đọc được flag từ localStorage sẽ bypass
 // realm gate + chi phí vật liệu, xây mọi công trình miễn phí.
+//
+// B1.9a (beta-final PR3) - dev tools are explicit MOCK-only: under
+// VITE_BACKEND_MODE=supabase a free build/write would land in the
+// remote-committed save and poison the authoritative row. Reads the env
+// directly (core must not import the service composition root); the
+// resolver's development default is mock, so an unset value still
+// enables the flag in dev.
 
 export function isTestModeUnlockAll(): boolean {
   if (!import.meta.env.DEV) {
+    return false
+  }
+
+  if (import.meta.env.VITE_BACKEND_MODE === 'supabase') {
     return false
   }
 

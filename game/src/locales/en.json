@@ -643,13 +643,15 @@
         "reload": "Reload (from last save)",
         "export": "Export Save (.json)",
         "import": "Import Save",
-        "reset": "Delete Save & Start New"
+        "reset": "Delete Save & Start New",
+        "resetCloud": "Reload From Cloud"
       },
       "notifications": {
         "saved": "Progress saved",
         "saveFailedShort": "Save failed",
         "saveFailed": "Could not save — storage is full or blocked.",
-        "exportFailed": "Could not export save — writing data failed."
+        "exportFailed": "Could not export save — writing data failed.",
+        "importValidatedRemote": "Save file is valid — normalized copy exported. Server save unchanged."
       },
       "hints": {
         "savedAt": "Saved at {time}"
@@ -660,7 +662,10 @@
         "importTitle": "Import Save",
         "importBody": "Importing this save will REPLACE current progress (1 backup copy is made before overwriting). Continue?",
         "resetTitle": "Delete Save",
-        "resetBody": "Delete all progress and start a new character? Remember to \"Export Save\" first if you haven't — this action cannot be undone."
+        "resetBody": "Delete all progress and start a new character? Remember to \"Export Save\" first if you haven't — this action cannot be undone.",
+        "resetCloudTitle": "Reload From Cloud",
+        "resetCloudBody": "Clear the local cache and reload progress from the server? The cloud save is NOT deleted — the server version will be restored.",
+        "importBodyRemote": "Cloud mode: the imported file is only VALIDATED and a normalized copy is exported — the server save is not replaced. Continue?"
       },
       "errors": {
         "invalidSaveFile": "Invalid save file."
@@ -673,7 +678,18 @@
         "save": "Save Data",
         "saveAria": "Save data",
         "language": "Language",
-        "languageAria": "Language"
+        "languageAria": "Language",
+        "build": "Build",
+        "buildAria": "Build information"
+      },
+      "build": {
+        "version": "Version",
+        "build": "Build",
+        "commit": "Commit",
+        "schema": "Save schema",
+        "environment": "Environment",
+        "channel": "Channel",
+        "builtAt": "Built at"
       },
       "audio": {
         "on": "On",
@@ -1388,7 +1404,8 @@
   },
   "save": {
     "conflict": "Save was changed by another session.",
-    "createFailed": "Character creation failed — initialization did not complete."
+    "createFailed": "Character creation failed — initialization did not complete.",
+    "characterDeleted": "Character was deleted on the server — this session cannot continue."
   },
   "hidden": {
     "mortal": {
@@ -1422,11 +1439,15 @@
     "app": {
       "title": "An error occurred",
       "close": "Close",
-      "reload": "Reload Page"
+      "reload": "Reload Page",
+      "build": "{product} {version} · build {build} · {sha} · {env}"
     },
     "boot": {
       "title": "Unable to start",
       "backToAuth": "Back to sign in"
+    },
+    "backendConfig": {
+      "title": "Invalid backend configuration"
     }
   },
   "toasts": {
@@ -1489,16 +1510,20 @@
     "actions": {
       "export": "Download Save (.json)",
       "import": "Import Another Save",
-      "reset": "Delete & Start Over"
+      "reset": "Delete & Start Over",
+      "resetCloud": "Reload From Cloud"
     },
     "confirm": {
       "resetTitle": "Delete & Start Over",
       "resetBody": "Delete the current save and start a new character? Download your save first if you have not — this cannot be undone.",
       "importFailedTitle": "Import Failed",
-      "importFailedBody": "The save file is not valid."
+      "importFailedBody": "The save file is not valid.",
+      "resetCloudTitle": "Reload From Cloud",
+      "resetCloudBody": "Clear the local cache and reload from the server? The cloud save is not deleted — if the server data is still corrupt, this screen will return."
     },
     "notify": {
-      "deleteFailed": "Could not delete the save — the browser is refusing storage access."
+      "deleteFailed": "Could not delete the save — the browser is refusing storage access.",
+      "importValidatedRemote": "Save file is valid — normalized copy exported. Server save unchanged."
     }
   }
 }

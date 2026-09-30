@@ -2,6 +2,7 @@ import { onBeforeUnmount, type Ref } from 'vue'
 import type { GameManager } from '../core/game/GameManager'
 import type { CloudSaveCoordinator } from '../services/cloudSave/CloudSaveCoordinator'
 import type { CloudSaveWriteResult } from '../services/cloudSave/CloudSaveService'
+import type { RemoteCharacterMetadata } from '../services/session/BackendStatus'
 import { ESSENCE_STREAM_ARRIVAL_EVENT } from '../core/battle/BattleEvents'
 import { TICK_INTERVAL_MS } from '../core/idle/SpeedSettings'
 import { i18n } from '@/i18n'
@@ -45,7 +46,7 @@ export interface UseAppLifecycleDeps {
     requireCharacter: () => void
     showAuth: () => void
   }
-  coordinator: Pick<CloudSaveCoordinator, 'load' | 'save' | 'reset'>
+  coordinator: Pick<CloudSaveCoordinator, 'load' | 'save' | 'reset' | 'capability'>
   player: {
     save: (gameManager: GameManager) => Promise<CloudSaveWriteResult>
     $state: object
@@ -81,14 +82,6 @@ export interface UseAppLifecycleDeps {
    * convention as the settings delete-save flow).
    */
   hardReset: () => void
-  /**
-   * Spec F8 - optional login-time remote save reconciliation. Invoked
-   * inside bootGame after boot.startSaveLoad() and before
-   * coordinator.load(), only when !createNewCharacter. A rejection is
-   * logged and boot proceeds on the local slot - remote unavailability
-   * must never block boot.
-   */
-  remoteSync?: () => Promise<unknown>
 }
 
 export interface BootOutcome {
@@ -99,8 +92,11 @@ export interface BootOptions {
   createNewCharacter: boolean
   /** Chạy khi restore save ok — grant skill/init UI phụ thuộc App (offline modal đã show trong composable). */
   onRestoreOk?: (offline: { elapsedSeconds: number; cultivation: number }) => void
-  /** Chạy khi tạo nhân vật mới — grant khởi đầu phụ thuộc App. */
-  onNewCharacter?: () => void
+  /** Runs when a new character enters - the starter grants owned by App.
+   *  Remote-authoritative CHARACTER_UNINITIALIZED carries the canonical
+   *  server metadata the starter snapshot must be rebuilt from (B1.4);
+   *  absent for the local/pending-payload path. */
+  onNewCharacter?: (metadata?: RemoteCharacterMetadata) => void | Promise<void>
 }
 
 export function useAppLifecycle(deps: UseAppLifecycleDeps) {
@@ -121,7 +117,6 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
     restoreGameSession,
     persistPlayer,
     onError,
-    remoteSync,
   } = deps
 
   let autosaveHandle: number | undefined
@@ -129,12 +124,12 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
   let saveInFlight = false
   let persistenceSuppressed = false
   let stopped = false
-  // B2 (audit T1-8 follow-up) — starter grants commit to runtime state
+  // B2 (audit T1-8 follow-up) - starter grants commit to runtime state
   // BEFORE the first save; if that save fails, the buildings/materials/
   // activePlayer already applied cannot be rolled back in memory. A
   // second createNewCharacter boot must reload instead of re-granting.
   let newCharacterGrantsApplied = false
-  // ARCH-013/L04 — boot generation. `stopAll()` bumps it, so every async
+  // ARCH-013/L04 - boot generation. `stopAll()` bumps it, so every async
   // continuation that captured the pre-stop value can tell it is stale and
   // must not write (restore, timers, route transitions) into a disposed
   // lifecycle. Same generation-fence idiom as useDynamicRegion /
@@ -216,7 +211,7 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
     // onUnmounted — và nó BẮT BUỘC phải chạy: Vue gọi onBeforeUnmount(stopAll)
     // TRƯỚC onUnmounted, nếu stopped chặn save thì "persist first so a
     // development reload cannot roll the player back" là dead code
-    // (review round 1 — ARCH-013/L04).
+    // (review round 1 - ARCH-013/L04).
     if (persistenceSuppressed || entryStage.value !== 'game' || saveInFlight) {
       return
     }
@@ -260,31 +255,27 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
 
       boot.startSaveLoad()
 
-      if (!createNewCharacter && remoteSync) {
-        try {
-          await remoteSync()
-        } catch (error: unknown) {
-          // Remote reconciliation must never block boot - the local slot
-          // is the authority for loadGame() either way.
-          console.warn('[boot] remote save sync failed; continuing on local slot', error)
-        }
-      }
+      const remoteAuthoritative = coordinator.capability === 'remote-authoritative'
 
-      // ARCH-013 fence re-checked BEFORE the load: loadGame() itself has
-      // side effects (it consumes the one-shot import-handoff marker
-      // even on a byte mismatch), so a boot made stale mid-remoteSync
-      // must not pay for a disposed lifecycle.
+      // ARCH-013 fence re-checked BEFORE the load: the local load path
+      // has side effects (it consumes the one-shot import-handoff marker
+      // even on a byte mismatch), so a boot made stale must not pay for
+      // a disposed lifecycle.
       if (bootGeneration !== lifecycleGeneration) {
         return { status: 'skipped' }
       }
 
-      // Nhân vật mới reset revision về 0 khớp storage (deleteSave đã xoá
-      // revision key) — tránh CAS-fail save đầu tiên.
-      const loaded = createNewCharacter
+      // Local mode keeps the synthetic empty shortcut for new characters
+      // (deleteSave already cleared the slot; there is no row to read).
+      // Remote-authoritative mode always performs the authoritative
+      // load: after create_character it returns CHARACTER_UNINITIALIZED
+      // carrying the canonical metadata + server checkpoint the
+      // revision-0 write requires.
+      const loaded = createNewCharacter && !remoteAuthoritative
         ? (coordinator.reset(), await Promise.resolve({ status: 'empty' as const, revision: 0 as const }))
         : await coordinator.load()
 
-      // ARCH-013/L04 generation fence — spans EVERY status branch below:
+      // ARCH-013/L04 generation fence - spans EVERY status branch below:
       // 'ok' would restore/start/enter, but the failure branches are route
       // transitions too (boot.fail -> 'error', requireCharacter ->
       // 'character'), and onError/saveIssue.report write UI state into a
@@ -300,12 +291,33 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
         return { status: 'failed' }
       }
 
+      if (loaded.status === 'deleted') {
+        // Terminal remote state (B1.10) - the character row is
+        // soft-deleted; no in-client recovery path exists, so this
+        // surfaces as a plain boot failure, not the recovery surface.
+        onError(i18n.global.t('save.characterDeleted'))
+        boot.fail()
+        return { status: 'failed' }
+      }
+
       if (loaded.status === 'incompatible' || loaded.status === 'corrupted') {
         saveIssue.report(
           loaded.status,
           'raw' in loaded && typeof loaded.raw === 'string' ? loaded.raw : '',
           loaded.status === 'incompatible' && 'foundVersion' in loaded ? loaded.foundVersion : undefined,
         )
+        boot.fail()
+        return { status: 'failed' }
+      }
+
+      if (loaded.status === 'pending-conflict' || loaded.status === 'pending-quarantined') {
+        // B1-C - a durable pending mutation could not resolve forward:
+        // genuine CAS divergence (record retained in the journal) or a
+        // corrupt/uncommittable record (parked in quarantine). The
+        // pending payload bytes route through the same export/delete
+        // recovery surface as a corrupted save; deleteSave drops the
+        // envelope keys so a resolved pending never wedges the next boot.
+        saveIssue.report('corrupted', loaded.pendingRaw)
         boot.fail()
         return { status: 'failed' }
       }
@@ -346,19 +358,33 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
 
         onRestoreOk?.(offline)
       } else {
+        // Dirty-transaction guard, checked for EVERY grant-path entry -
+        // not only createNewCharacter: remote CHARACTER_UNINITIALIZED
+        // reaches this branch on a plain boot(false) retry too (the row
+        // still has no save). Re-running grants over the partially or
+        // fully granted managers would duplicate buildings/materials and
+        // commit the doubled state, so a repeat resolves to a reload.
+        if (newCharacterGrantsApplied) {
+          deps.hardReset()
+          return { status: 'skipped' }
+        }
+
         // Mark the transaction dirty BEFORE the callback runs
         // (Mission B audit): the callback drives non-idempotent grants
         // across several mutable authorities. A mid-grant throw leaves a
-        // partially-mutated runtime — the flag must already be set so any
+        // partially-mutated runtime - the flag must already be set so any
         // later retry takes the dirty-transaction branch (hardReset)
         // instead of re-running grants on top of the partial state.
         newCharacterGrantsApplied = true
 
         try {
-          // Await even though the type is () => void: a promise-returning
-          // callback is silently assignable to it, and an async rejection
-          // must land in this same catch rather than escaping bootGame.
-          await onNewCharacter?.()
+          // Remote CHARACTER_UNINITIALIZED hands the canonical server
+          // metadata down so exactly one starter snapshot is rebuilt -
+          // never a reroll (B1.4). Local/mock creation paths carry no
+          // metadata; App falls back to the pending creation payload.
+          // Await even though the signature permits void: an async
+          // rejection must land in this same catch.
+          await onNewCharacter?.(loaded.status === 'uninitialized' ? loaded.character : undefined)
         } catch (error: unknown) {
           // Same visible-failure contract as a throwing first save: a
           // grant-phase throw must resolve through boot.fail()/onError,
@@ -376,7 +402,7 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
           return { status: 'failed' }
         }
 
-        // Audit T1-8 fix — the first durable save is INSIDE the boot
+        // Audit T1-8 fix - the first durable save is INSIDE the boot
         // transaction: a new character must not reach a ticking runtime
         // until the write commits. Previously App.vue saved AFTER boot
         // returned 'entered', so a failed/conflicted write left the tick

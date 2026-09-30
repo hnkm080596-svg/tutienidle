@@ -1,0 +1,83 @@
+{
+  "phase": "INTAKE",
+  "request": {
+    "runId": "beta-release-2026-09-29",
+    "productRoot": "..",
+    "task": "Beta release-readiness exhaustive audit of literal master HEAD f1049b5e42757f14aebee18bab3569dc43c37d09 (checked out as qa/beta-2026-09-29). Approval object: complete aggregate Beta repository state, ceiling = Foundation Establishment. Mission brief: game/docs/qa/missions/beta-release-exhaustive-2026-09-29.md (58 sections). Deep adversarial mode per protocol; not a diff-scoped review.",
+    "authorizedRepairs": [
+      "game/src/",
+      "game/tests/",
+      "game/scripts/",
+      "game/supabase/",
+      "game/locales/",
+      "game/electron/",
+      "game/*.config.*",
+      "game/package.json"
+    ],
+    "nonGoals": [
+      "gameplay redesign or rebalance tuning",
+      "post-Beta content activation (Artifact stays deferred)",
+      "new features",
+      "repairing pre-existing failures unrelated to Beta player correctness without explicit adjudication"
+    ],
+    "requiredReadiness": false,
+    "budget": "1 coordinator + isolated blind reviewers as protocol requires (platform cap 5 concurrent); no external review transport",
+    "priorEvidence": [],
+    "contractPaths": [
+      "AGENTS.md",
+      "game/CLAUDE.md",
+      "game/docs/qa/protocol/README.md",
+      "game/docs/qa/protocol/agent-instructions.md",
+      "game/docs/qa/protocol/defect-taxonomy.md",
+      "game/docs/qa/protocol/ledger-schema.md",
+      "game/docs/qa/protocol/qualification.md"
+    ],
+    "attackModelPath": "attack-model.json",
+    "requiredDomains": [
+      "creation-auth",
+      "save-cloud",
+      "realm-progression",
+      "hidden-lineage",
+      "body-progression",
+      "technique",
+      "nodes-skills",
+      "six-ways",
+      "combat-core",
+      "impact-sync",
+      "buffs-reactions",
+      "stats-vitals",
+      "talents",
+      "inventory-equipment",
+      "economy-production",
+      "stages-drops",
+      "idle-offline",
+      "companions-formation",
+      "artifact-negative",
+      "quests-ui",
+      "runtime-phaser",
+      "audio",
+      "a11y-i18n",
+      "lifecycle",
+      "registries-data",
+      "test-quality"
+    ],
+    "extraExclude": [
+      "game/docs/qa/",
+      "game/docs/c2c/",
+      "game/docs/p7/",
+      "game/docs/superpowers/",
+      ".c2c/",
+      ".agents/",
+      ".claude/",
+      ".devin/",
+      ".opencode/",
+      "game/play-*.mjs",
+      "game/probe-*.mjs",
+      "game/re-*.mjs",
+      "game/verify-*.mjs",
+      "game/reaudit.mjs",
+      "game/*.png",
+      "game/play-audit-shots/"
+    ]
+  }
+}

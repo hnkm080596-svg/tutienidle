@@ -4,7 +4,11 @@ import { usePlayerStore } from './stores/player'
 import { useUiStore } from './stores/ui'
 import { GameClock, DEFAULT_MAX_OFFLINE_SECONDS } from './core/idle/GameClock'
 import { GameManager } from './core/game/GameManager'
-import { applyCreationProfile, bootstrapEarlyGamePlayer } from './core/game/EarlyGameBootstrap'
+import {
+  initializeCharacter,
+  initializationMetadataFromRemote,
+  type CharacterInitializationMetadata,
+} from './services/character/initializeCharacter'
 import { GAME_MANAGER_KEY, STATE_VERSION_KEY, BUMP_STATE_KEY } from './composables/useGameState'
 import {
   PHASER_SCENE_ADAPTER_KEY,
@@ -74,7 +78,8 @@ import { ALL_PROGRESSION_NODES } from './data/progression/ProgressionNodeCatalog
 import { QUESTS } from './data/quest/quests'
 import { isCultivationPoseActive } from './core/cultivation/CultivationPose'
 import { useBootFlow } from './composables/useBootFlow'
-import { cloudSaveCoordinator, remoteSaveSync } from './services/cloudSave/CloudSaveServiceFactory'
+import { cloudSaveCoordinator } from './services/cloudSave/CloudSaveServiceFactory'
+import { backendBundle, backendFatal } from './services/backend/backendBundle'
 import {
   deleteSave,
   restoreGameSession,
@@ -427,9 +432,6 @@ const lifecycle = useAppLifecycle({
   // roll its starter grants back in memory; the composable calls this to
   // recover on a clean process (same convention as resetSaveFromSettings).
   hardReset: () => window.location.reload(),
-  // Spec F8 - newest-wins remote reconciliation before the local load;
-  // undefined when Supabase isn't configured (fully local boot).
-  remoteSync: remoteSaveSync,
 })
 
 // Canh bao autosave fail chi 1 lan cho moi chuoi fail - autosave chay
@@ -588,50 +590,20 @@ async function bootGame(createNewCharacter = false): Promise<BootOutcome> {
         }
       }
     },
-    onNewCharacter: () => {
-      // Nhan vat moi: hoc san skill + grant khoi dau.
-      // P7-M3 - KHONG con tam phap khoi dau: Pham Nhan khong giu
-      // canonical technique (tu_linh_quyet da retire); Way cap tai
-      // initiation ritual. BETA-CREATION: the mortal basic pick arrives
-      // from the creation screen via pendingCreationPick and is written
-      // inside the shared bootstrap seam (never a silent tram default).
-      const pick = pendingCreationPick
-      pendingCreationPick = undefined
-      if (pick === undefined) {
+    onNewCharacter: (metadata) => {
+      // Nhan vat moi / CHARACTER_UNINITIALIZED: mot starter snapshot
+      // DUY NHAT tu canonical metadata (server row thang nhat hon; nguoc
+      // lai pending creation payload cho mock/local).
+      const resolved = metadata ? initializationMetadataFromRemote(metadata) : pendingCreationMetadata
+      pendingCreationMetadata = undefined
+      if (resolved === undefined) {
         throw new Error('onNewCharacter ran without a creation pick')
       }
-      bootstrapEarlyGamePlayer(gameManager, player.$state, pick)
-
-      for (const buildingId of ['teleport_array', 'gathering_outpost']) {
-        const instance = {
-          instanceId: crypto.randomUUID(),
-          buildingId,
-          level: 1,
-          lastCollectedAt: clock.nowSeconds(),
-        }
-
-        gameManager.buildingManager.add(instance)
-        gameManager.buildingOps.refreshAutoWorkerCapacity(player.$state, instance)
-      }
-
-      // Starter pack du xay 3 base (Linh Tuyen/Khi Duong/Dan Phong) -
-      // id theo truc tuoi thong nhat (gp123 6E C2).
-      for (const [materialId, amount] of [
-        ['mortal_wood_decade', 15],
-        ['mortal_ore_decade', 6],
-      ] as const) {
-        if (gameManager.materialRegistry.has(materialId)) {
-          gameManager.materialBag.add(gameManager.materialRegistry.get(materialId), amount)
-        }
-      }
-
-      // the 3 Thanh Van sources: autoRestart on - sites start producing once
-      // workers are allocated (Mission D: workers-as-fuel, no manual start).
-      for (const definition of gameManager.productionSystem.getSiteDefinitions()) {
-        gameManager.buildingOps.setProductionAutoRestart(definition.siteId, true)
-      }
-
-      gameManager.setActivePlayer(player.$state)
+      initializeCharacter(resolved, {
+        gameManager,
+        player: player.$state,
+        nowSeconds: () => clock.nowSeconds(),
+      })
     },
   })
 
@@ -645,8 +617,12 @@ async function bootGame(createNewCharacter = false): Promise<BootOutcome> {
 
     // Dev-only console helpers (spec v3 B5) - registered here so BOTH
     // new-character and restored-save entries get them; the function
-    // itself early-returns outside import.meta.env.DEV.
-    registerEnemySpawnDebug({ gameManager, player: player.$state })
+    // itself early-returns outside import.meta.env.DEV. B1.9a - mock
+    // bundle only: bypassing realm/cost gates inside a remote-committed
+    // save would poison the authoritative row.
+    if (backendBundle.mode === 'mock') {
+      registerEnemySpawnDebug({ gameManager, player: player.$state })
+    }
 
     isBooted.value = true
     lifecycle.startAutosave()
@@ -658,17 +634,24 @@ async function bootGame(createNewCharacter = false): Promise<BootOutcome> {
 function onAuthenticated(session: AuthSession) {
   // Spec F8 - bind the save slot BEFORE boot loads: every storage path
   // resolves through resolveSaveKey() from this point on.
+  // B1-C - bump the save generation FIRST: an in-flight write from the
+  // previous session/account cannot touch the journal or cache once it
+  // resolves (reset/logout/user-switch fence), and queued writers drain
+  // instead of committing under the new account.
+  cloudSaveCoordinator.reset()
   setSaveAccountId(accountIdForSession(session))
   void bootGame(false)
 }
 
-// BETA-CREATION - the creation screen's skill pick is consumed by
-// onNewCharacter inside the boot transaction (learn precedes pick write).
-let pendingCreationPick: string | undefined
+// BETA-CREATION - the creation payload (or the canonical character the
+// RPC committed) is consumed by onNewCharacter inside the boot
+// transaction (learn precedes pick write).
+let pendingCreationMetadata: CharacterInitializationMetadata | undefined
 
 async function onCharacterCreated(payload: CharacterCreationPayload) {
-  applyCreationProfile(player.$state, payload)
-  pendingCreationPick = payload.mortalBasicSkillId
+  pendingCreationMetadata = payload.character
+    ? initializationMetadataFromRemote(payload.character)
+    : { name: payload.name, talentIds: payload.talentIds, mortalBasicSkillId: payload.mortalBasicSkillId }
 
   // The first durable save now lives inside the boot transaction
   // (useAppLifecycle.bootGame): 'entered' is only returned after the write
@@ -680,6 +663,16 @@ async function onCharacterCreated(payload: CharacterCreationPayload) {
 
 onMounted(() => {
   window.addEventListener(SAVE_RESET_REQUEST_EVENT, resetSaveFromSettings)
+
+  // B1.2 - a fatal backend composition (release build without an
+  // explicit working VITE_BACKEND_MODE, mock in release, or supabase
+  // without credentials) lands on the configuration surface BEFORE
+  // auth; every service in the bundle is fail-closed as a backstop.
+  if (backendFatal) {
+    bootError.value = backendFatal.message
+    bootFlow.fail()
+    return
+  }
 
   // ui-audit creation-meta - reload used to replay the full 3s title intro
   // even with a session+save on disk; resume candidates get a short beat.
@@ -759,9 +752,11 @@ onUnmounted(() => {
     <SaveIncompatibleScreen v-if="saveIssue.status" />
 
     <main v-else class="boot-error">
-      <h1>{{ t('errors.boot.title') }}</h1>
+      <h1>{{ backendFatal ? t('errors.backendConfig.title') : t('errors.boot.title') }}</h1>
       <p>{{ bootError }}</p>
-      <button type="button" @click="bootFlow.showAuth">{{ t('errors.boot.backToAuth') }}</button>
+      <!-- No back-to-auth escape on a fatal composition: auth cannot
+           admit anything against an unconfigured backend. -->
+      <button v-if="!backendFatal" type="button" @click="bootFlow.showAuth">{{ t('errors.boot.backToAuth') }}</button>
     </main>
   </RouteMount>
 

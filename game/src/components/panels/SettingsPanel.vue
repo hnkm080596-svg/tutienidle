@@ -6,8 +6,11 @@ import { useAudioStore } from '@/stores/audio'
 import { useGameManager } from '@/composables/useGameState'
 import { useNotificationStore } from '@/stores/notification'
 import { exportSaveToFile, getRawSave, importSaveRaw, SAVE_RESET_REQUEST_EVENT } from '@/services/save/SaveSystem'
+import { validateRecoveryData } from '@/services/save/recoveryApi'
+import { cloudSaveCoordinator } from '@/services/cloudSave/CloudSaveServiceFactory'
 import { UI_SCALE_OPTIONS, loadUiScale, saveUiScale } from '@/composables/uiScale'
 import { LOCALE_OPTIONS, saveLocale, type AppLocale } from '@/composables/locale'
+import { BUILD_IDENTITY, shortGitSha } from '@/shared/build/BuildIdentity'
 import ConfirmModal from '@/components/common/ConfirmModal.vue'
 import GameButton from '@/components/common/GameButton.vue'
 import Chip from '@/components/common/primitives/Chip.vue'
@@ -17,6 +20,13 @@ const gameManager = useGameManager()
 const notification = useNotificationStore()
 const audio = useAudioStore()
 const { t, locale } = useI18n()
+
+// B1.9a - under the remote authority the panel's recovery actions keep
+// different semantics: manual import validates/exports the file instead
+// of overwriting (no client-side path can replace the cloud row), reset
+// clears the local cache so the authoritative load restores from cloud,
+// and export stamps its provenance + revision onto the filename.
+const remoteAuthoritative = cloudSaveCoordinator.capability === 'remote-authoritative'
 
 // W3: one slider per audio channel (field = store state, channel = bus id).
 const AUDIO_CHANNELS = [
@@ -54,6 +64,19 @@ function handleUiScale(scale: number) {
 function handleLocale(next: AppLocale) {
   saveLocale(next)
 }
+
+// BETA-FINAL PR1 - one read of the injected build identity for the Build
+// section below (frozen; same literal the Electron main process logged).
+const build = BUILD_IDENTITY
+const BUILD_ROWS = [
+  { labelKey: 'version', testid: 'build-version', value: build.appVersion },
+  { labelKey: 'build', testid: 'build-id', value: build.buildId },
+  { labelKey: 'commit', testid: 'build-commit', value: shortGitSha() },
+  { labelKey: 'schema', testid: 'build-schema', value: build.saveSchemaVersion },
+  { labelKey: 'environment', testid: 'build-environment', value: build.backendEnvironment },
+  { labelKey: 'channel', testid: 'build-channel', value: build.releaseChannel },
+  { labelKey: 'builtAt', testid: 'build-built-at', value: build.builtAtUtc },
+] as const
 
 const lastSavedLabel = ref('')
 
@@ -102,10 +125,19 @@ async function handleExport() {
     return
   }
 
-  const raw = getRawSave()
+  // B1-C: remote mode exports the server-ACKed envelope (payload +
+  // revision bound as one identity); local mode's slot is the same
+  // facade. getRawSave stays as a legacy fallback only.
+  const cached = await cloudSaveCoordinator.readCachedSave()
+  const raw = cached?.raw ?? getRawSave()
 
   if (raw) {
-    exportSaveToFile(raw)
+    exportSaveToFile(
+      raw,
+      remoteAuthoritative
+        ? { source: 'cloud', revision: cached?.revision ?? cloudSaveCoordinator.getRevision() }
+        : { source: 'local', revision: cached?.revision ?? cloudSaveCoordinator.getRevision() },
+    )
   }
 }
 
@@ -121,12 +153,32 @@ function handleImportFile(event: Event) {
 
   requestConfirm(
     t('panels.settings.confirm.importTitle'),
-    t('panels.settings.confirm.importBody'),
+    remoteAuthoritative
+      ? t('panels.settings.confirm.importBodyRemote')
+      : t('panels.settings.confirm.importBody'),
     () => {
       const reader = new FileReader()
 
       reader.onload = () => {
-        const ok = importSaveRaw(String(reader.result))
+        const rawText = String(reader.result)
+
+        if (remoteAuthoritative) {
+          // Remote mode: validate the recovery file only. A consumable
+          // payload is exported back normalized (identified by source +
+          // revision); the cloud row and the local cache stay untouched.
+          const validation = validateRecoveryData(rawText)
+
+          if (validation.status === 'valid') {
+            exportSaveToFile(validation.normalizedRaw, { source: 'recovery-import' })
+            notification.push('save', t('panels.settings.notifications.importValidatedRemote'))
+          } else {
+            notification.push('error', t('panels.settings.errors.invalidSaveFile'))
+          }
+
+          return
+        }
+
+        const ok = importSaveRaw(rawText)
 
         if (ok) {
           window.location.reload()
@@ -145,8 +197,12 @@ function handleImportFile(event: Event) {
 
 function handleReset() {
   requestConfirm(
-    t('panels.settings.confirm.resetTitle'),
-    t('panels.settings.confirm.resetBody'),
+    remoteAuthoritative
+      ? t('panels.settings.confirm.resetCloudTitle')
+      : t('panels.settings.confirm.resetTitle'),
+    remoteAuthoritative
+      ? t('panels.settings.confirm.resetCloudBody')
+      : t('panels.settings.confirm.resetBody'),
     // App phải dừng interval/pagehide autosave TRƯỚC khi xoá; nếu panel tự
     // reload, pagehide ghi lại chính save vừa xoá.
     () => window.dispatchEvent(new Event(SAVE_RESET_REQUEST_EVENT)),
@@ -181,7 +237,7 @@ function handleReset() {
           </label>
 
           <GameButton class="settings-panel__danger" variant="danger" @click="handleReset">
-            {{ t('panels.settings.actions.reset') }}
+            {{ remoteAuthoritative ? t('panels.settings.actions.resetCloud') : t('panels.settings.actions.reset') }}
           </GameButton>
         </div>
       </section>
@@ -285,6 +341,19 @@ function handleReset() {
           {{ t(`panels.settings.language.names.${option}`) }}
         </Chip>
       </div>
+    </section>
+
+    <!-- BETA-FINAL PR1 / spec B2 - support-visible build identity. Values
+         match the release manifest and the error screen footer. -->
+    <section class="settings-panel__section settings-panel__build" :aria-label="t('panels.settings.sections.buildAria')">
+      <h4>{{ t('panels.settings.sections.build') }}</h4>
+
+      <dl class="settings-panel__build-list">
+        <div v-for="row in BUILD_ROWS" :key="row.testid" class="settings-panel__build-row">
+          <dt>{{ t(`panels.settings.build.${row.labelKey}`) }}</dt>
+          <dd :data-testid="row.testid">{{ row.value }}</dd>
+        </div>
+      </dl>
     </section>
     </div>
 
@@ -407,7 +476,7 @@ function handleReset() {
   border-color: var(--chrome-500);
 }
 
-/* Audio — on/off + master volume. */
+/* Audio - on/off + master volume. */
 .settings-panel__audio h4 {
   margin: 0 0 8px;
   color: var(--paper-text);
@@ -463,5 +532,32 @@ function handleReset() {
 
 .settings-panel__language-option:hover {
   border-color: var(--chrome-500);
+}
+
+/* Build identity - read-only dl for support/diagnostics. */
+.settings-panel__build-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  font-size: var(--text-xs);
+}
+
+.settings-panel__build-row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.settings-panel__build-row dt {
+  color: var(--paper-text-soft);
+}
+
+.settings-panel__build-row dd {
+  margin: 0;
+  color: var(--paper-text);
+  font-family: var(--font-mono, monospace);
+  word-break: break-all;
+  text-align: right;
 }
 </style>

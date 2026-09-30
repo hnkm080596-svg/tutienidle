@@ -1,0 +1,20 @@
+{
+ "tools": {
+  "node": "v24.19.0",
+  "npm": "11.x",
+  "vite": "8.2.2",
+  "vitest": "4.1.11",
+  "playwright": "present"
+ },
+ "os": "win32",
+ "profile": "local-devin-cli",
+ "runtime": {
+  "devServer": "vite dev (port 5608 observed)",
+  "browser": "playwright chromium",
+  "electron": "NOT EXECUTED - declared boundary"
+ },
+ "network": {
+  "supabase": "not exercised with real credentials - declared boundary"
+ },
+ "note": "Electron packaging + real-cloud calls are coverage limitations; all cloud attacks run through mock seams."
+}

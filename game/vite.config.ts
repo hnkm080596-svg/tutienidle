@@ -1,11 +1,14 @@
 /// <reference types="vitest/config" />
 import { fileURLToPath, URL } from 'node:url'
+import { execFileSync } from 'node:child_process'
+import path from 'node:path'
 
-import { defineConfig } from 'vite'
+import { defineConfig, type Plugin } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vueDevTools from 'vite-plugin-vue-devtools'
 import electron from 'vite-plugin-electron/simple'
 import { devPortForRoot } from './scripts/dev-port.ts'
+import type { BuildIdentity } from './src/shared/build/BuildIdentity.ts'
 
 // Uncommitted audit followup plan, Ưu tiên 2 (Electron packaging,
 // 2026-08-24) — plugin electron() chỉ đăng ký khi biến env ELECTRON được
@@ -19,6 +22,38 @@ const isElectron = Boolean(process.env.ELECTRON)
 // playwright.config.ts derives the same value, so its webServer always
 // targets this server. Override: DEV_PORT=5999 npm run dev.
 const devPort = Number(process.env.DEV_PORT ?? devPortForRoot(fileURLToPath(new URL('.', import.meta.url))))
+
+const gameRoot = fileURLToPath(new URL('.', import.meta.url))
+
+// BETA-FINAL PR1 / spec B2 - ONE generator invocation feeds the renderer
+// define, the Electron main define and the emitted JSON manifest, so the
+// three artifacts can never disagree. The generator fails closed on invalid
+// release inputs (bad tag/version, dirty tree, missing SHA/build id).
+const buildIdentity = JSON.parse(
+  execFileSync(
+    process.execPath,
+    [path.join(gameRoot, 'scripts', 'release', 'build-identity.mjs'), '--json'],
+    { cwd: gameRoot, encoding: 'utf8' },
+  ),
+) as BuildIdentity
+const buildIdentityDefine = JSON.stringify(buildIdentity)
+
+// Emits dist/build-identity.json (and dist-electron/build-identity.json when
+// attached to the main build) - the release manifest for later artifact
+// verification (`node scripts/release/build-identity.mjs check`).
+function buildIdentityManifestPlugin(): Plugin {
+  return {
+    name: 'tutien-build-identity-manifest',
+    apply: 'build',
+    generateBundle() {
+      this.emitFile({
+        type: 'asset',
+        fileName: 'build-identity.json',
+        source: JSON.stringify(buildIdentity, null, 2) + '\n',
+      })
+    },
+  }
+}
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -34,13 +69,26 @@ export default defineConfig({
   // khi Electron đóng gói (electron-builder). Không ảnh hưởng dev server/
   // vite preview, cả 2 vẫn phục vụ qua http bình thường.
   base: './',
+  // Renderer bundle + Vitest both read the identity through this define.
+  define: {
+    __BUILD_IDENTITY__: buildIdentityDefine,
+  },
   plugins: [
     vue(),
     vueDevTools(),
+    buildIdentityManifestPlugin(),
     ...(isElectron
       ? [
           electron({
-            main: { entry: 'electron/main.ts' },
+            main: {
+              entry: 'electron/main.ts',
+              // The SAME identity literal reaches the main bundle; the
+              // manifest copy lets dist-electron prove agreement offline.
+              vite: {
+                define: { __BUILD_IDENTITY__: buildIdentityDefine },
+                plugins: [buildIdentityManifestPlugin()],
+              },
+            },
             preload: { input: 'electron/preload.ts' },
             renderer: {},
           }),

@@ -140,3 +140,50 @@ describe('hidden_spell_pathway kit coherence (saveAcceptance)', () => {
     expect(isSaveAcceptable(save, catalogs)).toBe(true)
   })
 })
+
+// Mutation finding F-MUT-COMPLETION-ENUM (beta-release-2026-09-29): the
+// completionState whitelist inside the gradeHistory record-shape check had
+// no detector - a mutant dropping it passed because the existing 'bad
+// completionState' corpus only ever rejected via keySet. Pin: an otherwise
+// canonical record (valid grade key, valid finalRank) whose completionState
+// is outside 'partial'|'dai_thanh'|'vien_man' must be rejected on the
+// record shape alone.
+describe('gradeHistory completionState whitelist (saveAcceptance)', () => {
+  it('non-canonical completionState on an otherwise-valid record -> reject', () => {
+    const save = spellPathwaySave()
+    // foundation_establishment (realmIndex 2) makes grade 1 the lagging
+    // live grade -> gradeHistory MUST carry the sealed record {'1'} and
+    // nothing else, so the record shape is the only failing leg.
+    save.player.realmId = 'foundation_establishment'
+    save.techniques = [
+      {
+        ...structuredClone(TECHNIQUES.find((entry) => entry.id === 'five_elements_art')!),
+        grade: 1,
+        rank: 0,
+        mastery: 0,
+        gradeHistory: { '1': { finalRank: 10, completionState: 'bogus' as never } },
+      },
+    ]
+
+    expect(() => assertSaveAcceptable(save, catalogs)).toThrow(
+      'Invalid technique progression state',
+    )
+    expect(isSaveAcceptable(save, catalogs)).toBe(false)
+  })
+
+  it('canonical completionState on the same record -> accepted', () => {
+    const save = spellPathwaySave()
+    save.player.realmId = 'foundation_establishment'
+    save.techniques = [
+      {
+        ...structuredClone(TECHNIQUES.find((entry) => entry.id === 'five_elements_art')!),
+        grade: 1,
+        rank: 0,
+        mastery: 0,
+        gradeHistory: { '1': { finalRank: 10, completionState: 'vien_man' } },
+      },
+    ]
+
+    expect(isSaveAcceptable(save, catalogs)).toBe(true)
+  })
+})

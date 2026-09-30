@@ -12,6 +12,7 @@
  */
 
 import type { AssetPort, RouteRequest } from '../PresentationContracts'
+import { resolveAssetUrl } from './AssetBaseUrl'
 import {
   enumerateResources,
   getBundleDescriptors,
@@ -53,7 +54,7 @@ export function defaultDomAudioLoader(
     for (const url of urls) {
       if (signal?.aborted) throw new Error(`Load aborted: ${url}`)
       try {
-        const res = await fetch(url, { signal })
+        const res = await fetch(resolveAssetUrl(url), { signal })
         if (!res.ok) throw new Error(`Audio fetch failed ${res.status}: ${url}`)
         return await res.arrayBuffer()
       } catch (err) {
@@ -360,7 +361,7 @@ export class AssetBundleManager implements AssetPort {
 
     const runLoad = async (): Promise<void> => {
       try {
-        await this.domImageLoader(desc.url)
+        await this.domImageLoader(resolveAssetUrl(desc.url))
         // No loaderGeneration fence here: a DOM image's result lives in the
         // browser cache, not in the loader scene's texture cache, so a
         // setLoaderScene/dispose during the await cannot make it stale. The

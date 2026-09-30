@@ -13,7 +13,17 @@ export interface AuthSession {
   userId?: string
 }
 
-export type AuthErrorCode = 'invalid_id' | 'weak_password' | 'invalid_credentials' | 'id_taken' | 'server_unavailable'
+export type AuthErrorCode =
+  | 'invalid_id'
+  | 'weak_password'
+  | 'invalid_credentials'
+  | 'id_taken'
+  | 'server_unavailable'
+  /** B1.7 admission rejections (claim_active_session) - never collapsed
+   *  into 'server_unavailable': maintenance is temporary, unsupported is
+   *  a client-version problem, and they display different copy. */
+  | 'maintenance'
+  | 'unsupported_client'
 
 export type AuthResult =
   | { ok: true; session: AuthSession }

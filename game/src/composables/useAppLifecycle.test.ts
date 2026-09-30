@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 //
-// Remediation Task 5 (2026-09-05) — App.vue boot/tick/listener lifecycle
+// Remediation Task 5 (2026-09-05) - App.vue boot/tick/listener lifecycle
 // idempotence. App.vue extract ra composable `useAppLifecycle` để test
 // được (script setup của App.vue không test trực tiếp được):
 // 1. startTickLoop() gọi 2 lần → chỉ 1 interval (trước đây setInterval
@@ -58,9 +58,10 @@ function makeStubs() {
       load: vi.fn(async () => ({ status: 'empty' as const, revision: 0 as const })),
       save: vi.fn(async () => ({ status: 'ok' as const, revision: 1 })),
       reset: vi.fn(),
+      capability: 'local-only' as 'local-only' | 'remote-authoritative',
     } as unknown as Pick<
       import('../services/cloudSave/CloudSaveCoordinator').CloudSaveCoordinator,
-      'load' | 'save' | 'reset'
+      'load' | 'save' | 'reset' | 'capability'
     >,
     player: {
       save: vi.fn(async () => ({ status: 'ok' as const, revision: 1 })),
@@ -89,7 +90,6 @@ function makeStubs() {
     persistPlayer: vi.fn(async () => ({ status: 'ok' as const, revision: 1 })),
     onError: vi.fn(),
     hardReset: vi.fn(),
-    remoteSync: vi.fn(async () => 'skipped'),
   }
 }
 
@@ -114,7 +114,6 @@ function makeLifecycle(stubs: Stubs) {
     persistPlayer: stubs.persistPlayer,
     onError: stubs.onError,
     hardReset: stubs.hardReset,
-    remoteSync: stubs.remoteSync,
   })
 }
 
@@ -171,10 +170,7 @@ describe('useAppLifecycle — boot idempotence (Remediation Task 5)', () => {
   it('bootGame 2 lần khi boot đầu còn pending → boot flow chỉ chạy 1 lần', async () => {
     const stubs = makeStubs()
 
-    // load() waits on the gate - simulates a pending boot. Deferred created
-    // upfront: bootGame awaits remoteSync BEFORE calling load(), so a
-    // resolver assigned inside mockImplementation would not exist yet
-    // when the test releases it.
+    // load() waits on the gate - simulates a pending boot.
     let releaseLoad: (value: unknown) => void = () => undefined
     const loadGate = new Promise((resolve) => (releaseLoad = resolve))
     ;(stubs.coordinator.load as ReturnType<typeof vi.fn>).mockImplementation(() => loadGate)
@@ -281,9 +277,48 @@ describe('useAppLifecycle — boot idempotence (Remediation Task 5)', () => {
   })
 })
 
+describe('useAppLifecycle — B1-C pending load surfaces', () => {
+  it("load 'pending-conflict' routes the durable record's bytes to the corrupted surface + boot.fail (B1-C)", async () => {
+    const stubs = makeStubs()
+    ;(stubs.coordinator.load as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      status: 'pending-conflict',
+      currentRevision: 9,
+      pendingRaw: 'pending-payload-bytes',
+    })
+
+    const lifecycle = makeLifecycle(stubs)
+    const outcome = await lifecycle.bootGame({ createNewCharacter: false })
+
+    expect(outcome.status).toBe('failed')
+    expect(stubs.saveIssue.report).toHaveBeenCalledWith('corrupted', 'pending-payload-bytes')
+    expect(stubs.boot.fail).toHaveBeenCalledTimes(1)
+    expect(stubs.onError).not.toHaveBeenCalled()
+
+    lifecycle.stopAll()
+  })
+
+  it("load 'pending-quarantined' routes pendingRaw to the corrupted surface + boot.fail (B1-C)", async () => {
+    const stubs = makeStubs()
+    ;(stubs.coordinator.load as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      status: 'pending-quarantined',
+      reason: 'journal-envelope-corrupt',
+      pendingRaw: 'quarantined-bytes',
+    })
+
+    const lifecycle = makeLifecycle(stubs)
+    const outcome = await lifecycle.bootGame({ createNewCharacter: false })
+
+    expect(outcome.status).toBe('failed')
+    expect(stubs.saveIssue.report).toHaveBeenCalledWith('corrupted', 'quarantined-bytes')
+    expect(stubs.boot.fail).toHaveBeenCalledTimes(1)
+
+    lifecycle.stopAll()
+  })
+})
+
 describe('useAppLifecycle — ARCH-013/L04 boot generation fence', () => {
   // Audit L04 executed: deferred load -> real stopAll -> resolve 'ok'
-  // produced {intervals:1, restores:1, entries:1, handle:1} — a disposed
+  // produced {intervals:1, restores:1, entries:1, handle:1} - a disposed
   // App's boot continuation restored state, started the world tick and
   // drove a route transition. The generation fence must zero ALL of it.
   it('stopAll trong lúc load pending → resolve vẫn: 0 restore / 0 interval / 0 route entry (outcome skipped)', async () => {
@@ -307,7 +342,7 @@ describe('useAppLifecycle — ARCH-013/L04 boot generation fence', () => {
     expect(stubs.clock.start).not.toHaveBeenCalled()
     expect(lifecycle.getTickHandle()).toBeUndefined()
 
-    // Every branch below the fence is a route/UI write — none may run:
+    // Every branch below the fence is a route/UI write - none may run:
     // enterGame (home), fail (error), requireCharacter, offline modal,
     // onRestoreOk/onNewCharacter side effects, onError.
     expect(stubs.boot.enterGame).not.toHaveBeenCalled()
@@ -338,36 +373,11 @@ describe('useAppLifecycle — ARCH-013/L04 boot generation fence', () => {
     expect(stubs.onError).not.toHaveBeenCalled()
   })
 
-  // F-INT-1 (clean-B' INTEGRATION): the fence must sit BEFORE the
-  // consuming load too - loadGame() eats the one-shot import-handoff
-  // marker, so a boot made stale mid-remoteSync must never reach
-  // coordinator.load at all.
-  it('stopAll trong lúc remoteSync pending → coordinator.load KHÔNG chạy (load tự có side effect)', async () => {
-    const stubs = makeStubs()
-
-    let releaseSync: (value: unknown) => void = () => undefined
-    const syncGate = new Promise((resolve) => (releaseSync = resolve))
-    ;(stubs.remoteSync as ReturnType<typeof vi.fn>).mockImplementation(() => syncGate)
-
-    const lifecycle = makeLifecycle(stubs)
-
-    const boot = lifecycle.bootGame({ createNewCharacter: false })
-    lifecycle.stopAll()
-    releaseSync('skipped')
-
-    const outcome = await boot
-
-    expect(outcome.status).toBe('skipped')
-    expect(stubs.coordinator.load).not.toHaveBeenCalled()
-    expect(stubs.restoreGameSession).not.toHaveBeenCalled()
-    expect(stubs.boot.enterGame).not.toHaveBeenCalled()
-  })
-
   it('stopAll trong lúc new-character boot pending → continuation vẫn stale (cùng generation, synthetic await)', async () => {
     const stubs = makeStubs()
     const lifecycle = makeLifecycle(stubs)
 
-    // createNewCharacter path awaits Promise.resolve — still an await
+    // createNewCharacter path awaits Promise.resolve - still an await
     // boundary; a synchronous stopAll between call and continuation must
     // fence it too.
     const boot = lifecycle.bootGame({ createNewCharacter: true })
@@ -427,43 +437,142 @@ describe('useAppLifecycle — ARCH-013/L04 boot generation fence', () => {
   })
 })
 
-describe('useAppLifecycle - remote sync reconciliation (spec F8, Mission F Task 11)', () => {
-  it('remoteSync is awaited after startSaveLoad and before coordinator.load', async () => {
-    const stubs = makeStubs()
-    const lifecycle = makeLifecycle(stubs)
+describe('useAppLifecycle - remote-authoritative boot semantics (B1)', () => {
+  const remoteCharacter = {
+    id: 'char-1',
+    name: 'Vo Danh',
+    selectedTalentIds: ['talent-a'],
+    baseAttributes: { strength: 1, dexterity: 1, intelligence: 1, attunement: 1, vitality: 1 },
+    mortalBasicSkillId: 'tram',
+    realmId: 'mortal',
+    realmLevel: 0,
+    createdAt: '2026-01-01T00:00:00Z',
+  }
 
-    await lifecycle.bootGame({ createNewCharacter: false })
-
-    const syncOrder = stubs.remoteSync.mock.invocationCallOrder[0]
-    const loadOrder = (stubs.coordinator.load as ReturnType<typeof vi.fn>).mock.invocationCallOrder[0]
-    expect(stubs.remoteSync).toHaveBeenCalledTimes(1)
-    expect(syncOrder).toBeDefined()
-    expect(loadOrder).toBeDefined()
-    expect(syncOrder!).toBeLessThan(loadOrder!)
-
-    lifecycle.stopAll()
-  })
-
-  it('createNewCharacter boot skips remoteSync - the new character has no remote row yet', async () => {
+  it('local-mode createNewCharacter boot keeps the synthetic empty shortcut (no authoritative load)', async () => {
     const stubs = makeStubs()
     const lifecycle = makeLifecycle(stubs)
 
     await lifecycle.bootGame({ createNewCharacter: true })
 
-    expect(stubs.remoteSync).not.toHaveBeenCalled()
+    expect(stubs.coordinator.load).not.toHaveBeenCalled()
+    expect(stubs.coordinator.reset).toHaveBeenCalledTimes(1)
 
     lifecycle.stopAll()
   })
 
-  it('remoteSync rejection never blocks boot - coordinator.load still runs', async () => {
+  it('remote-authoritative createNewCharacter boot performs the authoritative load instead of synthetic empty', async () => {
     const stubs = makeStubs()
-    stubs.remoteSync.mockRejectedValueOnce(new Error('remote down'))
+    stubs.coordinator = { ...stubs.coordinator, capability: 'remote-authoritative' }
+    ;(stubs.coordinator.load as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      status: 'uninitialized',
+      revision: 0,
+      character: remoteCharacter,
+    })
+
+    const onNewCharacter = vi.fn()
     const lifecycle = makeLifecycle(stubs)
 
-    const outcome = await lifecycle.bootGame({ createNewCharacter: false })
+    const outcome = await lifecycle.bootGame({ createNewCharacter: true, onNewCharacter })
 
+    // The RPC load is the ONLY load step - no reset short-circuit.
     expect(stubs.coordinator.load).toHaveBeenCalledTimes(1)
-    expect(outcome.status).toBe('require-character')
+    expect(stubs.coordinator.reset).not.toHaveBeenCalled()
+
+    // Canonical server metadata drives exactly one starter snapshot.
+    expect(onNewCharacter).toHaveBeenCalledTimes(1)
+    expect(onNewCharacter).toHaveBeenCalledWith(remoteCharacter)
+    expect(outcome.status).toBe('entered')
+
+    lifecycle.stopAll()
+  })
+
+  it('CHARACTER_UNINITIALIZED rebuild: first save commits before the tick loop starts', async () => {
+    const stubs = makeStubs()
+    stubs.coordinator = { ...stubs.coordinator, capability: 'remote-authoritative' }
+    ;(stubs.coordinator.load as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      status: 'uninitialized',
+      revision: 0,
+      character: remoteCharacter,
+    })
+
+    // Required seed: zero ticks may run before the first remote ack -
+    // capture the tick count at the moment the revision-1 write resolves.
+    let tickCountBeforeFirstRemoteAck = -1
+    ;(stubs.player.save as ReturnType<typeof vi.fn>).mockImplementationOnce(async () => {
+      tickCountBeforeFirstRemoteAck = (stubs.tick as ReturnType<typeof vi.fn>).mock.calls.length
+      return { status: 'ok' as const, revision: 1 }
+    })
+
+    const lifecycle = makeLifecycle(stubs)
+    const outcome = await lifecycle.bootGame({ createNewCharacter: false, onNewCharacter: vi.fn() })
+
+    expect(outcome.status).toBe('entered')
+    expect(stubs.player.save).toHaveBeenCalledTimes(1)
+    expect(tickCountBeforeFirstRemoteAck).toBe(0)
+
+    // revision 1 precedes tick: the save ran before clock.start and
+    // before the tick interval was scheduled.
+    const saveOrder = (stubs.player.save as ReturnType<typeof vi.fn>).mock.invocationCallOrder[0]
+    const clockOrder = stubs.clock.start.mock.invocationCallOrder[0]
+    expect(saveOrder).toBeLessThan(clockOrder!)
+
+    lifecycle.stopAll()
+  })
+
+  it('CHARACTER_UNINITIALIZED retried after a failed first save triggers the dirty-transaction reload instead of re-granting', async () => {
+    const stubs = makeStubs()
+    stubs.coordinator = { ...stubs.coordinator, capability: 'remote-authoritative' }
+    ;(stubs.coordinator.load as ReturnType<typeof vi.fn>).mockResolvedValue({
+      status: 'uninitialized',
+      revision: 0,
+      character: remoteCharacter,
+    })
+    ;(stubs.player.save as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      status: 'unavailable',
+      message: 'remote down',
+      code: 'NETWORK_UNAVAILABLE',
+      retryable: true,
+    })
+
+    const onNewCharacter = vi.fn()
+    const lifecycle = makeLifecycle(stubs)
+
+    // Boot 1: grants commit to runtime state, then the revision-0 write
+    // fails -> boot.fail -> error screen.
+    const first = await lifecycle.bootGame({ createNewCharacter: false, onNewCharacter })
+    expect(first.status).toBe('failed')
+    expect(onNewCharacter).toHaveBeenCalledTimes(1)
+
+    // Retry in the same mount (back-to-auth -> re-auth -> bootGame(false)):
+    // the server still has no save row, so load returns uninitialized
+    // again. Re-running grants would duplicate buildings/materials on the
+    // already-granted managers - the dirty-transaction guard must resolve
+    // to a reload instead.
+    const second = await lifecycle.bootGame({ createNewCharacter: false, onNewCharacter })
+
+    expect(second.status).toBe('skipped')
+    expect(stubs.hardReset).toHaveBeenCalledTimes(1)
+    expect(onNewCharacter).toHaveBeenCalledTimes(1)
+
+    lifecycle.stopAll()
+  })
+
+  it('CHARACTER_DELETED is terminal - fail with onError, never the grant path', async () => {
+    const stubs = makeStubs()
+    stubs.coordinator = { ...stubs.coordinator, capability: 'remote-authoritative' }
+    ;(stubs.coordinator.load as ReturnType<typeof vi.fn>).mockResolvedValueOnce({ status: 'deleted' })
+
+    const onNewCharacter = vi.fn()
+    const lifecycle = makeLifecycle(stubs)
+
+    const outcome = await lifecycle.bootGame({ createNewCharacter: false, onNewCharacter })
+
+    expect(outcome.status).toBe('failed')
+    expect(stubs.onError).toHaveBeenCalledTimes(1)
+    expect(stubs.boot.fail).toHaveBeenCalledTimes(1)
+    expect(onNewCharacter).not.toHaveBeenCalled()
+    expect(stubs.boot.enterGame).not.toHaveBeenCalled()
 
     lifecycle.stopAll()
   })
@@ -632,7 +741,7 @@ describe('useAppLifecycle — entry smoke qua createApp (pattern usePanelPaginat
           hardReset: stubs.hardReset,
         })
 
-        // Mirror App.vue's onUnmounted flush — fires strictly after the
+        // Mirror App.vue's onUnmounted flush - fires strictly after the
         // composable's onBeforeUnmount(stopAll).
         onUnmounted(() => {
           void lifecycle.persistProgress()
@@ -724,7 +833,7 @@ describe('useAppLifecycle — B2 character-creation save transaction (audit T1-8
     const lifecycle = makeLifecycle(stubs)
     const boot = lifecycle.bootGame({ createNewCharacter: true })
 
-    // Park bootGame AT the player.save await before stopping — calling
+    // Park bootGame AT the player.save await before stopping - calling
     // stopAll() synchronously only exercises the existing fence after
     // coordinator.reset(), leaving the new post-save fence uncovered.
     await vi.waitFor(() => expect(stubs.player.save).toHaveBeenCalled())
@@ -861,7 +970,7 @@ describe('useAppLifecycle — B2 character-creation save transaction (audit T1-8
     })
 
     // The throw must resolve through the same visible failure contract as
-    // a throwing first save — not an unhandled rejection on a stuck boot.
+    // a throwing first save - not an unhandled rejection on a stuck boot.
     expect(first.status).toBe('failed')
     expect(stubs.boot.fail).toHaveBeenCalledTimes(1)
     expect(stubs.onError).toHaveBeenCalled()
@@ -878,7 +987,7 @@ describe('useAppLifecycle — B2 character-creation save transaction (audit T1-8
 
     expect(second.status).toBe('skipped')
     expect(stubs.hardReset).toHaveBeenCalledTimes(1)
-    // The callback ran exactly once — the first attempt. A re-run would
+    // The callback ran exactly once - the first attempt. A re-run would
     // double-apply the partial grants.
     expect(grantStarterContent).toHaveBeenCalledTimes(1)
 

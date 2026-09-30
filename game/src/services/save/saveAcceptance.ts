@@ -1,7 +1,7 @@
 // Save acceptance predicate - ONE authority for every registry-backed
 // and progression-canonicality check the boot restore preflight runs.
 // Extracted (BETA-CREATION, qa-authority-01) so the remote newest-wins
-// gate (SupabaseRemoteSave) can apply the IDENTICAL acceptance set the
+// gate (SupabaseCloudSaveService) can apply the IDENTICAL acceptance set the
 // boot restore does: a payload the boot restore would reject must
 // count as "no remote", otherwise newest-wins resurrects poison on
 // every login and the local delete recovery can never converge.

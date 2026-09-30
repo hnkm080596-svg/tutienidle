@@ -10,6 +10,7 @@ import { SKILLS } from '@/data/skill/Skills'
 import type { Skill } from '@/core/skill/Skill'
 import { characterCreationService } from '@/services/character/CharacterCreationServiceFactory'
 import { isValidCharacterName } from '@/services/character/CharacterCreationService'
+import type { RemoteCharacterMetadata } from '@/services/session/BackendStatus'
 import { useAudioStore } from '@/stores/audio'
 
 // BETA-CREATION - ONE unified flow: name + talent + starting-skill pick on
@@ -20,6 +21,11 @@ export interface CharacterCreationPayload {
   name: string
   talentIds: string[]
   mortalBasicSkillId: string
+  /** B1.4 - the canonical character block the create_character RPC
+   *  returned. Present only in supabase mode; the boot grant path
+   *  prefers it over the draft fields so the starter snapshot mirrors
+   *  the server-committed row. */
+  character?: RemoteCharacterMetadata
 }
 
 const emit = defineEmits<{ complete: [payload: CharacterCreationPayload]; back: [] }>()
@@ -103,7 +109,7 @@ async function finish() {
     useAudioStore().cue('progress.create')
     // Keep `creating` until unmount - the boot/save work that follows runs while
     // this screen is still displayed under the closing curtain.
-    emit('complete', payload)
+    emit('complete', { ...payload, character: result.character })
   } catch (err) {
     error.value = err instanceof Error ? err.message : String(err)
   } finally {

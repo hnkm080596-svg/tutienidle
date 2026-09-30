@@ -1,0 +1,744 @@
+
+> tien-hiep-idle@0.0.0 test:e2e
+> playwright test
+
+
+Running 38 tests using 2 workers
+
+  ok  2 tests\e2e\accessibility.spec.ts:12:3 › Keyboard accessibility journey › auth + character creation operable by keyboard only (16.5s)
+  ok  1 tests\e2e\announcement-layering.spec.ts:16:3 › announcement layering (T4-35) › offline summary stays clickable while an announcement is firing (21.4s)
+  ok  3 tests\e2e\boot-fresh.spec.ts:9:3 › Boot fresh (no saved state) › boots to character-creation when no save exists (8.6s)
+  ok  5 tests\e2e\combat-overlay-layout.spec.ts:45:5 › Combat overlay layout (T8.3) › desktop: panels anchored, no canvas-HUD overlap (48.8s)
+  x   4 tests\e2e\combat-idle-motion-capture.spec.ts:51:3 › Combat idle motion (static mode + wave-1 reskins) › static entities bob; reskinned enemies play authored frames @capture (53.6s)
+  ok  6 tests\e2e\combat-overlay-layout.spec.ts:45:5 › Combat overlay layout (T8.3) › compact: panels anchored, no canvas-HUD overlap (36.5s)
+  ok  8 tests\e2e\combat-overlay-layout.spec.ts:45:5 › Combat overlay layout (T8.3) › tall: panels anchored, no canvas-HUD overlap (39.5s)
+  ok  7 tests\e2e\combat-vertical-slice.spec.ts:298:3 › P3 — production combat vertical slice › victory loop: ngo_dao ritual -> stage 1 -> aura -> victory -> reward -> refight -> clean exit (4.4m)
+  ok  9 tests\e2e\create-to-combat.spec.ts:12:3 › Create character to combat › creates a character, starts a stage battle and shows a result (4.7m)
+  ok 11 tests\e2e\cultivation-path-ritual.spec.ts:292:3 › Cultivation Path ritual - six-way matrix (P14) › ungated offers only when no gate mirror is seeded (39.7s)
+  ok 10 tests\e2e\combat-vertical-slice.spec.ts:489:3 › P3 — production combat vertical slice › abandon loop: stage -> exit-confirm -> abandon -> home -> re-enter -> terminal -> return (3.2m)
+  ok 13 tests\e2e\error-recovery.spec.ts:13:3 › Save error recovery › corrupted save shows recovery screen with export/reset actions (4.9s)
+  x  12 tests\e2e\cultivation-path-ritual.spec.ts:310:3 › Cultivation Path ritual - six-way matrix (P14) › sword/sword_pathway: ritual -> preset editor surface (1.1m)
+  x  14 tests\e2e\error-recovery.spec.ts:54:3 › Reload recovery › reload during home returns to home without stuck state (41.3s)
+  x  15 tests\e2e\cultivation-path-ritual.spec.ts:381:3 › Cultivation Path ritual - six-way matrix (P14) › sword/hidden_sword_pathway: tram gate -> ritual entry -> ngu slice (35.6s)
+  x  16 tests\e2e\ink-wash-ui.spec.ts:30:5 › ink-wash UI visual smoke › desktop: painting shell stays usable and inside the viewport (2.8s)
+  x  17 tests\e2e\cultivation-path-ritual.spec.ts:421:3 › Cultivation Path ritual - six-way matrix (P14) › spell/spell_pathway: ritual -> element tree + artifact deferred to Kim Dan (2.8s)
+  x  18 tests\e2e\ink-wash-ui.spec.ts:30:5 › ink-wash UI visual smoke › compact: painting shell stays usable and inside the viewport (2.8s)
+  x  19 tests\e2e\cultivation-path-ritual.spec.ts:488:3 › Cultivation Path ritual - six-way matrix (P14) › spell/hidden_spell_pathway: linh_bao gate -> sealed card -> skill triple, no artifact (2.7s)
+  x  20 tests\e2e\ink-wash-ui.spec.ts:30:5 › ink-wash UI visual smoke › tall: painting shell stays usable and inside the viewport (2.8s)
+  x  21 tests\e2e\cultivation-path-ritual.spec.ts:603:3 › Cultivation Path ritual - six-way matrix (P14) › body/body_pathway: ritual -> kit resolution (2.8s)
+  x  22 tests\e2e\presentation-routing.spec.ts:14:3 › Presentation routing regression (Task 1 baseline) › stage start activates CombatScene and deactivates MainScene in Phaser (2.8s)
+  x  23 tests\e2e\cultivation-path-ritual.spec.ts:624:3 › Cultivation Path ritual - six-way matrix (P14) › body/hidden_body_pathway: huy_quyen gate -> ritual entry (2.8s)
+  x  25 tests\e2e\save-reload.spec.ts:63:3 › Save and reload persistence › persists character and seeded spirit stones exactly across reload (2.8s)
+  x  24 tests\e2e\reduced-motion.spec.ts:10:3 › Reduced motion › animations disabled under prefers-reduced-motion: reduce (2.9s)
+  x  26 tests\e2e\skill-presentation-production.spec.ts:436:3 › skill presentation runtime - production path (design section 11) › melee basic + ngu_kiem_thuat: cast -> impact once -> resolved -> complete (2.7s)
+  x  27 tests\e2e\skill-vfx.spec.ts:6:1 › skill VFX lab uses the shared runner, cleans up, and never writes saves (2.7s)
+  x  28 tests\e2e\sound-system.spec.ts:78:3 › Sound system › cue attempts fire on gesture; sliders persist across reload (2.8s)
+  x  29 tests\e2e\skill-vfx.spec.ts:42:1 › low quality and reduced motion preserve the same milestones (2.9s)
+  x  30 tests\e2e\standing-slot-panel.spec.ts:176:3 › Standing slot panel (P14) › panel opens, drag-drop works without crash, 3x3 grid with distinct occupied state (2.8s)
+  x  31 tests\e2e\system-ui.spec.ts:37:3 › system UI skin - rim authority › drawer and system modal hand the single live rim back and forth (2.9s)
+  x  32 tests\e2e\technique-frozen-warning.spec.ts:130:3 › BreakthroughRequirementPanel unperfected-technique warning (M-F-TECHNIQUE, P14) › shows the frozen-cycle warning on the Trúc Cơ confirm while a technique is unperfected (2.8s)
+  x  33 tests\e2e\system-ui.spec.ts:91:3 › system UI skin - rim authority › a nested system modal answers Escape, not the background card (2.9s)
+  x  34 tests\e2e\tribulation-flow.spec.ts:112:3 › Tribulation flow (P13 oracle, F1 regression) › completed tribulation routes home and restores usable home chrome (2.8s)
+  x  35 tests\e2e\system-ui.spec.ts:118:3 › system UI skin - rim authority › reduced-motion emulation stills all sys layer animation (2.9s)
+  x  36 tests\e2e\turn-combat-hud.spec.ts:37:3 › Slice 7 — turn combat HUD › battle runs, combat slots render, legacy controls gone, refight works (2.7s)
+  x  37 tests\e2e\ui-audit-progression-fixed.spec.ts:100:1 › progression slice fixed screens (2.8s)
+  x  38 tests\e2e\wave-vfx-capture.spec.ts:23:3 › Turn-Based Wave VFX visual capture › captures countdown/materialize screenshots + runtime wave telegraph proof @capture (2.6s)
+
+
+  1) tests\e2e\combat-idle-motion-capture.spec.ts:51:3 › Combat idle motion (static mode + wave-1 reskins) › static entities bob; reskinned enemies play authored frames @capture 
+
+    Error: probe sprite still present after death sequence
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      239 |     })
+      240 |
+    > 241 |     expect(probeGone, 'probe sprite still present after death sequence').toBe(true)
+          |                                                                          ^
+      242 |
+      243 |     // Player probe (character-art-infra): `ult` is the one clip combat may
+      244 |     // never fire on floor 1 (ult slot gating is deep progression). pham_nhan
+        at E:\tutienidle\game\tests\e2e\combat-idle-motion-capture.spec.ts:241:74
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\combat-idle-motion-capture-2907f-nemies-play-authored-frames\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\combat-idle-motion-capture-2907f-nemies-play-authored-frames\error-context.md
+
+  2) tests\e2e\cultivation-path-ritual.spec.ts:310:3 › Cultivation Path ritual - six-way matrix (P14) › sword/sword_pathway: ritual -> preset editor surface 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator:  locator('[data-wheel-slot="teleport_array"]')
+    Expected: visible
+    Received: hidden
+    Timeout:  10000ms
+
+    Call log:
+      - Expect "toBeVisible" with timeout 10000ms
+      - waiting for locator('[data-wheel-slot="teleport_array"]')
+        23 × locator resolved to <button type="button" data-v-4465eea8="" data-wheel-orbit="1" aria-disabled="false" aria-label="Truyền Tống Trận" data-wheel-slot="teleport_array" class="command-wheel__slot command-wheel__slot--ring3">…</button>
+           - unexpected value "hidden"
+
+
+      247 |     await page.keyboard.press('Tab')
+      248 |   }
+    > 249 |   await expect(teleportSlot).toBeVisible({ timeout: 10_000 })
+          |                              ^
+      250 |   await teleportSlot.click()
+      251 |
+      252 |   const overlay = page.getByTestId('function-overlay-panel')
+        at startStageOneBattle (E:\tutienidle\game\tests\e2e\cultivation-path-ritual.spec.ts:249:30)
+        at E:\tutienidle\game\tests\e2e\cultivation-path-ritual.spec.ts:354:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\cultivation-path-ritual-Cu-fe567-ual---preset-editor-surface\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\cultivation-path-ritual-Cu-fe567-ual---preset-editor-surface\error-context.md
+
+  3) tests\e2e\cultivation-path-ritual.spec.ts:381:3 › Cultivation Path ritual - six-way matrix (P14) › sword/hidden_sword_pathway: tram gate -> ritual entry -> ngu slice 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByTestId('auth-screen')
+    Expected: visible
+    Timeout: 15000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" with timeout 15000ms
+      - waiting for getByTestId('auth-screen')
+
+
+       at helpers.ts:24
+
+      22 |
+      23 |   const auth = page.getByTestId('auth-screen')
+    > 24 |   await expect(auth).toBeVisible({ timeout: 15_000 })
+         |                      ^
+      25 |
+      26 |   // "Chơi ngay" (guest) skips credentials; MockAuthService resolves after 250ms.
+      27 |   await page.getByTestId('auth-guest-button').click()
+        at bootToGuestHome (E:\tutienidle\game\tests\e2e\helpers.ts:24:22)
+        at E:\tutienidle\game\tests\e2e\cultivation-path-ritual.spec.ts:385:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\cultivation-path-ritual-Cu-89cbc----ritual-entry---ngu-slice\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\cultivation-path-ritual-Cu-89cbc----ritual-entry---ngu-slice\error-context.md
+
+  4) tests\e2e\cultivation-path-ritual.spec.ts:421:3 › Cultivation Path ritual - six-way matrix (P14) › spell/spell_pathway: ritual -> element tree + artifact deferred to Kim Dan 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5608/
+    Call log:
+      - navigating to "http://localhost:5608/", waiting until "load"
+
+
+       at helpers.ts:21
+
+      19 |  */
+      20 | export async function bootToGuestHome(page: Page): Promise<void> {
+    > 21 |   await page.goto('/')
+         |              ^
+      22 |
+      23 |   const auth = page.getByTestId('auth-screen')
+      24 |   await expect(auth).toBeVisible({ timeout: 15_000 })
+        at bootToGuestHome (E:\tutienidle\game\tests\e2e\helpers.ts:21:14)
+        at E:\tutienidle\game\tests\e2e\cultivation-path-ritual.spec.ts:425:11
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\cultivation-path-ritual-Cu-d84cc-rtifact-deferred-to-Kim-Dan\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\cultivation-path-ritual-Cu-d84cc-rtifact-deferred-to-Kim-Dan\error-context.md
+
+  5) tests\e2e\cultivation-path-ritual.spec.ts:488:3 › Cultivation Path ritual - six-way matrix (P14) › spell/hidden_spell_pathway: linh_bao gate -> sealed card -> skill triple, no artifact 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5608/
+    Call log:
+      - navigating to "http://localhost:5608/", waiting until "load"
+
+
+       at helpers.ts:21
+
+      19 |  */
+      20 | export async function bootToGuestHome(page: Page): Promise<void> {
+    > 21 |   await page.goto('/')
+         |              ^
+      22 |
+      23 |   const auth = page.getByTestId('auth-screen')
+      24 |   await expect(auth).toBeVisible({ timeout: 15_000 })
+        at bootToGuestHome (E:\tutienidle\game\tests\e2e\helpers.ts:21:14)
+        at E:\tutienidle\game\tests\e2e\cultivation-path-ritual.spec.ts:492:11
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\cultivation-path-ritual-Cu-57547----skill-triple-no-artifact\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\cultivation-path-ritual-Cu-57547----skill-triple-no-artifact\error-context.md
+
+  6) tests\e2e\cultivation-path-ritual.spec.ts:603:3 › Cultivation Path ritual - six-way matrix (P14) › body/body_pathway: ritual -> kit resolution 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5608/
+    Call log:
+      - navigating to "http://localhost:5608/", waiting until "load"
+
+
+       at helpers.ts:21
+
+      19 |  */
+      20 | export async function bootToGuestHome(page: Page): Promise<void> {
+    > 21 |   await page.goto('/')
+         |              ^
+      22 |
+      23 |   const auth = page.getByTestId('auth-screen')
+      24 |   await expect(auth).toBeVisible({ timeout: 15_000 })
+        at bootToGuestHome (E:\tutienidle\game\tests\e2e\helpers.ts:21:14)
+        at E:\tutienidle\game\tests\e2e\cultivation-path-ritual.spec.ts:607:11
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\cultivation-path-ritual-Cu-4e3d6-way-ritual---kit-resolution\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\cultivation-path-ritual-Cu-4e3d6-way-ritual---kit-resolution\error-context.md
+
+  7) tests\e2e\cultivation-path-ritual.spec.ts:624:3 › Cultivation Path ritual - six-way matrix (P14) › body/hidden_body_pathway: huy_quyen gate -> ritual entry 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5608/
+    Call log:
+      - navigating to "http://localhost:5608/", waiting until "load"
+
+
+       at helpers.ts:21
+
+      19 |  */
+      20 | export async function bootToGuestHome(page: Page): Promise<void> {
+    > 21 |   await page.goto('/')
+         |              ^
+      22 |
+      23 |   const auth = page.getByTestId('auth-screen')
+      24 |   await expect(auth).toBeVisible({ timeout: 15_000 })
+        at bootToGuestHome (E:\tutienidle\game\tests\e2e\helpers.ts:21:14)
+        at E:\tutienidle\game\tests\e2e\cultivation-path-ritual.spec.ts:628:11
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\cultivation-path-ritual-Cu-4887a-y-quyen-gate---ritual-entry\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\cultivation-path-ritual-Cu-4887a-y-quyen-gate---ritual-entry\error-context.md
+
+  8) tests\e2e\error-recovery.spec.ts:54:3 › Reload recovery › reload during home returns to home without stuck state 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByTestId('auth-screen')
+    Expected: visible
+    Timeout: 15000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" with timeout 15000ms
+      - waiting for getByTestId('auth-screen')
+
+
+       at helpers.ts:24
+
+      22 |
+      23 |   const auth = page.getByTestId('auth-screen')
+    > 24 |   await expect(auth).toBeVisible({ timeout: 15_000 })
+         |                      ^
+      25 |
+      26 |   // "Chơi ngay" (guest) skips credentials; MockAuthService resolves after 250ms.
+      27 |   await page.getByTestId('auth-guest-button').click()
+        at bootToGuestHome (E:\tutienidle\game\tests\e2e\helpers.ts:24:22)
+        at E:\tutienidle\game\tests\e2e\error-recovery.spec.ts:57:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\error-recovery-Reload-reco-df168-to-home-without-stuck-state\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\error-recovery-Reload-reco-df168-to-home-without-stuck-state\error-context.md
+
+  9) tests\e2e\ink-wash-ui.spec.ts:30:5 › ink-wash UI visual smoke › desktop: painting shell stays usable and inside the viewport 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5608/
+    Call log:
+      - navigating to "http://localhost:5608/", waiting until "load"
+
+
+      31 |       await page.setViewportSize(viewport)
+      32 |       await page.addInitScript(() => localStorage.clear())
+    > 33 |       await page.goto('/')
+         |                  ^
+      34 |
+      35 |       const auth = page.getByTestId('auth-screen')
+      36 |       await expect(auth).toBeVisible({ timeout: 15_000 })
+        at E:\tutienidle\game\tests\e2e\ink-wash-ui.spec.ts:33:18
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\ink-wash-ui-ink-wash-UI-vi-a7585-ble-and-inside-the-viewport\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\ink-wash-ui-ink-wash-UI-vi-a7585-ble-and-inside-the-viewport\error-context.md
+
+  10) tests\e2e\ink-wash-ui.spec.ts:30:5 › ink-wash UI visual smoke › compact: painting shell stays usable and inside the viewport 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5608/
+    Call log:
+      - navigating to "http://localhost:5608/", waiting until "load"
+
+
+      31 |       await page.setViewportSize(viewport)
+      32 |       await page.addInitScript(() => localStorage.clear())
+    > 33 |       await page.goto('/')
+         |                  ^
+      34 |
+      35 |       const auth = page.getByTestId('auth-screen')
+      36 |       await expect(auth).toBeVisible({ timeout: 15_000 })
+        at E:\tutienidle\game\tests\e2e\ink-wash-ui.spec.ts:33:18
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\ink-wash-ui-ink-wash-UI-vi-ef97d-ble-and-inside-the-viewport\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\ink-wash-ui-ink-wash-UI-vi-ef97d-ble-and-inside-the-viewport\error-context.md
+
+  11) tests\e2e\ink-wash-ui.spec.ts:30:5 › ink-wash UI visual smoke › tall: painting shell stays usable and inside the viewport 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5608/
+    Call log:
+      - navigating to "http://localhost:5608/", waiting until "load"
+
+
+      31 |       await page.setViewportSize(viewport)
+      32 |       await page.addInitScript(() => localStorage.clear())
+    > 33 |       await page.goto('/')
+         |                  ^
+      34 |
+      35 |       const auth = page.getByTestId('auth-screen')
+      36 |       await expect(auth).toBeVisible({ timeout: 15_000 })
+        at E:\tutienidle\game\tests\e2e\ink-wash-ui.spec.ts:33:18
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\ink-wash-ui-ink-wash-UI-vi-97848-ble-and-inside-the-viewport\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\ink-wash-ui-ink-wash-UI-vi-97848-ble-and-inside-the-viewport\error-context.md
+
+  12) tests\e2e\presentation-routing.spec.ts:14:3 › Presentation routing regression (Task 1 baseline) › stage start activates CombatScene and deactivates MainScene in Phaser 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5608/
+    Call log:
+      - navigating to "http://localhost:5608/", waiting until "load"
+
+
+       at helpers.ts:21
+
+      19 |  */
+      20 | export async function bootToGuestHome(page: Page): Promise<void> {
+    > 21 |   await page.goto('/')
+         |              ^
+      22 |
+      23 |   const auth = page.getByTestId('auth-screen')
+      24 |   await expect(auth).toBeVisible({ timeout: 15_000 })
+        at bootToGuestHome (E:\tutienidle\game\tests\e2e\helpers.ts:21:14)
+        at E:\tutienidle\game\tests\e2e\presentation-routing.spec.ts:19:11
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\presentation-routing-Prese-bea6d-tivates-MainScene-in-Phaser\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\presentation-routing-Prese-bea6d-tivates-MainScene-in-Phaser\error-context.md
+
+  13) tests\e2e\reduced-motion.spec.ts:10:3 › Reduced motion › animations disabled under prefers-reduced-motion: reduce 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5608/
+    Call log:
+      - navigating to "http://localhost:5608/", waiting until "load"
+
+
+      11 |     await page.emulateMedia({ reducedMotion: 'reduce' })
+      12 |
+    > 13 |     await page.goto('/')
+         |                ^
+      14 |
+      15 |     // LoadingScreen pulse (hiện trong intro — trước auth).
+      16 |     const pulse = page.locator('.loading-screen__pulse')
+        at E:\tutienidle\game\tests\e2e\reduced-motion.spec.ts:13:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\reduced-motion-Reduced-mot-ea4ad-efers-reduced-motion-reduce\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\reduced-motion-Reduced-mot-ea4ad-efers-reduced-motion-reduce\error-context.md
+
+  14) tests\e2e\save-reload.spec.ts:63:3 › Save and reload persistence › persists character and seeded spirit stones exactly across reload 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5608/
+    Call log:
+      - navigating to "http://localhost:5608/", waiting until "load"
+
+
+       at helpers.ts:21
+
+      19 |  */
+      20 | export async function bootToGuestHome(page: Page): Promise<void> {
+    > 21 |   await page.goto('/')
+         |              ^
+      22 |
+      23 |   const auth = page.getByTestId('auth-screen')
+      24 |   await expect(auth).toBeVisible({ timeout: 15_000 })
+        at bootToGuestHome (E:\tutienidle\game\tests\e2e\helpers.ts:21:14)
+        at E:\tutienidle\game\tests\e2e\save-reload.spec.ts:68:11
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\save-reload-Save-and-reloa-d73d4-tones-exactly-across-reload\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\save-reload-Save-and-reloa-d73d4-tones-exactly-across-reload\error-context.md
+
+  15) tests\e2e\skill-presentation-production.spec.ts:436:3 › skill presentation runtime - production path (design section 11) › melee basic + ngu_kiem_thuat: cast -> impact once -> resolved -> complete 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5608/
+    Call log:
+      - navigating to "http://localhost:5608/", waiting until "load"
+
+
+       at helpers.ts:21
+
+      19 |  */
+      20 | export async function bootToGuestHome(page: Page): Promise<void> {
+    > 21 |   await page.goto('/')
+         |              ^
+      22 |
+      23 |   const auth = page.getByTestId('auth-screen')
+      24 |   await expect(auth).toBeVisible({ timeout: 15_000 })
+        at bootToGuestHome (E:\tutienidle\game\tests\e2e\helpers.ts:21:14)
+        at E:\tutienidle\game\tests\e2e\skill-presentation-production.spec.ts:442:11
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\skill-presentation-product-487dc--once---resolved---complete\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\skill-presentation-product-487dc--once---resolved---complete\error-context.md
+
+  16) tests\e2e\skill-vfx.spec.ts:6:1 › skill VFX lab uses the shared runner, cleans up, and never writes saves 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5608/dev/skill-vfx.html?manual=1
+    Call log:
+      - navigating to "http://localhost:5608/dev/skill-vfx.html?manual=1", waiting until "load"
+
+
+       6 | test('skill VFX lab uses the shared runner, cleans up, and never writes saves', async ({ page }) => {
+       7 |   const errors = collectBrowserErrors(page)
+    >  8 |   await page.goto('/dev/skill-vfx.html?manual=1')
+         |              ^
+       9 |   await expect(page.getByRole('heading', { name: 'Diễn võ · Phi Kiếm' })).toBeVisible()
+      10 |   await expect(page.locator('canvas')).toBeVisible()
+      11 |   await page.waitForFunction(() => Boolean(window.__skillVfxLab))
+        at E:\tutienidle\game\tests\e2e\skill-vfx.spec.ts:8:14
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\skill-vfx-skill-VFX-lab-us-03236-s-up-and-never-writes-saves\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\skill-vfx-skill-VFX-lab-us-03236-s-up-and-never-writes-saves\error-context.md
+
+  17) tests\e2e\skill-vfx.spec.ts:42:1 › low quality and reduced motion preserve the same milestones 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5608/dev/skill-vfx.html?manual=1&quality=low
+    Call log:
+      - navigating to "http://localhost:5608/dev/skill-vfx.html?manual=1&quality=low", waiting until "load"
+
+
+      42 | test('low quality and reduced motion preserve the same milestones', async ({ page }) => {
+      43 |   await page.emulateMedia({ reducedMotion: 'reduce' })
+    > 44 |   await page.goto('/dev/skill-vfx.html?manual=1&quality=low')
+         |              ^
+      45 |   await page.waitForFunction(() => Boolean(window.__skillVfxLab))
+      46 |   expect(await page.evaluate(() => {
+      47 |     window.__skillVfxLab!.advance(370)
+        at E:\tutienidle\game\tests\e2e\skill-vfx.spec.ts:44:14
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\skill-vfx-low-quality-and--aa47a-reserve-the-same-milestones\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\skill-vfx-low-quality-and--aa47a-reserve-the-same-milestones\error-context.md
+
+  18) tests\e2e\sound-system.spec.ts:78:3 › Sound system › cue attempts fire on gesture; sliders persist across reload 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5608/
+    Call log:
+      - navigating to "http://localhost:5608/", waiting until "load"
+
+
+      85 |     page.on('pageerror', (err) => consoleErrors.push(String(err)))
+      86 |
+    > 87 |     await page.goto('/')
+         |                ^
+      88 |     await installProbe(page)
+      89 |
+      90 |     const auth = page.getByTestId('auth-screen')
+        at E:\tutienidle\game\tests\e2e\sound-system.spec.ts:87:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\sound-system-Sound-system--9adcf-iders-persist-across-reload\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\sound-system-Sound-system--9adcf-iders-persist-across-reload\error-context.md
+
+  19) tests\e2e\standing-slot-panel.spec.ts:176:3 › Standing slot panel (P14) › panel opens, drag-drop works without crash, 3x3 grid with distinct occupied state 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5608/
+    Call log:
+      - navigating to "http://localhost:5608/", waiting until "load"
+
+
+       at helpers.ts:21
+
+      19 |  */
+      20 | export async function bootToGuestHome(page: Page): Promise<void> {
+    > 21 |   await page.goto('/')
+         |              ^
+      22 |
+      23 |   const auth = page.getByTestId('auth-screen')
+      24 |   await expect(auth).toBeVisible({ timeout: 15_000 })
+        at bootToGuestHome (E:\tutienidle\game\tests\e2e\helpers.ts:21:14)
+        at E:\tutienidle\game\tests\e2e\standing-slot-panel.spec.ts:179:11
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\standing-slot-panel-Standi-e5087-ith-distinct-occupied-state\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\standing-slot-panel-Standi-e5087-ith-distinct-occupied-state\error-context.md
+
+  20) tests\e2e\system-ui.spec.ts:37:3 › system UI skin - rim authority › drawer and system modal hand the single live rim back and forth 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5608/
+    Call log:
+      - navigating to "http://localhost:5608/", waiting until "load"
+
+
+      37 |   test('drawer and system modal hand the single live rim back and forth', async ({ page }) => {
+      38 |     await page.addInitScript(() => localStorage.clear())
+    > 39 |     await page.goto('/')
+         |                ^
+      40 |     await page.getByTestId('auth-guest-button').click()
+      41 |     await createCharacterThroughUi(page, 'Hệ Thống')
+      42 |     await enterHome(page)
+        at E:\tutienidle\game\tests\e2e\system-ui.spec.ts:39:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\system-ui-system-UI-skin---4c118-gle-live-rim-back-and-forth\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\system-ui-system-UI-skin---4c118-gle-live-rim-back-and-forth\error-context.md
+
+  21) tests\e2e\system-ui.spec.ts:91:3 › system UI skin - rim authority › a nested system modal answers Escape, not the background card 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5608/
+    Call log:
+      - navigating to "http://localhost:5608/", waiting until "load"
+
+
+      91 |   test('a nested system modal answers Escape, not the background card', async ({ page }) => {
+      92 |     await page.addInitScript(() => localStorage.clear())
+    > 93 |     await page.goto('/')
+         |                ^
+      94 |     await page.getByTestId('auth-guest-button').click()
+      95 |     await createCharacterThroughUi(page, 'Hệ Thống')
+      96 |     await enterHome(page)
+        at E:\tutienidle\game\tests\e2e\system-ui.spec.ts:93:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\system-ui-system-UI-skin---58793-ape-not-the-background-card\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\system-ui-system-UI-skin---58793-ape-not-the-background-card\error-context.md
+
+  22) tests\e2e\system-ui.spec.ts:118:3 › system UI skin - rim authority › reduced-motion emulation stills all sys layer animation 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5608/
+    Call log:
+      - navigating to "http://localhost:5608/", waiting until "load"
+
+
+      119 |     await page.emulateMedia({ reducedMotion: 'reduce' })
+      120 |     await page.addInitScript(() => localStorage.clear())
+    > 121 |     await page.goto('/')
+          |                ^
+      122 |     await page.getByTestId('auth-guest-button').click()
+      123 |     await createCharacterThroughUi(page, 'Hệ Thống')
+      124 |     await enterHome(page)
+        at E:\tutienidle\game\tests\e2e\system-ui.spec.ts:121:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\system-ui-system-UI-skin---4e84f-lls-all-sys-layer-animation\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\system-ui-system-UI-skin---4e84f-lls-all-sys-layer-animation\error-context.md
+
+  23) tests\e2e\technique-frozen-warning.spec.ts:130:3 › BreakthroughRequirementPanel unperfected-technique warning (M-F-TECHNIQUE, P14) › shows the frozen-cycle warning on the Trúc Cơ confirm while a technique is unperfected 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5608/
+    Call log:
+      - navigating to "http://localhost:5608/", waiting until "load"
+
+
+       at helpers.ts:21
+
+      19 |  */
+      20 | export async function bootToGuestHome(page: Page): Promise<void> {
+    > 21 |   await page.goto('/')
+         |              ^
+      22 |
+      23 |   const auth = page.getByTestId('auth-screen')
+      24 |   await expect(auth).toBeVisible({ timeout: 15_000 })
+        at bootToGuestHome (E:\tutienidle\game\tests\e2e\helpers.ts:21:14)
+        at E:\tutienidle\game\tests\e2e\technique-frozen-warning.spec.ts:136:11
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\technique-frozen-warning-B-a07d2--a-technique-is-unperfected\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\technique-frozen-warning-B-a07d2--a-technique-is-unperfected\error-context.md
+
+  24) tests\e2e\tribulation-flow.spec.ts:112:3 › Tribulation flow (P13 oracle, F1 regression) › completed tribulation routes home and restores usable home chrome 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5608/
+    Call log:
+      - navigating to "http://localhost:5608/", waiting until "load"
+
+
+       at helpers.ts:21
+
+      19 |  */
+      20 | export async function bootToGuestHome(page: Page): Promise<void> {
+    > 21 |   await page.goto('/')
+         |              ^
+      22 |
+      23 |   const auth = page.getByTestId('auth-screen')
+      24 |   await expect(auth).toBeVisible({ timeout: 15_000 })
+        at bootToGuestHome (E:\tutienidle\game\tests\e2e\helpers.ts:21:14)
+        at E:\tutienidle\game\tests\e2e\tribulation-flow.spec.ts:117:11
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\tribulation-flow-Tribulati-cdd59-restores-usable-home-chrome\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\tribulation-flow-Tribulati-cdd59-restores-usable-home-chrome\error-context.md
+
+  25) tests\e2e\turn-combat-hud.spec.ts:37:3 › Slice 7 — turn combat HUD › battle runs, combat slots render, legacy controls gone, refight works 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5608/
+    Call log:
+      - navigating to "http://localhost:5608/", waiting until "load"
+
+
+       at helpers.ts:21
+
+      19 |  */
+      20 | export async function bootToGuestHome(page: Page): Promise<void> {
+    > 21 |   await page.goto('/')
+         |              ^
+      22 |
+      23 |   const auth = page.getByTestId('auth-screen')
+      24 |   await expect(auth).toBeVisible({ timeout: 15_000 })
+        at bootToGuestHome (E:\tutienidle\game\tests\e2e\helpers.ts:21:14)
+        at E:\tutienidle\game\tests\e2e\turn-combat-hud.spec.ts:44:11
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\turn-combat-hud-Slice-7-—--ef6c6-controls-gone-refight-works\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\turn-combat-hud-Slice-7-—--ef6c6-controls-gone-refight-works\error-context.md
+
+  26) tests\e2e\ui-audit-progression-fixed.spec.ts:100:1 › progression slice fixed screens ─────────
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5608/
+    Call log:
+      - navigating to "http://localhost:5608/", waiting until "load"
+
+
+       at helpers.ts:21
+
+      19 |  */
+      20 | export async function bootToGuestHome(page: Page): Promise<void> {
+    > 21 |   await page.goto('/')
+         |              ^
+      22 |
+      23 |   const auth = page.getByTestId('auth-screen')
+      24 |   await expect(auth).toBeVisible({ timeout: 15_000 })
+        at bootToGuestHome (E:\tutienidle\game\tests\e2e\helpers.ts:21:14)
+        at E:\tutienidle\game\tests\e2e\ui-audit-progression-fixed.spec.ts:101:9
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\ui-audit-progression-fixed-progression-slice-fixed-screens\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\ui-audit-progression-fixed-progression-slice-fixed-screens\error-context.md
+
+  27) tests\e2e\wave-vfx-capture.spec.ts:23:3 › Turn-Based Wave VFX visual capture › captures countdown/materialize screenshots + runtime wave telegraph proof @capture 
+
+    Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5608/
+    Call log:
+      - navigating to "http://localhost:5608/", waiting until "load"
+
+
+       at helpers.ts:21
+
+      19 |  */
+      20 | export async function bootToGuestHome(page: Page): Promise<void> {
+    > 21 |   await page.goto('/')
+         |              ^
+      22 |
+      23 |   const auth = page.getByTestId('auth-screen')
+      24 |   await expect(auth).toBeVisible({ timeout: 15_000 })
+        at bootToGuestHome (E:\tutienidle\game\tests\e2e\helpers.ts:21:14)
+        at E:\tutienidle\game\tests\e2e\wave-vfx-capture.spec.ts:29:11
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\wave-vfx-capture-Turn-Base-e352e-untime-wave-telegraph-proof\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\wave-vfx-capture-Turn-Base-e352e-untime-wave-telegraph-proof\error-context.md
+
+  Slow test file: tests\e2e\combat-vertical-slice.spec.ts (7.6m)
+  Consider running tests from slow files in parallel. See: https://playwright.dev/docs/test-parallel
+  27 failed
+    tests\e2e\combat-idle-motion-capture.spec.ts:51:3 › Combat idle motion (static mode + wave-1 reskins) › static entities bob; reskinned enemies play authored frames @capture 
+    tests\e2e\cultivation-path-ritual.spec.ts:310:3 › Cultivation Path ritual - six-way matrix (P14) › sword/sword_pathway: ritual -> preset editor surface 
+    tests\e2e\cultivation-path-ritual.spec.ts:381:3 › Cultivation Path ritual - six-way matrix (P14) › sword/hidden_sword_pathway: tram gate -> ritual entry -> ngu slice 
+    tests\e2e\cultivation-path-ritual.spec.ts:421:3 › Cultivation Path ritual - six-way matrix (P14) › spell/spell_pathway: ritual -> element tree + artifact deferred to Kim Dan 
+    tests\e2e\cultivation-path-ritual.spec.ts:488:3 › Cultivation Path ritual - six-way matrix (P14) › spell/hidden_spell_pathway: linh_bao gate -> sealed card -> skill triple, no artifact 
+    tests\e2e\cultivation-path-ritual.spec.ts:603:3 › Cultivation Path ritual - six-way matrix (P14) › body/body_pathway: ritual -> kit resolution 
+    tests\e2e\cultivation-path-ritual.spec.ts:624:3 › Cultivation Path ritual - six-way matrix (P14) › body/hidden_body_pathway: huy_quyen gate -> ritual entry 
+    tests\e2e\error-recovery.spec.ts:54:3 › Reload recovery › reload during home returns to home without stuck state 
+    tests\e2e\ink-wash-ui.spec.ts:30:5 › ink-wash UI visual smoke › desktop: painting shell stays usable and inside the viewport 
+    tests\e2e\ink-wash-ui.spec.ts:30:5 › ink-wash UI visual smoke › compact: painting shell stays usable and inside the viewport 
+    tests\e2e\ink-wash-ui.spec.ts:30:5 › ink-wash UI visual smoke › tall: painting shell stays usable and inside the viewport 
+    tests\e2e\presentation-routing.spec.ts:14:3 › Presentation routing regression (Task 1 baseline) › stage start activates CombatScene and deactivates MainScene in Phaser 
+    tests\e2e\reduced-motion.spec.ts:10:3 › Reduced motion › animations disabled under prefers-reduced-motion: reduce 
+    tests\e2e\save-reload.spec.ts:63:3 › Save and reload persistence › persists character and seeded spirit stones exactly across reload 
+    tests\e2e\skill-presentation-production.spec.ts:436:3 › skill presentation runtime - production path (design section 11) › melee basic + ngu_kiem_thuat: cast -> impact once -> resolved -> complete 
+    tests\e2e\skill-vfx.spec.ts:6:1 › skill VFX lab uses the shared runner, cleans up, and never writes saves 
+    tests\e2e\skill-vfx.spec.ts:42:1 › low quality and reduced motion preserve the same milestones ─
+    tests\e2e\sound-system.spec.ts:78:3 › Sound system › cue attempts fire on gesture; sliders persist across reload 
+    tests\e2e\standing-slot-panel.spec.ts:176:3 › Standing slot panel (P14) › panel opens, drag-drop works without crash, 3x3 grid with distinct occupied state 
+    tests\e2e\system-ui.spec.ts:37:3 › system UI skin - rim authority › drawer and system modal hand the single live rim back and forth 
+    tests\e2e\system-ui.spec.ts:91:3 › system UI skin - rim authority › a nested system modal answers Escape, not the background card 
+    tests\e2e\system-ui.spec.ts:118:3 › system UI skin - rim authority › reduced-motion emulation stills all sys layer animation 
+    tests\e2e\technique-frozen-warning.spec.ts:130:3 › BreakthroughRequirementPanel unperfected-technique warning (M-F-TECHNIQUE, P14) › shows the frozen-cycle warning on the Trúc Cơ confirm while a technique is unperfected 
+    tests\e2e\tribulation-flow.spec.ts:112:3 › Tribulation flow (P13 oracle, F1 regression) › completed tribulation routes home and restores usable home chrome 
+    tests\e2e\turn-combat-hud.spec.ts:37:3 › Slice 7 — turn combat HUD › battle runs, combat slots render, legacy controls gone, refight works 
+    tests\e2e\ui-audit-progression-fixed.spec.ts:100:1 › progression slice fixed screens ───────────
+    tests\e2e\wave-vfx-capture.spec.ts:23:3 › Turn-Based Wave VFX visual capture › captures countdown/materialize screenshots + runtime wave telegraph proof @capture 
+  11 passed (10.5m)
+EXIT=1

@@ -29,6 +29,7 @@ import {
   type LaneIndex,
 } from '@/core/battle/BattleLane'
 import { getCombatInsets, getFallbackCombatInsets } from '@/presentation/geometry/combatInsets'
+import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import { PlayerHudLayer } from './combat/PlayerHudLayer'
 import { readKiemBar } from '@/presentation/bridges/kiemBarBridge'
 import { readTheBar } from '@/presentation/bridges/theBarBridge'
@@ -2211,7 +2212,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     }
 
     for (const entry of missing) {
-      this.load.image(entry.key, entry.url)
+      this.load.image(entry.key, resolveAssetUrl(entry.url))
     }
 
     const generation = ++this.backdropGeneration

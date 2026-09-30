@@ -6,6 +6,7 @@ import {
   attachPowerMonitorToClockHost,
 } from '../src/main-process/combatClockHost'
 import { createQuitFlush } from '../src/main-process/quitFlush'
+import { BUILD_IDENTITY, shortGitSha } from '../src/shared/build/BuildIdentity'
 
 // Uncommitted audit followup plan, Ưu tiên 2 "xử lý khi đóng gói Electron"
 // (2026-08-24) — main process cho bản desktop. Hai mục đích:
@@ -39,6 +40,15 @@ function main() {
   // One host for the one BrowserWindow this app creates (see the
   // single-instance lock above).
   const clockHost = createCombatClockHost()
+
+  // The same injected identity the renderer/settings surfaces render - logged
+  // once at boot so packaged logs can be matched to the release manifest.
+  console.log(
+    `[build] ${BUILD_IDENTITY.productName} ${BUILD_IDENTITY.appVersion} ` +
+      `build=${BUILD_IDENTITY.buildId} sha=${shortGitSha()} ` +
+      `schema=${BUILD_IDENTITY.saveSchemaVersion} env=${BUILD_IDENTITY.backendEnvironment} ` +
+      `channel=${BUILD_IDENTITY.releaseChannel} at=${BUILD_IDENTITY.builtAtUtc}`,
+  )
 
   // Autosave on window close — the first 'close' is held while the renderer
   // flushes its save (IPC 'app:flush-complete', see electron/preload.ts),

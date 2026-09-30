@@ -1,0 +1,837 @@
+{
+ "records": [
+  {
+   "kind": "coverage",
+   "id": "COV-I-IDENTITY-MATRIX-STATIC_SEMANTIC",
+   "invariantId": "I-IDENTITY-MATRIX",
+   "surface": "STATIC_SEMANTIC",
+   "attackIds": [],
+   "taxonomyIds": [
+    "PTH-01",
+    "ROB-01"
+   ],
+   "applicability": "REQUIRED",
+   "reason": "covered via EV-COORD-CLEAN",
+   "evidenceIds": [
+    "EV-COORD-CLEAN"
+   ],
+   "reviewerIds": [
+    "coordinator-local"
+   ],
+   "status": "SATISFIED",
+   "weakProtection": false
+  },
+  {
+   "kind": "coverage",
+   "id": "COV-I-IDENTITY-MATRIX-PERSISTENCE",
+   "invariantId": "I-IDENTITY-MATRIX",
+   "surface": "PERSISTENCE",
+   "attackIds": [],
+   "taxonomyIds": [
+    "PTH-01",
+    "ROB-01"
+   ],
+   "applicability": "REQUIRED",
+   "reason": "covered via EV-VERIFY-S1",
+   "evidenceIds": [
+    "EV-VERIFY-S1"
+   ],
+   "reviewerIds": [
+    "coordinator-local"
+   ],
+   "status": "SATISFIED",
+   "weakProtection": false
+  },
+  {
+   "kind": "coverage",
+   "id": "COV-I-IDENTITY-MATRIX-DETERMINISTIC",
+   "invariantId": "I-IDENTITY-MATRIX",
+   "surface": "DETERMINISTIC",
+   "attackIds": [],
+   "taxonomyIds": [
+    "PTH-01",
+    "ROB-01"
+   ],
+   "applicability": "REQUIRED",
+   "reason": "covered via EV-VERIFY-S1",
+   "evidenceIds": [
+    "EV-VERIFY-S1"
+   ],
+   "reviewerIds": [
+    "coordinator-local"
+   ],
+   "status": "SATISFIED",
+   "weakProtection": false
+  },
+  {
+   "kind": "coverage",
+   "id": "COV-I-CREATION-CONTRACT-STATIC_SEMANTIC",
+   "invariantId": "I-CREATION-CONTRACT",
+   "surface": "STATIC_SEMANTIC",
+   "attackIds": [],
+   "taxonomyIds": [
+    "STA-03",
+    "TRN-03",
+    "ASY-02"
+   ],
+   "applicability": "REQUIRED",
+   "reason": "covered via EV-COORD-CLEAN",
+   "evidenceIds": [
+    "EV-COORD-CLEAN"
+   ],
+   "reviewerIds": [
+    "coordinator-local"
+   ],
+   "status": "SATISFIED",
+   "weakProtection": false
+  },
+  {
+   "kind": "coverage",
+   "id": "COV-I-CREATION-CONTRACT-DETERMINISTIC",
+   "invariantId": "I-CREATION-CONTRACT",
+   "surface": "DETERMINISTIC",
+   "attackIds": [],
+   "taxonomyIds": [
+    "STA-03",
+    "TRN-03",
+    "ASY-02"
+   ],
+   "applicability": "REQUIRED",
+   "reason": "covered via EV-VERIFY-S1",
+   "evidenceIds": [
+    "EV-VERIFY-S1"
+   ],
+   "reviewerIds": [
+    "coordinator-local"
+   ],
+   "status": "SATISFIED",
+   "weakProtection": false
+  },
+  {
+   "kind": "coverage",
+   "id": "COV-I-SAVE-VERSION-87-STATIC_SEMANTIC",
+   "invariantId": "I-SAVE-VERSION-87",
+   "surface": "STATIC_SEMANTIC",
+   "attackIds": [],
+   "taxonomyIds": [
+    "PER-01",
+    "PER-03",
+    "PER-07",
+    "ROB-03"
+   ],
+   "applicability": "REQUIRED",
+   "reason": "covered via EV-COORD-CLEAN",
+   "evidenceIds": [
+    "EV-COORD-CLEAN"
+   ],
+   "reviewerIds": [
+    "coordinator-local"
+   ],
+   "status": "SATISFIED",
+   "weakProtection": false
+  },
+  {
+   "kind": "coverage",
+   "id": "COV-I-SAVE-VERSION-87-DETERMINISTIC",
+   "invariantId": "I-SAVE-VERSION-87",
+   "surface": "DETERMINISTIC",
+   "attackIds": [],
+   "taxonomyIds": [
+    "PER-01",
+    "PER-03",
+    "PER-07",
+    "ROB-03"
+   ],
+   "applicability": "REQUIRED",
+   "reason": "covered via EV-VERIFY-S1",
+   "evidenceIds": [
+    "EV-VERIFY-S1"
+   ],
+   "reviewerIds": [
+    "coordinator-local"
+   ],
+   "status": "SATISFIED",
+   "weakProtection": false
+  },
+  {
+   "kind": "coverage",
+   "id": "COV-I-RESTORE-ATOMIC-STATIC_SEMANTIC",
+   "invariantId": "I-RESTORE-ATOMIC",
+   "surface": "STATIC_SEMANTIC",
+   "attackIds": [],
+   "taxonomyIds": [
+    "PER-11",
+    "TRN-03"
+   ],
+   "applicability": "REQUIRED",
+   "reason": "covered via EV-COORD-CLEAN",
+   "evidenceIds": [
+    "EV-COORD-CLEAN"
+   ],
+   "reviewerIds": [
+    "coordinator-local"
+   ],
+   "status": "SATISFIED",
+   "weakProtection": false
+  },
+  {
+   "kind": "coverage",
+   "id": "COV-I-RESTORE-ATOMIC-DETERMINISTIC",
+   "invariantId": "I-RESTORE-ATOMIC",
+   "surface": "DETERMINISTIC",
+   "attackIds": [],
+   "taxonomyIds": [
+    "PER-11",
+    "TRN-03"
+   ],
+   "applicability": "REQUIRED",
+   "reason": "covered via EV-VERIFY-S1",
+   "evidenceIds": [
+    "EV-VERIFY-S1"
+   ],
+   "reviewerIds": [
+    "coordinator-local"
+   ],
+   "status": "SATISFIED",
+   "weakProtection": false
+  },
+  {
+   "kind": "coverage",
+   "id": "COV-I-SAVE-ROUNDTRIP-STATIC_SEMANTIC",
+   "invariantId": "I-SAVE-ROUNDTRIP",
+   "surface": "STATIC_SEMANTIC",
+   "attackIds": [],
+   "taxonomyIds": [
+    "PER-09",
+    "PER-12"
+   ],
+   "applicability": "REQUIRED",
+   "reason": "covered via EV-COORD-CLEAN",
+   "evidenceIds": [
+    "EV-COORD-CLEAN"
+   ],
+   "reviewerIds": [
+    "coordinator-local"
+   ],
+   "status": "SATISFIED",
+   "weakProtection": false
+  },
+  {
+   "kind": "coverage",
+   "id": "COV-I-SAVE-ROUNDTRIP-DETERMINISTIC",
+   "invariantId": "I-SAVE-ROUNDTRIP",
+   "surface": "DETERMINISTIC",
+   "attackIds": [],
+   "taxonomyIds": [
+    "PER-09",
+    "PER-12"
+   ],
+   "applicability": "REQUIRED",
+   "reason": "covered via EV-VERIFY-S1",
+   "evidenceIds": [
+    "EV-VERIFY-S1"
+   ],
+   "reviewerIds": [
+    "coordinator-local"
+   ],
+   "status": "SATISFIED",
+   "weakProtection": false
+  },
+  {
+   "kind": "coverage",
+   "id": "COV-I-CLOUD-CAS-STATIC_SEMANTIC",
+   "invariantId": "I-CLOUD-CAS",
+   "surface": "STATIC_SEMANTIC",
+   "attackIds": [],
+   "taxonomyIds": [
+    "ASY-01",
+    "ASY-03",
+    "ASY-08"
+   ],
+   "applicability": "REQUIRED",
+   "reason": "covered via EV-COORD-CLEAN",
+   "evidenceIds": [
+    "EV-COORD-CLEAN"
+   ],
+   "reviewerIds": [
+    "coordinator-local"
+   ],
+   "status": "SATISFIED",
+   "weakProtection": false
+  },
+  {
+   "kind": "coverage",
+   "id": "COV-I-CLOUD-CAS-DETERMINISTIC",
+   "invariantId": "I-CLOUD-CAS",
+   "surface": "DETERMINISTIC",
+   "attackIds": [],
+   "taxonomyIds": [
+    "ASY-01",
+    "ASY-03",
+    "ASY-08"
+   ],
+   "applicability": "REQUIRED",
+   "reason": "covered via EV-VERIFY-S1",
+   "evidenceIds": [
+    "EV-VERIFY-S1"
+   ],
+   "reviewerIds": [
+    "coordinator-local"
+   ],
+   "status": "SATISFIED",
+   "weakProtection": false
+  },
+  {
+   "kind": "coverage",
+   "id": "COV-I-REALM-18-STATIC_SEMANTIC",
+   "invariantId": "I-REALM-18",
+   "surface": "STATIC_SEMANTIC",
+   "attackIds": [],
+   "taxonomyIds": [
+    "TRN-08",
+    "STA-03",
+    "UI-04"
+   ],
+   "applicability": "REQUIRED",
+   "reason": "covered via EV-COORD-CLEAN",
+   "evidenceIds": [
+    "EV-COORD-CLEAN"
+   ],
+   "reviewerIds": [
+    "coordinator-local"
+   ],
+   "status": "SATISFIED",
+   "weakProtection": false
+  },
+  {
+   "kind": "coverage",
+   "id": "COV-I-REALM-18-DETERMINISTIC",
+   "invariantId": "I-REALM-18",
+   "surface": "DETERMINISTIC",
+   "attackIds": [],
+   "taxonomyIds": [
+    "TRN-08",
+    "STA-03",
+    "UI-04"
+   ],
+   "applicability": "REQUIRED",
+   "reason": "covered via EV-BALANCE-S1",
+   "evidenceIds": [
+    "EV-BALANCE-S1"
+   ],
+   "reviewerIds": [
+    "coordinator-local"
+   ],
+   "status": "SATISFIED",
+   "weakProtection": false
+  },
+  {
+   "kind": "coverage",
+   "id": "COV-I-REALM-SETTLE-ONCE-STATIC_SEMANTIC",
+   "invariantId": "I-REALM-SETTLE-ONCE",
+   "surface": "STATIC_SEMANTIC",
+   "attackIds": [],
+   "taxonomyIds": [
+    "TRN-12",
+    "TRN-06",
+    "PER-02"
+   ],
+   "applicability": "REQUIRED",
+   "reason": "covered via EV-COORD-CLEAN",
+   "evidenceIds": [
+    "EV-COORD-CLEAN"
+   ],
+   "reviewerIds": [
+    "coordinator-local"
+   ],
+   "status": "SATISFIED",
+   "weakProtection": false
+  },
+  {
+   "kind": "coverage",
+   "id": "COV-I-REALM-SETTLE-ONCE-DETERMINISTIC",
+   "invariantId": "I-REALM-SETTLE-ONCE",
+   "surface": "DETERMINISTIC",
+   "attackIds": [],
+   "taxonomyIds": [
+    "TRN-12",
+    "TRN-06",
+    "PER-02"
+   ],
+   "applicability": "REQUIRED",
+   "reason": "covered via EV-VERIFY-S1",
+   "evidenceIds": [
+    "EV-VERIFY-S1"
+   ],
+   "reviewerIds": [
+    "coordinator-local"
+   ],
+   "status": "SATISFIED",
+   "weakProtection": false
+  },
+  {
+   "kind": "coverage",
+   "id": "COV-I-REALM-UNEQUIP-STATIC_SEMANTIC",
+   "invariantId": "I-REALM-UNEQUIP",
+   "surface": "STATIC_SEMANTIC",
+   "attackIds": [],
+   "taxonomyIds": [
+    "INV-09",
+    "CRS-06"
+   ],
+   "applicability": "REQUIRED",
+   "reason": "covered via EV-COORD-CLEAN",
+   "evidenceIds": [
+    "EV-COORD-CLEAN"
+   ],
+   "reviewerIds": [
+    "coordinator-local"
+   ],
+   "status": "SATISFIED",
+   "weakProtection": false
+  },
+  {
+   "kind": "coverage",
+   "id": "COV-I-REALM-UNEQUIP-DETERMINISTIC",
+   "invariantId": "I-REALM-UNEQUIP",
+   "surface": "DETERMINISTIC",
+   "attackIds": [],
+   "taxonomyIds": [
+    "INV-09",
+    "CRS-06"
+   ],
+   "applicability": "REQUIRED",
+   "reason": "covered via EV-VERIFY-S1",
+   "evidenceIds": [
+    "EV-VERIFY-S1"
+   ],
+   "reviewerIds": [
+    "coordinator-local"
+   ],
+   "status": "SATISFIED",
+   "weakProtection": false
+  },
+  {
+   "kind": "coverage",
+   "id": "COV-I-HIDDEN-PREFIX-STATIC_SEMANTIC",
+   "invariantId": "I-HIDDEN-PREFIX",
+   "surface": "STATIC_SEMANTIC",
+   "attackIds": [],
+   "taxonomyIds": [
+    "STA-02",
+    "STA-07",
+    "TRN-06"
+   ],
+   "applicability": "REQUIRED",
+   "reason": "covered via EV-COORD-CLEAN",
+   "evidenceIds": [
+    "EV-COORD-CLEAN"
+   ],
+   "reviewerIds": [
+    "coordinator-local"
+   ],
+   "status": "SATISFIED",
+   "weakProtection": false
+  },
+  {
+   "kind": "coverage",
+   "id": "COV-I-HIDDEN-PREFIX-DETERMINISTIC",
+   "invariantId": "I-HIDDEN-PREFIX",
+   "surface": "DETERMINISTIC",
+   "attackIds": [],
+   "taxonomyIds": [
+    "STA-02",
+    "STA-07",
+    "TRN-06"
+   ],
+   "applicability": "REQUIRED",
+   "reason": "covered via EV-VERIFY-S1",
+   "evidenceIds": [
+    "EV-VERIFY-S1"
+   ],
+   "reviewerIds": [
+    "coordinator-local"
+   ],
+   "status": "SATISFIED",
+   "weakProtection": false
+  },
+  {
+   "kind": "coverage",
+   "id": "COV-I-HIDDEN-REWARD-ONCE-STATIC_SEMANTIC",
+   "invariantId": "I-HIDDEN-REWARD-ONCE",
+   "surface": "STATIC_SEMANTIC",
+   "attackIds": [],
+   "taxonomyIds": [
+    "TRN-12",
+    "ECO-01"
+   ],
+   "applicability": "REQUIRED",
+   "reason": "covered via EV-COORD-CLEAN",
+   "evidenceIds": [
+    "EV-COORD-CLEAN"
+   ],
+   "reviewerIds": [
+    "coordinator-local"
+   ],
+   "status": "SATISFIED",
+   "weakProtection": false
+  },
+  {
+   "kind": "coverage",
+   "id": "COV-I-HIDDEN-REWARD-ONCE-DETERMINISTIC",
+   "invariantId": "I-HIDDEN-REWARD-ONCE",
+   "surface": "DETERMINISTIC",
+   "attackIds": [],
+   "taxonomyIds": [
+    "TRN-12",
+    "ECO-01"
+   ],
+   "applicability": "REQUIRED",
+   "reason": "covered via EV-VERIFY-S1",
+   "evidenceIds": [
+    "EV-VERIFY-S1"
+   ],
+   "reviewerIds": [
+    "coordinator-local"
+   ],
+   "status": "SATISFIED",
+   "weakProtection": false
+  },
+  {
+   "kind": "coverage",
+   "id": "COV-I-NGHICH-PITY-STATIC_SEMANTIC",
+   "invariantId": "I-NGHICH-PITY",
+   "surface": "STATIC_SEMANTIC",
+   "attackIds": [],
+   "taxonomyIds": [
+    "ECO-03",
+    "ROB-10",
+    "TRN-06"
+   ],
+   "applicability": "REQUIRED",
+   "reason": "not yet exercised this run — pending",
+   "evidenceIds": [],
+   "reviewerIds": [
+    "coordinator-local"
+   ],
+   "status": "PENDING",
+   "weakProtection": false
+  },
+  {
+   "kind": "coverage",
+   "id": "COV-I-NGHICH-PITY-DETERMINISTIC",
+   "invariantId": "I-NGHICH-PITY",
+   "surface": "DETERMINISTIC",
+   "attackIds": [],
+   "taxonomyIds": [
+    "ECO-03",
+    "ROB-10",
+    "TRN-06"
+   ],
+   "applicability": "REQUIRED",
+   "reason": "covered via EV-VERIFY-S1",
+   "evidenceIds": [
+    "EV-VERIFY-S1"
+   ],
+   "reviewerIds": [
+    "coordinator-local"
+   ],
+   "status": "SATISFIED",
+   "weakProtection": false
+  },
+  {
+   "kind": "coverage",
+   "id": "COV-I-BODY-OWNER-STATIC_SEMANTIC",
+   "invariantId": "I-BODY-OWNER",
+   "surface": "STATIC_SEMANTIC",
+   "attackIds": [],
+   "taxonomyIds": [
+    "AUT-01",
+    "AUT-02",
+    "ECO-05"
+   ],
+   "applicability": "REQUIRED",
+   "reason": "covered via EV-COORD-CLEAN",
+   "evidenceIds": [
+    "EV-COORD-CLEAN"
+   ],
+   "reviewerIds": [
+    "coordinator-local"
+   ],
+   "status": "SATISFIED",
+   "weakProtection": false
+  },
+  {
+   "kind": "coverage",
+   "id": "COV-I-BODY-OWNER-DETERMINISTIC",
+   "invariantId": "I-BODY-OWNER",
+   "surface": "DETERMINISTIC",
+   "attackIds": [],
+   "taxonomyIds": [
+    "AUT-01",
+    "AUT-02",
+    "ECO-05"
+   ],
+   "applicability": "REQUIRED",
+   "reason": "covered via EV-VERIFY-S1",
+   "evidenceIds": [
+    "EV-VERIFY-S1"
+   ],
+   "reviewerIds": [
+    "coordinator-local"
+   ],
+   "status": "SATISFIED",
+   "weakProtection": false
+  },
+  {
+   "kind": "coverage",
+   "id": "COV-I-ESSENCE-SUBST-STATIC_SEMANTIC",
+   "invariantId": "I-ESSENCE-SUBST",
+   "surface": "STATIC_SEMANTIC",
+   "attackIds": [],
+   "taxonomyIds": [
+    "ECO-01",
+    "ECO-05"
+   ],
+   "applicability": "REQUIRED",
+   "reason": "not yet exercised this run — pending",
+   "evidenceIds": [],
+   "reviewerIds": [
+    "coordinator-local"
+   ],
+   "status": "PENDING",
+   "weakProtection": false
+  },
+  {
+   "kind": "coverage",
+   "id": "COV-I-ESSENCE-SUBST-DETERMINISTIC",
+   "invariantId": "I-ESSENCE-SUBST",
+   "surface": "DETERMINISTIC",
+   "attackIds": [],
+   "taxonomyIds": [
+    "ECO-01",
+    "ECO-05"
+   ],
+   "applicability": "REQUIRED",
+   "reason": "covered via EV-BALANCE-S1",
+   "evidenceIds": [
+    "EV-BALANCE-S1"
+   ],
+   "reviewerIds": [
+    "coordinator-local"
+   ],
+   "status": "SATISFIED",
+   "weakProtection": false
+  },
+  {
+   "kind": "coverage",
+   "id": "COV-I-PHYSIQUE-ONCE-STATIC_SEMANTIC",
+   "invariantId": "I-PHYSIQUE-ONCE",
+   "surface": "STATIC_SEMANTIC",
+   "attackIds": [],
+   "taxonomyIds": [
+    "TRN-06",
+    "PER-02"
+   ],
+   "applicability": "REQUIRED",
+   "reason": "not yet exercised this run — pending",
+   "evidenceIds": [],
+   "reviewerIds": [
+    "coordinator-local"
+   ],
+   "status": "PENDING",
+   "weakProtection": false
+  },
+  {
+   "kind": "coverage",
+   "id": "COV-I-PHYSIQUE-ONCE-DETERMINISTIC",
+   "invariantId": "I-PHYSIQUE-ONCE",
+   "surface": "DETERMINISTIC",
+   "attackIds": [],
+   "taxonomyIds": [
+    "TRN-06",
+    "PER-02"
+   ],
+   "applicability": "REQUIRED",
+   "reason": "covered via EV-VERIFY-S1",
+   "evidenceIds": [
+    "EV-VERIFY-S1"
+   ],
+   "reviewerIds": [
+    "coordinator-local"
+   ],
+   "status": "SATISFIED",
+   "weakProtection": false
+  },
+  {
+   "kind": "coverage",
+   "id": "COV-I-TECH-MASTERY-STATIC_SEMANTIC",
+   "invariantId": "I-TECH-MASTERY",
+   "surface": "STATIC_SEMANTIC",
+   "attackIds": [],
+   "taxonomyIds": [
+    "AUT-08",
+    "TRN-12"
+   ],
+   "applicability": "REQUIRED",
+   "reason": "covered via EV-COORD-CLEAN",
+   "evidenceIds": [
+    "EV-COORD-CLEAN"
+   ],
+   "reviewerIds": [
+    "coordinator-local"
+   ],
+   "status": "SATISFIED",
+   "weakProtection": false
+  },
+  {
+   "kind": "coverage",
+   "id": "COV-I-TECH-MASTERY-DETERMINISTIC",
+   "invariantId": "I-TECH-MASTERY",
+   "surface": "DETERMINISTIC",
+   "attackIds": [],
+   "taxonomyIds": [
+    "AUT-08",
+    "TRN-12"
+   ],
+   "applicability": "REQUIRED",
+   "reason": "covered via EV-VERIFY-S1",
+   "evidenceIds": [
+    "EV-VERIFY-S1"
+   ],
+   "reviewerIds": [
+    "coordinator-local"
+   ],
+   "status": "SATISFIED",
+   "weakProtection": false
+  },
+  {
+   "kind": "coverage",
+   "id": "COV-I-TECH-MODEL-STATIC_SEMANTIC",
+   "invariantId": "I-TECH-MODEL",
+   "surface": "STATIC_SEMANTIC",
+   "attackIds": [],
+   "taxonomyIds": [
+    "STA-02",
+    "ROB-03"
+   ],
+   "applicability": "REQUIRED",
+   "reason": "not yet exercised this run — pending",
+   "evidenceIds": [],
+   "reviewerIds": [
+    "coordinator-local"
+   ],
+   "status": "PENDING",
+   "weakProtection": false
+  },
+  {
+   "kind": "coverage",
+   "id": "COV-I-TECH-MODEL-DETERMINISTIC",
+   "invariantId": "I-TECH-MODEL",
+   "surface": "DETERMINISTIC",
+   "attackIds": [],
+   "taxonomyIds": [
+    "STA-02",
+    "ROB-03"
+   ],
+   "applicability": "REQUIRED",
+   "reason": "covered via EV-VERIFY-S1",
+   "evidenceIds": [
+    "EV-VERIFY-S1"
+   ],
+   "reviewerIds": [
+    "coordinator-local"
+   ],
+   "status": "SATISFIED",
+   "weakProtection": false
+  },
+  {
+   "kind": "coverage",
+   "id": "COV-I-NODE-CORELEVEL-STATIC_SEMANTIC",
+   "invariantId": "I-NODE-CORELEVEL",
+   "surface": "STATIC_SEMANTIC",
+   "attackIds": [],
+   "taxonomyIds": [
+    "AUT-03",
+    "CBT-02",
+    "PER-07"
+   ],
+   "applicability": "REQUIRED",
+   "reason": "covered via EV-COORD-CLEAN",
+   "evidenceIds": [
+    "EV-COORD-CLEAN"
+   ],
+   "reviewerIds": [
+    "coordinator-local"
+   ],
+   "status": "SATISFIED",
+   "weakProtection": false
+  },
+  {
+   "kind": "coverage",
+   "id": "COV-I-NODE-CORELEVEL-DETERMINISTIC",
+   "invariantId": "I-NODE-CORELEVEL",
+   "surface": "DETERMINISTIC",
+   "attackIds": [],
+   "taxonomyIds": [
+    "AUT-03",
+    "CBT-02",
+    "PER-07"
+   ],
+   "applicability": "REQUIRED",
+   "reason": "covered via EV-VERIFY-S1",
+   "evidenceIds": [
+    "EV-VERIFY-S1"
+   ],
+   "reviewerIds": [
+    "coordinator-local"
+   ],
+   "status": "SATISFIED",
+   "weakProtection": false
+  },
+  {
+   "kind": "coverage",
+   "id": "COV-I-NODE-PREREQ-STATIC_SEMANTIC",
+   "invariantId": "I-NODE-PREREQ",
+   "surface": "STATIC_SEMANTIC",
+   "attackIds": [],
+   "taxonomyIds": [
+    "TRN-01",
+    "TRN-11",
+    "INV-05"
+   ],
+   "applicability": "REQUIRED",
+   "reason": "covered via EV-COORD-CLEAN",
+   "evidenceIds": [
+    "EV-COORD-CLEAN"
+   ],
+   "reviewerIds": [
+    "coordinator-local"
+   ],
+   "status": "SATISFIED",
+   "weakProtection": false
+  },
+  {
+   "kind": "coverage",
+   "id": "COV-I-NODE-PREREQ-DETERMINISTIC",
+   "invariantId": "I-NODE-PREREQ",
+   "surface": "DETERMINISTIC",
+   "attackIds": [],
+   "taxonomyIds": [
+    "TRN-01",
+    "TRN-11",
+    "INV-05"
+   ],
+   "applicability": "REQUIRED",
+   "reason": "covered via EV-VERIFY-S1",
+   "evidenceIds": [
+    "EV-VERIFY-S1"
+   ],
+   "reviewerIds": [
+    "coordinator-local"
+   ],
+   "status": "SATISFIED",
+   "weakProtection": false
+  }
+ ]
+}
