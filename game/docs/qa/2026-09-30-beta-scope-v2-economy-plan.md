@@ -334,3 +334,67 @@ classification list lives in `betaScope.ts` (policy authority).
   census scope is materials + stone/tinh_hoa currencies only.
 - Vault-3 equipment bases still list non-beta realm species in
   lore text; sources are family tables now (data-level, no .vue edits).
+
+---
+
+## P5 Sequential review evidence (post-P4 state, commits through 0c863ad3)
+
+Sequential Review Pass 1 - Local Correctness / Regression
+  Reviewed state: post-OCR + post-P4 production diff (82 files, 3ff4b826..0c863ad3).
+  Method: every production hunk re-read (betaScope authority, CompanionAvailability/
+  ArtifactProgression/FormationPlacement predicates, CompanionGifts, HiddenBeastSystem,
+  EquipmentSystem wash/refine, DecomposeSystem, ProductionSystem manualWorkforce +
+  grotto filter + hidden channels, GameManagerAlchemyOps gates + read-model,
+  GameManagerBuildingOps assignWorkers + worker-lodge model, QuestSystem predicates,
+  BattleLootSystem essence/EXP gates, CombatBuild companion/formation gates,
+  FamilyDropTables/quests/FoundationEnemies data).
+  Findings: none new. Verified-non-findings: (a) deliversInBeta lacks the
+  breakthroughRealmId leg - vacuous today, no Material carries the tag
+  (only truc_co_dan pill + alchemy_truc_co_dan recipe); (b)
+  foundation_ferocious_sand_scorpion family tag is data-true (same species
+  as roster normal, off-roster so pool never fires - correct).
+  Fixes: none. Verification: npx vitest run src/core/game + tests/architecture
+  = 199 files green; type-check clean; ascii ratchet green.
+
+Sequential Review Pass 2 - Architecture / Authority / Ownership
+  Reviewed state after Pass 1 fixes: YES (no fixes needed).
+  Findings:
+    - LOW: betaEconomyCensus.deliversInBeta mirrors BattleLootSystem
+      delivery suppressions test-side; a future delivery suppression not
+      mirrored would drift the census. Deferred - the suppressed-faucet
+      assertions pin today's 5 suppressed ids and the mirror is
+      documented in-code.
+    - Accepted: CombatBuild + BattleLootSystem key grandfathered-save
+      access on isScopeHidden directly (not the unlock predicates) -
+      deliberate, the scope question is flag-only; both read the same
+      authority. Ops-level reason-string mirrors (startAlchemyJob,
+      assignWorkers) are intentional fail-fast UX seams with the domain
+      gate behind them.
+  Fixes: none. Verification: type-check clean (no import cycles -
+  betaScope imports Quest type-only).
+
+Sequential Review Pass 3 - Adversarial Integration
+  Reviewed state after Pass 2 fixes: YES (no fixes needed).
+  Adversarial sweep results:
+    - Grandfathered saves: companion participants [] in resolveCombatBuild,
+      Tran Phap buff skipped, companion EXP closed, commitFormationLoadout
+      closed, pull/exchange/claim/feed realm_locked, gifts suppressed,
+      token suppressed at delivery (existing seam), essences suppressed
+      (new gate), hidden channels frozen (onEnemyDefeated +
+      rollHiddenChannelRewards), offline settle returns 0, spawn funnel
+      stageSpawnableEnemyIds rejects huyet_mong on beta stages.
+    - Talent faucets: no quest reward grants a talent; TribulationOutcome
+      pham_nhan_chi_cot push sits behind isGreatDaoBreakthrough (dormant
+      classification - unreachable in beta); creation-offer filtering is
+      Phase-2 scope.
+    - Daily residue: unregistered questProgress inert (registry-filtered
+      everywhere), pinned by ChieuHienLenhDrops + r81qa tests.
+    - Auto-farm path: same loot seam -> EXP + suppression gates apply.
+  Findings: none new.
+  Fixes: none. Verification: full affected scope green (see P3/P4).
+
+Deferred findings ledger (all Low, safe to defer):
+  1. census deliversInBeta mirror-drift risk (Pass 2 above).
+  2. EquipmentSystem.ts pre-existing unused imports (~lines 20-22) -
+     predates this phase; recorded.
+  3. Repo-wide 92 pre-existing eslint errors - predates this phase.
