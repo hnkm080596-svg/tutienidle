@@ -30,6 +30,11 @@ import { PHAP_TU_ELEMENT_ROOT_IDS } from '@/data/progression/PhapTuNodes.builder
 import { createDefaultPlayer, type PlayerData } from '@/core/player/Player'
 import type { ProgressionNode } from '@/core/progression/ProgressionNode'
 import type { ElementType } from '@/core/element/ElementType'
+import { lockBetaWaysForTests } from '@/core/game/__fixtures__/betaWaysUnlock'
+
+// This suite asserts the beta way lock; undo the global setup's
+// full-catalog unlock so non-beta ways fail closed again.
+lockBetaWaysForTests()
 
 const BETA_ELEMENTS: ElementType[] = ['fire', 'water', 'wood', 'metal', 'earth']
 
