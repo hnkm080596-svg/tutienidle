@@ -11,6 +11,7 @@ import {
 } from '../realm/ReleasePolicy'
 import { BETA_COMPANIONS } from '../../data/companion/Companions'
 import type { CompanionDefinition } from '../../data/companion/Companions'
+import { isBetaFeature } from '../betaScope'
 
 export const COMPANION_UNLOCK_REALM_ID = 'foundation_establishment'
 
@@ -19,7 +20,11 @@ export function isCompanionDomainUnlocked(realmId: string): boolean {
   // grandfathering beyond the ceiling - a persisted save whose realm is
   // unavailable hides the domain even though COMPANION_UNLOCK_REALM_ID
   // sits in-window.
+  // BETA SCOPE LOCK v2 sec.14 - the companion domain is scope-hidden in
+  // beta; the predicate stays the single seam so ops/UI/drop/gift paths
+  // all close together.
   return (
+    isBetaFeature('companion') &&
     isRealmAvailable(COMPANION_UNLOCK_REALM_ID) &&
     isRealmAvailable(realmId) &&
     getRealmIndex(realmId) >= getRealmIndex(COMPANION_UNLOCK_REALM_ID)

@@ -10,6 +10,7 @@ import { COMPANION_UNLOCK_REALM_ID } from '../../core/companion/CompanionAvailab
 import { QuestRegistry } from '../../core/quest/QuestRegistry'
 import { QuestManager } from '../../core/quest/QuestManager'
 import { QuestSystem } from '../../core/quest/QuestSystem'
+import type { Quest } from '../../core/quest/Quest'
 import { MaterialRegistry } from '../../core/material/MaterialRegistry'
 import { MaterialBag } from '../../core/material/MaterialBag'
 import { PillRegistry } from '../../core/pill/PillRegistry'
@@ -194,92 +195,67 @@ describe('daily_chieu_hien_lenh quest', () => {
     return { registry, manager, system, bags, rewardSystem, receiver, materialBag }
   }
 
-  it('exists in QUESTS as a kill-generic daily paying 1 token, gated to Tru Co', () => {
-    const quest = QUESTS.find((entry) => entry.id === 'daily_chieu_hien_lenh')
-
-    expect(quest).toBeDefined()
-    expect(quest!.cadence).toBe('daily')
-    expect(quest!.condition).toEqual({ kind: 'kill', amount: 20 })
-    expect(quest!.reward.itemDrops).toEqual([
-      { kind: 'material', itemId: COMPANION_PULL_TOKEN_ID, amount: 1 },
-    ])
-    expect(quest!.requiredRealmId).toBe('foundation_establishment')
+  // BETA SCOPE LOCK v2 sec.15 - the token daily left the authored set
+  // entirely (companion domain scope-hidden + daily cadence disabled),
+  // so the quest id is gone rather than merely gated. The lifecycle
+  // assertions below pin what a save carrying the retired id does.
+  it('no longer exists in QUESTS', () => {
+    expect(QUESTS.find((entry) => entry.id === 'daily_chieu_hien_lenh')).toBeUndefined()
   })
 
-  it('never activates below Tru Co', () => {
-    const { registry, manager, system, bags } = setup()
-    const player = { realmId: 'qi_refining' } as unknown as PlayerData
+  it('never activates at any realm - nothing in the registry can start it', () => {
+    for (const realmId of ['qi_refining', 'foundation_establishment']) {
+      const { registry, manager, system, bags } = setup()
+      const player = { realmId } as unknown as PlayerData
 
-    system.reconcileActiveQuests(registry, manager, player)
+      system.reconcileActiveQuests(registry, manager, player)
 
-    for (let index = 0; index < 20; index++) {
-      system.onEnemyDefeated(registry, manager, 'wild_wolf', undefined)
+      for (let index = 0; index < 20; index++) {
+        system.onEnemyDefeated(registry, manager, 'wild_wolf', undefined)
+      }
+
+      expect(manager.getProgress('daily_chieu_hien_lenh')).toBeUndefined()
+      expect(system.canClaim(registry, manager, bags, 'daily_chieu_hien_lenh')).toBe(false)
     }
-
-    expect(system.canClaim(registry, manager, bags, 'daily_chieu_hien_lenh')).toBe(false)
   })
 
-  it('drops stale active progress on reconcile below Tru Co (grandfathered save)', () => {
+  it('stale residue from a grandfathered save stays inert (never counts, never claims, never projects)', () => {
     const { registry, manager, system, bags } = setup()
     const player = { realmId: 'foundation_establishment' } as unknown as PlayerData
 
-    // Grandfathered state: the daily was activated while eligible (or
-    // restored from a pre-gate save) and already has progress. Seed via
-    // ensureActive - reconcile no longer activates this quest while the
-    // pull pool is closed (token-only faucet), so it cannot seed here.
-    manager.ensureActive(QUESTS.find((q) => q.id === 'daily_chieu_hien_lenh')!)
+    // Seed the residue a pre-retirement save would carry - an active
+    // progress entry for the retired id. ensureActive takes a Quest
+    // literal so the retired entry can be seeded without registry data.
+    const legacyDaily: Quest = {
+      id: 'daily_chieu_hien_lenh',
+      name: 'Triệu Hiền Lệnh',
+      description: '',
+      cadence: 'daily',
+      condition: { kind: 'kill', amount: 20 },
+      reward: {
+        itemDrops: [{ kind: 'material', itemId: COMPANION_PULL_TOKEN_ID, amount: 1 }],
+      },
+      requiredRealmId: 'foundation_establishment',
+    }
+    manager.ensureActive(legacyDaily)
     manager.incrementProgress('daily_chieu_hien_lenh', 7)
     expect(manager.getProgress('daily_chieu_hien_lenh')?.progress).toBe(7)
 
-    // Realm gate now fails (save predates Truc Co / content moved) -
-    // reconcile removes the stale entry instead of letting it count.
-    player.realmId = 'qi_refining'
+    // Reconcile preserves unregistered residue (the inverse pass only
+    // touches ids still in the registry)...
     system.reconcileActiveQuests(registry, manager, player)
-
-    expect(manager.getProgress('daily_chieu_hien_lenh')).toBeUndefined()
-
-    for (let index = 0; index < 20; index++) {
-      system.onEnemyDefeated(registry, manager, 'wild_wolf', undefined)
-    }
-
-    expect(manager.getProgress('daily_chieu_hien_lenh')).toBeUndefined()
-    expect(system.canClaim(registry, manager, bags, 'daily_chieu_hien_lenh')).toBe(false)
-  })
-
-  // M-F-COMPANION-GIFT: the quest is token-only on base (its entire
-  // reward set is pull-token itemDrops), so questIsTokenOnlySource
-  // suppresses the WHOLE quest while the pull pool is closed - it never
-  // activates at Tru Co at all. Non-token rewards are unaffected
-  // because there are none; the mixed-reward case is covered in
-  // ReleasePolicy.test.ts.
-  it('never activates at Truc Co while the pull pool is closed (token-only faucet)', () => {
-    const { registry, manager, system, bags } = setup()
-    const player = { realmId: 'foundation_establishment' } as unknown as PlayerData
-
-    system.reconcileActiveQuests(registry, manager, player)
-
-    for (let index = 0; index < 20; index++) {
-      system.onEnemyDefeated(registry, manager, 'wild_wolf', undefined)
-    }
-
-    expect(manager.getProgress('daily_chieu_hien_lenh')).toBeUndefined()
-    expect(system.canClaim(registry, manager, bags, 'daily_chieu_hien_lenh')).toBe(false)
-  })
-
-  it('reconciles away stale Truc Co progress while the pool is closed (grandfathered save)', () => {
-    const { registry, manager, system, bags } = setup()
-    const player = { realmId: 'foundation_establishment' } as unknown as PlayerData
-
-    // Grandfathered state: a save from before the suppression carried an
-    // active daily with progress. Reconcile removes it - the quest no
-    // longer counts as unlocked under the closed pool.
-    manager.ensureActive(QUESTS.find((q) => q.id === 'daily_chieu_hien_lenh')!)
-    manager.incrementProgress('daily_chieu_hien_lenh', 7)
     expect(manager.getProgress('daily_chieu_hien_lenh')?.progress).toBe(7)
 
-    system.reconcileActiveQuests(registry, manager, player)
-
-    expect(manager.getProgress('daily_chieu_hien_lenh')).toBeUndefined()
+    // ...but the entry is fully inert: kill events skip unregistered
+    // ids, claims resolve through the registry, and the active-quest
+    // projection iterates the registry only.
+    for (let index = 0; index < 20; index++) {
+      system.onEnemyDefeated(registry, manager, 'wild_wolf', undefined)
+    }
+    expect(manager.getProgress('daily_chieu_hien_lenh')?.progress).toBe(7)
     expect(system.canClaim(registry, manager, bags, 'daily_chieu_hien_lenh')).toBe(false)
+    expect(
+      system.getActiveQuests(registry, manager, player).map((entry) => entry.quest.id),
+    ).not.toContain('daily_chieu_hien_lenh')
   })
 })

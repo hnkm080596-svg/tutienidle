@@ -71,15 +71,24 @@ describe('foundation stages', () => {
     expect(boss.bossEnemyId).toBe('foundation_ferocious_flood_dragon_whelp')
   })
 
-  it('chương 3: tầng chẵn dùng biến thể ferocious, tầng lẻ dùng bản thường', () => {
-    for (const stage of STAGES.filter((s) => s.chapter === 3)) {
-      const ids = stage.enemyPool.map((entry) => entry.enemyId)
+  // BETA SCOPE LOCK v2: the old even/odd ferocious pair pattern is
+  // replaced by the chapter-3 roster bands - lava hound (1-3), sand
+  // scorpion (4-6), mud golem (7-9), whelp (10).
+  it('chương 3: pool theo band roster 1-3/4-6/7-9, boss tầng 10', () => {
+    const expected: Record<number, string> = {
+      1: 'foundation_lava_hound',
+      3: 'foundation_lava_hound',
+      4: 'foundation_sand_scorpion',
+      6: 'foundation_sand_scorpion',
+      7: 'foundation_mud_golem',
+      9: 'foundation_mud_golem',
+      10: 'foundation_ferocious_flood_dragon_whelp',
+    }
 
-      if ((stage.floor ?? 0) % 2 === 0) {
-        for (const id of ids) expect(id).toContain('_ferocious_')
-      } else {
-        for (const id of ids) expect(id).not.toContain('_ferocious_')
-      }
+    for (const [floorText, species] of Object.entries(expected)) {
+      const floor = Number(floorText)
+      const stage = STAGES.find((candidate) => candidate.chapter === 3 && candidate.floor === floor)!
+      expect(stage.enemyPool.map((entry) => entry.enemyId)).toEqual([species])
     }
   })
 })
@@ -110,19 +119,21 @@ describe('builder swap (spec v3)', () => {
     }
   })
 
-  it('eliteChance entries intact on all 30 stages', () => {
-    let count = 0
-
+  // BETA SCOPE LOCK v2: single-species roster pools - every stage
+  // carries exactly one entry, elite-tagged via the per-floor ramp
+  // (5% -> 21%) except floor 10's fixed 10% boss stack chance.
+  it('eliteChance on the single pool entry of all 30 stages (ramp + boss)', () => {
     for (const stage of STAGES) {
-      for (const entry of stage.enemyPool) {
-        if (entry.eliteChance !== undefined) {
-          expect(entry.eliteChance).toBe(0.1)
-          count++
-        }
+      expect(stage.enemyPool).toHaveLength(1)
+      const chance = stage.enemyPool[0]!.eliteChance
+      expect(chance).toBeDefined()
+
+      if (stage.floor === 10) {
+        expect(chance).toBe(0.1)
+      } else {
+        expect(chance).toBeCloseTo(0.05 + (stage.floor! - 1) * 0.02, 10)
       }
     }
-
-    expect(count).toBe(30)
   })
 
   it('waves sum invariant holds for all 30 stages', () => {

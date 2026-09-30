@@ -4,7 +4,17 @@
 // ChiHienQuan.integration.test.ts: the panel self-gates on
 // ui.standalonePanel === 'companion' and reads player.companions +
 // materialBag through the provided keys.
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+
+// BETA SCOPE LOCK v2 Phase-5 - this suite exercises the scope-hidden
+// system's ENABLED implementation (sec.11-15: dormant, not deleted),
+// so the scope authority reports in-scope for this file.
+vi.mock('../../core/betaScope', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../../core/betaScope')>()),
+  isBetaFeature: () => true,
+  isScopeHidden: () => false,
+}))
+
 import { createApp, h, nextTick, ref } from 'vue'
 import { createPinia } from 'pinia'
 import CompanionPanel from './CompanionPanel.vue'

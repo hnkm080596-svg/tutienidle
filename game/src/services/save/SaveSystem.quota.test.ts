@@ -31,7 +31,7 @@ const IMPORT_DISCARDED_EQUIPMENT_COUNT_KEY = resolveImportHandoffKey()
 function minimalSave(): GameSave {
   const player = createDefaultPlayer()
 
-  player.mortalBasicSkillId = 'tram'
+  player.mortalBasicSkillId = 'linh_bao'
   player.nodeLevels = { ...player.nodeLevels, core_tram: 1 }
   player.purchasedNodeIds = [...player.purchasedNodeIds, 'core_tram']
 

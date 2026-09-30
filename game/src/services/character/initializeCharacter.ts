@@ -1,6 +1,7 @@
 import type { GameManager } from '../../core/game/GameManager'
 import type { PlayerData } from '../../core/player/Player'
 import { applyCreationProfile, bootstrapEarlyGamePlayer } from '../../core/game/EarlyGameBootstrap'
+import { BETA_MORTAL_STARTER_SKILL_ID } from '../../core/betaScope'
 import type { RemoteCharacterMetadata } from '../session/BackendStatus'
 
 // B1.4 (beta-final PR3) - the ONE starter-grant transaction. App.vue's
@@ -14,10 +15,14 @@ import type { RemoteCharacterMetadata } from '../session/BackendStatus'
 // Owners are injected so the function stays composable-testable and never
 // reaches into App module scope.
 
+// BETA SCOPE LOCK v2 (phase-2): the initialization input is Name +
+// Talent only - no starter pick. The remote row still carries
+// mortal_basic_skill_id, but it is now server-side constant
+// ('linh_bao'), validated at the adapter below rather than trusted as
+// an input.
 export interface CharacterInitializationMetadata {
   name: string
   talentIds: string[]
-  mortalBasicSkillId: string
 }
 
 export interface InitializeCharacterOwners {
@@ -30,13 +35,21 @@ export interface InitializeCharacterOwners {
 
 /** The remote metadata shape is canonical for UNINITIALIZED
  *  reconstruction; the creation draft is the local equivalent. Both map
- *  onto one initialization input - a missing skill pick is corrupt data,
- *  never a silent default (v82 contract). */
+ *  onto one initialization input. Beta scope: the row's starter pick
+ *  must be the fixed beta constant - a row saying otherwise is corrupt
+ *  server data (it would also fail the write_character_save
+ *  cross-check on the first save), so the adapter fails closed instead
+ *  of silently booting a mismatched character. */
 export function initializationMetadataFromRemote(character: RemoteCharacterMetadata): CharacterInitializationMetadata {
+  const remotePick = character.mortalBasicSkillId ?? ''
+  if (remotePick !== BETA_MORTAL_STARTER_SKILL_ID) {
+    throw new Error(
+      `initializationMetadataFromRemote: remote starter pick '${remotePick}' is not the beta starter '${BETA_MORTAL_STARTER_SKILL_ID}'`,
+    )
+  }
   return {
     name: character.name,
     talentIds: character.selectedTalentIds,
-    mortalBasicSkillId: character.mortalBasicSkillId ?? '',
   }
 }
 
@@ -49,10 +62,9 @@ export function initializeCharacter(
   applyCreationProfile(player, {
     name: metadata.name,
     talentIds: metadata.talentIds,
-    mortalBasicSkillId: metadata.mortalBasicSkillId,
   })
 
-  bootstrapEarlyGamePlayer(gameManager, player, metadata.mortalBasicSkillId)
+  bootstrapEarlyGamePlayer(gameManager, player)
 
   for (const buildingId of ['teleport_array', 'gathering_outpost']) {
     const instance = {

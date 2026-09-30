@@ -29,7 +29,10 @@ import {
   BODY_REFINEMENT_TIERS,
   TINH_HOA_PHAM_THE_MATERIAL_ID,
 } from '../../../data/realm/BodyRefinement'
-import type { CultivationPathId, CultivationWayId } from '../../player/CultivationPathKit'
+import { CULTIVATION_PATH_MODULES, declaresElementAxis, type CultivationPathId, type CultivationWayId } from '../../player/CultivationPathKit'
+import type { ElementType } from '../../element/ElementType'
+import { canUseItemGrade } from '../../equipment/canUseItem'
+import { ITEM_QUALITY_ORDER } from '../../item/ItemQuality'
 import {
   applyCreationProfile,
   bootstrapEarlyGamePlayer,
@@ -236,7 +239,7 @@ export class EarlyGameSession {
     this.playerOwner = options.playerOwner
     this.player = options.playerOwner?.$state ?? createDefaultPlayer()
     applyCreationProfile(this.player, options.profile)
-    bootstrapEarlyGamePlayer(this.gameManager, this.player, options.profile.mortalBasicSkillId)
+    bootstrapEarlyGamePlayer(this.gameManager, this.player)
     this.gameManager.setActivePlayer(this.player)
   }
 
@@ -466,7 +469,21 @@ export class EarlyGameSession {
     return player as TribulationPlayerWriter
   }
 
-  performRitual(path: CultivationPathId, way: CultivationWayId): boolean {
+  /** The journey ritual seam. BETA SCOPE LOCK v2 (phase-2): a way
+   * declaring an element subpath axis commits only through the atomic
+   * initiation - pass the element the suite means to commit (defaults
+   * fire); other ways stay on chooseCultivationPath (which itself
+   * rejects non-beta ways and element-axis ways). Returns the op's
+   * boolean success. */
+  performRitual(path: CultivationPathId, way: CultivationWayId, element?: ElementType): boolean {
+    // Data-driven routing - same discriminator as QuanKhiPanel and
+    // runBattle: the element subpath axis, not a literal way id.
+    if (declaresElementAxis(CULTIVATION_PATH_MODULES[path]?.ways[way])) {
+      return this.gameManager.realmAdvanceOps.commitFiveElementInitiation(
+        element ?? 'fire',
+        this.player,
+      ).ok
+    }
     return this.gameManager.realmAdvanceOps.chooseCultivationPath(path, way, this.player)
   }
 
@@ -571,15 +588,30 @@ export class EarlyGameSession {
     while (this.investRefinement() > 0) { /* consume until dry */ }
   }
 
-  /** Equip every unequipped bag item into its slot (best-first by item
-   * level). The gear loop is part of real progression - the canonical
-   * loop must exercise it, not bypass with raw stat grants. */
+  /** Equip every unequipped bag item into its slot (best-first by
+   * quality, then drop level). The gear loop is part of real
+   * progression - the canonical loop must exercise it, not bypass with
+   * raw stat grants. equip() swaps an occupied slot unconditionally,
+   * so the bag is bucketed per slot first - only the best candidate
+   * per slot gets equipped (otherwise the LAST-sorted, weakest item
+   * would win every swap). Items the player can no longer wear (a
+   * realm ascent invalidates lower-grade gear via canUseItemGrade)
+   * never win a bucket - they would starve every legal candidate. */
   equipAll(): number {
     const bag = this.gameManager.equipmentBag.getAll()
-    const sorted = [...bag].sort((a, b) => (b.realmLevel ?? 0) - (a.realmLevel ?? 0))
-    let equipped = 0
-    for (const item of sorted) {
+    const rank = (item: (typeof bag)[number]): number =>
+      ITEM_QUALITY_ORDER.indexOf(item.quality) * 1000 + (item.realmLevel ?? 0)
+    const bestPerSlot = new Map<string, (typeof bag)[number]>()
+    for (const item of bag) {
       if (item.equipped) continue
+      if (!canUseItemGrade(item.grade, this.player.realmId)) continue
+      const held = bestPerSlot.get(item.slot)
+      if (!held || rank(item) > rank(held)) {
+        bestPerSlot.set(item.slot, item)
+      }
+    }
+    let equipped = 0
+    for (const item of bestPerSlot.values()) {
       if (this.gameManager.equipmentOps.equipItem(item.instanceId, this.player).ok) {
         equipped++
       }
@@ -588,8 +620,10 @@ export class EarlyGameSession {
     // resyncs the equipment-derived slice of player.modifiers after
     // equip ops (the ops layer itself never writes it); skipping the
     // resync here would leave the live player stale vs. the state a
-    // restore recomputes (restoreGameSession resyncs it).
-    this.playerOwner?.setEquipmentModifiers(
+    // restore recomputes (restoreGameSession resyncs it). writer()
+    // lazily installs the same filtered-replace contract on a bare
+    // player when no owner backs the session.
+    this.writer().setEquipmentModifiers(
       this.gameManager.equipmentOps.getEquipmentModifiers(),
     )
     return equipped

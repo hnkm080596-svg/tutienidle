@@ -37,23 +37,12 @@ function fillName(container: HTMLElement) {
   nameInput.dispatchEvent(new Event('input'))
 }
 
-async function completeCreation(container: HTMLElement, skillId: string) {
-  fillName(container)
-  await nextTick()
-
-  container.querySelector<HTMLButtonElement>('.talent-card')!.click()
-  await nextTick()
-
-  container.querySelector<HTMLButtonElement>(`[data-testid="creation-skill-${skillId}"]`)!.click()
-  await nextTick()
-}
-
-describe('CharacterCreationScreen — unified name + talent + skill flow', () => {
+describe('CharacterCreationScreen — beta name + talent flow', () => {
   afterEach(() => {
     document.body.innerHTML = ''
   })
 
-  it('renders name, talent and starting-skill sections on ONE screen with no stepper or attribute step', async () => {
+  it('renders name and talent sections on ONE screen with no skill, stepper or attribute step', async () => {
     const mounted = mountScreen()
     await flushRoll()
 
@@ -61,21 +50,16 @@ describe('CharacterCreationScreen — unified name + talent + skill flow', () =>
     expect(container.querySelector('[data-testid="creation-name-input"]')).toBeTruthy()
     expect(container.querySelector('[data-testid^="creation-talent-"]')).toBeTruthy()
 
-    const skillCards = container.querySelectorAll('[data-testid^="creation-skill-"]')
-    expect([...skillCards].map(el => el.getAttribute('data-testid')).sort()).toEqual([
-      'creation-skill-huy_quyen',
-      'creation-skill-linh_bao',
-      'creation-skill-tram',
-    ])
-
-    // The ruling removed allocation entirely: no counters, no stepper.
+    // BETA SCOPE LOCK v2 (phase-2): the mortal starter pick is gone
+    // entirely - no skill cards, no allocation, no stepper.
+    expect(container.querySelector('[data-testid^="creation-skill-"]')).toBeNull()
     expect(container.querySelector('[data-testid^="creation-attribute-"]')).toBeNull()
     expect(container.querySelector('.stepper')).toBeNull()
 
     mounted.unmount()
   })
 
-  it('keeps finish disabled until name + talent + skill are all chosen', async () => {
+  it('keeps finish disabled until name + talent are both chosen', async () => {
     const mounted = mountScreen()
     await flushRoll()
     const container = mounted.container
@@ -89,21 +73,22 @@ describe('CharacterCreationScreen — unified name + talent + skill flow', () =>
 
     container.querySelector<HTMLButtonElement>('.talent-card')!.click()
     await nextTick()
-    expect(finish().disabled).toBe(true)
-
-    container.querySelector<HTMLButtonElement>('[data-testid="creation-skill-huy_quyen"]')!.click()
-    await nextTick()
     expect(finish().disabled).toBe(false)
 
     mounted.unmount()
   })
 
-  it('emits name + talentIds + mortalBasicSkillId and no attributes field', async () => {
+  it('emits name + talentIds only - the starter pick never leaves the screen', async () => {
     const payloads: CharacterCreationPayload[] = []
     const mounted = mountScreen((payload) => payloads.push(payload))
     await flushRoll()
 
-    await completeCreation(mounted.container, 'huy_quyen')
+    fillName(mounted.container)
+    await nextTick()
+
+    mounted.container.querySelector<HTMLButtonElement>('.talent-card')!.click()
+    await nextTick()
+
     mounted.container.querySelector<HTMLButtonElement>('[data-testid="creation-finish"]')!.click()
     await flushRoll()
 
@@ -111,8 +96,8 @@ describe('CharacterCreationScreen — unified name + talent + skill flow', () =>
     expect(payloads[0]).toEqual({
       name: 'Lạc Vân',
       talentIds: [expect.any(String)],
-      mortalBasicSkillId: 'huy_quyen',
     })
+    expect('mortalBasicSkillId' in payloads[0]!).toBe(false)
     expect('attributes' in payloads[0]!).toBe(false)
 
     mounted.unmount()

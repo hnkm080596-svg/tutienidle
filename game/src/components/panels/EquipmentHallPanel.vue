@@ -18,6 +18,7 @@ import RefineTab from './equipment-hall/RefineTab.vue'
 import DissolveTab from './equipment-hall/DissolveTab.vue'
 import DecomposeTab from './equipment-hall/DecomposeTab.vue'
 import { HALL_SELECTION_KEY } from './equipment-hall/hallSelection'
+import { isBetaEquipmentTab } from '@/core/betaScope'
 import './equipment-hall/qi-hall.css'
 
 // Khí Đường (2026-08-25, resource-professions-rework plan §7/§9.2) —
@@ -34,6 +35,10 @@ import './equipment-hall/qi-hall.css'
 // tính trước, không cần cơ chế giữ/bỏ.
 const { t } = useI18n()
 
+// BETA SCOPE LOCK v2 (Phase-6): the rendered tab list comes from the
+// betaScope equipment-tab allow-list (enhance + dissolve) - wash /
+// refine / decompose are scope-hidden, so no tab button exists and no
+// ops entry point survives in beta.
 const TABS = [
   { id: 'enhance', label: t('panels.equipmentHall.tabs.enhance') },
   { id: 'wash', label: t('panels.equipmentHall.tabs.wash') },
@@ -43,6 +48,8 @@ const TABS = [
 ] as const
 
 type TabId = (typeof TABS)[number]['id']
+
+const visibleTabs = TABS.filter((tab) => isBetaEquipmentTab(tab.id))
 
 const activeTab = ref<TabId>('enhance')
 
@@ -84,7 +91,7 @@ provide(HALL_SELECTION_KEY, { selectedInstanceId, selectEquipped, clearSelection
          bug report) — bỏ hẳn header "Chọn một trang bị..." cũ. -->
     <TabBar
       class="qi-hall__tabs"
-      :tabs="TABS.map((tab) => ({ id: tab.id, label: tab.label }))"
+      :tabs="visibleTabs.map((tab) => ({ id: tab.id, label: tab.label }))"
       :model-value="activeTab"
       @update:model-value="switchTab($event as TabId)"
     />

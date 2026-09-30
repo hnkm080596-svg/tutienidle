@@ -190,6 +190,10 @@ export default defineConfig({
   },
   test: {
     environment: 'node',
+    // BETA SCOPE LOCK v2: every suite starts with the full way catalog
+    // admitted (pre-beta defaults); gating suites call
+    // lockBetaWaysForTests() to re-pin the canonical set.
+    setupFiles: ['./tests/setup.betaScope.ts'],
     // Architecture/meta guards live under tests/ (kept out of app source);
     // e2e specs (*.spec.ts, Playwright) are unaffected.
     // tests/lab is assertion-light experiment sweeps (audit T7-61) - it has

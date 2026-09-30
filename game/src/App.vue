@@ -943,7 +943,7 @@ let pendingCreationMetadata: CharacterInitializationMetadata | undefined
 async function onCharacterCreated(payload: CharacterCreationPayload) {
   pendingCreationMetadata = payload.character
     ? initializationMetadataFromRemote(payload.character)
-    : { name: payload.name, talentIds: payload.talentIds, mortalBasicSkillId: payload.mortalBasicSkillId }
+    : { name: payload.name, talentIds: payload.talentIds }
 
   // The first durable save now lives inside the boot transaction
   // (useAppLifecycle.bootGame): 'entered' is only returned after the write

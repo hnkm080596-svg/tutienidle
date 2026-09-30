@@ -4,7 +4,19 @@
 // They are written to PASS against correct behavior; a failure is a
 // confirmed defect (failing-for-the-intended-reason evidence).
 import { withMortalCreationPick } from '../../services/save/GameSave.fixture'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
+
+// BETA SCOPE LOCK v2 Phase-5 - this suite exercises the scope-hidden
+// system's ENABLED implementation (sec.11-15: dormant, not deleted),
+// so the scope authority reports in-scope for this file.
+vi.mock('../betaScope', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../betaScope')>()),
+  isBetaFeature: () => true,
+  isScopeHidden: () => false,
+  isBetaQuestEnabled: () => true,
+  betaRecipeFamilyOfId: () => 'tu_linh_dan',
+}))
+
 import { GameManager } from './GameManager'
 import { createDefaultPlayer } from '../player/Player'
 import { buildings } from '../../data/building/buildings'

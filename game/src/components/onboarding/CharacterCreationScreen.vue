@@ -5,22 +5,19 @@ import GameButton from '@/components/common/GameButton.vue'
 import InkWashBackdrop from '@/components/common/InkWashBackdrop.vue'
 import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
 import { TALENT_RARITY_LABELS, type TalentDefinition } from '@/core/talent/Talent'
-import { MORTAL_PRECURSOR_SKILL_IDS } from '@/core/skill/MortalPrecursors'
-import { SKILLS } from '@/data/skill/Skills'
-import type { Skill } from '@/core/skill/Skill'
 import { characterCreationService } from '@/services/character/CharacterCreationServiceFactory'
 import { isValidCharacterName } from '@/services/character/CharacterCreationService'
 import type { RemoteCharacterMetadata } from '@/services/session/BackendStatus'
 import { useAudioStore } from '@/stores/audio'
 
-// BETA-CREATION - ONE unified flow: name + talent + starting-skill pick on
-// a single screen. The 5-point allocation step is removed entirely; base
-// stats are the 1/1/1/1/1 default. The pick travels through the payload
-// and is written inside the boot seam after the precursors are learned.
+// BETA SCOPE LOCK v2 (phase-2) - the canonical creation surface is
+// Name + Talent only. The mortal starter pick is gone: every beta
+// character boots with 'linh_bao' (BETA_MORTAL_STARTER_SKILL_ID), and
+// the talent offer list arrives already beta-admitted from the service
+// - this screen never filters the registry itself.
 export interface CharacterCreationPayload {
   name: string
   talentIds: string[]
-  mortalBasicSkillId: string
   /** B1.4 - the canonical character block the create_character RPC
    *  returned. Present only in supabase mode; the boot grant path
    *  prefers it over the draft fields so the starter snapshot mirrors
@@ -32,7 +29,6 @@ const emit = defineEmits<{ complete: [payload: CharacterCreationPayload]; back: 
 const name = ref('')
 const talents = ref<TalentDefinition[]>([])
 const selectedTalentIds = ref<string[]>([])
-const selectedSkillId = ref('')
 const rolling = ref(false)
 const error = ref('')
 const creating = ref(false)
@@ -47,24 +43,12 @@ function talentTagLabel(tag: string): string {
   return te(key) ? t(key) : tag
 }
 
-const precursorSkills = computed<Skill[]>(() =>
-  MORTAL_PRECURSOR_SKILL_IDS.map((id) => {
-    const skill = SKILLS.find((candidate) => candidate.id === id)
-    if (!skill) throw new Error(`Mortal precursor skill template missing: ${id}`)
-    return skill
-  }),
-)
-
 const validName = computed(() => isValidCharacterName(name.value))
-const ready = computed(() => validName.value && selectedTalentIds.value.length === 1 && selectedSkillId.value !== '')
+const ready = computed(() => validName.value && selectedTalentIds.value.length === 1)
 
 const pickedTalentName = computed(
   () => talents.value.find((talent) => talent.id === selectedTalentIds.value[0])?.name ?? '',
 )
-const pickedSkillName = computed(
-  () => precursorSkills.value.find((skill) => skill.id === selectedSkillId.value)?.name ?? '',
-)
-
 function toggleTalent(talent: TalentDefinition) {
   if (rolling.value || creating.value) return
   const index = selectedTalentIds.value.indexOf(talent.id)
@@ -90,7 +74,6 @@ async function finish() {
   const payload: CharacterCreationPayload = {
     name: name.value.trim(),
     talentIds: [...selectedTalentIds.value],
-    mortalBasicSkillId: selectedSkillId.value,
   }
   const validation = characterCreationService.validateDraft(payload, new Set(talents.value.map(talent => talent.id)))
   if (!validation.ok) { error.value = validation.message; return }
@@ -151,19 +134,9 @@ onMounted(() => { void reroll() })
         <div class="section-actions"><GameButton variant="secondary" :disabled="rolling || creating" @click="reroll">{{ t('onboarding.creation.talentStep.reroll') }}</GameButton></div>
       </div>
 
-      <div class="creation-section skill-section">
-        <div class="panel-heading"><div><p class="kicker">{{ t('onboarding.creation.skillStep.kicker') }}</p><h2>{{ t('onboarding.creation.skillStep.title') }}</h2></div><strong>{{ t('onboarding.creation.skillStep.selected', { count: selectedSkillId === '' ? 0 : 1 }) }}</strong></div>
-        <p class="section-description">{{ t('onboarding.creation.skillStep.description') }}</p>
-        <div class="skill-grid">
-          <button v-for="skill in precursorSkills" :key="skill.id" type="button" class="skill-card" :data-testid="`creation-skill-${skill.id}`" :class="{ selected: selectedSkillId === skill.id }" :disabled="creating" @click="selectedSkillId = skill.id">
-            <h3>{{ skill.name }}</h3><p>{{ skill.description }}</p>
-          </button>
-        </div>
-      </div>
-
       <p v-if="error && talents.length > 0" class="creation-error">{{ error }}</p>
       <footer class="panel-actions">
-        <p v-if="ready" class="creation-summary" data-testid="creation-summary">{{ t('onboarding.creation.summary', { name: name.trim(), talent: pickedTalentName, skill: pickedSkillName }) }}</p>
+        <p v-if="ready" class="creation-summary" data-testid="creation-summary">{{ t('onboarding.creation.summary', { name: name.trim(), talent: pickedTalentName }) }}</p>
         <GameButton variant="primary" :disabled="!ready || creating" data-testid="creation-finish" @click="finish">{{ creating ? t('onboarding.creation.creating') : t('onboarding.creation.finish') }}</GameButton>
       </footer>
     </section>
@@ -182,9 +155,8 @@ onMounted(() => { void reroll() })
 .talent-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 10px; }.talent-card { position: relative; min-height: 128px; padding: 15px; border: 1px solid var(--paper-line, rgba(42,41,36,.42)); border-radius: 2px; background: color-mix(in srgb, var(--paper-50, #f5f0e4) 88%, transparent); color: var(--paper-text, #211f1a); text-align: left; cursor: pointer; transition: transform .15s,border-color .15s; }.talent-card:hover { transform: translateY(-2px); }.talent-card.selected { border-color: var(--cinnabar, #b54432); box-shadow: inset 0 0 0 1px var(--cinnabar, #b54432); }.talent-card__rarity { font-size: var(--text-xs); text-transform: uppercase; letter-spacing: .13em; }.talent-card h3 { margin: 7px 0; font: 600 var(--text-md) var(--font-display); }.talent-card p { margin: 0 0 8px; color: var(--paper-text-soft, #5e5a50); font-size: var(--text-xs); line-height: 1.5; }.talent-card small { color: var(--text-muted); }
 .talent-grid.is-rolling { opacity: .45; pointer-events: none; }.talent-tier-pham .talent-card__rarity{color:var(--rank-color-1)}.talent-tier-linh .talent-card__rarity{color:var(--rank-color-3)}.talent-tier-dia .talent-card__rarity{color:var(--rank-color-5)}.talent-tier-thien .talent-card__rarity{color:var(--rank-color-7)}.talent-tier-di .talent-card__rarity{color:var(--rank-color-8)}
 .section-actions { display: flex; justify-content: flex-end; margin-top: 10px; }
-.skill-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 10px; }.skill-card { min-height: 96px; padding: 15px; border: 1px solid var(--paper-line, rgba(42,41,36,.42)); border-radius: 2px; background: color-mix(in srgb, var(--paper-50, #f5f0e4) 88%, transparent); color: var(--paper-text, #211f1a); text-align: left; cursor: pointer; transition: transform .15s,border-color .15s; }.skill-card:hover { transform: translateY(-2px); }.skill-card.selected { border-color: var(--cinnabar, #b54432); box-shadow: inset 0 0 0 1px var(--cinnabar, #b54432); }.skill-card h3 { margin: 0 0 7px; font: 600 var(--text-md) var(--font-display); }.skill-card p { margin: 0; color: var(--paper-text-soft, #5e5a50); font-size: var(--text-xs); line-height: 1.5; }
 .loading-roll { min-height: min(220px, 30vh); display: grid; place-items: center; color: var(--cinnabar, #b54432); font-family: var(--font-display); }.creation-error { margin: 14px 0 0; color: var(--crimson); text-align: center; font-size: var(--text-xs); }
 .panel-actions { display: flex; justify-content: center; align-items: center; gap: 12px; margin-top: 22px; }
 .creation-summary { margin: 0; color: var(--paper-text-soft, #5e5a50); font-size: var(--text-xs); }
-@media(max-width:760px){.talent-grid,.skill-grid{grid-template-columns:1fr 1fr}.creation-header{grid-template-columns:1fr auto}.creation-header>div{grid-column:1/-1;grid-row:1}.creation-header button{grid-row:2}.panel-heading{align-items:start}}
+@media(max-width:760px){.talent-grid{grid-template-columns:1fr 1fr}.creation-header{grid-template-columns:1fr auto}.creation-header>div{grid-column:1/-1;grid-row:1}.creation-header button{grid-row:2}.panel-heading{align-items:start}}
 </style>

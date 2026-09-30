@@ -13,13 +13,14 @@ import { useUiStore } from '@/stores/ui'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager } from '@/composables/useGameState'
 import { useBreakthroughRequirementStore } from '@/stores/breakthroughRequirement'
-import { CORE_REALM_LEVEL, getCurrentRealm, getNextRealm } from '@/core/realm/realmSystem'
-import { isBeyondReleaseCeiling, progressionCeilingRealmId } from '@/core/realm/ReleasePolicy'
+import { CORE_REALM_LEVEL, getCurrentRealm } from '@/core/realm/realmSystem'
+import {
+  betaNextRealmSurfaceFor,
+  betaRealmLadderNodes,
+} from '@/core/betaScopeSurface'
 import { formatNumber } from '@/core/format/NumberFormatter'
 import { formatDuration } from '@/core/format/formatDuration'
 import { getRealmTier } from '@/core/realm/RealmTierMap'
-import type { RealmPassiveNode } from '@/data/realm/RealmPassiveNodes'
-import { REALM_PASSIVE_NODES } from '@/data/realm/RealmPassiveNodes'
 import { useRealmStatPassives } from '@/composables/useRealmStatPassives'
 
 // 2026-08-28 - tieu canh gioi tu tang khi du tu vi (App.vue's tick(),
@@ -42,15 +43,12 @@ const canBreakthrough = computed(() => gameManager.realmAdvanceOps.canTriggerBre
 const requirements = computed(() =>
   gameManager.realmAdvanceOps.getBreakthroughRequirements(player.$state),
 )
-const nextRealmName = computed(() => getNextRealm(player.realmId)?.name ?? '')
-// FE-17 - release-ceiling readout: at Truc Co the "Kim Dan" button is
-// disabled by ReleasePolicy (authored but dormant), not by an unmet
-// requirement, so the requirements list alone gives no explanation.
-const nextRealmBeyondCeiling = computed(() => {
-  const next = getNextRealm(player.realmId)
-  return next != null && isBeyondReleaseCeiling(next.id)
-})
-const ceilingRealmName = computed(() => getCurrentRealm(progressionCeilingRealmId).name)
+// BETA SCOPE LOCK v2 (Phase-6): the next-realm surface comes from the
+// canonical read-model - null when the next realm is beyond the release
+// ceiling (Truc Co -> Kim Dan), so no breakthrough CTA or ceiling teaser
+// can render there.
+const nextRealmSurface = computed(() => betaNextRealmSurfaceFor(player.$state))
+const nextRealmName = computed(() => nextRealmSurface.value?.nextRealmName ?? '')
 const realmName = computed(() => getCurrentRealm(player.realmId).name)
 // Idle-game readout under the cultivation bar: the live per-second rate
 // (same snapshot the tick writes) plus the ETA to filling this floor.
@@ -68,15 +66,10 @@ const cultivationEta = computed(() => {
 // the mortal->qi_refining reward (unlockTier 2), so a mortal player saw
 // nine locked nodes and no "you are here". The display list prepends the
 // mortal rung only - the authored data stays reward-shaped.
-const realmNodes: RealmPassiveNode[] = [
-  {
-    realmId: 'mortal',
-    label: getCurrentRealm('mortal').name,
-    unlockTier: getRealmTier('mortal'),
-    comingSoon: false,
-  },
-  ...REALM_PASSIVE_NODES,
-]
+// BETA SCOPE LOCK v2 (Phase-6): the rail is the canonical filtered list
+// - post-ceiling nodes (Kim Dan+) are scope-hidden, not shown as
+// coming-soon teasers.
+const realmNodes = betaRealmLadderNodes()
 const majorBreakthroughLabel = computed(() => {
   if (player.realmId === 'mortal') return t('panels.realm.labels.quanKhi')
   if (player.realmId === 'qi_refining') return t('panels.realm.labels.foundation')
@@ -117,11 +110,7 @@ function majorBreakthrough() {
       </div>
 
       <div class="realm-panel__actions">
-        <GameButton :disabled="!canBreakthrough" @click="majorBreakthrough">{{ majorBreakthroughLabel }}</GameButton>
-
-        <p v-if="nextRealmBeyondCeiling" class="realm-ceiling-note">
-          {{ t('panels.realm.ceilingNote', { realm: nextRealmName, ceiling: ceilingRealmName }) }}
-        </p>
+        <GameButton v-if="nextRealmSurface" :disabled="!canBreakthrough" @click="majorBreakthrough">{{ majorBreakthroughLabel }}</GameButton>
 
         <ul v-if="requirements.length" class="realm-requirements">
         <li

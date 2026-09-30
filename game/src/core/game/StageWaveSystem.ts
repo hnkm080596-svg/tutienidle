@@ -12,6 +12,7 @@ import type { EnemySystem } from '../enemy/EnemySystem'
 import type { TemplateRegistry } from './TemplateRegistry'
 import type { HiddenBeastSystem } from './HiddenBeastSystem'
 import { effectiveTotalEnemyCount } from '../stage/EffectiveEnemyCount'
+import { stageSpawnableEnemyIds } from '../stage/StageSpawnableEnemies'
 
 export interface StageWaveSystemDeps {
   eventBus: EventBus
@@ -274,13 +275,17 @@ export class StageWaveSystem {
     // Khí + cửa sổ 1000 kill mở; roll 5% thay thế quái pool bằng Huyết Mông.
     // Stage khong khai bao requiredRealmId thi khong thuoc band nao -
     // pass raw, khong ngam coi nhu Luyen Khi.
+    // BETA SCOPE LOCK v2 funnel: the stage pool is the single allow-list
+    // - a substitution may only surface an identity the stage declares
+    // spawnable. Beta stages never declare a hidden beast, so the
+    // substitution can never fire on them (matches hiddenContent: false).
     if (this.activeStagePlayer) {
       const hidden = this.deps.hiddenBeast.maybeReplaceSpawn(
         this.activeStagePlayer,
         stage.requiredRealmId,
         options?.rng ?? this.deps.sessionRng,
       )
-      if (hidden) {
+      if (hidden && stageSpawnableEnemyIds(stage).has(hidden.id)) {
         return applyStageRealm(hidden)
       }
     }

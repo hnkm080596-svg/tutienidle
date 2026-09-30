@@ -86,8 +86,9 @@ describe('RealmPanel', () => {
     mounted.player.realmId = 'foundation_establishment'
     await nextTick()
 
-    expect(actionLabels()).toEqual(['Kim Đan'])
-    expect(ritualButton().disabled).toBe(true)
+    // BETA SCOPE LOCK v2 (Phase-6): Truc Co -> Kim Dan is beyond the
+    // release ceiling, so no major-breakthrough CTA renders at all.
+    expect(actionLabels()).toEqual([])
     mounted.unmount()
   })
 

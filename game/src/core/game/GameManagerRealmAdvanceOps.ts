@@ -5,10 +5,14 @@ import type { MaterialBag } from '../material/MaterialBag'
 import type { MaterialRegistry } from '../material/MaterialRegistry'
 import type { PillBag } from '../pill/PillBag'
 import type { PlayerData } from '../player/Player'
-import type { CultivationPathId, CultivationWayId } from '../player/CultivationPathKit'
+import { capturePlayerSnapshot, restorePlayerSnapshotInPlace } from '../player/PlayerSnapshot'
+import type { ElementType } from '../element/ElementType'
+import { isBetaElement, isBetaWay } from '../betaScope'
+import { PHAP_TU_ELEMENT_ROOT_IDS } from '../../data/progression/PhapTuNodes.builders'
+import { canPurchaseNode as canPurchaseNodeSystem } from '../progression/NodeSystem'
+import { CULTIVATION_PATH_MODULES, declaresElementAxis, getActiveWayDefinition, isCultivationPathOffered, type CultivationPathId, type CultivationWayId } from '../player/CultivationPathKit'
 import { applyBreakthroughMerge } from '../kiem-tu/NguKiemDao'
 import { issueCompanionGifts } from '../companion/CompanionGifts'
-import { CULTIVATION_PATH_MODULES, getActiveWayDefinition } from '../player/CultivationPathKit'
 import type { NodeRegistry } from '../progression/NodeRegistry'
 import { applyPathChoice, grantCultivationPathRealmReward as grantPathRealmReward, reconcileCultivationPathRealmRewards as reconcilePathRealmRewards, hasStaticPathCapability } from '../player/CultivationPathSystem'
 import { grantSkillCore } from '../progression/NodeSystem'
@@ -84,6 +88,35 @@ import type { TemplateRegistry } from './TemplateRegistry'
  * them resolver-internal.
  */
 export type { BreakthroughRequirementRow }
+
+/**
+ * BETA SCOPE LOCK v2 (phase-2) - the failure reasons of
+ * commitFiveElementInitiation. Every preflight condition maps to one
+ * explicit code so the caller can render a user-visible message per
+ * case; 'commit_failed' is the post-preflight catch-all (the commit
+ * region rolls back to the byte-equivalent pre-commit state before it
+ * is returned).
+ */
+export type FiveElementInitiationFailure =
+  | 'invalid_element'
+  | 'not_mortal'
+  | 'already_committed'
+  | 'realm_level_too_low'
+  | 'in_combat'
+  | 'way_unavailable'
+  | 'way_not_offered'
+  | 'element_committed'
+  | 'missing_technique'
+  | 'technique_occupied'
+  | 'technique_grade_exceeds'
+  | 'missing_element_root'
+  | 'element_root_blocked'
+  | 'missing_kit_skill'
+  | 'commit_failed'
+
+export type FiveElementInitiationResult =
+  | { ok: true }
+  | { ok: false; reason: FiveElementInitiationFailure }
 
 
 
@@ -264,6 +297,23 @@ export class GameManagerRealmAdvanceOps {
    * breakthrough.
    */
   chooseCultivationPath(pathId: CultivationPathId, wayId: CultivationWayId, player: PlayerData): boolean {
+    // M2 - the (path, way) pair resolves its way definition from the
+    // module catalog; an unknown pair yields no way and fails closed.
+    // Way OFFERABILITY is no longer checked here: applyPathChoice owns
+    // the offerGate evaluation.
+    const way = CULTIVATION_PATH_MODULES[pathId]?.ways[wayId]
+
+    // BETA SCOPE LOCK v2 (phase-2) - the ritual's admission gate is the
+    // beta allow-list: a non-beta way fails closed here. And a way
+    // declaring an element subpath axis (today: spell_pathway) can NEVER
+    // ride this op - it commits an element intrinsically, so its only
+    // entry point is commitFiveElementInitiation() below (a permanent
+    // contract, not a beta flag: an element-committing way must commit
+    // atomically).
+    if (!isBetaWay(wayId) || declaresElementAxis(way)) {
+      return false
+    }
+
     if (
       player.cultivationPath ||
       player.realmId !== 'mortal' ||
@@ -279,12 +329,6 @@ export class GameManagerRealmAdvanceOps {
     if (this.deps.isTurnBattleInProgress()) {
       return false
     }
-
-    // M2 - the (path, way) pair resolves its way definition from the
-    // module catalog; an unknown pair yields no way and fails closed.
-    // Way OFFERABILITY is no longer checked here: applyPathChoice owns
-    // the offerGate evaluation.
-    const way = CULTIVATION_PATH_MODULES[pathId]?.ways[wayId]
 
     if (!way) {
       return false
@@ -418,57 +462,7 @@ export class GameManagerRealmAdvanceOps {
     // progressionOps.selectSpellPathElement() commits the atomic choice.
 
     if (player.realmId === 'mortal') {
-      // Realm Passive & Pressure System (2026-08-20) - lock the Nhap Dao
-      // grade BEFORE granting so Nhap Dao (RealmPassives.ts) reads the
-      // final Luyen The value at the moment of the Initiation Ritual.
-      player.breakthroughGrade = computeBreakthroughGrade(player)
-
-      // Hidden Perfection Lineage (2026-09-23): the breakthrough TYPE
-      // (normal vs hidden) resolves at commit - mortal uses
-      // chooseCultivationPath instead of a tribulation attempt. A
-      // NORMAL success closes the lineage on the DEPARTING realm
-      // (here 'mortal'); a hidden entry records the entered realm
-      // after the realm write below so the enhanced Nhap Dao selects.
-      const breakthroughType = resolveBreakthroughType(player)
-      if (breakthroughType === 'normal') {
-        closeHiddenLineage(player, 'mortal')
-      }
-
-      player.realmId = 'qi_refining'
-      player.realmLevel = 1
-      player.cultivation = 0
-
-      // Hai Nap (M2) - banked overflow follows into the new realm's level
-      // 1 - same owner helper as the minor-tier breakthrough pour.
-      pourCultivationOvercharge(player)
-
-      if (breakthroughType === 'hidden') {
-        recordHiddenBreakthrough(player, 'qi_refining')
-      }
-
-      // R8.1 (AR-09) - realm transition may unlock quests; reconcile on
-      // the next tick instead of waiting for a panel read.
-      this.deps.markQuestRealmTransition()
-
-      // M-F-COMPANION-GIFT - companion gift moments authored against
-      // qi_refining entry fire here (write-if-absent; idempotent).
-      this.applyCompanionGiftRealmTransition(player)
-
-      this.syncRealmPassive(player)
-      this.syncRealmStatPassive(player)
-
-      // Uniform funnel: every major-realm entry runs the way-authored
-      // realm-reward grant (qi_refining authors none today - no-op).
-      grantPathRealmReward(player, 'qi_refining', (nodeId) =>
-        this.deps.nodeRegistry.has(nodeId) ? this.deps.nodeRegistry.get(nodeId) : undefined,
-      )
-
-      // M6 - NO applySwordPathRealmTransition here: hidden_sword_pathway can now be picked at
-      // this very ritual, so the pre-M6 "hidden_sword_pathway cannot exist at mortal"
-      // assumption is false. The slice was JUST created (kiemDaoCount 1 -
-      // nothing forged this realm); merging it would hand out a free
-      // kiemDaoBase bump at entry. The merge stays on real major-realm
-      // advances (TribulationOutcomeService), where forged swords exist.
+      this.commitInitiationRealmAdvance(player)
     }
 
     // P7-M3 - canonical Technique grant runs AFTER the realm promotion
@@ -478,6 +472,273 @@ export class GameManagerRealmAdvanceOps {
     this.grantCanonicalTechnique(way.techniqueId, player)
 
     return true
+  }
+
+  /**
+   * BETA SCOPE LOCK v2 (phase-2) - the shared mortal -> qi_refining
+   * promotion leg of the initiation ritual. Both ritual entry points
+   * (the legacy chooseCultivationPath for non-beta ways and the atomic
+   * commitFiveElementInitiation for the spell way) run the SAME block -
+   * single implementation, never duplicated.
+   */
+  private commitInitiationRealmAdvance(player: PlayerData): void {
+    // Realm Passive & Pressure System (2026-08-20) - lock the Nhap Dao
+    // grade BEFORE granting so Nhap Dao (RealmPassives.ts) reads the
+    // final Luyen The value at the moment of the Initiation Ritual.
+    player.breakthroughGrade = computeBreakthroughGrade(player)
+
+    // Hidden Perfection Lineage (2026-09-23): the breakthrough TYPE
+    // (normal vs hidden) resolves at commit - mortal uses
+    // chooseCultivationPath instead of a tribulation attempt. A
+    // NORMAL success closes the lineage on the DEPARTING realm
+    // (here 'mortal'); a hidden entry records the entered realm
+    // after the realm write below so the enhanced Nhap Dao selects.
+    const breakthroughType = resolveBreakthroughType(player)
+    if (breakthroughType === 'normal') {
+      closeHiddenLineage(player, 'mortal')
+    }
+
+    player.realmId = 'qi_refining'
+    player.realmLevel = 1
+    player.cultivation = 0
+
+    // Hai Nap (M2) - banked overflow follows into the new realm's level
+    // 1 - same owner helper as the minor-tier breakthrough pour.
+    pourCultivationOvercharge(player)
+
+    if (breakthroughType === 'hidden') {
+      recordHiddenBreakthrough(player, 'qi_refining')
+    }
+
+    // R8.1 (AR-09) - realm transition may unlock quests; reconcile on
+    // the next tick instead of waiting for a panel read.
+    this.deps.markQuestRealmTransition()
+
+    // M-F-COMPANION-GIFT - companion gift moments authored against
+    // qi_refining entry fire here (write-if-absent; idempotent).
+    this.applyCompanionGiftRealmTransition(player)
+
+    this.syncRealmPassive(player)
+    this.syncRealmStatPassive(player)
+
+    // Uniform funnel: every major-realm entry runs the way-authored
+    // realm-reward grant (qi_refining authors none today - no-op).
+    grantPathRealmReward(player, 'qi_refining', (nodeId) =>
+      this.deps.nodeRegistry.has(nodeId) ? this.deps.nodeRegistry.get(nodeId) : undefined,
+    )
+
+    // M6 - NO applySwordPathRealmTransition here: hidden_sword_pathway can now be picked at
+    // this very ritual, so the pre-M6 "hidden_sword_pathway cannot exist at mortal"
+    // assumption is false. The slice was JUST created (kiemDaoCount 1 -
+    // nothing forged this realm); merging it would hand out a free
+    // kiemDaoBase bump at entry. The merge stays on real major-realm
+    // advances (TribulationOutcomeService), where forged swords exist.
+  }
+
+  /**
+   * BETA SCOPE LOCK v2 (phase-2) - the ONE canonical Ngu Hanh
+   * initiation: spell + spell_pathway + element + realm +
+   * five_elements_art committed in a single all-or-nothing transaction
+   * (spec: 'pick pathway then pick element elsewhere' is replaced; the
+   * element root is never an ordinary purchase and
+   * selectSpellPathElement only commits inside this transaction).
+   *
+   * Every preflight condition maps to an explicit failure reason the
+   * caller can present. On { ok: false } NOTHING mutated; on a
+   * post-preflight leg failure the commit region rolls back to the
+   * byte-equivalent pre-commit state before returning 'commit_failed'.
+   */
+  commitFiveElementInitiation(element: ElementType, player: PlayerData): FiveElementInitiationResult {
+    // Element admission - the BETA_PLAYABLE_ELEMENTS allow-list.
+    if (!isBetaElement(element)) {
+      return { ok: false, reason: 'invalid_element' }
+    }
+
+    // The op is bound to the element-committing way declared in the
+    // catalog: resolve it from the element subpath axis instead of a
+    // literal id so a future element way needs no code change here.
+    const way = Object.values(CULTIVATION_PATH_MODULES).flatMap((path) =>
+      Object.values(path.ways),
+    ).find((candidate) => declaresElementAxis(candidate))
+
+    if (!way || !isBetaWay(way.id)) {
+      return { ok: false, reason: 'way_unavailable' }
+    }
+
+    if (player.realmId !== 'mortal') {
+      return { ok: false, reason: 'not_mortal' }
+    }
+
+    if (player.cultivationPath !== undefined || player.cultivationWay !== undefined) {
+      return { ok: false, reason: 'already_committed' }
+    }
+
+    if (player.realmLevel < CORE_REALM_LEVEL) {
+      return { ok: false, reason: 'realm_level_too_low' }
+    }
+
+    // Same out-of-combat discipline as chooseCultivationPath.
+    if (this.deps.isTurnBattleInProgress()) {
+      return { ok: false, reason: 'in_combat' }
+    }
+
+    if (!isCultivationPathOffered(way, player)) {
+      return { ok: false, reason: 'way_not_offered' }
+    }
+
+    const techniqueTemplate = this.deps.techniqueTemplates.get(way.techniqueId)
+
+    if (!techniqueTemplate) {
+      return { ok: false, reason: 'missing_technique' }
+    }
+
+    if (this.deps.techniqueManager.getActive() !== undefined) {
+      return { ok: false, reason: 'technique_occupied' }
+    }
+
+    // grant() refuses a template whose grade exceeds the post-promotion
+    // (qi_refining) ceiling - fail before commit, same as the ritual.
+    if (techniqueTemplate.grade > getTechniqueGradeCeiling('qi_refining')) {
+      return { ok: false, reason: 'technique_grade_exceeds' }
+    }
+
+    if (player.spellPath.element !== null) {
+      return { ok: false, reason: 'element_committed' }
+    }
+
+    const rootId = PHAP_TU_ELEMENT_ROOT_IDS[element]
+    const root = this.deps.nodeRegistry.has(rootId) ? this.deps.nodeRegistry.get(rootId) : undefined
+
+    if (!root) {
+      return { ok: false, reason: 'missing_element_root' }
+    }
+
+    // Element roots are way-gated (requiredWay 'spell_pathway'): the
+    // purchasability probe runs on a post-commit player clone so the
+    // check evaluates the state the commit will actually produce.
+    const probe = JSON.parse(JSON.stringify(player)) as PlayerData
+    probe.cultivationPath = way.pathId
+    probe.cultivationWay = way.id
+
+    if (!canPurchaseNodeSystem(probe, root)) {
+      return { ok: false, reason: 'element_root_blocked' }
+    }
+
+    // Every skill the transaction learns - way kit members (declared,
+    // passives, starter), the element basic riding the root's unlock
+    // effect, and the qi_refining realm passive granted inside the
+    // promotion leg - must resolve template + core BEFORE any mutation.
+    const qiRefiningPassiveId = way.realmRewards?.['qi_refining']?.passiveSkillId
+    const kitSkillIds: string[] = [
+      ...(way.skillIds ?? []),
+      ...(way.passiveSkillIds ?? []),
+      ...(way.starterBasicSkillId !== undefined ? [way.starterBasicSkillId] : []),
+      ...(root.effect.unlocksSkillIds ?? []),
+      ...(qiRefiningPassiveId != null ? [qiRefiningPassiveId] : []),
+    ]
+
+    for (const skillId of kitSkillIds) {
+      if (!this.deps.progressionOps.preflightLearnableSkill(skillId)) {
+        return { ok: false, reason: 'missing_kit_skill' }
+      }
+    }
+
+    for (const skillId of [...(way.coreSkillIds ?? []), ...(root.effect.grantsSkillCoreIds ?? [])]) {
+      if (!this.deps.progressionOps.preflightSkillCoreGrant(skillId)) {
+        return { ok: false, reason: 'missing_kit_skill' }
+      }
+    }
+
+    for (const nodeId of way.grantedNodeIds ?? []) {
+      if (!this.deps.nodeRegistry.has(nodeId)) {
+        return { ok: false, reason: 'missing_kit_skill' }
+      }
+    }
+
+    // ---- COMMIT REGION --------------------------------------------------
+    // Snapshot for byte-equivalent rollback: the player payload (JSON
+    // clone, same rule as investBodyChapter - structuredClone throws on
+    // nested Pinia proxies), the learned-skill set, and the 0-or-1
+    // technique holder. External observers fired inside the promotion
+    // leg (quest transition mark, companion gifts) are idempotent
+    // write-if-absent channels - a rolled-back commit leaves them marked
+    // but state-consistent (a later real transition reconciles).
+    const playerSnapshot = capturePlayerSnapshot(player)
+    const learnedBefore = new Set(this.deps.skillManager.getAll().map((skill) => skill.id))
+    const techniquesBefore = this.deps.techniqueManager.getAll()
+
+    const rollback = (): void => {
+      restorePlayerSnapshotInPlace(player, playerSnapshot)
+      for (const skill of this.deps.skillManager.getAll()) {
+        if (!learnedBefore.has(skill.id)) {
+          this.deps.skillSystem.unlearn(skill.id)
+        }
+      }
+      this.deps.techniqueManager.restore(techniquesBefore)
+    }
+
+    try {
+      // Path/way commit - validates the pair, evaluates offerGate, writes
+      // cultivationPath + cultivationWay + the way's path-state slice.
+      if (!applyPathChoice(player, way.pathId, way.id).ok) {
+        rollback()
+        return { ok: false, reason: 'commit_failed' }
+      }
+
+      // The mortal-only basic pick ends at initiation (same contract as
+      // the ritual - post-path presence is corrupt on the save boundary).
+      delete player.mortalBasicSkillId
+
+      // Way kit learns - identical legs to the ritual's commit block.
+      way.skillIds?.forEach((skillId) => {
+        this.deps.progressionOps.learnSkill(skillId, player)
+        if (!this.deps.skillManager.has(skillId)) {
+          throw new Error(`five-element initiation: kit learn failed: ${skillId}`)
+        }
+      })
+
+      for (const skillId of way.coreSkillIds ?? []) {
+        this.deps.progressionOps.grantSkillCoreBySkillId(player, skillId)
+      }
+
+      for (const nodeId of way.grantedNodeIds ?? []) {
+        grantSkillCore(player, this.deps.nodeRegistry.get(nodeId))
+      }
+
+      if (way.starterBasicSkillId !== undefined) {
+        this.deps.progressionOps.learnSkill(way.starterBasicSkillId, player)
+        if (!this.deps.skillManager.has(way.starterBasicSkillId)) {
+          throw new Error(`five-element initiation: starter learn failed: ${way.starterBasicSkillId}`)
+        }
+      }
+
+      for (const passiveId of way.passiveSkillIds ?? []) {
+        if (!this.deps.skillManager.has(passiveId)) {
+          this.deps.progressionOps.learnSkill(passiveId, player)
+        }
+      }
+
+      // The element leg: root purchase + kit basic learn +
+      // spellPath.element commit through the ONE element-commit op
+      // (gated to mortal-only, so it can only ever run inside an
+      // in-flight initiation like this one).
+      if (!this.deps.progressionOps.selectSpellPathElement(element, player)) {
+        rollback()
+        return { ok: false, reason: 'commit_failed' }
+      }
+
+      this.commitInitiationRealmAdvance(player)
+
+      if (!this.grantCanonicalTechnique(way.techniqueId, player)) {
+        rollback()
+        return { ok: false, reason: 'commit_failed' }
+      }
+    } catch (error) {
+      rollback()
+      throw error
+    }
+
+    return { ok: true }
   }
 
   /**

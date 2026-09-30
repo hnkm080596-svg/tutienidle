@@ -497,3 +497,15 @@ export function isCultivationPathOffered(way: PathWayDefinition, player: PlayerD
 
   return true
 }
+
+/**
+ * BETA SCOPE LOCK v2 (phase-2) - the ONE predicate for 'this way commits
+ * an element intrinsically'. An element-axis way (today: spell_pathway)
+ * can never ride the generic chooseCultivationPath op - its element
+ * commits atomically inside commitFiveElementInitiation. Consumers
+ * (ritual ops, sim/harness ritual seams, the Quan Khi element pick)
+ * branch on this, never on a literal way id.
+ */
+export function declaresElementAxis(way: PathWayDefinition | undefined): boolean {
+  return way?.subpaths?.element !== undefined
+}

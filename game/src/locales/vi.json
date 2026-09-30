@@ -311,6 +311,10 @@
           "lockedHint": "Mở khóa tại {realm}.",
           "appendAria": "Thêm {name} vào phổ",
           "removeAria": "Gỡ {name} khỏi phổ"
+        },
+        "elementPick": {
+          "hint": "Chọn hành của Ngũ Hành Chân Quyết — quyết định vĩnh viễn.",
+          "back": "Quay lại"
         }
       },
       "pathDescriptions": {
@@ -329,6 +333,23 @@
       "world": {
         "ceremonyTitle": "LỄ NHẬP MÔN",
         "ceremonyBody": "Đạo hữu đã từ bỏ thân phận phàm nhân, chính thức bước vào {name}."
+      },
+      "initiationFailed": {
+        "invalid_element": "Nguyên tố này không thể chọn.",
+        "not_mortal": "Chỉ có phàm nhân ở ngưỡng cửa mới được hành nghi lễ.",
+        "already_committed": "Đạo hữu đã thề vào một con đường.",
+        "realm_level_too_low": "Tu vi chưa đủ sâu để hành nghi lễ nhập môn.",
+        "in_combat": "Không thể hành lễ giữa trận chiến.",
+        "way_unavailable": "Con đường này hiện không mở.",
+        "way_not_offered": "Con đường này không dành cho đạo hữu.",
+        "element_committed": "Nguyên tố đã được chọn rồi.",
+        "missing_technique": "Tâm pháp của con đường đang thiếu.",
+        "technique_occupied": "Đạo hữu đã mang một tâm pháp khác.",
+        "technique_grade_exceeds": "Tâm pháp này vượt quá cảnh giới vừa nhập môn.",
+        "missing_element_root": "Linh ngộ của hành này đang thiếu.",
+        "element_root_blocked": "Chưa thể lĩnh ngộ gốc hành này.",
+        "missing_kit_skill": "Bộ khởi đầu của nghi lễ đang thiếu một phần.",
+        "commit_failed": "Nghi lễ không thể hoàn thành. Không có thay đổi nào được ghi."
       }
     },
     "stageSelect": {
@@ -1097,18 +1118,12 @@
           "skill": "Kỹ Năng"
         }
       },
-      "skillStep": {
-        "kicker": "KHỞI THỦY",
-        "title": "Chọn chiêu thức khởi đầu",
-        "selected": "Đã chọn {count} / 1",
-        "description": "Cả ba chiêu đều được học — lựa chọn này quyết định chiêu đánh thường mở màn."
-      },
       "finish": "Bước vào tiên đồ",
       "creating": "Đang lập mệnh…",
       "errors": {
         "rollFailed": "Không thể quan sát thiên cơ. Vui lòng thử lại."
       },
-      "summary": "Đạo danh {name} · {talent} · {skill}"
+      "summary": "Đạo danh {name} · {talent}"
     }
   },
   "skillResource": {
@@ -1343,7 +1358,8 @@
       "missing_fuel_wood": "Không đủ Gỗ nhiên liệu cùng cảnh giới và cùng tuổi với Linh Thảo đã chọn",
       "missing_spirit_stone": "Không đủ Linh Thạch",
       "missing_special_ingredient": "Thiếu nguyên liệu đặc biệt của đan phương",
-      "fallback": "Không thể bắt đầu luyện"
+      "fallback": "Không thể bắt đầu luyện",
+      "scope_hidden": "Đan phương này nằm ngoài phạm vi beta — chưa mở trong bản này"
     },
     "outcomeNone": "Lần này không nhận được đan nào."
   },

@@ -3,6 +3,16 @@
 // shape. The real impl stays under the spy so records land for real and
 // idempotency is observable end-to-end.
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
+
+// BETA SCOPE LOCK v2 Phase-5 - this suite exercises the scope-hidden
+// system's ENABLED implementation (sec.11-15: dormant, not deleted),
+// so the scope authority reports in-scope for this file.
+vi.mock('../betaScope', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../betaScope')>()),
+  isBetaFeature: () => true,
+  isScopeHidden: () => false,
+}))
+
 import { createPinia, setActivePinia } from 'pinia'
 import { usePlayerStore } from '../../stores/player'
 import { GameManager } from '../game/GameManager'
@@ -22,6 +32,7 @@ import { TECHNIQUES } from '../../data/technique/Techniques'
 import { SKILLS } from '../../data/skill/Skills'
 import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
 import { CORE_REALM_LEVEL } from '../realm/realmSystem'
+import { commitSpellInitiationForTest } from '../game/__fixtures__/betaWaysUnlock'
 
 vi.mock('./CompanionGifts', async (importOriginal) => {
   const actual = await importOriginal<typeof import('./CompanionGifts')>()
@@ -120,9 +131,7 @@ describe('realm_entered gift seam', () => {
     // The initiation ritual requires a max-level mortal.
     player.realmLevel = CORE_REALM_LEVEL
 
-    expect(
-      gameManager.realmAdvanceOps.chooseCultivationPath('spell', 'spell_pathway', player),
-    ).toBe(true)
+    commitSpellInitiationForTest(gameManager, player)
     expect(player.realmId).toBe('qi_refining')
     expect(issueSpy).toHaveBeenCalledWith(player, {
       kind: 'realm_entered',

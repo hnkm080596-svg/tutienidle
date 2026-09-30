@@ -301,6 +301,11 @@ const ALLOWED: AllowedFile[] = [
     contract:
       'Restore-time migration fold: retired pill-permanent:* modifiers fold their earned flat into baseStats once during load (bounded by getEffectiveMainStatCap); the modifier is dropped so the fold is idempotent, not a new grant channel.',
   },
+  {
+    path: 'src/core/player/PlayerSnapshot.ts',
+    contract:
+      'Transactional rollback channel: restorePlayerSnapshotInPlace writes back the byte-equivalent snapshot capturePlayerSnapshot took inside the same op. It only ever reproduces state the player already had - no grant channel, and callers get rollback for free without a raw Object.assign lane in their own file.',
+  },
 ]
 
 /** Replace `v-pre` element subtrees in a .vue template with blanks

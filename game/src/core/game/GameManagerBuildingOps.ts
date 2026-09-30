@@ -13,6 +13,14 @@ import { getRealmTier } from '../realm/RealmTierMap'
 import type { PlayerData } from '../player/Player'
 import { NotificationQueue } from './NotificationQueue'
 import { createBagOverflowEvent } from '../notification/bagOverflow'
+import {
+  betaSurfaceVerdict,
+  isScopeHidden,
+  BETA_WORKER_LODGE_TABS,
+  WORKER_LODGE_TAB_FEATURE,
+  type BetaScopeVerdict,
+  type BetaWorkerLodgeTabId,
+} from '../betaScope'
 
 export interface GameManagerBuildingOpsDeps {
   buildingRegistry: BuildingRegistry
@@ -156,11 +164,53 @@ export class GameManagerBuildingOps {
   }
 
   /**
+   * BETA SCOPE LOCK v2 sec.13 - the Worker Lodge tab read-model. Each
+   * authored tab resolves through the scope authority so the frontend
+   * renders verdicts directly and never imports CompanionAvailability to
+   * decide which tabs exist. STRICTLY ADDITIVE - existing accessors keep
+   * their shape. nhan_cong is the workforce tab itself (always offered);
+   * manualAssignOffered reports whether the manual split write is live.
+   */
+  getWorkerLodgeSurfaceModel(): {
+    tabs: {
+      id: BetaWorkerLodgeTabId
+      verdict: BetaScopeVerdict
+      manualAssignOffered?: boolean
+    }[]
+  } {
+    return {
+      tabs: BETA_WORKER_LODGE_TABS.map((tabId) => {
+        const feature = WORKER_LODGE_TAB_FEATURE[tabId]
+
+        if (feature === null) {
+          return {
+            id: tabId,
+            verdict: 'available' as BetaScopeVerdict,
+            manualAssignOffered: !isScopeHidden('manualWorkforce'),
+          }
+        }
+
+        return {
+          id: tabId,
+          verdict: betaSurfaceVerdict(feature),
+        }
+      }),
+    }
+  }
+
+  /**
    * Chi-hien-quan (2026-09-02) — UI phân bổ: gán/xóa số slot manual của
    * 1 site. `count === undefined` = về AUTO (xóa assignedWorkers).
    * Clamp [0, capacity] phòng UI gửi sai; không đổi nếu site không tồn tại.
    */
   assignWorkers(siteId: string, count: number | undefined): void {
+    // BETA SCOPE LOCK v2 sec.13 - manualWorkforce is scope-hidden:
+    // automatic allocation is the normal beta path, so the manual write
+    // is a no-op (the domain command repeats the check for direct calls).
+    if (isScopeHidden('manualWorkforce')) {
+      return
+    }
+
     // Clamp bound stays fed by the one split rule - the domain command
     // owns the write itself (D2: no foreign mutation of site state).
     const capacity = resolveProductionWorkerCapacity(

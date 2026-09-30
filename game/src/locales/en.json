@@ -311,6 +311,10 @@
           "lockedHint": "Unlocks at {realm}.",
           "appendAria": "Append {name} to the sequence",
           "removeAria": "Remove {name} from the sequence"
+        },
+        "elementPick": {
+          "hint": "Choose the element of the Five Element Art — a permanent commitment.",
+          "back": "Back"
         }
       },
       "pathDescriptions": {
@@ -329,6 +333,23 @@
       "world": {
         "ceremonyTitle": "ENTRY CEREMONY",
         "ceremonyBody": "The cultivator has forsaken their mortal identity and formally entered {name}."
+      },
+      "initiationFailed": {
+        "invalid_element": "That element cannot be chosen.",
+        "not_mortal": "Only a mortal at the threshold can take this initiation.",
+        "already_committed": "You have already sworn to a path.",
+        "realm_level_too_low": "Your cultivation is not yet deep enough for the initiation.",
+        "in_combat": "You cannot perform the initiation while in battle.",
+        "way_unavailable": "This path is not available.",
+        "way_not_offered": "This path does not open to you.",
+        "element_committed": "An element has already been committed.",
+        "missing_technique": "The path's heart art is missing.",
+        "technique_occupied": "You already hold a heart art.",
+        "technique_grade_exceeds": "This heart art exceeds what a newly-entered cultivator can hold.",
+        "missing_element_root": "The element's awakening node is missing.",
+        "element_root_blocked": "The element's awakening node cannot be comprehended.",
+        "missing_kit_skill": "Part of the initiation kit is missing.",
+        "commit_failed": "The initiation could not be completed. Nothing was changed."
       }
     },
     "stageSelect": {
@@ -1097,18 +1118,12 @@
           "skill": "Skill"
         }
       },
-      "skillStep": {
-        "kicker": "FIRST STRIKE",
-        "title": "Choose your starting technique",
-        "selected": "Selected {count} / 1",
-        "description": "All three techniques are learned — this choice decides your opening basic attack."
-      },
       "finish": "Step onto the immortal path",
       "creating": "Binding fate…",
       "errors": {
         "rollFailed": "Cannot observe the heavens. Please try again."
       },
-      "summary": "{name} · {talent} · {skill}"
+      "summary": "{name} · {talent}"
     }
   },
   "skillResource": {
@@ -1343,7 +1358,8 @@
       "missing_fuel_wood": "Not enough fuel wood matching the herb's realm and age",
       "missing_spirit_stone": "Not enough Spirit Stones",
       "missing_special_ingredient": "Missing the recipe's special ingredient",
-      "fallback": "Cannot start brewing"
+      "fallback": "Cannot start brewing",
+      "scope_hidden": "This recipe is outside the beta scope"
     },
     "outcomeNone": "This run yields no pills."
   },

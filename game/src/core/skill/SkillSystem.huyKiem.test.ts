@@ -41,6 +41,25 @@ describe('Huy Kiếm — flat damage vĩnh viễn theo cast', () => {
     expect((action as { skillExperienceRatio?: number })?.skillExperienceRatio).toBeUndefined()
   })
 
+  // BETA SCOPE LOCK v2 - all 3 mortal precursors share the same
+  // uncapped flat-damage mechanic (design ruling 2026-09-30): level
+  // still caps at Lv3 via CAST_LEVELING_THRESHOLDS, but +1 flat per 10
+  // casts never stops growing.
+  it.each(['linh_bao', 'huy_quyen'] as const)('precursor %s nhan flat bonus giong tram', (skillId) => {
+    const manager = new SkillManager()
+    const system = new SkillSystem(manager)
+    const template = SKILLS.find((skill) => skill.id === skillId)!
+    system.learn(template)
+    const skill = manager.get(skillId)!
+    skill.totalExperience = 150
+
+    const effective = system.getEffectiveSkill(skill)
+
+    const action = effective.triggers?.[0]?.actions[0]
+    expect(action?.type).toBe('dealDamage')
+    expect((action as { value?: number }).value).toBe(1 + 15)
+  })
+
   it('skill khác KHÔNG nhận flat bonus', () => {
     const manager = new SkillManager()
     const system = new SkillSystem(manager)

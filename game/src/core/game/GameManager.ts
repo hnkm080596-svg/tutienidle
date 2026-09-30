@@ -102,6 +102,7 @@ import { GameManagerPersistentEffectOps } from './GameManagerPersistentEffectOps
 import { GameManagerEconomyOps } from './GameManagerEconomyOps'
 import { GameManagerPillOps } from './GameManagerPillOps'
 import { GameManagerTickOps } from './GameManagerTickOps'
+import { GameManagerStageOps } from './GameManagerStageOps'
 import { GameManagerTurnBattleOps, type ResumePlayback } from './GameManagerTurnBattleOps'
 import { HiddenBeastSystem } from './HiddenBeastSystem'
 import { TribulationDirector, type ActiveTribulationState } from '../tribulation/TribulationDirector'
@@ -494,6 +495,13 @@ export class GameManager {
   // quest lifecycle reconciliation).
   // Public: callers use gameManager.tickOps.* directly (no facade).
   readonly tickOps: GameManagerTickOps
+
+  // Stage surface read-model (BETA SCOPE LOCK v2 section 9): one stable
+  // projection per stage for presentation - state/enemy/reward/
+  // auto-farm/start-availability/disabled-reason composed from the
+  // owning authorities.
+  // Public: callers use gameManager.stageOps.* directly (no facade).
+  readonly stageOps: GameManagerStageOps
 
   // Hidden beast (spec dot-pha-loi-kiep sec.4.1c) - the 1000-kill
   // Qi Refining window.
@@ -915,6 +923,22 @@ export class GameManager {
       turnBattleOps: this.turnBattleOps,
       tribulationDirector: this.tribulationDirector,
       sessionRng: () => this.sessionRng(),
+    })
+
+    // Stage surface read-model - constructed LAST: it only delegates to
+    // the owning authorities (catalogOps unlock/lock-reason, stageWaves
+    // admission probe, autoFarmOps eligibility) so it needs them all
+    // initialized.
+    this.stageOps = new GameManagerStageOps({
+      stageTemplates: this.stageTemplates,
+      zoneRegistry: this.zoneRegistry,
+      enemyTemplates: this.enemyTemplates,
+      isStageUnlocked: (stageId, player) => this.catalogOps.isStageUnlocked(stageId, player),
+      stageLockReasonCode: (stageId, player) =>
+        this.catalogOps.stageLockReasonCode(stageId, player),
+      canStart: (player, stage) => this.stageWaves.canStart(player, stage),
+      isAutoFarmStageEligible: (player, stageId) =>
+        this.turnBattleOps.autoFarmOps.isAutoFarmStageEligible(player, stageId),
     })
   }
 

@@ -1,30 +1,35 @@
 import { describe, expect, it } from 'vitest'
 import { isValidCharacterName, validateCharacterCreationDraft, type CharacterCreationDraft } from './CharacterCreationService'
+import { BETA_CREATION_TALENT_IDS } from '@/core/betaScope'
 
+const offeredId = BETA_CREATION_TALENT_IDS[0]!
 const validDraft: CharacterCreationDraft = {
   name: 'Lạc Vân',
-  talentIds: ['a'],
-  mortalBasicSkillId: 'tram',
+  talentIds: [offeredId],
 }
-const rollIds = new Set(['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i'])
+// The roll offers the beta-admitted id plus a non-beta id a stale
+// offer list could carry.
+const rollIds = new Set([offeredId, 'pham_cot', 'a', 'b', 'c', 'd', 'e', 'f', 'g'])
 
 describe('character creation validation', () => {
   it('accepts Vietnamese character names', () => expect(isValidCharacterName('Lạc Vân')).toBe(true))
-  it('accepts a valid draft with exactly one talent and a precursor pick', () => expect(validateCharacterCreationDraft(validDraft, rollIds)).toEqual({ ok: true }))
-  it('accepts every mortal precursor as the starting-skill pick', () => {
-    for (const skillId of ['tram', 'linh_bao', 'huy_quyen']) {
-      expect(validateCharacterCreationDraft({ ...validDraft, mortalBasicSkillId: skillId }, rollIds)).toEqual({ ok: true })
-    }
-  })
-  it('rejects forged talent IDs and picking more than one', () => {
+  it('accepts a valid draft with exactly one beta-admitted talent', () => expect(validateCharacterCreationDraft(validDraft, rollIds)).toEqual({ ok: true }))
+  it('rejects forged, non-offered, non-beta, or wrongly-counted talent picks', () => {
     expect(validateCharacterCreationDraft({ ...validDraft, talentIds: ['forged'] }, rollIds).ok).toBe(false)
-    expect(validateCharacterCreationDraft({ ...validDraft, talentIds: ['a', 'b'] }, rollIds).ok).toBe(false)
+    // 'pham_cot' is offered by the (stale) roll but excluded by the
+    // beta allow-list - the draft validator fails closed on it.
+    expect(validateCharacterCreationDraft({ ...validDraft, talentIds: ['pham_cot'] }, rollIds)).toEqual({
+      ok: false,
+      code: 'invalid_talents',
+      message: expect.any(String),
+    })
+    expect(validateCharacterCreationDraft({ ...validDraft, talentIds: [offeredId, 'a'] }, rollIds).ok).toBe(false)
     expect(validateCharacterCreationDraft({ ...validDraft, talentIds: [] }, rollIds).ok).toBe(false)
   })
-  it('rejects a missing, non-precursor, or empty starting-skill pick', () => {
-    const noPick = validateCharacterCreationDraft({ ...validDraft, mortalBasicSkillId: '' }, rollIds)
-    expect(noPick).toEqual({ ok: false, code: 'invalid_skill', message: expect.any(String) })
-    const nonPrecursor = validateCharacterCreationDraft({ ...validDraft, mortalBasicSkillId: 'hoa_cau_thuat' }, rollIds)
-    expect(nonPrecursor).toEqual({ ok: false, code: 'invalid_skill', message: expect.any(String) })
+  it('the draft contract carries no starter-skill pick at all', () => {
+    // BETA SCOPE LOCK v2: the canonical beta draft is name + talent.
+    // A payload-shaped injection of a starter pick is structurally
+    // absent - the boot seam writes the constant itself.
+    expect('mortalBasicSkillId' in validDraft).toBe(false)
   })
 })

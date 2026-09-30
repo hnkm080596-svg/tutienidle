@@ -34,6 +34,7 @@ import {
 } from './HiddenLineage'
 import { HIDDEN_MECHANIC_STATE_VALIDATORS, type RealmHiddenMechanicState } from './HiddenPerfection'
 import { isDaiChuThienReached } from '../body/ZhouTianChapter'
+import { isBetaFeature } from '../../betaScope'
 
 const REALM_ID = 'foundation_establishment'
 export const NGHICH_CHU_TIAN_TOTAL_STEPS = 36
@@ -101,6 +102,14 @@ export function isNghichChuTianEligible(player: PlayerData): boolean {
  * always false - a frozen record is inert progress, and sec.12.1 shows
  * no hint of the continuation while the lineage is closed. */
 export function isNghichChuTianRevealed(player: PlayerData): boolean {
+  // BETA SCOPE LOCK v2 (Phase-6): the reverse-circuit continuation is
+  // scope-hidden - even a legacy save carrying a discovered record
+  // reveals nothing (the record persists untouched; scope admission
+  // outranks the discovered-flag read).
+  if (!isBetaFeature('hiddenContent')) {
+    return false
+  }
+
   const record = getRealmHiddenState(player, REALM_ID)
   return (
     (record?.discovered === true && record.frozen !== true) ||

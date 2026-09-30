@@ -28,6 +28,7 @@ import type { SkillManager } from '../skill/SkillManager'
 import type { SkillSystem } from '../skill/SkillSystem'
 import { type OrbId } from '../kiem-tu/KiemTuState'
 import { isMortalPrecursorSkillId } from '../skill/MortalPrecursors'
+import { isBetaMortalStarterId } from '../betaScope'
 import { isHiddenSwordPathway } from '../kiem-tu/KiemTuPath'
 import { validatePreset } from '../kiem-tu/KiemPhoSystem'
 import { getRealmIndex } from '../realm/realmSystem'
@@ -45,6 +46,25 @@ import { SKILL_CORE_NODES } from '../../data/progression/SkillCoreNodes'
 import { PHAP_TU_ELEMENT_ROOT_IDS } from '../../data/progression/PhapTuNodes.builders'
 import { NGU_KIEM_EVOLUTION_NODE_IDS } from '../../data/progression/KiemTuNodes'
 import { getActiveElement, hasStaticPathCapability } from '../player/CultivationPathSystem'
+import {
+  activeElementTreeFor as betaActiveElementTreeFor,
+  betaCombatRolesFor as betaCombatRolesForDomain,
+  betaCombatSurfacesFor as betaCombatSurfacesForDomain,
+  betaSkillTreeFor as betaSkillTreeForDomain,
+  type BetaCombatRoleEntry,
+  type BetaPrecursorSurfaceVerdict,
+  type BetaSkillTree,
+  type BetaSkillTreeNode,
+} from '../betaScopeSkillDomain'
+import {
+  betaCompletionFor as betaCompletionForDomain,
+  betaNextRealmSurfaceFor as betaNextRealmSurfaceForDomain,
+  betaSupportedFor as betaSupportedForDomain,
+  unsupportedReleaseReason as unsupportedReleaseReasonDomain,
+  type BetaCompletion,
+  type BetaNextRealmSurface,
+  type BetaUnsupportedReason,
+} from '../betaScopeSurface'
 import { commitSpellPathElement } from '../phap-tu/PhapTuState'
 import { getEffectiveMainStatCap } from '../stats/StatCap'
 import type { MainStatKey } from '../stats/StatTypes'
@@ -496,6 +516,17 @@ export class GameManagerProgressionOps {
     if (this.deps.isTurnBattleInProgress()) {
       return false
     }
+    // BETA SCOPE LOCK v2 (phase-2) - an element commits ONLY inside the
+    // in-flight commitFiveElementInitiation transaction: that op applies
+    // the path choice while the player is still mortal, so 'mortal' is
+    // the precise discriminator between its element leg and any later
+    // direct call (a qi_refining caller must already hold - or have
+    // bypassed - the atomic commit). Post-path commits via this seam
+    // are gone.
+    if (player.realmId !== 'mortal') {
+      return false
+    }
+
     // Cultivation Path Framework (M4, R6): element machinery is
     // spell_pathway-only - P1 - the declared 'spell.elemental_casting'
     // capability is the gate, so the post-M7 collapsed ('spell',
@@ -545,6 +576,13 @@ export class GameManagerProgressionOps {
 
     for (const skillId of root.effect.unlocksSkillIds ?? []) {
       this.learnSkill(skillId, player)
+      // Same mid-flight verification as the way-kit leg: a learn that
+      // cannot land must fail the element leg so the enclosing
+      // initiation transaction rolls back instead of committing an
+      // element without its basic.
+      if (!this.deps.skillManager.has(skillId)) {
+        return false
+      }
     }
 
     for (const skillId of root.effect.grantsSkillCoreIds ?? []) {
@@ -922,6 +960,11 @@ export class GameManagerProgressionOps {
    * (spec sec.4.3a - a held entry IS learned). The realm term mirrors
    * the v82 save preflight (mortal = realmId 'mortal' + pathless) so a
    * write can never produce a state restore would reject.
+   *
+   * BETA SCOPE LOCK v2 (phase-2): the pick itself is fixed - only
+   * 'linh_bao' is a writable starter. tram/huy_quyen stay learnable
+   * precursors but every write path (boot seam, repick, direct-API
+   * injection) fails closed here at the single admission point.
    */
   setMortalBasicSkill(player: PlayerData, skillId: string): boolean {
     // the pick binds the kit at battle build - mid-battle writes are
@@ -935,6 +978,11 @@ export class GameManagerProgressionOps {
     }
 
     if (!isMortalPrecursorSkillId(skillId)) {
+      return false
+    }
+
+    // Beta scope gate: the starter pick is fixed to 'linh_bao'.
+    if (!isBetaMortalStarterId(skillId)) {
       return false
     }
 
@@ -994,6 +1042,56 @@ export class GameManagerProgressionOps {
       special: decorate(roles.special),
       ultimate: decorate(roles.ultimate),
     }
+  }
+
+  /**
+   * BETA SCOPE LOCK v2 Phase-3 - UI reach for the canonical combat/skill
+   * read-models (core/betaScopeSkillDomain.ts). Same binding pattern as
+   * getResolvedSkillRoles: the domain reads stay pure; only
+   * learned-skill membership is injected here (SkillManager stays the
+   * owner). The frontend renders these verdicts - it must never rederive
+   * rail/tree visibility from realm + skill registry.
+   */
+  betaCombatRolesFor(player: PlayerData): BetaCombatRoleEntry[] {
+    return betaCombatRolesForDomain(player, {
+      hasSkill: (skillId) => this.deps.skillManager.has(skillId),
+    })
+  }
+
+  betaSkillTreeFor(player: PlayerData): BetaSkillTree {
+    return betaSkillTreeForDomain(player)
+  }
+
+  betaActiveElementTreeFor(player: PlayerData): BetaSkillTreeNode[] {
+    return betaActiveElementTreeFor(player)
+  }
+
+  betaCombatSurfacesFor(player: PlayerData): BetaPrecursorSurfaceVerdict[] {
+    return betaCombatSurfacesForDomain(player, {
+      hasSkill: (skillId) => this.deps.skillManager.has(skillId),
+    })
+  }
+
+  /**
+   * BETA SCOPE LOCK v2 Phase-6 - UI reach for the global-surface
+   * read-models (core/betaScopeSurface.ts). All four are PlayerData-pure
+   * queries; the bindings give the frontend the same GameManager seam
+   * the Phase-3 read-models use.
+   */
+  betaCompletionFor(player: PlayerData): BetaCompletion {
+    return betaCompletionForDomain(player)
+  }
+
+  betaNextRealmSurfaceFor(player: PlayerData): BetaNextRealmSurface | null {
+    return betaNextRealmSurfaceForDomain(player)
+  }
+
+  betaSupportedFor(player: PlayerData): boolean {
+    return betaSupportedForDomain(player)
+  }
+
+  unsupportedReleaseReason(player: PlayerData): BetaUnsupportedReason | null {
+    return unsupportedReleaseReasonDomain(player)
   }
 
   /**

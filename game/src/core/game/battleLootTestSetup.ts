@@ -54,6 +54,8 @@ export const TEST_EQUIPMENT_INSTANCE = {
 export interface LootTestSetupOptions {
   /** Enemy realm — drives getRealmRewardMultiplier + artifact EXP. */
   realmId?: string
+  /** Player realm - defaults to 'mortal'; domain unlock predicates read it. */
+  playerRealmId?: string
   /** Still consumed by getArtifactExperienceReward; currency no longer read. */
   rewards?: EnemyReward
   family?: string
@@ -177,6 +179,7 @@ export function createLootTestSetup(options: LootTestSetupOptions = {}) {
 
   const loot = new BattleLootSystem(deps)
   const player = createDefaultPlayer()
+  player.realmId = options.playerRealmId ?? 'mortal'
   player.selectedTalentIds = options.talentIds ?? []
 
   loot.setSession({} as RewardReceiver, player)
