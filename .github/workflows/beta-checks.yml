@@ -1,0 +1,112 @@
+# BETA-FINAL PR10 / spec B5 - unprivileged pull-request verification.
+#
+# This workflow RUNS UNTRUSTED PR HEAD CODE (npm ci executes the PR's own
+# install scripts). It therefore gets `contents: read` and nothing else: no
+# `environment:`, no signing credentials, no release permissions. Fork PRs
+# already receive no secrets from GitHub; this file keeps it structurally
+# impossible to leak any even if repo secrets are misconfigured. Nothing
+# release-shaped (tags, publish, signing) is accepted here.
+#
+# Pinning contract: every action is referenced by full commit SHA, the Node
+# toolchain is the exact locked version, and the runner image identity is
+# recorded so packaged evidence can name the image it was produced on.
+
+name: beta-checks
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+      - 'beta-final/**'
+  workflow_dispatch:
+
+permissions: {}
+
+env:
+  # Exact toolchain pin (engines: ^22.18.0 || >=24.12.0 - the repo's dev
+  # machines and snapshot run this 22.x line).
+  NODE_VERSION: '22.23.3'
+
+jobs:
+  verify:
+    name: verify (ubuntu-24.04)
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: game
+    steps:
+      - name: Checkout PR head (untrusted - no credentials persist)
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          persist-credentials: false
+
+      - name: Record runner image identity
+        run: |
+          echo "runner.os=${{ runner.os }} runner.arch=${{ runner.arch }}"
+          echo "ImageOS=${ImageOS:-unset} ImageVersion=${ImageVersion:-unset}"
+
+      - name: Setup Node (pinned)
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: game/package-lock.json
+
+      - name: npm ci (lockfile-enforced)
+        run: npm ci
+
+      - name: canvas libuuid workaround (Linux)
+        # The canvas prebuild bundles a libuuid that mismatches the system
+        # one; copy the real library in (same workaround as dev boxes).
+        run: cp "$(readlink -f /lib/x86_64-linux-gnu/libuuid.so.1)" node_modules/canvas/build/Release/libuuid.so.1
+
+      - name: npm run verify (type-check + build + full vitest)
+        run: npm run verify
+
+      - name: Release script tests
+        run: node --test "scripts/release/*.test.mjs"
+
+  windows-package:
+    name: unsigned package dry-run (windows-2022)
+    runs-on: windows-2022
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: game
+    steps:
+      - name: Checkout PR head (untrusted - no credentials persist)
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          persist-credentials: false
+
+      - name: Record runner image identity
+        shell: pwsh
+        run: |
+          "runner.os=${{ runner.os }} runner.arch=${{ runner.arch }}"
+          "ImageOS=$env:ImageOS ImageVersion=$env:ImageVersion"
+
+      - name: Setup Node (pinned)
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: game/package-lock.json
+
+      - name: npm ci (lockfile-enforced)
+        run: npm ci
+
+      - name: Build + package unsigned NSIS dry-run
+        # No signing credentials exist in this context by construction;
+        # electron-builder produces a clean unsigned package, which is the
+        # intended PR-time result (EXT-02 unresolved).
+        run: npm run dist:win
+
+      - name: Inspect packaged payload
+        run: node scripts/release/inspect-package.mjs --input release
+
+      - name: Signing preflight (informational - unsigned expected on PRs)
+        run: node scripts/release/signing-preflight.mjs
