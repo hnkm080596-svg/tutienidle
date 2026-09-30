@@ -1,4 +1,14 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
+
+// BETA SCOPE LOCK v2 - the companion domain is scope-hidden in the beta
+// build, so the kill EXP feed is closed by a domain gate. This file keeps
+// exercising the dormant feed's enabled semantics by stubbing the scope
+// flags open, matching the dormant-system test convention.
+vi.mock('../betaScope', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../betaScope')>()),
+  isBetaFeature: () => true,
+  isScopeHidden: () => false,
+}))
 import type { CompanionInstance } from '../../data/companion/Companions'
 import type { PlayerData } from '../player/Player'
 import type { Stage } from '../stage/Stage'
@@ -51,6 +61,7 @@ describe('BattleLootSystem - companion battle EXP', () => {
     vi.spyOn(Math, 'random').mockReturnValue(0)
     const { killEnemy, player } = createLootTestSetup({
       realmId: 'qi_refining',
+      playerRealmId: 'foundation_establishment',
       stage: { stageId: 'qr_5', requiredRealmId: 'qi_refining', floor: 5 },
     })
 
@@ -72,6 +83,7 @@ describe('BattleLootSystem - companion battle EXP', () => {
     vi.spyOn(Math, 'random').mockReturnValue(0)
     const { killEnemy, player } = createLootTestSetup({
       realmId: 'qi_refining',
+      playerRealmId: 'foundation_establishment',
       stage: { stageId: 'qr_5', requiredRealmId: 'qi_refining', floor: 5 },
     })
 
@@ -91,6 +103,7 @@ describe('BattleLootSystem - companion battle EXP', () => {
     vi.spyOn(Math, 'random').mockReturnValue(0)
     const { killEnemy, player } = createLootTestSetup({
       realmId: 'foundation_establishment',
+      playerRealmId: 'foundation_establishment',
     })
 
     player.companions.push(makeCompanion('test_companion_1'))
@@ -107,13 +120,17 @@ describe('BattleLootSystem - companion battle EXP', () => {
     vi.spyOn(Math, 'random').mockReturnValue(0)
     const { killEnemy, player } = createLootTestSetup({
       realmId: 'mortal',
+      playerRealmId: 'foundation_establishment',
       stage: { stageId: 'mortal_5', requiredRealmId: 'mortal', floor: 5 },
     })
 
-    // Player is mortal (createDefaultPlayer); mortal maxLevel is 18, so a
-    // mortal companion at tier 18 sits exactly at the ceiling and
-    // applyCompanionExp discards the incoming exp.
-    player.companions.push(makeCompanion('test_companion_1', { realmLevel: 18 }))
+    // Player is at the companion domain's unlock realm (the gate requires
+    // it); foundation maxLevel is 18, so a foundation companion at tier
+    // 18 sits exactly at the player-realm ceiling and applyCompanionExp
+    // discards the incoming exp.
+    player.companions.push(
+      makeCompanion('test_companion_1', { realmId: 'foundation_establishment', realmLevel: 18 }),
+    )
     assignFormation(player, 'test_companion_1')
 
     killEnemy()
@@ -126,6 +143,7 @@ describe('BattleLootSystem - companion battle EXP', () => {
     vi.spyOn(Math, 'random').mockReturnValue(0)
     const { killEnemy, player } = createLootTestSetup({
       realmId: 'qi_refining',
+      playerRealmId: 'foundation_establishment',
       stage: { stageId: 'qr_5', requiredRealmId: 'qi_refining', floor: 5 },
     })
 
@@ -154,6 +172,7 @@ describe('BattleLootSystem - companion battle EXP', () => {
     vi.spyOn(Math, 'random').mockReturnValue(0)
     const { killEnemy, player } = createLootTestSetup({
       realmId: 'qi_refining',
+      playerRealmId: 'foundation_establishment',
       stage: { stageId: 'qr_5', requiredRealmId: 'qi_refining', floor: 5 },
     })
 
@@ -179,7 +198,7 @@ describe('BattleLootSystem - companion battle EXP', () => {
 
   it('the auto-farm shim path (processDefeatedEnemies with a stage override) grants exp', () => {
     vi.spyOn(Math, 'random').mockReturnValue(0)
-    const { loot, player } = createLootTestSetup({ realmId: 'mortal' })
+    const { loot, player } = createLootTestSetup({ realmId: 'mortal', playerRealmId: 'foundation_establishment' })
 
     player.companions.push(makeCompanion('test_companion_1'))
     assignFormation(player, 'test_companion_1')

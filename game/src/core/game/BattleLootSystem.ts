@@ -36,7 +36,6 @@ import { physiqueEssenceGradeOf } from '../../data/realm/PhysiqueEssence'
 import { isScopeHidden } from '../betaScope'
 import {
   isBreakthroughAcquisitionEnabled,
-  COMPANION_PULL_TOKEN_MATERIAL_IDS,
   isCompanionPullTokenSourceSuppressed,
   isDomainScopedAcquisitionEnabled,
 } from '../realm/ReleasePolicy'
@@ -375,7 +374,12 @@ export class BattleLootSystem {
           // re-resolved per kill (snapshot semantics): a mid-battle
           // formation change only affects the NEXT kill.
           const player = this.player
-          if (player && player.companions.length > 0) {
+          // BETA SCOPE LOCK v2 sec.14 - companion battle EXP is domain
+          // ACCESS (same class as grantArtifactExperience above): it
+          // closes when the domain is scope-hidden, including for a
+          // grandfathered save still carrying companion instances and a
+          // persisted loadout. Ownership data itself is never touched.
+          if (player && player.companions.length > 0 && !isScopeHidden('companion')) {
             const expPerKill = companionBattleExpPerKill(
               stage?.requiredRealmId ?? enemy.realmId,
             )
@@ -592,17 +596,6 @@ export class BattleLootSystem {
             if (
               physiqueEssenceGradeOf(drop.itemId) !== undefined &&
               isScopeHidden('bodyPath')
-            ) {
-              break
-            }
-
-            // BETA SCOPE LOCK v2 sec.14 - the companion pull token is a
-            // generated currency of the scope-hidden companion domain:
-            // its authored signature drop stays but cannot deliver
-            // (post-resolve filter, same seam as the gates above).
-            if (
-              COMPANION_PULL_TOKEN_MATERIAL_IDS.includes(drop.itemId as 'chieu_hien_lenh') &&
-              isScopeHidden('companion')
             ) {
               break
             }

@@ -31,6 +31,12 @@ import {
   isFormationUnlocked,
 } from '@/core/game/FormationPlacement'
 import { issueCompanionGifts } from '@/core/companion/CompanionGifts'
+import { createCompanionInstance } from '@/core/companion/CompanionGacha'
+import { BETA_COMPANIONS } from '@/data/companion/Companions'
+import { createLootTestSetup } from '@/core/game/battleLootTestSetup'
+import { resolveCombatBuild } from '@/core/game/CombatBuild'
+import { TRAN_PHAP_FORMATIONS } from '@/data/formation/TranPhap'
+import { GENERIC_PHYSICAL_BASIC } from '@/data/skill/TurnBasicAttacks'
 import { HiddenBeastSystem } from '@/core/game/HiddenBeastSystem'
 import { hiddenBeastChannels } from '@/data/drop/HiddenMaterialChannels'
 import { ENEMIES } from '@/data/enemy/Enemies'
@@ -319,6 +325,61 @@ describe('sec.14 companion/formation/artifact - all faucets shut', () => {
     // through the domain predicate.
     expect(
       commitFormationLoadout(player, { formationId: 'test_formation', assignments: [] }),
+    ).toBe(false)
+  })
+
+  it('companion battle EXP does not accrue on a grandfathered save', () => {
+    // A pre-flag save can carry owned companions AND a persisted
+    // formation loadout; the per-kill EXP feed must still close (the
+    // same domain-access contract as artifact EXP).
+    const { player, killEnemy } = createLootTestSetup({ realmId: 'mortal' })
+    const definition = BETA_COMPANIONS[0]!
+    player.companions.push(createCompanionInstance(definition, () => 'inst-1'))
+    player.formationLoadout = {
+      formationId: 'test',
+      assignments: [{ row: 0, column: 0, combatantId: definition.id }],
+    }
+
+    killEnemy()
+
+    expect(player.companions[0]!.exp).toBe(0)
+  })
+
+  it('grandfathered combat build fields no companions and no Tran Phap buff', () => {
+    const player = foundationPlayer()
+    const definition = BETA_COMPANIONS[0]!
+    const formation = TRAN_PHAP_FORMATIONS[0]!
+    player.companions = [createCompanionInstance(definition, () => 'inst-1')]
+    player.formationLoadout = {
+      formationId: formation.id,
+      assignments: [
+        { row: 0, column: 0, combatantId: 'player' },
+        { row: 1, column: 1, combatantId: definition.id },
+      ],
+    }
+
+    const build = resolveCombatBuild(
+      player,
+      {
+        resolveBasic: () => GENERIC_PHYSICAL_BASIC,
+        resolveSpecialUltimate: () => undefined,
+        resolveMaxThe: () => 10,
+        resolveStatDomains: () => undefined,
+      },
+      {
+        getBattleBaseChannels: () => [],
+        resolveCapabilities: () => new Set(),
+        getSkillLevels: () => ({}),
+        getProgressionNodes: () => [],
+        getCompanionDefinition: (id) => BETA_COMPANIONS.find((c) => c.id === id),
+        getLiveBattleModifiers: () => [],
+        getActivePlayer: () => undefined,
+      },
+    )
+
+    expect(build.companions).toEqual([])
+    expect(
+      build.entryBuffs.some((buff) => buff.definitionId === formation.buff.definitionId),
     ).toBe(false)
   })
 
