@@ -14,6 +14,7 @@ import {
   type DongFuBuildingId,
 } from '@/presentation/background/DongFuBuildingArt'
 import type { ThanhVanVariant } from '@/presentation/background/BackgroundVariant'
+import { isBetaBuildingSurface } from '@/core/betaScopeSurface'
 import DongFuBuildingSprite from './DongFuBuildingSprite.vue'
 
 interface SceneBuilding {
@@ -37,8 +38,15 @@ const assetErrors = ref<Set<DongFuBuildingId>>(new Set())
 
 let reducedMotionQuery: MediaQueryList | undefined
 
+// BETA SCOPE LOCK v2 (Phase-6): the hotspot layer consumes the
+// canonical beta surface set - a scope-hidden building (chi_hien_quan)
+// renders NO hotspot, nameplate or tooltip at all.
 const sceneBuildings = computed<SceneBuilding[]>(() =>
   DONG_FU_BUILDING_ART.flatMap((art) => {
+    if (!isBetaBuildingSurface(art.buildingId)) {
+      return []
+    }
+
     const building = definitions.value.find((entry) => entry.id === art.buildingId)
     return building ? [{ art, building }] : []
   }),

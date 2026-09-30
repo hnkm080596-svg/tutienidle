@@ -44,6 +44,7 @@ import {
 } from '../../data/drop/HiddenMaterialChannels'
 import { getRealmIndex } from '../realm/realmSystem'
 import { isBreakthroughAcquisitionEnabled } from '../realm/ReleasePolicy'
+import { isBetaFeature } from '../betaScope'
 
 /** Một giao dịch settle đã xảy ra — dùng cho notification UI (§9.1). */
 export interface ProductionSettlementEvent {
@@ -509,6 +510,15 @@ export class ProductionSystem {
     cycle: ProductionCycle,
     registry: MaterialRegistry,
   ): ResolvedProductionReward[] {
+    // BETA SCOPE LOCK v2 (Phase-6): hidden-content channels are
+    // scope-hidden - no emission and no counter write, so an authored
+    // grotto channel can never leak a dormant-system material into the
+    // beta economy (the registry ships empty today; the gate covers
+    // any channel authored later).
+    if (!isBetaFeature('hiddenContent')) {
+      return []
+    }
+
     const definition = this.getSiteDefinition(cycle.siteId)
     const channels = this.deps.hiddenGrottoChannels ?? hiddenGrottoChannels()
 

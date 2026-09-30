@@ -3,6 +3,11 @@ import {
   loadPersistedUiAutomationFlags,
   savePersistedUiAutomationFlags,
 } from './uiFlagsPersistence'
+import {
+  isBetaBuildingSurface,
+  isBetaLeftPanelMode,
+  isBetaStandalonePanel,
+} from '@/core/betaScopeSurface'
 
 // "Trang chức năng" chiếm 100% panel trái, chỉ 1 trang hiện tại 1
 // thời điểm — 'inventory' còn có thêm khối Equipment cố định 30%
@@ -199,6 +204,12 @@ export const useUiStore = defineStore('ui', {
     // Bấm lại chức năng đang mở sẽ đóng, bấm chức năng khác tự thay
     // thế (không cần tự đóng cái cũ thủ công).
     toggleLeft(mode: Exclude<LeftPanelMode, null>) {
+      // BETA SCOPE LOCK v2 (Phase-6): a scope-hidden mode (worker_lodge)
+      // toggles nothing - deep links fail closed.
+      if (!isBetaLeftPanelMode(mode)) {
+        return
+      }
+
       if (mode === 'character' || mode === 'inventory') {
         const shouldClose = this.characterOverlayOpen
         this.closeHomeOverlays()
@@ -217,6 +228,11 @@ export const useUiStore = defineStore('ui', {
     },
 
     openLeftPanel(mode: Exclude<LeftPanelMode, null>) {
+      // BETA SCOPE LOCK v2 (Phase-6): scope-hidden mode no-ops.
+      if (!isBetaLeftPanelMode(mode)) {
+        return
+      }
+
       if (mode === 'character' || mode === 'inventory') {
         this.closeHomeOverlays()
         this.characterOverlayOpen = true
@@ -229,6 +245,13 @@ export const useUiStore = defineStore('ui', {
     },
 
     openStandalonePanel(panel: Exclude<StandalonePanel, null>) {
+      // BETA SCOPE LOCK v2 (Phase-6): scope-hidden panels
+      // (artifact / tran_phap / companion) fail closed - no caller can
+      // open them through this seam.
+      if (!isBetaStandalonePanel(panel)) {
+        return
+      }
+
       this.closeHomeOverlays()
 
       this.standalonePanel = panel
@@ -264,6 +287,12 @@ export const useUiStore = defineStore('ui', {
     },
 
     openBuildingPopover(buildingId: string) {
+      // BETA SCOPE LOCK v2 (Phase-6): scope-hidden buildings open no
+      // popover (chi_hien_quan deep-link fails closed).
+      if (!isBetaBuildingSurface(buildingId)) {
+        return
+      }
+
       this.closeHomeOverlays()
 
       this.activeBuildingPopoverId = buildingId
@@ -314,6 +343,15 @@ export const useUiStore = defineStore('ui', {
     // panel khác tự thay thế (Kỹ Năng/Tâm Pháp loại trừ lẫn nhau, không
     // mở đồng thời).
     toggleStandalonePanel(panel: Exclude<StandalonePanel, null>) {
+      // BETA SCOPE LOCK v2 (Phase-6): a scope-hidden panel can only
+      // close (never open).
+      if (!isBetaStandalonePanel(panel)) {
+        if (this.standalonePanel === panel) {
+          this.standalonePanel = null
+        }
+        return
+      }
+
       this.standalonePanel = this.standalonePanel === panel ? null : panel
     },
 

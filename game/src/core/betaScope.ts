@@ -339,9 +339,29 @@ export const BETA_EQUIPMENT_TABS = ['enhance', 'dissolve'] as const
 
 export type BetaEquipmentTab = (typeof BETA_EQUIPMENT_TABS)[number]
 
+/**
+ * Authored equipment tab id -> the scope-hidden feature that owns it
+ * (null = ships in beta). BETA_EQUIPMENT_TABS is the canonical beta
+ * list; the binding keeps one authority so a feature flip re-admits a
+ * tab instead of hand-editing the list. A tab id absent from the map
+ * fails closed.
+ */
+const BETA_EQUIPMENT_TAB_FEATURES: Readonly<Record<string, BetaFeatureName | null>> = {
+  enhance: null,
+  wash: 'equipmentWash',
+  refine: 'equipmentRefine',
+  dissolve: null,
+  decompose: 'equipmentOreDecompose',
+}
+
 /** Equipment-tab admission check - fails closed for hidden tabs. */
 export function isBetaEquipmentTab(tabId: string): boolean {
-  return (BETA_EQUIPMENT_TABS as readonly string[]).includes(tabId)
+  const feature = BETA_EQUIPMENT_TAB_FEATURES[tabId]
+  // Unlisted tab id -> fail closed; null feature -> ships in beta.
+  if (feature === undefined) {
+    return false
+  }
+  return feature === null || isBetaFeature(feature)
 }
 
 // ---------------------------------------------------------------------------

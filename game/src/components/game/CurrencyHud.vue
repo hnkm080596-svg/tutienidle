@@ -16,6 +16,7 @@ import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { SPIRIT_STONE_MATERIALS } from '@/core/material/SpiritStoneMaterial'
 import { isCompanionDomainUnlocked } from '@/core/companion/CompanionAvailability'
 import { COMPANION_PULL_TOKEN_ID } from '@/core/game/GameManagerCompanionOps'
+import { isBetaFeature } from '@/core/betaScope'
 import { materialLabel } from '@/core/presentation/labels'
 import { formatNumber } from '@/core/format/NumberFormatter'
 
@@ -52,10 +53,12 @@ const spiritStoneChips = computed<CurrencyChip[]>(() => {
 // Gacha currencies only render once the companion domain is reachable
 // (realm-gated in WorkerLodgePanel too - showing them earlier would be a
 // promise of a feature the player cannot open yet).
+// BETA SCOPE LOCK v2 (Phase-6): the companion domain is scope-hidden -
+// its currencies never surface in the HUD at any realm.
 const companionChips = computed<CurrencyChip[]>(() => {
   stateVersion.value
 
-  if (!isCompanionDomainUnlocked(player.realmId)) {
+  if (!isBetaFeature('companion') || !isCompanionDomainUnlocked(player.realmId)) {
     return []
   }
 

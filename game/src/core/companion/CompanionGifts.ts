@@ -12,6 +12,7 @@ import {
   type CompanionGiftTrigger,
 } from '../../data/companion/CompanionGiftMoments'
 import type { PlayerData } from '../player/Player'
+import { isBetaFeature } from '../betaScope'
 
 function triggerMatches(
   moment: CompanionGiftMoment,
@@ -43,6 +44,14 @@ export function issueCompanionGifts(
   trigger: CompanionGiftTrigger,
   moments: readonly CompanionGiftMoment[] = COMPANION_GIFT_MOMENTS,
 ): CompanionGiftRecord[] {
+  // BETA SCOPE LOCK v2 (Phase-6): the companion domain is scope-hidden
+  // - no gift record is ever written for a beta build, whatever the
+  //  trigger seam (realm_entered / stage_completed). Fail closed here
+  // so every caller inherits the verdict.
+  if (!isBetaFeature('companion')) {
+    return []
+  }
+
   const appended: CompanionGiftRecord[] = []
 
   for (const moment of moments) {

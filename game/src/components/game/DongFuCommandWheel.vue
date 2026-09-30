@@ -11,10 +11,10 @@ import { usePlayerStore } from '@/stores/player'
 import { useStageActive } from '@/composables/useStageActive'
 import { useBuildingNavigation } from '@/composables/useBuildingNavigation'
 import {
-  COMMAND_WHEEL_SLOTS,
   type CommandWheelDisabledContext,
   type CommandWheelSlot,
 } from '@/data/ui/commandWheelCatalog'
+import { betaWheelSlots } from '@/core/betaScopeSurface'
 import { getCommandWheelOrbitDirection } from '@/data/ui/commandWheelOrbit'
 import { resolveExpectedArtifactId } from '@/core/artifact/Artifact'
 import {
@@ -65,8 +65,14 @@ function slotLabel(slot: CommandWheelSlot): string {
   return t(slot.labelKey)
 }
 
-/** Future slot (available=false) tồn tại trong catalog nhưng KHÔNG render. */
-const renderedSlots = computed(() => COMMAND_WHEEL_SLOTS.filter((slot) => slot.available()))
+/**
+ * BETA SCOPE LOCK v2 (Phase-6): the wheel consumes the canonical
+ * filtered list - scope-hidden slots (phap_bao / formation_slot /
+ * companion_roster / chi_hien_quan) never render a button or tooltip.
+ * Each surviving slot's own available() still applies (future slot
+ * stays hidden).
+ */
+const renderedSlots = computed(() => betaWheelSlots().filter((slot) => slot.available()))
 
 const ORBIT_COUNT = 2
 const ORBIT_SWEEP_DEGREES = 112

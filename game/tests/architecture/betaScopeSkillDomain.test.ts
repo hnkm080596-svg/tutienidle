@@ -30,6 +30,14 @@ import { PHAP_TU_ELEMENT_ROOT_IDS } from '@/data/progression/PhapTuNodes.builder
 import { createDefaultPlayer, type PlayerData } from '@/core/player/Player'
 import type { ProgressionNode } from '@/core/progression/ProgressionNode'
 import type { ElementType } from '@/core/element/ElementType'
+import { lockBetaWaysForTests } from '@/core/game/__fixtures__/betaWaysUnlock'
+import { lockBetaFeaturesForTests } from '@/core/game/__fixtures__/betaFeaturesUnlock'
+
+// The global test setup unlocks every catalog way + feature for
+// suites written pre-lock; this suite asserts canonical beta verdicts
+// (non-beta ways are scope-hidden), so re-pin them.
+lockBetaWaysForTests()
+lockBetaFeaturesForTests()
 
 const BETA_ELEMENTS: ElementType[] = ['fire', 'water', 'wood', 'metal', 'earth']
 
