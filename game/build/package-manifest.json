@@ -52,6 +52,19 @@
     ],
     "deny": []
   },
+  "signing": {
+    "$comment": "BETA-FINAL PR9 / spec B4 - expected-signature contract consumed by scripts/release/verify-signatures.ps1. expectedSignedFiles: .exe files that MUST carry the beta certificate's Authenticode signature (same glob rules as allow lists; wildcard entries match zero or more). thirdPartySignedFiles: upstream-signed .exe electron-builder does not re-sign (resources/elevate.exe ships inside Electron's dist, outside the signing walk - see app-builder-lib winPackager.signApp); they must be Valid if signed at all. Any *.exe not matched by either list is rejected as unexpected. installerSigned: the NSIS -Setup.exe artifact must carry the beta signature too.",
+    "expectedSignedFiles": [
+      "TienHiepIdle.exe",
+      "chrome_crashpad_handler.exe",
+      "resources/app.asar.unpacked/**/*.exe",
+      "swiftshader/**/*.exe"
+    ],
+    "thirdPartySignedFiles": [
+      "resources/elevate.exe"
+    ],
+    "installerSigned": true
+  },
   "deny": [
     "**/*.ts",
     "**/*.tsx",
