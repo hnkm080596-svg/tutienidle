@@ -55,10 +55,11 @@ const CHROME_SLOT_BY_SIZE = {
 } as const
 
 const chromeSlot = computed(() => {
-  // border-image (InkNineSlice) does not follow border-radius — circle
-  // buttons use a plain CSS border (.game-button--circle) instead; ghost
-  // stays a bare hairline frame on the element itself.
-  if (props.shape === 'circle' || props.variant === 'ghost') return undefined
+  // ghost stays a bare hairline frame on the element itself. Circle maps
+  // to the icon-button-utility seal slot (the pending --hk-* fallback
+  // rounds via border-radius: inherit like every other slice).
+  if (props.variant === 'ghost') return undefined
+  if (props.shape === 'circle') return 'icon-button-utility'
   return CHROME_SLOT_BY_SIZE[props.size]
 })
 
@@ -184,13 +185,19 @@ const sliceTint = computed(() => {
   box-shadow: none;
 }
 
-/* Dạng tròn — nút icon (+/−). */
+/* Dạng tròn — nút icon (+/−). The element border is the fallback when
+   no slice is mounted (ghost-circle); a mounted chrome slice owns the
+   ring instead. */
 .game-button--circle {
   min-width: var(--hk-density-compact-height);
   min-height: var(--hk-density-compact-height);
   padding: 0;
-  border: 1px solid var(--hk-border-muted);
+  border: 0;
   border-radius: 50%;
+}
+
+.game-button--circle:not(:has(> .ink-nine-slice)) {
+  border: 1px solid var(--hk-border-muted);
 }
 
 .game-button--circle:not(:disabled):hover {
