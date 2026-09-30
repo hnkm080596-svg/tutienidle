@@ -99,7 +99,18 @@ export function createUnavailableBackendBundle(message: string, mode: BackendMod
       async authenticate() {
         return { ok: false, code: 'server_unavailable' as const, message }
       },
-      async logout() {},
+      async resumeStoredSession() {
+        return { ok: false, code: 'server_unavailable' as const, message }
+      },
+      async upgradeGuest() {
+        return { ok: false, code: 'server_unavailable' as const, message }
+      },
+      async finalizeUpgrade() {
+        return { ok: false, code: 'server_unavailable' as const, message }
+      },
+      async logout() {
+        return { serverRevoke: 'skipped' as const, signout: 'skipped' as const }
+      },
     },
     characterCreationService: {
       async rollTalents() {

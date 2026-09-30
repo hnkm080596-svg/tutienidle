@@ -30,3 +30,9 @@ export function unbindOnlineAuthority(authority: OnlineSessionController): void 
 export function observeAuthoritySaveResult(result: CloudSaveWriteResult): void {
   bound?.observeSaveResult(result)
 }
+
+/** The bound authority itself - B1.9's logout orchestration joins its ONE
+ *  save queue for the flush leg instead of inventing a second write path. */
+export function resolveOnlineAuthority(): OnlineSessionController | null {
+  return bound
+}
