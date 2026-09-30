@@ -17,6 +17,7 @@ import {
   createAnonymousUser,
   claimSession,
   provisionCharacter,
+  confirmEmailIdentity,
   uniqueName,
   type ContractEnv,
 } from './fixture'
@@ -43,27 +44,6 @@ async function profileRow(userId: string) {
     [userId],
   )
   return rows[0] as { account_kind: string; login_id: string | null } | undefined
-}
-
-async function setEmailConfirmed(userId: string, email: string) {
-  // Faithful post-confirm state, proven live on staging GoTrue: the
-  // real confirm flow leaves the bound email, its confirmation
-  // timestamp, a verified `email` identity row AND is_anonymous=false
-  // on auth.users. Any subset that leaves the user anonymous fails the
-  // post-finalize password bind: GoTrue rejects updateUser({password})
-  // with 422 "anonymous user without an email or phone" (verified by
-  // direct probe: email+timestamp alone -> 422; +identity -> 422;
-  // +is_anonymous=false -> 200).
-  await pg.query(
-    'update auth.users set email = $2, email_confirmed_at = now(), is_anonymous = false, updated_at = now() where id = $1',
-    [userId, email],
-  )
-  await pg.query(
-    `insert into auth.identities (id, user_id, identity_data, provider, provider_id, last_sign_in_at, created_at, updated_at)
-     values (gen_random_uuid(), $1::uuid, jsonb_build_object('sub', $1::text, 'email', $2::text, 'email_verified', true), 'email', $2::text, now(), now(), now())
-     on conflict do nothing`,
-    [userId, email],
-  )
 }
 
 test('anonymous user is a guest; unconfirmed link keeps finalize PENDING', async () => {
@@ -119,7 +99,7 @@ test('confirmed link finalizes the SAME profile/character; replay is idempotent'
   const loginId = newLoginId()
 
   // Server-side confirmed email on the caller's auth.users row.
-  await setEmailConfirmed(user.userId, `${loginId}@tutien-idle-accounts.invalid`)
+  await confirmEmailIdentity(pg, user.userId, `${loginId}@tutien-idle-accounts.invalid`)
 
   const fin1 = await rpc(env, user.token, 'finalize_guest_upgrade', { p_login_id: loginId })
   expect(fin1.status).toBe(200)
@@ -154,7 +134,7 @@ test('client metadata cannot elevate; a bound login is never rebindable', async 
   const user = await createAnonymousUser(env)
   await claimSession(env, user.token)
   const loginId = newLoginId()
-  await setEmailConfirmed(user.userId, `${loginId}@tutien-idle-accounts.invalid`)
+  await confirmEmailIdentity(pg, user.userId, `${loginId}@tutien-idle-accounts.invalid`)
 
   // user_metadata spoof: still gated by auth.users-derived rules.
   await fetch(`${env.supabaseUrl}/auth/v1/user`, {
@@ -172,7 +152,7 @@ test('client metadata cannot elevate; a bound login is never rebindable', async 
   // A different caller with a confirmed link cannot steal the bound login.
   const thief = await createAnonymousUser(env)
   await claimSession(env, thief.token)
-  await setEmailConfirmed(thief.userId, `thief-${loginId}@tutien-idle-accounts.invalid`)
+  await confirmEmailIdentity(pg, thief.userId, `thief-${loginId}@tutien-idle-accounts.invalid`)
   const steal = await rpc(env, thief.token, 'finalize_guest_upgrade', { p_login_id: loginId })
   expect(steal.status).toBe(200)
   expect(steal.body?.status).toBe('REJECTED')
