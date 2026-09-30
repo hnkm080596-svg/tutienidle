@@ -33,6 +33,8 @@
     "electron:dev": "cross-env ELECTRON=1 vite",
     "dist:win": "cross-env ELECTRON=1 npm run build && electron-builder --win",
     "inspect:package": "node scripts/release/inspect-package.mjs --input release",
+    "release:manifest": "node scripts/release/manifest.mjs --input release",
+    "release:publish": "node scripts/release/publish-candidate.mjs --manifest release/release-manifest.json",
     "signing:preflight": "node scripts/release/signing-preflight.mjs",
     "signing:preflight:release": "node scripts/release/signing-preflight.mjs --require-signing",
     "qa:internal": "node scripts/qa/cli.mjs",

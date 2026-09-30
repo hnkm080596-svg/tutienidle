@@ -71,9 +71,11 @@ const BASE_ASAR_FILES = {
   'build/icon.ico': 'ICONDATA',
 }
 
+// Mirrors the real Electron 43.4.1 win-unpacked payload: no
+// chrome_crashpad_handler.exe (allowed via unpackedApp.allow when present,
+// absent today - see package-manifest.json signing.$comment).
 const BASE_DISK_FILES = [
   'TienHiepIdle.exe',
-  'chrome_crashpad_handler.exe',
   'ffmpeg.dll',
   'libGLESv2.dll',
   'icudtl.dat',
@@ -259,11 +261,11 @@ describe('inspectPackage - required entries and identity', () => {
     assert.ok(problemsOf(release).some((p) => p.includes('TienHiepIdle.exe')))
   })
 
-  it('requires every literal file the signing contract expects to be signed', () => {
-    const release = makeRelease({ omitDisk: ['chrome_crashpad_handler.exe'] })
+  it('requires every literal file the signing contract lists', () => {
+    const release = makeRelease({ omitDisk: ['resources/elevate.exe'] })
     assert.ok(
       problemsOf(release).some((p) =>
-        p.includes('signing.expectedSignedFiles') && p.includes('chrome_crashpad_handler.exe'),
+        p.includes('signing.thirdPartySignedFiles') && p.includes('resources/elevate.exe'),
       ),
     )
   })

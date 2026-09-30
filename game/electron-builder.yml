@@ -96,3 +96,16 @@ nsis:
   # prompt in build/installer.nsh — see docs/operations/beta/windows-install.md.
   deleteAppDataOnUninstall: false
   include: build/installer.nsh
+
+# PR10 / spec B5 - update metadata + candidate feed contract. Declaring the
+# github provider makes electron-builder emit channel-named update metadata
+# (beta.yml) and the differential-update .blockmap during packaging.
+# Uploads NEVER go through electron-builder's own publisher (no --publish
+# flag is ever passed); the restricted draft feed is owned by
+# scripts/release/publish-candidate.mjs via GitHub draft releases (EXT-04).
+publish:
+  provider: github
+  owner: hnkm080596-svg
+  repo: tutienidle
+  channel: beta
+  releaseType: draft
