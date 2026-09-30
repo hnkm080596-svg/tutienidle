@@ -1,10 +1,15 @@
 <script setup lang="ts">
+import { onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import GameButton from '@/components/common/GameButton.vue'
 import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
 import { useErrorStore } from '@/stores/error'
 import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
 import { BUILD_IDENTITY, shortGitSha } from '@/shared/build/BuildIdentity'
+import {
+  getDiagnosticRecorder,
+  recordDiagnostic,
+} from '@/services/diagnostics/DiagnosticRecorder'
 
 const errorStore = useErrorStore()
 const { t } = useI18n()
@@ -20,6 +25,74 @@ function dismiss() {
 
 function reloadPage() {
   window.location.reload()
+}
+
+// BETA-FINAL PR11 / spec B8 - the error surface carries the stable report
+// id (main-process minted on Electron, recorder fallback on web) so a
+// screenshot or a copied line correlates to the local crash bundle. Export
+// goes through the main-side save dialog only - the renderer never sees a
+// filesystem path it could influence.
+const reportId = ref('')
+const reportCopied = ref(false)
+const exportState = ref<'idle' | 'exported' | 'failed'>('idle')
+const canExport = typeof window.electronAPI?.exportDiagnostics === 'function'
+
+onMounted(() => {
+  reportId.value = getDiagnosticRecorder()?.reportId ?? ''
+  if (window.electronAPI?.getDiagnosticReportId) {
+    void window.electronAPI
+      .getDiagnosticReportId()
+      .then((id) => {
+        reportId.value = id
+      })
+      .catch(() => undefined)
+  }
+})
+
+function copyReportInfo() {
+  const text = [
+    `report=${reportId.value}`,
+    `product=${BUILD_IDENTITY.productName}`,
+    `version=${BUILD_IDENTITY.appVersion}`,
+    `build=${BUILD_IDENTITY.buildId}`,
+    `sha=${shortGitSha()}`,
+    `env=${BUILD_IDENTITY.backendEnvironment}`,
+  ].join(' ')
+  try {
+    void navigator.clipboard
+      ?.writeText(text)
+      .then(() => {
+        reportCopied.value = true
+      })
+      .catch(() => undefined)
+  } catch {
+    // Clipboard unavailable - the report id stays visible for manual copy.
+  }
+}
+
+async function exportDiagnostics() {
+  const api = window.electronAPI
+  if (!api?.exportDiagnostics) return
+  try {
+    const context = (await getDiagnosticRecorder()?.collectExportContext()) ?? {}
+    const result = await api.exportDiagnostics(context)
+    // A cancelled save dialog is not a failure - only surface real errors.
+    if (result.status === 'exported') {
+      exportState.value = 'exported'
+    } else if (result.status !== 'cancelled') {
+      exportState.value = 'failed'
+    }
+    recordDiagnostic({
+      source: 'renderer',
+      severity: result.status === 'exported' ? 'info' : 'warning',
+      category: 'export',
+      code: `EXPORT_${result.status.toUpperCase()}`,
+      message: `diagnostic export ${result.status}`,
+      details: { status: result.status },
+    })
+  } catch {
+    exportState.value = 'failed'
+  }
 }
 </script>
 
@@ -38,6 +111,23 @@ function reloadPage() {
           <GameButton variant="primary" @click="dismiss">{{ t('errors.app.close') }}</GameButton>
 
           <GameButton variant="secondary" @click="reloadPage">{{ t('errors.app.reload') }}</GameButton>
+        </div>
+
+        <div v-if="reportId !== '' || canExport" class="error-screen__report">
+          <p v-if="reportId !== ''" class="error-screen__report-id" data-testid="error-report-id">
+            {{ t('errors.app.reportId', { id: reportId }) }}
+          </p>
+          <div class="error-screen__report-actions">
+            <GameButton variant="secondary" @click="copyReportInfo">
+              {{ reportCopied ? t('errors.app.copied') : t('errors.app.copyReport') }}
+            </GameButton>
+            <GameButton v-if="canExport" variant="secondary" @click="exportDiagnostics">
+              {{ t('errors.app.exportDiagnostics') }}
+            </GameButton>
+          </div>
+          <p v-if="exportState !== 'idle'" class="error-screen__export-state" data-testid="error-export-state">
+            {{ exportState === 'exported' ? t('errors.app.exportDone') : t('errors.app.exportFailed') }}
+          </p>
         </div>
 
         <!-- BETA-FINAL PR1 / spec B2 - build identity on the error surface
@@ -112,6 +202,30 @@ function reloadPage() {
   display: flex;
   gap: 10px;
   justify-content: center;
+}
+
+.error-screen__report {
+  margin: 16px 0 0;
+}
+
+.error-screen__report-id {
+  margin: 0 0 8px;
+  color: var(--paper-text-soft);
+  font-family: var(--font-mono, monospace);
+  font-size: var(--text-xs);
+  word-break: break-all;
+}
+
+.error-screen__report-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.error-screen__export-state {
+  margin: 8px 0 0;
+  color: var(--paper-text-soft);
+  font-size: var(--text-xs);
 }
 
 .error-screen__build {

@@ -6,9 +6,50 @@ import ErrorScreen from './ErrorScreen.vue'
 import { useErrorStore } from '@/stores/error'
 import { i18n } from '@/i18n'
 import { BUILD_IDENTITY, shortGitSha } from '@/shared/build/BuildIdentity'
+import {
+  bindDiagnosticRecorder,
+  DiagnosticRecorder,
+  unbindDiagnosticRecorder,
+} from '@/services/diagnostics/DiagnosticRecorder'
 
 afterEach(() => {
+  unbindDiagnosticRecorder()
   document.body.innerHTML = ''
+})
+
+function mountScreen() {
+  const container = document.createElement('div')
+  document.body.appendChild(container)
+  const app = createApp({ render: () => h(ErrorScreen) })
+  app.use(createPinia())
+  app.use(i18n)
+  app.mount(container)
+  return { container, app }
+}
+
+// BETA-FINAL PR11 / spec B8 - the crash surface correlates to the local
+// bundle: the bound recorder's report id renders for support screenshots.
+describe('ErrorScreen — diagnostic report block', () => {
+  it('shows the bound recorder report id when one is bound', async () => {
+    bindDiagnosticRecorder(new DiagnosticRecorder({ reportId: 'report-qa-1' }))
+    const { container, app } = mountScreen()
+    useErrorStore().report('boom')
+    await nextTick()
+
+    const block = container.querySelector<HTMLElement>('[data-testid="error-report-id"]')
+    expect(block).not.toBeNull()
+    expect(block!.textContent).toContain('report-qa-1')
+    app.unmount()
+  })
+
+  it('hides the report block when no recorder and no bridge exist', async () => {
+    const { container, app } = mountScreen()
+    useErrorStore().report('boom')
+    await nextTick()
+
+    expect(container.querySelector('.error-screen__report')).toBeNull()
+    app.unmount()
+  })
 })
 
 // BETA-FINAL PR1 / spec B2 - the error surface must carry the exact release

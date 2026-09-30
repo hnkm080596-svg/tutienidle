@@ -5,6 +5,8 @@ import { i18n } from '@/i18n'
 import type { GameManager } from '../core/game/GameManager'
 import type { CombatClockBridge } from '../presentation/clock/MainProcessClockSource'
 import type { FlushResult, QuitFlushFailedNotice } from '../shared/session/FlushResult'
+import type { DiagnosticExportResult } from '../main-process/DiagnosticBundle'
+import { recordDiagnostic } from '../services/diagnostics/DiagnosticRecorder'
 
 // Uncommitted audit followup plan, Ưu tiên 2 "xử lý khi đóng gói Electron"
 // (2026-08-24) — cầu nối renderer ↔ main process, CHỈ tồn tại khi chạy
@@ -40,6 +42,14 @@ export interface ElectronBridgeAPI {
   retryQuitFlush(requestId: string): void
   cancelQuitClose(requestId: string): void
   forceQuitClose(requestId: string): void
+  // BETA-FINAL PR11 / spec B8 - diagnostics bridge; must match the fields
+  // added in electron/preload.ts. The export result shape is defined
+  // main-side (src/main-process/DiagnosticBundle.ts).
+  reportDiagnosticEvent(event: unknown): void
+  getDiagnosticReportId(): Promise<string>
+  exportDiagnostics(
+    context: unknown,
+  ): Promise<DiagnosticExportResult | { status: 'cancelled' }>
   // Task 7 (2026-09-10) - main-process clock host bridge, consumed by
   // MainProcessClockSource (src/presentation/clock/). Shape must match
   // CombatClockBridge exactly; kept as that imported type rather than
@@ -100,6 +110,15 @@ export function useElectronBridge(
   // ACK): drains the ONE save queue through the authority flush (or the
   // plain save path in local mode) and replies bound to the requestId.
   const offBeforeQuitFlush = electronAPI.onBeforeQuitFlush((requestId) => {
+    recordDiagnostic({
+      source: 'renderer',
+      severity: 'info',
+      category: 'quit-flush',
+      code: 'FLUSH_REQUESTED',
+      message: 'quit flush requested',
+      correlationId: requestId === '' ? undefined : requestId,
+      details: { requestId },
+    })
     void (async () => {
       const result = await (async (): Promise<FlushResult> => {
         if (handlers?.flush) {
@@ -124,21 +143,65 @@ export function useElectronBridge(
           return { status: 'failed', requestId, generation: 0, code: 'FLUSH_FAILED' }
         }
       })()
+      recordDiagnostic({
+        source: 'renderer',
+        severity: result.status === 'saved' ? 'info' : 'error',
+        category: 'quit-flush',
+        code: `FLUSH_${result.status.toUpperCase()}`,
+        message: `quit flush ${result.status}`,
+        correlationId: result.requestId,
+        revision: result.status === 'saved' ? result.revision : undefined,
+        details: {
+          requestId: result.requestId,
+          status: result.status,
+          generation: result.generation,
+          ...(result.status === 'saved' ? { revision: result.revision } : { code: result.code }),
+        },
+      })
       electronAPI.notifyFlushResult(result)
     })()
   })
 
   const offFlushFailed = handlers?.onFlushFailed
-    ? electronAPI.onFlushFailed(handlers.onFlushFailed)
+    ? electronAPI.onFlushFailed((notice) => {
+        recordDiagnostic({
+          source: 'renderer',
+          severity: 'error',
+          category: 'quit-flush',
+          code: 'FLUSH_FAILED_NOTICE',
+          message: `quit flush failed (${notice.status})`,
+          correlationId: notice.requestId,
+          details: {
+            requestId: notice.requestId,
+            status: notice.status,
+            ...(notice.code !== undefined ? { code: notice.code } : {}),
+          },
+        })
+        handlers.onFlushFailed?.(notice)
+      })
     : () => {}
 
   const offSystemSuspend = electronAPI.onSystemSuspend(timestamp => {
     console.info('[electron] system suspend', new Date(timestamp).toISOString())
+    recordDiagnostic({
+      source: 'renderer',
+      severity: 'info',
+      category: 'lifecycle',
+      code: 'SYSTEM_SUSPEND',
+      message: 'system suspended',
+    })
     handlers?.suspend?.()
   })
 
   const offSystemResume = electronAPI.onSystemResume(timestamp => {
     console.info('[electron] system resume', new Date(timestamp).toISOString())
+    recordDiagnostic({
+      source: 'renderer',
+      severity: 'info',
+      category: 'lifecycle',
+      code: 'SYSTEM_RESUME',
+      message: 'system resumed',
+    })
     handlers?.resume?.()
   })
 

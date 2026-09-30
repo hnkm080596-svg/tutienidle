@@ -56,6 +56,9 @@ function makeApi() {
     retryQuitFlush: vi.fn(),
     cancelQuitClose: vi.fn(),
     forceQuitClose: vi.fn(),
+    reportDiagnosticEvent: vi.fn(),
+    getDiagnosticReportId: vi.fn(() => Promise.resolve('test-report-id')),
+    exportDiagnostics: vi.fn(() => Promise.resolve({ status: 'cancelled' as const })),
     combatClock: {
       onTick: vi.fn(() => vi.fn()),
       stop: vi.fn(),

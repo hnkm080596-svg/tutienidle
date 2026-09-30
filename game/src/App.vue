@@ -47,7 +47,12 @@ import { useSaveIssueStore } from './stores/saveIssue'
 import { installAutomationFlagsPersistence } from './stores/uiFlagsPersistence'
 import { useAppLifecycle, type BootOutcome } from './composables/useAppLifecycle'
 import { hasResumeCandidate, markResetNotice } from './composables/resumeSession'
-import { accountIdForSession, setSaveAccountId } from './services/save/saveKeys'
+import { accountIdForSession, setSaveAccountId, resolveSaveKey } from './services/save/saveKeys'
+import {
+  getDiagnosticRecorder,
+  recordDiagnostic,
+} from './services/diagnostics/DiagnosticRecorder'
+import { recordSaveOutcome } from './services/diagnostics/recordSaveOutcome'
 import type { AuthSession } from './services/auth/AuthService'
 import GameRoot from './components/layout/GameRoot.vue'
 import RouteMount from './components/game/RouteMount.vue'
@@ -335,6 +340,41 @@ const entryStage = bootFlow.stage
 const bootError = ref('')
 let introHandle: number | undefined
 
+// BETA-FINAL PR11 / spec B8 - late-bind the diagnostic context now that the
+// coordinator and save coordinator exist: every recorded event then carries
+// the committed route, the coarse save revision, and one per-boot
+// correlation id. The stable report id arrives async from main (Electron);
+// the recorder's fallback id serves until it resolves (and forever on web).
+const diagnosticsRecorder = getDiagnosticRecorder()
+diagnosticsRecorder?.bindContext({
+  routeProvider: () => coordinator.getSnapshot().currentRoute,
+  revisionProvider: () => cloudSaveCoordinator.getRevision(),
+  saveHashProvider: cachedSaveHash,
+  correlationId: crypto.randomUUID(),
+})
+if (window.electronAPI?.getDiagnosticReportId) {
+  void window.electronAPI
+    .getDiagnosticReportId()
+    .then((id) => diagnosticsRecorder?.bindContext({ reportId: id }))
+    .catch(() => undefined)
+}
+
+/** SHA-256 (truncated) of the cached raw save - the manifest's coarse
+ *  corruption signal. Never the save bytes themselves. */
+async function cachedSaveHash(): Promise<string | undefined> {
+  try {
+    const raw = localStorage.getItem(resolveSaveKey())
+    if (raw === null || raw === '') return undefined
+    const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(raw))
+    return [...new Uint8Array(digest)]
+      .map((b) => b.toString(16).padStart(2, '0'))
+      .join('')
+      .slice(0, 16)
+  } catch {
+    return undefined
+  }
+}
+
 gameManager.catalogOps.registerMaterials(materials)
 gameManager.catalogOps.registerSkillTemplates(SKILLS)
 gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
@@ -445,6 +485,9 @@ const lifecycle = useAppLifecycle({
     // terminates admission by its error class.
     observeAuthoritySaveResult(result)
 
+    // B8 - non-ok save outcomes are diagnostic events (never save bytes).
+    recordSaveOutcome(result, 'autosave')
+
     // Canh bao autosave fail chi 1 lan cho moi chuoi fail - reset co khi
     // ghi thanh cong lai de chuoi fail ke tiep van duoc bao.
     if (result.status !== 'ok' && !saveFailureNotified) {
@@ -459,6 +502,13 @@ const lifecycle = useAppLifecycle({
   },
   onError: (message) => {
     bootError.value = message
+    recordDiagnostic({
+      source: 'renderer',
+      severity: 'error',
+      category: 'lifecycle',
+      code: 'BOOT_FAILED',
+      message,
+    })
   },
   // B2 - a retried character creation after a failed first save cannot
   // roll its starter grants back in memory; the composable calls this to
@@ -503,8 +553,26 @@ const onlineAuthority = bindOnlineAuthority(new OnlineSessionController({
   monotonicNow: () => performance.now(),
   scheduleInterval: (callback, timeoutMs) => window.setInterval(callback, timeoutMs),
   clearHandle: (handle) => window.clearInterval(handle),
-  onPause: () => lifecycle.pauseSimulation(),
+  onPause: (reason) => {
+    recordDiagnostic({
+      source: 'renderer',
+      severity: 'warning',
+      category: 'session',
+      code: 'AUTH_PAUSED',
+      message: `authority paused (${reason})`,
+      details: { reason },
+    })
+    lifecycle.pauseSimulation()
+  },
   onResume: (lineage, save, serverAuthority) => {
+    recordDiagnostic({
+      source: 'renderer',
+      severity: 'info',
+      category: 'session',
+      code: 'AUTH_RESUMED',
+      message: `authority resumed (${lineage})`,
+      details: { lineage },
+    })
     if (lineage === 'replaced' && save) {
       // Zero-accrual live replacement (B1-D): queues/jobs restore from
       // the authoritative payload with the reconnect's server clock bound
@@ -519,6 +587,14 @@ const onlineAuthority = bindOnlineAuthority(new OnlineSessionController({
   },
   onStateChange: (state) => {
     authorityState.value = state
+    recordDiagnostic({
+      source: 'renderer',
+      severity: AUTHORITY_TERMINAL_STATES.has(state) ? 'error' : 'info',
+      category: 'session',
+      code: `AUTH_${state.toUpperCase().replace(/-/g, '_')}`,
+      message: `authority state: ${state}`,
+      details: { state },
+    })
   },
 }))
 
@@ -833,6 +909,13 @@ onMounted(() => {
   // auth; every service in the bundle is fail-closed as a backstop.
   if (backendFatal) {
     bootError.value = backendFatal.message
+    recordDiagnostic({
+      source: 'renderer',
+      severity: 'fatal',
+      category: 'lifecycle',
+      code: 'BACKEND_CONFIG_FATAL',
+      message: backendFatal.message,
+    })
     bootFlow.fail()
     return
   }

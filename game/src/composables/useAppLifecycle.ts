@@ -7,6 +7,7 @@ import type { RestoreTimeAuthority } from '../services/save/saveTypes'
 import { ESSENCE_STREAM_ARRIVAL_EVENT } from '../core/battle/BattleEvents'
 import { TICK_INTERVAL_MS } from '../core/idle/SpeedSettings'
 import { i18n } from '@/i18n'
+import { recordSaveOutcome } from '../services/diagnostics/recordSaveOutcome'
 
 /**
  * Remediation Task 5 (2026-09-05) — App boot/tick/listener lifecycle
@@ -485,6 +486,7 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
           authority.observeSaveResult(commit)
 
           if (commit.status !== 'ok') {
+            recordSaveOutcome(commit, 'boot-commit')
             onError(
               commit.status === 'conflict'
                 ? i18n.global.t('save.conflict')
@@ -577,6 +579,7 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
 
         if (firstSave.status !== 'ok') {
           authority.observeSaveResult(firstSave)
+          recordSaveOutcome(firstSave, 'boot-first-save')
           onError(
             firstSave.status === 'conflict'
               ? i18n.global.t('save.conflict')
