@@ -68,7 +68,7 @@ a coverage gap, not silently waived.
 | `npx vitest run` (full) | 828 files pass, 1 skipped | includes audio-binding manifest scan, all architecture guards |
 | `npm run type-check` | pass | vue-tsc clean |
 | `npm run build` | pass | |
-| `npm run test:supabase` | NOT RUN — no staging creds | `SUPABASE_STAGING_*` absent in env; contract spec env-gated |
+| `npm run test:supabase` (staging, coordinator) | 24/24 prior + guest-upgrade 2 pass / 1 env-skip | coordinator-run; test 1 honest-skips on GoTrue email-send 429 (quota exhausted — rerun after reset); spec env-gated locally |
 | P18 OCR delegation preview+rule | 29 files reviewable, all reviewed | see P5 pass notes |
 
 ## Findings
@@ -112,9 +112,9 @@ a coverage gap, not silently waived.
 
 ## New or Changed QA Tests
 
-Post-gate staging verification (coordinator, real staging + migration `202609300003`): 24/24 prior contract tests pass; the original 3 guest-upgrade specs failed on the `{email,password}` link PUT (400 `email_address_invalid`) — production defect in `upgradeGuest`, fixed above. Spec updated to the email-only PUT plus a post-finalize `updateUser({password})` step; staging re-run pending (no `SUPABASE_STAGING_*` creds on this box). Runbook note: the GoTrue project email-send rate limit (429 on the link PUT) is a real staging/beta constraint — the surface reports "try again in a few minutes" (`rate_limited`) and keeps the pending marker; operators raising email quotas unblocks, no client change needed.
+Post-gate staging verification (coordinator, real staging + migration `202609300003`, on `e9fdce5c`/`0eba5266`): 24/24 prior contract tests pass. The original 3 guest-upgrade specs initially failed on the `{email,password}` link PUT (400 `email_address_invalid`) — production defect in `upgradeGuest`, fixed above. Staging re-run verdict after the fix: **2/3 PASS** — confirmed-link finalize + idempotent replay + post-finalize password bind; metadata-cannot-elevate + rebind-rejected — and **1 SKIPPED** (test 1 needs a real confirmation email; the project GoTrue send quota is exhausted — honest `test.skip` on 429, rerun after quota reset or custom SMTP). Coordinator probes also verified the post-confirm GoTrue state directly: the real confirm flow flips `is_anonymous=false` + adds the verified `email` identity row, and `updateUser({password})` then returns 200 — the post-finalize password design is valid in the real flow (their faithful simulation landed in `0eba5266`). Runbook note: the GoTrue project email-send rate limit (429 on the link PUT) is a real staging/beta constraint — the surface reports "try again in a few minutes" (`rate_limited`) and keeps the pending marker; operators raising email quotas unblocks, no client change needed.
 
-- `src/services/auth/SupabaseAuthService.test.ts` — new `GoTrue 422 email_exists ... maps to id_taken` spec (the fixed defect's pin); plus resume/upgrade/finalize/logout ordering specs asserting call order and stored-session mutation.
+- `src/services/auth/SupabaseAuthService.test.ts` — pins for the staging-proven defects: `400 email_address_invalid -> NOT id_taken`, `429 -> rate_limited + marker kept`, `422/400 email_exists -> id_taken`, `FINALIZED keeps marker + durable until password bound`, `completeUpgrade` suite (PUT body, flip + durable retire, failure retains marker); plus resume/upgrade/finalize/logout ordering specs.
 - `src/services/supabase/SupabaseSession.test.ts` — durable seam: guest-only write, ordering, restore statuses, generation fence.
 - `src/main-process/GuestCredentialStore.test.ts` — atomic tmp+rename, corrupted/unavailable/invalid codes, no-plaintext round-trip, IPC allowlist.
 - `tests/electron/guest-persistence.spec.ts` — 6 process-restart specs: encrypted-at-rest + same userId, rotated token persisted, rejected token clears (no re-signup calls), transient failure retains, upgrade → PENDING marker → relaunch → recheck → finalize replay, no plaintext token under userData.
