@@ -4,6 +4,9 @@ Contract chính thức giữa ART và CODE: **state nào tồn tại, nhìn th�
 
 Nguồn token: `src/assets/huyen-kim.tokens.css` (`--hk-*`). Semantic states gốc (spec §46-47): `locked · available · active · complete · danger · milestone · attention · selected · ready`. File này mở rộng thành contract đầy đủ theo runtime thực tế.
 
+
+> **BETA SCOPE v2 note:** states của các feature scope-hidden (orb-picker, passive emblem, Ultimate, companion, formation, artifact) là reference-only — giữ trong contract cho post-beta, nhưng không render trong beta.
+
 ## 1. Interaction states (mọi interactive element)
 
 | State | Visual treatment | Render bởi |
