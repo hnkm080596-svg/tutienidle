@@ -493,3 +493,8 @@ Each candidate must pass the promotion predicate during Devin adoption before be
   - **Root class:** L-EARNABLE-BOUND / L-CURRENCY-TALLY - BOUNDARY.
   - **Detector escape:** deferred per Medium+-only ruling: sign and open-ended magnitude classes on stat/currency claims - self-harm mint only, no upward fabrication.
   - **Pin/attack proposal:** if the deferral is reversed, bound sign (>=0 or authored minimum) and magnitudes to the earnable ledger for the recorded progression state.
+
+- **Incident:** spirit-stone stack tier unproducible under the claimed realm (F-SCOPE-1); equipmentSlots.enhanceLevel beyond the realm-tier reachable ceiling (F-SCOPE-2); buildings/productionSites level above the realm-tier writer gate (F-SCOPE-3); workerCycles.siteLevelAtStart outside the monotonic level history span (F-SCOPE-4); flagged beyond-beta realm claim disputed then rejected with proof (F-SCOPE-5).
+  - **Root class:** L-REALM-TIER-PRODUCIBILITY - BOUNDARY.
+  - **Detector escape:** level and currency-tier claims were bounded against catalog ceilings (materials id legality, MAX_SLOT_ENHANCE_LEVEL, siteDefinition.maxLevel, span consistency) but never replayed against the writer's realm-tier key - every producer gates on getRealmTier(player.realmId), so whole claim classes below the catalog ceiling stayed unproducible under the claimed realm.
+  - **Pin/attack proposal:** replay the writer key at the boundary: derive the producibility ceiling from getRealmTier(claimed realmId) - stone material tier, enhance ceiling, site/building level, level-history span - and reject claims above it.
