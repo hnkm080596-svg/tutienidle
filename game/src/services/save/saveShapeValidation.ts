@@ -63,6 +63,13 @@ import {
   TU_LINH_TRAN_EFFECT_GROUP,
 } from '../../core/economy/TuLinhTranBalance'
 import { GLOBAL_MAX_AFFIXES } from '../../core/equipment/EquipmentRollPrimitives'
+import {
+  ITEM_QUALITY_AFFIX_TIER,
+  ITEM_QUALITY_SUBSTATS_RANGE,
+  ITEM_QUALITY_UNLOCKED_POOLS,
+} from '../../core/equipment/ItemQualityBalance'
+import { isValidEquipmentSubstat } from '../../core/equipment/EquipmentStatPolicy'
+import { MAIN_STAT_KEYS } from '../../core/stats/StatTypes'
 import { affixes } from '../../data/equipment/affixes'
 import { alchemyRecipes } from '../../data/alchemy/alchemyRecipes'
 import { buildings } from '../../data/building/buildings'
@@ -446,12 +453,26 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
     }
 
     let creationTalentCount = 0
+    const seenTalentIds = new Set<string>()
 
     for (let i = 0; i < selectedTalentIds.length; i += 1) {
       const talentId = selectedTalentIds[i]
 
       if (typeof talentId !== 'string') {
         continue
+      }
+
+      // F-TALENT-DUP: every writer grants a talent id at most once -
+      // a duplicated pool id dodges the count ceiling (one id, one
+      // slot) while collectTalentEffects still double-applies its
+      // effects at the consumer seam.
+      if (seenTalentIds.has(talentId)) {
+        issues.push({
+          path: `player.selectedTalentIds[${i}]`,
+          message: `talent '${talentId}' trùng lặp - writer không bao giờ grant 2 lần`,
+        })
+      } else {
+        seenTalentIds.add(talentId)
       }
 
       if (CREATION_TALENT_IDS.has(talentId)) {
@@ -819,6 +840,36 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
       path: 'player.attributePoints',
       message: 'vượt số điểm có thể kiếm được ở vị trí cảnh giới hiện tại',
     })
+  }
+
+  // F-AP-DOUBLE-COUNT: the same global-level ceiling binds unspent AND
+  // spent together - attribute stats start at 1 and grow only through
+  // allocateAttributePoint's 1:1 spend, so the pool claim and the
+  // baseStats claims draw on one ledger. Per-stat contributions floor
+  // at 0 so a self-harm negative claim cannot launder extra points, and
+  // each stat's contribution caps at the earnable total because restore
+  // already clamps a forged magnitude to the same authored ceiling - the
+  // bound reconciles the post-normalization claim, not the raw bytes.
+  if (
+    isNonNegativeFiniteNumber(player.attributePoints) &&
+    typeof player.realmId === 'string' &&
+    isNonNegativeFiniteNumber(player.realmLevel) &&
+    isObject(player.baseStats)
+  ) {
+    const earnablePoints = getGlobalCultivationLevel(player.realmId, player.realmLevel)
+    let spentAttributePoints = 0
+    for (const statKey of MAIN_STAT_KEYS) {
+      const value = player.baseStats[statKey]
+      if (isFiniteNumber(value)) {
+        spentAttributePoints += Math.min(Math.max(0, (value as number) - 1), earnablePoints)
+      }
+    }
+    if ((player.attributePoints as number) + spentAttributePoints > earnablePoints) {
+      issues.push({
+        path: 'player.attributePoints',
+        message: 'điểm chưa phân + đã phân vượt số điểm kiếm được ở vị trí cảnh giới hiện tại',
+      })
+    }
   }
   requireNonNegativeNumber(player, 'breakthroughGrade', 'player', issues)
 
@@ -2965,6 +3016,22 @@ function validateEquipmentEntries(
         message: 'phải thuộc EQUIPMENT_SLOTS',
       })
     }
+
+    // F-EQ-FOREIGN-SLOT: the item template declares exactly one authored
+    // slot - a weapon claimed in 'helmet' occupies a slot no writer
+    // could place it in and still mints its modifiers from there.
+    const equipmentTemplateForSlot = equipment.find((item) => item.id === entry.itemId)
+    if (
+      equipmentTemplateForSlot !== undefined &&
+      isEquipmentSlot(entry.slot) &&
+      entry.slot !== equipmentTemplateForSlot.slot
+    ) {
+      issues.push({
+        path: `${path}[${i}].slot`,
+        message: `slot ngoài authored slot của template (${equipmentTemplateForSlot.slot})`,
+      })
+    }
+
     requireBoolean(entry, 'equipped', `${path}[${i}]`, issues)
 
     // F-SCOPE-EQ-1: equipped:true is a writer-gated claim - equip()
@@ -3106,6 +3173,36 @@ function validateEquipmentEntries(
         })
       }
 
+      // F-EQ-AFFIX-ENVELOPE: the roller draws at most
+      // ITEM_QUALITY_SUBSTATS_RANGE[quality].max base affixes (plus one
+      // chance-gated 'supreme' exalted on tien), each at a tier
+      // <= ITEM_QUALITY_AFFIX_TIER[quality] from a pool in
+      // ITEM_QUALITY_UNLOCKED_POOLS[quality]. Claims beyond that
+      // envelope mint modifiers no roll produces.
+      if (isItemQuality(entry.quality)) {
+        const qualityAffixCeiling =
+          ITEM_QUALITY_SUBSTATS_RANGE[entry.quality].max + (entry.quality === 'tien' ? 1 : 0)
+        if (equipmentAffixes.length > qualityAffixCeiling) {
+          issues.push({
+            path: `${path}[${i}].affixes`,
+            message: `vượt authored substat ceiling của quality ${entry.quality} (${qualityAffixCeiling})`,
+          })
+        }
+      }
+
+      // F-EQ-AFFIX-DUP + F-EQ-AFFIX-MAINSTAT-OVERLAP: rollAffixes seeds
+      // excludeStats with the item's main stat and pushes every rolled
+      // stat - a persisted entry can never repeat a stat across its
+      // affixes nor restate the main stat.
+      const seenAffixStats = new Set<string>()
+      const claimedMainStat =
+        isObject(entry.mainStat) && typeof entry.mainStat.stat === 'string'
+          ? entry.mainStat.stat
+          : undefined
+      if (claimedMainStat !== undefined) {
+        seenAffixStats.add(claimedMainStat)
+      }
+
       for (let affixIndex = 0; affixIndex < equipmentAffixes.length; affixIndex += 1) {
         const affix = equipmentAffixes[affixIndex]
         const affixPath = `${path}[${i}].affixes[${affixIndex}]`
@@ -3141,6 +3238,59 @@ function validateEquipmentEntries(
             path: affixPath,
             message: `affix không roll được trên slot ${String(entry.slot)}`,
           })
+        }
+
+        if (affixDefinition !== undefined) {
+          // F-EQ-AFFIX-SLOT: the roller's candidate filter also applies
+          // the stat-vs-slot policy (isValidEquipmentSubstat) even when
+          // the affix declares no explicit slots list - a stat the slot
+          // forbids mints from a claim the roller could never emit.
+          if (isEquipmentSlot(entry.slot) && !isValidEquipmentSubstat(entry.slot, affixDefinition.stat)) {
+            issues.push({
+              path: affixPath,
+              message: `stat '${affixDefinition.stat}' không thuộc substat policy của slot ${String(entry.slot)}`,
+            })
+          }
+
+          // F-EQ-AFFIX-ENVELOPE: tier must exist on the affix and stay
+          // at-or-below the quality cap; pool must be unlocked by the
+          // quality. The roller's filters are the authored producers.
+          if (isItemQuality(entry.quality)) {
+            if (!ITEM_QUALITY_UNLOCKED_POOLS[entry.quality].includes(affixDefinition.pool)) {
+              issues.push({
+                path: affixPath,
+                message: `pool '${affixDefinition.pool}' quality ${entry.quality} chưa mở`,
+              })
+            }
+            if (
+              isFiniteNumber(affix.tier) &&
+              (affix.tier as number) > ITEM_QUALITY_AFFIX_TIER[entry.quality]
+            ) {
+              issues.push({
+                path: `${affixPath}.tier`,
+                message: `vượt authored tier cap của quality ${entry.quality} (${ITEM_QUALITY_AFFIX_TIER[entry.quality]})`,
+              })
+            }
+          }
+          if (
+            isFiniteNumber(affix.tier) &&
+            !affixDefinition.tiers.some((tierDef) => tierDef.tier === affix.tier)
+          ) {
+            issues.push({
+              path: `${affixPath}.tier`,
+              message: 'tier không tồn tại trong authored tiers của affix',
+            })
+          }
+
+          // Stat-uniqueness bound (see the seenAffixStats comment above).
+          if (seenAffixStats.has(affixDefinition.stat)) {
+            issues.push({
+              path: affixPath,
+              message: `stat '${affixDefinition.stat}' trùng main stat hoặc affix khác - roller không bao giờ emit`,
+            })
+          } else {
+            seenAffixStats.add(affixDefinition.stat)
+          }
         }
       }
     }

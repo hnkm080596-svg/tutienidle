@@ -1209,7 +1209,9 @@ describe('validateGameSaveShape — equipment & slot shape (chặn crash boot/Na
       perLevelFlat: 0.5,
       perLevelPercent: 0.01,
     }
-    entry.affixes = [{ affixId: 'prefix_attack', tier: 2, value: 8 }]
+    // prefix_critical_rate tier 1 is a roller-producible hoang weapon
+    // affix (basic pool, authored tier, weapon substat policy).
+    entry.affixes = [{ affixId: 'prefix_critical_rate', tier: 1, value: 0.01 }]
     save.equipment = [entry]
 
     expect(validateGameSaveShape(save)).toMatchObject({ ok: true, issues: [] })
