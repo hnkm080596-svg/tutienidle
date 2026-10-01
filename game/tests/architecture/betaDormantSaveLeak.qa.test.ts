@@ -311,7 +311,10 @@ describe('dormancy: dormant way node trees refuse insight writes on a carried sa
     const p = swordSave({ thich_can: 2 })
 
     expect(gameManager.progressionOps.respecNodeTree(p)).toBeNull()
-    expect(gameManager.progressionOps.previewNodeRespec(p).resetCount).toBe(0)
+    // The preview refuses too: a null preview means no fabricated
+    // 'reset 0 / refund 0' confirm dialog can mount (verdict-vs-render
+    // parity between the write op and its read projection).
+    expect(gameManager.progressionOps.previewNodeRespec(p)).toBeNull()
     // Dormant records stay intact - the lock freezes them, never monetizes them.
     expect(p.nodeLevels).toEqual({ thich_can: 2 })
     expect(p.skillInsight).toBe(100)

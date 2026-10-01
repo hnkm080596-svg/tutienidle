@@ -730,19 +730,19 @@ export class GameManagerProgressionOps {
    * via selectSpellPathElement only) exempts them from the reset, so a
    * respec can never strand a committed element without its root.
    */
-  previewNodeRespec(player: PlayerData, scope?: { rootId?: string }): NodeRespecPreview {
-    // The preview must agree with respecNodeTree's beta scope gate: a
-    // save holding dormant-tree records is refused, so the confirm
-    // dialog never promises a refund the op will not pay. has() guards
-    // the throwing get() - save validation tolerates ghost nodeLevels
-    // ids (retired nodes) by design.
+  previewNodeRespec(player: PlayerData, scope?: { rootId?: string }): NodeRespecPreview | null {
+    // The preview shares respecNodeTree's admission gate: dormant-tree
+    // holdings refuse the respec, so a null preview keeps the confirm
+    // dialog honest (verdict-vs-render parity on the read side). has()
+    // guards the throwing get() - save validation tolerates ghost
+    // nodeLevels ids (retired nodes) by design.
     const holdsDormantPreview = Object.keys(player.nodeLevels ?? {}).some((id) =>
       this.deps.nodeRegistry.has(id) &&
       !betaNodeWriteAdmitted(this.deps.nodeRegistry.get(id)),
     )
 
     if (holdsDormantPreview) {
-      return { refund: 0, resetNodeIds: [], resetCount: 0, clawback: undefined }
+      return null
     }
 
     // JSON round-trip (not structuredClone): callers hand in the Pinia
