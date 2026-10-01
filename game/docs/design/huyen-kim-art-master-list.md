@@ -12,7 +12,25 @@ Thay v2 — thu theo **BETA SCOPE LOCK v2**: vertical slice Phàm Nhân → Luy�
 
 ---
 
-## A. SCENE MASTER CONCEPTS — 1672×941 + state strip nhỏ
+## ⚠ SCOPE BOUNDARY — ĐỌC TRƯỚC KHI GENERATE BẤT KỲ ASSET NÀO
+
+File này liệt kê **toàn bộ việc cần làm**, không phải toàn bộ việc của một agent. Owner ghi trên từng section — KHÔNG suy rộng sang section khác.
+
+**CODEX (frontend/UI agent) ĐƯỢC phép:**
+1. Implement UI/UX trong code — layout, components, state rendering theo `huyen-kim-component-state-matrix.md` + `frontend-contract.md`.
+2. Generate art — **CHỈ Section B** (chrome/static UI: frames, panels, buttons, dividers, decorative) theo phong cách Huyền Kim Sơn Thủy.
+
+**CODEX CẤM — việc của MINH (hand-drawn), không generate/vẽ/placeholder-ify:**
+- **Section C** — enemy/boss spritesheets, animation clips (idle/attack/death/special), bất kỳ asset có `impactFrame`/feet-anchor.
+- **Section D** — skill/spell icons, pill/material icons (kể cả dòng "VẼ").
+- **Section A** — scene master concepts là concept art của Minh; Codex dùng làm reference implement UI, KHÔNG generate thay.
+- Character art, combat VFX, aura/particle overlays — mọi gameplay-facing art.
+
+**Một câu:** entity/gameplay art → MINH; khung/chrome/nền UI tĩnh → Codex được gen. Nghi ngờ → hỏi, đừng vẽ.
+
+---
+
+## A. SCENE MASTER CONCEPTS — 1672×941 + state strip nhỏ   ⟦OWNER: MINH — Codex KHÔNG generate⟧
 
 | # | Scene | Mockup | State strip | Priority |
 |---|-------|--------|-------------|----------|
@@ -28,13 +46,13 @@ Thay v2 — thu theo **BETA SCOPE LOCK v2**: vertical slice Phàm Nhân → Luy�
 
 ---
 
-## B. CHROME — 18 slot vẽ + 2 HOLD (đúng như v2, ceremonial = GRAYSCALE)
+## B. CHROME — 18 slot vẽ + 2 HOLD (đúng như v2, ceremonial = GRAYSCALE)   ⟦OWNER: CODEX được gen / MINH vẽ cũng được⟧
 
 Như v2 — xem `huyen-kim-chrome-art-spec.md` (count 20, divider 4/4). HOLD: `frame-s-slot`, `scrollbar`. `button-ceremonial` vẽ **grayscale** (game tô gold/cinnabar). Không slot nào thuộc scope-hidden feature → manifest giữ nguyên.
 
 ---
 
-## C. ENEMY ART — **12 identity** (đúng `BETA_ENEMY_ROSTER`, stage-roster-audit §6)
+## C. ENEMY ART — **12 identity** (đúng `BETA_ENEMY_ROSTER`, stage-roster-audit §6)   ⟦OWNER: MINH only — Codex CẤM⟧
 
 **Format:** 1 PNG sheet/clip; nền trong suốt; cell ~500×500; chân chạm đáy; feet-anchor. **Clip contract: normal = `idle/attack/death`; boss = `idle/attack/special/death`** (`special` map `specialAttacks` — water_surge mỗi action thứ 4). **BẮT BUỘC `impactFrame`/`impactFrames[]`** trên clip attack+special (impact-sync pipeline). Boss phase/enrage feedback ưu tiên runtime tint/aura/glyph — shape không đổi thì không vẽ sheet riêng. Hung/elite-normal (`tinh_anh`) = runtime modifier — KHÔNG vẽ.
 
@@ -70,7 +88,7 @@ Như v2 — xem `huyen-kim-chrome-art-spec.md` (count 20, divider 4/4). HOLD: `f
 
 ---
 
-## D. ICONS — **14 beta-facing · 7 cần vẽ** (+1 conditional), ~256² ink-wash nền tối
+## D. ICONS — **14 beta-facing · 7 cần vẽ** (+1 conditional), ~256² ink-wash nền tối   ⟦OWNER: MINH only — Codex CẤM⟧
 
 Surface cần icon trong beta: combat rail (basic·special), skill-tree node, Đạo Quyển technique band, Pill Room recipe + breakthrough gate, bag/inventory row.
 

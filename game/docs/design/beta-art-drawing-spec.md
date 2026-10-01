@@ -1,5 +1,7 @@
 # BETA ART SPEC v3 — danh sách + mô tả chi tiết (LEAN BETA: 6 enemy + 7 icon)
 
+> **⟦OWNER: MINH only — Codex CẤM⟧** Toàn bộ file này là việc vẽ tay của Minh: enemy spritesheets, skill/pill/material icons. Codex KHÔNG generate/vẽ bất kỳ mục nào ở đây (kể cả dòng "VẼ"). Codex scope = Section B trong `huyen-kim-art-master-list.md` (chrome/static UI) + implement UI code. Xem `huyen-kim-art-master-list.md` §SCOPE BOUNDARY.
+
 Thu theo **BETA SCOPE LOCK v2** (`src/core/betaScope.ts`, `frontend-contract.md`). Mọi phần v2 ngoài scope đã gỡ: companion (Thần Nông/Khai Minh), hidden boss (Huyết Mông/Cổ Thú), Thể Tu player, ~58 icon kỹ năng (orb Kiếm, Ngộ Đạo, kit Thể Tu, companion), ferocious-sibling sheets. Chúng là dormant data — KHÔNG vẽ trong beta.
 
 Roster authority: `BETA_ENEMY_ROSTER`; enemy ids sống trong `src/data/enemy/MortalEnemies.ts` (act I + II) và `FoundationEnemies.ts` (act III).
