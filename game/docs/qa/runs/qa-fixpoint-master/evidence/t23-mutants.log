@@ -1,0 +1,14 @@
+Masked-mutant convention: each A14 forge trips exactly one new bound;
+pre-fix RED on pinned 120cba78, post-fix GREEN on 77aecae0 - the kill
+transition is the mutant evidence.
+
+M1 spirit_stone_trung_pham stack x5000 @ mortal  -> RED pre -> GREEN post (materials stone-tier bound)
+M2 equipmentSlots.weapon.enhanceLevel 60 @ mortal -> RED pre -> GREEN post (producible-enhance bound)
+M3 productionSites level 9 @ mortal              -> RED pre -> GREEN post (site level <= realmTier bound)
+M4 workerCycles.siteLevelAtStart 9 on level-1 site -> RED pre -> GREEN post ([1, site.level] bound)
+M5 buildings level 9 @ mortal                    -> covered by same realmTier bound (building side)
+
+Unmasked: M1-M4 each trip exactly one bound (catalog ceilings do not
+fire: 9 == siteDefinition.maxLevel, 60 < MAX_SLOT_ENHANCE_LEVEL, span
+consistent). M5 is the building half of the shared tier bound.
+All 11 scopeAuthorityBlind.qa.test.ts probes PASS on 77aecae0.

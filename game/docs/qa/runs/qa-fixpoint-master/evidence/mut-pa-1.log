@@ -1,0 +1,37 @@
+=== EV-MUT-PA-1 way-gate-removed T7 2026-10-01T04:15:11.254979Z ===
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+ ❯ tests/architecture/betaDormantSaveLeak.qa.test.ts (40 tests | 1 failed) 44ms
+     × chooseCultivationPath rejects a non-beta way pair before any other check 9ms
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 39 passed (40)
+   Start at  04:15:12
+   Duration  1.83s (transform 1.33s, setup 244ms, import 1.42s, tests 44ms, environment 0ms)
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/architecture/betaDormantSaveLeak.qa.test.ts > path authority: the ritual gate fails closed for dormant ways (I-PA-1) > chooseCultivationPath rejects a non-beta way pair before any other check
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/architecture/betaDormantSaveLeak.qa.test.ts:254:92
+    252|     const p = player({ realmLevel: 12 })
+    253|
+    254|     expect(gameManager.realmAdvanceOps.chooseCultivationPath('sword', …
+       |                                                                                            ^
+    255|     expect(gameManager.realmAdvanceOps.chooseCultivationPath('body', '…
+    256|     // spell_pathway carries an element axis - it also fails closed he…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+DETECTOR_EXIT=1  (nonzero = mutant killed the suite = KILLED_EXPECTED)
+RESULT=KILLED_EXPECTED

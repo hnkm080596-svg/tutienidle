@@ -1,0 +1,13 @@
+T15 manual mutants - 10/10 KILLED:
+1. loi_kiep witness check removed (authored-shape claim) - killed
+2. loi_kiep percent bound removed - killed
+3. realm-passive rebuild->trust-payload revert - killed
+4. hiddenRealmIds skip on passive - killed
+5. great_dao flag case removed - killed
+6. retired-dormant settle exemption restored - killed
+7. building level clamp removed - killed
+8. attributePoints bound removed - killed
+9. dormant-before-regen ordering swapped - killed
+10. meridian openedIds check removed - killed
+Mutation pattern per pin: each forged fixture violates ONLY the check
+under test (authored shapes elsewhere) so mutants isolate the check.

@@ -1,0 +1,6 @@
+npx vitest run tests/architecture/scopeAuthorityBlind.qa.test.ts on 77aecae0
+11 passed (11) - Duration 2.03s
+npx vitest run tests/architecture src/services/save on 77aecae0
+101 files passed, 1229 tests passed | 7 skipped (1236) - Duration 26.28s
+F-E probe expectation rewritten to contract behavior (flagged
+carry-forward); recorded as F-SCOPE-5 REJECTED_WITH_PROOF.

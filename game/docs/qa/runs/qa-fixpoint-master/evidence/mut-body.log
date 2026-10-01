@@ -1,0 +1,6 @@
+MUTANT SWEEP - F-BODY-W-1/F-BODY-UI-1 (ae43f3b5)
+Mutant 1: remove isBetaFeature('bodyPath') gate from investBodyChapter
+  -> vitest authority seam pin: KILLED_EXPECTED
+Mutant 2: remove v-if="bodyPathLive" from RealmPanel body block
+  -> vitest RealmPanel lock-mount test: KILLED_EXPECTED
+Corpus: 2 mutants, 2 KILLED_EXPECTED, 0 SURVIVED

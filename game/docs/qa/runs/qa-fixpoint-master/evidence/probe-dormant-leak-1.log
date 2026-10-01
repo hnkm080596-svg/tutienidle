@@ -1,0 +1,11 @@
+=== betaDormantSaveLeak (T7 rebind, Thu Oct  1 04:11:50 UTC 2026) ===
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+
+ Test Files  1 passed (1)
+      Tests  40 passed (40)
+   Start at  04:11:51
+   Duration  1.79s (transform 1.33s, setup 207ms, import 1.44s, tests 35ms, environment 0ms)
+
+EXIT=0

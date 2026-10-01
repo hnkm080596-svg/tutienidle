@@ -1,0 +1,8 @@
+# T12 B6/TC4 wave - mutant kills over betaSettlementReauth.qa.test.ts pins
+# (manual mutation, run, observe FAIL, restore) - 2026-10-01
+M1 hiddenDormant -> false          : 1 test failed (hidden-type park pin)    KILLED
+M2 settle gate -> if(false)        : 3 tests failed (dormant-target parks)   KILLED
+M3 alchemy park gate -> if(false)  : 3 tests failed (dormant job delivers)   KILLED
+M4 body modifier arm -> always emit: 1 test failed (bat-mach re-emission)    KILLED
+M5 bodyLive -> true                : 1 test failed (kien-co grade leak)      KILLED
+Post-restore: 16/16 green on cedaac21.

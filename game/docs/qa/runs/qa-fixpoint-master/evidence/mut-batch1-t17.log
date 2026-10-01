@@ -1,0 +1,528 @@
+===== MUT-IA-1 :: rollback-noop in commitFiveElementInitiation
+MUT-IA-1: KILLED_EXPECTED (exit=1)
+g","name":"Linh Khí Cảm Ứng","description":"Cảm nhận linh khí xung quanh, mỗi đòn đánh trúng tăng dần công kích.","type":"passive","level":1,"maxLevel":1,"requiredRealmId":"qi_refining","cooldown":0,"target":"self","effects":[],"passiveModifiers":[{"id":"passive_linh_khi_cam_ung_attack","sourceId":"passive_linh_khi_cam_ung","sourceType":"skill","stat":"might","percent":0.005,"stacks":0,"maxStacks":50}],"passiveTrigger":"hit","experience":0,"totalExperience":0}],"techniques":[]}"
+
+ ❯ expectByteEquivalent src/core/game/GameManager.fiveElementInitiation.test.ts:54:43
+     52|   player: PlayerData,
+     53| ): void {
+     54|   expect(snapshotOf(gameManager, player)).toBe(before)
+       |                                           ^
+     55| }
+     56|
+ ❯ src/core/game/GameManager.fiveElementInitiation.test.ts:151:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/6]⎯
+
+ FAIL  src/core/game/GameManager.fiveElementInitiation.test.ts > commitFiveElementInitiation - commit postconditions under injection > failed commit leaves the caller retriable (no poisoned half-state)
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/core/game/GameManager.fiveElementInitiation.test.ts:172:23
+    170|     const result = gameManager.realmAdvanceOps.commitFiveElementInitia…
+    171|
+    172|     expect(result.ok).toBe(true)
+       |                       ^
+    173|     expect(getActiveElement(player)).toBe('water')
+    174|   })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/6]⎯
+
+
+===== MUT-PA-1 :: way-gate-removed in chooseCultivationPath
+MUT-PA-1: SURVIVED (exit=0)
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+
+ Test Files  1 passed (1)
+      Tests  46 passed (46)
+   Start at  11:26:37
+   Duration  1.81s (transform 1.35s, setup 221ms, import 1.44s, tests 38ms, environment 0ms)
+
+
+===== MUT-SV-1 :: betaWay forced true in betaScopeSkillDomain
+MUT-SV-1: KILLED_EXPECTED (exit=1)
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+ ❯ tests/architecture/betaScopeSkillDomain.test.ts (25 tests | 1 failed) 34ms
+     × non-beta ways scope-hide the whole rail; corrupt way-less non-mortal fails closed 7ms
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  1 failed | 29 passed (30)
+   Start at  11:26:40
+   Duration  3.64s (transform 2.56s, setup 375ms, import 2.87s, tests 179ms, environment 564ms)
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/architecture/betaScopeSkillDomain.test.ts > beta scope v2 phase-3 - combat role rail > non-beta ways scope-hide the whole rail; corrupt way-less non-mortal fails closed
+AssertionError: expected 'available' to be 'scope-hidden' // Object.is equality
+
+Expected: "scope-hidden"
+Received: "available"
+
+ ❯ tests/architecture/betaScopeSkillDomain.test.ts:277:27
+    275|
+    276|     for (const entry of swordRail) {
+    277|       expect(entry.state).toBe('scope-hidden')
+       |                           ^
+    278|     }
+    279|     // basic/special carry the admission blocker; ultimate's constant
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+===== MUT-AS-1 :: pill-gate-removed in GameManagerPillOps
+MUT-AS-1: KILLED_EXPECTED (exit=1)
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+ ❯ tests/architecture/betaDormantSaveLeak.qa.test.ts (46 tests | 1 failed) 46ms
+     × usePillDetailed rejects a dormant-family pill without consuming it 11ms
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 45 passed (46)
+   Start at  11:26:45
+   Duration  1.75s (transform 1.29s, setup 200ms, import 1.39s, tests 46ms, environment 0ms)
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/architecture/betaDormantSaveLeak.qa.test.ts > dormancy: dormant-family pills on a carried save stay inert (F-TRI-1) > usePillDetailed rejects a dormant-family pill without consuming it
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/architecture/betaDormantSaveLeak.qa.test.ts:173:23
+    171|     const result = gameManager.pillOps.usePillDetailed('phi_van_dan_mo…
+    172|
+    173|     expect(result.ok).toBe(false)
+       |                       ^
+    174|     expect(result.reason).toBe('scope_hidden')
+    175|     expect(gameManager.pillBag.getAmount('phi_van_dan_mortal')).toBe(1)
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+===== MUT-DS-1 :: cap-ungated in StatCap (hiddenContent guard removed)
+MUT-DS-1: KILLED_EXPECTED (exit=1)
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+ ❯ tests/architecture/betaDormantSaveLeak.qa.test.ts (46 tests | 1 failed) 90ms
+     × completedHiddenBodyRealmIds does not raise the main-stat cap under beta scope 17ms
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 45 passed (46)
+   Start at  11:26:48
+   Duration  2.96s (transform 2.24s, setup 299ms, import 2.35s, tests 90ms, environment 0ms)
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/architecture/betaDormantSaveLeak.qa.test.ts > dormancy: hidden progression on a loaded save must not affect visible play > completedHiddenBodyRealmIds does not raise the main-stat cap under beta scope
+AssertionError: expected 36 to be 30 // Object.is equality
+
+- Expected
++ Received
+
+- 30
++ 36
+
+ ❯ tests/architecture/betaDormantSaveLeak.qa.test.ts:126:40
+    124|     // Under beta scope the hidden-content domain is dormant: a carried
+    125|     // record must not grant its +10pp/realm cap bonus into visible pl…
+    126|     expect(getEffectiveMainStatCap(p)).toBe(getMainStatCap('qi_refinin…
+       |                                        ^
+    127|   })
+    128|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+===== MUT-RM-1 :: slot-unfiltered in TurnCombatSkillBar
+MUT-RM-1: KILLED_EXPECTED (exit=1)
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+stdout | tests/architecture/betaReadModelHonesty.qa.test.ts
+ * Tone.js v15.1.22 * 
+
+ ❯ tests/architecture/betaReadModelHonesty.qa.test.ts (5 tests | 1 failed) 325ms
+     × a scope-hidden ultimate role renders no slot button for a beta player 41ms
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 4 passed (5)
+   Start at  11:26:52
+   Duration  7.87s (transform 5.93s, setup 255ms, import 6.55s, tests 325ms, environment 607ms)
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/architecture/betaReadModelHonesty.qa.test.ts > QA read-model honesty: combat role rail (contract sec.7/8) > a scope-hidden ultimate role renders no slot button for a beta player
+AssertionError: expected 3 to be 2 // Object.is equality
+
+- Expected
++ Received
+
+- 2
++ 3
+
+ ❯ tests/architecture/betaReadModelHonesty.qa.test.ts:194:28
+    192|     )
+    193|
+    194|     expect(buttons.length).toBe(2)
+       |                            ^
+    195|
+    196|     view.unmount()
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+===== MUT-CR-1 :: double-publish in BattleRewardOps
+MUT-CR-1: KILLED_EXPECTED (exit=1)
+e_end', …(1) } ]
+
+- Expected
++ Received
+
+  [
+    {
+      "state": "victory",
+      "type": "battle_end",
+    },
++   {
++     "state": "victory",
++     "type": "battle_end",
++   },
+  ]
+
+ ❯ src/core/game/GameManager.battleEndPublication.test.ts:279:24
+    277|
+    278|     runUntil(combatSource, () => gameManager.getTurnBattle()?.state ==…
+    279|     expect(battleEnds).toEqual([{ type: 'battle_end', state: 'victory'…
+       |                        ^
+    280|
+    281|     // Non-stage entry — startBattleWithPlayer is the stageWaves launc…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  src/core/game/GameManager.battleEndPublication.test.ts > ARCH-014 (M12) — battle_end terminal publication, exactly once per outcome > abandon on a direct startBattle() (dev spawn seam) after a terminal still publishes defeat — guard was reset
+AssertionError: expected [ { type: 'battle_end', …(1) }, …(1) ] to deeply equal [ { type: 'battle_end', …(1) } ]
+
+- Expected
++ Received
+
+  [
+    {
+      "state": "victory",
+      "type": "battle_end",
+    },
++   {
++     "state": "victory",
++     "type": "battle_end",
++   },
+  ]
+
+ ❯ src/core/game/GameManager.battleEndPublication.test.ts:311:24
+    309|
+    310|     runUntil(combatSource, () => gameManager.getTurnBattle()?.state ==…
+    311|     expect(battleEnds).toEqual([{ type: 'battle_end', state: 'victory'…
+       |                        ^
+    312|
+    313|     // Direct CombatEntity entry — the enemySpawnDebug path. Pre-fix t…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+===== MUT-PG-1 :: precursor-cap added (uncapped floor/10 broken)
+MUT-PG-1: KILLED_EXPECTED (exit=1)
+(getHuyKiemFlatDamageBonus(9999)).toBe(999)
+       |                                             ^
+     15|   })
+     16|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  src/core/skill/SkillSystem.huyKiem.test.ts > Huy Kiếm — flat damage vĩnh viễn theo cast > getEffectiveSkill cộng flat bonus vào action dealDamage của tram
+AssertionError: expected 6 to be 16 // Object.is equality
+
+- Expected
++ Received
+
+- 16
++ 6
+
+ ❯ src/core/skill/SkillSystem.huyKiem.test.ts:29:50
+     27|     const action = effective.triggers?.[0]?.actions[0]
+     28|     expect(action?.type).toBe('dealDamage')
+     29|     expect((action as { value?: number }).value).toBe(1 + 15)
+       |                                                  ^
+     30|   })
+     31|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  src/core/skill/SkillSystem.huyKiem.test.ts > Huy Kiếm — flat damage vĩnh viễn theo cast > precursor linh_bao nhan flat bonus giong tram
+ FAIL  src/core/skill/SkillSystem.huyKiem.test.ts > Huy Kiếm — flat damage vĩnh viễn theo cast > precursor huy_quyen nhan flat bonus giong tram
+AssertionError: expected 6 to be 16 // Object.is equality
+
+- Expected
++ Received
+
+- 16
++ 6
+
+ ❯ src/core/skill/SkillSystem.huyKiem.test.ts:60:50
+     58|     const action = effective.triggers?.[0]?.actions[0]
+     59|     expect(action?.type).toBe('dealDamage')
+     60|     expect((action as { value?: number }).value).toBe(1 + 15)
+       |                                                  ^
+     61|   })
+     62|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+
+===== MUT-EC-1 :: orphan-sink: live recipe emits dead pill id
+MUT-EC-1: SURVIVED (exit=0)
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+
+ Test Files  1 passed (1)
+      Tests  6 passed (6)
+   Start at  11:27:13
+   Duration  610ms (transform 402ms, setup 274ms, import 212ms, tests 7ms, environment 0ms)
+
+
+===== MUT-SF-1 :: flag-removed: way_out_of_scope branch dropped
+MUT-SF-1: KILLED_EXPECTED (exit=1)
+Save)).toEqual([])
+    556|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/6]⎯
+
+ FAIL  tests/architecture/betaDormantSaveLeak.qa.test.ts > dormancy: way-authored realm seams stay inert on a carried save (F-A3-01 / F-A3-02 / F-A3-03) > a hidden_spell save mints no realm-reward nodes through the restore replay (F-A3-01)
+AssertionError: expected null to be 'way_out_of_scope' // Object.is equality
+
+- Expected:
+"way_out_of_scope"
+
++ Received:
+null
+
+ ❯ tests/architecture/betaDormantSaveLeak.qa.test.ts:840:41
+    838|       realmId: 'foundation_establishment',
+    839|     })
+    840|     expect(unsupportedReleaseReason(p)).toBe('way_out_of_scope')
+       |                                         ^
+    841|
+    842|     const gameManager = managerWithNodes()
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/6]⎯
+
+ FAIL  tests/architecture/betaDormantSaveLeak.qa.test.ts > dormancy: way-authored realm seams stay inert on a carried save (F-A3-01 / F-A3-02 / F-A3-03) > a hidden_sword save keeps its preserved slice frozen through realm advances (F-A3-03)
+AssertionError: expected null to be 'way_out_of_scope' // Object.is equality
+
+- Expected:
+"way_out_of_scope"
+
++ Received:
+null
+
+ ❯ tests/architecture/betaDormantSaveLeak.qa.test.ts:918:41
+    916|       realmLevel: 12,
+    917|     })
+    918|     expect(unsupportedReleaseReason(p)).toBe('way_out_of_scope')
+       |                                         ^
+    919|     expect(hasStaticPathCapability(p, 'sword.sword_riding')).toBe(true)
+    920|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/6]⎯
+
+
+===== MUT-TQ-1 :: fixture mutant: lockBetaWaysForTests clear() dropped
+MUT-TQ-1: KILLED_EXPECTED (exit=1)
+    expect(p.nodeLevels ?? {}).toEqual({})
+    862|   })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[15/17]⎯
+
+ FAIL  tests/architecture/betaDormantSaveLeak.qa.test.ts > dormancy: way-authored realm seams stay inert on a carried save (F-A3-01 / F-A3-02 / F-A3-03) > a hidden_spell save learns no way-authored ladder passive at realm entry (F-A3-02)
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/architecture/betaDormantSaveLeak.qa.test.ts:890:67
+    888|     gameManager.realmAdvanceOps.syncRealmPassive(p)
+    889|
+    890|     expect(gameManager.skillManager.has('passive_truc_co_y_chi')).toBe…
+       |                                                                   ^
+    891|   })
+    892|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[16/17]⎯
+
+ FAIL  tests/architecture/betaDormantSaveLeak.qa.test.ts > dormancy: way-authored realm seams stay inert on a carried save (F-A3-01 / F-A3-02 / F-A3-03) > a hidden_sword save keeps its preserved slice frozen through realm advances (F-A3-03)
+AssertionError: expected null to be 'way_out_of_scope' // Object.is equality
+
+- Expected:
+"way_out_of_scope"
+
++ Received:
+null
+
+ ❯ tests/architecture/betaDormantSaveLeak.qa.test.ts:918:41
+    916|       realmLevel: 12,
+    917|     })
+    918|     expect(unsupportedReleaseReason(p)).toBe('way_out_of_scope')
+       |                                         ^
+    919|     expect(hasStaticPathCapability(p, 'sword.sword_riding')).toBe(true)
+    920|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[17/17]⎯
+
+
+===== MUT-CA-1 :: betaTreeNodeAdmitted neutered to true
+MUT-CA-1: KILLED_EXPECTED (exit=1)
+s on a carried save (F-CA-1) > canPurchaseNode / purchaseNode / upgradeNode all reject dormant-tree nodes
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/architecture/betaDormantSaveLeak.qa.test.ts:302:68
+    300|     expect(gameManager.progressionOps.canPurchaseNode('thich_can', p))…
+    301|     expect(gameManager.progressionOps.purchaseNode('thich_can', p)).to…
+    302|     expect(gameManager.progressionOps.upgradeNode('thich_can', p)).toB…
+       |                                                                    ^
+    303|     expect(p.skillInsight).toBe(insightBefore)
+    304|     expect(p.nodeLevels).toEqual({ thich_can: 1 })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  tests/architecture/betaDormantSaveLeak.qa.test.ts > dormancy: dormant way node trees refuse insight writes on a carried save (F-CA-1) > respecNodeTree refuses a save holding dormant records - dormant insight is never refunded
+AssertionError: expected 2 to be null
+
+- Expected:
+null
+
++ Received:
+2
+
+ ❯ tests/architecture/betaDormantSaveLeak.qa.test.ts:313:58
+    311|     const p = swordSave({ thich_can: 2 })
+    312|
+    313|     expect(gameManager.progressionOps.respecNodeTree(p)).toBeNull()
+       |                                                          ^
+    314|     // The preview refuses too: a null preview means no fabricated
+    315|     // 'reset 0 / refund 0' confirm dialog can mount (verdict-vs-render
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+===== MUT-TC-1 :: F-TC admission predicates neutered to true
+MUT-TC-1: KILLED_EXPECTED (exit=1)
+aDormantSaveLeak.qa.test.ts > dormancy: dormant way/technique/passive stat channels stay inert (F-TC-1/F-TC-3) > a dormant way technique emits no tier modifiers; the beta way technique still emits
+AssertionError: expected [ { …(5) } ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   {
++     "flat": 2,
++     "id": "technique-tier:diamond_body_art:hpRegen",
++     "sourceId": "diamond_body_art",
++     "sourceType": "technique",
++     "stat": "hpRegenPerTurn",
++   },
++ ]
+
+ ❯ tests/architecture/betaDormantSaveLeak.qa.test.ts:583:7
+    581|     expect(
+    582|       dormantChannels.find((c) => c.channel === 'technique_tier')!.mod…
+    583|     ).toEqual([])
+       |       ^
+    584|
+    585|     const spellSave = player({
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯
+
+ FAIL  tests/architecture/betaDormantSaveLeak.qa.test.ts > dormancy: dormant way/technique/passive stat channels stay inert (F-TC-1/F-TC-3) > tryAdvanceTechniqueGrade refuses a dormant technique and debits no stones
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/architecture/betaDormantSaveLeak.qa.test.ts:642:69
+    640|     gameManager.materialBag.add(stoneMaterial, 1000)
+    641|
+    642|     expect(gameManager.realmAdvanceOps.tryAdvanceTechniqueGrade(p)).to…
+       |                                                                     ^
+    643|     expect(gameManager.materialBag.getAmount(stoneId)).toBe(1000)
+    644|   })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯
+
+
+===== MUT-A3-1 :: A3/T2 gates neutered (talent filter, seal gate, realm-replay, has-guard)
+MUT-A3-1: KILLED_EXPECTED (exit=1)
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+ ❯ tests/architecture/betaDormantSaveLeak.qa.test.ts (46 tests | 1 failed) 51ms
+     × a carried pham_nhan_chi_cot record applies no cultivation speed 7ms
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 45 passed (46)
+   Start at  11:27:26
+   Duration  1.74s (transform 1.28s, setup 225ms, import 1.35s, tests 51ms, environment 0ms)
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/architecture/betaDormantSaveLeak.qa.test.ts > dormancy: a non-beta talent record emits nothing through the effect seam (F-A3-08) > a carried pham_nhan_chi_cot record applies no cultivation speed
+AssertionError: expected 0.75 to be +0 // Object.is equality
+
+- Expected
++ Received
+
+- 0
++ 0.75
+
+ ❯ tests/architecture/betaDormantSaveLeak.qa.test.ts:934:77
+    932|     const p = player({ selectedTalentIds: ['pham_nhan_chi_cot'] })
+    933|
+    934|     expect(getCultivationSpeedPercent(p.selectedTalentIds, p.talentLev…
+       |                                                                             ^
+    935|     expect(collectTalentEffects(p.selectedTalentIds, p.talentLevels)).…
+    936|   })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+
+Corpus: 14 mutants, 12 KILLED_EXPECTED, 2 SURVIVED

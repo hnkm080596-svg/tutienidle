@@ -1,0 +1,9 @@
+npm run verify on devin/qa-fixpoint @ 77aecae0 (post F-SCOPE-1..4 bounds)
+type-check: PASS (vue-tsc --build)
+build: PASS (vite build, 1923 modules)
+vitest: PASS - Test Files 874 passed | 1 skipped (875)
+        Tests 8168 passed | 5 expected fail | 8 skipped (8181)
+        Duration 102.32s
+(note: first run reported one timing-sensitive sim flake,
+src/core/simulation/earlygame/TrucCoJourney.test.ts - passes in
+isolation 8/8 and on rerun; unrelated to validator bounds)

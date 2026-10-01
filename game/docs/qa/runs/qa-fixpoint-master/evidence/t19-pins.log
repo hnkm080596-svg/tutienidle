@@ -1,0 +1,7 @@
+# T19 pin suite execution — betaWriterBoundsTc8.qa.test.ts @ a2bd826f
+# npx vitest run tests/architecture/betaWriterBoundsTc8.qa.test.ts tests/architecture/betaConsumerSeamsB8.qa.test.ts
+# Test Files 2 passed; Tests 55 passed | 1 skipped (F-B8-4 aura half stays deferred per ruling)
+# New asserts: 22 (TC8/B10) + 12 (A10) = 34 in betaWriterBoundsTc8.qa.test.ts
+# F-B8-4 talent-card pin promoted it.skip->it (F-B10-002 promoted to Medium, fix landed)
+# Issue-path probe: every new bound emits its own unique issue path (no masking)
+RESULT: PASS (34/34 pin asserts, controls green)
