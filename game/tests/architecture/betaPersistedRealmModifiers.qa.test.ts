@@ -127,7 +127,12 @@ describe('persisted realm modifiers under the beta lock', () => {
     expect(stats.strength).toBe(base.strength)
   })
 
-  it('a playable phap tu realm-sourced modifier still emits (control)', () => {
+  it('a persisted phap tu/spell-channel claim is fabricated - real phap tu channels emit via way facets, not player.modifiers (F-A7-1)', () => {
+    // Writer inventory for persisted player.modifiers: realm passives
+    // (marker-gated), meridian chapter (bat-mach:*), loi kiep grant,
+    // and the rebuilt equipment slice. The playable phap tu path emits
+    // its 'spell'-channel modifiers as derived way facets - a PERSISTED
+    // claim of the same source is a forged entry and must emit nothing.
     const p = player()
     p.modifiers.push({
       id: 'phap_tu_linh_luc',
@@ -141,7 +146,7 @@ describe('persisted realm modifiers under the beta lock', () => {
     const stats = resolvePlayerStatAssembly(p, []).stats
     const base = resolvePlayerStatAssembly(player(), []).stats
 
-    expect(stats.maxMp).toBe(base.maxMp + 100)
+    expect(stats.maxMp).toBe(base.maxMp)
   })
 
   it('carried body-chapter realm modifiers (meridian) emit nothing under the lock', () => {

@@ -84,6 +84,32 @@ function getSpiritSpringTargetRatePerMinute(realmId: string | undefined): number
  * còn Linh Tuyền (producesSpiritStone): vòng sản xuất nguyên liệu đã
  * chuyển sang ProductionSystem, processing jobs/garden đã bị loại bỏ.
  */
+/**
+ * F-TC5-1: the accrual realm pin is only ever written from the player's
+ * realm at build/claim time (EM-01). A pin that resolves above the
+ * current realm - or to no known realm - is a forged accrual window;
+ * clamp it to the current realm instead of minting the fabricated
+ * window's tier and rate.
+ */
+function resolveAccrualRealmId(
+  instance: BuildingInstance,
+  currentRealmId?: string,
+): string | undefined {
+  const pinned = instance.accrualRealmId ?? currentRealmId
+
+  if (pinned === undefined || currentRealmId === undefined) {
+    return pinned
+  }
+
+  const pinnedIndex = getRealmIndex(pinned)
+
+  if (pinnedIndex < 0 || pinnedIndex > getRealmIndex(currentRealmId)) {
+    return currentRealmId
+  }
+
+  return pinned
+}
+
 export class BuildingSystem {
   /**
    * Check chi tiết kèm lý do — UI/toast báo đúng nguyên nhân thay vì
@@ -362,7 +388,7 @@ export class BuildingSystem {
       // EM-01 - rate/capacity follow the realm the window accrued under,
       // not the claim-time realm: a breakthrough inside the window must
       // not retroactively reprice the whole backlog.
-      const accrualRealmId = instance.accrualRealmId ?? realmId
+      const accrualRealmId = resolveAccrualRealmId(instance, realmId)
       const rate = this.getEffectiveRate(template, instance.level, accrualRealmId)
       const capacity = this.getEffectiveCapacity(template, instance.level, accrualRealmId)
 
@@ -376,11 +402,11 @@ export class BuildingSystem {
   // getStoredAmount/claim so they always agree (2026-08-28). EM-01: same
   // accrualRealmId pin - the UI number is exactly what claim() will pay.
   getCapacity(instance: BuildingInstance, template: Building, realmId?: string): number {
-    return this.getEffectiveCapacity(template, instance.level, instance.accrualRealmId ?? realmId)
+    return this.getEffectiveCapacity(template, instance.level, resolveAccrualRealmId(instance, realmId))
   }
 
   getRatePerMinute(instance: BuildingInstance, template: Building, realmId?: string): number {
-    return this.getEffectiveRate(template, instance.level, instance.accrualRealmId ?? realmId) * 60
+    return this.getEffectiveRate(template, instance.level, resolveAccrualRealmId(instance, realmId)) * 60
   }
 
   /**
@@ -440,7 +466,7 @@ export class BuildingSystem {
     // EM-01 - rate/material tier still follow the just-ended window's
     // realm (pin), then the pin moves to the current realm for the next
     // accrual window.
-    const accrualRealmId = instance.accrualRealmId ?? currentRealmId
+    const accrualRealmId = resolveAccrualRealmId(instance, currentRealmId)
     const rate = this.getEffectiveRate(template, instance.level, accrualRealmId)
 
     const fraction = stored - amount

@@ -374,7 +374,10 @@ export class AlchemySystem {
         continue
       }
 
-      const pill = resolvePill(job.pillId)
+      // F-A7-3: settle re-derives the deliverable from the authored
+      // recipe - job.pillId is only a denormalized snapshot, so a forged
+      // job claiming a different pill can never mint it.
+      const pill = recipe !== undefined ? resolvePill(recipe.pillId) : undefined
 
       if (!recipe || !pill) {
         // Recipe/pill không resolve được (data đổi/xoá giữa save và load) —
@@ -414,7 +417,7 @@ export class AlchemySystem {
         // R9 (AR-34): surface the delivery receipt instead of ignoring it.
         this.pendingEvents.push({
           jobId: job.jobId,
-          pillId: job.pillId,
+          pillId: recipe.pillId,
           pills,
           success: pills > 0,
           delivered: pills - overflow,

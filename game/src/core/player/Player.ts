@@ -533,8 +533,22 @@ export function resolvePlayerStatAssembly(
 
   const allModifiers = [
     ...player.modifiers.filter((modifier) => {
-      if (modifier.sourceType !== 'realm') {
+      if (modifier.sourceType === 'equipment') {
+        // The equipment slice is rebuilt from equipped items at every
+        // restore (setEquipmentModifiers) - a forged entry is
+        // self-scrubbed before it can emit.
         return true
+      }
+      if (modifier.sourceType === 'talent') {
+        // The only persisted talent-sourced writer is the loi kiep
+        // outcome grant - any other talent claim is a forged entry.
+        return modifier.sourceId === 'loi_kiep'
+      }
+      if (modifier.sourceType !== 'realm') {
+        // No current-version writer persists any other sourceType
+        // (skill/technique/buff/pill/etc. are node/way/channel
+        // derivations, never pushed) - a persisted claim is forged.
+        return false
       }
       const passive = REALM_PASSIVES.find((entry) => entry.sourceId === modifier.sourceId)
       if (passive !== undefined) {
@@ -549,9 +563,10 @@ export function resolvePlayerStatAssembly(
       if (MERIDIANS.some((meridian) => meridian.id === modifier.sourceId)) {
         return bodyPathAdmitted
       }
-      // Other realm-sourced writers (the playable phap tu path, spell
-      // channels) stay live - only the dormant body channel is gated.
-      return true
+      // Realm-sourced persisted writers are exactly the passives above
+      // and the meridian chapter - the phap tu/spell channels emit
+      // derived modifiers, so any other persisted realm claim is forged.
+      return false
     }),
     ...externalModifiers,
   ]

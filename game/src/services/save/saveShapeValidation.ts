@@ -32,6 +32,13 @@ import { THE_TU_AN_NODES } from '../../data/progression/TheTuAnNodes'
 import { getTalentDefinition } from '../../data/talent/Talents'
 import { TRAN_PHAP_FORMATIONS } from '../../data/formation/TranPhap'
 import { REALM_PASSIVES } from '../../data/realm/RealmPassives'
+import { MERIDIANS } from '../../data/realm/Meridians'
+import { pills } from '../../data/pill/pills'
+import {
+  TU_LINH_TRAN_BUFF_PERCENT,
+  TU_LINH_TRAN_EFFECT_GROUP,
+} from '../../core/economy/TuLinhTranBalance'
+import { alchemyRecipes } from '../../data/alchemy/alchemyRecipes'
 import { getRealmIndex } from '../../core/realm/realmSystem'
 import { getTalentMaxLevel, isLegalBreakthroughOffer, isTalentEntitlementActionable } from '../../core/talent/TalentEntitlement'
 import { skillCoreNodeId } from '../../core/progression/SkillCoreLevel'
@@ -558,6 +565,49 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
         }
       }
     }
+
+    // F-A7-1: claimed-source coherence. On a current-version save the
+    // persisted writers are enumerable - realm passives (marker-checked
+    // above), the meridian chapter rebuild, the loi kiep outcome grant
+    // ('talent' + 'loi_kiep'), and the equipment slice that restore
+    // rebuilds from equipped items. Any other claimed source is a
+    // fabricated entry, the same provable-forgery class as the
+    // ungranted passive payload.
+    const claimedModifiers = Array.isArray(playerModifiers) ? playerModifiers : []
+
+    for (let i = 0; i < claimedModifiers.length; i += 1) {
+      const modifier = claimedModifiers[i]
+
+      if (!isObject(modifier) || modifier.sourceType === 'equipment') {
+        continue
+      }
+
+      if (modifier.sourceType === 'realm') {
+        const resolvable =
+          REALM_PASSIVES.some((entry) => entry.sourceId === modifier.sourceId) ||
+          MERIDIANS.some((entry) => entry.id === modifier.sourceId)
+
+        if (!resolvable) {
+          issues.push({
+            path: `player.modifiers[${i}]`,
+            message: `realm-source modifier không có writer nào (${String(modifier.sourceId)})`,
+          })
+        }
+
+        continue
+      }
+
+      if (modifier.sourceType === 'talent' && modifier.sourceId === 'loi_kiep') {
+        continue
+      }
+
+      issues.push({
+        path: `player.modifiers[${i}]`,
+        message: `modifier claim nguồn không thuộc writer đã biết (${String(
+          modifier.sourceType,
+        )}:${String(modifier.sourceId)})`,
+      })
+    }
   }
 
   // persistentTimedEffects - expiresAtMs is the absolute authority
@@ -565,6 +615,13 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
   const timedEffects = requireArray(player, 'persistentTimedEffects', 'player', issues)
 
   if (timedEffects) {
+    // F-A7-2: claimed-source coherence for timed effects - the writers
+    // are activateTuLinhTran (sourceItemId 'tu_linh_tran') and pill regen
+    // consumption (sourceItemId = authored pill id). A claim that
+    // resolves to neither is fabricated, and per-source surface bounds
+    // mirror exactly what each writer can mint.
+    const seenEffectGroups = new Set<string>()
+
     for (let i = 0; i < timedEffects.length; i += 1) {
       const effect = timedEffects[i]
       const effectPath = `player.persistentTimedEffects[${i}]`
@@ -588,6 +645,61 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
 
       if (effectModifiers) {
         validateStatModifierEntries(effectModifiers, `${effectPath}.modifiers`, issues)
+      }
+
+      if (typeof effect.effectGroup === 'string' && effect.effectGroup.length > 0) {
+        if (seenEffectGroups.has(effect.effectGroup)) {
+          // applyTimedEffect merges same-group entries into one record -
+          // two persisted entries sharing a group cannot be authored.
+          issues.push({
+            path: `${effectPath}.effectGroup`,
+            message: `effectGroup trùng lặp (${effect.effectGroup})`,
+          })
+        }
+        seenEffectGroups.add(effect.effectGroup)
+      }
+
+      if (typeof effect.sourceItemId === 'string' && effect.sourceItemId.length > 0) {
+        if (effect.sourceItemId === 'tu_linh_tran') {
+          if (
+            effect.effectGroup !== TU_LINH_TRAN_EFFECT_GROUP ||
+            (effectModifiers !== undefined && effectModifiers.length > 0) ||
+            effect.durationStackable === true ||
+            !isFiniteNumber(effect.cultivationSpeedPercent) ||
+            (effect.cultivationSpeedPercent as number) <= 0 ||
+            (effect.cultivationSpeedPercent as number) > TU_LINH_TRAN_BUFF_PERCENT
+          ) {
+            issues.push({
+              path: effectPath,
+              message: 'tu_linh_tran effect vượt biên writer',
+            })
+          }
+        } else if (pills.some((pill) => pill.id === effect.sourceItemId)) {
+          // Pill regen consumption never writes cultivationSpeedPercent
+          // and only emits manaRegenPerTurn modifiers.
+          if (effect.cultivationSpeedPercent !== undefined) {
+            issues.push({
+              path: `${effectPath}.cultivationSpeedPercent`,
+              message: 'pill effect không thể ghi cultivationSpeedPercent',
+            })
+          }
+          if (effectModifiers !== undefined) {
+            for (let j = 0; j < effectModifiers.length; j += 1) {
+              const modifier = effectModifiers[j]
+              if (isObject(modifier) && modifier.stat !== 'manaRegenPerTurn') {
+                issues.push({
+                  path: `${effectPath}.modifiers[${j}]`,
+                  message: `pill regen chỉ emit manaRegenPerTurn (${String(modifier.stat)})`,
+                })
+              }
+            }
+          }
+        } else {
+          issues.push({
+            path: `${effectPath}.sourceItemId`,
+            message: `timed effect claim nguồn không resolve (${String(effect.sourceItemId)})`,
+          })
+        }
       }
     }
   }
@@ -1521,9 +1633,15 @@ function validateQuestSave(value: unknown, path: string, issues: ShapeIssue[]): 
 // stored-amount math; a non-numeric level used to pass the gate and
 // produce NaN rates. Shape-only: maxLevel bounds stay with the building
 // catalog (this file does not check gameplay values).
-function validateBuildingsSave(entries: unknown[], path: string, issues: ShapeIssue[]): void {
+function validateBuildingsSave(
+  entries: unknown[],
+  path: string,
+  issues: ShapeIssue[],
+  playerRealmIndex?: number,
+): void {
   for (let i = 0; i < entries.length; i += 1) {
     const entry = entries[i]
+    const entryPath = `${path}[${i}]`
 
     if (
       !isObject(entry) ||
@@ -1533,7 +1651,24 @@ function validateBuildingsSave(entries: unknown[], path: string, issues: ShapeIs
       (entry.level as number) < 1 ||
       !isNonNegativeFiniteNumber(entry.lastCollectedAt)
     ) {
-      issues.push({ path: `${path}[${i}]`, message: 'building sai shape' })
+      issues.push({ path: entryPath, message: 'building sai shape' })
+      continue
+    }
+
+    // F-TC5-1: the accrual realm pin is only ever written from
+    // player.realmId at build/claim time, so a pin above the player's
+    // own realm (or an unknown realm) is a forged accrual window -
+    // same provable-forgery class as the modifier claims.
+    if (entry.accrualRealmId !== undefined) {
+      const pinIndex =
+        typeof entry.accrualRealmId === 'string' ? getRealmIndex(entry.accrualRealmId) : -1
+
+      if (pinIndex < 0 || (playerRealmIndex !== undefined && pinIndex > playerRealmIndex)) {
+        issues.push({
+          path: `${entryPath}.accrualRealmId`,
+          message: `accrual realm pin vượt quá realm người chơi (${String(entry.accrualRealmId)})`,
+        })
+      }
     }
   }
 }
@@ -1545,6 +1680,7 @@ function validateProductionCycleSave(
   value: unknown,
   path: string,
   issues: ShapeIssue[],
+  playerRealmIndex?: number,
 ): void {
   if (
     !isObject(value) ||
@@ -1558,6 +1694,20 @@ function validateProductionCycleSave(
     !isFiniteNumber(value.completesAtMs)
   ) {
     issues.push({ path, message: 'production cycle sai shape' })
+    return
+  }
+
+  // F-TC5-1 (sibling): the collection realm snapshot is only ever
+  // written from the player's realm at cycle start - a pin above the
+  // player's realm (or an unknown realm) is a forged window feeding
+  // settle-tier math.
+  const cycleRealmIndex = getRealmIndex(value.collectionRealmId)
+
+  if (cycleRealmIndex < 0 || (playerRealmIndex !== undefined && cycleRealmIndex > playerRealmIndex)) {
+    issues.push({
+      path: `${path}.collectionRealmId`,
+      message: `collection realm pin vượt quá realm người chơi (${value.collectionRealmId})`,
+    })
   }
 }
 
@@ -1565,6 +1715,7 @@ function validateProductionSitesSave(
   entries: unknown[],
   path: string,
   issues: ShapeIssue[],
+  playerRealmIndex?: number,
 ): void {
   for (let i = 0; i < entries.length; i += 1) {
     const entry = entries[i]
@@ -1614,6 +1765,7 @@ function validateProductionSitesSave(
             entry.workerCycles[j],
             `${entryPath}.workerCycles[${j}]`,
             issues,
+            playerRealmIndex,
           )
 
           if (
@@ -1641,6 +1793,7 @@ function validateAlchemyJobsSave(
 ): void {
   for (let i = 0; i < entries.length; i += 1) {
     const entry = entries[i]
+    const entryPath = `${path}[${i}]`
 
     if (
       !isObject(entry) ||
@@ -1652,7 +1805,20 @@ function validateAlchemyJobsSave(
       !isFiniteNumber(entry.completesAtMs) ||
       !isFiniteNumber(entry.roomLevelAtStart)
     ) {
-      issues.push({ path: `${path}[${i}]`, message: 'alchemy job sai shape' })
+      issues.push({ path: entryPath, message: 'alchemy job sai shape' })
+      continue
+    }
+
+    // F-A7-3: pillId is denormalized from the authored recipe at
+    // startJob - a persisted pillId that disagrees with the recipe is a
+    // fabricated claim (forged dormant pill delivery).
+    const recipe = alchemyRecipes.find((candidate) => candidate.id === entry.recipeId)
+
+    if (recipe !== undefined && recipe.pillId !== entry.pillId) {
+      issues.push({
+        path: `${entryPath}.pillId`,
+        message: `pillId không khớp recipe (${entry.pillId} != ${recipe.pillId})`,
+      })
     }
   }
 }
@@ -1955,8 +2121,18 @@ export function validateGameSaveShape(parsed: unknown): ShapeValidationResult {
   const productionSites = optionalArray(parsed, 'productionSites', '', issues)
   const alchemyJobs = optionalArray(parsed, 'alchemyJobs', '', issues)
 
+  const playerRealmIndex =
+    isObject(parsed.player) && typeof parsed.player.realmId === 'string'
+      ? getRealmIndex(parsed.player.realmId)
+      : undefined
+
   if (productionSites) {
-    validateProductionSitesSave(productionSites, 'productionSites', issues)
+    validateProductionSitesSave(
+      productionSites,
+      'productionSites',
+      issues,
+      playerRealmIndex !== undefined && playerRealmIndex >= 0 ? playerRealmIndex : undefined,
+    )
   }
 
   if (alchemyJobs) {
@@ -2113,7 +2289,12 @@ export function validateGameSaveShape(parsed: unknown): ShapeValidationResult {
   }
 
   if (buildings) {
-    validateBuildingsSave(buildings, 'buildings', issues)
+    validateBuildingsSave(
+      buildings,
+      'buildings',
+      issues,
+      playerRealmIndex !== undefined && playerRealmIndex >= 0 ? playerRealmIndex : undefined,
+    )
   }
 
   if (materials) {
