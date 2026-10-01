@@ -15,10 +15,11 @@
 // so a slot/building/panel added later without a scope decision can
 // never leak into the beta build. Nothing here writes state or
 // consumes RNG; every function is a pure query (Q9).
-import { isBetaFeature, isBetaWay, type BetaFeatureName } from './betaScope'
+import { isBetaFeature, isBetaWay, scopeHiddenPillFamilyOfId, type BetaFeatureName } from './betaScope'
 import {
   isBeyondReleaseCeiling,
   isRealmAvailable,
+  isRealmTransitionEnabled,
 } from './realm/ReleasePolicy'
 import { getNextRealm } from './realm/realmSystem'
 import { getRealmHiddenState } from './realm/hidden/HiddenLineage'
@@ -292,13 +293,39 @@ export type BetaUnsupportedReason =
   | 'formation_loadout'
   /** Dormant workforce state exists (chi_hien_quan capacity). */
   | 'manual_workforce_state'
+  /** Body-path progression records exist on the save. */
+  | 'body_progression_state'
+  /** A dormant tribulation committed outcome awaits settlement. */
+  | 'pending_tribulation_state'
+  /** An in-flight alchemy job belongs to a dormant recipe family. */
+  | 'dormant_alchemy_job'
+
+/**
+ * Save-level slices the reason read-model inspects in addition to
+ * PlayerData. Passed from the loaded payload by the boot path - the
+ * tribulation committed-outcome slot and the alchemy job list live
+ * outside PlayerData but are just as much carried dormant records.
+ * Read defensively: shape validation may be bypassed on a hostile save.
+ */
+export interface BetaUnsupportedSaveSlices {
+  tribulation?: {
+    committedOutcome?: {
+      targetRealmId?: unknown
+      breakthroughType?: unknown
+    } | Record<string, unknown> | null
+  } | null
+  alchemyJobs?: unknown
+}
 
 /**
  * The first unsupported reason for `player`, or null when the save is
  * fully inside beta scope. Read-only - it inspects persisted fields and
  * never mutates them (spec sec.20: deserialize safely, flag explicitly).
  */
-export function unsupportedReleaseReason(player: PlayerData): BetaUnsupportedReason | null {
+export function unsupportedReleaseReason(
+  player: PlayerData,
+  saveSlices?: BetaUnsupportedSaveSlices,
+): BetaUnsupportedReason | null {
   if (!isRealmAvailable(player.realmId)) {
     return 'realm_beyond_release'
   }
@@ -339,7 +366,101 @@ export function unsupportedReleaseReason(player: PlayerData): BetaUnsupportedRea
     return 'manual_workforce_state'
   }
 
+  if (hasBodyProgressionState(player)) {
+    return 'body_progression_state'
+  }
+
+  // A committed tribulation outcome is a carried dormant record when its
+  // transition or lineage type is out of scope - the settle seam parks
+  // it (never applies), and the carry is reported here. An admissible
+  // pending outcome (e.g. the live Truc Co tribulation) is not a reason.
+  const committed = saveSlices?.tribulation?.committedOutcome
+  if (committed !== undefined && committed !== null && typeof committed === 'object') {
+    const hiddenDormant =
+      committed.breakthroughType !== 'normal' && !isBetaFeature('hiddenContent')
+    if (
+      hiddenDormant ||
+      typeof committed.targetRealmId !== 'string' ||
+      !isRealmTransitionEnabled(player.realmId, committed.targetRealmId)
+    ) {
+      return 'pending_tribulation_state'
+    }
+  }
+
+  // A carried job of an authored dormant recipe parks at the settle
+  // seam (inert, never delivers) - flag it as out-of-scope state. An
+  // unknown/corrupt recipeId fails honestly instead, so it is not a
+  // dormant-record reason.
+  const jobs = saveSlices?.alchemyJobs
+  if (
+    Array.isArray(jobs) &&
+    jobs.some((job) => {
+      const recipeId = (job as { recipeId?: unknown } | null)?.recipeId
+      return typeof recipeId === 'string' && scopeHiddenPillFamilyOfId(recipeId) !== null
+    })
+  ) {
+    return 'dormant_alchemy_job'
+  }
+
   return null
+}
+
+/**
+ * Body-path presence: any chapter slice above its zero-state or a
+ * physique grade past 'pham'. Defensive shape reads - a missing or
+ * hostile-typed slice fails closed as "no record" rather than throwing.
+ */
+function hasBodyProgressionState(player: PlayerData): boolean {
+  // A PRESENT non-default grade is a body-progression record; an absent
+  // field (hostile/legacy minimal save) is not a record at all.
+  if (typeof player.physiqueGrade === 'string' && player.physiqueGrade !== 'pham') {
+    return true
+  }
+
+  const body = player.bodyProgression as {
+    body_refinement?: { completedTiers?: unknown; currentTierProgress?: unknown } | null
+    meridian?: { openedIds?: unknown } | null
+    zhou_tian?: { completed?: unknown } | null
+  } | null
+
+  if (body === undefined || body === null || typeof body !== 'object') {
+    return false
+  }
+
+  const refinement = body.body_refinement
+  if (
+    refinement !== undefined &&
+    refinement !== null &&
+    (positiveNumber(refinement.completedTiers) ||
+      positiveNumber(refinement.currentTierProgress))
+  ) {
+    return true
+  }
+
+  const meridian = body.meridian
+  if (
+    meridian !== undefined &&
+    meridian !== null &&
+    Array.isArray(meridian.openedIds) &&
+    meridian.openedIds.length > 0
+  ) {
+    return true
+  }
+
+  const zhouTian = body.zhou_tian
+  if (
+    zhouTian !== undefined &&
+    zhouTian !== null &&
+    positiveNumber(zhouTian.completed)
+  ) {
+    return true
+  }
+
+  return false
+}
+
+function positiveNumber(value: unknown): boolean {
+  return typeof value === 'number' && Number.isFinite(value) && value > 0
 }
 
 /** true when the save carries no out-of-scope state. */

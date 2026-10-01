@@ -15,7 +15,7 @@ import type { HerbAge } from '../production/ProductionTypes'
 import { HERB_AGE_BASE_SUCCESS_PERCENT } from '../production/ProductionBalance'
 import { buildProfessionMaterialId } from '../profession/ProfessionMaterial'
 import { mulberry32 } from '../production/ProductionBalance'
-import { betaRecipeFamilyOfId } from '../betaScope'
+import { betaRecipeFamilyOfId, scopeHiddenPillFamilyOfId } from '../betaScope'
 
 /** Biến thể nguyên liệu của thảo — stack cụ thể trong Bag. */
 export interface AlchemyHerbVariant {
@@ -357,6 +357,22 @@ export class AlchemySystem {
       }
 
       const recipe = this.recipeLookup?.(job.recipeId)
+
+      // BETA SCOPE LOCK - a carried dormant-family job stays inert at
+      // the delivery seam: startJob gates origination but restore and
+      // settle used to trust persisted intent. The record parks (data
+      // intact) - no pill lands and no event/toast fires. Only AUTHORED
+      // dormant recipes park: an unknown/corrupt recipeId falls through
+      // to the recipe-miss failure arm instead of parking forever, and
+      // a retired recipe keeps its own contract (in-flight jobs settle).
+      if (
+        recipe?.retired !== true &&
+        scopeHiddenPillFamilyOfId(job.recipeId) !== null
+      ) {
+        remaining.push(job)
+
+        continue
+      }
 
       const pill = resolvePill(job.pillId)
 

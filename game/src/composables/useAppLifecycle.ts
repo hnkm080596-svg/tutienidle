@@ -466,6 +466,10 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
         // state, once per load.
         const unsupportedReason = unsupportedReleaseReason(
           player.$state as PlayerData,
+          {
+            tribulation: loaded.save.tribulation,
+            alchemyJobs: loaded.save.alchemyJobs,
+          },
         )
         if (unsupportedReason !== null) {
           unsupportedSaveNotice?.(unsupportedReason)

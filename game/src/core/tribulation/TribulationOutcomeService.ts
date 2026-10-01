@@ -52,6 +52,8 @@ import {
   TRIBULATION_DEFEAT_SPIRIT_STONE_LOSS_BY_REALM,
   TRIBULATION_DEFEAT_SPIRIT_STONE_LOSS_FALLBACK,
 } from '../../data/tribulation/TribulationChapters'
+import { isRealmTransitionEnabled } from '../realm/ReleasePolicy'
+import { isBetaFeature } from '../betaScope'
 
 /** Victory outcome facts for presentation. */
 export interface TribulationVictoryResult {
@@ -157,6 +159,23 @@ export class TribulationOutcomeService {
     }
 
     if (committed.settlementError) {
+      return null
+    }
+
+    // BETA SCOPE LOCK - a carried committedOutcome re-authorizes a
+    // dormant realm transition: the scope verdict is enforced at
+    // start() but restore/settle used to trust persisted intent
+    // verbatim. The verdict is re-derived here so a dormant or forged
+    // record stays pending (inert data) instead of settling realm
+    // entries, passives, penalties, or hidden-lineage writes. A hidden
+    // type parks while hiddenContent is scope-hidden; it settles
+    // normally whenever the feature is admitted.
+    const hiddenDormant =
+      committed.breakthroughType !== 'normal' && !isBetaFeature('hiddenContent')
+    if (
+      hiddenDormant ||
+      !isRealmTransitionEnabled(player.realmId, committed.targetRealmId)
+    ) {
       return null
     }
 

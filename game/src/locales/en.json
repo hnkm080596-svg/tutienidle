@@ -1465,7 +1465,10 @@
       "companion_owned": "This save has a companion — that feature is not open in beta and stays dormant safely.",
       "artifact_owned": "This save has an artifact — that feature is not open in beta and stays dormant safely.",
       "formation_loadout": "This save carries a formation loadout — that feature is not open in beta and stays dormant safely.",
-      "manual_workforce_state": "This save carries Chi Hien Quan workforce state — that feature is not open in beta and stays dormant safely."
+      "manual_workforce_state": "This save carries Chi Hien Quan workforce state — that feature is not open in beta and stays dormant safely.",
+      "body_progression_state": "This save carries body-path progression — the body way is not open in beta and stays dormant safely.",
+      "pending_tribulation_state": "This save carries a pending tribulation outcome outside beta scope — it stays dormant safely.",
+      "dormant_alchemy_job": "This save carries an alchemy job from a recipe family not open in beta — it stays dormant safely."
     }
   },
   "hidden": {

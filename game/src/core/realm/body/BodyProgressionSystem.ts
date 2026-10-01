@@ -28,7 +28,16 @@ import {
 // (keeps chapter state the sole authority over its old slice).
 function applyChapterEffect(player: PlayerData, chapter: BodyChapterDefinition): void {
   if (chapter.kind === 'modifier') {
-    chapter.applyModifiers(player)
+    // BETA SCOPE LOCK - a modifier chapter's owned slice must never
+    // emit from carried dormant records, but the slice is still
+    // stripped so a forged 'bat-mach:*'-style entry cannot linger.
+    if (isBetaFeature('bodyPath')) {
+      chapter.applyModifiers(player)
+    } else {
+      player.modifiers = player.modifiers.filter(
+        (modifier) => !modifier.id.startsWith(chapter.modifierPrefix),
+      )
+    }
   } else if (chapter.kind === 'baseStat') {
     chapter.scrubLegacyModifiers(player)
   } else {

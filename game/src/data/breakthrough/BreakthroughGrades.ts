@@ -1,6 +1,7 @@
 import type { PlayerData } from '../../core/player/Player'
 import type { FoundationType } from '../../core/breakthrough/FoundationType'
 import { BODY_REFINEMENT_TIERS } from '../realm/BodyRefinement'
+import { isBetaFeature } from '../../core/betaScope'
 import {
   getBodyRefinementCompletedTiers,
   getOpenedMeridianCount,
@@ -40,7 +41,12 @@ export function resolveKienCoGrade(
   player: PlayerData,
   hasTrucCoDan: boolean,
 ): ResolvableKienCoGrade {
-  const earthReady = hasTrucCoDan && getBodyRefinementCompletedTiers(player) >= EARTH_BODY_TIERS
+  // BETA SCOPE LOCK - body-path investment is dormant: a carried
+  // bodyProgression record can never upgrade the Truc Co grade while
+  // the feature is scope-hidden ('human' is the beta ceiling).
+  const bodyLive = isBetaFeature('bodyPath')
+  const earthReady =
+    hasTrucCoDan && bodyLive && getBodyRefinementCompletedTiers(player) >= EARTH_BODY_TIERS
   const heavenReady =
     earthReady &&
     getBodyRefinementCompletedTiers(player) >= HEAVEN_BODY_TIERS &&
