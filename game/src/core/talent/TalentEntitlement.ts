@@ -3,6 +3,7 @@ import type { TalentDefinition, TalentEffect } from './Talent'
 import { getTalentDefinition } from '@/data/talent/Talents'
 import { BREAKTHROUGH_TALENT_POOLS } from '@/data/talent/BreakthroughTalentPools'
 import { isBreakthroughAcquisitionEnabled } from '../realm/ReleasePolicy'
+import { isBetaTalentId } from '../betaScope'
 
 // M-F-TALENT (ruling S15-18, Truc Co mission graph) - the mandatory
 // breakthrough talent transaction. ONE committed victory originates ONE
@@ -88,6 +89,12 @@ export function getUpgradeableTalentIds(
   player: Pick<PlayerData, 'selectedTalentIds' | 'talentLevels'>,
 ): string[] {
   return [...new Set(player.selectedTalentIds)].filter((talentId) => {
+    // BETA SCOPE LOCK - an owned dormant talent is inert (collectTalentEffects
+    // drops it), so the UPGRADE branch may only offer beta-admitted ids;
+    // offering one would burn the ONE entitlement result on an inert card.
+    if (!isBetaTalentId(talentId)) {
+      return false
+    }
     const talent = getTalentDefinition(talentId)
     return talent !== undefined && getTalentLevel(player, talentId) < getTalentMaxLevel(talent)
   })
@@ -268,6 +275,13 @@ export function resolveTalentEntitlement(
     player.talentLevels[decision.talentId] = 1
   } else {
     if (!player.selectedTalentIds.includes(decision.talentId)) {
+      return false
+    }
+
+    // BETA SCOPE LOCK - same admission rule as the offer surface: a
+    // forged or stale upgrade decision on a dormant id is rejected, so
+    // it can never consume the record's ONE result.
+    if (!isBetaTalentId(decision.talentId)) {
       return false
     }
 
