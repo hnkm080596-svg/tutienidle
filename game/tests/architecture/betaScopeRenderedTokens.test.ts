@@ -175,22 +175,11 @@ const BENIGN: ReadonlyArray<{ file: string; tokens: readonly string[]; reason: s
 // ---------------------------------------------------------------------------
 // Confirmed leaks (spec sec.9 violations found by this audit). The suite
 // passes while the registry is exact; fixing a leak makes its entry stale
-// and fails the suite until the entry is removed.
+// and fails the suite until the entry is removed. Currently empty - the
+// TurnCombatSkillBar ultimate slot and the SkillRoleStrip ultimate card
+// were fixed by consuming betaCombatRolesFor directly.
 
-const KNOWN_LEAKS: ReadonlyArray<{ file: string; tokens: readonly string[]; evidence: string }> = [
-  {
-    file: 'components/game/combat/hud/TurnCombatSkillBar.vue',
-    tokens: ['ultimate'],
-    evidence:
-      'ROLE_ORDER includes "ultimate" and visibleSlots never consults betaCombatRolesFor - every beta battle renders a disabled ultimate slot labeled Tuyệt Kỹ (aria-label "Dùng Tuyệt Kỹ"). Contract sec.C: "Never render an ultimate slot as locked; it is absent."',
-  },
-  {
-    file: 'components/panels/skill-path/SkillRoleStrip.vue',
-    tokens: ['ultimate'],
-    evidence:
-      'ROLE_KEYS renders all three role cards from getResolvedSkillRoles instead of betaCombatRolesFor - the ultimate card renders "Tuyệt Kỹ" with a "-" empty marker inside SkillPathPanel. Contract sec.D: the strip renders only from the beta tree read-model.',
-  },
-]
+const KNOWN_LEAKS: ReadonlyArray<{ file: string; tokens: readonly string[]; evidence: string }> = []
 
 // Every scope-hidden BETA_FEATURES key must have a corpus token watching
 // its surfaces. When a feature flips true its surface becomes legal and
@@ -345,10 +334,7 @@ describe('beta scope rendered-token corpus guard', () => {
     }
   })
 
-  it('the leak registry is exact: two confirmed rendered-token leaks', () => {
-    expect(KNOWN_LEAKS.map((l) => l.file).sort()).toEqual([
-      'components/game/combat/hud/TurnCombatSkillBar.vue',
-      'components/panels/skill-path/SkillRoleStrip.vue',
-    ])
+  it('the leak registry is exact: no confirmed rendered-token leaks', () => {
+    expect(KNOWN_LEAKS.map((l) => l.file).sort()).toEqual([])
   })
 })

@@ -95,11 +95,29 @@ const showTree = computed(
 )
 
 // ---- Nhánh spell (Hành -> Node Tree) ----
-// Phap Tu Reimagine: element tabs always visible for spell -- the
+// Phap Tu Reimagine: element tabs visible for spell -- the
 // element-root pick happens IN the tree (element-only commit), so the
 // tree must render before any elemental skill is learned. Default tab
 // = the committed element once the element axis resolves one.
 const committedElement = computed(() => skillTree.value.element ?? undefined)
+
+// BETA FE-CONTRACT sec.4: the tab row renders only the elements the
+// tree model still renders - a branch whose nodes are all
+// 'scope-hidden' (a non-selected element after commit, via
+// 'other-element-branch') gets no tab at all. Locked-but-visible
+// nodes keep their element's tab; the casting gate still owns whether
+// the row appears.
+const visibleElementTabs = computed<ElementType[]>(() => {
+  const renderable = new Set<ElementType>()
+
+  for (const node of skillTree.value.nodes) {
+    if (node.elementTag !== undefined && node.state !== 'scope-hidden') {
+      renderable.add(node.elementTag)
+    }
+  }
+
+  return ELEMENT_ORDER.filter((element) => renderable.has(element))
+})
 
 const selectedBranch = ref<ElementType>(committedElement.value ?? 'fire')
 
@@ -316,16 +334,17 @@ function close() {
           </div>
 
           <div class="skill-path-panel__col skill-path-panel__col--center">
-            <!-- Phap Tu element tabs (Task 16) — browse all 5 branches;
-                 the committed element is marked, others render locked. -->
+            <!-- Phap Tu element tabs (Task 16) - the tab row shows the
+                 branches the model renders; scope-hidden branches (the
+                 non-committed elements) are absent, not locked. -->
             <div
-              v-if="hasElementalCasting"
+              v-if="hasElementalCasting && visibleElementTabs.length > 0"
               class="skill-path-panel__element-tabs"
               role="group"
               :aria-label="t('panels.skillPath.elementTabs.aria')"
             >
               <button
-                v-for="element in ELEMENT_ORDER"
+                v-for="element in visibleElementTabs"
                 :key="element"
                 type="button"
                 class="skill-path-panel__element-tab"

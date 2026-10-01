@@ -12,7 +12,7 @@ import { GAME_MANAGER_KEY, STATE_VERSION_KEY, BUMP_STATE_KEY } from '@/composabl
 import { vTooltip } from '@/directives/tooltip'
 import { i18n } from '@/i18n'
 import type { GameManager } from '@/core/game/GameManager'
-import { betaSkillTreeFor } from '@/core/betaScopeSkillDomain'
+import { betaCombatRolesFor, betaSkillTreeFor } from '@/core/betaScopeSkillDomain'
 import { betaTechniqueSurfaceFor } from '@/core/betaScopeTechniqueDomain'
 import type { PlayerData } from '@/core/player/Player'
 import type { ProgressionNode } from '@/core/progression/ProgressionNode'
@@ -56,9 +56,14 @@ function mockGameManager(overrides: {
         }),
     } as unknown as GameManager['realmAdvanceOps'],
     progressionOps: {
-      // Canonical-model seam - delegate to the real domain function.
+      // Canonical-model seam - delegate to the real domain functions.
       betaSkillTreeFor: (player: PlayerData, tree?: readonly ProgressionNode[]) =>
         betaSkillTreeFor(player, tree),
+      betaCombatRolesFor: (player: PlayerData) =>
+        betaCombatRolesFor(player, {
+          hasSkill: (skillId: string) =>
+            (overrides.skills ?? []).some((skill) => skill.id === skillId),
+        }),
       getResolvedSkillRoles: () => ({ basic: { kind: 'dynamic', label: '—' } }),
       getSkillLevel: (skillId: string) => overrides.levels?.[skillId] ?? 1,
       getSkillCoreUpgradeCost: (skillId: string) => overrides.costs?.[skillId],
