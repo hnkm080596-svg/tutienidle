@@ -29,6 +29,8 @@ import { validateBodyProgressionPersistedState } from '../../core/realm/body/Bod
 import { validateHiddenPerfectionPersistedState } from '../../core/realm/hidden/HiddenPerfection'
 import { SKILL_CORE_NODES } from '../../data/progression/SkillCoreNodes'
 import { SKILLS } from '../../data/skill/Skills'
+import { STAGES } from '../../data/stage/Stages'
+import { BREAKTHROUGH_TALENT_POOLS } from '../../data/talent/BreakthroughTalentPools'
 import { PHAP_TU_NODES } from '../../data/progression/PhapTuNodes'
 import { PHAP_TU_AN_NODES } from '../../data/progression/PhapTuAnNodes'
 import { KIEM_TU_NODES } from '../../data/progression/KiemTuNodes'
@@ -63,6 +65,24 @@ import { isPhysiqueGradeId } from '../../data/realm/PhysiqueLadder'
 const SKILL_CORE_BY_ID = new Map(SKILL_CORE_NODES.map((node) => [node.id, node]))
 
 const LEVELLED_SKILL_IDS = new Set(SKILLS.filter((skill) => skill.maxLevel > 1).map((skill) => skill.id))
+
+const SKILL_TEMPLATE_BY_ID = new Map(SKILLS.map((skill) => [skill.id, skill]))
+
+const STAGE_BY_ID = new Map(STAGES.map((stage) => [stage.id, stage]))
+
+// F-A10: realm-earnability lookups - a persisted claim naming a
+// realm-gated writer (breakthrough talent pool, realm-ladder passive,
+// realm-gated stage) is only coherent while the player's own realm is
+// at least the writer's realm. Realm order is monotonic, so a learned
+// record can never outrank the holder's realm.
+const TALENT_POOL_REALM_BY_ID = new Map<string, string>()
+for (const [realmId, pool] of Object.entries(BREAKTHROUGH_TALENT_POOLS)) {
+  for (const talent of pool) {
+    if (!TALENT_POOL_REALM_BY_ID.has(talent.id)) {
+      TALENT_POOL_REALM_BY_ID.set(talent.id, realmId)
+    }
+  }
+}
 
 const PROGRESSION_NODE_BY_ID = new Map(
   [
@@ -331,6 +351,29 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
 
   if (selectedTalentIds) {
     validateStringEntries(selectedTalentIds, 'player.selectedTalentIds', issues)
+
+    // F-A10-1: breakthrough-pool talents are minted by a victory INTO
+    // that pool's realm - holding one on a lower realm is a fabricated
+    // claim. Creation/reward talents carry no pool key and stay
+    // tolerated at any realm.
+    const talentRealmIndex =
+      typeof player.realmId === 'string' ? getRealmIndex(player.realmId) : -1
+
+    for (let i = 0; i < selectedTalentIds.length; i += 1) {
+      const talentId = selectedTalentIds[i]
+
+      if (typeof talentId !== 'string' || talentRealmIndex < 0) {
+        continue
+      }
+
+      const poolRealmId = TALENT_POOL_REALM_BY_ID.get(talentId)
+      if (poolRealmId !== undefined && getRealmIndex(poolRealmId) > talentRealmIndex) {
+        issues.push({
+          path: `player.selectedTalentIds[${i}]`,
+          message: `talent '${talentId}' thuộc pool '${poolRealmId}' - realm chưa đạt nên grant bất khả thi`,
+        })
+      }
+    }
   }
 
   // M-F-TALENT (v76) - talentLevels is required (sparse level map; empty
@@ -560,6 +603,43 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
 
   if (perfectClearStageIds) {
     validateStringEntries(perfectClearStageIds, 'player.perfectClearStageIds', issues)
+  }
+
+  // F-A10-6/-8: stage-clear claims are realm-earnability claims too - a
+  // stage's requiredRealmId gates entry, so a clear/autofarm record on
+  // a stage above the player's realm is a fabricated claim. Stage
+  // requiredRealmId resolves through the same monotonic realm order.
+  const stageClaimRealmIndex =
+    typeof player.realmId === 'string' ? getRealmIndex(player.realmId) : -1
+
+  if (stageClaimRealmIndex >= 0) {
+    for (const [field, entries] of [
+      ['completedStageIds', completedStageIds],
+      ['perfectClearStageIds', perfectClearStageIds],
+    ] as const) {
+      if (!entries) {
+        continue
+      }
+
+      for (let i = 0; i < entries.length; i += 1) {
+        const stageId = entries[i]
+
+        if (typeof stageId !== 'string') {
+          continue
+        }
+
+        const stage = STAGE_BY_ID.get(stageId)
+        if (
+          stage?.requiredRealmId !== undefined &&
+          getRealmIndex(stage.requiredRealmId) > stageClaimRealmIndex
+        ) {
+          issues.push({
+            path: `player.${field}[${i}]`,
+            message: `stage '${stageId}' yêu cầu realm '${stage.requiredRealmId}' - realm chưa đạt nên clear bất khả thi`,
+          })
+        }
+      }
+    }
   }
 
   const grantedRealmPassiveIds = requireArray(player, 'grantedRealmPassiveIds', 'player', issues)
@@ -1397,6 +1477,24 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
     } else {
       requireNonEmptyString(player.autoFarmStage, 'stageId', 'player.autoFarmStage', issues)
       requireNonNegativeNumber(player.autoFarmStage, 'lastCheckedMs', 'player.autoFarmStage', issues)
+
+      // F-A10-6: autofarm mints rewards on the claimed stage - the same
+      // realm-earnability bound as the clear claims applies.
+      const autoFarmStageId = player.autoFarmStage.stageId
+      const autoFarmRealmIndex =
+        typeof player.realmId === 'string' ? getRealmIndex(player.realmId) : -1
+      const autoFarmStage =
+        typeof autoFarmStageId === 'string' ? STAGE_BY_ID.get(autoFarmStageId) : undefined
+      if (
+        autoFarmRealmIndex >= 0 &&
+        autoFarmStage?.requiredRealmId !== undefined &&
+        getRealmIndex(autoFarmStage.requiredRealmId) > autoFarmRealmIndex
+      ) {
+        issues.push({
+          path: 'player.autoFarmStage.stageId',
+          message: `stage '${autoFarmStageId}' yêu cầu realm '${autoFarmStage.requiredRealmId}' - realm chưa đạt nên autofarm bất khả thi`,
+        })
+      }
     }
   }
 
@@ -1756,6 +1854,34 @@ function validateSkillCoreCoverage(
       )
       .map((entry) => entry.id as string),
   )
+
+  // F-A10-2: skill membership is a realm-earnability claim - templates
+  // carrying requiredRealmId (the realm-ladder passives) are granted by
+  // a realm advance into that realm, so membership on a lower realm is
+  // a fabricated claim even though restore rebuilds the template.
+  const memberRealmIndex =
+    typeof player.realmId === 'string' ? getRealmIndex(player.realmId) : -1
+
+  if (memberRealmIndex >= 0) {
+    for (let i = 0; i < skills.length; i += 1) {
+      const entry = skills[i]
+
+      if (!isObject(entry) || typeof entry.id !== 'string') {
+        continue
+      }
+
+      const template = SKILL_TEMPLATE_BY_ID.get(entry.id)
+      if (
+        template?.requiredRealmId !== undefined &&
+        getRealmIndex(template.requiredRealmId) > memberRealmIndex
+      ) {
+        issues.push({
+          path: `skills[${i}].id`,
+          message: `skill '${entry.id}' yêu cầu realm '${template.requiredRealmId}' - realm chưa đạt nên membership bất khả thi`,
+        })
+      }
+    }
+  }
 
   const wayGrantedIds = new Set(way?.coreSkillIds ?? [])
   const nodeGrantedIds = new Set<string>()

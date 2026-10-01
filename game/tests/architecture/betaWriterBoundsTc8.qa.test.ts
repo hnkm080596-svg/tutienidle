@@ -476,3 +476,125 @@ describe('F-B10-1: unsupportedReleaseReason covers dormant records', () => {
     expect(unsupportedReleaseReason(p)).toBeNull()
   })
 })
+
+describe('F-A10-1: breakthrough-pool talents need the pool realm', () => {
+  it('a mortal holding an lk_* pool talent is rejected', () => {
+    const save = validSave()
+    const p = save.player as ReturnType<typeof createDefaultPlayer>
+    p.selectedTalentIds = ['lk_linh_mach']
+
+    expect(validateGameSaveShape(save).ok).toBe(false)
+  })
+
+  it('a qi_refining save holding a tc_* pool talent is rejected', () => {
+    const save = validSave()
+    const p = save.player as ReturnType<typeof createDefaultPlayer>
+    p.realmId = 'qi_refining'
+    p.realmLevel = 1
+    p.selectedTalentIds = ['tc_truc_hon']
+
+    expect(validateGameSaveShape(save).ok).toBe(false)
+  })
+
+  it('a qi_refining save holding an lk_* pool talent still validates', () => {
+    const save = validSave()
+    const p = save.player as ReturnType<typeof createDefaultPlayer>
+    p.realmId = 'qi_refining'
+    p.realmLevel = 1
+    p.selectedTalentIds = ['lk_linh_mach']
+
+    expect(validateGameSaveShape(save).ok).toBe(true)
+  })
+
+  it('a non-pool talent at mortal still validates', () => {
+    const save = validSave()
+    const p = save.player as ReturnType<typeof createDefaultPlayer>
+    // loi_kiep is a reward/creation talent, not a breakthrough-pool
+    // entry - the pool bound does not apply to it.
+    p.selectedTalentIds = ['loi_kiep']
+
+    expect(validateGameSaveShape(save).ok).toBe(true)
+  })
+})
+
+describe('F-A10-2: skill membership respects template requiredRealmId', () => {
+  it('a mortal claiming a golden_core realm-ladder passive is rejected', () => {
+    const save = validSave()
+    const forged = SKILLS.find((skill) => skill.id === 'passive_kim_dan_chi_quang')
+    expect(forged?.requiredRealmId).toBe('golden_core')
+    save.skills = [structuredClone(SKILLS.find((skill) => skill.id === 'linh_bao')!), structuredClone(forged!)]
+
+    expect(validateGameSaveShape(save).ok).toBe(false)
+  })
+
+  it('a qi_refining save claiming a foundation realm-ladder passive is rejected', () => {
+    const save = validSave()
+    const p = save.player as ReturnType<typeof createDefaultPlayer>
+    p.realmId = 'qi_refining'
+    p.realmLevel = 1
+    save.skills = [
+      structuredClone(SKILLS.find((skill) => skill.id === 'linh_bao')!),
+      structuredClone(SKILLS.find((skill) => skill.id === 'passive_truc_co_y_chi')!),
+    ]
+
+    expect(validateGameSaveShape(save).ok).toBe(false)
+  })
+
+  it('a qi_refining save claiming the qi_refining realm passive still validates', () => {
+    const save = validSave()
+    const p = save.player as ReturnType<typeof createDefaultPlayer>
+    p.realmId = 'qi_refining'
+    p.realmLevel = 1
+    save.skills = [
+      structuredClone(SKILLS.find((skill) => skill.id === 'linh_bao')!),
+      structuredClone(SKILLS.find((skill) => skill.id === 'passive_linh_khi_cam_ung')!),
+    ]
+
+    expect(validateGameSaveShape(save).ok).toBe(true)
+  })
+})
+
+describe('F-A10-6: stage-clear and autofarm claims respect the stage realm', () => {
+  it('a mortal claiming a qi_refining clear is rejected', () => {
+    const save = validSave()
+    const p = save.player as ReturnType<typeof createDefaultPlayer>
+    p.completedStageIds = ['qi_refining_forest']
+
+    expect(validateGameSaveShape(save).ok).toBe(false)
+  })
+
+  it('a mortal claiming a foundation perfect clear is rejected', () => {
+    const save = validSave()
+    const p = save.player as ReturnType<typeof createDefaultPlayer>
+    p.perfectClearStageIds = ['foundation_floor_1']
+    p.perfectClearSeconds = { foundation_floor_1: 60 }
+
+    expect(validateGameSaveShape(save).ok).toBe(false)
+  })
+
+  it('a mortal autofarm record on a foundation stage is rejected', () => {
+    const save = validSave()
+    const p = save.player as ReturnType<typeof createDefaultPlayer>
+    p.autoFarmStage = { stageId: 'foundation_floor_1', lastCheckedMs: 1 }
+
+    expect(validateGameSaveShape(save).ok).toBe(false)
+  })
+
+  it('a mortal clear on a mortal stage still validates', () => {
+    const save = validSave()
+    const p = save.player as ReturnType<typeof createDefaultPlayer>
+    p.completedStageIds = ['mortal_dong_1']
+
+    expect(validateGameSaveShape(save).ok).toBe(true)
+  })
+
+  it('a foundation save claiming a foundation floor still validates', () => {
+    const save = validSave()
+    const p = save.player as ReturnType<typeof createDefaultPlayer>
+    p.realmId = 'foundation_establishment'
+    p.realmLevel = 1
+    p.completedStageIds = ['foundation_floor_1']
+
+    expect(validateGameSaveShape(save).ok).toBe(true)
+  })
+})

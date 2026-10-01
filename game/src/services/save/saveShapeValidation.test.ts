@@ -1747,6 +1747,10 @@ describe('validateGameSaveShape — player record/array deep checks (Mission A r
 
     const owned = validSave()
 
+    // Breakthrough-pool talents are realm-earnability claims: tc_* is
+    // minted by the foundation pool, lk_* by the qi_refining pool, so a
+    // coherent holder of both sits at foundation_establishment.
+    playerOf(owned).realmId = 'foundation_establishment'
     playerOf(owned).selectedTalentIds = ['tc_dia_can', 'lk_linh_mach']
     playerOf(owned).talentLevels = { tc_dia_can: 2, lk_linh_mach: 3 }
     expect(validateGameSaveShape(owned).ok).toBe(true)
