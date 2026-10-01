@@ -1284,6 +1284,9 @@ describe('v72 bodyProgression preflight + rehydration', () => {
     // M-F-CHU-THIEN (C2C-64): opened meridians also need the completed
     // refinement predecessor (+ the mirrored bao grade) to stay
     // coherent; residue at 6/6 would itself be a violation.
+    // F-TC15 pacing: 2 openings producible in-page at realmLevel 4
+    // (doi_mach's authored requirement).
+    mid.realmLevel = 4
     mid.physiqueGrade = 'bao'
     mid.bodyProgression.body_refinement.completedTiers = 6
     mid.bodyProgression.meridian.openedIds = ['nham_mach', 'doi_mach']
@@ -1301,6 +1304,9 @@ describe('v72 bodyProgression preflight + rehydration', () => {
     // M-E (D2): the meridian progress below is only legit with the
     // qi_refining page unlocked. M-F-CHU-THIEN (C2C-64): it also needs
     // the completed refinement predecessor + mirrored bao grade.
+    // F-TC15 pacing: the single opening is producible at realmLevel
+    // 2 (nham_mach's authored requirement).
+    player.realmLevel = 2
     player.physiqueGrade = 'bao'
     player.bodyProgression.body_refinement.completedTiers = 6
     player.bodyProgression.meridian.openedIds = ['nham_mach']

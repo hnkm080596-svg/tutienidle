@@ -73,9 +73,15 @@ const wayNodeTreeTag = computed(() => getActiveWayDefinition(player)?.nodeTreeTa
 // P7-M7 - way identity line: the committed way's self-describing name
 // (e.g. 'Kiem Tu - Ngu Kiem Tam Kinh'), or Phan Nhan for a way-less
 // mortal. Resolved through the canonical way read, never an id literal.
-const wayIdentity = computed(
-  () => getActiveWayDefinition(player)?.name ?? t('panels.skillPath.mortalName'),
-)
+// The subtitle is a verdict surface: a carried way_out_of_scope pair
+// brands nothing (the tree body already renders empty).
+const wayIdentity = computed(() => {
+  const way = getActiveWay(player)
+  if (way !== undefined && !isBetaWay(way)) {
+    return t('panels.skillPath.mortalName')
+  }
+  return getActiveWayDefinition(player)?.name ?? t('panels.skillPath.mortalName')
+})
 
 const hasElementalCasting = computed(
   () => hasStaticPathCapability(player, 'spell.elemental_casting'),

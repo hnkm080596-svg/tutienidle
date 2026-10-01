@@ -12,6 +12,7 @@ import EmptyState from '../../common/primitives/EmptyState.vue'
 import LoreCodexModal from '../LoreCodexModal.vue'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { usePanelPagination } from '@/composables/usePanelPagination'
+import { isCompanionPullTokenSourceSuppressed } from '@/core/realm/ReleasePolicy'
 
 const gameManager = useGameManager()
 const { stateVersion } = useStateVersion()
@@ -24,6 +25,7 @@ const loreItems = computed(() => {
 
   return gameManager.materialBag.getAll()
     .filter(stack => stack.material.category === 'other')
+    .filter(stack => !isCompanionPullTokenSourceSuppressed(stack.material.id))
     .map(stack => ({
       key: stack.material.id,
       label: stack.material.name,

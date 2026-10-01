@@ -338,7 +338,10 @@ describe('BodyRefinementChapter - persisted state + integrity', () => {
     player.bodyProgression.body_refinement.currentTierProgress = 1
     expect(bodyRefinementChapter.integrityIssues(player).length).toBeGreaterThan(0)
 
-    // valid mid-progress state passes
+    // valid mid-progress state passes - F-TC15 pacing: 2 completed
+    // tiers at mortal require realmLevel 4, and parked progress on
+    // the active tier 2 requires 6.
+    player.realmLevel = 6
     player.bodyProgression.body_refinement.completedTiers = 2
     player.bodyProgression.body_refinement.currentTierProgress = 5
     expect(bodyRefinementChapter.integrityIssues(player)).toHaveLength(0)

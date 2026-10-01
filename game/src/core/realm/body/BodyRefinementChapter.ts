@@ -242,6 +242,39 @@ export const bodyRefinementChapter: BaseStatBodyChapter = {
       issues.push(`body_refinement.currentTierProgress phai = 0 khi da hoan thanh ${TOTAL_TIERS} tang (nhan ${state.currentTierProgress})`)
     }
 
+    // F-TC15-BODYREF-PACING - replay the invest gate's mortal
+    // realmLevel pacing: in Pham Nhan only the leading tiers whose
+    // requiredRealmLevel the player has reached can be invested, and
+    // tiers complete strictly in order. Post-mortal tier gains are
+    // unpaced by design (isTierRequiredRealmLevelMet), so the bound
+    // applies only while realmId stays 'mortal'.
+    if (player.realmId === 'mortal' && Number.isInteger(state.completedTiers)) {
+      let allowedCompleted = 0
+      while (
+        allowedCompleted < TOTAL_TIERS &&
+        player.realmLevel >= (BODY_REFINEMENT_TIERS[allowedCompleted]?.requiredRealmLevel ?? 0)
+      ) {
+        allowedCompleted += 1
+      }
+
+      if (state.completedTiers > allowedCompleted) {
+        issues.push(
+          `body_refinement.completedTiers ${state.completedTiers} vuot suc chua cua realmLevel ${player.realmLevel} o Pham Nhan (toi da ${allowedCompleted})`,
+        )
+      }
+
+      // Parked progress on a realm-locked tier is equally
+      // unproducible: the active tier is completedTiers itself.
+      if (
+        state.currentTierProgress > 0 &&
+        state.completedTiers >= allowedCompleted
+      ) {
+        issues.push(
+          `body_refinement.currentTierProgress ${state.currentTierProgress} dang do tren tang khoa realmLevel ${player.realmLevel}`,
+        )
+      }
+    }
+
     return issues
   },
 }
