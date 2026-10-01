@@ -63,6 +63,7 @@ import {
   TU_LINH_TRAN_DURATION_MS,
   TU_LINH_TRAN_EFFECT_GROUP,
 } from '../../core/economy/TuLinhTranBalance'
+import { TRIBULATION_COOLDOWN_SECONDS } from '../../core/tribulation/TribulationDirector'
 import { GLOBAL_MAX_AFFIXES } from '../../core/equipment/EquipmentRollPrimitives'
 import {
   ITEM_QUALITY_AFFIX_TIER,
@@ -3764,6 +3765,27 @@ export function validateGameSaveShape(parsed: unknown): ShapeValidationResult {
         !isNonNegativeFiniteNumber(tribulation.cooldownUntil)
       ) {
         issues.push({ path: '.tribulation.cooldownUntil', message: 'phải là số hữu hạn không âm' })
+      }
+
+      // F-LC-1: the only writer mints cooldownUntil = now +
+      // TRIBULATION_COOLDOWN_SECONDS (300s) - a deadline beyond
+      // lastSavedAt + the authored span is unproducible and wedges
+      // start() forever (permanent deadlock on the only forward
+      // transition), same class as the alchemy/building span bounds.
+      const saveClock =
+        isObject(parsed.player) && isFiniteNumber(parsed.player.lastSavedAt)
+          ? (parsed.player.lastSavedAt as number)
+          : undefined
+      if (
+        isNonNegativeFiniteNumber(tribulation.cooldownUntil) &&
+        saveClock !== undefined &&
+        (tribulation.cooldownUntil as number) >
+          saveClock + TRIBULATION_COOLDOWN_SECONDS * 1000
+      ) {
+        issues.push({
+          path: '.tribulation.cooldownUntil',
+          message: 'vượt authored cooldown span (deadlock bất khả thi)',
+        })
       }
 
       if (tribulation.committedOutcome !== undefined) {
