@@ -201,6 +201,46 @@ describe('technique training seam: dormant-way techniques must not accrue master
  expect(sword.techniqueProgress).toEqual({ rank: 4, grade: 1 })
  })
 
+ it('applyTechniqueRealmTransition stays inert for a dormant-way active technique', () => {
+ const gameManager = new GameManager()
+ gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
+ const sword = swordSave()
+ sword.realmId = 'qi_refining'
+ sword.realmLevel = 12
+ gameManager.setActivePlayer(sword)
+ const template = TECHNIQUES.find((t) => t.id === 'sword_control_art')!
+ gameManager.techniqueManager.setActive({
+ ...structuredClone(template),
+ rank: 4,
+ mastery: 0,
+ gradeHistory: {},
+ })
+
+ // Realm-exit freeze on a live Truc Co advance must not seal a cycle
+ // onto the dormant technique record - the dormant record stays data.
+ gameManager.realmAdvanceOps.applyTechniqueRealmTransition(sword, 'foundation_establishment')
+
+ expect(gameManager.techniqueManager.getActive()?.gradeHistory).toEqual({})
+ })
+
+ it('control: the beta spell technique still seals on realm advance', () => {
+ const gameManager = new GameManager()
+ gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
+ const spell = player({ realmId: 'qi_refining', realmLevel: 12 })
+ gameManager.setActivePlayer(spell)
+ const template = TECHNIQUES.find((t) => t.id === 'five_elements_art')!
+ gameManager.techniqueManager.setActive({
+ ...structuredClone(template),
+ rank: 4,
+ mastery: 0,
+ gradeHistory: {},
+ })
+
+ gameManager.realmAdvanceOps.applyTechniqueRealmTransition(spell, 'foundation_establishment')
+
+ expect(gameManager.techniqueManager.getActive()?.gradeHistory[1]).toBeDefined()
+ })
+
  it('control: the beta spell technique still trains in-band', () => {
  const gameManager = new GameManager()
  gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)

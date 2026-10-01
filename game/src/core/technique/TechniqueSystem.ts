@@ -140,6 +140,13 @@ export class TechniqueSystem {
       return false
     }
 
+    // BETA SCOPE LOCK - a carried way_out_of_scope save's dormant
+    // technique must stay data: a live realm advance never seals a
+    // cycle onto it.
+    if (!betaTechniqueAdmitted(technique.id)) {
+      return false
+    }
+
     if (technique.gradeHistory[technique.grade] === undefined) {
       technique.gradeHistory[technique.grade] = {
         finalRank: technique.rank,
