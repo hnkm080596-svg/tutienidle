@@ -164,7 +164,7 @@ describe('F-TECH-1: canonical-technique grant bypasses the scope admission gate'
     // The one player state that would make grant() reachable - empty
     // holder on a post-initiation save - is already rejected at the
     // shape layer (before saveAcceptance even runs) on every ingress
-    // seam: 'realm >= qi_refining nhưng techniques trống'.
+    // seam: 'realm >= qi_refining but techniques empty'.
     const save = committedSave('qi_refining', {}, { techniques: [] })
     const shape = validateGameSaveShape(JSON.parse(JSON.stringify(save)))
     expect(shape.ok).toBe(false)
