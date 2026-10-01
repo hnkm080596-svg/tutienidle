@@ -1,0 +1,8 @@
+T28 verify - post A19-1/B19-01/B19-02 fixes
+state: devin/qa-fixpoint tip (A19/B19/TC16 harvest fixes committed)
+run: npm run verify (type-check + build + full vitest)
+result: GREEN - 8322 passed | 12 expected fail | 9 skipped (8343)
+flake note: EarlyGameSession canonical loop defeated once at
+  qi_refining_forest under parallel run (unseeded Math.random economy
+  draws - same class as F-JOURNEY-FLAKE-1, recorded); 2/2 green
+  standalone + green on suite re-run.
