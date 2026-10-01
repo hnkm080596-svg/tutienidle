@@ -528,6 +528,36 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
         })
       }
     }
+
+    // F-BS3: payload -> marker direction - a realm-passive modifier
+    // whose source passive was never granted is a forged carry-in, same
+    // corruption class as the orphan marker above. Non-passive realm
+    // sources (meridian/body chapters) own their own marker space and
+    // stay outside this check.
+    if (Array.isArray(playerModifiers)) {
+      const grantedSourceIds = new Set(
+        grantedRealmPassiveIds
+          .filter((grantedId): grantedId is string => typeof grantedId === 'string')
+          .map((grantedId) => REALM_PASSIVES.find((passive) => passive.id === grantedId)?.sourceId)
+          .filter((sourceId): sourceId is string => typeof sourceId === 'string'),
+      )
+
+      for (let i = 0; i < playerModifiers.length; i += 1) {
+        const modifier = playerModifiers[i]
+
+        if (!isObject(modifier) || modifier.sourceType !== 'realm') {
+          continue
+        }
+
+        const passive = REALM_PASSIVES.find((entry) => entry.sourceId === modifier.sourceId)
+        if (passive !== undefined && !grantedSourceIds.has(modifier.sourceId as string)) {
+          issues.push({
+            path: `player.modifiers[${i}]`,
+            message: `modifier phát từ realm passive chưa được grant (${String(modifier.sourceId)})`,
+          })
+        }
+      }
+    }
   }
 
   // persistentTimedEffects - expiresAtMs is the absolute authority

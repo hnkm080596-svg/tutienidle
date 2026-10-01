@@ -1,6 +1,10 @@
 import { calculateStats, resolveAttributeTotals, type StatModifier } from '../stats/StatCalculator'
 import { collectActiveWayStatModifiers } from './CultivationPathSystem'
 import { collectBodyBaseStatDeltas, statDeltaEntries } from '../realm/body/BodyProgressionSystem'
+import { REALM_PASSIVES } from '../../data/realm/RealmPassives'
+import { MERIDIANS } from '../../data/realm/Meridians'
+import { isBetaFeature } from '../betaScope'
+import { getHiddenBreakthroughRealmIds } from '../realm/hidden/HiddenLineage'
 import { asBaseStats, createBaseStats, type BaseStats, type Stats } from '../stats/StatBlock'
 import type { CombatEntity } from '../combat/CombatEntity'
 import { CENTER_LANE_INDEX } from '../battle/BattleLane'
@@ -516,8 +520,39 @@ export function resolvePlayerStatAssembly(
   player: PlayerData,
   externalModifiers: StatModifier[],
 ): { stats: Stats; wayFacetModifiers: readonly StatModifier[] } {
+  // Persisted realm-sourced modifiers reconcile against the CURRENT
+  // scope verdict: realm-passive entries granted through a hidden
+  // breakthrough stay recorded on flagged saves but emit nothing while
+  // hiddenContent is locked, and the non-passive realm channels (the
+  // body chapters - meridian and siblings) emit only while bodyPath is
+  // admitted. Records are never scrubbed on restore.
+  const hiddenRealmIds = isBetaFeature('hiddenContent')
+    ? undefined
+    : new Set(getHiddenBreakthroughRealmIds(player))
+  const bodyPathAdmitted = isBetaFeature('bodyPath')
+
   const allModifiers = [
-    ...player.modifiers,
+    ...player.modifiers.filter((modifier) => {
+      if (modifier.sourceType !== 'realm') {
+        return true
+      }
+      const passive = REALM_PASSIVES.find((entry) => entry.sourceId === modifier.sourceId)
+      if (passive !== undefined) {
+        // A passive-sourced entry without the grant marker is a forged
+        // payload - grantRealmPassive writes both slices atomically, so
+        // a real save always carries them together.
+        if (!player.grantedRealmPassiveIds.includes(passive.id)) {
+          return false
+        }
+        return hiddenRealmIds === undefined || !hiddenRealmIds.has(passive.id)
+      }
+      if (MERIDIANS.some((meridian) => meridian.id === modifier.sourceId)) {
+        return bodyPathAdmitted
+      }
+      // Other realm-sourced writers (the playable phap tu path, spell
+      // channels) stay live - only the dormant body channel is gated.
+      return true
+    }),
     ...externalModifiers,
   ]
 

@@ -15,6 +15,7 @@ import {
   type PhysiqueAdvancement,
 } from './BodyChapter'
 import { computeRefinementBreakthroughGrade } from './BodyRefinementChapter'
+import { isBetaFeature } from '../../betaScope'
 import {
   getPhysiqueGradeIndex,
   isPhysiqueGradeId,
@@ -194,6 +195,13 @@ export function applyAllBodyModifiers(player: PlayerData): void {
 export function collectBodyBaseStatDeltas(
   player: PlayerData,
 ): Partial<Record<StatType, number>> {
+  // Dormant under beta scope: carried bodyProgression stays data on a
+  // flagged save - its flat base-stat deltas never emit while the body
+  // path is scope-hidden.
+  if (!isBetaFeature('bodyPath')) {
+    return {}
+  }
+
   const deltas: Partial<Record<StatType, number>> = {}
 
   for (const chapter of BODY_CHAPTERS) {
