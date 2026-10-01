@@ -17146,6 +17146,134 @@
       "pinEvidenceIds": [],
       "verificationEvidenceIds": [],
       "discoveredBy": "B14 blind consumer-seam review"
+    },
+    {
+      "id": "F-SCOPE-ENH-STREAK",
+      "title": "equipmentSlots[].enhanceFailStreak unbounded - persisted streak > ENHANCE_PITY_THRESHOLD (10) unproducible but accepted",
+      "severity": "Low",
+      "status": "HUMAN_EXCEPTION",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "rootClass": "BOUNDARY",
+      "subsystem": "betaScope",
+      "reachability": "PRODUCTION",
+      "rootCause": "field checked with requireNonNegativeNumber only; writer only persists 0..10 (attempt at streak>=10 is a guaranteed success resetting to 0; failures +1)",
+      "expected": "enhanceFailStreak <= 10",
+      "actual": "streak 11 validates; next enhance() mints a free guaranteed success",
+      "counterexample": "probe: enhanceFailStreak=11 validates; random()=>1 returns ok:true, enhanceLevel +1",
+      "repair": "deferred per Medium+-only ruling (single-shot mint identical to reachable streak=10; no amplification)",
+      "siblingSearch": [
+        {
+          "roots": [
+            "src"
+          ],
+          "termsAndMethod": "enumerated during blind sweep",
+          "evidenceIds": [],
+          "hitDispositions": [],
+          "coverageLimits": [
+            "blind-round sweep"
+          ]
+        }
+      ],
+      "siblingFindingIds": [],
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "locations": [
+        {
+          "basis": "SOURCE",
+          "path": "src/services/save/saveShapeValidation.ts",
+          "revision": "77aecae0",
+          "symbolOrSection": "persisted-claim bounds"
+        }
+      ],
+      "invariantIds": [
+        "I-SF-1"
+      ],
+      "state": {
+        "productStateId": "cdff040243d8feb0a1596e1d03857f53eebccb06bb7675027e08ab92e7dcc8c4",
+        "contractId": "0686d2e04e66ef600e6508c38360530ca1e9a0077a6fb1e92769f2c814476fc8",
+        "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+        "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+      },
+      "evidenceIds": [
+        "EV-PROBE-A15"
+      ],
+      "exception": {
+        "humanInstructionRef": "user ruling: attacks/scope fixes are Medium+ only; Low/Nit recorded as deferred exceptions",
+        "scope": "deferred minor surface",
+        "reason": "below fix threshold per ruling",
+        "expiresWhen": "next scope contract revision or user reversal of the Medium+-only ruling"
+      },
+      "closeReason": "deferred Low per Medium+-only ruling",
+      "closedAt": "2026-10-01T17:43:00.542Z",
+      "closureReviewIds": [],
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "discoveredBy": "A15 blind authority-seam audit (devin-dc24e763)"
+    },
+    {
+      "id": "F-ALCH-REALM-JOB",
+      "title": "alchemyJobs[] not bound on recipe.realmId vs player.realmId - coherent forged cross-realm job accepted",
+      "severity": "Low",
+      "status": "HUMAN_EXCEPTION",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "rootClass": "BOUNDARY",
+      "subsystem": "betaScope",
+      "reachability": "PRODUCTION",
+      "rootCause": "job coherence bounds recipe/pill/herb/span/room/slot but not recipe.realmId vs player.realmId",
+      "expected": "job realmId bounded to player realm reachability",
+      "actual": "coherent forged job on foundation_establishment recipe accepted on qi_refining save",
+      "counterexample": "probe: cross-realm job validates (minted pill realm-inert at usePill - wrong_realm)",
+      "repair": "deferred per Medium+-only ruling (acceptance-hygiene gap; settle mints authored pill which is realm-inert - no live effect)",
+      "siblingSearch": [
+        {
+          "roots": [
+            "src"
+          ],
+          "termsAndMethod": "enumerated during blind sweep",
+          "evidenceIds": [],
+          "hitDispositions": [],
+          "coverageLimits": [
+            "blind-round sweep"
+          ]
+        }
+      ],
+      "siblingFindingIds": [],
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "locations": [
+        {
+          "basis": "SOURCE",
+          "path": "src/services/save/saveShapeValidation.ts",
+          "revision": "77aecae0",
+          "symbolOrSection": "persisted-claim bounds"
+        }
+      ],
+      "invariantIds": [
+        "I-SF-1"
+      ],
+      "state": {
+        "productStateId": "cdff040243d8feb0a1596e1d03857f53eebccb06bb7675027e08ab92e7dcc8c4",
+        "contractId": "0686d2e04e66ef600e6508c38360530ca1e9a0077a6fb1e92769f2c814476fc8",
+        "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+        "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+      },
+      "evidenceIds": [
+        "EV-PROBE-A15"
+      ],
+      "exception": {
+        "humanInstructionRef": "user ruling: attacks/scope fixes are Medium+ only; Low/Nit recorded as deferred exceptions",
+        "scope": "deferred minor surface",
+        "reason": "below fix threshold per ruling",
+        "expiresWhen": "next scope contract revision or user reversal of the Medium+-only ruling"
+      },
+      "closeReason": "deferred Low per Medium+-only ruling",
+      "closedAt": "2026-10-01T17:43:00.542Z",
+      "closureReviewIds": [],
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "discoveredBy": "A15 blind authority-seam audit (devin-dc24e763)"
     }
   ],
   "evidence": [
@@ -20511,6 +20639,37 @@
         "npm run verify GREEN on 77aecae0: 8168 passed | 5 expected fail | 8 skipped; one pre-existing timing flake in TrucCoJourney passes isolated"
       ],
       "limitations": [],
+      "status": "CURRENT"
+    },
+    {
+      "id": "EV-PROBE-A15",
+      "state": {
+        "productStateId": "cdff040243d8feb0a1596e1d03857f53eebccb06bb7675027e08ab92e7dcc8c4",
+        "contractId": "0686d2e04e66ef600e6508c38360530ca1e9a0077a6fb1e92769f2c814476fc8",
+        "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+        "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+      },
+      "kind": "EXECUTED_PROPERTY",
+      "producer": "blind-child-session",
+      "startedAt": "2026-10-01T17:19:00Z",
+      "finishedAt": "2026-10-01T17:43:00.542Z",
+      "commandOrMethod": "blind child-session scope-authority audit on pinned 77aecae0 (child VM)",
+      "cwd": "game/",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/a15-findings.json",
+      "artifactHash": "7fbdec3c99d9651ed868e8ee68fd071d1f5fc51b76bf59c68df14213508b05d4",
+      "inputPaths": [],
+      "inputEvidenceIds": [],
+      "invariantIds": [
+        "I-SF-1"
+      ],
+      "claims": [
+        "A15 blind authority-seam audit on 77aecae0: 1 Low (enhanceFailStreak > pity threshold unproducible, single-shot mint) + 1 informational (alchemy job realmId hygiene gap, no live effect); all other seams held"
+      ],
+      "limitations": [
+        "child probe preserved as evidence/a15-probe.test.ts"
+      ],
       "status": "CURRENT"
     }
   ],
@@ -25321,6 +25480,38 @@
       "novelAttackIds": [],
       "accessLimitations": [],
       "previousPhaseReviewId": "RV-ADV-TC12"
+    },
+    {
+      "id": "RV-ADV-A15",
+      "contextId": "ctx-child-a15",
+      "reviewerId": "devin-dc24e763351d4b7cab97137c7c19f007",
+      "model": "SWE-2",
+      "phase": "AUTHORITY",
+      "round": 38,
+      "role": "fresh blind scope-authority audit on 77aecae0 (T23 pin): 1 Low + 1 informational; all other attacked seams held",
+      "state": {
+        "productStateId": "cdff040243d8feb0a1596e1d03857f53eebccb06bb7675027e08ab92e7dcc8c4",
+        "contractId": "0686d2e04e66ef600e6508c38360530ca1e9a0077a6fb1e92769f2c814476fc8",
+        "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+        "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+      },
+      "status": "SEALED",
+      "startedAt": "2026-10-01T17:19:00Z",
+      "sealedAt": "2026-10-01T17:43:00.542Z",
+      "priorFindingsVisible": false,
+      "reviewedAfterPreviousFixes": true,
+      "inputBundleHash": "0135ebae91fa862bc6471e8611c10951e32ddaec94eadd6a56e569b87ec06a15",
+      "evidenceIds": [
+        "EV-PROBE-A15"
+      ],
+      "coverageIds": [],
+      "findingIds": [
+        "F-SCOPE-ENH-STREAK",
+        "F-ALCH-REALM-JOB"
+      ],
+      "novelAttackIds": [],
+      "accessLimitations": [],
+      "previousPhaseReviewId": "RV-ADV-A14"
     }
   ],
   "cycles": [
@@ -31348,6 +31539,22 @@
       "payloadPath": "events/0130.json",
       "payloadHash": "c62be81a6008cb39d9cac2741a2e2d267e6e47731810b15381924a1bfb38b323",
       "eventHash": "645db6ff752c647eda9eedb0e0dfbd0d97c14fb2574643cb42c757b7583edeca"
+    },
+    {
+      "seq": 131,
+      "at": "2026-10-01T17:43:00.543Z",
+      "kind": "FINDING",
+      "actor": "coord-main",
+      "state": {
+        "productStateId": "cdff040243d8feb0a1596e1d03857f53eebccb06bb7675027e08ab92e7dcc8c4",
+        "contractId": "0686d2e04e66ef600e6508c38360530ca1e9a0077a6fb1e92769f2c814476fc8",
+        "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+        "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+      },
+      "previousEventHash": "645db6ff752c647eda9eedb0e0dfbd0d97c14fb2574643cb42c757b7583edeca",
+      "payloadPath": "events/0131.json",
+      "payloadHash": "7c884bd0bb31b294e6f714e01408450cb45e1e96b0a3689d95caf35a298027fd",
+      "eventHash": "84a48a9418df28b72df9a26d9b91d9876446d792a3db7f0c88617eff526fd95b"
     }
   ]
 }
