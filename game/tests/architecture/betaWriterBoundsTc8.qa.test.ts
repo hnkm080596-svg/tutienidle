@@ -593,7 +593,156 @@ describe('F-A10-6: stage-clear and autofarm claims respect the stage realm', () 
     const p = save.player as ReturnType<typeof createDefaultPlayer>
     p.realmId = 'foundation_establishment'
     p.realmLevel = 1
-    p.completedStageIds = ['foundation_floor_1']
+    // F-TC9-2: the chain-prefix bound requires every earlier floor in
+    // the same zone - a legit foundation claim carries the full prefix.
+    p.completedStageIds = [
+      ...Array.from({ length: 10 }, (_, index) => `mortal_dong_${index + 1}`),
+      'qi_refining_forest',
+      'qi_refining_deep_forest',
+      'qi_refining_ember_canyon',
+      'qi_refining_scorched_ridge',
+      'qi_refining_sand_plain',
+      'qi_refining_stone_range',
+      'qi_refining_blade_peak',
+      'qi_refining_mineral_pit',
+      'qi_refining_mystic_marsh',
+      'qi_refining_abyssal_pool',
+      'foundation_floor_1',
+    ]
+
+    expect(validateGameSaveShape(save).ok).toBe(true)
+  })
+})
+
+// QA pin - writer-bound wave 2 (blind TC9 sweep on a2bd826f).
+//
+// F-TC9-1  timed-effect appliedAtMs carried no temporal coherence -
+//          every writer stamps appliedAtMs=now before lastSavedAt, so
+//          activation after the save timestamp is impossible.
+// F-TC9-2  completedStageIds carried no chain-prefix coherence -
+//          isStageUnlocked requires the immediately preceding chain
+//          floor, and perfectClear is a same-tick completion co-write.
+// F-TC9-3  alchemyJobs roomLevelAtStart was unbounded - jobSuccessPercent
+//          reads it verbatim and building level never decreases, so the
+//          persisted pill_room level is the ceiling.
+// F-TC9-4  cultivationPerSecond was unbounded despite being a fully
+//          derived snapshot - the writer computes BASE x claimed talent
+//          speed x claimed talent ramp x (1 + tu linh tran <= 0.25), so
+//          a rate above the save's own claims is a forged magnitude.
+
+describe('F-TC9-1: timed-effect temporal coherence', () => {
+  it('an effect applied after lastSavedAt is rejected', () => {
+    const save = validSave()
+    const p = save.player as ReturnType<typeof createDefaultPlayer>
+    p.lastSavedAt = 10_000
+    p.persistentTimedEffects = [
+      {
+        id: 'fx1',
+        sourceItemId: 'tu_linh_tran',
+        appliedAtMs: 20_000,
+        expiresAtMs: 30_000,
+        effectGroup: TU_LINH_TRAN_EFFECT_GROUP,
+        cultivationSpeedPercent: 0.2,
+        modifiers: [],
+      },
+    ]
+
+    expect(validateGameSaveShape(save).ok).toBe(false)
+  })
+
+  it('an effect applied before lastSavedAt still validates', () => {
+    const save = validSave()
+    const p = save.player as ReturnType<typeof createDefaultPlayer>
+    p.lastSavedAt = 10_000
+    p.persistentTimedEffects = [
+      {
+        id: 'fx1',
+        sourceItemId: 'tu_linh_tran',
+        appliedAtMs: 5_000,
+        expiresAtMs: 15_000,
+        effectGroup: TU_LINH_TRAN_EFFECT_GROUP,
+        cultivationSpeedPercent: 0.2,
+        modifiers: [],
+      },
+    ]
+
+    expect(validateGameSaveShape(save).ok).toBe(true)
+  })
+})
+
+describe('F-TC9-2: stage clear chain-prefix coherence', () => {
+  it('a clear claim skipping an earlier floor is rejected', () => {
+    const save = validSave()
+    const p = save.player as ReturnType<typeof createDefaultPlayer>
+    p.completedStageIds = ['mortal_dong_1', 'mortal_dong_3']
+
+    expect(validateGameSaveShape(save).ok).toBe(false)
+  })
+
+  it('a perfect-clear without the completion claim is rejected', () => {
+    const save = validSave()
+    const p = save.player as ReturnType<typeof createDefaultPlayer>
+    p.completedStageIds = ['mortal_dong_1']
+    p.perfectClearStageIds = ['mortal_dong_2']
+
+    expect(validateGameSaveShape(save).ok).toBe(false)
+  })
+
+  it('a contiguous prefix chain still validates', () => {
+    const save = validSave()
+    const p = save.player as ReturnType<typeof createDefaultPlayer>
+    p.completedStageIds = ['mortal_dong_1', 'mortal_dong_2']
+    p.perfectClearStageIds = ['mortal_dong_2']
+
+    expect(validateGameSaveShape(save).ok).toBe(true)
+  })
+})
+
+describe('F-TC9-3: alchemy job room-level bound', () => {
+  const job = {
+    jobId: 'job-tc9',
+    recipeId: 'pill_regen_mortal',
+    pillId: 'pill_regen_mortal',
+    herbMaterialId: 'mortal_herb_decade',
+    startedAtMs: 1_000,
+    completesAtMs: 61_000,
+    roomLevelAtStart: 5,
+  }
+
+  it('a job claiming a room level above the persisted pill_room is rejected', () => {
+    const save = validSave()
+    save.buildings = [
+      { instanceId: 'b-pill', buildingId: 'pill_room', level: 1, lastCollectedAt: 0 },
+    ]
+    save.alchemyJobs = [{ ...job }]
+
+    expect(validateGameSaveShape(save).ok).toBe(false)
+  })
+
+  it('a job within the persisted pill_room level still validates', () => {
+    const save = validSave()
+    save.buildings = [
+      { instanceId: 'b-pill', buildingId: 'pill_room', level: 5, lastCollectedAt: 0 },
+    ]
+    save.alchemyJobs = [{ ...job }]
+
+    expect(validateGameSaveShape(save).ok).toBe(true)
+  })
+})
+
+describe('F-TC9-4: cultivationPerSecond derived-snapshot bound', () => {
+  it('a rate above the derivable maximum is rejected', () => {
+    const save = validSave()
+    const p = save.player as ReturnType<typeof createDefaultPlayer>
+    p.cultivationPerSecond = 1_000_000
+
+    expect(validateGameSaveShape(save).ok).toBe(false)
+  })
+
+  it('the plain base rate still validates', () => {
+    const save = validSave()
+    const p = save.player as ReturnType<typeof createDefaultPlayer>
+    p.cultivationPerSecond = 10
 
     expect(validateGameSaveShape(save).ok).toBe(true)
   })

@@ -172,9 +172,17 @@ function populateSource(player: PlayerData, manager: GameManager): void {
   )
 
   // Buildings — Chi Hien Quan level 1 sets worker capacity 3 (1+level*2).
+  // pill_room level 1 witnesses the alchemy job's roomLevelAtStart
+  // claim (F-TC9-3 bound: building level never decreases).
   manager.buildingManager.add({
     instanceId: 'b-chq',
     buildingId: 'chi_hien_quan',
+    level: 1,
+    lastCollectedAt: NOW - 2_000,
+  })
+  manager.buildingManager.add({
+    instanceId: 'b-pill',
+    buildingId: 'pill_room',
     level: 1,
     lastCollectedAt: NOW - 2_000,
   })

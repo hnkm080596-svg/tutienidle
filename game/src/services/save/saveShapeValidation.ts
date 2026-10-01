@@ -30,6 +30,7 @@ import { validateHiddenPerfectionPersistedState } from '../../core/realm/hidden/
 import { SKILL_CORE_NODES } from '../../data/progression/SkillCoreNodes'
 import { SKILLS } from '../../data/skill/Skills'
 import { STAGES } from '../../data/stage/Stages'
+import { zones } from '../../data/stage/Zones'
 import { BREAKTHROUGH_TALENT_POOLS } from '../../data/talent/BreakthroughTalentPools'
 import { PHAP_TU_NODES } from '../../data/progression/PhapTuNodes'
 import { PHAP_TU_AN_NODES } from '../../data/progression/PhapTuAnNodes'
@@ -52,7 +53,15 @@ import { alchemyRecipes } from '../../data/alchemy/alchemyRecipes'
 import { buildings } from '../../data/building/buildings'
 import { THANH_VAN_PRODUCTION_SITES } from '../../core/production/ProductionCatalog'
 import { scopeHiddenPillFamilyOfId } from '../../core/betaScope'
-import { getGlobalCultivationLevel, getRealmIndex } from '../../core/realm/realmSystem'
+import {
+  BASE_CULTIVATION_PER_SECOND,
+  getGlobalCultivationLevel,
+  getRealmIndex,
+} from '../../core/realm/realmSystem'
+import {
+  getCultivationRampMultiplier,
+  getCultivationSpeedMultiplier,
+} from '../../core/talent/TalentEffects'
 import { getTalentMaxLevel, isLegalBreakthroughOffer, isTalentEntitlementActionable } from '../../core/talent/TalentEntitlement'
 import { skillCoreNodeId } from '../../core/progression/SkillCoreLevel'
 import { isPhysiqueGradeId } from '../../data/realm/PhysiqueLadder'
@@ -419,6 +428,43 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
     }
   }
 
+  // F-TC9-4: cultivationPerSecond is a derived snapshot - cultivateTick
+  // rewrites it every tick from authored factors (BASE x claimed talent
+  // speed x claimed talent ramp x tu linh tran <= +25%). A persisted
+  // rate above what the save's own claims can produce is a forged
+  // accrual magnitude: restore pays offlineSeconds x cps and banks the
+  // overflow into cultivationOvercharge.
+  if (
+    isNonNegativeFiniteNumber(player.cultivationPerSecond) &&
+    isNonNegativeFiniteNumber(player.realmLevel)
+  ) {
+    const cpsTalentIds = (selectedTalentIds ?? []).filter(
+      (talentId): talentId is string => typeof talentId === 'string',
+    )
+    const cpsTalentLevels: Record<string, number> = {}
+
+    if (isObject(player.talentLevels)) {
+      for (const [talentId, level] of Object.entries(player.talentLevels)) {
+        if (isNonNegativeFiniteNumber(level)) {
+          cpsTalentLevels[talentId] = level
+        }
+      }
+    }
+
+    const maxPersistedCps =
+      BASE_CULTIVATION_PER_SECOND *
+      getCultivationSpeedMultiplier(cpsTalentIds, cpsTalentLevels) *
+      getCultivationRampMultiplier(cpsTalentIds, player.realmLevel, cpsTalentLevels) *
+      (1 + TU_LINH_TRAN_BUFF_PERCENT)
+
+    if (player.cultivationPerSecond > maxPersistedCps + 1e-9) {
+      issues.push({
+        path: 'player.cultivationPerSecond',
+        message: 'vượt rate tối đa derive được từ talent claims hiện tại',
+      })
+    }
+  }
+
   // M-F-TALENT (v76) - pendingTalentEntitlement is optional; when
   // present it is the in-flight mandatory breakthrough decision record:
   // realmId (pool key) + bound offeredTalentIds. A malformed record must
@@ -642,6 +688,47 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
     }
   }
 
+  // F-TC9-2: stage-chain coherence - isStageUnlocked requires the
+  // immediately preceding chain stage to be completed, so a clear claim
+  // whose earlier floors are unclaimed is provably impossible; and a
+  // perfect-clear is a same-tick co-write of completion, so every
+  // perfect claim must also be a completed claim.
+  if (completedStageIds) {
+    const claimedStages = new Set(
+      completedStageIds.filter((stageId): stageId is string => typeof stageId === 'string'),
+    )
+
+    for (const stageId of claimedStages) {
+      const zone = zones.find((candidate) => candidate.stageIds.includes(stageId))
+
+      if (!zone) {
+        continue
+      }
+
+      const index = zone.stageIds.indexOf(stageId)
+
+      if (index > 0 && !claimedStages.has(zone.stageIds[index - 1]!)) {
+        issues.push({
+          path: 'player.completedStageIds',
+          message: `stage '${stageId}' thiếu clear trước '${zone.stageIds[index - 1]}' (skip-chain bất khả thi)`,
+        })
+      }
+    }
+
+    if (perfectClearStageIds) {
+      for (let i = 0; i < perfectClearStageIds.length; i += 1) {
+        const stageId = perfectClearStageIds[i]
+
+        if (typeof stageId === 'string' && !claimedStages.has(stageId)) {
+          issues.push({
+            path: `player.perfectClearStageIds[${i}]`,
+            message: `perfect claim '${stageId}' không nằm trong completedStageIds`,
+          })
+        }
+      }
+    }
+  }
+
   const grantedRealmPassiveIds = requireArray(player, 'grantedRealmPassiveIds', 'player', issues)
 
   if (grantedRealmPassiveIds) {
@@ -854,6 +941,22 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
       }
       if (!isFiniteNumber(effect.expiresAtMs)) {
         issues.push({ path: `${effectPath}.expiresAtMs`, message: 'phải là số hữu hạn' })
+      }
+
+      // F-TC9-1: every writer stamps appliedAtMs=now before the save's
+      // lastSavedAt - an activation after the save timestamp is
+      // provably impossible, and liveness keys on expiresAtMs alone so
+      // a future-dated window mints a live buff without any coherence
+      // check.
+      if (
+        isFiniteNumber(effect.appliedAtMs) &&
+        isFiniteNumber(player.lastSavedAt) &&
+        (effect.appliedAtMs as number) > (player.lastSavedAt as number)
+      ) {
+        issues.push({
+          path: `${effectPath}.appliedAtMs`,
+          message: 'appliedAtMs vượt lastSavedAt (activation sau thời điểm save là bất khả thi)',
+        })
       }
 
       const effectModifiers = requireArray(effect, 'modifiers', effectPath, issues)
@@ -2163,6 +2266,7 @@ function validateAlchemyJobsSave(
   entries: unknown[],
   path: string,
   issues: ShapeIssue[],
+  pillRoomLevel: number,
 ): void {
   for (let i = 0; i < entries.length; i += 1) {
     const entry = entries[i]
@@ -2180,6 +2284,17 @@ function validateAlchemyJobsSave(
     ) {
       issues.push({ path: entryPath, message: 'alchemy job sai shape' })
       continue
+    }
+
+    // F-TC9-3: jobSuccessPercent reads roomLevelAtStart verbatim into
+    // the authored success table, and building level never decreases -
+    // a claim above the persisted pill_room level is a forged success
+    // rate that settles real pills on every tick.
+    if ((entry.roomLevelAtStart as number) > pillRoomLevel) {
+      issues.push({
+        path: `${entryPath}.roomLevelAtStart`,
+        message: `roomLevelAtStart vượt level pill_room hiện tại (${pillRoomLevel})`,
+      })
     }
 
     // F-A7-3: pillId is denormalized from the authored recipe at
@@ -2601,7 +2716,20 @@ export function validateGameSaveShape(parsed: unknown): ShapeValidationResult {
   }
 
   if (alchemyJobs) {
-    validateAlchemyJobsSave(alchemyJobs, 'alchemyJobs', issues)
+    // F-TC9-3: jobs settle with the room level claimed at start; the
+    // only writer stamps the current pill_room level, and building
+    // level never decreases - the persisted level is the upper bound.
+    const pillRoomLevel = Array.isArray(buildings)
+      ? buildings.reduce<number>(
+          (max, entry) =>
+            isObject(entry) && entry.buildingId === 'pill_room' && isFiniteNumber(entry.level)
+              ? Math.max(max, entry.level as number)
+              : max,
+          0,
+        )
+      : 0
+
+    validateAlchemyJobsSave(alchemyJobs, 'alchemyJobs', issues, pillRoomLevel)
   }
 
   // Mission A1 - deep element checks: a present-but-malformed slice must

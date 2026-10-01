@@ -555,6 +555,14 @@ describe('SaveRoundTrip — buildGameSave() luôn qua validateGameSaveShape()', 
     const gameManager = createBootedGameManager()
     const player = createDefaultPlayer()
 
+    // F-TC9-3: the job's roomLevelAtStart claim needs a persisted
+    // pill_room instance at least that high (level never decreases).
+    gameManager.buildingManager.add({
+      instanceId: 'b-pill',
+      buildingId: 'pill_room',
+      level: 1,
+      lastCollectedAt: 0,
+    })
     gameManager.alchemySystem.restoreJobs([
       {
         jobId: 'job_pin_1',

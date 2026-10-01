@@ -819,6 +819,11 @@ describe('validateGameSaveShape — alchemyJobs slice (Mission A1)', () => {
   it('chấp nhận alchemyJobs entry hợp lệ', () => {
     const save = validSave()
 
+    // F-TC9-3: roomLevelAtStart is coherence-bounded by the persisted
+    // pill_room level - a job claim needs the building built.
+    save.buildings = [
+      { instanceId: 'b-pill', buildingId: 'pill_room', level: 1, lastCollectedAt: 0 },
+    ]
     save.alchemyJobs = [validJob()]
 
     expect(validateGameSaveShape(save).ok).toBe(true)
