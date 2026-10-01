@@ -1126,11 +1126,30 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
     // ungranted passive payload.
     const claimedModifiers = Array.isArray(playerModifiers) ? playerModifiers : []
 
+    // QA-FS-1/2b: every persisted writer emits at most one entry per
+    // modifier id (realm-passive template, bat-mach:<m>:<stat>,
+    // talent_loi_kiep_<stat>) - and the mint seams emit once per
+    // persisted entry (authored rebuild or verbatim push), so a
+    // duplicated id mints N x the authored package. Equipment entries
+    // are rebuilt at restore and stay outside this check.
+    const seenClaimedIds = new Set<string>()
+
     for (let i = 0; i < claimedModifiers.length; i += 1) {
       const modifier = claimedModifiers[i]
 
       if (!isObject(modifier) || modifier.sourceType === 'equipment') {
         continue
+      }
+
+      if (typeof modifier.id === 'string') {
+        if (seenClaimedIds.has(modifier.id)) {
+          issues.push({
+            path: `player.modifiers[${i}]`,
+            message: `modifier id trùng lặp (writer upsert - không sản xuất được: ${modifier.id})`,
+          })
+        } else {
+          seenClaimedIds.add(modifier.id)
+        }
       }
 
       if (modifier.sourceType === 'realm') {
@@ -1194,7 +1213,19 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
                 typeof player.realmId === 'string' ? getRealmIndex(player.realmId) : 0,
               ) +
               1e-9 ||
-          modifier.flat !== undefined
+          modifier.flat !== undefined ||
+          // QA-FS-2a: the writer emits exactly
+          // {id, sourceId, sourceType, stat, percent} and the emit
+          // seam pushes the persisted object verbatim - every other
+          // StatModifier field reaches runPipeline unchecked
+          // (multiplier^stacks More product, tag Increased tier).
+          modifier.multiplier !== undefined ||
+          modifier.stacks !== undefined ||
+          modifier.maxStacks !== undefined ||
+          modifier.perLevelFlat !== undefined ||
+          modifier.perLevelPercent !== undefined ||
+          modifier.tag !== undefined ||
+          modifier.domain !== undefined
         ) {
           issues.push({
             path: `player.modifiers[${i}]`,
@@ -1374,15 +1405,27 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
                 }
                 // The writer emits exactly one flat modifier - a
                 // percent/multiplier field is an impossible claim.
+                // QA-FS-3: same for every other StatModifier field -
+                // the timed-modifier seam flatMaps the persisted
+                // entries verbatim into the live pipeline, so a
+                // forged stacks/multiplier/tag mints flat*stacks
+                // past the authored bound, and a foreign domain
+                // claims a gated channel the writer never emits.
                 if (
                   isObject(modifier) &&
                   ((isFiniteNumber(modifier.percent) && (modifier.percent as number) !== 0) ||
                     (isFiniteNumber(modifier.multiplier) &&
-                      (modifier.multiplier as number) !== 1))
+                      (modifier.multiplier as number) !== 1) ||
+                    modifier.stacks !== undefined ||
+                    modifier.maxStacks !== undefined ||
+                    modifier.perLevelFlat !== undefined ||
+                    modifier.perLevelPercent !== undefined ||
+                    modifier.tag !== undefined ||
+                    (modifier.domain !== undefined && modifier.domain !== 'spell'))
                 ) {
                   issues.push({
                     path: `${effectPath}.modifiers[${j}]`,
-                    message: 'pill regen chỉ emit flat - percent/multiplier không authored',
+                    message: 'pill regen chỉ emit flat+domain:spell - field phụ không authored',
                   })
                 }
               }
@@ -2253,6 +2296,11 @@ function validateSkillEntries(
   issues: ShapeIssue[],
   skillCastCounts: Record<string, unknown> | undefined,
 ) {
+  // QA-FS-4: SkillSystem.learn dedupes via SkillManager.has, so a
+  // duplicate skills[] id is unproducible - each copy re-emits the
+  // full passive set and accrues stacks at N x rate.
+  const seenIds = new Set<string>()
+
   for (let i = 0; i < entries.length; i += 1) {
     const entry = entries[i]
 
@@ -2263,6 +2311,17 @@ function validateSkillEntries(
     }
 
     requireString(entry, 'id', `${path}[${i}]`, issues)
+
+    if (typeof entry.id === 'string') {
+      if (seenIds.has(entry.id)) {
+        issues.push({
+          path: `${path}[${i}].id`,
+          message: `skill record trùng lặp (learn() dedupe - không sản xuất được: ${entry.id})`,
+        })
+      } else {
+        seenIds.add(entry.id)
+      }
+    }
 
     for (const retiredKey of RETIRED_SKILL_ENTRY_KEYS) {
       if (Object.prototype.hasOwnProperty.call(entry, retiredKey)) {

@@ -1,0 +1,80 @@
+{
+  "verdict": "FAIL",
+  "target": {
+    "repo": "hnkm080596-svg/tutienidle",
+    "branch": "devin/qa-fixpoint",
+    "pinned_commit": "a7d12edf",
+    "scope": "blind adversarial sweep: forged save payloads + hostile runtime sequences on beta scope (Pham Nhan -> spell initiation -> Luyen Khi -> Truc Co)"
+  },
+  "root_class": "Persisted modifier-bearing collections enforce per-entry provenance and field bounds but carry no (a) collection-level uniqueness and no (b) auxiliary-field allowlisting; every mint seam downstream emits per-entry verbatim. One envelope/restore dedupe or field-whitelist kills all findings in this class.",
+  "probe_file": "tests/architecture/betaClaimedCollectionMint.qa.test.ts",
+  "probe_result": "5/5 failing (each test asserts envelope acceptance = passes, then asserts the security invariant = fails with the minted delta)",
+  "findings": [
+    {
+      "id": "QA-FS-1",
+      "title": "Duplicated claimed-source realm-passive modifier entries each mint the authored emission",
+      "severity": "high",
+      "confidence": "high",
+      "surface": "player.modifiers[] (sourceType 'realm')",
+      "writer_inventory": "grantRealmPassive emits exactly one modifier per (passive, stat) and is idempotent via grantedRealmPassiveIds marker; no writer emits duplicate ids",
+      "gap": "Realm-passive envelope check (saveShapeValidation.ts:1100-1110) byte-matches each entry against its authored template (id/stat/percent/flat/domain) but has no id uniqueness. resolvePlayerStatAssembly (Player.ts:594-597) pushes one authored emit per persisted entry. runPipeline has no dedupe",
+      "repro": "grantedRealmPassiveIds=['nhap_dao'] + byte-valid authored modifier set + 5 structuredClone() copies of 'realm-passive:nhap_dao:maxHp' -> envelope issues [] -> maxHp 146.88 vs 114.48 control (+28.3% of the authored grant)",
+      "mint_path": "N-1 extra copies of the full authored realm-passive package (maxHp, maxMp, regen, main-stat percents) on every stat recompute; count unbounded; persisted so it re-pays on every save/reload and survives into combat stat reads"
+    },
+    {
+      "id": "QA-FS-2a",
+      "title": "Loi Kiep modifier entries are pushed verbatim - forged stacks/multiplier/tag mint unbounded More-tier stats",
+      "severity": "critical",
+      "confidence": "high",
+      "surface": "player.modifiers[] (sourceId 'loi_kiep', sourceType 'talent')",
+      "writer_inventory": "applyLoiKiepVictoryBonus upserts {id, sourceId, sourceType, stat, percent} only; never emits stacks/multiplier/tag/maxStacks/perLevel*/domain",
+      "gap": "Loi kiep envelope (saveShapeValidation.ts:1172-1205) pins ownership + id + stat + percent bound + bans flat - every other StatModifier field is unchecked. resolvePlayerStatAssembly:561 pushes the PERSISTED object verbatim (not an authored rebuild), so forged fields reach runPipeline which honors stacks and pushes multiplier stacks-times into the More list",
+      "repro": "selectedTalentIds=['loi_kiep'] + {id:'talent_loi_kiep_strength', stat:'strength', percent:0.1 (in bound), multiplier:2, stacks:4} -> envelope issues [] -> strength 22.4 vs 1.1 control (x20.4)",
+      "mint_path": "Arbitrary More-tier product on any of the 8 main stats (multiplier^stacks, only finite constraint) cascading into every derived combat stat; re-pays on every stat recompute; persisted. One forged entry is enough - no count needed. tag additionally lands a separate Increased multiply tier"
+    },
+    {
+      "id": "QA-FS-2b",
+      "title": "Duplicated loi kiep entries each emit the authored percent",
+      "severity": "high",
+      "confidence": "high",
+      "surface": "player.modifiers[] (sourceId 'loi_kiep', sourceType 'talent')",
+      "writer_inventory": "applyLoiKiepVictoryBonus upserts - at most one entry per stat can exist through any writer",
+      "gap": "Same envelope as QA-FS-2a: no uniqueness on (sourceId,stat). Verbatim push per entry -> each copy pays the full authored percent",
+      "repro": "two identical in-bound entries talent_loi_kiep_strength percent 0.1 -> envelope issues [] -> strength 1.2 vs 1.1 control (2x the authored grant)",
+      "mint_path": "Linear N x authored percent per stat, count unbounded; same seam as QA-FS-2a, same persistence"
+    },
+    {
+      "id": "QA-FS-3",
+      "title": "Timed-effect pill-regen modifier forged with stacks mints flat*stacks past the authored flat bound",
+      "severity": "high",
+      "confidence": "high",
+      "surface": "player.persistentTimedEffects[].modifiers[] (regen pills)",
+      "writer_inventory": "PillSystem regen writer emits exactly one modifier {stat 'manaRegenPerTurn', flat <= mpPerSecond x 1.5, domain 'spell'} with no stacks",
+      "gap": "Regen claim envelope (saveShapeValidation.ts:1356-1387) pins <=1 modifier, stat, flat bound, and rejects percent/multiplier - stacks is unchecked. Restore keeps it (isCurrentShapeModifier: domain 'spell' satisfies the gated-stat requirement). getActiveTimedModifiers (GameManagerPersistentEffectOps:279) flatMaps effect.modifiers verbatim into the live pipeline; runPipeline pays flat*stacks",
+      "repro": "hoi_linh_dan_mortal effect (beta-enabled family, authored group/stackable/deadline) + modifier {flat 3, domain 'spell', stacks 50} -> envelope issues [] -> manaRegenPerTurn 150.05 vs 3.05 control",
+      "mint_path": "50x the authored flat bound on a per-turn regen stat for the effect's whole window; expiresAtMs span is unbounded at the envelope so the mint is effectively permanent once saved; re-pays every recompute while the window is live"
+    },
+    {
+      "id": "QA-FS-4",
+      "title": "Duplicated learned passive skill records each emit their full passive set and accrue stacks at N x rate",
+      "severity": "high",
+      "confidence": "high",
+      "surface": "save.skills[] (learned skill records)",
+      "writer_inventory": "SkillSystem.learn is the only writer and dedupes via SkillManager.has - a duplicate skills[] entry is unproducible",
+      "gap": "validateSkillEntries validates shape only, no uniqueness; validateSkillCoreCoverage checks per-entry producibility only (talents DO have F-TALENT-DUP - skills lack the twin check). Restore rebuilds every record (GameManagerSaveRestore:203-227) and SkillManager.restore stores them all. getScaledPassiveModifiers emits per held record; PassiveSystem.handleEvent addStack()s every record",
+      "repro": "skills: [{id:'passive_linh_khi_cam_ung'},{id:'passive_linh_khi_cam_ung'}] (beta-admitted, realm-earnable at qi_refining) -> envelope issues [] -> restore -> 2 emissions of passive_linh_khi_cam_ung_attack (expected 1); one 'hit' event accrues 2 total stacks (expected 1)",
+      "mint_path": "N x the full passive modifier set + N x stack accrual per trigger event (might % stacks to maxStacks 50 -> N x ramp); persisted so it re-pays on every reload and applies on every battle"
+    }
+  ],
+  "eliminated_classes": [
+    "meridian bat-mach:* dup/forged entries - scrubbed and rebuilt from canonical bodyProgression at restore (MeridianChapter.applyModifiers)",
+    "equipment dup entries / slot mints - rebuilt from equipmentSlots at restore",
+    "alchemy job dup/settle forge - count bounded by authored slot ladder, roomLevelAtStart <= pillRoomLevel, exact authored span, recipe pillId re-derived",
+    "CombatBuild dormant seams (way/formation/companion/aura) - all scope-gated",
+    "quest dup entries - first-match getProgress makes duplicates invisible; claim path gated",
+    "decompose/claim payouts - scope-gated, worker capacity clamped at restore",
+    "forged hiddenBreakthroughRealmIds / grantedRealmPassiveIds - marker-only, mints nothing without modifier entries; self-harm",
+    "externalModifiers, persistentBuffs - not persisted authority / cleared at restore",
+    "expiresAtMs span, same-value counters within authored bounds - KNOWN human-accepted residuals per brief"
+  ]
+}
