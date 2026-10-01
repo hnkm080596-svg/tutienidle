@@ -1,0 +1,5 @@
+{
+  "action": "T23 harvest wave close: TC13 falsified 2 collection-level bounds (F-EQ-COUNT-1 High, F-BLD-DUP-1 High) CLOSED on a7d12edf; B15 1 Low + 2 latent + 1 Nit deferred; L-COLLECTION-LEVEL-INVARIANTS captured",
+  "tip": "a7d12edf",
+  "wave": "T24"
+}

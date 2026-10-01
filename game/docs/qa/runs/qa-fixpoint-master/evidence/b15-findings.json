@@ -1,0 +1,93 @@
+{
+  "audit": "tutienidle beta scope contract - consumer/integration seam audit",
+  "repo": "hnkm080596-svg/tutienidle",
+  "branch": "devin/qa-fixpoint",
+  "pin": "77aecae05b282910b1c7a5d8d690ba05a49704c3",
+  "probe_file": "game/tests/architecture/betaConsumerSeamsQa.qa.test.ts",
+  "probe_result": {
+    "total": 12,
+    "passing_controls": 9,
+    "failing_repros": 3
+  },
+  "verdict": "FAIL WITH REASON - 1 confirmed consumer-seam leak (Low), 2 latent open seams (coverage gaps, no live mint today). The codebase is otherwise comprehensively gated: every named consumer seam carries an explicit fail-closed scope check or is provably unreachable from dormant state.",
+  "findings": [
+    {
+      "id": "F-QA-CONS-BADGE-1",
+      "status": "CONFIRMED",
+      "severity": "Low",
+      "confidence": "high",
+      "surface": "pill_room building nameplate badge - src/composables/useBuildingNavigation.ts:97 (getBuildingStatus)",
+      "consumer_path": "HomeBuildingIcons.vue:81 renders navigation.getBuildingStatus(buildingId) for every built building on the home map",
+      "repro": "tests/architecture/betaConsumerSeamsQa.qa.test.ts describe 'F-QA-CONS-BADGE-1' - two failing assertions: (1) a restored dormant-family alchemy job makes the badge read 'active' (expected: not 'active'); (2) with upgrade materials present the badge still reads 'active' (expected: 'upgradeable').",
+      "mechanism": "AlchemySystem.tick parks dormant-family jobs forever (AlchemySystem.ts:370-374, job pushed back into remaining). GameManagerAlchemyOps.getAlchemyJobs() (:114) returns the UNFILTERED getJobs() - including parked records. getBuildingStatus counts jobs.length > 0 -> 'active'. The two sibling consumers of the same record DO filter: getBetaAlchemyRecipeModels filters activeJobs through betaRecipeFamilyOfId (:401-403) and AlchemyView filters job list rows (:195). The badge is the only consumer that does not.",
+      "user_impact": "On a carried/flagged save with a parked dormant alchemy job, the pill_room nameplate shows 'active' permanently (the job can never settle), and the badge's priority ordering (locked > ready > active > upgradeable) suppresses the 'upgradeable' signal forever. Cosmetic surface lie; the upgrade itself still works through the popover.",
+      "mint_path": "None - cosmetic badge only. No effects, currencies, or items minted.",
+      "mint_path_detail": "gated record (parked dormant job) -> unfiltered consumer -> visible surface state. The defect class matches the contract definition (dormant scope leaking into visible play through a consumer path) but the mint is a badge string, not an effect.",
+      "fix_hint": "filter the job list the same way the panel does: gameManager.alchemyOps.getAlchemyJobs().some(job => betaRecipeFamilyOfId(job.recipeId) !== null)"
+    },
+    {
+      "id": "F-QA-CONS-SURVIVE",
+      "status": "COVERAGE GAP (latent)",
+      "severity": "Low",
+      "confidence": "high (seam verified open; latent because no runtime ships the hook today)",
+      "surface": "src/core/game/CombatBuild.ts:385 - resolveCombatBuild survive.extraSources",
+      "consumer_path": "battle entry -> build.survive.extraSources -> SurviveLethalSource minting",
+      "repro": "tests/architecture/betaConsumerSeamsQa.qa.test.ts it 'F-QA-CONS-SURVIVE (LATENT)' - resolveCombatBuild with a hidden_spell save and a runtime stub implementing buildSurviveSources: expect(build.survive.extraSources).toBeUndefined() FAILS (binds the function).",
+      "mechanism": "Every other runtime channel routes through gatedRuntime = wayAdmitted ? runtime : undefined (roles :234, statDomains :235, buildDynamicBasic :242, resolveMaxThe :255). survive.extraSources alone binds the RAW `runtime` param, so a dormant way's runtime would mint hidden survive sources into battle on a carried save.",
+      "mint_path": "None today - no shipped runtime implements buildSurviveSources (CultivationPathRegistry.ts:495 'Beta: no buildSurviveSources'). The first dormant runtime to implement it leaks survive sources on carried saves.",
+      "fix_hint": "bind gatedRuntime?.buildSurviveSources instead of runtime?.buildSurviveSources"
+    },
+    {
+      "id": "F-QA-CONS-COLLECT",
+      "status": "COVERAGE GAP (latent)",
+      "severity": "Low",
+      "confidence": "high (gate absence verified; latent because no hidden building produces today)",
+      "surface": "src/core/game/GameManagerBuildingOps.ts collectBuilding (:289) / getBuildingStoredAmount (:330)",
+      "consumer_path": "building popover harvest button -> collectBuilding -> materialBag.add",
+      "repro": "tests/architecture/betaConsumerSeamsQa.qa.test.ts it 'collectBuilding on chi_hien_quan returns 0' PASSES today (control documenting no live mint). The structural gap: unlike buildBuilding/upgradeBuilding (:65,:78,:269 gated by isBetaBuildingSurface), collectBuilding and getBuildingStoredAmount carry no scope gate.",
+      "mechanism": "If a future scope-hidden building ever declares producesMaterialId, a carried instance would mint materials through collect, and 'ready' badges through getBuildingStoredAmount - both ungated.",
+      "mint_path": "None today - chi_hien_quan (the only scope-hidden building) has no producesMaterialId, so resolveProducesMaterialId returns undefined and both accessors short-circuit to 0.",
+      "fix_hint": "add `if (!isBetaBuildingSurface(instance.buildingId)) return 0` at the top of both accessors"
+    },
+    {
+      "id": "F-QA-CONS-LOCALE-NIT",
+      "status": "NOTED (nit)",
+      "severity": "Nit",
+      "confidence": "medium",
+      "surface": "src/locales/en.json tutorial.steps.4.body",
+      "repro": "EN tutorial step 4 reads 'forge and refine equipment' while the equipmentRefine tab is scope-hidden (BETA_EQUIPMENT_TABS = ['enhance','dissolve']). The VI source says 'chế tạo và cường hóa' (craft and strengthen) which matches the live 'enhance' tab.",
+      "mint_path": "None - wording only; no surface or record affected."
+    }
+  ],
+  "seams_verified_closed": {
+    "resolveCombatBuild": "wayAdmitted gate (:232) covers roles/statDomains/buildDynamicBasic/resolveMaxThe; formation falls back to DEFAULT_PARTY_FORMATION (isScopeHidden('formation') :264); companions [] under isScopeHidden('companion') (:286); tran-phap buff gated (:329); hidden aura gated by wayAdmitted (:347). Probed on carried hidden_spell save - all assertions pass.",
+    "resolvePlayerStatAssembly": "rebuild-don't-trust (:519-654): realm-passive claims require grant marker + realm-order eligibility + hiddenRealmIds exclusion + authored-shape match; talent claims require loi_kiep ownership; meridian claims require openedIds + authored id shape. Forged claims emit nothing; dormant way facet emits nothing (collectActiveWayStatMembers isBetaWay gate, CultivationPathSystem.ts:286). Probed - passes.",
+    "alchemy": "startAlchemyJob rejects 'scope_hidden' (ops :131 + domain startJob); tick parks dormant jobs without event/pill (:370-374); previewAlchemyOutcome gated (:246); getBetaAlchemyRecipeModels filters activeJobs (:401-403); AlchemyView job list filters (:195). Probed - all pass.",
+    "vendor_sell": "sell gate = profession grade strictly below player grade; dormant material ids (chieu_hien_lenh, doan_bao_thach, duyen_phan) carry no profession meta -> unsellable. Closed.",
+    "reward_drops": "RewardSystem mints only skillInsight/cultivation/spiritStone; quest itemDrops filtered per-drop; resolveDrops gated. Closed.",
+    "quest_claim_settle": "isUnlocked requires isBetaQuestEnabled && realm && !tokenOnly (:55); reconcile deactivates stale; resolveClaimable fails closed. Closed.",
+    "production_worker_settle": "setWorkerAssignment gated (:192); getWorkerAssignments returns empty map while manualWorkforce hidden (GameManagerBuildingOps :157-158) -> carried assignedWorkers inert; getWorkforceView censors assignedWorkers (:186). Probed - pass.",
+    "offline_settle": "pure cultivationPerSecond * elapsed on validator-bounded CPS (saveShapeValidation :613-624 bounds by live-talent/live-TLT ceiling); autoFarm reconcile drops ineligible armed farms; production settleOffline uses the gated workerAssignments path. Closed.",
+    "decompose": "isScopeHidden('equipmentOreDecompose') at DecomposeSystem :103,:112,:132(list),:154,:276; getSettings masks workers->0. Closed.",
+    "notifications_toasts": "no emitter reads dormant records - toast sources (quest complete, alchemy settle, decompose, companion) all sit downstream of gated writers; parked jobs emit no settlement events (probed: drainSettlementEvents empty).",
+    "tutorial_triggers": "TUTORIAL_STEPS are 9 static locale keys; tutorialSteps.ts comment mandates no hidden-content mentions; vi/en bodies verified clean (EN 'refine' wording nit noted).",
+    "save_migration_edges": "every save-version bump rejects the old version outright (dev phase, no compat translators) - no migration path exists that could mint dormant state. Closed by design.",
+    "event_handlers": "HiddenBeastSystem maybeReplaceSpawn/onEnemyDefeated gated isBetaFeature/isScopeHidden('hiddenContent'); skillInsightPillUse and other emission events fire only through gated writers. Closed.",
+    "devtools": "DevMode + enemySpawnDebug are import.meta.env.DEV-gated and disabled under supabase mode. Closed.",
+    "character_panel": "selectedTalents filtered isBetaTalentId (:65); showQuanKhiEntry gated !isScopeHidden('swordPath') (:44). Closed.",
+    "skill_path_panel": "tree gated betaWayAdmitted (:89-100); skill list betaSkillAdmitted (:195,:210); SkillRoleStrip filters betaCombatRolesFor scope-hidden (:57-65). wayIdentity renders the committed way name unconditionally - assessed NOT a defect (honest record display; the 'Pham Nhan' fallback would lie).",
+    "realm_hidden_rows": "ZhouTianSection/BodyRefinementSection/MeridianSection hidden rows gated through isNghichChuTianRevealed/betaHiddenRealmRecordFor -> undefined under lock; attemptNghichChuTian fails closed at isBetaFeature('hiddenContent'). Closed.",
+    "equipment_hall": "tabs filtered isBetaEquipmentTab (:52); paperdoll has no artifact slot; wash/refine ops gated. Closed.",
+    "companion_ops": "pull/exchange/claimGift/feed all gated isCompanionDomainUnlocked (includes isBetaFeature('companion')); gifts filtered isBetaCompanionGift. Closed.",
+    "artifact": "player.artifact is a parked record - no stat/combat consumer exists; applyArtifactExperience writes dormant XP only; domain ops gated isArtifactDomainUnlocked; flagged 'artifact_owned'. Closed.",
+    "worker_lodge_surface": "getWorkerLodgeSurfaceModel resolves per-tab verdicts; assignWorkers no-ops under lock. Closed.",
+    "stage_surfaces": "STAGES roster is 3 beta chapters only; isBetaEnemyId has zero non-test consumers; stage surface models resolve inside BETA_ENEMY_ROSTER. Closed.",
+    "stat_cap": "StatCap +10pp hidden bonus gated isBetaFeature('hiddenContent') (:63). Closed.",
+    "flagged_save_load": "validateGameSaveShape accepts a save carrying hidden way + companions + formationLoadout + autoWorkerCapacity + CHQ instance + parked alchemy job (probed ok:true) AND unsupportedReleaseReason flags it (way_out_of_scope first). Contract satisfied."
+  },
+  "notes": [
+    "Baseline: tests/architecture = 82 files / 713 tests pass at the pin before this file; probe adds 12 tests (9 pass, 3 fail by design).",
+    "The codebase has been through many prior QA waves - nearly every consumer seam carries an explicit 'BETA SCOPE LOCK' comment and fail-closed gate. The one live defect found is cosmetic (badge) and the two structural gaps have no content to leak today.",
+    "Findings are evidence of defects only - no production code was modified, per audit scope."
+  ]
+}
