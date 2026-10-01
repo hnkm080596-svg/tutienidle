@@ -28,7 +28,7 @@ import type { SkillManager } from '../skill/SkillManager'
 import type { SkillSystem } from '../skill/SkillSystem'
 import { type OrbId } from '../kiem-tu/KiemTuState'
 import { isMortalPrecursorSkillId } from '../skill/MortalPrecursors'
-import { isBetaMortalStarterId } from '../betaScope'
+import { isBetaMortalStarterId, isScopeHidden } from '../betaScope'
 import { isHiddenSwordPathway } from '../kiem-tu/KiemTuPath'
 import { validatePreset } from '../kiem-tu/KiemPhoSystem'
 import { getRealmIndex } from '../realm/realmSystem'
@@ -1180,6 +1180,12 @@ export class GameManagerProgressionOps {
     // discriminator became cultivationWay; preset is sword_pathway machinery).
     // P1 - the 'sword.sword_scroll' capability carries that membership.
     if (!player.swordPath || !hasStaticPathCapability(player, 'sword.sword_scroll')) {
+      return false
+    }
+
+    // BETA SCOPE LOCK - preset writes are sword-way machinery: a carried
+    // way_out_of_scope save must not mint edits on the dormant path.
+    if (isScopeHidden('swordPath')) {
       return false
     }
 

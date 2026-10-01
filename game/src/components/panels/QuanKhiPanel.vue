@@ -26,7 +26,7 @@ import {
   isActivePath,
   listOfferableWays,
 } from '@/core/player/CultivationPathSystem'
-import { BETA_PLAYABLE_ELEMENTS, isBetaWay } from '@/core/betaScope'
+import { BETA_PLAYABLE_ELEMENTS, isBetaWay, isScopeHidden } from '@/core/betaScope'
 import type { ElementType } from '@/core/element/ElementType'
 import { ELEMENT_LABELS } from '@/core/element/ElementLabels'
 import OverlayPanel from '@/components/common/OverlayPanel.vue'
@@ -220,7 +220,10 @@ const isSwordPath = computed(() => {
 
   // P1 - the generic authority read resolves the committed pair through
   // the catalog: a way-less/corrupt sword save is NOT kiem (fail closed).
-  return isActivePath(player, 'sword')
+  // BETA SCOPE LOCK - a carried way_out_of_scope sword save keeps the
+  // path flag, but every sword-way surface stays scope-hidden (no spec
+  // card, no preset editor).
+  return isActivePath(player, 'sword') && !isScopeHidden('swordPath')
 })
 
 // Cultivation Path Framework (M6/M9) — the sword/hidden way is canonical on

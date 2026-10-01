@@ -12,6 +12,7 @@ import { BASE_STAT_LABELS, formatStat } from '@/core/stats/StatLabels'
 import { ELEMENT_LABELS, ELEMENT_COLOR_VARS, ELEMENT_ORDER } from '@/core/element/ElementLabels'
 import { getActiveWayDefinition } from '@/core/player/CultivationPathKit'
 import { isActivePath } from '@/core/player/CultivationPathSystem'
+import { isScopeHidden } from '@/core/betaScope'
 import { MAIN_STAT_KEYS, type MainStatKey } from '@/core/stats/StatTypes'
 import { getEffectiveMainStatCap } from '@/core/stats/StatCap'
 import { useProgressionActions } from '@/composables/useProgressionActions'
@@ -37,8 +38,12 @@ const { isBattleInProgress: inBattle } = useTurnBattleInfo()
 // ý nghĩa ở đó).
 // M9 - the entry is kiem-way machinery. P1 - the generic authority read
 // resolves the committed pair through the catalog (fail closed on a
-// way-less/corrupt pair), never a raw path id.
-const showQuanKhiEntry = computed(() => isActivePath(player, 'sword'))
+// way-less/corrupt pair), never a raw path id. BETA SCOPE LOCK - a
+// carried way_out_of_scope sword save keeps the path flag but the entry
+// stays scope-hidden (the panel's editors are sword-way machinery).
+const showQuanKhiEntry = computed(
+  () => isActivePath(player, 'sword') && !isScopeHidden('swordPath'),
+)
 
 function openQuanKhi() {
   ui.openStandalonePanel('quan_khi')

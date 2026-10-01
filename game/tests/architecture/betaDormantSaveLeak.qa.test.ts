@@ -31,9 +31,13 @@ import { TECHNIQUES } from '@/data/technique/Techniques'
 import { KIEM_TU_NODES } from '@/data/progression/KiemTuNodes'
 import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
 import type { Skill } from '@/core/skill/Skill'
-import { freshSwordPathState } from '@/core/kiem-tu/KiemTuState'
+import { freshSwordPathState, type OrbId } from '@/core/kiem-tu/KiemTuState'
 import { createSpellPathState } from '@/core/phap-tu/PhapTuState'
-import { resolvePathCapabilities } from '@/core/player/CultivationPathSystem'
+import { hasStaticPathCapability, resolvePathCapabilities } from '@/core/player/CultivationPathSystem'
+import { BattleLootSystem, type BattleLootSystemDeps } from '@/core/game/BattleLootSystem'
+import { MaterialRegistry } from '@/core/material/MaterialRegistry'
+import type { Material } from '@/core/material/Material'
+import type { ResolvedDropItem } from '@/core/drop/resolveDrops'
 import { GENERIC_PHYSICAL_BASIC } from '@/data/skill/TurnBasicAttacks'
 import { VAN_PHAP_THAN_HOA_ID } from '@/data/buff/ReactionStatusBuffs'
 
@@ -403,5 +407,84 @@ describe('dormancy: dormant-kit skill cores reject insight spends and learns (F-
       purchasedNodeIds: ['core_hoa_cau_thuat'],
     })
     expect(gameManager.progressionOps.levelUpSkill('hoa_cau_thuat', spellSave)).toBe(true)
+  })
+})
+
+
+describe('dormancy: a carried sword save cannot drive sword machinery (F-B-2)', () => {
+  it('setKiemPhoPreset fails closed under beta scope and leaves the preset untouched', () => {
+    const gameManager = new GameManager()
+    const p = player({
+      cultivationPath: 'sword',
+      cultivationWay: 'sword_pathway',
+      swordPath: freshSwordPathState(),
+      // qi_refining: orb_dam is realm-unlocked so validatePreset alone
+      // would admit the write - the scope seam is the only rejector.
+      realmId: 'qi_refining',
+      realmLevel: 12,
+    })
+
+    expect(unsupportedReleaseReason(p)).toBe('way_out_of_scope')
+    // The capability gate alone would admit (the save carries
+    // sword.sword_scroll) - the scope seam is the only rejector.
+    expect(hasStaticPathCapability(p, 'sword.sword_scroll')).toBe(true)
+
+    expect(gameManager.progressionOps.setKiemPhoPreset(p, ['orb_dam', 'orb_dam'] as OrbId[])).toBe(
+      false,
+    )
+    expect(p.swordPath!.preset).toEqual(['orb_dam'])
+  })
+})
+
+
+describe('beta-live progression: physique essences fund the realm body chapters (F-B-1)', () => {
+  const ESSENCE: Material = {
+    id: 'tinh_hoa_pham_the',
+    name: 'Tinh Hoa Pham The',
+    category: 'essence',
+    sourceType: 'monster',
+    description: 'chapter essence',
+  }
+
+  function buildLoot() {
+    const materialRegistry = new MaterialRegistry()
+    materialRegistry.register(ESSENCE)
+    const bag: Array<{ id: string; amount: number }> = []
+    const gained: Array<{ id: string; amount: number }> = []
+    const deps = {
+      eventBus: { emit: () => {} },
+      notifications: { push: () => {} },
+      stageManager: { getActive: () => undefined },
+      zoneRegistry: { getZoneForStage: () => undefined },
+      materialRegistry,
+      materialBag: {
+        add: (material: Material, amount: number) => {
+          bag.push({ id: material.id, amount })
+          return 0
+        },
+      },
+      notifyMaterialGained: (id: string, amount: number) => {
+        gained.push({ id, amount })
+      },
+    } as unknown as BattleLootSystemDeps
+
+    return { loot: new BattleLootSystem(deps), bag, gained }
+  }
+
+  function grant(loot: BattleLootSystem, items: ResolvedDropItem[]) {
+    ;(
+      loot as unknown as {
+        grantResolvedDrops: (i: ResolvedDropItem[], steps: number, sourceId: string) => void
+      }
+    ).grantResolvedDrops(items, 0, 'probe')
+  }
+
+  it('physique essence drops deliver under beta scope (chapter faucet stays open)', () => {
+    const { loot, bag, gained } = buildLoot()
+
+    grant(loot, [{ kind: 'material', itemId: 'tinh_hoa_pham_the', amount: 3 }])
+
+    expect(bag).toEqual([{ id: 'tinh_hoa_pham_the', amount: 3 }])
+    expect(gained).toEqual([{ id: 'tinh_hoa_pham_the', amount: 3 }])
   })
 })
