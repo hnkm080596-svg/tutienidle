@@ -24438,13 +24438,13 @@
       "path": "src/services/save/saveShapeValidation.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "e790fd68088cd1d28cf125b2d2ffa0ded1089076101515ba43cef172313e4082"
+      "hash": "6c09ad42102aed6c1240e9c719ba689356738221ac633132d35c41d4260b16a5"
     },
     {
       "path": "src/services/save/saveShapeValidation.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "feaf8aeda92737746f53144d7c92f11a621e5e6b25fa5288291901bed134d033"
+      "hash": "0b50a0ff911645fcc84faf05006136c2fe84c26b8d53e321450dabde83d31f6b"
     },
     {
       "path": "src/services/save/SaveSystem.bootRestore.test.ts",
@@ -24456,7 +24456,7 @@
       "path": "src/services/save/SaveSystem.conformance.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "6d6964918d58e38593442394b3c967d777f2975f5ed799ea84908964958c3c49"
+      "hash": "40f2e3169a413275ab7831699564ceae0aa41d91d3a7be063eb9270a6cef30c4"
     },
     {
       "path": "src/services/save/SaveSystem.quota.test.ts",
@@ -24474,7 +24474,7 @@
       "path": "src/services/save/SaveSystem.saveLoadRoundTrip.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "9c4cf4b02a4991d31bacf99a9e4c9ef9f21654147592343dee97acad8b49d5aa"
+      "hash": "a07ff01b9b513d82621313e839c6802a787331fdb1f644fd0e92e416ea8e892a"
     },
     {
       "path": "src/services/save/SaveSystem.snapshotIsolation.test.ts",
@@ -24972,13 +24972,13 @@
       "path": "tests/architecture/betaBoundaryMagnitude.qa.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "c92c15b2c6890a7701be87b5d1e0e6f146b9ca02604cd27f0a2278b7b6782dbe"
+      "hash": "5ccc383b6bbc442dc49c46b8336d4e03ecafb3520b6bd935c89dd20330607cb6"
     },
     {
       "path": "tests/architecture/betaClaimedSourceForge.qa.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "1ad20916adbf4e822261e0a3c07bc8fcfede059be23fdb2cf45361daa2b93fc0"
+      "hash": "8c533b7d57643c07640e3d7c61aafb8dfc4b3eec223eada9fbd55f2ea46ef0a6"
     },
     {
       "path": "tests/architecture/betaConsumerLeak.qa.test.ts",
@@ -25080,7 +25080,7 @@
       "path": "tests/architecture/betaWriterBoundsTc8.qa.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "7a130a45ed9783695b5f9af18f0d63c9c25961e7c5851b98403a51da904b3e78"
+      "hash": "38633805e2fd3f495f6fe6a0f854e188193e0194052c75e57b7702645a46a848"
     },
     {
       "path": "tests/architecture/buildCompositionBoundary.test.ts",
@@ -25315,6 +25315,12 @@
       "kind": "file",
       "mode": 33188,
       "hash": "025cf6931ccc6aa1171f8f57bd2de61f3fd5eb22573ea8db3c5c2ba727ca5c8d"
+    },
+    {
+      "path": "tests/architecture/scopeAuthorityBlind.qa.test.ts",
+      "kind": "file",
+      "mode": 33152,
+      "hash": "dea499948ab32e03e7c1f10b6924ff77e8df016dc1b298afd509eb337e1e2eef"
     },
     {
       "path": "tests/architecture/screenShakeAuthority.test.ts",
@@ -25701,5 +25707,5 @@
       "hash": "0bb3657058699da63594036eda9bb6be7f6b4b44aebbb960fcba939870fd3f5e"
     }
   ],
-  "productStateId": "735483ad51b3eee824a4ab3291019299d852283f434e6d68ad6e369eeb30b1c8"
+  "productStateId": "cdff040243d8feb0a1596e1d03857f53eebccb06bb7675027e08ab92e7dcc8c4"
 }
