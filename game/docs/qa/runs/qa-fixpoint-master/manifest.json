@@ -16668,7 +16668,7 @@
       "path": "src/core/alchemy/AlchemySystem.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "32803c1c9c3db5fa887b8850ad2d1c368300f45b0395bbb7c4616a298e52b8cc"
+      "hash": "c15c7f7dc4d96d671e30b8dac031178f2e1d1bd206e6a1e78d4b8ba0e985a6c1"
     },
     {
       "path": "src/core/artifact/Artifact.ts",
@@ -18012,7 +18012,7 @@
       "path": "src/core/building/BuildingSystem.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "a217c425ce8993c920dcc22e0c1b26400b4d6d93846794ca55a3542ec66851cf"
+      "hash": "0997b4e6af88b452a30262a0ebec3bbf2eee1b0f1745ceb66e7df7f3a7d4a0a4"
     },
     {
       "path": "src/core/combat/Accuracy.test.ts",
@@ -18330,7 +18330,7 @@
       "path": "src/core/cultivation/CultivationTick.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "27868ddc4965ae4619a3be4080d547712544601a5e4b9a466ab2633e81364c76"
+      "hash": "7c600b82d1f04f9eab6822bb810eef73b8fc25842898b116df0caf53727c1b7d"
     },
     {
       "path": "src/core/cultivation/CultivationTick.ts",
@@ -18426,13 +18426,13 @@
       "path": "src/core/economy/TuLinhTranBalance.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "203a06fd053d06042a7cb9b8af5593f72675a16643eae2d27aa91aa51a1b7371"
+      "hash": "059a72e1f992f5d80eda503dbfcc2d0ad96c856eaefa6d384fc8c30b6ec0c513"
     },
     {
       "path": "src/core/economy/TuLinhTranBalance.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "340e5dc694e3c23451a82c02edca4f15fb62982ee948ee575e081b4ddc11b88f"
+      "hash": "a1b26d852c18a84f354a21c4486592a2d231fb208060fdb2dbed850eaeb62edc"
     },
     {
       "path": "src/core/economy/VendorBalance.ts",
@@ -20322,7 +20322,7 @@
       "path": "src/core/player/Player.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "0672fe1fb78a77f06e6e059b79f20c890a6849637a662103b4d53d7ab4fd7680"
+      "hash": "1747cec1220633904b06abe08d3609606cda2243af1f67ff67ad0137017e0cfb"
     },
     {
       "path": "src/core/player/PlayerSnapshot.ts",
@@ -21114,7 +21114,7 @@
       "path": "src/core/realm/hidden/HiddenLineage.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "7bff7d18173b17d348ba6d5558aed5db317619b2b007c1cc714e1c0b19947fcc"
+      "hash": "a063fefab4d16db90b56b6ad70b4982ff02f8750f57f7f93d70e04f74265088f"
     },
     {
       "path": "src/core/realm/hidden/HiddenPerfection.test.ts",
@@ -21930,7 +21930,7 @@
       "path": "src/core/talent/TalentEntitlement.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "e36496ddc3c4bbbeaf50a6f99eeb119b039ebd04a4258e39e0809d5baaf10c6c"
+      "hash": "1e28ea1ea34dccf946015aad62e572802b3b51bd88d4dd7e86bf7df0f208c1bc"
     },
     {
       "path": "src/core/talent/TalentsV4Wiring.test.ts",
@@ -24444,7 +24444,7 @@
       "path": "src/services/save/saveShapeValidation.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "85bba498be76de51d173d02f11ac746fa3bd6fe25408d430caa42595b1a8334d"
+      "hash": "0ce42a4a4ad10b64a5f86f7546e96d3bee3bdcdb79afa88b3754d267f827a0e8"
     },
     {
       "path": "src/services/save/SaveSystem.bootRestore.test.ts",
@@ -24738,7 +24738,7 @@
       "path": "src/stores/player.restoreFromSave.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "5afe1594a50154cdd6a60d59e1236d1ecb83768b8ebc0bd8f51ec72d2ff66d54"
+      "hash": "ebd82fc46cfe8b652745ca13ea182148b245cff50ec0f48a8598a4f2cd8ffd8a"
     },
     {
       "path": "src/stores/player.save.test.ts",
@@ -24969,6 +24969,18 @@
       "hash": "cad200e8a45856795b45922235914295984885843a9fc71c2d246331df640920"
     },
     {
+      "path": "tests/architecture/betaClaimedSourceForge.qa.test.ts",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "b94dd37f61a0f3d053faca72681253d78ca2677e2dac58cef37f82de9d1a5399"
+    },
+    {
+      "path": "tests/architecture/betaConsumerLeak.qa.test.ts",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "1b12fdeef5fc72aa3070c12ddbdf7d4e8b79610f1a06cb568c11a7df5558491d"
+    },
+    {
       "path": "tests/architecture/betaConsumerSeamMounts.qa.test.ts",
       "kind": "file",
       "mode": 33188,
@@ -24996,7 +25008,7 @@
       "path": "tests/architecture/betaPersistedRealmModifiers.qa.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "d563f46550ddb4d2fad1cdcd6f0f0cc4562e249c11e271218d012be2bf48f5b2"
+      "hash": "dc3a15a5842c9d23b2a76671e1ed49b9c5a5794f923138a4399654195d9b0845"
     },
     {
       "path": "tests/architecture/betaReadModelHonesty.qa.test.ts",
@@ -25647,5 +25659,5 @@
       "hash": "0bb3657058699da63594036eda9bb6be7f6b4b44aebbb960fcba939870fd3f5e"
     }
   ],
-  "productStateId": "a1ddad7788a9afc923faa1ea24847bf36b89c14b8849e0078ab973dda011c4f8"
+  "productStateId": "3d91ed561793d6a001bd79f0e147cfe43b96109886ee9ea7dfc12c90aa6c43e8"
 }

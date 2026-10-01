@@ -1,0 +1,1010 @@
+{
+ "records": [
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-PIN-A7TC5",
+    "kind": "EXECUTED_UNIT_STRUCTURAL",
+    "state": {
+     "productStateId": "3d91ed561793d6a001bd79f0e147cfe43b96109886ee9ea7dfc12c90aa6c43e8",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "CURRENT",
+    "commandOrMethod": "npx vitest run tests/architecture/betaClaimedSourceForge.qa.test.ts tests/architecture/betaPersistedRealmModifiers.qa.test.ts tests/architecture/betaConsumerLeak.qa.test.ts",
+    "cwd": "game/",
+    "artifactPath": "evidence/t13-pin-a7tc5.log",
+    "artifactHash": "ae5d1ad39a67edf151ae34b82d879f618ad9159856c02a970b5b460ebaa47f4e",
+    "result": "PASS",
+    "exitCode": 0,
+    "startedAt": "2026-10-01T08:05:00Z",
+    "finishedAt": "2026-10-01T08:15:00Z",
+    "producer": "coord-main",
+    "invariantIds": [
+     "I-AS-1",
+     "I-DS-1",
+     "I-SF-1",
+     "I-EC-1"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [],
+    "claims": [
+     "38 pins green: forged modifier claims (unknown realm sourceId, non-loi_kiep talent, non-inventory sourceType) rejected AND inert; forged timed-effect claims (tu_linh_tran modifiers/dup group/out-of-bound percent/fabricated sourceItemId/pill+speed) rejected; alchemy pillId!=recipe.pillId rejected + settle delivers recipe pill; accrualRealmId/collectionRealmId above player realm rejected + claim clamps; controls (loi_kiep, meridian, equipment, legit tl_tran, pill regen, pin<=realm) all validate+emit"
+    ],
+    "limitations": []
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-MUT-A7TC5",
+    "kind": "EXECUTED_MUTATION",
+    "state": {
+     "productStateId": "3d91ed561793d6a001bd79f0e147cfe43b96109886ee9ea7dfc12c90aa6c43e8",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "CURRENT",
+    "commandOrMethod": "manual mutants over T13 forged-claim seams vs betaClaimedSourceForge.qa.test.ts",
+    "cwd": "game/",
+    "artifactPath": "evidence/t13-mutant-a7tc5.log",
+    "artifactHash": "9853ac836f4260f8f07d4a09bcd817a09099c552e206f7d6cd9b80bf7fc4452a",
+    "result": "PASS",
+    "exitCode": 0,
+    "startedAt": "2026-10-01T08:05:00Z",
+    "finishedAt": "2026-10-01T08:15:00Z",
+    "producer": "coord-main",
+    "invariantIds": [
+     "I-AS-1",
+     "I-DS-1",
+     "I-SF-1"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [],
+    "claims": [
+     "8 mutants KILLED_EXPECTED: emit fallthrough permissive (3 fails), validator claim block off (3), settle job.pillId (1), claim raw pin (1), accrual bound off (2), speed emit bound off (2), timed coherence off (5)"
+    ],
+    "limitations": []
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-VERIFY-T13",
+    "kind": "EXECUTED_INTEGRATION",
+    "state": {
+     "productStateId": "3d91ed561793d6a001bd79f0e147cfe43b96109886ee9ea7dfc12c90aa6c43e8",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "CURRENT",
+    "commandOrMethod": "npm run verify (type-check + build + full vitest) on fba2bd85",
+    "cwd": "game/",
+    "artifactPath": "evidence/t13-verify.log",
+    "artifactHash": "dd1d573481e4061e40a03b8f9d4e171bdfae5896cf2f1e0562dbfdbb49397301",
+    "result": "PASS",
+    "exitCode": 0,
+    "startedAt": "2026-10-01T08:13:00Z",
+    "finishedAt": "2026-10-01T08:17:00Z",
+    "producer": "coord-main",
+    "invariantIds": [
+     "I-AS-1",
+     "I-DS-1",
+     "I-SF-1",
+     "I-EC-1"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [],
+    "claims": [
+     "7948 tests green / 866 files; ngoDaoReaction flake absent on this run; EM-02 + CultivationTick fixture-normalization commits included"
+    ],
+    "limitations": []
+   }
+  },
+  {
+   "kind": "review",
+   "body": {
+    "id": "RV-ADV-A7",
+    "contextId": "ctx-child-a7",
+    "reviewerId": "devin-f55f935a65184e87908a50a1390a15b0",
+    "model": "SWE-2",
+    "phase": "AUTHORITY",
+    "round": 17,
+    "role": "fresh blind authority-seam review on 3e802342 (T12): F-A7-1/2/3 Medium forged-claim class confirmed; fixed on T13",
+    "state": {
+     "productStateId": "3d91ed561793d6a001bd79f0e147cfe43b96109886ee9ea7dfc12c90aa6c43e8",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "SEALED",
+    "startedAt": "2026-10-01T07:00:00Z",
+    "sealedAt": "2026-10-01T07:45:00Z",
+    "priorFindingsVisible": false,
+    "reviewedAfterPreviousFixes": true,
+    "inputBundleHash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+    "evidenceIds": [],
+    "coverageIds": [],
+    "findingIds": [
+     "F-A7-1",
+     "F-A7-2",
+     "F-A7-3"
+    ],
+    "novelAttackIds": [],
+    "accessLimitations": [],
+    "previousPhaseReviewId": "RV-ADV-A6"
+   }
+  },
+  {
+   "kind": "review",
+   "body": {
+    "id": "RV-ADV-B7",
+    "contextId": "ctx-child-b7",
+    "reviewerId": "devin-17675f9babeb448f80971898027f1682",
+    "model": "SWE-2",
+    "phase": "INTEGRATION",
+    "round": 17,
+    "role": "fresh blind consumer-seam review on 3e802342 (T12): F-B7-1 dormant talent UPGRADE card + F-B7-2 ungated closeHiddenLineage write; fixed at 57d67081",
+    "state": {
+     "productStateId": "3d91ed561793d6a001bd79f0e147cfe43b96109886ee9ea7dfc12c90aa6c43e8",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "SEALED",
+    "startedAt": "2026-10-01T07:00:00Z",
+    "sealedAt": "2026-10-01T07:45:00Z",
+    "priorFindingsVisible": false,
+    "reviewedAfterPreviousFixes": true,
+    "inputBundleHash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+    "evidenceIds": [],
+    "coverageIds": [],
+    "findingIds": [
+     "F-B7-1",
+     "F-B7-2"
+    ],
+    "novelAttackIds": [],
+    "accessLimitations": [],
+    "previousPhaseReviewId": "RV-ADV-B6"
+   }
+  },
+  {
+   "kind": "review",
+   "body": {
+    "id": "RV-ADV-TC5",
+    "contextId": "ctx-child-tc5",
+    "reviewerId": "devin-8a907a21d421400a85cfb1703b1a41ab",
+    "model": "SWE-2",
+    "phase": "TERMINAL_CHECK",
+    "round": 17,
+    "role": "fresh blind falsification sweep on 3e802342 (T12): F-TC5-1 forged accrualRealmId mints dormant-tier stones; 18/18 hostile probes otherwise green; fixed on T13",
+    "state": {
+     "productStateId": "3d91ed561793d6a001bd79f0e147cfe43b96109886ee9ea7dfc12c90aa6c43e8",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "SEALED",
+    "startedAt": "2026-10-01T07:00:00Z",
+    "sealedAt": "2026-10-01T07:45:00Z",
+    "priorFindingsVisible": false,
+    "reviewedAfterPreviousFixes": true,
+    "inputBundleHash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+    "evidenceIds": [],
+    "coverageIds": [],
+    "findingIds": [
+     "F-TC5-1"
+    ],
+    "novelAttackIds": [],
+    "accessLimitations": [],
+    "previousPhaseReviewId": "RV-ADV-TC4"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-B7-1",
+    "title": "dormant talents render as selectable UPGRADE cards on the mandatory breakthrough-talent modal (getUpgradeableTalentIds + UPGRADE branch ungated)",
+    "severity": "Medium",
+    "status": "CLOSED",
+    "classification": "REAL_DEFECT",
+    "discoveredBy": "devin-17675f9babeb448f80971898027f1682",
+    "actionable": true,
+    "subsystem": "betaScope",
+    "rootClass": "AUTHORITY",
+    "rootCause": "isBetaTalentId gate present on collectTalentEffects but missing on getUpgradeableTalentIds and the UPGRADE branch of resolveTalentEntitlement",
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/core/talent/TalentEntitlement.ts",
+      "revision": "fba2bd85",
+      "symbolOrSection": "getUpgradeableTalentIds / resolveTalentEntitlement"
+     },
+     {
+      "basis": "SOURCE",
+      "path": "src/components/game/TalentEntitlementModal.vue",
+      "revision": "fba2bd85",
+      "symbolOrSection": "renders offer"
+     }
+    ],
+    "reachability": "PRODUCTION",
+    "state": {
+     "productStateId": "3d91ed561793d6a001bd79f0e147cfe43b96109886ee9ea7dfc12c90aa6c43e8",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "invariantIds": [
+     "I-AS-1",
+     "I-DS-1"
+    ],
+    "siblingFindingIds": [],
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "expected": "dormant carried talents never offered; entitlement cannot be consumed by a dormant card",
+    "actual": "carried kd_thanh_dan/kd_linh_dan offered on the uncancellable modal; selecting writes talentLevels[id]+=1 and consumes the single entitlement",
+    "counterexample": "carried save owning kd_thanh_dan reaches breakthrough -> modal offers the dormant UPGRADE card",
+    "repair": "isBetaTalentId guards on getUpgradeableTalentIds + resolveTalentEntitlement UPGRADE branch (57d67081)",
+    "evidenceIds": [
+     "EV-PIN-A7TC5",
+     "EV-MUT-A7TC5",
+     "EV-VERIFY-T13"
+    ],
+    "pinEvidenceIds": [
+     "EV-PIN-A7TC5",
+     "EV-MUT-A7TC5",
+     "EV-VERIFY-T13"
+    ],
+    "verificationEvidenceIds": [
+     "EV-PIN-A7TC5",
+     "EV-MUT-A7TC5",
+     "EV-VERIFY-T13"
+    ],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src/core",
+       "src/services",
+       "src/components",
+       "tests"
+      ],
+      "termsAndMethod": "claimed-source census: every persisted denormalized/claimed-source field enumerated and resolved against the closed writer inventory; emit seams classified fail-closed vs permissive-by-open-extension-point",
+      "hitDispositions": [
+       "see claims in evidence"
+      ],
+      "coverageLimits": [
+       "emit permissive where applyTimedEffect is an open extension point; validator is the boundary"
+      ],
+      "evidenceIds": [
+       "EV-PIN-A7TC5",
+       "EV-MUT-A7TC5",
+       "EV-VERIFY-T13"
+      ]
+     }
+    ],
+    "closeReason": "upgrade candidates filtered by isBetaTalentId; UPGRADE branch gated; pin green at 57d67081",
+    "closedAt": "2026-10-01T08:15:00Z",
+    "closureReviewIds": [
+     "RV-CLOSURE-12"
+    ]
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-B7-2",
+    "title": "closeHiddenLineage not scope-gated - every live normal breakthrough destructively mutates a carried open lineage",
+    "severity": "Medium",
+    "status": "CLOSED",
+    "classification": "REAL_DEFECT",
+    "discoveredBy": "devin-17675f9babeb448f80971898027f1682",
+    "actionable": true,
+    "subsystem": "betaScope",
+    "rootClass": "AUTHORITY",
+    "rootCause": "every sibling read/write in HiddenLineage.ts gated on isBetaFeature('hiddenContent') except closeHiddenLineage/recordHiddenBreakthrough",
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/core/hidden/HiddenLineage.ts",
+      "revision": "fba2bd85",
+      "symbolOrSection": "closeHiddenLineage / recordHiddenBreakthrough"
+     },
+     {
+      "basis": "SOURCE",
+      "path": "src/core/game/GameManagerRealmAdvanceOps.ts",
+      "revision": "fba2bd85",
+      "symbolOrSection": "commitInitiationRealmAdvance caller"
+     }
+    ],
+    "reachability": "PRODUCTION",
+    "state": {
+     "productStateId": "3d91ed561793d6a001bd79f0e147cfe43b96109886ee9ea7dfc12c90aa6c43e8",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "invariantIds": [
+     "I-DS-1"
+    ],
+    "siblingFindingIds": [],
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "expected": "carried dormant lineage records are readable-but-inert; no destructive mutation under the lock",
+    "actual": "live breakthroughs write lineageActive->false + lineageClosedByRealmId onto carried open lineages",
+    "counterexample": "carried open lineage + commitInitiationRealmAdvance -> record mutated (lineageActive false)",
+    "repair": "gate closeHiddenLineage + recordHiddenBreakthrough on isBetaFeature('hiddenContent') (57d67081)",
+    "evidenceIds": [
+     "EV-PIN-A7TC5",
+     "EV-MUT-A7TC5",
+     "EV-VERIFY-T13"
+    ],
+    "pinEvidenceIds": [
+     "EV-PIN-A7TC5",
+     "EV-MUT-A7TC5",
+     "EV-VERIFY-T13"
+    ],
+    "verificationEvidenceIds": [
+     "EV-PIN-A7TC5",
+     "EV-MUT-A7TC5",
+     "EV-VERIFY-T13"
+    ],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src/core",
+       "src/services",
+       "src/components",
+       "tests"
+      ],
+      "termsAndMethod": "claimed-source census: every persisted denormalized/claimed-source field enumerated and resolved against the closed writer inventory; emit seams classified fail-closed vs permissive-by-open-extension-point",
+      "hitDispositions": [
+       "see claims in evidence"
+      ],
+      "coverageLimits": [
+       "emit permissive where applyTimedEffect is an open extension point; validator is the boundary"
+      ],
+      "evidenceIds": [
+       "EV-PIN-A7TC5",
+       "EV-MUT-A7TC5",
+       "EV-VERIFY-T13"
+      ]
+     }
+    ],
+    "closeReason": "both writes gated; pin green at 57d67081",
+    "closedAt": "2026-10-01T08:15:00Z",
+    "closureReviewIds": [
+     "RV-CLOSURE-12"
+    ]
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-A7-1",
+    "title": "forged claimed-source player.modifiers mint live stats - emit fallthrough + shape-only boundary",
+    "severity": "Medium",
+    "status": "CLOSED",
+    "classification": "REAL_DEFECT",
+    "discoveredBy": "devin-f55f935a65184e87908a50a1390a15b0",
+    "actionable": true,
+    "subsystem": "betaScope",
+    "rootClass": "AUTHORITY",
+    "rootCause": "validateStatModifierEntries shape-only; F-BS-3 coherence covered only realm+REALM_PASSIVES; unknown realm sourceIds hit emit 'return true' fallthrough; non-realm sourceTypes emitted unconditionally",
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/services/save/saveShapeValidation.ts",
+      "revision": "fba2bd85",
+      "symbolOrSection": "validateStatModifierEntries claim coherence"
+     },
+     {
+      "basis": "SOURCE",
+      "path": "src/core/player/Player.ts",
+      "revision": "fba2bd85",
+      "symbolOrSection": "resolvePlayerStatAssembly emit filter"
+     }
+    ],
+    "reachability": "PRODUCTION",
+    "state": {
+     "productStateId": "3d91ed561793d6a001bd79f0e147cfe43b96109886ee9ea7dfc12c90aa6c43e8",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "invariantIds": [
+     "I-AS-1",
+     "I-SF-1",
+     "I-DS-1"
+    ],
+    "siblingFindingIds": [
+     "F-A7-2"
+    ],
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "expected": "a persisted modifier claim resolves against the closed writer inventory (realm passives+marker, meridian chapter, loi_kiep grant, self-scrubbing equipment); unknown sources rejected at boundary and inert at emit",
+    "actual": "{realm,'realm_source_that_does_not_exist',strength,percent:9} validated AND emitted (1->10); {talent,'tam_the_linh_can',strength,flat:9999} -> 1->10000",
+    "counterexample": "forged modifiers slice on a valid save validates + stats minted at restore",
+    "repair": "writer-inventory coherence at the boundary + fail-closed emit for any source no writer mints (ee672699)",
+    "evidenceIds": [
+     "EV-PIN-A7TC5",
+     "EV-MUT-A7TC5",
+     "EV-VERIFY-T13"
+    ],
+    "pinEvidenceIds": [
+     "EV-PIN-A7TC5",
+     "EV-MUT-A7TC5",
+     "EV-VERIFY-T13"
+    ],
+    "verificationEvidenceIds": [
+     "EV-PIN-A7TC5",
+     "EV-MUT-A7TC5",
+     "EV-VERIFY-T13"
+    ],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src/core",
+       "src/services",
+       "src/components",
+       "tests"
+      ],
+      "termsAndMethod": "claimed-source census: every persisted denormalized/claimed-source field enumerated and resolved against the closed writer inventory; emit seams classified fail-closed vs permissive-by-open-extension-point",
+      "hitDispositions": [
+       "see claims in evidence"
+      ],
+      "coverageLimits": [
+       "emit permissive where applyTimedEffect is an open extension point; validator is the boundary"
+      ],
+      "evidenceIds": [
+       "EV-PIN-A7TC5",
+       "EV-MUT-A7TC5",
+       "EV-VERIFY-T13"
+      ]
+     }
+    ],
+    "closeReason": "boundary resolves claims vs closed inventory; emit fail-closed; mutant-killed",
+    "closedAt": "2026-10-01T08:15:00Z",
+    "closureReviewIds": [
+     "RV-CLOSURE-12"
+    ]
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-A7-2",
+    "title": "forged persistentTimedEffects mint stats + unbounded cultivation speed",
+    "severity": "Medium",
+    "status": "CLOSED",
+    "classification": "REAL_DEFECT",
+    "discoveredBy": "devin-f55f935a65184e87908a50a1390a15b0",
+    "actionable": true,
+    "subsystem": "betaScope",
+    "rootClass": "AUTHORITY",
+    "rootCause": "boundary validated only id/sourceItemId/timestamps/modifier shape - effectGroup, cultivationSpeedPercent, durationStackable never verified; emit summed any tu_linh_tran-grouped percent",
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/services/save/saveShapeValidation.ts",
+      "revision": "fba2bd85",
+      "symbolOrSection": "timed-effect claim coherence"
+     },
+     {
+      "basis": "SOURCE",
+      "path": "src/core/economy/TuLinhTranBalance.ts",
+      "revision": "fba2bd85",
+      "symbolOrSection": "getActiveCultivationSpeedPercent bound"
+     }
+    ],
+    "reachability": "PRODUCTION",
+    "state": {
+     "productStateId": "3d91ed561793d6a001bd79f0e147cfe43b96109886ee9ea7dfc12c90aa6c43e8",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "invariantIds": [
+     "I-AS-1",
+     "I-SF-1",
+     "I-DS-1"
+    ],
+    "siblingFindingIds": [
+     "F-A7-1"
+    ],
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "expected": "a timed-effect claim resolves against its writers (activateTuLinhTran shape: group match, empty modifiers, percent<=0.25, single entry per group; pill regen: authored id, manaRegenPerTurn only)",
+    "actual": "{tu_linh_tran, maxHp flat:9999, cultivationSpeedPercent:9} validated, emitted, minted 10x cultivation online+offline",
+    "counterexample": "forged timed effect entry with fabricated group/percent -> live stat + speed effect",
+    "repair": "writer-shape coherence at boundary + cultivation-speed channel bounded to authored percent (ee672699); timed modifier emit stays permissive (open extension point)",
+    "evidenceIds": [
+     "EV-PIN-A7TC5",
+     "EV-MUT-A7TC5",
+     "EV-VERIFY-T13"
+    ],
+    "pinEvidenceIds": [
+     "EV-PIN-A7TC5",
+     "EV-MUT-A7TC5",
+     "EV-VERIFY-T13"
+    ],
+    "verificationEvidenceIds": [
+     "EV-PIN-A7TC5",
+     "EV-MUT-A7TC5",
+     "EV-VERIFY-T13"
+    ],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src/core",
+       "src/services",
+       "src/components",
+       "tests"
+      ],
+      "termsAndMethod": "claimed-source census: every persisted denormalized/claimed-source field enumerated and resolved against the closed writer inventory; emit seams classified fail-closed vs permissive-by-open-extension-point",
+      "hitDispositions": [
+       "see claims in evidence"
+      ],
+      "coverageLimits": [
+       "emit permissive where applyTimedEffect is an open extension point; validator is the boundary"
+      ],
+      "evidenceIds": [
+       "EV-PIN-A7TC5",
+       "EV-MUT-A7TC5",
+       "EV-VERIFY-T13"
+      ]
+     }
+    ],
+    "closeReason": "claims resolved; speed channel bounded (0,0.25]; mutants killed",
+    "closedAt": "2026-10-01T08:15:00Z",
+    "closureReviewIds": [
+     "RV-CLOSURE-12"
+    ]
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-A7-3",
+    "title": "alchemy settle trusts persisted job.pillId - never re-derived vs recipe authority",
+    "severity": "Medium",
+    "status": "CLOSED",
+    "classification": "REAL_DEFECT",
+    "discoveredBy": "devin-f55f935a65184e87908a50a1390a15b0",
+    "actionable": true,
+    "subsystem": "betaScope",
+    "rootClass": "AUTHORITY",
+    "rootCause": "tick/settleOffline delivered resolvePill(job.pillId); no pillId===recipe.pillId check anywhere; dormant park read recipeId only",
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/core/alchemy/AlchemySystem.ts",
+      "revision": "fba2bd85",
+      "symbolOrSection": "tick settle"
+     },
+     {
+      "basis": "SOURCE",
+      "path": "src/services/save/saveShapeValidation.ts",
+      "revision": "fba2bd85",
+      "symbolOrSection": "validateAlchemyJobsSave"
+     }
+    ],
+    "reachability": "PRODUCTION",
+    "state": {
+     "productStateId": "3d91ed561793d6a001bd79f0e147cfe43b96109886ee9ea7dfc12c90aa6c43e8",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "invariantIds": [
+     "I-AS-1",
+     "I-DS-1"
+    ],
+    "siblingFindingIds": [],
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "expected": "settle delivers the authored recipe's pillId; a forged denormalized claim is rejected at the boundary and cannot redirect delivery",
+    "actual": "{recipeId:'alchemy_tu_linh_dan_mortal', pillId:'thong_mach_dan'} minted the dormant pill + success event; pillId:'truc_co_dan' minted the gate pill free of ingredients",
+    "counterexample": "carried job with forged pillId settles -> dormant/gated pill delivered",
+    "repair": "settle re-derives via recipe.pillId; validator cross-checks the pair (ee672699)",
+    "evidenceIds": [
+     "EV-PIN-A7TC5",
+     "EV-MUT-A7TC5",
+     "EV-VERIFY-T13"
+    ],
+    "pinEvidenceIds": [
+     "EV-PIN-A7TC5",
+     "EV-MUT-A7TC5",
+     "EV-VERIFY-T13"
+    ],
+    "verificationEvidenceIds": [
+     "EV-PIN-A7TC5",
+     "EV-MUT-A7TC5",
+     "EV-VERIFY-T13"
+    ],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src/core",
+       "src/services",
+       "src/components",
+       "tests"
+      ],
+      "termsAndMethod": "claimed-source census: every persisted denormalized/claimed-source field enumerated and resolved against the closed writer inventory; emit seams classified fail-closed vs permissive-by-open-extension-point",
+      "hitDispositions": [
+       "see claims in evidence"
+      ],
+      "coverageLimits": [
+       "emit permissive where applyTimedEffect is an open extension point; validator is the boundary"
+      ],
+      "evidenceIds": [
+       "EV-PIN-A7TC5",
+       "EV-MUT-A7TC5",
+       "EV-VERIFY-T13"
+      ]
+     }
+    ],
+    "closeReason": "settle authority = recipe.pillId; boundary coherence; settle pin green",
+    "closedAt": "2026-10-01T08:15:00Z",
+    "closureReviewIds": [
+     "RV-CLOSURE-12"
+    ]
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-TC5-1",
+    "title": "forged accrualRealmId (+sibling collectionRealmId) pins mint dormant-tier materials at forged-realm rate",
+    "severity": "Medium",
+    "status": "CLOSED",
+    "classification": "REAL_DEFECT",
+    "discoveredBy": "devin-8a907a21d421400a85cfb1703b1a41ab",
+    "actionable": true,
+    "subsystem": "betaScope",
+    "rootClass": "AUTHORITY",
+    "rootCause": "accrualRealmId/collectionRealmId persisted but never validated; claim/settle priced by the forged pin while pre-checks used player.realmId - boundary double-cross between realm authorities",
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/services/save/saveShapeValidation.ts",
+      "revision": "fba2bd85",
+      "symbolOrSection": "validateBuildingsSave / validateProductionCycleSave"
+     },
+     {
+      "basis": "SOURCE",
+      "path": "src/core/building/BuildingSystem.ts",
+      "revision": "fba2bd85",
+      "symbolOrSection": "resolveAccrualRealmId clamp"
+     },
+     {
+      "basis": "SOURCE",
+      "path": "src/core/production/ProductionSystem.ts",
+      "revision": "fba2bd85",
+      "symbolOrSection": "settle cycle pin"
+     }
+    ],
+    "reachability": "PRODUCTION",
+    "state": {
+     "productStateId": "3d91ed561793d6a001bd79f0e147cfe43b96109886ee9ea7dfc12c90aa6c43e8",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "invariantIds": [
+     "I-EC-1",
+     "I-SF-1",
+     "I-AS-1"
+    ],
+    "siblingFindingIds": [],
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "expected": "a realm pin is only ever written from player.realmId at build/claim; pin > player realm or unresolvable = forged; claim/settle clamps to current realm",
+    "actual": "{gathering_outpost, accrualRealmId:'tribulation'} on a mortal save minted spirit_stone_thuong_pham at ~68k/min (~12000x), capped only by the forged realm's capacity",
+    "counterexample": "forged pin on building/production record -> dormant-tier materials minted at claim/settle",
+    "repair": "boundary bound (resolvable + index <= player realm) + claim-seam clamp to current realm (ee672699)",
+    "evidenceIds": [
+     "EV-PIN-A7TC5",
+     "EV-MUT-A7TC5",
+     "EV-VERIFY-T13"
+    ],
+    "pinEvidenceIds": [
+     "EV-PIN-A7TC5",
+     "EV-MUT-A7TC5",
+     "EV-VERIFY-T13"
+    ],
+    "verificationEvidenceIds": [
+     "EV-PIN-A7TC5",
+     "EV-MUT-A7TC5",
+     "EV-VERIFY-T13"
+    ],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src/core",
+       "src/services",
+       "src/components",
+       "tests"
+      ],
+      "termsAndMethod": "claimed-source census: every persisted denormalized/claimed-source field enumerated and resolved against the closed writer inventory; emit seams classified fail-closed vs permissive-by-open-extension-point",
+      "hitDispositions": [
+       "see claims in evidence"
+      ],
+      "coverageLimits": [
+       "emit permissive where applyTimedEffect is an open extension point; validator is the boundary"
+      ],
+      "evidenceIds": [
+       "EV-PIN-A7TC5",
+       "EV-MUT-A7TC5",
+       "EV-VERIFY-T13"
+      ]
+     }
+    ],
+    "closeReason": "pin bounded at boundary + clamped at claim; collectionRealmId sibling same fix; mutants killed",
+    "closedAt": "2026-10-01T08:15:00Z",
+    "closureReviewIds": [
+     "RV-CLOSURE-12"
+    ]
+   }
+  },
+  {
+   "kind": "review",
+   "body": {
+    "id": "RV-SEQ12-COR",
+    "contextId": "ctx-coord-seq12",
+    "reviewerId": "coord-main",
+    "model": "SWE-2",
+    "phase": "CORRECTNESS",
+    "round": 17,
+    "role": "coordinator pass-1 over the A7+TC5 fix wave: writer-inventory coherence, clamp math, settle authority, fixture legality",
+    "state": {
+     "productStateId": "3d91ed561793d6a001bd79f0e147cfe43b96109886ee9ea7dfc12c90aa6c43e8",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "SEALED",
+    "startedAt": "2026-10-01T07:50:00Z",
+    "sealedAt": "2026-10-01T08:10:00Z",
+    "priorFindingsVisible": true,
+    "reviewedAfterPreviousFixes": true,
+    "inputBundleHash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+    "evidenceIds": [
+     "EV-PIN-A7TC5",
+     "EV-MUT-A7TC5",
+     "EV-VERIFY-T13"
+    ],
+    "coverageIds": [],
+    "findingIds": [],
+    "novelAttackIds": [],
+    "accessLimitations": [],
+    "previousPhaseReviewId": null
+   }
+  },
+  {
+   "kind": "review",
+   "body": {
+    "id": "RV-SEQ12-AUT",
+    "contextId": "ctx-coord-seq12",
+    "reviewerId": "coord-main",
+    "model": "SWE-2",
+    "phase": "AUTHORITY",
+    "round": 17,
+    "role": "coordinator pass-2: emit-side asymmetry decision (fail-closed closed-inventory vs permissive open extension point); sibling enumeration found collectionRealmId",
+    "state": {
+     "productStateId": "3d91ed561793d6a001bd79f0e147cfe43b96109886ee9ea7dfc12c90aa6c43e8",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "SEALED",
+    "startedAt": "2026-10-01T08:10:00Z",
+    "sealedAt": "2026-10-01T08:12:00Z",
+    "priorFindingsVisible": true,
+    "reviewedAfterPreviousFixes": true,
+    "inputBundleHash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+    "evidenceIds": [
+     "EV-PIN-A7TC5",
+     "EV-MUT-A7TC5",
+     "EV-VERIFY-T13"
+    ],
+    "coverageIds": [],
+    "findingIds": [],
+    "novelAttackIds": [],
+    "accessLimitations": [],
+    "previousPhaseReviewId": "RV-SEQ12-COR"
+   }
+  },
+  {
+   "kind": "review",
+   "body": {
+    "id": "RV-SEQ12-INT",
+    "contextId": "ctx-coord-seq12",
+    "reviewerId": "coord-main",
+    "model": "SWE-2",
+    "phase": "INTEGRATION",
+    "round": 17,
+    "role": "coordinator pass-3: full-verify integration of all five seams; illegal fixture values normalized to authored bound; ngoDaoReaction prior flake absent this run",
+    "state": {
+     "productStateId": "3d91ed561793d6a001bd79f0e147cfe43b96109886ee9ea7dfc12c90aa6c43e8",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "SEALED",
+    "startedAt": "2026-10-01T08:12:00Z",
+    "sealedAt": "2026-10-01T08:15:00Z",
+    "priorFindingsVisible": true,
+    "reviewedAfterPreviousFixes": true,
+    "inputBundleHash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+    "evidenceIds": [
+     "EV-PIN-A7TC5",
+     "EV-MUT-A7TC5",
+     "EV-VERIFY-T13"
+    ],
+    "coverageIds": [],
+    "findingIds": [],
+    "novelAttackIds": [],
+    "accessLimitations": [],
+    "previousPhaseReviewId": "RV-SEQ12-AUT"
+   }
+  },
+  {
+   "kind": "review",
+   "body": {
+    "id": "RV-CLOSURE-12",
+    "contextId": "ctx-coord-seq12",
+    "reviewerId": "coord-main",
+    "model": "SWE-2",
+    "phase": "CLOSURE",
+    "round": 17,
+    "role": "wave closure: all six A7/B7/TC5 findings CLOSED with pin+mutant+verify evidence",
+    "state": {
+     "productStateId": "3d91ed561793d6a001bd79f0e147cfe43b96109886ee9ea7dfc12c90aa6c43e8",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "SEALED",
+    "startedAt": "2026-10-01T08:15:00Z",
+    "sealedAt": "2026-10-01T08:15:00Z",
+    "priorFindingsVisible": true,
+    "reviewedAfterPreviousFixes": true,
+    "inputBundleHash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+    "evidenceIds": [
+     "EV-PIN-A7TC5",
+     "EV-MUT-A7TC5",
+     "EV-VERIFY-T13"
+    ],
+    "coverageIds": [],
+    "findingIds": [
+     "F-B7-1",
+     "F-B7-2",
+     "F-A7-1",
+     "F-A7-2",
+     "F-A7-3",
+     "F-TC5-1"
+    ],
+    "novelAttackIds": [],
+    "accessLimitations": [],
+    "previousPhaseReviewId": "RV-SEQ12-INT"
+   }
+  },
+  {
+   "kind": "cycle",
+   "body": {
+    "id": "CY-SEQ-12",
+    "state": {
+     "productStateId": "3d91ed561793d6a001bd79f0e147cfe43b96109886ee9ea7dfc12c90aa6c43e8",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "FINDINGS",
+    "reviewIds": [
+     "RV-SEQ12-COR",
+     "RV-SEQ12-AUT",
+     "RV-SEQ12-INT"
+    ],
+    "coverageIds": [],
+    "evidenceIds": [
+     "EV-PIN-A7TC5",
+     "EV-MUT-A7TC5",
+     "EV-VERIFY-T13"
+    ],
+    "noveltyEvidenceIds": [],
+    "startedAt": "2026-10-01T07:45:00Z",
+    "finishedAt": "2026-10-01T08:15:00Z"
+   }
+  },
+  {
+   "kind": "lesson",
+   "body": {
+    "id": "L-CLAIMED-SOURCE-FORGE",
+    "version": 1,
+    "supersedes": null,
+    "triggerType": "DEFECT",
+    "findingIds": [
+     "F-A7-1",
+     "F-A7-2",
+     "F-A7-3",
+     "F-TC5-1"
+    ],
+    "incidentEvidenceIds": [
+     "EV-PIN-A7TC5",
+     "EV-MUT-A7TC5"
+    ],
+    "originatingRun": "qa-fixpoint-master",
+    "rootClass": "AUTHORITY",
+    "missedInvariantIds": [
+     "I-AS-1",
+     "I-SF-1"
+    ],
+    "escapeReason": "each prior wave gated real-writer slices but left the claimed-source dimension shape-only: a record claiming a source no writer mints passed the boundary and emitted at read seams; the class only becomes enumerable once save versioning is hard-reject (no migration) so current-version writers are exhaustive",
+    "applicability": [
+     "every persisted field that is a denormalized copy or claims a source (modifier sourceType/sourceId, timed-effect group/percent/sourceItemId, job pillId, realm pins, way/path ids)"
+    ],
+    "exclusions": [
+     "open extension points (applyTimedEffect) stay permissive at emit; the validator owns the boundary"
+    ],
+    "proposedProtection": [
+     "resolve each claimed-source field against the closed writer inventory at the acceptance boundary; fail-closed emit where the inventory is closed; clamp or re-derive where a writer authority exists at the consumer seam"
+    ],
+    "promotionEvidenceIds": [],
+    "qualifiedBy": [],
+    "capabilityDelta": "RECORDED - awaiting independent qualification",
+    "status": "CAPTURED",
+    "policyVersion": null,
+    "effectiveFromRun": null,
+    "recurrenceFindingIds": [],
+    "preventionEvidenceIds": [],
+    "guidance": null
+   }
+  },
+  {
+   "kind": "lesson",
+   "body": {
+    "id": "L-BOUNDED-FIXTURE-VALUES",
+    "version": 1,
+    "supersedes": null,
+    "triggerType": "DEFECT",
+    "findingIds": [
+     "F-A7-2"
+    ],
+    "incidentEvidenceIds": [
+     "EV-PIN-A7TC5"
+    ],
+    "originatingRun": "qa-fixpoint-master",
+    "rootClass": "DETECTION",
+    "missedInvariantIds": [
+     "I-DS-1"
+    ],
+    "escapeReason": "bound-tightening regressions twice this wave came from test fixtures minting values outside the authored writer bound (percent 1/0.5 > 0.25); the fixtures were never legal records - the fix detector correctly read them as forged",
+    "applicability": [
+     "any guard tightened to an authored bound where fixtures pre-date the bound"
+    ],
+    "exclusions": [],
+    "proposedProtection": [
+     "when adding a writer-shape bound, census test fixtures for out-of-bound values and normalize them to authored values before running"
+    ],
+    "promotionEvidenceIds": [],
+    "qualifiedBy": [],
+    "capabilityDelta": "RECORDED - awaiting independent qualification",
+    "status": "CAPTURED",
+    "policyVersion": null,
+    "effectiveFromRun": null,
+    "recurrenceFindingIds": [],
+    "preventionEvidenceIds": [],
+    "guidance": null
+   }
+  }
+ ]
+}
