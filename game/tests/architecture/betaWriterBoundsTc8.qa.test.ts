@@ -793,6 +793,7 @@ describe('F-A11-1: cultivationOvercharge requires the bank talent', () => {
     const p = save.player as Record<string, unknown>
     p.selectedTalentIds = ['hai_na']
     p.cultivationOvercharge = 5
+    p.totalCultivationGained = 100
 
     expect(validateGameSaveShape(save).ok).toBe(true)
   })

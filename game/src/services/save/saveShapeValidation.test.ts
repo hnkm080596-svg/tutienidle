@@ -1522,6 +1522,7 @@ describe('validateGameSaveShape - talent v4 M2 fields (v61)', () => {
     // balance needs a claimed cultivation_overflow_bank talent.
     player.selectedTalentIds = ['hai_na']
     player.cultivationOvercharge = 12
+    player.totalCultivationGained = 100
     player.nodeFreePurchaseRecord = { node_a: 2 }
     player.phaGiapCarryStacks = 4
     player.phaGiapCarryRealmId = 'qi_refining'

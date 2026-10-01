@@ -568,11 +568,27 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
       }
     }
 
+    // F-TC10-CPS: the +25% tu_linh_tran factor is only derivable while a
+    // tu_linh_tran timed-effect record is live at save time - an
+    // unconditional headroom lets a TLT-less save claim 25% extra
+    // offline accrual magnitude.
+    const persistedTimedEffects = player.persistentTimedEffects
+    const hasLiveTlt =
+      Array.isArray(persistedTimedEffects) &&
+      persistedTimedEffects.some(
+        (effect) =>
+          isObject(effect) &&
+          effect.sourceItemId === 'tu_linh_tran' &&
+          isFiniteNumber(effect.expiresAtMs) &&
+          (!isFiniteNumber(player.lastSavedAt) ||
+            (effect.expiresAtMs as number) > (player.lastSavedAt as number)),
+      )
+
     const maxPersistedCps =
       BASE_CULTIVATION_PER_SECOND *
       getCultivationSpeedMultiplier(cpsTalentIds, cpsTalentLevels) *
       getCultivationRampMultiplier(cpsTalentIds, player.realmLevel, cpsTalentLevels) *
-      (1 + TU_LINH_TRAN_BUFF_PERCENT)
+      (hasLiveTlt ? 1 + TU_LINH_TRAN_BUFF_PERCENT : 1)
 
     if (player.cultivationPerSecond > maxPersistedCps + 1e-9) {
       issues.push({
@@ -1743,6 +1759,20 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
     issues.push({
       path: 'player.cultivationOvercharge',
       message: 'bank > 0 khi không sở hữu talent cultivation_overflow_bank',
+    })
+  }
+
+  // F-TC10-OC: the bank only ever accrues overflow from cultivation the
+  // save has already gained (addCultivation splits into bank), so an
+  // overcharge above the lifetime tally is a fabricated accrual grant.
+  if (
+    isNonNegativeFiniteNumber(player.cultivationOvercharge) &&
+    isNonNegativeFiniteNumber(player.totalCultivationGained) &&
+    (player.cultivationOvercharge as number) > (player.totalCultivationGained as number)
+  ) {
+    issues.push({
+      path: 'player.cultivationOvercharge',
+      message: 'bank vượt totalCultivationGained (accrual claim bất khả thi)',
     })
   }
   // tribulationBonusStacks removed at v82 — Loi Kiep lives only in

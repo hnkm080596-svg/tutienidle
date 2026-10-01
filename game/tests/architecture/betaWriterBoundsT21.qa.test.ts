@@ -499,3 +499,59 @@ describe('F-A12-4: alchemy job span replays the authored recipe duration', () =>
     expect(classify(save).shape.ok).toBe(true)
   })
 })
+
+describe('F-TC10-CPS: cultivationPerSecond TLT headroom requires a live record', () => {
+  const liveTlt = (lastSavedAt: number) => ({
+    id: 'tlt-1',
+    sourceItemId: 'tu_linh_tran',
+    effectGroup: 'tu_linh_tran',
+    cultivationSpeedPercent: 0.25,
+    durationStackable: false,
+    modifiers: [],
+    appliedAtMs: lastSavedAt - 1_000,
+    expiresAtMs: lastSavedAt + 86_399_000,
+  })
+
+  it('cps above base x speed x ramp without any tu_linh_tran record rejects', () => {
+    // The +25% TLT factor is only derivable while a live record exists;
+    // a TLT-less save claiming the headroom mints extra offline accrual.
+    const { save } = committedSave('qi_refining', { cultivationPerSecond: 12 })
+    expect(classify(save).shape.ok).toBe(false)
+  })
+
+  it('cps beyond the TLT headroom rejects even with a live record', () => {
+    const { save } = committedSave('qi_refining', { cultivationPerSecond: 20 })
+    save.player.persistentTimedEffects = [liveTlt(save.player.lastSavedAt)]
+    expect(classify(save).shape.ok).toBe(false)
+  })
+
+  it('control: cps at base x speed x ramp x 1.25 with a live record validates', () => {
+    const { save } = committedSave('qi_refining', { cultivationPerSecond: 12.5 })
+    save.player.persistentTimedEffects = [liveTlt(save.player.lastSavedAt)]
+    expect(classify(save).shape.ok).toBe(true)
+  })
+})
+
+describe('F-TC10-OC: cultivationOvercharge is bounded by the lifetime tally', () => {
+  it('an overcharge above totalCultivationGained rejects even with the bank talent', () => {
+    // addCultivation splits already-gained cultivation into the bank -
+    // a bank larger than the lifetime tally is a fabricated grant.
+    const { save } = committedSave('qi_refining', {
+      selectedTalentIds: ['hai_na'],
+      talentLevels: { hai_na: 1 },
+      cultivationOvercharge: 1_000_000,
+      totalCultivationGained: 100,
+    })
+    expect(classify(save).shape.ok).toBe(false)
+  })
+
+  it('control: an overcharge within the lifetime tally validates', () => {
+    const { save } = committedSave('qi_refining', {
+      selectedTalentIds: ['hai_na'],
+      talentLevels: { hai_na: 1 },
+      cultivationOvercharge: 50,
+      totalCultivationGained: 100,
+    })
+    expect(classify(save).shape.ok).toBe(true)
+  })
+})
