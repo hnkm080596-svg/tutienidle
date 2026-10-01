@@ -117,7 +117,7 @@ describe('player.restoreFromSave — idempotency (QA-002, Task 9.2)', () => {
     const player = usePlayerStore()
     const windowMs = 30_000
     const save = buildMinimalSave({
-      // base rate 10/s x (1 + 1.0) buff -> snapshot 20/s.
+      // base rate 16/s x (1 + 0.25) buff -> snapshot 20/s.
       cultivationPerSecond: 20,
       lastSavedAt: currentMs - windowMs,
       persistentTimedEffects: [
@@ -127,7 +127,7 @@ describe('player.restoreFromSave — idempotency (QA-002, Task 9.2)', () => {
           effectGroup: 'tu_linh_tran',
           appliedAtMs: currentMs - windowMs - 10_000,
           expiresAtMs: currentMs - windowMs + 10_000, // dies after 10s offline
-          cultivationSpeedPercent: 1,
+          cultivationSpeedPercent: 0.25,
           modifiers: [],
         },
       ],
@@ -135,8 +135,8 @@ describe('player.restoreFromSave — idempotency (QA-002, Task 9.2)', () => {
 
     const result = player.restoreFromSave(save)
 
-    // 10*(1+1)*10s + 10*20s = 400 (< cap 600); pre-fix = 20*30 = 600.
-    expect(result.cultivation).toBe(400)
+    // 20*10s + 16*20s = 520 (< cap 600); pre-fix = 20*30 = 600.
+    expect(result.cultivation).toBe(520)
     expect(result.elapsedSeconds).toBe(30)
   })
 
@@ -152,7 +152,7 @@ describe('player.restoreFromSave — idempotency (QA-002, Task 9.2)', () => {
           effectGroup: 'tu_linh_tran',
           appliedAtMs: 0,
           expiresAtMs: currentMs - 200_000, // dies before the save
-          cultivationSpeedPercent: 1,
+          cultivationSpeedPercent: 0.25,
           modifiers: [],
         },
       ],
@@ -176,7 +176,7 @@ describe('player.restoreFromSave — idempotency (QA-002, Task 9.2)', () => {
           effectGroup: 'tu_linh_tran',
           appliedAtMs: 0,
           expiresAtMs: currentMs + 999_000_000, // still live past window end
-          cultivationSpeedPercent: 1,
+          cultivationSpeedPercent: 0.25,
           modifiers: [],
         },
       ],
