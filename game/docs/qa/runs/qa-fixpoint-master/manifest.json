@@ -16128,13 +16128,13 @@
       "path": "src/components/panels/RealmPanel.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "b69196632c2a5c30fe35f03f9650e15c40f2f13c6476ed72e179942ceb650b35"
+      "hash": "6316c9abe666230e319d59f36762c80eadcdd2a7396260f2777c41b4aed043ad"
     },
     {
       "path": "src/components/panels/RealmPanel.vue",
       "kind": "file",
       "mode": 33188,
-      "hash": "23316e6bbbd2eb47f41bf158bbd0e84742bf0767fe87125d27ce086ab10e94f1"
+      "hash": "000b7837fb9ba4676fee6c9439c8f3695d617c78c8f5fd4c4db66dd3567a82ed"
     },
     {
       "path": "src/components/panels/scripture/LoreCodex.vue",
@@ -17772,7 +17772,7 @@
       "path": "src/core/betaScopeSurface.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "4d35cefa92f0ea765a4641e6a661a0033dc09eb83172b462c051270cfbca1e45"
+      "hash": "0ee37608e191b297addee2879dd59dc983be096b71c5bad2c6893187e9fc9fb0"
     },
     {
       "path": "src/core/breakthrough/FoundationType.ts",
@@ -19752,7 +19752,7 @@
       "path": "src/core/game/GameManagerRealmAdvanceOps.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "48ba7a228d08d2ad61a7e7e1979b791e5275427f2cec8242c94832b9a9693d88"
+      "hash": "812ce6146540c26bc5240df9a45f36dbbd45e56cc97e1be88d1ecd5e27fea2c4"
     },
     {
       "path": "src/core/game/GameManagerRewardOps.ts",
@@ -23574,13 +23574,13 @@
       "path": "src/locales/en.json",
       "kind": "file",
       "mode": 33188,
-      "hash": "9a52523017462b9b3c21171bfdb4e6574ab858094a967c9aaaa1ed180fe6aaf0"
+      "hash": "6a3b3a3ab36e85fc3ce539388dd336d513ed26e443d33a177e58910834c196d5"
     },
     {
       "path": "src/locales/vi.json",
       "kind": "file",
       "mode": 33188,
-      "hash": "a44e6e2b29855b01269a0e64450e14ed8ea38c9e2772decb031d9e8835d07ee2"
+      "hash": "20bc476b8f84354d73722d712b757d3c0dee69403131f3ad5eb27243cfc75562"
     },
     {
       "path": "src/main-process/combatClockHost.test.ts",
@@ -24984,7 +24984,7 @@
       "path": "tests/architecture/betaDormantSaveLeak.qa.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "5dcb7e29610c72cd3d4e9e86d5cbdcf88ef25d459bd981b0cf49e88dd350e8cf"
+      "hash": "660d8e1839fbea85678f3728f40858f526ed0c65cc2be3a54ad8edeebbbf6a67"
     },
     {
       "path": "tests/architecture/betaEconomyCensus.test.ts",
@@ -25008,7 +25008,7 @@
       "path": "tests/architecture/betaScopeAuthoritySeam.qa.test.ts",
       "kind": "file",
       "mode": 33152,
-      "hash": "e300cf4160875aa9b7b2f23994483ae6e299313692134f53f2e678a906ca3dde"
+      "hash": "15374c89186cb180f68a333901bfb2b96ff2c61bfb8cc5f8cf250f55d5d3170e"
     },
     {
       "path": "tests/architecture/betaScopeEconomyGates.test.ts",
@@ -25641,5 +25641,5 @@
       "hash": "0bb3657058699da63594036eda9bb6be7f6b4b44aebbb960fcba939870fd3f5e"
     }
   ],
-  "productStateId": "8b9c093fd7255c17fd99302f9078b9328581b6d55e45f18414902d84ff29efb6"
+  "productStateId": "7a1014a95af9e4b9c7e0a2108c342a5170aa0add4dc8eeb01c14edf7d0c1171e"
 }
