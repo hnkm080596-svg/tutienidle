@@ -334,7 +334,10 @@ export function resolveCombatBuild(
     }
   }
 
-  if (capabilities.has('spell.reaction_aura')) {
+  // BETA SCOPE LOCK v2 - the aura is hidden_spell_pathway kit content;
+  // its capability survives on a carried save, so the same wayAdmitted
+  // gate as the kit applies (never layer hidden-way buffs on allies).
+  if (wayAdmitted && capabilities.has('spell.reaction_aura')) {
     for (const ally of allies) {
       if (!ally.alive) continue
       entryBuffs.push({

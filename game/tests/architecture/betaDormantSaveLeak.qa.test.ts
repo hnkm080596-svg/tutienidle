@@ -35,6 +35,7 @@ import { freshSwordPathState } from '@/core/kiem-tu/KiemTuState'
 import { createSpellPathState } from '@/core/phap-tu/PhapTuState'
 import { resolvePathCapabilities } from '@/core/player/CultivationPathSystem'
 import { GENERIC_PHYSICAL_BASIC } from '@/data/skill/TurnBasicAttacks'
+import { VAN_PHAP_THAN_HOA_ID } from '@/data/buff/ReactionStatusBuffs'
 
 lockBetaFeaturesForTests()
 lockBetaWaysForTests()
@@ -179,7 +180,7 @@ describe('dormancy: a way_out_of_scope save must not execute its dormant kit (F-
   }
 
   it('sword_pathway combat build falls back to the generic kit', () => {
-    const { deps, runtimeDeps } = buildDeps()
+    const { deps, runtimeDeps } = buildCombatDeps()
     const p = player({
       cultivationPath: 'sword',
       cultivationWay: 'sword_pathway',
@@ -202,7 +203,7 @@ describe('dormancy: a way_out_of_scope save must not execute its dormant kit (F-
   })
 
   it('spell_pathway combat build still resolves its committed kit', () => {
-    const { deps, runtimeDeps } = buildDeps()
+    const { deps, runtimeDeps } = buildCombatDeps()
     const p = player({
       cultivationPath: 'spell',
       cultivationWay: 'spell_pathway',
@@ -308,3 +309,99 @@ describe('dormancy: role verdicts on a way_out_of_scope save are all scope-hidde
   })
 })
 
+
+function buildCombatDeps(): { deps: CombatBuildDeps; runtimeDeps: CultivationPathRuntimeDeps } {
+  const skillManager = new SkillManager()
+  const skillTemplates = new TemplateRegistry<Skill>()
+  for (const skill of SKILLS) {
+    skillTemplates.register(skill.id, skill)
+  }
+  const runtimeDeps: CultivationPathRuntimeDeps = {
+    skillManager,
+    skillSystem: new SkillSystem(skillManager),
+    skillTemplates,
+    nodeRegistry: new NodeRegistry(),
+    getNodeLevel: () => 0,
+    getSpellPathElement: () => undefined,
+  }
+  const deps: CombatBuildDeps = {
+    getBattleBaseChannels: () => [],
+    resolveCapabilities: (p) => resolvePathCapabilities(p, { hasSkill: () => false }),
+    getSkillLevels: () => ({}),
+    getProgressionNodes: () => [],
+    getCompanionDefinition: () => undefined,
+    getLiveBattleModifiers: () => [],
+    getActivePlayer: () => undefined,
+  }
+  return { deps, runtimeDeps }
+}
+
+describe('dormancy: hidden-way reaction aura never enters the entry-buff layer (F-A2-1)', () => {
+  it('a committed hidden_spell save with its aura passive still emits no aura entryBuffs', () => {
+    const { deps, runtimeDeps } = buildCombatDeps()
+    deps.resolveCapabilities = (p) =>
+      resolvePathCapabilities(p, { hasSkill: (id) => id === 'ngo_dao_hon_don' })
+    const p = player({
+      realmId: 'foundation_establishment',
+      cultivationPath: 'spell',
+      cultivationWay: 'hidden_spell_pathway',
+      mortalBasicSkillId: undefined,
+    })
+
+    const build = resolveCombatBuild(p, resolveCultivationPathRuntime(p, runtimeDeps), deps)
+
+    expect(build.entryBuffs.some((b) => b.definitionId === VAN_PHAP_THAN_HOA_ID)).toBe(false)
+  })
+
+})
+
+describe('dormancy: dormant-kit skill cores reject insight spends and learns (F-A2-2 / F-A2-3)', () => {
+  it('canUpgradeNode and levelUpSkill reject a dormant way core on a carried save', () => {
+    const gameManager = new GameManager()
+    gameManager.catalogOps.registerSkillTemplates(SKILLS)
+    gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
+    const p = player({
+      cultivationPath: 'body',
+      cultivationWay: 'hidden_body_pathway',
+      skillInsight: 100,
+      nodeLevels: { core_tham_the: 1 },
+      purchasedNodeIds: ['core_tham_the'],
+    })
+
+    expect(gameManager.progressionOps.canUpgradeNode('core_tham_the', p)).toBe(false)
+    expect(gameManager.progressionOps.levelUpSkill('tham_the', p)).toBe(false)
+    // Dormant core holding fails respec closed the same as a dormant tree node.
+    expect(gameManager.progressionOps.respecNodeTree(p)).toBeNull()
+    expect(p.nodeLevels).toEqual({ core_tham_the: 1 })
+  })
+
+  it('learnSkill rejects hidden-kit skill ids even on a clean beta save', () => {
+    const gameManager = new GameManager()
+    gameManager.catalogOps.registerSkillTemplates(SKILLS)
+    gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
+    const p = player()
+
+    for (const id of ['van_phap_tuy_tam', 'da_phap_lien_tuyen', 'ngo_dao_hon_don', 'ngu_kiem_thuat', 'tham_the']) {
+      expect(gameManager.progressionOps.learnSkill(id, player()), `learn ${id}`).toBe(false)
+    }
+  })
+
+  it('mortal precursors and beta spell-kit skills stay learnable/levelable (positive controls)', () => {
+    const gameManager = new GameManager()
+    gameManager.catalogOps.registerSkillTemplates(SKILLS)
+    gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
+
+    expect(gameManager.progressionOps.learnSkill('huy_quyen', player())).toBe(true)
+    // hoa_cau_thuat: beta element-kit skill, generated core, no cast
+    // threshold - the insight level channel stays open on a beta save.
+    const spellSave = player({
+      cultivationPath: 'spell',
+      cultivationWay: 'spell_pathway',
+      spellPath: createSpellPathState(),
+      skillInsight: 500,
+      nodeLevels: { core_hoa_cau_thuat: 1 },
+      purchasedNodeIds: ['core_hoa_cau_thuat'],
+    })
+    expect(gameManager.progressionOps.levelUpSkill('hoa_cau_thuat', spellSave)).toBe(true)
+  })
+})

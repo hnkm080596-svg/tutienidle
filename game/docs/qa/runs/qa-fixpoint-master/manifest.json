@@ -2514,7 +2514,7 @@
       "path": "docs/qa/protocol/learning.md",
       "kind": "file",
       "mode": 33188,
-      "hash": "ffb31aadf0ac200c25d488be1ee8c005f9faedb4aa69f277ab642966570b4538"
+      "hash": "81995c240a51069ddfa067b7ec67ba5be7acaee85e1158845dba45e36fe876d2"
     },
     {
       "path": "docs/qa/protocol/ledger-schema.md",
@@ -16212,7 +16212,7 @@
       "path": "src/components/panels/skill-path/SkillRoleStrip.vue",
       "kind": "file",
       "mode": 33188,
-      "hash": "7fcbeece0dc26d9cc08bcfe8b853a3009a5eba024e80f1083350c24051d2ae3c"
+      "hash": "f9f043a41b83d0385fa7b9af20018315e49753f644205f32aac40e1e66f6a60d"
     },
     {
       "path": "src/components/panels/skill-path/TechniqueBand.test.ts",
@@ -16248,13 +16248,13 @@
       "path": "src/components/panels/SkillPathPanel.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "224a5128571b8350d1cec2121b534c1d21804a12ec2197db749ee3b082ec37c5"
+      "hash": "851735d344072df76af330080a50c6626734ff34a2aa875ad8a4150f4fde9ba8"
     },
     {
       "path": "src/components/panels/SkillPathPanel.vue",
       "kind": "file",
       "mode": 33188,
-      "hash": "9461ac09075e4a0285ab936c9834188eb21d6586c4d3638874c5b99bd915329f"
+      "hash": "6dd5fbffc4122ab7ae76a288606c373c9a1fb111e67a1c511209f4d5e40f58a3"
     },
     {
       "path": "src/components/panels/StageSelectPanel.test.ts",
@@ -17748,7 +17748,7 @@
       "path": "src/core/betaScopeSkillDomain.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "3b674e80a1b15d3d310842c0603b9eea51be1c9fc2c41f8c876cf4ba8fa29f5b"
+      "hash": "cabde144c12e05484e8624532520ec50c51e16bf8648a2771f5b9f6411b0cd55"
     },
     {
       "path": "src/core/betaScopeSurface.ts",
@@ -19716,7 +19716,7 @@
       "path": "src/core/game/GameManagerProgressionOps.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "24f1110acfad162ba310c86f7544757b078c6b23bc1befef316195f8cb434a73"
+      "hash": "afc7f3626343b096823227cc0f65af8d79a1001c57f586d0a7890d14024ae850"
     },
     {
       "path": "src/core/game/GameManagerQuestOps.ts",
@@ -24930,7 +24930,7 @@
       "path": "tests/architecture/betaDormantSaveLeak.qa.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "5a181ffdf765473276851678fdfa13ac8d427d8e85ac3aaebb16b870b6717839"
+      "hash": "f7cdccf6d65923b03d002735b189a8f16998933cdfbe42cfe741c55eb13a2c05"
     },
     {
       "path": "tests/architecture/betaEconomyCensus.test.ts",
@@ -25575,5 +25575,5 @@
       "hash": "0bb3657058699da63594036eda9bb6be7f6b4b44aebbb960fcba939870fd3f5e"
     }
   ],
-  "productStateId": "a9789bc3d584d7baf0ab2e32c951181c7990ed3a79ae0fbd91eb7dfe3cb0766b"
+  "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2"
 }

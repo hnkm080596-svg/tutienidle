@@ -51,6 +51,8 @@ import {
   betaCombatRolesFor as betaCombatRolesForDomain,
   betaCombatSurfacesFor as betaCombatSurfacesForDomain,
   betaSkillTreeFor as betaSkillTreeForDomain,
+  betaNodeSkillLevelAdmitted,
+  betaSkillAdmitted,
   betaTreeNodeAdmitted,
   type BetaCombatRoleEntry,
   type BetaPrecursorSurfaceVerdict,
@@ -95,6 +97,14 @@ export const RESPEC_PRESERVED_NODE_IDS: readonly string[] = [
   ...Object.values(PHAP_TU_ELEMENT_ROOT_IDS),
   ...NGU_KIEM_EVOLUTION_NODE_IDS,
 ]
+
+function betaNodeWriteAdmitted(node: ProgressionNode): boolean {
+  // One write-admission predicate for every progression op: tree-surface
+  // admission (dormant way/hidden branch tags) AND skill-level admission
+  // (a core node leveling a dormant way's kit skill stays rejected even
+  // though core nodes carry no view tag).
+  return betaTreeNodeAdmitted(node) && betaNodeSkillLevelAdmitted(node)
+}
 
 export class GameManagerProgressionOps {
   constructor(
@@ -194,6 +204,12 @@ export class GameManagerProgressionOps {
     // a running battle only reads its minted kit snapshot, so the grant
     // rejects instead of looking applied mid-fight.
     if (this.deps.isTurnBattleInProgress()) {
+      return false
+    }
+
+    // Beta scope gate - a scope-hidden skill id stays unlearnable on
+    // every save; dormant way kits never mint through this seam.
+    if (!betaSkillAdmitted(skillId)) {
       return false
     }
 
@@ -328,7 +344,7 @@ export class GameManagerProgressionOps {
     // branch tag) is scope-hidden for every player: a carried
     // way_out_of_scope save cannot spend insight on a kit the gated
     // combat runtime never executes.
-    if (!betaTreeNodeAdmitted(candidateNode)) {
+    if (!betaNodeWriteAdmitted(candidateNode)) {
       return false
     }
 
@@ -625,7 +641,7 @@ export class GameManagerProgressionOps {
 
     // Same beta scope gate as purchaseNode - a dormant-tree node never
     // takes insight, whether the levels arrived pre-beta or by save.
-    if (!betaTreeNodeAdmitted(node)) {
+    if (!betaNodeWriteAdmitted(node)) {
       return false
     }
 
@@ -667,7 +683,7 @@ export class GameManagerProgressionOps {
 
     // The UI verdict must agree with purchaseNode - a dormant-tree node
     // can never report purchasable.
-    if (!betaTreeNodeAdmitted(node)) {
+    if (!betaNodeWriteAdmitted(node)) {
       return false
     }
 
@@ -675,9 +691,13 @@ export class GameManagerProgressionOps {
   }
 
   canUpgradeNode(nodeId: string, player: PlayerData): boolean {
-    return (
-      this.deps.nodeRegistry.has(nodeId) && canUpgradeNodeSystem(player, this.deps.nodeRegistry.get(nodeId))
-    )
+    // Same admission as upgradeNode - the verdict seam must agree with
+    // the write seam, core-node dormant kits included.
+    const node = this.deps.nodeRegistry.has(nodeId)
+      ? this.deps.nodeRegistry.get(nodeId)
+      : undefined
+
+    return node !== undefined && betaNodeWriteAdmitted(node) && canUpgradeNodeSystem(player, node)
   }
 
   /**
@@ -713,7 +733,7 @@ export class GameManagerProgressionOps {
     // dialog never promises a refund the op will not pay.
     const holdsDormantPreview = Object.keys(player.nodeLevels ?? {}).some((id) => {
       const node = this.deps.nodeRegistry.get(id)
-      return node !== undefined && !betaTreeNodeAdmitted(node)
+      return node !== undefined && !betaNodeWriteAdmitted(node)
     })
 
     if (holdsDormantPreview) {
@@ -864,7 +884,7 @@ export class GameManagerProgressionOps {
     // so a carried save's dormant levels stay intact, never monetized.
     const holdsDormant = Object.keys(player.nodeLevels ?? {}).some((id) => {
       const node = this.deps.nodeRegistry.get(id)
-      return node !== undefined && !betaTreeNodeAdmitted(node)
+      return node !== undefined && !betaNodeWriteAdmitted(node)
     })
 
     if (holdsDormant) {
@@ -900,6 +920,12 @@ export class GameManagerProgressionOps {
     // Same battle gate as purchaseNode/upgradeNode - the core upgrade
     // below writes player.nodeLevels mid-fight would never apply.
     if (this.deps.isTurnBattleInProgress()) {
+      return false
+    }
+
+    // Beta scope gate - leveling a dormant way's kit skill spends
+    // insight into a kit the gated combat runtime never executes.
+    if (!betaSkillAdmitted(skillId)) {
       return false
     }
 
@@ -1209,7 +1235,7 @@ export class GameManagerProgressionOps {
     // BETA SCOPE LOCK - a spec claimed only by dormant-tree nodes is
     // dormant machinery: no beta player can hold the claim, and a
     // carried save's dormant claimant must not unfreeze it.
-    if (claimants.length > 0 && claimants.every((claimant) => !betaTreeNodeAdmitted(claimant))) {
+    if (claimants.length > 0 && claimants.every((claimant) => !betaNodeWriteAdmitted(claimant))) {
       return false
     }
 
