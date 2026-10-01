@@ -1,0 +1,12 @@
+{
+ "verdict": "FINDINGS",
+ "reviewer": "devin-27b905ded6e84cf2abab6f6649c68b43",
+ "pinnedCommit": "d22d3c72",
+ "role": "CONSUMER-seam blind review (UI mounts, read-model consumers, carried-record channels)",
+ "probeFile": "game/tests/lab/qaBetaConsumerSeams.test.ts (child VM, 3 failing contract assertions)",
+ "summary": "Gating thorough: mounts fail-closed, read-model honest, carried channels reconcile. One Low (progressionOps facade drops saveSlices - 3 of 12 unsupportedReleaseReason variants unreachable on published ops seam; latent - live consumer calls domain fn correctly) + one Nit (CombatBuild survive.extraSources wires ungated runtime; unreachable - no way implements buildSurviveSources).",
+ "findings": [
+  {"id": "F-CS-1", "severity": "Low", "surface": "GameManagerProgressionOps.unsupportedReleaseReason", "title": "facade drops saveSlices - slice-dependent flag variants unreachable on published seam"},
+  {"id": "F-CS-2", "severity": "Nit", "surface": "CombatBuild survive.extraSources", "title": "wires ungated runtime instead of gatedRuntime (latent - no way implements buildSurviveSources)"}
+ ]
+}

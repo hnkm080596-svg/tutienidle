@@ -69,7 +69,6 @@ import {
   ITEM_QUALITY_UNLOCKED_POOLS,
 } from '../../core/equipment/ItemQualityBalance'
 import { isValidEquipmentSubstat } from '../../core/equipment/EquipmentStatPolicy'
-import { MAIN_STAT_KEYS } from '../../core/stats/StatTypes'
 import { affixes } from '../../data/equipment/affixes'
 import { alchemyRecipes } from '../../data/alchemy/alchemyRecipes'
 import { buildings } from '../../data/building/buildings'
@@ -842,35 +841,14 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
     })
   }
 
-  // F-AP-DOUBLE-COUNT: the same global-level ceiling binds unspent AND
-  // spent together - attribute stats start at 1 and grow only through
-  // allocateAttributePoint's 1:1 spend, so the pool claim and the
-  // baseStats claims draw on one ledger. Per-stat contributions floor
-  // at 0 so a self-harm negative claim cannot launder extra points, and
-  // each stat's contribution caps at the earnable total because restore
-  // already clamps a forged magnitude to the same authored ceiling - the
-  // bound reconciles the post-normalization claim, not the raw bytes.
-  if (
-    isNonNegativeFiniteNumber(player.attributePoints) &&
-    typeof player.realmId === 'string' &&
-    isNonNegativeFiniteNumber(player.realmLevel) &&
-    isObject(player.baseStats)
-  ) {
-    const earnablePoints = getGlobalCultivationLevel(player.realmId, player.realmLevel)
-    let spentAttributePoints = 0
-    for (const statKey of MAIN_STAT_KEYS) {
-      const value = player.baseStats[statKey]
-      if (isFiniteNumber(value)) {
-        spentAttributePoints += Math.min(Math.max(0, (value as number) - 1), earnablePoints)
-      }
-    }
-    if ((player.attributePoints as number) + spentAttributePoints > earnablePoints) {
-      issues.push({
-        path: 'player.attributePoints',
-        message: 'điểm chưa phân + đã phân vượt số điểm kiếm được ở vị trí cảnh giới hiện tại',
-      })
-    }
-  }
+  // F-AP-DOUBLE-COUNT (deferred exception): unspent + spent cannot be
+  // reconciled against the earnable ceiling because baseStats grow
+  // through TWO unobservable-in-save channels - allocateAttributePoint
+  // spend AND permanent_stat pills, which are unlimited-use craftable
+  // consumables with no persisted consumption ledger. A saturated-stat
+  // plus full-pool claim is indistinguishable from a pill-fed player
+  // without an event ledger; recorded as human-accepted exception
+  // (same class as forged totalExperience - online-authority defense).
   requireNonNegativeNumber(player, 'breakthroughGrade', 'player', issues)
 
   // F-TC8-1: computeBreakthroughGrade clamps the grade into [1,6]

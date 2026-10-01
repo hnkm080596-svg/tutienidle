@@ -1,0 +1,22 @@
+{
+  "review": "B13 consumer seam blind review",
+  "pin": "97f1878b",
+  "session": "devin-9b04b73167fd46b58f371799a41e6cf6",
+  "summary": "2 confirmed findings: F-SEAM-1 medium (ungated resolvePartyFormation leaks dormant/forged formationLoadout into buildTurnBattle player placement + companion EXP) and F-SEAM-2 high (forged perfectClearSeconds mints auto-farm reward cycles below the physical clear floor). All other consumer seams held (mount watchers, popover censor, combat kit seams, talent/node/technique channels, settle re-auth, offline accrual, notifications, bag/shop, stage panels).",
+  "findings": [
+    {
+      "id": "F-SEAM-1",
+      "severity": "medium",
+      "surface": "combat build -> buildTurnBattle player placement (resolvePartyFormation)",
+      "attack_class": "consumer bypassing a scope gate / dormant-record leak",
+      "reproduction": "player.formationLoadout is dormant (unsupportedReleaseReason='formation_loadout'), write path closed via isFormationUnlocked, sibling consumers gated - but resolvePartyFormation at CombatBuild.ts:259 ungated (grandfathering comment pre-dates scope lock). Carried cell (2,0) -> absolute (7,0) vs default (4,1); chebyshevDistanceToEnemy ranks kill order off it. Second consumer: BattleLootSystem.ts:392 grants companion EXP from the same ungated resolver."
+    },
+    {
+      "id": "F-SEAM-2",
+      "severity": "high",
+      "surface": "auto-farm cycle mint (perfectClearSeconds earned-claim rate bound)",
+      "attack_class": "fabricated claim minting live effects",
+      "reproduction": "forged perfectClearSeconds=1 mints auto-farm reward cycles at 0.5s, below every physical clear floor (SPAWN_INTERVAL_SECONDS=3, multi-wave stage >=6s); validator floor was shape-only seconds>=1."
+    }
+  ]
+}

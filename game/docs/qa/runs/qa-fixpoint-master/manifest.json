@@ -16128,13 +16128,13 @@
       "path": "src/components/panels/RealmPanel.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "6316c9abe666230e319d59f36762c80eadcdd2a7396260f2777c41b4aed043ad"
+      "hash": "56ee53abe819c02a7f576a8a4fd27b541be68ed088cf34087bde18b2f70a00a4"
     },
     {
       "path": "src/components/panels/RealmPanel.vue",
       "kind": "file",
       "mode": 33188,
-      "hash": "000b7837fb9ba4676fee6c9439c8f3695d617c78c8f5fd4c4db66dd3567a82ed"
+      "hash": "23316e6bbbd2eb47f41bf158bbd0e84742bf0767fe87125d27ce086ab10e94f1"
     },
     {
       "path": "src/components/panels/scripture/LoreCodex.vue",
@@ -16380,7 +16380,7 @@
       "path": "src/composables/useAppLifecycle.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "96f2f3a85ae3ec85ca223876da5baeef28c7ad8dbbeaaa1a78fb502d8f8a58db"
+      "hash": "12d4ab3e2cb196e4ca35e079ae7e531803a80eec08f06d9891bee9783503a5a0"
     },
     {
       "path": "src/composables/useAutoRetryCountdown.test.ts",
@@ -17760,7 +17760,7 @@
       "path": "src/core/betaScope.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "0a8cf771c27083ae58ee79ebec2c24215e0653f73ff744d524eb3bb99457b8ac"
+      "hash": "f61b364ef382338db5d0fe0c1f6617e1257f645c728b25eab9c42d424b85a06f"
     },
     {
       "path": "src/core/betaScopeSkillDomain.ts",
@@ -17772,7 +17772,7 @@
       "path": "src/core/betaScopeSurface.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "4c16f6d8992d6c574f6e85afa39329fd9fa3cde9ca67a9c39fb3055eb0dec82e"
+      "hash": "492837461b07b8ca1fb03a6fd9cd24540b5a5c8cfaf3efbda430aad500f3e1de"
     },
     {
       "path": "src/core/breakthrough/FoundationType.ts",
@@ -18576,7 +18576,7 @@
       "path": "src/core/equipment/canUseItem.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "cbcfa721037ae56a1bf6a92ecfae7f5dc79095b8e6576692c956755ecf48293f"
+      "hash": "ac0d23cdbc3afadccdc98a7a1dc24e972e04140d35d0a36742a13381ceedcecc"
     },
     {
       "path": "src/core/equipment/deadReferences.test.ts",
@@ -18996,7 +18996,7 @@
       "path": "src/core/game/CombatBuild.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "ecdee5893e089bc46011b7ce0d12f37fe5b966a5c5094c1473816b2e8dee0799"
+      "hash": "4ffb48b1069458874e8e1a849efac78ce02eaee56d04a277b91cac3e2122283f"
     },
     {
       "path": "src/core/game/CombatTimeClassification.test.ts",
@@ -19752,7 +19752,7 @@
       "path": "src/core/game/GameManagerRealmAdvanceOps.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "812ce6146540c26bc5240df9a45f36dbbd45e56cc97e1be88d1ecd5e27fea2c4"
+      "hash": "118b6b1141c4ac768a867c913c4af9a2da877bc70206513dba177f9bac84e6e4"
     },
     {
       "path": "src/core/game/GameManagerRewardOps.ts",
@@ -20322,7 +20322,7 @@
       "path": "src/core/player/Player.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "26f23370b8caacac1b273425f3d745b7c2cff89b2bda82e36975934a2ef59a11"
+      "hash": "2366106043db9a0851c9166db9b25787e26485eb39241f373f35196cb4331295"
     },
     {
       "path": "src/core/player/PlayerSnapshot.ts",
@@ -21012,7 +21012,7 @@
       "path": "src/core/realm/body/BodyProgressionSystem.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "0386d3df6a6bf42359d69e2a3f9e8e417faa968bb29220be12d3e38fedbf8021"
+      "hash": "bbfac4b4309c44be5e36fe33726d666ce9d00b4dec2595e9b9bac12f2243669a"
     },
     {
       "path": "src/core/realm/body/BodyRefinementChapter.test.ts",
@@ -22206,7 +22206,7 @@
       "path": "src/data/breakthrough/BreakthroughGrades.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "3aea30780dd6e6377b8013efb856694012d8e024482c0536488bf31934f447ed"
+      "hash": "5e867b8bab6e4eb4a85f8135bb831404300e03b39a2e6a1c8303e905948abe28"
     },
     {
       "path": "src/data/breakthrough/BreakthroughScopedResources.ts",
@@ -22722,7 +22722,7 @@
       "path": "src/data/realm/RealmPassives.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "22cd3aa7fa4c1cc0a7d948ac28b7e2bcc2286f8c126a4832502aae939c6a621d"
+      "hash": "304e30714779c9bbf3f1f16999bd8b470bdc293075bb509329f662880de081d8"
     },
     {
       "path": "src/data/realm/ZhouTian.ts",
@@ -23574,13 +23574,13 @@
       "path": "src/locales/en.json",
       "kind": "file",
       "mode": 33188,
-      "hash": "3ef56281c7e3b8c277ee8828cb9144083435da8b6cf89ee884aa522da3cc9d29"
+      "hash": "c6f6bac4e3e0f3fc40d7bcd70f15213169004526b33b004b62bc705e8b704b93"
     },
     {
       "path": "src/locales/vi.json",
       "kind": "file",
       "mode": 33188,
-      "hash": "944e68f81caa533b091522ddf05aabde80aa906d2d63b7889afc4bcda71c4ae4"
+      "hash": "a7c9d35dc91aa7ba7f46fe8b035ed51af9ff098cf94e8e5ec2b0f1351aa07ff1"
     },
     {
       "path": "src/main-process/combatClockHost.test.ts",
@@ -24432,19 +24432,19 @@
       "path": "src/services/save/SaveRoundTrip.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "8aa5861d819a61ac322bd7779285c35ed065b7fdfbe68effc8b87e135b6e7a73"
+      "hash": "e9e0a195c30a7a938a111678b33b0a2082e8ba4d67068f4955f21be7a5550ddd"
     },
     {
       "path": "src/services/save/saveShapeValidation.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "06b8f4695fe33731e70008b5c323eda8b56006da25251d7562e1f98e2b1210bf"
+      "hash": "e790fd68088cd1d28cf125b2d2ffa0ded1089076101515ba43cef172313e4082"
     },
     {
       "path": "src/services/save/saveShapeValidation.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "179dd35af63bf62d51ca93e268d7c0700c42dc2ff1ab627eb2c05f65d1290809"
+      "hash": "147e6440aa37f318fe8bca5a36fa6093bb21310d4f6b87a85dd477d4ff6671db"
     },
     {
       "path": "src/services/save/SaveSystem.bootRestore.test.ts",
@@ -24456,7 +24456,7 @@
       "path": "src/services/save/SaveSystem.conformance.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "b858e1c0944728503e03ca2ff98243fab2df27af8ab3c0f54eef8de5c762b031"
+      "hash": "6d6964918d58e38593442394b3c967d777f2975f5ed799ea84908964958c3c49"
     },
     {
       "path": "src/services/save/SaveSystem.quota.test.ts",
@@ -24972,13 +24972,13 @@
       "path": "tests/architecture/betaBoundaryMagnitude.qa.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "2c31330ade744cd6076d6f1840d8153590e3148fba284811ea69fa47321d787d"
+      "hash": "c92c15b2c6890a7701be87b5d1e0e6f146b9ca02604cd27f0a2278b7b6782dbe"
     },
     {
       "path": "tests/architecture/betaClaimedSourceForge.qa.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "2a5bcb390621ec5bea9ca0a6b86e4693ba3c41e98fdb1fc0d480b47b1a60a6f6"
+      "hash": "1ad20916adbf4e822261e0a3c07bc8fcfede059be23fdb2cf45361daa2b93fc0"
     },
     {
       "path": "tests/architecture/betaConsumerLeak.qa.test.ts",
@@ -25008,7 +25008,7 @@
       "path": "tests/architecture/betaDormantSaveLeak.qa.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "c2678f3b1258e6015d8256b9cdf66407f5d93a10acd289f9980fba27bb6d453d"
+      "hash": "d3c15c8497ed4a2e12c384685c296adc00beebf7eb408bb07313c3a60b756db7"
     },
     {
       "path": "tests/architecture/betaEconomyCensus.test.ts",
@@ -25026,7 +25026,7 @@
       "path": "tests/architecture/betaPersistedRealmModifiers.qa.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "c95bdcba00d93920ce1d170035871667acb94bfda16955803491cc2bae2f9931"
+      "hash": "084ae95433cc0c33af318d6e2ffa423b0e59978cfb4b3e9a2fe0fd0f48b3f00e"
     },
     {
       "path": "tests/architecture/betaReadModelHonesty.qa.test.ts",
@@ -25038,7 +25038,7 @@
       "path": "tests/architecture/betaScopeAuthoritySeam.qa.test.ts",
       "kind": "file",
       "mode": 33152,
-      "hash": "15374c89186cb180f68a333901bfb2b96ff2c61bfb8cc5f8cf250f55d5d3170e"
+      "hash": "e300cf4160875aa9b7b2f23994483ae6e299313692134f53f2e678a906ca3dde"
     },
     {
       "path": "tests/architecture/betaScopeEconomyGates.test.ts",
@@ -25050,7 +25050,7 @@
       "path": "tests/architecture/betaScopeLockV2.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "feefc477ae0a4fcd30221efbdfabb4b2c56363feb8d5bf6d49fe4e3a4870a054"
+      "hash": "8aa9eb41e391679caa9f898697acdcd1e451215e7cdba6ed7a9ef0d4d3df9483"
     },
     {
       "path": "tests/architecture/betaScopeSkillDomain.test.ts",
@@ -25068,13 +25068,19 @@
       "path": "tests/architecture/betaSettlementReauth.qa.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "87cb057002c29102fa622a78521638473c4635da06ccfc1070731be99ad24d54"
+      "hash": "836f97509150b4ee28ba6d687b223ca956e8f7d846dd79788bf5094b12276ca3"
+    },
+    {
+      "path": "tests/architecture/betaWriterBoundsT21.qa.test.ts",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "3a72df4257cfe334344b9c7444c3c5995c0b99df723f1c000a39d733c10db47d"
     },
     {
       "path": "tests/architecture/betaWriterBoundsTc8.qa.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "75643de409a791fe1f6250298f352693da67630d29cdc24983a24c47eefe1662"
+      "hash": "7a130a45ed9783695b5f9af18f0d63c9c25961e7c5851b98403a51da904b3e78"
     },
     {
       "path": "tests/architecture/buildCompositionBoundary.test.ts",
@@ -25299,6 +25305,12 @@
       "hash": "32aaaa35e97ef1d5a1e39d32625ad50e465c16d0f3f4d0706135a7b1e355a177"
     },
     {
+      "path": "tests/architecture/saveFalsificationTc11.qa.test.ts",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "fdb1515cc2775a56e067106b3f73b3f9d49d0d12521f714eaf5d76e6beffbc49"
+    },
+    {
       "path": "tests/architecture/sceneHelperBoundaries.test.ts",
       "kind": "file",
       "mode": 33188,
@@ -25350,7 +25362,7 @@
       "path": "tests/architecture/tc6ForgedSaveFalsification.qa.test.ts",
       "kind": "file",
       "mode": 33152,
-      "hash": "94b36f68ee2ae285e7eaf7e2cc56d727edd2158851cd4451d69d747ff191d4d2"
+      "hash": "a7dfd2c223ce672086db16d1b3a588b491081f0e74fa656a7c77c5897be36479"
     },
     {
       "path": "tests/architecture/tribulationAdmissionFunnel.test.ts",
@@ -25689,5 +25701,5 @@
       "hash": "0bb3657058699da63594036eda9bb6be7f6b4b44aebbb960fcba939870fd3f5e"
     }
   ],
-  "productStateId": "c521ac4278bf1126d0bfe9421d02b2c851d4a53cd3e8727eff49b5e30094a5da"
+  "productStateId": "068af781187ad3a2fa1495877c3b8c9ece361c7cca427aba5a1b05a9b7480369"
 }

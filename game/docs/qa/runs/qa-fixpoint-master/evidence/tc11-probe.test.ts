@@ -1,41 +1,42 @@
-// TC11 blind falsification harvest (devin-b7a6e9a372134a41bae53e16fb1415b7,
-// pin 97f1878b) - every test asserts the SECURE expectation: a fabricated
-// claim must be rejected by validateGameSaveShape / restore, and whatever
-// is admitted must not mint an effect no authored writer could produce.
+// Adversarial falsification probes for the save-acceptance + restore seam.
 //
-// Medium+ probes are live pins (fixed in the T21c wave on devin/qa-fixpoint).
-// Low findings are deferred per the Medium+-only ruling and stay skipped,
-// not deleted, until the exception closes (same convention as F-B-CONS-3/4).
+// Every test asserts the SECURE expectation: a fabricated claim must be
+// rejected by validateGameSaveShape / preflightSaveRegistryReferences, and
+// whatever gets admitted must not mint an effect no authored writer could
+// produce. A FAILING expectation is the defect evidence.
+//
+// Probes run at PIN commit 97f1878b on mortal + qi_refining (spell) saves.
 // ASCII comments only.
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 
-import { affixes } from '@/data/equipment/affixes'
-import { equipment } from '@/data/equipment/equipment'
-import { materials } from '@/data/materials/materials'
-import { TECHNIQUES } from '@/data/technique/Techniques'
-import { SKILLS } from '@/data/skill/Skills'
-import { ALL_PROGRESSION_NODES } from '@/data/progression/ProgressionNodeCatalog'
-import { ENEMIES } from '@/data/enemy/Enemies'
-import { STAGES } from '@/data/stage/Stages'
-import { zones } from '@/data/stage/Zones'
-import { pills } from '@/data/pill/pills'
-import { buffs } from '@/data/buff/buffs'
-import { talismans } from '@/data/talisman/talismans'
-import { formations } from '@/data/formation/formations'
-import { alchemyRecipes } from '@/data/alchemy/alchemyRecipes'
-import { buildings } from '@/data/building/buildings'
-import { QUESTS } from '@/data/quest/quests'
-import { GameManager } from '@/core/game/GameManager'
-import { makeInstance } from '@/core/equipment/EquipmentInstance.fixture'
-import { createDefaultPlayer } from '@/core/player/Player'
-import { usePlayerStore } from '@/stores/player'
-import { withMortalCreationPick } from '@/services/save/GameSave.fixture'
-import { restoreGameSession } from '@/services/save/SaveSystem'
-import { validateGameSaveShape } from '@/services/save/saveShapeValidation'
-import { CURRENT_SAVE_VERSION } from '@/services/save/SaveSystem'
-import type { GameSave } from '@/services/save/saveTypes'
+import { affixes } from '../data/equipment/affixes'
+import { equipment } from '../data/equipment/equipment'
+import { materials } from '../data/materials/materials'
+import { TECHNIQUES } from '../data/technique/Techniques'
+import { SKILLS } from '../data/skill/Skills'
+import { ALL_PROGRESSION_NODES } from '../data/progression/ProgressionNodeCatalog'
+import { ENEMIES } from '../data/enemy/Enemies'
+import { STAGES } from '../data/stage/Stages'
+import { zones } from '../data/stage/Zones'
+import { pills } from '../data/pill/pills'
+import { buffs } from '../data/buff/buffs'
+import { talismans } from '../data/talisman/talismans'
+import { formations } from '../data/formation/formations'
+import { alchemyRecipes } from '../data/alchemy/alchemyRecipes'
+import { buildings } from '../data/building/buildings'
+import { QUESTS } from '../data/quest/quests'
+import { GameManager } from '../core/game/GameManager'
+import { makeInstance } from '../core/equipment/EquipmentInstance.fixture'
+import { createDefaultPlayer } from '../core/player/Player'
+import { getCultivationSpeedMultiplier } from '../core/talent/TalentEffects'
+import { usePlayerStore } from '../stores/player'
+import { withMortalCreationPick } from '../services/save/GameSave.fixture'
+import { restoreGameSession } from '../services/save/SaveSystem'
+import { validateGameSaveShape } from '../services/save/saveShapeValidation'
+import { CURRENT_SAVE_VERSION } from '../services/save/SaveSystem'
+import type { GameSave } from '../services/save/saveTypes'
 
 // The production registration set (same union App.vue/EarlyGameSession
 // boot with) - acceptance membership checks share this catalog.
@@ -145,10 +146,12 @@ describe('F-EQ-GRADE-REALM: equipped item grade vs player realm', () => {
     save.equipment = [forgedBaseKiem({ grade: 'bat_pham' })]
 
     const shape = validateGameSaveShape(save)
-    expect(shape.ok).toBe(false)
-    // restore-side mint assertions removed: restoreGameSession
-    // consumes pre-validated input only (loadGame/importSaveRaw gate at
-    // validateGameSaveShape); a rejected save never reaches it.
+    expect.soft(shape.ok).toBe(false)
+
+    const { manager, result } = restoreSave(save)
+    expect(result.status).not.toBe('ok')
+    const minted = manager.equipmentOps.getEquipmentModifiers().filter((m) => m.stat === 'might')
+    expect(minted).toHaveLength(0)
   })
 })
 
@@ -169,10 +172,12 @@ describe('F-EQ-AFFIX-SLOT: affix stat that slot policy forbids', () => {
     ]
 
     const shape = validateGameSaveShape(save)
-    expect(shape.ok).toBe(false)
-    // restore-side mint assertions removed: restoreGameSession
-    // consumes pre-validated input only (loadGame/importSaveRaw gate at
-    // validateGameSaveShape); a rejected save never reaches it.
+    expect.soft(shape.ok).toBe(false)
+
+    const { manager, result } = restoreSave(save)
+    expect(result.status).not.toBe('ok')
+    const minted = manager.equipmentOps.getEquipmentModifiers().filter((m) => m.stat === 'maxHp')
+    expect(minted).toHaveLength(0)
   })
 })
 
@@ -185,32 +190,28 @@ describe('F-EQ-AFFIX-SLOT: affix stat that slot policy forbids', () => {
 describe('F-EQ-AFFIX-DUP: duplicate affix stat on one item', () => {
   it('rejects two affixes claiming the same stat on one item', () => {
     const save = mortalSave()
-    // Isolated: huyen ceiling is 2 substats at tier <= 2 from the basic
-    // pool, so a same-stat pair on otherwise-legal affixes is rejected
-    // ONLY by the stat-uniqueness bound (roller excludeStats).
     save.equipment = [
       forgedBaseKiem({
-        quality: 'huyen',
         affixes: [
-          { affixId: 'prefix_critical_rate', tier: 1, value: 0.01 },
-          { affixId: 'prefix_critical_rate', tier: 2, value: 0.03 },
+          { affixId: 'prefix_max_hp', tier: 1, value: 15 },
+          { affixId: 'prefix_max_hp', tier: 2, value: 35 },
         ],
       }),
     ]
 
     const shape = validateGameSaveShape(save)
-    expect(shape.ok).toBe(false)
-    // restore-side mint assertions removed: restoreGameSession
-    // consumes pre-validated input only (loadGame/importSaveRaw gate at
-    // validateGameSaveShape); a rejected save never reaches it.
+    expect.soft(shape.ok).toBe(false)
+
+    const { manager, result } = restoreSave(save)
+    expect(result.status).not.toBe('ok')
+    const minted = manager.equipmentOps.getEquipmentModifiers().filter((m) => m.stat === 'maxHp')
+    expect(minted.length).toBeLessThanOrEqual(1)
   })
 
   it('rejects an affix claiming the item mainStat stat', () => {
     const save = mortalSave()
     // prefix_attack is might -- same stat as the claimed mainStat; the
-    // roller can never emit it on this item (excludeStats seed). The
-    // slot-policy bound also rejects this save (might is never a
-    // weapon substat), so the claim is masked there by design.
+    // roller can never emit it on this item (excludeStats seed).
     save.equipment = [
       forgedBaseKiem({
         affixes: [{ affixId: 'prefix_attack', tier: 1, value: 6 }],
@@ -218,10 +219,12 @@ describe('F-EQ-AFFIX-DUP: duplicate affix stat on one item', () => {
     ]
 
     const shape = validateGameSaveShape(save)
-    expect(shape.ok).toBe(false)
-    // restore-side mint assertions removed: restoreGameSession
-    // consumes pre-validated input only (loadGame/importSaveRaw gate at
-    // validateGameSaveShape); a rejected save never reaches it.
+    expect.soft(shape.ok).toBe(false)
+
+    const { manager, result } = restoreSave(save)
+    expect(result.status).not.toBe('ok')
+    const minted = manager.equipmentOps.getEquipmentModifiers().filter((m) => m.stat === 'might')
+    expect(minted.length).toBeLessThanOrEqual(1)
   })
 })
 
@@ -234,67 +237,28 @@ describe('F-EQ-AFFIX-DUP: duplicate affix stat on one item', () => {
 // normalizes the value against the union of authored tiers).
 // ------------------------------------------------------------------
 describe('F-EQ-AFFIX-ENVELOPE: quality-inconsistent affix claims', () => {
-  // Each probe is isolated: every claim is legal under every other bound
-  // so a single envelope check is the only rejector.
-  it('rejects more affixes than the quality substat ceiling', () => {
+  it('rejects a hoang item claiming a supreme-pool affix above its tier cap', () => {
     const save = mortalSave()
-    // hoang rolls at most 1 substat; both affixes are otherwise legal.
     save.equipment = [
       forgedBaseKiem({
         quality: 'hoang',
+        // hoang rolls at most 1 substat, tier <= 1, pool 'basic' only.
         affixes: [
-          { affixId: 'prefix_critical_rate', tier: 1, value: 0.01 },
-          { affixId: 'suffix_accuracy', tier: 1, value: 3 },
+          { affixId: 'prefix_supreme_final_damage', tier: 5, value: 0.14 },
+          { affixId: 'prefix_max_hp', tier: 3, value: 50 },
         ],
       }),
     ]
 
     const shape = validateGameSaveShape(save)
-    expect(shape.ok).toBe(false)
-  })
+    expect.soft(shape.ok).toBe(false)
 
-  it('rejects an affix from a pool the quality has not unlocked', () => {
-    const save = mortalSave()
-    // dia unlocks basic/advanced/specialized - supreme opens at thien.
-    save.equipment = [
-      forgedBaseKiem({
-        quality: 'dia',
-        affixes: [{ affixId: 'prefix_supreme_final_damage', tier: 1, value: 0.01 }],
-      }),
-    ]
-
-    const shape = validateGameSaveShape(save)
-    expect(shape.ok).toBe(false)
-  })
-
-  it('rejects an affix tier above the quality cap', () => {
-    const save = mortalSave()
-    // huyen caps affix tier at 2; prefix_critical_rate authors tiers
-    // 1..3, so tier 3 is authored but above this quality's cap.
-    save.equipment = [
-      forgedBaseKiem({
-        quality: 'huyen',
-        affixes: [{ affixId: 'prefix_critical_rate', tier: 3, value: 0.06 }],
-      }),
-    ]
-
-    const shape = validateGameSaveShape(save)
-    expect(shape.ok).toBe(false)
-  })
-
-  it('rejects an affix tier the definition never authors', () => {
-    const save = mortalSave()
-    // thien caps affix tier at 4; prefix_critical_rate only authors
-    // tiers 1..3, so tier 4 is inside the quality cap but unproducible.
-    save.equipment = [
-      forgedBaseKiem({
-        quality: 'thien',
-        affixes: [{ affixId: 'prefix_critical_rate', tier: 4, value: 0.1 }],
-      }),
-    ]
-
-    const shape = validateGameSaveShape(save)
-    expect(shape.ok).toBe(false)
+    const { manager, result } = restoreSave(save)
+    expect(result.status).not.toBe('ok')
+    const minted = manager.equipmentOps
+      .getEquipmentModifiers()
+      .filter((m) => m.stat === 'finalDamagePercent' || m.stat === 'maxHp')
+    expect(minted).toHaveLength(0)
   })
 })
 
@@ -310,10 +274,12 @@ describe('F-EQ-FOREIGN-SLOT: item claiming a slot its template forbids', () => {
     save.equipment = [forgedBaseKiem({ slot: 'helmet' })]
 
     const shape = validateGameSaveShape(save)
-    expect(shape.ok).toBe(false)
-    // restore-side mint assertions removed: restoreGameSession
-    // consumes pre-validated input only (loadGame/importSaveRaw gate at
-    // validateGameSaveShape); a rejected save never reaches it.
+    expect.soft(shape.ok).toBe(false)
+
+    const { manager, result } = restoreSave(save)
+    expect(result.status).not.toBe('ok')
+    const minted = manager.equipmentOps.getEquipmentModifiers().filter((m) => m.stat === 'might')
+    expect(minted).toHaveLength(0)
   })
 })
 
@@ -323,9 +289,7 @@ describe('F-EQ-FOREIGN-SLOT: item claiming a slot its template forbids', () => {
 // it out as a negative stat. Self-harm only -> Low.
 // ------------------------------------------------------------------
 describe('F-EQ-MAINSTAT-NEG: negative mainStat flat', () => {
-  // F-EQ-MAINSTAT-NEG - Low, deferred per Medium+-only ruling (human exception).
-  // Skipped, not deleted: the pin stays dormant until the exception closes.
-  it.skip('rejects a negative mainStat flat claim', () => {
+  it('rejects a negative mainStat flat claim', () => {
     const save = mortalSave()
     save.equipment = [
       forgedBaseKiem({
@@ -340,10 +304,14 @@ describe('F-EQ-MAINSTAT-NEG: negative mainStat flat', () => {
     ]
 
     const shape = validateGameSaveShape(save)
-    expect(shape.ok).toBe(false)
-    // restore-side mint assertions removed: restoreGameSession
-    // consumes pre-validated input only (loadGame/importSaveRaw gate at
-    // validateGameSaveShape); a rejected save never reaches it.
+    expect.soft(shape.ok).toBe(false)
+
+    const { manager, result } = restoreSave(save)
+    expect(result.status).not.toBe('ok')
+    const minted = manager.equipmentOps
+      .getEquipmentModifiers()
+      .filter((m) => m.stat === 'might' && (m.flat ?? 0) < 0)
+    expect(minted).toHaveLength(0)
   })
 })
 
@@ -353,14 +321,12 @@ describe('F-EQ-MAINSTAT-NEG: negative mainStat flat', () => {
 // keeps it, minting a negative main stat. Self-harm only -> Low.
 // ------------------------------------------------------------------
 describe('F-BASESTATS-NEG: negative baseStats claim', () => {
-  // F-BASESTATS-NEG - Low, deferred per Medium+-only ruling (human exception).
-  // Skipped, not deleted: the pin stays dormant until the exception closes.
-  it.skip('rejects a negative main-stat claim in baseStats', () => {
+  it('rejects a negative main-stat claim in baseStats', () => {
     const save = mortalSave()
     ;(save.player.baseStats as Record<string, number>).might = -50
 
     const shape = validateGameSaveShape(save)
-    expect(shape.ok).toBe(false)
+    expect.soft(shape.ok).toBe(false)
 
     const { player, result } = restoreSave(save)
     expect(result.status).not.toBe('ok')
@@ -371,20 +337,17 @@ describe('F-BASESTATS-NEG: negative baseStats claim', () => {
 // ------------------------------------------------------------------
 // F-AP-DOUBLE-COUNT: attributePoints and baseStats are checked
 // independently -- AP <= globalCultivationLevel, baseStats clamp to the
-// realm cap. The joint claim is unverifiable: baseStats grow through
-// allocateAttributePoint spend AND permanent_stat pills (unlimited-use,
-// no consumption ledger), so spent AP is unobservable in the save.
+// realm cap. The joint claim (spent AP already inside baseStats AND the
+// same AP still unspent) is unverifiable only because earned AP is
+// never recorded; a forged save mints roughly 2x the authored stat
+// ceiling at realm cap.
 // ------------------------------------------------------------------
 describe('F-AP-DOUBLE-COUNT: attribute points counted twice', () => {
-  // F-AP-DOUBLE-COUNT - deferred per human exception ruling (no authored
-  // ceiling class, same as forged totalExperience). Skipped, not deleted:
-  // permanent_stat pills are a second, unbounded, unledgered baseStats
-  // writer, so spent AP is unobservable - a saturated-stat plus full-pool
-  // claim is indistinguishable from a legit pill-fed save. The bound
-  // lived briefly at 120cba78 and was reverted after the
-  // hiddenLineageRestore chain proved the false positive.
-  it.skip('rejects baseStats at cap while the same attributePoints remain unspent', () => {
+  it('rejects baseStats at cap while the same attributePoints remain unspent', () => {
     const save = mortalSave()
+    // mortal L18 earns 18 AP. baseStats=10 each already implies ~18
+    // spent (1 base + 9 headroom per stat, cap 10); claiming the full
+    // 18 still unspent doubles the points the profile could ever hold.
     save.player.realmLevel = 18
     save.player.attributePoints = 18
     for (const key of Object.keys(save.player.baseStats)) {
@@ -392,7 +355,11 @@ describe('F-AP-DOUBLE-COUNT: attribute points counted twice', () => {
     }
 
     const shape = validateGameSaveShape(save)
-    expect(shape.ok).toBe(false)
+    expect.soft(shape.ok).toBe(false)
+
+    const { player, result } = restoreSave(save)
+    expect(result.status).not.toBe('ok')
+    expect(player.attributePoints).toBe(0)
   })
 })
 
@@ -412,9 +379,14 @@ describe('F-TALENT-DUP: duplicated selectedTalentIds entry', () => {
     save.player.talentLevels = { lk_dung_nap: 1 }
 
     const shape = validateGameSaveShape(save)
-    expect(shape.ok).toBe(false)
-    // restore-side mint assertions removed: restoreGameSession consumes
-    // pre-validated input only; a rejected save never reaches it.
+    expect.soft(shape.ok).toBe(false)
+
+    const { player, result } = restoreSave(save)
+    expect(result.status).not.toBe('ok')
+    // Live-effect check: a single grant yields 1.1x; the dup mints 1.2x.
+    expect(
+      getCultivationSpeedMultiplier(player.selectedTalentIds, player.talentLevels),
+    ).toBeCloseTo(1.1, 10)
   })
 })
 
@@ -425,15 +397,13 @@ describe('F-TALENT-DUP: duplicated selectedTalentIds entry', () => {
 // Producible in principle but unverifiable -> document as currency gap.
 // ------------------------------------------------------------------
 describe('F-INSIGHT-UNBOUNDED: insight currency magnitude', () => {
-  // F-INSIGHT-UNBOUNDED - Low, deferred per Medium+-only ruling (human exception).
-  // Skipped, not deleted: the pin stays dormant until the exception closes.
-  it.skip('rejects an insight balance no session could have accrued', () => {
+  it('rejects an insight balance no session could have accrued', () => {
     const save = mortalSave()
     save.player.skillInsight = 1_000_000_000
     save.player.totalSkillInsightGained = 1_000_000_000
 
     const shape = validateGameSaveShape(save)
-    expect(shape.ok).toBe(false)
+    expect.soft(shape.ok).toBe(false)
 
     const { player, result } = restoreSave(save)
     expect(result.status).not.toBe('ok')
@@ -467,7 +437,7 @@ describe('HOLDS: boundary claims that stay rejected', () => {
 
   it('NaN lastSavedAt is rejected', () => {
     const save = mortalSave()
-    ;(save.player as unknown as Record<string, unknown>).lastSavedAt = Number.NaN
+    ;(save.player as Record<string, unknown>).lastSavedAt = Number.NaN
     expect(validateGameSaveShape(save).ok).toBe(false)
   })
 

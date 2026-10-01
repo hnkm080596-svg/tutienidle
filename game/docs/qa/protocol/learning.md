@@ -463,3 +463,33 @@ Each candidate must pass the promotion predicate during Devin adoption before be
   - **Root class:** L-LATENT-UNGATED-HOOK - AUTHORITY.
   - **Detector escape:** latent hooks (runtime.buildSurviveSources, pill drop branch) lack scope gates but are unreachable at this commit - recorded so a future writer enabling the path sees the gate requirement.
   - **Pin/attack proposal:** when a writer lands for a latent seam, the scope gate must ship with it.
+
+- **Incident:** persisted equipped:true with a realm-incompatible grade validated and minted modifiers at restore (F-SCOPE-EQ-1 / F-EQ-GRADE-REALM).
+  - **Root class:** L-CLAIM-WITNESS-CHAIN - BOUNDARY.
+  - **Detector escape:** the equipped flag was checked as a boolean and the grade against the enum, but the claim was never reconciled against the writer gates (equip() requires grade==realm, tribulation unequips all) - a claim no writer produces minted might flat:20.
+  - **Pin/attack proposal:** equipped claims replay against producibleEquippedGrades(realmId); item-state fields verified vs the writers that could have produced them.
+
+- **Incident:** ungated resolvePartyFormation leaked dormant/forged formationLoadout into live player position and companion EXP (F-SEAM-1); forged perfectClearSeconds below the physical clear floor minted accelerated auto-farm cycles (F-SEAM-2).
+  - **Root class:** L-ASYM-SIBLING-SEAM / L-REALM-EARNABILITY-CLAIM - BOUNDARY.
+  - **Detector escape:** sibling consumers of the same dormant records were scope-gated but the formation resolver stayed ungated under a pre-lock grandfathering comment; perfectClearSeconds had a shape-only floor (>=1) while the physical floor (waves-1)*spawnInterval was never replayed.
+  - **Pin/attack proposal:** enumerate ALL consumers of a gated record class, not just same-mechanism siblings; persisted timing claims replay against the minimum the physics of the recorded stage can produce.
+
+- **Incident:** equipment validator envelope cluster - foreign slot claim (F-EQ-FOREIGN-SLOT), affix slot policy skipped when affix.slots undefined (F-EQ-AFFIX-SLOT), duplicate affix stats (F-EQ-AFFIX-DUP), affix stat overlapping mainStat (F-EQ-AFFIX-MAINSTAT-OVERLAP), quality envelope unenforced count/pool/tier/authored-tier (F-EQ-AFFIX-ENVELOPE), negative mainStat.flat (F-EQ-MAINSTAT-NEG, deferred Low).
+  - **Root class:** L-PRODUCER-ENVELOPE-REPLAY - BOUNDARY.
+  - **Detector escape:** per-field legality and enum membership were checked, but the roll envelope (ITEM_QUALITY_SUBSTATS_RANGE, ITEM_QUALITY_AFFIX_TIER, ITEM_QUALITY_UNLOCKED_POOLS, authored affix tiers, excludeStats uniqueness, template slot) was never crossed - each claim minted modifiers no roller emits.
+  - **Pin/attack proposal:** persisted producer outputs replay against the producer's full eligibility envelope at the boundary; enumerate every constraint the factory applies (pool unlock, tier caps, stat uniqueness, slot policy, template slot, sign/magnitude).
+
+- **Incident:** attributePoints and baseStats bounded independently - a forged save claimed saturated stats AND the full unspent pool (F-AP-DOUBLE-COUNT).
+  - **Root class:** L-SPLIT-CLAIM-LEDGER - BOUNDARY.
+  - **Detector escape:** the unspent claim and each stat's magnitude were separately bounded against the earnable ceiling, but the SUM was never reconciled - the two claims draw on one ledger.
+  - **Pin/attack proposal:** bound unspent + spent together against the earnable total, computing the spent side on the post-normalization claim (per-stat contribution clamped at the restore ceiling).
+
+- **Incident:** duplicated selectedTalentIds entry dodged count bounds and double-applied the talent effect (F-TALENT-DUP).
+  - **Root class:** L-WRITER-UNIQUENESS-CLAIM - BOUNDARY.
+  - **Detector escape:** the writer guards every push with !includes, but the persisted list carried no dedup bound - a duplicated pool talent claimed cultivation_speed 1.2 vs authored 1.1.
+  - **Pin/attack proposal:** list claims whose writer dedups must carry the same uniqueness bound at the boundary.
+
+- **Incident:** negative baseStats claim admitted, restore clamp preserves the negative (F-BASESTATS-NEG, deferred Low); skillInsight unbounded magnitude (F-INSIGHT-UNBOUNDED, deferred Low).
+  - **Root class:** L-EARNABLE-BOUND / L-CURRENCY-TALLY - BOUNDARY.
+  - **Detector escape:** deferred per Medium+-only ruling: sign and open-ended magnitude classes on stat/currency claims - self-harm mint only, no upward fabrication.
+  - **Pin/attack proposal:** if the deferral is reversed, bound sign (>=0 or authored minimum) and magnitudes to the earnable ledger for the recorded progression state.
