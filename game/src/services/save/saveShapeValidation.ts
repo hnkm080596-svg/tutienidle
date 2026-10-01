@@ -39,6 +39,8 @@ import {
   TU_LINH_TRAN_EFFECT_GROUP,
 } from '../../core/economy/TuLinhTranBalance'
 import { alchemyRecipes } from '../../data/alchemy/alchemyRecipes'
+import { buildings } from '../../data/building/buildings'
+import { THANH_VAN_PRODUCTION_SITES } from '../../core/production/ProductionCatalog'
 import { getRealmIndex } from '../../core/realm/realmSystem'
 import { getTalentMaxLevel, isLegalBreakthroughOffer, isTalentEntitlementActionable } from '../../core/talent/TalentEntitlement'
 import { skillCoreNodeId } from '../../core/progression/SkillCoreLevel'
@@ -674,31 +676,77 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
               message: 'tu_linh_tran effect vượt biên writer',
             })
           }
-        } else if (pills.some((pill) => pill.id === effect.sourceItemId)) {
-          // Pill regen consumption never writes cultivationSpeedPercent
-          // and only emits manaRegenPerTurn modifiers.
-          if (effect.cultivationSpeedPercent !== undefined) {
-            issues.push({
-              path: `${effectPath}.cultivationSpeedPercent`,
-              message: 'pill effect không thể ghi cultivationSpeedPercent',
-            })
-          }
-          if (effectModifiers !== undefined) {
-            for (let j = 0; j < effectModifiers.length; j += 1) {
-              const modifier = effectModifiers[j]
-              if (isObject(modifier) && modifier.stat !== 'manaRegenPerTurn') {
+        } else {
+          // F-A8-1: the pill writer is regen consumption only - a pill
+          // without a 'regen' effect (cultivation/permanent/material)
+          // never mints a timed effect, and a regen claim must match
+          // the authored effect's own shape.
+          const claimedPill = pills.find((pill) => pill.id === effect.sourceItemId)
+          const regenEffect = claimedPill?.effects.find(
+            (pillEffect) => pillEffect.type === 'regen',
+          )
+
+          if (claimedPill !== undefined && regenEffect !== undefined) {
+            if (effect.cultivationSpeedPercent !== undefined) {
+              issues.push({
+                path: `${effectPath}.cultivationSpeedPercent`,
+                message: 'pill effect không thể ghi cultivationSpeedPercent',
+              })
+            }
+            // The writer always emits effectGroup and durationStackable;
+            // expiresAtMs-appliedAtMs is NOT bound - the stackable
+            // refresh legitimately widens it (unbounded over drinks).
+            const expectedGroup = regenEffect.effectGroup ?? 'pill_regen'
+            if (effect.effectGroup !== expectedGroup) {
+              issues.push({
+                path: `${effectPath}.effectGroup`,
+                message: `pill regen effectGroup phải là ${expectedGroup}`,
+              })
+            }
+            if (effect.durationStackable !== (regenEffect.stackable ?? false)) {
+              issues.push({
+                path: `${effectPath}.durationStackable`,
+                message: 'pill regen durationStackable khác authored',
+              })
+            }
+            if (effectModifiers !== undefined) {
+              // The writer emits exactly one manaRegenPerTurn modifier
+              // with flat = mpPerSecond x potency; alchemy_double_pill
+              // authors the potency ceiling (1.5).
+              const maxFlat = (regenEffect.mpPerSecond ?? 0) * 1.5
+              if (effectModifiers.length > 1) {
                 issues.push({
-                  path: `${effectPath}.modifiers[${j}]`,
-                  message: `pill regen chỉ emit manaRegenPerTurn (${String(modifier.stat)})`,
+                  path: `${effectPath}.modifiers`,
+                  message: 'pill regen chỉ emit đúng một modifier',
                 })
               }
+              for (let j = 0; j < effectModifiers.length; j += 1) {
+                const modifier = effectModifiers[j]
+                if (isObject(modifier) && modifier.stat !== 'manaRegenPerTurn') {
+                  issues.push({
+                    path: `${effectPath}.modifiers[${j}]`,
+                    message: `pill regen chỉ emit manaRegenPerTurn (${String(modifier.stat)})`,
+                  })
+                }
+                if (
+                  isObject(modifier) &&
+                  (!isFiniteNumber(modifier.flat) ||
+                    (modifier.flat as number) < 0 ||
+                    (modifier.flat as number) > maxFlat)
+                ) {
+                  issues.push({
+                    path: `${effectPath}.modifiers[${j}].flat`,
+                    message: `pill regen flat vượt authored bound (${maxFlat})`,
+                  })
+                }
+              }
             }
+          } else {
+            issues.push({
+              path: `${effectPath}.sourceItemId`,
+              message: `timed effect claim nguồn không resolve (${String(effect.sourceItemId)})`,
+            })
           }
-        } else {
-          issues.push({
-            path: `${effectPath}.sourceItemId`,
-            message: `timed effect claim nguồn không resolve (${String(effect.sourceItemId)})`,
-          })
         }
       }
     }
@@ -1655,6 +1703,17 @@ function validateBuildingsSave(
       continue
     }
 
+    // F-A8-2: level is writer-bounded by the template's maxLevel -
+    // upgrade() refuses beyond it, so a higher persisted level is
+    // forged accrual magnitude.
+    const template = buildings.find((building) => building.id === entry.buildingId)
+    if (template !== undefined && (entry.level as number) > template.maxLevel) {
+      issues.push({
+        path: `${entryPath}.level`,
+        message: `level vượt maxLevel authored (${template.maxLevel})`,
+      })
+    }
+
     // F-TC5-1: the accrual realm pin is only ever written from
     // player.realmId at build/claim time, so a pin above the player's
     // own realm (or an unknown realm) is a forged accrual window -
@@ -1731,6 +1790,18 @@ function validateProductionSitesSave(
       issues.push({ path: entryPath, message: 'production site sai shape' })
 
       continue
+    }
+
+    // F-A8-2: same writer bound as building level - upgradeSite
+    // refuses beyond the site definition's maxLevel.
+    const siteDefinition = THANH_VAN_PRODUCTION_SITES.find(
+      (site) => site.siteId === entry.siteId,
+    )
+    if (siteDefinition !== undefined && (entry.level as number) > siteDefinition.maxLevel) {
+      issues.push({
+        path: `${entryPath}.level`,
+        message: `level vượt maxLevel authored (${siteDefinition.maxLevel})`,
+      })
     }
 
     if (

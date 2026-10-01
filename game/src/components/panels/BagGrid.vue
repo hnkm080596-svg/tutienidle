@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useUiStore, type BagTab } from '@/stores/ui'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
+import { scopeHiddenPillFamilyOfId } from '@/core/betaScope'
 import EquipmentBagSection from './bag-sections/EquipmentBagSection.vue'
 import MaterialBagSection from './bag-sections/MaterialBagSection.vue'
 import PillBagSection from './bag-sections/PillBagSection.vue'
@@ -22,7 +23,12 @@ const activeTab = computed<BagTab>(() => ui.activeBagTab)
 const BAG_COUNTS: Record<BagTab, () => number> = {
   equipment: () => gameManager.equipmentBag.getAll().length,
   material: () => gameManager.materialBag.getAll().length,
-  pill: () => gameManager.pillBag.getAll().length,
+  // Same scope-hidden family filter as the section's entries - the tab
+  // count must agree with what the grid can render.
+  pill: () =>
+    gameManager.pillBag
+      .getAll()
+      .filter((stack) => scopeHiddenPillFamilyOfId(stack.pill.id) === null).length,
 }
 
 const activeTabCount = computed(() => {

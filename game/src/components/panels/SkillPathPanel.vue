@@ -32,6 +32,7 @@ import { canPurchaseNode, getNodeLevel } from '@/core/progression/NodeSystem'
 import { getActiveWayDefinition } from '@/core/player/CultivationPathKit'
 import { getActiveWay } from '@/core/player/CultivationPathSystem'
 import { isBetaWay } from '@/core/betaScope'
+import { betaSkillAdmitted } from '@/core/betaScopeSkillDomain'
 import {
   getActiveElement,
   hasStaticPathCapability,
@@ -191,7 +192,7 @@ const skillPathEntries = computed<SkillPathEntry[]>(() => {
 
   const entries: SkillPathEntry[] = gameManager.skillManager
     .getAll()
-    .filter(skill => skill.type === 'active')
+    .filter(skill => skill.type === 'active' && betaSkillAdmitted(skill.id))
     .map(skill => ({
       kind: 'skill' as const,
       id: skill.id,
@@ -206,7 +207,7 @@ const skillPathEntries = computed<SkillPathEntry[]>(() => {
   for (const skillId of NATIVE_CORE_SKILL_IDS) {
     const level = getSkillCoreLevel(player.$state, skillId)
 
-    if (level < 1) {
+    if (level < 1 || !betaSkillAdmitted(skillId)) {
       continue
     }
 

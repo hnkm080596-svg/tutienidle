@@ -249,15 +249,20 @@ describe('F-A7-2: persistentTimedEffects claimed-source coherence', () => {
   it('control: a legit pill regen entry validates and emits manaRegenPerTurn', () => {
     const save = validSave()
     const p = save.player as ReturnType<typeof createDefaultPlayer>
-    const authored = pills.find((pill) => pill.effects.some((e) => e.type === 'regen'))!
+    // The mp_regen family is the live regen writer; the record must
+    // carry its authored shape (family effectGroup, stackable flag).
+    const authored = pills.find((pill) =>
+      pill.effects.some((e) => e.type === 'regen' && e.mpPerSecond !== undefined))!
+    const regen = authored.effects.find((e) => e.type === 'regen')!
     p.persistentTimedEffects = [
       timedEffect({
         id: 'te5',
         sourceItemId: authored.id,
-        effectGroup: 'pill_regen',
+        effectGroup: regen.effectGroup,
+        durationStackable: regen.stackable,
         cultivationSpeedPercent: undefined,
         modifiers: [
-          { id: 'm', sourceId: authored.id, sourceType: 'pill', stat: 'manaRegenPerTurn', flat: 2 },
+          { id: 'm', sourceId: authored.id, sourceType: 'pill', stat: 'manaRegenPerTurn', flat: regen.mpPerSecond },
         ],
       }),
     ]
@@ -492,5 +497,189 @@ describe('F-TC5-1: accrual realm pin boundary', () => {
     ]
 
     expect(validateGameSaveShape(save).ok).toBe(false)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// F-A8-1 (blind A8 sweep on fba2bd85) - the pill timed-effect writer is
+// regen-consumption only and always emits ONE manaRegenPerTurn modifier
+// with flat = mpPerSecond x potency (alchemy_double_pill ceiling 1.5).
+// A claim naming a non-regen pill (cultivation/permanent/material) or a
+// regen record whose group/stackable/modifier shape disagrees with its
+// authored effect is fabricated.
+describe('F-A8-1: pill timed-effect claims resolve a regen effect with authored shape', () => {
+  const mpRegenPill = () =>
+    pills.find((pill) =>
+      pill.effects.some((e) => e.type === 'regen' && e.mpPerSecond !== undefined))!
+
+  function pillEffect(overrides: Partial<PersistentTimedEffect> = {}) {
+    const authored = mpRegenPill()
+    const regen = authored.effects.find((e) => e.type === 'regen')!
+    return {
+      pill: authored,
+      regen,
+      effect: timedEffect({
+        id: 'pe1',
+        sourceItemId: authored.id,
+        effectGroup: regen.effectGroup,
+        durationStackable: regen.stackable,
+        cultivationSpeedPercent: undefined,
+        modifiers: [
+          { id: 'm', sourceId: authored.id, sourceType: 'pill', stat: 'manaRegenPerTurn', flat: regen.mpPerSecond },
+        ],
+        ...overrides,
+      }),
+    }
+  }
+
+  function saveWith(effect: PersistentTimedEffect) {
+    const save = validSave()
+    const p = save.player as ReturnType<typeof createDefaultPlayer>
+    p.persistentTimedEffects = [effect]
+    return save
+  }
+
+  it('a claim naming a non-regen pill (cultivation family) is rejected', () => {
+    const cultivationPill = pills.find((pill) =>
+      pill.effects.some((e) => e.type === 'cultivation'))!
+    const save = saveWith(
+      timedEffect({
+        id: 'pe2',
+        sourceItemId: cultivationPill.id,
+        effectGroup: cultivationPill.id,
+        durationStackable: true,
+        cultivationSpeedPercent: undefined,
+        modifiers: [
+          { id: 'm', sourceId: cultivationPill.id, sourceType: 'pill', stat: 'manaRegenPerTurn', flat: 2 },
+        ],
+      }),
+    )
+
+    expect(validateGameSaveShape(save).ok).toBe(false)
+  })
+
+  it('a claim naming a permanent_stat pill is rejected', () => {
+    const permanentPill = pills.find((pill) =>
+      pill.effects.some((e) => e.type === 'permanent_stat'))!
+    const save = saveWith(
+      timedEffect({
+        id: 'pe3',
+        sourceItemId: permanentPill.id,
+        effectGroup: permanentPill.id,
+        durationStackable: true,
+        cultivationSpeedPercent: undefined,
+        modifiers: [
+          { id: 'm', sourceId: permanentPill.id, sourceType: 'pill', stat: 'manaRegenPerTurn', flat: 2 },
+        ],
+      }),
+    )
+
+    expect(validateGameSaveShape(save).ok).toBe(false)
+  })
+
+  it('a regen claim with a foreign effectGroup is rejected', () => {
+    const { effect } = pillEffect({ effectGroup: 'forged_group' })
+    expect(validateGameSaveShape(saveWith(effect)).ok).toBe(false)
+  })
+
+  it('a regen claim missing durationStackable (writer always emits it) is rejected', () => {
+    const { effect } = pillEffect({ durationStackable: undefined })
+    expect(validateGameSaveShape(saveWith(effect)).ok).toBe(false)
+  })
+
+  it('a regen claim whose stackable flag disagrees with the authored effect is rejected', () => {
+    const { effect, regen } = pillEffect()
+    effect.durationStackable = !regen.stackable
+    expect(validateGameSaveShape(saveWith(effect)).ok).toBe(false)
+  })
+
+  it('a modifier flat above the authored potency bound is rejected', () => {
+    const { effect, regen } = pillEffect()
+    effect.modifiers[0]!.flat = (regen.mpPerSecond ?? 0) * 1.5 + 0.01
+    expect(validateGameSaveShape(saveWith(effect)).ok).toBe(false)
+  })
+
+  it('a second modifier on a regen claim is rejected (writer emits exactly one)', () => {
+    const { effect } = pillEffect()
+    effect.modifiers.push(
+      { id: 'x', sourceId: 'm', sourceType: 'pill', stat: 'manaRegenPerTurn', flat: 1 },
+    )
+    expect(validateGameSaveShape(saveWith(effect)).ok).toBe(false)
+  })
+
+  it('control: the retired hp_regen family claim with authored shape stays legal', () => {
+    const hpPill = pills.find((pill) =>
+      pill.effects.some((e) => e.type === 'regen' && e.hpPerSecond !== undefined))!
+    const regen = hpPill.effects.find((e) => e.type === 'regen')!
+    const save = saveWith(
+      timedEffect({
+        id: 'pe9',
+        sourceItemId: hpPill.id,
+        effectGroup: regen.effectGroup,
+        durationStackable: regen.stackable,
+        cultivationSpeedPercent: undefined,
+        // hp_regen authors mpPerSecond: undefined - the writer emits
+        // flat 0, so 0 is the only legal value.
+        modifiers: [
+          { id: 'm', sourceId: hpPill.id, sourceType: 'pill', stat: 'manaRegenPerTurn', flat: 0 },
+        ],
+      }),
+    )
+
+    expect(validateGameSaveShape(save).ok).toBe(true)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// F-A8-2 (blind A8 sweep on fba2bd85) - upgrade writers refuse past the
+// template/site maxLevel, so a persisted level above it is a forged
+// magnitude claim.
+describe('F-A8-2: building/site level bounded by authored maxLevel', () => {
+  it('a building level above its template maxLevel is rejected', () => {
+    const save = validSave()
+    ;(save as Record<string, unknown>).buildings = [
+      {
+        instanceId: 'i1',
+        buildingId: 'gathering_outpost',
+        level: 500,
+        lastCollectedAt: 0,
+      },
+    ]
+
+    expect(validateGameSaveShape(save).ok).toBe(false)
+  })
+
+  it('a production site level above its definition maxLevel is rejected', () => {
+    const save = validSave()
+    ;(save as Record<string, unknown>).productionSites = [
+      {
+        siteId: 'thanh_van_lam',
+        level: 10,
+        autoRestart: false,
+      },
+    ]
+
+    expect(validateGameSaveShape(save).ok).toBe(false)
+  })
+
+  it('control: level exactly at maxLevel validates for both record kinds', () => {
+    const save = validSave()
+    ;(save as Record<string, unknown>).buildings = [
+      {
+        instanceId: 'i1',
+        buildingId: 'gathering_outpost',
+        level: 9,
+        lastCollectedAt: 0,
+      },
+    ]
+    ;(save as Record<string, unknown>).productionSites = [
+      {
+        siteId: 'thanh_van_lam',
+        level: 9,
+        autoRestart: false,
+      },
+    ]
+
+    expect(validateGameSaveShape(save).ok).toBe(true)
   })
 })

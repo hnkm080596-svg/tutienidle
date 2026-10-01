@@ -980,6 +980,13 @@ export class GameManagerProgressionOps {
    * the cost on a disabled button; affordability is canUpgrade's job.
    */
   getSkillCoreUpgradeCost(skillId: string, player: PlayerData): number | undefined {
+    // F-B8-1: a dormant kit's native core is scope-hidden - never
+    // preview an upgrade cost for it (levelUpSkill refuses anyway, so a
+    // cost here would be an enabled-but-dead affordance).
+    if (!betaSkillAdmitted(skillId)) {
+      return undefined
+    }
+
     const coreId = skillCoreNodeId(skillId)
 
     if (!this.deps.nodeRegistry.has(coreId)) {

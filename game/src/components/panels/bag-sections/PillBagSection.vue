@@ -17,6 +17,7 @@ import {
 } from '@/composables/useBagFilter'
 import { usePlayerStore } from '@/stores/player'
 import { addCultivation } from '@/core/cultivation/CultivationSystem'
+import { scopeHiddenPillFamilyOfId } from '@/core/betaScope'
 import { useNotificationStore } from '@/stores/notification'
 import type { PillTarget } from '@/core/pill/PillSystem'
 import type { Pill } from '@/core/pill/Pill'
@@ -310,7 +311,13 @@ const SORT_OPTIONS: Array<BagSortOption & { value: PillSortMode }> = [
 const entries = computed<PillEntry[]>(() => {
   stateVersion.value
 
-  return gameManager.pillBag.getAll().map((stack) => {
+  // BETA SCOPE LOCK - a carried save's dormant-family stacks are
+  // scope-hidden: the drink path (usePillDetailed) fails closed, so a
+  // rendered cell would arm a consume it can never complete.
+  return gameManager.pillBag
+    .getAll()
+    .filter((stack) => scopeHiddenPillFamilyOfId(stack.pill.id) === null)
+    .map((stack) => {
     const displayName = composeItemGradeNameSegments(stack.pill.name, stack.pill.grade)
       .map((segment) => segment.text)
       .join(' ')
