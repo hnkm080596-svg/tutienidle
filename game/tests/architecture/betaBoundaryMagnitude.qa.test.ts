@@ -496,7 +496,22 @@ describe('F-TC7-TRIB: committedOutcome re-derives the breakthrough gate at settl
   it('control: gate inputs present, the admissible outcome settles', () => {
     const p = committedSpellPlayer({
       realmLevel: 16,
-      completedStageIds: ['qi_refining_abyssal_pool'],
+      // F-TC9-2: the chain-prefix bound requires every earlier floor in
+      // the zone - a legit claim on the last qi floor carries the full
+      // mortal + qi prefix.
+      completedStageIds: [
+        ...Array.from({ length: 10 }, (_, index) => `mortal_dong_${index + 1}`),
+        'qi_refining_forest',
+        'qi_refining_deep_forest',
+        'qi_refining_ember_canyon',
+        'qi_refining_scorched_ridge',
+        'qi_refining_sand_plain',
+        'qi_refining_stone_range',
+        'qi_refining_blade_peak',
+        'qi_refining_mineral_pit',
+        'qi_refining_mystic_marsh',
+        'qi_refining_abyssal_pool',
+      ],
     })
     const { manager, result } = boot(saveFor(p, committedOutcome()))
     expect(result.status).toBe('ok')

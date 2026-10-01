@@ -313,9 +313,16 @@ describe('F-A7-2: persistentTimedEffects claimed-source coherence', () => {
 })
 
 describe('F-A7-3: alchemy job pillId coherence', () => {
+  const pillRoomWitness = [
+    { instanceId: 'b-pill', buildingId: 'pill_room', level: 1, lastCollectedAt: 0 },
+  ]
+
   it('a job whose pillId disagrees with the recipe is rejected', () => {
     const recipe = alchemyRecipes.find((r) => r.pillId !== 'phi_van_dan_mortal')!
     const save = validSave()
+    // F-TC9-3: a job claim needs the pill_room built - the witness keeps
+    // this assertion specific to the pillId mismatch.
+    ;(save as Record<string, unknown>).buildings = pillRoomWitness
     ;(save as Record<string, unknown>).alchemyJobs = [
       {
         jobId: 'j1',
@@ -334,6 +341,7 @@ describe('F-A7-3: alchemy job pillId coherence', () => {
   it('control: a job matching its recipe validates', () => {
     const recipe = alchemyRecipes[0]!
     const save = validSave()
+    ;(save as Record<string, unknown>).buildings = pillRoomWitness
     ;(save as Record<string, unknown>).alchemyJobs = [
       {
         jobId: 'j1',

@@ -292,6 +292,15 @@ describe('TC6-A claim-vs-writer: player.modifiers sourceType/sourceId', () => {
 })
 
 describe('TC6-B dormant-record liveness', () => {
+  // F-TC9-3: job claims are room-level coherence-bounded - fixtures
+  // carrying an alchemyJobs claim need the witnessing pill_room at
+  // least that level.
+  const pillRoom = {
+    instanceId: 'b-pill',
+    buildingId: 'pill_room',
+    level: 1,
+    lastCollectedAt: 0,
+  }
   it('B1 - coherent hiddenPerfection + missing passive marker emits ENHANCED realm passive at next sync', () => {
     const { save } = committedSave('qi_refining', {
       hiddenPerfection: {
@@ -461,7 +470,7 @@ describe('TC6-B dormant-record liveness', () => {
       completesAtMs: Date.now() - 1,
       roomLevelAtStart: 1,
     }
-    const { save } = committedSave('qi_refining', {}, { alchemyJobs: [job] })
+    const { save } = committedSave('qi_refining', {}, { alchemyJobs: [job], buildings: [pillRoom] })
     const { playerStore, manager, result } = boot(save)
     expect(result.status).toBe('ok')
     expect(
@@ -486,7 +495,7 @@ describe('TC6-B dormant-record liveness', () => {
       completesAtMs: Date.now() - 1,
       roomLevelAtStart: 1,
     }
-    const { save } = committedSave('qi_refining', {}, { alchemyJobs: [job] })
+    const { save } = committedSave('qi_refining', {}, { alchemyJobs: [job], buildings: [pillRoom] })
     const shape = validateGameSaveShape(JSON.parse(JSON.stringify(save)))
     expect(shape.ok).toBe(false)
     // Second wall (F-A7-3): even if it leaked past admission, settle
@@ -558,7 +567,7 @@ describe('TC6-B dormant-record liveness', () => {
       completesAtMs: Date.now() - 1,
       roomLevelAtStart: 1,
     }
-    const { save } = committedSave('qi_refining', {}, { alchemyJobs: [job] })
+    const { save } = committedSave('qi_refining', {}, { alchemyJobs: [job], buildings: [pillRoom] })
     const { acceptable, shape } = classify(save)
     expect(shape.ok).toBe(true)
     expect(acceptable).toBe(true)
