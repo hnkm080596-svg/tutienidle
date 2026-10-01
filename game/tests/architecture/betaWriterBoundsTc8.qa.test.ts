@@ -931,7 +931,7 @@ describe('F-A11-4: workerCycles lane-count and per-cycle bounds', () => {
     completesAtMs: 100_001,
   })
 
-  it('more cycles than the authored 19-lane ceiling are rejected', () => {
+  it('more cycles than the effective worker pool are rejected', () => {
     const save = validSave()
     save.productionSites = [
       {

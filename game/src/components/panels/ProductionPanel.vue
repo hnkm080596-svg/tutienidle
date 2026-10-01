@@ -12,7 +12,7 @@ import GameButton from '@/components/common/GameButton.vue'
 import { PILL_FAMILIES } from '@/data/pill/PillFamilies'
 import { formatStat } from '@/core/stats/StatLabels'
 import { formatDuration } from '@/core/format/formatDuration'
-import { betaSurfaceVisible } from '@/core/betaScope'
+import { betaRecipeFamilyOfId, betaSurfaceVisible } from '@/core/betaScope'
 
 // Sản Xuất (2026-08-25, resource-professions-rework plan §9.1) — thay
 // ExplorationPanel: mỗi Địa Giới hiển thị đúng ba card Lâm/Quáng/
@@ -33,7 +33,12 @@ function rewardSummary(kind: string): string {
 
   if (kind === 'mine') return t('panels.production.rewards.mine')
 
-  return t('panels.production.rewards.grotto', { count: PILL_FAMILIES.length })
+  // CONSUMER-01: advertise only beta-admitted families - the grotto can
+  // never produce a scope-hidden recipe, so PILL_FAMILIES.length would
+  // overstate the card against the alchemy authority seam.
+  return t('panels.production.rewards.grotto', {
+    count: PILL_FAMILIES.filter((family) => betaRecipeFamilyOfId(family.id) !== null).length,
+  })
 }
 
 const player = usePlayerStore()

@@ -81,6 +81,7 @@ import {
   BASE_CULTIVATION_PER_SECOND,
   getGlobalCultivationLevel,
   getRealmIndex,
+  getRequiredCultivation,
 } from '../../core/realm/realmSystem'
 import { getRealmTier } from '../../core/realm/RealmTierMap'
 import {
@@ -93,7 +94,7 @@ import {
   getInsightPerCultivation,
   hasCultivationOverflowBank,
 } from '../../core/talent/TalentEffects'
-import { getWorkerCapacityForLevel } from '../../core/production/WorkerCapacity'
+import { betaEffectiveWorkerCapacity } from '../../core/production/WorkerCapacity'
 import { getTalentMaxLevel, isLegalBreakthroughOffer, isTalentEntitlementActionable } from '../../core/talent/TalentEntitlement'
 import { skillCoreNodeId } from '../../core/progression/SkillCoreLevel'
 import { isPhysiqueGradeId } from '../../data/realm/PhysiqueLadder'
@@ -409,6 +410,25 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
   // NaN vinh vien cho cultivation qua calculateOfflineProgress (review
   // 2026-08-28 bug #2).
   requireNonNegativeNumber(player, 'cultivation', 'player', issues)
+
+  // F-CULT-OVERCAP: addCultivation is the sole writer and clamps every
+  // gain at the current tier's getRequiredCultivation - overflow banks
+  // to cultivationOvercharge (Hai Nap) or waits at the cap for the
+  // breakthrough ritual - so a persisted value above required is a
+  // forged magnitude claim.
+  if (
+    isNonNegativeFiniteNumber(player.cultivation) &&
+    typeof player.realmId === 'string' &&
+    REALMS.some((realm) => realm.id === player.realmId) &&
+    isNonNegativeFiniteNumber(player.realmLevel) &&
+    player.cultivation > getRequiredCultivation(player.realmId, player.realmLevel)
+  ) {
+    issues.push({
+      path: 'player.cultivation',
+      message: 'vượt required của tầng hiện tại (writer clamp tại getRequiredCultivation)',
+    })
+  }
+
   requireNonNegativeNumber(player, 'cultivationPerSecond', 'player', issues)
 
   // Mission A review - the player record/array fields below were
@@ -2644,6 +2664,12 @@ function validateQuestSave(value: unknown, path: string, issues: ShapeIssue[]): 
   if (!Array.isArray(active)) {
     issues.push({ path: `${path}.active`, message: 'phải là array' })
   } else {
+    // F-QUEST-DUP: ensureActive dedupes via getProgress (first-match),
+    // so a duplicated active questId is unproducible - the dup would
+    // shadow progress/claim state at restore (same class as QA-FS-4
+    // skills and equipment instanceId).
+    const seenQuestIds = new Set<string>()
+
     for (let i = 0; i < active.length; i += 1) {
       const entry = active[i]
 
@@ -2654,6 +2680,17 @@ function validateQuestSave(value: unknown, path: string, issues: ShapeIssue[]): 
         typeof entry.claimed !== 'boolean'
       ) {
         issues.push({ path: `${path}.active[${i}]`, message: 'quest progress sai shape' })
+      }
+
+      if (isObject(entry) && typeof entry.questId === 'string') {
+        if (seenQuestIds.has(entry.questId)) {
+          issues.push({
+            path: `${path}.active[${i}].questId`,
+            message: `questId '${entry.questId}' trùng lặp (ensureActive dedupe - không sản xuất được)`,
+          })
+        } else {
+          seenQuestIds.add(entry.questId)
+        }
       }
     }
   }
@@ -2869,6 +2906,7 @@ function validateProductionSitesSave(
   playerRealmIndex?: number,
   playerLastSavedAt?: number,
   claimedRealmTier?: number,
+  claimedWorkerCapacity?: number,
 ): void {
   for (let i = 0; i < entries.length; i += 1) {
     const entry = entries[i]
@@ -2935,13 +2973,14 @@ function validateProductionSitesSave(
       if (!Array.isArray(entry.workerCycles)) {
         issues.push({ path: `${entryPath}.workerCycles`, message: 'phải là array' })
       } else {
-        // F-A11-4: lane count can never exceed the authored worker
-        // pool ceiling (chi_hien_quan max level -> 1 + level*2
-        // capacity); every lane is one reward settle, so an
-        // over-ceiling array mints free production.
-        const maxLanes = getWorkerCapacityForLevel(
-          buildings.find((building) => building.id === 'chi_hien_quan')?.maxLevel ?? 9,
-        )
+        // F-WC-LANES (rebounds F-A11-4): lane count can never exceed the
+        // producible worker pool. While manualWorkforce is scope-hidden
+        // every capacity consumer reads the flat auto pool via
+        // betaEffectiveWorkerCapacity (BETA_BASELINE_WORKER_CAPACITY =
+        // one lane per Thanh Van site) - the authored chi_hien_quan
+        // ceiling is unreachable, so a site holding more in-flight lanes
+        // than the effective pool mints free settles.
+        const maxLanes = betaEffectiveWorkerCapacity(claimedWorkerCapacity ?? 0)
 
         if (entry.workerCycles.length > maxLanes) {
           issues.push({
@@ -3688,6 +3727,9 @@ export function validateGameSaveShape(parsed: unknown): ShapeValidationResult {
         ? (parsed.player.lastSavedAt as number)
         : undefined,
       claimedRealmTier,
+      isObject(parsed.player) && isNonNegativeFiniteNumber(parsed.player.autoWorkerCapacity)
+        ? (parsed.player.autoWorkerCapacity as number)
+        : undefined,
     )
   }
 

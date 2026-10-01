@@ -754,6 +754,19 @@ describe('validateGameSaveShape — productionSites slice (Mission A1)', () => {
   it('chấp nhận productionSites đầy đủ hợp lệ', () => {
     const save = validSave()
 
+    // F-WC-LANES: in-flight lanes are bounded by the effective worker
+    // pool. Under the unlocked test table the pool reads the claimed
+    // autoWorkerCapacity (F-W-16: a non-zero claim needs the
+    // chi_hien_quan instance that grants it).
+    ;(save.player as Record<string, unknown>).autoWorkerCapacity = 3
+    save.buildings = [
+      {
+        instanceId: 'b-chq',
+        buildingId: 'chi_hien_quan',
+        level: 1,
+        lastCollectedAt: 0,
+      },
+    ]
     save.productionSites = [validSite()]
 
     expect(validateGameSaveShape(save).ok).toBe(true)
