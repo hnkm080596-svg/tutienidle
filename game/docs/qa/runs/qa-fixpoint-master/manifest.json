@@ -2514,7 +2514,7 @@
       "path": "docs/qa/protocol/learning.md",
       "kind": "file",
       "mode": 33188,
-      "hash": "4087bd5a51966598ba944468ec6024e920bfa0062c31c1bc67a49e28904534e0"
+      "hash": "232244e91896f1113b611a2a7968eb8aac69175321e3e74c6f6b8538be5e6628"
     },
     {
       "path": "docs/qa/protocol/ledger-schema.md",
@@ -17742,7 +17742,7 @@
       "path": "src/core/betaScope.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "24dcc6d541e1a563474df330142fe7a6224fc65657c4e31b01dfcb229859cbdf"
+      "hash": "bfbb7800cb6009565eb58d0247ca6e5e433f35d18e6f669fd6643410e0f4a94d"
     },
     {
       "path": "src/core/betaScopeSkillDomain.ts",
@@ -18891,6 +18891,12 @@
       "hash": "4f0f06a4772e8e48dcfa6a1af3905355e1b8f126c682cc1e0ff47604f5f4071b"
     },
     {
+      "path": "src/core/game/__fixtures__/betaTalentsUnlock.ts",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "f3191acd16a7e29ac9fc3cc2aaceb7b41b358462cac0c7b7bfff89ff798f8e3a"
+    },
+    {
       "path": "src/core/game/__fixtures__/betaWaysUnlock.ts",
       "kind": "file",
       "mode": 33188,
@@ -19716,7 +19722,7 @@
       "path": "src/core/game/GameManagerProgressionOps.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "754eab3351f41dab2d2db192d7f112414486e9e6502bcf5feb226f63effcb2db"
+      "hash": "d916bcece3c31c85bdd848f05caeb48121626609af4c1455e0b93e7749430f05"
     },
     {
       "path": "src/core/game/GameManagerQuestOps.ts",
@@ -19728,7 +19734,7 @@
       "path": "src/core/game/GameManagerRealmAdvanceOps.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "da5de54fb3aecebccb26e9b58dbcd5a93124420dcdc9ef135d6979405e61c54b"
+      "hash": "48ba7a228d08d2ad61a7e7e1979b791e5275427f2cec8242c94832b9a9693d88"
     },
     {
       "path": "src/core/game/GameManagerRewardOps.ts",
@@ -20280,7 +20286,7 @@
       "path": "src/core/player/CultivationPathSystem.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "7c05f70d9db182c662971f1123d106894f39b491affe1445b82142c42f5cd526"
+      "hash": "89693924a2f939f0f38f191adead195a0bc18cb273c8024f9163eb1fe92b8c54"
     },
     {
       "path": "src/core/player/PersistentTimedEffect.ts",
@@ -21876,7 +21882,7 @@
       "path": "src/core/talent/TalentEffects.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "0ff93044ee95b5e03fa57d248cd0a6a9bf477ba91b6372758777a64e7f16221d"
+      "hash": "62c182774cea7b13cf52a3279701e4666581fc2162af3d43b1475889004538ff"
     },
     {
       "path": "src/core/talent/TalentEntitlement.offerLegality.test.ts",
@@ -24930,7 +24936,7 @@
       "path": "tests/architecture/betaDormantSaveLeak.qa.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "204f695a8e360fe7f2b6f76a16b8ba8e30fefac9c4a3f48dc10746af70677e80"
+      "hash": "5dcb7e29610c72cd3d4e9e86d5cbdcf88ef25d459bd981b0cf49e88dd350e8cf"
     },
     {
       "path": "tests/architecture/betaEconomyCensus.test.ts",
@@ -25524,7 +25530,7 @@
       "path": "tests/setup.betaScope.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "07e6cfc1d18f88bd4b6d29f11772643f00c6362a47417743016f05685a8050e3"
+      "hash": "f97161b3ce742a208f1e10d32457b6c0586de87355f75c95ab42c57a9a0aa804"
     },
     {
       "path": "tests/unit/AssetBaseUrl.test.ts",
@@ -25575,5 +25581,5 @@
       "hash": "0bb3657058699da63594036eda9bb6be7f6b4b44aebbb960fcba939870fd3f5e"
     }
   ],
-  "productStateId": "68a026d3d49539b0f6269ecfc146a78b2607ee6023d286df3e8c730b021e080a"
+  "productStateId": "451a4d139ef4c03f6210dedca35e5b84ae91d41a5d252a8afb52caaf0db37b9f"
 }
