@@ -15870,7 +15870,7 @@
       "path": "src/components/panels/bag-sections/MaterialBagSection.vue",
       "kind": "file",
       "mode": 33188,
-      "hash": "fc051a199d7a21916c234d2a75bdf54ac0e01d080dcab176fdf0b36c209a2490"
+      "hash": "aac879479e2260680bc78a91da011522e37e530d490d43279c43a55b515a0e70"
     },
     {
       "path": "src/components/panels/bag-sections/PillBagSection.test.ts",
@@ -15888,7 +15888,7 @@
       "path": "src/components/panels/BagGrid.vue",
       "kind": "file",
       "mode": 33188,
-      "hash": "f3d8d6b0822f703be4c4c141b6d5f77a70b8593fd5673fd2faa58b35ed67821f"
+      "hash": "5ef53520beb8274d78d1a2cf03a2858714ef0198005189d9872e56d6c329f177"
     },
     {
       "path": "src/components/panels/BuildingConstructionGate.test.ts",
@@ -15906,7 +15906,7 @@
       "path": "src/components/panels/CharacterDetailCard.vue",
       "kind": "file",
       "mode": 33188,
-      "hash": "de23600a426b9777a6892c7d78de8d33c6606fc5f194cd3072b3fadb1b7af53a"
+      "hash": "95c106e01ee27619be7cacf5cfac452819bb769ff6be9d0614b6d2e756d35061"
     },
     {
       "path": "src/components/panels/CharacterPanel.meridian.test.ts",
@@ -16140,7 +16140,7 @@
       "path": "src/components/panels/scripture/LoreCodex.vue",
       "kind": "file",
       "mode": 33188,
-      "hash": "996c911b168a2587bde006633fc472edee8676d43a797314d375059487753516"
+      "hash": "675eb7a5f5a93f9c033ac1ca769e449b69531dc57b000a42fb1f73d26486050b"
     },
     {
       "path": "src/components/panels/ScripturePavilionPanel.vue",
@@ -17760,7 +17760,7 @@
       "path": "src/core/betaScope.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "f61b364ef382338db5d0fe0c1f6617e1257f645c728b25eab9c42d424b85a06f"
+      "hash": "45a556f077c3f09d85cc9f707b8b75f7b11b45891e2eacd242cc420c2d651208"
     },
     {
       "path": "src/core/betaScopeSkillDomain.ts",
@@ -24408,7 +24408,7 @@
       "path": "src/services/save/saveAcceptance.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "b2faeb1cce754ab8491ca0cd2134057c3a7d493e54fe16f7ffeb82a6ac2fc72e"
+      "hash": "a2c6aeebeaba55890f0c07675a2f3ee2adfd629f9fb27566c786652e68bc3301"
     },
     {
       "path": "src/services/save/saveKeys.test.ts",
@@ -24444,7 +24444,7 @@
       "path": "src/services/save/saveShapeValidation.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "cfc9bfc44ff3c8768c678774fbf1f15cfebb21aab62a52de2d28667eb8d2880f"
+      "hash": "c0583afcb63d6bab8b2aada681035b8f7793b4b632c2d6589a6df0b36542ae98"
     },
     {
       "path": "src/services/save/SaveSystem.bootRestore.test.ts",
@@ -24885,6 +24885,12 @@
       "hash": "91d1c43004802cd49950d78eb11c8fa7d05da8ffffe219a8b13b2f561bc00903"
     },
     {
+      "path": "tests/architecture/a19ElementRootWitness.qa.test.ts",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "dd9f8f194c086d32f77db7e2123d97db980b00e1a9f230dc6f82b5e20c1f90d6"
+    },
+    {
       "path": "tests/architecture/ackTokenContract.test.ts",
       "kind": "file",
       "mode": 33188,
@@ -24957,6 +24963,12 @@
       "hash": "2c14b3f2eca76ddeede67ce24755e7224f64c4aaf850c897ffac753942406906"
     },
     {
+      "path": "tests/architecture/b19ConsumerScopeLeak.qa.test.ts",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "33f557184b529b84d4c7fae9c0c7c095de285bd2b8a86ea60c09660f7f3a617a"
+    },
+    {
       "path": "tests/architecture/baselines/asciiComments.json",
       "kind": "file",
       "mode": 33188,
@@ -24973,6 +24985,12 @@
       "kind": "file",
       "mode": 33188,
       "hash": "cad200e8a45856795b45922235914295984885843a9fc71c2d246331df640920"
+    },
+    {
+      "path": "tests/architecture/betaAuthoritySeamA18.qa.test.ts",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "e5cb9224b2b68a23cd0aae81f5cd4b875b7af289d1c84c1b3146d1648e4a0824"
     },
     {
       "path": "tests/architecture/betaBoundaryMagnitude.qa.test.ts",
@@ -25419,6 +25437,12 @@
       "hash": "e7e197e894f150463179f219022c9de3347c5e623f6c74c6e1d9d893469963c4"
     },
     {
+      "path": "tests/architecture/tc16Falsification.qa.test.ts",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "99f9eee85445fd1f0f30bed0bb4eda6482a3509dcdb2844aa62cea610f130745"
+    },
+    {
       "path": "tests/architecture/tc6ForgedSaveFalsification.qa.test.ts",
       "kind": "file",
       "mode": 33152,
@@ -25761,5 +25785,5 @@
       "hash": "0bb3657058699da63594036eda9bb6be7f6b4b44aebbb960fcba939870fd3f5e"
     }
   ],
-  "productStateId": "497435c925cecd9ff0fbd2c10533a81721b447a3e939081da8399722b0752af3"
+  "productStateId": "dcca2dd0f086aabe6eae58ecdf5bb28bd44d6bae4d19d1ff8f0c6c81c877187e"
 }

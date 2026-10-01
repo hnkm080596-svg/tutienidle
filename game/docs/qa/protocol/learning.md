@@ -508,3 +508,13 @@ Each candidate must pass the promotion predicate during Devin adoption before be
   - **Root class:** L-MIRROR-COHERENCE - BOUNDARY.
   - **Detector escape:** the writer increments totalExperience and writes player.skillCastCounts[id] in the same statement, and the mirror is never cleared (unlearn leaves stale counts, relearn restarts the entry) - the producible relation is tExp <= mirror, which the validator never replayed while checking only entry.id.
   - **Pin/attack proposal:** bound mirrored counters against their never-cleared mirror row in the direction the writer cannot produce (tExp > mirror); tolerate stale-mirror shapes (tExp < mirror after relearn) and mirror-only rows for unlearned skills.
+
+- **Incident:** forged element-root claim admitted on a save with no committed element, permanently bricking every initiation probe (F-A19-ROOT-1).
+  - **Root class:** L-ATOMIC-COWRITE-WITNESS - BOUNDARY.
+  - **Detector escape:** the canonicality replay checked each owned node against its authored prereqs but never the atomic co-write contract - a PHAP_TU_ELEMENT_ROOT_IDS root is producible only inside the commitFiveElementInitiation commit that also writes spellPath.element, so the witness claim (root owned) must agree with the co-written field (element committed). Per-field prereq bounds cannot express cross-field atomicity.
+  - **Pin/attack proposal:** for atomically co-written fields, replay ownership-to-co-field agreement at every acceptance seam (owned root => getActiveElement === owning element), including the remote newest-wins gate (assertSaveAcceptable), not just the shape layer.
+
+- **Incident:** CharacterDetailCard iterated BASE_STAT_LABELS raw, rendering hidden-domain stat rows to every beta player (F-B19-STAT-1); a carried domain-scoped material rendered its dormant-domain branding in MaterialBagSection/LoreCodex/BagGrid count below the unlock realm (F-B19-DOMAIN-1).
+  - **Root class:** L-WAY-CAPABILITY-VERDICT - CONSUMER (shared-predicate bypass recurrence).
+  - **Detector escape:** same class as B18 - consumers enumerated raw catalogs (stat label list, material stacks) instead of consulting the scope verdicts; the gated WRITE seams stayed closed while a display surface branded the dormant domain.
+  - **Pin/attack proposal:** every consumer rendering a catalog enumeration must apply the scope predicate at the same seam the entries pass through - new stat/display keys need an admission row (BETA_SCOPE_HIDDEN_STAT_KEYS, isDomainScopedAcquisitionEnabled), and tab badges must count the filtered set, not the raw bag.
