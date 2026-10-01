@@ -93,7 +93,7 @@ describe('B18 hostile persisted state -> read-model honesty', () => {
     const html = await ssr(LoreCodex, gameManager)
     // chi_hien_lenh is category 'other' -> LoreCodex's unsuppressed
     // filter admits it, and the slot renders its dormant branding
-    // ("dùng tại Chiêu Hiền Quán để chiêu mộ đồng đội").
+    // (the Chieu Hien Quan companion-pull usage text).
     expect(html).not.toContain('Chiêu Hiền Lệnh')
   })
 
