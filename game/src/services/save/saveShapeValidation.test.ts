@@ -1500,6 +1500,9 @@ describe('validateGameSaveShape - talent v4 M2 fields (v61)', () => {
     const save = validSave()
     const player = playerOf(save)
 
+    // F-A11-1: the overcharge bank is talent-witnessed - a positive
+    // balance needs a claimed cultivation_overflow_bank talent.
+    player.selectedTalentIds = ['hai_na']
     player.cultivationOvercharge = 12
     player.nodeFreePurchaseRecord = { node_a: 2 }
     player.phaGiapCarryStacks = 4

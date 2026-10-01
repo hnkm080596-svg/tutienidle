@@ -61,7 +61,10 @@ import {
 import {
   getCultivationRampMultiplier,
   getCultivationSpeedMultiplier,
+  getInsightPerCultivation,
+  hasCultivationOverflowBank,
 } from '../../core/talent/TalentEffects'
+import { getWorkerCapacityForLevel } from '../../core/production/WorkerCapacity'
 import { getTalentMaxLevel, isLegalBreakthroughOffer, isTalentEntitlementActionable } from '../../core/talent/TalentEntitlement'
 import { skillCoreNodeId } from '../../core/progression/SkillCoreLevel'
 import { isPhysiqueGradeId } from '../../data/realm/PhysiqueLadder'
@@ -606,6 +609,51 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
   requireNonNegativeNumber(player, 'skillInsight', 'player', issues)
   requireNonNegativeNumber(player, 'totalSkillInsightGained', 'player', issues)
   requireNonNegativeNumber(player, 'cultivationInsightAccumulator', 'player', issues)
+
+  // F-A11-3: every skillInsight mint bumps totalSkillInsightGained in
+  // the same statement and spends only decrement skillInsight
+  // (refunds repay already-minted insight), so insight can never
+  // exceed the lifetime tally - a larger claim is a forged currency
+  // grant.
+  if (
+    isNonNegativeFiniteNumber(player.skillInsight) &&
+    isNonNegativeFiniteNumber(player.totalSkillInsightGained) &&
+    (player.skillInsight as number) > (player.totalSkillInsightGained as number)
+  ) {
+    issues.push({
+      path: 'player.skillInsight',
+      message: 'skillInsight vượt totalSkillInsightGained (currency claim bất khả thi)',
+    })
+  }
+
+  // F-A11-2: accrueCultivationInsight early-returns without an
+  // insight_per_cultivation talent and its drain loop always exits
+  // below threshold, so a persisted accumulator is only legal while
+  // under the claimed talents' threshold - anything else is a
+  // deferred skillInsight mint.
+  const insightThreshold = getInsightPerCultivation(
+    (selectedTalentIds ?? []).filter(
+      (talentId): talentId is string => typeof talentId === 'string',
+    ),
+    isObject(player.talentLevels) ? (player.talentLevels as Record<string, number>) : undefined,
+  )
+
+  if (isNonNegativeFiniteNumber(player.cultivationInsightAccumulator)) {
+    if (insightThreshold === undefined && (player.cultivationInsightAccumulator as number) > 0) {
+      issues.push({
+        path: 'player.cultivationInsightAccumulator',
+        message: 'accumulator > 0 khi không có talent insight_per_cultivation',
+      })
+    } else if (
+      insightThreshold !== undefined &&
+      (player.cultivationInsightAccumulator as number) >= insightThreshold
+    ) {
+      issues.push({
+        path: 'player.cultivationInsightAccumulator',
+        message: 'accumulator đạt ngưỡng mint (drain loop luôn thoát dưới ngưỡng)',
+      })
+    }
+  }
   requireNonNegativeNumber(player, 'attributePoints', 'player', issues)
   // F-TC6-6: 1 attribute point mints per tier climbed (levelUp +
   // breakthrough each grant exactly one), so unspent points can never
@@ -637,6 +685,28 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
 
   if (purchasedNodeIds) {
     validateStringEntries(purchasedNodeIds, 'player.purchasedNodeIds', issues)
+
+    // F-A11-6: purchasedNodeIds is a compat mirror of nodeLevels - the
+    // purchase path and grantSkillCore write both, and every removal
+    // seam (revokeNodeOwnership, respec clawback) drops both, so an
+    // entry without level >= 1 is forged ownership that authorizes
+    // specialization claims.
+    if (isObject(player.nodeLevels)) {
+      for (let i = 0; i < purchasedNodeIds.length; i += 1) {
+        const nodeId = purchasedNodeIds[i]
+        const level = player.nodeLevels[nodeId as string]
+
+        if (
+          typeof nodeId === 'string' &&
+          (!isFiniteNumber(level) || (level as number) < 1)
+        ) {
+          issues.push({
+            path: `player.purchasedNodeIds[${i}]`,
+            message: `node '${nodeId}' không có nodeLevels >= 1 (ownership mirror bất khả thi)`,
+          })
+        }
+      }
+    }
   }
 
   const completedStageIds = requireArray(player, 'completedStageIds', 'player', issues)
@@ -1441,6 +1511,27 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
   // Loi Kiep, ledger mua node mien phi (Van Dao), tang Pha Giap mang
   // sang tran sau + canh gioi luc bank.
   requireNonNegativeNumber(player, 'cultivationOvercharge', 'player', issues)
+
+  // F-A11-1: addCultivation is the only writer and it banks solely
+  // under hasCultivationOverflowBank (cultivation_overflow_bank
+  // talent); no removal path can orphan the bank, so a positive
+  // overcharge without the talent is a forged cultivation grant that
+  // pourCultivationOvercharge pays at every breakthrough.
+  if (
+    isNonNegativeFiniteNumber(player.cultivationOvercharge) &&
+    (player.cultivationOvercharge as number) > 0 &&
+    !hasCultivationOverflowBank(
+      (selectedTalentIds ?? []).filter(
+        (talentId): talentId is string => typeof talentId === 'string',
+      ),
+      isObject(player.talentLevels) ? (player.talentLevels as Record<string, number>) : undefined,
+    )
+  ) {
+    issues.push({
+      path: 'player.cultivationOvercharge',
+      message: 'bank > 0 khi không sở hữu talent cultivation_overflow_bank',
+    })
+  }
   // tribulationBonusStacks removed at v82 — Loi Kiep lives only in
   // talent_loi_kiep_* modifiers (was write-only).
 
@@ -2145,6 +2236,7 @@ function validateProductionCycleSave(
   path: string,
   issues: ShapeIssue[],
   playerRealmIndex?: number,
+  siteMaxLevel?: number,
 ): void {
   if (
     !isObject(value) ||
@@ -2171,6 +2263,24 @@ function validateProductionCycleSave(
     issues.push({
       path: `${path}.collectionRealmId`,
       message: `collection realm pin vượt quá realm người chơi (${value.collectionRealmId})`,
+    })
+  }
+
+  // F-A11-4: a spawned lane snapshots completesAtMs = startedAtMs +
+  // cycleMs and siteLevelAtStart = state.level <= maxLevel - a
+  // reversed span or an over-ceiling level claim is a forged reward
+  // window.
+  if ((value.completesAtMs as number) <= (value.startedAtMs as number)) {
+    issues.push({
+      path: `${path}.completesAtMs`,
+      message: 'phải sau startedAtMs (writer luôn stamp start + cycleMs)',
+    })
+  }
+
+  if (siteMaxLevel !== undefined && (value.siteLevelAtStart as number) > siteMaxLevel) {
+    issues.push({
+      path: `${path}.siteLevelAtStart`,
+      message: `vượt maxLevel authored (${siteMaxLevel})`,
     })
   }
 }
@@ -2236,12 +2346,28 @@ function validateProductionSitesSave(
       if (!Array.isArray(entry.workerCycles)) {
         issues.push({ path: `${entryPath}.workerCycles`, message: 'phải là array' })
       } else {
+        // F-A11-4: lane count can never exceed the authored worker
+        // pool ceiling (chi_hien_quan max level -> 1 + level*2
+        // capacity); every lane is one reward settle, so an
+        // over-ceiling array mints free production.
+        const maxLanes = getWorkerCapacityForLevel(
+          buildings.find((building) => building.id === 'chi_hien_quan')?.maxLevel ?? 9,
+        )
+
+        if (entry.workerCycles.length > maxLanes) {
+          issues.push({
+            path: `${entryPath}.workerCycles`,
+            message: `vượt authored lane ceiling (${maxLanes})`,
+          })
+        }
+
         for (let j = 0; j < entry.workerCycles.length; j += 1) {
           validateProductionCycleSave(
             entry.workerCycles[j],
             `${entryPath}.workerCycles[${j}]`,
             issues,
             playerRealmIndex,
+            siteDefinition?.maxLevel,
           )
 
           if (
@@ -2297,6 +2423,16 @@ function validateAlchemyJobsSave(
       })
     }
 
+    // F-A11-5: the only writer stamps completesAtMs = startedAtMs +
+    // duration - a reversed span is a malformed claim that settles
+    // free pills on restore.
+    if ((entry.completesAtMs as number) <= (entry.startedAtMs as number)) {
+      issues.push({
+        path: `${entryPath}.completesAtMs`,
+        message: 'phải sau startedAtMs (writer luôn stamp start + duration)',
+      })
+    }
+
     // F-A7-3: pillId is denormalized from the authored recipe at
     // startJob - a persisted pillId that disagrees with the recipe is a
     // fabricated claim (forged dormant pill delivery).
@@ -2306,6 +2442,19 @@ function validateAlchemyJobsSave(
       issues.push({
         path: `${entryPath}.pillId`,
         message: `pillId không khớp recipe (${entry.pillId} != ${recipe.pillId})`,
+      })
+    }
+
+    // F-A11-5 (sibling): startJob reserves the herb variant at launch
+    // - a materialId outside recipe.herbVariants can never have been
+    // reserved, so the job could not have been started by any writer.
+    if (
+      recipe !== undefined &&
+      !recipe.herbVariants.some((variant) => variant.materialId === entry.herbMaterialId)
+    ) {
+      issues.push({
+        path: `${entryPath}.herbMaterialId`,
+        message: 'herbMaterialId không thuộc herbVariants của recipe',
       })
     }
   }
@@ -2728,6 +2877,24 @@ export function validateGameSaveShape(parsed: unknown): ShapeValidationResult {
           0,
         )
       : 0
+
+    // F-A11-5: the authored slot ladder grants +1 concurrent job at
+    // pill_room levels 3/6/9 on top of the base slot - a job count the
+    // persisted level cannot host is a forged settle window.
+    const maxJobs =
+      pillRoomLevel <= 0
+        ? 0
+        : 1 +
+          (pillRoomLevel >= 3 ? 1 : 0) +
+          (pillRoomLevel >= 6 ? 1 : 0) +
+          (pillRoomLevel >= 9 ? 1 : 0)
+
+    if (alchemyJobs.length > maxJobs) {
+      issues.push({
+        path: 'alchemyJobs',
+        message: `vượt concurrent slot authored (${maxJobs})`,
+      })
+    }
 
     validateAlchemyJobsSave(alchemyJobs, 'alchemyJobs', issues, pillRoomLevel)
   }

@@ -106,6 +106,8 @@ function populateSource(player: PlayerData, manager: GameManager): void {
   player.cultivation = 321
   player.duyenPhan = 55
   player.skillInsight = 12
+  // F-A11-3: insight can never exceed the lifetime-minted tally.
+  player.totalSkillInsightGained = 12
   player.attributePoints = 4
   player.nodeLevels = { test_node: 2 }
   player.purchasedNodeIds = ['test_node']

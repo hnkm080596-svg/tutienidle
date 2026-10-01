@@ -22,6 +22,13 @@
 //          GLOBAL_MAX_AFFIXES and the roller slot eligibility now apply.
 // F-B10-1  unsupportedReleaseReason missed the decompose slice and
 //          dormant talent carries - both flag explicitly now.
+// F-TC9-x  wave-2 pins: appliedAtMs temporal coherence, stage-clear
+//          chain-prefix coherence, room-level snapshots, and the
+//          derived cultivationPerSecond snapshot bound.
+// F-A11-x  wave-3 pins: talent-witnessed accumulators (overcharge,
+//          insight), skillInsight <= totalSkillInsightGained, lane/job
+//          count vs authored ceilings, cycle/job span bounds, and the
+//          purchasedNodeIds ownership mirror.
 import { describe, expect, it } from 'vitest'
 
 import { createDefaultPlayer, resolvePlayerStatAssembly } from '../../src/core/player/Player'
@@ -743,6 +750,221 @@ describe('F-TC9-4: cultivationPerSecond derived-snapshot bound', () => {
     const save = validSave()
     const p = save.player as ReturnType<typeof createDefaultPlayer>
     p.cultivationPerSecond = 10
+
+    expect(validateGameSaveShape(save).ok).toBe(true)
+  })
+})
+
+// ==================== F-A11-x — authority-seam coverage bounds (wave 3) ====================
+
+describe('F-A11-1: cultivationOvercharge requires the bank talent', () => {
+  it('a positive overcharge with no overflow-bank talent is rejected', () => {
+    const save = validSave()
+    const p = save.player as Record<string, unknown>
+    p.cultivationOvercharge = 5
+
+    expect(validateGameSaveShape(save).ok).toBe(false)
+  })
+
+  it('a positive overcharge witnessed by hai_na validates', () => {
+    const save = validSave()
+    const p = save.player as Record<string, unknown>
+    p.selectedTalentIds = ['hai_na']
+    p.cultivationOvercharge = 5
+
+    expect(validateGameSaveShape(save).ok).toBe(true)
+  })
+
+  it('the inert zero overcharge stays valid', () => {
+    const save = validSave()
+    const p = save.player as Record<string, unknown>
+    p.cultivationOvercharge = 0
+
+    expect(validateGameSaveShape(save).ok).toBe(true)
+  })
+})
+
+describe('F-A11-2: cultivationInsightAccumulator is witnessed and threshold-bounded', () => {
+  it('a positive accumulator with no insight talent is rejected', () => {
+    const save = validSave()
+    const p = save.player as Record<string, unknown>
+    p.cultivationInsightAccumulator = 500
+
+    expect(validateGameSaveShape(save).ok).toBe(false)
+  })
+
+  it('an accumulator at the claimed threshold is rejected', () => {
+    const save = validSave()
+    const p = save.player as Record<string, unknown>
+    p.selectedTalentIds = ['ngo_dao'] // threshold 2000
+    p.cultivationInsightAccumulator = 2000
+
+    expect(validateGameSaveShape(save).ok).toBe(false)
+  })
+
+  it('an accumulator below the claimed threshold validates', () => {
+    const save = validSave()
+    const p = save.player as Record<string, unknown>
+    p.selectedTalentIds = ['ngo_dao']
+    p.cultivationInsightAccumulator = 1999
+
+    expect(validateGameSaveShape(save).ok).toBe(true)
+  })
+})
+
+describe('F-A11-3: skillInsight never exceeds totalSkillInsightGained', () => {
+  it('insight above the lifetime-minted tally is rejected', () => {
+    const save = validSave()
+    const p = save.player as Record<string, unknown>
+    p.skillInsight = 100
+    p.totalSkillInsightGained = 50
+
+    expect(validateGameSaveShape(save).ok).toBe(false)
+  })
+
+  it('insight within the minted tally validates', () => {
+    const save = validSave()
+    const p = save.player as Record<string, unknown>
+    p.skillInsight = 40
+    p.totalSkillInsightGained = 50
+
+    expect(validateGameSaveShape(save).ok).toBe(true)
+  })
+})
+
+describe('F-A11-4: workerCycles lane-count and per-cycle bounds', () => {
+  const cycle = (id: string) => ({
+    cycleId: id,
+    siteId: 'thanh_van_lam',
+    collectionRealmId: 'mortal',
+    siteLevelAtStart: 1,
+    rewardTableVersion: 1,
+    rollSeed: 1,
+    startedAtMs: 1,
+    completesAtMs: 100,
+  })
+
+  it('more cycles than the authored 19-lane ceiling are rejected', () => {
+    const save = validSave()
+    save.productionSites = [
+      {
+        siteId: 'thanh_van_lam',
+        level: 1,
+        autoRestart: true,
+        workerCycles: Array.from({ length: 20 }, (_, i) => cycle(`c${i}`)),
+      },
+    ]
+
+    expect(validateGameSaveShape(save).ok).toBe(false)
+  })
+
+  it('a cycle that completes before it starts is rejected', () => {
+    const save = validSave()
+    save.productionSites = [
+      {
+        siteId: 'thanh_van_lam',
+        level: 1,
+        autoRestart: true,
+        workerCycles: [{ ...cycle('c1'), startedAtMs: 100, completesAtMs: 1 }],
+      },
+    ]
+
+    expect(validateGameSaveShape(save).ok).toBe(false)
+  })
+
+  it('a siteLevelAtStart above the site maxLevel is rejected', () => {
+    const save = validSave()
+    save.productionSites = [
+      {
+        siteId: 'thanh_van_lam',
+        level: 1,
+        autoRestart: true,
+        workerCycles: [{ ...cycle('c1'), siteLevelAtStart: 10 }],
+      },
+    ]
+
+    expect(validateGameSaveShape(save).ok).toBe(false)
+  })
+
+  it('a single coherent cycle validates', () => {
+    const save = validSave()
+    save.productionSites = [
+      {
+        siteId: 'thanh_van_lam',
+        level: 1,
+        autoRestart: true,
+        workerCycles: [cycle('c1')],
+      },
+    ]
+
+    expect(validateGameSaveShape(save).ok).toBe(true)
+  })
+})
+
+describe('F-A11-5: alchemyJobs slot-count, span and herb bounds', () => {
+  const pillRoom = {
+    instanceId: 'b-pill',
+    buildingId: 'pill_room',
+    level: 1,
+    lastCollectedAt: 0,
+  }
+  const job = (id: string) => ({
+    jobId: id,
+    recipeId: 'alchemy_truc_co_dan',
+    pillId: 'truc_co_dan',
+    herbMaterialId: 'tu_linh_thao_qi_refining_century',
+    startedAtMs: 1,
+    completesAtMs: 100,
+    roomLevelAtStart: 1,
+  })
+
+  it('two running jobs on a level-1 room (one slot) are rejected', () => {
+    const save = validSave()
+    save.buildings = [pillRoom]
+    save.alchemyJobs = [job('j1'), job('j2')]
+
+    expect(validateGameSaveShape(save).ok).toBe(false)
+  })
+
+  it('a job that completes before it starts is rejected', () => {
+    const save = validSave()
+    save.buildings = [pillRoom]
+    save.alchemyJobs = [{ ...job('j1'), startedAtMs: 100, completesAtMs: 1 }]
+
+    expect(validateGameSaveShape(save).ok).toBe(false)
+  })
+
+  it('a herbMaterialId outside the recipe variants is rejected', () => {
+    const save = validSave()
+    save.buildings = [pillRoom]
+    save.alchemyJobs = [{ ...job('j1'), herbMaterialId: 'forged_herb' }]
+
+    expect(validateGameSaveShape(save).ok).toBe(false)
+  })
+
+  it('one coherent job on a level-1 room validates', () => {
+    const save = validSave()
+    save.buildings = [pillRoom]
+    save.alchemyJobs = [job('j1')]
+
+    expect(validateGameSaveShape(save).ok).toBe(true)
+  })
+})
+
+describe('F-A11-6: purchasedNodeIds must mirror nodeLevels', () => {
+  it('a purchased entry without a nodeLevels level is rejected', () => {
+    const save = validSave()
+    const p = save.player as Record<string, unknown>
+    p.purchasedNodeIds = [...(p.purchasedNodeIds as string[]), 'ghost_node']
+
+    expect(validateGameSaveShape(save).ok).toBe(false)
+  })
+
+  it('a purchased entry with a matching level validates', () => {
+    const save = validSave()
+    const p = save.player as Record<string, unknown>
+    p.purchasedNodeIds = ['core_linh_bao']
+    p.nodeLevels = { core_linh_bao: 1 }
 
     expect(validateGameSaveShape(save).ok).toBe(true)
   })
