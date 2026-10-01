@@ -44,6 +44,26 @@ const roles = computed(() => {
   return gameManager.progressionOps.getResolvedSkillRoles(player.$state)
 })
 
+// BETA SCOPE LOCK - role cards render through the canonical rail
+// verdict, same as TurnCombatSkillBar: a scope-hidden role renders
+// nothing (no muted teaser card), so a carried way_out_of_scope save
+// never shows its dormant kit on a beta-visible strip.
+const roleVerdicts = computed(() => {
+  stateVersion.value
+
+  return gameManager.progressionOps.betaCombatRolesFor(player.$state)
+})
+
+const visibleRoleKeys = computed<readonly RoleKey[]>(() => {
+  const admitted = new Set(
+    roleVerdicts.value
+      .filter(entry => entry.state !== 'scope-hidden')
+      .map(entry => entry.role),
+  )
+
+  return ROLE_KEYS.filter(key => admitted.has(key))
+})
+
 // Specialization writes reject mid-battle (ops gate) - the chips
 // disable up front so the affordance doesn't look live.
 const { isBattleInProgress: inBattle } = useTurnBattleInfo()
@@ -149,10 +169,10 @@ function specTooltip(skill: Skill, spec: SkillSpecialization) {
 </script>
 
 <template>
-  <div class="skill-role-strip">
+  <div v-if="visibleRoleKeys.length > 0" class="skill-role-strip">
     <div class="skill-roles">
       <button
-        v-for="key in ROLE_KEYS"
+        v-for="key in visibleRoleKeys"
         :key="key"
         type="button"
         class="skill-role"

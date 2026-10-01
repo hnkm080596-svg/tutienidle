@@ -238,3 +238,73 @@ describe('path authority: the ritual gate fails closed for dormant ways (I-PA-1)
   })
 })
 
+describe('dormancy: dormant way node trees refuse insight writes on a carried save (F-CA-1)', () => {
+  function swordSave(levels: Record<string, number> = {}): PlayerData {
+    return player({
+      cultivationPath: 'sword',
+      cultivationWay: 'sword_pathway',
+      swordPath: freshSwordPathState(),
+      skillInsight: 100,
+      nodeLevels: levels,
+      purchasedNodeIds: Object.keys(levels),
+    })
+  }
+
+  it('canPurchaseNode / purchaseNode / upgradeNode all reject dormant-tree nodes', () => {
+    const gameManager = new GameManager()
+    gameManager.catalogOps.registerProgressionNodes(KIEM_TU_NODES)
+    gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
+    const p = swordSave({ thich_can: 1 })
+    const insightBefore = p.skillInsight
+
+    // The tree is scope-hidden for every beta player: no buy, no level-up.
+    expect(gameManager.progressionOps.canPurchaseNode('thich_can', p)).toBe(false)
+    expect(gameManager.progressionOps.purchaseNode('thich_can', p)).toBe(false)
+    expect(gameManager.progressionOps.upgradeNode('thich_can', p)).toBe(false)
+    expect(p.skillInsight).toBe(insightBefore)
+    expect(p.nodeLevels).toEqual({ thich_can: 1 })
+  })
+
+  it('respecNodeTree refuses a save holding dormant records - dormant insight is never refunded', () => {
+    const gameManager = new GameManager()
+    gameManager.catalogOps.registerProgressionNodes(KIEM_TU_NODES)
+    gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
+    const p = swordSave({ thich_can: 2 })
+
+    expect(gameManager.progressionOps.respecNodeTree(p)).toBeNull()
+    expect(gameManager.progressionOps.previewNodeRespec(p).resetCount).toBe(0)
+    // Dormant records stay intact - the lock freezes them, never monetizes them.
+    expect(p.nodeLevels).toEqual({ thich_can: 2 })
+    expect(p.skillInsight).toBe(100)
+  })
+
+  it('a beta save with only admitted nodes still buys and respecs normally', () => {
+    const gameManager = new GameManager()
+    gameManager.catalogOps.registerProgressionNodes(KIEM_TU_NODES)
+    gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
+    // mortal save holding an untagged (way-agnostic) core-style node level
+    const mortal = player({ realmId: 'mortal', skillInsight: 50, nodeLevels: {}, purchasedNodeIds: [] })
+    expect(gameManager.progressionOps.respecNodeTree(mortal)).not.toBeNull()
+  })
+})
+
+describe('dormancy: role verdicts on a way_out_of_scope save are all scope-hidden (F-CA-2)', () => {
+  it('betaCombatRolesFor emits no renderable role for dormant-way saves', () => {
+    const gameManager = new GameManager()
+    const p = player({
+      cultivationPath: 'sword',
+      cultivationWay: 'sword_pathway',
+      swordPath: freshSwordPathState(),
+    })
+    const verdicts = gameManager.progressionOps.betaCombatRolesFor(p)
+    expect(verdicts.every((v) => v.state === 'scope-hidden')).toBe(true)
+    // Hidden variant fails identically closed.
+    const hidden = player({
+      cultivationPath: 'sword',
+      cultivationWay: 'hidden_sword_pathway',
+      swordPath: freshSwordPathState(),
+    })
+    expect(gameManager.progressionOps.betaCombatRolesFor(hidden).every((v) => v.state === 'scope-hidden')).toBe(true)
+  })
+})
+

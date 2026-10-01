@@ -51,6 +51,7 @@ import {
   betaCombatRolesFor as betaCombatRolesForDomain,
   betaCombatSurfacesFor as betaCombatSurfacesForDomain,
   betaSkillTreeFor as betaSkillTreeForDomain,
+  betaTreeNodeAdmitted,
   type BetaCombatRoleEntry,
   type BetaPrecursorSurfaceVerdict,
   type BetaSkillTree,
@@ -318,6 +319,16 @@ export class GameManagerProgressionOps {
     }
 
     if (!this.deps.nodeRegistry.has(nodeId)) {
+      return false
+    }
+
+    const candidateNode = this.deps.nodeRegistry.get(nodeId)
+
+    // BETA SCOPE LOCK - a node on a dormant way's tree (or a hidden
+    // branch tag) is scope-hidden for every player: a carried
+    // way_out_of_scope save cannot spend insight on a kit the gated
+    // combat runtime never executes.
+    if (!betaTreeNodeAdmitted(candidateNode)) {
       return false
     }
 
@@ -610,7 +621,15 @@ export class GameManagerProgressionOps {
       return false
     }
 
-    return upgradeNodeSystem(player, this.deps.nodeRegistry.get(nodeId), this.deps.sessionRng)
+    const node = this.deps.nodeRegistry.get(nodeId)
+
+    // Same beta scope gate as purchaseNode - a dormant-tree node never
+    // takes insight, whether the levels arrived pre-beta or by save.
+    if (!betaTreeNodeAdmitted(node)) {
+      return false
+    }
+
+    return upgradeNodeSystem(player, node, this.deps.sessionRng)
   }
 
   getNodeLevel(nodeId: string, player: PlayerData): number {
@@ -645,6 +664,12 @@ export class GameManagerProgressionOps {
     }
 
     const node = this.deps.nodeRegistry.get(nodeId)
+
+    // The UI verdict must agree with purchaseNode - a dormant-tree node
+    // can never report purchasable.
+    if (!betaTreeNodeAdmitted(node)) {
+      return false
+    }
 
     return canPurchaseNodeSystem(player, node)
   }
@@ -683,6 +708,18 @@ export class GameManagerProgressionOps {
    * respec can never strand a committed element without its root.
    */
   previewNodeRespec(player: PlayerData, scope?: { rootId?: string }): NodeRespecPreview {
+    // The preview must agree with respecNodeTree's beta scope gate: a
+    // save holding dormant-tree records is refused, so the confirm
+    // dialog never promises a refund the op will not pay.
+    const holdsDormantPreview = Object.keys(player.nodeLevels ?? {}).some((id) => {
+      const node = this.deps.nodeRegistry.get(id)
+      return node !== undefined && !betaTreeNodeAdmitted(node)
+    })
+
+    if (holdsDormantPreview) {
+      return { refund: 0, resetNodeIds: [], resetCount: 0, clawback: undefined }
+    }
+
     // JSON round-trip (not structuredClone): callers hand in the Pinia
     // reactive state; PlayerData is what the save system serializes.
     const sim = JSON.parse(JSON.stringify(player)) as PlayerData
@@ -822,6 +859,18 @@ export class GameManagerProgressionOps {
    * the refunded Insight, or null when rejected in battle.
    */
   respecNodeTree(player: PlayerData, scope?: { rootId?: string }): number | null {
+    // BETA SCOPE LOCK - a respec that would reset dormant-tree records
+    // refunds their insight into the live economy: refuse the whole op
+    // so a carried save's dormant levels stay intact, never monetized.
+    const holdsDormant = Object.keys(player.nodeLevels ?? {}).some((id) => {
+      const node = this.deps.nodeRegistry.get(id)
+      return node !== undefined && !betaTreeNodeAdmitted(node)
+    })
+
+    if (holdsDormant) {
+      return null
+    }
+
     if (this.deps.isTurnBattleInProgress()) {
       return null
     }
@@ -1157,6 +1206,13 @@ export class GameManagerProgressionOps {
     // would disagree with the clawback leg on diverged crafted saves.
     // Any owned claimant authorizes the spec (first registry hit is not
     // the only legitimate owner when nodes share a claim).
+    // BETA SCOPE LOCK - a spec claimed only by dormant-tree nodes is
+    // dormant machinery: no beta player can hold the claim, and a
+    // carried save's dormant claimant must not unfreeze it.
+    if (claimants.length > 0 && claimants.every((claimant) => !betaTreeNodeAdmitted(claimant))) {
+      return false
+    }
+
     if (claimants.length > 0 && !claimants.some((claimant) => ownedNodeIds(player).includes(claimant.id))) {
       return false
     }

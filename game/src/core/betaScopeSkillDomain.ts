@@ -26,6 +26,7 @@ import type { ElementType } from './element/ElementType'
 import type { PlayerData } from './player/Player'
 import type { NodePrerequisite, ProgressionNode } from './progression/ProgressionNode'
 import {
+  CULTIVATION_PATH_MODULES,
   getActiveWayDefinition,
   type CultivationWayId,
   type PathCapabilityDeps,
@@ -47,6 +48,10 @@ import {
   nodePathApplies,
   nodeWayApplies,
 } from './progression/NodeSystem'
+import {
+  HIDDEN_BRANCH_TAGS,
+  viewBranchTags,
+} from './progression/NodeBranchViews'
 import {
   MORTAL_DEFAULT_BASIC_ID,
   isMortalPrecursorSkillId,
@@ -260,6 +265,42 @@ export interface BetaSkillTreeNode {
   levelGates: BetaSkillNodeGate[]
   /** Skills the node grants (unlocksSkillIds + grantsSkillCoreIds). */
   grantsSkillIds: string[]
+}
+
+/**
+ * Beta tree-node admission (frontend-contract sec.D): a node renders or
+ * accepts writes only on an admitted tree surface. A node scoped to a
+ * non-beta way (requiredWay) or carrying a view tag owned by a dormant
+ * way's tree - or a hidden branch tag - is scope-hidden for every
+ * player, so a carried way_out_of_scope save cannot spend insight on a
+ * kit the gated combat runtime never executes. Element-tagged nodes
+ * belong to the beta spell tree and stay admitted; untagged nodes are
+ * way-agnostic and stay admitted on every save.
+ */
+const BETA_DORMANT_TREE_VIEW_TAGS: ReadonlySet<string> = (() => {
+  const tags = new Set<string>(HIDDEN_BRANCH_TAGS)
+
+  for (const path of Object.values(CULTIVATION_PATH_MODULES)) {
+    for (const way of Object.values(path.ways)) {
+      if (!isBetaWay(way.id) && way.nodeTreeTag !== undefined) {
+        for (const tag of viewBranchTags(way.nodeTreeTag)) {
+          tags.add(tag)
+        }
+      }
+    }
+  }
+
+  return tags
+})()
+
+export function betaTreeNodeAdmitted(node: ProgressionNode): boolean {
+  if (node.requiredWay !== undefined && !isBetaWay(node.requiredWay)) {
+    return false
+  }
+
+  const viewTag = node.elementTag ?? node.branchTag
+
+  return viewTag === undefined || !BETA_DORMANT_TREE_VIEW_TAGS.has(viewTag)
 }
 
 export interface BetaSkillTree {

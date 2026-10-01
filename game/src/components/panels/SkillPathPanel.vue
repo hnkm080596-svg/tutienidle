@@ -30,6 +30,8 @@ import SkillRoleStrip from './skill-path/SkillRoleStrip.vue'
 import TechniqueBand from './skill-path/TechniqueBand.vue'
 import { canPurchaseNode, getNodeLevel } from '@/core/progression/NodeSystem'
 import { getActiveWayDefinition } from '@/core/player/CultivationPathKit'
+import { getActiveWay } from '@/core/player/CultivationPathSystem'
+import { isBetaWay } from '@/core/betaScope'
 import {
   getActiveElement,
   hasStaticPathCapability,
@@ -78,12 +80,23 @@ const hasElementalCasting = computed(
   () => hasStaticPathCapability(player, 'spell.elemental_casting'),
 )
 
+// BETA SCOPE LOCK - a way's declared nodeTreeTag belongs to that way's
+// tree; every tag-declaring way today is scope-hidden, so the tag
+// branch only renders while the committed way is beta-admitted. A
+// carried way_out_of_scope save keeps its dormant tree hidden instead
+// of browsing (and buying on) a kit the gated runtime never executes.
+const betaWayAdmitted = computed(() => {
+  const way = getActiveWay(player)
+  return way === undefined || isBetaWay(way)
+})
+
 const showTree = computed(
   () =>
     // M4 (R6): the Phap Tu element tree is spell_pathway machinery - the
     // 'spell.elemental_casting' capability is the gate - a collapsed
     // ('spell','hidden_spell_pathway') player owns no element branches.
-    hasElementalCasting.value || wayNodeTreeTag.value !== undefined,
+    hasElementalCasting.value ||
+    (wayNodeTreeTag.value !== undefined && betaWayAdmitted.value),
 )
 
 // ---- Nhánh spell (Hành -> Node Tree) ----
