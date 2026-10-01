@@ -21,6 +21,7 @@ import type { EquipmentSlot } from '../../core/equipment/EquipmentTypes'
 import { MAX_SLOT_ENHANCE_LEVEL } from '../../core/equipment/EnhanceCurve'
 import { MAIN_STAT_REALM_SCALE } from '../../core/equipment/EquipmentRolling'
 import { ITEM_QUALITY_IMPLICIT_MULTIPLIER } from '../../core/equipment/ItemQualityBalance'
+import { EQUIPMENT_BAG_SOFT_CAP } from '../../core/equipment/EquipmentBag'
 import { equipment } from '../../data/equipment/equipment'
 import { CULTIVATION_PATH_MODULES, type CultivationPathId } from '../../core/player/CultivationPathKit'
 import { COMBAT_AI_STRATEGIES } from '../../core/battle/CombatAiStrategy'
@@ -2567,6 +2568,14 @@ function validateBuildingsSave(
   playerRealmIndex?: number,
   claimedRealmTier?: number,
 ): void {
+  // F-BLD-DUP-1: instanceId comes from crypto.randomUUID() at build
+  // time - a duplicate is unproducible and breaks first-match
+  // get()/remove() consumers. buildingId duplicates are unproducible
+  // for 'crafting_station' templates (canBuildDetailed -> already_built);
+  // resource categories may legitimately hold several instances.
+  const seenInstanceIds = new Set<string>()
+  const seenSingleInstanceBuildingIds = new Set<string>()
+
   for (let i = 0; i < entries.length; i += 1) {
     const entry = entries[i]
     const entryPath = `${path}[${i}]`
@@ -2583,10 +2592,27 @@ function validateBuildingsSave(
       continue
     }
 
+    if (seenInstanceIds.has(entry.instanceId)) {
+      issues.push({ path: `${entryPath}.instanceId`, message: 'bị trùng với building entry khác' })
+    } else {
+      seenInstanceIds.add(entry.instanceId)
+    }
+
     // F-A8-2: level is writer-bounded by the template's maxLevel -
     // upgrade() refuses beyond it, so a higher persisted level is
     // forged accrual magnitude.
     const template = buildings.find((building) => building.id === entry.buildingId)
+
+    if (template !== undefined && template.category === 'crafting_station') {
+      if (seenSingleInstanceBuildingIds.has(entry.buildingId)) {
+        issues.push({
+          path: `${entryPath}.buildingId`,
+          message: 'crafting_station chỉ có 1 instance (already_built)',
+        })
+      } else {
+        seenSingleInstanceBuildingIds.add(entry.buildingId)
+      }
+    }
     if (template !== undefined && (entry.level as number) > template.maxLevel) {
       issues.push({
         path: `${entryPath}.level`,
@@ -3003,6 +3029,7 @@ function validateEquipmentEntries(
 ): EquipmentEntriesValidation {
   const normalizedEntries: unknown[] = []
   let discardedCount = 0
+  let unprotectedCount = 0
 
   for (let i = 0; i < entries.length; i += 1) {
     const entry = entries[i]
@@ -3011,6 +3038,15 @@ function validateEquipmentEntries(
       issues.push({ path: `${path}[${i}]`, message: 'phải là object' })
 
       continue
+    }
+
+    // F-EQ-COUNT-1: add() auto-dissolves overflow above the soft cap, so
+    // a produced bag holds at most EQUIPMENT_BAG_SOFT_CAP entries that
+    // are not equipped/locked/favorite. Beyond that the payload is
+    // unproducible - and restore re-feeds every entry through add(),
+    // minting essence per dissolved forged item.
+    if (entry.equipped !== true && entry.locked !== true && entry.favorite !== true) {
+      unprotectedCount += 1
     }
 
     // Development build khong migrate item schema cu. Chi rieng entry
@@ -3331,6 +3367,13 @@ function validateEquipmentEntries(
         message: 'không được vượt forgeUsesTotal',
       })
     }
+  }
+
+  if (unprotectedCount > EQUIPMENT_BAG_SOFT_CAP) {
+    issues.push({
+      path,
+      message: `unprotected equipment vượt EQUIPMENT_BAG_SOFT_CAP (${EQUIPMENT_BAG_SOFT_CAP})`,
+    })
   }
 
   return { normalizedEntries, discardedCount }

@@ -1,0 +1,57 @@
+{
+  "audit": "scope-authority (blind adversarial)",
+  "repo": "hnkm080596-svg/tutienidle",
+  "branch": "devin/qa-fixpoint",
+  "pinnedCommit": "77aecae05b282910b1c7a5d8d690ba05a49704c3",
+  "probeFile": "game/tests/architecture/scopeAuthorityForgedClaims.qa.test.ts",
+  "probeResult": "1 failing test (defect evidence), 3 passing (boundary sanity, mint demo, inert-mint observation)",
+  "verdict": "FINDINGS",
+  "findings": [
+    {
+      "id": "F-SCOPE-ENH-STREAK",
+      "severity": "low",
+      "confidence": "high",
+      "surface": "equipmentSlots[].enhanceFailStreak - save acceptance upper bound",
+      "claim": "A persisted pity streak above ENHANCE_PITY_THRESHOLD (10) is unproducible. EquipmentSystem.enhance only ever persists a streak in [0, 10]: the attempt running at streak >= 10 is a guaranteed success that resets the counter to 0, and failures only increment by 1. validateGameSaveShape checks the field with requireNonNegativeNumber only, so the impossible claim is accepted.",
+      "repro": "Probe 'rejects enhanceFailStreak > ENHANCE_PITY_THRESHOLD (writer only persists <= threshold)' FAILS: validateGameSaveShape returns ok=true for equipmentSlots=[{slot:'weapon', enhanceLevel:0, enhanceFailStreak:11}] on an otherwise-committed save. Control in same file: streak=10 is accepted legitimately (producible).",
+      "mintPath": "Load save -> next enhance() call on that slot -> pityGuaranteed fires -> guaranteed success, enhanceLevel +1, streak resets to 0. Demonstrated: slotManager restored with streak 11, random()=>1 (unwinnable roll) returns ok:true, enhanceLevel 0->1; control slot with streak 0 fails on the same roll ('enhance_failed').",
+      "impact": "Single-shot: exactly one free enhance success, same mint the reachable streak=10 already grants. No unbounded amplification possible (success resets streak to 0). Severity low."
+    },
+    {
+      "id": "OBS-SCOPE-ALCH-REALM",
+      "severity": "informational",
+      "confidence": "high",
+      "surface": "alchemyJobs[] - recipe.realmId vs player.realmId bind absent",
+      "claim": "A coherent forged job on a recipe whose realmId exceeds the player's realm is accepted: every owned bound passes (recipe/pill/herb/span/room/slot coherence) but recipe.realmId is not checked against player.realmId.",
+      "repro": "Probe 'accepts a coherent job on a recipe realm above the player, settle delivers a realm-inert pill' PASSES: forged {jobId:'j1', recipeId:'alchemy_tu_linh_dan_foundation_establishment', ...} on a committed qi_refining save passes validateGameSaveShape.",
+      "mintPath": "AlchemySystem.tick settles the job and delivers the authored pill (tu_linh_dan_foundation_establishment) into the pill bag - but the minted record is realm-inert: usePill exact-realm gate refuses it for a qi_refining player ('wrong_realm'), it cannot be consumed or sold for stones. No live effect reachable; gap is acceptance-hygiene only.",
+      "impact": "No live mint. Same inert-settle class as scope-hidden recipe families (parked, then settled to unsellable/wrong-realm pills). Tracked as an observation, not a defect."
+    }
+  ],
+  "defendedSeams": [
+    "technique holder contract: exactly-1 entry, id===activeWay.techniqueId, catalogs.hasTechnique, grade <= getTechniqueGradeCeiling(realmId) and TECHNIQUE_RANK_CAP, mastery coherence (rank<cap && mastery>=cost reject; rank>=cap && mastery!==0 reject), gradeHistory canonical (sealed keys {1..grade-1} + {grade} iff grade < realmIndex)",
+    "cultivation-path way selection: chooseCultivationPath gates !isBetaWay and declaresElementAxis plus mortal/CORE_REALM_LEVEL before applyPathChoice",
+    "spec claims: selectSkillSpecialization gates claimant-node ownership via specializationClaimingNodes + betaNodeWriteAdmitted + ownedNodeIds; reconcileSpecClaims clears unowned-claimant specs at load",
+    "player.modifiers: claimed-source coherence + authoredRealmPassiveEntries byte-match + meridian 'bat-mach:<id>:<stat>' exact shape + loi_kiep magnitude <= 0.1*realmIndex",
+    "persistentTimedEffects: source/shape/span/magnitude bounds + scopeHiddenPillFamilyOfId reject",
+    "stage clears: realm-earnability + chain-coherence + perfect subset of completed + perfectClearSeconds physical floor",
+    "autoFarmStage: requires perfectClearStageIds witness + finite cycleSeconds >= 1 + template exists; farmLease object-identity",
+    "production workerCycles: span == computeCycleSeconds + lane bounds; activeWorkerSlots re-derived via allocateWorkerSlots in tickWorkers",
+    "alchemyJobs: jobId/recipe/pill/herb/span==alchemySecondsFor/roomLevelAtStart <= pillRoomLevel/startedAtMs <= lastSavedAt/slot-count bounds; hidden families parked at tick, deliverable re-derived from recipe",
+    "tribulation committedOutcome: settle re-derives outcome from authored rules",
+    "quests: beta-gated acceptance + stale-progress reconcile + reward envelope mint-only",
+    "pendingTalentEntitlement: realm == player.realm + isLegalBreakthroughOffer + dedupe + pick-ceiling",
+    "attributePoints <= getGlobalCultivationLevel; skillInsight <= totalSkillInsightGained",
+    "dormant slices (companion/formation/artifact/sword-path/ultimate/daily-quests/wash-refine): emission gates inert under betaScope; flagged saves still load",
+    "companion gifts: issue/claim ops both beta+realm gated; dormant records load inert",
+    "equipment dissolve: fixed essence output by quality (feeds only scope-hidden wash/refine)",
+    "equipment rolls/affixes: envelope pools/tiers/counts/foreign-slot/stat-uniqueness bounds vs authored roll machinery; affix.value finite-checked at save and clamped at consume via normalizeRolledAffixValue"
+  ],
+  "acceptedNoLedgerMagnitude": [
+    "skill.totalExperience / skillCastCounts (mint floor(totalExperience/10) precursor bonus - unbounded but ledger-free by design)",
+    "spent attributePoints magnitudes",
+    "material stack amounts and spirit stone tiers (earnable envelopes unbound)",
+    "cultivation magnitude fields",
+    "quest progress counters (mint only inside authored reward envelope)"
+  ]
+}
