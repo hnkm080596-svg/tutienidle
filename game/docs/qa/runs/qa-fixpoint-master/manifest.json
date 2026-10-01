@@ -2514,7 +2514,7 @@
       "path": "docs/qa/protocol/learning.md",
       "kind": "file",
       "mode": 33188,
-      "hash": "7340ed22013734c19e8944f61d8467e8d8e6bc379d893d809383405fa234f552"
+      "hash": "1a8afc1b0e29e6c4a0158548256dc1b00fe5ce077a3aef42dc7efb3b4ce49913"
     },
     {
       "path": "docs/qa/protocol/ledger-schema.md",
@@ -15900,7 +15900,7 @@
       "path": "src/components/panels/CharacterPanel.vue",
       "kind": "file",
       "mode": 33188,
-      "hash": "926c57a0378399dcb2413e9c0b9bc26ea348d488f90b9113186aaba9f2050260"
+      "hash": "4acaae12cae297715021b29d4907c931ff85a1b76cd82708d77ded432cfcff44"
     },
     {
       "path": "src/components/panels/ChiHienQuan.integration.test.ts",
@@ -16074,7 +16074,7 @@
       "path": "src/components/panels/QuanKhiPanel.vue",
       "kind": "file",
       "mode": 33188,
-      "hash": "8c5c8f65aa6dff926ba76d47b764a223dbdf0a080a0768fc7aad8bec2130dc54"
+      "hash": "e4abfc5eedc493e84b760203068bee7ce69afa1e85a7270ee98ab15920579083"
     },
     {
       "path": "src/components/panels/QuestPanel.vue",
@@ -17748,7 +17748,7 @@
       "path": "src/core/betaScopeSkillDomain.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "1712dc5b9ee9a29685df960f8f0d2d559b11e0ae20d085670271bffa6a8b16c9"
+      "hash": "d2525cee4d567255df66838010d15f3fc7f8ee832efec2e85cd7b41eaa74c8ee"
     },
     {
       "path": "src/core/betaScopeSurface.ts",
@@ -18954,7 +18954,7 @@
       "path": "src/core/game/BattleLootSystem.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "6a4248ff57d05070aed259c667ccfcf5f9442da98ff82e16113866656e172c6a"
+      "hash": "ceb52720a34fbc9f3b90c155039dfcc8393cffd01c77497740cf34a2d1b1df5f"
     },
     {
       "path": "src/core/game/battleLootTestSetup.ts",
@@ -19680,7 +19680,7 @@
       "path": "src/core/game/GameManagerPersistentEffectOps.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "15c089955a9d8017c3a49c315d96412c792df0fa20e196b88efb91de6634785c"
+      "hash": "5c6005590952629bc1f5d0a8cc964d7abf2a8cbdf54bf55cd404f9c060e1e16d"
     },
     {
       "path": "src/core/game/GameManagerPillOps.ts",
@@ -19716,7 +19716,7 @@
       "path": "src/core/game/GameManagerProgressionOps.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "0ebb7468365b290044b4d92a2874c170d4acfabbeac785e054881b94d14e34d6"
+      "hash": "754eab3351f41dab2d2db192d7f112414486e9e6502bcf5feb226f63effcb2db"
     },
     {
       "path": "src/core/game/GameManagerQuestOps.ts",
@@ -19728,7 +19728,7 @@
       "path": "src/core/game/GameManagerRealmAdvanceOps.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "ffca773f8c29979566743c6da24e15baf84575cd901bf193e46de33edd4a88f0"
+      "hash": "da5de54fb3aecebccb26e9b58dbcd5a93124420dcdc9ef135d6979405e61c54b"
     },
     {
       "path": "src/core/game/GameManagerRewardOps.ts",
@@ -20280,7 +20280,7 @@
       "path": "src/core/player/CultivationPathSystem.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "d5db2518589b8f085c07271ba31e629efeddf40a24ea326ffa3fbfb64a321d4f"
+      "hash": "7c05f70d9db182c662971f1123d106894f39b491affe1445b82142c42f5cd526"
     },
     {
       "path": "src/core/player/PersistentTimedEffect.ts",
@@ -21474,7 +21474,7 @@
       "path": "src/core/skill/SkillSystem.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "4c0cd61cf9a0586bdbe0fe895ca20ccf63a1cb6373805534cdc1d4937444d637"
+      "hash": "074e67bff2577f4b698fcb77c58017249928c63420f360066af30602ceccfcd9"
     },
     {
       "path": "src/core/skill/SkillTrigger.ts",
@@ -24930,7 +24930,7 @@
       "path": "tests/architecture/betaDormantSaveLeak.qa.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "c57e518d14e274b4019179f6eb1fd25d250a6b119f3a45d5a621dd2e7523c804"
+      "hash": "4142a9b1b68b4266ccfc0db159b290234a1e98b9a792f0717aa4f3aebf5d299d"
     },
     {
       "path": "tests/architecture/betaEconomyCensus.test.ts",
@@ -25575,5 +25575,5 @@
       "hash": "0bb3657058699da63594036eda9bb6be7f6b4b44aebbb960fcba939870fd3f5e"
     }
   ],
-  "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2"
+  "productStateId": "4528ef3873ec57b53bb2cf012e15105104bee7eb1f51031400cd03977b7855ba"
 }

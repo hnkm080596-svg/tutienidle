@@ -36,3 +36,20 @@ I-QI-1: ledger written exclusively through qa:internal record (schema +
 stale-propagation enforcement); every evidence record binds artifactPath +
 artifactHash + inputPaths + claims; every FAIL evidence is the pre-fix run
 whose matching PASS evidence is the post-fix run on the same state.
+
+T4 refresh (0599c32a): after the F-TC-1/3 gate batch the write/read seam
+census gained the stat-channel surface. Verified consumers of the new
+predicates: betaTechniqueAdmitted gates tryAdvanceTechniqueGrade +
+getTechniqueTierModifiers + getTechniqueCombatModifiers
+(GameManagerRealmAdvanceOps/GameManagerPersistentEffectOps);
+betaActiveWayAdmitted-equivalent isBetaWay gates now wrap
+collectActiveWayStatModifiers + getCultivationPathStatModifiers
+(CultivationPathSystem); betaSkillAdmitted gates
+getScaledPassiveModifiers (SkillSystem); betaNodeWriteAdmitted filters
+the node_levels channel inputs at the PersistentEffectOps call site
+(admittedNodeModifiers) - call-site filtering used because NodeSystem
+cannot import the domain module (acyclic). Dormant-node statModifiers
+are not emitted by any authored node today (bodyKit/skillDefinition
+shapes only) so the filter is correct hardening with no behavior delta
+on beta saves. Predicate liveness: all admission predicates evaluate
+BETA_PLAYABLE_WAYS/BETA_FEATURES per call (no module-load snapshot).
