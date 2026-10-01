@@ -1,0 +1,1422 @@
+{
+ "records": [
+  {
+   "kind": "finding",
+   "body": {
+    "actionable": true,
+    "classification": "REAL_DEFECT",
+    "status": "CLOSED",
+    "closeReason": "fixed on devin/qa-fixpoint (9522454d/a2bd826f); pin + mutant-killed + verify green",
+    "closedAt": "2026-10-01T13:00:00Z",
+    "closureReviewIds": [
+     "RV-CLOSURE-15"
+    ],
+    "counterexample": "hostile save grade=50 passes full acceptance + emits",
+    "duplicateOf": null,
+    "evidenceIds": [],
+    "exception": null,
+    "expected": "persisted grade bounded to authored [1,6]",
+    "actual": "grade=50 accepted -> +150% maxHp emitted",
+    "invariantIds": [
+     "I-SF-1"
+    ],
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/services/save/saveShapeValidation.ts",
+      "revision": "ae4af514",
+      "symbolOrSection": "breakthroughGrade bound"
+     },
+     {
+      "basis": "SOURCE",
+      "path": "src/core/realm/nhapDao",
+      "revision": "ae4af514",
+      "symbolOrSection": "buildNhapDaoModifiers"
+     }
+    ],
+    "pinEvidenceIds": [
+     "EV-PIN-T19",
+     "EV-MUT-T19"
+    ],
+    "reachability": "PRODUCTION",
+    "rejectionReason": null,
+    "repair": "validator rejects breakthroughGrade>6; pin betaWriterBoundsTc8 'v\u01b0\u1ee3t authored grade ceiling (6)'",
+    "rootCause": "validator ran requireNonNegativeNumber only; buildNhapDaoModifiers multiplies grade*0.03 unclamped (writer mints 1-6)",
+    "rootClass": "BOUNDARY",
+    "severity": "Critical",
+    "siblingFindingIds": [],
+    "siblingSearch": [],
+    "state": {
+     "productStateId": "e81120ad6870aa0455576e0b9a33b54eb01b4ba309483a363cfacd625c4dc8e7",
+     "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "subsystem": "betaScope",
+    "title": "breakthroughGrade magnitude unchecked -> realm-passive builder emits unbounded stats",
+    "verificationEvidenceIds": [
+     "EV-PIN-SUITE-T19",
+     "EV-VERIFY-T19"
+    ],
+    "id": "F-TC8-1",
+    "discoveredBy": "devin-24605d880dc547f58218cf826b6c6202"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "actionable": true,
+    "classification": "REAL_DEFECT",
+    "status": "CLOSED",
+    "closeReason": "fixed on devin/qa-fixpoint (9522454d/a2bd826f); pin + mutant-killed + verify green",
+    "closedAt": "2026-10-01T13:00:00Z",
+    "closureReviewIds": [
+     "RV-CLOSURE-15"
+    ],
+    "counterexample": "mortal + grantedRealmPassiveIds=['foundation_establishment'] + matching modifier -> +10% main stats",
+    "duplicateOf": null,
+    "evidenceIds": [],
+    "exception": null,
+    "expected": "marker indexed above player realm is impossible",
+    "actual": "mortal save claiming foundation marker emitted kien_co passive",
+    "invariantIds": [
+     "I-SF-1"
+    ],
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/services/save/saveShapeValidation.ts",
+      "revision": "ae4af514",
+      "symbolOrSection": "grantedRealmPassiveIds loop"
+     },
+     {
+      "basis": "SOURCE",
+      "path": "src/core/player/Player.ts",
+      "revision": "ae4af514",
+      "symbolOrSection": "hasGrantedRealmPassive realm-order gate"
+     }
+    ],
+    "pinEvidenceIds": [
+     "EV-PIN-T19",
+     "EV-MUT-T19"
+    ],
+    "reachability": "PRODUCTION",
+    "rejectionReason": null,
+    "repair": "validator: marker realm-order bound (marker realm <= player realm); emit: getRealmIndex(passive.id) > player realm -> inert",
+    "rootCause": "marker verified vs registry+modifier witness but never vs player realm; emit seam also marker-only",
+    "rootClass": "AUTHORITY",
+    "severity": "High",
+    "siblingFindingIds": [],
+    "siblingSearch": [],
+    "state": {
+     "productStateId": "e81120ad6870aa0455576e0b9a33b54eb01b4ba309483a363cfacd625c4dc8e7",
+     "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "subsystem": "betaScope",
+    "title": "grantedRealmPassiveIds marker has no realm eligibility -> dormant kien_co passive emits on mortal",
+    "verificationEvidenceIds": [
+     "EV-PIN-SUITE-T19",
+     "EV-VERIFY-T19"
+    ],
+    "id": "F-TC8-2",
+    "discoveredBy": "devin-24605d880dc547f58218cf826b6c6202"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "actionable": true,
+    "classification": "REAL_DEFECT",
+    "status": "CLOSED",
+    "closeReason": "fixed on devin/qa-fixpoint (9522454d/a2bd826f); pin + mutant-killed + verify green",
+    "closedAt": "2026-10-01T13:00:00Z",
+    "closureReviewIds": [
+     "RV-CLOSURE-15"
+    ],
+    "counterexample": "mortal + talent_loi_kiep_* percent 0.9 -> +90% emitted",
+    "duplicateOf": null,
+    "evidenceIds": [],
+    "exception": null,
+    "expected": "percent <= 0.1 * realmIndex(player.realmId)",
+    "actual": "mortal save carrying 0.9 accrual validates",
+    "invariantIds": [
+     "I-SF-1"
+    ],
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/services/save/saveShapeValidation.ts",
+      "revision": "ae4af514",
+      "symbolOrSection": "loi_kiep percent bound"
+     }
+    ],
+    "pinEvidenceIds": [
+     "EV-PIN-T19",
+     "EV-MUT-T19"
+    ],
+    "reachability": "PRODUCTION",
+    "rejectionReason": null,
+    "repair": "bound replaced with realm-scaled 0.1*getRealmIndex(realmId)+eps (mortal=0, qi_refining=0.1, foundation=0.2)",
+    "rootCause": "LOI_KIEP_MAX_PERCENT used all-realm bound (0.1*9); victory writer mints +0.1 per realm transition witnessed",
+    "rootClass": "BOUNDARY",
+    "severity": "High",
+    "siblingFindingIds": [],
+    "siblingSearch": [],
+    "state": {
+     "productStateId": "e81120ad6870aa0455576e0b9a33b54eb01b4ba309483a363cfacd625c4dc8e7",
+     "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "subsystem": "betaScope",
+    "title": "loi_kiep persisted percent pushed verbatim (bound 0.9 vs beta-legit ~0.2)",
+    "verificationEvidenceIds": [
+     "EV-PIN-SUITE-T19",
+     "EV-VERIFY-T19"
+    ],
+    "id": "F-TC8-3",
+    "discoveredBy": "devin-24605d880dc547f58218cf826b6c6202"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "actionable": true,
+    "classification": "REAL_DEFECT",
+    "status": "CLOSED",
+    "closeReason": "fixed on devin/qa-fixpoint (9522454d/a2bd826f); pin + mutant-killed + verify green",
+    "closedAt": "2026-10-01T13:00:00Z",
+    "closureReviewIds": [
+     "RV-CLOSURE-15"
+    ],
+    "counterexample": "save.skills[].cooldown=0 target='party' -> live skill fights with forged scalars",
+    "duplicateOf": null,
+    "evidenceIds": [],
+    "exception": null,
+    "expected": "combat-authored fields re-derived from registered template",
+    "actual": "persisted scalars became live skill config",
+    "invariantIds": [
+     "I-SF-1"
+    ],
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/core/game/GameManagerSaveRestore.ts",
+      "revision": "ae4af514",
+      "symbolOrSection": "restoredSkills template-rebuild"
+     }
+    ],
+    "pinEvidenceIds": [
+     "EV-PIN-T19",
+     "EV-MUT-T19"
+    ],
+    "reachability": "PRODUCTION",
+    "rejectionReason": null,
+    "repair": "restore rebuilds every skill from template; only instance progress (experience/totalExperience/selectedSpecializationId) survives",
+    "rootCause": "restore field-by-field refreshed only some fields; cooldown/cost/targeting/requiredRealmId/... claims persisted as authority",
+    "rootClass": "AUTHORITY",
+    "severity": "High",
+    "siblingFindingIds": [],
+    "siblingSearch": [],
+    "state": {
+     "productStateId": "e81120ad6870aa0455576e0b9a33b54eb01b4ba309483a363cfacd625c4dc8e7",
+     "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "subsystem": "betaScope",
+    "title": "persisted skill combat scalars trusted verbatim on restore",
+    "verificationEvidenceIds": [
+     "EV-PIN-SUITE-T19",
+     "EV-VERIFY-T19"
+    ],
+    "id": "F-TC8-4",
+    "discoveredBy": "devin-24605d880dc547f58218cf826b6c6202"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "actionable": true,
+    "classification": "REAL_DEFECT",
+    "status": "HUMAN_EXCEPTION",
+    "closeReason": null,
+    "closedAt": null,
+    "closureReviewIds": [],
+    "counterexample": "same-value forge: persisted counter indistinguishable from legit accrual without an event ledger",
+    "duplicateOf": null,
+    "evidenceIds": [],
+    "exception": {
+     "humanInstructionRef": "escalation: no authored ceiling/witness exists for this claim class",
+     "scope": "same-value forgery inside authored shape - indistinguishable from earned state without an event ledger",
+     "reason": "no authored ceiling or provenance witness; clamp misfires on legit accrual (see L-NO-AUTHORED-CEILING); awaiting ruling",
+     "expiresWhen": "schema-level provenance (event ledger / writer-signed counters) lands, or user accepts residual"
+    },
+    "expected": "forged totalExperience should not mint unbounded damage",
+    "actual": "totalExperience=1e12 emits proportional precursor damage",
+    "invariantIds": [
+     "I-SF-1"
+    ],
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/core/skill",
+      "revision": "ae4af514",
+      "symbolOrSection": "precursor flat damage formula"
+     },
+     {
+      "basis": "SOURCE",
+      "path": "src/services/save/saveShapeValidation.ts",
+      "revision": "ae4af514",
+      "symbolOrSection": "totalExperience (no bound exists)"
+     }
+    ],
+    "pinEvidenceIds": [],
+    "reachability": "PRODUCTION",
+    "rejectionReason": null,
+    "repair": null,
+    "rootCause": "getPrecursorFlatDamage reads skill.totalExperience uncapped; experience accrual is unbounded by design - no authored ceiling",
+    "rootClass": "BOUNDARY",
+    "severity": "Critical",
+    "siblingFindingIds": [],
+    "siblingSearch": [],
+    "state": {
+     "productStateId": "e81120ad6870aa0455576e0b9a33b54eb01b4ba309483a363cfacd625c4dc8e7",
+     "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "subsystem": "betaScope",
+    "title": "skill totalExperience -> unbounded precursor flat damage (no cap)",
+    "verificationEvidenceIds": [],
+    "id": "F-TC8-5",
+    "discoveredBy": "devin-24605d880dc547f58218cf826b6c6202"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "actionable": true,
+    "classification": "REAL_DEFECT",
+    "status": "CLOSED",
+    "closeReason": "fixed on devin/qa-fixpoint (9522454d/a2bd826f); pin + mutant-killed + verify green",
+    "closedAt": "2026-10-01T13:00:00Z",
+    "closureReviewIds": [
+     "RV-CLOSURE-15"
+    ],
+    "counterexample": "hostile save skills[] += passive_kim_cang_y_chi -> event trigger stacks on a locked way",
+    "duplicateOf": null,
+    "evidenceIds": [],
+    "exception": null,
+    "expected": "dormant skill records stay inert end-to-end",
+    "actual": "golden_core/dormant passives emitted on carried saves",
+    "invariantIds": [
+     "I-SF-1"
+    ],
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/core/skill/PassiveSystem.ts",
+      "revision": "ae4af514",
+      "symbolOrSection": "betaSkillAdmitted gates (event loop, per_second, bank/seed carry)"
+     },
+     {
+      "basis": "SOURCE",
+      "path": "src/services/save/saveShapeValidation.ts",
+      "revision": "ae4af514",
+      "symbolOrSection": "skill requiredRealmId membership bound"
+     }
+    ],
+    "pinEvidenceIds": [
+     "EV-PIN-T19",
+     "EV-MUT-T19"
+    ],
+    "reachability": "PRODUCTION",
+    "rejectionReason": null,
+    "repair": "PassiveSystem admission gates on all emit/seed paths; membership realm bound (F-A10-2) rejects lower-realm realm-ladder claims",
+    "rootCause": "restore accepted any template-registered id; PassiveSystem seeded/passive loops never consulted admission",
+    "rootClass": "AUTHORITY",
+    "severity": "High",
+    "siblingFindingIds": [],
+    "siblingSearch": [],
+    "state": {
+     "productStateId": "e81120ad6870aa0455576e0b9a33b54eb01b4ba309483a363cfacd625c4dc8e7",
+     "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "subsystem": "betaScope",
+    "title": "skills[] accepts any registered id with no scope/kit membership check -> dormant golden_core passives emit",
+    "verificationEvidenceIds": [
+     "EV-PIN-SUITE-T19",
+     "EV-VERIFY-T19"
+    ],
+    "id": "F-TC8-6",
+    "discoveredBy": "devin-24605d880dc547f58218cf826b6c6202"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "actionable": true,
+    "classification": "REAL_DEFECT",
+    "status": "CLOSED",
+    "closeReason": "fixed on devin/qa-fixpoint (9522454d/a2bd826f); pin + mutant-killed + verify green",
+    "closedAt": "2026-10-01T13:00:00Z",
+    "closureReviewIds": [
+     "RV-CLOSURE-15"
+    ],
+    "counterexample": "perfectClearSeconds={x:0.001} -> settle pays floor(elapsed/0.5s) cycles",
+    "duplicateOf": null,
+    "evidenceIds": [],
+    "exception": null,
+    "expected": "clear seconds floored at authored minimum (>=1s)",
+    "actual": "seconds=0.001 accepted -> reward flood",
+    "invariantIds": [
+     "I-SF-1"
+    ],
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/services/save/saveShapeValidation.ts",
+      "revision": "ae4af514",
+      "symbolOrSection": "perfectClearSeconds floor"
+     },
+     {
+      "basis": "SOURCE",
+      "path": "src/core/game/GameManagerAutoFarmOps.ts",
+      "revision": "ae4af514",
+      "symbolOrSection": "isValidCycleSeconds >=1"
+     }
+    ],
+    "pinEvidenceIds": [
+     "EV-PIN-T19",
+     "EV-MUT-T19"
+    ],
+    "reachability": "PRODUCTION",
+    "rejectionReason": null,
+    "repair": "seconds<1 rejected; isValidCycleSeconds requires >=1; autoFarm stage realm coherence added (F-A10-6)",
+    "rootCause": "seconds<=0 rejected only; sub-1s claims mint reward floors; autoFarm cycleSeconds=0.5*2 loop bounds exploited",
+    "rootClass": "BOUNDARY",
+    "severity": "High",
+    "siblingFindingIds": [],
+    "siblingSearch": [],
+    "state": {
+     "productStateId": "e81120ad6870aa0455576e0b9a33b54eb01b4ba309483a363cfacd625c4dc8e7",
+     "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "subsystem": "betaScope",
+    "title": "perfectClearSeconds magnitude unbounded -> auto-farm reward flood / restore-path DoS",
+    "verificationEvidenceIds": [
+     "EV-PIN-SUITE-T19",
+     "EV-VERIFY-T19"
+    ],
+    "id": "F-TC8-7",
+    "discoveredBy": "devin-24605d880dc547f58218cf826b6c6202"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "actionable": true,
+    "classification": "REAL_DEFECT",
+    "status": "CLOSED",
+    "closeReason": "fixed on devin/qa-fixpoint (9522454d/a2bd826f); pin + mutant-killed + verify green",
+    "closedAt": "2026-10-01T13:00:00Z",
+    "closureReviewIds": [
+     "RV-CLOSURE-15"
+    ],
+    "counterexample": "tu_linh_tran effect expiring year 2126 validates and stays live",
+    "duplicateOf": null,
+    "evidenceIds": [],
+    "exception": null,
+    "expected": "effect window <= TU_LINH_TRAN_DURATION_MS (24h)",
+    "actual": "+100yr expiry accepted -> permanent +25%",
+    "invariantIds": [
+     "I-SF-1"
+    ],
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/services/save/saveShapeValidation.ts",
+      "revision": "ae4af514",
+      "symbolOrSection": "tu_linh_tran duration bound"
+     }
+    ],
+    "pinEvidenceIds": [
+     "EV-PIN-T19",
+     "EV-MUT-T19"
+    ],
+    "reachability": "PRODUCTION",
+    "rejectionReason": null,
+    "repair": "duration bound: expiresAtMs-appliedAtMs > TU_LINH_TRAN_DURATION_MS rejected",
+    "rootCause": "percent writer-bound (<=0.25) but expiresAtMs-appliedAtMs unbounded; writer mints 24h only",
+    "rootClass": "BOUNDARY",
+    "severity": "Medium",
+    "siblingFindingIds": [],
+    "siblingSearch": [],
+    "state": {
+     "productStateId": "e81120ad6870aa0455576e0b9a33b54eb01b4ba309483a363cfacd625c4dc8e7",
+     "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "subsystem": "betaScope",
+    "title": "persistentTimedEffects expiry unbounded -> permanent tu_linh_tran buff",
+    "verificationEvidenceIds": [
+     "EV-PIN-SUITE-T19",
+     "EV-VERIFY-T19"
+    ],
+    "id": "F-TC8-8",
+    "discoveredBy": "devin-24605d880dc547f58218cf826b6c6202"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "actionable": true,
+    "classification": "REAL_DEFECT",
+    "status": "DUPLICATE_LINKED",
+    "closeReason": null,
+    "closedAt": null,
+    "closureReviewIds": [],
+    "counterexample": "duplicate of F-TC7-TRIB (already CLOSED with arm-isolation pins)",
+    "duplicateOf": "F-TC7-TRIB",
+    "evidenceIds": [],
+    "exception": null,
+    "expected": "settle re-authorizes committed outcome vs scope verdict",
+    "actual": "covered by F-TC7-TRIB fix (park + re-derive)",
+    "invariantIds": [
+     "I-SF-1"
+    ],
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/core/tribulation/TribulationOutcomeService.ts",
+      "revision": "ae4af514",
+      "symbolOrSection": "settleOutcome park condition"
+     }
+    ],
+    "pinEvidenceIds": [],
+    "reachability": "PRODUCTION",
+    "rejectionReason": null,
+    "repair": null,
+    "rootCause": null,
+    "rootClass": "AUTHORITY",
+    "severity": "High",
+    "siblingFindingIds": [],
+    "siblingSearch": [],
+    "state": {
+     "productStateId": "e81120ad6870aa0455576e0b9a33b54eb01b4ba309483a363cfacd625c4dc8e7",
+     "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "subsystem": "betaScope",
+    "title": "forged committedOutcome victory settles a breakthrough never fought",
+    "verificationEvidenceIds": [],
+    "id": "F-TC8-9",
+    "discoveredBy": "devin-24605d880dc547f58218cf826b6c6202"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "actionable": true,
+    "classification": "REAL_DEFECT",
+    "status": "REJECTED_WITH_PROOF",
+    "closeReason": null,
+    "closedAt": null,
+    "closureReviewIds": [],
+    "counterexample": "golden_core save -> unsupportedReleaseReason = 'realm_beyond_release' (contract-compliant)",
+    "duplicateOf": null,
+    "evidenceIds": [],
+    "exception": null,
+    "expected": "dormant-realm carry flags explicitly",
+    "actual": "it does: realm_beyond_release fires on load",
+    "invariantIds": [
+     "I-SF-1"
+    ],
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/core/betaScopeSurface.ts",
+      "revision": "ae4af514",
+      "symbolOrSection": "isRealmAvailable -> realm_beyond_release"
+     }
+    ],
+    "pinEvidenceIds": [],
+    "reachability": "PRODUCTION",
+    "rejectionReason": "by contract: deserialize-safe + flagged is the intended path - unsupportedReleaseReason returns 'realm_beyond_release' for realmId beyond the beta ceiling (betaScopeSurface.ts:340); probe re-verified on T19",
+    "repair": null,
+    "rootCause": null,
+    "rootClass": "BOUNDARY",
+    "severity": "Medium",
+    "siblingFindingIds": [],
+    "siblingSearch": [],
+    "state": {
+     "productStateId": "e81120ad6870aa0455576e0b9a33b54eb01b4ba309483a363cfacd625c4dc8e7",
+     "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "subsystem": "betaScope",
+    "title": "dormant-realm save validates and loads under beta lock",
+    "verificationEvidenceIds": [],
+    "id": "F-TC8-10",
+    "discoveredBy": "devin-24605d880dc547f58218cf826b6c6202"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "actionable": true,
+    "classification": "REAL_DEFECT",
+    "status": "CLOSED",
+    "closeReason": "fixed on devin/qa-fixpoint (9522454d/a2bd826f); pin + mutant-killed + verify green",
+    "closedAt": "2026-10-01T13:00:00Z",
+    "closureReviewIds": [
+     "RV-CLOSURE-15"
+    ],
+    "counterexample": "9x prefix_max_hp on weapon validates",
+    "duplicateOf": null,
+    "evidenceIds": [],
+    "exception": null,
+    "expected": "affixes <= GLOBAL_MAX_AFFIXES (8) and slot-in-authored-list",
+    "actual": "9 affixes + prefix_ward on weapon accepted",
+    "invariantIds": [
+     "I-SF-1"
+    ],
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/services/save/saveShapeValidation.ts",
+      "revision": "ae4af514",
+      "symbolOrSection": "affix count + slot eligibility"
+     }
+    ],
+    "pinEvidenceIds": [
+     "EV-PIN-T19",
+     "EV-MUT-T19"
+    ],
+    "reachability": "PRODUCTION",
+    "rejectionReason": null,
+    "repair": "count bound + slot eligibility via affixes catalog slots list",
+    "rootCause": "affix count and slot eligibility never checked against authored roll tables",
+    "rootClass": "BOUNDARY",
+    "severity": "High",
+    "siblingFindingIds": [],
+    "siblingSearch": [],
+    "state": {
+     "productStateId": "e81120ad6870aa0455576e0b9a33b54eb01b4ba309483a363cfacd625c4dc8e7",
+     "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "subsystem": "betaScope",
+    "title": "equipment affix list unbounded by GLOBAL_MAX_AFFIXES and slot-ineligible affixes emit",
+    "verificationEvidenceIds": [
+     "EV-PIN-SUITE-T19",
+     "EV-VERIFY-T19"
+    ],
+    "id": "F-TC8-11",
+    "discoveredBy": "devin-24605d880dc547f58218cf826b6c6202"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "actionable": true,
+    "classification": "REAL_DEFECT",
+    "status": "DUPLICATE_LINKED",
+    "closeReason": null,
+    "closedAt": null,
+    "closureReviewIds": [],
+    "counterexample": "duplicate of F-TC6-7 (escalated residual - TrucCoJourney legitimately overshoots requirement)",
+    "duplicateOf": "F-TC6-7",
+    "evidenceIds": [],
+    "exception": null,
+    "expected": "progress counter provenance",
+    "actual": "same-value forge (F-TC6-7 class); no event ledger",
+    "invariantIds": [
+     "I-SF-1"
+    ],
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/core/quest",
+      "revision": "ae4af514",
+      "symbolOrSection": "quest progress claim"
+     }
+    ],
+    "pinEvidenceIds": [],
+    "reachability": "PRODUCTION",
+    "rejectionReason": null,
+    "repair": null,
+    "rootCause": null,
+    "rootClass": "BOUNDARY",
+    "severity": "Medium",
+    "siblingFindingIds": [],
+    "siblingSearch": [],
+    "state": {
+     "productStateId": "e81120ad6870aa0455576e0b9a33b54eb01b4ba309483a363cfacd625c4dc8e7",
+     "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "subsystem": "betaScope",
+    "title": "quest progress forge -> authored reward pays out",
+    "verificationEvidenceIds": [],
+    "id": "F-TC8-12",
+    "discoveredBy": "devin-24605d880dc547f58218cf826b6c6202"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "actionable": true,
+    "classification": "REAL_DEFECT",
+    "status": "HUMAN_EXCEPTION",
+    "closeReason": null,
+    "closedAt": null,
+    "closureReviewIds": [],
+    "counterexample": "cosmetic-only permissiveness",
+    "duplicateOf": null,
+    "evidenceIds": [],
+    "exception": {
+     "humanInstructionRef": "user ruling: attacks/scope fixes are Medium+ only; Low/Nit recorded as deferred exceptions",
+     "scope": "flagged unsupported saves / dev-only paths - a normal beta save cannot reach these",
+     "reason": "DEFERRED per Medium+-only ruling",
+     "expiresWhen": "next scope contract revision or user reversal of the Medium+-only ruling"
+    },
+    "expected": "author-shaped values only",
+    "actual": "inert values tolerated (no live effect)",
+    "invariantIds": [
+     "I-SF-1"
+    ],
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/services/save/saveShapeValidation.ts",
+      "revision": "ae4af514",
+      "symbolOrSection": "general shape tolerance"
+     }
+    ],
+    "pinEvidenceIds": [],
+    "reachability": "PRODUCTION",
+    "rejectionReason": null,
+    "repair": null,
+    "rootCause": null,
+    "rootClass": "BOUNDARY",
+    "severity": "Low",
+    "siblingFindingIds": [],
+    "siblingSearch": [],
+    "state": {
+     "productStateId": "e81120ad6870aa0455576e0b9a33b54eb01b4ba309483a363cfacd625c4dc8e7",
+     "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "subsystem": "betaScope",
+    "title": "boundary permissiveness: values no writer produces accepted (inert at emit)",
+    "verificationEvidenceIds": [],
+    "id": "F-TC8-13",
+    "discoveredBy": "devin-24605d880dc547f58218cf826b6c6202"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "actionable": true,
+    "classification": "REAL_DEFECT",
+    "status": "CLOSED",
+    "closeReason": "fixed on devin/qa-fixpoint (9522454d/a2bd826f); pin + mutant-killed + verify green",
+    "closedAt": "2026-10-01T13:00:00Z",
+    "closureReviewIds": [
+     "RV-CLOSURE-15"
+    ],
+    "counterexample": "decompose.started=true save -> unsupportedReleaseReason null",
+    "duplicateOf": null,
+    "evidenceIds": [],
+    "exception": null,
+    "expected": "every dormant record class flags explicitly",
+    "actual": "decompose/dormant-talent carries report beta-clean",
+    "invariantIds": [
+     "I-SF-1"
+    ],
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/core/betaScopeSurface.ts",
+      "revision": "ae4af514",
+      "symbolOrSection": "dormant_decompose_state + dormant_talent_state"
+     },
+     {
+      "basis": "SOURCE",
+      "path": "src/composables/useAppLifecycle.ts",
+      "revision": "ae4af514",
+      "symbolOrSection": "decompose slice wiring"
+     }
+    ],
+    "pinEvidenceIds": [
+     "EV-PIN-T19",
+     "EV-MUT-T19"
+    ],
+    "reachability": "PRODUCTION",
+    "rejectionReason": null,
+    "repair": "new reasons dormant_decompose_state (started||workers>0) + dormant_talent_state (!isBetaTalentId member); decompose slice wired through useAppLifecycle; i18n vi/en",
+    "rootCause": "BetaUnsupportedSaveSlices admitted only {tribulation, alchemyJobs}; decompose slice could not be passed; dormant talent ids unflagged",
+    "rootClass": "AUTHORITY",
+    "severity": "Medium",
+    "siblingFindingIds": [],
+    "siblingSearch": [],
+    "state": {
+     "productStateId": "e81120ad6870aa0455576e0b9a33b54eb01b4ba309483a363cfacd625c4dc8e7",
+     "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "subsystem": "betaScope",
+    "title": "unsupportedReleaseReason blind to save.decompose and dormant selectedTalentIds",
+    "verificationEvidenceIds": [
+     "EV-PIN-SUITE-T19",
+     "EV-VERIFY-T19"
+    ],
+    "id": "F-B10-001",
+    "discoveredBy": "devin-05160ba8d67042da95992e83ce45723a"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "actionable": true,
+    "classification": "REAL_DEFECT",
+    "status": "CLOSED",
+    "closeReason": "fixed on devin/qa-fixpoint (9522454d/a2bd826f); pin + mutant-killed + verify green",
+    "closedAt": "2026-10-01T13:00:00Z",
+    "closureReviewIds": [
+     "RV-CLOSURE-15"
+    ],
+    "counterexample": "carried save selectedTalentIds+=kd_thanh_dan -> card renders name/rarity/description",
+    "duplicateOf": null,
+    "evidenceIds": [],
+    "exception": null,
+    "expected": "dormant talent ids never render on beta surfaces",
+    "actual": "full dormant card rendered as owned",
+    "invariantIds": [
+     "I-SF-1"
+    ],
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/components/panels/CharacterPanel.vue",
+      "revision": "ae4af514",
+      "symbolOrSection": "selectedTalents filter"
+     }
+    ],
+    "pinEvidenceIds": [
+     "EV-PIN-T19",
+     "EV-MUT-T19"
+    ],
+    "reachability": "PRODUCTION",
+    "rejectionReason": null,
+    "repair": "filter consumes isBetaTalentId; F-B8-4 pin unskipped (talent half promoted)",
+    "rootCause": "selectedTalents filtered on getTalentDefinition existence only - no isBetaTalentId admission like sibling surfaces",
+    "rootClass": "AUTHORITY",
+    "severity": "Medium",
+    "siblingFindingIds": [],
+    "siblingSearch": [],
+    "state": {
+     "productStateId": "e81120ad6870aa0455576e0b9a33b54eb01b4ba309483a363cfacd625c4dc8e7",
+     "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "subsystem": "betaScope",
+    "title": "CharacterPanel renders dormant talent cards on a carried save",
+    "verificationEvidenceIds": [
+     "EV-PIN-SUITE-T19",
+     "EV-VERIFY-T19"
+    ],
+    "id": "F-B10-002",
+    "discoveredBy": "devin-05160ba8d67042da95992e83ce45723a"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "actionable": true,
+    "classification": "REAL_DEFECT",
+    "status": "HUMAN_EXCEPTION",
+    "closeReason": null,
+    "closedAt": null,
+    "closureReviewIds": [],
+    "counterexample": "flagged-save-only or verdict-equivalent display seam",
+    "duplicateOf": null,
+    "evidenceIds": [],
+    "exception": {
+     "humanInstructionRef": "user ruling: attacks/scope fixes are Medium+ only; Low/Nit recorded as deferred exceptions",
+     "scope": "flagged unsupported saves / dev-only paths - a normal beta save cannot reach these",
+     "reason": "DEFERRED per Medium+-only ruling",
+     "expiresWhen": "next scope contract revision or user reversal of the Medium+-only ruling"
+    },
+    "expected": "canonical read-model consumed",
+    "actual": "getBuildingStatus counts unfiltered parked dormant jobs -> badge claims live brewing",
+    "invariantIds": [
+     "I-SF-1"
+    ],
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/components",
+      "revision": "ae4af514",
+      "symbolOrSection": "consumer surface"
+     }
+    ],
+    "pinEvidenceIds": [],
+    "reachability": "PRODUCTION",
+    "rejectionReason": null,
+    "repair": null,
+    "rootCause": "getBuildingStatus counts unfiltered parked dormant jobs -> badge claims live brewing",
+    "rootClass": "AUTHORITY",
+    "severity": "Low",
+    "siblingFindingIds": [],
+    "siblingSearch": [],
+    "state": {
+     "productStateId": "e81120ad6870aa0455576e0b9a33b54eb01b4ba309483a363cfacd625c4dc8e7",
+     "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "subsystem": "betaScope",
+    "title": "pill_room nameplate shows 'active' for a permanently parked dormant job",
+    "verificationEvidenceIds": [],
+    "id": "F-B10-003",
+    "discoveredBy": "devin-05160ba8d67042da95992e83ce45723a"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "actionable": true,
+    "classification": "REAL_DEFECT",
+    "status": "HUMAN_EXCEPTION",
+    "closeReason": null,
+    "closedAt": null,
+    "closureReviewIds": [],
+    "counterexample": "flagged-save-only or verdict-equivalent display seam",
+    "duplicateOf": null,
+    "evidenceIds": [],
+    "exception": {
+     "humanInstructionRef": "user ruling: attacks/scope fixes are Medium+ only; Low/Nit recorded as deferred exceptions",
+     "scope": "flagged unsupported saves / dev-only paths - a normal beta save cannot reach these",
+     "reason": "DEFERRED per Medium+-only ruling",
+     "expiresWhen": "next scope contract revision or user reversal of the Medium+-only ruling"
+    },
+    "expected": "canonical read-model consumed",
+    "actual": "rederives visibleTabs instead of consuming canonical surface model; verdicts coincide today",
+    "invariantIds": [
+     "I-SF-1"
+    ],
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/components",
+      "revision": "ae4af514",
+      "symbolOrSection": "consumer surface"
+     }
+    ],
+    "pinEvidenceIds": [],
+    "reachability": "PRODUCTION",
+    "rejectionReason": null,
+    "repair": null,
+    "rootCause": "rederives visibleTabs instead of consuming canonical surface model; verdicts coincide today",
+    "rootClass": "AUTHORITY",
+    "severity": "Nit",
+    "siblingFindingIds": [],
+    "siblingSearch": [],
+    "state": {
+     "productStateId": "e81120ad6870aa0455576e0b9a33b54eb01b4ba309483a363cfacd625c4dc8e7",
+     "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "subsystem": "betaScope",
+    "title": "WorkerLodgePanel imports contract-forbidden CompanionAvailability authority",
+    "verificationEvidenceIds": [],
+    "id": "F-B10-004",
+    "discoveredBy": "devin-05160ba8d67042da95992e83ce45723a"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "actionable": true,
+    "classification": "REAL_DEFECT",
+    "status": "HUMAN_EXCEPTION",
+    "closeReason": null,
+    "closedAt": null,
+    "closureReviewIds": [],
+    "counterexample": "flagged-save-only or verdict-equivalent display seam",
+    "duplicateOf": null,
+    "evidenceIds": [],
+    "exception": {
+     "humanInstructionRef": "user ruling: attacks/scope fixes are Medium+ only; Low/Nit recorded as deferred exceptions",
+     "scope": "flagged unsupported saves / dev-only paths - a normal beta save cannot reach these",
+     "reason": "DEFERRED per Medium+-only ruling",
+     "expiresWhen": "next scope contract revision or user reversal of the Medium+-only ruling"
+    },
+    "expected": "canonical read-model consumed",
+    "actual": "contract-form violation + drift risk; identical verdicts today",
+    "invariantIds": [
+     "I-SF-1"
+    ],
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/components",
+      "revision": "ae4af514",
+      "symbolOrSection": "consumer surface"
+     }
+    ],
+    "pinEvidenceIds": [],
+    "reachability": "PRODUCTION",
+    "rejectionReason": null,
+    "repair": null,
+    "rootCause": "contract-form violation + drift risk; identical verdicts today",
+    "rootClass": "AUTHORITY",
+    "severity": "Nit",
+    "siblingFindingIds": [],
+    "siblingSearch": [],
+    "state": {
+     "productStateId": "e81120ad6870aa0455576e0b9a33b54eb01b4ba309483a363cfacd625c4dc8e7",
+     "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "subsystem": "betaScope",
+    "title": "AlchemyView/StageSelectPanel rederive predicates the canonical read-models own",
+    "verificationEvidenceIds": [],
+    "id": "F-B10-005",
+    "discoveredBy": "devin-05160ba8d67042da95992e83ce45723a"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "actionable": true,
+    "classification": "REAL_DEFECT",
+    "status": "CLOSED",
+    "closeReason": "fixed on devin/qa-fixpoint (9522454d/a2bd826f); pin + mutant-killed + verify green",
+    "closedAt": "2026-10-01T13:00:00Z",
+    "closureReviewIds": [
+     "RV-CLOSURE-15"
+    ],
+    "counterexample": "mortal+lk_linh_mach and qi_refining+tc_truc_hon both pass acceptance and emit",
+    "duplicateOf": null,
+    "evidenceIds": [],
+    "exception": null,
+    "expected": "lk_* needs qi_refining+, tc_* needs foundation+",
+    "actual": "mortal+lk_linh_mach -> +15% spirit stones emitted",
+    "invariantIds": [
+     "I-SF-1"
+    ],
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/services/save/saveShapeValidation.ts",
+      "revision": "ae4af514",
+      "symbolOrSection": "TALENT_POOL_REALM_BY_ID bound"
+     }
+    ],
+    "pinEvidenceIds": [
+     "EV-PIN-T19",
+     "EV-MUT-T19"
+    ],
+    "reachability": "PRODUCTION",
+    "rejectionReason": null,
+    "repair": "validator: talent pool realm bound via BREAKTHROUGH_TALENT_POOLS keyed map",
+    "rootCause": "isBetaTalentId is target-keyed not holder-keyed; pool realm never compared to player realm",
+    "rootClass": "BOUNDARY",
+    "severity": "High",
+    "siblingFindingIds": [],
+    "siblingSearch": [],
+    "state": {
+     "productStateId": "e81120ad6870aa0455576e0b9a33b54eb01b4ba309483a363cfacd625c4dc8e7",
+     "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "subsystem": "betaScope",
+    "title": "forged selectedTalentIds admit breakthrough-pool talents on realms that can never hold them",
+    "verificationEvidenceIds": [
+     "EV-PIN-SUITE-T19",
+     "EV-VERIFY-T19"
+    ],
+    "id": "F-A10-1",
+    "discoveredBy": "devin-fe65867bb7114a7faaeb9fa4fe403e1d"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "actionable": true,
+    "classification": "REAL_DEFECT",
+    "status": "CLOSED",
+    "closeReason": "fixed on devin/qa-fixpoint (9522454d/a2bd826f); pin + mutant-killed + verify green",
+    "closedAt": "2026-10-01T13:00:00Z",
+    "closureReviewIds": [
+     "RV-CLOSURE-15"
+    ],
+    "counterexample": "mortal save claiming golden_core passive emits live",
+    "duplicateOf": null,
+    "evidenceIds": [],
+    "exception": null,
+    "expected": "skill.requiredRealmId <= player realm",
+    "actual": "mortal+passive_kim_dan_chi_quang restores and emits",
+    "invariantIds": [
+     "I-SF-1"
+    ],
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/services/save/saveShapeValidation.ts",
+      "revision": "ae4af514",
+      "symbolOrSection": "SKILL_TEMPLATE_BY_ID requiredRealmId membership bound"
+     }
+    ],
+    "pinEvidenceIds": [
+     "EV-PIN-T19",
+     "EV-MUT-T19"
+    ],
+    "reachability": "PRODUCTION",
+    "rejectionReason": null,
+    "repair": "validator: skills[] membership bound to template.requiredRealmId realm order",
+    "rootCause": "realm-ladder passives composed via realmRewards (not way-owned) so betaSkillAdmitted admits; restore had no realm check",
+    "rootClass": "BOUNDARY",
+    "severity": "High",
+    "siblingFindingIds": [],
+    "siblingSearch": [],
+    "state": {
+     "productStateId": "e81120ad6870aa0455576e0b9a33b54eb01b4ba309483a363cfacd625c4dc8e7",
+     "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "subsystem": "betaScope",
+    "title": "forged skills[] membership learns realm-ladder passives beyond holder realm",
+    "verificationEvidenceIds": [
+     "EV-PIN-SUITE-T19",
+     "EV-VERIFY-T19"
+    ],
+    "id": "F-A10-2",
+    "discoveredBy": "devin-fe65867bb7114a7faaeb9fa4fe403e1d"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "actionable": true,
+    "classification": "REAL_DEFECT",
+    "status": "DUPLICATE_LINKED",
+    "closeReason": null,
+    "closedAt": null,
+    "closureReviewIds": [],
+    "counterexample": "same mechanism as F-TC8-2; fix verified on T19",
+    "duplicateOf": "F-TC8-2",
+    "evidenceIds": [],
+    "exception": null,
+    "expected": "claim replay vs writer earnability",
+    "actual": "independently rediscovered by blind A10",
+    "invariantIds": [
+     "I-SF-1"
+    ],
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/services/save/saveShapeValidation.ts",
+      "revision": "ae4af514",
+      "symbolOrSection": "realm-earnability bounds"
+     }
+    ],
+    "pinEvidenceIds": [],
+    "reachability": "PRODUCTION",
+    "rejectionReason": null,
+    "repair": null,
+    "rootCause": null,
+    "rootClass": "BOUNDARY",
+    "severity": "High",
+    "siblingFindingIds": [],
+    "siblingSearch": [],
+    "state": {
+     "productStateId": "e81120ad6870aa0455576e0b9a33b54eb01b4ba309483a363cfacd625c4dc8e7",
+     "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "subsystem": "betaScope",
+    "title": "dup of F-TC8-2 (realm-earnability claim class)",
+    "verificationEvidenceIds": [],
+    "id": "F-A10-3",
+    "discoveredBy": "devin-fe65867bb7114a7faaeb9fa4fe403e1d"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "actionable": true,
+    "classification": "REAL_DEFECT",
+    "status": "DUPLICATE_LINKED",
+    "closeReason": null,
+    "closedAt": null,
+    "closureReviewIds": [],
+    "counterexample": "same mechanism as F-TC8-1; fix verified on T19",
+    "duplicateOf": "F-TC8-1",
+    "evidenceIds": [],
+    "exception": null,
+    "expected": "claim replay vs writer earnability",
+    "actual": "independently rediscovered by blind A10",
+    "invariantIds": [
+     "I-SF-1"
+    ],
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/services/save/saveShapeValidation.ts",
+      "revision": "ae4af514",
+      "symbolOrSection": "realm-earnability bounds"
+     }
+    ],
+    "pinEvidenceIds": [],
+    "reachability": "PRODUCTION",
+    "rejectionReason": null,
+    "repair": null,
+    "rootCause": null,
+    "rootClass": "BOUNDARY",
+    "severity": "High",
+    "siblingFindingIds": [],
+    "siblingSearch": [],
+    "state": {
+     "productStateId": "e81120ad6870aa0455576e0b9a33b54eb01b4ba309483a363cfacd625c4dc8e7",
+     "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "subsystem": "betaScope",
+    "title": "dup of F-TC8-1 (realm-earnability claim class)",
+    "verificationEvidenceIds": [],
+    "id": "F-A10-4",
+    "discoveredBy": "devin-fe65867bb7114a7faaeb9fa4fe403e1d"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "actionable": true,
+    "classification": "REAL_DEFECT",
+    "status": "DUPLICATE_LINKED",
+    "closeReason": null,
+    "closedAt": null,
+    "closureReviewIds": [],
+    "counterexample": "same mechanism as F-TC8-3; fix verified on T19",
+    "duplicateOf": "F-TC8-3",
+    "evidenceIds": [],
+    "exception": null,
+    "expected": "claim replay vs writer earnability",
+    "actual": "independently rediscovered by blind A10",
+    "invariantIds": [
+     "I-SF-1"
+    ],
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/services/save/saveShapeValidation.ts",
+      "revision": "ae4af514",
+      "symbolOrSection": "realm-earnability bounds"
+     }
+    ],
+    "pinEvidenceIds": [],
+    "reachability": "PRODUCTION",
+    "rejectionReason": null,
+    "repair": null,
+    "rootCause": null,
+    "rootClass": "BOUNDARY",
+    "severity": "High",
+    "siblingFindingIds": [],
+    "siblingSearch": [],
+    "state": {
+     "productStateId": "e81120ad6870aa0455576e0b9a33b54eb01b4ba309483a363cfacd625c4dc8e7",
+     "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "subsystem": "betaScope",
+    "title": "dup of F-TC8-3 (realm-earnability claim class)",
+    "verificationEvidenceIds": [],
+    "id": "F-A10-5",
+    "discoveredBy": "devin-fe65867bb7114a7faaeb9fa4fe403e1d"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "actionable": true,
+    "classification": "REAL_DEFECT",
+    "status": "CLOSED",
+    "closeReason": "fixed on devin/qa-fixpoint (9522454d/a2bd826f); pin + mutant-killed + verify green",
+    "closedAt": "2026-10-01T13:00:00Z",
+    "closureReviewIds": [
+     "RV-CLOSURE-15"
+    ],
+    "counterexample": "mortal save perfectClear foundation_floor_1 -> eligible -> settle pays",
+    "duplicateOf": null,
+    "evidenceIds": [],
+    "exception": null,
+    "expected": "stage claim realm <= player realm",
+    "actual": "mortal+foundation_floor_1 perfect-clear -> settle mints spirit stones",
+    "invariantIds": [
+     "I-SF-1"
+    ],
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/services/save/saveShapeValidation.ts",
+      "revision": "ae4af514",
+      "symbolOrSection": "stage requiredRealmId bounds on completed/perfectClear/autoFarm"
+     }
+    ],
+    "pinEvidenceIds": [
+     "EV-PIN-T19",
+     "EV-MUT-T19"
+    ],
+    "reachability": "PRODUCTION",
+    "rejectionReason": null,
+    "repair": "validator: stage.requiredRealmId realm-order bound on completedStageIds/perfectClearStageIds/autoFarmStage.stageId",
+    "rootCause": "resolveValidAutoFarmStage re-derives eligibility from persisted claims only - no realm check on stage claims",
+    "rootClass": "AUTHORITY",
+    "severity": "High",
+    "siblingFindingIds": [],
+    "siblingSearch": [],
+    "state": {
+     "productStateId": "e81120ad6870aa0455576e0b9a33b54eb01b4ba309483a363cfacd625c4dc8e7",
+     "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "subsystem": "betaScope",
+    "title": "forged perfectClear+autoFarm on beyond-realm stage mints offline rewards",
+    "verificationEvidenceIds": [
+     "EV-PIN-SUITE-T19",
+     "EV-VERIFY-T19"
+    ],
+    "id": "F-A10-6",
+    "discoveredBy": "devin-fe65867bb7114a7faaeb9fa4fe403e1d"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "actionable": true,
+    "classification": "REAL_DEFECT",
+    "status": "DUPLICATE_LINKED",
+    "closeReason": null,
+    "closedAt": null,
+    "closureReviewIds": [],
+    "counterexample": "+100yr expiry now rejected (>24h window)",
+    "duplicateOf": "F-TC8-8",
+    "evidenceIds": [],
+    "exception": null,
+    "expected": "expiry <= authored writer window",
+    "actual": "covered by F-TC8-8 duration bound",
+    "invariantIds": [
+     "I-SF-1"
+    ],
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/services/save/saveShapeValidation.ts",
+      "revision": "ae4af514",
+      "symbolOrSection": "duration bound"
+     }
+    ],
+    "pinEvidenceIds": [],
+    "reachability": "PRODUCTION",
+    "rejectionReason": null,
+    "repair": null,
+    "rootCause": null,
+    "rootClass": "BOUNDARY",
+    "severity": "Medium",
+    "siblingFindingIds": [],
+    "siblingSearch": [],
+    "state": {
+     "productStateId": "e81120ad6870aa0455576e0b9a33b54eb01b4ba309483a363cfacd625c4dc8e7",
+     "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "subsystem": "betaScope",
+    "title": "persistentTimedEffects expiry unbounded (tu_linh_tran writer dead code)",
+    "verificationEvidenceIds": [],
+    "id": "F-A10-7",
+    "discoveredBy": "devin-fe65867bb7114a7faaeb9fa4fe403e1d"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "actionable": true,
+    "classification": "REAL_DEFECT",
+    "status": "HUMAN_EXCEPTION",
+    "closeReason": null,
+    "closedAt": null,
+    "closureReviewIds": [],
+    "counterexample": "read-model scope-lie only, no reward mint",
+    "duplicateOf": null,
+    "evidenceIds": [],
+    "exception": {
+     "humanInstructionRef": "user ruling: attacks/scope fixes are Medium+ only; Low/Nit recorded as deferred exceptions",
+     "scope": "flagged unsupported saves / dev-only paths - a normal beta save cannot reach these",
+     "reason": "DEFERRED per Medium+-only ruling",
+     "expiresWhen": "next scope contract revision or user reversal of the Medium+-only ruling"
+    },
+    "expected": "betaComplete only for coherent progression",
+    "actual": "mortal+foundation_floor_10 -> betaComplete true (cosmetic)",
+    "invariantIds": [
+     "I-SF-1"
+    ],
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/core/betaScopeSurface.ts",
+      "revision": "ae4af514",
+      "symbolOrSection": "betaCompletionFor"
+     }
+    ],
+    "pinEvidenceIds": [],
+    "reachability": "PRODUCTION",
+    "rejectionReason": null,
+    "repair": null,
+    "rootCause": "betaCompletionFor consumes completedStageIds read-model with no progression coherence",
+    "rootClass": "BOUNDARY",
+    "severity": "Low",
+    "siblingFindingIds": [],
+    "siblingSearch": [],
+    "state": {
+     "productStateId": "e81120ad6870aa0455576e0b9a33b54eb01b4ba309483a363cfacd625c4dc8e7",
+     "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "subsystem": "betaScope",
+    "title": "forged completedStageIds final boss fires Beta Complete on a mortal",
+    "verificationEvidenceIds": [],
+    "id": "F-A10-8",
+    "discoveredBy": "devin-fe65867bb7114a7faaeb9fa4fe403e1d"
+   }
+  }
+ ]
+}
