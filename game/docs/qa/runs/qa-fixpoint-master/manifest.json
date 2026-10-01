@@ -16380,7 +16380,7 @@
       "path": "src/composables/useAppLifecycle.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "7d0eb4c046c20d9ae0af983b3844364c5d1d11368f1db31a4e3625893948447d"
+      "hash": "b05c01a58a6c692561f6a13c89ecb9860d4a39040cd564eb054f5e4f755fbe32"
     },
     {
       "path": "src/composables/useAutoRetryCountdown.test.ts",
@@ -16668,7 +16668,7 @@
       "path": "src/core/alchemy/AlchemySystem.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "956a88e54dc4fb40eecdd3ee8b3835d6179f494985670c539c00c5be5fa88a88"
+      "hash": "32803c1c9c3db5fa887b8850ad2d1c368300f45b0395bbb7c4616a298e52b8cc"
     },
     {
       "path": "src/core/artifact/Artifact.ts",
@@ -17760,7 +17760,7 @@
       "path": "src/core/betaScope.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "674cc3d075186635a20ef36fdb3dbfb99e90f8b2e4b784bff5fbb0d08b1d470e"
+      "hash": "0a8cf771c27083ae58ee79ebec2c24215e0653f73ff744d524eb3bb99457b8ac"
     },
     {
       "path": "src/core/betaScopeSkillDomain.ts",
@@ -17772,7 +17772,7 @@
       "path": "src/core/betaScopeSurface.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "0ee37608e191b297addee2879dd59dc983be096b71c5bad2c6893187e9fc9fb0"
+      "hash": "8dc9b5cd04242c22b34b54ee85f211ced17391dc6a61fcd7088112461906a918"
     },
     {
       "path": "src/core/breakthrough/FoundationType.ts",
@@ -21012,7 +21012,7 @@
       "path": "src/core/realm/body/BodyProgressionSystem.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "ba51f47bb1ab7c191c450336e325d2cac68752a53936b9fdf84afe1cd03513ca"
+      "hash": "0386d3df6a6bf42359d69e2a3f9e8e417faa968bb29220be12d3e38fedbf8021"
     },
     {
       "path": "src/core/realm/body/BodyRefinementChapter.test.ts",
@@ -22122,7 +22122,7 @@
       "path": "src/core/tribulation/TribulationOutcomeService.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "081262e980234d0674ea767352ae285b2aec8b5f2784fb774b24d54647a58c19"
+      "hash": "1dd03d7dea639ebf31267e181df3d115b0f41ba25f58fa17cc424fd49d606b7d"
     },
     {
       "path": "src/core/tribulation/TribulationOutcomeSettlement.test.ts",
@@ -22206,7 +22206,7 @@
       "path": "src/data/breakthrough/BreakthroughGrades.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "5e867b8bab6e4eb4a85f8135bb831404300e03b39a2e6a1c8303e905948abe28"
+      "hash": "3aea30780dd6e6377b8013efb856694012d8e024482c0536488bf31934f447ed"
     },
     {
       "path": "src/data/breakthrough/BreakthroughScopedResources.ts",
@@ -23574,13 +23574,13 @@
       "path": "src/locales/en.json",
       "kind": "file",
       "mode": 33188,
-      "hash": "6a3b3a3ab36e85fc3ce539388dd336d513ed26e443d33a177e58910834c196d5"
+      "hash": "5d9ca206ea3af28f6eb310e6d47fbd58359d15b869abb45d41c52e86526904fc"
     },
     {
       "path": "src/locales/vi.json",
       "kind": "file",
       "mode": 33188,
-      "hash": "20bc476b8f84354d73722d712b757d3c0dee69403131f3ad5eb27243cfc75562"
+      "hash": "52b327d93ae20f8eb0fd356495e3c448cbf2f8e8f927714c8a0a1327d97e749d"
     },
     {
       "path": "src/main-process/combatClockHost.test.ts",
@@ -25020,7 +25020,7 @@
       "path": "tests/architecture/betaScopeLockV2.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "22e1a28f68d248da632d8de5593b76a66d360dd2fa29974afa01cb0d7e43ddef"
+      "hash": "feefc477ae0a4fcd30221efbdfabb4b2c56363feb8d5bf6d49fe4e3a4870a054"
     },
     {
       "path": "tests/architecture/betaScopeSkillDomain.test.ts",
@@ -25033,6 +25033,12 @@
       "kind": "file",
       "mode": 33188,
       "hash": "ffad9595f495ddc15546cc2e7d544afd6db716f81d4fe0add27e882cbfd2597d"
+    },
+    {
+      "path": "tests/architecture/betaSettlementReauth.qa.test.ts",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "acb202359fef780e777ca20ece64e412f7b994bf716b64059b16bf046e733768"
     },
     {
       "path": "tests/architecture/buildCompositionBoundary.test.ts",
@@ -25641,5 +25647,5 @@
       "hash": "0bb3657058699da63594036eda9bb6be7f6b4b44aebbb960fcba939870fd3f5e"
     }
   ],
-  "productStateId": "7a1014a95af9e4b9c7e0a2108c342a5170aa0add4dc8eeb01c14edf7d0c1171e"
+  "productStateId": "a1ddad7788a9afc923faa1ea24847bf36b89c14b8849e0078ab973dda011c4f8"
 }
