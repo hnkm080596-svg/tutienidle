@@ -2247,7 +2247,12 @@ function validateIdEntries(entries: unknown[], path: string, issues: ShapeIssue[
 // combat roles resolve from the way kit - these fields have no writer.
 const RETIRED_SKILL_ENTRY_KEYS = ['loadoutSlot', 'loadoutSlots', 'equipped', 'unlocked'] as const
 
-function validateSkillEntries(entries: unknown[], path: string, issues: ShapeIssue[]) {
+function validateSkillEntries(
+  entries: unknown[],
+  path: string,
+  issues: ShapeIssue[],
+  skillCastCounts: Record<string, unknown> | undefined,
+) {
   for (let i = 0; i < entries.length; i += 1) {
     const entry = entries[i]
 
@@ -2264,6 +2269,27 @@ function validateSkillEntries(entries: unknown[], path: string, issues: ShapeIss
         issues.push({
           path: `${path}[${i}].${retiredKey}`,
           message: 'field đã retire (v71 - learned = membership; roles resolve from the way kit)',
+        })
+      }
+    }
+
+    // F-SKILLS-TXP: recordCast() increments totalExperience and writes
+    // player.skillCastCounts[id] in the same statement, and the mirror
+    // is never cleared (unlearn leaves stale counts, relearn restarts
+    // the entry counter). totalExperience <= mirror is therefore the
+    // only producible direction - anything above it, or a non-numeric
+    // claim, is forged. The field feeds getPrecursorFlatDamageBonus
+    // (floor(t/10) flat damage) and getCastLeveledSkillLevel.
+    if (Object.prototype.hasOwnProperty.call(entry, 'totalExperience')) {
+      const mirror = skillCastCounts !== undefined && typeof entry.id === 'string'
+        ? skillCastCounts[entry.id]
+        : undefined
+      const mirrorValue = typeof mirror === 'number' && Number.isFinite(mirror) ? mirror : 0
+
+      if (!isNonNegativeFiniteNumber(entry.totalExperience) || entry.totalExperience > mirrorValue) {
+        issues.push({
+          path: `${path}[${i}].totalExperience`,
+          message: 'vượt skillCastCounts mirror (cast counter không sản xuất được)',
         })
       }
     }
@@ -3772,7 +3798,14 @@ export function validateGameSaveShape(parsed: unknown): ShapeValidationResult {
   }
 
   if (skills) {
-    validateSkillEntries(skills, 'skills', issues)
+    validateSkillEntries(
+      skills,
+      'skills',
+      issues,
+      isObject(parsed.player) && isObject(parsed.player.skillCastCounts)
+        ? parsed.player.skillCastCounts
+        : undefined,
+    )
   }
 
   // M-QI-05 (v73) - Core Node coverage: the learned levelled skills,
