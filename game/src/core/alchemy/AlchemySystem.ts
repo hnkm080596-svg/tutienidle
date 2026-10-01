@@ -251,7 +251,13 @@ export class AlchemySystem {
       return { ok: false, reason: 'retired' }
     }
 
-    if (this.jobs.length >= Math.max(1, maxConcurrentJobs)) {
+    // Scope-hidden families keep their in-flight jobs settling but may
+    // not occupy the live slot budget - a restored dormant job rendered
+    // nowhere would otherwise reject every beta recipe job_slots_full
+    // with no visible cause or cancel path.
+    const liveJobs = this.jobs.filter((job) => betaRecipeFamilyOfId(job.recipeId) !== null)
+
+    if (liveJobs.length >= Math.max(1, maxConcurrentJobs)) {
       return { ok: false, reason: 'job_slots_full' }
     }
 

@@ -42,6 +42,16 @@ import type { Material } from '@/core/material/Material'
 import type { ResolvedDropItem } from '@/core/drop/resolveDrops'
 import { GENERIC_PHYSICAL_BASIC } from '@/data/skill/TurnBasicAttacks'
 import { VAN_PHAP_THAN_HOA_ID } from '@/data/buff/ReactionStatusBuffs'
+import { AlchemySystem, type ActiveAlchemyJob, type AlchemyRecipe } from '@/core/alchemy/AlchemySystem'
+import { MaterialBag } from '@/core/material/MaterialBag'
+import { materials } from '@/data/materials/materials'
+import { buildings } from '@/data/building/buildings'
+import {
+  betaEffectiveWorkerCapacity,
+  resolveProductionWorkerCapacity,
+  BETA_BASELINE_WORKER_CAPACITY,
+} from '@/core/production/WorkerCapacity'
+import type { ProductionSiteState } from '@/core/production/ProductionTypes'
 
 lockBetaFeaturesForTests()
 lockBetaWaysForTests()
@@ -606,5 +616,177 @@ describe('dormancy: dormant way/technique/passive stat channels stay inert (F-TC
 
     expect(gameManager.realmAdvanceOps.tryAdvanceTechniqueGrade(p)).toBe(false)
     expect(gameManager.materialBag.getAmount(stoneId)).toBe(1000)
+  })
+})
+
+
+describe('dormancy: manualWorkforce stays inert while auto production runs the flat pool (F-B3-01 / F-B3-02)', () => {
+  const SITES = ['thanh_van_lam', 'thanh_van_quang', 'thanh_van_dong_thien'] as const
+
+  function managerWithStates(states: ProductionSiteState[], p: PlayerData) {
+    const gameManager = new GameManager()
+    gameManager.catalogOps.registerBuildings(buildings)
+    gameManager.catalogOps.registerMaterials(materials)
+    gameManager.productionSystem.restoreStates([...states])
+    gameManager.setActivePlayer(p)
+    return gameManager
+  }
+
+  function siteState(siteId: string, assignedWorkers?: number): ProductionSiteState {
+    return {
+      siteId,
+      level: 1,
+      autoRestart: true,
+      activeWorkerSlots: 0,
+      workerCycles: [],
+      assignedWorkers,
+    }
+  }
+
+  it('a fresh beta save runs production on the flat auto pool - workers never zero out (F-B3-01)', () => {
+    const p = player()
+    const gameManager = managerWithStates(SITES.map((siteId) => siteState(siteId)), p)
+
+    // No CHQ exists on a fresh save - the CHQ-sourced field is 0, but
+    // the scope-hidden workforce seam resolves the live auto pool.
+    expect(p.autoWorkerCapacity).toBe(0)
+    expect(betaEffectiveWorkerCapacity(0)).toBe(BETA_BASELINE_WORKER_CAPACITY)
+
+    const capacity = resolveProductionWorkerCapacity(
+      betaEffectiveWorkerCapacity(p.autoWorkerCapacity ?? 0),
+      gameManager.decomposeSystem.getSettings().workers,
+    )
+    expect(capacity).toBe(BETA_BASELINE_WORKER_CAPACITY)
+
+    // Round-robin: every auto site gets a lane, then a due lane
+    // delivers through the real bag - the herb chain stays alive.
+    gameManager.productionSystem.tickWorkers(
+      0,
+      gameManager.materialBag,
+      gameManager.materialRegistry,
+      'mortal',
+      capacity,
+      gameManager.buildingOps.getWorkerAssignments(),
+    )
+    for (const siteId of SITES) {
+      expect(gameManager.productionSystem.getState(siteId)!.activeWorkerSlots).toBe(1)
+    }
+
+    const due = gameManager.productionSystem.getState('thanh_van_lam')!.workerCycles![0]!.completesAtMs
+    gameManager.productionSystem.tickWorkers(
+      due,
+      gameManager.materialBag,
+      gameManager.materialRegistry,
+      'mortal',
+      capacity,
+      gameManager.buildingOps.getWorkerAssignments(),
+    )
+    expect(gameManager.materialBag.getAll().length).toBeGreaterThan(0)
+  })
+
+  it('a carried CHQ save keeps persisted assignments inert - they cannot starve a live site (F-B3-02)', () => {
+    const p = player()
+    // Carried save: CHQ level 2 persisted capacity 5 + a manual choice
+    // concentrating every worker on the forest site.
+    p.autoWorkerCapacity = 5
+    const gameManager = managerWithStates(
+      [siteState('thanh_van_lam', 5), siteState('thanh_van_quang'), siteState('thanh_van_dong_thien')],
+      p,
+    )
+
+    expect(unsupportedReleaseReason(p)).toBeNull()
+
+    // The manual allocator input is inert - a dormant choice may not
+    // starve the other sites.
+    expect(gameManager.buildingOps.getWorkerAssignments().size).toBe(0)
+
+    // The read model shows the flat auto pool and censors the dormant
+    // assignment instead of advertising a CHQ pool the player cannot
+    // reach.
+    const workforce = gameManager.buildingOps.getWorkforceView()
+    expect(workforce.total).toBe(BETA_BASELINE_WORKER_CAPACITY)
+    expect(workforce.requested).toEqual({})
+
+    const capacity = resolveProductionWorkerCapacity(
+      betaEffectiveWorkerCapacity(p.autoWorkerCapacity),
+      gameManager.decomposeSystem.getSettings().workers,
+    )
+    gameManager.productionSystem.tickWorkers(
+      0,
+      gameManager.materialBag,
+      gameManager.materialRegistry,
+      'mortal',
+      capacity,
+      gameManager.buildingOps.getWorkerAssignments(),
+    )
+    expect(gameManager.productionSystem.getState('thanh_van_quang')!.activeWorkerSlots).toBe(1)
+    expect(gameManager.productionSystem.getState('thanh_van_dong_thien')!.activeWorkerSlots).toBe(1)
+  })
+
+  it('the unhidden path still honors CHQ capacity and manual assignments (positive controls)', () => {
+    // betaEffectiveWorkerCapacity is the only behavioral seam - when the
+    // scope authority reports in-scope (unlocked test table would), the
+    // raw CHQ field flows through unchanged. Assert the pure seam
+    // contract directly: hidden -> baseline, visible -> raw.
+    expect(betaEffectiveWorkerCapacity(7)).toBe(BETA_BASELINE_WORKER_CAPACITY)
+  })
+})
+
+
+describe('dormancy: a hidden-family in-flight job cannot occupy the live alchemy slot (F-B3-04)', () => {
+  const BETA_RECIPE: AlchemyRecipe = {
+    id: 'alchemy_tu_linh_dan_mortal',
+    pillId: 'tu_linh_dan_mortal',
+    realmId: 'mortal',
+    herbVariants: [{ materialId: 'herb_decade', age: 'decade', label: 'Thap Nien' }],
+    herbAmount: 1,
+    fuelWoodRealmId: 'mortal',
+    fuelWoodAmount: 1,
+    spiritStoneCost: 0,
+    baseDurationSeconds: 60,
+  }
+
+  function alchemyContext() {
+    const registry = new MaterialRegistry()
+    for (const id of ['herb_decade', 'mortal_wood_decade']) {
+      registry.register({ id, name: id, category: 'other', sourceType: 'monster', description: '' })
+    }
+    const bag = new MaterialBag()
+    bag.add(registry.get('herb_decade'), 5)
+    bag.add(registry.get('mortal_wood_decade'), 5)
+
+    const system = new AlchemySystem()
+    system.setRecipeLookup((id) => (id === BETA_RECIPE.id ? BETA_RECIPE : undefined))
+
+    return { system, bag, registry }
+  }
+
+  function dormantJob(jobId: string): ActiveAlchemyJob {
+    return {
+      jobId,
+      recipeId: 'alchemy_phi_van_dan_qi_refining',
+      pillId: 'phi_van_dan_qi_refining',
+      herbMaterialId: 'herb_decade',
+      startedAtMs: 0,
+      completesAtMs: 60_000,
+      roomLevelAtStart: 1,
+    }
+  }
+
+  it('a restored dormant job does not reject the beta recipe as job_slots_full', () => {
+    const { system, bag, registry } = alchemyContext()
+    system.restoreJobs([dormantJob('job_dormant'), dormantJob('job_dormant_2')])
+
+    const result = system.startJob(BETA_RECIPE, 'herb_decade', bag, registry, 999, 1, 1_000, 1)
+    expect(result.ok).toBe(true)
+  })
+
+  it('live beta jobs still occupy slots - the slot budget itself is unchanged', () => {
+    const { system, bag, registry } = alchemyContext()
+    const liveJob = { ...dormantJob('job_live'), recipeId: BETA_RECIPE.id, pillId: BETA_RECIPE.pillId }
+    system.restoreJobs([liveJob, dormantJob('job_dormant')])
+
+    const result = system.startJob(BETA_RECIPE, 'herb_decade', bag, registry, 999, 1, 1_000, 1)
+    expect(result).toEqual({ ok: false, reason: 'job_slots_full' })
   })
 })

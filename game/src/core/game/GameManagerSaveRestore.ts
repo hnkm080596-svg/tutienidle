@@ -17,7 +17,7 @@ import { BuildingRegistry } from '../building/BuildingRegistry'
 import { QuestManager } from '../quest/QuestManager'
 import { ProductionSystem } from '../production/ProductionSystem'
 import type { ProductionSiteState } from '../production/ProductionTypes'
-import { resolveProductionWorkerCapacity } from '../production/WorkerCapacity'
+import { betaEffectiveWorkerCapacity, resolveProductionWorkerCapacity } from '../production/WorkerCapacity'
 import { DecomposeSystem, type DecomposeOutputEntry } from '../production/DecomposeSystem'
 import { AlchemySystem, type ActiveAlchemyJob } from '../alchemy/AlchemySystem'
 import { getAlchemyDoublePill } from '../talent/TalentEffects'
@@ -394,7 +394,7 @@ export class GameManagerSaveRestore {
     // state so saved workers clamp against the real ceiling, settle
     // the offline window under the shared cap concept, and deliver
     // output through the SAME delivery/overflow path as the tick.
-    this.deps.decomposeSystem.updateCapacity(offlinePlayer?.autoWorkerCapacity ?? 0)
+    this.deps.decomposeSystem.updateCapacity(betaEffectiveWorkerCapacity(offlinePlayer?.autoWorkerCapacity ?? 0))
     this.deps.decomposeSystem.restore(save.decompose)
 
     // B1-D - the settle window is the authorized context, never a
@@ -427,7 +427,7 @@ export class GameManagerSaveRestore {
           settleNowMs,
           {
             workerCapacity: resolveProductionWorkerCapacity(
-              offlinePlayer.autoWorkerCapacity ?? 0,
+              betaEffectiveWorkerCapacity(offlinePlayer.autoWorkerCapacity ?? 0),
               this.deps.decomposeSystem.getSettings().workers,
             ),
             offlineSinceMs,

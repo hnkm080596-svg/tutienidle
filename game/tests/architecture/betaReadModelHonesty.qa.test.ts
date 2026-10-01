@@ -33,6 +33,14 @@ import type { AlchemyRecipe } from '@/core/alchemy/AlchemySystem'
 import type { Material } from '@/core/material/Material'
 import type { Pill } from '@/core/pill/Pill'
 import type { Building } from '@/core/building/Building'
+import ProductionPanel from '@/components/panels/ProductionPanel.vue'
+import { buildings } from '@/data/building/buildings'
+import { materials } from '@/data/materials/materials'
+import { lockBetaFeaturesForTests } from '@/core/game/__fixtures__/betaFeaturesUnlock'
+
+// These suites assert the beta scope lock - pin the canonical
+// all-false feature table (the global test setup unlocks it).
+lockBetaFeaturesForTests()
 
 // --- combat bar fixture: a beta kit mints basic+special only; the
 // presentation carries an EMPTY ultimate entry (the scope-hidden role). ---
@@ -280,5 +288,48 @@ describe('QA read-model honesty: beta completion surface (contract sec.H)', () =
     }
 
     expect(consumers).not.toEqual([])
+  })
+})
+
+
+describe('QA read-model honesty: production workforce surface (contract sec.4C)', () => {
+  it('the manual worker-allocation block is scope-hidden while auto production stays visible (F-B3-03)', async () => {
+    const gameManager = new GameManager()
+    gameManager.catalogOps.registerBuildings(buildings)
+    gameManager.catalogOps.registerMaterials(materials)
+    // Grant the panel gate building so <slot/> content actually renders.
+    gameManager.buildingManager.add({
+      instanceId: 'qa_outpost',
+      buildingId: 'gathering_outpost',
+      level: 1,
+      lastCollectedAt: 0,
+    })
+    // A carried CHQ save's persisted assignment must not leak into the
+    // hidden surface either.
+    gameManager.productionSystem.restoreStates([
+      {
+        siteId: 'thanh_van_lam',
+        level: 1,
+        autoRestart: true,
+        activeWorkerSlots: 0,
+        workerCycles: [],
+        assignedWorkers: 5,
+      },
+    ])
+
+    const view = mountPanel(ProductionPanel, gameManager, (player) => {
+      player.$state.realmId = 'mortal'
+      player.$state.autoWorkerCapacity = 5
+    })
+
+    await nextTick()
+
+    // Panel content is live (auto production keeps running) but the
+    // manual allocation block is scope-hidden - no slider, no stale
+    // '5 / 3 workers' header.
+    expect(view.container.querySelector('.production-panel')).not.toBeNull()
+    expect(view.container.querySelector('.worker-allocation')).toBeNull()
+
+    view.unmount()
   })
 })
