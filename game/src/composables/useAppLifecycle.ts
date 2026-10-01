@@ -4,6 +4,9 @@ import type { CloudSaveCoordinator } from '../services/cloudSave/CloudSaveCoordi
 import type { CloudSaveWriteResult } from '../services/cloudSave/CloudSaveService'
 import type { BackendErrorCode, RemoteCharacterMetadata } from '../services/session/BackendStatus'
 import type { RestoreTimeAuthority } from '../services/save/saveTypes'
+import type { PlayerData } from '../core/player/Player'
+import { unsupportedReleaseReason } from '../core/betaScopeSurface'
+import type { BetaUnsupportedReason } from '../core/betaScopeSurface'
 import { ESSENCE_STREAM_ARRIVAL_EVENT } from '../core/battle/BattleEvents'
 import { TICK_INTERVAL_MS } from '../core/idle/SpeedSettings'
 import { i18n } from '@/i18n'
@@ -88,6 +91,13 @@ export interface UseAppLifecycleDeps {
   persistPlayer: () => Promise<unknown>
   onError: (message: string) => void
   /**
+   * Contract sec.H notice seam: a save that loads with out-of-scope state
+   * still plays - this surfaces the dormant-record reason to the UI
+   * (toast/banner owned by the caller). Called at most once per restored
+   * load; never for in-scope saves.
+   */
+  unsupportedSaveNotice?: (reason: BetaUnsupportedReason) => void
+  /**
    * Full page reload seam (App.vue passes window.location.reload). Used
    * when a retried character creation would otherwise double-apply the
    * starter grants left over from a failed first save - no manager-level
@@ -131,6 +141,7 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
     restoreGameSession,
     persistPlayer,
     onError,
+    unsupportedSaveNotice,
   } = deps
 
   let autosaveHandle: number | undefined
@@ -448,6 +459,17 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
         }
 
         const offline = restored.offline ?? { elapsedSeconds: 0, cultivation: 0 }
+
+        // Contract sec.H: an out-of-scope save still loads and plays -
+        // the dormant records it carries are flagged with a notice, not
+        // silently dropped or auto-migrated. Evaluated on the restored
+        // state, once per load.
+        const unsupportedReason = unsupportedReleaseReason(
+          player.$state as PlayerData,
+        )
+        if (unsupportedReason !== null) {
+          unsupportedSaveNotice?.(unsupportedReason)
+        }
 
         // Beta Phase 4 (mục XIV) — chỉ hiện modal nếu offline đủ dài
         // (>60s, tránh phiền khi refresh nhanh).

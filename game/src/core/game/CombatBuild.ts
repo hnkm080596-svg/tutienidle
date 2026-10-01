@@ -31,7 +31,7 @@ import type { ProgressionNode } from '../progression/ProgressionNode'
 import type { PartyFormationSlot } from './PartyFormation'
 import { DEFAULT_PARTY_FORMATION } from './PartyFormation'
 import { resolvePartyFormation } from './FormationPlacement'
-import { isScopeHidden } from '../betaScope'
+import { isBetaWay, isScopeHidden } from '../betaScope'
 import type { CompanionDefinition, CompanionInstance } from '../../data/companion/Companions'
 import { companionToCombatEntity } from '../companion/CompanionCombat'
 import { resolveCompanionSkillKit } from '../companion/CompanionProgression'
@@ -222,16 +222,25 @@ export function resolveCombatBuild(
   // The node registry is read ONCE here; the provider thunk closes over the
   // snapshot so no registry read can occur after resolve returns.
   const nodes = deps.getProgressionNodes()
-  const roles = runtime ? resolveCombatSkillRoles(source, runtime) : undefined
-  const statDomains = runtime?.resolveStatDomains(source)
+  // BETA SCOPE LOCK v2 - a way_out_of_scope save (sword/body/hidden)
+  // loads intact and still binds its dormant path runtime; combat
+  // participation is the dormant feature's ACCESS seam, gated the same
+  // as companions/formation below - roles fall back to the generic
+  // basic rather than executing the hidden kit (the rail's
+  // scope-hidden verdict and the engine must agree).
+  const activeWay = getActiveWay(source)
+  const wayAdmitted = activeWay === undefined || isBetaWay(activeWay)
+  const gatedRuntime = wayAdmitted ? runtime : undefined
+  const roles = gatedRuntime ? resolveCombatSkillRoles(source, gatedRuntime) : undefined
+  const statDomains = gatedRuntime?.resolveStatDomains(source)
   const kit: ResolvedCombatKit = {
     basic: roles?.basic ?? GENERIC_PHYSICAL_BASIC,
     special: roles?.special,
     ultimate: roles?.ultimate,
     reactivePayloads: roles?.reactivePayloads,
     statDomains,
-    buildDynamicBasic: runtime?.buildDynamicBasic
-      ? (rng) => runtime.buildDynamicBasic!(source, nodes, rng)
+    buildDynamicBasic: gatedRuntime?.buildDynamicBasic
+      ? (rng) => gatedRuntime.buildDynamicBasic!(source, nodes, rng)
       : undefined,
   }
 
@@ -243,7 +252,7 @@ export function resolveCombatBuild(
   if (roles?.maxThe !== undefined) {
     entity.maxThe = roles.maxThe
   } else if (primaryEntityOverride === undefined) {
-    entity.maxThe = runtime?.resolveMaxThe(source)
+    entity.maxThe = gatedRuntime?.resolveMaxThe(source)
   }
 
   // --- Formation + companions (M3) --------------------------------------

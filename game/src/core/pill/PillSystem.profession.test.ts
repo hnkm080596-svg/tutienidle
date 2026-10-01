@@ -48,7 +48,10 @@ function setup() {
 // profession-pill path covered (realm gate still fires before its
 // spell gate, so the wrong_realm test is unaffected).
 const REGEN_PILL = 'hoi_linh_dan_mortal'
-const PERMANENT_PILL = 'to_cot_dan_mortal'
+// BETA SCOPE LOCK v2 - the permanent-stat fixture uses the beta-
+// enabled family (khai_linh_dan -> attunement); the dormant families
+// (phi_van/to_cot/thoi_the/duong_than) now reject at usePillDetailed.
+const PERMANENT_PILL = 'khai_linh_dan_mortal'
 const CULTIVATION_PILL = 'tu_linh_dan_mortal'
 
 function registerPill(gameManager: GameManager, pillId: string, amount = 1) {
@@ -90,14 +93,14 @@ describe('Pill nghề — gate + atomic consumption', () => {
   it('đan vĩnh viễn cộng THẲNG vào baseStats (ruling 2026-09-29) - không tạo modifier', async () => {
     const { gameManager, player } = setup()
 
-    const before = player.baseStats.strength
+    const before = player.baseStats.attunement
 
     await registerPill(gameManager, PERMANENT_PILL, 2)
     const result = gameManager.pillOps.usePillDetailed(PERMANENT_PILL, pillTarget(), player)
 
     expect(result.ok).toBe(true)
-    expect(player.baseStats.strength).toBe(before + 1)
-    expect(player.modifiers.some((modifier) => modifier.id === 'pill-permanent:strength')).toBe(false)
+    expect(player.baseStats.attunement).toBe(before + 1)
+    expect(player.modifiers.some((modifier) => modifier.id === 'pill-permanent:attunement')).toBe(false)
     expect(gameManager.pillBag.getAmount(PERMANENT_PILL)).toBe(1)
   })
 
@@ -108,13 +111,13 @@ describe('Pill nghề — gate + atomic consumption', () => {
     // final pill closes it - the hidden predicate's baseStats read
     // reaches cap only because the write is to baseStats, not modifiers.
     const cap = getMainStatCap('mortal')
-    player.baseStats.strength = cap - 1
+    player.baseStats.attunement = cap - 1
 
     await registerPill(gameManager, PERMANENT_PILL)
     const result = gameManager.pillOps.usePillDetailed(PERMANENT_PILL, pillTarget(), player)
 
     expect(result.ok).toBe(true)
-    expect(player.baseStats.strength).toBe(cap)
+    expect(player.baseStats.attunement).toBe(cap)
   })
 
   it('thuộc tính đích đã chạm trần → không consume', async () => {
@@ -123,7 +126,7 @@ describe('Pill nghề — gate + atomic consumption', () => {
     await registerPill(gameManager, PERMANENT_PILL)
 
     const cap = getMainStatCap('mortal')
-    player.baseStats.strength = cap
+    player.baseStats.attunement = cap
     const result = gameManager.pillOps.usePillDetailed(PERMANENT_PILL, pillTarget(), player)
 
     expect(result.ok).toBe(false)

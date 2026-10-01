@@ -87,11 +87,16 @@ const showTree = computed(
 )
 
 // ---- Nhánh spell (Hành -> Node Tree) ----
-// Phap Tu Reimagine: element tabs always visible for spell -- the
-// element-root pick happens IN the tree (element-only commit), so the
-// tree must render before any elemental skill is learned. Default tab
-// = the committed element once the element axis resolves one.
+// BETA SCOPE LOCK v2 (frontend-contract sec.D): post-commit the 4
+// non-committed element branches are scope-hidden -- they do not
+// render (no teaser, no 'locked'). Pre-commit (element unresolved) the
+// strip still offers all five branches for browsing; the actual
+// element pick happens inside commitFiveElementInitiation, not here.
 const committedElement = computed(() => getActiveElement(player))
+
+const visibleElements = computed<readonly ElementType[]>(() =>
+  committedElement.value === undefined ? ELEMENT_ORDER : [committedElement.value],
+)
 
 const selectedBranch = ref<ElementType>(committedElement.value ?? 'fire')
 
@@ -298,8 +303,9 @@ function close() {
           </div>
 
           <div class="skill-path-panel__col skill-path-panel__col--center">
-            <!-- Phap Tu element tabs (Task 16) — browse all 5 branches;
-                 the committed element is marked, others render locked. -->
+            <!-- Phap Tu element tabs - pre-commit all five branches are
+                 browsable; post-commit only the committed element renders
+                 (the other branches are scope-hidden, contract sec.D). -->
             <div
               v-if="hasElementalCasting"
               class="skill-path-panel__element-tabs"
@@ -307,7 +313,7 @@ function close() {
               :aria-label="t('panels.skillPath.elementTabs.aria')"
             >
               <button
-                v-for="element in ELEMENT_ORDER"
+                v-for="element in visibleElements"
                 :key="element"
                 type="button"
                 class="skill-path-panel__element-tab"

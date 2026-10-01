@@ -241,6 +241,7 @@ function drinkPill(pillId: string, pillName: string) {
     retired: 'bag.pill.reason.retired',
     material_pill: 'bag.pill.reason.material_pill',
     in_battle: 'bag.pill.reason.in_battle',
+    scope_hidden: 'bag.pill.reason.scope_hidden',
   }
 
   useNotificationStore().push('warning', t(reasonKeys[result.reason ?? 'not_found']))

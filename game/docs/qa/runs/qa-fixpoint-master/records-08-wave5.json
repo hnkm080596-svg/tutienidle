@@ -1,0 +1,439 @@
+{
+  "records": [
+    {
+      "kind": "evidence",
+      "body": {
+        "id": "EV-PROBE-TRISAVE-1",
+        "state": {
+          "productStateId": "4311fc4d636dc9808f8fcc3699a4f41eb4e9db05e3b22623cc5409502f115a42",
+          "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+          "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+          "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+        },
+        "kind": "EXECUTED_UNIT_STRUCTURAL",
+        "producer": "coord-main",
+        "startedAt": "2026-10-01T00:03:00Z",
+        "finishedAt": "2026-10-01T00:03:10Z",
+        "commandOrMethod": "npx vitest run tests/architecture/betaDormantSaveLeak.qa.test.ts",
+        "cwd": "game/",
+        "exitCode": 1,
+        "result": "FAIL",
+        "artifactPath": "docs/qa/runs/qa-fixpoint-master/evidence/probe-trisave-1.log",
+        "artifactHash": "bdf65341d1b6c0ec11817f9c0487a13816d7484878fb6f12bf46947b21f33c45",
+        "inputPaths": [
+          "tests/architecture/betaDormantSaveLeak.qa.test.ts",
+          "src/core/game/GameManagerPillOps.ts",
+          "src/core/game/CombatBuild.ts",
+          "src/core/betaScope.ts"
+        ],
+        "inputEvidenceIds": [
+          "EV-BASE-VERIFY"
+        ],
+        "invariantIds": [
+          "I-DS-1",
+          "I-SS-1"
+        ],
+        "claims": [
+          "deterministic repro on pre-fix code (gates stashed): (a) usePillDetailed consumed phi_van_dan_mortal on a flagged save and returned ok - permanent_stat applied to baseStats; (b) resolveCombatBuild on a sword_pathway save resolved the dormant way kit instead of falling back to GENERIC_PHYSICAL_BASIC - rail said scope-hidden while the engine executed the kit",
+          "the two new asserts are the only failures; the 8 pre-existing asserts still pass on pre-fix code"
+        ],
+        "limitations": [
+          "component/UI rendering of the dormant stacks not exercised; engine-level kit resolution only"
+        ],
+        "status": "CURRENT"
+      }
+    },
+    {
+      "kind": "finding",
+      "body": {
+        "id": "F-TRI-1",
+        "title": "usePillDetailed has no beta gate - dormant pill families on a carried save consume and apply effects (permanent_stat baseStats write)",
+        "state": {
+          "productStateId": "4311fc4d636dc9808f8fcc3699a4f41eb4e9db05e3b22623cc5409502f115a42",
+          "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+          "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+          "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+        },
+        "severity": "Medium",
+        "classification": "REAL_DEFECT",
+        "actionable": true,
+        "reachability": "SUPPORTED_BOUNDARY",
+        "locations": [
+          {
+            "path": "src/core/game/GameManagerPillOps.ts",
+            "symbolOrSection": "usePillDetailed (~L37-145) - gates retired/material/realm/battle but not beta scope",
+            "revision": "46bb1482",
+            "basis": "SOURCE"
+          },
+          {
+            "path": "src/core/betaScope.ts",
+            "symbolOrSection": "betaRecipeFamilyOfId resolves enabled families only - no dormant-family resolver existed",
+            "revision": "46bb1482",
+            "basis": "SOURCE"
+          },
+          {
+            "path": "src/data/pill/pills.ts",
+            "symbolOrSection": "all consumable pills are <family>_<realm> tiered; phi_van/to_cot/thoi_the/duong_than are dormant permanent_stat families",
+            "revision": "46bb1482",
+            "basis": "SOURCE"
+          }
+        ],
+        "discoveredBy": "coord-main tri-state verdict enumeration (wave 5) - consumption seam census over bag surfaces",
+        "invariantIds": [
+          "I-DS-1"
+        ],
+        "evidenceIds": [
+          "EV-PROBE-TRISAVE-1"
+        ],
+        "counterexample": "hostile save carrying phi_van_dan_mortal in pillBag -> usePillDetailed('phi_van_dan_mortal', target, player) -> {ok:true}, permanent_stat dexterity grant applied to baseStats, pill consumed",
+        "expected": "dormant-family artifacts on a carried save stay inert - consuming one applies a scope-hidden effect into live play, same seam class as F-DL-1/F-DL-2 carried-state leaks",
+        "actual": "no scope check: retired->material->realm->battle gates all pass for a realm-matching dormant pill; the profession path applies its effect and removes it from the bag",
+        "rootCause": "the pill consumption seam was gated on pill-domain reasons only; the beta allow-list was never consulted at the effect-applying seam",
+        "rootClass": "AUTHORITY",
+        "subsystem": "betaScope",
+        "siblingSearch": [
+          {
+            "roots": [
+              "src/core/game",
+              "src/components/panels/bag-sections",
+              "src/core/economy",
+              "src/data"
+            ],
+            "termsAndMethod": "enumerated every effect-applying bag/item seam reachable on a carried save: usePill/usePillDetailed (pill consume), vendor sellMaterial/previewSellGrant (material sell), equipment equip/enhance/dissolve, alchemy job completion delivery, quest itemDrops",
+            "evidenceIds": [
+              "EV-PROBE-TRISAVE-1"
+            ],
+            "hitDispositions": [
+              "F-TRI-1 confirmed: usePillDetailed applies dormant pill effects",
+              "vendor sell-side closed: dormant herbs (phi_van_thao etc.) exist only as PillFamilies herbId strings, never authored as materials - getUnitSellPrice cannot resolve them",
+              "equipment bag closed for scope: equipment is beta-shipped content, no dormant equipment class exists; wash/refine/decompose tabs already isBetaEquipmentTab-gated",
+              "quest itemDrops closed: PerfectionEconomy census asserts no quest drop carries a permanent-stat pill id",
+              "deferred: dormant bag stacks (pills/materials on flagged saves) still render unfiltered - inert post-gate, flagged-save render class (Low, F-DEFER-1)",
+              "deferred: in-flight alchemy jobs for dormant families complete and deliver pills on flagged saves - delivered pill is inert post-gate (Low, F-DEFER-3)"
+            ],
+            "coverageLimits": [
+              "hostile-save field coverage bounded to persisted players data fields enumerated in wave 1 sibling search plus bag surfaces"
+            ]
+          }
+        ],
+        "siblingFindingIds": [
+          "F-TRI-2"
+        ],
+        "repair": "Added scopeHiddenPillFamilyOfId(id) resolver to betaScope.ts (known authored family that is not beta-enabled -> family id; unknown spellings -> null so test/legacy ids stay consumable). usePillDetailed rejects {ok:false, reason:'scope_hidden'} after the material_pill gate and before the realm gate; reason union extended; PillBagSection reasonKeys maps the new reason to bag.pill.reason.scope_hidden (vi+en). PillSystem.profession.test.ts permanent-stat fixture moved from dormant to_cot_dan_mortal to beta khai_linh_dan_mortal (strength->attunement asserts).",
+        "pinEvidenceIds": [
+          "EV-PROBE-TRISAVE-2"
+        ],
+        "verificationEvidenceIds": [
+          "EV-PROBE-TRISAVE-2"
+        ],
+        "closureReviewIds": [],
+        "status": "FIXED_PENDING_PROOF",
+        "duplicateOf": null,
+        "rejectionReason": null,
+        "exception": null
+      }
+    },
+    {
+      "kind": "finding",
+      "body": {
+        "id": "F-TRI-2",
+        "title": "CombatBuild resolves the dormant way kit on a way_out_of_scope save - engine executes sword/body/hidden kit while the rail renders scope-hidden",
+        "state": {
+          "productStateId": "4311fc4d636dc9808f8fcc3699a4f41eb4e9db05e3b22623cc5409502f115a42",
+          "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+          "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+          "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+        },
+        "severity": "High",
+        "classification": "REAL_DEFECT",
+        "actionable": true,
+        "reachability": "SUPPORTED_BOUNDARY",
+        "locations": [
+          {
+            "path": "src/core/game/CombatBuild.ts",
+            "symbolOrSection": "role composition seam (~L225): roles = resolveCombatSkillRoles(source, runtime) with no way-admission check",
+            "revision": "46bb1482",
+            "basis": "SOURCE"
+          },
+          {
+            "path": "src/core/betaScopeSkillDomain.ts",
+            "symbolOrSection": "betaCombatRolesFor returns scope-hidden for every role on a non-beta way - rail already fail-closed",
+            "revision": "46bb1482",
+            "basis": "SOURCE"
+          },
+          {
+            "path": "src/core/player/CultivationPathRegistry.ts",
+            "symbolOrSection": "resolveCultivationPathRuntime binds the committed way's runtime incl. sword/body/hidden",
+            "revision": "46bb1482",
+            "basis": "SOURCE"
+          }
+        ],
+        "discoveredBy": "coord-main tri-state verdict enumeration (wave 5) - rail vs engine agreement census",
+        "invariantIds": [
+          "I-DS-1",
+          "I-SS-1"
+        ],
+        "evidenceIds": [
+          "EV-PROBE-TRISAVE-1"
+        ],
+        "counterexample": "save with cultivationWay='sword_pathway' + swordPath state -> resolveCombatBuild resolves kit.basic/special/ultimate through the sword runtime (and a dynamic basic provider); the rail betaCombatRolesFor reports all roles scope-hidden for the same player - HUD hides what the engine executes",
+        "expected": "dormant-domain ACCESS seams fail closed on a flagged save, identical to the sibling gating already in the same function for companions (isScopeHidden('companion')) and formation buffs",
+        "actual": "the whole way-kit executes in combat - basic/special/ultimate/reactivePayloads/dynamic-basic/maxThe/statDomains all resolve through the dormant runtime",
+        "rootCause": "the combat build gates dormant features (companion/formation) but never gated the player's own way runtime - the ACCESS seam for the dormant path feature was missed when scope-lock landed",
+        "rootClass": "AUTHORITY",
+        "subsystem": "combat",
+        "siblingSearch": [
+          {
+            "roots": [
+              "src/core/game",
+              "src/core/player",
+              "src/core/battle",
+              "src/core/simulation",
+              "src/components"
+            ],
+            "termsAndMethod": "enumerated every resolveCombatSkillRoles/resolvePathRuntime consumer plus combat-participation seams: CombatBuild kit assembly, GameManagerTurnBattleOps dynamic-basic, getResolvedSkillRoles display accessor, BattleSimulation skill restore, formation/companion minting",
+            "evidenceIds": [
+              "EV-PROBE-TRISAVE-1"
+            ],
+            "hitDispositions": [
+              "F-TRI-2 confirmed: CombatBuild resolved dormant kit on a way_out_of_scope save",
+              "dynamic-basic consumer closed: kit.buildDynamicBasic flows through the same gated runtime - cleared by the same fix",
+              "companion/formation seams closed already (isScopeHidden checks at CombatBuild :270/:313)",
+              "BattleSimulation closed: restores explicit build.skill lists for sim fixtures, not save-driven way resolution",
+              "deferred: progressionOps.getResolvedSkillRoles still renders the dormant kit names on flagged saves (SkillRoleStrip teaser) - display-only on a flagged save (Low, F-DEFER-2)"
+            ],
+            "coverageLimits": [
+              "combat minting covered via resolveCombatBuild; scene-level Phaser adapters consume the same build"
+            ]
+          }
+        ],
+        "siblingFindingIds": [
+          "F-TRI-1"
+        ],
+        "repair": "CombatBuild now computes wayAdmitted = getActiveWay(source) === undefined || isBetaWay(activeWay) and threads gatedRuntime = wayAdmitted ? runtime : undefined through role composition, statDomains, buildDynamicBasic and the resolveMaxThe fallback. A way_out_of_scope save degrades to GENERIC_PHYSICAL_BASIC with no kit - same ACCESS-seam class as the companion/formation checks in the same function. turnCombatReactivity.test.ts slot-count assertion updated to the contract (2 slots: basic+special; scope-hidden ultimate no longer renders, from the wave-3 fix).",
+        "pinEvidenceIds": [
+          "EV-PROBE-TRISAVE-2"
+        ],
+        "verificationEvidenceIds": [
+          "EV-PROBE-TRISAVE-2"
+        ],
+        "closureReviewIds": [],
+        "status": "FIXED_PENDING_PROOF",
+        "duplicateOf": null,
+        "rejectionReason": null,
+        "exception": null
+      }
+    },
+    {
+      "kind": "evidence",
+      "body": {
+        "id": "EV-PROBE-TRISAVE-2",
+        "state": {
+          "productStateId": "4311fc4d636dc9808f8fcc3699a4f41eb4e9db05e3b22623cc5409502f115a42",
+          "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+          "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+          "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+        },
+        "kind": "EXECUTED_UNIT_STRUCTURAL",
+        "producer": "coord-main",
+        "startedAt": "2026-10-01T00:03:00Z",
+        "finishedAt": "2026-10-01T00:03:10Z",
+        "commandOrMethod": "npx vitest run tests/architecture/betaDormantSaveLeak.qa.test.ts",
+        "cwd": "game/",
+        "exitCode": 0,
+        "result": "PASS",
+        "artifactPath": "docs/qa/runs/qa-fixpoint-master/evidence/probe-trisave-2.log",
+        "artifactHash": "9c5441d6f480fa5261d012e3ac92ba6fd92a6110fa935da75cdb4460d566d643",
+        "inputPaths": [
+          "tests/architecture/betaDormantSaveLeak.qa.test.ts",
+          "src/core/game/GameManagerPillOps.ts",
+          "src/core/game/CombatBuild.ts",
+          "src/core/betaScope.ts"
+        ],
+        "inputEvidenceIds": [
+          "EV-BASE-VERIFY"
+        ],
+        "invariantIds": [
+          "I-DS-1",
+          "I-SS-1"
+        ],
+        "claims": [
+          "post-fix pin: 10/10 asserts green - dormant pill rejects scope_hidden without consumption, beta pill still consumes, sword_pathway build falls back to GENERIC_PHYSICAL_BASIC with no special/ultimate/dynamicBasic/statDomains, spell_pathway build still resolves its committed kit",
+          "scopeHiddenPillFamilyOfId resolves authored dormant families only; unknown spellings (test/legacy pills) return null"
+        ],
+        "limitations": [
+          "sword/body/hidden runtime participation verified at build level; a live turn-battle execution was not replayed"
+        ],
+        "status": "CURRENT"
+      }
+    },
+    {
+      "kind": "finding",
+      "body": {
+        "id": "F-DEFER-1",
+        "title": "Bag sections render dormant stacks unfiltered on flagged saves (materials/equipment/dormant pills)",
+        "state": {
+          "productStateId": "4311fc4d636dc9808f8fcc3699a4f41eb4e9db05e3b22623cc5409502f115a42",
+          "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+          "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+          "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+        },
+        "severity": "Low",
+        "classification": "REAL_DEFECT",
+        "actionable": false,
+        "reachability": "SUPPORTED_BOUNDARY",
+        "locations": [
+          {
+            "path": "src/components/panels/bag-sections",
+            "symbolOrSection": "MaterialBagSection.vue:233, EquipmentBagSection.vue:67, PillBagSection.vue - getAll() unfiltered",
+            "revision": "46bb1482",
+            "basis": "SOURCE"
+          }
+        ],
+        "discoveredBy": "coord-main wave-5 tri-state enumeration",
+        "invariantIds": [
+          "I-DS-1"
+        ],
+        "evidenceIds": [
+          "EV-PROBE-TRISAVE-1"
+        ],
+        "counterexample": "carried save's dormant stacks render in bag grids; consume/sell seams are now gated so they are display-only",
+        "expected": "dormant content should not render (contract sec.D spirit)",
+        "actual": "carried save's dormant stacks render in bag grids; consume/sell seams are now gated so they are display-only",
+        "rootCause": null,
+        "rootClass": "AUTHORITY",
+        "subsystem": "betaScope",
+        "siblingSearch": [],
+        "siblingFindingIds": [
+          "F-TRI-1",
+          "F-TRI-2"
+        ],
+        "repair": null,
+        "pinEvidenceIds": [],
+        "verificationEvidenceIds": [],
+        "closureReviewIds": [],
+        "status": "HUMAN_EXCEPTION",
+        "duplicateOf": null,
+        "rejectionReason": null,
+        "exception": {
+          "humanInstructionRef": "user ruling: attacks/scope fixes are Medium+ only; Low/Nit recorded as deferred exceptions",
+          "scope": "flagged unsupported saves only - a normal beta save cannot reach this state",
+          "reason": "display-only render of carried state on a save already flagged unsupported; every effect-applying seam behind it is now gated",
+          "expiresWhen": "next scope contract revision or user reversal of the Medium+-only ruling"
+        }
+      }
+    },
+    {
+      "kind": "finding",
+      "body": {
+        "id": "F-DEFER-2",
+        "title": "getResolvedSkillRoles renders the dormant way kit names on way_out_of_scope saves (SkillRoleStrip)",
+        "state": {
+          "productStateId": "4311fc4d636dc9808f8fcc3699a4f41eb4e9db05e3b22623cc5409502f115a42",
+          "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+          "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+          "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+        },
+        "severity": "Low",
+        "classification": "REAL_DEFECT",
+        "actionable": false,
+        "reachability": "SUPPORTED_BOUNDARY",
+        "locations": [
+          {
+            "path": "src/core/game/GameManagerProgressionOps.ts",
+            "symbolOrSection": "getResolvedSkillRoles (~L1016) resolves via ungated resolveCombatSkillRoles",
+            "revision": "46bb1482",
+            "basis": "SOURCE"
+          }
+        ],
+        "discoveredBy": "coord-main wave-5 tri-state enumeration",
+        "invariantIds": [
+          "I-DS-1"
+        ],
+        "evidenceIds": [
+          "EV-PROBE-TRISAVE-1"
+        ],
+        "counterexample": "SkillRoleStrip would render sword-kit names on a flagged save; the engine no longer executes them",
+        "expected": "display of dormant kit should be scope-hidden on flagged saves",
+        "actual": "SkillRoleStrip would render sword-kit names on a flagged save; the engine no longer executes them",
+        "rootCause": null,
+        "rootClass": "AUTHORITY",
+        "subsystem": "betaScope",
+        "siblingSearch": [],
+        "siblingFindingIds": [
+          "F-TRI-1",
+          "F-TRI-2"
+        ],
+        "repair": null,
+        "pinEvidenceIds": [],
+        "verificationEvidenceIds": [],
+        "closureReviewIds": [],
+        "status": "HUMAN_EXCEPTION",
+        "duplicateOf": null,
+        "rejectionReason": null,
+        "exception": {
+          "humanInstructionRef": "user ruling: attacks/scope fixes are Medium+ only; Low/Nit recorded as deferred exceptions",
+          "scope": "flagged unsupported saves only - a normal beta save cannot reach this state",
+          "reason": "display-only render of carried state on a save already flagged unsupported; every effect-applying seam behind it is now gated",
+          "expiresWhen": "next scope contract revision or user reversal of the Medium+-only ruling"
+        }
+      }
+    },
+    {
+      "kind": "finding",
+      "body": {
+        "id": "F-DEFER-3",
+        "title": "In-flight alchemy jobs for dormant families complete and deliver pills on flagged saves",
+        "state": {
+          "productStateId": "4311fc4d636dc9808f8fcc3699a4f41eb4e9db05e3b22623cc5409502f115a42",
+          "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+          "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+          "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+        },
+        "severity": "Low",
+        "classification": "REAL_DEFECT",
+        "actionable": false,
+        "reachability": "SUPPORTED_BOUNDARY",
+        "locations": [
+          {
+            "path": "src/components/panels/AlchemyView.vue + alchemy job resolver",
+            "symbolOrSection": "job list filtered for display (F-RM-4) but completion delivery continues",
+            "revision": "46bb1482",
+            "basis": "SOURCE"
+          }
+        ],
+        "discoveredBy": "coord-main wave-5 tri-state enumeration",
+        "invariantIds": [
+          "I-DS-1"
+        ],
+        "evidenceIds": [
+          "EV-PROBE-TRISAVE-1"
+        ],
+        "counterexample": "a hostile save's in-flight dormant-family job still resolves and delivers the pill into the bag; the pill is unconsumable post-gate",
+        "expected": "carried job results are inert dormant artifacts",
+        "actual": "a hostile save's in-flight dormant-family job still resolves and delivers the pill into the bag; the pill is unconsumable post-gate",
+        "rootCause": null,
+        "rootClass": "AUTHORITY",
+        "subsystem": "betaScope",
+        "siblingSearch": [],
+        "siblingFindingIds": [
+          "F-TRI-1",
+          "F-TRI-2"
+        ],
+        "repair": null,
+        "pinEvidenceIds": [],
+        "verificationEvidenceIds": [],
+        "closureReviewIds": [],
+        "status": "HUMAN_EXCEPTION",
+        "duplicateOf": null,
+        "rejectionReason": null,
+        "exception": {
+          "humanInstructionRef": "user ruling: attacks/scope fixes are Medium+ only; Low/Nit recorded as deferred exceptions",
+          "scope": "flagged unsupported saves only - a normal beta save cannot reach this state",
+          "reason": "display-only render of carried state on a save already flagged unsupported; every effect-applying seam behind it is now gated",
+          "expiresWhen": "next scope contract revision or user reversal of the Medium+-only ruling"
+        }
+      }
+    }
+  ]
+}

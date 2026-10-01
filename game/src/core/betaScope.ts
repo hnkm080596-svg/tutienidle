@@ -30,6 +30,7 @@ import {
   SPIRIT_STONE_TRUNG_PHAM_MATERIAL_ID,
 } from './material/SpiritStoneMaterial'
 import { LUYEN_KHI_TINH_HOA_ID } from './equipment/TinhHoaMaterial'
+import { PILL_FAMILIES } from '@/data/pill/PillFamilies'
 
 // ---------------------------------------------------------------------------
 // Ways and elements
@@ -334,6 +335,34 @@ export function betaRecipeFamilyOfId(id: string): BetaRecipeFamily | null {
     }
   }
   return isBetaRecipeFamily(bare) ? (bare as BetaRecipeFamily) : null
+}
+
+/** Every authored pill-family id, enabled or scope-hidden. */
+const AUTHORED_PILL_FAMILY_IDS: ReadonlySet<string> = new Set(
+  PILL_FAMILIES.map((family) => family.id),
+)
+
+/**
+ * Resolve a scope-hidden recipe family from an authored id spelling -
+ * same grammar as betaRecipeFamilyOfId, but returns the family id only
+ * when it is a KNOWN authored family that beta does not enable. Unknown
+ * spellings (test/legacy ids) return null - they are not a scope
+ * question. Companion to betaRecipeFamilyOfId for fail-closed
+ * consumption seams that must keep dormant-family artifacts inert on a
+ * carried save.
+ */
+export function scopeHiddenPillFamilyOfId(id: string): string | null {
+  const bare = id.startsWith('alchemy_') ? id.slice('alchemy_'.length) : id
+  for (const realm of REALM_TIERS) {
+    const suffix = `_${realm}`
+    if (bare.endsWith(suffix)) {
+      const family = bare.slice(0, -suffix.length)
+      return AUTHORED_PILL_FAMILY_IDS.has(family) && !isBetaRecipeFamily(family)
+        ? family
+        : null
+    }
+  }
+  return AUTHORED_PILL_FAMILY_IDS.has(bare) && !isBetaRecipeFamily(bare) ? bare : null
 }
 
 // ---------------------------------------------------------------------------

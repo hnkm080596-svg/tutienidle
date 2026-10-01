@@ -1,0 +1,444 @@
+{
+ "records": [
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-PROBE-READMODEL-2",
+    "state": {
+     "productStateId": "4311fc4d636dc9808f8fcc3699a4f41eb4e9db05e3b22623cc5409502f115a42",
+     "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "kind": "EXECUTED_UNIT_STRUCTURAL",
+    "producer": "coord-main",
+    "startedAt": "2026-09-30T23:44:00Z",
+    "finishedAt": "2026-09-30T23:44:15Z",
+    "commandOrMethod": "npx vitest run tests/architecture/betaReadModelHonesty.qa.test.ts (post-fix) + npm run type-check + vitest affected scope (panels/hud/common/architecture: 660 tests)",
+    "cwd": "game/",
+    "exitCode": 0,
+    "result": "PASS",
+    "artifactPath": "docs/qa/runs/qa-fixpoint-master/evidence/probe-readmodel-2.log",
+    "artifactHash": "2b65cb4e34f249d18431690fd2f123c0803d3dae50d6f4e9f888d3546d23a370",
+    "inputPaths": [
+     "tests/architecture/betaReadModelHonesty.qa.test.ts",
+     "src/components/panels/SkillPathPanel.vue",
+     "src/components/game/combat/hud/TurnCombatSkillBar.vue",
+     "src/components/game/combat/hud/TurnCombatSkillBar.display.test.ts",
+     "src/components/panels/AlchemyView.vue",
+     "src/App.vue",
+     "src/components/common/BetaCompletionModal.vue",
+     "src/locales/vi.json",
+     "src/locales/en.json"
+    ],
+    "inputEvidenceIds": [
+     "EV-PROBE-READMODEL-1"
+    ],
+    "invariantIds": [
+     "I-RM-1",
+     "I-DS-1"
+    ],
+    "claims": [
+     "post-fix: all 4 contract assertions PASS - committed element tab strip renders <=1 tab (the committed element); combat bar renders 2 slot buttons (no scope-hidden ultimate slot); AlchemyView renders exactly 1 beta recipe row, dormant family hidden; betaCompletionFor has a UI consumer (App.vue -> BetaCompletionModal)",
+     "affected-scope vitest green: 660 tests across src/components/panels, src/components/game/combat/hud, src/components/common, tests/architecture",
+     "npm run type-check clean",
+     "fix evidence for F-RM-1..F-RM-4; probe asserts now pin the contract invariants"
+    ],
+    "limitations": [],
+    "status": "CURRENT"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-RM-1",
+    "title": "SkillPathPanel renders the 4 non-committed element branches as browsable locked tabs, violating contract sec.D scope-hidden mandate",
+    "state": {
+     "productStateId": "4311fc4d636dc9808f8fcc3699a4f41eb4e9db05e3b22623cc5409502f115a42",
+     "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "severity": "High",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "PRODUCTION",
+    "locations": [
+     {
+      "path": "src/components/panels/SkillPathPanel.vue",
+      "symbolOrSection": "element tabs v-for over ELEMENT_ORDER (~L300)",
+      "revision": "4311fc4d636d",
+      "basis": "SOURCE"
+     },
+     {
+      "path": "src/components/panels/skill-path/NodeTreePanel.vue",
+      "symbolOrSection": "own node filtering (visibleTags/HIDDEN_BRANCH_TAGS/nodeWayApplies) recomputes verdicts",
+      "revision": "4311fc4d636d",
+      "basis": "SOURCE"
+     },
+     {
+      "path": "src/core/betaScopeSkillDomain.ts",
+      "symbolOrSection": "betaSkillTreeFor/activeElementTreeFor - zero UI consumers",
+      "revision": "4311fc4d636d",
+      "basis": "SOURCE"
+     },
+     {
+      "path": "docs/design/frontend-contract.md",
+      "symbolOrSection": "sec.D: non-committed branches scope-hidden; render verdicts verbatim, never recompute",
+      "revision": "4311fc4d636d",
+      "basis": "SOURCE"
+     }
+    ],
+    "discoveredBy": "coord-main read-model honesty census (beta read-model consumer enumeration)",
+    "invariantIds": [
+     "I-RM-1",
+     "I-DS-1"
+    ],
+    "evidenceIds": [
+     "EV-PROBE-READMODEL-1",
+     "EV-PROBE-READMODEL-2"
+    ],
+    "counterexample": "committed-fire spell_pathway player opens skill panel -> element tab strip renders Hoa/Kim/Thuy/Moc/Tho; selecting a foreign tab browses its locked tree",
+    "expected": "contract sec.D: the 4 non-committed element branches are scope-hidden post-commit - do not render; no teaser, no 'locked'",
+    "actual": "all 5 element tabs render; foreign branches browsable with locked treatment (deterministic: tab 'Moc' rendered for committed 'fire')",
+    "rootCause": "UI bypasses the canonical beta read-model and renders scope-hidden content through its own filtering",
+    "rootClass": "AUTHORITY",
+    "subsystem": "betaScope",
+    "siblingSearch": [
+     {
+      "roots": [
+       "src/components",
+       "src/stores",
+       "src/composables"
+      ],
+      "termsAndMethod": "enumerated every exported beta read-model in src/core/betaScopeSurface.ts + src/core/betaScopeSkillDomain.ts + GameManager facade methods, then grepped src/components|stores|composables for a consumer of each; for each unwired/parallel-verdict surface inspected the UI's own filtering for dormant-content leaks",
+      "evidenceIds": [
+       "EV-PROBE-READMODEL-1"
+      ],
+      "hitDispositions": [
+       "F-RM-1 confirmed: SkillPathPanel iterates ELEMENT_ORDER directly; betaSkillTreeFor/activeElementTreeFor have zero UI consumers",
+       "F-RM-2 confirmed: TurnCombatSkillBar iterates fixed ROLE_ORDER; betaCombatRolesFor unwired; empty ultimate slot renders",
+       "F-RM-3 confirmed: betaCompletionFor zero UI consumers; ending beat never displays",
+       "F-RM-4 confirmed: AlchemyView filters raw getAlchemyRecipes by realm+retired only; getBetaAlchemyRecipeModels unwired; 4 dormant families render",
+       "StageSelectPanel closed: catalog contains only in-scope stages; locks render via domain stageLockReasonCode",
+       "QuestPanel closed: isBetaQuestEnabled gates unlock/projection/claim in QuestSystem",
+       "EquipmentHall closed: isBetaEquipmentTab consumed",
+       "Realm ladder closed: betaRealmLadderNodes consumed by RealmPanel",
+       "Wheel/buildings/panels/left-modes closed: betaWheelSlots/isBetaBuildingSurface/isBetaStandalonePanel/isBetaLeftPanelMode all consumed",
+       "getWorkerLodgeSurfaceModel unwired but worker_lodge itself is scope-hidden - moot",
+       "stageSpawnableEnemyIds consumed by StageWaveSystem funnel"
+      ],
+      "coverageLimits": [
+       "consumer census by name grep; a consumer importing under an alias not containing the read-model name would be missed (all exports use distinct names, verified by re-grep on facade method names)"
+      ]
+     }
+    ],
+    "siblingFindingIds": [
+     "F-RM-2",
+     "F-RM-3",
+     "F-RM-4"
+    ],
+    "repair": "SkillPathPanel.vue: visibleElements computed = ELEMENT_ORDER pre-commit, [committedElement] post-commit; tab strip v-for now renders only the committed element (contract sec.D).",
+    "pinEvidenceIds": [
+     "EV-PROBE-READMODEL-2"
+    ],
+    "verificationEvidenceIds": [
+     "EV-PROBE-READMODEL-2"
+    ],
+    "closureReviewIds": [],
+    "status": "FIXED_PENDING_PROOF",
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-RM-2",
+    "title": "Combat skill bar renders an empty 'Ultimate' slot button for every beta player (scope-hidden role teaser)",
+    "state": {
+     "productStateId": "4311fc4d636dc9808f8fcc3699a4f41eb4e9db05e3b22623cc5409502f115a42",
+     "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "severity": "Medium",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "PRODUCTION",
+    "locations": [
+     {
+      "path": "src/components/game/combat/hud/TurnCombatSkillBar.vue",
+      "symbolOrSection": "visibleSlots iterates fixed ROLE_ORDER incl. ultimate (~L107)",
+      "revision": "4311fc4d636d",
+      "basis": "SOURCE"
+     },
+     {
+      "path": "src/core/combat/CombatSkillPresentation.ts",
+      "symbolOrSection": "ultimate EMPTY_ENTRY minted for beta kits",
+      "revision": "4311fc4d636d",
+      "basis": "SOURCE"
+     },
+     {
+      "path": "src/core/betaScopeSkillDomain.ts",
+      "symbolOrSection": "betaCombatRolesFor - the unwired role-rail read-model",
+      "revision": "4311fc4d636d",
+      "basis": "SOURCE"
+     }
+    ],
+    "discoveredBy": "coord-main read-model honesty census (beta read-model consumer enumeration)",
+    "invariantIds": [
+     "I-RM-1",
+     "I-DS-1"
+    ],
+    "evidenceIds": [
+     "EV-PROBE-READMODEL-1",
+     "EV-PROBE-READMODEL-2"
+    ],
+    "counterexample": "any beta player enters a turn battle -> skill bar renders [basic, special, Ultimate(empty disabled)]",
+    "expected": "contract sec.7/8 rail verdict: ultimate is 'scope-hidden' in beta - no role exists; do not render",
+    "actual": "an 'Ultimate' slot button renders on every battle rail (deterministic: 3 slot buttons for a beta kit)",
+    "rootCause": "UI bypasses the canonical beta read-model and renders scope-hidden content through its own filtering",
+    "rootClass": "AUTHORITY",
+    "subsystem": "betaScope",
+    "siblingSearch": [
+     {
+      "roots": [
+       "src/components",
+       "src/stores",
+       "src/composables"
+      ],
+      "termsAndMethod": "enumerated every exported beta read-model in src/core/betaScopeSurface.ts + src/core/betaScopeSkillDomain.ts + GameManager facade methods, then grepped src/components|stores|composables for a consumer of each; for each unwired/parallel-verdict surface inspected the UI's own filtering for dormant-content leaks",
+      "evidenceIds": [
+       "EV-PROBE-READMODEL-1"
+      ],
+      "hitDispositions": [
+       "F-RM-1 confirmed: SkillPathPanel iterates ELEMENT_ORDER directly; betaSkillTreeFor/activeElementTreeFor have zero UI consumers",
+       "F-RM-2 confirmed: TurnCombatSkillBar iterates fixed ROLE_ORDER; betaCombatRolesFor unwired; empty ultimate slot renders",
+       "F-RM-3 confirmed: betaCompletionFor zero UI consumers; ending beat never displays",
+       "F-RM-4 confirmed: AlchemyView filters raw getAlchemyRecipes by realm+retired only; getBetaAlchemyRecipeModels unwired; 4 dormant families render",
+       "StageSelectPanel closed: catalog contains only in-scope stages; locks render via domain stageLockReasonCode",
+       "QuestPanel closed: isBetaQuestEnabled gates unlock/projection/claim in QuestSystem",
+       "EquipmentHall closed: isBetaEquipmentTab consumed",
+       "Realm ladder closed: betaRealmLadderNodes consumed by RealmPanel",
+       "Wheel/buildings/panels/left-modes closed: betaWheelSlots/isBetaBuildingSurface/isBetaStandalonePanel/isBetaLeftPanelMode all consumed",
+       "getWorkerLodgeSurfaceModel unwired but worker_lodge itself is scope-hidden - moot",
+       "stageSpawnableEnemyIds consumed by StageWaveSystem funnel"
+      ],
+      "coverageLimits": [
+       "consumer census by name grep; a consumer importing under an alias not containing the read-model name would be missed (all exports use distinct names, verified by re-grep on facade method names)"
+      ]
+     }
+    ],
+    "siblingFindingIds": [
+     "F-RM-1"
+    ],
+    "repair": "TurnCombatSkillBar.vue: visibleSlots filters out roles whose betaCombatRolesFor verdict is 'scope-hidden' (rail authority consumed via gameManager.progressionOps; no recomputation).",
+    "pinEvidenceIds": [
+     "EV-PROBE-READMODEL-2"
+    ],
+    "verificationEvidenceIds": [
+     "EV-PROBE-READMODEL-2"
+    ],
+    "closureReviewIds": [],
+    "status": "FIXED_PENDING_PROOF",
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-RM-3",
+    "title": "betaCompletionFor has zero UI consumers - the contract-promised beta ending beat never displays",
+    "state": {
+     "productStateId": "4311fc4d636dc9808f8fcc3699a4f41eb4e9db05e3b22623cc5409502f115a42",
+     "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "severity": "High",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "PRODUCTION",
+    "locations": [
+     {
+      "path": "src/core/betaScopeSurface.ts",
+      "symbolOrSection": "betaCompletionFor (~L253)",
+      "revision": "4311fc4d636d",
+      "basis": "SOURCE"
+     },
+     {
+      "path": "src/core/game/GameManagerProgressionOps.ts",
+      "symbolOrSection": "betaCompletionFor facade (~L1081)",
+      "revision": "4311fc4d636d",
+      "basis": "SOURCE"
+     },
+     {
+      "path": "docs/design/frontend-contract.md",
+      "symbolOrSection": "sec.H: deliberate beta ending beat; no Kim Dan CTA",
+      "revision": "4311fc4d636d",
+      "basis": "SOURCE"
+     }
+    ],
+    "discoveredBy": "coord-main read-model honesty census (beta read-model consumer enumeration)",
+    "invariantIds": [
+     "I-RM-1",
+     "I-DS-1"
+    ],
+    "evidenceIds": [
+     "EV-PROBE-READMODEL-1",
+     "EV-PROBE-READMODEL-2"
+    ],
+    "counterexample": "player clears foundation_floor_10 (act-3 final boss) -> betaComplete=true -> no surface reacts; nothing renders the ending",
+    "expected": "contract sec.H: the flag feeds 'the ending surface' - the deliberate beta ending beat",
+    "actual": "deterministic: recursive scan of src/components + src/App.vue finds zero 'betaCompletionFor' references; every completion shows nothing",
+    "rootCause": "UI bypasses the canonical beta read-model and renders scope-hidden content through its own filtering",
+    "rootClass": "AUTHORITY",
+    "subsystem": "betaScope",
+    "siblingSearch": [
+     {
+      "roots": [
+       "src/components",
+       "src/stores",
+       "src/composables"
+      ],
+      "termsAndMethod": "enumerated every exported beta read-model in src/core/betaScopeSurface.ts + src/core/betaScopeSkillDomain.ts + GameManager facade methods, then grepped src/components|stores|composables for a consumer of each; for each unwired/parallel-verdict surface inspected the UI's own filtering for dormant-content leaks",
+      "evidenceIds": [
+       "EV-PROBE-READMODEL-1"
+      ],
+      "hitDispositions": [
+       "F-RM-1 confirmed: SkillPathPanel iterates ELEMENT_ORDER directly; betaSkillTreeFor/activeElementTreeFor have zero UI consumers",
+       "F-RM-2 confirmed: TurnCombatSkillBar iterates fixed ROLE_ORDER; betaCombatRolesFor unwired; empty ultimate slot renders",
+       "F-RM-3 confirmed: betaCompletionFor zero UI consumers; ending beat never displays",
+       "F-RM-4 confirmed: AlchemyView filters raw getAlchemyRecipes by realm+retired only; getBetaAlchemyRecipeModels unwired; 4 dormant families render",
+       "StageSelectPanel closed: catalog contains only in-scope stages; locks render via domain stageLockReasonCode",
+       "QuestPanel closed: isBetaQuestEnabled gates unlock/projection/claim in QuestSystem",
+       "EquipmentHall closed: isBetaEquipmentTab consumed",
+       "Realm ladder closed: betaRealmLadderNodes consumed by RealmPanel",
+       "Wheel/buildings/panels/left-modes closed: betaWheelSlots/isBetaBuildingSurface/isBetaStandalonePanel/isBetaLeftPanelMode all consumed",
+       "getWorkerLodgeSurfaceModel unwired but worker_lodge itself is scope-hidden - moot",
+       "stageSpawnableEnemyIds consumed by StageWaveSystem funnel"
+      ],
+      "coverageLimits": [
+       "consumer census by name grep; a consumer importing under an alias not containing the read-model name would be missed (all exports use distinct names, verified by re-grep on facade method names)"
+      ]
+     }
+    ],
+    "siblingFindingIds": [
+     "F-RM-1"
+    ],
+    "repair": "App.vue + new components/common/BetaCompletionModal.vue: showBetaCompletion = betaCompletionFor(player).betaComplete && !acked; dismiss writes device-local flag tutienidle.betaCompletionAck.v1.<name> (no save-schema bump). i18n betaComplete.* vi+en.",
+    "pinEvidenceIds": [
+     "EV-PROBE-READMODEL-2"
+    ],
+    "verificationEvidenceIds": [
+     "EV-PROBE-READMODEL-2"
+    ],
+    "closureReviewIds": [],
+    "status": "FIXED_PENDING_PROOF",
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-RM-4",
+    "title": "AlchemyView renders 4 dormant pill families (phi_van/to_cot/thoi_the/duong_than) via unfiltered getAlchemyRecipes + realm filter",
+    "state": {
+     "productStateId": "4311fc4d636dc9808f8fcc3699a4f41eb4e9db05e3b22623cc5409502f115a42",
+     "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "severity": "Medium",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "PRODUCTION",
+    "locations": [
+     {
+      "path": "src/components/panels/AlchemyView.vue",
+      "symbolOrSection": "recipes computed (~L47): realm+retired filter only; jobs computed unfiltered",
+      "revision": "4311fc4d636d",
+      "basis": "SOURCE"
+     },
+     {
+      "path": "src/core/game/GameManagerAlchemyOps.ts",
+      "symbolOrSection": "getBetaAlchemyRecipeModels (~L298) - unwired canonical model",
+      "revision": "4311fc4d636d",
+      "basis": "SOURCE"
+     },
+     {
+      "path": "src/data/pill/PillFamilies.ts",
+      "symbolOrSection": "4 of 8 families are non-beta; generated recipes exist at every realm tier",
+      "revision": "4311fc4d636d",
+      "basis": "SOURCE"
+     }
+    ],
+    "discoveredBy": "coord-main read-model honesty census (beta read-model consumer enumeration)",
+    "invariantIds": [
+     "I-RM-1",
+     "I-DS-1"
+    ],
+    "evidenceIds": [
+     "EV-PROBE-READMODEL-1",
+     "EV-PROBE-READMODEL-2"
+    ],
+    "counterexample": "mortal player opens pill room -> recipe list shows Phi Van Dan/To Cot Dan/Thoi The Dan/Duong Than Dan rows; brew returns scope_hidden",
+    "expected": "contract sec.F: render the BetaAlchemySurfaceModel recipes (beta families only); dormant families must not appear",
+    "actual": "dormant-family rows render with names/materials visible + dead craft affordance (deterministic: dormant pill row rendered)",
+    "rootCause": "UI bypasses the canonical beta read-model and renders scope-hidden content through its own filtering",
+    "rootClass": "AUTHORITY",
+    "subsystem": "betaScope",
+    "siblingSearch": [
+     {
+      "roots": [
+       "src/components",
+       "src/stores",
+       "src/composables"
+      ],
+      "termsAndMethod": "enumerated every exported beta read-model in src/core/betaScopeSurface.ts + src/core/betaScopeSkillDomain.ts + GameManager facade methods, then grepped src/components|stores|composables for a consumer of each; for each unwired/parallel-verdict surface inspected the UI's own filtering for dormant-content leaks",
+      "evidenceIds": [
+       "EV-PROBE-READMODEL-1"
+      ],
+      "hitDispositions": [
+       "F-RM-1 confirmed: SkillPathPanel iterates ELEMENT_ORDER directly; betaSkillTreeFor/activeElementTreeFor have zero UI consumers",
+       "F-RM-2 confirmed: TurnCombatSkillBar iterates fixed ROLE_ORDER; betaCombatRolesFor unwired; empty ultimate slot renders",
+       "F-RM-3 confirmed: betaCompletionFor zero UI consumers; ending beat never displays",
+       "F-RM-4 confirmed: AlchemyView filters raw getAlchemyRecipes by realm+retired only; getBetaAlchemyRecipeModels unwired; 4 dormant families render",
+       "StageSelectPanel closed: catalog contains only in-scope stages; locks render via domain stageLockReasonCode",
+       "QuestPanel closed: isBetaQuestEnabled gates unlock/projection/claim in QuestSystem",
+       "EquipmentHall closed: isBetaEquipmentTab consumed",
+       "Realm ladder closed: betaRealmLadderNodes consumed by RealmPanel",
+       "Wheel/buildings/panels/left-modes closed: betaWheelSlots/isBetaBuildingSurface/isBetaStandalonePanel/isBetaLeftPanelMode all consumed",
+       "getWorkerLodgeSurfaceModel unwired but worker_lodge itself is scope-hidden - moot",
+       "stageSpawnableEnemyIds consumed by StageWaveSystem funnel"
+      ],
+      "coverageLimits": [
+       "consumer census by name grep; a consumer importing under an alias not containing the read-model name would be missed (all exports use distinct names, verified by re-grep on facade method names)"
+      ]
+     }
+    ],
+    "siblingFindingIds": [
+     "F-RM-1"
+    ],
+    "repair": "AlchemyView.vue: recipes + jobs filtered through betaRecipeFamilyOfId(...) !== null - dormant families (phi_van_dan etc.) no longer surface on the pill table or job list.",
+    "pinEvidenceIds": [
+     "EV-PROBE-READMODEL-2"
+    ],
+    "verificationEvidenceIds": [
+     "EV-PROBE-READMODEL-2"
+    ],
+    "closureReviewIds": [],
+    "status": "FIXED_PENDING_PROOF",
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null
+   }
+  }
+ ]
+}

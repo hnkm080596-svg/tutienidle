@@ -1,0 +1,6 @@
+{
+  "applied": [
+    "evidence:EV-ATOMICITY-1",
+    "coverage:COV-ATOMICITY-1"
+  ]
+}

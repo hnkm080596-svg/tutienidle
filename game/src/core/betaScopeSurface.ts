@@ -312,7 +312,7 @@ export function unsupportedReleaseReason(player: PlayerData): BetaUnsupportedRea
     return 'artifact_owned'
   }
 
-  if (player.formationLoadout !== null) {
+  if (player.formationLoadout !== null && player.formationLoadout !== undefined) {
     return 'formation_loadout'
   }
 
@@ -335,7 +335,12 @@ function hasHiddenProgressionState(player: PlayerData): boolean {
   if (perfection !== undefined) {
     // Defensive shape reads: the flags mean "records exist", so a
     // field that failed shape validation (non-object/non-array) counts
-    // as hidden state rather than throwing on it.
+    // as hidden state rather than throwing on it. A present-but-null or
+    // scalar slice is the same class of corrupt data - flag it, never
+    // throw on it.
+    if (perfection === null || typeof perfection !== 'object') {
+      return true
+    }
     if (typeof perfection.realms === 'object' && perfection.realms !== null) {
       if (Object.keys(perfection.realms).length > 0) {
         return true

@@ -1,0 +1,215 @@
+/**
+ * QA FIXPOINT probe (run qa-fixpoint-master) - adversarial save-edge
+ * attacks on the beta scope contract (frontend-contract.md sec.H):
+ * hostile/legacy saves must "deserialize safely, flag explicitly" and
+ * scope-hidden persisted state must stay DORMANT - never leak into
+ * visible play (stat caps, realm passives, combat inputs).
+ *
+ * Beta flags are pinned by lockBetaFeaturesForTests() - the suite
+ * asserts behavior under the canonical all-false table.
+ */
+import { describe, expect, it } from 'vitest'
+import { createDefaultPlayer, type PlayerData } from '@/core/player/Player'
+import { unsupportedReleaseReason } from '@/core/betaScopeSurface'
+import { getEffectiveMainStatCap, getMainStatCap } from '@/core/stats/StatCap'
+import { grantRealmPassive } from '@/core/realm/RealmPassiveSystem'
+import { REALM_PASSIVES } from '@/data/realm/RealmPassives'
+import { lockBetaFeaturesForTests } from '@/core/game/__fixtures__/betaFeaturesUnlock'
+import { GameManager } from '@/core/game/GameManager'
+import { pills } from '@/data/pill/pills'
+import { scopeHiddenPillFamilyOfId } from '@/core/betaScope'
+import { lockBetaWaysForTests } from '@/core/game/__fixtures__/betaWaysUnlock'
+import { resolveCombatBuild, type CombatBuildDeps } from '@/core/game/CombatBuild'
+import { resolveCultivationPathRuntime } from '@/core/player/CultivationPathRegistry'
+import type { CultivationPathRuntimeDeps } from '@/core/player/CultivationPathRuntime'
+import { SkillManager } from '@/core/skill/SkillManager'
+import { SkillSystem } from '@/core/skill/SkillSystem'
+import { TemplateRegistry } from '@/core/game/TemplateRegistry'
+import { NodeRegistry } from '@/core/progression/NodeRegistry'
+import { SKILLS } from '@/data/skill/Skills'
+import type { Skill } from '@/core/skill/Skill'
+import { freshSwordPathState } from '@/core/kiem-tu/KiemTuState'
+import { createSpellPathState } from '@/core/phap-tu/PhapTuState'
+import { resolvePathCapabilities } from '@/core/player/CultivationPathSystem'
+import { GENERIC_PHYSICAL_BASIC } from '@/data/skill/TurnBasicAttacks'
+
+lockBetaFeaturesForTests()
+lockBetaWaysForTests()
+
+function player(overrides: Partial<PlayerData> = {}): PlayerData {
+  return {
+    ...createDefaultPlayer(),
+    ...overrides,
+  }
+}
+
+describe('save-safety: unsupportedReleaseReason robustness', () => {
+  it('never throws on hostile hiddenPerfection shapes', () => {
+    for (const hostile of [null, 5, 'x', [], { realms: null }]) {
+      const p = player()
+      ;(p as { hiddenPerfection?: unknown }).hiddenPerfection = hostile
+      expect(() => unsupportedReleaseReason(p), `hiddenPerfection=${JSON.stringify(hostile)}`).not.toThrow()
+    }
+  })
+
+  it('flags a save whose hiddenPerfection is a corrupted non-object as hidden state', () => {
+    const p = player()
+    ;(p as { hiddenPerfection?: unknown }).hiddenPerfection = { realms: 'not-an-object' }
+    expect(unsupportedReleaseReason(p)).toBe('hidden_progression_state')
+  })
+
+  it('flags a save with null hiddenPerfection deterministically (no crash, closed reason or tolerated)', () => {
+    const p = player()
+    ;(p as { hiddenPerfection?: unknown }).hiddenPerfection = null
+    // Contract: "deserialize safely, flag explicitly" - the read-model
+    // must resolve to a value, never TypeError.
+    const reason = unsupportedReleaseReason(p)
+    expect(reason === null || typeof reason === 'string').toBe(true)
+  })
+})
+
+describe('dormancy: hidden progression on a loaded save must not affect visible play', () => {
+  it('completedHiddenBodyRealmIds does not raise the main-stat cap under beta scope', () => {
+    const p = player({
+      realmId: 'qi_refining',
+      hiddenPerfection: {
+        lineageActive: true,
+        completedHiddenBodyRealmIds: ['mortal', 'qi_refining'],
+        hiddenBreakthroughRealmIds: [],
+        realms: {},
+      },
+    })
+    // Under beta scope the hidden-content domain is dormant: a carried
+    // record must not grant its +10pp/realm cap bonus into visible play.
+    expect(getEffectiveMainStatCap(p)).toBe(getMainStatCap('qi_refining'))
+  })
+
+  it('hiddenBreakthroughRealmIds does not grant the enhanced realm-passive variant under beta scope', () => {
+    const p = player({
+      realmId: 'qi_refining',
+      grantedRealmPassiveIds: [],
+      modifiers: [],
+      hiddenPerfection: {
+        lineageActive: true,
+        completedHiddenBodyRealmIds: [],
+        hiddenBreakthroughRealmIds: ['qi_refining'],
+        realms: {},
+      },
+    })
+    grantRealmPassive(p, 'qi_refining')
+    const definition = REALM_PASSIVES.find((d) => d.id === 'qi_refining')!
+    const normal = definition.buildModifiers(p).map((m) => m.stat + ':' + m.percent)
+    const granted = p.modifiers.map((m) => m.stat + ':' + m.percent)
+    // The carried hidden record must not select the enhanced variant.
+    expect(granted).toEqual(normal)
+  })
+})
+
+describe('dormancy: dormant-family pills on a carried save stay inert (F-TRI-1)', () => {
+  const noopTarget = { addCultivation: () => {}, heal: () => {}, applyBuff: () => {} }
+
+  it('scopeHiddenPillFamilyOfId resolves authored dormant families only', () => {
+    expect(scopeHiddenPillFamilyOfId('phi_van_dan_mortal')).toBe('phi_van_dan')
+    expect(scopeHiddenPillFamilyOfId('to_cot_dan_mortal')).toBe('to_cot_dan')
+    expect(scopeHiddenPillFamilyOfId('alchemy_duong_than_dan_qi_refining')).toBe('duong_than_dan')
+    // Enabled families and unknown spellings are not a scope question.
+    expect(scopeHiddenPillFamilyOfId('tu_linh_dan_mortal')).toBeNull()
+    expect(scopeHiddenPillFamilyOfId('khai_linh_dan_mortal')).toBeNull()
+    expect(scopeHiddenPillFamilyOfId('unknown_legacy_pill')).toBeNull()
+  })
+
+  it('usePillDetailed rejects a dormant-family pill without consuming it', () => {
+    const gameManager = new GameManager()
+    const p = player()
+    gameManager.setActivePlayer(p)
+    gameManager.catalogOps.registerPills(pills.filter((x) => x.id === 'phi_van_dan_mortal'))
+    gameManager.pillBag.add(gameManager.pillRegistry.get('phi_van_dan_mortal'), 1)
+
+    const dexBefore = p.baseStats.dexterity
+    const result = gameManager.pillOps.usePillDetailed('phi_van_dan_mortal', noopTarget, p)
+
+    expect(result.ok).toBe(false)
+    expect(result.reason).toBe('scope_hidden')
+    expect(gameManager.pillBag.getAmount('phi_van_dan_mortal')).toBe(1)
+    expect(p.baseStats.dexterity).toBe(dexBefore)
+  })
+
+  it('an enabled beta pill still consumes through the same path', () => {
+    const gameManager = new GameManager()
+    const p = player()
+    gameManager.setActivePlayer(p)
+    gameManager.catalogOps.registerPills(pills.filter((x) => x.id === 'tu_linh_dan_mortal'))
+    gameManager.pillBag.add(gameManager.pillRegistry.get('tu_linh_dan_mortal'), 1)
+
+    const result = gameManager.pillOps.usePillDetailed('tu_linh_dan_mortal', noopTarget, p)
+
+    expect(result.ok).toBe(true)
+    expect(gameManager.pillBag.getAmount('tu_linh_dan_mortal')).toBe(0)
+  })
+})
+
+describe('dormancy: a way_out_of_scope save must not execute its dormant kit (F-TRI-2)', () => {
+  function buildDeps(): { deps: CombatBuildDeps; runtimeDeps: CultivationPathRuntimeDeps } {
+    const skillManager = new SkillManager()
+    const skillTemplates = new TemplateRegistry<Skill>()
+    for (const skill of SKILLS) {
+      skillTemplates.register(skill.id, skill)
+    }
+    const runtimeDeps: CultivationPathRuntimeDeps = {
+      skillManager,
+      skillSystem: new SkillSystem(skillManager),
+      skillTemplates,
+      nodeRegistry: new NodeRegistry(),
+      getNodeLevel: () => 0,
+      getSpellPathElement: () => undefined,
+    }
+    const deps: CombatBuildDeps = {
+      getBattleBaseChannels: () => [],
+      resolveCapabilities: (p) => resolvePathCapabilities(p, { hasSkill: () => false }),
+      getSkillLevels: () => ({}),
+      getProgressionNodes: () => [],
+      getCompanionDefinition: () => undefined,
+      getLiveBattleModifiers: () => [],
+      getActivePlayer: () => undefined,
+    }
+    return { deps, runtimeDeps }
+  }
+
+  it('sword_pathway combat build falls back to the generic kit', () => {
+    const { deps, runtimeDeps } = buildDeps()
+    const p = player({
+      cultivationPath: 'sword',
+      cultivationWay: 'sword_pathway',
+      swordPath: freshSwordPathState(),
+    })
+
+    // The save is flagged unsupported through the canonical reader.
+    expect(unsupportedReleaseReason(p)).toBe('way_out_of_scope')
+
+    const runtime = resolveCultivationPathRuntime(p, runtimeDeps)
+    const build = resolveCombatBuild(p, runtime, deps)
+
+    // Dormant-way kit must not execute - same ACCESS seam class as the
+    // companion/formation gating below it in resolveCombatBuild.
+    expect(build.kit.basic).toBe(GENERIC_PHYSICAL_BASIC)
+    expect(build.kit.special).toBeUndefined()
+    expect(build.kit.ultimate).toBeUndefined()
+    expect(build.kit.buildDynamicBasic).toBeUndefined()
+    expect(build.kit.statDomains).toBeUndefined()
+  })
+
+  it('spell_pathway combat build still resolves its committed kit', () => {
+    const { deps, runtimeDeps } = buildDeps()
+    const p = player({
+      cultivationPath: 'spell',
+      cultivationWay: 'spell_pathway',
+      spellPath: createSpellPathState(),
+    })
+
+    const runtime = resolveCultivationPathRuntime(p, runtimeDeps)
+    const build = resolveCombatBuild(p, runtime, deps)
+
+    expect(build.kit.basic).toBeTruthy()
+    expect(build.kit.basic).not.toBe(GENERIC_PHYSICAL_BASIC)
+  })
+})

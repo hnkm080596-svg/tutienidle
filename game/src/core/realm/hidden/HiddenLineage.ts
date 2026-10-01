@@ -79,6 +79,12 @@ export function wasHiddenBreakthrough(
   player: Pick<HiddenLineagePlayer, 'hiddenPerfection'>,
   realmId: string,
 ): boolean {
+  // Dormant under beta scope: a carried breakthrough record stays data -
+  // it never picks the enhanced realm-passive variant while the hidden
+  // domain is gated off.
+  if (!isBetaFeature('hiddenContent')) {
+    return false
+  }
   return asRealmIdList(player.hiddenPerfection?.hiddenBreakthroughRealmIds).includes(realmId)
 }
 

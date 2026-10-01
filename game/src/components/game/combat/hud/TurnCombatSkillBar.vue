@@ -14,6 +14,7 @@ import CombatSkillSlot from './CombatSkillSlot.vue'
 import { useTurnCombatManual } from '@/composables/useTurnCombatManual'
 import { useGameManager } from '@/composables/useGameState'
 import { useUiStore } from '@/stores/ui'
+import { usePlayerStore } from '@/stores/player'
 
 import { turnSkillDisplayMetaOf } from '@/data/skill/TurnSkillDisplayMeta'
 import type { TurnSkillPresentationEntry } from '@/core/combat/CombatSkillPresentation'
@@ -44,6 +45,7 @@ function tooltipFor(entry: TurnSkillPresentationEntry): TooltipContent | undefin
 // (persist per-device), đồng bộ GameManager flag (plain class, không
 // import Pinia — UI layer gọi setter, cùng pattern battleRunMode).
 const ui = useUiStore()
+const player = usePlayerStore()
 const gameManager = useGameManager()
 const {
   isAwaitingChoice,
@@ -102,11 +104,28 @@ function entryAt(index: number): TurnSkillPresentationEntry {
   return slotList.value[index] ?? SLOT_EMPTY
 }
 
+// BETA SCOPE LOCK v2 (frontend-contract sec.7/8) - the role rail
+// consumes betaCombatRolesFor: a 'scope-hidden' role renders no slot
+// at all (ultimate in beta; every role on an out-of-scope way save),
+// never an empty teaser button.
+const scopeHiddenRoles = computed(() => {
+  const hidden = new Set<TurnSkillSlotRole>()
+
+  for (const entry of gameManager.progressionOps.betaCombatRolesFor(player.$state)) {
+    if (entry.state === 'scope-hidden') {
+      hidden.add(entry.role)
+    }
+  }
+
+  return hidden
+})
+
 // Hien owns the basic slot via the orb picker — drop it from the role
 // row while keeping the original slotList indices for special/ultimate.
 const visibleSlots = computed(() =>
   ROLE_ORDER.map((role, index) => ({ role, index })).filter(
-    ({ role }) => !(role === 'basic' && hasDynamicBasic.value),
+    ({ role }) =>
+      !(role === 'basic' && hasDynamicBasic.value) && !scopeHiddenRoles.value.has(role),
   ),
 )
 

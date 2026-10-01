@@ -1,0 +1,5034 @@
+{
+  "schemaVersion": 2,
+  "run": {
+    "id": "qa-fixpoint-master",
+    "createdAt": "2026-09-30T22:51:04.224Z",
+    "scope": "AGGREGATE_REPOSITORY",
+    "authorizedRepairs": [
+      "*"
+    ],
+    "nonGoals": [
+      "merge/deploy/release publish (draft PR only)",
+      "Low/Nit production repairs — user ruling: fix Medium+ only; Low/Nit recorded as deferred exceptions",
+      "full golden-bug corpus benchmark replay — representative subset replayed inside declared attack surfaces; unreplayed cases recorded as benchmark gaps"
+    ],
+    "checkout": "/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game",
+    "branch": "devin/qa-fixpoint",
+    "base": "origin/master",
+    "head": "HEAD",
+    "state": {
+      "productStateId": "4311fc4d636dc9808f8fcc3699a4f41eb4e9db05e3b22623cc5409502f115a42",
+      "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+      "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+      "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "manifestPath": "manifest.json",
+    "environmentPath": "environment.json",
+    "learningPolicyId": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+    "consumedLessonIds": [],
+    "aggregateParents": [],
+    "requiredDomains": [
+      "creation-contract",
+      "initiation-atomicity",
+      "path-authority",
+      "scope-verdict",
+      "authority-seam",
+      "dormant-systems",
+      "read-model",
+      "combat-rail",
+      "precursor-growth",
+      "stage-state",
+      "economy-census",
+      "save-safety",
+      "persistence-migration",
+      "enemy-content",
+      "ui-honesty",
+      "release-trust",
+      "tooling-security",
+      "concurrency",
+      "test-quality",
+      "qa-integrity"
+    ],
+    "exclusions": [],
+    "briefIds": [],
+    "capacityLimit": 5,
+    "requiredReadiness": false,
+    "phase": "SNAPSHOT",
+    "cleanRoundA": null,
+    "cleanRoundB": null,
+    "finalEvidenceIds": [],
+    "outcome": null
+  },
+  "briefs": [],
+  "assignments": [],
+  "consumptions": [],
+  "invariants": [
+    {
+      "id": "I-CC-1",
+      "statement": "Mortal creation commits exactly the contract start state: stats 1/1/1/1/1, declared name+talent+mortalBasicSkillId, realm Phàm Nhân, no scope-hidden fields present.",
+      "domain": "creation-contract",
+      "risk": "STANDARD",
+      "sources": [
+        {
+          "path": "docs/design/frontend-contract.md",
+          "symbolOrSection": "A-creation",
+          "revision": "46bb1482887596da18934f614fae6a375574c7b2",
+          "basis": "MAINTAINED_CONTRACT"
+        },
+        {
+          "path": "src/services/character/CharacterCreationService.ts",
+          "symbolOrSection": "create",
+          "revision": "46bb1482887596da18934f614fae6a375574c7b2",
+          "basis": "SOURCE"
+        }
+      ],
+      "owner": {
+        "path": "src/services/character/CharacterCreationService.ts",
+        "symbolOrSection": "CharacterCreationService",
+        "revision": "46bb1482887596da18934f614fae6a375574c7b2",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "CharacterCreationService"
+      ],
+      "legalReaders": [
+        "*"
+      ],
+      "projections": [],
+      "caches": [],
+      "validStates": [
+        "committed consistent state"
+      ],
+      "forbiddenStates": [
+        "partial commit",
+        "dual truth"
+      ],
+      "preconditions": [
+        "caller holds required authority"
+      ],
+      "postconditions": [
+        "player object exactly matches contract seed",
+        "no hidden-progression keys"
+      ],
+      "legalTransitions": [
+        "declared ops only"
+      ],
+      "illegalTransitions": [
+        "bypass of owner authority"
+      ],
+      "failureBehavior": "fail closed; no partial effect",
+      "atomicity": "op-level atomicity",
+      "inverseBehavior": "rollback restores prior state",
+      "persistence": "state survives save/load as owner contract",
+      "migration": "schema-versioned restore",
+      "lifecycle": "created via owner op, destroyed via owner op",
+      "runtimeConsequences": [
+        "game boots into legal mortal state"
+      ],
+      "uiConsequences": [
+        "UI reflects invariant via read model"
+      ],
+      "oracles": [
+        "deterministic vitest assertions"
+      ],
+      "requiredEvidenceSurfaces": [
+        "DETERMINISTIC",
+        "INDEPENDENT_REVIEW"
+      ],
+      "taxonomyIds": [
+        "CONTRACT",
+        "STATE",
+        "PERSISTENCE"
+      ],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-IA-1",
+      "statement": "commitFiveElementInitiation is atomic: on ANY failure code the player's spell/way/element/realm/root/skills/technique/level state restores byte-equivalent to the pre-commit snapshot; on success ALL five facets commit together.",
+      "domain": "initiation-atomicity",
+      "risk": "CRITICAL",
+      "sources": [
+        {
+          "path": "docs/design/frontend-contract.md",
+          "symbolOrSection": "B-initiation",
+          "revision": "46bb1482887596da18934f614fae6a375574c7b2",
+          "basis": "MAINTAINED_CONTRACT"
+        },
+        {
+          "path": "src/core/game/GameManagerRealmAdvanceOps.ts",
+          "symbolOrSection": "commitFiveElementInitiation",
+          "revision": "46bb1482887596da18934f614fae6a375574c7b2",
+          "basis": "SOURCE"
+        }
+      ],
+      "owner": {
+        "path": "src/core/game/GameManagerRealmAdvanceOps.ts",
+        "symbolOrSection": "commitFiveElementInitiation",
+        "revision": "46bb1482887596da18934f614fae6a375574c7b2",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "commitFiveElementInitiation"
+      ],
+      "legalReaders": [
+        "*"
+      ],
+      "projections": [],
+      "caches": [],
+      "validStates": [
+        "committed consistent state"
+      ],
+      "forbiddenStates": [
+        "partial commit",
+        "orphaned spell without way"
+      ],
+      "preconditions": [
+        "caller holds required authority"
+      ],
+      "postconditions": [
+        "either all facets set or none",
+        "no dangling skill unlocks",
+        "no realm advance without element"
+      ],
+      "legalTransitions": [
+        "declared ops only"
+      ],
+      "illegalTransitions": [
+        "bypass of owner authority"
+      ],
+      "failureBehavior": "fail closed; no partial effect",
+      "atomicity": "capturePlayerSnapshot -> validate -> commit all -> on any throw restorePlayerSnapshotInPlace + unlearn skills + restore technique",
+      "inverseBehavior": "restorePlayerSnapshotInPlace returns byte-equal player state",
+      "persistence": "state survives save/load as owner contract",
+      "migration": "schema-versioned restore",
+      "lifecycle": "created via owner op, destroyed via owner op",
+      "runtimeConsequences": [
+        "visible behavior follows invariant"
+      ],
+      "uiConsequences": [
+        "UI reflects invariant via read model"
+      ],
+      "oracles": [
+        "deterministic vitest assertions"
+      ],
+      "requiredEvidenceSurfaces": [
+        "DETERMINISTIC",
+        "PROPERTY",
+        "MUTATION",
+        "INDEPENDENT_REVIEW"
+      ],
+      "taxonomyIds": [
+        "STATE",
+        "TRANSITION",
+        "ROBUSTNESS"
+      ],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-IA-2",
+      "statement": "Every initiation failure path returns one of the 15 declared failure codes; no silent or unclassified failure; callers observe a typed failure, never a thrown stack.",
+      "domain": "initiation-atomicity",
+      "risk": "STANDARD",
+      "sources": [
+        {
+          "path": "src/core/game/GameManagerRealmAdvanceOps.ts",
+          "symbolOrSection": "INITIATION_FAILURE_CODES",
+          "revision": "46bb1482887596da18934f614fae6a375574c7b2",
+          "basis": "SOURCE"
+        }
+      ],
+      "owner": {
+        "path": "src/core/game/GameManagerRealmAdvanceOps.ts",
+        "symbolOrSection": "commitFiveElementInitiation",
+        "revision": "46bb1482887596da18934f614fae6a375574c7b2",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "commitFiveElementInitiation"
+      ],
+      "legalReaders": [
+        "*"
+      ],
+      "projections": [],
+      "caches": [],
+      "validStates": [
+        "committed consistent state"
+      ],
+      "forbiddenStates": [
+        "partial commit",
+        "dual truth"
+      ],
+      "preconditions": [
+        "caller holds required authority"
+      ],
+      "postconditions": [
+        "return value is {ok:false, code} for every reject path"
+      ],
+      "legalTransitions": [
+        "declared ops only"
+      ],
+      "illegalTransitions": [
+        "bypass of owner authority"
+      ],
+      "failureBehavior": "fail closed; no partial effect",
+      "atomicity": "op-level atomicity",
+      "inverseBehavior": "rollback restores prior state",
+      "persistence": "state survives save/load as owner contract",
+      "migration": "schema-versioned restore",
+      "lifecycle": "created via owner op, destroyed via owner op",
+      "runtimeConsequences": [
+        "visible behavior follows invariant"
+      ],
+      "uiConsequences": [
+        "UI reflects invariant via read model"
+      ],
+      "oracles": [
+        "deterministic vitest assertions"
+      ],
+      "requiredEvidenceSurfaces": [
+        "DETERMINISTIC",
+        "STATIC_SEMANTIC",
+        "INDEPENDENT_REVIEW"
+      ],
+      "taxonomyIds": [
+        "CONTRACT",
+        "ROBUSTNESS"
+      ],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-PA-1",
+      "statement": "chooseCultivationPath refuses declaresElementAxis ways and non-beta ways with declared failure codes; only beta-legal ways settle.",
+      "domain": "path-authority",
+      "risk": "HIGH",
+      "sources": [
+        {
+          "path": "docs/design/frontend-contract.md",
+          "symbolOrSection": "B-initiation",
+          "revision": "46bb1482887596da18934f614fae6a375574c7b2",
+          "basis": "MAINTAINED_CONTRACT"
+        },
+        {
+          "path": "src/core/game/GameManagerRealmAdvanceOps.ts",
+          "symbolOrSection": "chooseCultivationPath",
+          "revision": "46bb1482887596da18934f614fae6a375574c7b2",
+          "basis": "SOURCE"
+        }
+      ],
+      "owner": {
+        "path": "src/core/game/GameManagerRealmAdvanceOps.ts",
+        "symbolOrSection": "chooseCultivationPath",
+        "revision": "46bb1482887596da18934f614fae6a375574c7b2",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "chooseCultivationPath"
+      ],
+      "legalReaders": [
+        "*"
+      ],
+      "projections": [],
+      "caches": [],
+      "validStates": [
+        "committed consistent state"
+      ],
+      "forbiddenStates": [
+        "partial commit",
+        "dual truth"
+      ],
+      "preconditions": [
+        "caller holds required authority"
+      ],
+      "postconditions": [
+        "invariant statement holds"
+      ],
+      "legalTransitions": [
+        "declared ops only"
+      ],
+      "illegalTransitions": [
+        "choose declaresElementAxis way",
+        "choose non-beta way",
+        "double path commit"
+      ],
+      "failureBehavior": "fail closed; no partial effect",
+      "atomicity": "op-level atomicity",
+      "inverseBehavior": "rollback restores prior state",
+      "persistence": "state survives save/load as owner contract",
+      "migration": "schema-versioned restore",
+      "lifecycle": "created via owner op, destroyed via owner op",
+      "runtimeConsequences": [
+        "visible behavior follows invariant"
+      ],
+      "uiConsequences": [
+        "UI reflects invariant via read model"
+      ],
+      "oracles": [
+        "deterministic vitest assertions"
+      ],
+      "requiredEvidenceSurfaces": [
+        "DETERMINISTIC",
+        "INDEPENDENT_REVIEW",
+        "MUTATION"
+      ],
+      "taxonomyIds": [
+        "AUTHORITY",
+        "CONTRACT",
+        "TRANSITION"
+      ],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-SV-1",
+      "statement": "Every beta surface resolves to exactly one verdict {available | progression-locked | scope-hidden} owned by betaScopeSurface; scope-hidden surfaces render nothing anywhere.",
+      "domain": "scope-verdict",
+      "risk": "CRITICAL",
+      "sources": [
+        {
+          "path": "docs/design/frontend-contract.md",
+          "symbolOrSection": "I-dormant",
+          "revision": "46bb1482887596da18934f614fae6a375574c7b2",
+          "basis": "MAINTAINED_CONTRACT"
+        },
+        {
+          "path": "src/core/betaScopeSurface.ts",
+          "symbolOrSection": "betaSurfaceVerdict",
+          "revision": "46bb1482887596da18934f614fae6a375574c7b2",
+          "basis": "SOURCE"
+        }
+      ],
+      "owner": {
+        "path": "src/core/betaScopeSurface.ts",
+        "symbolOrSection": "betaSurfaceVerdict",
+        "revision": "46bb1482887596da18934f614fae6a375574c7b2",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "betaSurfaceVerdict"
+      ],
+      "legalReaders": [
+        "all UI surfaces",
+        "domain entry points"
+      ],
+      "projections": [],
+      "caches": [],
+      "validStates": [
+        "committed consistent state"
+      ],
+      "forbiddenStates": [
+        "partial commit",
+        "dual truth"
+      ],
+      "preconditions": [
+        "caller holds required authority"
+      ],
+      "postconditions": [
+        "exactly one verdict per surface",
+        "no surface unverdicted",
+        "scope-hidden renders nothing"
+      ],
+      "legalTransitions": [
+        "declared ops only"
+      ],
+      "illegalTransitions": [
+        "bypass of owner authority"
+      ],
+      "failureBehavior": "fail closed; no partial effect",
+      "atomicity": "op-level atomicity",
+      "inverseBehavior": "rollback restores prior state",
+      "persistence": "state survives save/load as owner contract",
+      "migration": "schema-versioned restore",
+      "lifecycle": "created via owner op, destroyed via owner op",
+      "runtimeConsequences": [
+        "visible behavior follows invariant"
+      ],
+      "uiConsequences": [
+        "UI reflects invariant via read model"
+      ],
+      "oracles": [
+        "deterministic vitest assertions"
+      ],
+      "requiredEvidenceSurfaces": [
+        "DETERMINISTIC",
+        "INTEGRATION",
+        "MUTATION",
+        "INDEPENDENT_REVIEW"
+      ],
+      "taxonomyIds": [
+        "AUTHORITY",
+        "PRESENTATION",
+        "CONTRACT"
+      ],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-AS-1",
+      "statement": "Scope-hidden content cannot enter visible play through any seam: direct domain API, save payload fields, event handlers, shop/loot tables, quest effects, notifications, tutorial, devtools/console paths.",
+      "domain": "authority-seam",
+      "risk": "HIGH",
+      "sources": [
+        {
+          "path": "src/core/betaScope.ts",
+          "symbolOrSection": "BETA_FEATURES",
+          "revision": "46bb1482887596da18934f614fae6a375574c7b2",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "docs/design/frontend-contract.md",
+          "symbolOrSection": "I-dormant",
+          "revision": "46bb1482887596da18934f614fae6a375574c7b2",
+          "basis": "MAINTAINED_CONTRACT"
+        }
+      ],
+      "owner": {
+        "path": "src/core/betaScope.ts",
+        "symbolOrSection": "betaScope",
+        "revision": "46bb1482887596da18934f614fae6a375574c7b2",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "betaScope"
+      ],
+      "legalReaders": [
+        "*"
+      ],
+      "projections": [],
+      "caches": [],
+      "validStates": [
+        "committed consistent state"
+      ],
+      "forbiddenStates": [
+        "partial commit",
+        "dual truth"
+      ],
+      "preconditions": [
+        "caller holds required authority"
+      ],
+      "postconditions": [
+        "invariant statement holds"
+      ],
+      "legalTransitions": [
+        "declared ops only"
+      ],
+      "illegalTransitions": [
+        "hidden feature reachable via direct call",
+        "hidden item in shop/loot",
+        "quest effect granting hidden content",
+        "devtools bypass"
+      ],
+      "failureBehavior": "fail closed; no partial effect",
+      "atomicity": "op-level atomicity",
+      "inverseBehavior": "rollback restores prior state",
+      "persistence": "state survives save/load as owner contract",
+      "migration": "schema-versioned restore",
+      "lifecycle": "created via owner op, destroyed via owner op",
+      "runtimeConsequences": [
+        "visible behavior follows invariant"
+      ],
+      "uiConsequences": [
+        "UI reflects invariant via read model"
+      ],
+      "oracles": [
+        "deterministic vitest assertions"
+      ],
+      "requiredEvidenceSurfaces": [
+        "DETERMINISTIC",
+        "INTEGRATION",
+        "MUTATION",
+        "INDEPENDENT_REVIEW"
+      ],
+      "taxonomyIds": [
+        "AUTHORITY",
+        "CROSS_SYSTEM",
+        "TOOLING_SECURITY"
+      ],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-DS-1",
+      "statement": "All BETA_FEATURES=false systems (hiddenContent, swordPath, bodyPath, companion, formation, artifact, manualWorkforce, equipmentWash, equipmentRefine, equipmentOreDecompose, dailyQuest) stay scope-hidden end-to-end and remain dormant across save/load cycles.",
+      "domain": "dormant-systems",
+      "risk": "HIGH",
+      "sources": [
+        {
+          "path": "src/core/betaScope.ts",
+          "symbolOrSection": "BETA_FEATURES",
+          "revision": "46bb1482887596da18934f614fae6a375574c7b2",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "docs/design/frontend-contract.md",
+          "symbolOrSection": "I-dormant",
+          "revision": "46bb1482887596da18934f614fae6a375574c7b2",
+          "basis": "MAINTAINED_CONTRACT"
+        }
+      ],
+      "owner": {
+        "path": "src/core/betaScope.ts",
+        "symbolOrSection": "BETA_FEATURES",
+        "revision": "46bb1482887596da18934f614fae6a375574c7b2",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "BETA_FEATURES"
+      ],
+      "legalReaders": [
+        "*"
+      ],
+      "projections": [],
+      "caches": [],
+      "validStates": [
+        "committed consistent state"
+      ],
+      "forbiddenStates": [
+        "partial commit",
+        "dual truth"
+      ],
+      "preconditions": [
+        "caller holds required authority"
+      ],
+      "postconditions": [
+        "invariant statement holds"
+      ],
+      "legalTransitions": [
+        "declared ops only"
+      ],
+      "illegalTransitions": [
+        "bypass of owner authority"
+      ],
+      "failureBehavior": "fail closed; no partial effect",
+      "atomicity": "op-level atomicity",
+      "inverseBehavior": "rollback restores prior state",
+      "persistence": "state survives save/load as owner contract",
+      "migration": "schema-versioned restore",
+      "lifecycle": "created via owner op, destroyed via owner op",
+      "runtimeConsequences": [
+        "dormant systems never tick, never pay out, never notify"
+      ],
+      "uiConsequences": [
+        "UI reflects invariant via read model"
+      ],
+      "oracles": [
+        "deterministic vitest assertions"
+      ],
+      "requiredEvidenceSurfaces": [
+        "DETERMINISTIC",
+        "PERSISTENCE",
+        "INDEPENDENT_REVIEW"
+      ],
+      "taxonomyIds": [
+        "AUTHORITY",
+        "PERSISTENCE",
+        "CROSS_SYSTEM"
+      ],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-RM-1",
+      "statement": "UI components consume read-model projections only; no component mutates PlayerData or reads internals that bypass the projection; read model is the only honest surface.",
+      "domain": "read-model",
+      "risk": "HIGH",
+      "sources": [
+        {
+          "path": "src/presentation/createGamePresentation.ts",
+          "symbolOrSection": "createGamePresentation",
+          "revision": "46bb1482887596da18934f614fae6a375574c7b2",
+          "basis": "SOURCE"
+        }
+      ],
+      "owner": {
+        "path": "src/presentation/createGamePresentation.ts",
+        "symbolOrSection": "createGamePresentation",
+        "revision": "46bb1482887596da18934f614fae6a375574c7b2",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "createGamePresentation"
+      ],
+      "legalReaders": [
+        "*"
+      ],
+      "projections": [],
+      "caches": [],
+      "validStates": [
+        "committed consistent state"
+      ],
+      "forbiddenStates": [
+        "partial commit",
+        "dual truth"
+      ],
+      "preconditions": [
+        "caller holds required authority"
+      ],
+      "postconditions": [
+        "invariant statement holds"
+      ],
+      "legalTransitions": [
+        "declared ops only"
+      ],
+      "illegalTransitions": [
+        "bypass of owner authority"
+      ],
+      "failureBehavior": "fail closed; no partial effect",
+      "atomicity": "op-level atomicity",
+      "inverseBehavior": "rollback restores prior state",
+      "persistence": "state survives save/load as owner contract",
+      "migration": "schema-versioned restore",
+      "lifecycle": "created via owner op, destroyed via owner op",
+      "runtimeConsequences": [
+        "visible behavior follows invariant"
+      ],
+      "uiConsequences": [
+        "every surface reflects projection",
+        "no component edits PlayerData fields"
+      ],
+      "oracles": [
+        "deterministic vitest assertions"
+      ],
+      "requiredEvidenceSurfaces": [
+        "STATIC_SEMANTIC",
+        "DETERMINISTIC",
+        "INDEPENDENT_REVIEW"
+      ],
+      "taxonomyIds": [
+        "AUTHORITY",
+        "PRESENTATION"
+      ],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-CR-1",
+      "statement": "Combat request -> settlement -> reward is exactly-once: no double settlement on abort/restart/death-between-declaration-and-impact; rewards cannot duplicate or drop silently.",
+      "domain": "combat-rail",
+      "risk": "HIGH",
+      "sources": [
+        {
+          "path": "src/core/battle/BattleLootSystem.ts",
+          "symbolOrSection": "settle",
+          "revision": "46bb1482887596da18934f614fae6a375574c7b2",
+          "basis": "SOURCE"
+        }
+      ],
+      "owner": {
+        "path": "src/core/battle/BattleLootSystem.ts",
+        "symbolOrSection": "BattleLootSystem",
+        "revision": "46bb1482887596da18934f614fae6a375574c7b2",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "BattleLootSystem"
+      ],
+      "legalReaders": [
+        "*"
+      ],
+      "projections": [],
+      "caches": [],
+      "validStates": [
+        "committed consistent state"
+      ],
+      "forbiddenStates": [
+        "partial commit",
+        "dual truth"
+      ],
+      "preconditions": [
+        "caller holds required authority"
+      ],
+      "postconditions": [
+        "invariant statement holds"
+      ],
+      "legalTransitions": [
+        "declared ops only"
+      ],
+      "illegalTransitions": [
+        "bypass of owner authority"
+      ],
+      "failureBehavior": "fail closed; no partial effect",
+      "atomicity": "op-level atomicity",
+      "inverseBehavior": "rollback restores prior state",
+      "persistence": "state survives save/load as owner contract",
+      "migration": "schema-versioned restore",
+      "lifecycle": "created via owner op, destroyed via owner op",
+      "runtimeConsequences": [
+        "reward exactly-once",
+        "death mid-flight handled deterministically"
+      ],
+      "uiConsequences": [
+        "UI reflects invariant via read model"
+      ],
+      "oracles": [
+        "deterministic vitest assertions"
+      ],
+      "requiredEvidenceSurfaces": [
+        "DETERMINISTIC",
+        "INTEGRATION",
+        "INDEPENDENT_REVIEW"
+      ],
+      "taxonomyIds": [
+        "COMBAT",
+        "STATE",
+        "ASYNC"
+      ],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-PG-1",
+      "statement": "Each of the 3 precursor skills gains floor(casts/10) growth with no cap and no divergence — parity law holds at all cast counts including boundaries and overflow.",
+      "domain": "precursor-growth",
+      "risk": "HIGH",
+      "sources": [
+        {
+          "path": "docs/design/frontend-contract.md",
+          "symbolOrSection": "J-precursor",
+          "revision": "46bb1482887596da18934f614fae6a375574c7b2",
+          "basis": "MAINTAINED_CONTRACT"
+        },
+        {
+          "path": "src/core/skill/MortalPrecursors.ts",
+          "symbolOrSection": "precursorGrowth",
+          "revision": "46bb1482887596da18934f614fae6a375574c7b2",
+          "basis": "SOURCE"
+        }
+      ],
+      "owner": {
+        "path": "src/core/skill/MortalPrecursors.ts",
+        "symbolOrSection": "MortalPrecursors",
+        "revision": "46bb1482887596da18934f614fae6a375574c7b2",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "MortalPrecursors"
+      ],
+      "legalReaders": [
+        "*"
+      ],
+      "projections": [],
+      "caches": [],
+      "validStates": [
+        "committed consistent state"
+      ],
+      "forbiddenStates": [
+        "partial commit",
+        "dual truth"
+      ],
+      "preconditions": [
+        "caller holds required authority"
+      ],
+      "postconditions": [
+        "growth == floor(casts/10) for every precursor",
+        "no cap at any level"
+      ],
+      "legalTransitions": [
+        "declared ops only"
+      ],
+      "illegalTransitions": [
+        "bypass of owner authority"
+      ],
+      "failureBehavior": "fail closed; no partial effect",
+      "atomicity": "op-level atomicity",
+      "inverseBehavior": "rollback restores prior state",
+      "persistence": "state survives save/load as owner contract",
+      "migration": "schema-versioned restore",
+      "lifecycle": "created via owner op, destroyed via owner op",
+      "runtimeConsequences": [
+        "visible behavior follows invariant"
+      ],
+      "uiConsequences": [
+        "UI reflects invariant via read model"
+      ],
+      "oracles": [
+        "deterministic vitest assertions"
+      ],
+      "requiredEvidenceSurfaces": [
+        "DETERMINISTIC",
+        "PROPERTY",
+        "MUTATION"
+      ],
+      "taxonomyIds": [
+        "CONTRACT",
+        "COMBAT",
+        "ECONOMY"
+      ],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-SS-1",
+      "statement": "Stage read-model transitions are monotonic (locked -> available -> cleared); betaComplete fires only on foundation_ferocious_flood_dragon_whelp defeat; no skip/replay/abort can fabricate completion.",
+      "domain": "stage-state",
+      "risk": "STANDARD",
+      "sources": [
+        {
+          "path": "src/core/stage/StageManager.ts",
+          "symbolOrSection": "StageManager",
+          "revision": "46bb1482887596da18934f614fae6a375574c7b2",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "src/core/betaScope.ts",
+          "symbolOrSection": "BETA_ENEMY_ROSTER",
+          "revision": "46bb1482887596da18934f614fae6a375574c7b2",
+          "basis": "SOURCE"
+        }
+      ],
+      "owner": {
+        "path": "src/core/stage/StageManager.ts",
+        "symbolOrSection": "StageManager",
+        "revision": "46bb1482887596da18934f614fae6a375574c7b2",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "StageManager"
+      ],
+      "legalReaders": [
+        "*"
+      ],
+      "projections": [],
+      "caches": [],
+      "validStates": [
+        "committed consistent state"
+      ],
+      "forbiddenStates": [
+        "partial commit",
+        "dual truth"
+      ],
+      "preconditions": [
+        "caller holds required authority"
+      ],
+      "postconditions": [
+        "invariant statement holds"
+      ],
+      "legalTransitions": [
+        "declared ops only"
+      ],
+      "illegalTransitions": [
+        "bypass of owner authority"
+      ],
+      "failureBehavior": "fail closed; no partial effect",
+      "atomicity": "op-level atomicity",
+      "inverseBehavior": "rollback restores prior state",
+      "persistence": "state survives save/load as owner contract",
+      "migration": "schema-versioned restore",
+      "lifecycle": "created via owner op, destroyed via owner op",
+      "runtimeConsequences": [
+        "visible behavior follows invariant"
+      ],
+      "uiConsequences": [
+        "UI reflects invariant via read model"
+      ],
+      "oracles": [
+        "deterministic vitest assertions"
+      ],
+      "requiredEvidenceSurfaces": [
+        "DETERMINISTIC",
+        "INTEGRATION",
+        "INDEPENDENT_REVIEW"
+      ],
+      "taxonomyIds": [
+        "TRANSITION",
+        "CONTENT_PATH"
+      ],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-EC-1",
+      "statement": "Every beta economy flow has a reachable source and sink; no dead sources, dead sinks, orphan quests/equipment/materials; census lists every flow.",
+      "domain": "economy-census",
+      "risk": "HIGH",
+      "sources": [
+        {
+          "path": "src/core/economy/VendorSystem.ts",
+          "symbolOrSection": "VendorSystem",
+          "revision": "46bb1482887596da18934f614fae6a375574c7b2",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "tests/architecture/betaEconomyCensus.test.ts",
+          "symbolOrSection": "census",
+          "revision": "46bb1482887596da18934f614fae6a375574c7b2",
+          "basis": "SOURCE"
+        }
+      ],
+      "owner": {
+        "path": "src/core/economy/VendorSystem.ts",
+        "symbolOrSection": "VendorSystem",
+        "revision": "46bb1482887596da18934f614fae6a375574c7b2",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "VendorSystem"
+      ],
+      "legalReaders": [
+        "*"
+      ],
+      "projections": [],
+      "caches": [],
+      "validStates": [
+        "committed consistent state"
+      ],
+      "forbiddenStates": [
+        "partial commit",
+        "dual truth"
+      ],
+      "preconditions": [
+        "caller holds required authority"
+      ],
+      "postconditions": [
+        "source->sink graph closed over beta scope",
+        "no orphan content"
+      ],
+      "legalTransitions": [
+        "declared ops only"
+      ],
+      "illegalTransitions": [
+        "bypass of owner authority"
+      ],
+      "failureBehavior": "fail closed; no partial effect",
+      "atomicity": "op-level atomicity",
+      "inverseBehavior": "rollback restores prior state",
+      "persistence": "state survives save/load as owner contract",
+      "migration": "schema-versioned restore",
+      "lifecycle": "created via owner op, destroyed via owner op",
+      "runtimeConsequences": [
+        "visible behavior follows invariant"
+      ],
+      "uiConsequences": [
+        "UI reflects invariant via read model"
+      ],
+      "oracles": [
+        "deterministic vitest assertions"
+      ],
+      "requiredEvidenceSurfaces": [
+        "DETERMINISTIC",
+        "INDEPENDENT_REVIEW",
+        "MUTATION"
+      ],
+      "taxonomyIds": [
+        "ECONOMY",
+        "CONTRACT"
+      ],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-SF-1",
+      "statement": "betaSupportedFor/unsupportedReleaseReason classify every hostile save (hidden progression state, companion/artifact/formation owned, realm beyond release, way out of scope) as unsupported with the declared reason; deserialization never throws and never leaks hidden content into play.",
+      "domain": "save-safety",
+      "risk": "CRITICAL",
+      "sources": [
+        {
+          "path": "src/core/betaScopeSurface.ts",
+          "symbolOrSection": "unsupportedReleaseReason",
+          "revision": "46bb1482887596da18934f614fae6a375574c7b2",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "docs/design/frontend-contract.md",
+          "symbolOrSection": "H-ending-save",
+          "revision": "46bb1482887596da18934f614fae6a375574c7b2",
+          "basis": "MAINTAINED_CONTRACT"
+        }
+      ],
+      "owner": {
+        "path": "src/core/betaScopeSurface.ts",
+        "symbolOrSection": "unsupportedReleaseReason",
+        "revision": "46bb1482887596da18934f614fae6a375574c7b2",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "unsupportedReleaseReason"
+      ],
+      "legalReaders": [
+        "*"
+      ],
+      "projections": [],
+      "caches": [],
+      "validStates": [
+        "committed consistent state"
+      ],
+      "forbiddenStates": [
+        "partial commit",
+        "dual truth"
+      ],
+      "preconditions": [
+        "caller holds required authority"
+      ],
+      "postconditions": [
+        "hostile save flagged not played",
+        "deserialize-safe for every malformed beta payload"
+      ],
+      "legalTransitions": [
+        "declared ops only"
+      ],
+      "illegalTransitions": [
+        "bypass of owner authority"
+      ],
+      "failureBehavior": "fail closed; no partial effect",
+      "atomicity": "op-level atomicity",
+      "inverseBehavior": "rollback restores prior state",
+      "persistence": "state survives save/load as owner contract",
+      "migration": "schema-versioned restore",
+      "lifecycle": "created via owner op, destroyed via owner op",
+      "runtimeConsequences": [
+        "visible behavior follows invariant"
+      ],
+      "uiConsequences": [
+        "UI reflects invariant via read model"
+      ],
+      "oracles": [
+        "deterministic vitest assertions"
+      ],
+      "requiredEvidenceSurfaces": [
+        "DETERMINISTIC",
+        "FUZZ",
+        "PERSISTENCE",
+        "MUTATION",
+        "INDEPENDENT_REVIEW"
+      ],
+      "taxonomyIds": [
+        "PERSISTENCE",
+        "AUTHORITY",
+        "ROBUSTNESS"
+      ],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-PM-1",
+      "statement": "Save version contract enforced (CURRENT_SAVE_VERSION), version rejection explicit, restore atomic (all-or-nothing), retired fields handled, malformed-but-schema-valid payloads rejected deterministically.",
+      "domain": "persistence-migration",
+      "risk": "STANDARD",
+      "sources": [
+        {
+          "path": "src/services/save/SaveSystem.ts",
+          "symbolOrSection": "restore",
+          "revision": "46bb1482887596da18934f614fae6a375574c7b2",
+          "basis": "SOURCE"
+        }
+      ],
+      "owner": {
+        "path": "src/services/save/SaveSystem.ts",
+        "symbolOrSection": "SaveSystem",
+        "revision": "46bb1482887596da18934f614fae6a375574c7b2",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "SaveSystem"
+      ],
+      "legalReaders": [
+        "*"
+      ],
+      "projections": [],
+      "caches": [],
+      "validStates": [
+        "committed consistent state"
+      ],
+      "forbiddenStates": [
+        "partial commit",
+        "dual truth"
+      ],
+      "preconditions": [
+        "caller holds required authority"
+      ],
+      "postconditions": [
+        "invariant statement holds"
+      ],
+      "legalTransitions": [
+        "declared ops only"
+      ],
+      "illegalTransitions": [
+        "bypass of owner authority"
+      ],
+      "failureBehavior": "fail closed; no partial effect",
+      "atomicity": "op-level atomicity",
+      "inverseBehavior": "rollback restores prior state",
+      "persistence": "state survives save/load as owner contract",
+      "migration": "schema-versioned restore",
+      "lifecycle": "created via owner op, destroyed via owner op",
+      "runtimeConsequences": [
+        "visible behavior follows invariant"
+      ],
+      "uiConsequences": [
+        "UI reflects invariant via read model"
+      ],
+      "oracles": [
+        "deterministic vitest assertions"
+      ],
+      "requiredEvidenceSurfaces": [
+        "DETERMINISTIC",
+        "PERSISTENCE"
+      ],
+      "taxonomyIds": [
+        "PERSISTENCE",
+        "ROBUSTNESS"
+      ],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-EN-1",
+      "statement": "BETA_ENEMY_ROSTER is valid: 12 enemies across acts 1-3 (3 normals + 1 boss per act); every enemy reachable, killable, lootable; final boss = foundation_ferocious_flood_dragon_whelp.",
+      "domain": "enemy-content",
+      "risk": "STANDARD",
+      "sources": [
+        {
+          "path": "src/core/betaScope.ts",
+          "symbolOrSection": "BETA_ENEMY_ROSTER",
+          "revision": "46bb1482887596da18934f614fae6a375574c7b2",
+          "basis": "SOURCE"
+        }
+      ],
+      "owner": {
+        "path": "src/core/betaScope.ts",
+        "symbolOrSection": "BETA_ENEMY_ROSTER",
+        "revision": "46bb1482887596da18934f614fae6a375574c7b2",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "BETA_ENEMY_ROSTER"
+      ],
+      "legalReaders": [
+        "*"
+      ],
+      "projections": [],
+      "caches": [],
+      "validStates": [
+        "committed consistent state"
+      ],
+      "forbiddenStates": [
+        "partial commit",
+        "dual truth"
+      ],
+      "preconditions": [
+        "caller holds required authority"
+      ],
+      "postconditions": [
+        "invariant statement holds"
+      ],
+      "legalTransitions": [
+        "declared ops only"
+      ],
+      "illegalTransitions": [
+        "bypass of owner authority"
+      ],
+      "failureBehavior": "fail closed; no partial effect",
+      "atomicity": "op-level atomicity",
+      "inverseBehavior": "rollback restores prior state",
+      "persistence": "state survives save/load as owner contract",
+      "migration": "schema-versioned restore",
+      "lifecycle": "created via owner op, destroyed via owner op",
+      "runtimeConsequences": [
+        "visible behavior follows invariant"
+      ],
+      "uiConsequences": [
+        "UI reflects invariant via read model"
+      ],
+      "oracles": [
+        "deterministic vitest assertions"
+      ],
+      "requiredEvidenceSurfaces": [
+        "DETERMINISTIC",
+        "INDEPENDENT_REVIEW"
+      ],
+      "taxonomyIds": [
+        "CONTENT_PATH",
+        "COMBAT",
+        "CONTRACT"
+      ],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-UH-1",
+      "statement": "UI renders verdicts honestly: available surfaces work, progression-locked shows lock reason, scope-hidden renders nothing; i18n strings exist for all user-visible beta text; no teaser/ghost UI for hidden content.",
+      "domain": "ui-honesty",
+      "risk": "STANDARD",
+      "sources": [
+        {
+          "path": "src/core/presentation/labels.ts",
+          "symbolOrSection": "labels",
+          "revision": "46bb1482887596da18934f614fae6a375574c7b2",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "docs/design/frontend-contract.md",
+          "symbolOrSection": "G-nav",
+          "revision": "46bb1482887596da18934f614fae6a375574c7b2",
+          "basis": "MAINTAINED_CONTRACT"
+        }
+      ],
+      "owner": {
+        "path": "src/core/presentation/labels.ts",
+        "symbolOrSection": "labels",
+        "revision": "46bb1482887596da18934f614fae6a375574c7b2",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "labels"
+      ],
+      "legalReaders": [
+        "*"
+      ],
+      "projections": [],
+      "caches": [],
+      "validStates": [
+        "committed consistent state"
+      ],
+      "forbiddenStates": [
+        "partial commit",
+        "dual truth"
+      ],
+      "preconditions": [
+        "caller holds required authority"
+      ],
+      "postconditions": [
+        "invariant statement holds"
+      ],
+      "legalTransitions": [
+        "declared ops only"
+      ],
+      "illegalTransitions": [
+        "bypass of owner authority"
+      ],
+      "failureBehavior": "fail closed; no partial effect",
+      "atomicity": "op-level atomicity",
+      "inverseBehavior": "rollback restores prior state",
+      "persistence": "state survives save/load as owner contract",
+      "migration": "schema-versioned restore",
+      "lifecycle": "created via owner op, destroyed via owner op",
+      "runtimeConsequences": [
+        "visible behavior follows invariant"
+      ],
+      "uiConsequences": [
+        "UI reflects invariant via read model"
+      ],
+      "oracles": [
+        "deterministic vitest assertions"
+      ],
+      "requiredEvidenceSurfaces": [
+        "DETERMINISTIC",
+        "RUNTIME_E2E",
+        "INDEPENDENT_REVIEW"
+      ],
+      "taxonomyIds": [
+        "PRESENTATION",
+        "CONTRACT"
+      ],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-RT-1",
+      "statement": "Electron updates are verified (signature/metadata), channel cannot downgrade, quitAndInstall has declared semantics; update failures never corrupt the installed game.",
+      "domain": "release-trust",
+      "risk": "STANDARD",
+      "sources": [
+        {
+          "path": "electron/main.ts",
+          "symbolOrSection": "autoUpdater",
+          "revision": "46bb1482887596da18934f614fae6a375574c7b2",
+          "basis": "SOURCE"
+        }
+      ],
+      "owner": {
+        "path": "electron/main.ts",
+        "symbolOrSection": "autoUpdater",
+        "revision": "46bb1482887596da18934f614fae6a375574c7b2",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "autoUpdater"
+      ],
+      "legalReaders": [
+        "*"
+      ],
+      "projections": [],
+      "caches": [],
+      "validStates": [
+        "committed consistent state"
+      ],
+      "forbiddenStates": [
+        "partial commit",
+        "dual truth"
+      ],
+      "preconditions": [
+        "caller holds required authority"
+      ],
+      "postconditions": [
+        "invariant statement holds"
+      ],
+      "legalTransitions": [
+        "declared ops only"
+      ],
+      "illegalTransitions": [
+        "bypass of owner authority"
+      ],
+      "failureBehavior": "fail closed; no partial effect",
+      "atomicity": "op-level atomicity",
+      "inverseBehavior": "rollback restores prior state",
+      "persistence": "state survives save/load as owner contract",
+      "migration": "schema-versioned restore",
+      "lifecycle": "created via owner op, destroyed via owner op",
+      "runtimeConsequences": [
+        "visible behavior follows invariant"
+      ],
+      "uiConsequences": [
+        "UI reflects invariant via read model"
+      ],
+      "oracles": [
+        "deterministic vitest assertions"
+      ],
+      "requiredEvidenceSurfaces": [
+        "STATIC_SEMANTIC",
+        "DETERMINISTIC"
+      ],
+      "taxonomyIds": [
+        "TOOLING_SECURITY",
+        "PERSISTENCE"
+      ],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-TS-1",
+      "statement": "Devtools, debug seams, scripts and CSP grant no privileged path to scope-hidden state and no production-bypass surface; tool integrity is preserved.",
+      "domain": "tooling-security",
+      "risk": "STANDARD",
+      "sources": [
+        {
+          "path": "src/core/dev",
+          "symbolOrSection": "devtools",
+          "revision": "46bb1482887596da18934f614fae6a375574c7b2",
+          "basis": "SOURCE"
+        }
+      ],
+      "owner": {
+        "path": "src/core/dev",
+        "symbolOrSection": "devtools",
+        "revision": "46bb1482887596da18934f614fae6a375574c7b2",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "devtools"
+      ],
+      "legalReaders": [
+        "*"
+      ],
+      "projections": [],
+      "caches": [],
+      "validStates": [
+        "committed consistent state"
+      ],
+      "forbiddenStates": [
+        "partial commit",
+        "dual truth"
+      ],
+      "preconditions": [
+        "caller holds required authority"
+      ],
+      "postconditions": [
+        "invariant statement holds"
+      ],
+      "legalTransitions": [
+        "declared ops only"
+      ],
+      "illegalTransitions": [
+        "bypass of owner authority"
+      ],
+      "failureBehavior": "fail closed; no partial effect",
+      "atomicity": "op-level atomicity",
+      "inverseBehavior": "rollback restores prior state",
+      "persistence": "state survives save/load as owner contract",
+      "migration": "schema-versioned restore",
+      "lifecycle": "created via owner op, destroyed via owner op",
+      "runtimeConsequences": [
+        "visible behavior follows invariant"
+      ],
+      "uiConsequences": [
+        "UI reflects invariant via read model"
+      ],
+      "oracles": [
+        "deterministic vitest assertions"
+      ],
+      "requiredEvidenceSurfaces": [
+        "STATIC_SEMANTIC",
+        "DETERMINISTIC"
+      ],
+      "taxonomyIds": [
+        "TOOLING_SECURITY",
+        "AUTHORITY"
+      ],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-CN-1",
+      "statement": "Save/load lifecycle seams are race-free: pagehide/quit flush, no double initialization, no stale re-entry; duplicate invocation collapses to single authority.",
+      "domain": "concurrency",
+      "risk": "STANDARD",
+      "sources": [
+        {
+          "path": "src/services/save/SaveSystem.ts",
+          "symbolOrSection": "flush",
+          "revision": "46bb1482887596da18934f614fae6a375574c7b2",
+          "basis": "SOURCE"
+        }
+      ],
+      "owner": {
+        "path": "src/services/save/SaveSystem.ts",
+        "symbolOrSection": "flush",
+        "revision": "46bb1482887596da18934f614fae6a375574c7b2",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "flush"
+      ],
+      "legalReaders": [
+        "*"
+      ],
+      "projections": [],
+      "caches": [],
+      "validStates": [
+        "committed consistent state"
+      ],
+      "forbiddenStates": [
+        "partial commit",
+        "dual truth"
+      ],
+      "preconditions": [
+        "caller holds required authority"
+      ],
+      "postconditions": [
+        "invariant statement holds"
+      ],
+      "legalTransitions": [
+        "declared ops only"
+      ],
+      "illegalTransitions": [
+        "bypass of owner authority"
+      ],
+      "failureBehavior": "fail closed; no partial effect",
+      "atomicity": "op-level atomicity",
+      "inverseBehavior": "rollback restores prior state",
+      "persistence": "state survives save/load as owner contract",
+      "migration": "schema-versioned restore",
+      "lifecycle": "created via owner op, destroyed via owner op",
+      "runtimeConsequences": [
+        "visible behavior follows invariant"
+      ],
+      "uiConsequences": [
+        "UI reflects invariant via read model"
+      ],
+      "oracles": [
+        "deterministic vitest assertions"
+      ],
+      "requiredEvidenceSurfaces": [
+        "DETERMINISTIC",
+        "INTEGRATION"
+      ],
+      "taxonomyIds": [
+        "ASYNC",
+        "STATE",
+        "PERSISTENCE"
+      ],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-TQ-1",
+      "statement": "Tests assert behavior and invariants, not implementation details; counted oracles fail closed; every regression pin is real (fails without the fix).",
+      "domain": "test-quality",
+      "risk": "STANDARD",
+      "sources": [
+        {
+          "path": "tests",
+          "symbolOrSection": "vitest suite",
+          "revision": "46bb1482887596da18934f614fae6a375574c7b2",
+          "basis": "HISTORICAL"
+        }
+      ],
+      "owner": {
+        "path": "tests",
+        "symbolOrSection": "vitest suite",
+        "revision": "46bb1482887596da18934f614fae6a375574c7b2",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "vitest suite"
+      ],
+      "legalReaders": [
+        "*"
+      ],
+      "projections": [],
+      "caches": [],
+      "validStates": [
+        "committed consistent state"
+      ],
+      "forbiddenStates": [
+        "partial commit",
+        "dual truth"
+      ],
+      "preconditions": [
+        "caller holds required authority"
+      ],
+      "postconditions": [
+        "invariant statement holds"
+      ],
+      "legalTransitions": [
+        "declared ops only"
+      ],
+      "illegalTransitions": [
+        "bypass of owner authority"
+      ],
+      "failureBehavior": "fail closed; no partial effect",
+      "atomicity": "op-level atomicity",
+      "inverseBehavior": "rollback restores prior state",
+      "persistence": "state survives save/load as owner contract",
+      "migration": "schema-versioned restore",
+      "lifecycle": "created via owner op, destroyed via owner op",
+      "runtimeConsequences": [
+        "visible behavior follows invariant"
+      ],
+      "uiConsequences": [
+        "UI reflects invariant via read model"
+      ],
+      "oracles": [
+        "mutation kills each pin for intended reason"
+      ],
+      "requiredEvidenceSurfaces": [
+        "STATIC_SEMANTIC",
+        "INDEPENDENT_REVIEW",
+        "MUTATION"
+      ],
+      "taxonomyIds": [
+        "TEST_QUALITY"
+      ],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "I-QI-1",
+      "statement": "QA runner records honest state: ledger reflects executed reality, machine checks sound, no counted-oracle inflation, no forged independence.",
+      "domain": "qa-integrity",
+      "risk": "STANDARD",
+      "sources": [
+        {
+          "path": "scripts/qa/cli.mjs",
+          "symbolOrSection": "cli",
+          "revision": "46bb1482887596da18934f614fae6a375574c7b2",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "scripts/qa/ledger.schema.json",
+          "symbolOrSection": "schema",
+          "revision": "46bb1482887596da18934f614fae6a375574c7b2",
+          "basis": "SOURCE"
+        }
+      ],
+      "owner": {
+        "path": "scripts/qa/cli.mjs",
+        "symbolOrSection": "qa:internal",
+        "revision": "46bb1482887596da18934f614fae6a375574c7b2",
+        "basis": "SOURCE"
+      },
+      "legalWriters": [
+        "qa:internal"
+      ],
+      "legalReaders": [
+        "*"
+      ],
+      "projections": [],
+      "caches": [],
+      "validStates": [
+        "committed consistent state"
+      ],
+      "forbiddenStates": [
+        "partial commit",
+        "dual truth"
+      ],
+      "preconditions": [
+        "caller holds required authority"
+      ],
+      "postconditions": [
+        "invariant statement holds"
+      ],
+      "legalTransitions": [
+        "declared ops only"
+      ],
+      "illegalTransitions": [
+        "bypass of owner authority"
+      ],
+      "failureBehavior": "fail closed; no partial effect",
+      "atomicity": "op-level atomicity",
+      "inverseBehavior": "rollback restores prior state",
+      "persistence": "state survives save/load as owner contract",
+      "migration": "schema-versioned restore",
+      "lifecycle": "created via owner op, destroyed via owner op",
+      "runtimeConsequences": [
+        "visible behavior follows invariant"
+      ],
+      "uiConsequences": [
+        "UI reflects invariant via read model"
+      ],
+      "oracles": [
+        "deterministic vitest assertions"
+      ],
+      "requiredEvidenceSurfaces": [
+        "STATIC_SEMANTIC",
+        "INDEPENDENT_REVIEW"
+      ],
+      "taxonomyIds": [
+        "QA_INTEGRITY"
+      ],
+      "status": "ACTIVE"
+    }
+  ],
+  "census": [
+    {
+      "id": "CEN-CC",
+      "invariantIds": [
+        "I-CC-1"
+      ],
+      "location": {
+        "path": "src/services/character",
+        "symbolOrSection": "CharacterCreationService",
+        "revision": "46bb1482887596da18934f614fae6a375574c7b2",
+        "basis": "SOURCE"
+      },
+      "classification": "CANONICAL",
+      "reads": [],
+      "writes": [
+        "CharacterCreationService"
+      ],
+      "eventsIn": [],
+      "eventsOut": [],
+      "consumerIds": [],
+      "searchEvidenceIds": [],
+      "disposition": "adjudicated canonical authority for declared invariants"
+    },
+    {
+      "id": "CEN-IA",
+      "invariantIds": [
+        "I-IA-1",
+        "I-IA-2"
+      ],
+      "location": {
+        "path": "src/core/game",
+        "symbolOrSection": "GameManagerRealmAdvanceOps",
+        "revision": "46bb1482887596da18934f614fae6a375574c7b2",
+        "basis": "SOURCE"
+      },
+      "classification": "CANONICAL",
+      "reads": [],
+      "writes": [
+        "GameManagerRealmAdvanceOps"
+      ],
+      "eventsIn": [],
+      "eventsOut": [],
+      "consumerIds": [],
+      "searchEvidenceIds": [],
+      "disposition": "adjudicated canonical authority for declared invariants"
+    },
+    {
+      "id": "CEN-PA",
+      "invariantIds": [
+        "I-PA-1"
+      ],
+      "location": {
+        "path": "src/core/game",
+        "symbolOrSection": "GameManagerRealmAdvanceOps.chooseCultivationPath",
+        "revision": "46bb1482887596da18934f614fae6a375574c7b2",
+        "basis": "SOURCE"
+      },
+      "classification": "CANONICAL",
+      "reads": [],
+      "writes": [
+        "GameManagerRealmAdvanceOps.chooseCultivationPath"
+      ],
+      "eventsIn": [],
+      "eventsOut": [],
+      "consumerIds": [],
+      "searchEvidenceIds": [],
+      "disposition": "adjudicated canonical authority for declared invariants"
+    },
+    {
+      "id": "CEN-SV",
+      "invariantIds": [
+        "I-SV-1"
+      ],
+      "location": {
+        "path": "src/core",
+        "symbolOrSection": "betaScopeSurface",
+        "revision": "46bb1482887596da18934f614fae6a375574c7b2",
+        "basis": "SOURCE"
+      },
+      "classification": "CANONICAL",
+      "reads": [],
+      "writes": [
+        "betaScopeSurface"
+      ],
+      "eventsIn": [],
+      "eventsOut": [],
+      "consumerIds": [],
+      "searchEvidenceIds": [],
+      "disposition": "adjudicated canonical authority for declared invariants"
+    },
+    {
+      "id": "CEN-AS",
+      "invariantIds": [
+        "I-AS-1",
+        "I-DS-1"
+      ],
+      "location": {
+        "path": "src/core",
+        "symbolOrSection": "betaScope",
+        "revision": "46bb1482887596da18934f614fae6a375574c7b2",
+        "basis": "SOURCE"
+      },
+      "classification": "CANONICAL",
+      "reads": [],
+      "writes": [
+        "betaScope"
+      ],
+      "eventsIn": [],
+      "eventsOut": [],
+      "consumerIds": [],
+      "searchEvidenceIds": [],
+      "disposition": "adjudicated canonical authority for declared invariants"
+    },
+    {
+      "id": "CEN-RM",
+      "invariantIds": [
+        "I-RM-1"
+      ],
+      "location": {
+        "path": "src/presentation",
+        "symbolOrSection": "createGamePresentation",
+        "revision": "46bb1482887596da18934f614fae6a375574c7b2",
+        "basis": "SOURCE"
+      },
+      "classification": "PROJECTION",
+      "reads": [],
+      "writes": [],
+      "eventsIn": [],
+      "eventsOut": [],
+      "consumerIds": [],
+      "searchEvidenceIds": [],
+      "disposition": "adjudicated projection role"
+    },
+    {
+      "id": "CEN-CR",
+      "invariantIds": [
+        "I-CR-1"
+      ],
+      "location": {
+        "path": "src/core/battle",
+        "symbolOrSection": "BattleLootSystem",
+        "revision": "46bb1482887596da18934f614fae6a375574c7b2",
+        "basis": "SOURCE"
+      },
+      "classification": "CANONICAL",
+      "reads": [],
+      "writes": [
+        "BattleLootSystem"
+      ],
+      "eventsIn": [],
+      "eventsOut": [],
+      "consumerIds": [],
+      "searchEvidenceIds": [],
+      "disposition": "adjudicated canonical authority for declared invariants"
+    },
+    {
+      "id": "CEN-PG",
+      "invariantIds": [
+        "I-PG-1"
+      ],
+      "location": {
+        "path": "src/core/skill",
+        "symbolOrSection": "MortalPrecursors",
+        "revision": "46bb1482887596da18934f614fae6a375574c7b2",
+        "basis": "SOURCE"
+      },
+      "classification": "CANONICAL",
+      "reads": [],
+      "writes": [
+        "MortalPrecursors"
+      ],
+      "eventsIn": [],
+      "eventsOut": [],
+      "consumerIds": [],
+      "searchEvidenceIds": [],
+      "disposition": "adjudicated canonical authority for declared invariants"
+    },
+    {
+      "id": "CEN-SS",
+      "invariantIds": [
+        "I-SS-1"
+      ],
+      "location": {
+        "path": "src/core/stage",
+        "symbolOrSection": "StageManager+StageSystem",
+        "revision": "46bb1482887596da18934f614fae6a375574c7b2",
+        "basis": "SOURCE"
+      },
+      "classification": "CANONICAL",
+      "reads": [],
+      "writes": [
+        "StageManager+StageSystem"
+      ],
+      "eventsIn": [],
+      "eventsOut": [],
+      "consumerIds": [],
+      "searchEvidenceIds": [],
+      "disposition": "adjudicated canonical authority for declared invariants"
+    },
+    {
+      "id": "CEN-EC",
+      "invariantIds": [
+        "I-EC-1"
+      ],
+      "location": {
+        "path": "src/core/economy",
+        "symbolOrSection": "VendorSystem+economy census",
+        "revision": "46bb1482887596da18934f614fae6a375574c7b2",
+        "basis": "SOURCE"
+      },
+      "classification": "CANONICAL",
+      "reads": [],
+      "writes": [
+        "VendorSystem+economy census"
+      ],
+      "eventsIn": [],
+      "eventsOut": [],
+      "consumerIds": [],
+      "searchEvidenceIds": [],
+      "disposition": "adjudicated canonical authority for declared invariants"
+    },
+    {
+      "id": "CEN-SF",
+      "invariantIds": [
+        "I-SF-1"
+      ],
+      "location": {
+        "path": "src/core",
+        "symbolOrSection": "betaScopeSurface.unsupportedReleaseReason",
+        "revision": "46bb1482887596da18934f614fae6a375574c7b2",
+        "basis": "SOURCE"
+      },
+      "classification": "CANONICAL",
+      "reads": [],
+      "writes": [
+        "betaScopeSurface.unsupportedReleaseReason"
+      ],
+      "eventsIn": [],
+      "eventsOut": [],
+      "consumerIds": [],
+      "searchEvidenceIds": [],
+      "disposition": "adjudicated canonical authority for declared invariants"
+    },
+    {
+      "id": "CEN-PM",
+      "invariantIds": [
+        "I-PM-1"
+      ],
+      "location": {
+        "path": "src/services/save",
+        "symbolOrSection": "SaveSystem",
+        "revision": "46bb1482887596da18934f614fae6a375574c7b2",
+        "basis": "SOURCE"
+      },
+      "classification": "CANONICAL",
+      "reads": [],
+      "writes": [
+        "SaveSystem"
+      ],
+      "eventsIn": [],
+      "eventsOut": [],
+      "consumerIds": [],
+      "searchEvidenceIds": [],
+      "disposition": "adjudicated canonical authority for declared invariants"
+    },
+    {
+      "id": "CEN-EN",
+      "invariantIds": [
+        "I-EN-1"
+      ],
+      "location": {
+        "path": "src/core/enemy",
+        "symbolOrSection": "enemy registry + BETA_ENEMY_ROSTER",
+        "revision": "46bb1482887596da18934f614fae6a375574c7b2",
+        "basis": "SOURCE"
+      },
+      "classification": "CANONICAL",
+      "reads": [],
+      "writes": [
+        "enemy registry + BETA_ENEMY_ROSTER"
+      ],
+      "eventsIn": [],
+      "eventsOut": [],
+      "consumerIds": [],
+      "searchEvidenceIds": [],
+      "disposition": "adjudicated canonical authority for declared invariants"
+    },
+    {
+      "id": "CEN-UH",
+      "invariantIds": [
+        "I-UH-1"
+      ],
+      "location": {
+        "path": "src/core/presentation",
+        "symbolOrSection": "labels+OverlayLayers",
+        "revision": "46bb1482887596da18934f614fae6a375574c7b2",
+        "basis": "SOURCE"
+      },
+      "classification": "PROJECTION",
+      "reads": [],
+      "writes": [],
+      "eventsIn": [],
+      "eventsOut": [],
+      "consumerIds": [],
+      "searchEvidenceIds": [],
+      "disposition": "adjudicated projection role"
+    },
+    {
+      "id": "CEN-RT",
+      "invariantIds": [
+        "I-RT-1"
+      ],
+      "location": {
+        "path": "electron",
+        "symbolOrSection": "main.ts autoUpdater",
+        "revision": "46bb1482887596da18934f614fae6a375574c7b2",
+        "basis": "SOURCE"
+      },
+      "classification": "CANONICAL",
+      "reads": [],
+      "writes": [
+        "main.ts autoUpdater"
+      ],
+      "eventsIn": [],
+      "eventsOut": [],
+      "consumerIds": [],
+      "searchEvidenceIds": [],
+      "disposition": "adjudicated canonical authority for declared invariants"
+    },
+    {
+      "id": "CEN-TS",
+      "invariantIds": [
+        "I-TS-1"
+      ],
+      "location": {
+        "path": "src/core/dev",
+        "symbolOrSection": "devtools seams",
+        "revision": "46bb1482887596da18934f614fae6a375574c7b2",
+        "basis": "SOURCE"
+      },
+      "classification": "TEST_ONLY",
+      "reads": [],
+      "writes": [],
+      "eventsIn": [],
+      "eventsOut": [],
+      "consumerIds": [],
+      "searchEvidenceIds": [],
+      "disposition": "adjudicated test_only role"
+    },
+    {
+      "id": "CEN-CN",
+      "invariantIds": [
+        "I-CN-1"
+      ],
+      "location": {
+        "path": "src/services/save",
+        "symbolOrSection": "lifecycle flush seams",
+        "revision": "46bb1482887596da18934f614fae6a375574c7b2",
+        "basis": "SOURCE"
+      },
+      "classification": "CANONICAL",
+      "reads": [],
+      "writes": [
+        "lifecycle flush seams"
+      ],
+      "eventsIn": [],
+      "eventsOut": [],
+      "consumerIds": [],
+      "searchEvidenceIds": [],
+      "disposition": "adjudicated canonical authority for declared invariants"
+    },
+    {
+      "id": "CEN-TQ",
+      "invariantIds": [
+        "I-TQ-1"
+      ],
+      "location": {
+        "path": "tests",
+        "symbolOrSection": "vitest suite + pins",
+        "revision": "46bb1482887596da18934f614fae6a375574c7b2",
+        "basis": "SOURCE"
+      },
+      "classification": "TEST_ONLY",
+      "reads": [],
+      "writes": [],
+      "eventsIn": [],
+      "eventsOut": [],
+      "consumerIds": [],
+      "searchEvidenceIds": [],
+      "disposition": "adjudicated test_only role"
+    },
+    {
+      "id": "CEN-QI",
+      "invariantIds": [
+        "I-QI-1"
+      ],
+      "location": {
+        "path": "scripts/qa",
+        "symbolOrSection": "qa:internal runner",
+        "revision": "46bb1482887596da18934f614fae6a375574c7b2",
+        "basis": "SOURCE"
+      },
+      "classification": "CANONICAL",
+      "reads": [],
+      "writes": [
+        "qa:internal runner"
+      ],
+      "eventsIn": [],
+      "eventsOut": [],
+      "consumerIds": [],
+      "searchEvidenceIds": [],
+      "disposition": "adjudicated canonical authority for declared invariants"
+    }
+  ],
+  "findings": [
+    {
+      "id": "F-DL-1",
+      "title": "hiddenPerfection.completedHiddenBodyRealmIds on a loaded save inflates main-stat cap under beta scope",
+      "state": {
+        "productStateId": "86f75a51c2abb1b7538b08ff288b947a4f5cfd1f36efb642707a911957657cf1",
+        "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+        "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+        "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+      },
+      "severity": "High",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "src/core/stats/StatCap.ts",
+          "symbolOrSection": "getEffectiveMainStatCap",
+          "revision": "86f75a51c2ab",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "src/core/game/GameManagerProgressionOps.ts",
+          "symbolOrSection": "allocateStatPoint",
+          "revision": "86f75a51c2ab",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "src/core/pill/PillSystem.ts",
+          "symbolOrSection": "pill stat channels",
+          "revision": "86f75a51c2ab",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "src/stores/player.ts",
+          "symbolOrSection": "normalizedCap",
+          "revision": "86f75a51c2ab",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "coord-main probe (attack surface authority-seam/dormant-systems)",
+      "invariantIds": [
+        "I-DS-1",
+        "I-AS-1"
+      ],
+      "evidenceIds": [
+        "EV-PROBE-DORMANT-1"
+      ],
+      "counterexample": "player{realmId:qi_refining, hiddenPerfection.completedHiddenBodyRealmIds:[mortal,qi_refining]} under lockBetaFeaturesForTests -> getEffectiveMainStatCap=36",
+      "expected": "cap == getMainStatCap(realm) = 30 (hidden record dormant)",
+      "actual": "cap = 36 (+10pp per carried realm leaks into visible play)",
+      "rootCause": "ungated dormant-state effect feed",
+      "rootClass": "AUTHORITY",
+      "subsystem": "betaScope",
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/core",
+            "src/services",
+            "src/components"
+          ],
+          "termsAndMethod": "grep for persisted scope-hidden field names (hiddenPerfection slices, hiddenBeastKills, companions, artifact, formationLoadout, swordPath, forgePoints, daily quest state) read by effect paths outside their gated domains; inspected each consumer for an isBetaFeature/isScopeHidden gate",
+          "evidenceIds": [
+            "EV-PROBE-DORMANT-1"
+          ],
+          "hitDispositions": [
+            "F-DL-1 confirmed (StatCap ungated)",
+            "F-DL-2 confirmed (RealmPassive ungated)",
+            "hiddenBeastKills: consumers all inside gated HiddenBeastSystem — closed",
+            "lineageActive/realms records: no non-hidden consumers — closed",
+            "companions: CombatBuild empties under isScopeHidden — closed",
+            "formationLoadout: CombatBuild buff gated — closed",
+            "artifact: artifactGradeMultiplier constant 1, domain unlock gated — closed",
+            "swordPath: capability-gated via way membership — closed",
+            "forgePoints: display-only — closed",
+            "dailyQuest state: activation/projection/claim/reset all gated — closed",
+            "manualWorkforce: write seam fails closed — closed"
+          ],
+          "coverageLimits": [
+            "grep-based enumeration over persisted field names; novel field names added after this run not covered"
+          ]
+        }
+      ],
+      "siblingFindingIds": [
+        "F-DL-2"
+      ],
+      "repair": "gated dormant-state effect read on isBetaFeature(hiddenContent) at the effect seam",
+      "pinEvidenceIds": [
+        "EV-PIN-DORMANT-1"
+      ],
+      "verificationEvidenceIds": [
+        "EV-PIN-DORMANT-1"
+      ],
+      "closureReviewIds": [],
+      "status": "FIXED_PENDING_PROOF",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-DL-2",
+      "title": "hiddenPerfection.hiddenBreakthroughRealmIds grants the enhanced realm-passive variant under beta scope",
+      "state": {
+        "productStateId": "86f75a51c2abb1b7538b08ff288b947a4f5cfd1f36efb642707a911957657cf1",
+        "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+        "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+        "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+      },
+      "severity": "High",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "src/core/realm/RealmPassiveSystem.ts",
+          "symbolOrSection": "grantRealmPassive",
+          "revision": "86f75a51c2ab",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "src/core/realm/hidden/HiddenLineage.ts",
+          "symbolOrSection": "wasHiddenBreakthrough",
+          "revision": "86f75a51c2ab",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "src/data/realm/RealmPassives.ts",
+          "symbolOrSection": "buildEnhancedModifiers",
+          "revision": "86f75a51c2ab",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "coord-main probe (attack surface authority-seam/dormant-systems)",
+      "invariantIds": [
+        "I-DS-1",
+        "I-AS-1"
+      ],
+      "evidenceIds": [
+        "EV-PROBE-DORMANT-1"
+      ],
+      "counterexample": "player{hiddenBreakthroughRealmIds:[qi_refining], grantedRealmPassiveIds:[]} -> grantRealmPassive -> modifiers percent=0.3",
+      "expected": "normal variant (maxHp:0.18) — hidden breakthrough record dormant under beta",
+      "actual": "enhanced variant granted (maxHp:0.3, +67% inflation)",
+      "rootCause": "ungated dormant-state effect feed",
+      "rootClass": "AUTHORITY",
+      "subsystem": "betaScope",
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/core",
+            "src/services",
+            "src/components"
+          ],
+          "termsAndMethod": "grep for persisted scope-hidden field names (hiddenPerfection slices, hiddenBeastKills, companions, artifact, formationLoadout, swordPath, forgePoints, daily quest state) read by effect paths outside their gated domains; inspected each consumer for an isBetaFeature/isScopeHidden gate",
+          "evidenceIds": [
+            "EV-PROBE-DORMANT-1"
+          ],
+          "hitDispositions": [
+            "F-DL-1 confirmed (StatCap ungated)",
+            "F-DL-2 confirmed (RealmPassive ungated)",
+            "hiddenBeastKills: consumers all inside gated HiddenBeastSystem — closed",
+            "lineageActive/realms records: no non-hidden consumers — closed",
+            "companions: CombatBuild empties under isScopeHidden — closed",
+            "formationLoadout: CombatBuild buff gated — closed",
+            "artifact: artifactGradeMultiplier constant 1, domain unlock gated — closed",
+            "swordPath: capability-gated via way membership — closed",
+            "forgePoints: display-only — closed",
+            "dailyQuest state: activation/projection/claim/reset all gated — closed",
+            "manualWorkforce: write seam fails closed — closed"
+          ],
+          "coverageLimits": [
+            "grep-based enumeration over persisted field names; novel field names added after this run not covered"
+          ]
+        }
+      ],
+      "siblingFindingIds": [
+        "F-DL-1"
+      ],
+      "repair": "gated dormant-state effect read on isBetaFeature(hiddenContent) at the effect seam",
+      "pinEvidenceIds": [
+        "EV-PIN-DORMANT-1"
+      ],
+      "verificationEvidenceIds": [
+        "EV-PIN-DORMANT-1"
+      ],
+      "closureReviewIds": [],
+      "status": "FIXED_PENDING_PROOF",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-DL-3",
+      "title": "unsupportedReleaseReason throws TypeError on hiddenPerfection:null",
+      "state": {
+        "productStateId": "86f75a51c2abb1b7538b08ff288b947a4f5cfd1f36efb642707a911957657cf1",
+        "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+        "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+        "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+      },
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "src/core/betaScopeSurface.ts",
+          "symbolOrSection": "unsupportedReleaseReason",
+          "revision": "86f75a51c2ab",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "src/core/betaScopeSurface.ts",
+          "symbolOrSection": "hasHiddenProgressionState",
+          "revision": "86f75a51c2ab",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "coord-main probe (attack surface authority-seam/dormant-systems)",
+      "invariantIds": [
+        "I-SF-1"
+      ],
+      "evidenceIds": [
+        "EV-PROBE-DORMANT-1"
+      ],
+      "counterexample": "player{hiddenPerfection:null} -> unsupportedReleaseReason(p) throws TypeError: Cannot read properties of null (reading realms)",
+      "expected": "never throws on validation-bypassed shapes (function own contract comment); returns reason or null",
+      "actual": "TypeError thrown — null passes the !== undefined guard and .realms access crashes",
+      "rootCause": "ungated dormant-state effect feed",
+      "rootClass": "AUTHORITY",
+      "subsystem": "betaScope",
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/core",
+            "src/services",
+            "src/components"
+          ],
+          "termsAndMethod": "grep for persisted scope-hidden field names (hiddenPerfection slices, hiddenBeastKills, companions, artifact, formationLoadout, swordPath, forgePoints, daily quest state) read by effect paths outside their gated domains; inspected each consumer for an isBetaFeature/isScopeHidden gate",
+          "evidenceIds": [
+            "EV-PROBE-DORMANT-1"
+          ],
+          "hitDispositions": [
+            "F-DL-1 confirmed (StatCap ungated)",
+            "F-DL-2 confirmed (RealmPassive ungated)",
+            "hiddenBeastKills: consumers all inside gated HiddenBeastSystem — closed",
+            "lineageActive/realms records: no non-hidden consumers — closed",
+            "companions: CombatBuild empties under isScopeHidden — closed",
+            "formationLoadout: CombatBuild buff gated — closed",
+            "artifact: artifactGradeMultiplier constant 1, domain unlock gated — closed",
+            "swordPath: capability-gated via way membership — closed",
+            "forgePoints: display-only — closed",
+            "dailyQuest state: activation/projection/claim/reset all gated — closed",
+            "manualWorkforce: write seam fails closed — closed"
+          ],
+          "coverageLimits": [
+            "grep-based enumeration over persisted field names; novel field names added after this run not covered"
+          ]
+        }
+      ],
+      "siblingFindingIds": [
+        "F-DL-1",
+        "F-DL-2"
+      ],
+      "repair": "null/scalar guard in hasHiddenProgressionState",
+      "pinEvidenceIds": [
+        "EV-PIN-DORMANT-1"
+      ],
+      "verificationEvidenceIds": [
+        "EV-PIN-DORMANT-1"
+      ],
+      "closureReviewIds": [],
+      "status": "FIXED_PENDING_PROOF",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-DL-4",
+      "title": "frontend-contract sec.H unsupported-save notice is unwired: unsupportedReleaseReason/betaSupportedFor have zero production callers",
+      "state": {
+        "productStateId": "86f75a51c2abb1b7538b08ff288b947a4f5cfd1f36efb642707a911957657cf1",
+        "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+        "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+        "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+      },
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "locations": [
+        {
+          "path": "src/core/betaScopeSurface.ts",
+          "symbolOrSection": "unsupportedReleaseReason",
+          "revision": "86f75a51c2ab",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "src/composables/useAppLifecycle.ts",
+          "symbolOrSection": "boot load flow",
+          "revision": "86f75a51c2ab",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "src/App.vue",
+          "symbolOrSection": "SaveIncompatibleScreen route",
+          "revision": "86f75a51c2ab",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "coord-main probe (attack surface authority-seam/dormant-systems)",
+      "invariantIds": [
+        "I-SF-1",
+        "I-UH-1"
+      ],
+      "evidenceIds": [
+        "EV-PROBE-DORMANT-1"
+      ],
+      "counterexample": "grep of src/ for unsupportedReleaseReason|betaSupportedFor call sites: only betaScopeSurface.ts (def) + GameManagerProgressionOps.ts (delegate) + tests — no UI/load-path consumer",
+      "expected": "sec.H: legacy saves carry a reason — render a notice",
+      "actual": "no notice rendered anywhere; out-of-scope save loads and plays silently",
+      "rootCause": "ungated dormant-state effect feed",
+      "rootClass": "AUTHORITY",
+      "subsystem": "betaScope",
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/core",
+            "src/services",
+            "src/components"
+          ],
+          "termsAndMethod": "grep for persisted scope-hidden field names (hiddenPerfection slices, hiddenBeastKills, companions, artifact, formationLoadout, swordPath, forgePoints, daily quest state) read by effect paths outside their gated domains; inspected each consumer for an isBetaFeature/isScopeHidden gate",
+          "evidenceIds": [
+            "EV-PROBE-DORMANT-1"
+          ],
+          "hitDispositions": [
+            "F-DL-1 confirmed (StatCap ungated)",
+            "F-DL-2 confirmed (RealmPassive ungated)",
+            "hiddenBeastKills: consumers all inside gated HiddenBeastSystem — closed",
+            "lineageActive/realms records: no non-hidden consumers — closed",
+            "companions: CombatBuild empties under isScopeHidden — closed",
+            "formationLoadout: CombatBuild buff gated — closed",
+            "artifact: artifactGradeMultiplier constant 1, domain unlock gated — closed",
+            "swordPath: capability-gated via way membership — closed",
+            "forgePoints: display-only — closed",
+            "dailyQuest state: activation/projection/claim/reset all gated — closed",
+            "manualWorkforce: write seam fails closed — closed"
+          ],
+          "coverageLimits": [
+            "grep-based enumeration over persisted field names; novel field names added after this run not covered"
+          ]
+        }
+      ],
+      "siblingFindingIds": [
+        "F-DL-1",
+        "F-DL-2"
+      ],
+      "repair": "wired sec.H notice: unsupportedSaveNotice dep in useAppLifecycle -> warning toast via i18n save.betaUnsupported.*",
+      "pinEvidenceIds": [
+        "EV-PIN-NOTICE-1"
+      ],
+      "verificationEvidenceIds": [
+        "EV-PIN-NOTICE-1"
+      ],
+      "closureReviewIds": [],
+      "status": "FIXED_PENDING_PROOF",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-DL-5",
+      "title": "unsupportedReleaseReason flags formation_loadout on a save MISSING the field (absent field treated as record)",
+      "state": {
+        "productStateId": "86f75a51c2abb1b7538b08ff288b947a4f5cfd1f36efb642707a911957657cf1",
+        "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+        "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+        "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+      },
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "src/core/betaScopeSurface.ts",
+          "symbolOrSection": "unsupportedReleaseReason",
+          "revision": "86f75a51c2ab",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "coord-main pin-test authoring (sec.H notice wiring)",
+      "invariantIds": [
+        "I-SF-1"
+      ],
+      "evidenceIds": [
+        "EV-PIN-NOTICE-1"
+      ],
+      "counterexample": "unsupportedReleaseReason({realmId:mortal, no formationLoadout field}) -> formation_loadout because undefined !== null is true",
+      "expected": "absent field = no record -> no flag (function comment: fails closed only when a real record exists)",
+      "actual": "false-positive formation_loadout flag -> betaSupportedFor false on saves lacking the field",
+      "rootCause": "!== null check treats undefined (absent) as a record",
+      "rootClass": "LOGIC",
+      "subsystem": "betaScope",
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/core/betaScopeSurface.ts"
+          ],
+          "termsAndMethod": "audited every field check in unsupportedReleaseReason for absent-vs-null semantics",
+          "evidenceIds": [
+            "EV-PIN-NOTICE-1"
+          ],
+          "hitDispositions": [
+            "artifact uses !== undefined (correct for optional field)",
+            "companions uses Array.isArray (closed)",
+            "hiddenPerfection uses !== undefined + object guard (fixed for null in F-DL-3)",
+            "realm/way reads guarded",
+            "formationLoadout was the only !== null hole"
+          ],
+          "coverageLimits": [
+            "read-model only"
+          ]
+        }
+      ],
+      "siblingFindingIds": [
+        "F-DL-3",
+        "F-DL-4"
+      ],
+      "repair": "added !== undefined to the formationLoadout record check",
+      "pinEvidenceIds": [
+        "EV-PIN-NOTICE-1"
+      ],
+      "verificationEvidenceIds": [
+        "EV-PIN-NOTICE-1"
+      ],
+      "closureReviewIds": [],
+      "status": "FIXED_PENDING_PROOF",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-RM-1",
+      "title": "SkillPathPanel renders the 4 non-committed element branches as browsable locked tabs, violating contract sec.D scope-hidden mandate",
+      "state": {
+        "productStateId": "4311fc4d636dc9808f8fcc3699a4f41eb4e9db05e3b22623cc5409502f115a42",
+        "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+        "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+        "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+      },
+      "severity": "High",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "src/components/panels/SkillPathPanel.vue",
+          "symbolOrSection": "element tabs v-for over ELEMENT_ORDER (~L300)",
+          "revision": "4311fc4d636d",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "src/components/panels/skill-path/NodeTreePanel.vue",
+          "symbolOrSection": "own node filtering (visibleTags/HIDDEN_BRANCH_TAGS/nodeWayApplies) recomputes verdicts",
+          "revision": "4311fc4d636d",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "src/core/betaScopeSkillDomain.ts",
+          "symbolOrSection": "betaSkillTreeFor/activeElementTreeFor - zero UI consumers",
+          "revision": "4311fc4d636d",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "docs/design/frontend-contract.md",
+          "symbolOrSection": "sec.D: non-committed branches scope-hidden; render verdicts verbatim, never recompute",
+          "revision": "4311fc4d636d",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "coord-main read-model honesty census (beta read-model consumer enumeration)",
+      "invariantIds": [
+        "I-RM-1",
+        "I-DS-1"
+      ],
+      "evidenceIds": [
+        "EV-PROBE-READMODEL-1",
+        "EV-PROBE-READMODEL-2"
+      ],
+      "counterexample": "committed-fire spell_pathway player opens skill panel -> element tab strip renders Hoa/Kim/Thuy/Moc/Tho; selecting a foreign tab browses its locked tree",
+      "expected": "contract sec.D: the 4 non-committed element branches are scope-hidden post-commit - do not render; no teaser, no 'locked'",
+      "actual": "all 5 element tabs render; foreign branches browsable with locked treatment (deterministic: tab 'Moc' rendered for committed 'fire')",
+      "rootCause": "UI bypasses the canonical beta read-model and renders scope-hidden content through its own filtering",
+      "rootClass": "AUTHORITY",
+      "subsystem": "betaScope",
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/components",
+            "src/stores",
+            "src/composables"
+          ],
+          "termsAndMethod": "enumerated every exported beta read-model in src/core/betaScopeSurface.ts + src/core/betaScopeSkillDomain.ts + GameManager facade methods, then grepped src/components|stores|composables for a consumer of each; for each unwired/parallel-verdict surface inspected the UI's own filtering for dormant-content leaks",
+          "evidenceIds": [
+            "EV-PROBE-READMODEL-1"
+          ],
+          "hitDispositions": [
+            "F-RM-1 confirmed: SkillPathPanel iterates ELEMENT_ORDER directly; betaSkillTreeFor/activeElementTreeFor have zero UI consumers",
+            "F-RM-2 confirmed: TurnCombatSkillBar iterates fixed ROLE_ORDER; betaCombatRolesFor unwired; empty ultimate slot renders",
+            "F-RM-3 confirmed: betaCompletionFor zero UI consumers; ending beat never displays",
+            "F-RM-4 confirmed: AlchemyView filters raw getAlchemyRecipes by realm+retired only; getBetaAlchemyRecipeModels unwired; 4 dormant families render",
+            "StageSelectPanel closed: catalog contains only in-scope stages; locks render via domain stageLockReasonCode",
+            "QuestPanel closed: isBetaQuestEnabled gates unlock/projection/claim in QuestSystem",
+            "EquipmentHall closed: isBetaEquipmentTab consumed",
+            "Realm ladder closed: betaRealmLadderNodes consumed by RealmPanel",
+            "Wheel/buildings/panels/left-modes closed: betaWheelSlots/isBetaBuildingSurface/isBetaStandalonePanel/isBetaLeftPanelMode all consumed",
+            "getWorkerLodgeSurfaceModel unwired but worker_lodge itself is scope-hidden - moot",
+            "stageSpawnableEnemyIds consumed by StageWaveSystem funnel"
+          ],
+          "coverageLimits": [
+            "consumer census by name grep; a consumer importing under an alias not containing the read-model name would be missed (all exports use distinct names, verified by re-grep on facade method names)"
+          ]
+        }
+      ],
+      "siblingFindingIds": [
+        "F-RM-2",
+        "F-RM-3",
+        "F-RM-4"
+      ],
+      "repair": "SkillPathPanel.vue: visibleElements computed = ELEMENT_ORDER pre-commit, [committedElement] post-commit; tab strip v-for now renders only the committed element (contract sec.D).",
+      "pinEvidenceIds": [
+        "EV-PROBE-READMODEL-2"
+      ],
+      "verificationEvidenceIds": [
+        "EV-PROBE-READMODEL-2"
+      ],
+      "closureReviewIds": [],
+      "status": "FIXED_PENDING_PROOF",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-RM-2",
+      "title": "Combat skill bar renders an empty 'Ultimate' slot button for every beta player (scope-hidden role teaser)",
+      "state": {
+        "productStateId": "4311fc4d636dc9808f8fcc3699a4f41eb4e9db05e3b22623cc5409502f115a42",
+        "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+        "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+        "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+      },
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "src/components/game/combat/hud/TurnCombatSkillBar.vue",
+          "symbolOrSection": "visibleSlots iterates fixed ROLE_ORDER incl. ultimate (~L107)",
+          "revision": "4311fc4d636d",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "src/core/combat/CombatSkillPresentation.ts",
+          "symbolOrSection": "ultimate EMPTY_ENTRY minted for beta kits",
+          "revision": "4311fc4d636d",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "src/core/betaScopeSkillDomain.ts",
+          "symbolOrSection": "betaCombatRolesFor - the unwired role-rail read-model",
+          "revision": "4311fc4d636d",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "coord-main read-model honesty census (beta read-model consumer enumeration)",
+      "invariantIds": [
+        "I-RM-1",
+        "I-DS-1"
+      ],
+      "evidenceIds": [
+        "EV-PROBE-READMODEL-1",
+        "EV-PROBE-READMODEL-2"
+      ],
+      "counterexample": "any beta player enters a turn battle -> skill bar renders [basic, special, Ultimate(empty disabled)]",
+      "expected": "contract sec.7/8 rail verdict: ultimate is 'scope-hidden' in beta - no role exists; do not render",
+      "actual": "an 'Ultimate' slot button renders on every battle rail (deterministic: 3 slot buttons for a beta kit)",
+      "rootCause": "UI bypasses the canonical beta read-model and renders scope-hidden content through its own filtering",
+      "rootClass": "AUTHORITY",
+      "subsystem": "betaScope",
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/components",
+            "src/stores",
+            "src/composables"
+          ],
+          "termsAndMethod": "enumerated every exported beta read-model in src/core/betaScopeSurface.ts + src/core/betaScopeSkillDomain.ts + GameManager facade methods, then grepped src/components|stores|composables for a consumer of each; for each unwired/parallel-verdict surface inspected the UI's own filtering for dormant-content leaks",
+          "evidenceIds": [
+            "EV-PROBE-READMODEL-1"
+          ],
+          "hitDispositions": [
+            "F-RM-1 confirmed: SkillPathPanel iterates ELEMENT_ORDER directly; betaSkillTreeFor/activeElementTreeFor have zero UI consumers",
+            "F-RM-2 confirmed: TurnCombatSkillBar iterates fixed ROLE_ORDER; betaCombatRolesFor unwired; empty ultimate slot renders",
+            "F-RM-3 confirmed: betaCompletionFor zero UI consumers; ending beat never displays",
+            "F-RM-4 confirmed: AlchemyView filters raw getAlchemyRecipes by realm+retired only; getBetaAlchemyRecipeModels unwired; 4 dormant families render",
+            "StageSelectPanel closed: catalog contains only in-scope stages; locks render via domain stageLockReasonCode",
+            "QuestPanel closed: isBetaQuestEnabled gates unlock/projection/claim in QuestSystem",
+            "EquipmentHall closed: isBetaEquipmentTab consumed",
+            "Realm ladder closed: betaRealmLadderNodes consumed by RealmPanel",
+            "Wheel/buildings/panels/left-modes closed: betaWheelSlots/isBetaBuildingSurface/isBetaStandalonePanel/isBetaLeftPanelMode all consumed",
+            "getWorkerLodgeSurfaceModel unwired but worker_lodge itself is scope-hidden - moot",
+            "stageSpawnableEnemyIds consumed by StageWaveSystem funnel"
+          ],
+          "coverageLimits": [
+            "consumer census by name grep; a consumer importing under an alias not containing the read-model name would be missed (all exports use distinct names, verified by re-grep on facade method names)"
+          ]
+        }
+      ],
+      "siblingFindingIds": [
+        "F-RM-1"
+      ],
+      "repair": "TurnCombatSkillBar.vue: visibleSlots filters out roles whose betaCombatRolesFor verdict is 'scope-hidden' (rail authority consumed via gameManager.progressionOps; no recomputation).",
+      "pinEvidenceIds": [
+        "EV-PROBE-READMODEL-2"
+      ],
+      "verificationEvidenceIds": [
+        "EV-PROBE-READMODEL-2"
+      ],
+      "closureReviewIds": [],
+      "status": "FIXED_PENDING_PROOF",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-RM-3",
+      "title": "betaCompletionFor has zero UI consumers - the contract-promised beta ending beat never displays",
+      "state": {
+        "productStateId": "4311fc4d636dc9808f8fcc3699a4f41eb4e9db05e3b22623cc5409502f115a42",
+        "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+        "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+        "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+      },
+      "severity": "High",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "src/core/betaScopeSurface.ts",
+          "symbolOrSection": "betaCompletionFor (~L253)",
+          "revision": "4311fc4d636d",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "src/core/game/GameManagerProgressionOps.ts",
+          "symbolOrSection": "betaCompletionFor facade (~L1081)",
+          "revision": "4311fc4d636d",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "docs/design/frontend-contract.md",
+          "symbolOrSection": "sec.H: deliberate beta ending beat; no Kim Dan CTA",
+          "revision": "4311fc4d636d",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "coord-main read-model honesty census (beta read-model consumer enumeration)",
+      "invariantIds": [
+        "I-RM-1",
+        "I-DS-1"
+      ],
+      "evidenceIds": [
+        "EV-PROBE-READMODEL-1",
+        "EV-PROBE-READMODEL-2"
+      ],
+      "counterexample": "player clears foundation_floor_10 (act-3 final boss) -> betaComplete=true -> no surface reacts; nothing renders the ending",
+      "expected": "contract sec.H: the flag feeds 'the ending surface' - the deliberate beta ending beat",
+      "actual": "deterministic: recursive scan of src/components + src/App.vue finds zero 'betaCompletionFor' references; every completion shows nothing",
+      "rootCause": "UI bypasses the canonical beta read-model and renders scope-hidden content through its own filtering",
+      "rootClass": "AUTHORITY",
+      "subsystem": "betaScope",
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/components",
+            "src/stores",
+            "src/composables"
+          ],
+          "termsAndMethod": "enumerated every exported beta read-model in src/core/betaScopeSurface.ts + src/core/betaScopeSkillDomain.ts + GameManager facade methods, then grepped src/components|stores|composables for a consumer of each; for each unwired/parallel-verdict surface inspected the UI's own filtering for dormant-content leaks",
+          "evidenceIds": [
+            "EV-PROBE-READMODEL-1"
+          ],
+          "hitDispositions": [
+            "F-RM-1 confirmed: SkillPathPanel iterates ELEMENT_ORDER directly; betaSkillTreeFor/activeElementTreeFor have zero UI consumers",
+            "F-RM-2 confirmed: TurnCombatSkillBar iterates fixed ROLE_ORDER; betaCombatRolesFor unwired; empty ultimate slot renders",
+            "F-RM-3 confirmed: betaCompletionFor zero UI consumers; ending beat never displays",
+            "F-RM-4 confirmed: AlchemyView filters raw getAlchemyRecipes by realm+retired only; getBetaAlchemyRecipeModels unwired; 4 dormant families render",
+            "StageSelectPanel closed: catalog contains only in-scope stages; locks render via domain stageLockReasonCode",
+            "QuestPanel closed: isBetaQuestEnabled gates unlock/projection/claim in QuestSystem",
+            "EquipmentHall closed: isBetaEquipmentTab consumed",
+            "Realm ladder closed: betaRealmLadderNodes consumed by RealmPanel",
+            "Wheel/buildings/panels/left-modes closed: betaWheelSlots/isBetaBuildingSurface/isBetaStandalonePanel/isBetaLeftPanelMode all consumed",
+            "getWorkerLodgeSurfaceModel unwired but worker_lodge itself is scope-hidden - moot",
+            "stageSpawnableEnemyIds consumed by StageWaveSystem funnel"
+          ],
+          "coverageLimits": [
+            "consumer census by name grep; a consumer importing under an alias not containing the read-model name would be missed (all exports use distinct names, verified by re-grep on facade method names)"
+          ]
+        }
+      ],
+      "siblingFindingIds": [
+        "F-RM-1"
+      ],
+      "repair": "App.vue + new components/common/BetaCompletionModal.vue: showBetaCompletion = betaCompletionFor(player).betaComplete && !acked; dismiss writes device-local flag tutienidle.betaCompletionAck.v1.<name> (no save-schema bump). i18n betaComplete.* vi+en.",
+      "pinEvidenceIds": [
+        "EV-PROBE-READMODEL-2"
+      ],
+      "verificationEvidenceIds": [
+        "EV-PROBE-READMODEL-2"
+      ],
+      "closureReviewIds": [],
+      "status": "FIXED_PENDING_PROOF",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-RM-4",
+      "title": "AlchemyView renders 4 dormant pill families (phi_van/to_cot/thoi_the/duong_than) via unfiltered getAlchemyRecipes + realm filter",
+      "state": {
+        "productStateId": "4311fc4d636dc9808f8fcc3699a4f41eb4e9db05e3b22623cc5409502f115a42",
+        "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+        "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+        "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+      },
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "PRODUCTION",
+      "locations": [
+        {
+          "path": "src/components/panels/AlchemyView.vue",
+          "symbolOrSection": "recipes computed (~L47): realm+retired filter only; jobs computed unfiltered",
+          "revision": "4311fc4d636d",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "src/core/game/GameManagerAlchemyOps.ts",
+          "symbolOrSection": "getBetaAlchemyRecipeModels (~L298) - unwired canonical model",
+          "revision": "4311fc4d636d",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "src/data/pill/PillFamilies.ts",
+          "symbolOrSection": "4 of 8 families are non-beta; generated recipes exist at every realm tier",
+          "revision": "4311fc4d636d",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "coord-main read-model honesty census (beta read-model consumer enumeration)",
+      "invariantIds": [
+        "I-RM-1",
+        "I-DS-1"
+      ],
+      "evidenceIds": [
+        "EV-PROBE-READMODEL-1",
+        "EV-PROBE-READMODEL-2"
+      ],
+      "counterexample": "mortal player opens pill room -> recipe list shows Phi Van Dan/To Cot Dan/Thoi The Dan/Duong Than Dan rows; brew returns scope_hidden",
+      "expected": "contract sec.F: render the BetaAlchemySurfaceModel recipes (beta families only); dormant families must not appear",
+      "actual": "dormant-family rows render with names/materials visible + dead craft affordance (deterministic: dormant pill row rendered)",
+      "rootCause": "UI bypasses the canonical beta read-model and renders scope-hidden content through its own filtering",
+      "rootClass": "AUTHORITY",
+      "subsystem": "betaScope",
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/components",
+            "src/stores",
+            "src/composables"
+          ],
+          "termsAndMethod": "enumerated every exported beta read-model in src/core/betaScopeSurface.ts + src/core/betaScopeSkillDomain.ts + GameManager facade methods, then grepped src/components|stores|composables for a consumer of each; for each unwired/parallel-verdict surface inspected the UI's own filtering for dormant-content leaks",
+          "evidenceIds": [
+            "EV-PROBE-READMODEL-1"
+          ],
+          "hitDispositions": [
+            "F-RM-1 confirmed: SkillPathPanel iterates ELEMENT_ORDER directly; betaSkillTreeFor/activeElementTreeFor have zero UI consumers",
+            "F-RM-2 confirmed: TurnCombatSkillBar iterates fixed ROLE_ORDER; betaCombatRolesFor unwired; empty ultimate slot renders",
+            "F-RM-3 confirmed: betaCompletionFor zero UI consumers; ending beat never displays",
+            "F-RM-4 confirmed: AlchemyView filters raw getAlchemyRecipes by realm+retired only; getBetaAlchemyRecipeModels unwired; 4 dormant families render",
+            "StageSelectPanel closed: catalog contains only in-scope stages; locks render via domain stageLockReasonCode",
+            "QuestPanel closed: isBetaQuestEnabled gates unlock/projection/claim in QuestSystem",
+            "EquipmentHall closed: isBetaEquipmentTab consumed",
+            "Realm ladder closed: betaRealmLadderNodes consumed by RealmPanel",
+            "Wheel/buildings/panels/left-modes closed: betaWheelSlots/isBetaBuildingSurface/isBetaStandalonePanel/isBetaLeftPanelMode all consumed",
+            "getWorkerLodgeSurfaceModel unwired but worker_lodge itself is scope-hidden - moot",
+            "stageSpawnableEnemyIds consumed by StageWaveSystem funnel"
+          ],
+          "coverageLimits": [
+            "consumer census by name grep; a consumer importing under an alias not containing the read-model name would be missed (all exports use distinct names, verified by re-grep on facade method names)"
+          ]
+        }
+      ],
+      "siblingFindingIds": [
+        "F-RM-1"
+      ],
+      "repair": "AlchemyView.vue: recipes + jobs filtered through betaRecipeFamilyOfId(...) !== null - dormant families (phi_van_dan etc.) no longer surface on the pill table or job list.",
+      "pinEvidenceIds": [
+        "EV-PROBE-READMODEL-2"
+      ],
+      "verificationEvidenceIds": [
+        "EV-PROBE-READMODEL-2"
+      ],
+      "closureReviewIds": [],
+      "status": "FIXED_PENDING_PROOF",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-TRI-1",
+      "title": "usePillDetailed has no beta gate - dormant pill families on a carried save consume and apply effects (permanent_stat baseStats write)",
+      "state": {
+        "productStateId": "4311fc4d636dc9808f8fcc3699a4f41eb4e9db05e3b22623cc5409502f115a42",
+        "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+        "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+        "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+      },
+      "severity": "Medium",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "locations": [
+        {
+          "path": "src/core/game/GameManagerPillOps.ts",
+          "symbolOrSection": "usePillDetailed (~L37-145) - gates retired/material/realm/battle but not beta scope",
+          "revision": "46bb1482",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "src/core/betaScope.ts",
+          "symbolOrSection": "betaRecipeFamilyOfId resolves enabled families only - no dormant-family resolver existed",
+          "revision": "46bb1482",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "src/data/pill/pills.ts",
+          "symbolOrSection": "all consumable pills are <family>_<realm> tiered; phi_van/to_cot/thoi_the/duong_than are dormant permanent_stat families",
+          "revision": "46bb1482",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "coord-main tri-state verdict enumeration (wave 5) - consumption seam census over bag surfaces",
+      "invariantIds": [
+        "I-DS-1"
+      ],
+      "evidenceIds": [
+        "EV-PROBE-TRISAVE-1"
+      ],
+      "counterexample": "hostile save carrying phi_van_dan_mortal in pillBag -> usePillDetailed('phi_van_dan_mortal', target, player) -> {ok:true}, permanent_stat dexterity grant applied to baseStats, pill consumed",
+      "expected": "dormant-family artifacts on a carried save stay inert - consuming one applies a scope-hidden effect into live play, same seam class as F-DL-1/F-DL-2 carried-state leaks",
+      "actual": "no scope check: retired->material->realm->battle gates all pass for a realm-matching dormant pill; the profession path applies its effect and removes it from the bag",
+      "rootCause": "the pill consumption seam was gated on pill-domain reasons only; the beta allow-list was never consulted at the effect-applying seam",
+      "rootClass": "AUTHORITY",
+      "subsystem": "betaScope",
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/core/game",
+            "src/components/panels/bag-sections",
+            "src/core/economy",
+            "src/data"
+          ],
+          "termsAndMethod": "enumerated every effect-applying bag/item seam reachable on a carried save: usePill/usePillDetailed (pill consume), vendor sellMaterial/previewSellGrant (material sell), equipment equip/enhance/dissolve, alchemy job completion delivery, quest itemDrops",
+          "evidenceIds": [
+            "EV-PROBE-TRISAVE-1"
+          ],
+          "hitDispositions": [
+            "F-TRI-1 confirmed: usePillDetailed applies dormant pill effects",
+            "vendor sell-side closed: dormant herbs (phi_van_thao etc.) exist only as PillFamilies herbId strings, never authored as materials - getUnitSellPrice cannot resolve them",
+            "equipment bag closed for scope: equipment is beta-shipped content, no dormant equipment class exists; wash/refine/decompose tabs already isBetaEquipmentTab-gated",
+            "quest itemDrops closed: PerfectionEconomy census asserts no quest drop carries a permanent-stat pill id",
+            "deferred: dormant bag stacks (pills/materials on flagged saves) still render unfiltered - inert post-gate, flagged-save render class (Low, F-DEFER-1)",
+            "deferred: in-flight alchemy jobs for dormant families complete and deliver pills on flagged saves - delivered pill is inert post-gate (Low, F-DEFER-3)"
+          ],
+          "coverageLimits": [
+            "hostile-save field coverage bounded to persisted players data fields enumerated in wave 1 sibling search plus bag surfaces"
+          ]
+        }
+      ],
+      "siblingFindingIds": [
+        "F-TRI-2"
+      ],
+      "repair": "Added scopeHiddenPillFamilyOfId(id) resolver to betaScope.ts (known authored family that is not beta-enabled -> family id; unknown spellings -> null so test/legacy ids stay consumable). usePillDetailed rejects {ok:false, reason:'scope_hidden'} after the material_pill gate and before the realm gate; reason union extended; PillBagSection reasonKeys maps the new reason to bag.pill.reason.scope_hidden (vi+en). PillSystem.profession.test.ts permanent-stat fixture moved from dormant to_cot_dan_mortal to beta khai_linh_dan_mortal (strength->attunement asserts).",
+      "pinEvidenceIds": [
+        "EV-PROBE-TRISAVE-2"
+      ],
+      "verificationEvidenceIds": [
+        "EV-PROBE-TRISAVE-2"
+      ],
+      "closureReviewIds": [],
+      "status": "FIXED_PENDING_PROOF",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-TRI-2",
+      "title": "CombatBuild resolves the dormant way kit on a way_out_of_scope save - engine executes sword/body/hidden kit while the rail renders scope-hidden",
+      "state": {
+        "productStateId": "4311fc4d636dc9808f8fcc3699a4f41eb4e9db05e3b22623cc5409502f115a42",
+        "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+        "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+        "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+      },
+      "severity": "High",
+      "classification": "REAL_DEFECT",
+      "actionable": true,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "locations": [
+        {
+          "path": "src/core/game/CombatBuild.ts",
+          "symbolOrSection": "role composition seam (~L225): roles = resolveCombatSkillRoles(source, runtime) with no way-admission check",
+          "revision": "46bb1482",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "src/core/betaScopeSkillDomain.ts",
+          "symbolOrSection": "betaCombatRolesFor returns scope-hidden for every role on a non-beta way - rail already fail-closed",
+          "revision": "46bb1482",
+          "basis": "SOURCE"
+        },
+        {
+          "path": "src/core/player/CultivationPathRegistry.ts",
+          "symbolOrSection": "resolveCultivationPathRuntime binds the committed way's runtime incl. sword/body/hidden",
+          "revision": "46bb1482",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "coord-main tri-state verdict enumeration (wave 5) - rail vs engine agreement census",
+      "invariantIds": [
+        "I-DS-1",
+        "I-SS-1"
+      ],
+      "evidenceIds": [
+        "EV-PROBE-TRISAVE-1"
+      ],
+      "counterexample": "save with cultivationWay='sword_pathway' + swordPath state -> resolveCombatBuild resolves kit.basic/special/ultimate through the sword runtime (and a dynamic basic provider); the rail betaCombatRolesFor reports all roles scope-hidden for the same player - HUD hides what the engine executes",
+      "expected": "dormant-domain ACCESS seams fail closed on a flagged save, identical to the sibling gating already in the same function for companions (isScopeHidden('companion')) and formation buffs",
+      "actual": "the whole way-kit executes in combat - basic/special/ultimate/reactivePayloads/dynamic-basic/maxThe/statDomains all resolve through the dormant runtime",
+      "rootCause": "the combat build gates dormant features (companion/formation) but never gated the player's own way runtime - the ACCESS seam for the dormant path feature was missed when scope-lock landed",
+      "rootClass": "AUTHORITY",
+      "subsystem": "combat",
+      "siblingSearch": [
+        {
+          "roots": [
+            "src/core/game",
+            "src/core/player",
+            "src/core/battle",
+            "src/core/simulation",
+            "src/components"
+          ],
+          "termsAndMethod": "enumerated every resolveCombatSkillRoles/resolvePathRuntime consumer plus combat-participation seams: CombatBuild kit assembly, GameManagerTurnBattleOps dynamic-basic, getResolvedSkillRoles display accessor, BattleSimulation skill restore, formation/companion minting",
+          "evidenceIds": [
+            "EV-PROBE-TRISAVE-1"
+          ],
+          "hitDispositions": [
+            "F-TRI-2 confirmed: CombatBuild resolved dormant kit on a way_out_of_scope save",
+            "dynamic-basic consumer closed: kit.buildDynamicBasic flows through the same gated runtime - cleared by the same fix",
+            "companion/formation seams closed already (isScopeHidden checks at CombatBuild :270/:313)",
+            "BattleSimulation closed: restores explicit build.skill lists for sim fixtures, not save-driven way resolution",
+            "deferred: progressionOps.getResolvedSkillRoles still renders the dormant kit names on flagged saves (SkillRoleStrip teaser) - display-only on a flagged save (Low, F-DEFER-2)"
+          ],
+          "coverageLimits": [
+            "combat minting covered via resolveCombatBuild; scene-level Phaser adapters consume the same build"
+          ]
+        }
+      ],
+      "siblingFindingIds": [
+        "F-TRI-1"
+      ],
+      "repair": "CombatBuild now computes wayAdmitted = getActiveWay(source) === undefined || isBetaWay(activeWay) and threads gatedRuntime = wayAdmitted ? runtime : undefined through role composition, statDomains, buildDynamicBasic and the resolveMaxThe fallback. A way_out_of_scope save degrades to GENERIC_PHYSICAL_BASIC with no kit - same ACCESS-seam class as the companion/formation checks in the same function. turnCombatReactivity.test.ts slot-count assertion updated to the contract (2 slots: basic+special; scope-hidden ultimate no longer renders, from the wave-3 fix).",
+      "pinEvidenceIds": [
+        "EV-PROBE-TRISAVE-2"
+      ],
+      "verificationEvidenceIds": [
+        "EV-PROBE-TRISAVE-2"
+      ],
+      "closureReviewIds": [],
+      "status": "FIXED_PENDING_PROOF",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": null
+    },
+    {
+      "id": "F-DEFER-1",
+      "title": "Bag sections render dormant stacks unfiltered on flagged saves (materials/equipment/dormant pills)",
+      "state": {
+        "productStateId": "4311fc4d636dc9808f8fcc3699a4f41eb4e9db05e3b22623cc5409502f115a42",
+        "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+        "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+        "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+      },
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": false,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "locations": [
+        {
+          "path": "src/components/panels/bag-sections",
+          "symbolOrSection": "MaterialBagSection.vue:233, EquipmentBagSection.vue:67, PillBagSection.vue - getAll() unfiltered",
+          "revision": "46bb1482",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "coord-main wave-5 tri-state enumeration",
+      "invariantIds": [
+        "I-DS-1"
+      ],
+      "evidenceIds": [
+        "EV-PROBE-TRISAVE-1"
+      ],
+      "counterexample": "carried save's dormant stacks render in bag grids; consume/sell seams are now gated so they are display-only",
+      "expected": "dormant content should not render (contract sec.D spirit)",
+      "actual": "carried save's dormant stacks render in bag grids; consume/sell seams are now gated so they are display-only",
+      "rootCause": null,
+      "rootClass": "AUTHORITY",
+      "subsystem": "betaScope",
+      "siblingSearch": [],
+      "siblingFindingIds": [
+        "F-TRI-1",
+        "F-TRI-2"
+      ],
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "HUMAN_EXCEPTION",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": {
+        "humanInstructionRef": "user ruling: attacks/scope fixes are Medium+ only; Low/Nit recorded as deferred exceptions",
+        "scope": "flagged unsupported saves only - a normal beta save cannot reach this state",
+        "reason": "display-only render of carried state on a save already flagged unsupported; every effect-applying seam behind it is now gated",
+        "expiresWhen": "next scope contract revision or user reversal of the Medium+-only ruling"
+      }
+    },
+    {
+      "id": "F-DEFER-2",
+      "title": "getResolvedSkillRoles renders the dormant way kit names on way_out_of_scope saves (SkillRoleStrip)",
+      "state": {
+        "productStateId": "4311fc4d636dc9808f8fcc3699a4f41eb4e9db05e3b22623cc5409502f115a42",
+        "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+        "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+        "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+      },
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": false,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "locations": [
+        {
+          "path": "src/core/game/GameManagerProgressionOps.ts",
+          "symbolOrSection": "getResolvedSkillRoles (~L1016) resolves via ungated resolveCombatSkillRoles",
+          "revision": "46bb1482",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "coord-main wave-5 tri-state enumeration",
+      "invariantIds": [
+        "I-DS-1"
+      ],
+      "evidenceIds": [
+        "EV-PROBE-TRISAVE-1"
+      ],
+      "counterexample": "SkillRoleStrip would render sword-kit names on a flagged save; the engine no longer executes them",
+      "expected": "display of dormant kit should be scope-hidden on flagged saves",
+      "actual": "SkillRoleStrip would render sword-kit names on a flagged save; the engine no longer executes them",
+      "rootCause": null,
+      "rootClass": "AUTHORITY",
+      "subsystem": "betaScope",
+      "siblingSearch": [],
+      "siblingFindingIds": [
+        "F-TRI-1",
+        "F-TRI-2"
+      ],
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "HUMAN_EXCEPTION",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": {
+        "humanInstructionRef": "user ruling: attacks/scope fixes are Medium+ only; Low/Nit recorded as deferred exceptions",
+        "scope": "flagged unsupported saves only - a normal beta save cannot reach this state",
+        "reason": "display-only render of carried state on a save already flagged unsupported; every effect-applying seam behind it is now gated",
+        "expiresWhen": "next scope contract revision or user reversal of the Medium+-only ruling"
+      }
+    },
+    {
+      "id": "F-DEFER-3",
+      "title": "In-flight alchemy jobs for dormant families complete and deliver pills on flagged saves",
+      "state": {
+        "productStateId": "4311fc4d636dc9808f8fcc3699a4f41eb4e9db05e3b22623cc5409502f115a42",
+        "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+        "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+        "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+      },
+      "severity": "Low",
+      "classification": "REAL_DEFECT",
+      "actionable": false,
+      "reachability": "SUPPORTED_BOUNDARY",
+      "locations": [
+        {
+          "path": "src/components/panels/AlchemyView.vue + alchemy job resolver",
+          "symbolOrSection": "job list filtered for display (F-RM-4) but completion delivery continues",
+          "revision": "46bb1482",
+          "basis": "SOURCE"
+        }
+      ],
+      "discoveredBy": "coord-main wave-5 tri-state enumeration",
+      "invariantIds": [
+        "I-DS-1"
+      ],
+      "evidenceIds": [
+        "EV-PROBE-TRISAVE-1"
+      ],
+      "counterexample": "a hostile save's in-flight dormant-family job still resolves and delivers the pill into the bag; the pill is unconsumable post-gate",
+      "expected": "carried job results are inert dormant artifacts",
+      "actual": "a hostile save's in-flight dormant-family job still resolves and delivers the pill into the bag; the pill is unconsumable post-gate",
+      "rootCause": null,
+      "rootClass": "AUTHORITY",
+      "subsystem": "betaScope",
+      "siblingSearch": [],
+      "siblingFindingIds": [
+        "F-TRI-1",
+        "F-TRI-2"
+      ],
+      "repair": null,
+      "pinEvidenceIds": [],
+      "verificationEvidenceIds": [],
+      "closureReviewIds": [],
+      "status": "HUMAN_EXCEPTION",
+      "duplicateOf": null,
+      "rejectionReason": null,
+      "exception": {
+        "humanInstructionRef": "user ruling: attacks/scope fixes are Medium+ only; Low/Nit recorded as deferred exceptions",
+        "scope": "flagged unsupported saves only - a normal beta save cannot reach this state",
+        "reason": "display-only render of carried state on a save already flagged unsupported; every effect-applying seam behind it is now gated",
+        "expiresWhen": "next scope contract revision or user reversal of the Medium+-only ruling"
+      }
+    }
+  ],
+  "evidence": [
+    {
+      "id": "EV-BASE-VERIFY",
+      "state": {
+        "productStateId": "86f75a51c2abb1b7538b08ff288b947a4f5cfd1f36efb642707a911957657cf1",
+        "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+        "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+        "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+      },
+      "kind": "EXECUTED_INTEGRATION",
+      "producer": "coord-main",
+      "startedAt": "2026-09-30T22:50:00Z",
+      "finishedAt": "2026-09-30T22:54:48.700229+00:00",
+      "commandOrMethod": "npm run verify (type-check && build && vitest run)",
+      "cwd": "game/",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "docs/qa/runs/qa-fixpoint-master/evidence/baseline-verify.log",
+      "artifactHash": "bb3c9899357d7483fa68bdd65f60e108e6679392d8752ca3ee6da99ae7b7ecb3",
+      "inputPaths": [
+        "package.json"
+      ],
+      "inputEvidenceIds": [],
+      "invariantIds": [
+        "I-TQ-1"
+      ],
+      "claims": [
+        "baseline green: 854 files, 7808 tests pass, type-check+build clean"
+      ],
+      "limitations": [
+        "does not cover e2e/electron runtime"
+      ],
+      "status": "STALE"
+    },
+    {
+      "id": "EV-PROBE-DORMANT-1",
+      "state": {
+        "productStateId": "86f75a51c2abb1b7538b08ff288b947a4f5cfd1f36efb642707a911957657cf1",
+        "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+        "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+        "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+      },
+      "kind": "EXECUTED_UNIT_STRUCTURAL",
+      "producer": "coord-main",
+      "startedAt": "2026-09-30T23:05:00Z",
+      "finishedAt": "2026-09-30T23:06:46.738209+00:00",
+      "commandOrMethod": "npx vitest run tests/architecture/betaDormantSaveLeak.qa.test.ts",
+      "cwd": "game/",
+      "exitCode": 1,
+      "result": "FAIL",
+      "artifactPath": "docs/qa/runs/qa-fixpoint-master/evidence/probe-dormant-leak-1.log",
+      "artifactHash": "ba0edb7584c3939bd3bb309b061a3b36b86595edfbdc72c81c48c8cdff3074df",
+      "inputPaths": [
+        "tests/architecture/betaDormantSaveLeak.qa.test.ts",
+        "src/core/stats/StatCap.ts",
+        "src/core/realm/RealmPassiveSystem.ts",
+        "src/core/betaScopeSurface.ts"
+      ],
+      "inputEvidenceIds": [
+        "EV-BASE-VERIFY"
+      ],
+      "invariantIds": [
+        "I-DS-1",
+        "I-AS-1",
+        "I-SF-1"
+      ],
+      "claims": [
+        "deterministic repro: 4 failing assertions prove (a) hiddenPerfection=null throws in unsupportedReleaseReason, (b) completedHiddenBodyRealmIds inflates main-stat cap 36v30 under beta lock, (c) hiddenBreakthroughRealmIds grants enhanced realm passive 0.3v0.18 under beta lock"
+      ],
+      "limitations": [
+        "does not test UI surface"
+      ],
+      "status": "STALE"
+    },
+    {
+      "id": "EV-PIN-NOTICE-1",
+      "state": {
+        "productStateId": "86f75a51c2abb1b7538b08ff288b947a4f5cfd1f36efb642707a911957657cf1",
+        "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+        "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+        "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+      },
+      "kind": "EXECUTED_UNIT_STRUCTURAL",
+      "producer": "coord-main",
+      "startedAt": "2026-09-30T23:16:00Z",
+      "finishedAt": "2026-09-30T23:16:52.680815+00:00",
+      "commandOrMethod": "npx vitest run src/composables/useAppLifecycle.test.ts",
+      "cwd": "game/",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "docs/qa/runs/qa-fixpoint-master/evidence/pin-notice-lifecycle.log",
+      "artifactHash": "5d0757a6db1dfa213da0c6545c92a638d2fea1fdd6949b114e907f5f399b6c54",
+      "inputPaths": [
+        "src/composables/useAppLifecycle.ts",
+        "src/composables/useAppLifecycle.test.ts",
+        "src/App.vue",
+        "src/locales/vi.json",
+        "src/locales/en.json",
+        "src/core/betaScopeSurface.ts"
+      ],
+      "inputEvidenceIds": [
+        "EV-PROBE-DORMANT-1"
+      ],
+      "invariantIds": [
+        "I-SF-1",
+        "I-UH-1"
+      ],
+      "claims": [
+        "sec.H notice fires once on out-of-scope restored save (realm_beyond_release pin), never on in-scope save; F-DL-5 pre-fix repro: unsupportedReleaseReason({realmId:mortal}) returned formation_loadout on absent field (undefined!==null), contradicting real-record-only contract"
+      ],
+      "limitations": [],
+      "status": "STALE"
+    },
+    {
+      "id": "EV-PIN-DORMANT-1",
+      "state": {
+        "productStateId": "86f75a51c2abb1b7538b08ff288b947a4f5cfd1f36efb642707a911957657cf1",
+        "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+        "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+        "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+      },
+      "kind": "EXECUTED_UNIT_STRUCTURAL",
+      "producer": "coord-main",
+      "startedAt": "2026-09-30T23:16:00Z",
+      "finishedAt": "2026-09-30T23:16:52.680815+00:00",
+      "commandOrMethod": "npx vitest run tests/architecture/betaDormantSaveLeak.qa.test.ts",
+      "cwd": "game/",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "docs/qa/runs/qa-fixpoint-master/evidence/pin-dormant-leak.log",
+      "artifactHash": "442696c0ff8f52bbe210ccc1273ebe3c9dd902831f0b3c5e1bf82ab9b3c5b511",
+      "inputPaths": [
+        "tests/architecture/betaDormantSaveLeak.qa.test.ts",
+        "src/core/stats/StatCap.ts",
+        "src/core/realm/hidden/HiddenLineage.ts",
+        "src/core/betaScopeSurface.ts"
+      ],
+      "inputEvidenceIds": [
+        "EV-PROBE-DORMANT-1"
+      ],
+      "invariantIds": [
+        "I-DS-1",
+        "I-AS-1",
+        "I-SF-1"
+      ],
+      "claims": [
+        "all 5 dormant-leak assertions now pass post-fix: cap==base under carried record, normal passive granted, hiddenPerfection=null flags hidden_progression_state without throwing"
+      ],
+      "limitations": [],
+      "status": "STALE"
+    },
+    {
+      "id": "EV-PROBE-READMODEL-1",
+      "state": {
+        "productStateId": "c48b5401ed9930d05891ee0deaa50e5b8592984dd5ff7a242b4de0703257609a",
+        "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+        "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+        "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+      },
+      "kind": "EXECUTED_UNIT_STRUCTURAL",
+      "producer": "coord-main",
+      "startedAt": "2026-09-30T23:32:00Z",
+      "finishedAt": "2026-09-30T23:32:30Z",
+      "commandOrMethod": "npx vitest run tests/architecture/betaReadModelHonesty.qa.test.ts",
+      "cwd": "game/",
+      "exitCode": 1,
+      "result": "FAIL",
+      "artifactPath": "docs/qa/runs/qa-fixpoint-master/evidence/probe-readmodel-1.log",
+      "artifactHash": "335449a3cde7e69153774e5ae86af3f7f33c3cbd97484efba30850be0ca64f1e",
+      "inputPaths": [
+        "tests/architecture/betaReadModelHonesty.qa.test.ts",
+        "src/components/panels/SkillPathPanel.vue",
+        "src/components/game/combat/hud/TurnCombatSkillBar.vue",
+        "src/components/panels/AlchemyView.vue",
+        "src/core/betaScopeSurface.ts"
+      ],
+      "inputEvidenceIds": [
+        "EV-BASE-VERIFY"
+      ],
+      "invariantIds": [
+        "I-RM-1",
+        "I-DS-1"
+      ],
+      "claims": [
+        "deterministic repro: 4 failing contract assertions prove (a) SkillPathPanel renders foreign element branch tabs for a committed-fire spell player, (b) combat bar renders an empty 'Ultimate' slot button for a beta player, (c) AlchemyView renders dormant pill-family recipe rows, (d) betaCompletionFor has zero UI consumers (ending beat unwired)"
+      ],
+      "limitations": [
+        "component mounts in jsdom; visual styling not assessed"
+      ],
+      "status": "STALE"
+    },
+    {
+      "id": "EV-PROBE-READMODEL-2",
+      "state": {
+        "productStateId": "4311fc4d636dc9808f8fcc3699a4f41eb4e9db05e3b22623cc5409502f115a42",
+        "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+        "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+        "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+      },
+      "kind": "EXECUTED_UNIT_STRUCTURAL",
+      "producer": "coord-main",
+      "startedAt": "2026-09-30T23:44:00Z",
+      "finishedAt": "2026-09-30T23:44:15Z",
+      "commandOrMethod": "npx vitest run tests/architecture/betaReadModelHonesty.qa.test.ts (post-fix) + npm run type-check + vitest affected scope (panels/hud/common/architecture: 660 tests)",
+      "cwd": "game/",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "docs/qa/runs/qa-fixpoint-master/evidence/probe-readmodel-2.log",
+      "artifactHash": "2b65cb4e34f249d18431690fd2f123c0803d3dae50d6f4e9f888d3546d23a370",
+      "inputPaths": [
+        "tests/architecture/betaReadModelHonesty.qa.test.ts",
+        "src/components/panels/SkillPathPanel.vue",
+        "src/components/game/combat/hud/TurnCombatSkillBar.vue",
+        "src/components/game/combat/hud/TurnCombatSkillBar.display.test.ts",
+        "src/components/panels/AlchemyView.vue",
+        "src/App.vue",
+        "src/components/common/BetaCompletionModal.vue",
+        "src/locales/vi.json",
+        "src/locales/en.json"
+      ],
+      "inputEvidenceIds": [
+        "EV-PROBE-READMODEL-1"
+      ],
+      "invariantIds": [
+        "I-RM-1",
+        "I-DS-1"
+      ],
+      "claims": [
+        "post-fix: all 4 contract assertions PASS - committed element tab strip renders <=1 tab (the committed element); combat bar renders 2 slot buttons (no scope-hidden ultimate slot); AlchemyView renders exactly 1 beta recipe row, dormant family hidden; betaCompletionFor has a UI consumer (App.vue -> BetaCompletionModal)",
+        "affected-scope vitest green: 660 tests across src/components/panels, src/components/game/combat/hud, src/components/common, tests/architecture",
+        "npm run type-check clean",
+        "fix evidence for F-RM-1..F-RM-4; probe asserts now pin the contract invariants"
+      ],
+      "limitations": [],
+      "status": "CURRENT"
+    },
+    {
+      "id": "EV-ATOMICITY-1",
+      "state": {
+        "productStateId": "4311fc4d636dc9808f8fcc3699a4f41eb4e9db05e3b22623cc5409502f115a42",
+        "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+        "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+        "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+      },
+      "kind": "EXECUTED_UNIT_STRUCTURAL",
+      "producer": "coord-main",
+      "startedAt": "2026-09-30T23:50:00Z",
+      "finishedAt": "2026-09-30T23:50:10Z",
+      "commandOrMethod": "npx vitest run src/core/game/GameManager.fiveElementInitiation.test.ts src/core/game/GameManager.realmAdvanceUnequip.test.ts src/composables/cultivationRitualFlow.integration.test.ts + full source audit of commitFiveElementInitiation + legs",
+      "cwd": "game/",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "docs/qa/runs/qa-fixpoint-master/evidence/atomicity-1.log",
+      "artifactHash": "e800b346de18d66e34356468cf5bb4479ac16a9f691544642ad6ce79633b579e",
+      "inputPaths": [
+        "src/core/game/GameManagerRealmAdvanceOps.ts (commitFiveElementInitiation L551-742)",
+        "src/core/player/PlayerSnapshot.ts",
+        "src/core/game/GameManagerProgressionOps.ts (learnSkill/selectSpellPathElement)",
+        "src/core/skill/SkillSystem.ts (learn/unlearn membership-only)",
+        "src/core/technique/TechniqueManager.ts (0-or-1 holder, getAll shallow copy)",
+        "src/core/progression/NodeSystem.ts (purchaseNode: cost/insight/nodeLevels/purchasedNodeIds)",
+        "src/data/progression/PhapTuNodes.builders.ts (element root insightCost 0)",
+        "src/core/game/GameManagerTickOps.ts (markQuestRealmTransition flag)",
+        "src/core/companion/CompanionGifts.ts (player.companionGifts write-if-absent)",
+        "src/components/panels/QuanKhiPanel.vue (caller maps every reason via te() fallback)"
+      ],
+      "inputEvidenceIds": [
+        "EV-BASE-VERIFY"
+      ],
+      "invariantIds": [
+        "I-CC-1"
+      ],
+      "claims": [
+        "commitFiveElementInitiation: preflight region (L551-656) is write-free by inspection - every early return happens before the snapshot/commit boundary",
+        "commit region snapshots all three mutable channels: PlayerData (JSON clone), skillManager learned-set ids, techniqueManager list - restorePlayerSnapshotInPlace deletes+reassigns in snapshot key order (byte-equivalence proof in tests)",
+        "existing suite pins 5 mid-commit fault injections (starter learn fail, kit learn fail, element commit fail, realm-advance crash, technique grant fail) + retry-after-failure - all byte-equivalent at current state (9/9 green incl. ritual flow integration)",
+        "external escapes audited and closed: markQuestRealmTransition leaves a flag -> next-tick reconcile is idempotent+realm-checked; issueCompanionGifts writes only player.companionGifts (snapshot-covered); no eventBus emits in any leg; sessionRng never consumed (element root insightCost=0 -> rollVanDaoWaive short-circuits)",
+        "hostile injection surface: element validated by isBetaElement allow-list first; second call hits already_committed/element_committed/not_mortal; direct selectSpellPathElement outside ritual fails closed (mortal-only + static capability gate); in_combat guard at op + learnSkill leg level",
+        "caller coverage: QuanKhiPanel maps every FiveElementInitiationResult.reason to i18n with te() fallback; EarlyGameSession uses the same op"
+      ],
+      "limitations": [
+        "rollback does not (and cannot) restore the tick-ops questRealmReconcileNeeded flag - documented idempotent design; reconcile against the restored player is equivalent to a restore-time reconcile",
+        "the test suite injects faults at 5 named legs; a fault inside a finer-grained sub-step relies on the same snapshot mechanism (mechanism-level proof, not per-step enumeration)"
+      ],
+      "status": "CURRENT"
+    },
+    {
+      "id": "EV-PROBE-TRISAVE-1",
+      "state": {
+        "productStateId": "4311fc4d636dc9808f8fcc3699a4f41eb4e9db05e3b22623cc5409502f115a42",
+        "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+        "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+        "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+      },
+      "kind": "EXECUTED_UNIT_STRUCTURAL",
+      "producer": "coord-main",
+      "startedAt": "2026-10-01T00:03:00Z",
+      "finishedAt": "2026-10-01T00:03:10Z",
+      "commandOrMethod": "npx vitest run tests/architecture/betaDormantSaveLeak.qa.test.ts",
+      "cwd": "game/",
+      "exitCode": 1,
+      "result": "FAIL",
+      "artifactPath": "docs/qa/runs/qa-fixpoint-master/evidence/probe-trisave-1.log",
+      "artifactHash": "bdf65341d1b6c0ec11817f9c0487a13816d7484878fb6f12bf46947b21f33c45",
+      "inputPaths": [
+        "tests/architecture/betaDormantSaveLeak.qa.test.ts",
+        "src/core/game/GameManagerPillOps.ts",
+        "src/core/game/CombatBuild.ts",
+        "src/core/betaScope.ts"
+      ],
+      "inputEvidenceIds": [
+        "EV-BASE-VERIFY"
+      ],
+      "invariantIds": [
+        "I-DS-1",
+        "I-SS-1"
+      ],
+      "claims": [
+        "deterministic repro on pre-fix code (gates stashed): (a) usePillDetailed consumed phi_van_dan_mortal on a flagged save and returned ok - permanent_stat applied to baseStats; (b) resolveCombatBuild on a sword_pathway save resolved the dormant way kit instead of falling back to GENERIC_PHYSICAL_BASIC - rail said scope-hidden while the engine executed the kit",
+        "the two new asserts are the only failures; the 8 pre-existing asserts still pass on pre-fix code"
+      ],
+      "limitations": [
+        "component/UI rendering of the dormant stacks not exercised; engine-level kit resolution only"
+      ],
+      "status": "CURRENT"
+    },
+    {
+      "id": "EV-PROBE-TRISAVE-2",
+      "state": {
+        "productStateId": "4311fc4d636dc9808f8fcc3699a4f41eb4e9db05e3b22623cc5409502f115a42",
+        "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+        "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+        "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+      },
+      "kind": "EXECUTED_UNIT_STRUCTURAL",
+      "producer": "coord-main",
+      "startedAt": "2026-10-01T00:03:00Z",
+      "finishedAt": "2026-10-01T00:03:10Z",
+      "commandOrMethod": "npx vitest run tests/architecture/betaDormantSaveLeak.qa.test.ts",
+      "cwd": "game/",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "docs/qa/runs/qa-fixpoint-master/evidence/probe-trisave-2.log",
+      "artifactHash": "9c5441d6f480fa5261d012e3ac92ba6fd92a6110fa935da75cdb4460d566d643",
+      "inputPaths": [
+        "tests/architecture/betaDormantSaveLeak.qa.test.ts",
+        "src/core/game/GameManagerPillOps.ts",
+        "src/core/game/CombatBuild.ts",
+        "src/core/betaScope.ts"
+      ],
+      "inputEvidenceIds": [
+        "EV-BASE-VERIFY"
+      ],
+      "invariantIds": [
+        "I-DS-1",
+        "I-SS-1"
+      ],
+      "claims": [
+        "post-fix pin: 10/10 asserts green - dormant pill rejects scope_hidden without consumption, beta pill still consumes, sword_pathway build falls back to GENERIC_PHYSICAL_BASIC with no special/ultimate/dynamicBasic/statDomains, spell_pathway build still resolves its committed kit",
+        "scopeHiddenPillFamilyOfId resolves authored dormant families only; unknown spellings (test/legacy pills) return null"
+      ],
+      "limitations": [
+        "sword/body/hidden runtime participation verified at build level; a live turn-battle execution was not replayed"
+      ],
+      "status": "CURRENT"
+    },
+    {
+      "id": "EV-PROBE-WAVE6",
+      "state": {
+        "productStateId": "4311fc4d636dc9808f8fcc3699a4f41eb4e9db05e3b22623cc5409502f115a42",
+        "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+        "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+        "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+      },
+      "kind": "EXECUTED_UNIT_STRUCTURAL",
+      "producer": "coord-main",
+      "startedAt": "2026-10-01T00:07:30Z",
+      "finishedAt": "2026-10-01T00:07:45Z",
+      "commandOrMethod": "npx vitest run src/main-process/electronUpdater.test.ts src/core/skill/SkillSystem.test.ts src/core/game/GameManagerStageOps.test.ts tests/architecture/betaEconomyCensus.test.ts src/services/save/SaveSystem.bootRestore.test.ts src/services/save/SaveSystem.snapshotIsolation.test.ts",
+      "cwd": "game/",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "docs/qa/runs/qa-fixpoint-master/evidence/probe-wave6.log",
+      "artifactHash": "429b8edbd5dfe06456b0e512d2efb2d0fccf302a4adb18a44f6278533b1b184f",
+      "inputPaths": [
+        "src/core/skill/SkillSystem.ts",
+        "src/core/skill/CastLeveling.ts",
+        "src/core/skill/MortalPrecursors.ts",
+        "src/core/game/GameManagerStageOps.ts",
+        "src/main-process/electronUpdater.ts",
+        "electron/main.ts",
+        "src/core/dev/enemySpawnDebug.ts",
+        "vite.config.ts",
+        "tests/architecture/betaEconomyCensus.test.ts"
+      ],
+      "inputEvidenceIds": [
+        "EV-BASE-VERIFY"
+      ],
+      "invariantIds": [
+        "I-PG-1",
+        "I-SS-1",
+        "I-EC-1",
+        "I-RT-1",
+        "I-TS-1",
+        "I-CN-1"
+      ],
+      "claims": [
+        "precursor parity (I-PG-1): all 3 mortal precursors (tram/linh_bao/huy_quyen) share the single getPrecursorFlatDamageBonus path (floor(casts/10), uncapped by design) applied via isMortalPrecursorSkillId and identical CAST_LEVELING_THRESHOLDS - parity is authored-symmetric, no divergence",
+        "stage read-model state machine (I-SS-1): surfaceState priority perfect>completed>locked>current/available is total and monotonic; final boss stage foundation_floor_10 with BETA_FINAL_BOSS_ENEMY_ID reachable in-scope; hostile completedStageIds degrade to completed-by-membership only",
+        "economy census (I-EC-1): sec.17 betaEconomyCensus suite green on current state - 6 asserts cover orphan source/sink, suppressed faucets, dormant-family grotto exclusion",
+        "electron updates (I-RT-1): provider pins autoDownload=false, allowDowngrade=false, quit-bypass install gated behind flush; sha512 verified by electron-updater; test suite green",
+        "devtools/CSP (I-TS-1): __tutienEnemySpawnDebug gated by import.meta.env.DEV (absent in production bundle); PRODUCTION_CSP injected at build with fail-closed anchor; contextIsolation+nodeIntegration:false+devTools off in packaged Electron",
+        "concurrency (I-CN-1): save lifecycle pins green - bootRestore, saveLoadRoundTrip, snapshotIsolation (replacement restore + bag clear + no stale restore merge) plus wave-4 atomicity pins"
+      ],
+      "limitations": [
+        "pins are suite-level green evidence; concurrency reasoning rests on JS single-thread + replacement-restore tests rather than a dedicated race fuzzer",
+        "electron update path verified at adapter level; packaged autoUpdater binary behavior not exercised"
+      ],
+      "status": "CURRENT"
+    }
+  ],
+  "coverage": [
+    {
+      "id": "COV-I-CC-1-DETERMINISTIC",
+      "invariantId": "I-CC-1",
+      "surface": "DETERMINISTIC",
+      "attackIds": [],
+      "taxonomyIds": [
+        "CONTRACT",
+        "STATE",
+        "PERSISTENCE"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "DETERMINISTIC surface required by I-CC-1 risk=STANDARD",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-CC-1-INDEPENDENT_REVIEW",
+      "invariantId": "I-CC-1",
+      "surface": "INDEPENDENT_REVIEW",
+      "attackIds": [],
+      "taxonomyIds": [
+        "CONTRACT",
+        "STATE",
+        "PERSISTENCE"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "INDEPENDENT_REVIEW surface required by I-CC-1 risk=STANDARD",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-IA-1-DETERMINISTIC",
+      "invariantId": "I-IA-1",
+      "surface": "DETERMINISTIC",
+      "attackIds": [],
+      "taxonomyIds": [
+        "STATE",
+        "TRANSITION",
+        "ROBUSTNESS"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "DETERMINISTIC surface required by I-IA-1 risk=CRITICAL",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-IA-1-PROPERTY",
+      "invariantId": "I-IA-1",
+      "surface": "PROPERTY",
+      "attackIds": [],
+      "taxonomyIds": [
+        "STATE",
+        "TRANSITION",
+        "ROBUSTNESS"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "PROPERTY surface required by I-IA-1 risk=CRITICAL",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-IA-1-MUTATION",
+      "invariantId": "I-IA-1",
+      "surface": "MUTATION",
+      "attackIds": [],
+      "taxonomyIds": [
+        "STATE",
+        "TRANSITION",
+        "ROBUSTNESS"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "MUTATION surface required by I-IA-1 risk=CRITICAL",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-IA-1-INDEPENDENT_REVIEW",
+      "invariantId": "I-IA-1",
+      "surface": "INDEPENDENT_REVIEW",
+      "attackIds": [],
+      "taxonomyIds": [
+        "STATE",
+        "TRANSITION",
+        "ROBUSTNESS"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "INDEPENDENT_REVIEW surface required by I-IA-1 risk=CRITICAL",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-IA-2-DETERMINISTIC",
+      "invariantId": "I-IA-2",
+      "surface": "DETERMINISTIC",
+      "attackIds": [],
+      "taxonomyIds": [
+        "CONTRACT",
+        "ROBUSTNESS"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "DETERMINISTIC surface required by I-IA-2 risk=STANDARD",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-IA-2-STATIC_SEMANTIC",
+      "invariantId": "I-IA-2",
+      "surface": "STATIC_SEMANTIC",
+      "attackIds": [],
+      "taxonomyIds": [
+        "CONTRACT",
+        "ROBUSTNESS"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "STATIC_SEMANTIC surface required by I-IA-2 risk=STANDARD",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-IA-2-INDEPENDENT_REVIEW",
+      "invariantId": "I-IA-2",
+      "surface": "INDEPENDENT_REVIEW",
+      "attackIds": [],
+      "taxonomyIds": [
+        "CONTRACT",
+        "ROBUSTNESS"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "INDEPENDENT_REVIEW surface required by I-IA-2 risk=STANDARD",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-PA-1-DETERMINISTIC",
+      "invariantId": "I-PA-1",
+      "surface": "DETERMINISTIC",
+      "attackIds": [],
+      "taxonomyIds": [
+        "AUTHORITY",
+        "CONTRACT",
+        "TRANSITION"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "DETERMINISTIC surface required by I-PA-1 risk=HIGH",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-PA-1-INDEPENDENT_REVIEW",
+      "invariantId": "I-PA-1",
+      "surface": "INDEPENDENT_REVIEW",
+      "attackIds": [],
+      "taxonomyIds": [
+        "AUTHORITY",
+        "CONTRACT",
+        "TRANSITION"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "INDEPENDENT_REVIEW surface required by I-PA-1 risk=HIGH",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-PA-1-MUTATION",
+      "invariantId": "I-PA-1",
+      "surface": "MUTATION",
+      "attackIds": [],
+      "taxonomyIds": [
+        "AUTHORITY",
+        "CONTRACT",
+        "TRANSITION"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "MUTATION surface required by I-PA-1 risk=HIGH",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-SV-1-DETERMINISTIC",
+      "invariantId": "I-SV-1",
+      "surface": "DETERMINISTIC",
+      "attackIds": [],
+      "taxonomyIds": [
+        "AUTHORITY",
+        "PRESENTATION",
+        "CONTRACT"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "DETERMINISTIC surface required by I-SV-1 risk=CRITICAL",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-SV-1-INTEGRATION",
+      "invariantId": "I-SV-1",
+      "surface": "INTEGRATION",
+      "attackIds": [],
+      "taxonomyIds": [
+        "AUTHORITY",
+        "PRESENTATION",
+        "CONTRACT"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "INTEGRATION surface required by I-SV-1 risk=CRITICAL",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-SV-1-MUTATION",
+      "invariantId": "I-SV-1",
+      "surface": "MUTATION",
+      "attackIds": [],
+      "taxonomyIds": [
+        "AUTHORITY",
+        "PRESENTATION",
+        "CONTRACT"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "MUTATION surface required by I-SV-1 risk=CRITICAL",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-SV-1-INDEPENDENT_REVIEW",
+      "invariantId": "I-SV-1",
+      "surface": "INDEPENDENT_REVIEW",
+      "attackIds": [],
+      "taxonomyIds": [
+        "AUTHORITY",
+        "PRESENTATION",
+        "CONTRACT"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "INDEPENDENT_REVIEW surface required by I-SV-1 risk=CRITICAL",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-AS-1-DETERMINISTIC",
+      "invariantId": "I-AS-1",
+      "surface": "DETERMINISTIC",
+      "attackIds": [],
+      "taxonomyIds": [
+        "AUTHORITY",
+        "CROSS_SYSTEM",
+        "TOOLING_SECURITY"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "DETERMINISTIC surface required by I-AS-1 risk=HIGH",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-AS-1-INTEGRATION",
+      "invariantId": "I-AS-1",
+      "surface": "INTEGRATION",
+      "attackIds": [],
+      "taxonomyIds": [
+        "AUTHORITY",
+        "CROSS_SYSTEM",
+        "TOOLING_SECURITY"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "INTEGRATION surface required by I-AS-1 risk=HIGH",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-AS-1-MUTATION",
+      "invariantId": "I-AS-1",
+      "surface": "MUTATION",
+      "attackIds": [],
+      "taxonomyIds": [
+        "AUTHORITY",
+        "CROSS_SYSTEM",
+        "TOOLING_SECURITY"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "MUTATION surface required by I-AS-1 risk=HIGH",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-AS-1-INDEPENDENT_REVIEW",
+      "invariantId": "I-AS-1",
+      "surface": "INDEPENDENT_REVIEW",
+      "attackIds": [],
+      "taxonomyIds": [
+        "AUTHORITY",
+        "CROSS_SYSTEM",
+        "TOOLING_SECURITY"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "INDEPENDENT_REVIEW surface required by I-AS-1 risk=HIGH",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-DS-1-DETERMINISTIC",
+      "invariantId": "I-DS-1",
+      "surface": "DETERMINISTIC",
+      "attackIds": [],
+      "taxonomyIds": [
+        "AUTHORITY",
+        "PERSISTENCE",
+        "CROSS_SYSTEM"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "DETERMINISTIC surface required by I-DS-1 risk=HIGH",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-DS-1-PERSISTENCE",
+      "invariantId": "I-DS-1",
+      "surface": "PERSISTENCE",
+      "attackIds": [],
+      "taxonomyIds": [
+        "AUTHORITY",
+        "PERSISTENCE",
+        "CROSS_SYSTEM"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "PERSISTENCE surface required by I-DS-1 risk=HIGH",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-DS-1-INDEPENDENT_REVIEW",
+      "invariantId": "I-DS-1",
+      "surface": "INDEPENDENT_REVIEW",
+      "attackIds": [],
+      "taxonomyIds": [
+        "AUTHORITY",
+        "PERSISTENCE",
+        "CROSS_SYSTEM"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "INDEPENDENT_REVIEW surface required by I-DS-1 risk=HIGH",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-RM-1-STATIC_SEMANTIC",
+      "invariantId": "I-RM-1",
+      "surface": "STATIC_SEMANTIC",
+      "attackIds": [],
+      "taxonomyIds": [
+        "AUTHORITY",
+        "PRESENTATION"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "STATIC_SEMANTIC surface required by I-RM-1 risk=HIGH",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-RM-1-DETERMINISTIC",
+      "invariantId": "I-RM-1",
+      "surface": "DETERMINISTIC",
+      "attackIds": [],
+      "taxonomyIds": [
+        "AUTHORITY",
+        "PRESENTATION"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "DETERMINISTIC surface required by I-RM-1 risk=HIGH",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-RM-1-INDEPENDENT_REVIEW",
+      "invariantId": "I-RM-1",
+      "surface": "INDEPENDENT_REVIEW",
+      "attackIds": [],
+      "taxonomyIds": [
+        "AUTHORITY",
+        "PRESENTATION"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "INDEPENDENT_REVIEW surface required by I-RM-1 risk=HIGH",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-CR-1-DETERMINISTIC",
+      "invariantId": "I-CR-1",
+      "surface": "DETERMINISTIC",
+      "attackIds": [],
+      "taxonomyIds": [
+        "COMBAT",
+        "STATE",
+        "ASYNC"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "DETERMINISTIC surface required by I-CR-1 risk=HIGH",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-CR-1-INTEGRATION",
+      "invariantId": "I-CR-1",
+      "surface": "INTEGRATION",
+      "attackIds": [],
+      "taxonomyIds": [
+        "COMBAT",
+        "STATE",
+        "ASYNC"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "INTEGRATION surface required by I-CR-1 risk=HIGH",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-CR-1-INDEPENDENT_REVIEW",
+      "invariantId": "I-CR-1",
+      "surface": "INDEPENDENT_REVIEW",
+      "attackIds": [],
+      "taxonomyIds": [
+        "COMBAT",
+        "STATE",
+        "ASYNC"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "INDEPENDENT_REVIEW surface required by I-CR-1 risk=HIGH",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-PG-1-DETERMINISTIC",
+      "invariantId": "I-PG-1",
+      "surface": "DETERMINISTIC",
+      "attackIds": [],
+      "taxonomyIds": [
+        "CONTRACT",
+        "COMBAT",
+        "ECONOMY"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "DETERMINISTIC surface required by I-PG-1 risk=HIGH",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-PG-1-PROPERTY",
+      "invariantId": "I-PG-1",
+      "surface": "PROPERTY",
+      "attackIds": [],
+      "taxonomyIds": [
+        "CONTRACT",
+        "COMBAT",
+        "ECONOMY"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "PROPERTY surface required by I-PG-1 risk=HIGH",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-PG-1-MUTATION",
+      "invariantId": "I-PG-1",
+      "surface": "MUTATION",
+      "attackIds": [],
+      "taxonomyIds": [
+        "CONTRACT",
+        "COMBAT",
+        "ECONOMY"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "MUTATION surface required by I-PG-1 risk=HIGH",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-SS-1-DETERMINISTIC",
+      "invariantId": "I-SS-1",
+      "surface": "DETERMINISTIC",
+      "attackIds": [],
+      "taxonomyIds": [
+        "TRANSITION",
+        "CONTENT_PATH"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "DETERMINISTIC surface required by I-SS-1 risk=STANDARD",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-SS-1-INTEGRATION",
+      "invariantId": "I-SS-1",
+      "surface": "INTEGRATION",
+      "attackIds": [],
+      "taxonomyIds": [
+        "TRANSITION",
+        "CONTENT_PATH"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "INTEGRATION surface required by I-SS-1 risk=STANDARD",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-SS-1-INDEPENDENT_REVIEW",
+      "invariantId": "I-SS-1",
+      "surface": "INDEPENDENT_REVIEW",
+      "attackIds": [],
+      "taxonomyIds": [
+        "TRANSITION",
+        "CONTENT_PATH"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "INDEPENDENT_REVIEW surface required by I-SS-1 risk=STANDARD",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-EC-1-DETERMINISTIC",
+      "invariantId": "I-EC-1",
+      "surface": "DETERMINISTIC",
+      "attackIds": [],
+      "taxonomyIds": [
+        "ECONOMY",
+        "CONTRACT"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "DETERMINISTIC surface required by I-EC-1 risk=HIGH",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-EC-1-INDEPENDENT_REVIEW",
+      "invariantId": "I-EC-1",
+      "surface": "INDEPENDENT_REVIEW",
+      "attackIds": [],
+      "taxonomyIds": [
+        "ECONOMY",
+        "CONTRACT"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "INDEPENDENT_REVIEW surface required by I-EC-1 risk=HIGH",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-EC-1-MUTATION",
+      "invariantId": "I-EC-1",
+      "surface": "MUTATION",
+      "attackIds": [],
+      "taxonomyIds": [
+        "ECONOMY",
+        "CONTRACT"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "MUTATION surface required by I-EC-1 risk=HIGH",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-SF-1-DETERMINISTIC",
+      "invariantId": "I-SF-1",
+      "surface": "DETERMINISTIC",
+      "attackIds": [],
+      "taxonomyIds": [
+        "PERSISTENCE",
+        "AUTHORITY",
+        "ROBUSTNESS"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "DETERMINISTIC surface required by I-SF-1 risk=CRITICAL",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-SF-1-FUZZ",
+      "invariantId": "I-SF-1",
+      "surface": "FUZZ",
+      "attackIds": [],
+      "taxonomyIds": [
+        "PERSISTENCE",
+        "AUTHORITY",
+        "ROBUSTNESS"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "FUZZ surface required by I-SF-1 risk=CRITICAL",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-SF-1-PERSISTENCE",
+      "invariantId": "I-SF-1",
+      "surface": "PERSISTENCE",
+      "attackIds": [],
+      "taxonomyIds": [
+        "PERSISTENCE",
+        "AUTHORITY",
+        "ROBUSTNESS"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "PERSISTENCE surface required by I-SF-1 risk=CRITICAL",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-SF-1-MUTATION",
+      "invariantId": "I-SF-1",
+      "surface": "MUTATION",
+      "attackIds": [],
+      "taxonomyIds": [
+        "PERSISTENCE",
+        "AUTHORITY",
+        "ROBUSTNESS"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "MUTATION surface required by I-SF-1 risk=CRITICAL",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-SF-1-INDEPENDENT_REVIEW",
+      "invariantId": "I-SF-1",
+      "surface": "INDEPENDENT_REVIEW",
+      "attackIds": [],
+      "taxonomyIds": [
+        "PERSISTENCE",
+        "AUTHORITY",
+        "ROBUSTNESS"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "INDEPENDENT_REVIEW surface required by I-SF-1 risk=CRITICAL",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-PM-1-DETERMINISTIC",
+      "invariantId": "I-PM-1",
+      "surface": "DETERMINISTIC",
+      "attackIds": [],
+      "taxonomyIds": [
+        "PERSISTENCE",
+        "ROBUSTNESS"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "DETERMINISTIC surface required by I-PM-1 risk=STANDARD",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-PM-1-PERSISTENCE",
+      "invariantId": "I-PM-1",
+      "surface": "PERSISTENCE",
+      "attackIds": [],
+      "taxonomyIds": [
+        "PERSISTENCE",
+        "ROBUSTNESS"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "PERSISTENCE surface required by I-PM-1 risk=STANDARD",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-EN-1-DETERMINISTIC",
+      "invariantId": "I-EN-1",
+      "surface": "DETERMINISTIC",
+      "attackIds": [],
+      "taxonomyIds": [
+        "CONTENT_PATH",
+        "COMBAT",
+        "CONTRACT"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "DETERMINISTIC surface required by I-EN-1 risk=STANDARD",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-EN-1-INDEPENDENT_REVIEW",
+      "invariantId": "I-EN-1",
+      "surface": "INDEPENDENT_REVIEW",
+      "attackIds": [],
+      "taxonomyIds": [
+        "CONTENT_PATH",
+        "COMBAT",
+        "CONTRACT"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "INDEPENDENT_REVIEW surface required by I-EN-1 risk=STANDARD",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-UH-1-DETERMINISTIC",
+      "invariantId": "I-UH-1",
+      "surface": "DETERMINISTIC",
+      "attackIds": [],
+      "taxonomyIds": [
+        "PRESENTATION",
+        "CONTRACT"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "DETERMINISTIC surface required by I-UH-1 risk=STANDARD",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-UH-1-RUNTIME_E2E",
+      "invariantId": "I-UH-1",
+      "surface": "RUNTIME_E2E",
+      "attackIds": [],
+      "taxonomyIds": [
+        "PRESENTATION",
+        "CONTRACT"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "RUNTIME_E2E surface required by I-UH-1 risk=STANDARD",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-UH-1-INDEPENDENT_REVIEW",
+      "invariantId": "I-UH-1",
+      "surface": "INDEPENDENT_REVIEW",
+      "attackIds": [],
+      "taxonomyIds": [
+        "PRESENTATION",
+        "CONTRACT"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "INDEPENDENT_REVIEW surface required by I-UH-1 risk=STANDARD",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-RT-1-STATIC_SEMANTIC",
+      "invariantId": "I-RT-1",
+      "surface": "STATIC_SEMANTIC",
+      "attackIds": [],
+      "taxonomyIds": [
+        "TOOLING_SECURITY",
+        "PERSISTENCE"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "STATIC_SEMANTIC surface required by I-RT-1 risk=STANDARD",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-RT-1-DETERMINISTIC",
+      "invariantId": "I-RT-1",
+      "surface": "DETERMINISTIC",
+      "attackIds": [],
+      "taxonomyIds": [
+        "TOOLING_SECURITY",
+        "PERSISTENCE"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "DETERMINISTIC surface required by I-RT-1 risk=STANDARD",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-TS-1-STATIC_SEMANTIC",
+      "invariantId": "I-TS-1",
+      "surface": "STATIC_SEMANTIC",
+      "attackIds": [],
+      "taxonomyIds": [
+        "TOOLING_SECURITY",
+        "AUTHORITY"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "STATIC_SEMANTIC surface required by I-TS-1 risk=STANDARD",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-TS-1-DETERMINISTIC",
+      "invariantId": "I-TS-1",
+      "surface": "DETERMINISTIC",
+      "attackIds": [],
+      "taxonomyIds": [
+        "TOOLING_SECURITY",
+        "AUTHORITY"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "DETERMINISTIC surface required by I-TS-1 risk=STANDARD",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-CN-1-DETERMINISTIC",
+      "invariantId": "I-CN-1",
+      "surface": "DETERMINISTIC",
+      "attackIds": [],
+      "taxonomyIds": [
+        "ASYNC",
+        "STATE",
+        "PERSISTENCE"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "DETERMINISTIC surface required by I-CN-1 risk=STANDARD",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-CN-1-INTEGRATION",
+      "invariantId": "I-CN-1",
+      "surface": "INTEGRATION",
+      "attackIds": [],
+      "taxonomyIds": [
+        "ASYNC",
+        "STATE",
+        "PERSISTENCE"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "INTEGRATION surface required by I-CN-1 risk=STANDARD",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-TQ-1-STATIC_SEMANTIC",
+      "invariantId": "I-TQ-1",
+      "surface": "STATIC_SEMANTIC",
+      "attackIds": [],
+      "taxonomyIds": [
+        "TEST_QUALITY"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "STATIC_SEMANTIC surface required by I-TQ-1 risk=STANDARD",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-TQ-1-INDEPENDENT_REVIEW",
+      "invariantId": "I-TQ-1",
+      "surface": "INDEPENDENT_REVIEW",
+      "attackIds": [],
+      "taxonomyIds": [
+        "TEST_QUALITY"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "INDEPENDENT_REVIEW surface required by I-TQ-1 risk=STANDARD",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-TQ-1-MUTATION",
+      "invariantId": "I-TQ-1",
+      "surface": "MUTATION",
+      "attackIds": [],
+      "taxonomyIds": [
+        "TEST_QUALITY"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "MUTATION surface required by I-TQ-1 risk=STANDARD",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-QI-1-STATIC_SEMANTIC",
+      "invariantId": "I-QI-1",
+      "surface": "STATIC_SEMANTIC",
+      "attackIds": [],
+      "taxonomyIds": [
+        "QA_INTEGRITY"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "STATIC_SEMANTIC surface required by I-QI-1 risk=STANDARD",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-I-QI-1-INDEPENDENT_REVIEW",
+      "invariantId": "I-QI-1",
+      "surface": "INDEPENDENT_REVIEW",
+      "attackIds": [],
+      "taxonomyIds": [
+        "QA_INTEGRITY"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "INDEPENDENT_REVIEW surface required by I-QI-1 risk=STANDARD",
+      "evidenceIds": [],
+      "reviewerIds": [],
+      "status": "PENDING",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-ATOMICITY-1",
+      "invariantId": "I-CC-1",
+      "surface": "DETERMINISTIC",
+      "attackIds": [],
+      "taxonomyIds": [
+        "CONTRACT",
+        "STATE",
+        "PERSISTENCE"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "commitFiveElementInitiation atomicity: injection points, partial failure paths, rollback byte-equivalence - audited + pinned",
+      "evidenceIds": [
+        "EV-ATOMICITY-1"
+      ],
+      "reviewerIds": [],
+      "status": "SATISFIED",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-PRECURSOR-PARITY-1",
+      "invariantId": "I-PG-1",
+      "surface": "DETERMINISTIC",
+      "attackIds": [],
+      "taxonomyIds": [
+        "CONTRACT",
+        "STATE"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "precursor parity verified: one shared uncapped bonus path + identical thresholds for all 3 precursors",
+      "evidenceIds": [
+        "EV-PROBE-WAVE6"
+      ],
+      "reviewerIds": [],
+      "status": "SATISFIED",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-STAGE-STATE-1",
+      "invariantId": "I-SS-1",
+      "surface": "DETERMINISTIC",
+      "attackIds": [],
+      "taxonomyIds": [
+        "CONTRACT",
+        "STATE"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "stage read-model total order verified + final-boss stage reachable in beta scope",
+      "evidenceIds": [
+        "EV-PROBE-WAVE6"
+      ],
+      "reviewerIds": [],
+      "status": "SATISFIED",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-ECONOMY-1",
+      "invariantId": "I-EC-1",
+      "surface": "DETERMINISTIC",
+      "attackIds": [],
+      "taxonomyIds": [
+        "CONTRACT",
+        "STATE"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "sec.17 economy census suite green - no orphan source/sink, suppressed faucets excluded",
+      "evidenceIds": [
+        "EV-PROBE-WAVE6"
+      ],
+      "reviewerIds": [],
+      "status": "SATISFIED",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-ELECTRON-1",
+      "invariantId": "I-RT-1",
+      "surface": "DETERMINISTIC",
+      "attackIds": [],
+      "taxonomyIds": [
+        "CONTRACT",
+        "STATE"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "update provider safety flags + verified download pinned; packaged devtools off, contextIsolation on",
+      "evidenceIds": [
+        "EV-PROBE-WAVE6"
+      ],
+      "reviewerIds": [],
+      "status": "SATISFIED",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-TOOLING-1",
+      "invariantId": "I-TS-1",
+      "surface": "DETERMINISTIC",
+      "attackIds": [],
+      "taxonomyIds": [
+        "CONTRACT",
+        "STATE"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "dev-only debug seam absent in prod bundle; build-time CSP fail-closed",
+      "evidenceIds": [
+        "EV-PROBE-WAVE6"
+      ],
+      "reviewerIds": [],
+      "status": "SATISFIED",
+      "weakProtection": false
+    },
+    {
+      "id": "COV-CONCURRENCY-1",
+      "invariantId": "I-CN-1",
+      "surface": "DETERMINISTIC",
+      "attackIds": [],
+      "taxonomyIds": [
+        "CONTRACT",
+        "STATE"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "save lifecycle race seams pinned: replacement restore, bag clear, snapshot isolation, boot restore",
+      "evidenceIds": [
+        "EV-PROBE-WAVE6"
+      ],
+      "reviewerIds": [],
+      "status": "SATISFIED",
+      "weakProtection": false
+    }
+  ],
+  "attacks": [],
+  "reviews": [],
+  "cycles": [],
+  "mutations": [],
+  "corpus": [],
+  "lessons": [],
+  "messages": [],
+  "events": [
+    {
+      "seq": 1,
+      "at": "2026-09-30T22:51:04.225Z",
+      "kind": "PHASE",
+      "actor": "coord-main",
+      "state": {
+        "productStateId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567",
+        "contractId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567",
+        "attackModelId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567",
+        "environmentId": "6429982d0558fb6f0ce6a537abc18ea10b2b60228c52fa37d04f6804d4a11567"
+      },
+      "previousEventHash": null,
+      "payloadPath": "events/0001.json",
+      "payloadHash": "ef39df386c5b8de3251d3fdc573192fddf4b160c8d7a1bda61a945122bb0dbfd",
+      "eventHash": "8081b752e3b8e9e1d2bb13af72895d3dfe782e39bf11f3c120dee427dca41fe1"
+    },
+    {
+      "seq": 2,
+      "at": "2026-09-30T22:51:08.221Z",
+      "kind": "SNAPSHOT",
+      "actor": "coord-main",
+      "state": {
+        "productStateId": "86f75a51c2abb1b7538b08ff288b947a4f5cfd1f36efb642707a911957657cf1",
+        "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+        "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+        "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+      },
+      "previousEventHash": "8081b752e3b8e9e1d2bb13af72895d3dfe782e39bf11f3c120dee427dca41fe1",
+      "payloadPath": "events/0002.json",
+      "payloadHash": "3938f947878a9aeaad8a4f8060a5cf5e106ab98ff13dd3b24d7894829286da04",
+      "eventHash": "fc03addea82730ec7626bfece62bcabb98a68e7e1d1e0386ec37744bf4f289db"
+    },
+    {
+      "seq": 3,
+      "at": "2026-09-30T22:54:19.443Z",
+      "kind": "EVIDENCE",
+      "actor": "coord-main",
+      "state": {
+        "productStateId": "86f75a51c2abb1b7538b08ff288b947a4f5cfd1f36efb642707a911957657cf1",
+        "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+        "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+        "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+      },
+      "previousEventHash": "fc03addea82730ec7626bfece62bcabb98a68e7e1d1e0386ec37744bf4f289db",
+      "payloadPath": "events/0003.json",
+      "payloadHash": "a388f3e98c30a5891eef7b8e6cb1cad205449cd72a590aaa7baf9b4613c7686a",
+      "eventHash": "910393b9695447168c87d1d8342a7452ea99f241c0d9aa6ba4355ce67b9e5bfe"
+    },
+    {
+      "seq": 4,
+      "at": "2026-09-30T22:54:48.972Z",
+      "kind": "EVIDENCE",
+      "actor": "coord-main",
+      "state": {
+        "productStateId": "86f75a51c2abb1b7538b08ff288b947a4f5cfd1f36efb642707a911957657cf1",
+        "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+        "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+        "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+      },
+      "previousEventHash": "910393b9695447168c87d1d8342a7452ea99f241c0d9aa6ba4355ce67b9e5bfe",
+      "payloadPath": "events/0004.json",
+      "payloadHash": "1944379041cc9effdc10c1732dd0f89317b8451c28b6f580f11400194f4f0fb6",
+      "eventHash": "5625da82b3f7078b97ae5b0c00f8c49041a5f9a4907f3d335e3caa1c81b0f14d"
+    },
+    {
+      "seq": 5,
+      "at": "2026-09-30T23:07:13.620Z",
+      "kind": "EVIDENCE",
+      "actor": "coord-main",
+      "state": {
+        "productStateId": "86f75a51c2abb1b7538b08ff288b947a4f5cfd1f36efb642707a911957657cf1",
+        "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+        "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+        "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+      },
+      "previousEventHash": "5625da82b3f7078b97ae5b0c00f8c49041a5f9a4907f3d335e3caa1c81b0f14d",
+      "payloadPath": "events/0005.json",
+      "payloadHash": "3d800b878b167aff3ffcae5b441ef6c42a52a6177f75db8dfb969dd7e0ebd8bd",
+      "eventHash": "d510879adb0888441f4c08f17d9675170c460c2d74ebe731c35ac3b019a01ffa"
+    },
+    {
+      "seq": 6,
+      "at": "2026-09-30T23:16:52.956Z",
+      "kind": "EVIDENCE",
+      "actor": "coord-main",
+      "state": {
+        "productStateId": "86f75a51c2abb1b7538b08ff288b947a4f5cfd1f36efb642707a911957657cf1",
+        "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+        "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+        "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+      },
+      "previousEventHash": "d510879adb0888441f4c08f17d9675170c460c2d74ebe731c35ac3b019a01ffa",
+      "payloadPath": "events/0006.json",
+      "payloadHash": "8a8d7280052ea7dae0bd4a89ca3c3b8c20755952f9bcb7b52e8446adf5a9b719",
+      "eventHash": "374495714e831b6afdf871c0c6059feb2e58de1b5160abd7b7d8d1a8b6d7fcaf"
+    },
+    {
+      "seq": 7,
+      "at": "2026-09-30T23:26:30.806Z",
+      "kind": "SNAPSHOT",
+      "actor": "coord-main",
+      "state": {
+        "productStateId": "d0e79841ffff6358d9792cd9aee2395ca8ce1225b1af30e79ad599202307dd47",
+        "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+        "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+        "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+      },
+      "previousEventHash": "374495714e831b6afdf871c0c6059feb2e58de1b5160abd7b7d8d1a8b6d7fcaf",
+      "payloadPath": "events/0007.json",
+      "payloadHash": "ea844617eeade96ee2ff55a1604cfdc17adc8376651e1ea1112b1920efad6ae0",
+      "eventHash": "1ccaf9fa92a168cf1d8fe832ad9d3d3457887a15a3b1f0eeeb9216dd1f4c7bbd"
+    },
+    {
+      "seq": 8,
+      "at": "2026-09-30T23:34:21.726Z",
+      "kind": "SNAPSHOT",
+      "actor": "coord-main",
+      "state": {
+        "productStateId": "c48b5401ed9930d05891ee0deaa50e5b8592984dd5ff7a242b4de0703257609a",
+        "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+        "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+        "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+      },
+      "previousEventHash": "1ccaf9fa92a168cf1d8fe832ad9d3d3457887a15a3b1f0eeeb9216dd1f4c7bbd",
+      "payloadPath": "events/0008.json",
+      "payloadHash": "48e289db72a5b7ab553129257cf921ca7d3d5674383709058e725f1adfffdbc9",
+      "eventHash": "66210f5902f9b9617e874fe11241f7b8d5751329922d4e68400441a96e517168"
+    },
+    {
+      "seq": 9,
+      "at": "2026-09-30T23:35:48.264Z",
+      "kind": "EVIDENCE",
+      "actor": "coord-main",
+      "state": {
+        "productStateId": "c48b5401ed9930d05891ee0deaa50e5b8592984dd5ff7a242b4de0703257609a",
+        "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+        "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+        "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+      },
+      "previousEventHash": "66210f5902f9b9617e874fe11241f7b8d5751329922d4e68400441a96e517168",
+      "payloadPath": "events/0009.json",
+      "payloadHash": "8500e3a533ce3510c1762245d6b9ea0b85e1f6b429b6b109db925d49caf96a8e",
+      "eventHash": "0eaf975ef8b09233f158564a94c2226cc45708b4e6340c161a864840cd55cdfc"
+    },
+    {
+      "seq": 10,
+      "at": "2026-09-30T23:45:24.905Z",
+      "kind": "SNAPSHOT",
+      "actor": "coord-main",
+      "state": {
+        "productStateId": "4311fc4d636dc9808f8fcc3699a4f41eb4e9db05e3b22623cc5409502f115a42",
+        "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+        "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+        "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+      },
+      "previousEventHash": "0eaf975ef8b09233f158564a94c2226cc45708b4e6340c161a864840cd55cdfc",
+      "payloadPath": "events/0010.json",
+      "payloadHash": "0f3e475b5209f0fa8b0f7212385e82af352d47e41ac7c62786b6f7b152b8cab8",
+      "eventHash": "fb4a27560bc56593e354ee94e9e7335843599544241e016ed8415fc9afb545ec"
+    },
+    {
+      "seq": 11,
+      "at": "2026-09-30T23:46:13.388Z",
+      "kind": "EVIDENCE",
+      "actor": "coord-main",
+      "state": {
+        "productStateId": "4311fc4d636dc9808f8fcc3699a4f41eb4e9db05e3b22623cc5409502f115a42",
+        "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+        "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+        "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+      },
+      "previousEventHash": "fb4a27560bc56593e354ee94e9e7335843599544241e016ed8415fc9afb545ec",
+      "payloadPath": "events/0011.json",
+      "payloadHash": "26edd288e378fdcf7690f256e4c898e9a4ec4d097df3e055b051f78cf505b239",
+      "eventHash": "12751bd233c1d0fa0cdae77a4579525210087a5df23569410faa580bac331313"
+    },
+    {
+      "seq": 12,
+      "at": "2026-09-30T23:50:33.430Z",
+      "kind": "EVIDENCE",
+      "actor": "coord-main",
+      "state": {
+        "productStateId": "4311fc4d636dc9808f8fcc3699a4f41eb4e9db05e3b22623cc5409502f115a42",
+        "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+        "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+        "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+      },
+      "previousEventHash": "12751bd233c1d0fa0cdae77a4579525210087a5df23569410faa580bac331313",
+      "payloadPath": "events/0012.json",
+      "payloadHash": "7dd9017b1c2df9219b47cee745a1590f3c3b918b53ae465ed35c6a41f7ed8457",
+      "eventHash": "d9433b48c84e6b08b39849b21c1a0e516e38b830ffdd7f2f3428ce4e0fc9ca0b"
+    },
+    {
+      "seq": 13,
+      "at": "2026-10-01T00:05:26.916Z",
+      "kind": "EVIDENCE",
+      "actor": "coord-main",
+      "state": {
+        "productStateId": "4311fc4d636dc9808f8fcc3699a4f41eb4e9db05e3b22623cc5409502f115a42",
+        "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+        "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+        "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+      },
+      "previousEventHash": "d9433b48c84e6b08b39849b21c1a0e516e38b830ffdd7f2f3428ce4e0fc9ca0b",
+      "payloadPath": "events/0013.json",
+      "payloadHash": "761ac4c2b617a2e1c1d8231d2e120f82984cd7c4510b37968d62cfa6566a1c2f",
+      "eventHash": "fe7eafd1f07d1c30f89761ca5712eca032e706760a1662877a4c3844c8b5dba6"
+    },
+    {
+      "seq": 14,
+      "at": "2026-10-01T00:08:35.507Z",
+      "kind": "EVIDENCE",
+      "actor": "coord-main",
+      "state": {
+        "productStateId": "4311fc4d636dc9808f8fcc3699a4f41eb4e9db05e3b22623cc5409502f115a42",
+        "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+        "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+        "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+      },
+      "previousEventHash": "fe7eafd1f07d1c30f89761ca5712eca032e706760a1662877a4c3844c8b5dba6",
+      "payloadPath": "events/0014.json",
+      "payloadHash": "a13161e86fd2da6de3ec7c1bf6d58714b125ee60d3fd60e5f4804784539df7d2",
+      "eventHash": "aea98209b675e4c7383390e317a38f1a296ece975e48247cbcbf7a2e903a03cc"
+    }
+  ]
+}
