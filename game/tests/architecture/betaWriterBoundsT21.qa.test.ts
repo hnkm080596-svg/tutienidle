@@ -555,3 +555,62 @@ describe('F-TC10-OC: cultivationOvercharge is bounded by the lifetime tally', ()
     expect(classify(save).shape.ok).toBe(true)
   })
 })
+
+describe('F-SCOPE-EQ-1: equipped grade must be producible at the claimed realm', () => {
+  // equip() enforces canUseItemGrade (exact realm->grade match) and every
+  // tribulation transition unequips all gear; the mortal->qi_refining
+  // initiation is the single non-unequip transition, so qi_refining may
+  // still carry equipped cuu_pham while later realms admit only their
+  // own grade.
+  function equipEntry(over: Record<string, unknown> = {}): Record<string, unknown> {
+    return {
+      instanceId: 'eq-1',
+      itemId: 'base_kiem',
+      slot: 'weapon',
+      equipped: true,
+      grade: 'bat_pham',
+      quality: 'hoang',
+      mainStat: {
+        id: 'eq-1:main',
+        sourceId: 'eq-1',
+        sourceType: 'equipment',
+        stat: 'might',
+        flat: 12,
+      },
+      affixes: [],
+      forgeUsesTotal: 6,
+      forgeUsesRemaining: 6,
+      ...over,
+    }
+  }
+
+  it('a bat_pham weapon equipped at foundation_establishment rejects', () => {
+    const { save } = committedSave('foundation_establishment')
+    save.equipment = [equipEntry()] as never
+    expect(classify(save).shape.ok).toBe(false)
+  })
+
+  it('a that_pham weapon equipped at qi_refining rejects', () => {
+    const { save } = committedSave('qi_refining')
+    save.equipment = [equipEntry({ grade: 'that_pham' })] as never
+    expect(classify(save).shape.ok).toBe(false)
+  })
+
+  it('control: a bat_pham weapon equipped at qi_refining validates', () => {
+    const { save } = committedSave('qi_refining')
+    save.equipment = [equipEntry()] as never
+    expect(classify(save).shape.ok).toBe(true)
+  })
+
+  it('control: a cuu_pham weapon equipped at qi_refining validates (initiation carry)', () => {
+    const { save } = committedSave('qi_refining')
+    save.equipment = [equipEntry({ grade: 'cuu_pham' })] as never
+    expect(classify(save).shape.ok).toBe(true)
+  })
+
+  it('control: an unequipped bat_pham record at foundation stays loadable', () => {
+    const { save } = committedSave('foundation_establishment')
+    save.equipment = [equipEntry({ equipped: false })] as never
+    expect(classify(save).shape.ok).toBe(true)
+  })
+})

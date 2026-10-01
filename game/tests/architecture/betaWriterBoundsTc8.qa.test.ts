@@ -372,6 +372,50 @@ describe('F-TC8-7: perfectClearSeconds authored floor', () => {
   })
 })
 
+describe('F-SEAM-2: perfectClearSeconds per-stage physical floor', () => {
+  it('a claim below the authored spawn schedule is rejected', () => {
+    const save = validSave()
+    const p = save.player as ReturnType<typeof createDefaultPlayer>
+    // qi_refining_forest runs 3 waves at 3s - the last wave cannot land
+    // before t=6s, so a 5s 'perfect clear' is physically impossible.
+    p.perfectClearSeconds = { qi_refining_forest: 5 }
+
+    expect(validateGameSaveShape(save).ok).toBe(false)
+  })
+
+  it('a 1s claim on a multi-wave stage is rejected (was: flat floor accepted it)', () => {
+    const save = validSave()
+    const p = save.player as ReturnType<typeof createDefaultPlayer>
+    p.perfectClearSeconds = { qi_refining_deep_forest: 1 }
+
+    expect(validateGameSaveShape(save).ok).toBe(false)
+  })
+
+  it('a claim at the spawn-schedule boundary is accepted', () => {
+    const save = validSave()
+    const p = save.player as ReturnType<typeof createDefaultPlayer>
+    p.perfectClearSeconds = { qi_refining_forest: 6 }
+
+    expect(validateGameSaveShape(save).ok).toBe(true)
+  })
+
+  it('a 1s claim on the solo-boss stage is accepted (waves=[N] floor stays 1)', () => {
+    const save = validSave()
+    const p = save.player as ReturnType<typeof createDefaultPlayer>
+    p.perfectClearSeconds = { qi_refining_abyssal_pool: 1 }
+
+    expect(validateGameSaveShape(save).ok).toBe(true)
+  })
+
+  it('an unauthored stage id keeps the legacy 1s floor', () => {
+    const save = validSave()
+    const p = save.player as ReturnType<typeof createDefaultPlayer>
+    p.perfectClearSeconds = { ghost_stage_beta: 0.5 }
+
+    expect(validateGameSaveShape(save).ok).toBe(false)
+  })
+})
+
 describe('F-TC8-8: tu_linh_tran duration bound', () => {
   it('a span wider than the authored 24h writer window is rejected', () => {
     const save = validSave()

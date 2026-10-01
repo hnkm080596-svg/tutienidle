@@ -42,6 +42,7 @@ import { MaterialRegistry } from '@/core/material/MaterialRegistry'
 import type { Material } from '@/core/material/Material'
 import type { ResolvedDropItem } from '@/core/drop/resolveDrops'
 import { GENERIC_PHYSICAL_BASIC } from '@/data/skill/TurnBasicAttacks'
+import { DEFAULT_PARTY_FORMATION } from '@/core/game/PartyFormation'
 import { VAN_PHAP_THAN_HOA_ID } from '@/data/buff/ReactionStatusBuffs'
 import { AlchemySystem, type ActiveAlchemyJob, type AlchemyRecipe } from '@/core/alchemy/AlchemySystem'
 import { MaterialBag } from '@/core/material/MaterialBag'
@@ -1007,5 +1008,56 @@ describe('F-TC6-3: great_dao foundation is hidden-progression carry', () => {
     ).stats.strength
 
     expect(resolvePlayerStatAssembly(p, []).stats.strength).toBeGreaterThan(clean)
+  })
+})
+
+describe('dormancy: a carried/forged formation loadout cannot move live grid position (F-SEAM-1)', () => {
+  function buildDeps(): { deps: CombatBuildDeps; runtimeDeps: CultivationPathRuntimeDeps } {
+    const skillManager = new SkillManager()
+    const skillTemplates = new TemplateRegistry<Skill>()
+    for (const skill of SKILLS) {
+      skillTemplates.register(skill.id, skill)
+    }
+    const runtimeDeps: CultivationPathRuntimeDeps = {
+      skillManager,
+      skillSystem: new SkillSystem(skillManager),
+      skillTemplates,
+      nodeRegistry: new NodeRegistry(),
+      getNodeLevel: () => 0,
+      getSpellPathElement: () => undefined,
+    }
+    const deps: CombatBuildDeps = {
+      getBattleBaseChannels: () => [],
+      resolveCapabilities: (p) => resolvePathCapabilities(p, { hasSkill: () => false }),
+      getSkillLevels: () => ({}),
+      getProgressionNodes: () => [],
+      getCompanionDefinition: () => undefined,
+      getLiveBattleModifiers: () => [],
+      getActivePlayer: () => undefined,
+    }
+    return { deps, runtimeDeps }
+  }
+
+  it('resolveCombatBuild resolves DEFAULT_PARTY_FORMATION under the formation scope lock', () => {
+    const { deps, runtimeDeps } = buildDeps()
+    const p = player({
+      cultivationPath: 'spell',
+      cultivationWay: 'spell_pathway',
+      spellPath: createSpellPathState(),
+      // carried/forged loadout - places 'player' on the cell farthest
+      // from the default hero slot; every legit writer is gated while
+      // formation is scope-hidden, so the claim must stay inert.
+      formationLoadout: {
+        formationId: 'cuu_cung_tran',
+        assignments: [{ combatantId: 'player', row: 0, column: 0 }],
+      },
+    })
+
+    expect(unsupportedReleaseReason(p)).toBe('formation_loadout')
+
+    const runtime = resolveCultivationPathRuntime(p, runtimeDeps)
+    const build = resolveCombatBuild(p, runtime, deps)
+
+    expect(build.formation).toEqual(DEFAULT_PARTY_FORMATION)
   })
 })

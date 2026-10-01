@@ -14,6 +14,7 @@ import { MAX_CONSTELLATION_RANK } from '../../core/companion/CompanionProgressio
 import { ITEM_QUALITY_ORDER, type ItemQuality } from '../../core/item/ItemQuality'
 import { getRealmIdForProfessionGrade, isProfessionGrade } from '../../core/profession/ProfessionGrade'
 import { isHerbAge } from '../../core/production/ProductionTypes'
+import { isAuthoredRealmId, producibleEquippedGrades } from '../../core/equipment/canUseItem'
 import { createBaseStats } from '../../core/stats/StatBlock'
 import { EQUIPMENT_SLOTS } from '../../core/equipment/EquipmentSlotState'
 import type { EquipmentSlot } from '../../core/equipment/EquipmentTypes'
@@ -1895,10 +1896,19 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
       // F-TC8-7: a sub-second clear is below every authored stage
       // minimum and feeds the auto-farm roll rate directly (cycleMs
       // halves it) - a 0.001s claim mints thousands of rolls per tick.
-      if (!isFiniteNumber(seconds) || seconds < 1) {
+      // F-SEAM-2: the floor is per-stage physical - no wave can land
+      // before its spawn tick, so a multi-wave stage cannot clear
+      // faster than (waves.length - 1) * spawnIntervalSeconds; a claim
+      // below that is a fabricated auto-farm rate grant.
+      const claimedStage = STAGES.find((stage) => stage.id === stageId)
+      const physicalFloor =
+        claimedStage !== undefined
+          ? Math.max(1, (claimedStage.waves.length - 1) * claimedStage.spawnIntervalSeconds)
+          : 1
+      if (!isFiniteNumber(seconds) || (seconds as number) < physicalFloor) {
         issues.push({
           path: `player.perfectClearSeconds.${stageId}`,
-          message: 'dưới authored floor - stage nhanh nhất vẫn cần >= 1s',
+          message: `dưới authored floor - stage nhanh nhất vẫn cần >= ${physicalFloor}s`,
         })
       }
     }
@@ -2956,6 +2966,25 @@ function validateEquipmentEntries(
       })
     }
     requireBoolean(entry, 'equipped', `${path}[${i}]`, issues)
+
+    // F-SCOPE-EQ-1: equipped:true is a writer-gated claim - equip()
+    // enforces canUseItemGrade and every tribulation transition
+    // unequips all gear, so an equipped item whose grade cannot be
+    // produced at the claimed realm is a fabricated claim (e.g.
+    // bat_pham equipped at foundation_establishment). Uneqipped
+    // records of any authored grade stay loadable.
+    if (
+      entry.equipped === true &&
+      isProfessionGrade(entry.grade) &&
+      typeof playerRealmId === 'string' &&
+      isAuthoredRealmId(playerRealmId) &&
+      !producibleEquippedGrades(playerRealmId).has(entry.grade)
+    ) {
+      issues.push({
+        path: `${path}[${i}].equipped`,
+        message: 'phẩm trang bị bất khả thi tại cảnh giới đã claim',
+      })
+    }
 
     if (!isProfessionGrade(entry.grade)) {
       issues.push({

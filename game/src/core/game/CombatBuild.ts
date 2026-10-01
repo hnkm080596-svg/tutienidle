@@ -256,7 +256,14 @@ export function resolveCombatBuild(
   }
 
   // --- Formation + companions (M3) --------------------------------------
-  const formation = resolvePartyFormation(source)
+  // BETA SCOPE LOCK v2 sec.14 - the persisted loadout is formation-domain
+  // ACCESS: a carried/forged formationLoadout must not move the player's
+  // live grid position (kill order) or grant companion EXP while the
+  // domain is scope-hidden. Same verdict as the sibling formation buff
+  // + companion gates below; the record itself stays untouched.
+  const formation = isScopeHidden('formation')
+    ? DEFAULT_PARTY_FORMATION
+    : resolvePartyFormation(source)
 
   // Each companion mints a fresh CombatEntity per battle; a missing
   // definition OR a missing formation slot skips silently (ops parity).
