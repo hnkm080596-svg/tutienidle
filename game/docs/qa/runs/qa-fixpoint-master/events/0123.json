@@ -1,0 +1,51 @@
+{
+  "outcome": "QA_UNVERIFIED",
+  "detail": "required evidence/coverage/independence missing",
+  "clauses": [
+    {
+      "id": "C1-identity",
+      "ok": true,
+      "reason": "all final evidence binds the declared state"
+    },
+    {
+      "id": "C2-census-coverage",
+      "ok": false,
+      "reason": "coverage COV-I-CC-1-DETERMINISTIC=STALE; coverage COV-ATOMICITY-1=STALE; coverage COV-I-IA-1-DETERMINISTIC=STALE; coverage COV-I-IA-1-PROPERTY=STALE; coverage COV-I-IA-1-MUTATION=STALE; coverage COV-I-IA-2-DETERMINISTIC=STALE; coverage COV-I-IA-2-STATIC_SEMANTIC=STALE; coverage COV-I-PA-1-DETERMINISTIC=STALE; coverage COV-I-PA-1-MUTATION=STALE; coverage COV-I-SV-1-DETERMINISTIC=STALE; coverage COV-I-SV-1-INTEGRATION=STALE; coverage COV-I-SV-1-MUTATION=STALE; coverage COV-I-AS-1-DETERMINISTIC=STALE; coverage COV-I-AS-1-INTEGRATION=STALE; coverage COV-I-AS-1-MUTATION=STALE; coverage COV-I-DS-1-DETERMINISTIC=STALE; coverage COV-I-DS-1-PERSISTENCE=STALE; coverage COV-I-RM-1-STATIC_SEMANTIC=STALE; coverage COV-I-RM-1-DETERMINISTIC=STALE; coverage COV-I-CR-1-DETERMINISTIC=STALE; coverage COV-I-CR-1-INTEGRATION=STALE; coverage COV-I-PG-1-DETERMINISTIC=STALE; coverage COV-PRECURSOR-PARITY-1=STALE; coverage COV-I-PG-1-PROPERTY=STALE; coverage COV-I-PG-1-MUTATION=STALE; coverage COV-I-SS-1-DETERMINISTIC=STALE; coverage COV-STAGE-STATE-1=STALE; coverage COV-I-SS-1-INTEGRATION=STALE; coverage COV-I-EC-1-DETERMINISTIC=STALE; coverage COV-ECONOMY-1=STALE; coverage COV-I-EC-1-MUTATION=STALE; coverage COV-I-SF-1-DETERMINISTIC=STALE; coverage COV-I-SF-1-FUZZ=STALE; coverage COV-I-SF-1-PERSISTENCE=STALE; coverage COV-I-SF-1-MUTATION=STALE; coverage COV-I-PM-1-DETERMINISTIC=STALE; coverage COV-I-PM-1-PERSISTENCE=STALE; coverage COV-I-EN-1-DETERMINISTIC=STALE; coverage COV-I-UH-1-DETERMINISTIC=STALE; coverage COV-I-UH-1-RUNTIME_E2E=STALE; coverage COV-I-RT-1-STATIC_SEMANTIC=STALE; coverage COV-I-RT-1-DETERMINISTIC=STALE; coverage COV-ELECTRON-1=STALE; coverage COV-I-TS-1-STATIC_SEMANTIC=STALE; coverage COV-I-TS-1-DETERMINISTIC=STALE; coverage COV-TOOLING-1=STALE; coverage COV-I-CN-1-DETERMINISTIC=STALE; coverage COV-CONCURRENCY-1=STALE; coverage COV-I-CN-1-INTEGRATION=STALE; coverage COV-I-TQ-1-STATIC_SEMANTIC=STALE; coverage COV-I-TQ-1-MUTATION=STALE; coverage COV-I-QI-1-STATIC_SEMANTIC=STALE"
+    },
+    {
+      "id": "C3-no-open",
+      "ok": false,
+      "reason": "exception F-DEFER-1; exception F-DEFER-2; exception F-DEFER-3; exception F-DEFER-5; exception F-A2-4; exception F-B3-05; exception F-B3-06; exception F-A3-04; exception F-A3-05; exception F-A3-06; exception F-A3-07; exception F-B-CONS-3; exception F-B-CONS-4; exception F-B-CONS-5; exception F-BS-4; exception F-BS-5; exception F-BS-6; exception F-BS-7; exception F-TIMED-EMIT; exception F-A8-3; exception F-B8-4; exception F-B8-5; exception F-B8-6; exception F-TC6-7; exception F-A9-2; exception F-TC7-STAGES; exception F-TC7-AUTOFARM; exception F-TC7-ETERNAL; exception F-TC7-MATERIAL; exception F-TC7-BETAPILL; exception F-TC7-ALCHEMY; exception F-TC7-CULT; exception F-TC7-WORKERS; exception F-TC7-CPS; exception F-B9-CON-01; exception F-B9-CON-03; exception F-B9-CON-04; exception F-B9-CON-05; exception F-B9-CON-06; exception F-TC8-5; exception F-TC8-13; exception F-B10-003; exception F-B10-004; exception F-B10-005; exception F-A10-8; exception F-TC9-5; exception F-TC9-6; exception F-B11-1; exception F-B11-2; exception F-B11-3; exception F-B11-4; exception F-B11-5; exception F-B11-6; exception F-TC10-11; exception F-TC10-12; exception F-CS-1; exception F-CS-2; exception F-AP-DOUBLE-COUNT; exception F-EQ-MAINSTAT-NEG; exception F-BASESTATS-NEG; exception F-INSIGHT-UNBOUNDED"
+    },
+    {
+      "id": "C4-final-gates",
+      "ok": true,
+      "reason": "final gates green"
+    },
+    {
+      "id": "C5-sequential",
+      "ok": true,
+      "reason": "sequential phase reviews present"
+    },
+    {
+      "id": "C6-clean-pair",
+      "ok": false,
+      "reason": "Clean A missing/not CLEAN; Clean B missing/not CLEAN"
+    },
+    {
+      "id": "C7-mutation-corpus",
+      "ok": true,
+      "reason": "mutation + corpus satisfied"
+    },
+    {
+      "id": "C8-terminal-check",
+      "ok": false,
+      "reason": "no sealed independent TERMINAL_CHECK on the final state"
+    },
+    {
+      "id": "C9-readiness",
+      "ok": true,
+      "reason": "readiness not required for this run (v1 or opt-out)"
+    }
+  ]
+}

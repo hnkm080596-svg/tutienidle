@@ -1,0 +1,5 @@
+{
+  "action": "T22b coverage rebind: 18 stale evidence re-executed on 1dbccae6 (4 vitest batches 612 tests, e2e 2/2, static-seam census, 8/8 legacy mutants re-killed incl. F-AP-DOUBLE-COUNT-free corpus), 52 coverage cells SATISFIED",
+  "tip": "b48b8c65",
+  "wave": "T22 rebind"
+}
