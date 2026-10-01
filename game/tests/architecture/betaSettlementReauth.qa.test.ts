@@ -407,6 +407,9 @@ describe('live body chain (scope ruling): body-progression records emit and grad
     const manager = makeManager()
     const p = committedPlayer({
       realmId: 'qi_refining',
+      // F-TC15 pacing: 3 opened meridians producible in-page at
+      // realmLevel 6 (am_kieu_mach's authored requirement).
+      realmLevel: 6,
       bodyProgression: {
         body_refinement: { completedTiers: 6, currentTierProgress: 0 },
         meridian: { openedIds: ['nham_mach', 'doi_mach', 'am_kieu_mach'] },
@@ -425,6 +428,8 @@ describe('live body chain (scope ruling): body-progression records emit and grad
 
   it('resolveKienCoGrade counts live body investment (earth on a max-tier save)', () => {
     const p = committedPlayer({
+      // F-TC15 pacing: same 3-meridian producibility bound.
+      realmLevel: 6,
       bodyProgression: {
         body_refinement: { completedTiers: 6, currentTierProgress: 0 },
         meridian: { openedIds: ['nham_mach', 'doi_mach', 'am_kieu_mach'] },
