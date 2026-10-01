@@ -331,13 +331,19 @@ export class BuildingSystem {
   }
 
   private getEffectiveRate(template: Building, level: number, realmId?: string): number {
+    // F-TC6-5: a forged/unsupported level cannot mint unbounded yield -
+    // the authored table tops out at template.maxLevel, so effective
+    // level clamps there (the boundary validator already rejects, this
+    // is the emit-side defence).
+    const effectiveLevel = Math.min(level, template.maxLevel)
+
     // Linh mạch (chi-hien-quan spec) — engine Linh Tuyền cũ, nguồn giờ là
     // gathering_outpost (building spirit_spring đã xóa khỏi data).
     if (template.id === 'gathering_outpost') {
-      return this.getSpiritSpringRatePerSecond(template, level, realmId)
+      return this.getSpiritSpringRatePerSecond(template, effectiveLevel, realmId)
     }
 
-    return (template.baseProductionRate ?? 0) * (1 + (level - 1) * LEVEL_BONUS_PER_LEVEL)
+    return (template.baseProductionRate ?? 0) * (1 + (effectiveLevel - 1) * LEVEL_BONUS_PER_LEVEL)
   }
 
   // Linh Tuyền — rate neo theo realm (bảng SPIRIT_SPRING_TARGET_PER_MINUTE),
@@ -351,16 +357,18 @@ export class BuildingSystem {
   }
 
   private getEffectiveCapacity(template: Building, level: number, realmId?: string): number {
+    const effectiveLevel = Math.min(level, template.maxLevel)
+
     if (template.id === 'gathering_outpost') {
       // Storage = đúng 10h sản lượng ở level/realm đó để offline không bao
       // giờ cap TRƯỚC cap thời gian (2026-08-28 — thay 100^level cũ khiến
       // L1 chỉ chứa 100 thạch, đầy sau ~47 phút). Epsilon chặn float drift
       // (rate×36000 = 18600.000000000004 không bị ceil lên 18601).
-      const tenHourYield = this.getSpiritSpringRatePerSecond(template, level, realmId) * PRODUCTION_OFFLINE_CAP_SECONDS
+      const tenHourYield = this.getSpiritSpringRatePerSecond(template, effectiveLevel, realmId) * PRODUCTION_OFFLINE_CAP_SECONDS
       return Math.ceil(tenHourYield - 1e-6)
     }
 
-    return template.baseStorageCapacity * (1 + (level - 1) * LEVEL_BONUS_PER_LEVEL)
+    return template.baseStorageCapacity * (1 + (effectiveLevel - 1) * LEVEL_BONUS_PER_LEVEL)
   }
 
   /**

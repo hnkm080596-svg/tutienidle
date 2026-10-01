@@ -41,7 +41,9 @@ import {
 import { alchemyRecipes } from '../../data/alchemy/alchemyRecipes'
 import { buildings } from '../../data/building/buildings'
 import { THANH_VAN_PRODUCTION_SITES } from '../../core/production/ProductionCatalog'
-import { getRealmIndex } from '../../core/realm/realmSystem'
+import { scopeHiddenPillFamilyOfId } from '../../core/betaScope'
+import { getGlobalCultivationLevel, getRealmIndex } from '../../core/realm/realmSystem'
+import { REALM_TIERS } from '../../core/realm/RealmTierMap'
 import { getTalentMaxLevel, isLegalBreakthroughOffer, isTalentEntitlementActionable } from '../../core/talent/TalentEntitlement'
 import { skillCoreNodeId } from '../../core/progression/SkillCoreLevel'
 import { isPhysiqueGradeId } from '../../data/realm/PhysiqueLadder'
@@ -67,6 +69,19 @@ const PROGRESSION_NODE_BY_ID = new Map(
 )
 
 const STAT_TYPES = new Set<string>(Object.keys(createBaseStats()))
+
+// F-TC6-1: the Loi Kiep victory grant upserts one modifier per main
+// stat (TribulationOutcomeService) - the claim shape and its victory
+// bound are closed: +0.1 per major realm transition at most.
+const LOI_KIEP_MAIN_STATS = [
+  'strength',
+  'dexterity',
+  'intelligence',
+  'attunement',
+  'vitality',
+] as const
+
+const LOI_KIEP_MAX_PERCENT = 0.1 * REALM_TIERS.length
 
 const STAT_MODIFIER_NUMERIC_FIELDS = [
   'flat',
@@ -475,6 +490,20 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
   requireNonNegativeNumber(player, 'totalSkillInsightGained', 'player', issues)
   requireNonNegativeNumber(player, 'cultivationInsightAccumulator', 'player', issues)
   requireNonNegativeNumber(player, 'attributePoints', 'player', issues)
+  // F-TC6-6: 1 attribute point mints per tier climbed (levelUp +
+  // breakthrough each grant exactly one), so unspent points can never
+  // exceed the player's cumulative tier position.
+  if (
+    isNonNegativeFiniteNumber(player.attributePoints) &&
+    typeof player.realmId === 'string' &&
+    isNonNegativeFiniteNumber(player.realmLevel) &&
+    player.attributePoints > getGlobalCultivationLevel(player.realmId, player.realmLevel)
+  ) {
+    issues.push({
+      path: 'player.attributePoints',
+      message: 'vượt số điểm có thể kiếm được ở vị trí cảnh giới hiện tại',
+    })
+  }
   requireNonNegativeNumber(player, 'breakthroughGrade', 'player', issues)
 
   const purchasedNodeIds = requireArray(player, 'purchasedNodeIds', 'player', issues)
@@ -585,21 +614,64 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
       }
 
       if (modifier.sourceType === 'realm') {
-        const resolvable =
-          REALM_PASSIVES.some((entry) => entry.sourceId === modifier.sourceId) ||
-          MERIDIANS.some((entry) => entry.id === modifier.sourceId)
+        const passiveSource = REALM_PASSIVES.some(
+          (entry) => entry.sourceId === modifier.sourceId,
+        )
+        const meridianSource = MERIDIANS.find(
+          (entry) => entry.id === modifier.sourceId,
+        )
 
-        if (!resolvable) {
+        if (!passiveSource && meridianSource === undefined) {
           issues.push({
             path: `player.modifiers[${i}]`,
             message: `realm-source modifier không có writer nào (${String(modifier.sourceId)})`,
           })
         }
 
+        // F-TC6-9: the meridian writer emits exactly
+        // 'bat-mach:<meridian>:<stat>' entries at the authored
+        // percentAtFullTier - a claim in another id shape, another
+        // stat, or another magnitude is forged and would emit live
+        // once bodyPath unlocks (the bat-mach: strip never sees it).
+        if (meridianSource !== undefined) {
+          if (
+            modifier.id !== `bat-mach:${meridianSource.id}:${String(modifier.stat)}` ||
+            !meridianSource.stats.some((stat) => stat === modifier.stat) ||
+            modifier.percent !== meridianSource.percentAtFullTier
+          ) {
+            issues.push({
+              path: `player.modifiers[${i}]`,
+              message: `meridian modifier ngoài shape writer bat-mach (${String(modifier.id)})`,
+            })
+          }
+        }
+
         continue
       }
 
       if (modifier.sourceType === 'talent' && modifier.sourceId === 'loi_kiep') {
+        // F-TC6-1: the loi kiep grant has an ownership witness (the
+        // talent itself) and a closed writer shape - id
+        // 'talent_loi_kiep_<stat>' on the five main attributes, percent
+        // accumulation only (a victory grants +0.1 per major realm
+        // transition), never flat.
+        const mainStat = LOI_KIEP_MAIN_STATS.find(
+          (stat) => modifier.stat === stat && modifier.id === `talent_loi_kiep_${stat}`,
+        )
+        if (
+          !(selectedTalentIds ?? []).includes('loi_kiep') ||
+          mainStat === undefined ||
+          !isFiniteNumber(modifier.percent) ||
+          (modifier.percent as number) < 0 ||
+          (modifier.percent as number) > LOI_KIEP_MAX_PERCENT ||
+          modifier.flat !== undefined
+        ) {
+          issues.push({
+            path: `player.modifiers[${i}]`,
+            message: 'loi kiep modifier ngoài shape writer/talent chưa sở hữu',
+          })
+        }
+
         continue
       }
 
@@ -681,12 +753,20 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
           // without a 'regen' effect (cultivation/permanent/material)
           // never mints a timed effect, and a regen claim must match
           // the authored effect's own shape.
+          // F-TC6-8: a dormant-family pill (hoi_xuan_dan etc.) is a
+          // scope-hidden artifact - its claim is rejected outright
+          // even when the authored regen shape matches.
           const claimedPill = pills.find((pill) => pill.id === effect.sourceItemId)
           const regenEffect = claimedPill?.effects.find(
             (pillEffect) => pillEffect.type === 'regen',
           )
 
-          if (claimedPill !== undefined && regenEffect !== undefined) {
+          if (scopeHiddenPillFamilyOfId(effect.sourceItemId) !== null) {
+            issues.push({
+              path: `${effectPath}.sourceItemId`,
+              message: `timed effect claim nguồn thuộc family dormant (${String(effect.sourceItemId)})`,
+            })
+          } else if (claimedPill !== undefined && regenEffect !== undefined) {
             if (effect.cultivationSpeedPercent !== undefined) {
               issues.push({
                 path: `${effectPath}.cultivationSpeedPercent`,

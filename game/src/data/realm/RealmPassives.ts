@@ -2,6 +2,7 @@ import type { PlayerData } from '../../core/player/Player'
 import type { StatModifier } from '../../core/stats/StatCalculator'
 import { MAIN_STAT_KEYS } from '../../core/stats/StatTypes'
 import type { FoundationType } from '../../core/breakthrough/FoundationType'
+import { isBetaFeature } from '../../core/betaScope'
 
 // Realm Passive & Pressure System (2026-08-20) - buff VINH VIEN cap
 // luc buoc vao 1 dai canh gioi moi (id = realmId DICH), xem
@@ -86,7 +87,13 @@ const KIEN_CO_MAIN_STAT_PERCENT: Record<FoundationType, number> = {
 function buildKienCoModifiers(player: PlayerData): StatModifier[] {
   const foundationType = player.highestFoundationAchieved
 
-  if (!foundationType) {
+  // F-TC6-3: 'great_dao' is only ever written by a hidden breakthrough
+  // - under the beta lock the record is dormant, so its authored
+  //  percent mints nothing (parked, not rewritten to the next tier).
+  if (
+    !foundationType ||
+    (foundationType === 'great_dao' && !isBetaFeature('hiddenContent'))
+  ) {
     return []
   }
 

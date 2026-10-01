@@ -33,6 +33,7 @@ import { alchemyRecipes } from '../../src/data/alchemy/alchemyRecipes'
 import { materials } from '../../src/data/materials/materials'
 import { pills } from '../../src/data/pill/pills'
 import { equipment } from '../../src/data/equipment/equipment'
+import { QUESTS } from '../../src/data/quest/quests'
 import { affixes } from '../../src/data/equipment/affixes'
 import { buildings } from '../../src/data/building/buildings'
 import { SKILLS } from '../../src/data/skill/Skills'
@@ -123,18 +124,27 @@ describe('F-A7-1: persisted modifiers claiming non-writer sources', () => {
   })
 
   it('control: the loi_kiep talent grant still validates and emits', () => {
+    // F-TC6-1 tightened the claim shape: the writer mints percent-only
+    // 'talent_loi_kiep_<stat>' entries and only while the talent is
+    // held - the control mints that authored shape.
     const save = validSave()
     const p = save.player as ReturnType<typeof createDefaultPlayer>
+    p.selectedTalentIds = ['loi_kiep']
     p.modifiers.push({
       id: 'talent_loi_kiep_strength',
       sourceId: 'loi_kiep',
       sourceType: 'talent',
       stat: 'strength',
-      flat: 3,
+      percent: 0.1,
     })
 
     expect(validateGameSaveShape(save).ok).toBe(true)
-    expect(baseStat('strength', p.modifiers[0])).toBe(baseStat('strength') + 3)
+    const emitP = player()
+    emitP.selectedTalentIds = ['loi_kiep']
+    emitP.modifiers.push(p.modifiers[0]!)
+    expect(resolvePlayerStatAssembly(emitP, []).stats.strength).toBeGreaterThan(
+      resolvePlayerStatAssembly(player(), []).stats.strength,
+    )
   })
 
   it('control: a meridian-sourced entry still validates (emit stays gated)', () => {
@@ -607,7 +617,10 @@ describe('F-A8-1: pill timed-effect claims resolve a regen effect with authored 
     expect(validateGameSaveShape(saveWith(effect)).ok).toBe(false)
   })
 
-  it('control: the retired hp_regen family claim with authored shape stays legal', () => {
+  it('a dormant-family regen claim with authored shape is rejected (F-TC6-8)', () => {
+    // hoi_xuan_dan is retired AND scope-hidden - a dormant pill can
+    // never mint a timed effect, so its claim is rejected outright
+    // even when the authored regen shape would otherwise pass.
     const hpPill = pills.find((pill) =>
       pill.effects.some((e) => e.type === 'regen' && e.hpPerSecond !== undefined))!
     const regen = hpPill.effects.find((e) => e.type === 'regen')!
@@ -618,15 +631,13 @@ describe('F-A8-1: pill timed-effect claims resolve a regen effect with authored 
         effectGroup: regen.effectGroup,
         durationStackable: regen.stackable,
         cultivationSpeedPercent: undefined,
-        // hp_regen authors mpPerSecond: undefined - the writer emits
-        // flat 0, so 0 is the only legal value.
         modifiers: [
           { id: 'm', sourceId: hpPill.id, sourceType: 'pill', stat: 'manaRegenPerTurn', flat: 0 },
         ],
       }),
     )
 
-    expect(validateGameSaveShape(save).ok).toBe(true)
+    expect(validateGameSaveShape(save).ok).toBe(false)
   })
 })
 
@@ -681,5 +692,238 @@ describe('F-A8-2: building/site level bounded by authored maxLevel', () => {
     ]
 
     expect(validateGameSaveShape(save).ok).toBe(true)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// TC6 wave (blind falsification sweep on fba2bd85) - claimed-value
+// magnitude forgery: the writer-class check is not enough; each
+// persisted claim must also match the writer's shape/bound, and the
+// emit seams re-derive authored payloads instead of trusting claims.
+describe('F-TC6-1: loi kiep grant claim needs the ownership witness', () => {
+  it('a loi_kiep claim without the talent held is rejected and inert', () => {
+    const save = validSave()
+    const p = save.player as ReturnType<typeof createDefaultPlayer>
+    // Authored shape, ownership witness missing - must reject on the
+    // witness alone (a non-authored shape would mask the check).
+    p.modifiers.push({
+      id: 'talent_loi_kiep_strength',
+      sourceId: 'loi_kiep',
+      sourceType: 'talent',
+      stat: 'strength',
+      percent: 0.1,
+    })
+
+    expect(validateGameSaveShape(save).ok).toBe(false)
+    expect(baseStat('strength', p.modifiers[0])).toBe(baseStat('strength'))
+  })
+
+  it('a loi_kiep claim with the talent held but a foreign stat is rejected', () => {
+    const save = validSave()
+    const p = save.player as ReturnType<typeof createDefaultPlayer>
+    p.selectedTalentIds = ['loi_kiep']
+    p.modifiers.push({
+      id: 'talent_loi_kiep_maxHp',
+      sourceId: 'loi_kiep',
+      sourceType: 'talent',
+      stat: 'maxHp',
+      percent: 0.1,
+    })
+
+    expect(validateGameSaveShape(save).ok).toBe(false)
+  })
+
+  it('a loi_kiep claim with flat (writer emits percent only) is rejected', () => {
+    const save = validSave()
+    const p = save.player as ReturnType<typeof createDefaultPlayer>
+    p.selectedTalentIds = ['loi_kiep']
+    p.modifiers.push({
+      id: 'talent_loi_kiep_strength',
+      sourceId: 'loi_kiep',
+      sourceType: 'talent',
+      stat: 'strength',
+      flat: 3,
+    })
+
+    expect(validateGameSaveShape(save).ok).toBe(false)
+  })
+
+  it('a loi_kiep percent above the victory bound is rejected', () => {
+    const save = validSave()
+    const p = save.player as ReturnType<typeof createDefaultPlayer>
+    p.selectedTalentIds = ['loi_kiep']
+    p.modifiers.push({
+      id: 'talent_loi_kiep_strength',
+      sourceId: 'loi_kiep',
+      sourceType: 'talent',
+      stat: 'strength',
+      percent: 99,
+    })
+
+    expect(validateGameSaveShape(save).ok).toBe(false)
+  })
+})
+
+describe('F-TC6-2: realm-passive payloads re-derive at emit (rebuild, not trust)', () => {
+  it('a forged passive magnitude emits the authored value, not the claim', () => {
+    const p = player()
+    p.grantedRealmPassiveIds = ['qi_refining']
+    p.breakthroughGrade = 6
+
+    const forged = {
+      id: 'realm-passive:nhap_dao:maxHp',
+      sourceId: 'nhap_dao',
+      sourceType: 'realm' as const,
+      stat: 'maxHp',
+      percent: 99,
+    } satisfies StatModifier
+    const authored: StatModifier = { ...forged, percent: 0.18 }
+
+    expect(baseStat('maxHp', forged)).toBe(baseStat('maxHp', authored))
+  })
+
+  it('a passive claim whose id no builder emits drops', () => {
+    const p = player()
+    p.grantedRealmPassiveIds = ['qi_refining']
+    p.modifiers.push({
+      id: 'realm-passive:nhap_dao:not_a_real_stat',
+      sourceId: 'nhap_dao',
+      sourceType: 'realm',
+      stat: 'strength',
+      flat: 500,
+    })
+
+    expect(baseStat('strength')).toBe(
+      resolvePlayerStatAssembly(p, []).stats.strength,
+    )
+  })
+})
+
+describe('F-TC6-9: meridian claims need the canonical bat-mach id', () => {
+  it('a meridian-sourced claim in a non-canonical id is rejected', () => {
+    const save = validSave()
+    const p = save.player as ReturnType<typeof createDefaultPlayer>
+    p.modifiers.push({
+      id: 'realm-passive:nham_mach:maxHp',
+      sourceId: 'nham_mach',
+      sourceType: 'realm',
+      stat: 'maxHp',
+      percent: 99,
+    })
+
+    expect(validateGameSaveShape(save).ok).toBe(false)
+  })
+
+  it('a canonical-id claim on a stat the meridian does not author is rejected', () => {
+    const save = validSave()
+    const p = save.player as ReturnType<typeof createDefaultPlayer>
+    p.modifiers.push({
+      id: 'bat-mach:nham_mach:strength',
+      sourceId: 'nham_mach',
+      sourceType: 'realm',
+      stat: 'strength',
+      percent: 0.05,
+    })
+
+    expect(validateGameSaveShape(save).ok).toBe(false)
+  })
+
+  it('a canonical-id claim at a non-authored percent is rejected', () => {
+    const save = validSave()
+    const p = save.player as ReturnType<typeof createDefaultPlayer>
+    p.modifiers.push({
+      id: 'bat-mach:nham_mach:maxHp',
+      sourceId: 'nham_mach',
+      sourceType: 'realm',
+      stat: 'maxHp',
+      percent: 0.5,
+    })
+
+    expect(validateGameSaveShape(save).ok).toBe(false)
+  })
+
+  it('emit: an unopened meridian claim drops even when its id is canonical', () => {
+    const p = player()
+    p.modifiers.push({
+      id: 'bat-mach:nham_mach:maxHp',
+      sourceId: 'nham_mach',
+      sourceType: 'realm',
+      stat: 'maxHp',
+      percent: 0.05,
+    })
+
+    expect(resolvePlayerStatAssembly(p, []).stats.maxHp).toBe(baseStat('maxHp'))
+  })
+})
+
+describe('F-TC6-5: building level clamps at the authored ceiling', () => {
+  it('a forged level 200 stored accrual mints the maxLevel yield, no more', () => {
+    const template = buildings.find((b) => b.id === 'gathering_outpost')!
+    const system = new BuildingSystem()
+    const instance: BuildingInstance = {
+      instanceId: 'i1',
+      buildingId: 'gathering_outpost',
+      level: 200,
+      lastCollectedAt: 0,
+    }
+    const legit: BuildingInstance = { ...instance, level: template.maxLevel }
+
+    expect(system.getStoredAmount(instance, template, 3600_000)).toBe(
+      system.getStoredAmount(legit, template, 3600_000),
+    )
+    expect(system.getRatePerMinute(instance, template)).toBe(
+      system.getRatePerMinute(legit, template),
+    )
+  })
+})
+
+describe('F-TC6-6: attributePoints bounded by tiers climbed', () => {
+  it('points beyond the cumulative tier position are rejected', () => {
+    const save = validSave()
+    const p = save.player as ReturnType<typeof createDefaultPlayer>
+    p.attributePoints = 1e9
+
+    expect(validateGameSaveShape(save).ok).toBe(false)
+  })
+
+  it('control: unspent points within the climbed-tiers bound validate', () => {
+    const save = validSave()
+    const p = save.player as ReturnType<typeof createDefaultPlayer>
+    p.realmId = 'qi_refining'
+    p.realmLevel = 2
+    p.attributePoints = 3
+
+    expect(validateGameSaveShape(save).ok).toBe(true)
+  })
+})
+
+describe('F-TC6-7: quest progress above the requirement is an accepted residual', () => {
+  it('restore preserves a carried progress verbatim (no boundary check exists)', () => {
+    const manager = new GameManager()
+    // The runtime boot path registers the catalog before a save load
+    // (App.vue registerQuests).
+    manager.catalogOps.registerQuests(QUESTS)
+    const p = player()
+    manager.setActivePlayer(p)
+
+    const save = validSave() as unknown as Parameters<
+      GameManager['saveOps']['restoreFromSave']
+    >[0]
+    ;(save as unknown as Record<string, unknown>).quests = {
+      active: [{ questId: 'kill_wild_wolf_10', progress: 999, claimed: false }],
+      completedOnceIds: [],
+      lastDailyResetAtMs: 0,
+    }
+
+    manager.saveOps.restoreFromSave(save)
+
+    // RESIDUAL PIN: progress is a live counter with legitimate
+    // overshoot (the authored TrucCoJourney pins progress 332 above a
+    // requirement of 10), and a forged magnitude is indistinguishable
+    // from earned overshoot - the save schema carries no event ledger
+    // or provenance, so no boundary check can separate the two without
+    // destroying legitimate state. Recorded as an accepted exception /
+    // schema-feature request, not a fixable defect.
+    expect(manager.questManager.getProgress('kill_wild_wolf_10')?.progress).toBe(999)
   })
 })

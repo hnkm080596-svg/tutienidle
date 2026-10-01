@@ -506,6 +506,13 @@ function hasHiddenProgressionState(player: PlayerData): boolean {
     }
   }
 
+  // F-TC6-3: 'great_dao' is only writable by a hidden breakthrough - the
+  // value alone is hidden-progression carry, even when the perfection
+  // record slice is absent.
+  if (player.highestFoundationAchieved === 'great_dao') {
+    return true
+  }
+
   const kills = player.hiddenBeastKills
   return typeof kills === 'object' && kills !== null && Object.keys(kills).length > 0
 }

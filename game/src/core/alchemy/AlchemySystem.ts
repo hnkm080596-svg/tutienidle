@@ -363,12 +363,11 @@ export class AlchemySystem {
       // settle used to trust persisted intent. The record parks (data
       // intact) - no pill lands and no event/toast fires. Only AUTHORED
       // dormant recipes park: an unknown/corrupt recipeId falls through
-      // to the recipe-miss failure arm instead of parking forever, and
-      // a retired recipe keeps its own contract (in-flight jobs settle).
-      if (
-        recipe?.retired !== true &&
-        scopeHiddenPillFamilyOfId(job.recipeId) !== null
-      ) {
+      // to the recipe-miss failure arm instead of parking forever.
+      // F-TC6-4: retired is NOT an exemption - hoi_xuan_dan is retired
+      // AND scope-hidden, and dormancy is the stronger claim (the
+      // retired contract predates the scope lock).
+      if (scopeHiddenPillFamilyOfId(job.recipeId) !== null) {
         remaining.push(job)
 
         continue

@@ -960,3 +960,49 @@ describe('save-safety: ghost nodeLevels ids cannot crash respec (F-T2-1)', () =>
     expect(p.nodeLevels.kiem_tran_luoi_kiem).toBe(3)
   })
 })
+
+describe('F-TC6-3: great_dao foundation is hidden-progression carry', () => {
+  it("flags highestFoundationAchieved='great_dao' even without a perfection record", () => {
+    const p = player({ realmId: 'foundation_establishment', highestFoundationAchieved: 'great_dao' })
+    expect(unsupportedReleaseReason(p)).toBe('hidden_progression_state')
+  })
+
+  it('the carried great_dao kien_co passive emits nothing under the lock', () => {
+    const p = player({ realmId: 'foundation_establishment', highestFoundationAchieved: 'great_dao' })
+    p.grantedRealmPassiveIds = ['foundation_establishment']
+    p.modifiers.push({
+      id: 'realm-passive:kien_co:strength',
+      sourceId: 'kien_co',
+      sourceType: 'realm',
+      stat: 'strength',
+      percent: 0.2,
+    })
+
+    const dormant = resolvePlayerStatAssembly(p, []).stats.strength
+    const clean = resolvePlayerStatAssembly(
+      player({ realmId: 'foundation_establishment' }),
+      [],
+    ).stats.strength
+
+    expect(dormant).toBe(clean)
+  })
+
+  it('control: an earth foundation still emits its authored kien_co percent', () => {
+    const p = player({ realmId: 'foundation_establishment', highestFoundationAchieved: 'earth' })
+    p.grantedRealmPassiveIds = ['foundation_establishment']
+    p.modifiers.push({
+      id: 'realm-passive:kien_co:strength',
+      sourceId: 'kien_co',
+      sourceType: 'realm',
+      stat: 'strength',
+      percent: 0.05,
+    })
+
+    const clean = resolvePlayerStatAssembly(
+      player({ realmId: 'foundation_establishment' }),
+      [],
+    ).stats.strength
+
+    expect(resolvePlayerStatAssembly(p, []).stats.strength).toBeGreaterThan(clean)
+  })
+})
