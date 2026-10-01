@@ -248,3 +248,218 @@ Each candidate must pass the promotion predicate during Devin adoption before be
   - **Root class:** L-DEAD-GUARD-GET - `.get` on this registry throws for unknown ids; `x = get(id); x !== undefined` is dead code that crashes instead of skipping. ~20 sibling sites correctly has()-guard; the two respec probes copied the guard shape without the call shape.
   - **Detector escape:** the respec seam was exercised only on authored live trees where every held id resolves; the validator's ghost-tolerance contract was never pushed through the respec ops that read the same map.
   - **Pin/attack proposal:** hostile pin carries a retired node id through preview+respec asserting no-throw and record preservation; registry.get must never appear without a sibling has() guard (grepable rule: `\.get\(` without `has(` on the same registry in the enclosing block).
+
+- **Incident:** hiddenPerfection.completedHiddenBodyRealmIds on a loaded save inflates main-stat cap under beta scope (F-DL-1); hiddenPerfection.hiddenBreakthroughRealmIds grants the enhanced realm-passive variant under beta scope (F-DL-2).
+  - **Root class:** L-DORMANT-EFFECT-SEAM - AUTHORITY.
+  - **Detector escape:** dormant persisted state fed effect seams (stat cap, realm passive) because the seam read the raw field without isBetaFeature gating | detector gap: the green baseline had no assertion that dormant records stay inert - unlock-everything test setup masked the leak.
+  - **Pin/attack proposal:** gate every effect seam on the scope authority; census all dormant persisted fields for effect feeds.
+
+- **Incident:** unsupportedReleaseReason throws TypeError on hiddenPerfection:null (F-DL-3); unsupportedReleaseReason flags formation_loadout on a save MISSING the field (absent field treated as record) (F-DL-5); REJECTED: consumePill throw claim - usePillDetailed fails closed on unknown ids (F-DEFER-4); betaCompletionFor throws on non-array completedStageIds (unreachable via validated saves) (F-DEFER-5).
+  - **Root class:** L-HOSTILE-SHAPE - ROBUSTNESS.
+  - **Detector escape:** flag reader used !== null on a value that can be absent (undefined) or non-object, throwing / false-flagging | detector gap: shape matrix (null/scalar/array/absent) not enumerated at the seam.
+  - **Pin/attack proposal:** enumerate the hostile-shape matrix on every save flag reader.
+
+- **Incident:** frontend-contract sec.H unsupported-save notice is unwired: unsupportedReleaseReason/betaSupportedFor have zero production callers (F-DL-4).
+  - **Root class:** L-CONTRACT-NOTICE - CONTRACT.
+  - **Detector escape:** contract required a notice on flagged saves but the flag had zero UI consumers | detector gap: contract clauses without a consumer probe drift unwired.
+  - **Pin/attack proposal:** every contract observable needs a consumer census entry.
+
+- **Incident:** SkillPathPanel renders the 4 non-committed element branches as browsable locked tabs, violating contract sec.D scope-hidden mandate (F-RM-1); Combat skill bar renders an empty 'Ultimate' slot button for every beta player (scope-hidden role teaser) (F-RM-2); AlchemyView renders 4 dormant pill families (phi_van/to_cot/thoi_the/duong_than) via unfiltered getAlchemyRecipes + realm filter (F-RM-4).
+  - **Root class:** L-RAIL-BYPASS - AUTHORITY.
+  - **Detector escape:** three surfaces rendered dormant content (element tabs, ultimate slot, alchemy families) around the verdict rail | detector gap: rail computed correctly but no rendered-set===verdict pin existed.
+  - **Pin/attack proposal:** pin rendered-set === rail verdict on every tri-state surface.
+
+- **Incident:** betaCompletionFor has zero UI consumers - the contract-promised beta ending beat never displays (F-RM-3).
+  - **Root class:** L-UNWIRED-BEAT - CONTRACT.
+  - **Detector escape:** betaCompletionFor computed the end beat but nothing mounted it | detector gap: same unwired-consumer class as L-CONTRACT-NOTICE.
+  - **Pin/attack proposal:** consumer census for every contract read-model.
+
+- **Incident:** CombatBuild resolves the dormant way kit on a way_out_of_scope save - engine executes sword/body/hidden kit while the rail renders scope-hidden (F-TRI-2).
+  - **Root class:** L-DORMANT-RUNTIME - AUTHORITY.
+  - **Detector escape:** combat kit builder gated companions/formation but admitted the players own dormant-way kit | detector gap: sibling seam audit stopped at external systems, not self-runtime.
+  - **Pin/attack proposal:** sibling search must include the subjects own runtime path.
+
+- **Incident:** usePillDetailed has no beta gate - dormant pill families on a carried save consume and apply effects (permanent_stat baseStats write) (F-TRI-1).
+  - **Root class:** L-DORMANT-CONSUME - AUTHORITY.
+  - **Detector escape:** pill consumption applied permanent_stat for dormant families on carried saves | detector gap: family-resolver census missed the consume path.
+  - **Pin/attack proposal:** gate every dormant-content effect seam, not just render seams.
+
+- **Incident:** e2e suite dead at character creation: specs click removed creation-skill-tram testid (F-E2E-1).
+  - **Root class:** L-FIXTURE-DRIFT - TEST_QUALITY.
+  - **Detector escape:** e2e helpers referenced a testid removed by the unified-creation refactor; whole e2e layer dead while verify stayed green | detector gap: e2e specs excluded from npm run verify - no executor noticed drift.
+  - **Pin/attack proposal:** runtime probes inside the QA gate; excluded suites need an explicit executor.
+
+- **Incident:** Bag sections render dormant stacks unfiltered on flagged saves (materials/equipment/dormant pills) (F-DEFER-1); getResolvedSkillRoles renders the dormant way kit names on way_out_of_scope saves (SkillRoleStrip) (F-DEFER-2); In-flight alchemy jobs for dormant families complete and deliver pills on flagged saves (F-DEFER-3); autoFarmStage.lastCheckedMs may carry a future timestamp (unclamped persisted read) (F-A2-4).
+  - **Root class:** L-DEFERRED-LOW - CONTRACT.
+  - **Detector escape:** dormant bag stacks / skill strip names / in-flight dormant jobs render on flagged saves (display-only, effect seams closed) | detector gap: display polish on out-of-scope saves - user ruling defers Low.
+  - **Pin/attack proposal:** deferred per ruling; revisit when display filtering budget exists.
+
+- **Incident:** carried save's persisted chi_hien_quan pool + assignedWorkers keep live override effect on flagged saves (F-B3-02); restored dormant-family alchemy job occupies maxConcurrentJobs -> job_slots_full with no visible cause or cancel path (F-B3-04).
+  - **Root class:** L-DORMANT-PERSISTED-OVERRIDE - AUTHORITY.
+  - **Detector escape:** persisted dormant records overrode live beta values (worker capacity, job-slot budget) - dormancy read through carried state instead of being ignored | detector gap: hostile-save probes covered dormant FIELDS but not dormant RECORDS inside live aggregates.
+  - **Pin/attack proposal:** when a scope-hidden slice is preserved, every aggregate that iterates it must filter by the admission predicate, not by presence.
+
+- **Incident:** ProductionPanel renders the scope-hidden worker-allocation block unconditionally (nonsense '5 / 0 workers' header) (F-B3-03); dormant-family job settlement emits a 'craft' delivery toast carrying the dormant pill identity (F-B3-05); CombatBuild binds survive.extraSources from the ungated runtime while siblings use gatedRuntime (F-B3-06).
+  - **Root class:** L-DORMANT-RENDER-SEAM - READ_MODEL.
+  - **Detector escape:** render surfaces mounted dormant blocks (allocation UI, toast identity, extra-source binding) on flagged saves without consulting the scope verdict | Low/Nit deferred per ruling.
+  - **Pin/attack proposal:** gate dormant-slice render blocks on betaSurfaceVisible; surfaces may not name dormant identities.
+
+- **Incident:** reconcileWayGrants mints ngu_kiem_khoi (sword core node) on every restore of a hidden_sword save - write-only, emitters filter it (F-A3-04); capability-gated HUD bridges (kiemBarBridge/theBarBridge) bypass betaScope - dormant Ngu Kiem / Ung The bars render mid-battle on flagged saves (F-A3-05); devResetBranch refunds insight for dormant nodes that respecNodeTree excludes (console-only dev path today) (F-A3-06); grantSkillCoreBySkillId lacks the betaSkillAdmitted gate its sibling learnSkill carries (latent: no prod caller reaches dormant ids) (F-A3-07).
+  - **Root class:** L-DEFERRED-A3-LOW - CONTRACT.
+  - **Detector escape:** write-only dormant mint, capability-bridge HUD render, dev-only reset refund and a latent ungated grant seam - all Low/Nit, deferred per the Medium+-only ruling.
+  - **Pin/attack proposal:** next scope revision should still pin write-only mints + capability bridges; latent seams get admission predicates when they gain dormant inputs.
+
+- **Incident:** devResetBranch refunds/revokes dormant-tree nodes: branchTag targets exist only on dormant trees yet the op revokes levels + mints live skillInsight with no dormancy gate (F-A4-1).
+  - **Root class:** L-PARALLEL-SEAM-GUARD - AUTHORITY.
+  - **Detector escape:** parallel write seam implemented without the sibling op refusal guard: devResetBranch revoked+refunded dormant-tree nodes while respecNodeTree refuses the same save outright.
+  - **Pin/attack proposal:** new write seams must enumerate sibling-op guards before admission; pin: holdsDormant shared predicate.
+
+- **Incident:** BETA_TALENT_IDS admits authored-dormant golden_core talents: roster seeds from ALL breakthrough pools including the suppressed golden_core pool; collectTalentEffects emits live (F-A4-2).
+  - **Root class:** L-ROSTER-OVERADMISSION - AUTHORITY.
+  - **Detector escape:** admission roster seeded from ALL catalog pools including the suppressed golden_core pool; isBetaTalentId admitted authored-dormant talents and collectTalentEffects emitted live effects.
+  - **Pin/attack proposal:** roster seeds filter pools through realm-acquisition predicates (isBreakthroughAcquisitionEnabled), not raw catalog union.
+
+- **Incident:** chi_hien_quan build/upgrade writes bypass the lock: BETA_BUILDING_FEATURES gates the surface read-model only; write seam lacks the fail-closed {ok:false,scope_hidden} pattern (F-A4-3).
+  - **Root class:** L-SURFACE-ONLY-GATING - AUTHORITY.
+  - **Detector escape:** BETA_BUILDING_FEATURES gated the surface read-model only; canBuild/buildBuilding/upgradeBuilding lacked the fail-closed scope_hidden pattern used by equipment/alchemy/workforce.
+  - **Pin/attack proposal:** every gated surface needs its domain commands fail-closed on the same admission predicate.
+
+- **Incident:** gainMastery trains dormant-way techniques on carried saves: accrual channel missed the lock that sibling emitters/tryAdvanceTechniqueGrade enforce (F-A4-4).
+  - **Root class:** L-ACCRUAL-CHANNEL-LOCK - AUTHORITY.
+  - **Detector escape:** accrual channel missed the lock that sibling emitters enforce: gainMastery trained dormant-way techniques via settleTechniqueMastery on carried saves.
+  - **Pin/attack proposal:** accrual entry points gate on the same admission predicate as emitters (betaTechniqueAdmitted).
+
+- **Incident:** worker_lodge left-panel mount seam: FunctionOverlayPanel reads ui.leftPanelMode with no isBetaLeftPanelMode check (mount-seam defense asymmetry vs standalonePanel watcher) (F-B-CONS-1); chi_hien_quan popover mount seam: GameRoot mounts BuildingDetailPopover on raw ui.activeBuildingPopoverId; component renders build card ungated (F-B-CONS-2).
+  - **Root class:** L-MOUNT-SEAM-ASYMMETRY - AUTHORITY.
+  - **Detector escape:** mount seams defended asymmetrically: GameRoot guarded standalonePanel via watcher because callers can bypass the action API, but leftPanelMode + activeBuildingPopoverId lacked it AND downstream commands lacked fail-closed guards.
+  - **Pin/attack proposal:** mount seams gate on admission predicates at BOTH the container binding and the component self-gate.
+
+- **Incident:** WorkerLodgePanel imports CompanionAvailability (contract F ban) + never consumes getWorkerLodgeSurfaceModel read model; fails closed today (F-B-CONS-3); AutoFarmIndicator renders raw autoFarmStage.stageId when id does not resolve; reachable only via mid-session corrupt lease, self-clears via Stop (F-B-CONS-4); LoreCodex/material surfaces render carried dormant materials descriptions verbatim (chieu_hien_lenh, doan_bao_thach) - dormant-system teasers on flagged saves only (F-B-CONS-5).
+  - **Root class:** L-DEFERRED-B4-LOW - CONTRACT.
+  - **Detector escape:** banned dependency import + dead authored read model, raw ghost-id render on corrupt lease, dormant material description teasers - all Low/Nit, deferred per the Medium+-only ruling.
+  - **Pin/attack proposal:** next scope revision pins banned-import lint + read-model consumption checks.
+
+- **Incident:** persisted enhanced hidden-breakthrough realm passives emit on flagged saves: resolvePlayerStatAssembly reads player.modifiers verbatim; grant-time gates never cover restore (F-BS-1).
+  - **Root class:** L-PERSISTED-EFFECT-RECONCILE - CONTRACT.
+  - **Detector escape:** grant-time gates never cover restore: resolvePlayerStatAssembly read persisted player.modifiers verbatim, so a pre-beta save carrying enhanced hidden-breakthrough passives emitted them forever on a flagged save.
+  - **Pin/attack proposal:** effect seams reconcile persisted payloads against admission at emit time; records stay intact (deserialize+flag), effects stay inert.
+
+- **Incident:** forged realm-passive modifier entries validate and mint stats: marker->payload coherence checked but payload->marker never; any sourceType realm entry mints without a granting (F-BS-3).
+  - **Root class:** L-MARKER-BIDIRECTIONAL - CONTRACT.
+  - **Detector escape:** marker->payload coherence checked but payload->marker never: forged sourceType realm entries minted stats past acceptance with no granting marker.
+  - **Pin/attack proposal:** coherence checks run both directions; payload entries whose catalog passive lacks the marker are flagged at acceptance + inert at emit.
+
+- **Incident:** devResetBranch admission-seam bypass refunds dormant-tree levels into live skillInsight (F-BS-2); devResetBranch refunds/revokes dormant-tree records bypassing respecNodeTree refusal (stale-state report on 5431ae7e) (F-AS-1); chi_hien_quan build/upgrade write seams admitted dormant building on carried save (stale-state report on 5431ae7e) (F-AS-2); gainMastery accrues on dormant-way active technique (stale-state report on 5431ae7e; mastery half of A5 technique-write finding) (F-AS-3); +2 related findings.
+  - **Root class:** L-DUP-WAVE-OVERLAP - PROCESS.
+  - **Detector escape:** blind rounds dispatched on different tips can report the same root: TC3 F-BS-2 duplicated F-A4-1 already fixed mid-wave; dedup by root class + seam, not by surface symptom.
+  - **Pin/attack proposal:** record duplicateOf at triage; fix ownership follows the earliest confirmed repro.
+
+- **Incident:** TribulationOutcomeService deletes talentLevels[pham_cot] on victory - dormant record mutated on live path; inert (roster-excluded, arguably cleanup) (F-BS-4); selectSpecialization free-switch writes spec claims on a carried learned dormant skill; claims never emit (F-BS-5); buildBuilding/upgradeBuilding ungated for chi_hien_quan via console at review time - dead sink while manualWorkforce hidden (superseded by F-A4-3 fix) (F-BS-6); save.formations slice persisted but never read on restore - dead slice, no effect (F-BS-7).
+  - **Root class:** L-DEFERRED-TC3-NIT - CONTRACT.
+  - **Detector escape:** dormant-record mutation on live path, dormant-skill spec claims, console-exposed dead sink, dead persisted slice - all Nit, deferred per the Medium+-only ruling.
+  - **Pin/attack proposal:** next scope revision pins dormant-record mutation even when inert.
+
+- **Incident:** sealFrozenCycle seals a grade-history cycle onto a dormant-way active technique on a live realm advance - realm-exit freeze write seam missed betaTechniqueAdmitted (F-A5-1).
+  - **Root class:** L-TRANSITION-SEAL-LOCK - AUTHORITY.
+  - **Detector escape:** realm-exit freeze hook sealFrozenCycle escaped the technique write-op census - sibling ops (gainMastery, tryAdvanceTechniqueGrade) gated first, transition hooks audited as a separate class and missed until stale-tip blind review A5.
+  - **Pin/attack proposal:** write-op census includes transition/hook ops (advance, seal, tribulation outcomes), not only explicit user actions.
+
+- **Incident:** unsupportedReleaseReason lacks a workforce case - a carried chi_hien_quan/autoWorkerCapacity save loads unflagged, silent dormant record (F-B5-1).
+  - **Root class:** L-FLAG-COVERAGE-CENSUS - LOGIC.
+  - **Detector escape:** flag-coverage defect hid behind the mount/write seam fixes - the dormancy record was sealed from interaction AND from notice; only a consumer-side audit enumerating the reason enum against the persisted-record census caught the missing case.
+  - **Pin/attack proposal:** reason enum derived census: every persisted dormant record kind must have a matching unsupported reason - census as pin.
+
+- **Incident:** investBodyChapter write dispatch ungated - tick auto-invest + UI button drain live beta currencies into suppressed body-path records (silent sink) (F-BODY-W-1); RealmPanel renders the dormant body chain (BodyRefinement/Meridian/ZhouTian sections) with a live invest button inside the beta-admitted realm panel (F-BODY-UI-1).
+  - **Root class:** L-DISPATCH-VS-EMISSION - AUTHORITY.
+  - **Detector escape:** emission-side gating verified while the WRITE dispatch stayed open - a silent sink: currency spends that can never emit. Detector gap: suppression tests only asserted no-effect, never no-spend.
+  - **Pin/attack proposal:** for every dormant feature, enumerate spend-capable entrypoints (ops dispatch, tick hooks, UI buttons) - not only stat/effect emissions.
+
+- **Incident:** settleOutcome trusts a carried committedOutcome verbatim - dormant realm transition + hidden lineage re-authorized without re-deriving the scope verdict (F-CONS-B1); alchemy tick/settleOffline delivers carried dormant-family jobs into the live pillBag - restore trusted persisted intent without re-deriving the family verdict (F-CONS-B2); applyChapterEffect modifier chapters re-emit their owned modifier slice from carried bodyProgression records under the lock - restore rehydration trusted carried state (F-BODY-EMIT); resolveKienCoGrade counts carried bodyProgression investment toward the Truc Co grade - earth/heaven grades reachable on a flagged save (F-BODY-GRADE); +2 related findings.
+  - **Root class:** L-SETTLEMENT-REAUTH - AUTHORITY.
+  - **Detector escape:** review/test coverage exercised origination gates (start/startJob) but never the persisted-intent path: restore+settle of a forged-or-carried record was uncovered until the B6/TC4 blind rounds.
+  - **Pin/attack proposal:** settle seam checklists: tribulation settleOutcome, alchemy tick/settleOffline delivery, body modifier emission, grade resolvers, flag surfaces.
+
+- **Incident:** applyChapterEffect modifier chapters re-emit their owned modifier slice from carried bodyProgression records under the lock - restore rehydration trusted carried state (F-BODY-EMIT); thong_mach_dan is a live-craftable silent sink: beta-admitted recipe whose only consumer (meridian chapter) is dormant - live herbs/wood/stones drain into a pill that can never (F-SINK).
+  - **Root class:** L-SIBLING-EMITTER-ASYMMETRY - AUTHORITY.
+  - **Detector escape:** per-fix sibling searches looked for the same emission kind (base-stat vs StatModifier); the census step must enumerate ALL consumers/emitters of a gated record class, not siblings of the same mechanism; F-SINK: recipe-family admission was never census-checked against consumer dormancy.
+  - **Pin/attack proposal:** sibling-emitter table in fix records (writer | reader | emitter | consumer columns).
+
+- **Incident:** carried timed alchemy jobs may emit completion notifications long after save timestamp (future completesAtMs) - display-only ordering nit (F-TIMED-EMIT).
+  - **Root class:** L-DEFERRED-TIMED-EMIT - AUTHORITY.
+  - **Detector escape:** deferred per Medium+-only ruling: future-dated carried job records park silently; notification ordering is display-only on flagged saves with no live effect on beta play.
+  - **Pin/attack proposal:** if the deferral is reversed, suppress completion notification for parked records or normalize completesAtMs at restore.
+
+- **Incident:** forged claimed-source player.modifiers mint live stats - emit fallthrough + shape-only boundary (F-A7-1); forged persistentTimedEffects mint stats + unbounded cultivation speed (F-A7-2); alchemy settle trusts persisted job.pillId - never re-derived vs recipe authority (F-A7-3); forged accrualRealmId (+sibling collectionRealmId) pins mint dormant-tier materials at forged-realm rate (F-TC5-1).
+  - **Root class:** L-CLAIMED-SOURCE-FORGE - AUTHORITY.
+  - **Detector escape:** each prior wave gated real-writer slices but left the claimed-source dimension shape-only: a record claiming a source no writer mints passed the boundary and emitted at read seams; the class only becomes enumerable once save versioning is hard-reject (no migration) so current-version writers are exhaustive.
+  - **Pin/attack proposal:** resolve each claimed-source field against the closed writer inventory at the acceptance boundary; fail-closed emit where the inventory is closed; clamp or re-derive where a writer authority exists at the consumer seam.
+
+- **Incident:** forged persistentTimedEffects mint stats + unbounded cultivation speed (F-A7-2).
+  - **Root class:** L-BOUNDED-FIXTURE-VALUES - DETECTION.
+  - **Detector escape:** bound-tightening regressions twice this wave came from test fixtures minting values outside the authored writer bound (percent 1/0.5 > 0.25); the fixtures were never legal records - the fix detector correctly read them as forged.
+  - **Pin/attack proposal:** when adding a writer-shape bound, census test fixtures for out-of-bound values and normalize them to authored values before running.
+
+- **Incident:** dormant talents render as selectable UPGRADE cards on the mandatory breakthrough-talent modal (getUpgradeableTalentIds + UPGRADE branch ungated) (F-B7-1); closeHiddenLineage not scope-gated - every live normal breakthrough destructively mutates a carried open lineage (F-B7-2).
+  - **Root class:** L-PARTIAL-GATE-COVERAGE - AUTHORITY.
+  - **Detector escape:** the isBetaTalentId/isBetaFeature gates existed on the observed read paths (collectTalentEffects, hidden-lineage reads) but the symmetric write/resolve paths (getUpgradeableTalentIds, resolveTalentEntitlement UPGRADE, closeHiddenLineage, recordHiddenBreakthrough) were left ungated - the fix pattern gated the leak that was seen, not the full entry-point set.
+  - **Pin/attack proposal:** when gating a record type, enumerate every public mutator/resolver that can reach it and gate the full set, not only the observed leak.
+
+- **Incident:** forged quests.active[].progress mints the authored reward (same-value claim) (F-TC6-7).
+  - **Root class:** L-SAME-VALUE-FORGE - AUTHORITY.
+  - **Detector escape:** the claimed-source census bounds magnitudes and shapes, but a claim AT an authored value is indistinguishable from earned state; detection requires provenance (event ledger / writer-signed counters) that the save schema does not carry - the defect class is a schema gap, not a missing check.
+  - **Pin/attack proposal:** record same-value claim classes as accepted residuals pending a provenance schema; pin the residual so a future schema change must update the pin; never clamp live counters to detect forgery - it destroys legitimate overshoot and does not block the mint.
+
+- **Incident:** persisted realm-passive payload mints arbitrary stats (id/shape forged) (F-TC6-2); persisted meridian payload emitted on unlock with forged id/shape/percent (F-TC6-9).
+  - **Root class:** L-REBUILD-DONT-TRUST-EMIT - AUTHORITY.
+  - **Detector escape:** the claimed-source census verified ownership markers but trusted the persisted payload's own numbers; a payload carrying a real marker id with invented magnitudes passed every check - ownership and content are separate claims.
+  - **Pin/attack proposal:** at emit, a persisted payload is a CLAIM: rebuild the emitted value from the authored builder keyed by the marker, drop ids the builder does not produce; the validator mirrors the same canonical check at the boundary; iterate claim repair in a scanner-transparent shape (explicit loop) when the write-authority detector is chain-sensitive.
+
+- **Incident:** timed-effect census admits claims no pill writer can mint + unbounded magnitude (F-A8-1); dormant-family timed-effect claim passed the regen-shape check (F-TC6-8).
+  - **Root class:** L-WRITER-SHAPE-CENSUS - AUTHORITY.
+  - **Detector escape:** the claim census resolved a sourceItemId against the authored catalog but never checked whether that writer actually MINTS the record type, and scope-ordering let a dormant claim pass while authored in shape; a claim must resolve against the writer's PRODUCT, not just its identity, and scope checks must run before shape checks.
+  - **Pin/attack proposal:** bound each claim class to the writer-shape inventory that produces it; order scope/dormant checks before writer-shape checks.
+
+- **Incident:** buildings[].level / productionSites[].level unbounded at shape (writer maxLevel=9) - forged level mints ~39x accrual (F-A8-2); building level claim above template.maxLevel flows into rate/capacity math (F-TC6-5).
+  - **Root class:** L-PERSISTED-LEVEL-BOUND - AUTHORITY.
+  - **Detector escape:** persisted level claims were shape-checked >=1 while the writer's ceiling (template.maxLevel) was never consulted at the boundary or the effective-read seam.
+  - **Pin/attack proposal:** bound persisted levels to the writer maximum at shape AND clamp at the effective-read seam for non-save paths.
+
+- **Incident:** SkillPathPanel renders dormant kit rows selectable + enabled-but-dead core upgrade on carried saves (F-B8-1); PillBagSection/BagGrid render carried dormant pill stacks as clickable cells (drink arms then fails) (F-B8-2); TechniqueBand renders dormant canonical technique + enabled advance; canAdvanceTechniqueGrade ungated (F-B8-3).
+  - **Root class:** L-VERBATIM-READ-SURFACE - AUTHORITY.
+  - **Detector escape:** consumer surfaces mapped domain getAll() outputs verbatim while the domain write seams were already gated; a carried dormant record rendered as a selectable row or an enabled-but-dead control - the rail verdict must reach the surface, not just the write path.
+  - **Pin/attack proposal:** filter surfaces through the same admission predicate the write seam uses (betaSkillAdmitted / scopeHiddenPillFamilyOfId / betaTechniqueAdmitted); treat a non-admitted record as absent.
+
+- **Incident:** persisted loi_kiep talent claim emits without the ownership witness (F-TC6-1).
+  - **Root class:** L-OWNERSHIP-WITNESS-EMIT - AUTHORITY.
+  - **Detector escape:** the emit filter verified the claim's sourceId but not the ownership record that produces it - a grant claim survived with no owning talent selected.
+  - **Pin/attack proposal:** emit requires the ownership witness (selectedTalentIds/marker); validator mirrors the same canonical shape.
+
+- **Incident:** carried highestFoundationAchieved='great_dao' save skipped the hidden-progression flag and emitted kien_co (F-TC6-3).
+  - **Root class:** L-FLAG-WRITER-COVERAGE - AUTHORITY.
+  - **Detector escape:** the hidden-progression flag enumerated dormant-record writers but missed highestFoundationAchieved='great_dao', so a save only hidden writers could produce loaded unflagged and emitted under lock.
+  - **Pin/attack proposal:** enumerate flag conditions over the closed writer inventory (great_dao is a hidden-writer product); suppress the gated emissions while locked.
+
+- **Incident:** retired-but-dormant alchemy jobs delivered dormant pills at settle (F-TC6-4).
+  - **Root class:** L-SETTLE-EXEMPTION-ORDER - AUTHORITY.
+  - **Detector escape:** the settle path's retired exemption ran without the dormant-family check, so a retired-but-dormant job delivered its pill - an exemption applied before a scope check silently re-admits the record.
+  - **Pin/attack proposal:** scope/dormant checks run before all exemptions; exemptions may soften handling of LIVE records only.
+
+- **Incident:** attributePoints claims exceed max earnable (getGlobalCultivationLevel) (F-TC6-6).
+  - **Root class:** L-EARNABLE-BOUND - AUTHORITY.
+  - **Detector escape:** attributePoints was shape-checked >=0 but never bounded against the maximum earnable from the authored progression table (realmLevel + prior maxLevels).
+  - **Pin/attack proposal:** bound persisted accumulators to the max a writer could produce from the recorded progression state.
+
+- **Incident:** player.externalModifiers passes shape validation with no claimed-source census - forged entries transiently live until first tick (F-A8-3).
+  - **Root class:** L-DEFERRED-TRANSIENT-MIRROR - AUTHORITY.
+  - **Detector escape:** deferred per Medium+-only ruling: externalModifiers lacks a claimed-source census, but the per-tick mirror overwrite scrubs forged entries after one frame - a transient window on hostile saves only.
+  - **Pin/attack proposal:** if the deferral is reversed, census externalModifiers like player.modifiers.
+
+- **Incident:** CharacterPanel renders carried dormant talents and dormant-way element aura (F-B8-4).
+  - **Root class:** L-DEFERRED-DISPLAY-ONLY-DORMANT - AUTHORITY.
+  - **Detector escape:** deferred per Medium+-only ruling: CharacterPanel renders carried dormant talents + dormant-way aura - display-only on flagged saves, no live effect.
+  - **Pin/attack proposal:** if the deferral is reversed, filter selectedTalentIds via isBetaTalentId and gate the aura read via isBetaWay.
+
+- **Incident:** CombatBuild binds un-gated runtime.buildSurviveSources (F-B8-5); BattleLootSystem pill drop branch lacks scopeHiddenPillFamilyOfId (F-B8-6).
+  - **Root class:** L-LATENT-UNGATED-HOOK - AUTHORITY.
+  - **Detector escape:** latent hooks (runtime.buildSurviveSources, pill drop branch) lack scope gates but are unreachable at this commit - recorded so a future writer enabling the path sees the gate requirement.
+  - **Pin/attack proposal:** when a writer lands for a latent seam, the scope gate must ship with it.
