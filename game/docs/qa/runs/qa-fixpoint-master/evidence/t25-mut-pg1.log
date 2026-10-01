@@ -1,0 +1,77 @@
+=== MUTANT pg1 applied ===
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+ ❯ src/core/skill/SkillSystem.huyKiem.test.ts (8 tests | 4 failed) 27ms
+     × mỗi 10 cast +1 flat damage, không trần 7ms
+     × getEffectiveSkill cộng flat bonus vào action dealDamage của tram 1ms
+     × precursor linh_bao nhan flat bonus giong tram 1ms
+     × precursor huy_quyen nhan flat bonus giong tram 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/core/skill/SkillSystem.huyKiem.test.ts > Huy Kiếm — flat damage vĩnh viễn theo cast > mỗi 10 cast +1 flat damage, không trần
+AssertionError: expected 10 to be 999 // Object.is equality
+
+- Expected
++ Received
+
+- 999
++ 10
+
+ ❯ src/core/skill/SkillSystem.huyKiem.test.ts:14:45
+     12|     expect(getHuyKiemFlatDamageBonus(9)).toBe(0)
+     13|     expect(getHuyKiemFlatDamageBonus(10)).toBe(1)
+     14|     expect(getHuyKiemFlatDamageBonus(9999)).toBe(999)
+       |                                             ^
+     15|   })
+     16|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  src/core/skill/SkillSystem.huyKiem.test.ts > Huy Kiếm — flat damage vĩnh viễn theo cast > getEffectiveSkill cộng flat bonus vào action dealDamage của tram
+AssertionError: expected 11 to be 16 // Object.is equality
+
+- Expected
++ Received
+
+- 16
++ 11
+
+ ❯ src/core/skill/SkillSystem.huyKiem.test.ts:29:50
+     27|     const action = effective.triggers?.[0]?.actions[0]
+     28|     expect(action?.type).toBe('dealDamage')
+     29|     expect((action as { value?: number }).value).toBe(1 + 15)
+       |                                                  ^
+     30|   })
+     31|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  src/core/skill/SkillSystem.huyKiem.test.ts > Huy Kiếm — flat damage vĩnh viễn theo cast > precursor linh_bao nhan flat bonus giong tram
+ FAIL  src/core/skill/SkillSystem.huyKiem.test.ts > Huy Kiếm — flat damage vĩnh viễn theo cast > precursor huy_quyen nhan flat bonus giong tram
+AssertionError: expected 11 to be 16 // Object.is equality
+
+- Expected
++ Received
+
+- 16
++ 11
+
+ ❯ src/core/skill/SkillSystem.huyKiem.test.ts:60:50
+     58|     const action = effective.triggers?.[0]?.actions[0]
+     59|     expect(action?.type).toBe('dealDamage')
+     60|     expect((action as { value?: number }).value).toBe(1 + 15)
+       |                                                  ^
+     61|   })
+     62|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  4 failed | 4 passed (8)
+   Start at  20:05:26
+   Duration  579ms (transform 343ms, setup 214ms, import 213ms, tests 27ms, environment 0ms)
+
+EXIT=1

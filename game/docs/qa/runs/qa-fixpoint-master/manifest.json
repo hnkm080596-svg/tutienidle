@@ -2532,7 +2532,7 @@
       "path": "docs/qa/protocol/learning.md",
       "kind": "file",
       "mode": 33188,
-      "hash": "867c26b7ebd3e71fac62f5357c8c5bf209c745c7c65c255f280418635fafb5b8"
+      "hash": "6ecfa405128170d4a20e9f6b5ec24fd7f88bb9a31fc7c7f3bdffade7b9f8f93e"
     },
     {
       "path": "docs/qa/protocol/ledger-schema.md",
@@ -15870,7 +15870,7 @@
       "path": "src/components/panels/bag-sections/MaterialBagSection.vue",
       "kind": "file",
       "mode": 33188,
-      "hash": "7a2663076e02ecea82bfa5812a619af605e9c13665573d60fda5212051108a02"
+      "hash": "fc051a199d7a21916c234d2a75bdf54ac0e01d080dcab176fdf0b36c209a2490"
     },
     {
       "path": "src/components/panels/bag-sections/PillBagSection.test.ts",
@@ -20304,7 +20304,7 @@
       "path": "src/core/player/CultivationPathSystem.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "89693924a2f939f0f38f191adead195a0bc18cb273c8024f9163eb1fe92b8c54"
+      "hash": "1928fe4dea1af88038014fbe63b85003c50531f3d3829b4a9cc13c5cac4ace60"
     },
     {
       "path": "src/core/player/PersistentTimedEffect.ts",
@@ -21372,7 +21372,7 @@
       "path": "src/core/simulation/earlygame/TrucCoJourney.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "f22a8a2042b7071ac3b36bd650c6a46775b21c604fb31fd0b0b2ecbafc04d303"
+      "hash": "0b25d6cfab554b22a49e510ae4595ff0166db1cf9bb21f6dd3ac3b0ab4e3d193"
     },
     {
       "path": "src/core/skill/CastLeveling.ts",
@@ -24444,7 +24444,7 @@
       "path": "src/services/save/saveShapeValidation.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "d3aa2a6892c86dd7027a6927129e6f5c5bf8261ed19b1ed2d30e0b41885a31db"
+      "hash": "cfc9bfc44ff3c8768c678774fbf1f15cfebb21aab62a52de2d28667eb8d2880f"
     },
     {
       "path": "src/services/save/SaveSystem.bootRestore.test.ts",
@@ -24975,10 +24975,22 @@
       "hash": "5ccc383b6bbc442dc49c46b8336d4e03ecafb3520b6bd935c89dd20330607cb6"
     },
     {
+      "path": "tests/architecture/betaClaimedCollectionMint.qa.test.ts",
+      "kind": "file",
+      "mode": 33152,
+      "hash": "f2f6fdf59ce5b3c33dcc64f35316d782725c811535c262e6f2f34d6934748ad3"
+    },
+    {
       "path": "tests/architecture/betaClaimedSourceForge.qa.test.ts",
       "kind": "file",
       "mode": 33188,
       "hash": "8c533b7d57643c07640e3d7c61aafb8dfc4b3eec223eada9fbd55f2ea46ef0a6"
+    },
+    {
+      "path": "tests/architecture/betaConsumerHudChannels.qa.test.ts",
+      "kind": "file",
+      "mode": 33152,
+      "hash": "9922f2e769fad3d0d46639b50f76142c13b75d8bdb1c72c9867d5cf53f69ffc6"
     },
     {
       "path": "tests/architecture/betaConsumerLeak.qa.test.ts",
@@ -25005,16 +25017,28 @@
       "hash": "0080d78691bae86b200b1676205611942406639c74e1110ff28183437840a830"
     },
     {
+      "path": "tests/architecture/betaConsumerSeamsProbes.qa.test.ts",
+      "kind": "file",
+      "mode": 33152,
+      "hash": "3101329777ca7531cb6f58fc47f4864020dcc9733ba29a7c1e8b6e5e74694ce9"
+    },
+    {
       "path": "tests/architecture/betaDormantSaveLeak.qa.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "d3c15c8497ed4a2e12c384685c296adc00beebf7eb408bb07313c3a60b756db7"
+      "hash": "80181e2169bc841780aa27df32714534e14546666f8047f7e42c007713ce776c"
     },
     {
       "path": "tests/architecture/betaEconomyCensus.test.ts",
       "kind": "file",
       "mode": 33188,
       "hash": "2117c329f8500c62450f56078ea5a61bb8e30572eeff21700bf487836c668f8f"
+    },
+    {
+      "path": "tests/architecture/betaLocalCorrectnessAudit.qa.test.ts",
+      "kind": "file",
+      "mode": 33152,
+      "hash": "9800cdf1b7005f2bbc5ee8a667ae5de48ce02c619afcb5bbf4da9b3738f3d6d5"
     },
     {
       "path": "tests/architecture/betaMeridianOpenedGate.qa.test.ts",
@@ -25327,6 +25351,18 @@
       "kind": "file",
       "mode": 33152,
       "hash": "dea499948ab32e03e7c1f10b6924ff77e8df016dc1b298afd509eb337e1e2eef"
+    },
+    {
+      "path": "tests/architecture/scopeAuthoritySkills.qa.test.ts",
+      "kind": "file",
+      "mode": 33152,
+      "hash": "dd2b82341d4be8cd6dba9497c96e245fbc880e0a1d3ba057326fc2d6934c67b7"
+    },
+    {
+      "path": "tests/architecture/scopeWriteSeamsBlind.qa.test.ts",
+      "kind": "file",
+      "mode": 33152,
+      "hash": "e236164fc95097156b70fc0e5c8ea3379c3e7f139ef9c0b79666280d03981ce3"
     },
     {
       "path": "tests/architecture/screenShakeAuthority.test.ts",
@@ -25713,5 +25749,5 @@
       "hash": "0bb3657058699da63594036eda9bb6be7f6b4b44aebbb960fcba939870fd3f5e"
     }
   ],
-  "productStateId": "26a8c15becc65a6b5fa1d3f23252f6e01e77360baf5e8aa710fb859f4ef8739e"
+  "productStateId": "7fb18ef4b4f03c1ed7c29864d187345ca1593f1b786bb52df1d246b9da473934"
 }
