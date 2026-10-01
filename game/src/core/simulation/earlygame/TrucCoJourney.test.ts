@@ -102,6 +102,7 @@ import {
   isTieuChuThienReached,
 } from '../../realm/body/ZhouTianChapter'
 import { EarlyGameSession } from './EarlyGameSession'
+import { SeededCombatRng } from '../../battle/runtime/rng/SeededCombatRng'
 
 const PINNED_PROFILE = {
   name: 'journey',
@@ -323,6 +324,17 @@ describe('TrucCoJourney - ordered journey', () => {
     { timeout: 300_000 },
     () => {
       vi.useFakeTimers()
+      // Economy/equipment draws ride unseeded Math.random BY DESIGN
+      // (a seeded battle must not pin drops - EarlyGameSession), which
+      // leaves this pinned order nondeterministic whenever a marginal
+      // fight meets gear variance (floor_10 intermittently observed
+      // defeat). Pin the unseeded surface to its own stream for the
+      // run - the same substitution the benchmark drive uses
+      // (EssenceSubstitutionEconomy) via the sanctioned vi.spyOn seam.
+      const unseededStream = new SeededCombatRng(0x5d1ce7)
+      const randomSpy = vi
+        .spyOn(Math, 'random')
+        .mockImplementation(() => unseededStream.roll())
 
       // ===== Leg A - seeded LQ fixture + admission =====
       let s = makeJourneySession()
@@ -800,6 +812,13 @@ describe('TrucCoJourney - ordered journey', () => {
       expect(s.breakthroughIfReady()).toBe(true)
       expect(s.player.realmLevel).toBe(10)
       expect(getZhouTianCapacity(s.player)).toBe(20)
+      // Growth cycle before the boss, same authored rhythm every
+      // other floor enjoys (leg E.2): equip the carried drops and
+      // spend the earned attribute pool. floor_10 was the only boss
+      // attempted on the pre-growth state, which left the seeded
+      // battle margin RNG-exposed.
+      s.equipAll()
+      while (s.allocateAttribute('strength')) {}
       expect(s.runStage('foundation_floor_10')).toBe('victory')
       expect(s.player.completedStageIds.at(-1)).toBe(
         'foundation_floor_10',
@@ -1005,6 +1024,7 @@ describe('TrucCoJourney - ordered journey', () => {
       // no site carries a recorded cycle.
       expect(s.snapshot().hiddenChannelCycles).toEqual([])
 
+      randomSpy.mockRestore()
       vi.useRealTimers()
     },
   )
