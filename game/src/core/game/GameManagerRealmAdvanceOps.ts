@@ -8,6 +8,7 @@ import type { PlayerData } from '../player/Player'
 import { capturePlayerSnapshot, restorePlayerSnapshotInPlace } from '../player/PlayerSnapshot'
 import type { ElementType } from '../element/ElementType'
 import { isBetaElement, isBetaWay } from '../betaScope'
+import { betaTechniqueAdmitted } from '../betaScopeSkillDomain'
 import { PHAP_TU_ELEMENT_ROOT_IDS } from '../../data/progression/PhapTuNodes.builders'
 import { canPurchaseNode as canPurchaseNodeSystem } from '../progression/NodeSystem'
 import { CULTIVATION_PATH_MODULES, declaresElementAxis, getActiveWayDefinition, isCultivationPathOffered, type CultivationPathId, type CultivationWayId } from '../player/CultivationPathKit'
@@ -823,6 +824,12 @@ export class GameManagerRealmAdvanceOps {
     const technique = this.deps.techniqueManager.getActive()
 
     if (!technique || !canAdvanceTechniqueGrade(technique, player.realmId)) {
+      return false
+    }
+
+    // BETA SCOPE LOCK - a carried way_out_of_scope save must not spend
+    // spirit stones grading the dormant way's canonical technique.
+    if (!betaTechniqueAdmitted(technique.id)) {
       return false
     }
 

@@ -18,6 +18,7 @@ import {
 } from '../player/CultivationPathSystem'
 import type { NodeRegistry } from '../progression/NodeRegistry'
 import { aggregateNodeStatModifiers } from '../progression/NodeSystem'
+import { betaNodeWriteAdmitted, betaTechniqueAdmitted } from '../betaScopeSkillDomain'
 import type { ResolvedModifierChannel } from './CombatBuild'
 import type { SkillSystem } from '../skill/SkillSystem'
 import type { StatModifier } from '../stats/StatCalculator'
@@ -84,7 +85,7 @@ export class GameManagerPersistentEffectOps {
       // Node levels (plan §6.8) - node modifiers derived from (registry,
       // nodeLevels), scaled by current level; no longer inside
       // player.modifiers.
-      ...(player ? aggregateNodeStatModifiers(this.deps.nodeRegistry, player) : []),
+      ...(player ? this.admittedNodeModifiers(player) : []),
       // combat-gate-teleport-autocast plan §9 - combatModifiers of the
       // way-owned technique: fixed, band-independent, while the way owns it.
       // This is the ONLY aggregation path so it is never double-counted.
@@ -120,7 +121,7 @@ export class GameManagerPersistentEffectOps {
     return [
       { channel: 'technique_tier', partition: 'static', modifiers: this.getTechniqueTierModifiers(player) },
       { channel: 'cultivation_path', partition: 'static', modifiers: getCultivationPathStatModifiers(player) },
-      { channel: 'node_levels', partition: 'static', modifiers: aggregateNodeStatModifiers(this.deps.nodeRegistry, player) },
+      { channel: 'node_levels', partition: 'static', modifiers: this.admittedNodeModifiers(player) },
       { channel: 'technique_combat', partition: 'static', modifiers: this.getTechniqueCombatModifiers() },
     ]
   }
@@ -146,6 +147,12 @@ export class GameManagerPersistentEffectOps {
   private getTechniqueCombatModifiers(): StatModifier[] {
     const technique = this.deps.techniqueManager.getActive()
 
+    // BETA SCOPE LOCK - dormant way's technique stays inert (same
+    // admission read as the tier channel).
+    if (technique !== undefined && !betaTechniqueAdmitted(technique.id)) {
+      return []
+    }
+
     if (!technique?.combatModifiers) {
       return []
     }
@@ -163,8 +170,22 @@ export class GameManagerPersistentEffectOps {
    * step). Task 3 (D17): MP-pool modifiers carry domain:'spell' so the
    * Task-7 gate accepts them once maxMp/manaRegenPerTurn are gated.
    */
+  /** Node-level modifiers restricted to scope-admitted nodes. */
+  private admittedNodeModifiers(player: PlayerData): StatModifier[] {
+    return aggregateNodeStatModifiers(
+      { getAll: () => this.deps.nodeRegistry.getAll().filter(betaNodeWriteAdmitted) },
+      player,
+    )
+  }
+
   private getTechniqueTierModifiers(player: PlayerData): StatModifier[] {
     const technique = this.deps.techniqueManager.getActive()
+
+    // BETA SCOPE LOCK - a dormant way's canonical technique emits no
+    // tier effects on a carried way_out_of_scope save.
+    if (technique !== undefined && !betaTechniqueAdmitted(technique.id)) {
+      return []
+    }
 
     const effect = technique ? getTechniqueEffects(technique) : undefined
 

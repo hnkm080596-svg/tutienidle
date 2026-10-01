@@ -22,6 +22,7 @@ import {
 } from './CultivationPathKit'
 import { registerDomainDeltaDeriver, type StatModifier } from '../stats/StatCalculator'
 import { isRealmAvailable } from '../realm/ReleasePolicy'
+import { isBetaWay } from '../betaScope'
 import { getRealmTier } from '../realm/RealmTierMap'
 import { type StatDomain } from '../stats/StatDomain'
 import type { MainStatKey } from '../stats/StatTypes'
@@ -280,6 +281,12 @@ export function collectActiveWayStatModifiers(
 ): readonly StatModifier[] {
   const way = getActiveWayDefinition(player)
 
+  // BETA SCOPE LOCK - a carried way_out_of_scope save keeps its way
+  // record, but the dormant facet emits nothing into live stats.
+  if (way !== undefined && !isBetaWay(way.id)) {
+    return []
+  }
+
   return way?.stats?.collectModifiers(player, totals) ?? []
 }
 
@@ -349,7 +356,9 @@ export function applyPathChoice(
 export function getCultivationPathStatModifiers(player: PlayerData) {
   const way = getActiveWayDefinition(player)
 
-  return [...(way?.statModifiers ?? [])]
+  // BETA SCOPE LOCK - dormant way statModifiers stay inert on a
+  // carried way_out_of_scope save (same admission read as the facet).
+  return [...(way !== undefined && isBetaWay(way.id) ? way.statModifiers ?? [] : [])]
 }
 
 // P7-M3 - realm rewards are artifact-only delivery (the canonical

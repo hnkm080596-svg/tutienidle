@@ -51,7 +51,7 @@ import {
   betaCombatRolesFor as betaCombatRolesForDomain,
   betaCombatSurfacesFor as betaCombatSurfacesForDomain,
   betaSkillTreeFor as betaSkillTreeForDomain,
-  betaNodeSkillLevelAdmitted,
+  betaNodeWriteAdmitted,
   betaSkillAdmitted,
   betaTreeNodeAdmitted,
   type BetaCombatRoleEntry,
@@ -97,14 +97,6 @@ export const RESPEC_PRESERVED_NODE_IDS: readonly string[] = [
   ...Object.values(PHAP_TU_ELEMENT_ROOT_IDS),
   ...NGU_KIEM_EVOLUTION_NODE_IDS,
 ]
-
-function betaNodeWriteAdmitted(node: ProgressionNode): boolean {
-  // One write-admission predicate for every progression op: tree-surface
-  // admission (dormant way/hidden branch tags) AND skill-level admission
-  // (a core node leveling a dormant way's kit skill stays rejected even
-  // though core nodes carry no view tag).
-  return betaTreeNodeAdmitted(node) && betaNodeSkillLevelAdmitted(node)
-}
 
 export class GameManagerProgressionOps {
   constructor(

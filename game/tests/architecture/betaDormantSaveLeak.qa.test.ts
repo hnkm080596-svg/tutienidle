@@ -9,7 +9,7 @@
  * asserts behavior under the canonical all-false table.
  */
 import { describe, expect, it } from 'vitest'
-import { createDefaultPlayer, type PlayerData } from '@/core/player/Player'
+import { createDefaultPlayer, resolvePlayerStatAssembly, type PlayerData } from '@/core/player/Player'
 import { unsupportedReleaseReason } from '@/core/betaScopeSurface'
 import { getEffectiveMainStatCap, getMainStatCap } from '@/core/stats/StatCap'
 import { grantRealmPassive } from '@/core/realm/RealmPassiveSystem'
@@ -33,7 +33,9 @@ import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
 import type { Skill } from '@/core/skill/Skill'
 import { freshSwordPathState, type OrbId } from '@/core/kiem-tu/KiemTuState'
 import { createSpellPathState } from '@/core/phap-tu/PhapTuState'
-import { hasStaticPathCapability, resolvePathCapabilities } from '@/core/player/CultivationPathSystem'
+import { getCultivationPathStatModifiers, hasStaticPathCapability, resolvePathCapabilities } from '@/core/player/CultivationPathSystem'
+import { getSpiritStoneMaterialIdForRealmTier } from '@/core/material/SpiritStoneMaterial'
+import { getRealmTier } from '@/core/realm/RealmTierMap'
 import { BattleLootSystem, type BattleLootSystemDeps } from '@/core/game/BattleLootSystem'
 import { MaterialRegistry } from '@/core/material/MaterialRegistry'
 import type { Material } from '@/core/material/Material'
@@ -486,5 +488,123 @@ describe('beta-live progression: physique essences fund the realm body chapters 
 
     expect(bag).toEqual([{ id: 'tinh_hoa_pham_the', amount: 3 }])
     expect(gained).toEqual([{ id: 'tinh_hoa_pham_the', amount: 3 }])
+  })
+})
+
+
+describe('dormancy: dormant way/technique/passive stat channels stay inert (F-TC-1/F-TC-3)', () => {
+  it('a flagged body-path save emits no way facet modifiers in stat assembly', () => {
+    const p = player({
+      cultivationPath: 'body',
+      cultivationWay: 'body_pathway',
+      realmId: 'qi_refining',
+      realmLevel: 5,
+    })
+
+    expect(unsupportedReleaseReason(p)).toBe('way_out_of_scope')
+
+    const { wayFacetModifiers } = resolvePlayerStatAssembly(p, [])
+    expect(wayFacetModifiers).toEqual([])
+  })
+
+  it('a flagged hidden-spell save emits no way statModifiers via the cultivation_path channel', () => {
+    const hiddenSave = player({
+      cultivationPath: 'spell',
+      cultivationWay: 'hidden_spell_pathway',
+      spellPath: createSpellPathState(),
+      realmId: 'qi_refining',
+      realmLevel: 5,
+    })
+
+    expect(unsupportedReleaseReason(hiddenSave)).toBe('way_out_of_scope')
+    expect(getCultivationPathStatModifiers(hiddenSave)).toEqual([])
+
+    // Positive control - the beta way's authored statModifiers still emit.
+    const betaSave = player({
+      cultivationPath: 'spell',
+      cultivationWay: 'spell_pathway',
+      spellPath: createSpellPathState(),
+      realmId: 'qi_refining',
+      realmLevel: 5,
+    })
+    expect(getCultivationPathStatModifiers(betaSave).length).toBeGreaterThan(0)
+  })
+
+  it('a dormant way technique emits no tier modifiers; the beta way technique still emits', () => {
+    const gameManager = new GameManager()
+
+    const bodySave = player({
+      cultivationPath: 'body',
+      cultivationWay: 'body_pathway',
+      realmId: 'foundation_establishment',
+      realmLevel: 8,
+    })
+    gameManager.techniqueManager.setActive({
+      ...TECHNIQUES.find((t) => t.id === 'diamond_body_art')!,
+    })
+    const dormantChannels = gameManager.effectOps.getBattleBaseChannels(bodySave)
+    expect(
+      dormantChannels.find((c) => c.channel === 'technique_tier')!.modifiers,
+    ).toEqual([])
+
+    const spellSave = player({
+      cultivationPath: 'spell',
+      cultivationWay: 'spell_pathway',
+      spellPath: createSpellPathState(),
+      realmId: 'qi_refining',
+      realmLevel: 5,
+    })
+    gameManager.techniqueManager.setActive({
+      ...TECHNIQUES.find((t) => t.id === 'five_elements_art')!,
+    })
+    const betaChannels = gameManager.effectOps.getBattleBaseChannels(spellSave)
+    expect(
+      betaChannels.find((c) => c.channel === 'technique_tier')!.modifiers.length,
+    ).toBeGreaterThan(0)
+  })
+
+  it('a learned dormant-way passive emits no scaled modifiers; unowned passives still emit', () => {
+    const gameManager = new GameManager()
+    gameManager.catalogOps.registerSkillTemplates(SKILLS)
+
+    gameManager.skillManager.add(
+      SKILLS.find((s) => s.id === 'passive_kiem_tam_lanh_liet')!,
+    )
+    const mods = gameManager.skillSystem.getScaledPassiveModifiers()
+    expect(mods.find((m) => m.sourceId === 'passive_kiem_tam_lanh_liet')).toBeUndefined()
+
+    gameManager.skillManager.add(SKILLS.find((s) => s.id === 'passive_linh_khi_cam_ung')!)
+    const modsAfter = gameManager.skillSystem.getScaledPassiveModifiers()
+    expect(
+      modsAfter.find((m) => m.sourceId === 'passive_linh_khi_cam_ung'),
+    ).toBeTruthy()
+  })
+
+  it('tryAdvanceTechniqueGrade refuses a dormant technique and debits no stones', () => {
+    const gameManager = new GameManager()
+    const p = player({
+      cultivationPath: 'body',
+      cultivationWay: 'body_pathway',
+      realmId: 'foundation_establishment',
+      realmLevel: 8,
+    })
+    gameManager.techniqueManager.setActive({
+      ...TECHNIQUES.find((t) => t.id === 'diamond_body_art')!,
+      grade: 1,
+    })
+
+    const stoneId = getSpiritStoneMaterialIdForRealmTier(getRealmTier('foundation_establishment'))
+    gameManager.materialRegistry.register({
+      id: stoneId,
+      name: 'Stone',
+      category: 'other',
+      sourceType: 'building',
+      description: '',
+    })
+    const stoneMaterial = gameManager.materialRegistry.get(stoneId)
+    gameManager.materialBag.add(stoneMaterial, 1000)
+
+    expect(gameManager.realmAdvanceOps.tryAdvanceTechniqueGrade(p)).toBe(false)
+    expect(gameManager.materialBag.getAmount(stoneId)).toBe(1000)
   })
 })

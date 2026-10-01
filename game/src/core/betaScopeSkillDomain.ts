@@ -347,6 +347,52 @@ export function betaSkillAdmitted(skillId: string): boolean {
 }
 
 /**
+ * Way-owned canonical techniques (way.techniqueId): a technique minted by
+ * a dormant way carries that way's dormancy - its grade advancement,
+ * tier emissions and combat modifiers are scope-hidden machinery.
+ * Unowned (mortal) techniques stay admitted on every save.
+ * Evaluated per call like betaDormantSkillIds - live lock state.
+ */
+function betaDormantTechniqueIds(): ReadonlySet<string> {
+  const betaOwned = new Set<string>()
+  const dormant = new Set<string>()
+
+  for (const path of Object.values(CULTIVATION_PATH_MODULES)) {
+    for (const way of Object.values(path.ways)) {
+      const sink = isBetaWay(way.id) ? betaOwned : dormant
+      sink.add(way.techniqueId)
+    }
+  }
+
+  for (const id of betaOwned) dormant.delete(id)
+  return dormant
+}
+
+export function betaTechniqueAdmitted(techniqueId: string): boolean {
+  return !betaDormantTechniqueIds().has(techniqueId)
+}
+
+/**
+ * Active-way admission for effect seams: a way-less player is the beta
+ * mortal baseline (admitted); a committed way is admitted only when the
+ * beta allow-list owns it. Mirrors the wayAdmitted seam in CombatBuild.
+ */
+export function betaActiveWayAdmitted(player: PlayerData): boolean {
+  const wayId = getActiveWay(player)
+  return wayId === undefined || isBetaWay(wayId)
+}
+
+/**
+ * One write/effect admission predicate for progression ops and their
+ * readers: tree-surface admission (dormant way/hidden branch tags) AND
+ * skill-level admission (a core node leveling a dormant way's kit skill
+ * stays rejected even though core nodes carry no view tag).
+ */
+export function betaNodeWriteAdmitted(node: ProgressionNode): boolean {
+  return betaTreeNodeAdmitted(node) && betaNodeSkillLevelAdmitted(node)
+}
+
+/**
  * Beta core-node admission: a node that levels a skill is admitted
  * only when the leveled skill is - untagged core nodes carry no tree
  * view tag, so betaTreeNodeAdmitted alone admits dormant way kits.
