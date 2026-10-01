@@ -15156,7 +15156,7 @@
       "path": "src/components/common/BreakthroughRequirementPanel.vue",
       "kind": "file",
       "mode": 33188,
-      "hash": "5621ac1bb1776147bcfd4c66797ae1242cf6e93b47bd6029b953a171cf9adb57"
+      "hash": "035760107187c3e1bacc5c7e44f2bf183b5f032bafe44c15a7db75589e23e74a"
     },
     {
       "path": "src/components/common/ConfirmModal.vue",
@@ -15882,13 +15882,13 @@
       "path": "src/components/panels/bag-sections/PillBagSection.vue",
       "kind": "file",
       "mode": 33188,
-      "hash": "3e94c8752d6edae59594de125664ed41a566c8ee34bcd88ac1f05ed7214269c3"
+      "hash": "fc2dfd7911c915a47e5a815591c5ae9debf5a9bf560751f86c097d2ada59a3d1"
     },
     {
       "path": "src/components/panels/BagGrid.vue",
       "kind": "file",
       "mode": 33188,
-      "hash": "4b5e9d62a12bacc5ff6ecacb18581a4e7546cbf009629e95c93edb4f2874a9a4"
+      "hash": "21ac82e6387210eac8cbb0f8c588e037aed861bd30f28a69bdaf61764379393e"
     },
     {
       "path": "src/components/panels/BuildingConstructionGate.test.ts",
@@ -16242,7 +16242,7 @@
       "path": "src/components/panels/skill-path/TechniqueBand.vue",
       "kind": "file",
       "mode": 33188,
-      "hash": "fee10af9caa6491999edee0c6250d7fbf339af3aac6465612499154d27b81140"
+      "hash": "6b2f933d1e7d0b6f62368184c139cdc2abfbc3f1c0a3de3cbe58ab3245385fca"
     },
     {
       "path": "src/components/panels/skill-path/TechniqueSlotCard.vue",
@@ -16272,7 +16272,7 @@
       "path": "src/components/panels/SkillPathPanel.vue",
       "kind": "file",
       "mode": 33188,
-      "hash": "6dd5fbffc4122ab7ae76a288606c373c9a1fb111e67a1c511209f4d5e40f58a3"
+      "hash": "88123f43a2675d5241be9ad9b44164a09f600965d77264efe78368e13d302998"
     },
     {
       "path": "src/components/panels/StageSelectPanel.test.ts",
@@ -16668,7 +16668,7 @@
       "path": "src/core/alchemy/AlchemySystem.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "c15c7f7dc4d96d671e30b8dac031178f2e1d1bd206e6a1e78d4b8ba0e985a6c1"
+      "hash": "7a188f30ee1d2c3d28b13b1eeb87b94bd62b338a492926d38c6b645295f4e155"
     },
     {
       "path": "src/core/artifact/Artifact.ts",
@@ -17772,7 +17772,7 @@
       "path": "src/core/betaScopeSurface.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "8dc9b5cd04242c22b34b54ee85f211ced17391dc6a61fcd7088112461906a918"
+      "hash": "51445bf1c40f6bcced4fbdc87092663581c880efc0f2fd19f1457fe662b3b2bf"
     },
     {
       "path": "src/core/breakthrough/FoundationType.ts",
@@ -18012,7 +18012,7 @@
       "path": "src/core/building/BuildingSystem.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "0997b4e6af88b452a30262a0ebec3bbf2eee1b0f1745ceb66e7df7f3a7d4a0a4"
+      "hash": "ef35b0e0b99c05fe79d06ac71b327dacc679549a2dbd245fe159475985c3ac3f"
     },
     {
       "path": "src/core/combat/Accuracy.test.ts",
@@ -19062,7 +19062,7 @@
       "path": "src/core/game/GameManager.authoredParity.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "5fd1bb5c859a5928098717d93e4352935447463a5e6d554026df1d418e0582c2"
+      "hash": "111d4c4ce4ff962b7f51e38feaa03f3d9d52af148dc258b7b563b7400563a20d"
     },
     {
       "path": "src/core/game/GameManager.autoFarm.test.ts",
@@ -19740,7 +19740,7 @@
       "path": "src/core/game/GameManagerProgressionOps.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "35cf1e5452e8e052a390bf931e911321308b8f6c81cf364d9a8359693845985b"
+      "hash": "7c681613604a2df54f4f01b21333052ce7e858439c2558a3714baa96fb63be33"
     },
     {
       "path": "src/core/game/GameManagerQuestOps.ts",
@@ -20322,7 +20322,7 @@
       "path": "src/core/player/Player.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "1747cec1220633904b06abe08d3609606cda2243af1f67ff67ad0137017e0cfb"
+      "hash": "b83dba9353cc4cded36824c8012cd75dd20968150b0e3396e74966097dd07f7f"
     },
     {
       "path": "src/core/player/PlayerSnapshot.ts",
@@ -22722,7 +22722,7 @@
       "path": "src/data/realm/RealmPassives.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "03b887d055f43a336d5d5826f0ce52ddd64dbe97fa138e6a06ab8c2fd7dfd12d"
+      "hash": "22cd3aa7fa4c1cc0a7d948ac28b7e2bcc2286f8c126a4832502aae939c6a621d"
     },
     {
       "path": "src/data/realm/ZhouTian.ts",
@@ -24444,7 +24444,7 @@
       "path": "src/services/save/saveShapeValidation.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "0ce42a4a4ad10b64a5f86f7546e96d3bee3bdcdb79afa88b3754d267f827a0e8"
+      "hash": "b996af6818462ad1a68c92bae6ccf0d3f95ab1324010ec67baea3007f116d87b"
     },
     {
       "path": "src/services/save/SaveSystem.bootRestore.test.ts",
@@ -24972,7 +24972,7 @@
       "path": "tests/architecture/betaClaimedSourceForge.qa.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "b94dd37f61a0f3d053faca72681253d78ca2677e2dac58cef37f82de9d1a5399"
+      "hash": "c4e2a5d0bbb4b676a4169b180877388431083d38215d1fc0e5eb1b357adfabbd"
     },
     {
       "path": "tests/architecture/betaConsumerLeak.qa.test.ts",
@@ -24993,10 +24993,16 @@
       "hash": "670623179e7722df44bfd3573e6e1c57a3ea13b5ac521b943af9d11729366d45"
     },
     {
+      "path": "tests/architecture/betaConsumerSeamsB8.qa.test.ts",
+      "kind": "file",
+      "mode": 33152,
+      "hash": "96ef8bcc6d31fee994684aa09d28e7efdb930ce86d1314d31d7a8b4030cf4e12"
+    },
+    {
       "path": "tests/architecture/betaDormantSaveLeak.qa.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "660d8e1839fbea85678f3728f40858f526ed0c65cc2be3a54ad8edeebbbf6a67"
+      "hash": "25178125ab34597aea897d9e0a607cca6bac062339f1da7b24cd96f7006f9119"
     },
     {
       "path": "tests/architecture/betaEconomyCensus.test.ts",
@@ -25321,6 +25327,12 @@
       "kind": "file",
       "mode": 33188,
       "hash": "65ec6ed71cfb423db7b4bac7900dac4d74cbb0856ccdd45056cc06d4b360b241"
+    },
+    {
+      "path": "tests/architecture/tc6ForgedSaveFalsification.qa.test.ts",
+      "kind": "file",
+      "mode": 33152,
+      "hash": "fa9cd155e59121e34cc2c7a704cafc7c361be86fbbbef19153d249f79fafd41c"
     },
     {
       "path": "tests/architecture/tribulationAdmissionFunnel.test.ts",
@@ -25659,5 +25671,5 @@
       "hash": "0bb3657058699da63594036eda9bb6be7f6b4b44aebbb960fcba939870fd3f5e"
     }
   ],
-  "productStateId": "3d91ed561793d6a001bd79f0e147cfe43b96109886ee9ea7dfc12c90aa6c43e8"
+  "productStateId": "de4898e7ab3132c96817dff81c523eb586e7d0bee41196c32ad54ba045e28e82"
 }

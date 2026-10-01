@@ -1,0 +1,12 @@
+{
+  "runPatch": {
+    "findingActionable": {
+      "F-A8-3": true,
+      "F-B8-4": true,
+      "F-B8-5": true,
+      "F-B8-6": true,
+      "F-TC6-7": true
+    }
+  },
+  "reason": "schema correction: deferred/exception REAL_DEFECT findings keep actionable=true; the exception object carries the deferral (matches F-TIMED-EMIT convention)"
+}
