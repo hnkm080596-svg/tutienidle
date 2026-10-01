@@ -230,7 +230,7 @@ describe('consumer seam: chi_hien_quan building popover (contract sec.G)', () =>
 // and the tab surface drifts from the verdict authority.
 // ---------------------------------------------------------------------------
 describe('consumer seam: worker lodge read-model consumption (contract sec.F)', () => {
-  // F-B-CONS-3 — Low, deferred per Medium+-only ruling (human exception).
+  // F-B-CONS-3 - Low, deferred per Medium+-only ruling (human exception).
   // Skipped, not deleted: the pin stays dormant until the exception closes.
   it.skip('WorkerLodgePanel never imports CompanionAvailability and consumes the tab read model', () => {
     const source = readFileSync('src/components/panels/WorkerLodgePanel.vue', 'utf8')
@@ -303,7 +303,7 @@ describe('carried dormant auto-farm lease (save boundary)', () => {
 })
 
 describe('auto-farm indicator honesty', () => {
-  // F-B-CONS-4 — Low, deferred per Medium+-only ruling (human exception).
+  // F-B-CONS-4 - Low, deferred per Medium+-only ruling (human exception).
   it.skip('a farm whose stage id no longer resolves renders nothing actionable (no phantom name)', async () => {
     const gameManager = realGameManager()
 
