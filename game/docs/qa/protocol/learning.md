@@ -162,3 +162,16 @@ Each candidate must pass the promotion predicate during Devin adoption before be
   - **Detector escape:** CSS declarations fail silently; no lint asserts token/shape fit; unit tests don't read computed styles.
   - **Pin/attack proposal:** when retokening, verify each token's VALUE SHAPE against the property grammar (color vs length vs list); a grep for `box-shadow: var(--` with color-valued tokens is a cheap pin. Qualify as CANDIDATE.
 - **Out-of-scope finding (base defect, frozen file):** `src/assets/huyen-kim.tokens.css:9` doc comment contains `--ink-*/--paper-*`; the `*/` inside `--ink-*` terminates the comment early and the browser discards the ENTIRE `:root` block - every `--hk-*` var resolves empty at runtime AND `lightningcss` minify fails `npm run build` (`Unexpected token Delim('*')`). Verified: dev server serves the file, computed `getPropertyValue('--hk-density-ceremonial-height')` is `''`, and injecting a vars shim restores the reskinned primitives (48px ceremonial button, tinted slice). Reported to coordinator; foundation file was not modified per scope.
+
+### 2026-10-02 huyen-kim-stable-scene-art - generator replay escapes caught before handoff
+
+- **Incident:** The pre-extension core chrome generator rewrote the shared manifest and production report from scratch. Replaying it after adding the stable scene package would silently remove the stable-scene manifest contract and its parallax handoff evidence.
+  - **Root class:** L-MULTI-PRODUCER-CLOBBER - an older producer treated a now-shared aggregate artifact as exclusively owned output.
+  - **Detector escape:** final-file census and image inspection exercised the extension generator but did not replay every older producer against the integrated state.
+  - **Evidence:** SOURCE_PROOF from the unconditional manifest/report writes, followed by an isolated clean-tree replay after repair that retained `stable_scene_extension`, aggregate count 154, and the exact integrated-report hash.
+  - **Pin/attack proposal:** every additive asset-pack extension must replay all producers of shared manifests/reports in an isolated tree and assert preservation of unknown/additive sections. Capture as CANDIDATE; independent qualification is still required before promotion.
+- **Incident:** The core generator assumed `preview/` already existed. A populated worktree hid the problem; the first isolated clean-tree replay failed when Sharp opened `preview/01-p0-foundation.png` for writing.
+  - **Root class:** L-IMPLICIT-FILESYSTEM-PRECONDITION - a producer depended on a directory created by prior local history rather than owning creation of its output parents.
+  - **Detector escape:** regeneration had only been run in the existing populated pack, not in a clean output root.
+  - **Evidence:** EXECUTED_TOOLING failure in the isolated replay, then a successful clean replay producing all nine preview sheets after the generator created each output parent.
+  - **Pin/attack proposal:** asset-generator qualification must include a clean-root replay with no output directories, followed by exact output and preservation census. Capture as CANDIDATE; independent qualification is still required before promotion.

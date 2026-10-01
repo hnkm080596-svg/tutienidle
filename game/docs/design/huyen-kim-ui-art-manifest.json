@@ -1,0 +1,2881 @@
+{
+  "meta": {
+    "pack": "Huyền Kim Sơn Thủy UI Art Pack",
+    "schema_version": 1,
+    "forensic_source_commit": "211a62e4b61c6686534cc2c3f07bc52e0a94a01f",
+    "export_scale_variants": [
+      "@1x",
+      "@2x"
+    ],
+    "production_assets": 42,
+    "production_png_files": 84,
+    "stable_scene_raster_assets": 26,
+    "stable_scene_production_png_files": 52,
+    "stable_symbol_svg_files": 18,
+    "aggregate_production_files": 154,
+    "baked_text": false,
+    "state_model": "one neutral base per asset; runtime tint, opacity, glow, mask, and motion"
+  },
+  "assets": [
+    {
+      "asset_id": "frame-xs-tooltip",
+      "inventory_id": "frame-xs-tooltip",
+      "status": "DONE",
+      "path": {
+        "@1x": "public/assets/ui/huyen-kim/frames/frame-xs-tooltip@1x.png",
+        "@2x": "public/assets/ui/huyen-kim/frames/frame-xs-tooltip@2x.png"
+      },
+      "format": "png",
+      "width": 96,
+      "height": 96,
+      "alpha": true,
+      "nine_slice_insets": {
+        "left": 20,
+        "top": 20,
+        "right": 20,
+        "bottom": 20
+      },
+      "transparent_margin": {
+        "left": 0,
+        "top": 0,
+        "right": 0,
+        "bottom": 0
+      },
+      "content_safe_rect": {
+        "x": 20,
+        "y": 20,
+        "width": 56,
+        "height": 56
+      },
+      "text_safe_rect": {
+        "x": 24,
+        "y": 24,
+        "width": 48,
+        "height": 48
+      },
+      "states_supported": [
+        "idle",
+        "warning",
+        "invalid"
+      ],
+      "runtime_state_strategy": "grayscale + runtime tint (--hk-gold / --hk-cinnabar)",
+      "priority": "P1",
+      "notes": "Manifest M01. Corners hold seal-square ornaments; edges thin gold-lacquer."
+    },
+    {
+      "asset_id": "frame-s-slot",
+      "inventory_id": "frame-s-slot",
+      "status": "DONE",
+      "path": {
+        "@1x": "public/assets/ui/huyen-kim/slots/frame-s-slot@1x.png",
+        "@2x": "public/assets/ui/huyen-kim/slots/frame-s-slot@2x.png"
+      },
+      "format": "png",
+      "width": 96,
+      "height": 96,
+      "alpha": true,
+      "nine_slice_insets": {
+        "left": 20,
+        "top": 20,
+        "right": 20,
+        "bottom": 20
+      },
+      "transparent_margin": {
+        "left": 0,
+        "top": 0,
+        "right": 0,
+        "bottom": 0
+      },
+      "content_safe_rect": {
+        "x": 20,
+        "y": 20,
+        "width": 56,
+        "height": 56
+      },
+      "text_safe_rect": null,
+      "states_supported": [
+        "idle",
+        "selected",
+        "locked",
+        "rarity-tinted"
+      ],
+      "runtime_state_strategy": "grayscale + rarity tint",
+      "priority": "P0",
+      "notes": "RULING 03: released from HOLD -> P0 shared drawable. One neutral base; states/rarity are runtime tints. Consumers: inventory cells (09), equipment sockets (12), reward slots (15/16), material chips (11/13), requirement chips, compact socket surfaces. Existing ink-wash frame-s-slot may serve as interim."
+    },
+    {
+      "asset_id": "surface-m-panel",
+      "inventory_id": "surface-m-panel",
+      "status": "DONE",
+      "path": {
+        "@1x": "public/assets/ui/huyen-kim/surfaces/surface-m-panel@1x.png",
+        "@2x": "public/assets/ui/huyen-kim/surfaces/surface-m-panel@2x.png"
+      },
+      "format": "png",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "nine_slice_insets": {
+        "left": 32,
+        "top": 32,
+        "right": 32,
+        "bottom": 32
+      },
+      "transparent_margin": {
+        "left": 0,
+        "top": 0,
+        "right": 0,
+        "bottom": 0
+      },
+      "content_safe_rect": {
+        "x": 32,
+        "y": 32,
+        "width": 192,
+        "height": 192
+      },
+      "text_safe_rect": {
+        "x": 40,
+        "y": 40,
+        "width": 176,
+        "height": 176
+      },
+      "states_supported": [
+        "idle"
+      ],
+      "runtime_state_strategy": "fixed colors; state overlays are runtime",
+      "priority": "P0",
+      "notes": "Manifest M03. Drawn version replaces CSS fallback; keep existing ink-wash slice as interim."
+    },
+    {
+      "asset_id": "frame-m-modal",
+      "inventory_id": "frame-m-modal",
+      "status": "DONE",
+      "path": {
+        "@1x": "public/assets/ui/huyen-kim/frames/frame-m-modal@1x.png",
+        "@2x": "public/assets/ui/huyen-kim/frames/frame-m-modal@2x.png"
+      },
+      "format": "png",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "nine_slice_insets": {
+        "left": 40,
+        "top": 40,
+        "right": 40,
+        "bottom": 40
+      },
+      "transparent_margin": {
+        "left": 0,
+        "top": 0,
+        "right": 0,
+        "bottom": 0
+      },
+      "content_safe_rect": {
+        "x": 40,
+        "y": 40,
+        "width": 176,
+        "height": 176
+      },
+      "text_safe_rect": null,
+      "states_supported": [
+        "idle"
+      ],
+      "runtime_state_strategy": "fixed colors",
+      "priority": "P0",
+      "notes": "Manifest M04. Transparent center — content surface drawn separately."
+    },
+    {
+      "asset_id": "surface-l-drawer",
+      "inventory_id": "surface-l-drawer",
+      "status": "DONE",
+      "path": {
+        "@1x": "public/assets/ui/huyen-kim/surfaces/surface-l-drawer@1x.png",
+        "@2x": "public/assets/ui/huyen-kim/surfaces/surface-l-drawer@2x.png"
+      },
+      "format": "png",
+      "width": 384,
+      "height": 384,
+      "alpha": true,
+      "nine_slice_insets": {
+        "left": 48,
+        "top": 48,
+        "right": 48,
+        "bottom": 48
+      },
+      "transparent_margin": {
+        "left": 0,
+        "top": 0,
+        "right": 0,
+        "bottom": 0
+      },
+      "content_safe_rect": {
+        "x": 48,
+        "y": 48,
+        "width": 288,
+        "height": 288
+      },
+      "text_safe_rect": {
+        "x": 56,
+        "y": 56,
+        "width": 272,
+        "height": 272
+      },
+      "states_supported": [
+        "idle"
+      ],
+      "runtime_state_strategy": "fixed colors",
+      "priority": "P0",
+      "notes": "Manifest M05; M1 gate — needed by Động Phủ Thiên Cơ Bảng."
+    },
+    {
+      "asset_id": "surface-xl-scroll",
+      "inventory_id": "surface-xl-scroll",
+      "status": "DONE",
+      "path": {
+        "@1x": "public/assets/ui/huyen-kim/scroll/surface-xl-scroll@1x.png",
+        "@2x": "public/assets/ui/huyen-kim/scroll/surface-xl-scroll@2x.png"
+      },
+      "format": "png",
+      "width": 512,
+      "height": 640,
+      "alpha": true,
+      "nine_slice_insets": {
+        "left": 64,
+        "top": 96,
+        "right": 64,
+        "bottom": 96
+      },
+      "transparent_margin": {
+        "left": 0,
+        "top": 0,
+        "right": 0,
+        "bottom": 0
+      },
+      "content_safe_rect": {
+        "x": 64,
+        "y": 96,
+        "width": 384,
+        "height": 448
+      },
+      "text_safe_rect": {
+        "x": 80,
+        "y": 112,
+        "width": 352,
+        "height": 416
+      },
+      "states_supported": [
+        "idle"
+      ],
+      "runtime_state_strategy": "fixed colors; victory/defeat differ by ceremony ribbon + tint overlay",
+      "priority": "P0",
+      "notes": "Manifest M06. Vertical scroll edges (t96/b96). Horizontal scroll shell for functional panels uses imperial-scroll-body instead."
+    },
+    {
+      "asset_id": "frame-xl-ceremony",
+      "inventory_id": "frame-xl-ceremony",
+      "status": "DONE",
+      "path": {
+        "@1x": "public/assets/ui/huyen-kim/frames/frame-xl-ceremony@1x.png",
+        "@2x": "public/assets/ui/huyen-kim/frames/frame-xl-ceremony@2x.png"
+      },
+      "format": "png",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "nine_slice_insets": {
+        "left": 72,
+        "top": 72,
+        "right": 72,
+        "bottom": 72
+      },
+      "transparent_margin": {
+        "left": 0,
+        "top": 0,
+        "right": 0,
+        "bottom": 0
+      },
+      "content_safe_rect": {
+        "x": 72,
+        "y": 72,
+        "width": 368,
+        "height": 368
+      },
+      "text_safe_rect": null,
+      "states_supported": [
+        "idle",
+        "cinnabar-tint variant via overlay"
+      ],
+      "runtime_state_strategy": "fixed colors; defeat/alert = runtime cinnabar tint layer",
+      "priority": "P0",
+      "notes": "Manifest M07. Corners carry the densest ornament; center edges keep a thin continuous band."
+    },
+    {
+      "asset_id": "button-compact",
+      "inventory_id": "button-compact",
+      "status": "DONE",
+      "path": {
+        "@1x": "public/assets/ui/huyen-kim/buttons/button-compact@1x.png",
+        "@2x": "public/assets/ui/huyen-kim/buttons/button-compact@2x.png"
+      },
+      "format": "png",
+      "width": 160,
+      "height": 56,
+      "alpha": true,
+      "nine_slice_insets": {
+        "left": 28,
+        "top": 16,
+        "right": 28,
+        "bottom": 16
+      },
+      "transparent_margin": {
+        "left": 0,
+        "top": 0,
+        "right": 0,
+        "bottom": 0
+      },
+      "content_safe_rect": {
+        "x": 28,
+        "y": 16,
+        "width": 104,
+        "height": 24
+      },
+      "text_safe_rect": {
+        "x": 32,
+        "y": 18,
+        "width": 96,
+        "height": 20
+      },
+      "states_supported": [
+        "idle",
+        "hover",
+        "pressed",
+        "disabled",
+        "selected",
+        "attention"
+      ],
+      "runtime_state_strategy": "grayscale + runtime tint/opacity/scale",
+      "priority": "P0",
+      "notes": "Manifest M08; grayscale sheet — variants (primary/danger/ghost) are tints."
+    },
+    {
+      "asset_id": "button-standard",
+      "inventory_id": "button-standard",
+      "status": "DONE",
+      "path": {
+        "@1x": "public/assets/ui/huyen-kim/buttons/button-standard@1x.png",
+        "@2x": "public/assets/ui/huyen-kim/buttons/button-standard@2x.png"
+      },
+      "format": "png",
+      "width": 192,
+      "height": 72,
+      "alpha": true,
+      "nine_slice_insets": {
+        "left": 32,
+        "top": 20,
+        "right": 32,
+        "bottom": 20
+      },
+      "transparent_margin": {
+        "left": 0,
+        "top": 0,
+        "right": 0,
+        "bottom": 0
+      },
+      "content_safe_rect": {
+        "x": 32,
+        "y": 20,
+        "width": 128,
+        "height": 32
+      },
+      "text_safe_rect": {
+        "x": 36,
+        "y": 24,
+        "width": 120,
+        "height": 24
+      },
+      "states_supported": [
+        "idle",
+        "hover",
+        "pressed",
+        "disabled",
+        "selected",
+        "attention",
+        "processing"
+      ],
+      "runtime_state_strategy": "grayscale + runtime tint/opacity",
+      "priority": "P0",
+      "notes": "Manifest M09; grayscale."
+    },
+    {
+      "asset_id": "button-ceremonial",
+      "inventory_id": "button-ceremonial",
+      "status": "DONE",
+      "path": {
+        "@1x": "public/assets/ui/huyen-kim/buttons/button-ceremonial@1x.png",
+        "@2x": "public/assets/ui/huyen-kim/buttons/button-ceremonial@2x.png"
+      },
+      "format": "png",
+      "width": 256,
+      "height": 96,
+      "alpha": true,
+      "nine_slice_insets": {
+        "left": 40,
+        "top": 24,
+        "right": 40,
+        "bottom": 24
+      },
+      "transparent_margin": {
+        "left": 0,
+        "top": 4,
+        "right": 0,
+        "bottom": 4
+      },
+      "content_safe_rect": {
+        "x": 40,
+        "y": 24,
+        "width": 176,
+        "height": 48
+      },
+      "text_safe_rect": {
+        "x": 48,
+        "y": 30,
+        "width": 160,
+        "height": 36
+      },
+      "states_supported": [
+        "idle",
+        "hover",
+        "pressed",
+        "disabled",
+        "ready",
+        "attention"
+      ],
+      "runtime_state_strategy": "grayscale + gold/jade/cinnabar tint + breath glow",
+      "priority": "P0",
+      "notes": "Manifest M10; MUST be grayscale — runtime tints per variant (spec wiring note)."
+    },
+    {
+      "asset_id": "icon-button-utility",
+      "inventory_id": "icon-button-utility",
+      "status": "DONE",
+      "path": {
+        "@1x": "public/assets/ui/huyen-kim/buttons/icon-button-utility@1x.png",
+        "@2x": "public/assets/ui/huyen-kim/buttons/icon-button-utility@2x.png"
+      },
+      "format": "png",
+      "width": 96,
+      "height": 96,
+      "alpha": true,
+      "nine_slice_insets": {
+        "left": 30,
+        "top": 30,
+        "right": 30,
+        "bottom": 30
+      },
+      "transparent_margin": {
+        "left": 0,
+        "top": 0,
+        "right": 0,
+        "bottom": 0
+      },
+      "content_safe_rect": {
+        "x": 24,
+        "y": 24,
+        "width": 48,
+        "height": 48
+      },
+      "text_safe_rect": null,
+      "states_supported": [
+        "idle",
+        "hover",
+        "active",
+        "notification-dot"
+      ],
+      "runtime_state_strategy": "grayscale + tint; dot = runtime",
+      "priority": "P0",
+      "notes": "Manifest M11; icon glyphs stay runtime (existing SVG/text icons)."
+    },
+    {
+      "asset_id": "seal-chip",
+      "inventory_id": "seal-chip",
+      "status": "DONE",
+      "path": {
+        "@1x": "public/assets/ui/huyen-kim/badges/seal-chip@1x.png",
+        "@2x": "public/assets/ui/huyen-kim/badges/seal-chip@2x.png"
+      },
+      "format": "png",
+      "width": 128,
+      "height": 48,
+      "alpha": true,
+      "nine_slice_insets": {
+        "left": 24,
+        "top": 14,
+        "right": 24,
+        "bottom": 14
+      },
+      "transparent_margin": {
+        "left": 0,
+        "top": 0,
+        "right": 0,
+        "bottom": 0
+      },
+      "content_safe_rect": {
+        "x": 24,
+        "y": 14,
+        "width": 80,
+        "height": 20
+      },
+      "text_safe_rect": {
+        "x": 28,
+        "y": 16,
+        "width": 72,
+        "height": 16
+      },
+      "states_supported": [
+        "idle",
+        "selected",
+        "locked",
+        "actionable",
+        "complete"
+      ],
+      "runtime_state_strategy": "grayscale + rank/tone tint",
+      "priority": "P1",
+      "notes": "Manifest M12."
+    },
+    {
+      "asset_id": "resource-pill",
+      "inventory_id": "resource-pill",
+      "status": "DONE",
+      "path": {
+        "@1x": "public/assets/ui/huyen-kim/hud/resource-pill@1x.png",
+        "@2x": "public/assets/ui/huyen-kim/hud/resource-pill@2x.png"
+      },
+      "format": "png",
+      "width": 160,
+      "height": 48,
+      "alpha": true,
+      "nine_slice_insets": {
+        "left": 24,
+        "top": 14,
+        "right": 24,
+        "bottom": 14
+      },
+      "transparent_margin": {
+        "left": 0,
+        "top": 0,
+        "right": 0,
+        "bottom": 0
+      },
+      "content_safe_rect": {
+        "x": 24,
+        "y": 12,
+        "width": 112,
+        "height": 24
+      },
+      "text_safe_rect": {
+        "x": 48,
+        "y": 14,
+        "width": 84,
+        "height": 20
+      },
+      "states_supported": [
+        "normal",
+        "bump-on-change",
+        "insufficient"
+      ],
+      "runtime_state_strategy": "fixed capsule; runtime scale pop + cinnabar flash",
+      "priority": "P0",
+      "notes": "Manifest M13; not tintable — fixed dark capsule."
+    },
+    {
+      "asset_id": "entity-bar",
+      "inventory_id": "entity-bar",
+      "status": "DONE",
+      "path": {
+        "@1x": "public/assets/ui/huyen-kim/bars/entity-bar@1x.png",
+        "@2x": "public/assets/ui/huyen-kim/bars/entity-bar@2x.png"
+      },
+      "format": "png",
+      "width": 192,
+      "height": 32,
+      "alpha": true,
+      "nine_slice_insets": {
+        "left": 20,
+        "top": 10,
+        "right": 20,
+        "bottom": 10
+      },
+      "transparent_margin": {
+        "left": 0,
+        "top": 0,
+        "right": 0,
+        "bottom": 0
+      },
+      "content_safe_rect": {
+        "x": 20,
+        "y": 10,
+        "width": 152,
+        "height": 12
+      },
+      "text_safe_rect": null,
+      "states_supported": [
+        "ally",
+        "enemy",
+        "targeted",
+        "low-hp",
+        "dead",
+        "neutral"
+      ],
+      "runtime_state_strategy": "grayscale track + runtime fill gradient + tint (jade/cinnabar)",
+      "priority": "P0",
+      "notes": "Manifest M14; fill never baked. Reuse for generic progress/mastery/timer tracks."
+    },
+    {
+      "asset_id": "divider-ornament",
+      "inventory_id": "divider-ornament",
+      "status": "DONE",
+      "path": {
+        "@1x": "public/assets/ui/huyen-kim/ornaments/divider-ornament@1x.png",
+        "@2x": "public/assets/ui/huyen-kim/ornaments/divider-ornament@2x.png"
+      },
+      "format": "png",
+      "width": 256,
+      "height": 16,
+      "alpha": true,
+      "nine_slice_insets": {
+        "left": 96,
+        "top": 4,
+        "right": 96,
+        "bottom": 4
+      },
+      "transparent_margin": {
+        "left": 0,
+        "top": 0,
+        "right": 0,
+        "bottom": 0
+      },
+      "content_safe_rect": null,
+      "text_safe_rect": {
+        "x": 108,
+        "y": 0,
+        "width": 40,
+        "height": 16
+      },
+      "states_supported": [
+        "idle"
+      ],
+      "runtime_state_strategy": "grayscale + tint",
+      "priority": "P1",
+      "notes": "Manifest M15; center ornament occupies middle ~40px slice gap."
+    },
+    {
+      "asset_id": "scrollbar",
+      "inventory_id": "scrollbar",
+      "status": "HOLD",
+      "path": null,
+      "format": "png",
+      "width": 32,
+      "height": 128,
+      "alpha": true,
+      "nine_slice_insets": {
+        "left": 12,
+        "top": 24,
+        "right": 12,
+        "bottom": 24
+      },
+      "transparent_margin": {
+        "left": 0,
+        "top": 0,
+        "right": 0,
+        "bottom": 0
+      },
+      "content_safe_rect": null,
+      "text_safe_rect": null,
+      "states_supported": [
+        "idle",
+        "hover",
+        "drag"
+      ],
+      "runtime_state_strategy": "grayscale + tint",
+      "priority": "P3",
+      "notes": "HOLD — app hides scrollbars globally; scroll regions use scrollfade masks. Draw only if a surface reinstates visible scroll chrome. No export by forensic ruling."
+    },
+    {
+      "asset_id": "dao-luan-center",
+      "inventory_id": "dao-luan-center",
+      "status": "DONE",
+      "path": {
+        "@1x": "public/assets/ui/huyen-kim/nodes/dao-luan-center@1x.png",
+        "@2x": "public/assets/ui/huyen-kim/nodes/dao-luan-center@2x.png"
+      },
+      "format": "png",
+      "width": 192,
+      "height": 192,
+      "alpha": true,
+      "nine_slice_insets": null,
+      "transparent_margin": {
+        "left": 8,
+        "top": 8,
+        "right": 8,
+        "bottom": 8
+      },
+      "content_safe_rect": {
+        "x": 40,
+        "y": 40,
+        "width": 112,
+        "height": 112
+      },
+      "text_safe_rect": null,
+      "states_supported": [
+        "idle",
+        "active/cultivating",
+        "attention"
+      ],
+      "runtime_state_strategy": "fixed colors + runtime glow overlay",
+      "priority": "P0",
+      "notes": "Manifest M17; M1 gate. Radial symmetry; glyph recess in center."
+    },
+    {
+      "asset_id": "dao-luan-node",
+      "inventory_id": "dao-luan-node",
+      "status": "DONE",
+      "path": {
+        "@1x": "public/assets/ui/huyen-kim/nodes/dao-luan-node@1x.png",
+        "@2x": "public/assets/ui/huyen-kim/nodes/dao-luan-node@2x.png"
+      },
+      "format": "png",
+      "width": 96,
+      "height": 96,
+      "alpha": true,
+      "nine_slice_insets": null,
+      "transparent_margin": {
+        "left": 4,
+        "top": 4,
+        "right": 4,
+        "bottom": 4
+      },
+      "content_safe_rect": {
+        "x": 20,
+        "y": 20,
+        "width": 56,
+        "height": 56
+      },
+      "text_safe_rect": {
+        "x": 20,
+        "y": 66,
+        "width": 56,
+        "height": 18
+      },
+      "states_supported": [
+        "normal",
+        "hover",
+        "active",
+        "locked",
+        "upgradeable",
+        "notification-dot"
+      ],
+      "runtime_state_strategy": "grayscale + runtime tint + dot",
+      "priority": "P0",
+      "notes": "Manifest M18; label renders BELOW the disc (text-safe zone is under-node caption area)."
+    },
+    {
+      "asset_id": "rune-node",
+      "inventory_id": "rune-node",
+      "status": "DONE",
+      "path": {
+        "@1x": "public/assets/ui/huyen-kim/nodes/rune-node@1x.png",
+        "@2x": "public/assets/ui/huyen-kim/nodes/rune-node@2x.png"
+      },
+      "format": "png",
+      "width": 64,
+      "height": 64,
+      "alpha": true,
+      "nine_slice_insets": null,
+      "transparent_margin": {
+        "left": 4,
+        "top": 4,
+        "right": 4,
+        "bottom": 4
+      },
+      "content_safe_rect": {
+        "x": 14,
+        "y": 14,
+        "width": 36,
+        "height": 36
+      },
+      "text_safe_rect": null,
+      "states_supported": [
+        "hidden",
+        "locked",
+        "available",
+        "selected",
+        "learned",
+        "maxed",
+        "gate-blocked"
+      ],
+      "runtime_state_strategy": "grayscale + tint per state; lock glyph runtime",
+      "priority": "P0",
+      "notes": "Manifest M19; edges/connections are runtime strokes."
+    },
+    {
+      "asset_id": "tab-seal",
+      "inventory_id": "tab-seal",
+      "status": "DONE",
+      "path": {
+        "@1x": "public/assets/ui/huyen-kim/tabs/tab-seal@1x.png",
+        "@2x": "public/assets/ui/huyen-kim/tabs/tab-seal@2x.png"
+      },
+      "format": "png",
+      "width": 96,
+      "height": 64,
+      "alpha": true,
+      "nine_slice_insets": {
+        "left": 20,
+        "top": 16,
+        "right": 20,
+        "bottom": 16
+      },
+      "transparent_margin": {
+        "left": 0,
+        "top": 0,
+        "right": 0,
+        "bottom": 0
+      },
+      "content_safe_rect": {
+        "x": 20,
+        "y": 16,
+        "width": 56,
+        "height": 32
+      },
+      "text_safe_rect": {
+        "x": 24,
+        "y": 20,
+        "width": 48,
+        "height": 24
+      },
+      "states_supported": [
+        "idle",
+        "selected",
+        "locked",
+        "attention"
+      ],
+      "runtime_state_strategy": "grayscale + tint; selected = jade fill + gold edge",
+      "priority": "P1",
+      "notes": "Manifest M20."
+    },
+    {
+      "asset_id": "imperial-scroll-body",
+      "inventory_id": "imperial-scroll-body",
+      "status": "DONE",
+      "path": {
+        "@1x": "public/assets/ui/huyen-kim/scroll/imperial-scroll-body@1x.png",
+        "@2x": "public/assets/ui/huyen-kim/scroll/imperial-scroll-body@2x.png"
+      },
+      "format": "png",
+      "width": 768,
+      "height": 512,
+      "alpha": true,
+      "nine_slice_insets": {
+        "left": 56,
+        "top": 48,
+        "right": 56,
+        "bottom": 48
+      },
+      "transparent_margin": {
+        "left": 0,
+        "top": 0,
+        "right": 0,
+        "bottom": 0
+      },
+      "content_safe_rect": {
+        "x": 56,
+        "y": 48,
+        "width": 656,
+        "height": 416
+      },
+      "text_safe_rect": {
+        "x": 64,
+        "y": 56,
+        "width": 640,
+        "height": 400
+      },
+      "states_supported": [
+        "idle"
+      ],
+      "runtime_state_strategy": "fixed colors",
+      "priority": "P0",
+      "notes": "NEW. Center must stretch cleanly (low-frequency texture only); left/right edges shade toward rollers."
+    },
+    {
+      "asset_id": "imperial-scroll-roller",
+      "inventory_id": "imperial-scroll-roller",
+      "status": "DONE",
+      "path": {
+        "@1x": "public/assets/ui/huyen-kim/scroll/imperial-scroll-roller@1x.png",
+        "@2x": "public/assets/ui/huyen-kim/scroll/imperial-scroll-roller@2x.png"
+      },
+      "format": "png",
+      "width": 96,
+      "height": 896,
+      "alpha": true,
+      "nine_slice_insets": null,
+      "transparent_margin": {
+        "left": 4,
+        "top": 0,
+        "right": 4,
+        "bottom": 0
+      },
+      "content_safe_rect": null,
+      "text_safe_rect": null,
+      "states_supported": [
+        "idle",
+        "opening-anim mask",
+        "closing-anim mask"
+      ],
+      "runtime_state_strategy": "fixed colors; reveal anim is runtime transform+mask",
+      "priority": "P0",
+      "notes": "NEW. R16/R14 refs show jade ring + tassel on roller ends — keep caps symmetric for mirroring."
+    },
+    {
+      "asset_id": "scroll-title-plaque",
+      "inventory_id": "scroll-title-plaque",
+      "status": "DONE",
+      "path": {
+        "@1x": "public/assets/ui/huyen-kim/plaques/scroll-title-plaque@1x.png",
+        "@2x": "public/assets/ui/huyen-kim/plaques/scroll-title-plaque@2x.png"
+      },
+      "format": "png",
+      "width": 320,
+      "height": 88,
+      "alpha": true,
+      "nine_slice_insets": null,
+      "transparent_margin": {
+        "left": 8,
+        "top": 0,
+        "right": 8,
+        "bottom": 0
+      },
+      "content_safe_rect": {
+        "x": 40,
+        "y": 20,
+        "width": 240,
+        "height": 48
+      },
+      "text_safe_rect": {
+        "x": 44,
+        "y": 24,
+        "width": 232,
+        "height": 40
+      },
+      "states_supported": [
+        "idle"
+      ],
+      "runtime_state_strategy": "fixed colors",
+      "priority": "P0",
+      "notes": "NEW. Overlaps the frame edge — draw with transparent top/bottom so it can hang."
+    },
+    {
+      "asset_id": "section-plaque",
+      "inventory_id": "section-plaque",
+      "status": "DONE",
+      "path": {
+        "@1x": "public/assets/ui/huyen-kim/plaques/section-plaque@1x.png",
+        "@2x": "public/assets/ui/huyen-kim/plaques/section-plaque@2x.png"
+      },
+      "format": "png",
+      "width": 240,
+      "height": 56,
+      "alpha": true,
+      "nine_slice_insets": {
+        "left": 24,
+        "top": 16,
+        "right": 24,
+        "bottom": 16
+      },
+      "transparent_margin": {
+        "left": 0,
+        "top": 0,
+        "right": 0,
+        "bottom": 0
+      },
+      "content_safe_rect": {
+        "x": 24,
+        "y": 14,
+        "width": 192,
+        "height": 28
+      },
+      "text_safe_rect": {
+        "x": 28,
+        "y": 16,
+        "width": 184,
+        "height": 24
+      },
+      "states_supported": [
+        "idle"
+      ],
+      "runtime_state_strategy": "fixed colors",
+      "priority": "P1",
+      "notes": "NEW."
+    },
+    {
+      "asset_id": "nav-seal-vertical",
+      "inventory_id": "nav-seal-vertical",
+      "status": "DONE",
+      "path": {
+        "@1x": "public/assets/ui/huyen-kim/tabs/nav-seal-vertical@1x.png",
+        "@2x": "public/assets/ui/huyen-kim/tabs/nav-seal-vertical@2x.png"
+      },
+      "format": "png",
+      "width": 96,
+      "height": 128,
+      "alpha": true,
+      "nine_slice_insets": null,
+      "transparent_margin": {
+        "left": 4,
+        "top": 4,
+        "right": 4,
+        "bottom": 4
+      },
+      "content_safe_rect": {
+        "x": 16,
+        "y": 12,
+        "width": 64,
+        "height": 104
+      },
+      "text_safe_rect": {
+        "x": 20,
+        "y": 76,
+        "width": 56,
+        "height": 44
+      },
+      "states_supported": [
+        "idle",
+        "hover",
+        "selected",
+        "locked",
+        "attention"
+      ],
+      "runtime_state_strategy": "grayscale + tint; selected = gold edge + jade core glow",
+      "priority": "P0",
+      "notes": "NEW. Icon recess = upper ~56px; label zone = lower ~44px (app text)."
+    },
+    {
+      "asset_id": "list-row",
+      "inventory_id": "list-row",
+      "status": "DONE",
+      "path": {
+        "@1x": "public/assets/ui/huyen-kim/list/list-row@1x.png",
+        "@2x": "public/assets/ui/huyen-kim/list/list-row@2x.png"
+      },
+      "format": "png",
+      "width": 384,
+      "height": 64,
+      "alpha": true,
+      "nine_slice_insets": {
+        "left": 16,
+        "top": 12,
+        "right": 16,
+        "bottom": 12
+      },
+      "transparent_margin": {
+        "left": 0,
+        "top": 0,
+        "right": 0,
+        "bottom": 0
+      },
+      "content_safe_rect": {
+        "x": 16,
+        "y": 10,
+        "width": 352,
+        "height": 44
+      },
+      "text_safe_rect": {
+        "x": 20,
+        "y": 12,
+        "width": 344,
+        "height": 40
+      },
+      "states_supported": [
+        "idle",
+        "hover",
+        "selected",
+        "locked",
+        "complete",
+        "attention"
+      ],
+      "runtime_state_strategy": "grayscale + tint; selected adds left-edge seal marker (runtime)",
+      "priority": "P0",
+      "notes": "NEW — the single most reused row primitive."
+    },
+    {
+      "asset_id": "avatar-frame",
+      "inventory_id": "avatar-frame",
+      "status": "DONE",
+      "path": {
+        "@1x": "public/assets/ui/huyen-kim/hud/avatar-frame@1x.png",
+        "@2x": "public/assets/ui/huyen-kim/hud/avatar-frame@2x.png"
+      },
+      "format": "png",
+      "width": 96,
+      "height": 96,
+      "alpha": true,
+      "nine_slice_insets": null,
+      "transparent_margin": {
+        "left": 2,
+        "top": 2,
+        "right": 2,
+        "bottom": 2
+      },
+      "content_safe_rect": {
+        "x": 12,
+        "y": 12,
+        "width": 72,
+        "height": 72
+      },
+      "text_safe_rect": null,
+      "states_supported": [
+        "idle",
+        "selected",
+        "attention"
+      ],
+      "runtime_state_strategy": "fixed colors + runtime ring tint",
+      "priority": "P0",
+      "notes": "NEW. Ref draws hexagonal frame — flat top/bottom hexagon reads better than circle at 96px; portrait crops inside."
+    },
+    {
+      "asset_id": "identity-plate",
+      "inventory_id": "identity-plate",
+      "status": "DONE",
+      "path": {
+        "@1x": "public/assets/ui/huyen-kim/hud/identity-plate@1x.png",
+        "@2x": "public/assets/ui/huyen-kim/hud/identity-plate@2x.png"
+      },
+      "format": "png",
+      "width": 384,
+      "height": 96,
+      "alpha": true,
+      "nine_slice_insets": {
+        "left": 24,
+        "top": 20,
+        "right": 24,
+        "bottom": 20
+      },
+      "transparent_margin": {
+        "left": 0,
+        "top": 0,
+        "right": 0,
+        "bottom": 0
+      },
+      "content_safe_rect": {
+        "x": 24,
+        "y": 16,
+        "width": 336,
+        "height": 64
+      },
+      "text_safe_rect": {
+        "x": 100,
+        "y": 20,
+        "width": 252,
+        "height": 56
+      },
+      "states_supported": [
+        "idle",
+        "attention"
+      ],
+      "runtime_state_strategy": "grayscale + tint",
+      "priority": "P0",
+      "notes": "NEW. Left ~90px reserved for avatar-frame overlap."
+    },
+    {
+      "asset_id": "text-field",
+      "inventory_id": "text-field",
+      "status": "DONE",
+      "path": {
+        "@1x": "public/assets/ui/huyen-kim/forms/text-field@1x.png",
+        "@2x": "public/assets/ui/huyen-kim/forms/text-field@2x.png"
+      },
+      "format": "png",
+      "width": 320,
+      "height": 56,
+      "alpha": true,
+      "nine_slice_insets": {
+        "left": 20,
+        "top": 16,
+        "right": 20,
+        "bottom": 16
+      },
+      "transparent_margin": {
+        "left": 0,
+        "top": 0,
+        "right": 0,
+        "bottom": 0
+      },
+      "content_safe_rect": {
+        "x": 20,
+        "y": 14,
+        "width": 280,
+        "height": 28
+      },
+      "text_safe_rect": {
+        "x": 24,
+        "y": 16,
+        "width": 272,
+        "height": 24
+      },
+      "states_supported": [
+        "idle",
+        "focus",
+        "invalid",
+        "disabled"
+      ],
+      "runtime_state_strategy": "grayscale + tint (focus gold, invalid cinnabar)",
+      "priority": "P0",
+      "notes": "NEW."
+    },
+    {
+      "asset_id": "toggle-track",
+      "inventory_id": "toggle-track",
+      "status": "DONE",
+      "path": {
+        "@1x": "public/assets/ui/huyen-kim/settings/toggle-track@1x.png",
+        "@2x": "public/assets/ui/huyen-kim/settings/toggle-track@2x.png"
+      },
+      "format": "png",
+      "width": 96,
+      "height": 48,
+      "alpha": true,
+      "nine_slice_insets": null,
+      "transparent_margin": {
+        "left": 0,
+        "top": 0,
+        "right": 0,
+        "bottom": 0
+      },
+      "content_safe_rect": null,
+      "text_safe_rect": null,
+      "states_supported": [
+        "off",
+        "on",
+        "disabled"
+      ],
+      "runtime_state_strategy": "grayscale + jade/gold tint for on",
+      "priority": "P1",
+      "notes": "NEW."
+    },
+    {
+      "asset_id": "slider-track",
+      "inventory_id": "slider-track",
+      "status": "DONE",
+      "path": {
+        "@1x": "public/assets/ui/huyen-kim/settings/slider-track@1x.png",
+        "@2x": "public/assets/ui/huyen-kim/settings/slider-track@2x.png"
+      },
+      "format": "png",
+      "width": 256,
+      "height": 24,
+      "alpha": true,
+      "nine_slice_insets": {
+        "left": 16,
+        "top": 8,
+        "right": 16,
+        "bottom": 8
+      },
+      "transparent_margin": {
+        "left": 0,
+        "top": 0,
+        "right": 0,
+        "bottom": 0
+      },
+      "content_safe_rect": {
+        "x": 16,
+        "y": 8,
+        "width": 224,
+        "height": 8
+      },
+      "text_safe_rect": null,
+      "states_supported": [
+        "idle",
+        "disabled"
+      ],
+      "runtime_state_strategy": "grayscale + fill gradient runtime",
+      "priority": "P1",
+      "notes": "NEW."
+    },
+    {
+      "asset_id": "slider-thumb",
+      "inventory_id": "slider-thumb",
+      "status": "DONE",
+      "path": {
+        "@1x": "public/assets/ui/huyen-kim/settings/slider-thumb@1x.png",
+        "@2x": "public/assets/ui/huyen-kim/settings/slider-thumb@2x.png"
+      },
+      "format": "png",
+      "width": 40,
+      "height": 40,
+      "alpha": true,
+      "nine_slice_insets": null,
+      "transparent_margin": {
+        "left": 0,
+        "top": 0,
+        "right": 0,
+        "bottom": 0
+      },
+      "content_safe_rect": null,
+      "text_safe_rect": null,
+      "states_supported": [
+        "idle",
+        "hover",
+        "drag"
+      ],
+      "runtime_state_strategy": "grayscale + tint",
+      "priority": "P1",
+      "notes": "NEW."
+    },
+    {
+      "asset_id": "skill-orb-frame",
+      "inventory_id": "skill-orb-frame",
+      "status": "DONE",
+      "path": {
+        "@1x": "public/assets/ui/huyen-kim/combat/skill-orb-frame@1x.png",
+        "@2x": "public/assets/ui/huyen-kim/combat/skill-orb-frame@2x.png"
+      },
+      "format": "png",
+      "width": 96,
+      "height": 96,
+      "alpha": true,
+      "nine_slice_insets": null,
+      "transparent_margin": {
+        "left": 2,
+        "top": 2,
+        "right": 2,
+        "bottom": 2
+      },
+      "content_safe_rect": {
+        "x": 16,
+        "y": 16,
+        "width": 64,
+        "height": 64
+      },
+      "text_safe_rect": {
+        "x": 16,
+        "y": 76,
+        "width": 64,
+        "height": 16
+      },
+      "states_supported": [
+        "ready",
+        "cooldown",
+        "blocked-resource",
+        "awaiting-choice",
+        "empty",
+        "disabled"
+      ],
+      "runtime_state_strategy": "grayscale + tint + cooldown sweep mask + cost badge runtime",
+      "priority": "P0",
+      "notes": "NEW. Skill icon sits in center recess (icon = gameplay art)."
+    },
+    {
+      "asset_id": "turn-token",
+      "inventory_id": "turn-token",
+      "status": "DONE",
+      "path": {
+        "@1x": "public/assets/ui/huyen-kim/combat/turn-token@1x.png",
+        "@2x": "public/assets/ui/huyen-kim/combat/turn-token@2x.png"
+      },
+      "format": "png",
+      "width": 64,
+      "height": 64,
+      "alpha": true,
+      "nine_slice_insets": null,
+      "transparent_margin": {
+        "left": 2,
+        "top": 2,
+        "right": 2,
+        "bottom": 2
+      },
+      "content_safe_rect": {
+        "x": 10,
+        "y": 10,
+        "width": 44,
+        "height": 44
+      },
+      "text_safe_rect": null,
+      "states_supported": [
+        "idle",
+        "active-turn",
+        "dead",
+        "ally",
+        "enemy"
+      ],
+      "runtime_state_strategy": "grayscale + faction tint + gauge fill runtime",
+      "priority": "P1",
+      "notes": "NEW."
+    },
+    {
+      "asset_id": "boss-seal",
+      "inventory_id": "boss-seal",
+      "status": "DONE",
+      "path": {
+        "@1x": "public/assets/ui/huyen-kim/badges/boss-seal@1x.png",
+        "@2x": "public/assets/ui/huyen-kim/badges/boss-seal@2x.png"
+      },
+      "format": "png",
+      "width": 80,
+      "height": 104,
+      "alpha": true,
+      "nine_slice_insets": null,
+      "transparent_margin": {
+        "left": 4,
+        "top": 0,
+        "right": 4,
+        "bottom": 4
+      },
+      "content_safe_rect": {
+        "x": 16,
+        "y": 12,
+        "width": 48,
+        "height": 80
+      },
+      "text_safe_rect": {
+        "x": 20,
+        "y": 20,
+        "width": 40,
+        "height": 56
+      },
+      "states_supported": [
+        "idle",
+        "defeated"
+      ],
+      "runtime_state_strategy": "fixed colors; defeated = jade check overlay runtime",
+      "priority": "P1",
+      "notes": "NEW."
+    },
+    {
+      "asset_id": "stage-node",
+      "inventory_id": "stage-node",
+      "status": "DONE",
+      "path": {
+        "@1x": "public/assets/ui/huyen-kim/map-ui/stage-node@1x.png",
+        "@2x": "public/assets/ui/huyen-kim/map-ui/stage-node@2x.png"
+      },
+      "format": "png",
+      "width": 80,
+      "height": 80,
+      "alpha": true,
+      "nine_slice_insets": null,
+      "transparent_margin": {
+        "left": 4,
+        "top": 4,
+        "right": 4,
+        "bottom": 4
+      },
+      "content_safe_rect": {
+        "x": 16,
+        "y": 16,
+        "width": 48,
+        "height": 48
+      },
+      "text_safe_rect": {
+        "x": 20,
+        "y": 28,
+        "width": 40,
+        "height": 24
+      },
+      "states_supported": [
+        "locked",
+        "available",
+        "current",
+        "cleared",
+        "perfect",
+        "auto-farm-armed"
+      ],
+      "runtime_state_strategy": "grayscale + state tint + mist overlay for locked",
+      "priority": "P0",
+      "notes": "NEW. Boss variant reuses same disc + boss-seal overlay."
+    },
+    {
+      "asset_id": "building-plaque",
+      "inventory_id": "building-plaque",
+      "status": "DONE",
+      "path": {
+        "@1x": "public/assets/ui/huyen-kim/plaques/building-plaque@1x.png",
+        "@2x": "public/assets/ui/huyen-kim/plaques/building-plaque@2x.png"
+      },
+      "format": "png",
+      "width": 96,
+      "height": 160,
+      "alpha": true,
+      "nine_slice_insets": null,
+      "transparent_margin": {
+        "left": 8,
+        "top": 0,
+        "right": 8,
+        "bottom": 4
+      },
+      "content_safe_rect": {
+        "x": 20,
+        "y": 24,
+        "width": 56,
+        "height": 112
+      },
+      "text_safe_rect": {
+        "x": 28,
+        "y": 32,
+        "width": 40,
+        "height": 96
+      },
+      "states_supported": [
+        "idle",
+        "hover",
+        "locked",
+        "ready"
+      ],
+      "runtime_state_strategy": "fixed colors + runtime state ring",
+      "priority": "P1",
+      "notes": "NEW. Vertical text column safe area; vertical writing is a CSS writing-mode choice, not baked."
+    },
+    {
+      "asset_id": "corner-ornament",
+      "inventory_id": "corner-ornament",
+      "status": "DONE",
+      "path": {
+        "@1x": "public/assets/ui/huyen-kim/ornaments/corner-ornament@1x.png",
+        "@2x": "public/assets/ui/huyen-kim/ornaments/corner-ornament@2x.png"
+      },
+      "format": "png",
+      "width": 64,
+      "height": 64,
+      "alpha": true,
+      "nine_slice_insets": null,
+      "transparent_margin": {
+        "left": 0,
+        "top": 0,
+        "right": 32,
+        "bottom": 32
+      },
+      "content_safe_rect": null,
+      "text_safe_rect": null,
+      "states_supported": [
+        "idle"
+      ],
+      "runtime_state_strategy": "grayscale + tint",
+      "priority": "P2",
+      "notes": "NEW. Draw once for top-left; rotate for others."
+    },
+    {
+      "asset_id": "cloud-ornament",
+      "inventory_id": "cloud-ornament",
+      "status": "DONE",
+      "path": {
+        "@1x": "public/assets/ui/huyen-kim/ornaments/cloud-ornament@1x.png",
+        "@2x": "public/assets/ui/huyen-kim/ornaments/cloud-ornament@2x.png"
+      },
+      "format": "png",
+      "width": 256,
+      "height": 128,
+      "alpha": true,
+      "nine_slice_insets": null,
+      "transparent_margin": {
+        "left": 16,
+        "top": 16,
+        "right": 16,
+        "bottom": 16
+      },
+      "content_safe_rect": null,
+      "text_safe_rect": null,
+      "states_supported": [
+        "idle"
+      ],
+      "runtime_state_strategy": "grayscale + opacity/drift anim",
+      "priority": "P3",
+      "notes": "NEW optional; existing wash overlays may already suffice."
+    },
+    {
+      "asset_id": "timer-ring",
+      "inventory_id": "timer-ring",
+      "status": "DONE",
+      "path": {
+        "@1x": "public/assets/ui/huyen-kim/combat/timer-ring@1x.png",
+        "@2x": "public/assets/ui/huyen-kim/combat/timer-ring@2x.png"
+      },
+      "format": "png",
+      "width": 128,
+      "height": 128,
+      "alpha": true,
+      "nine_slice_insets": null,
+      "transparent_margin": {
+        "left": 4,
+        "top": 4,
+        "right": 4,
+        "bottom": 4
+      },
+      "content_safe_rect": {
+        "x": 24,
+        "y": 24,
+        "width": 80,
+        "height": 80
+      },
+      "text_safe_rect": {
+        "x": 32,
+        "y": 48,
+        "width": 64,
+        "height": 32
+      },
+      "states_supported": [
+        "idle",
+        "warning",
+        "expired"
+      ],
+      "runtime_state_strategy": "grayscale + tint + runtime arc",
+      "priority": "P1",
+      "notes": "NEW."
+    },
+    {
+      "asset_id": "ceremony-ribbon",
+      "inventory_id": "ceremony-ribbon",
+      "status": "DONE",
+      "path": {
+        "@1x": "public/assets/ui/huyen-kim/ceremony/ceremony-ribbon@1x.png",
+        "@2x": "public/assets/ui/huyen-kim/ceremony/ceremony-ribbon@2x.png"
+      },
+      "format": "png",
+      "width": 320,
+      "height": 96,
+      "alpha": true,
+      "nine_slice_insets": null,
+      "transparent_margin": {
+        "left": 24,
+        "top": 8,
+        "right": 24,
+        "bottom": 8
+      },
+      "content_safe_rect": {
+        "x": 48,
+        "y": 24,
+        "width": 224,
+        "height": 48
+      },
+      "text_safe_rect": {
+        "x": 56,
+        "y": 28,
+        "width": 208,
+        "height": 40
+      },
+      "states_supported": [
+        "victory-gold",
+        "defeat-cinnabar"
+      ],
+      "runtime_state_strategy": "fixed colors + runtime cinnabar/gold tint overlay",
+      "priority": "P1",
+      "notes": "NEW."
+    },
+    {
+      "asset_id": "paper-grain-tile",
+      "inventory_id": "paper-grain-tile",
+      "status": "DONE",
+      "path": {
+        "@1x": "public/assets/ui/huyen-kim/textures/paper-grain-tile@1x.png",
+        "@2x": "public/assets/ui/huyen-kim/textures/paper-grain-tile@2x.png"
+      },
+      "format": "png",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "nine_slice_insets": null,
+      "transparent_margin": {
+        "left": 0,
+        "top": 0,
+        "right": 0,
+        "bottom": 0
+      },
+      "content_safe_rect": null,
+      "text_safe_rect": null,
+      "states_supported": [
+        "idle"
+      ],
+      "runtime_state_strategy": "grayscale low-contrast + opacity",
+      "priority": "P3",
+      "notes": "NEW optional — only if the baked scroll body texture is insufficient at 2x."
+    },
+    {
+      "asset_id": "alchemy-cauldron-prop",
+      "inventory_id": "alchemy-cauldron-prop",
+      "status": "DONE",
+      "path": {
+        "@1x": "public/assets/ui/huyen-kim/alchemy/alchemy-cauldron-prop@1x.png",
+        "@2x": "public/assets/ui/huyen-kim/alchemy/alchemy-cauldron-prop@2x.png"
+      },
+      "format": "png",
+      "width": 384,
+      "height": 320,
+      "alpha": true,
+      "nine_slice_insets": null,
+      "transparent_margin": {
+        "left": 16,
+        "top": 8,
+        "right": 16,
+        "bottom": 8
+      },
+      "content_safe_rect": null,
+      "text_safe_rect": null,
+      "states_supported": [
+        "idle",
+        "brewing-active"
+      ],
+      "runtime_state_strategy": "fixed colors; brewing state = runtime ember/mist overlay (CSS glow), never a second raster",
+      "priority": "P2",
+      "notes": "RULING 02: UI SCENE PROP, UI Art Agent owned. MUST NOT gain gameplay identity, item identity, world-building identity, or independent building stats. Herb/material slots in the ref are decorative only."
+    }
+  ],
+  "stable_scene_extension": {
+    "contract": "public/assets/ui/huyen-kim/_source/stable-scene-extension.json",
+    "qa_report": "public/assets/ui/huyen-kim/_source/stable-scene-extension-qa.json",
+    "prompt_ledger": "docs/design/huyen-kim-stable-scene-art-prompts.md",
+    "status": "DONE",
+    "package_count": 9,
+    "raster_asset_count": 26,
+    "production_png_files": 52,
+    "symbol_count": 18,
+    "packages": [
+      {
+        "package_id": "huyen-kim-ui-symbol-set",
+        "priority": "P0",
+        "consumers": [
+          "global navigation",
+          "utility controls"
+        ],
+        "runtime_owns": [
+          "tint",
+          "hover",
+          "selected",
+          "disabled",
+          "attention",
+          "notification"
+        ]
+      },
+      {
+        "package_id": "realm-ascent-vista",
+        "priority": "P0",
+        "consumers": [
+          "Scene 05 Realm ascent-map"
+        ],
+        "runtime_owns": [
+          "18 nodes",
+          "realm rungs",
+          "labels",
+          "progress",
+          "locks",
+          "selection"
+        ]
+      },
+      {
+        "package_id": "body-diagram-kit",
+        "priority": "P0",
+        "consumers": [
+          "Scene 08 Body figure-focus"
+        ],
+        "runtime_owns": [
+          "meridian orbs",
+          "labels",
+          "tiers",
+          "chapter state",
+          "invest animation"
+        ]
+      },
+      {
+        "package_id": "tribulation-environment-kit",
+        "priority": "P0",
+        "consumers": [
+          "Scene 14 Tribulation world"
+        ],
+        "runtime_owns": [
+          "lightning",
+          "flash",
+          "debris",
+          "shake",
+          "phases",
+          "characters",
+          "questions",
+          "meters"
+        ]
+      },
+      {
+        "package_id": "equipment-paperdoll-base",
+        "priority": "P1",
+        "consumers": [
+          "Scene 12 Equipment paperdoll"
+        ],
+        "runtime_owns": [
+          "equipment art",
+          "six sockets",
+          "rarity",
+          "selection",
+          "operations"
+        ]
+      },
+      {
+        "package_id": "exploration-map-chrome-kit",
+        "priority": "P1",
+        "consumers": [
+          "Scene 10 Exploration map-canvas"
+        ],
+        "runtime_owns": [
+          "geography",
+          "routes",
+          "nodes",
+          "boss marks",
+          "labels",
+          "chapter state"
+        ]
+      },
+      {
+        "package_id": "technique-display-plinth",
+        "priority": "P1",
+        "consumers": [
+          "Scene 06 Technique artifact-vista"
+        ],
+        "runtime_owns": [
+          "technique illustration",
+          "name",
+          "grade",
+          "rank",
+          "materials",
+          "upgrade effects"
+        ]
+      },
+      {
+        "package_id": "neutral-skill-tree-substrate",
+        "priority": "P1",
+        "consumers": [
+          "Scene 07 Skill tree-canvas"
+        ],
+        "runtime_owns": [
+          "core node",
+          "branch nodes",
+          "icons",
+          "edges",
+          "topology",
+          "levels",
+          "locks",
+          "element tint"
+        ]
+      },
+      {
+        "package_id": "auth-creation-vista",
+        "priority": "P1",
+        "consumers": [
+          "Scene 01 Login",
+          "Scene 02 Character Creation"
+        ],
+        "runtime_owns": [
+          "logo",
+          "auth scroll",
+          "forms",
+          "talent cards",
+          "player character",
+          "controls"
+        ]
+      }
+    ],
+    "raster_assets": [
+      {
+        "asset_id": "auth-creation-00-sky",
+        "package_id": "auth-creation-vista",
+        "status": "DONE",
+        "path": {
+          "@1x": "public/assets/ui/huyen-kim/scene/auth/00-sky@1x.png",
+          "@2x": "public/assets/ui/huyen-kim/scene/auth/00-sky@2x.png"
+        },
+        "width": 1672,
+        "height": 941,
+        "alpha": false,
+        "content_safe_rect": {
+          "x": 0,
+          "y": 0,
+          "width": 960,
+          "height": 941
+        },
+        "runtime_reserved_rects": [
+          {
+            "x": 1016,
+            "y": 120,
+            "width": 560,
+            "height": 700
+          }
+        ],
+        "parallax": {
+          "stack": "auth-creation",
+          "depth": "L0",
+          "order": 0,
+          "motion": "static",
+          "max_drift_px": {
+            "x": 0,
+            "y": 0
+          },
+          "reduced_motion_offset_px": 0
+        }
+      },
+      {
+        "asset_id": "auth-creation-01-far-mountains",
+        "package_id": "auth-creation-vista",
+        "status": "DONE",
+        "path": {
+          "@1x": "public/assets/ui/huyen-kim/scene/auth/01-far-mountains@1x.png",
+          "@2x": "public/assets/ui/huyen-kim/scene/auth/01-far-mountains@2x.png"
+        },
+        "width": 1672,
+        "height": 941,
+        "alpha": true,
+        "content_safe_rect": {
+          "x": 0,
+          "y": 0,
+          "width": 960,
+          "height": 941
+        },
+        "runtime_reserved_rects": [
+          {
+            "x": 1016,
+            "y": 120,
+            "width": 560,
+            "height": 700
+          }
+        ],
+        "parallax": {
+          "stack": "auth-creation",
+          "depth": "L1",
+          "order": 1,
+          "motion": "far-slow",
+          "max_drift_px": {
+            "x": 4,
+            "y": 2
+          },
+          "reduced_motion_offset_px": 0
+        }
+      },
+      {
+        "asset_id": "auth-creation-02-mid-landscape",
+        "package_id": "auth-creation-vista",
+        "status": "DONE",
+        "path": {
+          "@1x": "public/assets/ui/huyen-kim/scene/auth/02-mid-landscape@1x.png",
+          "@2x": "public/assets/ui/huyen-kim/scene/auth/02-mid-landscape@2x.png"
+        },
+        "width": 1672,
+        "height": 941,
+        "alpha": true,
+        "content_safe_rect": {
+          "x": 0,
+          "y": 0,
+          "width": 960,
+          "height": 941
+        },
+        "runtime_reserved_rects": [
+          {
+            "x": 1016,
+            "y": 120,
+            "width": 560,
+            "height": 700
+          }
+        ],
+        "parallax": {
+          "stack": "auth-creation",
+          "depth": "L2",
+          "order": 2,
+          "motion": "mid",
+          "max_drift_px": {
+            "x": 8,
+            "y": 4
+          },
+          "reduced_motion_offset_px": 0
+        }
+      },
+      {
+        "asset_id": "auth-creation-03-focal-architecture",
+        "package_id": "auth-creation-vista",
+        "status": "DONE",
+        "path": {
+          "@1x": "public/assets/ui/huyen-kim/scene/auth/03-focal-architecture@1x.png",
+          "@2x": "public/assets/ui/huyen-kim/scene/auth/03-focal-architecture@2x.png"
+        },
+        "width": 1672,
+        "height": 941,
+        "alpha": true,
+        "content_safe_rect": {
+          "x": 0,
+          "y": 0,
+          "width": 960,
+          "height": 941
+        },
+        "runtime_reserved_rects": [
+          {
+            "x": 1016,
+            "y": 120,
+            "width": 560,
+            "height": 700
+          }
+        ],
+        "parallax": {
+          "stack": "auth-creation",
+          "depth": "L3",
+          "order": 3,
+          "motion": "ground",
+          "max_drift_px": {
+            "x": 10,
+            "y": 5
+          },
+          "reduced_motion_offset_px": 0
+        }
+      },
+      {
+        "asset_id": "auth-creation-04-low-mist",
+        "package_id": "auth-creation-vista",
+        "status": "DONE",
+        "path": {
+          "@1x": "public/assets/ui/huyen-kim/scene/auth/04-low-mist@1x.png",
+          "@2x": "public/assets/ui/huyen-kim/scene/auth/04-low-mist@2x.png"
+        },
+        "width": 1672,
+        "height": 941,
+        "alpha": true,
+        "content_safe_rect": {
+          "x": 0,
+          "y": 0,
+          "width": 960,
+          "height": 941
+        },
+        "runtime_reserved_rects": [
+          {
+            "x": 1016,
+            "y": 120,
+            "width": 560,
+            "height": 700
+          }
+        ],
+        "parallax": {
+          "stack": "auth-creation",
+          "depth": "L4",
+          "order": 4,
+          "motion": "mist-slow",
+          "max_drift_px": {
+            "x": 12,
+            "y": 6
+          },
+          "reduced_motion_offset_px": 0
+        }
+      },
+      {
+        "asset_id": "auth-creation-05-foreground",
+        "package_id": "auth-creation-vista",
+        "status": "DONE",
+        "path": {
+          "@1x": "public/assets/ui/huyen-kim/scene/auth/05-foreground@1x.png",
+          "@2x": "public/assets/ui/huyen-kim/scene/auth/05-foreground@2x.png"
+        },
+        "width": 1672,
+        "height": 941,
+        "alpha": true,
+        "content_safe_rect": {
+          "x": 0,
+          "y": 0,
+          "width": 960,
+          "height": 941
+        },
+        "runtime_reserved_rects": [
+          {
+            "x": 1016,
+            "y": 120,
+            "width": 560,
+            "height": 700
+          }
+        ],
+        "parallax": {
+          "stack": "auth-creation",
+          "depth": "L5",
+          "order": 5,
+          "motion": "foreground",
+          "max_drift_px": {
+            "x": 18,
+            "y": 9
+          },
+          "reduced_motion_offset_px": 0
+        }
+      },
+      {
+        "asset_id": "realm-ascent-00-sky",
+        "package_id": "realm-ascent-vista",
+        "status": "DONE",
+        "path": {
+          "@1x": "public/assets/ui/huyen-kim/scene/realm/00-sky@1x.png",
+          "@2x": "public/assets/ui/huyen-kim/scene/realm/00-sky@2x.png"
+        },
+        "width": 812,
+        "height": 610,
+        "alpha": false,
+        "content_safe_rect": {
+          "x": 24,
+          "y": 24,
+          "width": 764,
+          "height": 562
+        },
+        "runtime_reserved_rects": [
+          {
+            "x": 72,
+            "y": 28,
+            "width": 650,
+            "height": 554
+          }
+        ],
+        "parallax": {
+          "stack": "realm-ascent",
+          "depth": "L0",
+          "order": 0,
+          "motion": "static",
+          "max_drift_px": {
+            "x": 0,
+            "y": 0
+          },
+          "reduced_motion_offset_px": 0
+        }
+      },
+      {
+        "asset_id": "realm-ascent-01-far-mountains",
+        "package_id": "realm-ascent-vista",
+        "status": "DONE",
+        "path": {
+          "@1x": "public/assets/ui/huyen-kim/scene/realm/01-far-mountains@1x.png",
+          "@2x": "public/assets/ui/huyen-kim/scene/realm/01-far-mountains@2x.png"
+        },
+        "width": 812,
+        "height": 610,
+        "alpha": true,
+        "content_safe_rect": {
+          "x": 24,
+          "y": 24,
+          "width": 764,
+          "height": 562
+        },
+        "runtime_reserved_rects": [
+          {
+            "x": 72,
+            "y": 28,
+            "width": 650,
+            "height": 554
+          }
+        ],
+        "parallax": {
+          "stack": "realm-ascent",
+          "depth": "L1",
+          "order": 1,
+          "motion": "far-slow",
+          "max_drift_px": {
+            "x": 3,
+            "y": 2
+          },
+          "reduced_motion_offset_px": 0
+        }
+      },
+      {
+        "asset_id": "realm-ascent-02-mid-ascent",
+        "package_id": "realm-ascent-vista",
+        "status": "DONE",
+        "path": {
+          "@1x": "public/assets/ui/huyen-kim/scene/realm/02-mid-ascent@1x.png",
+          "@2x": "public/assets/ui/huyen-kim/scene/realm/02-mid-ascent@2x.png"
+        },
+        "width": 812,
+        "height": 610,
+        "alpha": true,
+        "content_safe_rect": {
+          "x": 24,
+          "y": 24,
+          "width": 764,
+          "height": 562
+        },
+        "runtime_reserved_rects": [
+          {
+            "x": 72,
+            "y": 28,
+            "width": 650,
+            "height": 554
+          }
+        ],
+        "parallax": {
+          "stack": "realm-ascent",
+          "depth": "L2",
+          "order": 2,
+          "motion": "mid",
+          "max_drift_px": {
+            "x": 6,
+            "y": 3
+          },
+          "reduced_motion_offset_px": 0
+        }
+      },
+      {
+        "asset_id": "realm-ascent-03-summit-architecture",
+        "package_id": "realm-ascent-vista",
+        "status": "DONE",
+        "path": {
+          "@1x": "public/assets/ui/huyen-kim/scene/realm/03-summit-architecture@1x.png",
+          "@2x": "public/assets/ui/huyen-kim/scene/realm/03-summit-architecture@2x.png"
+        },
+        "width": 812,
+        "height": 610,
+        "alpha": true,
+        "content_safe_rect": {
+          "x": 24,
+          "y": 24,
+          "width": 764,
+          "height": 562
+        },
+        "runtime_reserved_rects": [
+          {
+            "x": 72,
+            "y": 28,
+            "width": 650,
+            "height": 554
+          }
+        ],
+        "parallax": {
+          "stack": "realm-ascent",
+          "depth": "L3",
+          "order": 3,
+          "motion": "ground",
+          "max_drift_px": {
+            "x": 8,
+            "y": 4
+          },
+          "reduced_motion_offset_px": 0
+        }
+      },
+      {
+        "asset_id": "realm-ascent-04-low-mist",
+        "package_id": "realm-ascent-vista",
+        "status": "DONE",
+        "path": {
+          "@1x": "public/assets/ui/huyen-kim/scene/realm/04-low-mist@1x.png",
+          "@2x": "public/assets/ui/huyen-kim/scene/realm/04-low-mist@2x.png"
+        },
+        "width": 812,
+        "height": 610,
+        "alpha": true,
+        "content_safe_rect": {
+          "x": 24,
+          "y": 24,
+          "width": 764,
+          "height": 562
+        },
+        "runtime_reserved_rects": [
+          {
+            "x": 72,
+            "y": 28,
+            "width": 650,
+            "height": 554
+          }
+        ],
+        "parallax": {
+          "stack": "realm-ascent",
+          "depth": "L4",
+          "order": 4,
+          "motion": "mist-slow",
+          "max_drift_px": {
+            "x": 10,
+            "y": 5
+          },
+          "reduced_motion_offset_px": 0
+        }
+      },
+      {
+        "asset_id": "body-cultivation-figure",
+        "package_id": "body-diagram-kit",
+        "status": "DONE",
+        "path": {
+          "@1x": "public/assets/ui/huyen-kim/scene/body/body-cultivation-figure@1x.png",
+          "@2x": "public/assets/ui/huyen-kim/scene/body/body-cultivation-figure@2x.png"
+        },
+        "width": 640,
+        "height": 520,
+        "alpha": true,
+        "content_safe_rect": {
+          "x": 112,
+          "y": 16,
+          "width": 416,
+          "height": 488
+        },
+        "runtime_reserved_rects": [],
+        "parallax": null
+      },
+      {
+        "asset_id": "body-meridian-overlay",
+        "package_id": "body-diagram-kit",
+        "status": "DONE",
+        "path": {
+          "@1x": "public/assets/ui/huyen-kim/scene/body/body-meridian-overlay@1x.png",
+          "@2x": "public/assets/ui/huyen-kim/scene/body/body-meridian-overlay@2x.png"
+        },
+        "width": 640,
+        "height": 520,
+        "alpha": true,
+        "content_safe_rect": {
+          "x": 176,
+          "y": 44,
+          "width": 288,
+          "height": 442
+        },
+        "runtime_reserved_rects": [],
+        "parallax": null
+      },
+      {
+        "asset_id": "tribulation-storm-far",
+        "package_id": "tribulation-environment-kit",
+        "status": "DONE",
+        "path": {
+          "@1x": "public/assets/ui/huyen-kim/scene/tribulation/tribulation-storm-far@1x.png",
+          "@2x": "public/assets/ui/huyen-kim/scene/tribulation/tribulation-storm-far@2x.png"
+        },
+        "width": 1672,
+        "height": 941,
+        "alpha": true,
+        "content_safe_rect": {
+          "x": 0,
+          "y": 0,
+          "width": 1672,
+          "height": 560
+        },
+        "runtime_reserved_rects": [],
+        "parallax": null
+      },
+      {
+        "asset_id": "tribulation-storm-near",
+        "package_id": "tribulation-environment-kit",
+        "status": "DONE",
+        "path": {
+          "@1x": "public/assets/ui/huyen-kim/scene/tribulation/tribulation-storm-near@1x.png",
+          "@2x": "public/assets/ui/huyen-kim/scene/tribulation/tribulation-storm-near@2x.png"
+        },
+        "width": 1672,
+        "height": 941,
+        "alpha": true,
+        "content_safe_rect": {
+          "x": 220,
+          "y": 0,
+          "width": 1232,
+          "height": 660
+        },
+        "runtime_reserved_rects": [],
+        "parallax": null
+      },
+      {
+        "asset_id": "tribulation-dais",
+        "package_id": "tribulation-environment-kit",
+        "status": "DONE",
+        "path": {
+          "@1x": "public/assets/ui/huyen-kim/scene/tribulation/tribulation-dais@1x.png",
+          "@2x": "public/assets/ui/huyen-kim/scene/tribulation/tribulation-dais@2x.png"
+        },
+        "width": 1672,
+        "height": 941,
+        "alpha": true,
+        "content_safe_rect": {
+          "x": 426,
+          "y": 420,
+          "width": 820,
+          "height": 480
+        },
+        "runtime_reserved_rects": [],
+        "parallax": null
+      },
+      {
+        "asset_id": "tribulation-sky-vignette",
+        "package_id": "tribulation-environment-kit",
+        "status": "DONE",
+        "path": {
+          "@1x": "public/assets/ui/huyen-kim/scene/tribulation/tribulation-sky-vignette@1x.png",
+          "@2x": "public/assets/ui/huyen-kim/scene/tribulation/tribulation-sky-vignette@2x.png"
+        },
+        "width": 1672,
+        "height": 941,
+        "alpha": true,
+        "content_safe_rect": {
+          "x": 0,
+          "y": 0,
+          "width": 1672,
+          "height": 941
+        },
+        "runtime_reserved_rects": [],
+        "parallax": null
+      },
+      {
+        "asset_id": "equipment-paperdoll-base",
+        "package_id": "equipment-paperdoll-base",
+        "status": "DONE",
+        "path": {
+          "@1x": "public/assets/ui/huyen-kim/scene/equipment/equipment-paperdoll-base@1x.png",
+          "@2x": "public/assets/ui/huyen-kim/scene/equipment/equipment-paperdoll-base@2x.png"
+        },
+        "width": 380,
+        "height": 610,
+        "alpha": true,
+        "content_safe_rect": {
+          "x": 64,
+          "y": 16,
+          "width": 252,
+          "height": 578
+        },
+        "runtime_reserved_rects": [],
+        "parallax": null
+      },
+      {
+        "asset_id": "exploration-map-frame",
+        "package_id": "exploration-map-chrome-kit",
+        "status": "DONE",
+        "path": {
+          "@1x": "public/assets/ui/huyen-kim/scene/map/exploration-map-frame@1x.png",
+          "@2x": "public/assets/ui/huyen-kim/scene/map/exploration-map-frame@2x.png"
+        },
+        "width": 700,
+        "height": 524,
+        "alpha": true,
+        "content_safe_rect": {
+          "x": 52,
+          "y": 44,
+          "width": 596,
+          "height": 436
+        },
+        "runtime_reserved_rects": [],
+        "parallax": null
+      },
+      {
+        "asset_id": "exploration-map-mask",
+        "package_id": "exploration-map-chrome-kit",
+        "status": "DONE",
+        "path": {
+          "@1x": "public/assets/ui/huyen-kim/scene/map/exploration-map-mask@1x.png",
+          "@2x": "public/assets/ui/huyen-kim/scene/map/exploration-map-mask@2x.png"
+        },
+        "width": 700,
+        "height": 524,
+        "alpha": true,
+        "content_safe_rect": {
+          "x": 42,
+          "y": 36,
+          "width": 616,
+          "height": 452
+        },
+        "runtime_reserved_rects": [],
+        "parallax": null
+      },
+      {
+        "asset_id": "exploration-chapter-divider",
+        "package_id": "exploration-map-chrome-kit",
+        "status": "DONE",
+        "path": {
+          "@1x": "public/assets/ui/huyen-kim/scene/map/exploration-chapter-divider@1x.png",
+          "@2x": "public/assets/ui/huyen-kim/scene/map/exploration-chapter-divider@2x.png"
+        },
+        "width": 620,
+        "height": 16,
+        "alpha": true,
+        "content_safe_rect": {
+          "x": 18,
+          "y": 0,
+          "width": 584,
+          "height": 16
+        },
+        "runtime_reserved_rects": [],
+        "parallax": null
+      },
+      {
+        "asset_id": "technique-display-plinth",
+        "package_id": "technique-display-plinth",
+        "status": "DONE",
+        "path": {
+          "@1x": "public/assets/ui/huyen-kim/scene/technique/technique-display-plinth@1x.png",
+          "@2x": "public/assets/ui/huyen-kim/scene/technique/technique-display-plinth@2x.png"
+        },
+        "width": 448,
+        "height": 480,
+        "alpha": true,
+        "content_safe_rect": {
+          "x": 48,
+          "y": 48,
+          "width": 352,
+          "height": 400
+        },
+        "runtime_reserved_rects": [
+          {
+            "x": 92,
+            "y": 30,
+            "width": 264,
+            "height": 292
+          }
+        ],
+        "parallax": null
+      },
+      {
+        "asset_id": "skill-tree-00-sky",
+        "package_id": "neutral-skill-tree-substrate",
+        "status": "DONE",
+        "path": {
+          "@1x": "public/assets/ui/huyen-kim/scene/skill/00-sky@1x.png",
+          "@2x": "public/assets/ui/huyen-kim/scene/skill/00-sky@2x.png"
+        },
+        "width": 640,
+        "height": 470,
+        "alpha": false,
+        "content_safe_rect": {
+          "x": 40,
+          "y": 32,
+          "width": 560,
+          "height": 406
+        },
+        "runtime_reserved_rects": [
+          {
+            "x": 80,
+            "y": 48,
+            "width": 480,
+            "height": 374
+          }
+        ],
+        "parallax": {
+          "stack": "skill-tree",
+          "depth": "L0",
+          "order": 0,
+          "motion": "static",
+          "max_drift_px": {
+            "x": 0,
+            "y": 0
+          },
+          "reduced_motion_offset_px": 0
+        }
+      },
+      {
+        "asset_id": "skill-tree-01-far-mountains",
+        "package_id": "neutral-skill-tree-substrate",
+        "status": "DONE",
+        "path": {
+          "@1x": "public/assets/ui/huyen-kim/scene/skill/01-far-mountains@1x.png",
+          "@2x": "public/assets/ui/huyen-kim/scene/skill/01-far-mountains@2x.png"
+        },
+        "width": 640,
+        "height": 470,
+        "alpha": true,
+        "content_safe_rect": {
+          "x": 40,
+          "y": 32,
+          "width": 560,
+          "height": 406
+        },
+        "runtime_reserved_rects": [
+          {
+            "x": 80,
+            "y": 48,
+            "width": 480,
+            "height": 374
+          }
+        ],
+        "parallax": {
+          "stack": "skill-tree",
+          "depth": "L1",
+          "order": 1,
+          "motion": "far-slow",
+          "max_drift_px": {
+            "x": 3,
+            "y": 2
+          },
+          "reduced_motion_offset_px": 0
+        }
+      },
+      {
+        "asset_id": "skill-tree-02-celestial-field",
+        "package_id": "neutral-skill-tree-substrate",
+        "status": "DONE",
+        "path": {
+          "@1x": "public/assets/ui/huyen-kim/scene/skill/02-celestial-field@1x.png",
+          "@2x": "public/assets/ui/huyen-kim/scene/skill/02-celestial-field@2x.png"
+        },
+        "width": 640,
+        "height": 470,
+        "alpha": true,
+        "content_safe_rect": {
+          "x": 40,
+          "y": 32,
+          "width": 560,
+          "height": 406
+        },
+        "runtime_reserved_rects": [
+          {
+            "x": 80,
+            "y": 48,
+            "width": 480,
+            "height": 374
+          }
+        ],
+        "parallax": {
+          "stack": "skill-tree",
+          "depth": "L2",
+          "order": 2,
+          "motion": "celestial-slow",
+          "max_drift_px": {
+            "x": 5,
+            "y": 2
+          },
+          "reduced_motion_offset_px": 0
+        }
+      },
+      {
+        "asset_id": "skill-tree-03-atmosphere",
+        "package_id": "neutral-skill-tree-substrate",
+        "status": "DONE",
+        "path": {
+          "@1x": "public/assets/ui/huyen-kim/scene/skill/03-atmosphere@1x.png",
+          "@2x": "public/assets/ui/huyen-kim/scene/skill/03-atmosphere@2x.png"
+        },
+        "width": 640,
+        "height": 470,
+        "alpha": true,
+        "content_safe_rect": {
+          "x": 40,
+          "y": 32,
+          "width": 560,
+          "height": 406
+        },
+        "runtime_reserved_rects": [
+          {
+            "x": 80,
+            "y": 48,
+            "width": 480,
+            "height": 374
+          }
+        ],
+        "parallax": {
+          "stack": "skill-tree",
+          "depth": "L3",
+          "order": 3,
+          "motion": "atmosphere",
+          "max_drift_px": {
+            "x": 8,
+            "y": 4
+          },
+          "reduced_motion_offset_px": 0
+        }
+      }
+    ],
+    "symbols": [
+      {
+        "asset_id": "symbol-back",
+        "status": "DONE",
+        "path": "public/assets/ui/huyen-kim/symbols/back.svg",
+        "format": "svg",
+        "view_box": "0 0 24 24",
+        "runtime_state_strategy": "currentColor plus runtime hover, selected, disabled, attention, and notification states"
+      },
+      {
+        "asset_id": "symbol-close",
+        "status": "DONE",
+        "path": "public/assets/ui/huyen-kim/symbols/close.svg",
+        "format": "svg",
+        "view_box": "0 0 24 24",
+        "runtime_state_strategy": "currentColor plus runtime hover, selected, disabled, attention, and notification states"
+      },
+      {
+        "asset_id": "symbol-home",
+        "status": "DONE",
+        "path": "public/assets/ui/huyen-kim/symbols/home.svg",
+        "format": "svg",
+        "view_box": "0 0 24 24",
+        "runtime_state_strategy": "currentColor plus runtime hover, selected, disabled, attention, and notification states"
+      },
+      {
+        "asset_id": "symbol-character",
+        "status": "DONE",
+        "path": "public/assets/ui/huyen-kim/symbols/character.svg",
+        "format": "svg",
+        "view_box": "0 0 24 24",
+        "runtime_state_strategy": "currentColor plus runtime hover, selected, disabled, attention, and notification states"
+      },
+      {
+        "asset_id": "symbol-realm",
+        "status": "DONE",
+        "path": "public/assets/ui/huyen-kim/symbols/realm.svg",
+        "format": "svg",
+        "view_box": "0 0 24 24",
+        "runtime_state_strategy": "currentColor plus runtime hover, selected, disabled, attention, and notification states"
+      },
+      {
+        "asset_id": "symbol-skill",
+        "status": "DONE",
+        "path": "public/assets/ui/huyen-kim/symbols/skill.svg",
+        "format": "svg",
+        "view_box": "0 0 24 24",
+        "runtime_state_strategy": "currentColor plus runtime hover, selected, disabled, attention, and notification states"
+      },
+      {
+        "asset_id": "symbol-body",
+        "status": "DONE",
+        "path": "public/assets/ui/huyen-kim/symbols/body.svg",
+        "format": "svg",
+        "view_box": "0 0 24 24",
+        "runtime_state_strategy": "currentColor plus runtime hover, selected, disabled, attention, and notification states"
+      },
+      {
+        "asset_id": "symbol-technique",
+        "status": "DONE",
+        "path": "public/assets/ui/huyen-kim/symbols/technique.svg",
+        "format": "svg",
+        "view_box": "0 0 24 24",
+        "runtime_state_strategy": "currentColor plus runtime hover, selected, disabled, attention, and notification states"
+      },
+      {
+        "asset_id": "symbol-inventory",
+        "status": "DONE",
+        "path": "public/assets/ui/huyen-kim/symbols/inventory.svg",
+        "format": "svg",
+        "view_box": "0 0 24 24",
+        "runtime_state_strategy": "currentColor plus runtime hover, selected, disabled, attention, and notification states"
+      },
+      {
+        "asset_id": "symbol-exploration",
+        "status": "DONE",
+        "path": "public/assets/ui/huyen-kim/symbols/exploration.svg",
+        "format": "svg",
+        "view_box": "0 0 24 24",
+        "runtime_state_strategy": "currentColor plus runtime hover, selected, disabled, attention, and notification states"
+      },
+      {
+        "asset_id": "symbol-alchemy",
+        "status": "DONE",
+        "path": "public/assets/ui/huyen-kim/symbols/alchemy.svg",
+        "format": "svg",
+        "view_box": "0 0 24 24",
+        "runtime_state_strategy": "currentColor plus runtime hover, selected, disabled, attention, and notification states"
+      },
+      {
+        "asset_id": "symbol-equipment",
+        "status": "DONE",
+        "path": "public/assets/ui/huyen-kim/symbols/equipment.svg",
+        "format": "svg",
+        "view_box": "0 0 24 24",
+        "runtime_state_strategy": "currentColor plus runtime hover, selected, disabled, attention, and notification states"
+      },
+      {
+        "asset_id": "symbol-quest",
+        "status": "DONE",
+        "path": "public/assets/ui/huyen-kim/symbols/quest.svg",
+        "format": "svg",
+        "view_box": "0 0 24 24",
+        "runtime_state_strategy": "currentColor plus runtime hover, selected, disabled, attention, and notification states"
+      },
+      {
+        "asset_id": "symbol-settings",
+        "status": "DONE",
+        "path": "public/assets/ui/huyen-kim/symbols/settings.svg",
+        "format": "svg",
+        "view_box": "0 0 24 24",
+        "runtime_state_strategy": "currentColor plus runtime hover, selected, disabled, attention, and notification states"
+      },
+      {
+        "asset_id": "symbol-feedback",
+        "status": "DONE",
+        "path": "public/assets/ui/huyen-kim/symbols/feedback.svg",
+        "format": "svg",
+        "view_box": "0 0 24 24",
+        "runtime_state_strategy": "currentColor plus runtime hover, selected, disabled, attention, and notification states"
+      },
+      {
+        "asset_id": "symbol-auto-farm",
+        "status": "DONE",
+        "path": "public/assets/ui/huyen-kim/symbols/auto-farm.svg",
+        "format": "svg",
+        "view_box": "0 0 24 24",
+        "runtime_state_strategy": "currentColor plus runtime hover, selected, disabled, attention, and notification states"
+      },
+      {
+        "asset_id": "symbol-confirm",
+        "status": "DONE",
+        "path": "public/assets/ui/huyen-kim/symbols/confirm.svg",
+        "format": "svg",
+        "view_box": "0 0 24 24",
+        "runtime_state_strategy": "currentColor plus runtime hover, selected, disabled, attention, and notification states"
+      },
+      {
+        "asset_id": "symbol-lock",
+        "status": "DONE",
+        "path": "public/assets/ui/huyen-kim/symbols/lock.svg",
+        "format": "svg",
+        "view_box": "0 0 24 24",
+        "runtime_state_strategy": "currentColor plus runtime hover, selected, disabled, attention, and notification states"
+      }
+    ],
+    "excluded_volatile_content": [
+      "entity spritesheets and portraits",
+      "technique illustrations",
+      "skill icons and authored skill-tree topology",
+      "pill, material, item, equipment, reward, realm-emblem, quest, stage, boss, and chapter content art",
+      "painted Son Ha geography",
+      "animated VFX and runtime state variants"
+    ]
+  },
+  "runtime_only_effects": [
+    {
+      "id": "notification-dot",
+      "status": "NOT_REQUIRED",
+      "implementation": "CSS/runtime"
+    },
+    {
+      "id": "focus-ring",
+      "status": "NOT_REQUIRED",
+      "implementation": "CSS/runtime"
+    },
+    {
+      "id": "orbit-guide-circle",
+      "status": "NOT_REQUIRED",
+      "implementation": "CSS/runtime"
+    },
+    {
+      "id": "node-edge-stroke",
+      "status": "NOT_REQUIRED",
+      "implementation": "CSS/runtime"
+    },
+    {
+      "id": "cooldown-sweep-mask",
+      "status": "NOT_REQUIRED",
+      "implementation": "CSS/runtime"
+    },
+    {
+      "id": "atb-gauge-fill",
+      "status": "NOT_REQUIRED",
+      "implementation": "CSS/runtime"
+    },
+    {
+      "id": "the-pip-dots",
+      "status": "NOT_REQUIRED",
+      "implementation": "CSS/runtime"
+    },
+    {
+      "id": "selection-halo-breath",
+      "status": "NOT_REQUIRED",
+      "implementation": "CSS/runtime"
+    },
+    {
+      "id": "scrollfade-gradient",
+      "status": "NOT_REQUIRED",
+      "implementation": "CSS/runtime"
+    },
+    {
+      "id": "mist-vignette",
+      "status": "NOT_REQUIRED",
+      "implementation": "CSS/runtime"
+    },
+    {
+      "id": "lock-desaturation",
+      "status": "NOT_REQUIRED",
+      "implementation": "CSS/runtime"
+    },
+    {
+      "id": "pressed-scale",
+      "status": "NOT_REQUIRED",
+      "implementation": "CSS/runtime"
+    }
+  ]
+}
