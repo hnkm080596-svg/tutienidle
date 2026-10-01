@@ -2211,6 +2211,24 @@
       "hash": "c22dd9df6e8c4ad185a95b2e7ba8c91989d759b74a249fa239f4b887df438a0d"
     },
     {
+      "path": "docs/qa/2026-10-01-beta-scope-authority-seam-clean-round-a.md",
+      "kind": "file",
+      "mode": 33152,
+      "hash": "a5ebfb6d6fef04eed95aa2ee13f0f5af048abd40af2ecb267d5d890fd7475cc8"
+    },
+    {
+      "path": "docs/qa/2026-10-01-beta-scope-falsification-deep.md",
+      "kind": "file",
+      "mode": 33152,
+      "hash": "02529fa4642de4c70260870eeb2e85ae9234e35e49331b70ecd81e643f161019"
+    },
+    {
+      "path": "docs/qa/2026-10-01-consumer-seam-blind-b.md",
+      "kind": "file",
+      "mode": 33152,
+      "hash": "0ac6bbeaab8f553366ab493ab2dd39928555dbc8db8ad8c6d1eaeb2c2a351699"
+    },
+    {
       "path": "docs/qa/2026-10-01-md-perfection-sim-quick.md",
       "kind": "file",
       "mode": 33188,
@@ -15462,7 +15480,7 @@
       "path": "src/components/game/BuildingDetailPopover.vue",
       "kind": "file",
       "mode": 33188,
-      "hash": "507f87105a50e7c95148740c645a761b458b2857f4b3d6d97222f3b6c109d58f"
+      "hash": "3892ff33d03cf276facd0b9ea6ce47ca2fbd8e07fa6f2062d18b20645dcc22d6"
     },
     {
       "path": "src/components/game/combat/BattleLogPanel.test.ts",
@@ -15732,13 +15750,13 @@
       "path": "src/components/layout/FunctionOverlayPanel.vue",
       "kind": "file",
       "mode": 33188,
-      "hash": "0305b277b5aeda7208941ad3ffea6e9ab3adb749195e6963a07601d02fdcb475"
+      "hash": "17242b97f31cccf4efc69e70e6a939a059879faff9b45c9793e243a9e6d611b8"
     },
     {
       "path": "src/components/layout/GameRoot.vue",
       "kind": "file",
       "mode": 33188,
-      "hash": "08186cb77994f02ccffda18db31df67e40f9d3e4855e79c480134bdad4136d66"
+      "hash": "a357222342b5ffdc4b7ccb2f838d2f9aed63554cf47f67905ccc1f48cdafa76e"
     },
     {
       "path": "src/components/layout/LeftPanel.building.test.ts",
@@ -16638,7 +16656,7 @@
       "path": "src/composables/useUpdates.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "209981613e3e738f2145e3fd8bb9209764fafa9e8c604adb8ef0a36e8669ffab"
+      "hash": "69ad7dc67cf4fe0a55ea8c69a968b41cd1cca386856a038306396d9e211c0d05"
     },
     {
       "path": "src/core/alchemy/AlchemySystem.test.ts",
@@ -17742,7 +17760,7 @@
       "path": "src/core/betaScope.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "bfbb7800cb6009565eb58d0247ca6e5e433f35d18e6f669fd6643410e0f4a94d"
+      "hash": "674cc3d075186635a20ef36fdb3dbfb99e90f8b2e4b784bff5fbb0d08b1d470e"
     },
     {
       "path": "src/core/betaScopeSkillDomain.ts",
@@ -17754,7 +17772,7 @@
       "path": "src/core/betaScopeSurface.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "a87014f38ce1673e91765c5ed30edc1d32b27a77de86c49c6eeb94990d6073f6"
+      "hash": "4d35cefa92f0ea765a4641e6a661a0033dc09eb83172b462c051270cfbca1e45"
     },
     {
       "path": "src/core/breakthrough/FoundationType.ts",
@@ -19656,7 +19674,7 @@
       "path": "src/core/game/GameManagerBuildingOps.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "0f80cd01373532d99a3699d42831e5e46a5e5dc91175b7995996d1591aafb4b8"
+      "hash": "fa7e6674507ca4149f1cfac5aafbccf91971b5a123b43632ab18b87e00185ba7"
     },
     {
       "path": "src/core/game/GameManagerCatalogOps.ts",
@@ -19722,7 +19740,7 @@
       "path": "src/core/game/GameManagerProgressionOps.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "d916bcece3c31c85bdd848f05caeb48121626609af4c1455e0b93e7749430f05"
+      "hash": "35cf1e5452e8e052a390bf931e911321308b8f6c81cf364d9a8359693845985b"
     },
     {
       "path": "src/core/game/GameManagerQuestOps.ts",
@@ -20304,7 +20322,7 @@
       "path": "src/core/player/Player.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "8b27c61971213ffdaf6a6cc8da4a0545d6c799f3e9acfdc4a44175a170b3ce6a"
+      "hash": "0672fe1fb78a77f06e6e059b79f20c890a6849637a662103b4d53d7ab4fd7680"
     },
     {
       "path": "src/core/player/PlayerSnapshot.ts",
@@ -20605,6 +20623,12 @@
       "kind": "file",
       "mode": 33188,
       "hash": "7c2669f0aee1183258d0ea4bbc1b9d860d0f58712a2e4bc833b721873aa591c3"
+    },
+    {
+      "path": "src/core/progression/devResetBranch.admission.qa.test.ts",
+      "kind": "file",
+      "mode": 33152,
+      "hash": "1cd4387579a2ae51bde9d2d987bbd64b789bac9ab1db843d3db8e1a2beb42797"
     },
     {
       "path": "src/core/progression/NodeBranchViews.test.ts",
@@ -20988,7 +21012,7 @@
       "path": "src/core/realm/body/BodyProgressionSystem.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "bbfac4b4309c44be5e36fe33726d666ce9d00b4dec2595e9b9bac12f2243669a"
+      "hash": "ba51f47bb1ab7c191c450336e325d2cac68752a53936b9fdf84afe1cd03513ca"
     },
     {
       "path": "src/core/realm/body/BodyRefinementChapter.test.ts",
@@ -21043,6 +21067,12 @@
       "kind": "file",
       "mode": 33188,
       "hash": "37cb80e5e02376c502f28797f67b9aa5505cbb69073d483c98f56ee56a7a4c59"
+    },
+    {
+      "path": "src/core/realm/enhancedPassivePersisted.qa.test.ts",
+      "kind": "file",
+      "mode": 33152,
+      "hash": "c626419cf05857304e3b5ec4c268746eebb076697749a78e84e1996c6d20500a"
     },
     {
       "path": "src/core/realm/hidden/AncientBeastTrial.test.ts",
@@ -21954,7 +21984,7 @@
       "path": "src/core/technique/TechniqueSystem.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "875acdfee795590fc26de3d0aa548bbc8890b1d842c11e3ff232dc3b09d3b952"
+      "hash": "bb97c05cfb2bd346b6c3650abbb8e2a7fc5f14b89a7270a90a6f3578ea8d3335"
     },
     {
       "path": "src/core/the-tu/TheEconomy.test.ts",
@@ -24345,6 +24375,12 @@
       "hash": "78782f33380c68a24d4661fbd5550ac4c04c2536490d31004d421fc3b1f460a3"
     },
     {
+      "path": "src/services/save/forgedModifierMints.qa.test.ts",
+      "kind": "file",
+      "mode": 33152,
+      "hash": "b32b6011026d39d050c8ad2d93028875452345ba4e5abe6c93b0c419a5df5825"
+    },
+    {
       "path": "src/services/save/GameSave.fixture.ts",
       "kind": "file",
       "mode": 33188,
@@ -24408,7 +24444,7 @@
       "path": "src/services/save/saveShapeValidation.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "74b19d5c4e7788b4e663b41ee8e0809ae069f52aeccb8e13f44b856d739881d1"
+      "hash": "85bba498be76de51d173d02f11ac746fa3bd6fe25408d430caa42595b1a8334d"
     },
     {
       "path": "src/services/save/SaveSystem.bootRestore.test.ts",
@@ -24933,6 +24969,18 @@
       "hash": "cad200e8a45856795b45922235914295984885843a9fc71c2d246331df640920"
     },
     {
+      "path": "tests/architecture/betaConsumerSeamMounts.qa.test.ts",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "c2c1f9a888ebf34b5c6cb66fde0aef8a193a5257fed8813af200934d9c9b619b"
+    },
+    {
+      "path": "tests/architecture/betaConsumerSeams.qa.test.ts",
+      "kind": "file",
+      "mode": 33152,
+      "hash": "670623179e7722df44bfd3573e6e1c57a3ea13b5ac521b943af9d11729366d45"
+    },
+    {
       "path": "tests/architecture/betaDormantSaveLeak.qa.test.ts",
       "kind": "file",
       "mode": 33188,
@@ -24945,10 +24993,22 @@
       "hash": "2117c329f8500c62450f56078ea5a61bb8e30572eeff21700bf487836c668f8f"
     },
     {
+      "path": "tests/architecture/betaPersistedRealmModifiers.qa.test.ts",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "d563f46550ddb4d2fad1cdcd6f0f0cc4562e249c11e271218d012be2bf48f5b2"
+    },
+    {
       "path": "tests/architecture/betaReadModelHonesty.qa.test.ts",
       "kind": "file",
       "mode": 33188,
       "hash": "cea2d661b8789e4ac775da5b87d75b9157de583d7f09819d640f894bbc0f9f1b"
+    },
+    {
+      "path": "tests/architecture/betaScopeAuthoritySeam.qa.test.ts",
+      "kind": "file",
+      "mode": 33152,
+      "hash": "0a7285cbd7410fbf2701e50ca0556453970eb7bc11ded5975bf0c9b75ae69714"
     },
     {
       "path": "tests/architecture/betaScopeEconomyGates.test.ts",
@@ -25581,5 +25641,5 @@
       "hash": "0bb3657058699da63594036eda9bb6be7f6b4b44aebbb960fcba939870fd3f5e"
     }
   ],
-  "productStateId": "451a4d139ef4c03f6210dedca35e5b84ae91d41a5d252a8afb52caaf0db37b9f"
+  "productStateId": "ace0c1af868434beb55d410e13cf9987da41d1c58fdc5adfdedd98e2e356d9fe"
 }
