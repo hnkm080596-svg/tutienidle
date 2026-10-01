@@ -393,6 +393,34 @@ describe('TC6-B dormant-record liveness', () => {
     expect(manager.tribulationDirector.getCommittedOutcome()?.outcome).toBe('victory')
   })
 
+  it('B3b - a committed outcome carrying the persisted-only-hidden grade great_dao is rejected at shape', () => {
+    // 'great_dao' is never a persisted ordinary grade - a hidden
+    // breakthrough records it via breakthroughType. A normal outcome
+    // claiming the grade is a fabricated record.
+    const { save } = committedSave(
+      'foundation_establishment',
+      {},
+      {
+        tribulation: {
+          committedOutcome: {
+            attemptId: 9,
+            outcome: 'victory',
+            targetRealmId: 'golden_core',
+            // Cast: the forged grade is deliberately outside the writer
+            // type - that is what the boundary arm rejects.
+            grade: 'great_dao' as never,
+            breakthroughType: 'normal',
+            receipt: null,
+            settlementError: false,
+          },
+          cooldownUntil: 0,
+        } satisfies TribulationSaveSlice,
+      },
+    )
+    const { shape } = classify(save)
+    expect(shape.ok).toBe(false)
+  })
+
   it('B4 - forged NORMAL outcome targeting a dormant realm transition parks inert', () => {
     const { save } = committedSave(
       'foundation_establishment',
@@ -499,6 +527,18 @@ describe('TC6-B dormant-record liveness', () => {
     )
     expect(legitStored).toBeGreaterThan(0)
     expect(forgedStored).toBeLessThanOrEqual(legitStored)
+
+    // Rate isolation: the stored-amount arm above is also bounded by
+    // the capacity clamp, so it cannot see a rate-only regression - the
+    // per-minute rate itself must clamp at maxLevel.
+    const forgedRate = manager.buildingSystem.getRatePerMinute(forged, template, 'qi_refining')
+    const legitRate = manager.buildingSystem.getRatePerMinute(
+      { ...forged, level: template.maxLevel },
+      template,
+      'qi_refining',
+    )
+    expect(legitRate).toBeGreaterThan(0)
+    expect(forgedRate).toBeLessThanOrEqual(legitRate)
   })
 
   it('B7 - RETIRED + scope-hidden family job escapes the parking predicate and settles live', () => {

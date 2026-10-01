@@ -227,6 +227,20 @@ describe('F-A7-2: persistentTimedEffects claimed-source coherence', () => {
     expect(validateGameSaveShape(save).ok).toBe(false)
   })
 
+  it('a tu_linh_tran-group entry claiming another sourceItemId emits nothing', () => {
+    // The emit seam's source check is the last defence: an entry wearing
+    // the authored group and an in-bound percent but a foreign
+    // sourceItemId never mints cultivation speed.
+    const p = createDefaultPlayer()
+    p.persistentTimedEffects = [timedEffect({ sourceItemId: 'hacked_buff' })]
+    expect(getActiveCultivationSpeedPercent(p.persistentTimedEffects, Date.now())).toBe(0)
+
+    const save = validSave()
+    const sp = save.player as ReturnType<typeof createDefaultPlayer>
+    sp.persistentTimedEffects = [timedEffect({ sourceItemId: 'hacked_buff' })]
+    expect(validateGameSaveShape(save).ok).toBe(false)
+  })
+
   it('a pill-sourced entry with cultivationSpeedPercent is rejected', () => {
     const save = validSave()
     const p = save.player as ReturnType<typeof createDefaultPlayer>

@@ -185,10 +185,17 @@ function dormantOutcome(overrides: Record<string, unknown> = {}) {
 describe('F-CONS-B1: a carried tribulation committedOutcome must re-derive admission at settle', () => {
   it('a dormant-target victory parks forever - no realm entry, no receipt, record intact', () => {
     const manager = makeManager()
-    const p = committedPlayer({ realmId: 'foundation_establishment', realmLevel: 3 })
+    // Gate-coherent entrant: the dormant-transition arm alone must keep
+    // this parked (an un-gated fixture would park through the
+    // breakthrough-gate arm instead and mask this check).
+    const p = committedPlayer({
+      realmId: 'qi_refining',
+      realmLevel: 16,
+      completedStageIds: ['qi_refining_abyssal_pool'],
+    })
     const save = baseSave(p, {
       tribulation: { committedOutcome: dormantOutcome() },
-      techniques: [wayTechniqueSlice('foundation_establishment')],
+      techniques: [wayTechniqueSlice('qi_refining')],
     })
 
     manager.setActivePlayer(p)
@@ -202,7 +209,7 @@ describe('F-CONS-B1: a carried tribulation committedOutcome must re-derive admis
     expect(service.settleOutcome(writerOf(p), manager, manager.tribulationDirector)).toBeNull()
 
     // Nothing applied: realm/cultivation untouched, record still pending.
-    expect(p.realmId).toBe('foundation_establishment')
+    expect(p.realmId).toBe('qi_refining')
     expect(manager.tribulationDirector.getCommittedOutcome()).not.toBeNull()
 
     // The carry is flagged as out-of-scope state.
@@ -213,7 +220,11 @@ describe('F-CONS-B1: a carried tribulation committedOutcome must re-derive admis
 
   it('a hidden-type victory targeting an in-scope realm is still parked (dormant lineage)', () => {
     const manager = makeManager()
-    const p = committedPlayer({ realmId: 'qi_refining', realmLevel: 5 })
+    const p = committedPlayer({
+      realmId: 'qi_refining',
+      realmLevel: 16,
+      completedStageIds: ['qi_refining_abyssal_pool'],
+    })
     const save = baseSave(p, {
       tribulation: {
         committedOutcome: dormantOutcome({
@@ -235,10 +246,17 @@ describe('F-CONS-B1: a carried tribulation committedOutcome must re-derive admis
 
   it('a dormant-target defeat levies no penalty table', () => {
     const manager = makeManager()
-    const p = committedPlayer({ realmId: 'foundation_establishment', realmLevel: 3, cultivation: 500 })
+    // Gate-coherent entrant - same arm-isolation reason as the victory
+    // fixture above.
+    const p = committedPlayer({
+      realmId: 'qi_refining',
+      realmLevel: 16,
+      cultivation: 500,
+      completedStageIds: ['qi_refining_abyssal_pool'],
+    })
     const save = baseSave(p, {
       tribulation: { committedOutcome: dormantOutcome({ outcome: 'defeat' }) },
-      techniques: [wayTechniqueSlice('foundation_establishment')],
+      techniques: [wayTechniqueSlice('qi_refining')],
     })
 
     manager.setActivePlayer(p)

@@ -127,6 +127,24 @@ describe('persisted realm modifiers under the beta lock', () => {
     expect(stats.strength).toBe(base.strength)
   })
 
+  it('a payload carrying the authored passive id but no grant marker still mints nothing', () => {
+    // Isolates the marker gate: rebuild-don't-trust alone would let an
+    // authored-id claim through without the ownership witness.
+    const p = player()
+    const forged: StatModifier = {
+      id: 'realm-passive:nhap_dao:maxHp',
+      sourceId: 'nhap_dao',
+      sourceType: 'realm',
+      stat: 'maxHp',
+      percent: 9,
+    }
+    p.modifiers.push(forged)
+
+    const stats = resolvePlayerStatAssembly(p, []).stats
+    const base = resolvePlayerStatAssembly(player(), []).stats
+    expect(stats.maxHp).toBe(base.maxHp)
+  })
+
   it('a persisted phap tu/spell-channel claim is fabricated - real phap tu channels emit via way facets, not player.modifiers (F-A7-1)', () => {
     // Writer inventory for persisted player.modifiers: realm passives
     // (marker-gated), meridian chapter (bat-mach:*), loi kiep grant,
