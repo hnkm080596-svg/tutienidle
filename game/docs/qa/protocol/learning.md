@@ -151,7 +151,7 @@ Each candidate must pass the promotion predicate during Devin adoption before be
   - **Detector escape:** the FakeUpdater in tests accepted any signature; semantics only live in electron-updater docs, not types.
   - **Pin/attack proposal:** for provider-boundary adapters, pin every defaulted argument that carries a journey invariant in the adapter comment AND verify launch-failure recovery (state returns to a retryable phase). Qualify as CANDIDATE.
 
-### 2026-09-30 qa-fixpoint-master (beta-scope-v2 master gate) - 8 incidents across 11 findings
+### 2026-09-30 qa-fixpoint-master (beta-scope-v2 master gate) - 9 incidents across 15 findings
 
 - **Incident:** carried-save hidden-progression records kept applying effects into live play (F-DL-1 stat-cap inflation, F-DL-2 enhanced realm passive) on a save the reader itself flagged unsupported.
   - **Root class:** L-DORMANT-CARRIED-EFFECT - persisted scope-hidden records are dormant-but-legible: they deserialize intact and their readers kept honoring them. Dormancy flags gated ENTRY (panels, commits) but not the READ seams that turn stored state into stats/effects.
@@ -185,3 +185,8 @@ Each candidate must pass the promotion predicate during Devin adoption before be
   - **Root class:** L-FIXTURE-ENCODES-DRIFT - suites authored pre-lock kept asserting pre-lock behavior as correctness; the new invariant required fixtures to change, not code.
   - **Detector escape:** not an escape - the fixtures failed loudly post-gate; the retreat was recognizing they pinned the OLD contract (update fixture to a beta family, keep the mechanic under test).
   - **Pin/attack proposal:** when a scope gate lands, sweep fixtures for dormant-content consumption; an unlocked-test-build convention (setup.betaScope.ts admits all) already handles the dormant-machinery suites.
+
+- **Incident:** e2e helpers + a boot spec still clicked `creation-skill-tram` after the unified-creation refactor (fb16d2b7) removed the starter-skill pick - the whole e2e layer had drifted dead on master while `npm run verify` stayed green.
+  - **Root class:** L-SUITE-DRIFT - coverage suite excluded from the verify gate went silently stale as the product moved.
+  - **Detector escape:** no detector at all - e2e specs are not part of `npm run verify`; nothing executed them on master.
+  - **Pin/attack proposal:** a runtime probe run (boot + save/reload) inside every fixed-point QA gate - coverage excluded from the gate needs an explicit executor, not an assumption of health.

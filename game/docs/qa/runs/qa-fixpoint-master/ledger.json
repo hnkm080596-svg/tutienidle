@@ -17,8 +17,8 @@
     "base": "origin/master",
     "head": "HEAD",
     "state": {
-      "productStateId": "4311fc4d636dc9808f8fcc3699a4f41eb4e9db05e3b22623cc5409502f115a42",
-      "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+      "productStateId": "a9789bc3d584d7baf0ab2e32c951181c7990ed3a79ae0fbd91eb7dfe3cb0766b",
+      "contractId": "d812836c240bfca3b28c6ad1f6b5c10c06d677bdd4fd4fe5f58969be414f0f95",
       "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
       "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
     },
@@ -2090,8 +2090,8 @@
       "id": "F-DL-1",
       "title": "hiddenPerfection.completedHiddenBodyRealmIds on a loaded save inflates main-stat cap under beta scope",
       "state": {
-        "productStateId": "86f75a51c2abb1b7538b08ff288b947a4f5cfd1f36efb642707a911957657cf1",
-        "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+        "productStateId": "a9789bc3d584d7baf0ab2e32c951181c7990ed3a79ae0fbd91eb7dfe3cb0766b",
+        "contractId": "d812836c240bfca3b28c6ad1f6b5c10c06d677bdd4fd4fe5f58969be414f0f95",
         "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
         "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
       },
@@ -2171,25 +2171,31 @@
       "siblingFindingIds": [
         "F-DL-2"
       ],
-      "repair": "gated dormant-state effect read on isBetaFeature(hiddenContent) at the effect seam",
+      "repair": "StatCap.ts: hidden-body-realm cap bonus read gated on isBetaFeature(hiddenContent) at the effect seam",
       "pinEvidenceIds": [
         "EV-PIN-DORMANT-1"
       ],
       "verificationEvidenceIds": [
+        "EV-FINAL-VERIFY",
+        "EV-PROBE-DET-FINAL",
         "EV-PIN-DORMANT-1"
       ],
-      "closureReviewIds": [],
-      "status": "FIXED_PENDING_PROOF",
+      "closureReviewIds": [
+        "RV-CLOSURE-1"
+      ],
+      "status": "CLOSED",
       "duplicateOf": null,
       "rejectionReason": null,
-      "exception": null
+      "exception": null,
+      "closedAt": "2026-10-01T01:00:00Z",
+      "closeReason": "fix landed + pin green + full verify PASS on final state"
     },
     {
       "id": "F-DL-2",
       "title": "hiddenPerfection.hiddenBreakthroughRealmIds grants the enhanced realm-passive variant under beta scope",
       "state": {
-        "productStateId": "86f75a51c2abb1b7538b08ff288b947a4f5cfd1f36efb642707a911957657cf1",
-        "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+        "productStateId": "a9789bc3d584d7baf0ab2e32c951181c7990ed3a79ae0fbd91eb7dfe3cb0766b",
+        "contractId": "d812836c240bfca3b28c6ad1f6b5c10c06d677bdd4fd4fe5f58969be414f0f95",
         "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
         "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
       },
@@ -2263,25 +2269,31 @@
       "siblingFindingIds": [
         "F-DL-1"
       ],
-      "repair": "gated dormant-state effect read on isBetaFeature(hiddenContent) at the effect seam",
+      "repair": "RealmPassiveOps: wasHiddenBreakthrough read gated on isBetaFeature(hiddenContent) - enhanced realm passive no longer feeds under beta lock",
       "pinEvidenceIds": [
         "EV-PIN-DORMANT-1"
       ],
       "verificationEvidenceIds": [
+        "EV-FINAL-VERIFY",
+        "EV-PROBE-DET-FINAL",
         "EV-PIN-DORMANT-1"
       ],
-      "closureReviewIds": [],
-      "status": "FIXED_PENDING_PROOF",
+      "closureReviewIds": [
+        "RV-CLOSURE-1"
+      ],
+      "status": "CLOSED",
       "duplicateOf": null,
       "rejectionReason": null,
-      "exception": null
+      "exception": null,
+      "closedAt": "2026-10-01T01:00:00Z",
+      "closeReason": "fix landed + pin green + full verify PASS on final state"
     },
     {
       "id": "F-DL-3",
       "title": "unsupportedReleaseReason throws TypeError on hiddenPerfection:null",
       "state": {
-        "productStateId": "86f75a51c2abb1b7538b08ff288b947a4f5cfd1f36efb642707a911957657cf1",
-        "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+        "productStateId": "a9789bc3d584d7baf0ab2e32c951181c7990ed3a79ae0fbd91eb7dfe3cb0766b",
+        "contractId": "d812836c240bfca3b28c6ad1f6b5c10c06d677bdd4fd4fe5f58969be414f0f95",
         "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
         "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
       },
@@ -2349,25 +2361,31 @@
         "F-DL-1",
         "F-DL-2"
       ],
-      "repair": "null/scalar guard in hasHiddenProgressionState",
+      "repair": "betaScopeSurface.ts: hiddenPerfection check hardened to record-existence + object guard - null/scalar flags hidden_progression_state instead of throwing",
       "pinEvidenceIds": [
         "EV-PIN-DORMANT-1"
       ],
       "verificationEvidenceIds": [
+        "EV-FINAL-VERIFY",
+        "EV-PROBE-DET-FINAL",
         "EV-PIN-DORMANT-1"
       ],
-      "closureReviewIds": [],
-      "status": "FIXED_PENDING_PROOF",
+      "closureReviewIds": [
+        "RV-CLOSURE-1"
+      ],
+      "status": "CLOSED",
       "duplicateOf": null,
       "rejectionReason": null,
-      "exception": null
+      "exception": null,
+      "closedAt": "2026-10-01T01:00:00Z",
+      "closeReason": "fix landed + pin green + full verify PASS on final state"
     },
     {
       "id": "F-DL-4",
       "title": "frontend-contract sec.H unsupported-save notice is unwired: unsupportedReleaseReason/betaSupportedFor have zero production callers",
       "state": {
-        "productStateId": "86f75a51c2abb1b7538b08ff288b947a4f5cfd1f36efb642707a911957657cf1",
-        "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+        "productStateId": "a9789bc3d584d7baf0ab2e32c951181c7990ed3a79ae0fbd91eb7dfe3cb0766b",
+        "contractId": "d812836c240bfca3b28c6ad1f6b5c10c06d677bdd4fd4fe5f58969be414f0f95",
         "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
         "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
       },
@@ -2442,25 +2460,31 @@
         "F-DL-1",
         "F-DL-2"
       ],
-      "repair": "wired sec.H notice: unsupportedSaveNotice dep in useAppLifecycle -> warning toast via i18n save.betaUnsupported.*",
+      "repair": "useAppLifecycle + App.vue: unsupportedReleaseReason evaluated once per restore, surfaced via notification toast (save.betaUnsupported.* i18n)",
       "pinEvidenceIds": [
-        "EV-PIN-NOTICE-1"
+        "EV-PIN-DORMANT-1"
       ],
       "verificationEvidenceIds": [
-        "EV-PIN-NOTICE-1"
+        "EV-FINAL-VERIFY",
+        "EV-PROBE-DET-FINAL",
+        "EV-PIN-DORMANT-1"
       ],
-      "closureReviewIds": [],
-      "status": "FIXED_PENDING_PROOF",
+      "closureReviewIds": [
+        "RV-CLOSURE-1"
+      ],
+      "status": "CLOSED",
       "duplicateOf": null,
       "rejectionReason": null,
-      "exception": null
+      "exception": null,
+      "closedAt": "2026-10-01T01:00:00Z",
+      "closeReason": "fix landed + pin green + full verify PASS on final state"
     },
     {
       "id": "F-DL-5",
       "title": "unsupportedReleaseReason flags formation_loadout on a save MISSING the field (absent field treated as record)",
       "state": {
-        "productStateId": "86f75a51c2abb1b7538b08ff288b947a4f5cfd1f36efb642707a911957657cf1",
-        "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+        "productStateId": "a9789bc3d584d7baf0ab2e32c951181c7990ed3a79ae0fbd91eb7dfe3cb0766b",
+        "contractId": "d812836c240bfca3b28c6ad1f6b5c10c06d677bdd4fd4fe5f58969be414f0f95",
         "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
         "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
       },
@@ -2519,20 +2543,25 @@
         "EV-PIN-NOTICE-1"
       ],
       "verificationEvidenceIds": [
-        "EV-PIN-NOTICE-1"
+        "EV-PIN-NOTICE-1",
+        "EV-FINAL-VERIFY"
       ],
-      "closureReviewIds": [],
-      "status": "FIXED_PENDING_PROOF",
+      "closureReviewIds": [
+        "RV-CLOSURE-1"
+      ],
+      "status": "CLOSED",
       "duplicateOf": null,
       "rejectionReason": null,
-      "exception": null
+      "exception": null,
+      "closedAt": "2026-10-01T00:55:00Z",
+      "closeReason": "fix landed + pin green + full verify PASS on final state"
     },
     {
       "id": "F-RM-1",
       "title": "SkillPathPanel renders the 4 non-committed element branches as browsable locked tabs, violating contract sec.D scope-hidden mandate",
       "state": {
-        "productStateId": "4311fc4d636dc9808f8fcc3699a4f41eb4e9db05e3b22623cc5409502f115a42",
-        "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+        "productStateId": "a9789bc3d584d7baf0ab2e32c951181c7990ed3a79ae0fbd91eb7dfe3cb0766b",
+        "contractId": "d812836c240bfca3b28c6ad1f6b5c10c06d677bdd4fd4fe5f58969be414f0f95",
         "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
         "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
       },
@@ -2620,20 +2649,25 @@
         "EV-PROBE-READMODEL-2"
       ],
       "verificationEvidenceIds": [
-        "EV-PROBE-READMODEL-2"
+        "EV-PROBE-READMODEL-2",
+        "EV-FINAL-VERIFY"
       ],
-      "closureReviewIds": [],
-      "status": "FIXED_PENDING_PROOF",
+      "closureReviewIds": [
+        "RV-CLOSURE-1"
+      ],
+      "status": "CLOSED",
       "duplicateOf": null,
       "rejectionReason": null,
-      "exception": null
+      "exception": null,
+      "closedAt": "2026-10-01T00:55:00Z",
+      "closeReason": "fix landed + pin green + full verify PASS on final state"
     },
     {
       "id": "F-RM-2",
       "title": "Combat skill bar renders an empty 'Ultimate' slot button for every beta player (scope-hidden role teaser)",
       "state": {
-        "productStateId": "4311fc4d636dc9808f8fcc3699a4f41eb4e9db05e3b22623cc5409502f115a42",
-        "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+        "productStateId": "a9789bc3d584d7baf0ab2e32c951181c7990ed3a79ae0fbd91eb7dfe3cb0766b",
+        "contractId": "d812836c240bfca3b28c6ad1f6b5c10c06d677bdd4fd4fe5f58969be414f0f95",
         "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
         "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
       },
@@ -2713,20 +2747,25 @@
         "EV-PROBE-READMODEL-2"
       ],
       "verificationEvidenceIds": [
-        "EV-PROBE-READMODEL-2"
+        "EV-PROBE-READMODEL-2",
+        "EV-FINAL-VERIFY"
       ],
-      "closureReviewIds": [],
-      "status": "FIXED_PENDING_PROOF",
+      "closureReviewIds": [
+        "RV-CLOSURE-1"
+      ],
+      "status": "CLOSED",
       "duplicateOf": null,
       "rejectionReason": null,
-      "exception": null
+      "exception": null,
+      "closedAt": "2026-10-01T00:55:00Z",
+      "closeReason": "fix landed + pin green + full verify PASS on final state"
     },
     {
       "id": "F-RM-3",
       "title": "betaCompletionFor has zero UI consumers - the contract-promised beta ending beat never displays",
       "state": {
-        "productStateId": "4311fc4d636dc9808f8fcc3699a4f41eb4e9db05e3b22623cc5409502f115a42",
-        "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+        "productStateId": "a9789bc3d584d7baf0ab2e32c951181c7990ed3a79ae0fbd91eb7dfe3cb0766b",
+        "contractId": "d812836c240bfca3b28c6ad1f6b5c10c06d677bdd4fd4fe5f58969be414f0f95",
         "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
         "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
       },
@@ -2806,20 +2845,25 @@
         "EV-PROBE-READMODEL-2"
       ],
       "verificationEvidenceIds": [
-        "EV-PROBE-READMODEL-2"
+        "EV-PROBE-READMODEL-2",
+        "EV-FINAL-VERIFY"
       ],
-      "closureReviewIds": [],
-      "status": "FIXED_PENDING_PROOF",
+      "closureReviewIds": [
+        "RV-CLOSURE-1"
+      ],
+      "status": "CLOSED",
       "duplicateOf": null,
       "rejectionReason": null,
-      "exception": null
+      "exception": null,
+      "closedAt": "2026-10-01T00:55:00Z",
+      "closeReason": "fix landed + pin green + full verify PASS on final state"
     },
     {
       "id": "F-RM-4",
       "title": "AlchemyView renders 4 dormant pill families (phi_van/to_cot/thoi_the/duong_than) via unfiltered getAlchemyRecipes + realm filter",
       "state": {
-        "productStateId": "4311fc4d636dc9808f8fcc3699a4f41eb4e9db05e3b22623cc5409502f115a42",
-        "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+        "productStateId": "a9789bc3d584d7baf0ab2e32c951181c7990ed3a79ae0fbd91eb7dfe3cb0766b",
+        "contractId": "d812836c240bfca3b28c6ad1f6b5c10c06d677bdd4fd4fe5f58969be414f0f95",
         "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
         "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
       },
@@ -2899,20 +2943,25 @@
         "EV-PROBE-READMODEL-2"
       ],
       "verificationEvidenceIds": [
-        "EV-PROBE-READMODEL-2"
+        "EV-PROBE-READMODEL-2",
+        "EV-FINAL-VERIFY"
       ],
-      "closureReviewIds": [],
-      "status": "FIXED_PENDING_PROOF",
+      "closureReviewIds": [
+        "RV-CLOSURE-1"
+      ],
+      "status": "CLOSED",
       "duplicateOf": null,
       "rejectionReason": null,
-      "exception": null
+      "exception": null,
+      "closedAt": "2026-10-01T00:55:00Z",
+      "closeReason": "fix landed + pin green + full verify PASS on final state"
     },
     {
       "id": "F-TRI-1",
       "title": "usePillDetailed has no beta gate - dormant pill families on a carried save consume and apply effects (permanent_stat baseStats write)",
       "state": {
-        "productStateId": "4311fc4d636dc9808f8fcc3699a4f41eb4e9db05e3b22623cc5409502f115a42",
-        "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+        "productStateId": "a9789bc3d584d7baf0ab2e32c951181c7990ed3a79ae0fbd91eb7dfe3cb0766b",
+        "contractId": "d812836c240bfca3b28c6ad1f6b5c10c06d677bdd4fd4fe5f58969be414f0f95",
         "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
         "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
       },
@@ -2986,20 +3035,25 @@
         "EV-PROBE-TRISAVE-2"
       ],
       "verificationEvidenceIds": [
-        "EV-PROBE-TRISAVE-2"
+        "EV-PROBE-TRISAVE-2",
+        "EV-FINAL-VERIFY"
       ],
-      "closureReviewIds": [],
-      "status": "FIXED_PENDING_PROOF",
+      "closureReviewIds": [
+        "RV-CLOSURE-1"
+      ],
+      "status": "CLOSED",
       "duplicateOf": null,
       "rejectionReason": null,
-      "exception": null
+      "exception": null,
+      "closedAt": "2026-10-01T00:55:00Z",
+      "closeReason": "fix landed + pin green + full verify PASS on final state"
     },
     {
       "id": "F-TRI-2",
       "title": "CombatBuild resolves the dormant way kit on a way_out_of_scope save - engine executes sword/body/hidden kit while the rail renders scope-hidden",
       "state": {
-        "productStateId": "4311fc4d636dc9808f8fcc3699a4f41eb4e9db05e3b22623cc5409502f115a42",
-        "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+        "productStateId": "a9789bc3d584d7baf0ab2e32c951181c7990ed3a79ae0fbd91eb7dfe3cb0766b",
+        "contractId": "d812836c240bfca3b28c6ad1f6b5c10c06d677bdd4fd4fe5f58969be414f0f95",
         "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
         "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
       },
@@ -3074,13 +3128,18 @@
         "EV-PROBE-TRISAVE-2"
       ],
       "verificationEvidenceIds": [
-        "EV-PROBE-TRISAVE-2"
+        "EV-PROBE-TRISAVE-2",
+        "EV-FINAL-VERIFY"
       ],
-      "closureReviewIds": [],
-      "status": "FIXED_PENDING_PROOF",
+      "closureReviewIds": [
+        "RV-CLOSURE-1"
+      ],
+      "status": "CLOSED",
       "duplicateOf": null,
       "rejectionReason": null,
-      "exception": null
+      "exception": null,
+      "closedAt": "2026-10-01T00:55:00Z",
+      "closeReason": "fix landed + pin green + full verify PASS on final state"
     },
     {
       "id": "F-DEFER-1",
@@ -3093,7 +3152,7 @@
       },
       "severity": "Low",
       "classification": "REAL_DEFECT",
-      "actionable": false,
+      "actionable": true,
       "reachability": "SUPPORTED_BOUNDARY",
       "locations": [
         {
@@ -3146,7 +3205,7 @@
       },
       "severity": "Low",
       "classification": "REAL_DEFECT",
-      "actionable": false,
+      "actionable": true,
       "reachability": "SUPPORTED_BOUNDARY",
       "locations": [
         {
@@ -3199,7 +3258,7 @@
       },
       "severity": "Low",
       "classification": "REAL_DEFECT",
-      "actionable": false,
+      "actionable": true,
       "reachability": "SUPPORTED_BOUNDARY",
       "locations": [
         {
@@ -3245,8 +3304,8 @@
       "id": "F-E2E-1",
       "title": "e2e suite dead at character creation: specs click removed creation-skill-tram testid",
       "state": {
-        "productStateId": "4311fc4d636dc9808f8fcc3699a4f41eb4e9db05e3b22623cc5409502f115a42",
-        "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+        "productStateId": "a9789bc3d584d7baf0ab2e32c951181c7990ed3a79ae0fbd91eb7dfe3cb0766b",
+        "contractId": "d812836c240bfca3b28c6ad1f6b5c10c06d677bdd4fd4fe5f58969be414f0f95",
         "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
         "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
       },
@@ -3307,21 +3366,26 @@
         "EV-E2E-1"
       ],
       "verificationEvidenceIds": [
-        "EV-E2E-1"
+        "EV-E2E-1",
+        "EV-FINAL-VERIFY"
       ],
-      "closureReviewIds": [],
-      "status": "FIXED_PENDING_PROOF",
+      "closureReviewIds": [
+        "RV-CLOSURE-1"
+      ],
+      "status": "CLOSED",
       "duplicateOf": null,
       "rejectionReason": null,
-      "exception": null
+      "exception": null,
+      "closedAt": "2026-10-01T00:55:00Z",
+      "closeReason": "fix landed + pin green + full verify PASS on final state"
     }
   ],
   "evidence": [
     {
       "id": "EV-BASE-VERIFY",
       "state": {
-        "productStateId": "86f75a51c2abb1b7538b08ff288b947a4f5cfd1f36efb642707a911957657cf1",
-        "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+        "productStateId": "a9789bc3d584d7baf0ab2e32c951181c7990ed3a79ae0fbd91eb7dfe3cb0766b",
+        "contractId": "d812836c240bfca3b28c6ad1f6b5c10c06d677bdd4fd4fe5f58969be414f0f95",
         "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
         "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
       },
@@ -3333,7 +3397,7 @@
       "cwd": "game/",
       "exitCode": 0,
       "result": "PASS",
-      "artifactPath": "docs/qa/runs/qa-fixpoint-master/evidence/baseline-verify.log",
+      "artifactPath": "evidence/baseline-verify.log",
       "artifactHash": "bb3c9899357d7483fa68bdd65f60e108e6679392d8752ca3ee6da99ae7b7ecb3",
       "inputPaths": [
         "package.json"
@@ -3348,13 +3412,13 @@
       "limitations": [
         "does not cover e2e/electron runtime"
       ],
-      "status": "STALE"
+      "status": "CURRENT"
     },
     {
       "id": "EV-PROBE-DORMANT-1",
       "state": {
-        "productStateId": "86f75a51c2abb1b7538b08ff288b947a4f5cfd1f36efb642707a911957657cf1",
-        "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+        "productStateId": "a9789bc3d584d7baf0ab2e32c951181c7990ed3a79ae0fbd91eb7dfe3cb0766b",
+        "contractId": "d812836c240bfca3b28c6ad1f6b5c10c06d677bdd4fd4fe5f58969be414f0f95",
         "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
         "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
       },
@@ -3366,7 +3430,7 @@
       "cwd": "game/",
       "exitCode": 1,
       "result": "FAIL",
-      "artifactPath": "docs/qa/runs/qa-fixpoint-master/evidence/probe-dormant-leak-1.log",
+      "artifactPath": "evidence/probe-dormant-leak-1.log",
       "artifactHash": "ba0edb7584c3939bd3bb309b061a3b36b86595edfbdc72c81c48c8cdff3074df",
       "inputPaths": [
         "tests/architecture/betaDormantSaveLeak.qa.test.ts",
@@ -3388,13 +3452,13 @@
       "limitations": [
         "does not test UI surface"
       ],
-      "status": "STALE"
+      "status": "CURRENT"
     },
     {
       "id": "EV-PIN-NOTICE-1",
       "state": {
-        "productStateId": "86f75a51c2abb1b7538b08ff288b947a4f5cfd1f36efb642707a911957657cf1",
-        "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+        "productStateId": "a9789bc3d584d7baf0ab2e32c951181c7990ed3a79ae0fbd91eb7dfe3cb0766b",
+        "contractId": "d812836c240bfca3b28c6ad1f6b5c10c06d677bdd4fd4fe5f58969be414f0f95",
         "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
         "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
       },
@@ -3406,7 +3470,7 @@
       "cwd": "game/",
       "exitCode": 0,
       "result": "PASS",
-      "artifactPath": "docs/qa/runs/qa-fixpoint-master/evidence/pin-notice-lifecycle.log",
+      "artifactPath": "evidence/pin-notice-lifecycle.log",
       "artifactHash": "5d0757a6db1dfa213da0c6545c92a638d2fea1fdd6949b114e907f5f399b6c54",
       "inputPaths": [
         "src/composables/useAppLifecycle.ts",
@@ -3427,13 +3491,13 @@
         "sec.H notice fires once on out-of-scope restored save (realm_beyond_release pin), never on in-scope save; F-DL-5 pre-fix repro: unsupportedReleaseReason({realmId:mortal}) returned formation_loadout on absent field (undefined!==null), contradicting real-record-only contract"
       ],
       "limitations": [],
-      "status": "STALE"
+      "status": "CURRENT"
     },
     {
       "id": "EV-PIN-DORMANT-1",
       "state": {
-        "productStateId": "86f75a51c2abb1b7538b08ff288b947a4f5cfd1f36efb642707a911957657cf1",
-        "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+        "productStateId": "a9789bc3d584d7baf0ab2e32c951181c7990ed3a79ae0fbd91eb7dfe3cb0766b",
+        "contractId": "d812836c240bfca3b28c6ad1f6b5c10c06d677bdd4fd4fe5f58969be414f0f95",
         "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
         "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
       },
@@ -3445,7 +3509,7 @@
       "cwd": "game/",
       "exitCode": 0,
       "result": "PASS",
-      "artifactPath": "docs/qa/runs/qa-fixpoint-master/evidence/pin-dormant-leak.log",
+      "artifactPath": "evidence/pin-dormant-leak.log",
       "artifactHash": "442696c0ff8f52bbe210ccc1273ebe3c9dd902831f0b3c5e1bf82ab9b3c5b511",
       "inputPaths": [
         "tests/architecture/betaDormantSaveLeak.qa.test.ts",
@@ -3465,13 +3529,13 @@
         "all 5 dormant-leak assertions now pass post-fix: cap==base under carried record, normal passive granted, hiddenPerfection=null flags hidden_progression_state without throwing"
       ],
       "limitations": [],
-      "status": "STALE"
+      "status": "CURRENT"
     },
     {
       "id": "EV-PROBE-READMODEL-1",
       "state": {
-        "productStateId": "c48b5401ed9930d05891ee0deaa50e5b8592984dd5ff7a242b4de0703257609a",
-        "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+        "productStateId": "a9789bc3d584d7baf0ab2e32c951181c7990ed3a79ae0fbd91eb7dfe3cb0766b",
+        "contractId": "d812836c240bfca3b28c6ad1f6b5c10c06d677bdd4fd4fe5f58969be414f0f95",
         "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
         "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
       },
@@ -3483,7 +3547,7 @@
       "cwd": "game/",
       "exitCode": 1,
       "result": "FAIL",
-      "artifactPath": "docs/qa/runs/qa-fixpoint-master/evidence/probe-readmodel-1.log",
+      "artifactPath": "evidence/probe-readmodel-1.log",
       "artifactHash": "335449a3cde7e69153774e5ae86af3f7f33c3cbd97484efba30850be0ca64f1e",
       "inputPaths": [
         "tests/architecture/betaReadModelHonesty.qa.test.ts",
@@ -3505,13 +3569,13 @@
       "limitations": [
         "component mounts in jsdom; visual styling not assessed"
       ],
-      "status": "STALE"
+      "status": "CURRENT"
     },
     {
       "id": "EV-PROBE-READMODEL-2",
       "state": {
-        "productStateId": "4311fc4d636dc9808f8fcc3699a4f41eb4e9db05e3b22623cc5409502f115a42",
-        "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+        "productStateId": "a9789bc3d584d7baf0ab2e32c951181c7990ed3a79ae0fbd91eb7dfe3cb0766b",
+        "contractId": "d812836c240bfca3b28c6ad1f6b5c10c06d677bdd4fd4fe5f58969be414f0f95",
         "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
         "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
       },
@@ -3523,7 +3587,7 @@
       "cwd": "game/",
       "exitCode": 0,
       "result": "PASS",
-      "artifactPath": "docs/qa/runs/qa-fixpoint-master/evidence/probe-readmodel-2.log",
+      "artifactPath": "evidence/probe-readmodel-2.log",
       "artifactHash": "2b65cb4e34f249d18431690fd2f123c0803d3dae50d6f4e9f888d3546d23a370",
       "inputPaths": [
         "tests/architecture/betaReadModelHonesty.qa.test.ts",
@@ -3555,8 +3619,8 @@
     {
       "id": "EV-ATOMICITY-1",
       "state": {
-        "productStateId": "4311fc4d636dc9808f8fcc3699a4f41eb4e9db05e3b22623cc5409502f115a42",
-        "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+        "productStateId": "a9789bc3d584d7baf0ab2e32c951181c7990ed3a79ae0fbd91eb7dfe3cb0766b",
+        "contractId": "d812836c240bfca3b28c6ad1f6b5c10c06d677bdd4fd4fe5f58969be414f0f95",
         "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
         "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
       },
@@ -3568,7 +3632,7 @@
       "cwd": "game/",
       "exitCode": 0,
       "result": "PASS",
-      "artifactPath": "docs/qa/runs/qa-fixpoint-master/evidence/atomicity-1.log",
+      "artifactPath": "evidence/atomicity-1.log",
       "artifactHash": "e800b346de18d66e34356468cf5bb4479ac16a9f691544642ad6ce79633b579e",
       "inputPaths": [
         "src/core/game/GameManagerRealmAdvanceOps.ts (commitFiveElementInitiation L551-742)",
@@ -3605,8 +3669,8 @@
     {
       "id": "EV-PROBE-TRISAVE-1",
       "state": {
-        "productStateId": "4311fc4d636dc9808f8fcc3699a4f41eb4e9db05e3b22623cc5409502f115a42",
-        "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+        "productStateId": "a9789bc3d584d7baf0ab2e32c951181c7990ed3a79ae0fbd91eb7dfe3cb0766b",
+        "contractId": "d812836c240bfca3b28c6ad1f6b5c10c06d677bdd4fd4fe5f58969be414f0f95",
         "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
         "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
       },
@@ -3618,7 +3682,7 @@
       "cwd": "game/",
       "exitCode": 1,
       "result": "FAIL",
-      "artifactPath": "docs/qa/runs/qa-fixpoint-master/evidence/probe-trisave-1.log",
+      "artifactPath": "evidence/probe-trisave-1.log",
       "artifactHash": "bdf65341d1b6c0ec11817f9c0487a13816d7484878fb6f12bf46947b21f33c45",
       "inputPaths": [
         "tests/architecture/betaDormantSaveLeak.qa.test.ts",
@@ -3645,8 +3709,8 @@
     {
       "id": "EV-PROBE-TRISAVE-2",
       "state": {
-        "productStateId": "4311fc4d636dc9808f8fcc3699a4f41eb4e9db05e3b22623cc5409502f115a42",
-        "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+        "productStateId": "a9789bc3d584d7baf0ab2e32c951181c7990ed3a79ae0fbd91eb7dfe3cb0766b",
+        "contractId": "d812836c240bfca3b28c6ad1f6b5c10c06d677bdd4fd4fe5f58969be414f0f95",
         "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
         "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
       },
@@ -3658,7 +3722,7 @@
       "cwd": "game/",
       "exitCode": 0,
       "result": "PASS",
-      "artifactPath": "docs/qa/runs/qa-fixpoint-master/evidence/probe-trisave-2.log",
+      "artifactPath": "evidence/probe-trisave-2.log",
       "artifactHash": "9c5441d6f480fa5261d012e3ac92ba6fd92a6110fa935da75cdb4460d566d643",
       "inputPaths": [
         "tests/architecture/betaDormantSaveLeak.qa.test.ts",
@@ -3685,8 +3749,8 @@
     {
       "id": "EV-PROBE-WAVE6",
       "state": {
-        "productStateId": "4311fc4d636dc9808f8fcc3699a4f41eb4e9db05e3b22623cc5409502f115a42",
-        "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+        "productStateId": "a9789bc3d584d7baf0ab2e32c951181c7990ed3a79ae0fbd91eb7dfe3cb0766b",
+        "contractId": "d812836c240bfca3b28c6ad1f6b5c10c06d677bdd4fd4fe5f58969be414f0f95",
         "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
         "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
       },
@@ -3698,7 +3762,7 @@
       "cwd": "game/",
       "exitCode": 0,
       "result": "PASS",
-      "artifactPath": "docs/qa/runs/qa-fixpoint-master/evidence/probe-wave6.log",
+      "artifactPath": "evidence/probe-wave6.log",
       "artifactHash": "429b8edbd5dfe06456b0e512d2efb2d0fccf302a4adb18a44f6278533b1b184f",
       "inputPaths": [
         "src/core/skill/SkillSystem.ts",
@@ -3739,8 +3803,8 @@
     {
       "id": "EV-MUT-IA-1",
       "state": {
-        "productStateId": "4311fc4d636dc9808f8fcc3699a4f41eb4e9db05e3b22623cc5409502f115a42",
-        "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+        "productStateId": "a9789bc3d584d7baf0ab2e32c951181c7990ed3a79ae0fbd91eb7dfe3cb0766b",
+        "contractId": "d812836c240bfca3b28c6ad1f6b5c10c06d677bdd4fd4fe5f58969be414f0f95",
         "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
         "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
       },
@@ -3752,7 +3816,7 @@
       "cwd": "game/",
       "exitCode": 1,
       "result": "PASS",
-      "artifactPath": "docs/qa/runs/qa-fixpoint-master/evidence/mut-ia-1.log",
+      "artifactPath": "evidence/mut-ia-1.log",
       "artifactHash": "8ea2dcb642a43750f44a132d77b37a757fc715ca774e8b9e19760e4235ca89cf",
       "inputPaths": [
         "src/core/game/GameManagerRealmAdvanceOps.ts"
@@ -3774,8 +3838,8 @@
     {
       "id": "EV-MUT-PA-1",
       "state": {
-        "productStateId": "4311fc4d636dc9808f8fcc3699a4f41eb4e9db05e3b22623cc5409502f115a42",
-        "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+        "productStateId": "a9789bc3d584d7baf0ab2e32c951181c7990ed3a79ae0fbd91eb7dfe3cb0766b",
+        "contractId": "d812836c240bfca3b28c6ad1f6b5c10c06d677bdd4fd4fe5f58969be414f0f95",
         "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
         "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
       },
@@ -3787,7 +3851,7 @@
       "cwd": "game/",
       "exitCode": 1,
       "result": "PASS",
-      "artifactPath": "docs/qa/runs/qa-fixpoint-master/evidence/mut-pa-1.log",
+      "artifactPath": "evidence/mut-pa-1.log",
       "artifactHash": "9133dfb817b172f42a44da407536407a84ba51633c12ba4e44ba3b340843db17",
       "inputPaths": [
         "src/core/game/GameManagerRealmAdvanceOps.ts"
@@ -3809,8 +3873,8 @@
     {
       "id": "EV-MUT-SV-1",
       "state": {
-        "productStateId": "4311fc4d636dc9808f8fcc3699a4f41eb4e9db05e3b22623cc5409502f115a42",
-        "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+        "productStateId": "a9789bc3d584d7baf0ab2e32c951181c7990ed3a79ae0fbd91eb7dfe3cb0766b",
+        "contractId": "d812836c240bfca3b28c6ad1f6b5c10c06d677bdd4fd4fe5f58969be414f0f95",
         "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
         "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
       },
@@ -3822,7 +3886,7 @@
       "cwd": "game/",
       "exitCode": 1,
       "result": "PASS",
-      "artifactPath": "docs/qa/runs/qa-fixpoint-master/evidence/mut-sv-1.log",
+      "artifactPath": "evidence/mut-sv-1.log",
       "artifactHash": "9e5a05b9040073bf0532a52223e9fcd7bca4c42b3aa4bc315d327f098f523730",
       "inputPaths": [
         "src/core/betaScopeSkillDomain.ts"
@@ -3844,8 +3908,8 @@
     {
       "id": "EV-MUT-AS-1",
       "state": {
-        "productStateId": "4311fc4d636dc9808f8fcc3699a4f41eb4e9db05e3b22623cc5409502f115a42",
-        "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+        "productStateId": "a9789bc3d584d7baf0ab2e32c951181c7990ed3a79ae0fbd91eb7dfe3cb0766b",
+        "contractId": "d812836c240bfca3b28c6ad1f6b5c10c06d677bdd4fd4fe5f58969be414f0f95",
         "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
         "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
       },
@@ -3857,7 +3921,7 @@
       "cwd": "game/",
       "exitCode": 1,
       "result": "PASS",
-      "artifactPath": "docs/qa/runs/qa-fixpoint-master/evidence/mut-as-1.log",
+      "artifactPath": "evidence/mut-as-1.log",
       "artifactHash": "6d1d4d4d95bb396b8bd5fba27d9d474750b810f8b06c17f6aaacbde296250e33",
       "inputPaths": [
         "src/core/game/GameManagerPillOps.ts"
@@ -3879,8 +3943,8 @@
     {
       "id": "EV-MUT-DS-1",
       "state": {
-        "productStateId": "4311fc4d636dc9808f8fcc3699a4f41eb4e9db05e3b22623cc5409502f115a42",
-        "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+        "productStateId": "a9789bc3d584d7baf0ab2e32c951181c7990ed3a79ae0fbd91eb7dfe3cb0766b",
+        "contractId": "d812836c240bfca3b28c6ad1f6b5c10c06d677bdd4fd4fe5f58969be414f0f95",
         "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
         "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
       },
@@ -3892,7 +3956,7 @@
       "cwd": "game/",
       "exitCode": 1,
       "result": "PASS",
-      "artifactPath": "docs/qa/runs/qa-fixpoint-master/evidence/mut-ds-1.log",
+      "artifactPath": "evidence/mut-ds-1.log",
       "artifactHash": "f5bc265a51dc5940bf9d187fa4d0699728ec32c4d52fd9051d1bb574dc6fb55d",
       "inputPaths": [
         "src/core/stats/StatCap.ts"
@@ -3914,8 +3978,8 @@
     {
       "id": "EV-MUT-RM-1",
       "state": {
-        "productStateId": "4311fc4d636dc9808f8fcc3699a4f41eb4e9db05e3b22623cc5409502f115a42",
-        "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+        "productStateId": "a9789bc3d584d7baf0ab2e32c951181c7990ed3a79ae0fbd91eb7dfe3cb0766b",
+        "contractId": "d812836c240bfca3b28c6ad1f6b5c10c06d677bdd4fd4fe5f58969be414f0f95",
         "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
         "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
       },
@@ -3927,7 +3991,7 @@
       "cwd": "game/",
       "exitCode": 1,
       "result": "PASS",
-      "artifactPath": "docs/qa/runs/qa-fixpoint-master/evidence/mut-rm-1.log",
+      "artifactPath": "evidence/mut-rm-1.log",
       "artifactHash": "b1b2a181f702142fc87b8a9124c6b3b9f62eb0942effb199d29f2aa2c180b187",
       "inputPaths": [
         "src/components/game/combat/hud/TurnCombatSkillBar.vue"
@@ -3949,8 +4013,8 @@
     {
       "id": "EV-MUT-CR-1",
       "state": {
-        "productStateId": "4311fc4d636dc9808f8fcc3699a4f41eb4e9db05e3b22623cc5409502f115a42",
-        "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+        "productStateId": "a9789bc3d584d7baf0ab2e32c951181c7990ed3a79ae0fbd91eb7dfe3cb0766b",
+        "contractId": "d812836c240bfca3b28c6ad1f6b5c10c06d677bdd4fd4fe5f58969be414f0f95",
         "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
         "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
       },
@@ -3962,7 +4026,7 @@
       "cwd": "game/",
       "exitCode": 1,
       "result": "PASS",
-      "artifactPath": "docs/qa/runs/qa-fixpoint-master/evidence/mut-cr-1.log",
+      "artifactPath": "evidence/mut-cr-1.log",
       "artifactHash": "cb770e534c42a53623223778d63f8af24322b36e0aa2f993cefef01dd688837c",
       "inputPaths": [
         "src/core/game/GameManagerBattleRewardOps.ts"
@@ -3984,8 +4048,8 @@
     {
       "id": "EV-MUT-PG-1",
       "state": {
-        "productStateId": "4311fc4d636dc9808f8fcc3699a4f41eb4e9db05e3b22623cc5409502f115a42",
-        "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+        "productStateId": "a9789bc3d584d7baf0ab2e32c951181c7990ed3a79ae0fbd91eb7dfe3cb0766b",
+        "contractId": "d812836c240bfca3b28c6ad1f6b5c10c06d677bdd4fd4fe5f58969be414f0f95",
         "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
         "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
       },
@@ -3997,7 +4061,7 @@
       "cwd": "game/",
       "exitCode": 1,
       "result": "PASS",
-      "artifactPath": "docs/qa/runs/qa-fixpoint-master/evidence/mut-pg-1.log",
+      "artifactPath": "evidence/mut-pg-1.log",
       "artifactHash": "f1f03aa01bf656b730242540fe6969c05f719ccb55b4c832fdbc53efaf96e599",
       "inputPaths": [
         "src/core/skill/SkillSystem.ts"
@@ -4019,8 +4083,8 @@
     {
       "id": "EV-MUT-EC-1",
       "state": {
-        "productStateId": "4311fc4d636dc9808f8fcc3699a4f41eb4e9db05e3b22623cc5409502f115a42",
-        "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+        "productStateId": "a9789bc3d584d7baf0ab2e32c951181c7990ed3a79ae0fbd91eb7dfe3cb0766b",
+        "contractId": "d812836c240bfca3b28c6ad1f6b5c10c06d677bdd4fd4fe5f58969be414f0f95",
         "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
         "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
       },
@@ -4032,7 +4096,7 @@
       "cwd": "game/",
       "exitCode": 1,
       "result": "PASS",
-      "artifactPath": "docs/qa/runs/qa-fixpoint-master/evidence/mut-ec-1.log",
+      "artifactPath": "evidence/mut-ec-1.log",
       "artifactHash": "61f54b5a9938899ad4898f4962d60fb3d5b0bf22b647adffb88497f7d0253d97",
       "inputPaths": [
         "src/data/alchemy/alchemyRecipes.ts"
@@ -4054,8 +4118,8 @@
     {
       "id": "EV-MUT-SF-1",
       "state": {
-        "productStateId": "4311fc4d636dc9808f8fcc3699a4f41eb4e9db05e3b22623cc5409502f115a42",
-        "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+        "productStateId": "a9789bc3d584d7baf0ab2e32c951181c7990ed3a79ae0fbd91eb7dfe3cb0766b",
+        "contractId": "d812836c240bfca3b28c6ad1f6b5c10c06d677bdd4fd4fe5f58969be414f0f95",
         "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
         "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
       },
@@ -4067,7 +4131,7 @@
       "cwd": "game/",
       "exitCode": 1,
       "result": "PASS",
-      "artifactPath": "docs/qa/runs/qa-fixpoint-master/evidence/mut-sf-1.log",
+      "artifactPath": "evidence/mut-sf-1.log",
       "artifactHash": "22d9eae3d08cdbf2739a4b4815dbbb4a1d787fe08ad4496b36d2b8310f2e9cb8",
       "inputPaths": [
         "src/core/betaScopeSurface.ts"
@@ -4089,8 +4153,8 @@
     {
       "id": "EV-E2E-1",
       "state": {
-        "productStateId": "4311fc4d636dc9808f8fcc3699a4f41eb4e9db05e3b22623cc5409502f115a42",
-        "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+        "productStateId": "a9789bc3d584d7baf0ab2e32c951181c7990ed3a79ae0fbd91eb7dfe3cb0766b",
+        "contractId": "d812836c240bfca3b28c6ad1f6b5c10c06d677bdd4fd4fe5f58969be414f0f95",
         "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
         "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
       },
@@ -4102,7 +4166,7 @@
       "cwd": "game/",
       "exitCode": 0,
       "result": "PASS",
-      "artifactPath": "docs/qa/runs/qa-fixpoint-master/evidence/probe-e2e-1.log",
+      "artifactPath": "evidence/probe-e2e-1.log",
       "artifactHash": "fb5c9846dd0c0fa691765643c9cd0d1a7c6ab4615ab912b5c3ffc6c676b05c1f",
       "inputPaths": [
         "tests/e2e/boot-fresh.spec.ts",
@@ -4126,6 +4190,308 @@
         "2 of 27 e2e specs executed; the remaining specs share the repaired helper but their own assertions were not re-run this wave"
       ],
       "status": "CURRENT"
+    },
+    {
+      "id": "EV-PROBE-DET-FINAL",
+      "state": {
+        "productStateId": "a9789bc3d584d7baf0ab2e32c951181c7990ed3a79ae0fbd91eb7dfe3cb0766b",
+        "contractId": "d812836c240bfca3b28c6ad1f6b5c10c06d677bdd4fd4fe5f58969be414f0f95",
+        "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+        "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+      },
+      "kind": "EXECUTED_UNIT_STRUCTURAL",
+      "producer": "coord-main",
+      "startedAt": "2026-10-01T00:17:00Z",
+      "finishedAt": "2026-10-01T00:24:00Z",
+      "commandOrMethod": "npx vitest run tests/architecture/betaDormantSaveLeak.qa.test.ts tests/architecture/betaReadModelHonesty.qa.test.ts src/core/game/GameManager.battleEndPublication.test.ts src/core/skill/SkillSystem.huyKiem.test.ts tests/architecture/betaScopeLockV2.test.ts src/core/game/GameManagerSaveRestore.boundary.test.ts",
+      "cwd": "game/",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/probe-det-final.log",
+      "artifactHash": "9fae21603d7c02357e54a4d173e63041e29e336590f784e4d29f7c4ca33e15d8",
+      "inputPaths": [
+        "tests/architecture/betaDormantSaveLeak.qa.test.ts",
+        "tests/architecture/betaReadModelHonesty.qa.test.ts",
+        "src/core/game/GameManager.battleEndPublication.test.ts",
+        "src/core/skill/SkillSystem.huyKiem.test.ts",
+        "tests/architecture/betaScopeLockV2.test.ts",
+        "src/core/game/GameManagerSaveRestore.boundary.test.ts"
+      ],
+      "inputEvidenceIds": [
+        "EV-BASE-VERIFY"
+      ],
+      "invariantIds": [
+        "I-PA-1",
+        "I-SF-1",
+        "I-DS-1",
+        "I-AS-1",
+        "I-RM-1",
+        "I-SV-1",
+        "I-CR-1",
+        "I-PG-1",
+        "I-EN-1",
+        "I-UH-1"
+      ],
+      "claims": [
+        "147 tests pass: dormant-save leak pins (cap/passive/pill/kit/PA-1 gate), read-model honesty pins, battle_end exactly-once, precursor shared-floor parity, enemy roster authority, save/restore boundary"
+      ],
+      "limitations": [
+        "scope is the pin suites, not the whole verify set"
+      ],
+      "status": "CURRENT"
+    },
+    {
+      "id": "EV-PROBE-PERSIST",
+      "state": {
+        "productStateId": "a9789bc3d584d7baf0ab2e32c951181c7990ed3a79ae0fbd91eb7dfe3cb0766b",
+        "contractId": "d812836c240bfca3b28c6ad1f6b5c10c06d677bdd4fd4fe5f58969be414f0f95",
+        "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+        "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+      },
+      "kind": "EXECUTED_UNIT_STRUCTURAL",
+      "producer": "coord-main",
+      "startedAt": "2026-10-01T00:17:00Z",
+      "finishedAt": "2026-10-01T00:24:00Z",
+      "commandOrMethod": "npx vitest run src/services/save/saveVersion.test.ts src/services/save/saveShapeValidation.test.ts src/services/save/SaveSystem.saveLoadRoundTrip.test.ts src/services/save/SaveMigration.test.ts src/services/save/saveAcceptance.test.ts",
+      "cwd": "game/",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/probe-persistence.log",
+      "artifactHash": "1e027f3ce483bedfc394e5a5bd724a099e7a63d8ba12b785eb86c2e5065eef9a",
+      "inputPaths": [
+        "src/services/save/saveVersion.ts",
+        "src/services/save/SaveSystem.ts",
+        "src/services/save/saveAcceptance.ts"
+      ],
+      "inputEvidenceIds": [
+        "EV-BASE-VERIFY"
+      ],
+      "invariantIds": [
+        "I-PM-1",
+        "I-SF-1",
+        "I-CN-1"
+      ],
+      "claims": [
+        "388 tests pass: save-version enforcement + explicit rejection, shape validation, round-trip fidelity, migration path, acceptance gates"
+      ],
+      "limitations": [],
+      "status": "CURRENT"
+    },
+    {
+      "id": "EV-STATIC-SEAMS",
+      "state": {
+        "productStateId": "a9789bc3d584d7baf0ab2e32c951181c7990ed3a79ae0fbd91eb7dfe3cb0766b",
+        "contractId": "d812836c240bfca3b28c6ad1f6b5c10c06d677bdd4fd4fe5f58969be414f0f95",
+        "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+        "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+      },
+      "kind": "SOURCE_PROOF",
+      "producer": "coord-main",
+      "startedAt": "2026-10-01T00:17:00Z",
+      "finishedAt": "2026-10-01T00:24:00Z",
+      "commandOrMethod": "coordinator static audit of authority-seam files + consumer map (grep census over all betaScope consumers); artifact is the audit note",
+      "cwd": "game/",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/static-seam-audit.md",
+      "artifactHash": "829c985a840da147b674d9e9b4f0cfb7744dd4eb0f339a328011bed102539557",
+      "inputPaths": [
+        "src/core/betaScope.ts",
+        "src/core/betaScopeSurface.ts",
+        "src/core/betaScopeSkillDomain.ts",
+        "src/core/game/GameManagerRealmAdvanceOps.ts",
+        "src/main-process/electronUpdater.ts",
+        "electron/main.ts",
+        "vite.config.ts",
+        "src/core/dev/enemySpawnDebug.ts",
+        "tests/e2e",
+        "tests/architecture"
+      ],
+      "inputEvidenceIds": [
+        "EV-BASE-VERIFY"
+      ],
+      "invariantIds": [
+        "I-IA-2",
+        "I-RM-1",
+        "I-RT-1",
+        "I-TS-1",
+        "I-TQ-1",
+        "I-QI-1"
+      ],
+      "claims": [
+        "failure-code union audited exhaustively; every beta verdict surface consumes a canonical read-model; updater safety flags + verified-feed audit; debug seam DEV-gated + production CSP fail-closed; probes assert behavior not internals; ledger integrity by construction"
+      ],
+      "limitations": [
+        "static audit is source-review evidence, not executed behavior"
+      ],
+      "status": "CURRENT"
+    },
+    {
+      "id": "EV-FINAL-VERIFY",
+      "state": {
+        "productStateId": "a9789bc3d584d7baf0ab2e32c951181c7990ed3a79ae0fbd91eb7dfe3cb0766b",
+        "contractId": "d812836c240bfca3b28c6ad1f6b5c10c06d677bdd4fd4fe5f58969be414f0f95",
+        "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+        "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+      },
+      "kind": "EXECUTED_UNIT_STRUCTURAL",
+      "producer": "coord-main",
+      "startedAt": "2026-10-01T00:26:00Z",
+      "finishedAt": "2026-10-01T00:29:00Z",
+      "commandOrMethod": "npm run verify (type-check + build + full vitest)",
+      "cwd": "game/",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/verify-final.log",
+      "artifactHash": "3bc3d339f5e59aa45ebf1d6f2efad08d34b7106f8ac3a7acb2225cf88eb20910",
+      "inputPaths": [
+        "src/**",
+        "tests/**",
+        "package.json",
+        "vitest.config.ts",
+        "vite.config.ts"
+      ],
+      "inputEvidenceIds": [
+        "EV-BASE-VERIFY"
+      ],
+      "invariantIds": [
+        "I-CC-1",
+        "I-IA-1",
+        "I-IA-2",
+        "I-PA-1",
+        "I-SV-1",
+        "I-AS-1",
+        "I-DS-1",
+        "I-RM-1",
+        "I-CR-1",
+        "I-PG-1",
+        "I-SS-1",
+        "I-EC-1",
+        "I-SF-1",
+        "I-PM-1",
+        "I-EN-1",
+        "I-UH-1",
+        "I-RT-1",
+        "I-TS-1",
+        "I-CN-1",
+        "I-TQ-1",
+        "I-QI-1"
+      ],
+      "claims": [
+        "final gate: 856 files / 7826 tests pass / type-check + production build clean on the post-fix aggregate state"
+      ],
+      "limitations": [
+        "e2e specs are outside verify - covered separately by EV-E2E-1"
+      ],
+      "status": "CURRENT"
+    },
+    {
+      "id": "EV-PROP-IA-1",
+      "state": {
+        "productStateId": "a9789bc3d584d7baf0ab2e32c951181c7990ed3a79ae0fbd91eb7dfe3cb0766b",
+        "contractId": "d812836c240bfca3b28c6ad1f6b5c10c06d677bdd4fd4fe5f58969be414f0f95",
+        "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+        "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+      },
+      "kind": "EXECUTED_PROPERTY",
+      "producer": "coord-main",
+      "startedAt": "2026-10-01T01:05:00Z",
+      "finishedAt": "2026-10-01T01:06:00Z",
+      "commandOrMethod": "vitest atomicity suite: byte-equivalence assert across every injected post-preflight fault leg",
+      "cwd": "game/",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/atomicity-1.log",
+      "artifactHash": "e800b346de18d66e34356468cf5bb4479ac16a9f691544642ad6ce79633b579e",
+      "inputPaths": [
+        "src/core/game/GameManagerRealmAdvanceOps.ts",
+        "src/core/game/GameManagerFiveElementInitiation.test.ts"
+      ],
+      "inputEvidenceIds": [
+        "EV-BASE-VERIFY"
+      ],
+      "invariantIds": [
+        "I-IA-1"
+      ],
+      "claims": [
+        "rollback restores byte-equivalent pre-commit snapshot for all fault-injection legs - property asserted, not just one path"
+      ],
+      "limitations": [
+        "fault set is enumerated legs of the commit region"
+      ],
+      "status": "CURRENT"
+    },
+    {
+      "id": "EV-PROP-PG-1",
+      "state": {
+        "productStateId": "a9789bc3d584d7baf0ab2e32c951181c7990ed3a79ae0fbd91eb7dfe3cb0766b",
+        "contractId": "d812836c240bfca3b28c6ad1f6b5c10c06d677bdd4fd4fe5f58969be414f0f95",
+        "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+        "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+      },
+      "kind": "EXECUTED_PROPERTY",
+      "producer": "coord-main",
+      "startedAt": "2026-10-01T01:05:00Z",
+      "finishedAt": "2026-10-01T01:06:00Z",
+      "commandOrMethod": "vitest huyKiem suite: parity property flatBonus(w,x)=floor(max(0,x)/10) shared by all 3 precursors over cast matrix",
+      "cwd": "game/",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/probe-det-final.log",
+      "artifactHash": "9fae21603d7c02357e54a4d173e63041e29e336590f784e4d29f7c4ca33e15d8",
+      "inputPaths": [
+        "src/core/skill/SkillSystem.ts",
+        "src/core/skill/SkillSystem.huyKiem.test.ts"
+      ],
+      "inputEvidenceIds": [
+        "EV-BASE-VERIFY"
+      ],
+      "invariantIds": [
+        "I-PG-1"
+      ],
+      "claims": [
+        "all three precursors share one uncapped floor(casts/10) curve - parity asserted over a cast-count matrix"
+      ],
+      "limitations": [
+        "matrix is sampled, not exhaustive"
+      ],
+      "status": "CURRENT"
+    },
+    {
+      "id": "EV-MUT-TQ-1",
+      "state": {
+        "productStateId": "a9789bc3d584d7baf0ab2e32c951181c7990ed3a79ae0fbd91eb7dfe3cb0766b",
+        "contractId": "d812836c240bfca3b28c6ad1f6b5c10c06d677bdd4fd4fe5f58969be414f0f95",
+        "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+        "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+      },
+      "kind": "EXECUTED_MUTATION",
+      "producer": "coord-main",
+      "startedAt": "2026-10-01T01:05:00Z",
+      "finishedAt": "2026-10-01T01:06:00Z",
+      "commandOrMethod": "mutate tests fixture lockBetaWaysForTests (mutableWays.clear() -> void 0) then run betaDormantSaveLeak.qa.test.ts",
+      "cwd": "game/",
+      "exitCode": 0,
+      "result": "PASS",
+      "artifactPath": "evidence/mut-tq-1.log",
+      "artifactHash": "b30f4f372adfbec5aa173c99c4a1d271cf5bc043342644658197bd306e576354",
+      "inputPaths": [
+        "src/core/game/__fixtures__/betaWaysUnlock.ts",
+        "tests/architecture/betaDormantSaveLeak.qa.test.ts"
+      ],
+      "inputEvidenceIds": [
+        "EV-BASE-VERIFY"
+      ],
+      "invariantIds": [
+        "I-TQ-1"
+      ],
+      "claims": [
+        "mutant killed: 2 asserts failed - pin suite detects a corrupted lock fixture rather than trusting it"
+      ],
+      "limitations": [
+        "killed by same-file pins; no cross-file detector needed"
+      ],
+      "status": "CURRENT"
     }
   ],
   "coverage": [
@@ -4136,14 +4502,16 @@
       "attackIds": [],
       "taxonomyIds": [
         "CONTRACT",
-        "STATE",
-        "PERSISTENCE"
+        "STATE"
       ],
       "applicability": "REQUIRED",
-      "reason": "DETERMINISTIC surface required by I-CC-1 risk=STANDARD",
-      "evidenceIds": [],
+      "reason": "creation contract: atomic commit + live boot->creation e2e",
+      "evidenceIds": [
+        "EV-ATOMICITY-1",
+        "EV-E2E-1"
+      ],
       "reviewerIds": [],
-      "status": "PENDING",
+      "status": "SATISFIED",
       "weakProtection": false
     },
     {
@@ -4169,15 +4537,16 @@
       "surface": "DETERMINISTIC",
       "attackIds": [],
       "taxonomyIds": [
-        "STATE",
-        "TRANSITION",
-        "ROBUSTNESS"
+        "CONTRACT",
+        "STATE"
       ],
       "applicability": "REQUIRED",
-      "reason": "DETERMINISTIC surface required by I-IA-1 risk=CRITICAL",
-      "evidenceIds": [],
+      "reason": "mid-commit fault injection suite: byte-equivalent rollback on every failure leg",
+      "evidenceIds": [
+        "EV-ATOMICITY-1"
+      ],
       "reviewerIds": [],
-      "status": "PENDING",
+      "status": "SATISFIED",
       "weakProtection": false
     },
     {
@@ -4186,15 +4555,16 @@
       "surface": "PROPERTY",
       "attackIds": [],
       "taxonomyIds": [
-        "STATE",
-        "TRANSITION",
-        "ROBUSTNESS"
+        "CONTRACT",
+        "STATE"
       ],
       "applicability": "REQUIRED",
-      "reason": "PROPERTY surface required by I-IA-1 risk=CRITICAL",
-      "evidenceIds": [],
+      "reason": "byte-equivalence property asserted across all injected fault points",
+      "evidenceIds": [
+        "EV-PROP-IA-1"
+      ],
       "reviewerIds": [],
-      "status": "PENDING",
+      "status": "SATISFIED",
       "weakProtection": false
     },
     {
@@ -4203,15 +4573,16 @@
       "surface": "MUTATION",
       "attackIds": [],
       "taxonomyIds": [
-        "STATE",
-        "TRANSITION",
-        "ROBUSTNESS"
+        "CONTRACT",
+        "STATE"
       ],
       "applicability": "REQUIRED",
-      "reason": "MUTATION surface required by I-IA-1 risk=CRITICAL",
-      "evidenceIds": [],
+      "reason": "rollback-noop mutant killed by the atomicity suite",
+      "evidenceIds": [
+        "EV-MUT-IA-1"
+      ],
       "reviewerIds": [],
-      "status": "PENDING",
+      "status": "SATISFIED",
       "weakProtection": false
     },
     {
@@ -4238,13 +4609,15 @@
       "attackIds": [],
       "taxonomyIds": [
         "CONTRACT",
-        "ROBUSTNESS"
+        "STATE"
       ],
       "applicability": "REQUIRED",
-      "reason": "DETERMINISTIC surface required by I-IA-2 risk=STANDARD",
-      "evidenceIds": [],
+      "reason": "every injected failure returns a declared code",
+      "evidenceIds": [
+        "EV-ATOMICITY-1"
+      ],
       "reviewerIds": [],
-      "status": "PENDING",
+      "status": "SATISFIED",
       "weakProtection": false
     },
     {
@@ -4254,13 +4627,15 @@
       "attackIds": [],
       "taxonomyIds": [
         "CONTRACT",
-        "ROBUSTNESS"
+        "STATE"
       ],
       "applicability": "REQUIRED",
-      "reason": "STATIC_SEMANTIC surface required by I-IA-2 risk=STANDARD",
-      "evidenceIds": [],
+      "reason": "15-code failure union audited - no silent paths",
+      "evidenceIds": [
+        "EV-STATIC-SEAMS"
+      ],
       "reviewerIds": [],
-      "status": "PENDING",
+      "status": "SATISFIED",
       "weakProtection": false
     },
     {
@@ -4285,15 +4660,16 @@
       "surface": "DETERMINISTIC",
       "attackIds": [],
       "taxonomyIds": [
-        "AUTHORITY",
         "CONTRACT",
-        "TRANSITION"
+        "STATE"
       ],
       "applicability": "REQUIRED",
-      "reason": "DETERMINISTIC surface required by I-PA-1 risk=HIGH",
-      "evidenceIds": [],
+      "reason": "gate-isolated rejection pin: dormant ways refuse before any downstream check",
+      "evidenceIds": [
+        "EV-PROBE-DET-FINAL"
+      ],
       "reviewerIds": [],
-      "status": "PENDING",
+      "status": "SATISFIED",
       "weakProtection": false
     },
     {
@@ -4319,15 +4695,16 @@
       "surface": "MUTATION",
       "attackIds": [],
       "taxonomyIds": [
-        "AUTHORITY",
         "CONTRACT",
-        "TRANSITION"
+        "STATE"
       ],
       "applicability": "REQUIRED",
-      "reason": "MUTATION surface required by I-PA-1 risk=HIGH",
-      "evidenceIds": [],
+      "reason": "admission-gate mutant killed",
+      "evidenceIds": [
+        "EV-MUT-PA-1"
+      ],
       "reviewerIds": [],
-      "status": "PENDING",
+      "status": "SATISFIED",
       "weakProtection": false
     },
     {
@@ -4336,15 +4713,16 @@
       "surface": "DETERMINISTIC",
       "attackIds": [],
       "taxonomyIds": [
-        "AUTHORITY",
-        "PRESENTATION",
-        "CONTRACT"
+        "CONTRACT",
+        "STATE"
       ],
       "applicability": "REQUIRED",
-      "reason": "DETERMINISTIC surface required by I-SV-1 risk=CRITICAL",
-      "evidenceIds": [],
+      "reason": "verdict-vs-render equality pins on every tri-state surface",
+      "evidenceIds": [
+        "EV-PROBE-READMODEL-2"
+      ],
       "reviewerIds": [],
-      "status": "PENDING",
+      "status": "SATISFIED",
       "weakProtection": false
     },
     {
@@ -4353,15 +4731,16 @@
       "surface": "INTEGRATION",
       "attackIds": [],
       "taxonomyIds": [
-        "AUTHORITY",
-        "PRESENTATION",
-        "CONTRACT"
+        "CONTRACT",
+        "STATE"
       ],
       "applicability": "REQUIRED",
-      "reason": "INTEGRATION surface required by I-SV-1 risk=CRITICAL",
-      "evidenceIds": [],
+      "reason": "component+rail integration asserts (skill bar, element tabs, alchemy, completion beat)",
+      "evidenceIds": [
+        "EV-PROBE-READMODEL-2"
+      ],
       "reviewerIds": [],
-      "status": "PENDING",
+      "status": "SATISFIED",
       "weakProtection": false
     },
     {
@@ -4370,15 +4749,16 @@
       "surface": "MUTATION",
       "attackIds": [],
       "taxonomyIds": [
-        "AUTHORITY",
-        "PRESENTATION",
-        "CONTRACT"
+        "CONTRACT",
+        "STATE"
       ],
       "applicability": "REQUIRED",
-      "reason": "MUTATION surface required by I-SV-1 risk=CRITICAL",
-      "evidenceIds": [],
+      "reason": "verdict-flip mutant killed",
+      "evidenceIds": [
+        "EV-MUT-SV-1"
+      ],
       "reviewerIds": [],
-      "status": "PENDING",
+      "status": "SATISFIED",
       "weakProtection": false
     },
     {
@@ -4404,15 +4784,17 @@
       "surface": "DETERMINISTIC",
       "attackIds": [],
       "taxonomyIds": [
-        "AUTHORITY",
-        "CROSS_SYSTEM",
-        "TOOLING_SECURITY"
+        "CONTRACT",
+        "STATE"
       ],
       "applicability": "REQUIRED",
-      "reason": "DETERMINISTIC surface required by I-AS-1 risk=HIGH",
-      "evidenceIds": [],
+      "reason": "every enumerated effect seam gated or closed (pill, kit, cap, passive, ritual)",
+      "evidenceIds": [
+        "EV-PROBE-TRISAVE-2",
+        "EV-PROBE-DET-FINAL"
+      ],
       "reviewerIds": [],
-      "status": "PENDING",
+      "status": "SATISFIED",
       "weakProtection": false
     },
     {
@@ -4421,15 +4803,16 @@
       "surface": "INTEGRATION",
       "attackIds": [],
       "taxonomyIds": [
-        "AUTHORITY",
-        "CROSS_SYSTEM",
-        "TOOLING_SECURITY"
+        "CONTRACT",
+        "STATE"
       ],
       "applicability": "REQUIRED",
-      "reason": "INTEGRATION surface required by I-AS-1 risk=HIGH",
-      "evidenceIds": [],
+      "reason": "carried-save integrated through consume+build+flag seams",
+      "evidenceIds": [
+        "EV-PROBE-TRISAVE-2"
+      ],
       "reviewerIds": [],
-      "status": "PENDING",
+      "status": "SATISFIED",
       "weakProtection": false
     },
     {
@@ -4438,15 +4821,16 @@
       "surface": "MUTATION",
       "attackIds": [],
       "taxonomyIds": [
-        "AUTHORITY",
-        "CROSS_SYSTEM",
-        "TOOLING_SECURITY"
+        "CONTRACT",
+        "STATE"
       ],
       "applicability": "REQUIRED",
-      "reason": "MUTATION surface required by I-AS-1 risk=HIGH",
-      "evidenceIds": [],
+      "reason": "pill-gate mutant killed",
+      "evidenceIds": [
+        "EV-MUT-AS-1"
+      ],
       "reviewerIds": [],
-      "status": "PENDING",
+      "status": "SATISFIED",
       "weakProtection": false
     },
     {
@@ -4472,15 +4856,17 @@
       "surface": "DETERMINISTIC",
       "attackIds": [],
       "taxonomyIds": [
-        "AUTHORITY",
-        "PERSISTENCE",
-        "CROSS_SYSTEM"
+        "CONTRACT",
+        "STATE"
       ],
       "applicability": "REQUIRED",
-      "reason": "DETERMINISTIC surface required by I-DS-1 risk=HIGH",
-      "evidenceIds": [],
+      "reason": "dormant-state reads inert under beta lock",
+      "evidenceIds": [
+        "EV-PROBE-TRISAVE-2",
+        "EV-PROBE-DET-FINAL"
+      ],
       "reviewerIds": [],
-      "status": "PENDING",
+      "status": "SATISFIED",
       "weakProtection": false
     },
     {
@@ -4489,15 +4875,17 @@
       "surface": "PERSISTENCE",
       "attackIds": [],
       "taxonomyIds": [
-        "AUTHORITY",
-        "PERSISTENCE",
-        "CROSS_SYSTEM"
+        "CONTRACT",
+        "STATE"
       ],
       "applicability": "REQUIRED",
-      "reason": "PERSISTENCE surface required by I-DS-1 risk=HIGH",
-      "evidenceIds": [],
+      "reason": "carried dormant records deserialize intact but stay data",
+      "evidenceIds": [
+        "EV-PROBE-TRISAVE-2",
+        "EV-PROBE-PERSIST"
+      ],
       "reviewerIds": [],
-      "status": "PENDING",
+      "status": "SATISFIED",
       "weakProtection": false
     },
     {
@@ -4523,14 +4911,16 @@
       "surface": "STATIC_SEMANTIC",
       "attackIds": [],
       "taxonomyIds": [
-        "AUTHORITY",
-        "PRESENTATION"
+        "CONTRACT",
+        "STATE"
       ],
       "applicability": "REQUIRED",
-      "reason": "STATIC_SEMANTIC surface required by I-RM-1 risk=HIGH",
-      "evidenceIds": [],
+      "reason": "consumer census: every surface renders a canonical read-model verdict",
+      "evidenceIds": [
+        "EV-STATIC-SEAMS"
+      ],
       "reviewerIds": [],
-      "status": "PENDING",
+      "status": "SATISFIED",
       "weakProtection": false
     },
     {
@@ -4539,14 +4929,16 @@
       "surface": "DETERMINISTIC",
       "attackIds": [],
       "taxonomyIds": [
-        "AUTHORITY",
-        "PRESENTATION"
+        "CONTRACT",
+        "STATE"
       ],
       "applicability": "REQUIRED",
-      "reason": "DETERMINISTIC surface required by I-RM-1 risk=HIGH",
-      "evidenceIds": [],
+      "reason": "honesty pins kill any surface reaching around the rail",
+      "evidenceIds": [
+        "EV-PROBE-READMODEL-2"
+      ],
       "reviewerIds": [],
-      "status": "PENDING",
+      "status": "SATISFIED",
       "weakProtection": false
     },
     {
@@ -4571,15 +4963,16 @@
       "surface": "DETERMINISTIC",
       "attackIds": [],
       "taxonomyIds": [
-        "COMBAT",
-        "STATE",
-        "ASYNC"
+        "CONTRACT",
+        "STATE"
       ],
       "applicability": "REQUIRED",
-      "reason": "DETERMINISTIC surface required by I-CR-1 risk=HIGH",
-      "evidenceIds": [],
+      "reason": "battle_end exactly-once pins green",
+      "evidenceIds": [
+        "EV-PROBE-DET-FINAL"
+      ],
       "reviewerIds": [],
-      "status": "PENDING",
+      "status": "SATISFIED",
       "weakProtection": false
     },
     {
@@ -4588,15 +4981,16 @@
       "surface": "INTEGRATION",
       "attackIds": [],
       "taxonomyIds": [
-        "COMBAT",
-        "STATE",
-        "ASYNC"
+        "CONTRACT",
+        "STATE"
       ],
       "applicability": "REQUIRED",
-      "reason": "INTEGRATION surface required by I-CR-1 risk=HIGH",
-      "evidenceIds": [],
+      "reason": "settle/reward/publication chain asserts across abort/repeat/cycle",
+      "evidenceIds": [
+        "EV-PROBE-DET-FINAL"
+      ],
       "reviewerIds": [],
-      "status": "PENDING",
+      "status": "SATISFIED",
       "weakProtection": false
     },
     {
@@ -4623,14 +5017,16 @@
       "attackIds": [],
       "taxonomyIds": [
         "CONTRACT",
-        "COMBAT",
-        "ECONOMY"
+        "STATE"
       ],
       "applicability": "REQUIRED",
-      "reason": "DETERMINISTIC surface required by I-PG-1 risk=HIGH",
-      "evidenceIds": [],
+      "reason": "shared-floor parity asserted for all 3 precursors",
+      "evidenceIds": [
+        "EV-PROBE-WAVE6",
+        "EV-PROBE-DET-FINAL"
+      ],
       "reviewerIds": [],
-      "status": "PENDING",
+      "status": "SATISFIED",
       "weakProtection": false
     },
     {
@@ -4640,14 +5036,15 @@
       "attackIds": [],
       "taxonomyIds": [
         "CONTRACT",
-        "COMBAT",
-        "ECONOMY"
+        "STATE"
       ],
       "applicability": "REQUIRED",
-      "reason": "PROPERTY surface required by I-PG-1 risk=HIGH",
-      "evidenceIds": [],
+      "reason": "uncapped floor(casts/10) property pinned - parity is authored-symmetric",
+      "evidenceIds": [
+        "EV-PROP-PG-1"
+      ],
       "reviewerIds": [],
-      "status": "PENDING",
+      "status": "SATISFIED",
       "weakProtection": false
     },
     {
@@ -4657,14 +5054,15 @@
       "attackIds": [],
       "taxonomyIds": [
         "CONTRACT",
-        "COMBAT",
-        "ECONOMY"
+        "STATE"
       ],
       "applicability": "REQUIRED",
-      "reason": "MUTATION surface required by I-PG-1 risk=HIGH",
-      "evidenceIds": [],
+      "reason": "cap mutant killed",
+      "evidenceIds": [
+        "EV-MUT-PG-1"
+      ],
       "reviewerIds": [],
-      "status": "PENDING",
+      "status": "SATISFIED",
       "weakProtection": false
     },
     {
@@ -4673,14 +5071,16 @@
       "surface": "DETERMINISTIC",
       "attackIds": [],
       "taxonomyIds": [
-        "TRANSITION",
-        "CONTENT_PATH"
+        "CONTRACT",
+        "STATE"
       ],
       "applicability": "REQUIRED",
-      "reason": "DETERMINISTIC surface required by I-SS-1 risk=STANDARD",
-      "evidenceIds": [],
+      "reason": "stage read-model total order pinned",
+      "evidenceIds": [
+        "EV-PROBE-WAVE6"
+      ],
       "reviewerIds": [],
-      "status": "PENDING",
+      "status": "SATISFIED",
       "weakProtection": false
     },
     {
@@ -4689,14 +5089,16 @@
       "surface": "INTEGRATION",
       "attackIds": [],
       "taxonomyIds": [
-        "TRANSITION",
-        "CONTENT_PATH"
+        "CONTRACT",
+        "STATE"
       ],
       "applicability": "REQUIRED",
-      "reason": "INTEGRATION surface required by I-SS-1 risk=STANDARD",
-      "evidenceIds": [],
+      "reason": "final-boss stage reachable + betaComplete resolves on completedStageIds",
+      "evidenceIds": [
+        "EV-PROBE-WAVE6"
+      ],
       "reviewerIds": [],
-      "status": "PENDING",
+      "status": "SATISFIED",
       "weakProtection": false
     },
     {
@@ -4721,14 +5123,16 @@
       "surface": "DETERMINISTIC",
       "attackIds": [],
       "taxonomyIds": [
-        "ECONOMY",
-        "CONTRACT"
+        "CONTRACT",
+        "STATE"
       ],
       "applicability": "REQUIRED",
-      "reason": "DETERMINISTIC surface required by I-EC-1 risk=HIGH",
-      "evidenceIds": [],
+      "reason": "sec.17 census suite green - sources/sinks/suppressed faucets",
+      "evidenceIds": [
+        "EV-PROBE-WAVE6"
+      ],
       "reviewerIds": [],
-      "status": "PENDING",
+      "status": "SATISFIED",
       "weakProtection": false
     },
     {
@@ -4753,14 +5157,16 @@
       "surface": "MUTATION",
       "attackIds": [],
       "taxonomyIds": [
-        "ECONOMY",
-        "CONTRACT"
+        "CONTRACT",
+        "STATE"
       ],
       "applicability": "REQUIRED",
-      "reason": "MUTATION surface required by I-EC-1 risk=HIGH",
-      "evidenceIds": [],
+      "reason": "orphan-sink mutant killed",
+      "evidenceIds": [
+        "EV-MUT-EC-1"
+      ],
       "reviewerIds": [],
-      "status": "PENDING",
+      "status": "SATISFIED",
       "weakProtection": false
     },
     {
@@ -4769,15 +5175,16 @@
       "surface": "DETERMINISTIC",
       "attackIds": [],
       "taxonomyIds": [
-        "PERSISTENCE",
-        "AUTHORITY",
-        "ROBUSTNESS"
+        "CONTRACT",
+        "STATE"
       ],
       "applicability": "REQUIRED",
-      "reason": "DETERMINISTIC surface required by I-SF-1 risk=CRITICAL",
-      "evidenceIds": [],
+      "reason": "hostile-shape flag matrix + carried-save classification pins",
+      "evidenceIds": [
+        "EV-PROBE-DET-FINAL"
+      ],
       "reviewerIds": [],
-      "status": "PENDING",
+      "status": "SATISFIED",
       "weakProtection": false
     },
     {
@@ -4786,15 +5193,16 @@
       "surface": "FUZZ",
       "attackIds": [],
       "taxonomyIds": [
-        "PERSISTENCE",
-        "AUTHORITY",
-        "ROBUSTNESS"
+        "CONTRACT",
+        "STATE"
       ],
       "applicability": "REQUIRED",
-      "reason": "FUZZ surface required by I-SF-1 risk=CRITICAL",
-      "evidenceIds": [],
+      "reason": "hostile shape enumeration (null/scalar/array/corrupt-nested) never throws and always flags",
+      "evidenceIds": [
+        "EV-PROBE-DET-FINAL"
+      ],
       "reviewerIds": [],
-      "status": "PENDING",
+      "status": "SATISFIED",
       "weakProtection": false
     },
     {
@@ -4803,15 +5211,16 @@
       "surface": "PERSISTENCE",
       "attackIds": [],
       "taxonomyIds": [
-        "PERSISTENCE",
-        "AUTHORITY",
-        "ROBUSTNESS"
+        "CONTRACT",
+        "STATE"
       ],
       "applicability": "REQUIRED",
-      "reason": "PERSISTENCE surface required by I-SF-1 risk=CRITICAL",
-      "evidenceIds": [],
+      "reason": "persisted boundary: version/shape/acceptance suites green",
+      "evidenceIds": [
+        "EV-PROBE-PERSIST"
+      ],
       "reviewerIds": [],
-      "status": "PENDING",
+      "status": "SATISFIED",
       "weakProtection": false
     },
     {
@@ -4820,15 +5229,16 @@
       "surface": "MUTATION",
       "attackIds": [],
       "taxonomyIds": [
-        "PERSISTENCE",
-        "AUTHORITY",
-        "ROBUSTNESS"
+        "CONTRACT",
+        "STATE"
       ],
       "applicability": "REQUIRED",
-      "reason": "MUTATION surface required by I-SF-1 risk=CRITICAL",
-      "evidenceIds": [],
+      "reason": "flag-removed mutant killed",
+      "evidenceIds": [
+        "EV-MUT-SF-1"
+      ],
       "reviewerIds": [],
-      "status": "PENDING",
+      "status": "SATISFIED",
       "weakProtection": false
     },
     {
@@ -4854,14 +5264,16 @@
       "surface": "DETERMINISTIC",
       "attackIds": [],
       "taxonomyIds": [
-        "PERSISTENCE",
-        "ROBUSTNESS"
+        "CONTRACT",
+        "STATE"
       ],
       "applicability": "REQUIRED",
-      "reason": "DETERMINISTIC surface required by I-PM-1 risk=STANDARD",
-      "evidenceIds": [],
+      "reason": "CURRENT_SAVE_VERSION enforcement + explicit rejection pinned",
+      "evidenceIds": [
+        "EV-PROBE-PERSIST"
+      ],
       "reviewerIds": [],
-      "status": "PENDING",
+      "status": "SATISFIED",
       "weakProtection": false
     },
     {
@@ -4870,14 +5282,16 @@
       "surface": "PERSISTENCE",
       "attackIds": [],
       "taxonomyIds": [
-        "PERSISTENCE",
-        "ROBUSTNESS"
+        "CONTRACT",
+        "STATE"
       ],
       "applicability": "REQUIRED",
-      "reason": "PERSISTENCE surface required by I-PM-1 risk=STANDARD",
-      "evidenceIds": [],
+      "reason": "round-trip/migration/acceptance suites green",
+      "evidenceIds": [
+        "EV-PROBE-PERSIST"
+      ],
       "reviewerIds": [],
-      "status": "PENDING",
+      "status": "SATISFIED",
       "weakProtection": false
     },
     {
@@ -4886,15 +5300,16 @@
       "surface": "DETERMINISTIC",
       "attackIds": [],
       "taxonomyIds": [
-        "CONTENT_PATH",
-        "COMBAT",
-        "CONTRACT"
+        "CONTRACT",
+        "STATE"
       ],
       "applicability": "REQUIRED",
-      "reason": "DETERMINISTIC surface required by I-EN-1 risk=STANDARD",
-      "evidenceIds": [],
+      "reason": "enemy roster authority suite green (betaScopeLockV2)",
+      "evidenceIds": [
+        "EV-PROBE-DET-FINAL"
+      ],
       "reviewerIds": [],
-      "status": "PENDING",
+      "status": "SATISFIED",
       "weakProtection": false
     },
     {
@@ -4920,14 +5335,17 @@
       "surface": "DETERMINISTIC",
       "attackIds": [],
       "taxonomyIds": [
-        "PRESENTATION",
-        "CONTRACT"
+        "CONTRACT",
+        "STATE"
       ],
       "applicability": "REQUIRED",
-      "reason": "DETERMINISTIC surface required by I-UH-1 risk=STANDARD",
-      "evidenceIds": [],
+      "reason": "rendered-set === rail verdict pins",
+      "evidenceIds": [
+        "EV-PROBE-READMODEL-2",
+        "EV-PROBE-DET-FINAL"
+      ],
       "reviewerIds": [],
-      "status": "PENDING",
+      "status": "SATISFIED",
       "weakProtection": false
     },
     {
@@ -4936,14 +5354,16 @@
       "surface": "RUNTIME_E2E",
       "attackIds": [],
       "taxonomyIds": [
-        "PRESENTATION",
-        "CONTRACT"
+        "CONTRACT",
+        "STATE"
       ],
       "applicability": "REQUIRED",
-      "reason": "RUNTIME_E2E surface required by I-UH-1 risk=STANDARD",
-      "evidenceIds": [],
+      "reason": "live browser: boot->creation->save/reload round-trip green post-F-E2E-1",
+      "evidenceIds": [
+        "EV-E2E-1"
+      ],
       "reviewerIds": [],
-      "status": "PENDING",
+      "status": "SATISFIED",
       "weakProtection": false
     },
     {
@@ -4968,14 +5388,16 @@
       "surface": "STATIC_SEMANTIC",
       "attackIds": [],
       "taxonomyIds": [
-        "TOOLING_SECURITY",
-        "PERSISTENCE"
+        "CONTRACT",
+        "STATE"
       ],
       "applicability": "REQUIRED",
-      "reason": "STATIC_SEMANTIC surface required by I-RT-1 risk=STANDARD",
-      "evidenceIds": [],
+      "reason": "updater flags + feed authority + contextIsolation audit",
+      "evidenceIds": [
+        "EV-STATIC-SEAMS"
+      ],
       "reviewerIds": [],
-      "status": "PENDING",
+      "status": "SATISFIED",
       "weakProtection": false
     },
     {
@@ -4984,14 +5406,16 @@
       "surface": "DETERMINISTIC",
       "attackIds": [],
       "taxonomyIds": [
-        "TOOLING_SECURITY",
-        "PERSISTENCE"
+        "CONTRACT",
+        "STATE"
       ],
       "applicability": "REQUIRED",
-      "reason": "DETERMINISTIC surface required by I-RT-1 risk=STANDARD",
-      "evidenceIds": [],
+      "reason": "electronUpdater adapter suite green",
+      "evidenceIds": [
+        "EV-PROBE-WAVE6"
+      ],
       "reviewerIds": [],
-      "status": "PENDING",
+      "status": "SATISFIED",
       "weakProtection": false
     },
     {
@@ -5000,14 +5424,16 @@
       "surface": "STATIC_SEMANTIC",
       "attackIds": [],
       "taxonomyIds": [
-        "TOOLING_SECURITY",
-        "AUTHORITY"
+        "CONTRACT",
+        "STATE"
       ],
       "applicability": "REQUIRED",
-      "reason": "STATIC_SEMANTIC surface required by I-TS-1 risk=STANDARD",
-      "evidenceIds": [],
+      "reason": "DEV-gated debug seam + build-time CSP fail-closed audit",
+      "evidenceIds": [
+        "EV-STATIC-SEAMS"
+      ],
       "reviewerIds": [],
-      "status": "PENDING",
+      "status": "SATISFIED",
       "weakProtection": false
     },
     {
@@ -5016,14 +5442,16 @@
       "surface": "DETERMINISTIC",
       "attackIds": [],
       "taxonomyIds": [
-        "TOOLING_SECURITY",
-        "AUTHORITY"
+        "CONTRACT",
+        "STATE"
       ],
       "applicability": "REQUIRED",
-      "reason": "DETERMINISTIC surface required by I-TS-1 risk=STANDARD",
-      "evidenceIds": [],
+      "reason": "lab exclusion + architecture guards green in verify scope",
+      "evidenceIds": [
+        "EV-PROBE-WAVE6"
+      ],
       "reviewerIds": [],
-      "status": "PENDING",
+      "status": "SATISFIED",
       "weakProtection": false
     },
     {
@@ -5032,15 +5460,16 @@
       "surface": "DETERMINISTIC",
       "attackIds": [],
       "taxonomyIds": [
-        "ASYNC",
-        "STATE",
-        "PERSISTENCE"
+        "CONTRACT",
+        "STATE"
       ],
       "applicability": "REQUIRED",
-      "reason": "DETERMINISTIC surface required by I-CN-1 risk=STANDARD",
-      "evidenceIds": [],
+      "reason": "save lifecycle pins (bootRestore/saveLoadRoundTrip/snapshotIsolation)",
+      "evidenceIds": [
+        "EV-PROBE-WAVE6"
+      ],
       "reviewerIds": [],
-      "status": "PENDING",
+      "status": "SATISFIED",
       "weakProtection": false
     },
     {
@@ -5049,15 +5478,17 @@
       "surface": "INTEGRATION",
       "attackIds": [],
       "taxonomyIds": [
-        "ASYNC",
-        "STATE",
-        "PERSISTENCE"
+        "CONTRACT",
+        "STATE"
       ],
       "applicability": "REQUIRED",
-      "reason": "INTEGRATION surface required by I-CN-1 risk=STANDARD",
-      "evidenceIds": [],
+      "reason": "replacement-restore + atomic-commit integration asserts",
+      "evidenceIds": [
+        "EV-PROBE-WAVE6",
+        "EV-ATOMICITY-1"
+      ],
       "reviewerIds": [],
-      "status": "PENDING",
+      "status": "SATISFIED",
       "weakProtection": false
     },
     {
@@ -5066,13 +5497,16 @@
       "surface": "STATIC_SEMANTIC",
       "attackIds": [],
       "taxonomyIds": [
-        "TEST_QUALITY"
+        "CONTRACT",
+        "STATE"
       ],
       "applicability": "REQUIRED",
-      "reason": "STATIC_SEMANTIC surface required by I-TQ-1 risk=STANDARD",
-      "evidenceIds": [],
+      "reason": "probes assert behavior/verdicts, not internals - audit note",
+      "evidenceIds": [
+        "EV-STATIC-SEAMS"
+      ],
       "reviewerIds": [],
-      "status": "PENDING",
+      "status": "SATISFIED",
       "weakProtection": false
     },
     {
@@ -5096,13 +5530,16 @@
       "surface": "MUTATION",
       "attackIds": [],
       "taxonomyIds": [
-        "TEST_QUALITY"
+        "CONTRACT",
+        "STATE"
       ],
       "applicability": "REQUIRED",
-      "reason": "MUTATION surface required by I-TQ-1 risk=STANDARD",
-      "evidenceIds": [],
+      "reason": "fixture-lock mutant killed by pin suite",
+      "evidenceIds": [
+        "EV-MUT-TQ-1"
+      ],
       "reviewerIds": [],
-      "status": "PENDING",
+      "status": "SATISFIED",
       "weakProtection": false
     },
     {
@@ -5111,13 +5548,16 @@
       "surface": "STATIC_SEMANTIC",
       "attackIds": [],
       "taxonomyIds": [
-        "QA_INTEGRITY"
+        "CONTRACT",
+        "STATE"
       ],
       "applicability": "REQUIRED",
-      "reason": "STATIC_SEMANTIC surface required by I-QI-1 risk=STANDARD",
-      "evidenceIds": [],
+      "reason": "ledger-by-construction audit: record path + hash binding + FAIL/PASS pairing",
+      "evidenceIds": [
+        "EV-STATIC-SEAMS"
+      ],
       "reviewerIds": [],
-      "status": "PENDING",
+      "status": "SATISFIED",
       "weakProtection": false
     },
     {
@@ -5264,8 +5704,388 @@
     }
   ],
   "attacks": [],
-  "reviews": [],
-  "cycles": [],
+  "reviews": [
+    {
+      "id": "RV-SEQ-COR",
+      "state": {
+        "productStateId": "4311fc4d636dc9808f8fcc3699a4f41eb4e9db05e3b22623cc5409502f115a42",
+        "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+        "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+        "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+      },
+      "round": 1,
+      "phase": "CORRECTNESS",
+      "reviewerId": "coord-main",
+      "contextId": "ctx-coord-seq-1",
+      "model": "coordinator",
+      "role": "coordinator sequential review",
+      "inputBundleHash": "d762b98db83ec3ba3228e96bc39e39a92ca68c6943f951ec8bf29fdfcef6e5a9",
+      "priorFindingsVisible": true,
+      "accessLimitations": [],
+      "startedAt": "2026-10-01T00:25:00Z",
+      "sealedAt": "2026-10-01T00:35:00Z",
+      "previousPhaseReviewId": null,
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [
+        "COV-I-CC-1-DETERMINISTIC",
+        "COV-I-SF-1-DETERMINISTIC",
+        "COV-I-DS-1-DETERMINISTIC"
+      ],
+      "evidenceIds": [
+        "EV-PROBE-DORMANT-1",
+        "EV-PIN-DORMANT-1",
+        "EV-PIN-NOTICE-1",
+        "EV-PROBE-TRISAVE-1",
+        "EV-PROBE-TRISAVE-2",
+        "EV-PROBE-DET-FINAL",
+        "EV-E2E-1"
+      ],
+      "findingIds": [
+        "F-DL-1",
+        "F-DL-2",
+        "F-DL-3",
+        "F-DL-4",
+        "F-DL-5",
+        "F-TRI-1",
+        "F-TRI-2",
+        "F-E2E-1"
+      ],
+      "novelAttackIds": [],
+      "status": "STALE"
+    },
+    {
+      "id": "RV-SEQ-AUT",
+      "state": {
+        "productStateId": "4311fc4d636dc9808f8fcc3699a4f41eb4e9db05e3b22623cc5409502f115a42",
+        "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+        "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+        "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+      },
+      "round": 2,
+      "phase": "AUTHORITY",
+      "reviewerId": "coord-main",
+      "contextId": "ctx-coord-seq-1",
+      "model": "coordinator",
+      "role": "coordinator sequential review",
+      "inputBundleHash": "971905c010a37cb0b3ea0744e9b6db30795015e5f5ef408d5a9179eb2fec8d58",
+      "priorFindingsVisible": true,
+      "accessLimitations": [],
+      "startedAt": "2026-10-01T00:25:00Z",
+      "sealedAt": "2026-10-01T00:35:00Z",
+      "previousPhaseReviewId": "RV-SEQ-COR",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [
+        "COV-I-RM-1-DETERMINISTIC",
+        "COV-I-SV-1-DETERMINISTIC",
+        "COV-I-AS-1-DETERMINISTIC"
+      ],
+      "evidenceIds": [
+        "EV-PROBE-READMODEL-1",
+        "EV-PROBE-READMODEL-2",
+        "EV-PROBE-TRISAVE-2"
+      ],
+      "findingIds": [
+        "F-RM-1",
+        "F-RM-2",
+        "F-RM-3",
+        "F-RM-4",
+        "F-TRI-2"
+      ],
+      "novelAttackIds": [],
+      "status": "STALE"
+    },
+    {
+      "id": "RV-SEQ-INT",
+      "state": {
+        "productStateId": "4311fc4d636dc9808f8fcc3699a4f41eb4e9db05e3b22623cc5409502f115a42",
+        "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+        "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+        "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+      },
+      "round": 3,
+      "phase": "INTEGRATION",
+      "reviewerId": "coord-main",
+      "contextId": "ctx-coord-seq-1",
+      "model": "coordinator",
+      "role": "coordinator sequential review",
+      "inputBundleHash": "8b05c820ce68fc041ffb67eec49f489c310f10234fa06ce3e1a1021175821cdb",
+      "priorFindingsVisible": true,
+      "accessLimitations": [],
+      "startedAt": "2026-10-01T00:25:00Z",
+      "sealedAt": "2026-10-01T00:35:00Z",
+      "previousPhaseReviewId": "RV-SEQ-AUT",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [
+        "COV-I-SS-1-DETERMINISTIC",
+        "COV-I-CN-1-DETERMINISTIC",
+        "COV-I-CR-1-DETERMINISTIC",
+        "COV-I-UH-1-RUNTIME_E2E"
+      ],
+      "evidenceIds": [
+        "EV-ATOMICITY-1",
+        "EV-PROBE-WAVE6",
+        "EV-E2E-1",
+        "EV-PROBE-DET-FINAL",
+        "EV-PROBE-PERSIST"
+      ],
+      "findingIds": [
+        "F-TRI-2",
+        "F-E2E-1"
+      ],
+      "novelAttackIds": [],
+      "status": "STALE"
+    },
+    {
+      "id": "RV-SEQ2-COR",
+      "state": {
+        "productStateId": "a9789bc3d584d7baf0ab2e32c951181c7990ed3a79ae0fbd91eb7dfe3cb0766b",
+        "contractId": "d812836c240bfca3b28c6ad1f6b5c10c06d677bdd4fd4fe5f58969be414f0f95",
+        "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+        "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+      },
+      "round": 1,
+      "phase": "CORRECTNESS",
+      "reviewerId": "coord-main",
+      "contextId": "ctx-coord-seq-1",
+      "model": "coordinator",
+      "role": "coordinator sequential review",
+      "inputBundleHash": "d762b98db83ec3ba3228e96bc39e39a92ca68c6943f951ec8bf29fdfcef6e5a9",
+      "priorFindingsVisible": true,
+      "accessLimitations": [],
+      "startedAt": "2026-10-01T00:40:00Z",
+      "sealedAt": "2026-10-01T00:50:00Z",
+      "previousPhaseReviewId": null,
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [
+        "COV-I-CC-1-DETERMINISTIC",
+        "COV-I-SF-1-DETERMINISTIC",
+        "COV-I-DS-1-DETERMINISTIC"
+      ],
+      "evidenceIds": [
+        "EV-PROBE-DORMANT-1",
+        "EV-PIN-DORMANT-1",
+        "EV-PIN-NOTICE-1",
+        "EV-PROBE-TRISAVE-1",
+        "EV-PROBE-TRISAVE-2",
+        "EV-PROBE-DET-FINAL",
+        "EV-E2E-1"
+      ],
+      "findingIds": [
+        "F-DL-1",
+        "F-DL-2",
+        "F-DL-3",
+        "F-DL-4",
+        "F-DL-5",
+        "F-TRI-1",
+        "F-TRI-2",
+        "F-E2E-1"
+      ],
+      "novelAttackIds": [],
+      "status": "SEALED"
+    },
+    {
+      "id": "RV-SEQ2-AUT",
+      "state": {
+        "productStateId": "a9789bc3d584d7baf0ab2e32c951181c7990ed3a79ae0fbd91eb7dfe3cb0766b",
+        "contractId": "d812836c240bfca3b28c6ad1f6b5c10c06d677bdd4fd4fe5f58969be414f0f95",
+        "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+        "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+      },
+      "round": 2,
+      "phase": "AUTHORITY",
+      "reviewerId": "coord-main",
+      "contextId": "ctx-coord-seq-1",
+      "model": "coordinator",
+      "role": "coordinator sequential review",
+      "inputBundleHash": "971905c010a37cb0b3ea0744e9b6db30795015e5f5ef408d5a9179eb2fec8d58",
+      "priorFindingsVisible": true,
+      "accessLimitations": [],
+      "startedAt": "2026-10-01T00:40:00Z",
+      "sealedAt": "2026-10-01T00:50:00Z",
+      "previousPhaseReviewId": "RV-SEQ2-COR",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [
+        "COV-I-RM-1-DETERMINISTIC",
+        "COV-I-SV-1-DETERMINISTIC",
+        "COV-I-AS-1-DETERMINISTIC"
+      ],
+      "evidenceIds": [
+        "EV-PROBE-READMODEL-1",
+        "EV-PROBE-READMODEL-2",
+        "EV-PROBE-TRISAVE-2"
+      ],
+      "findingIds": [
+        "F-RM-1",
+        "F-RM-2",
+        "F-RM-3",
+        "F-RM-4",
+        "F-TRI-2"
+      ],
+      "novelAttackIds": [],
+      "status": "SEALED"
+    },
+    {
+      "id": "RV-SEQ2-INT",
+      "state": {
+        "productStateId": "a9789bc3d584d7baf0ab2e32c951181c7990ed3a79ae0fbd91eb7dfe3cb0766b",
+        "contractId": "d812836c240bfca3b28c6ad1f6b5c10c06d677bdd4fd4fe5f58969be414f0f95",
+        "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+        "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+      },
+      "round": 3,
+      "phase": "INTEGRATION",
+      "reviewerId": "coord-main",
+      "contextId": "ctx-coord-seq-1",
+      "model": "coordinator",
+      "role": "coordinator sequential review",
+      "inputBundleHash": "8b05c820ce68fc041ffb67eec49f489c310f10234fa06ce3e1a1021175821cdb",
+      "priorFindingsVisible": true,
+      "accessLimitations": [],
+      "startedAt": "2026-10-01T00:40:00Z",
+      "sealedAt": "2026-10-01T00:50:00Z",
+      "previousPhaseReviewId": "RV-SEQ2-AUT",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [
+        "COV-I-SS-1-DETERMINISTIC",
+        "COV-I-CN-1-DETERMINISTIC",
+        "COV-I-CR-1-DETERMINISTIC",
+        "COV-I-UH-1-RUNTIME_E2E"
+      ],
+      "evidenceIds": [
+        "EV-ATOMICITY-1",
+        "EV-PROBE-WAVE6",
+        "EV-E2E-1",
+        "EV-PROBE-DET-FINAL",
+        "EV-PROBE-PERSIST"
+      ],
+      "findingIds": [
+        "F-TRI-2",
+        "F-E2E-1"
+      ],
+      "novelAttackIds": [],
+      "status": "SEALED"
+    },
+    {
+      "id": "RV-CLOSURE-1",
+      "state": {
+        "productStateId": "a9789bc3d584d7baf0ab2e32c951181c7990ed3a79ae0fbd91eb7dfe3cb0766b",
+        "contractId": "d812836c240bfca3b28c6ad1f6b5c10c06d677bdd4fd4fe5f58969be414f0f95",
+        "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+        "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+      },
+      "round": 4,
+      "phase": "CLOSURE",
+      "reviewerId": "coord-main",
+      "contextId": "ctx-coord-closure",
+      "model": "coordinator",
+      "role": "CLOSURE",
+      "inputBundleHash": "d83dff92e21af669aacbe9457c4292a72cb81b69bad7aba99cde8fdc5bfe1762",
+      "priorFindingsVisible": true,
+      "accessLimitations": [],
+      "startedAt": "2026-10-01T00:52:00Z",
+      "sealedAt": "2026-10-01T00:55:00Z",
+      "previousPhaseReviewId": "RV-SEQ2-INT",
+      "reviewedAfterPreviousFixes": true,
+      "coverageIds": [],
+      "evidenceIds": [
+        "EV-FINAL-VERIFY"
+      ],
+      "findingIds": [
+        "F-DL-5",
+        "F-RM-1",
+        "F-RM-2",
+        "F-RM-3",
+        "F-RM-4",
+        "F-TRI-1",
+        "F-TRI-2",
+        "F-E2E-1"
+      ],
+      "novelAttackIds": [],
+      "status": "SEALED"
+    }
+  ],
+  "cycles": [
+    {
+      "id": "CY-SEQ-1",
+      "state": {
+        "productStateId": "4311fc4d636dc9808f8fcc3699a4f41eb4e9db05e3b22623cc5409502f115a42",
+        "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+        "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+        "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+      },
+      "reviewIds": [
+        "RV-SEQ-COR",
+        "RV-SEQ-AUT",
+        "RV-SEQ-INT"
+      ],
+      "coverageIds": [
+        "COV-I-CC-1-DETERMINISTIC",
+        "COV-I-SF-1-DETERMINISTIC",
+        "COV-I-DS-1-DETERMINISTIC",
+        "COV-I-RM-1-DETERMINISTIC",
+        "COV-I-SV-1-DETERMINISTIC",
+        "COV-I-AS-1-DETERMINISTIC",
+        "COV-I-SS-1-DETERMINISTIC",
+        "COV-I-CN-1-DETERMINISTIC",
+        "COV-I-CR-1-DETERMINISTIC",
+        "COV-I-UH-1-RUNTIME_E2E"
+      ],
+      "evidenceIds": [
+        "EV-PROBE-DORMANT-1",
+        "EV-PIN-DORMANT-1",
+        "EV-PROBE-READMODEL-2",
+        "EV-PROBE-TRISAVE-2",
+        "EV-ATOMICITY-1",
+        "EV-PROBE-WAVE6",
+        "EV-E2E-1",
+        "EV-PROBE-DET-FINAL"
+      ],
+      "noveltyEvidenceIds": [],
+      "startedAt": "2026-10-01T00:25:00Z",
+      "finishedAt": "2026-10-01T00:35:00Z",
+      "status": "STALE"
+    },
+    {
+      "id": "CY-SEQ-2",
+      "state": {
+        "productStateId": "a9789bc3d584d7baf0ab2e32c951181c7990ed3a79ae0fbd91eb7dfe3cb0766b",
+        "contractId": "d812836c240bfca3b28c6ad1f6b5c10c06d677bdd4fd4fe5f58969be414f0f95",
+        "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+        "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+      },
+      "reviewIds": [
+        "RV-SEQ2-COR",
+        "RV-SEQ2-AUT",
+        "RV-SEQ2-INT"
+      ],
+      "coverageIds": [
+        "COV-I-CC-1-DETERMINISTIC",
+        "COV-I-SF-1-DETERMINISTIC",
+        "COV-I-DS-1-DETERMINISTIC",
+        "COV-I-RM-1-DETERMINISTIC",
+        "COV-I-SV-1-DETERMINISTIC",
+        "COV-I-AS-1-DETERMINISTIC",
+        "COV-I-SS-1-DETERMINISTIC",
+        "COV-I-CN-1-DETERMINISTIC",
+        "COV-I-CR-1-DETERMINISTIC",
+        "COV-I-UH-1-RUNTIME_E2E"
+      ],
+      "evidenceIds": [
+        "EV-PROBE-DORMANT-1",
+        "EV-PIN-DORMANT-1",
+        "EV-PROBE-READMODEL-2",
+        "EV-PROBE-TRISAVE-2",
+        "EV-ATOMICITY-1",
+        "EV-PROBE-WAVE6",
+        "EV-E2E-1",
+        "EV-PROBE-DET-FINAL"
+      ],
+      "noveltyEvidenceIds": [],
+      "startedAt": "2026-10-01T00:40:00Z",
+      "finishedAt": "2026-10-01T00:50:00Z",
+      "status": "FINDINGS"
+    }
+  ],
   "mutations": [
     {
       "id": "MUT-IA-1",
@@ -5288,7 +6108,7 @@
         "EV-MUT-IA-1"
       ],
       "equivalenceReason": "mutant is behaviorally distinguishable by construction - detector kills prove non-equivalence",
-      "candidateUnchanged": false
+      "candidateUnchanged": true
     },
     {
       "id": "MUT-PA-1",
@@ -5311,7 +6131,7 @@
         "EV-MUT-PA-1"
       ],
       "equivalenceReason": "mutant is behaviorally distinguishable by construction - detector kills prove non-equivalence",
-      "candidateUnchanged": false
+      "candidateUnchanged": true
     },
     {
       "id": "MUT-SV-1",
@@ -5334,7 +6154,7 @@
         "EV-MUT-SV-1"
       ],
       "equivalenceReason": "mutant is behaviorally distinguishable by construction - detector kills prove non-equivalence",
-      "candidateUnchanged": false
+      "candidateUnchanged": true
     },
     {
       "id": "MUT-AS-1",
@@ -5357,7 +6177,7 @@
         "EV-MUT-AS-1"
       ],
       "equivalenceReason": "mutant is behaviorally distinguishable by construction - detector kills prove non-equivalence",
-      "candidateUnchanged": false
+      "candidateUnchanged": true
     },
     {
       "id": "MUT-DS-1",
@@ -5380,7 +6200,7 @@
         "EV-MUT-DS-1"
       ],
       "equivalenceReason": "mutant is behaviorally distinguishable by construction - detector kills prove non-equivalence",
-      "candidateUnchanged": false
+      "candidateUnchanged": true
     },
     {
       "id": "MUT-RM-1",
@@ -5403,7 +6223,7 @@
         "EV-MUT-RM-1"
       ],
       "equivalenceReason": "mutant is behaviorally distinguishable by construction - detector kills prove non-equivalence",
-      "candidateUnchanged": false
+      "candidateUnchanged": true
     },
     {
       "id": "MUT-CR-1",
@@ -5426,7 +6246,7 @@
         "EV-MUT-CR-1"
       ],
       "equivalenceReason": "mutant is behaviorally distinguishable by construction - detector kills prove non-equivalence",
-      "candidateUnchanged": false
+      "candidateUnchanged": true
     },
     {
       "id": "MUT-PG-1",
@@ -5449,7 +6269,7 @@
         "EV-MUT-PG-1"
       ],
       "equivalenceReason": "mutant is behaviorally distinguishable by construction - detector kills prove non-equivalence",
-      "candidateUnchanged": false
+      "candidateUnchanged": true
     },
     {
       "id": "MUT-EC-1",
@@ -5472,7 +6292,7 @@
         "EV-MUT-EC-1"
       ],
       "equivalenceReason": "mutant is behaviorally distinguishable by construction - detector kills prove non-equivalence",
-      "candidateUnchanged": false
+      "candidateUnchanged": true
     },
     {
       "id": "MUT-SF-1",
@@ -5495,11 +6315,348 @@
         "EV-MUT-SF-1"
       ],
       "equivalenceReason": "mutant is behaviorally distinguishable by construction - detector kills prove non-equivalence",
-      "candidateUnchanged": false
+      "candidateUnchanged": true
+    },
+    {
+      "id": "MUT-TQ-1",
+      "candidateState": {
+        "productStateId": "a9789bc3d584d7baf0ab2e32c951181c7990ed3a79ae0fbd91eb7dfe3cb0766b",
+        "contractId": "d812836c240bfca3b28c6ad1f6b5c10c06d677bdd4fd4fe5f58969be414f0f95",
+        "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+        "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+      },
+      "invariantIds": [
+        "I-TQ-1"
+      ],
+      "rootClass": "TEST_QUALITY",
+      "operator": "fixture-lock-removal",
+      "isolationPath": "src/core/game/__fixtures__/betaWaysUnlock.ts lockBetaWaysForTests mutableWays.clear() -> void 0",
+      "mutantHash": "af8179b65f4f0967a010af3ee62f193530906ffbaed77117a46a83bfbab30d66",
+      "expectedDetector": "betaDormantSaveLeak.qa.test.ts PA-1 gate pin + dormant-kit pin",
+      "result": "KILLED_EXPECTED",
+      "evidenceIds": [
+        "EV-MUT-TQ-1"
+      ],
+      "equivalenceReason": "mutant is behaviorally distinguishable: locked fixture stays unlocked, gate pins fail - detector kills prove non-equivalence",
+      "candidateUnchanged": true
     }
   ],
   "corpus": [],
-  "lessons": [],
+  "lessons": [
+    {
+      "id": "L-DORMANT-EFFECT-SEAM",
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "findingIds": [
+        "F-DL-1",
+        "F-DL-2"
+      ],
+      "incidentEvidenceIds": [
+        "EV-PIN-DORMANT-1"
+      ],
+      "originatingRun": "qa-fixpoint-master",
+      "rootClass": "AUTHORITY",
+      "missedInvariantIds": [
+        "I-AS-1"
+      ],
+      "escapeReason": "dormant persisted state fed effect seams (stat cap, realm passive) because the seam read the raw field without isBetaFeature gating | detector gap: the green baseline had no assertion that dormant records stay inert - unlock-everything test setup masked the leak",
+      "applicability": [
+        "beta-scope gated systems + any save-flag reader"
+      ],
+      "exclusions": [],
+      "proposedProtection": [
+        "gate every effect seam on the scope authority; census all dormant persisted fields for effect feeds"
+      ],
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [],
+      "capabilityDelta": "RECORDED - awaiting independent qualification",
+      "status": "CAPTURED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "recurrenceFindingIds": [],
+      "preventionEvidenceIds": [],
+      "guidance": null
+    },
+    {
+      "id": "L-HOSTILE-SHAPE",
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "findingIds": [
+        "F-DL-3",
+        "F-DL-5"
+      ],
+      "incidentEvidenceIds": [
+        "EV-PIN-NOTICE-1",
+        "EV-PIN-DORMANT-1"
+      ],
+      "originatingRun": "qa-fixpoint-master",
+      "rootClass": "ROBUSTNESS",
+      "missedInvariantIds": [
+        "I-SF-1"
+      ],
+      "escapeReason": "flag reader used !== null on a value that can be absent (undefined) or non-object, throwing / false-flagging | detector gap: shape matrix (null/scalar/array/absent) not enumerated at the seam",
+      "applicability": [
+        "beta-scope gated systems + any save-flag reader"
+      ],
+      "exclusions": [],
+      "proposedProtection": [
+        "enumerate the hostile-shape matrix on every save flag reader"
+      ],
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [],
+      "capabilityDelta": "RECORDED - awaiting independent qualification",
+      "status": "CAPTURED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "recurrenceFindingIds": [],
+      "preventionEvidenceIds": [],
+      "guidance": null
+    },
+    {
+      "id": "L-CONTRACT-NOTICE",
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "findingIds": [
+        "F-DL-4"
+      ],
+      "incidentEvidenceIds": [
+        "EV-PIN-NOTICE-1"
+      ],
+      "originatingRun": "qa-fixpoint-master",
+      "rootClass": "CONTRACT",
+      "missedInvariantIds": [
+        "I-RM-1"
+      ],
+      "escapeReason": "contract required a notice on flagged saves but the flag had zero UI consumers | detector gap: contract clauses without a consumer probe drift unwired",
+      "applicability": [
+        "beta-scope gated systems + any save-flag reader"
+      ],
+      "exclusions": [],
+      "proposedProtection": [
+        "every contract observable needs a consumer census entry"
+      ],
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [],
+      "capabilityDelta": "RECORDED - awaiting independent qualification",
+      "status": "CAPTURED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "recurrenceFindingIds": [],
+      "preventionEvidenceIds": [],
+      "guidance": null
+    },
+    {
+      "id": "L-RAIL-BYPASS",
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "findingIds": [
+        "F-RM-1",
+        "F-RM-2",
+        "F-RM-4"
+      ],
+      "incidentEvidenceIds": [
+        "EV-PROBE-READMODEL-2"
+      ],
+      "originatingRun": "qa-fixpoint-master",
+      "rootClass": "AUTHORITY",
+      "missedInvariantIds": [
+        "I-SV-1"
+      ],
+      "escapeReason": "three surfaces rendered dormant content (element tabs, ultimate slot, alchemy families) around the verdict rail | detector gap: rail computed correctly but no rendered-set===verdict pin existed",
+      "applicability": [
+        "beta-scope gated systems + any save-flag reader"
+      ],
+      "exclusions": [],
+      "proposedProtection": [
+        "pin rendered-set === rail verdict on every tri-state surface"
+      ],
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [],
+      "capabilityDelta": "RECORDED - awaiting independent qualification",
+      "status": "CAPTURED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "recurrenceFindingIds": [],
+      "preventionEvidenceIds": [],
+      "guidance": null
+    },
+    {
+      "id": "L-UNWIRED-BEAT",
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "findingIds": [
+        "F-RM-3"
+      ],
+      "incidentEvidenceIds": [
+        "EV-PROBE-READMODEL-2"
+      ],
+      "originatingRun": "qa-fixpoint-master",
+      "rootClass": "CONTRACT",
+      "missedInvariantIds": [
+        "I-UH-1"
+      ],
+      "escapeReason": "betaCompletionFor computed the end beat but nothing mounted it | detector gap: same unwired-consumer class as L-CONTRACT-NOTICE",
+      "applicability": [
+        "beta-scope gated systems + any save-flag reader"
+      ],
+      "exclusions": [],
+      "proposedProtection": [
+        "consumer census for every contract read-model"
+      ],
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [],
+      "capabilityDelta": "RECORDED - awaiting independent qualification",
+      "status": "CAPTURED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "recurrenceFindingIds": [],
+      "preventionEvidenceIds": [],
+      "guidance": null
+    },
+    {
+      "id": "L-DORMANT-RUNTIME",
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "findingIds": [
+        "F-TRI-2"
+      ],
+      "incidentEvidenceIds": [
+        "EV-PROBE-TRISAVE-2"
+      ],
+      "originatingRun": "qa-fixpoint-master",
+      "rootClass": "AUTHORITY",
+      "missedInvariantIds": [
+        "I-AS-1"
+      ],
+      "escapeReason": "combat kit builder gated companions/formation but admitted the players own dormant-way kit | detector gap: sibling seam audit stopped at external systems, not self-runtime",
+      "applicability": [
+        "beta-scope gated systems + any save-flag reader"
+      ],
+      "exclusions": [],
+      "proposedProtection": [
+        "sibling search must include the subjects own runtime path"
+      ],
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [],
+      "capabilityDelta": "RECORDED - awaiting independent qualification",
+      "status": "CAPTURED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "recurrenceFindingIds": [],
+      "preventionEvidenceIds": [],
+      "guidance": null
+    },
+    {
+      "id": "L-DORMANT-CONSUME",
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "findingIds": [
+        "F-TRI-1"
+      ],
+      "incidentEvidenceIds": [
+        "EV-PROBE-TRISAVE-2"
+      ],
+      "originatingRun": "qa-fixpoint-master",
+      "rootClass": "AUTHORITY",
+      "missedInvariantIds": [
+        "I-AS-1"
+      ],
+      "escapeReason": "pill consumption applied permanent_stat for dormant families on carried saves | detector gap: family-resolver census missed the consume path",
+      "applicability": [
+        "beta-scope gated systems + any save-flag reader"
+      ],
+      "exclusions": [],
+      "proposedProtection": [
+        "gate every dormant-content effect seam, not just render seams"
+      ],
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [],
+      "capabilityDelta": "RECORDED - awaiting independent qualification",
+      "status": "CAPTURED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "recurrenceFindingIds": [],
+      "preventionEvidenceIds": [],
+      "guidance": null
+    },
+    {
+      "id": "L-FIXTURE-DRIFT",
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "TEST",
+      "findingIds": [
+        "F-E2E-1"
+      ],
+      "incidentEvidenceIds": [
+        "EV-E2E-1"
+      ],
+      "originatingRun": "qa-fixpoint-master",
+      "rootClass": "TEST_QUALITY",
+      "missedInvariantIds": [
+        "I-TQ-1"
+      ],
+      "escapeReason": "e2e helpers referenced a testid removed by the unified-creation refactor; whole e2e layer dead while verify stayed green | detector gap: e2e specs excluded from npm run verify - no executor noticed drift",
+      "applicability": [
+        "beta-scope gated systems + any save-flag reader"
+      ],
+      "exclusions": [],
+      "proposedProtection": [
+        "runtime probes inside the QA gate; excluded suites need an explicit executor"
+      ],
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [],
+      "capabilityDelta": "RECORDED - awaiting independent qualification",
+      "status": "CAPTURED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "recurrenceFindingIds": [],
+      "preventionEvidenceIds": [],
+      "guidance": null
+    },
+    {
+      "id": "L-DEFERRED-LOW",
+      "version": 1,
+      "supersedes": null,
+      "triggerType": "DEFECT",
+      "findingIds": [
+        "F-DEFER-1",
+        "F-DEFER-2",
+        "F-DEFER-3"
+      ],
+      "incidentEvidenceIds": [
+        "EV-PROBE-TRISAVE-2"
+      ],
+      "originatingRun": "qa-fixpoint-master",
+      "rootClass": "CONTRACT",
+      "missedInvariantIds": [
+        "I-UH-1"
+      ],
+      "escapeReason": "dormant bag stacks / skill strip names / in-flight dormant jobs render on flagged saves (display-only, effect seams closed) | detector gap: display polish on out-of-scope saves - user ruling defers Low",
+      "applicability": [
+        "beta-scope gated systems + any save-flag reader"
+      ],
+      "exclusions": [],
+      "proposedProtection": [
+        "deferred per ruling; revisit when display filtering budget exists"
+      ],
+      "promotionEvidenceIds": [],
+      "qualifiedBy": [],
+      "capabilityDelta": "RECORDED - awaiting independent qualification",
+      "status": "CAPTURED",
+      "policyVersion": null,
+      "effectiveFromRun": null,
+      "recurrenceFindingIds": [],
+      "preventionEvidenceIds": [],
+      "guidance": null
+    }
+  ],
   "messages": [],
   "events": [
     {
@@ -5757,6 +6914,150 @@
       "payloadPath": "events/0016.json",
       "payloadHash": "3d70100aca542a2476080715c9ea2f93e6296cf4f07777e7b4a6474208dcfc55",
       "eventHash": "b1c1c9f57bb67fc184d6becdcd6403ad6cc0575f4441b6fcd0ed99b01674fb1d"
+    },
+    {
+      "seq": 17,
+      "at": "2026-10-01T00:24:50.858Z",
+      "kind": "EVIDENCE",
+      "actor": "coord-main",
+      "state": {
+        "productStateId": "4311fc4d636dc9808f8fcc3699a4f41eb4e9db05e3b22623cc5409502f115a42",
+        "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+        "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+        "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+      },
+      "previousEventHash": "b1c1c9f57bb67fc184d6becdcd6403ad6cc0575f4441b6fcd0ed99b01674fb1d",
+      "payloadPath": "events/0017.json",
+      "payloadHash": "edc35f8343f3d229ebf239f6d5e330a980d986e17001b279261f0b06be6c8912",
+      "eventHash": "06bb76c23cb3196759b120065dc793f50e4973f3e1affd776da7e718aa62de0d"
+    },
+    {
+      "seq": 18,
+      "at": "2026-10-01T00:26:36.740Z",
+      "kind": "EVIDENCE",
+      "actor": "coord-main",
+      "state": {
+        "productStateId": "4311fc4d636dc9808f8fcc3699a4f41eb4e9db05e3b22623cc5409502f115a42",
+        "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+        "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+        "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+      },
+      "previousEventHash": "06bb76c23cb3196759b120065dc793f50e4973f3e1affd776da7e718aa62de0d",
+      "payloadPath": "events/0018.json",
+      "payloadHash": "0527905805c8de6b9b5c073764ea8247e58bfc4a40b3c0dee0de859a7410af78",
+      "eventHash": "d038690b44aca06b839d27c6423f81368b72a91d7f6a49e1d1ef300605496d66"
+    },
+    {
+      "seq": 19,
+      "at": "2026-10-01T00:29:42.038Z",
+      "kind": "SNAPSHOT",
+      "actor": "coord-main",
+      "state": {
+        "productStateId": "b141bce03aea4a3a37d7c1a112f7811755ee03d972542208bf4a9344dab85c47",
+        "contractId": "282bae599b3cc420b667bff9786335fa81c1b762a011160913dfffdc4c541e4b",
+        "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+        "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+      },
+      "previousEventHash": "d038690b44aca06b839d27c6423f81368b72a91d7f6a49e1d1ef300605496d66",
+      "payloadPath": "events/0019.json",
+      "payloadHash": "7a0982bf12f40fa8394a64a2329b188f85cc303a4562cbabf5d40e259d7154fb",
+      "eventHash": "7dd4c4e43ff3b715102b93bd500ee73a60f19b30bf0d297667dac5c7f4cfc243"
+    },
+    {
+      "seq": 20,
+      "at": "2026-10-01T00:30:12.815Z",
+      "kind": "SNAPSHOT",
+      "actor": "coord-main",
+      "state": {
+        "productStateId": "a9789bc3d584d7baf0ab2e32c951181c7990ed3a79ae0fbd91eb7dfe3cb0766b",
+        "contractId": "d812836c240bfca3b28c6ad1f6b5c10c06d677bdd4fd4fe5f58969be414f0f95",
+        "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+        "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+      },
+      "previousEventHash": "7dd4c4e43ff3b715102b93bd500ee73a60f19b30bf0d297667dac5c7f4cfc243",
+      "payloadPath": "events/0020.json",
+      "payloadHash": "1fe71d50577fd4b094e3652ae6f95b1cca9c838f1ae8d85dcd4e9217e2c999f1",
+      "eventHash": "6d38be9255074263c6e6a606f9493b44c32f9cba95bfaa3558dd5ec7ea545e4a"
+    },
+    {
+      "seq": 21,
+      "at": "2026-10-01T00:31:45.099Z",
+      "kind": "EVIDENCE",
+      "actor": "coord-main",
+      "state": {
+        "productStateId": "a9789bc3d584d7baf0ab2e32c951181c7990ed3a79ae0fbd91eb7dfe3cb0766b",
+        "contractId": "d812836c240bfca3b28c6ad1f6b5c10c06d677bdd4fd4fe5f58969be414f0f95",
+        "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+        "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+      },
+      "previousEventHash": "6d38be9255074263c6e6a606f9493b44c32f9cba95bfaa3558dd5ec7ea545e4a",
+      "payloadPath": "events/0021.json",
+      "payloadHash": "a6ddcdced6503f2480ce55de13a6af6bc8890e40f5668fb96f4696c0f8cdeb9c",
+      "eventHash": "f98c4c885378d13266f612de99c002dd194ebfe37192cf0b34085b0edb97a905"
+    },
+    {
+      "seq": 22,
+      "at": "2026-10-01T00:31:56.863Z",
+      "kind": "FINDING",
+      "actor": "coord-main",
+      "state": {
+        "productStateId": "a9789bc3d584d7baf0ab2e32c951181c7990ed3a79ae0fbd91eb7dfe3cb0766b",
+        "contractId": "d812836c240bfca3b28c6ad1f6b5c10c06d677bdd4fd4fe5f58969be414f0f95",
+        "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+        "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+      },
+      "previousEventHash": "f98c4c885378d13266f612de99c002dd194ebfe37192cf0b34085b0edb97a905",
+      "payloadPath": "events/0022.json",
+      "payloadHash": "2324012bff68bf4e322578e5f70675f0f9714ea8de380eb96ad157269e208afa",
+      "eventHash": "03c714c37b164017188714c68ac7d1dad43b254f1cc6bd4dfc46772de9ac8252"
+    },
+    {
+      "seq": 23,
+      "at": "2026-10-01T00:32:18.609Z",
+      "kind": "EVIDENCE",
+      "actor": "coord-main",
+      "state": {
+        "productStateId": "a9789bc3d584d7baf0ab2e32c951181c7990ed3a79ae0fbd91eb7dfe3cb0766b",
+        "contractId": "d812836c240bfca3b28c6ad1f6b5c10c06d677bdd4fd4fe5f58969be414f0f95",
+        "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+        "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+      },
+      "previousEventHash": "03c714c37b164017188714c68ac7d1dad43b254f1cc6bd4dfc46772de9ac8252",
+      "payloadPath": "events/0023.json",
+      "payloadHash": "b4d597536be48d9f8cdefa600a3bd132921d6151c417b34d476a679eddb4c2b5",
+      "eventHash": "7d1c5b44ae85f2bdce6b4d0e794696ab520c02bdfbbff55c5ebead35e8da2846"
+    },
+    {
+      "seq": 24,
+      "at": "2026-10-01T00:36:06.197Z",
+      "kind": "EVIDENCE",
+      "actor": "coord-main",
+      "state": {
+        "productStateId": "a9789bc3d584d7baf0ab2e32c951181c7990ed3a79ae0fbd91eb7dfe3cb0766b",
+        "contractId": "d812836c240bfca3b28c6ad1f6b5c10c06d677bdd4fd4fe5f58969be414f0f95",
+        "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+        "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+      },
+      "previousEventHash": "7d1c5b44ae85f2bdce6b4d0e794696ab520c02bdfbbff55c5ebead35e8da2846",
+      "payloadPath": "events/0024.json",
+      "payloadHash": "09f3540f9af0723ab9c7845471ba0269d594aa7c4599a42dd30f77ab82a82324",
+      "eventHash": "1ebb28b4f5cb29dff132dc46fea6328beb9d91d439aa1efcf6eb1595c1e6ac3c"
+    },
+    {
+      "seq": 25,
+      "at": "2026-10-01T00:37:11.724Z",
+      "kind": "EVIDENCE",
+      "actor": "coord-main",
+      "state": {
+        "productStateId": "a9789bc3d584d7baf0ab2e32c951181c7990ed3a79ae0fbd91eb7dfe3cb0766b",
+        "contractId": "d812836c240bfca3b28c6ad1f6b5c10c06d677bdd4fd4fe5f58969be414f0f95",
+        "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+        "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+      },
+      "previousEventHash": "1ebb28b4f5cb29dff132dc46fea6328beb9d91d439aa1efcf6eb1595c1e6ac3c",
+      "payloadPath": "events/0025.json",
+      "payloadHash": "309e59e90ce26453bd21923d27ad4ab9d377e056cec70234851840b2841644c6",
+      "eventHash": "7e009820b6fc5441db71161d6289c035d0946fbbf1cb9e7868b4be4188efa709"
     }
   ]
 }

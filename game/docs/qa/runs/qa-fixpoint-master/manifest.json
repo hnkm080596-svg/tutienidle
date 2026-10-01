@@ -2514,7 +2514,7 @@
       "path": "docs/qa/protocol/learning.md",
       "kind": "file",
       "mode": 33188,
-      "hash": "8bbfd251f35cbe8ca64842e4fe2e03f62cf04ae6f001bcb7899e5b85c91bd10b"
+      "hash": "ffb31aadf0ac200c25d488be1ee8c005f9faedb4aa69f277ab642966570b4538"
     },
     {
       "path": "docs/qa/protocol/ledger-schema.md",
@@ -15618,7 +15618,7 @@
       "path": "src/components/game/combat/turnCombatReactivity.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "8798902a71ff0f316e1039bf8f8e3982e020be120820737a0df36f55e24ba518"
+      "hash": "06ea55dceded7c90bc1a4b729110efc0453ce5a1d4a9abdb75979842a638ac97"
     },
     {
       "path": "src/components/game/combat/TurnOrderStrip.test.ts",
@@ -15864,7 +15864,7 @@
       "path": "src/components/panels/bag-sections/PillBagSection.vue",
       "kind": "file",
       "mode": 33188,
-      "hash": "780eb49c5dd9fbd754e71df06c006026d04be4137c0c9ef2cbd6df183bc07fa2"
+      "hash": "3e94c8752d6edae59594de125664ed41a566c8ee34bcd88ac1f05ed7214269c3"
     },
     {
       "path": "src/components/panels/BagGrid.vue",
@@ -17742,7 +17742,7 @@
       "path": "src/core/betaScope.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "272bbdd810d9ec2c826c95892aa7ab979529933ac0608ed2518abdbe37c08871"
+      "hash": "24dcc6d541e1a563474df330142fe7a6224fc65657c4e31b01dfcb229859cbdf"
     },
     {
       "path": "src/core/betaScopeSkillDomain.ts",
@@ -18972,7 +18972,7 @@
       "path": "src/core/game/CombatBuild.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "6c09fd841089a6b3ce1c87b006a9e686ffd2d2fb0887950f17ef64806c2e2ff2"
+      "hash": "df6747e2423d1653462b60fe39a8915a4700222d1c3f56233eeaee0743c4955f"
     },
     {
       "path": "src/core/game/CombatTimeClassification.test.ts",
@@ -19686,7 +19686,7 @@
       "path": "src/core/game/GameManagerPillOps.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "b58a3add55cc5b32d54ab3bee04fb7a4d4b58fba08f192ebb9333429fa1629ed"
+      "hash": "6ce0ce25413d61740ebfac196b40b9379e270058447722bb32b386f9d18cb9b2"
     },
     {
       "path": "src/core/game/GameManagerProgressionOps.clawback.test.ts",
@@ -20208,7 +20208,7 @@
       "path": "src/core/pill/PillSystem.profession.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "e0fc64afea03e0517a12e1c9363d9b6fa50f5827301638c4fba37f23abd9ec8b"
+      "hash": "e62308a65cd49ae73bb14a1b4f7cac1ba48766ade42a448d53a33c687d358938"
     },
     {
       "path": "src/core/pill/PillSystem.ts",
@@ -23538,13 +23538,13 @@
       "path": "src/locales/en.json",
       "kind": "file",
       "mode": 33188,
-      "hash": "7bb058de2944761c2cf7ab5866eea2db0e3d9e22f837315432affde840b2a1f9"
+      "hash": "9a52523017462b9b3c21171bfdb4e6574ab858094a967c9aaaa1ed180fe6aaf0"
     },
     {
       "path": "src/locales/vi.json",
       "kind": "file",
       "mode": 33188,
-      "hash": "cf028dd702ebf29fc20bb67609952c44fd07d337f92b420d5e783d6f3b6be9be"
+      "hash": "a44e6e2b29855b01269a0e64450e14ed8ea38c9e2772decb031d9e8835d07ee2"
     },
     {
       "path": "src/main-process/combatClockHost.test.ts",
@@ -24837,6 +24837,12 @@
       "hash": "c8aead2f9dfb66e3bd1ce079f631c714e9feecb470f6724d26f81b8ff3de180b"
     },
     {
+      "path": "test-results/.last-run.json",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "91d1c43004802cd49950d78eb11c8fa7d05da8ffffe219a8b13b2f561bc00903"
+    },
+    {
       "path": "tests/architecture/ackTokenContract.test.ts",
       "kind": "file",
       "mode": 33188,
@@ -24924,7 +24930,7 @@
       "path": "tests/architecture/betaDormantSaveLeak.qa.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "aa777c7e766f02493de803314cd760505596ec792c1590e7ac1d78967d44d894"
+      "hash": "5a181ffdf765473276851678fdfa13ac8d427d8e85ac3aaebb16b870b6717839"
     },
     {
       "path": "tests/architecture/betaEconomyCensus.test.ts",
@@ -25290,7 +25296,7 @@
       "path": "tests/e2e/boot-fresh.spec.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "a8afc31643416d6d5e9c87361f62b414bad5bc118282e2d52581ebd1d7e4d890"
+      "hash": "29f357b88c88bb702282e5f71793176d7f4352d43434c8f8f42d96b248897042"
     },
     {
       "path": "tests/e2e/combat-idle-motion-capture.spec.ts",
@@ -25344,7 +25350,7 @@
       "path": "tests/e2e/helpers.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "7fafe045e2dd0ef54e01e9a18e0b35c3be1be99270b5f833d86c2650aa465cea"
+      "hash": "be6388a58a28b99a4d263c99ce03e546d2172abc5c8eed9476542cf9cfc199a5"
     },
     {
       "path": "tests/e2e/ink-wash-ui.spec.ts",
@@ -25569,5 +25575,5 @@
       "hash": "0bb3657058699da63594036eda9bb6be7f6b4b44aebbb960fcba939870fd3f5e"
     }
   ],
-  "productStateId": "4311fc4d636dc9808f8fcc3699a4f41eb4e9db05e3b22623cc5409502f115a42"
+  "productStateId": "a9789bc3d584d7baf0ab2e32c951181c7990ed3a79ae0fbd91eb7dfe3cb0766b"
 }
