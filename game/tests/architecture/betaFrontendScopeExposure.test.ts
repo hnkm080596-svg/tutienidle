@@ -92,13 +92,12 @@ describe('beta FE-contract sec.8 - scope-exposure corpus guards', () => {
       // {state:'scope-hidden'}; a beta surface renders entries, it never
       // names the role. Recorded exceptions are the live-combat carriers
       // whose role row predates the beta rail contract
-      // (TurnCombatSkillBar / useTurnCombatManual / SkillRoleStrip) and
-      // the dormant companion panel vocabulary - a new beta surface may
-      // not join the list.
+      // (TurnCombatSkillBar's 'an-ultimate-emblem' surface id /
+      // useTurnCombatManual's slotList) and the dormant companion panel
+      // vocabulary - a new beta surface may not join the list.
       const list = offenders(/\bultimate\b/, [
         'components/game/combat/hud/TurnCombatSkillBar.vue',
         'components/panels/CompanionPanel.vue',
-        'components/panels/skill-path/SkillRoleStrip.vue',
         'composables/useTurnCombatManual.ts',
       ])
 
@@ -258,14 +257,11 @@ describe('beta FE-contract sec.8 - scope-exposure corpus guards', () => {
       // getResolvedSkillRoles / buildTurnSkillPresentation resolve the
       // live role row (they can emit an ultimate); the beta rail consumes
       // the scope verdicts. Banned as identifiers so a direct import
-      // bypasses nothing. Recorded exceptions are the two live-combat
-      // carriers already on the ultimate exception list.
+      // bypasses nothing. useTurnCombatManual is the recorded exception:
+      // the live cast loop stays on slotList (contract sec.3).
       const list = offendersInCode(
         /\b(getResolvedSkillRoles|buildTurnSkillPresentation)\b/,
-        [
-          'components/panels/skill-path/SkillRoleStrip.vue',
-          'composables/useTurnCombatManual.ts',
-        ],
+        ['composables/useTurnCombatManual.ts'],
       )
 
       expect(list).toEqual([])
@@ -277,11 +273,9 @@ describe('beta FE-contract sec.8 - scope-exposure corpus guards', () => {
     'the hidden-way capability authority stays out of new shell files',
     () => {
       // hasPathCapability feeds the ngo_dao emblem + hidden-way surfaces;
-      // betaCombatSurfacesFor already verdicts both scope-hidden. The
-      // live-combat bar is the recorded exception.
-      const list = offenders(/\bhasPathCapability\b/, [
-        'components/game/combat/hud/TurnCombatSkillBar.vue',
-      ])
+      // betaCombatSurfacesFor already verdicts both scope-hidden, so the
+      // shell consumes the verdicts only.
+      const list = offenders(/\bhasPathCapability\b/)
 
       expect(list).toEqual([])
     },

@@ -1,16 +1,17 @@
 <script setup lang="ts">
 // P7-M4 - resolved-role display replacing the retired slot-selection
-// surface. The three combat roles come straight from
-// progressionOps.getResolvedSkillRoles - the same override-aware seam
-// combat consumes, so what renders here is what fights. No slot count,
-// no locked tiers, no equip/unequip.
+// surface. No slot count, no locked tiers, no equip/unequip.
 //
 // BETA SCOPE LOCK v2 (phase-2): the mortal precursor chooser is gone -
 // the starter pick is fixed to 'linh_bao' at creation and the
 // setMortalBasicSkill write admits only that id, so a repick affordance
-// could only ever fail. Sword ways show their provider label (Kiem
-// Pho / Ngu Kiem Dao); special/ultimate that resolve to nothing render
-// muted.
+// could only ever fail.
+//
+// BETA FE-CONTRACT sec.3 - the cards render the canonical combat rail
+// read-model (progressionOps.betaCombatRolesFor): a scope-hidden entry
+// never becomes a card, so the strip cannot re-emit a role the model
+// hid (the third role is permanently scope-hidden in beta).
+// Progression-locked roles still render muted via their empty card.
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import SlotView from '../../common/SlotView.vue'
@@ -20,7 +21,8 @@ import { useTurnBattleInfo } from '@/composables/useTurnBattleInfo'
 import { useProgressionActions } from '@/composables/useProgressionActions'
 import { usePlayerStore } from '@/stores/player'
 import { specializationClaimingNodes } from '@/core/progression/NodeSystem'
-import type { BetaSkillTreeNode } from '@/core/betaScopeSkillDomain'
+import { turnSkillDisplayMetaOf } from '@/data/skill/TurnSkillDisplayMeta'
+import type { BetaCombatRole, BetaSkillTreeNode } from '@/core/betaScopeSkillDomain'
 import type { Skill } from '@/core/skill/Skill'
 import type { SkillSpecialization } from '@/core/skill/SkillSpecialization'
 
@@ -30,19 +32,19 @@ const { stateVersion } = useStateVersion()
 const { selectSkillSpecialization } = useProgressionActions()
 const { t } = useI18n()
 
-type RoleKey = 'basic' | 'special' | 'ultimate'
-
-const ROLE_KEYS: readonly RoleKey[] = ['basic', 'special', 'ultimate']
-const ROLE_LABELS: Record<RoleKey, string> = {
+const ROLE_LABELS: Partial<Record<BetaCombatRole, string>> = {
   basic: 'Cơ Bản',
   special: 'Đặc Biệt',
-  ultimate: 'Tuyệt Kỹ',
 }
 
-const roles = computed(() => {
+function roleLabel(role: BetaCombatRole): string {
+  return ROLE_LABELS[role] ?? role
+}
+
+const roleRail = computed(() => {
   stateVersion.value
 
-  return gameManager.progressionOps.getResolvedSkillRoles(player.$state)
+  return gameManager.progressionOps.betaCombatRolesFor(player.$state)
 })
 
 // BETA FE-CONTRACT (relayed scope): node ownership reads resolve
@@ -68,55 +70,58 @@ function owned(nodeId: string): boolean {
 const { isBattleInProgress: inBattle } = useTurnBattleInfo()
 
 interface RoleCard {
-  key: RoleKey
-  /** Display name (accessor-resolved: learned > template > id). */
+  role: BetaCombatRole
+  /** Display name (meta-resolved; falls back to the learned name). */
   name?: string
-  /** Learned instance - present iff the role def is learned. */
+  /** Learned instance - present iff the role skill is learned. */
   skill?: Skill
-  /** Provider-backed basic (sword ways) - display label, no def. */
-  dynamicLabel?: string
   empty: boolean
 }
 
-const roleCards = computed<Record<RoleKey, RoleCard>>(() => {
-  const resolved = roles.value
-  const card = (entry: { name: string; skill?: Skill } | undefined, key: RoleKey): RoleCard =>
-    entry === undefined
-      ? { key, empty: true }
-      : { key, name: entry.name, skill: entry.skill, empty: false }
+// Cards come from the rail verdicts: scope-hidden roles are dropped,
+// a null skillId renders the muted empty card, and a named skillId
+// resolves its display name through the canonical meta table.
+const roleCards = computed<RoleCard[]>(() =>
+  roleRail.value
+    .filter((entry) => entry.state !== 'scope-hidden')
+    .map((entry) => {
+      if (entry.skillId === null) {
+        return { role: entry.role, empty: true }
+      }
 
-  return {
-    basic:
-      resolved.basic.kind === 'dynamic'
-        ? { key: 'basic', dynamicLabel: resolved.basic.label, empty: false }
-        : { key: 'basic', name: resolved.basic.name, skill: resolved.basic.skill, empty: false },
-    special: card(resolved.special, 'special'),
-    ultimate: card(resolved.ultimate, 'ultimate'),
-  }
-})
+      const skill = gameManager.skillManager.get(entry.skillId)
 
-const openRole = ref<RoleKey | null>(null)
+      return {
+        role: entry.role,
+        name: turnSkillDisplayMetaOf(entry.skillId)?.name ?? skill?.name ?? entry.skillId,
+        skill,
+        empty: false,
+      }
+    }),
+)
 
-function skillOf(key: RoleKey): Skill | undefined {
-  return roleCards.value[key].skill
+const openRole = ref<BetaCombatRole | null>(null)
+
+function cardOf(role: BetaCombatRole): RoleCard | undefined {
+  return roleCards.value.find((card) => card.role === role)
 }
 
-function isEmptyRole(key: RoleKey): boolean {
-  return roleCards.value[key].empty
+function skillOf(role: BetaCombatRole): Skill | undefined {
+  return cardOf(role)?.skill
 }
 
 // A card opens when it has something to show beneath it: a def-backed
 // card with a learned specialization-bearing skill opens its chips.
-function roleHasPanel(key: RoleKey): boolean {
-  return (skillOf(key)?.specializations?.length ?? 0) > 0
+function roleHasPanel(role: BetaCombatRole): boolean {
+  return (skillOf(role)?.specializations?.length ?? 0) > 0
 }
 
-function toggleRole(key: RoleKey) {
-  if (!roleHasPanel(key)) {
+function toggleRole(role: BetaCombatRole) {
+  if (!roleHasPanel(role)) {
     return
   }
 
-  openRole.value = openRole.value === key ? null : key
+  openRole.value = openRole.value === role ? null : role
 }
 
 const openedSkill = computed(() => {
@@ -168,21 +173,17 @@ function specTooltip(skill: Skill, spec: SkillSpecialization) {
   <div class="skill-role-strip">
     <div class="skill-roles">
       <button
-        v-for="key in ROLE_KEYS"
-        :key="key"
+        v-for="card in roleCards"
+        :key="card.role"
         type="button"
         class="skill-role"
-        :class="{ 'is-empty': isEmptyRole(key), 'is-open': openRole === key }"
-        :disabled="!roleHasPanel(key)"
-        @click="toggleRole(key)"
+        :class="{ 'is-empty': card.empty, 'is-open': openRole === card.role }"
+        :disabled="!roleHasPanel(card.role)"
+        @click="toggleRole(card.role)"
       >
-        <span class="skill-role__label">{{ ROLE_LABELS[key] }}</span>
+        <span class="skill-role__label">{{ roleLabel(card.role) }}</span>
 
-        <template v-if="roleCards[key].dynamicLabel">
-          <span class="skill-role__dynamic">{{ roleCards[key].dynamicLabel }}</span>
-        </template>
-
-        <template v-else-if="isEmptyRole(key)">
+        <template v-if="card.empty">
           <span class="skill-role__empty">—</span>
         </template>
 
@@ -193,12 +194,12 @@ function specTooltip(skill: Skill, spec: SkillSpecialization) {
                the authored channel, previously dropped here. -->
           <SlotView
             class="skill-role__icon"
-            :item="roleCards[key].skill ?? null"
-            :label="roleCards[key].name ?? ''"
-            :description="roleCards[key].skill?.description"
+            :item="card.skill ?? null"
+            :label="card.name ?? ''"
+            :description="card.skill?.description"
           />
-          <span v-if="roleCards[key].skill" class="skill-role__level">
-            Lv. {{ roleCards[key].skill!.level }}/{{ roleCards[key].skill!.maxLevel }}
+          <span v-if="card.skill" class="skill-role__level">
+            Lv. {{ card.skill!.level }}/{{ card.skill!.maxLevel }}
           </span>
         </template>
       </button>

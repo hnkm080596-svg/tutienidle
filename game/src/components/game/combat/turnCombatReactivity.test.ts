@@ -187,7 +187,9 @@ describe('ARCH-005 (M12) — combat HUD reactivity over the in-place-mutated Tur
     await bump()
 
     expect(container.querySelector('.turn-combat-skill-bar')).not.toBeNull()
-    expect(container.querySelectorAll('.turn-combat-skill-bar__slot-button')).toHaveLength(3)
+    // Mortal rail = basic + progression-locked special; the ultimate
+    // role is scope-hidden and never renders a slot.
+    expect(container.querySelectorAll('.turn-combat-skill-bar__slot-button')).toHaveLength(2)
     expect(container.querySelector('.turn-order-strip')).not.toBeNull()
 
     // Auto turns append battle.log in place; the panel surfaces after bump.

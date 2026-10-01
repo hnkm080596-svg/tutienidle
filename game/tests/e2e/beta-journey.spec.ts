@@ -14,15 +14,9 @@ import { bootToGuestHome, enterHome } from './helpers'
  * tests/architecture/betaScopeRenderedTokens.test.ts.
  *
  * This suite is a GATE, so leak assertions are hard expects, not
- * test.fail() markers: while a known leak exists the suite stays red and
- * the failure lines name exactly which forbidden surface class rendered.
- * Current known leaks (see PR description):
- *   - TurnCombatSkillBar renders a disabled ultimate slot (Tuyet Ky) in
- *     every beta battle.
- *   - SkillRoleStrip renders an ultimate card inside SkillPathPanel.
- *   - SkillPathPanel renders all five element branch tabs after a
- *     five-element commit; the four non-committed branches are
- *     scope-hidden, not browseable-locked.
+ * test.fail() markers: while a scope-hidden surface renders the suite
+ * stays red and the failure lines name exactly which forbidden surface
+ * class rendered.
  */
 
 // The scope-hidden surface ids, expressed as the DOM hooks they would use
@@ -213,9 +207,8 @@ test.describe('beta journey - scope-leak gate (spec sec.9)', () => {
     await openStandalone(page, 'skill')
     const strip = page.locator('.skill-role-strip')
     await expect(strip).toBeVisible({ timeout: 10_000 })
-    // LEAK: SkillRoleStrip builds all three role cards from
-    // getResolvedSkillRoles and never consults betaCombatRolesFor, so the
-    // scope-hidden ultimate card renders "Tuyet Ky" with an empty marker.
+    // The strip renders the betaCombatRolesFor rail: the ultimate
+    // role is permanently scope-hidden, so no card carries the label.
     await expect(
       strip.locator('.skill-role__label').filter({ hasText: ULTIMATE_LABEL }),
       'ultimate role card must not exist on the strip',
@@ -241,9 +234,8 @@ test.describe('beta journey - scope-leak gate (spec sec.9)', () => {
     const bar = page.locator('.turn-combat-skill-bar')
     await expect(bar).toBeVisible({ timeout: 30_000 })
 
-    // LEAK: TurnCombatSkillBar's visibleSlots carry ROLE_ORDER verbatim
-    // (basic/special/ultimate) without consulting betaCombatRolesFor, so a
-    // disabled "Dung Tuyet Ky" button renders in every beta battle.
+    // The rail renders only betaCombatRolesFor entries; the ultimate
+    // role is scope-hidden so no slot (disabled or otherwise) renders.
     await expect(
       bar.locator('button').filter({ hasText: ULTIMATE_LABEL }),
       'ultimate slot button must not exist on the bar',
@@ -272,9 +264,8 @@ test.describe('beta journey - scope-leak gate (spec sec.9)', () => {
     await expect(tabs.first()).toBeVisible({ timeout: 10_000 })
 
     // Contract: after committing fire, the four non-committed element
-    // branches are scope-hidden - the panel must render ONLY the fire tab,
-    // not five tabs with four locked. (Design comment on the tab loop
-    // says "others render locked"; spec sec.9 forbids the placeholder.)
+    // branches are scope-hidden - the panel renders ONLY the fire tab,
+    // derived from the betaSkillTreeFor node states.
     const rendered = await tabs.allTextContents()
     expect(
       rendered.length,
