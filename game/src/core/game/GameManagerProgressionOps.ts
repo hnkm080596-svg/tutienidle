@@ -722,11 +722,13 @@ export class GameManagerProgressionOps {
   previewNodeRespec(player: PlayerData, scope?: { rootId?: string }): NodeRespecPreview {
     // The preview must agree with respecNodeTree's beta scope gate: a
     // save holding dormant-tree records is refused, so the confirm
-    // dialog never promises a refund the op will not pay.
-    const holdsDormantPreview = Object.keys(player.nodeLevels ?? {}).some((id) => {
-      const node = this.deps.nodeRegistry.get(id)
-      return node !== undefined && !betaNodeWriteAdmitted(node)
-    })
+    // dialog never promises a refund the op will not pay. has() guards
+    // the throwing get() - save validation tolerates ghost nodeLevels
+    // ids (retired nodes) by design.
+    const holdsDormantPreview = Object.keys(player.nodeLevels ?? {}).some((id) =>
+      this.deps.nodeRegistry.has(id) &&
+      !betaNodeWriteAdmitted(this.deps.nodeRegistry.get(id)),
+    )
 
     if (holdsDormantPreview) {
       return { refund: 0, resetNodeIds: [], resetCount: 0, clawback: undefined }
@@ -874,10 +876,12 @@ export class GameManagerProgressionOps {
     // BETA SCOPE LOCK - a respec that would reset dormant-tree records
     // refunds their insight into the live economy: refuse the whole op
     // so a carried save's dormant levels stay intact, never monetized.
-    const holdsDormant = Object.keys(player.nodeLevels ?? {}).some((id) => {
-      const node = this.deps.nodeRegistry.get(id)
-      return node !== undefined && !betaNodeWriteAdmitted(node)
-    })
+    // has() guards the throwing get() - save validation tolerates
+    // ghost nodeLevels ids (retired nodes) by design.
+    const holdsDormant = Object.keys(player.nodeLevels ?? {}).some((id) =>
+      this.deps.nodeRegistry.has(id) &&
+      !betaNodeWriteAdmitted(this.deps.nodeRegistry.get(id)),
+    )
 
     if (holdsDormant) {
       return null

@@ -17,8 +17,8 @@
     "base": "origin/master",
     "head": "HEAD",
     "state": {
-      "productStateId": "4528ef3873ec57b53bb2cf012e15105104bee7eb1f51031400cd03977b7855ba",
-      "contractId": "357b3bff016e4300e72ad462451074a2c8ab36a5a68081aaf629bddeab16b964",
+      "productStateId": "68a026d3d49539b0f6269ecfc146a78b2607ee6023d286df3e8c730b021e080a",
+      "contractId": "555a6e249bd6786ad137938b8631661186aa658f73c5bc69363a8cd6f5e6bf0a",
       "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
       "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
     },
@@ -4454,7 +4454,7 @@
         "sec.H notice fires once on out-of-scope restored save (realm_beyond_release pin), never on in-scope save; F-DL-5 pre-fix repro: unsupportedReleaseReason({realmId:mortal}) returned formation_loadout on absent field (undefined!==null), contradicting real-record-only contract"
       ],
       "limitations": [],
-      "status": "CURRENT"
+      "status": "STALE"
     },
     {
       "id": "EV-PIN-DORMANT-1",
@@ -4490,7 +4490,7 @@
         "all 5 dormant-leak assertions now pass post-fix: cap==base under carried record, normal passive granted, hiddenPerfection=null flags hidden_progression_state without throwing"
       ],
       "limitations": [],
-      "status": "CURRENT"
+      "status": "STALE"
     },
     {
       "id": "EV-PROBE-READMODEL-1",
@@ -4573,7 +4573,7 @@
         "fix evidence for F-RM-1..F-RM-4; probe asserts now pin the contract invariants"
       ],
       "limitations": [],
-      "status": "CURRENT"
+      "status": "STALE"
     },
     {
       "id": "EV-ATOMICITY-1",
@@ -4623,7 +4623,7 @@
         "rollback does not (and cannot) restore the tick-ops questRealmReconcileNeeded flag - documented idempotent design; reconcile against the restored player is equivalent to a restore-time reconcile",
         "the test suite injects faults at 5 named legs; a fault inside a finer-grained sub-step relies on the same snapshot mechanism (mechanism-level proof, not per-step enumeration)"
       ],
-      "status": "CURRENT"
+      "status": "STALE"
     },
     {
       "id": "EV-PROBE-TRISAVE-1",
@@ -4703,7 +4703,7 @@
       "limitations": [
         "sword/body/hidden runtime participation verified at build level; a live turn-battle execution was not replayed"
       ],
-      "status": "CURRENT"
+      "status": "STALE"
     },
     {
       "id": "EV-PROBE-WAVE6",
@@ -4757,7 +4757,7 @@
         "pins are suite-level green evidence; concurrency reasoning rests on JS single-thread + replacement-restore tests rather than a dedicated race fuzzer",
         "electron update path verified at adapter level; packaged autoUpdater binary behavior not exercised"
       ],
-      "status": "CURRENT"
+      "status": "STALE"
     },
     {
       "id": "EV-MUT-IA-1",
@@ -4792,7 +4792,7 @@
       "limitations": [
         "single-mutant isolation in-place; detector scope is the pinning suite, not the whole suite"
       ],
-      "status": "CURRENT"
+      "status": "STALE"
     },
     {
       "id": "EV-MUT-PA-1",
@@ -4827,7 +4827,7 @@
       "limitations": [
         "single-mutant isolation in-place; detector scope is the pinning suite, not the whole suite"
       ],
-      "status": "CURRENT"
+      "status": "STALE"
     },
     {
       "id": "EV-MUT-SV-1",
@@ -4862,7 +4862,7 @@
       "limitations": [
         "single-mutant isolation in-place; detector scope is the pinning suite, not the whole suite"
       ],
-      "status": "CURRENT"
+      "status": "STALE"
     },
     {
       "id": "EV-MUT-AS-1",
@@ -4897,7 +4897,7 @@
       "limitations": [
         "single-mutant isolation in-place; detector scope is the pinning suite, not the whole suite"
       ],
-      "status": "CURRENT"
+      "status": "STALE"
     },
     {
       "id": "EV-MUT-DS-1",
@@ -4932,7 +4932,7 @@
       "limitations": [
         "single-mutant isolation in-place; detector scope is the pinning suite, not the whole suite"
       ],
-      "status": "CURRENT"
+      "status": "STALE"
     },
     {
       "id": "EV-MUT-RM-1",
@@ -4967,7 +4967,7 @@
       "limitations": [
         "single-mutant isolation in-place; detector scope is the pinning suite, not the whole suite"
       ],
-      "status": "CURRENT"
+      "status": "STALE"
     },
     {
       "id": "EV-MUT-CR-1",
@@ -5002,7 +5002,7 @@
       "limitations": [
         "single-mutant isolation in-place; detector scope is the pinning suite, not the whole suite"
       ],
-      "status": "CURRENT"
+      "status": "STALE"
     },
     {
       "id": "EV-MUT-PG-1",
@@ -5037,7 +5037,7 @@
       "limitations": [
         "single-mutant isolation in-place; detector scope is the pinning suite, not the whole suite"
       ],
-      "status": "CURRENT"
+      "status": "STALE"
     },
     {
       "id": "EV-MUT-EC-1",
@@ -5072,7 +5072,7 @@
       "limitations": [
         "single-mutant isolation in-place; detector scope is the pinning suite, not the whole suite"
       ],
-      "status": "CURRENT"
+      "status": "STALE"
     },
     {
       "id": "EV-MUT-SF-1",
@@ -5107,7 +5107,7 @@
       "limitations": [
         "single-mutant isolation in-place; detector scope is the pinning suite, not the whole suite"
       ],
-      "status": "CURRENT"
+      "status": "STALE"
     },
     {
       "id": "EV-E2E-1",
@@ -5148,7 +5148,7 @@
       "limitations": [
         "2 of 27 e2e specs executed; the remaining specs share the repaired helper but their own assertions were not re-run this wave"
       ],
-      "status": "CURRENT"
+      "status": "STALE"
     },
     {
       "id": "EV-PROBE-DET-FINAL",
@@ -5197,7 +5197,7 @@
       "limitations": [
         "scope is the pin suites, not the whole verify set"
       ],
-      "status": "CURRENT"
+      "status": "STALE"
     },
     {
       "id": "EV-PROBE-PERSIST",
@@ -5234,7 +5234,7 @@
         "388 tests pass: save-version enforcement + explicit rejection, shape validation, round-trip fidelity, migration path, acceptance gates"
       ],
       "limitations": [],
-      "status": "CURRENT"
+      "status": "STALE"
     },
     {
       "id": "EV-STATIC-SEAMS",
@@ -5283,7 +5283,7 @@
       "limitations": [
         "static audit is source-review evidence, not executed behavior"
       ],
-      "status": "CURRENT"
+      "status": "STALE"
     },
     {
       "id": "EV-FINAL-VERIFY",
@@ -5378,7 +5378,7 @@
       "limitations": [
         "fault set is enumerated legs of the commit region"
       ],
-      "status": "CURRENT"
+      "status": "STALE"
     },
     {
       "id": "EV-PROP-PG-1",
@@ -5414,7 +5414,7 @@
       "limitations": [
         "matrix is sampled, not exhaustive"
       ],
-      "status": "CURRENT"
+      "status": "STALE"
     },
     {
       "id": "EV-MUT-TQ-1",
@@ -5450,7 +5450,7 @@
       "limitations": [
         "killed by same-file pins; no cross-file detector needed"
       ],
-      "status": "CURRENT"
+      "status": "STALE"
     },
     {
       "id": "EV-PROBE-CA-FIX",
@@ -5487,7 +5487,7 @@
       "limitations": [
         "unit-level ops; render seams covered by betaReadModelHonesty + SkillPathPanel.test"
       ],
-      "status": "CURRENT"
+      "status": "STALE"
     },
     {
       "id": "EV-MUT-CA-1",
@@ -5522,7 +5522,7 @@
       "limitations": [
         "mutant covers requiredWay leg only; view-tag leg covered by same pins"
       ],
-      "status": "CURRENT"
+      "status": "STALE"
     },
     {
       "id": "EV-FINAL-VERIFY-2",
@@ -5638,7 +5638,7 @@
         "src/core/game/GameManagerProgressionOps.ts",
         "src/core/game/CombatBuild.ts"
       ],
-      "status": "CURRENT",
+      "status": "STALE",
       "claims": [
         "19/19 pin asserts green: hidden-way aura excluded from entryBuffs; dormant-kit cores reject insight + respec frozen; hidden-kit learnSkill rejected; beta/mortal positive controls pass"
       ],
@@ -5744,7 +5744,7 @@
         "post-fix pin: way facet [], cultivation_path channel [] on hidden_spell save, technique_tier [] for diamond_body_art, dormant passive emits nothing, tryAdvanceTechniqueGrade refuses dormant technique without debiting; beta positive controls emit normally"
       ],
       "limitations": [],
-      "status": "CURRENT",
+      "status": "STALE",
       "kind": "EXECUTED_UNIT_STRUCTURAL"
     },
     {
@@ -5776,7 +5776,7 @@
         "all 5 F-TC pins fail under the ungated revert - pins isolate exactly the dormant-channel defects they claim"
       ],
       "limitations": [],
-      "status": "CURRENT",
+      "status": "STALE",
       "kind": "EXECUTED_MUTATION"
     },
     {
@@ -5825,7 +5825,7 @@
         "full gate green on the post-F-TC state: 7841 tests, type-check, build"
       ],
       "limitations": [],
-      "status": "CURRENT",
+      "status": "STALE",
       "kind": "EXECUTED_INTEGRATION"
     }
   ],
@@ -5846,7 +5846,7 @@
         "EV-E2E-1"
       ],
       "reviewerIds": [],
-      "status": "SATISFIED",
+      "status": "STALE",
       "weakProtection": false
     },
     {
@@ -5881,7 +5881,7 @@
         "EV-ATOMICITY-1"
       ],
       "reviewerIds": [],
-      "status": "SATISFIED",
+      "status": "STALE",
       "weakProtection": false
     },
     {
@@ -5899,7 +5899,7 @@
         "EV-PROP-IA-1"
       ],
       "reviewerIds": [],
-      "status": "SATISFIED",
+      "status": "STALE",
       "weakProtection": false
     },
     {
@@ -5917,7 +5917,7 @@
         "EV-MUT-IA-1"
       ],
       "reviewerIds": [],
-      "status": "SATISFIED",
+      "status": "STALE",
       "weakProtection": false
     },
     {
@@ -5952,7 +5952,7 @@
         "EV-ATOMICITY-1"
       ],
       "reviewerIds": [],
-      "status": "SATISFIED",
+      "status": "STALE",
       "weakProtection": false
     },
     {
@@ -5970,7 +5970,7 @@
         "EV-STATIC-SEAMS"
       ],
       "reviewerIds": [],
-      "status": "SATISFIED",
+      "status": "STALE",
       "weakProtection": false
     },
     {
@@ -6004,7 +6004,7 @@
         "EV-PROBE-DET-FINAL"
       ],
       "reviewerIds": [],
-      "status": "SATISFIED",
+      "status": "STALE",
       "weakProtection": false
     },
     {
@@ -6039,7 +6039,7 @@
         "EV-MUT-PA-1"
       ],
       "reviewerIds": [],
-      "status": "SATISFIED",
+      "status": "STALE",
       "weakProtection": false
     },
     {
@@ -6057,7 +6057,7 @@
         "EV-PROBE-READMODEL-2"
       ],
       "reviewerIds": [],
-      "status": "SATISFIED",
+      "status": "STALE",
       "weakProtection": false
     },
     {
@@ -6075,7 +6075,7 @@
         "EV-PROBE-READMODEL-2"
       ],
       "reviewerIds": [],
-      "status": "SATISFIED",
+      "status": "STALE",
       "weakProtection": false
     },
     {
@@ -6093,7 +6093,7 @@
         "EV-MUT-SV-1"
       ],
       "reviewerIds": [],
-      "status": "SATISFIED",
+      "status": "STALE",
       "weakProtection": false
     },
     {
@@ -6129,7 +6129,7 @@
         "EV-PROBE-DET-FINAL"
       ],
       "reviewerIds": [],
-      "status": "SATISFIED",
+      "status": "STALE",
       "weakProtection": false
     },
     {
@@ -6147,7 +6147,7 @@
         "EV-PROBE-TRISAVE-2"
       ],
       "reviewerIds": [],
-      "status": "SATISFIED",
+      "status": "STALE",
       "weakProtection": false
     },
     {
@@ -6165,7 +6165,7 @@
         "EV-MUT-AS-1"
       ],
       "reviewerIds": [],
-      "status": "SATISFIED",
+      "status": "STALE",
       "weakProtection": false
     },
     {
@@ -6201,7 +6201,7 @@
         "EV-PROBE-DET-FINAL"
       ],
       "reviewerIds": [],
-      "status": "SATISFIED",
+      "status": "STALE",
       "weakProtection": false
     },
     {
@@ -6220,7 +6220,7 @@
         "EV-PROBE-PERSIST"
       ],
       "reviewerIds": [],
-      "status": "SATISFIED",
+      "status": "STALE",
       "weakProtection": false
     },
     {
@@ -6255,7 +6255,7 @@
         "EV-STATIC-SEAMS"
       ],
       "reviewerIds": [],
-      "status": "SATISFIED",
+      "status": "STALE",
       "weakProtection": false
     },
     {
@@ -6273,7 +6273,7 @@
         "EV-PROBE-READMODEL-2"
       ],
       "reviewerIds": [],
-      "status": "SATISFIED",
+      "status": "STALE",
       "weakProtection": false
     },
     {
@@ -6307,7 +6307,7 @@
         "EV-PROBE-DET-FINAL"
       ],
       "reviewerIds": [],
-      "status": "SATISFIED",
+      "status": "STALE",
       "weakProtection": false
     },
     {
@@ -6325,7 +6325,7 @@
         "EV-PROBE-DET-FINAL"
       ],
       "reviewerIds": [],
-      "status": "SATISFIED",
+      "status": "STALE",
       "weakProtection": false
     },
     {
@@ -6361,7 +6361,7 @@
         "EV-PROBE-DET-FINAL"
       ],
       "reviewerIds": [],
-      "status": "SATISFIED",
+      "status": "STALE",
       "weakProtection": false
     },
     {
@@ -6379,7 +6379,7 @@
         "EV-PROP-PG-1"
       ],
       "reviewerIds": [],
-      "status": "SATISFIED",
+      "status": "STALE",
       "weakProtection": false
     },
     {
@@ -6397,7 +6397,7 @@
         "EV-MUT-PG-1"
       ],
       "reviewerIds": [],
-      "status": "SATISFIED",
+      "status": "STALE",
       "weakProtection": false
     },
     {
@@ -6415,7 +6415,7 @@
         "EV-PROBE-WAVE6"
       ],
       "reviewerIds": [],
-      "status": "SATISFIED",
+      "status": "STALE",
       "weakProtection": false
     },
     {
@@ -6433,7 +6433,7 @@
         "EV-PROBE-WAVE6"
       ],
       "reviewerIds": [],
-      "status": "SATISFIED",
+      "status": "STALE",
       "weakProtection": false
     },
     {
@@ -6467,7 +6467,7 @@
         "EV-PROBE-WAVE6"
       ],
       "reviewerIds": [],
-      "status": "SATISFIED",
+      "status": "STALE",
       "weakProtection": false
     },
     {
@@ -6501,7 +6501,7 @@
         "EV-MUT-EC-1"
       ],
       "reviewerIds": [],
-      "status": "SATISFIED",
+      "status": "STALE",
       "weakProtection": false
     },
     {
@@ -6519,7 +6519,7 @@
         "EV-PROBE-DET-FINAL"
       ],
       "reviewerIds": [],
-      "status": "SATISFIED",
+      "status": "STALE",
       "weakProtection": false
     },
     {
@@ -6537,7 +6537,7 @@
         "EV-PROBE-DET-FINAL"
       ],
       "reviewerIds": [],
-      "status": "SATISFIED",
+      "status": "STALE",
       "weakProtection": false
     },
     {
@@ -6555,7 +6555,7 @@
         "EV-PROBE-PERSIST"
       ],
       "reviewerIds": [],
-      "status": "SATISFIED",
+      "status": "STALE",
       "weakProtection": false
     },
     {
@@ -6573,7 +6573,7 @@
         "EV-MUT-SF-1"
       ],
       "reviewerIds": [],
-      "status": "SATISFIED",
+      "status": "STALE",
       "weakProtection": false
     },
     {
@@ -6608,7 +6608,7 @@
         "EV-PROBE-PERSIST"
       ],
       "reviewerIds": [],
-      "status": "SATISFIED",
+      "status": "STALE",
       "weakProtection": false
     },
     {
@@ -6626,7 +6626,7 @@
         "EV-PROBE-PERSIST"
       ],
       "reviewerIds": [],
-      "status": "SATISFIED",
+      "status": "STALE",
       "weakProtection": false
     },
     {
@@ -6644,7 +6644,7 @@
         "EV-PROBE-DET-FINAL"
       ],
       "reviewerIds": [],
-      "status": "SATISFIED",
+      "status": "STALE",
       "weakProtection": false
     },
     {
@@ -6680,7 +6680,7 @@
         "EV-PROBE-DET-FINAL"
       ],
       "reviewerIds": [],
-      "status": "SATISFIED",
+      "status": "STALE",
       "weakProtection": false
     },
     {
@@ -6698,7 +6698,7 @@
         "EV-E2E-1"
       ],
       "reviewerIds": [],
-      "status": "SATISFIED",
+      "status": "STALE",
       "weakProtection": false
     },
     {
@@ -6732,7 +6732,7 @@
         "EV-STATIC-SEAMS"
       ],
       "reviewerIds": [],
-      "status": "SATISFIED",
+      "status": "STALE",
       "weakProtection": false
     },
     {
@@ -6750,7 +6750,7 @@
         "EV-PROBE-WAVE6"
       ],
       "reviewerIds": [],
-      "status": "SATISFIED",
+      "status": "STALE",
       "weakProtection": false
     },
     {
@@ -6768,7 +6768,7 @@
         "EV-STATIC-SEAMS"
       ],
       "reviewerIds": [],
-      "status": "SATISFIED",
+      "status": "STALE",
       "weakProtection": false
     },
     {
@@ -6786,7 +6786,7 @@
         "EV-PROBE-WAVE6"
       ],
       "reviewerIds": [],
-      "status": "SATISFIED",
+      "status": "STALE",
       "weakProtection": false
     },
     {
@@ -6804,7 +6804,7 @@
         "EV-PROBE-WAVE6"
       ],
       "reviewerIds": [],
-      "status": "SATISFIED",
+      "status": "STALE",
       "weakProtection": false
     },
     {
@@ -6823,7 +6823,7 @@
         "EV-ATOMICITY-1"
       ],
       "reviewerIds": [],
-      "status": "SATISFIED",
+      "status": "STALE",
       "weakProtection": false
     },
     {
@@ -6841,7 +6841,7 @@
         "EV-STATIC-SEAMS"
       ],
       "reviewerIds": [],
-      "status": "SATISFIED",
+      "status": "STALE",
       "weakProtection": false
     },
     {
@@ -6874,7 +6874,7 @@
         "EV-MUT-TQ-1"
       ],
       "reviewerIds": [],
-      "status": "SATISFIED",
+      "status": "STALE",
       "weakProtection": false
     },
     {
@@ -6892,7 +6892,7 @@
         "EV-STATIC-SEAMS"
       ],
       "reviewerIds": [],
-      "status": "SATISFIED",
+      "status": "STALE",
       "weakProtection": false
     },
     {
@@ -6926,7 +6926,7 @@
         "EV-ATOMICITY-1"
       ],
       "reviewerIds": [],
-      "status": "SATISFIED",
+      "status": "STALE",
       "weakProtection": false
     },
     {
@@ -6944,7 +6944,7 @@
         "EV-PROBE-WAVE6"
       ],
       "reviewerIds": [],
-      "status": "SATISFIED",
+      "status": "STALE",
       "weakProtection": false
     },
     {
@@ -6962,7 +6962,7 @@
         "EV-PROBE-WAVE6"
       ],
       "reviewerIds": [],
-      "status": "SATISFIED",
+      "status": "STALE",
       "weakProtection": false
     },
     {
@@ -6980,7 +6980,7 @@
         "EV-PROBE-WAVE6"
       ],
       "reviewerIds": [],
-      "status": "SATISFIED",
+      "status": "STALE",
       "weakProtection": false
     },
     {
@@ -6998,7 +6998,7 @@
         "EV-PROBE-WAVE6"
       ],
       "reviewerIds": [],
-      "status": "SATISFIED",
+      "status": "STALE",
       "weakProtection": false
     },
     {
@@ -7016,7 +7016,7 @@
         "EV-PROBE-WAVE6"
       ],
       "reviewerIds": [],
-      "status": "SATISFIED",
+      "status": "STALE",
       "weakProtection": false
     },
     {
@@ -7034,7 +7034,7 @@
         "EV-PROBE-WAVE6"
       ],
       "reviewerIds": [],
-      "status": "SATISFIED",
+      "status": "STALE",
       "weakProtection": false
     }
   ],
@@ -7635,7 +7635,7 @@
       "accessLimitations": [],
       "coverageIds": [],
       "novelAttackIds": [],
-      "status": "SEALED",
+      "status": "STALE",
       "round": 8,
       "phase": "CORRECTNESS",
       "contextId": "ctx-coord-seq-5",
@@ -7666,7 +7666,7 @@
       "accessLimitations": [],
       "coverageIds": [],
       "novelAttackIds": [],
-      "status": "SEALED",
+      "status": "STALE",
       "round": 8,
       "phase": "AUTHORITY",
       "contextId": "ctx-coord-seq-5",
@@ -7696,7 +7696,7 @@
       "accessLimitations": [],
       "coverageIds": [],
       "novelAttackIds": [],
-      "status": "SEALED",
+      "status": "STALE",
       "round": 8,
       "phase": "INTEGRATION",
       "contextId": "ctx-coord-seq-5",
@@ -7726,7 +7726,7 @@
       "accessLimitations": [],
       "coverageIds": [],
       "novelAttackIds": [],
-      "status": "SEALED",
+      "status": "STALE",
       "round": 8,
       "phase": "CLOSURE",
       "contextId": "ctx-coord-closure-4",
@@ -7900,7 +7900,7 @@
       "noveltyEvidenceIds": [],
       "startedAt": "2026-10-01T02:56:00Z",
       "finishedAt": "2026-10-01T03:16:00Z",
-      "status": "CLEAN"
+      "status": "STALE"
     }
   ],
   "mutations": [
@@ -9295,6 +9295,22 @@
       "payloadPath": "events/0036.json",
       "payloadHash": "30b408367641a87c2a42c6550c2d37b1844f3942e65f448af011393c472b05b3",
       "eventHash": "11442c8a030a12c1ad285055068baabd3ca1374e652c470c6b321ed832cf50ec"
+    },
+    {
+      "seq": 37,
+      "at": "2026-10-01T03:52:28.657Z",
+      "kind": "SNAPSHOT",
+      "actor": "coord-main",
+      "state": {
+        "productStateId": "68a026d3d49539b0f6269ecfc146a78b2607ee6023d286df3e8c730b021e080a",
+        "contractId": "555a6e249bd6786ad137938b8631661186aa658f73c5bc69363a8cd6f5e6bf0a",
+        "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+        "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+      },
+      "previousEventHash": "11442c8a030a12c1ad285055068baabd3ca1374e652c470c6b321ed832cf50ec",
+      "payloadPath": "events/0037.json",
+      "payloadHash": "5bfbedbb293a84568e82e4a7095f1672e0f5e4296fb9f289fb66f63c6c86d7ac",
+      "eventHash": "99d7cc9f237f398ac0c81ba1fea17766711e1e15054301cbb3ce45dbd43ce377"
     }
   ]
 }

@@ -19,6 +19,7 @@ import { GameManager } from '@/core/game/GameManager'
 import { pills } from '@/data/pill/pills'
 import { scopeHiddenPillFamilyOfId } from '@/core/betaScope'
 import { lockBetaWaysForTests } from '@/core/game/__fixtures__/betaWaysUnlock'
+import { lockBetaTalentsForTests } from '@/core/game/__fixtures__/betaTalentsUnlock'
 import { resolveCombatBuild, type CombatBuildDeps } from '@/core/game/CombatBuild'
 import { resolveCultivationPathRuntime } from '@/core/player/CultivationPathRegistry'
 import type { CultivationPathRuntimeDeps } from '@/core/player/CultivationPathRuntime'
@@ -52,9 +53,12 @@ import {
   BETA_BASELINE_WORKER_CAPACITY,
 } from '@/core/production/WorkerCapacity'
 import type { ProductionSiteState } from '@/core/production/ProductionTypes'
+import { buildRealmRewardNodes, TINH_THONG_NODE_IDS } from '@/data/progression/PhapTuRealmRewardNodes'
+import { collectTalentEffects, getCultivationSpeedPercent } from '@/core/talent/TalentEffects'
 
 lockBetaFeaturesForTests()
 lockBetaWaysForTests()
+lockBetaTalentsForTests()
 
 function player(overrides: Partial<PlayerData> = {}): PlayerData {
   return {
@@ -788,5 +792,150 @@ describe('dormancy: a hidden-family in-flight job cannot occupy the live alchemy
 
     const result = system.startJob(BETA_RECIPE, 'herb_decade', bag, registry, 999, 1, 1_000, 1)
     expect(result).toEqual({ ok: false, reason: 'job_slots_full' })
+  })
+})
+
+
+describe('dormancy: way-authored realm seams stay inert on a carried save (F-A3-01 / F-A3-02 / F-A3-03)', () => {
+  function managerWithNodes() {
+    const gameManager = new GameManager()
+    gameManager.catalogOps.registerSkillTemplates(SKILLS)
+    gameManager.catalogOps.registerProgressionNodes([
+      ...SKILL_CORE_NODES,
+      ...buildRealmRewardNodes(),
+    ])
+    return gameManager
+  }
+
+  it('a hidden_spell save mints no realm-reward nodes through the restore replay (F-A3-01)', () => {
+    const p = player({
+      cultivationPath: 'spell',
+      cultivationWay: 'hidden_spell_pathway',
+      realmId: 'foundation_establishment',
+    })
+    expect(unsupportedReleaseReason(p)).toBe('way_out_of_scope')
+
+    const gameManager = managerWithNodes()
+
+    // The replay seam must not mint the hidden way's tinh_thong L2 grants.
+    expect(gameManager.realmAdvanceOps.reconcileCultivationPathRealmRewards(p)).toBe(false)
+    expect(p.nodeLevels ?? {}).toEqual({})
+  })
+
+  it('a hidden_spell save mints no realm-reward nodes at the realm-entry grant (F-A3-01)', () => {
+    const p = player({
+      cultivationPath: 'spell',
+      cultivationWay: 'hidden_spell_pathway',
+      realmId: 'foundation_establishment',
+    })
+
+    const gameManager = managerWithNodes()
+
+    expect(
+      gameManager.realmAdvanceOps.grantCultivationPathRealmReward(p, 'foundation_establishment'),
+    ).toBe(false)
+    expect(p.nodeLevels ?? {}).toEqual({})
+  })
+
+  it('positive control - the beta way still replays its authored grants (F-A3-01)', () => {
+    const p = player({
+      cultivationPath: 'spell',
+      cultivationWay: 'spell_pathway',
+      realmId: 'foundation_establishment',
+    })
+    expect(unsupportedReleaseReason(p)).toBeNull()
+
+    const gameManager = managerWithNodes()
+
+    expect(gameManager.realmAdvanceOps.reconcileCultivationPathRealmRewards(p)).toBe(true)
+    for (const nodeId of Object.values(TINH_THONG_NODE_IDS)) {
+      expect(p.nodeLevels?.[nodeId]).toBe(1)
+    }
+  })
+
+  it('a hidden_spell save learns no way-authored ladder passive at realm entry (F-A3-02)', () => {
+    const p = player({
+      cultivationPath: 'spell',
+      cultivationWay: 'hidden_spell_pathway',
+      realmId: 'foundation_establishment',
+    })
+
+    const gameManager = managerWithNodes()
+    gameManager.realmAdvanceOps.syncRealmPassive(p)
+
+    expect(gameManager.skillManager.has('passive_truc_co_y_chi')).toBe(false)
+  })
+
+  it('positive control - the beta way still learns its ladder passive (F-A3-02)', () => {
+    const p = player({
+      cultivationPath: 'spell',
+      cultivationWay: 'spell_pathway',
+      realmId: 'foundation_establishment',
+    })
+
+    const gameManager = managerWithNodes()
+    gameManager.realmAdvanceOps.syncRealmPassive(p)
+
+    expect(gameManager.skillManager.has('passive_truc_co_y_chi')).toBe(true)
+  })
+
+  it('a hidden_sword save keeps its preserved slice frozen through realm advances (F-A3-03)', () => {
+    const swordPath = freshSwordPathState()
+    swordPath.kiemDaoCount = 3
+    const baseBefore = swordPath.kiemDaoBase
+
+    const p = player({
+      cultivationPath: 'sword',
+      cultivationWay: 'hidden_sword_pathway',
+      swordPath,
+      realmId: 'qi_refining',
+      realmLevel: 12,
+    })
+    expect(unsupportedReleaseReason(p)).toBe('way_out_of_scope')
+    expect(hasStaticPathCapability(p, 'sword.sword_riding')).toBe(true)
+
+    const gameManager = new GameManager()
+    gameManager.realmAdvanceOps.applySwordPathRealmTransition(p)
+
+    expect(p.swordPath!.kiemDaoCount).toBe(3)
+    expect(p.swordPath!.kiemDaoBase).toBe(baseBefore)
+  })
+})
+
+
+describe('dormancy: a non-beta talent record emits nothing through the effect seam (F-A3-08)', () => {
+  it('a carried pham_nhan_chi_cot record applies no cultivation speed', () => {
+    const p = player({ selectedTalentIds: ['pham_nhan_chi_cot'] })
+
+    expect(getCultivationSpeedPercent(p.selectedTalentIds, p.talentLevels)).toBe(0)
+    expect(collectTalentEffects(p.selectedTalentIds, p.talentLevels)).toEqual([])
+  })
+
+  it('beta-owned talents still emit - creation and breakthrough pool controls', () => {
+    const creationTalent = player({ selectedTalentIds: ['hap_linh'] })
+    expect(collectTalentEffects(creationTalent.selectedTalentIds).length).toBeGreaterThan(0)
+
+    const breakthroughTalent = player({ selectedTalentIds: ['lk_linh_mach'] })
+    expect(collectTalentEffects(breakthroughTalent.selectedTalentIds).length).toBeGreaterThan(0)
+  })
+})
+
+
+describe('save-safety: ghost nodeLevels ids cannot crash respec (F-T2-1)', () => {
+  it('preview + respec tolerate retired node ids the validator tolerates', () => {
+    const p = player()
+    // A save carrying a retired node id: validation tolerates it
+    // (non-core ghosts are tolerated by design), so the respec seams
+    // must not throw on the throwing registry.get.
+    p.nodeLevels = { kiem_tran_luoi_kiem: 3 }
+
+    const gameManager = new GameManager()
+
+    expect(() => gameManager.progressionOps.previewNodeRespec(p)).not.toThrow()
+    expect(() => gameManager.progressionOps.respecNodeTree(p)).not.toThrow()
+
+    // The ghost record stays preserved - respec can only reset known
+    // nodes and must never monetize a dormant/unknown holding.
+    expect(p.nodeLevels.kiem_tran_luoi_kiem).toBe(3)
   })
 })

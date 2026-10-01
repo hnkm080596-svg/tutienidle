@@ -375,6 +375,15 @@ export function grantCultivationPathRealmReward(
     return false
   }
 
+  // BETA SCOPE LOCK v2 - realm-entry rewards are authored on the ACTIVE
+  // way record. A carried way_out_of_scope save keeps the record
+  // preserved-by-design, but its authored grants stay inert - the same
+  // way-admission seam CombatBuild gates combat runtime on.
+  const activeWay = getActiveWay(player)
+  if (activeWay === undefined || !isBetaWay(activeWay)) {
+    return false
+  }
+
   // M-F-CEILING - realm-entry rewards for unreleased realms stay dormant
   // (authored records such as the canonical golden_core+ passive ladder
   // are kept; the release policy suppresses the grant itself).
@@ -479,6 +488,13 @@ export function reconcileCultivationPathRealmRewards(
   resolveNode: (nodeId: string) => ProgressionNode | undefined,
 ): boolean {
   if (!player.cultivationPath) {
+    return false
+  }
+
+  // BETA SCOPE LOCK v2 - the restore replay is way-authored too: a
+  // dormant way's realmRewards never mint through the reconcile seam.
+  const activeWay = getActiveWay(player)
+  if (activeWay === undefined || !isBetaWay(activeWay)) {
     return false
   }
 

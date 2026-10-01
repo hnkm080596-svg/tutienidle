@@ -31,6 +31,7 @@ import {
 } from './material/SpiritStoneMaterial'
 import { LUYEN_KHI_TINH_HOA_ID } from './equipment/TinhHoaMaterial'
 import { PILL_FAMILIES } from '@/data/pill/PillFamilies'
+import { BREAKTHROUGH_TALENT_POOLS } from '@/data/talent/BreakthroughTalentPools'
 
 // ---------------------------------------------------------------------------
 // Ways and elements
@@ -124,6 +125,36 @@ export const BETA_CREATION_TALENT_IDS: readonly string[] = [
 /** Beta creation-offer admission check - fails closed for unknown ids. */
 export function isBetaCreationTalentId(talentId: string): boolean {
   return BETA_CREATION_TALENT_IDS.includes(talentId)
+}
+
+/**
+ * Every talent id a beta save can legitimately own - the creation
+ * allow-list plus every breakthrough-pool member (the realm-scoped
+ * transaction catalogs). Great Dao reward evolutions (pham_nhan_chi_cot
+ * via the excluded pham_cot feeder) and parked ids stay inert: their
+ * only acquisition paths are out of beta scope, so an owned record is
+ * a carried-save record and must not emit through the effect seam.
+ * Seeded from static catalogs; the test-only roster-open seam
+ * (betaTalentsUnlock) admits every defined talent when the lock is
+ * lifted, so suites asserting pre-beta data wiring resolve the full
+ * roster.
+ */
+const BETA_TALENT_IDS: ReadonlySet<string> = new Set([
+  ...BETA_CREATION_TALENT_IDS,
+  ...Object.values(BREAKTHROUGH_TALENT_POOLS).flat().map((talent) => talent.id),
+])
+
+/**
+ * Test-only lock state for the talent roster - mutated only by
+ * src/core/game/__fixtures__/betaTalentsUnlock.ts (the same pattern as
+ * BETA_FEATURES / the ways allow-list). Unlocked means pre-beta
+ * semantics: every defined talent id resolves through the effect seam.
+ */
+export const BETA_TALENT_ROSTER = { unlocked: false }
+
+/** Beta ownership-admission check for the talent EFFECT seam. */
+export function isBetaTalentId(talentId: string): boolean {
+  return BETA_TALENT_ROSTER.unlocked || BETA_TALENT_IDS.has(talentId)
 }
 
 // ---------------------------------------------------------------------------

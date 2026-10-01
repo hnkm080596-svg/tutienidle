@@ -7,7 +7,7 @@ import type { PillBag } from '../pill/PillBag'
 import type { PlayerData } from '../player/Player'
 import { capturePlayerSnapshot, restorePlayerSnapshotInPlace } from '../player/PlayerSnapshot'
 import type { ElementType } from '../element/ElementType'
-import { isBetaElement, isBetaWay } from '../betaScope'
+import { isBetaElement, isBetaWay, isScopeHidden } from '../betaScope'
 import { betaTechniqueAdmitted } from '../betaScopeSkillDomain'
 import { PHAP_TU_ELEMENT_ROOT_IDS } from '../../data/progression/PhapTuNodes.builders'
 import { canPurchaseNode as canPurchaseNodeSystem } from '../progression/NodeSystem'
@@ -212,6 +212,13 @@ export class GameManagerRealmAdvanceOps {
     // M6 - way membership is the discriminator (swordPath.mode retired).
     // P1 - the 'sword.sword_riding' capability carries that membership;
     // the slice presence check stays (corrupt saves fail closed).
+    // BETA SCOPE LOCK v2 - the merge mutates the preserved dormant
+    // slice (kiemDaoBase) on every realm advance; sword machinery is
+    // scope-hidden, so a carried save's slice stays frozen in beta.
+    if (isScopeHidden('swordPath')) {
+      return
+    }
+
     if (player.swordPath && hasStaticPathCapability(player, 'sword.sword_riding')) {
       applyBreakthroughMerge(player.swordPath)
     }
@@ -230,7 +237,13 @@ export class GameManagerRealmAdvanceOps {
   reconcileWayGrants(player: PlayerData): void {
     const way = getActiveWayDefinition(player)
 
-    for (const nodeId of way?.grantedNodeIds ?? []) {
+    // BETA SCOPE LOCK v2 - the grant replay is authored on the ACTIVE
+    // way record; a way_out_of_scope save's grants stay inert.
+    if (way === undefined || !isBetaWay(way.id)) {
+      return
+    }
+
+    for (const nodeId of way.grantedNodeIds ?? []) {
       if (this.deps.nodeRegistry.has(nodeId)) {
         grantSkillCore(player, this.deps.nodeRegistry.get(nodeId))
       }
@@ -871,9 +884,18 @@ export class GameManagerRealmAdvanceOps {
       return
     }
 
+    // BETA SCOPE LOCK v2 - the way-authored passive ladder is an
+    // inert record on a way_out_of_scope save; learning it through
+    // this seam would emit a dormant kit's passive into live play.
+    const way = getActiveWayDefinition(player)
+
+    if (way === undefined || !isBetaWay(way.id)) {
+      return
+    }
+
     const realm = getCurrentRealm(player.realmId)
 
-    const skillId = getActiveWayDefinition(player)?.realmRewards?.[realm.id]?.passiveSkillId
+    const skillId = way.realmRewards?.[realm.id]?.passiveSkillId
 
     if (!skillId) {
       return
