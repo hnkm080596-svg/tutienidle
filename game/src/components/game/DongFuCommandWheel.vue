@@ -25,6 +25,7 @@ import { isCompanionDomainUnlocked } from '@/core/companion/CompanionAvailabilit
 import { isFormationUnlocked } from '@/core/game/FormationPlacement'
 import { isRealmAvailable } from '@/core/realm/ReleasePolicy'
 import NotificationBadge from '@/components/common/NotificationBadge.vue'
+import HuyenKimSymbol from '@/components/common/HuyenKimSymbol.vue'
 import { useAudioStore } from '@/stores/audio'
 
 const ui = useUiStore()
@@ -464,7 +465,7 @@ function activate(slot: CommandWheelSlot) {
              phân biệt bằng opacity mờ đi, dễ đọc nhầm là "chỉ tối màu"
              thay vì "chưa bấm được". Thêm icon khóa góc dưới-phải (2 góc
              kia đã có upgrade-dot/notification-badge). -->
-        <span v-if="disabledReason(slot)" class="command-wheel__lock-badge" aria-hidden="true">🔒</span>
+        <span v-if="disabledReason(slot)" class="command-wheel__lock-badge" aria-hidden="true"><HuyenKimSymbol name="lock" /></span>
 
         <NotificationBadge
           v-if="hasBreakthroughBadge(slot)"

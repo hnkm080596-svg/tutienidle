@@ -18,6 +18,11 @@ import StatRow from '@/components/common/primitives/StatRow.vue'
 import Eyebrow from '@/components/common/primitives/Eyebrow.vue'
 import EmptyState from '@/components/common/primitives/EmptyState.vue'
 import { formatNumber } from '@/core/format/NumberFormatter'
+import { stableSceneArtUrl } from '@/presentation/huyenKim/StableSceneArt'
+
+// technique-display-plinth (stable art): empty pedestal below the runtime
+// slot card - the plinth is scene furniture; the artifact stays runtime.
+const PLINTH_SRC = stableSceneArtUrl('technique-display-plinth', '@2x')
 
 const player = usePlayerStore()
 const gameManager = useGameManager()
@@ -46,7 +51,10 @@ function upgradeGrade(): void {
     <template v-if="model.state === 'available'">
       <div class="technique-band__hero">
         <Eyebrow>{{ t('panels.skillPath.technique.title') }}</Eyebrow>
-        <TechniqueSlotCard :label="t('panels.skillPath.technique.heroLabel')" size="hero" />
+        <div class="technique-band__plinth">
+          <img class="technique-band__plinth-img" :src="PLINTH_SRC" alt="" aria-hidden="true" />
+          <TechniqueSlotCard :label="t('panels.skillPath.technique.heroLabel')" size="hero" />
+        </div>
       </div>
 
       <div class="technique-band__detail">
@@ -92,6 +100,31 @@ function upgradeGrade(): void {
   flex: 0 0 min(240px, 100%);
   display: flex;
   flex-direction: column;
+}
+
+/* Plinth art occupies the card area; the runtime slot card floats above
+   the pedestal (contain@south art, so the column anchors bottom). */
+.technique-band__plinth {
+  position: relative;
+  flex: 1;
+  min-height: 150px;
+  display: grid;
+  place-items: center;
+}
+
+.technique-band__plinth-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center bottom;
+  pointer-events: none;
+}
+
+.technique-band__plinth :deep(.technique-card) {
+  position: relative;
+  z-index: 1;
 }
 
 .technique-band__hero .eyebrow {

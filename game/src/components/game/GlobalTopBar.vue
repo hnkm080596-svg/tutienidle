@@ -13,6 +13,7 @@ import CurrencyHud from './CurrencyHud.vue'
 import AutoFarmIndicator from './AutoFarmIndicator.vue'
 import PlayerPortrait from '../common/PlayerPortrait.vue'
 import GameButton from '../common/GameButton.vue'
+import HuyenKimSymbol from '../common/HuyenKimSymbol.vue'
 import FeedbackDialog from '../common/FeedbackDialog.vue'
 
 const { t } = useI18n()
@@ -72,6 +73,7 @@ const feedbackOpen = ref(false)
         :aria-label="t('home.topBar.feedbackAria')"
         @click="feedbackOpen = true"
       >
+        <HuyenKimSymbol name="feedback" />
         {{ t('home.topBar.feedback') }}
       </GameButton>
       <GameButton
@@ -82,6 +84,7 @@ const feedbackOpen = ref(false)
         :aria-label="t('home.topBar.bagAria')"
         @click="ui.openLeftPanel('inventory')"
       >
+        <HuyenKimSymbol name="inventory" />
         {{ t('home.topBar.bag') }}
       </GameButton>
       <GameButton
@@ -92,6 +95,7 @@ const feedbackOpen = ref(false)
         :aria-label="t('home.topBar.settingsAria')"
         @click="ui.openLeftPanel('settings')"
       >
+        <HuyenKimSymbol name="settings" />
         {{ t('home.topBar.settings') }}
       </GameButton>
     </div>

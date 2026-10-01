@@ -35,6 +35,7 @@ interface SceneHarness {
     circle: ReturnType<typeof vi.fn>
     text: ReturnType<typeof vi.fn>
     sprite: ReturnType<typeof vi.fn>
+    image: ReturnType<typeof vi.fn>
   }
   anims: {
     exists: () => boolean
@@ -52,6 +53,9 @@ function chain() {
     setShadow: vi.fn(),
     play: vi.fn(),
     setDisplaySize: vi.fn(),
+    setDepth: vi.fn(),
+    setPosition: vi.fn(),
+    setSize: vi.fn(),
   }
   for (const method of Object.values(target)) method.mockReturnValue(target)
   return target
@@ -65,7 +69,7 @@ describe('TribulationScene ink-wash viewport frame', () => {
     const harness = scene as unknown as SceneHarness
     const shutdownHandlers: Array<() => void> = []
     const resizeHandlers: Array<(size: { width: number; height: number }) => void> = []
-    const frame = { setSize: vi.fn() } as unknown as Phaser.GameObjects.NineSlice
+    const frame = chain() as unknown as Phaser.GameObjects.NineSlice
 
     vi.mocked(addInkWashNineSlice).mockReturnValue(frame)
     harness.textures = {
@@ -80,11 +84,18 @@ describe('TribulationScene ink-wash viewport frame', () => {
       on: vi.fn((_event, handler) => resizeHandlers.push(handler)),
       off: vi.fn(),
     }
+    const images: ReturnType<typeof chain>[] = []
     harness.add = {
       rectangle: vi.fn(() => chain()),
       circle: vi.fn(() => chain()),
       text: vi.fn(() => chain()),
       sprite: vi.fn(() => chain()),
+      image: vi.fn((...args: unknown[]) => {
+        const image = chain()
+        ;(image as unknown as { texture: { key: string } }).texture = { key: args[2] as string }
+        images.push(image)
+        return image
+      }),
     }
     harness.anims = {
       exists: () => true,
@@ -112,6 +123,23 @@ describe('TribulationScene ink-wash viewport frame', () => {
 
     resizeHandlers[0]!({ width: 1000, height: 700 })
     expect(frame.setSize).toHaveBeenCalledWith(976, 676)
+
+    // Stable environment kit: four textures drawn, anchored per contract
+    // (storms north, dais south, vignette centered cover).
+    expect(harness.add.image).toHaveBeenCalledTimes(4)
+    expect(harness.add.image.mock.calls.map((call) => call[2])).toEqual([
+      'hk-tribulation-storm-far',
+      'hk-tribulation-storm-near',
+      'hk-tribulation-dais',
+      'hk-tribulation-sky-vignette',
+    ])
+    const byTexture = new Map(
+      images.map((image) => [(image as unknown as { texture: { key: string } }).texture.key, image]),
+    )
+    // create() ran layoutEnvironment at 1600x900; resize to 1000x700 re-anchored.
+    expect(byTexture.get('hk-tribulation-dais')?.setPosition).toHaveBeenLastCalledWith(500, 700)
+    expect(byTexture.get('hk-tribulation-storm-far')?.setPosition).toHaveBeenLastCalledWith(500, 0)
+    expect(byTexture.get('hk-tribulation-sky-vignette')?.setPosition).toHaveBeenLastCalledWith(500, 350)
 
     shutdownHandlers[0]!()
     expect(harness.scale.off).toHaveBeenCalledWith('resize', resizeHandlers[0])

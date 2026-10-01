@@ -16,6 +16,15 @@ import Chip from '@/components/common/primitives/Chip.vue'
 import EmptyState from '@/components/common/primitives/EmptyState.vue'
 import { getCurrentRealm } from '@/core/realm/realmSystem'
 import { useAudioStore } from '@/stores/audio'
+import { stableSceneArtUrl } from '@/presentation/huyenKim/StableSceneArt'
+import HuyenKimSymbol from '@/components/common/HuyenKimSymbol.vue'
+
+// exploration-map-chrome-kit (stable art): frame around the map panel,
+// chapter divider under the title, soft-edge mask on the scroll region.
+// Geography/routes/stage marks stay runtime-owned - the kit is chrome only.
+const MAP_FRAME_SRC = stableSceneArtUrl('exploration-map-frame', '@2x')
+const MAP_MASK_SRC = stableSceneArtUrl('exploration-map-mask', '@2x')
+const CHAPTER_DIVIDER_SRC = stableSceneArtUrl('exploration-chapter-divider', '@2x')
 
 const { t } = useI18n()
 
@@ -300,12 +309,15 @@ function start() {
       </nav>
 
       <div class="stage-select__workspace">
-        <section class="stage-select__map-panel scrollfade">
+        <section class="stage-select__map-panel">
+          <img class="stage-select__map-frame" :src="MAP_FRAME_SRC" alt="" aria-hidden="true" />
+          <div class="stage-select__map-scroll scrollfade">
           <h4 class="stage-select__title">{{ t('panels.stageSelect.sections.selectFloor') }}</h4>
+          <img class="stage-select__chapter-divider" :src="CHAPTER_DIVIDER_SRC" alt="" aria-hidden="true" />
 
           <EmptyState v-if="visibleStages.length === 0" size="sm">{{ t('panels.stageSelect.empty.noStages') }}</EmptyState>
 
-          <div v-else class="stage-map">
+          <div v-else class="stage-map" :style="{ '--map-mask': `url(${MAP_MASK_SRC})` }">
             <button
               v-for="node in stageNodes"
               :key="node.stage.id"
@@ -326,8 +338,9 @@ function start() {
                 <small>{{ node.enemies.join(' · ') }}</small>
               </span>
               <span v-if="node.stage.bossEnemyId" class="stage-map__boss">{{ t('panels.stageSelect.labels.boss') }}</span>
-              <span v-if="!isStageUnlocked(node.stage)" class="stage-map__lock" aria-hidden="true">🔒</span>
+              <span v-if="!isStageUnlocked(node.stage)" class="stage-map__lock" aria-hidden="true"><HuyenKimSymbol name="lock" /></span>
             </button>
+          </div>
           </div>
         </section>
 
@@ -472,9 +485,39 @@ function start() {
   padding: 10px 12px;
 }
 
+/* exploration-map-chrome-kit: the panel is the (non-scrolling) frame's
+   canvas; .stage-select__map-scroll carries the old overflow behavior. */
 .stage-select__map-panel {
+  position: relative;
   border-right: 1px solid var(--paper-line);
+  overflow: hidden;
+  padding: 0;
+}
+
+.stage-select__map-scroll {
+  height: 100%;
   overflow-y: auto;
+  padding: 10px 12px;
+}
+
+.stage-select__map-frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.stage-select__chapter-divider {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 14px;
+  object-fit: fill;
+  margin: 0 0 8px;
+  pointer-events: none;
 }
 
 .stage-select__detail {
@@ -501,6 +544,12 @@ function start() {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 8px;
+  /* Stable map-content mask: alpha edges feather the node field into
+     the parchment (interior stays fully opaque). */
+  -webkit-mask-image: var(--map-mask, none);
+  mask-image: var(--map-mask, none);
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
 }
 
 .stage-map__node {

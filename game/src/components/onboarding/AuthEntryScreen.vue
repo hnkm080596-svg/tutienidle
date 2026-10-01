@@ -2,7 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import GameButton from '@/components/common/GameButton.vue'
-import InkWashBackdrop from '@/components/common/InkWashBackdrop.vue'
+import HuyenKimParallaxStack from '@/components/common/HuyenKimParallaxStack.vue'
 import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
 import ConfirmModal from '@/components/common/ConfirmModal.vue'
 import GuestUpgradeCard from './GuestUpgradeCard.vue'
@@ -134,7 +134,7 @@ function switchTab(target: 'login' | 'register') {
 
 <template>
   <main class="auth-screen" data-testid="auth-screen">
-    <InkWashBackdrop left-mountain bamboo seal="small" :bottom-mist="false" />
+    <HuyenKimParallaxStack stack="auth-creation" />
     <section class="auth-card paper-on-dark">
       <InkNineSlice asset-id="surface-xl-paper-scroll" layer="surface" />
       <InkNineSlice asset-id="frame-xl-ceremony" layer="frame" />

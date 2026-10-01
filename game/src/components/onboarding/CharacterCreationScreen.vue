@@ -2,7 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import GameButton from '@/components/common/GameButton.vue'
-import InkWashBackdrop from '@/components/common/InkWashBackdrop.vue'
+import HuyenKimParallaxStack from '@/components/common/HuyenKimParallaxStack.vue'
 import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
 import { TALENT_RARITY_LABELS, type TalentDefinition } from '@/core/talent/Talent'
 import { characterCreationService } from '@/services/character/CharacterCreationServiceFactory'
@@ -105,7 +105,7 @@ onMounted(() => { void reroll() })
 
 <template>
   <main class="creation-screen" data-testid="character-creation-screen">
-    <InkWashBackdrop left-mountain right-mountain bottom-mist />
+    <HuyenKimParallaxStack stack="auth-creation" />
     <header class="creation-header">
       <GameButton variant="ghost" size="sm" :disabled="creating" @click="emit('back')">{{ t('onboarding.creation.back') }}</GameButton>
       <div><p>{{ t('onboarding.creation.headerKicker') }}</p><h1>{{ t('onboarding.creation.headerTitle') }}</h1></div>

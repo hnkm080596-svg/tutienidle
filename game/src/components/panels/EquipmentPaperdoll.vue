@@ -15,6 +15,12 @@ import type { EquipmentTooltipContent } from '@/composables/useTooltip'
 import type { NameSegment } from '@/core/item/NameSegment'
 import type { SlotBadge } from '@/components/common/SlotTypes'
 import { useAudioStore } from '@/stores/audio'
+import { stableSceneArtUrl } from '@/presentation/huyenKim/StableSceneArt'
+
+// equipment-paperdoll-base (stable art): neutral mannequin substrate under
+// the six runtime sockets - no gameplay identity, decorative alignment
+// only. Runtime keeps item/socket/rarity ownership.
+const PAPERDOLL_BASE_SRC = stableSceneArtUrl('equipment-paperdoll-base', '@2x')
 
 const { t } = useI18n()
 const gameManager = useGameManager()
@@ -201,6 +207,7 @@ function onSlotClick(instance: EquipmentInstance | undefined) {
 
 <template>
   <div class="paperdoll">
+    <img class="paperdoll__base" :src="PAPERDOLL_BASE_SRC" alt="" aria-hidden="true" />
     <div v-for="entry in SLOT_LAYOUT" :key="entry.slot" class="paperdoll__cell">
       <div class="paperdoll__slot-wrap">
         <SlotView
@@ -227,6 +234,7 @@ function onSlotClick(instance: EquipmentInstance | undefined) {
 
 <style scoped>
 .paperdoll {
+  position: relative;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   grid-auto-rows: min-content;
@@ -237,6 +245,21 @@ function onSlotClick(instance: EquipmentInstance | undefined) {
   padding: 6px;
   box-sizing: border-box;
   font-family: var(--font-body);
+}
+
+/* Neutral mannequin substrate (stable art): centered behind the socket
+   grid; sockets keep full interaction above it. */
+.paperdoll__base {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  height: 92%;
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
+  opacity: 0.55;
+  pointer-events: none;
 }
 
 .paperdoll__cell {

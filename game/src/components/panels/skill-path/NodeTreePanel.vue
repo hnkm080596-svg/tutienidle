@@ -35,6 +35,7 @@ import { isBattleInProgress } from '@/core/battle/BattleTypes'
 import SkillConnections from './SkillConnections.vue'
 import type { SkillConnectionEntry, SkillConnectionRect } from './SkillConnections.vue'
 import ConfirmModal from '@/components/common/ConfirmModal.vue'
+import HuyenKimParallaxStack from '@/components/common/HuyenKimParallaxStack.vue'
 import type { ElementType } from '@/core/element/ElementType'
 import type { ProgressionNode } from '@/core/progression/ProgressionNode'
 
@@ -651,6 +652,9 @@ onBeforeUnmount(() => {
          khong duoi san doc duoc (FIT_ZOOM_MIN); noi dung tran khung cho
          cuon/pan (is-pannable). -->
     <div ref="viewportEl" class="node-tree__viewport" :class="{ 'is-pannable': isPannable }">
+      <!-- neutral-skill-tree-substrate: static parallax substrate under
+           the runtime tree; nodes/edges/labels stay runtime-owned. -->
+      <HuyenKimParallaxStack stack="skill-tree" />
       <div ref="contentEl" class="node-tree__scale-content" :style="{ zoom: `${zoom}` }">
         <div v-for="branch in branches" :key="branch.branchTag ?? 'other'" class="node-tree__branch">
           <h5 class="node-tree__branch-title" :style="{ color: branch.color }">{{ branch.label }}</h5>
@@ -800,9 +804,20 @@ onBeforeUnmount(() => {
    dung da co vua khung qua CSS `zoom`), cho cuon/pan khi zoom vuot muc
    fit THO (is-pannable ke ca khi san FIT_ZOOM_MIN giu zoom cao hon fit). */
 .node-tree__viewport {
+  position: relative;
   flex: 1;
   min-height: 0;
   overflow: hidden;
+}
+
+/* Substrate stays viewport-pinned while the tree pans/zooms above it. */
+.node-tree__viewport .hk-parallax-stack {
+  z-index: 0;
+}
+
+.node-tree__scale-content {
+  position: relative;
+  z-index: 1;
 }
 
 .node-tree__viewport.is-pannable {

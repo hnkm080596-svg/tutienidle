@@ -25,7 +25,8 @@ import { getRealmTier } from '@/core/realm/RealmTierMap'
 import { useRealmStatPassives } from '@/composables/useRealmStatPassives'
 import type { BodyChapterId } from '@/core/realm/body/BodyChapter'
 import { getBodyChapterProgress, isBodyChapterUnlocked } from '@/core/realm/body/BodyProgressionSystem'
-import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
+import HuyenKimParallaxStack from '@/components/common/HuyenKimParallaxStack.vue'
+import { stableSceneArtUrl } from '@/presentation/huyenKim/StableSceneArt'
 
 // 2026-08-28 - tieu canh gioi tu tang khi du tu vi (App.vue's tick(),
 // khong con nut Dot pha hay checkbox). Panel chi con nut dai canh
@@ -126,9 +127,11 @@ const activeChapter = computed<BodyChapterId>(
     ?? 'body_refinement',
 )
 
-// Bound dynamically: a literal src="/assets/..." would be rewritten to a
-// module import by the vite plugin, which breaks jsdom mounts.
-const BODY_FIGURE_SRC = resolveAssetUrl('/assets/ui/stat-meridian-figure.png')
+// Huyen Kim body-diagram-kit: stable cultivation figure + aligned meridian
+// ring overlay (same 640x520 canvas). Runtime keeps node/tier ownership -
+// the overlay is decorative substrate, the sections still own the data.
+const BODY_FIGURE_SRC = stableSceneArtUrl('body-cultivation-figure', '@2x')
+const BODY_MERIDIAN_OVERLAY_SRC = stableSceneArtUrl('body-meridian-overlay', '@2x')
 
 // SS20 upgrade feedback - a landed chapter invest flashes the body
 // silhouette (the "localized body glow" beat); the row-level ignition
@@ -167,6 +170,9 @@ function majorBreakthrough() {
       <!-- Study Mode SS8.2 - hero subject (Thien Lo path) + info rail. -->
       <div class="realm-panel__study">
         <div class="realm-panel__hero">
+          <!-- realm-ascent-vista: layered substrate behind the 18-rung
+               path; runtime owns every rung/state above it. -->
+          <HuyenKimParallaxStack stack="realm-ascent" />
           <div
             class="realm-panel__nodes"
             :aria-label="t('panels.realm.nodes.aria')"
@@ -268,6 +274,7 @@ function majorBreakthrough() {
 
           <div class="realm-panel__silhouette" :class="{ 'is-igniting': bodyIgniting }">
             <img class="realm-panel__silhouette-figure" :src="BODY_FIGURE_SRC" alt="" aria-hidden="true" />
+            <img class="realm-panel__silhouette-overlay" :src="BODY_MERIDIAN_OVERLAY_SRC" alt="" aria-hidden="true" />
           </div>
 
           <div class="realm-panel__chapter">
@@ -288,7 +295,10 @@ function majorBreakthrough() {
 
 /* Study Mode SS8.2 - hero + information rail. */
 .realm-panel__study { display: grid; grid-template-columns: minmax(0, 1fr) minmax(220px, 270px); gap: 18px; align-items: start; }
-.realm-panel__hero { min-width: 0; }
+/* realm-ascent-vista backdrop: the hero clips the stack, nodes stay above. */
+.realm-panel__hero { position: relative; min-width: 0; overflow: hidden; border-radius: var(--hk-radius-md, 8px); }
+.realm-panel__hero .hk-parallax-stack { z-index: 0; }
+.realm-panel__nodes { z-index: 1; }
 .realm-panel__rail { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
 
 /* Paper-to-sys remap moved to the .paper-on-sys utility in
@@ -454,6 +464,18 @@ function majorBreakthrough() {
   pointer-events: none;
 }
 .realm-panel__silhouette-figure { position: relative; width: 100%; height: auto; max-width: 170px; }
+/* Meridian ring overlay shares the figure's 640x520 canvas: identical
+   width box + same center keeps the authored alignment. */
+.realm-panel__silhouette-overlay {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  height: auto;
+  max-width: 170px;
+  pointer-events: none;
+}
 /* Landed-invest flash: gold wash sweeps the silhouette, then settles. */
 .realm-panel__silhouette.is-igniting { animation: realm-ignite-flash 1400ms var(--hk-ease-standard, ease) 1; }
 .realm-panel__silhouette.is-igniting::before { opacity: 0.8; }

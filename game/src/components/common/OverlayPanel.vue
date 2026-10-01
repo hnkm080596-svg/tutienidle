@@ -5,6 +5,7 @@ import { useDialogFocus } from '@/composables/useDialogFocus'
 import { i18n } from '@/i18n'
 import InkNineSlice from './primitives/InkNineSlice.vue'
 import GameButton from './GameButton.vue'
+import HuyenKimSymbol from './HuyenKimSymbol.vue'
 import SysPanel from './system/SysPanel.vue'
 
 const props = withDefaults(defineProps<{
@@ -84,7 +85,7 @@ const closeLabel = computed(() => i18n.global.t('panels.common.close'))
           class="overlay-panel__close"
           :aria-label="closeLabel"
           @click="emit('close')"
-        >✕</GameButton>
+        ><HuyenKimSymbol name="close" /></GameButton>
       </component>
     </div>
   </Transition>
