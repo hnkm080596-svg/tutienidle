@@ -135,6 +135,11 @@ onBeforeUnmount(() => {
   inset: 0;
   overflow: hidden;
   pointer-events: none;
+  /* Contain the layers' z-order: without a stacking context the imgs'
+     inline z-index 0..5 escape into the parent context and paint over
+     content siblings (e.g. the auth card at z-index 1). */
+  isolation: isolate;
+  z-index: 0;
 }
 
 /* Shared cover geometry: each layer is a fixed-size element centered in the

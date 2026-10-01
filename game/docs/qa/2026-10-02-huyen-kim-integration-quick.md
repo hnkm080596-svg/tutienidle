@@ -38,7 +38,15 @@ Manual routing bounds all three: AssetBundleCatalog feeds the deterministic rout
 
 ## Findings
 
+- Medium (fixed): stacking-escape defect class — parallax layer inline `z-index` 0..5 escaped into parent contexts and painted over the auth card; `.paperdoll__base` (z-auto) painted over static socket cells; `.auth-screen::before` grid texture sank under the opaque L0 sky. Fixed via `isolation: isolate; z-index: 0` on `.hk-parallax-stack`, `isolation: isolate` + `z-index: -1` base on `.paperdoll`, and `z-index: 1` on `.auth-screen::before`. Sibling search over every new absolute decorative element confirmed explicit ordering + `pointer-events: none` (map-frame z1 chrome intentional, plinth-img under z1 card, silhouette-overlay above figure by DOM order). Pinned by e2e paint-order assertions (`elementFromPoint` on auth card + equipment socket) and re-inspected screenshots.
 - Low: `StageSelectPanel` `.stage-select__map-scroll` wrapper left children at the pre-wrap indent - cosmetic only.
 - Low: `.stage-select__map-frame` uses `object-fit: fill` (stretch); the panel column is layout-bounded so distortion is bounded. Recorded for a future 9-slice frame pass if the art agent ships one.
+- Low (pre-existing, out of scope): tribulation mind-phase DOM card overlaps the `Chương 1/2` label zone slightly; DOM-vs-Phaser placement unchanged by this task.
 
-No Critical/High/Medium findings. Deep escalation not required: all `unmappedPaths` bounded by inspection plus runtime evidence; no save/economy/progression/combat-authority transition changed.
+## Sequential Review Pass 4 (post-fix state after the Medium stacking fixes)
+
+- Reviewed state: parallax-stack isolation + paperdoll z-order + auth ::before fixes applied.
+- Findings: no new Medium+; the three Low findings above unchanged and still safe to defer.
+- Verification: `npm run type-check` PASS; `npx playwright test huyen-kim-stable-art --workers=1` PASS 9/9 incl. paint-order pins; all 9 scene screenshots re-inspected visually (01/02 legible card over vista, 05/06/07/08/10/12 correct substrate layering, 14 env composite intact).
+
+No Critical/High/Medium findings remain open. Deep escalation not required: all `unmappedPaths` bounded by inspection plus runtime evidence; no save/economy/progression/combat-authority transition changed.

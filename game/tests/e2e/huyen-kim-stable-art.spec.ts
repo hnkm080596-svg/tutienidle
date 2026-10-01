@@ -52,20 +52,26 @@ async function bootFreshMortal(page: Page): Promise<void> {
   await enterHome(page)
 }
 
+// Store modules import by URL inside the page's vite module graph (same
+// mechanism as beta-journey.spec.ts); the specifier is a variable so
+// vue-tsc does not try to resolve a dev-server path.
+const UI_STORE_URL = '/src/stores/ui.ts'
+const PLAYER_STORE_URL = '/src/stores/player.ts'
+
 /** Open a standalone panel through the app's own ui store action. */
 async function openStandalone(page: Page, panel: string): Promise<void> {
-  await page.evaluate(async (p) => {
-    const { useUiStore } = await import('/src/stores/ui.ts')
+  await page.evaluate(async ([p, url]) => {
+    const { useUiStore } = await import(/* @vite-ignore */ url)
     useUiStore().openStandalonePanel(p as never)
-  }, panel)
+  }, [panel, UI_STORE_URL])
 }
 
 /** Open a left-panel mode through the app's own ui store action. */
 async function openLeftMode(page: Page, mode: string): Promise<void> {
-  await page.evaluate(async (m) => {
-    const { useUiStore } = await import('/src/stores/ui.ts')
+  await page.evaluate(async ([m, url]) => {
+    const { useUiStore } = await import(/* @vite-ignore */ url)
     useUiStore().openLeftPanel(m as never)
-  }, mode)
+  }, [mode, UI_STORE_URL])
 }
 
 interface SaveShape {
@@ -131,10 +137,26 @@ test.describe('Huyen Kim stable scene art', () => {
     await page.goto('/')
     await expect(page.getByTestId('auth-screen')).toBeVisible({ timeout: 15_000 })
 
+    // The boot curtain still locks the page when the auth route first
+    // appears; wait it out before asserting paint order.
+    await waitForPresentationIdle(page)
+
     const stack = '[data-testid="auth-screen"] .hk-parallax-stack[data-stack="auth-creation"]'
     await expect(page.locator(stack)).toBeVisible()
     await expect(page.locator(`${stack} .hk-parallax-stack__layer`)).toHaveCount(6)
     expect(await stackDepths(page, stack)).toEqual(['L0', 'L1', 'L2', 'L3', 'L4', 'L5'])
+
+    // Paint order contract: the login card must sit above the vista —
+    // elementFromPoint at the card's center must hit card content, never
+    // a parallax layer (regression pin for the stacking-context fix).
+    const hitHost = await page.evaluate(() => {
+      const card = document.querySelector('.auth-card')
+      if (!card) return 'no-card'
+      const rect = card.getBoundingClientRect()
+      const hit = document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2)
+      return hit?.closest('.auth-card') ? 'card' : (hit?.className ?? 'none')
+    })
+    expect(hitHost, 'parallax layers must not cover the auth card').toBe('card')
 
     // Contract max_drift_px are DESIGN-space px (1672x941); rendered drift
     // scales with the cover-fit factor, so assert against contract*s where
@@ -211,6 +233,8 @@ test.describe('Huyen Kim stable scene art', () => {
     const stack = creation.locator('.hk-parallax-stack[data-stack="auth-creation"]')
     await expect(stack).toBeVisible()
     expect(await stack.locator('.hk-parallax-stack__layer').count()).toBe(6)
+    // Route curtain must finish revealing before the capture.
+    await waitForPresentationIdle(page)
     await shot(page, '02-character-creation')
     assertNoBrowserErrors(errors)
   })
@@ -252,8 +276,8 @@ test.describe('Huyen Kim stable scene art', () => {
       ...save,
       player: { ...save.player, realmLevel: 12, cultivation: 0 },
     }))
-    await page.evaluate(async () => {
-      const { usePlayerStore } = await import('/src/stores/player.ts')
+    await page.evaluate(async (playerUrl) => {
+      const { usePlayerStore } = await import(/* @vite-ignore */ playerUrl)
       const w = window as unknown as {
         __tutienPhaserGame?: { registry: { get(key: string): any } }
       }
@@ -262,7 +286,7 @@ test.describe('Huyen Kim stable scene art', () => {
       const player = usePlayerStore()
       player.skillCastCounts['linh_bao'] = 10_000
       return gm.realmAdvanceOps.commitFiveElementInitiation('fire', player.$state)
-    })
+    }, PLAYER_STORE_URL)
 
     await openStandalone(page, 'skill')
     const treeViewport = page.locator('.node-tree__viewport')
@@ -329,10 +353,25 @@ test.describe('Huyen Kim stable scene art', () => {
     await expect(drawer).toBeVisible({ timeout: 10_000 })
     const doll = drawer.locator('.paperdoll')
     await expect(doll).toBeVisible({ timeout: 10_000 })
+    // The drawer slides in from the right - hit-testing before the
+    // transition lands probes off-viewport coordinates.
+    await expect(drawer).not.toHaveClass(/enter-active/, { timeout: 10_000 })
     const base = doll.locator('.paperdoll__base')
     await expect(base).toBeVisible()
     expect(await base.getAttribute('src')).toContain('equipment-paperdoll-base')
-    await expect(doll.locator('.paperdoll__slot').first()).toBeVisible()
+    const slot = doll.locator('.paperdoll__slot').first()
+    await expect(slot).toBeVisible()
+    // The decorative base must paint under the socket cells (hit-test
+    // scoped to the visible drawer - other panels reuse SlotView).
+    const hitHost = await page.evaluate(() => {
+      const dollEl = document.querySelector('.right-panel .paperdoll')
+      const slotEl = dollEl?.querySelector('.paperdoll__slot')
+      if (!slotEl) return 'no-slot'
+      const rect = slotEl.getBoundingClientRect()
+      const hit = document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2)
+      return hit?.closest('.right-panel .paperdoll__cell') ? 'slot' : `${hit?.tagName}.${hit?.className ?? ''}`
+    })
+    expect(hitHost, 'paperdoll base must not cover socket cells').toBe('slot')
     await shot(page, '12-equipment')
     assertNoBrowserErrors(errors)
   })

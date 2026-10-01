@@ -282,7 +282,7 @@ function switchTab(target: 'login' | 'register') {
 
 <style scoped>
 .auth-screen { position: relative; width: 100vw; min-height: 100vh; display: grid; place-items: center; overflow: hidden auto; color: var(--paper-text, #211f1a); background: var(--paper-50, #f5f0e4); }
-.auth-screen::before { content: ''; position: absolute; inset: 0; opacity: .1; background-image: linear-gradient(color-mix(in srgb, var(--text-primary) 7%, transparent) 1px, transparent 1px), linear-gradient(90deg, color-mix(in srgb, var(--text-primary) 7%, transparent) 1px, transparent 1px); background-size: 44px 44px; mask-image: radial-gradient(circle, #000, transparent 72%); }
+.auth-screen::before { content: ''; position: absolute; inset: 0; z-index: 1; opacity: .1; background-image: linear-gradient(color-mix(in srgb, var(--text-primary) 7%, transparent) 1px, transparent 1px), linear-gradient(90deg, color-mix(in srgb, var(--text-primary) 7%, transparent) 1px, transparent 1px); background-size: 44px 44px; mask-image: radial-gradient(circle, #000, transparent 72%); }
 .auth-screen__mist { position: absolute; width: 42vw; height: 42vw; border-radius: 50%; filter: blur(80px); opacity: .1; background: var(--chrome-500); }
 .auth-screen__mist--one { left: -18vw; bottom: -22vw; }.auth-screen__mist--two { right: -20vw; top: -24vw; }
 .auth-card { position: relative; z-index: 1; isolation: isolate; width: min(390px, calc(100vw - 40px)); box-sizing: border-box; padding: 34px; border-radius: 0; background: transparent; box-shadow: none; text-align: center; }

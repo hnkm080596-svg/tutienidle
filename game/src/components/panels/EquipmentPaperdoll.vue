@@ -235,6 +235,9 @@ function onSlotClick(instance: EquipmentInstance | undefined) {
 <style scoped>
 .paperdoll {
   position: relative;
+  /* Own stacking context so the negative-z base stays between the
+     paperdoll background and the runtime socket cells. */
+  isolation: isolate;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   grid-auto-rows: min-content;
@@ -254,6 +257,9 @@ function onSlotClick(instance: EquipmentInstance | undefined) {
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
+  /* Substrate must paint under the static grid cells - positioned
+     elements at z:auto would otherwise cover the runtime sockets. */
+  z-index: -1;
   height: 92%;
   width: auto;
   max-width: 100%;
