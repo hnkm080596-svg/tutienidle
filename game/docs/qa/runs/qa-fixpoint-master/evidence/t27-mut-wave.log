@@ -1,0 +1,8 @@
+T27 wave mutation corpus (manual apply, pre-commit ab0b135e):
+M1 LoreCodex suppressed-source unfilter -> KILLED (b18ConsumerHonesty 1 fail)
+M2 BagGrid material count unfilter -> KILLED (1 fail)
+M3 SkillPathPanel wayIdentity ungate -> KILLED (1 fail)
+M4 getCultivateTexture way ungate -> KILLED (2 fails)
+M5 MeridianChapter in-page pacing replay removal -> KILLED (2 fails)
+M6 BodyRefinementChapter mortal pacing replay removal -> KILLED (1 fail)
+all 6 restored post-test; kills recorded at wave close

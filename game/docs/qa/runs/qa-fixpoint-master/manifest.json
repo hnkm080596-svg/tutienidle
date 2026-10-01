@@ -4410,13 +4410,13 @@
       "path": "package-lock.json",
       "kind": "file",
       "mode": 33188,
-      "hash": "7657c53ca58d3ea68db9de5ba095c50eafecef6fe8d383a87119dfaa4a77361e"
+      "hash": "40e666bf32aed845c883e07f896b51bfce28ad161d937b1b8037a794d39c49b3"
     },
     {
       "path": "package.json",
       "kind": "file",
       "mode": 33188,
-      "hash": "f54c64f44dc5b8dd1786f366884b077b7f60ce12fcc41a8f88870463cad0177b"
+      "hash": "29e55e9f786d144ab9ed0bec36d3b91923ed108a7826f4f5ab059f2e97ecd232"
     },
     {
       "path": "playwright.beta.config.ts",
@@ -15888,7 +15888,7 @@
       "path": "src/components/panels/BagGrid.vue",
       "kind": "file",
       "mode": 33188,
-      "hash": "21ac82e6387210eac8cbb0f8c588e037aed861bd30f28a69bdaf61764379393e"
+      "hash": "f3d8d6b0822f703be4c4c141b6d5f77a70b8593fd5673fd2faa58b35ed67821f"
     },
     {
       "path": "src/components/panels/BuildingConstructionGate.test.ts",
@@ -16140,7 +16140,7 @@
       "path": "src/components/panels/scripture/LoreCodex.vue",
       "kind": "file",
       "mode": 33188,
-      "hash": "d8b0a8c99009e537bb677e369841204050db0cbeee33f26f06b87a04a50681ae"
+      "hash": "996c911b168a2587bde006633fc472edee8676d43a797314d375059487753516"
     },
     {
       "path": "src/components/panels/ScripturePavilionPanel.vue",
@@ -16272,7 +16272,7 @@
       "path": "src/components/panels/SkillPathPanel.vue",
       "kind": "file",
       "mode": 33188,
-      "hash": "88123f43a2675d5241be9ad9b44164a09f600965d77264efe78368e13d302998"
+      "hash": "fe899889c14f6cbd2368dd72af149d87c0e1ff403ae67e5e8f374a35ad881691"
     },
     {
       "path": "src/components/panels/StageSelectPanel.test.ts",
@@ -19764,7 +19764,7 @@
       "path": "src/core/game/GameManagerSaveRestore.boundary.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "96379f8268f34f4a3e5112032df53d0a733130f2486120b858dead4f7f60757e"
+      "hash": "e9df086608fa103f22dee1a9bbf4395e87324ab65625de700c4f746203141543"
     },
     {
       "path": "src/core/game/GameManagerSaveRestore.onceOnlySettle.test.ts",
@@ -21006,7 +21006,7 @@
       "path": "src/core/realm/body/BodyProgressionSystem.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "67afaad9eb339a6f2308483f3c76e5e622a143cb7cc252def72bd619e2c07d6e"
+      "hash": "bdf2b3a32194612f6335046c2d75c8072c2b4ebf3bdf3d1d09ac4d7ab4e437eb"
     },
     {
       "path": "src/core/realm/body/BodyProgressionSystem.ts",
@@ -21018,13 +21018,13 @@
       "path": "src/core/realm/body/BodyRefinementChapter.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "5a90a4f137946d4b746b0173586ce40ce0a9b7ec0ef2c7ada2643ddae3d7381f"
+      "hash": "598fc51b0ecf3f3fe24cbffd52408dbb6855c48bd5184e9a1f17a537b229bb97"
     },
     {
       "path": "src/core/realm/body/BodyRefinementChapter.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "027781383939e512cfb0748c560bf20f724d45ec4ad50e80f530dc35778e43a7"
+      "hash": "876945c468d8a9f1580978e1a3c3910869105e2eb3f27e58ef3d6796f480998f"
     },
     {
       "path": "src/core/realm/body/MeridianChapter.test.ts",
@@ -21036,7 +21036,7 @@
       "path": "src/core/realm/body/MeridianChapter.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "46bad7d4a144b7d98ee00875a5da4762692c7260075a0928610240febc55c8a8"
+      "hash": "90f7c9d323ac0ed75f53cff08e800cfbc57159ade9b2f7ee8c8fec602a1781e8"
     },
     {
       "path": "src/core/realm/body/MeridianPages.test.ts",
@@ -23700,7 +23700,7 @@
       "path": "src/presentation/art/PlayerVisualProfiles.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "94f8f2367691b1769500ab77739c00a47b2a0ef7194a4321d9a1dc80de722c53"
+      "hash": "07716856bfc609bc0b38402b0f55274d607f99dbb5598e4fac43554526a8c661"
     },
     {
       "path": "src/presentation/assets/AssetBaseUrl.ts",
@@ -24951,6 +24951,12 @@
       "hash": "abeef8aa5a25a01b4f69264dd38ed3f552e950c4922582ab6afde3a36bc5b26e"
     },
     {
+      "path": "tests/architecture/b18ConsumerHonesty.qa.test.ts",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "2c14b3f2eca76ddeede67ce24755e7224f64c4aaf850c897ffac753942406906"
+    },
+    {
       "path": "tests/architecture/baselines/asciiComments.json",
       "kind": "file",
       "mode": 33188,
@@ -25092,7 +25098,7 @@
       "path": "tests/architecture/betaSettlementReauth.qa.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "836f97509150b4ee28ba6d687b223ca956e8f7d846dd79788bf5094b12276ca3"
+      "hash": "97a78c169425f991cea22debffee2feabb3f47e3806a3c107f696f6071770dbe"
     },
     {
       "path": "tests/architecture/betaWriterBoundsT21.qa.test.ts",
@@ -25405,6 +25411,12 @@
       "kind": "file",
       "mode": 33188,
       "hash": "65ec6ed71cfb423db7b4bac7900dac4d74cbb0856ccdd45056cc06d4b360b241"
+    },
+    {
+      "path": "tests/architecture/tc15SavePacingFalsification.qa.test.ts",
+      "kind": "file",
+      "mode": 33188,
+      "hash": "e7e197e894f150463179f219022c9de3347c5e623f6c74c6e1d9d893469963c4"
     },
     {
       "path": "tests/architecture/tc6ForgedSaveFalsification.qa.test.ts",
@@ -25749,5 +25761,5 @@
       "hash": "0bb3657058699da63594036eda9bb6be7f6b4b44aebbb960fcba939870fd3f5e"
     }
   ],
-  "productStateId": "7fb18ef4b4f03c1ed7c29864d187345ca1593f1b786bb52df1d246b9da473934"
+  "productStateId": "497435c925cecd9ff0fbd2c10533a81721b447a3e939081da8399722b0752af3"
 }

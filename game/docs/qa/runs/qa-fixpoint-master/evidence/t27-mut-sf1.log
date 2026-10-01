@@ -1,0 +1,135 @@
+=== MUTANT sf1 applied ===
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+ ❯ tests/architecture/betaDormantSaveLeak.qa.test.ts (47 tests | 6 failed) 50ms
+     × sword_pathway combat build falls back to the generic kit 6ms
+     × setKiemPhoPreset fails closed under beta scope and leaves the preset untouched 1ms
+     × a flagged body-path save emits no way facet modifiers in stat assembly 0ms
+     × a flagged hidden-spell save emits no way statModifiers via the cultivation_path channel 0ms
+     × a hidden_spell save mints no realm-reward nodes through the restore replay (F-A3-01) 1ms
+     × a hidden_sword save keeps its preserved slice frozen through realm advances (F-A3-03) 0ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/architecture/betaDormantSaveLeak.qa.test.ts > dormancy: a way_out_of_scope save must not execute its dormant kit (F-TRI-2) > sword_pathway combat build falls back to the generic kit
+AssertionError: expected null to be 'way_out_of_scope' // Object.is equality
+
+- Expected:
+"way_out_of_scope"
+
++ Received:
+null
+
+ ❯ tests/architecture/betaDormantSaveLeak.qa.test.ts:230:41
+    228|
+    229|     // The save is flagged unsupported through the canonical reader.
+    230|     expect(unsupportedReleaseReason(p)).toBe('way_out_of_scope')
+       |                                         ^
+    231|
+    232|     const runtime = resolveCultivationPathRuntime(p, runtimeDeps)
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  tests/architecture/betaDormantSaveLeak.qa.test.ts > dormancy: a carried sword save cannot drive sword machinery (F-B-2) > setKiemPhoPreset fails closed under beta scope and leaves the preset untouched
+AssertionError: expected null to be 'way_out_of_scope' // Object.is equality
+
+- Expected:
+"way_out_of_scope"
+
++ Received:
+null
+
+ ❯ tests/architecture/betaDormantSaveLeak.qa.test.ts:465:41
+    463|     })
+    464|
+    465|     expect(unsupportedReleaseReason(p)).toBe('way_out_of_scope')
+       |                                         ^
+    466|     // The capability resolver itself fails closed on the dormant way
+    467|     // (B17 wave: resolvePathCapabilities is way-admission gated) - the
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+ FAIL  tests/architecture/betaDormantSaveLeak.qa.test.ts > dormancy: dormant way/technique/passive stat channels stay inert (F-TC-1/F-TC-3) > a flagged body-path save emits no way facet modifiers in stat assembly
+AssertionError: expected null to be 'way_out_of_scope' // Object.is equality
+
+- Expected:
+"way_out_of_scope"
+
++ Received:
+null
+
+ ❯ tests/architecture/betaDormantSaveLeak.qa.test.ts:541:41
+    539|     })
+    540|
+    541|     expect(unsupportedReleaseReason(p)).toBe('way_out_of_scope')
+       |                                         ^
+    542|
+    543|     const { wayFacetModifiers } = resolvePlayerStatAssembly(p, [])
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯
+
+ FAIL  tests/architecture/betaDormantSaveLeak.qa.test.ts > dormancy: dormant way/technique/passive stat channels stay inert (F-TC-1/F-TC-3) > a flagged hidden-spell save emits no way statModifiers via the cultivation_path channel
+AssertionError: expected null to be 'way_out_of_scope' // Object.is equality
+
+- Expected:
+"way_out_of_scope"
+
++ Received:
+null
+
+ ❯ tests/architecture/betaDormantSaveLeak.qa.test.ts:556:50
+    554|     })
+    555|
+    556|     expect(unsupportedReleaseReason(hiddenSave)).toBe('way_out_of_scop…
+       |                                                  ^
+    557|     expect(getCultivationPathStatModifiers(hiddenSave)).toEqual([])
+    558|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/6]⎯
+
+ FAIL  tests/architecture/betaDormantSaveLeak.qa.test.ts > dormancy: way-authored realm seams stay inert on a carried save (F-A3-01 / F-A3-02 / F-A3-03) > a hidden_spell save mints no realm-reward nodes through the restore replay (F-A3-01)
+AssertionError: expected null to be 'way_out_of_scope' // Object.is equality
+
+- Expected:
+"way_out_of_scope"
+
++ Received:
+null
+
+ ❯ tests/architecture/betaDormantSaveLeak.qa.test.ts:842:41
+    840|       realmId: 'foundation_establishment',
+    841|     })
+    842|     expect(unsupportedReleaseReason(p)).toBe('way_out_of_scope')
+       |                                         ^
+    843|
+    844|     const gameManager = managerWithNodes()
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/6]⎯
+
+ FAIL  tests/architecture/betaDormantSaveLeak.qa.test.ts > dormancy: way-authored realm seams stay inert on a carried save (F-A3-01 / F-A3-02 / F-A3-03) > a hidden_sword save keeps its preserved slice frozen through realm advances (F-A3-03)
+AssertionError: expected null to be 'way_out_of_scope' // Object.is equality
+
+- Expected:
+"way_out_of_scope"
+
++ Received:
+null
+
+ ❯ tests/architecture/betaDormantSaveLeak.qa.test.ts:920:41
+    918|       realmLevel: 12,
+    919|     })
+    920|     expect(unsupportedReleaseReason(p)).toBe('way_out_of_scope')
+       |                                         ^
+    921|     // The capability resolver now fails closed on the dormant way
+    922|     // (B17 wave) - realm-advance machinery fails closed through the
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/6]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  6 failed | 41 passed (47)
+   Start at  20:51:18
+   Duration  1.81s (transform 1.31s, setup 219ms, import 1.41s, tests 50ms, environment 0ms)
+
+EXIT=1
