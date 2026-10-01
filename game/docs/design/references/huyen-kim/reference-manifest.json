@@ -1,0 +1,27 @@
+{
+  "meta": {
+    "package": "huyen-kim-son-thuy",
+    "baseline": { "branch": "devin/frontend-ready", "sha": "e9cb0dd6" },
+    "authority": "Reference images are visual/composition only; repository + canonical contracts are functional authority. See ../huyen-kim-reference-audit.md.",
+    "inventory_note": "No standalone Inventory reference by design — grammar derives from 12-equipment + shared slot/tab/detail families."
+  },
+  "scenes": [
+    { "scene_id": "01", "name": "Login", "expected_file": "scenes/01-login.jpg", "status": "present", "shell": "world" },
+    { "scene_id": "02", "name": "Character Creation", "expected_file": "scenes/02-character-creation.jpg", "status": "present", "shell": "world" },
+    { "scene_id": "03", "name": "Dong Phu", "expected_file": "scenes/03-dong-fu.jpg", "status": "present", "shell": "world" },
+    { "scene_id": "04", "name": "Character", "expected_file": "scenes/04-character.jpg", "status": "present", "shell": "imperial-scroll" },
+    { "scene_id": "05", "name": "Realm", "expected_file": "scenes/05-realm.jpg", "status": "present", "shell": "imperial-scroll" },
+    { "scene_id": "06", "name": "Technique", "expected_file": "scenes/06-technique.jpg", "status": "present", "shell": "imperial-scroll" },
+    { "scene_id": "07", "name": "Skill", "expected_file": "scenes/07-skill.jpg", "status": "present", "shell": "imperial-scroll" },
+    { "scene_id": "08", "name": "Body", "expected_file": "scenes/08-body.jpg", "status": "present", "shell": "imperial-scroll" },
+    { "scene_id": "09", "name": "Exploration", "expected_file": "scenes/09-exploration.jpg", "status": "present", "shell": "imperial-scroll" },
+    { "scene_id": "10", "name": "Combat", "expected_file": "scenes/10-combat.jpg", "status": "present", "shell": "world" },
+    { "scene_id": "11", "name": "Alchemy", "expected_file": "scenes/11-alchemy.jpg", "status": "present", "shell": "imperial-scroll" },
+    { "scene_id": "12", "name": "Equipment", "expected_file": "scenes/12-equipment.jpg", "status": "present", "shell": "imperial-scroll" },
+    { "scene_id": "13", "name": "Tribulation", "expected_file": "scenes/13-tribulation.jpg", "status": "present", "shell": "world" },
+    { "scene_id": "14", "name": "Victory", "expected_file": "scenes/14-victory.jpg", "status": "present", "shell": "ceremonial-scroll" },
+    { "scene_id": "15", "name": "Defeat", "expected_file": "scenes/15-defeat.jpg", "status": "present", "shell": "ceremonial-scroll" },
+    { "scene_id": "16", "name": "Settings", "expected_file": "scenes/16-settings.jpg", "status": "present", "shell": "imperial-scroll" },
+    { "scene_id": "17", "name": "Quest", "expected_file": "scenes/17-quest.jpg", "status": "present", "shell": "imperial-scroll" }
+  ]
+}
