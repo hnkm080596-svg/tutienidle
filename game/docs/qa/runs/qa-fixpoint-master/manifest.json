@@ -21984,7 +21984,7 @@
       "path": "src/core/technique/TechniqueSystem.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "bb97c05cfb2bd346b6c3650abbb8e2a7fc5f14b89a7270a90a6f3578ea8d3335"
+      "hash": "23d5a038ae7cc2ca2f7bd21b4604c141fba18075cc401c920a8f511acbb1bc21"
     },
     {
       "path": "src/core/the-tu/TheEconomy.test.ts",
@@ -25008,7 +25008,7 @@
       "path": "tests/architecture/betaScopeAuthoritySeam.qa.test.ts",
       "kind": "file",
       "mode": 33152,
-      "hash": "0a7285cbd7410fbf2701e50ca0556453970eb7bc11ded5975bf0c9b75ae69714"
+      "hash": "e300cf4160875aa9b7b2f23994483ae6e299313692134f53f2e678a906ca3dde"
     },
     {
       "path": "tests/architecture/betaScopeEconomyGates.test.ts",
@@ -25641,5 +25641,5 @@
       "hash": "0bb3657058699da63594036eda9bb6be7f6b4b44aebbb960fcba939870fd3f5e"
     }
   ],
-  "productStateId": "ace0c1af868434beb55d410e13cf9987da41d1c58fdc5adfdedd98e2e356d9fe"
+  "productStateId": "8b9c093fd7255c17fd99302f9078b9328581b6d55e45f18414902d84ff29efb6"
 }
