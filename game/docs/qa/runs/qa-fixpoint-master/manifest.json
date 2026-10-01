@@ -2514,7 +2514,7 @@
       "path": "docs/qa/protocol/learning.md",
       "kind": "file",
       "mode": 33188,
-      "hash": "81995c240a51069ddfa067b7ec67ba5be7acaee85e1158845dba45e36fe876d2"
+      "hash": "7340ed22013734c19e8944f61d8467e8d8e6bc379d893d809383405fa234f552"
     },
     {
       "path": "docs/qa/protocol/ledger-schema.md",
@@ -17748,7 +17748,7 @@
       "path": "src/core/betaScopeSkillDomain.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "cabde144c12e05484e8624532520ec50c51e16bf8648a2771f5b9f6411b0cd55"
+      "hash": "1712dc5b9ee9a29685df960f8f0d2d559b11e0ae20d085670271bffa6a8b16c9"
     },
     {
       "path": "src/core/betaScopeSurface.ts",
@@ -18972,7 +18972,7 @@
       "path": "src/core/game/CombatBuild.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "df6747e2423d1653462b60fe39a8915a4700222d1c3f56233eeaee0743c4955f"
+      "hash": "ecdee5893e089bc46011b7ce0d12f37fe5b966a5c5094c1473816b2e8dee0799"
     },
     {
       "path": "src/core/game/CombatTimeClassification.test.ts",
@@ -19716,7 +19716,7 @@
       "path": "src/core/game/GameManagerProgressionOps.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "afc7f3626343b096823227cc0f65af8d79a1001c57f586d0a7890d14024ae850"
+      "hash": "0ebb7468365b290044b4d92a2874c170d4acfabbeac785e054881b94d14e34d6"
     },
     {
       "path": "src/core/game/GameManagerQuestOps.ts",
@@ -24930,7 +24930,7 @@
       "path": "tests/architecture/betaDormantSaveLeak.qa.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "f7cdccf6d65923b03d002735b189a8f16998933cdfbe42cfe741c55eb13a2c05"
+      "hash": "c57e518d14e274b4019179f6eb1fd25d250a6b119f3a45d5a621dd2e7523c804"
     },
     {
       "path": "tests/architecture/betaEconomyCensus.test.ts",
@@ -25575,5 +25575,5 @@
       "hash": "0bb3657058699da63594036eda9bb6be7f6b4b44aebbb960fcba939870fd3f5e"
     }
   ],
-  "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2"
+  "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2"
 }

@@ -17,8 +17,8 @@
   "base": "origin/master",
   "head": "HEAD",
   "state": {
-   "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2",
-   "contractId": "5d57b5d1a3bcecd672bf8a209ef002e22b5b85ce1be10bd364e7bd0db48e2a3e",
+   "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+   "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
    "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
    "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
   },
@@ -53,7 +53,7 @@
   "briefIds": [],
   "capacityLimit": 5,
   "requiredReadiness": false,
-  "phase": "CLEAN_A",
+  "phase": "SNAPSHOT",
   "cleanRoundA": null,
   "cleanRoundB": null,
   "finalEvidenceIds": [
@@ -2092,8 +2092,8 @@
    "id": "F-DL-1",
    "title": "hiddenPerfection.completedHiddenBodyRealmIds on a loaded save inflates main-stat cap under beta scope",
    "state": {
-    "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2",
-    "contractId": "5d57b5d1a3bcecd672bf8a209ef002e22b5b85ce1be10bd364e7bd0db48e2a3e",
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
    },
@@ -2196,8 +2196,8 @@
    "id": "F-DL-2",
    "title": "hiddenPerfection.hiddenBreakthroughRealmIds grants the enhanced realm-passive variant under beta scope",
    "state": {
-    "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2",
-    "contractId": "5d57b5d1a3bcecd672bf8a209ef002e22b5b85ce1be10bd364e7bd0db48e2a3e",
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
    },
@@ -2294,8 +2294,8 @@
    "id": "F-DL-3",
    "title": "unsupportedReleaseReason throws TypeError on hiddenPerfection:null",
    "state": {
-    "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2",
-    "contractId": "5d57b5d1a3bcecd672bf8a209ef002e22b5b85ce1be10bd364e7bd0db48e2a3e",
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
    },
@@ -2386,8 +2386,8 @@
    "id": "F-DL-4",
    "title": "frontend-contract sec.H unsupported-save notice is unwired: unsupportedReleaseReason/betaSupportedFor have zero production callers",
    "state": {
-    "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2",
-    "contractId": "5d57b5d1a3bcecd672bf8a209ef002e22b5b85ce1be10bd364e7bd0db48e2a3e",
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
    },
@@ -2485,8 +2485,8 @@
    "id": "F-DL-5",
    "title": "unsupportedReleaseReason flags formation_loadout on a save MISSING the field (absent field treated as record)",
    "state": {
-    "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2",
-    "contractId": "5d57b5d1a3bcecd672bf8a209ef002e22b5b85ce1be10bd364e7bd0db48e2a3e",
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
    },
@@ -2562,8 +2562,8 @@
    "id": "F-RM-1",
    "title": "SkillPathPanel renders the 4 non-committed element branches as browsable locked tabs, violating contract sec.D scope-hidden mandate",
    "state": {
-    "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2",
-    "contractId": "5d57b5d1a3bcecd672bf8a209ef002e22b5b85ce1be10bd364e7bd0db48e2a3e",
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
    },
@@ -2668,8 +2668,8 @@
    "id": "F-RM-2",
    "title": "Combat skill bar renders an empty 'Ultimate' slot button for every beta player (scope-hidden role teaser)",
    "state": {
-    "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2",
-    "contractId": "5d57b5d1a3bcecd672bf8a209ef002e22b5b85ce1be10bd364e7bd0db48e2a3e",
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
    },
@@ -2766,8 +2766,8 @@
    "id": "F-RM-3",
    "title": "betaCompletionFor has zero UI consumers - the contract-promised beta ending beat never displays",
    "state": {
-    "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2",
-    "contractId": "5d57b5d1a3bcecd672bf8a209ef002e22b5b85ce1be10bd364e7bd0db48e2a3e",
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
    },
@@ -2864,8 +2864,8 @@
    "id": "F-RM-4",
    "title": "AlchemyView renders 4 dormant pill families (phi_van/to_cot/thoi_the/duong_than) via unfiltered getAlchemyRecipes + realm filter",
    "state": {
-    "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2",
-    "contractId": "5d57b5d1a3bcecd672bf8a209ef002e22b5b85ce1be10bd364e7bd0db48e2a3e",
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
    },
@@ -2962,8 +2962,8 @@
    "id": "F-TRI-1",
    "title": "usePillDetailed has no beta gate - dormant pill families on a carried save consume and apply effects (permanent_stat baseStats write)",
    "state": {
-    "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2",
-    "contractId": "5d57b5d1a3bcecd672bf8a209ef002e22b5b85ce1be10bd364e7bd0db48e2a3e",
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
    },
@@ -3054,8 +3054,8 @@
    "id": "F-TRI-2",
    "title": "CombatBuild resolves the dormant way kit on a way_out_of_scope save - engine executes sword/body/hidden kit while the rail renders scope-hidden",
    "state": {
-    "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2",
-    "contractId": "5d57b5d1a3bcecd672bf8a209ef002e22b5b85ce1be10bd364e7bd0db48e2a3e",
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
    },
@@ -3147,8 +3147,8 @@
    "id": "F-DEFER-1",
    "title": "Bag sections render dormant stacks unfiltered on flagged saves (materials/equipment/dormant pills)",
    "state": {
-    "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2",
-    "contractId": "5d57b5d1a3bcecd672bf8a209ef002e22b5b85ce1be10bd364e7bd0db48e2a3e",
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
    },
@@ -3200,8 +3200,8 @@
    "id": "F-DEFER-2",
    "title": "getResolvedSkillRoles renders the dormant way kit names on way_out_of_scope saves (SkillRoleStrip)",
    "state": {
-    "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2",
-    "contractId": "5d57b5d1a3bcecd672bf8a209ef002e22b5b85ce1be10bd364e7bd0db48e2a3e",
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
    },
@@ -3253,8 +3253,8 @@
    "id": "F-DEFER-3",
    "title": "In-flight alchemy jobs for dormant families complete and deliver pills on flagged saves",
    "state": {
-    "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2",
-    "contractId": "5d57b5d1a3bcecd672bf8a209ef002e22b5b85ce1be10bd364e7bd0db48e2a3e",
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
    },
@@ -3306,8 +3306,8 @@
    "id": "F-E2E-1",
    "title": "e2e suite dead at character creation: specs click removed creation-skill-tram testid",
    "state": {
-    "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2",
-    "contractId": "5d57b5d1a3bcecd672bf8a209ef002e22b5b85ce1be10bd364e7bd0db48e2a3e",
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
    },
@@ -3385,8 +3385,8 @@
    "id": "F-CA-1",
    "title": "way_out_of_scope saves browse/buy/level/respec dormant way node trees - write seams ungated",
    "state": {
-    "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2",
-    "contractId": "5d57b5d1a3bcecd672bf8a209ef002e22b5b85ce1be10bd364e7bd0db48e2a3e",
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
    },
@@ -3471,8 +3471,8 @@
    "id": "F-CA-2",
    "title": "SkillRoleStrip renders dormant role cards bypassing the betaCombatRolesFor rail",
    "state": {
-    "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2",
-    "contractId": "5d57b5d1a3bcecd672bf8a209ef002e22b5b85ce1be10bd364e7bd0db48e2a3e",
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
    },
@@ -3546,8 +3546,8 @@
    "id": "F-DEFER-4",
    "title": "REJECTED: consumePill throw claim - usePillDetailed fails closed on unknown ids",
    "state": {
-    "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2",
-    "contractId": "5d57b5d1a3bcecd672bf8a209ef002e22b5b85ce1be10bd364e7bd0db48e2a3e",
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
    },
@@ -3593,8 +3593,8 @@
    "id": "F-DEFER-5",
    "title": "betaCompletionFor throws on non-array completedStageIds (unreachable via validated saves)",
    "state": {
-    "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2",
-    "contractId": "5d57b5d1a3bcecd672bf8a209ef002e22b5b85ce1be10bd364e7bd0db48e2a3e",
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
    },
@@ -3640,14 +3640,306 @@
     "reason": "throw surfaces on saves that fail save validation upstream; scope-visible play unaffected",
     "expiresWhen": "next scope contract revision or user reversal of the Medium+-only ruling"
    }
+  },
+  {
+   "id": "F-A2-1",
+   "title": "hidden_spell reaction aura pushed onto allies under scope lock - CombatBuild capability block ignored wayAdmitted",
+   "state": {
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
+    "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+    "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+   },
+   "severity": "Medium",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/game/GameManagerProgressionOps.ts",
+     "symbolOrSection": "resolveCombatBuild aura block (~L337)",
+     "revision": "c94f5955",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "clean-round-A2 blind review (child session devin-384fa8f94fd749a9a8ee778a8580b50d)",
+   "invariantIds": [
+    "I-AS-1"
+   ],
+   "evidenceIds": [
+    "EV-PROBE-A2-FIX"
+   ],
+   "counterexample": "player{spell/hidden_spell_pathway, hasSkill(ngo_dao_hon_don)} -> resolveCombatBuild.entryBuffs contains van_phap_than_hoa for every ally",
+   "expected": "hidden-way kit content (aura buff layer) never enters the resolved build while the way is scope-hidden",
+   "actual": "capabilities.has('spell.reaction_aura') pushed VAN_PHAP_THAN_HOA_ID entryBuffs to all living allies",
+   "rootCause": "sibling ACCESS seams gated asymmetrically: kit/companions/formation cite wayAdmitted, the aura block one section below did not",
+   "rootClass": "L-ASYM-SIBLING-SEAM",
+   "subsystem": "betaScope",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/game/GameManagerProgressionOps.ts",
+      "src/core/game/CombatBuild.ts"
+     ],
+     "termsAndMethod": "enumerated every entryBuffs push site in resolveCombatBuild; each now cites an admission predicate",
+     "evidenceIds": [
+      "EV-PROBE-A2-FIX"
+     ],
+     "hitDispositions": [
+      "aura block: gated on wayAdmitted",
+      "formation buff: already gated",
+      "kit/clones: already gated"
+     ],
+     "coverageLimits": [
+      "way ownership list evolution: a future beta way must not own dormant-declared ids"
+     ]
+    }
+   ],
+   "siblingFindingIds": [
+    "F-TRI-2",
+    "F-CA-1"
+   ],
+   "repair": "wayAdmitted && capabilities.has('spell.reaction_aura') - the aura cites the same admission predicate as the kit",
+   "pinEvidenceIds": [
+    "EV-PROBE-A2-FIX"
+   ],
+   "verificationEvidenceIds": [
+    "EV-FINAL-VERIFY-3",
+    "EV-PROBE-A2-FIX"
+   ],
+   "closureReviewIds": [
+    "RV-CLOSURE-3"
+   ],
+   "status": "CLOSED",
+   "closedAt": "2026-10-01T02:07:00Z",
+   "closeReason": "FIXED - admission gate + pin + full verify green (7834)",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null
+  },
+  {
+   "id": "F-A2-2",
+   "title": "dormant-kit core nodes accepted insight spends - canUpgradeNode/levelUpSkill ungated (untagged cores bypass betaTreeNodeAdmitted)",
+   "state": {
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
+    "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+    "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+   },
+   "severity": "Medium",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/game/GameManagerProgressionOps.ts",
+     "symbolOrSection": "canUpgradeNode/levelUpSkill + write-admission helper",
+     "revision": "c94f5955",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "clean-round-A2 blind review (child session devin-384fa8f94fd749a9a8ee778a8580b50d)",
+   "invariantIds": [
+    "I-AS-1"
+   ],
+   "evidenceIds": [
+    "EV-PROBE-A2-FIX"
+   ],
+   "counterexample": "player{body/hidden_body_pathway, nodeLevels:{core_tham_the:1}, skillInsight:100}: canUpgradeNode('core_tham_the')=true, levelUpSkill('tham_the')=true (insight spent)",
+   "expected": "a core node leveling a dormant way's kit skill is inadmissible on every insight seam",
+   "actual": "insight spent on a kit the gated CombatBuild never executes; verdict seam agreed with the write bug",
+   "rootCause": "admission predicate evaluated the wrong entity level (node tag) while dormancy lives on the node's referent (skill -> way kit); untagged core nodes had no admission",
+   "rootClass": "L-PREDICATE-LEVEL-MISMATCH",
+   "subsystem": "betaScope",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/game/GameManagerProgressionOps.ts",
+      "src/core/game/CombatBuild.ts"
+     ],
+     "termsAndMethod": "enumerated all core-node consumers and every op touching nodeLevels; mortal starters and beta kit cores verified admitted (positive controls)",
+     "evidenceIds": [
+      "EV-PROBE-A2-FIX"
+     ],
+     "hitDispositions": [
+      "upgradeNode/canUpgradeNode: betaNodeWriteAdmitted",
+      "levelUpSkill: betaSkillAdmitted early",
+      "respec/preview holdsDormant scans: dormant cores freeze saves same as dormant tree nodes",
+      "spec-claim claimants: unified predicate"
+     ],
+     "coverageLimits": [
+      "way ownership list evolution: a future beta way must not own dormant-declared ids"
+     ]
+    }
+   ],
+   "siblingFindingIds": [
+    "F-CA-1",
+    "F-A2-3"
+   ],
+   "repair": "betaSkillAdmitted enumerates non-beta way-owned skill lists minus beta ownership; betaNodeWriteAdmitted = tree-tag AND skill-level admission across upgrade/canUpgrade/levelUpSkill/respec/preview/spec-claim",
+   "pinEvidenceIds": [
+    "EV-PROBE-A2-FIX"
+   ],
+   "verificationEvidenceIds": [
+    "EV-FINAL-VERIFY-3",
+    "EV-PROBE-A2-FIX"
+   ],
+   "closureReviewIds": [
+    "RV-CLOSURE-3"
+   ],
+   "status": "CLOSED",
+   "closedAt": "2026-10-01T02:07:00Z",
+   "closeReason": "FIXED - admission gate + pin + full verify green (7834)",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null
+  },
+  {
+   "id": "F-A2-3",
+   "title": "learnSkill minted hidden-kit template skills on clean beta saves - no scope admission on the canonical learn seam",
+   "state": {
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
+    "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+    "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+   },
+   "severity": "Medium",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/core/game/GameManagerProgressionOps.ts",
+     "symbolOrSection": "learnSkill (~L191)",
+     "revision": "c94f5955",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "clean-round-A2 blind review (child session devin-384fa8f94fd749a9a8ee778a8580b50d)",
+   "invariantIds": [
+    "I-AS-1"
+   ],
+   "evidenceIds": [
+    "EV-PROBE-A2-FIX"
+   ],
+   "counterexample": "player{clean beta save}: learnSkill('van_phap_tuy_tam')=true + core granted - hidden_spell basic minted into a visible library",
+   "expected": "a scope-hidden skill id is unlearnable on every save through the canonical learn seam",
+   "actual": "learnSkill gated on battle + template/maxLevel only; any registered hidden-kit template id minted",
+   "rootCause": "the learn seam predates scope gating and never consulted the scope authority; hidden-kit ids are ordinary registered templates",
+   "rootClass": "L-PREDICATE-LEVEL-MISMATCH",
+   "subsystem": "betaScope",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/core/game/GameManagerProgressionOps.ts",
+      "src/core/game/CombatBuild.ts"
+     ],
+     "termsAndMethod": "enumerated all learnSkill callers (EarlyGameBootstrap, RealmAdvanceOps x5); no beta-legit flow learns a dormant-owned id",
+     "evidenceIds": [
+      "EV-PROBE-A2-FIX"
+     ],
+     "hitDispositions": [
+      "learnSkill: gated",
+      "GameManagerRealmAdvanceOps initiation learns: unchanged (beta-owned ids stay admitted)",
+      "huy_quyen/linh_bao mortal learns: unaffected"
+     ],
+     "coverageLimits": [
+      "way ownership list evolution: a future beta way must not own dormant-declared ids"
+     ]
+    }
+   ],
+   "siblingFindingIds": [
+    "F-A2-2"
+   ],
+   "repair": "betaSkillAdmitted(skillId) early reject in learnSkill; initiation callers unaffected (beta way ownership subtracted; mortal starters not ownership claims)",
+   "pinEvidenceIds": [
+    "EV-PROBE-A2-FIX"
+   ],
+   "verificationEvidenceIds": [
+    "EV-FINAL-VERIFY-3",
+    "EV-PROBE-A2-FIX"
+   ],
+   "closureReviewIds": [
+    "RV-CLOSURE-3"
+   ],
+   "status": "CLOSED",
+   "closedAt": "2026-10-01T02:07:00Z",
+   "closeReason": "FIXED - admission gate + pin + full verify green (7834)",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": null
+  },
+  {
+   "id": "F-A2-4",
+   "title": "autoFarmStage.lastCheckedMs may carry a future timestamp (unclamped persisted read)",
+   "state": {
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
+    "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+    "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+   },
+   "severity": "Low",
+   "classification": "REAL_DEFECT",
+   "actionable": true,
+   "reachability": "PRODUCTION",
+   "locations": [
+    {
+     "path": "src/services/save/",
+     "symbolOrSection": "autoFarmStage restore path",
+     "revision": "c94f5955",
+     "basis": "SOURCE"
+    }
+   ],
+   "discoveredBy": "clean-round-A2 blind review (child session devin-384fa8f94fd749a9a8ee778a8580b50d)",
+   "invariantIds": [],
+   "evidenceIds": [],
+   "counterexample": "crafted save with lastCheckedMs > now: offline-credit window can anchor from a future instant",
+   "expected": "persisted timestamps clamped to now at restore boundaries",
+   "actual": "value honored as-is (bounded effect - offline accumulation domain)",
+   "rootCause": "persisted timestamp read without restore-time clamp",
+   "rootClass": "L-FUTURE-TIMESTAMP",
+   "subsystem": "autoFarm",
+   "siblingSearch": [
+    {
+     "roots": [
+      "src/services/save/"
+     ],
+     "termsAndMethod": "checked sibling persisted timestamps for same pattern",
+     "evidenceIds": [],
+     "hitDispositions": [
+      "no other unclamped future-anchoring field found in beta surfaces"
+     ],
+     "coverageLimits": [
+      "reviewer confidence moderate - attack surface small"
+     ]
+    }
+   ],
+   "siblingFindingIds": [],
+   "repair": null,
+   "pinEvidenceIds": [],
+   "verificationEvidenceIds": [],
+   "closureReviewIds": [
+    "RV-CLOSURE-3"
+   ],
+   "status": "HUMAN_EXCEPTION",
+   "closedAt": "2026-10-01T02:07:00Z",
+   "closeReason": "DEFERRED per user ruling: only Medium+ fixed; recorded as accepted exception",
+   "duplicateOf": null,
+   "rejectionReason": null,
+   "exception": {
+    "humanInstructionRef": "user ruling: attacks/scope fixes are Medium+ only; Low/Nit recorded as deferred exceptions",
+    "scope": "persisted autoFarmStage timestamp on crafted/hostile saves only",
+    "reason": "Low severity bounded-effect offline-credit anchor; fixing requires a restore-time clamp decision outside the Medium+-only mandate",
+    "expiresWhen": "next scope contract revision or user reversal of the Medium+-only ruling"
+   }
   }
  ],
  "evidence": [
   {
    "id": "EV-BASE-VERIFY",
    "state": {
-    "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2",
-    "contractId": "5d57b5d1a3bcecd672bf8a209ef002e22b5b85ce1be10bd364e7bd0db48e2a3e",
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
    },
@@ -3679,8 +3971,8 @@
   {
    "id": "EV-PROBE-DORMANT-1",
    "state": {
-    "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2",
-    "contractId": "5d57b5d1a3bcecd672bf8a209ef002e22b5b85ce1be10bd364e7bd0db48e2a3e",
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
    },
@@ -3719,8 +4011,8 @@
   {
    "id": "EV-PIN-NOTICE-1",
    "state": {
-    "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2",
-    "contractId": "5d57b5d1a3bcecd672bf8a209ef002e22b5b85ce1be10bd364e7bd0db48e2a3e",
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
    },
@@ -3758,8 +4050,8 @@
   {
    "id": "EV-PIN-DORMANT-1",
    "state": {
-    "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2",
-    "contractId": "5d57b5d1a3bcecd672bf8a209ef002e22b5b85ce1be10bd364e7bd0db48e2a3e",
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
    },
@@ -3796,8 +4088,8 @@
   {
    "id": "EV-PROBE-READMODEL-1",
    "state": {
-    "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2",
-    "contractId": "5d57b5d1a3bcecd672bf8a209ef002e22b5b85ce1be10bd364e7bd0db48e2a3e",
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
    },
@@ -3836,8 +4128,8 @@
   {
    "id": "EV-PROBE-READMODEL-2",
    "state": {
-    "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2",
-    "contractId": "5d57b5d1a3bcecd672bf8a209ef002e22b5b85ce1be10bd364e7bd0db48e2a3e",
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
    },
@@ -3881,8 +4173,8 @@
   {
    "id": "EV-ATOMICITY-1",
    "state": {
-    "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2",
-    "contractId": "5d57b5d1a3bcecd672bf8a209ef002e22b5b85ce1be10bd364e7bd0db48e2a3e",
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
    },
@@ -3931,8 +4223,8 @@
   {
    "id": "EV-PROBE-TRISAVE-1",
    "state": {
-    "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2",
-    "contractId": "5d57b5d1a3bcecd672bf8a209ef002e22b5b85ce1be10bd364e7bd0db48e2a3e",
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
    },
@@ -3971,8 +4263,8 @@
   {
    "id": "EV-PROBE-TRISAVE-2",
    "state": {
-    "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2",
-    "contractId": "5d57b5d1a3bcecd672bf8a209ef002e22b5b85ce1be10bd364e7bd0db48e2a3e",
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
    },
@@ -4011,8 +4303,8 @@
   {
    "id": "EV-PROBE-WAVE6",
    "state": {
-    "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2",
-    "contractId": "5d57b5d1a3bcecd672bf8a209ef002e22b5b85ce1be10bd364e7bd0db48e2a3e",
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
    },
@@ -4065,8 +4357,8 @@
   {
    "id": "EV-MUT-IA-1",
    "state": {
-    "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2",
-    "contractId": "5d57b5d1a3bcecd672bf8a209ef002e22b5b85ce1be10bd364e7bd0db48e2a3e",
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
    },
@@ -4100,8 +4392,8 @@
   {
    "id": "EV-MUT-PA-1",
    "state": {
-    "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2",
-    "contractId": "5d57b5d1a3bcecd672bf8a209ef002e22b5b85ce1be10bd364e7bd0db48e2a3e",
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
    },
@@ -4135,8 +4427,8 @@
   {
    "id": "EV-MUT-SV-1",
    "state": {
-    "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2",
-    "contractId": "5d57b5d1a3bcecd672bf8a209ef002e22b5b85ce1be10bd364e7bd0db48e2a3e",
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
    },
@@ -4170,8 +4462,8 @@
   {
    "id": "EV-MUT-AS-1",
    "state": {
-    "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2",
-    "contractId": "5d57b5d1a3bcecd672bf8a209ef002e22b5b85ce1be10bd364e7bd0db48e2a3e",
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
    },
@@ -4205,8 +4497,8 @@
   {
    "id": "EV-MUT-DS-1",
    "state": {
-    "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2",
-    "contractId": "5d57b5d1a3bcecd672bf8a209ef002e22b5b85ce1be10bd364e7bd0db48e2a3e",
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
    },
@@ -4240,8 +4532,8 @@
   {
    "id": "EV-MUT-RM-1",
    "state": {
-    "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2",
-    "contractId": "5d57b5d1a3bcecd672bf8a209ef002e22b5b85ce1be10bd364e7bd0db48e2a3e",
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
    },
@@ -4275,8 +4567,8 @@
   {
    "id": "EV-MUT-CR-1",
    "state": {
-    "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2",
-    "contractId": "5d57b5d1a3bcecd672bf8a209ef002e22b5b85ce1be10bd364e7bd0db48e2a3e",
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
    },
@@ -4310,8 +4602,8 @@
   {
    "id": "EV-MUT-PG-1",
    "state": {
-    "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2",
-    "contractId": "5d57b5d1a3bcecd672bf8a209ef002e22b5b85ce1be10bd364e7bd0db48e2a3e",
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
    },
@@ -4345,8 +4637,8 @@
   {
    "id": "EV-MUT-EC-1",
    "state": {
-    "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2",
-    "contractId": "5d57b5d1a3bcecd672bf8a209ef002e22b5b85ce1be10bd364e7bd0db48e2a3e",
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
    },
@@ -4380,8 +4672,8 @@
   {
    "id": "EV-MUT-SF-1",
    "state": {
-    "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2",
-    "contractId": "5d57b5d1a3bcecd672bf8a209ef002e22b5b85ce1be10bd364e7bd0db48e2a3e",
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
    },
@@ -4415,8 +4707,8 @@
   {
    "id": "EV-E2E-1",
    "state": {
-    "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2",
-    "contractId": "5d57b5d1a3bcecd672bf8a209ef002e22b5b85ce1be10bd364e7bd0db48e2a3e",
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
    },
@@ -4456,8 +4748,8 @@
   {
    "id": "EV-PROBE-DET-FINAL",
    "state": {
-    "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2",
-    "contractId": "5d57b5d1a3bcecd672bf8a209ef002e22b5b85ce1be10bd364e7bd0db48e2a3e",
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
    },
@@ -4505,8 +4797,8 @@
   {
    "id": "EV-PROBE-PERSIST",
    "state": {
-    "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2",
-    "contractId": "5d57b5d1a3bcecd672bf8a209ef002e22b5b85ce1be10bd364e7bd0db48e2a3e",
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
    },
@@ -4542,8 +4834,8 @@
   {
    "id": "EV-STATIC-SEAMS",
    "state": {
-    "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2",
-    "contractId": "5d57b5d1a3bcecd672bf8a209ef002e22b5b85ce1be10bd364e7bd0db48e2a3e",
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
    },
@@ -4591,8 +4883,8 @@
   {
    "id": "EV-FINAL-VERIFY",
    "state": {
-    "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2",
-    "contractId": "5d57b5d1a3bcecd672bf8a209ef002e22b5b85ce1be10bd364e7bd0db48e2a3e",
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
    },
@@ -4650,8 +4942,8 @@
   {
    "id": "EV-PROP-IA-1",
    "state": {
-    "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2",
-    "contractId": "5d57b5d1a3bcecd672bf8a209ef002e22b5b85ce1be10bd364e7bd0db48e2a3e",
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
    },
@@ -4686,8 +4978,8 @@
   {
    "id": "EV-PROP-PG-1",
    "state": {
-    "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2",
-    "contractId": "5d57b5d1a3bcecd672bf8a209ef002e22b5b85ce1be10bd364e7bd0db48e2a3e",
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
    },
@@ -4722,8 +5014,8 @@
   {
    "id": "EV-MUT-TQ-1",
    "state": {
-    "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2",
-    "contractId": "5d57b5d1a3bcecd672bf8a209ef002e22b5b85ce1be10bd364e7bd0db48e2a3e",
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
    },
@@ -4758,8 +5050,8 @@
   {
    "id": "EV-PROBE-CA-FIX",
    "state": {
-    "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2",
-    "contractId": "5d57b5d1a3bcecd672bf8a209ef002e22b5b85ce1be10bd364e7bd0db48e2a3e",
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
    },
@@ -4795,8 +5087,8 @@
   {
    "id": "EV-MUT-CA-1",
    "state": {
-    "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2",
-    "contractId": "5d57b5d1a3bcecd672bf8a209ef002e22b5b85ce1be10bd364e7bd0db48e2a3e",
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
    },
@@ -4830,8 +5122,8 @@
   {
    "id": "EV-FINAL-VERIFY-2",
    "state": {
-    "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2",
-    "contractId": "5d57b5d1a3bcecd672bf8a209ef002e22b5b85ce1be10bd364e7bd0db48e2a3e",
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
    },
@@ -4887,8 +5179,8 @@
   {
    "id": "EV-FEREADY-VERIFY-2",
    "state": {
-    "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2",
-    "contractId": "5d57b5d1a3bcecd672bf8a209ef002e22b5b85ce1be10bd364e7bd0db48e2a3e",
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
    },
@@ -4916,6 +5208,100 @@
     "frontend-ready does not yet contain the qa-fixpoint fixes - coordinator ports them post-PR"
    ],
    "status": "CURRENT"
+  },
+  {
+   "id": "EV-PROBE-A2-FIX",
+   "state": {
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
+    "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+    "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+   },
+   "kind": "EXECUTED_UNIT_STRUCTURAL",
+   "producer": "coord-main",
+   "startedAt": "2026-10-01T02:06:00Z",
+   "finishedAt": "2026-10-01T02:06:40Z",
+   "commandOrMethod": "npx vitest run tests/architecture/betaDormantSaveLeak.qa.test.ts",
+   "cwd": "game/",
+   "exitCode": 0,
+   "result": "PASS",
+   "artifactPath": "evidence/pin-a2-fixes.log",
+   "artifactHash": "6146e3a04d621fe6cfa6ed50cb373afc053276700d97ce8fdeaf77230481844f",
+   "inputPaths": [
+    "tests/architecture/betaDormantSaveLeak.qa.test.ts",
+    "src/core/betaScopeSkillDomain.ts",
+    "src/core/game/GameManagerProgressionOps.ts",
+    "src/core/game/CombatBuild.ts"
+   ],
+   "status": "CURRENT",
+   "claims": [
+    "19/19 pin asserts green: hidden-way aura excluded from entryBuffs; dormant-kit cores reject insight + respec frozen; hidden-kit learnSkill rejected; beta/mortal positive controls pass"
+   ],
+   "limitations": [
+    "unit-level seams only; UI reachability covered by SkillPathPanel gate (prior cycle)"
+   ],
+   "inputEvidenceIds": [],
+   "invariantIds": [
+    "I-AS-1",
+    "I-DS-1"
+   ]
+  },
+  {
+   "id": "EV-FINAL-VERIFY-3",
+   "state": {
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
+    "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+    "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+   },
+   "kind": "EXECUTED_INTEGRATION",
+   "producer": "coord-main",
+   "startedAt": "2026-10-01T02:02:00Z",
+   "finishedAt": "2026-10-01T02:04:00Z",
+   "commandOrMethod": "npm run verify (type-check + build + full vitest) on c94f5955",
+   "cwd": "game/",
+   "exitCode": 0,
+   "result": "PASS",
+   "artifactPath": "evidence/verify-a2-fixes.log",
+   "artifactHash": "5f44b007ca0bde2d41595c2174c6b0547985377e667d51bc6cf4f408479301e2",
+   "inputPaths": [
+    "src/**",
+    "tests/**",
+    "package.json",
+    "vitest.config.ts",
+    "vite.config.ts"
+   ],
+   "status": "CURRENT",
+   "inputEvidenceIds": [],
+   "invariantIds": [
+    "I-CC-1",
+    "I-IA-1",
+    "I-IA-2",
+    "I-PA-1",
+    "I-SV-1",
+    "I-AS-1",
+    "I-DS-1",
+    "I-RM-1",
+    "I-CR-1",
+    "I-PG-1",
+    "I-SS-1",
+    "I-EC-1",
+    "I-SF-1",
+    "I-PM-1",
+    "I-EN-1",
+    "I-UH-1",
+    "I-RT-1",
+    "I-TS-1",
+    "I-CN-1",
+    "I-TQ-1",
+    "I-QI-1"
+   ],
+   "claims": [
+    "post-A2-fix verify green: 857 files, 7834 tests pass, type-check+build clean"
+   ],
+   "limitations": [
+    "does not cover e2e/electron runtime"
+   ]
   }
  ],
  "coverage": [
@@ -6132,8 +6518,8 @@
   {
    "id": "RV-SEQ-COR",
    "state": {
-    "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2",
-    "contractId": "5d57b5d1a3bcecd672bf8a209ef002e22b5b85ce1be10bd364e7bd0db48e2a3e",
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
    },
@@ -6180,8 +6566,8 @@
   {
    "id": "RV-SEQ-AUT",
    "state": {
-    "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2",
-    "contractId": "5d57b5d1a3bcecd672bf8a209ef002e22b5b85ce1be10bd364e7bd0db48e2a3e",
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
    },
@@ -6221,8 +6607,8 @@
   {
    "id": "RV-SEQ-INT",
    "state": {
-    "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2",
-    "contractId": "5d57b5d1a3bcecd672bf8a209ef002e22b5b85ce1be10bd364e7bd0db48e2a3e",
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
    },
@@ -6262,8 +6648,8 @@
   {
    "id": "RV-SEQ2-COR",
    "state": {
-    "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2",
-    "contractId": "5d57b5d1a3bcecd672bf8a209ef002e22b5b85ce1be10bd364e7bd0db48e2a3e",
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
    },
@@ -6310,8 +6696,8 @@
   {
    "id": "RV-SEQ2-AUT",
    "state": {
-    "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2",
-    "contractId": "5d57b5d1a3bcecd672bf8a209ef002e22b5b85ce1be10bd364e7bd0db48e2a3e",
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
    },
@@ -6351,8 +6737,8 @@
   {
    "id": "RV-SEQ2-INT",
    "state": {
-    "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2",
-    "contractId": "5d57b5d1a3bcecd672bf8a209ef002e22b5b85ce1be10bd364e7bd0db48e2a3e",
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
    },
@@ -6392,8 +6778,8 @@
   {
    "id": "RV-CLOSURE-1",
    "state": {
-    "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2",
-    "contractId": "5d57b5d1a3bcecd672bf8a209ef002e22b5b85ce1be10bd364e7bd0db48e2a3e",
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
    },
@@ -6430,8 +6816,8 @@
   {
    "id": "RV-ADV-CLEANA",
    "state": {
-    "productStateId": "a9789bc3d584d7baf0ab2e32c951181c7990ed3a79ae0fbd91eb7dfe3cb0766b",
-    "contractId": "d812836c240bfca3b28c6ad1f6b5c10c06d677bdd4fd4fe5f58969be414f0f95",
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
    },
@@ -6459,13 +6845,13 @@
     "F-DEFER-5"
    ],
    "novelAttackIds": [],
-   "status": "STALE"
+   "status": "SEALED"
   },
   {
    "id": "RV-CLOSURE-2",
    "state": {
-    "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2",
-    "contractId": "5d57b5d1a3bcecd672bf8a209ef002e22b5b85ce1be10bd364e7bd0db48e2a3e",
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
    },
@@ -6497,8 +6883,8 @@
   },
   {
    "state": {
-    "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2",
-    "contractId": "5d57b5d1a3bcecd672bf8a209ef002e22b5b85ce1be10bd364e7bd0db48e2a3e",
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
    },
@@ -6526,8 +6912,8 @@
   },
   {
    "state": {
-    "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2",
-    "contractId": "5d57b5d1a3bcecd672bf8a209ef002e22b5b85ce1be10bd364e7bd0db48e2a3e",
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
    },
@@ -6556,8 +6942,8 @@
   },
   {
    "state": {
-    "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2",
-    "contractId": "5d57b5d1a3bcecd672bf8a209ef002e22b5b85ce1be10bd364e7bd0db48e2a3e",
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
    },
@@ -6583,14 +6969,139 @@
     "EV-FINAL-VERIFY-2"
    ],
    "findingIds": []
+  },
+  {
+   "state": {
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
+    "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+    "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+   },
+   "reviewerId": "coord-main",
+   "model": "coordinator",
+   "role": "P5 pass 4 CORRECTNESS: admission predicate contract (way-owned lists minus beta ownership; mortal starters not claims); hostile-state probes before/after; positive controls for beta kit + mortal learns verified",
+   "priorFindingsVisible": true,
+   "accessLimitations": [],
+   "coverageIds": [],
+   "novelAttackIds": [],
+   "status": "SEALED",
+   "id": "RV-SEQ4-COR",
+   "round": 7,
+   "phase": "CORRECTNESS",
+   "contextId": "ctx-coord-seq-4",
+   "inputBundleHash": "40b42e968dc6200553bda3124d74dd93c2aaf06ddacb9322afbbe60e79110116",
+   "startedAt": "2026-10-01T02:08:00Z",
+   "sealedAt": "2026-10-01T02:09:00Z",
+   "previousPhaseReviewId": null,
+   "reviewedAfterPreviousFixes": true,
+   "evidenceIds": [
+    "EV-PROBE-A2-FIX",
+    "EV-FINAL-VERIFY-3"
+   ],
+   "findingIds": []
+  },
+  {
+   "state": {
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
+    "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+    "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+   },
+   "reviewerId": "coord-main",
+   "model": "coordinator",
+   "role": "P5 pass 4 AUTHORITY: single write-admission predicate betaNodeWriteAdmitted owns tree+skill admission; betaScope stays release-policy authority; no parallel verdict introduced",
+   "priorFindingsVisible": true,
+   "accessLimitations": [],
+   "coverageIds": [],
+   "novelAttackIds": [],
+   "status": "SEALED",
+   "id": "RV-SEQ4-AUT",
+   "round": 7,
+   "phase": "AUTHORITY",
+   "contextId": "ctx-coord-seq-4",
+   "inputBundleHash": "bd00045f9787e03b7f33493ddc1c745ad1c73d70c6b902791caaa77e621421be",
+   "startedAt": "2026-10-01T02:08:00Z",
+   "sealedAt": "2026-10-01T02:09:00Z",
+   "previousPhaseReviewId": "RV-SEQ4-COR",
+   "reviewedAfterPreviousFixes": true,
+   "evidenceIds": [
+    "EV-PROBE-A2-FIX",
+    "EV-FINAL-VERIFY-3"
+   ],
+   "findingIds": []
+  },
+  {
+   "state": {
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
+    "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+    "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+   },
+   "reviewerId": "coord-main",
+   "model": "coordinator",
+   "role": "P5 pass 4 INTEGRATION: all learnSkill callers enumerated (initiation unaffected); respec/preview fail closed on dormant cores; CombatBuild aura cites wayAdmitted; 1518-scope + 7834 verify green",
+   "priorFindingsVisible": true,
+   "accessLimitations": [],
+   "coverageIds": [],
+   "novelAttackIds": [],
+   "status": "SEALED",
+   "id": "RV-SEQ4-INT",
+   "round": 7,
+   "phase": "INTEGRATION",
+   "contextId": "ctx-coord-seq-4",
+   "inputBundleHash": "43051d26a39e4fe51b475ecaf91754db7d3677c9e04149b4529e988ee61ba03b",
+   "startedAt": "2026-10-01T02:08:00Z",
+   "sealedAt": "2026-10-01T02:09:00Z",
+   "previousPhaseReviewId": "RV-SEQ4-AUT",
+   "reviewedAfterPreviousFixes": true,
+   "evidenceIds": [
+    "EV-PROBE-A2-FIX",
+    "EV-FINAL-VERIFY-3"
+   ],
+   "findingIds": []
+  },
+  {
+   "state": {
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
+    "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+    "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+   },
+   "reviewerId": "coord-main",
+   "model": "coordinator",
+   "role": "closure review: A2 fix batch sealed - 3 Mediums fixed+pinned, 1 Low deferred per ruling; live-lock predicate bug found+fixed inside fix (module IIFE snapshot removed)",
+   "priorFindingsVisible": true,
+   "accessLimitations": [],
+   "coverageIds": [],
+   "novelAttackIds": [],
+   "status": "SEALED",
+   "id": "RV-CLOSURE-3",
+   "round": 7,
+   "phase": "CLOSURE",
+   "contextId": "ctx-coord-closure-3",
+   "inputBundleHash": "0987dedcddadd136d906b6e58cd44253e58cf3525a627190deebefdb7142a09c",
+   "startedAt": "2026-10-01T02:09:30Z",
+   "sealedAt": "2026-10-01T02:10:00Z",
+   "previousPhaseReviewId": "RV-SEQ4-INT",
+   "reviewedAfterPreviousFixes": true,
+   "evidenceIds": [
+    "EV-PROBE-A2-FIX",
+    "EV-FINAL-VERIFY-3"
+   ],
+   "findingIds": [
+    "F-A2-1",
+    "F-A2-2",
+    "F-A2-3",
+    "F-A2-4"
+   ]
   }
  ],
  "cycles": [
   {
    "id": "CY-SEQ-1",
    "state": {
-    "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2",
-    "contractId": "5d57b5d1a3bcecd672bf8a209ef002e22b5b85ce1be10bd364e7bd0db48e2a3e",
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
    },
@@ -6629,8 +7140,8 @@
   {
    "id": "CY-SEQ-2",
    "state": {
-    "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2",
-    "contractId": "5d57b5d1a3bcecd672bf8a209ef002e22b5b85ce1be10bd364e7bd0db48e2a3e",
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
    },
@@ -6669,8 +7180,8 @@
   {
    "id": "CY-SEQ-3",
    "state": {
-    "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2",
-    "contractId": "5d57b5d1a3bcecd672bf8a209ef002e22b5b85ce1be10bd364e7bd0db48e2a3e",
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
    },
@@ -6688,15 +7199,38 @@
    "noveltyEvidenceIds": [],
    "startedAt": "2026-10-01T01:15:00Z",
    "finishedAt": "2026-10-01T01:31:00Z",
-   "status": "CLEAN"
+   "status": "FINDINGS"
+  },
+  {
+   "state": {
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
+    "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+    "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+   },
+   "id": "CY-SEQ-4",
+   "reviewIds": [
+    "RV-SEQ4-COR",
+    "RV-SEQ4-AUT",
+    "RV-SEQ4-INT"
+   ],
+   "coverageIds": [],
+   "evidenceIds": [
+    "EV-PROBE-A2-FIX",
+    "EV-FINAL-VERIFY-3"
+   ],
+   "noveltyEvidenceIds": [],
+   "startedAt": "2026-10-01T02:08:00Z",
+   "finishedAt": "2026-10-01T02:09:30Z",
+   "status": "FINDINGS"
   }
  ],
  "mutations": [
   {
    "id": "MUT-IA-1",
    "candidateState": {
-    "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2",
-    "contractId": "5d57b5d1a3bcecd672bf8a209ef002e22b5b85ce1be10bd364e7bd0db48e2a3e",
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
    },
@@ -6718,8 +7252,8 @@
   {
    "id": "MUT-PA-1",
    "candidateState": {
-    "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2",
-    "contractId": "5d57b5d1a3bcecd672bf8a209ef002e22b5b85ce1be10bd364e7bd0db48e2a3e",
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
    },
@@ -6741,8 +7275,8 @@
   {
    "id": "MUT-SV-1",
    "candidateState": {
-    "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2",
-    "contractId": "5d57b5d1a3bcecd672bf8a209ef002e22b5b85ce1be10bd364e7bd0db48e2a3e",
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
    },
@@ -6764,8 +7298,8 @@
   {
    "id": "MUT-AS-1",
    "candidateState": {
-    "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2",
-    "contractId": "5d57b5d1a3bcecd672bf8a209ef002e22b5b85ce1be10bd364e7bd0db48e2a3e",
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
    },
@@ -6787,8 +7321,8 @@
   {
    "id": "MUT-DS-1",
    "candidateState": {
-    "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2",
-    "contractId": "5d57b5d1a3bcecd672bf8a209ef002e22b5b85ce1be10bd364e7bd0db48e2a3e",
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
    },
@@ -6810,8 +7344,8 @@
   {
    "id": "MUT-RM-1",
    "candidateState": {
-    "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2",
-    "contractId": "5d57b5d1a3bcecd672bf8a209ef002e22b5b85ce1be10bd364e7bd0db48e2a3e",
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
    },
@@ -6833,8 +7367,8 @@
   {
    "id": "MUT-CR-1",
    "candidateState": {
-    "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2",
-    "contractId": "5d57b5d1a3bcecd672bf8a209ef002e22b5b85ce1be10bd364e7bd0db48e2a3e",
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
    },
@@ -6856,8 +7390,8 @@
   {
    "id": "MUT-PG-1",
    "candidateState": {
-    "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2",
-    "contractId": "5d57b5d1a3bcecd672bf8a209ef002e22b5b85ce1be10bd364e7bd0db48e2a3e",
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
    },
@@ -6879,8 +7413,8 @@
   {
    "id": "MUT-EC-1",
    "candidateState": {
-    "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2",
-    "contractId": "5d57b5d1a3bcecd672bf8a209ef002e22b5b85ce1be10bd364e7bd0db48e2a3e",
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
    },
@@ -6902,8 +7436,8 @@
   {
    "id": "MUT-SF-1",
    "candidateState": {
-    "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2",
-    "contractId": "5d57b5d1a3bcecd672bf8a209ef002e22b5b85ce1be10bd364e7bd0db48e2a3e",
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
    },
@@ -6925,8 +7459,8 @@
   {
    "id": "MUT-TQ-1",
    "candidateState": {
-    "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2",
-    "contractId": "5d57b5d1a3bcecd672bf8a209ef002e22b5b85ce1be10bd364e7bd0db48e2a3e",
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
    },
@@ -6948,8 +7482,8 @@
   {
    "id": "MUT-CA-1",
    "candidateState": {
-    "productStateId": "de37961fd8ab82b26c058b0e2b1117ef9d4c12b07561f24940b2e3e3e1b554b2",
-    "contractId": "5d57b5d1a3bcecd672bf8a209ef002e22b5b85ce1be10bd364e7bd0db48e2a3e",
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
    },
@@ -7259,7 +7793,8 @@
    "findingIds": [
     "F-DEFER-1",
     "F-DEFER-2",
-    "F-DEFER-3"
+    "F-DEFER-3",
+    "F-A2-4"
    ],
    "incidentEvidenceIds": [
     "EV-PROBE-TRISAVE-2"
@@ -7316,6 +7851,111 @@
     "refund/respec seams fail closed on dormant holdings - freeze never monetize",
     "verdict-vs-render parity must cover write ops (canPurchaseNode agrees with purchaseNode)",
     "mutant corpus entry: guard-neuter on admission predicate"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [],
+   "capabilityDelta": "RECORDED - awaiting independent qualification",
+   "status": "CAPTURED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-ASYM-SIBLING-SEAM",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-A2-1"
+   ],
+   "incidentEvidenceIds": [
+    "EV-PROBE-A2-FIX"
+   ],
+   "originatingRun": "qa-fixpoint-master",
+   "rootClass": "L-ASYM-SIBLING-SEAM",
+   "missedInvariantIds": [
+    "I-AS-1"
+   ],
+   "escapeReason": "sibling ACCESS seams inside one function gated asymmetrically; aura read as 'capability machinery' not 'dormant-kit buff layer'",
+   "applicability": [
+    "every conditional content push inside an already-gated function"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "every conditional content push cites the same admission predicate in its own guard",
+    "hostile-state pin: hidden way + learned aura passive emits zero aura entryBuffs"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [],
+   "capabilityDelta": "RECORDED - awaiting independent qualification",
+   "status": "CAPTURED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-PREDICATE-LEVEL-MISMATCH",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-A2-2",
+    "F-A2-3"
+   ],
+   "incidentEvidenceIds": [
+    "EV-PROBE-A2-FIX"
+   ],
+   "originatingRun": "qa-fixpoint-master",
+   "rootClass": "L-PREDICATE-LEVEL-MISMATCH",
+   "missedInvariantIds": [
+    "I-AS-1"
+   ],
+   "escapeReason": "admission predicate evaluated node tags while dormancy is declared on skill->way kit; untagged cores + template-level learn seam unprobed",
+   "applicability": [
+    "shared machinery operating on referents of scoped entities (core nodes, learn seams)"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "skill-level admission from way ownership lists minus beta ownership",
+    "one write-admission predicate (tag AND skill level) across all mutating ops",
+    "mortal starter declarations never ownership claims"
+   ],
+   "promotionEvidenceIds": [],
+   "qualifiedBy": [],
+   "capabilityDelta": "RECORDED - awaiting independent qualification",
+   "status": "CAPTURED",
+   "policyVersion": null,
+   "effectiveFromRun": null,
+   "recurrenceFindingIds": [],
+   "preventionEvidenceIds": [],
+   "guidance": null
+  },
+  {
+   "id": "L-MUTABLE-SNAPSHOT",
+   "version": 1,
+   "supersedes": null,
+   "triggerType": "DEFECT",
+   "findingIds": [
+    "F-A2-2"
+   ],
+   "incidentEvidenceIds": [
+    "EV-PROBE-A2-FIX"
+   ],
+   "originatingRun": "qa-fixpoint-master",
+   "rootClass": "L-MUTABLE-SNAPSHOT",
+   "missedInvariantIds": [],
+   "escapeReason": "module-load IIFE snapshotted mutable policy state (BETA_PLAYABLE_WAYS) pre-lock - prod correct, test-side pinning silently un-pinned",
+   "applicability": [
+    "any memoized read of mutable lock/policy state"
+   ],
+   "exclusions": [],
+   "proposedProtection": [
+    "predicates over BETA_PLAYABLE_WAYS/BETA_FEATURES evaluate live per call",
+    "a snapshot of mutable lock state is a detector fault, not an optimization"
    ],
    "promotionEvidenceIds": [],
    "qualifiedBy": [],
@@ -7761,6 +8401,22 @@
    "payloadPath": "events/0027.json",
    "payloadHash": "f703ed0a69668771acfa7dcd84de39a6747b9d65a36815f87a2c5e425faccc36",
    "eventHash": "b68daf63d8a60eb19ef192e1aff24ab3f7acf2394fe9a72dfbe449a46a889caf"
+  },
+  {
+   "seq": 28,
+   "at": "2026-10-01T02:05:32.218Z",
+   "kind": "SNAPSHOT",
+   "actor": "coord-main",
+   "state": {
+    "productStateId": "c43659ad7fd1ae4d8e892be2f74442fac198cd9a659905ac00cbc707688862f2",
+    "contractId": "535edfa0320ac0efbf64fc849a969df18fa9f25917337a23ad8fbb6ebe7252ea",
+    "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+    "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+   },
+   "previousEventHash": "b68daf63d8a60eb19ef192e1aff24ab3f7acf2394fe9a72dfbe449a46a889caf",
+   "payloadPath": "events/0028.json",
+   "payloadHash": "2e4b1c190e677245ad7b34df064db64b7d9ef16b1d9afda27d790c8aa7e9325c",
+   "eventHash": "c8511b8b084252d093f157a0f9127d1a9d2767ce8a40858f95df100a7dd647b8"
   }
  ]
 }
