@@ -32,6 +32,7 @@ import {
 import { LUYEN_KHI_TINH_HOA_ID } from './equipment/TinhHoaMaterial'
 import { PILL_FAMILIES } from '@/data/pill/PillFamilies'
 import { BREAKTHROUGH_TALENT_POOLS } from '@/data/talent/BreakthroughTalentPools'
+import { isBreakthroughAcquisitionEnabled } from './realm/ReleasePolicy'
 
 // ---------------------------------------------------------------------------
 // Ways and elements
@@ -141,7 +142,13 @@ export function isBetaCreationTalentId(talentId: string): boolean {
  */
 const BETA_TALENT_IDS: ReadonlySet<string> = new Set([
   ...BETA_CREATION_TALENT_IDS,
-  ...Object.values(BREAKTHROUGH_TALENT_POOLS).flat().map((talent) => talent.id),
+  ...Object.entries(BREAKTHROUGH_TALENT_POOLS)
+    // Pools are keyed by the realm that grants them; a pool whose realm is
+    // suppressed by ReleasePolicy (e.g. golden_core) is authored-but-dormant,
+    // so its ids cannot be legitimately owned by a beta save either.
+    .filter(([realmId]) => isBreakthroughAcquisitionEnabled(realmId))
+    .flatMap(([, pool]) => pool)
+    .map((talent) => talent.id),
 ])
 
 /**

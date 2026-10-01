@@ -29,7 +29,6 @@ import type { SkillSystem } from '../skill/SkillSystem'
 import { type OrbId } from '../kiem-tu/KiemTuState'
 import { isMortalPrecursorSkillId } from '../skill/MortalPrecursors'
 import { isBetaMortalStarterId, isScopeHidden } from '../betaScope'
-import { isHiddenSwordPathway } from '../kiem-tu/KiemTuPath'
 import { validatePreset } from '../kiem-tu/KiemPhoSystem'
 import { getRealmIndex } from '../realm/realmSystem'
 import type { CultivationPathRuntime } from '../player/CultivationPathRuntime'
@@ -53,7 +52,6 @@ import {
   betaSkillTreeFor as betaSkillTreeForDomain,
   betaNodeWriteAdmitted,
   betaSkillAdmitted,
-  betaTreeNodeAdmitted,
   type BetaCombatRoleEntry,
   type BetaPrecursorSurfaceVerdict,
   type BetaSkillTree,
@@ -698,6 +696,19 @@ export class GameManagerProgressionOps {
    * update via the aggregators (no reverse subtraction of old modifiers).
    */
   devResetBranch(branchTag: string, player: PlayerData): number | null {
+    // Same dormant-save refusal as respecNodeTree: every branchTag root
+    // lives on a dormant tree, so a reset would refund dormant records
+    // into live insight. has() guards the throwing get() - save
+    // validation tolerates ghost nodeLevels ids by design.
+    const holdsDormant = Object.keys(player.nodeLevels ?? {}).some((id) =>
+      this.deps.nodeRegistry.has(id) &&
+      !betaNodeWriteAdmitted(this.deps.nodeRegistry.get(id)),
+    )
+
+    if (holdsDormant) {
+      return null
+    }
+
     // Same out-of-combat contract as respecNodeTree: node
     // investment is static during battle, so a mid-battle reset is
     // refused even though this op is dev-console only today.

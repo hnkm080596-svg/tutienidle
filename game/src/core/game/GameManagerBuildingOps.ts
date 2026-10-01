@@ -21,6 +21,7 @@ import {
   type BetaScopeVerdict,
   type BetaWorkerLodgeTabId,
 } from '../betaScope'
+import { isBetaBuildingSurface } from '../betaScopeSurface'
 
 export interface GameManagerBuildingOpsDeps {
   buildingRegistry: BuildingRegistry
@@ -57,6 +58,13 @@ export class GameManagerBuildingOps {
 
   /** Gate UI xây mới — delegate BuildingSystem.canBuild (§ popover). */
   canBuildBuilding(buildingId: string, player: PlayerData): boolean {
+    // BETA SCOPE LOCK - a scope-hidden building (chi_hien_quan ->
+    // manualWorkforce) fails closed at the write seam, not only at the
+    // surface read model; same rule as the {ok:false,'scope_hidden'}
+    // pattern in equipment/alchemy/workforce ops.
+    if (!isBetaBuildingSurface(buildingId)) {
+      return false
+    }
     return this.deps.buildingSystem.canBuild(
       buildingId,
       this.deps.buildingRegistry,
@@ -67,6 +75,9 @@ export class GameManagerBuildingOps {
   }
 
   buildBuilding(buildingId: string, player: PlayerData, currentTime = Date.now() / 1000) {
+    if (!isBetaBuildingSurface(buildingId)) {
+      return null
+    }
     const instance = this.deps.buildingSystem.build(
       buildingId,
       this.deps.buildingRegistry,
@@ -251,6 +262,13 @@ export class GameManagerBuildingOps {
   }
 
   upgradeBuilding(instanceId: string): boolean {
+    // BETA SCOPE LOCK - a carried instance of a scope-hidden building is
+    // preserved, never upgraded (an upgrade would spend live materials
+    // into a dormant record).
+    const existing = this.deps.buildingManager.get(instanceId)
+    if (existing !== undefined && !isBetaBuildingSurface(existing.buildingId)) {
+      return false
+    }
     const upgraded = this.deps.buildingSystem.upgrade(
       instanceId,
       this.deps.buildingRegistry,

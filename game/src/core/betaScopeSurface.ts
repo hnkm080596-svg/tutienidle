@@ -118,6 +118,15 @@ export function isBetaBuildingSurface(buildingId: string): boolean {
   return featureAdmits(BETA_BUILDING_FEATURES[buildingId])
 }
 
+/**
+ * The building-popover mount chokepoint: GameRoot binds this so a raw
+ * ui.activeBuildingPopoverId write can never mount a scope-hidden
+ * card - identical defense to the standalone-panel mount watcher.
+ */
+export function betaAdmittedBuildingPopoverId(buildingId: string | null): string | null {
+  return buildingId !== null && isBetaBuildingSurface(buildingId) ? buildingId : null
+}
+
 // ---------------------------------------------------------------------------
 // C. Panels (deep-link guards)
 // ---------------------------------------------------------------------------
