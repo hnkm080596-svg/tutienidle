@@ -1,0 +1,532 @@
+{
+ "records": [
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-BASE-VERIFY",
+    "state": {
+     "productStateId": "e81120ad6870aa0455576e0b9a33b54eb01b4ba309483a363cfacd625c4dc8e7",
+     "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "kind": "EXECUTED_INTEGRATION",
+    "producer": "coord-main",
+    "startedAt": "2026-10-01T11:30:00Z",
+    "finishedAt": "2026-10-01T11:52:00Z",
+    "commandOrMethod": "npm run verify (type-check && build && vitest run)",
+    "cwd": "game/",
+    "exitCode": 0,
+    "result": "PASS",
+    "artifactPath": "evidence/t18-verify-final.log",
+    "artifactHash": "79069aa951b9be089927218aec6bd4821b658446f61182cef40ad47dd8a89597",
+    "inputPaths": [
+     "package.json"
+    ],
+    "inputEvidenceIds": [],
+    "invariantIds": [
+     "I-TQ-1"
+    ],
+    "claims": [
+     "baseline green: 854 files, 7808 tests pass, type-check+build clean",
+     "re-executed on T18 (7001f01b product state e81120ad); same command, fresh artifact"
+    ],
+    "limitations": [
+     "does not cover e2e/electron runtime"
+    ],
+    "status": "CURRENT"
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-FINAL-VERIFY",
+    "state": {
+     "productStateId": "e81120ad6870aa0455576e0b9a33b54eb01b4ba309483a363cfacd625c4dc8e7",
+     "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "kind": "EXECUTED_UNIT_STRUCTURAL",
+    "producer": "coord-main",
+    "startedAt": "2026-10-01T11:30:00Z",
+    "finishedAt": "2026-10-01T11:52:00Z",
+    "commandOrMethod": "npm run verify (type-check + build + full vitest)",
+    "cwd": "game/",
+    "exitCode": 0,
+    "result": "PASS",
+    "artifactPath": "evidence/t18-verify-final.log",
+    "artifactHash": "79069aa951b9be089927218aec6bd4821b658446f61182cef40ad47dd8a89597",
+    "inputPaths": [
+     "src/**",
+     "tests/**",
+     "package.json",
+     "vitest.config.ts",
+     "vite.config.ts"
+    ],
+    "inputEvidenceIds": [
+     "EV-BASE-VERIFY"
+    ],
+    "invariantIds": [
+     "I-CC-1",
+     "I-IA-1",
+     "I-IA-2",
+     "I-PA-1",
+     "I-SV-1",
+     "I-AS-1",
+     "I-DS-1",
+     "I-RM-1",
+     "I-CR-1",
+     "I-PG-1",
+     "I-SS-1",
+     "I-EC-1",
+     "I-SF-1",
+     "I-PM-1",
+     "I-EN-1",
+     "I-UH-1",
+     "I-RT-1",
+     "I-TS-1",
+     "I-CN-1",
+     "I-TQ-1",
+     "I-QI-1"
+    ],
+    "claims": [
+     "final gate: 856 files / 7826 tests pass / type-check + production build clean on the post-fix aggregate state",
+     "re-executed on T18 (7001f01b product state e81120ad); same command, fresh artifact"
+    ],
+    "limitations": [
+     "e2e specs are outside verify - covered separately by EV-E2E-1"
+    ],
+    "status": "CURRENT"
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-FINAL-VERIFY-2",
+    "state": {
+     "productStateId": "e81120ad6870aa0455576e0b9a33b54eb01b4ba309483a363cfacd625c4dc8e7",
+     "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "kind": "EXECUTED_INTEGRATION",
+    "producer": "coord-main",
+    "startedAt": "2026-10-01T11:30:00Z",
+    "finishedAt": "2026-10-01T11:52:00Z",
+    "commandOrMethod": "npm run verify (type-check + build + full vitest) on acbe096a",
+    "cwd": "game/",
+    "exitCode": 0,
+    "result": "PASS",
+    "artifactPath": "evidence/t18-verify-final.log",
+    "artifactHash": "79069aa951b9be089927218aec6bd4821b658446f61182cef40ad47dd8a89597",
+    "inputPaths": [
+     "src/**",
+     "tests/**",
+     "package.json",
+     "vitest.config.ts",
+     "vite.config.ts"
+    ],
+    "inputEvidenceIds": [],
+    "invariantIds": [
+     "I-CC-1",
+     "I-IA-1",
+     "I-IA-2",
+     "I-PA-1",
+     "I-SV-1",
+     "I-AS-1",
+     "I-DS-1",
+     "I-RM-1",
+     "I-CR-1",
+     "I-PG-1",
+     "I-SS-1",
+     "I-EC-1",
+     "I-SF-1",
+     "I-PM-1",
+     "I-EN-1",
+     "I-UH-1",
+     "I-RT-1",
+     "I-TS-1",
+     "I-CN-1",
+     "I-TQ-1",
+     "I-QI-1"
+    ],
+    "claims": [
+     "post-CA-fix verify green: 856 files, 7830 tests pass, type-check+build clean",
+     "re-executed on T18 (7001f01b product state e81120ad); same command, fresh artifact"
+    ],
+    "limitations": [
+     "does not cover e2e/electron runtime"
+    ],
+    "status": "CURRENT"
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-FINAL-VERIFY-3",
+    "state": {
+     "productStateId": "e81120ad6870aa0455576e0b9a33b54eb01b4ba309483a363cfacd625c4dc8e7",
+     "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "kind": "EXECUTED_INTEGRATION",
+    "producer": "coord-main",
+    "startedAt": "2026-10-01T11:30:00Z",
+    "finishedAt": "2026-10-01T11:52:00Z",
+    "commandOrMethod": "npm run verify (type-check + build + full vitest) on c94f5955",
+    "cwd": "game/",
+    "exitCode": 0,
+    "result": "PASS",
+    "artifactPath": "evidence/t18-verify-final.log",
+    "artifactHash": "79069aa951b9be089927218aec6bd4821b658446f61182cef40ad47dd8a89597",
+    "inputPaths": [
+     "src/**",
+     "tests/**",
+     "package.json",
+     "vitest.config.ts",
+     "vite.config.ts"
+    ],
+    "inputEvidenceIds": [],
+    "invariantIds": [
+     "I-CC-1",
+     "I-IA-1",
+     "I-IA-2",
+     "I-PA-1",
+     "I-SV-1",
+     "I-AS-1",
+     "I-DS-1",
+     "I-RM-1",
+     "I-CR-1",
+     "I-PG-1",
+     "I-SS-1",
+     "I-EC-1",
+     "I-SF-1",
+     "I-PM-1",
+     "I-EN-1",
+     "I-UH-1",
+     "I-RT-1",
+     "I-TS-1",
+     "I-CN-1",
+     "I-TQ-1",
+     "I-QI-1"
+    ],
+    "claims": [
+     "post-A2-fix verify green: 857 files, 7834 tests pass, type-check+build clean",
+     "re-executed on T18 (7001f01b product state e81120ad); same command, fresh artifact"
+    ],
+    "limitations": [
+     "does not cover e2e/electron runtime"
+    ],
+    "status": "CURRENT"
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-FINAL-VERIFY-4",
+    "state": {
+     "productStateId": "e81120ad6870aa0455576e0b9a33b54eb01b4ba309483a363cfacd625c4dc8e7",
+     "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "producer": "coord-main",
+    "startedAt": "2026-10-01T11:30:00Z",
+    "finishedAt": "2026-10-01T11:52:00Z",
+    "commandOrMethod": "npm run verify (type-check + build + full vitest) on 0599c32a+learning.md (T5 state)",
+    "cwd": "game/",
+    "exitCode": 0,
+    "result": "PASS",
+    "artifactPath": "evidence/t18-verify-final.log",
+    "artifactHash": "79069aa951b9be089927218aec6bd4821b658446f61182cef40ad47dd8a89597",
+    "inputPaths": [],
+    "inputEvidenceIds": [],
+    "invariantIds": [
+     "I-CC-1",
+     "I-IA-1",
+     "I-IA-2",
+     "I-PA-1",
+     "I-SV-1",
+     "I-AS-1",
+     "I-DS-1",
+     "I-RM-1",
+     "I-CR-1",
+     "I-PG-1",
+     "I-SS-1",
+     "I-EC-1",
+     "I-SF-1",
+     "I-PM-1",
+     "I-EN-1",
+     "I-UH-1",
+     "I-RT-1",
+     "I-TS-1",
+     "I-CN-1",
+     "I-TQ-1",
+     "I-QI-1"
+    ],
+    "claims": [
+     "full gate green on the post-F-TC state: 7841 tests, type-check, build",
+     "re-executed on T18 (7001f01b product state e81120ad); same command, fresh artifact"
+    ],
+    "limitations": [],
+    "kind": "EXECUTED_INTEGRATION",
+    "status": "CURRENT"
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-FINAL-VERIFY-5",
+    "kind": "EXECUTED_INTEGRATION",
+    "state": {
+     "productStateId": "e81120ad6870aa0455576e0b9a33b54eb01b4ba309483a363cfacd625c4dc8e7",
+     "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "commandOrMethod": "npm run verify (type-check + build + full vitest) on 5431ae7e (T7 state)",
+    "cwd": "game/",
+    "artifactPath": "evidence/t18-verify-final.log",
+    "artifactHash": "79069aa951b9be089927218aec6bd4821b658446f61182cef40ad47dd8a89597",
+    "result": "PASS",
+    "exitCode": 0,
+    "startedAt": "2026-10-01T11:30:00Z",
+    "finishedAt": "2026-10-01T11:52:00Z",
+    "producer": "coord-main",
+    "invariantIds": [
+     "I-CC-1",
+     "I-CR-1",
+     "I-DS-1",
+     "I-AS-1",
+     "I-PA-1",
+     "I-SV-1",
+     "I-RM-1",
+     "I-EC-1",
+     "I-SF-1",
+     "I-UH-1",
+     "I-PG-1",
+     "I-IA-1",
+     "I-IA-2",
+     "I-TQ-1"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [],
+    "claims": [
+     "full verify green on T7: 7856 tests passed, vue-tsc clean, production build OK",
+     "re-executed on T18 (7001f01b product state e81120ad); same command, fresh artifact"
+    ],
+    "limitations": [],
+    "status": "CURRENT"
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-FINAL-VERIFY-T9",
+    "kind": "EXECUTED_INTEGRATION",
+    "state": {
+     "productStateId": "e81120ad6870aa0455576e0b9a33b54eb01b4ba309483a363cfacd625c4dc8e7",
+     "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "commandOrMethod": "npm run verify @ c32bc29e",
+    "cwd": "game/",
+    "artifactPath": "evidence/t18-verify-final.log",
+    "artifactHash": "79069aa951b9be089927218aec6bd4821b658446f61182cef40ad47dd8a89597",
+    "result": "PASS",
+    "exitCode": 0,
+    "startedAt": "2026-10-01T11:30:00Z",
+    "finishedAt": "2026-10-01T11:52:00Z",
+    "producer": "coord-main",
+    "invariantIds": [],
+    "inputEvidenceIds": [],
+    "inputPaths": [
+     "package.json"
+    ],
+    "claims": [
+     "npm run verify GREEN on T9 (1b310881): full vitest suite incl. AS3B seal pin, VERIFY_EXIT=0",
+     "P3 full gate re-run after F-AS-3b fix",
+     "re-executed on T18 (7001f01b product state e81120ad); same command, fresh artifact"
+    ],
+    "limitations": [],
+    "status": "CURRENT"
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-FINAL-VERIFY-T10",
+    "kind": "EXECUTED_INTEGRATION",
+    "state": {
+     "productStateId": "e81120ad6870aa0455576e0b9a33b54eb01b4ba309483a363cfacd625c4dc8e7",
+     "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "commandOrMethod": "npm run verify",
+    "cwd": "game/",
+    "artifactPath": "evidence/t18-verify-final.log",
+    "artifactHash": "79069aa951b9be089927218aec6bd4821b658446f61182cef40ad47dd8a89597",
+    "result": "PASS",
+    "exitCode": 1,
+    "startedAt": "2026-10-01T11:30:00Z",
+    "finishedAt": "2026-10-01T11:52:00Z",
+    "producer": "coord-main",
+    "invariantIds": [],
+    "inputEvidenceIds": [],
+    "inputPaths": [],
+    "claims": [
+     "RED phase: F-BODY-W-1 pin (closed-sink) failed on pre-gate tip - investBodyChapter consumed 50 essence under lock; defect caught by the full gate mid-wave",
+     "re-executed on T18 (7001f01b product state e81120ad); same command, fresh artifact"
+    ],
+    "limitations": [],
+    "status": "CURRENT"
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-FINAL-VERIFY-T11",
+    "kind": "EXECUTED_INTEGRATION",
+    "state": {
+     "productStateId": "e81120ad6870aa0455576e0b9a33b54eb01b4ba309483a363cfacd625c4dc8e7",
+     "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "commandOrMethod": "npm run verify",
+    "cwd": "game/",
+    "artifactPath": "evidence/t18-verify-final.log",
+    "artifactHash": "79069aa951b9be089927218aec6bd4821b658446f61182cef40ad47dd8a89597",
+    "result": "PASS",
+    "exitCode": 0,
+    "startedAt": "2026-10-01T11:30:00Z",
+    "finishedAt": "2026-10-01T11:52:00Z",
+    "producer": "coord-main",
+    "invariantIds": [],
+    "inputEvidenceIds": [],
+    "inputPaths": [],
+    "claims": [
+     "npm run verify GREEN on T11 (ae43f3b5): full suite incl. F-BODY-W-1/F-BODY-UI-1 + F-B5-1 pins; P3 gate for the wave",
+     "re-executed on T18 (7001f01b product state e81120ad); same command, fresh artifact"
+    ],
+    "limitations": [],
+    "status": "CURRENT"
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-FINAL-VERIFY-T12",
+    "kind": "EXECUTED_INTEGRATION",
+    "state": {
+     "productStateId": "e81120ad6870aa0455576e0b9a33b54eb01b4ba309483a363cfacd625c4dc8e7",
+     "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "commandOrMethod": "npm run verify (type-check && build && vitest run)",
+    "cwd": "game/",
+    "artifactPath": "evidence/t18-verify-final.log",
+    "artifactHash": "79069aa951b9be089927218aec6bd4821b658446f61182cef40ad47dd8a89597",
+    "result": "PASS",
+    "exitCode": 0,
+    "startedAt": "2026-10-01T11:30:00Z",
+    "finishedAt": "2026-10-01T11:52:00Z",
+    "producer": "coord-main",
+    "invariantIds": [
+     "I-TQ-1"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [],
+    "claims": [
+     "T12 @ cedaac21 GREEN: 864 files, 7918 tests pass, type-check+build clean after B6/TC4 settlement-reauth wave",
+     "re-executed on T18 (7001f01b product state e81120ad); same command, fresh artifact"
+    ],
+    "limitations": [],
+    "status": "CURRENT"
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-VERIFY-T13",
+    "kind": "EXECUTED_INTEGRATION",
+    "state": {
+     "productStateId": "e81120ad6870aa0455576e0b9a33b54eb01b4ba309483a363cfacd625c4dc8e7",
+     "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "commandOrMethod": "npm run verify (type-check + build + full vitest) on fba2bd85",
+    "cwd": "game/",
+    "artifactPath": "evidence/t18-verify-final.log",
+    "artifactHash": "79069aa951b9be089927218aec6bd4821b658446f61182cef40ad47dd8a89597",
+    "result": "PASS",
+    "exitCode": 0,
+    "startedAt": "2026-10-01T11:30:00Z",
+    "finishedAt": "2026-10-01T11:52:00Z",
+    "producer": "coord-main",
+    "invariantIds": [
+     "I-AS-1",
+     "I-DS-1",
+     "I-SF-1",
+     "I-EC-1"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [],
+    "claims": [
+     "7948 tests green / 866 files; ngoDaoReaction flake absent on this run; EM-02 + CultivationTick fixture-normalization commits included",
+     "re-executed on T18 (7001f01b product state e81120ad); same command, fresh artifact"
+    ],
+    "limitations": [],
+    "status": "CURRENT"
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-VERIFY-T15",
+    "kind": "EXECUTED_INTEGRATION",
+    "state": {
+     "productStateId": "e81120ad6870aa0455576e0b9a33b54eb01b4ba309483a363cfacd625c4dc8e7",
+     "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "commandOrMethod": "npm run verify (type-check + build + full vitest) on 4c691c7e",
+    "cwd": "game/",
+    "artifactPath": "evidence/t18-verify-final.log",
+    "artifactHash": "79069aa951b9be089927218aec6bd4821b658446f61182cef40ad47dd8a89597",
+    "result": "PASS",
+    "exitCode": 0,
+    "startedAt": "2026-10-01T11:30:00Z",
+    "finishedAt": "2026-10-01T11:52:00Z",
+    "producer": "coord-main",
+    "invariantIds": [
+     "I-AS-1",
+     "I-DS-1",
+     "I-SF-1",
+     "I-EC-1"
+    ],
+    "inputEvidenceIds": [
+     "EV-PIN-T14",
+     "EV-PIN-T15",
+     "EV-MUT-T15"
+    ],
+    "inputPaths": [],
+    "claims": [
+     "8008 tests green / 868 files; includes adopted 25-probe TC6 file",
+     "Player.ts rebuild-don't-trust in for-of form satisfies baseStatsWriteAuthority",
+     "F-TC6-7 clamp reverted (data-loss + ineffective); residual pinned",
+     "re-executed on T18 (7001f01b product state e81120ad); same command, fresh artifact"
+    ],
+    "limitations": [],
+    "status": "CURRENT"
+   }
+  }
+ ]
+}

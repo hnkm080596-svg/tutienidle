@@ -1,0 +1,13 @@
+{
+  "applied": [
+    "review:RV-ADV-B9",
+    "review:RV-ADV-TC7",
+    "review:RV-SEQ14-COR",
+    "review:RV-SEQ14-AUT",
+    "review:RV-SEQ14-INT",
+    "review:RV-CLOSURE-14",
+    "cycle:CY-SEQ-14",
+    "lesson:L-ARM-ISOLATION-DETECTOR",
+    "lesson:L-BOUNDARY-MAGNITUDE"
+  ]
+}
