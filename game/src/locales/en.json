@@ -1464,7 +1464,8 @@
       "hidden_progression_state": "This save carries hidden progress — hidden content is not open in beta and stays dormant safely.",
       "companion_owned": "This save has a companion — that feature is not open in beta and stays dormant safely.",
       "artifact_owned": "This save has an artifact — that feature is not open in beta and stays dormant safely.",
-      "formation_loadout": "This save carries a formation loadout — that feature is not open in beta and stays dormant safely."
+      "formation_loadout": "This save carries a formation loadout — that feature is not open in beta and stays dormant safely.",
+      "manual_workforce_state": "This save carries Chi Hien Quan workforce state — that feature is not open in beta and stays dormant safely."
     }
   },
   "hidden": {

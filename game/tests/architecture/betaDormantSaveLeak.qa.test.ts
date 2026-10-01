@@ -90,6 +90,24 @@ describe('save-safety: unsupportedReleaseReason robustness', () => {
     const reason = unsupportedReleaseReason(p)
     expect(reason === null || typeof reason === 'string').toBe(true)
   })
+
+  it('flags a save carrying dormant chi_hien_quan workforce capacity (F-B5-1)', () => {
+    const p = player()
+    p.autoWorkerCapacity = 5
+    expect(unsupportedReleaseReason(p)).toBe('manual_workforce_state')
+  })
+
+  it('control: a clean beta save carries no unsupported reason', () => {
+    expect(unsupportedReleaseReason(player())).toBeNull()
+  })
+
+  it('never throws on hostile autoWorkerCapacity shapes', () => {
+    for (const hostile of [null, undefined, 'x', NaN, -3]) {
+      const p = player()
+      ;(p as { autoWorkerCapacity?: unknown }).autoWorkerCapacity = hostile
+      expect(() => unsupportedReleaseReason(p)).not.toThrow()
+    }
+  })
 })
 
 describe('dormancy: hidden progression on a loaded save must not affect visible play', () => {
@@ -698,7 +716,10 @@ describe('dormancy: manualWorkforce stays inert while auto production runs the f
       p,
     )
 
-    expect(unsupportedReleaseReason(p)).toBeNull()
+    // Flag coverage (F-B5-1): a save carrying dormant workforce state
+    // must surface the unsupported notice - capacity>0 always implies
+    // a chi_hien_quan record since CHQ is the only capacity source.
+    expect(unsupportedReleaseReason(p)).toBe('manual_workforce_state')
 
     // The manual allocator input is inert - a dormant choice may not
     // starve the other sites.

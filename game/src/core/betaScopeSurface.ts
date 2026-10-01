@@ -290,6 +290,8 @@ export type BetaUnsupportedReason =
   | 'artifact_owned'
   /** A Tran Phap loadout is persisted. */
   | 'formation_loadout'
+  /** Dormant workforce state exists (chi_hien_quan capacity). */
+  | 'manual_workforce_state'
 
 /**
  * The first unsupported reason for `player`, or null when the save is
@@ -323,6 +325,18 @@ export function unsupportedReleaseReason(player: PlayerData): BetaUnsupportedRea
 
   if (player.formationLoadout !== null && player.formationLoadout !== undefined) {
     return 'formation_loadout'
+  }
+
+  // Restore recomputes autoWorkerCapacity from any carried chi_hien_quan
+  // instance before this read-model runs, so >0 always means dormant
+  // workforce state exists on the save - instance-only payloads are
+  // caught too.
+  if (
+    typeof player.autoWorkerCapacity === 'number' &&
+    Number.isFinite(player.autoWorkerCapacity) &&
+    player.autoWorkerCapacity > 0
+  ) {
+    return 'manual_workforce_state'
   }
 
   return null
