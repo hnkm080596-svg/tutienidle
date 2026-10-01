@@ -27,6 +27,7 @@ import { ELEMENT_LABELS } from '@/core/element/ElementLabels'
 import { SPIRIT_STONE_LABEL } from '@/core/presentation/labels'
 import { getProfessionGradeForRealm } from '@/core/profession/ProfessionGrade'
 import { professionGradeRank } from '@/core/profession/slotRank'
+import { isCompanionPullTokenSourceSuppressed } from '@/core/realm/ReleasePolicy'
 import type { BagCell } from './BagCell'
 import type { Material, MaterialCategory } from '@/core/material/Material'
 import type { GradedItemTooltipContent } from '@/composables/useTooltip'
@@ -230,7 +231,14 @@ function materialAccessibleLabel(name: string, material: Material): string {
 const entries = computed<MaterialEntry[]>(() => {
   stateVersion.value
 
-  return gameManager.materialBag.getAll().map((stack) => ({
+  // BETA SCOPE LOCK v2 - a source-suppressed material (the companion
+  // pull token, whose recurring faucets are all gated in ReleasePolicy)
+  // renders in no live bag cell: CurrencyHud already censors the same
+  // id, and the bag agrees rather than presenting a live surface for a
+  // scope-hidden domain. Banked balances stay persisted, never deleted.
+  return gameManager.materialBag.getAll()
+    .filter((stack) => !isCompanionPullTokenSourceSuppressed(stack.material.id))
+    .map((stack) => ({
     material: stack.material,
 
     amount: stack.amount,

@@ -463,9 +463,10 @@ describe('dormancy: a carried sword save cannot drive sword machinery (F-B-2)', 
     })
 
     expect(unsupportedReleaseReason(p)).toBe('way_out_of_scope')
-    // The capability gate alone would admit (the save carries
-    // sword.sword_scroll) - the scope seam is the only rejector.
-    expect(hasStaticPathCapability(p, 'sword.sword_scroll')).toBe(true)
+    // The capability resolver itself fails closed on the dormant way
+    // (B17 wave: resolvePathCapabilities is way-admission gated) - the
+    // write seam refuses twice over.
+    expect(hasStaticPathCapability(p, 'sword.sword_scroll')).toBe(false)
 
     expect(gameManager.progressionOps.setKiemPhoPreset(p, ['orb_dam', 'orb_dam'] as OrbId[])).toBe(
       false,
@@ -917,7 +918,10 @@ describe('dormancy: way-authored realm seams stay inert on a carried save (F-A3-
       realmLevel: 12,
     })
     expect(unsupportedReleaseReason(p)).toBe('way_out_of_scope')
-    expect(hasStaticPathCapability(p, 'sword.sword_riding')).toBe(true)
+    // The capability resolver now fails closed on the dormant way
+    // (B17 wave) - realm-advance machinery fails closed through the
+    // resolver AND the slice stays frozen.
+    expect(hasStaticPathCapability(p, 'sword.sword_riding')).toBe(false)
 
     const gameManager = new GameManager()
     gameManager.realmAdvanceOps.applySwordPathRealmTransition(p)

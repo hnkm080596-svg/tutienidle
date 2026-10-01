@@ -181,6 +181,16 @@ export function resolvePathCapabilities(
   deps: PathCapabilityDeps,
   mode: 'all' | 'static' = 'all',
 ): ReadonlySet<PathCapability> {
+  // BETA SCOPE LOCK v2 - the committed pair's way re-admits its declared
+  // facet to every ungated consumer (HUD bars, emblems, realm rewards,
+  // runtime capability reads) on a carried way_out_of_scope save. The
+  // active way resolves the empty set under the lock, same admission
+  // gate as realm rewards / way stat modifiers below.
+  const activeWay = getActiveWay(player)
+  if (activeWay !== undefined && !isBetaWay(activeWay)) {
+    return new Set()
+  }
+
   const facet = getActiveWayDefinition(player)?.capabilities
 
   if (!facet) {
