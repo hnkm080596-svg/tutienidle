@@ -19,7 +19,11 @@ import type { StageWaveSystem } from './StageWaveSystem'
  * lastCheckedMs forever.
  */
 function isValidCycleSeconds(cycleSeconds: number | undefined): cycleSeconds is number {
-  return cycleSeconds !== undefined && cycleSeconds > 0 && Number.isFinite(cycleSeconds)
+  // F-TC8-7: >= 1 second authored floor - a sub-second claim mints
+  // thousands of reward cycles per tick (cycleMs halves the value).
+  return (
+    cycleSeconds !== undefined && cycleSeconds >= 1 && Number.isFinite(cycleSeconds)
+  )
 }
 
 /**

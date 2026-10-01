@@ -129,6 +129,9 @@ describe('F-A7-1: persisted modifiers claiming non-writer sources', () => {
     // held - the control mints that authored shape.
     const save = validSave()
     const p = save.player as ReturnType<typeof createDefaultPlayer>
+    // loi_kiep grants +0.1 per realm transition the player has
+    // witnessed - the authored-legit holder is at least qi_refining.
+    p.realmId = 'qi_refining'
     p.selectedTalentIds = ['loi_kiep']
     p.modifiers.push({
       id: 'talent_loi_kiep_strength',
@@ -181,7 +184,7 @@ function timedEffect(overrides: Partial<PersistentTimedEffect> = {}): Persistent
     id: 'te1',
     sourceItemId: 'tu_linh_tran',
     effectGroup: 'tu_linh_tran',
-    appliedAtMs: 1,
+    appliedAtMs: Date.now() - 60_000,
     expiresAtMs: Date.now() + 60_000,
     modifiers: [],
     cultivationSpeedPercent: 0.25,

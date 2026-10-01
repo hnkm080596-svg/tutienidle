@@ -2644,6 +2644,9 @@ describe('validateGameSaveShape — v82 seam repair cross-checks', () => {
   it('F-W-9: chấp nhận marker kèm modifier sống cùng sourceId', () => {
     const save = validSave()
 
+    // A qi_refining marker is a realm-advance witness - it is only
+    // coherent while the player's realm is at least qi_refining.
+    playerOf(save).realmId = 'qi_refining'
     playerOf(save).grantedRealmPassiveIds = ['qi_refining']
     playerOf(save).modifiers = [
       { id: 'm1', sourceId: 'nhap_dao', sourceType: 'realm', stat: 'might', flat: 2 },

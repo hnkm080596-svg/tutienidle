@@ -201,60 +201,25 @@ export class GameManagerSaveRestore {
     this.deps.techniqueSystem.restore(restoredTechniques)
 
     const restoredSkills = save.skills.flatMap((savedSkill) => {
-      const skill = structuredClone(savedSkill)
-
-      // Execution policy rework + development-build no-migration (2026-
-      // 08-26): save cua nhan vat CU luu skill object nguyen trang truoc
-      // khi co field `execution` bat buoc - scheduler thong nhat BO QUA
-      // moi active thieu execution ("khong cast gi" du tele/di chuyen
-      // van chay). Doi chieu template da dang ky de hoi phuc AUTHORED
-      // combat data (execution/targeting/AOE/VFX preset), giu NGUYEN
-      // progression state cua instance (level/cooldown/specialization).
-      // Template thieu thi entry bi drop (dev-stage
-      // rule: khong migrate, khong giu object mo coi).
-      const template = this.deps.skillTemplates.get(skill.id)
+      // Rebuild-don't-trust (F-TC8-4): every combat-authored field is
+      // re-derived from the registered template - a persisted scalar
+      // (cooldown/cost/target/targeting/requiredRealmId/...) is a claim,
+      // not an authority. The only fields kept from the save record are
+      // instance-progress state: experience/totalExperience counters
+      // and selectedSpecializationId. Template thieu thi entry bi drop
+      // (dev-stage rule: khong migrate, khong giu object mo coi).
+      const template = this.deps.skillTemplates.get(savedSkill.id)
 
       if (!template) {
         return []
       }
 
-      if (!skill.execution && template.execution) {
-        skill.execution = structuredClone(template.execution)
+      const skill: Skill = {
+        ...structuredClone(template),
+        experience: savedSkill.experience,
+        totalExperience: savedSkill.totalExperience,
+        selectedSpecializationId: savedSkill.selectedSpecializationId,
       }
-
-      if (!skill.targeting && template.targeting) {
-        skill.targeting = structuredClone(template.targeting)
-      }
-
-      // Text-refresh-on-load: name/description la du lieu HIEN THI THUAN
-      // (khong phai progression), nen luon dong bo lai tu template dang
-      // dang ky thay vi giu nguyen ban da dong bang trong save cu. Vi du
-      // that da gap: 1 save cu tung luu "Huy Kiem" luc description bi
-      // hong encoding (mojibake) -- sua Skills.ts khong tu hoi phuc cac
-      // save da luu truoc do neu thieu buoc nay.
-      skill.name = template.name
-      skill.description = template.description
-
-      // passiveModifiers/specializations are authored data owned by the
-      // template; re-derive so stale authored fields frozen in the save
-      // don't stay inert. selectedSpecializationId lives on the instance
-      // (progression) and is untouched.
-      skill.passiveModifiers = structuredClone(template.passiveModifiers)
-      skill.specializations = structuredClone(template.specializations)
-
-      // M-QI-05 - level is frozen authored data too: the canonical live
-      // level is nodeLevels[core_<id>], so a save's stored `level` must
-      // never survive as a second authority.
-      skill.level = template.level
-
-      // effects/triggers are the same authored-combat-data class:
-      // nothing mutates them on the instance (progression lives in
-      // level/selectedSpecializationId; specialization overrides ride
-      // on `specializations` above). A save frozen with a stale shell
-      // (e.g. da_phap_lien_tuyen's empty effects[] pre-fix) must
-      // re-derive, not stay broken through every future battle.
-      skill.effects = structuredClone(template.effects)
-      skill.triggers = structuredClone(template.triggers)
 
       return [skill]
     })

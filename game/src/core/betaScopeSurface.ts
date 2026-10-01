@@ -15,7 +15,7 @@
 // so a slot/building/panel added later without a scope decision can
 // never leak into the beta build. Nothing here writes state or
 // consumes RNG; every function is a pure query (Q9).
-import { isBetaFeature, isBetaWay, scopeHiddenPillFamilyOfId, type BetaFeatureName } from './betaScope'
+import { isBetaFeature, isBetaTalentId, isBetaWay, scopeHiddenPillFamilyOfId, type BetaFeatureName } from './betaScope'
 import {
   isBeyondReleaseCeiling,
   isRealmAvailable,
@@ -299,6 +299,10 @@ export type BetaUnsupportedReason =
   | 'pending_tribulation_state'
   /** An in-flight alchemy job belongs to a dormant recipe family. */
   | 'dormant_alchemy_job'
+  /** The Decompose station carries live state (running or staffed). */
+  | 'dormant_decompose_state'
+  /** A selected talent outside the beta roster is persisted. */
+  | 'dormant_talent_state'
 
 /**
  * Save-level slices the reason read-model inspects in addition to
@@ -315,6 +319,12 @@ export interface BetaUnsupportedSaveSlices {
     } | Record<string, unknown> | null
   } | null
   alchemyJobs?: unknown
+  decompose?: {
+    started?: unknown
+    settings?: {
+      workers?: unknown
+    } | Record<string, unknown>
+  } | null
 }
 
 /**
@@ -400,6 +410,34 @@ export function unsupportedReleaseReason(
     })
   ) {
     return 'dormant_alchemy_job'
+  }
+
+  // A live Decompose station is the same dormant-record class - the
+  // station itself is scope-hidden, so a running cycle or assigned
+  // workers must never run silently on a beta save.
+  const decompose = saveSlices?.decompose
+  if (
+    decompose !== undefined &&
+    decompose !== null &&
+    typeof decompose === 'object' &&
+    (decompose.started === true ||
+      (typeof decompose.settings === 'object' &&
+        decompose.settings !== null &&
+        typeof decompose.settings.workers === 'number' &&
+        decompose.settings.workers > 0))
+  ) {
+    return 'dormant_decompose_state'
+  }
+
+  // A persisted talent outside the beta roster carries talent-owned
+  // records (upgrade cards, loi_kiep claims) with no beta writer.
+  if (
+    Array.isArray(player.selectedTalentIds) &&
+    player.selectedTalentIds.some(
+      (talentId) => typeof talentId === 'string' && !isBetaTalentId(talentId),
+    )
+  ) {
+    return 'dormant_talent_state'
   }
 
   return null

@@ -577,6 +577,13 @@ export function resolvePlayerStatAssembly(
       if (!player.grantedRealmPassiveIds.includes(passive.id)) {
         continue
       }
+      // F-TC8-2: marker realm-order eligibility - grantRealmPassive
+      // only writes the marker on a realm advance INTO that realm, so
+      // a marker indexed above the player's own realm is an impossible
+      // grant and the passive stays inert.
+      if (getRealmIndex(passive.id) > getRealmIndex(player.realmId)) {
+        continue
+      }
       if (hiddenRealmIds !== undefined && hiddenRealmIds.has(passive.id)) {
         continue
       }

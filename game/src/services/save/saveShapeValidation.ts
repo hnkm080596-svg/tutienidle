@@ -16,6 +16,7 @@ import { getRealmIdForProfessionGrade, isProfessionGrade } from '../../core/prof
 import { isHerbAge } from '../../core/production/ProductionTypes'
 import { createBaseStats } from '../../core/stats/StatBlock'
 import { EQUIPMENT_SLOTS } from '../../core/equipment/EquipmentSlotState'
+import type { EquipmentSlot } from '../../core/equipment/EquipmentTypes'
 import { MAX_SLOT_ENHANCE_LEVEL } from '../../core/equipment/EnhanceCurve'
 import { MAIN_STAT_REALM_SCALE } from '../../core/equipment/EquipmentRolling'
 import { ITEM_QUALITY_IMPLICIT_MULTIPLIER } from '../../core/equipment/ItemQualityBalance'
@@ -40,14 +41,16 @@ import { MERIDIANS } from '../../data/realm/Meridians'
 import { pills } from '../../data/pill/pills'
 import {
   TU_LINH_TRAN_BUFF_PERCENT,
+  TU_LINH_TRAN_DURATION_MS,
   TU_LINH_TRAN_EFFECT_GROUP,
 } from '../../core/economy/TuLinhTranBalance'
+import { GLOBAL_MAX_AFFIXES } from '../../core/equipment/EquipmentRollPrimitives'
+import { affixes } from '../../data/equipment/affixes'
 import { alchemyRecipes } from '../../data/alchemy/alchemyRecipes'
 import { buildings } from '../../data/building/buildings'
 import { THANH_VAN_PRODUCTION_SITES } from '../../core/production/ProductionCatalog'
 import { scopeHiddenPillFamilyOfId } from '../../core/betaScope'
 import { getGlobalCultivationLevel, getRealmIndex } from '../../core/realm/realmSystem'
-import { REALM_TIERS } from '../../core/realm/RealmTierMap'
 import { getTalentMaxLevel, isLegalBreakthroughOffer, isTalentEntitlementActionable } from '../../core/talent/TalentEntitlement'
 import { skillCoreNodeId } from '../../core/progression/SkillCoreLevel'
 import { isPhysiqueGradeId } from '../../data/realm/PhysiqueLadder'
@@ -84,8 +87,6 @@ const LOI_KIEP_MAIN_STATS = [
   'attunement',
   'vitality',
 ] as const
-
-const LOI_KIEP_MAX_PERCENT = 0.1 * REALM_TIERS.length
 
 const STAT_MODIFIER_NUMERIC_FIELDS = [
   'flat',
@@ -139,7 +140,7 @@ function isItemQuality(value: unknown): value is ItemQuality {
   return typeof value === 'string' && ITEM_QUALITY_ORDER.some((quality) => quality === value)
 }
 
-function isEquipmentSlot(value: unknown): boolean {
+function isEquipmentSlot(value: unknown): value is EquipmentSlot {
   return typeof value === 'string' && EQUIPMENT_SLOTS.some((slot) => slot === value)
 }
 
@@ -533,6 +534,16 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
   }
   requireNonNegativeNumber(player, 'breakthroughGrade', 'player', issues)
 
+  // F-TC8-1: computeBreakthroughGrade clamps the grade into [1,6]
+  // (breakthroughGradeMinimum=1 .. 6), so a persisted grade above the
+  // authored ceiling is an impossible claim that nhap_dao scales on.
+  if (isFiniteNumber(player.breakthroughGrade) && (player.breakthroughGrade as number) > 6) {
+    issues.push({
+      path: 'player.breakthroughGrade',
+      message: 'vượt authored grade ceiling (6)',
+    })
+  }
+
   const purchasedNodeIds = requireArray(player, 'purchasedNodeIds', 'player', issues)
 
   if (purchasedNodeIds) {
@@ -575,6 +586,19 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
           message: 'realm passive không tồn tại trong registry',
         })
         continue
+      }
+
+      // F-TC8-2: marker realm-order eligibility - grantRealmPassive
+      // only writes the marker on a realm advance INTO that realm, so
+      // a marker indexed above the player's own realm is impossible.
+      const markerRealmIndex = getRealmIndex(grantedId)
+      const playerRealmIndex =
+        typeof player.realmId === 'string' ? getRealmIndex(player.realmId) : -1
+      if (markerRealmIndex > playerRealmIndex) {
+        issues.push({
+          path: `player.grantedRealmPassiveIds[${i}]`,
+          message: 'marker của realm chưa đạt - grant bất khả thi',
+        })
       }
 
       const hasLiveModifier =
@@ -690,7 +714,17 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
           mainStat === undefined ||
           !isFiniteNumber(modifier.percent) ||
           (modifier.percent as number) < 0 ||
-          (modifier.percent as number) > LOI_KIEP_MAX_PERCENT ||
+          // F-TC8-3: the victory grant writes exactly +0.1 per realm
+          // transition, so the authored bound scales with the player's
+          // own realm index - the old all-realm bound only excluded a
+          // claim no in-scope writer can mint anyway.
+          (modifier.percent as number) >
+            0.1 *
+              Math.max(
+                0,
+                typeof player.realmId === 'string' ? getRealmIndex(player.realmId) : 0,
+              ) +
+              1e-9 ||
           modifier.flat !== undefined
         ) {
           issues.push({
@@ -768,7 +802,14 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
             effect.durationStackable === true ||
             !isFiniteNumber(effect.cultivationSpeedPercent) ||
             (effect.cultivationSpeedPercent as number) <= 0 ||
-            (effect.cultivationSpeedPercent as number) > TU_LINH_TRAN_BUFF_PERCENT
+            (effect.cultivationSpeedPercent as number) > TU_LINH_TRAN_BUFF_PERCENT ||
+            (isFiniteNumber(effect.appliedAtMs) &&
+              isFiniteNumber(effect.expiresAtMs) &&
+              // F-TC8-8: the writer mints expiresAtMs = appliedAtMs +
+              // TU_LINH_TRAN_DURATION_MS exactly - a wider span is
+              // fabricated even when every other field is in shape.
+              (effect.expiresAtMs as number) - (effect.appliedAtMs as number) >
+                TU_LINH_TRAN_DURATION_MS)
           ) {
             issues.push({
               path: effectPath,
@@ -880,6 +921,18 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
     issues.push({
       path: 'player.highestFoundationAchieved',
       message: 'phải là FoundationType hợp lệ hoặc vắng mặt',
+    })
+  } else if (
+    // F-TC8-2b: highestFoundationAchieved is a free enum with no realm
+    // coherence - it is written only at the foundation_establishment
+    // breakthrough, so a record on a lower realm is impossible.
+    player.highestFoundationAchieved !== undefined &&
+    getRealmIndex(typeof player.realmId === 'string' ? player.realmId : '') <
+      getRealmIndex('foundation_establishment')
+  ) {
+    issues.push({
+      path: 'player.highestFoundationAchieved',
+      message: 'khai foundation nhưng realm chưa đạt foundation_establishment',
     })
   }
 
@@ -1322,10 +1375,13 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
     issues.push({ path: 'player.perfectClearSeconds', message: 'phải là object' })
   } else {
     for (const [stageId, seconds] of Object.entries(player.perfectClearSeconds)) {
-      if (!isFiniteNumber(seconds) || seconds <= 0) {
+      // F-TC8-7: a sub-second clear is below every authored stage
+      // minimum and feeds the auto-farm roll rate directly (cycleMs
+      // halves it) - a 0.001s claim mints thousands of rolls per tick.
+      if (!isFiniteNumber(seconds) || seconds < 1) {
         issues.push({
           path: `player.perfectClearSeconds.${stageId}`,
-          message: 'phải là số hữu hạn > 0',
+          message: 'dưới authored floor - stage nhanh nhất vẫn cần >= 1s',
         })
       }
     }
@@ -2227,6 +2283,16 @@ function validateEquipmentEntries(
     const equipmentAffixes = requireArray(entry, 'affixes', `${path}[${i}]`, issues)
 
     if (equipmentAffixes) {
+      // F-TC8-11: the roller caps at GLOBAL_MAX_AFFIXES and never rolls
+      // a slotted affix onto a slot its template excludes - both are
+      // hard authored bounds a persisted entry cannot exceed.
+      if (equipmentAffixes.length > GLOBAL_MAX_AFFIXES) {
+        issues.push({
+          path: `${path}[${i}].affixes`,
+          message: `vượt GLOBAL_MAX_AFFIXES (${GLOBAL_MAX_AFFIXES})`,
+        })
+      }
+
       for (let affixIndex = 0; affixIndex < equipmentAffixes.length; affixIndex += 1) {
         const affix = equipmentAffixes[affixIndex]
         const affixPath = `${path}[${i}].affixes[${affixIndex}]`
@@ -2246,6 +2312,22 @@ function validateEquipmentEntries(
 
         if (!isFiniteNumber(affix.value)) {
           issues.push({ path: `${affixPath}.value`, message: 'phải là số hữu hạn' })
+        }
+
+        const affixDefinition =
+          typeof affix.affixId === 'string'
+            ? affixes.find((candidate) => candidate.id === affix.affixId)
+            : undefined
+        if (
+          affixDefinition !== undefined &&
+          affixDefinition.slots !== undefined &&
+          isEquipmentSlot(entry.slot) &&
+          !affixDefinition.slots.includes(entry.slot)
+        ) {
+          issues.push({
+            path: affixPath,
+            message: `affix không roll được trên slot ${String(entry.slot)}`,
+          })
         }
       }
     }

@@ -12,7 +12,7 @@ import { BASE_STAT_LABELS, formatStat } from '@/core/stats/StatLabels'
 import { ELEMENT_LABELS, ELEMENT_COLOR_VARS, ELEMENT_ORDER } from '@/core/element/ElementLabels'
 import { getActiveWayDefinition } from '@/core/player/CultivationPathKit'
 import { isActivePath } from '@/core/player/CultivationPathSystem'
-import { isScopeHidden } from '@/core/betaScope'
+import { isBetaTalentId, isScopeHidden } from '@/core/betaScope'
 import { MAIN_STAT_KEYS, type MainStatKey } from '@/core/stats/StatTypes'
 import { getEffectiveMainStatCap } from '@/core/stats/StatCap'
 import { useProgressionActions } from '@/composables/useProgressionActions'
@@ -60,7 +60,10 @@ const chosenKit = computed(() => getActiveWayDefinition(player))
 const selectedTalents = computed(() =>
   player.selectedTalentIds
     .map((talentId) => getTalentDefinition(talentId))
-    .filter((talent): talent is TalentDefinition => talent !== undefined),
+    .filter(
+      (talent): talent is TalentDefinition =>
+        talent !== undefined && isBetaTalentId(talent.id),
+    ),
 )
 
 // M-UI-SYSTEM - talent rarity tag -> SysTag tone: the tier is carried by

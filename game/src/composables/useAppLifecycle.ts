@@ -469,6 +469,7 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
           {
             tribulation: loaded.save.tribulation,
             alchemyJobs: loaded.save.alchemyJobs,
+            decompose: loaded.save.decompose,
           },
         )
         if (unsupportedReason !== null) {

@@ -300,9 +300,9 @@ describe('F-B8-3: TechniqueBand must not render a dormant way technique', () => 
 // ---------------------------------------------------------------------------
 
 describe('F-B8-4: CharacterPanel must not render dormant talent/way identity', () => {
-  // F-B8-4 - Low, deferred per Medium+-only ruling (human exception).
-  // Skipped, not deleted: the pins stay dormant until the exception closes.
-  it.skip('a carried save lists only beta-admitted talents', async () => {
+  // F-B8-4 talent half promoted to Medium (B10-002) and fixed: the
+  // roster is now filtered through isBetaTalentId, so the pin is live.
+  it('a carried save lists only beta-admitted talents', async () => {
     const gameManager = new GameManager()
 
     const view = mountPanel(CharacterPanel, gameManager, (player) => {
