@@ -252,7 +252,14 @@ describe('F-CONS-B1: a carried tribulation committedOutcome must re-derive admis
 
   it('control: an admissible committed outcome still settles (qi_refining -> foundation_establishment)', () => {
     const manager = makeManager()
-    const p = committedPlayer({ realmId: 'qi_refining', realmLevel: 16 })
+    // The settle seam re-derives the ordinary breakthrough gate, so an
+    // honest record carries the gate inputs the battle entry required
+    // (level >= 12 and the qi_refining chapter-final clear).
+    const p = committedPlayer({
+      realmId: 'qi_refining',
+      realmLevel: 16,
+      completedStageIds: ['qi_refining_abyssal_pool'],
+    })
     const save = baseSave(p, {
       tribulation: {
         committedOutcome: dormantOutcome({ targetRealmId: 'foundation_establishment' }),

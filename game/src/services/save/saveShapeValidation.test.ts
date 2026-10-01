@@ -1818,6 +1818,9 @@ describe('validateGameSaveShape — player record/array deep checks (Mission A r
   it('chấp nhận pendingTalentEntitlement hợp lệ / vắng mặt', () => {
     const save = validSave()
 
+    // The record binds the pool of the realm the transition landed in,
+    // so a coherent fixture holds the player at that same realm.
+    playerOf(save).realmId = 'foundation_establishment'
     playerOf(save).pendingTalentEntitlement = {
       realmId: 'foundation_establishment',
       offeredTalentIds: ['tc_dia_can', 'tc_kim_lan', 'tc_truc_hon'],
@@ -1909,6 +1912,7 @@ describe('validateGameSaveShape — player record/array deep checks (Mission A r
 
     // A drained pool legitimately produces offeredTalentIds: [] - the
     // decision survives on the UPGRADE branch (owned, levels authored).
+    player.realmId = 'qi_refining'
     player.selectedTalentIds = ['lk_bac_hai']
     player.talentLevels = { lk_bac_hai: 2 }
     player.pendingTalentEntitlement = { realmId: 'qi_refining', offeredTalentIds: [] }

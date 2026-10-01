@@ -18,6 +18,7 @@ import { asBaseStats, createBaseStats } from '@/core/stats/StatBlock'
 import { STAT_DOMAIN } from '@/core/stats/StatDomain'
 import { getEffectiveMainStatCap } from '@/core/stats/StatCap'
 import { MAIN_STAT_KEYS } from '@/core/stats/StatTypes'
+import type { StatType } from '@/core/stats/StatTypes'
 import type { GameManager } from '@/core/game/GameManager'
 import { getCurrentRealm, getRequiredCultivation } from '@/core/realm/realmSystem'
 import { cultivateTick } from '@/core/cultivation/CultivationTick'
@@ -445,9 +446,11 @@ export const usePlayerStore = defineStore('player', {
       }
 
       restoredPlayer.modifiers = (restoredPlayer.modifiers ?? []).filter(isCurrentShapeModifier)
-      restoredPlayer.externalModifiers = (restoredPlayer.externalModifiers ?? []).filter(
-        isCurrentShapeModifier,
-      )
+      // externalModifiers is the per-tick aggregate mirror the
+      // GameManager rewrites every tick from live buff/technique
+      // sources - it holds no persisted authority of its own, so the
+      // restored copy clears here and repopulates on the next tick.
+      restoredPlayer.externalModifiers = []
       restoredPlayer.persistentTimedEffects = (restoredPlayer.persistentTimedEffects ?? []).map(
         (effect) => ({
           ...effect,
@@ -511,14 +514,28 @@ export const usePlayerStore = defineStore('player', {
       // đủ gate, grade/path sai enum, realm/level/EXP vượt trần.
       normalizeArtifactProgress(this)
 
-      // Value-domain coherence on the persisted pool: main stats clamp
-      // to the shared cap (a save claiming more is corrupt or crafted -
-      // same bound every legitimate writer already enforces). Runs
-      // AFTER normalize: the cap is realm-derived, so the clamp reads
-      // the corrected realm claim, not the crafted one.
+      // Value-domain coherence on the persisted pool: the base-stat
+      // record rebuilds onto authored defaults - main stats clamp to
+      // the shared cap (a save claiming more is corrupt or crafted -
+      // same bound every legitimate writer already enforces), and every
+      // non-main key resets to its authored initial value because no
+      // persisted writer ever changes them (attribute allocation and
+      // permanent_stat pills write MAIN_STAT_KEYS only). Runs AFTER
+      // normalize: the cap is realm-derived, so the clamp reads the
+      // corrected realm claim, not the crafted one.
       const normalizedCap = getEffectiveMainStatCap(this)
-      for (const key of MAIN_STAT_KEYS) {
-        this.baseStats[key] = Math.min(normalizedCap, this.baseStats[key] ?? 0)
+      const authoredBaseStats = createBaseStats()
+      const authoredKeys = new Set(Object.keys(authoredBaseStats))
+      const mainKeys = new Set<string>(MAIN_STAT_KEYS)
+      for (const key of Object.keys(this.baseStats)) {
+        if (!authoredKeys.has(key)) {
+          delete (this.baseStats as Record<string, number>)[key]
+        }
+      }
+      for (const key of Object.keys(authoredBaseStats) as StatType[]) {
+        this.baseStats[key] = mainKeys.has(key)
+          ? Math.min(normalizedCap, this.baseStats[key])
+          : authoredBaseStats[key]
       }
 
       // M1 (ARCH-001) — commit the payload identity only AFTER the whole

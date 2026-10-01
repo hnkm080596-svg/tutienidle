@@ -241,9 +241,11 @@ describe('player.restoreFromSave — idempotency (QA-002, Task 9.2)', () => {
 
     player.restoreFromSave(save)
 
-    // Current-shape keys survive; every legacy/retired key drops -
-    // 'attack' is NOT renamed to might, it is gone.
-    expect(player.baseStats.defense).toBe(7)
+    // Current-shape main keys survive within cap; non-main keys hold
+    // only authored defaults (no persisted writer exists), and every
+    // legacy/retired key drops - 'attack' is NOT renamed to might, it
+    // is gone.
+    expect(player.baseStats.defense).toBe(createBaseStats().defense)
     expect(player.baseStats.might).toBe(createBaseStats().might)
     expect('attack' in player.baseStats).toBe(false)
     expect('maxMpPercent' in player.baseStats).toBe(false)

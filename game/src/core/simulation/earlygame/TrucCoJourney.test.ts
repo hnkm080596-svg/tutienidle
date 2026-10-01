@@ -68,7 +68,8 @@ import {
   ZHOU_TIAN_CURRENCY_MATERIAL_ID,
   zhouTianStepCost,
 } from '../../../data/realm/ZhouTian'
-import { asBaseStats } from '../../stats/StatBlock'
+import { asBaseStats, createBaseStats, type Stats } from '../../stats/StatBlock'
+import { MAIN_STAT_KEYS } from '../../stats/StatTypes'
 import { buildGameSave } from '../../../services/save/SaveSystem'
 import type { GameSave } from '../../../services/save/saveTypes'
 import {
@@ -214,6 +215,22 @@ function normalizeVolatileSaveFields(save: GameSave): GameSave {
   save.player.lastSavedAt = 0
   if (save.quests) {
     save.quests.lastDailyResetAtMs = 0
+  }
+  // Parity compares through the restore contract: non-main baseStats
+  // have no persisted writer, so a save's claims reset to authored
+  // defaults on restore - the expected side normalizes the same way.
+  const authoredBaseStats = createBaseStats()
+  const baseStats = save.player.baseStats as Record<string, number>
+  const mainKeys = new Set<string>(MAIN_STAT_KEYS)
+  for (const key of Object.keys(baseStats)) {
+    if (!(key in authoredBaseStats)) {
+      delete baseStats[key]
+    }
+  }
+  for (const key of Object.keys(authoredBaseStats) as (keyof Stats)[]) {
+    if (!mainKeys.has(key)) {
+      baseStats[key] = authoredBaseStats[key]
+    }
   }
   const UUID_RE =
     /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/g

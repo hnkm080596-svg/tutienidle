@@ -53,6 +53,7 @@ import {
   TRIBULATION_DEFEAT_SPIRIT_STONE_LOSS_FALLBACK,
 } from '../../data/tribulation/TribulationChapters'
 import { isRealmTransitionEnabled } from '../realm/ReleasePolicy'
+import { canTriggerBreakthrough } from '../realm/BreakthroughGate'
 import { isBetaFeature } from '../betaScope'
 
 /** Victory outcome facts for presentation. */
@@ -172,9 +173,17 @@ export class TribulationOutcomeService {
     // normally whenever the feature is admitted.
     const hiddenDormant =
       committed.breakthroughType !== 'normal' && !isBetaFeature('hiddenContent')
+    // The record is also re-checked against the breakthrough gate
+    // itself: start() requires the ordinary requirements (level,
+    // chapter clear) and the hidden predicate only ADDS inputs on top,
+    // so a committedOutcome on a player who could not have entered the
+    // battle is an impossible claim. Requirements are monotonic
+    // (levels/stage clears never shrink), so the settle-time read
+    // matches the start-time read for an honest record.
     if (
       hiddenDormant ||
-      !isRealmTransitionEnabled(player.realmId, committed.targetRealmId)
+      !isRealmTransitionEnabled(player.realmId, committed.targetRealmId) ||
+      !canTriggerBreakthrough(player)
     ) {
       return null
     }

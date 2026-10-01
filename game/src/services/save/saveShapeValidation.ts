@@ -12,10 +12,14 @@ import { REALMS } from '../../data/realms/realm'
 import { COMPANIONS, isBetaCompanionGift } from '../../data/companion/Companions'
 import { MAX_CONSTELLATION_RANK } from '../../core/companion/CompanionProgression'
 import { ITEM_QUALITY_ORDER, type ItemQuality } from '../../core/item/ItemQuality'
-import { isProfessionGrade } from '../../core/profession/ProfessionGrade'
+import { getRealmIdForProfessionGrade, isProfessionGrade } from '../../core/profession/ProfessionGrade'
 import { isHerbAge } from '../../core/production/ProductionTypes'
 import { createBaseStats } from '../../core/stats/StatBlock'
 import { EQUIPMENT_SLOTS } from '../../core/equipment/EquipmentSlotState'
+import { MAX_SLOT_ENHANCE_LEVEL } from '../../core/equipment/EnhanceCurve'
+import { MAIN_STAT_REALM_SCALE } from '../../core/equipment/EquipmentRolling'
+import { ITEM_QUALITY_IMPLICIT_MULTIPLIER } from '../../core/equipment/ItemQualityBalance'
+import { equipment } from '../../data/equipment/equipment'
 import { CULTIVATION_PATH_MODULES, type CultivationPathId } from '../../core/player/CultivationPathKit'
 import { COMBAT_AI_STRATEGIES } from '../../core/battle/CombatAiStrategy'
 import { FOUNDATION_LABELS } from '../../core/breakthrough/FoundationType'
@@ -274,6 +278,17 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
   // lay sang cultivation curve.
   if (!isFiniteNumber(player.realmLevel) || player.realmLevel < 1) {
     issues.push({ path: 'player.realmLevel', message: 'phải là number hữu hạn >= 1' })
+  } else {
+    // A realmLevel past the realm's authored maxLevel is an impossible
+    // claim - progression writes stop at maxLevel, and the
+    // attributePoints bound below is derived from the same field.
+    const realm = REALMS.find((entry) => entry.id === player.realmId)
+    if (realm !== undefined && player.realmLevel > realm.maxLevel) {
+      issues.push({
+        path: 'player.realmLevel',
+        message: `vượt maxLevel của realm (${realm.maxLevel})`,
+      })
+    }
   }
 
   // cultivation/cultivationPerSecond - thieu cultivationPerSecond tung gay
@@ -387,6 +402,18 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
         !REALMS.some((realm) => realm.id === entitlement.realmId)
       ) {
         issues.push({ path: 'player.pendingTalentEntitlement.realmId', message: 'realmId không thuộc danh mục REALMS' })
+      }
+
+      // The entitlement mints inside the realm transition it decides -
+      // the only writer binds pool realmId to the realm the player just
+      // entered, so a record naming any other realm is an impossible
+      // claim (the modal cannot represent a decision for a realm the
+      // player is not in).
+      if (entitlement.realmId !== player.realmId) {
+        issues.push({
+          path: 'player.pendingTalentEntitlement.realmId',
+          message: 'entitlement realmId không khớp realm hiện tại',
+        })
       }
 
       if (offered) {
@@ -817,6 +844,19 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
                   issues.push({
                     path: `${effectPath}.modifiers[${j}].flat`,
                     message: `pill regen flat vượt authored bound (${maxFlat})`,
+                  })
+                }
+                // The writer emits exactly one flat modifier - a
+                // percent/multiplier field is an impossible claim.
+                if (
+                  isObject(modifier) &&
+                  ((isFiniteNumber(modifier.percent) && (modifier.percent as number) !== 0) ||
+                    (isFiniteNumber(modifier.multiplier) &&
+                      (modifier.multiplier as number) !== 1))
+                ) {
+                  issues.push({
+                    path: `${effectPath}.modifiers[${j}]`,
+                    message: 'pill regen chỉ emit flat - percent/multiplier không authored',
                   })
                 }
               }
@@ -2035,6 +2075,7 @@ function validateEquipmentEntries(
   entries: unknown[],
   path: string,
   issues: ShapeIssue[],
+  playerRealmId: string | undefined,
 ): EquipmentEntriesValidation {
   const normalizedEntries: unknown[] = []
   let discardedCount = 0
@@ -2127,6 +2168,60 @@ function validateEquipmentEntries(
           })
         }
       }
+
+      // Writer-shape bound: rollMainStat emits flat-only, rolled inside
+      // the template's authored stat range times the quality implicit
+      // multiplier and the realm scale of the item's grade realm. A
+      // persisted flat above that bound (or a percent/multiplier the
+      // writer never emits) is an impossible claim.
+      const equipmentTemplate = equipment.find((item) => item.id === entry.itemId)
+      if (
+        equipmentTemplate !== undefined &&
+        isProfessionGrade(entry.grade) &&
+        isItemQuality(entry.quality) &&
+        typeof entry.mainStat.stat === 'string'
+      ) {
+        const claimedStat = entry.mainStat.stat
+        const statRange = equipmentTemplate.mainStats.find(
+          (candidate) => candidate.stat === claimedStat,
+        )
+        if (statRange === undefined) {
+          issues.push({
+            path: `${mainStatPath}.stat`,
+            message: 'main stat ngoài authored range của template',
+          })
+        } else {
+          const gradeRealmId = getRealmIdForProfessionGrade(entry.grade)
+          // rollMainStat scales the roll by the PLAYER's realmLevel
+          // (capped by the realmLevel bound above), not the grade
+          // realm's - the bound therefore takes the player's own
+          // realm maxLevel plus the grade realm's prior-realm sum.
+          const playerRealm = REALMS.find((realm) => realm.id === playerRealmId)
+          const levelBound = getGlobalCultivationLevel(
+            gradeRealmId ?? 'mortal',
+            playerRealm?.maxLevel ?? 1,
+          )
+          const maxFlat =
+            statRange.max *
+            ITEM_QUALITY_IMPLICIT_MULTIPLIER[entry.quality] *
+            (1 + levelBound * MAIN_STAT_REALM_SCALE)
+          if (isFiniteNumber(entry.mainStat.flat) && (entry.mainStat.flat as number) > maxFlat) {
+            issues.push({
+              path: `${mainStatPath}.flat`,
+              message: `vượt authored roll bound (${maxFlat})`,
+            })
+          }
+          if (
+            (isFiniteNumber(entry.mainStat.percent) && (entry.mainStat.percent as number) !== 0) ||
+            (isFiniteNumber(entry.mainStat.multiplier) && (entry.mainStat.multiplier as number) !== 1)
+          ) {
+            issues.push({
+              path: mainStatPath,
+              message: 'rollMainStat chỉ emit flat - percent/multiplier không authored',
+            })
+          }
+        }
+      }
     }
 
     const equipmentAffixes = requireArray(entry, 'affixes', `${path}[${i}]`, issues)
@@ -2201,6 +2296,17 @@ function validateEquipmentSlotEntries(
       })
     }
     requireNonNegativeNumber(entry, 'enhanceLevel', `${path}[${i}]`, issues)
+    // Enhance writes cap at MAX_SLOT_ENHANCE_LEVEL - a persisted level
+    // above it is an impossible claim, not drift.
+    if (
+      isNonNegativeFiniteNumber(entry.enhanceLevel) &&
+      (entry.enhanceLevel as number) > MAX_SLOT_ENHANCE_LEVEL
+    ) {
+      issues.push({
+        path: `${path}[${i}].enhanceLevel`,
+        message: `vượt MAX_SLOT_ENHANCE_LEVEL (${MAX_SLOT_ENHANCE_LEVEL})`,
+      })
+    }
 
     if (entry.enhanceFailStreak !== undefined) {
       requireNonNegativeNumber(entry, 'enhanceFailStreak', `${path}[${i}]`, issues)
@@ -2467,7 +2573,14 @@ export function validateGameSaveShape(parsed: unknown): ShapeValidationResult {
   }
 
   const equipmentValidation = equipment
-    ? validateEquipmentEntries(equipment, 'equipment', issues)
+    ? validateEquipmentEntries(
+        equipment,
+        'equipment',
+        issues,
+        isObject(parsed.player) && typeof parsed.player.realmId === 'string'
+          ? parsed.player.realmId
+          : undefined,
+      )
     : undefined
   const normalizedEquipmentSlots = equipmentSlots
     ? validateEquipmentSlotEntries(equipmentSlots, 'equipmentSlots', issues)
