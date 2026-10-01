@@ -66,6 +66,11 @@ import type { PersistentTimedEffect } from '../../src/core/player/PersistentTime
 import type { StatModifier } from '../../src/core/stats/StatCalculator'
 import type { TribulationPlayerWriter } from '../../src/core/tribulation/TribulationOutcomeService'
 
+// F-REALM-1: a realm witness must carry an authored technique object.
+function fiveElementsTechnique() {
+  return structuredClone(TECHNIQUES.find((t) => t.id === 'five_elements_art')!)
+}
+
 function player(overrides: Partial<PlayerData> = {}): PlayerData {
   return { ...createDefaultPlayer(), ...overrides }
 }
@@ -381,12 +386,14 @@ describe('F-TC7-ENT: pendingTalentEntitlement is bound to the realm it minted in
       cultivationPath: 'spell',
       cultivationWay: 'spell_pathway',
       spellPath: { element: null },
+      // F-REALM-1: a qi_refining claim carries the initiation grade.
+      breakthroughGrade: 1,
       pendingTalentEntitlement: {
         realmId: 'qi_refining',
         offeredTalentIds: ['lk_bac_hai'],
       },
     } as Partial<PlayerData>, {
-      techniques: [],
+      techniques: [fiveElementsTechnique()],
     })
     const shape = validateGameSaveShape(JSON.parse(JSON.stringify(save)))
     expect(shape.ok).toBe(true)
@@ -422,6 +429,9 @@ describe('F-TC7-TRIB: committedOutcome re-derives the breakthrough gate at settl
       cultivationPath: 'spell',
       cultivationWay: 'spell_pathway',
       realmId: 'qi_refining',
+      // F-REALM-1 / F-A12-2: a committed qi+ save carries the stamped
+      // initiation grade (writer clamps to >= 1).
+      breakthroughGrade: 1,
       mortalBasicSkillId: undefined,
       spellPath: { element: null },
       ...overrides,

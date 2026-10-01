@@ -29,6 +29,7 @@ import { buildings } from '../../src/data/building/buildings'
 import { SKILLS } from '../../src/data/skill/Skills'
 import { TECHNIQUES } from '../../src/data/technique/Techniques'
 import { alchemyRecipes } from '../../src/data/alchemy/alchemyRecipes'
+import { alchemySecondsFor } from '../../src/core/alchemy/AlchemySystem'
 import { QUESTS } from '../../src/data/quest/quests'
 import { REALM_PASSIVES } from '../../src/data/realm/RealmPassives'
 import { TribulationOutcomeService } from '../../src/core/tribulation/TribulationOutcomeService'
@@ -71,6 +72,15 @@ function committedPlayer(realmId: RealmId): PlayerData {
   player.realmId = realmId
   player.realmLevel = 1
   delete player.mortalBasicSkillId
+  // F-REALM-1 / F-A12-2: a committed qi+ save always carries the
+  // stamped initiation grade (clamp(completedTiers,1,6)); at
+  // foundation_establishment it also carries the victory record.
+  if (getRealmIndex(realmId) >= getRealmIndex('qi_refining')) {
+    player.breakthroughGrade = 1
+  }
+  if (getRealmIndex(realmId) >= getRealmIndex('foundation_establishment')) {
+    player.highestFoundationAchieved = 'human'
+  }
   return player
 }
 
@@ -199,7 +209,10 @@ describe('TC6-A claim-vs-writer: player.modifiers sourceType/sourceId', () => {
     expect(result.status).toBe('rejected')
   })
 
-  it('A4 - forged nhap_dao marker + inflated percent rebuilds to authored at emit', () => {
+  it('A4 - forged nhap_dao marker + inflated percent is rejected at the boundary', () => {
+    // F-MOD-1: the marker only proves the passive was granted - the
+    // entry itself must replay an authored emission for this player.
+    // A free-magnitude claim (percent 99) matches no envelope entry.
     const { save } = committedSave('qi_refining', {
       grantedRealmPassiveIds: ['qi_refining'],
       modifiers: [
@@ -213,19 +226,11 @@ describe('TC6-A claim-vs-writer: player.modifiers sourceType/sourceId', () => {
       ],
     })
     const { acceptable, shape } = classify(save)
-    expect(shape.ok).toBe(true)
-    expect(acceptable).toBe(true)
+    expect(shape.ok).toBe(false)
+    expect(acceptable).toBe(false)
 
-    const { playerStore, manager, result } = boot(save)
-    expect(result.status).toBe('ok')
-    // F-TC6-2 rebuild-don't-trust: the marker stays coherent, but the
-    // EMITTED magnitude comes from the authored builder
-    // (breakthroughGrade * 0.03) - the persisted 99 never reaches stats.
-    const cleanPlayer = committedPlayer('qi_refining')
-    const authoredPercent = cleanPlayer.breakthroughGrade * 0.03
-    const cleanMaxHp = makeManager().resolveAmbientPlayerStats(cleanPlayer).maxHp
-    const stats = manager.resolveAmbientPlayerStats(playerStore.$state)
-    expect(stats.maxHp).toBeCloseTo(cleanMaxHp * (1 + authoredPercent), 5)
+    const { result } = boot(save)
+    expect(result.status).toBe('rejected')
   })
 
   it('A5 - forged equipment-source modifier is wiped by setEquipmentModifiers (inert)', () => {
@@ -336,33 +341,20 @@ describe('TC6-B dormant-record liveness', () => {
     expect(emittedEnhanced.length).toBe(0)
   })
 
-  it('B2 - highestFoundationAchieved great_dao (no beta writer can mint it) mints the 0.2 passive unflagged', () => {
+  it('B2 - highestFoundationAchieved great_dao without the hidden witness is rejected at the boundary', () => {
+    // F-TRB-1/F-A12-1: a great_dao claim requires the persisted
+    // hiddenBreakthroughRealmIds marker (the only writer is the hidden
+    // foundation entry). Without it the claim is fabricated.
     const { save } = committedSave('foundation_establishment', {
       highestFoundationAchieved: 'great_dao',
       grantedRealmPassiveIds: [], // fe passive marker absent -> next sync grants
     })
     const { acceptable, shape } = classify(save)
-    expect(shape.ok).toBe(true)
-    expect(acceptable).toBe(true)
+    expect(shape.ok).toBe(false)
+    expect(acceptable).toBe(false)
 
-    const { playerStore, manager, result } = boot(save)
-    expect(result.status).toBe('ok')
-    // F-TC6-3: a great_dao foundation is hidden-progression carry - the
-    // save is flagged, never silent.
-    expect(
-      unsupportedReleaseReason(playerStore.$state, {
-        alchemyJobs: save.alchemyJobs,
-      }),
-    ).toBe('hidden_progression_state')
-
-    manager.realmAdvanceOps.syncRealmStatPassive(playerStore.$state)
-    // KIEN_CO_MAIN_STAT_PERCENT.great_dao = 0.2 - the emit is suppressed
-    // entirely under the beta lock (hiddenContent dormant).
-    expect(
-      playerStore.modifiers.some(
-        (m) => m.id.startsWith('realm-passive:kien_co:'),
-      ),
-    ).toBe(false)
+    const { result } = boot(save)
+    expect(result.status).toBe('rejected')
   })
 
   it('B3 - hidden breakthroughType committed outcome parks (settle null, record kept, flagged)', () => {
@@ -375,7 +367,10 @@ describe('TC6-B dormant-record liveness', () => {
             attemptId: 1,
             outcome: 'victory',
             targetRealmId: 'foundation_establishment',
-            grade: 'earth',
+            // F-TRB-1: the grade resolves from monotonic body records
+            // at commit - 'human' is always resolvable so the park
+            // path (hidden type) stays what this test exercises.
+            grade: 'human',
             breakthroughType: 'hidden',
             receipt: null,
             settlementError: false,
@@ -435,7 +430,7 @@ describe('TC6-B dormant-record liveness', () => {
             attemptId: 7,
             outcome: 'victory',
             targetRealmId: 'golden_core',
-            grade: 'heaven',
+            grade: 'human',
             breakthroughType: 'normal',
             receipt: null,
             settlementError: false,
@@ -453,13 +448,17 @@ describe('TC6-B dormant-record liveness', () => {
   })
 
   it('B5 - dormant-family alchemy job parks: no pill delivered, job retained, flagged', () => {
+    // F-A12-4: the span replays the authored recipe duration -
+    // compute it from the catalog entry like the real writer does.
+    const dormantRecipe = alchemyRecipes.find((r) => r.id === 'alchemy_phi_van_dan_mortal')!
+    const authoredStart = Date.now() - 999_000
     const job: AlchemyJobSave = {
       jobId: 'j1',
-      recipeId: 'alchemy_phi_van_dan_mortal',
-      pillId: 'phi_van_dan_mortal',
+      recipeId: dormantRecipe.id,
+      pillId: dormantRecipe.pillId,
       herbMaterialId: 'phi_van_thao_mortal_thuong_co',
-      startedAtMs: Date.now() - 999_000,
-      completesAtMs: Date.now() - 1,
+      startedAtMs: authoredStart,
+      completesAtMs: authoredStart + alchemySecondsFor(dormantRecipe, 1) * 1000,
       roomLevelAtStart: 1,
     }
     const { save } = committedSave('qi_refining', {}, { alchemyJobs: [job], buildings: [pillRoom] })
@@ -550,13 +549,15 @@ describe('TC6-B dormant-record liveness', () => {
     // dormant pill into the live bag during restore's offline settle.
     const retiredRecipe = alchemyRecipes.find((r) => r.id === 'alchemy_hoi_xuan_dan_qi_refining')!
     expect(retiredRecipe.retired).toBe(true)
+    const authoredStart = Date.now() - 999_000
     const job: AlchemyJobSave = {
       jobId: 'j3',
       recipeId: retiredRecipe.id,
       pillId: retiredRecipe.pillId,
       herbMaterialId: 'hoi_xuan_thao_qi_refining_thuong_co', // 100% base
-      startedAtMs: Date.now() - 999_000,
-      completesAtMs: Date.now() - 1,
+      // F-A12-4: span must replay the authored recipe duration.
+      startedAtMs: authoredStart,
+      completesAtMs: authoredStart + alchemySecondsFor(retiredRecipe, 1) * 1000,
       roomLevelAtStart: 1,
     }
     const { save } = committedSave('qi_refining', {}, { alchemyJobs: [job], buildings: [pillRoom] })

@@ -37,10 +37,24 @@ import { PHAP_TU_AN_NODES } from '../../data/progression/PhapTuAnNodes'
 import { KIEM_TU_NODES } from '../../data/progression/KiemTuNodes'
 import { THE_TU_NODES } from '../../data/progression/TheTuNodes'
 import { THE_TU_AN_NODES } from '../../data/progression/TheTuAnNodes'
-import { getTalentDefinition } from '../../data/talent/Talents'
+import {
+  CHARACTER_CREATION_TALENTS,
+  GREAT_DAO_REWARD_TALENTS,
+  PARKED_TALENTS,
+  getTalentDefinition,
+} from '../../data/talent/Talents'
 import { TRAN_PHAP_FORMATIONS } from '../../data/formation/TranPhap'
-import { REALM_PASSIVES } from '../../data/realm/RealmPassives'
+import { authoredRealmPassiveEntries, REALM_PASSIVES } from '../../data/realm/RealmPassives'
 import { MERIDIANS } from '../../data/realm/Meridians'
+import { resolveKienCoGrade } from '../../data/breakthrough/BreakthroughGrades'
+import { CHARACTER_CREATION_TALENT_COUNT } from '../character/CharacterCreationService'
+import { alchemySecondsFor } from '../../core/alchemy/AlchemySystem'
+import {
+  CYCLE_BASE_SECONDS_BY_REALM,
+  computeCycleSeconds,
+} from '../../core/production/ProductionBalance'
+import { BETA_MORTAL_STARTER_SKILL_ID } from '../../core/betaScope'
+import type { PlayerData } from '../../core/player/Player'
 import { pills } from '../../data/pill/pills'
 import {
   TU_LINH_TRAN_BUFF_PERCENT,
@@ -106,6 +120,49 @@ const PROGRESSION_NODE_BY_ID = new Map(
     ...SKILL_CORE_NODES,
   ].map((node) => [node.id, node]),
 )
+
+// F-TAL-1 / F-REALM-1 / F-TC10: ownership and claim earnability lookups.
+// - Creation grants exactly CHARACTER_CREATION_TALENT_COUNT pick; each
+//   major-realm entry mints one entitlement resolving into one pool pick.
+// - Parked talents have weight 0 and no writer at all (never rolled).
+// - Great Dao rewards exist only via the pham_cot conversion at a hidden
+//   foundation breakthrough - the foundation record is the witness.
+const CREATION_TALENT_IDS = new Set(CHARACTER_CREATION_TALENTS.map((talent) => talent.id))
+const PARKED_TALENT_IDS = new Set(PARKED_TALENTS.map((talent) => talent.id))
+const GREAT_DAO_REWARD_TALENT_IDS = new Set(GREAT_DAO_REWARD_TALENTS.map((talent) => talent.id))
+
+const FOUNDATION_CLAIM_RANK: Record<string, number> = {
+  human: 1,
+  earth: 2,
+  heaven: 3,
+  great_dao: 4,
+}
+
+// F-A12-2: completedTiers monotonic read for the breakthroughGrade
+// bound - defensive over a save still being shaped (malformed slices
+// are flagged by the body-progression block separately).
+function persistedBodyRefinementTiers(player: Record<string, unknown>): number {
+  if (!isObject(player.bodyProgression) || !isObject(player.bodyProgression.body_refinement)) {
+    return 0
+  }
+
+  const tiers = player.bodyProgression.body_refinement.completedTiers
+
+  return isNonNegativeFiniteNumber(tiers) ? Math.floor(tiers as number) : 0
+}
+
+// F-A12-1 / F-TRB-1: the foundation-grade ceiling derivable from this
+// player's own monotonic records, via the domain resolver (truc_co_dan
+// pill condition waived - the witness pill may have left the bag after
+// the outcome was recorded). A claim above the resolvable rank is
+// fabricated; a malformed body slice resolves 'human'.
+function persistedResolvableFoundationRank(player: Record<string, unknown>): number {
+  try {
+    return FOUNDATION_CLAIM_RANK[resolveKienCoGrade(player as unknown as PlayerData, true)] ?? 1
+  } catch {
+    return FOUNDATION_CLAIM_RANK.human ?? 1
+  }
+}
 
 const STAT_TYPES = new Set<string>(Object.keys(createBaseStats()))
 
@@ -371,10 +428,58 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
     const talentRealmIndex =
       typeof player.realmId === 'string' ? getRealmIndex(player.realmId) : -1
 
+    // F-TAL-1: talent count is an earnability claim - creation grants
+    // exactly CHARACTER_CREATION_TALENT_COUNT and each major-realm
+    // entry mints one entitlement resolving into at most one pool
+    // pick, so the total can never exceed count + realmIndex.
+    const maxTalentPicks =
+      talentRealmIndex >= 0
+        ? CHARACTER_CREATION_TALENT_COUNT + talentRealmIndex
+        : CHARACTER_CREATION_TALENT_COUNT
+
+    if (selectedTalentIds.length > maxTalentPicks) {
+      issues.push({
+        path: 'player.selectedTalentIds',
+        message: `vượt authored pick ceiling (${maxTalentPicks} = creation + realmIndex)`,
+      })
+    }
+
+    let creationTalentCount = 0
+
     for (let i = 0; i < selectedTalentIds.length; i += 1) {
       const talentId = selectedTalentIds[i]
 
-      if (typeof talentId !== 'string' || talentRealmIndex < 0) {
+      if (typeof talentId !== 'string') {
+        continue
+      }
+
+      if (CREATION_TALENT_IDS.has(talentId)) {
+        creationTalentCount += 1
+      }
+
+      // F-TAL-1: parked talents carry weight 0 and are never rolled -
+      // no writer can have granted one.
+      if (PARKED_TALENT_IDS.has(talentId)) {
+        issues.push({
+          path: `player.selectedTalentIds[${i}]`,
+          message: `talent '${talentId}' là parked (không writer nào grant)`,
+        })
+      }
+
+      // F-TAL-1: Great Dao rewards mint only from the pham_cot
+      // conversion at a hidden foundation breakthrough - the
+      // highestFoundationAchieved record is the required witness.
+      if (
+        GREAT_DAO_REWARD_TALENT_IDS.has(talentId) &&
+        player.highestFoundationAchieved !== 'great_dao'
+      ) {
+        issues.push({
+          path: `player.selectedTalentIds[${i}]`,
+          message: `talent '${talentId}' là Dai Dao reward nhưng thiếu great_dao witness`,
+        })
+      }
+
+      if (talentRealmIndex < 0) {
         continue
       }
 
@@ -385,6 +490,15 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
           message: `talent '${talentId}' thuộc pool '${poolRealmId}' - realm chưa đạt nên grant bất khả thi`,
         })
       }
+    }
+
+    // F-TAL-1: creation resolves exactly CHARACTER_CREATION_TALENT_COUNT
+    // id - the Great Dao conversion replaces (never adds) a creation id.
+    if (creationTalentCount > CHARACTER_CREATION_TALENT_COUNT) {
+      issues.push({
+        path: 'player.selectedTalentIds',
+        message: `vượt creation pick count (${creationTalentCount} > ${CHARACTER_CREATION_TALENT_COUNT})`,
+      })
     }
   }
 
@@ -507,6 +621,26 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
           path: 'player.pendingTalentEntitlement.realmId',
           message: 'entitlement realmId không khớp realm hiện tại',
         })
+      }
+
+      // F-TC10-ENT: the pending record occupies the slot its own pick
+      // has not yet consumed - resolved picks can total at most
+      // realmIndex - 1 entries (the current realm's is still pending),
+      // so a saturated talent list makes the pending claim impossible.
+      {
+        const entitlementRealmIndex =
+          typeof player.realmId === 'string' ? getRealmIndex(player.realmId) : -1
+
+        if (
+          entitlementRealmIndex >= 0 &&
+          Array.isArray(selectedTalentIds) &&
+          selectedTalentIds.length > CHARACTER_CREATION_TALENT_COUNT + entitlementRealmIndex - 1
+        ) {
+          issues.push({
+            path: 'player.pendingTalentEntitlement',
+            message: 'entitlement pending trong khi pick ceiling đã resolve',
+          })
+        }
       }
 
       if (offered) {
@@ -678,6 +812,24 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
     issues.push({
       path: 'player.breakthroughGrade',
       message: 'vượt authored grade ceiling (6)',
+    })
+  }
+
+  // F-A12-2: the sole writer is clamp(completedTiers, 1, 6) at the
+  // initiation ritual - completedTiers only ever grows afterward, so a
+  // grade above max(1, tiers) is a fabricated magnitude replay. The
+  // bound only applies post-initiation: at mortal the field is an
+  // inert placeholder (spawn default 6) that no consumer reads until
+  // the nhap_dao passive exists.
+  if (
+    typeof player.realmId === 'string' &&
+    getRealmIndex(player.realmId) >= getRealmIndex('qi_refining') &&
+    isFiniteNumber(player.breakthroughGrade) &&
+    (player.breakthroughGrade as number) > Math.max(1, persistedBodyRefinementTiers(player))
+  ) {
+    issues.push({
+      path: 'player.breakthroughGrade',
+      message: 'vượt grade derivable từ completedTiers (writer clamp)',
     })
   }
 
@@ -876,10 +1028,38 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
         }
 
         const passive = REALM_PASSIVES.find((entry) => entry.sourceId === modifier.sourceId)
-        if (passive !== undefined && !grantedSourceIds.has(modifier.sourceId as string)) {
+        if (passive === undefined) {
+          continue
+        }
+
+        if (!grantedSourceIds.has(modifier.sourceId as string)) {
           issues.push({
             path: `player.modifiers[${i}]`,
             message: `modifier phát từ realm passive chưa được grant (${String(modifier.sourceId)})`,
+          })
+          continue
+        }
+
+        // F-MOD-1: the marker only proves the passive was granted - the
+        // entry itself must byte-match an authored emission for this
+        // player (variant selected by the same hidden-lineage rule the
+        // grant seam uses). A free-magnitude or free-stat claim is
+        // fabricated.
+        const expected = authoredRealmPassiveEntries(passive, player as unknown as PlayerData)
+
+        if (
+          !expected.some(
+            (authored) =>
+              authored.id === modifier.id &&
+              authored.stat === modifier.stat &&
+              authored.percent === modifier.percent &&
+              authored.flat === modifier.flat &&
+              authored.domain === modifier.domain,
+          )
+        ) {
+          issues.push({
+            path: `player.modifiers[${i}]`,
+            message: `realm-passive modifier ngoài envelope authored (${String(modifier.id)})`,
           })
         }
       }
@@ -1187,6 +1367,39 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
       path: 'player.highestFoundationAchieved',
       message: 'khai foundation nhưng realm chưa đạt foundation_establishment',
     })
+  }
+
+  // F-A12-1: the grade itself is an earnability claim - its only writer
+  // resolves against monotonic body records (completedTiers, opened
+  // meridians), so a grade above what those inputs can produce is a
+  // fabricated claim minting the kien_co main-stat multiplier.
+  if (
+    typeof player.highestFoundationAchieved === 'string' &&
+    Object.prototype.hasOwnProperty.call(FOUNDATION_LABELS, player.highestFoundationAchieved)
+  ) {
+    if (player.highestFoundationAchieved === 'great_dao') {
+      // Dai Dao is the hidden foundation entry - the persisted
+      // hiddenBreakthroughRealmIds marker is the required witness.
+      const hiddenIds =
+        isObject(player.hiddenPerfection) && Array.isArray(player.hiddenPerfection.hiddenBreakthroughRealmIds)
+          ? (player.hiddenPerfection.hiddenBreakthroughRealmIds as unknown[])
+          : []
+
+      if (!hiddenIds.includes('foundation_establishment')) {
+        issues.push({
+          path: 'player.highestFoundationAchieved',
+          message: "'great_dao' thiếu hidden foundation witness (hiddenBreakthroughRealmIds)",
+        })
+      }
+    } else if (
+      (FOUNDATION_CLAIM_RANK[player.highestFoundationAchieved] ?? 0) >
+      persistedResolvableFoundationRank(player)
+    ) {
+      issues.push({
+        path: 'player.highestFoundationAchieved',
+        message: `grade '${String(player.highestFoundationAchieved)}' vượt điều kiện derivable từ body records`,
+      })
+    }
   }
 
   if (!COMBAT_AI_STRATEGIES.some((strategy) => strategy === player.combatAiStrategy)) {
@@ -2077,6 +2290,102 @@ function validateSkillCoreCoverage(
     }
   }
 
+  // F-SKL-1: membership itself is a claim - a registered template must
+  // name at least one writer this save satisfies:
+  //   - the mortal starter skill (granted at creation)
+  //   - the owned way's kit (skillIds / coreSkillIds / starter /
+  //     passiveSkillIds / realm-reward passives)
+  //   - an owned node's unlocksSkillIds / grantsSkillCoreIds
+  //   - an owned talent's combat_passive declaration (definitions are
+  //     enumerated directly so a dormant-flagged talent carry still
+  //     resolves - the talent ownership record is the witness)
+  //   - a realm-ladder passive (its own realm legality is F-A10-2)
+  //   - a levelled skill (its own core axis is the first loop)
+  // Restore already drops unregistered ids, so only registered
+  // templates reach this check; an id with no producing writer is a
+  // fabricated claim that restore would mint anyway.
+  const ownedTalentPassiveSkillIds = new Set<string>()
+  const persistedOwnedTalentIds = Array.isArray(player.selectedTalentIds)
+    ? player.selectedTalentIds
+    : []
+
+  for (const talentId of persistedOwnedTalentIds) {
+    if (typeof talentId !== 'string') {
+      continue
+    }
+
+    for (const effect of getTalentDefinition(talentId)?.effects ?? []) {
+      if (effect.kind === 'combat_passive') {
+        ownedTalentPassiveSkillIds.add(effect.passiveSkillId)
+      }
+    }
+  }
+
+  const ownedNodeGrantSkillIds = new Set<string>()
+  if (nodeLevels !== undefined) {
+    for (const [ownedNodeId, ownedLevel] of Object.entries(nodeLevels)) {
+      if (!isNonNegativeFiniteNumber(ownedLevel) || ownedLevel < 1) {
+        continue
+      }
+
+      const ownedNode = PROGRESSION_NODE_BY_ID.get(ownedNodeId)
+      for (const id of ownedNode?.effect?.unlocksSkillIds ?? []) {
+        ownedNodeGrantSkillIds.add(id)
+      }
+      for (const id of ownedNode?.effect?.grantsSkillCoreIds ?? []) {
+        ownedNodeGrantSkillIds.add(id)
+      }
+    }
+  }
+
+  const ownedWayKitSkillIds = new Set<string>()
+  if (way !== undefined) {
+    for (const id of way.skillIds ?? []) {
+      ownedWayKitSkillIds.add(id)
+    }
+    for (const id of way.coreSkillIds ?? []) {
+      ownedWayKitSkillIds.add(id)
+    }
+    if (way.starterBasicSkillId !== undefined) {
+      ownedWayKitSkillIds.add(way.starterBasicSkillId)
+    }
+    for (const id of way.passiveSkillIds ?? []) {
+      ownedWayKitSkillIds.add(id)
+    }
+    for (const reward of Object.values(way.realmRewards ?? {})) {
+      if (typeof reward?.passiveSkillId === 'string') {
+        ownedWayKitSkillIds.add(reward.passiveSkillId)
+      }
+    }
+  }
+
+  for (let i = 0; i < skills.length; i += 1) {
+    const entry = skills[i]
+
+    if (!isObject(entry) || typeof entry.id !== 'string') {
+      continue
+    }
+
+    const template = SKILL_TEMPLATE_BY_ID.get(entry.id)
+    if (template === undefined || LEVELLED_SKILL_IDS.has(entry.id)) {
+      continue
+    }
+
+    const producible =
+      entry.id === BETA_MORTAL_STARTER_SKILL_ID ||
+      ownedWayKitSkillIds.has(entry.id) ||
+      ownedNodeGrantSkillIds.has(entry.id) ||
+      ownedTalentPassiveSkillIds.has(entry.id) ||
+      template.requiredRealmId !== undefined
+
+    if (!producible) {
+      issues.push({
+        path: `skills[${i}].id`,
+        message: `skill '${entry.id}' không có writer nào trên save này có thể grant`,
+      })
+    }
+  }
+
   const wayGrantedIds = new Set(way?.coreSkillIds ?? [])
   const nodeGrantedIds = new Set<string>()
 
@@ -2237,6 +2546,7 @@ function validateProductionCycleSave(
   issues: ShapeIssue[],
   playerRealmIndex?: number,
   siteMaxLevel?: number,
+  lastSavedAt?: number,
 ): void {
   if (
     !isObject(value) ||
@@ -2283,6 +2593,32 @@ function validateProductionCycleSave(
       message: `vượt maxLevel authored (${siteMaxLevel})`,
     })
   }
+
+  // F-TC10-WC: the span itself is the authored recipe - the sole writer
+  // stamps completesAtMs = startedAtMs + computeCycleSeconds(base,
+  // level)*1000 and never mutates it afterward, so a mismatched span is
+  // a fabricated reward window (shorter mints faster free settles).
+  const cycleBaseSeconds = CYCLE_BASE_SECONDS_BY_REALM[value.collectionRealmId]
+  if (cycleBaseSeconds !== undefined) {
+    const expectedSpanMs =
+      computeCycleSeconds(cycleBaseSeconds, value.siteLevelAtStart as number) * 1000
+
+    if ((value.completesAtMs as number) - (value.startedAtMs as number) !== expectedSpanMs) {
+      issues.push({
+        path: `${path}.completesAtMs`,
+        message: `span không khớp authored cycle window (${expectedSpanMs}ms)`,
+      })
+    }
+  }
+
+  // F-TC10-WC (sibling): a cycle started after the save timestamp could
+  // not have been persisted by a legal path.
+  if (lastSavedAt !== undefined && (value.startedAtMs as number) > lastSavedAt) {
+    issues.push({
+      path: `${path}.startedAtMs`,
+      message: 'startedAtMs vượt lastSavedAt (cycle bắt đầu sau save là bất khả thi)',
+    })
+  }
 }
 
 function validateProductionSitesSave(
@@ -2290,6 +2626,7 @@ function validateProductionSitesSave(
   path: string,
   issues: ShapeIssue[],
   playerRealmIndex?: number,
+  playerLastSavedAt?: number,
 ): void {
   for (let i = 0; i < entries.length; i += 1) {
     const entry = entries[i]
@@ -2368,6 +2705,7 @@ function validateProductionSitesSave(
             issues,
             playerRealmIndex,
             siteDefinition?.maxLevel,
+            playerLastSavedAt,
           )
 
           if (
@@ -2393,6 +2731,7 @@ function validateAlchemyJobsSave(
   path: string,
   issues: ShapeIssue[],
   pillRoomLevel: number,
+  playerLastSavedAt?: number,
 ): void {
   for (let i = 0; i < entries.length; i += 1) {
     const entry = entries[i]
@@ -2455,6 +2794,31 @@ function validateAlchemyJobsSave(
       issues.push({
         path: `${entryPath}.herbMaterialId`,
         message: 'herbMaterialId không thuộc herbVariants của recipe',
+      })
+    }
+
+    // F-A12-4: the span is the authored recipe - startJob stamps
+    // completesAtMs = startedAtMs + alchemySecondsFor(recipe,
+    // roomLevelAtStart)*1000, so a mismatched span is a fabricated
+    // delivery window (shorter mints pills faster than authored).
+    if (recipe !== undefined) {
+      const expectedSpanMs =
+        alchemySecondsFor(recipe, entry.roomLevelAtStart as number) * 1000
+
+      if ((entry.completesAtMs as number) - (entry.startedAtMs as number) !== expectedSpanMs) {
+        issues.push({
+          path: `${entryPath}.completesAtMs`,
+          message: `span không khớp authored duration (${expectedSpanMs}ms)`,
+        })
+      }
+    }
+
+    // F-A12-4 (sibling): a job started after the save timestamp could
+    // not have been persisted by a legal path.
+    if (playerLastSavedAt !== undefined && (entry.startedAtMs as number) > playerLastSavedAt) {
+      issues.push({
+        path: `${entryPath}.startedAtMs`,
+        message: 'startedAtMs vượt lastSavedAt (job bắt đầu sau save là bất khả thi)',
       })
     }
   }
@@ -2825,6 +3189,46 @@ export function validateGameSaveShape(parsed: unknown): ShapeValidationResult {
 
   const buildings = requireArray(parsed, 'buildings', '', issues)
 
+  // F-REALM-1: the realm claim is a progression witness - entering
+  // qi_refining only happens through an initiation commit that writes
+  // grade >= 1 and grants the starter technique, and reaching
+  // foundation_establishment only happens through a victory that
+  // records highestFoundationAchieved. A realm claim missing its own
+  // mandatory receipts is a fabricated profile that mints realm-scaled
+  // stats and clears every realm-gated bound.
+  if (isObject(parsed.player) && typeof parsed.player.realmId === 'string') {
+    const witnessedRealmIndex = getRealmIndex(parsed.player.realmId)
+
+    if (witnessedRealmIndex >= getRealmIndex('qi_refining')) {
+      if (Array.isArray(techniques) && techniques.length < 1) {
+        issues.push({
+          path: 'techniques',
+          message: 'realm >= qi_refining nhưng techniques trống (initiation chưa từng commit)',
+        })
+      }
+
+      if (
+        !isFiniteNumber(parsed.player.breakthroughGrade) ||
+        (parsed.player.breakthroughGrade as number) < 1
+      ) {
+        issues.push({
+          path: 'player.breakthroughGrade',
+          message: 'realm >= qi_refining nhưng grade < 1 (initiation chưa từng commit)',
+        })
+      }
+    }
+
+    if (
+      witnessedRealmIndex >= getRealmIndex('foundation_establishment') &&
+      parsed.player.highestFoundationAchieved === undefined
+    ) {
+      issues.push({
+        path: 'player.highestFoundationAchieved',
+        message: 'realm >= foundation_establishment nhưng thiếu foundation victory record',
+      })
+    }
+  }
+
   // F-W-16 (v82): restore recomputes autoWorkerCapacity from the chi_hien_quan
   // instance, so a persisted non-zero capacity without that building is
   // always corrupt — fail loud instead of silently clamping on restore.
@@ -2861,6 +3265,9 @@ export function validateGameSaveShape(parsed: unknown): ShapeValidationResult {
       'productionSites',
       issues,
       playerRealmIndex !== undefined && playerRealmIndex >= 0 ? playerRealmIndex : undefined,
+      isObject(parsed.player) && isFiniteNumber(parsed.player.lastSavedAt)
+        ? (parsed.player.lastSavedAt as number)
+        : undefined,
     )
   }
 
@@ -2896,7 +3303,15 @@ export function validateGameSaveShape(parsed: unknown): ShapeValidationResult {
       })
     }
 
-    validateAlchemyJobsSave(alchemyJobs, 'alchemyJobs', issues, pillRoomLevel)
+    validateAlchemyJobsSave(
+      alchemyJobs,
+      'alchemyJobs',
+      issues,
+      pillRoomLevel,
+      isObject(parsed.player) && isFiniteNumber(parsed.player.lastSavedAt)
+        ? (parsed.player.lastSavedAt as number)
+        : undefined,
+    )
   }
 
   // Mission A1 - deep element checks: a present-but-malformed slice must
@@ -2996,6 +3411,19 @@ export function validateGameSaveShape(parsed: unknown): ShapeValidationResult {
             issues.push({
               path: '.tribulation.committedOutcome.grade',
               message: 'phải là ResolvableKienCoGrade hợp lệ',
+            })
+          } else if (
+            // F-TRB-1: the recorded grade resolves from monotonic body
+            // records at commit time - those records only grow after
+            // the commit, so a grade above the resolvable rank on this
+            // save's own inputs is a fabricated settle (it would mint
+            // the kien_co main-stat multiplier + reward outcomes).
+            (FOUNDATION_CLAIM_RANK[committed.grade] ?? 0) >
+              persistedResolvableFoundationRank(isObject(parsed.player) ? parsed.player : {})
+          ) {
+            issues.push({
+              path: '.tribulation.committedOutcome.grade',
+              message: `grade '${String(committed.grade)}' vượt điều kiện derivable từ body records`,
             })
           }
 

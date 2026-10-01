@@ -7,6 +7,8 @@ import { buildGameSave } from './SaveSystem'
 import { validateGameSaveShape } from './saveShapeValidation'
 import { GameManager } from '../../core/game/GameManager'
 import { createDefaultPlayer } from '../../core/player/Player'
+import { TECHNIQUES } from '../../data/technique/Techniques'
+import { getRealmIndex } from '../../core/realm/realmSystem'
 import type { Material } from '../../core/material/Material'
 import type { EquipmentInstance } from '../../core/equipment/EquipmentInstance'
 
@@ -23,6 +25,22 @@ function createBootedGameManager(): GameManager {
   gameManager.catalogOps.registerMaterials([TEST_MATERIAL])
 
   return gameManager
+}
+
+// F-REALM-1: a committed realm claim carries its earnability receipts -
+// an owned technique + stamped grade at qi+, plus the persisted
+// foundation victory record at fe+. Fixture-only players that jump
+// straight to realmId must carry them the way the real writers do.
+function commitRealmReceipts(player: ReturnType<typeof createDefaultPlayer>, gameManager: GameManager): void {
+  if (getRealmIndex(player.realmId) >= getRealmIndex('qi_refining')) {
+    player.breakthroughGrade = 1
+    gameManager.techniqueSystem.restore([
+      structuredClone(TECHNIQUES.find((t) => t.id === 'five_elements_art')!),
+    ])
+  }
+  if (getRealmIndex(player.realmId) >= getRealmIndex('foundation_establishment')) {
+    player.highestFoundationAchieved = 'human'
+  }
 }
 
 function normalizedSaveOf(
@@ -121,6 +139,7 @@ describe('SaveRoundTrip — buildGameSave() luôn qua validateGameSaveShape()', 
 
     player.realmId = 'foundation_establishment'
     player.realmLevel = 18
+    commitRealmReceipts(player, gameManager)
     player.bodyProgression.zhou_tian.completed = 36
     player.hiddenPerfection.completedHiddenBodyRealmIds = ['mortal', 'qi_refining']
     player.hiddenPerfection.realms.foundation_establishment = {
@@ -316,6 +335,7 @@ describe('SaveRoundTrip — buildGameSave() luôn qua validateGameSaveShape()', 
     const player = createDefaultPlayer()
 
     player.realmId = 'qi_refining'
+    commitRealmReceipts(player, gameManager)
     player.cultivationPath = 'spell'
     player.cultivationWay = 'hidden_spell_pathway'
 
@@ -355,7 +375,10 @@ describe('SaveRoundTrip — buildGameSave() luôn qua validateGameSaveShape()', 
     const player = createDefaultPlayer()
 
     player.realmId = 'foundation_establishment'
-    player.selectedTalentIds = ['pham_nhan_chi_cot', 'lk_dung_nap']
+    commitRealmReceipts(player, gameManager)
+    // F-TAL-1: held picks must be producible - a creation/reward talent
+    // like loi_kiep needs no witness beyond the realm ceiling.
+    player.selectedTalentIds = ['loi_kiep', 'lk_dung_nap']
     player.talentLevels = { lk_dung_nap: 2 }
     player.pendingTalentEntitlement = {
       realmId: 'foundation_establishment',
@@ -509,6 +532,7 @@ describe('SaveRoundTrip — buildGameSave() luôn qua validateGameSaveShape()', 
     const gameManager = createBootedGameManager()
     const player = createDefaultPlayer()
     player.realmId = 'foundation_establishment'
+    commitRealmReceipts(player, gameManager)
     player.companionGifts.push(
       {
         id: 'gift_than_nong_foundation_entry',

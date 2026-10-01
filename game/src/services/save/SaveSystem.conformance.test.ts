@@ -21,6 +21,7 @@ import { skillCoreNodeId } from '../../core/progression/SkillCoreLevel'
 import { usePlayerStore } from '../../stores/player'
 import { validateGameSaveShape } from './saveShapeValidation'
 import { buildGameSave, restoreGameSession, type GameSave } from './SaveSystem'
+import { CYCLE_BASE_SECONDS_BY_REALM, computeCycleSeconds } from '../../core/production/ProductionBalance'
 import type { ProductionCycle, ProductionSiteState } from '../../core/production/ProductionTypes'
 import type { Skill } from '../../core/skill/Skill'
 import type { Technique } from '../../core/technique/Technique'
@@ -87,6 +88,9 @@ function createRegisteredManager(): GameManager {
 }
 
 function productionCycle(cycleId: string, siteId: string, completesAtMs: number): ProductionCycle {
+  // F-CYC-1: the span replays the authored cycle window (mortal base at
+  // site level 2 speed) - compute it from the balance table like the
+  // real writer.
   return {
     cycleId,
     siteId,
@@ -94,7 +98,7 @@ function productionCycle(cycleId: string, siteId: string, completesAtMs: number)
     siteLevelAtStart: 2,
     rewardTableVersion: 1,
     rollSeed: 42,
-    startedAtMs: NOW - 5_000,
+    startedAtMs: completesAtMs - computeCycleSeconds(CYCLE_BASE_SECONDS_BY_REALM.mortal ?? 0, 2) * 1000,
     completesAtMs,
   }
 }
@@ -139,6 +143,8 @@ function populateSource(player: PlayerData, manager: GameManager): void {
   player.swordPath = freshSwordPathState()
   player.realmId = 'qi_refining'
   player.realmLevel = 1
+  // F-REALM-1 / F-A12-2: a committed qi+ save carries the stamped grade.
+  player.breakthroughGrade = 1
   // M-QI-05 (v73) - the committed way's coreSkillIds are granted at the
   // ritual: nodeLevels[core_<id>] = 1 plus purchasedNodeIds membership.
   for (const skillId of SWORD_PATHWAY.coreSkillIds ?? []) {
@@ -203,7 +209,9 @@ function populateSource(player: PlayerData, manager: GameManager): void {
     activeWorkerSlots: 1,
     workerCycles: [
       productionCycle('cycle-active', siteId, NOW + 60_000),
-      productionCycle('cycle-worker-1', siteId, NOW + 120_000),
+      // F-CYC-1: a writer-spawned cycle never completes later than the
+      // authored span out - an 87s window can end at most NOW + 87s.
+      productionCycle('cycle-worker-1', siteId, NOW + 80_000),
     ],
     assignedWorkers: 2,
   }
@@ -270,6 +278,9 @@ describe('Mission A7 — whole-payload save conformance', () => {
     // The persisted form is what JSON.stringify would write.
     const persisted = JSON.parse(JSON.stringify(save1)) as unknown
     const shape = validateGameSaveShape(persisted)
+    if (!shape.ok) {
+      console.log(JSON.stringify(shape.issues, null, 2))
+    }
 
     expect(shape.ok).toBe(true)
     if (!shape.ok) {

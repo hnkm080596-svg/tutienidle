@@ -46,6 +46,7 @@ import { lockBetaFeaturesForTests } from '../../src/core/game/__fixtures__/betaF
 import { lockBetaWaysForTests } from '../../src/core/game/__fixtures__/betaWaysUnlock'
 import { lockBetaTalentsForTests } from '../../src/core/game/__fixtures__/betaTalentsUnlock'
 import { SKILLS } from '../../src/data/skill/Skills'
+import { TECHNIQUES } from '../../src/data/technique/Techniques'
 import { PASSIVE_SKILLS } from '../../src/data/skill/PassiveSkills'
 import { CURRENT_SAVE_VERSION } from '../../src/services/save/saveVersion'
 import { validateGameSaveShape } from '../../src/services/save/saveShapeValidation'
@@ -83,6 +84,11 @@ function validSave() {
     productionSites: [],
     alchemyJobs: [],
   } as Record<string, unknown>
+}
+
+// F-REALM-1: a realm witness must carry an authored technique object.
+function fiveElementsTechnique() {
+  return structuredClone(TECHNIQUES.find((t) => t.id === 'five_elements_art')!)
 }
 
 describe('F-TC8-1: breakthroughGrade authored ceiling', () => {
@@ -186,6 +192,11 @@ describe('F-TC8-3: loi kiep victory bound scales with player realm', () => {
     p.realmId = 'foundation_establishment'
     p.realmLevel = 1
     p.selectedTalentIds = ['loi_kiep']
+    // F-REALM-1: an fe claim carries the initiation receipt, the stamped
+    // grade and the persisted foundation record.
+    save.techniques = [fiveElementsTechnique()]
+    p.breakthroughGrade = 1
+    p.highestFoundationAchieved = 'human'
     p.modifiers.push({
       id: 'talent_loi_kiep_strength',
       sourceId: 'loi_kiep',
@@ -411,7 +422,7 @@ describe('F-TC8-11: equipment affix authored bounds', () => {
         grade: 'ngu_pham',
         quality: 'hoang',
         mainStat: { id: 'm1', sourceId: 'roll-main', sourceType: 'equipment', stat: 'might', flat: 15 },
-        affixes: Array.from({ length: 9 }, (_, i) => ({ affixId: 'prefix_max_hp', tier: 1, value: 10 })),
+        affixes: Array.from({ length: 9 }, () => ({ affixId: 'prefix_max_hp', tier: 1, value: 10 })),
         forgeUsesTotal: 0,
         forgeUsesRemaining: 0,
       },
@@ -508,6 +519,9 @@ describe('F-A10-1: breakthrough-pool talents need the pool realm', () => {
     const p = save.player as ReturnType<typeof createDefaultPlayer>
     p.realmId = 'qi_refining'
     p.realmLevel = 1
+    // F-REALM-1: a committed qi+ save carries the stamped grade.
+    save.techniques = [fiveElementsTechnique()]
+    p.breakthroughGrade = 1
     p.selectedTalentIds = ['lk_linh_mach']
 
     expect(validateGameSaveShape(save).ok).toBe(true)
@@ -552,6 +566,9 @@ describe('F-A10-2: skill membership respects template requiredRealmId', () => {
     const p = save.player as ReturnType<typeof createDefaultPlayer>
     p.realmId = 'qi_refining'
     p.realmLevel = 1
+    // F-REALM-1: a committed qi+ save carries the stamped grade.
+    save.techniques = [fiveElementsTechnique()]
+    p.breakthroughGrade = 1
     save.skills = [
       structuredClone(SKILLS.find((skill) => skill.id === 'linh_bao')!),
       structuredClone(SKILLS.find((skill) => skill.id === 'passive_linh_khi_cam_ung')!),
@@ -600,6 +617,11 @@ describe('F-A10-6: stage-clear and autofarm claims respect the stage realm', () 
     const p = save.player as ReturnType<typeof createDefaultPlayer>
     p.realmId = 'foundation_establishment'
     p.realmLevel = 1
+    // F-REALM-1: an fe claim carries the initiation receipt, the stamped
+    // grade and the persisted foundation record.
+    save.techniques = [fiveElementsTechnique()]
+    p.breakthroughGrade = 1
+    p.highestFoundationAchieved = 'human'
     // F-TC9-2: the chain-prefix bound requires every earlier floor in
     // the same zone - a legit foundation claim carries the full prefix.
     p.completedStageIds = [
@@ -833,6 +855,8 @@ describe('F-A11-3: skillInsight never exceeds totalSkillInsightGained', () => {
 })
 
 describe('F-A11-4: workerCycles lane-count and per-cycle bounds', () => {
+  // F-CYC-1: the span replays the authored duration
+  // (mortal base 100s at site level-1 speed 1.0 -> 100_000ms).
   const cycle = (id: string) => ({
     cycleId: id,
     siteId: 'thanh_van_lam',
@@ -841,7 +865,7 @@ describe('F-A11-4: workerCycles lane-count and per-cycle bounds', () => {
     rewardTableVersion: 1,
     rollSeed: 1,
     startedAtMs: 1,
-    completesAtMs: 100,
+    completesAtMs: 100_001,
   })
 
   it('more cycles than the authored 19-lane ceiling are rejected', () => {
@@ -908,13 +932,15 @@ describe('F-A11-5: alchemyJobs slot-count, span and herb bounds', () => {
     level: 1,
     lastCollectedAt: 0,
   }
+  // F-A12-4: the span replays the authored recipe duration
+  // (alchemy_truc_co_dan base 1200s at room level-1 speed -> 1_200_000ms).
   const job = (id: string) => ({
     jobId: id,
     recipeId: 'alchemy_truc_co_dan',
     pillId: 'truc_co_dan',
     herbMaterialId: 'tu_linh_thao_qi_refining_century',
     startedAtMs: 1,
-    completesAtMs: 100,
+    completesAtMs: 1_200_001,
     roomLevelAtStart: 1,
   })
 

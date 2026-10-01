@@ -32,12 +32,10 @@ import { getActiveCultivationSpeedPercent } from '../../src/core/economy/TuLinhT
 import { alchemyRecipes } from '../../src/data/alchemy/alchemyRecipes'
 import { materials } from '../../src/data/materials/materials'
 import { pills } from '../../src/data/pill/pills'
-import { equipment } from '../../src/data/equipment/equipment'
 import { QUESTS } from '../../src/data/quest/quests'
-import { affixes } from '../../src/data/equipment/affixes'
 import { buildings } from '../../src/data/building/buildings'
-import { SKILLS } from '../../src/data/skill/Skills'
 import { TECHNIQUES } from '../../src/data/technique/Techniques'
+import { alchemySecondsFor } from '../../src/core/alchemy/AlchemySystem'
 import { CURRENT_SAVE_VERSION } from '../../src/services/save/saveVersion'
 import { validateGameSaveShape } from '../../src/services/save/saveShapeValidation'
 import type { PersistentTimedEffect } from '../../src/core/player/PersistentTimedEffect'
@@ -69,6 +67,11 @@ function validSave() {
     productionSites: [],
     alchemyJobs: [],
   } as Record<string, unknown>
+}
+
+// F-REALM-1: a realm witness must carry an authored technique object.
+function fiveElementsTechnique() {
+  return structuredClone(TECHNIQUES.find((t) => t.id === 'five_elements_art')!)
 }
 
 function baseStat(key: 'strength' | 'maxHp', extra?: StatModifier) {
@@ -132,6 +135,9 @@ describe('F-A7-1: persisted modifiers claiming non-writer sources', () => {
     // loi_kiep grants +0.1 per realm transition the player has
     // witnessed - the authored-legit holder is at least qi_refining.
     p.realmId = 'qi_refining'
+    // F-REALM-1: a committed qi+ save carries the stamped grade.
+    p.breakthroughGrade = 1
+    ;(save as Record<string, unknown>).techniques = [fiveElementsTechnique()]
     p.selectedTalentIds = ['loi_kiep']
     p.modifiers.push({
       id: 'talent_loi_kiep_strength',
@@ -348,8 +354,9 @@ describe('F-A7-3: alchemy job pillId coherence', () => {
         recipeId: recipe.id,
         pillId: recipe.pillId,
         herbMaterialId: recipe.herbVariants[0]!.materialId,
+        // F-A12-4: the span replays the authored recipe duration.
         startedAtMs: 1,
-        completesAtMs: 2,
+        completesAtMs: 1 + alchemySecondsFor(recipe, 1) * 1000,
         roomLevelAtStart: 1,
       },
     ]
@@ -481,6 +488,8 @@ describe('F-TC5-1: accrual realm pin boundary', () => {
     const save = validSave()
     const p = save.player as ReturnType<typeof createDefaultPlayer>
     p.realmId = 'qi_refining'
+    // F-REALM-1: a committed qi+ save carries the stamped grade.
+    p.breakthroughGrade = 1
     p.cultivationPath = 'spell'
     p.cultivationWay = 'spell_pathway'
     p.mortalBasicSkillId = undefined
@@ -915,6 +924,9 @@ describe('F-TC6-6: attributePoints bounded by tiers climbed', () => {
     const save = validSave()
     const p = save.player as ReturnType<typeof createDefaultPlayer>
     p.realmId = 'qi_refining'
+    // F-REALM-1: a committed qi+ save carries the stamped grade.
+    p.breakthroughGrade = 1
+    ;(save as Record<string, unknown>).techniques = [fiveElementsTechnique()]
     p.realmLevel = 2
     p.attributePoints = 3
 

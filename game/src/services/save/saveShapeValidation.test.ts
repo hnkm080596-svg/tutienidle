@@ -5,6 +5,12 @@ import { createDefaultPlayer } from '../../core/player/Player'
 import { COMPANIONS } from '../../data/companion/Companions'
 import { CULTIVATION_PATH_MODULES, type CultivationPathId } from '../../core/player/CultivationPathKit'
 import { skillCoreNodeId } from '../../core/progression/SkillCoreLevel'
+import { TECHNIQUES } from '../../data/technique/Techniques'
+
+// F-REALM-1: a realm witness must carry an authored technique object.
+function fiveElementsTechnique() {
+  return structuredClone(TECHNIQUES.find((t) => t.id === 'five_elements_art')!)
+}
 
 function validSave(): Record<string, unknown> {
   return {
@@ -180,6 +186,10 @@ describe('validateGameSaveShape — cultivationPath / cultivationWay (v66)', () 
     const player = playerOf(save)
 
     player.realmId = 'qi_refining'
+    // F-REALM-1 / F-A12-2: a qi_refining save always carries its
+    // initiation receipts - a starter technique and the stamped grade.
+    save.techniques = [fiveElementsTechnique()]
+    player.breakthroughGrade = 1
     player.cultivationPath = pathId
     player.cultivationWay = wayId
     if (pathId === 'sword') {
@@ -339,6 +349,10 @@ describe('validateGameSaveShape — cultivationPath / cultivationWay (v66)', () 
     const save = validSave()
 
     playerOf(save).realmId = 'qi_refining'
+    // F-REALM-1 / F-A12-2: a qi_refining save always carries its
+    // initiation receipts - a starter technique and the stamped grade.
+    save.techniques = [fiveElementsTechnique()]
+    playerOf(save).breakthroughGrade = 1
     playerOf(save).cultivationPath = 'spell'
     playerOf(save).cultivationWay = 'hidden_spell_pathway'
 
@@ -372,6 +386,8 @@ describe('validateGameSaveShape — spellPath element-only (route retired)', () 
       const save = validSave()
 
       ;(save.player as Record<string, unknown>).realmId = 'qi_refining'
+      save.techniques = [fiveElementsTechnique()]
+      ;(save.player as Record<string, unknown>).breakthroughGrade = 1
       ;(save.player as Record<string, unknown>).cultivationPath = 'spell'
       ;(save.player as Record<string, unknown>).cultivationWay = 'spell_pathway'
       ;(save.player as Record<string, unknown>).spellPath = spellPath
@@ -714,8 +730,10 @@ describe('validateGameSaveShape — productionSites slice (Mission A1)', () => {
       siteLevelAtStart: 1,
       rewardTableVersion: 1,
       rollSeed: 12345,
+      // F-TC10-WC: the span must replay the authored cycle window -
+      // mortal base 100s at site level 1 (multiplier 1.0) = 100_000ms.
       startedAtMs: 1_725_000_000_000,
-      completesAtMs: 1_725_000_060_000,
+      completesAtMs: 1_725_000_100_000,
     }
   }
 
@@ -1759,6 +1777,11 @@ describe('validateGameSaveShape — player record/array deep checks (Mission A r
     // minted by the foundation pool, lk_* by the qi_refining pool, so a
     // coherent holder of both sits at foundation_establishment.
     playerOf(owned).realmId = 'foundation_establishment'
+    // F-REALM-1: a realm claim carries its transition receipts -
+    // techniques + stamped grade at qi+, the foundation record at fe+.
+    owned.techniques = [fiveElementsTechnique()]
+    playerOf(owned).breakthroughGrade = 1
+    playerOf(owned).highestFoundationAchieved = 'human'
     playerOf(owned).selectedTalentIds = ['tc_dia_can', 'lk_linh_mach']
     playerOf(owned).talentLevels = { tc_dia_can: 2, lk_linh_mach: 3 }
     expect(validateGameSaveShape(owned).ok).toBe(true)
@@ -1833,6 +1856,9 @@ describe('validateGameSaveShape — player record/array deep checks (Mission A r
     // The record binds the pool of the realm the transition landed in,
     // so a coherent fixture holds the player at that same realm.
     playerOf(save).realmId = 'foundation_establishment'
+    save.techniques = [fiveElementsTechnique()]
+    playerOf(save).breakthroughGrade = 1
+    playerOf(save).highestFoundationAchieved = 'human'
     playerOf(save).pendingTalentEntitlement = {
       realmId: 'foundation_establishment',
       offeredTalentIds: ['tc_dia_can', 'tc_kim_lan', 'tc_truc_hon'],
@@ -1925,6 +1951,8 @@ describe('validateGameSaveShape — player record/array deep checks (Mission A r
     // A drained pool legitimately produces offeredTalentIds: [] - the
     // decision survives on the UPGRADE branch (owned, levels authored).
     player.realmId = 'qi_refining'
+    save.techniques = [fiveElementsTechnique()]
+    player.breakthroughGrade = 1
     player.selectedTalentIds = ['lk_bac_hai']
     player.talentLevels = { lk_bac_hai: 2 }
     player.pendingTalentEntitlement = { realmId: 'qi_refining', offeredTalentIds: [] }
@@ -2160,8 +2188,10 @@ describe('validateGameSaveShape — cycle/site consistency (Mission A review)', 
       siteLevelAtStart: 1,
       rewardTableVersion: 1,
       rollSeed: 12345,
+      // F-TC10-WC: the span must replay the authored cycle window -
+      // mortal base 100s at site level 1 (multiplier 1.0) = 100_000ms.
       startedAtMs: 1_725_000_000_000,
-      completesAtMs: 1_725_000_060_000,
+      completesAtMs: 1_725_000_100_000,
     }
   }
 
@@ -2435,6 +2465,9 @@ describe('validateGameSaveShape — v73 core inverse ownership', () => {
     // owned nodes whose monotonic prereqs no longer hold, so the
     // fixture must carry a canonical realm for the grant test.
     player.realmId = 'foundation_establishment'
+    save.techniques = [fiveElementsTechnique()]
+    player.breakthroughGrade = 1
+    player.highestFoundationAchieved = 'human'
     player.cultivationPath = 'body'
     player.cultivationWay = 'body_pathway'
 
@@ -2659,9 +2692,19 @@ describe('validateGameSaveShape — v82 seam repair cross-checks', () => {
     // A qi_refining marker is a realm-advance witness - it is only
     // coherent while the player's realm is at least qi_refining.
     playerOf(save).realmId = 'qi_refining'
+    save.techniques = [fiveElementsTechnique()]
+    playerOf(save).breakthroughGrade = 1
     playerOf(save).grantedRealmPassiveIds = ['qi_refining']
+    // F-MOD-1: the claim must replay the authored emission - nhap_dao
+    // emits realm-passive:nhap_dao:maxHp at grade * 0.03.
     playerOf(save).modifiers = [
-      { id: 'm1', sourceId: 'nhap_dao', sourceType: 'realm', stat: 'might', flat: 2 },
+      {
+        id: 'realm-passive:nhap_dao:maxHp',
+        sourceId: 'nhap_dao',
+        sourceType: 'realm',
+        stat: 'maxHp',
+        percent: 0.03,
+      },
     ]
 
     expect(validateGameSaveShape(save).ok).toBe(true)

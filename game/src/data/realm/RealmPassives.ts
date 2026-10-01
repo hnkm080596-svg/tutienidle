@@ -149,6 +149,30 @@ function buildEnhancedKienCoModifiers(_player: PlayerData): StatModifier[] {
   }))
 }
 
+/**
+ * Persisted-claim replay (save validator, F-MOD-1): the exact entry set
+ * the grant seam could have persisted for this player - the enhanced
+ * variant when the realm's entry rides the hidden lineage, the normal
+ * variant otherwise (grantRealmPassive's selection rule). A persisted
+ * modifier outside this envelope is fabricated.
+ */
+export function authoredRealmPassiveEntries(
+  passive: RealmPassiveDefinition,
+  player: PlayerData,
+): StatModifier[] {
+  // hiddenPerfection may be malformed on a save still under validation -
+  // an absent record selects the normal variant (its own shape check
+  // reports the corruption separately).
+  const hiddenIds = player.hiddenPerfection?.hiddenBreakthroughRealmIds
+  const enhanced = Array.isArray(hiddenIds) && hiddenIds.includes(passive.id)
+
+  if (enhanced) {
+    return passive.buildEnhancedModifiers?.(player) ?? passive.buildModifiers(player)
+  }
+
+  return passive.buildModifiers(player)
+}
+
 export const REALM_PASSIVES: RealmPassiveDefinition[] = [
   {
     id: 'qi_refining',
