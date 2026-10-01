@@ -12,6 +12,7 @@ import {
 import { usePlayerStore } from '@/stores/player'
 import { useUiStore } from '@/stores/ui'
 import { i18n } from '@/i18n'
+import { lockBetaFeaturesForTests } from '@/core/game/__fixtures__/betaFeaturesUnlock'
 
 function mountRealmPanel() {
   const container = document.createElement('div')
@@ -152,6 +153,23 @@ describe('RealmPanel', () => {
       'Trúc Cơ Đan', 'truc_co_dan', 'Luyện Thể', 'Kinh Mạch',
       'Hoàn Mỹ', 'Pháp Bảo', 'pham_cot',
     ]) {
+      expect(text).not.toContain(hidden)
+    }
+
+    mounted.unmount()
+  })
+
+  // F-BODY-UI-1 - scope-hidden body chain must not render (nor expose
+  // a live invest button) inside the beta-admitted realm panel. Lock
+  // runs inside the test so sibling tests keep the global unlock.
+  it('body progression sections are scope-hidden under the beta lock', async () => {
+    lockBetaFeaturesForTests()
+    const mounted = mountRealmPanel()
+    await nextTick()
+
+    expect(mounted.container.querySelector('.realm-panel__body')).toBeNull()
+    const text = mounted.container.textContent ?? ''
+    for (const hidden of ['Luyện Thể', 'Kinh Mạch', 'Chu Thiên']) {
       expect(text).not.toContain(hidden)
     }
 

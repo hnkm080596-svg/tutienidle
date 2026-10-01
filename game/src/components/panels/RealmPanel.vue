@@ -18,6 +18,7 @@ import {
   betaNextRealmSurfaceFor,
   betaRealmLadderNodes,
 } from '@/core/betaScopeSurface'
+import { isBetaFeature } from '@/core/betaScope'
 import { formatNumber } from '@/core/format/NumberFormatter'
 import { formatDuration } from '@/core/format/formatDuration'
 import { getRealmTier } from '@/core/realm/RealmTierMap'
@@ -32,6 +33,7 @@ const gameManager = useGameManager()
 const { t } = useI18n()
 const requirement = useBreakthroughRequirementStore()
 const { realmStatPassiveRows } = useRealmStatPassives()
+const bodyPathLive = isBetaFeature('bodyPath')
 
 const currentTier = computed(() => getRealmTier(player.realmId))
 const canBreakthrough = computed(() => gameManager.realmAdvanceOps.canTriggerBreakthrough(player.$state))
@@ -155,8 +157,10 @@ function majorBreakthrough() {
 
       <!-- P7-M7 - unified body progression subviews (the retired
            LuyenThePanel's tier block + the Bat Mach read-only list
-           + the Chu Thien steps column). -->
-      <div class="realm-panel__body">
+           + the Chu Thien steps column). Scope-hidden while the
+           body path is dormant - the invest calls inside are gated
+           too, so nothing spendable renders. -->
+      <div v-if="bodyPathLive" class="realm-panel__body">
         <div class="realm-panel__body-col">
           <Eyebrow>{{ t('panels.realm.bodyRefinement.title') }}</Eyebrow>
           <BodyRefinementSection />
