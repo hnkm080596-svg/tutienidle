@@ -686,7 +686,9 @@ describe('validateGameSaveShape — buildings slice (Mission A1)', () => {
     return {
       instanceId: 'b1',
       buildingId: 'chi_hien_quan',
-      level: 2,
+      // F-SCOPE-3: upgrade() gates on realm tier - level 2 needs
+      // qi_refining; the default mortal save can only carry level 1.
+      level: 1,
       lastCollectedAt: 1_725_000_000_000,
     }
   }
@@ -740,7 +742,9 @@ describe('validateGameSaveShape — productionSites slice (Mission A1)', () => {
   function validSite(): Record<string, unknown> {
     return {
       siteId: 'thanh_van_forest',
-      level: 2,
+      // F-SCOPE-3: upgradeSite gates on realm tier - level 2 needs
+      // qi_refining; the default mortal save can only carry level 1.
+      level: 1,
       autoRestart: true,
       assignedWorkers: 2,
       workerCycles: [validCycle()],
@@ -2732,7 +2736,7 @@ describe('validateGameSaveShape — v82 seam repair cross-checks', () => {
       {
         instanceId: 'b-chq',
         buildingId: 'chi_hien_quan',
-        level: 2,
+        level: 1,
         lastCollectedAt: 1_725_000_000_000,
       },
     ]

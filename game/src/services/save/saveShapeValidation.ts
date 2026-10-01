@@ -79,6 +79,11 @@ import {
   getGlobalCultivationLevel,
   getRealmIndex,
 } from '../../core/realm/realmSystem'
+import { getRealmTier } from '../../core/realm/RealmTierMap'
+import {
+  SPIRIT_STONE_THUONG_PHAM_MATERIAL_ID,
+  SPIRIT_STONE_TRUNG_PHAM_MATERIAL_ID,
+} from '../../core/material/SpiritStoneMaterial'
 import {
   getCultivationRampMultiplier,
   getCultivationSpeedMultiplier,
@@ -2560,6 +2565,7 @@ function validateBuildingsSave(
   path: string,
   issues: ShapeIssue[],
   playerRealmIndex?: number,
+  claimedRealmTier?: number,
 ): void {
   for (let i = 0; i < entries.length; i += 1) {
     const entry = entries[i]
@@ -2585,6 +2591,17 @@ function validateBuildingsSave(
       issues.push({
         path: `${entryPath}.level`,
         message: `level vượt maxLevel authored (${template.maxLevel})`,
+      })
+    }
+
+    // F-SCOPE-3: upgrade() rejects target levels above the player's
+    // realm tier (getRealmTier(currentRealmId) < level + 1) - a
+    // persisted level beyond the tier of the claimed realm is
+    // unproducible.
+    if (claimedRealmTier !== undefined && (entry.level as number) > claimedRealmTier) {
+      issues.push({
+        path: `${entryPath}.level`,
+        message: `level vượt realm tier người chơi (${claimedRealmTier})`,
       })
     }
 
@@ -2616,6 +2633,7 @@ function validateProductionCycleSave(
   playerRealmIndex?: number,
   siteMaxLevel?: number,
   lastSavedAt?: number,
+  siteCurrentLevel?: number,
 ): void {
   if (
     !isObject(value) ||
@@ -2663,6 +2681,21 @@ function validateProductionCycleSave(
     })
   }
 
+  // F-SCOPE-4: the lane writer stamps siteLevelAtStart = state.level
+  // at spawn and site level only ever increments (upgradeSite) - an
+  // integer outside [1, site.level] is a forged settle window.
+  if (
+    siteCurrentLevel !== undefined &&
+    (!Number.isInteger(value.siteLevelAtStart) ||
+      (value.siteLevelAtStart as number) < 1 ||
+      (value.siteLevelAtStart as number) > siteCurrentLevel)
+  ) {
+    issues.push({
+      path: `${path}.siteLevelAtStart`,
+      message: `ngoài khoảng authored [1, level site hiện tại = ${siteCurrentLevel}]`,
+    })
+  }
+
   // F-TC10-WC: the span itself is the authored recipe - the sole writer
   // stamps completesAtMs = startedAtMs + computeCycleSeconds(base,
   // level)*1000 and never mutates it afterward, so a mismatched span is
@@ -2696,6 +2729,7 @@ function validateProductionSitesSave(
   issues: ShapeIssue[],
   playerRealmIndex?: number,
   playerLastSavedAt?: number,
+  claimedRealmTier?: number,
 ): void {
   for (let i = 0; i < entries.length; i += 1) {
     const entry = entries[i]
@@ -2722,6 +2756,16 @@ function validateProductionSitesSave(
       issues.push({
         path: `${entryPath}.level`,
         message: `level vượt maxLevel authored (${siteDefinition.maxLevel})`,
+      })
+    }
+
+    // F-SCOPE-3: upgradeSite rejects target levels above the player's
+    // realm tier (currentRealmTier < targetLevel) - a persisted level
+    // beyond the tier of the claimed realm is unproducible.
+    if (claimedRealmTier !== undefined && (entry.level as number) > claimedRealmTier) {
+      issues.push({
+        path: `${entryPath}.level`,
+        message: `level vượt realm tier người chơi (${claimedRealmTier})`,
       })
     }
 
@@ -2775,6 +2819,7 @@ function validateProductionSitesSave(
             playerRealmIndex,
             siteDefinition?.maxLevel,
             playerLastSavedAt,
+            entry.level as number,
           )
 
           if (
@@ -3300,6 +3345,7 @@ function validateEquipmentSlotEntries(
   entries: unknown[],
   path: string,
   issues: ShapeIssue[],
+  claimedRealmTier?: number,
 ): unknown[] {
   const normalizedEntries: unknown[] = []
 
@@ -3328,6 +3374,31 @@ function validateEquipmentSlotEntries(
       issues.push({
         path: `${path}[${i}].enhanceLevel`,
         message: `vượt MAX_SLOT_ENHANCE_LEVEL (${MAX_SLOT_ENHANCE_LEVEL})`,
+      })
+    }
+
+    // F-SCOPE-2: enhancing at level N pays the stone tier of
+    // getSpiritStoneMaterialIdForEnhanceLevel(N) - ha-only economies
+    // (realm tier < 4) reach at most level 30, trung economies
+    // (tier 4-6) reach 60, thuong (tier >= 7) reach the cap. A
+    // persisted level past the tier of the claimed realm is
+    // unproducible.
+    const maxProducibleEnhance =
+      claimedRealmTier === undefined
+        ? undefined
+        : claimedRealmTier >= 7
+          ? MAX_SLOT_ENHANCE_LEVEL
+          : claimedRealmTier >= 4
+            ? 60
+            : 30
+    if (
+      maxProducibleEnhance !== undefined &&
+      isNonNegativeFiniteNumber(entry.enhanceLevel) &&
+      (entry.enhanceLevel as number) > maxProducibleEnhance
+    ) {
+      issues.push({
+        path: `${path}[${i}].enhanceLevel`,
+        message: `vượt trần cường hóa producible theo realm tier (${maxProducibleEnhance})`,
       })
     }
 
@@ -3446,6 +3517,11 @@ export function validateGameSaveShape(parsed: unknown): ShapeValidationResult {
       ? getRealmIndex(parsed.player.realmId)
       : undefined
 
+  const claimedRealmTier =
+    isObject(parsed.player) && typeof parsed.player.realmId === 'string'
+      ? getRealmTier(parsed.player.realmId)
+      : undefined
+
   if (productionSites) {
     validateProductionSitesSave(
       productionSites,
@@ -3455,6 +3531,7 @@ export function validateGameSaveShape(parsed: unknown): ShapeValidationResult {
       isObject(parsed.player) && isFiniteNumber(parsed.player.lastSavedAt)
         ? (parsed.player.lastSavedAt as number)
         : undefined,
+      claimedRealmTier,
     )
   }
 
@@ -3669,11 +3746,35 @@ export function validateGameSaveShape(parsed: unknown): ShapeValidationResult {
       'buildings',
       issues,
       playerRealmIndex !== undefined && playerRealmIndex >= 0 ? playerRealmIndex : undefined,
+      claimedRealmTier,
     )
   }
 
   if (materials) {
     validateStackEntries(materials, 'materialId', 'materials', issues)
+
+    // F-SCOPE-1: every authored stone writer pays the tier keyed by
+    // getSpiritStoneMaterialIdForRealmTier(realmTier) - a trung stack
+    // needs a tier >= 4 realm claim, thuong needs tier >= 7; below
+    // that, the stack is unproducible.
+    if (claimedRealmTier !== undefined) {
+      for (let i = 0; i < materials.length; i += 1) {
+        const entry = materials[i]
+        if (!isObject(entry) || typeof entry.materialId !== 'string') continue
+        const requiredTier =
+          entry.materialId === SPIRIT_STONE_THUONG_PHAM_MATERIAL_ID
+            ? 7
+            : entry.materialId === SPIRIT_STONE_TRUNG_PHAM_MATERIAL_ID
+              ? 4
+              : 0
+        if (requiredTier > 0 && claimedRealmTier < requiredTier) {
+          issues.push({
+            path: `materials[${i}]`,
+            message: `linh thạch ${entry.materialId} vượt realm tier người chơi (${claimedRealmTier})`,
+          })
+        }
+      }
+    }
   }
 
   if (pills) {
@@ -3701,7 +3802,7 @@ export function validateGameSaveShape(parsed: unknown): ShapeValidationResult {
       )
     : undefined
   const normalizedEquipmentSlots = equipmentSlots
-    ? validateEquipmentSlotEntries(equipmentSlots, 'equipmentSlots', issues)
+    ? validateEquipmentSlotEntries(equipmentSlots, 'equipmentSlots', issues, claimedRealmTier)
     : undefined
   const discardedEquipmentCount = equipmentValidation?.discardedCount ?? 0
 

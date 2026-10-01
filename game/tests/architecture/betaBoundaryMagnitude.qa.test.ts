@@ -241,9 +241,33 @@ describe('F-TC7-ENH: equipmentSlots enhanceLevel bounded by MAX_SLOT_ENHANCE_LEV
   })
 
   it('control: enhanceLevel at the cap validates', () => {
-    const { save } = validSave({}, {
-      equipmentSlots: [{ slot: 'weapon', enhanceLevel: MAX_SLOT_ENHANCE_LEVEL }],
-    } as Partial<GameSave>)
+    // F-SCOPE-2: reaching the cap pays thuong stones - only a tier >= 7
+    // realm claim can produce it, so the control claims tribulation
+    // with the coherence witnesses that claim requires.
+    const { save } = validSave(
+      {
+        realmId: 'tribulation',
+        breakthroughGrade: 1,
+        highestFoundationAchieved: 'human',
+      },
+      {
+        techniques: [
+          {
+            id: 'five_elements_art',
+            name: 'Five Elements Art',
+            description: 'payload',
+            grade: 1,
+            rank: 2,
+            mastery: 100,
+            quality: 'huyen',
+            gradeHistory: { 1: { finalRank: 12, completionState: 'dai_thanh' } },
+          },
+        ],
+        equipmentSlots: [
+          { slot: 'weapon', enhanceLevel: MAX_SLOT_ENHANCE_LEVEL, enhanceFailStreak: 0 },
+        ],
+      } as Partial<GameSave>,
+    )
     expect(validateGameSaveShape(JSON.parse(JSON.stringify(save))).ok).toBe(true)
   })
 })

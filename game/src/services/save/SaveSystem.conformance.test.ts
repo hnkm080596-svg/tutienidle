@@ -159,8 +159,11 @@ function populateSource(player: PlayerData, manager: GameManager): void {
   manager.skillManager.restore([structuredClone(CONF_SKILL)])
 
   // Bags.
+  // F-SCOPE-1: every stone writer is realm-tier-keyed, so a trung stack
+  // on a tier-2 save is unproducible - the second stack uses the first
+  // non-stone material instead.
   manager.materialBag.add(manager.materialRegistry.get(materials[0]!.id), 7)
-  manager.materialBag.add(manager.materialRegistry.get(materials[1]!.id), 3)
+  manager.materialBag.add(manager.materialRegistry.get(materials[3]!.id), 3)
   manager.pillBag.add(manager.pillRegistry.get(pills[0]!.id), 2)
   manager.equipmentBag.add(
     makeInstance({

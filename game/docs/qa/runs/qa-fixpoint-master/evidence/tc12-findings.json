@@ -1,0 +1,77 @@
+{
+  "summary": "Blind adversarial falsification sweep of validateGameSaveShape + restoreGameSession + assertSaveAcceptable at pinned commit 120cba78. Swept every GameSave slice (player counters/ledgers, skills, techniques, materials, equipment+slots, pills, talismans, formations, buildings, quests, productionSites.workerCycles, alchemyJobs, tribulation, decompose, companions/gifts, timed effects, nodeLevels, modifiers, hiddenPerfection, body progression, sword/spell path slices). The validator is systematically tight on authored-envelope claims: unknown ids rejected at the acceptance preflight, writer-shape bounds enforced on every cycle/accrual timestamp, cross-slice ledgers (insight<=gained, attributePoints<=tiers, cps<=derivable, realm witnesses) enforced. 2 admitted mints found: skills[].totalExperience is completely unvalidated and mints uncapped live flat damage (and the hidden ngo_dao Lv3 gate on next cast); negative mainStat.flat mints an impossible negative modifier (self-harm). One sweep candidate collapsed to HOLD on inspection: workerCycles over the beta-producible lane count is admitted but the offline-settle budget caps total rewarded duration, so extra lanes only reorder payouts. All other surfaces hold.",
+  "probe_file": "game/src/probes/forgedSaveClaims.probe.test.ts",
+  "probe_run": "cd game && npx vitest run src/probes/forgedSaveClaims.probe.test.ts (14/14 pass)",
+  "findings": [
+    {
+      "id": "F-SKILL-TEXP-1",
+      "title": "skills[].totalExperience is unvalidated and mints uncapped flat damage plus the hidden ngo_dao cast-level gate",
+      "severity": "High",
+      "attack_class": "unbounded persisted counter -> uncapped live effect + cross-slice mirror divergence",
+      "surface": "skills[] / player.skillCastCounts / core_<skillId> nodeLevels",
+      "reproduction": "validateSkillEntries checks only entry.id and the retired loadout keys (saveShapeValidation.ts ~2266-2287); experience/totalExperience/selectedSpecializationId get no numeric check, not even finite. Restore keeps them verbatim ({...template, experience, totalExperience, selectedSpecializationId}, GameManagerSaveRestore.ts:217-222). getEffectiveSkill then adds getPrecursorFlatDamageBonus(totalExperience)=floor(max(0,x)/10) with no cap to every damage action on the mortal precursors, including mandatory starter linh_bao (SkillSystem.ts:122-133). Forge a legal mortal save, set skills[linh_bao].totalExperience=1e12 and player.skillCastCounts={linh_bao:0} (divergence a writer never emits - castCountSink writes both in the same statement), validateGameSaveShape->ok, restoreGameSession->ok, restored linh_bao carries totalExperience=1e12 and its dealDamage action value = 1+1e11 vs authored 1. On the next live cast, castCountSink mirrors totalExperience into skillCastCounts and nodeLevels[core_linh_bao]=Lv3 (GameManager.ts:517-533), satisfying the hidden ngo_dao ritual gate (linh_bao Lv3 = 10000 casts, CoreSkills.ts:66) without the grind. Probe: 'FINDING F-SKILL-TEXP-1' and 'F-SKILL-TEXP-1b' in the probe file."
+    },
+    {
+      "id": "F-EQ-NEGFLAT-1",
+      "title": "equipment[].mainStat.flat is only bounded from above; a negative flat is admitted and minted as a live negative modifier",
+      "severity": "Low",
+      "attack_class": "sign-boundary gap in writer-shape envelope",
+      "surface": "equipment[].mainStat.flat",
+      "reproduction": "validateEquipmentEntries rejects flat > authored roll bound (statRange.max * quality implicit * realm scale) and any nonzero percent/multiplier, but never checks flat < statRange.min - rollMainStat can only emit >= statRange.min (positive). Forge an equipped base_kiem with mainStat {stat:'might', flat:-1e9}; shape ok, restoreGameSession ok, getEquipmentModifiers() contains a live -1e9 might modifier. Self-harm only (every equipment stat is monotonic-beneficial), so Low; still an unproducible claim that lands in the live modifier channel. Probe: 'FINDING F-EQ-NEGFLAT-1' in the probe file."
+    }
+  ],
+  "holds": [
+    {
+      "id": "H-REGISTRY-1",
+      "detail": "Unknown itemId/affixId (and materialId/pillId/buildingId/siteId/techniqueId) skip every template-conditioned shape bound but are rejected by assertSaveAcceptable before restore mutates anything (probe: HOLD unknown itemId/affixId)."
+    },
+    {
+      "id": "H-TECHNIQUE-1",
+      "detail": "Technique holder contract: 0-or-1 holder == activeWay.techniqueId, grade<=realm ceiling, rank<=cap, mastery bound, gradeHistory canonical key-set -> reject."
+    },
+    {
+      "id": "H-CONTRACT-1",
+      "detail": "Mortal boundary (creation pick + committed path), body progression integrity (sequential prereqs + physiqueGrade exact-derive), hiddenPerfection two-view integrity, spell element<->kit coherence -> all reject (probe: HOLD mortal+path)."
+    },
+    {
+      "id": "H-LANES-1",
+      "detail": "workerCycles >19 rejects (authored chi_hien_quan ceiling). At/below ceiling the forge is admitted but inert as a mint: offline settle spends ONE shared 10h budgetMs across all lanes, so extra forged lanes only reorder completions inside the same cap (probes: HOLD 20 lanes rejects, HOLD 19 lanes admitted)."
+    },
+    {
+      "id": "H-TIMING-1",
+      "detail": "Reversed/overspanned alchemy jobs and production cycles reject; startedAtMs>lastSavedAt rejects; building accrual clamps to offline cap+capacity with accrualRealmId pinned <= player realm (probe: HOLD reversed alchemy span)."
+    },
+    {
+      "id": "H-LEDGER-1",
+      "detail": "Currency/ledger coherence enforced: skillInsight<=totalSkillInsightGained, attributePoints<=cumulative tiers, cultivationInsightAccumulator<threshold (0 without the talent), cultivationPerSecond<=talent-derivable (+25% TLT only with a live TLT record) (probes: HOLD attributePoints, HOLD skillInsight, HOLD cps)."
+    },
+    {
+      "id": "H-EQUIP-1",
+      "detail": "Equipment envelope: equipped grade must be producible at claimed realm, template slot match, flat>authored bound rejects, percent/multiplier reject, affix count/tier/pool/dup-stat/slot bounds (probe: HOLD equipped bat_pham at mortal)."
+    },
+    {
+      "id": "H-MODS-1",
+      "detail": "player.modifiers is a claimed-source whitelist (realm-passive marker+byte-match, meridian, talent:loi_kiep bound); equipment-source entries are scrubbed at the setEquipmentModifiers rebuild."
+    },
+    {
+      "id": "H-NODES-1",
+      "detail": "nodeLevels replays monotonic buy-gates only; techniqueRank/skillCastCount/kiemDaoBelowCap laggy gates intentionally skipped - rank dies at technique grade-up freeze, so frozen surplus is unprovable (design, not a gap)."
+    },
+    {
+      "id": "H-DORMANT-1",
+      "detail": "All dormant mint channels verified closed at emission: admittedNodeModifiers filters betaNodeWriteAdmitted, technique tier/combat modifiers gate betaTechniqueAdmitted, path stat modifiers and realm rewards gate isBetaWay+isRealmAvailable; companion gift claims are scope-locked (isBetaFeature('companion') false) so forged unclaimed gift records stay inert."
+    },
+    {
+      "id": "H-MIRROR-1",
+      "detail": "skillCastCounts magnitudes are admitted (finite non-neg only) but inert: no authored beta node uses the skillCastCount prereq kind and the mirror does not feed effective-skill math; the mint channel is skills[].totalExperience (F-SKILL-TEXP-1), not this record (probe: HOLD forged skillCastCounts)."
+    },
+    {
+      "id": "H-TIMED-1",
+      "detail": "persistentTimedEffects bounded to writer shapes (tu_linh_tran exact record, pill regen authored-pill+flat<=mpPerSecond*1.5, appliedAtMs<=lastSavedAt); durationStackable refresh span unbounded by design (applyTimedEffect merge)."
+    },
+    {
+      "id": "H-MISC-1",
+      "detail": "Other swept surfaces hold: highestFoundationAchieved has no live consumer at beta (flag only); phaGiapCarryStacks capped at maxStacks at seed; enhanceLevel/failStreak bounded+producible; unknown skill ids drop at restore; nodeFreePurchaseRecord only shrinks refunds (self-harm); tribulation cooldownUntil self-inflicted; cultivation/insight/material amounts are inherently unprovable accruals; ancient lastSavedAt is capped by settle windows; equipment realmLevel/zoneId/icon/locked/favorite feed display/dormant consumers only; no persistentBuffs slice exists in GameSave."
+    }
+  ]
+}

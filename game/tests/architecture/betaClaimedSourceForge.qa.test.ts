@@ -487,9 +487,13 @@ describe('F-TC5-1: accrual realm pin boundary', () => {
   it('control: a pin below the current realm (mid-breakthrough window) stays valid and mints the pin tier', () => {
     const save = validSave()
     const p = save.player as ReturnType<typeof createDefaultPlayer>
-    p.realmId = 'qi_refining'
+    // F-SCOPE-3: the level-9 building below is only producible at realm
+    // tier 9 - claim tribulation (the pin 'mortal' stays below it) with
+    // the coherence witnesses that claim requires.
+    p.realmId = 'tribulation'
     // F-REALM-1: a committed qi+ save carries the stamped grade.
     p.breakthroughGrade = 1
+    p.highestFoundationAchieved = 'human'
     p.cultivationPath = 'spell'
     p.cultivationWay = 'spell_pathway'
     p.mortalBasicSkillId = undefined
@@ -709,6 +713,24 @@ describe('F-A8-2: building/site level bounded by authored maxLevel', () => {
 
   it('control: level exactly at maxLevel validates for both record kinds', () => {
     const save = validSave()
+    // F-SCOPE-3: level 9 is only producible at realm tier 9 - the
+    // control claims tribulation with its coherence witnesses.
+    const p = save.player as ReturnType<typeof createDefaultPlayer>
+    p.realmId = 'tribulation'
+    p.breakthroughGrade = 1
+    p.highestFoundationAchieved = 'human'
+    ;(save as Record<string, unknown>).techniques = [
+      {
+        id: 'five_elements_art',
+        name: 'Five Elements Art',
+        description: 'payload',
+        grade: 1,
+        rank: 2,
+        mastery: 100,
+        quality: 'huyen',
+        gradeHistory: { 1: { finalRank: 12, completionState: 'dai_thanh' } },
+      },
+    ]
     ;(save as Record<string, unknown>).buildings = [
       {
         instanceId: 'i1',

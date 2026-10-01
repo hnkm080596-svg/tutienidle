@@ -794,6 +794,24 @@ describe('F-TC9-3: alchemy job room-level bound', () => {
 
   it('a job within the persisted pill_room level still validates', () => {
     const save = validSave()
+    // F-SCOPE-3: a level-5 building is only producible at realm tier
+    // >= 5 - claim nascent_soul with its coherence witnesses.
+    const p = save.player as ReturnType<typeof createDefaultPlayer>
+    p.realmId = 'nascent_soul'
+    p.breakthroughGrade = 1
+    p.highestFoundationAchieved = 'human'
+    save.techniques = [
+      {
+        id: 'five_elements_art',
+        name: 'Five Elements Art',
+        description: 'payload',
+        grade: 1,
+        rank: 2,
+        mastery: 100,
+        quality: 'huyen',
+        gradeHistory: { 1: { finalRank: 12, completionState: 'dai_thanh' } },
+      },
+    ]
     save.buildings = [
       { instanceId: 'b-pill', buildingId: 'pill_room', level: 5, lastCollectedAt: 0 },
     ]
