@@ -503,3 +503,8 @@ Each candidate must pass the promotion predicate during Devin adoption before be
   - **Root class:** L-COLLECTION-LEVEL-INVARIANTS - BOUNDARY.
   - **Detector escape:** per-entry validation checked shape and magnitude of each element but never the cross-entry invariants the sole writers maintain - EquipmentBag.add() dissolves overflow so produced bags hold <=500 unprotected entries, and build() rejects a second crafting_station of the same buildingId; forged collections that no writer could emit minted N x payout at restore.
   - **Pin/attack proposal:** derive collection-level invariants from writer semantics (dedup keys, uniqueness rules, post-write count ceilings) and enforce them at the save boundary; bound only unproducible shapes - protected entries (equipped/locked/favorite) and multi-instance building categories stay tolerated.
+
+- **Incident:** skills[].totalExperience carried no validation - a forged 1e6 claim minted +100000 floor(t/10) flat damage on the beta starter and claimed cast-level 3 (F-SKILLS-TXP); sibling field experience unchecked but consumer-free (G-SKILLS-EXP, deferred Low).
+  - **Root class:** L-MIRROR-COHERENCE - BOUNDARY.
+  - **Detector escape:** the writer increments totalExperience and writes player.skillCastCounts[id] in the same statement, and the mirror is never cleared (unlearn leaves stale counts, relearn restarts the entry) - the producible relation is tExp <= mirror, which the validator never replayed while checking only entry.id.
+  - **Pin/attack proposal:** bound mirrored counters against their never-cleared mirror row in the direction the writer cannot produce (tExp > mirror); tolerate stale-mirror shapes (tExp < mirror after relearn) and mirror-only rows for unlearned skills.
