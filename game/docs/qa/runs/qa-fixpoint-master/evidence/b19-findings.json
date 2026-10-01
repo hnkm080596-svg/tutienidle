@@ -1,0 +1,45 @@
+{
+  "reviewer": "b19",
+  "role": "scope CONSUMER seam review (read-model/honesty downstream of the verdict)",
+  "commit": "ab0b135e021dbc915821c0855de3d395ce82a5ce",
+  "verdict": "PASS WITH GAPS",
+  "findings": [
+    {
+      "id": "b19-01",
+      "severity": "Medium",
+      "surface": "components/panels/CharacterDetailCard.vue (statGroups over BASE_STAT_LABELS, categories combat/survival/special/defense_advanced)",
+      "title": "Character detail card renders hidden-way stat rows on every save",
+      "repro": "tests/architecture/b19ConsumerScopeLeak.qa.test.ts > 'character detail card renders no hidden-way stat rows' - mount the card on a fresh default player; the rendered text contains 'Tỉ lệ phản kích', 'Tỉ lệ hộ thể', 'Tỉ lệ truy kích' (The Tu An / hidden body way reactive chances, StatLabels.ts:68-70) and 'Hiệu Ứng Phản Ứng' (reactionEffectPercent, hidden spell path only per StatDomain.ts:34). Fails deterministically - no hostile state needed.",
+      "mintPath": "Open Character panel -> 'Chi Tiết' (panels.character.actions.details) -> the docked stat card lists dormant-way stats for every beta player.",
+      "confidence": "confirmed",
+      "evidence": "EXECUTED_TEST (npx vitest run tests/architecture/b19ConsumerScopeLeak.qa.test.ts: assertion expected rendered text not to contain 'Hiệu Ứng Phản Ứng', received it alongside the three The Tu An rows)",
+      "contract": "frontend-contract.md sec.I: hidden ways are scope-hidden; 'no UI may mention them'. BASE_STAT_LABELS' own descriptions say 'chi tu thuoc tinh (The Tu An)' - the leak names the dormant way verbatim.",
+      "note": "The values are 0.0% on a clean save, so the impact is dormant-system branding in a live surface rather than corrupted numbers. statGroups should consult the beta stat/skill domain model (or filter out the hidden-path stat keys) instead of iterating the raw label list."
+    },
+    {
+      "id": "b19-02",
+      "severity": "Medium",
+      "surface": "components/panels/bag-sections/MaterialBagSection.vue:239-240 (entries) + components/panels/scripture/LoreCodex.vue:22-28 (loreItems)",
+      "title": "Carried artifact-domain material renders in bag and lore codex",
+      "repro": "tests/architecture/b19ConsumerScopeLeak.qa.test.ts > 'material bag hides the domain-suppressed artifact stone' + 'lore codex hides the domain-suppressed artifact stone' - mount both with materialBag carrying doan_bao_thach (data/materials/materials.ts:86-92). Both surfaces show the stack; both assertions fail deterministically.",
+      "mintPath": "Legacy/carried save whose materialBag already holds doan_bao_thach. Contract sec.H: out-of-scope saves load and play, dormant records preserved, no migration - so the stack is production-reachable. The material's description reads 'dung de nang pham ban menh phap bao' - it names the scope-hidden artifact domain to the player.",
+      "confidence": "confirmed",
+      "evidence": "EXECUTED_TEST (bag-section__count reports the stack despite the suppressed domain; lore codex renders it - EmptyState never mounts)",
+      "contract": "frontend-contract.md sec.I: artifact/phap_bao is scope-hidden. Both surfaces already consult isCompanionPullTokenSourceSuppressed for the pull token, but doan_bao_thach - the other census'd suppressed-source material (isDomainScopedAcquisitionEnabled, ReleasePolicy.ts:153) - is not filtered. Its delivery is suppressed at origination yet a carried stack still brands the dormant domain in two live panels.",
+      "note": "Fix shape is symmetric with the existing pull-token filter: consult the same domain-scope predicate (e.g. !isDomainScopedAcquisitionEnabled(stack.material.domainUnlockRealmId, player.realmId) -> hide) in both consumers. Not reported as 'forged counter' - this is rendered branding, not a same-value number."
+    }
+  ],
+  "refutedLines": [
+    "kiem/the bar leak: resolvePathCapabilities (CultivationPathSystem.ts:184-192) returns an empty capability set for any committed non-beta way, so hasStaticPathCapability/hasPathCapability gates in kiemBarBridge.ts and theBarBridge.ts fail closed on carried sword/body saves.",
+    "orb picker / dynamic-basic leak: CombatBuild.ts ~225-347 wayAdmitted gates gatedRuntime/kit/buildDynamicBasic, so the dynamicBasic provider never attaches on dormant-way saves; the An emblem in TurnCombatSkillBar.vue sits inside the scopeHiddenRoles-filtered loop and is dead code, not a leak.",
+    "hidden-trial top-bar banner: the only resolver (AncientBeastTrial.ts:104-127) calls canProgressHiddenBody, which fails closed when isBetaFeature('hiddenContent') is false (HiddenLineage.ts:136-138).",
+    "TalentEntitlementModal dormant cards: reconcile + isTalentEntitlementActionable require isBreakthroughAcquisitionEnabled and resolveTalentEntitlement rejects non-beta upgrade ids.",
+    "RewardList artifactInsight: mint path is BattleLootSystem.grantArtifactExperience, which requires player.artifact && isArtifactDomainUnlocked(player.realmId); artifact unlock is golden_core, beyond the release ceiling, so the flag never sets for any beta-reachable realm.",
+    "skill tree on a carried dormant-way save: SkillPathPanel betaWayAdmitted suppresses wayNodeTreeTag trees and NodeTreePanel re-filters by nodeWayApplies; betaSkillTreeFor/betaSkillAdmitted govern entries."
+  ],
+  "evidenceFiles": {
+    "findings": "docs/qa/runs/qa-fixpoint-master/evidence/b19-findings.json",
+    "report": "docs/qa/runs/qa-fixpoint-master/evidence/b19-report.md",
+    "reproTests": "tests/architecture/b19ConsumerScopeLeak.qa.test.ts"
+  }
+}

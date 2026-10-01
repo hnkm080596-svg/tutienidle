@@ -35,6 +35,7 @@ import { STAGES } from '../../data/stage/Stages'
 import { zones } from '../../data/stage/Zones'
 import { BREAKTHROUGH_TALENT_POOLS } from '../../data/talent/BreakthroughTalentPools'
 import { PHAP_TU_NODES } from '../../data/progression/PhapTuNodes'
+import { PHAP_TU_ELEMENT_ROOT_IDS } from '../../data/progression/PhapTuNodes.builders'
 import { PHAP_TU_AN_NODES } from '../../data/progression/PhapTuAnNodes'
 import { KIEM_TU_NODES } from '../../data/progression/KiemTuNodes'
 import { THE_TU_NODES } from '../../data/progression/TheTuNodes'
@@ -96,6 +97,7 @@ import { getWorkerCapacityForLevel } from '../../core/production/WorkerCapacity'
 import { getTalentMaxLevel, isLegalBreakthroughOffer, isTalentEntitlementActionable } from '../../core/talent/TalentEntitlement'
 import { skillCoreNodeId } from '../../core/progression/SkillCoreLevel'
 import { isPhysiqueGradeId } from '../../data/realm/PhysiqueLadder'
+import { getActiveElement } from '../../core/player/CultivationPathSystem'
 
 // M-QI-05 (v73) - canonical Core Node lookups for the coverage checks:
 // a save that loads must leave every levelled learned skill, every
@@ -133,6 +135,14 @@ const PROGRESSION_NODE_BY_ID = new Map(
     ...THE_TU_AN_NODES,
     ...SKILL_CORE_NODES,
   ].map((node) => [node.id, node]),
+)
+
+// F-A19-1: root nodeId -> owning element. commitFiveElementInitiation is
+// the only writer and it mints exactly the committed element's root, so
+// an owned root is only producible when player.spellPath.element names
+// that element (a mortal save can hold none of the five).
+const ELEMENT_BY_ROOT_ID = new Map<string, string>(
+  Object.entries(PHAP_TU_ELEMENT_ROOT_IDS).map(([element, rootId]) => [rootId, element]),
 )
 
 // F-TAL-1 / F-REALM-1 / F-TC10: ownership and claim earnability lookups.
@@ -1675,6 +1685,23 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
               path: `player.nodeLevels.${nodeId}`,
               message: 'node đã mua phải nằm trong purchasedNodeIds',
             })
+          }
+
+          // F-A19-1: an owned element root is producible only on the
+          // post-initiation element commit - any other value (incl. null
+          // before the ritual) leaves a permanently bricked initiation
+          // the excludesNode replay cannot see. getActiveElement is the
+          // canonical element read: it resolves only on the element-axis
+          // way's committed pair, so a hostile/missing slice fails closed.
+          const rootElement = ELEMENT_BY_ROOT_ID.get(nodeId)
+          if (rootElement !== undefined) {
+            const committedElement = getActiveElement(player as unknown as PlayerData)
+            if (committedElement !== rootElement) {
+              issues.push({
+                path: `player.nodeLevels.${nodeId}`,
+                message: `element root '${nodeId}' chỉ sản sinh được khi spellPath.element = '${rootElement}'`,
+              })
+            }
           }
 
           for (const prereq of node.prerequisites ?? []) {

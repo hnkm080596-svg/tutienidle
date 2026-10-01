@@ -4,7 +4,8 @@ import { useI18n } from 'vue-i18n'
 import { useUiStore, type BagTab } from '@/stores/ui'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { scopeHiddenPillFamilyOfId } from '@/core/betaScope'
-import { isCompanionPullTokenSourceSuppressed } from '@/core/realm/ReleasePolicy'
+import { isCompanionPullTokenSourceSuppressed, isDomainScopedAcquisitionEnabled } from '@/core/realm/ReleasePolicy'
+import { usePlayerStore } from '@/stores/player'
 import EquipmentBagSection from './bag-sections/EquipmentBagSection.vue'
 import MaterialBagSection from './bag-sections/MaterialBagSection.vue'
 import PillBagSection from './bag-sections/PillBagSection.vue'
@@ -17,6 +18,7 @@ const { t } = useI18n()
 
 const ui = useUiStore()
 const gameManager = useGameManager()
+const player = usePlayerStore()
 const { stateVersion } = useStateVersion()
 
 const activeTab = computed<BagTab>(() => ui.activeBagTab)
@@ -28,7 +30,8 @@ const BAG_COUNTS: Record<BagTab, () => number> = {
   material: () =>
     gameManager.materialBag
       .getAll()
-      .filter((stack) => !isCompanionPullTokenSourceSuppressed(stack.material.id)).length,
+      .filter((stack) => !isCompanionPullTokenSourceSuppressed(stack.material.id))
+      .filter((stack) => isDomainScopedAcquisitionEnabled(stack.material.domainUnlockRealmId, player.realmId)).length,
   // Same scope-hidden family filter as the section's entries - the tab
   // count must agree with what the grid can render.
   pill: () =>

@@ -241,6 +241,24 @@ export function isScopeHidden(feature: string): boolean {
 }
 
 /**
+ * Stat keys whose only writers live inside scope-hidden domains: the
+ * The Tu An reactive chances (STAT_DOMAIN 'hidden_body') and the hidden
+ * Phap Tu path's reaction scalar. A beta player can never produce them,
+ * so stat-row surfaces must not brand the dormant systems - the same
+ * contract B18's suppressed-source filters follow.
+ */
+export const BETA_SCOPE_HIDDEN_STAT_KEYS: ReadonlySet<string> = new Set([
+  'counterChance',
+  'protectChance',
+  'followUpChance',
+  'reactionEffectPercent',
+])
+
+export function isBetaStatLabelVisible(key: string): boolean {
+  return !BETA_SCOPE_HIDDEN_STAT_KEYS.has(key)
+}
+
+/**
  * Generic verdict classifier for ANY surface: compose it with the
  * per-surface allow-list check (isBetaWay / isBetaEquipmentTab /
  * isBetaFeature / isBetaElement / isBetaEnemyId) and the consumer's
