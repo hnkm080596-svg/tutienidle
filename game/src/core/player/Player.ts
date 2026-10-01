@@ -523,13 +523,12 @@ export function resolvePlayerStatAssembly(
   // Persisted realm-sourced modifiers reconcile against the CURRENT
   // scope verdict: realm-passive entries granted through a hidden
   // breakthrough stay recorded on flagged saves but emit nothing while
-  // hiddenContent is locked, and the non-passive realm channels (the
-  // body chapters - meridian and siblings) emit only while bodyPath is
-  // admitted. Records are never scrubbed on restore.
+  // hiddenContent is locked. The body chain (meridian and siblings) is
+  // live scope, so its channel reconciles against opened records.
+  // Records are never scrubbed on restore.
   const hiddenRealmIds = isBetaFeature('hiddenContent')
     ? undefined
     : new Set(getHiddenBreakthroughRealmIds(player))
-  const bodyPathAdmitted = isBetaFeature('bodyPath')
 
   // F-TC6-2/F-TC6-9 rebuild-don't-trust: a persisted realm-sourced
   // payload is a claim, not evidence. The marker grants ownership of
@@ -600,9 +599,6 @@ export function resolvePlayerStatAssembly(
     }
     const meridian = MERIDIANS.find((entry) => entry.id === modifier.sourceId)
     if (meridian !== undefined) {
-      if (!bodyPathAdmitted) {
-        continue
-      }
       if (!player.bodyProgression.meridian.openedIds.includes(meridian.id)) {
         continue
       }

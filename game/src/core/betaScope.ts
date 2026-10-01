@@ -337,13 +337,11 @@ export function betaActOfEnemy(id: string): BetaActId | null {
 // Alchemy recipe family authority
 // ---------------------------------------------------------------------------
 
-// thong_mach_dan is deliberately absent: its only sink is the dormant
-// meridian chapter, so crafting it under the lock was a silent drain of
-// live herbs/wood/stones into a product that can never emit.
 const BETA_ENABLED_RECIPE_FAMILY_IDS = [
   'tu_linh_dan',
   'hoi_linh_dan',
   'khai_linh_dan',
+  'thong_mach_dan',
   'truc_co_dan',
 ] as const
 

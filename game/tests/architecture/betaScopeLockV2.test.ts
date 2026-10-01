@@ -235,13 +235,12 @@ describe('beta scope v2 - enemy roster authority', () => {
 })
 
 describe('beta scope v2 - recipe family allow-list', () => {
-  it('enables exactly the four beta pill families', () => {
-    // thong_mach_dan was removed: its only sink is the dormant meridian
-    // chapter, so under the lock it was a silent drain of live
-    // currencies into a product that can never emit.
+  it('enables exactly the five beta pill families', () => {
+    // thong_mach_dan is live: the meridian chapter consumes it.
     expect([...BETA_ENABLED_RECIPE_FAMILIES].sort()).toEqual([
       'hoi_linh_dan',
       'khai_linh_dan',
+      'thong_mach_dan',
       'truc_co_dan',
       'tu_linh_dan',
     ])
@@ -250,7 +249,6 @@ describe('beta scope v2 - recipe family allow-list', () => {
   it('fails closed for other live families and unknown ids', () => {
     for (const id of [
       'hoi_xuan_dan',
-      'thong_mach_dan',
       'phi_van_dan',
       'to_cot_dan',
       'thoi_the_dan',
@@ -268,11 +266,11 @@ describe('beta scope v2 - recipe family allow-list', () => {
     expect(betaRecipeFamilyOfId('tu_linh_dan_qi_refining')).toBe('tu_linh_dan')
     expect(betaRecipeFamilyOfId('alchemy_tu_linh_dan_qi_refining')).toBe('tu_linh_dan')
     expect(betaRecipeFamilyOfId('alchemy_truc_co_dan')).toBe('truc_co_dan')
+    expect(betaRecipeFamilyOfId('alchemy_thong_mach_dan')).toBe('thong_mach_dan')
+    expect(betaRecipeFamilyOfId('thong_mach_dan')).toBe('thong_mach_dan')
   })
 
   it('fails closed on recipe ids outside the enabled families', () => {
-    expect(betaRecipeFamilyOfId('alchemy_thong_mach_dan')).toBeNull()
-    expect(betaRecipeFamilyOfId('thong_mach_dan')).toBeNull()
     expect(betaRecipeFamilyOfId('alchemy_phi_van_dan_mortal')).toBeNull()
     expect(betaRecipeFamilyOfId('phi_van_dan_qi_refining')).toBeNull()
     expect(betaRecipeFamilyOfId('alchemy_')).toBeNull()

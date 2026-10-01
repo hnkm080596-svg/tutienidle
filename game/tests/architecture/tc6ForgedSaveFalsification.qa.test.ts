@@ -318,7 +318,6 @@ describe('TC6-B dormant-record liveness', () => {
     expect(result.status).toBe('ok')
     expect(
       unsupportedReleaseReason(playerStore.$state, {
-        tribulation: save.tribulation,
         alchemyJobs: save.alchemyJobs,
       }),
     ).toBe('hidden_progression_state')
@@ -352,7 +351,6 @@ describe('TC6-B dormant-record liveness', () => {
     // save is flagged, never silent.
     expect(
       unsupportedReleaseReason(playerStore.$state, {
-        tribulation: save.tribulation,
         alchemyJobs: save.alchemyJobs,
       }),
     ).toBe('hidden_progression_state')
@@ -388,9 +386,6 @@ describe('TC6-B dormant-record liveness', () => {
     )
     const { playerStore, manager, result } = boot(save)
     expect(result.status).toBe('ok')
-    expect(
-      unsupportedReleaseReason(playerStore.$state, { tribulation: save.tribulation }),
-    ).toBe('pending_tribulation_state')
     expect(
       new TribulationOutcomeService().settleOutcome(
         playerStore,
@@ -452,9 +447,6 @@ describe('TC6-B dormant-record liveness', () => {
     const { playerStore, manager, result } = boot(save)
     expect(result.status).toBe('ok')
     expect(
-      unsupportedReleaseReason(playerStore.$state, { tribulation: save.tribulation }),
-    ).toBe('pending_tribulation_state')
-    expect(
       new TribulationOutcomeService().settleOutcome(playerStore, manager, manager.tribulationDirector),
     ).toBeNull()
     expect(playerStore.realmId).toBe('foundation_establishment')
@@ -463,9 +455,9 @@ describe('TC6-B dormant-record liveness', () => {
   it('B5 - dormant-family alchemy job parks: no pill delivered, job retained, flagged', () => {
     const job: AlchemyJobSave = {
       jobId: 'j1',
-      recipeId: 'alchemy_thong_mach_dan',
-      pillId: 'thong_mach_dan',
-      herbMaterialId: 'tu_linh_thao_qi_refining_thuong_co',
+      recipeId: 'alchemy_phi_van_dan_mortal',
+      pillId: 'phi_van_dan_mortal',
+      herbMaterialId: 'phi_van_thao_mortal_thuong_co',
       startedAtMs: Date.now() - 999_000,
       completesAtMs: Date.now() - 1,
       roomLevelAtStart: 1,
@@ -481,8 +473,8 @@ describe('TC6-B dormant-record liveness', () => {
       manager.pillBag,
       (id) => (manager.pillRegistry.has(id) ? manager.pillRegistry.get(id) : undefined),
     )
-    expect(manager.alchemySystem.getJobs().some((j) => j.recipeId === 'alchemy_thong_mach_dan')).toBe(true)
-    expect(manager.pillBag.getAmount('thong_mach_dan')).toBe(0)
+    expect(manager.alchemySystem.getJobs().some((j) => j.recipeId === 'alchemy_phi_van_dan_mortal')).toBe(true)
+    expect(manager.pillBag.getAmount('phi_van_dan_mortal')).toBe(0)
   })
 
   it('B6 - beta recipe job with mismatched pillId is rejected at shape (recipe↔pill binding)', () => {
@@ -689,9 +681,9 @@ describe('TC6-C hostile slices', () => {
     expect(validateGameSaveShape(JSON.parse(JSON.stringify(ok))).ok).toBe(false)
   })
 
-  it('C7 - dormant-authored pill id as effect source is admitted (scope-blind writer bound)', () => {
-    // thong_mach_dan is authored but scope-hidden - a writer could never
-    // mint this claim under the lock, yet the pill-id bound admits it.
+  it('C7 - special pill id as effect source is admitted (scope-blind writer bound)', () => {
+    // thong_mach_dan is authored and LIVE (meridian chapter consumes it),
+    // so the pill-id bound legitimately admits it as an effect source.
     const forged = {
       id: 'tc6_fx2',
       sourceItemId: 'thong_mach_dan',

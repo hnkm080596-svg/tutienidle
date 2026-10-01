@@ -943,13 +943,6 @@ export class GameManagerRealmAdvanceOps {
    * amount actually consumed (0 when gated/complete/empty).
    */
   investBodyChapter(player: PlayerData, chapterId: BodyChapterId): number {
-    // BETA SCOPE LOCK - the body path is dormant: suppressing emissions
-    // alone left a silent sink (tick auto-invest + the RealmPanel button
-    // drain live currencies into records that can never emit). The write
-    // dispatch fails closed here so every caller is inert.
-    if (!isBetaFeature('bodyPath')) {
-      return 0
-    }
     const chapter = getBodyChapterDefinition(chapterId)
     const bag = this.bodyChapterBag(chapter.currency)
     const available = bag.getAmount(chapter.currency.id)

@@ -211,11 +211,6 @@ describe('F-CONS-B1: a carried tribulation committedOutcome must re-derive admis
     // Nothing applied: realm/cultivation untouched, record still pending.
     expect(p.realmId).toBe('qi_refining')
     expect(manager.tribulationDirector.getCommittedOutcome()).not.toBeNull()
-
-    // The carry is flagged as out-of-scope state.
-    expect(
-      unsupportedReleaseReason(p, { tribulation: save.tribulation }),
-    ).toBe('pending_tribulation_state')
   })
 
   it('a hidden-type victory targeting an in-scope realm is still parked (dormant lineage)', () => {
@@ -297,9 +292,9 @@ describe('F-CONS-B1: a carried tribulation committedOutcome must re-derive admis
 
   it('a forged committed outcome with a malformed payload stays inert (no throw)', () => {
     const p = committedPlayer({ realmId: 'foundation_establishment' })
-    const hostile = { tribulation: { committedOutcome: { outcome: 'victory' } } }
+    const hostile = { alchemyJobs: [{ recipeId: 'alchemy_thong_mach_dan', pillId: 'x' }] }
     expect(() => unsupportedReleaseReason(p, hostile)).not.toThrow()
-    expect(unsupportedReleaseReason(p, hostile)).toBe('pending_tribulation_state')
+    expect(unsupportedReleaseReason(p, hostile)).toBeNull()
   })
 })
 
@@ -320,19 +315,27 @@ describe('F-CONS-B2: a carried dormant-family alchemy job must not deliver', () 
     ).toBe('dormant_alchemy_job')
   })
 
-  it('a carried thong_mach_dan job (special recipe, no realm suffix) also parks', () => {
+  it('a carried thong_mach_dan job (live meridian recipe) settles and delivers', () => {
+    // User scope ruling: luyen the / kinh mach / chu thien is a LIVE
+    // beta chain - thong_mach_dan is beta-admitted again, so a carried
+    // job of that recipe is not a dormant record at all.
     const manager = makeManager()
     const p = player()
     manager.setActivePlayer(p)
     manager.saveOps.restoreFromSave(
       baseSave(p, {
-        alchemyJobs: [dormantJob({ recipeId: 'alchemy_thong_mach_dan', pillId: 'thong_mach_dan' })],
+        alchemyJobs: [
+          dormantJob({
+            recipeId: 'alchemy_thong_mach_dan',
+            pillId: 'thong_mach_dan',
+            herbMaterialId: 'tu_linh_thao_qi_refining_thuong_co',
+          }),
+        ],
       }),
     )
 
-    expect(manager.pillBag.getAmount('thong_mach_dan')).toBe(0)
-    expect(manager.alchemySystem.getJobs()).toHaveLength(1)
-    expect(manager.alchemySystem.drainSettlementEvents()).toEqual([])
+    expect(manager.alchemySystem.getJobs()).toHaveLength(0)
+    expect(manager.pillBag.getAmount('thong_mach_dan')).toBeGreaterThan(0)
   })
 
   it('an unknown recipeId fails honestly instead of parking forever', () => {
@@ -394,8 +397,13 @@ describe('F-CONS-B2: a carried dormant-family alchemy job must not deliver', () 
   })
 })
 
-describe('F-BODY-EMIT: carried body-progression records never emit modifiers under lock', () => {
-  it('restore rehydration strips the owned bat-mach slice instead of re-emitting it', () => {
+describe('live body chain (scope ruling): body-progression records emit and grade normally', () => {
+  // REVERTED F-BODY-EMIT / F-BODY-GRADE / F-BODY-FLAG / F-SINK: Minh
+  // ruled luyen the / kinh mach / chu thien a LIVE beta chain - only
+  // the hidden breakthrough (dot pha an) stays gated. Carried body
+  // records therefore emit their owned slice, count toward the Truc Co
+  // grade, and do NOT flag the save as unsupported.
+  it('restore rehydration emits the owned bat-mach slice (live chain)', () => {
     const manager = makeManager()
     const p = committedPlayer({
       realmId: 'qi_refining',
@@ -405,9 +413,6 @@ describe('F-BODY-EMIT: carried body-progression records never emit modifiers und
         zhou_tian: { completed: 0 },
       },
       physiqueGrade: 'bao',
-      modifiers: [
-        { id: 'bat-mach:doc_mach:strength', sourceId: 'doc_mach', sourceType: 'realm', stat: 'strength', percent: 5 },
-      ],
     })
     manager.setActivePlayer(p)
     manager.saveOps.restoreFromSave(
@@ -415,12 +420,10 @@ describe('F-BODY-EMIT: carried body-progression records never emit modifiers und
     )
 
     const bodyMods = p.modifiers.filter((m) => m.id.startsWith('bat-mach:'))
-    expect(bodyMods).toEqual([])
+    expect(bodyMods.length).toBeGreaterThan(0)
   })
-})
 
-describe('F-BODY-GRADE: the Truc Co grade ignores carried body records under lock', () => {
-  it('resolveKienCoGrade returns human on a carried max-body save', () => {
+  it('resolveKienCoGrade counts live body investment (earth on a max-tier save)', () => {
     const p = committedPlayer({
       bodyProgression: {
         body_refinement: { completedTiers: 6, currentTierProgress: 0 },
@@ -429,12 +432,12 @@ describe('F-BODY-GRADE: the Truc Co grade ignores carried body records under loc
       },
       physiqueGrade: 'bao',
     })
-    expect(resolveKienCoGrade(p, true)).toBe('human')
+    // 6 tiers >= 3 + Truc Co Dan present => 'earth' (heaven still needs
+    // 6 opened meridians - only 3 here).
+    expect(resolveKienCoGrade(p, true)).toBe('earth')
   })
-})
 
-describe('F-BODY-FLAG: unsupportedReleaseReason covers carried body progression', () => {
-  it('flags opened meridians', () => {
+  it('carried body progression does NOT flag the save as unsupported', () => {
     const p = committedPlayer({
       bodyProgression: {
         body_refinement: { completedTiers: 0, currentTierProgress: 0 },
@@ -442,12 +445,8 @@ describe('F-BODY-FLAG: unsupportedReleaseReason covers carried body progression'
         zhou_tian: { completed: 0 },
       },
     })
-    expect(unsupportedReleaseReason(p)).toBe('body_progression_state')
-  })
-
-  it('flags a non-default physique grade even with zero-state chapters', () => {
-    const p = committedPlayer({ physiqueGrade: 'phap' })
-    expect(unsupportedReleaseReason(p)).toBe('body_progression_state')
+    expect(unsupportedReleaseReason(p)).toBeNull()
+    expect(unsupportedReleaseReason(committedPlayer({ physiqueGrade: 'phap' }))).toBeNull()
   })
 
   it('never throws on hostile bodyProgression shapes', () => {
@@ -457,12 +456,10 @@ describe('F-BODY-FLAG: unsupportedReleaseReason covers carried body progression'
       expect(() => unsupportedReleaseReason(p), JSON.stringify(hostile)).not.toThrow()
     }
   })
-})
 
-describe('F-SINK: thong_mach_dan is no longer a beta-admitted sink', () => {
-  it('the special recipe fails closed at origination', () => {
-    expect(betaRecipeFamilyOfId('alchemy_thong_mach_dan')).toBeNull()
-    expect(betaRecipeFamilyOfId('thong_mach_dan')).toBeNull()
+  it('thong_mach_dan is beta-admitted again (live meridian consumer)', () => {
+    expect(betaRecipeFamilyOfId('alchemy_thong_mach_dan')).toBe('thong_mach_dan')
+    expect(betaRecipeFamilyOfId('thong_mach_dan')).toBe('thong_mach_dan')
 
     const recipe = alchemyRecipes.find((r) => r.id === 'alchemy_thong_mach_dan')!
     const manager = makeManager()
@@ -476,7 +473,11 @@ describe('F-SINK: thong_mach_dan is no longer a beta-admitted sink', () => {
       1,
       9,
     )
-    expect(result.ok).toBe(false)
-    expect(result.reason).toBe('scope_hidden')
+    // No scope_hidden refusal - the chain is live. Origination may still
+    // fail for an authored reason (missing herb, room level), never for
+    // scope.
+    if (!result.ok) {
+      expect(result.reason).not.toBe('scope_hidden')
+    }
   })
 })

@@ -23,7 +23,6 @@ import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
 import { BREAKTHROUGH_TALENT_POOLS } from '@/data/talent/BreakthroughTalentPools'
 import { buildings } from '@/data/building/buildings'
 import { materials } from '@/data/materials/materials'
-import { pills } from '@/data/pill/pills'
 import { TECHNIQUES } from '@/data/technique/Techniques'
 import { freshSwordPathState } from '@/core/kiem-tu/KiemTuState'
 
@@ -240,29 +239,6 @@ describe('technique training seam: dormant-way techniques must not accrue master
  gameManager.realmAdvanceOps.applyTechniqueRealmTransition(spell, 'foundation_establishment')
 
  expect(gameManager.techniqueManager.getActive()?.gradeHistory[1]).toBeDefined()
- })
-
- it('investBodyChapter dispatch is a closed sink for every dormant chapter (F-BODY-W-1)', () => {
- const gameManager = new GameManager()
- const p = player({ realmId: 'qi_refining', realmLevel: 12 })
- gameManager.setActivePlayer(p)
-
- // Fund every body-chapter currency stack incl. the beta-admitted
- // thong_mach_dan pill: under the lock the write dispatch must return
- // 0 for every chapter and leave every bag + dormant record untouched.
- const essence = materials.find((m) => m.id === 'tinh_hoa_pham_the')!
- const phapEssence = materials.find((m) => m.id === 'tinh_hoa_phap_the')!
- const pill = pills.find((m) => m.id === 'thong_mach_dan')!
- gameManager.materialBag.add(essence, 500)
- gameManager.materialBag.add(phapEssence, 500)
- gameManager.pillBag.add(pill, 5)
-
- for (const chapterId of ['body_refinement', 'meridian', 'zhou_tian'] as const) {
-  expect(gameManager.realmAdvanceOps.investBodyChapter(p, chapterId)).toBe(0)
- }
- expect(gameManager.materialBag.getAmount('tinh_hoa_pham_the')).toBe(500)
- expect(gameManager.materialBag.getAmount('tinh_hoa_phap_the')).toBe(500)
- expect(gameManager.pillBag.getAmount('thong_mach_dan')).toBe(5)
  })
 
  it('control: the beta spell technique still trains in-band', () => {

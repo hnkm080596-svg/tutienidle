@@ -467,7 +467,6 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
         const unsupportedReason = unsupportedReleaseReason(
           player.$state as PlayerData,
           {
-            tribulation: loaded.save.tribulation,
             alchemyJobs: loaded.save.alchemyJobs,
             decompose: loaded.save.decompose,
           },

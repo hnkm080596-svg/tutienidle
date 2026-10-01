@@ -167,7 +167,10 @@ describe('persisted realm modifiers under the beta lock', () => {
     expect(stats.maxMp).toBe(base.maxMp)
   })
 
-  it('carried body-chapter realm modifiers (meridian) emit nothing under the lock', () => {
+  it('carried body-chapter realm modifiers (meridian) emit under the live chain', () => {
+    // User scope ruling: the luyen the / kinh mach / chu thien chain is
+    // LIVE in beta - an opened meridian's canonical payload emits its
+    // authored modifier.
     const carried = player()
     carried.bodyProgression.meridian.openedIds = ['nham_mach']
     const meridian = MERIDIANS.find((m) => m.id === 'nham_mach')
@@ -186,11 +189,11 @@ describe('persisted realm modifiers under the beta lock', () => {
     const base = resolvePlayerStatAssembly(player(), []).stats
 
     for (const stat of meridian!.stats) {
-      expect(stats[stat as keyof typeof stats]).toBe(base[stat as keyof typeof base])
+      expect(stats[stat as keyof typeof stats]).not.toBe(base[stat as keyof typeof base])
     }
   })
 
-  it('carried bodyProgression base-stat deltas emit nothing under the lock', () => {
+  it('carried bodyProgression base-stat deltas emit under the live chain', () => {
     const carried = player()
     carried.bodyProgression.body_refinement.completedTiers = 3
     carried.bodyProgression.zhou_tian.completed = 12
@@ -198,9 +201,10 @@ describe('persisted realm modifiers under the beta lock', () => {
     const carriedStats = resolvePlayerStatAssembly(carried, []).stats
     const base = resolvePlayerStatAssembly(player(), []).stats
 
-    expect(carriedStats.maxHp).toBe(base.maxHp)
-    expect(carriedStats.strength).toBe(base.strength)
-    expect(collectBodyBaseStatDeltas(carried)).toEqual({})
+    expect(Object.keys(collectBodyBaseStatDeltas(carried)).length).toBeGreaterThan(0)
+    expect(
+      carriedStats.maxHp !== base.maxHp || carriedStats.strength !== base.strength,
+    ).toBe(true)
   })
 
   it('acceptance flags a realm-passive payload whose marker was never granted', () => {

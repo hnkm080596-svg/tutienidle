@@ -1,0 +1,1250 @@
+{
+  "records": [
+    {
+      "kind": "finding",
+      "body": {
+        "id": "F-TC9-1",
+        "title": "persistentTimedEffects appliedAtMs unbounded vs lastSavedAt - future-dated tu_linh_tran becomes permanent +25% cps buff",
+        "severity": "High",
+        "status": "CLOSED",
+        "classification": "REAL_DEFECT",
+        "actionable": true,
+        "rootClass": "BOUNDARY",
+        "subsystem": "betaScope",
+        "reachability": "PRODUCTION",
+        "rootCause": "validator checked isFiniteNumber + span<=24h + percent<=0.25 only; every liveness read keys on expiresAtMs>now so appliedAtMs>lastSavedAt was provably impossible yet live",
+        "expected": "appliedAtMs <= lastSavedAt at the boundary",
+        "actual": "appliedAtMs = lastSavedAt+1e12 accepted and the +25% buff ran live",
+        "counterexample": "forge tu_linh_tran appliedAtMs=lastSavedAt+1e12 -> ok:true, speed percent 0.25 live",
+        "repair": "appliedAtMs > lastSavedAt now rejects (temporal coherence bound)",
+        "siblingSearch": [
+          {
+            "roots": [
+              "src"
+            ],
+            "termsAndMethod": "persistentTimedEffects all effectGroups swept; expiresAtMs span bound already present; getActiveTimedModifiers reads unchanged",
+            "evidenceIds": [],
+            "hitDispositions": [],
+            "coverageLimits": [
+              "blind-round sweep; limits recorded in review findings"
+            ]
+          }
+        ],
+        "siblingFindingIds": [],
+        "duplicateOf": null,
+        "rejectionReason": null,
+        "locations": [
+          {
+            "basis": "SOURCE",
+            "path": "src/services/save/saveShapeValidation.ts",
+            "revision": "a2bd826f",
+            "symbolOrSection": "persisted-claim bounds"
+          }
+        ],
+        "invariantIds": [
+          "I-SF-1"
+        ],
+        "state": {
+          "productStateId": "1e111dc87b6fb8330d9c3aab07fceb6eafacee22cc67ee47ee7e36c49390bf35",
+          "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+          "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+          "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+        },
+        "evidenceIds": [
+          "EV-PROBE-TC9"
+        ],
+        "exception": null,
+        "closeReason": "fixed on devin/qa-fixpoint (d615f4fc/d22d3c72); pin + mutant-killed + verify green",
+        "closedAt": "2026-10-01T13:45:00Z",
+        "closureReviewIds": [
+          "RV-CLOSURE-16"
+        ],
+        "pinEvidenceIds": [
+          "EV-PIN-T20",
+          "EV-MUT-T20"
+        ],
+        "verificationEvidenceIds": [
+          "EV-PIN-T20",
+          "EV-MUT-T20",
+          "EV-VERIFY-T20"
+        ],
+        "discoveredBy": "clean-round TC9 blind reviewer probe (independent falsification wave)"
+      }
+    },
+    {
+      "kind": "finding",
+      "body": {
+        "id": "F-TC9-2",
+        "title": "completedStageIds/perfectClearStageIds lacked chain-prefix and perfect-subset coherence - skip-chain claim arms tribulation gate + autofarm",
+        "severity": "High",
+        "status": "CLOSED",
+        "classification": "REAL_DEFECT",
+        "actionable": true,
+        "rootClass": "BOUNDARY",
+        "subsystem": "betaScope",
+        "reachability": "PRODUCTION",
+        "rootCause": "each claimed stage was realm-bounded but never ordering-checked against the zone's linear chain; perfectClearStageIds was not required subset of completedStageIds (same-tick co-write)",
+        "expected": "claimed stage i implies all earlier chain ids claimed; perfect clears subset of completes",
+        "actual": "completedStageIds=['qi_refining_abyssal_pool'] alone validated and canTriggerBreakthrough returned true; perfect-only claim armed autofarm",
+        "counterexample": "probe: chain-skip save ok:true, gate true, autofarm armed",
+        "repair": "chain-prefix rule per zone stageIds + perfect-subset-completed check",
+        "siblingSearch": [
+          {
+            "roots": [
+              "src"
+            ],
+            "termsAndMethod": "zones iterated for stageIds ordering; tribulation settle re-gates verified; autofarm arm/settle re-checks verified",
+            "evidenceIds": [],
+            "hitDispositions": [],
+            "coverageLimits": [
+              "blind-round sweep; limits recorded in review findings"
+            ]
+          }
+        ],
+        "siblingFindingIds": [],
+        "duplicateOf": null,
+        "rejectionReason": null,
+        "locations": [
+          {
+            "basis": "SOURCE",
+            "path": "src/services/save/saveShapeValidation.ts",
+            "revision": "a2bd826f",
+            "symbolOrSection": "persisted-claim bounds"
+          }
+        ],
+        "invariantIds": [
+          "I-SF-1"
+        ],
+        "state": {
+          "productStateId": "1e111dc87b6fb8330d9c3aab07fceb6eafacee22cc67ee47ee7e36c49390bf35",
+          "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+          "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+          "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+        },
+        "evidenceIds": [
+          "EV-PROBE-TC9"
+        ],
+        "exception": null,
+        "closeReason": "fixed on devin/qa-fixpoint (d615f4fc/d22d3c72); pin + mutant-killed + verify green",
+        "closedAt": "2026-10-01T13:45:00Z",
+        "closureReviewIds": [
+          "RV-CLOSURE-16"
+        ],
+        "pinEvidenceIds": [
+          "EV-PIN-T20",
+          "EV-MUT-T20"
+        ],
+        "verificationEvidenceIds": [
+          "EV-PIN-T20",
+          "EV-MUT-T20",
+          "EV-VERIFY-T20"
+        ],
+        "discoveredBy": "clean-round TC9 blind reviewer probe (independent falsification wave)"
+      }
+    },
+    {
+      "kind": "finding",
+      "body": {
+        "id": "F-TC9-3",
+        "title": "alchemyJobs[].roomLevelAtStart unbounded vs persisted pill_room level - +40pp success minted per settle",
+        "severity": "Medium",
+        "status": "CLOSED",
+        "classification": "REAL_DEFECT",
+        "actionable": true,
+        "rootClass": "BOUNDARY",
+        "subsystem": "betaScope",
+        "reachability": "PRODUCTION",
+        "rootCause": "roomLevelAtStart was finite-checked only; jobSuccessPercent indexes ALCHEMY_SUCCESS_BONUS_PERCENT by it verbatim; building level never decreases",
+        "expected": "roomLevelAtStart <= persisted pill_room level",
+        "actual": "roomLevelAtStart=9 with pill_room level 1 accepted; +40pp success delta",
+        "counterexample": "probe: forged job validates + success delta +40 vs honest level-1 job",
+        "repair": "coherence bound roomLevelAtStart <= pillRoomLevel at validateAlchemyJobsSave",
+        "siblingSearch": [
+          {
+            "roots": [
+              "src"
+            ],
+            "termsAndMethod": "all building-derived snapshots swept (siteLevelAtStart gained the same bound in AS-4)",
+            "evidenceIds": [],
+            "hitDispositions": [],
+            "coverageLimits": [
+              "blind-round sweep; limits recorded in review findings"
+            ]
+          }
+        ],
+        "siblingFindingIds": [],
+        "duplicateOf": null,
+        "rejectionReason": null,
+        "locations": [
+          {
+            "basis": "SOURCE",
+            "path": "src/services/save/saveShapeValidation.ts",
+            "revision": "a2bd826f",
+            "symbolOrSection": "persisted-claim bounds"
+          }
+        ],
+        "invariantIds": [
+          "I-SF-1"
+        ],
+        "state": {
+          "productStateId": "1e111dc87b6fb8330d9c3aab07fceb6eafacee22cc67ee47ee7e36c49390bf35",
+          "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+          "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+          "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+        },
+        "evidenceIds": [
+          "EV-PROBE-TC9"
+        ],
+        "exception": null,
+        "closeReason": "fixed on devin/qa-fixpoint (d615f4fc/d22d3c72); pin + mutant-killed + verify green",
+        "closedAt": "2026-10-01T13:45:00Z",
+        "closureReviewIds": [
+          "RV-CLOSURE-16"
+        ],
+        "pinEvidenceIds": [
+          "EV-PIN-T20",
+          "EV-MUT-T20"
+        ],
+        "verificationEvidenceIds": [
+          "EV-PIN-T20",
+          "EV-MUT-T20",
+          "EV-VERIFY-T20"
+        ],
+        "discoveredBy": "clean-round TC9 blind reviewer probe (independent falsification wave)"
+      }
+    },
+    {
+      "kind": "finding",
+      "body": {
+        "id": "F-TC9-4",
+        "title": "cultivationPerSecond persisted unbounded although fully derived - forged rate mints realm ladder via offline accrual + overcharge",
+        "severity": "High",
+        "status": "CLOSED",
+        "classification": "REAL_DEFECT",
+        "actionable": true,
+        "rootClass": "BOUNDARY",
+        "subsystem": "betaScope",
+        "reachability": "PRODUCTION",
+        "rootCause": "cps is a derived snapshot BASE(10) x speedMult x rampMult x (1+tuLinh<=0.25); validator required only finite>=0; restore pays offlineSeconds x cps into cultivation/overcharge",
+        "expected": "persisted cps bounded to authored maximum product",
+        "actual": "cps=1e9 accepted; offline accrual + pours fill the whole qi_refining ladder",
+        "counterexample": "probe: cps=1e9 + hai_na + lastSavedAt=-86400s validates; simulated restore advances realmLevel 1->18",
+        "repair": "boundary bound: cps <= BASE x max speedMult x rampMult(ids) x 1.25 + eps",
+        "siblingSearch": [
+          {
+            "roots": [
+              "src"
+            ],
+            "termsAndMethod": "other derived snapshots (workerCycles span, room levels, timed-effect spans) all bounded this wave",
+            "evidenceIds": [],
+            "hitDispositions": [],
+            "coverageLimits": [
+              "blind-round sweep; limits recorded in review findings"
+            ]
+          }
+        ],
+        "siblingFindingIds": [],
+        "duplicateOf": null,
+        "rejectionReason": null,
+        "locations": [
+          {
+            "basis": "SOURCE",
+            "path": "src/services/save/saveShapeValidation.ts",
+            "revision": "a2bd826f",
+            "symbolOrSection": "persisted-claim bounds"
+          }
+        ],
+        "invariantIds": [
+          "I-SF-1"
+        ],
+        "state": {
+          "productStateId": "1e111dc87b6fb8330d9c3aab07fceb6eafacee22cc67ee47ee7e36c49390bf35",
+          "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+          "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+          "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+        },
+        "evidenceIds": [
+          "EV-PROBE-TC9"
+        ],
+        "exception": null,
+        "closeReason": "fixed on devin/qa-fixpoint (d615f4fc/d22d3c72); pin + mutant-killed + verify green",
+        "closedAt": "2026-10-01T13:45:00Z",
+        "closureReviewIds": [
+          "RV-CLOSURE-16"
+        ],
+        "pinEvidenceIds": [
+          "EV-PIN-T20",
+          "EV-MUT-T20"
+        ],
+        "verificationEvidenceIds": [
+          "EV-PIN-T20",
+          "EV-MUT-T20",
+          "EV-VERIFY-T20"
+        ],
+        "discoveredBy": "clean-round TC9 blind reviewer probe (independent falsification wave)"
+      }
+    },
+    {
+      "kind": "finding",
+      "body": {
+        "id": "F-TC9-5",
+        "title": "spell_pathway + element:null accepted - impossible since way commits element atomically (inert)",
+        "severity": "Low",
+        "status": "HUMAN_EXCEPTION",
+        "classification": "REAL_DEFECT",
+        "actionable": true,
+        "rootClass": "BOUNDARY",
+        "subsystem": "betaScope",
+        "reachability": "PRODUCTION",
+        "rootCause": "chooseCultivationPath fails closed for element-axis ways; a qi_refining spell_pathway save with element:null is unreachable yet validated",
+        "expected": "way->element coherence check",
+        "actual": "accepted; save soft-locked but inert (element gate is mortal-only)",
+        "counterexample": "qi_refining/spell/element:null save ok:true",
+        "repair": "n/a - no code change (deferred Low/Nit per Medium+-only ruling or duplicate of an already-fixed finding)",
+        "siblingSearch": [
+          {
+            "roots": [
+              "src"
+            ],
+            "termsAndMethod": "element kit coherence asserts audited",
+            "evidenceIds": [],
+            "hitDispositions": [],
+            "coverageLimits": [
+              "blind-round sweep; limits recorded in review findings"
+            ]
+          }
+        ],
+        "siblingFindingIds": [],
+        "duplicateOf": null,
+        "rejectionReason": null,
+        "locations": [
+          {
+            "basis": "SOURCE",
+            "path": "src/services/save/saveShapeValidation.ts",
+            "revision": "a2bd826f",
+            "symbolOrSection": "persisted-claim bounds"
+          }
+        ],
+        "invariantIds": [
+          "I-SF-1"
+        ],
+        "state": {
+          "productStateId": "1e111dc87b6fb8330d9c3aab07fceb6eafacee22cc67ee47ee7e36c49390bf35",
+          "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+          "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+          "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+        },
+        "evidenceIds": [
+          "EV-PROBE-TC9"
+        ],
+        "exception": {
+          "humanInstructionRef": "user ruling: attacks/scope fixes are Medium+ only; Low/Nit recorded as deferred exceptions",
+          "scope": "flagged/crafted saves or display-only surfaces - a normal beta save cannot reach live harm",
+          "reason": "DEFERRED per Medium+-only ruling",
+          "expiresWhen": "next scope contract revision or user reversal of the Medium+-only ruling"
+        },
+        "closeReason": null,
+        "closedAt": null,
+        "closureReviewIds": [],
+        "pinEvidenceIds": [],
+        "verificationEvidenceIds": [],
+        "discoveredBy": "clean-round TC9 blind reviewer probe (independent falsification wave)"
+      }
+    },
+    {
+      "kind": "finding",
+      "body": {
+        "id": "F-TC9-6",
+        "title": "same-value claim classes with no authored ceiling - acceptance confirmed, indistinguishable from legit accrual",
+        "severity": "Low",
+        "status": "HUMAN_EXCEPTION",
+        "classification": "REAL_DEFECT",
+        "actionable": true,
+        "rootClass": "BOUNDARY",
+        "subsystem": "betaScope",
+        "reachability": "PRODUCTION",
+        "rootCause": "no authored maximum exists for these counters (overcharge magnitude, totalCultivationGained, skillCastCounts, stack amounts, bossKillCount); a claim inside the shape is indistinguishable",
+        "expected": "authored ceilings or provenance witness",
+        "actual": "all seven assertions pass - each feeds a live consumer",
+        "counterexample": "forge_same_value_ceiling_notes probes all pass",
+        "repair": "n/a - no code change (deferred Low/Nit per Medium+-only ruling or duplicate of an already-fixed finding)",
+        "siblingSearch": [
+          {
+            "roots": [
+              "src"
+            ],
+            "termsAndMethod": "covered claim classes enumerated in the probe corpus",
+            "evidenceIds": [],
+            "hitDispositions": [],
+            "coverageLimits": [
+              "blind-round sweep; limits recorded in review findings"
+            ]
+          }
+        ],
+        "siblingFindingIds": [],
+        "duplicateOf": null,
+        "rejectionReason": null,
+        "locations": [
+          {
+            "basis": "SOURCE",
+            "path": "src/services/save/saveShapeValidation.ts",
+            "revision": "a2bd826f",
+            "symbolOrSection": "persisted-claim bounds"
+          }
+        ],
+        "invariantIds": [
+          "I-SF-1"
+        ],
+        "state": {
+          "productStateId": "1e111dc87b6fb8330d9c3aab07fceb6eafacee22cc67ee47ee7e36c49390bf35",
+          "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+          "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+          "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+        },
+        "evidenceIds": [
+          "EV-PROBE-TC9"
+        ],
+        "exception": {
+          "humanInstructionRef": "user ruling: attacks/scope fixes are Medium+ only; Low/Nit recorded as deferred exceptions",
+          "scope": "flagged/crafted saves or display-only surfaces - a normal beta save cannot reach live harm",
+          "reason": "DEFERRED per Medium+-only ruling",
+          "expiresWhen": "next scope contract revision or user reversal of the Medium+-only ruling"
+        },
+        "closeReason": null,
+        "closedAt": null,
+        "closureReviewIds": [],
+        "pinEvidenceIds": [],
+        "verificationEvidenceIds": [],
+        "discoveredBy": "clean-round TC9 blind reviewer probe (independent falsification wave)"
+      }
+    },
+    {
+      "kind": "finding",
+      "body": {
+        "id": "F-A11-1",
+        "title": "cultivationOvercharge has no ownership witness - forged bank auto-fills every subsequent level",
+        "severity": "High",
+        "status": "CLOSED",
+        "classification": "REAL_DEFECT",
+        "actionable": true,
+        "rootClass": "BOUNDARY",
+        "subsystem": "betaScope",
+        "reachability": "PRODUCTION",
+        "rootCause": "validator required >=0 only; addCultivation banks solely under hasCultivationOverflowBank and pourCultivationOvercharge pours without the check",
+        "expected": "overcharge>0 requires the bank talent",
+        "actual": "overcharge=1e9 without talent validates and pours real cultivation",
+        "counterexample": "overcharge=1e9 no-talent save ok:true; pourCultivationOvercharge lands full required",
+        "repair": "boundary: overcharge>0 rejected without a cultivation_overflow_bank talent",
+        "siblingSearch": [
+          {
+            "roots": [
+              "src"
+            ],
+            "termsAndMethod": "talent removal path audited (single splice on Great Dao victory - cannot orphan); magnitude bound intentionally NOT applied (overcharge at cap legitimately exceeds total)",
+            "evidenceIds": [],
+            "hitDispositions": [],
+            "coverageLimits": [
+              "blind-round sweep; limits recorded in review findings"
+            ]
+          }
+        ],
+        "siblingFindingIds": [],
+        "duplicateOf": null,
+        "rejectionReason": null,
+        "locations": [
+          {
+            "basis": "SOURCE",
+            "path": "src/services/save/saveShapeValidation.ts",
+            "revision": "a2bd826f",
+            "symbolOrSection": "persisted-claim bounds"
+          }
+        ],
+        "invariantIds": [
+          "I-SF-1"
+        ],
+        "state": {
+          "productStateId": "1e111dc87b6fb8330d9c3aab07fceb6eafacee22cc67ee47ee7e36c49390bf35",
+          "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+          "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+          "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+        },
+        "evidenceIds": [
+          "EV-PROBE-A11"
+        ],
+        "exception": null,
+        "closeReason": "fixed on devin/qa-fixpoint (d615f4fc/d22d3c72); pin + mutant-killed + verify green",
+        "closedAt": "2026-10-01T13:45:00Z",
+        "closureReviewIds": [
+          "RV-CLOSURE-16"
+        ],
+        "pinEvidenceIds": [
+          "EV-PIN-T20",
+          "EV-MUT-T20"
+        ],
+        "verificationEvidenceIds": [
+          "EV-PIN-T20",
+          "EV-MUT-T20",
+          "EV-VERIFY-T20"
+        ],
+        "discoveredBy": "clean-round A11 blind reviewer probe (independent falsification wave)"
+      }
+    },
+    {
+      "kind": "finding",
+      "body": {
+        "id": "F-A11-2",
+        "title": "cultivationInsightAccumulator unwitnessed + unbounded - mints free skillInsight",
+        "severity": "High",
+        "status": "CLOSED",
+        "classification": "REAL_DEFECT",
+        "actionable": true,
+        "rootClass": "BOUNDARY",
+        "subsystem": "betaScope",
+        "reachability": "PRODUCTION",
+        "rootCause": "requireNonNegativeNumber only; accrueCultivationInsight early-returns without insight_per_cultivation talent and its drain exits below threshold",
+        "expected": "accumulator>0 requires the talent and stays < claimed threshold",
+        "actual": "acc=5000 no-talent validates; with tc_thien_co a forged acc=1e6 mints 500 insight",
+        "counterexample": "no-talent acc>0 ok:true; forged acc fires mint on acquisition",
+        "repair": "witness + acc < getInsightPerCultivation(ids,levels) bound",
+        "siblingSearch": [
+          {
+            "roots": [
+              "src"
+            ],
+            "termsAndMethod": "drain-loop exit invariant verified at CultivationInsight.ts:11-25",
+            "evidenceIds": [],
+            "hitDispositions": [],
+            "coverageLimits": [
+              "blind-round sweep; limits recorded in review findings"
+            ]
+          }
+        ],
+        "siblingFindingIds": [],
+        "duplicateOf": null,
+        "rejectionReason": null,
+        "locations": [
+          {
+            "basis": "SOURCE",
+            "path": "src/services/save/saveShapeValidation.ts",
+            "revision": "a2bd826f",
+            "symbolOrSection": "persisted-claim bounds"
+          }
+        ],
+        "invariantIds": [
+          "I-SF-1"
+        ],
+        "state": {
+          "productStateId": "1e111dc87b6fb8330d9c3aab07fceb6eafacee22cc67ee47ee7e36c49390bf35",
+          "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+          "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+          "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+        },
+        "evidenceIds": [
+          "EV-PROBE-A11"
+        ],
+        "exception": null,
+        "closeReason": "fixed on devin/qa-fixpoint (d615f4fc/d22d3c72); pin + mutant-killed + verify green",
+        "closedAt": "2026-10-01T13:45:00Z",
+        "closureReviewIds": [
+          "RV-CLOSURE-16"
+        ],
+        "pinEvidenceIds": [
+          "EV-PIN-T20",
+          "EV-MUT-T20"
+        ],
+        "verificationEvidenceIds": [
+          "EV-PIN-T20",
+          "EV-MUT-T20",
+          "EV-VERIFY-T20"
+        ],
+        "discoveredBy": "clean-round A11 blind reviewer probe (independent falsification wave)"
+      }
+    },
+    {
+      "kind": "finding",
+      "body": {
+        "id": "F-A11-3",
+        "title": "no cross-field bound skillInsight <= totalSkillInsightGained - free Insight currency claim",
+        "severity": "High",
+        "status": "CLOSED",
+        "classification": "REAL_DEFECT",
+        "actionable": true,
+        "rootClass": "BOUNDARY",
+        "subsystem": "betaScope",
+        "reachability": "PRODUCTION",
+        "rootCause": "fields checked independently; every mint bumps both in the same statement (4 sites), spends only decrement",
+        "expected": "skillInsight <= totalSkillInsightGained",
+        "actual": "skillInsight=1e9 total=0 validates and spends",
+        "counterexample": "skillInsight=1e9/total=0 ok:true; purchaseNode spends forged balance",
+        "repair": "coherence bound skillInsight <= totalSkillInsightGained",
+        "siblingSearch": [
+          {
+            "roots": [
+              "src"
+            ],
+            "termsAndMethod": "all four mint sites audited - BattleLootSystem, RewardOps, CultivationInsight, PillSystem all pair both fields",
+            "evidenceIds": [],
+            "hitDispositions": [],
+            "coverageLimits": [
+              "blind-round sweep; limits recorded in review findings"
+            ]
+          }
+        ],
+        "siblingFindingIds": [],
+        "duplicateOf": null,
+        "rejectionReason": null,
+        "locations": [
+          {
+            "basis": "SOURCE",
+            "path": "src/services/save/saveShapeValidation.ts",
+            "revision": "a2bd826f",
+            "symbolOrSection": "persisted-claim bounds"
+          }
+        ],
+        "invariantIds": [
+          "I-SF-1"
+        ],
+        "state": {
+          "productStateId": "1e111dc87b6fb8330d9c3aab07fceb6eafacee22cc67ee47ee7e36c49390bf35",
+          "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+          "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+          "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+        },
+        "evidenceIds": [
+          "EV-PROBE-A11"
+        ],
+        "exception": null,
+        "closeReason": "fixed on devin/qa-fixpoint (d615f4fc/d22d3c72); pin + mutant-killed + verify green",
+        "closedAt": "2026-10-01T13:45:00Z",
+        "closureReviewIds": [
+          "RV-CLOSURE-16"
+        ],
+        "pinEvidenceIds": [
+          "EV-PIN-T20",
+          "EV-MUT-T20"
+        ],
+        "verificationEvidenceIds": [
+          "EV-PIN-T20",
+          "EV-MUT-T20",
+          "EV-VERIFY-T20"
+        ],
+        "discoveredBy": "clean-round A11 blind reviewer probe (independent falsification wave)"
+      }
+    },
+    {
+      "kind": "finding",
+      "body": {
+        "id": "F-A11-4",
+        "title": "productionSites[].workerCycles unbounded in count/duration - zero-cost cycles mint rewards",
+        "severity": "High",
+        "status": "CLOSED",
+        "classification": "REAL_DEFECT",
+        "actionable": true,
+        "rootClass": "BOUNDARY",
+        "subsystem": "betaScope",
+        "reachability": "PRODUCTION",
+        "rootCause": "cycle save checked ids/finite/realm pin only; no count bound, no span ordering, no level coherence; lanes beyond budget settle at zero cost",
+        "expected": "cycles <= authored 19-lane ceiling; completesAtMs > startedAtMs; siteLevelAtStart <= site maxLevel",
+        "actual": "50 forged cycles validate; advanceWorkerLanes completes all at zero budget",
+        "counterexample": "probe: 20 lanes + reversed spans + siteLevelAtStart=10 all ok:true; settle mints rewards",
+        "repair": "count vs getWorkerCapacityForLevel(chi_hien_quan maxLevel=9) ceiling; span + level bounds",
+        "siblingSearch": [
+          {
+            "roots": [
+              "src"
+            ],
+            "termsAndMethod": "lane retention semantics verified (retained lanes exceed slots legitimately) - bound set vs authored ceiling not slot claim",
+            "evidenceIds": [],
+            "hitDispositions": [],
+            "coverageLimits": [
+              "blind-round sweep; limits recorded in review findings"
+            ]
+          }
+        ],
+        "siblingFindingIds": [],
+        "duplicateOf": null,
+        "rejectionReason": null,
+        "locations": [
+          {
+            "basis": "SOURCE",
+            "path": "src/services/save/saveShapeValidation.ts",
+            "revision": "a2bd826f",
+            "symbolOrSection": "persisted-claim bounds"
+          }
+        ],
+        "invariantIds": [
+          "I-SF-1"
+        ],
+        "state": {
+          "productStateId": "1e111dc87b6fb8330d9c3aab07fceb6eafacee22cc67ee47ee7e36c49390bf35",
+          "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+          "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+          "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+        },
+        "evidenceIds": [
+          "EV-PROBE-A11"
+        ],
+        "exception": null,
+        "closeReason": "fixed on devin/qa-fixpoint (d615f4fc/d22d3c72); pin + mutant-killed + verify green",
+        "closedAt": "2026-10-01T13:45:00Z",
+        "closureReviewIds": [
+          "RV-CLOSURE-16"
+        ],
+        "pinEvidenceIds": [
+          "EV-PIN-T20",
+          "EV-MUT-T20"
+        ],
+        "verificationEvidenceIds": [
+          "EV-PIN-T20",
+          "EV-MUT-T20",
+          "EV-VERIFY-T20"
+        ],
+        "discoveredBy": "clean-round A11 blind reviewer probe (independent falsification wave)"
+      }
+    },
+    {
+      "kind": "finding",
+      "body": {
+        "id": "F-A11-5",
+        "title": "alchemyJobs[] trusted verbatim at restore - forged past-due jobs mint pills with no ingredient reserve",
+        "severity": "High",
+        "status": "CLOSED",
+        "classification": "REAL_DEFECT",
+        "actionable": true,
+        "rootClass": "BOUNDARY",
+        "subsystem": "betaScope",
+        "reachability": "PRODUCTION",
+        "rootCause": "job save checked shape + pillId-vs-recipe only; no count bound vs pill_room slots, no span ordering, no herbMaterialId membership",
+        "expected": "jobs <= slot ladder (1+L>=3+L>=6+L>=9); span ordered; herbMaterialId in recipe.herbVariants",
+        "actual": "20 jobs with ghost herb + reversed span validate; restoreJobs settles free pills",
+        "counterexample": "probe: 2 jobs on level-1 room, reversed span, forged herb - all ok:true; settle delivers pills",
+        "repair": "count vs persisted pill_room level ladder; span bound; herb variant membership",
+        "siblingSearch": [
+          {
+            "roots": [
+              "src"
+            ],
+            "termsAndMethod": "pillId already re-derived (F-A7-3); retired-family contract preserved (in-flight settle parks dormant)",
+            "evidenceIds": [],
+            "hitDispositions": [],
+            "coverageLimits": [
+              "blind-round sweep; limits recorded in review findings"
+            ]
+          }
+        ],
+        "siblingFindingIds": [],
+        "duplicateOf": null,
+        "rejectionReason": null,
+        "locations": [
+          {
+            "basis": "SOURCE",
+            "path": "src/services/save/saveShapeValidation.ts",
+            "revision": "a2bd826f",
+            "symbolOrSection": "persisted-claim bounds"
+          }
+        ],
+        "invariantIds": [
+          "I-SF-1"
+        ],
+        "state": {
+          "productStateId": "1e111dc87b6fb8330d9c3aab07fceb6eafacee22cc67ee47ee7e36c49390bf35",
+          "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+          "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+          "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+        },
+        "evidenceIds": [
+          "EV-PROBE-A11"
+        ],
+        "exception": null,
+        "closeReason": "fixed on devin/qa-fixpoint (d615f4fc/d22d3c72); pin + mutant-killed + verify green",
+        "closedAt": "2026-10-01T13:45:00Z",
+        "closureReviewIds": [
+          "RV-CLOSURE-16"
+        ],
+        "pinEvidenceIds": [
+          "EV-PIN-T20",
+          "EV-MUT-T20"
+        ],
+        "verificationEvidenceIds": [
+          "EV-PIN-T20",
+          "EV-MUT-T20",
+          "EV-VERIFY-T20"
+        ],
+        "discoveredBy": "clean-round A11 blind reviewer probe (independent falsification wave)"
+      }
+    },
+    {
+      "kind": "finding",
+      "body": {
+        "id": "F-A11-6",
+        "title": "purchasedNodeIds mirror entries with no nodeLevels ownership - forged ownership authorizes spec claims",
+        "severity": "Medium",
+        "status": "CLOSED",
+        "classification": "REAL_DEFECT",
+        "actionable": true,
+        "rootClass": "BOUNDARY",
+        "subsystem": "betaScope",
+        "reachability": "PRODUCTION",
+        "rootCause": "string-entry check only; every writer writes nodeLevels[id]>=1 in the same transaction and ownedNodeIds unions both slices, feeding spec-claim gates",
+        "expected": "purchasedNodeIds subset {id: nodeLevels[id]>=1}",
+        "actual": "entry without level validates; ownedNodeIds admits it; spec gate authorizes claims",
+        "counterexample": "purchasedNodeIds append ghost id ok:true; ownedNodeIds contains forged id",
+        "repair": "mirror coherence: purchased entry requires nodeLevels >= 1",
+        "siblingSearch": [
+          {
+            "roots": [
+              "src"
+            ],
+            "termsAndMethod": "all removal seams drop both (revoke, respec clawback); rewardOnly grants write levels only - exempted direction preserved",
+            "evidenceIds": [],
+            "hitDispositions": [],
+            "coverageLimits": [
+              "blind-round sweep; limits recorded in review findings"
+            ]
+          }
+        ],
+        "siblingFindingIds": [],
+        "duplicateOf": null,
+        "rejectionReason": null,
+        "locations": [
+          {
+            "basis": "SOURCE",
+            "path": "src/services/save/saveShapeValidation.ts",
+            "revision": "a2bd826f",
+            "symbolOrSection": "persisted-claim bounds"
+          }
+        ],
+        "invariantIds": [
+          "I-SF-1"
+        ],
+        "state": {
+          "productStateId": "1e111dc87b6fb8330d9c3aab07fceb6eafacee22cc67ee47ee7e36c49390bf35",
+          "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+          "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+          "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+        },
+        "evidenceIds": [
+          "EV-PROBE-A11"
+        ],
+        "exception": null,
+        "closeReason": "fixed on devin/qa-fixpoint (d615f4fc/d22d3c72); pin + mutant-killed + verify green",
+        "closedAt": "2026-10-01T13:45:00Z",
+        "closureReviewIds": [
+          "RV-CLOSURE-16"
+        ],
+        "pinEvidenceIds": [
+          "EV-PIN-T20",
+          "EV-MUT-T20"
+        ],
+        "verificationEvidenceIds": [
+          "EV-PIN-T20",
+          "EV-MUT-T20",
+          "EV-VERIFY-T20"
+        ],
+        "discoveredBy": "clean-round A11 blind reviewer probe (independent falsification wave)"
+      }
+    },
+    {
+      "kind": "finding",
+      "body": {
+        "id": "F-B11-1",
+        "title": "mortal skill-tree tri-state half-render: in-scope progression-locked nodes render as absent",
+        "severity": "Low",
+        "status": "HUMAN_EXCEPTION",
+        "classification": "REAL_DEFECT",
+        "actionable": true,
+        "rootClass": "BOUNDARY",
+        "subsystem": "betaScope",
+        "reachability": "PRODUCTION",
+        "rootCause": "SkillPathPanel requires elemental_casting capability or admitted way nodeTreeTag; mortal satisfies neither so NodeTreePanel never mounts though the read-model marks nodes progression-locked/initiation-pending",
+        "expected": "locked-tree surface per contract sec.A/D",
+        "actual": "zero tree rows render for a clean mortal",
+        "counterexample": "betaSkillTreeFor(mortal) marks nodes progression-locked; panel gate evaluates false",
+        "repair": "n/a - no code change (deferred Low/Nit per Medium+-only ruling or duplicate of an already-fixed finding)",
+        "siblingSearch": [
+          {
+            "roots": [
+              "src"
+            ],
+            "termsAndMethod": "NodeTreePanel verdict consumption audited (CSM-02 nit)",
+            "evidenceIds": [],
+            "hitDispositions": [],
+            "coverageLimits": [
+              "blind-round sweep; limits recorded in review findings"
+            ]
+          }
+        ],
+        "siblingFindingIds": [],
+        "duplicateOf": null,
+        "rejectionReason": null,
+        "locations": [
+          {
+            "basis": "SOURCE",
+            "path": "src/services/save/saveShapeValidation.ts",
+            "revision": "a2bd826f",
+            "symbolOrSection": "persisted-claim bounds"
+          }
+        ],
+        "invariantIds": [
+          "I-SF-1"
+        ],
+        "state": {
+          "productStateId": "1e111dc87b6fb8330d9c3aab07fceb6eafacee22cc67ee47ee7e36c49390bf35",
+          "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+          "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+          "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+        },
+        "evidenceIds": [
+          "EV-PROBE-B11"
+        ],
+        "exception": {
+          "humanInstructionRef": "user ruling: attacks/scope fixes are Medium+ only; Low/Nit recorded as deferred exceptions",
+          "scope": "flagged/crafted saves or display-only surfaces - a normal beta save cannot reach live harm",
+          "reason": "DEFERRED per Medium+-only ruling",
+          "expiresWhen": "next scope contract revision or user reversal of the Medium+-only ruling"
+        },
+        "closeReason": null,
+        "closedAt": null,
+        "closureReviewIds": [],
+        "pinEvidenceIds": [],
+        "verificationEvidenceIds": [],
+        "discoveredBy": "clean-round B11 blind reviewer probe (independent falsification wave)"
+      }
+    },
+    {
+      "kind": "finding",
+      "body": {
+        "id": "F-B11-2",
+        "title": "NodeTreePanel re-derives node visibility locally instead of consuming canonical verdicts",
+        "severity": "Nit",
+        "status": "HUMAN_EXCEPTION",
+        "classification": "REAL_DEFECT",
+        "actionable": true,
+        "rootClass": "BOUNDARY",
+        "subsystem": "betaScope",
+        "reachability": "PRODUCTION",
+        "rootCause": "local enumeration/label drift vs canonical read-model; convergent today",
+        "expected": "canonical verdict consumption",
+        "actual": "drift risk only; no wrong render on current data",
+        "counterexample": "n/a - deferred/duplicate disposition; see exception/duplicateOf + closureReviewIds",
+        "repair": "n/a - no code change (deferred Low/Nit per Medium+-only ruling or duplicate of an already-fixed finding)",
+        "siblingSearch": [
+          {
+            "roots": [
+              "src"
+            ],
+            "termsAndMethod": "siblings enumerated in B11 sweep",
+            "evidenceIds": [],
+            "hitDispositions": [],
+            "coverageLimits": [
+              "blind-round sweep; limits recorded in review findings"
+            ]
+          }
+        ],
+        "siblingFindingIds": [],
+        "duplicateOf": null,
+        "rejectionReason": null,
+        "locations": [
+          {
+            "basis": "SOURCE",
+            "path": "src/services/save/saveShapeValidation.ts",
+            "revision": "a2bd826f",
+            "symbolOrSection": "persisted-claim bounds"
+          }
+        ],
+        "invariantIds": [
+          "I-SF-1"
+        ],
+        "state": {
+          "productStateId": "1e111dc87b6fb8330d9c3aab07fceb6eafacee22cc67ee47ee7e36c49390bf35",
+          "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+          "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+          "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+        },
+        "evidenceIds": [
+          "EV-REPORT-B11"
+        ],
+        "exception": {
+          "humanInstructionRef": "user ruling: attacks/scope fixes are Medium+ only; Low/Nit recorded as deferred exceptions",
+          "scope": "flagged/crafted saves or display-only surfaces - a normal beta save cannot reach live harm",
+          "reason": "DEFERRED per Medium+-only ruling",
+          "expiresWhen": "next scope contract revision or user reversal of the Medium+-only ruling"
+        },
+        "closeReason": null,
+        "closedAt": null,
+        "closureReviewIds": [],
+        "pinEvidenceIds": [],
+        "verificationEvidenceIds": [],
+        "discoveredBy": "clean-round B11 blind reviewer probe (independent falsification wave)"
+      }
+    },
+    {
+      "kind": "finding",
+      "body": {
+        "id": "F-B11-3",
+        "title": "StageSelectPanel enumerates zone.stageIds + isStageUnlocked locally instead of getStageSurfaceModels",
+        "severity": "Nit",
+        "status": "HUMAN_EXCEPTION",
+        "classification": "REAL_DEFECT",
+        "actionable": true,
+        "rootClass": "BOUNDARY",
+        "subsystem": "betaScope",
+        "reachability": "PRODUCTION",
+        "rootCause": "local enumeration/label drift vs canonical read-model; convergent today",
+        "expected": "canonical verdict consumption",
+        "actual": "drift risk only; no wrong render on current data",
+        "counterexample": "n/a - deferred/duplicate disposition; see exception/duplicateOf + closureReviewIds",
+        "repair": "n/a - no code change (deferred Low/Nit per Medium+-only ruling or duplicate of an already-fixed finding)",
+        "siblingSearch": [
+          {
+            "roots": [
+              "src"
+            ],
+            "termsAndMethod": "siblings enumerated in B11 sweep",
+            "evidenceIds": [],
+            "hitDispositions": [],
+            "coverageLimits": [
+              "blind-round sweep; limits recorded in review findings"
+            ]
+          }
+        ],
+        "siblingFindingIds": [],
+        "duplicateOf": null,
+        "rejectionReason": null,
+        "locations": [
+          {
+            "basis": "SOURCE",
+            "path": "src/services/save/saveShapeValidation.ts",
+            "revision": "a2bd826f",
+            "symbolOrSection": "persisted-claim bounds"
+          }
+        ],
+        "invariantIds": [
+          "I-SF-1"
+        ],
+        "state": {
+          "productStateId": "1e111dc87b6fb8330d9c3aab07fceb6eafacee22cc67ee47ee7e36c49390bf35",
+          "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+          "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+          "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+        },
+        "evidenceIds": [
+          "EV-REPORT-B11"
+        ],
+        "exception": {
+          "humanInstructionRef": "user ruling: attacks/scope fixes are Medium+ only; Low/Nit recorded as deferred exceptions",
+          "scope": "flagged/crafted saves or display-only surfaces - a normal beta save cannot reach live harm",
+          "reason": "DEFERRED per Medium+-only ruling",
+          "expiresWhen": "next scope contract revision or user reversal of the Medium+-only ruling"
+        },
+        "closeReason": null,
+        "closedAt": null,
+        "closureReviewIds": [],
+        "pinEvidenceIds": [],
+        "verificationEvidenceIds": [],
+        "discoveredBy": "clean-round B11 blind reviewer probe (independent falsification wave)"
+      }
+    },
+    {
+      "kind": "finding",
+      "body": {
+        "id": "F-B11-4",
+        "title": "companion ops report 'realm_locked' rather than canonical scope_hidden on dormant writes",
+        "severity": "Nit",
+        "status": "HUMAN_EXCEPTION",
+        "classification": "REAL_DEFECT",
+        "actionable": true,
+        "rootClass": "BOUNDARY",
+        "subsystem": "betaScope",
+        "reachability": "PRODUCTION",
+        "rootCause": "local enumeration/label drift vs canonical read-model; convergent today",
+        "expected": "canonical verdict consumption",
+        "actual": "drift risk only; no wrong render on current data",
+        "counterexample": "n/a - deferred/duplicate disposition; see exception/duplicateOf + closureReviewIds",
+        "repair": "n/a - no code change (deferred Low/Nit per Medium+-only ruling or duplicate of an already-fixed finding)",
+        "siblingSearch": [
+          {
+            "roots": [
+              "src"
+            ],
+            "termsAndMethod": "siblings enumerated in B11 sweep",
+            "evidenceIds": [],
+            "hitDispositions": [],
+            "coverageLimits": [
+              "blind-round sweep; limits recorded in review findings"
+            ]
+          }
+        ],
+        "siblingFindingIds": [],
+        "duplicateOf": null,
+        "rejectionReason": null,
+        "locations": [
+          {
+            "basis": "SOURCE",
+            "path": "src/services/save/saveShapeValidation.ts",
+            "revision": "a2bd826f",
+            "symbolOrSection": "persisted-claim bounds"
+          }
+        ],
+        "invariantIds": [
+          "I-SF-1"
+        ],
+        "state": {
+          "productStateId": "1e111dc87b6fb8330d9c3aab07fceb6eafacee22cc67ee47ee7e36c49390bf35",
+          "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+          "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+          "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+        },
+        "evidenceIds": [
+          "EV-REPORT-B11"
+        ],
+        "exception": {
+          "humanInstructionRef": "user ruling: attacks/scope fixes are Medium+ only; Low/Nit recorded as deferred exceptions",
+          "scope": "flagged/crafted saves or display-only surfaces - a normal beta save cannot reach live harm",
+          "reason": "DEFERRED per Medium+-only ruling",
+          "expiresWhen": "next scope contract revision or user reversal of the Medium+-only ruling"
+        },
+        "closeReason": null,
+        "closedAt": null,
+        "closureReviewIds": [],
+        "pinEvidenceIds": [],
+        "verificationEvidenceIds": [],
+        "discoveredBy": "clean-round B11 blind reviewer probe (independent falsification wave)"
+      }
+    },
+    {
+      "kind": "finding",
+      "body": {
+        "id": "F-B11-5",
+        "title": "stale comment in BattleLootSystem claims thong_mach_dan spend funds physique essences",
+        "severity": "Nit",
+        "status": "HUMAN_EXCEPTION",
+        "classification": "REAL_DEFECT",
+        "actionable": true,
+        "rootClass": "BOUNDARY",
+        "subsystem": "betaScope",
+        "reachability": "PRODUCTION",
+        "rootCause": "local enumeration/label drift vs canonical read-model; convergent today",
+        "expected": "canonical verdict consumption",
+        "actual": "drift risk only; no wrong render on current data",
+        "counterexample": "n/a - deferred/duplicate disposition; see exception/duplicateOf + closureReviewIds",
+        "repair": "n/a - no code change (deferred Low/Nit per Medium+-only ruling or duplicate of an already-fixed finding)",
+        "siblingSearch": [
+          {
+            "roots": [
+              "src"
+            ],
+            "termsAndMethod": "siblings enumerated in B11 sweep",
+            "evidenceIds": [],
+            "hitDispositions": [],
+            "coverageLimits": [
+              "blind-round sweep; limits recorded in review findings"
+            ]
+          }
+        ],
+        "siblingFindingIds": [],
+        "duplicateOf": null,
+        "rejectionReason": null,
+        "locations": [
+          {
+            "basis": "SOURCE",
+            "path": "src/services/save/saveShapeValidation.ts",
+            "revision": "a2bd826f",
+            "symbolOrSection": "persisted-claim bounds"
+          }
+        ],
+        "invariantIds": [
+          "I-SF-1"
+        ],
+        "state": {
+          "productStateId": "1e111dc87b6fb8330d9c3aab07fceb6eafacee22cc67ee47ee7e36c49390bf35",
+          "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+          "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+          "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+        },
+        "evidenceIds": [
+          "EV-REPORT-B11"
+        ],
+        "exception": {
+          "humanInstructionRef": "user ruling: attacks/scope fixes are Medium+ only; Low/Nit recorded as deferred exceptions",
+          "scope": "flagged/crafted saves or display-only surfaces - a normal beta save cannot reach live harm",
+          "reason": "DEFERRED per Medium+-only ruling",
+          "expiresWhen": "next scope contract revision or user reversal of the Medium+-only ruling"
+        },
+        "closeReason": null,
+        "closedAt": null,
+        "closureReviewIds": [],
+        "pinEvidenceIds": [],
+        "verificationEvidenceIds": [],
+        "discoveredBy": "clean-round B11 blind reviewer probe (independent falsification wave)"
+      }
+    },
+    {
+      "kind": "finding",
+      "body": {
+        "id": "F-B11-6",
+        "title": "flagged save renders dormant way identity in CharacterPanel/SkillPathPanel while combat runs mortal kit",
+        "severity": "Nit",
+        "status": "HUMAN_EXCEPTION",
+        "classification": "REAL_DEFECT",
+        "actionable": true,
+        "rootClass": "BOUNDARY",
+        "subsystem": "betaScope",
+        "reachability": "PRODUCTION",
+        "rootCause": "local enumeration/label drift vs canonical read-model; convergent today",
+        "expected": "canonical verdict consumption",
+        "actual": "drift risk only; no wrong render on current data",
+        "counterexample": "n/a - deferred/duplicate disposition; see exception/duplicateOf + closureReviewIds",
+        "repair": "n/a - no code change (deferred Low/Nit per Medium+-only ruling or duplicate of an already-fixed finding)",
+        "siblingSearch": [
+          {
+            "roots": [
+              "src"
+            ],
+            "termsAndMethod": "siblings enumerated in B11 sweep",
+            "evidenceIds": [],
+            "hitDispositions": [],
+            "coverageLimits": [
+              "blind-round sweep; limits recorded in review findings"
+            ]
+          }
+        ],
+        "siblingFindingIds": [],
+        "duplicateOf": null,
+        "rejectionReason": null,
+        "locations": [
+          {
+            "basis": "SOURCE",
+            "path": "src/services/save/saveShapeValidation.ts",
+            "revision": "a2bd826f",
+            "symbolOrSection": "persisted-claim bounds"
+          }
+        ],
+        "invariantIds": [
+          "I-SF-1"
+        ],
+        "state": {
+          "productStateId": "1e111dc87b6fb8330d9c3aab07fceb6eafacee22cc67ee47ee7e36c49390bf35",
+          "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+          "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+          "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+        },
+        "evidenceIds": [
+          "EV-REPORT-B11"
+        ],
+        "exception": {
+          "humanInstructionRef": "user ruling: attacks/scope fixes are Medium+ only; Low/Nit recorded as deferred exceptions",
+          "scope": "flagged/crafted saves or display-only surfaces - a normal beta save cannot reach live harm",
+          "reason": "DEFERRED per Medium+-only ruling",
+          "expiresWhen": "next scope contract revision or user reversal of the Medium+-only ruling"
+        },
+        "closeReason": null,
+        "closedAt": null,
+        "closureReviewIds": [],
+        "pinEvidenceIds": [],
+        "verificationEvidenceIds": [],
+        "discoveredBy": "clean-round B11 blind reviewer probe (independent falsification wave)"
+      }
+    }
+  ]
+}

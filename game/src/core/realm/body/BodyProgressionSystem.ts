@@ -15,7 +15,6 @@ import {
   type PhysiqueAdvancement,
 } from './BodyChapter'
 import { computeRefinementBreakthroughGrade } from './BodyRefinementChapter'
-import { isBetaFeature } from '../../betaScope'
 import {
   getPhysiqueGradeIndex,
   isPhysiqueGradeId,
@@ -28,16 +27,7 @@ import {
 // (keeps chapter state the sole authority over its old slice).
 function applyChapterEffect(player: PlayerData, chapter: BodyChapterDefinition): void {
   if (chapter.kind === 'modifier') {
-    // BETA SCOPE LOCK - a modifier chapter's owned slice must never
-    // emit from carried dormant records, but the slice is still
-    // stripped so a forged 'bat-mach:*'-style entry cannot linger.
-    if (isBetaFeature('bodyPath')) {
-      chapter.applyModifiers(player)
-    } else {
-      player.modifiers = player.modifiers.filter(
-        (modifier) => !modifier.id.startsWith(chapter.modifierPrefix),
-      )
-    }
+    chapter.applyModifiers(player)
   } else if (chapter.kind === 'baseStat') {
     chapter.scrubLegacyModifiers(player)
   } else {
@@ -204,13 +194,6 @@ export function applyAllBodyModifiers(player: PlayerData): void {
 export function collectBodyBaseStatDeltas(
   player: PlayerData,
 ): Partial<Record<StatType, number>> {
-  // Dormant under beta scope: carried bodyProgression stays data on a
-  // flagged save - its flat base-stat deltas never emit while the body
-  // path is scope-hidden.
-  if (!isBetaFeature('bodyPath')) {
-    return {}
-  }
-
   const deltas: Partial<Record<StatType, number>> = {}
 
   for (const chapter of BODY_CHAPTERS) {
