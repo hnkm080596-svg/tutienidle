@@ -27,6 +27,9 @@ import { SkillSystem } from '@/core/skill/SkillSystem'
 import { TemplateRegistry } from '@/core/game/TemplateRegistry'
 import { NodeRegistry } from '@/core/progression/NodeRegistry'
 import { SKILLS } from '@/data/skill/Skills'
+import { TECHNIQUES } from '@/data/technique/Techniques'
+import { KIEM_TU_NODES } from '@/data/progression/KiemTuNodes'
+import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
 import type { Skill } from '@/core/skill/Skill'
 import { freshSwordPathState } from '@/core/kiem-tu/KiemTuState'
 import { createSpellPathState } from '@/core/phap-tu/PhapTuState'
@@ -213,3 +216,25 @@ describe('dormancy: a way_out_of_scope save must not execute its dormant kit (F-
     expect(build.kit.basic).not.toBe(GENERIC_PHYSICAL_BASIC)
   })
 })
+
+
+describe('path authority: the ritual gate fails closed for dormant ways (I-PA-1)', () => {
+  it('chooseCultivationPath rejects a non-beta way pair before any other check', () => {
+    const gameManager = new GameManager()
+    // Registered catalogs + realmLevel >= CORE_REALM_LEVEL so every
+    // downstream preflight passes and the beta admission gate is the ONLY
+    // possible rejector (same fixture shape as buildSnapshot.test.ts).
+    gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
+    gameManager.catalogOps.registerSkillTemplates(SKILLS)
+    gameManager.catalogOps.registerProgressionNodes(KIEM_TU_NODES)
+    gameManager.catalogOps.registerProgressionNodes(SKILL_CORE_NODES)
+    const p = player({ realmLevel: 12 })
+
+    expect(gameManager.realmAdvanceOps.chooseCultivationPath('sword', 'sword_pathway', p)).toBe(false)
+    expect(gameManager.realmAdvanceOps.chooseCultivationPath('body', 'body_pathway', p)).toBe(false)
+    // spell_pathway carries an element axis - it also fails closed here;
+    // its only entry point is the atomic commitFiveElementInitiation.
+    expect(gameManager.realmAdvanceOps.chooseCultivationPath('spell', 'spell_pathway', p)).toBe(false)
+  })
+})
+

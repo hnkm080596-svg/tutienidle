@@ -150,3 +150,38 @@ Each candidate must pass the promotion predicate during Devin adoption before be
   - **Root class:** L-API-DEFAULT-SEMANTICS - a library call taken verbatim adopted defaults that negate the caller's invariant (relaunch-after-install); plus unguarded terminal call post-commit.
   - **Detector escape:** the FakeUpdater in tests accepted any signature; semantics only live in electron-updater docs, not types.
   - **Pin/attack proposal:** for provider-boundary adapters, pin every defaulted argument that carries a journey invariant in the adapter comment AND verify launch-failure recovery (state returns to a retryable phase). Qualify as CANDIDATE.
+
+### 2026-09-30 qa-fixpoint-master (beta-scope-v2 master gate) - 8 incidents across 11 findings
+
+- **Incident:** carried-save hidden-progression records kept applying effects into live play (F-DL-1 stat-cap inflation, F-DL-2 enhanced realm passive) on a save the reader itself flagged unsupported.
+  - **Root class:** L-DORMANT-CARRIED-EFFECT - persisted scope-hidden records are dormant-but-legible: they deserialize intact and their readers kept honoring them. Dormancy flags gated ENTRY (panels, commits) but not the READ seams that turn stored state into stats/effects.
+  - **Detector escape:** hostile-save fixtures were exercised against deserialize/flag readers only; no probe replayed a carried record through an effect seam (StatCap read, RealmPassive grant). F-DL-5 (formation_loadout false-positive on absent field) is the same class at the flag reader: presence checks that treat `undefined !== null` as a record.
+  - **Pin/attack proposal:** for every persisted field owned by a scope-hidden domain, enumerate its live READERS (not just writers) and assert a carried value cannot alter any effect seam; betaDormantSaveLeak.qa.test.ts now pins the cap/passive reads. Record-presence checks must distinguish absent from present-null. Qualify as CANDIDATE.
+- **Incident:** `unsupportedReleaseReason` threw TypeError on `hiddenPerfection: null` (F-DL-3) - the §H hostile-save reader itself crashed on a hostile shape.
+  - **Root class:** L-DEFENSIVE-SHAPE - a read written to tolerate corrupt data failed closed on the ONE shape it was meant to tolerate (null/absent treated as object).
+  - **Detector escape:** robustness was unit-tested per-field but never fuzzed with non-object scalars/arrays crossing the persisted boundary.
+  - **Pin/attack proposal:** every §H flag reader gets a hostile-shape matrix (null, scalar, array, corrupted-nested) asserting resolve-not-throw; now pinned in betaDormantSaveLeak.qa.test.ts.
+- **Incident:** two contract-mandated surfaces were completely unwired: the §H unsupported-save notice (F-DL-4) and the §H beta-completion ending beat (F-RM-3, `betaCompletionFor` had zero UI consumers).
+  - **Root class:** L-UNWIRED-CONTRACT - a read-model + spec line existed with no consumer; the contract described a surface no code path could reach.
+  - **Detector escape:** read-models were verified for correctness against fixture states but nobody enumerated CONSUMER count per read-model; a zero-consumer authority is silent.
+  - **Pin/attack proposal:** census every exported beta read-model for >=1 production consumer as a suite check (an authoritative read-model with zero consumers is a defect, not a wart); betaCompletionFor gained its modal consumer; betaSupportedFor gained the post-restore notice consumer.
+- **Incident:** three surfaces rendered dormant content through their own filtering, bypassing the canonical beta read-models (F-RM-1 SkillPathPanel element tabs, F-RM-2 combat bar ultimate slot, F-RM-4 AlchemyView dormant families).
+  - **Root class:** L-PARALLEL-VERDICT - a surface recomputed visibility from raw domain data (ELEMENT_ORDER, fixed ROLE_ORDER, raw recipe realm filters) instead of rendering the read-model verdict verbatim; the read-model said scope-hidden while the surface rendered the content.
+  - **Detector escape:** each surface was internally consistent; only a verdict-vs-render comparison exposes the disagreement (betaReadModelHonesty.qa.test.ts pattern now exists).
+  - **Pin/attack proposal:** for every tri-state surface, assert rendered-set === rail verdicts (available+progression-locked render, scope-hidden does not); never let a surface re-derive scope.
+- **Incident:** `usePillDetailed` consumed dormant pill families on carried saves and applied their effects to baseStats (F-TRI-1).
+  - **Root class:** L-GATE-MISSING-EFFECT-SEAM - the consumption seam was gated on domain reasons (retired/material/realm/battle) but never consulted the scope authority; entry-gating alone is insufficient when a hostile save bypasses acquisition gates entirely.
+  - **Detector escape:** hostile-save analysis focused on persisted-field readers; CONSUMPTION seams (bag item -> effect) were assumed covered by acquisition-side gates.
+  - **Pin/attack proposal:** every effect-applying seam must check scope, not just acquisition surfaces; unknown/legacy ids must remain consumable (the dormant resolver rejects only authored dormant families).
+- **Incident:** `resolveCombatBuild` resolved a dormant way's full combat kit on a `way_out_of_scope` save (F-TRI-2) - the engine executed sword/body/hidden kits while the rail reported scope-hidden.
+  - **Root class:** L-ASYM-SIBLING-SEAM - the same function gated two sibling ACCESS seams (companions, formation buff) but not the third (the player's own path runtime); partial gating reads as complete gating.
+  - **Detector escape:** dormant-participation checks were written per-feature; the way runtime was categorized as 'the player's own state' rather than a dormant feature with an ACCESS seam.
+  - **Pin/attack proposal:** ACCESS seams enumerate the full dormant-feature list - a feature table diff (`isScopeHidden` checks vs. reachable seams) would have caught the missing third seam; CombatBuild now fails closed to the generic basic.
+- **Incident:** save-version coupling forced a design retreat mid-fix (F-RM-3 first draft added `betaCompletionAcknowledged` to PlayerData -> would have required the v88 bump that bricks every existing save).
+  - **Root class:** L-SAVE-SCHEMA-COUPLING - ANY PlayerData field addition is a breaking save-schema change (dev-phase no-migration convention); a UI acknowledgment belongs to a side channel.
+  - **Detector escape:** type-check/tests do not model save-version bricking; the constraint was discovered through schema review, not a test.
+  - **Pin/attack proposal:** device-local/derived acknowledgments (localStorage keyed by character name) for UI-consumption flags; keep the PlayerData diff empty unless the intent is a save-version bump. Documented in the fix, not a test - flag for save-schema lint coverage later.
+- **Incident:** test fixtures themselves encoded the leak (PERMANENT_PILL = dormant `to_cot_dan_mortal` expected to consume; CombatBuild parity test asserted dormant-way kit resolution).
+  - **Root class:** L-FIXTURE-ENCODES-DRIFT - suites authored pre-lock kept asserting pre-lock behavior as correctness; the new invariant required fixtures to change, not code.
+  - **Detector escape:** not an escape - the fixtures failed loudly post-gate; the retreat was recognizing they pinned the OLD contract (update fixture to a beta family, keep the mechanic under test).
+  - **Pin/attack proposal:** when a scope gate lands, sweep fixtures for dormant-content consumption; an unlocked-test-build convention (setup.betaScope.ts admits all) already handles the dormant-machinery suites.
