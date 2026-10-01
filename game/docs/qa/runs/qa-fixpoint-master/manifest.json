@@ -2532,7 +2532,7 @@
       "path": "docs/qa/protocol/learning.md",
       "kind": "file",
       "mode": 33188,
-      "hash": "d14ef356416cc4105905c1bf620d227e9f3fcf8537bf58df40fad6376ed872fc"
+      "hash": "6849c3bbff9e7f30da7c4e99997d5104b878973593dd53681f192141fd867fb7"
     },
     {
       "path": "docs/qa/protocol/ledger-schema.md",
@@ -24444,7 +24444,7 @@
       "path": "src/services/save/saveShapeValidation.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "147e6440aa37f318fe8bca5a36fa6093bb21310d4f6b87a85dd477d4ff6671db"
+      "hash": "feaf8aeda92737746f53144d7c92f11a621e5e6b25fa5288291901bed134d033"
     },
     {
       "path": "src/services/save/SaveSystem.bootRestore.test.ts",
@@ -25308,7 +25308,7 @@
       "path": "tests/architecture/saveFalsificationTc11.qa.test.ts",
       "kind": "file",
       "mode": 33188,
-      "hash": "fdb1515cc2775a56e067106b3f73b3f9d49d0d12521f714eaf5d76e6beffbc49"
+      "hash": "76ded8d4370afccfcc49785943f5bef60c8b20271e97e318803ce1490337457d"
     },
     {
       "path": "tests/architecture/sceneHelperBoundaries.test.ts",
@@ -25701,5 +25701,5 @@
       "hash": "0bb3657058699da63594036eda9bb6be7f6b4b44aebbb960fcba939870fd3f5e"
     }
   ],
-  "productStateId": "068af781187ad3a2fa1495877c3b8c9ece361c7cca427aba5a1b05a9b7480369"
+  "productStateId": "735483ad51b3eee824a4ab3291019299d852283f434e6d68ad6e369eeb30b1c8"
 }
