@@ -14,7 +14,7 @@ import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { chromeSlice } from '@/ui/huyenKimChrome'
-import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
+import DongFuResourcePill from '@/components/scenes/dong-fu/hud/DongFuResourcePill.vue'
 import { SPIRIT_STONE_MATERIALS } from '@/core/material/SpiritStoneMaterial'
 import { isCompanionDomainUnlocked } from '@/core/companion/CompanionAvailability'
 import { COMPANION_PULL_TOKEN_ID } from '@/core/game/GameManagerCompanionOps'
@@ -84,17 +84,15 @@ const resourcePillSlice = chromeSlice('resource-pill')
 </script>
 
 <template>
-  <div class="currency-hud" :aria-label="t('currencyHud.aria')">
-    <span
+  <div class="currency-hud" :aria-label="t('currencyHud.aria')" data-hk-region="resource-cluster">
+    <DongFuResourcePill
       v-for="chip in chips"
       :key="chip.id"
-      class="currency-hud__chip"
-      :class="[`currency-hud__chip--${chip.id}`, { 'currency-hud__chip--sliced': Boolean(resourcePillSlice) }]"
-    >
-      <InkNineSlice v-if="resourcePillSlice" chrome-id="resource-pill" layer="surface" />
-      <span class="currency-hud__label">{{ chip.label }}</span>
-      <strong class="currency-hud__amount">{{ formatNumber(chip.amount) }}</strong>
-    </span>
+      :chip-id="chip.id"
+      :label="chip.label"
+      :amount-text="formatNumber(chip.amount)"
+      :sliced="Boolean(resourcePillSlice)"
+    />
   </div>
 </template>
 
@@ -113,46 +111,6 @@ const resourcePillSlice = chromeSlice('resource-pill')
   pointer-events: none;
 }
 
-.currency-hud__chip {
-  position: relative;
-  display: inline-flex;
-  align-items: baseline;
-  gap: 6px;
-  padding: 4px 10px;
-  background: color-mix(in srgb, var(--ink-950) 80%, transparent);
-  border: 1px solid var(--paper-line);
-  border-radius: var(--radius-sm);
-  font-size: var(--text-sm);
-  color: var(--surface-text-soft);
-}
-
-/* Sliced capsule: the resource-pill PNG owns fill + ring, so the CSS
-   capsule surface drops out and the slice inherits the chip radius. */
-.currency-hud__chip--sliced {
-  background: none;
-  border-color: transparent;
-  border-radius: var(--radius-sm);
-  padding: 6px 12px;
-}
-
-.currency-hud__label,
-.currency-hud__amount {
-  position: relative;
-  z-index: 3;
-}
-
-.currency-hud__label {
-  font-size: var(--text-xs);
-  white-space: nowrap;
-}
-
-.currency-hud__amount {
-  color: var(--surface-text);
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-}
-
-.currency-hud__chip--duyen_phan .currency-hud__amount {
-  color: var(--mineral-gold);
-}
+/* Chip internals (pill surface, label, amount) live in
+   DongFuResourcePill - this block owns only the strip layout. */
 </style>
