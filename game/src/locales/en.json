@@ -1112,6 +1112,7 @@
       "headerTitle": "Create Character",
       "nameStep": {
         "kicker": "DAO TITLE",
+        "sectionTitle": "Dao Name",
         "title": "A title carried through the immortal path",
         "description": "Character names are unique and cannot be changed in the early phase.",
         "label": "Character Name",
@@ -1120,10 +1121,12 @@
       },
       "talentStep": {
         "kicker": "DESTINY",
+        "sectionTitle": "Innate Talent",
         "title": "Choose One Innate Talent",
         "selected": "Selected {count} / 1",
         "rolling": "Observing the heavens…",
         "reroll": "↻ Reroll all",
+        "hint": "Choose 1 starting talent",
         "tags": {
           "combat": "Combat",
           "crafting": "Crafting",
@@ -1140,7 +1143,13 @@
       "errors": {
         "rollFailed": "Cannot observe the heavens. Please try again."
       },
-      "summary": "{name} · {talent}"
+      "summary": "{name} · {talent}",
+      "headerSubtitle": "ONE STEP ONTO THE IMMORTAL PATH · MYRIAD MILES OF MOUNTAINS AND RIVERS",
+      "vistaBanner": "UNSULLIED HEART",
+      "starterSlot": {
+        "title": "Starter Skill",
+        "pending": "Revealed after you choose a talent"
+      }
     }
   },
   "skillResource": {
