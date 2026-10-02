@@ -1390,7 +1390,12 @@
       "fallback": "Cannot start brewing",
       "scope_hidden": "This recipe is outside the beta scope"
     },
-    "outcomeNone": "This run yields no pills."
+    "outcomeNone": "This run yields no pills.",
+    "queueTitle": "Brewing Queue",
+    "queueEmpty": "No cauldron is brewing yet.",
+    "placeIngredients": "Place ingredients into the cauldron",
+    "bannerLeft": "Dao of Alchemy Reaches Heaven",
+    "bannerRight": "Flame of the Cauldron, Pure Azure"
   },
   "layout": {
     "functionOverlay": {

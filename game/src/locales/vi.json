@@ -1390,7 +1390,12 @@
       "fallback": "Không thể bắt đầu luyện",
       "scope_hidden": "Đan phương này nằm ngoài phạm vi beta — chưa mở trong bản này"
     },
-    "outcomeNone": "Lần này không nhận được đan nào."
+    "outcomeNone": "Lần này không nhận được đan nào.",
+    "queueTitle": "Hàng Chờ Luyện Đan",
+    "queueEmpty": "Chưa có lò nào đang luyện.",
+    "placeIngredients": "Đặt nguyên liệu vào đan lô",
+    "bannerLeft": "Đan Đạo Thông Thiên",
+    "bannerRight": "Lô Hỏa Thuần Thanh"
   },
   "layout": {
     "functionOverlay": {
