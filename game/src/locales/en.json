@@ -269,7 +269,10 @@
         "attribute": "Attributes",
         "defenseAdvanced": "Advanced Defense",
         "elements": "Five Elements",
-        "talents": "Innate Talents"
+        "talents": "Innate Talents",
+        "mainStats": "Main Attributes",
+        "elementSummary": "Elements Summary",
+        "derivedStats": "Derived Attributes"
       },
       "actions": {
         "quanKhi": "Quán Khí",
@@ -285,7 +288,8 @@
       "tooltips": {
         "elementStat": "Power {power} · Resistance {resistance} · Penetration {penetration}",
         "primordialTitle": "Primordial",
-        "primordialStat": "Power {power} · Ignores all defenses."
+        "primordialStat": "Power {power} · Ignores all defenses.",
+        "elementShare": "{share}% of total elemental power."
       }
     },
     "quanKhi": {

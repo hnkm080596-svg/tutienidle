@@ -269,7 +269,10 @@
         "attribute": "Thuộc Tính",
         "defenseAdvanced": "Phòng Thủ Nâng Cao",
         "elements": "Ngũ Hành",
-        "talents": "Thiên Phú"
+        "talents": "Thiên Phú",
+        "mainStats": "Thuộc Tính Chính",
+        "elementSummary": "Ngũ Hành Tóm Tắt",
+        "derivedStats": "Thuộc Tính Phụ"
       },
       "actions": {
         "quanKhi": "Quán Khí",
@@ -285,7 +288,8 @@
       "tooltips": {
         "elementStat": "Power {power} · Kháng {resistance} · Xuyên {penetration}",
         "primordialTitle": "Hỗn Nguyên",
-        "primordialStat": "Power {power} · Bỏ qua mọi phòng thủ."
+        "primordialStat": "Power {power} · Bỏ qua mọi phòng thủ.",
+        "elementShare": "{share}% tổng ngũ hành lực."
       }
     },
     "quanKhi": {

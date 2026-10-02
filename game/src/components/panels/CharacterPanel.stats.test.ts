@@ -1,10 +1,9 @@
 // @vitest-environment jsdom
 //
-// Meridian figure block — the "Thuoc Tinh" (main attribute) group is
-// rendered as five nodes anchored on the martial-figure art instead of a
-// plain list. These tests pin the contract: five nodes keyed by
-// MainStatKey, values shown, and the existing allocate (+)/MAX behavior
-// preserved per node.
+// Scene 04 main-stats block - the "Thuoc Tinh Chinh" group renders the
+// five main attributes as seal-icon + bar rows (reference list family).
+// These tests pin the contract: five rows keyed by MainStatKey, values
+// shown, and the existing allocate (+)/MAX behavior preserved per row.
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createApp, h, ref } from 'vue'
 import { createPinia, type Pinia } from 'pinia'
@@ -39,36 +38,36 @@ function mountPanel(prepare?: (pinia: Pinia, manager: GameManager) => void) {
 
 afterEach(() => { document.body.innerHTML = '' })
 
-describe('CharacterPanel — meridian figure (5 main stats on the martial art)', () => {
-  it('nhóm Thuộc Tính render đúng 5 node, mỗi node gắn data-stat là MainStatKey', () => {
+describe('CharacterPanel — main stats rows (5 attributes)', () => {
+  it('nhóm Thuộc Tính Chính render đúng 5 row, mỗi row gắn data-stat là MainStatKey', () => {
     const { container, unmount } = mountPanel()
 
-    const nodes = container.querySelectorAll('.meridian__node')
-    expect(nodes).toHaveLength(5)
+    const rows = container.querySelectorAll('.main-stat[data-stat]')
+    expect(rows).toHaveLength(5)
 
-    const stats = [...nodes].map(node => node.getAttribute('data-stat')).sort()
+    const stats = [...rows].map(row => row.getAttribute('data-stat')).sort()
     expect(stats).toEqual(['attunement', 'dexterity', 'intelligence', 'strength', 'vitality'])
     unmount()
   })
 
-  it('mỗi node hiển thị label + giá trị stat', () => {
+  it('mỗi row hiển thị label + giá trị stat', () => {
     const { container, unmount } = mountPanel()
 
-    for (const node of container.querySelectorAll('.meridian__node')) {
-      expect(node.querySelector('.meridian__node-label')?.textContent?.trim()).not.toBe('')
-      expect(node.querySelector('.meridian__node-value')?.textContent?.trim()).not.toBe('')
+    for (const row of container.querySelectorAll('.main-stat')) {
+      expect(row.querySelector('.main-stat__label')?.textContent?.trim()).not.toBe('')
+      expect(row.querySelector('.main-stat__value')?.textContent?.trim()).not.toBe('')
     }
     unmount()
   })
 
-  it('còn attributePoints → node hiện nút +, click gọi allocateAttributePoint đúng stat', () => {
+  it('còn attributePoints → row hiện nút +, click gọi allocateAttributePoint đúng stat', () => {
     const { container, manager, unmount } = mountPanel((pinia) => {
       usePlayerStore(pinia).attributePoints = 3
     })
 
     const spy = vi.spyOn(manager.progressionOps, 'allocateAttributePoint')
     const button = container.querySelector<HTMLButtonElement>(
-      '.meridian__node[data-stat="strength"] .meridian__node-allocate',
+      '.main-stat[data-stat="strength"] .main-stat__allocate',
     )
 
     expect(button).not.toBeNull()
@@ -77,10 +76,10 @@ describe('CharacterPanel — meridian figure (5 main stats on the martial art)',
     unmount()
   })
 
-  it('hết attributePoints → không nút + trên node nào', () => {
+  it('hết attributePoints → không nút + trên row nào', () => {
     const { container, unmount } = mountPanel()
 
-    expect(container.querySelector('.meridian__node-allocate')).toBeNull()
+    expect(container.querySelector('.main-stat__allocate')).toBeNull()
     unmount()
   })
 
@@ -91,15 +90,15 @@ describe('CharacterPanel — meridian figure (5 main stats on the martial art)',
       player.baseStats.strength = 999_999
     })
 
-    const node = container.querySelector('.meridian__node[data-stat="strength"]')!
-    expect(node.querySelector('.meridian__node-allocate')).toBeNull()
-    expect(node.querySelector('.meridian__node-max')?.textContent).toBe('MAX')
+    const row = container.querySelector('.main-stat[data-stat="strength"]')!
+    expect(row.querySelector('.main-stat__allocate')).toBeNull()
+    expect(row.querySelector('.main-stat__max')?.textContent).toBe('MAX')
     unmount()
   })
 })
 
 describe('CharacterPanel — Ngũ Hành formation', () => {
-  it('render 5 medallion hành (không caption text) + taiji Hỗn Nguyên ở tâm', () => {
+  it('render 5 medallion hành (không caption text) + taiji Hỗn Nguyên', () => {
     const { container, unmount } = mountPanel()
 
     const nodes = container.querySelectorAll('.element-node[data-element]')
@@ -108,13 +107,13 @@ describe('CharacterPanel — Ngũ Hành formation', () => {
     const elements = [...nodes].map(node => node.getAttribute('data-element')).sort()
     expect(elements).toEqual(['earth', 'fire', 'metal', 'water', 'wood'])
 
-    // The art medallion identifies the element - no text caption under the disc.
+    // The medallion + tag identify the element - no __caption element.
     for (const node of nodes) {
       expect(node.querySelector('.element-node__disc')).not.toBeNull()
       expect(node.querySelector('.element-node__caption')).toBeNull()
     }
 
-    // The taiji at the pentagram center carries Hon Nguyen's Power.
+    // The taiji carries Hon Nguyen's Power.
     const primordial = container.querySelector('.element-node--primordial')
     expect(primordial?.querySelector('.element-node__core')?.textContent?.trim()).not.toBe('')
     unmount()
