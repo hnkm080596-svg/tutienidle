@@ -14,15 +14,12 @@
 // `top` (publishTopBarHeight — giữ nguyên `right` của dock), không còn
 // giữ import cho 2 component đã dời.
 import { nextTick, onBeforeUnmount, onMounted, onUnmounted, ref } from 'vue'
-import CombatTopBar from './CombatTopBar.vue'
-import CombatResultModal from './CombatResultModal.vue'
-import CombatCountdownOverlay from './CombatCountdownOverlay.vue'
-import CombatIntroOverlay from './CombatIntroOverlay.vue'
-import CombatAiPanel from './CombatAiPanel.vue'
-import CombatSkillDockPanel from './CombatSkillDockPanel.vue'
-import TurnOrderStrip from './TurnOrderStrip.vue'
-import BattleLogPanel from './BattleLogPanel.vue'
-import CombatExitConfirmModal from './CombatExitConfirmModal.vue'
+import CombatTopRail from '@/components/scenes/combat/CombatTopRail.vue'
+import CombatTurnRail from '@/components/scenes/combat/CombatTurnRail.vue'
+import CombatAiRail from '@/components/scenes/combat/CombatAiRail.vue'
+import CombatActionDock from '@/components/scenes/combat/CombatActionDock.vue'
+import CombatLogFeed from '@/components/scenes/combat/CombatLogFeed.vue'
+import CombatModalLayer from '@/components/scenes/combat/CombatModalLayer.vue'
 import { publishTopBarHeight, resetCombatInsets } from '@/presentation/geometry/combatInsets'
 import { useTurnCombatManual } from '@/composables/useTurnCombatManual'
 
@@ -107,29 +104,24 @@ onUnmounted(() => {
        Overlay chỉ còn TopBar (thông tin zone/stage), AI panel, dock
        kỹ năng mép phải và các modal. Bottom = full canvas. -->
   <div ref="rootRef" class="combat-scene-overlay">
-    <CombatTopBar class="combat-scene-overlay__top-bar" />
+    <CombatTopRail class="combat-scene-overlay__top-bar" />
 
-    <CombatSkillDockPanel v-if="isBattleFighting" />
+    <CombatActionDock :fighting="isBattleFighting" />
 
     <div class="combat-scene-overlay__battlefield">
       <!-- Combat AI panel — góc TRÁI battlefield, chỉ panel nhận pointer. -->
-      <CombatAiPanel class="combat-scene-overlay__ai-panel" />
+      <CombatAiRail class="combat-scene-overlay__ai-panel" />
     </div>
 
     <!-- Slice 7 extension - turn-order preview (top, dưới TopBar) + battle
          log (góc phải-dưới, self-guarded khi không fighting). -->
-    <TurnOrderStrip class="combat-scene-overlay__turn-order-strip" />
+    <CombatTurnRail class="combat-scene-overlay__turn-order-strip" />
 
-    <BattleLogPanel />
+    <CombatLogFeed />
 
-    <!-- 6A-T6 — confirm thoát trận (scene exit zone → bridge event). -->
-    <CombatExitConfirmModal />
-
-    <CombatResultModal />
-
-    <CombatIntroOverlay />
-
-    <CombatCountdownOverlay />
+    <!-- 6A-T6 — confirm thoát trận + result/intro/countdown (scene exit
+         zone → bridge event). -->
+    <CombatModalLayer />
   </div>
 </template>
 <style scoped>
