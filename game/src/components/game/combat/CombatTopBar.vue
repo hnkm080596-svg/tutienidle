@@ -55,6 +55,8 @@ function requestExit(): void {
 
 <template>
   <div class="combat-top-bar">
+    <!-- Ref's ornate stage-banner plaque under the title (temp art). -->
+    <i class="combat-top-bar__plaque art-needed" data-art-id="combat-title-plaque" aria-hidden="true" />
     <span class="combat-top-bar__title">{{ zoneName }}<template v-if="stage"> • {{ stage.name }}</template></span>
 
     <div class="combat-top-bar__side">
@@ -96,7 +98,23 @@ function requestExit(): void {
   pointer-events: auto;
 }
 
+/* Scene 10 stage-banner plaque (temp art): muted-gold swallowtail
+   behind the zone·stage title. */
+.combat-top-bar__plaque {
+  position: absolute;
+  left: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 240px;
+  height: 34px;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--hk-gold-muted, #7a6234) 30%, transparent), transparent 88%);
+  border-left: 3px solid var(--hk-gold-muted, #7a6234);
+  border-radius: 3px;
+  pointer-events: none;
+}
+
 .combat-top-bar__title {
+  position: relative;
   font-family: var(--font-display);
   font-weight: 700;
   font-size: var(--text-body);
