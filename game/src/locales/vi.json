@@ -594,6 +594,17 @@
       "tierLine": "{realm} · Tầng {level}",
       "cultivationUnit": "Tu Vi",
       "rateEta": "+{rate} {unit}/giây · còn ~{eta}",
+      "tierOf": "Tầng {level}/{max}",
+      "sections": {
+        "progress": "Tu Luyện Tiến Độ",
+        "passives": "Thiên Phú Cảnh Giới ({realm})",
+        "requirements": "Điều Kiện Đột Phá {target}"
+      },
+      "meta": {
+        "rateLabel": "Tốc Độ Tu Luyện",
+        "etaLabel": "Ước Tính Tầng Sau",
+        "rateValue": "{rate} {unit}/giây"
+      },
       "labels": {
         "quanKhi": "Quán Khí",
         "foundation": "Trúc Cơ",
