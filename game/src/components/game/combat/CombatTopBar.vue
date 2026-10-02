@@ -99,7 +99,7 @@ function requestExit(): void {
 }
 
 /* Scene 10 stage-banner plaque (temp art): muted-gold swallowtail
-   behind the zone·stage title. */
+   behind the zone-stage title. */
 .combat-top-bar__plaque {
   position: absolute;
   left: 20px;

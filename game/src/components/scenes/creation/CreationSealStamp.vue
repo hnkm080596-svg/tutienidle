@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Scene 02 prop — the cinnabar seal stamp pressed beside the title in the
+// Scene 02 prop - the cinnabar seal stamp pressed beside the title in the
 // ref. TEMP ART: carved square placeholder until the seal art lands.
 </script>
 

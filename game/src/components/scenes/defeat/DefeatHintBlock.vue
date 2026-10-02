@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // Scene 15/16 hint region (spec: 526/260/620/80, shell-panel).
 // Audit EXACT: isCultivationGap picks cultivate vs gear hint. Ref adds
-// a "Nguyên Nhân Thất Bại" header and an exclamation seal medallion —
+// a "Nguyen Nhan That Bai" header and an exclamation seal medallion -
 // the seal is temp art.
 import { useI18n } from 'vue-i18n'
 

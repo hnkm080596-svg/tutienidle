@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Scene 02 Kỹ Năng Khởi Đầu slot — RESERVED (audit R00 / spec
+// Scene 02 Ky Nang Khoi Dau slot - RESERVED (audit R00 / spec
 // `starter-slot` 988/716/564/56): the full-product architecture keeps the
 // region, but beta renders nothing because the starter is fixed to
 // `linh_bao` (BETA_MORTAL_STARTER_SKILL_ID). `visible` stays false in beta;

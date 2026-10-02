@@ -32,9 +32,9 @@ const { t } = useI18n()
 </template>
 
 <style scoped>
-/* PNG tu luyện (player-mortal-cultivate-v1) qua PlayerPortrait —
-   chuyển động float/breathe/aura sống trong component đó; khối này chỉ
-   định vị tâm màn hình và hit target. */
+/* PNG tu luyen (player-mortal-cultivate-v1) qua PlayerPortrait -
+   chuyen dong float/breathe/aura song trong component do; khoi nay chi
+   dinh vi tam man hinh va hit target. */
 .home-player {
   position: absolute;
   z-index: 6;
@@ -43,8 +43,8 @@ const { t } = useI18n()
   transform: translate(-50%, -50%);
 }
 
-/* .home-scene pointer-events:none toàn khối — trigger phải tự bật lại
-   để nhận click/touch mở command wheel. */
+/* .home-scene pointer-events:none toan khoi - trigger phai tu bat lai
+   de nhan click/touch mo command wheel. */
 .home-player__trigger {
   display: block;
   padding: 0;
@@ -89,7 +89,7 @@ const { t } = useI18n()
   opacity: 0;
 }
 
-/* Khi wheel mở — aura tăng nhẹ (presentation-only). */
+/* Khi wheel mo - aura tang nhe (presentation-only). */
 .home-player__trigger.is-wheel-open :deep(.player-portrait__aura) {
   opacity: 1;
   scale: 1.08;

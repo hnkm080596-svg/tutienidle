@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Scene 02 Thiên Phú section — seal header + pick hint + 3×3 offer grid +
+// Scene 02 Thien Phu section - seal header + pick hint + 3x3 offer grid +
 // reroll action (region talent-grid 988/340/564/360, roll size 9).
 import { useI18n } from 'vue-i18n'
 import GameButton from '@/components/common/GameButton.vue'
@@ -80,7 +80,7 @@ const { t } = useI18n()
 .creation-talent-section__grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  /* spec card = 176×112 design px; rows pinned so the grid cannot push the
+  /* spec card = 176x112 design px; rows pinned so the grid cannot push the
      footer past the scroll edge */
   grid-auto-rows: clamp(96px, 12vh, 114px);
   gap: 8px;

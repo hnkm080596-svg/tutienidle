@@ -1,7 +1,7 @@
 <script setup lang="ts">
-// Scene 02 vista region — the painted world left of the creation scroll.
-// Layer order (bottom→top): parallax stack (delivered stable art) → ink
-// edge fade → seated figure → desk props. Decorative only.
+// Scene 02 vista region - the painted world left of the creation scroll.
+// Layer order (bottom->top): parallax stack (delivered stable art) -> ink
+// edge fade -> seated figure -> desk props. Decorative only.
 import HuyenKimParallaxStack from '@/components/common/HuyenKimParallaxStack.vue'
 import CreationVistaFigure from './CreationVistaFigure.vue'
 import CreationVistaDesk from './CreationVistaDesk.vue'

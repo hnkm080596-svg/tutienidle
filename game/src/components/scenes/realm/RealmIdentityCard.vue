@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // Scene 05 realm-card region (spec: 1116/176/416/150, shell-panel
 // family, surface-m-panel). Ref: ornate circular realm medallion left,
-// realm name center, "Tầng n/18" right.
+// realm name center, "Tang n/18" right.
 import { useI18n } from 'vue-i18n'
 import HuyenKimSymbol from '@/components/common/HuyenKimSymbol.vue'
 

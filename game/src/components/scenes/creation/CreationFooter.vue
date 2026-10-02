@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Scene 02 footer — draft summary line, ceremonial finish CTA on
+// Scene 02 footer - draft summary line, ceremonial finish CTA on
 // button-ceremonial chrome, gold flourishes flanking it, and the
 // post-submit error line (region footer 988/780/564/60).
 import GameButton from '@/components/common/GameButton.vue'

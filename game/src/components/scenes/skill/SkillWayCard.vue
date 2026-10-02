@@ -1,9 +1,9 @@
 <script setup lang="ts">
 // Scene 07 way-card region (spec: 288/176/212/610, shell-panel family,
-// surface-m-panel). Ref: flaming way emblem + "Phap Tu • Hoa Hanh"
+// surface-m-panel). Ref: flaming way emblem + "Phap Tu * Hoa Hanh"
 // identity line + '?' help orb + way flavor paragraph.
 // The canonical way model has NO description field (PathWayDefinition =
-// name/element/kit only) — the flavor paragraph is omitted and flagged
+// name/element/kit only) - the flavor paragraph is omitted and flagged
 // in the art doc rather than invented.
 import { computed } from 'vue'
 import HuyenKimSymbol from '@/components/common/HuyenKimSymbol.vue'

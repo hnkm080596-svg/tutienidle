@@ -84,8 +84,8 @@ const { t } = useI18n()
 .exploration-tabs :deep(.stage-select__filter-chip) {
   padding: 5px 10px;
   font-weight: 600;
-  /* Filter Địa Giới dùng palette portal teal — đè công thức chrome chuẩn
-     của Chip bằng CSS var local. */
+  /* Filter Dia Gioi dung palette portal teal - de cong thuc chrome chuan
+     cua Chip bang CSS var local. */
   --chip-active-bg: color-mix(in srgb, var(--scene-portal-glow) 20%, var(--paper-50));
 }
 

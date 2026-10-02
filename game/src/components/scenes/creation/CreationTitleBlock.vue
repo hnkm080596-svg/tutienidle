@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Scene 02 header — scroll-title-plaque chrome (empty plaque, app-rendered
+// Scene 02 header - scroll-title-plaque chrome (empty plaque, app-rendered
 // title) + kicker overline + the ref's letterspaced subtitle + cinnabar
 // seal stamp at the plaque's right shoulder.
 import { computed } from 'vue'

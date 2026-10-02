@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // Scene 11 detail-panel cost rows (audit EXACT: fuel wood row +
-// spirit-stone row; ref's "Nhiên Liệu" + "Tiêu Hao Linh Thạch").
+// spirit-stone row; ref's "Nhien Lieu" + "Tieu Hao Linh Thach").
 import { useI18n } from 'vue-i18n'
 import StatRow from '@/components/common/primitives/StatRow.vue'
 

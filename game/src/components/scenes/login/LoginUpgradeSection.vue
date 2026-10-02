@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Scene 01 upgrade-card region (spec: 1048/468/496/~140, conditional —
+// Scene 01 upgrade-card region (spec: 1048/468/496/~140, conditional -
 // guest session only, shell-panel family). B1.8 guest-account surface:
 // pending-confirm replay or the upgrade entry, kept apart from the
 // login/register tabs (the explicit switch to an existing account).

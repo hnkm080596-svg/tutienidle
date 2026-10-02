@@ -1,9 +1,9 @@
 <script setup lang="ts">
 // Scene 11 focal-cauldron region (spec: 684/176/420/360, ornament
-// family; Ruling 02 — `alchemy-cauldron-prop` is a UI scene prop,
+// family; Ruling 02 - `alchemy-cauldron-prop` is a UI scene prop,
 // decorative only). Ref dresses the cauldron with two hanging calligraphy
-// banners and an ingredient socket row below ("Đặt Nguyên Liệu Vào
-// Đan Lô") — all decorative temp art.
+// banners and an ingredient socket row below ("Dat Nguyen Lieu Vao
+// Dan Lo") - all decorative temp art.
 import { useI18n } from 'vue-i18n'
 import { hkChromeUrl } from '@/ui/huyenKimChrome'
 
@@ -20,7 +20,7 @@ const CAULDRON_SRC = hkChromeUrl('alchemy-cauldron-prop')
     </div>
 
     <!-- Ref: ring of empty ingredient sockets under the cauldron.
-         Decorative per Ruling 02 — real herb selection lives in the
+         Decorative per Ruling 02 - real herb selection lives in the
          detail rail. -->
     <div class="alchemy-sockets" aria-hidden="true">
       <i v-for="n in 5" :key="n" class="alchemy-sockets__socket art-needed" :data-art-id="`alchemy-ingredient-socket-${n}`" />
@@ -56,7 +56,7 @@ const CAULDRON_SRC = hkChromeUrl('alchemy-cauldron-prop')
   pointer-events: none;
 }
 
-/* Hanging calligraphy banners flanking the cauldron (temp art —
+/* Hanging calligraphy banners flanking the cauldron (temp art -
    vertical gold-on-ink scrolls). */
 .alchemy-banner {
   position: absolute;
@@ -80,7 +80,7 @@ const CAULDRON_SRC = hkChromeUrl('alchemy-cauldron-prop')
 .alchemy-banner--left { left: 4%; }
 .alchemy-banner--right { right: 4%; }
 
-/* Ingredient socket ring under the cauldron (temp art — dark metal
+/* Ingredient socket ring under the cauldron (temp art - dark metal
    sockets on a gold-rail band). */
 .alchemy-sockets {
   flex: 0 0 auto;

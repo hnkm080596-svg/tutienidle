@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // Scene 10 turn-strip region (spec: 436/64/800/96, combat family,
-// turn-token asset — already delivered via TurnOrderStrip). Ref draws
+// turn-token asset - already delivered via TurnOrderStrip). Ref draws
 // a dark rail band behind the ATB portrait chips; temp art below.
 import TurnOrderStrip from '@/components/game/combat/TurnOrderStrip.vue'
 </script>
@@ -14,7 +14,7 @@ import TurnOrderStrip from '@/components/game/combat/TurnOrderStrip.vue'
 
 <style scoped>
 .combat-turn-rail { position: relative; display: flex; justify-content: center; }
-/* Ref: dark rail behind the ATB chips (temp art — ornate capsule). */
+/* Ref: dark rail behind the ATB chips (temp art - ornate capsule). */
 .combat-turn-rail__band {
   position: absolute;
   top: 2px;

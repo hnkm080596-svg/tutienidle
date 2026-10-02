@@ -1,6 +1,6 @@
 <script setup lang="ts">
-// Scene 11 detail-panel "Xem Trước Thành Phẩm" block (audit EXACT:
-// outcome preview "chắc chắn N + X% thêm" + brew duration).
+// Scene 11 detail-panel "Xem Truoc Thanh Pham" block (audit EXACT:
+// outcome preview "chac chan N + X% them" + brew duration).
 import { useI18n } from 'vue-i18n'
 
 defineProps<{

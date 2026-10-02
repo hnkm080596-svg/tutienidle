@@ -2,7 +2,7 @@
 // Dao Luan command wheel layer (scene 03 spec `dao-luan-hub`/`wheel-*`,
 // Workstream B): opens by clicking the cultivator figure on the dais
 // (trigger lives in DongFuCultivatorFigure), closes by re-click / empty-
-// space click / Escape. Slots spread evenly over 360° across two
+// space click / Escape. Slots spread evenly over 360 deg  across two
 // counter-rotating circular orbits following the catalog order, spiraling
 // out from the center with alpha climbing through the travel.
 // Owns the open/close state machine + domain resolution; the visual

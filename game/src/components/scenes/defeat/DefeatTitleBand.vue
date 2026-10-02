@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // Scene 15/16 defeat title region (spec: 576/140/520/96, ornament,
-// ceremony-ribbon with cinnabar tint — delivered). Ref adds a subtitle
+// ceremony-ribbon with cinnabar tint - delivered). Ref adds a subtitle
 // motto under the brush title.
 import { hkChromeUrl } from '@/ui/huyenKimChrome'
 

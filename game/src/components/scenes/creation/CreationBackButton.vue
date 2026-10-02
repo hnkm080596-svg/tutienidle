@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Scene 02 back affordance — top-left ghost button (region back-btn
+// Scene 02 back affordance - top-left ghost button (region back-btn
 // 24/24/96/40 in design px) returning to the auth entry.
 import GameButton from '@/components/common/GameButton.vue'
 import { useI18n } from 'vue-i18n'

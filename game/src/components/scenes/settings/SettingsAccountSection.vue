@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Scene 16/17 account section (ref's Tài Khoản — remote mode only):
+// Scene 16/17 account section (ref's Tai Khoan - remote mode only):
 // guest upgrade card + ordered logout. Account/session state stays in
 // the panel (the abandon + unsynced dialogs own it); this is the view.
 import { useI18n } from 'vue-i18n'

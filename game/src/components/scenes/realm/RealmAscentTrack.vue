@@ -57,7 +57,7 @@ const { t } = useI18n()
 }
 .realm-panel__nodes::-webkit-scrollbar { display: none; }
 
-/* Trail spine — climbs center-bottom to summit; climbed share jade. */
+/* Trail spine - climbs center-bottom to summit; climbed share jade. */
 .realm-track__trail {
   position: absolute;
   top: 18px;

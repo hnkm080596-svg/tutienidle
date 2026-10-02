@@ -1,7 +1,7 @@
 <script setup lang="ts">
-// Scene 16/17 shared section frame — bordered card + plaque'd h4 per the
-// ref's section plaques (Chung/Âm Thanh/Hiển Thị/Ngôn Ngữ headers).
-// Spec asset: section-plaque (chrome) — temp art until Minh delivers.
+// Scene 16/17 shared section frame - bordered card + plaque'd h4 per the
+// ref's section plaques (Chung/Am Thanh/Hien Thi/Ngon Ngu headers).
+// Spec asset: section-plaque (chrome) - temp art until Minh delivers.
 defineProps<{
   title: string
   label: string
@@ -32,7 +32,7 @@ defineProps<{
   font-size: var(--text-md);
   letter-spacing: 0.05em;
 }
-/* TEMP ART (art-needed) — ref's small icon plaque left of each header. */
+/* TEMP ART (art-needed) - ref's small icon plaque left of each header. */
 .settings-panel__plaque {
   width: 18px;
   height: 18px;

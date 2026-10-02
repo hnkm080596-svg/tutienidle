@@ -57,8 +57,8 @@ const emit = defineEmits<{
 </template>
 
 <style scoped>
-/* Bốn texture 1672×941 dùng cùng cover geometry để luôn khớp hình khi dịch
-   nhẹ theo con trỏ; vùng bleed 2% che mép trong biên độ parallax tối đa. */
+/* Bon texture 1672x941 dung cung cover geometry de luon khop hinh khi dich
+   nhe theo con tro; vung bleed 2% che mep trong bien do parallax toi da. */
 .home-scene__parallax-stack {
   position: absolute;
   inset: 0;

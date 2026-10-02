@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Scene 02 scroll shell — the imperial scroll the creation form lives on.
+// Scene 02 scroll shell - the imperial scroll the creation form lives on.
 // Chrome = delivered surface-xl-scroll + frame-xl-ceremony slices; the
 // carved ornaments (lantern, tassel, corners) hang outside the ring.
 // Interior slots follow the spec's region order.

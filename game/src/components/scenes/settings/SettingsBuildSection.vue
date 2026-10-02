@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Scene 16/17 build-info section (support group) — read-only identity
+// Scene 16/17 build-info section (support group) - read-only identity
 // rows matching the release manifest.
 import { useI18n } from 'vue-i18n'
 import { BUILD_IDENTITY, shortGitSha } from '@/shared/build/BuildIdentity'

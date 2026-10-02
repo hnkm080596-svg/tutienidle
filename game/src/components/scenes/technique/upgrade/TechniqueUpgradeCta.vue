@@ -5,7 +5,7 @@ import GameButton from '@/components/common/GameButton.vue'
 import { formatNumber } from '@/core/format/NumberFormatter'
 import type { BetaTechniqueGradeAdvance } from '@/core/betaScopeTechniqueDomain'
 
-// Ceremonial CTA: quotes the price line even while disabled (contract —
+// Ceremonial CTA: quotes the price line even while disabled (contract -
 // "a greyed button renders the price line"), then the disabledReason
 // hint underneath. .technique-scene__grade-btn preserved for tests.
 const props = defineProps<{

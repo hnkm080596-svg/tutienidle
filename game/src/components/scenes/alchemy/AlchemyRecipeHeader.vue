@@ -39,7 +39,7 @@ const { t } = useI18n()
 .alchemy-detail__header-text { min-width: 0; }
 .alchemy-detail__grade-chip { font-weight: 700; }
 
-/* Ref: square recipe art tile (temp art — molten pill vignette). */
+/* Ref: square recipe art tile (temp art - molten pill vignette). */
 .alchemy-detail__recipe-icon {
   flex: 0 0 auto;
   width: 52px;

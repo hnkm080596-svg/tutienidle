@@ -65,7 +65,7 @@ const { t, locale } = useI18n()
   position: relative;
   z-index: 3;
 }
-/* Globe glyph placeholder — icon-set gap (no stable symbol yet). */
+/* Globe glyph placeholder - icon-set gap (no stable symbol yet). */
 .login-locale__globe {
   width: 14px;
   height: 14px;

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Scene 07 header chip: "✦ Ngộ Tính" insight counter (audit 07 EXACT —
+// Scene 07 header chip: "* Ngo Tinh" insight counter (audit 07 EXACT -
 // header skillInsight chip). Rendered inside the scroll header slot.
 import { useI18n } from 'vue-i18n'
 

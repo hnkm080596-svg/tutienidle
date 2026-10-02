@@ -10,8 +10,8 @@ import TechniqueMaterialCard from './TechniqueMaterialCard.vue'
 import TechniqueUpgradeCta from './TechniqueUpgradeCta.vue'
 import type { BetaTechniqueSurfaceModel } from '@/core/betaScopeTechniqueDomain'
 
-// Right region (`upgrade-panel`): "Tăng Rank" -> corrected "Nâng Cảnh"
-// panel — grade compare header, materials list, ceremonial CTA pinned
+// Right region (`upgrade-panel`): "Tang Rank" -> corrected "Nang Canh"
+// panel - grade compare header, materials list, ceremonial CTA pinned
 // bottom. surface-m-panel chrome wired; overflow uses the scrollfade.
 const props = defineProps<{
   model: BetaTechniqueSurfaceModel

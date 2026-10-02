@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Scene 16/17 save section ("general" group — ref's Lưu Trữ block):
+// Scene 16/17 save section ("general" group - ref's Luu Tru block):
 // warning note + save/reload/export/import/reset actions.
 import { useI18n } from 'vue-i18n'
 import GameButton from '@/components/common/GameButton.vue'

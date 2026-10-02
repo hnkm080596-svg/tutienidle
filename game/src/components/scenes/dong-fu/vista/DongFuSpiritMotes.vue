@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Scene 03 vista dressing: linh khí motes drifting around the cultivator.
+// Scene 03 vista dressing: linh khi motes drifting around the cultivator.
 // Temporary CSS particles pending sprite art (art inventory 03-dong-fu).
 // Canonical layer L5.
 </script>

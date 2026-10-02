@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import Bar from '@/components/common/primitives/Bar.vue'
 
-// Rank-progress line under the grade chain: "Cảnh {grade} · Cấp {rank}"
-// + bar + numeric value (mastery/max, or "Viên Mãn" tier when capped).
+// Rank-progress line under the grade chain: "Canh {grade} - Cap {rank}"
+// + bar + numeric value (mastery/max, or "Vien Man" tier when capped).
 // All fields arrive pre-formatted/derived from the canonical model.
 defineProps<{
   rankLine: string

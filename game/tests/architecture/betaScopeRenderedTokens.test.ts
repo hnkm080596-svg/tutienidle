@@ -145,7 +145,7 @@ const MOUNT_GATES: MountGate[] = [
       'the only leftPanelMode writers (setLeftPanelMode/toggleLeftPanelMode) reject any mode isBetaLeftPanelMode denies - worker_lodge mode can never activate, so its title/map entries and the panel never render',
   },
   {
-    gateFile: 'src/components/panels/EquipmentHallPanel.vue',
+    gateFile: 'src/components/scenes/equipment/EquipmentScene.vue',
     signatures: ['isBetaEquipmentTab(', 'visibleTabs'],
     protected: [
       'components/panels/equipment-hall/WashTab.vue',
@@ -153,7 +153,7 @@ const MOUNT_GATES: MountGate[] = [
       'components/panels/equipment-hall/DecomposeTab.vue',
     ],
     reason:
-      'activeTab can only become a tab listed in visibleTabs, which is TABS filtered by isBetaEquipmentTab - wash/refine/decompose tabs are unreachable',
+      'activeWorkspace can only become a tab listed in visibleTabs, which is TABS filtered by isBetaEquipmentTab - wash/refine/decompose tabs are unreachable',
   },
 ]
 
@@ -168,6 +168,12 @@ const BENIGN: ReadonlyArray<{ file: string; tokens: readonly string[]; reason: s
     tokens: ['post-beta-realm'],
     reason:
       'REALM_LABELS is a provenance tooltip lookup keyed by material.realmId - a label renders only for a material the player owns, and no post-ceiling material is obtainable in beta',
+  },
+  {
+    file: 'components/scenes/realm/RealmAscentNode.vue',
+    tokens: ['coming-soon'],
+    reason:
+      'the node renders props only; betaRealmLadderNodes() (betaScopeSurface) flattens comingSoon to false for every emitted node, so the comingSoon branch is unreachable - BetaJourney pins the guarantee',
   },
 ]
 

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Scene 13 realm card (ref top-right "Độ Kiếp Tầng 9" — audit
+// Scene 13 realm card (ref top-right "Do Kiep Tang 9" - audit
 // CORRECTED: realm label from tribulation targetRealmId, progress =
 // chapter x/y). The flame row is the temp-art strike marker row.
 import { computed } from 'vue'

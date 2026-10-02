@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // Scene 11 recipe-list row (spec asset: list-row). Canonical row =
-// name + herb count; ref also draws a pill icon tile — temp art chip
+// name + herb count; ref also draws a pill icon tile - temp art chip
 // stands in until per-pill icons exist.
 defineProps<{
   index: number
@@ -52,7 +52,7 @@ const emit = defineEmits<{ select: [] }>()
 .alchemy-row__pill b { color: var(--cinnabar); font-size: var(--text-xs); }
 .alchemy-row__herb { font-size: var(--text-xs); color: var(--paper-text-soft); }
 
-/* Ref: glowing pill icon tile per row (temp art — pill orb). */
+/* Ref: glowing pill icon tile per row (temp art - pill orb). */
 .alchemy-row__pill-icon {
   flex: 0 0 auto;
   width: 26px;

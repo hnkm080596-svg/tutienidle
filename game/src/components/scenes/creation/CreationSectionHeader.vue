@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Scene 02 section header — engraved seal chip + section title + optional
+// Scene 02 section header - engraved seal chip + section title + optional
 // right-aligned hint (ref: icon disc left, hint text right). The medallion
 // is TEMP ART; the glyph inside it is delivered stable symbol art.
 import HuyenKimSymbol from '@/components/common/HuyenKimSymbol.vue'
@@ -33,7 +33,7 @@ defineProps<{
   margin-bottom: clamp(4px, 0.8vh, 8px);
 }
 
-/* Engraved circular medallion — ink disc, muted-gold ring, gold glyph. */
+/* Engraved circular medallion - ink disc, muted-gold ring, gold glyph. */
 .creation-section-header__seal {
   display: inline-grid;
   place-items: center;

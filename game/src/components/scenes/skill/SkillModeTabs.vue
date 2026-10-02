@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // Scene 07 mode-tabs region (spec: 516/708/640/44, navigation family,
-// tab-seal). Tree/Detail toggle — M-QI-05 (D7): selected = jade tint.
+// tab-seal). Tree/Detail toggle - M-QI-05 (D7): selected = jade tint.
 import { useI18n } from 'vue-i18n'
 import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
 

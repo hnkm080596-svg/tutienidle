@@ -6,6 +6,9 @@ import authSource from '@/components/onboarding/AuthEntryScreen.vue?raw'
 import loginVistaSource from '@/components/scenes/login/LoginSceneVista.vue?raw'
 import modeTabsSource from '@/components/scenes/login/AuthModeTabs.vue?raw'
 import creationSource from '@/components/onboarding/CharacterCreationScreen.vue?raw'
+import creationVistaSource from '@/components/scenes/creation/CreationVista.vue?raw'
+import creationShellSource from '@/components/scenes/creation/CreationScrollShell.vue?raw'
+import talentCardSource from '@/components/scenes/creation/TalentCard.vue?raw'
 // Scene 14: the victory ceremonial surface lives in the scene layer
 // (scenes/victory/VictoryScene); the panel wrapper keeps the behavior.
 import victorySource from '@/components/scenes/victory/VictoryScene.vue?raw'
@@ -70,7 +73,11 @@ describe('InkWashBackdrop', () => {
     expect(authSource).toContain('LoginSceneVista')
     expect(loginVistaSource).toContain('HuyenKimParallaxStack')
     expect(loginVistaSource).toContain('stack="auth-creation"')
-    expect(creationSource).toContain('HuyenKimParallaxStack')
+    // Scene 02 scaffold: CharacterCreationScreen composes region
+    // components; the parallax stack lives in CreationVista.
+    expect(creationSource).toContain('CreationVista')
+    expect(creationVistaSource).toContain('HuyenKimParallaxStack')
+    expect(creationVistaSource).toContain('stack="auth-creation"')
     expect(victorySource).toContain('<InkWashBackdrop :left-mountain="false" bottom-mist seal="large"')
     expect(defeatSource).toContain('<InkWashBackdrop left-mountain bottom-mist')
   })
@@ -82,9 +89,13 @@ describe('InkWashBackdrop', () => {
     expect(modeTabsSource).toMatch(/\.auth-tabs__tab\.active \{[^}]*color: var\(--hk-ivory/)
     // Huyen Kim S01/S02 (2026-10-02): the card is the surface-xl-scroll
     // chrome - paper-text tokens carry the legibility contract now.
-    expect(creationSource).toContain('chrome-id="surface-xl-scroll"')
+    // Scene 02 scaffold: the chrome lives in CreationScrollShell.
+    expect(creationSource).toContain('CreationScrollShell')
+    expect(creationShellSource).toContain('chrome-id="surface-xl-scroll"')
     // BETA-CREATION - name+talent draft only: the selected talent card
-    // is the legibility affordance now.
-    expect(creationSource).toContain('.talent-card.selected { border-color: var(--hk-border-ceremony')
+    // is the legibility affordance now (TalentCard region).
+    expect(talentCardSource).toMatch(
+      /\.talent-card\.selected \{[^}]*border-color: var\(--hk-border-ceremony/,
+    )
   })
 })

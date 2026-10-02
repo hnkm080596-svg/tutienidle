@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Scene 02 (R00) layout shell — design space 1672×941
+// Scene 02 (R00) layout shell - design space 1672x941
 // (huyen-kim-scene-layout-spec.json scene_id "02"):
 //   vista           0/0/940/941   left 56% art column (full-bleed underneath)
 //   back-btn        24/24/96/40   top-left ghost
@@ -39,7 +39,7 @@
 
 .creation-layout__back {
   position: absolute;
-  /* 24/1672 · 24/941 */
+  /* 24/1672 - 24/941 */
   left: 1.44%;
   top: 2.55%;
   z-index: 12;
@@ -47,7 +47,7 @@
 
 .creation-layout__scroll {
   position: absolute;
-  /* 940/1672 · 90/941 · 660/1672 · 760/941 */
+  /* 940/1672 - 90/941 - 660/1672 - 760/941 */
   left: 56.22%;
   top: 9.56%;
   width: 39.47%;

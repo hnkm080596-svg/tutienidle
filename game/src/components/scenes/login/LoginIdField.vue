@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Scene 01 login-id field — ref shows an icon-bearing text field with
+// Scene 01 login-id field - ref shows an icon-bearing text field with
 // no visible label (placeholder-only); the label stays sr-only for
 // a11y. Leading glyph = delivered `character` stable symbol.
 import { computed } from 'vue'

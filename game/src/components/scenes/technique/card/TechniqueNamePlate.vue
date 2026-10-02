@@ -4,7 +4,7 @@ import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
 import { chromeSlice } from '@/ui/huyenKimChrome'
 
 // Left-card identity block: display name + red quality seal chip +
-// "Phẩm: <quality>" line, matching ref rows 2-3 of the tech card.
+// "Pham: <quality>" line, matching ref rows 2-3 of the tech card.
 // Quality label/key arrive pre-resolved (model quality -> labels).
 defineProps<{
   name: string

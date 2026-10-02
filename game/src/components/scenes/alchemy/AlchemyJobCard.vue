@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // Scene 11 job-queue card (spec asset: list-row + entity-bar for the
-// progress gauge). Real jobs only — fast-forward chip INVALID,
+// progress gauge). Real jobs only - fast-forward chip INVALID,
 // paid-unlock slots INVALID.
 import { useI18n } from 'vue-i18n'
 import Bar from '@/components/common/primitives/Bar.vue'

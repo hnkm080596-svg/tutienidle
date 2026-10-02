@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Scene 02 scroll dressing — carved corners (delivered corner-ornament
+// Scene 02 scroll dressing - carved corners (delivered corner-ornament
 // chrome) plus the pieces Minh still owes: the lantern hooked on the
 // scroll's top-right ear and the cinnabar tassel on its right edge.
 import { hkChromeUrl } from '@/ui/huyenKimChrome'

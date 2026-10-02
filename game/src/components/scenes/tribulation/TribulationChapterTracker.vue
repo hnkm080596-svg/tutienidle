@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // Scene 13 chapter-tracker region (spec: 536/44/600/66, node family,
-// dao-luan-node — delivered). Sequential pips: done / current states;
+// dao-luan-node - delivered). Sequential pips: done / current states;
 // chaptersTotal dynamic, NOT selectable.
 import { computed } from 'vue'
 import { hkChromeUrl } from '@/ui/huyenKimChrome'

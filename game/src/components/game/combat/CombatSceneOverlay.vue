@@ -1,18 +1,18 @@
 ﻿<script setup lang="ts">
 // 6A-T8 (2026-09-01, spec docs/superpowers/specs/2026-09-01-combat-scene-
-// ui-redesign-design.md) — CombatSceneOverlay top-only: 3 bar DOM dưới
-// (Status/Event/Control) rời DOM — HP/MP/Kiết + exit zone vào canvas
+// ui-redesign-design.md) - CombatSceneOverlay top-only: 3 bar DOM duoi
+// (Status/Event/Control) roi DOM - HP/MP/Kiet + exit zone vao canvas
 // (PlayerHudLayer T4/T5), floating text kill/heal (T2), confirm modal
-// extract riêng (T6), slider/ult vào Build HUD (T7).
+// extract rieng (T6), slider/ult vao Build HUD (T7).
 //
-// Insets: chỉ TopBar còn là DOM chrome phía trên; publishInsets chỉ
-// đo top (bottom luôn 0 từ T3).
+// Insets: chi TopBar con la DOM chrome phia tren; publishInsets chi
+// do top (bottom luon 0 tu T3).
 //
-// Combat Art Pipeline Task 7 (2026-09-05, spec §7.5) — Build HUD +
-// TurnCombatSkillBar rời battlefield slot vào CombatSkillDockPanel
-// (dock mép phải, publish `right` riêng). Overlay này giờ chỉ publish
-// `top` (publishTopBarHeight — giữ nguyên `right` của dock), không còn
-// giữ import cho 2 component đã dời.
+// Combat Art Pipeline Task 7 (2026-09-05, spec sec.7.5) - Build HUD +
+// TurnCombatSkillBar roi battlefield slot vao CombatSkillDockPanel
+// (dock mep phai, publish `right` rieng). Overlay nay gio chi publish
+// `top` (publishTopBarHeight - giu nguyen `right` cua dock), khong con
+// giu import cho 2 component da doi.
 import { nextTick, onBeforeUnmount, onMounted, onUnmounted, ref } from 'vue'
 import CombatTopRail from '@/components/scenes/combat/CombatTopRail.vue'
 import CombatTurnRail from '@/components/scenes/combat/CombatTurnRail.vue'
@@ -33,7 +33,7 @@ const { isBattleFighting } = useTurnCombatManual()
 
 let insetsObserver: ResizeObserver | null = null
 
-// Chỉ TopBar — chrome DOM duy nhất còn lại phía trên canvas.
+// Chi TopBar - chrome DOM duy nhat con lai phia tren canvas.
 const BAR_CLASSES = ['combat-scene-overlay__top-bar']
 
 function barHeight(root: HTMLElement, className: string): number {
@@ -50,8 +50,8 @@ function publishInsets() {
   const top = barHeight(root, 'combat-scene-overlay__top-bar')
 
   if (top > 0) {
-    // Chỉ ghi `top` (publishTopBarHeight giữ `right` của dock) — setCombatInsets
-    // thô ghi đè cả 3 trường, sẽ xóa width dock vừa publish.
+    // Chi ghi `top` (publishTopBarHeight giu `right` cua dock) - setCombatInsets
+    // tho ghi de ca 3 truong, se xoa width dock vua publish.
     publishTopBarHeight(top)
   }
 }
@@ -91,46 +91,46 @@ onBeforeUnmount(() => {
 })
 
 onUnmounted(() => {
-  // onUnmounted (KHÔNG onBeforeUnmount) — Vue teardown cha-trước-con:
-  // dock (con) clear `right` của nó trong onBeforeUnmount trước khi hook
-  // này chạy, resetCombatInsets() ở đây xóa phần còn lại sau cùng.
+  // onUnmounted (KHONG onBeforeUnmount) - Vue teardown cha-truoc-con:
+  // dock (con) clear `right` cua no trong onBeforeUnmount truoc khi hook
+  // nay chay, resetCombatInsets() o day xoa phan con lai sau cung.
   resetCombatInsets()
 })
 </script>
 
 <template>
-  <!-- 6A — background chiến đấu là vùng giao diện chính; canvas Phaser
-       duy nhất của app vẫn là PhaserCanvas.vue trong MainScene.vue.
-       Overlay chỉ còn TopBar (thông tin zone/stage), AI panel, dock
-       kỹ năng mép phải và các modal. Bottom = full canvas. -->
+  <!-- 6A - background chien dau la vung giao dien chinh; canvas Phaser
+       duy nhat cua app van la PhaserCanvas.vue trong MainScene.vue.
+       Overlay chi con TopBar (thong tin zone/stage), AI panel, dock
+       ky nang mep phai va cac modal. Bottom = full canvas. -->
   <div ref="rootRef" class="combat-scene-overlay">
     <CombatTopRail class="combat-scene-overlay__top-bar" />
 
     <CombatActionDock :fighting="isBattleFighting" />
 
     <div class="combat-scene-overlay__battlefield">
-      <!-- Combat AI panel — góc TRÁI battlefield, chỉ panel nhận pointer. -->
+      <!-- Combat AI panel - goc TRAI battlefield, chi panel nhan pointer. -->
       <CombatAiRail class="combat-scene-overlay__ai-panel" />
     </div>
 
-    <!-- Slice 7 extension - turn-order preview (top, dưới TopBar) + battle
-         log (góc phải-dưới, self-guarded khi không fighting). -->
+    <!-- Slice 7 extension - turn-order preview (top, duoi TopBar) + battle
+         log (goc phai-duoi, self-guarded khi khong fighting). -->
     <CombatTurnRail class="combat-scene-overlay__turn-order-strip" />
 
     <CombatLogFeed />
 
-    <!-- 6A-T6 — confirm thoát trận + result/intro/countdown (scene exit
-         zone → bridge event). -->
+    <!-- 6A-T6 - confirm thoat tran + result/intro/countdown (scene exit
+         zone -> bridge event). -->
     <CombatModalLayer />
   </div>
 </template>
 <style scoped>
-/* T8.1 (2026-09-02) — khôi phục styles bị mất trong 6A T8 rewrite
-   (991ba75 đã xóa toàn bộ style scoped): root phủ canvas, AI panel
-   neo trái-trên ("bảng chọn mục tiêu" — user report), battlefield
-   là vùng chứa. Giá trị NGUYÊN BẢN từ 71357a1^ — không cải thiện
-   tùy tiện. Status/event/control bar rules KHÔNG khôi phục (đã
-   retire đúng chủ ý). */
+/* T8.1 (2026-09-02) - khoi phuc styles bi mat trong 6A T8 rewrite
+   (991ba75 da xoa toan bo style scoped): root phu canvas, AI panel
+   neo trai-tren ("bang chon muc tieu" - user report), battlefield
+   la vung chua. Gia tri NGUYEN BAN tu 71357a1^ - khong cai thien
+   tuy tien. Status/event/control bar rules KHONG khoi phuc (da
+   retire dung chu y). */
 .combat-scene-overlay {
   position: absolute;
   inset: 0;
@@ -152,8 +152,8 @@ onUnmounted(() => {
   pointer-events: none;
 }
 
-/* Combat AI panel (plan §11.1) — góc trái battlefield, dưới
-   top bar (nằm trong vùng battlefield nên không đụng CombatTopBar). */
+/* Combat AI panel (plan sec.11.1) - goc trai battlefield, duoi
+   top bar (nam trong vung battlefield nen khong dung CombatTopBar). */
 .combat-scene-overlay__ai-panel {
   position: absolute;
   left: var(--space-3);
@@ -161,17 +161,17 @@ onUnmounted(() => {
   z-index: 12;
 }
 
-/* Slice 7 extension - turn-order strip: neo dưới TopBar, giữa.
-   Layout fix (2026-09-06) — trước dùng hardcode top: 60px (xấp xỉ chiều
-   cao TopBar), nay đổi sang đúng token --combat-topbar-h mà TopBar và
-   CombatSkillDockPanel đều dùng để trỏ height/top của chính nó. Strip và
-   dock giờ neo CÙNG một mép dưới TopBar thay vì 2 giá trị lệch nhau —
-   giảm khả năng strip "cắt" vào phần trên của dock. Strip vẫn full-width
-   + justify-content: center nên nội dung thực tế (party/turn badges) nằm
-   giữa màn hình; ở viewport rất hẹp nội dung căn giữa có thể vẫn chạm mép
-   trái của dock — pointer-events: none nên không chặn thao tác, nhưng
-   overlap hình ảnh trong trường hợp cực hẹp chưa được xử lý triệt để ở
-   task này (xem báo cáo). */
+/* Slice 7 extension - turn-order strip: neo duoi TopBar, giua.
+   Layout fix (2026-09-06) - truoc dung hardcode top: 60px (xap xi chieu
+   cao TopBar), nay doi sang dung token --combat-topbar-h ma TopBar va
+   CombatSkillDockPanel deu dung de tro height/top cua chinh no. Strip va
+   dock gio neo CUNG mot mep duoi TopBar thay vi 2 gia tri lech nhau -
+   giam kha nang strip "cat" vao phan tren cua dock. Strip van full-width
+   + justify-content: center nen noi dung thuc te (party/turn badges) nam
+   giua man hinh; o viewport rat hep noi dung can giua co the van cham mep
+   trai cua dock - pointer-events: none nen khong chan thao tac, nhung
+   overlap hinh anh trong truong hop cuc hep chua duoc xu ly triet de o
+   task nay (xem bao cao). */
 .combat-scene-overlay__turn-order-strip {
   position: absolute;
   top: var(--combat-topbar-h);
@@ -182,9 +182,9 @@ onUnmounted(() => {
   z-index: 12;
 }
 
-/* T8.2 — O3 vertical guard: viewport thấp, AI panel dọc cao
-   (topbar ~64 + title + 5 options × --tap-min ~44) có thể chạm
-   vùng HUD dưới-trái. Cho scroll trong panel thay vì đè. */
+/* T8.2 - O3 vertical guard: viewport thap, AI panel doc cao
+   (topbar ~64 + title + 5 options x --tap-min ~44) co the cham
+   vung HUD duoi-trai. Cho scroll trong panel thay vi de. */
 @media (max-height: 700px) {
   .combat-scene-overlay__ai-panel {
     max-height: calc(100% - 180px);

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Scene 16/17 language section (ref's Ngôn Ngữ — CORRECTED to the real
+// Scene 16/17 language section (ref's Ngon Ngu - CORRECTED to the real
 // locale chips; ref's voice-language dropdown is INVALID).
 import { useI18n } from 'vue-i18n'
 import Chip from '@/components/common/primitives/Chip.vue'

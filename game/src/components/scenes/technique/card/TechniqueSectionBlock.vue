@@ -6,7 +6,7 @@ import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
 import { chromeSlice } from '@/ui/huyenKimChrome'
 import type { TechniqueDisplaySection } from '@/core/betaScopeTechniqueDomain'
 
-// One labeled section of the technique read-model ("Chiến Đấu", ...):
+// One labeled section of the technique read-model ("Chien Dau", ...):
 // plaque-backed eyebrow + verbatim display rows. The .technique-scene__rows
 // class on the list preserves the existing DOM test contract.
 defineProps<{

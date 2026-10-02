@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // Scene 13 mind-card region (spec: 1090/200/522/380, shell-panel,
-// surface-m-panel + button-standard + timer-ring — all delivered).
+// surface-m-panel + button-standard + timer-ring - all delivered).
 // Question phase only; answer count is dynamic.
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'

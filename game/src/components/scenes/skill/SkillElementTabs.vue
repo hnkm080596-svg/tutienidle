@@ -1,8 +1,8 @@
 <script setup lang="ts">
 // Scene 07 element-tabs region (spec: 516/176/640/48, navigation
-// family, tab-seal; pre-commitment only — the parent renders this only
+// family, tab-seal; pre-commitment only - the parent renders this only
 // when the model still shows element branches). Each tab carries the
-// element's identity color; the committed element fills jade→element.
+// element's identity color; the committed element fills jade->element.
 import { useI18n } from 'vue-i18n'
 import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
 import { ELEMENT_LABELS, ELEMENT_COLOR_VARS } from '@/core/element/ElementLabels'

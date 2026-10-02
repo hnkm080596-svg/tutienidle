@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Scene 02 vista prop — the seated cultivator on the rock ledge, the ref's
+// Scene 02 vista prop - the seated cultivator on the rock ledge, the ref's
 // focal figure (R00 left half, facing the moon over the sea of clouds).
 // TEMP ART: silhouette placeholder until Minh's figure painting lands.
 </script>
@@ -21,7 +21,7 @@
 .creation-vista-figure {
   position: absolute;
   /* seated figure + ledge dominate the vista's left half in the ref
-     (~760×710 design px; the right edge slides under the scroll) */
+     (~760x710 design px; the right edge slides under the scroll) */
   left: 4%;
   top: 9%;
   width: 46%;
@@ -29,7 +29,7 @@
   pointer-events: none;
 }
 
-/* Rock ledge under the figure — dark crag catching moon rim-light. */
+/* Rock ledge under the figure - dark crag catching moon rim-light. */
 .creation-vista-figure__rock {
   position: absolute;
   left: -16%;
@@ -46,7 +46,7 @@
 
 /* Seated profile facing right: head + topknot, flowing hair behind,
    raised knees, robe pooling over the ledge. Ivory robe mass below,
-   ink mass above — the ref's white-robe/black-hair read. */
+   ink mass above - the ref's white-robe/black-hair read. */
 .creation-vista-figure__body {
   position: absolute;
   left: 12%;

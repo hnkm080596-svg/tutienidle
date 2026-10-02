@@ -21,7 +21,7 @@ import { readResumeCandidate, consumeResetNotice, type ResumeCandidate } from '@
 // per-region scene components (game/src/components/scenes/login/) at the
 // layout spec's canonical slots. Presentation lives in the children;
 // every functional surface below comes from the existing read-models
-// (resumeSession / authService / locale composable) — no invented data.
+// (resumeSession / authService / locale composable) - no invented data.
 const emit = defineEmits<{ authenticated: [session: AuthSession] }>()
 const mode = ref<'login' | 'register'>('login')
 const loginId = ref('')

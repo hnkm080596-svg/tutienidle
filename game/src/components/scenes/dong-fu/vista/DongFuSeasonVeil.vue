@@ -32,8 +32,8 @@ const seasonOverlayUrl = computed(() => dongFuSeasonOverlayUrl(props.season))
   width: 100%;
   height: 100%;
   object-fit: fill;
-  /* Giảm 50% (2026-08-30, bug report: khung trúc/lá che building Truyền
-     Tống Trận quá đậm) — vẫn giữ khung trang trí, chỉ nhạt bớt. */
+  /* Giam 50% (2026-08-30, bug report: khung truc/la che building Truyen
+     Tong Tran qua dam) - van giu khung trang tri, chi nhat bot. */
   opacity: 0.5;
   pointer-events: none;
 }

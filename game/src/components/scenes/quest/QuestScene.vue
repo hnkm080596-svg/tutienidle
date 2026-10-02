@@ -22,8 +22,8 @@ const gameManager = useGameManager()
 const { bumpState } = useStateVersion()
 
 // Cadence filter is model-driven: beta admits 'once' only, so the tab
-// strip renders Tat Ca + one tab per cadence actually present (daily
-// stays RESERVED - contract DO-NOT-DERIVE).
+// strip renders Tat Ca + one tab per cadence actually present (other
+// cadences stay RESERVED - contract DO-NOT-DERIVE).
 const activeCadence = ref<'all' | BetaQuestSurfaceModel['cadence']>('all')
 
 const cadences = computed(() => {

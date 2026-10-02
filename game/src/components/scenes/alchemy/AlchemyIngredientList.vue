@@ -1,6 +1,6 @@
 <script setup lang="ts">
-// Scene 11 detail-panel "Nguyên Liệu Cần Thiết" block (audit EXACT:
-// herb variant radios — owned/enough per variant).
+// Scene 11 detail-panel "Nguyen Lieu Can Thiet" block (audit EXACT:
+// herb variant radios - owned/enough per variant).
 import { useI18n } from 'vue-i18n'
 
 export interface AlchemyVariantRow {

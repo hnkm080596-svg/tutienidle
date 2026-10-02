@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // Scene 13 hp-cluster region (spec: 616/736/440/84, hud family,
-// entity-bar frame — delivered). Audit CORRECTED: single canonical HP
+// entity-bar frame - delivered). Audit CORRECTED: single canonical HP
 // bar + strikes counter (second resource bar INVALID). The resolve
 // caption under the bar is the ref's bottom flavor line.
 import { useI18n } from 'vue-i18n'

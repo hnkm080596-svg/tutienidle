@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Scene 16/17 display section (ref's Hiển Thị — CORRECTED to the real
+// Scene 16/17 display section (ref's Hien Thi - CORRECTED to the real
 // ui-scale control only; ref's resolution/graphics rows are INVALID).
 import { useI18n } from 'vue-i18n'
 import Chip from '@/components/common/primitives/Chip.vue'

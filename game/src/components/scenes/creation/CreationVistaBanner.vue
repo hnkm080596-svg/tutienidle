@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Scene 02 vista prop — the vertical calligraphy strip hanging at the
+// Scene 02 vista prop - the vertical calligraphy strip hanging at the
 // vista's far-left edge in the ref (ivory paper, ink glyphs, red tassel).
 // TEMP ART until Minh's strip lands.
 import { computed } from 'vue'
@@ -20,7 +20,7 @@ const glyphs = computed(() => t('onboarding.creation.vistaBanner').replace(/\s/g
 </template>
 
 <style scoped>
-/* ~60×280 design px at the far-left edge; slight paper sag toward the
+/* ~60x280 design px at the far-left edge; slight paper sag toward the
    bottom like the ref's hanging strip. */
 .creation-vista-banner {
   position: absolute;

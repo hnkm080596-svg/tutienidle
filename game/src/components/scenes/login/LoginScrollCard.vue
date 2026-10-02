@@ -4,7 +4,7 @@
 // (surface-xl-scroll + frame-xl-ceremony) plus corner ornaments and the
 // two hanging props the ref shows on the frame edge.
 //
-// TEMP ART — surfaces marked .art-needed carry a data-art-id into
+// TEMP ART - surfaces marked .art-needed carry a data-art-id into
 // game/docs/design/art-requests/01-login.md and render a CSS stand-in in
 // the Huyen Kim palette (ink #101718 / jade #315f55 / gold #b99a55 /
 // ivory paper) until Minh's final prop art lands.

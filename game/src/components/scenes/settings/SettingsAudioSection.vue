@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Scene 16/17 audio section (ref's Âm Thanh — CORRECTED to the real
+// Scene 16/17 audio section (ref's Am Thanh - CORRECTED to the real
 // store: on/off + master + per-channel volumes + reduced shake; ref's
 // spatial-audio/combat-ducking toggles are INVALID).
 import { useI18n } from 'vue-i18n'

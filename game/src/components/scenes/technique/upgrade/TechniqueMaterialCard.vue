@@ -6,7 +6,7 @@ import { formatNumber } from '@/core/format/NumberFormatter'
 
 // One material row in the upgrade panel: slot-framed icon cell, material
 // name, and owned/needed count (red when insufficient). The model quotes
-// at most ONE material per advance — the ref's extra Linh Thạch card has
+// at most ONE material per advance - the ref's extra Linh Thach card has
 // no data source (flagged in report).
 const props = defineProps<{
   name: string

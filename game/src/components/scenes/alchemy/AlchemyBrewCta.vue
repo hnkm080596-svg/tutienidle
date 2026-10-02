@@ -1,7 +1,7 @@
 <script setup lang="ts">
-// Scene 11 detail-panel brew CTA ("Bắt Đầu Luyện Đan") + the audit M4
+// Scene 11 detail-panel brew CTA ("Bat Dau Luyen Dan") + the audit M4
 // block-reason line naming the exact missing input. No quantity
-// stepper — INVALID for beta.
+// stepper - INVALID for beta.
 import { useI18n } from 'vue-i18n'
 import GameButton from '@/components/common/GameButton.vue'
 

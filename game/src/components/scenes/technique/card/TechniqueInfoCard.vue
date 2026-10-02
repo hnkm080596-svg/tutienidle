@@ -9,8 +9,8 @@ import TechniqueSectionBlock from './TechniqueSectionBlock.vue'
 import type { BetaTechniqueSurfaceModel } from '@/core/betaScopeTechniqueDomain'
 import { ITEM_QUALITY_LABELS, ITEM_QUALITY_SHORT_LABELS } from '@/core/item/ItemQuality'
 
-// Left region (`tech-card`): the "Công Pháp" card — title row with help
-// seal, name + quality seal, Phẩm line, description, and the model's
+// Left region (`tech-card`): the "Cong Phap" card - title row with help
+// seal, name + quality seal, Pham line, description, and the model's
 // display sections verbatim. surface-m-panel chrome wired.
 const props = defineProps<{
   model: BetaTechniqueSurfaceModel

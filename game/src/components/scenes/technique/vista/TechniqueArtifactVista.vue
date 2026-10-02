@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // Center region (`artifact-vista`): plinth dais + artifact frame + the
 // runtime slot card standing in for the painted scroll/book artifact
-// (content illustration = excluded art — frame + dais only). The default
+// (content illustration = excluded art - frame + dais only). The default
 // slot receives the canonical TechniqueSlotCard hero.
 defineProps<{
   plinthSrc: string

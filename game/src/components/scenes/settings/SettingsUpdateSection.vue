@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Scene 16/17 update section (ref's Cập Nhật — electron/feed builds
+// Scene 16/17 update section (ref's Cap Nhat - electron/feed builds
 // only): phase-aware status line + download/cancel/install/check.
 import { useI18n } from 'vue-i18n'
 import GameButton from '@/components/common/GameButton.vue'

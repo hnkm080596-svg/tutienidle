@@ -1,7 +1,7 @@
 <script setup lang="ts">
-// Compare header of the upgrade panel: "Phẩm {from} » Phẩm {to}".
+// Compare header of the upgrade panel: "Pham {from} " Pham {to}".
 // Labels arrive pre-localized (gradeNode key). The ref's stat-compare
-// rows have no model source — the model exposes no next-grade stat
+// rows have no model source - the model exposes no next-grade stat
 // preview, so only the grade jump is rendered (flagged in report).
 defineProps<{
   fromLabel: string

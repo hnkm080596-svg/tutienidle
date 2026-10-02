@@ -8,9 +8,9 @@ export interface TechniqueTrackNode {
   state: 'current' | 'next'
 }
 
-// Bottom strip (`grade-track`): region caption, the current→target grade
+// Bottom strip (`grade-track`): region caption, the current->target grade
 // chain with connector links, and the rank mastery line. The node list is
-// contract-true (model can only quote current + target grades — the ref's
+// contract-true (model can only quote current + target grades - the ref's
 // 7-node realm chain is AI-invented, see report flags).
 defineProps<{
   caption: string

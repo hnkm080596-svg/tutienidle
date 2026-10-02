@@ -10,7 +10,7 @@ import RealmSectionTitle from './RealmSectionTitle.vue'
 const props = defineProps<{
   cultivation: number
   required: number
-  /** Preformatted "+{rate} {unit}/giây" text (real readout). */
+  /** Preformatted "+{rate} {unit}/giay" text (real readout). */
   rateText: string
   /** Preformatted ETA duration, '' when rate is zero. */
   etaText: string

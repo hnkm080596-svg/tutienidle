@@ -2,7 +2,7 @@
 // Scene 01 logo-block region (spec: 1112/168/368/120, card-top, z11).
 // Audit class EXCEPTED: baked-text logo art is a separately-approved
 // asset; until Minh's brush wordmark lands the title stays app-rendered.
-// TEMP ART — .art-needed surfaces map to rows in 01-login.md.
+// TEMP ART - .art-needed surfaces map to rows in 01-login.md.
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()

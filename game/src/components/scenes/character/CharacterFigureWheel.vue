@@ -31,6 +31,11 @@ const chosenKit = computed(() => {
   }
   return getActiveWayDefinition(player)
 })
+// Aura tint bound: the beta way's declared element, chrome otherwise -
+// the --aura var is the panel's contract surface (tests read it).
+const characterAuraColor = computed(() =>
+  chosenKit.value?.element ? ELEMENT_COLOR_VARS[chosenKit.value.element] : 'var(--chrome-500)',
+)
 const heroElement = computed(() => getActiveElement(player) ?? chosenKit.value?.element ?? null)
 const heroDiscUrl = computed(() =>
   resolveAssetUrl(
@@ -65,7 +70,7 @@ const PORTRAIT_HEIGHT = 230
 </script>
 
 <template>
-  <figure class="character-panel__figure figure-wheel" data-hk-region="figure-wheel">
+  <figure class="character-panel__figure figure-wheel" data-hk-region="figure-wheel" :style="{ '--aura': characterAuraColor }">
     <!-- Temp art: ink vista backdrop - moon, clouds, standing dais. -->
     <div class="figure-wheel__backdrop art-needed" data-art-id="character-figure-backdrop" aria-hidden="true">
       <span class="figure-wheel__moon" />
@@ -276,7 +281,7 @@ const PORTRAIT_HEIGHT = 230
   aspect-ratio: 1;
   transform: translate(-50%, -50%);
   opacity: 0.8;
-  filter: drop-shadow(0 0 12px rgba(185, 154, 85, 0.3));
+  filter: drop-shadow(0 0 12px color-mix(in srgb, var(--aura, #b99a55) 45%, transparent));
   pointer-events: none;
   z-index: 1;
 }

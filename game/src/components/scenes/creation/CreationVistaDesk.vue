@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Scene 02 vista prop — the scholar's desk strip under the scroll in the
+// Scene 02 vista prop - the scholar's desk strip under the scroll in the
 // ref: dark wood slab, a half-unrolled scroll, and an ember-warm incense
 // burner at the far right. TEMP ART until the painted props land.
 </script>

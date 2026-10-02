@@ -1,6 +1,6 @@
 <script setup lang="ts">
-// Scene 16/17 settings nav rail (ref left rail: Chung/Âm Thanh/Hiển Thị/
-// Ngôn Ngữ/Lưu Trữ/Tài Khoản/Cập Nhật/Hỗ Trợ seals — CORRECTED to real
+// Scene 16/17 settings nav rail (ref left rail: Chung/Am Thanh/Hien Thi/
+// Ngon Ngu/Luu Tru/Tai Khoan/Cap Nhat/Ho Tro seals - CORRECTED to real
 // sections only). Selector/data-section contract pinned by tests + e2e.
 defineProps<{
   sections: Array<{ id: string; label: string }>
@@ -64,7 +64,7 @@ const emit = defineEmits<{ select: [id: string] }>()
 }
 .settings-panel__nav-seal:focus-visible { outline: 2px solid var(--hk-gold, var(--gold-700)); outline-offset: 2px; }
 
-/* TEMP ART (art-needed) — ref shows a small glyph left of each seal label. */
+/* TEMP ART (art-needed) - ref shows a small glyph left of each seal label. */
 .settings-panel__nav-glyph {
   width: 16px;
   height: 16px;

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Scene 02 talent card — one offer in the 3×3 roll grid (corrected from
+// Scene 02 talent card - one offer in the 3x3 roll grid (corrected from
 // the ref's 3 cards: real roll size is 9, card chrome = frame + emblem +
 // text + seal; painted card art is the gameplay-art pipeline).
 import { computed } from 'vue'
@@ -70,7 +70,7 @@ const tagLabel = computed(() => {
   transition: border-color var(--hk-motion-micro, 150ms) var(--hk-ease-standard, ease), box-shadow var(--hk-motion-micro, 150ms) var(--hk-ease-standard, ease);
 }
 
-/* hover = gold keyline breath only; no transform — the fidelity spec pins
+/* hover = gold keyline breath only; no transform - the fidelity spec pins
    the grid's row geometry. */
 .talent-card:hover {
   border-color: var(--hk-border-ceremony, #e8c35a);
@@ -139,7 +139,7 @@ const tagLabel = computed(() => {
 }
 
 /* Gold filigree corner ticks on all four card corners (ref: ornate gilt
-   brackets on the painted frame). Part of the card frame's temp art —
+   brackets on the painted frame). Part of the card frame's temp art -
    covered by data-art-id="talent-card-frame" on the card itself. */
 .talent-card__corners {
   position: absolute;

@@ -6,7 +6,7 @@
 // Minh's painted stage art is pending (art-needed).
 //
 // The ref's "Chien LUC" plaque under the figure is intentionally absent:
-// Chiến Lực is a CharacterPanel-local display heuristic, not a shared
+// Chien Luc is a CharacterPanel-local display heuristic, not a shared
 // read-model, so nothing is quoted here (flagged for the audit report).
 import EquipmentPaperdoll from '@/components/panels/EquipmentPaperdoll.vue'
 

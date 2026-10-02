@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Scene 01 password field — same icon-field grammar as the id field.
+// Scene 01 password field - same icon-field grammar as the id field.
 // Leading glyph = delivered `lock` stable symbol. The ref's eye-toggle
 // is an audit RESERVED detail: intentionally not scaffolded.
 import { useI18n } from 'vue-i18n'

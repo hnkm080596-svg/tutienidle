@@ -157,7 +157,7 @@ describe('beta FE-contract sec.8 - scope-exposure corpus guards', () => {
       const list = offenders(
         /\b(isCompanionDomainUnlocked|isArtifactDomainUnlocked|isFormationUnlocked)\b/,
         [
-          'components/game/DongFuCommandWheel.vue',
+          'components/scenes/dong-fu/wheel/DongFuCommandWheelLayer.vue',
           'components/game/CurrencyHud.vue',
         ],
       )
@@ -191,7 +191,7 @@ describe('beta FE-contract sec.8 - scope-exposure corpus guards', () => {
       // for branch visibility.
       const elementReads = offendersInCode(
         /\bgetActiveElement\b|\.spellPath\b/,
-        ['components/panels/CharacterPanel.vue'],
+        ['components/scenes/character/CharacterFigureWheel.vue'],
       )
 
       expect(elementReads).toEqual([])
@@ -308,8 +308,8 @@ describe('beta FE-contract sec.8 - scope-exposure corpus guards', () => {
           'isBetaLeftPanelMode',
           'isBetaBuildingSurface',
         ],
-        'components/game/DongFuCommandWheel.vue': ['betaWheelSlots'],
-        'components/panels/EquipmentHallPanel.vue': ['isBetaEquipmentTab'],
+        'components/scenes/dong-fu/wheel/DongFuCommandWheelLayer.vue': ['betaWheelSlots'],
+        'components/scenes/equipment/EquipmentScene.vue': ['isBetaEquipmentTab'],
         'components/game/CurrencyHud.vue': ['isBetaFeature'],
         'components/panels/QuanKhiPanel.vue': ['isBetaWay'],
       }

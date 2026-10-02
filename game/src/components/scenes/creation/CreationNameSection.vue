@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Scene 02 Đạo Danh section — seal header + subtitle line + name field +
+// Scene 02 Dao Danh section - seal header + subtitle line + name field +
 // length hint (region name-section 988/150/564/170 in design px).
 import { useI18n } from 'vue-i18n'
 import CreationSectionHeader from './CreationSectionHeader.vue'

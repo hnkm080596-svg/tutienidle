@@ -1,10 +1,10 @@
 <script setup lang="ts">
-// Thám Hiểm (2026-08-14) — màn hình chọn màn trước khi chiến đấu.
+// Tham Hiem (2026-08-14) - man hinh chon man truoc khi chien dau.
 // Scene 09 (Huyen Kim) scaffold: presentation decomposes into
-// components/scenes/exploration/* — this panel keeps ALL selection
+// components/scenes/exploration/* - this panel keeps ALL selection
 // logic and feeds children the canonical read-models
 // (getStageSurfaceModels: state, boss, displayEnemy, rewardPreview,
-// disabledReason — frontend-contract §7 DO-NOT-DERIVE).
+// disabledReason - frontend-contract sec.7 DO-NOT-DERIVE).
 import { computed, inject, nextTick, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '@/stores/player'
@@ -48,21 +48,21 @@ onMounted(() => {
   assetManager?.prefetch(['combat']).catch(() => {})
 })
 
-// Combat UI Redesign mục 4/15 — Chọn Ải là nơi DUY NHẤT cấu hình Auto
-// Battle TRƯỚC trận (Combat Scene giờ chiếm toàn màn hình, không còn
-// BottomBar/BattleControls hiện ĐƯỢC nữa trong lúc combat để bật/tắt
-// giữa chừng) và shortcut để chỉnh Build — KHÔNG dựng Build UI riêng,
-// chỉ deep-link. Trước trỏ vào tab Tâm Pháp của LoadoutManager.vue (đã
-// xoá); giờ mở thẳng SkillPathPanel.vue (2026-08-20) — quyết định build
-// THẬT SỰ (chọn skill/node) nằm ở đó, Tâm Pháp giờ chỉ đọc, không còn
-// gì để "chỉnh".
+// Combat UI Redesign muc 4/15 - Chon Ai la noi DUY NHAT cau hinh Auto
+// Battle TRUOC tran (Combat Scene gio chiem toan man hinh, khong con
+// BottomBar/BattleControls hien DUOC nua trong luc combat de bat/tat
+// giua chung) va shortcut de chinh Build - KHONG dung Build UI rieng,
+// chi deep-link. Truoc tro vao tab Tam Phap cua LoadoutManager.vue (da
+// xoa); gio mo thang SkillPathPanel.vue (2026-08-20) - quyet dinh build
+// THAT SU (chon skill/node) nam o do, Tam Phap gio chi doc, khong con
+// gi de "chinh".
 function openBuild() {
   ui.standalonePanel = 'skill'
 }
 
 const zones = computed(() => gameManager.zoneRegistry.getAll())
 
-// Canonical stage read-models (contract §7) — the list consumes
+// Canonical stage read-models (contract sec.7) - the list consumes
 // state/disabledReason/displayEnemy/rewardPreview from here, never by
 // re-calling isStageUnlocked/stageLockReasonCode per node.
 const surfaceModels = computed(() => gameManager.stageOps.getStageSurfaceModels(player.$state))
@@ -95,7 +95,7 @@ const selectedChapter = ref<number>(stagesInZone.value[0]?.chapter ?? 1)
 
 const mapPanel = ref<InstanceType<typeof ExplorationMapPanel> | null>(null)
 
-// Auto-farm B5 — armed state is player state (survives reload), so the
+// Auto-farm B5 - armed state is player state (survives reload), so the
 // panel mirrors it: running farm row + stop control, and the perfect-farm
 // start only closes the panel when the domain accepted it.
 const armedFarmStage = computed(() => {
@@ -151,11 +151,11 @@ function selectFirstStageInChapter() {
     ?? null
 }
 
-// Đổi Địa Giới thì bỏ chọn Màn cũ (Màn thuộc Địa Giới trước, không còn
-// hợp lệ ở Địa Giới mới).
-// Đổi chapter.value → watcher bên dưới tự chọn lại stage (đúng 1 lần);
-// chapter GIỮ NGUYÊN (đa số zone đều bắt đầu ở chapter 1) thì watcher
-// đó không bắn, nên gọi trực tiếp ở đây để không rơi mất lần chọn lại.
+// Doi Dia Gioi thi bo chon Man cu (Man thuoc Dia Gioi truoc, khong con
+// hop le o Dia Gioi moi).
+// Doi chapter.value -> watcher ben duoi tu chon lai stage (dung 1 lan);
+// chapter GIU NGUYEN (da so zone deu bat dau o chapter 1) thi watcher
+// do khong ban, nen goi truc tiep o day de khong roi mat lan chon lai.
 watch(selectedZoneId, () => {
   const nextChapter = stagesInZone.value[0]?.chapter ?? 1
 
@@ -199,7 +199,7 @@ watch(selectedStageId, () => {
   mode.value = 'manual'
 })
 
-// Auto-farm Task 6 — chip thứ 4 chỉ bật khi stage đang chọn đã Hoàn Mỹ.
+// Auto-farm Task 6 - chip thu 4 chi bat khi stage dang chon da Hoan My.
 const isSelectedStagePerfectClear = computed(() =>
   Boolean(selectedStage.value && player.$state.perfectClearStageIds.includes(selectedStage.value.id)),
 )
@@ -230,9 +230,9 @@ function start() {
     return
   }
 
-  // Auto-farm Task 6 (2026-09-04) — perfect_farm KHÔNG start trận thật:
-  // gọi startAutoFarm trực tiếp (roll reward theo wall-clock, không
-  // hoạt ảnh) — khác mọi mode khác đều qua startSelectedStage.
+  // Auto-farm Task 6 (2026-09-04) - perfect_farm KHONG start tran that:
+  // goi startAutoFarm truc tiep (roll reward theo wall-clock, khong
+  // hoat anh) - khac moi mode khac deu qua startSelectedStage.
   if (mode.value === 'perfect_farm') {
     // Only close on an accepted start - a refused start (slot held by a
     // running farm, missing perfect clear) keeps the panel open so the
@@ -347,8 +347,8 @@ function start() {
   grid-template-columns: auto minmax(0, 1.25fr) minmax(290px, .75fr);
 }
 
-/* Fit-refactor đợt 2 — đo theo CARD (overlay-panel container), không còn
-   viewport; scene clamp tự co nên bỏ flex-basis override. */
+/* Fit-refactor dot 2 - do theo CARD (overlay-panel container), khong con
+   viewport; scene clamp tu co nen bo flex-basis override. */
 @container overlay-panel (max-width: 900px) {
   .stage-select__workspace { display: flex; flex-direction: column; }
   .stage-select__detail { min-height: 360px; }

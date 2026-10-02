@@ -1,7 +1,7 @@
 <script setup lang="ts">
-// Scene 01 notice lines — conditional copy strips above the form:
+// Scene 01 notice lines - conditional copy strips above the form:
 // save-cleared notice (post-reset continuity) and the durable guest
-// credential recovery error (B1.8 — surfaced, never silently bypassed).
+// credential recovery error (B1.8 - surfaced, never silently bypassed).
 import { useI18n } from 'vue-i18n'
 
 defineProps<{

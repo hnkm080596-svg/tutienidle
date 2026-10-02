@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // Scene 13 result region (spec: 536/340/600/220 z30, shell-panel,
-// surface-m-panel) — victory/defeat banner while isFinished.
+// surface-m-panel) - victory/defeat banner while isFinished.
 import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
 
 defineProps<{

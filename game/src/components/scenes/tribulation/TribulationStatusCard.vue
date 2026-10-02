@@ -1,8 +1,8 @@
 <script setup lang="ts">
 // Scene 13 status-card region (spec: 60/560/420/220, shell-panel,
 // surface-m-panel + timer-ring). Audit CORRECTED: real fields are the
-// chapter timer (`secondsRemaining`) and `lightningStrikesTaken` —
-// ref's "Độ Tâm Ma %" / attempt counters were invented, not rebuilt.
+// chapter timer (`secondsRemaining`) and `lightningStrikesTaken` -
+// ref's "Do Tam Ma %" / attempt counters were invented, not rebuilt.
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
@@ -68,7 +68,7 @@ const timerLabel = computed(() => {
 .tribulation-ui__time-left b { font-variant-numeric:tabular-nums; color:var(--chrome-100); }
 .tribulation-ui__hint, .tribulation-ui__strikes { margin-top:6px; font-size:var(--text-xs); text-shadow:0 1px 3px #000; color:var(--scene-tribulation-text-soft); }
 .tribulation-ui__strike-pips { display:flex; justify-content:center; gap:5px; margin-top:6px; }
-/* Ref: flame strike markers (temp art — lit = strike taken). */
+/* Ref: flame strike markers (temp art - lit = strike taken). */
 .tribulation-ui__strike-pip {
   width: 10px;
   height: 14px;

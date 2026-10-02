@@ -77,7 +77,7 @@ const { t } = useI18n()
   grid-column: 1 / -1;
 }
 
-/* TEMP ART (art-needed) — icon-set gaps. */
+/* TEMP ART (art-needed) - icon-set gaps. */
 .art-needed {
   outline: 1px dashed color-mix(in srgb, #b99a55 65%, transparent);
   outline-offset: -1px;

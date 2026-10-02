@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // Scene 09 scaffold - one stage seal on a chapter band's trail. All
 // state/enemy/lock data comes from the canonical StageSurfaceModel
-// (frontend-contract §7 DO-NOT-DERIVE) - the node never recomputes.
+// (frontend-contract sec.7 DO-NOT-DERIVE) - the node never recomputes.
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { Stage } from '@/core/stage/Stage'

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Scene 16/17 feedback section (support group) — opens the intake
+// Scene 16/17 feedback section (support group) - opens the intake
 // dialog owned by the panel.
 import { useI18n } from 'vue-i18n'
 import GameButton from '@/components/common/GameButton.vue'

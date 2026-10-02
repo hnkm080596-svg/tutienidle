@@ -1,8 +1,8 @@
 <script setup lang="ts">
 // Scene 11 job-queue region (spec: 288/724/824/118, list family;
-// slots = maxJobSlots from the pill_room building — no fast-forward,
-// no paid unlock). Shows the canonical "Hàng Chờ (n/m)" capacity the
-// ref's "Hàng Chờ Luyện Đan (3/4)" implies.
+// slots = maxJobSlots from the pill_room building - no fast-forward,
+// no paid unlock). Shows the canonical "Hang Cho (n/m)" capacity the
+// ref's "Hang Cho Luyen Dan (3/4)" implies.
 import { useI18n } from 'vue-i18n'
 import AlchemyJobCard from './AlchemyJobCard.vue'
 

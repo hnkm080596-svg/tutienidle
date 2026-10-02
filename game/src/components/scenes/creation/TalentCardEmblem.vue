@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Scene 02 card medallion — the circular painted motif at each talent
+// Scene 02 card medallion - the circular painted motif at each talent
 // card's crown in the ref (moon/ember/beast vignette). TEMP ART: one
 // placeholder disc per card; Minh paints per-talent variants.
 import { computed } from 'vue'

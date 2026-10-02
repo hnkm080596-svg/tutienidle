@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Scene 02 name field — the Đạo Danh text input on text-field chrome.
+// Scene 02 name field - the Dao Danh text input on text-field chrome.
 // Contract surface: data-testid="creation-name-input", maxlength 20,
 // autofocus, disabled while the create call is in flight.
 import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
