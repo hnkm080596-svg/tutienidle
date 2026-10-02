@@ -1,9 +1,11 @@
 <script setup lang="ts">
-// Thám Hiểm (2026-08-14) — màn hình chọn màn trước khi chiến đấu, thay
-// nút "Chiến Đấu" trực tiếp cũ. 3 lựa chọn theo đúng thứ tự người
-// dùng mô tả: Địa Giới (map lớn) → Màn (trong Địa Giới đó) → chế độ
-// (Lặp Lại Khiêu Chiến / Tự Động Thám Hiểm) → Bắt Đầu.
-import { computed, inject, onMounted, ref, watch } from 'vue'
+// Thám Hiểm (2026-08-14) — màn hình chọn màn trước khi chiến đấu.
+// Scene 09 (Huyen Kim) scaffold: presentation decomposes into
+// components/scenes/exploration/* — this panel keeps ALL selection
+// logic and feeds children the canonical read-models
+// (getStageSurfaceModels: state, boss, displayEnemy, rewardPreview,
+// disabledReason — frontend-contract §7 DO-NOT-DERIVE).
+import { computed, inject, nextTick, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '@/stores/player'
 import { useUiStore, type BattleRunMode } from '@/stores/ui'
@@ -11,15 +13,20 @@ import { useGameManager } from '@/composables/useGameState'
 import { useBattleActions } from '@/composables/useBattleActions'
 import { ASSET_BUNDLE_MANAGER_KEY } from '@/presentation/PresentationContracts'
 import BuildingConstructionGate from './BuildingConstructionGate.vue'
-import GameButton from '@/components/common/GameButton.vue'
-import Chip from '@/components/common/primitives/Chip.vue'
-import EmptyState from '@/components/common/primitives/EmptyState.vue'
 import { getCurrentRealm } from '@/core/realm/realmSystem'
 import { useAudioStore } from '@/stores/audio'
 import { stableSceneArtUrl } from '@/presentation/huyenKim/StableSceneArt'
-import { layoutStageTrail } from './stageTrailLayout'
-import HuyenKimSymbol from '@/components/common/HuyenKimSymbol.vue'
 import { hkChromeUrl } from '@/ui/huyenKimChrome'
+import ExplorationChapterTabs from '@/components/scenes/exploration/ExplorationChapterTabs.vue'
+import ExplorationZoneRail from '@/components/scenes/exploration/ExplorationZoneRail.vue'
+import ExplorationMapPanel from '@/components/scenes/exploration/ExplorationMapPanel.vue'
+import ExplorationChapterBand from '@/components/scenes/exploration/ExplorationChapterBand.vue'
+import ExplorationDetailPanel from '@/components/scenes/exploration/ExplorationDetailPanel.vue'
+import ExplorationProgressFooter from '@/components/scenes/exploration/ExplorationProgressFooter.vue'
+
+// RESERVED slot (audit): the zone rail is not in ref 09 - flip this when
+// the rail is implemented so the workspace grid gains its column.
+const ZONE_RAIL_VISIBLE = false
 
 // exploration-map-chrome-kit (stable art): frame around the map panel,
 // chapter divider under the title, soft-edge mask on the scroll region.
@@ -55,43 +62,16 @@ function openBuild() {
 
 const zones = computed(() => gameManager.zoneRegistry.getAll())
 
+// Canonical stage read-models (contract §7) — the list consumes
+// state/disabledReason/displayEnemy/rewardPreview from here, never by
+// re-calling isStageUnlocked/stageLockReasonCode per node.
+const surfaceModels = computed(() => gameManager.stageOps.getStageSurfaceModels(player.$state))
+const modelById = computed(() => new Map(surfaceModels.value.map(model => [model.stageId, model])))
+
 function isZoneUnlocked(zoneId: string): boolean {
   const zone = zones.value.find(candidate => candidate.id === zoneId)
   const firstStageId = zone?.stageIds[0]
-  return Boolean(firstStageId && gameManager.catalogOps.isStageUnlocked(firstStageId, player.$state))
-}
-
-// Luyện Khí tầng 1-10 content pass — gate MỊN hơn isZoneUnlocked (chỉ
-// đại-cảnh-giới): requiredRealmLevel CHỈ được xét khi player ĐANG ở
-// đúng requiredRealmId của Stage đó — nếu player đã vượt hẳn qua đại
-// cảnh giới này (vd đã lên Trúc Cơ), tầng gate coi như hết ý nghĩa,
-// Stage mở tự do để farm lại.
-function isStageUnlocked(stage: (typeof stagesInZone.value)[number]): boolean {
-  return gameManager.catalogOps.isStageUnlocked(stage.id, player.$state)
-}
-
-// Locked-floor reason (ui-audit progression fix): the domain read model
-// catalogOps.stageLockReasonCode owns the gate logic; the panel only maps
-// the reason code to i18n text.
-function stageLockReason(stage: (typeof stagesInZone.value)[number]): string {
-  const reason = gameManager.catalogOps.stageLockReasonCode(stage.id, player.$state)
-
-  if (reason === null) {
-    return ''
-  }
-
-  if (reason.kind === 'realm') {
-    return t('panels.stageSelect.locked.requireRealm', {
-      realm: getCurrentRealm(reason.realmId).name,
-      level: reason.realmLevel,
-    })
-  }
-
-  if (reason.kind === 'floor') {
-    return t('panels.stageSelect.locked.clearFloor', { floor: reason.floor })
-  }
-
-  return t('panels.stageSelect.locked.progress')
+  return Boolean(firstStageId && modelById.value.get(firstStageId)?.state !== 'locked')
 }
 
 const selectedZoneId = ref<string | null>(zones.value[0]?.id ?? null)
@@ -112,6 +92,8 @@ const stagesInZone = computed(() => {
 
 const selectedStageId = ref<string | null>(null)
 const selectedChapter = ref<number>(stagesInZone.value[0]?.chapter ?? 1)
+
+const mapPanel = ref<InstanceType<typeof ExplorationMapPanel> | null>(null)
 
 // Auto-farm B5 — armed state is player state (survives reload), so the
 // panel mirrors it: running farm row + stop control, and the perfect-farm
@@ -146,12 +128,25 @@ const chapterOptions = computed(() => {
   return [...chapters.values()]
 })
 
+// Ref map renders every chapter band at once; the chips scroll to the
+// band and re-pick its first unlocked stage.
+const chapterBands = computed(() =>
+  chapterOptions.value.map(option => ({
+    ...option,
+    stages: stagesInZone.value.filter(stage => (stage.chapter ?? 1) === option.chapter),
+  })),
+)
+
+const selectedChapterLabel = computed(() =>
+  chapterOptions.value.find(option => option.chapter === selectedChapter.value)?.label ?? '',
+)
+
 const visibleStages = computed(() =>
   stagesInZone.value.filter(stage => (stage.chapter ?? 1) === selectedChapter.value),
 )
 
 function selectFirstStageInChapter() {
-  selectedStageId.value = visibleStages.value.find(stage => isStageUnlocked(stage))?.id
+  selectedStageId.value = visibleStages.value.find(stage => modelById.value.get(stage.id)?.state !== 'locked')?.id
     ?? visibleStages.value[0]?.id
     ?? null
 }
@@ -177,47 +172,23 @@ const selectedStage = computed(() =>
   stagesInZone.value.find(stage => stage.id === selectedStageId.value) ?? null,
 )
 
-const stageNodes = computed(() => visibleStages.value.map((stage, index) => ({
-  stage,
-  isLast: index === visibleStages.value.length - 1,
-  enemies: stage.enemyPool
-    .map(entry => gameManager.catalogOps.getEnemyTemplate(entry.enemyId)?.name ?? entry.enemyId),
-})))
+const selectedModel = computed(() =>
+  selectedStageId.value ? modelById.value.get(selectedStageId.value) : undefined,
+)
 
-// Scene 10 (Son Ha Do): the stage field is a winding trail across the
-// framed parchment - pure projection of stageNodes order, no domain
-// state. layoutStageTrail returns fractional node positions + the SVG
-// path through them.
-const stageTrail = computed(() => layoutStageTrail(stageNodes.value.length))
+// Ref footer: zone completion bar - "Tien Do Tham Hiem {done}/{total}".
+const zoneProgress = computed(() => {
+  const zone = selectedZone.value
+  if (!zone) {
+    return { completed: 0, total: 0 }
+  }
 
-const selectedEncounters = computed(() => {
-  if (!selectedStage.value) return []
-
-  return selectedStage.value.enemyPool.map((entry) => {
-    const enemy = gameManager.catalogOps.getEnemyTemplate(entry.enemyId)
-    return {
-      id: entry.enemyId,
-      name: enemy?.name ?? entry.enemyId,
-      level: enemy?.level,
-      archetype: enemy?.archetype ?? 'melee',
-      weight: entry.weight,
-      eliteChance: entry.eliteChance ?? 0,
-    }
-  })
+  const done = player.$state.completedStageIds
+  return {
+    completed: zone.stageIds.filter(stageId => done.includes(stageId)).length,
+    total: zone.stageIds.length,
+  }
 })
-
-const selectedBoss = computed(() => {
-  const bossId = selectedStage.value?.bossEnemyId
-  if (!bossId) return null
-  return gameManager.catalogOps.getEnemyTemplate(bossId)
-})
-
-const ARCHETYPE_LABEL_KEYS: Record<string, string> = {
-  melee: 'panels.stageSelect.archetypes.melee',
-  ranged: 'panels.stageSelect.archetypes.ranged',
-  caster: 'panels.stageSelect.archetypes.caster',
-  tank: 'panels.stageSelect.archetypes.tank',
-}
 
 const mode = ref<BattleRunMode>('manual')
 
@@ -238,7 +209,7 @@ const canStart = computed(() => {
     return false
   }
 
-  return isZoneUnlocked(selectedZone.value.id) && isStageUnlocked(selectedStage.value)
+  return isZoneUnlocked(selectedZone.value.id) && (selectedModel.value?.startAvailable ?? false)
 })
 
 function selectZone(zoneId: string) {
@@ -247,6 +218,7 @@ function selectZone(zoneId: string) {
 
 function selectChapter(chapter: number) {
   selectedChapter.value = chapter
+  void nextTick(() => mapPanel.value?.scrollToChapter(chapter))
 }
 
 function selectStage(stageId: string) {
@@ -281,158 +253,62 @@ function start() {
 <template>
   <BuildingConstructionGate building-id="teleport_array">
   <div class="stage-select-shell">
-    <!-- Banner ảnh teleport_array đã bỏ (2026-08-30, bug report: hình dư
-         thừa). Intro text (eyebrow/h3/mô tả) BỎ LUÔN (2026-08-30, bug
-         report thứ 2: trùng lặp — title bar OverlayPanel đã hiện "Địa
-         Giới", nhãn filter "Địa Giới"/"Cảnh Giới Khu Vực" bên dưới đã tự
-         giải thích, không cần lặp lại bằng câu văn). -->
     <div class="stage-select">
-      <nav class="stage-select__filters" :aria-label="t('panels.stageSelect.aria.filters')">
-        <div class="stage-select__filter-group">
-          <small>{{ t('panels.stageSelect.labels.zoneFilter') }}</small>
-          <Chip
-            v-for="zone in zones"
-            :key="zone.id"
-            class="stage-select__filter-chip"
-            :class="{ 'is-locked': !isZoneUnlocked(zone.id) }"
-            :active="zone.id === selectedZoneId"
-            :disabled="!isZoneUnlocked(zone.id)"
-            @click="selectZone(zone.id)"
-          >
-            {{ zone.name }}
-          </Chip>
-        </div>
+      <ExplorationChapterTabs
+        :zones="zones"
+        :selected-zone-id="selectedZoneId"
+        :is-zone-unlocked="isZoneUnlocked"
+        :chapter-options="chapterOptions"
+        :selected-chapter="selectedChapter"
+        @select-zone="selectZone"
+        @select-chapter="selectChapter"
+      />
 
-        <div class="stage-select__filter-group stage-select__filter-group--chapters">
-          <small>{{ t('panels.stageSelect.labels.chapterFilter') }}</small>
-          <Chip
-            v-for="chapter in chapterOptions"
-            :key="chapter.chapter"
-            class="stage-select__filter-chip"
-            :active="chapter.chapter === selectedChapter"
-            @click="selectChapter(chapter.chapter)"
-          >
-            {{ chapter.label }}
-          </Chip>
-        </div>
-      </nav>
+      <div class="stage-select__workspace" :class="{ 'stage-select__workspace--rail': ZONE_RAIL_VISIBLE }">
+        <!-- zone-rail: RESERVED architecture slot (audit) - renders nothing. -->
+        <ExplorationZoneRail :visible="ZONE_RAIL_VISIBLE" />
 
-      <div class="stage-select__workspace">
-        <section class="stage-select__map-panel">
-          <img class="stage-select__map-frame" :src="MAP_FRAME_SRC" alt="" aria-hidden="true" />
-          <!-- Pinned map header sits INSIDE the frame's interior band -
-               it was previously the scroll region's first child, where
-               the scrollfade top mask ate the title glyphs. -->
-          <header class="stage-select__map-head">
-            <h4 class="stage-select__title">{{ t('panels.stageSelect.sections.selectFloor') }}</h4>
-            <img class="stage-select__chapter-divider" :src="CHAPTER_DIVIDER_SRC" alt="" aria-hidden="true" />
-          </header>
-          <div class="stage-select__map-scroll scrollfade">
-          <EmptyState v-if="visibleStages.length === 0" size="sm">{{ t('panels.stageSelect.empty.noStages') }}</EmptyState>
+        <ExplorationMapPanel
+          ref="mapPanel"
+          :zone-name="selectedZone?.name ?? ''"
+          :frame-src="MAP_FRAME_SRC"
+          :divider-src="CHAPTER_DIVIDER_SRC"
+          :mask-src="MAP_MASK_SRC"
+          :has-stages="stagesInZone.length > 0"
+        >
+          <ExplorationChapterBand
+            v-for="band in chapterBands"
+            :key="band.chapter"
+            :chapter="band.chapter"
+            :label="band.label"
+            :stages="band.stages"
+            :models="modelById"
+            :selected-stage-id="selectedStageId"
+            :boss-seal-url="bossSealUrl"
+            @select-stage="selectStage"
+          />
+        </ExplorationMapPanel>
 
-          <div v-else class="stage-map" :style="{ '--map-mask': `url(${MAP_MASK_SRC})` }">
-            <svg
-              v-if="stageTrail.pathD"
-              class="stage-map__trail"
-              viewBox="0 0 1000 1000"
-              preserveAspectRatio="none"
-              aria-hidden="true"
-            >
-              <path :d="stageTrail.pathD" class="stage-map__trail-path" />
-            </svg>
-            <button
-              v-for="(node, index) in stageNodes"
-              :key="node.stage.id"
-              type="button"
-              class="stage-map__node"
-              :data-testid="`stage-node-${node.stage.id}`"
-              :class="{
-                'is-selected': node.stage.id === selectedStageId,
-                'is-locked': !isStageUnlocked(node.stage),
-                'is-final': node.isLast,
-              }"
-              :style="{
-                left: `${(stageTrail.points[index]?.x ?? 0.5) * 100}%`,
-                top: `${(stageTrail.points[index]?.y ?? 0.5) * 100}%`,
-              }"
-              v-tooltip="node.stage.id === selectedStageId ? undefined : isStageUnlocked(node.stage) ? node.stage.description : stageLockReason(node.stage)"
-              @click="selectStage(node.stage.id)"
-            >
-              <span class="stage-map__number">{{ node.stage.floor ?? node.stage.requiredRealmLevel ?? 1 }}</span>
-              <span class="stage-map__copy">
-                <strong>{{ t('panels.stageSelect.labels.floorPrefix', { floor: node.stage.floor ?? node.stage.requiredRealmLevel ?? 1 }) }}</strong>
-                <small>{{ node.enemies.join(' · ') }}</small>
-              </span>
-              <span v-if="node.stage.bossEnemyId" class="stage-map__boss">
-                <img v-if="bossSealUrl" class="stage-map__boss-seal" :src="bossSealUrl" alt="" aria-hidden="true" />
-                {{ t('panels.stageSelect.labels.boss') }}
-              </span>
-              <span v-if="!isStageUnlocked(node.stage)" class="stage-map__lock" aria-hidden="true"><HuyenKimSymbol name="lock" /></span>
-            </button>
-          </div>
-          </div>
-        </section>
-
-        <section class="stage-select__detail">
-        <div v-if="armedFarmStage" class="stage-select__autofarm">
-          <span>{{ t('autoFarm.running', { stage: armedFarmStage.name }) }}</span>
-          <GameButton variant="danger" size="sm" data-testid="autofarm-stop" @click="stopAutoFarm">
-            {{ t('autoFarm.stop') }}
-          </GameButton>
-        </div>
-      <template v-if="selectedStage">
-        <h4 class="stage-select__title">{{ selectedStage.name }}</h4>
-        <p class="stage-select__description">{{ selectedStage.description }}</p>
-        <p v-if="!isStageUnlocked(selectedStage)" class="stage-select__locked-hint">{{ stageLockReason(selectedStage) }}</p>
-
-        <div class="stage-select__encounter-summary">
-          <span><strong>{{ selectedStage.totalEnemyCount }}</strong> {{ t('panels.stageSelect.labels.enemiesSuffix') }}</span>
-          <span v-if="selectedBoss" class="is-boss">{{ t('panels.stageSelect.labels.bossNamePrefix') }} <strong>{{ selectedBoss.name }}</strong></span>
-        </div>
-
-        <div class="stage-select__enemy-list">
-          <article v-for="enemy in selectedEncounters" :key="enemy.id" class="stage-select__enemy">
-            <span class="stage-select__enemy-sigil">{{ enemy.name.charAt(0) }}</span>
-            <span>
-              <strong>{{ enemy.name }}</strong>
-              <!-- Bỏ "Trọng số {{enemy.weight}}" (2026-08-30, bug report:
-                   số trọng số RNG nội bộ, không có ngữ cảnh tổng nên
-                   không giúp người chơi quyết định gì). -->
-              <small>
-                <template v-if="enemy.level">{{ t('panels.stageSelect.labels.levelPrefix', { level: enemy.level }) }} · </template>{{ t(ARCHETYPE_LABEL_KEYS[enemy.archetype] ?? 'panels.stageSelect.archetypes.melee') }}
-                <template v-if="enemy.eliteChance > 0"> · {{ t('panels.stageSelect.labels.eliteChance', { percent: Math.round(enemy.eliteChance * 100) }) }}</template>
-              </small>
-            </span>
-          </article>
-        </div>
-
-        <div class="stage-select__mode">
-          <Chip :active="mode === 'manual'" @click="mode = 'manual'">{{ t('panels.stageSelect.modes.manual') }}</Chip>
-          <Chip :active="mode === 'repeat'" @click="mode = 'repeat'">{{ t('panels.stageSelect.modes.repeat') }}</Chip>
-          <Chip :active="mode === 'progress'" @click="mode = 'progress'">{{ t('panels.stageSelect.modes.progress') }}</Chip>
-          <Chip
-            :active="mode === 'perfect_farm'"
-            :disabled="!isSelectedStagePerfectClear"
-            @click="isSelectedStagePerfectClear && (mode = 'perfect_farm')"
-          >{{ t('panels.stageSelect.modes.perfectFarm') }}</Chip>
-        </div>
-
-        <p class="stage-select__mode-hint">
-          {{ mode === 'manual' ? t('panels.stageSelect.modeHints.manual') : mode === 'repeat' ? t('panels.stageSelect.modeHints.repeat') : mode === 'progress' ? t('panels.stageSelect.modeHints.progress') : t('panels.stageSelect.modeHints.perfectFarm') }}
-        </p>
-
-        <div class="stage-select__start-row">
-          <GameButton class="stage-select__build" variant="secondary" size="sm" @click="openBuild">{{ t('panels.stageSelect.actions.editBuild') }}</GameButton>
-
-          <GameButton class="stage-select__start" size="sm" :disabled="!canStart" data-testid="stage-start-button" @click="start">
-            {{ t('panels.stageSelect.actions.start') }}
-          </GameButton>
-        </div>
-      </template>
-
-          <EmptyState v-else size="lg">{{ t('panels.stageSelect.empty.selectStage') }}</EmptyState>
-        </section>
+        <ExplorationDetailPanel
+          :stage="selectedStage"
+          :model="selectedModel"
+          :chapter-label="selectedChapterLabel"
+          :armed-farm-stage-name="armedFarmStage?.name ?? null"
+          :mode="mode"
+          :perfect-clear="isSelectedStagePerfectClear"
+          :can-start="canStart"
+          @stop-farm="stopAutoFarm"
+          @open-build="openBuild"
+          @start="start"
+          @update:mode="mode = $event"
+        />
       </div>
+
+      <ExplorationProgressFooter
+        :zone-name="selectedZone?.name ?? ''"
+        :completed="zoneProgress.completed"
+        :total="zoneProgress.total"
+      />
     </div>
   </div>
   </BuildingConstructionGate>
@@ -459,47 +335,6 @@ function start() {
   color: var(--paper-text);
 }
 
-.stage-select__filters {
-  flex: 0 0 auto;
-  display: flex;
-  align-items: center;
-  gap: 18px;
-  padding: 8px 12px;
-  border-bottom: 1px solid var(--paper-line);
-  background: color-mix(in srgb, var(--scene-portal-glow) 6%, var(--paper-100));
-}
-
-.stage-select__filter-group {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.stage-select__filter-group small {
-  margin-right: 3px;
-  color: var(--paper-text-muted);
-  font-size: var(--text-xs);
-  text-transform: uppercase;
-  letter-spacing: .08em;
-}
-
-.stage-select__filter-chip {
-  padding: 5px 10px;
-  font-weight: 600;
-  /* Filter Địa Giới dùng palette portal teal — đè công thức chrome chuẩn
-     của Chip bằng CSS var local. */
-  --chip-active-bg: color-mix(in srgb, var(--scene-portal-glow) 20%, var(--paper-50));
-}
-
-.stage-select__filter-chip.is-active {
-  border-color: var(--scene-portal-accent);
-  color: color-mix(in srgb, var(--scene-portal-accent) 55%, var(--brush-950) 45%);
-}
-
-.stage-select__filter-chip.is-locked {
-  opacity: 0.55;
-}
-
 .stage-select__workspace {
   flex: 1;
   min-height: 0;
@@ -507,323 +342,15 @@ function start() {
   grid-template-columns: minmax(0, 1.25fr) minmax(290px, .75fr);
 }
 
-.stage-select__map-panel,
-.stage-select__detail {
-  min-width: 0;
-  min-height: 0;
-  padding: 10px 12px;
-}
-
-/* exploration-map-chrome-kit: the panel is the (non-scrolling) frame's
-   canvas; .stage-select__map-scroll carries the old overflow behavior. */
-.stage-select__map-panel {
-  position: relative;
-  border-right: 1px solid var(--paper-line);
-  overflow: hidden;
-  padding: 0;
-}
-
-/* The map head is pinned inside the frame interior so the scroll mask
-   never fades it. */
-.stage-select__map-head {
-  position: absolute;
-  top: 60px;
-  left: 48px;
-  right: 48px;
-  z-index: 3;
-}
-.stage-select__map-head .stage-select__title { margin-bottom: 4px; }
-
-.stage-select__map-scroll {
-  position: relative;
-  z-index: 2;
-  height: 100%;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  /* The painted frame's inner border is ~28-40px at this canvas scale,
-     and the pinned head band occupies ~90px - the node field starts
-     under both and clears the bottom band. */
-  padding: 126px 36px 46px;
-}
-
-/* Scene 10: the floor field rides the vertical center of the map frame
-   (auto margins collapse cleanly when many stages force scrolling). */
-.stage-select__map-scroll > .stage-map,
-.stage-select__map-scroll > .empty-state { margin-block: auto; }
-
-.stage-select__map-frame {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: fill;
-  pointer-events: none;
-  z-index: 1;
-}
-
-.stage-select__chapter-divider {
-  display: block;
-  width: 100%;
-  height: auto;
-  max-height: 14px;
-  object-fit: fill;
-  margin: 0 0 8px;
-  pointer-events: none;
-}
-
-.stage-select__detail {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.stage-select__title {
-  margin: 0 0 8px;
-  font-family: var(--font-display);
-  color: var(--paper-text);
-  font-size: var(--text-body);
-}
-
-.stage-select .empty-state {
-  color: var(--paper-text-muted);
-  font-size: var(--text-xs);
-}
-
-/* Scene 10 (Son Ha Do): the stage field is a parchment canvas - nodes
-   are orbit seals on the winding SVG trail (stageTrailLayout), not a
-   card grid. The mask still feathers the field edges. */
-.stage-map {
-  position: relative;
-  flex: 1 1 auto;
-  min-height: 340px;
-  /* Stable map-content mask: alpha edges feather the node field into
-     the parchment (interior stays fully opaque). */
-  -webkit-mask-image: var(--map-mask, none);
-  mask-image: var(--map-mask, none);
-  -webkit-mask-size: 100% 100%;
-  mask-size: 100% 100%;
-}
-
-.stage-map__trail {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-}
-
-.stage-map__trail-path {
-  fill: none;
-  stroke: color-mix(in srgb, var(--scene-portal-accent) 70%, var(--brush-950) 12%);
-  stroke-width: 3;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-dasharray: 18 9;
-  opacity: 0.8;
-  vector-effect: non-scaling-stroke;
-}
-
-.stage-map__node {
-  position: absolute;
-  transform: translate(-50%, -50%);
-  width: 108px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 3px;
-  padding: 6px 4px;
-  border-radius: var(--radius-sm);
-  background: transparent;
-  border: 1px solid transparent;
-  color: var(--paper-text);
-  cursor: pointer;
-  text-align: center;
-}
-
-.stage-map__number {
-  display: grid;
-  width: 40px;
-  height: 40px;
-  place-items: center;
-  border: 2px solid color-mix(in srgb, var(--scene-portal-accent) 60%, transparent);
-  border-radius: 50%;
-  background: color-mix(in srgb, var(--paper-50) 72%, var(--scene-portal-glow) 10%);
-  box-shadow: 0 1px 6px rgba(60, 40, 10, 0.25);
-  color: color-mix(in srgb, var(--scene-portal-accent) 60%, var(--brush-950) 40%);
-  font: 700 var(--text-sm) var(--font-display);
-}
-.stage-map__copy { width: 100%; min-width: 0; display: flex; flex-direction: column; }
-.stage-map__copy strong { font-size: var(--text-xs); text-shadow: 0 1px 2px var(--paper-50); }
-.stage-map__copy small { overflow: hidden; color: var(--paper-text-muted); font-size: 10px; text-overflow: ellipsis; white-space: nowrap; text-shadow: 0 1px 2px var(--paper-50); }
-/* Scene 10: boss stages wear the boss-seal badge art behind the label. */
-.stage-map__boss {
-  position: absolute;
-  top: 2px;
-  right: 4px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  color: var(--crimson);
-  font-size: 9px;
-  font-weight: 800;
-  line-height: 1;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
-}
-.stage-map__boss-seal {
-  width: 24px;
-  height: auto;
-  margin-bottom: 1px;
-  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.45));
-}
-
-.stage-map__node:hover .stage-map__number {
-  border-color: var(--scene-portal-glow);
-  box-shadow: 0 0 10px -2px var(--scene-portal-glow);
-}
-
-.stage-map__node.is-selected .stage-map__number {
-  border-color: var(--scene-portal-glow);
-  background: color-mix(in srgb, var(--scene-portal-glow) 26%, var(--paper-50));
-  box-shadow: 0 0 12px -1px var(--scene-portal-glow);
-}
-
-.stage-map__node.is-locked {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-/* Lock affordance on the floor tile itself - the 45% dim alone did not
-   read as "locked" (ui-audit progression fix). */
-.stage-map__lock {
-  position: absolute;
-  top: 4px;
-  left: 4px;
-  font-size: var(--text-sm);
-  line-height: 1;
-}
-
-.stage-select__locked-hint {
-  margin: 0;
-  font-size: var(--text-xs);
-  color: var(--crimson);
-}
-
-.stage-map__node.is-final:not(.is-selected) .stage-map__number {
-  border-color: var(--crimson);
-}
-
-.stage-select__description,
-.stage-select__meta {
-  margin: 0;
-  font-size: var(--text-sm);
-  color: var(--paper-text-soft);
-}
-
-.stage-select__encounter-summary {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-}
-.stage-select__encounter-summary span {
-  padding: 3px 7px;
-  border: 1px solid color-mix(in srgb, var(--scene-portal-glow) 28%, var(--paper-line));
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--scene-portal-glow) 8%, var(--paper-100));
-  color: var(--paper-text-soft);
-  font-size: var(--text-xs);
-}
-.stage-select__encounter-summary .is-boss { border-color: color-mix(in srgb, var(--crimson) 45%, transparent); color: var(--crimson); }
-.stage-select__enemy-list { display: flex; flex-direction: column; gap: 5px; }
-.stage-select__enemy {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 7px;
-  border: 1px solid var(--paper-line);
-  border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--scene-portal-glow) 5%, var(--paper-100));
-}
-.stage-select__enemy-sigil {
-  display: grid;
-  flex: 0 0 30px;
-  height: 30px;
-  place-items: center;
-  border-radius: 50%;
-  background: color-mix(in srgb, var(--scene-portal-glow) 20%, var(--paper-50));
-  color: color-mix(in srgb, var(--scene-portal-accent) 55%, var(--brush-950) 45%);
-  font-family: var(--font-display);
-}
-.stage-select__enemy > span:last-child { min-width: 0; display: flex; flex-direction: column; }
-.stage-select__enemy strong { font-size: var(--text-sm); }
-.stage-select__enemy small { color: var(--paper-text-muted); font-size: var(--text-xs); }
-
-.stage-select__autofarm {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-2);
-  margin-bottom: var(--space-2);
-  font-size: var(--text-sm);
-  color: var(--text-muted);
-}
-
-.stage-select__mode {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 4px;
-  margin-top: 4px;
-}
-
-.stage-select__mode .chip {
-  padding: 6px;
-  font-size: var(--text-sm);
-}
-
-.stage-select__mode-hint {
-  margin: 0;
-  font-size: var(--text-xs);
-  color: var(--paper-text-muted);
-}
-
-.stage-select__auto {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: var(--text-sm);
-  color: var(--paper-text-soft);
-  cursor: pointer;
-}
-
-.stage-select__start-row {
-  margin-top: auto;
-  display: flex;
-  gap: 8px;
-}
-
-.stage-select__build {
-  padding: 8px 10px;
-}
-
-.stage-select__start {
-  flex: 1;
-  padding: 8px;
-}
-
-.stage-select__start:disabled {
-  background: var(--paper-200);
-  color: var(--paper-text-muted);
+/* RESERVED rail column appears only when the slot is enabled. */
+.stage-select__workspace--rail {
+  grid-template-columns: auto minmax(0, 1.25fr) minmax(290px, .75fr);
 }
 
 /* Fit-refactor đợt 2 — đo theo CARD (overlay-panel container), không còn
    viewport; scene clamp tự co nên bỏ flex-basis override. */
 @container overlay-panel (max-width: 900px) {
-  .stage-select__filters { align-items: flex-start; flex-direction: column; gap: 6px; }
-  .stage-select__filter-group { width: 100%; }
   .stage-select__workspace { display: flex; flex-direction: column; }
-  .stage-select__map-panel { border-right: none; border-bottom: 1px solid var(--ink-line-soft); }
-  .stage-map { grid-template-columns: repeat(5, minmax(72px, 1fr)); }
   .stage-select__detail { min-height: 360px; }
 }
 </style>

@@ -396,7 +396,9 @@
         "eliteChance": "{percent}% Elite"
       },
       "sections": {
-        "selectFloor": "Select Floor"
+        "selectFloor": "Select Floor",
+        "enemies": "Enemies Appearing",
+        "rewards": "Stage Rewards"
       },
       "empty": {
         "noStages": "This region has no combat floors yet.",
@@ -428,6 +430,17 @@
         "ranged": "Ranged",
         "caster": "Caster",
         "tank": "Guardian"
+      },
+      "progress": {
+        "title": "Exploration Progress: {zone}"
+      },
+      "rewards": {
+        "kinds": {
+          "material": "Material",
+          "equipment": "Equipment",
+          "equipmentAny": "Any Equipment",
+          "pill": "Pill"
+        }
       }
     },
     "wheel": {
