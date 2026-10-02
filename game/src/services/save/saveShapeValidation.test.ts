@@ -1000,8 +1000,8 @@ describe('validateGameSaveShape — equipment & slot shape (chặn crash boot/Na
         flat: 1,
       },
       affixes: [],
-      forgeUsesTotal: 6,
-      forgeUsesRemaining: 6,
+      forgeUsesTotal: 5,
+      forgeUsesRemaining: 5,
     }
   }
 

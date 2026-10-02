@@ -33,16 +33,13 @@ import { restoreGameSession } from '@/services/save/SaveSystem'
 import { validateGameSaveShape } from '@/services/save/saveShapeValidation'
 import { CURRENT_SAVE_VERSION } from '@/services/save/SaveSystem'
 import type { GameSave } from '@/services/save/saveTypes'
-import { getRealmTier } from '@/core/realm/RealmTierMap'
 import {
   getSpiritStoneMaterialIdForEnhanceLevel,
-  getSpiritStoneMaterialIdForRealmTier,
 } from '@/core/material/SpiritStoneMaterial'
 import {
   CYCLE_BASE_SECONDS_BY_REALM,
   computeCycleSeconds,
 } from '@/core/production/ProductionBalance'
-import { unsupportedReleaseReason } from '@/core/betaScopeSurface'
 import type { PlayerData } from '@/core/player/Player'
 
 const T0 = 1_725_160_000_000
@@ -371,44 +368,40 @@ describe('F-D: forged workerCycle siteLevelAtStart mints a compressed settle', (
 })
 
 // ------------------------------------------------------------------
-// F-E: forged realmId beyond the release ceiling. The transition gate
-// is adjacent-only + isRealmAvailable(target) (foundation_establishment
-// -> golden_core is closed), so no beta writer can produce the claim.
-// Shape admits it; the realm_beyond_release flag is a notice only,
-// while live systems key on player.realmId and mint at the forged
-// tier: the spirit-stone faucet switches to trung_pham (tier >= 4),
-// site/building level caps lift to the forged tier, and the vendor
-// sell floor follows it.
+// F-E / F-REALM-CEILING (fixed wave 3): forged realmId beyond the
+// release ceiling. The transition gate is adjacent-only +
+// isRealmAvailable(target) (foundation_establishment -> golden_core
+// is closed), so no beta writer can produce the claim - and the save
+// boundary now REJECTS it on player.realmId. This supersedes the old
+// F-SCOPE-5 "flagged but playable" contract: loading the claim used
+// to flag 'realm_beyond_release' while every realm-tier-keyed faucet
+// (spirit stones, site/building caps, vendor floor) minted at the
+// forged tier.
 // ------------------------------------------------------------------
-describe('F-E: beyond-ceiling realm claim mints realm-tier effects', () => {
-  it('a forged golden_core save must not play at the forged tier', () => {
+describe('F-E/F-REALM-CEILING: a beyond-ceiling realm claim is rejected at the save boundary', () => {
+  it('a forged golden_core save rejects on player.realmId', () => {
     const save = beyondCeilingSave('golden_core')
-    expect(validateGameSaveShape(save).ok).toBe(true)
+    const shape = validateGameSaveShape(save)
 
-    const { player, result } = restoreSave(save)
-    expect(result.status).toBe('ok')
+    expect(shape.ok).toBe(false)
+    expect(shape.issues.some((issue) => issue.path === 'player.realmId')).toBe(true)
+  })
 
-    const restored = player as unknown as PlayerData
-    // flagged but playable - the flag is a notice, not a bound:
-    expect(restored.realmId).toBe('golden_core')
-    expect(unsupportedReleaseReason(restored)).toBe('realm_beyond_release')
-    expect(getRealmTier('golden_core')).toBeGreaterThan(3)
+  it('every ladder realm past the release ceiling rejects the same way', () => {
+    for (const realmId of [
+      'nascent_soul',
+      'soul_transformation',
+      'void_refinement',
+      'body_integration',
+      'mahayana',
+      'tribulation',
+    ]) {
+      expect(validateGameSaveShape(beyondCeilingSave(realmId)).ok).toBe(false)
+    }
+  })
 
-    // mint: every realm-tier-keyed faucet now emits at the forged tier
-    // (production/vendor/rewards all consult this map).
-    expect(getSpiritStoneMaterialIdForRealmTier(getRealmTier(restored.realmId))).toBe(
-      'spirit_stone_trung_pham',
-    )
-
-    // Contract behavior (F-SCOPE-5, REJECTED_WITH_PROOF): the
-    // realm_beyond_release flag is the designed mitigation - a
-    // beyond-ceiling realm claim loads flagged and the carried shape
-    // stays playable (carry-forward). A forged realm claim rides the
-    // same authored flag path; the flag is the recorded bound. The
-    // in-scope bounds (F-SCOPE-1..4) still apply, and any dormancy
-    // leak out of the carried save remains gated.
-    expect(restored.realmId).toBe('golden_core')
-    expect(unsupportedReleaseReason(restored)).toBe('realm_beyond_release')
+  it('control: a coherent realm claim at the ceiling still validates', () => {
+    expect(validateGameSaveShape(beyondCeilingSave('foundation_establishment')).ok).toBe(true)
   })
 })
 

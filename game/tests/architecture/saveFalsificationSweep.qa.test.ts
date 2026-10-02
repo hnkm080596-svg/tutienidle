@@ -35,7 +35,10 @@ import { describe, expect, it } from 'vitest'
 import { createDefaultPlayer } from '../../src/core/player/Player'
 import { GameManager } from '../../src/core/game/GameManager'
 import { EQUIPMENT_BAG_SOFT_CAP } from '../../src/core/equipment/EquipmentBag'
-import { ITEM_QUALITY_ESSENCE_RANGE } from '../../src/core/equipment/ItemQualityBalance'
+import {
+  ITEM_QUALITY_ESSENCE_RANGE,
+  ITEM_QUALITY_FORGE_USES,
+} from '../../src/core/equipment/ItemQualityBalance'
 import { LUYEN_KHI_TINH_HOA_ID } from '../../src/core/equipment/TinhHoaMaterial'
 import { CURRENT_SAVE_VERSION } from '../../src/services/save/saveVersion'
 import { validateGameSaveShape } from '../../src/services/save/saveShapeValidation'
@@ -112,8 +115,10 @@ function forgedItem(index: number, quality: 'hoang' | 'tien' = 'tien') {
       flat: 12,
     },
     affixes: [],
-    forgeUsesTotal: 0,
-    forgeUsesRemaining: 0,
+    // F-FORGE-TOTAL: the total is the authored per-quality budget - a
+    // forged bag still has to carry writer-consistent values to pass.
+    forgeUsesTotal: ITEM_QUALITY_FORGE_USES[quality],
+    forgeUsesRemaining: ITEM_QUALITY_FORGE_USES[quality],
   }
 }
 

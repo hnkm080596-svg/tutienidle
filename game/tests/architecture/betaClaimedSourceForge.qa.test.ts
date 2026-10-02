@@ -500,10 +500,10 @@ describe('F-TC5-1: accrual realm pin boundary', () => {
   it('control: a pin below the current realm (mid-breakthrough window) stays valid and mints the pin tier', () => {
     const save = validSave()
     const p = save.player as ReturnType<typeof createDefaultPlayer>
-    // F-SCOPE-3: the level-9 building below is only producible at realm
-    // tier 9 - claim tribulation (the pin 'mortal' stays below it) with
-    // the coherence witnesses that claim requires.
-    p.realmId = 'tribulation'
+    // F-SCOPE-3 + F-REALM-CEILING: level 3 is the producible maximum
+    // inside the beta release ceiling (realm tier 3 at
+    // foundation_establishment); the pin 'mortal' stays below it.
+    p.realmId = 'foundation_establishment'
     // F-REALM-1: a committed qi+ save carries the stamped grade.
     p.breakthroughGrade = 1
     p.highestFoundationAchieved = 'human'
@@ -526,7 +526,7 @@ describe('F-TC5-1: accrual realm pin boundary', () => {
       {
         instanceId: 'i1',
         buildingId: 'gathering_outpost',
-        level: 9,
+        level: 3,
         lastCollectedAt: 0,
         accrualRealmId: 'mortal',
       },
@@ -724,12 +724,15 @@ describe('F-A8-2: building/site level bounded by authored maxLevel', () => {
     expect(validateGameSaveShape(save).ok).toBe(false)
   })
 
-  it('control: level exactly at maxLevel validates for both record kinds', () => {
+  it('control: level at the beta-producible ceiling validates for both record kinds', () => {
     const save = validSave()
-    // F-SCOPE-3: level 9 is only producible at realm tier 9 - the
-    // control claims tribulation with its coherence witnesses.
+    // F-SCOPE-3 + F-REALM-CEILING: the authored maxLevel 9 sits at
+    // realm tier 9, unreachable inside the beta release ceiling - a
+    // beyond-ceiling realm claim is now rejected at the boundary, so
+    // level 3 at foundation_establishment (realm tier 3) is the
+    // producible maximum.
     const p = save.player as ReturnType<typeof createDefaultPlayer>
-    p.realmId = 'tribulation'
+    p.realmId = 'foundation_establishment'
     p.breakthroughGrade = 1
     p.highestFoundationAchieved = 'human'
     ;(save as Record<string, unknown>).techniques = [
@@ -748,14 +751,14 @@ describe('F-A8-2: building/site level bounded by authored maxLevel', () => {
       {
         instanceId: 'i1',
         buildingId: 'gathering_outpost',
-        level: 9,
+        level: 3,
         lastCollectedAt: 0,
       },
     ]
     ;(save as Record<string, unknown>).productionSites = [
       {
         siteId: 'thanh_van_lam',
-        level: 9,
+        level: 3,
         autoRestart: false,
       },
     ]

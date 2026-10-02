@@ -164,8 +164,10 @@ function equipmentEntry(overrides: Record<string, unknown> = {}) {
         flat: range.min,
       },
       affixes: [],
-      forgeUsesTotal: 0,
-      forgeUsesRemaining: 0,
+      // F-FORGE-TOTAL: the persisted total must be the authored
+      // per-quality budget (hoang -> 5).
+      forgeUsesTotal: 5,
+      forgeUsesRemaining: 5,
       ...overrides,
     },
     range,
@@ -241,13 +243,23 @@ describe('F-TC7-ENH: equipmentSlots enhanceLevel bounded by MAX_SLOT_ENHANCE_LEV
     expect(shape.ok).toBe(false)
   })
 
-  it('control: enhanceLevel at the cap validates', () => {
-    // F-SCOPE-2: reaching the cap pays thuong stones - only a tier >= 7
-    // realm claim can produce it, so the control claims tribulation
-    // with the coherence witnesses that claim requires.
+  it('control: enhanceLevel at the beta-producible bound validates', () => {
+    // F-SCOPE-2 + F-REALM-CEILING: reaching MAX_SLOT_ENHANCE_LEVEL pays
+    // thuong stones (realm tier >= 7) - unproducible now that
+    // beyond-ceiling realm claims reject at the boundary. At every
+    // beta realm (tier < 4) the producible ceiling is 30.
+    const { save } = validSave({}, {
+      equipmentSlots: [
+        { slot: 'weapon', enhanceLevel: 30, enhanceFailStreak: 0 },
+      ],
+    } as Partial<GameSave>)
+    expect(validateGameSaveShape(JSON.parse(JSON.stringify(save))).ok).toBe(true)
+  })
+
+  it('an enhanceLevel past the beta-producible bound is rejected even at the realm ceiling', () => {
     const { save } = validSave(
       {
-        realmId: 'tribulation',
+        realmId: 'foundation_establishment',
         breakthroughGrade: 1,
         highestFoundationAchieved: 'human',
       },
@@ -265,11 +277,11 @@ describe('F-TC7-ENH: equipmentSlots enhanceLevel bounded by MAX_SLOT_ENHANCE_LEV
           },
         ],
         equipmentSlots: [
-          { slot: 'weapon', enhanceLevel: MAX_SLOT_ENHANCE_LEVEL, enhanceFailStreak: 0 },
+          { slot: 'weapon', enhanceLevel: 31, enhanceFailStreak: 0 },
         ],
       } as Partial<GameSave>,
     )
-    expect(validateGameSaveShape(JSON.parse(JSON.stringify(save))).ok).toBe(true)
+    expect(validateGameSaveShape(JSON.parse(JSON.stringify(save))).ok).toBe(false)
   })
 })
 

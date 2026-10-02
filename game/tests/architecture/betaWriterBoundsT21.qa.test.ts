@@ -615,8 +615,8 @@ describe('F-SCOPE-EQ-1: equipped grade must be producible at the claimed realm',
         flat: 12,
       },
       affixes: [],
-      forgeUsesTotal: 6,
-      forgeUsesRemaining: 6,
+      forgeUsesTotal: 5,
+      forgeUsesRemaining: 5,
       ...over,
     }
   }

@@ -77,6 +77,7 @@ import { TRIBULATION_COOLDOWN_SECONDS } from '../../core/tribulation/Tribulation
 import { GLOBAL_MAX_AFFIXES } from '../../core/equipment/EquipmentRollPrimitives'
 import {
   ITEM_QUALITY_AFFIX_TIER,
+  ITEM_QUALITY_FORGE_USES,
   ITEM_QUALITY_SUBSTATS_RANGE,
   ITEM_QUALITY_UNLOCKED_POOLS,
 } from '../../core/equipment/ItemQualityBalance'
@@ -93,6 +94,11 @@ import {
   getRequiredCultivation,
 } from '../../core/realm/realmSystem'
 import { getRealmTier } from '../../core/realm/RealmTierMap'
+import {
+  isBeyondReleaseCeiling,
+  progressionCeilingRealmId,
+} from '../../core/realm/ReleasePolicy'
+import { isBetaStandalonePanel } from '../../core/betaScopeSurface'
 import {
   SPIRIT_STONE_THUONG_PHAM_MATERIAL_ID,
   SPIRIT_STONE_TRUNG_PHAM_MATERIAL_ID,
@@ -445,6 +451,20 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
     issues.push({
       path: 'player.realmId',
       message: `không tồn tại trong danh sách cảnh giới: ${player.realmId}`,
+    })
+  }
+
+  // F-REALM-CEILING: the beta release ladder ends at
+  // progressionCeilingRealmId - a realmId beyond it cannot be produced
+  // by any transition writer (isRealmTransitionEnabled fails closed),
+  // yet the claim would relax every realmIndex-scaled bound below
+  // (talent picks, loi kiep percent, technique grade ceiling, forge
+  // budgets). Reject it at the boundary instead of loading an
+  // unproducible progression state.
+  if (typeof player.realmId === 'string' && isBeyondReleaseCeiling(player.realmId)) {
+    issues.push({
+      path: 'player.realmId',
+      message: `vượt release ceiling (${progressionCeilingRealmId}): ${player.realmId}`,
     })
   }
 
@@ -3113,6 +3133,11 @@ function validateAlchemyJobsSave(
   pillRoomLevel: number,
   playerLastSavedAt?: number,
 ): void {
+  // F-ALCH-JOBID-DUP: startJob mints a unique jobId per reservation, so
+  // two persisted jobs sharing one id can only be a replayed record -
+  // settle would deliver the same pill twice for one burned input set.
+  const seenJobIds = new Set<string>()
+
   for (let i = 0; i < entries.length; i += 1) {
     const entry = entries[i]
     const entryPath = `${path}[${i}]`
@@ -3129,6 +3154,15 @@ function validateAlchemyJobsSave(
     ) {
       issues.push({ path: entryPath, message: 'alchemy job sai shape' })
       continue
+    }
+
+    if (seenJobIds.has(entry.jobId as string)) {
+      issues.push({
+        path: `${entryPath}.jobId`,
+        message: 'jobId trùng - startJob mint id duy nhất, record replay là bất khả thi',
+      })
+    } else {
+      seenJobIds.add(entry.jobId as string)
     }
 
     // F-TC9-3: jobSuccessPercent reads roomLevelAtStart verbatim into
@@ -3335,6 +3369,25 @@ function validateEquipmentEntries(
     // EquipmentBag dedupe duoc.
     requireString(entry, 'instanceId', `${path}[${i}]`, issues)
     requireString(entry, 'itemId', `${path}[${i}]`, issues)
+
+    // F-EQ-REALMLEVEL: the writer stamps realmLevel as a positive int
+    // on the entry (roll provenance); zoneId/icon are optional string
+    // labels. A present-but-wrong-typed value is unproducible.
+    if (
+      entry.realmLevel !== undefined &&
+      (!Number.isInteger(entry.realmLevel) || (entry.realmLevel as number) < 1)
+    ) {
+      issues.push({
+        path: `${path}[${i}].realmLevel`,
+        message: 'phải là số nguyên >= 1 hoặc vắng mặt',
+      })
+    }
+    if (entry.zoneId !== undefined && typeof entry.zoneId !== 'string') {
+      issues.push({ path: `${path}[${i}].zoneId`, message: 'phải là string hoặc vắng mặt' })
+    }
+    if (entry.icon !== undefined && typeof entry.icon !== 'string') {
+      issues.push({ path: `${path}[${i}].icon`, message: 'phải là string hoặc vắng mặt' })
+    }
 
     // refreshModifiers (EquipmentSystem.applyModifiers) doc truc tiep cac
     // field nay khi boot. Thieu/sai shape se gay TypeError hoac NaN
@@ -3635,6 +3688,21 @@ function validateEquipmentEntries(
       issues.push({
         path: `${path}[${i}].forgeUsesRemaining`,
         message: 'không được vượt forgeUsesTotal',
+      })
+    }
+
+    // F-FORGE-TOTAL: the writer stamps forgeUsesTotal = the authored
+    // ITEM_QUALITY_FORGE_USES[quality] at roll time and only ever
+    // decrements forgeUsesRemaining - a persisted total off the
+    // authored budget is a fabricated forge allowance.
+    if (
+      isItemQuality(entry.quality) &&
+      isNonNegativeFiniteNumber(entry.forgeUsesTotal) &&
+      entry.forgeUsesTotal !== ITEM_QUALITY_FORGE_USES[entry.quality]
+    ) {
+      issues.push({
+        path: `${path}[${i}].forgeUsesTotal`,
+        message: `không khớp authored forge budget của quality ${entry.quality} (${ITEM_QUALITY_FORGE_USES[entry.quality]})`,
       })
     }
   }
@@ -4055,12 +4123,110 @@ export function validateGameSaveShape(parsed: unknown): ShapeValidationResult {
               message: 'phải là object hoặc null',
             })
           } else if (isObject(committed.receipt)) {
-            const kind = (committed.receipt as Record<string, unknown>).kind
-            if (kind !== 'victory' && kind !== 'defeat') {
+            // F-TRB-RECEIPT: the persisted receipt replays
+            // settleOutcome's emit for THIS committed outcome - kind
+            // bound to outcome plus the fields presentOutcome derefs
+            // every settle tick. A receipt missing
+            // announcement.titleKey crash-loops the tick before
+            // consumeReceipt can clear it, so the shape is bound
+            // here: an accepted record can never crash the tick.
+            const receipt = committed.receipt as Record<string, unknown>
+            const receiptPath = '.tribulation.committedOutcome.receipt'
+
+            if (receipt.kind !== 'victory' && receipt.kind !== 'defeat') {
               issues.push({
-                path: '.tribulation.committedOutcome.receipt.kind',
+                path: `${receiptPath}.kind`,
                 message: "phải là 'victory' hoặc 'defeat'",
               })
+            } else if (receipt.kind !== committed.outcome) {
+              issues.push({
+                path: `${receiptPath}.kind`,
+                message: 'không khớp outcome đã commit (receipt phải replay settleOutcome của outcome này)',
+              })
+            }
+
+            if (!isObject(receipt.announcement)) {
+              issues.push({
+                path: `${receiptPath}.announcement`,
+                message: 'phải là object (presentOutcome deref mỗi settle tick)',
+              })
+            } else {
+              const announcementPath = `${receiptPath}.announcement`
+              requireNonEmptyString(receipt.announcement, 'titleKey', announcementPath, issues)
+              requireNonEmptyString(receipt.announcement, 'bodyKey', announcementPath, issues)
+              for (const paramsField of ['titleParams', 'bodyParams'] as const) {
+                const params = receipt.announcement[paramsField]
+                if (
+                  params !== undefined &&
+                  (!isObject(params) ||
+                    !Object.values(params).every((value) => typeof value === 'string'))
+                ) {
+                  issues.push({
+                    path: `${announcementPath}.${paramsField}`,
+                    message: 'phải là Record<string, string> hoặc vắng mặt',
+                  })
+                }
+              }
+            }
+
+            if (receipt.kind === 'victory') {
+              // Writer emit (TribulationOutcomeService.settleOutcome):
+              // realmEntered null for the Quan Khi ritual, else the
+              // entered targetRealmId; realmName/flags always stamped.
+              const expectedRealmEntered =
+                committed.targetRealmId === 'qi_refining' ? null : committed.targetRealmId
+              if (receipt.realmEntered !== expectedRealmEntered) {
+                issues.push({
+                  path: `${receiptPath}.realmEntered`,
+                  message: `không khớp writer emit cho targetRealmId ${String(committed.targetRealmId)}`,
+                })
+              }
+              requireNonEmptyString(receipt, 'realmName', receiptPath, issues)
+              requireBoolean(receipt, 'talentConverted', receiptPath, issues)
+              requireBoolean(receipt, 'questRealmTransitionMarked', receiptPath, issues)
+
+              // foundationGrade is emitted only for the
+              // foundation_establishment settle (human/earth/heaven, or
+              // great_dao on a hidden breakthrough).
+              if (committed.targetRealmId === 'foundation_establishment') {
+                if (
+                  typeof receipt.foundationGrade !== 'string' ||
+                  !Object.prototype.hasOwnProperty.call(FOUNDATION_LABELS, receipt.foundationGrade)
+                ) {
+                  issues.push({
+                    path: `${receiptPath}.foundationGrade`,
+                    message: 'phải là FoundationType hợp lệ (victory foundation_establishment luôn stamp)',
+                  })
+                }
+              } else if (receipt.foundationGrade !== undefined) {
+                issues.push({
+                  path: `${receiptPath}.foundationGrade`,
+                  message: 'writer chỉ emit cho targetRealmId foundation_establishment',
+                })
+              }
+
+              // standalonePanel is emitted as 'quan_khi' only on the
+              // mortal -> qi_refining ritual; it must also pass the
+              // beta standalone-panel gate (a scope-hidden panel id
+              // would mount a hidden surface - the seam fix routes
+              // presentOutcome through ui.openStandalonePanel too).
+              if (receipt.standalonePanel !== undefined) {
+                if (
+                  typeof receipt.standalonePanel !== 'string' ||
+                  !isBetaStandalonePanel(receipt.standalonePanel) ||
+                  receipt.standalonePanel !== 'quan_khi' ||
+                  committed.targetRealmId !== 'qi_refining'
+                ) {
+                  issues.push({
+                    path: `${receiptPath}.standalonePanel`,
+                    message: "writer chỉ emit 'quan_khi' cho targetRealmId qi_refining (và phải qua isBetaStandalonePanel)",
+                  })
+                }
+              }
+            } else if (receipt.kind === 'defeat') {
+              requireNonNegativeNumber(receipt, 'cultivationLossPercent', receiptPath, issues)
+              requireNonEmptyString(receipt, 'spiritStoneId', receiptPath, issues)
+              requireNonNegativeNumber(receipt, 'spiritStonesLost', receiptPath, issues)
             }
           }
 

@@ -102,7 +102,10 @@ function presentOutcome(result: TribulationOutcomeResult): void {
   )
 
   if (result.kind === 'victory' && result.standalonePanel) {
-    ui.standalonePanel = result.standalonePanel
+    // F-TRB-RECEIPT: route through the gated opener - a direct
+    // standalonePanel write bypasses isBetaStandalonePanel and could
+    // mount a scope-hidden panel from a persisted receipt.
+    ui.openStandalonePanel(result.standalonePanel)
   }
 }
 

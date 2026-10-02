@@ -11,8 +11,8 @@ import { formatNumber } from '@/core/format/NumberFormatter'
 import { BASE_STAT_LABELS, formatStat } from '@/core/stats/StatLabels'
 import { ELEMENT_LABELS, ELEMENT_COLOR_VARS, ELEMENT_ORDER } from '@/core/element/ElementLabels'
 import { getActiveWayDefinition } from '@/core/player/CultivationPathKit'
-import { isActivePath } from '@/core/player/CultivationPathSystem'
-import { isBetaTalentId, isScopeHidden } from '@/core/betaScope'
+import { getActiveWay, isActivePath } from '@/core/player/CultivationPathSystem'
+import { isBetaTalentId, isBetaWay, isScopeHidden } from '@/core/betaScope'
 import { MAIN_STAT_KEYS, type MainStatKey } from '@/core/stats/StatTypes'
 import { getEffectiveMainStatCap } from '@/core/stats/StatCap'
 import { useProgressionActions } from '@/composables/useProgressionActions'
@@ -52,7 +52,17 @@ function openQuanKhi() {
 // M5 — the active way (cultivationWay authoritative) drives the kit
 // label + aura colour; getActiveWayDefinition resolves the persisted
 // (path, way) pair and fails closed on a way-less/corrupt save.
-const chosenKit = computed(() => getActiveWayDefinition(player))
+// BETA SCOPE LOCK (F-C-CONS-1): a carried dormant way (sword/body)
+// brands nothing - its declared element must not tint the aura, same
+// collapse-to-neutral as SkillPathPanel.wayIdentity. Mortal saves and
+// the beta spell_pathway are unchanged.
+const chosenKit = computed(() => {
+  const way = getActiveWay(player)
+  if (way !== undefined && !isBetaWay(way)) {
+    return undefined
+  }
+  return getActiveWayDefinition(player)
+})
 
 // Thiên Phú (talent-direction-choice-plan §7) — hiển thị thiên phú đã chọn
 // (tên + description) đọc từ selectedTalentIds qua getTalentDefinition;

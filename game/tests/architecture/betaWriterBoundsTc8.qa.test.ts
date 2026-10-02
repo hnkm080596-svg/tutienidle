@@ -470,7 +470,7 @@ describe('F-TC8-11: equipment affix authored bounds', () => {
         quality: 'hoang',
         mainStat: { id: 'm1', sourceId: 'roll-main', sourceType: 'equipment', stat: 'might', flat: 15 },
         affixes: Array.from({ length: 9 }, () => ({ affixId: 'prefix_max_hp', tier: 1, value: 10 })),
-        forgeUsesTotal: 0,
+        forgeUsesTotal: 5,
         forgeUsesRemaining: 0,
       },
     ]
@@ -492,7 +492,7 @@ describe('F-TC8-11: equipment affix authored bounds', () => {
         quality: 'hoang',
         mainStat: { id: 'm1', sourceId: 'roll-main', sourceType: 'equipment', stat: 'might', flat: 15 },
         affixes: [{ affixId: 'prefix_ward', tier: 1, value: 10 }],
-        forgeUsesTotal: 0,
+        forgeUsesTotal: 5,
         forgeUsesRemaining: 0,
       },
     ]
@@ -805,10 +805,12 @@ describe('F-TC9-3: alchemy job room-level bound', () => {
 
   it('a job within the persisted pill_room level still validates', () => {
     const save = validSave()
-    // F-SCOPE-3: a level-5 building is only producible at realm tier
-    // >= 5 - claim nascent_soul with its coherence witnesses.
+    // F-SCOPE-3 + F-REALM-CEILING: level 3 is the producible maximum
+    // inside the beta release ceiling (realm tier 3 at
+    // foundation_establishment) - a level-5 claim would need a
+    // beyond-ceiling realm, which the boundary now rejects.
     const p = save.player as ReturnType<typeof createDefaultPlayer>
-    p.realmId = 'nascent_soul'
+    p.realmId = 'foundation_establishment'
     p.breakthroughGrade = 1
     p.highestFoundationAchieved = 'human'
     save.techniques = [
@@ -824,9 +826,22 @@ describe('F-TC9-3: alchemy job room-level bound', () => {
       },
     ]
     save.buildings = [
-      { instanceId: 'b-pill', buildingId: 'pill_room', level: 5, lastCollectedAt: 0 },
+      { instanceId: 'b-pill', buildingId: 'pill_room', level: 3, lastCollectedAt: 0 },
     ]
-    save.alchemyJobs = [{ ...job }]
+    const inCeilingJob = alchemyJobFixture(
+      {
+        jobId: 'job-tc9-in-ceiling',
+        recipeId: thongMach.id,
+        pillId: thongMach.pillId,
+        herbMaterialId: thongMach.herbVariants[0]!.materialId,
+        startedAtMs: 1_000,
+        completesAtMs: 1_000 + alchemySecondsFor(thongMach, 3) * 1000,
+        roomLevelAtStart: 3,
+      },
+      undefined,
+      thongMach,
+    )
+    save.alchemyJobs = [inCeilingJob]
 
     expect(validateGameSaveShape(save).ok).toBe(true)
   })
