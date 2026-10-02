@@ -43,6 +43,15 @@
         "dissolve": "Dissolve",
         "decompose": "Decompose"
       },
+      "rail": {
+        "aria": "Equipment operations"
+      },
+      "scene": {
+        "equip": "Equip",
+        "unequip": "Unequip",
+        "equipped": "Equipped",
+        "starsAria": "Quality {rank} of {total}"
+      },
       "aria": {
         "enhanceSlots": "Select enhancement slot",
         "washSlots": "Select equipment to wash",

@@ -28,6 +28,10 @@ const player = usePlayerStore()
 const { stateVersion, bumpState } = useStateVersion()
 const { unequip } = useEquipmentActions()
 
+// Scene 12 scaffold: the item-card detail view wants the clicked
+// instance; the unequip mutation below stays the slot's behavior.
+const emit = defineEmits<{ select: [instanceId: string] }>()
+
 // Lưới 3 cột × 2 hàng (thay lục giác quanh sprite cũ — khối Equipment
 // giờ chỉ chiếm 30% chiều cao panel, cố định cho Hành Trang/Tứ Nghệ,
 // xem LeftPanel.vue) — không còn sprite nhân vật ở giữa.
@@ -199,6 +203,7 @@ const badgesBySlot = computed<Record<EquipmentSlot, SlotBadge[]>>(() => {
 
 function onSlotClick(instance: EquipmentInstance | undefined) {
   if (instance) {
+    emit('select', instance.instanceId)
     useAudioStore().cue('ui.equip')
     unequip(instance.instanceId)
   }
