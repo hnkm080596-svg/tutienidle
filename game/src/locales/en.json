@@ -1365,7 +1365,11 @@
       "resultVictory": "TRIBULATION PASSED",
       "resultDefeat": "TRIBULATION FAILED",
       "resultVictoryText": "The heavenly tribulation dissolves — your dao heart stands firmer.",
-      "resultDefeatText": "Body broken, dao scattered — recover, then try again."
+      "resultDefeatText": "Body broken, dao scattered — recover, then try again.",
+      "timeLeft": "Time remaining",
+      "realmCardTitle": "Tribulation: {name}",
+      "progressLabel": "Progress",
+      "resolve": "Hold the dao heart — overcome the heart demon"
     }
   },
   "actionFailure": {
