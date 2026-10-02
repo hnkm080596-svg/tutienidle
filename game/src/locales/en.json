@@ -848,6 +848,47 @@
     "scripture": {
       "empty": "No lore fragments found yet.",
       "emptyHint": "Fragments that record old tales — they drop from exploration and combat."
+    },
+    "body": {
+      "help": "Three body chapters: refine the vessel, open the vessels, circulate qi.",
+      "tierRailAria": "Unit selector",
+      "chapters": {
+        "bodyRefinement": {
+          "subtitle": "Body Strengthening"
+        },
+        "meridian": {
+          "subtitle": "Opening the Meridians"
+        },
+        "zhouTian": {
+          "subtitle": "Circulating True Qi"
+        }
+      },
+      "chips": {
+        "tier": "Tier {n}",
+        "meridian": "Vessel {n}",
+        "step": "Step {n}",
+        "milestone": "Lore milestone"
+      },
+      "states": {
+        "locked": "Locked",
+        "active": "Active",
+        "done": "Done",
+        "realmLocked": "Realm locked"
+      },
+      "sections": {
+        "gains": "Attribute Gains",
+        "requirements": "Requirements"
+      },
+      "actions": {
+        "investRefinement": "Refine"
+      },
+      "unit": {
+        "tierTitle": "Tier {tier} · {name}",
+        "stepTitle": "Step {n} of {total}"
+      },
+      "zhouTian": {
+        "description": "Circulate true qi through the heavenly circuit; each step advances the vessel's foundation."
+      }
     }
   },
   "workerLodge": {
