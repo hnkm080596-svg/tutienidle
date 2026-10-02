@@ -3,6 +3,8 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { createApp, h, type App } from 'vue'
 import InkWashBackdrop from './InkWashBackdrop.vue'
 import authSource from '@/components/onboarding/AuthEntryScreen.vue?raw'
+import loginVistaSource from '@/components/scenes/login/LoginSceneVista.vue?raw'
+import modeTabsSource from '@/components/scenes/login/AuthModeTabs.vue?raw'
 import creationSource from '@/components/onboarding/CharacterCreationScreen.vue?raw'
 import victorySource from '@/components/game/combat/CombatVictoryPanel.vue?raw'
 import defeatSource from '@/components/game/combat/CombatDefeatPanel.vue?raw'
@@ -61,15 +63,21 @@ describe('InkWashBackdrop', () => {
   it('composes the approved painting bridges into the ceremonial flows', () => {
     // Onboarding (auth/creation) moved to the Huyen Kim parallax vista -
     // the ink-wash backdrop family now owns the combat result surfaces.
-    expect(authSource).toContain('HuyenKimParallaxStack')
+    // Scene 01 scaffold: AuthEntryScreen composes region components; the
+    // parallax stack lives in LoginSceneVista.
+    expect(authSource).toContain('LoginSceneVista')
+    expect(loginVistaSource).toContain('HuyenKimParallaxStack')
+    expect(loginVistaSource).toContain('stack="auth-creation"')
     expect(creationSource).toContain('HuyenKimParallaxStack')
     expect(victorySource).toContain('<InkWashBackdrop :left-mountain="false" bottom-mist seal="large"')
     expect(defeatSource).toContain('<InkWashBackdrop left-mountain bottom-mist')
   })
 
   it('keeps onboarding controls legible on the ivory scroll', () => {
-    expect(authSource).toContain('.auth-tabs button.active { color: var(--paper-text')
-    expect(authSource).toContain('border-bottom: 2px solid var(--cinnabar')
+    // Scene 01 scaffold: the tab underline moved to the delivered
+    // tintable tab-seal chrome (active = jade, label ivory).
+    expect(modeTabsSource).toContain('chrome-id="tab-seal"')
+    expect(modeTabsSource).toMatch(/\.auth-tabs__tab\.active \{[^}]*color: var\(--hk-ivory/)
     // Huyen Kim S01/S02 (2026-10-02): the card is the surface-xl-scroll
     // chrome - paper-text tokens carry the legibility contract now.
     expect(creationSource).toContain('chrome-id="surface-xl-scroll"')
