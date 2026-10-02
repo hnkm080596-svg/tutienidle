@@ -110,6 +110,26 @@ async function reseedSave(page: Page, mutate: (save: SaveShape) => SaveShape): P
   await reauthAndEnterHome(page)
 }
 
+/** Wait for the imperial scroll's unfold signature (clip reveal + chrome
+ *  fade) to land so evidence captures never catch a mid-open frame. */
+async function waitForScrollSettled(page: Page): Promise<void> {
+  const clip = page.locator('.hk-scroll__clip').last()
+  // The settled inset serializes to the collapsed shorthand 'inset(0px)';
+  // mid-unfold it carries a 50% lateral clamp, so equality is the gate.
+  await expect
+    .poll(
+      async () => clip.evaluate((el) => getComputedStyle(el).clipPath),
+      { timeout: 10_000 },
+    )
+    .toBe('inset(0px)')
+  await expect
+    .poll(
+      async () => page.locator('.hk-scroll__chrome').last().evaluate((el) => getComputedStyle(el).opacity),
+      { timeout: 10_000 },
+    )
+    .toBe('1')
+}
+
 function stackDepths(page: Page, stackSelector: string) {
   return page.locator(`${stackSelector} .hk-parallax-stack__layer`).evaluateAll((els) =>
     els.map((el) => el.getAttribute('data-depth')),
@@ -239,28 +259,36 @@ test.describe('Huyen Kim stable scene art', () => {
     assertNoBrowserErrors(errors)
   })
 
-  test('scenes 05+08 realm panel: ascent stack + body figure/overlay', async ({ page }) => {
+  test('scenes 05+08: realm ascent stack, then body figure/overlay', async ({ page }) => {
     const errors = collectBrowserErrors(page)
     await bootFreshMortal(page)
     await openStandalone(page, 'realm')
-    const panel = page.locator('.realm-panel')
-    await expect(panel).toBeVisible({ timeout: 15_000 })
+    const scroll = page.locator('.hk-scroll')
+    await expect(scroll).toBeVisible({ timeout: 15_000 })
 
-    const stack = panel.locator(
-      '.realm-panel__hero .hk-parallax-stack[data-stack="realm-ascent"]',
+    const stack = scroll.locator(
+      '.realm-scene__ascent .hk-parallax-stack[data-stack="realm-ascent"]',
     )
     await expect(stack).toBeVisible()
     await expect(stack.locator('.hk-parallax-stack__layer')).toHaveCount(5)
+    // Runtime-owned content stays dominant: realm rungs still render.
+    await expect(scroll.locator('.realm-node').first()).toBeVisible({ timeout: 10_000 })
+    await waitForPresentationIdle(page)
+    await waitForScrollSettled(page)
+    await shot(page, '05-realm')
 
-    const figure = panel.locator('.realm-panel__silhouette-figure')
-    const meridian = panel.locator('.realm-panel__silhouette-overlay')
+    await page.keyboard.press('Escape')
+    await openStandalone(page, 'body')
+    const body = page.locator('.body-scene')
+    await expect(body).toBeVisible({ timeout: 15_000 })
+    const figure = body.locator('.body-scene__figure-img')
+    const meridian = body.locator('.body-scene__figure-overlay')
     await expect(figure).toBeVisible()
     await expect(meridian).toBeVisible()
     expect(await figure.getAttribute('src')).toContain('body-cultivation-figure')
     expect(await meridian.getAttribute('src')).toContain('body-meridian-overlay')
-    // Runtime-owned content stays dominant: realm rungs still render.
-    await expect(panel.locator('.realm-node').first()).toBeVisible({ timeout: 10_000 })
-    await shot(page, '05-realm')
+    await waitForPresentationIdle(page)
+    await waitForScrollSettled(page)
     await shot(page, '08-body')
     assertNoBrowserErrors(errors)
   })
@@ -294,14 +322,23 @@ test.describe('Huyen Kim stable scene art', () => {
     const substrate = treeViewport.locator('.hk-parallax-stack[data-stack="skill-tree"]')
     await expect(substrate).toBeVisible()
     await expect(substrate.locator('.hk-parallax-stack__layer')).toHaveCount(4)
-    // Runtime node rows still own interactivity.
-    await expect(treeViewport.locator('.node-tree__row').first()).toBeVisible()
+    // Runtime constellation nodes still own interactivity.
+    await expect(treeViewport.locator('.node-tree__node').first()).toBeVisible()
+    await waitForScrollSettled(page)
     await shot(page, '07-skill')
 
-    const plinth = page.locator('.technique-band__plinth-img')
-    if (await plinth.count()) {
-      await shot(page, '06-technique')
-    }
+    // Scene 06 is its own imperial scene now — the plinth centerpiece
+    // lives in TechniquePanel, not the skill tree.
+    await page.keyboard.press('Escape')
+    await openStandalone(page, 'technique')
+    const technique = page.locator('.technique-scene')
+    await expect(technique).toBeVisible({ timeout: 15_000 })
+    const plinth = technique.locator('.technique-scene__plinth')
+    await expect(plinth).toBeVisible()
+    expect(await plinth.getAttribute('src')).toContain('technique-display-plinth')
+    await waitForPresentationIdle(page)
+    await waitForScrollSettled(page)
+    await shot(page, '06-technique')
     assertNoBrowserErrors(errors)
   })
 
@@ -340,6 +377,7 @@ test.describe('Huyen Kim stable scene art', () => {
       const mask = await locks.first().evaluate((el) => getComputedStyle(el).maskImage)
       expect(mask).toContain('huyen-kim/symbols/lock.svg')
     }
+    await waitForScrollSettled(page)
     await shot(page, '10-exploration')
     assertNoBrowserErrors(errors)
   })
@@ -347,31 +385,32 @@ test.describe('Huyen Kim stable scene art', () => {
   test('scene 12 equipment: paperdoll base behind runtime sockets', async ({ page }) => {
     const errors = collectBrowserErrors(page)
     await bootFreshMortal(page)
-    // The paperdoll lives in the character/inventory right drawer.
-    await openLeftMode(page, 'character')
-    const drawer = page.locator('.right-panel')
-    await expect(drawer).toBeVisible({ timeout: 10_000 })
-    const doll = drawer.locator('.paperdoll')
+    // The paperdoll is the focal column of Khi Duong (imperial scene).
+    await openLeftMode(page, 'equipment_hall')
+    const scene = page.getByTestId('function-overlay-panel')
+    await expect(scene).toBeVisible({ timeout: 10_000 })
+    const doll = scene.locator('.paperdoll')
     await expect(doll).toBeVisible({ timeout: 10_000 })
-    // The drawer slides in from the right - hit-testing before the
-    // transition lands probes off-viewport coordinates.
-    await expect(drawer).not.toHaveClass(/enter-active/, { timeout: 10_000 })
+    // The scroll unfold plays once - hit-testing before the transition
+    // lands probes off-viewport coordinates.
+    await waitForPresentationIdle(page)
     const base = doll.locator('.paperdoll__base')
     await expect(base).toBeVisible()
     expect(await base.getAttribute('src')).toContain('equipment-paperdoll-base')
     const slot = doll.locator('.paperdoll__slot').first()
     await expect(slot).toBeVisible()
     // The decorative base must paint under the socket cells (hit-test
-    // scoped to the visible drawer - other panels reuse SlotView).
+    // scoped to the imperial scene - other panels reuse SlotView).
     const hitHost = await page.evaluate(() => {
-      const dollEl = document.querySelector('.right-panel .paperdoll')
+      const dollEl = document.querySelector('[data-testid="function-overlay-panel"] .paperdoll')
       const slotEl = dollEl?.querySelector('.paperdoll__slot')
       if (!slotEl) return 'no-slot'
       const rect = slotEl.getBoundingClientRect()
       const hit = document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2)
-      return hit?.closest('.right-panel .paperdoll__cell') ? 'slot' : `${hit?.tagName}.${hit?.className ?? ''}`
+      return hit?.closest('.paperdoll__cell') ? 'slot' : `${hit?.tagName}.${hit?.className ?? ''}`
     })
     expect(hitHost, 'paperdoll base must not cover socket cells').toBe('slot')
+    await waitForScrollSettled(page)
     await shot(page, '12-equipment')
     assertNoBrowserErrors(errors)
   })
@@ -438,9 +477,9 @@ test.describe('Huyen Kim stable scene art', () => {
       expect(mask).toContain('huyen-kim/symbols/')
     }
 
-    // Overlay close glyph.
+    // Imperial-scroll close glyph.
     await openStandalone(page, 'realm')
-    const close = page.locator('.overlay-panel__close .hk-symbol')
+    const close = page.locator('.hk-scroll__close .hk-symbol')
     await expect(close).toBeVisible({ timeout: 10_000 })
     expect(await close.evaluate((el) => getComputedStyle(el).maskImage)).toContain(
       'symbols/close.svg',

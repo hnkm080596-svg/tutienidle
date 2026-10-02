@@ -11,7 +11,8 @@
 import { ref, provide } from 'vue'
 import { useI18n } from 'vue-i18n'
 import TabBar from '@/components/common/TabBar.vue'
-import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
+import EquipmentPaperdoll from '@/components/panels/EquipmentPaperdoll.vue'
+import EquipmentBagRail from './equipment-hall/EquipmentBagRail.vue'
 import EnhanceTab from './equipment-hall/EnhanceTab.vue'
 import WashTab from './equipment-hall/WashTab.vue'
 import RefineTab from './equipment-hall/RefineTab.vue'
@@ -79,32 +80,39 @@ provide(HALL_SELECTION_KEY, { selectedInstanceId, selectEquipped, clearSelection
 
 <template>
   <div class="qi-hall">
-    <InkNineSlice asset-id="surface-xl-paper-scroll" layer="surface" />
-    <InkNineSlice asset-id="frame-xl-ceremony" layer="frame" />
+    <!-- Huyen Kim scene 12: the paperdoll IS the focal presentation
+         column (runtime sockets over the painted base); the operation
+         workspace keeps the canonical tab bodies. -->
+    <div class="qi-hall-scene__focal">
+      <EquipmentPaperdoll />
+    </div>
 
-    <!-- Header "Điểm Rèn món đang chọn" cũ đã BỎ (2026-08-30, bug report:
-         thông tin không cần thiết) — số Điểm Rèn chỉ liên quan Tẩy/Tinh
-         Luyện, tự hiện đúng ngay trong card của 2 tab đó, không cần lặp
-         lại ở đầu panel cho cả Cường Hóa/Hóa Luyện không dùng tới nó. -->
+    <!-- Spec 12: compact bag column - unequipped gear rail between the
+         paperdoll and the ops workspace; click equips via canonical op. -->
+    <div class="qi-hall-scene__bag">
+      <EquipmentBagRail />
+    </div>
 
-    <!-- Nav chức năng lên NGAY đầu card, không nền riêng (2026-08-30,
-         bug report) — bỏ hẳn header "Chọn một trang bị..." cũ. -->
-    <TabBar
-      class="qi-hall__tabs"
-      :tabs="visibleTabs.map((tab) => ({ id: tab.id, label: tab.label }))"
-      :model-value="activeTab"
-      @update:model-value="switchTab($event as TabId)"
-    />
+    <div class="qi-hall-scene__ops">
+      <TabBar
+        class="qi-hall__tabs"
+        :tabs="visibleTabs.map((tab) => ({ id: tab.id, label: tab.label }))"
+        :model-value="activeTab"
+        @update:model-value="switchTab($event as TabId)"
+      />
 
-    <EnhanceTab v-if="activeTab === 'enhance'" />
-    <WashTab v-else-if="activeTab === 'wash'" />
-    <RefineTab v-else-if="activeTab === 'refine'" />
-    <DissolveTab v-else-if="activeTab === 'dissolve'" />
+      <div class="qi-hall-scene__workspace">
+        <EnhanceTab v-if="activeTab === 'enhance'" />
+        <WashTab v-else-if="activeTab === 'wash'" />
+        <RefineTab v-else-if="activeTab === 'refine'" />
+        <DissolveTab v-else-if="activeTab === 'dissolve'" />
 
-    <!-- ===== PHÂN GIẢI (Task 14) — khoáng → Luyện Khí Tinh Hoa ===== -->
-    <section v-else-if="activeTab === 'decompose'" class="qi-hall__body qi-hall__decompose">
-      <DecomposeTab />
-    </section>
+        <!-- ===== PHÂN GIẢI (Task 14) — khoáng → Luyện Khí Tinh Hoa ===== -->
+        <section v-else-if="activeTab === 'decompose'" class="qi-hall__body qi-hall__decompose">
+          <DecomposeTab />
+        </section>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -112,17 +120,54 @@ provide(HALL_SELECTION_KEY, { selectedInstanceId, selectEquipped, clearSelection
 .qi-hall {
   position: relative;
   isolation: isolate;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: minmax(220px, 0.9fr) minmax(64px, 0.18fr) minmax(0, 1.6fr);
+  gap: 16px;
   height: 100%;
   min-height: 0;
+  padding: 6px 2px;
   color: var(--text-primary);
   font-family: var(--font-body);
 }
 
-.qi-hall > :not(.ink-nine-slice) {
-  position: relative;
-  z-index: 3;
+.qi-hall-scene__focal {
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.qi-hall-scene__focal :deep(.paperdoll) {
+  width: 100%;
+  height: 100%;
+  max-height: 100%;
+}
+
+.qi-hall-scene__ops {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--hk-surface-raised, var(--ink-800));
+  border: 1px solid var(--hk-border-muted, var(--ink-line-soft));
+  border-radius: var(--hk-radius-md, 8px);
+  overflow: hidden;
+}
+
+.qi-hall-scene__workspace {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.qi-hall-scene__bag {
+  min-height: 0;
+  display: flex;
+}
+
+@container (max-width: 860px) {
+  .qi-hall { grid-template-columns: 1fr 64px; grid-template-rows: minmax(180px, 30%) 1fr; overflow-y: auto; }
+  .qi-hall-scene__bag { grid-column: 2; grid-row: 1 / -1; }
 }
 
 /* Nav lên đầu, KHÔNG nền riêng (2026-08-30, bug report) — hoà vào card

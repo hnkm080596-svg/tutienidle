@@ -13,6 +13,11 @@ import StatRow from '@/components/common/primitives/StatRow.vue'
 import { PROFESSION_GRADE_NAMES, getProfessionGradeForRealm } from '@/core/profession/ProfessionGrade'
 import { professionGradeRank } from '@/core/profession/slotRank'
 import { useAudioStore } from '@/stores/audio'
+import { hkChromeUrl } from '@/ui/huyenKimChrome'
+
+// alchemy-cauldron-prop (Huyen Kim chrome pack) - the scene focal art
+// between the recipe rail and the detail column.
+const CAULDRON_SRC = hkChromeUrl('alchemy-cauldron-prop')
 
 // Luyện Đan (2026-08-25, resource-professions-rework plan §8/§9.3) —
 // thay RecipeCraftingView: mỗi đan phương nhận ĐÚNG MỘT Linh Thảo
@@ -368,6 +373,27 @@ function cancelJob(jobId: string) {
       </section>
     </div>
 
+    <!-- Huyen Kim scene 11: the cauldron prop is the scene focal point;
+         the brew queue rides a prominent strip at its base (was buried
+         inside the detail rail). The strip carries cancel buttons, so
+         this container is NOT aria-hidden. -->
+    <div class="alchemy-view__cauldron">
+      <img v-if="CAULDRON_SRC" class="alchemy-view__cauldron-img" :src="CAULDRON_SRC" alt="" aria-hidden="true" />
+
+      <div v-if="jobs.length > 0" class="alchemy-queue" :aria-label="t('alchemy.jobs')">
+        <div v-for="job in jobs" :key="job.jobId" class="alchemy-queue__job">
+          <div class="alchemy-queue__job-head">
+            <span class="alchemy-queue__job-name">{{ job.pillName }}</span>
+            <span class="alchemy-queue__job-eta">{{ job.remainingLabel }}</span>
+          </div>
+          <Bar class="alchemy-queue__job-bar" :value="job.progress" :max="1" :height="5" />
+          <GameButton variant="ghost" size="sm" class="alchemy-queue__job-cancel" @click="cancelJob(job.jobId)">
+            {{ t('alchemy.cancelJob') }}
+          </GameButton>
+        </div>
+      </div>
+    </div>
+
     <div v-if="selectedRecipe" class="alchemy-detail scrollfade">
       <header class="alchemy-detail__header">
         <span>{{ t('alchemy.recipe') }}</span>
@@ -428,23 +454,8 @@ function cancelJob(jobId: string) {
         </p>
       </section>
 
-      <section v-if="jobs.length > 0" class="alchemy-detail__block">
-        <h4>{{ t('alchemy.jobs') }}</h4>
-
-        <div v-for="job in jobs" :key="job.jobId" class="alchemy-job">
-          <div class="alchemy-job__head">
-            <span>{{ job.pillName }}</span>
-
-            <span>{{ job.remainingLabel }}</span>
-          </div>
-
-          <Bar class="alchemy-job__progress" :value="job.progress" :max="1" :height="6" />
-
-          <GameButton class="alchemy-job__cancel" variant="ghost" size="sm" @click="cancelJob(job.jobId)">
-            {{ t('alchemy.cancelJob') }}
-          </GameButton>
-        </div>
-      </section>
+      <!-- Jobs strip lives under the cauldron focal (scene 11 queue
+           strip); the detail rail keeps recipe/preview/cost only. -->
     </div>
   </div>
 </template>
@@ -452,7 +463,8 @@ function cancelJob(jobId: string) {
 <style scoped>
 .alchemy-view {
   position: relative;
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(220px, 0.85fr) minmax(160px, 0.9fr) minmax(280px, 1.15fr);
   height: 100%;
   min-height: 0;
   color: var(--paper-text);
@@ -460,12 +472,62 @@ function cancelJob(jobId: string) {
   overflow: hidden;
   background:
     var(--paper-grain) 0 0 / 160px 160px repeat,
-    radial-gradient(circle at 23% 0%, color-mix(in srgb, var(--scene-fire-glow) 10%, transparent), transparent 40%),
+    radial-gradient(circle at 42% 0%, color-mix(in srgb, var(--scene-fire-glow) 10%, transparent), transparent 40%),
     linear-gradient(175deg, var(--paper-50) 0%, var(--paper-100) 60%, var(--paper-200) 100%);
 }
 
+/* Center focal: the painted cauldron above the brew-queue strip
+   (scene 11 - the queue is a first-class surface, not buried in the
+   detail rail). */
+.alchemy-view__cauldron {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+.alchemy-view__cauldron-img {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 10px 26px color-mix(in srgb, var(--scene-fire-accent, #b54432) 24%, transparent));
+  pointer-events: none;
+}
+
+/* Prominent queue strip under the cauldron - horizontal job chips. */
+.alchemy-queue {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 8px 10px;
+  border-top: 1px solid color-mix(in srgb, var(--scene-fire-accent) 35%, var(--paper-line));
+  background: color-mix(in srgb, var(--scene-fire-accent) 7%, var(--paper-100));
+  scrollbar-width: none;
+}
+.alchemy-queue::-webkit-scrollbar { display: none; }
+
+.alchemy-queue__job {
+  flex: 0 0 auto;
+  width: 168px;
+  padding: 6px 8px;
+  border: 1px solid color-mix(in srgb, var(--scene-fire-accent) 30%, var(--paper-line));
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--paper-50) 80%, var(--scene-fire-accent) 8%);
+}
+.alchemy-queue__job-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+  font-size: var(--text-xs);
+  margin-bottom: 4px;
+}
+.alchemy-queue__job-name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.alchemy-queue__job-eta { color: var(--cinnabar); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.alchemy-queue__job-cancel { width: 100%; margin-top: 4px; font-size: 10px; }
+
 .alchemy-view__recipes {
-  flex: 0 0 min(39%, 420px);
   overflow-y: auto;
   padding: 14px;
   border-right: 1px solid color-mix(in srgb, var(--scene-fire-accent) 35%, var(--paper-line));
@@ -599,26 +661,13 @@ function cancelJob(jobId: string) {
   .alchemy-view__recipes { flex: 0 0 auto; border-right: 0; border-bottom: 1px solid color-mix(in srgb, var(--scene-fire-accent) 30%, transparent); }
 }
 
-.alchemy-job {
-  margin-bottom: 8px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.alchemy-job__head {
-  display: flex;
-  justify-content: space-between;
-  font-size: var(--text-sm);
-}
-
-.alchemy-job__progress {
-  border-radius: 3px;
-}
-
-.alchemy-job__cancel {
-  align-self: flex-end;
-  color: var(--crimson);
-  font-size: var(--text-xs);
+/* Narrow scroll envelope: stack the scene (recipes, cauldron, detail). */
+@container (max-width: 860px) {
+  .alchemy-view {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto minmax(140px, 26%) 1fr;
+    overflow-y: auto;
+  }
+  .alchemy-view__recipes { overflow-y: visible; border-right: 0; }
 }
 </style>

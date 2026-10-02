@@ -41,7 +41,6 @@ const bagTabs = computed(() => [
 <template>
   <div class="bag-grid">
     <div class="bag-grid__header">
-      <span class="bag-grid__title">{{ t('panels.bag.title') }}</span>
       <span class="bag-grid__count">{{ activeTabCount }} {{ t('panels.bag.countSuffix') }}</span>
     </div>
 
@@ -78,14 +77,7 @@ const bagTabs = computed(() => [
   flex: 0 0 auto;
   display: flex;
   align-items: baseline;
-  justify-content: space-between;
-}
-
-.bag-grid__title {
-  font-family: var(--font-display);
-  font-size: var(--text-title);
-  font-weight: 700;
-  color: var(--paper-text);
+  justify-content: flex-end;
 }
 
 .bag-grid__count {

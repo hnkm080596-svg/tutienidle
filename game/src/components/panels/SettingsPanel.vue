@@ -21,6 +21,7 @@ import GuestUpgradeCard from '@/components/onboarding/GuestUpgradeCard.vue'
 import GuestAbandonDialog from '@/components/panels/GuestAbandonDialog.vue'
 import { readSupabaseSession } from '@/services/supabase/SupabaseSession'
 import { requestSessionLogout } from '@/composables/useSessionAccount'
+import { hkChromeUrl } from '@/ui/huyenKimChrome'
 
 const player = usePlayerStore()
 const gameManager = useGameManager()
@@ -298,19 +299,65 @@ function onAbandonUpgrade() {
 function onAbandonExport() {
   void handleExport()
 }
+
+// Huyen Kim scene 17: left seal nav + right workspace. Sections map to
+// real surfaces only - reserved categories (Graphics Quality etc.)
+// render nothing. Account/Update hide themselves with their data.
+type SettingsSection = 'general' | 'display' | 'audio' | 'account' | 'update' | 'support'
+const activeSection = ref<SettingsSection>('general')
+const navSections = computed(() => {
+  const list: Array<{ id: SettingsSection; label: string }> = [
+    { id: 'general', label: t('panels.settings.sections.save') },
+    { id: 'display', label: t('panels.settings.sections.display') },
+    { id: 'audio', label: t('panels.settings.sections.audio') },
+  ]
+  if (remoteAuthoritative) {
+    list.push({ id: 'account', label: t('panels.settings.sections.account') })
+  }
+  if (updateState.value !== null && updatePhase.value !== 'unsupported') {
+    list.push({ id: 'update', label: t('panels.settings.update.title') })
+  }
+  list.push({ id: 'support', label: t('panels.settings.sections.support') })
+  return list
+})
+// Scene 17 grammar: audio/ui sliders wear the slider-track + slider-thumb
+// chrome when the PNGs are ready; the native range keeps working as fallback.
+const sliderTrackUrl = hkChromeUrl('slider-track')
+const sliderThumbUrl = hkChromeUrl('slider-thumb')
+const sliderChromeStyle = computed<Record<string, string> | undefined>(() =>
+  sliderTrackUrl && sliderThumbUrl
+    ? {
+        '--hk-slider-track': `url("${sliderTrackUrl}")`,
+        '--hk-slider-thumb': `url("${sliderThumbUrl}")`,
+      }
+    : undefined,
+)
 </script>
 
 <template>
-  <div class="settings-panel paper-on-dark">
-    <p class="settings-panel__warning">
-      {{ t('panels.settings.autosaveNote') }}
-    </p>
+  <div class="settings-panel" :class="{ 'has-hk-slider': Boolean(sliderChromeStyle) }" :style="sliderChromeStyle">
+    <!-- Scene 17: left vertical seal navigation. -->
+    <nav class="settings-panel__nav" :aria-label="t('panels.settings.sections.navAria')">
+      <button
+        v-for="section in navSections"
+        :key="section.id"
+        type="button"
+        class="settings-panel__nav-seal"
+        :class="{ 'is-active': activeSection === section.id }"
+        :data-section="section.id"
+        @click="activeSection = section.id"
+      >
+        {{ section.label }}
+      </button>
+    </nav>
 
-    <!-- Sectioned grid (ui-audit creation-meta): the actions column was
-         a lone 360px strip inside a min(1120px) overlay - group the four
-         setting clusters into equal cards that fill the space. -->
-    <div class="settings-panel__grid">
-      <section class="settings-panel__section" :aria-label="t('panels.settings.sections.saveAria')">
+    <!-- Right workspace: the active category only. -->
+    <div class="settings-panel__workspace scrollfade">
+      <p v-if="activeSection === 'general'" class="settings-panel__warning">
+        {{ t('panels.settings.autosaveNote') }}
+      </p>
+
+      <section v-if="activeSection === 'general'" class="settings-panel__section" :aria-label="t('panels.settings.sections.saveAria')">
         <h4>{{ t('panels.settings.sections.save') }}</h4>
 
         <div class="settings-panel__actions">
@@ -331,6 +378,7 @@ function onAbandonExport() {
         </div>
       </section>
 
+    <template v-if="activeSection === 'display'">
     <!-- WS8 — cỡ chữ giao diện: chỉ scale typography/control tokens,
          không đụng canvas/khung layout. Áp dụng tức thời + lưu local. -->
     <section class="settings-panel__section settings-panel__ui-scale" :aria-label="t('panels.settings.sections.uiScaleAria')">
@@ -349,8 +397,29 @@ function onAbandonExport() {
       </div>
     </section>
 
+    <!-- Language - UI locale, persisted via composables/locale. -->
+    <section class="settings-panel__section settings-panel__language" :aria-label="t('panels.settings.sections.languageAria')">
+      <h4>{{ t('panels.settings.sections.language') }}</h4>
+
+      <p class="settings-panel__section-note">{{ t('panels.settings.language.note') }}</p>
+
+      <div class="settings-panel__language-options">
+        <Chip
+          v-for="option in LOCALE_OPTIONS"
+          :key="option"
+          class="settings-panel__language-option"
+          :active="locale === option"
+          :data-testid="`settings-locale-${option}`"
+          @click="handleLocale(option)"
+        >
+          {{ t(`panels.settings.language.names.${option}`) }}
+        </Chip>
+      </div>
+    </section>
+    </template>
+
     <!-- Audio - on/off + master/channel volumes (0-100%) + reduced shake. Persisted via useAudioStore. -->
-    <section class="settings-panel__section settings-panel__audio" :aria-label="t('panels.settings.sections.audioAria')">
+    <section v-if="activeSection === 'audio'" class="settings-panel__section settings-panel__audio" :aria-label="t('panels.settings.sections.audioAria')">
       <h4>{{ t('panels.settings.sections.audio') }}</h4>
 
       <div class="settings-panel__audio-row">
@@ -414,7 +483,7 @@ function onAbandonExport() {
 
     <!-- BETA-FINAL PR13 / spec B7 - feedback intake: opens the intake
          dialog (form + opt-in redacted diagnostics + local export). -->
-    <section class="settings-panel__section settings-panel__feedback" :aria-label="t('panels.settings.sections.feedbackAria')">
+    <section v-if="activeSection === 'support'" class="settings-panel__section settings-panel__feedback" :aria-label="t('panels.settings.sections.feedbackAria')">
       <h4>{{ t('panels.settings.sections.feedback') }}</h4>
 
       <p class="settings-panel__section-note">{{ t('panels.settings.feedback.note') }}</p>
@@ -426,7 +495,7 @@ function onAbandonExport() {
 
     <!-- B1.8/B1.9 - account: guest upgrade surface (pending-confirm
          replay included) and the ordered logout. Remote mode only. -->
-    <section v-if="remoteAuthoritative" class="settings-panel__section settings-panel__account" :aria-label="t('panels.settings.sections.accountAria')">
+    <section v-if="remoteAuthoritative && activeSection === 'account'" class="settings-panel__section settings-panel__account" :aria-label="t('panels.settings.sections.accountAria')">
       <h4>{{ t('panels.settings.sections.account') }}</h4>
 
       <p class="settings-panel__section-note">
@@ -460,31 +529,11 @@ function onAbandonExport() {
       </div>
     </section>
 
-    <!-- Language - UI locale, persisted via composables/locale. -->
-    <section class="settings-panel__section settings-panel__language" :aria-label="t('panels.settings.sections.languageAria')">
-      <h4>{{ t('panels.settings.sections.language') }}</h4>
-
-      <p class="settings-panel__section-note">{{ t('panels.settings.language.note') }}</p>
-
-      <div class="settings-panel__language-options">
-        <Chip
-          v-for="option in LOCALE_OPTIONS"
-          :key="option"
-          class="settings-panel__language-option"
-          :active="locale === option"
-          :data-testid="`settings-locale-${option}`"
-          @click="handleLocale(option)"
-        >
-          {{ t(`panels.settings.language.names.${option}`) }}
-        </Chip>
-      </div>
-    </section>
-
     <!-- BETA-FINAL PR12 / spec B6 - the update surface. Hidden entirely
          on builds with no verified feed (web/dev render 'unsupported' -
          there is nothing honest to offer). -->
     <section
-      v-if="updateState !== null && updatePhase !== 'unsupported'"
+      v-if="activeSection === 'update' && updateState !== null && updatePhase !== 'unsupported'"
       class="settings-panel__section settings-panel__update"
       :aria-label="t('panels.settings.sections.updateAria')"
     >
@@ -556,7 +605,7 @@ function onAbandonExport() {
 
     <!-- BETA-FINAL PR1 / spec B2 - support-visible build identity. Values
          match the release manifest and the error screen footer. -->
-    <section class="settings-panel__section settings-panel__build" :aria-label="t('panels.settings.sections.buildAria')">
+    <section v-if="activeSection === 'support'" class="settings-panel__section settings-panel__build" :aria-label="t('panels.settings.sections.buildAria')">
       <h4>{{ t('panels.settings.sections.build') }}</h4>
 
       <dl class="settings-panel__build-list">
@@ -607,10 +656,58 @@ function onAbandonExport() {
 </template>
 
 <style scoped>
+/* Scene 17: left seal nav | right workspace (imperial scroll content). */
 .settings-panel {
-  padding: 12px;
+  height: 100%;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(140px, 190px) minmax(0, 1fr);
+  gap: 16px;
+  padding: 6px 2px;
   color: var(--paper-text);
   font-size: var(--text-body);
+}
+
+.settings-panel__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: none;
+  mask-image: linear-gradient(180deg, transparent 0, #000 14px, #000 calc(100% - 14px), transparent 100%);
+}
+.settings-panel__nav::-webkit-scrollbar { display: none; }
+
+.settings-panel__nav-seal {
+  padding: 10px 12px;
+  border: 1px solid var(--hk-border-muted, var(--paper-line));
+  border-radius: var(--hk-radius-md, 8px);
+  background: var(--hk-surface-raised, color-mix(in srgb, var(--paper-100) 30%, transparent));
+  color: var(--paper-text-soft);
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.16s ease, color 0.16s ease;
+}
+.settings-panel__nav-seal:hover { border-color: var(--hk-border-active, var(--paper-line)); }
+.settings-panel__nav-seal.is-active {
+  border-color: var(--hk-jade, var(--jade));
+  color: var(--paper-text);
+  box-shadow: inset 3px 0 var(--hk-jade, var(--jade));
+}
+.settings-panel__nav-seal:focus-visible { outline: 2px solid var(--hk-gold, var(--gold-700)); outline-offset: 2px; }
+
+.settings-panel__workspace {
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 4px 8px;
 }
 
 .settings-panel__warning {
@@ -622,11 +719,9 @@ function onAbandonExport() {
   margin: 0 0 12px;
 }
 
-.settings-panel__grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 14px;
-  align-items: start;
+@container (max-width: 760px) {
+  .settings-panel { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+  .settings-panel__nav { flex-direction: row; flex-wrap: wrap; }
 }
 
 .settings-panel__section {
@@ -744,6 +839,57 @@ function onAbandonExport() {
 .settings-panel__audio-volume input[type='range'] {
   width: 140px;
   accent-color: var(--gold);
+}
+
+/* slider-track + slider-thumb chrome (scene 17 grammar); enabled only when
+   the registry resolves both URLs (has-hk-slider). */
+.settings-panel.has-hk-slider .settings-panel__audio-volume input[type='range'] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 24px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.settings-panel.has-hk-slider .settings-panel__audio-volume input[type='range']::-webkit-slider-runnable-track {
+  height: 10px;
+  border-radius: 5px;
+  background: var(--hk-slider-track) center / 100% 100% no-repeat;
+}
+
+.settings-panel.has-hk-slider .settings-panel__audio-volume input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  margin-top: -5px;
+  border: none;
+  background: var(--hk-slider-thumb) center / contain no-repeat;
+  cursor: grab;
+}
+
+.settings-panel.has-hk-slider .settings-panel__audio-volume input[type='range']::-moz-range-track {
+  height: 10px;
+  border-radius: 5px;
+  background: var(--hk-slider-track) center / 100% 100% no-repeat;
+}
+
+.settings-panel.has-hk-slider .settings-panel__audio-volume input[type='range']::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border: none;
+  background: var(--hk-slider-thumb) center / contain no-repeat;
+  cursor: grab;
+}
+
+.settings-panel.has-hk-slider .settings-panel__audio-volume input[type='range']:focus-visible {
+  outline: 2px solid var(--chrome-300);
+  outline-offset: 3px;
+}
+
+.settings-panel.has-hk-slider .settings-panel__audio-volume input[type='range']:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .settings-panel__audio-volume-value {

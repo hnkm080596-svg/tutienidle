@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-// HuyenKimParallaxStack — DOM contract checks: manifest-order layers,
+// HuyenKimParallaxStack - DOM contract checks: manifest-order layers,
 // srcset density pairs, decorative semantics, reduced-motion zeroing.
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { createApp, h, nextTick, type App } from 'vue'

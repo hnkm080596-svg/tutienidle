@@ -2,8 +2,11 @@
 //
 // CurrencyHud chip strip + the `resource-pill` chrome contract:
 // while the huyen-kim manifest keeps the slot 'pending' the capsules
-// render the plain CSS pill (no border-image); once it flips to 'ready'
-// the same assertion set verifies the nine-slice style instead.
+// render the plain CSS pill (no slice element); once it flips to 'ready'
+// each chip mounts an InkNineSlice[data-hk-slice="resource-pill"] layer -
+// the primitive owns the nine-slice style, so this test asserts the
+// marker/class contract rather than inline border-image (jsdom drops
+// image-set() values the shared primitive emits anyway).
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { nextTick } from 'vue'
 import { createApp, defineComponent, h, ref } from 'vue'
@@ -80,18 +83,15 @@ describe('CurrencyHud', () => {
     for (const chip of chips) {
       const sliced = chip.classList.contains('currency-hud__chip--sliced')
       expect(sliced, 'sliced class follows chromeSlice()').toBe(Boolean(slice))
-      expect(chip.style.borderImageSource !== '').toBe(Boolean(slice))
-      if (slice) {
+      const layer = chip.querySelector<HTMLElement>(
+        '.ink-nine-slice[data-hk-slice="resource-pill"]',
+      )
+      expect(Boolean(layer), 'InkNineSlice layer follows chromeSlice()').toBe(Boolean(slice))
+      if (slice && layer) {
         const asset = HUYEN_KIM_CHROME['resource-pill']
         if (!asset) throw new Error('resource-pill missing from manifest')
-        if (asset.center !== 'transparent') {
-          expect(chip.style.borderImageSlice).toContain('fill')
-        }
-        expect(chip.style.borderImageRepeat).toBe(
-          asset.edgeMode === 'tile' ? 'repeat' : 'stretch',
-        )
         // Non-tintable capsule: no accent/tint var may leak into the art.
-        expect(chip.style.getPropertyValue('--ink-slice-tint')).toBe('')
+        expect(layer.style.getPropertyValue('--ink-slice-tint')).toBe('')
       }
     }
   })

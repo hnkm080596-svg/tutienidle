@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // Home Hub Phase 6 - trich tu LoadoutManager.vue's khoi "slot cong
 // phap" (icon/ten/level-bar). P7-M7: nguoi dung duy nhat con lai la
-// TechniqueBand.vue (hero variant) - doc chung nguon qua
+// TechniquePanel.vue (hero variant) - doc chung nguon qua
 // techniqueManager, tranh nhieu noi tu ve nhieu kieu khac nhau.
 //
 // BETA FE-CONTRACT (work-order sec.4A): card gio THUAN hien thi
@@ -28,7 +28,7 @@ import { formatNumber } from '@/core/format/NumberFormatter'
 // UI redesign Step 12 (Tam Phap, spec muc 15) - "Tam phap hien tai
 // lon, cac tam phap khac nho hon" can 1 bien the hero (icon lon,
 // layout doc, badge trang thai). P7-M7: hero variant chi con
-// TechniqueBand.vue dung; 'normal' giu mac dinh cho moi noi khac -
+// TechniquePanel.vue dung; 'normal' giu mac dinh cho moi noi khac -
 // prop optional, mac dinh giu nguyen hanh vi cu.
 withDefaults(defineProps<{
   label: string

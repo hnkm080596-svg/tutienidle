@@ -296,12 +296,12 @@ onBeforeUnmount(() => {
   border-radius: 0 !important;
 }
 
-/* Khung hẹp — icon-only, tooltip vẫn mang nhãn đầy đủ. Container query
-   theo chiều rộng THẬT của panel chứa bag (RightPanel khai báo
-   container-name: right-panel) — viewport media query không đúng vì
-   width panel decoupled khỏi width viewport; giữ thêm media fallback
-   cho cửa sổ thật hẹp. */
-@container right-panel (max-width: 420px) {
+/* Narrow frame - icon-only, tooltip keeps the full label. The container
+   query tracks the REAL width of the bag's host panel (InventoryPanel
+   declares container-name: bag-panel) - a viewport media query is wrong
+   because panel width is decoupled from viewport width; a media fallback
+   stays for genuinely narrow windows. */
+@container bag-panel (max-width: 420px) {
   .bag-pagination__sort-label {
     display: none;
   }
@@ -311,7 +311,7 @@ onBeforeUnmount(() => {
   }
 }
 
-/* Fallback media cho ngữ cảnh ngoài right-panel (bag trong overlay). */
+/* Media fallback for contexts outside bag-panel (bag in an overlay). */
 @media (max-width: 480px) {
   .bag-pagination__sort-label {
     display: none;

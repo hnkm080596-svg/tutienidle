@@ -4,7 +4,6 @@ import { readOptionalGate } from '@/presentation/gate/PresentationGate'
 import type { EntityVitalsChangedEvent, VitalsChangeReason } from '@/core/combat/EntityVitalsSystem'
 import { formatNumber } from '@/core/format/NumberFormatter'
 import {
-  addInkWashNineSlice,
   queueInkWashUiAtlas,
 } from '@/game/support/InkWashUiPhaser'
 import { queueTribulationAssets } from '@/game/support/TribulationPreload'
@@ -50,7 +49,7 @@ const TRIBULATION_ART_WIDTH = 1672
 const TRIBULATION_ART_HEIGHT = 941
 
 // Depth contract: rect bg < storm-far < dais < player < storm-near <
-// vignette < lightning(10)/damage text < frame(20) < title(21). Runtime
+// vignette < lightning(10)/damage text < title(21). Runtime
 // characters, strikes, meters and results stay gameplay-owned above.
 const TRIBULATION_DEPTH = {
   stormFar: 1,
@@ -58,13 +57,11 @@ const TRIBULATION_DEPTH = {
   player: 3,
   stormNear: 4,
   vignette: 5,
-  frame: 20,
   title: 21,
 } as const
 
 export class TribulationScene extends Phaser.Scene {
   private player?: Phaser.GameObjects.Sprite
-  private viewportFrame?: Phaser.GameObjects.NineSlice
   private envImages: Phaser.GameObjects.Image[] = []
   private eventBus?: EventBus
   private lightningHandler = () => this.strikeLightning()
@@ -77,12 +74,10 @@ export class TribulationScene extends Phaser.Scene {
     if (damage !== null) this.showDamage(damage)
   }
   private resizeHandler = (gameSize: ResizeSize) => {
-    this.viewportFrame?.setSize(Math.max(0, gameSize.width - 24), Math.max(0, gameSize.height - 24))
     this.layoutEnvironment(gameSize.width, gameSize.height)
   }
   private shutdownHandler = () => {
     this.scale.off('resize', this.resizeHandler)
-    this.viewportFrame = undefined
     this.envImages = []
     this.unsubscribe()
   }
@@ -131,14 +126,9 @@ export class TribulationScene extends Phaser.Scene {
     }
     this.layoutEnvironment(width, height)
 
-    this.viewportFrame = addInkWashNineSlice(this, {
-      id: 'frame-xl-ceremony',
-      x: 12,
-      y: 12,
-      width: width - 24,
-      height: height - 24,
-      origin: 0,
-    }).setDepth(TRIBULATION_DEPTH.frame)
+    // No chrome frame: the tribulation scene is route-owned full-bleed
+    // storm vista (spec 14), not a scroll - a ceremony frame around the
+    // viewport read as a stray ring.
     this.add.text(width / 2, height * 0.17, 'THIÊN KIẾP', {
       fontFamily: 'serif', fontSize: '32px', color: '#ddecff', letterSpacing: 8,
     }).setOrigin(0.5).setShadow(0, 0, '#72bfff', 16).setDepth(TRIBULATION_DEPTH.title)

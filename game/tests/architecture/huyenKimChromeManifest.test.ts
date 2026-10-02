@@ -1,4 +1,4 @@
-import { existsSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { chromeSlice, HUYEN_KIM_CHROME, pendingChromeIds } from '@/ui/huyenKimChrome'
@@ -46,6 +46,29 @@ describe('huyen-kim chrome manifest', () => {
       expect(resolved, a.id).not.toBeNull()
       expect(resolved?.url1x).toBe(a.url1x)
       expect(resolved?.slices).toEqual(a.slices)
+    }
+  })
+
+  // Reference-fidelity Task 1: declared sourceWidth/sourceHeight must match
+  // the real PNG (IHDR), and @2x must be exactly 2x - a mismatch makes
+  // border-image-slice cut the art at the wrong relative position (halved
+  // or doubled border thickness at DPR 2).
+  function pngSize(relUrl: string): { width: number; height: number } {
+    const buf = readFileSync(join(PUBLIC_DIR, relUrl.replace(/^\//, '')))
+    expect(buf.slice(12, 16).toString('ascii')).toBe('IHDR')
+    return { width: buf.readUInt32BE(16), height: buf.readUInt32BE(20) }
+  }
+
+  it('declared source dims match the @1x IHDR and @2x is exactly 2x', () => {
+    for (const a of Object.values(HUYEN_KIM_CHROME).filter((x) => x.status === 'ready')) {
+      expect(pngSize(a.url1x), `${a.id} @1x vs sourceWidth/Height`).toEqual({
+        width: a.sourceWidth,
+        height: a.sourceHeight,
+      })
+      expect(pngSize(a.url2x), `${a.id} @2x density parity`).toEqual({
+        width: a.sourceWidth * 2,
+        height: a.sourceHeight * 2,
+      })
     }
   })
 

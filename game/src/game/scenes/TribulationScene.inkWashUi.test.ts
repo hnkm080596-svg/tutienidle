@@ -61,17 +61,19 @@ function chain() {
   return target
 }
 
-describe('TribulationScene ink-wash viewport frame', () => {
+describe('TribulationScene ink-wash environment', () => {
   beforeEach(() => vi.clearAllMocks())
 
-  it('queues, creates, resizes, and disposes the ceremonial frame', () => {
+  // Huyen Kim S14 (2026-10-02): no ceremony frame around the viewport -
+  // the route-owned storm vista must stay full-bleed. The test pins that
+  // removal so a future change cannot silently re-add the stray ring.
+  it('queues the atlas, paints the storm kit full-bleed, and adds no viewport frame', () => {
     const scene = new TribulationScene()
     const harness = scene as unknown as SceneHarness
     const shutdownHandlers: Array<() => void> = []
     const resizeHandlers: Array<(size: { width: number; height: number }) => void> = []
-    const frame = chain() as unknown as Phaser.GameObjects.NineSlice
 
-    vi.mocked(addInkWashNineSlice).mockReturnValue(frame)
+    vi.mocked(addInkWashNineSlice).mockReturnValue(chain() as unknown as Phaser.GameObjects.NineSlice)
     harness.textures = {
       exists: () => true,
       // Static mode sizes the cultivate sprite from the live source image.
@@ -111,18 +113,10 @@ describe('TribulationScene ink-wash viewport frame', () => {
     scene.create()
 
     expect(queueInkWashUiAtlas).toHaveBeenCalledWith(scene)
-    expect(addInkWashNineSlice).toHaveBeenCalledWith(scene, {
-      id: 'frame-xl-ceremony',
-      x: 12,
-      y: 12,
-      width: 1576,
-      height: 876,
-      origin: 0,
-    })
+    expect(addInkWashNineSlice).not.toHaveBeenCalled()
     expect(resizeHandlers).toHaveLength(1)
 
     resizeHandlers[0]!({ width: 1000, height: 700 })
-    expect(frame.setSize).toHaveBeenCalledWith(976, 676)
 
     // Stable environment kit: four textures drawn, anchored per contract
     // (storms north, dais south, vignette centered cover).

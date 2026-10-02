@@ -26,6 +26,8 @@ import { isFormationUnlocked } from '@/core/game/FormationPlacement'
 import { isRealmAvailable } from '@/core/realm/ReleasePolicy'
 import NotificationBadge from '@/components/common/NotificationBadge.vue'
 import HuyenKimSymbol from '@/components/common/HuyenKimSymbol.vue'
+import type { StableSymbolId } from '@/presentation/huyenKim/StableSceneArt'
+import { hkChromeUrl } from '@/ui/huyenKimChrome'
 import { useAudioStore } from '@/stores/audio'
 
 const ui = useUiStore()
@@ -64,6 +66,31 @@ function disabledReason(slot: CommandWheelSlot): string | null {
 // follows the selected locale.
 function slotLabel(slot: CommandWheelSlot): string {
   return t(slot.labelKey)
+}
+
+// Huyen Kim S03: the disc carries a stable-art glyph; the text label
+// hangs below the node. Presentation-only map - the catalog stays pure
+// data (no icon field).
+const SLOT_SYMBOL: Record<string, StableSymbolId> = {
+  character: 'character',
+  realm: 'realm',
+  skill: 'skill',
+  quest: 'quest',
+  phap_bao: 'equipment',
+  talisman_slot: 'technique',
+  formation_slot: 'realm',
+  companion_roster: 'character',
+  teleport_array: 'exploration',
+  pill_room: 'alchemy',
+  gathering_outpost: 'auto-farm',
+  chi_hien_quan: 'home',
+  equipment_hall: 'equipment',
+  scripture_pavilion: 'technique',
+  settings: 'settings',
+}
+
+function slotSymbol(slot: CommandWheelSlot): StableSymbolId {
+  return SLOT_SYMBOL[slot.id] ?? 'home'
 }
 
 /**
@@ -128,12 +155,13 @@ function outerOrbitRadius(): number {
   // chừa mép màn hình; khoảng trống tâm phải đủ để không che sprite nhân vật.
   // Sàn 168px KHÔNG được vượt bottomFit — cửa sổ thấp thà vòng nhỏ còn hơn
   // slot tràn khỏi mép dưới viewport.
-  // margin must cover HALF the slot height (~34-44px) plus edge clearance
-  // - before, subtracting only 32px clipped the last orbit slot at the
-  // bottom viewport edge.
+  // margin covers the disc half (~28px) + the label hanging below (~18px)
+  // plus a small edge clearance.
   // (ui-audit creation-meta).
-  const bottomFit = height * 0.34 - 56
-  const ideal = Math.max(168, Math.min(340, shortSide * 0.34))
+  // Huyen Kim S03 (spec scene-03): outer orbit r264 / inner r185 design px
+  // on the 1672x941 canvas -> ~202/~142px at 1280x720 (scale 0.765).
+  const bottomFit = height * 0.34 - 48
+  const ideal = Math.max(168, Math.min(340, shortSide * 0.28))
   return Math.max(96, Math.min(ideal, bottomFit))
 }
 
@@ -146,6 +174,14 @@ function orbitRadius(orbitIndex: number): number {
 }
 
 const orbitIndexes = computed(() => Array.from({ length: ORBIT_COUNT }, (_, index) => index))
+
+// Huyen Kim SS10: orbit slots wear the dao-luan-node chrome art as their
+// backdrop; state rings/borders still paint over it (CSS stays the
+// fallback while the PNG is absent).
+const daoLuanNodeUrl = hkChromeUrl('dao-luan-node')
+const slotNodeArt = computed<Record<string, string> | undefined>(() =>
+  daoLuanNodeUrl ? { backgroundImage: `url("${daoLuanNodeUrl}")` } : undefined,
+)
 
 function orbitStyle(orbitIndex: number) {
   return {
@@ -432,6 +468,7 @@ function activate(slot: CommandWheelSlot) {
         :key="orbitIndex"
         class="command-wheel__orbit"
         :style="orbitStyle(orbitIndex)"
+        :data-hk-region="orbitIndex === 0 ? 'wheel-inner-orbit' : 'wheel-outer-orbit'"
         aria-hidden="true"
       />
 
@@ -449,7 +486,7 @@ function activate(slot: CommandWheelSlot) {
             'is-ignited': ignitedIds.has(slot.id),
           },
         ]"
-        :style="slotStyle(slot)"
+        :style="[slotStyle(slot), slotNodeArt]"
         :data-wheel-orbit="slotOrbitIndex(slot)"
         :aria-label="slotLabel(slot)"
         :data-wheel-slot="slot.id"
@@ -457,6 +494,7 @@ function activate(slot: CommandWheelSlot) {
         v-tooltip="disabledReason(slot) ?? undefined"
         @click="activate(slot)"
       >
+        <HuyenKimSymbol :name="slotSymbol(slot)" class="command-wheel__glyph" />
         <span class="command-wheel__label">{{ slotLabel(slot) }}</span>
 
         <span v-if="isUpgradeable(slot)" class="command-wheel__upgrade-dot" aria-hidden="true" />
@@ -538,29 +576,31 @@ function activate(slot: CommandWheelSlot) {
   transform: translate(-50%, -50%) scale(1);
 }
 
-/* Dao Luan center seal (spec SS10.1) -- decorative Tu Luyen marker at the
-   hub; falls back to CSS while chrome slot 'dao-luan-center' is pending. */
+/* Dao Luan center seal (spec SS10.1) -- the hub is a hollow ring AROUND
+   the seated cultivator (S03 ref: figure visible inside a glowing ring),
+   not a disc over it; the label hangs below the ring on the dais. */
 .command-wheel__center-seal {
   position: absolute;
   left: 0;
   top: 0;
   display: grid;
-  place-items: center;
-  width: 72px;
-  height: 72px;
-  border: 1px solid var(--hk-border-active, var(--mineral-gold));
+  place-items: end center;
+  width: 92px;
+  height: 92px;
+  padding-bottom: 6px;
+  border: 1px solid color-mix(in srgb, var(--hk-gold, var(--mineral-gold)) 78%, transparent);
   border-radius: 50%;
-  background:
-    radial-gradient(120% 120% at 50% 20%, var(--hk-surface-overlay, var(--ink-800)) 0%, var(--hk-surface-base, var(--ink-950)) 78%);
+  background: color-mix(in srgb, var(--hk-surface-base, var(--ink-950)) 18%, transparent);
   box-shadow:
-    inset 0 0 0 4px var(--hk-surface-base, var(--ink-950)),
-    inset 0 0 0 5px color-mix(in srgb, var(--hk-gold-muted, var(--mineral-gold)) 55%, transparent),
-    0 0 18px var(--hk-glow-gold, rgba(232, 195, 90, 0.35));
-  color: var(--hk-gold, var(--mineral-gold));
+    inset 0 0 0 3px color-mix(in srgb, var(--hk-surface-base, var(--ink-950)) 55%, transparent),
+    inset 0 0 0 4px color-mix(in srgb, var(--hk-gold-muted, var(--mineral-gold)) 55%, transparent),
+    0 0 22px var(--hk-glow-gold, rgba(232, 195, 90, 0.35));
+  color: var(--hk-gold-bright, var(--mineral-gold));
   font-family: var(--hk-font-display, var(--font-display));
-  font-size: var(--text-sm);
+  font-size: 10px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
   pointer-events: none;
   opacity: 0;
   transform: translate(-50%, -50%) scale(0.6);
@@ -580,14 +620,16 @@ function activate(slot: CommandWheelSlot) {
   top: 0;
   display: grid;
   place-items: center;
-  min-width: 57px;
-  max-width: 81px;
-  min-height: 57px;
-  padding: 6px 8px;
+  width: 56px;
+  height: 56px;
+  padding: 0;
   border: 1px solid var(--hk-border-muted, var(--frame-outer));
   border-radius: 999px;
+  /* dao-luan-node chrome art lands via inline background-image when the
+     slot is ready; this radial ink disc stays as the fallback. */
   background:
     radial-gradient(120% 120% at 50% 16%, var(--hk-surface-overlay, var(--ink-800)) 0%, var(--hk-surface-raised, var(--ink-900)) 72%);
+  background-size: cover;
   box-shadow: 0 3px 10px var(--hk-shadow-low, rgba(0, 0, 0, 0.4));
   color: var(--hk-text-primary, var(--paper-text));
   font-family: var(--hk-font-ui, var(--font-body));
@@ -612,6 +654,31 @@ function activate(slot: CommandWheelSlot) {
   opacity: 1;
   transform: rotate(var(--end-angle)) translateY(calc(-1 * var(--orbit-radius)))
     rotate(var(--end-counter-angle)) translate(-50%, -50%);
+}
+
+/* Huyen Kim S03: the label hangs BELOW the node disc (ref: node +
+   caption), never wraps inside it - fixes the multi-line clip seen in
+   the pre-fidelity state. */
+.command-wheel__label {
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 4px);
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--hk-surface-base, var(--ink-950)) 78%, transparent);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+  color: var(--hk-text-primary, var(--paper-text));
+  font-size: 10px;
+  line-height: 1.25;
+  white-space: nowrap;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.command-wheel__glyph {
+  width: 24px;
+  height: 24px;
+  color: var(--hk-gold-bright, var(--mineral-gold));
 }
 
 .command-wheel__slot:hover,

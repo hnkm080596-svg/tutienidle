@@ -32,9 +32,15 @@ function pathFor(conn: SkillConnectionEntry, rects: Record<string, SkillConnecti
     return ''
   }
 
-  const midY = (parent.bottomY + child.topY) / 2
+  // Radial constellation (scene 07): center-to-center segment, gentle
+  // quadratic bow toward the shared canvas center keeps the curve off
+  // sibling spokes without owning layout math here.
+  const px = parent.x
+  const py = (parent.topY + parent.bottomY) / 2
+  const cx = child.x
+  const cy = (child.topY + child.bottomY) / 2
 
-  return `M ${parent.x} ${parent.bottomY} C ${parent.x} ${midY}, ${child.x} ${midY}, ${child.x} ${child.topY}`
+  return `M ${px} ${py} Q ${(px + cx) / 2} ${(py + cy) / 2}, ${cx} ${cy}`
 }
 </script>
 
@@ -60,12 +66,14 @@ function pathFor(conn: SkillConnectionEntry, rects: Record<string, SkillConnecti
   overflow: visible;
 }
 
-/* Huyen Kim SS19 - subdued ink for unlit paths, jade for learned. */
+/* Huyen Kim SS19 - constellation spokes must read against the painted
+   substrate: branch-tinted stroke with a light halo, jade for learned. */
 .skill-connections__path {
   fill: none;
-  stroke: var(--hk-ink, var(--branch-color, var(--ink-line)));
-  stroke-width: 1.5px;
-  opacity: 0.3;
+  stroke: var(--branch-color, var(--hk-ink, var(--ink-line)));
+  stroke-width: 2px;
+  opacity: 0.6;
+  filter: drop-shadow(0 0 2px rgba(20, 16, 8, 0.9));
   transition: opacity 0.3s ease;
 }
 

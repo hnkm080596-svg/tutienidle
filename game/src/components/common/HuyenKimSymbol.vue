@@ -1,8 +1,8 @@
 <script setup lang="ts">
-// HuyenKimSymbol — tintable stable-art glyph (huyen-kim-ui-symbol-set).
+// HuyenKimSymbol - tintable stable-art glyph (huyen-kim-ui-symbol-set).
 // Renders via CSS mask so `color`/`currentColor` owns the tint; runtime
 // keeps hover/selected/disabled state styling per the symbol contract.
-// Decorative by default — callers provide the accessible label on the
+// Decorative by default - callers provide the accessible label on the
 // owning control, never on this glyph.
 import { computed } from 'vue'
 import { stableSymbolUrl, type StableSymbolId } from '@/presentation/huyenKim/StableSceneArt'

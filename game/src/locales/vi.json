@@ -32,6 +32,10 @@
   },
   "panels": {
     "equipmentHall": {
+      "bagRail": {
+        "title": "Túi Trang Bị",
+        "empty": "Chưa có trang bị dự trữ"
+      },
       "tabs": {
         "enhance": "Cường Hóa",
         "wash": "Tẩy Luyện",
@@ -182,7 +186,8 @@
         "heroLabel": "Tâm Pháp",
         "emptyNoBonus": "Không có thông tin bổ sung",
         "emptyNoTechnique": "Chưa có công pháp — hoàn thành Lễ Nhập Môn để tự động nhận",
-        "gradeAction": "Nâng Cảnh"
+        "gradeAction": "Nâng Cảnh",
+        "gradeNode": "Phẩm {grade}"
       },
       "colTitles": {
         "activeArts": "Pháp Thuật Đang Vận Hành"
@@ -723,7 +728,10 @@
         "account": "Tài Khoản",
         "accountAria": "Tài khoản",
         "feedback": "Phản Hồi",
-        "feedbackAria": "Phản hồi beta"
+        "feedbackAria": "Phản hồi beta",
+        "display": "Hiển Thị",
+        "support": "Hỗ Trợ",
+        "navAria": "Mục cài đặt"
       },
       "update": {
         "title": "Cập Nhật",
@@ -789,6 +797,10 @@
       "close": "Đóng",
       "confirm": "Xác Nhận",
       "cancel": "Hủy"
+    },
+    "hkNav": {
+      "aria": "Điều hướng chức năng",
+      "body": "Đạo Thể"
     },
     "decompose": {
       "labels": {
@@ -1542,6 +1554,7 @@
       "title": "Thiên Cơ Bảng",
       "aria": "Thiên Cơ Bảng — việc đáng làm lúc này",
       "empty": "Đạo tâm an nhiên — chưa có việc gấp.",
+      "collapse": "Thu gọn Thiên Cơ Bảng",
       "breakthrough": {
         "title": "Đột phá sẵn sàng",
         "detail": "Tu vi đã đủ — mở Cảnh Giới để đột phá.",
@@ -1567,6 +1580,9 @@
         "detail": "Đủ nguyên liệu cho cấp kế tiếp.",
         "cta": "Nâng cấp"
       }
+    },
+    "questTracker": {
+      "aria": "Nhiệm vụ đang theo dõi: {name}"
     }
   },
   "tutorial": {

@@ -32,6 +32,10 @@
   },
   "panels": {
     "equipmentHall": {
+      "bagRail": {
+        "title": "Gear Stash",
+        "empty": "No spare equipment"
+      },
       "tabs": {
         "enhance": "Enhance",
         "wash": "Wash",
@@ -182,7 +186,8 @@
         "heroLabel": "Mental Method",
         "emptyNoBonus": "No additional information",
         "emptyNoTechnique": "No technique yet — complete the Entry Ceremony to receive one automatically",
-        "gradeAction": "Advance Grade"
+        "gradeAction": "Advance Grade",
+        "gradeNode": "Grade {grade}"
       },
       "colTitles": {
         "activeArts": "Active Spell Arts"
@@ -723,7 +728,10 @@
         "account": "Account",
         "accountAria": "Account",
         "feedback": "Feedback",
-        "feedbackAria": "Beta feedback"
+        "feedbackAria": "Beta feedback",
+        "display": "Display",
+        "support": "Support",
+        "navAria": "Settings sections"
       },
       "update": {
         "title": "Updates",
@@ -789,6 +797,10 @@
       "close": "Close",
       "confirm": "Confirm",
       "cancel": "Cancel"
+    },
+    "hkNav": {
+      "aria": "Feature navigation",
+      "body": "Dao Body"
     },
     "decompose": {
       "labels": {
@@ -1542,6 +1554,7 @@
       "title": "Heaven's Insight",
       "aria": "Heaven's Insight — what is worth doing now",
       "empty": "A calm Dao heart — nothing urgent.",
+      "collapse": "Collapse Heaven's Insight",
       "breakthrough": {
         "title": "Breakthrough ready",
         "detail": "Cultivation is full — open Realm to break through.",
@@ -1567,6 +1580,9 @@
         "detail": "Materials ready for the next level.",
         "cta": "Upgrade"
       }
+    },
+    "questTracker": {
+      "aria": "Tracked quest: {name}"
     }
   },
   "tutorial": {

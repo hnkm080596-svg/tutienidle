@@ -1,4 +1,5 @@
 import { expect, test } from './fixtures'
+import { BETA_FEATURES } from '../../src/core/betaFeatureFlags'
 
 import {
   assertNoBrowserErrors,
@@ -298,6 +299,8 @@ test.describe('P3 — production combat vertical slice', () => {
   test('victory loop: ngo_dao ritual -> stage 1 -> aura -> victory -> reward -> refight -> clean exit', async ({
     page,
   }) => {
+    // ngo_dao is a hidden way - scope-hidden under the beta lock.
+    test.skip(!BETA_FEATURES.hiddenContent, 'hiddenContent scope-hidden under the beta lock')
     // Ritual setup (~90s) + up to 2 battle attempts (~180s each worst
     // measured) + refight + exit assertions.
     test.setTimeout(600_000)

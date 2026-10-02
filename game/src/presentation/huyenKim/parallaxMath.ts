@@ -5,7 +5,7 @@
  * - all layers share one canvas family + one center (no independent crop);
  * - each layer cover-fits the container PLUS its drift margin: the render
  *   scale solves `layerSize * s >= container + 2 * maxDrift * s` on both
- *   axes, so at maximum drift every edge still covers the container —
+ *   axes, so at maximum drift every edge still covers the container -
  *   i.e. rendered overscan >= 2 * rendered drift (the contract's
  *   `2 * max_drift_px` read in rendered units; drift scales with the
  *   canvas so motion stays proportional at 0.765 runtime scaling);

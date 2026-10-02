@@ -68,55 +68,52 @@ test.describe('ink-wash UI visual smoke', () => {
       await expect(settingsSlot).toBeVisible({ timeout: 10_000 })
       await settingsSlot.click()
 
-      const panel = page.locator('.overlay-panel__card').first()
+      // Huyen Kim rebuild: settings rides the imperial scroll shell -
+      // envelope + body/frame slices replace the old overlay card.
+      const panel = page.locator('.hk-scroll__envelope').first()
       await expect(panel).toBeVisible()
-      await expect(panel.locator('[data-hk-slice="surface-m-panel"]').first()).toBeVisible()
-      await expect(panel.locator('[data-hk-slice="frame-m-modal"]').first()).toBeVisible()
+      await expect(panel.locator('[data-hk-slice="imperial-scroll-body"]').first()).toBeVisible()
+      await expect(panel.locator('[data-hk-slice="frame-xl-ceremony"]').first()).toBeVisible()
 
-      // Flake fix (2026-09-01): overlay-fade enter transition chạy
-      // transform .22s sau khi visible — boundingBox đọc ngay làm
-      // heading-offset >= 32 fail ngẫu nhiên (compact/tall dễ miss
-      // timing hơn). Chờ panel transform ổn định trước khi đo.
-      // Flake fix (2026-09-01): overlay-fade enter transition chạy
-      // transform .22s sau khi visible — boundingBox đọc ngay làm
-      // heading-offset >= 32 fail ngẫu nhiên (compact/tall dễ miss
-      // timing hơn). Chờ panel transform ổn định trước khi đo.
+      // The scroll's reveal is clip-path (paper) + opacity (chrome), not
+      // transform - wait for the unfold signature to land before measuring.
       // String-based evaluate (no DOM ambient types in e2e tsconfig).
       await page.waitForFunction(
         `(() => {
-          const card = document.querySelector('.overlay-panel__card')
-
-          if (!card) {
-            return false
-          }
-
-          const transform = window.getComputedStyle(card).transform
-
-          // 'none' hoặc identity matrix = transition đã xong.
-          return transform === 'none' || transform === 'matrix(1, 0, 0, 1, 0, 0)'
+          const clip = document.querySelector('.hk-scroll__clip')
+          if (!clip) return false
+          return window.getComputedStyle(clip).clipPath === 'inset(0px)'
         })()`,
         undefined,
         { timeout: 5_000 },
       )
 
       const panelBox = await panel.boundingBox()
-      const headingBox = await panel.locator('.overlay-panel__heading').boundingBox()
+      const headingBox = await panel.locator('.hk-scroll__title').boundingBox()
       const settingsBox = await panel.locator('.settings-panel').boundingBox()
       expect(panelBox).not.toBeNull()
       expect(headingBox).not.toBeNull()
       expect(settingsBox).not.toBeNull()
-      expect(headingBox!.y - panelBox!.y).toBeGreaterThanOrEqual(32)
+      // The title plaque rides the envelope's top band - its text must be
+      // horizontally centered inside the envelope and the settings
+      // workspace must clear the nav-rail column on the left.
+      expect(headingBox!.x).toBeGreaterThanOrEqual(panelBox!.x)
+      expect(headingBox!.x + headingBox!.width).toBeLessThanOrEqual(panelBox!.x + panelBox!.width)
       expect(settingsBox!.x - panelBox!.x).toBeGreaterThanOrEqual(28)
-      const settingsColors = await page.evaluate<{ warning: string; heading: string }>(
-        `({
-          warning: getComputedStyle(document.querySelector('.settings-panel__warning')).color,
-          heading: getComputedStyle(document.querySelector('.settings-panel__ui-scale h4')).color,
-        })`,
+      // Sectioned workspace: the autosave warning lives on the default
+      // 'general' section; the ui-scale heading is behind 'display'.
+      const settingsColors = await page.evaluate<{ warning: string }>(
+        `({ warning: getComputedStyle(document.querySelector('.settings-panel__warning')).color })`,
+      )
+      await panel.locator('.settings-panel__nav-seal[data-section="display"]').click()
+      const headingColor = await page.evaluate<string>(
+        `getComputedStyle(document.querySelector('.settings-panel__ui-scale h4')).color`,
       )
       // .settings-panel .paper-on-dark remaps --paper-text* onto the
       // dark-surface ramp: heading = --surface-text, warning =
       // --surface-text-soft.
-      expect(settingsColors).toEqual({ warning: 'rgb(168, 164, 152)', heading: 'rgb(232, 228, 220)' })
+      expect(settingsColors.warning).toBe('rgb(168, 164, 152)')
+      expect(headingColor).toBe('rgb(232, 228, 220)')
       await page.screenshot({
         path: testInfo.outputPath(`ink-wash-home-${viewport.name}.png`),
         animations: 'disabled',

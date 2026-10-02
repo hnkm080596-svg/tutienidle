@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// HuyenKimParallaxStack — the ONE reusable presenter for the stable-art
+// HuyenKimParallaxStack - the ONE reusable presenter for the stable-art
 // parallax stacks (auth-creation, realm-ascent, skill-tree). Contract:
 // - layers render in manifest order on one shared canvas + center;
 // - cover fit + centered overscan >= 2 * max_drift_px per axis;

@@ -131,6 +131,7 @@ describe('hidden lineage - save/restore chain (restoreGameSession)', () => {
       chapterIndex: 0,
       chaptersTotal: 1,
       chapterName: '',
+      chapterNames: [''],
       state: 'victory',
       currentQuestion: null,
       questionSecondsRemaining: 0,

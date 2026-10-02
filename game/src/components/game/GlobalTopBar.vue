@@ -15,6 +15,8 @@ import PlayerPortrait from '../common/PlayerPortrait.vue'
 import GameButton from '../common/GameButton.vue'
 import HuyenKimSymbol from '../common/HuyenKimSymbol.vue'
 import FeedbackDialog from '../common/FeedbackDialog.vue'
+import InkNineSlice from '../common/primitives/InkNineSlice.vue'
+import { hkChromeUrl } from '@/ui/huyenKimChrome'
 
 const { t } = useI18n()
 const player = usePlayerStore()
@@ -27,18 +29,21 @@ const cultivationText = computed(
 )
 
 const feedbackOpen = ref(false)
+const avatarFrameUrl = hkChromeUrl('avatar-frame')
 </script>
 
 <template>
-  <header class="global-top-bar" role="banner" :aria-label="t('home.topBar.aria')" data-canonical-layer="L8">
+  <header class="global-top-bar" role="banner" :aria-label="t('home.topBar.aria')" data-canonical-layer="L8" data-hk-region="top-bar">
     <button
       type="button"
       class="global-top-bar__identity"
       :aria-label="t('home.topBar.identityAria')"
       @click="ui.openLeftPanel('character')"
     >
+      <InkNineSlice chrome-id="identity-plate" layer="surface" />
       <span class="global-top-bar__avatar">
         <PlayerPortrait variant="portrait" :height="38" />
+        <img v-if="avatarFrameUrl" class="global-top-bar__avatar-frame" :src="avatarFrameUrl" alt="" aria-hidden="true" />
       </span>
       <span class="global-top-bar__identity-text">
         <span class="global-top-bar__name">{{ player.name }}</span>
@@ -132,21 +137,27 @@ const feedbackOpen = ref(false)
   pointer-events: auto;
 }
 
+/* identity-plate chrome: the PNG plate owns the surface; the button's
+   own pill styling stays as the pending/fallback path underneath. */
 .global-top-bar__identity {
+  position: relative;
+  isolation: isolate;
   display: inline-flex;
   align-items: center;
   gap: var(--hk-space-3, 8px);
   justify-self: start;
   max-width: 40vw;
-  padding: var(--hk-space-2, 4px) var(--hk-space-4, 12px) var(--hk-space-2, 4px) var(--hk-space-2, 4px);
+  padding: var(--hk-space-3, 8px) var(--hk-space-5, 16px) var(--hk-space-3, 8px) var(--hk-space-3, 8px);
   border: 1px solid var(--hk-border-muted, #2a352f);
-  border-radius: var(--hk-radius-pill, 999px);
+  border-radius: var(--radius-sm, 2px);
   background: color-mix(in srgb, var(--hk-surface-base, #0b0f0d) 72%, transparent);
   color: var(--hk-text-primary, #ede6d6);
   font-family: var(--hk-font-ui, sans-serif);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
+
+.global-top-bar__identity > :not(.ink-nine-slice) { position: relative; z-index: 2; }
 
 .global-top-bar__identity:hover,
 .global-top-bar__identity:focus-visible {
@@ -159,13 +170,29 @@ const feedbackOpen = ref(false)
 }
 
 .global-top-bar__avatar {
+  position: relative;
   display: block;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 auto;
+}
+
+.global-top-bar__avatar :deep(.player-portrait),
+.global-top-bar__avatar > :first-child {
   width: 38px;
   height: 38px;
   overflow: hidden;
   border: 1px solid var(--hk-border-active, #7a6234);
   border-radius: 50%;
-  flex: 0 0 auto;
+}
+
+.global-top-bar__avatar-frame {
+  position: absolute;
+  inset: -4px;
+  width: calc(100% + 8px);
+  height: calc(100% + 8px);
+  object-fit: fill;
+  pointer-events: none;
 }
 
 .global-top-bar__identity-text {
@@ -236,8 +263,21 @@ const feedbackOpen = ref(false)
   position: static;
 }
 
+/* S03 spec: utility seals are icon-only round seals (aria-label still
+   announces them) - collapses the label text so the right cluster never
+   overflows the viewport edge. */
 .global-top-bar__seal {
   font-family: var(--hk-font-display, serif);
+}
+
+.global-top-bar__seal :deep(.game-button__label) {
+  font-size: 0;
+  gap: 0;
+}
+
+.global-top-bar__seal :deep(.hk-symbol) {
+  width: 16px;
+  height: 16px;
 }
 
 @media (max-width: 720px) {

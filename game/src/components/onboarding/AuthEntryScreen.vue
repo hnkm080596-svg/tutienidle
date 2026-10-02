@@ -10,6 +10,7 @@ import { authService } from '@/services/auth/AuthServiceFactory'
 import { isValidLoginId, isValidPassword, type AuthenticationMode, type AuthSession } from '@/services/auth/AuthService'
 import { LOCALE_OPTIONS, saveLocale } from '@/composables/locale'
 import { readResumeCandidate, consumeResetNotice, type ResumeCandidate } from '@/composables/resumeSession'
+import { hkChromeUrl } from '@/ui/huyenKimChrome'
 
 const emit = defineEmits<{ authenticated: [session: AuthSession] }>()
 const mode = ref<'login' | 'register'>('login')
@@ -19,6 +20,7 @@ const submitting = ref(false)
 const error = ref('')
 
 const { t, locale } = useI18n()
+const dividerOrnamentUrl = hkChromeUrl('divider-ornament')
 
 // ui-audit creation-meta - reload forced a full re-login even when a
 // session/save was still on disk; offer one-click continue instead.
@@ -133,11 +135,11 @@ function switchTab(target: 'login' | 'register') {
 </script>
 
 <template>
-  <main class="auth-screen" data-testid="auth-screen">
+  <main class="auth-screen" data-testid="auth-screen" data-hk-scene="login">
     <HuyenKimParallaxStack stack="auth-creation" />
-    <section class="auth-card paper-on-dark">
-      <InkNineSlice asset-id="surface-xl-paper-scroll" layer="surface" />
-      <InkNineSlice asset-id="frame-xl-ceremony" layer="frame" />
+    <section class="auth-card" data-hk-region="auth-card">
+      <InkNineSlice chrome-id="surface-xl-scroll" layer="surface" />
+      <InkNineSlice chrome-id="frame-xl-ceremony" layer="frame" />
       <div class="auth-card__seal">仙</div>
       <!-- Language switch is reachable BEFORE auth: same chips idiom as
            SettingsPanel; persists via composables/locale. -->
@@ -158,7 +160,6 @@ function switchTab(target: 'login' | 'register') {
       <p class="auth-card__eyebrow">{{ t('onboarding.auth.eyebrow') }}</p>
       <h1>Tiên Hiệp Idle</h1>
       <p v-if="resetNotice" class="auth-card__notice">{{ t('onboarding.auth.saveCleared') }}</p>
-      <p class="auth-card__lead">{{ t('onboarding.auth.lead') }}</p>
 
       <!-- UI-003/004 (Task 2, 2026-09-07) — tabs semantics thật: role="tab"
            + aria-selected + arrow-key navigation; form errors qua
@@ -231,41 +232,52 @@ function switchTab(target: 'login' | 'register') {
       <form class="auth-form" @submit.prevent="submit">
         <label for="auth-input-id">
           <span>{{ t('onboarding.auth.labels.loginId') }}</span>
-          <input
-            id="auth-input-id"
-            v-model.trim="loginId"
-            autocomplete="username"
-            maxlength="20"
-            :placeholder="t('onboarding.auth.placeholders.loginId')"
-            :aria-invalid="loginId && !validId ? true : undefined"
-            :aria-describedby="loginId && !validId ? 'auth-error-id' : undefined"
-          />
+          <span class="auth-field">
+            <InkNineSlice chrome-id="text-field" layer="surface" />
+            <input
+              id="auth-input-id"
+              v-model.trim="loginId"
+              autocomplete="username"
+              maxlength="20"
+              :placeholder="t('onboarding.auth.placeholders.loginId')"
+              :aria-invalid="loginId && !validId ? true : undefined"
+              :aria-describedby="loginId && !validId ? 'auth-error-id' : undefined"
+            />
+          </span>
         </label>
         <p v-if="loginId && !validId" id="auth-error-id" class="auth-form__hint is-error">{{ t('onboarding.auth.errors.invalidId') }}</p>
         <label for="auth-input-password">
           <span>{{ t('onboarding.auth.labels.password') }}</span>
-          <input
-            id="auth-input-password"
-            v-model="password"
-            autocomplete="current-password"
-            type="password"
-            :placeholder="t('onboarding.auth.placeholders.password')"
-          />
+          <span class="auth-field">
+            <InkNineSlice chrome-id="text-field" layer="surface" />
+            <input
+              id="auth-input-password"
+              v-model="password"
+              autocomplete="current-password"
+              type="password"
+              :placeholder="t('onboarding.auth.placeholders.password')"
+            />
+          </span>
         </label>
         <!-- UI-004 — submit-level error là live region (screen reader đọc khi hiện). -->
         <p v-if="error" id="auth-error-submit" class="auth-form__hint is-error" role="alert">{{ error }}</p>
-        <GameButton class="primary-action" type="submit" variant="primary" size="lg" :disabled="!canSubmit" :loading="submitting">
+        <GameButton class="primary-action" type="submit" variant="primary" size="lg" :disabled="!canSubmit" :loading="submitting" data-hk-region="primary-action">
           {{ mode === 'login' ? t('onboarding.auth.submit.login') : t('onboarding.auth.submit.register') }}
         </GameButton>
       </form>
 
-      <div class="auth-divider"><span>{{ t('onboarding.auth.divider') }}</span></div>
-      <GameButton class="guest-action" variant="ghost" size="lg" :disabled="submitting" data-testid="auth-guest-button" @click="startGuest">
+      <div class="auth-divider">
+        <img v-if="dividerOrnamentUrl" :src="dividerOrnamentUrl" alt="" aria-hidden="true" />
+        <span>{{ t('onboarding.auth.divider') }}</span>
+      </div>
+      <GameButton class="guest-action" variant="ghost" size="lg" :disabled="submitting" data-testid="auth-guest-button" data-hk-region="guest-action" @click="startGuest">
         {{ t('onboarding.auth.guest.button') }}
         <small>{{ t('onboarding.auth.guest.note') }}</small>
       </GameButton>
-      <p class="auth-card__status"><i /> {{ t('onboarding.auth.status') }}</p>
     </section>
+    <!-- Server-status indicator is ambient dev info, not card content:
+         it sits on the vista corner outside the scroll. -->
+    <p class="auth-status"><i /> {{ t('onboarding.auth.status') }}</p>
 
     <!-- B1.8 cross-account acknowledgement: leaving the stored guest
          session is an explicit user choice, never automatic. -->
@@ -281,22 +293,40 @@ function switchTab(target: 'login' | 'register') {
 </template>
 
 <style scoped>
-.auth-screen { position: relative; width: 100vw; min-height: 100vh; display: grid; place-items: center; overflow: hidden auto; color: var(--paper-text, #211f1a); background: var(--paper-50, #f5f0e4); }
+/* Scene 01 spec: vista dominant; auth scroll card right-of-center.
+   Design 1672x941: card x=1016 w=560 h=700 -> 5.7% right margin,
+   ~33.5% width, ~74% height centered. Recenters at <=1400px. */
+.auth-screen { position: relative; width: 100vw; min-height: 100vh; display: grid; justify-items: end; align-items: center; overflow: hidden auto; color: var(--paper-text, #211f1a); background: var(--paper-50, #f5f0e4); }
 .auth-screen::before { content: ''; position: absolute; inset: 0; z-index: 1; opacity: .1; background-image: linear-gradient(color-mix(in srgb, var(--text-primary) 7%, transparent) 1px, transparent 1px), linear-gradient(90deg, color-mix(in srgb, var(--text-primary) 7%, transparent) 1px, transparent 1px); background-size: 44px 44px; mask-image: radial-gradient(circle, #000, transparent 72%); }
 .auth-screen__mist { position: absolute; width: 42vw; height: 42vw; border-radius: 50%; filter: blur(80px); opacity: .1; background: var(--chrome-500); }
 .auth-screen__mist--one { left: -18vw; bottom: -22vw; }.auth-screen__mist--two { right: -20vw; top: -24vw; }
-.auth-card { position: relative; z-index: 1; isolation: isolate; width: min(390px, calc(100vw - 40px)); box-sizing: border-box; padding: 34px; border-radius: 0; background: transparent; box-shadow: none; text-align: center; }
+/* surface-xl-scroll's frame occupies ~12% of each side and ~15% top/
+   bottom at this size; padding keeps all interactive content inside the
+   paper's inner safe area. */
+.auth-card { position: relative; z-index: 1; isolation: isolate; width: clamp(430px, 33.5vw, 560px); max-height: 88vh; margin-right: clamp(20px, 5.7vw, 96px); box-sizing: border-box; padding: clamp(50px, 7.6vh, 80px) clamp(64px, 6vw, 88px); border-radius: 0; background: transparent; box-shadow: none; text-align: center; overflow-y: auto; scrollbar-width: none; }
+.auth-card::-webkit-scrollbar { display: none; }
+@media (max-width: 900px) {
+  .auth-screen { justify-items: center; }
+  .auth-card { margin-right: 0; width: min(560px, calc(100vw - 40px)); }
+}
 .auth-card > :not(.ink-nine-slice) { position: relative; z-index: 3; }
-.auth-card__seal { width: 54px; height: 54px; margin: 0 auto 16px; display: grid; place-items: center; border: 1px solid var(--cinnabar, #b54432); color: var(--cinnabar, #b54432); font: 700 var(--text-display) var(--font-display); transform: rotate(45deg); }.auth-card__seal::first-letter { transform: rotate(-45deg); }
-.auth-card__eyebrow { margin: 0; color: var(--mineral-gold, #b79653); font-size: var(--text-xs); letter-spacing: .28em; }.auth-card h1 { margin: 8px 0 4px; font: 700 var(--text-display-lg) var(--font-display); }.auth-card__lead { margin: 0 0 24px; color: var(--paper-text-soft, #5e5a50); font-family: var(--font-display); font-style: italic; }
-.auth-locale { display: flex; justify-content: flex-end; gap: 6px; margin-bottom: 14px; }.auth-locale__option { min-height: 32px; padding: 4px 10px; border: 1px solid var(--paper-line, rgba(42,41,36,.42)); border-radius: var(--radius-sm, 2px); background: transparent; color: var(--paper-text-muted, #6b6860); font-size: var(--text-xs); letter-spacing: .08em; cursor: pointer; }.auth-locale__option.active { border-color: var(--mineral-gold, #b79653); color: var(--paper-text, #211f1a); }.auth-locale__option:hover { border-color: var(--mineral-gold, #b79653); }
+.auth-card__seal { width: 38px; height: 38px; margin: 0 auto 6px; display: grid; place-items: center; border: 1px solid var(--cinnabar, #b54432); color: var(--cinnabar, #b54432); font: 700 var(--text-md) var(--font-display); transform: rotate(45deg); }.auth-card__seal::first-letter { transform: rotate(-45deg); }
+.auth-card__eyebrow { margin: 0; color: var(--mineral-gold, #b79653); font-size: var(--text-xs); letter-spacing: .28em; }.auth-card h1 { margin: 4px 0 8px; font: 700 var(--text-panel-title) var(--font-display); }
+.auth-locale { display: flex; justify-content: flex-end; gap: 6px; margin-bottom: 8px; }.auth-locale__option { min-height: 32px; padding: 4px 10px; border: 1px solid var(--paper-line, rgba(42,41,36,.42)); border-radius: var(--radius-sm, 2px); background: transparent; color: var(--paper-text-muted, #6b6860); font-size: var(--text-xs); letter-spacing: .08em; cursor: pointer; }.auth-locale__option.active { border-color: var(--mineral-gold, #b79653); color: var(--paper-text, #211f1a); }.auth-locale__option:hover { border-color: var(--mineral-gold, #b79653); }
 .continue-action { width: 100%; margin-bottom: 16px; }
 .auth-card__notice { margin: 8px 0 14px; padding: 6px 10px; border: 1px solid var(--paper-line, rgba(42,41,36,.42)); border-radius: var(--radius-sm, 2px); color: var(--paper-text-soft, #5e5a50); font-size: var(--text-xs); }
 .auth-card__notice.is-error { border-color: var(--cinnabar, #b54432); color: var(--cinnabar, #b54432); }
 .auth-card__upgrade-link { margin: 0 0 16px; border: 0; background: none; padding: 0; color: var(--paper-text-muted, #6b6860); font-size: var(--text-xs); text-decoration: underline; cursor: pointer; }
 .auth-card__upgrade-link:hover { color: var(--mineral-gold, #b79653); }
 .auth-card :deep(.upgrade-card) { margin: 0 0 16px; padding: 10px 12px; border: 1px solid var(--paper-line, rgba(42,41,36,.42)); border-radius: var(--radius-sm, 2px); }
-.auth-tabs { display: grid; grid-template-columns: 1fr 1fr; border-bottom: 1px solid var(--ink-line); margin-bottom: 20px; }.auth-tabs button { border: 0; padding: 10px; min-height: var(--tap-min); background: none; color: var(--text-muted); cursor: pointer; }.auth-tabs button.active { color: var(--paper-text, #211f1a); border-bottom: 2px solid var(--cinnabar, #b54432); }
-.auth-form { display: grid; gap: 14px; text-align: left; }.auth-form label { display: grid; gap: 7px; color: var(--paper-text-soft, #5e5a50); font-size: var(--text-xs); }.auth-form input { box-sizing: border-box; width: 100%; border: 1px solid var(--paper-line, rgba(42,41,36,.42)); border-radius: 2px; padding: 12px 13px; outline: none; background: color-mix(in srgb, var(--paper-50, #f5f0e4) 86%, transparent); color: var(--paper-text, #211f1a); }.auth-form input:focus { border-color: var(--brush-600, #5e5a50); box-shadow: none; }.auth-form__hint { margin: -8px 0 0; font-size: var(--text-xs); }.is-error { color: var(--cinnabar, #b54432); }
-.primary-action { width: 100%; margin-top: 4px; }.auth-divider { display: flex; align-items: center; gap: 10px; margin: 19px 0; color: var(--text-muted); font-size: var(--text-xs); }.auth-divider::before,.auth-divider::after { content: ''; flex: 1; height: 1px; background: var(--ink-line); }.guest-action { width: 100%; }.guest-action :deep(.game-button__label) { display: grid; gap: 4px; justify-items: center; width: 100%; }.guest-action small { color: var(--text-muted); font-weight: 400; }.auth-card__status { margin: 20px 0 0; color: var(--text-muted); font-size: var(--text-xs); }.auth-card__status i { display: inline-block; width: 6px; height: 6px; margin-right: 6px; border-radius: 50%; background: var(--jade); box-shadow: 0 0 7px var(--jade); }
+.auth-tabs { display: grid; grid-template-columns: 1fr 1fr; border-bottom: 1px solid var(--ink-line); margin-bottom: 14px; }.auth-tabs button { border: 0; padding: 8px 10px; min-height: var(--tap-min); background: none; color: var(--text-muted); cursor: pointer; }.auth-tabs button.active { color: var(--paper-text, #211f1a); border-bottom: 2px solid var(--cinnabar, #b54432); }
+.auth-form { display: grid; gap: 8px; text-align: left; }.auth-form label { display: grid; gap: 4px; color: var(--paper-text-soft, #5e5a50); font-size: var(--text-xs); }
+/* text-field chrome: the PNG field background owns the box; the input
+   itself stays transparent. */
+.auth-field { position: relative; display: block; isolation: isolate; }
+.auth-field .ink-nine-slice { z-index: 0; }
+.auth-form input { position: relative; z-index: 1; box-sizing: border-box; width: 100%; border: 0; border-radius: 2px; padding: 10px 16px; outline: none; background: transparent; color: var(--hk-text-primary, #ede6d6); }
+.auth-form input::placeholder { color: color-mix(in srgb, var(--hk-text-primary, #ede6d6) 42%, transparent); }
+.auth-form input:focus { box-shadow: 0 0 0 2px color-mix(in srgb, var(--hk-gold, #c99a4a) 45%, transparent); }.auth-form__hint { margin: -8px 0 0; font-size: var(--text-xs); }.is-error { color: var(--cinnabar, #b54432); }
+.primary-action { width: 100%; margin-top: 2px; }.auth-divider { position: relative; display: grid; place-items: center; margin: 10px 0; color: var(--text-muted); font-size: var(--text-xs); }.auth-divider img { position: absolute; inset: 50% 0 auto; width: 100%; height: 14px; transform: translateY(-50%); object-fit: fill; opacity: .9; pointer-events: none; }.auth-divider span { position: relative; padding: 0 10px; background: var(--paper-50, #f5f0e4); }.guest-action { width: 100%; }.guest-action :deep(.game-button__label) { display: grid; gap: 2px; justify-items: center; width: 100%; }.guest-action small { color: var(--text-muted); font-weight: 400; }.auth-status { position: absolute; left: 14px; bottom: 12px; z-index: 1; margin: 0; color: var(--hk-text-primary, #ede6d6); font-size: var(--text-xs); opacity: .75; text-shadow: 0 1px 3px rgba(0,0,0,.6); }.auth-status i { display: inline-block; width: 6px; height: 6px; margin-right: 6px; border-radius: 50%; background: var(--jade); box-shadow: 0 0 7px var(--jade); }
 </style>

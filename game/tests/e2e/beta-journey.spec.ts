@@ -178,7 +178,7 @@ test.describe('beta journey - scope-leak gate (spec sec.9)', () => {
   test('quest panel carries no daily-quest surfaces', async ({ page }) => {
     await bootFreshMortal(page)
     await openStandalone(page, 'quest')
-    const panel = page.locator('.quest-panel')
+    const panel = page.locator('.quest-scene')
     await expect(panel).toBeVisible({ timeout: 10_000 })
     await expect(panel.getByText('Nhiệm Vụ Ngày')).toHaveCount(0)
     await expect(panel.getByText(/hàng ngày|hằng ngày/i)).toHaveCount(0)

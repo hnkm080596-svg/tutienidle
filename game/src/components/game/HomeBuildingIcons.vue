@@ -16,6 +16,7 @@ import {
 import type { ThanhVanVariant } from '@/presentation/background/BackgroundVariant'
 import { isBetaBuildingSurface } from '@/core/betaScopeSurface'
 import DongFuBuildingSprite from './DongFuBuildingSprite.vue'
+import { hkChromeUrl } from '@/ui/huyenKimChrome'
 
 interface SceneBuilding {
   art: DongFuBuildingArtEntry
@@ -35,6 +36,9 @@ const ui = useUiStore()
 const definitions = computed(() => gameManager.buildingOps.getBuildingDefinitions())
 const reducedMotion = ref(false)
 const assetErrors = ref<Set<DongFuBuildingId>>(new Set())
+
+// Scene 03 spec: hotspots carry the building-plaque tag chrome.
+const buildingPlaqueUrl = hkChromeUrl('building-plaque')
 
 let reducedMotionQuery: MediaQueryList | undefined
 
@@ -164,13 +168,17 @@ onBeforeUnmount(() => {
         <span
           class="building-nameplate"
           :class="`building-nameplate--${statusFor(scene.building.id)}`"
+          :data-hk-region="`hotspot-${scene.art.buildingId}`"
           aria-hidden="true"
         >
           <span v-if="statusFor(scene.building.id) === 'locked'" class="building-nameplate__lock" />
           <span v-else-if="statusFor(scene.building.id) === 'ready'" class="building-nameplate__ready" />
           <span v-else-if="statusFor(scene.building.id) === 'active'" class="building-nameplate__active" />
           <span v-else-if="statusFor(scene.building.id) === 'upgradeable'" class="building-nameplate__upgradeable" />
-          <span class="building-nameplate__text">{{ scene.building.name }}</span>
+          <span class="building-nameplate__tag">
+            <img v-if="buildingPlaqueUrl" class="building-nameplate__plaque" :src="buildingPlaqueUrl" alt="" aria-hidden="true" />
+            <span class="building-nameplate__text">{{ scene.building.name }}</span>
+          </span>
           <small class="building-nameplate__level">{{ presentationFor(scene.building.id).isBuilt
             ? t('homeBuildings.level', { level: presentationFor(scene.building.id).level })
             : t('homeBuildings.notBuilt') }}</small>
@@ -245,33 +253,76 @@ onBeforeUnmount(() => {
   border-radius: 42%;
 }
 
-/* Nameplate LUÔN hiện — mượn style pill/paper-flat/box-shadow của
-   hover-label cũ (đẹp hơn dải nền-vân-giấy trước đây), hover-label riêng
-   đã bị xoá hẳn (2026-08-30 bug report: 2 label chồng nhau khi hover). */
+/* Nameplate always visible. Huyen Kim S03 (2026-10-02): the plate is a
+   VERTICAL hanging tag using the `building-plaque` chrome art (96x160)
+   instead of the old horizontal pill - name runs top-to-bottom
+   (vertical-rl, wrapping into columns for long names), level sits under
+   the tag, status is the dot at the tag top. */
 .building-nameplate {
   position: absolute;
   left: 50%;
-  top: calc(var(--baseline-y) - 2px);
+  top: calc(var(--baseline-y) + 2px);
   z-index: 6;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 5px;
-  min-width: max-content;
-  max-width: 220%;
-  padding: 3px 10px;
-  border: 1px solid color-mix(in srgb, var(--gold-500) 55%, var(--frame-outer));
-  border-radius: 999px;
-  background: var(--paper-50);
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
-  color: var(--paper-text);
-  font: 600 var(--text-xs) var(--font-body);
-  line-height: var(--lh-tight);
+  gap: 3px;
   transform: translateX(-50%);
   pointer-events: none;
 }
 
-.building-nameplate__text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.building-nameplate__level { color: var(--paper-text-muted); font-size: var(--text-xs); font-weight: 400; }
+.building-nameplate__tag {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-width: 30px;
+  min-height: 58px;
+  padding: 8px 6px;
+  /* Pending/fallback surface - the plaque PNG owns the tag face when
+     the chrome slot resolves. */
+  border: 1px solid color-mix(in srgb, var(--gold-500) 55%, var(--frame-outer));
+  border-radius: 4px;
+  background: linear-gradient(180deg, var(--paper-50), color-mix(in srgb, var(--paper-50) 88%, var(--gold-500)));
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
+  color: var(--paper-text);
+  font: 600 10px var(--font-body);
+  line-height: var(--lh-tight);
+}
+
+.building-nameplate__tag:has(.building-nameplate__plaque) {
+  border-color: transparent;
+  background: none;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
+}
+
+.building-nameplate__plaque {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+}
+
+.building-nameplate__text {
+  position: relative;
+  z-index: 1;
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  max-height: 76px;
+  overflow: hidden;
+  letter-spacing: 0.02em;
+  filter: drop-shadow(0 1px 0 rgba(255, 248, 220, 0.35));
+}
+
+.building-nameplate__level {
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ink-950) 78%, transparent);
+  color: var(--surface-text-soft);
+  font-size: 9px;
+  font-weight: 400;
+  white-space: nowrap;
+}
 .building-nameplate__lock {
   position: relative;
   flex: 0 0 auto;

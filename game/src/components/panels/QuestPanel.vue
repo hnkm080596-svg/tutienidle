@@ -4,11 +4,17 @@
 // labels, the collect shortfall and claimability all resolve inside
 // the domain model. The panel maps verdict -> i18n label / CSS class
 // and never rebuilds release gating or reward admission itself.
-import { computed } from 'vue'
+//
+// Huyen Kim scene 18: quest list rail (left) + selected quest detail
+// (right) inside the imperial scroll shell. Cadence grouping stays
+// model-driven - beta admits once-quests only, and hidden cadences
+// never render a placeholder.
+import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useUiStore } from '@/stores/ui'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
-import OverlayPanel from '@/components/common/OverlayPanel.vue'
+import ImperialScrollScene from '@/components/common/ImperialScrollScene.vue'
+import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
 import Bar from '@/components/common/primitives/Bar.vue'
 import GameButton from '@/components/common/GameButton.vue'
 import EmptyState from '@/components/common/primitives/EmptyState.vue'
@@ -60,6 +66,18 @@ const groups = computed(() => [
   { title: t('panels.quest.groups.once'), rows: rows.value },
 ])
 
+// Scene 18: left rail selects the quest, right panel owns the detail.
+const selectedQuestId = ref<string | null>(null)
+const selectedRow = computed(
+  () => rows.value.find(row => row.id === selectedQuestId.value) ?? null,
+)
+
+watch(rows, list => {
+  if (!list.some(row => row.id === selectedQuestId.value)) {
+    selectedQuestId.value = list[0]?.id ?? null
+  }
+}, { immediate: true })
+
 function onClaim(questId: string) {
   if (gameManager.questOps.claimQuest(questId)) {
     bumpState()
@@ -72,68 +90,140 @@ function close() {
 </script>
 
 <template>
-  <OverlayPanel :open="ui.standalonePanel === 'quest'" :title="t('panels.quest.title')" width="min(760px, 94vw)" height="min(640px, 88vh)" @close="close">
-    <template #header-actions>
-      <GameButton variant="ghost" size="sm" @click="close">
-        {{ t('panels.common.close') }}
-      </GameButton>
-    </template>
+  <ImperialScrollScene
+    scene="quest" :open="ui.standalonePanel === 'quest'" :title="t('panels.quest.title')" @close="close">
+    <div class="quest-scene">
+      <!-- Left rail: cadence group + quest entries -->
+      <div v-show="rows.length" class="quest-scene__rail">
+        <section v-for="group in groups" v-show="group.rows.length" :key="group.title" class="quest-scene__section">
+          <h4 class="quest-scene__section-title">{{ group.title }}</h4>
+          <ul class="quest-scene__list">
+            <li v-for="row in group.rows" :key="row.id">
+              <button
+                type="button"
+                class="quest-scene__entry"
+                :class="{ 'is-selected': row.id === selectedQuestId, 'is-claimable': row.claim.available && !row.claim.claimed }"
+                @click="selectedQuestId = row.id"
+              >
+                <InkNineSlice chrome-id="list-row" layer="surface" />
+                <span class="quest-scene__entry-name">{{ row.name }}</span>
+                <span class="quest-scene__entry-progress">{{ Math.min(row.progress, row.target) }}/{{ row.target }}</span>
+              </button>
+            </li>
+          </ul>
+        </section>
 
-    <div class="quest-panel">
-      <section v-for="group in groups" v-show="group.rows.length" :key="group.title" class="quest-panel__section">
-        <h4 class="quest-panel__section-title">{{ group.title }}</h4>
-        <ul class="quest-panel__list">
-          <li v-for="row in group.rows" :key="row.id" class="quest-panel__card">
-            <div class="quest-panel__info">
-              <div class="quest-panel__name">{{ row.name }}</div>
-              <div class="quest-panel__desc">{{ row.description }}</div>
-              <Bar
-                class="quest-panel__progress-bar"
-                :value="row.progress"
-                :max="row.target"
-                :height="6"
-              />
-              <div class="quest-panel__progress-label">
-                {{ targetLabel(row) }} · {{ Math.min(row.progress, row.target) }}/{{ row.target }}
-              </div>
-              <div v-if="rewardChips(row).length" class="quest-panel__rewards">
-                <span v-for="(chip, chipIndex) in rewardChips(row)" :key="chipIndex" class="quest-panel__reward">
-                  {{ chip }}
-                </span>
-              </div>
-              <div v-if="bagShortfall(row)" class="quest-panel__shortfall">
-                {{ t('panels.quest.bagShortfall', { have: bagShortfall(row)!.have, need: bagShortfall(row)!.need }) }}
-              </div>
-            </div>
-            <GameButton
-              class="quest-panel__claim"
-              :disabled="row.claim.claimed || !row.claim.available"
-              @click="onClaim(row.id)"
-            >
-              {{ row.claim.claimed ? t('panels.quest.actions.claimed') : t('panels.quest.actions.claim') }}
-            </GameButton>
-          </li>
-        </ul>
-      </section>
+      </div>
 
-      <EmptyState v-if="!rows.length">{{ t('panels.quest.empty') }}</EmptyState>
+      <!-- Empty state spans the whole content grid (both rail and detail
+           are pointless surfaces when the model emits no rows). -->
+      <EmptyState v-if="!rows.length" class="quest-scene__empty">{{ t('panels.quest.empty') }}</EmptyState>
+
+      <!-- Right: selected quest detail (description/objective/progress/
+           reward/claim - all canonical model fields). -->
+      <div v-if="selectedRow" class="quest-scene__detail">
+        <h3 class="quest-scene__name">{{ selectedRow.name }}</h3>
+        <p class="quest-scene__desc">{{ selectedRow.description }}</p>
+        <Bar
+          class="quest-scene__progress-bar"
+          :value="selectedRow.progress"
+          :max="selectedRow.target"
+          :height="8"
+        />
+        <div class="quest-scene__progress-label">
+          {{ targetLabel(selectedRow) }} · {{ Math.min(selectedRow.progress, selectedRow.target) }}/{{ selectedRow.target }}
+        </div>
+        <div v-if="rewardChips(selectedRow).length" class="quest-scene__rewards">
+          <span v-for="(chip, chipIndex) in rewardChips(selectedRow)" :key="chipIndex" class="quest-scene__reward">
+            {{ chip }}
+          </span>
+        </div>
+        <div v-if="bagShortfall(selectedRow)" class="quest-scene__shortfall">
+          {{ t('panels.quest.bagShortfall', { have: bagShortfall(selectedRow)!.have, need: bagShortfall(selectedRow)!.need }) }}
+        </div>
+        <GameButton
+          class="quest-scene__claim"
+          :disabled="selectedRow.claim.claimed || !selectedRow.claim.available"
+          @click="onClaim(selectedRow.id)"
+        >
+          {{ selectedRow.claim.claimed ? t('panels.quest.actions.claimed') : t('panels.quest.actions.claim') }}
+        </GameButton>
+      </div>
     </div>
-  </OverlayPanel>
+  </ImperialScrollScene>
 </template>
 
 <style scoped>
-.quest-panel { display: flex; flex-direction: column; gap: 20px; height: 100%; min-height: 0; padding: 16px 18px; overflow-y: auto; }
-.quest-panel__section-title { margin: 0 0 10px; color: var(--paper-eyebrow); font: 700 var(--text-md) var(--font-display); letter-spacing: .04em; }
-.quest-panel__list { display: flex; flex-direction: column; gap: 10px; margin: 0; padding: 0; list-style: none; }
-.quest-panel__card { display: flex; align-items: center; gap: 14px; padding: 12px 14px; background: var(--ink-800); border: 1px solid var(--ink-line-soft); border-radius: var(--radius-sm); }
-.quest-panel__info { flex: 1 1 auto; min-width: 0; }
-.quest-panel__name { color: var(--text-primary); font-weight: 600; }
-.quest-panel__desc { margin-top: 2px; color: var(--text-secondary); font-size: var(--text-body); }
-.quest-panel__progress-bar { margin-top: 8px; border-radius: 3px; --bar-track: var(--ink-950); --bar-from: var(--chrome-300); --bar-to: var(--chrome-300); }
-.quest-panel__progress-label { margin-top: 4px; color: var(--text-secondary); font-size: var(--text-sm); }
-.quest-panel__rewards { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
-.quest-panel__reward { padding: 2px 8px; border: 1px solid var(--ink-line-soft); border-radius: var(--radius-sm); background: color-mix(in srgb, var(--mineral-gold) 12%, var(--ink-900)); color: var(--mineral-gold); font-size: var(--text-xs); }
-.quest-panel__shortfall { margin-top: 6px; color: var(--cinnabar); font-size: var(--text-xs); }
-.quest-panel__claim { flex: 0 0 auto; }
-.quest-panel__claim:disabled { color: var(--text-secondary); background: var(--ink-700, var(--ink-800)); }
+/* Spec 18: list rail | detail panel inside the scroll content grid. */
+.quest-scene {
+  height: 100%;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(240px, 1fr) minmax(0, 1.6fr);
+  gap: 18px;
+  padding: 6px 2px;
+}
+.quest-scene__rail {
+  min-height: 0;
+  overflow-y: auto;
+  mask-image: linear-gradient(to bottom, transparent 0, #000 12px, #000 calc(100% - 12px), transparent 100%);
+  padding: 4px 6px;
+}
+.quest-scene__section-title { margin: 0 0 10px; color: var(--hk-text-muted, var(--paper-eyebrow)); font: 700 var(--text-md) var(--font-display); letter-spacing: .04em; }
+.quest-scene__list { display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; list-style: none; }
+/* list-row chrome: the PNG row surface carries the base fill; state
+   borders still paint over it so selected/claimable read unchanged. */
+.quest-scene__entry {
+  position: relative;
+  isolation: isolate;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--hk-surface-raised, var(--ink-800));
+  border: 1px solid var(--hk-border-muted, var(--ink-line-soft));
+  border-radius: var(--hk-radius-md, var(--radius-sm));
+  color: var(--hk-text-secondary, var(--text-secondary));
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--hk-motion-micro, 150ms) var(--hk-ease-standard, ease);
+}
+.quest-scene__entry .ink-nine-slice { z-index: 0; }
+.quest-scene__entry > :not(.ink-nine-slice) { position: relative; z-index: 1; }
+.quest-scene__entry:hover { border-color: var(--hk-border-active, var(--ink-line)); }
+.quest-scene__entry.is-selected { border-color: var(--hk-jade, var(--jade)); color: var(--hk-text-primary, var(--text-primary)); }
+.quest-scene__entry.is-claimable .quest-scene__entry-progress { color: var(--hk-gold, var(--mineral-gold)); }
+.quest-scene__entry-name { font-weight: 600; }
+.quest-scene__entry-progress { font-size: var(--text-xs); font-variant-numeric: tabular-nums; color: var(--hk-text-muted, var(--text-muted)); }
+
+.quest-scene__detail {
+  min-height: 0;
+  overflow-y: auto;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  background: var(--hk-surface-raised, var(--ink-800));
+  border: 1px solid var(--hk-border-muted, var(--ink-line-soft));
+  border-radius: var(--hk-radius-md, var(--radius-sm));
+}
+.quest-scene__name { margin: 0; color: var(--hk-text-primary, var(--text-primary)); font: 700 var(--text-title) var(--font-display); }
+.quest-scene__desc { margin: 6px 0 0; color: var(--hk-text-secondary, var(--text-secondary)); font-size: var(--text-body); }
+.quest-scene__progress-bar { width: 100%; margin-top: 14px; border-radius: 3px; --bar-track: var(--hk-surface-base, var(--ink-950)); --bar-from: var(--chrome-300); --bar-to: var(--chrome-300); }
+.quest-scene__progress-label { margin-top: 6px; color: var(--hk-text-secondary, var(--text-secondary)); font-size: var(--text-sm); }
+.quest-scene__rewards { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 10px; }
+.quest-scene__reward { padding: 2px 8px; border: 1px solid var(--hk-border-muted, var(--ink-line-soft)); border-radius: var(--radius-sm); background: color-mix(in srgb, var(--hk-gold, var(--mineral-gold)) 12%, var(--hk-surface-base, var(--ink-900))); color: var(--hk-gold, var(--mineral-gold)); font-size: var(--text-xs); }
+.quest-scene__shortfall { margin-top: 8px; color: var(--cinnabar); font-size: var(--text-xs); }
+.quest-scene__claim { margin-top: auto; }
+.quest-scene__claim:disabled { color: var(--text-secondary); background: var(--ink-700, var(--ink-800)); }
+.quest-scene__empty { grid-column: 1 / -1; align-self: center; justify-self: center; }
+
+@container (max-width: 860px) {
+  .quest-scene { grid-template-columns: 1fr; grid-template-rows: auto 1fr; overflow-y: auto; }
+}
 </style>

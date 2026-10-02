@@ -1,15 +1,10 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import OverlayPanel from '@/components/common/OverlayPanel.vue'
+import ImperialScrollScene from '@/components/common/ImperialScrollScene.vue'
 import PlayerPortrait from '@/components/common/PlayerPortrait.vue'
 import Bar from '@/components/common/primitives/Bar.vue'
-import Eyebrow from '@/components/common/primitives/Eyebrow.vue'
 import GameButton from '@/components/common/GameButton.vue'
-import BodyRefinementSection from '@/components/panels/realm/BodyRefinementSection.vue'
-import MeridianSection from '@/components/panels/realm/MeridianSection.vue'
-import ZhouTianSection from '@/components/panels/realm/ZhouTianSection.vue'
-import BodyChapterNav, { type BodyChapterEntry } from '@/components/panels/realm/BodyChapterNav.vue'
 import { useUiStore } from '@/stores/ui'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
@@ -23,10 +18,7 @@ import { formatNumber } from '@/core/format/NumberFormatter'
 import { formatDuration } from '@/core/format/formatDuration'
 import { getRealmTier } from '@/core/realm/RealmTierMap'
 import { useRealmStatPassives } from '@/composables/useRealmStatPassives'
-import type { BodyChapterId } from '@/core/realm/body/BodyChapter'
-import { getBodyChapterProgress, isBodyChapterUnlocked } from '@/core/realm/body/BodyProgressionSystem'
 import HuyenKimParallaxStack from '@/components/common/HuyenKimParallaxStack.vue'
-import { stableSceneArtUrl } from '@/presentation/huyenKim/StableSceneArt'
 
 // 2026-08-28 - tieu canh gioi tu tang khi du tu vi (App.vue's tick(),
 // khong con nut Dot pha hay checkbox). Panel chi con nut dai canh
@@ -94,69 +86,8 @@ const majorBreakthroughLabel = computed(() => {
   return nextRealmName.value || t('panels.realm.labels.majorFallback')
 })
 
-// ---- SS20 Dao The / Kinh Mach - chapter rail + silhouette + detail ----
-const BODY_CHAPTER_LABEL_KEYS: Record<BodyChapterId, string> = {
-  body_refinement: 'panels.realm.bodyRefinement.title',
-  meridian: 'panels.realm.meridian.title',
-  zhou_tian: 'panels.realm.zhouTian.title',
-}
-const BODY_CHAPTER_ORDER: readonly BodyChapterId[] = ['body_refinement', 'meridian', 'zhou_tian']
-
-const bodyChapters = computed<BodyChapterEntry[]>(() => {
-  stateVersion.value
-
-  return BODY_CHAPTER_ORDER.map(id => {
-    const progress = getBodyChapterProgress(player.$state, id)
-    return {
-      id,
-      label: t(BODY_CHAPTER_LABEL_KEYS[id]),
-      unlocked: isBodyChapterUnlocked(player.$state, id),
-      completed: progress.completed,
-      total: progress.total,
-    }
-  })
-})
-
-const selectedChapter = ref<BodyChapterId | null>(null)
-// Default view = the first unlocked chapter still in progress.
-const activeChapter = computed<BodyChapterId>(
-  () =>
-    selectedChapter.value
-    ?? bodyChapters.value.find(chapter => chapter.unlocked && chapter.completed < chapter.total)?.id
-    ?? bodyChapters.value.find(chapter => chapter.unlocked)?.id
-    ?? 'body_refinement',
-)
-
-// Huyen Kim body-diagram-kit: stable cultivation figure + aligned meridian
-// ring overlay (same 640x520 canvas). Runtime keeps node/tier ownership -
-// the overlay is decorative substrate, the sections still own the data.
-const BODY_FIGURE_SRC = stableSceneArtUrl('body-cultivation-figure', '@2x')
-const BODY_MERIDIAN_OVERLAY_SRC = stableSceneArtUrl('body-meridian-overlay', '@2x')
-
-// SS20 upgrade feedback - a landed chapter invest flashes the body
-// silhouette (the "localized body glow" beat); the row-level ignition
-// flash lives inside each section.
-const bodyIgniting = ref(false)
-let igniteTimer: ReturnType<typeof setTimeout> | undefined
-
-const bodyCompletedTotal = computed(() =>
-  bodyChapters.value.reduce((sum, chapter) => sum + chapter.completed, 0),
-)
-
-watch(bodyCompletedTotal, (now, before) => {
-  if (now <= before) {
-    return
-  }
-
-  bodyIgniting.value = true
-  clearTimeout(igniteTimer)
-  igniteTimer = setTimeout(() => {
-    bodyIgniting.value = false
-  }, 1400)
-})
-
-onBeforeUnmount(() => clearTimeout(igniteTimer))
-
+// Body/Meridian/Zhou Tian moved to BodyPanel.vue (Huyen Kim scene 08) -
+// Realm keeps only the Thien Lo ascent + breakthrough ceremony.
 function close() { ui.closeHomeOverlays() }
 function majorBreakthrough() {
   if (!canBreakthrough.value) return
@@ -165,144 +96,127 @@ function majorBreakthrough() {
 </script>
 
 <template>
-  <OverlayPanel :open="ui.standalonePanel === 'realm'" :title="t('panels.realm.title')" width="min(1120px, 94vw)" height="min(760px, 90vh)" variant="system" @close="close">
-    <div class="realm-panel paper-on-sys">
-      <!-- Study Mode SS8.2 - hero subject (Thien Lo path) + info rail. -->
-      <div class="realm-panel__study">
-        <div class="realm-panel__hero">
-          <!-- realm-ascent-vista: layered substrate behind the 18-rung
-               path; runtime owns every rung/state above it. -->
-          <HuyenKimParallaxStack stack="realm-ascent" />
-          <div
-            class="realm-panel__nodes"
-            :aria-label="t('panels.realm.nodes.aria')"
-            :style="{ '--path-progress': `${pathProgress}%` }"
-          >
-            <div
-              v-for="(node, index) in realmNodes"
-              :key="`${node.realmId}-${index}`"
-              class="realm-node"
-              :class="{
-                'is-current': currentTier === node.unlockTier,
-                'is-complete': currentTier >= node.unlockTier,
-                'is-locked': node.comingSoon,
-                'is-next': node.unlockTier === nextTier,
-                'is-future': !node.comingSoon && node.unlockTier > currentTier && node.unlockTier !== nextTier,
-              }"
-            >
-              <span class="realm-node__rune" aria-hidden="true" />
-              <span v-if="currentTier === node.unlockTier" class="realm-node__seal" aria-hidden="true">{{ player.name.charAt(0) }}</span>
-              <span class="realm-node__index">{{ index }}</span>
-              <strong>{{ node.label }}</strong>
-              <small v-if="node.comingSoon">{{ t('panels.realm.nodes.comingSoon') }}</small>
-              <small v-else-if="currentTier === node.unlockTier">{{ t('panels.realm.nodes.current') }}</small>
-              <small v-else-if="currentTier > node.unlockTier">{{ t('panels.realm.nodes.unlocked') }}</small>
-              <small v-else-if="node.unlockTier === nextTier">{{ t('panels.realm.nodes.next') }}</small>
-              <small v-else>{{ t('panels.realm.nodes.locked') }}</small>
-            </div>
-          </div>
-        </div>
-
-        <aside class="realm-panel__rail">
-          <div class="realm-panel__cultivator">
-            <div class="realm-panel__aura" />
-            <PlayerPortrait variant="cultivate" :height="130" animated />
-            <strong class="realm-panel__name">{{ player.name }}</strong>
-            <span class="realm-panel__realm-line">{{ t('panels.realm.tierLine', { realm: realmName, level: player.realmLevel }) }}</span>
-          </div>
-
-          <div class="realm-panel__cultivation">
-            <Bar
-              :value="player.cultivation"
-              :max="player.cultivationRequired"
-              :height="24"
-              pill
-              variant="system"
-              class="realm-panel__cultivation-bar"
-            >
-              <template #label><span class="realm-panel__cultivation-label">{{ Math.floor(player.cultivation) }} / {{ Math.floor(player.cultivationRequired) }} {{ t('panels.realm.cultivationUnit') }}</span></template>
-            </Bar>
-            <div v-if="cultivationRate > 0" class="realm-panel__cultivation-meta">
-              {{ t('panels.realm.rateEta', { rate: formatNumber(cultivationRate), unit: t('panels.realm.cultivationUnit'), eta: cultivationEta }) }}
-            </div>
-          </div>
-
-          <div v-if="realmStatPassiveRows.length" class="realm-panel__passives">
-            <article v-for="row in realmStatPassiveRows" :key="row.id">
-              <strong>{{ row.name }}</strong><span>{{ row.description }}</span>
-            </article>
-          </div>
-        </aside>
-      </div>
-
-      <!-- Action rail (SS8.2) - the dominant breakthrough CTA keeps the
-           requirements block inside it (spec v2 sec.3.2 pin). -->
-      <div class="realm-panel__actions">
-        <GameButton v-if="nextRealmSurface" :disabled="!canBreakthrough" @click="majorBreakthrough">{{ majorBreakthroughLabel }}</GameButton>
-
-        <ul v-if="requirements.length" class="realm-requirements">
-        <li
-          v-for="row in requirements"
-          :key="row.key"
-          class="realm-requirement"
-          :class="{ 'realm-requirement--met': row.met }"
+  <ImperialScrollScene
+    scene="realm" :open="ui.standalonePanel === 'realm'" :title="t('panels.realm.title')" @close="close">
+    <div class="realm-scene">
+      <!-- Scene 05 spec: the Thien Lo ascent map is the dominant region;
+           the parallax vista fills it, the 18-rung path rides above. -->
+      <div class="realm-scene__ascent">
+        <HuyenKimParallaxStack stack="realm-ascent" />
+        <div
+          class="realm-panel__nodes"
+          :aria-label="t('panels.realm.nodes.aria')"
+          :style="{ '--path-progress': `${pathProgress}%` }"
         >
-          <span
-            class="realm-requirement__marker"
-            :aria-label="row.met ? t('panels.realm.requirements.met') : t('panels.realm.requirements.unmet')"
-          >{{ row.met ? '✓' : '✗' }}</span>
-          <span>{{
-            row.key === 'level'
-              ? t('panels.realm.requirements.level', { realm: realmName, level: CORE_REALM_LEVEL })
-              : t('panels.realm.requirements.chapterClear')
-          }}</span>
-        </li>
-      </ul>
-      </div>
-
-      <!-- SS20 Dao The / Kinh Mach - chapter rail left, silhouette
-           center, active chapter (cost/requirement/gains) right. -->
-      <div class="realm-panel__body">
-        <Eyebrow>{{ t('panels.realm.body.title') }}</Eyebrow>
-
-        <div class="realm-panel__body-grid">
-          <BodyChapterNav
-            :chapters="bodyChapters"
-            :active-id="activeChapter"
-            @select="id => { selectedChapter = id }"
-          />
-
-          <div class="realm-panel__silhouette" :class="{ 'is-igniting': bodyIgniting }">
-            <img class="realm-panel__silhouette-figure" :src="BODY_FIGURE_SRC" alt="" aria-hidden="true" />
-            <img class="realm-panel__silhouette-overlay" :src="BODY_MERIDIAN_OVERLAY_SRC" alt="" aria-hidden="true" />
-          </div>
-
-          <div class="realm-panel__chapter">
-            <BodyRefinementSection v-if="activeChapter === 'body_refinement'" />
-            <MeridianSection v-else-if="activeChapter === 'meridian'" />
-            <ZhouTianSection v-else />
+          <div
+            v-for="(node, index) in realmNodes"
+            :key="`${node.realmId}-${index}`"
+            class="realm-node"
+            :class="{
+              'is-current': currentTier === node.unlockTier,
+              'is-complete': currentTier >= node.unlockTier,
+              'is-locked': node.comingSoon,
+              'is-next': node.unlockTier === nextTier,
+              'is-future': !node.comingSoon && node.unlockTier > currentTier && node.unlockTier !== nextTier,
+            }"
+          >
+            <span class="realm-node__rune" aria-hidden="true" />
+            <span v-if="currentTier === node.unlockTier" class="realm-node__seal" aria-hidden="true">{{ player.name.charAt(0) }}</span>
+            <span class="realm-node__index">{{ index }}</span>
+            <strong>{{ node.label }}</strong>
+            <small v-if="node.comingSoon">{{ t('panels.realm.nodes.comingSoon') }}</small>
+            <small v-else-if="currentTier === node.unlockTier">{{ t('panels.realm.nodes.current') }}</small>
+            <small v-else-if="currentTier > node.unlockTier">{{ t('panels.realm.nodes.unlocked') }}</small>
+            <small v-else-if="node.unlockTier === nextTier">{{ t('panels.realm.nodes.next') }}</small>
+            <small v-else>{{ t('panels.realm.nodes.locked') }}</small>
           </div>
         </div>
       </div>
+
+      <!-- Right rail: cultivator card -> cultivation -> passives ->
+           requirements -> breakthrough CTA (spec 05 rail stack). -->
+      <aside class="realm-scene__rail">
+        <div class="realm-panel__cultivator">
+          <div class="realm-panel__aura" />
+          <PlayerPortrait variant="cultivate" :height="130" animated />
+          <strong class="realm-panel__name">{{ player.name }}</strong>
+          <span class="realm-panel__realm-line">{{ t('panels.realm.tierLine', { realm: realmName, level: player.realmLevel }) }}</span>
+        </div>
+
+        <div class="realm-panel__cultivation">
+          <Bar
+            :value="player.cultivation"
+            :max="player.cultivationRequired"
+            :height="24"
+            pill
+            variant="system"
+            class="realm-panel__cultivation-bar"
+          >
+            <template #label><span class="realm-panel__cultivation-label">{{ Math.floor(player.cultivation) }} / {{ Math.floor(player.cultivationRequired) }} {{ t('panels.realm.cultivationUnit') }}</span></template>
+          </Bar>
+          <div v-if="cultivationRate > 0" class="realm-panel__cultivation-meta">
+            {{ t('panels.realm.rateEta', { rate: formatNumber(cultivationRate), unit: t('panels.realm.cultivationUnit'), eta: cultivationEta }) }}
+          </div>
+        </div>
+
+        <div v-if="realmStatPassiveRows.length" class="realm-panel__passives">
+          <article v-for="row in realmStatPassiveRows" :key="row.id">
+            <strong>{{ row.name }}</strong><span>{{ row.description }}</span>
+          </article>
+        </div>
+
+        <!-- Action block (spec v2 sec.3.2 pin kept): the dominant
+             breakthrough CTA owns the requirements block. -->
+        <div class="realm-panel__actions">
+          <GameButton v-if="nextRealmSurface" :disabled="!canBreakthrough" @click="majorBreakthrough">{{ majorBreakthroughLabel }}</GameButton>
+
+          <ul v-if="requirements.length" class="realm-requirements">
+            <li
+              v-for="row in requirements"
+              :key="row.key"
+              class="realm-requirement"
+              :class="{ 'realm-requirement--met': row.met }"
+            >
+              <span
+                class="realm-requirement__marker"
+                :aria-label="row.met ? t('panels.realm.requirements.met') : t('panels.realm.requirements.unmet')"
+              >{{ row.met ? '✓' : '✗' }}</span>
+              <span>{{
+                row.key === 'level'
+                  ? t('panels.realm.requirements.level', { realm: realmName, level: CORE_REALM_LEVEL })
+                  : t('panels.realm.requirements.chapterClear')
+              }}</span>
+            </li>
+          </ul>
+        </div>
+      </aside>
     </div>
-  </OverlayPanel>
+  </ImperialScrollScene>
 </template>
 
 <style scoped>
-.realm-panel { height: 100%; min-height: 0; display: flex; flex-direction: column; gap: 18px; padding: 20px; overflow-y: auto; }
+/* Scene 05 layout: ascent map dominant (vista + rung path) beside the
+   cultivator/requirements/CTA rail. */
+.realm-scene {
+  height: 100%;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(260px, 1fr);
+  gap: 18px;
+  padding: 6px 2px;
+}
+.realm-scene__ascent {
+  position: relative;
+  min-height: 0;
+  overflow: hidden;
+  border-radius: var(--hk-radius-md, 8px);
+}
+.realm-scene__ascent .hk-parallax-stack { z-index: 0; }
+.realm-scene__rail { display: flex; flex-direction: column; gap: 12px; min-width: 0; overflow-y: auto; mask-image: linear-gradient(to bottom, transparent 0, #000 12px, #000 calc(100% - 12px), transparent 100%); }
+
 .realm-panel__cultivator { position: relative; display: flex; flex-direction: column; align-items: center; color: var(--paper-text-soft); }
 .realm-panel__cultivator strong { color: var(--paper-text); font-family: var(--font-display); }
-
-/* Study Mode SS8.2 - hero + information rail. */
-.realm-panel__study { display: grid; grid-template-columns: minmax(0, 1fr) minmax(220px, 270px); gap: 18px; align-items: start; }
-/* realm-ascent-vista backdrop: the hero clips the stack, nodes stay above. */
-.realm-panel__hero { position: relative; min-width: 0; overflow: hidden; border-radius: var(--hk-radius-md, 8px); }
-.realm-panel__hero .hk-parallax-stack { z-index: 0; }
 .realm-panel__nodes { z-index: 1; }
-.realm-panel__rail { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
-
-/* Paper-to-sys remap moved to the .paper-on-sys utility in
-   system-theme.css (single owner; applied on .realm-panel above). */
 /* Ten/canh gioi khong co co chu tuong minh truoc day (2026-08-30
    frontend-design pass: dong nhan dien quan trong nhat panel lai nho
    nhat) - nang len dung co CharacterPanel's identity block dung. */
@@ -311,7 +225,7 @@ function majorBreakthrough() {
 .realm-panel__cultivation-label { font-size: var(--text-md); font-weight: 700; }
 .realm-panel__cultivation-meta { margin-top: 5px; text-align: center; font-size: var(--text-xs); color: var(--paper-text-muted); font-variant-numeric: tabular-nums; }
 .realm-panel__aura { position: absolute; width: 170px; height: 170px; border-radius: 50%; background: radial-gradient(circle, var(--hk-glow-jade, color-mix(in srgb, var(--chrome-500) 25%, transparent)), transparent 68%); animation: realm-breathe 3s ease-in-out infinite; }
-.realm-panel__actions { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 10px; padding-top: 4px; border-top: 1px solid var(--hk-border-muted, var(--ink-line)); }
+.realm-panel__actions { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 10px; margin-top: auto; padding-top: 10px; border-top: 1px solid var(--hk-border-muted, var(--ink-line)); }
 .realm-panel__actions :deep(button:disabled) { opacity: .38; filter: grayscale(1); }
 .realm-panel__actions label { color: var(--text-secondary); }
 /* M-QI-03 - normal Truc Co requirement lines (unmet muted / met jade). */
@@ -327,7 +241,7 @@ function majorBreakthrough() {
 /* SS16 Thien Lo - vertical milestone path, mortal rung at the bottom.
    The center spine's climbed share is jade (--path-progress); rung
    cards alternate sides and connect to the spine by a short trace. */
-.realm-panel__nodes { display: flex; flex-direction: column-reverse; gap: 10px; position: relative; padding: 14px 0 6px; }
+.realm-panel__nodes { display: flex; flex-direction: column-reverse; gap: 10px; position: relative; height: 100%; padding: 14px 0 20px; overflow-y: auto; mask-image: linear-gradient(to bottom, transparent 0, #000 18px, #000 calc(100% - 18px), transparent 100%); }
 .realm-panel__nodes::before {
   content: '';
   position: absolute;
@@ -441,62 +355,14 @@ function majorBreakthrough() {
 .realm-panel__passives article strong { font-size: var(--text-md); color: var(--hk-text-primary, var(--text-primary)); }
 .realm-panel__passives article span { color: var(--hk-text-secondary, var(--text-muted)); font-size: var(--text-sm); }
 
-/* SS20 - chapter nav | silhouette | active chapter detail. */
-.realm-panel__body { display: flex; flex-direction: column; gap: 8px; }
-.realm-panel__body .eyebrow { margin: 0; }
-.realm-panel__body-grid { display: grid; grid-template-columns: minmax(140px, 180px) minmax(140px, 200px) minmax(0, 1fr); gap: 16px; align-items: start; }
-.realm-panel__silhouette {
-  position: relative;
-  display: flex;
-  justify-content: center;
-  padding: 8px;
-  border: 1px solid var(--hk-border-muted, #2a352f);
-  border-radius: var(--hk-radius-md, 8px);
-  background: var(--hk-surface-base, #0b0f0d);
-}
-.realm-panel__silhouette::before {
-  content: '';
-  position: absolute;
-  inset: 8% 14%;
-  border-radius: 50%;
-  background: radial-gradient(closest-side, var(--hk-glow-jade, rgba(63, 166, 139, 0.35)), transparent 72%);
-  opacity: 0.35;
-  pointer-events: none;
-}
-.realm-panel__silhouette-figure { position: relative; width: 100%; height: auto; max-width: 170px; }
-/* Meridian ring overlay shares the figure's 640x520 canvas: identical
-   width box + same center keeps the authored alignment. */
-.realm-panel__silhouette-overlay {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  width: 100%;
-  height: auto;
-  max-width: 170px;
-  pointer-events: none;
-}
-/* Landed-invest flash: gold wash sweeps the silhouette, then settles. */
-.realm-panel__silhouette.is-igniting { animation: realm-ignite-flash 1400ms var(--hk-ease-standard, ease) 1; }
-.realm-panel__silhouette.is-igniting::before { opacity: 0.8; }
-.realm-panel__chapter { min-width: 0; }
-
-@keyframes realm-ignite-flash {
-  0% { box-shadow: inset 0 0 0 0 var(--hk-glow-gold, rgba(232, 195, 90, 0.35)); }
-  35% { box-shadow: inset 0 0 34px 6px var(--hk-glow-gold, rgba(232, 195, 90, 0.35)); }
-  100% { box-shadow: inset 0 0 0 0 transparent; }
-}
-
 @keyframes realm-breathe { 50% { transform: scale(1.08); opacity: .65; } }
-/* UI-006 (Task 4) - reduced motion: aura dung yen; ignite flash giu
-   state class, khong sweep. */
+/* UI-006 (Task 4) - reduced motion: aura dung yen. */
 @media (prefers-reduced-motion: reduce) {
   .realm-panel__aura { animation: none; }
-  .realm-panel__silhouette.is-igniting { animation: none; }
 }
-@container overlay-panel (max-width: 860px) {
-  .realm-panel__study { grid-template-columns: 1fr; }
-  .realm-panel__body-grid { grid-template-columns: 1fr; }
+@container (max-width: 860px) {
+  .realm-scene { grid-template-columns: 1fr; grid-template-rows: minmax(0,1fr) auto; overflow-y: auto; }
+  .realm-scene__rail { overflow-y: visible; }
   .realm-panel__nodes { padding-left: 30px; }
   .realm-panel__nodes::before { left: 10px; }
   .realm-node { width: 100%; }

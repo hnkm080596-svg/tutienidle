@@ -97,8 +97,7 @@ const FORBIDDEN_TOKENS = [
 
 const GATE_MARKERS = [
   /\bisBeta[A-Z]\w*\(/,
-  /\bbeta[A-Z]\w*For\(/,
-  /\bbetaWheelSlots\(/,
+  /\bbeta[A-Z]\w*\(/,
   /\bBETA_[A-Z_]+\b/,
   /from ['"]@\/core\/betaScope/,
   /\bisActivePath\(/,
@@ -209,11 +208,16 @@ interface HitFile {
   tokens: string[]
 }
 
+/** relative() returns OS separators; protected paths are POSIX-style. */
+function toPosix(rel: string): string {
+  return rel.replace(/\\/g, '/')
+}
+
 function scan(): HitFile[] {
   const files = [...listVueFiles(SRC_ROOT)]
   const hits: HitFile[] = []
   for (const file of files) {
-    const rel = relative(SRC_ROOT, file)
+    const rel = toPosix(relative(SRC_ROOT, file))
     const stripped = stripComments(readFileSync(file, 'utf8'))
     const tokens = FORBIDDEN_TOKENS.filter((tok) => tok.pattern.test(stripped)).map(
       (tok) => tok.id,

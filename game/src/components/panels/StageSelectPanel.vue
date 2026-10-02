@@ -17,7 +17,9 @@ import EmptyState from '@/components/common/primitives/EmptyState.vue'
 import { getCurrentRealm } from '@/core/realm/realmSystem'
 import { useAudioStore } from '@/stores/audio'
 import { stableSceneArtUrl } from '@/presentation/huyenKim/StableSceneArt'
+import { layoutStageTrail } from './stageTrailLayout'
 import HuyenKimSymbol from '@/components/common/HuyenKimSymbol.vue'
+import { hkChromeUrl } from '@/ui/huyenKimChrome'
 
 // exploration-map-chrome-kit (stable art): frame around the map panel,
 // chapter divider under the title, soft-edge mask on the scroll region.
@@ -25,6 +27,7 @@ import HuyenKimSymbol from '@/components/common/HuyenKimSymbol.vue'
 const MAP_FRAME_SRC = stableSceneArtUrl('exploration-map-frame', '@2x')
 const MAP_MASK_SRC = stableSceneArtUrl('exploration-map-mask', '@2x')
 const CHAPTER_DIVIDER_SRC = stableSceneArtUrl('exploration-chapter-divider', '@2x')
+const bossSealUrl = hkChromeUrl('boss-seal')
 
 const { t } = useI18n()
 
@@ -181,6 +184,12 @@ const stageNodes = computed(() => visibleStages.value.map((stage, index) => ({
     .map(entry => gameManager.catalogOps.getEnemyTemplate(entry.enemyId)?.name ?? entry.enemyId),
 })))
 
+// Scene 10 (Son Ha Do): the stage field is a winding trail across the
+// framed parchment - pure projection of stageNodes order, no domain
+// state. layoutStageTrail returns fractional node positions + the SVG
+// path through them.
+const stageTrail = computed(() => layoutStageTrail(stageNodes.value.length))
+
 const selectedEncounters = computed(() => {
   if (!selectedStage.value) return []
 
@@ -311,15 +320,28 @@ function start() {
       <div class="stage-select__workspace">
         <section class="stage-select__map-panel">
           <img class="stage-select__map-frame" :src="MAP_FRAME_SRC" alt="" aria-hidden="true" />
+          <!-- Pinned map header sits INSIDE the frame's interior band -
+               it was previously the scroll region's first child, where
+               the scrollfade top mask ate the title glyphs. -->
+          <header class="stage-select__map-head">
+            <h4 class="stage-select__title">{{ t('panels.stageSelect.sections.selectFloor') }}</h4>
+            <img class="stage-select__chapter-divider" :src="CHAPTER_DIVIDER_SRC" alt="" aria-hidden="true" />
+          </header>
           <div class="stage-select__map-scroll scrollfade">
-          <h4 class="stage-select__title">{{ t('panels.stageSelect.sections.selectFloor') }}</h4>
-          <img class="stage-select__chapter-divider" :src="CHAPTER_DIVIDER_SRC" alt="" aria-hidden="true" />
-
           <EmptyState v-if="visibleStages.length === 0" size="sm">{{ t('panels.stageSelect.empty.noStages') }}</EmptyState>
 
           <div v-else class="stage-map" :style="{ '--map-mask': `url(${MAP_MASK_SRC})` }">
+            <svg
+              v-if="stageTrail.pathD"
+              class="stage-map__trail"
+              viewBox="0 0 1000 1000"
+              preserveAspectRatio="none"
+              aria-hidden="true"
+            >
+              <path :d="stageTrail.pathD" class="stage-map__trail-path" />
+            </svg>
             <button
-              v-for="node in stageNodes"
+              v-for="(node, index) in stageNodes"
               :key="node.stage.id"
               type="button"
               class="stage-map__node"
@@ -329,6 +351,10 @@ function start() {
                 'is-locked': !isStageUnlocked(node.stage),
                 'is-final': node.isLast,
               }"
+              :style="{
+                left: `${(stageTrail.points[index]?.x ?? 0.5) * 100}%`,
+                top: `${(stageTrail.points[index]?.y ?? 0.5) * 100}%`,
+              }"
               v-tooltip="node.stage.id === selectedStageId ? undefined : isStageUnlocked(node.stage) ? node.stage.description : stageLockReason(node.stage)"
               @click="selectStage(node.stage.id)"
             >
@@ -337,7 +363,10 @@ function start() {
                 <strong>{{ t('panels.stageSelect.labels.floorPrefix', { floor: node.stage.floor ?? node.stage.requiredRealmLevel ?? 1 }) }}</strong>
                 <small>{{ node.enemies.join(' · ') }}</small>
               </span>
-              <span v-if="node.stage.bossEnemyId" class="stage-map__boss">{{ t('panels.stageSelect.labels.boss') }}</span>
+              <span v-if="node.stage.bossEnemyId" class="stage-map__boss">
+                <img v-if="bossSealUrl" class="stage-map__boss-seal" :src="bossSealUrl" alt="" aria-hidden="true" />
+                {{ t('panels.stageSelect.labels.boss') }}
+              </span>
               <span v-if="!isStageUnlocked(node.stage)" class="stage-map__lock" aria-hidden="true"><HuyenKimSymbol name="lock" /></span>
             </button>
           </div>
@@ -494,11 +523,34 @@ function start() {
   padding: 0;
 }
 
+/* The map head is pinned inside the frame interior so the scroll mask
+   never fades it. */
+.stage-select__map-head {
+  position: absolute;
+  top: 60px;
+  left: 48px;
+  right: 48px;
+  z-index: 3;
+}
+.stage-select__map-head .stage-select__title { margin-bottom: 4px; }
+
 .stage-select__map-scroll {
+  position: relative;
+  z-index: 2;
   height: 100%;
   overflow-y: auto;
-  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  /* The painted frame's inner border is ~28-40px at this canvas scale,
+     and the pinned head band occupies ~90px - the node field starts
+     under both and clears the bottom band. */
+  padding: 126px 36px 46px;
 }
+
+/* Scene 10: the floor field rides the vertical center of the map frame
+   (auto margins collapse cleanly when many stages force scrolling). */
+.stage-select__map-scroll > .stage-map,
+.stage-select__map-scroll > .empty-state { margin-block: auto; }
 
 .stage-select__map-frame {
   position: absolute;
@@ -538,12 +590,13 @@ function start() {
   font-size: var(--text-xs);
 }
 
-/* World map thu nhỏ (spec mục 22) — đường mòn ngoằn ngoèo, xem
-   stageNodes/stagePathPoints. */
+/* Scene 10 (Son Ha Do): the stage field is a parchment canvas - nodes
+   are orbit seals on the winding SVG trail (stageTrailLayout), not a
+   card grid. The mask still feathers the field edges. */
 .stage-map {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 8px;
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 340px;
   /* Stable map-content mask: alpha edges feather the node field into
      the parchment (interior stays fully opaque). */
   -webkit-mask-image: var(--map-mask, none);
@@ -552,19 +605,38 @@ function start() {
   mask-size: 100% 100%;
 }
 
+.stage-map__trail {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.stage-map__trail-path {
+  fill: none;
+  stroke: color-mix(in srgb, var(--scene-portal-accent) 70%, var(--brush-950) 12%);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 18 9;
+  opacity: 0.8;
+  vector-effect: non-scaling-stroke;
+}
+
 .stage-map__node {
-  position: relative;
-  min-width: 0;
-  min-height: 94px;
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 108px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  padding: 7px 5px;
+  gap: 3px;
+  padding: 6px 4px;
   border-radius: var(--radius-sm);
-  background: linear-gradient(105deg, color-mix(in srgb, var(--scene-portal-glow) 8%, var(--paper-50)), color-mix(in srgb, var(--scene-portal-glow) 4%, var(--paper-100)));
-  border: 1px solid color-mix(in srgb, var(--scene-portal-glow) 30%, var(--paper-line));
+  background: transparent;
+  border: 1px solid transparent;
   color: var(--paper-text);
   cursor: pointer;
   text-align: center;
@@ -572,34 +644,49 @@ function start() {
 
 .stage-map__number {
   display: grid;
-  width: 34px;
-  height: 34px;
+  width: 40px;
+  height: 40px;
   place-items: center;
-  border: 1px solid color-mix(in srgb, var(--scene-portal-accent) 50%, transparent);
+  border: 2px solid color-mix(in srgb, var(--scene-portal-accent) 60%, transparent);
   border-radius: 50%;
-  color: color-mix(in srgb, var(--scene-portal-accent) 55%, var(--brush-950) 45%);
+  background: color-mix(in srgb, var(--paper-50) 72%, var(--scene-portal-glow) 10%);
+  box-shadow: 0 1px 6px rgba(60, 40, 10, 0.25);
+  color: color-mix(in srgb, var(--scene-portal-accent) 60%, var(--brush-950) 40%);
   font: 700 var(--text-sm) var(--font-display);
 }
 .stage-map__copy { width: 100%; min-width: 0; display: flex; flex-direction: column; }
-.stage-map__copy strong { font-size: var(--text-sm); }
-.stage-map__copy small { overflow: hidden; color: var(--paper-text-muted); font-size: var(--text-xs); text-overflow: ellipsis; white-space: nowrap; }
+.stage-map__copy strong { font-size: var(--text-xs); text-shadow: 0 1px 2px var(--paper-50); }
+.stage-map__copy small { overflow: hidden; color: var(--paper-text-muted); font-size: 10px; text-overflow: ellipsis; white-space: nowrap; text-shadow: 0 1px 2px var(--paper-50); }
+/* Scene 10: boss stages wear the boss-seal badge art behind the label. */
 .stage-map__boss {
   position: absolute;
-  top: 4px;
+  top: 2px;
   right: 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   color: var(--crimson);
-  font-size: var(--text-xs);
+  font-size: 9px;
   font-weight: 800;
+  line-height: 1;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+}
+.stage-map__boss-seal {
+  width: 24px;
+  height: auto;
+  margin-bottom: 1px;
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.45));
 }
 
-.stage-map__node:hover {
+.stage-map__node:hover .stage-map__number {
   border-color: var(--scene-portal-glow);
-}
-
-.stage-map__node.is-selected {
-  border-color: var(--scene-portal-glow);
-  background: color-mix(in srgb, var(--scene-portal-glow) 18%, var(--paper-50));
   box-shadow: 0 0 10px -2px var(--scene-portal-glow);
+}
+
+.stage-map__node.is-selected .stage-map__number {
+  border-color: var(--scene-portal-glow);
+  background: color-mix(in srgb, var(--scene-portal-glow) 26%, var(--paper-50));
+  box-shadow: 0 0 12px -1px var(--scene-portal-glow);
 }
 
 .stage-map__node.is-locked {
@@ -623,7 +710,7 @@ function start() {
   color: var(--crimson);
 }
 
-.stage-map__node.is-final:not(.is-selected) {
+.stage-map__node.is-final:not(.is-selected) .stage-map__number {
   border-color: var(--crimson);
 }
 

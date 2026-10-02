@@ -9,11 +9,12 @@
 // Presentation only (A7): reads materialBag + player state through the
 // stateVersion bridge; mutating commands stay in the ops layer. The
 // 1-second App.vue tick keeps the counts live.
-import { computed, type CSSProperties } from 'vue'
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
-import { chromeSlice, HUYEN_KIM_CHROME } from '@/ui/huyenKimChrome'
+import { chromeSlice } from '@/ui/huyenKimChrome'
+import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
 import { SPIRIT_STONE_MATERIALS } from '@/core/material/SpiritStoneMaterial'
 import { isCompanionDomainUnlocked } from '@/core/companion/CompanionAvailability'
 import { COMPANION_PULL_TOKEN_ID } from '@/core/game/GameManagerCompanionOps'
@@ -33,22 +34,17 @@ interface CurrencyChip {
 }
 
 // Linh Thach is a per-realm-tier MATERIAL family (ha/trung/thuong pham),
-// not a scalar - show one chip per tier the player actually holds, plus
-// the current realm's tier even at 0 so "I have no money" is visible.
+// not a scalar. Huyen Kim S03 (spec scene-03 top-bar): the strip shows
+// exactly the three tiers - empty tiers read 0 so the pill geometry is
+// stable and "I have no money at this tier" is always visible.
 const spiritStoneChips = computed<CurrencyChip[]>(() => {
   stateVersion.value
 
-  const chips = SPIRIT_STONE_MATERIALS.map((stone) => ({
+  return SPIRIT_STONE_MATERIALS.map((stone) => ({
     id: stone.id,
     label: stone.name,
     amount: gameManager.materialBag.getAmount(stone.id),
   }))
-
-  const held = chips.filter((chip) => chip.amount > 0)
-
-  // Empty bag still needs a visible zero balance - fall back to the
-  // lowest tier so the strip is never empty.
-  return held.length > 0 ? held : chips.slice(0, 1)
 })
 
 // Gacha currencies only render once the companion domain is reachable
@@ -81,43 +77,10 @@ const chips = computed(() => [...spiritStoneChips.value, ...companionChips.value
 
 // Huyen Kim chrome slot `resource-pill` (160x48, non-tintable) is spec'd
 // for these counters. While the manifest keeps the slot 'pending',
-// chromeSlice() returns null and the chips keep the CSS capsule below -
-// identical render to today. Once the PNG drops and status flips to
-// 'ready', this style paints the nine-slice instead: manifest-only
-// change, no code edits (huyen-kim-chrome.json header contract).
-const resourcePill = HUYEN_KIM_CHROME['resource-pill']
+// chromeSlice() returns null and the chips keep the CSS capsule below;
+// once 'ready', InkNineSlice (the ONE nine-slice owner) paints the PNG -
+// manifest-only change, no code edits (huyen-kim-chrome.json contract).
 const resourcePillSlice = chromeSlice('resource-pill')
-
-const chipChromeStyle = computed<CSSProperties[] | undefined>(() => {
-  if (!resourcePill || !resourcePillSlice) return undefined
-
-  const { url1x, url2x, slices } = resourcePillSlice
-  // Render at the manifest's minimumHeight/sourceHeight ratio (the pill
-  // capsule art is authored for ~0.5x source). image-set reports each
-  // candidate's intrinsic size in density-aware CSS px, so the same px
-  // slice numbers cut correctly on the 2x sheet; the plain url() entry
-  // keeps engines without image-set support working.
-  const scale = resourcePill.minimumHeight / resourcePill.sourceHeight
-  const fill = resourcePill.center === 'transparent' ? '' : ' fill'
-  const slice = `${slices.top} ${slices.right} ${slices.bottom} ${slices.left}${fill}`
-  const width =
-    `${slices.top * scale}px ${slices.right * scale}px ` +
-    `${slices.bottom * scale}px ${slices.left * scale}px`
-  return [
-    {
-      borderStyle: 'solid',
-      borderWidth: width,
-      borderColor: 'transparent',
-      borderRadius: '0px',
-      background: 'none',
-      borderImageSource: `url("${url1x}")`,
-      borderImageSlice: slice,
-      borderImageWidth: width,
-      borderImageRepeat: resourcePill.edgeMode === 'tile' ? 'repeat' : 'stretch',
-    },
-    { borderImageSource: `image-set(url("${url1x}") 1x, url("${url2x}") 2x)` },
-  ]
-})
 </script>
 
 <template>
@@ -127,8 +90,8 @@ const chipChromeStyle = computed<CSSProperties[] | undefined>(() => {
       :key="chip.id"
       class="currency-hud__chip"
       :class="[`currency-hud__chip--${chip.id}`, { 'currency-hud__chip--sliced': Boolean(resourcePillSlice) }]"
-      :style="chipChromeStyle"
     >
+      <InkNineSlice v-if="resourcePillSlice" chrome-id="resource-pill" layer="surface" />
       <span class="currency-hud__label">{{ chip.label }}</span>
       <strong class="currency-hud__amount">{{ formatNumber(chip.amount) }}</strong>
     </span>
@@ -151,6 +114,7 @@ const chipChromeStyle = computed<CSSProperties[] | undefined>(() => {
 }
 
 .currency-hud__chip {
+  position: relative;
   display: inline-flex;
   align-items: baseline;
   gap: 6px;
@@ -160,6 +124,21 @@ const chipChromeStyle = computed<CSSProperties[] | undefined>(() => {
   border-radius: var(--radius-sm);
   font-size: var(--text-sm);
   color: var(--surface-text-soft);
+}
+
+/* Sliced capsule: the resource-pill PNG owns fill + ring, so the CSS
+   capsule surface drops out and the slice inherits the chip radius. */
+.currency-hud__chip--sliced {
+  background: none;
+  border-color: transparent;
+  border-radius: var(--radius-sm);
+  padding: 6px 12px;
+}
+
+.currency-hud__label,
+.currency-hud__amount {
+  position: relative;
+  z-index: 3;
 }
 
 .currency-hud__label {

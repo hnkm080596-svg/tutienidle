@@ -1,4 +1,4 @@
-// StableSceneArt registry — guards the stable-art contract: parallax
+// StableSceneArt registry - guards the stable-art contract: parallax
 // stacks keep manifest order/drift and no provenance/banned path can
 // leak into runtime URLs. On-disk file existence is covered by the
 // pack validator (generate-scene-extension.mjs --check).

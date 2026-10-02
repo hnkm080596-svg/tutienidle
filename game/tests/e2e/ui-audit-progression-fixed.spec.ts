@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { BETA_FEATURES } from '../../src/core/betaFeatureFlags'
 import { mkdirSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -98,6 +99,9 @@ async function openWheelSlot(page: import('@playwright/test').Page, slotId: stri
 }
 
 test('progression slice fixed screens', async ({ page }) => {
+  // The audit path picks Kiem Tu - swordPath is scope-hidden under the
+  // beta lock, so this capture run is skipped until the flag flips.
+  test.skip(!BETA_FEATURES.swordPath, 'swordPath scope-hidden under the beta lock')
   await bootToGuestHome(page)
   await createCharacterThroughUi(page, 'AuditFix')
   await enterHome(page)
@@ -215,7 +219,7 @@ test('progression slice fixed screens', async ({ page }) => {
 
   // ---- Node tree — default zoom stays readable (>= FIT_ZOOM_MIN)
   await openWheelSlot(page, 'skill')
-  const skillPanel = page.locator('.overlay-panel')
+  const skillPanel = page.locator('.hk-scroll')
   await expect(skillPanel).toBeVisible({ timeout: 15_000 })
   const zoomValue = skillPanel.locator('.node-tree__zoom-value')
   await expect(zoomValue).toBeVisible({ timeout: 10_000 })

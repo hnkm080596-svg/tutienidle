@@ -11,6 +11,7 @@ import GameButton from '@/components/common/GameButton.vue'
 import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
 import InkWashBackdrop from '@/components/common/InkWashBackdrop.vue'
 import RewardList from './RewardList.vue'
+import { hkChromeUrl } from '@/ui/huyenKimChrome'
 
 // Combat UI Redesign muc 18/23, mo rong 2026-08-22 -- truoc day CHI 1
 // nut "Ve Dong Phu" (khong danh lai). Gio them "Tai Chien" (LUON danh
@@ -70,6 +71,9 @@ const hasAnyReward = computed(() => {
 })
 
 const isAutoRetrying = ref(false)
+
+// Scene 16 spec: same ceremonial family as Victory; cinnabar title.
+const ribbonUrl = hkChromeUrl('ceremony-ribbon')
 
 async function refight(): Promise<void> {
   if (!ui.selectedStageId) {
@@ -131,15 +135,18 @@ onMounted(() => {
 <template>
   <div class="combat-defeat-panel paper-on-dark">
     <InkWashBackdrop left-mountain bottom-mist :right-mountain="false" />
-    <InkNineSlice asset-id="surface-xl-paper-scroll" layer="surface" />
+    <InkNineSlice chrome-id="surface-xl-scroll" layer="surface" />
     <InkNineSlice asset-id="frame-xl-ceremony" layer="frame" tint-var="--cinnabar" />
-    <h2 class="combat-defeat-panel__title">{{ t('combat.defeat.title') }}</h2>
-
-    <RewardList v-if="hasAnyReward" :summary="summary" class="combat-defeat-panel__rewards scrollfade" />
+    <div class="combat-defeat-panel__title-band">
+      <img v-if="ribbonUrl" :src="ribbonUrl" alt="" aria-hidden="true" />
+      <h2 class="combat-defeat-panel__title">{{ t('combat.defeat.title') }}</h2>
+    </div>
 
     <p class="combat-defeat-panel__hint">
       {{ t(isCultivationGap ? 'combat.defeat.hintCultivate' : 'combat.defeat.hintGear') }}
     </p>
+
+    <RewardList v-if="hasAnyReward" :summary="summary" class="combat-defeat-panel__rewards scrollfade" />
 
     <div class="combat-defeat-panel__actions">
       <GameButton
@@ -160,13 +167,14 @@ onMounted(() => {
 </template>
 
 <style scoped>
+/* Scene 16: same ceremonial family as Victory - ink + cinnabar. */
 .combat-defeat-panel {
   /* .paper-on-dark owns the paper->surface remap (theme.css). */
   position: relative;
   isolation: isolate;
   box-sizing: border-box;
-  width: min(420px, calc(100vw - 32px));
-  padding: 28px 32px;
+  width: min(620px, calc(100vw - 32px));
+  padding: 34px 40px 30px;
   background: transparent;
   border: 0;
   border-radius: 0;
@@ -180,11 +188,32 @@ onMounted(() => {
   z-index: 3;
 }
 
+.combat-defeat-panel__title-band {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 76px;
+  margin: -10px 0 10px;
+}
+
+.combat-defeat-panel__title-band img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  pointer-events: none;
+  /* Defeat variation: wash the ribbon toward ink/cinnabar. */
+  filter: sepia(0.45) hue-rotate(-18deg) saturate(1.3);
+}
+
 .combat-defeat-panel__title {
-  margin: 0 0 16px;
+  position: relative;
+  margin: 0;
   font-family: var(--font-display);
   color: var(--crimson);
-  font-size: var(--text-panel-title);
+  font-size: var(--text-display-lg);
+  letter-spacing: 0.22em;
 }
 
 .combat-defeat-panel__rewards {

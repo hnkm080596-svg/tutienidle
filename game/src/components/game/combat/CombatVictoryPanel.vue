@@ -12,6 +12,7 @@ import { resolveNextProgressStage } from '@/core/stage/ProgressStageResolver'
 import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
 import InkWashBackdrop from '@/components/common/InkWashBackdrop.vue'
 import RewardList from './RewardList.vue'
+import { hkChromeUrl } from '@/ui/huyenKimChrome'
 
 // Combat UI Redesign muc 14-19 -- thang thi hien reward tich luy ca
 // tran (xem GameManager.getBattleRewardSummary()). Auto Battle OFF:
@@ -62,6 +63,9 @@ function continueToStageSelect() {
   // screen until the swap behind it is ready (useBattleActions).
   exitCombatToHome()
 }
+
+// Scene 15 spec: ceremonial title ribbon over the victory seal.
+const ribbonUrl = hkChromeUrl('ceremony-ribbon')
 
 const { remaining: countdown, start: startAutoRefightCountdown } = useAutoRetryCountdown(COUNTDOWN_SECONDS, async () => {
   // Tu Dong Tham Hiem -- chi tien khi resolver xac nhan man ke da mo. Man
@@ -121,9 +125,12 @@ onMounted(() => {
 <template>
   <div class="combat-victory-panel paper-on-dark">
     <InkWashBackdrop :left-mountain="false" bottom-mist seal="large" />
-    <InkNineSlice asset-id="surface-xl-paper-scroll" layer="surface" />
+    <InkNineSlice chrome-id="surface-xl-scroll" layer="surface" />
     <InkNineSlice asset-id="frame-xl-ceremony" layer="frame" />
-    <h2 class="combat-victory-panel__title">{{ t('combat.victory.title') }}</h2>
+    <div class="combat-victory-panel__title-band">
+      <img v-if="ribbonUrl" :src="ribbonUrl" alt="" aria-hidden="true" />
+      <h2 class="combat-victory-panel__title">{{ t('combat.victory.title') }}</h2>
+    </div>
 
     <RewardList :summary="summary" class="combat-victory-panel__rewards scrollfade" />
 
@@ -145,13 +152,15 @@ onMounted(() => {
 </template>
 
 <style scoped>
+/* Scene 15 ceremonial scroll: ~620px content column, ribbon title band,
+   reward slot row, action pair. */
 .combat-victory-panel {
   /* .paper-on-dark owns the paper->surface remap (theme.css). */
   position: relative;
   isolation: isolate;
   box-sizing: border-box;
-  width: min(420px, calc(100vw - 32px));
-  padding: 28px 32px;
+  width: min(620px, calc(100vw - 32px));
+  padding: 34px 40px 30px;
   background: transparent;
   border: 0;
   border-radius: 0;
@@ -165,11 +174,31 @@ onMounted(() => {
   z-index: 3;
 }
 
+.combat-victory-panel__title-band {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 76px;
+  margin: -10px 0 14px;
+}
+
+.combat-victory-panel__title-band img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  pointer-events: none;
+}
+
 .combat-victory-panel__title {
-  margin: 0 0 16px;
+  position: relative;
+  margin: 0;
   font-family: var(--font-display);
   color: var(--paper-text, #211f1a);
-  font-size: var(--text-panel-title);
+  font-size: var(--text-display-lg);
+  letter-spacing: 0.22em;
+  text-shadow: 0 0 12px color-mix(in srgb, var(--hk-glow-gold, rgba(232,195,90,.6)) 60%, transparent);
 }
 
 .combat-victory-panel__rewards {

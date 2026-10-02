@@ -129,41 +129,15 @@ export function isBetaCreationTalentId(talentId: string): boolean {
 // Feature flags and lock classes
 // ---------------------------------------------------------------------------
 
-/**
- * Beta feature admission table. Every listed feature is OUT of beta
- * scope; the table exists so each removal is a deliberate named flag
- * and re-enable is a single flip. Features not listed here are still
- * not offered - the fail-closed rule covers anything unnamed.
- *
- *   hiddenContent          - hidden ways' content: hidden lineage
- *                            (discovery / Co Thu trial / Quan The
- *                            diversion / Nghich Chu Thien), hidden
- *                            beasts, hidden material emissions
- *   swordPath / bodyPath   - Kiem Tu / The Tu ritual offers and panels
- *   companion              - companion roster/acquisition/progression
- *   formation              - Tran Phap formation access
- *   artifact               - artifact system surfaces
- *   manualWorkforce        - Nhan Cong manual workforce surface
- *   equipmentWash          - equipment wash (affix reroll) tab
- *   equipmentRefine        - equipment refine tab
- *   equipmentOreDecompose  - ore decompose tab
- *   dailyQuest             - all daily-cadence quests
- */
-export const BETA_FEATURES = {
-  hiddenContent: false,
-  swordPath: false,
-  bodyPath: false,
-  companion: false,
-  formation: false,
-  artifact: false,
-  manualWorkforce: false,
-  equipmentWash: false,
-  equipmentRefine: false,
-  equipmentOreDecompose: false,
-  dailyQuest: false,
-} as const
+// The flag table lives in betaFeatureFlags.ts (zero-dependency leaf -
+// e2e specs import it under tsconfig.node without dragging this
+// module's graph along). Re-export keeps '@/core/betaScope' the
+// canonical import path.
+export { BETA_FEATURES } from './betaFeatureFlags'
+export type { BetaFeatureName } from './betaFeatureFlags'
 
-export type BetaFeatureName = keyof typeof BETA_FEATURES
+import { BETA_FEATURES } from './betaFeatureFlags'
+import type { BetaFeatureName } from './betaFeatureFlags'
 
 /** The two lock classes plus the open state a surface can resolve to. */
 export type BetaScopeVerdict = 'available' | 'progression-locked' | 'scope-hidden'

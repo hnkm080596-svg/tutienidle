@@ -24,10 +24,11 @@ test.describe('Boot fresh (no saved state)', () => {
     const creation = page.getByTestId('character-creation-screen')
     await expect(creation).toBeVisible({ timeout: 15_000 })
 
-    // BETA-CREATION - one unified screen, no stepper: name + talent +
-    // starting-skill sections all visible at once.
+    // BETA-CREATION - one unified screen, no stepper: name + talent
+    // sections visible at once; the starting-skill step was removed.
     await expect(creation.getByText('Đạo danh', { exact: false })).toBeVisible()
     await expect(page.getByTestId('creation-name-input')).toBeVisible()
-    await expect(page.getByTestId('creation-skill-tram')).toBeVisible()
+    await expect(creation.locator('[data-testid^="creation-talent-"]').first()).toBeVisible()
+    await expect(creation.locator('[data-testid^="creation-skill-"]')).toHaveCount(0)
   })
 })

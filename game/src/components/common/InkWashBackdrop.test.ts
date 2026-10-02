@@ -58,17 +58,21 @@ describe('InkWashBackdrop', () => {
     ])
   })
 
-  it('composes the approved painting bridges into all four full-screen flows', () => {
-    expect(authSource).toContain('<InkWashBackdrop left-mountain bamboo seal="small"')
-    expect(creationSource).toContain('<InkWashBackdrop left-mountain right-mountain bottom-mist')
+  it('composes the approved painting bridges into the ceremonial flows', () => {
+    // Onboarding (auth/creation) moved to the Huyen Kim parallax vista -
+    // the ink-wash backdrop family now owns the combat result surfaces.
+    expect(authSource).toContain('HuyenKimParallaxStack')
+    expect(creationSource).toContain('HuyenKimParallaxStack')
     expect(victorySource).toContain('<InkWashBackdrop :left-mountain="false" bottom-mist seal="large"')
     expect(defeatSource).toContain('<InkWashBackdrop left-mountain bottom-mist')
   })
 
-  it('keeps onboarding controls legible on white paper', () => {
+  it('keeps onboarding controls legible on the ivory scroll', () => {
     expect(authSource).toContain('.auth-tabs button.active { color: var(--paper-text')
     expect(authSource).toContain('border-bottom: 2px solid var(--cinnabar')
-    expect(creationSource).toContain('background: color-mix(in srgb, var(--paper-50')
+    // Huyen Kim S01/S02 (2026-10-02): the card is the surface-xl-scroll
+    // chrome - paper-text tokens carry the legibility contract now.
+    expect(creationSource).toContain('chrome-id="surface-xl-scroll"')
     // BETA-CREATION - name+talent draft only: the selected talent card
     // is the legibility affordance now.
     expect(creationSource).toContain('.talent-card.selected { border-color: var(--hk-border-ceremony')

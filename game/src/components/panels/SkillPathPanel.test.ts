@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 // P7-M7 - the consolidated progression view carries the way identity
 // line (committed way name, 'Phan Nhan' for a way-less mortal) resolved
-// through getActiveWayDefinition, plus the absorbed TechniqueBand.
+// through getActiveWayDefinition, plus the absorbed technique surface.
 import { describe, expect, it, vi } from 'vitest'
 import { createApp, h, nextTick, ref } from 'vue'
 import { createPinia } from 'pinia'
@@ -114,7 +114,6 @@ function mountPanel(
   return {
     container,
     subtitle: () => container.querySelector('.skill-path-panel__subtitle')?.textContent ?? null,
-    band: () => container.querySelector('.technique-band'),
     unmount: () => {
       app.unmount()
       container.remove()
@@ -129,12 +128,8 @@ describe('SkillPathPanel way identity (P7-M7)', () => {
     await nextTick()
 
     expect(view.subtitle()).toBe(i18n.global.t('panels.skillPath.mortalName'))
-    // Mortal carries no canonical technique - the band shows its empty
-    // state (the Nhap Mon hint) rather than nothing.
-    expect(view.band()).not.toBeNull()
-    expect(view.band()!.textContent).toContain(
-      i18n.global.t('panels.skillPath.technique.emptyNoTechnique'),
-    )
+    // The technique band moved to TechniquePanel (Huyen Kim scene 06) -
+    // the mortal empty state lives there now, not inside this panel.
 
     view.unmount()
   })

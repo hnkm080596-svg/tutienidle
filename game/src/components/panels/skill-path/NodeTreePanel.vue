@@ -34,10 +34,16 @@ import { HIDDEN_BRANCH_TAGS, viewBranchTags } from '@/core/progression/NodeBranc
 import { isBattleInProgress } from '@/core/battle/BattleTypes'
 import SkillConnections from './SkillConnections.vue'
 import type { SkillConnectionEntry, SkillConnectionRect } from './SkillConnections.vue'
+import { layoutRadialGraph } from './skillGraphLayout'
 import ConfirmModal from '@/components/common/ConfirmModal.vue'
 import HuyenKimParallaxStack from '@/components/common/HuyenKimParallaxStack.vue'
 import type { ElementType } from '@/core/element/ElementType'
 import type { ProgressionNode } from '@/core/progression/ProgressionNode'
+import { hkChromeUrl } from '@/ui/huyenKimChrome'
+
+// Scene 07 (Tinh Do constellation): node cards carry the rune-node
+// glyph tinted to the branch color via mask-image.
+const runeNodeUrl = hkChromeUrl('rune-node', '1x')
 
 const props = defineProps<{
   branchTag?: string
@@ -477,6 +483,33 @@ function measure() {
   }
 }
 
+// Scene 07 (Tinh Do constellation): each branch projects onto a radial
+// canvas - depth -> orbit radius, subtree leaf-share -> angular sector.
+// layoutRadialGraph consumes ONLY id/parentId/depth (no unlock or cost
+// state), so the canonical model stays the single authority.
+const branchLayouts = computed(() => {
+  const map = new Map<string, ReturnType<typeof layoutRadialGraph>>()
+
+  for (const branch of branches.value) {
+    map.set(
+      branch.branchTag ?? '__other__',
+      layoutRadialGraph(
+        branch.entries.map((entry) => ({
+          id: entry.node.id,
+          parentId: entry.parentId,
+          depth: entry.depth,
+        })),
+      ),
+    )
+  }
+
+  return map
+})
+
+function layoutFor(branch: (typeof branches.value)[number]) {
+  return branchLayouts.value.get(branch.branchTag ?? '__other__')
+}
+
 function connectionsFor(branch: (typeof branches.value)[number]): SkillConnectionEntry[] {
   return branch.entries
     .filter(entry => entry.parentId)
@@ -661,34 +694,47 @@ onBeforeUnmount(() => {
 
           <div
             :ref="el => setContainerRef(branch.branchTag ?? '__other__', el)"
-            class="node-tree__branch-tree"
-            :style="{ '--branch-color': branch.color }"
+            class="node-tree__branch-tree node-tree__branch-tree--radial"
+            :style="{
+              '--branch-color': branch.color,
+              width: `${layoutFor(branch)?.size ?? 0}px`,
+              height: `${layoutFor(branch)?.size ?? 0}px`,
+            }"
           >
             <SkillConnections
               :connections="connectionsFor(branch)"
               :rects="rectsByBranch[branch.branchTag ?? '__other__'] ?? {}"
             />
 
-            <div v-for="tier in branch.tiers" :key="tier.depth" class="node-tree__row">
-              <button
-                v-for="entry in tier.entries"
-                :key="entry.node.id"
-                :ref="el => setNodeRef(entry.node.id, el)"
-                type="button"
-                class="node-tree__node"
-                :class="{
-                  'is-major': tier.depth === 0,
-                  'node-tree__node--child': tier.depth > 0,
-                  'is-purchased': entry.purchased,
-                  'is-maxed': entry.purchased && !entry.upgradable && entry.level >= entry.maxLevel && entry.maxLevel > 1,
-                  'is-available': !entry.purchased && entry.purchasable,
-                  'is-upgradable': entry.upgradable,
-                  'is-locked': !entry.purchased && !entry.purchasable,
-                  'is-selected': entry.node.id === selectedNodeId,
-                  'is-unlocking': entry.node.id === unlockingNodeId,
-                }"
-                @click="onClick(entry.node, entry.purchased, entry.purchasable)"
-              >
+            <button
+              v-for="entry in branch.entries"
+              :key="entry.node.id"
+              :ref="el => setNodeRef(entry.node.id, el)"
+              type="button"
+              class="node-tree__node"
+              :class="{
+                'is-major': entry.depth === 0,
+                'node-tree__node--child': entry.depth > 0,
+                'is-purchased': entry.purchased,
+                'is-maxed': entry.purchased && !entry.upgradable && entry.level >= entry.maxLevel && entry.maxLevel > 1,
+                'is-available': !entry.purchased && entry.purchasable,
+                'is-upgradable': entry.upgradable,
+                'is-locked': !entry.purchased && !entry.purchasable,
+                'is-selected': entry.node.id === selectedNodeId,
+                'is-unlocking': entry.node.id === unlockingNodeId,
+              }"
+              :style="{
+                left: `${layoutFor(branch)?.positions.get(entry.node.id)?.x ?? 0}px`,
+                top: `${layoutFor(branch)?.positions.get(entry.node.id)?.y ?? 0}px`,
+              }"
+              @click="onClick(entry.node, entry.purchased, entry.purchasable)"
+            >
+                <span
+                  v-if="runeNodeUrl"
+                  class="node-tree__node-rune"
+                  :style="{ WebkitMaskImage: `url(${runeNodeUrl})`, maskImage: `url(${runeNodeUrl})` }"
+                  aria-hidden="true"
+                />
                 <span class="node-tree__node-name">
                   {{ entry.node.name }}
 
@@ -701,7 +747,6 @@ onBeforeUnmount(() => {
                   {{ costLabel(entry) }}
                 </span>
               </button>
-            </div>
           </div>
         </div>
       </div>
@@ -846,37 +891,34 @@ onBeforeUnmount(() => {
   margin: 0 0 4px;
 }
 
-/* Cay that, N tang (Skill Node phan tang, 2026-08-21) -- moi .node-tree__row
-   la 1 tang depth, duong noi THAT ve boi SkillConnections.vue (SVG,
-   position:absolute ben trong container position:relative nay) thay vi
-   connector CSS gia truoc day. */
+/* Scene 07 radial constellation -- the branch canvas is an explicit
+   square sized by skillGraphLayout; nodes are absolute-positioned on
+   orbit rings (depth -> radius) and the SVG layer draws center-to-center
+   edges measured from the real boxes. */
 .node-tree__branch-tree {
   position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 22px;
-  padding: 4px 0;
+  margin: 0 auto;
 }
 
-.node-tree__row {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 10px;
+.node-tree__branch-tree--radial {
+  max-width: 100%;
 }
 
 /* Huyen Kim SS19 (Dao Mach constellation) + SS47 semantics:
    locked = ink silhouette, available = gold rim, learned = jade fill,
    upgradeable = breathing light, selected = strong jade + gold edge. */
 .node-tree__node {
+  position: absolute;
+  z-index: 1;
+  /* `translate` (not transform) keeps the centering intact while the
+     is-unlocking keyframes animate transform: scale(). */
+  translate: -50% -50%;
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  width: 140px;
-  padding: 6px 8px;
+  gap: 1px;
+  width: 122px;
+  padding: 4px 6px;
+  padding-left: 30px;
   background: var(--hk-surface-raised, var(--sys-bg-0, var(--ink-800)));
   border: 1px solid var(--hk-border-muted, var(--sys-line-soft, var(--ink-line-soft)));
   border-radius: var(--radius-sm);
@@ -886,6 +928,29 @@ onBeforeUnmount(() => {
   color: var(--hk-text-primary, var(--sys-text, var(--text-primary)));
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
+
+/* rune-node glyph (scene 07 constellation vertex) -- grayscale sheet
+   tinted to the branch color via mask-image. */
+.node-tree__node-rune {
+  position: absolute;
+  left: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  background: var(--branch-color, var(--chrome-300));
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+.node-tree__node.is-locked .node-tree__node-rune { opacity: 0.35; }
+.node-tree__node.is-purchased .node-tree__node-rune { opacity: 1; }
 
 .node-tree__node.is-major {
   border-color: var(--hk-border-active, var(--sys-line-hot, var(--branch-color, var(--ink-line))));
@@ -913,8 +978,8 @@ onBeforeUnmount(() => {
    plan muc 29 "Node locked -> hien dieu kien") -- chi mo di de phan biet,
    khong con cursor:not-allowed/disabled nhu ban mua-thang cu. */
 .node-tree__node.is-locked {
-  opacity: 0.5;
-  filter: grayscale(0.6);
+  opacity: 0.72;
+  filter: grayscale(0.45);
   color: var(--hk-ink, #5b6266);
 }
 
@@ -994,9 +1059,10 @@ onBeforeUnmount(() => {
   color: var(--hk-text-secondary, var(--chrome-100));
 }
 
+/* Radial constellation nodes stay compact (spec 07: no card overlap at
+   1280x720); the full description lives in the right-rail inspector. */
 .node-tree__node-desc {
-  font-size: var(--text-xs);
-  color: var(--hk-text-muted, var(--sys-text-dim, var(--text-muted)));
+  display: none;
 }
 
 .node-tree__node-cost {

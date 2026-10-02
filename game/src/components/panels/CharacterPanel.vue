@@ -29,12 +29,12 @@ const { allocateAttributePoint } = useProgressionActions()
 // disables up front so the affordance doesn't look live.
 const { isBattleInProgress: inBattle } = useTurnBattleInfo()
 
-// Entry point Quán Khí (Task 7 review fix, Critical) — nút riêng trong
-// Character Panel này (openQuanKhi → ui.openStandalonePanel('quan_khi'))
-// là đường mở lại panel sau khi Quán Khí; flow đột phá thống nhất đi qua
+// Entry point Quan Khi (Task 7 review fix, Critical) - nut rieng trong
+// Character Panel nay (openQuanKhi -> ui.openStandalonePanel('quan_khi'))
+// la duong mo lai panel sau khi Quan Khi; flow dot pha thong nhat di qua
 // triggerBreakthroughAction() trong useTribulation.ts (commandWheelCatalog.ts
-// đã bỏ slot quan_khi). Chỉ hiện khi đã chọn Kiếm Tu (route switch chỉ có
-// ý nghĩa ở đó).
+// da bo slot quan_khi). Chi hien khi da chon Kiem Tu (route switch chi co
+// y nghia o do).
 // M9 - the entry is kiem-way machinery. P1 - the generic authority read
 // resolves the committed pair through the catalog (fail closed on a
 // way-less/corrupt pair), never a raw path id.
@@ -44,7 +44,7 @@ function openQuanKhi() {
   ui.openStandalonePanel('quan_khi')
 }
 
-// M5 — the active way (cultivationWay authoritative) drives the kit
+// M5 - the active way (cultivationWay authoritative) drives the kit
 // label + aura colour; getActiveWayDefinition resolves the persisted
 // (path, way) pair and fails closed on a way-less/corrupt save.
 const chosenKit = computed(() => getActiveWayDefinition(player))
@@ -61,9 +61,9 @@ const heroDiscUrl = computed(() =>
   ),
 )
 
-// Thiên Phú (talent-direction-choice-plan §7) — hiển thị thiên phú đã chọn
-// (tên + description) đọc từ selectedTalentIds qua getTalentDefinition;
-// id lạ trong save cũ bị bỏ qua an toàn (undefined → filter loại).
+// Thien Phu (talent-direction-choice-plan sec.7) - hien thi thien phu da chon
+// (ten + description) doc tu selectedTalentIds qua getTalentDefinition;
+// id la trong save cu bi bo qua an toan (undefined -> filter loai).
 const selectedTalents = computed(() =>
   player.selectedTalentIds
     .map((talentId) => getTalentDefinition(talentId))
@@ -80,46 +80,46 @@ const TALENT_RARITY_TONE: Record<TalentRarity, 'muted' | 'success' | 'cyan' | 'v
   di: 'warn',
 }
 
-// UI redesign mục 11 (Character) — silhouette nhân vật ở cột giữa
-// header nhuộm màu theo hệ của path đã chọn (Kiếm Tu khai `element`
+// UI redesign muc 11 (Character) - silhouette nhan vat o cot giua
+// header nhuom mau theo he cua path da chon (Kiem Tu khai `element`
 // fixed; spell pathway leaves it empty because the element lives on player.spellPath.element - see
-// CultivationPathKit.ts) — fallback vàng trung tính khi CHƯA chọn path
-// (còn ở Phàm Nhân) hoặc đã chọn Pháp Tu.
+// CultivationPathKit.ts) - fallback vang trung tinh khi CHUA chon path
+// (con o Pham Nhan) hoac da chon Phap Tu.
 const characterAuraColor = computed(() =>
     chosenKit.value?.element ? ELEMENT_COLOR_VARS[chosenKit.value.element] : 'var(--chrome-500)',
 )
 
-// Chân dung tĩnh (2026-08-26, dong-fu plan Workstream A) — PNG mortal
-// mới player-mortal-v1.png qua PlayerPortrait; ẢNH TĨNH, không áp
-// animation tu luyện (khác trigger cultivate giữa Động Phủ).
+// Chan dung tinh (2026-08-26, dong-fu plan Workstream A) - PNG mortal
+// moi player-mortal-v1.png qua PlayerPortrait; ANH TINH, khong ap
+// animation tu luyen (khac trigger cultivate giua Dong Phu).
 const characterPortraitHeight = 148
 
-// Đọc tên skill qua skillManager (LEARNED skills, public) thay vì
-// GameManager.skillTemplates (private) — sau chooseCultivationPath(),
-// cả 3 skill của kit đã chắc chắn có trong skillManager.
+// Doc ten skill qua skillManager (LEARNED skills, public) thay vi
+// GameManager.skillTemplates (private) - sau chooseCultivationPath(),
+// ca 3 skill cua kit da chac chan co trong skillManager.
 
 const realm = computed(() => getCurrentRealm(player.realmId))
 
-// Nhóm theo category để hiện thành từng khối danh sách riêng — dễ
-// quét mắt hơn 1 khối phẳng chia 2 cột (không dùng bảng ô/table).
-// BASE_STAT_LABELS/StatCategory trích ra @/core/stats/StatLabels.ts
-// (2026-08-15, tooltip Tâm Pháp dùng chung).
+// Nhom theo category de hien thanh tung khoi danh sach rieng - de
+// quet mat hon 1 khoi phang chia 2 cot (khong dung bang o/table).
+// BASE_STAT_LABELS/StatCategory trich ra @/core/stats/StatLabels.ts
+// (2026-08-15, tooltip Tam Phap dung chung).
 
-// Attribute first — the five main stats are the interactive core of the
+// Attribute first - the five main stats are the interactive core of the
 // sheet (point allocation) and render as the meridian figure below.
 // The other categories (combat/survival/special/defense_advanced) live
 // in the detail card beside the drawer (CharacterDetailCard.vue,
-// toggle = panels.character.actions.details) — the panel keeps just
+// toggle = panels.character.actions.details) - the panel keeps just
 // the meridian + Ngu Hanh chips so the drawer stays compact.
 const attributeStats = computed(() =>
   BASE_STAT_LABELS.filter(stat => stat.category === 'attribute'),
 )
 
-// PLAN HOÀN CHỈNH mục 4 — UI Stat Cap: KHÔNG hiện "24/30", chỉ hiện số
-// + chữ "MAX" (vàng) ngay bên dưới khi ĐẦY. Trần tính trên baseStats
-// (phần người chơi TỰ đầu tư) chứ không phải finalStats đang hiện ở
-// cột giá trị — equipment/pill vẫn có thể đẩy finalStats cao hơn trần
-// này bình thường, trần chỉ chặn HÀNH ĐỘNG phân phối điểm.
+// PLAN HOAN CHINH muc 4 - UI Stat Cap: KHONG hien "24/30", chi hien so
+// + chu "MAX" (vang) ngay ben duoi khi DAY. Tran tinh tren baseStats
+// (phan nguoi choi TU dau tu) chu khong phai finalStats dang hien o
+// cot gia tri - equipment/pill van co the day finalStats cao hon tran
+// nay binh thuong, tran chi chan HANH DONG phan phoi diem.
 function isMainStat(key: string): key is MainStatKey {
   return (MAIN_STAT_KEYS as string[]).includes(key)
 }
@@ -136,7 +136,7 @@ function allocate(key: MainStatKey) {
   allocateAttributePoint(key)
 }
 
-// Meridian node anchors — dot positions on stat-meridian-figure.png
+// Meridian node anchors - dot positions on stat-meridian-figure.png
 // (904x1024 stance art): head = intelligence, chest = vitality,
 // dantian = attunement, extended left fist = strength, grounded right
 // foot = dexterity. Percent coords so the block scales with panel
@@ -171,9 +171,9 @@ function meridianNode(key: string): { style: { left: string; top: string }; modi
 // breaks jsdom mounts (CharacterPanel.meridian.test.ts).
 const MERIDIAN_FIGURE_SRC = resolveAssetUrl('/assets/ui/stat-meridian-figure.png')
 
-// Không còn "Hướng" (ElementAffinity đã xoá — vai trò khuếch đại
-// Power giờ do Linh Căn/Attunement đảm nhiệm, xem StatCalculator.ts)
-// và không còn chu kỳ sinh/khắc — mỗi hành độc lập kiểu Last Epoch.
+// Khong con "Huong" (ElementAffinity da xoa - vai tro khuech dai
+// Power gio do Linh Can/Attunement dam nhiem, xem StatCalculator.ts)
+// va khong con chu ky sinh/khac - moi hanh doc lap kieu Last Epoch.
 const elementRows = computed(() =>
   ELEMENT_ORDER.map(element => ({
     element,
@@ -190,12 +190,12 @@ const elementRows = computed(() =>
   })),
 )
 
-// Hỗn Nguyên (Void) — chỉ có Power, bỏ qua Armor/Resistance hoàn
-// toàn nên không có cột Kháng/Xuyên như 5 hành thường.
+// Hon Nguyen (Void) - chi co Power, bo qua Armor/Resistance hoan
+// toan nen khong co cot Khang/Xuyen nhu 5 hanh thuong.
 const PRIMORDIAL_COLOR = 'var(--el-primordial)'
 
 // Static src="/..." gets rewritten to an import by the vite plugin and
-// breaks under jsdom — bind dynamically like the element discs above.
+// breaks under jsdom - bind dynamically like the element discs above.
 const primordialDiscUrl = resolveAssetUrl('/assets/ui/elements/el-primordial.png')
 
 // 3 concentric formation rings from the same sprite sheet - the formation base layer.
@@ -203,10 +203,10 @@ const formationRingUrl = resolveAssetUrl('/assets/ui/elements/el-formation-ring.
 const formationOrbsUrl = resolveAssetUrl('/assets/ui/elements/el-formation-orbs.png')
 const formationStarUrl = resolveAssetUrl('/assets/ui/elements/el-formation-star.png')
 
-// "Chiến Lực" — chỉ số tổng hợp THUẦN HIỂN THỊ (không dùng ở đâu khác
-// trong game logic/combat thật), lấy cảm hứng từ số "Mastery" tổng
-// trong màn Combat Attributes tham khảo. Hệ số minh hoạ, dễ tinh
-// chỉnh lại sau khi thấy số thực tế qua nhiều mốc Cảnh Giới.
+// "Chien Luc" - chi so tong hop THUAN HIEN THI (khong dung o dau khac
+// trong game logic/combat that), lay cam hung tu so "Mastery" tong
+// trong man Combat Attributes tham khao. He so minh hoa, de tinh
+// chinh lai sau khi thay so thuc te qua nhieu moc Canh Gioi.
 const combatPower = computed(() => {
   const stats = player.finalStats
 
@@ -225,8 +225,8 @@ const combatPower = computed(() => {
 
 <template>
   <section class="character-panel">
-    <!-- Tu vi và Đột Phá thuộc hoàn toàn về panel Cảnh Giới. Nhân Vật
-         chỉ giữ nhận diện, chiến lực và chỉ số để tránh lặp UI. -->
+    <!-- Tu vi va Dot Pha thuoc hoan toan ve panel Canh Gioi. Nhan Vat
+         chi giu nhan dien, chien luc va chi so de tranh lap UI. -->
     <div class="character-panel__header">
       <div class="character-panel__identity">
         <div class="character-panel__figure" :style="{ '--aura': characterAuraColor }">
@@ -252,9 +252,9 @@ const combatPower = computed(() => {
         </div>
       </div>
 
-      <!-- Thiên Phú đã chọn (talent-direction-choice-plan §7) — quyết định
-           hướng Đạo duy nhất lúc tạo nhân vật, luôn hiển thị để người
-           chơi nhớ mình đang đi đường nào. -->
+      <!-- Thien Phu da chon (talent-direction-choice-plan sec.7) - quyet dinh
+           huong Dao duy nhat luc tao nhan vat, luon hien thi de nguoi
+           choi nho minh dang di duong nao. -->
       <div v-if="selectedTalents.length > 0" class="character-panel__talents">
         <h4 class="character-panel__talents-title"><span class="sys-eyebrow">{{ t('panels.character.sections.talents') }}</span></h4>
 
@@ -274,7 +274,7 @@ const combatPower = computed(() => {
       </div>
     </div>
 
-    <div class="character-panel__body scrollfade">
+    <div class="character-panel__stats scrollfade">
         <div class="stat-group">
         <h4 class="stat-group__title stat-group__title--static">
           <span class="sys-eyebrow">
@@ -283,7 +283,7 @@ const combatPower = computed(() => {
           </span>
         </h4>
 
-        <!-- Meridian figure (user art pass) — the five main stats sit
+        <!-- Meridian figure (user art pass) - the five main stats sit
              on the martial art instead of a list. The dot lands on the
              body point, the card extends sideways; allocate (+)/MAX
              behavior identical to the old list rows. -->
@@ -323,6 +323,8 @@ const combatPower = computed(() => {
           </div>
         </div>
       </div>
+    </div>
+    <div class="character-panel__elements scrollfade">
       <div class="stat-group">
         <h4 class="stat-group__title stat-group__title--static"><span class="sys-eyebrow">{{ t('panels.character.sections.elements') }}</span></h4>
 
@@ -381,41 +383,54 @@ const combatPower = computed(() => {
 </template>
 
 <style scoped>
+/* Scene 04 (imperial scroll): hero column | five-attribute meridian |
+   Ngu Hanh wheel, action rail across the bottom. The paper surface is
+   owned by the scroll body - the panel stays transparent. */
 .character-panel {
   height: 100%;
   min-height: 0;
-  display: flex;
-  flex-direction: column;
-  /* Surface is owned by the drawer (.ink-drawer) — the panel itself
-     stays transparent; --paper-* reads resolve to the dark remap. */
+  display: grid;
+  grid-template-columns: minmax(240px, 0.85fr) minmax(0, 1.25fr) minmax(220px, 0.8fr);
+  grid-template-rows: minmax(0, 1fr) auto;
+  grid-template-areas:
+    'hero stats elements'
+    'rail rail rail';
+  gap: 14px;
+  padding: 6px 2px;
   color: var(--paper-text);
   font-family: var(--font-body);
 }
 
 .character-panel__header {
-  flex: 0 0 auto;
+  grid-area: hero;
+  min-height: 0;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
+  justify-content: center;
   gap: var(--space-3);
   padding: var(--space-3);
-  border-bottom: 1px solid var(--paper-line);
+  border: 1px solid var(--paper-line);
+  border-radius: var(--hk-radius-md, var(--radius-md));
   background:
     var(--paper-grain) 0 0 / 140px 140px repeat,
     linear-gradient(175deg, var(--paper-50) 0%, var(--paper-100) 100%);
 }
 
-/* WS3 vùng 1 — chân dung + tên/Cảnh Giới/chiến lực, nằm ngang thoải mái. */
+/* Scene 04 hero column: portrait stacks over identity text. */
 .character-panel__identity {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: var(--space-4);
+  gap: var(--space-3);
+  text-align: center;
 }
 
 .character-panel__figure {
   position: relative;
   flex: 0 0 auto;
-  width: 150px;
-  height: 156px;
+  width: min(240px, 78%);
+  aspect-ratio: 150 / 156;
   display: flex;
   align-items: flex-end;
   justify-content: center;
@@ -490,9 +505,9 @@ const combatPower = computed(() => {
   line-height: 1.1;
 }
 
-/* "Chiến Lực" là con số tổng hợp người chơi quan tâm nhất trên cả panel
-   (frontend-design pass 2026-08-30: "the hero is a thesis") — phóng to
-   hẳn so với các số khác thay vì cùng cỡ text-lg với tên thiên phú. */
+/* "Chien Luc" la con so tong hop nguoi choi quan tam nhat tren ca panel
+   (frontend-design pass 2026-08-30: "the hero is a thesis") - phong to
+   han so voi cac so khac thay vi cung co text-lg voi ten thien phu. */
 .character-panel__power-value {
   /* M-UI-SYSTEM: display-font numerals + tabular; fallback keeps the
      ink font when system-theme.css is not loaded (safe degrade). */
@@ -514,7 +529,7 @@ const combatPower = computed(() => {
 /* Study Mode SS8.2 - action rail: contextual controls pinned at the
    drawer foot so the scroll body stays pure information. */
 .character-panel__action-rail {
-  flex: 0 0 auto;
+  grid-area: rail;
   display: flex;
   align-items: center;
   gap: var(--space-2);
@@ -541,8 +556,8 @@ const combatPower = computed(() => {
   color: var(--hk-gold-radiant);
 }
 
-/* Thiên Phú đã chọn (talent-direction-choice-plan §7) — khối nhỏ dưới
-   vùng nhận diện, tông màu theo rarity giống thẻ roll lúc tạo nhân vật
+/* Thien Phu da chon (talent-direction-choice-plan sec.7) - khoi nho duoi
+   vung nhan dien, tong mau theo rarity giong the roll luc tao nhan vat
    (CharacterCreationScreen.vue's talent-tier-*). */
 .character-panel__talents {
   display: flex;
@@ -600,8 +615,8 @@ const combatPower = computed(() => {
 .talent-tier-thien { --talent-tier-color: var(--rank-color-7); }
 .talent-tier-di { --talent-tier-color: var(--rank-color-8); }
 
-/* WS3 — section Trang Bị độc lập dưới header, paperdoll dùng trọn
-   chiều rộng panel. */
+/* WS3 - section Trang Bi doc lap duoi header, paperdoll dung tron
+   chieu rong panel. */
 .character-panel__section-title {
   margin: 0 0 var(--space-2);
   font-size: var(--text-xs);
@@ -622,21 +637,42 @@ const combatPower = computed(() => {
   color: var(--text-muted);
 }
 
-.character-panel__body {
-  flex: 1;
+/* Scene 04 grid cells: the meridian stats column and the Ngu Hanh
+   column scroll independently inside the scroll content grid. */
+.character-panel__stats {
+  grid-area: stats;
   min-height: 0;
   overflow-y: auto;
-  padding: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-2);
   font-size: var(--text-body);
   scrollbar-width: none;
 }
 
-.character-panel__body::-webkit-scrollbar { display: none; }
+.character-panel__elements {
+  grid-area: elements;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-2);
+  scrollbar-width: none;
+}
 
-/* Mỗi nhóm chỉ số giờ là 1 CARD thật (viền + nền giấy tinting nhẹ) thay
-   vì khối phẳng chỉ phân bằng hairline — cùng ngôn ngữ thị giác với
-   .qi-hall__preview-card/.resource-card đã dùng ở các building panel
-   (frontend-design pass 2026-08-30, đồng bộ toàn app). */
+/* Scene 04: short columns ride the vertical center of the scroll cell
+   (auto margins collapse cleanly when content overflows, so scrolling
+   is unaffected). */
+.character-panel__stats > .stat-group,
+.character-panel__elements > .stat-group { margin-block: auto; }
+
+.character-panel__stats::-webkit-scrollbar,
+.character-panel__elements::-webkit-scrollbar { display: none; }
+
+/* Moi nhom chi so gio la 1 CARD that (vien + nen giay tinting nhe) thay
+   vi khoi phang chi phan bang hairline - cung ngon ngu thi giac voi
+   .qi-hall__preview-card/.resource-card da dung o cac building panel
+   (frontend-design pass 2026-08-30, dong bo toan app). */
 .stat-group {
   margin-bottom: var(--space-3);
   padding: var(--space-2) var(--space-3);
@@ -645,9 +681,9 @@ const combatPower = computed(() => {
   background: color-mix(in srgb, var(--paper-50) 65%, transparent);
 }
 
-/* Tiêu đề nhóm — vạch cinnabar bên trái + cỡ chữ lớn hơn CHÍNH các dòng
-   nó tiêu đề (trước đây tiêu đề 13px lại NHỎ HƠN dòng nội dung 14px bên
-   dưới, đảo ngược tôn ti thị giác). */
+/* Tieu de nhom - vach cinnabar ben trai + co chu lon hon CHINH cac dong
+   no tieu de (truoc day tieu de 13px lai NHO HON dong noi dung 14px ben
+   duoi, dao nguoc ton ti thi giac). */
 .stat-group__title {
   display: flex;
   align-items: center;
@@ -717,7 +753,7 @@ const combatPower = computed(() => {
 }
 
 /* ============================================================
-   MERIDIAN FIGURE — five main stats anchored on the martial art
+   MERIDIAN FIGURE - five main stats anchored on the martial art
    (user art pass). The dot marks the body point; the info card
    extends sideways (never clips: --left modifier mirrors it).
    ============================================================ */
@@ -728,12 +764,12 @@ const combatPower = computed(() => {
    get the full-width figure. */
 .meridian {
   position: relative;
-  /* Detail stats moved to the side card — the figure now shares the
+  /* Detail stats moved to the side card - the figure now shares the
      drawer with just Ngu Hanh, so it shrinks to keep the whole block
      inside one viewport (user feedback: card was too big). */
   width: min(100%, calc(30vh * 0.8828), 300px);
   /* aspect-ratio holds the block height even if the figure 404s or is
-     still loading — without it the 0x0 node anchors collapse to the
+     still loading - without it the 0x0 node anchors collapse to the
      section top and all five cards stack on each other. */
   aspect-ratio: 904 / 1024;
   margin-inline: auto;
@@ -741,7 +777,7 @@ const combatPower = computed(() => {
   container-name: meridian;
 }
 
-/* The jade figure is inherently dark (avg luminance ~35) — a faint
+/* The jade figure is inherently dark (avg luminance ~35) - a faint
    cool moon-glow behind it lifts the silhouette off the dark drawer
    without changing the art itself. */
 .meridian::before {
@@ -784,7 +820,7 @@ const combatPower = computed(() => {
     0 0 7px var(--hk-jade, var(--sys-cyan, var(--mineral-gold)));
 }
 
-/* Compact vertical card (label over value+button) — ~80px wide so the
+/* Compact vertical card (label over value+button) - ~80px wide so the
    five callouts fit in staggered bands around the figure without
    overlapping each other (horizontal cards were ~65% of block width
    and collided). */
@@ -921,7 +957,7 @@ const combatPower = computed(() => {
   filter: drop-shadow(0 0 12px color-mix(in srgb, var(--node-color) 70%, transparent));
 }
 
-/* Pentagon points — disc centers match the star polygon vertices. */
+/* Pentagon points - disc centers match the star polygon vertices. */
 .element-node--fire { left: 50%; top: 15%; }
 .element-node--earth { left: 86%; top: 40%; }
 .element-node--metal { left: 73%; top: 76%; }
@@ -950,5 +986,18 @@ const combatPower = computed(() => {
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   pointer-events: none;
+}
+
+/* Narrow scroll envelope: stack hero / stats / elements. */
+@container (max-width: 900px) {
+  .character-panel {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto auto;
+    grid-template-areas: 'hero' 'stats' 'elements' 'rail';
+    overflow-y: auto;
+  }
+  .character-panel__header,
+  .character-panel__stats,
+  .character-panel__elements { overflow-y: visible; }
 }
 </style>

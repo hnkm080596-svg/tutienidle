@@ -1,12 +1,14 @@
 // @vitest-environment jsdom
-// P7-M7 - the technique card + Nang Canh action absorbed from the
-// retired TechniquePanel into SkillPathPanel's band. Mounts the real
+// TechniquePanel (Huyen Kim scene 06) - ports the retired
+// TechniqueBand coverage onto the imperial scene: mounts the real
 // component through the project pattern (createApp + h + provide).
+// The scroll shell renders only when ui.standalonePanel === 'technique'.
 import { describe, expect, it, vi } from 'vitest'
 import { createApp, h, nextTick, ref } from 'vue'
 import { createPinia } from 'pinia'
-import TechniqueBand from './TechniqueBand.vue'
+import TechniquePanel from './TechniquePanel.vue'
 import { usePlayerStore } from '@/stores/player'
+import { useUiStore } from '@/stores/ui'
 import { GAME_MANAGER_KEY, STATE_VERSION_KEY, BUMP_STATE_KEY } from '@/composables/useGameState'
 import { vTooltip } from '@/directives/tooltip'
 import { i18n } from '@/i18n'
@@ -37,7 +39,7 @@ interface MountOptions {
   gradeResult?: boolean
 }
 
-function mountBand(options: MountOptions = {}) {
+function mountPanel(options: MountOptions = {}) {
   const container = document.createElement('div')
   document.body.appendChild(container)
 
@@ -70,7 +72,7 @@ function mountBand(options: MountOptions = {}) {
     } as unknown as GameManager['materialRegistry'],
   }
 
-  const app = createApp({ render: () => h(TechniqueBand) })
+  const app = createApp({ render: () => h(TechniquePanel) })
   const pinia = createPinia()
   app.use(pinia)
   app.use(i18n)
@@ -81,6 +83,8 @@ function mountBand(options: MountOptions = {}) {
 
   const player = usePlayerStore(pinia)
   player.$state.realmId = options.realmId ?? 'qi_refining'
+  const ui = useUiStore(pinia)
+  ui.openStandalonePanel('technique')
 
   app.mount(container)
 
@@ -88,9 +92,10 @@ function mountBand(options: MountOptions = {}) {
     container,
     tryAdvanceTechniqueGrade,
     bumpState,
-    gradeButton: () => container.querySelector<HTMLButtonElement>('.technique-band__grade-btn'),
-    sectionRows: () => container.querySelectorAll('.technique-band__rows li').length,
-    emptyText: () => container.querySelector('.technique-band .empty-state, .technique-band__empty')?.textContent ?? null,
+    gradeButton: () => container.querySelector<HTMLButtonElement>('.technique-scene__grade-btn'),
+    sectionRows: () => container.querySelectorAll('.technique-scene__rows li').length,
+    scene: () => container.querySelector('.technique-scene'),
+    emptyText: () => container.querySelector('.technique-scene__empty')?.textContent ?? null,
     unmount: () => {
       app.unmount()
       container.remove()
@@ -98,13 +103,13 @@ function mountBand(options: MountOptions = {}) {
   }
 }
 
-describe('TechniqueBand (P7-M7)', () => {
+describe('TechniquePanel (Huyen Kim scene 06)', () => {
   it('renders the canonical technique card, its sections, and the grade button with cost', async () => {
-    const view = mountBand({ technique: fixtureTechnique() })
+    const view = mountPanel({ technique: fixtureTechnique() })
 
     await nextTick()
 
-    expect(view.container.querySelector('.technique-band')).not.toBeNull()
+    expect(view.scene()).not.toBeNull()
     expect(view.sectionRows()).toBeGreaterThan(0)
     expect(view.gradeButton()).not.toBeNull()
 
@@ -112,7 +117,7 @@ describe('TechniqueBand (P7-M7)', () => {
   })
 
   it('grade click runs tryAdvanceTechniqueGrade and bumps state on success only', async () => {
-    const success = mountBand({
+    const success = mountPanel({
       technique: fixtureTechnique({ rank: 10 }),
       realmId: 'foundation_establishment',
       materialAmount: 999,
@@ -127,7 +132,7 @@ describe('TechniqueBand (P7-M7)', () => {
 
     success.unmount()
 
-    const failure = mountBand({
+    const failure = mountPanel({
       technique: fixtureTechnique({ rank: 10 }),
       realmId: 'foundation_establishment',
       materialAmount: 999,
@@ -146,7 +151,7 @@ describe('TechniqueBand (P7-M7)', () => {
   it('disables the grade button when the op precondition fails', async () => {
     // M-F-TECHNIQUE - catch-up-only: an in-band holder (grade == realm
     // index) has nothing to catch up to, so the precondition fails.
-    const view = mountBand({
+    const view = mountPanel({
       technique: fixtureTechnique({ rank: 10 }),
       realmId: 'qi_refining',
       materialAmount: 999,
@@ -159,8 +164,8 @@ describe('TechniqueBand (P7-M7)', () => {
     view.unmount()
   })
 
-  it('shows the mortal empty state without the grade button when no technique is active', async () => {
-    const view = mountBand({ technique: undefined })
+  it('shows the empty state without the grade button when no technique is active', async () => {
+    const view = mountPanel({ technique: undefined })
 
     await nextTick()
 
@@ -169,5 +174,29 @@ describe('TechniqueBand (P7-M7)', () => {
     expect(view.gradeButton()).toBeNull()
 
     view.unmount()
+  })
+
+  it('renders nothing when the technique scene is not open', async () => {
+    const container = document.createElement('div')
+    document.body.appendChild(container)
+
+    const stateVersion = ref(0)
+    const app = createApp({ render: () => h(TechniquePanel) })
+    const pinia = createPinia()
+    app.use(pinia)
+    app.use(i18n)
+    app.provide(GAME_MANAGER_KEY, {} as GameManager)
+    app.provide(STATE_VERSION_KEY, stateVersion)
+    app.provide(BUMP_STATE_KEY, vi.fn())
+    app.directive('tooltip', vTooltip)
+
+    app.mount(container)
+    await nextTick()
+
+    expect(container.querySelector('.hk-scroll')).toBeNull()
+    expect(container.querySelector('.technique-scene')).toBeNull()
+
+    app.unmount()
+    container.remove()
   })
 })

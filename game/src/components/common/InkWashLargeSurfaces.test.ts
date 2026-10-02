@@ -47,7 +47,9 @@ describe('ink-wash large surfaces', () => {
     // it intentionally no longer carries the XL ink layers, so only the
     // combat victory/defeat panels stay in this ceremonial assertion.
     for (const source of [victorySource, defeatSource]) {
-      expect(source).toContain('asset-id="surface-xl-paper-scroll"')
+      // XL scroll surface migrated to the Huyen Kim chrome registry;
+      // the ceremony frame stays on the legacy ink-wash asset id.
+      expect(source).toContain('chrome-id="surface-xl-scroll"')
       expect(source).toContain('asset-id="frame-xl-ceremony"')
     }
     expect(confirmSource).toContain("emit('confirm')")

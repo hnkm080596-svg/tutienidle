@@ -25,8 +25,23 @@ import type { TurnSkillPresentationEntry } from '@/core/combat/CombatSkillPresen
 import type { TurnSkillDefinition, TurnSkillSlotRole } from '@/core/battle/turn/TurnSkillAction'
 import type { TooltipContent } from '@/composables/useTooltip'
 import { useAudioStore } from '@/stores/audio'
+import { hkChromeUrl } from '@/ui/huyenKimChrome'
 
 const { t } = useI18n()
+
+// Scene 13 spec: role orbs ride inside the skill-orb-frame chrome ring;
+// the auto/manual toggle wears the toggle-track + slider-thumb chrome.
+const skillOrbFrameUrl = hkChromeUrl('skill-orb-frame')
+const toggleTrackUrl = hkChromeUrl('toggle-track')
+const sliderThumbUrl = hkChromeUrl('slider-thumb')
+const toggleChromeStyle = computed<Record<string, string> | undefined>(() =>
+  toggleTrackUrl && sliderThumbUrl
+    ? {
+        '--hk-toggle-track': `url("${toggleTrackUrl}")`,
+        '--hk-slider-thumb': `url("${sliderThumbUrl}")`,
+      }
+    : undefined,
+)
 
 function roleLabel(role: TurnSkillSlotRole): string {
   return t(`combat.overlay.skillBar.roles.${role}`)
@@ -204,6 +219,7 @@ function onDynamicBasicClick(defId: string): void {
             :is-insufficient-resource="false"
             :tooltip-override="orbTooltip(orb)"
           />
+          <img v-if="skillOrbFrameUrl" class="turn-combat-skill-bar__orb-frame" :src="skillOrbFrameUrl" alt="" aria-hidden="true" />
         </button>
       </template>
 
@@ -227,6 +243,7 @@ function onDynamicBasicClick(defId: string): void {
             :is-insufficient-resource="entryAt(slot.index).state === 'blocked_resource'"
             :tooltip-override="tooltipFor(entryAt(slot.index))"
           />
+          <img v-if="skillOrbFrameUrl" class="turn-combat-skill-bar__orb-frame" :src="skillOrbFrameUrl" alt="" aria-hidden="true" />
         </button>
       </template>
 
@@ -243,7 +260,7 @@ function onDynamicBasicClick(defId: string): void {
       </div>
     </div>
 
-    <label class="turn-combat-skill-bar__mode-toggle">
+    <label class="turn-combat-skill-bar__mode-toggle" :class="{ 'has-hk-toggle': Boolean(toggleChromeStyle) }" :style="toggleChromeStyle">
       <input
         type="checkbox"
         :checked="isManualMode"
@@ -294,6 +311,18 @@ function onDynamicBasicClick(defId: string): void {
   outline-offset: 2px;
 }
 
+/* skill-orb-frame chrome ring -- slightly oversized so the ring hugs the
+   slot edge; purely decorative, never intercepts the button. */
+.turn-combat-skill-bar__orb-frame {
+  position: absolute;
+  inset: -7%;
+  width: 114%;
+  height: 114%;
+  object-fit: fill;
+  pointer-events: none;
+  z-index: 2;
+}
+
 /* Phap Tu An (Task 16) — passive emblem replaces the ult slot button:
    always-on dao passive, reads as an emblem not a disabled control. */
 .turn-combat-skill-bar__emblem {
@@ -332,6 +361,39 @@ function onDynamicBasicClick(defId: string): void {
   font-size: var(--text-xs, 12px);
   color: var(--text-muted, #999);
   cursor: pointer;
+}
+
+/* toggle-track + slider-thumb chrome (scene 13 / settings grammar). */
+.turn-combat-skill-bar__mode-toggle.has-hk-toggle input[type='checkbox'] {
+  -webkit-appearance: none;
+  appearance: none;
+  position: relative;
+  width: 46px;
+  height: 23px;
+  margin: 0;
+  background: var(--hk-toggle-track) center / 100% 100% no-repeat;
+  cursor: pointer;
+}
+
+.turn-combat-skill-bar__mode-toggle.has-hk-toggle input[type='checkbox']::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 3px;
+  width: 19px;
+  height: 19px;
+  transform: translateY(-50%);
+  background: var(--hk-slider-thumb) center / contain no-repeat;
+  transition: left 0.16s ease;
+}
+
+.turn-combat-skill-bar__mode-toggle.has-hk-toggle input[type='checkbox']:checked::after {
+  left: 24px;
+}
+
+.turn-combat-skill-bar__mode-toggle.has-hk-toggle input[type='checkbox']:focus-visible {
+  outline: 2px solid var(--hk-gold, #d8b45a);
+  outline-offset: 2px;
 }
 
 .turn-combat-skill-bar__awaiting {

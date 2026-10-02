@@ -1,5 +1,5 @@
 /**
- * StableSceneArt — typed registry for the delivered Huyen Kim stable
+ * StableSceneArt - typed registry for the delivered Huyen Kim stable
  * scene-art package (game/docs/design/huyen-kim-ui-art-manifest.json +
  * public/assets/ui/huyen-kim/_source/stable-scene-extension.json).
  *
@@ -15,7 +15,7 @@
  * - parallax stacks render in ascending `order`; `max_drift_px` bounds
  *   pointer drift in design px; reduced motion collapses every offset
  *   to exactly 0.
- * - `_source/generated/*-master.png` provenance composites are banned —
+ * - `_source/generated/*-master.png` provenance composites are banned -
  *   runtime imports only the paired `@1x`/`@2x` outputs.
  */
 

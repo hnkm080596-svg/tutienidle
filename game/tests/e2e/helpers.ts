@@ -29,8 +29,9 @@ export async function bootToGuestHome(page: Page): Promise<void> {
 
 /**
  * Creates a character through the ONE unified screen (BETA-CREATION):
- * name + 1 talent + 1 starting-skill pick -> finish. The attribute
- * allocation step no longer exists - base stats default to 1/1/1/1/1.
+ * name + 1 talent pick -> finish. The attribute allocation and
+ * starting-skill steps no longer exist - base stats default to 1/1/1/1/1
+ * and no `creation-skill-*` cards are rendered.
  *
  * Prerequisite: guest auth done (bootToGuestHome).
  */
@@ -46,10 +47,7 @@ export async function createCharacterThroughUi(page: Page, name: string): Promis
   await expect(talentCards.first()).toBeVisible({ timeout: 10_000 })
   await talentCards.first().click()
 
-  // Starting skill - tram (Huy Kiem) keeps the historical basic.
-  await page.getByTestId('creation-skill-tram').click()
-
-  // Finish - enabled once name + talent + skill are all satisfied.
+  // Finish - enabled once name + talent are satisfied.
   await expect(page.getByTestId('creation-finish')).toBeEnabled({ timeout: 5_000 })
   await page.getByTestId('creation-finish').click()
 }

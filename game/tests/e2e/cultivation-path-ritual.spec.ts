@@ -1,4 +1,5 @@
 import { expect, test } from './fixtures'
+import { BETA_FEATURES } from '../../src/core/betaFeatureFlags'
 
 import {
   assertNoBrowserErrors,
@@ -195,15 +196,30 @@ async function winQuanKhiAndOpenRitual(page: import('@playwright/test').Page): P
   await expect(page.locator('.quan-khi-panel__choices')).toBeVisible()
 }
 
+/** Element-axis ways commit via the element grid (no confirm modal). */
+async function elementButtonCommit(page: import('@playwright/test').Page): Promise<void> {
+  const elementButton = page.locator('.quan-khi-panel__element-btn').first()
+  await expect(elementButton).toBeVisible({ timeout: 10_000 })
+  await elementButton.click()
+}
+
 /** Clicks a way card by its "Bước Vào {name}" button and confirms. */
 async function chooseWay(page: import('@playwright/test').Page, wayNamePattern: RegExp): Promise<void> {
   const choice = page.getByRole('button', { name: wayNamePattern })
   await expect(choice).toBeEnabled({ timeout: 10_000 })
   await choice.click()
 
-  const confirm = page.locator('.confirm-modal__confirm')
-  await expect(confirm).toBeVisible({ timeout: 10_000 })
-  await confirm.click()
+  // Element-axis ways (spell_pathway - the beta-live offer) commit
+  // atomically on the element pick; other ways still route through the
+  // generic confirm modal.
+  const elementStep = page.locator('.quan-khi-panel__element-btn').first()
+  if (await elementStep.isVisible({ timeout: 3_000 }).catch(() => false)) {
+    await elementButtonCommit(page)
+  } else {
+    const confirm = page.locator('.confirm-modal__confirm')
+    await expect(confirm).toBeVisible({ timeout: 10_000 })
+    await confirm.click()
+  }
 
   await expect(page.locator('.overlay-panel')).toHaveCount(0, { timeout: 10_000 })
 
@@ -223,10 +239,13 @@ async function saveAndRead(page: import('@playwright/test').Page): Promise<SaveS
   const save = await readSave(page)
   expect(save).not.toBeNull()
 
-  const openPanel = page.locator('.overlay-panel')
+  // Huyen Kim: the open surface is an imperial scroll (.hk-scroll) or a
+  // legacy micro-overlay (.overlay-panel) - a scrim corner click closes
+  // either shell via its @click.self handler.
+  const openPanel = page.locator('.overlay-panel, .hk-scroll').first()
   if (await openPanel.isVisible().catch(() => false)) {
     await openPanel.click({ position: { x: 8, y: 8 } })
-    await expect(openPanel).toHaveCount(0, { timeout: 10_000 })
+    await expect(page.locator('.overlay-panel, .hk-scroll')).toHaveCount(0, { timeout: 10_000 })
   }
 
   return save!
@@ -290,6 +309,12 @@ async function reopenQuanKhiViaCharacter(page: import('@playwright/test').Page):
 
 test.describe('Cultivation Path ritual - six-way matrix (P14)', () => {
   test('ungated offers only when no gate mirror is seeded', async ({ page }) => {
+    // Beta lock: only spell_pathway is offered (count 1); the 3-way base
+    // matrix needs the sword/body offers back.
+    test.skip(
+      !BETA_FEATURES.swordPath || !BETA_FEATURES.bodyPath,
+      'swordPath/bodyPath scope-hidden under the beta lock',
+    )
     test.setTimeout(210_000)
     const collected = collectBrowserErrors(page)
 
@@ -308,6 +333,7 @@ test.describe('Cultivation Path ritual - six-way matrix (P14)', () => {
   })
 
   test('sword/sword_pathway: ritual -> preset editor surface', async ({ page }) => {
+    test.skip(!BETA_FEATURES.swordPath, 'swordPath scope-hidden under the beta lock')
     test.setTimeout(210_000)
     const collected = collectBrowserErrors(page)
 
@@ -386,6 +412,10 @@ test.describe('Cultivation Path ritual - six-way matrix (P14)', () => {
   })
 
   test('sword/hidden_sword_pathway: tram gate -> ritual entry -> ngu slice', async ({ page }) => {
+    test.skip(
+      !BETA_FEATURES.swordPath || !BETA_FEATURES.hiddenContent,
+      'swordPath/hiddenContent scope-hidden under the beta lock',
+    )
     test.setTimeout(210_000)
     const collected = collectBrowserErrors(page)
 
@@ -443,16 +473,21 @@ test.describe('Cultivation Path ritual - six-way matrix (P14)', () => {
     expect(save.player.cultivationWay).toBe('spell_pathway')
     // Phap Tu Reimagined (Task 16): the route half of the legacy
     // {element, route} commit is retired - spellPath carries element only.
-    expect(save.player.spellPath).toEqual({ element: null })
+    // chooseWay commits the element pick (first button = 'fire' -
+    // BETA_PLAYABLE_ELEMENTS insertion order), so the save lands the
+    // element atomically with the way.
+    expect(save.player.spellPath).toEqual({ element: 'fire' })
     expect(save.techniques.map((t) => t.id)).toEqual(['five_elements_art'])
 
-    // Element tree surface - 5 element tabs render for ngu_hanh only.
+    // Element tree surface - under the beta lock only the committed
+    // element tab renders (beta-journey pins the same 1-tab contract);
+    // the 5-tab matrix returns when the other elements re-open.
     await page.keyboard.press('Tab')
     const skillSlot = page.locator('[data-wheel-slot="skill"]')
     await expect(skillSlot).toBeVisible({ timeout: 10_000 })
     await skillSlot.click()
     await expect(page.locator('.skill-path-panel')).toBeVisible({ timeout: 15_000 })
-    await expect(page.locator('.skill-path-panel__element-tab')).toHaveCount(5)
+    await expect(page.locator('.skill-path-panel__element-tab')).toHaveCount(1)
 
     // M-F-ARTIFACT-DEFER oracle: the artifact domain is deferred to
     // Kim Dan+ (outside the release window) - at foundation_establishment
@@ -486,13 +521,21 @@ test.describe('Cultivation Path ritual - six-way matrix (P14)', () => {
 
     await page.keyboard.press('Tab')
     const artifactSlot = page.locator('[data-wheel-slot="phap_bao"]')
-    await expect(artifactSlot).toBeVisible({ timeout: 10_000 })
-    await expect(artifactSlot).toHaveAttribute('aria-disabled', 'true')
+    if (BETA_FEATURES.artifact) {
+      // Post-beta: the slot renders but stays progression-locked to Kim Dan.
+      await expect(artifactSlot).toBeVisible({ timeout: 10_000 })
+      await expect(artifactSlot).toHaveAttribute('aria-disabled', 'true')
+    } else {
+      // Beta scope lock: the artifact surface is scope-hidden - the wheel
+      // slot never renders (beta-journey pins the same no-slot contract).
+      await expect(artifactSlot).toHaveCount(0)
+    }
 
     assertNoBrowserErrors(collected)
   })
 
   test('spell/hidden_spell_pathway: linh_bao gate -> sealed card -> skill triple, no artifact', async ({ page }) => {
+    test.skip(!BETA_FEATURES.hiddenContent, 'hiddenContent scope-hidden under the beta lock')
     test.setTimeout(240_000)
     const collected = collectBrowserErrors(page)
 
@@ -608,6 +651,7 @@ test.describe('Cultivation Path ritual - six-way matrix (P14)', () => {
   })
 
   test('body/body_pathway: ritual -> kit resolution', async ({ page }) => {
+    test.skip(!BETA_FEATURES.bodyPath, 'bodyPath scope-hidden under the beta lock')
     test.setTimeout(210_000)
     const collected = collectBrowserErrors(page)
 
@@ -629,6 +673,10 @@ test.describe('Cultivation Path ritual - six-way matrix (P14)', () => {
   })
 
   test('body/hidden_body_pathway: huy_quyen gate -> ritual entry', async ({ page }) => {
+    test.skip(
+      !BETA_FEATURES.bodyPath || !BETA_FEATURES.hiddenContent,
+      'bodyPath/hiddenContent scope-hidden under the beta lock',
+    )
     test.setTimeout(210_000)
     const collected = collectBrowserErrors(page)
 

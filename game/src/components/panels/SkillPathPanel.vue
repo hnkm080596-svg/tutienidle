@@ -27,7 +27,6 @@ import SkillPathList from './skill-path/SkillPathList.vue'
 import SkillDetailView from './skill-path/SkillDetailView.vue'
 import NativeCoreDetail from './skill-path/NativeCoreDetail.vue'
 import SkillRoleStrip from './skill-path/SkillRoleStrip.vue'
-import TechniqueBand from './skill-path/TechniqueBand.vue'
 import type { BetaSkillTreeNode } from '@/core/betaScopeSkillDomain'
 import { ELEMENT_ORDER, ELEMENT_LABELS, ELEMENT_COLOR_VARS } from '@/core/element/ElementLabels'
 import type { ProgressionNode } from '@/core/progression/ProgressionNode'
@@ -37,7 +36,7 @@ import type { SkillPathEntry, NativeSkillPathEntry } from './skill-path/SkillPat
 import { NATIVE_CORE_SKILL_IDS } from '@/data/progression/SkillCoreNodes'
 import { turnSkillDisplayMetaOf } from '@/data/skill/TurnSkillDisplayMeta'
 import { useTurnBattleInfo } from '@/composables/useTurnBattleInfo'
-import OverlayPanel from '@/components/common/OverlayPanel.vue'
+import ImperialScrollScene from '@/components/common/ImperialScrollScene.vue'
 import { useAudioStore } from '@/stores/audio'
 
 const { t } = useI18n()
@@ -322,17 +321,20 @@ function close() {
 </script>
 
 <template>
-  <OverlayPanel :open="ui.standalonePanel === 'skill'" :title="t('panels.skillPath.title')" width="min(1400px, 94vw)" height="min(760px, 88vh)" @close="close">
-      <template #subtitle><span class="skill-path-panel__subtitle">{{ wayIdentity }}</span></template>
-      <template #header-actions><span v-if="showTree" class="skill-path-panel__points">✦ {{ t('panels.nodeTree.labels.insight') }}: {{ player.skillInsight }}</span></template>
+  <ImperialScrollScene
+    scene="skill" :open="ui.standalonePanel === 'skill'" :title="t('panels.skillPath.title')" @close="close">
+      <template #header>
+        <span class="skill-path-panel__subtitle">{{ wayIdentity }}</span>
+        <span v-if="showTree" class="skill-path-panel__points">✦ {{ t('panels.nodeTree.labels.insight') }}: {{ player.skillInsight }}</span>
+      </template>
       <div class="skill-path-panel">
-        <TechniqueBand />
-
         <div class="skill-path-panel__body">
+          <!-- Spec 07: way-card column (identity + skill library) -->
           <div class="skill-path-panel__col skill-path-panel__col--left">
             <SkillPathList :entries="skillPathEntries" :selected-id="selectedSkillId" @select="onSelectEntry" />
           </div>
 
+          <!-- Spec 07: element tabs (pre-commit) + tree canvas + mode tabs -->
           <div class="skill-path-panel__col skill-path-panel__col--center">
             <!-- Phap Tu element tabs (Task 16) - the tab row shows the
                  branches the model renders; scope-hidden branches (the
@@ -356,10 +358,21 @@ function close() {
               </button>
             </div>
 
-            <!-- M-QI-05 (D7) - Tree/Detail mode tabs: visible on every
-                 tree-owning way so the detail surface (and its upgrade
-                 affordance) stays reachable; Detail renders the
-                 selected entry, Tree restores the node view. -->
+            <NodeTreePanel
+              v-if="showTree && !showDetail"
+              :branch-tag="treeBranchTag"
+              :selected-node-id="selectedNode?.id ?? null"
+              :unlock-trigger="unlockTrigger"
+              @select="onSelectNode"
+            />
+
+            <NativeCoreDetail v-else-if="selectedNativeEntry" :entry="selectedNativeEntry" />
+
+            <SkillDetailView v-else :skill="selectedSkill" />
+
+            <!-- M-QI-05 (D7) - Tree/Detail mode tabs (spec 07: below the
+                 tree canvas); Detail renders the selected entry, Tree
+                 restores the node view. -->
             <div
               v-if="showTree"
               class="skill-path-panel__mode-tabs"
@@ -383,38 +396,27 @@ function close() {
                 {{ t('panels.skillPath.centerTabs.detail') }}
               </button>
             </div>
-
-            <NodeTreePanel
-              v-if="showTree && !showDetail"
-              :branch-tag="treeBranchTag"
-              :selected-node-id="selectedNode?.id ?? null"
-              :unlock-trigger="unlockTrigger"
-              @select="onSelectNode"
-            />
-
-            <NativeCoreDetail v-else-if="selectedNativeEntry" :entry="selectedNativeEntry" />
-
-            <SkillDetailView v-else :skill="selectedSkill" />
           </div>
 
+          <!-- Spec 07: detail rail - node inspector (upgrade) + active arts -->
           <div class="skill-path-panel__col skill-path-panel__col--right">
+            <NodeInspector
+              v-if="showTree && !showDetail"
+              :node="selectedNode"
+              :row="selectedRow"
+              :purchased="selectedNodePurchased"
+              :purchasable="selectedNodePurchasable"
+              :in-battle="inBattle"
+              @unlocked="onNodeUnlocked"
+            />
+
             <span class="skill-path-panel__col-title">{{ t('panels.skillPath.colTitles.activeArts') }}</span>
 
             <SkillRoleStrip />
           </div>
         </div>
-
-        <NodeInspector
-          v-if="showTree && !showDetail"
-          :node="selectedNode"
-          :row="selectedRow"
-          :purchased="selectedNodePurchased"
-          :purchasable="selectedNodePurchasable"
-          :in-battle="inBattle"
-          @unlocked="onNodeUnlocked"
-        />
       </div>
-  </OverlayPanel>
+  </ImperialScrollScene>
 </template>
 
 <style scoped>
@@ -454,7 +456,7 @@ function close() {
 /* Fit-refactor đợt 3 — card hẹp (< 900px theo CARD, không phải viewport)
    thì stack 3 cột thành khối dọc: mỗi cột co giãn theo nội dung thay vì
    ép cột trái 70px. Cột trái thành accordion ngang bằng flex-wrap chips. */
-@container overlay-panel (max-width: 900px) {
+@container (max-width: 900px) {
   .skill-path-panel__body { flex-direction: column; }
   .skill-path-panel__col { flex: 1 1 auto; overflow-y: visible; border-right: 0; border-left: 0; border-bottom: 1px solid var(--ink-line); }
   .skill-path-panel__col--left { flex: 0 0 auto; max-height: 32%; }

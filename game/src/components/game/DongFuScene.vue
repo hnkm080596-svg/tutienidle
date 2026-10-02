@@ -233,7 +233,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div v-if="!stageActive" class="home-scene" :class="{ 'is-focusing': focusAnchor !== null }">
+  <div v-if="!stageActive" class="home-scene" :class="{ 'is-focusing': focusAnchor !== null }" data-hk-scene="dong-fu">
     <!-- Fallback gradient cũ — chỉ nhìn thấy trong lúc ảnh base đang load. -->
     <div class="home-scene__sky" />
     <div class="home-scene__mountains home-scene__mountains--far" />
@@ -268,6 +268,7 @@ onBeforeUnmount(() => {
 
     <div
       class="home-scene__parallax-stack home-scene__parallax-stack--active"
+      data-hk-region="vista"
       :class="{
         'is-entering': transitionActive,
         'is-reduced-motion': reducedMotion,

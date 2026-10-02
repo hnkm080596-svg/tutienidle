@@ -62,10 +62,10 @@ const statGroups = computed(() =>
 </template>
 
 <style scoped>
-/* Docked card - position (absolute, left:100% of the drawer) is set by
-   LeftPanel via the incoming .left-panel__detail class; this file only
-   styles the surface. --paper-* tokens are remapped dark by .ink-drawer
-   so the card inherits the drawer tone. */
+/* Docked card - position is set by LeftPanel via the incoming
+   .character-detail-dock class; this file only styles the surface. The
+   imperial scroll host supplies the dark --paper-* token remap the card
+   inherits. */
 .character-detail {
   width: 280px;
   max-height: calc(100% - 24px);

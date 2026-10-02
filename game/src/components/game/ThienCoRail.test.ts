@@ -46,6 +46,7 @@ function mountRail(gameManager: GameManager) {
   return {
     ui,
     rail: () => container.querySelector<HTMLElement>('.thien-co-rail'),
+    chip: () => container.querySelector<HTMLElement>('.thien-co-rail__chip'),
     empty: () => container.querySelector<HTMLElement>('.thien-co-rail__empty'),
     entries: () => Array.from(container.querySelectorAll<HTMLElement>('.thien-co-rail__entry')),
     entryCta: (index: number) =>
@@ -73,9 +74,12 @@ describe('ThienCoRail', () => {
     vi.useRealTimers()
   })
 
-  it('shows the quiet empty line when nothing is actionable', () => {
+  it('shows the quiet empty line when nothing is actionable', async () => {
     expect(mounted.rail()).not.toBeNull()
     expect(mounted.rail()!.dataset.canonicalLayer).toBe('L8')
+    // Collapsed chip first (spec scene-03) - entries live in the drawer.
+    mounted.chip()!.click()
+    await nextTick()
     expect(mounted.entries().length).toBe(0)
     expect(mounted.empty()!.textContent).toContain('Đạo tâm an nhiên')
   })
@@ -86,6 +90,7 @@ describe('ThienCoRail', () => {
     player.realmLevel = 12
     player.cultivation = player.cultivationRequired
 
+    mounted.chip()!.click()
     await nextTick()
 
     const entries = mounted.entries()
