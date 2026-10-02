@@ -57,7 +57,10 @@ describe('StageSelectPanel — thông tin Truyền Tống Trận', () => {
     expect(mounted.container.querySelector('.stage-select__intro')).toBeNull()
     expect(mounted.container.querySelector('.stage-select__scene')).toBeNull()
     expect(mounted.container.querySelectorAll('.stage-select__filter-group--chapters button')).toHaveLength(3)
-    expect(mounted.container.querySelectorAll('.stage-map__node')).toHaveLength(10)
+    // Scene 09 scaffold (2026-10-02): the audit's EXACT scene-10 pattern
+    // renders all 3 chapter bands at once - 30 nodes across the bands.
+    // nodes[9] below is still mortal_dong_10 (band order = chapter order).
+    expect(mounted.container.querySelectorAll('.stage-map__node')).toHaveLength(30)
     expect(mounted.container.textContent).toContain('Dã Trư')
     // BETA roster: deep-floor nodes show the band-C species (was Son Khau
     // under the old 2-species pair mix).

@@ -373,7 +373,9 @@
         "eliteChance": "{percent}% Tinh Anh"
       },
       "sections": {
-        "selectFloor": "Chọn tầng"
+        "selectFloor": "Chọn tầng",
+        "enemies": "Địch Xuất Hiện",
+        "rewards": "Thưởng Vượt Ải"
       },
       "empty": {
         "noStages": "Khu vực này chưa có tầng chiến đấu.",
@@ -405,6 +407,17 @@
         "ranged": "Tầm xa",
         "caster": "Pháp thuật",
         "tank": "Hộ vệ"
+      },
+      "progress": {
+        "title": "Tiến Độ Thám Hiểm: {zone}"
+      },
+      "rewards": {
+        "kinds": {
+          "material": "Vật Liệu",
+          "equipment": "Trang Bị",
+          "equipmentAny": "Trang Bị Ngẫu Nhiên",
+          "pill": "Đan Dược"
+        }
       }
     },
     "wheel": {

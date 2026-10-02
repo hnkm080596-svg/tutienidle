@@ -53,11 +53,46 @@ export function layoutStageTrail(count: number): StageTrailLayout {
     points.push({ x: xBase, y })
   }
 
-  // Smooth the polyline with quadratic mid-segment joins so the trail
-  // reads as a drawn path, not a wire graph.
-  // viewBox is 0..1000 on both axes (preserveAspectRatio="none"
-  // stretches the trail to the parchment field, same mapping as the
-  // nodes' left/top %).
+  return { points, pathD: pathThroughPoints(points) }
+}
+
+// Chapter-band variant: the audit's EXACT scene-10 pattern renders all
+// three chapter tracks at once, one serpentine wave per band ending on
+// the chapter's boss medallion at the right edge.
+const BAND_START_X = 0.26
+const BAND_SPAN_X = 0.54
+const BAND_Y_HIGH = 0.36
+const BAND_Y_LOW = 0.62
+const BAND_BOSS_X = 0.92
+const BAND_BOSS_Y = 0.48
+
+export function layoutChapterBandTrail(count: number): StageTrailLayout {
+  if (count <= 0) {
+    return { points: [], pathD: '' }
+  }
+
+  const regular = Math.max(0, count - 1)
+  const points: StageTrailPoint[] = []
+
+  for (let index = 0; index < regular; index += 1) {
+    const x = regular > 1
+      ? BAND_START_X + (index / (regular - 1)) * BAND_SPAN_X
+      : BAND_START_X + BAND_SPAN_X / 2
+    points.push({ x, y: index % 2 === 0 ? BAND_Y_HIGH : BAND_Y_LOW })
+  }
+
+  // The band's last stage is its chapter-end boss seal.
+  points.push({ x: BAND_BOSS_X, y: BAND_BOSS_Y })
+
+  return { points, pathD: pathThroughPoints(points) }
+}
+
+// Smooth the polyline with quadratic mid-segment joins so the trail
+// reads as a drawn path, not a wire graph.
+// viewBox is 0..1000 on both axes (preserveAspectRatio="none"
+// stretches the trail to the parchment field, same mapping as the
+// nodes' left/top %).
+function pathThroughPoints(points: StageTrailPoint[]): string {
   const toViewBox = (point: StageTrailPoint) => ({
     x: Math.round(point.x * 10000) / 10,
     y: Math.round(point.y * 10000) / 10,
@@ -88,5 +123,5 @@ export function layoutStageTrail(count: number): StageTrailLayout {
     pathD += ` L ${last.x} ${last.y}`
   }
 
-  return { points, pathD }
+  return pathD
 }
