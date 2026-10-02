@@ -1,0 +1,32 @@
+=== MUTANT sv1 ===
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+ ❯ tests/architecture/betaScopeSkillDomain.test.ts (25 tests | 1 failed) 34ms
+     × non-beta ways scope-hide the whole rail; corrupt way-less non-mortal fails closed 7ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/architecture/betaScopeSkillDomain.test.ts > beta scope v2 phase-3 - combat role rail > non-beta ways scope-hide the whole rail; corrupt way-less non-mortal fails closed
+AssertionError: expected 'available' to be 'scope-hidden' // Object.is equality
+
+Expected: "scope-hidden"
+Received: "available"
+
+ ❯ tests/architecture/betaScopeSkillDomain.test.ts:277:27
+    275|
+    276|     for (const entry of swordRail) {
+    277|       expect(entry.state).toBe('scope-hidden')
+       |                           ^
+    278|     }
+    279|     // basic/special carry the admission blocker; ultimate's constant
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  1 failed | 29 passed (30)
+   Start at  15:27:55
+   Duration  4.63s (transform 3.37s, setup 438ms, import 3.81s, tests 192ms, environment 602ms)
+
+EXIT=1

@@ -1,0 +1,142 @@
+{
+  "audit": {
+    "scope": "blind adversarial audit of CONSUMER/INTEGRATION seams - every place persisted/restored state is consumed by the beta scope contract",
+    "repo": "hnkm080596-svg/tutienidle",
+    "branch": "devin/qa-fixpoint",
+    "pinned_commit": "a7d12edf",
+    "date": "2026-10-01",
+    "auditor": "independent Devin session (blind)",
+    "probe_file": "tests/architecture/betaConsumerSeamsProbes.qa.test.ts",
+    "probe_results": "29/29 pass on the pinned state; npm run type-check clean",
+    "defect_definition": "dormant scope leaking into visible play through a consumer path, OR a gated record still minting effects downstream of the boundary (flagged saves must still LOAD)"
+  },
+  "verdict": {
+    "label": "PASS_WITH_EVIDENCE",
+    "confirmed_defects": 0,
+    "critical": 0,
+    "high": 0,
+    "medium": 0,
+    "low": 0,
+    "nit": 1,
+    "summary": "Every consumer seam attacked at a7d12edf fails closed: dormant kits, formations, companions, hidden beasts, hidden mechanics (Quan The, Nghich Chu Tian, ancient beast trial, hidden tribulation outcomes), dormant talents, dormant passives/skills/techniques, alchemy/decompose/worker production, daily quests, vendor, building writes, way selection, and all tri-state read models. Carried dormant records deserialize inert; flagged saves still load via unsupportedReleaseReason flagging (not blocking)."
+  },
+  "findings": [
+    {
+      "id": "QA-CS-N1",
+      "severity": "Nit",
+      "confidence": "confirmed-inert-latent",
+      "status": "LATENT_COVERAGE_GAP",
+      "surface": "src/core/game/CombatBuild.ts:385-387 - survive.extraSources binds runtime.buildSurviveSources from the UNGATED runtime (not gatedRuntime)",
+      "repro": "None possible at a7d12edf: no runtime in CULTIVATION_PATH_MODULES defines buildSurviveSources (grep-verified: only the type declaration at src/core/player/CultivationPathRuntime.ts:52 and the parked-content comment at src/core/player/CultivationPathRegistry.ts:495). Probe 'emits nothing from any dormant channel' asserts build.survive.extraSources === undefined on a dormant-way save - passes.",
+      "mint_path": "CombatBuild.ts:385 resolveCombatBuild emits survive.extraSources bound from `runtime` while every sibling channel (kit, formation, aura, tranPhap buffs, companions) is evaluated against wayAdmitted/isScopeHidden. If a post-beta way runtime gains buildSurviveSources on a way that is dormant under the beta allow-list, a carried way_out_of_scope save mints SurviveLethalSource entries downstream at GameManagerTurnBattleOps.ts:1894 (`build.survive.extraSources?.(...)`) - bypassing the way gate every sibling respects.",
+      "recommendation": "When any runtime gains buildSurviveSources, gate this binding with the same wayAdmitted predicate used for capabilities/formationBuff (line ~347) or bind from gatedRuntime."
+    }
+  ],
+  "verified_clean_seams": [
+    {
+      "surface": "combat build resolution (resolveCombatBuild)",
+      "evidence": "dormant-way save (sword_pathway committed + freshSwordPathState + carried formationLoadout + forged talent ids) resolves GENERIC_PHYSICAL_BASIC only; kit.special/ultimate/statDomains undefined; formation = DEFAULT_PARTY_FORMATION; companions = []; no VAN_PHAP_THAN_HOA_ID aura and no tranPhap/clone buffs in entryBuffs",
+      "gate": "wayAdmitted (isBetaWay) + isScopeHidden('formation'/'companion'/'artifact') + betaSkillAdmitted/betaNodeSkillLevelAdmitted"
+    },
+    {
+      "surface": "survive-lethal charges (SurviveLethalGuard.beginBattle)",
+      "evidence": "forged ['pham_cot','pham_nhan_chi_cot','tran_tam'] mints 0 uses; control ['bat_tu_the'] mints 1 - raw talentIds pass through but re-gate inside getSurviveLethalUsesPerBattle -> collectTalentEffects",
+      "gate": "isBetaTalentId inside collectTalentEffects"
+    },
+    {
+      "surface": "persisted stat assembly (resolvePlayerStatAssembly)",
+      "evidence": "forged realm-sourced modifier claim (flat:99999 might) drops - stats equal clean baseline; authored grantRealmPassive survives rebuild; carried completedHiddenBodyRealmIds do not raise getEffectiveMainStatCap",
+      "gate": "rebuild-don't-trust realm channel + hiddenRealmIds skip + isBetaFeature('hiddenContent') in getEffectiveMainStatCap"
+    },
+    {
+      "surface": "talent effect reads (collectTalentEffects / getTalentCombatPassiveSkillId)",
+      "evidence": "forged non-beta ids emit [] / undefined; beta talent emits",
+      "gate": "isBetaTalentId per-id filter"
+    },
+    {
+      "surface": "hidden-beast spawn substitution + kill counters (HiddenBeastSystem)",
+      "evidence": "carried window-open counter + forced rng => maybeReplaceSpawn undefined; onEnemyDefeated returns [] and never writes counters",
+      "gate": "isBetaFeature('hiddenContent') first line; isScopeHidden('hiddenContent') in onEnemyDefeated"
+    },
+    {
+      "surface": "Quan The cultivation diverter (resolveFinalCultivationGain)",
+      "evidence": "carried active mechanic (discovered, active:true, progress:10) + 8/8 meridian claim + lineageActive => full 1000 lands, progress frozen at 10",
+      "gate": "isQuanTheActionable -> canProgressHiddenBody -> isBetaFeature('hiddenContent') first line"
+    },
+    {
+      "surface": "Nghich Chu Tian attempt (attemptNghichChuTian)",
+      "evidence": "carried discovered+active record (completed:5) + funded bag => outcome 'ineligible', level stays 5, zero material debit",
+      "gate": "isNghichChuTianEligible -> canProgressHiddenBody fails closed before any materialBag.remove"
+    },
+    {
+      "surface": "alchemy settle/park (AlchemySystem.restoreJobs + tick)",
+      "evidence": "carried dormant-family job (alchemy_phi_van_dan_qi_refining) parks past completesAtMs: job preserved, zero pills, zero settlement events",
+      "gate": "scopeHiddenPillFamilyOfId !== null -> remaining.push(job); continue"
+    },
+    {
+      "surface": "decompose carried started cycle (DecomposeSystem.tick/settleOffline)",
+      "evidence": "restore({started:true,workers:3}) + tick + settleOffline => no output, ore unconsumed; restore clamps workers to capacity=0 under lock",
+      "gate": "isScopeHidden('equipmentOreDecompose') early-return in tick/settleOffline/setSetting/listMatchingOres"
+    },
+    {
+      "surface": "vendor reads (sellMaterialToVendor / previewVendorSale / getVendorSellableRows)",
+      "evidence": "tinh_hoa_pham_the, tinh_hoa_phap_the, doan_bao_thach, chieu_hien_lenh, yeu_dan_hung_giao all rejected/absent - grade gate fails closed (no profession -> not sellable)",
+      "gate": "VendorSystem isGradeBelowPlayer requires material.profession.realmId; hidden materials carry none"
+    },
+    {
+      "surface": "quest claim/settle on carried scope-hidden daily quest",
+      "evidence": "carried daily_chieu_hien_lenh progress deactivates at reconcileQuestLifecycle; claimQuest returns false",
+      "gate": "isBetaQuestEnabled + isScopeHidden('dailyQuest')"
+    },
+    {
+      "surface": "building write seam (chi_hien_quan)",
+      "evidence": "canBuildBuilding false, buildBuilding null - scope gate precedes the dev-flag check",
+      "gate": "isBetaBuildingSurface at GameManagerBuildingOps:65/78"
+    },
+    {
+      "surface": "way selection (chooseCultivationPath / commitFiveElementInitiation)",
+      "evidence": "chooseCultivationPath('sword','sword_pathway') returns false, no mutation",
+      "gate": "isBetaWay at GameManagerRealmAdvanceOps:327"
+    },
+    {
+      "surface": "carried dormant technique (TechniqueSystem.gainMastery)",
+      "evidence": "restored dormant technique accrues {gained:0,rankUps:0}; sealFrozenCycle gated identically",
+      "gate": "betaTechniqueAdmitted(technique.id)"
+    },
+    {
+      "surface": "learned dormant passive skills (SkillSystem.getScaledPassiveModifiers)",
+      "evidence": "learned passive_kiem_tam_lanh_liet (sword-way-owned) emits zero modifiers",
+      "gate": "betaSkillAdmitted at SkillSystem:224"
+    },
+    {
+      "surface": "tri-state verdict honesty (betaCombatRolesFor)",
+      "evidence": "mortal save: basic available / special progression-locked / ultimate scope-hidden; dormant-way save: all three scope-hidden; exactly one verdict per role, never half-rendered",
+      "gate": "explicit BetaScopeVerdict per role, fail-closed on unresolved/non-beta way"
+    },
+    {
+      "surface": "hidden record read model (betaHiddenRealmRecordFor) + flagged-save load",
+      "evidence": "carried discovered record => undefined under lock; unsupportedReleaseReason => 'hidden_progression_state' (flags, never blocks restore - useAppLifecycle routes the notice)",
+      "gate": "isBetaFeature('hiddenContent') early-return"
+    },
+    {
+      "surface": "tribulation carried committed outcome (TribulationOutcomeService.settleOutcome)",
+      "evidence": "hidden-type or impossible committedOutcome parks: returns null, no realm/cultivation/talent write, record stays pending (sibling suite betaSettlementReauth.qa.test.ts:208-289 confirms)",
+      "gate": "hiddenDormant = breakthroughType !== 'normal' && !isBetaFeature('hiddenContent')"
+    },
+    {
+      "surface": "creation boundary (applyCreationProfile / validateCharacterCreationDraft)",
+      "evidence": "draft rejects non-beta talent ids (isBetaCreationTalentId) at validateDraft; core write is raw but unreachable for hostile input and consumption re-gates per-id",
+      "gate": "validateCharacterCreationDraft isBetaCreationTalentId check"
+    },
+    {
+      "surface": "devtools (enemySpawnDebug / isTestModeUnlockAll)",
+      "evidence": "import.meta.env.DEV + mock-backend + localStorage flag required; ops-layer scope gates run before the flag is consulted",
+      "gate": "dev-only, never reachable in production builds"
+    }
+  ],
+  "coverage_notes": [
+    "All probes deterministic unit-level vitest; no visual/browser drive in this audit (UI surfaces probed via read models and component-level siblings)",
+    "Online-only file writes: tests/architecture/betaConsumerSeamsProbes.qa.test.ts added; zero production edits",
+    "Sibling coverage cross-checked to avoid duplicate pins: betaDormantSaveLeak (save load/dormant leak), betaConsumerSeams/B8 (mount+vendor+quest+workforce), betaScopeEconomyGates (decompose+hiddenBeast), betaSettlementReauth (tribulation), betaScopeLockV2/betaScopeSurface/betaScopeSkillDomain (read models)"
+  ]
+}

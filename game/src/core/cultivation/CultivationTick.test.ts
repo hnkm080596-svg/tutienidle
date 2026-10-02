@@ -58,9 +58,9 @@ describe('cultivateTick', () => {
     const player = createDefaultPlayer()
     player.persistentTimedEffects = [
       {
-        id: 'fx1', sourceItemId: 'x', effectGroup: 'tu_linh_tran',
+        id: 'fx1', sourceItemId: 'tu_linh_tran', effectGroup: 'tu_linh_tran',
         appliedAtMs: NOW, expiresAtMs: NOW + 60_000,
-        modifiers: [], cultivationSpeedPercent: 0.5,
+        modifiers: [], cultivationSpeedPercent: 0.25,
       },
       {
         id: 'fx2', sourceItemId: 'x', effectGroup: 'tu_linh_tran',
@@ -75,7 +75,7 @@ describe('cultivateTick', () => {
     ]
 
     cultivateTick(player, 1, NOW)
-    expect(player.cultivationPerSecond).toBeCloseTo(BASE_CULTIVATION_PER_SECOND * 1.5)
+    expect(player.cultivationPerSecond).toBeCloseTo(BASE_CULTIVATION_PER_SECOND * 1.25)
   })
 
   it('ngo_dao: insight accrues at the 2000-cultivation threshold with rollover', () => {

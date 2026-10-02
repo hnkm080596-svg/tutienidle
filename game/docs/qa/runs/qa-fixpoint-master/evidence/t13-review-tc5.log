@@ -1,0 +1,5 @@
+RV-ADV-TC5 (devin-8a907a21d421400a85cfb1703b1a41ab) - blind terminal falsification sweep @ 3e802342 (T12)
+Verdict: FAIL - 1 finding (scope lock otherwise holds; 18/18 hostile-state probes green).
+Probe: src/services/save/falsificationSweep.tc5.qa.test.ts
+F-TC5-1 [Medium] forged accrualRealmId mints dormant-tier spirit stones at forged-realm rate - accrualRealmId persisted but never validated; collectBuilding pre-checks by player.realmId while claim mints by forged pin (boundary double-cross). Repro: {buildingId:'gathering_outpost', accrualRealmId:'tribulation'} on mortal save -> spirit_stone_thuong_pham at ~68k/min vs mortal 5.5/min, capped only by forged realm's 10h capacity.
+Held: carried dormant way pair fails closed at combat build + role rail; dormant pills/jobs/skills/nodes inert; respec/devReset refuse wholesale; alchemy startJob gated; decompose closed; CHQ flat-3; hidden validators coherent; hostile render gated at betaCombatRolesFor.

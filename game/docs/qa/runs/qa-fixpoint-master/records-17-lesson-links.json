@@ -1,0 +1,582 @@
+{
+ "records": [
+  {
+   "kind": "lesson",
+   "body": {
+    "id": "L-DORMANT-EFFECT-SEAM",
+    "version": 1,
+    "supersedes": null,
+    "triggerType": "DEFECT",
+    "findingIds": [
+     "F-DL-1",
+     "F-DL-2"
+    ],
+    "incidentEvidenceIds": [
+     "EV-PIN-DORMANT-1"
+    ],
+    "originatingRun": "qa-fixpoint-master",
+    "rootClass": "AUTHORITY",
+    "missedInvariantIds": [
+     "I-AS-1"
+    ],
+    "escapeReason": "dormant persisted state fed effect seams (stat cap, realm passive) because the seam read the raw field without isBetaFeature gating | detector gap: the green baseline had no assertion that dormant records stay inert - unlock-everything test setup masked the leak",
+    "applicability": [
+     "beta-scope gated systems + any save-flag reader"
+    ],
+    "exclusions": [],
+    "proposedProtection": [
+     "gate every effect seam on the scope authority; census all dormant persisted fields for effect feeds"
+    ],
+    "promotionEvidenceIds": [],
+    "qualifiedBy": [],
+    "capabilityDelta": "RECORDED - awaiting independent qualification",
+    "status": "CAPTURED",
+    "policyVersion": null,
+    "effectiveFromRun": null,
+    "recurrenceFindingIds": [],
+    "preventionEvidenceIds": [],
+    "guidance": null
+   }
+  },
+  {
+   "kind": "lesson",
+   "body": {
+    "id": "L-HOSTILE-SHAPE",
+    "version": 1,
+    "supersedes": null,
+    "triggerType": "DEFECT",
+    "findingIds": [
+     "F-DL-3",
+     "F-DL-5",
+     "F-DEFER-4",
+     "F-DEFER-5"
+    ],
+    "incidentEvidenceIds": [
+     "EV-PIN-NOTICE-1",
+     "EV-PIN-DORMANT-1"
+    ],
+    "originatingRun": "qa-fixpoint-master",
+    "rootClass": "ROBUSTNESS",
+    "missedInvariantIds": [
+     "I-SF-1"
+    ],
+    "escapeReason": "flag reader used !== null on a value that can be absent (undefined) or non-object, throwing / false-flagging | detector gap: shape matrix (null/scalar/array/absent) not enumerated at the seam",
+    "applicability": [
+     "beta-scope gated systems + any save-flag reader"
+    ],
+    "exclusions": [],
+    "proposedProtection": [
+     "enumerate the hostile-shape matrix on every save flag reader"
+    ],
+    "promotionEvidenceIds": [],
+    "qualifiedBy": [],
+    "capabilityDelta": "RECORDED - awaiting independent qualification",
+    "status": "CAPTURED",
+    "policyVersion": null,
+    "effectiveFromRun": null,
+    "recurrenceFindingIds": [],
+    "preventionEvidenceIds": [],
+    "guidance": null
+   }
+  },
+  {
+   "kind": "lesson",
+   "body": {
+    "id": "L-CONTRACT-NOTICE",
+    "version": 1,
+    "supersedes": null,
+    "triggerType": "DEFECT",
+    "findingIds": [
+     "F-DL-4"
+    ],
+    "incidentEvidenceIds": [
+     "EV-PIN-NOTICE-1"
+    ],
+    "originatingRun": "qa-fixpoint-master",
+    "rootClass": "CONTRACT",
+    "missedInvariantIds": [
+     "I-RM-1"
+    ],
+    "escapeReason": "contract required a notice on flagged saves but the flag had zero UI consumers | detector gap: contract clauses without a consumer probe drift unwired",
+    "applicability": [
+     "beta-scope gated systems + any save-flag reader"
+    ],
+    "exclusions": [],
+    "proposedProtection": [
+     "every contract observable needs a consumer census entry"
+    ],
+    "promotionEvidenceIds": [],
+    "qualifiedBy": [],
+    "capabilityDelta": "RECORDED - awaiting independent qualification",
+    "status": "CAPTURED",
+    "policyVersion": null,
+    "effectiveFromRun": null,
+    "recurrenceFindingIds": [],
+    "preventionEvidenceIds": [],
+    "guidance": null
+   }
+  },
+  {
+   "kind": "lesson",
+   "body": {
+    "id": "L-RAIL-BYPASS",
+    "version": 1,
+    "supersedes": null,
+    "triggerType": "DEFECT",
+    "findingIds": [
+     "F-RM-1",
+     "F-RM-2",
+     "F-RM-4"
+    ],
+    "incidentEvidenceIds": [
+     "EV-PROBE-READMODEL-2"
+    ],
+    "originatingRun": "qa-fixpoint-master",
+    "rootClass": "AUTHORITY",
+    "missedInvariantIds": [
+     "I-SV-1"
+    ],
+    "escapeReason": "three surfaces rendered dormant content (element tabs, ultimate slot, alchemy families) around the verdict rail | detector gap: rail computed correctly but no rendered-set===verdict pin existed",
+    "applicability": [
+     "beta-scope gated systems + any save-flag reader"
+    ],
+    "exclusions": [],
+    "proposedProtection": [
+     "pin rendered-set === rail verdict on every tri-state surface"
+    ],
+    "promotionEvidenceIds": [],
+    "qualifiedBy": [],
+    "capabilityDelta": "RECORDED - awaiting independent qualification",
+    "status": "CAPTURED",
+    "policyVersion": null,
+    "effectiveFromRun": null,
+    "recurrenceFindingIds": [],
+    "preventionEvidenceIds": [],
+    "guidance": null
+   }
+  },
+  {
+   "kind": "lesson",
+   "body": {
+    "id": "L-UNWIRED-BEAT",
+    "version": 1,
+    "supersedes": null,
+    "triggerType": "DEFECT",
+    "findingIds": [
+     "F-RM-3"
+    ],
+    "incidentEvidenceIds": [
+     "EV-PROBE-READMODEL-2"
+    ],
+    "originatingRun": "qa-fixpoint-master",
+    "rootClass": "CONTRACT",
+    "missedInvariantIds": [
+     "I-UH-1"
+    ],
+    "escapeReason": "betaCompletionFor computed the end beat but nothing mounted it | detector gap: same unwired-consumer class as L-CONTRACT-NOTICE",
+    "applicability": [
+     "beta-scope gated systems + any save-flag reader"
+    ],
+    "exclusions": [],
+    "proposedProtection": [
+     "consumer census for every contract read-model"
+    ],
+    "promotionEvidenceIds": [],
+    "qualifiedBy": [],
+    "capabilityDelta": "RECORDED - awaiting independent qualification",
+    "status": "CAPTURED",
+    "policyVersion": null,
+    "effectiveFromRun": null,
+    "recurrenceFindingIds": [],
+    "preventionEvidenceIds": [],
+    "guidance": null
+   }
+  },
+  {
+   "kind": "lesson",
+   "body": {
+    "id": "L-DORMANT-RUNTIME",
+    "version": 1,
+    "supersedes": null,
+    "triggerType": "DEFECT",
+    "findingIds": [
+     "F-TRI-2"
+    ],
+    "incidentEvidenceIds": [
+     "EV-PROBE-TRISAVE-2"
+    ],
+    "originatingRun": "qa-fixpoint-master",
+    "rootClass": "AUTHORITY",
+    "missedInvariantIds": [
+     "I-AS-1"
+    ],
+    "escapeReason": "combat kit builder gated companions/formation but admitted the players own dormant-way kit | detector gap: sibling seam audit stopped at external systems, not self-runtime",
+    "applicability": [
+     "beta-scope gated systems + any save-flag reader"
+    ],
+    "exclusions": [],
+    "proposedProtection": [
+     "sibling search must include the subjects own runtime path"
+    ],
+    "promotionEvidenceIds": [],
+    "qualifiedBy": [],
+    "capabilityDelta": "RECORDED - awaiting independent qualification",
+    "status": "CAPTURED",
+    "policyVersion": null,
+    "effectiveFromRun": null,
+    "recurrenceFindingIds": [],
+    "preventionEvidenceIds": [],
+    "guidance": null
+   }
+  },
+  {
+   "kind": "lesson",
+   "body": {
+    "id": "L-DORMANT-CONSUME",
+    "version": 1,
+    "supersedes": null,
+    "triggerType": "DEFECT",
+    "findingIds": [
+     "F-TRI-1"
+    ],
+    "incidentEvidenceIds": [
+     "EV-PROBE-TRISAVE-2"
+    ],
+    "originatingRun": "qa-fixpoint-master",
+    "rootClass": "AUTHORITY",
+    "missedInvariantIds": [
+     "I-AS-1"
+    ],
+    "escapeReason": "pill consumption applied permanent_stat for dormant families on carried saves | detector gap: family-resolver census missed the consume path",
+    "applicability": [
+     "beta-scope gated systems + any save-flag reader"
+    ],
+    "exclusions": [],
+    "proposedProtection": [
+     "gate every dormant-content effect seam, not just render seams"
+    ],
+    "promotionEvidenceIds": [],
+    "qualifiedBy": [],
+    "capabilityDelta": "RECORDED - awaiting independent qualification",
+    "status": "CAPTURED",
+    "policyVersion": null,
+    "effectiveFromRun": null,
+    "recurrenceFindingIds": [],
+    "preventionEvidenceIds": [],
+    "guidance": null
+   }
+  },
+  {
+   "kind": "lesson",
+   "body": {
+    "id": "L-FIXTURE-DRIFT",
+    "version": 1,
+    "supersedes": null,
+    "triggerType": "TEST",
+    "findingIds": [
+     "F-E2E-1"
+    ],
+    "incidentEvidenceIds": [
+     "EV-E2E-1"
+    ],
+    "originatingRun": "qa-fixpoint-master",
+    "rootClass": "TEST_QUALITY",
+    "missedInvariantIds": [
+     "I-TQ-1"
+    ],
+    "escapeReason": "e2e helpers referenced a testid removed by the unified-creation refactor; whole e2e layer dead while verify stayed green | detector gap: e2e specs excluded from npm run verify - no executor noticed drift",
+    "applicability": [
+     "beta-scope gated systems + any save-flag reader"
+    ],
+    "exclusions": [],
+    "proposedProtection": [
+     "runtime probes inside the QA gate; excluded suites need an explicit executor"
+    ],
+    "promotionEvidenceIds": [],
+    "qualifiedBy": [],
+    "capabilityDelta": "RECORDED - awaiting independent qualification",
+    "status": "CAPTURED",
+    "policyVersion": null,
+    "effectiveFromRun": null,
+    "recurrenceFindingIds": [],
+    "preventionEvidenceIds": [],
+    "guidance": null
+   }
+  },
+  {
+   "kind": "lesson",
+   "body": {
+    "id": "L-DEFERRED-LOW",
+    "version": 1,
+    "supersedes": null,
+    "triggerType": "DEFECT",
+    "findingIds": [
+     "F-DEFER-1",
+     "F-DEFER-2",
+     "F-DEFER-3",
+     "F-A2-4"
+    ],
+    "incidentEvidenceIds": [
+     "EV-PROBE-TRISAVE-2"
+    ],
+    "originatingRun": "qa-fixpoint-master",
+    "rootClass": "CONTRACT",
+    "missedInvariantIds": [
+     "I-UH-1"
+    ],
+    "escapeReason": "dormant bag stacks / skill strip names / in-flight dormant jobs render on flagged saves (display-only, effect seams closed) | detector gap: display polish on out-of-scope saves - user ruling defers Low",
+    "applicability": [
+     "beta-scope gated systems + any save-flag reader"
+    ],
+    "exclusions": [],
+    "proposedProtection": [
+     "deferred per ruling; revisit when display filtering budget exists"
+    ],
+    "promotionEvidenceIds": [],
+    "qualifiedBy": [],
+    "capabilityDelta": "RECORDED - awaiting independent qualification",
+    "status": "CAPTURED",
+    "policyVersion": null,
+    "effectiveFromRun": null,
+    "recurrenceFindingIds": [],
+    "preventionEvidenceIds": [],
+    "guidance": null
+   }
+  },
+  {
+   "kind": "lesson",
+   "body": {
+    "id": "L-WRITE-SEAM-UNGATED",
+    "version": 1,
+    "supersedes": null,
+    "triggerType": "DEFECT",
+    "findingIds": [
+     "F-CA-1",
+     "F-CA-2",
+     "F-B-2"
+    ],
+    "incidentEvidenceIds": [
+     "EV-PROBE-CA-FIX",
+     "EV-MUT-CA-1"
+    ],
+    "originatingRun": "qa-fixpoint-master",
+    "rootClass": "L-WRITE-SEAM-UNGATED",
+    "missedInvariantIds": [
+     "I-AS-1"
+    ],
+    "escapeReason": "scope lock covered read-models + combat ACCESS seams but never progression WRITE seams on node registries | detector gap: hostile-save analysis enumerated persisted-field readers and rail consumers; the shared node-tree write path (purchase/upgrade/respec/spec-claim) was assumed beta machinery - found only by a blind clean-round reviewer",
+    "applicability": [
+     "any mutating op over tree-like registries (nodes, recipes, kits) gated by scope",
+     "refund/respec seams over possibly-dormant holdings"
+    ],
+    "exclusions": [],
+    "proposedProtection": [
+     "admission predicate on every registry write op (betaTreeNodeAdmitted)",
+     "refund/respec seams fail closed on dormant holdings - freeze never monetize",
+     "verdict-vs-render parity must cover write ops (canPurchaseNode agrees with purchaseNode)",
+     "mutant corpus entry: guard-neuter on admission predicate"
+    ],
+    "promotionEvidenceIds": [],
+    "qualifiedBy": [],
+    "capabilityDelta": "RECORDED - awaiting independent qualification",
+    "status": "CAPTURED",
+    "policyVersion": null,
+    "effectiveFromRun": null,
+    "recurrenceFindingIds": [],
+    "preventionEvidenceIds": [],
+    "guidance": null
+   }
+  },
+  {
+   "kind": "lesson",
+   "body": {
+    "id": "L-ASYM-SIBLING-SEAM",
+    "version": 1,
+    "supersedes": null,
+    "triggerType": "DEFECT",
+    "findingIds": [
+     "F-A2-1"
+    ],
+    "incidentEvidenceIds": [
+     "EV-PROBE-A2-FIX"
+    ],
+    "originatingRun": "qa-fixpoint-master",
+    "rootClass": "L-ASYM-SIBLING-SEAM",
+    "missedInvariantIds": [
+     "I-AS-1"
+    ],
+    "escapeReason": "sibling ACCESS seams inside one function gated asymmetrically; aura read as 'capability machinery' not 'dormant-kit buff layer'",
+    "applicability": [
+     "every conditional content push inside an already-gated function"
+    ],
+    "exclusions": [],
+    "proposedProtection": [
+     "every conditional content push cites the same admission predicate in its own guard",
+     "hostile-state pin: hidden way + learned aura passive emits zero aura entryBuffs"
+    ],
+    "promotionEvidenceIds": [],
+    "qualifiedBy": [],
+    "capabilityDelta": "RECORDED - awaiting independent qualification",
+    "status": "CAPTURED",
+    "policyVersion": null,
+    "effectiveFromRun": null,
+    "recurrenceFindingIds": [],
+    "preventionEvidenceIds": [],
+    "guidance": null
+   }
+  },
+  {
+   "kind": "lesson",
+   "body": {
+    "id": "L-PREDICATE-LEVEL-MISMATCH",
+    "version": 1,
+    "supersedes": null,
+    "triggerType": "DEFECT",
+    "findingIds": [
+     "F-A2-2",
+     "F-A2-3",
+     "F-TC-2"
+    ],
+    "incidentEvidenceIds": [
+     "EV-PROBE-A2-FIX"
+    ],
+    "originatingRun": "qa-fixpoint-master",
+    "rootClass": "L-PREDICATE-LEVEL-MISMATCH",
+    "missedInvariantIds": [
+     "I-AS-1"
+    ],
+    "escapeReason": "admission predicate evaluated node tags while dormancy is declared on skill->way kit; untagged cores + template-level learn seam unprobed",
+    "applicability": [
+     "shared machinery operating on referents of scoped entities (core nodes, learn seams)"
+    ],
+    "exclusions": [],
+    "proposedProtection": [
+     "skill-level admission from way ownership lists minus beta ownership",
+     "one write-admission predicate (tag AND skill level) across all mutating ops",
+     "mortal starter declarations never ownership claims"
+    ],
+    "promotionEvidenceIds": [],
+    "qualifiedBy": [],
+    "capabilityDelta": "RECORDED - awaiting independent qualification",
+    "status": "CAPTURED",
+    "policyVersion": null,
+    "effectiveFromRun": null,
+    "recurrenceFindingIds": [],
+    "preventionEvidenceIds": [],
+    "guidance": null
+   }
+  },
+  {
+   "kind": "lesson",
+   "body": {
+    "id": "L-MUTABLE-SNAPSHOT",
+    "version": 1,
+    "supersedes": null,
+    "triggerType": "DEFECT",
+    "findingIds": [
+     "F-A2-2"
+    ],
+    "incidentEvidenceIds": [
+     "EV-PROBE-A2-FIX"
+    ],
+    "originatingRun": "qa-fixpoint-master",
+    "rootClass": "L-MUTABLE-SNAPSHOT",
+    "missedInvariantIds": [],
+    "escapeReason": "module-load IIFE snapshotted mutable policy state (BETA_PLAYABLE_WAYS) pre-lock - prod correct, test-side pinning silently un-pinned",
+    "applicability": [
+     "any memoized read of mutable lock/policy state"
+    ],
+    "exclusions": [],
+    "proposedProtection": [
+     "predicates over BETA_PLAYABLE_WAYS/BETA_FEATURES evaluate live per call",
+     "a snapshot of mutable lock state is a detector fault, not an optimization"
+    ],
+    "promotionEvidenceIds": [],
+    "qualifiedBy": [],
+    "capabilityDelta": "RECORDED - awaiting independent qualification",
+    "status": "CAPTURED",
+    "policyVersion": null,
+    "effectiveFromRun": null,
+    "recurrenceFindingIds": [],
+    "preventionEvidenceIds": [],
+    "guidance": null
+   }
+  },
+  {
+   "kind": "lesson",
+   "body": {
+    "id": "L-SUPPRESSION-OVERBROAD",
+    "version": 1,
+    "supersedes": null,
+    "triggerType": "DEFECT",
+    "findingIds": [
+     "F-B-1"
+    ],
+    "incidentEvidenceIds": [
+     "EV-PIN-DORMANT-1"
+    ],
+    "originatingRun": "qa-fixpoint-master",
+    "rootClass": "AUTHORITY",
+    "missedInvariantIds": [],
+    "escapeReason": "leak checks run one direction (does hidden content reach live play); never inverted to does a suppressed faucet feed a consumer the live contract requires",
+    "applicability": [
+     "any domain-keyed suppression of content whose live-ness rides a different ownership boundary"
+    ],
+    "exclusions": [],
+    "proposedProtection": [
+     "for every scope-keyed suppression enumerate the suppressed items consumers; a suppressed item with a live consumer is broken visible scope",
+     "consumer-chain audit is mandatory before domain-keyed suppression (Kien Co grade -> body chapters is canonical)"
+    ],
+    "promotionEvidenceIds": [],
+    "qualifiedBy": [],
+    "capabilityDelta": "RECORDED - awaiting independent qualification",
+    "status": "CAPTURED",
+    "policyVersion": null,
+    "effectiveFromRun": null,
+    "recurrenceFindingIds": [],
+    "preventionEvidenceIds": [],
+    "guidance": null
+   }
+  },
+  {
+   "kind": "lesson",
+   "body": {
+    "id": "L-EFFECT-CHANNEL-UNGATED",
+    "version": 1,
+    "supersedes": null,
+    "triggerType": "DEFECT",
+    "findingIds": [
+     "F-TC-1",
+     "F-TC-3"
+    ],
+    "incidentEvidenceIds": [
+     "EV-PIN-TC-FIX",
+     "EV-MUT-TC-1"
+    ],
+    "originatingRun": "qa-fixpoint-master",
+    "rootClass": "AUTHORITY",
+    "missedInvariantIds": [],
+    "escapeReason": "dormancy enforced at access seams; stat-channel emitters treated as beta machinery because the beta way shares the channels - preserved way records emit downstream of the gate",
+    "applicability": [
+     "every channel aggregating per-player modifiers/stat effects",
+     "every write op on way-owned entities (techniqueId, skillIds, nodes)"
+    ],
+    "exclusions": [],
+    "proposedProtection": [
+     "enumerate every modifier-aggregation channel and gate each dormant-ownership emitter at its source",
+     "way.techniqueId is an ownership claim; grade/tier/combat channels fail closed on dormant techniques",
+     "call-site filtering when the aggregator cannot import the domain module (acyclic)"
+    ],
+    "promotionEvidenceIds": [],
+    "qualifiedBy": [],
+    "capabilityDelta": "RECORDED - awaiting independent qualification",
+    "status": "CAPTURED",
+    "policyVersion": null,
+    "effectiveFromRun": null,
+    "recurrenceFindingIds": [],
+    "preventionEvidenceIds": [],
+    "guidance": null
+   }
+  }
+ ]
+}

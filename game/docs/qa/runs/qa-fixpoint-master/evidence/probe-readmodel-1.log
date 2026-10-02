@@ -1,0 +1,89 @@
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+stdout | tests/architecture/betaReadModelHonesty.qa.test.ts
+ * Tone.js v15.1.22 * 
+
+ ❯ tests/architecture/betaReadModelHonesty.qa.test.ts (4 tests | 4 failed) 114ms
+     × post-commit renders only the committed element branch — foreign branches are scope-hidden 75ms
+     × a scope-hidden ultimate role renders no slot button for a beta player 16ms
+     × renders only beta-enabled recipe families — dormant families are scope-hidden 14ms
+     × betaCompletionFor has at least one UI consumer — the ending beat must render 8ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/architecture/betaReadModelHonesty.qa.test.ts > QA read-model honesty: skill path element branches (contract sec.D) > post-commit renders only the committed element branch — foreign branches are scope-hidden
+AssertionError: expected 'Mộc' to be 'Hỏa' // Object.is equality
+
+Expected: "Hỏa"
+Received: "Mộc"
+
+ ❯ tests/architecture/betaReadModelHonesty.qa.test.ts:140:39
+    138|     // The committed element may render (marked); no other element may…
+    139|     for (const tab of tabs) {
+    140|       expect(tab.textContent?.trim()).toBe(ELEMENT_LABELS.fire)
+       |                                       ^
+    141|     }
+    142|     expect(tabs.length).toBeLessThanOrEqual(1)
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  tests/architecture/betaReadModelHonesty.qa.test.ts > QA read-model honesty: combat role rail (contract sec.7/8) > a scope-hidden ultimate role renders no slot button for a beta player
+AssertionError: expected 3 to be 2 // Object.is equality
+
+- Expected
++ Received
+
+- 2
++ 3
+
+ ❯ tests/architecture/betaReadModelHonesty.qa.test.ts:179:28
+    177|     )
+    178|
+    179|     expect(buttons.length).toBe(2)
+       |                            ^
+    180|
+    181|     view.unmount()
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  tests/architecture/betaReadModelHonesty.qa.test.ts > QA read-model honesty: alchemy recipe surface (contract sec.F) > renders only beta-enabled recipe families — dormant families are scope-hidden
+AssertionError: expected 2 to be 1 // Object.is equality
+
+- Expected
++ Received
+
+- 1
++ 2
+
+ ❯ tests/architecture/betaReadModelHonesty.qa.test.ts:246:25
+    244|
+    245|     const rows = Array.from(view.container.querySelectorAll<HTMLElemen…
+    246|     expect(rows.length).toBe(1)
+       |                         ^
+    247|     expect(rows[0]?.textContent).not.toContain('Dormant Pill')
+    248|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  tests/architecture/betaReadModelHonesty.qa.test.ts > QA read-model honesty: beta completion surface (contract sec.H) > betaCompletionFor has at least one UI consumer — the ending beat must render
+AssertionError: expected [] to not deeply equal []
+
+Compared values have no visual difference.
+
+ ❯ tests/architecture/betaReadModelHonesty.qa.test.ts:275:27
+    273|     }
+    274|
+    275|     expect(consumers).not.toEqual([])
+       |                           ^
+    276|   })
+    277| })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  4 failed (4)
+   Start at  23:34:13
+   Duration  3.48s (transform 2.14s, setup 190ms, import 2.51s, tests 114ms, environment 554ms)
+

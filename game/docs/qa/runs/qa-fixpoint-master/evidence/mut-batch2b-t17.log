@@ -1,0 +1,243 @@
+===== MUT-A4-roster :: A4: talent roster BETA_TALENT_IDS filter removed (upgrade pool)
+MUT-A4-roster: KILLED_EXPECTED (exit=1)
+ 1 failed | 3 passed (4)
+      Tests  2 failed | 36 passed | 2 skipped (40)
+   Start at  11:34:28
+   Duration  4.14s (transform 7.35s, setup 953ms, import 9.26s, tests 156ms, environment 1.14s)
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/architecture/betaConsumerLeak.qa.test.ts > F-B7-1 dormant talent offered on the mandatory breakthrough modal > getUpgradeableTalentIds excludes dormant owned talents under the lock
+AssertionError: expected [ 'kd_thanh_dan', 'lk_linh_mach' ] to not include 'kd_thanh_dan'
+ ❯ tests/architecture/betaConsumerLeak.qa.test.ts:77:29
+     75|     const upgradeable = getUpgradeableTalentIds(p)
+     76|     expect(upgradeable).toContain(BETA_TALENT)
+     77|     expect(upgradeable).not.toContain(DORMANT_TALENT)
+       |                             ^
+     78|   })
+     79|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  tests/architecture/betaConsumerLeak.qa.test.ts > F-B7-1 dormant talent offered on the mandatory breakthrough modal > a dormant-only upgrade list never holds an empty-offer entitlement actionable
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/architecture/betaConsumerLeak.qa.test.ts:90:46
+     88|       },
+     89|     })
+     90|     expect(isTalentEntitlementActionable(p)).toBe(false)
+       |                                              ^
+     91|     reconcileTalentEntitlement(p)
+     92|     expect(p.pendingTalentEntitlement).toBeUndefined()
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+===== MUT-BS-marker :: BS: markerGate removed (authored-id payload without marker emits)
+MUT-BS-marker: SURVIVED (exit=0)
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+
+ Test Files  1 passed (1)
+      Tests  9 passed (9)
+   Start at  11:34:33
+   Duration  653ms (transform 424ms, setup 203ms, import 322ms, tests 13ms, environment 0ms)
+
+
+===== MUT-BS-meridian :: BS: meridianGate openedIds check removed (bodyPath live)
+MUT-BS-meridian: KILLED_EXPECTED (exit=1)
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+ ❯ tests/architecture/betaMeridianOpenedGate.qa.test.ts (2 tests | 1 failed) 10ms
+     × a payload on an unopened meridian emits nothing 8ms
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 1 passed (2)
+   Start at  11:34:35
+   Duration  504ms (transform 305ms, setup 202ms, import 175ms, tests 10ms, environment 0ms)
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/architecture/betaMeridianOpenedGate.qa.test.ts > meridian openedIds gate while bodyPath is live > a payload on an unopened meridian emits nothing
+AssertionError: expected 113.4 to be 108 // Object.is equality
+
+- Expected
++ Received
+
+- 108
++ 113.4
+
+ ❯ tests/architecture/betaMeridianOpenedGate.qa.test.ts:48:49
+     46|     const base = resolvePlayerStatAssembly(player(), []).stats
+     47|     for (const stat of MERIDIAN.stats) {
+     48|       expect(stats[stat as keyof typeof stats]).toBe(base[stat as keyo…
+       |                                                 ^
+     49|     }
+     50|   })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+===== MUT-REAUTH-hiddenDormant :: REAUTH: hiddenDormant -> false (hidden-type on gate-coherent entrant)
+MUT-REAUTH-hiddenDormant: KILLED_EXPECTED (exit=1)
+skipped
+grantedNodeLevels entry 'tinh_thong_moc' is not a rewardOnly-authored node - grant skipped
+grantedNodeLevels entry 'tinh_thong_kim' is not a rewardOnly-authored node - grant skipped
+grantedNodeLevels entry 'tinh_thong_tho' is not a rewardOnly-authored node - grant skipped
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/architecture/betaSettlementReauth.qa.test.ts > F-CONS-B1: a carried tribulation committedOutcome must re-derive admission at settle > a hidden-type victory targeting an in-scope realm is still parked (dormant lineage)
+AssertionError: expected { kind: 'victory', …(6) } to be null
+
+- Expected:
+null
+
++ Received:
+{
+  "announcement": {
+    "bodyKey": "announce.tribulation.foundation.body",
+    "titleKey": "announce.tribulation.foundation.title",
+    "titleParams": {
+      "label": "ĐẠI ĐẠO",
+    },
+  },
+  "foundationGrade": "great_dao",
+  "kind": "victory",
+  "questRealmTransitionMarked": true,
+  "realmEntered": "foundation_establishment",
+  "realmName": "Trúc Cơ",
+  "talentConverted": true,
+}
+
+ ❯ tests/architecture/betaSettlementReauth.qa.test.ts:242:86
+    240|
+    241|     const service = new TribulationOutcomeService()
+    242|     expect(service.settleOutcome(writerOf(p), manager, manager.tribula…
+       |                                                                                      ^
+    243|     expect(p.realmId).toBe('qi_refining')
+    244|     expect(manager.tribulationDirector.getCommittedOutcome()).not.toBe…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+===== MUT-REAUTH-settleGate :: REAUTH: settle transition gate -> false (gate-coherent entrant)
+MUT-REAUTH-settleGate: KILLED_EXPECTED (exit=1)
+  "realmName": "Kim Đan",
+  "talentConverted": false,
+}
+
+ ❯ tests/architecture/betaSettlementReauth.qa.test.ts:209:86
+    207|
+    208|     const service = new TribulationOutcomeService()
+    209|     expect(service.settleOutcome(writerOf(p), manager, manager.tribula…
+       |                                                                                      ^
+    210|
+    211|     // Nothing applied: realm/cultivation untouched, record still pend…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  tests/architecture/betaSettlementReauth.qa.test.ts > F-CONS-B1: a carried tribulation committedOutcome must re-derive admission at settle > a dormant-target defeat levies no penalty table
+AssertionError: expected { kind: 'defeat', …(4) } to be null
+
+- Expected:
+null
+
++ Received:
+{
+  "announcement": {
+    "bodyKey": "announce.tribulation.defeat.body",
+    "titleKey": "announce.tribulation.defeat.title",
+  },
+  "cultivationLossPercent": 0.3,
+  "kind": "defeat",
+  "spiritStoneId": "spirit_stone_trung_pham",
+  "spiritStonesLost": 0,
+}
+
+ ❯ tests/architecture/betaSettlementReauth.qa.test.ts:266:86
+    264|
+    265|     const service = new TribulationOutcomeService()
+    266|     expect(service.settleOutcome(writerOf(p), manager, manager.tribula…
+       |                                                                                      ^
+    267|     expect(p.cultivation).toBe(500)
+    268|     expect(manager.tribulationDirector.getCommittedOutcome()).not.toBe…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+===== MUT-BODY-panel :: BODY: RealmPanel v-if bodyPathLive removed
+MUT-BODY-panel: KILLED_EXPECTED (exit=1)
+n-section__row--locked"
+        data-v-55366cc1=""
+      >
+        <div
+          aria-valuemax="0"
+          aria-valuemin="0"
+          aria-valuenow="0"
+          class="bar zhou-tian-section__bar"
+          data-v-55366cc1=""
+          data-v-ca0869b4=""
+          role="progressbar"
+          style="--bar-height: 5px;"
+        >
+          <div
+            class="bar__fill"
+            data-v-ca0869b4=""
+            style="width: 0%;"
+          />
+          <!--v-if-->
+        </div>
+        <div
+          class="zhou-tian-section__milestones"
+          data-v-55366cc1=""
+        >
+          <span
+            class=""
+            data-v-55366cc1=""
+          >
+            Tiểu Chu Thiên · 18
+          </span>
+          <span
+            class=""
+            data-v-55366cc1=""
+          >
+            Đại Chu Thiên · 36
+          </span>
+        </div>
+        <p
+          class="zhou-tian-section__gate"
+          data-v-55366cc1=""
+        >
+          Hoàn thành Kỳ Kinh Bát Mạch trước
+        </p>
+        <!--v-if-->
+      </div>
+    </section>
+  </div>
+</div>
+
+ ❯ src/components/panels/RealmPanel.test.ts:170:67
+    168|     await nextTick()
+    169|
+    170|     expect(mounted.container.querySelector('.realm-panel__body')).toBe…
+       |                                                                   ^
+    171|     const text = mounted.container.textContent ?? ''
+    172|     for (const hidden of ['Luyện Thể', 'Kinh Mạch', 'Chu Thiên']) {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+
+Corpus: 6 mutants, 5 KILLED_EXPECTED, 1 SURVIVED

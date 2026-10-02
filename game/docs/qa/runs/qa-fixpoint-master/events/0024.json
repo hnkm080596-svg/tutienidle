@@ -1,0 +1,30 @@
+{
+  "applied": [
+    "evidence:EV-PROP-IA-1",
+    "evidence:EV-PROP-PG-1",
+    "evidence:EV-MUT-TQ-1",
+    "mutation:MUT-TQ-1",
+    "mutation:MUT-IA-1 (updated)",
+    "mutation:MUT-PA-1 (updated)",
+    "mutation:MUT-SV-1 (updated)",
+    "mutation:MUT-AS-1 (updated)",
+    "mutation:MUT-DS-1 (updated)",
+    "mutation:MUT-RM-1 (updated)",
+    "mutation:MUT-CR-1 (updated)",
+    "mutation:MUT-PG-1 (updated)",
+    "mutation:MUT-EC-1 (updated)",
+    "mutation:MUT-SF-1 (updated)",
+    "coverage:COV-I-TQ-1-MUTATION (updated)",
+    "coverage:COV-I-IA-1-PROPERTY (updated)",
+    "coverage:COV-I-PG-1-PROPERTY (updated)",
+    "lesson:L-DORMANT-EFFECT-SEAM",
+    "lesson:L-HOSTILE-SHAPE",
+    "lesson:L-CONTRACT-NOTICE",
+    "lesson:L-RAIL-BYPASS",
+    "lesson:L-UNWIRED-BEAT",
+    "lesson:L-DORMANT-RUNTIME",
+    "lesson:L-DORMANT-CONSUME",
+    "lesson:L-FIXTURE-DRIFT",
+    "lesson:L-DEFERRED-LOW"
+  ]
+}

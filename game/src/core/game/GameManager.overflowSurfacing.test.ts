@@ -15,6 +15,8 @@ import type { Building } from '../building/Building'
 import type { Quest } from '../quest/Quest'
 import type { Pill } from '../pill/Pill'
 import type { AlchemyRecipe, ActiveAlchemyJob } from '../alchemy/AlchemySystem'
+import { alchemyJobReservationDigest } from '../alchemy/AlchemySystem'
+import { buildProfessionMaterialId } from '../profession/ProfessionMaterial'
 import { MAX_STACK_AMOUNT } from '../inventory/StackLimits'
 
 const OVERFLOW_MATERIAL: Material = {
@@ -325,15 +327,30 @@ describe('GameManager — production/alchemy settle receipts (ARCH-012, M12)', (
       baseDurationSeconds: 1,
     }
 
-    const makeJob = (jobId: string, recipeId = OVERFLOW_RECIPE.id): ActiveAlchemyJob => ({
-      jobId,
-      recipeId,
-      pillId: OVERFLOW_PILL.id,
-      herbMaterialId: 'test_herb_myriad',
-      startedAtMs: 0,
-      completesAtMs: 1, // already due on the first update tick
-      roomLevelAtStart: 1,
-    })
+    const makeJob = (jobId: string, recipeId = OVERFLOW_RECIPE.id): ActiveAlchemyJob => {
+      const job: ActiveAlchemyJob = {
+        jobId,
+        recipeId,
+        pillId: OVERFLOW_PILL.id,
+        herbMaterialId: 'test_herb_myriad',
+        startedAtMs: 0,
+        completesAtMs: 1, // already due on the first update tick
+        roomLevelAtStart: 1,
+        reservation: {
+          woodId: buildProfessionMaterialId('wood', OVERFLOW_RECIPE.fuelWoodRealmId, 'myriad_year'),
+          fuelWoodAmount: OVERFLOW_RECIPE.fuelWoodAmount,
+          spiritStoneCost: OVERFLOW_RECIPE.spiritStoneCost,
+          herbAmount: OVERFLOW_RECIPE.herbAmount,
+          specialIngredients: [],
+          costScale: 1,
+          digest: 0,
+        },
+      }
+
+      job.reservation = { ...job.reservation, digest: alchemyJobReservationDigest(job, job.reservation) }
+
+      return job
+    }
 
     const manager = new GameManager()
     const player: PlayerData = createDefaultPlayer()

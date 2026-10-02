@@ -1,0 +1,28 @@
+{
+  "applied": [
+    "finding:F-TC7-TRIB",
+    "finding:F-TC7-EXTMOD",
+    "finding:F-TC7-STAGES",
+    "finding:F-TC7-AUTOFARM",
+    "finding:F-TC7-BASESTAT",
+    "finding:F-TC7-ENHANCE",
+    "finding:F-TC7-MAINFLAT",
+    "finding:F-TC7-AFFIXTIER",
+    "finding:F-TC7-PILLPCT",
+    "finding:F-TC7-ETERNAL",
+    "finding:F-TC7-MATERIAL",
+    "finding:F-TC7-BETAPILL",
+    "finding:F-TC7-ALCHEMY",
+    "finding:F-TC7-LEVEL99",
+    "finding:F-TC7-CULT",
+    "finding:F-TC7-ENTITLE",
+    "finding:F-TC7-WORKERS",
+    "finding:F-TC7-CPS",
+    "finding:F-B9-CON-02",
+    "finding:F-B9-CON-01",
+    "finding:F-B9-CON-03",
+    "finding:F-B9-CON-04",
+    "finding:F-B9-CON-05",
+    "finding:F-B9-CON-06"
+  ]
+}

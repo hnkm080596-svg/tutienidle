@@ -1,0 +1,8 @@
+{
+  "runPatch": {
+    "finalEvidenceIds": [
+      "EV-VERIFY-T13"
+    ]
+  },
+  "reason": "rebind final gate to T13 verify (fba2bd85) after A7+TC5 wave"
+}

@@ -1,0 +1,132 @@
+===== T13-M7 :: tu_linh_tran emit bound -> any sourceItemId
+T13-M7: KILLED_EXPECTED (exit=1)
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+ ❯ tests/architecture/betaClaimedSourceForge.qa.test.ts (48 tests | 1 failed) 52ms
+     × a tu_linh_tran-group entry claiming another sourceItemId emits nothing 11ms
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 47 passed (48)
+   Start at  11:41:50
+   Duration  1.95s (transform 1.45s, setup 221ms, import 1.56s, tests 52ms, environment 0ms)
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/architecture/betaClaimedSourceForge.qa.test.ts > F-A7-2: persistentTimedEffects claimed-source coherence > a tu_linh_tran-group entry claiming another sourceItemId emits nothing
+AssertionError: expected 0.25 to be +0 // Object.is equality
+
+- Expected
++ Received
+
+- 0
++ 0.25
+
+ ❯ tests/architecture/betaClaimedSourceForge.qa.test.ts:236:84
+    234|     const p = createDefaultPlayer()
+    235|     p.persistentTimedEffects = [timedEffect({ sourceItemId: 'hacked_bu…
+    236|     expect(getActiveCultivationSpeedPercent(p.persistentTimedEffects, …
+       |                                                                                    ^
+    237|
+    238|     const save = validSave()
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+===== T15-3 :: realm-passive rebuild -> trust payload
+T15-3: KILLED_EXPECTED (exit=1)
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+ ❯ tests/architecture/tc6ForgedSaveFalsification.qa.test.ts (26 tests | 1 failed) 96ms
+     × A4 - forged nhap_dao marker + inflated percent rebuilds to authored at emit 13ms
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 25 passed (26)
+   Start at  11:41:53
+   Duration  2.18s (transform 1.54s, setup 238ms, import 1.73s, tests 96ms, environment 0ms)
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/architecture/tc6ForgedSaveFalsification.qa.test.ts > TC6-A claim-vs-writer: player.modifiers sourceType/sourceId > A4 - forged nhap_dao marker + inflated percent rebuilds to authored at emit
+AssertionError: expected 10800 to be close to 127.44, received difference is 10672.56, but expected 0.0000049999999999999996
+ ❯ tests/architecture/tc6ForgedSaveFalsification.qa.test.ts:228:25
+    226|     const cleanMaxHp = makeManager().resolveAmbientPlayerStats(cleanPl…
+    227|     const stats = manager.resolveAmbientPlayerStats(playerStore.$state)
+    228|     expect(stats.maxHp).toBeCloseTo(cleanMaxHp * (1 + authoredPercent)…
+       |                         ^
+    229|   })
+    230|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+===== T15-5 :: great_dao grade flag removed
+T15-5: KILLED_EXPECTED (exit=1)
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+ ❯ tests/architecture/tc6ForgedSaveFalsification.qa.test.ts (26 tests | 1 failed) 86ms
+     × B3b - a committed outcome carrying the persisted-only-hidden grade great_dao is rejected at shape 9ms
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 25 passed (26)
+   Start at  11:41:57
+   Duration  2.29s (transform 1.59s, setup 324ms, import 1.71s, tests 86ms, environment 0ms)
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/architecture/tc6ForgedSaveFalsification.qa.test.ts > TC6-B dormant-record liveness > B3b - a committed outcome carrying the persisted-only-hidden grade great_dao is rejected at shape
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/architecture/tc6ForgedSaveFalsification.qa.test.ts:419:22
+    417|     )
+    418|     const { shape } = classify(save)
+    419|     expect(shape.ok).toBe(false)
+       |                      ^
+    420|   })
+    421|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+===== T15-7 :: building level clamp removed (rate)
+T15-7: KILLED_EXPECTED (exit=1)
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+ ❯ tests/architecture/tc6ForgedSaveFalsification.qa.test.ts (26 tests | 1 failed) 87ms
+     × B8 - forged building level (no writer bound at admission) mints scaled production live 6ms
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 25 passed (26)
+   Start at  11:42:00
+   Duration  2.07s (transform 1.46s, setup 209ms, import 1.66s, tests 87ms, environment 0ms)
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/architecture/tc6ForgedSaveFalsification.qa.test.ts > TC6-B dormant-record liveness > B8 - forged building level (no writer bound at admission) mints scaled production live
+AssertionError: expected 486.46153846153857 to be less than or equal to 31.000000000000004
+ ❯ tests/architecture/tc6ForgedSaveFalsification.qa.test.ts:539:24
+    537|     )
+    538|     expect(legitRate).toBeGreaterThan(0)
+    539|     expect(forgedRate).toBeLessThanOrEqual(legitRate)
+       |                        ^
+    540|   })
+    541|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+
+Corpus: 4 mutants, 4 KILLED_EXPECTED, 0 SURVIVED

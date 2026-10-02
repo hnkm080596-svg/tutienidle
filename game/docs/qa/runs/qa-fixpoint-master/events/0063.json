@@ -1,0 +1,23 @@
+{
+  "applied": [
+    "evidence:EV-FINAL-VERIFY-T12",
+    "evidence:EV-PIN-REAUTH-1",
+    "evidence:EV-MUT-REAUTH-1",
+    "finding:F-CONS-B1",
+    "finding:F-CONS-B2",
+    "finding:F-BODY-EMIT",
+    "finding:F-BODY-GRADE",
+    "finding:F-BODY-FLAG",
+    "finding:F-SINK",
+    "finding:F-TIMED-EMIT",
+    "review:RV-ADV-B6",
+    "review:RV-ADV-TC4",
+    "review:RV-SEQ11-COR",
+    "review:RV-SEQ11-AUT",
+    "review:RV-SEQ11-INT",
+    "review:RV-CLOSURE-11",
+    "cycle:CY-SEQ-11",
+    "lesson:L-SETTLEMENT-REAUTH",
+    "lesson:L-SIBLING-EMITTER-ASYMMETRY"
+  ]
+}

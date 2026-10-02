@@ -1,0 +1,9 @@
+T28 mutant battery - A19-1 / B19-01 / B19-02 fixes
+state: post-fix tip candidates (devin/qa-fixpoint)
+M1 (revert element-root checks in saveShapeValidation + saveAcceptance):
+  -> a19ElementRootWitness.qa.test.ts: 1 failed (forge admitted) = KILLED
+M2 (drop isBetaStatLabelVisible filter in CharacterDetailCard):
+  -> b19ConsumerScopeLeak.qa.test.ts: 1 failed (hidden rows render) = KILLED
+M3 (drop isDomainScopedAcquisitionEnabled in MaterialBagSection + LoreCodex):
+  -> b19ConsumerScopeLeak.qa.test.ts: 2 failed (domain-scoped rows render) = KILLED
+all 3 mutants KILLED_EXPECTED; restored, suite green (867 arch + 1382 save/arch scope).

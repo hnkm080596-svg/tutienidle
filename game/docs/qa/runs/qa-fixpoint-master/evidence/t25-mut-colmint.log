@@ -1,0 +1,6 @@
+Masked-mutant kills, betaClaimedCollectionMint.qa.test.ts (T25/TC14 bounds):
+  M1 claimed-modifier dedup off          -> KILLED (QA-FS-1 + QA-FS-2b probes fail)
+  M2 loi_kiep aux-field allowlist off    -> KILLED (QA-FS-2a probe fails)
+  M3 timed-effect aux-field bound off    -> KILLED (QA-FS-3 probe fails)
+  M4 skills[] id dedup off               -> KILLED (QA-FS-4 probe fails)
+4/4 KILLED_EXPECTED

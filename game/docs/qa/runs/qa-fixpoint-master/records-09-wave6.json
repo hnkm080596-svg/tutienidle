@@ -1,0 +1,175 @@
+{
+  "records": [
+    {
+      "kind": "evidence",
+      "body": {
+        "id": "EV-PROBE-WAVE6",
+        "state": {
+          "productStateId": "4311fc4d636dc9808f8fcc3699a4f41eb4e9db05e3b22623cc5409502f115a42",
+          "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+          "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+          "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+        },
+        "kind": "EXECUTED_UNIT_STRUCTURAL",
+        "producer": "coord-main",
+        "startedAt": "2026-10-01T00:07:30Z",
+        "finishedAt": "2026-10-01T00:07:45Z",
+        "commandOrMethod": "npx vitest run src/main-process/electronUpdater.test.ts src/core/skill/SkillSystem.test.ts src/core/game/GameManagerStageOps.test.ts tests/architecture/betaEconomyCensus.test.ts src/services/save/SaveSystem.bootRestore.test.ts src/services/save/SaveSystem.snapshotIsolation.test.ts",
+        "cwd": "game/",
+        "exitCode": 0,
+        "result": "PASS",
+        "artifactPath": "docs/qa/runs/qa-fixpoint-master/evidence/probe-wave6.log",
+        "artifactHash": "429b8edbd5dfe06456b0e512d2efb2d0fccf302a4adb18a44f6278533b1b184f",
+        "inputPaths": [
+          "src/core/skill/SkillSystem.ts",
+          "src/core/skill/CastLeveling.ts",
+          "src/core/skill/MortalPrecursors.ts",
+          "src/core/game/GameManagerStageOps.ts",
+          "src/main-process/electronUpdater.ts",
+          "electron/main.ts",
+          "src/core/dev/enemySpawnDebug.ts",
+          "vite.config.ts",
+          "tests/architecture/betaEconomyCensus.test.ts"
+        ],
+        "inputEvidenceIds": [
+          "EV-BASE-VERIFY"
+        ],
+        "invariantIds": [
+          "I-PG-1",
+          "I-SS-1",
+          "I-EC-1",
+          "I-RT-1",
+          "I-TS-1",
+          "I-CN-1"
+        ],
+        "claims": [
+          "precursor parity (I-PG-1): all 3 mortal precursors (tram/linh_bao/huy_quyen) share the single getPrecursorFlatDamageBonus path (floor(casts/10), uncapped by design) applied via isMortalPrecursorSkillId and identical CAST_LEVELING_THRESHOLDS - parity is authored-symmetric, no divergence",
+          "stage read-model state machine (I-SS-1): surfaceState priority perfect>completed>locked>current/available is total and monotonic; final boss stage foundation_floor_10 with BETA_FINAL_BOSS_ENEMY_ID reachable in-scope; hostile completedStageIds degrade to completed-by-membership only",
+          "economy census (I-EC-1): sec.17 betaEconomyCensus suite green on current state - 6 asserts cover orphan source/sink, suppressed faucets, dormant-family grotto exclusion",
+          "electron updates (I-RT-1): provider pins autoDownload=false, allowDowngrade=false, quit-bypass install gated behind flush; sha512 verified by electron-updater; test suite green",
+          "devtools/CSP (I-TS-1): __tutienEnemySpawnDebug gated by import.meta.env.DEV (absent in production bundle); PRODUCTION_CSP injected at build with fail-closed anchor; contextIsolation+nodeIntegration:false+devTools off in packaged Electron",
+          "concurrency (I-CN-1): save lifecycle pins green - bootRestore, saveLoadRoundTrip, snapshotIsolation (replacement restore + bag clear + no stale restore merge) plus wave-4 atomicity pins"
+        ],
+        "limitations": [
+          "pins are suite-level green evidence; concurrency reasoning rests on JS single-thread + replacement-restore tests rather than a dedicated race fuzzer",
+          "electron update path verified at adapter level; packaged autoUpdater binary behavior not exercised"
+        ],
+        "status": "CURRENT"
+      }
+    },
+    {
+      "kind": "coverage",
+      "id": "COV-PRECURSOR-PARITY-1",
+      "invariantId": "I-PG-1",
+      "surface": "DETERMINISTIC",
+      "attackIds": [],
+      "taxonomyIds": [
+        "CONTRACT",
+        "STATE"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "precursor parity verified: one shared uncapped bonus path + identical thresholds for all 3 precursors",
+      "evidenceIds": [
+        "EV-PROBE-WAVE6"
+      ],
+      "reviewerIds": [],
+      "status": "SATISFIED",
+      "weakProtection": false
+    },
+    {
+      "kind": "coverage",
+      "id": "COV-STAGE-STATE-1",
+      "invariantId": "I-SS-1",
+      "surface": "DETERMINISTIC",
+      "attackIds": [],
+      "taxonomyIds": [
+        "CONTRACT",
+        "STATE"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "stage read-model total order verified + final-boss stage reachable in beta scope",
+      "evidenceIds": [
+        "EV-PROBE-WAVE6"
+      ],
+      "reviewerIds": [],
+      "status": "SATISFIED",
+      "weakProtection": false
+    },
+    {
+      "kind": "coverage",
+      "id": "COV-ECONOMY-1",
+      "invariantId": "I-EC-1",
+      "surface": "DETERMINISTIC",
+      "attackIds": [],
+      "taxonomyIds": [
+        "CONTRACT",
+        "STATE"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "sec.17 economy census suite green - no orphan source/sink, suppressed faucets excluded",
+      "evidenceIds": [
+        "EV-PROBE-WAVE6"
+      ],
+      "reviewerIds": [],
+      "status": "SATISFIED",
+      "weakProtection": false
+    },
+    {
+      "kind": "coverage",
+      "id": "COV-ELECTRON-1",
+      "invariantId": "I-RT-1",
+      "surface": "DETERMINISTIC",
+      "attackIds": [],
+      "taxonomyIds": [
+        "CONTRACT",
+        "STATE"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "update provider safety flags + verified download pinned; packaged devtools off, contextIsolation on",
+      "evidenceIds": [
+        "EV-PROBE-WAVE6"
+      ],
+      "reviewerIds": [],
+      "status": "SATISFIED",
+      "weakProtection": false
+    },
+    {
+      "kind": "coverage",
+      "id": "COV-TOOLING-1",
+      "invariantId": "I-TS-1",
+      "surface": "DETERMINISTIC",
+      "attackIds": [],
+      "taxonomyIds": [
+        "CONTRACT",
+        "STATE"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "dev-only debug seam absent in prod bundle; build-time CSP fail-closed",
+      "evidenceIds": [
+        "EV-PROBE-WAVE6"
+      ],
+      "reviewerIds": [],
+      "status": "SATISFIED",
+      "weakProtection": false
+    },
+    {
+      "kind": "coverage",
+      "id": "COV-CONCURRENCY-1",
+      "invariantId": "I-CN-1",
+      "surface": "DETERMINISTIC",
+      "attackIds": [],
+      "taxonomyIds": [
+        "CONTRACT",
+        "STATE"
+      ],
+      "applicability": "REQUIRED",
+      "reason": "save lifecycle race seams pinned: replacement restore, bag clear, snapshot isolation, boot restore",
+      "evidenceIds": [
+        "EV-PROBE-WAVE6"
+      ],
+      "reviewerIds": [],
+      "status": "SATISFIED",
+      "weakProtection": false
+    }
+  ]
+}

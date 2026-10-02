@@ -732,6 +732,7 @@ export class GameManager {
     this.tribulationDirector = new TribulationDirector({
       eventBus: this.eventBus,
       sessionAllocator: this.sessionAllocator,
+      rng: () => this.sessionRng(),
     })
 
     this.equipmentOps = new EquipmentOpsSystem({

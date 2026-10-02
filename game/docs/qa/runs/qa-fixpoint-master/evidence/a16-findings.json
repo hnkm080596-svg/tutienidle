@@ -1,0 +1,65 @@
+{
+  "audit": "scope-authority-blind",
+  "pin": "a7d12edf",
+  "date": "2026-10-01",
+  "verdict": "FAIL",
+  "probe_file": "tests/architecture/scopeAuthoritySkills.qa.test.ts",
+  "findings": [
+    {
+      "id": "F-SKILLS-TXP",
+      "severity": "High",
+      "status": "Confirmed",
+      "confidence": "high",
+      "surface": "saveShapeValidation -> skills[] entry (validateSkillEntries), restored verbatim by GameManagerSaveRestore",
+      "summary": "skills[].totalExperience has NO validation at all (entry check requires only 'id'). The field is a live input to getPrecursorFlatDamageBonus (floor(t/10), unbounded flat damage on tram/linh_bao/huy_quyen - linh_bao is the beta starter) and to getCastLeveledSkillLevel (>=10000 casts -> Lv3, feeding hidden-pathway offer gates). The writer increments totalExperience and writes player.skillCastCounts[id] in the SAME statement (SkillSystem ~L323+L336 -> castCountSink), so every honest save has skillCastCounts[id] === totalExperience whenever tExp > 0. Absent/divergent mirror = unproducible, and a non-numeric value = unproducible - none of these is checked, while the same one-writer coherence pattern IS enforced for skillInsight<=totalSkillInsightGained and node/purchase mirrors.",
+      "repro": "npx vitest run tests/architecture/scopeAuthoritySkills.qa.test.ts - 4 failing probes",
+      "mint_paths": [
+        "totalExperience=1000000 with no skillCastCounts mirror: validateGameSaveShape ok=true, restore lands it verbatim, getPrecursorFlatDamageBonus -> +100000 flat damage on the beta starter linh_bao",
+        "totalExperience=42 + skillCastCounts={linh_bao:1000000}: divergent one-fact mirrors both pass validation",
+        "totalExperience='999999' (string): Math.max coercion mints +99999 flat damage",
+        "totalExperience=10000: getCastLeveledSkillLevel -> Lv3 (writer needs 10000 real casts); same mirror feeds hidden-pathway offerGate evaluation"
+      ],
+      "bound_the_writer_upholds": "totalExperience is a non-negative finite number, and skillCastCounts[id] === totalExperience whenever totalExperience > 0 (both written in one statement by the cast sink)",
+      "suggested_fix_direction": "validateSkillEntries: isNonNegativeFiniteNumber(totalExperience) + coherence check skills[].totalExperience === player.skillCastCounts[id] (mirror divergence or missing mirror -> issue); mirror-only entries for unlearned skills stay legal (respec leaves stale counts)"
+    },
+    {
+      "id": "G-SKILLS-EXP",
+      "severity": "Low",
+      "status": "Coverage gap",
+      "confidence": "medium",
+      "surface": "skills[].experience - verbatim restore, no shape check",
+      "summary": "Same unchecked-field class as F-SKILLS-TXP, but no consumer reads skill.experience today (writes/serializes only). No mint vector identified; flagged for symmetry with the fix above - if a reader ever appears, the same hole reopens.",
+      "repro": "static: GameManagerSaveRestore ~L219 copies savedSkill.experience verbatim; grep shows only writes",
+      "mint_paths": []
+    },
+    {
+      "id": "G-COUNTERS",
+      "severity": "Nit",
+      "status": "Coverage gap",
+      "confidence": "medium",
+      "surface": "player.cultivation, bossKillCount, totalCultivationGained, totalSkillInsightGained, quests.active[].progress",
+      "summary": "Nonneg-only counters with no producibility ceiling and no mirror to coherence-check against. Consumers re-authorize at their seams (tribulation settle re-checks transition+grade, quest claim re-checks bag + isBetaQuestEnabled + reconcile deactivates realm-ineligible entries, node purchase re-checks prereqs), so no mint path was found - but the magnitude ceiling question is open by construction for counters.",
+      "repro": "static review",
+      "mint_paths": []
+    }
+  ],
+  "closed_leads": [
+    "realmId > progressionCeilingRealmId (golden_core): adjudicated F-SCOPE-5 - realm_beyond_release flag is the designed carry-forward bound; flagged-but-loadable is intentional",
+    "tribulation committedOutcome.targetRealmId forgery: settleOutcome re-authorizes adjacency + isRealmTransitionEnabled + canTriggerBreakthrough -> parked inert",
+    "persisted node ownership across paths/ways: nodePathApplies/nodeWayApplies re-checked at purchase AND by aggregators (TheTuKitModifiers, KiemPhoNodeModifiers, betaScopeSkillDomain)",
+    "alchemyJobs on dormant pill families: tick parks scopeHiddenPillFamilyOfId jobs; settle re-derives pill from recipeId, not job.pillId",
+    "buildings lastCollectedAt: getStoredAmount clamps elapsed to OFFLINE_CAP and output to capacity",
+    "autoFarmStage/perfectClearStageIds: realm-earnability bound (F-A10-6), skip-chain ordering, perfectClearSeconds physical floor (F-SEAM-2) + consumer guard >=1s",
+    "persistentTimedEffects: per-source writer bounds (tu_linh_tran exact shape; pill regen must match authored effect, dormant families rejected, manaRegenPerTurn flat <= mpPerSecond*1.5)",
+    "hiddenBeastKills/hiddenChannelCycles counters: both engines frozen while isScopeHidden('hiddenContent')",
+    "companions: roster membership + realm validity + level/rank caps; domain fully dormant (isCompanionDomainUnlocked composes isBetaFeature('companion')) - forged gifts inert at claim",
+    "decompose.settings.workers: clamped to live capacity at restore",
+    "hiddenPerfection: strict-prefix completedHiddenBodyRealmIds, two-view coherence, entered-realm <= player realm (assertHiddenPerfectionIntegrity hard-fails)",
+    "selectedSpecializationId: write seam requires owned claimant node + betaNodeWriteAdmitted; reconcileSpecClaims clears forged claims at restore",
+    "way/path commit: chooseCultivationPath + commitFiveElementInitiation both fail closed on !isBetaWay (only spell_pathway playable)",
+    "externalModifiers: reset to [] at restore",
+    "unknown equipment/affix/material/pill/building/site ids: preflightSaveRegistryReferences + assertSaveAcceptable hard-fail",
+    "spirit-stone tier stacks: materials bag bounded by getSpiritStoneMaterialIdForRealmTier vs claimed realm tier (F-SCOPE-1); vendor sell re-checks isGradeBelowPlayer",
+    "quests.active forged progress: claim re-reads progress >= condition.amount + isBetaQuestEnabled; reconcileActiveQuests deactivates entries failing realm/beta gates at restore"
+  ]
+}

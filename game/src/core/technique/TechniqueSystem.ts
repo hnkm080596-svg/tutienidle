@@ -10,6 +10,7 @@ import {
   getTechniqueRankCeiling,
   resolveTechniqueCompletionState,
 } from './TechniqueProgression'
+import { betaTechniqueAdmitted } from '../betaScopeSkillDomain'
 
 // P7-M3 - canonical technique progression authority. The retired
 // learn/equip/unequip list semantics are gone: the Way grants its one
@@ -89,7 +90,11 @@ export class TechniqueSystem {
    */
   gainMastery(amount: number, realmId: string, realmLevel: number): { gained: number; rankUps: number } {
     const technique = this.manager.getActive()
-    if (!technique || amount <= 0) {
+    // BETA SCOPE LOCK - a carried save's dormant-way technique stays
+    // inert: mastery/rank writes and the techniqueProgress mirror feed
+    // live prereqs, the same channels the sibling emitters and
+    // tryAdvanceTechniqueGrade already gate.
+    if (!technique || amount <= 0 || !betaTechniqueAdmitted(technique.id)) {
       return { gained: 0, rankUps: 0 }
     }
 
@@ -132,6 +137,13 @@ export class TechniqueSystem {
   sealFrozenCycle(newRealmId: string, departedRealmLevel: number): boolean {
     const technique = this.manager.getActive()
     if (!technique || getRealmIndex(newRealmId) <= technique.grade) {
+      return false
+    }
+
+    // BETA SCOPE LOCK - a carried way_out_of_scope save's dormant
+    // technique must stay data: a live realm advance never seals a
+    // cycle onto it.
+    if (!betaTechniqueAdmitted(technique.id)) {
       return false
     }
 

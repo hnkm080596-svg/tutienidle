@@ -1,0 +1,145 @@
+== T17 static authority-seam census (ae4af514 + wave pins) ==
+--- betaScope consumers census (isBetaWay/isBetaFeature/isBetaTalentId/isBetaRecipeFamily scopeHiddenPillFamilyOfId betaAdmitted* beta*Admitted usage count per file) ---
+src/components/common/BreakthroughRequirementPanel.vue:2
+src/components/game/BuildingDetailPopover.vue:2
+src/components/game/CurrencyHud.vue:2
+src/components/game/DongFuCommandWheel.test.ts:1
+src/components/game/HomeBuildingIcons.vue:2
+src/components/game/combat/hud/TurnCombatSkillBar.display.test.ts:2
+src/components/game/combat/hud/TurnCombatSkillBar.vue:2
+src/components/layout/GameRoot.vue:2
+src/components/panels/AlchemyView.vue:3
+src/components/panels/BagGrid.vue:2
+src/components/panels/ChiHienQuan.integration.test.ts:1
+src/components/panels/CompanionPanel.test.ts:1
+src/components/panels/QuanKhiPanel.vue:2
+src/components/panels/RealmPanel.vue:3
+src/components/panels/SkillPathPanel.test.ts:1
+src/components/panels/SkillPathPanel.vue:5
+src/components/panels/TranPhapPanel.test.ts:1
+src/components/panels/bag-sections/PillBagSection.vue:2
+src/components/panels/equipment-hall/DecomposeTab.test.ts:1
+src/components/panels/equipment-hall/RefineTab.test.ts:1
+src/components/panels/equipment-hall/WashTab.test.ts:1
+src/components/panels/skill-path/SkillRoleStrip.vue:1
+src/components/panels/skill-path/TechniqueBand.vue:2
+src/composables/useBuildingNavigation.ts:2
+src/core/alchemy/AlchemySystem.test.ts:2
+src/core/alchemy/AlchemySystem.ts:4
+src/core/artifact/ArtifactProgression.ts:2
+src/core/betaScope.ts:14
+src/core/betaScopeSkillDomain.ts:22
+src/core/betaScopeSurface.ts:9
+src/core/companion/CompanionAvailability.ts:2
+src/core/companion/CompanionGifts.test.ts:1
+src/core/companion/CompanionGifts.wiring.test.ts:1
+src/core/equipment/EquipmentSystem.test.ts:1
+src/core/equipment/EquipmentSystem.wash.test.ts:1
+src/core/equipment/EquipmentWash.pending.test.ts:1
+src/core/game/BattleLootSystem.companionExp.test.ts:1
+src/core/game/BattleLootSystem.dropResult.test.ts:1
+src/core/game/CombatBuild.test.ts:1
+src/core/game/CombatBuild.ts:2
+src/core/game/FormationPlacement.test.ts:1
+src/core/game/FormationPlacement.ts:2
+src/core/game/GameManager.authoredParity.test.ts:2
+src/core/game/GameManager.companionSkillKit.test.ts:1
+src/core/game/GameManager.hiddenChannel.test.ts:1
+src/core/game/GameManager.ngoDaoReaction.test.ts:1
+src/core/game/GameManager.partyFormation.test.ts:1
+src/core/game/GameManager.perfectClear.test.ts:1
+src/core/game/GameManager.questLifecycle.test.ts:1
+src/core/game/GameManager.r7qa.test.ts:2
+src/core/game/GameManager.r81qa.test.ts:2
+src/core/game/GameManager.r9qa.test.ts:2
+src/core/game/GameManager.reactionReproof.test.ts:1
+src/core/game/GameManager.refineTransaction.test.ts:1
+src/core/game/GameManager.sharedWorkerPool.test.ts:1
+src/core/game/GameManager.skillPipelineJourney.test.ts:1
+src/core/game/GameManager.statRefresh.test.ts:1
+src/core/game/GameManager.theTuAnE2E.test.ts:1
+src/core/game/GameManager.theTuE2E.test.ts:1
+src/core/game/GameManager.turnStatusVfx.test.ts:1
+src/core/game/GameManager.washTransaction.test.ts:1
+src/core/game/GameManager.workerCapacity.test.ts:1
+src/core/game/GameManagerAlchemyOps.ts:5
+src/core/game/GameManagerBuildingOps.ts:4
+src/core/game/GameManagerCompanionOps.test.ts:1
+src/core/game/GameManagerPersistentEffectOps.ts:4
+src/core/game/GameManagerPillOps.ts:2
+src/core/game/GameManagerProgressionOps.ts:16
+src/core/game/GameManagerRealmAdvanceOps.ts:8
+src/core/game/GameManagerSaveRestore.boundary.test.ts:1
+src/core/game/GameManagerTickOps.ts:2
+src/core/game/GameManagerTurnBattleOps.idleDrops.test.ts:1
+src/core/game/HiddenBeastSystem.test.ts:1
+src/core/game/HiddenBeastSystem.ts:2
+src/core/player/CultivationPathSystem.ts:5
+src/core/player/Player.ts:3
+src/core/production/DecomposeSystem.capacity.test.ts:1
+src/core/production/DecomposeSystem.saveRestore.test.ts:1
+src/core/production/DecomposeSystem.test.ts:1
+src/core/production/ProductionBalance.simulation.test.ts:2
+src/core/production/ProductionSystem.test.ts:2
+src/core/production/ProductionSystem.ts:2
+src/core/production/ProductionSystem.workers.test.ts:1
+src/core/progression/devResetBranch.admission.qa.test.ts:2
+src/core/quest/QuestSystem.lifecycle.test.ts:1
+src/core/quest/QuestSystem.test.ts:1
+src/core/realm/ReleasePolicy.artifactDeferred.test.ts:1
+src/core/realm/ReleasePolicy.test.ts:2
+src/core/realm/body/BodyProgressionSystem.ts:3
+src/core/realm/hidden/HiddenLineage.ts:6
+src/core/realm/hidden/NghichChuTian.ts:2
+src/core/simulation/earlygame/TrucCoJourney.test.ts:1
+src/core/skill/SkillSystem.ts:2
+src/core/stats/StatCap.ts:2
+src/core/talent/TalentEffects.ts:2
+src/core/talent/TalentEntitlement.ts:3
+src/core/technique/TechniqueSystem.ts:3
+src/core/tribulation/TribulationOutcomeService.ts:2
+src/data/breakthrough/BreakthroughGrades.ts:2
+src/data/realm/RealmPassives.ts:2
+src/services/save/SaveSystem.saveLoadRoundTrip.test.ts:1
+src/services/save/saveShapeValidation.ts:2
+src/stores/ui.ts:2
+--- betaScope.ts exported predicate names vs usage count ---
+isBetaWay => 31
+isBetaFeature => 104
+isBetaTalentId => 6
+betaAdmittedBuildingPopoverId => 3
+betaCombatRolesFor => 9
+betaTreeNodeAdmitted => 3
+betaSkillAdmitted => 11
+betaNodeWriteAdmitted => 14
+betaTechniqueAdmitted => 13
+betaActiveWayAdmitted => 1
+betaRecipeFamilyOfId => 24
+scopeHiddenPillFamilyOfId => 13
+isBetaBuildingSurface => 14
+isBetaLeftPanelMode => 6
+betaCompletionFor => 6
+unsupportedReleaseReason => 9
+betaSupportedFor => 3
+--- dead-guard spot check: registry.get sites feeding dormant gates ---
+src/core/game/GameManagerTurnBattleOps.ts:1015:   * registry.get() try/catch).
+src/core/game/GameManagerTurnBattleOps.idleDrops.test.ts:71:  gameManager.catalogOps.registerEnemyTemplates([FARM_ENEMY])
+src/core/game/GameManagerTurnBattleOps.idleDrops.test.ts:72:  gameManager.catalogOps.registerStages([FARM_STAGE])
+src/core/game/GameManagerTurnBattleOps.idleDrops.test.ts:73:  gameManager.catalogOps.registerMaterials([PROBE_MATERIAL])
+src/core/game/GameManagerTurnBattleOps.chargeManualClaim.test.ts:100:  gameManager.catalogOps.registerSkillTemplates([createBasicSkill()])
+src/core/game/GameManagerTurnBattleOps.chargeManualClaim.test.ts:101:  gameManager.catalogOps.registerProgressionNodes([{
+src/core/game/GameManagerStageOps.ts:15: * authority (catalogOps unlock/lock-reason, stageWaves admission probe,
+src/core/game/GameManagerStageOps.ts:29: * reason (same union catalogOps.stageLockReasonCode returns), else
+src/core/game/GameManagerStageOps.ts:77:  // The unlock authority (catalogOps.isStageUnlocked /
+src/core/game/GameManagerStageOps.ts:96:   * registered stage (same convention as catalogOps.getStage).
+src/core/game/GameManagerStageOps.test.ts:14:  manager.catalogOps.registerStages(STAGES)
+src/core/game/GameManagerStageOps.test.ts:15:  manager.catalogOps.registerEnemyTemplates(ENEMIES)
+src/core/game/GameManagerStageOps.test.ts:16:  manager.catalogOps.registerZones(zones)
+src/core/game/GameManagerSaveRestore.replace.test.ts:45:  manager.catalogOps.registerMaterials([MATERIAL_A, MATERIAL_B])
+src/core/game/GameManagerSaveRestore.replace.test.ts:46:  manager.catalogOps.registerPills([PILL_A])
+src/core/game/GameManagerSaveRestore.preflight.test.ts:47:  manager.catalogOps.registerMaterials([MATERIAL])
+src/core/game/GameManagerSaveRestore.preflight.test.ts:48:  manager.catalogOps.registerPills([PILL])
+src/core/game/GameManagerSaveRestore.preflight.test.ts:49:  manager.catalogOps.registerBuildings([BUILDING])
+src/core/game/GameManagerSaveRestore.boundary.test.ts:50:  manager.catalogOps.registerMaterials(materials)
+src/core/game/GameManagerSaveRestore.boundary.test.ts:51:  manager.catalogOps.registerPills(pills)
+AUDIT_DONE

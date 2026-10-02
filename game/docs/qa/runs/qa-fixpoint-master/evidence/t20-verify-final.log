@@ -1,0 +1,79 @@
+
+> tien-hiep-idle@0.1.0-beta.0 verify
+> npm run type-check && npm run build && npx vitest run
+
+
+> tien-hiep-idle@0.1.0-beta.0 type-check
+> vue-tsc --build
+
+
+> tien-hiep-idle@0.1.0-beta.0 build
+> run-p type-check "build-only {@}" --
+
+
+> tien-hiep-idle@0.1.0-beta.0 type-check
+> vue-tsc --build
+
+
+> tien-hiep-idle@0.1.0-beta.0 build-only
+> vite build
+
+vite v8.2.2 building client environment for production...
+transforming...
+✓ 1923 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/build-identity.json                                0.29 kB │ gzip:   0.22 kB
+dist/index.html                                         1.55 kB │ gzip:   0.62 kB
+dist/assets/QuestPanel-1DoX5fq2.css                     1.70 kB │ gzip:   0.58 kB
+dist/assets/GameButton-BdBDikFk.css                     2.63 kB │ gzip:   0.82 kB
+dist/assets/TranPhapPanel-BqHC0CA4.css                  3.00 kB │ gzip:   0.94 kB
+dist/assets/QuanKhiPanel-v57AZVhN.css                   3.69 kB │ gzip:   0.82 kB
+dist/assets/ArtifactPanel-DLxV17bI.css                  4.15 kB │ gzip:   1.05 kB
+dist/assets/CompanionPanel-DKL2Ff9z.css                 5.38 kB │ gzip:   1.07 kB
+dist/assets/OverlayPanel-CQ8S4uIB.css                   5.58 kB │ gzip:   1.42 kB
+dist/assets/RealmPanel-B1JsmTz6.css                    10.35 kB │ gzip:   1.96 kB
+dist/assets/SkillPathPanel-DFwT-6ve.css                16.80 kB │ gzip:   3.14 kB
+dist/assets/index-B2wtXD7T.css                        187.86 kB │ gzip:  32.10 kB
+dist/assets/PlayerVisualForm-q_dsQYsq.js                0.16 kB │ gzip:   0.13 kB
+dist/assets/AssetLoaderScene-BcGWJvlW.js                1.81 kB │ gzip:   0.83 kB
+dist/assets/TranPhapCombatPreviewScene-DysBwA-w.js      3.54 kB │ gzip:   1.48 kB
+dist/assets/BattleGridProjection-8v0gSDWF.js            3.64 kB │ gzip:   1.14 kB
+dist/assets/TribulationScene-BF5jCZA0.js                3.65 kB │ gzip:   1.70 kB
+dist/assets/QuestPanel-joddn0MS.js                      4.09 kB │ gzip:   1.69 kB
+dist/assets/MainScene-ZRFuWW6c.js                       4.65 kB │ gzip:   1.56 kB
+dist/assets/combat-animation-playback-Cm35hf0h.js       5.34 kB │ gzip:   2.12 kB
+dist/assets/ArtifactPanel-CruX3zP-.js                   7.02 kB │ gzip:   2.82 kB
+dist/assets/AudioCueManifest-B8CPDVwu.js                7.36 kB │ gzip:   2.01 kB
+dist/assets/QuanKhiPanel-BiorH3c7.js                    8.03 kB │ gzip:   2.66 kB
+dist/assets/TranPhapPanel-CvTJyl9O.js                   9.34 kB │ gzip:   3.95 kB
+dist/assets/CompanionPanel-EDkv0Idk.js                 10.61 kB │ gzip:   3.41 kB
+dist/assets/combat-grid-view-DxvBRoLX.js               11.08 kB │ gzip:   3.00 kB
+dist/assets/RealmPanel-BdvOvjR-.js                     16.37 kB │ gzip:   4.89 kB
+dist/assets/TechniqueProgression-BlTonf_6.js           18.19 kB │ gzip:   6.46 kB
+dist/assets/SkillPathPanel-e1S0sEJT.js                 32.71 kB │ gzip:  10.58 kB
+dist/assets/CombatScene-CEnqdZjq.js                    68.48 kB │ gzip:  20.63 kB
+dist/assets/vendor-DS4vP7Kk.js                        166.25 kB │ gzip:  60.84 kB
+dist/assets/OverlayPanel-BZXDqGf6.js                  256.95 kB │ gzip:  81.48 kB
+dist/assets/GameButton-CfThCMQP.js                    261.48 kB │ gzip:  65.00 kB
+dist/assets/game-data-C91KR4mj.js                     263.84 kB │ gzip:  66.94 kB
+dist/assets/index-hE27h1SP.js                         858.83 kB │ gzip: 234.69 kB
+dist/assets/phaser.esm-B5wjwyWN.js                  1,375.57 kB │ gzip: 357.95 kB
+
+✓ built in 2.21s
+[plugin builtin:vite-reporter] 
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+Not implemented: navigation to another Document
+
+ Test Files  871 passed | 1 skipped (872)
+      Tests  8097 passed | 5 expected fail | 4 skipped (8106)
+   Start at  13:36:26
+   Duration  106.47s (transform 47.70s, setup 66.33s, import 275.48s, tests 180.08s, environment 94.75s)
+
+VERIFY_EXIT=0

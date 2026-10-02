@@ -1,0 +1,14 @@
+=== EV-PROBE-READMODEL-2 T15 ===
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+
+ Test Files  1 passed (1)
+      Tests  5 passed (5)
+   Start at  10:25:40
+   Duration  4.20s (transform 2.42s, setup 232ms, import 2.83s, tests 146ms, environment 815ms)
+
+
+> tien-hiep-idle@0.1.0-beta.0 type-check
+> vue-tsc --build
+

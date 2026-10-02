@@ -1,0 +1,46 @@
+{
+ "verdict": "FINDINGS",
+ "reviewer": "devin-b16b85780ded4887b0e9e8b22d441c26",
+ "pinnedCommit": "a2bd826f",
+ "role": "CONSUMER-seam review",
+ "note": "no dormancy leak into visible play; carried/flagged saves fail-closed at every audited write seam; all findings Low/Nit",
+ "probeFile": "evidence/b11-mortal-tree-tristate.test.ts",
+ "findings": [
+  {
+   "id": "CSM-01",
+   "severity": "Low",
+   "title": "mortal skill-tree tri-state half-render: in-scope progression-locked nodes get no surface",
+   "mappedTo": "F-B11-1"
+  },
+  {
+   "id": "CSM-02",
+   "severity": "Nit",
+   "title": "NodeTreePanel re-derives node visibility locally instead of consuming canonical verdicts",
+   "mappedTo": "F-B11-2"
+  },
+  {
+   "id": "CSM-03",
+   "severity": "Nit",
+   "title": "StageSelectPanel enumerates zone.stageIds + isStageUnlocked locally instead of getStageSurfaceModels",
+   "mappedTo": "F-B11-3"
+  },
+  {
+   "id": "CSM-04",
+   "severity": "Nit",
+   "title": "companion ops report 'realm_locked' rather than canonical scope_hidden on dormant writes",
+   "mappedTo": "F-B11-4"
+  },
+  {
+   "id": "CSM-05",
+   "severity": "Nit",
+   "title": "stale comment in BattleLootSystem claims thong_mach_dan spend funds physique essences",
+   "mappedTo": "F-B11-5"
+  },
+  {
+   "id": "CSM-06",
+   "severity": "Nit",
+   "title": "flagged save renders dormant way identity in CharacterPanel/SkillPathPanel while combat runs mortal kit",
+   "mappedTo": "F-B11-6"
+  }
+ ]
+}

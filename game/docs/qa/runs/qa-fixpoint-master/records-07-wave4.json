@@ -1,0 +1,77 @@
+{
+ "records": [
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-ATOMICITY-1",
+    "state": {
+     "productStateId": "4311fc4d636dc9808f8fcc3699a4f41eb4e9db05e3b22623cc5409502f115a42",
+     "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "kind": "EXECUTED_UNIT_STRUCTURAL",
+    "producer": "coord-main",
+    "startedAt": "2026-09-30T23:50:00Z",
+    "finishedAt": "2026-09-30T23:50:10Z",
+    "commandOrMethod": "npx vitest run src/core/game/GameManager.fiveElementInitiation.test.ts src/core/game/GameManager.realmAdvanceUnequip.test.ts src/composables/cultivationRitualFlow.integration.test.ts + full source audit of commitFiveElementInitiation + legs",
+    "cwd": "game/",
+    "exitCode": 0,
+    "result": "PASS",
+    "artifactPath": "docs/qa/runs/qa-fixpoint-master/evidence/atomicity-1.log",
+    "artifactHash": "e800b346de18d66e34356468cf5bb4479ac16a9f691544642ad6ce79633b579e",
+    "inputPaths": [
+     "src/core/game/GameManagerRealmAdvanceOps.ts (commitFiveElementInitiation L551-742)",
+     "src/core/player/PlayerSnapshot.ts",
+     "src/core/game/GameManagerProgressionOps.ts (learnSkill/selectSpellPathElement)",
+     "src/core/skill/SkillSystem.ts (learn/unlearn membership-only)",
+     "src/core/technique/TechniqueManager.ts (0-or-1 holder, getAll shallow copy)",
+     "src/core/progression/NodeSystem.ts (purchaseNode: cost/insight/nodeLevels/purchasedNodeIds)",
+     "src/data/progression/PhapTuNodes.builders.ts (element root insightCost 0)",
+     "src/core/game/GameManagerTickOps.ts (markQuestRealmTransition flag)",
+     "src/core/companion/CompanionGifts.ts (player.companionGifts write-if-absent)",
+     "src/components/panels/QuanKhiPanel.vue (caller maps every reason via te() fallback)"
+    ],
+    "inputEvidenceIds": [
+     "EV-BASE-VERIFY"
+    ],
+    "invariantIds": [
+     "I-CC-1"
+    ],
+    "claims": [
+     "commitFiveElementInitiation: preflight region (L551-656) is write-free by inspection - every early return happens before the snapshot/commit boundary",
+     "commit region snapshots all three mutable channels: PlayerData (JSON clone), skillManager learned-set ids, techniqueManager list - restorePlayerSnapshotInPlace deletes+reassigns in snapshot key order (byte-equivalence proof in tests)",
+     "existing suite pins 5 mid-commit fault injections (starter learn fail, kit learn fail, element commit fail, realm-advance crash, technique grant fail) + retry-after-failure - all byte-equivalent at current state (9/9 green incl. ritual flow integration)",
+     "external escapes audited and closed: markQuestRealmTransition leaves a flag -> next-tick reconcile is idempotent+realm-checked; issueCompanionGifts writes only player.companionGifts (snapshot-covered); no eventBus emits in any leg; sessionRng never consumed (element root insightCost=0 -> rollVanDaoWaive short-circuits)",
+     "hostile injection surface: element validated by isBetaElement allow-list first; second call hits already_committed/element_committed/not_mortal; direct selectSpellPathElement outside ritual fails closed (mortal-only + static capability gate); in_combat guard at op + learnSkill leg level",
+     "caller coverage: QuanKhiPanel maps every FiveElementInitiationResult.reason to i18n with te() fallback; EarlyGameSession uses the same op"
+    ],
+    "limitations": [
+     "rollback does not (and cannot) restore the tick-ops questRealmReconcileNeeded flag - documented idempotent design; reconcile against the restored player is equivalent to a restore-time reconcile",
+     "the test suite injects faults at 5 named legs; a fault inside a finer-grained sub-step relies on the same snapshot mechanism (mechanism-level proof, not per-step enumeration)"
+    ],
+    "status": "CURRENT"
+   }
+  },
+  {
+   "kind": "coverage",
+   "id": "COV-ATOMICITY-1",
+   "invariantId": "I-CC-1",
+   "surface": "DETERMINISTIC",
+   "attackIds": [],
+   "taxonomyIds": [
+    "CONTRACT",
+    "STATE",
+    "PERSISTENCE"
+   ],
+   "applicability": "REQUIRED",
+   "reason": "commitFiveElementInitiation atomicity: injection points, partial failure paths, rollback byte-equivalence - audited + pinned",
+   "evidenceIds": [
+    "EV-ATOMICITY-1"
+   ],
+   "reviewerIds": [],
+   "status": "SATISFIED",
+   "weakProtection": false
+  }
+ ]
+}

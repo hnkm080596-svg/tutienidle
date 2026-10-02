@@ -196,7 +196,10 @@ describe('BodyProgressionSystem - integrity gate', () => {
     // violation, so legit progress fixtures carry the page realm.
     // M-F-CHU-THIEN (C2C-64): meridian progress ALSO requires the
     // completed refinement predecessor - the fixture is coherent.
+    // F-TC15 pacing: the opened id must also be producible at the
+    // persisted realmLevel (nham_mach requires 2).
     player.realmId = 'qi_refining'
+    player.realmLevel = 2
     player.physiqueGrade = 'bao'
     player.bodyProgression.body_refinement.completedTiers = 6
     player.bodyProgression.meridian.openedIds = ['nham_mach']
@@ -232,6 +235,9 @@ describe('BodyProgressionSystem - integrity gate', () => {
   it('accepts a fully-completed canonical state', () => {
     const player = createDefaultPlayer()
     player.realmId = 'qi_refining'
+    // F-TC15 pacing: all eight openings producible in-page at
+    // realmLevel 16 (doc_mach's authored requirement).
+    player.realmLevel = 16
     // M-QI-07 - a 6/6 refinement chapter implies the transform already
     // fired; the persisted grade mirrors it (INV-8).
     player.physiqueGrade = 'bao'

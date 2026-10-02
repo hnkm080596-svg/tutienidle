@@ -1,0 +1,46 @@
+{
+ "verdict": "FINDINGS",
+ "reviewer": "devin-9bd157412148451ea2973edf69b96112",
+ "pinnedCommit": "a2bd826f",
+ "role": "AUTHORITY-seam review (persisted-state writers, saveShapeValidation.ts)",
+ "probeFile": "/home/ubuntu/repos/tutienidle/qa-scratch/authority-seam.test.ts (child VM)",
+ "probeResult": "12 tests: 6 VALIDATOR asserts fail (forged saves pass validateGameSaveShape); 6 CONSUMER/baseline asserts pass (forged claims produce live mint/effect)",
+ "findings": [
+  {
+   "id": "AS-1",
+   "severity": "High",
+   "title": "cultivationOvercharge no ownership witness - forged bank auto-fills every subsequent level",
+   "mappedTo": "F-AS-1"
+  },
+  {
+   "id": "AS-2",
+   "severity": "High",
+   "title": "cultivationInsightAccumulator unwitnessed + unbounded - mints free skillInsight",
+   "mappedTo": "F-AS-2"
+  },
+  {
+   "id": "AS-3",
+   "severity": "High",
+   "title": "no cross-field bound skillInsight <= totalSkillInsightGained - free Insight currency claim",
+   "mappedTo": "F-AS-3"
+  },
+  {
+   "id": "AS-4",
+   "severity": "High",
+   "title": "productionSites[].workerCycles unbounded in count/duration - zero-cost cycles mint rewards",
+   "mappedTo": "F-AS-4"
+  },
+  {
+   "id": "AS-5",
+   "severity": "High",
+   "title": "alchemyJobs[] trusted verbatim at restore - forged past-due jobs mint pills with no ingredient reserve",
+   "mappedTo": "F-AS-5"
+  },
+  {
+   "id": "AS-6",
+   "severity": "Medium",
+   "title": "purchasedNodeIds mirror entries with no nodeLevels ownership - forged ownership authorizes spec claims",
+   "mappedTo": "F-AS-6"
+  }
+ ]
+}

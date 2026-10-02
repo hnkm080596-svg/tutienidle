@@ -1,0 +1,456 @@
+===== T15-9 :: dormant-pill check demoted below regen-shape arm
+T15-9: KILLED_EXPECTED (exit=1)
+yer src/services/save/saveShapeValidation.ts:806:47
+    804|             // expiresAtMs-appliedAtMs is NOT bound - the stackable
+    805|             // refresh legitimately widens it (unbounded over drinks).
+    806|             const expectedGroup = regenEffect.effectGroup ?? 'pill_reg…
+       |                                               ^
+    807|             if (effect.effectGroup !== expectedGroup) {
+    808|               issues.push({
+ ❯ validateGameSaveShape src/services/save/saveShapeValidation.ts:2343:3
+ ❯ tests/architecture/betaClaimedSourceForge.qa.test.ts:601:12
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  tests/architecture/tc6ForgedSaveFalsification.qa.test.ts > TC6-C hostile slices > C7 - dormant-authored pill id as effect source is admitted (scope-blind writer bound)
+TypeError: Cannot read properties of undefined (reading 'effectGroup')
+ ❯ validatePlayer src/services/save/saveShapeValidation.ts:806:47
+    804|             // expiresAtMs-appliedAtMs is NOT bound - the stackable
+    805|             // refresh legitimately widens it (unbounded over drinks).
+    806|             const expectedGroup = regenEffect.effectGroup ?? 'pill_reg…
+       |                                               ^
+    807|             if (effect.effectGroup !== expectedGroup) {
+    808|               issues.push({
+ ❯ validateGameSaveShape src/services/save/saveShapeValidation.ts:2343:3
+ ❯ tests/architecture/tc6ForgedSaveFalsification.qa.test.ts:708:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+===== T17-1 :: realmLevel>maxLevel bound removed
+T17-1: KILLED_EXPECTED (exit=1)
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+ ❯ tests/architecture/betaBoundaryMagnitude.qa.test.ts (22 tests | 1 failed) 60ms
+     × realmLevel above maxLevel is rejected at the boundary 11ms
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 21 passed (22)
+   Start at  11:42:10
+   Duration  2.13s (transform 1.52s, setup 210ms, import 1.74s, tests 60ms, environment 0ms)
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/architecture/betaBoundaryMagnitude.qa.test.ts > F-TC7-LEVEL: realmLevel bounded by the realm authored maxLevel > realmLevel above maxLevel is rejected at the boundary
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/architecture/betaBoundaryMagnitude.qa.test.ts:174:22
+    172|     const { save } = validSave({ realmLevel: MORTAL_MAX_LEVEL + 1 })
+    173|     const shape = validateGameSaveShape(JSON.parse(JSON.stringify(save…
+    174|     expect(shape.ok).toBe(false)
+       |                      ^
+    175|     expect(shape.issues.some((issue) => issue.path === 'player.realmLe…
+    176|   })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+===== T17-2 :: enhanceLevel>MAX bound removed
+T17-2: KILLED_EXPECTED (exit=1)
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+ ❯ tests/architecture/betaBoundaryMagnitude.qa.test.ts (22 tests | 1 failed) 52ms
+     × enhanceLevel above the authored cap is rejected 6ms
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 21 passed (22)
+   Start at  11:42:13
+   Duration  2.24s (transform 1.63s, setup 287ms, import 1.79s, tests 52ms, environment 0ms)
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/architecture/betaBoundaryMagnitude.qa.test.ts > F-TC7-ENH: equipmentSlots enhanceLevel bounded by MAX_SLOT_ENHANCE_LEVEL > enhanceLevel above the authored cap is rejected
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/architecture/betaBoundaryMagnitude.qa.test.ts:235:22
+    233|     } as Partial<GameSave>)
+    234|     const shape = validateGameSaveShape(JSON.parse(JSON.stringify(save…
+    235|     expect(shape.ok).toBe(false)
+       |                      ^
+    236|   })
+    237|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+===== T17-3 :: mainStat flat roll bound removed
+T17-3: KILLED_EXPECTED (exit=1)
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+ ❯ tests/architecture/betaBoundaryMagnitude.qa.test.ts (22 tests | 1 failed) 52ms
+     × mainStat flat above the authored roll bound is rejected 7ms
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 21 passed (22)
+   Start at  11:42:16
+   Duration  2.21s (transform 1.59s, setup 243ms, import 1.78s, tests 52ms, environment 0ms)
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/architecture/betaBoundaryMagnitude.qa.test.ts > F-TC7-EQP: equipment mainStat writer-shape bound > mainStat flat above the authored roll bound is rejected
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/architecture/betaBoundaryMagnitude.qa.test.ts:258:72
+    256|     entry.mainStat.flat = boundFlat(range.max) + 1
+    257|     const { save } = validSave({}, { equipment: [entry] } as Partial<G…
+    258|     expect(validateGameSaveShape(JSON.parse(JSON.stringify(save))).ok)…
+       |                                                                        ^
+    259|   })
+    260|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+===== T17-4 :: mainStat percent/multiplier emit-shape check removed
+T17-4: KILLED_EXPECTED (exit=1)
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+ ❯ tests/architecture/betaBoundaryMagnitude.qa.test.ts (22 tests | 1 failed) 66ms
+     × a percent or multiplier the writer never emits is rejected 8ms
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 21 passed (22)
+   Start at  11:42:20
+   Duration  2.22s (transform 1.58s, setup 217ms, import 1.82s, tests 66ms, environment 0ms)
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/architecture/betaBoundaryMagnitude.qa.test.ts > F-TC7-EQP: equipment mainStat writer-shape bound > a percent or multiplier the writer never emits is rejected
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/architecture/betaBoundaryMagnitude.qa.test.ts:273:72
+    271|     ;(entry.mainStat as Record<string, unknown>)['percent'] = 0.5
+    272|     const { save } = validSave({}, { equipment: [entry] } as Partial<G…
+    273|     expect(validateGameSaveShape(JSON.parse(JSON.stringify(save))).ok)…
+       |                                                                        ^
+    274|
+    275|     const second = equipmentEntry()
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+===== T17-5 :: pill regen percent/multiplier emit-shape check removed
+T17-5: KILLED_EXPECTED (exit=1)
+/architecture/betaBoundaryMagnitude.qa.test.ts (22 tests | 2 failed) 51ms
+     × a percent field on the regen modifier is rejected 6ms
+     × a multiplier field on the regen modifier is rejected 1ms
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  2 failed | 68 passed (70)
+   Start at  11:42:23
+   Duration  2.01s (transform 2.71s, setup 500ms, import 3.03s, tests 84ms, environment 1ms)
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/architecture/betaBoundaryMagnitude.qa.test.ts > F-TC7-PILL: pill regen claims carry flat-only modifiers > a percent field on the regen modifier is rejected
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/architecture/betaBoundaryMagnitude.qa.test.ts:347:7
+    345|     expect(
+    346|       validateGameSaveShape(JSON.parse(JSON.stringify(regenClaim({ per…
+    347|     ).toBe(false)
+       |       ^
+    348|   })
+    349|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  tests/architecture/betaBoundaryMagnitude.qa.test.ts > F-TC7-PILL: pill regen claims carry flat-only modifiers > a multiplier field on the regen modifier is rejected
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/architecture/betaBoundaryMagnitude.qa.test.ts:353:7
+    351|     expect(
+    352|       validateGameSaveShape(JSON.parse(JSON.stringify(regenClaim({ mul…
+    353|     ).toBe(false)
+       |       ^
+    354|   })
+    355|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+===== T17-6 :: entitlement realmId coherence removed
+T17-6: KILLED_EXPECTED (exit=1)
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+ ❯ tests/architecture/betaBoundaryMagnitude.qa.test.ts (22 tests | 1 failed) 58ms
+     × an entitlement naming another realm is rejected 10ms
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 21 passed (22)
+   Start at  11:42:26
+   Duration  1.99s (transform 1.42s, setup 224ms, import 1.59s, tests 58ms, environment 0ms)
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/architecture/betaBoundaryMagnitude.qa.test.ts > F-TC7-ENT: pendingTalentEntitlement is bound to the realm it minted into > an entitlement naming another realm is rejected
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/architecture/betaBoundaryMagnitude.qa.test.ts:372:22
+    370|     } as Partial<PlayerData>)
+    371|     const shape = validateGameSaveShape(JSON.parse(JSON.stringify(save…
+    372|     expect(shape.ok).toBe(false)
+       |                      ^
+    373|     expect(
+    374|       shape.issues.some((issue) => issue.path === 'player.pendingTalen…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+===== T17-7 :: restore externalModifiers clear removed
+T17-7: KILLED_EXPECTED (exit=1)
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+ ❯ tests/architecture/betaBoundaryMagnitude.qa.test.ts (22 tests | 1 failed) 52ms
+     × persisted externalModifiers do not survive restore 11ms
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 21 passed (22)
+   Start at  11:42:29
+   Duration  1.99s (transform 1.43s, setup 217ms, import 1.61s, tests 52ms, environment 0ms)
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/architecture/betaBoundaryMagnitude.qa.test.ts > F-TC7-EXT: externalModifiers is a mirror - the restored copy clears > persisted externalModifiers do not survive restore
+AssertionError: expected [ { id: 'ext_forge', …(4) } ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   {
++     "flat": 999,
++     "id": "ext_forge",
++     "sourceId": "admin",
++     "sourceType": "buff",
++     "stat": "strength",
++   },
++ ]
+
+ ❯ tests/architecture/betaBoundaryMagnitude.qa.test.ts:223:43
+    221|     const { playerStore, result } = boot(save)
+    222|     expect(result.status).toBe('ok')
+    223|     expect(playerStore.externalModifiers).toEqual([])
+       |                                           ^
+    224|   })
+    225| })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+===== T17-8 :: restore baseStats rebuild removed (both loops)
+T17-8: KILLED_EXPECTED (exit=1)
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+ ❯ tests/architecture/betaBoundaryMagnitude.qa.test.ts (22 tests | 1 failed) 48ms
+     × a forged non-main stat resets to the authored initial value 18ms
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 21 passed (22)
+   Start at  11:42:32
+   Duration  1.99s (transform 1.43s, setup 200ms, import 1.63s, tests 48ms, environment 0ms)
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/architecture/betaBoundaryMagnitude.qa.test.ts > F-TC7-BASE: restore rebuilds non-main baseStats onto authored defaults > a forged non-main stat resets to the authored initial value
+AssertionError: expected 999 to be 10 // Object.is equality
+
+- Expected
++ Received
+
+- 10
++ 999
+
+ ❯ tests/architecture/betaBoundaryMagnitude.qa.test.ts:194:41
+    192|     const { playerStore, result } = boot(save)
+    193|     expect(result.status).toBe('ok')
+    194|     expect(playerStore.baseStats.might).toBe(createBaseStats().might)
+       |                                         ^
+    195|     expect(playerStore.baseStats.defense).toBe(createBaseStats().defen…
+    196|     expect(playerStore.baseStats.strength).toBe(5)
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+===== T17-9 :: settleOutcome canTriggerBreakthrough arm removed
+T17-9: KILLED_EXPECTED (exit=1)
+ "label": "NHÂN ĐẠO",
+    },
+  },
+  "foundationGrade": "human",
+  "kind": "victory",
+  "questRealmTransitionMarked": true,
+  "realmEntered": "foundation_establishment",
+  "realmName": "Trúc Cơ",
+  "talentConverted": false,
+}
+
+ ❯ tests/architecture/betaBoundaryMagnitude.qa.test.ts:476:7
+    474|         manager.tribulationDirector,
+    475|       ),
+    476|     ).toBeNull()
+       |       ^
+    477|     expect(p.realmId).toBe('qi_refining')
+    478|     expect(manager.tribulationDirector.getCommittedOutcome()).not.toBe…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  tests/architecture/betaBoundaryMagnitude.qa.test.ts > F-TC7-TRIB: committedOutcome re-derives the breakthrough gate at settle > a victory committed without the chapter-clear gate parks too
+AssertionError: expected { kind: 'victory', …(6) } to be null
+
+- Expected:
+null
+
++ Received:
+{
+  "announcement": {
+    "bodyKey": "announce.tribulation.foundation.body",
+    "titleKey": "announce.tribulation.foundation.title",
+    "titleParams": {
+      "label": "NHÂN ĐẠO",
+    },
+  },
+  "foundationGrade": "human",
+  "kind": "victory",
+  "questRealmTransitionMarked": true,
+  "realmEntered": "foundation_establishment",
+  "realmName": "Trúc Cơ",
+  "talentConverted": false,
+}
+
+ ❯ tests/architecture/betaBoundaryMagnitude.qa.test.ts:492:7
+    490|         manager.tribulationDirector,
+    491|       ),
+    492|     ).toBeNull()
+       |       ^
+    493|     expect(p.realmId).toBe('qi_refining')
+    494|   })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+===== T17-10 :: unlisted-tier affix union normalize -> trust raw
+T17-10: KILLED_EXPECTED (exit=1)
+/game
+
+ ❯ tests/architecture/betaBoundaryMagnitude.qa.test.ts (22 tests | 2 failed) 51ms
+     × value above the union clamps to union max 6ms
+     × value below the union clamps to union min 1ms
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 20 passed (22)
+   Start at  11:42:37
+   Duration  1.97s (transform 1.40s, setup 205ms, import 1.58s, tests 51ms, environment 0ms)
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/architecture/betaBoundaryMagnitude.qa.test.ts > F-TC7-AFX: an affix roll naming no authored tier clamps to the authored union > value above the union clamps to union max
+AssertionError: expected 9999 to be 20 // Object.is equality
+
+- Expected
++ Received
+
+- 20
++ 9999
+
+ ❯ tests/architecture/betaBoundaryMagnitude.qa.test.ts:297:7
+    295|     expect(
+    296|       getEffectiveAffixValue({ affixId: 'prefix_attack', tier: 99, val…
+    297|     ).toBe(unionMax)
+       |       ^
+    298|   })
+    299|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  tests/architecture/betaBoundaryMagnitude.qa.test.ts > F-TC7-AFX: an affix roll naming no authored tier clamps to the authored union > value below the union clamps to union min
+AssertionError: expected -50 to be 3 // Object.is equality
+
+- Expected
++ Received
+
+- 3
++ -50
+
+ ❯ tests/architecture/betaBoundaryMagnitude.qa.test.ts:303:7
+    301|     expect(
+    302|       getEffectiveAffixValue({ affixId: 'prefix_attack', tier: 99, val…
+    303|     ).toBe(unionMin)
+       |       ^
+    304|   })
+    305|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+
+Corpus: 11 mutants, 11 KILLED_EXPECTED, 0 SURVIVED

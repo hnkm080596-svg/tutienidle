@@ -1,0 +1,6 @@
+MUTANT SWEEP - F-AS-3b sealFrozenCycle gate (1b310881)
+Mutant: remove `if (!betaTechniqueAdmitted(technique.id)) return false` gate
+  from TechniqueSystem.sealFrozenCycle
+Method: python source-edit + `npx vitest run tests/architecture/betaScopeAuthoritySeam.qa.test.ts`, then revert
+Result: sealGate KILLED_EXPECTED (test suite fails: dormant-seal pin test trips)
+Corpus: 1 mutant, 1 KILLED_EXPECTED, 0 SURVIVED

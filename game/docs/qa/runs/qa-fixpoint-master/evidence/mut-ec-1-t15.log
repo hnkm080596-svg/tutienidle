@@ -1,0 +1,50 @@
+=== EV-MUT-EC-1 orphan-sink T15 2026-10-01T10:28:59 ===
+diff --git a/game/src/data/alchemy/alchemyRecipes.ts b/game/src/data/alchemy/alchemyRecipes.ts
+index 376593c2..4b364a93 100644
+--- a/game/src/data/alchemy/alchemyRecipes.ts
++++ b/game/src/data/alchemy/alchemyRecipes.ts
+@@ -62,7 +62,7 @@ export const SPECIAL_ALCHEMY_RECIPES: AlchemyRecipe[] = [
+     fuelWoodAmount: 4,
+     spiritStoneCost: 1000,
+     baseDurationSeconds: 1200,
+-    specialIngredients: [{ materialId: 'yeu_dan_hung_giao', amount: 1 }],
++    specialIngredients: [{ materialId: 'yeu_dan_hung_giao', amount: 1 }, { materialId: 'mut_orphan_material_x9', amount: 1 }],
+   },
+ ]
+ 
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+ ❯ tests/architecture/betaEconomyCensus.test.ts (6 tests | 1 failed) 13ms
+     × every material consumed by a beta-realm purpose sink has a live beta source or an exemption 7ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/architecture/betaEconomyCensus.test.ts > sec.17 beta economy census - no orphan source, no orphan sink > every material consumed by a beta-realm purpose sink has a live beta source or an exemption
+AssertionError: expected [ Array(1) ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   "mut_orphan_material_x9 (sinks: recipe:alchemy_truc_co_dan:special)",
++ ]
+
+ ❯ tests/architecture/betaEconomyCensus.test.ts:295:21
+    293|       }
+    294|     }
+    295|     expect(orphans).toEqual([])
+       |                     ^
+    296|   })
+    297|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 5 passed (6)
+   Start at  10:29:00
+   Duration  510ms (transform 302ms, setup 217ms, import 162ms, tests 13ms, environment 0ms)
+
+DETECTOR_EXIT=1

@@ -42,6 +42,7 @@ import { affixes } from '../../data/equipment/affixes'
 import { pills } from '../../data/pill/pills'
 import { buildings } from '../../data/building/buildings'
 import { THANH_VAN_PRODUCTION_SITES } from '../../core/production/ProductionCatalog'
+import { PHAP_TU_ELEMENT_ROOT_IDS } from '../../data/progression/PhapTuNodes.builders'
 
 /**
  * Lookup surface the predicate needs - nothing more. Boot restore
@@ -235,6 +236,27 @@ export function assertSaveAcceptable(save: GameSave, catalogs: SaveAcceptanceCat
   // core/realm/hidden/HiddenPerfection). Same hard-fail seam - reject
   // before any owner mutation.
   assertHiddenPerfectionIntegrity(save.player)
+
+  // element-root claim (F-A19-1) - each PHAP_TU_ELEMENT_ROOT_IDS root
+  // is minted only inside the atomic commit that writes
+  // spellPath.element. An owned root whose owning element differs
+  // (element null or foreign) is unproducible: it also bricks every
+  // initiation probe, so a mortal save claiming one can never commit.
+  // getActiveElement is the canonical element read - it resolves only
+  // on the committed element-axis pair, so a hostile/missing slice or
+  // foreign way fails closed.
+  const committedElement = getActiveElement(save.player)
+  const nodeLevelRecords = save.player.nodeLevels
+  if (nodeLevelRecords !== undefined && nodeLevelRecords !== null) {
+    for (const [element, rootId] of Object.entries(PHAP_TU_ELEMENT_ROOT_IDS)) {
+      const claimed = nodeLevelRecords[rootId]
+      if (typeof claimed === 'number' && claimed >= 1 && committedElement !== element) {
+        throw new Error(
+          `element root claim '${rootId}' requires committed element '${element}'`,
+        )
+      }
+    }
+  }
 
   // spell element <-> kit coherence - the element commit grants the
   // element's basic atomically (resolveAuthoredBasic throws on a

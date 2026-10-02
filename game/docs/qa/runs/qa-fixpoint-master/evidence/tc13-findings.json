@@ -1,0 +1,65 @@
+{
+  "sweep": "TERMINAL_CHECK - blind save-acceptance falsification",
+  "target": {
+    "repo": "hnkm080596-svg/tutienidle",
+    "branch": "devin/qa-fixpoint",
+    "commit": "77aecae05b282910b1c7a5d8d690ba05a49704c3",
+    "worktree": ".agent-worktrees/qa-falsify-77aecae0"
+  },
+  "verdict": "FALSIFIED - the save-acceptance layer is not complete. Two persisted claim classes no authored writer can produce are accepted by both gates and mint live economy effects at restore.",
+  "evidence": {
+    "probe_file": "tests/architecture/saveFalsificationSweep.qa.test.ts",
+    "probe_command": "npx vitest run tests/architecture/saveFalsificationSweep.qa.test.ts",
+    "probe_result": "6/6 pass (all four defect assertions + two controls)",
+    "type_check": "npm run type-check: clean"
+  },
+  "findings": [
+    {
+      "id": "F-EQ-COUNT-1",
+      "severity": "high",
+      "confidence": "high",
+      "surface": "equipment",
+      "claim": "save.equipment carries no array-length bound; every per-entry check (slot, grade, quality, mainStat roll bound, affix envelope/dup, forgeUses) passes on the forged payload.",
+      "writer_inventory": "EquipmentBag.add() is the only writer; it runs autoDissolveOverflow() at pickup, so a legitimately-produced bag (and therefore a legitimate save) can never exceed EQUIPMENT_BAG_SOFT_CAP = 500 items. A >500-entry payload is unproducible by construction.",
+      "repro": "505 valid unprotected entries (registered itemId, authored slot, equipped:false, quality 'tien') pass validateGameSaveShape AND assertSaveAcceptable.",
+      "mint_path": "validateGameSaveShape -> assertSaveAcceptable -> SaveSystem.restore -> GameManagerSaveRestore.ts:281-301 equipmentBag.add() per entry -> EquipmentBag.autoDissolveOverflow() dissolves the 5 excess items -> AutoDissolveReward -> materialBag.add(LUYEN_KHI_TINH_HOA_ID, 5 x ITEM_QUALITY_ESSENCE_RANGE.tien.min = 25 essence). Repeatable per crafted save injection.",
+      "scale": "payout scales linearly with forged excess count; quality 'tien' maximizes per-item essence (min 5)"
+    },
+    {
+      "id": "F-BLD-DUP-1",
+      "severity": "medium-high",
+      "confidence": "high",
+      "surface": "buildings",
+      "claim": "save.buildings validates each entry (shape, level <= maxLevel, level <= realm tier, accrualRealmId pin <= player realm) but never deduplicates on buildingId or instanceId.",
+      "writer_inventory": "Every building template is category 'crafting_station'; canBuildDetailed returns 'already_built' for a second same-buildingId instance, so the sole writer can never produce duplicates.",
+      "repro": "Two entries { instanceId: 'b-1'/'b-2', buildingId: 'gathering_outpost', level: 1, lastCollectedAt: 0 } pass both acceptance gates.",
+      "mint_path": "validateGameSaveShape -> assertSaveAcceptable -> restore -> BuildingManager.restore maps entries verbatim (no dedupe) -> BuildingSystem.claim(instanceId) pays floor(min(elapsed x rate, capacity)) per instance -> collectBuilding credits materialBag per forged instance. N duplicates = N x authored accrual payout.",
+      "scale": "linear in forged instance count; per-instance payout capped by authored level-1 capacity window"
+    }
+  ],
+  "surfaces_defended": [
+    "baseStats rebuilt onto defaults; unknown keys dropped, mains clamped to getEffectiveMainStatCap",
+    "equipment-sourced modifiers scrubbed by setEquipmentModifiers; other sourceTypes dropped at resolvePlayerStatAssembly",
+    "skill templates re-derived at restore (F-TC8-4); learned-skill provenance enforced (F-SKL-1: starter/way-kit/node-grant/talent-passive/realm-passive/levelled-axis)",
+    "selectedSpecializationId reconciled against owning claimants (reconcileSpecClaims)",
+    "nodeLevels: integer <= maxLevel, purchasedNodeIds mirror, monotonic prereq replay (node/excludesNode/nodeCount/realm), core coverage + inverse source checks",
+    "tribulation committedOutcome re-derives gates at settleOutcome (stays pending -> inert)",
+    "alchemy jobs: recipe coherence, room-level snapshot bound, herb-claim membership in recipe.herbVariants, unknown recipeId settles 0 pills",
+    "production: site state keyed by siteId (Map dedupe), assignedWorkers clamped to capacity, hiddenChannel frozen while hiddenContent scope-hidden",
+    "timed effects: per-source shape/span bounds (tu_linh_tran 24h)",
+    "modifiers: claimed-source coherence (F-A7-1) + externalModifiers wiped",
+    "spirit stones: trung/thuong tiers bounded by claimed realm tier (F-SCOPE-1)",
+    "enhanceLevel: MAX_SLOT_ENHANCE_LEVEL + realm-tier producibility bound (F-SCOPE-2)",
+    "attributePoints <= realm-derived ceiling; cultivation clamped at required (no extra mint)",
+    "quests: active entries canonicalized; completedOnceIds suppress-only; progress overshoot is an accepted residual",
+    "physiqueGrade ladder enum + derived-from-chapters integrity; combatAiStrategy enum",
+    "companions: dedupe + roster/realm bounds (grandfather policy keeps owned companions fighting while scope-hidden - deliberate, documented)",
+    "companion gifts restricted to beta gift ids",
+    "quest progress/effects: overshoot accepted residual; completedOnceIds suppress-only",
+    "way grants re-asserted idempotently (reconcileWayGrants); forged way marker rejected for unauthorized way"
+  ],
+  "accepted_exceptions_not_defects": [
+    "unbounded counters with no event ledger: currencies, skillInsight<=totalSkillInsightGained, skillCastCounts, totalCultivationGained, hiddenBeastKills, skill.totalExperience (F-AP-DOUBLE-COUNT precedent), quest progress overshoot (F-TC6-7 precedent) - a forged magnitude is indistinguishable from earned grind at the boundary",
+    "companion ownership claims on scope-hidden domain: grandfathered by design; forged vs grandfathered ownership is undecidable at the boundary"
+  ]
+}

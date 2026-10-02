@@ -1,0 +1,18 @@
+# T20 hand-mutant run - one mutant per new gate (A11 wave)
+# runner: /tmp/a11_mutants.py applied to src/services/save/saveShapeValidation.ts
+# each mutant disabled exactly one new bound; pin file betaWriterBoundsTc8.qa.test.ts re-run
+M-AS1  overcharge witness (hasCultivationOverflowBank inverted)      KILLED
+M-AS2a accumulator no-talent reject (undefined threshold arm)        KILLED
+M-AS2b accumulator >= threshold reject                               KILLED
+M-AS3  skillInsight > totalSkillInsightGained bound                  KILLED
+M-AS4c workerCycles count > authored lane ceiling (19)               KILLED
+M-AS4s workerCycle completesAtMs <= startedAtMs span bound           KILLED
+M-AS4l siteLevelAtStart > site maxLevel bound                        KILLED
+M-AS5c alchemyJobs count > pill_room slot ladder                     KILLED
+M-AS5s alchemyJob completesAtMs <= startedAtMs span bound            KILLED
+M-AS5h herbMaterialId in recipe.herbVariants bound                   KILLED
+M-AS6  purchasedNodeIds entry without nodeLevels >= 1                KILLED
+# note: M-AS6 first SURVIVED because the pin fixture wiped baseSave's
+# core_linh_bao grant, tripping an unrelated grant check; fixture fixed
+# to keep base nodeLevels and append the ghost entry -> KILLED on rerun.
+SUMMARY: 11/11 KILLED

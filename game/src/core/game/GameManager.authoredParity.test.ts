@@ -19,6 +19,7 @@ import { defineEnemy } from '../enemy/Enemy'
 import { SKILLS } from '../../data/skill/Skills'
 import { pills } from '../../data/pill/pills'
 import { alchemyRecipes } from '../../data/alchemy/alchemyRecipes'
+import { alchemyJobFixture } from '../alchemy/AlchemyJob.fixture'
 import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
 
 // ARCH-008 (M10) — authored-parity regression matrix through REAL
@@ -322,7 +323,10 @@ describe('ARCH-008 — Hoi Xuan Dan explicitly retired (user-locked, HP regen no
     expect(result.reason).toBe('retired')
   })
 
-  it('an alchemy job started BEFORE retirement still settles and delivers the pill', () => {
+  it('an alchemy job started BEFORE retirement PARKS under the scope lock (retired + scope-hidden family)', () => {
+    // Contract revision (F-TC6-4): the pre-scope-lock rule let in-flight
+    // retired jobs settle; hoi_xuan_dan is ALSO a scope-hidden family,
+    // so the persisted job parks - record intact, no pill minted.
     const { gameManager } = makeManager()
     const player = createDefaultPlayer()
 
@@ -331,15 +335,19 @@ describe('ARCH-008 — Hoi Xuan Dan explicitly retired (user-locked, HP regen no
     const recipe = alchemyRecipes.find((candidate) => candidate.id === 'alchemy_hoi_xuan_dan_mortal')!
 
     gameManager.alchemySystem.restoreJobs([
-      {
-        jobId: 'legacy_hoi_xuan_job',
-        recipeId: recipe.id,
-        pillId: recipe.pillId,
-        herbMaterialId: 'hoi_xuan_thao_mortal_decade',
-        startedAtMs: 1_000,
-        completesAtMs: 2_000,
-        roomLevelAtStart: 1,
-      },
+      alchemyJobFixture(
+        {
+          jobId: 'legacy_hoi_xuan_job',
+          recipeId: recipe.id,
+          pillId: recipe.pillId,
+          herbMaterialId: 'hoi_xuan_thao_mortal_decade',
+          startedAtMs: 1_000,
+          completesAtMs: 2_000,
+          roomLevelAtStart: 1,
+        },
+        undefined,
+        recipe,
+      ),
     ])
 
     const settled = gameManager.alchemySystem.settleOffline(
@@ -349,8 +357,9 @@ describe('ARCH-008 — Hoi Xuan Dan explicitly retired (user-locked, HP regen no
       200,
     )
 
-    expect(settled).toBe(1)
-    expect(gameManager.pillBag.getAmount(recipe.pillId)).toBeGreaterThan(0)
+    expect(settled).toBe(0)
+    expect(gameManager.pillBag.getAmount(recipe.pillId)).toBe(0)
+    expect(gameManager.alchemySystem.getJobs()).toHaveLength(1)
   })
 
   it('AlchemySystem.startJob rejects a retired recipe directly — not only the ops gate', () => {

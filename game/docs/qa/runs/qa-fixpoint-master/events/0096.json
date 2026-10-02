@@ -1,0 +1,12 @@
+{
+  "applied": [
+    "review:RV-ADV-TC8",
+    "review:RV-ADV-B10",
+    "review:RV-ADV-A10",
+    "review:RV-SEQ15-COR",
+    "review:RV-SEQ15-AUT",
+    "review:RV-SEQ15-INT",
+    "review:RV-CLOSURE-15",
+    "cycle:CY-SEQ-15"
+  ]
+}

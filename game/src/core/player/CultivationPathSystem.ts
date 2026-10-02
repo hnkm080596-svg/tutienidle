@@ -22,6 +22,7 @@ import {
 } from './CultivationPathKit'
 import { registerDomainDeltaDeriver, type StatModifier } from '../stats/StatCalculator'
 import { isRealmAvailable } from '../realm/ReleasePolicy'
+import { isBetaWay } from '../betaScope'
 import { getRealmTier } from '../realm/RealmTierMap'
 import { type StatDomain } from '../stats/StatDomain'
 import type { MainStatKey } from '../stats/StatTypes'
@@ -180,6 +181,16 @@ export function resolvePathCapabilities(
   deps: PathCapabilityDeps,
   mode: 'all' | 'static' = 'all',
 ): ReadonlySet<PathCapability> {
+  // BETA SCOPE LOCK v2 - the committed pair's way re-admits its declared
+  // facet to every ungated consumer (HUD bars, emblems, realm rewards,
+  // runtime capability reads) on a carried way_out_of_scope save. The
+  // active way resolves the empty set under the lock, same admission
+  // gate as realm rewards / way stat modifiers below.
+  const activeWay = getActiveWay(player)
+  if (activeWay !== undefined && !isBetaWay(activeWay)) {
+    return new Set()
+  }
+
   const facet = getActiveWayDefinition(player)?.capabilities
 
   if (!facet) {
@@ -280,6 +291,12 @@ export function collectActiveWayStatModifiers(
 ): readonly StatModifier[] {
   const way = getActiveWayDefinition(player)
 
+  // BETA SCOPE LOCK - a carried way_out_of_scope save keeps its way
+  // record, but the dormant facet emits nothing into live stats.
+  if (way !== undefined && !isBetaWay(way.id)) {
+    return []
+  }
+
   return way?.stats?.collectModifiers(player, totals) ?? []
 }
 
@@ -294,7 +311,18 @@ export function collectActiveWayStatModifiers(
  * Corrupt/way-less pairs resolve nothing.
  */
 export function resolveActiveWayStatDomains(player: PathWayRead): readonly StatDomain[] | undefined {
-  return getActiveWayDefinition(player)?.stats?.domains
+  const way = getActiveWayDefinition(player)
+
+  // BETA SCOPE LOCK - a carried way_out_of_scope save keeps its way
+  // record, but the dormant facet owns no live domains (same admission
+  // read as collectActiveWayStatModifiers): without the gate the pair
+  // binds stats.domains at battle build and the deltaDerivers mint
+  // BETA_SCOPE_HIDDEN_STAT_KEYS stats mid-battle.
+  if (way !== undefined && !isBetaWay(way.id)) {
+    return []
+  }
+
+  return way?.stats?.domains
 }
 
 /**
@@ -349,7 +377,9 @@ export function applyPathChoice(
 export function getCultivationPathStatModifiers(player: PlayerData) {
   const way = getActiveWayDefinition(player)
 
-  return [...(way?.statModifiers ?? [])]
+  // BETA SCOPE LOCK - dormant way statModifiers stay inert on a
+  // carried way_out_of_scope save (same admission read as the facet).
+  return [...(way !== undefined && isBetaWay(way.id) ? way.statModifiers ?? [] : [])]
 }
 
 // P7-M3 - realm rewards are artifact-only delivery (the canonical
@@ -363,6 +393,15 @@ export function grantCultivationPathRealmReward(
   resolveNode: (nodeId: string) => ProgressionNode | undefined,
 ): boolean {
   if (!player.cultivationPath) {
+    return false
+  }
+
+  // BETA SCOPE LOCK v2 - realm-entry rewards are authored on the ACTIVE
+  // way record. A carried way_out_of_scope save keeps the record
+  // preserved-by-design, but its authored grants stay inert - the same
+  // way-admission seam CombatBuild gates combat runtime on.
+  const activeWay = getActiveWay(player)
+  if (activeWay === undefined || !isBetaWay(activeWay)) {
     return false
   }
 
@@ -470,6 +509,13 @@ export function reconcileCultivationPathRealmRewards(
   resolveNode: (nodeId: string) => ProgressionNode | undefined,
 ): boolean {
   if (!player.cultivationPath) {
+    return false
+  }
+
+  // BETA SCOPE LOCK v2 - the restore replay is way-authored too: a
+  // dormant way's realmRewards never mint through the reconcile seam.
+  const activeWay = getActiveWay(player)
+  if (activeWay === undefined || !isBetaWay(activeWay)) {
     return false
   }
 

@@ -8,6 +8,7 @@ import type { FlushResult } from '../shared/session/FlushResult'
 import type { UpdateInstallFailedNotice } from '../shared/update/UpdateState'
 import { parseUpdateState, type UpdateState } from '../shared/update/UpdateState'
 import { recordDiagnostic } from '../services/diagnostics/DiagnosticRecorder'
+import type { ElectronBridgeAPI } from './useElectronBridge'
 
 // BETA-FINAL PR12 / spec B6 - the renderer half of the update contract.
 // The composable consumes ONLY the sanitized UpdateState push/get and the
@@ -85,7 +86,7 @@ export function useUpdates(
   deps: UseUpdatesDeps = {},
   gameManagerOverride?: GameManager,
 ): UseUpdatesHandle | undefined {
-  const electronAPI = window.electronAPI
+  const electronAPI: ElectronBridgeAPI | undefined = window.electronAPI
   if (!electronAPI) {
     return undefined
   }

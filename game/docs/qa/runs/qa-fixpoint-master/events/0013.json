@@ -1,0 +1,11 @@
+{
+  "applied": [
+    "evidence:EV-PROBE-TRISAVE-1",
+    "finding:F-TRI-1",
+    "finding:F-TRI-2",
+    "evidence:EV-PROBE-TRISAVE-2",
+    "finding:F-DEFER-1",
+    "finding:F-DEFER-2",
+    "finding:F-DEFER-3"
+  ]
+}

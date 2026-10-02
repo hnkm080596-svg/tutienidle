@@ -1,0 +1,95 @@
+=== M-TXP: mirror-coherence bound removed ===
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+ ❯ tests/architecture/scopeAuthoritySkills.qa.test.ts (7 tests | 4 failed) 38ms
+     × rejects totalExperience with an absent skillCastCounts mirror 25ms
+     × rejects totalExperience ABOVE the skillCastCounts mirror 1ms
+     × rejects a non-numeric totalExperience (string coerces into damage) 4ms
+     × rejects a Lv3-claiming totalExperience the mirror does not confirm 2ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/architecture/scopeAuthoritySkills.qa.test.ts > F-SKILLS-TXP-1: forged skills[].totalExperience mints precursor damage > rejects totalExperience with an absent skillCastCounts mirror
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/architecture/scopeAuthoritySkills.qa.test.ts:131:44
+    129|     expect(getPrecursorFlatDamageBonus(restored.totalExperience!)).toB…
+    130|
+    131|     expect(validateGameSaveShape(save).ok).toBe(false)
+       |                                            ^
+    132|   })
+    133|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  tests/architecture/scopeAuthoritySkills.qa.test.ts > F-SKILLS-TXP-1: forged skills[].totalExperience mints precursor damage > rejects totalExperience ABOVE the skillCastCounts mirror
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/architecture/scopeAuthoritySkills.qa.test.ts:143:44
+    141|     save.player.skillCastCounts = { linh_bao: 42 }
+    142|
+    143|     expect(validateGameSaveShape(save).ok).toBe(false)
+       |                                            ^
+    144|   })
+    145|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  tests/architecture/scopeAuthoritySkills.qa.test.ts > F-SKILLS-TXP-1: forged skills[].totalExperience mints precursor damage > rejects a non-numeric totalExperience (string coerces into damage)
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/architecture/scopeAuthoritySkills.qa.test.ts:158:44
+    156|     expect(getPrecursorFlatDamageBonus(restored.totalExperience as num…
+    157|
+    158|     expect(validateGameSaveShape(save).ok).toBe(false)
+       |                                            ^
+    159|   })
+    160| })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  tests/architecture/scopeAuthoritySkills.qa.test.ts > F-SKILLS-TXP-2: forged totalExperience mints cast-level 3 > rejects a Lv3-claiming totalExperience the mirror does not confirm
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/architecture/scopeAuthoritySkills.qa.test.ts:175:44
+    173|
+    174|     expect(getCastLeveledSkillLevel('linh_bao', 10_000)).toBe(3)
+    175|     expect(validateGameSaveShape(save).ok).toBe(false)
+       |                                            ^
+    176|   })
+    177| })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  4 failed | 3 passed (7)
+   Start at  18:20:42
+   Duration  2.03s (transform 1.45s, setup 202ms, import 1.66s, tests 38ms, environment 0ms)
+
+EXIT=1

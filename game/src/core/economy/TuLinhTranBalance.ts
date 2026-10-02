@@ -41,7 +41,18 @@ export function getActiveCultivationSpeedPercent(
   nowMs: number,
 ): number {
   return effects
-    .filter((e) => e.effectGroup === TU_LINH_TRAN_EFFECT_GROUP && e.expiresAtMs > nowMs)
+    .filter(
+      (e) =>
+        e.effectGroup === TU_LINH_TRAN_EFFECT_GROUP &&
+        e.expiresAtMs > nowMs &&
+        // F-A7-2: the only writer of this group is activateTuLinhTran -
+        // an entry claiming another source, or a percent outside the
+        // authored bound, is a fabricated record and emits nothing.
+        e.sourceItemId === 'tu_linh_tran' &&
+        typeof e.cultivationSpeedPercent === 'number' &&
+        e.cultivationSpeedPercent > 0 &&
+        e.cultivationSpeedPercent <= TU_LINH_TRAN_BUFF_PERCENT,
+    )
     .reduce((sum, e) => sum + (e.cultivationSpeedPercent ?? 0), 0)
 }
 

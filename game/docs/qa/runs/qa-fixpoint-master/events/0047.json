@@ -1,0 +1,23 @@
+{
+  "applied": [
+    "finding:F-A4-1",
+    "finding:F-A4-2",
+    "finding:F-A4-3",
+    "finding:F-A4-4",
+    "finding:F-B-CONS-1",
+    "finding:F-B-CONS-2",
+    "finding:F-B-CONS-3",
+    "finding:F-B-CONS-4",
+    "finding:F-B-CONS-5",
+    "finding:F-BS-1",
+    "finding:F-BS-2",
+    "finding:F-BS-3",
+    "finding:F-BS-4",
+    "finding:F-BS-5",
+    "finding:F-BS-6",
+    "finding:F-BS-7",
+    "review:RV-ADV-A4",
+    "review:RV-ADV-B4",
+    "review:RV-ADV-TC3"
+  ]
+}

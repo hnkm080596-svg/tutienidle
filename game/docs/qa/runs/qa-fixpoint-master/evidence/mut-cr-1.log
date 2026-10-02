@@ -1,0 +1,91 @@
+=== EV-MUT-CR-1 double-publish T7 2026-10-01T04:15:29.357821Z ===
+"battle_end",
++   },
+  ]
+
+ ❯ src/core/game/GameManager.battleEndPublication.test.ts:230:24
+    228|
+    229|     expect(gameManager.abandonBattle()).toBe(true)
+    230|     expect(battleEnds).toEqual([{ type: 'battle_end', state: 'defeat' …
+       |                        ^
+    231|     expect(soundCalls('combat.defeat')).toBe(1)
+    232|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯
+
+ FAIL  src/core/game/GameManager.battleEndPublication.test.ts > ARCH-014 (M12) — battle_end terminal publication, exactly once per outcome > auto-repeat emits battle_end exactly once PER CYCLE — two victories produce two events, not zero and not more
+AssertionError: expected [ { type: 'battle_end', …(1) }, …(3) ] to have a length of 3 but got 4
+
+- Expected
++ Received
+
+- 3
++ 4
+
+ ❯ src/core/game/GameManager.battleEndPublication.test.ts:262:24
+    260|     // Cleanup: abandon the running third cycle ends it once.
+    261|     expect(gameManager.abandonBattle()).toBe(true)
+    262|     expect(battleEnds).toHaveLength(3)
+       |                        ^
+    263|     expect(battleEnds[2]).toEqual({ type: 'battle_end', state: 'defeat…
+    264|   })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/6]⎯
+
+ FAIL  src/core/game/GameManager.battleEndPublication.test.ts > ARCH-014 (M12) — battle_end terminal publication, exactly once per outcome > non-stage battle started after a terminal still publishes battle_end (once-guard reset on startBattle)
+AssertionError: expected [ { type: 'battle_end', …(1) }, …(1) ] to deeply equal [ { type: 'battle_end', …(1) } ]
+
+- Expected
++ Received
+
+  [
+    {
+      "state": "victory",
+      "type": "battle_end",
+    },
++   {
++     "state": "victory",
++     "type": "battle_end",
++   },
+  ]
+
+ ❯ src/core/game/GameManager.battleEndPublication.test.ts:279:24
+    277|
+    278|     runUntil(combatSource, () => gameManager.getTurnBattle()?.state ==…
+    279|     expect(battleEnds).toEqual([{ type: 'battle_end', state: 'victory'…
+       |                        ^
+    280|
+    281|     // Non-stage entry — startBattleWithPlayer is the stageWaves launc…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/6]⎯
+
+ FAIL  src/core/game/GameManager.battleEndPublication.test.ts > ARCH-014 (M12) — battle_end terminal publication, exactly once per outcome > abandon on a direct startBattle() (dev spawn seam) after a terminal still publishes defeat — guard was reset
+AssertionError: expected [ { type: 'battle_end', …(1) }, …(1) ] to deeply equal [ { type: 'battle_end', …(1) } ]
+
+- Expected
++ Received
+
+  [
+    {
+      "state": "victory",
+      "type": "battle_end",
+    },
++   {
++     "state": "victory",
++     "type": "battle_end",
++   },
+  ]
+
+ ❯ src/core/game/GameManager.battleEndPublication.test.ts:311:24
+    309|
+    310|     runUntil(combatSource, () => gameManager.getTurnBattle()?.state ==…
+    311|     expect(battleEnds).toEqual([{ type: 'battle_end', state: 'victory'…
+       |                        ^
+    312|
+    313|     // Direct CombatEntity entry — the enemySpawnDebug path. Pre-fix t…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/6]⎯
+
+
+DETECTOR_EXIT=1  (nonzero = mutant killed the suite = KILLED_EXPECTED)
+RESULT=KILLED_EXPECTED

@@ -65,6 +65,7 @@ import ErrorBoundary from './components/common/ErrorBoundary.vue'
 import ErrorScreen from './components/common/ErrorScreen.vue'
 import UpdateBanner from './components/common/UpdateBanner.vue'
 import SaveIncompatibleScreen from './components/common/SaveIncompatibleScreen.vue'
+import BetaCompletionModal from './components/common/BetaCompletionModal.vue'
 import AuthEntryScreen from './components/onboarding/AuthEntryScreen.vue'
 import CharacterCreationScreen, {
   type CharacterCreationPayload,
@@ -136,6 +137,38 @@ const saveIssue = useSaveIssueStore()
 // Home. Set true o cuoi onMounted() sau khi moi thu (load save/dang
 // ky data/tick loop) da san sang.
 const isBooted = ref(false)
+
+// Beta scope v2 sec.H - the ending beat: once betaCompletionFor resolves
+// betaComplete, BetaCompletionModal shows until dismissed. The ack is a
+// device-local flag keyed by character name (localStorage): no
+// save-schema bump, and a second same-named character is a documented
+// edge (they simply re-see the beat if the flag was never written or
+// was cleared). Same flag-name pattern as tutienidle.audio.v2.
+const BETA_COMPLETION_ACK_PREFIX = 'tutienidle.betaCompletionAck.v1.'
+
+const betaCompletionAcked = ref(false)
+
+const betaCompletionAckKey = computed(() => `${BETA_COMPLETION_ACK_PREFIX}${player.name}`)
+
+const showBetaCompletion = computed(
+  () =>
+    !betaCompletionAcked.value &&
+    typeof localStorage !== 'undefined' &&
+    localStorage.getItem(betaCompletionAckKey.value) !== '1' &&
+    gameManager.progressionOps.betaCompletionFor(player.$state).betaComplete,
+)
+
+function ackBetaCompletion() {
+  betaCompletionAcked.value = true
+
+  if (typeof localStorage !== 'undefined') {
+    try {
+      localStorage.setItem(betaCompletionAckKey.value, '1')
+    } catch {
+      // Storage quota/privacy mode: the in-session ack still holds.
+    }
+  }
+}
 // GameClock chi do thoi gian (pure clock). GameManager chi dieu
 // phoi cac system. Viec "moi giay thi lam gi" la trach nhiem cua
 // vong lap tick() duoi day - noi duy nhat biet ca 2 ben.
@@ -534,6 +567,10 @@ const lifecycle = useAppLifecycle({
   // roll its starter grants back in memory; the composable calls this to
   // recover on a clean process (same convention as resetSaveFromSettings).
   hardReset: () => window.location.reload(),
+  // Contract sec.H - a restored save carrying out-of-scope records gets
+  // one warning toast naming the dormant slice; the records stay data.
+  unsupportedSaveNotice: (reason) =>
+    notification.push('warning', t(`save.betaUnsupported.${reason}`)),
 })
 
 // B1-D - the online-admission authority (30s heartbeat / <=40s health
@@ -1080,6 +1117,15 @@ onUnmounted(() => {
     <!-- GameRoot chi hien khi boot xong; inert while an authority
          overlay owns the surface (B1-D). -->
     <GameRoot v-if="isBooted" :inert="authorityOverlayActive" />
+
+    <!-- Beta scope v2 sec.H - the deliberate ending beat: rendered once
+         the completion read-model resolves, acknowledged per device via
+         localStorage (no save-schema impact). Sits below the authority
+         overlay and transition curtain. -->
+    <BetaCompletionModal
+      v-if="isBooted && showBetaCompletion"
+      @dismiss="ackBetaCompletion"
+    />
   </ErrorBoundary>
 
   <!-- Task 8 (A11) - the unwatched pause. Data-driven by useCombatPause()
