@@ -590,6 +590,17 @@
       "tierLine": "{realm} · Floor {level}",
       "cultivationUnit": "Cultivation",
       "rateEta": "+{rate} {unit}/s · ~{eta} left",
+      "tierOf": "Floor {level}/{max}",
+      "sections": {
+        "progress": "Cultivation Progress",
+        "passives": "Realm Talent ({realm})",
+        "requirements": "Breakthrough Conditions: {target}"
+      },
+      "meta": {
+        "rateLabel": "Cultivation Rate",
+        "etaLabel": "Next Floor ETA",
+        "rateValue": "{rate} {unit}/s"
+      },
       "labels": {
         "quanKhi": "Quán Khí",
         "foundation": "Foundation Establishment",
