@@ -12,5 +12,14 @@ import BattleLogPanel from '@/components/game/combat/BattleLogPanel.vue'
 </template>
 
 <style scoped>
-.combat-log-feed { position: relative; }
+/* Spec 10 battle-log 1330/620/326/280 on the 1672x941 canvas: right
+   0.96vw, bottom 4.36vh, 19.5vw wide, capped at 29.76vh tall. */
+.combat-log-feed {
+  position: absolute;
+  right: 0.96vw;
+  bottom: 4.36vh;
+  width: 19.5vw;
+  max-height: 29.76vh;
+  z-index: 12;
+}
 </style>

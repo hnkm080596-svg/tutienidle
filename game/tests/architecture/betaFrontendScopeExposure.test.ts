@@ -116,7 +116,6 @@ describe('beta FE-contract sec.8 - scope-exposure corpus guards', () => {
       // call to action.
       const list = offenders(/golden_core|goldenCore|kim_dan|kimDan/, [
         'components/panels/bag-sections/MaterialBagSection.vue',
-        'components/panels/skill-path/TheTuTreePanel.vue',
       ])
 
       expect(list).toEqual([])
@@ -211,10 +210,7 @@ describe('beta FE-contract sec.8 - scope-exposure corpus guards', () => {
       // retires onto the model.
       const list = offendersInCode(
         /\b(isStageUnlocked|stageLockReasonCode)\b/,
-        [
-          'components/panels/StageSelectPanel.vue',
-          'components/game/combat/CombatVictoryPanel.vue',
-        ],
+        ['components/game/combat/CombatVictoryPanel.vue'],
       )
 
       expect(list).toEqual([])
@@ -272,10 +268,16 @@ describe('beta FE-contract sec.8 - scope-exposure corpus guards', () => {
   it(
     'the hidden-way capability authority stays out of new shell files',
     () => {
-      // hasPathCapability feeds the ngo_dao emblem + hidden-way surfaces;
-      // betaCombatSurfacesFor already verdicts both scope-hidden, so the
-      // shell consumes the verdicts only.
-      const list = offenders(/\bhasPathCapability\b/)
+      // hasPathCapability/hasStaticPathCapability feed the ngo_dao
+      // emblem + hidden-way surfaces; betaCombatSurfacesFor already
+      // verdicts both scope-hidden, so the shell consumes the
+      // verdicts only. Recorded exception: QuanKhiPanel resolves
+      // 'sword.sword_riding' to pick the hidden_sword_pathway preset
+      // editor - a pathway read inside the ritual's own gated seam,
+      // not a hidden-way admission verdict.
+      const list = offenders(/\b(hasPathCapability|hasStaticPathCapability)\b/, [
+        'components/panels/QuanKhiPanel.vue',
+      ])
 
       expect(list).toEqual([])
     },

@@ -58,17 +58,17 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
-/* UI-audit fix (2026-09-28) -- the dock hugs its content instead of
-   reserving a fixed 27-44vw column: the skill bar stacks vertically,
-   so the panel is a compact top-right rail (auto width/height) and the
-   overlay mounts it only while the battle is fighting. The ResizeObserver
-   publish keeps the scene's right inset in sync with the real width. */
+/* Spec 10 skill-dock 1540/80/132/560 on the 1672x941 canvas: flush
+   right edge, canvas-top 8.5vh, 7.89vw wide, capped at 59.5vh tall.
+   The ResizeObserver publish keeps the scene's right inset in sync
+   with the real width. */
 .combat-skill-dock-panel {
   position: absolute;
-  top: var(--combat-topbar-h);
+  top: 8.5vh;
   right: 0;
-  width: auto;
-  max-width: 100vw;
+  width: 7.89vw;
+  min-width: 96px;
+  max-height: 59.5vh;
   display: flex;
   flex-direction: column;
   gap: var(--space-3, 12px);

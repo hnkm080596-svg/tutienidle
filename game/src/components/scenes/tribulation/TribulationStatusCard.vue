@@ -54,11 +54,11 @@ const timerLabel = computed(() => {
 </template>
 
 <style scoped>
-/* Spec 14 status-left: the chapter identity/status card anchors the left
-   edge under the tracker; the tank phase's strikes/hint fold into it.
-   surface-m-panel gives the card a real body so text can't escape the
-   plaque's painted bounds. */
-.tribulation-ui__status { position:absolute; top:calc(22% + 10px); left:4%; width:min(280px, 30vw); display:flex; flex-direction:column; gap:2px; text-align:center; isolation:isolate; padding:30px 16px 14px; border-radius:var(--radius-md); }
+/* Spec 14 status-card 60/560/420/220: the chapter identity/status
+   card anchors the lower-left (~59.5% top); the tank phase's
+   strikes/hint fold into it. surface-m-panel gives the card a real
+   body so text can't escape the plaque's painted bounds. */
+.tribulation-ui__status { position:absolute; top:59.51%; left:3.59%; width:min(25.12vw, 420px); max-height:23.38%; overflow-y:auto; display:flex; flex-direction:column; gap:2px; text-align:center; isolation:isolate; padding:30px 16px 14px; border-radius:var(--radius-md); }
 .tribulation-ui__status > :not(.ink-nine-slice) { position:relative; z-index:2; }
 .tribulation-ui__header { position:relative; display:flex; flex-direction:column; gap:2px; align-items:center; }
 .tribulation-ui__plaque { position:absolute; left:50%; top:-14px; transform:translateX(-50%); width:min(200px, 90%); height:auto; opacity:.9; pointer-events:none; }

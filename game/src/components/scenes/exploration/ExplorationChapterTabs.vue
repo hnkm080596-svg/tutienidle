@@ -1,22 +1,16 @@
 <script setup lang="ts">
-// Scene 09 scaffold - chapter-tabs region (spec 444/176/680/44). The
-// zone chip row is progressive disclosure: it renders only when more
-// than one zone exists (the ref's zone rail is RESERVED). Chapter
-// chips still own the contract class `--chapters`.
+// Scene 09 scaffold - chapter-tabs region (spec 444/176/680/44).
+// Zone selection lives on the zone-rail; this row owns the chapter
+// chips only and keeps the contract class `--chapters`.
 import { useI18n } from 'vue-i18n'
-import type { Zone } from '@/core/stage/Zone'
 import Chip from '@/components/common/primitives/Chip.vue'
 
 defineProps<{
-  zones: Zone[]
-  selectedZoneId: string | null
-  isZoneUnlocked: (zoneId: string) => boolean
   chapterOptions: { chapter: number; label: string }[]
   selectedChapter: number
 }>()
 
 const emit = defineEmits<{
-  (e: 'select-zone', zoneId: string): void
   (e: 'select-chapter', chapter: number): void
 }>()
 
@@ -25,21 +19,6 @@ const { t } = useI18n()
 
 <template>
   <nav class="stage-select__filters exploration-tabs" :aria-label="t('panels.stageSelect.aria.filters')">
-    <div v-if="zones.length > 1" class="stage-select__filter-group">
-      <small>{{ t('panels.stageSelect.labels.zoneFilter') }}</small>
-      <Chip
-        v-for="zone in zones"
-        :key="zone.id"
-        class="stage-select__filter-chip"
-        :class="{ 'is-locked': !isZoneUnlocked(zone.id) }"
-        :active="zone.id === selectedZoneId"
-        :disabled="!isZoneUnlocked(zone.id)"
-        @click="emit('select-zone', zone.id)"
-      >
-        {{ zone.name }}
-      </Chip>
-    </div>
-
     <div class="stage-select__filter-group stage-select__filter-group--chapters">
       <small>{{ t('panels.stageSelect.labels.chapterFilter') }}</small>
       <Chip
@@ -57,8 +36,12 @@ const { t } = useI18n()
 </template>
 
 <style scoped>
+/* Spec 09: the 680px tab band hangs inside the 700px map column ->
+   97.14% of the column, centered. */
 .exploration-tabs {
   flex: 0 0 auto;
+  width: 97.14%;
+  align-self: center;
   display: flex;
   align-items: center;
   gap: 18px;

@@ -21,12 +21,29 @@
 .creation-vista-figure {
   position: absolute;
   /* seated figure + ledge dominate the vista's left half in the ref
-     (~760x710 design px; the right edge slides under the scroll) */
+     (~760x710 design px; the right edge slides under the scroll).
+     Fade the right + bottom edges so the temp silhouette melts into
+     the scene instead of hard-clipping against the scroll frame. */
   left: 4%;
   top: 9%;
   width: 46%;
   height: 86%;
   pointer-events: none;
+  mask-image: linear-gradient(
+    to right,
+    #000 0%,
+    #000 68%,
+    transparent 98%
+  ), linear-gradient(
+    to bottom,
+    #000 0%,
+    #000 82%,
+    transparent 99%
+  );
+  mask-composite: intersect;
+  -webkit-mask-image: linear-gradient(to right, #000 0%, #000 68%, transparent 98%),
+    linear-gradient(to bottom, #000 0%, #000 82%, transparent 99%);
+  -webkit-mask-composite: source-in;
 }
 
 /* Rock ledge under the figure - dark crag catching moon rim-light. */

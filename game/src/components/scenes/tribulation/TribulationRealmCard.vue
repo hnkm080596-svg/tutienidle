@@ -1,7 +1,9 @@
 <script setup lang="ts">
-// Scene 13 realm card (ref top-right "Do Kiep Tang 9" - audit
-// CORRECTED: realm label from tribulation targetRealmId, progress =
-// chapter x/y). The flame row is the temp-art strike marker row.
+// Spec 14 title-band 436/120/800/80: the realm card IS the centered
+// title band - realm name + chapter progress move here from the
+// top-right corner (audit CORRECTED: realm label from tribulation
+// targetRealmId, progress = chapter x/y). The flame row is the
+// temp-art strike marker row.
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 
@@ -27,11 +29,13 @@ const flames = computed(() => Math.min(props.strikesTaken, 7))
 <style scoped>
 .tribulation-realm-card {
   position: absolute;
-  top: calc(6.5% + 4px);
-  right: 4%;
+  top: 12.75%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(47.85%, 800px);
   min-width: 150px;
   padding: 10px 14px;
-  text-align: right;
+  text-align: center;
   isolation: isolate;
   border-radius: var(--radius-md);
   background: linear-gradient(180deg, rgba(16, 23, 24, .72), rgba(16, 23, 24, .5));
@@ -45,7 +49,7 @@ const flames = computed(() => Math.min(props.strikesTaken, 7))
   color: var(--hk-gold-muted, #b99a55);
 }
 .tribulation-realm-card__progress { margin: 4px 0 0; font-size: var(--text-xs); color: var(--scene-tribulation-text-soft); }
-.tribulation-realm-card__flames { display:flex; justify-content:flex-end; gap:4px; margin-top:6px; }
+.tribulation-realm-card__flames { display:flex; justify-content:center; gap:4px; margin-top:6px; }
 .tribulation-realm-card__flame {
   width: 11px;
   height: 15px;

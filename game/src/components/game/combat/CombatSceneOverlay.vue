@@ -152,12 +152,17 @@ onUnmounted(() => {
   pointer-events: none;
 }
 
-/* Combat AI panel (plan sec.11.1) - goc trai battlefield, duoi
-   top bar (nam trong vung battlefield nen khong dung CombatTopBar). */
+/* Spec 10 ai-panel 16/140/228/280 on the 1672x941 canvas: left
+   0.96vw, canvas-top 14.88vh (the battlefield starts under the top
+   bar, so subtract --combat-topbar-h), 13.64vw wide, capped at
+   29.76vh tall with internal scroll. */
 .combat-scene-overlay__ai-panel {
   position: absolute;
-  left: var(--space-3);
-  top: var(--space-3);
+  left: 0.96vw;
+  top: calc(14.88vh - var(--combat-topbar-h));
+  width: 13.64vw;
+  max-height: 29.76vh;
+  overflow-y: auto;
   z-index: 12;
 }
 
@@ -182,13 +187,5 @@ onUnmounted(() => {
   z-index: 12;
 }
 
-/* T8.2 - O3 vertical guard: viewport thap, AI panel doc cao
-   (topbar ~64 + title + 5 options x --tap-min ~44) co the cham
-   vung HUD duoi-trai. Cho scroll trong panel thay vi de. */
-@media (max-height: 700px) {
-  .combat-scene-overlay__ai-panel {
-    max-height: calc(100% - 180px);
-    overflow-y: auto;
-  }
-}
+
 </style>

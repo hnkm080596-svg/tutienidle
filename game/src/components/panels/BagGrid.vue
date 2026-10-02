@@ -60,6 +60,7 @@ const bagTabs = computed(() => [
     <TabBar
       :tabs="bagTabs"
       :model-value="ui.activeBagTab"
+      art-id="tab-pill"
       @update:model-value="ui.setActiveBagTab($event as BagTab)"
     />
 
@@ -94,6 +95,8 @@ const bagTabs = computed(() => [
 }
 
 .bag-grid__count {
+  flex: 0 0 auto;
+  white-space: nowrap;
   font-size: var(--text-sm);
   color: var(--paper-text-muted);
 }

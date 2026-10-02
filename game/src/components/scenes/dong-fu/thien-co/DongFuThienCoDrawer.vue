@@ -62,15 +62,17 @@ const drawerSlice = chromeSlice('surface-l-drawer')
 
 <style scoped>
 .thien-co-rail__drawer {
-  position: absolute;
+  /* Spec thien-co-open 1296/140/360/640: top-anchored right drawer -
+     right 16, top 140, w 360, h 640 design px on the 1672x941 canvas. */
+  position: fixed;
   isolation: isolate;
-  right: 0;
-  bottom: calc(100% + var(--hk-space-3, 8px));
+  right: 0.96vw;
+  top: 14.88vh;
   display: flex;
   flex-direction: column;
   gap: var(--hk-space-3, 8px);
-  width: clamp(210px, 22vw, 276px);
-  max-height: min(66vh, 490px);
+  width: 21.53vw;
+  height: 68.01vh;
   padding: var(--hk-space-4, 12px);
   border: 1px solid var(--hk-border-muted, #2a352f);
   border-radius: var(--hk-radius-lg, 12px);

@@ -35,14 +35,16 @@ import CharacterActionRail from './CharacterActionRail.vue'
   flex: 1 1 auto;
   min-height: 0;
   display: grid;
-  grid-template-columns: minmax(0, 32.2%) minmax(0, 45%) minmax(0, 22.8%);
+  /* Spec columns 400 | 560 | 252 on the 1244 band with two 16px gaps:
+     fr shares + 1.29% gaps (16/1244) land the total on exactly 100%. */
+  grid-template-columns: minmax(0, 400fr) minmax(0, 560fr) minmax(0, 252fr);
   grid-template-rows: minmax(0, auto) minmax(0, auto) minmax(0, 1fr) auto;
   grid-template-areas:
     'identity identity identity'
     'talents talents talents'
     'figure stats rightcol'
     'rail rail rail';
-  column-gap: 1.2%;
+  column-gap: 1.29%;
   row-gap: var(--hk-space-3, 8px);
   color: var(--paper-text);
   font-family: var(--font-body);

@@ -20,7 +20,8 @@ const { t } = useI18n()
   >
     <button
       type="button"
-      class="skill-path-panel__mode-tab"
+      class="skill-path-panel__mode-tab art-needed"
+      data-art-id="skill-mode-tab-seal"
       :class="{ 'is-selected': mode === 'tree' }"
       @click="emit('select', 'tree')"
     >
@@ -29,7 +30,8 @@ const { t } = useI18n()
     </button>
     <button
       type="button"
-      class="skill-path-panel__mode-tab"
+      class="skill-path-panel__mode-tab art-needed"
+      data-art-id="skill-mode-tab-seal"
       :class="{ 'is-selected': mode === 'detail' }"
       @click="emit('select', 'detail')"
     >

@@ -52,6 +52,12 @@ defineProps<{
   display: flex;
   align-items: center;
   justify-content: center;
+  /* Never let flex squash it below its ratio - a short region used to
+     shrink it into a dark square with the slot art bleeding below the
+     frame. max-height transfers through aspect-ratio so the width
+     narrows instead. */
+  flex: 0 0 auto;
+  max-height: 72%;
   width: min(78%, 340px);
   margin-bottom: 15%;
   aspect-ratio: 10 / 13;

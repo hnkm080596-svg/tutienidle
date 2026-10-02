@@ -29,7 +29,10 @@ const names = computed(() => props.chapterNames)
 </template>
 
 <style scoped>
-.tribulation-ui__tracker { position:absolute; top:calc(6.5% + 0px); left:50%; transform:translateX(-50%); display:flex; gap:18px; margin:0; padding:0; list-style:none; }
+/* Spec 14 chapter-tracker 536/44/600/66: centered 600px band at
+   4.68% top - clear of the title band (12.75%) and the realm card
+   moved there, so the top row no longer collides. */
+.tribulation-ui__tracker { position:absolute; top:4.68%; left:50%; transform:translateX(-50%); width:min(35.89vw, 600px); justify-content:center; display:flex; gap:18px; margin:0; padding:0; list-style:none; }
 .tribulation-ui__tracker-pip { position:relative; display:grid; place-items:center; min-width:64px; padding:4px 10px; font-family:var(--font-display); font-size:var(--text-xs); letter-spacing:.12em; color:var(--scene-tribulation-text-soft); opacity:.55; }
 .tribulation-ui__tracker-pip img { position:absolute; inset:-6px; width:calc(100% + 12px); height:calc(100% + 12px); object-fit:fill; opacity:.5; pointer-events:none; }
 .tribulation-ui__tracker-pip span { position:relative; }

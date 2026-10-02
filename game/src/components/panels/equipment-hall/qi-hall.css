@@ -247,7 +247,11 @@
   gap: 8px;
 }
 
-@container overlay-panel (max-width: 760px) {
+/* Unnamed container query: resolves against the imperial-scroll
+   envelope in scene mounts and the overlay-panel card in legacy
+   mounts - the named 'overlay-panel' container never exists inside
+   the scene shell, so the name would silently disable this block. */
+@container (max-width: 760px) {
   .qi-hall__split { flex-direction: column; }
   .qi-hall__split-left {
     flex: 0 0 auto;

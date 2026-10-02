@@ -406,7 +406,11 @@ function cancelJob(jobId: string) {
 .alchemy-view {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(220px, 0.85fr) minmax(160px, 0.9fr) minmax(280px, 1.15fr);
+  /* Spec 11 columns on the 1244 band: recipe 380 | cauldron 420 |
+     detail 412 with two 16px gaps. */
+  grid-template-columns: minmax(0, 380fr) minmax(0, 420fr) minmax(0, 412fr);
+  column-gap: 1.29%;
+  row-gap: 6px;
   grid-template-rows: minmax(0, 1fr) auto;
   grid-template-areas:
     "recipes cauldron detail"

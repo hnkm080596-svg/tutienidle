@@ -33,7 +33,7 @@ const { t, locale } = useI18n()
 .login-locale {
   position: absolute;
   top: 18px;
-  right: 26px;
+  right: 16px;
   z-index: 4;
   display: flex;
   align-items: center;

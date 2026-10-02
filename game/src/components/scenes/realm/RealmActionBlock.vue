@@ -57,11 +57,13 @@ const rows = computed(() =>
 
 <style scoped>
 .realm-panel__actions {
+  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
   gap: 8px;
   margin-top: auto;
   padding-top: 10px;
+  padding-bottom: 4px;
   border-top: 1px solid var(--hk-border-muted, var(--ink-line));
 }
 .realm-panel__actions :deep(button:disabled) { opacity: 0.38; filter: grayscale(1); }

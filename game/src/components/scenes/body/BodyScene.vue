@@ -88,7 +88,8 @@ function selectUnit(id: string): void {
   display: grid;
   grid-template-columns: minmax(0, 10.6%) minmax(0, 51.4%) minmax(0, 35.4%);
   grid-template-rows: minmax(0, 1fr);
-  column-gap: 18px;
+  /* Spec 08 column gaps: 16 design px between rail | figure | detail. */
+  column-gap: 16px;
   padding: 6px 2px;
 }
 

@@ -23,12 +23,17 @@ const { bumpState } = useStateVersion()
 
 // Cadence filter is model-driven: beta admits 'once' only, so the tab
 // strip renders Tat Ca + one tab per cadence actually present (other
-// cadences stay RESERVED - contract DO-NOT-DERIVE).
+// cadences stay RESERVED - contract DO-NOT-DERIVE). A row claiming a
+// foreign cadence (e.g. 'weekly') is malformed input and mints no tab.
+const MODEL_CADENCES: readonly BetaQuestSurfaceModel['cadence'][] = ['once']
+
 const activeCadence = ref<'all' | BetaQuestSurfaceModel['cadence']>('all')
 
 const cadences = computed(() => {
   const set = new Set<BetaQuestSurfaceModel['cadence']>()
-  for (const row of props.rows) set.add(row.cadence)
+  for (const row of props.rows) {
+    if (MODEL_CADENCES.includes(row.cadence)) set.add(row.cadence)
+  }
   return [...set]
 })
 

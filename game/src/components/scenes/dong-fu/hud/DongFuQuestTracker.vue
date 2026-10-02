@@ -47,16 +47,17 @@ const tracked = computed(() => {
 </template>
 
 <style scoped>
+/* Spec quest-tracker 1232/872/424/48: right 16, bottom 21, w <= 424
+   design px on the 1672x941 canvas. */
 .quest-tracker {
   position: absolute;
-  right: var(--hk-space-4, 12px);
-  /* Stacked above the Thien Co collapsed chip (chip height ~28 + gap). */
-  bottom: calc(var(--hk-space-4, 12px) + 36px);
+  right: 0.96vw;
+  bottom: 2.23vh;
   z-index: 9;
   display: inline-flex;
   align-items: center;
   gap: var(--hk-space-2, 6px);
-  max-width: clamp(200px, 26vw, 330px);
+  max-width: min(25.36vw, 424px);
   padding: var(--hk-space-2, 6px) var(--hk-space-4, 12px);
   border: 1px solid var(--hk-border-muted, #2a352f);
   border-radius: 999px;

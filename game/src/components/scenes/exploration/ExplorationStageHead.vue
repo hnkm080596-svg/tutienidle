@@ -38,13 +38,25 @@ const lockedHint = computed(() =>
 </template>
 
 <style scoped>
-.exploration-head { display: flex; flex-direction: column; gap: 4px; }
+/* Detail header lives inside a fixed ~332px slab - wrap long chapter
+   names / stage titles inside it instead of bleeding out (D-M4). */
+.exploration-head {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
 
 .exploration-head__eyebrow {
   color: color-mix(in srgb, var(--hk-gold, #b99a55) 80%, var(--paper-text));
   font-size: var(--text-xs);
   letter-spacing: .08em;
   text-transform: uppercase;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .exploration-head__title { margin: 0; }

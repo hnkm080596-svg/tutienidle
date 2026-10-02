@@ -27,7 +27,9 @@ const { t } = useI18n()
 </template>
 
 <style scoped>
-.tribulation-ui__hp-cluster { position:absolute; top:calc(62% + 84px); left:50%; transform:translateX(-50%); display:flex; flex-direction:column; align-items:center; width:min(340px, 80vw); }
+/* Spec 14 hp-cluster 616/736/440/84: centered 26.32vw band at
+   78.21% top. */
+.tribulation-ui__hp-cluster { position:absolute; top:78.21%; left:50%; transform:translateX(-50%); display:flex; flex-direction:column; align-items:center; width:min(26.32vw, 440px); }
 .tribulation-ui__hp-frame { position:relative; width:100%; padding:2px 4px; }
 .tribulation-ui__hp-track { width:100%; border-radius:4px; --bar-track: var(--scene-tribulation-deep); --bar-from: var(--scene-tribulation-hp); --bar-to: var(--scene-tribulation-hp); }
 .tribulation-ui__hp { margin-top:6px; font-size:var(--text-xs); text-shadow:0 1px 3px #000; }

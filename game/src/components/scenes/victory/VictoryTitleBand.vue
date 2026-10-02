@@ -21,7 +21,7 @@ const subtitle = computed(() => props.stageName ?? t('combat.victory.subtitle'))
   <header class="victory-title" data-hk-region="title">
     <div class="victory-title__band">
       <img v-if="ribbonUrl" class="victory-title__ribbon" :src="ribbonUrl" alt="" aria-hidden="true" />
-      <span class="victory-title__flourish art-needed" data-art-id="victory-title-flourish" aria-hidden="true" />
+      <span class="victory-title__flourish art-needed" data-art-id="victory-title-ink" aria-hidden="true" />
       <h2 class="victory-title__text">{{ t('combat.victory.title') }}</h2>
     </div>
 

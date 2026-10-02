@@ -26,7 +26,7 @@ const { t } = useI18n()
       <!-- Persistent nav affordance (ui-audit creation-meta): the only
            wheel entries were this unlabeled portrait and the hidden Tab
            key - caption names the action + shortcut. -->
-      <span class="home-player__hint">{{ t('home.commandWheel.hint') }}</span>
+      <span class="home-player__hint art-needed" data-art-id="home-player-hint">{{ t('home.commandWheel.hint') }}</span>
     </button>
   </div>
 </template>

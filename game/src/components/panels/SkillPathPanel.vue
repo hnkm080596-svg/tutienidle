@@ -94,13 +94,21 @@ const wayIdentity = computed(
 
 // Scene 07 way-card: the base path display name rides beside the way
 // identity (ref's "Phap Tu * Hoa Hanh" line). Mortal shows none, and a
-// carried dormant way/path brands nothing - the chip renders only for
-// the beta path while the committed way is beta-admitted (or absent).
+// carried dormant way/path brands nothing - the chip renders only when
+// the committed way is beta-admitted, or when no way is committed but
+// the player's path module still owns a beta-admitted way (derived via
+// CULTIVATION_PATH_MODULES[path].ways + isBetaWay - never a literal).
 const pathName = computed(() => {
   const way = skillTree.value.way
-  if (way !== null && !isBetaWay(way)) return null
-  return player.cultivationPath
-    ? CULTIVATION_PATH_MODULES[player.cultivationPath]?.name ?? null
+  const pathModule = player.cultivationPath
+    ? CULTIVATION_PATH_MODULES[player.cultivationPath]
+    : undefined
+
+  if (pathModule === undefined) return null
+  if (way !== null) return isBetaWay(way) ? pathModule.name : null
+
+  return Object.keys(pathModule.ways).some((wayId) => isBetaWay(wayId))
+    ? pathModule.name
     : null
 })
 
@@ -367,7 +375,7 @@ function close() {
                  branches the model renders; scope-hidden branches (the
                  non-committed elements) are absent, not locked. -->
             <SkillElementTabs
-              v-if="hasElementalCasting && visibleElementTabs.length > 0"
+              v-if="hasElementalCasting && !committedElement && visibleElementTabs.length > 0"
               :elements="visibleElementTabs"
               :selected="selectedBranch"
               :committed="committedElement"
@@ -435,13 +443,16 @@ function close() {
   flex: 1 1 auto;
   min-height: 0;
   display: flex;
-  gap: 0;
+  /* Spec 07 column gaps: 16 design px each (16/1244). */
+  gap: 1.29%;
 }
 
 /* Fit-refactor dot 5 - cot tree sau wheel-scroll an thanh (theme an san
    toan cuc), fade edge bao con noi dung; ngan sach chieu cao do flex body. */
 .skill-path-panel__col {
   min-height: 0;
+  /* Border-box so the spec % basis includes the padding. */
+  box-sizing: border-box;
   overflow-y: auto;
   mask-image: linear-gradient(to bottom, transparent 0, #000 12px, #000 calc(100% - 12px), transparent 100%);
   padding: 12px 14px;
@@ -457,8 +468,10 @@ function close() {
   .skill-path-panel__col--right { flex: 0 0 auto; border-bottom: 0; }
 }
 
+/* Spec 07 columns on the 1244 band: way-card 212 | center 640 |
+   detail 360 -> 17.04% | auto | 28.94%. */
 .skill-path-panel__col--left {
-  flex: 0 0 min(20%, 280px);
+  flex: 0 0 17.04%;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -476,7 +489,7 @@ function close() {
 }
 
 .skill-path-panel__col--right {
-  flex: 0 0 min(22%, 300px);
+  flex: 0 0 28.94%;
   display: flex;
   flex-direction: column;
   gap: 8px;
