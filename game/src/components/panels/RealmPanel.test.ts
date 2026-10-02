@@ -157,4 +157,5 @@ describe('RealmPanel', () => {
 
     mounted.unmount()
   })
+
 })

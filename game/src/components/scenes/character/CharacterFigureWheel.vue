@@ -7,7 +7,8 @@ import PlayerPortrait from '@/components/common/PlayerPortrait.vue'
 import { formatNumber } from '@/core/format/NumberFormatter'
 import { ELEMENT_LABELS, ELEMENT_COLOR_VARS, ELEMENT_ORDER } from '@/core/element/ElementLabels'
 import { getActiveWayDefinition } from '@/core/player/CultivationPathKit'
-import { getActiveElement } from '@/core/player/CultivationPathSystem'
+import { getActiveWay, getActiveElement } from '@/core/player/CultivationPathSystem'
+import { isBetaWay } from '@/core/betaScope'
 
 // figure-wheel region: the Ngu Hanh formation wheel orbiting the standing
 // figure - formation rings + pentagram + five element medallions on the
@@ -19,7 +20,17 @@ const player = usePlayerStore()
 // M5 - the active way (cultivationWay authoritative) drives the kit
 // element; getActiveWayDefinition resolves the persisted (path, way)
 // pair and fails closed on a way-less/corrupt save.
-const chosenKit = computed(() => getActiveWayDefinition(player))
+// BETA SCOPE LOCK (F-C-CONS-1): a carried dormant way (sword/body)
+// brands nothing - its declared element must not tint the aura, same
+// collapse-to-neutral as SkillPathPanel.wayIdentity. Mortal saves and
+// the beta spell_pathway are unchanged.
+const chosenKit = computed(() => {
+  const way = getActiveWay(player)
+  if (way !== undefined && !isBetaWay(way)) {
+    return undefined
+  }
+  return getActiveWayDefinition(player)
+})
 const heroElement = computed(() => getActiveElement(player) ?? chosenKit.value?.element ?? null)
 const heroDiscUrl = computed(() =>
   resolveAssetUrl(

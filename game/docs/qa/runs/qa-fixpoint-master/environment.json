@@ -1,0 +1,25 @@
+{
+  "profile": "devin-linux-worktree-node22",
+  "os": "linux",
+  "kernel": "6.8.0-1061-aws",
+  "distro": "Ubuntu 22.04 (devin-box)",
+  "tools": {
+    "node": "v22.23.3",
+    "nodePath": "/home/linuxbrew/.linuxbrew/opt/node@22",
+    "npm": "10.9.9",
+    "playwright": "1.62.1",
+    "electron": "43.4.1",
+    "python": "3.x",
+    "git": "system"
+  },
+  "lockfileHash": "7657c53ca58d3ea6",
+  "nodeModules": "worktree symlink -> /home/ubuntu/repos/tutienidle/game/node_modules (shared install, refreshed 2026-09-30 for electron-updater)",
+  "browsers": { "chromium": "playwright-bundled" },
+  "timeAuthority": "system clock (UTC)",
+  "capabilities": {
+    "headless_browser": true,
+    "electron_display": "headless via xvfb if available; electron specs run under playwright.electron.config.ts",
+    "network": "restricted (git + npm registry reachable)"
+  },
+  "notes": "Baseline verify runs under node@22 PATH export. Playwright e2e uses playwright.beta.config.ts for beta specs."
+}

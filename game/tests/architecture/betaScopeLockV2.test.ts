@@ -236,6 +236,7 @@ describe('beta scope v2 - enemy roster authority', () => {
 
 describe('beta scope v2 - recipe family allow-list', () => {
   it('enables exactly the five beta pill families', () => {
+    // thong_mach_dan is live: the meridian chapter consumes it.
     expect([...BETA_ENABLED_RECIPE_FAMILIES].sort()).toEqual([
       'hoi_linh_dan',
       'khai_linh_dan',
@@ -264,9 +265,9 @@ describe('beta scope v2 - recipe family allow-list', () => {
     expect(betaRecipeFamilyOfId('tu_linh_dan')).toBe('tu_linh_dan')
     expect(betaRecipeFamilyOfId('tu_linh_dan_qi_refining')).toBe('tu_linh_dan')
     expect(betaRecipeFamilyOfId('alchemy_tu_linh_dan_qi_refining')).toBe('tu_linh_dan')
+    expect(betaRecipeFamilyOfId('alchemy_truc_co_dan')).toBe('truc_co_dan')
     expect(betaRecipeFamilyOfId('alchemy_thong_mach_dan')).toBe('thong_mach_dan')
     expect(betaRecipeFamilyOfId('thong_mach_dan')).toBe('thong_mach_dan')
-    expect(betaRecipeFamilyOfId('alchemy_truc_co_dan')).toBe('truc_co_dan')
   })
 
   it('fails closed on recipe ids outside the enabled families', () => {

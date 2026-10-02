@@ -1,0 +1,37 @@
+=== MUTANT ec1 applied ===
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+ ❯ tests/architecture/betaEconomyCensus.test.ts (6 tests | 1 failed) 16ms
+     × every material consumed by a beta-realm purpose sink has a live beta source or an exemption 8ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/architecture/betaEconomyCensus.test.ts > sec.17 beta economy census - no orphan source, no orphan sink > every material consumed by a beta-realm purpose sink has a live beta source or an exemption
+AssertionError: expected [ Array(1) ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   "unproducible_x9 (sinks: recipe:alchemy_truc_co_dan:special)",
++ ]
+
+ ❯ tests/architecture/betaEconomyCensus.test.ts:295:21
+    293|       }
+    294|     }
+    295|     expect(orphans).toEqual([])
+       |                     ^
+    296|   })
+    297|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 5 passed (6)
+   Start at  18:03:45
+   Duration  849ms (transform 551ms, setup 403ms, import 246ms, tests 16ms, environment 0ms)
+
+EXIT=1

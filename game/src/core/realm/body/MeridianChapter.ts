@@ -182,6 +182,21 @@ export const meridianChapter: ModifierBodyChapter = {
         issues.push(
           `meridian '${id}' da mo nhung page '${meridian.pageRealmId}' chua mo khoa o realm '${player.realmId}'`,
         )
+        continue
+      }
+      // F-TC15-MERIDIAN-PACING - replay the invest gate's in-page
+      // realmLevel pacing: inside the meridian's own page realm, an
+      // opening requires realmLevel >= requiredRealmLevel (leaving the
+      // page removes the pace). A persisted opening the writer could
+      // not produce is incoherent.
+      if (
+        meridian &&
+        player.realmId === meridian.pageRealmId &&
+        player.realmLevel < meridian.requiredRealmLevel
+      ) {
+        issues.push(
+          `meridian '${id}' da mo tai realmLevel ${player.realmLevel} thap hon moc ${meridian.requiredRealmLevel} trong page '${meridian.pageRealmId}'`,
+        )
       }
     }
 

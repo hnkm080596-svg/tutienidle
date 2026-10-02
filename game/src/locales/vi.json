@@ -1543,7 +1543,8 @@
         "cap": "Chỉ số liên quan đã đạt trần cảnh giới.",
         "material_pill": "Đan dược này không uống trực tiếp — nó được tiêu qua hệ thống riêng.",
         "in_battle": "Đan dược cộng chỉ số không dùng được giữa trận.",
-        "fallback": "Không thể dùng đan dược."
+        "fallback": "Không thể dùng đan dược.",
+        "scope_hidden": "Đan dược này chưa mở trong phạm vi beta — hiệu ứng của nó không áp dụng."
       }
     },
     "filter": {
@@ -1605,7 +1606,19 @@
   "save": {
     "conflict": "Save đã thay đổi ở một phiên khác.",
     "createFailed": "Tạo nhân vật thất bại — khởi tạo không hoàn tất.",
-    "characterDeleted": "Nhân vật đã bị xoá trên máy chủ — không thể tiếp tục phiên này."
+    "characterDeleted": "Nhân vật đã bị xoá trên máy chủ — không thể tiếp tục phiên này.",
+    "betaUnsupported": {
+      "realm_beyond_release": "Bản lưu này đã vượt quá phạm vi beta (cảnh giới cao hơn) — phần tiến trình ấy sẽ nằm im, không ảnh hưởng gì.",
+      "way_out_of_scope": "Bản lưu mang con đường tu luyện ngoài phạm vi beta — hệ thống ấy sẽ nằm im, không ảnh hưởng gì.",
+      "hidden_progression_state": "Bản lưu mang tiến trình ẩn — nội dung ẩn chưa mở trong beta, sẽ nằm im an toàn.",
+      "companion_owned": "Bản lưu có bạn đồng hành — tính năng chưa mở trong beta, họ sẽ nằm im an toàn.",
+      "artifact_owned": "Bản lưu có pháp bảo — tính năng chưa mở trong beta, sẽ nằm im an toàn.",
+      "formation_loadout": "Bản lưu mang trận pháp — tính năng chưa mở trong beta, sẽ nằm im an toàn.",
+      "manual_workforce_state": "Bản lưu mang nhân công Chiêu Hiền Quán — tính năng chưa mở trong beta, sẽ nằm im an toàn.",
+      "dormant_alchemy_job": "Bản lưu mang lò luyện đan thuộc dòng đan chưa mở trong beta — nó sẽ nằm im an toàn.",
+      "dormant_decompose_state": "Bản lưu mang phân giải đài đang vận hành — tính năng chưa mở trong beta, sẽ nằm im an toàn.",
+      "dormant_talent_state": "Bản lưu mang thiên phú ngoài phạm vi beta — nó sẽ nằm im, không ảnh hưởng gì."
+    }
   },
   "hidden": {
     "mortal": {
@@ -1889,5 +1902,10 @@
       "retry": "Thử cài lại",
       "later": "Để sau"
     }
+  },
+  "betaComplete": {
+    "title": "Hành Trình Beta Hoàn Tất",
+    "body": "Hung Giao Sung đã ngã xuống — đạo hữu đã chinh phục toàn bộ nội dung beta: Phàm Nhân, Luyện Khí, Trúc Cơ. Cảm ơn đã đồng hành.",
+    "continue": "Tiếp Tục Tu Luyện"
   }
 }

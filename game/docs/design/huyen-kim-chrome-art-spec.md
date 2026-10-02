@@ -1,4 +1,6 @@
-# Huyền Kim Sơn Thủy — UI chrome drawing spec (cho Minh vẽ)
+# Huyền Kim Sơn Thủy — UI chrome drawing spec
+
+> **⟦OWNER: CODEX được gen / MINH vẽ cũng được⟧** Đây là LOẠI DUY NHẤT Codex được generate: chrome/static UI (frames, panels, buttons, dividers, decorative). Mọi art khác (enemy, icon, character, spritesheet, VFX) = Minh — xem `huyen-kim-art-master-list.md` §SCOPE BOUNDARY.
 
 Nguồn slot duy nhất: `game/src/ui/huyen-kim-chrome.json`. Mỗi slot cần **1 PNG sheet** (hoặc 2: `@1x` + `@2x` nếu muốn sắc nét retina). File đặt tại `game/public/assets/ui/huyen-kim/<id>@1x.png` và `<id>@2x.png` (2x gấp đôi kích thước 1x). Khi file vào, coordinator flip `status: pending → ready` trong manifest — không cần sửa code.
 

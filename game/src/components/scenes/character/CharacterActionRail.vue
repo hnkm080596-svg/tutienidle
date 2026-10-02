@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '@/stores/player'
 import { useUiStore } from '@/stores/ui'
 import { isActivePath } from '@/core/player/CultivationPathSystem'
+import { isScopeHidden } from '@/core/betaScope'
 
 // Action rail (footer zone): the Chi Tiet drawer toggle plus the
 // contextual Quan Khi re-entry (Kiem Tu only - the breakthrough flow
@@ -13,8 +14,13 @@ const player = usePlayerStore()
 const ui = useUiStore()
 
 // P1 - the generic authority read resolves the committed pair through
-// the catalog (fail closed on a way-less/corrupt pair).
-const showQuanKhiEntry = computed(() => isActivePath(player, 'sword'))
+// the catalog (fail closed on a way-less/corrupt pair). BETA SCOPE
+// LOCK - a carried way_out_of_scope sword save keeps the path flag
+// but the entry stays scope-hidden (the panel's editors are
+// sword-way machinery).
+const showQuanKhiEntry = computed(
+  () => isActivePath(player, 'sword') && !isScopeHidden('swordPath'),
+)
 
 function openQuanKhi() {
   ui.openStandalonePanel('quan_khi')

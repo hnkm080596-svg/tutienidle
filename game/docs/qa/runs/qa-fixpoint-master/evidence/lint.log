@@ -1,0 +1,579 @@
+
+> tien-hiep-idle@0.1.0-beta.0 lint
+> eslint .
+
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/docs/qa/runs/kiem-pho-beta-2026-09-25/evidence/probe-seams.test.ts
+  12:43  error  'unlockedOrbs' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/scripts/assets/optimize.mjs
+  16:24  error  'existsSync' is defined but never used                @typescript-eslint/no-unused-vars
+  30:7   error  'COPY_EXTENSIONS' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/scripts/operations/operations.test.mjs
+  12:3  error  'OpsError' is defined but never used       @typescript-eslint/no-unused-vars
+  19:3  error  'EDITABLE_KEYS' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/scripts/release/build-identity.test.mjs
+  6:24  error  'beforeEach' is defined but never used  @typescript-eslint/no-unused-vars
+  6:36  error  'afterEach' is defined but never used   @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/scripts/release/publish-candidate.mjs
+  58:7  error  'SHA256_HEX_RE' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/scripts/release/publish-candidate.test.mjs
+  16:3  error  'collectUploadFiles' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/scripts/release/signing-preflight.test.mjs
+  16:3  error  'readBuilderSigningConfig' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/App.wiring.test.ts
+  356:32  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  357:46  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  359:43  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  359:63  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/assets/dongFuBuildingAssets.test.ts
+  5:10  warning  'fileURLToPath' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/bundle-split.test.ts
+  14:16  warning  'dirname' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/components/common/ActionFeedbackLog.test.ts
+  28:13  warning  'root' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/components/common/ErrorScreen.test.ts
+  23:25  warning  There is more than one component in this file  vue/one-component-per-file
+  66:27  warning  There is more than one component in this file  vue/one-component-per-file
+  92:27  warning  There is more than one component in this file  vue/one-component-per-file
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/components/common/ItemCardBody.test.ts
+  21:25  warning  There is more than one component in this file  vue/one-component-per-file
+  38:25  warning  There is more than one component in this file  vue/one-component-per-file
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/components/common/OverlayPanel.vue
+  84:10  warning  Expected 1 line break after opening tag (`<button>`), but no line breaks found    vue/multiline-html-element-content-newline
+  84:11  warning  Expected 1 line break before closing tag (`</button>`), but no line breaks found  vue/multiline-html-element-content-newline
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/components/common/TabBar.vue
+  16:3  warning  Prop 'columns' requires default value to be set  vue/require-default-prop
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/components/common/TalentEntitlementModal.deadCards.test.ts
+  23:36  warning  There is more than one component in this file  vue/one-component-per-file
+  27:25  warning  There is more than one component in this file  vue/one-component-per-file
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/components/common/ToastContainer.vue
+  101:12  warning  Expected 1 line break after opening tag (`<button>`), but no line breaks found    vue/multiline-html-element-content-newline
+  101:13  warning  Expected 1 line break before closing tag (`</button>`), but no line breaks found  vue/multiline-html-element-content-newline
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/components/common/Tooltip.vue
+  189:12  warning  Expected 1 line break after opening tag (`<p>`), but no line breaks found    vue/multiline-html-element-content-newline
+  189:37  warning  Expected 1 line break before closing tag (`</p>`), but no line breaks found  vue/multiline-html-element-content-newline
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/components/common/dialogFocusAdversarial.test.ts
+   13:25  warning  There is more than one component in this file  vue/one-component-per-file
+   94:27  warning  There is more than one component in this file  vue/one-component-per-file
+  111:27  warning  There is more than one component in this file  vue/one-component-per-file
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/components/common/primitives/Chip.audio.test.ts
+  1:1  warning  Unused eslint-disable directive (no problems were reported from 'vue/one-component-per-file')
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/components/common/system/SysBar.vue
+  12:3  warning  Prop 'label' requires default value to be set  vue/require-default-prop
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/components/common/system/SysTag.vue
+  6:3  warning  Prop 'icon' requires default value to be set  vue/require-default-prop
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/components/game/DongFuCommandWheel.test.ts
+  39:36  warning  There is more than one component in this file  vue/one-component-per-file
+  45:25  warning  There is more than one component in this file  vue/one-component-per-file
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/components/game/HomeBuildingIcons.test.ts
+  66:36  warning  There is more than one component in this file  vue/one-component-per-file
+  83:25  warning  There is more than one component in this file  vue/one-component-per-file
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/components/game/PresentationTransitionOverlay.test.ts
+   21:28  warning  Unexpected any. Specify a different type       @typescript-eslint/no-explicit-any
+   22:27  warning  There is more than one component in this file  vue/one-component-per-file
+  100:28  warning  Unexpected any. Specify a different type       @typescript-eslint/no-explicit-any
+  101:27  warning  There is more than one component in this file  vue/one-component-per-file
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/components/game/PresentationTransitionOverlay.vue
+  15:10  warning  'computed' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  88:9   warning  'safetyTimeout' is never reassigned. Use 'const' instead                    prefer-const
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/components/game/combat/BattleLogPanel.vue
+  78:6   warning  Expected 1 line break after opening tag (`<button>`), but no line breaks found    vue/multiline-html-element-content-newline
+  78:85  warning  Expected 1 line break before closing tag (`</button>`), but no line breaks found  vue/multiline-html-element-content-newline
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/components/game/combat/hud/CombatSkillSlot.vue
+  25:3  warning  Prop 'skill' requires default value to be set            vue/require-default-prop
+  26:3  warning  Prop 'emptyLabel' requires default value to be set       vue/require-default-prop
+  31:3  warning  Prop 'displayLabel' requires default value to be set     vue/require-default-prop
+  35:3  warning  Prop 'displayIcon' requires default value to be set      vue/require-default-prop
+  47:3  warning  Prop 'castRemaining' requires default value to be set    vue/require-default-prop
+  48:3  warning  Prop 'castTotal' requires default value to be set        vue/require-default-prop
+  64:3  warning  Prop 'tooltipOverride' requires default value to be set  vue/require-default-prop
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/components/panels/CharacterDetailCard.vue
+  47:8  warning  Expected 1 line break after opening tag (`<button>`), but no line breaks found    vue/multiline-html-element-content-newline
+  47:9  warning  Expected 1 line break before closing tag (`</button>`), but no line breaks found  vue/multiline-html-element-content-newline
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/components/panels/CharacterPanel.vue
+  287:12  warning  Expected 1 line break after opening tag (`<button>`), but no line breaks found    vue/multiline-html-element-content-newline
+  287:55  warning  Expected 1 line break before closing tag (`</button>`), but no line breaks found  vue/multiline-html-element-content-newline
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/components/panels/EquipmentPaperdoll.vue
+  21:7   warning  'player' is assigned a value but never used. Allowed unused vars must match /^_/u     @typescript-eslint/no-unused-vars
+  22:23  warning  'bumpState' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/components/panels/InventorySort.test.ts
+  36:36  warning  There is more than one component in this file  vue/one-component-per-file
+  47:25  warning  There is more than one component in this file  vue/one-component-per-file
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/components/panels/MaterialBagFilter.test.ts
+  137:36  warning  There is more than one component in this file  vue/one-component-per-file
+  143:25  warning  There is more than one component in this file  vue/one-component-per-file
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/components/panels/ProductionPanel.vue
+  159:42  warning  'level' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/components/panels/SettingsPanel.test.ts
+   21:27  warning  There is more than one component in this file  vue/one-component-per-file
+   60:27  warning  There is more than one component in this file  vue/one-component-per-file
+  116:27  warning  There is more than one component in this file  vue/one-component-per-file
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/components/panels/StageSelectPanel.vue
+  375:12  warning  Expected 1 line break after opening tag (`<Chip>`), but no line breaks found    vue/multiline-html-element-content-newline
+  375:59  warning  Expected 1 line break before closing tag (`</chip>`), but no line breaks found  vue/multiline-html-element-content-newline
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/components/panels/bag-sections/EquipmentBagSection.vue
+  36:23  warning  'bumpState' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/components/panels/equipment-hall/EnhanceTab.test.ts
+  5:21  warning  'beforeEach' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/components/panels/skill-path/NodeInspector.test.ts
+   63:25  warning  There is more than one component in this file  vue/one-component-per-file
+  198:25  warning  There is more than one component in this file  vue/one-component-per-file
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/components/panels/skill-path/NodeInspector.vue
+  315:16  warning  Expected 1 line break before closing tag (`</div>`), but 2 line breaks found  vue/multiline-html-element-content-newline
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/components/panels/skill-path/NodeTreePanel.vue
+  29:10  warning  'useTurnBattleInfo' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/components/panels/worker-lodge/DuyenPhanTab.vue
+  141:8   warning  Expected 1 line break after opening tag (`<h4>`), but no line breaks found    vue/multiline-html-element-content-newline
+  141:44  warning  Expected 1 line break before closing tag (`</h4>`), but no line breaks found  vue/multiline-html-element-content-newline
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/composables/uiScale.test.ts
+  2:46  warning  'applyUiScale' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/composables/useAppLifecycle.test.ts
+  684:29  warning  There is more than one component in this file  vue/one-component-per-file
+  736:27  warning  There is more than one component in this file  vue/one-component-per-file
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/composables/useBagFilter.ts
+  4:10  warning  'PILL_FAMILIES' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/composables/useBagGridLayout.test.ts
+   58:25  warning  There is more than one component in this file                                    vue/one-component-per-file
+  194:11  warning  'show' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  199:27  warning  There is more than one component in this file                                    vue/one-component-per-file
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/composables/useCombatPause.test.ts
+  32:81  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  59:65  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/composables/useUpdates.test.ts
+  162:11  warning  'updates' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/core/battle/ActionTargetingSystem.ts
+  29:10  error  'compareBySelection' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/core/battle/turn/CombatAnimationRuntime.test.ts
+  436:30  error  'player' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  813:30  error  'player' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/core/battle/turn/TurnBattleSystem.appliesBuffUnknownId.qa.test.ts
+  2:33  error  'TurnBattle' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/core/battle/turn/TurnBattleSystem.batTu.test.ts
+    7:10  error  'BUFF_REGISTRY' is defined but never used. Allowed unused vars must match /^_/u     @typescript-eslint/no-unused-vars
+  261:21  error  'runtime' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/core/battle/turn/TurnBattleSystem.contract.test.ts
+  1009:39  error  'extraEnemies' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/core/battle/turn/TurnBattleSystem.determinism.test.ts
+  14:36  error  'CombatTraceExport' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/core/battle/turn/TurnBattleSystem.detonate.test.ts
+  170:49  error  'playerEntity' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  202:49  error  'playerEntity' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/core/battle/turn/TurnBattleSystem.skillPlan.test.ts
+  16:15  error  'CombatOperationResult' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/core/battle/turn/TurnBattleSystem.ungTreR4.test.ts
+  110:30  error  'enemyP' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/core/battle/turn/TurnSkillExecution.test.ts
+  157:21  error  'playerParticipant' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/core/buff2/BuffLifecycle.test.ts
+  9:15  error  'BuffModifierPayload' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/core/buff2/BuffPeriodicResolver.ts
+  39:15  error  'BuffModifier' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  62:3   error  'requestId' is defined but never used. Allowed unused args must match /^_/u     @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/core/buff2/BuffQuery.ts
+  10:3  error  'BuffInstanceId' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/core/buff2/BuffRegistry.test.ts
+  5:3  error  'makeTestDamageProfiles' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/core/combat/CombatSystem.hoThe.test.ts
+  62:50  error  's' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/core/element/WuxingRelations.test.ts
+  3:10  error  'KHAC_OVERCOMES' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/core/equipment/EquipmentSystem.ts
+  20:3   error  'getSpiritStoneMaterialIdForRealmTier' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  22:10  error  'getRealmTier' is defined but never used. Allowed unused vars must match /^_/u                          @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/core/game/GameManager.ancientBeastTrial.test.ts
+  171:11  error  'randomSpy' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/core/game/GameManager.battleTeardown.test.ts
+  1:32  error  'vi' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/core/game/GameManager.ngoDaoReaction.test.ts
+  69:10  error  'popCompanionDefinition' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/core/game/GameManagerCompanionOps.test.ts
+  186:22  error  'player' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/core/game/GameManagerProgressionOps.ts
+  32:10  error  'isHiddenSwordPathway' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/core/game/GameManagerSaveRestore.boundary.test.ts
+  474:11  error  'player' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  503:11  error  'player' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/core/game/GameManagerTurnBattleOps.presentationReceipt.test.ts
+  480:9  error  'completes' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/core/player/CultivationPathRegistry.ts
+  18:15  error  'ElementType' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/core/production/ProductionSystem.test.ts
+   24:10  error  'SPIRIT_STONE_MATERIAL' is defined but never used. Allowed unused vars must match /^_/u           @typescript-eslint/no-unused-vars
+   37:3   error  'PRODUCTION_OFFLINE_CAP_SECONDS' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  622:13  error  'bag' is assigned a value but never used. Allowed unused vars must match /^_/u                    @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/core/progression/NodeSystem.cores.test.ts
+   9:3  error  'getNodeLevel' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  11:3  error  'purchaseNode' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/core/progression/NodeSystem.test.ts
+  393:11  error  'registry' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  722:13  error  'registry' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/core/progression/NodeSystem.ts
+  6:10  error  'hasStaticPathCapability' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/core/reaction/ReactionBoard.ts
+  20:7  error  'ELEMENTS' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/core/reaction/ReactionCandidate.test.ts
+  6:15  error  'CombatEntityId' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/core/reaction/ReactionOperations.ts
+  47:30  error  'StackExpr' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/core/reaction/ReactionPayoff.noRecursion.test.ts
+  15:8  error  'ReactionTestWorld' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/core/reaction/ReactionRegistry.test.ts
+   6:15  error  'ReactionDefinition' is defined but never used. Allowed unused vars must match /^_/u     @typescript-eslint/no-unused-vars
+  12:3   error  'TEST_ELEMENT_BUFF_IDS' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/core/reaction/ReactionSnapshot.test.ts
+    5:15  error  'ElementType' is defined but never used. Allowed unused vars must match /^_/u             @typescript-eslint/no-unused-vars
+    8:3   error  'buildConsumeOperations' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+   10:3   error  'resolveCandidate' is defined but never used. Allowed unused vars must match /^_/u        @typescript-eslint/no-unused-vars
+   13:15  error  'ReactionBoard' is defined but never used. Allowed unused vars must match /^_/u           @typescript-eslint/no-unused-vars
+   19:3   error  'TEST_ELEMENT_BUFF_IDS' is defined but never used. Allowed unused vars must match /^_/u   @typescript-eslint/no-unused-vars
+  136:22  error  'board' is assigned a value but never used. Allowed unused vars must match /^_/u          @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/core/reaction/testing/ReactionTestFixtures.ts
+  57:10  error  'ELEMENTAL_REACTION_CAPABILITY' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/core/realm/body/BodyRefinementChapter.test.ts
+  11:3  error  'isTierRequiredRealmLevelMet' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/core/realm/hidden/HiddenLineage.ts
+  13:3  error  'HIDDEN_BODY_REALMS' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/core/simulation/BattleMetrics.test.ts
+  16:15  error  'PlayerData' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/core/simulation/BattleMetrics.ts
+  533:12  error  'gameManager' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/core/simulation/BattleSimulation.determinism.test.ts
+  5:15  error  'PlayerData' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/core/skilldef/CastSnapshot.ts
+   9:15  error  'SkillProgressionState' is defined but never used. Allowed unused vars must match /^_/u    @typescript-eslint/no-unused-vars
+  10:15  error  'SkillCombatRuntimeState' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/core/skilldef/SkillCastCommit.test.ts
+  4:15  error  'SkillId' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/core/skilldef/SkillExecutor.test.ts
+  3:33  error  'CombatEntityId' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  7:3   error  'ENEMY_B' is defined but never used. Allowed unused vars must match /^_/u         @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/core/skilldef/SkillExecutor.testkit.ts
+  503:15  error  'id' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/core/talent/TalentEffects.ts
+  3:35  error  'getTalentLevel' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/data/drop/HiddenMaterialChannels.test.ts
+  25:3  warning  'hiddenGrottoChannels' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/data/enemy/Enemies.ts
+  1:10  warning  'defineEnemy' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/data/materials/materials.ts
+  3:15  warning  'ProfessionMaterialMeta' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/data/progression/KiemTuNodes.ts
+  29:10  warning  'stat' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/data/skill/KiemPhoOrbs.test.ts
+  3:62  warning  'OrbId' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/game/scenes/AssetLoaderScene.test.ts
+  2:32  warning  'vi' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/game/scenes/CombatScene.combatAnimations.test.ts
+  779:11  warning  'standbyKey' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/game/scenes/CombatScene.enemyScale.test.ts
+  24:11  warning  'SizeRecordingRect' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  51:17  warning  Unexpected any. Specify a different type                                             @typescript-eslint/no-explicit-any
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/game/scenes/CombatScene.lifecycle.test.ts
+  52:22  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/game/scenes/CombatScene.playerMotion.test.ts
+  78:20  warning  'player' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  78:28  warning  'enemy' is assigned a value but never used. Allowed unused vars must match /^_/u   @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/game/scenes/CombatScene.positionSmoothing.test.ts
+  21:23  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  23:16  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/game/scenes/CombatScene.spawnVfx.test.ts
+  9:8  warning  'BattleGridProjection' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/game/scenes/CombatScene.ts
+   15:3   warning  'BattleEndEvent' is defined but never used. Allowed unused vars must match /^_/u              @typescript-eslint/no-unused-vars
+   25:3   warning  'GRID_COLUMN_COUNT' is defined but never used. Allowed unused vars must match /^_/u           @typescript-eslint/no-unused-vars
+   26:3   warning  'VISIBLE_MAX_COLUMN' is defined but never used. Allowed unused vars must match /^_/u          @typescript-eslint/no-unused-vars
+   60:3   warning  'GOURD_MOUTH_ANCHOR' is defined but never used. Allowed unused vars must match /^_/u          @typescript-eslint/no-unused-vars
+   61:3   warning  'GOURD_PLACEHOLDER_SIZE' is defined but never used. Allowed unused vars must match /^_/u      @typescript-eslint/no-unused-vars
+   63:3   warning  'GOURD_TEXTURE_URL' is defined but never used. Allowed unused vars must match /^_/u           @typescript-eslint/no-unused-vars
+   65:3   warning  'easeRewardProgress' is defined but never used. Allowed unused vars must match /^_/u          @typescript-eslint/no-unused-vars
+   66:3   warning  'resolveGourdMouth' is defined but never used. Allowed unused vars must match /^_/u           @typescript-eslint/no-unused-vars
+   67:3   warning  'resolveRewardControlPoint' is defined but never used. Allowed unused vars must match /^_/u   @typescript-eslint/no-unused-vars
+   68:3   warning  'rewardMoteScale' is defined but never used. Allowed unused vars must match /^_/u             @typescript-eslint/no-unused-vars
+   69:3   warning  'rewardSwirlOffset' is defined but never used. Allowed unused vars must match /^_/u           @typescript-eslint/no-unused-vars
+   74:3   warning  'DEPTH_GROUND_VFX' is defined but never used. Allowed unused vars must match /^_/u            @typescript-eslint/no-unused-vars
+   77:3   warning  'entitySpriteDepth' is defined but never used. Allowed unused vars must match /^_/u           @typescript-eslint/no-unused-vars
+   91:39  warning  'ThanhVanBackdropHandle' is defined but never used. Allowed unused vars must match /^_/u      @typescript-eslint/no-unused-vars
+  101:10  warning  'formatNumber' is defined but never used. Allowed unused vars must match /^_/u                @typescript-eslint/no-unused-vars
+  115:3   warning  'BUFF_ATTACH_COLOR' is defined but never used. Allowed unused vars must match /^_/u           @typescript-eslint/no-unused-vars
+  116:3   warning  'DEBUFF_ATTACH_COLOR' is defined but never used. Allowed unused vars must match /^_/u         @typescript-eslint/no-unused-vars
+  117:3   warning  'MIN_SEGMENT_DURATION_MS' is defined but never used. Allowed unused vars must match /^_/u     @typescript-eslint/no-unused-vars
+  120:3   warning  'DOT_TEXT_FLUSH_INTERVAL_MS' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  121:3   warning  'DAMAGE_DEALT_COLOR' is defined but never used. Allowed unused vars must match /^_/u          @typescript-eslint/no-unused-vars
+  122:3   warning  'DAMAGE_TAKEN_COLOR' is defined but never used. Allowed unused vars must match /^_/u          @typescript-eslint/no-unused-vars
+  123:3   warning  'LANE_DIVIDER_COLOR' is defined but never used. Allowed unused vars must match /^_/u          @typescript-eslint/no-unused-vars
+  124:3   warning  'PERSPECTIVE_GRID_COLOR' is defined but never used. Allowed unused vars must match /^_/u      @typescript-eslint/no-unused-vars
+  125:3   warning  'PERSPECTIVE_GRID_ALPHA' is defined but never used. Allowed unused vars must match /^_/u      @typescript-eslint/no-unused-vars
+  126:3   warning  'PERSPECTIVE_BORDER_COLOR' is defined but never used. Allowed unused vars must match /^_/u    @typescript-eslint/no-unused-vars
+  127:3   warning  'PERSPECTIVE_BORDER_ALPHA' is defined but never used. Allowed unused vars must match /^_/u    @typescript-eslint/no-unused-vars
+  128:3   warning  'SHADOW_WIDTH_RATIO' is defined but never used. Allowed unused vars must match /^_/u          @typescript-eslint/no-unused-vars
+  129:3   warning  'SHADOW_HEIGHT_RATIO' is defined but never used. Allowed unused vars must match /^_/u         @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/game/scenes/MainScene.ts
+  21:7  warning  'PLAYER_ID' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/game/scenes/combat/PlayerHudLayer.test.ts
+  198:6  warning  'SceneLike' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/game/scenes/combat/PlayerHudLayer.ts
+  23:3  warning  'ENEMY_HP_BAR_HEIGHT' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/game/scenes/combat/combat-snapshot-reconcile.ts
+  16:15  warning  'SpawnVfxSnapshot' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/game/scenes/combat/combat-vfx-spawner.statusRow.test.ts
+  14:3  warning  'STATUS_MAX_PER_ROW' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/game/support/CombatPreload.ts
+  17:3  warning  'ENEMY_SOURCE_SIZE' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/main-process/UpdateService.test.ts
+  370:13  warning  'service' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  383:13  warning  'service' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/main-process/UpdateService.ts
+  31:42  warning  'UpdateInstallResult' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  41:8   warning  'UpdatePhase' is defined but never used. Allowed unused vars must match /^_/u          @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/main-process/quitFlush.test.ts
+  44:13  warning  'ipcMain' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/presentation/GamePresentationCoordinator.test.ts
+  12:3  warning  'RouteRequest' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/presentation/PhaserSceneAdapter.ts
+  221:11  warning  'onAbort' is never reassigned. Use 'const' instead  prefer-const
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/presentation/PresentationContracts.ts
+  2:3  warning  'PresentationHold' is defined but never used. Allowed unused vars must match /^_/u         @typescript-eslint/no-unused-vars
+  3:3  warning  'SessionPresentationPort' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/presentation/VueRouteAdapter.test.ts
+  5:8  warning  'VueRouteAdapter' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/presentation/VueRouteAdapter.ts
+  17:3  warning  'CoordinatorSnapshot' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/presentation/art/PlayerVisualProfiles.test.ts
+  10:15  warning  'PlayerVisualProfileId' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/presentation/assets/AssetBundleCatalog.ts
+  20:8  warning  'DongFuLayerDescriptor' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/presentation/assets/AssetBundleManager.test.ts
+  10:8   warning  'DomAudioResourceDescriptor' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  99:59  warning  'url' is defined but never used. Allowed unused args must match /^_/u                         @typescript-eslint/no-unused-vars
+  99:64  warning  'signal' is defined but never used. Allowed unused args must match /^_/u                      @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/presentation/combatRouting.test.ts
+   30:7   warning  'stats' is assigned a value but never used. Allowed unused vars must match /^_/u     @typescript-eslint/no-unused-vars
+   84:10  warning  Unexpected any. Specify a different type                                             @typescript-eslint/no-explicit-any
+  119:43  warning  Unexpected any. Specify a different type                                             @typescript-eslint/no-explicit-any
+  128:10  warning  Unexpected any. Specify a different type                                             @typescript-eslint/no-explicit-any
+  178:34  warning  Unexpected any. Specify a different type                                             @typescript-eslint/no-explicit-any
+  184:10  warning  Unexpected any. Specify a different type                                             @typescript-eslint/no-explicit-any
+  214:11  warning  'session2' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  228:34  warning  Unexpected any. Specify a different type                                             @typescript-eslint/no-explicit-any
+  234:10  warning  Unexpected any. Specify a different type                                             @typescript-eslint/no-explicit-any
+  271:34  warning  Unexpected any. Specify a different type                                             @typescript-eslint/no-explicit-any
+  276:32  warning  Unexpected any. Specify a different type                                             @typescript-eslint/no-explicit-any
+  282:10  warning  Unexpected any. Specify a different type                                             @typescript-eslint/no-explicit-any
+  315:34  warning  Unexpected any. Specify a different type                                             @typescript-eslint/no-explicit-any
+  321:10  warning  Unexpected any. Specify a different type                                             @typescript-eslint/no-explicit-any
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/presentation/createGamePresentation.test.ts
+  245:11  warning  'presentation' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  266:11  warning  'presentation' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/presentation/presentationOwnership.test.ts
+  131:11  warning  'violations' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/presentation/sessionHandoff.test.ts
+  141:10  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  180:10  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  222:10  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  334:10  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  451:10  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/presentation/tribulationRouting.test.ts
+   76:10  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  110:10  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  121:10  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  179:10  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  188:10  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  205:10  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  246:10  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  281:10  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  315:10  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  441:10  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  471:10  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  477:12  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/services/character/SupabaseCharacterCreationService.ts
+  6:45  warning  'RemoteCharacterMetadata' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/services/cloudSave/PendingSaveJournal.test.ts
+  18:3  warning  'parseAckedSaveEnvelope' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/services/cloudSave/durableJournal.test.ts
+   35:7   warning  'BINDING3' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  783:11  warning  'calls' is assigned a value but never used. Allowed unused vars must match /^_/u     @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/services/save/SaveMigration.test.ts
+  77:11  warning  'raw' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/services/save/SaveSystem.ts
+  4:3  warning  'AlchemyJobSave' is defined but never used. Allowed unused vars must match /^_/u           @typescript-eslint/no-unused-vars
+  7:3  warning  'ProductionCycleSave' is defined but never used. Allowed unused vars must match /^_/u      @typescript-eslint/no-unused-vars
+  8:3  warning  'ProductionSiteStateSave' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/src/services/session/OnlineSessionController.test.ts
+  254:25  warning  'pauses' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/tests/architecture/audioBindingWiring.test.ts
+    22:10  error  'scriptBlockSpansOf' is defined but never used   @typescript-eslint/no-unused-vars
+    22:30  error  'markupCommentRanges' is defined but never used  @typescript-eslint/no-unused-vars
+  1979:15  error  'decodeSeg' is assigned a value but never used   @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/tests/architecture/baseStatsWriteAuthority.test.ts
+   315:7   error  'out' is never reassigned. Use 'const' instead  prefer-const
+  4689:15  error  'cbs' is never reassigned. Use 'const' instead  prefer-const
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/tests/architecture/impactMarkers.test.ts
+  16:23  error  'rmSync' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/tests/architecture/systemThemeBoundary.test.ts
+  31:16  error  'relative' is defined but never used  @typescript-eslint/no-unused-vars
+  31:26  error  'sep' is defined but never used       @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/tests/architecture/tribulationQueryPurity.test.ts
+  33:7  error  'open' is never reassigned. Use 'const' instead  prefer-const
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/tests/e2e/beta-authority.spec.ts
+  20:3  error  'rpc' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/tests/e2e/sound-system.spec.ts
+  3:3  error  'bootToGuestHome' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/tests/integration/supabase/authority.spec.ts
+   31:3   error  'uniqueName' is defined but never used      @typescript-eslint/no-unused-vars
+  473:64  error  Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+  495:27  error  '_drop' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/tests/integration/supabase/fixture.ts
+   45:9   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   68:15  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  297:12  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game/vitest.lab.config.mts
+  1:1  error  Do not use a triple slash reference for vitest/config, use `import` style instead  @typescript-eslint/triple-slash-reference
+
+✖ 280 problems (92 errors, 188 warnings)
+  3 errors and 18 warnings potentially fixable with the `--fix` option.
+
+LINT_EXIT=1

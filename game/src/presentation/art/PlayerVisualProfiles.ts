@@ -22,6 +22,7 @@ export { resolvePlayerVisualProfileId } from '@/core/player/PlayerVisualForm'
 import type { PlayerVisualProfileId } from '@/core/player/PlayerVisualForm'
 import type { CultivationWayId } from '@/core/player/CultivationPathKit'
 import type { ArtExtent } from '@/presentation/art/CombatEntityPresentation'
+import { isBetaWay } from '@/core/betaScope'
 
 /** Điểm bám VFX chuẩn hoá trên ảnh nguồn (plan §5.1). */
 export type PlayerBodyAnchorId =
@@ -232,13 +233,26 @@ export function getCultivateTexture(
   url: string
   sourceSize: { w: number; h: number }
 } {
+  const mortal = PLAYER_VISUAL_PROFILES.mortal
+
+  // BETA SCOPE LOCK - a carried way_out_of_scope save keeps its way
+  // record but must not repaint the live cultivate figure: non-beta
+  // ways collapse to mortal BEFORE the profile lookup, so a dormant
+  // profile id can never reach its dedicated art.
+  if (way !== undefined && !isBetaWay(way)) {
+    return {
+      key: mortal.cultivateTextureKey!,
+      url: mortal.cultivateTextureUrl!,
+      sourceSize: { ...mortal.cultivateSourceSize! },
+    }
+  }
+
+  // The override catalog only carries hidden-way art.
   const override = way !== undefined ? CULTIVATE_TEXTURE_OVERRIDES[way] : undefined
 
   if (override) {
     return { key: override.key, url: override.url, sourceSize: { ...override.sourceSize } }
   }
-
-  const mortal = PLAYER_VISUAL_PROFILES.mortal
 
   return {
     key: profile.cultivateTextureKey ?? mortal.cultivateTextureKey!,

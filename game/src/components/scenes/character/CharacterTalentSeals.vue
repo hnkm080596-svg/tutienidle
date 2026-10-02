@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '@/stores/player'
 import { getTalentDefinition } from '@/data/talent/Talents'
 import { TALENT_RARITY_LABELS, type TalentDefinition, type TalentRarity } from '@/core/talent/Talent'
+import { isBetaTalentId } from '@/core/betaScope'
 import SysTag from '@/components/common/system/SysTag.vue'
 import CharacterSectionPlaque from './CharacterSectionPlaque.vue'
 
@@ -15,7 +16,10 @@ const player = usePlayerStore()
 const selectedTalents = computed(() =>
   player.selectedTalentIds
     .map((talentId) => getTalentDefinition(talentId))
-    .filter((talent): talent is TalentDefinition => talent !== undefined),
+    .filter(
+      (talent): talent is TalentDefinition =>
+        talent !== undefined && isBetaTalentId(talent.id),
+    ),
 )
 
 // M-UI-SYSTEM - talent rarity tag -> SysTag tone: the tier is carried by

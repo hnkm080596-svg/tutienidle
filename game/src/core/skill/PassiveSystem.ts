@@ -7,6 +7,7 @@ import { addStack } from '../stats/StatCalculator'
 import type { StatModifier } from '../stats/StatCalculator'
 import type { PlayerData } from '../player/Player'
 import { getPassiveStackCarry } from '../talent/TalentEffects'
+import { betaSkillAdmitted } from '../betaScopeSkillDomain'
 
 export interface CombatEventPayload {
   type: string
@@ -128,6 +129,13 @@ export class PassiveSystem {
     }
 
     for (const skill of this.skillManager.getPassiveSkills()) {
+      // F-TC8-6: this channel is the passive runtime - a skill outside
+      // the admitted beta roster stays inert here exactly like the
+      // write seams (learn/upgrade/respec) that already gate it.
+      if (!betaSkillAdmitted(skill.id)) {
+        continue
+      }
+
       // Core Loop Foundation checklist (Muc SKILL) - doc qua
       // getEffectiveSkill() de ton trong Specialization da chon
       // (co the doi han passiveTrigger/passiveModifiers).
@@ -186,7 +194,7 @@ export class PassiveSystem {
 
     const skill = this.skillManager.get(carry.passiveSkillId)
 
-    if (!skill) {
+    if (!skill || !betaSkillAdmitted(skill.id)) {
       return
     }
 
@@ -229,7 +237,7 @@ export class PassiveSystem {
 
     const skill = this.skillManager.get(carry.passiveSkillId)
 
-    if (!skill) {
+    if (!skill || !betaSkillAdmitted(skill.id)) {
       return
     }
 
@@ -259,6 +267,10 @@ export class PassiveSystem {
    */
   tick(deltaSeconds: number) {
     for (const skill of this.skillManager.getPassiveSkills()) {
+      if (!betaSkillAdmitted(skill.id)) {
+        continue
+      }
+
       const effective = this.skillSystem.getEffectiveSkill(skill)
 
       if (effective.passiveTrigger !== 'per_second') {

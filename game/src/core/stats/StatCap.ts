@@ -1,4 +1,5 @@
 import { getRealmIndex } from '../realm/realmSystem'
+import { isBetaFeature } from '../betaScope'
 
 // PLAN HOAN CHINH muc 3 - tran cua MOI Main Stat. CO Y KHONG dung
 // RealmData.attributeCap - field do tung la tran cong don rieng cho
@@ -57,8 +58,11 @@ interface EffectiveCapPlayer {
  * may round differently.
  */
 export function getEffectiveMainStatCap(player: EffectiveCapPlayer): number {
-  const realmIds = player.hiddenPerfection?.completedHiddenBodyRealmIds
-  const completed = countCompletedHiddenBodyRealms(realmIds)
+  // The hidden-body record on a carried save stays data while the hidden
+  // domain is dormant - the cap bonus feeds only when the domain is on.
+  const completed = isBetaFeature('hiddenContent')
+    ? countCompletedHiddenBodyRealms(player.hiddenPerfection?.completedHiddenBodyRealmIds)
+    : 0
   return Math.floor(getMainStatCap(player.realmId) * (1 + completed * HIDDEN_BODY_CAP_BONUS_PER_REALM))
 }
 

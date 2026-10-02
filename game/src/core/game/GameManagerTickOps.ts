@@ -8,7 +8,7 @@ import type { PillRegistry } from '../pill/PillRegistry'
 import type { PlayerData } from '../player/Player'
 import type { DecomposeSystem, DecomposeOutputEntry } from '../production/DecomposeSystem'
 import type { ProductionSystem } from '../production/ProductionSystem'
-import { resolveProductionWorkerCapacity } from '../production/WorkerCapacity'
+import { betaEffectiveWorkerCapacity, resolveProductionWorkerCapacity } from '../production/WorkerCapacity'
 import type { QuestManager } from '../quest/QuestManager'
 import type { QuestRegistry } from '../quest/QuestRegistry'
 import type { QuestSystem } from '../quest/QuestSystem'
@@ -155,9 +155,12 @@ export class GameManagerTickOps {
       // restore path uses (GameManagerSaveRestore). Capacity is
       // re-supplied every tick so CHQ build/upgrade takes effect without
       // a restart, and stale restored workers clamp down.
-      this.deps.decomposeSystem.updateCapacity(activePlayer.autoWorkerCapacity ?? 0)
-      const productionCapacity = resolveProductionWorkerCapacity(
+      const effectiveWorkerCapacity = betaEffectiveWorkerCapacity(
         activePlayer.autoWorkerCapacity ?? 0,
+      )
+      this.deps.decomposeSystem.updateCapacity(effectiveWorkerCapacity)
+      const productionCapacity = resolveProductionWorkerCapacity(
+        effectiveWorkerCapacity,
         this.deps.decomposeSystem.getSettings().workers,
       )
 

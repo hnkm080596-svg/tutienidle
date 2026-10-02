@@ -31,7 +31,7 @@ import type { ProgressionNode } from '../progression/ProgressionNode'
 import type { PartyFormationSlot } from './PartyFormation'
 import { DEFAULT_PARTY_FORMATION } from './PartyFormation'
 import { resolvePartyFormation } from './FormationPlacement'
-import { isScopeHidden } from '../betaScope'
+import { isBetaWay, isScopeHidden } from '../betaScope'
 import type { CompanionDefinition, CompanionInstance } from '../../data/companion/Companions'
 import { companionToCombatEntity } from '../companion/CompanionCombat'
 import { resolveCompanionSkillKit } from '../companion/CompanionProgression'
@@ -222,16 +222,25 @@ export function resolveCombatBuild(
   // The node registry is read ONCE here; the provider thunk closes over the
   // snapshot so no registry read can occur after resolve returns.
   const nodes = deps.getProgressionNodes()
-  const roles = runtime ? resolveCombatSkillRoles(source, runtime) : undefined
-  const statDomains = runtime?.resolveStatDomains(source)
+  // BETA SCOPE LOCK v2 - a way_out_of_scope save (sword/body/hidden)
+  // loads intact and still binds its dormant path runtime; combat
+  // participation is the dormant feature's ACCESS seam, gated the same
+  // as companions/formation below - roles fall back to the generic
+  // basic rather than executing the hidden kit (the rail's
+  // scope-hidden verdict and the engine must agree).
+  const activeWay = getActiveWay(source)
+  const wayAdmitted = activeWay === undefined || isBetaWay(activeWay)
+  const gatedRuntime = wayAdmitted ? runtime : undefined
+  const roles = gatedRuntime ? resolveCombatSkillRoles(source, gatedRuntime) : undefined
+  const statDomains = gatedRuntime?.resolveStatDomains(source)
   const kit: ResolvedCombatKit = {
     basic: roles?.basic ?? GENERIC_PHYSICAL_BASIC,
     special: roles?.special,
     ultimate: roles?.ultimate,
     reactivePayloads: roles?.reactivePayloads,
     statDomains,
-    buildDynamicBasic: runtime?.buildDynamicBasic
-      ? (rng) => runtime.buildDynamicBasic!(source, nodes, rng)
+    buildDynamicBasic: gatedRuntime?.buildDynamicBasic
+      ? (rng) => gatedRuntime.buildDynamicBasic!(source, nodes, rng)
       : undefined,
   }
 
@@ -243,11 +252,18 @@ export function resolveCombatBuild(
   if (roles?.maxThe !== undefined) {
     entity.maxThe = roles.maxThe
   } else if (primaryEntityOverride === undefined) {
-    entity.maxThe = runtime?.resolveMaxThe(source)
+    entity.maxThe = gatedRuntime?.resolveMaxThe(source)
   }
 
   // --- Formation + companions (M3) --------------------------------------
-  const formation = resolvePartyFormation(source)
+  // BETA SCOPE LOCK v2 sec.14 - the persisted loadout is formation-domain
+  // ACCESS: a carried/forged formationLoadout must not move the player's
+  // live grid position (kill order) or grant companion EXP while the
+  // domain is scope-hidden. Same verdict as the sibling formation buff
+  // + companion gates below; the record itself stays untouched.
+  const formation = isScopeHidden('formation')
+    ? DEFAULT_PARTY_FORMATION
+    : resolvePartyFormation(source)
 
   // Each companion mints a fresh CombatEntity per battle; a missing
   // definition OR a missing formation slot skips silently (ops parity).
@@ -325,7 +341,10 @@ export function resolveCombatBuild(
     }
   }
 
-  if (capabilities.has('spell.reaction_aura')) {
+  // BETA SCOPE LOCK v2 - the aura is hidden_spell_pathway kit content;
+  // its capability survives on a carried save, so the same wayAdmitted
+  // gate as the kit applies (never layer hidden-way buffs on allies).
+  if (wayAdmitted && capabilities.has('spell.reaction_aura')) {
     for (const ally of allies) {
       if (!ally.alive) continue
       entryBuffs.push({

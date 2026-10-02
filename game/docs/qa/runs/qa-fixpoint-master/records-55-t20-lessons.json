@@ -1,0 +1,280 @@
+{
+  "records": [
+    {
+      "kind": "lesson",
+      "body": {
+        "id": "L-TEMPORAL-COHERENCE",
+        "version": 1,
+        "supersedes": null,
+        "triggerType": "DEFECT",
+        "findingIds": [
+          "F-TC9-1"
+        ],
+        "incidentEvidenceIds": [
+          "EV-PIN-T20",
+          "EV-MUT-T20",
+          "EV-VERIFY-T20"
+        ],
+        "originatingRun": "qa-fixpoint-master",
+        "rootClass": "BOUNDARY",
+        "missedInvariantIds": [
+          "I-SF-1"
+        ],
+        "escapeReason": "timestamp claims bounded in span but never against lastSavedAt - future-dated windows pass and liveness keys only on expiry",
+        "applicability": [
+          "persisted timestamps must be bounded against lastSavedAt (appliedAt <= lastSavedAt) and live windows against authored duration"
+        ],
+        "exclusions": [],
+        "proposedProtection": [
+          "persisted timestamps must be bounded against lastSavedAt (appliedAt <= lastSavedAt) and live windows against authored duration"
+        ],
+        "promotionEvidenceIds": [],
+        "qualifiedBy": [],
+        "capabilityDelta": "RECORDED - awaiting independent qualification",
+        "status": "CAPTURED",
+        "policyVersion": null,
+        "effectiveFromRun": null,
+        "recurrenceFindingIds": [],
+        "preventionEvidenceIds": [],
+        "guidance": null
+      }
+    },
+    {
+      "kind": "lesson",
+      "body": {
+        "id": "L-CHAIN-PREFIX",
+        "version": 1,
+        "supersedes": null,
+        "triggerType": "DEFECT",
+        "findingIds": [
+          "F-TC9-2"
+        ],
+        "incidentEvidenceIds": [
+          "EV-PIN-T20",
+          "EV-MUT-T20",
+          "EV-VERIFY-T20"
+        ],
+        "originatingRun": "qa-fixpoint-master",
+        "rootClass": "BOUNDARY",
+        "missedInvariantIds": [
+          "I-SF-1"
+        ],
+        "escapeReason": "ordering claims realm-bounded per element but never sequence-bounded - skip-chain claims satisfy downstream gates",
+        "applicability": [
+          "ordered progress claims (stage clears, chain unlocks) must replay prefix coherence along the declared chain"
+        ],
+        "exclusions": [],
+        "proposedProtection": [
+          "ordered progress claims (stage clears, chain unlocks) must replay prefix coherence along the declared chain"
+        ],
+        "promotionEvidenceIds": [],
+        "qualifiedBy": [],
+        "capabilityDelta": "RECORDED - awaiting independent qualification",
+        "status": "CAPTURED",
+        "policyVersion": null,
+        "effectiveFromRun": null,
+        "recurrenceFindingIds": [],
+        "preventionEvidenceIds": [],
+        "guidance": null
+      }
+    },
+    {
+      "kind": "lesson",
+      "body": {
+        "id": "L-DERIVED-SNAPSHOT",
+        "version": 1,
+        "supersedes": null,
+        "triggerType": "DEFECT",
+        "findingIds": [
+          "F-TC9-3",
+          "F-TC9-4"
+        ],
+        "incidentEvidenceIds": [
+          "EV-PIN-T20",
+          "EV-MUT-T20",
+          "EV-VERIFY-T20"
+        ],
+        "originatingRun": "qa-fixpoint-master",
+        "rootClass": "BOUNDARY",
+        "missedInvariantIds": [
+          "I-SF-1"
+        ],
+        "escapeReason": "derived snapshots persisted verbatim and trusted at restore though every factor is authored - forged magnitude mints downstream accrual",
+        "applicability": [
+          "persisted derived values must be re-derived or bounded to the authored maximum product at the boundary"
+        ],
+        "exclusions": [],
+        "proposedProtection": [
+          "persisted derived values must be re-derived or bounded to the authored maximum product at the boundary"
+        ],
+        "promotionEvidenceIds": [],
+        "qualifiedBy": [],
+        "capabilityDelta": "RECORDED - awaiting independent qualification",
+        "status": "CAPTURED",
+        "policyVersion": null,
+        "effectiveFromRun": null,
+        "recurrenceFindingIds": [],
+        "preventionEvidenceIds": [],
+        "guidance": null
+      }
+    },
+    {
+      "kind": "lesson",
+      "body": {
+        "id": "L-OWNERSHIP-WITNESS",
+        "version": 1,
+        "supersedes": null,
+        "triggerType": "DEFECT",
+        "findingIds": [
+          "F-A11-1",
+          "F-A11-2"
+        ],
+        "incidentEvidenceIds": [
+          "EV-PIN-T20",
+          "EV-MUT-T20",
+          "EV-VERIFY-T20"
+        ],
+        "originatingRun": "qa-fixpoint-master",
+        "rootClass": "BOUNDARY",
+        "missedInvariantIds": [
+          "I-SF-1"
+        ],
+        "escapeReason": "effect-scoped accumulators written only under a capability witness persisted without requiring the witness claim",
+        "applicability": [
+          "capability-gated persisted state must require its sole capability witness (talent/ownership marker) at the boundary"
+        ],
+        "exclusions": [],
+        "proposedProtection": [
+          "capability-gated persisted state must require its sole capability witness (talent/ownership marker) at the boundary"
+        ],
+        "promotionEvidenceIds": [],
+        "qualifiedBy": [],
+        "capabilityDelta": "RECORDED - awaiting independent qualification",
+        "status": "CAPTURED",
+        "policyVersion": null,
+        "effectiveFromRun": null,
+        "recurrenceFindingIds": [],
+        "preventionEvidenceIds": [],
+        "guidance": null
+      }
+    },
+    {
+      "kind": "lesson",
+      "body": {
+        "id": "L-CURRENCY-TALLY",
+        "version": 1,
+        "supersedes": null,
+        "triggerType": "DEFECT",
+        "findingIds": [
+          "F-A11-3"
+        ],
+        "incidentEvidenceIds": [
+          "EV-PIN-T20",
+          "EV-MUT-T20",
+          "EV-VERIFY-T20"
+        ],
+        "originatingRun": "qa-fixpoint-master",
+        "rootClass": "BOUNDARY",
+        "missedInvariantIds": [
+          "I-SF-1"
+        ],
+        "escapeReason": "spendable currency counters checked non-negative only while the lifetime-minted sibling counter exists for the same slice",
+        "applicability": [
+          "spendable balances must be bounded by their lifetime-minted tally when one exists (mints pair both, spends decrement one)"
+        ],
+        "exclusions": [],
+        "proposedProtection": [
+          "spendable balances must be bounded by their lifetime-minted tally when one exists (mints pair both, spends decrement one)"
+        ],
+        "promotionEvidenceIds": [],
+        "qualifiedBy": [],
+        "capabilityDelta": "RECORDED - awaiting independent qualification",
+        "status": "CAPTURED",
+        "policyVersion": null,
+        "effectiveFromRun": null,
+        "recurrenceFindingIds": [],
+        "preventionEvidenceIds": [],
+        "guidance": null
+      }
+    },
+    {
+      "kind": "lesson",
+      "body": {
+        "id": "L-SETTLE-WINDOW-COUNT",
+        "version": 1,
+        "supersedes": null,
+        "triggerType": "DEFECT",
+        "findingIds": [
+          "F-A11-4",
+          "F-A11-5"
+        ],
+        "incidentEvidenceIds": [
+          "EV-PIN-T20",
+          "EV-MUT-T20",
+          "EV-VERIFY-T20"
+        ],
+        "originatingRun": "qa-fixpoint-master",
+        "rootClass": "BOUNDARY",
+        "missedInvariantIds": [
+          "I-SF-1"
+        ],
+        "escapeReason": "in-flight settle windows (worker lanes, alchemy jobs) accepted verbatim past authored concurrency ceilings and span ordering",
+        "applicability": [
+          "persisted in-flight jobs must respect authored slot ceilings (building level ladders) and startedAt < completesAt ordering"
+        ],
+        "exclusions": [],
+        "proposedProtection": [
+          "persisted in-flight jobs must respect authored slot ceilings (building level ladders) and startedAt < completesAt ordering"
+        ],
+        "promotionEvidenceIds": [],
+        "qualifiedBy": [],
+        "capabilityDelta": "RECORDED - awaiting independent qualification",
+        "status": "CAPTURED",
+        "policyVersion": null,
+        "effectiveFromRun": null,
+        "recurrenceFindingIds": [],
+        "preventionEvidenceIds": [],
+        "guidance": null
+      }
+    },
+    {
+      "kind": "lesson",
+      "body": {
+        "id": "L-MIRROR-COHERENCE",
+        "version": 1,
+        "supersedes": null,
+        "triggerType": "DEFECT",
+        "findingIds": [
+          "F-A11-6"
+        ],
+        "incidentEvidenceIds": [
+          "EV-PIN-T20",
+          "EV-MUT-T20",
+          "EV-VERIFY-T20"
+        ],
+        "originatingRun": "qa-fixpoint-master",
+        "rootClass": "BOUNDARY",
+        "missedInvariantIds": [
+          "I-SF-1"
+        ],
+        "escapeReason": "compat mirror fields validated as strings only while the canonical ownership slice co-exists - forged mirror entries fabricate ownership",
+        "applicability": [
+          "compat/derived mirror claims must satisfy subset coherence with the canonical write target"
+        ],
+        "exclusions": [],
+        "proposedProtection": [
+          "compat/derived mirror claims must satisfy subset coherence with the canonical write target"
+        ],
+        "promotionEvidenceIds": [],
+        "qualifiedBy": [],
+        "capabilityDelta": "RECORDED - awaiting independent qualification",
+        "status": "CAPTURED",
+        "policyVersion": null,
+        "effectiveFromRun": null,
+        "recurrenceFindingIds": [],
+        "preventionEvidenceIds": [],
+        "guidance": null
+      }
+    }
+  ]
+}

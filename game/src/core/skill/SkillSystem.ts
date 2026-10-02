@@ -9,6 +9,7 @@ import {
 } from './SkillManager'
 import { getCastLeveledSkillLevel } from './CastLeveling'
 import { isMortalPrecursorSkillId } from './MortalPrecursors'
+import { betaSkillAdmitted } from '../betaScopeSkillDomain'
 
 import type { ActionTargeting } from '../battle/CombatAction'
 import type { SkillProgressionState } from '../skilldef/SkillProgressionState'
@@ -218,6 +219,12 @@ export class SkillSystem {
     const modifiers: StatModifier[] = []
 
     for (const skill of this.manager.getPassiveSkills()) {
+      // BETA SCOPE LOCK - a learned passive owned only by a dormant way
+      // emits nothing on a carried way_out_of_scope save.
+      if (!betaSkillAdmitted(skill.id)) {
+        continue
+      }
+
       const effective = this.getEffectiveSkill(skill)
 
       for (const modifier of effective.passiveModifiers ?? []) {

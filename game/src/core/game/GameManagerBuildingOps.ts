@@ -7,7 +7,7 @@ import type { Building } from '../building/Building'
 import type { BuildingInstance } from '../building/BuildingInstance'
 import { ProductionSystem } from '../production/ProductionSystem'
 import type { DecomposeSystem } from '../production/DecomposeSystem'
-import { getWorkerCapacityForLevel, resolveProductionWorkerCapacity } from '../production/WorkerCapacity'
+import { betaEffectiveWorkerCapacity, getWorkerCapacityForLevel, resolveProductionWorkerCapacity } from '../production/WorkerCapacity'
 import { buildWorkforceView, type WorkforceView } from '../production/WorkforceView'
 import { getRealmTier } from '../realm/RealmTierMap'
 import type { PlayerData } from '../player/Player'
@@ -22,6 +22,7 @@ import {
   type BetaScopeVerdict,
   type BetaWorkerLodgeTabId,
 } from '../betaScope'
+import { isBetaBuildingSurface } from '../betaScopeSurface'
 
 export interface GameManagerBuildingOpsDeps {
   buildingRegistry: BuildingRegistry
@@ -58,6 +59,13 @@ export class GameManagerBuildingOps {
 
   /** Gate UI xây mới — delegate BuildingSystem.canBuild (§ popover). */
   canBuildBuilding(buildingId: string, player: PlayerData): boolean {
+    // BETA SCOPE LOCK - a scope-hidden building (chi_hien_quan ->
+    // manualWorkforce) fails closed at the write seam, not only at the
+    // surface read model; same rule as the {ok:false,'scope_hidden'}
+    // pattern in equipment/alchemy/workforce ops.
+    if (!isBetaBuildingSurface(buildingId)) {
+      return false
+    }
     return this.deps.buildingSystem.canBuild(
       buildingId,
       this.deps.buildingRegistry,
@@ -68,6 +76,9 @@ export class GameManagerBuildingOps {
   }
 
   buildBuilding(buildingId: string, player: PlayerData, currentTime = Date.now() / 1000) {
+    if (!isBetaBuildingSurface(buildingId)) {
+      return null
+    }
     const instance = this.deps.buildingSystem.build(
       buildingId,
       this.deps.buildingRegistry,
@@ -141,6 +152,13 @@ export class GameManagerBuildingOps {
   getWorkerAssignments(): Map<string, number> {
     const assignments = new Map<string, number>()
 
+    // BETA SCOPE LOCK v2 sec.4C - manualWorkforce is scope-hidden:
+    // persisted assignedWorkers stay inert; the allocator round-robins
+    // every site so dormant manual choices cannot starve a live site.
+    if (isScopeHidden('manualWorkforce')) {
+      return assignments
+    }
+
     for (const state of this.deps.productionSystem.getAllStates()) {
       if (state.assignedWorkers !== undefined) {
         assignments.set(state.siteId, state.assignedWorkers)
@@ -157,10 +175,17 @@ export class GameManagerBuildingOps {
    * it does not recompute the split (A7).
    */
   getWorkforceView(): WorkforceView {
+    // BETA SCOPE LOCK v2 sec.4C - while manualWorkforce is hidden the
+    // view shows the flat auto pool and censors dormant assignments
+    // (same precedent as DecomposeSystem.getSettings reporting 0).
+    const hidden = isScopeHidden('manualWorkforce')
+
     return buildWorkforceView(
-      this.deps.getActivePlayer()?.autoWorkerCapacity ?? 0,
-      this.deps.decomposeSystem.getSettings().workers,
-      this.deps.productionSystem.getAllStates(),
+      betaEffectiveWorkerCapacity(this.deps.getActivePlayer()?.autoWorkerCapacity ?? 0),
+      hidden ? 0 : this.deps.decomposeSystem.getSettings().workers,
+      hidden
+        ? this.deps.productionSystem.getAllStates().map((state) => ({ ...state, assignedWorkers: undefined }))
+        : this.deps.productionSystem.getAllStates(),
     )
   }
 
@@ -224,7 +249,7 @@ export class GameManagerBuildingOps {
     // Clamp bound stays fed by the one split rule - the domain command
     // owns the write itself (D2: no foreign mutation of site state).
     const capacity = resolveProductionWorkerCapacity(
-      this.deps.getActivePlayer()?.autoWorkerCapacity ?? 0,
+      betaEffectiveWorkerCapacity(this.deps.getActivePlayer()?.autoWorkerCapacity ?? 0),
       this.deps.decomposeSystem.getSettings().workers,
     )
 
@@ -247,6 +272,13 @@ export class GameManagerBuildingOps {
   }
 
   upgradeBuilding(instanceId: string): boolean {
+    // BETA SCOPE LOCK - a carried instance of a scope-hidden building is
+    // preserved, never upgraded (an upgrade would spend live materials
+    // into a dormant record).
+    const existing = this.deps.buildingManager.get(instanceId)
+    if (existing !== undefined && !isBetaBuildingSurface(existing.buildingId)) {
+      return false
+    }
     const upgraded = this.deps.buildingSystem.upgrade(
       instanceId,
       this.deps.buildingRegistry,

@@ -236,11 +236,14 @@ describe('Tribulation routing integration (Task 11)', () => {
     driveTribulationToTerminal(gameManager)
     expect(gameManager.tribulationDirector.getCommittedOutcome()?.outcome).toBe('victory')
 
+    // The settle seam re-derives the ordinary breakthrough gate, so the
+    // mock carries a realmLevel that satisfies the mortal entry row
+    // (>= CORE_REALM_LEVEL) like the player that legitimately entered.
     const playerStoreMock = {
       ...player,
       $state: player,
       realmId: 'mortal',
-      realmLevel: 10,
+      realmLevel: 12,
       cultivation: 1000,
       selectedTalentIds: [],
     } as any
@@ -305,11 +308,12 @@ describe('Tribulation routing integration (Task 11)', () => {
     driveTribulationToTerminal(gameManager)
     expect(gameManager.tribulationDirector.getCommittedOutcome()?.outcome).toBe('victory')
 
+    // Same gate-coherent mock: settle re-derives the mortal entry row.
     const playerStoreMock = {
       ...player,
       $state: player,
       realmId: 'mortal',
-      realmLevel: 10,
+      realmLevel: 12,
       cultivation: 1000,
       selectedTalentIds: [],
     } as any

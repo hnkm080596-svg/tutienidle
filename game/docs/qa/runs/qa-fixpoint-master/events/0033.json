@@ -1,0 +1,30 @@
+{
+  "applied": [
+    "evidence:EV-PIN-NOTICE-1 (updated)",
+    "evidence:EV-PIN-DORMANT-1 (updated)",
+    "evidence:EV-PROBE-READMODEL-2 (updated)",
+    "evidence:EV-ATOMICITY-1 (updated)",
+    "evidence:EV-PROBE-TRISAVE-2 (updated)",
+    "evidence:EV-PROBE-WAVE6 (updated)",
+    "evidence:EV-MUT-IA-1 (updated)",
+    "evidence:EV-MUT-PA-1 (updated)",
+    "evidence:EV-MUT-SV-1 (updated)",
+    "evidence:EV-MUT-AS-1 (updated)",
+    "evidence:EV-MUT-DS-1 (updated)",
+    "evidence:EV-MUT-RM-1 (updated)",
+    "evidence:EV-MUT-CR-1 (updated)",
+    "evidence:EV-MUT-PG-1 (updated)",
+    "evidence:EV-MUT-EC-1 (updated)",
+    "evidence:EV-MUT-SF-1 (updated)",
+    "evidence:EV-E2E-1 (updated)",
+    "evidence:EV-PROBE-DET-FINAL (updated)",
+    "evidence:EV-PROBE-PERSIST (updated)",
+    "evidence:EV-STATIC-SEAMS (updated)",
+    "evidence:EV-PROP-IA-1 (updated)",
+    "evidence:EV-PROP-PG-1 (updated)",
+    "evidence:EV-MUT-TQ-1 (updated)",
+    "evidence:EV-PROBE-CA-FIX (updated)",
+    "evidence:EV-MUT-CA-1 (updated)",
+    "evidence:EV-PROBE-A2-FIX (updated)"
+  ]
+}

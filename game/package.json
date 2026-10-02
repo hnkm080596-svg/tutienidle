@@ -51,6 +51,7 @@
   "devDependencies": {
     "@playwright/test": "^1.62.1",
     "@tsconfig/node24": "^24.0.4",
+    "@types/jsdom": "^30.0.0",
     "@types/node": "^24.13.3",
     "@types/pg": "^8.15.6",
     "@vitejs/plugin-vue": "^6.0.8",

@@ -1,0 +1,3 @@
+{
+  "action": "T27 battery re-executed on tip: atomicity 9 + det-final + persist 388 + wave6 31 + e2e 2 + static seams + 8/8 mutants killed; evidence ids refreshed in place to t27-* artifacts; coverage bindings restored; lessons schema + MC9 chain repaired"
+}

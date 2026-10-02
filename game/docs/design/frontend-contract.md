@@ -7,6 +7,11 @@ scope/progression predicate from raw `PlayerData`** — every surface reads its
 verdict from the read-models below. If a surface needs a fact not listed here,
 that is a contract gap: stop and flag it; do not import domain predicates.
 
+> **Art ownership:** Codex implements UI/UX + may generate ONLY chrome/static UI
+> art (frames, panels, buttons, dividers — `huyen-kim-chrome-art-spec.md`).
+> Enemies, characters, skill/pill icons, spritesheets, VFX = Minh hand-drawn —
+> Codex MUST NOT generate them. See `huyen-kim-art-master-list.md` §SCOPE BOUNDARY.
+
 Verdict semantics (single vocabulary, `core/betaScope.ts`):
 
 | state | meaning | UI treatment |

@@ -1,0 +1,37 @@
+=== EV-MUT-AS-1 pill-gate-removed T7 2026-10-01T04:15:18.730512Z ===
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+ ❯ tests/architecture/betaDormantSaveLeak.qa.test.ts (40 tests | 1 failed) 43ms
+     × usePillDetailed rejects a dormant-family pill without consuming it 10ms
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 39 passed (40)
+   Start at  04:15:19
+   Duration  1.82s (transform 1.34s, setup 229ms, import 1.43s, tests 43ms, environment 0ms)
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/architecture/betaDormantSaveLeak.qa.test.ts > dormancy: dormant-family pills on a carried save stay inert (F-TRI-1) > usePillDetailed rejects a dormant-family pill without consuming it
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/architecture/betaDormantSaveLeak.qa.test.ts:155:23
+    153|     const result = gameManager.pillOps.usePillDetailed('phi_van_dan_mo…
+    154|
+    155|     expect(result.ok).toBe(false)
+       |                       ^
+    156|     expect(result.reason).toBe('scope_hidden')
+    157|     expect(gameManager.pillBag.getAmount('phi_van_dan_mortal')).toBe(1)
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+DETECTOR_EXIT=1  (nonzero = mutant killed the suite = KILLED_EXPECTED)
+RESULT=KILLED_EXPECTED

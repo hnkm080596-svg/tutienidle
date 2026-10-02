@@ -1,0 +1,11 @@
+=== atomicity (T7 rebind, Thu Oct  1 04:12:00 UTC 2026) ===
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+
+ Test Files  3 passed (3)
+      Tests  9 passed (9)
+   Start at  04:12:01
+   Duration  2.07s (transform 3.87s, setup 719ms, import 4.59s, tests 56ms, environment 1ms)
+
+EXIT=0

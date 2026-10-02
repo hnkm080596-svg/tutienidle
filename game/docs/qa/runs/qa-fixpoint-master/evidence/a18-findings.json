@@ -1,0 +1,61 @@
+{
+  "reviewer": "A18",
+  "role": "scope AUTHORITY seam review (authority-side admission/writers)",
+  "commit": "af3666e7a3b987c270d7acdeb4fe3f91166be4db",
+  "probe": "tests/architecture/betaAuthoritySeamA18.qa.test.ts",
+  "verdict": "PASS WITH GAPS",
+  "findings": [
+    {
+      "id": "A18-F1",
+      "severity": "Low",
+      "surface": "saveShapeValidation.ts materials bound (F-SCOPE-1 sibling) -> GameManagerSaveRestore materials loop -> VendorSystem.sellMaterialToVendor",
+      "repro": "tests/architecture/betaAuthoritySeamA18.qa.test.ts 'A18-1': mortal save carrying {materialId:'golden_core_wood_thuong_co', amount:5} (a tier-4 profession material no mortal writer can produce) passes validateGameSaveShape and restores 5 units into materialBag; economyOps.sellMaterialToVendor returns {ok:false, reason:'grade_not_below'} and the bag keeps all 5 units. Sibling: 'tinh_hoa_pham_the' (no profession meta) also fails the grade gate closed.",
+      "mint_path": "save.materials[] -> validateGameSaveShape (stack shape + amount only; only spirit stones are realm-tier bounded per F-SCOPE-1) -> restore materials loop (materialRegistry.has(id) only) -> materialBag -> consumer gates: vendor grade-below refuses, craft/consumption writers keyed to authored inventories",
+      "disposition": "deferred: forged above-realm material restores into the visible bag (dormancy leak as data, not behavior) but every checked consumer gate fails closed. Latent validator gap: F-SCOPE-1 realm-tier bound covers spirit stones only, not profession materials",
+      "sibling_surface": "essences/non-profession ids (vendor refuse, verified); forged above-realm equipment (equip gate canUseItemGrade EquipmentSystem.ts:279 fails closed, audited); forged dormant pills (usePillDetailed scope_hidden, verified A18-4)",
+      "notes": "Confirmed by probe + audit. No live mint path found."
+    },
+    {
+      "id": "A18-F2",
+      "severity": "Nit",
+      "surface": "CultivationPathSystem.applyPathChoice (CultivationPathSystem.ts:329-364)",
+      "repro": "audit: applyPathChoice checks isCultivationPathOffered(way, player) only - no internal isBetaWay/scope verdict; a hypothetical internal caller could mint a dormant way pair at runtime",
+      "mint_path": "chooseCultivationPath (RealmAdvanceOps:327, isBetaWay gated) and commitFiveElementInitiation chain (all call sites gated) are the only writers - no ungated runtime caller exists today",
+      "disposition": "deferred: latent defense-in-depth gap, not a live leak - every reachable writer gates on a scope verdict",
+      "sibling_surface": "same module: getCultivationPathStatModifiers (:371) and grantCultivationPathRealmReward (:392) ARE internally beta-gated, showing the intended pattern; reconcileWayGrants (:242) gates isBetaWay (verified inert on sword save, A18-3)",
+      "notes": "Defense-in-depth only; all external callers verified gated."
+    },
+    {
+      "id": "A18-R1",
+      "severity": "accepted-residual (not a defect per dispatch)",
+      "surface": "skillCastCounts / skill.totalExperience -> getPrecursorFlatDamageBonus floor(casts/10), uncapped ('KHONG tran', SkillSystem.ts:31-33)",
+      "repro": "tests/architecture/betaAuthoritySeamA18.qa.test.ts 'A18-7': forged totalExperience=1,000,000 on linh_bao restores verbatim and mints +100,000 flat precursor damage - identical to writer output at the same counter value",
+      "mint_path": "skillCastCounts shape-only bound (non-negative finite, no ceiling) -> restore copies totalExperience verbatim (GameManagerSaveRestore:217-222) -> precursor bonus floor(casts/10)",
+      "disposition": "accepted: same-value forged counter a writer could produce - human-accepted residual per dispatch scope",
+      "sibling_surface": "quest progress counters, timestamps, cultivation amounts, hiddenBeastKills/hiddenChannelCycles counters (same accepted class, inert in beta)",
+      "notes": "Documented so the uncapped mint law is on record; SKILL level is capped at Lv3 by CAST_LEVELING_THRESHOLDS, only the flat bonus is uncapped."
+    },
+    {
+      "id": "A18-R2",
+      "severity": "accepted-residual (not a defect per dispatch)",
+      "surface": "phaGiapCarryStacks -> seedBattleCarryStacks clamp (PassiveSystem.ts:188-261)",
+      "repro": "audit: forged carry stacks are clamped to modifier.maxStacks (pha_giap authored max 5) and bankBattleCarryStacks additionally requires the carry talent + betaSkillAdmitted",
+      "mint_path": "persisted carry stacks -> battle seed -> clamp(maxStacks ?? remaining)",
+      "disposition": "accepted: same-value residual within authored bounds, plus talent gate",
+      "sibling_surface": "persistentTimedEffects (closed writers, dormant families rejected - verified A18-6); modifiers claimed-source whitelist F-A7-1",
+      "notes": "Audited; capped + talent-gated."
+    },
+    {
+      "id": "A18-R3",
+      "severity": "accepted-residual (not a defect per dispatch)",
+      "surface": "dormant-domain counters: duyenPhan, companionPullsSinceRare, hiddenBeastKills, hiddenChannelCycles, bossKillCount",
+      "repro": "audit: counters persist and restore but every mint seam they feed is gated - rollHiddenChannelRewards frozen by isScopeHidden('hiddenContent') (ProductionSystem.ts:526); hidden-beast substitution requires stageSpawnableEnemyIds.has(hidden.id) which no beta stage declares (StageWaveSystem.ts:283-289); companion ops gated isCompanionDomainUnlocked (CompanionOps:107/176/246/318) + isBetaCompanionGift",
+      "mint_path": "persisted counters -> dormant ops -> scope verdict fail-closed",
+      "disposition": "accepted: inert counters in visible scope; no consumer reachable",
+      "sibling_surface": "hidden materials: only huyet_mong channel exists (HiddenMaterialChannels.ts:84-95) and its roll is scope-frozen; hidden breakthrough / wash / refine / ultimate slot / daily quests all gated at their write seams",
+      "notes": "Write-seam census: companion x4, artifact, alchemy, pill, quest, decompose, learn/level/purchase/upgrade/respec/spec/preset/starter/choose/committal/realm-rewards/way-grants/technique/tribulation/autofarm x3, building manualWorkforce - all carry a scope verdict."
+    }
+  ],
+  "confirmed_defects_medium_or_higher": 0,
+  "notes": "Fortified boundary: talent envelope (parked/pool-realm/creation-count), technique ceiling, spell-kit coherence, path/way pair coherence, F-SKL-1 provenance, F-W-2A dormant-skill prune, mortal-boundary contract, body progression integrity all hold under forge. Evidence: tests/architecture/betaAuthoritySeamA18.qa.test.ts 11/11 green."
+}

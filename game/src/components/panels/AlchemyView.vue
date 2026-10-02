@@ -7,6 +7,10 @@ import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { SPIRIT_STONE_MATERIAL_ID } from '@/core/material/SpiritStoneMaterial'
 import type { AlchemyRecipe } from '@/core/alchemy/AlchemySystem'
 import { buildProfessionMaterialId } from '@/core/profession/ProfessionMaterial'
+import { betaRecipeFamilyOfId } from '@/core/betaScope'
+import Bar from '@/components/common/primitives/Bar.vue'
+import GameButton from '@/components/common/GameButton.vue'
+import StatRow from '@/components/common/primitives/StatRow.vue'
 import { PROFESSION_GRADE_NAMES, getProfessionGradeForRealm } from '@/core/profession/ProfessionGrade'
 import { professionGradeRank } from '@/core/profession/slotRank'
 import { useAudioStore } from '@/stores/audio'
@@ -48,10 +52,19 @@ onUnmounted(() => {
 const recipes = computed<AlchemyRecipe[]>(() => {
   stateVersion.value
 
+  // BETA SCOPE LOCK v2 (contract sec.F) - only beta-enabled recipe
+  // families render (the canonical family authority, same predicate
+  // getBetaAlchemyRecipeModels applies); every other family is
+  // scope-hidden - no teaser rows, no dead craft buttons.
   // M10 (ARCH-008) — retired pill families (Hoi Xuan Dan) are hidden from
   // the craft list entirely; startJob still rejects them defensively.
   return gameManager.alchemyOps.getAlchemyRecipes()
-    .filter((recipe) => recipe.realmId === player.realmId && recipe.retired !== true)
+    .filter(
+      (recipe) =>
+        recipe.realmId === player.realmId &&
+        recipe.retired !== true &&
+        betaRecipeFamilyOfId(recipe.id) !== null,
+    )
 })
 
 const currentGrade = computed(() => getProfessionGradeForRealm(player.realmId))
@@ -186,7 +199,12 @@ const jobs = computed(() => {
 
   void nowMs.value
 
-  return gameManager.alchemyOps.getAlchemyJobs().map((job) => {
+  // Scope-hidden recipe families never render - a carried save's
+  // dormant in-flight job still settles in the domain but stays off
+  // the surface (contract sec.F).
+  return gameManager.alchemyOps.getAlchemyJobs()
+    .filter((job) => betaRecipeFamilyOfId(job.recipeId) !== null)
+    .map((job) => {
     const remainingMs = Math.max(0, job.completesAtMs - nowMs.value)
 
     const totalSeconds = Math.max(1, Math.ceil((job.completesAtMs - job.startedAtMs) / 1000))

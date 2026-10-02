@@ -14,6 +14,7 @@ import { materials } from '../../data/materials/materials'
 import { pills } from '../../data/pill/pills'
 import { GameManager } from '../../core/game/GameManager'
 import { makeInstance } from '../../core/equipment/EquipmentInstance.fixture'
+import { alchemyJobFixture } from '../../core/alchemy/AlchemyJob.fixture'
 import { createDefaultPlayer, type PlayerData } from '../../core/player/Player'
 import { freshSwordPathState } from '../../core/kiem-tu/KiemTuState'
 import { SWORD_PATHWAY } from '../../core/kiem-tu/KiemTuPath'
@@ -21,6 +22,7 @@ import { skillCoreNodeId } from '../../core/progression/SkillCoreLevel'
 import { usePlayerStore } from '../../stores/player'
 import { validateGameSaveShape } from './saveShapeValidation'
 import { buildGameSave, restoreGameSession, type GameSave } from './SaveSystem'
+import { CYCLE_BASE_SECONDS_BY_REALM, computeCycleSeconds } from '../../core/production/ProductionBalance'
 import type { ProductionCycle, ProductionSiteState } from '../../core/production/ProductionTypes'
 import type { Skill } from '../../core/skill/Skill'
 import type { Technique } from '../../core/technique/Technique'
@@ -41,7 +43,10 @@ const CONF_TECHNIQUE: Technique = {
   rank: 0,
   mastery: 0,
   quality: 'hoang',
-  gradeHistory: {},
+  // The fixture's save claims foundation_establishment - the live
+  // grade-1 cycle lags the realm, so it must carry its sealed
+  // realm-exit record (untrained commit -> partial at rank 0).
+  gradeHistory: { 1: { finalRank: 0, completionState: 'partial' } },
   gradeEffects: {},
 }
 
@@ -87,6 +92,9 @@ function createRegisteredManager(): GameManager {
 }
 
 function productionCycle(cycleId: string, siteId: string, completesAtMs: number): ProductionCycle {
+  // F-CYC-1: the span replays the authored cycle window (mortal base at
+  // site level 2 speed) - compute it from the balance table like the
+  // real writer.
   return {
     cycleId,
     siteId,
@@ -94,7 +102,7 @@ function productionCycle(cycleId: string, siteId: string, completesAtMs: number)
     siteLevelAtStart: 2,
     rewardTableVersion: 1,
     rollSeed: 42,
-    startedAtMs: NOW - 5_000,
+    startedAtMs: completesAtMs - computeCycleSeconds(CYCLE_BASE_SECONDS_BY_REALM.mortal ?? 0, 2) * 1000,
     completesAtMs,
   }
 }
@@ -106,6 +114,8 @@ function populateSource(player: PlayerData, manager: GameManager): void {
   player.cultivation = 321
   player.duyenPhan = 55
   player.skillInsight = 12
+  // F-A11-3: insight can never exceed the lifetime-minted tally.
+  player.totalSkillInsightGained = 12
   player.attributePoints = 4
   player.nodeLevels = { test_node: 2 }
   player.purchasedNodeIds = ['test_node']
@@ -135,8 +145,14 @@ function populateSource(player: PlayerData, manager: GameManager): void {
   player.cultivationPath = 'sword'
   player.cultivationWay = 'sword_pathway'
   player.swordPath = freshSwordPathState()
-  player.realmId = 'qi_refining'
+  // F-COMP-REALM-PIN: the fixture carries a companion, so the realm
+  // claim must reach the companion-domain unlock tier.
+  player.realmId = 'foundation_establishment'
   player.realmLevel = 1
+  // F-REALM-1 / F-A12-2: a committed qi+ save carries the stamped grade
+  // and the foundation victory record.
+  player.breakthroughGrade = 1
+  player.highestFoundationAchieved = 'human'
   // M-QI-05 (v73) - the committed way's coreSkillIds are granted at the
   // ritual: nodeLevels[core_<id>] = 1 plus purchasedNodeIds membership.
   for (const skillId of SWORD_PATHWAY.coreSkillIds ?? []) {
@@ -151,8 +167,11 @@ function populateSource(player: PlayerData, manager: GameManager): void {
   manager.skillManager.restore([structuredClone(CONF_SKILL)])
 
   // Bags.
+  // F-SCOPE-1: every stone writer is realm-tier-keyed, so a trung stack
+  // on a tier-2 save is unproducible - the second stack uses the first
+  // non-stone material instead.
   manager.materialBag.add(manager.materialRegistry.get(materials[0]!.id), 7)
-  manager.materialBag.add(manager.materialRegistry.get(materials[1]!.id), 3)
+  manager.materialBag.add(manager.materialRegistry.get(materials[3]!.id), 3)
   manager.pillBag.add(manager.pillRegistry.get(pills[0]!.id), 2)
   manager.equipmentBag.add(
     makeInstance({
@@ -172,9 +191,17 @@ function populateSource(player: PlayerData, manager: GameManager): void {
   )
 
   // Buildings — Chi Hien Quan level 1 sets worker capacity 3 (1+level*2).
+  // pill_room level 1 witnesses the alchemy job's roomLevelAtStart
+  // claim (F-TC9-3 bound: building level never decreases).
   manager.buildingManager.add({
     instanceId: 'b-chq',
     buildingId: 'chi_hien_quan',
+    level: 1,
+    lastCollectedAt: NOW - 2_000,
+  })
+  manager.buildingManager.add({
+    instanceId: 'b-pill',
+    buildingId: 'pill_room',
     level: 1,
     lastCollectedAt: NOW - 2_000,
   })
@@ -193,7 +220,9 @@ function populateSource(player: PlayerData, manager: GameManager): void {
     activeWorkerSlots: 1,
     workerCycles: [
       productionCycle('cycle-active', siteId, NOW + 60_000),
-      productionCycle('cycle-worker-1', siteId, NOW + 120_000),
+      // F-CYC-1: a writer-spawned cycle never completes later than the
+      // authored span out - an 87s window can end at most NOW + 87s.
+      productionCycle('cycle-worker-1', siteId, NOW + 80_000),
     ],
     assignedWorkers: 2,
   }
@@ -206,7 +235,7 @@ function populateSource(player: PlayerData, manager: GameManager): void {
   // Alchemy — a still-running job (completesAtMs in the future so the
   // restore-time offline settle leaves it pending).
   manager.alchemySystem.restoreJobs([
-    {
+    alchemyJobFixture({
       jobId: 'conf-job',
       recipeId: 'conf-recipe',
       pillId: pills[0]!.id,
@@ -214,7 +243,7 @@ function populateSource(player: PlayerData, manager: GameManager): void {
       startedAtMs: NOW - 1_000,
       completesAtMs: NOW + 999_999,
       roomLevelAtStart: 1,
-    },
+    }),
   ])
 
   // Decompose — non-default filters, workers within capacity, live timer.
@@ -260,6 +289,9 @@ describe('Mission A7 — whole-payload save conformance', () => {
     // The persisted form is what JSON.stringify would write.
     const persisted = JSON.parse(JSON.stringify(save1)) as unknown
     const shape = validateGameSaveShape(persisted)
+    if (!shape.ok) {
+      console.log(JSON.stringify(shape.issues, null, 2))
+    }
 
     expect(shape.ok).toBe(true)
     if (!shape.ok) {

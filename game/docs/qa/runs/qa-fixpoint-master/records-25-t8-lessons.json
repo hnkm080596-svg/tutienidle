@@ -1,0 +1,367 @@
+{
+ "records": [
+  {
+   "kind": "lesson",
+   "body": {
+    "id": "L-PARALLEL-SEAM-GUARD",
+    "version": 1,
+    "supersedes": null,
+    "triggerType": "DEFECT",
+    "findingIds": [
+     "F-A4-1"
+    ],
+    "incidentEvidenceIds": [
+     "EV-PROBE-A4-SEAM",
+     "EV-MUT-A4-1"
+    ],
+    "originatingRun": "qa-fixpoint-master",
+    "rootClass": "AUTHORITY",
+    "missedInvariantIds": [],
+    "escapeReason": "parallel write seam implemented without the sibling op refusal guard: devResetBranch revoked+refunded dormant-tree nodes while respecNodeTree refuses the same save outright",
+    "applicability": [
+     "reset/respec ops, dev-console write seams, branch-tagged trees"
+    ],
+    "exclusions": [],
+    "proposedProtection": [
+     "new write seams must enumerate sibling-op guards before admission; pin: holdsDormant shared predicate"
+    ],
+    "promotionEvidenceIds": [],
+    "qualifiedBy": [],
+    "capabilityDelta": "RECORDED - awaiting independent qualification",
+    "status": "CAPTURED",
+    "policyVersion": null,
+    "effectiveFromRun": null,
+    "recurrenceFindingIds": [],
+    "preventionEvidenceIds": [],
+    "guidance": null
+   }
+  },
+  {
+   "kind": "lesson",
+   "body": {
+    "id": "L-ROSTER-OVERADMISSION",
+    "version": 1,
+    "supersedes": null,
+    "triggerType": "DEFECT",
+    "findingIds": [
+     "F-A4-2"
+    ],
+    "incidentEvidenceIds": [
+     "EV-PROBE-A4-SEAM",
+     "EV-MUT-A4-1"
+    ],
+    "originatingRun": "qa-fixpoint-master",
+    "rootClass": "AUTHORITY",
+    "missedInvariantIds": [],
+    "escapeReason": "admission roster seeded from ALL catalog pools including the suppressed golden_core pool; isBetaTalentId admitted authored-dormant talents and collectTalentEffects emitted live effects",
+    "applicability": [
+     "talent roster seams, breakthrough pools, effect collectors"
+    ],
+    "exclusions": [],
+    "proposedProtection": [
+     "roster seeds filter pools through realm-acquisition predicates (isBreakthroughAcquisitionEnabled), not raw catalog union"
+    ],
+    "promotionEvidenceIds": [],
+    "qualifiedBy": [],
+    "capabilityDelta": "RECORDED - awaiting independent qualification",
+    "status": "CAPTURED",
+    "policyVersion": null,
+    "effectiveFromRun": null,
+    "recurrenceFindingIds": [],
+    "preventionEvidenceIds": [],
+    "guidance": null
+   }
+  },
+  {
+   "kind": "lesson",
+   "body": {
+    "id": "L-SURFACE-ONLY-GATING",
+    "version": 1,
+    "supersedes": null,
+    "triggerType": "DEFECT",
+    "findingIds": [
+     "F-A4-3"
+    ],
+    "incidentEvidenceIds": [
+     "EV-PROBE-A4-SEAM",
+     "EV-MUT-A4-1"
+    ],
+    "originatingRun": "qa-fixpoint-master",
+    "rootClass": "AUTHORITY",
+    "missedInvariantIds": [],
+    "escapeReason": "BETA_BUILDING_FEATURES gated the surface read-model only; canBuild/buildBuilding/upgradeBuilding lacked the fail-closed scope_hidden pattern used by equipment/alchemy/workforce",
+    "applicability": [
+     "building write seams, surface-vs-command split"
+    ],
+    "exclusions": [],
+    "proposedProtection": [
+     "every gated surface needs its domain commands fail-closed on the same admission predicate"
+    ],
+    "promotionEvidenceIds": [],
+    "qualifiedBy": [],
+    "capabilityDelta": "RECORDED - awaiting independent qualification",
+    "status": "CAPTURED",
+    "policyVersion": null,
+    "effectiveFromRun": null,
+    "recurrenceFindingIds": [],
+    "preventionEvidenceIds": [],
+    "guidance": null
+   }
+  },
+  {
+   "kind": "lesson",
+   "body": {
+    "id": "L-ACCRUAL-CHANNEL-LOCK",
+    "version": 1,
+    "supersedes": null,
+    "triggerType": "DEFECT",
+    "findingIds": [
+     "F-A4-4"
+    ],
+    "incidentEvidenceIds": [
+     "EV-PROBE-A4-SEAM",
+     "EV-MUT-A4-1"
+    ],
+    "originatingRun": "qa-fixpoint-master",
+    "rootClass": "AUTHORITY",
+    "missedInvariantIds": [],
+    "escapeReason": "accrual channel missed the lock that sibling emitters enforce: gainMastery trained dormant-way techniques via settleTechniqueMastery on carried saves",
+    "applicability": [
+     "technique mastery accrual, loot settle paths"
+    ],
+    "exclusions": [],
+    "proposedProtection": [
+     "accrual entry points gate on the same admission predicate as emitters (betaTechniqueAdmitted)"
+    ],
+    "promotionEvidenceIds": [],
+    "qualifiedBy": [],
+    "capabilityDelta": "RECORDED - awaiting independent qualification",
+    "status": "CAPTURED",
+    "policyVersion": null,
+    "effectiveFromRun": null,
+    "recurrenceFindingIds": [],
+    "preventionEvidenceIds": [],
+    "guidance": null
+   }
+  },
+  {
+   "kind": "lesson",
+   "body": {
+    "id": "L-MOUNT-SEAM-ASYMMETRY",
+    "version": 1,
+    "supersedes": null,
+    "triggerType": "DEFECT",
+    "findingIds": [
+     "F-B-CONS-1",
+     "F-B-CONS-2"
+    ],
+    "incidentEvidenceIds": [
+     "EV-PROBE-B4-SEAM",
+     "EV-MUT-A4-1"
+    ],
+    "originatingRun": "qa-fixpoint-master",
+    "rootClass": "AUTHORITY",
+    "missedInvariantIds": [],
+    "escapeReason": "mount seams defended asymmetrically: GameRoot guarded standalonePanel via watcher because callers can bypass the action API, but leftPanelMode + activeBuildingPopoverId lacked it AND downstream commands lacked fail-closed guards",
+    "applicability": [
+     "Vue mount seams, store raw-field writes, panel/popover components"
+    ],
+    "exclusions": [],
+    "proposedProtection": [
+     "mount seams gate on admission predicates at BOTH the container binding and the component self-gate"
+    ],
+    "promotionEvidenceIds": [],
+    "qualifiedBy": [],
+    "capabilityDelta": "RECORDED - awaiting independent qualification",
+    "status": "CAPTURED",
+    "policyVersion": null,
+    "effectiveFromRun": null,
+    "recurrenceFindingIds": [],
+    "preventionEvidenceIds": [],
+    "guidance": null
+   }
+  },
+  {
+   "kind": "lesson",
+   "body": {
+    "id": "L-DEFERRED-B4-LOW",
+    "version": 1,
+    "supersedes": null,
+    "triggerType": "DEFECT",
+    "findingIds": [
+     "F-B-CONS-3",
+     "F-B-CONS-4",
+     "F-B-CONS-5"
+    ],
+    "incidentEvidenceIds": [
+     "EV-PROBE-B4-SEAM"
+    ],
+    "originatingRun": "qa-fixpoint-master",
+    "rootClass": "CONTRACT",
+    "missedInvariantIds": [],
+    "escapeReason": "banned dependency import + dead authored read model, raw ghost-id render on corrupt lease, dormant material description teasers - all Low/Nit, deferred per the Medium+-only ruling",
+    "applicability": [
+     "component import boundaries, indicator renders, lore surfaces"
+    ],
+    "exclusions": [],
+    "proposedProtection": [
+     "next scope revision pins banned-import lint + read-model consumption checks"
+    ],
+    "promotionEvidenceIds": [],
+    "qualifiedBy": [],
+    "capabilityDelta": "RECORDED - awaiting independent qualification",
+    "status": "CAPTURED",
+    "policyVersion": null,
+    "effectiveFromRun": null,
+    "recurrenceFindingIds": [],
+    "preventionEvidenceIds": [],
+    "guidance": null
+   }
+  },
+  {
+   "kind": "lesson",
+   "body": {
+    "id": "L-PERSISTED-EFFECT-RECONCILE",
+    "version": 1,
+    "supersedes": null,
+    "triggerType": "DEFECT",
+    "findingIds": [
+     "F-BS-1"
+    ],
+    "incidentEvidenceIds": [
+     "EV-PIN-BS-WAVE",
+     "EV-MUT-BS-1"
+    ],
+    "originatingRun": "qa-fixpoint-master",
+    "rootClass": "CONTRACT",
+    "missedInvariantIds": [],
+    "escapeReason": "grant-time gates never cover restore: resolvePlayerStatAssembly read persisted player.modifiers verbatim, so a pre-beta save carrying enhanced hidden-breakthrough passives emitted them forever on a flagged save",
+    "applicability": [
+     "persisted modifier channels, realm passives, restore paths"
+    ],
+    "exclusions": [],
+    "proposedProtection": [
+     "effect seams reconcile persisted payloads against admission at emit time; records stay intact (deserialize+flag), effects stay inert"
+    ],
+    "promotionEvidenceIds": [],
+    "qualifiedBy": [],
+    "capabilityDelta": "RECORDED - awaiting independent qualification",
+    "status": "CAPTURED",
+    "policyVersion": null,
+    "effectiveFromRun": null,
+    "recurrenceFindingIds": [],
+    "preventionEvidenceIds": [],
+    "guidance": null
+   }
+  },
+  {
+   "kind": "lesson",
+   "body": {
+    "id": "L-MARKER-BIDIRECTIONAL",
+    "version": 1,
+    "supersedes": null,
+    "triggerType": "DEFECT",
+    "findingIds": [
+     "F-BS-3"
+    ],
+    "incidentEvidenceIds": [
+     "EV-PIN-BS-WAVE",
+     "EV-MUT-BS-1"
+    ],
+    "originatingRun": "qa-fixpoint-master",
+    "rootClass": "CONTRACT",
+    "missedInvariantIds": [],
+    "escapeReason": "marker->payload coherence checked but payload->marker never: forged sourceType realm entries minted stats past acceptance with no granting marker",
+    "applicability": [
+     "save shape validation, grant marker coherence"
+    ],
+    "exclusions": [],
+    "proposedProtection": [
+     "coherence checks run both directions; payload entries whose catalog passive lacks the marker are flagged at acceptance + inert at emit"
+    ],
+    "promotionEvidenceIds": [],
+    "qualifiedBy": [],
+    "capabilityDelta": "RECORDED - awaiting independent qualification",
+    "status": "CAPTURED",
+    "policyVersion": null,
+    "effectiveFromRun": null,
+    "recurrenceFindingIds": [],
+    "preventionEvidenceIds": [],
+    "guidance": null
+   }
+  },
+  {
+   "kind": "lesson",
+   "body": {
+    "id": "L-DUP-WAVE-OVERLAP",
+    "version": 1,
+    "supersedes": null,
+    "triggerType": "DEFECT",
+    "findingIds": [
+     "F-BS-2"
+    ],
+    "incidentEvidenceIds": [
+     "EV-PIN-BS-WAVE"
+    ],
+    "originatingRun": "qa-fixpoint-master",
+    "rootClass": "PROCESS",
+    "missedInvariantIds": [],
+    "escapeReason": "blind rounds dispatched on different tips can report the same root: TC3 F-BS-2 duplicated F-A4-1 already fixed mid-wave; dedup by root class + seam, not by surface symptom",
+    "applicability": [
+     "multi-wave blind review dispatch"
+    ],
+    "exclusions": [],
+    "proposedProtection": [
+     "record duplicateOf at triage; fix ownership follows the earliest confirmed repro"
+    ],
+    "promotionEvidenceIds": [],
+    "qualifiedBy": [],
+    "capabilityDelta": "RECORDED - awaiting independent qualification",
+    "status": "CAPTURED",
+    "policyVersion": null,
+    "effectiveFromRun": null,
+    "recurrenceFindingIds": [],
+    "preventionEvidenceIds": [],
+    "guidance": null
+   }
+  },
+  {
+   "kind": "lesson",
+   "body": {
+    "id": "L-DEFERRED-TC3-NIT",
+    "version": 1,
+    "supersedes": null,
+    "triggerType": "DEFECT",
+    "findingIds": [
+     "F-BS-4",
+     "F-BS-5",
+     "F-BS-6",
+     "F-BS-7"
+    ],
+    "incidentEvidenceIds": [
+     "EV-PIN-BS-WAVE"
+    ],
+    "originatingRun": "qa-fixpoint-master",
+    "rootClass": "CONTRACT",
+    "missedInvariantIds": [],
+    "escapeReason": "dormant-record mutation on live path, dormant-skill spec claims, console-exposed dead sink, dead persisted slice - all Nit, deferred per the Medium+-only ruling",
+    "applicability": [
+     "tribulation outcomes, specialization ops, console writes, save slices"
+    ],
+    "exclusions": [],
+    "proposedProtection": [
+     "next scope revision pins dormant-record mutation even when inert"
+    ],
+    "promotionEvidenceIds": [],
+    "qualifiedBy": [],
+    "capabilityDelta": "RECORDED - awaiting independent qualification",
+    "status": "CAPTURED",
+    "policyVersion": null,
+    "effectiveFromRun": null,
+    "recurrenceFindingIds": [],
+    "preventionEvidenceIds": [],
+    "guidance": null
+   }
+  }
+ ]
+}

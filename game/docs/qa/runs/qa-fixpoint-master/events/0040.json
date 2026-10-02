@@ -1,0 +1,27 @@
+{
+  "applied": [
+    "finding:F-B3-01",
+    "finding:F-B3-02",
+    "finding:F-B3-03",
+    "finding:F-B3-04",
+    "finding:F-B3-05",
+    "finding:F-B3-06",
+    "finding:F-A3-01",
+    "finding:F-A3-02",
+    "finding:F-A3-03",
+    "finding:F-A3-04",
+    "finding:F-A3-05",
+    "finding:F-A3-06",
+    "finding:F-A3-07",
+    "finding:F-A3-08",
+    "finding:F-TC2-1",
+    "review:RV-ADV-B3",
+    "review:RV-ADV-A3",
+    "review:RV-ADV-TC2",
+    "review:RV-SEQ6-COR",
+    "review:RV-SEQ6-AUT",
+    "review:RV-SEQ6-INT",
+    "review:RV-CLOSURE-5",
+    "cycle:CY-SEQ-6"
+  ]
+}

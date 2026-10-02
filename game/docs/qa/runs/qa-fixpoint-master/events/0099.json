@@ -1,0 +1,13 @@
+{
+  "applied": [
+    "evidence:EV-PROBE-TC9",
+    "evidence:EV-REPORT-TC9",
+    "evidence:EV-PROBE-A11",
+    "evidence:EV-REPORT-A11",
+    "evidence:EV-PROBE-B11",
+    "evidence:EV-REPORT-B11",
+    "evidence:EV-PIN-T20",
+    "evidence:EV-MUT-T20",
+    "evidence:EV-VERIFY-T20"
+  ]
+}

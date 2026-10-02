@@ -12,6 +12,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useUiStore } from '@/stores/ui'
 import { usePlayerStore } from '@/stores/player'
+import { useGameManager } from '@/composables/useGameState'
 import { useStageActive } from '@/composables/useStageActive'
 import { useBuildingNavigation } from '@/composables/useBuildingNavigation'
 import {
@@ -38,6 +39,7 @@ import DongFuWheelSlot from './DongFuWheelSlot.vue'
 
 const ui = useUiStore()
 const player = usePlayerStore()
+const gameManager = useGameManager()
 const { t } = useI18n()
 
 const stageActive = useStageActive()
@@ -400,13 +402,19 @@ function isUpgradeable(slot: CommandWheelSlot): boolean {
   )
 }
 
-// Idle-conventions rework - the first "new work" badge in the game
-// (before this pass NO unseen/new pattern existed). Breakthrough-ready
-// (cultivationProgress >= 1, same condition as CharacterPanel's "Co the
-// dot pha" - see CharacterPanel.vue) is the clearest existing signal to
-// pin on the Nhan Vat slot without adding state.
+// Idle-conventions rework - first "new work" badge in the game (no
+// unseen/new pattern existed before this wave). Breakthrough-readiness
+// reads the canonical admission gate (canTriggerBreakthrough, the same
+// predicate RealmPanel's Breakthrough button and triggerBreakthroughAction
+// use): level + chapter-clear + release-policy rows. Raw
+// cultivationProgress >= 1 lit a false "ready" dot wherever the bar
+// could fill while the gate still blocked - an uncleared chapter at
+// the Luyen Khi ceiling, or the release-disabled TC -> KD transition.
 function hasBreakthroughBadge(slot: CommandWheelSlot): boolean {
-  return slot.id === 'character' && player.cultivationProgress >= 1
+  return (
+    slot.id === 'character' &&
+    gameManager.realmAdvanceOps.canTriggerBreakthrough(player.$state)
+  )
 }
 
 // Icon pipeline removed (ui-audit creation-meta): public/assets/ui/wheel/

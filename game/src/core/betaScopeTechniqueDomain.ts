@@ -22,6 +22,7 @@ import {
   TECHNIQUE_RANK_CAP,
 } from './technique/TechniqueProgression'
 import { statLabel } from './stats/StatLabels'
+import { betaTechniqueAdmitted } from './betaScopeSkillDomain'
 import { COMBAT_TECHNIQUE_TYPES } from '../data/technique/CombatTechniqueTypes'
 
 // ---------------------------------------------------------------------------
@@ -208,6 +209,17 @@ export function betaTechniqueSurfaceFor(
   deps: BetaTechniqueSurfaceDeps,
 ): BetaTechniqueSurfaceModel {
   const technique = deps.activeTechnique
+
+  // BETA SCOPE LOCK - a carried save's active technique can belong to a
+  // dormant way; the parked record renders as absent on the live surface.
+  if (technique !== undefined && !betaTechniqueAdmitted(technique.id)) {
+    return {
+      state: 'unavailable',
+      sections: [],
+      gradeAdvance: { available: false, disabledReason: 'no-technique' },
+    }
+  }
+
   const gradeAdvance = gradeAdvanceFor(technique, player, deps)
 
   if (!technique) {

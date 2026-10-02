@@ -1,0 +1,5 @@
+{
+  "action": "T23 rebind on a7d12edf (product 26a8c15b): 18 stale evidence re-executed (4 vitest batches, e2e 2/2, static census, 8/8 legacy mutants re-killed), 52 coverage cells SATISFIED; finalEvidenceIds rebound to T23 set",
+  "tip": "a7d12edf",
+  "wave": "T24 rebind"
+}

@@ -34,6 +34,8 @@ import SkillModeTabs from '@/components/scenes/skill/SkillModeTabs.vue'
 import SkillDetailRail from '@/components/scenes/skill/SkillDetailRail.vue'
 import SkillInsightChip from '@/components/scenes/skill/SkillInsightChip.vue'
 import { CULTIVATION_PATH_MODULES } from '@/core/player/CultivationPathKit'
+import TechniqueBand from './skill-path/TechniqueBand.vue'
+import { betaSkillAdmitted } from '@/core/betaScopeSkillDomain'
 import type { BetaSkillTreeNode } from '@/core/betaScopeSkillDomain'
 import { ELEMENT_ORDER, ELEMENT_LABELS, ELEMENT_COLOR_VARS } from '@/core/element/ElementLabels'
 import type { ProgressionNode } from '@/core/progression/ProgressionNode'
@@ -219,7 +221,7 @@ const skillPathEntries = computed<SkillPathEntry[]>(() => {
 
   const entries: SkillPathEntry[] = gameManager.skillManager
     .getAll()
-    .filter(skill => skill.type === 'active')
+    .filter(skill => skill.type === 'active' && betaSkillAdmitted(skill.id))
     .map(skill => ({
       kind: 'skill' as const,
       id: skill.id,
@@ -236,7 +238,7 @@ const skillPathEntries = computed<SkillPathEntry[]>(() => {
     // skill rows above already consume.
     const level = gameManager.progressionOps.getSkillLevel(skillId, player.$state)
 
-    if (level < 1) {
+    if (level < 1 || !betaSkillAdmitted(skillId)) {
       continue
     }
 

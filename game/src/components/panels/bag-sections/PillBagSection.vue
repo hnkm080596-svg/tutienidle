@@ -17,6 +17,7 @@ import {
 } from '@/composables/useBagFilter'
 import { usePlayerStore } from '@/stores/player'
 import { addCultivation } from '@/core/cultivation/CultivationSystem'
+import { scopeHiddenPillFamilyOfId } from '@/core/betaScope'
 import { useNotificationStore } from '@/stores/notification'
 import type { PillTarget } from '@/core/pill/PillSystem'
 import type { Pill } from '@/core/pill/Pill'
@@ -241,6 +242,7 @@ function drinkPill(pillId: string, pillName: string) {
     retired: 'bag.pill.reason.retired',
     material_pill: 'bag.pill.reason.material_pill',
     in_battle: 'bag.pill.reason.in_battle',
+    scope_hidden: 'bag.pill.reason.scope_hidden',
   }
 
   useNotificationStore().push('warning', t(reasonKeys[result.reason ?? 'not_found']))
@@ -309,7 +311,13 @@ const SORT_OPTIONS: Array<BagSortOption & { value: PillSortMode }> = [
 const entries = computed<PillEntry[]>(() => {
   stateVersion.value
 
-  return gameManager.pillBag.getAll().map((stack) => {
+  // BETA SCOPE LOCK - a carried save's dormant-family stacks are
+  // scope-hidden: the drink path (usePillDetailed) fails closed, so a
+  // rendered cell would arm a consume it can never complete.
+  return gameManager.pillBag
+    .getAll()
+    .filter((stack) => scopeHiddenPillFamilyOfId(stack.pill.id) === null)
+    .map((stack) => {
     const displayName = composeItemGradeNameSegments(stack.pill.name, stack.pill.grade)
       .map((segment) => segment.text)
       .join(' ')
@@ -453,6 +461,10 @@ const activeTimedEffects = computed(() => {
 
   return player.$state.persistentTimedEffects
     .filter((effect) => effect.expiresAtMs > now)
+    // BETA SCOPE LOCK - same dormant-family admission as the stack
+    // cells above: a carried dormant-family timed effect (e.g.
+    // hoi_xuan_dan_*) renders no active-effects chip.
+    .filter((effect) => scopeHiddenPillFamilyOfId(effect.sourceItemId) === null)
     .map((effect) => {
       const remainingSeconds = Math.ceil((effect.expiresAtMs - now) / 1000)
 

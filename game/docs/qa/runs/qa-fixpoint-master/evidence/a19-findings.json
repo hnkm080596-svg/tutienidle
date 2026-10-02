@@ -1,0 +1,45 @@
+{
+  "reviewer": "a19",
+  "surface": "persisted-state claims + authority-side admission/writers (scope AUTHORITY seam)",
+  "commit": "ab0b135e021dbc915821c0855de3d395ce82a5ce",
+  "reproSuite": "game/tests/architecture/a19ElementRootWitness.qa.test.ts",
+  "verdict": "PASS WITH GAPS",
+  "findings": [
+    {
+      "id": "A19-1",
+      "severity": "Medium",
+      "surface": "save boundary -> player.nodeLevels element-root claims",
+      "title": "Forged element-root claim on a save with no committed element is admitted and permanently bricks the Ngu Hanh initiation",
+      "description": "PHAP_TU_ELEMENT_ROOT_IDS nodes (hoa_linh_ngo etc.) have exactly one writer: commitFiveElementInitiation, which commits the element root atomically with cultivationPath/cultivationWay, spellPath.element, the qi_refining realm advance and the element kit basic. The nodeLevels replay in saveShapeValidation.ts only replays the node's authored prereqs (node/excludesNode/nodeCount/realm); it never cross-checks an owned root against player.spellPath.element, and nothing restricts a mortal save's nodeLevels to core_* grants. A crafted mortal save claiming 'hoa_linh_ngo' (element=null) passes validateGameSaveShape AND assertSaveAcceptable. At commitFiveElementInitiation every element's purchasability probe then fails: the claimed element's root fails the owned check (getNodeLevel>0) and the other four fail excludesNode, so 'element_root_blocked' is returned for all five elements forever. The accepted save loads a permanently bricked progression state no writer can produce.",
+      "repro": "game/tests/architecture/a19ElementRootWitness.qa.test.ts > 'a mortal save claiming an element root bricks every initiation probe' -- shape.ok === true (defect), all 5 canPurchaseNode probes return false (brick evidence). npx vitest run tests/architecture/a19ElementRootWitness.qa.test.ts.",
+      "mintPath": "saveShapeValidation nodeLevels prereq replay (game/src/services/save/saveShapeValidation.ts ~1680) admits the root -> restore -> GameManagerRealmAdvanceOps.commitFiveElementInitiation element_root_blocked for every element (game/src/core/game/GameManagerRealmAdvanceOps.ts ~631-638) -> mortal player permanently unable to initiate.",
+      "confidence": "Confirmed (deterministic failing-test repro on the pinned commit; brick verified through the same canPurchaseNode call the ritual uses)",
+      "scopeNote": "Not a counter/counter-within-bounds class: the claim is an unproducible cross-field witness (element root without the element the ritual grants with it), i.e. persisted authority outside every writer's envelope."
+    },
+    {
+      "id": "A19-2",
+      "severity": "Low",
+      "surface": "save boundary -> player.spellPath.element on committed saves",
+      "title": "A committed spell_pathway save carrying element=null is unproducible yet admitted",
+      "description": "The ONLY element commit is commitFiveElementInitiation, which is also the ONLY way onto spell_pathway (element-axis ways can never ride the generic chooseCultivationPath op). Every writer-produced spell_pathway save therefore carries spellPath.element != null. The boundary accepts { element: null } on a committed save anyway: the element-axis ownership check gates writes to the axis but does not require the axis to be filled, and the NOVA-5 acceptance coherence check only fires when an element is resolved. The resulting player mints way authority (spell MP pool modifiers, five_elements_art holder, starter kit) with no element and can never gain one (selectSpellPathElement refuses realmId != 'mortal'), leaving the elemental_casting capability and the element tree dead. Unproducible persisted state admitted; effect is weaker than A19-1 because the player is not bricked from an already-valid position - they simply play a reduced, unreachable-by-writers progression shape.",
+      "repro": "Same file, test 'a committed spell_pathway save with element = null is unproducible' -- shape.ok === true, isSaveAcceptable === true (defect).",
+      "mintPath": "validateSpellPathPersistedState ownership check (game/src/core/phap-tu/PhapTuPath.ts) + saveAcceptance element->kit coherence (game/src/services/save/saveAcceptance.ts) both pass on element=null -> restore mints spell way authority (collectActiveWayStatModifiers + technique holder) with dead element machinery.",
+      "confidence": "Confirmed (deterministic failing-test repro; unproducibility established from the single-writer invariant in GameManagerRealmAdvanceOps + selectSpellPathElement's mortal-only gate)",
+      "scopeNote": "Same coherence-hole family as A19-1 (element axis lacks the commit-side witness replay). Kept separate because its admitted shape mints live way authority rather than a brick."
+    }
+  ],
+  "clearedSurfaces": [
+    "persisted player.modifiers / externalModifiers: rebuilt, never trusted (resolvePlayerStatAssembly rebuild-don't-trust; externalModifiers scrubbed to [] at restore)",
+    "forged dormant-way saves (sword/body/hidden ways): way_out_of_scope -> dormant machinery via isBetaWay gates in CombatBuild/capabilities/stat facets; intended carry, not a leak",
+    "forged dormant nodeLevels ids: inert at mint (admittedNodeModifiers filters betaNodeWriteAdmitted); respec/devResetBranch/preview refuse while dormant-tree nodes held",
+    "forged companions / formationLoadout / artifact claims: isScopeHidden + isBetaFeature gates at CombatBuild, pullCompanion isCompanionDomainUnlocked, commitFormationLoadout isFormationUnlocked; dormant pull pool empty",
+    "forged quest claims: QuestSystem.resolveClaimable fails closed on !isBetaQuestEnabled; reconcileActiveQuests deactivates stale claims",
+    "forged phaGiap bank/carry stacks: talent-witnessed + maxStacks capacity clamp (betaSkillAdmitted at seed)",
+    "forged alchemy jobs for dormant pill families: parked at settle (scopeHiddenPillFamilyOfId) and excluded from live slot budget",
+    "forged decompose/ore-decompose slice: gated by equipmentOreDecompose feature flag at the ops layer",
+    "timedEffects/pills: writer-envelope replay (potency/span bounds, dormant pill family rejection)",
+    "skills[] / technique holder / talent / stage / attribute / breakthrough / body progression / hidden perfection / overcharge: all replayed with hard rejects (saveShapeValidation + saveAcceptance + BodyProgressionSystem)",
+    "element=fire coherent forge including a second different-element root: already sealed by excludesNode replay (control test passes)",
+    "authority write seams: learnSkill (betaSkillAdmitted), purchaseNode (betaNodeWriteAdmitted + element-root public-purchase refusal + one-shot-grant provenance), setKiemPhoPreset (swordPath capability + isScopeHidden), selectSkillSpecialization (claimant admission filter), commitFiveElementInitiation (isBetaElement/isBetaWay/not_mortal/element_committed/atomic rollback), trainTechnique (betaTechniqueAdmitted), body invest paths (live body chain is beta scope), alchemy startJob (betaRecipeFamilyOfId), daily quest settle (isBetaFeature('dailyQuest'))"
+  ]
+}

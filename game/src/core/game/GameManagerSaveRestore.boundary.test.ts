@@ -37,6 +37,7 @@ import type { Skill } from '../skill/Skill'
 import type { Technique } from '../technique/Technique'
 import type { EquipmentSlotState } from '../equipment/EquipmentSlotState'
 import type { AlchemyJobSave } from '../../services/save/saveTypes'
+import { alchemyJobReservationDigest } from '../alchemy/AlchemySystem'
 import type { Quest } from '../quest/Quest'
 import { buildGameSave, restoreGameSession, type GameSave } from '../../services/save/SaveSystem'
 import { CURRENT_SAVE_VERSION } from '../../services/save/saveVersion'
@@ -203,15 +204,34 @@ const SAVED_SLOT_STATE: EquipmentSlotState = {
   enhanceFailStreak: 2,
 }
 
-const FUTURE_JOB: AlchemyJobSave = {
-  jobId: 'saved-job',
-  recipeId: 'saved-recipe',
-  pillId: pills[0]!.id,
-  herbMaterialId: 'saved-herb',
-  startedAtMs: Date.now(),
-  completesAtMs: Date.now() + 86_400_000, // far future — never settles during the test
-  roomLevelAtStart: 1,
-}
+const FUTURE_JOB: AlchemyJobSave = (() => {
+  const jobFields = {
+    jobId: 'saved-job',
+    recipeId: 'saved-recipe',
+    pillId: pills[0]!.id,
+    herbMaterialId: 'saved-herb',
+    startedAtMs: Date.now(),
+    completesAtMs: Date.now() + 86_400_000, // far future — never settles during the test
+    roomLevelAtStart: 1,
+  }
+  const reservation = {
+    woodId: 'saved-wood',
+    fuelWoodAmount: 1,
+    spiritStoneCost: 0,
+    herbAmount: 1,
+    specialIngredients: [] as { materialId: string; amount: number }[],
+    costScale: 1,
+    digest: 0,
+  }
+
+  return {
+    ...jobFields,
+    reservation: {
+      ...reservation,
+      digest: alchemyJobReservationDigest(jobFields, reservation),
+    },
+  }
+})()
 
 function savedItem(instanceId = 'saved-item'): ReturnType<typeof makeInstance> {
   return makeInstance({
@@ -1284,6 +1304,9 @@ describe('v72 bodyProgression preflight + rehydration', () => {
     // M-F-CHU-THIEN (C2C-64): opened meridians also need the completed
     // refinement predecessor (+ the mirrored bao grade) to stay
     // coherent; residue at 6/6 would itself be a violation.
+    // F-TC15 pacing: 2 openings producible in-page at realmLevel 4
+    // (doi_mach's authored requirement).
+    mid.realmLevel = 4
     mid.physiqueGrade = 'bao'
     mid.bodyProgression.body_refinement.completedTiers = 6
     mid.bodyProgression.meridian.openedIds = ['nham_mach', 'doi_mach']
@@ -1301,6 +1324,9 @@ describe('v72 bodyProgression preflight + rehydration', () => {
     // M-E (D2): the meridian progress below is only legit with the
     // qi_refining page unlocked. M-F-CHU-THIEN (C2C-64): it also needs
     // the completed refinement predecessor + mirrored bao grade.
+    // F-TC15 pacing: the single opening is producible at realmLevel
+    // 2 (nham_mach's authored requirement).
+    player.realmLevel = 2
     player.physiqueGrade = 'bao'
     player.bodyProgression.body_refinement.completedTiers = 6
     player.bodyProgression.meridian.openedIds = ['nham_mach']

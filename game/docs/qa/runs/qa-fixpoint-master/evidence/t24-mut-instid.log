@@ -1,0 +1,11 @@
+=== M3 instanceId-dedup removed ===
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+
+ Test Files  1 passed (1)
+      Tests  8 passed (8)
+   Start at  17:51:16
+   Duration  1.74s (transform 1.30s, setup 204ms, import 1.40s, tests 35ms, environment 0ms)
+
+EXIT=0

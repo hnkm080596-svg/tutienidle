@@ -1,0 +1,1956 @@
+{
+ "records": [
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-TC7-TRIB",
+    "title": "forged tribulation committedOutcome auto-settles a free realm advance",
+    "severity": "Critical",
+    "status": "CLOSED",
+    "classification": "REAL_DEFECT",
+    "discoveredBy": "devin-241f534e2dd84c65b29b174881c049de",
+    "actionable": true,
+    "subsystem": "betaScope",
+    "rootClass": "AUTHORITY",
+    "rootCause": "settleOutcome gated only on hiddenDormant + isRealmTransitionEnabled; a forged committedOutcome granted realm advance + foundation grade + passives + entitlement",
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/core/tribulation/TribulationOutcomeService.ts",
+      "revision": "4c691c7e",
+      "symbolOrSection": "settleOutcome park condition"
+     },
+     {
+      "basis": "SOURCE",
+      "path": "src/services/save/saveShapeValidation.ts",
+      "revision": "4c691c7e",
+      "symbolOrSection": "committedOutcome boundary checks"
+     }
+    ],
+    "reachability": "PRODUCTION",
+    "state": {
+     "productStateId": "de4898e7ab3132c96817dff81c523eb586e7d0bee41196c32ad54ba045e28e82",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "invariantIds": [
+     "I-AS-1",
+     "I-SF-1"
+    ],
+    "siblingFindingIds": [],
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "expected": "a settled intent must re-derive breakthrough eligibility (level + stage requirements) at the settle seam",
+    "actual": "settleOutcome gated only on hiddenDormant + isRealmTransitionEnabled; a forged committedOutcome granted realm advance + foundation grade + passives + entitlement",
+    "counterexample": "forged victory at mortal -> foundation_establishment + entitlements",
+    "repair": "park arm extended: hiddenDormant || !isRealmTransitionEnabled || !canTriggerBreakthrough(player); dormant-target + hidden-type + arm-isolation pins committed",
+    "evidenceIds": [
+     "EV-PIN-T17",
+     "EV-PIN-ARMISO",
+     "EV-MUT-T17",
+     "EV-VERIFY-T18"
+    ],
+    "pinEvidenceIds": [
+     "EV-PIN-T17",
+     "EV-PIN-ARMISO",
+     "EV-MUT-T17",
+     "EV-VERIFY-T18"
+    ],
+    "verificationEvidenceIds": [
+     "EV-PIN-T17",
+     "EV-PIN-ARMISO",
+     "EV-MUT-T17",
+     "EV-VERIFY-T18"
+    ],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src/services/save",
+       "src/core"
+      ],
+      "termsAndMethod": "forged-record census: every persisted numeric/claim class enumerated against authored writer ceilings; boundary + emit arms audited pairwise",
+      "hitDispositions": [
+       "writer classes closed via betaBoundaryMagnitude pins",
+       "residual unbounded classes recorded as exceptions pending provenance schema"
+      ],
+      "coverageLimits": [],
+      "evidenceIds": [
+       "EV-PIN-T17",
+       "EV-PIN-ARMISO",
+       "EV-MUT-T17",
+       "EV-VERIFY-T18"
+      ]
+     }
+    ],
+    "closeReason": "pinned + mutants killed",
+    "closedAt": "2026-10-01T11:55:00Z",
+    "closureReviewIds": [
+     "RV-CLOSURE-14"
+    ]
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-TC7-EXTMOD",
+    "title": "forged player.externalModifiers reach live stats verbatim",
+    "severity": "High",
+    "status": "CLOSED",
+    "classification": "REAL_DEFECT",
+    "discoveredBy": "devin-241f534e2dd84c65b29b174881c049de",
+    "actionable": true,
+    "subsystem": "betaScope",
+    "rootClass": "AUTHORITY",
+    "rootCause": "resolvePlayerStatAssembly pushed externalModifiers verbatim onto live resolved stats",
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/services/save/saveShapeValidation.ts",
+      "revision": "4c691c7e",
+      "symbolOrSection": "externalModifiers"
+     },
+     {
+      "basis": "SOURCE",
+      "path": "src/core/player/Player.ts",
+      "revision": "4c691c7e",
+      "symbolOrSection": "resolvePlayerStatAssembly"
+     }
+    ],
+    "reachability": "PRODUCTION",
+    "state": {
+     "productStateId": "de4898e7ab3132c96817dff81c523eb586e7d0bee41196c32ad54ba045e28e82",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "invariantIds": [
+     "I-SF-1"
+    ],
+    "siblingFindingIds": [],
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "expected": "external modifiers are not authored by any live writer",
+    "actual": "resolvePlayerStatAssembly pushed externalModifiers verbatim onto live resolved stats",
+    "counterexample": "externalModifiers [{percent:100}] -> forgedStr=101",
+    "repair": "externalModifiers dropped at boundary + emit",
+    "evidenceIds": [
+     "EV-PIN-T17",
+     "EV-PIN-ARMISO",
+     "EV-MUT-T17",
+     "EV-VERIFY-T18"
+    ],
+    "pinEvidenceIds": [
+     "EV-PIN-T17",
+     "EV-PIN-ARMISO",
+     "EV-MUT-T17",
+     "EV-VERIFY-T18"
+    ],
+    "verificationEvidenceIds": [
+     "EV-PIN-T17",
+     "EV-PIN-ARMISO",
+     "EV-MUT-T17",
+     "EV-VERIFY-T18"
+    ],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src/services/save",
+       "src/core"
+      ],
+      "termsAndMethod": "forged-record census: every persisted numeric/claim class enumerated against authored writer ceilings; boundary + emit arms audited pairwise",
+      "hitDispositions": [
+       "writer classes closed via betaBoundaryMagnitude pins",
+       "residual unbounded classes recorded as exceptions pending provenance schema"
+      ],
+      "coverageLimits": [],
+      "evidenceIds": [
+       "EV-PIN-T17",
+       "EV-PIN-ARMISO",
+       "EV-MUT-T17",
+       "EV-VERIFY-T18"
+      ]
+     }
+    ],
+    "closeReason": "pinned + mutants killed",
+    "closedAt": "2026-10-01T11:55:00Z",
+    "closureReviewIds": [
+     "RV-CLOSURE-14"
+    ]
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-TC7-STAGES",
+    "title": "forged completedStageIds opens the breakthrough gate",
+    "severity": "High",
+    "status": "HUMAN_EXCEPTION",
+    "classification": "REAL_DEFECT",
+    "discoveredBy": "devin-241f534e2dd84c65b29b174881c049de",
+    "actionable": true,
+    "subsystem": "betaScope",
+    "rootClass": "AUTHORITY",
+    "rootCause": "completedStageIds restores arbitrary authored-shaped ids; canTriggerBreakthrough reads the claim directly",
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/services/save/saveShapeValidation.ts",
+      "revision": "4c691c7e",
+      "symbolOrSection": "completedStageIds"
+     },
+     {
+      "basis": "SOURCE",
+      "path": "src/core/breakthrough/BreakthroughGate.ts",
+      "revision": "4c691c7e",
+      "symbolOrSection": "canTriggerBreakthrough"
+     }
+    ],
+    "reachability": "PRODUCTION",
+    "state": {
+     "productStateId": "de4898e7ab3132c96817dff81c523eb586e7d0bee41196c32ad54ba045e28e82",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "invariantIds": [
+     "I-AS-1",
+     "I-SF-1"
+    ],
+    "siblingFindingIds": [],
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": {
+     "humanInstructionRef": "escalated to coordinator for a ruling - unrepairable-in-principle on the current save schema without an authored ceiling/witness; recorded pending the parent's decision",
+     "scope": "beta-scope-v2 master gate",
+     "reason": "fabricated magnitude/provenance is indistinguishable from legitimate accrual without a writer ceiling or event ledger; a boundary clamp would either destroy legitimate data or fail to bound the claim",
+     "expiresWhen": "schema/provenance feature lands, or the human accepts the residual explicitly"
+    },
+    "expected": "only authored stage clears may satisfy the chapter-clear requirement",
+    "actual": "completedStageIds restores arbitrary authored-shaped ids; canTriggerBreakthrough reads the claim directly",
+    "counterexample": "completedStageIds includes qi_refining_abyssal_pool -> canTrigger=true without clearing",
+    "repair": null,
+    "evidenceIds": [
+     "EV-PIN-T17"
+    ],
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src/services/save",
+       "src/core"
+      ],
+      "termsAndMethod": "forged-record census: every persisted numeric/claim class enumerated against authored writer ceilings; boundary + emit arms audited pairwise",
+      "hitDispositions": [
+       "writer classes closed via betaBoundaryMagnitude pins",
+       "residual unbounded classes recorded as exceptions pending provenance schema"
+      ],
+      "coverageLimits": [],
+      "evidenceIds": [
+       "EV-PIN-T17",
+       "EV-PIN-ARMISO",
+       "EV-MUT-T17",
+       "EV-VERIFY-T18"
+      ]
+     }
+    ],
+    "closeReason": null,
+    "closedAt": null,
+    "closureReviewIds": []
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-TC7-AUTOFARM",
+    "title": "forged perfect-clear eligibility mints offline loot at scale",
+    "severity": "High",
+    "status": "HUMAN_EXCEPTION",
+    "classification": "REAL_DEFECT",
+    "discoveredBy": "devin-241f534e2dd84c65b29b174881c049de",
+    "actionable": true,
+    "subsystem": "betaScope",
+    "rootClass": "AUTHORITY",
+    "rootCause": "autoFarmStage + perfectClearStageIds + perfectClearSeconds all persisted claims; emit checks presence/finiteness only",
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/core/progression/AutoFarm.ts",
+      "revision": "4c691c7e",
+      "symbolOrSection": "settleAutoFarmOffline"
+     },
+     {
+      "basis": "SOURCE",
+      "path": "src/services/save/saveShapeValidation.ts",
+      "revision": "4c691c7e",
+      "symbolOrSection": "autoFarm fields"
+     }
+    ],
+    "reachability": "PRODUCTION",
+    "state": {
+     "productStateId": "de4898e7ab3132c96817dff81c523eb586e7d0bee41196c32ad54ba045e28e82",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "invariantIds": [
+     "I-SF-1"
+    ],
+    "siblingFindingIds": [],
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": {
+     "humanInstructionRef": "escalated to coordinator for a ruling - unrepairable-in-principle on the current save schema without an authored ceiling/witness; recorded pending the parent's decision",
+     "scope": "beta-scope-v2 master gate",
+     "reason": "fabricated magnitude/provenance is indistinguishable from legitimate accrual without a writer ceiling or event ledger; a boundary clamp would either destroy legitimate data or fail to bound the claim",
+     "expiresWhen": "schema/provenance feature lands, or the human accepts the residual explicitly"
+    },
+    "expected": "auto-farm eligibility requires an authored witness (real clear + seconds)",
+    "actual": "autoFarmStage + perfectClearStageIds + perfectClearSeconds all persisted claims; emit checks presence/finiteness only",
+    "counterexample": "1-second perfect-clear -> 23k materials over a 120s offline window",
+    "repair": null,
+    "evidenceIds": [
+     "EV-PIN-T17"
+    ],
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src/services/save",
+       "src/core"
+      ],
+      "termsAndMethod": "forged-record census: every persisted numeric/claim class enumerated against authored writer ceilings; boundary + emit arms audited pairwise",
+      "hitDispositions": [
+       "writer classes closed via betaBoundaryMagnitude pins",
+       "residual unbounded classes recorded as exceptions pending provenance schema"
+      ],
+      "coverageLimits": [],
+      "evidenceIds": [
+       "EV-PIN-T17",
+       "EV-PIN-ARMISO",
+       "EV-MUT-T17",
+       "EV-VERIFY-T18"
+      ]
+     }
+    ],
+    "closeReason": null,
+    "closedAt": null,
+    "closureReviewIds": []
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-TC7-BASESTAT",
+    "title": "non-main baseStats unbounded at restore",
+    "severity": "High",
+    "status": "CLOSED",
+    "classification": "REAL_DEFECT",
+    "discoveredBy": "devin-241f534e2dd84c65b29b174881c049de",
+    "actionable": true,
+    "subsystem": "betaScope",
+    "rootClass": "BOUNDARY",
+    "rootCause": "main-stat keys got the cap; every other baseStats key restored raw (finalDamagePercent=1e6)",
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/services/save/saveShapeValidation.ts",
+      "revision": "4c691c7e",
+      "symbolOrSection": "baseStats loop"
+     },
+     {
+      "basis": "SOURCE",
+      "path": "src/core/player/Player.ts",
+      "revision": "4c691c7e",
+      "symbolOrSection": "stat assembly"
+     }
+    ],
+    "reachability": "PRODUCTION",
+    "state": {
+     "productStateId": "de4898e7ab3132c96817dff81c523eb586e7d0bee41196c32ad54ba045e28e82",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "invariantIds": [
+     "I-SF-1"
+    ],
+    "siblingFindingIds": [],
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "expected": "every persisted stat key must be bounded by an authored writer ceiling",
+    "actual": "main-stat keys got the cap; every other baseStats key restored raw (finalDamagePercent=1e6)",
+    "counterexample": "baseStats.finalDamagePercent=1000000 restored + resolved",
+    "repair": "key-wise rebuild at boundary: all StatType keys clamped/rebuilt; statProvenance guard pinned",
+    "evidenceIds": [
+     "EV-PIN-T17",
+     "EV-PIN-ARMISO",
+     "EV-MUT-T17",
+     "EV-VERIFY-T18"
+    ],
+    "pinEvidenceIds": [
+     "EV-PIN-T17",
+     "EV-PIN-ARMISO",
+     "EV-MUT-T17",
+     "EV-VERIFY-T18"
+    ],
+    "verificationEvidenceIds": [
+     "EV-PIN-T17",
+     "EV-PIN-ARMISO",
+     "EV-MUT-T17",
+     "EV-VERIFY-T18"
+    ],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src/services/save",
+       "src/core"
+      ],
+      "termsAndMethod": "forged-record census: every persisted numeric/claim class enumerated against authored writer ceilings; boundary + emit arms audited pairwise",
+      "hitDispositions": [
+       "writer classes closed via betaBoundaryMagnitude pins",
+       "residual unbounded classes recorded as exceptions pending provenance schema"
+      ],
+      "coverageLimits": [],
+      "evidenceIds": [
+       "EV-PIN-T17",
+       "EV-PIN-ARMISO",
+       "EV-MUT-T17",
+       "EV-VERIFY-T18"
+      ]
+     }
+    ],
+    "closeReason": "pinned + mutants killed",
+    "closedAt": "2026-10-01T11:55:00Z",
+    "closureReviewIds": [
+     "RV-CLOSURE-14"
+    ]
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-TC7-ENHANCE",
+    "title": "forged equipmentSlots enhanceLevel breaks MAX_SLOT_ENHANCE_LEVEL",
+    "severity": "Medium",
+    "status": "CLOSED",
+    "classification": "REAL_DEFECT",
+    "discoveredBy": "devin-241f534e2dd84c65b29b174881c049de",
+    "actionable": true,
+    "subsystem": "betaScope",
+    "rootClass": "BOUNDARY",
+    "rootCause": "cap enforced at upgrade only; restore cloned verbatim (level 1e9 -> scale 6e7)",
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/services/save/saveShapeValidation.ts",
+      "revision": "4c691c7e",
+      "symbolOrSection": "equipmentSlots enhanceLevel"
+     },
+     {
+      "basis": "SOURCE",
+      "path": "src/core/equipment/EquipmentSystem.ts",
+      "revision": "4c691c7e",
+      "symbolOrSection": "enhance scale"
+     }
+    ],
+    "reachability": "PRODUCTION",
+    "state": {
+     "productStateId": "de4898e7ab3132c96817dff81c523eb586e7d0bee41196c32ad54ba045e28e82",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "invariantIds": [
+     "I-SF-1"
+    ],
+    "siblingFindingIds": [],
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "expected": "enhanceLevel must stay within authored max",
+    "actual": "cap enforced at upgrade only; restore cloned verbatim (level 1e9 -> scale 6e7)",
+    "counterexample": "enhanceLevel=1e9 -> might 720000022.6",
+    "repair": "enhanceLevel bound at boundary + emit clamp",
+    "evidenceIds": [
+     "EV-PIN-T17",
+     "EV-PIN-ARMISO",
+     "EV-MUT-T17",
+     "EV-VERIFY-T18"
+    ],
+    "pinEvidenceIds": [
+     "EV-PIN-T17",
+     "EV-PIN-ARMISO",
+     "EV-MUT-T17",
+     "EV-VERIFY-T18"
+    ],
+    "verificationEvidenceIds": [
+     "EV-PIN-T17",
+     "EV-PIN-ARMISO",
+     "EV-MUT-T17",
+     "EV-VERIFY-T18"
+    ],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src/services/save",
+       "src/core"
+      ],
+      "termsAndMethod": "forged-record census: every persisted numeric/claim class enumerated against authored writer ceilings; boundary + emit arms audited pairwise",
+      "hitDispositions": [
+       "writer classes closed via betaBoundaryMagnitude pins",
+       "residual unbounded classes recorded as exceptions pending provenance schema"
+      ],
+      "coverageLimits": [],
+      "evidenceIds": [
+       "EV-PIN-T17",
+       "EV-PIN-ARMISO",
+       "EV-MUT-T17",
+       "EV-VERIFY-T18"
+      ]
+     }
+    ],
+    "closeReason": "pinned + mutants killed",
+    "closedAt": "2026-10-01T11:55:00Z",
+    "closureReviewIds": [
+     "RV-CLOSURE-14"
+    ]
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-TC7-MAINFLAT",
+    "title": "forged equipment mainStat.flat unbounded",
+    "severity": "Medium",
+    "status": "CLOSED",
+    "classification": "REAL_DEFECT",
+    "discoveredBy": "devin-241f534e2dd84c65b29b174881c049de",
+    "actionable": true,
+    "subsystem": "betaScope",
+    "rootClass": "BOUNDARY",
+    "rootCause": "no magnitude bound on persisted main-stat values",
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/services/save/saveShapeValidation.ts",
+      "revision": "4c691c7e",
+      "symbolOrSection": "equipment mainStat"
+     },
+     {
+      "basis": "SOURCE",
+      "path": "src/core/equipment/EquipmentSystem.ts",
+      "revision": "4c691c7e",
+      "symbolOrSection": "setEquipmentModifiers"
+     }
+    ],
+    "reachability": "PRODUCTION",
+    "state": {
+     "productStateId": "de4898e7ab3132c96817dff81c523eb586e7d0bee41196c32ad54ba045e28e82",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "invariantIds": [
+     "I-SF-1"
+    ],
+    "siblingFindingIds": [],
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "expected": "mainStat values bounded by authored tier ranges",
+    "actual": "no magnitude bound on persisted main-stat values",
+    "counterexample": "mainStat.flat=1e9 -> might=1000000010.6",
+    "repair": "mainStat writer bound at boundary",
+    "evidenceIds": [
+     "EV-PIN-T17",
+     "EV-PIN-ARMISO",
+     "EV-MUT-T17",
+     "EV-VERIFY-T18"
+    ],
+    "pinEvidenceIds": [
+     "EV-PIN-T17",
+     "EV-PIN-ARMISO",
+     "EV-MUT-T17",
+     "EV-VERIFY-T18"
+    ],
+    "verificationEvidenceIds": [
+     "EV-PIN-T17",
+     "EV-PIN-ARMISO",
+     "EV-MUT-T17",
+     "EV-VERIFY-T18"
+    ],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src/services/save",
+       "src/core"
+      ],
+      "termsAndMethod": "forged-record census: every persisted numeric/claim class enumerated against authored writer ceilings; boundary + emit arms audited pairwise",
+      "hitDispositions": [
+       "writer classes closed via betaBoundaryMagnitude pins",
+       "residual unbounded classes recorded as exceptions pending provenance schema"
+      ],
+      "coverageLimits": [],
+      "evidenceIds": [
+       "EV-PIN-T17",
+       "EV-PIN-ARMISO",
+       "EV-MUT-T17",
+       "EV-VERIFY-T18"
+      ]
+     }
+    ],
+    "closeReason": "pinned + mutants killed",
+    "closedAt": "2026-10-01T11:55:00Z",
+    "closureReviewIds": [
+     "RV-CLOSURE-14"
+    ]
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-TC7-AFFIXTIER",
+    "title": "affix roll with unlisted tier escapes the value clamp",
+    "severity": "Medium",
+    "status": "CLOSED",
+    "classification": "REAL_DEFECT",
+    "discoveredBy": "devin-241f534e2dd84c65b29b174881c049de",
+    "actionable": true,
+    "subsystem": "betaScope",
+    "rootClass": "BOUNDARY",
+    "rootCause": "clamp applied only when tier in affix.tiers; tier:999 emitted the forged value",
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/services/save/saveShapeValidation.ts",
+      "revision": "4c691c7e",
+      "symbolOrSection": "rolledAffixes"
+     },
+     {
+      "basis": "SOURCE",
+      "path": "src/core/equipment/AffixSystem.ts",
+      "revision": "4c691c7e",
+      "symbolOrSection": "getEffectiveAffixValue"
+     }
+    ],
+    "reachability": "PRODUCTION",
+    "state": {
+     "productStateId": "de4898e7ab3132c96817dff81c523eb586e7d0bee41196c32ad54ba045e28e82",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "invariantIds": [
+     "I-SF-1"
+    ],
+    "siblingFindingIds": [],
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "expected": "rolled tier must be one of the affix's authored tiers",
+    "actual": "clamp applied only when tier in affix.tiers; tier:999 emitted the forged value",
+    "counterexample": "rolledAffixes tier:999 -> accuracyRating flat=1e9",
+    "repair": "tier membership enforced; unlisted tier drops/clamps the affix",
+    "evidenceIds": [
+     "EV-PIN-T17",
+     "EV-PIN-ARMISO",
+     "EV-MUT-T17",
+     "EV-VERIFY-T18"
+    ],
+    "pinEvidenceIds": [
+     "EV-PIN-T17",
+     "EV-PIN-ARMISO",
+     "EV-MUT-T17",
+     "EV-VERIFY-T18"
+    ],
+    "verificationEvidenceIds": [
+     "EV-PIN-T17",
+     "EV-PIN-ARMISO",
+     "EV-MUT-T17",
+     "EV-VERIFY-T18"
+    ],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src/services/save",
+       "src/core"
+      ],
+      "termsAndMethod": "forged-record census: every persisted numeric/claim class enumerated against authored writer ceilings; boundary + emit arms audited pairwise",
+      "hitDispositions": [
+       "writer classes closed via betaBoundaryMagnitude pins",
+       "residual unbounded classes recorded as exceptions pending provenance schema"
+      ],
+      "coverageLimits": [],
+      "evidenceIds": [
+       "EV-PIN-T17",
+       "EV-PIN-ARMISO",
+       "EV-MUT-T17",
+       "EV-VERIFY-T18"
+      ]
+     }
+    ],
+    "closeReason": "pinned + mutants killed",
+    "closedAt": "2026-10-01T11:55:00Z",
+    "closureReviewIds": [
+     "RV-CLOSURE-14"
+    ]
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-TC7-PILLPCT",
+    "title": "pill timed-effect percent/multiplier unbounded",
+    "severity": "Medium",
+    "status": "CLOSED",
+    "classification": "REAL_DEFECT",
+    "discoveredBy": "devin-241f534e2dd84c65b29b174881c049de",
+    "actionable": true,
+    "subsystem": "betaScope",
+    "rootClass": "BOUNDARY",
+    "rootCause": "validator bounded flat only; percent/multiplier emitted verbatim",
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/services/save/saveShapeValidation.ts",
+      "revision": "4c691c7e",
+      "symbolOrSection": "persistentTimedEffects"
+     },
+     {
+      "basis": "SOURCE",
+      "path": "src/core/effects/TimedEffects.ts",
+      "revision": "4c691c7e",
+      "symbolOrSection": "getActiveTimedModifiers"
+     }
+    ],
+    "reachability": "PRODUCTION",
+    "state": {
+     "productStateId": "de4898e7ab3132c96817dff81c523eb586e7d0bee41196c32ad54ba045e28e82",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "invariantIds": [
+     "I-SF-1"
+    ],
+    "siblingFindingIds": [],
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "expected": "timed-effect modifier magnitudes bounded by authored writer shapes",
+    "actual": "validator bounded flat only; percent/multiplier emitted verbatim",
+    "counterexample": "persistentTimedEffects [{percent:100}] -> live battle modifier",
+    "repair": "percent/multiplier bounded at boundary + emit",
+    "evidenceIds": [
+     "EV-PIN-T17",
+     "EV-PIN-ARMISO",
+     "EV-MUT-T17",
+     "EV-VERIFY-T18"
+    ],
+    "pinEvidenceIds": [
+     "EV-PIN-T17",
+     "EV-PIN-ARMISO",
+     "EV-MUT-T17",
+     "EV-VERIFY-T18"
+    ],
+    "verificationEvidenceIds": [
+     "EV-PIN-T17",
+     "EV-PIN-ARMISO",
+     "EV-MUT-T17",
+     "EV-VERIFY-T18"
+    ],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src/services/save",
+       "src/core"
+      ],
+      "termsAndMethod": "forged-record census: every persisted numeric/claim class enumerated against authored writer ceilings; boundary + emit arms audited pairwise",
+      "hitDispositions": [
+       "writer classes closed via betaBoundaryMagnitude pins",
+       "residual unbounded classes recorded as exceptions pending provenance schema"
+      ],
+      "coverageLimits": [],
+      "evidenceIds": [
+       "EV-PIN-T17",
+       "EV-PIN-ARMISO",
+       "EV-MUT-T17",
+       "EV-VERIFY-T18"
+      ]
+     }
+    ],
+    "closeReason": "pinned + mutants killed",
+    "closedAt": "2026-10-01T11:55:00Z",
+    "closureReviewIds": [
+     "RV-CLOSURE-14"
+    ]
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-TC7-ETERNAL",
+    "title": "timed-effect duration unbounded (eternal buff)",
+    "severity": "Medium",
+    "status": "HUMAN_EXCEPTION",
+    "classification": "REAL_DEFECT",
+    "discoveredBy": "devin-241f534e2dd84c65b29b174881c049de",
+    "actionable": true,
+    "subsystem": "betaScope",
+    "rootClass": "BOUNDARY",
+    "rootCause": "no authored bound on expiresAtMs-appliedAtMs; +1e12 emits forever",
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/services/save/saveShapeValidation.ts",
+      "revision": "4c691c7e",
+      "symbolOrSection": "persistentTimedEffects duration"
+     },
+     {
+      "basis": "SOURCE",
+      "path": "src/core/effects/TimedEffects.ts",
+      "revision": "4c691c7e",
+      "symbolOrSection": "expiry check"
+     }
+    ],
+    "reachability": "PRODUCTION",
+    "state": {
+     "productStateId": "de4898e7ab3132c96817dff81c523eb586e7d0bee41196c32ad54ba045e28e82",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "invariantIds": [
+     "I-SF-1"
+    ],
+    "siblingFindingIds": [],
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": {
+     "humanInstructionRef": "escalated to coordinator for a ruling - unrepairable-in-principle on the current save schema without an authored ceiling/witness; recorded pending the parent's decision",
+     "scope": "beta-scope-v2 master gate",
+     "reason": "fabricated magnitude/provenance is indistinguishable from legitimate accrual without a writer ceiling or event ledger; a boundary clamp would either destroy legitimate data or fail to bound the claim",
+     "expiresWhen": "schema/provenance feature lands, or the human accepts the residual explicitly"
+    },
+    "expected": "expiresAtMs should stay within an authored duration window",
+    "actual": "no authored bound on expiresAtMs-appliedAtMs; +1e12 emits forever",
+    "counterexample": "timed effect still active at +300yr",
+    "repair": null,
+    "evidenceIds": [
+     "EV-PIN-T17"
+    ],
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src/services/save",
+       "src/core"
+      ],
+      "termsAndMethod": "forged-record census: every persisted numeric/claim class enumerated against authored writer ceilings; boundary + emit arms audited pairwise",
+      "hitDispositions": [
+       "writer classes closed via betaBoundaryMagnitude pins",
+       "residual unbounded classes recorded as exceptions pending provenance schema"
+      ],
+      "coverageLimits": [],
+      "evidenceIds": [
+       "EV-PIN-T17",
+       "EV-PIN-ARMISO",
+       "EV-MUT-T17",
+       "EV-VERIFY-T18"
+      ]
+     }
+    ],
+    "closeReason": null,
+    "closedAt": null,
+    "closureReviewIds": []
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-TC7-MATERIAL",
+    "title": "material quantities unbounded (currency mint)",
+    "severity": "Medium",
+    "status": "HUMAN_EXCEPTION",
+    "classification": "REAL_DEFECT",
+    "discoveredBy": "devin-241f534e2dd84c65b29b174881c049de",
+    "actionable": true,
+    "subsystem": "betaScope",
+    "rootClass": "BOUNDARY",
+    "rootCause": "non-negative finite only; 1e9 restored and spendable",
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/services/save/saveShapeValidation.ts",
+      "revision": "4c691c7e",
+      "symbolOrSection": "materials[]"
+     },
+     {
+      "basis": "SOURCE",
+      "path": "src/core/inventory/MaterialBag.ts",
+      "revision": "4c691c7e",
+      "symbolOrSection": "spend"
+     }
+    ],
+    "reachability": "PRODUCTION",
+    "state": {
+     "productStateId": "de4898e7ab3132c96817dff81c523eb586e7d0bee41196c32ad54ba045e28e82",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "invariantIds": [
+     "I-SF-1"
+    ],
+    "siblingFindingIds": [],
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": {
+     "humanInstructionRef": "escalated to coordinator for a ruling - unrepairable-in-principle on the current save schema without an authored ceiling/witness; recorded pending the parent's decision",
+     "scope": "beta-scope-v2 master gate",
+     "reason": "fabricated magnitude/provenance is indistinguishable from legitimate accrual without a writer ceiling or event ledger; a boundary clamp would either destroy legitimate data or fail to bound the claim",
+     "expiresWhen": "schema/provenance feature lands, or the human accepts the residual explicitly"
+    },
+    "expected": "material amounts should be bounded by earnable ceilings",
+    "actual": "non-negative finite only; 1e9 restored and spendable",
+    "counterexample": "materials[].amount=1e9 -> spend 5e8 succeeds",
+    "repair": null,
+    "evidenceIds": [
+     "EV-PIN-T17"
+    ],
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src/services/save",
+       "src/core"
+      ],
+      "termsAndMethod": "forged-record census: every persisted numeric/claim class enumerated against authored writer ceilings; boundary + emit arms audited pairwise",
+      "hitDispositions": [
+       "writer classes closed via betaBoundaryMagnitude pins",
+       "residual unbounded classes recorded as exceptions pending provenance schema"
+      ],
+      "coverageLimits": [],
+      "evidenceIds": [
+       "EV-PIN-T17",
+       "EV-PIN-ARMISO",
+       "EV-MUT-T17",
+       "EV-VERIFY-T18"
+      ]
+     }
+    ],
+    "closeReason": null,
+    "closedAt": null,
+    "closureReviewIds": []
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-TC7-BETAPILL",
+    "title": "forged beta pill stack mints permanent main stats",
+    "severity": "Medium",
+    "status": "HUMAN_EXCEPTION",
+    "classification": "REAL_DEFECT",
+    "discoveredBy": "devin-241f534e2dd84c65b29b174881c049de",
+    "actionable": true,
+    "subsystem": "betaScope",
+    "rootClass": "BOUNDARY",
+    "rootCause": "stack size unbounded; consume writes baseStats until cap",
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/services/save/saveShapeValidation.ts",
+      "revision": "4c691c7e",
+      "symbolOrSection": "pills[]"
+     },
+     {
+      "basis": "SOURCE",
+      "path": "src/core/inventory/PillSystem.ts",
+      "revision": "4c691c7e",
+      "symbolOrSection": "usePillDetailed"
+     }
+    ],
+    "reachability": "PRODUCTION",
+    "state": {
+     "productStateId": "de4898e7ab3132c96817dff81c523eb586e7d0bee41196c32ad54ba045e28e82",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "invariantIds": [
+     "I-SF-1"
+    ],
+    "siblingFindingIds": [],
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": {
+     "humanInstructionRef": "escalated to coordinator for a ruling - unrepairable-in-principle on the current save schema without an authored ceiling/witness; recorded pending the parent's decision",
+     "scope": "beta-scope-v2 master gate",
+     "reason": "fabricated magnitude/provenance is indistinguishable from legitimate accrual without a writer ceiling or event ledger; a boundary clamp would either destroy legitimate data or fail to bound the claim",
+     "expiresWhen": "schema/provenance feature lands, or the human accepts the residual explicitly"
+    },
+    "expected": "pill stack size should be bounded by earnable ceilings",
+    "actual": "stack size unbounded; consume writes baseStats until cap",
+    "counterexample": "50 forged pills -> +29 attunement",
+    "repair": null,
+    "evidenceIds": [
+     "EV-PIN-T17"
+    ],
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src/services/save",
+       "src/core"
+      ],
+      "termsAndMethod": "forged-record census: every persisted numeric/claim class enumerated against authored writer ceilings; boundary + emit arms audited pairwise",
+      "hitDispositions": [
+       "writer classes closed via betaBoundaryMagnitude pins",
+       "residual unbounded classes recorded as exceptions pending provenance schema"
+      ],
+      "coverageLimits": [],
+      "evidenceIds": [
+       "EV-PIN-T17",
+       "EV-PIN-ARMISO",
+       "EV-MUT-T17",
+       "EV-VERIFY-T18"
+      ]
+     }
+    ],
+    "closeReason": null,
+    "closedAt": null,
+    "closureReviewIds": []
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-TC7-ALCHEMY",
+    "title": "forged completed alchemy job mints a free pill",
+    "severity": "Medium",
+    "status": "HUMAN_EXCEPTION",
+    "classification": "REAL_DEFECT",
+    "discoveredBy": "devin-241f534e2dd84c65b29b174881c049de",
+    "actionable": true,
+    "subsystem": "betaScope",
+    "rootClass": "AUTHORITY",
+    "rootCause": "restoreJobs trusts the record; past completesAtMs + valid herb variant settles with pill delivery - materials never paid",
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/core/alchemy/AlchemySystem.ts",
+      "revision": "4c691c7e",
+      "symbolOrSection": "settleOffline restoreJobs"
+     },
+     {
+      "basis": "SOURCE",
+      "path": "src/services/save/saveShapeValidation.ts",
+      "revision": "4c691c7e",
+      "symbolOrSection": "alchemyJobs"
+     }
+    ],
+    "reachability": "PRODUCTION",
+    "state": {
+     "productStateId": "de4898e7ab3132c96817dff81c523eb586e7d0bee41196c32ad54ba045e28e82",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "invariantIds": [
+     "I-SF-1"
+    ],
+    "siblingFindingIds": [],
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": {
+     "humanInstructionRef": "escalated to coordinator for a ruling - unrepairable-in-principle on the current save schema without an authored ceiling/witness; recorded pending the parent's decision",
+     "scope": "beta-scope-v2 master gate",
+     "reason": "fabricated magnitude/provenance is indistinguishable from legitimate accrual without a writer ceiling or event ledger; a boundary clamp would either destroy legitimate data or fail to bound the claim",
+     "expiresWhen": "schema/provenance feature lands, or the human accepts the residual explicitly"
+    },
+    "expected": "a job should prove payment before settlement delivers",
+    "actual": "restoreJobs trusts the record; past completesAtMs + valid herb variant settles with pill delivery - materials never paid",
+    "counterexample": "forged complete job -> 1 pill without payment",
+    "repair": null,
+    "evidenceIds": [
+     "EV-PIN-T17"
+    ],
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src/services/save",
+       "src/core"
+      ],
+      "termsAndMethod": "forged-record census: every persisted numeric/claim class enumerated against authored writer ceilings; boundary + emit arms audited pairwise",
+      "hitDispositions": [
+       "writer classes closed via betaBoundaryMagnitude pins",
+       "residual unbounded classes recorded as exceptions pending provenance schema"
+      ],
+      "coverageLimits": [],
+      "evidenceIds": [
+       "EV-PIN-T17",
+       "EV-PIN-ARMISO",
+       "EV-MUT-T17",
+       "EV-VERIFY-T18"
+      ]
+     }
+    ],
+    "closeReason": null,
+    "closedAt": null,
+    "closureReviewIds": []
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-TC7-LEVEL99",
+    "title": "realmLevel past realm maxLevel inflates attributePoints bound",
+    "severity": "Medium",
+    "status": "CLOSED",
+    "classification": "REAL_DEFECT",
+    "discoveredBy": "devin-241f534e2dd84c65b29b174881c049de",
+    "actionable": true,
+    "subsystem": "betaScope",
+    "rootClass": "BOUNDARY",
+    "rootCause": "realmLevel=99 at mortal (max 18) restored; bound = global level accepted attributePoints=99",
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/services/save/saveShapeValidation.ts",
+      "revision": "4c691c7e",
+      "symbolOrSection": "realmLevel"
+     },
+     {
+      "basis": "SOURCE",
+      "path": "src/core/player/Player.ts",
+      "revision": "4c691c7e",
+      "symbolOrSection": "attributePoints bound"
+     }
+    ],
+    "reachability": "PRODUCTION",
+    "state": {
+     "productStateId": "de4898e7ab3132c96817dff81c523eb586e7d0bee41196c32ad54ba045e28e82",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "invariantIds": [
+     "I-SF-1"
+    ],
+    "siblingFindingIds": [],
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "expected": "realmLevel must stay within the realm's authored maxLevel",
+    "actual": "realmLevel=99 at mortal (max 18) restored; bound = global level accepted attributePoints=99",
+    "counterexample": "realmLevel 99 + attributePoints 99 pass shape",
+    "repair": "realmLevel bounded by realm.maxLevel at boundary",
+    "evidenceIds": [
+     "EV-PIN-T17",
+     "EV-PIN-ARMISO",
+     "EV-MUT-T17",
+     "EV-VERIFY-T18"
+    ],
+    "pinEvidenceIds": [
+     "EV-PIN-T17",
+     "EV-PIN-ARMISO",
+     "EV-MUT-T17",
+     "EV-VERIFY-T18"
+    ],
+    "verificationEvidenceIds": [
+     "EV-PIN-T17",
+     "EV-PIN-ARMISO",
+     "EV-MUT-T17",
+     "EV-VERIFY-T18"
+    ],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src/services/save",
+       "src/core"
+      ],
+      "termsAndMethod": "forged-record census: every persisted numeric/claim class enumerated against authored writer ceilings; boundary + emit arms audited pairwise",
+      "hitDispositions": [
+       "writer classes closed via betaBoundaryMagnitude pins",
+       "residual unbounded classes recorded as exceptions pending provenance schema"
+      ],
+      "coverageLimits": [],
+      "evidenceIds": [
+       "EV-PIN-T17",
+       "EV-PIN-ARMISO",
+       "EV-MUT-T17",
+       "EV-VERIFY-T18"
+      ]
+     }
+    ],
+    "closeReason": "pinned + mutants killed",
+    "closedAt": "2026-10-01T11:55:00Z",
+    "closureReviewIds": [
+     "RV-CLOSURE-14"
+    ]
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-TC7-CULT",
+    "title": "forged cultivation spends as free breakthrough levels",
+    "severity": "Medium",
+    "status": "HUMAN_EXCEPTION",
+    "classification": "REAL_DEFECT",
+    "discoveredBy": "devin-241f534e2dd84c65b29b174881c049de",
+    "actionable": true,
+    "subsystem": "betaScope",
+    "rootClass": "BOUNDARY",
+    "rootCause": "no provenance check; cultivation consumed by the real breakthrough op",
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/services/save/saveShapeValidation.ts",
+      "revision": "4c691c7e",
+      "symbolOrSection": "cultivation"
+     },
+     {
+      "basis": "SOURCE",
+      "path": "src/core/cultivation/CultivationSystem.ts",
+      "revision": "4c691c7e",
+      "symbolOrSection": "breakthrough spend"
+     }
+    ],
+    "reachability": "PRODUCTION",
+    "state": {
+     "productStateId": "de4898e7ab3132c96817dff81c523eb586e7d0bee41196c32ad54ba045e28e82",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "invariantIds": [
+     "I-SF-1"
+    ],
+    "siblingFindingIds": [],
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": {
+     "humanInstructionRef": "escalated to coordinator for a ruling - unrepairable-in-principle on the current save schema without an authored ceiling/witness; recorded pending the parent's decision",
+     "scope": "beta-scope-v2 master gate",
+     "reason": "fabricated magnitude/provenance is indistinguishable from legitimate accrual without a writer ceiling or event ledger; a boundary clamp would either destroy legitimate data or fail to bound the claim",
+     "expiresWhen": "schema/provenance feature lands, or the human accepts the residual explicitly"
+    },
+    "expected": "cultivation should be bounded by earnable ceilings",
+    "actual": "no provenance check; cultivation consumed by the real breakthrough op",
+    "counterexample": "forged cultivation -> realmLevel++ + attributePoints++",
+    "repair": null,
+    "evidenceIds": [
+     "EV-PIN-T17"
+    ],
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src/services/save",
+       "src/core"
+      ],
+      "termsAndMethod": "forged-record census: every persisted numeric/claim class enumerated against authored writer ceilings; boundary + emit arms audited pairwise",
+      "hitDispositions": [
+       "writer classes closed via betaBoundaryMagnitude pins",
+       "residual unbounded classes recorded as exceptions pending provenance schema"
+      ],
+      "coverageLimits": [],
+      "evidenceIds": [
+       "EV-PIN-T17",
+       "EV-PIN-ARMISO",
+       "EV-MUT-T17",
+       "EV-VERIFY-T18"
+      ]
+     }
+    ],
+    "closeReason": null,
+    "closedAt": null,
+    "closureReviewIds": []
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-TC7-ENTITLE",
+    "title": "forged pendingTalentEntitlement grants a pool-legal talent early",
+    "severity": "Medium",
+    "status": "CLOSED",
+    "classification": "REAL_DEFECT",
+    "discoveredBy": "devin-241f534e2dd84c65b29b174881c049de",
+    "actionable": true,
+    "subsystem": "betaScope",
+    "rootClass": "AUTHORITY",
+    "rootCause": "pool legality checked but entitlement.realmId vs player.realmId coherence was not",
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/services/save/saveShapeValidation.ts",
+      "revision": "4c691c7e",
+      "symbolOrSection": "pendingTalentEntitlement"
+     },
+     {
+      "basis": "SOURCE",
+      "path": "src/core/talent/TalentSystem.ts",
+      "revision": "4c691c7e",
+      "symbolOrSection": "resolveTalentEntitlement"
+     }
+    ],
+    "reachability": "PRODUCTION",
+    "state": {
+     "productStateId": "de4898e7ab3132c96817dff81c523eb586e7d0bee41196c32ad54ba045e28e82",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "invariantIds": [
+     "I-SF-1"
+    ],
+    "siblingFindingIds": [],
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "expected": "entitlement realm must equal the player's realm",
+    "actual": "pool legality checked but entitlement.realmId vs player.realmId coherence was not",
+    "counterexample": "qi_refining player granted a foundation-pool talent",
+    "repair": "entitlement/claimant coherence enforced at boundary + resolution",
+    "evidenceIds": [
+     "EV-PIN-T17",
+     "EV-PIN-ARMISO",
+     "EV-MUT-T17",
+     "EV-VERIFY-T18"
+    ],
+    "pinEvidenceIds": [
+     "EV-PIN-T17",
+     "EV-PIN-ARMISO",
+     "EV-MUT-T17",
+     "EV-VERIFY-T18"
+    ],
+    "verificationEvidenceIds": [
+     "EV-PIN-T17",
+     "EV-PIN-ARMISO",
+     "EV-MUT-T17",
+     "EV-VERIFY-T18"
+    ],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src/services/save",
+       "src/core"
+      ],
+      "termsAndMethod": "forged-record census: every persisted numeric/claim class enumerated against authored writer ceilings; boundary + emit arms audited pairwise",
+      "hitDispositions": [
+       "writer classes closed via betaBoundaryMagnitude pins",
+       "residual unbounded classes recorded as exceptions pending provenance schema"
+      ],
+      "coverageLimits": [],
+      "evidenceIds": [
+       "EV-PIN-T17",
+       "EV-PIN-ARMISO",
+       "EV-MUT-T17",
+       "EV-VERIFY-T18"
+      ]
+     }
+    ],
+    "closeReason": "pinned + mutants killed",
+    "closedAt": "2026-10-01T11:55:00Z",
+    "closureReviewIds": [
+     "RV-CLOSURE-14"
+    ]
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-TC7-WORKERS",
+    "title": "forged chi_hien_quan building mints worker capacity",
+    "severity": "Low",
+    "status": "HUMAN_EXCEPTION",
+    "classification": "REAL_DEFECT",
+    "discoveredBy": "devin-241f534e2dd84c65b29b174881c049de",
+    "actionable": true,
+    "subsystem": "betaScope",
+    "rootClass": "AUTHORITY",
+    "rootCause": "capacity recomputed from forged instance (clamped to 3 anyway)",
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/core/building/BuildingSystem.ts",
+      "revision": "4c691c7e",
+      "symbolOrSection": "capacity recompute"
+     },
+     {
+      "basis": "SOURCE",
+      "path": "src/services/save/saveShapeValidation.ts",
+      "revision": "4c691c7e",
+      "symbolOrSection": "buildings[]"
+     }
+    ],
+    "reachability": "PRODUCTION",
+    "state": {
+     "productStateId": "de4898e7ab3132c96817dff81c523eb586e7d0bee41196c32ad54ba045e28e82",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "invariantIds": [
+     "I-SF-1"
+    ],
+    "siblingFindingIds": [],
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": {
+     "humanInstructionRef": "user ruling: attacks/scope fixes are Medium+ only; Low/Nit recorded as deferred exceptions",
+     "scope": "flagged unsupported saves only - a normal beta save cannot reach this state",
+     "reason": "bounded or display-only residual on a forged/flagged save; every effect-applying seam behind it is gated",
+     "expiresWhen": "next scope contract revision or user reversal of the Medium+-only ruling"
+    },
+    "expected": "instance claims should cross-check purchase history",
+    "actual": "capacity recomputed from forged instance (clamped to 3 anyway)",
+    "counterexample": "forged instance -> capacity=3 effective=3",
+    "repair": null,
+    "evidenceIds": [
+     "EV-PIN-T17"
+    ],
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src/services/save",
+       "src/core"
+      ],
+      "termsAndMethod": "forged-record census: every persisted numeric/claim class enumerated against authored writer ceilings; boundary + emit arms audited pairwise",
+      "hitDispositions": [
+       "writer classes closed via betaBoundaryMagnitude pins",
+       "residual unbounded classes recorded as exceptions pending provenance schema"
+      ],
+      "coverageLimits": [],
+      "evidenceIds": [
+       "EV-PIN-T17",
+       "EV-PIN-ARMISO",
+       "EV-MUT-T17",
+       "EV-VERIFY-T18"
+      ]
+     }
+    ],
+    "closeReason": null,
+    "closedAt": null,
+    "closureReviewIds": []
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-TC7-CPS",
+    "title": "forged cultivationPerSecond snapshot lands but capped",
+    "severity": "Low",
+    "status": "HUMAN_EXCEPTION",
+    "classification": "REAL_DEFECT",
+    "discoveredBy": "devin-241f534e2dd84c65b29b174881c049de",
+    "actionable": true,
+    "subsystem": "betaScope",
+    "rootClass": "BOUNDARY",
+    "rootCause": "persisted rate used for accrual window; hard-clamped (+600)",
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/services/save/saveShapeValidation.ts",
+      "revision": "4c691c7e",
+      "symbolOrSection": "cultivationPerSecond"
+     },
+     {
+      "basis": "SOURCE",
+      "path": "src/core/cultivation/CultivationSystem.ts",
+      "revision": "4c691c7e",
+      "symbolOrSection": "offline accrual"
+     }
+    ],
+    "reachability": "PRODUCTION",
+    "state": {
+     "productStateId": "de4898e7ab3132c96817dff81c523eb586e7d0bee41196c32ad54ba045e28e82",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "invariantIds": [
+     "I-SF-1"
+    ],
+    "siblingFindingIds": [],
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": {
+     "humanInstructionRef": "user ruling: attacks/scope fixes are Medium+ only; Low/Nit recorded as deferred exceptions",
+     "scope": "flagged unsupported saves only - a normal beta save cannot reach this state",
+     "reason": "bounded or display-only residual on a forged/flagged save; every effect-applying seam behind it is gated",
+     "expiresWhen": "next scope contract revision or user reversal of the Medium+-only ruling"
+    },
+    "expected": "rate claim should derive from the state, not the claim",
+    "actual": "persisted rate used for accrual window; hard-clamped (+600)",
+    "counterexample": "cultivationPerSecond=1e12 -> +600 only",
+    "repair": null,
+    "evidenceIds": [
+     "EV-PIN-T17"
+    ],
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src/services/save",
+       "src/core"
+      ],
+      "termsAndMethod": "forged-record census: every persisted numeric/claim class enumerated against authored writer ceilings; boundary + emit arms audited pairwise",
+      "hitDispositions": [
+       "writer classes closed via betaBoundaryMagnitude pins",
+       "residual unbounded classes recorded as exceptions pending provenance schema"
+      ],
+      "coverageLimits": [],
+      "evidenceIds": [
+       "EV-PIN-T17",
+       "EV-PIN-ARMISO",
+       "EV-MUT-T17",
+       "EV-VERIFY-T18"
+      ]
+     }
+    ],
+    "closeReason": null,
+    "closedAt": null,
+    "closureReviewIds": []
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-B9-CON-02",
+    "title": "dormant-tree respec renders a fabricated confirm dialog (preview returns non-null zero-shape)",
+    "severity": "Medium",
+    "status": "CLOSED",
+    "classification": "REAL_DEFECT",
+    "discoveredBy": "devin-a02a0fa79f544a24812e884623e1eee0",
+    "actionable": true,
+    "subsystem": "betaScope",
+    "rootClass": "CONSUMER",
+    "rootCause": "previewNodeRespec returned {refund:0,resetCount:0} for dormant holdings while respecNodeTree refused - confirm dialog mounted then silently no-oped",
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/core/game/GameManagerProgressionOps.ts",
+      "revision": "4c691c7e",
+      "symbolOrSection": "previewNodeRespec/respecNodeTree"
+     },
+     {
+      "basis": "SOURCE",
+      "path": "src/components/game/NodeTreePanel.vue",
+      "revision": "4c691c7e",
+      "symbolOrSection": "respec ConfirmModal"
+     }
+    ],
+    "reachability": "PRODUCTION",
+    "state": {
+     "productStateId": "de4898e7ab3132c96817dff81c523eb586e7d0bee41196c32ad54ba045e28e82",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "invariantIds": [
+     "I-AS-1"
+    ],
+    "siblingFindingIds": [],
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "expected": "consumer surfaces honor the write-op verdict",
+    "actual": "previewNodeRespec returned {refund:0,resetCount:0} for dormant holdings while respecNodeTree refused - confirm dialog mounted then silently no-oped",
+    "counterexample": "previewNodeRespec returned {refund:0,resetCount:0} for dormant holdings while respecNodeTree refused - confirm dialog mounted then silently no-oped",
+    "repair": "preview shares the write op's admission gate; null preview = no dialog mount (11863b9a)",
+    "evidenceIds": [
+     "EV-PIN-T17",
+     "EV-PIN-ARMISO",
+     "EV-MUT-T17",
+     "EV-VERIFY-T18"
+    ],
+    "pinEvidenceIds": [
+     "EV-PIN-T17",
+     "EV-PIN-ARMISO",
+     "EV-MUT-T17",
+     "EV-VERIFY-T18"
+    ],
+    "verificationEvidenceIds": [
+     "EV-PIN-T17",
+     "EV-PIN-ARMISO",
+     "EV-MUT-T17",
+     "EV-VERIFY-T18"
+    ],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src/core",
+       "src/components"
+      ],
+      "termsAndMethod": "write-op vs read-side preview gate symmetry across consumer surfaces",
+      "hitDispositions": [
+       "other previews share their op's gate"
+      ],
+      "coverageLimits": [],
+      "evidenceIds": []
+     }
+    ],
+    "closeReason": "pinned + verified",
+    "closedAt": "2026-10-01T10:45:00Z",
+    "closureReviewIds": [
+     "RV-CLOSURE-14"
+    ]
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-B9-CON-01",
+    "title": "NodeTreePanel.branches does not filter grantedOnly nodes / ignores betaSkillTreeFor verdicts",
+    "severity": "Low",
+    "status": "HUMAN_EXCEPTION",
+    "classification": "REAL_DEFECT",
+    "discoveredBy": "devin-a02a0fa79f544a24812e884623e1eee0",
+    "actionable": true,
+    "subsystem": "betaScope",
+    "rootClass": "CONSUMER",
+    "rootCause": "branches filters raw node flags but not grantedOnly and does not consume treeNodeFor verdicts; latent - only sword nodes carry grantedOnly and those trees are hidden today",
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/components/game/NodeTreePanel.vue",
+      "revision": "4c691c7e",
+      "symbolOrSection": "branches"
+     },
+     {
+      "basis": "SOURCE",
+      "path": "src/core/beta/betaScopeSkillDomain.ts",
+      "revision": "4c691c7e",
+      "symbolOrSection": "treeNodeFor"
+     }
+    ],
+    "reachability": "PRODUCTION",
+    "state": {
+     "productStateId": "de4898e7ab3132c96817dff81c523eb586e7d0bee41196c32ad54ba045e28e82",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "invariantIds": [
+     "I-AS-1"
+    ],
+    "siblingFindingIds": [],
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": {
+     "humanInstructionRef": "user ruling: attacks/scope fixes are Medium+ only; Low/Nit recorded as deferred exceptions",
+     "scope": "flagged unsupported saves only - a normal beta save cannot reach this state",
+     "reason": "bounded or display-only residual on a forged/flagged save; every effect-applying seam behind it is gated",
+     "expiresWhen": "next scope contract revision or user reversal of the Medium+-only ruling"
+    },
+    "expected": "consumer surfaces honor the write-op verdict",
+    "actual": "branches filters raw node flags but not grantedOnly and does not consume treeNodeFor verdicts; latent - only sword nodes carry grantedOnly and those trees are hidden today",
+    "counterexample": "branches filters raw node flags but not grantedOnly and does not consume treeNodeFor verdicts; latent - only sword nodes carry grantedOnly and those trees are hidden today",
+    "repair": null,
+    "evidenceIds": [],
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src/core",
+       "src/components"
+      ],
+      "termsAndMethod": "write-op vs read-side preview gate symmetry across consumer surfaces",
+      "hitDispositions": [
+       "other previews share their op's gate"
+      ],
+      "coverageLimits": [],
+      "evidenceIds": []
+     }
+    ],
+    "closeReason": null,
+    "closedAt": null,
+    "closureReviewIds": []
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-B9-CON-03",
+    "title": "non-beta selectedTalentIds render as owned talent cards on carried saves",
+    "severity": "Low",
+    "status": "HUMAN_EXCEPTION",
+    "classification": "REAL_DEFECT",
+    "discoveredBy": "devin-a02a0fa79f544a24812e884623e1eee0",
+    "actionable": true,
+    "subsystem": "betaScope",
+    "rootClass": "CONSUMER",
+    "rootCause": "selectedTalents maps all ids without isBetaTalentId filter; effect emission gated - display-only on flagged saves",
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/components/panels/CharacterPanel.vue",
+      "revision": "4c691c7e",
+      "symbolOrSection": "selectedTalents"
+     }
+    ],
+    "reachability": "PRODUCTION",
+    "state": {
+     "productStateId": "de4898e7ab3132c96817dff81c523eb586e7d0bee41196c32ad54ba045e28e82",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "invariantIds": [
+     "I-AS-1"
+    ],
+    "siblingFindingIds": [],
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": {
+     "humanInstructionRef": "user ruling: attacks/scope fixes are Medium+ only; Low/Nit recorded as deferred exceptions",
+     "scope": "flagged unsupported saves only - a normal beta save cannot reach this state",
+     "reason": "bounded or display-only residual on a forged/flagged save; every effect-applying seam behind it is gated",
+     "expiresWhen": "next scope contract revision or user reversal of the Medium+-only ruling"
+    },
+    "expected": "consumer surfaces honor the write-op verdict",
+    "actual": "selectedTalents maps all ids without isBetaTalentId filter; effect emission gated - display-only on flagged saves",
+    "counterexample": "selectedTalents maps all ids without isBetaTalentId filter; effect emission gated - display-only on flagged saves",
+    "repair": null,
+    "evidenceIds": [],
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src/core",
+       "src/components"
+      ],
+      "termsAndMethod": "write-op vs read-side preview gate symmetry across consumer surfaces",
+      "hitDispositions": [
+       "other previews share their op's gate"
+      ],
+      "coverageLimits": [],
+      "evidenceIds": []
+     }
+    ],
+    "closeReason": null,
+    "closedAt": null,
+    "closureReviewIds": []
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-B9-CON-04",
+    "title": "unsupportedReleaseReason gaps for secondary dormant record classes",
+    "severity": "Nit",
+    "status": "HUMAN_EXCEPTION",
+    "classification": "REAL_DEFECT",
+    "discoveredBy": "devin-a02a0fa79f544a24812e884623e1eee0",
+    "actionable": true,
+    "subsystem": "betaScope",
+    "rootClass": "CONSUMER",
+    "rootCause": "dormant nodeLevels, companion counters, gifts, skillCastCounts, washed affixes, daily-quest progress are not flagged; all verified inert under beta gates",
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/services/save/betaScopeSurface.ts",
+      "revision": "4c691c7e",
+      "symbolOrSection": "unsupportedReleaseReason"
+     }
+    ],
+    "reachability": "PRODUCTION",
+    "state": {
+     "productStateId": "de4898e7ab3132c96817dff81c523eb586e7d0bee41196c32ad54ba045e28e82",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "invariantIds": [
+     "I-AS-1"
+    ],
+    "siblingFindingIds": [],
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": {
+     "humanInstructionRef": "user ruling: attacks/scope fixes are Medium+ only; Low/Nit recorded as deferred exceptions",
+     "scope": "flagged unsupported saves only - a normal beta save cannot reach this state",
+     "reason": "bounded or display-only residual on a forged/flagged save; every effect-applying seam behind it is gated",
+     "expiresWhen": "next scope contract revision or user reversal of the Medium+-only ruling"
+    },
+    "expected": "consumer surfaces honor the write-op verdict",
+    "actual": "dormant nodeLevels, companion counters, gifts, skillCastCounts, washed affixes, daily-quest progress are not flagged; all verified inert under beta gates",
+    "counterexample": "dormant nodeLevels, companion counters, gifts, skillCastCounts, washed affixes, daily-quest progress are not flagged; all verified inert under beta gates",
+    "repair": null,
+    "evidenceIds": [],
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src/core",
+       "src/components"
+      ],
+      "termsAndMethod": "write-op vs read-side preview gate symmetry across consumer surfaces",
+      "hitDispositions": [
+       "other previews share their op's gate"
+      ],
+      "coverageLimits": [],
+      "evidenceIds": []
+     }
+    ],
+    "closeReason": null,
+    "closedAt": null,
+    "closureReviewIds": []
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-B9-CON-05",
+    "title": "tutorial copy promises scope-hidden equipmentRefine",
+    "severity": "Nit",
+    "status": "HUMAN_EXCEPTION",
+    "classification": "REAL_DEFECT",
+    "discoveredBy": "devin-a02a0fa79f544a24812e884623e1eee0",
+    "actionable": true,
+    "subsystem": "betaScope",
+    "rootClass": "CONSUMER",
+    "rootCause": "tutorial step 4 says 'forge and refine equipment'; equipmentRefine is scope-hidden - copy/contract drift",
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/core/tutorial/tutorialSteps.ts",
+      "revision": "4c691c7e",
+      "symbolOrSection": "step 4"
+     }
+    ],
+    "reachability": "PRODUCTION",
+    "state": {
+     "productStateId": "de4898e7ab3132c96817dff81c523eb586e7d0bee41196c32ad54ba045e28e82",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "invariantIds": [
+     "I-AS-1"
+    ],
+    "siblingFindingIds": [],
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": {
+     "humanInstructionRef": "user ruling: attacks/scope fixes are Medium+ only; Low/Nit recorded as deferred exceptions",
+     "scope": "flagged unsupported saves only - a normal beta save cannot reach this state",
+     "reason": "bounded or display-only residual on a forged/flagged save; every effect-applying seam behind it is gated",
+     "expiresWhen": "next scope contract revision or user reversal of the Medium+-only ruling"
+    },
+    "expected": "consumer surfaces honor the write-op verdict",
+    "actual": "tutorial step 4 says 'forge and refine equipment'; equipmentRefine is scope-hidden - copy/contract drift",
+    "counterexample": "tutorial step 4 says 'forge and refine equipment'; equipmentRefine is scope-hidden - copy/contract drift",
+    "repair": null,
+    "evidenceIds": [],
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src/core",
+       "src/components"
+      ],
+      "termsAndMethod": "write-op vs read-side preview gate symmetry across consumer surfaces",
+      "hitDispositions": [
+       "other previews share their op's gate"
+      ],
+      "coverageLimits": [],
+      "evidenceIds": []
+     }
+    ],
+    "closeReason": null,
+    "closedAt": null,
+    "closureReviewIds": []
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-B9-CON-06",
+    "title": "dead .realm-ceiling-note CSS in RealmPanel",
+    "severity": "Nit",
+    "status": "HUMAN_EXCEPTION",
+    "classification": "REAL_DEFECT",
+    "discoveredBy": "devin-a02a0fa79f544a24812e884623e1eee0",
+    "actionable": true,
+    "subsystem": "betaScope",
+    "rootClass": "CONSUMER",
+    "rootCause": "no matching rendered element; cosmetic dead code",
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/components/panels/RealmPanel.vue",
+      "revision": "4c691c7e",
+      "symbolOrSection": ".realm-ceiling-note"
+     }
+    ],
+    "reachability": "PRODUCTION",
+    "state": {
+     "productStateId": "de4898e7ab3132c96817dff81c523eb586e7d0bee41196c32ad54ba045e28e82",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "invariantIds": [
+     "I-AS-1"
+    ],
+    "siblingFindingIds": [],
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": {
+     "humanInstructionRef": "user ruling: attacks/scope fixes are Medium+ only; Low/Nit recorded as deferred exceptions",
+     "scope": "flagged unsupported saves only - a normal beta save cannot reach this state",
+     "reason": "bounded or display-only residual on a forged/flagged save; every effect-applying seam behind it is gated",
+     "expiresWhen": "next scope contract revision or user reversal of the Medium+-only ruling"
+    },
+    "expected": "consumer surfaces honor the write-op verdict",
+    "actual": "no matching rendered element; cosmetic dead code",
+    "counterexample": "no matching rendered element; cosmetic dead code",
+    "repair": null,
+    "evidenceIds": [],
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src/core",
+       "src/components"
+      ],
+      "termsAndMethod": "write-op vs read-side preview gate symmetry across consumer surfaces",
+      "hitDispositions": [
+       "other previews share their op's gate"
+      ],
+      "coverageLimits": [],
+      "evidenceIds": []
+     }
+    ],
+    "closeReason": null,
+    "closedAt": null,
+    "closureReviewIds": []
+   }
+  }
+ ]
+}

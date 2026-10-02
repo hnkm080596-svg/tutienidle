@@ -87,12 +87,12 @@ describe('splitCultivationSpeedWindow', () => {
       effect({
         effectGroup: TU_LINH_TRAN_EFFECT_GROUP,
         expiresAtMs: start + 120_000,
-        cultivationSpeedPercent: 1,
+        cultivationSpeedPercent: 0.2,
       }),
     ]
 
     expect(splitCultivationSpeedWindow(effects, start, start + 60_000)).toEqual([
-      { seconds: 60, percent: 1 },
+      { seconds: 60, percent: 0.2 },
     ])
   })
 
@@ -101,12 +101,12 @@ describe('splitCultivationSpeedWindow', () => {
       effect({
         effectGroup: TU_LINH_TRAN_EFFECT_GROUP,
         expiresAtMs: start + 20_000,
-        cultivationSpeedPercent: 1,
+        cultivationSpeedPercent: 0.2,
       }),
     ]
 
     expect(splitCultivationSpeedWindow(effects, start, start + 60_000)).toEqual([
-      { seconds: 20, percent: 1 },
+      { seconds: 20, percent: 0.2 },
       { seconds: 40, percent: 0 },
     ])
   })
@@ -116,7 +116,7 @@ describe('splitCultivationSpeedWindow', () => {
       effect({
         effectGroup: TU_LINH_TRAN_EFFECT_GROUP,
         expiresAtMs: start - 1,
-        cultivationSpeedPercent: 1,
+        cultivationSpeedPercent: 0.2,
       }),
     ]
 
@@ -130,19 +130,19 @@ describe('splitCultivationSpeedWindow', () => {
       effect({
         effectGroup: TU_LINH_TRAN_EFFECT_GROUP,
         expiresAtMs: start + 10_000,
-        cultivationSpeedPercent: 1,
+        cultivationSpeedPercent: 0.2,
       }),
       effect({
         id: 'e2',
         effectGroup: TU_LINH_TRAN_EFFECT_GROUP,
         expiresAtMs: start + 30_000,
-        cultivationSpeedPercent: 0.5,
+        cultivationSpeedPercent: 0.05,
       }),
     ]
 
     expect(splitCultivationSpeedWindow(effects, start, start + 60_000)).toEqual([
-      { seconds: 10, percent: 1.5 },
-      { seconds: 20, percent: 0.5 },
+      { seconds: 10, percent: 0.25 },
+      { seconds: 20, percent: 0.05 },
       { seconds: 30, percent: 0 },
     ])
   })
@@ -152,12 +152,12 @@ describe('splitCultivationSpeedWindow', () => {
       effect({
         effectGroup: TU_LINH_TRAN_EFFECT_GROUP,
         expiresAtMs: start + 30_000,
-        cultivationSpeedPercent: 1,
+        cultivationSpeedPercent: 0.2,
       }),
     ]
 
     const segments = splitCultivationSpeedWindow(effects, start, start + 30_000)
-    expect(segments).toEqual([{ seconds: 30, percent: 1 }])
+    expect(segments).toEqual([{ seconds: 30, percent: 0.2 }])
   })
 
   it('zero-length window yields no segments', () => {

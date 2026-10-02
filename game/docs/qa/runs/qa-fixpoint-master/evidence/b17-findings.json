@@ -1,0 +1,96 @@
+{
+  "audit": "beta-scope-contract consumer/integration seams (blind)",
+  "commit": "ea406a1f",
+  "branch": "devin/qa-fixpoint",
+  "date": "2026-10-01",
+  "verdict": "FAIL",
+  "probeFile": "tests/architecture/betaConsumerHudChannels.qa.test.ts",
+  "probeResult": "8 DEFECT assertions fail on pinned state; 6 controls pass",
+  "findings": [
+    {
+      "id": "BCS-HUD-01",
+      "severity": "Medium",
+      "confidence": "Confirmed",
+      "surface": "presentation/bridges/kiemBarBridge.ts:116 (kiem_pho arm)",
+      "repro": "Probe 'a carried sword_pathway save emits the Kiem Pho HUD bar mid-battle' fails: makeKiemBarReader returns {mode:'kiem_pho', preset, cursor, nextOrb, log} for player {cultivationPath:'sword', cultivationWay:'sword_pathway', swordPath: fresh} during state='fighting'.",
+      "mintPath": "carried sword_pathway + persisted swordPath.preset -> hasStaticPathCapability('sword.sword_scroll') (ungated, no isBetaWay check) -> snapshot polled per frame by CombatScene.pollKiemBar -> dormant Kiem Pho HUD + authored orb preset renders in live beta combat."
+    },
+    {
+      "id": "BCS-HUD-02",
+      "severity": "Medium",
+      "confidence": "Confirmed",
+      "surface": "presentation/bridges/kiemBarBridge.ts:139 (ngu_kiem arm)",
+      "repro": "Probe 'a carried hidden_sword_pathway save emits the Kiem Y HUD bar mid-battle' fails: returns {mode:'ngu_kiem', kiemY:40, kiemDaoCount:3, kiemDaoBase:2, label:'Kiếm Ý · 3 kiếm'}.",
+      "mintPath": "carried hidden_sword_pathway + persisted kiemY/kiemDaoCount -> ungated 'sword.sword_riding' cap -> dormant Ngu Kiem Dao progress bar rendered per frame in live combat."
+    },
+    {
+      "id": "BCS-HUD-03",
+      "severity": "Medium",
+      "confidence": "Confirmed",
+      "surface": "presentation/bridges/kiemBarBridge.ts:107 (The-pool arm)",
+      "repro": "Probe 'a carried body way emits the The proc-fuel HUD bar' fails for both body_pathway and hidden_body_pathway: returns {current, max, label:'Thế'}.",
+      "mintPath": "carried body way -> ungated 'body.essence_economy' cap -> dormant The-economy pool bar renders on every live battle frame."
+    },
+    {
+      "id": "BCS-HUD-04",
+      "severity": "Medium",
+      "confidence": "Confirmed",
+      "surface": "presentation/bridges/theBarBridge.ts:107 (bodyEconomy arm -> Ung The snapshot)",
+      "repro": "Probes 'carried hidden_body_pathway/body_pathway emits the Ung The HUD' fail: returns {label:'Thế', thamTargetId, quanTheActive, reactionDebt, quaThe} via CombatScene.pollTheBar.",
+      "mintPath": "carried body way -> ungated 'body.essence_economy' cap -> dormant Ung-The HUD structure (Tham focus, Quan The, Ung Tre/Qua The) renders while the corresponding combat effects are suppressed by wayAdmitted -> HUD disagrees with ground truth (tri-state dishonesty)."
+    },
+    {
+      "id": "BCS-HUD-05",
+      "severity": "Medium",
+      "confidence": "Confirmed",
+      "surface": "components/game/combat/hud/TurnCombatSkillBar.vue:69 isAnPath -> gameManager.hasPathCapability('spell.reaction_aura') (GameManager.ts:1013 facade)",
+      "repro": "Probe 'hasPathCapability spell.reaction_aura resolves true on a carried hidden_spell save' fails: true when skillManager.has('ngo_dao_hon_don').",
+      "mintPath": "carried hidden_spell_pathway + learned ngo_dao_hon_don -> conditional capability resolves true -> An emblem + dormant-passive tooltip render in the live combat skill bar while the aura entryBuff is suppressed at CombatBuild.ts:347 (wayAdmitted) -> dormant-way branding presented as live."
+    },
+    {
+      "id": "BCS-SUR-06",
+      "severity": "Medium",
+      "confidence": "Confirmed",
+      "surface": "components/panels/bag-sections/MaterialBagSection.vue:233 (entries computed -> materialBag.getAll() verbatim)",
+      "repro": "Probe 'a carried companion pull token renders as an ordinary live cell' fails: mounted section shows a filled slot for 3x chieu_hien_lenh (aria-label 'Chiêu Hiền Lệnh', tooltip advertises the dormant gacha sink).",
+      "mintPath": "save carries scope-suppressed material (chieu_hien_lenh; also doan_bao_thach class) -> restore preserves record (intended) -> bag renders it as fully available with no locked/hidden marker; sole sink pullCompanion is realm_locked and CurrencyHud censors the same id at every realm -> sibling surfaces disagree (tri-state dishonesty). No scopeHiddenMaterialFamilyOfId predicate exists."
+    },
+    {
+      "id": "BCS-LAT-07",
+      "severity": "Low",
+      "confidence": "Suspected (latent, inert today)",
+      "surface": "core/game/CombatBuild.ts:374 capabilities export + :385 survive.extraSources bind from ungated runtime",
+      "repro": "Probe 'static capability reads admit every dormant way' fails: hasStaticPathCapability returns true for sword.sword_riding / body.essence_economy on carried ways. Zero consumers of build.capabilities today; survive.extraSources inert (no runtime implements buildSurviveSources - CultivationPathRegistry.ts:495).",
+      "mintPath": "sibling emission channels of the prior-round survive.extraSources finding: any future consumer of build.capabilities or a runtime gaining buildSurviveSources re-admits the dormant way with no scope gate."
+    }
+  ],
+  "rejected": [
+    {"surface": "SkillPathPanel.vue:76 wayIdentity", "reason": "honest-record display of parked save; tree gated by betaWayAdmitted; same accepted class as hidden-carry realm flag"},
+    {"surface": "QuanKhiPanel.vue:235", "reason": "latent - panel unreachable on carried save (showQuanKhiEntry gated at CharacterPanel.vue:44-46)"},
+    {"surface": "restore bag-overflow toast", "reason": "Low surface naming of dormant material on >stackLimit carried stacks; hostile-save-only trigger; record must persist"},
+    {"surface": "core/dev/enemySpawnDebug.ts", "reason": "dev-only seam, no production path"}
+  ],
+  "exclusionApplied": "same-value forged counters within authored bounds not reported per brief",
+  "cleanSeamsCensus": [
+    "combat build resolution (wayAdmitted gates kit/roles/statDomains/maxThe/buildDynamicBasic/formation/companion/aura/Tran-Phap buff)",
+    "collectActiveWayStatModifiers (!isBetaWay -> [])",
+    "spell element reads (fail closed)",
+    "worker assignments/workforce view/lodge tabs (censored)",
+    "alchemy start/tick (scopeHiddenPillFamilyOfId parks dormant jobs)",
+    "vendor sell/preview/rows (rejects dormant materials)",
+    "quest claim itemDrops (breakthrough + pull-token + domain-scope filters per line)",
+    "companion ops (isCompanionDomainUnlocked fails closed incl. hidden-carry realms)",
+    "companionGiftRosterFor ([])",
+    "hidden-beast spawn/onEnemyDefeated (double-gated)",
+    "resolveHiddenBattleReplacement / isAncientBeastTrialEligible (isBetaFeature gated)",
+    "tribulation settle (re-derives verdict; dormant committed outcomes park)",
+    "resolveBreakthroughType ('hidden' unreachable)",
+    "auto-farm start/reconcile/settle (stage validity rechecked)",
+    "equipment wash/refine ops (isScopeHidden)",
+    "CurrencyHud companion chips (double-gated)",
+    "survive-lethal talent mint (beta-talent list re-gates)",
+    "migrations/restore (parks dormant slices; re-derives modifiers; reconcileWayGrants gated)",
+    "offline settle (same gated settle path)",
+    "tutorial/event-bus/devtools census"
+  ]
+}

@@ -1,0 +1,35 @@
+=== M2 crafting-station-dedup removed ===
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+ ❯ tests/architecture/saveFalsificationSweep.qa.test.ts (8 tests | 1 failed) 41ms
+     × two instances of a single-instance-gated building are rejected at the shape gate 6ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/architecture/saveFalsificationSweep.qa.test.ts > F-BLD-DUP-1: duplicate buildingId/instanceId instances are rejected > two instances of a single-instance-gated building are rejected at the shape gate
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/architecture/saveFalsificationSweep.qa.test.ts:193:44
+    191|     // of the same buildingId - 'already_built' rejects it - so this
+    192|     // payload is unproducible by construction.
+    193|     expect(validateGameSaveShape(save).ok).toBe(false)
+       |                                            ^
+    194|   })
+    195|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 7 passed (8)
+   Start at  17:51:13
+   Duration  1.78s (transform 1.31s, setup 206ms, import 1.42s, tests 41ms, environment 0ms)
+
+EXIT=1

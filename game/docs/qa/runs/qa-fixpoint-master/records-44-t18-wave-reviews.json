@@ -1,0 +1,342 @@
+{
+ "records": [
+  {
+   "kind": "review",
+   "body": {
+    "id": "RV-ADV-B9",
+    "contextId": "ctx-child-b9",
+    "reviewerId": "devin-a02a0fa79f544a24812e884623e1eee0",
+    "model": "SWE-2",
+    "phase": "INTEGRATION",
+    "round": 23,
+    "role": "fresh blind consumer-seam review on 4c691c7e (T15): 1 Medium (CON-02 respec preview), 2 Low, 3 Nit - deferred per Medium+-only ruling",
+    "state": {
+     "productStateId": "de4898e7ab3132c96817dff81c523eb586e7d0bee41196c32ad54ba045e28e82",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "SEALED",
+    "startedAt": "2026-10-01T10:05:00Z",
+    "sealedAt": "2026-10-01T10:35:00Z",
+    "priorFindingsVisible": false,
+    "reviewedAfterPreviousFixes": true,
+    "inputBundleHash": "752dcfd1ffb76f98ce1c4205b615c54d242868e95e43b49640caa8af2d537ab8",
+    "evidenceIds": [],
+    "coverageIds": [],
+    "findingIds": [
+     "F-B9-CON-01",
+     "F-B9-CON-02",
+     "F-B9-CON-03",
+     "F-B9-CON-04",
+     "F-B9-CON-05",
+     "F-B9-CON-06"
+    ],
+    "novelAttackIds": [],
+    "accessLimitations": [],
+    "previousPhaseReviewId": "RV-ADV-A9"
+   }
+  },
+  {
+   "kind": "review",
+   "body": {
+    "id": "RV-ADV-TC7",
+    "contextId": "ctx-child-tc7",
+    "reviewerId": "devin-241f534e2dd84c65b29b174881c049de",
+    "model": "SWE-2",
+    "phase": "TERMINAL_CHECK",
+    "round": 24,
+    "role": "fresh blind forged-save falsification sweep on 4c691c7e (T15): 18 findings - 1 Critical settleOutcome, 4 High, 11 Medium, 2 Low; 9 fixed, 7 residual exceptions (no authored ceiling/witness), 2 deferred Lows",
+    "state": {
+     "productStateId": "de4898e7ab3132c96817dff81c523eb586e7d0bee41196c32ad54ba045e28e82",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "SEALED",
+    "startedAt": "2026-10-01T10:05:00Z",
+    "sealedAt": "2026-10-01T11:00:00Z",
+    "priorFindingsVisible": false,
+    "reviewedAfterPreviousFixes": true,
+    "inputBundleHash": "1b2e400c8ff21f6a22e58ce9d3e1fbcb49232abe5c5cf50660ac7995f4efd9ba",
+    "evidenceIds": [],
+    "coverageIds": [],
+    "findingIds": [
+     "F-TC7-TRIB",
+     "F-TC7-EXTMOD",
+     "F-TC7-STAGES",
+     "F-TC7-AUTOFARM",
+     "F-TC7-BASESTAT",
+     "F-TC7-ENHANCE",
+     "F-TC7-MAINFLAT",
+     "F-TC7-AFFIXTIER",
+     "F-TC7-PILLPCT",
+     "F-TC7-ETERNAL",
+     "F-TC7-MATERIAL",
+     "F-TC7-BETAPILL",
+     "F-TC7-ALCHEMY",
+     "F-TC7-LEVEL99",
+     "F-TC7-CULT",
+     "F-TC7-ENTITLE",
+     "F-TC7-WORKERS",
+     "F-TC7-CPS"
+    ],
+    "novelAttackIds": [],
+    "accessLimitations": [],
+    "previousPhaseReviewId": "RV-ADV-B9"
+   }
+  },
+  {
+   "kind": "review",
+   "body": {
+    "id": "RV-SEQ14-COR",
+    "contextId": "ctx-coord",
+    "reviewerId": "coord-main",
+    "model": "SWE-2",
+    "phase": "CORRECTNESS",
+    "round": 25,
+    "role": "P5 pass 1 over ae4af514: boundary-magnitude fix correctness - boundary-magnitude suite 22 pins green; mutant batch4 executed, masked-arm survivors isolated",
+    "state": {
+     "productStateId": "e81120ad6870aa0455576e0b9a33b54eb01b4ba309483a363cfacd625c4dc8e7",
+     "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "SEALED",
+    "startedAt": "2026-10-01T11:05:00Z",
+    "sealedAt": "2026-10-01T11:30:00Z",
+    "priorFindingsVisible": false,
+    "reviewedAfterPreviousFixes": true,
+    "inputBundleHash": "021470dd5258f19838563564476854f697e8ea5c2a8f86e21e5f85ac5af8a5e6",
+    "evidenceIds": [
+     "EV-PIN-T17",
+     "EV-MUT-T17"
+    ],
+    "coverageIds": [],
+    "findingIds": [],
+    "novelAttackIds": [],
+    "accessLimitations": [],
+    "previousPhaseReviewId": "RV-ADV-TC7"
+   }
+  },
+  {
+   "kind": "review",
+   "body": {
+    "id": "RV-SEQ14-AUT",
+    "contextId": "ctx-coord",
+    "reviewerId": "coord-main",
+    "model": "SWE-2",
+    "phase": "AUTHORITY",
+    "round": 26,
+    "role": "P5 pass 2 over 7001f01b: arm-isolation fixture strengthening - each conjunction arm pinned with gate-coherent inputs (settlement reauth dormant-target/hidden/defeat arms, markerGate, meridian openedIds)",
+    "state": {
+     "productStateId": "e81120ad6870aa0455576e0b9a33b54eb01b4ba309483a363cfacd625c4dc8e7",
+     "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "SEALED",
+    "startedAt": "2026-10-01T11:30:00Z",
+    "sealedAt": "2026-10-01T11:48:00Z",
+    "priorFindingsVisible": false,
+    "reviewedAfterPreviousFixes": true,
+    "inputBundleHash": "e148deb39c1ed4e376504320a81bfd2ad618a6c594fa5a46960bdf5a61062237",
+    "evidenceIds": [
+     "EV-PIN-ARMISO",
+     "EV-MUT-T17"
+    ],
+    "coverageIds": [],
+    "findingIds": [],
+    "novelAttackIds": [],
+    "accessLimitations": [],
+    "previousPhaseReviewId": "RV-SEQ14-COR"
+   }
+  },
+  {
+   "kind": "review",
+   "body": {
+    "id": "RV-SEQ14-INT",
+    "contextId": "ctx-coord",
+    "reviewerId": "coord-main",
+    "model": "SWE-2",
+    "phase": "INTEGRATION",
+    "round": 27,
+    "role": "P5 pass 3 over 7001f01b: full verify re-run (8035 green) + sibling search over remaining persisted claim classes (all bounded or recorded as exceptions) + pending blind T17 rounds A10/B10/TC8",
+    "state": {
+     "productStateId": "e81120ad6870aa0455576e0b9a33b54eb01b4ba309483a363cfacd625c4dc8e7",
+     "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "SEALED",
+    "startedAt": "2026-10-01T11:48:00Z",
+    "sealedAt": "2026-10-01T11:56:00Z",
+    "priorFindingsVisible": false,
+    "reviewedAfterPreviousFixes": true,
+    "inputBundleHash": "46b52930a1ac0bc6038ae8a9aefec559149a816e787eceb22de35916a5d0dafb",
+    "evidenceIds": [
+     "EV-VERIFY-T18",
+     "EV-PIN-ARMISO",
+     "EV-MUT-T17"
+    ],
+    "coverageIds": [],
+    "findingIds": [],
+    "novelAttackIds": [],
+    "accessLimitations": [],
+    "previousPhaseReviewId": "RV-SEQ14-AUT"
+   }
+  },
+  {
+   "kind": "review",
+   "body": {
+    "id": "RV-CLOSURE-14",
+    "contextId": "ctx-coord",
+    "reviewerId": "coord-main",
+    "model": "SWE-2",
+    "phase": "CLOSURE",
+    "round": 28,
+    "role": "closure review of the T17 wave: 9 Medium+ fixes verified by pins + mutants + full verify; 9 findings excepted under the Medium+-only / no-authored-ceiling rulings",
+    "state": {
+     "productStateId": "e81120ad6870aa0455576e0b9a33b54eb01b4ba309483a363cfacd625c4dc8e7",
+     "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "SEALED",
+    "startedAt": "2026-10-01T11:56:00Z",
+    "sealedAt": "2026-10-01T11:58:00Z",
+    "priorFindingsVisible": false,
+    "reviewedAfterPreviousFixes": true,
+    "inputBundleHash": "e3875a84c51419593d229e641139b0858773d46670a4505c3b10f16f850301d8",
+    "evidenceIds": [
+     "EV-VERIFY-T18"
+    ],
+    "coverageIds": [],
+    "findingIds": [],
+    "novelAttackIds": [],
+    "accessLimitations": [],
+    "previousPhaseReviewId": "RV-SEQ14-INT"
+   }
+  },
+  {
+   "kind": "cycle",
+   "body": {
+    "id": "CY-SEQ-14",
+    "state": {
+     "productStateId": "e81120ad6870aa0455576e0b9a33b54eb01b4ba309483a363cfacd625c4dc8e7",
+     "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "FINDINGS",
+    "reviewIds": [
+     "RV-SEQ14-COR",
+     "RV-SEQ14-AUT",
+     "RV-SEQ14-INT"
+    ],
+    "coverageIds": [],
+    "evidenceIds": [
+     "EV-PIN-T17",
+     "EV-PIN-ARMISO",
+     "EV-MUT-T17",
+     "EV-VERIFY-T18"
+    ],
+    "noveltyEvidenceIds": [],
+    "startedAt": "2026-10-01T11:05:00Z",
+    "finishedAt": "2026-10-01T11:58:00Z"
+   }
+  },
+  {
+   "kind": "lesson",
+   "body": {
+    "id": "L-ARM-ISOLATION-DETECTOR",
+    "version": 1,
+    "supersedes": null,
+    "triggerType": "ESCAPE",
+    "findingIds": [
+     "F-TC7-TRIB"
+    ],
+    "incidentEvidenceIds": [
+     "EV-MUT-T17"
+    ],
+    "originatingRun": "qa-fixpoint-master",
+    "rootClass": "DETECTOR",
+    "missedInvariantIds": [
+     "I-AS-1"
+    ],
+    "escapeReason": "conjunction-gate mutants survived when the pin's fixture only exercised the upstream arm - removing the checked arm left behavior unchanged on that input, so the pin could not observe it",
+    "applicability": [
+     "any guard written as A && B && C - each arm needs a gate-coherent fixture where the other arms hold"
+    ],
+    "exclusions": [],
+    "proposedProtection": [
+     "mutant survivor analysis must isolate each conjunction arm: fixture satisfies all other arms, then assert the target arm alone"
+    ],
+    "promotionEvidenceIds": [
+     "EV-PIN-ARMISO",
+     "EV-MUT-T17"
+    ],
+    "qualifiedBy": [],
+    "capabilityDelta": "RECORDED - awaiting independent qualification",
+    "status": "CAPTURED",
+    "policyVersion": null,
+    "effectiveFromRun": null,
+    "recurrenceFindingIds": [],
+    "preventionEvidenceIds": [],
+    "guidance": null
+   }
+  },
+  {
+   "kind": "lesson",
+   "body": {
+    "id": "L-BOUNDARY-MAGNITUDE",
+    "version": 1,
+    "supersedes": null,
+    "triggerType": "DEFECT",
+    "findingIds": [
+     "F-TC7-EXTMOD",
+     "F-TC7-BASESTAT",
+     "F-TC7-ENHANCE",
+     "F-TC7-MAINFLAT",
+     "F-TC7-AFFIXTIER",
+     "F-TC7-PILLPCT",
+     "F-TC7-LEVEL99",
+     "F-TC7-ENTITLE",
+     "F-TC7-TRIB"
+    ],
+    "incidentEvidenceIds": [
+     "EV-PIN-T17"
+    ],
+    "originatingRun": "qa-fixpoint-master",
+    "rootClass": "BOUNDARY",
+    "missedInvariantIds": [
+     "I-SF-1"
+    ],
+    "escapeReason": "shape validation checked types and presence but not magnitude or coherence; forged numeric claims within the authored shape passed the boundary and emitted at arbitrary scale",
+    "applicability": [
+     "every persisted numeric/claim class restored verbatim",
+     "writer-vs-claim coherence fields (entitlement.realmId vs player.realmId)"
+    ],
+    "exclusions": [],
+    "proposedProtection": [
+     "bound each persisted numeric to its authored writer ceiling at the boundary; strip writer classes with no live author (externalModifiers); enforce claimant coherence on cross-record claims"
+    ],
+    "promotionEvidenceIds": [
+     "EV-PIN-T17",
+     "EV-MUT-T17",
+     "EV-VERIFY-T18"
+    ],
+    "qualifiedBy": [],
+    "capabilityDelta": "RECORDED - awaiting independent qualification",
+    "status": "CAPTURED",
+    "policyVersion": null,
+    "effectiveFromRun": null,
+    "recurrenceFindingIds": [
+     "F-B9-CON-02"
+    ],
+    "preventionEvidenceIds": [],
+    "guidance": null
+   }
+  }
+ ]
+}

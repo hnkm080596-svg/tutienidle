@@ -1,0 +1,20 @@
+
+> tien-hiep-idle@0.1.0-beta.0 verify
+> npm run type-check && npm run build && npx vitest run
+
+
+> tien-hiep-idle@0.1.0-beta.0 type-check
+> vue-tsc --build
+
+tests/architecture/betaMeridianOpenedGate.qa.test.ts(29,22): error TS18048: 'MERIDIAN' is possibly 'undefined'.
+tests/architecture/betaMeridianOpenedGate.qa.test.ts(31,23): error TS18048: 'MERIDIAN' is possibly 'undefined'.
+tests/architecture/betaMeridianOpenedGate.qa.test.ts(32,17): error TS18048: 'MERIDIAN' is possibly 'undefined'.
+tests/architecture/betaMeridianOpenedGate.qa.test.ts(35,16): error TS18048: 'MERIDIAN' is possibly 'undefined'.
+tests/architecture/betaMeridianOpenedGate.qa.test.ts(47,24): error TS18048: 'MERIDIAN' is possibly 'undefined'.
+tests/architecture/betaMeridianOpenedGate.qa.test.ts(54,45): error TS18048: 'MERIDIAN' is possibly 'undefined'.
+tests/architecture/betaMeridianOpenedGate.qa.test.ts(59,21): error TS18048: 'MERIDIAN' is possibly 'undefined'.
+tests/architecture/tc6ForgedSaveFalsification.qa.test.ts(404,9): error TS2322: Type '{ committedOutcome: { attemptId: number; outcome: "victory"; targetRealmId: string; grade: "great_dao"; breakthroughType: "normal"; receipt: null; settlementError: false; }; cooldownUntil: number; }' is not assignable to type 'TribulationSaveSlice'.
+  The types of 'committedOutcome.grade' are incompatible between these types.
+    Type '"great_dao"' is not assignable to type 'ResolvableKienCoGrade'.
+tests/architecture/tc6ForgedSaveFalsification.qa.test.ts(409,13): error TS2322: Type '"great_dao"' is not assignable to type 'ResolvableKienCoGrade'.
+EXIT=2

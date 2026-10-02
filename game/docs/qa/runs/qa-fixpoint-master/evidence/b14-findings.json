@@ -1,0 +1,47 @@
+{
+  "audit": "beta-scope consumer seams (blind)",
+  "repo": "https://github.com/hnkm080596-svg/tutienidle",
+  "branch": "devin/qa-fixpoint",
+  "pinned_commit": "120cba78",
+  "probe_file": "game/tests/lab/betaScopeSeams.test.ts",
+  "probe_run": "cd game && npx vitest run --config vitest.lab.config.mts tests/lab/betaScopeSeams.test.ts",
+  "probe_result": "40 pass / 1 expected-fail (F-1 evidence)",
+  "verdict": "PASS WITH GAPS",
+  "findings": [
+    {
+      "id": "F-1",
+      "title": "Loot pill-drop branch bypasses the dormant-family scope gate",
+      "severity": "Low",
+      "attack_class": "consumer seam missing a scope gate (latent channel breach)",
+      "surface": "src/core/game/BattleLootSystem.ts grantResolvedDrops case 'pill' (~lines 642-681)",
+      "reproduction": "tests/lab/betaScopeSeams.test.ts > 'SLEEPER: a pill-kind drop of a dormant family mints the dormant pill' — register enemy template with signature drop {kind:'pill', itemId:'phi_van_dan_qi_refining', chance:1}, enemySystem.spawn it, lootSystem.setSession(receiver, player), processDefeatedEnemies([dead entity]) → dormant pill lands in live pillBag. FAILS with: expected ['phi_van_dan_qi_refining'] to not include 'phi_van_dan_qi_refining'. Root cause: pill branch checks only isBreakthroughAcquisitionEnabled(pill.breakthroughRealmId) which returns true for undefined; dormant-family tiered pills carry no breakthroughRealmId. Sibling material branch has three gates (breakthrough realm ~L570, pull-token ~L577, domain-scoped ~L586). Latent: zero authored kind:'pill' drops in src/data at this commit; a minted pill is still hidden by bag surfaces and rejected by usePill."
+    },
+    {
+      "id": "F-2",
+      "title": "survive.extraSources binds the pre-gate runtime in resolveCombatBuild",
+      "severity": "Nit",
+      "attack_class": "latent consumer bypass (future seam)",
+      "surface": "src/core/game/CombatBuild.ts lines 385-387",
+      "reproduction": "Static: extraSources reads runtime?.buildSurviveSources (ungated runtime) while every other runtime emit flows through gatedRuntime (undefined when !wayAdmitted). Dead at this commit — CultivationPathRegistry.ts:495 'Beta: no buildSurviveSources', no runtime implements the facet."
+    },
+    {
+      "id": "F-3",
+      "title": "Dead scope predicates: betaActOfEnemy, betaActiveWayAdmitted",
+      "severity": "Nit",
+      "attack_class": "dead code",
+      "surface": "src/core/betaScope.ts:332 (betaActOfEnemy); src/core/betaScopeSkillDomain.ts:380 (betaActiveWayAdmitted)",
+      "reproduction": "grep consumers: zero production call sites at pinned commit (betaActOfEnemy referenced only by tests/architecture/betaScopeLockV2.test.ts; betaActiveWayAdmitted by nothing)."
+    }
+  ],
+  "holds": [
+    "Flagged saves load with dormant records inert (hidden progression, dormant alchemy/decompose/talents, companion/artifact/formation) — per contract.",
+    "resolvePlayerStatAssembly is rebuild-don't-trust: forged realm-passive markers, unauthored modifier ids, non-realm sourceTypes never reach computed stats; records preserved.",
+    "Timed-effect claims max-authority validated at load: dormant-family source rejected, appliedAtMs>lastSavedAt rejected, regen flat bounded to mpPerSecond*1.5, stat whitelisted to manaRegenPerTurn.",
+    "Committed tribulation outcomes re-derive verdict at settle; dormant/forged claims park inert.",
+    "skillManager.restore carries dormant skills loadable; all emission seams re-check admission.",
+    "settleAutoFarmOffline refuses dead leases; ghost stages pay nothing; reconcile drops the lease.",
+    "Tri-state verdicts clean on live projections (betaCombatRolesFor, betaSkillTreeFor, activeElementTreeFor, betaRealmLadderNodes, panel/popover maps) — nothing half-renders.",
+    "grantRealmPassive ungated but unreachable for out-of-scope grants (REALM_PASSIVES only authors in-window realms; assembly re-checks marker + realm order)."
+  ],
+  "coverage": "All enumerated consumer seams probed: way flag/kit/facets, nodes (dormant tree + off-element), skill restore/emission, technique mastery/seal, way selection, hidden lineage writers/read-model/cap bonus/great_dao passive, combat build (kits/survive/entry buffs/reactions/formation placement/companions/loot EXP), alchemy parked jobs (direct + live tick), decompose, worker capacity, tribulation settle, talents (effects/upgrade/entitlement), auto-farm/offline, panels/popovers/realm ladder, validator boundary on hostile saves, timed effects, forged stat-assembly claims, combat-role read models."
+}

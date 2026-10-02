@@ -1,0 +1,12 @@
+{
+  "summary": "user scope ruling (Minh): luyen the chain is live - 6 body-path findings reverted to REJECTED_WITH_PROOF; F-DL-1/F-DL-2/F-BS-1 hidden-breakthrough gates stay (dot pha an remains user-gated)",
+  "findingIds": [
+    "F-SINK",
+    "F-BODY-W-1",
+    "F-BODY-UI-1",
+    "F-BODY-EMIT",
+    "F-BODY-GRADE",
+    "F-BODY-FLAG"
+  ],
+  "instructionRef": "Devin Bot SCOPE CORRECTION relayed from Minh, 2026-10-01"
+}

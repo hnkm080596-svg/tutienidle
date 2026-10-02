@@ -1,0 +1,11 @@
+=== betaReadModelHonesty (T7 rebind, Thu Oct  1 04:11:55 UTC 2026) ===
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+
+ Test Files  1 passed (1)
+      Tests  5 passed (5)
+   Start at  04:11:56
+   Duration  3.79s (transform 2.38s, setup 223ms, import 2.75s, tests 145ms, environment 558ms)
+
+EXIT=0

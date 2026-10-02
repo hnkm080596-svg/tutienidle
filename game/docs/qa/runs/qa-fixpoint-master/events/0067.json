@@ -1,0 +1,23 @@
+{
+  "applied": [
+    "evidence:EV-PIN-A7TC5",
+    "evidence:EV-MUT-A7TC5",
+    "evidence:EV-VERIFY-T13",
+    "review:RV-ADV-A7",
+    "review:RV-ADV-B7",
+    "review:RV-ADV-TC5",
+    "finding:F-B7-1",
+    "finding:F-B7-2",
+    "finding:F-A7-1",
+    "finding:F-A7-2",
+    "finding:F-A7-3",
+    "finding:F-TC5-1",
+    "review:RV-SEQ12-COR",
+    "review:RV-SEQ12-AUT",
+    "review:RV-SEQ12-INT",
+    "review:RV-CLOSURE-12",
+    "cycle:CY-SEQ-12",
+    "lesson:L-CLAIMED-SOURCE-FORGE",
+    "lesson:L-BOUNDED-FIXTURE-VALUES"
+  ]
+}

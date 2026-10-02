@@ -5,6 +5,7 @@ import type { PersistentTimedEffect } from '../player/PersistentTimedEffect'
 import type { PlayerData } from '../player/Player'
 import { getAlchemyDoublePill } from '../talent/TalentEffects'
 import type { MainStatKey } from '../stats/StatTypes'
+import { scopeHiddenPillFamilyOfId } from '../betaScope'
 
 /**
  * Pill consumption operations. Extracted from GameManager (large-file
@@ -41,7 +42,7 @@ export class GameManagerPillOps {
     random: () => number = Math.random,
   ): {
     ok: boolean
-    reason?: 'not_found' | 'wrong_realm' | 'all_main_stats_capped' | 'requires_phap_tu' | 'cap' | 'retired' | 'material_pill' | 'in_battle'
+    reason?: 'not_found' | 'wrong_realm' | 'all_main_stats_capped' | 'requires_phap_tu' | 'cap' | 'retired' | 'material_pill' | 'in_battle' | 'scope_hidden'
     mainStat?: MainStatKey
   } {
     if (!this.deps.pillBag.has(pillId, 1)) {
@@ -63,6 +64,15 @@ export class GameManagerPillOps {
     // so every caller inherits it (A2); the pill stays in the bag.
     if (pill.type === 'material') {
       return { ok: false, reason: 'material_pill' }
+    }
+
+    // BETA SCOPE LOCK v2 - a carried save's dormant-family pills stay
+    // inert: consuming one would apply a scope-hidden effect into
+    // live play (same seam class as the hostile-save flag readers).
+    // Unknown/legacy ids return null - only authored dormant families
+    // are rejected.
+    if (scopeHiddenPillFamilyOfId(pillId) !== null) {
+      return { ok: false, reason: 'scope_hidden' }
     }
 
     // Exact-realm gate for profession pills (plan S5.2). A defined-

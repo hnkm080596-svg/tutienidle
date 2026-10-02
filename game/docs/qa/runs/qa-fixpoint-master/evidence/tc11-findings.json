@@ -1,0 +1,175 @@
+{
+  "summary": "Blind adversarial sweep of validateGameSaveShape + restoreGameSession at pin 97f1878b: 21 probe tests (game/src/probes/saveFalsification.probe.test.ts, run `cd game && npx vitest run src/probes/saveFalsification.probe.test.ts`) - 11 failing = confirmed mints, 10 passing = HOLD pins. Registry-membership preflight (materials/pills/buildings/sites/techniques), the closed modifier-witness set, the technique-holder contract, F-SKL-1 skill producer check, and the levelled-skill core axis all hold. The concentrated defect cluster is the equipment validator: it checks enum membership and per-field legality but never crosses item template/quality claims against the authored roll envelopes (slot lists, grade-vs-realm, affix slot policy, dup stats, pool ceilings), so forged items mint modifiers no authored roller produces. Second cluster is ledger-free claims: attributePoints vs baseStats are bounded independently but the spent-AP ledger does not exist, so both mint; duplicated non-creation talent ids dodge both count bounds and double-apply effects. Two Low self-harm mints (negative mainStat/baseStats) and one Low currency-class admission (unbounded skillInsight) are recorded honestly.",
+  "findings": [
+    {
+      "id": "F-EQ-GRADE-REALM",
+      "title": "Equipped item grade is checked against the enum only, never against the player realm (canUseItemGrade is strict realm==grade; no writer equips a mismatched item)",
+      "surface": "equipment[].grade (equipped item)",
+      "severity": "Medium",
+      "attack_class": "value_envelope",
+      "reproduction": "Probe F-EQ-GRADE-REALM: mortal save + equipped base_kiem with grade 'bat_pham'. validateGameSaveShape ok, restoreGameSession status 'ok', and setEquipmentModifiers mints the might modifier from a weapon the mortal realm could never equip."
+    },
+    {
+      "id": "F-EQ-AFFIX-SLOT",
+      "title": "Affix slot policy enforced only when the affix declares a raw `slots` array; most affixes leave it undefined so slot-forbidden stats (e.g. maxHp on a weapon) mint",
+      "surface": "equipment[].affixes[].affixId stat-vs-slot",
+      "severity": "Medium",
+      "attack_class": "cross_field_coherence",
+      "reproduction": "Probe F-EQ-AFFIX-SLOT: equipped base_kiem carries affix prefix_max_hp (registry-normalized slots forbid maxHp on weapon, but affixes.ts leaves `slots` undefined so saveShapeValidation.ts:3071-3085 skips the check). Admitted; restore mints maxHp on a weapon - no roller output ever contains it."
+    },
+    {
+      "id": "F-EQ-AFFIX-DUP",
+      "title": "Duplicate affix stats on one item are unbounded (only GLOBAL_MAX_AFFIXES=8 count is checked); rollAffixes' excludeStats makes stat duplication unproducible",
+      "surface": "equipment[].affixes duplicate stat",
+      "severity": "Medium",
+      "attack_class": "value_envelope",
+      "reproduction": "Probe F-EQ-AFFIX-DUP test 1: equipped base_kiem with two prefix_max_hp affix entries. Admitted and restored; two live maxHp modifiers minted where the roller can produce at most one."
+    },
+    {
+      "id": "F-EQ-AFFIX-MAINSTAT-OVERLAP",
+      "title": "An affix claiming the item's mainStat stat is admitted; rollAffixes seeds excludeStats with mainStat.stat so the overlap is unproducible",
+      "surface": "equipment[].affixes[].stat vs mainStat.stat",
+      "severity": "Medium",
+      "attack_class": "cross_field_coherence",
+      "reproduction": "Probe F-EQ-AFFIX-DUP test 2: might-mainStat base_kiem + prefix_attack (might) affix. Admitted; mints a might affix on top of the might main stat."
+    },
+    {
+      "id": "F-EQ-AFFIX-ENVELOPE",
+      "title": "Quality envelopes unenforced: a hoang item admits a supreme-pool affix, affix tier above the quality cap, more affixes than ITEM_QUALITY_SUBSTATS_RANGE allows, and per-tier values mint at union-max via getEffectiveAffixValue",
+      "surface": "equipment[].affixes pool/tier/count vs quality",
+      "severity": "Medium",
+      "attack_class": "value_envelope",
+      "reproduction": "Probe F-EQ-AFFIX-ENVELOPE: hoang-quality base_kiem claiming prefix_supreme_final_damage at tier 5 plus a tier-3 prefix_max_hp (hoang allows 1 substat at tier 1 in the basic pool). Admitted; getEffectiveAffixValue (EquipmentRollPrimitives.ts:51-67) normalizes each forged tier against the union of authored tiers, minting real modifiers."
+    },
+    {
+      "id": "F-EQ-FOREIGN-SLOT",
+      "title": "equipment[].slot is enum-checked but never checked against the item template's allowed slot - a weapon claimed in 'helmet' mints its modifiers from that slot",
+      "surface": "equipment[].slot vs template.slots",
+      "severity": "Medium",
+      "attack_class": "cross_field_coherence",
+      "reproduction": "Probe F-EQ-FOREIGN-SLOT: equipped base_kiem with slot 'helmet'. Admitted; restore occupies the helmet slot and mints the weapon's might modifier."
+    },
+    {
+      "id": "F-AP-DOUBLE-COUNT",
+      "title": "attributePoints and baseStats are bounded independently (AP <= globalLevel, stats clamped to realm cap) but no spent-AP ledger exists, so capped stats AND the full unspent AP pool mint together",
+      "surface": "player.baseStats vs player.attributePoints",
+      "severity": "Medium",
+      "attack_class": "cross_slice_coherence",
+      "reproduction": "Probe F-AP-DOUBLE-COUNT: mortal realmLevel 18, all baseStats already at 10 (cap), and attributePoints 18 unspent. Admitted; restore keeps capped stats plus 18 unspent points - ~2x the authored stat budget no allocation sequence produces."
+    },
+    {
+      "id": "F-TALENT-DUP",
+      "title": "selectedTalentIds has no dedup check: a duplicated POOL talent id (not in CREATION_TALENT_IDS) dodges both the creation-count and maxTalentPicks bounds, and collectTalentEffects double-applies it",
+      "surface": "player.selectedTalentIds duplicates",
+      "severity": "Medium",
+      "attack_class": "cross_slice_coherence",
+      "reproduction": "Probe F-TALENT-DUP: qi_refining save with selectedTalentIds=['lk_dung_nap','lk_dung_nap']. Admitted (count 2 <= 1+realmIndex 2; creation count 0); restore keeps both ids and getCultivationSpeedMultiplier returns 1.2 vs the authored 1.1 max at level 1. Writer push(decision.talentId) is guarded by !includes, so the dup is unproducible."
+    },
+    {
+      "id": "F-EQ-MAINSTAT-NEG",
+      "title": "mainStat.flat has only an upper bound (<= maxFlat); negative values admit and mint a negative modifier - self-harm only",
+      "surface": "equipment[].mainStat.flat",
+      "severity": "Low",
+      "attack_class": "boundary_arithmetic",
+      "reproduction": "Probe F-EQ-MAINSTAT-NEG: equipped base_kiem mainStat flat -50. Admitted; mints -50 might. No authored writer emits a negative flat, but the mint only harms the character."
+    },
+    {
+      "id": "F-BASESTATS-NEG",
+      "title": "baseStats values are only checked finite; a negative stat claim is admitted and the restore clamp min(cap, v) preserves it - self-harm only",
+      "surface": "player.baseStats values",
+      "severity": "Low",
+      "attack_class": "boundary_arithmetic",
+      "reproduction": "Probe F-BASESTATS-NEG: mortal save with baseStats.might = -50. Admitted; player.baseStats.might stays -50 after restore."
+    },
+    {
+      "id": "F-INSIGHT-UNBOUNDED",
+      "title": "skillInsight/totalSkillInsightGained accept any non-negative finite magnitude - currency-class admission (producible in principle, magnitude unverifiable)",
+      "surface": "player.skillInsight / totalSkillInsightGained",
+      "severity": "Low",
+      "attack_class": "value_envelope",
+      "reproduction": "Probe F-INSIGHT-UNBOUNDED: mortal save claiming skillInsight=totalSkillInsightGained=1e9. Admitted and restored verbatim. Insight spends on skill depth, so the claim mints purchasing power no session could accrue - Low because currency magnitudes are inherently unverifiable, same class as cultivation."
+    }
+  ],
+  "rejected_candidates": [
+    {
+      "surface": "equipmentSlots[].enhanceLevel",
+      "verdict": "HOLD - bounded by MAX_SLOT_ENHANCE_LEVEL (saveShapeValidation.ts:3134-3145); calculateEquipmentScale applies the authored linear scale only."
+    },
+    {
+      "surface": "equipment[] mainStat.percent/multiplier",
+      "verdict": "HOLD - percent must be exactly 0 and multiplier exactly 1; any nonzero mint rejected."
+    },
+    {
+      "surface": "equipment[].mainStat.stat / affixId / itemId unknown",
+      "verdict": "HOLD - stat must be in template.mainStats; unknown item/affix ids rejected by registry preflight."
+    },
+    {
+      "surface": "equipment[] duplicate instanceId / same-slot multi-equip",
+      "verdict": "HOLD - bag dedupes first-wins; the second claim is inert."
+    },
+    {
+      "surface": "materials[]/pills[] amount magnitude",
+      "verdict": "HOLD - non-negative shape bound plus MaterialBag.add stackLimit clamp (probe verifies 1e10 -> <=100); currency-class claim bounded by the stack cap."
+    },
+    {
+      "surface": "player.cultivation / totalExperience / bossKillCount / counters",
+      "verdict": "HOLD - cultivation clamps to level requirement (addCultivation caps); counters are inert records."
+    },
+    {
+      "surface": "player.modifiers / externalModifiers forged sources",
+      "verdict": "HOLD - closed witness set: meridian claims need owned meridian (probe: bat-mach:ren_mai rejected), ritual/talent/loi_kiep all witness-gated; tu_linh_tran percent bounded."
+    },
+    {
+      "surface": "player.persistentTimedEffects",
+      "verdict": "HOLD - closed source taxonomy; luyen_the effects are observer-restored, not trusted from save."
+    },
+    {
+      "surface": "player.selectedTalentIds creation/parked/realm/level bounds",
+      "verdict": "HOLD - creation count <=1 per CREATION_TALENT_IDS entry, parked rejected, great_dao needs witness, pool-realm <= player realm, talentLevels 1..maxLevel owned-only."
+    },
+    {
+      "surface": "player.nodeLevels / purchasedNodeIds",
+      "verdict": "HOLD - prereq replay covers node/nodeCount/excludesNode/realm; skipped-kind prereqs (skillCastCount/techniqueRank/techniqueGrade) exist only on dormant or unauthored nodes."
+    },
+    {
+      "surface": "techniques[] holder claim",
+      "verdict": "HOLD - exactly-1 holder == way.techniqueId; grade 1..ceiling; rank capped; mastery canonical; gradeHistory canonical key set."
+    },
+    {
+      "surface": "skills[] membership / level / cross-element kit",
+      "verdict": "HOLD - F-SKL-1 requires a producing writer (starter, way kit, owned node grant, talent passive, realm-ladder); levelled skills need their core node granted; realm-gated templates checked vs realmIndex."
+    },
+    {
+      "surface": "quests active/claimed/completedOnceIds",
+      "verdict": "HOLD - canClaim re-gates at claim time; forged claimed/completed flags are inert records."
+    },
+    {
+      "surface": "productionSites[] / workerCycles / alchemyJobs timing",
+      "verdict": "HOLD - offline catch-up requires elapsed>=duration with startedAt<=lastSavedAt<=now; spans are authored; siteId preflighted."
+    },
+    {
+      "surface": "tribulation committedOutcome / grade claims",
+      "verdict": "HOLD - F-TRB-1 enforces the authored grade chain; committed outcomes re-gate through isRealmTransitionEnabled; settled claims are producible-class."
+    },
+    {
+      "surface": "player.realmId beyond progressionCeiling (e.g. golden_core) + hiddenPerfection / grantedRealmPassiveIds",
+      "verdict": "REJECTED BY DESIGN - flagged save (unsupportedReleaseReason) loads with dormant records inert; per the flag contract only unproducible claims may be rejected."
+    },
+    {
+      "surface": "mortal save carrying cultivationPath/cultivationWay",
+      "verdict": "HOLD - mortal boundary contract rejects path/way claims on a mortal."
+    },
+    {
+      "surface": "player.lastSavedAt / boundary NaN, realmLevel>maxLevel, negative insight",
+      "verdict": "HOLD - non-finite timestamps rejected; realmLevel bounded by realm.maxLevel; requireNonNegativeNumber rejects negatives."
+    },
+    {
+      "surface": "spell element commit without basic skill / hidden pathway without kit",
+      "verdict": "HOLD - committed element requires its basic atomically; hidden_spell_pathway requires the 3-skill kit (acceptance coherence check)."
+    },
+    {
+      "surface": "player.autoWorkerCapacity / phaGiapCarryStacks / cultivationOvercharge / decompose / companions / talismans / formations",
+      "verdict": "HOLD - auto-worker and carry-stack magnitudes witness-bounded; overcharge requires hai_na ownership; dormant-scope slices (decompose/companions/talisman/formation entries) restore as inert records."
+    }
+  ]
+}

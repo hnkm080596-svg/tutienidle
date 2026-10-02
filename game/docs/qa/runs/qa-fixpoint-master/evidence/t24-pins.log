@@ -1,0 +1,20 @@
+== pin suite: saveFalsificationSweep (post-fix) ==
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+
+ Test Files  1 passed (1)
+      Tests  8 passed (8)
+   Start at  17:59:20
+   Duration  3.03s (transform 2.44s, setup 347ms, import 2.51s, tests 38ms, environment 0ms)
+
+== save+architecture scope ==
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+
+ Test Files  101 passed (101)
+      Tests  1236 passed | 7 skipped (1243)
+   Start at  17:59:24
+   Duration  29.30s (transform 21.78s, setup 10.82s, import 54.58s, tests 99.65s, environment 4.71s)
+

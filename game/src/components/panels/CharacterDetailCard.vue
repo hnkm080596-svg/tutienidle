@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '@/stores/player'
 import { useUiStore } from '@/stores/ui'
 import { BASE_STAT_LABELS, formatStat, type StatCategory } from '@/core/stats/StatLabels'
+import { isBetaStatLabelVisible } from '@/core/betaScope'
 
 // Detail stat card - split out of CharacterPanel (which now keeps only
 // the meridian figure + Ngu Hanh) and docked to the right edge of the
@@ -30,7 +31,9 @@ const statGroups = computed(() =>
   STAT_CATEGORY_ORDER.map(category => ({
     category,
     label: t(STAT_CATEGORY_KEYS[category]),
-    stats: BASE_STAT_LABELS.filter(stat => stat.category === category),
+    stats: BASE_STAT_LABELS.filter(
+      stat => stat.category === category && isBetaStatLabelVisible(stat.key),
+    ),
   })),
 )
 </script>

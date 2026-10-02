@@ -15,7 +15,7 @@
 // so a slot/building/panel added later without a scope decision can
 // never leak into the beta build. Nothing here writes state or
 // consumes RNG; every function is a pure query (Q9).
-import { isBetaFeature, isBetaWay, type BetaFeatureName } from './betaScope'
+import { isBetaFeature, isBetaTalentId, isBetaWay, scopeHiddenPillFamilyOfId, type BetaFeatureName } from './betaScope'
 import {
   isBeyondReleaseCeiling,
   isRealmAvailable,
@@ -116,6 +116,15 @@ const BETA_BUILDING_FEATURES: Readonly<Record<string, BetaFeatureName | null>> =
 /** true when the building may render a hotspot / open a panel in beta. */
 export function isBetaBuildingSurface(buildingId: string): boolean {
   return featureAdmits(BETA_BUILDING_FEATURES[buildingId])
+}
+
+/**
+ * The building-popover mount chokepoint: GameRoot binds this so a raw
+ * ui.activeBuildingPopoverId write can never mount a scope-hidden
+ * card - identical defense to the standalone-panel mount watcher.
+ */
+export function betaAdmittedBuildingPopoverId(buildingId: string | null): string | null {
+  return buildingId !== null && isBetaBuildingSurface(buildingId) ? buildingId : null
 }
 
 // ---------------------------------------------------------------------------
@@ -285,13 +294,41 @@ export type BetaUnsupportedReason =
   | 'artifact_owned'
   /** A Tran Phap loadout is persisted. */
   | 'formation_loadout'
+  /** Dormant workforce state exists (chi_hien_quan capacity). */
+  | 'manual_workforce_state'
+  /** An in-flight alchemy job belongs to a dormant recipe family. */
+  | 'dormant_alchemy_job'
+  /** The Decompose station carries live state (running or staffed). */
+  | 'dormant_decompose_state'
+  /** A selected talent outside the beta roster is persisted. */
+  | 'dormant_talent_state'
+
+/**
+ * Save-level slices the reason read-model inspects in addition to
+ * PlayerData. Passed from the loaded payload by the boot path - the
+ * alchemy job list and the decompose station state live outside
+ * PlayerData but are just as much carried dormant records.
+ * Read defensively: shape validation may be bypassed on a hostile save.
+ */
+export interface BetaUnsupportedSaveSlices {
+  alchemyJobs?: unknown
+  decompose?: {
+    started?: unknown
+    settings?: {
+      workers?: unknown
+    } | Record<string, unknown>
+  } | null
+}
 
 /**
  * The first unsupported reason for `player`, or null when the save is
  * fully inside beta scope. Read-only - it inspects persisted fields and
  * never mutates them (spec sec.20: deserialize safely, flag explicitly).
  */
-export function unsupportedReleaseReason(player: PlayerData): BetaUnsupportedReason | null {
+export function unsupportedReleaseReason(
+  player: PlayerData,
+  saveSlices?: BetaUnsupportedSaveSlices,
+): BetaUnsupportedReason | null {
   if (!isRealmAvailable(player.realmId)) {
     return 'realm_beyond_release'
   }
@@ -316,11 +353,70 @@ export function unsupportedReleaseReason(player: PlayerData): BetaUnsupportedRea
     return 'artifact_owned'
   }
 
-  if (player.formationLoadout !== null) {
+  if (player.formationLoadout !== null && player.formationLoadout !== undefined) {
     return 'formation_loadout'
   }
 
+  // Restore recomputes autoWorkerCapacity from any carried chi_hien_quan
+  // instance before this read-model runs, so >0 always means dormant
+  // workforce state exists on the save - instance-only payloads are
+  // caught too.
+  if (
+    typeof player.autoWorkerCapacity === 'number' &&
+    Number.isFinite(player.autoWorkerCapacity) &&
+    player.autoWorkerCapacity > 0
+  ) {
+    return 'manual_workforce_state'
+  }
+
+  // A carried job of an authored dormant recipe parks at the settle
+  // seam (inert, never delivers) - flag it as out-of-scope state. An
+  // unknown/corrupt recipeId fails honestly instead, so it is not a
+  // dormant-record reason.
+  const jobs = saveSlices?.alchemyJobs
+  if (
+    Array.isArray(jobs) &&
+    jobs.some((job) => {
+      const recipeId = (job as { recipeId?: unknown } | null)?.recipeId
+      return typeof recipeId === 'string' && scopeHiddenPillFamilyOfId(recipeId) !== null
+    })
+  ) {
+    return 'dormant_alchemy_job'
+  }
+
+  // A live Decompose station is the same dormant-record class - the
+  // station itself is scope-hidden, so a running cycle or assigned
+  // workers must never run silently on a beta save.
+  const decompose = saveSlices?.decompose
+  if (
+    decompose !== undefined &&
+    decompose !== null &&
+    typeof decompose === 'object' &&
+    (decompose.started === true ||
+      (typeof decompose.settings === 'object' &&
+        decompose.settings !== null &&
+        typeof decompose.settings.workers === 'number' &&
+        decompose.settings.workers > 0))
+  ) {
+    return 'dormant_decompose_state'
+  }
+
+  // A persisted talent outside the beta roster carries talent-owned
+  // records (upgrade cards, loi_kiep claims) with no beta writer.
+  if (
+    Array.isArray(player.selectedTalentIds) &&
+    player.selectedTalentIds.some(
+      (talentId) => typeof talentId === 'string' && !isBetaTalentId(talentId),
+    )
+  ) {
+    return 'dormant_talent_state'
+  }
+
   return null
+}
+
+function positiveNumber(value: unknown): boolean {
+  return typeof value === 'number' && Number.isFinite(value) && value > 0
 }
 
 /** true when the save carries no out-of-scope state. */
@@ -339,7 +435,12 @@ function hasHiddenProgressionState(player: PlayerData): boolean {
   if (perfection !== undefined) {
     // Defensive shape reads: the flags mean "records exist", so a
     // field that failed shape validation (non-object/non-array) counts
-    // as hidden state rather than throwing on it.
+    // as hidden state rather than throwing on it. A present-but-null or
+    // scalar slice is the same class of corrupt data - flag it, never
+    // throw on it.
+    if (perfection === null || typeof perfection !== 'object') {
+      return true
+    }
     if (typeof perfection.realms === 'object' && perfection.realms !== null) {
       if (Object.keys(perfection.realms).length > 0) {
         return true
@@ -359,6 +460,13 @@ function hasHiddenProgressionState(player: PlayerData): boolean {
     ) {
       return true
     }
+  }
+
+  // F-TC6-3: 'great_dao' is only writable by a hidden breakthrough - the
+  // value alone is hidden-progression carry, even when the perfection
+  // record slice is absent.
+  if (player.highestFoundationAchieved === 'great_dao') {
+    return true
   }
 
   const kills = player.hiddenBeastKills

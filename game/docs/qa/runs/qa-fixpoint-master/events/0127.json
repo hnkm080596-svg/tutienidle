@@ -1,0 +1,5 @@
+{
+  "action": "id collision fix: A14-wave closure review renamed RV-CLOSURE-19 -> RV-CLOSURE-20 (T22b rebind held the earlier id)",
+  "tip": "77aecae0",
+  "wave": "T23"
+}

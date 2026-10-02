@@ -225,8 +225,8 @@ describe('loadGame — shape validation (save-shape-validation-plan.md)', () => 
       quality: 'hoang',
       mainStat: { stat: 'might', flat: 1 },
       affixes: [{ affixId: 'suffix_accuracy', tier: 1, value: 3 }],
-      forgeUsesTotal: 6,
-      forgeUsesRemaining: 6,
+      forgeUsesTotal: 5,
+      forgeUsesRemaining: 5,
     }]
     localStorage.setItem(SAVE_KEY, JSON.stringify(save))
 
