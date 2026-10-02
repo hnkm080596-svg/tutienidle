@@ -150,6 +150,7 @@ export const usePlayerStore = defineStore('player', {
       return resolvePlayerVisualProfileId({
         realmId: state.realmId,
         cultivationPath: state.cultivationPath,
+        cultivationWay: state.cultivationWay ?? undefined,
       })
     },
 

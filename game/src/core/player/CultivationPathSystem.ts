@@ -311,7 +311,18 @@ export function collectActiveWayStatModifiers(
  * Corrupt/way-less pairs resolve nothing.
  */
 export function resolveActiveWayStatDomains(player: PathWayRead): readonly StatDomain[] | undefined {
-  return getActiveWayDefinition(player)?.stats?.domains
+  const way = getActiveWayDefinition(player)
+
+  // BETA SCOPE LOCK - a carried way_out_of_scope save keeps its way
+  // record, but the dormant facet owns no live domains (same admission
+  // read as collectActiveWayStatModifiers): without the gate the pair
+  // binds stats.domains at battle build and the deltaDerivers mint
+  // BETA_SCOPE_HIDDEN_STAT_KEYS stats mid-battle.
+  if (way !== undefined && !isBetaWay(way.id)) {
+    return []
+  }
+
+  return way?.stats?.domains
 }
 
 /**

@@ -233,15 +233,26 @@ export function getCultivateTexture(
   url: string
   sourceSize: { w: number; h: number }
 } {
-  // The override catalog only carries hidden-way art - a carried
-  // way_out_of_scope save must not repaint the live cultivate figure.
-  const override = way !== undefined && isBetaWay(way) ? CULTIVATE_TEXTURE_OVERRIDES[way] : undefined
+  const mortal = PLAYER_VISUAL_PROFILES.mortal
+
+  // BETA SCOPE LOCK - a carried way_out_of_scope save keeps its way
+  // record but must not repaint the live cultivate figure: non-beta
+  // ways collapse to mortal BEFORE the profile lookup, so a dormant
+  // profile id can never reach its dedicated art.
+  if (way !== undefined && !isBetaWay(way)) {
+    return {
+      key: mortal.cultivateTextureKey!,
+      url: mortal.cultivateTextureUrl!,
+      sourceSize: { ...mortal.cultivateSourceSize! },
+    }
+  }
+
+  // The override catalog only carries hidden-way art.
+  const override = way !== undefined ? CULTIVATE_TEXTURE_OVERRIDES[way] : undefined
 
   if (override) {
     return { key: override.key, url: override.url, sourceSize: { ...override.sourceSize } }
   }
-
-  const mortal = PLAYER_VISUAL_PROFILES.mortal
 
   return {
     key: profile.cultivateTextureKey ?? mortal.cultivateTextureKey!,

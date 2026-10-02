@@ -461,6 +461,10 @@ const activeTimedEffects = computed(() => {
 
   return player.$state.persistentTimedEffects
     .filter((effect) => effect.expiresAtMs > now)
+    // BETA SCOPE LOCK - same dormant-family admission as the stack
+    // cells above: a carried dormant-family timed effect (e.g.
+    // hoi_xuan_dan_*) renders no active-effects chip.
+    .filter((effect) => scopeHiddenPillFamilyOfId(effect.sourceItemId) === null)
     .map((effect) => {
       const remainingSeconds = Math.ceil((effect.expiresAtMs - now) / 1000)
 
