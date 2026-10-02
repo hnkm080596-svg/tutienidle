@@ -27,6 +27,8 @@ import { ELEMENT_LABELS } from '@/core/element/ElementLabels'
 import { SPIRIT_STONE_LABEL } from '@/core/presentation/labels'
 import { getProfessionGradeForRealm } from '@/core/profession/ProfessionGrade'
 import { professionGradeRank } from '@/core/profession/slotRank'
+import { isCompanionPullTokenSourceSuppressed, isDomainScopedAcquisitionEnabled } from '@/core/realm/ReleasePolicy'
+import { usePlayerStore } from '@/stores/player'
 import type { BagCell } from './BagCell'
 import type { Material, MaterialCategory } from '@/core/material/Material'
 import type { GradedItemTooltipContent } from '@/composables/useTooltip'
@@ -175,6 +177,7 @@ function buildTooltip(material: Material, owned: number): GradedItemTooltipConte
 const ui = useUiStore()
 
 const gameManager = useGameManager()
+const player = usePlayerStore()
 
 const { stateVersion } = useStateVersion()
 
@@ -230,7 +233,18 @@ function materialAccessibleLabel(name: string, material: Material): string {
 const entries = computed<MaterialEntry[]>(() => {
   stateVersion.value
 
-  return gameManager.materialBag.getAll().map((stack) => ({
+  // BETA SCOPE LOCK v2 - a source-suppressed material (the companion
+  // pull token, whose recurring faucets are all gated in ReleasePolicy)
+  // renders in no live bag cell: CurrencyHud already censors the same
+  // id, and the bag agrees rather than presenting a live surface for a
+  // scope-hidden domain. Banked balances stay persisted, never deleted.
+  return gameManager.materialBag.getAll()
+    .filter((stack) => !isCompanionPullTokenSourceSuppressed(stack.material.id))
+    // domain-scoped materials (artifact domain today) are a suppressed
+    // faucet too: below the shared unlock realm the carried record is
+    // persisted but the domain branding must not render.
+    .filter((stack) => isDomainScopedAcquisitionEnabled(stack.material.domainUnlockRealmId, player.realmId))
+    .map((stack) => ({
     material: stack.material,
 
     amount: stack.amount,

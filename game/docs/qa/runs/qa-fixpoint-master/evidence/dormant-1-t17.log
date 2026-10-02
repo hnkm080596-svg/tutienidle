@@ -1,0 +1,10 @@
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+
+ Test Files  1 passed (1)
+      Tests  46 passed (46)
+   Start at  11:21:23
+   Duration  3.37s (transform 2.62s, setup 374ms, import 2.76s, tests 49ms, environment 0ms)
+
+EXIT=0

@@ -1,0 +1,158 @@
+{
+  "records": [
+    {
+      "kind": "review",
+      "body": {
+        "id": "RV-ADV-TC9",
+        "contextId": "ctx-child-tc9",
+        "reviewerId": "devin-0e50709b9f6a4cd28109db059256d48b",
+        "model": "SWE-2",
+        "phase": "TERMINAL_CHECK",
+        "round": 32,
+        "role": "fresh blind falsification sweep on a2bd826f (T19): 6 findings - 3 High + 1 Medium fixed on T20, 2 Low deferred",
+        "state": {
+          "productStateId": "1e111dc87b6fb8330d9c3aab07fceb6eafacee22cc67ee47ee7e36c49390bf35",
+          "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+          "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+          "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+        },
+        "status": "SEALED",
+        "startedAt": "2026-10-01T12:42:53Z",
+        "sealedAt": "2026-10-01T13:21:00Z",
+        "priorFindingsVisible": false,
+        "reviewedAfterPreviousFixes": true,
+        "inputBundleHash": "5e44f602d6b9860d8b86e1d1cb32d27823cb7ead7774aa9e47d07e5fc210c73d",
+        "evidenceIds": [
+          "EV-PROBE-TC9",
+          "EV-REPORT-TC9"
+        ],
+        "coverageIds": [],
+        "findingIds": [
+          "F-TC9-1",
+          "F-TC9-2",
+          "F-TC9-3",
+          "F-TC9-4",
+          "F-TC9-5",
+          "F-TC9-6"
+        ],
+        "novelAttackIds": [],
+        "accessLimitations": [],
+        "previousPhaseReviewId": "RV-ADV-A10"
+      }
+    },
+    {
+      "kind": "review",
+      "body": {
+        "id": "RV-ADV-B11",
+        "contextId": "ctx-child-b11",
+        "reviewerId": "devin-b16b85780ded4887b0e9e8b22d441c26",
+        "model": "SWE-2",
+        "phase": "INTEGRATION",
+        "round": 32,
+        "role": "fresh blind consumer-seam review on a2bd826f (T19): 6 findings - 1 Low + 5 Nit, all deferred per Medium+-only ruling",
+        "state": {
+          "productStateId": "1e111dc87b6fb8330d9c3aab07fceb6eafacee22cc67ee47ee7e36c49390bf35",
+          "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+          "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+          "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+        },
+        "status": "SEALED",
+        "startedAt": "2026-10-01T12:42:53Z",
+        "sealedAt": "2026-10-01T13:21:00Z",
+        "priorFindingsVisible": false,
+        "reviewedAfterPreviousFixes": true,
+        "inputBundleHash": "b372942c9b92eb410b023bfd2861a6e2a0108f917da9706ef610b75780ca0210",
+        "evidenceIds": [
+          "EV-PROBE-B11",
+          "EV-REPORT-B11"
+        ],
+        "coverageIds": [],
+        "findingIds": [
+          "F-B11-1",
+          "F-B11-2",
+          "F-B11-3",
+          "F-B11-4",
+          "F-B11-5",
+          "F-B11-6"
+        ],
+        "novelAttackIds": [],
+        "accessLimitations": [],
+        "previousPhaseReviewId": "RV-ADV-TC9"
+      }
+    },
+    {
+      "kind": "review",
+      "body": {
+        "id": "RV-ADV-A11",
+        "contextId": "ctx-child-a11",
+        "reviewerId": "devin-9bd157412148451ea2973edf69b96112",
+        "model": "SWE-2",
+        "phase": "AUTHORITY",
+        "round": 32,
+        "role": "fresh blind authority-seam review on a2bd826f (T19): 6 findings - 5 High + 1 Medium, all fixed on T20",
+        "state": {
+          "productStateId": "1e111dc87b6fb8330d9c3aab07fceb6eafacee22cc67ee47ee7e36c49390bf35",
+          "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+          "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+          "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+        },
+        "status": "SEALED",
+        "startedAt": "2026-10-01T12:42:53Z",
+        "sealedAt": "2026-10-01T13:21:00Z",
+        "priorFindingsVisible": false,
+        "reviewedAfterPreviousFixes": true,
+        "inputBundleHash": "bd088dbfe9a6ecc1bc8273f5c33a26575a3316a4d9c69a397b87d752094eba56",
+        "evidenceIds": [
+          "EV-PROBE-A11",
+          "EV-REPORT-A11"
+        ],
+        "coverageIds": [],
+        "findingIds": [
+          "F-A11-1",
+          "F-A11-2",
+          "F-A11-3",
+          "F-A11-4",
+          "F-A11-5",
+          "F-A11-6"
+        ],
+        "novelAttackIds": [],
+        "accessLimitations": [],
+        "previousPhaseReviewId": "RV-ADV-B11"
+      }
+    },
+    {
+      "kind": "review",
+      "body": {
+        "id": "RV-CLOSURE-16",
+        "contextId": "ctx-coord-t20",
+        "reviewerId": "coord-main",
+        "model": "SWE-2",
+        "phase": "CLOSURE",
+        "round": 32,
+        "role": "coordinator closure review of T20 fix wave: TC9 4 fixes at d22d3c72 + A11 6 fixes at d615f4fc, pins+mutants+verify",
+        "state": {
+          "productStateId": "c521ac4278bf1126d0bfe9421d02b2c851d4a53cd3e8727eff49b5e30094a5da",
+          "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+          "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+          "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+        },
+        "status": "SEALED",
+        "startedAt": "2026-10-01T12:42:53Z",
+        "sealedAt": "2026-10-01T13:21:00Z",
+        "priorFindingsVisible": false,
+        "reviewedAfterPreviousFixes": true,
+        "inputBundleHash": "2b7eedf24f1dd6efbbba341308edfdfc36d66a121642829cfcd5b73b3623d274",
+        "evidenceIds": [
+          "EV-PIN-T20",
+          "EV-MUT-T20",
+          "EV-VERIFY-T20"
+        ],
+        "coverageIds": [],
+        "findingIds": [],
+        "novelAttackIds": [],
+        "accessLimitations": [],
+        "previousPhaseReviewId": "RV-ADV-A11"
+      }
+    }
+  ]
+}

@@ -21,6 +21,13 @@ const mocks = vi.hoisted(() => ({
   chooseSlot: vi.fn(),
   setBattleManualMode: vi.fn(),
   setCombatInputMode: vi.fn(),
+  // Beta scope lock - the role rail the bar consumes. Tests reassign
+  // per case; default = the beta rail (ultimate scope-hidden).
+  rail: [
+    { role: 'basic', skillId: 'tram', state: 'available' },
+    { role: 'special', skillId: null, state: 'progression-locked', reason: 'realm-gate' },
+    { role: 'ultimate', skillId: null, state: 'scope-hidden', reason: 'out-of-beta-scope' },
+  ] as { role: string; skillId: string | null; state: string; reason?: string }[],
   // P1 - assigned after imports below; delegates to the REAL capability
   // resolver so the emblem test pins real behavior, not a reimplemented
   // gate. hasSkill: true models the post-ritual invariant (the ngo_dao
@@ -49,6 +56,10 @@ vi.mock('@/composables/useGameState', () => ({
   useGameManager: () => ({
     setBattleManualMode: mocks.setBattleManualMode,
     hasPathCapability: (capability: PathCapability) => mocks.hasPathCapability(capability),
+    // Beta scope lock - the rail verdict the bar consumes.
+    progressionOps: {
+      betaCombatRolesFor: () => mocks.rail,
+    },
   }),
 }))
 
@@ -67,6 +78,9 @@ vi.mock('@/stores/player', () => ({
     get cultivationWay() {
       return mocks.cultivationWay
     },
+    // $state surfaces as an opaque PlayerData handle for the beta rail
+    // read-model; the mocked betaCombatRolesFor ignores its argument.
+    $state: {},
   }),
 }))
 
@@ -87,6 +101,11 @@ mocks.hasPathCapability = (capability) =>
 afterEach(() => {
   mocks.cultivationPath = undefined
   mocks.cultivationWay = undefined
+  mocks.rail = [
+    { role: 'basic', skillId: 'tram', state: 'available' },
+    { role: 'special', skillId: null, state: 'progression-locked', reason: 'realm-gate' },
+    { role: 'ultimate', skillId: null, state: 'scope-hidden', reason: 'out-of-beta-scope' },
+  ]
 })
 
 function entry(overrides: Partial<TurnSkillPresentationEntry> = {}): TurnSkillPresentationEntry {
@@ -127,14 +146,15 @@ describe('TurnCombatSkillBar — display label (9.5 #5)', () => {
     await nextTick()
 
     expect(container.textContent).toContain('Huy Kiếm')
-    // 2 slot con lai fallback nhan role.
+    // slot con lai fallback nhan role; the ultimate label is
+    // scope-hidden in beta - the rail verdict keeps it un-rendered.
     expect(container.textContent).toContain('Đặc Biệt')
-    expect(container.textContent).toContain('Tuyệt Kỹ')
+    expect(container.textContent).not.toContain('Tuyệt Kỹ')
 
     appCleanup(container)
   })
 
-  it('không có skillName nào → giữ nguyên 3 nhãn role', async () => {
+  it('không có skillName nào → giữ nguyên nhãn role, ultimate scope-hidden', async () => {
     mocks.slotList = [entry(), entry(), entry()]
 
     const container = mountBar()
@@ -142,7 +162,7 @@ describe('TurnCombatSkillBar — display label (9.5 #5)', () => {
 
     expect(container.textContent).toContain('Thường')
     expect(container.textContent).toContain('Đặc Biệt')
-    expect(container.textContent).toContain('Tuyệt Kỹ')
+    expect(container.textContent).not.toContain('Tuyệt Kỹ')
 
     appCleanup(container)
   })
@@ -150,11 +170,19 @@ describe('TurnCombatSkillBar — display label (9.5 #5)', () => {
 
 // Phap Tu Reimagined (Task 16) -- the ngo_dao way owns NO active ultimate: the
 // ult slot is the ngo_dao_hon_don dao passive, rendered as an emblem,
-// never a button (spec S3.3).
-describe('TurnCombatSkillBar — ngo_dao passive emblem', () => {
-  it('ult slot là emblem ngo_dao_hon_don, KHÔNG phải button', async () => {
+// never a button (spec S3.3). BETA SCOPE LOCK v2: the hidden way itself
+// is scope-hidden, so on a hidden-way save the beta rail hides every
+// role -- the emblem never renders (dormant UI may not appear, and the
+// save is flagged unsupported under contract sec.H anyway).
+describe('TurnCombatSkillBar — ngo_dao passive emblem (scope-hidden way)', () => {
+  it('hidden way: the beta rail renders nothing -- no buttons, no emblem', async () => {
     mocks.cultivationPath = 'spell'
     mocks.cultivationWay = 'hidden_spell_pathway'
+    mocks.rail = [
+      { role: 'basic', skillId: null, state: 'scope-hidden', reason: 'non-beta-way' },
+      { role: 'special', skillId: null, state: 'scope-hidden', reason: 'non-beta-way' },
+      { role: 'ultimate', skillId: null, state: 'scope-hidden', reason: 'non-beta-way' },
+    ]
     mocks.slotList = [
       entry({ skillId: 'van_phap_tuy_tam', skillName: 'Vạn Pháp Tùy Tâm' }),
       entry({ skillId: 'da_phap_lien_tuyen', skillName: 'Đa Pháp Liên Tuyến' }),
@@ -164,20 +192,16 @@ describe('TurnCombatSkillBar — ngo_dao passive emblem', () => {
     const container = mountBar()
     await nextTick()
 
-    // Emblem present with the passive name + tag.
-    expect(container.textContent).toContain('Ngộ Đạo Hỗn Độn')
-    expect(container.textContent).toContain('Bị Động')
-    expect(container.textContent).not.toContain('Tuyệt Kỹ')
-
-    // Exactly 2 buttons (basic + special) -- the emblem is a div.
     const buttons = container.querySelectorAll('button.turn-combat-skill-bar__slot-button')
 
-    expect(buttons).toHaveLength(2)
+    expect(buttons).toHaveLength(0)
+    expect(container.querySelector('.turn-combat-skill-bar__emblem')).toBeNull()
+    expect(container.textContent).not.toContain('Ngộ Đạo Hỗn Độn')
 
     appCleanup(container)
   })
 
-  it('path thường vẫn render nút ult bình thường', async () => {
+  it('beta way: ultimate slot does not render (scope-hidden role)', async () => {
     mocks.cultivationPath = 'spell'
     mocks.cultivationWay = 'spell_pathway'
     mocks.slotList = [entry(), entry(), entry()]
@@ -185,8 +209,9 @@ describe('TurnCombatSkillBar — ngo_dao passive emblem', () => {
     const container = mountBar()
     await nextTick()
 
-    expect(container.querySelectorAll('button.turn-combat-skill-bar__slot-button')).toHaveLength(3)
+    expect(container.querySelectorAll('button.turn-combat-skill-bar__slot-button')).toHaveLength(2)
     expect(container.querySelector('.turn-combat-skill-bar__emblem')).toBeNull()
+    expect(container.textContent).not.toContain('Tuyệt Kỹ')
 
     appCleanup(container)
   })

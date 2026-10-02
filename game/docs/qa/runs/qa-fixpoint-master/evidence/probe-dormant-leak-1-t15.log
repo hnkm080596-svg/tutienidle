@@ -1,0 +1,10 @@
+=== EV-PROBE-TRISAVE-2 T15 ===
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+
+ Test Files  1 passed (1)
+      Tests  46 passed (46)
+   Start at  10:25:54
+   Duration  2.14s (transform 1.62s, setup 268ms, import 1.72s, tests 40ms, environment 0ms)
+

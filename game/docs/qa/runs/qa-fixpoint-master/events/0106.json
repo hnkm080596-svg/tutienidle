@@ -1,0 +1,3 @@
+{
+  "summary": "MC13 lesson binding: upsert findingIds into existing lesson records for T20 findings; strip schema-invalid per-finding lessonIds"
+}

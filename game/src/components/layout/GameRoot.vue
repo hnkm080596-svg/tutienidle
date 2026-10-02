@@ -35,7 +35,7 @@ import TutorialOverlay from '../common/TutorialOverlay.vue'
 import { useOfflineSummaryStore } from '@/stores/offlineSummary'
 import { useUiStore } from '@/stores/ui'
 import { useCombatSceneActive } from '@/composables/useCombatSceneActive'
-import { isBetaStandalonePanel } from '@/core/betaScopeSurface'
+import { betaAdmittedBuildingPopoverId, isBetaStandalonePanel } from '@/core/betaScopeSurface'
 
 const offlineSummary = useOfflineSummaryStore()
 
@@ -83,6 +83,14 @@ watch(
   { immediate: true },
 )
 
+// BETA SCOPE LOCK: the popover mount seam carries the same chokepoint
+// defense as the standalone-panel watcher - a scope-hidden building's
+// card never renders even when ui.activeBuildingPopoverId is assigned
+// directly (e.g. by a surface that skipped openBuildingPopover).
+const admittedBuildingPopoverId = computed(() =>
+  betaAdmittedBuildingPopoverId(ui.activeBuildingPopoverId),
+)
+
 /** Which route this Vue tree is currently standing in for (mount witness). */
 const mountedGameRoute = computed<'home' | 'combat' | 'tribulation'>(() => {
   const route = routeAdapter?.activeRoute.value
@@ -108,8 +116,8 @@ function closeSidePanels() {
         <!-- Shared popover authority (plan Workstream C) - CHI MOT
              BuildingDetailPopover cho CA hotspot lan command wheel,
              dieu khien qua ui.activeBuildingPopoverId. -->
-        <div v-if="ui.activeBuildingPopoverId" class="game-root__building-popover-layer">
-          <BuildingDetailPopover :building-id="ui.activeBuildingPopoverId" />
+        <div v-if="admittedBuildingPopoverId" class="game-root__building-popover-layer">
+          <BuildingDetailPopover :building-id="admittedBuildingPopoverId" />
         </div>
 
         <!-- Economy currency strip (audit H1) - pinned top-left so the

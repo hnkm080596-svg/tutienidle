@@ -588,17 +588,11 @@ export class BattleLootSystem {
               break
             }
 
-            // BETA SCOPE LOCK v2 sec.14/sec.17 - physique essences feed
-            // only the scope-hidden body path (BodyChapter invest,
-            // ZhouTian, Nghich Chu Thian): while bodyPath is off the
-            // faucet closes at delivery (post-resolve filter, same seam
-            // as the policy gates above - rng order untouched).
-            if (
-              physiqueEssenceGradeOf(drop.itemId) !== undefined &&
-              isScopeHidden('bodyPath')
-            ) {
-              break
-            }
+            // Physique essences fund the realm body chapters
+            // (body_refinement -> meridian -> zhou_tian chain that the
+            // Kien Co breakthrough GRADE consumes, plus the beta-enabled
+            // thong_mach_dan spend): beta-live progression, not the
+            // scope-hidden The Tu way - the faucet stays open.
 
             const amount = drop.amount
 

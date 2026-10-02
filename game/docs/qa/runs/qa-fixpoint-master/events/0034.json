@@ -1,0 +1,19 @@
+{
+  "applied": [
+    "evidence:EV-PIN-TC-FIX",
+    "evidence:EV-MUT-TC-1",
+    "evidence:EV-FINAL-VERIFY-4",
+    "finding:F-B-1",
+    "finding:F-B-2",
+    "finding:F-TC-1",
+    "finding:F-TC-2",
+    "finding:F-TC-3",
+    "lesson:L-SUPPRESSION-OVERBROAD",
+    "lesson:L-EFFECT-CHANNEL-UNGATED",
+    "review:RV-SEQ5-COR",
+    "review:RV-SEQ5-AUT",
+    "review:RV-SEQ5-INT",
+    "review:RV-CLOSURE-4",
+    "cycle:CY-SEQ-5"
+  ]
+}

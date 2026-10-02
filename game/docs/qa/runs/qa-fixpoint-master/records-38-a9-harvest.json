@@ -1,0 +1,138 @@
+{
+ "records": [
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-A9-1",
+    "title": "CombatBuild consults ungated runtime for survive-lethal sources (A9 duplicate of F-B8-5)",
+    "severity": "Low",
+    "status": "DUPLICATE_LINKED",
+    "classification": "REAL_DEFECT",
+    "discoveredBy": "devin-52894bf88cfb4027a4ef127603fa9e75",
+    "actionable": true,
+    "subsystem": "betaScope",
+    "rootClass": "AUTHORITY",
+    "rootCause": "build.survive.extraSources closes over the raw runtime arg (CombatBuild ~378) bypassing gatedRuntime; no runtime implements buildSurviveSources at this commit (latent)",
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/core/game/CombatBuild.ts",
+      "revision": "4c691c7e",
+      "symbolOrSection": "build.survive.extraSources"
+     }
+    ],
+    "reachability": "PRODUCTION",
+    "state": {
+     "productStateId": "de4898e7ab3132c96817dff81c523eb586e7d0bee41196c32ad54ba045e28e82",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "invariantIds": [
+     "I-DS-1"
+    ],
+    "siblingFindingIds": [],
+    "duplicateOf": "F-B8-5",
+    "rejectionReason": null,
+    "exception": null,
+    "expected": "every dormant-way emit channel consults the gated runtime",
+    "actual": "survive extraSources reads the ungated runtime; unreachable today (no writer)",
+    "counterexample": "latent at this commit; identical seam to F-B8-5 (deferred latent exception)",
+    "repair": null,
+    "evidenceIds": [],
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "siblingSearch": [],
+    "closeReason": "duplicate of F-B8-5 (same latent hook, same deferral class)",
+    "closedAt": "2026-10-01T10:30:00Z",
+    "closureReviewIds": []
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-A9-2",
+    "title": "Carried formationLoadout emits player entity row/x while sibling dormant effects are suppressed",
+    "severity": "Nit",
+    "status": "HUMAN_EXCEPTION",
+    "classification": "REAL_DEFECT",
+    "discoveredBy": "devin-52894bf88cfb4027a4ef127603fa9e75",
+    "actionable": true,
+    "subsystem": "betaScope",
+    "rootClass": "AUTHORITY",
+    "rootCause": "resolvePartyFormation deliberately ungated (grandfathered loadout resolves); persisted 'player' slot writes playerEntity.row/x though companions/Tran Phap buff are gated",
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/core/game/GameManagerTurnBattleOps.ts",
+      "revision": "4c691c7e",
+      "symbolOrSection": "playerEntity.row/x write"
+     }
+    ],
+    "reachability": "PRODUCTION",
+    "state": {
+     "productStateId": "de4898e7ab3132c96817dff81c523eb586e7d0bee41196c32ad54ba045e28e82",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "invariantIds": [
+     "I-DS-1"
+    ],
+    "siblingFindingIds": [],
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": {
+     "humanInstructionRef": "user ruling: attacks/scope fixes are Medium+ only; Low/Nit recorded as deferred exceptions",
+     "scope": "beta-scope-v2 master gate",
+     "reason": "presentation-only today: single-ally beta combat has no position-sensitive rule; the loadout write path itself is gated",
+     "expiresWhen": "a combat rule reads ally position meaningfully, or scope contract revision"
+    },
+    "expected": "dormant loadout has zero live battlefield effect",
+    "actual": "playerEntity row/x is written from the dormant record (presentation-only)",
+    "counterexample": "no live consumer of ally cell at this commit",
+    "repair": null,
+    "evidenceIds": [],
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "siblingSearch": [],
+    "closeReason": null,
+    "closedAt": null,
+    "closureReviewIds": []
+   }
+  },
+  {
+   "kind": "review",
+   "body": {
+    "id": "RV-ADV-A9",
+    "contextId": "ctx-child-a9",
+    "reviewerId": "devin-52894bf88cfb4027a4ef127603fa9e75",
+    "model": "SWE-2",
+    "phase": "AUTHORITY",
+    "round": 22,
+    "role": "fresh blind authority-seam review on 4c691c7e (T15): F-A9-1 latent survive-source dup of F-B8-5; F-A9-2 Nit formation row/x deferred - no Medium+ (clean for gate purposes)",
+    "state": {
+     "productStateId": "de4898e7ab3132c96817dff81c523eb586e7d0bee41196c32ad54ba045e28e82",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "SEALED",
+    "startedAt": "2026-10-01T10:05:00Z",
+    "sealedAt": "2026-10-01T10:27:00Z",
+    "priorFindingsVisible": false,
+    "reviewedAfterPreviousFixes": true,
+    "inputBundleHash": "8d6a0ca441efc3d3d8816a983a4a3957d12a3df18291c0b8fad90ebfd3150936",
+    "evidenceIds": [],
+    "coverageIds": [],
+    "findingIds": [
+     "F-A9-1",
+     "F-A9-2"
+    ],
+    "novelAttackIds": [],
+    "accessLimitations": [],
+    "previousPhaseReviewId": "RV-ADV-A8"
+   }
+  }
+ ]
+}

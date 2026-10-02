@@ -1,0 +1,23 @@
+{
+ "verdict": "FINDINGS",
+ "reviewer": "devin-70bf7b90e1ff4b1e86bd093abeee8d10",
+ "pinnedCommit": "d22d3c72",
+ "role": "TERMINAL_CHECK blind falsification sweep (validateGameSaveShape + restoreGameSession)",
+ "probeFile": "game/src/services/save/forgeSweep.test.ts (child VM, 25-26 probes green under re-pinned beta locks)",
+ "summary": "13 deterministic mints: realm-modifier magnitude unbounded, selectedTalentIds full-catalog union, realmId claim, committedOutcome victory w/o battle check, skills[] membership, pendingTalentEntitlement, overcharge, alchemyJobs, workerCycles, autoFarmStage floor, skillCastCounts, nodeLevels, unconditional TLT cps headroom. Held: baseStats, cultivation, attributePoints, breakthroughGrade, prefix chain, modifier coherence, dormant gates.",
+ "findings": [
+  {"id": "F-MOD-1", "severity": "High", "surface": "player.modifiers[] realm sourceType", "title": "realm-source StatModifier accepts arbitrary magnitude - no replay bound"},
+  {"id": "F-TAL-1", "severity": "High", "surface": "player.selectedTalentIds[]", "title": "accepts entire 19-talent creation catalog union - emits every talent effect"},
+  {"id": "F-REALM-1", "severity": "High", "surface": "player.realmId/realmLevel", "title": "forged realmId=foundation_establishment restores - only technique-grade coherence gates"},
+  {"id": "F-TRB-1", "severity": "High", "surface": "save.tribulation.committedOutcome", "title": "victory settles without battle evidence - mints realm + heaven grade + entitlement"},
+  {"id": "F-SKL-1", "severity": "Medium", "surface": "save.skills[]", "title": "membership trusted - orphan passives nothing can grant apply"},
+  {"id": "F-ENT-1", "severity": "Medium", "surface": "player.pendingTalentEntitlement", "title": "forged entitlement mints a free pool pick"},
+  {"id": "F-OVR-1", "severity": "Medium", "surface": "player.cultivationOvercharge", "title": "unbounded + ungated bank claim"},
+  {"id": "F-ALC-1", "severity": "Medium", "surface": "save.alchemyJobs", "title": "forged jobs settle into real pills"},
+  {"id": "F-PROD-1", "severity": "Medium", "surface": "productionSites[].workerCycles", "title": "forged cycles settle real rewards"},
+  {"id": "F-AFS-1", "severity": "Medium", "surface": "autoFarmStage.lastCollectedAt", "title": "perfectClearSeconds floor 1s timing claim"},
+  {"id": "F-CAST-1", "severity": "Medium", "surface": "player.skillCastCounts", "title": "forged cast counts settle into cast levels/gates"},
+  {"id": "F-NODE-1", "severity": "Medium", "surface": "player.nodeLevels", "title": "forged node levels mint node effects"},
+  {"id": "F-CPS-1", "severity": "Medium", "surface": "player.cultivationPerSecond", "title": "cps bound carries unconditional +25% tu_linh_tran headroom"}
+ ]
+}

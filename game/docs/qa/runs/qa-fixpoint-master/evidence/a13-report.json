@@ -1,0 +1,28 @@
+{
+  "review": "A13 scope authority seam blind review",
+  "pin": "97f1878b",
+  "session": "devin-3b509ad94aa6400eab530f63a59dfe82",
+  "summary": "1 confirmed finding (F-SCOPE-EQ-1 High): persisted equipment 'equipped:true' flag never validated against canUseItemGrade(grade, realmId) - a claim no writer can produce (equip() enforces realm-grade equality; tribulation transitions unequip all) accepted by saveShapeValidation + assertSaveAcceptable and minted live via refreshModifiers. ~45 other attacked surfaces hold.",
+  "findings": [
+    {
+      "id": "F-SCOPE-EQ-1",
+      "severity": "High",
+      "surface": "equipment[].equipped x equipment[].grade x player.realmId",
+      "attack_class": "forged_persisted_claim",
+      "reproduction": "spell_pathway save at foundation_establishment + {itemId:'base_kiem', slot:'weapon', equipped:true, grade:'bat_pham'} - validateGameSaveShape ok, refreshModifiers mints {stat:'might', flat:20}. TribulationOutcomeService.settleOutcome unequips all at qi_refining->foundation; equip() grade_mismatch for non-that_pham."
+    }
+  ],
+  "holds": [
+    "realmId/realmLevel (F-REALM-1 receipts)",
+    "cultivationPath/Way pair",
+    "technique grade/history",
+    "breakthroughGrade (F-TC8-1+F-A12-2)",
+    "highestFoundationAchieved (F-A12-1)",
+    "selectedTalentIds/levels/entitlement",
+    "physiqueGrade",
+    "bodyProgression slices",
+    "hiddenPerfection",
+    "nodeLevels+purchasedNodeIds mirror",
+    "45 surfaces total"
+  ]
+}

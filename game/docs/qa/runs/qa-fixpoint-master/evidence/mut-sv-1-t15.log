@@ -1,0 +1,45 @@
+=== EV-MUT-SV-1 verdict-flip T15 2026-10-01T10:28:05 ===
+diff --git a/game/src/core/betaScopeSkillDomain.ts b/game/src/core/betaScopeSkillDomain.ts
+index da43a3ea..d17e0051 100644
+--- a/game/src/core/betaScopeSkillDomain.ts
++++ b/game/src/core/betaScopeSkillDomain.ts
+@@ -118,7 +118,7 @@ export function betaCombatRolesFor(
+     player.cultivationPath === undefined &&
+     player.cultivationWay === undefined
+   const way = getActiveWay(player)
+-  const betaWay = way !== undefined && isBetaWay(way)
++  const betaWay = true
+ 
+   if (isMortal) {
+     // Mirror createMortalRuntime.resolveBasic: the persisted pick,
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+ ❯ tests/architecture/betaScopeSkillDomain.test.ts (25 tests | 1 failed) 35ms
+     × non-beta ways scope-hide the whole rail; corrupt way-less non-mortal fails closed 7ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/architecture/betaScopeSkillDomain.test.ts > beta scope v2 phase-3 - combat role rail > non-beta ways scope-hide the whole rail; corrupt way-less non-mortal fails closed
+AssertionError: expected 'available' to be 'scope-hidden' // Object.is equality
+
+Expected: "scope-hidden"
+Received: "available"
+
+ ❯ tests/architecture/betaScopeSkillDomain.test.ts:277:27
+    275|
+    276|     for (const entry of swordRail) {
+    277|       expect(entry.state).toBe('scope-hidden')
+       |                           ^
+    278|     }
+    279|     // basic/special carry the admission blocker; ultimate's constant
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  1 failed | 29 passed (30)
+   Start at  10:28:06
+   Duration  3.84s (transform 2.73s, setup 395ms, import 3.03s, tests 190ms, environment 592ms)
+
+DETECTOR_EXIT=1

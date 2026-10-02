@@ -2,6 +2,7 @@ import type { PlayerData } from '../../core/player/Player'
 import type { StatModifier } from '../../core/stats/StatCalculator'
 import { MAIN_STAT_KEYS } from '../../core/stats/StatTypes'
 import type { FoundationType } from '../../core/breakthrough/FoundationType'
+import { isBetaFeature } from '../../core/betaScope'
 
 // Realm Passive & Pressure System (2026-08-20) - buff VINH VIEN cap
 // luc buoc vao 1 dai canh gioi moi (id = realmId DICH), xem
@@ -86,7 +87,13 @@ const KIEN_CO_MAIN_STAT_PERCENT: Record<FoundationType, number> = {
 function buildKienCoModifiers(player: PlayerData): StatModifier[] {
   const foundationType = player.highestFoundationAchieved
 
-  if (!foundationType) {
+  // F-TC6-3: 'great_dao' is only ever written by a hidden breakthrough
+  // - under the beta lock the record is dormant, so its authored
+  //  percent mints nothing (parked, not rewritten to the next tier).
+  if (
+    !foundationType ||
+    (foundationType === 'great_dao' && !isBetaFeature('hiddenContent'))
+  ) {
     return []
   }
 
@@ -140,6 +147,30 @@ function buildEnhancedKienCoModifiers(_player: PlayerData): StatModifier[] {
     stat,
     percent: KIEN_CO_ENHANCED_MAIN_STAT_PERCENT,
   }))
+}
+
+/**
+ * Persisted-claim replay (save validator, F-MOD-1): the exact entry set
+ * the grant seam could have persisted for this player - the enhanced
+ * variant when the realm's entry rides the hidden lineage, the normal
+ * variant otherwise (grantRealmPassive's selection rule). A persisted
+ * modifier outside this envelope is fabricated.
+ */
+export function authoredRealmPassiveEntries(
+  passive: RealmPassiveDefinition,
+  player: PlayerData,
+): StatModifier[] {
+  // hiddenPerfection may be malformed on a save still under validation -
+  // an absent record selects the normal variant (its own shape check
+  // reports the corruption separately).
+  const hiddenIds = player.hiddenPerfection?.hiddenBreakthroughRealmIds
+  const enhanced = Array.isArray(hiddenIds) && hiddenIds.includes(passive.id)
+
+  if (enhanced) {
+    return passive.buildEnhancedModifiers?.(player) ?? passive.buildModifiers(player)
+  }
+
+  return passive.buildModifiers(player)
 }
 
 export const REALM_PASSIVES: RealmPassiveDefinition[] = [

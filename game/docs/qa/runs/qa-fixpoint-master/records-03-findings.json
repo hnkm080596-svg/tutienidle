@@ -1,0 +1,412 @@
+{
+ "records": [
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-PROBE-DORMANT-1",
+    "state": {
+     "productStateId": "86f75a51c2abb1b7538b08ff288b947a4f5cfd1f36efb642707a911957657cf1",
+     "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "kind": "EXECUTED_UNIT_STRUCTURAL",
+    "producer": "coord-main",
+    "startedAt": "2026-09-30T23:05:00Z",
+    "finishedAt": "2026-09-30T23:06:46.738209+00:00",
+    "commandOrMethod": "npx vitest run tests/architecture/betaDormantSaveLeak.qa.test.ts",
+    "cwd": "game/",
+    "exitCode": 1,
+    "result": "FAIL",
+    "artifactPath": "docs/qa/runs/qa-fixpoint-master/evidence/probe-dormant-leak-1.log",
+    "artifactHash": "ba0edb7584c3939bd3bb309b061a3b36b86595edfbdc72c81c48c8cdff3074df",
+    "inputPaths": [
+     "tests/architecture/betaDormantSaveLeak.qa.test.ts",
+     "src/core/stats/StatCap.ts",
+     "src/core/realm/RealmPassiveSystem.ts",
+     "src/core/betaScopeSurface.ts"
+    ],
+    "inputEvidenceIds": [
+     "EV-BASE-VERIFY"
+    ],
+    "invariantIds": [
+     "I-DS-1",
+     "I-AS-1",
+     "I-SF-1"
+    ],
+    "claims": [
+     "deterministic repro: 4 failing assertions prove (a) hiddenPerfection=null throws in unsupportedReleaseReason, (b) completedHiddenBodyRealmIds inflates main-stat cap 36v30 under beta lock, (c) hiddenBreakthroughRealmIds grants enhanced realm passive 0.3v0.18 under beta lock"
+    ],
+    "limitations": [
+     "does not test UI surface"
+    ],
+    "status": "CURRENT"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-DL-1",
+    "title": "hiddenPerfection.completedHiddenBodyRealmIds on a loaded save inflates main-stat cap under beta scope",
+    "state": {
+     "productStateId": "86f75a51c2abb1b7538b08ff288b947a4f5cfd1f36efb642707a911957657cf1",
+     "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "severity": "High",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "PRODUCTION",
+    "locations": [
+     {
+      "path": "src/core/stats/StatCap.ts",
+      "symbolOrSection": "getEffectiveMainStatCap",
+      "revision": "86f75a51c2ab",
+      "basis": "SOURCE"
+     },
+     {
+      "path": "src/core/game/GameManagerProgressionOps.ts",
+      "symbolOrSection": "allocateStatPoint",
+      "revision": "86f75a51c2ab",
+      "basis": "SOURCE"
+     },
+     {
+      "path": "src/core/pill/PillSystem.ts",
+      "symbolOrSection": "pill stat channels",
+      "revision": "86f75a51c2ab",
+      "basis": "SOURCE"
+     },
+     {
+      "path": "src/stores/player.ts",
+      "symbolOrSection": "normalizedCap",
+      "revision": "86f75a51c2ab",
+      "basis": "SOURCE"
+     }
+    ],
+    "discoveredBy": "coord-main probe (attack surface authority-seam/dormant-systems)",
+    "invariantIds": [
+     "I-DS-1",
+     "I-AS-1"
+    ],
+    "evidenceIds": [
+     "EV-PROBE-DORMANT-1"
+    ],
+    "counterexample": "player{realmId:qi_refining, hiddenPerfection.completedHiddenBodyRealmIds:[mortal,qi_refining]} under lockBetaFeaturesForTests -> getEffectiveMainStatCap=36",
+    "expected": "cap == getMainStatCap(realm) = 30 (hidden record dormant)",
+    "actual": "cap = 36 (+10pp per carried realm leaks into visible play)",
+    "rootCause": "ungated dormant-state effect feed",
+    "rootClass": "AUTHORITY",
+    "subsystem": "betaScope",
+    "siblingSearch": [
+     {
+      "roots": [
+       "src/core",
+       "src/services",
+       "src/components"
+      ],
+      "termsAndMethod": "grep for persisted scope-hidden field names (hiddenPerfection slices, hiddenBeastKills, companions, artifact, formationLoadout, swordPath, forgePoints, daily quest state) read by effect paths outside their gated domains; inspected each consumer for an isBetaFeature/isScopeHidden gate",
+      "evidenceIds": [
+       "EV-PROBE-DORMANT-1"
+      ],
+      "hitDispositions": [
+       "F-DL-1 confirmed (StatCap ungated)",
+       "F-DL-2 confirmed (RealmPassive ungated)",
+       "hiddenBeastKills: consumers all inside gated HiddenBeastSystem \u2014 closed",
+       "lineageActive/realms records: no non-hidden consumers \u2014 closed",
+       "companions: CombatBuild empties under isScopeHidden \u2014 closed",
+       "formationLoadout: CombatBuild buff gated \u2014 closed",
+       "artifact: artifactGradeMultiplier constant 1, domain unlock gated \u2014 closed",
+       "swordPath: capability-gated via way membership \u2014 closed",
+       "forgePoints: display-only \u2014 closed",
+       "dailyQuest state: activation/projection/claim/reset all gated \u2014 closed",
+       "manualWorkforce: write seam fails closed \u2014 closed"
+      ],
+      "coverageLimits": [
+       "grep-based enumeration over persisted field names; novel field names added after this run not covered"
+      ]
+     }
+    ],
+    "siblingFindingIds": [
+     "F-DL-2"
+    ],
+    "repair": null,
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "status": "PROVEN",
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-DL-2",
+    "title": "hiddenPerfection.hiddenBreakthroughRealmIds grants the enhanced realm-passive variant under beta scope",
+    "state": {
+     "productStateId": "86f75a51c2abb1b7538b08ff288b947a4f5cfd1f36efb642707a911957657cf1",
+     "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "severity": "High",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "PRODUCTION",
+    "locations": [
+     {
+      "path": "src/core/realm/RealmPassiveSystem.ts",
+      "symbolOrSection": "grantRealmPassive",
+      "revision": "86f75a51c2ab",
+      "basis": "SOURCE"
+     },
+     {
+      "path": "src/core/realm/hidden/HiddenLineage.ts",
+      "symbolOrSection": "wasHiddenBreakthrough",
+      "revision": "86f75a51c2ab",
+      "basis": "SOURCE"
+     },
+     {
+      "path": "src/data/realm/RealmPassives.ts",
+      "symbolOrSection": "buildEnhancedModifiers",
+      "revision": "86f75a51c2ab",
+      "basis": "SOURCE"
+     }
+    ],
+    "discoveredBy": "coord-main probe (attack surface authority-seam/dormant-systems)",
+    "invariantIds": [
+     "I-DS-1",
+     "I-AS-1"
+    ],
+    "evidenceIds": [
+     "EV-PROBE-DORMANT-1"
+    ],
+    "counterexample": "player{hiddenBreakthroughRealmIds:[qi_refining], grantedRealmPassiveIds:[]} -> grantRealmPassive -> modifiers percent=0.3",
+    "expected": "normal variant (maxHp:0.18) \u2014 hidden breakthrough record dormant under beta",
+    "actual": "enhanced variant granted (maxHp:0.3, +67% inflation)",
+    "rootCause": "ungated dormant-state effect feed",
+    "rootClass": "AUTHORITY",
+    "subsystem": "betaScope",
+    "siblingSearch": [
+     {
+      "roots": [
+       "src/core",
+       "src/services",
+       "src/components"
+      ],
+      "termsAndMethod": "grep for persisted scope-hidden field names (hiddenPerfection slices, hiddenBeastKills, companions, artifact, formationLoadout, swordPath, forgePoints, daily quest state) read by effect paths outside their gated domains; inspected each consumer for an isBetaFeature/isScopeHidden gate",
+      "evidenceIds": [
+       "EV-PROBE-DORMANT-1"
+      ],
+      "hitDispositions": [
+       "F-DL-1 confirmed (StatCap ungated)",
+       "F-DL-2 confirmed (RealmPassive ungated)",
+       "hiddenBeastKills: consumers all inside gated HiddenBeastSystem \u2014 closed",
+       "lineageActive/realms records: no non-hidden consumers \u2014 closed",
+       "companions: CombatBuild empties under isScopeHidden \u2014 closed",
+       "formationLoadout: CombatBuild buff gated \u2014 closed",
+       "artifact: artifactGradeMultiplier constant 1, domain unlock gated \u2014 closed",
+       "swordPath: capability-gated via way membership \u2014 closed",
+       "forgePoints: display-only \u2014 closed",
+       "dailyQuest state: activation/projection/claim/reset all gated \u2014 closed",
+       "manualWorkforce: write seam fails closed \u2014 closed"
+      ],
+      "coverageLimits": [
+       "grep-based enumeration over persisted field names; novel field names added after this run not covered"
+      ]
+     }
+    ],
+    "siblingFindingIds": [
+     "F-DL-1"
+    ],
+    "repair": null,
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "status": "PROVEN",
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-DL-3",
+    "title": "unsupportedReleaseReason throws TypeError on hiddenPerfection:null",
+    "state": {
+     "productStateId": "86f75a51c2abb1b7538b08ff288b947a4f5cfd1f36efb642707a911957657cf1",
+     "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "severity": "Medium",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "PRODUCTION",
+    "locations": [
+     {
+      "path": "src/core/betaScopeSurface.ts",
+      "symbolOrSection": "unsupportedReleaseReason",
+      "revision": "86f75a51c2ab",
+      "basis": "SOURCE"
+     },
+     {
+      "path": "src/core/betaScopeSurface.ts",
+      "symbolOrSection": "hasHiddenProgressionState",
+      "revision": "86f75a51c2ab",
+      "basis": "SOURCE"
+     }
+    ],
+    "discoveredBy": "coord-main probe (attack surface authority-seam/dormant-systems)",
+    "invariantIds": [
+     "I-SF-1"
+    ],
+    "evidenceIds": [
+     "EV-PROBE-DORMANT-1"
+    ],
+    "counterexample": "player{hiddenPerfection:null} -> unsupportedReleaseReason(p) throws TypeError: Cannot read properties of null (reading realms)",
+    "expected": "never throws on validation-bypassed shapes (function own contract comment); returns reason or null",
+    "actual": "TypeError thrown \u2014 null passes the !== undefined guard and .realms access crashes",
+    "rootCause": "ungated dormant-state effect feed",
+    "rootClass": "AUTHORITY",
+    "subsystem": "betaScope",
+    "siblingSearch": [
+     {
+      "roots": [
+       "src/core",
+       "src/services",
+       "src/components"
+      ],
+      "termsAndMethod": "grep for persisted scope-hidden field names (hiddenPerfection slices, hiddenBeastKills, companions, artifact, formationLoadout, swordPath, forgePoints, daily quest state) read by effect paths outside their gated domains; inspected each consumer for an isBetaFeature/isScopeHidden gate",
+      "evidenceIds": [
+       "EV-PROBE-DORMANT-1"
+      ],
+      "hitDispositions": [
+       "F-DL-1 confirmed (StatCap ungated)",
+       "F-DL-2 confirmed (RealmPassive ungated)",
+       "hiddenBeastKills: consumers all inside gated HiddenBeastSystem \u2014 closed",
+       "lineageActive/realms records: no non-hidden consumers \u2014 closed",
+       "companions: CombatBuild empties under isScopeHidden \u2014 closed",
+       "formationLoadout: CombatBuild buff gated \u2014 closed",
+       "artifact: artifactGradeMultiplier constant 1, domain unlock gated \u2014 closed",
+       "swordPath: capability-gated via way membership \u2014 closed",
+       "forgePoints: display-only \u2014 closed",
+       "dailyQuest state: activation/projection/claim/reset all gated \u2014 closed",
+       "manualWorkforce: write seam fails closed \u2014 closed"
+      ],
+      "coverageLimits": [
+       "grep-based enumeration over persisted field names; novel field names added after this run not covered"
+      ]
+     }
+    ],
+    "siblingFindingIds": [
+     "F-DL-1",
+     "F-DL-2"
+    ],
+    "repair": null,
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "status": "PROVEN",
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-DL-4",
+    "title": "frontend-contract sec.H unsupported-save notice is unwired: unsupportedReleaseReason/betaSupportedFor have zero production callers",
+    "state": {
+     "productStateId": "86f75a51c2abb1b7538b08ff288b947a4f5cfd1f36efb642707a911957657cf1",
+     "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "severity": "Medium",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "SUPPORTED_BOUNDARY",
+    "locations": [
+     {
+      "path": "src/core/betaScopeSurface.ts",
+      "symbolOrSection": "unsupportedReleaseReason",
+      "revision": "86f75a51c2ab",
+      "basis": "SOURCE"
+     },
+     {
+      "path": "src/composables/useAppLifecycle.ts",
+      "symbolOrSection": "boot load flow",
+      "revision": "86f75a51c2ab",
+      "basis": "SOURCE"
+     },
+     {
+      "path": "src/App.vue",
+      "symbolOrSection": "SaveIncompatibleScreen route",
+      "revision": "86f75a51c2ab",
+      "basis": "SOURCE"
+     }
+    ],
+    "discoveredBy": "coord-main probe (attack surface authority-seam/dormant-systems)",
+    "invariantIds": [
+     "I-SF-1",
+     "I-UH-1"
+    ],
+    "evidenceIds": [
+     "EV-PROBE-DORMANT-1"
+    ],
+    "counterexample": "grep of src/ for unsupportedReleaseReason|betaSupportedFor call sites: only betaScopeSurface.ts (def) + GameManagerProgressionOps.ts (delegate) + tests \u2014 no UI/load-path consumer",
+    "expected": "sec.H: legacy saves carry a reason \u2014 render a notice",
+    "actual": "no notice rendered anywhere; out-of-scope save loads and plays silently",
+    "rootCause": "ungated dormant-state effect feed",
+    "rootClass": "AUTHORITY",
+    "subsystem": "betaScope",
+    "siblingSearch": [
+     {
+      "roots": [
+       "src/core",
+       "src/services",
+       "src/components"
+      ],
+      "termsAndMethod": "grep for persisted scope-hidden field names (hiddenPerfection slices, hiddenBeastKills, companions, artifact, formationLoadout, swordPath, forgePoints, daily quest state) read by effect paths outside their gated domains; inspected each consumer for an isBetaFeature/isScopeHidden gate",
+      "evidenceIds": [
+       "EV-PROBE-DORMANT-1"
+      ],
+      "hitDispositions": [
+       "F-DL-1 confirmed (StatCap ungated)",
+       "F-DL-2 confirmed (RealmPassive ungated)",
+       "hiddenBeastKills: consumers all inside gated HiddenBeastSystem \u2014 closed",
+       "lineageActive/realms records: no non-hidden consumers \u2014 closed",
+       "companions: CombatBuild empties under isScopeHidden \u2014 closed",
+       "formationLoadout: CombatBuild buff gated \u2014 closed",
+       "artifact: artifactGradeMultiplier constant 1, domain unlock gated \u2014 closed",
+       "swordPath: capability-gated via way membership \u2014 closed",
+       "forgePoints: display-only \u2014 closed",
+       "dailyQuest state: activation/projection/claim/reset all gated \u2014 closed",
+       "manualWorkforce: write seam fails closed \u2014 closed"
+      ],
+      "coverageLimits": [
+       "grep-based enumeration over persisted field names; novel field names added after this run not covered"
+      ]
+     }
+    ],
+    "siblingFindingIds": [
+     "F-DL-1",
+     "F-DL-2"
+    ],
+    "repair": null,
+    "pinEvidenceIds": [],
+    "verificationEvidenceIds": [],
+    "closureReviewIds": [],
+    "status": "PROVEN",
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null
+   }
+  }
+ ]
+}

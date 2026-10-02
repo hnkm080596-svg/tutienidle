@@ -1,0 +1,415 @@
+{
+ "records": [
+  {
+   "kind": "finding",
+   "body": {
+    "classification": "REAL_DEFECT",
+    "discoveredBy": "devin-1e0b8103c83c42ef86139606aab51f5d",
+    "subsystem": "betaScope",
+    "reachability": "PRODUCTION",
+    "state": {
+     "productStateId": "8b9c093fd7255c17fd99302f9078b9328581b6d55e45f18414902d84ff29efb6",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "invariantIds": [
+     "I-AS-1",
+     "I-DS-1"
+    ],
+    "id": "F-AS-1",
+    "title": "devResetBranch refunds/revokes dormant-tree records bypassing respecNodeTree refusal (stale-state report on 5431ae7e)",
+    "severity": "Medium",
+    "status": "DUPLICATE_LINKED",
+    "duplicateOf": "F-A4-1",
+    "actionable": true,
+    "rootClass": "AUTHORITY",
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/core/game/GameManagerSkillOps.ts",
+      "revision": "1b310881",
+      "symbolOrSection": "-"
+     }
+    ],
+    "expected": "dormant-tree branch reset refused on way_out_of_scope save",
+    "actual": "on 5431ae7e (pre-A4 fix) devResetBranch refunded dormant nodes - A5 tip predated the F-A4-1 fix",
+    "counterexample": "sword save + devResetBranch on stale tip",
+    "repair": "F-A4-1",
+    "evidenceIds": [],
+    "pinEvidenceIds": [
+     "EV-PROBE-A4-SEAM"
+    ],
+    "verificationEvidenceIds": [
+     "EV-PROBE-A4-SEAM"
+    ],
+    "siblingSearch": [],
+    "siblingFindingIds": [],
+    "closeReason": "duplicate of F-A4-1 fixed before reviewed tip",
+    "closedAt": "2026-10-01T05:35:00Z",
+    "closureReviewIds": [
+     "RV-CLOSURE-8"
+    ],
+    "rootCause": "dormant write seam ungated (stale-tip report: pre-F-A4 state)",
+    "rejectionReason": null,
+    "exception": null
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "classification": "REAL_DEFECT",
+    "discoveredBy": "devin-1e0b8103c83c42ef86139606aab51f5d",
+    "subsystem": "betaScope",
+    "reachability": "PRODUCTION",
+    "state": {
+     "productStateId": "8b9c093fd7255c17fd99302f9078b9328581b6d55e45f18414902d84ff29efb6",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "invariantIds": [
+     "I-AS-1",
+     "I-DS-1"
+    ],
+    "id": "F-AS-2",
+    "title": "chi_hien_quan build/upgrade write seams admitted dormant building on carried save (stale-state report on 5431ae7e)",
+    "severity": "Medium",
+    "status": "DUPLICATE_LINKED",
+    "duplicateOf": "F-A4-3",
+    "actionable": true,
+    "rootClass": "AUTHORITY",
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/core/game/GameManagerBuildingOps.ts",
+      "revision": "1b310881",
+      "symbolOrSection": "-"
+     }
+    ],
+    "expected": "dormant building write seams refuse on way_out_of_scope save",
+    "actual": "on 5431ae7e chi_hien_quan build/upgrade wrote records - A5 tip predated the F-A4-3 fix",
+    "counterexample": "sword save + chi_hien_quan build/upgrade on stale tip",
+    "repair": "F-A4-3",
+    "evidenceIds": [],
+    "pinEvidenceIds": [
+     "EV-PROBE-A4-SEAM"
+    ],
+    "verificationEvidenceIds": [
+     "EV-PROBE-A4-SEAM"
+    ],
+    "siblingSearch": [],
+    "siblingFindingIds": [],
+    "closeReason": "duplicate of F-A4-3 fixed before reviewed tip",
+    "closedAt": "2026-10-01T05:35:00Z",
+    "closureReviewIds": [
+     "RV-CLOSURE-8"
+    ],
+    "rootCause": "dormant write seam ungated (stale-tip report: pre-F-A4 state)",
+    "rejectionReason": null,
+    "exception": null
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "classification": "REAL_DEFECT",
+    "discoveredBy": "devin-1e0b8103c83c42ef86139606aab51f5d",
+    "subsystem": "betaScope",
+    "reachability": "PRODUCTION",
+    "state": {
+     "productStateId": "8b9c093fd7255c17fd99302f9078b9328581b6d55e45f18414902d84ff29efb6",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "invariantIds": [
+     "I-AS-1",
+     "I-DS-1"
+    ],
+    "id": "F-AS-3",
+    "title": "gainMastery accrues on dormant-way active technique (stale-state report on 5431ae7e; mastery half of A5 technique-write finding)",
+    "severity": "Medium",
+    "status": "DUPLICATE_LINKED",
+    "duplicateOf": "F-A4-4",
+    "actionable": true,
+    "rootClass": "AUTHORITY",
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/core/technique/TechniqueSystem.ts",
+      "revision": "1b310881",
+      "symbolOrSection": "-"
+     }
+    ],
+    "expected": "dormant technique accrual inert",
+    "actual": "on 5431ae7e gainMastery wrote mastery/rank into dormant record - A5 tip predated F-A4-4 fix",
+    "counterexample": "sword_control_art active on sword save + gainMastery",
+    "repair": "F-A4-4",
+    "evidenceIds": [],
+    "pinEvidenceIds": [
+     "EV-PROBE-A4-SEAM"
+    ],
+    "verificationEvidenceIds": [
+     "EV-PROBE-A4-SEAM"
+    ],
+    "siblingSearch": [],
+    "siblingFindingIds": [
+     "F-A5-1"
+    ],
+    "closeReason": "duplicate of F-A4-4 fixed before reviewed tip",
+    "closedAt": "2026-10-01T05:35:00Z",
+    "closureReviewIds": [
+     "RV-CLOSURE-8"
+    ],
+    "rootCause": "dormant write seam ungated (stale-tip report: pre-F-A4 state)",
+    "rejectionReason": null,
+    "exception": null
+   }
+  },
+  {
+   "kind": "lesson",
+   "body": {
+    "id": "L-DUP-WAVE-OVERLAP",
+    "version": 1,
+    "supersedes": null,
+    "triggerType": "DEFECT",
+    "findingIds": [
+     "F-BS-2",
+     "F-AS-1",
+     "F-AS-2",
+     "F-AS-3"
+    ],
+    "incidentEvidenceIds": [
+     "EV-PIN-BS-WAVE"
+    ],
+    "originatingRun": "qa-fixpoint-master",
+    "rootClass": "PROCESS",
+    "missedInvariantIds": [],
+    "escapeReason": "blind rounds dispatched on different tips can report the same root: TC3 F-BS-2 duplicated F-A4-1 already fixed mid-wave; dedup by root class + seam, not by surface symptom",
+    "applicability": [
+     "multi-wave blind review dispatch"
+    ],
+    "exclusions": [],
+    "proposedProtection": [
+     "record duplicateOf at triage; fix ownership follows the earliest confirmed repro"
+    ],
+    "promotionEvidenceIds": [],
+    "qualifiedBy": [],
+    "capabilityDelta": "RECORDED - awaiting independent qualification",
+    "status": "CAPTURED",
+    "policyVersion": null,
+    "effectiveFromRun": null,
+    "recurrenceFindingIds": [],
+    "preventionEvidenceIds": [],
+    "guidance": null
+   }
+  },
+  {
+   "kind": "review",
+   "body": {
+    "id": "RV-CLOSURE-8",
+    "contextId": "ctx-rv-closure-8",
+    "reviewerId": "coord-main",
+    "model": "coordinator",
+    "phase": "CORRECTNESS",
+    "round": 13,
+    "role": "closure review of F-AS-3b fix wave (1b310881): gate placement mirrors gainMastery/tryAdvanceTechniqueGrade precedent; positive controls prove playable path unaffected",
+    "state": {
+     "productStateId": "8b9c093fd7255c17fd99302f9078b9328581b6d55e45f18414902d84ff29efb6",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "SEALED",
+    "startedAt": "2026-10-01T05:35:00Z",
+    "sealedAt": "2026-10-01T05:40:00Z",
+    "priorFindingsVisible": true,
+    "reviewedAfterPreviousFixes": true,
+    "inputBundleHash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "evidenceIds": [
+     "EV-PIN-AS3B",
+     "EV-MUT-AS3B"
+    ],
+    "coverageIds": [],
+    "findingIds": [
+     "F-A5-1",
+     "F-AS-1",
+     "F-AS-2",
+     "F-AS-3"
+    ],
+    "novelAttackIds": [],
+    "accessLimitations": [],
+    "previousPhaseReviewId": "RV-CLOSURE-6"
+   }
+  },
+  {
+   "kind": "review",
+   "body": {
+    "id": "RV-SEQ8-COR",
+    "contextId": "ctx-rv-seq8-cor",
+    "reviewerId": "coord-main",
+    "model": "coordinator",
+    "phase": "CORRECTNESS",
+    "round": 13,
+    "role": "Pass 1 local correctness over F-AS-3b (sealFrozenCycle gate) on T9: pin asserts dormant record unmutated, control asserts live path still seals; placement inside TechniqueSystem mirrors gainMastery precedent",
+    "state": {
+     "productStateId": "8b9c093fd7255c17fd99302f9078b9328581b6d55e45f18414902d84ff29efb6",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "STALE",
+    "startedAt": "2026-10-01T05:30:00Z",
+    "sealedAt": "2026-10-01T05:41:00Z",
+    "priorFindingsVisible": true,
+    "reviewedAfterPreviousFixes": true,
+    "inputBundleHash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "evidenceIds": [
+     "EV-PIN-AS3B",
+     "EV-MUT-AS3B"
+    ],
+    "coverageIds": [],
+    "findingIds": [
+     "F-A5-1",
+     "F-AS-1",
+     "F-AS-2",
+     "F-AS-3"
+    ],
+    "novelAttackIds": [],
+    "accessLimitations": [],
+    "previousPhaseReviewId": "RV-SEQ7-INT"
+   }
+  },
+  {
+   "kind": "review",
+   "body": {
+    "id": "RV-SEQ8-AUT",
+    "contextId": "ctx-rv-seq8-aut",
+    "reviewerId": "coord-main",
+    "model": "coordinator",
+    "phase": "AUTHORITY",
+    "round": 13,
+    "role": "Pass 2 authority review of resulting state: gate evaluated inside the system write op (authority owned by TechniqueSystem), not at each caller - correct ownership; betaTechniqueAdmitted live-eval avoids IIFE snapshot trap recorded in L-EVAL-LIVE",
+    "state": {
+     "productStateId": "8b9c093fd7255c17fd99302f9078b9328581b6d55e45f18414902d84ff29efb6",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "STALE",
+    "startedAt": "2026-10-01T05:30:00Z",
+    "sealedAt": "2026-10-01T05:43:00Z",
+    "priorFindingsVisible": true,
+    "reviewedAfterPreviousFixes": true,
+    "inputBundleHash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "evidenceIds": [
+     "EV-PIN-AS3B",
+     "EV-MUT-AS3B"
+    ],
+    "coverageIds": [],
+    "findingIds": [
+     "F-A5-1"
+    ],
+    "novelAttackIds": [],
+    "accessLimitations": [],
+    "previousPhaseReviewId": "RV-SEQ8-COR"
+   }
+  },
+  {
+   "kind": "review",
+   "body": {
+    "id": "RV-SEQ8-INT",
+    "contextId": "ctx-rv-seq8-int",
+    "reviewerId": "coord-main",
+    "model": "coordinator",
+    "phase": "INTEGRATION",
+    "round": 13,
+    "role": "Pass 3 adversarial integration: caller census of sealFrozenCycle - realm advance applyTechniqueRealmTransition and TribulationOutcomeService both funnel through the same gated op; dormant record now byte-stable across both paths; no other technique write op ungated",
+    "state": {
+     "productStateId": "8b9c093fd7255c17fd99302f9078b9328581b6d55e45f18414902d84ff29efb6",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "STALE",
+    "startedAt": "2026-10-01T05:30:00Z",
+    "sealedAt": "2026-10-01T05:45:00Z",
+    "priorFindingsVisible": true,
+    "reviewedAfterPreviousFixes": true,
+    "inputBundleHash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "evidenceIds": [
+     "EV-PIN-AS3B",
+     "EV-MUT-AS3B"
+    ],
+    "coverageIds": [],
+    "findingIds": [
+     "F-A5-1"
+    ],
+    "novelAttackIds": [],
+    "accessLimitations": [],
+    "previousPhaseReviewId": "RV-SEQ8-AUT"
+   }
+  },
+  {
+   "kind": "cycle",
+   "body": {
+    "id": "CY-SEQ-8",
+    "state": {
+     "productStateId": "8b9c093fd7255c17fd99302f9078b9328581b6d55e45f18414902d84ff29efb6",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "STALE",
+    "reviewIds": [
+     "RV-SEQ8-COR",
+     "RV-SEQ8-AUT",
+     "RV-SEQ8-INT"
+    ],
+    "coverageIds": [],
+    "evidenceIds": [
+     "EV-PIN-AS3B",
+     "EV-MUT-AS3B",
+     "EV-FINAL-VERIFY-T9"
+    ],
+    "noveltyEvidenceIds": [],
+    "startedAt": "2026-10-01T05:30:00Z",
+    "finishedAt": "2026-10-01T05:40:00Z"
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-FINAL-VERIFY-T9",
+    "kind": "EXECUTED_INTEGRATION",
+    "state": {
+     "productStateId": "8b9c093fd7255c17fd99302f9078b9328581b6d55e45f18414902d84ff29efb6",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "STALE",
+    "commandOrMethod": "npm run verify @ c32bc29e",
+    "cwd": "game/",
+    "artifactPath": "evidence/final-verify-t9.log",
+    "artifactHash": "1f96e7da8a4caf641ffcf8a5b615ed621c88aecc44f5da015cde1cfdc48bb50e",
+    "result": "PASS",
+    "exitCode": 0,
+    "startedAt": "2026-10-01T04:40:00Z",
+    "finishedAt": "2026-10-01T05:35:00Z",
+    "producer": "coord-main",
+    "invariantIds": [],
+    "inputEvidenceIds": [],
+    "inputPaths": [
+     "package.json"
+    ],
+    "claims": [
+     "npm run verify GREEN on T9 (1b310881): 7900+ tests incl. AS3B seal pin",
+     "P3 full gate re-run after F-AS-3b fix"
+    ],
+    "limitations": []
+   }
+  }
+ ]
+}

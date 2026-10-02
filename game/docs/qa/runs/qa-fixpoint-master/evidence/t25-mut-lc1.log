@@ -1,0 +1,3 @@
+Masked-mutant kill, betaLocalCorrectnessAudit.qa.test.ts (F-LC-1 bound):
+  M5 tribulation cooldownUntil span bound off -> KILLED (F-LC-1a envelope probe fails)
+1/1 KILLED_EXPECTED

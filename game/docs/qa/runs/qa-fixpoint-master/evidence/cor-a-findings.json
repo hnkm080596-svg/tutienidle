@@ -1,0 +1,49 @@
+{
+  "audit": "local-correctness (blind)",
+  "pinned_commit": "a7d12edf",
+  "branch": "devin/qa-fixpoint",
+  "scope_contract": "Pham Nhan -> spell initiation -> Luyen Khi -> Truc Co; luyen the chain LIVE; hidden-breakthrough availability + The Tu/Kiem Tu way selection user-gated hidden; flagged saves must LOAD",
+  "verdict": "FAIL_WITH_REASON",
+  "probe_file": "game/tests/architecture/betaLocalCorrectnessAudit.qa.test.ts",
+  "probe_result": "34 probes: 30 pass (contract pins), 4 fail (defect evidence: F-LC-1 x3, F-LC-2 x1)",
+  "findings": [
+    {
+      "id": "F-LC-1",
+      "severity": "Medium",
+      "confidence": "High",
+      "surface": "save validation + tribulation restore",
+      "title": "tribulation.cooldownUntil is unbounded - a crafted save wedges tribulation start() forever",
+      "detail": "validateGameSaveShape accepts any non-negative finite tribulation.cooldownUntil (src/services/save/saveShapeValidation.ts ~3676: isNonNegativeFiniteNumber only). TribulationDirector.restoreRuntime restores it verbatim (src/core/tribulation/TribulationDirector.ts ~799: this.cooldownUntil = slice?.cooldownUntil ?? 0). start() refuses whenever getCooldownSeconds() > 0 (line ~217), and getCooldownSeconds = ceil((cooldownUntil - now)/1000). A hostile-but-shape-valid save carrying cooldownUntil = 9e15 yields ~8.99e12 seconds of cooldown - a permanent progression deadlock on the qi_refining -> foundation_establishment transition (the only forward path). The honest writer only ever stamps Date.now() + TRIBULATION_COOLDOWN_SECONDS*1000 (300s), so a bound cooldownUntil <= lastSavedAt + 300_000 is provable at the same validation site - the same provable-forgery class already bounded for alchemy job spans (F-A12-4) and building levels (F-A8-2).",
+      "repro": "tests/architecture/betaLocalCorrectnessAudit.qa.test.ts > 'F-LC-1a' validateGameSaveShape({...mortalSave(), tribulation:{cooldownUntil:9e15}}).ok === true (expected false); 'F-LC-1b' director.restoreRuntime({cooldownUntil:9e15}) -> getCooldownSeconds() ~ 8.99e12 >> 300; 'F-LC-1c' director.start(eligible qi_refining player, stats, false, 'foundation_establishment') === false under the forged cooldown",
+      "fix_direction": "Bound cooldownUntil at validation (<= lastSavedAt + TRIBULATION_COOLDOWN_SECONDS*1000) and/or clamp at restoreRuntime; both are inside existing anti-forgery conventions."
+    },
+    {
+      "id": "F-LC-2",
+      "severity": "Low",
+      "confidence": "High",
+      "surface": "GameManagerProgressionOps facade / betaScopeSurface domain",
+      "title": "betaSupportedFor/unsupportedReleaseReason player-only seams cannot classify slice-owned dormant records",
+      "detail": "unsupportedReleaseReason(player, saveSlices) reads saveSlices.alchemyJobs and saveSlices.decompose for 'dormant_alchemy_job' and 'dormant_decompose_state'. The facade wrappers on GameManagerProgressionOps (lines 1178-1184: betaSupportedFor/unsupportedReleaseReason) and the domain betaSupportedFor(player) take no slices, so a save whose ONLY out-of-scope state is a dormant alchemy job or a live decompose station reports supported through those seams. Zero consumers today (the live boot path useAppLifecycle.ts:467 calls the domain function WITH slices), so this is a dead-API footgun rather than a live misclassification.",
+      "repro": "tests/architecture/betaLocalCorrectnessAudit.qa.test.ts > 'F-LC-2': unsupportedReleaseReason(player, {alchemyJobs:[{recipeId:'alchemy_duong_than_dan_qi_refining'}]}) === 'dormant_alchemy_job' while betaSupportedFor(player) === true on the same player",
+      "fix_direction": "Drop the slice-blind facade wrappers, or extend them to take BetaUnsupportedSaveSlices; dead API should not carry a save-level claim."
+    }
+  ],
+  "verified_invariants": [
+    "flagged dormant saves LOAD: dormant alchemy job + pill_room building passes validateGameSaveShape + isSaveAcceptable and flags dormant_alchemy_job; live decompose slice flags dormant_decompose_state; hidden-progression records (hiddenBreakthroughRealmIds, hiddenBeastKills, hiddenPerfection.realms) flag hidden_progression_state; companion/artifact/formation/talent records flag in declared order; realm_beyond_release wins ordering",
+    "hidden breakthrough unforgeable under beta: resolveBreakthroughType -> 'normal'; recordHiddenBreakthrough is a fail-closed no-op; committedOutcome with breakthroughType 'hidden' parks inert at settleOutcome (returns null, no player mutation) and start() clears it rather than wedging",
+    "dormant way is inert: collectActiveWayStatModifiers + getCultivationPathStatModifiers emit [] for sword_pathway; reason model flags way_out_of_scope",
+    "luyen the chain LIVE: body_refinement invests at mortal (consumed > 0, progress accrues); meridian stays progression-gated (not scope-gated)",
+    "hidden records never leak into live math: getEffectiveMainStatCap ignores completedHiddenBodyRealmIds under lock; betaEffectiveWorkerCapacity pinned to 3 while manualWorkforce hidden; HiddenBeastSystem.onEnemyDefeated returns [] and mutates nothing",
+    "realm transition gate is adjacent + inside-release only; getBreakthroughRequirements returns [] past the ceiling",
+    "commitFiveElementInitiation re-commit rejects ('not_mortal' first in preflight order) with byte-identical player state",
+    "settleOutcome is receipt-deduped: defeat applies exactly once; parked non-adjacent targetRealmId stays inert",
+    "restoreRuntime is replacement-complete (second empty restore clears committedOutcome + cooldown); serialize/restore round-trips receipt + settlementError markers",
+    "computeRestoreIdentity covers alchemyJobs/tribulation/quests slices and excludes lastSavedAt",
+    "offline math clamps: calculateOfflineTime floors at 0 on a future lastOnlineAt and caps at 24h; tu_linh_tran windows split at expiry; percentAtSave=0 recovers an unbuffed base without NaN",
+    "surface maps fail closed on unknown ids (wheel slot / building popover / standalone panel / left panel mode); malformed dormant slices never throw and never fabricate a reason"
+  ],
+  "gaps": [
+    "rollback mid-try failure inside commitFiveElementInitiation could not be forced deterministically without mocks (all failure legs are preflight); snapshot-coverage verified by inspection instead",
+    "async/race surface limited to single-threaded probes; no scheduler-level interleaving tested (no async seams exist in the covered paths - all ops are synchronous)"
+  ]
+}

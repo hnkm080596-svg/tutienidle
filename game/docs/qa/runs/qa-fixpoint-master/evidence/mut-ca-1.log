@@ -1,0 +1,57 @@
+=== EV-MUT-CA-1 tree-admission-neutered T7 2026-10-01T04:15:40.969730Z ===
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+ ❯ tests/architecture/betaDormantSaveLeak.qa.test.ts (40 tests | 2 failed) 52ms
+     × canPurchaseNode / purchaseNode / upgradeNode all reject dormant-tree nodes 11ms
+     × respecNodeTree refuses a save holding dormant records - dormant insight is never refunded 2ms
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 38 passed (40)
+   Start at  04:15:41
+   Duration  1.89s (transform 1.39s, setup 206ms, import 1.51s, tests 52ms, environment 0ms)
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/architecture/betaDormantSaveLeak.qa.test.ts > dormancy: dormant way node trees refuse insight writes on a carried save (F-CA-1) > canPurchaseNode / purchaseNode / upgradeNode all reject dormant-tree nodes
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/architecture/betaDormantSaveLeak.qa.test.ts:284:68
+    282|     expect(gameManager.progressionOps.canPurchaseNode('thich_can', p))…
+    283|     expect(gameManager.progressionOps.purchaseNode('thich_can', p)).to…
+    284|     expect(gameManager.progressionOps.upgradeNode('thich_can', p)).toB…
+       |                                                                    ^
+    285|     expect(p.skillInsight).toBe(insightBefore)
+    286|     expect(p.nodeLevels).toEqual({ thich_can: 1 })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  tests/architecture/betaDormantSaveLeak.qa.test.ts > dormancy: dormant way node trees refuse insight writes on a carried save (F-CA-1) > respecNodeTree refuses a save holding dormant records - dormant insight is never refunded
+AssertionError: expected 2 to be null
+
+- Expected:
+null
+
++ Received:
+2
+
+ ❯ tests/architecture/betaDormantSaveLeak.qa.test.ts:295:58
+    293|     const p = swordSave({ thich_can: 2 })
+    294|
+    295|     expect(gameManager.progressionOps.respecNodeTree(p)).toBeNull()
+       |                                                          ^
+    296|     expect(gameManager.progressionOps.previewNodeRespec(p).resetCount)…
+    297|     // Dormant records stay intact - the lock freezes them, never mone…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+DETECTOR_EXIT=1  (nonzero = mutant killed the suite = KILLED_EXPECTED)
+RESULT=KILLED_EXPECTED

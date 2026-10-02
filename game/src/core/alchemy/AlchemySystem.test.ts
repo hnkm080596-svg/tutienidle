@@ -14,12 +14,14 @@ import {
   AlchemySystem,
   resolveFuelWood,
   jobSuccessPercent,
+  alchemyJobReservationDigest,
   alchemyRoomSuccessBonus,
   alchemySecondsFor,
   ALCHEMY_SUCCESS_BONUS_PERCENT,
   ALCHEMY_SPEED_MULTIPLIERS,
 } from './AlchemySystem'
 import type { ActiveAlchemyJob, AlchemyRecipe } from './AlchemySystem'
+import { buildProfessionMaterialId } from '../profession/ProfessionMaterial'
 import { PillBag } from '../pill/PillBag'
 import { MaterialBag } from '../material/MaterialBag'
 import { MaterialRegistry } from '../material/MaterialRegistry'
@@ -41,7 +43,7 @@ const RECIPE: AlchemyRecipe = {
 }
 
 function makeJob(overrides: Partial<ActiveAlchemyJob> = {}): ActiveAlchemyJob {
-  return {
+  const job: ActiveAlchemyJob = {
     jobId: 'job_test',
     recipeId: RECIPE.id,
     pillId: RECIPE.pillId,
@@ -49,8 +51,21 @@ function makeJob(overrides: Partial<ActiveAlchemyJob> = {}): ActiveAlchemyJob {
     startedAtMs: 0,
     completesAtMs: 1_000,
     roomLevelAtStart: 1,
+    reservation: {
+      woodId: buildProfessionMaterialId('wood', RECIPE.fuelWoodRealmId, 'decade'),
+      fuelWoodAmount: RECIPE.fuelWoodAmount,
+      spiritStoneCost: RECIPE.spiritStoneCost,
+      herbAmount: RECIPE.herbAmount,
+      specialIngredients: [],
+      costScale: 1,
+      digest: 0,
+    },
     ...overrides,
   }
+
+  job.reservation = { ...job.reservation, digest: alchemyJobReservationDigest(job, job.reservation) }
+
+  return job
 }
 
 function makeSystemWithJob(job: ActiveAlchemyJob = makeJob()): {

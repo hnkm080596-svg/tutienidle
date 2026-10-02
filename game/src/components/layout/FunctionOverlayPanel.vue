@@ -13,6 +13,7 @@ import StageSelectPanel from '@/components/panels/StageSelectPanel.vue'
 import WorkerLodgePanel from '@/components/panels/WorkerLodgePanel.vue'
 import VendorPanel from '@/components/panels/VendorPanel.vue'
 import { useUiStore, type LeftPanelMode } from '@/stores/ui'
+import { isBetaLeftPanelMode } from '@/core/betaScopeSurface'
 
 const { t } = useI18n()
 
@@ -42,7 +43,12 @@ const BUILDINGS: Partial<Record<FunctionMode, string>> = {
 
 const mode = computed<FunctionMode | null>(() => {
   const value = ui.leftPanelMode
-  return value && value !== 'character' && value !== 'inventory' ? value : null
+  // BETA SCOPE LOCK: mount-seam chokepoint - a scope-hidden mode never
+  // mounts even when a caller bypasses ui.openLeftPanel and writes the
+  // raw field (same defense the standalone-panel watcher carries).
+  return value && isBetaLeftPanelMode(value) && value !== 'character' && value !== 'inventory'
+    ? value
+    : null
 })
 
 const buildingId = computed(() => (mode.value ? BUILDINGS[mode.value] : undefined))

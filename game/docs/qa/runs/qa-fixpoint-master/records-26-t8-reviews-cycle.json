@@ -1,0 +1,220 @@
+{
+ "records": [
+  {
+   "kind": "review",
+   "body": {
+    "id": "RV-SEQ7-COR",
+    "contextId": "ctx-rv-seq7-cor",
+    "reviewerId": "coord-main",
+    "model": "coordinator",
+    "phase": "CORRECTNESS",
+    "round": 12,
+    "role": "Pass 1 local correctness over F-A4/F-B-CONS/F-BS fix wave: caught playable-channel overreach (PhapTu sourceType realm entries would drop under the catch-all gate) - gate rescoped to positive allowlist of dormant writers; stat-type list corrected to canonical MAIN_STAT_KEYS",
+    "state": {
+     "productStateId": "ace0c1af868434beb55d410e13cf9987da41d1c58fdc5adfdedd98e2e356d9fe",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "SEALED",
+    "startedAt": "2026-10-01T05:15:00Z",
+    "sealedAt": "2026-10-01T05:25:00Z",
+    "priorFindingsVisible": true,
+    "reviewedAfterPreviousFixes": true,
+    "inputBundleHash": "2b180a0ceda3c1745df456c3fa00342d792d55823cf5dc15329238d613e4ab7e",
+    "evidenceIds": [
+     "EV-PIN-BS-WAVE",
+     "EV-MUT-BS-1"
+    ],
+    "coverageIds": [],
+    "findingIds": [],
+    "novelAttackIds": [],
+    "accessLimitations": [],
+    "previousPhaseReviewId": null
+   }
+  },
+  {
+   "kind": "review",
+   "body": {
+    "id": "RV-SEQ7-AUT",
+    "contextId": "ctx-rv-seq7-aut",
+    "reviewerId": "coord-main",
+    "model": "coordinator",
+    "phase": "AUTHORITY",
+    "round": 12,
+    "role": "Pass 2 authority over the wave: enumerated every persisted sourceType realm writer (REALM_PASSIVES, MeridianChapter, PhapTuPath, node builders); effect seam reconciles against admission instead of scrubbing records (contract: deserialize intact + flag); marker coherence now bidirectional",
+    "state": {
+     "productStateId": "ace0c1af868434beb55d410e13cf9987da41d1c58fdc5adfdedd98e2e356d9fe",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "SEALED",
+    "startedAt": "2026-10-01T05:15:00Z",
+    "sealedAt": "2026-10-01T05:25:00Z",
+    "priorFindingsVisible": true,
+    "reviewedAfterPreviousFixes": true,
+    "inputBundleHash": "96e37885d19a2512de6c6863042721094c258ab75e0042f058551e6c27d2bb5f",
+    "evidenceIds": [
+     "EV-PIN-BS-WAVE"
+    ],
+    "coverageIds": [],
+    "findingIds": [],
+    "novelAttackIds": [],
+    "accessLimitations": [],
+    "previousPhaseReviewId": "RV-SEQ7-COR"
+   }
+  },
+  {
+   "kind": "review",
+   "body": {
+    "id": "RV-SEQ7-INT",
+    "contextId": "ctx-rv-seq7-int",
+    "reviewerId": "coord-main",
+    "model": "coordinator",
+    "phase": "INTEGRATION",
+    "round": 12,
+    "role": "Pass 3 adversarial integration over the wave: validator interplay (orphan markers still hard-fail; forged payloads flagged not silently dropped); StatDomain gate requires domain field on spell entries; controls verify playable nhap_dao normal passive + phap tu spell channels still emit; component self-gate kills direct-mount bypass",
+    "state": {
+     "productStateId": "ace0c1af868434beb55d410e13cf9987da41d1c58fdc5adfdedd98e2e356d9fe",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "SEALED",
+    "startedAt": "2026-10-01T05:15:00Z",
+    "sealedAt": "2026-10-01T05:25:00Z",
+    "priorFindingsVisible": true,
+    "reviewedAfterPreviousFixes": true,
+    "inputBundleHash": "8ff3972449326429deb3aee65054e0af583b81e13e70c6dbcec79bc8c5ab3185",
+    "evidenceIds": [
+     "EV-PIN-BS-WAVE",
+     "EV-FINAL-VERIFY-T9"
+    ],
+    "coverageIds": [],
+    "findingIds": [],
+    "novelAttackIds": [],
+    "accessLimitations": [],
+    "previousPhaseReviewId": "RV-SEQ7-AUT"
+   }
+  },
+  {
+   "kind": "review",
+   "body": {
+    "id": "RV-CLOSURE-6",
+    "contextId": "ctx-rv-closure-6",
+    "reviewerId": "coord-main",
+    "model": "coordinator",
+    "phase": "CLOSURE",
+    "round": 12,
+    "role": "closure review over the T8 wave: all 9 Medium+ (A4 x4, B-CONS x2, BS x2 + BS-1 High) fixed with mutant-killed pins; F-BS-2 recorded DUPLICATE_LINKED to F-A4-1; 7 Low/Nit deferred per Medium+-only ruling; verify 7895 green on c32bc29e",
+    "state": {
+     "productStateId": "ace0c1af868434beb55d410e13cf9987da41d1c58fdc5adfdedd98e2e356d9fe",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "SEALED",
+    "startedAt": "2026-10-01T05:15:00Z",
+    "sealedAt": "2026-10-01T05:25:00Z",
+    "priorFindingsVisible": true,
+    "reviewedAfterPreviousFixes": true,
+    "inputBundleHash": "668ed6aacfd1b11c9e2ff35f09f4a4b4dfad08a1a1988b53ee16a34d8d8a675b",
+    "evidenceIds": [
+     "EV-PIN-BS-WAVE",
+     "EV-MUT-BS-1",
+     "EV-MUT-A4-1",
+     "EV-PROBE-A4-SEAM",
+     "EV-PROBE-B4-SEAM",
+     "EV-FINAL-VERIFY-T9"
+    ],
+    "coverageIds": [],
+    "findingIds": [
+     "F-A4-1",
+     "F-A4-2",
+     "F-A4-3",
+     "F-A4-4",
+     "F-B-CONS-1",
+     "F-B-CONS-2",
+     "F-B-CONS-3",
+     "F-B-CONS-4",
+     "F-B-CONS-5",
+     "F-BS-1",
+     "F-BS-2",
+     "F-BS-3",
+     "F-BS-4",
+     "F-BS-5",
+     "F-BS-6",
+     "F-BS-7"
+    ],
+    "novelAttackIds": [],
+    "accessLimitations": [],
+    "previousPhaseReviewId": "RV-SEQ7-INT"
+   }
+  },
+  {
+   "kind": "cycle",
+   "body": {
+    "id": "CY-SEQ-7",
+    "state": {
+     "productStateId": "ace0c1af868434beb55d410e13cf9987da41d1c58fdc5adfdedd98e2e356d9fe",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "CLEAN",
+    "reviewIds": [
+     "RV-SEQ7-COR",
+     "RV-SEQ7-AUT",
+     "RV-SEQ7-INT"
+    ],
+    "coverageIds": [],
+    "evidenceIds": [
+     "EV-PIN-BS-WAVE",
+     "EV-MUT-BS-1",
+     "EV-MUT-A4-1",
+     "EV-FINAL-VERIFY-T9"
+    ],
+    "noveltyEvidenceIds": [],
+    "startedAt": "2026-10-01T05:15:00Z",
+    "finishedAt": "2026-10-01T05:25:00Z"
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-PROBE-B4-SEAM",
+    "kind": "EXECUTED_UNIT_STRUCTURAL",
+    "state": {
+     "productStateId": "ace0c1af868434beb55d410e13cf9987da41d1c58fdc5adfdedd98e2e356d9fe",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "CURRENT",
+    "commandOrMethod": "npx vitest run tests/architecture/betaConsumerSeamMounts.qa.test.ts tests/architecture/betaConsumerSeams.qa.test.ts (adopted from blind round B4)",
+    "cwd": "game/",
+    "artifactPath": "evidence/probe-b4-consumer-seam.log",
+    "artifactHash": "c84daf9d021cbf4d172e55dfed880581be022250a0052c500601fabcdb1cb040",
+    "result": "PASS",
+    "exitCode": 0,
+    "startedAt": "2026-10-01T04:40:00Z",
+    "finishedAt": "2026-10-01T05:25:00Z",
+    "producer": "coord-main",
+    "invariantIds": [
+     "I-AS-1",
+     "I-RM-1"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [
+     "tests/architecture/betaConsumerSeamMounts.qa.test.ts",
+     "tests/architecture/betaConsumerSeams.qa.test.ts"
+    ],
+    "claims": [
+     "B4 blind repro suite adopted: left-panel/popover mount gates, component self-gate"
+    ],
+    "limitations": []
+   }
+  }
+ ]
+}

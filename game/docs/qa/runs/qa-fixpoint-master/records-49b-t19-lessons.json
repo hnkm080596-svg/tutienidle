@@ -1,0 +1,97 @@
+{
+ "records": [
+  {
+   "kind": "lesson",
+   "body": {
+    "id": "L-REALM-EARNABILITY-CLAIM",
+    "version": 1,
+    "supersedes": null,
+    "triggerType": "DEFECT",
+    "findingIds": [
+     "F-TC8-2",
+     "F-TC8-6",
+     "F-A10-1",
+     "F-A10-2",
+     "F-A10-6",
+     "F-TC8-3",
+     "F-A10-3",
+     "F-A10-4",
+     "F-A10-5"
+    ],
+    "incidentEvidenceIds": [
+     "EV-PROBE-A10",
+     "EV-PIN-T19"
+    ],
+    "originatingRun": "qa-fixpoint-master",
+    "rootClass": "BOUNDARY",
+    "missedInvariantIds": [
+     "I-SF-1"
+    ],
+    "escapeReason": "boundary validated shape and presence but never replayed writer-side earnability: a persisted claim naming a realm-gated writer (talent pool, realm-ladder passive, realm-gated stage, realm marker) was accepted on a holder below the writer's realm. Realm order is monotonic so claims can never outrank the holder - the bound is claim.realm <= player.realm.",
+    "applicability": [
+     "any persisted claim whose authored writer is realm/progression-gated"
+    ],
+    "exclusions": [],
+    "proposedProtection": [
+     "at the trust boundary, resolve each claim's writer realm and require writer realm <= holder realm; keep a keyed writer->realm map beside the writer catalog"
+    ],
+    "promotionEvidenceIds": [
+     "EV-PIN-T19",
+     "EV-MUT-T19",
+     "EV-VERIFY-T19"
+    ],
+    "qualifiedBy": [],
+    "capabilityDelta": "PROMOTED - realm-earnability bounds enforced at the save boundary",
+    "status": "QUALIFIED",
+    "policyVersion": null,
+    "effectiveFromRun": "qa-fixpoint-master",
+    "recurrenceFindingIds": [],
+    "preventionEvidenceIds": [
+     "EV-PIN-T19",
+     "EV-MUT-T19",
+     "EV-VERIFY-T19"
+    ],
+    "guidance": null
+   }
+  },
+  {
+   "kind": "lesson",
+   "body": {
+    "id": "L-EVIDENCE-P15-SANITIZE",
+    "version": 1,
+    "supersedes": null,
+    "triggerType": "ESCAPE",
+    "findingIds": [],
+    "incidentEvidenceIds": [
+     "EV-VERIFY-T19"
+    ],
+    "originatingRun": "qa-fixpoint-master",
+    "rootClass": "DETECTOR",
+    "missedInvariantIds": [],
+    "escapeReason": "P15 asciiComments ratchet scans comment tokens in ALL .ts/.vue/.js under game/ including docs/qa/** - child-produced probe files copied into evidence/ carried em-dashes/unicode arrows and failed the ratchet",
+    "applicability": [
+     "any .test.ts probe copied into docs/qa/runs/**/evidence/"
+    ],
+    "exclusions": [
+     "string literals are exempt"
+    ],
+    "proposedProtection": [
+     "sanitize non-ASCII comment chars when archiving probe files; keep evidence probes ASCII-only"
+    ],
+    "promotionEvidenceIds": [
+     "EV-VERIFY-T19"
+    ],
+    "qualifiedBy": [],
+    "capabilityDelta": "RECORDED - awaiting independent qualification",
+    "status": "CAPTURED",
+    "policyVersion": null,
+    "effectiveFromRun": "qa-fixpoint-master",
+    "recurrenceFindingIds": [],
+    "preventionEvidenceIds": [
+     "EV-VERIFY-T19"
+    ],
+    "guidance": null
+   }
+  }
+ ]
+}

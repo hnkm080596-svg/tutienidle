@@ -1,0 +1,38 @@
+===== MUT-BS-marker :: BS: markerGate removed (authored-id payload without marker emits)
+MUT-BS-marker: KILLED_EXPECTED (exit=1)
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+ ❯ tests/architecture/betaPersistedRealmModifiers.qa.test.ts (9 tests | 1 failed) 18ms
+     × a payload carrying the authored passive id but no grant marker still mints nothing 6ms
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 8 passed (9)
+   Start at  11:35:01
+   Duration  704ms (transform 453ms, setup 207ms, import 357ms, tests 18ms, environment 0ms)
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/architecture/betaPersistedRealmModifiers.qa.test.ts > persisted realm modifiers under the beta lock > a payload carrying the authored passive id but no grant marker still mints nothing
+AssertionError: expected 127.44 to be 108 // Object.is equality
+
+- Expected
++ Received
+
+- 108
++ 127.44
+
+ ❯ tests/architecture/betaPersistedRealmModifiers.qa.test.ts:145:25
+    143|     const stats = resolvePlayerStatAssembly(p, []).stats
+    144|     const base = resolvePlayerStatAssembly(player(), []).stats
+    145|     expect(stats.maxHp).toBe(base.maxHp)
+       |                         ^
+    146|   })
+    147|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+
+Corpus: 1 mutants, 1 KILLED_EXPECTED, 0 SURVIVED

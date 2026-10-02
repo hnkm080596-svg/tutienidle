@@ -1,0 +1,317 @@
+{
+ "records": [
+  {
+   "kind": "lesson",
+   "body": {
+    "id": "L-NO-AUTHORED-CEILING",
+    "version": 1,
+    "supersedes": null,
+    "triggerType": "DEFECT",
+    "findingIds": [
+     "F-TC7-STAGES",
+     "F-TC7-AUTOFARM",
+     "F-TC7-ETERNAL",
+     "F-TC7-MATERIAL",
+     "F-TC7-BETAPILL",
+     "F-TC7-ALCHEMY",
+     "F-TC7-CULT",
+     "F-TC8-5",
+     "F-TC8-12"
+    ],
+    "incidentEvidenceIds": [
+     "EV-PIN-T17",
+     "EV-VERIFY-T18"
+    ],
+    "originatingRun": "qa-fixpoint-master",
+    "rootClass": "BOUNDARY",
+    "missedInvariantIds": [
+     "I-SF-1"
+    ],
+    "escapeReason": "same class as L-SAME-VALUE-FORGE but for non-counter records: eligibility markers (completedStageIds, perfectClear*), durations (expiresAtMs), and stockpile magnitudes (materials, pill stacks, cultivation, job completion) have no authored ceiling or witness in the schema - a claim inside the authored shape is indistinguishable from earned state",
+    "applicability": [
+     "persisted eligibility markers and stockpile magnitudes with no authored bound or provenance field"
+    ],
+    "exclusions": [],
+    "proposedProtection": [
+     "schema-level provenance (event ledger / writer-signed counters) is the only complete repair; recorded as residual exceptions pending coordinator ruling - all magnitude-bounded classes meanwhile closed at the boundary"
+    ],
+    "promotionEvidenceIds": [],
+    "qualifiedBy": [],
+    "capabilityDelta": "RECORDED - awaiting independent qualification",
+    "status": "CAPTURED",
+    "policyVersion": null,
+    "effectiveFromRun": null,
+    "recurrenceFindingIds": [],
+    "preventionEvidenceIds": [],
+    "guidance": null
+   }
+  },
+  {
+   "kind": "lesson",
+   "body": {
+    "id": "L-SETTLEMENT-REAUTH",
+    "version": 1,
+    "supersedes": null,
+    "triggerType": "DEFECT",
+    "findingIds": [
+     "F-CONS-B1",
+     "F-CONS-B2",
+     "F-BODY-EMIT",
+     "F-BODY-GRADE",
+     "F-BODY-FLAG",
+     "F-SINK",
+     "F-TC8-9"
+    ],
+    "incidentEvidenceIds": [
+     "EV-PIN-REAUTH-1",
+     "EV-MUT-REAUTH-1"
+    ],
+    "originatingRun": "qa-fixpoint-master",
+    "rootClass": "AUTHORITY",
+    "missedInvariantIds": [
+     "I-AS-1",
+     "I-DS-1"
+    ],
+    "escapeReason": "review/test coverage exercised origination gates (start/startJob) but never the persisted-intent path: restore+settle of a forged-or-carried record was uncovered until the B6/TC4 blind rounds",
+    "applicability": [
+     "every seam that applies persisted or carried records: the scope verdict must be re-derived at the apply site, not trusted from origination-time intent",
+     "dormant records park (data intact, no effect, no event) - never silently consumed, never silently emitted"
+    ],
+    "exclusions": [],
+    "proposedProtection": [
+     "settle seam checklists: tribulation settleOutcome, alchemy tick/settleOffline delivery, body modifier emission, grade resolvers, flag surfaces"
+    ],
+    "promotionEvidenceIds": [],
+    "qualifiedBy": [],
+    "capabilityDelta": "RECORDED - awaiting independent qualification",
+    "status": "CAPTURED",
+    "policyVersion": null,
+    "effectiveFromRun": null,
+    "recurrenceFindingIds": [],
+    "preventionEvidenceIds": [],
+    "guidance": null
+   }
+  },
+  {
+   "kind": "lesson",
+   "body": {
+    "id": "L-DEFERRED-B9-LOW",
+    "version": 1,
+    "supersedes": null,
+    "triggerType": "DEFECT",
+    "findingIds": [
+     "F-TC7-WORKERS",
+     "F-TC7-CPS",
+     "F-B9-CON-01",
+     "F-B9-CON-03",
+     "F-B9-CON-04",
+     "F-B9-CON-05",
+     "F-B9-CON-06",
+     "F-TC8-13",
+     "F-B10-003",
+     "F-B10-004",
+     "F-B10-005",
+     "F-A10-8"
+    ],
+    "incidentEvidenceIds": [
+     "EV-VERIFY-T18"
+    ],
+    "originatingRun": "qa-fixpoint-master",
+    "rootClass": "BOUNDARY",
+    "missedInvariantIds": [
+     "I-SF-1"
+    ],
+    "escapeReason": "low-severity residuals: forged building capacity already clamped to authored max, forged rate claim hard-capped by offline accrual, latent grantedOnly filter gap with no live trigger, display-only talent cards + flagging coverage gaps + stale tutorial copy + dead CSS",
+    "applicability": [
+     "deferred Low/Nit findings on flagged saves or inert display seams"
+    ],
+    "exclusions": [],
+    "proposedProtection": [
+     "deferred per the Medium+-only ruling; revisit at next contract revision"
+    ],
+    "promotionEvidenceIds": [],
+    "qualifiedBy": [],
+    "capabilityDelta": "RECORDED - awaiting independent qualification",
+    "status": "CAPTURED",
+    "policyVersion": null,
+    "effectiveFromRun": null,
+    "recurrenceFindingIds": [],
+    "preventionEvidenceIds": [],
+    "guidance": null
+   }
+  },
+  {
+   "kind": "lesson",
+   "body": {
+    "version": 1,
+    "supersedes": null,
+    "triggerType": "DEFECT",
+    "incidentEvidenceIds": [
+     "EV-PIN-T19"
+    ],
+    "originatingRun": "qa-fixpoint-master",
+    "rootClass": "BOUNDARY",
+    "missedInvariantIds": [
+     "I-SF-1"
+    ],
+    "exclusions": [],
+    "promotionEvidenceIds": [
+     "EV-PIN-T19",
+     "EV-MUT-T19",
+     "EV-VERIFY-T19"
+    ],
+    "qualifiedBy": [],
+    "capabilityDelta": "PROMOTED - bound enforced at the save boundary",
+    "status": "QUALIFIED",
+    "policyVersion": null,
+    "effectiveFromRun": "qa-fixpoint-master",
+    "recurrenceFindingIds": [],
+    "preventionEvidenceIds": [
+     "EV-PIN-T19",
+     "EV-MUT-T19"
+    ],
+    "guidance": null,
+    "id": "L-CLAIM-MAGNITUDE-CEILING",
+    "findingIds": [
+     "F-TC8-1",
+     "F-TC8-7",
+     "F-TC8-8",
+     "F-TC8-11",
+     "F-A10-7"
+    ],
+    "escapeReason": "shape validation checked types/presence but not authored magnitude: every writer mints bounded values (grade 1-6, affixes<=8+slot-eligible, durations<=authored window, seconds>=1) - a claim outside the writer's own range is provably forged",
+    "applicability": [
+     "persisted magnitudes whose authored writers have bounded output"
+    ],
+    "proposedProtection": [
+     "bound each persisted magnitude to its writer's authored range at the trust boundary; enumerate writers before choosing the bound"
+    ]
+   }
+  },
+  {
+   "kind": "lesson",
+   "body": {
+    "version": 1,
+    "supersedes": null,
+    "triggerType": "DEFECT",
+    "incidentEvidenceIds": [
+     "EV-PIN-T19"
+    ],
+    "originatingRun": "qa-fixpoint-master",
+    "rootClass": "BOUNDARY",
+    "missedInvariantIds": [
+     "I-SF-1"
+    ],
+    "exclusions": [],
+    "promotionEvidenceIds": [
+     "EV-PIN-T19",
+     "EV-MUT-T19",
+     "EV-VERIFY-T19"
+    ],
+    "qualifiedBy": [],
+    "capabilityDelta": "PROMOTED - bound enforced at the save boundary",
+    "status": "QUALIFIED",
+    "policyVersion": null,
+    "effectiveFromRun": "qa-fixpoint-master",
+    "recurrenceFindingIds": [],
+    "preventionEvidenceIds": [
+     "EV-PIN-T19",
+     "EV-MUT-T19"
+    ],
+    "guidance": null,
+    "id": "L-TEMPLATE-REBUILD-CLAIMS",
+    "findingIds": [
+     "F-TC8-4",
+     "F-TC8-6"
+    ],
+    "escapeReason": "restore trusted persisted fields that are authored constants (skill scalars, passive seeds) - template-derived state must be rebuilt from the template, not the claim",
+    "applicability": [
+     "any persisted record whose fields are authored elsewhere"
+    ],
+    "proposedProtection": [
+     "rebuild from the authoritative template at restore; persist only instance progress"
+    ]
+   }
+  },
+  {
+   "kind": "lesson",
+   "body": {
+    "version": 1,
+    "supersedes": null,
+    "triggerType": "DEFECT",
+    "incidentEvidenceIds": [
+     "EV-PIN-T19"
+    ],
+    "originatingRun": "qa-fixpoint-master",
+    "rootClass": "AUTHORITY",
+    "missedInvariantIds": [
+     "I-SF-1"
+    ],
+    "exclusions": [],
+    "promotionEvidenceIds": [
+     "EV-PIN-T19",
+     "EV-MUT-T19",
+     "EV-VERIFY-T19"
+    ],
+    "qualifiedBy": [],
+    "capabilityDelta": "PROMOTED - bound enforced at the save boundary",
+    "status": "QUALIFIED",
+    "policyVersion": null,
+    "effectiveFromRun": "qa-fixpoint-master",
+    "recurrenceFindingIds": [],
+    "preventionEvidenceIds": [
+     "EV-PIN-T19",
+     "EV-MUT-T19"
+    ],
+    "guidance": null,
+    "id": "L-CONSUMER-FLAG-COVERAGE",
+    "findingIds": [
+     "F-B10-001",
+     "F-B10-002"
+    ],
+    "escapeReason": "a consumer seam (unsupportedReleaseReason slices, panel membership filter) enumerated its own dormant classes and missed two - the canonical dormant-class census had already grown past the consumer's list",
+    "applicability": [
+     "any consumer that enumerates dormant/ineligible classes locally instead of consuming the canonical census"
+    ],
+    "proposedProtection": [
+     "consumers must consume the canonical scope verdicts; when a local enumeration is unavoidable, audit it against the full dormant-class census"
+    ]
+   }
+  },
+  {
+   "kind": "lesson",
+   "body": {
+    "version": 1,
+    "supersedes": null,
+    "triggerType": "FALSE_POSITIVE",
+    "incidentEvidenceIds": [
+     "EV-PIN-T19"
+    ],
+    "originatingRun": "qa-fixpoint-master",
+    "rootClass": "BOUNDARY",
+    "missedInvariantIds": [],
+    "exclusions": [],
+    "promotionEvidenceIds": [],
+    "qualifiedBy": [],
+    "capabilityDelta": "RECORDED - awaiting independent qualification",
+    "status": "CAPTURED",
+    "policyVersion": null,
+    "effectiveFromRun": "qa-fixpoint-master",
+    "recurrenceFindingIds": [],
+    "preventionEvidenceIds": [],
+    "guidance": null,
+    "id": "L-FLAGGED-LOAD-CONTRACT",
+    "findingIds": [
+     "F-TC8-10"
+    ],
+    "escapeReason": "flagged-load is the contract-compliant path for beyond-ceiling saves: deserialize-safe + unsupportedReleaseReason flags. 'dormant-realm save loads' is not a defect when the flag fires.",
+    "applicability": [
+     "beyond-ceiling/dormant carry classes with an explicit flagging reason"
+    ],
+    "proposedProtection": [
+     "before accepting a carry-class finding, verify whether unsupportedReleaseReason already names it"
+    ]
+   }
+  }
+ ]
+}

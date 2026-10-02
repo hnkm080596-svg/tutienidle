@@ -45,6 +45,11 @@ function mockGameManager(overrides: {
     } as unknown as GameManager['realmAdvanceOps'],
     progressionOps: {
       getResolvedSkillRoles: () => ({ basic: { kind: 'dynamic', label: '—' } }),
+      betaCombatRolesFor: () => [
+        { role: 'basic', skillId: null, state: 'available' },
+        { role: 'special', skillId: null, state: 'progression-locked' },
+        { role: 'ultimate', skillId: null, state: 'scope-hidden' },
+      ],
       getSkillLevel: (skillId: string) => overrides.levels?.[skillId] ?? 1,
       getSkillCoreUpgradeCost: (skillId: string) => overrides.costs?.[skillId],
       getSkillCoreMaxLevel: (skillId: string) => overrides.maxLevels?.[skillId] ?? 1,

@@ -26,6 +26,7 @@ import type { ElementType } from './element/ElementType'
 import type { PlayerData } from './player/Player'
 import type { NodePrerequisite, ProgressionNode } from './progression/ProgressionNode'
 import {
+  CULTIVATION_PATH_MODULES,
   getActiveWayDefinition,
   type CultivationWayId,
   type PathCapabilityDeps,
@@ -47,6 +48,10 @@ import {
   nodePathApplies,
   nodeWayApplies,
 } from './progression/NodeSystem'
+import {
+  HIDDEN_BRANCH_TAGS,
+  viewBranchTags,
+} from './progression/NodeBranchViews'
 import {
   MORTAL_DEFAULT_BASIC_ID,
   isMortalPrecursorSkillId,
@@ -260,6 +265,140 @@ export interface BetaSkillTreeNode {
   levelGates: BetaSkillNodeGate[]
   /** Skills the node grants (unlocksSkillIds + grantsSkillCoreIds). */
   grantsSkillIds: string[]
+}
+
+/**
+ * Beta tree-node admission (frontend-contract sec.D): a node renders or
+ * accepts writes only on an admitted tree surface. A node scoped to a
+ * non-beta way (requiredWay) or carrying a view tag owned by a dormant
+ * way's tree - or a hidden branch tag - is scope-hidden for every
+ * player, so a carried way_out_of_scope save cannot spend insight on a
+ * kit the gated combat runtime never executes. Element-tagged nodes
+ * belong to the beta spell tree and stay admitted; untagged nodes are
+ * way-agnostic and stay admitted on every save.
+ */
+// Evaluated per call, never memoized at module load: BETA_PLAYABLE_WAYS
+// is a mutable set (test fixtures unlock then re-pin it), so a snapshot
+// frozen at import time would silently admit every way in tests.
+function betaDormantTreeViewTags(): ReadonlySet<string> {
+  const tags = new Set<string>(HIDDEN_BRANCH_TAGS)
+
+  for (const path of Object.values(CULTIVATION_PATH_MODULES)) {
+    for (const way of Object.values(path.ways)) {
+      if (!isBetaWay(way.id) && way.nodeTreeTag !== undefined) {
+        for (const tag of viewBranchTags(way.nodeTreeTag)) {
+          tags.add(tag)
+        }
+      }
+    }
+  }
+
+  return tags
+}
+
+export function betaTreeNodeAdmitted(node: ProgressionNode): boolean {
+  if (node.requiredWay !== undefined && !isBetaWay(node.requiredWay)) {
+    return false
+  }
+
+  const viewTag = node.elementTag ?? node.branchTag
+
+  return viewTag === undefined || !betaDormantTreeViewTags().has(viewTag)
+}
+
+/**
+ * Beta skill admission (frontend-contract sec.D): a skill id is
+ * scope-hidden when every way declaring ownership of it is dormant.
+ * Ownership rides the way's declared lists - skillIds /
+ * passiveSkillIds / coreSkillIds / ownedContent.skillIds - the same
+ * data chooseCultivationPath preflights and the contract suite
+ * validates as way-unique. starterBasicSkillId is mortal-domain (a
+ * learned precursor the runtime falls back to), not an exclusive
+ * claim, so it never contributes here; an id a beta way also owns
+ * stays admitted. Mortal/native skills no way claims stay admitted
+ * on every save.
+ * Evaluated per call like betaDormantTreeViewTags - live lock state.
+ */
+function betaDormantSkillIds(): ReadonlySet<string> {
+  const betaOwned = new Set<string>()
+  const dormant = new Set<string>()
+
+  for (const path of Object.values(CULTIVATION_PATH_MODULES)) {
+    for (const way of Object.values(path.ways)) {
+      const declared: readonly (readonly string[] | undefined)[] = [
+        way.skillIds,
+        way.passiveSkillIds,
+        way.coreSkillIds,
+        way.ownedContent?.skillIds,
+      ]
+      const sink = isBetaWay(way.id) ? betaOwned : dormant
+      for (const ids of declared) {
+        for (const id of ids ?? []) sink.add(id)
+      }
+    }
+  }
+
+  for (const id of betaOwned) dormant.delete(id)
+  return dormant
+}
+
+export function betaSkillAdmitted(skillId: string): boolean {
+  return !betaDormantSkillIds().has(skillId)
+}
+
+/**
+ * Way-owned canonical techniques (way.techniqueId): a technique minted by
+ * a dormant way carries that way's dormancy - its grade advancement,
+ * tier emissions and combat modifiers are scope-hidden machinery.
+ * Unowned (mortal) techniques stay admitted on every save.
+ * Evaluated per call like betaDormantSkillIds - live lock state.
+ */
+function betaDormantTechniqueIds(): ReadonlySet<string> {
+  const betaOwned = new Set<string>()
+  const dormant = new Set<string>()
+
+  for (const path of Object.values(CULTIVATION_PATH_MODULES)) {
+    for (const way of Object.values(path.ways)) {
+      const sink = isBetaWay(way.id) ? betaOwned : dormant
+      sink.add(way.techniqueId)
+    }
+  }
+
+  for (const id of betaOwned) dormant.delete(id)
+  return dormant
+}
+
+export function betaTechniqueAdmitted(techniqueId: string): boolean {
+  return !betaDormantTechniqueIds().has(techniqueId)
+}
+
+/**
+ * Active-way admission for effect seams: a way-less player is the beta
+ * mortal baseline (admitted); a committed way is admitted only when the
+ * beta allow-list owns it. Mirrors the wayAdmitted seam in CombatBuild.
+ */
+export function betaActiveWayAdmitted(player: PlayerData): boolean {
+  const wayId = getActiveWay(player)
+  return wayId === undefined || isBetaWay(wayId)
+}
+
+/**
+ * One write/effect admission predicate for progression ops and their
+ * readers: tree-surface admission (dormant way/hidden branch tags) AND
+ * skill-level admission (a core node leveling a dormant way's kit skill
+ * stays rejected even though core nodes carry no view tag).
+ */
+export function betaNodeWriteAdmitted(node: ProgressionNode): boolean {
+  return betaTreeNodeAdmitted(node) && betaNodeSkillLevelAdmitted(node)
+}
+
+/**
+ * Beta core-node admission: a node that levels a skill is admitted
+ * only when the leveled skill is - untagged core nodes carry no tree
+ * view tag, so betaTreeNodeAdmitted alone admits dormant way kits.
+ */
+export function betaNodeSkillLevelAdmitted(node: ProgressionNode): boolean {
+  return node.levelsSkillId === undefined || betaSkillAdmitted(node.levelsSkillId)
 }
 
 export interface BetaSkillTree {

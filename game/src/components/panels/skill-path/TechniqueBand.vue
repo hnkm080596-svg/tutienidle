@@ -17,6 +17,7 @@ import {
   canAdvanceTechniqueGrade,
   getTechniqueGradeUpgradeCost,
 } from '@/core/technique/TechniqueProgression'
+import { betaTechniqueAdmitted } from '@/core/betaScopeSkillDomain'
 import { formatNumber } from '@/core/format/NumberFormatter'
 
 const player = usePlayerStore()
@@ -27,7 +28,14 @@ const { t } = useI18n()
 const currentTechnique = computed(() => {
   stateVersion.value
 
-  return gameManager.techniqueManager.getActive()
+  // BETA SCOPE LOCK - a carried save's active technique can belong to
+  // a dormant way; it stays parked-inert in the manager, so render it
+  // as absent rather than an enabled-but-dead Nang Canh hero.
+  const technique = gameManager.techniqueManager.getActive()
+
+  return technique !== undefined && betaTechniqueAdmitted(technique.id)
+    ? technique
+    : undefined
 })
 
 const techniqueSections = computed(() => {

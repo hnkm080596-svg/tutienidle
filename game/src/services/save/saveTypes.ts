@@ -225,6 +225,17 @@ export interface TribulationSaveSlice {
     // here - a hidden breakthrough records it via breakthroughType.
     grade: ResolvableKienCoGrade
     breakthroughType: BreakthroughType
+    // F-TRB-FORGE - provenance witness the commit site stamps (mirror
+    // cua TribulationCommitWitness trong core/tribulation; services
+    // khong import core cho shape, nen khai bao lai cung fields).
+    witness: {
+      departingRealmId: string
+      chapterIndex: number
+      chaptersTotal: number
+      lightningStrikesTaken: number
+      attemptSeed: number
+      digest: number
+    }
     receipt: TribulationOutcomeResult | null
     settlementError: boolean
   }
@@ -344,6 +355,25 @@ export interface ProductionSiteStateSave {
   hiddenChannelCycles?: Record<string, number>
 }
 
+/** F-ALCH-JOB-FORGE - persisted reservation witness: the exact inputs
+ * startJob reserved when the job began (mirror cua AlchemyJobReservation
+ * trong core/alchemy - cung fields, khong import nguoc). */
+export interface AlchemyJobReservationSave {
+  woodId: string
+
+  fuelWoodAmount: number
+
+  spiritStoneCost: number
+
+  herbAmount: number
+
+  specialIngredients: readonly { materialId: string; amount: number }[]
+
+  costScale: number
+
+  digest: number
+}
+
 /** Shape persist cua ActiveAlchemyJob - khop core/alchemy. */
 export interface AlchemyJobSave {
   jobId: string
@@ -359,5 +389,7 @@ export interface AlchemyJobSave {
   completesAtMs: number
 
   roomLevelAtStart: number
+
+  reservation: AlchemyJobReservationSave
 }
 

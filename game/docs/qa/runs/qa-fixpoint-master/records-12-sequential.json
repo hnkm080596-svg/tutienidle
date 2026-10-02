@@ -1,0 +1,186 @@
+{
+  "records": [
+    {
+      "kind": "review",
+      "body": {
+        "id": "RV-SEQ-COR",
+        "state": {
+          "productStateId": "4311fc4d636dc9808f8fcc3699a4f41eb4e9db05e3b22623cc5409502f115a42",
+          "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+          "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+          "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+        },
+        "round": 1,
+        "phase": "CORRECTNESS",
+        "reviewerId": "coord-main",
+        "contextId": "ctx-coord-seq-1",
+        "model": "coordinator",
+        "role": "coordinator sequential review",
+        "inputBundleHash": "d762b98db83ec3ba3228e96bc39e39a92ca68c6943f951ec8bf29fdfcef6e5a9",
+        "priorFindingsVisible": true,
+        "accessLimitations": [],
+        "startedAt": "2026-10-01T00:25:00Z",
+        "sealedAt": "2026-10-01T00:35:00Z",
+        "previousPhaseReviewId": null,
+        "reviewedAfterPreviousFixes": true,
+        "coverageIds": [
+          "COV-I-CC-1-DETERMINISTIC",
+          "COV-I-SF-1-DETERMINISTIC",
+          "COV-I-DS-1-DETERMINISTIC"
+        ],
+        "evidenceIds": [
+          "EV-PROBE-DORMANT-1",
+          "EV-PIN-DORMANT-1",
+          "EV-PIN-NOTICE-1",
+          "EV-PROBE-TRISAVE-1",
+          "EV-PROBE-TRISAVE-2",
+          "EV-PROBE-DET-FINAL",
+          "EV-E2E-1"
+        ],
+        "findingIds": [
+          "F-DL-1",
+          "F-DL-2",
+          "F-DL-3",
+          "F-DL-4",
+          "F-DL-5",
+          "F-TRI-1",
+          "F-TRI-2",
+          "F-E2E-1"
+        ],
+        "novelAttackIds": [],
+        "status": "SEALED"
+      }
+    },
+    {
+      "kind": "review",
+      "body": {
+        "id": "RV-SEQ-AUT",
+        "state": {
+          "productStateId": "4311fc4d636dc9808f8fcc3699a4f41eb4e9db05e3b22623cc5409502f115a42",
+          "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+          "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+          "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+        },
+        "round": 2,
+        "phase": "AUTHORITY",
+        "reviewerId": "coord-main",
+        "contextId": "ctx-coord-seq-1",
+        "model": "coordinator",
+        "role": "coordinator sequential review",
+        "inputBundleHash": "971905c010a37cb0b3ea0744e9b6db30795015e5f5ef408d5a9179eb2fec8d58",
+        "priorFindingsVisible": true,
+        "accessLimitations": [],
+        "startedAt": "2026-10-01T00:25:00Z",
+        "sealedAt": "2026-10-01T00:35:00Z",
+        "previousPhaseReviewId": "RV-SEQ-COR",
+        "reviewedAfterPreviousFixes": true,
+        "coverageIds": [
+          "COV-I-RM-1-DETERMINISTIC",
+          "COV-I-SV-1-DETERMINISTIC",
+          "COV-I-AS-1-DETERMINISTIC"
+        ],
+        "evidenceIds": [
+          "EV-PROBE-READMODEL-1",
+          "EV-PROBE-READMODEL-2",
+          "EV-PROBE-TRISAVE-2"
+        ],
+        "findingIds": [
+          "F-RM-1",
+          "F-RM-2",
+          "F-RM-3",
+          "F-RM-4",
+          "F-TRI-2"
+        ],
+        "novelAttackIds": [],
+        "status": "SEALED"
+      }
+    },
+    {
+      "kind": "review",
+      "body": {
+        "id": "RV-SEQ-INT",
+        "state": {
+          "productStateId": "4311fc4d636dc9808f8fcc3699a4f41eb4e9db05e3b22623cc5409502f115a42",
+          "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+          "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+          "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+        },
+        "round": 3,
+        "phase": "INTEGRATION",
+        "reviewerId": "coord-main",
+        "contextId": "ctx-coord-seq-1",
+        "model": "coordinator",
+        "role": "coordinator sequential review",
+        "inputBundleHash": "8b05c820ce68fc041ffb67eec49f489c310f10234fa06ce3e1a1021175821cdb",
+        "priorFindingsVisible": true,
+        "accessLimitations": [],
+        "startedAt": "2026-10-01T00:25:00Z",
+        "sealedAt": "2026-10-01T00:35:00Z",
+        "previousPhaseReviewId": "RV-SEQ-AUT",
+        "reviewedAfterPreviousFixes": true,
+        "coverageIds": [
+          "COV-I-SS-1-DETERMINISTIC",
+          "COV-I-CN-1-DETERMINISTIC",
+          "COV-I-CR-1-DETERMINISTIC",
+          "COV-I-UH-1-RUNTIME_E2E"
+        ],
+        "evidenceIds": [
+          "EV-ATOMICITY-1",
+          "EV-PROBE-WAVE6",
+          "EV-E2E-1",
+          "EV-PROBE-DET-FINAL",
+          "EV-PROBE-PERSIST"
+        ],
+        "findingIds": [
+          "F-TRI-2",
+          "F-E2E-1"
+        ],
+        "novelAttackIds": [],
+        "status": "SEALED"
+      }
+    },
+    {
+      "kind": "cycle",
+      "body": {
+        "id": "CY-SEQ-1",
+        "state": {
+          "productStateId": "4311fc4d636dc9808f8fcc3699a4f41eb4e9db05e3b22623cc5409502f115a42",
+          "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+          "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+          "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+        },
+        "reviewIds": [
+          "RV-SEQ-COR",
+          "RV-SEQ-AUT",
+          "RV-SEQ-INT"
+        ],
+        "coverageIds": [
+          "COV-I-CC-1-DETERMINISTIC",
+          "COV-I-SF-1-DETERMINISTIC",
+          "COV-I-DS-1-DETERMINISTIC",
+          "COV-I-RM-1-DETERMINISTIC",
+          "COV-I-SV-1-DETERMINISTIC",
+          "COV-I-AS-1-DETERMINISTIC",
+          "COV-I-SS-1-DETERMINISTIC",
+          "COV-I-CN-1-DETERMINISTIC",
+          "COV-I-CR-1-DETERMINISTIC",
+          "COV-I-UH-1-RUNTIME_E2E"
+        ],
+        "evidenceIds": [
+          "EV-PROBE-DORMANT-1",
+          "EV-PIN-DORMANT-1",
+          "EV-PROBE-READMODEL-2",
+          "EV-PROBE-TRISAVE-2",
+          "EV-ATOMICITY-1",
+          "EV-PROBE-WAVE6",
+          "EV-E2E-1",
+          "EV-PROBE-DET-FINAL"
+        ],
+        "noveltyEvidenceIds": [],
+        "startedAt": "2026-10-01T00:25:00Z",
+        "finishedAt": "2026-10-01T00:35:00Z",
+        "status": "FINDINGS"
+      }
+    }
+  ]
+}

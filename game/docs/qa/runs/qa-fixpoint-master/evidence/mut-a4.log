@@ -1,0 +1,16 @@
+QA-FIXPOINT T8 wave — mutation-kill evidence for A4/B4 pins
+detector: npx vitest run tests/architecture/betaScopeAuthoritySeam.qa.test.ts tests/architecture/betaConsumerSeamMounts.qa.test.ts tests/architecture/betaConsumerSeams.qa.test.ts
+tip: 46399f1a (state under test)
+
+Mutants applied one at a time (reverted after each run), each removing exactly one gate:
+
+roster        src/core/betaScope.ts             BETA_TALENT_IDS filter removed (golden_core pool readmitted) -> exit=1 KILLED_EXPECTED
+devReset      src/core/game/GameManagerProgressionOps.ts  holdsDormant refusal removed -> exit=1 KILLED_EXPECTED
+buildWrite    src/core/game/GameManagerBuildingOps.ts     isBetaBuildingSurface early-return removed (canBuild/buildBuilding) -> exit=1 KILLED_EXPECTED
+upgradeWrite  src/core/game/GameManagerBuildingOps.ts     upgrade admission check removed -> exit=1 KILLED_EXPECTED
+gainMastery   src/core/technique/TechniqueSystem.ts       betaTechniqueAdmitted clause removed -> exit=1 KILLED_EXPECTED
+popoverGate   src/core/betaScopeSurface.ts                betaAdmittedBuildingPopoverId returns raw id -> exit=1 KILLED_EXPECTED
+leftPanelGate src/components/layout/FunctionOverlayPanel.vue  isBetaLeftPanelMode clause removed -> exit=1 KILLED_EXPECTED
+selfGate      src/components/game/BuildingDetailPopover.vue   template computed admission check removed -> exit=1 KILLED_EXPECTED
+
+Result: 8/8 mutants killed. Every gate is pinned by at least one failing assertion.

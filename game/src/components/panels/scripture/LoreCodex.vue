@@ -12,8 +12,11 @@ import EmptyState from '../../common/primitives/EmptyState.vue'
 import LoreCodexModal from '../LoreCodexModal.vue'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { usePanelPagination } from '@/composables/usePanelPagination'
+import { isCompanionPullTokenSourceSuppressed, isDomainScopedAcquisitionEnabled } from '@/core/realm/ReleasePolicy'
+import { usePlayerStore } from '@/stores/player'
 
 const gameManager = useGameManager()
+const player = usePlayerStore()
 const { stateVersion } = useStateVersion()
 const { t } = useI18n()
 
@@ -24,6 +27,10 @@ const loreItems = computed(() => {
 
   return gameManager.materialBag.getAll()
     .filter(stack => stack.material.category === 'other')
+    .filter(stack => !isCompanionPullTokenSourceSuppressed(stack.material.id))
+    // same domain-scoped suppression as the bag section - a below-unlock
+    // realm keeps the record but must not see the dormant domain row.
+    .filter(stack => isDomainScopedAcquisitionEnabled(stack.material.domainUnlockRealmId, player.realmId))
     .map(stack => ({
       key: stack.material.id,
       label: stack.material.name,

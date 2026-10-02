@@ -1,0 +1,3 @@
+npm run verify @ ab0b135e
+PASS 8303 | expected-fail 11 | skipped 9 | files 884
+EXIT=0

@@ -1,0 +1,40 @@
+{
+ "records": [
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-BASE-VERIFY",
+    "state": {
+     "productStateId": "86f75a51c2abb1b7538b08ff288b947a4f5cfd1f36efb642707a911957657cf1",
+     "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "kind": "EXECUTED_INTEGRATION",
+    "producer": "coord-main",
+    "startedAt": "2026-09-30T22:50:00Z",
+    "finishedAt": "2026-09-30T22:54:48.700229+00:00",
+    "commandOrMethod": "npm run verify (type-check && build && vitest run)",
+    "cwd": "game/",
+    "exitCode": 0,
+    "result": "PASS",
+    "artifactPath": "docs/qa/runs/qa-fixpoint-master/evidence/baseline-verify.log",
+    "artifactHash": "bb3c9899357d7483fa68bdd65f60e108e6679392d8752ca3ee6da99ae7b7ecb3",
+    "inputPaths": [
+     "package.json"
+    ],
+    "inputEvidenceIds": [],
+    "invariantIds": [
+     "I-TQ-1"
+    ],
+    "claims": [
+     "baseline green: 854 files, 7808 tests pass, type-check+build clean"
+    ],
+    "limitations": [
+     "does not cover e2e/electron runtime"
+    ],
+    "status": "CURRENT"
+   }
+  }
+ ]
+}

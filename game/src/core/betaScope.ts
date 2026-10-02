@@ -30,6 +30,9 @@ import {
   SPIRIT_STONE_TRUNG_PHAM_MATERIAL_ID,
 } from './material/SpiritStoneMaterial'
 import { LUYEN_KHI_TINH_HOA_ID } from './equipment/TinhHoaMaterial'
+import { PILL_FAMILIES } from '@/data/pill/PillFamilies'
+import { BREAKTHROUGH_TALENT_POOLS } from '@/data/talent/BreakthroughTalentPools'
+import { isBreakthroughAcquisitionEnabled } from './realm/ReleasePolicy'
 
 // ---------------------------------------------------------------------------
 // Ways and elements
@@ -125,6 +128,42 @@ export function isBetaCreationTalentId(talentId: string): boolean {
   return BETA_CREATION_TALENT_IDS.includes(talentId)
 }
 
+/**
+ * Every talent id a beta save can legitimately own - the creation
+ * allow-list plus every breakthrough-pool member (the realm-scoped
+ * transaction catalogs). Great Dao reward evolutions (pham_nhan_chi_cot
+ * via the excluded pham_cot feeder) and parked ids stay inert: their
+ * only acquisition paths are out of beta scope, so an owned record is
+ * a carried-save record and must not emit through the effect seam.
+ * Seeded from static catalogs; the test-only roster-open seam
+ * (betaTalentsUnlock) admits every defined talent when the lock is
+ * lifted, so suites asserting pre-beta data wiring resolve the full
+ * roster.
+ */
+const BETA_TALENT_IDS: ReadonlySet<string> = new Set([
+  ...BETA_CREATION_TALENT_IDS,
+  ...Object.entries(BREAKTHROUGH_TALENT_POOLS)
+    // Pools are keyed by the realm that grants them; a pool whose realm is
+    // suppressed by ReleasePolicy (e.g. golden_core) is authored-but-dormant,
+    // so its ids cannot be legitimately owned by a beta save either.
+    .filter(([realmId]) => isBreakthroughAcquisitionEnabled(realmId))
+    .flatMap(([, pool]) => pool)
+    .map((talent) => talent.id),
+])
+
+/**
+ * Test-only lock state for the talent roster - mutated only by
+ * src/core/game/__fixtures__/betaTalentsUnlock.ts (the same pattern as
+ * BETA_FEATURES / the ways allow-list). Unlocked means pre-beta
+ * semantics: every defined talent id resolves through the effect seam.
+ */
+export const BETA_TALENT_ROSTER = { unlocked: false }
+
+/** Beta ownership-admission check for the talent EFFECT seam. */
+export function isBetaTalentId(talentId: string): boolean {
+  return BETA_TALENT_ROSTER.unlocked || BETA_TALENT_IDS.has(talentId)
+}
+
 // ---------------------------------------------------------------------------
 // Feature flags and lock classes
 // ---------------------------------------------------------------------------
@@ -199,6 +238,24 @@ export function isBetaFeature(name: string): boolean {
  */
 export function isScopeHidden(feature: string): boolean {
   return !isBetaFeature(feature)
+}
+
+/**
+ * Stat keys whose only writers live inside scope-hidden domains: the
+ * The Tu An reactive chances (STAT_DOMAIN 'hidden_body') and the hidden
+ * Phap Tu path's reaction scalar. A beta player can never produce them,
+ * so stat-row surfaces must not brand the dormant systems - the same
+ * contract B18's suppressed-source filters follow.
+ */
+export const BETA_SCOPE_HIDDEN_STAT_KEYS: ReadonlySet<string> = new Set([
+  'counterChance',
+  'protectChance',
+  'followUpChance',
+  'reactionEffectPercent',
+])
+
+export function isBetaStatLabelVisible(key: string): boolean {
+  return !BETA_SCOPE_HIDDEN_STAT_KEYS.has(key)
 }
 
 /**
@@ -334,6 +391,40 @@ export function betaRecipeFamilyOfId(id: string): BetaRecipeFamily | null {
     }
   }
   return isBetaRecipeFamily(bare) ? (bare as BetaRecipeFamily) : null
+}
+
+/**
+ * Every authored pill id outside the realm matrix too - the two special
+ * Truc Co gate pills carry no realm suffix, so the family table alone
+ * cannot resolve them.
+ */
+const AUTHORED_PILL_FAMILY_IDS: ReadonlySet<string> = new Set([
+  ...PILL_FAMILIES.map((family) => family.id),
+  'thong_mach_dan',
+  'truc_co_dan',
+])
+
+/**
+ * Resolve a scope-hidden recipe family from an authored id spelling -
+ * same grammar as betaRecipeFamilyOfId, but returns the family id only
+ * when it is a KNOWN authored family that beta does not enable. Unknown
+ * spellings (test/legacy ids) return null - they are not a scope
+ * question. Companion to betaRecipeFamilyOfId for fail-closed
+ * consumption seams that must keep dormant-family artifacts inert on a
+ * carried save.
+ */
+export function scopeHiddenPillFamilyOfId(id: string): string | null {
+  const bare = id.startsWith('alchemy_') ? id.slice('alchemy_'.length) : id
+  for (const realm of REALM_TIERS) {
+    const suffix = `_${realm}`
+    if (bare.endsWith(suffix)) {
+      const family = bare.slice(0, -suffix.length)
+      return AUTHORED_PILL_FAMILY_IDS.has(family) && !isBetaRecipeFamily(family)
+        ? family
+        : null
+    }
+  }
+  return AUTHORED_PILL_FAMILY_IDS.has(bare) && !isBetaRecipeFamily(bare) ? bare : null
 }
 
 // ---------------------------------------------------------------------------

@@ -101,6 +101,7 @@ function makeStubs() {
     restoreGameSession: vi.fn(() => ({ status: 'ok' as const, offline: { elapsedSeconds: 0, cultivation: 0 } })),
     persistPlayer: vi.fn(async () => ({ status: 'ok' as const, revision: 1 })),
     onError: vi.fn(),
+    unsupportedSaveNotice: vi.fn(),
     hardReset: vi.fn(),
   }
 }
@@ -126,6 +127,7 @@ function makeLifecycle(stubs: Stubs) {
     restoreGameSession: stubs.restoreGameSession,
     persistPlayer: stubs.persistPlayer,
     onError: stubs.onError,
+    unsupportedSaveNotice: stubs.unsupportedSaveNotice,
     hardReset: stubs.hardReset,
   })
 }
@@ -1230,6 +1232,49 @@ describe('useAppLifecycle — B1-D pause latch', () => {
     expect(lifecycle.isSimPaused()).toBe(true)
     expect(stubs.clock.stop).toHaveBeenCalledTimes(1)
     expect(stubs.gameManager.freezeCombat).toHaveBeenCalledWith('authority-pause')
+
+    lifecycle.stopAll()
+  })
+})
+
+describe('useAppLifecycle - beta-scope unsupported-save notice (contract sec.H)', () => {
+  it('a restored save carrying out-of-scope records fires unsupportedSaveNotice once with the domain reason', async () => {
+    const stubs = makeStubs()
+    // Post-restore state: a save that crossed beyond the beta realm
+    // ceiling. The notice names the dormant slice, once per load.
+    stubs.player.$state = { realmId: 'golden_core' }
+    ;(stubs.coordinator.load as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      status: 'ok',
+      revision: 1,
+      save: { player: {} },
+    })
+
+    const lifecycle = makeLifecycle(stubs)
+    const outcome = await lifecycle.bootGame({ createNewCharacter: false })
+
+    expect(outcome.status).toBe('entered')
+    expect(stubs.unsupportedSaveNotice).toHaveBeenCalledTimes(1)
+    expect(stubs.unsupportedSaveNotice).toHaveBeenCalledWith('realm_beyond_release')
+
+    lifecycle.stopAll()
+  })
+
+  it('an in-scope restored save never fires the notice (absent fields are not records)', async () => {
+    const stubs = makeStubs()
+    // Minimal in-scope state: no way field, no dormant records. The
+    // formation-loadout read must not treat a missing field as a record.
+    stubs.player.$state = { realmId: 'mortal' }
+    ;(stubs.coordinator.load as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      status: 'ok',
+      revision: 1,
+      save: { player: {} },
+    })
+
+    const lifecycle = makeLifecycle(stubs)
+    const outcome = await lifecycle.bootGame({ createNewCharacter: false })
+
+    expect(outcome.status).toBe('entered')
+    expect(stubs.unsupportedSaveNotice).not.toHaveBeenCalled()
 
     lifecycle.stopAll()
   })

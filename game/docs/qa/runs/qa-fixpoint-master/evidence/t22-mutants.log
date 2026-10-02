@@ -1,0 +1,19 @@
+TC11-wave manual mutant matrix (pin file tests/architecture/saveFalsificationTc11.qa.test.ts)
+Each bound neutralized individually -> expected its dedicated pin to fail. 9/9 KILLED on 120cba78:
+
+M1-foreign-slot      (entry.slot !== template.slot -> false)  FAIL: F-EQ-FOREIGN-SLOT        KILLED
+M2-affix-count       (length > qualityAffixCeiling -> false)   FAIL: F-EQ-AFFIX-ENVELOPE      KILLED
+M3-affix-slotpolicy  (isValidEquipmentSubstat -> false)        FAIL: F-EQ-AFFIX-SLOT          KILLED
+M4a-pool-unlock      (UNLOCKED_POOLS.includes -> false)        FAIL: F-EQ-AFFIX-ENVELOPE      KILLED
+M4b-tier-cap         (tier > AFFIX_TIER[quality] -> false)     FAIL: F-EQ-AFFIX-ENVELOPE      KILLED
+M4c-tier-authored    (!tiers.some(t==affix.tier) -> false)     FAIL: F-EQ-AFFIX-ENVELOPE      KILLED
+M5-affix-dup         (seenAffixStats.has -> false)             FAIL: F-EQ-AFFIX-DUP           KILLED
+M6-talent-dup        (seenTalentIds.has -> false)              FAIL: F-TALENT-DUP             KILLED
+M7-ap-double         (unspent+spent > earnable -> false)       FAIL: F-EQ-AP-DOUBLE-COUNT     KILLED -> bound WITHDRAWN at 1dbccae6 (human exception - unobservable pill channel)
+
+Post-revert state on 1dbccae6: 8 live bounds remain pinned; M7's bound removed
+under the human-exception ruling (permanent_stat pills make spent AP
+unobservable; the bound false-positived on authored hidden-lineage saves).
+F-EQ-AFFIX-MAINSTAT-OVERLAP is masked by design (a slot's main stat is never a
+legal substat, so the slot-policy bound is the first rejector; seenAffixStats
+seeds the main stat as a redundant guard).

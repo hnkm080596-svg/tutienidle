@@ -1,0 +1,162 @@
+{
+ "records": [
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-PIN-NOTICE-1",
+    "state": {
+     "productStateId": "86f75a51c2abb1b7538b08ff288b947a4f5cfd1f36efb642707a911957657cf1",
+     "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "kind": "EXECUTED_UNIT_STRUCTURAL",
+    "producer": "coord-main",
+    "startedAt": "2026-09-30T23:16:00Z",
+    "finishedAt": "2026-09-30T23:16:52.680815+00:00",
+    "commandOrMethod": "npx vitest run src/composables/useAppLifecycle.test.ts",
+    "cwd": "game/",
+    "exitCode": 0,
+    "result": "PASS",
+    "artifactPath": "docs/qa/runs/qa-fixpoint-master/evidence/pin-notice-lifecycle.log",
+    "artifactHash": "5d0757a6db1dfa213da0c6545c92a638d2fea1fdd6949b114e907f5f399b6c54",
+    "inputPaths": [
+     "src/composables/useAppLifecycle.ts",
+     "src/composables/useAppLifecycle.test.ts",
+     "src/App.vue",
+     "src/locales/vi.json",
+     "src/locales/en.json",
+     "src/core/betaScopeSurface.ts"
+    ],
+    "inputEvidenceIds": [
+     "EV-PROBE-DORMANT-1"
+    ],
+    "invariantIds": [
+     "I-SF-1",
+     "I-UH-1"
+    ],
+    "claims": [
+     "sec.H notice fires once on out-of-scope restored save (realm_beyond_release pin), never on in-scope save; F-DL-5 pre-fix repro: unsupportedReleaseReason({realmId:mortal}) returned formation_loadout on absent field (undefined!==null), contradicting real-record-only contract"
+    ],
+    "limitations": [],
+    "status": "CURRENT"
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-PIN-DORMANT-1",
+    "state": {
+     "productStateId": "86f75a51c2abb1b7538b08ff288b947a4f5cfd1f36efb642707a911957657cf1",
+     "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "kind": "EXECUTED_UNIT_STRUCTURAL",
+    "producer": "coord-main",
+    "startedAt": "2026-09-30T23:16:00Z",
+    "finishedAt": "2026-09-30T23:16:52.680815+00:00",
+    "commandOrMethod": "npx vitest run tests/architecture/betaDormantSaveLeak.qa.test.ts",
+    "cwd": "game/",
+    "exitCode": 0,
+    "result": "PASS",
+    "artifactPath": "docs/qa/runs/qa-fixpoint-master/evidence/pin-dormant-leak.log",
+    "artifactHash": "442696c0ff8f52bbe210ccc1273ebe3c9dd902831f0b3c5e1bf82ab9b3c5b511",
+    "inputPaths": [
+     "tests/architecture/betaDormantSaveLeak.qa.test.ts",
+     "src/core/stats/StatCap.ts",
+     "src/core/realm/hidden/HiddenLineage.ts",
+     "src/core/betaScopeSurface.ts"
+    ],
+    "inputEvidenceIds": [
+     "EV-PROBE-DORMANT-1"
+    ],
+    "invariantIds": [
+     "I-DS-1",
+     "I-AS-1",
+     "I-SF-1"
+    ],
+    "claims": [
+     "all 5 dormant-leak assertions now pass post-fix: cap==base under carried record, normal passive granted, hiddenPerfection=null flags hidden_progression_state without throwing"
+    ],
+    "limitations": [],
+    "status": "CURRENT"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-DL-5",
+    "title": "unsupportedReleaseReason flags formation_loadout on a save MISSING the field (absent field treated as record)",
+    "state": {
+     "productStateId": "86f75a51c2abb1b7538b08ff288b947a4f5cfd1f36efb642707a911957657cf1",
+     "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "severity": "Medium",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "PRODUCTION",
+    "locations": [
+     {
+      "path": "src/core/betaScopeSurface.ts",
+      "symbolOrSection": "unsupportedReleaseReason",
+      "revision": "86f75a51c2ab",
+      "basis": "SOURCE"
+     }
+    ],
+    "discoveredBy": "coord-main pin-test authoring (sec.H notice wiring)",
+    "invariantIds": [
+     "I-SF-1"
+    ],
+    "evidenceIds": [
+     "EV-PIN-NOTICE-1"
+    ],
+    "counterexample": "unsupportedReleaseReason({realmId:mortal, no formationLoadout field}) -> formation_loadout because undefined !== null is true",
+    "expected": "absent field = no record -> no flag (function comment: fails closed only when a real record exists)",
+    "actual": "false-positive formation_loadout flag -> betaSupportedFor false on saves lacking the field",
+    "rootCause": "!== null check treats undefined (absent) as a record",
+    "rootClass": "LOGIC",
+    "subsystem": "betaScope",
+    "siblingSearch": [
+     {
+      "roots": [
+       "src/core/betaScopeSurface.ts"
+      ],
+      "termsAndMethod": "audited every field check in unsupportedReleaseReason for absent-vs-null semantics",
+      "evidenceIds": [
+       "EV-PIN-NOTICE-1"
+      ],
+      "hitDispositions": [
+       "artifact uses !== undefined (correct for optional field)",
+       "companions uses Array.isArray (closed)",
+       "hiddenPerfection uses !== undefined + object guard (fixed for null in F-DL-3)",
+       "realm/way reads guarded",
+       "formationLoadout was the only !== null hole"
+      ],
+      "coverageLimits": [
+       "read-model only"
+      ]
+     }
+    ],
+    "siblingFindingIds": [
+     "F-DL-3",
+     "F-DL-4"
+    ],
+    "repair": "added !== undefined to the formationLoadout record check",
+    "pinEvidenceIds": [
+     "EV-PIN-NOTICE-1"
+    ],
+    "verificationEvidenceIds": [
+     "EV-PIN-NOTICE-1"
+    ],
+    "closureReviewIds": [],
+    "status": "FIXED_PENDING_PROOF",
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null
+   }
+  }
+ ]
+}

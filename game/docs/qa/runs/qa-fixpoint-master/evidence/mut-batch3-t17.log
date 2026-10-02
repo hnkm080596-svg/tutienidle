@@ -1,0 +1,507 @@
+===== T13-M1 :: emit fallthrough: non-whitelisted sourceType pushes instead of dropping
+T13-M1: KILLED_EXPECTED (exit=1)
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+ ❯ tests/architecture/betaClaimedSourceForge.qa.test.ts (47 tests | 1 failed) 38ms
+     × a modifier of a sourceType no writer persists is rejected and inert 8ms
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  1 failed | 55 passed (56)
+   Start at  11:36:25
+   Duration  1.79s (transform 1.86s, setup 469ms, import 1.83s, tests 51ms, environment 1ms)
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/architecture/betaClaimedSourceForge.qa.test.ts > F-A7-1: persisted modifiers claiming non-writer sources > a modifier of a sourceType no writer persists is rejected and inert
+AssertionError: expected 10107 to be 108 // Object.is equality
+
+- Expected
++ Received
+
+- 108
++ 10107
+
+ ❯ tests/architecture/betaClaimedSourceForge.qa.test.ts:123:47
+    121|
+    122|     expect(validateGameSaveShape(save).ok).toBe(false)
+    123|     expect(baseStat('maxHp', p.modifiers[0])).toBe(baseStat('maxHp'))
+       |                                               ^
+    124|   })
+    125|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+===== T13-M2 :: claimed-source coherence loop disabled
+T13-M2: KILLED_EXPECTED (exit=1)
+a non-canonical id is rejected
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/architecture/betaClaimedSourceForge.qa.test.ts:814:44
+    812|     })
+    813|
+    814|     expect(validateGameSaveShape(save).ok).toBe(false)
+       |                                            ^
+    815|   })
+    816|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/10]⎯
+
+ FAIL  tests/architecture/betaClaimedSourceForge.qa.test.ts > F-TC6-9: meridian claims need the canonical bat-mach id > a canonical-id claim on a stat the meridian does not author is rejected
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/architecture/betaClaimedSourceForge.qa.test.ts:828:44
+    826|     })
+    827|
+    828|     expect(validateGameSaveShape(save).ok).toBe(false)
+       |                                            ^
+    829|   })
+    830|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/10]⎯
+
+ FAIL  tests/architecture/betaClaimedSourceForge.qa.test.ts > F-TC6-9: meridian claims need the canonical bat-mach id > a canonical-id claim at a non-authored percent is rejected
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/architecture/betaClaimedSourceForge.qa.test.ts:842:44
+    840|     })
+    841|
+    842|     expect(validateGameSaveShape(save).ok).toBe(false)
+       |                                            ^
+    843|   })
+    844|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/10]⎯
+
+
+===== T13-M3 :: alchemy settle trusts job.pillId snapshot
+T13-M3: KILLED_EXPECTED (exit=1)
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+ ❯ tests/architecture/betaClaimedSourceForge.qa.test.ts (47 tests | 1 failed) 39ms
+     × a forged pillId job settles into recipe.pillId, not the claimed pill 9ms
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  1 failed | 71 passed (72)
+   Start at  11:36:31
+   Duration  1.99s (transform 2.63s, setup 458ms, import 3.02s, tests 118ms, environment 1ms)
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/architecture/betaClaimedSourceForge.qa.test.ts > F-A7-3 emit: settle delivers the authored recipe pill, never the forged claim > a forged pillId job settles into recipe.pillId, not the claimed pill
+AssertionError: expected 1 to be +0 // Object.is equality
+
+- Expected
++ Received
+
+- 0
++ 1
+
+ ❯ tests/architecture/betaClaimedSourceForge.qa.test.ts:388:61
+    386|     )
+    387|
+    388|     expect(manager.pillBag.getAmount('phi_van_dan_mortal')).toBe(0)
+       |                                                             ^
+    389|     expect(manager.pillBag.getAmount(recipe.pillId)).toBeGreaterThan(0)
+    390|   })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+===== T13-M5 :: accrualRealmId clamp removed - raw pin used
+T13-M5: KILLED_EXPECTED (exit=1)
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+ ❯ tests/architecture/betaClaimedSourceForge.qa.test.ts (47 tests | 1 failed) 36ms
+     × a pin above the player realm is rejected at the boundary and clamps at claim 5ms
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  1 failed | 71 passed (72)
+   Start at  11:36:33
+   Duration  1.95s (transform 2.60s, setup 443ms, import 2.94s, tests 116ms, environment 1ms)
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/architecture/betaClaimedSourceForge.qa.test.ts > F-TC5-1: accrual realm pin boundary > a pin above the player realm is rejected at the boundary and clamps at claim
+AssertionError: expected 'spirit_stone_thuong_pham' not to be 'spirit_stone_thuong_pham' // Object.is equality
+ ❯ tests/architecture/betaClaimedSourceForge.qa.test.ts:421:35
+    419|
+    420|     const result = system.claim('i1', registry, manager, 100, 'mortal')
+    421|     expect(result.materialId).not.toBe('spirit_stone_thuong_pham')
+       |                                   ^
+    422|     expect(result.amount).toBeLessThan(100)
+    423|   })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+===== T13-M6 :: accrualRealmId validator bound disabled
+T13-M6: KILLED_EXPECTED (exit=1)
+d) 39ms
+     × a pin above the player realm is rejected at the boundary and clamps at claim 7ms
+     × an unknown accrualRealmId is rejected at the boundary 1ms
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 45 passed (47)
+   Start at  11:36:36
+   Duration  1.81s (transform 1.33s, setup 204ms, import 1.45s, tests 39ms, environment 0ms)
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/architecture/betaClaimedSourceForge.qa.test.ts > F-TC5-1: accrual realm pin boundary > a pin above the player realm is rejected at the boundary and clamps at claim
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/architecture/betaClaimedSourceForge.qa.test.ts:406:44
+    404|     ]
+    405|
+    406|     expect(validateGameSaveShape(save).ok).toBe(false)
+       |                                            ^
+    407|
+    408|     // Emit side: even if the forged pin reaches the claim seam, it
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  tests/architecture/betaClaimedSourceForge.qa.test.ts > F-TC5-1: accrual realm pin boundary > an unknown accrualRealmId is rejected at the boundary
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/architecture/betaClaimedSourceForge.qa.test.ts:437:44
+    435|     ]
+    436|
+    437|     expect(validateGameSaveShape(save).ok).toBe(false)
+       |                                            ^
+    438|   })
+    439|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+===== T13-M7 :: tu_linh_tran emit bound -> any sourceItemId
+T13-M7: SURVIVED (exit=0)
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+
+ Test Files  1 passed (1)
+      Tests  47 passed (47)
+   Start at  11:36:39
+   Duration  1.76s (transform 1.31s, setup 217ms, import 1.41s, tests 33ms, environment 0ms)
+
+
+===== T13-M8 :: timed-effect coherence loop disabled
+T13-M8: KILLED_EXPECTED (exit=1)
+tests/architecture/betaClaimedSourceForge.qa.test.ts:640:44
+    638|     )
+    639|
+    640|     expect(validateGameSaveShape(save).ok).toBe(false)
+       |                                            ^
+    641|   })
+    642| })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/15]⎯
+
+ FAIL  tests/architecture/tc6ForgedSaveFalsification.qa.test.ts > TC6-C hostile slices > C6 - pill-source timed effect admits ONLY manaRegenPerTurn modifiers
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/architecture/tc6ForgedSaveFalsification.qa.test.ts:631:71
+    629|       {},
+    630|     )
+    631|     expect(validateGameSaveShape(JSON.parse(JSON.stringify(bad))).ok).…
+       |                                                                       ^
+    632|
+    633|     // Magnitude is bound too: flat above the authored
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[14/15]⎯
+
+ FAIL  tests/architecture/tc6ForgedSaveFalsification.qa.test.ts > TC6-C hostile slices > C7 - dormant-authored pill id as effect source is admitted (scope-blind writer bound)
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/architecture/tc6ForgedSaveFalsification.qa.test.ts:671:20
+    669|     // pipeline.
+    670|     const res = validateGameSaveShape(JSON.parse(JSON.stringify(save)))
+    671|     expect(res.ok).toBe(false)
+       |                    ^
+    672|
+    673|     const { result } = boot(save)
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[15/15]⎯
+
+
+===== T15-1 :: loi_kiep ownership witness removed
+T15-1: KILLED_EXPECTED (exit=1)
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+ ❯ tests/architecture/betaClaimedSourceForge.qa.test.ts (47 tests | 1 failed) 38ms
+     × a loi_kiep claim without the talent held is rejected and inert 7ms
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  1 failed | 71 passed (72)
+   Start at  11:36:45
+   Duration  1.94s (transform 2.59s, setup 419ms, import 2.95s, tests 118ms, environment 1ms)
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/architecture/betaClaimedSourceForge.qa.test.ts > F-TC6-1: loi kiep grant claim needs the ownership witness > a loi_kiep claim without the talent held is rejected and inert
+AssertionError: expected 1.1 to be 1 // Object.is equality
+
+- Expected
++ Received
+
+- 1
++ 1.1
+
+ ❯ tests/architecture/betaClaimedSourceForge.qa.test.ts:718:50
+    716|
+    717|     expect(validateGameSaveShape(save).ok).toBe(false)
+    718|     expect(baseStat('strength', p.modifiers[0])).toBe(baseStat('streng…
+       |                                                  ^
+    719|   })
+    720|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+===== T15-2 :: loi_kiep percent bound removed
+T15-2: KILLED_EXPECTED (exit=1)
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+ ❯ tests/architecture/betaClaimedSourceForge.qa.test.ts (47 tests | 1 failed) 39ms
+     × a loi_kiep percent above the victory bound is rejected 7ms
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 46 passed (47)
+   Start at  11:36:48
+   Duration  1.83s (transform 1.36s, setup 216ms, import 1.46s, tests 39ms, environment 0ms)
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/architecture/betaClaimedSourceForge.qa.test.ts > F-TC6-1: loi kiep grant claim needs the ownership witness > a loi_kiep percent above the victory bound is rejected
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/architecture/betaClaimedSourceForge.qa.test.ts:763:44
+    761|     })
+    762|
+    763|     expect(validateGameSaveShape(save).ok).toBe(false)
+       |                                            ^
+    764|   })
+    765| })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+===== T15-3 :: realm-passive rebuild -> trust payload
+T15-3: SURVIVED (exit=0)
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+
+ Test Files  2 passed (2)
+      Tests  56 passed (56)
+   Start at  11:36:50
+   Duration  1.75s (transform 1.80s, setup 425ms, import 1.81s, tests 44ms, environment 1ms)
+
+
+===== T15-4 :: hiddenRealmIds skip removed
+T15-4: KILLED_EXPECTED (exit=1)
+ests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/architecture/betaPersistedRealmModifiers.qa.test.ts > persisted realm modifiers under the beta lock > a hidden-breakthrough realm passive carried on a flagged save emits nothing
+AssertionError: expected 140.4 to be 108 // Object.is equality
+
+- Expected
++ Received
+
+- 108
++ 140.4
+
+ ❯ tests/architecture/betaPersistedRealmModifiers.qa.test.ts:69:32
+     67|     const carriedStats = resolvePlayerStatAssembly(carried, []).stats
+     68|
+     69|     expect(carriedStats.maxHp).toBe(controlStats.maxHp)
+       |                                ^
+     70|     expect(carriedStats.maxMp).toBe(controlStats.maxMp)
+     71|     expect(carriedStats.hpRegenPerTurn).toBe(controlStats.hpRegenPerTu…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  tests/architecture/betaPersistedRealmModifiers.qa.test.ts > persisted realm modifiers under the beta lock > a hidden-breakthrough kien_co enhanced passive carried on a flagged save emits nothing
+AssertionError: expected 1.2 to be 1 // Object.is equality
+
+- Expected
++ Received
+
+- 1
++ 1.2
+
+ ❯ tests/architecture/betaPersistedRealmModifiers.qa.test.ts:99:35
+     97|     const carriedStats = resolvePlayerStatAssembly(carried, []).stats
+     98|
+     99|     expect(carriedStats.strength).toBe(controlStats.strength)
+       |                                   ^
+    100|     expect(carriedStats.vitality).toBe(controlStats.vitality)
+    101|     expect(carriedStats.intelligence).toBe(controlStats.intelligence)
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+===== T15-5 :: great_dao grade flag removed
+T15-5: SURVIVED (exit=0)
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+
+ Test Files  1 passed (1)
+      Tests  25 passed (25)
+   Start at  11:36:55
+   Duration  2.01s (transform 1.43s, setup 228ms, import 1.60s, tests 79ms, environment 0ms)
+
+
+===== T15-6 :: dormant-family settle park removed
+T15-6: KILLED_EXPECTED (exit=1)
+s: no pill delivered, job retained, flagged
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ tests/architecture/tc6ForgedSaveFalsification.qa.test.ts:447:98
+    445|       (id) => (manager.pillRegistry.has(id) ? manager.pillRegistry.get…
+    446|     )
+    447|     expect(manager.alchemySystem.getJobs().some((j) => j.recipeId === …
+       |                                                                                                  ^
+    448|     expect(manager.pillBag.getAmount('thong_mach_dan')).toBe(0)
+    449|   })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯
+
+ FAIL  tests/architecture/tc6ForgedSaveFalsification.qa.test.ts > TC6-B dormant-record liveness > B7 - RETIRED + scope-hidden family job escapes the parking predicate and settles live
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ tests/architecture/tc6ForgedSaveFalsification.qa.test.ts:530:90
+    528|     // Correct contract: the dormant-family record parks (or at minimum
+    529|     // fails as unresolvable) - never delivers its dormant pill.
+    530|     expect(manager.alchemySystem.getJobs().some((j) => j.recipeId === …
+       |                                                                                          ^
+    531|     expect(manager.pillBag.getAmount(retiredRecipe.pillId)).toBe(0)
+    532|     // The flag DOES fire (it reads the persisted job record, not the
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯
+
+
+===== T15-7 :: building level clamp removed (rate)
+T15-7: SURVIVED (exit=0)
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+
+ Test Files  1 passed (1)
+      Tests  25 passed (25)
+   Start at  11:37:00
+   Duration  2.01s (transform 1.43s, setup 226ms, import 1.60s, tests 80ms, environment 0ms)
+
+
+===== T15-8 :: attributePoints bound removed
+T15-8: KILLED_EXPECTED (exit=1)
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+ ❯ tests/architecture/tc6ForgedSaveFalsification.qa.test.ts (25 tests | 1 failed) 87ms
+     × A7 - forged attributePoints pool (no earned-points bound) allocates to cap live 7ms
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 24 passed (25)
+   Start at  11:37:03
+   Duration  2.01s (transform 1.41s, setup 199ms, import 1.61s, tests 87ms, environment 0ms)
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/architecture/tc6ForgedSaveFalsification.qa.test.ts > TC6-A claim-vs-writer: player.modifiers sourceType/sourceId > A7 - forged attributePoints pool (no earned-points bound) allocates to cap live
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/architecture/tc6ForgedSaveFalsification.qa.test.ts:265:22
+    263|     // (1 point per tier climbed) - a pool above the earnable total
+    264|     // rejects the save at the boundary.
+    265|     expect(shape.ok).toBe(false)
+       |                      ^
+    266|     expect(acceptable).toBe(false)
+    267|   })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+
+Corpus: 15 mutants, 11 KILLED_EXPECTED, 4 SURVIVED

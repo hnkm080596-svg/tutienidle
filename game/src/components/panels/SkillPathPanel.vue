@@ -30,6 +30,9 @@ import SkillRoleStrip from './skill-path/SkillRoleStrip.vue'
 import TechniqueBand from './skill-path/TechniqueBand.vue'
 import { canPurchaseNode, getNodeLevel } from '@/core/progression/NodeSystem'
 import { getActiveWayDefinition } from '@/core/player/CultivationPathKit'
+import { getActiveWay } from '@/core/player/CultivationPathSystem'
+import { isBetaWay } from '@/core/betaScope'
+import { betaSkillAdmitted } from '@/core/betaScopeSkillDomain'
 import {
   getActiveElement,
   hasStaticPathCapability,
@@ -70,28 +73,50 @@ const wayNodeTreeTag = computed(() => getActiveWayDefinition(player)?.nodeTreeTa
 // P7-M7 - way identity line: the committed way's self-describing name
 // (e.g. 'Kiem Tu - Ngu Kiem Tam Kinh'), or Phan Nhan for a way-less
 // mortal. Resolved through the canonical way read, never an id literal.
-const wayIdentity = computed(
-  () => getActiveWayDefinition(player)?.name ?? t('panels.skillPath.mortalName'),
-)
+// The subtitle is a verdict surface: a carried way_out_of_scope pair
+// brands nothing (the tree body already renders empty).
+const wayIdentity = computed(() => {
+  const way = getActiveWay(player)
+  if (way !== undefined && !isBetaWay(way)) {
+    return t('panels.skillPath.mortalName')
+  }
+  return getActiveWayDefinition(player)?.name ?? t('panels.skillPath.mortalName')
+})
 
 const hasElementalCasting = computed(
   () => hasStaticPathCapability(player, 'spell.elemental_casting'),
 )
+
+// BETA SCOPE LOCK - a way's declared nodeTreeTag belongs to that way's
+// tree; every tag-declaring way today is scope-hidden, so the tag
+// branch only renders while the committed way is beta-admitted. A
+// carried way_out_of_scope save keeps its dormant tree hidden instead
+// of browsing (and buying on) a kit the gated runtime never executes.
+const betaWayAdmitted = computed(() => {
+  const way = getActiveWay(player)
+  return way === undefined || isBetaWay(way)
+})
 
 const showTree = computed(
   () =>
     // M4 (R6): the Phap Tu element tree is spell_pathway machinery - the
     // 'spell.elemental_casting' capability is the gate - a collapsed
     // ('spell','hidden_spell_pathway') player owns no element branches.
-    hasElementalCasting.value || wayNodeTreeTag.value !== undefined,
+    hasElementalCasting.value ||
+    (wayNodeTreeTag.value !== undefined && betaWayAdmitted.value),
 )
 
 // ---- Nhánh spell (Hành -> Node Tree) ----
-// Phap Tu Reimagine: element tabs always visible for spell -- the
-// element-root pick happens IN the tree (element-only commit), so the
-// tree must render before any elemental skill is learned. Default tab
-// = the committed element once the element axis resolves one.
+// BETA SCOPE LOCK v2 (frontend-contract sec.D): post-commit the 4
+// non-committed element branches are scope-hidden -- they do not
+// render (no teaser, no 'locked'). Pre-commit (element unresolved) the
+// strip still offers all five branches for browsing; the actual
+// element pick happens inside commitFiveElementInitiation, not here.
 const committedElement = computed(() => getActiveElement(player))
+
+const visibleElements = computed<readonly ElementType[]>(() =>
+  committedElement.value === undefined ? ELEMENT_ORDER : [committedElement.value],
+)
 
 const selectedBranch = ref<ElementType>(committedElement.value ?? 'fire')
 
@@ -173,7 +198,7 @@ const skillPathEntries = computed<SkillPathEntry[]>(() => {
 
   const entries: SkillPathEntry[] = gameManager.skillManager
     .getAll()
-    .filter(skill => skill.type === 'active')
+    .filter(skill => skill.type === 'active' && betaSkillAdmitted(skill.id))
     .map(skill => ({
       kind: 'skill' as const,
       id: skill.id,
@@ -188,7 +213,7 @@ const skillPathEntries = computed<SkillPathEntry[]>(() => {
   for (const skillId of NATIVE_CORE_SKILL_IDS) {
     const level = getSkillCoreLevel(player.$state, skillId)
 
-    if (level < 1) {
+    if (level < 1 || !betaSkillAdmitted(skillId)) {
       continue
     }
 
@@ -298,8 +323,9 @@ function close() {
           </div>
 
           <div class="skill-path-panel__col skill-path-panel__col--center">
-            <!-- Phap Tu element tabs (Task 16) — browse all 5 branches;
-                 the committed element is marked, others render locked. -->
+            <!-- Phap Tu element tabs - pre-commit all five branches are
+                 browsable; post-commit only the committed element renders
+                 (the other branches are scope-hidden, contract sec.D). -->
             <div
               v-if="hasElementalCasting"
               class="skill-path-panel__element-tabs"
@@ -307,7 +333,7 @@ function close() {
               :aria-label="t('panels.skillPath.elementTabs.aria')"
             >
               <button
-                v-for="element in ELEMENT_ORDER"
+                v-for="element in visibleElements"
                 :key="element"
                 type="button"
                 class="skill-path-panel__element-tab"

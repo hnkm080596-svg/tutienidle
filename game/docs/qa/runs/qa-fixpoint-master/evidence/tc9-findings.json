@@ -1,0 +1,46 @@
+{
+ "verdict": "FAIL - provably impossible persisted claims still clear the save boundary and mint real state",
+ "reviewer": "devin-0e50709b9f6a4cd28109db059256d48b",
+ "pinnedCommit": "a2bd826f",
+ "role": "TERMINAL_CHECK falsification sweep",
+ "probeDir": "/home/ubuntu/qa-falsification-probes/probes/ (child VM, session exited before upload)",
+ "probeResult": "9 of 21 probe assertions fail deterministically",
+ "findings": [
+  {
+   "id": "F1",
+   "severity": "High",
+   "title": "persistentTimedEffects.appliedAtMs/expiresAtMs no bound vs lastSavedAt - future-dated tu_linh_tran becomes permanent +25% cps buff",
+   "mappedTo": "F-TC9-1"
+  },
+  {
+   "id": "F2",
+   "severity": "High",
+   "title": "completedStageIds/perfectClearStageIds no chain-ordering or perfect-subset-completed coherence - skip-chain claim satisfies tribulation admission + arms autofarm",
+   "mappedTo": "F-TC9-2"
+  },
+  {
+   "id": "F3",
+   "severity": "Medium",
+   "title": "alchemyJobs[].roomLevelAtStart no coherence vs persisted pill_room level - +40pp success minted on every settle",
+   "mappedTo": "F-TC9-3"
+  },
+  {
+   "id": "F4",
+   "severity": "High",
+   "title": "cultivationPerSecond persisted unbounded although fully derived - forged rate mints realm ladder through offline accrual + overcharge",
+   "mappedTo": "F-TC9-4"
+  },
+  {
+   "id": "F5",
+   "severity": "Low",
+   "title": "spell_pathway + element:null accepted - impossible since way commits element atomically (inert, self-harm only)",
+   "mappedTo": "F-TC9-5"
+  },
+  {
+   "id": "F6",
+   "severity": "Low",
+   "title": "same-value claim classes with no authored ceiling (acceptance confirmed, indistinguishable from legit accrual)",
+   "mappedTo": "F-TC9-6"
+  }
+ ]
+}

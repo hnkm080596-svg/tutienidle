@@ -1394,7 +1394,8 @@
         "cap": "The related stat has reached the realm cap.",
         "material_pill": "This pill is not consumed directly — it is spent through its own system.",
         "in_battle": "Stat-granting pills cannot be used mid-battle.",
-        "fallback": "Cannot use this pill."
+        "fallback": "Cannot use this pill.",
+        "scope_hidden": "This pill is outside the beta scope — its effect does not apply."
       }
     },
     "filter": {
@@ -1456,7 +1457,19 @@
   "save": {
     "conflict": "Save was changed by another session.",
     "createFailed": "Character creation failed — initialization did not complete.",
-    "characterDeleted": "Character was deleted on the server — this session cannot continue."
+    "characterDeleted": "Character was deleted on the server — this session cannot continue.",
+    "betaUnsupported": {
+      "realm_beyond_release": "This save goes beyond beta scope (higher realm) — that progress stays dormant and harmless.",
+      "way_out_of_scope": "This save carries a cultivation way outside beta scope — that system stays dormant and harmless.",
+      "hidden_progression_state": "This save carries hidden progress — hidden content is not open in beta and stays dormant safely.",
+      "companion_owned": "This save has a companion — that feature is not open in beta and stays dormant safely.",
+      "artifact_owned": "This save has an artifact — that feature is not open in beta and stays dormant safely.",
+      "formation_loadout": "This save carries a formation loadout — that feature is not open in beta and stays dormant safely.",
+      "manual_workforce_state": "This save carries Chi Hien Quan workforce state — that feature is not open in beta and stays dormant safely.",
+      "dormant_alchemy_job": "This save carries an alchemy job from a recipe family not open in beta — it stays dormant safely.",
+      "dormant_decompose_state": "This save carries a running decompose station — that feature is not open in beta and stays dormant safely.",
+      "dormant_talent_state": "This save carries a talent outside beta scope — it stays dormant and harmless."
+    }
   },
   "hidden": {
     "mortal": {
@@ -1691,5 +1704,10 @@
       "retry": "Retry install",
       "later": "Later"
     }
+  },
+  "betaComplete": {
+    "title": "Beta Journey Complete",
+    "body": "Hung Giao Sung has fallen — every piece of beta content has been conquered: Mortal, Qi Refining, Foundation Establishment. Thank you for playing.",
+    "continue": "Continue Cultivating"
   }
 }

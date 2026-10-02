@@ -1,0 +1,13 @@
+T14 fix wave (12eb8d4c) pin evidence - scoped vitest runs green:
+- F-A8-1: timed-effect claims bounded to pill writer shapes (regen branch:
+  stat=manaRegenPerTurn, flat <= mpPerSecond*1.5, 1 modifier, effectGroup
+  pinned, durationStackable=stackable) - forged flat:1e9 / wrong-stat /
+  non-writer sourceItemId rejected by validateGameSaveShape.
+- F-A8-2: buildings[].level / productionSites[].level bounded to
+  template.maxLevel at shape - level:500 rejected.
+- F-B8-1: SkillPathPanel skillPathEntries + getSkillCoreUpgradeCost gated
+  via betaSkillAdmitted - dormant kit rows/cores not rendered/actionable.
+- F-B8-2: PillBagSection entries + BagGrid count filter dormant families.
+- F-B8-3: TechniqueBand + canAdvanceTechniqueGrade treat non-admitted
+  technique as absent.
+Manual mutants (check deleted/weakened) killed by the pins; type-check clean.

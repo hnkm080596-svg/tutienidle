@@ -1,0 +1,10 @@
+=== EV-PROBE-DET-FINAL T15 ===
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+
+ Test Files  6 passed (6)
+      Tests  183 passed (183)
+   Start at  10:26:07
+   Duration  5.28s (transform 13.00s, setup 2.09s, import 15.03s, tests 435ms, environment 598ms)
+

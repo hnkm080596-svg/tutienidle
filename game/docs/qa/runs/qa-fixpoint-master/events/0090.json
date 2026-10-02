@@ -1,0 +1,30 @@
+{
+  "applied": [
+    "finding:F-TC8-1",
+    "finding:F-TC8-2",
+    "finding:F-TC8-3",
+    "finding:F-TC8-4",
+    "finding:F-TC8-5",
+    "finding:F-TC8-6",
+    "finding:F-TC8-7",
+    "finding:F-TC8-8",
+    "finding:F-TC8-9",
+    "finding:F-TC8-10",
+    "finding:F-TC8-11",
+    "finding:F-TC8-12",
+    "finding:F-TC8-13",
+    "finding:F-B10-001",
+    "finding:F-B10-002",
+    "finding:F-B10-003",
+    "finding:F-B10-004",
+    "finding:F-B10-005",
+    "finding:F-A10-1",
+    "finding:F-A10-2",
+    "finding:F-A10-3",
+    "finding:F-A10-4",
+    "finding:F-A10-5",
+    "finding:F-A10-6",
+    "finding:F-A10-7",
+    "finding:F-A10-8"
+  ]
+}

@@ -1,6 +1,7 @@
 import type { TalentEffect } from './Talent'
 import { getTalentDefinition } from '@/data/talent/Talents'
 import { getTalentEffectsAtLevel, getTalentLevel } from './TalentEntitlement'
+import { isBetaTalentId } from '../betaScope'
 
 // Getter tap trung theo kind effect (talent-direction-choice-plan.md S6).
 // Moi noi tieu thu goi dung getter cua kind minh - KHONG noi nao tu lap
@@ -20,6 +21,14 @@ export function collectTalentEffects(
   const effects: TalentEffect[] = []
 
   for (const talentId of selectedTalentIds ?? []) {
+    // BETA SCOPE LOCK v2 - the creation allowlist gates only the
+    // creation flow; this effect seam needs its own ownership check.
+    // Non-beta records (Great Dao evolutions, parked ids) stay inert
+    // on a carried save instead of emitting into live channels.
+    if (!isBetaTalentId(talentId)) {
+      continue
+    }
+
     const talent = getTalentDefinition(talentId)
 
     if (talent) {
