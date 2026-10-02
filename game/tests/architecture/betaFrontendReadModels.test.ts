@@ -276,7 +276,7 @@ describe('beta FE-contract read-models - import guards', () => {
         'components/panels/skill-path/NodeTreePanel.vue': 'betaSkillTreeFor',
         'components/panels/skill-path/NodeInspector.vue': 'BetaSkillTreeNode',
         'components/panels/skill-path/SkillRoleStrip.vue': 'betaSkillTreeFor',
-        'components/panels/TechniquePanel.vue':
+        'components/scenes/technique/TechniqueScrollScene.vue':
           'getBetaTechniqueSurfaceModel',
         'components/panels/skill-path/TechniqueSlotCard.vue':
           'BetaTechniqueSurfaceModel',
