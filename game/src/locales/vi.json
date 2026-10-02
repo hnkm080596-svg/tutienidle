@@ -1043,7 +1043,10 @@
       "returnHome": "Về Động Phủ",
       "returnCountdown": "({duration})",
       "hintCultivate": "Tu vi chưa đủ — tu luyện thêm tầng, rồi quay lại khi đã mạnh hơn.",
-      "hintGear": "Chưa đủ sức phá bí cảnh — cường hóa trang bị, dùng đan dược hoặc lĩnh ngộ thêm trước khi tái chiến."
+      "hintGear": "Chưa đủ sức phá bí cảnh — cường hóa trang bị, dùng đan dược hoặc lĩnh ngộ thêm trước khi tái chiến.",
+      "subtitle": "Đạo tâm chưa vững, tiếp tục rèn luyện.",
+      "reasonHeader": "Nguyên Nhân Thất Bại",
+      "rewardsHeader": "Thưởng Nhận Được"
     },
     "log": {
       "toggle": "Nhật ký",
