@@ -1301,7 +1301,11 @@
       "resultVictory": "VƯỢT KIẾP",
       "resultDefeat": "KIẾP THẤT BẠI",
       "resultVictoryText": "Thiên kiếp tan biến — đạo tâm thêm vững.",
-      "resultDefeatText": "Thân hoại đạo tiêu — dưỡng thương rồi thử lại."
+      "resultDefeatText": "Thân hoại đạo tiêu — dưỡng thương rồi thử lại.",
+      "timeLeft": "Thời gian còn lại",
+      "realmCardTitle": "Độ Kiếp {name}",
+      "progressLabel": "Tiến độ",
+      "resolve": "Giữ vững đạo tâm — vượt qua tâm ma"
     }
   },
   "actionFailure": {

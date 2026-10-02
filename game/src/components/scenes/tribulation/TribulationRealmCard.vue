@@ -1,0 +1,56 @@
+<script setup lang="ts">
+// Scene 13 realm card (ref top-right "Độ Kiếp Tầng 9" — audit
+// CORRECTED: realm label from tribulation targetRealmId, progress =
+// chapter x/y). The flame row is the temp-art strike marker row.
+import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
+
+const props = defineProps<{
+  realmName: string
+  chapterProgress: string
+  strikesTaken: number
+}>()
+const { t } = useI18n()
+const flames = computed(() => Math.min(props.strikesTaken, 7))
+</script>
+
+<template>
+  <div class="tribulation-realm-card" data-hk-region="realm-card">
+    <p class="tribulation-realm-card__title">{{ t('tribulation.overlay.realmCardTitle', { name: realmName }) }}</p>
+    <p class="tribulation-realm-card__progress">{{ t('tribulation.overlay.progressLabel') }}: {{ chapterProgress }}</p>
+    <div class="tribulation-realm-card__flames" aria-hidden="true">
+      <i v-for="n in flames" :key="n" class="tribulation-realm-card__flame art-needed" data-art-id="tribulation-realm-flame" />
+    </div>
+  </div>
+</template>
+
+<style scoped>
+.tribulation-realm-card {
+  position: absolute;
+  top: calc(6.5% + 4px);
+  right: 4%;
+  min-width: 150px;
+  padding: 10px 14px;
+  text-align: right;
+  isolation: isolate;
+  border-radius: var(--radius-md);
+  background: linear-gradient(180deg, rgba(16, 23, 24, .72), rgba(16, 23, 24, .5));
+  border: 1px solid color-mix(in srgb, var(--hk-gold-muted, #b99a55) 45%, transparent);
+}
+.tribulation-realm-card__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--hk-gold-muted, #b99a55);
+}
+.tribulation-realm-card__progress { margin: 4px 0 0; font-size: var(--text-xs); color: var(--scene-tribulation-text-soft); }
+.tribulation-realm-card__flames { display:flex; justify-content:flex-end; gap:4px; margin-top:6px; }
+.tribulation-realm-card__flame {
+  width: 11px;
+  height: 15px;
+  clip-path: polygon(50% 0%, 82% 28%, 100% 62%, 84% 100%, 16% 100%, 0% 62%, 18% 28%);
+  background: radial-gradient(circle at 50% 70%, #ffd489, var(--hk-gold-muted, #b99a55) 60%, #6b4c1e);
+  box-shadow: 0 0 6px color-mix(in srgb, #ffd489 70%, transparent);
+}
+</style>
