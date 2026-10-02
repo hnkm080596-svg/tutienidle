@@ -48,7 +48,7 @@ import CharacterActionRail from './CharacterActionRail.vue'
     'talents talents talents'
     'figure stats rightcol';
   column-gap: 1.29%;
-  row-gap: var(--hk-space-3, 8px);
+  row-gap: 0.64%;
   color: var(--paper-text);
   font-family: var(--font-body);
 }
@@ -63,7 +63,8 @@ import CharacterActionRail from './CharacterActionRail.vue'
   min-height: 0;
   display: grid;
   grid-template-rows: minmax(0, 48%) minmax(0, 52%);
-  row-gap: var(--hk-space-3, 8px);
+  /* spec gap 8 design px of the ~252 col. */
+  row-gap: 3.17%;
 }
 .character-scene__elements,
 .character-scene__derived { min-height: 0; min-width: 0; }

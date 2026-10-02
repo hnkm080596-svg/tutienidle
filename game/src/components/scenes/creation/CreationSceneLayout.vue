@@ -51,7 +51,7 @@
   left: 56.22%;
   top: 9.56%;
   width: 39.47%;
-  min-width: 500px;
+  min-width: 429px;
   height: 80.77%;
   z-index: 10;
 }

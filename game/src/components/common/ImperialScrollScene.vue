@@ -287,9 +287,10 @@ const cloudUrl = hkChromeUrl('cloud-ornament')
   left: 14.4cqw;
   right: 4.8cqw;
   top: 6.5cqh;
-  /* Keep content inside the pale paper - the ceremony frame's dark
-     bottom band occupies ~10cqh below it. */
-  bottom: 10.5cqh;
+  /* Spec footer-safe band ends at y850 (footer-safe 288/794/1244/56);
+     the ceremony ring's inner edge sits at ~y850, so ~5cqh of the
+     envelope (840 design tall) is the correct reserve. */
+  bottom: 5cqh;
   display: flex;
   flex-direction: column;
   min-height: 0;

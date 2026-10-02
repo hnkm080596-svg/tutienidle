@@ -48,7 +48,7 @@ const ribbonUrl = hkChromeUrl('ceremony-ribbon')
 /* Ref: small motto under the brush title, ivory-on-ink. */
 .combat-defeat-panel__subtitle {
   position: relative;
-  margin: 6px 0 0;
+  margin: 12px 0 0;
   font-size: var(--text-xs);
   font-style: italic;
   color: var(--chrome-100);

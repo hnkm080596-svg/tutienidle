@@ -506,5 +506,8 @@ function close() {
   text-transform: uppercase;
   letter-spacing: 0.03em;
   color: var(--hk-text-muted, var(--paper-eyebrow));
+  /* Clear the rail frame's corner ornament (was crossing the leading
+     glyph ~3px). */
+  padding-left: 8px;
 }
 </style>

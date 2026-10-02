@@ -20,6 +20,6 @@ import BattleLogPanel from '@/components/game/combat/BattleLogPanel.vue'
   bottom: 4.36vh;
   width: 19.5vw;
   max-height: 29.76vh;
-  z-index: 12;
+  z-index: 11;
 }
 </style>

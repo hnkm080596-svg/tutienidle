@@ -31,7 +31,8 @@ import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  /* spec gap 8 design px of the ~414 rail. */
+  gap: 1.93%;
   /* Bottom pad > fade depth: the CTA must end fully inside the opaque
      band, not under the scrollfade. */
   padding: 16px 14px 24px;

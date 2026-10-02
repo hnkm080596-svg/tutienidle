@@ -159,6 +159,8 @@ provide(BAG_GRID_TOOLS_KEY, toolsTarget)
   white-space: nowrap;
   font-size: var(--text-sm);
   color: var(--paper-text-muted);
+  /* Clear the section frame's bottom-right corner ornament arm. */
+  margin-right: 14px;
 }
 
 .bag-grid__body {

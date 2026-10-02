@@ -66,7 +66,7 @@ const cornerOrnamentUrl = hkChromeUrl('corner-ornament')
   position: relative;
   isolation: isolate;
   width: clamp(430px, 33.5vw, 560px);
-  max-height: 88vh;
+  max-height: 74.4vh;
   box-sizing: border-box;
   text-align: center;
   overflow-y: auto;
