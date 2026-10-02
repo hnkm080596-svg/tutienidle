@@ -8,6 +8,7 @@ import { validateGameSaveShape } from './saveShapeValidation'
 import { GameManager } from '../../core/game/GameManager'
 import { createDefaultPlayer } from '../../core/player/Player'
 import { TECHNIQUES } from '../../data/technique/Techniques'
+import { zones } from '../../data/stage/Zones'
 import { getRealmIndex } from '../../core/realm/realmSystem'
 import { alchemyJobFixture } from '../../core/alchemy/AlchemyJob.fixture'
 import type { Material } from '../../core/material/Material'
@@ -534,6 +535,10 @@ describe('SaveRoundTrip — buildGameSave() luôn qua validateGameSaveShape()', 
     const player = createDefaultPlayer()
     player.realmId = 'foundation_establishment'
     commitRealmReceipts(player, gameManager)
+    // F-CG-MOMENT: the floor_10 mint sits inside the once-guarded
+    // clear write - an issued record always co-exists with the stage
+    // claim, so the full Thanh Van chain is the coherent witness.
+    player.completedStageIds = zones.flatMap((zone) => zone.stageIds)
     player.companionGifts.push(
       {
         id: 'gift_than_nong_foundation_entry',

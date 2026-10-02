@@ -119,27 +119,40 @@ function noopTarget(): PillTarget {
   return { addCultivation: () => {}, heal: () => {}, applyBuff: () => {} } as PillTarget
 }
 
-describe('A18-1 bag forge: above-realm material restores but cannot mint vendor value', () => {
+describe('A18-1 bag forge: above-realm material cannot restore nor mint vendor value', () => {
   // mortal (tier 1) player cannot produce a golden_core (tier 4) wood -
-  // the claim is out of envelope. The boundary admits it (stack shape
-  // only, F-SCOPE-1 covers stones only), restore carries it into the
-  // bag, and the vendor's grade-below gate refuses the sale -> inert.
-  it('mortal save carrying golden_core wood passes shape but vendor refuses the sale', () => {
+  // the claim is out of envelope. F-MAT-REALM closes this at the
+  // boundary: a profession.realmId tier more than one above the claimed
+  // realm tier is rejected outright (the +1 lead is what authored
+  // no-gate collect quests tolerate). The vendor's grade-below gate
+  // stays as the second layer for admitted one-tier-up holdings.
+  it('mortal save carrying golden_core wood is rejected at the shape boundary', () => {
     const { save } = validSave()
     save.materials = [{ materialId: 'golden_core_wood_thuong_co', amount: 5 }]
 
+    const { result, shape } = boot(save)
+    expect(shape.ok).toBe(false)
+    expect(result.status).toBe('rejected')
+  })
+
+  // The admitted edge: a mortal bag of qi_refining wood (tier +1)
+  // restores - and the vendor's grade gate still refuses to mint value.
+  it('mortal save carrying qi_refining wood restores but vendor refuses the sale', () => {
+    const { save } = validSave()
+    save.materials = [{ materialId: 'qi_refining_wood_decade', amount: 5 }]
+
     const { manager, playerStore, result } = boot(save)
     expect(result.status).toBe('ok')
-    expect(manager.materialBag.getAmount('golden_core_wood_thuong_co')).toBe(5)
+    expect(manager.materialBag.getAmount('qi_refining_wood_decade')).toBe(5)
 
     const sale = manager.economyOps.sellMaterialToVendor(
-      'golden_core_wood_thuong_co',
+      'qi_refining_wood_decade',
       5,
       playerStore.$state as PlayerData,
     )
     expect(sale.ok).toBe(false)
     // No spirit stone mint: the bag keeps every forged unit.
-    expect(manager.materialBag.getAmount('golden_core_wood_thuong_co')).toBe(5)
+    expect(manager.materialBag.getAmount('qi_refining_wood_decade')).toBe(5)
   })
 
   // Sibling check: non-profession ids also fail the grade gate closed

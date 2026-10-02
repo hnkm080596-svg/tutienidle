@@ -402,7 +402,8 @@ export class AlchemySystem {
     // BETA_ENABLED_RECIPE_FAMILIES are dormant: their definitions stay in
     // the registry but jobs cannot start via ANY entry path (the domain
     // fails closed, not just the ops layer). In-flight/loaded jobs for
-    // dormant families are unaffected - only startJob is gated.
+    // dormant families PARK at the tick delivery seam - the record stays
+    // intact, no pill lands, no event/toast fires (see tick()).
     if (betaRecipeFamilyOfId(recipe.id) === null) {
       return { ok: false, reason: 'scope_hidden' }
     }
@@ -413,10 +414,11 @@ export class AlchemySystem {
       return { ok: false, reason: 'retired' }
     }
 
-    // Scope-hidden families keep their in-flight jobs settling but may
-    // not occupy the live slot budget - a restored dormant job rendered
-    // nowhere would otherwise reject every beta recipe job_slots_full
-    // with no visible cause or cancel path.
+    // Scope-hidden families keep their in-flight jobs PARKED (record
+    // intact, no delivery - see tick()) but may not occupy the live slot
+    // budget - a restored dormant job rendered nowhere would otherwise
+    // reject every beta recipe job_slots_full with no visible cause or
+    // cancel path.
     const liveJobs = this.jobs.filter((job) => betaRecipeFamilyOfId(job.recipeId) !== null)
 
     if (liveJobs.length >= Math.max(1, maxConcurrentJobs)) {

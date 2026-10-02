@@ -6,6 +6,7 @@ import { COMPANIONS } from '../../data/companion/Companions'
 import { CULTIVATION_PATH_MODULES, type CultivationPathId } from '../../core/player/CultivationPathKit'
 import { skillCoreNodeId } from '../../core/progression/SkillCoreLevel'
 import { TECHNIQUES } from '../../data/technique/Techniques'
+import { zones } from '../../data/stage/Zones'
 import { alchemyRecipes } from '../../data/alchemy/alchemyRecipes'
 import { alchemyJobFixture } from '../../core/alchemy/AlchemyJob.fixture'
 import { alchemySecondsFor } from '../../core/alchemy/AlchemySystem'
@@ -2210,6 +2211,102 @@ describe('validateGameSaveShape — player record/array deep checks (Mission A r
 
     expect(validateGameSaveShape(clean).ok).toBe(true)
   })
+
+  // F-ARTIFACT-SUBGATE - the awaken seam is the only artifact writer
+  // and it opens at golden_core; realm order is monotonic, so a
+  // persisted record under the unlock realm is unproducible.
+  it.each([
+    ['mortal'],
+    ['qi_refining'],
+    ['foundation_establishment'],
+  ])('từ chối player.artifact trên realm %s (dưới golden_core)', (realmId) => {
+    const save = validSave()
+    const player = playerOf(save)
+
+    player.realmId = realmId
+    if (realmId !== 'mortal') {
+      // Realm witnesses the realm claim itself must carry.
+      save.techniques = [fiveElementsTechnique()]
+      player.breakthroughGrade = 1
+    }
+    if (realmId === 'foundation_establishment') {
+      player.highestFoundationAchieved = 'human'
+    }
+    player.artifact = {
+      artifactId: 'ngu_hanh_chau',
+      realmId: 'foundation_establishment',
+      realmLevel: 1,
+      experience: 0,
+      grade: 'pham',
+    }
+
+    const result = validateGameSaveShape(save)
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.artifact')
+  })
+
+  // A golden_core spell-pathway save is the coherent holder: the way's
+  // realm grant entitles ngu_hanh_chau and the realm clears the gate.
+  it('chấp nhận player.artifact trên golden_core + spell_pathway', () => {
+    const save = validSave()
+    const player = playerOf(save)
+
+    player.realmId = 'golden_core'
+    save.techniques = [fiveElementsTechnique()]
+    player.breakthroughGrade = 1
+    player.highestFoundationAchieved = 'human'
+    player.cultivationPath = 'spell'
+    player.cultivationWay = 'spell_pathway'
+    player.artifact = {
+      artifactId: 'ngu_hanh_chau',
+      realmId: 'foundation_establishment',
+      realmLevel: 1,
+      experience: 0,
+      grade: 'pham',
+    }
+
+    const result = validateGameSaveShape(save)
+    expect(pathsOf(result).some((path) => path.startsWith('player.artifact'))).toBe(false)
+  })
+
+  // The awaken grant resolves the artifact the ACTIVE way entitles -
+  // a record whose artifactId mismatches (or whose way grants none)
+  // could not be minted by that seam.
+  it.each([
+    // spell pathway entitles ngu_hanh_chau - a foreign id is forged.
+    ['spell', 'spell_pathway', 'khong_ton_tai'],
+    // hidden_spell_pathway grants no artifact - any record is forged.
+    ['spell', 'hidden_spell_pathway', 'ngu_hanh_chau'],
+    // sword way grants no artifact either.
+    ['sword', 'hidden_sword_pathway', 'ngu_hanh_chau'],
+  ])(
+    'từ chối artifactId không khớp way entitle (%s/%s artifactId=%s)',
+    (pathId, wayId, artifactId) => {
+      const save = validSave()
+      const player = playerOf(save)
+
+      player.realmId = 'golden_core'
+      save.techniques = [fiveElementsTechnique()]
+      player.breakthroughGrade = 1
+      player.highestFoundationAchieved = 'human'
+      player.cultivationPath = pathId
+      player.cultivationWay = wayId
+      if (pathId === 'sword') {
+        player.swordPath = { preset: ['orb_dam'], kiemY: 0, kiemDaoCount: 1, kiemDaoBase: 1 }
+      }
+      player.artifact = {
+        artifactId,
+        realmId: 'foundation_establishment',
+        realmLevel: 1,
+        experience: 0,
+        grade: 'pham',
+      }
+
+      const result = validateGameSaveShape(save)
+      expect(result.ok).toBe(false)
+      expect(pathsOf(result)).toContain('player.artifact.artifactId')
+    },
+  )
 })
 
 describe('validateGameSaveShape — cycle/site consistency (Mission A review)', () => {
@@ -2256,6 +2353,48 @@ describe('validateGameSaveShape — cycle/site consistency (Mission A review)', 
 
     expect(result.ok).toBe(false)
     expect(pathsOf(result)).toContain('productionSites[0].workerCycles[1].siteId')
+  })
+
+  // F-ROLLSEED-RANGE - the mint rolls Math.floor(Math.random() *
+  // 0x7fffffff) at cycle spawn: integer inside [0, 0x7fffffff].
+  it.each([
+    [-1],
+    [0x80000000],
+    [3.5],
+  ])('từ chối rollSeed ngoài khoảng mint = %j', (rollSeed) => {
+    const save = validSave()
+
+    save.productionSites = [
+      {
+        siteId: 'thanh_van_forest',
+        level: 1,
+        autoRestart: true,
+        workerCycles: [{ ...validCycle(), rollSeed }],
+      },
+    ]
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('productionSites[0].workerCycles[0].rollSeed')
+  })
+
+  it.each([[0], [0x7fffffff]])('chấp nhận rollSeed tại biên mint = %j', (rollSeed) => {
+    const save = validSave()
+
+    save.productionSites = [
+      {
+        siteId: 'thanh_van_forest',
+        level: 1,
+        autoRestart: true,
+        workerCycles: [{ ...validCycle(), rollSeed }],
+      },
+    ]
+
+    const result = validateGameSaveShape(save)
+    expect(
+      pathsOf(result).some((path) => path.includes('rollSeed')),
+    ).toBe(false)
   })
 })
 
@@ -2603,16 +2742,34 @@ describe('validateGameSaveShape — v73 core inverse ownership', () => {
 
 // M-F-COMPANION-GIFT (v77) - player.companionGifts slice: required
 // array, unique nonempty ids, definitionId inside the Beta gift
-// authority (not merely the full catalog), claimed boolean. Record ids
-// are NOT validated against COMPANION_GIFT_MOMENTS - records outlive
-// authored moments (drift tolerance).
+// authority (not merely the full catalog), claimed boolean.
+// F-CG-MOMENT: record ids bind the COMPANION_GIFT_MOMENTS table -
+// the issue seam mints id + paired definitionId only when its authored
+// trigger fires, so the save must carry the trigger witness (realm
+// >= the entered realm, or the completed stage).
 describe('validateGameSaveShape - companion gifts (v77)', () => {
   function playerOf(save: Record<string, unknown>): Record<string, unknown> {
     return save.player as Record<string, unknown>
   }
 
-  it('chấp nhận companionGifts hợp lệ (pending + claimed)', () => {
+  // A coherent foundation_establishment save: realm witnesses
+  // (technique + grade + foundation record) plus the full Thanh Van
+  // stage chain so foundation_floor_10's clear is claimed.
+  function coherentFoundationSave(): Record<string, unknown> {
     const save = validSave()
+    const player = playerOf(save)
+
+    player.realmId = 'foundation_establishment'
+    save.techniques = [fiveElementsTechnique()]
+    player.breakthroughGrade = 1
+    player.highestFoundationAchieved = 'human'
+    player.completedStageIds = zones[0]!.stageIds.slice()
+
+    return save
+  }
+
+  it('chấp nhận companionGifts hợp lệ (pending + claimed)', () => {
+    const save = coherentFoundationSave()
 
     playerOf(save).companionGifts = [
       { id: 'gift_than_nong_foundation_entry', definitionId: 'than_nong', claimed: false },
@@ -2679,16 +2836,135 @@ describe('validateGameSaveShape - companion gifts (v77)', () => {
     expect(pathsOf(validateGameSaveShape(save))).toContain('player.companionGifts[0].claimed')
   })
 
-  it('chấp nhận record id không thuộc COMPANION_GIFT_MOMENTS (drift tolerance)', () => {
-    const save = validSave()
+  // F-CG-MOMENT (a) - the mint table is closed: an id no authored
+  // moment produces is unproducible.
+  it('từ chối record id không thuộc COMPANION_GIFT_MOMENTS', () => {
+    const save = coherentFoundationSave()
 
-    // A save may carry records from moments since removed/renamed -
-    // they stay claimable, validation must not reject them.
     playerOf(save).companionGifts = [
       { id: 'gift_retired_moment', definitionId: 'than_nong', claimed: false },
     ]
 
-    expect(validateGameSaveShape(save).ok).toBe(true)
+    const result = validateGameSaveShape(save)
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.companionGifts[0].id')
+  })
+
+  // F-CG-MOMENT (b) - a real moment id paired with a definitionId the
+  // moment never mints is a forged pairing.
+  it('từ chối moment id ghép definitionId sai', () => {
+    const save = coherentFoundationSave()
+
+    playerOf(save).companionGifts = [
+      { id: 'gift_than_nong_foundation_entry', definitionId: 'khai_minh', claimed: false },
+    ]
+
+    const result = validateGameSaveShape(save)
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.companionGifts[0].definitionId')
+  })
+
+  // F-CG-MOMENT (c) - realm_entered witness absent: the foundation
+  // entry gift on a qi_refining save is unproducible.
+  it('từ chối realm_entered gift khi realm chưa đạt', () => {
+    const save = validSave()
+    const player = playerOf(save)
+
+    player.realmId = 'qi_refining'
+    save.techniques = [fiveElementsTechnique()]
+    player.breakthroughGrade = 1
+    player.companionGifts = [
+      { id: 'gift_than_nong_foundation_entry', definitionId: 'than_nong', claimed: false },
+    ]
+
+    const result = validateGameSaveShape(save)
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.companionGifts[0].id')
+  })
+
+  // F-CG-MOMENT (c) - stage_completed witness absent: the floor_10 gift
+  // without a completedStageIds claim on foundation_floor_10 is
+  // unproducible (the mint sits inside the once-guarded clear write).
+  it('từ chối stage_completed gift thiếu stage clear witness', () => {
+    const save = coherentFoundationSave()
+    const player = playerOf(save)
+
+    // Drop the boss floor's own claim - every earlier floor stays
+    // completed so only the witness is missing.
+    player.completedStageIds = (player.completedStageIds as string[]).filter(
+      (stageId) => stageId !== 'foundation_floor_10',
+    )
+    player.companionGifts = [
+      { id: 'gift_khai_minh_foundation_floor_10', definitionId: 'khai_minh', claimed: false },
+    ]
+
+    const result = validateGameSaveShape(save)
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.companionGifts[0].id')
+  })
+})
+
+// F-MAT-REALM - realm-keyed profession materials mint only from
+// realm-bounded faucets (territory tiers clamp to the player realm,
+// stage drop tables key on requiredRealmId). Authored no-gate collect
+// quests tolerate one tier ahead, so the bound is material realm tier
+// > claimed realm tier + 1.
+describe('validateGameSaveShape - profession material realm pin', () => {
+  function playerOf(save: Record<string, unknown>): Record<string, unknown> {
+    return save.player as Record<string, unknown>
+  }
+
+  function withRealm(save: Record<string, unknown>, realmId: string): void {
+    const player = playerOf(save)
+
+    player.realmId = realmId
+    if (realmId !== 'mortal') {
+      save.techniques = [fiveElementsTechnique()]
+      player.breakthroughGrade = 1
+    }
+    if (
+      realmId !== 'mortal' &&
+      realmId !== 'qi_refining'
+    ) {
+      player.highestFoundationAchieved = 'human'
+    }
+  }
+
+  // CONTROL: qi_refining_ore_decade on a MORTAL save stays valid - the
+  // authored no-gate collect quest (collect_qi_refining_ore_decade_1)
+  // expects mortal holders of the one-tier-up material.
+  it('chấp nhận qi_refining_ore_decade trên mortal save (tier +1)', () => {
+    const save = validSave()
+
+    save.materials = [{ materialId: 'qi_refining_ore_decade', amount: 3 }]
+
+    const result = validateGameSaveShape(save)
+    expect(pathsOf(result).some((path) => path.startsWith('materials'))).toBe(false)
+  })
+
+  it.each([
+    ['foundation_establishment_ore_decade', 'mortal'],
+    ['golden_core_wood_century', 'mortal'],
+    ['golden_core_ore_decade', 'qi_refining'],
+  ])('từ chối %s trên realm %s (vượt tier +1)', (materialId, realmId) => {
+    const save = validSave()
+
+    withRealm(save, realmId)
+    save.materials = [{ materialId, amount: 1 }]
+
+    const result = validateGameSaveShape(save)
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('materials[0]')
+  })
+
+  it('chấp nhận foundation material trên qi_refining save (tier +1)', () => {
+    const save = validSave()
+
+    withRealm(save, 'qi_refining')
+    save.materials = [{ materialId: 'foundation_establishment_ore_decade', amount: 1 }]
+
+    const result = validateGameSaveShape(save)
+    expect(pathsOf(result).some((path) => path.startsWith('materials'))).toBe(false)
   })
 })
 

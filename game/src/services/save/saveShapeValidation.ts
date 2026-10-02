@@ -10,6 +10,7 @@
 import { CURRENT_SAVE_VERSION } from './saveVersion'
 import { REALMS } from '../../data/realms/realm'
 import { COMPANIONS, isBetaCompanionGift } from '../../data/companion/Companions'
+import { COMPANION_GIFT_MOMENTS } from '../../data/companion/CompanionGiftMoments'
 import { MAX_CONSTELLATION_RANK } from '../../core/companion/CompanionProgression'
 import { ITEM_QUALITY_ORDER, type ItemQuality } from '../../core/item/ItemQuality'
 import { getRealmIdForProfessionGrade, isProfessionGrade } from '../../core/profession/ProfessionGrade'
@@ -23,10 +24,19 @@ import { MAIN_STAT_REALM_SCALE } from '../../core/equipment/EquipmentRolling'
 import { ITEM_QUALITY_IMPLICIT_MULTIPLIER } from '../../core/equipment/ItemQualityBalance'
 import { EQUIPMENT_BAG_SOFT_CAP } from '../../core/equipment/EquipmentBag'
 import { equipment } from '../../data/equipment/equipment'
-import { CULTIVATION_PATH_MODULES, type CultivationPathId } from '../../core/player/CultivationPathKit'
+import {
+  CULTIVATION_PATH_MODULES,
+  type CultivationPathId,
+  type CultivationWayId,
+} from '../../core/player/CultivationPathKit'
 import { COMBAT_AI_STRATEGIES } from '../../core/battle/CombatAiStrategy'
 import { FOUNDATION_LABELS } from '../../core/breakthrough/FoundationType'
-import { isArtifactGrade, isArtifactPath } from '../../core/artifact/Artifact'
+import {
+  isArtifactGrade,
+  isArtifactPath,
+  resolveExpectedArtifactId,
+} from '../../core/artifact/Artifact'
+import { ARTIFACT_UNLOCK_REALM_ID } from '../../core/artifact/ArtifactDomain'
 import { validateBodyProgressionPersistedState } from '../../core/realm/body/BodyProgressionSystem'
 import { validateHiddenPerfectionPersistedState } from '../../core/realm/hidden/HiddenPerfection'
 import { SKILL_CORE_NODES } from '../../data/progression/SkillCoreNodes'
@@ -103,6 +113,7 @@ import {
   SPIRIT_STONE_THUONG_PHAM_MATERIAL_ID,
   SPIRIT_STONE_TRUNG_PHAM_MATERIAL_ID,
 } from '../../core/material/SpiritStoneMaterial'
+import { materials as materialCatalog } from '../../data/materials/materials'
 import {
   getCultivationRampMultiplier,
   getCultivationSpeedMultiplier,
@@ -268,6 +279,27 @@ function persistedResolvableFoundationRank(player: Record<string, unknown>): num
     return FOUNDATION_CLAIM_RANK.human ?? 1
   }
 }
+
+// F-CG-MOMENT: issueCompanionGifts mints record.id = moment.id and
+// record.definitionId = moment.definitionId verbatim from this closed
+// table, so a persisted entry binds one authored moment - foreign id,
+// mismatched pair, or missing trigger witness are all unproducible.
+const COMPANION_GIFT_MOMENT_BY_ID = new Map(
+  COMPANION_GIFT_MOMENTS.map((moment) => [moment.id, moment]),
+)
+
+// F-MAT-REALM: profession materials stamp their authoring realm in
+// profession.realmId. Every faucet is realm-bounded (territory tiers
+// clamp to the player realm, stage drop tables key on requiredRealmId),
+// and authored no-gate collect quests tolerate one tier ahead - the
+// producible ceiling for a holding is claimed realm tier + 1.
+const PROFESSION_MATERIAL_REALM_TIER_BY_ID = new Map<string, number>(
+  materialCatalog.flatMap((material) =>
+    material.profession === undefined
+      ? []
+      : ([[material.id, getRealmTier(material.profession.realmId)]] as [string, number][]),
+  ),
+)
 
 const STAT_TYPES = new Set<string>(Object.keys(createBaseStats()))
 
@@ -1711,6 +1743,51 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
           message: 'phải là ArtifactPath hoặc vắng mặt',
         })
       }
+
+      // F-ARTIFACT-SUBGATE: the awaken seam is the only writer and it
+      // opens at ARTIFACT_UNLOCK_REALM_ID; realm order is monotonic, so
+      // a persisted record under the unlock realm is unproducible. The
+      // bound keys on realm order rather than isArtifactDomainUnlocked
+      // because the domain is scope-hidden in beta - a carried record
+      // must still load once the realm claim reaches the unlock tier.
+      const artifactHolderRealmIndex =
+        typeof player.realmId === 'string' ? getRealmIndex(player.realmId) : -1
+
+      if (
+        artifactHolderRealmIndex >= 0 &&
+        artifactHolderRealmIndex < getRealmIndex(ARTIFACT_UNLOCK_REALM_ID)
+      ) {
+        issues.push({
+          path: 'player.artifact',
+          message: `realm chưa đạt '${ARTIFACT_UNLOCK_REALM_ID}' - artifact bất khả thi`,
+        })
+      }
+
+      // The awaken grant resolves the artifact the active way entitles
+      // (resolveExpectedArtifactId): a record whose artifactId does not
+      // match the claimed way's grant - or a way granting none - could
+      // not be produced by that seam.
+      if (
+        typeof player.artifact.artifactId === 'string' &&
+        player.artifact.artifactId.trim().length > 0
+      ) {
+        const expectedArtifactId =
+          typeof player.cultivationPath === 'string' &&
+          player.cultivationPath in CULTIVATION_PATH_MODULES &&
+          typeof player.cultivationWay === 'string'
+            ? resolveExpectedArtifactId({
+                cultivationPath: player.cultivationPath as CultivationPathId,
+                cultivationWay: player.cultivationWay as CultivationWayId,
+              })
+            : undefined
+
+        if (player.artifact.artifactId !== expectedArtifactId) {
+          issues.push({
+            path: 'player.artifact.artifactId',
+            message: 'không khớp artifact mà cultivation way hiện tại entitle',
+          })
+        }
+      }
     }
   }
 
@@ -2116,7 +2193,17 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
   const companionGifts = requireArray(player, 'companionGifts', 'player', issues)
 
   if (companionGifts) {
-    validateCompanionGiftEntries(companionGifts, 'player.companionGifts', issues)
+    validateCompanionGiftEntries(
+      companionGifts,
+      'player.companionGifts',
+      issues,
+      stageClaimRealmIndex,
+      new Set(
+        (completedStageIds ?? []).filter(
+          (stageId): stageId is string => typeof stageId === 'string',
+        ),
+      ),
+    )
   }
 
   // C1 triage (2026-09-14) - 3 corrupt-save residuals closed save-side:
@@ -2356,14 +2443,18 @@ function validateCompanionEntries(
 }
 
 /**
- * CompanionGiftRecord entries (v77 schema). `id` is the authored-moment
- * identity (dedupe key); a retired moment id is tolerated because
- * moments are content - only the definitionId authority gate is strict.
+ * CompanionGiftRecord entries (v77 schema). `id` binds the authored
+ * moment table: the issue seam mints record.id = moment.id and pairs it
+ * with moment.definitionId, and the moment's trigger leaves a persisted
+ * witness the save must also carry (realm at/above the entered realm,
+ * or the completed stage for stage_completed moments).
  */
 function validateCompanionGiftEntries(
   entries: unknown[],
   path: string,
   issues: ShapeIssue[],
+  playerRealmIndex: number,
+  completedStageIds: ReadonlySet<string>,
 ) {
   const seenIds = new Set<string>()
 
@@ -2385,6 +2476,54 @@ function validateCompanionGiftEntries(
         issues.push({ path: `${entryPath}.id`, message: 'bị trùng với gift entry khác' })
       } else {
         seenIds.add(entry.id)
+      }
+    }
+
+    // F-CG-MOMENT: bind the record to its authored moment - the mint
+    // table is closed, so an id no moment mints, a definitionId the
+    // moment never pairs, or a trigger witness the save lacks are all
+    // unproducible.
+    const moment =
+      typeof entry.id === 'string' ? COMPANION_GIFT_MOMENT_BY_ID.get(entry.id) : undefined
+
+    if (typeof entry.id === 'string' && entry.id.trim().length > 0 && moment === undefined) {
+      issues.push({
+        path: `${entryPath}.id`,
+        message: 'không thuộc gift moment table đã authored',
+      })
+    }
+
+    if (
+      moment !== undefined &&
+      typeof entry.definitionId === 'string' &&
+      entry.definitionId.trim().length > 0 &&
+      entry.definitionId !== moment.definitionId
+    ) {
+      issues.push({
+        path: `${entryPath}.definitionId`,
+        message: `không khớp moment '${moment.id}' (authored '${moment.definitionId}')`,
+      })
+    }
+
+    if (moment !== undefined) {
+      if (moment.trigger.kind === 'realm_entered') {
+        const triggerRealmIndex = getRealmIndex(moment.trigger.realmId)
+
+        if (
+          playerRealmIndex >= 0 &&
+          triggerRealmIndex >= 0 &&
+          playerRealmIndex < triggerRealmIndex
+        ) {
+          issues.push({
+            path: `${entryPath}.id`,
+            message: `moment '${moment.id}' yêu cầu realm >= '${moment.trigger.realmId}'`,
+          })
+        }
+      } else if (!completedStageIds.has(moment.trigger.stageId)) {
+        issues.push({
+          path: `${entryPath}.id`,
+          message: `moment '${moment.id}' thiếu stage clear witness '${moment.trigger.stageId}'`,
+        })
       }
     }
 
@@ -2932,6 +3071,20 @@ function validateProductionCycleSave(
   ) {
     issues.push({ path, message: 'production cycle sai shape' })
     return
+  }
+
+  // F-ROLLSEED-RANGE: the mint rolls Math.floor(Math.random() *
+  // 0x7fffffff) at cycle spawn - anything outside the integer bound is
+  // a forged window feeding reward-table replay.
+  if (
+    !Number.isInteger(value.rollSeed) ||
+    (value.rollSeed as number) < 0 ||
+    (value.rollSeed as number) > 0x7fffffff
+  ) {
+    issues.push({
+      path: `${path}.rollSeed`,
+      message: 'rollSeed phải là integer trong [0, 0x7fffffff] (khoảng mint)',
+    })
   }
 
   // F-TC5-1 (sibling): the collection realm snapshot is only ever
@@ -4354,6 +4507,22 @@ export function validateGameSaveShape(parsed: unknown): ShapeValidationResult {
           issues.push({
             path: `materials[${i}]`,
             message: `linh thạch ${entry.materialId} vượt realm tier người chơi (${claimedRealmTier})`,
+          })
+        }
+
+        // F-MAT-REALM: realm-keyed profession materials mint from
+        // realm-bounded faucets only - a holding more than one tier
+        // above the claimed realm (the lead authored no-gate collect
+        // quests tolerate) is unproducible.
+        const professionRealmTier = PROFESSION_MATERIAL_REALM_TIER_BY_ID.get(entry.materialId)
+
+        if (
+          professionRealmTier !== undefined &&
+          professionRealmTier > claimedRealmTier + 1
+        ) {
+          issues.push({
+            path: `materials[${i}]`,
+            message: `nguyên liệu nghề '${entry.materialId}' vượt realm tier người chơi (${claimedRealmTier})`,
           })
         }
       }
