@@ -187,7 +187,17 @@
         "emptyNoBonus": "No additional information",
         "emptyNoTechnique": "No technique yet — complete the Entry Ceremony to receive one automatically",
         "gradeAction": "Advance Grade",
-        "gradeNode": "Grade {grade}"
+        "gradeNode": "Grade {grade}",
+        "cardTitle": "Technique",
+        "helpAria": "Technique help",
+        "qualityLine": "Grade: {quality}",
+        "gradeTrackTitle": "Technique Grade",
+        "rankLine": "Grade {grade} · Rank {rank}",
+        "materialsTitle": "Materials Needed",
+        "reasonGradeCeiling": "Grade ceiling reached",
+        "reasonRealmGate": "Requires a higher realm",
+        "reasonInsufficientMaterial": "Not enough materials",
+        "reasonBusy": "Busy — try again later"
       },
       "colTitles": {
         "activeArts": "Active Spell Arts"

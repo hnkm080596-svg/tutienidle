@@ -187,7 +187,17 @@
         "emptyNoBonus": "Không có thông tin bổ sung",
         "emptyNoTechnique": "Chưa có công pháp — hoàn thành Lễ Nhập Môn để tự động nhận",
         "gradeAction": "Nâng Cảnh",
-        "gradeNode": "Phẩm {grade}"
+        "gradeNode": "Phẩm {grade}",
+        "cardTitle": "Công Pháp",
+        "helpAria": "Trợ giúp công pháp",
+        "qualityLine": "Phẩm: {quality}",
+        "gradeTrackTitle": "Cảnh Giới Công Pháp",
+        "rankLine": "Cảnh {grade} · Cấp {rank}",
+        "materialsTitle": "Nguyên Liệu Cần",
+        "reasonGradeCeiling": "Đã đạt phẩm tối đa",
+        "reasonRealmGate": "Cần cảnh giới cao hơn",
+        "reasonInsufficientMaterial": "Không đủ nguyên liệu",
+        "reasonBusy": "Đang bận — thử lại sau"
       },
       "colTitles": {
         "activeArts": "Pháp Thuật Đang Vận Hành"
