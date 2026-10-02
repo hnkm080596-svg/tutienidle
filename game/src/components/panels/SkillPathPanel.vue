@@ -27,6 +27,13 @@ import SkillPathList from './skill-path/SkillPathList.vue'
 import SkillDetailView from './skill-path/SkillDetailView.vue'
 import NativeCoreDetail from './skill-path/NativeCoreDetail.vue'
 import SkillRoleStrip from './skill-path/SkillRoleStrip.vue'
+import SkillWayCard from '@/components/scenes/skill/SkillWayCard.vue'
+import SkillElementTabs from '@/components/scenes/skill/SkillElementTabs.vue'
+import SkillTreeCanvas from '@/components/scenes/skill/SkillTreeCanvas.vue'
+import SkillModeTabs from '@/components/scenes/skill/SkillModeTabs.vue'
+import SkillDetailRail from '@/components/scenes/skill/SkillDetailRail.vue'
+import SkillInsightChip from '@/components/scenes/skill/SkillInsightChip.vue'
+import { CULTIVATION_PATH_MODULES } from '@/core/player/CultivationPathKit'
 import type { BetaSkillTreeNode } from '@/core/betaScopeSkillDomain'
 import { ELEMENT_ORDER, ELEMENT_LABELS, ELEMENT_COLOR_VARS } from '@/core/element/ElementLabels'
 import type { ProgressionNode } from '@/core/progression/ProgressionNode'
@@ -81,6 +88,12 @@ const wayNodeTreeTag = computed(() => skillTree.value.wayNodeTreeTag)
 // mortal - model-resolved.
 const wayIdentity = computed(
   () => skillTree.value.wayName ?? t('panels.skillPath.mortalName'),
+)
+
+// Scene 07 way-card: the base path display name rides beside the way
+// identity (ref's "Phap Tu • Hoa Hanh" line). Mortal shows none.
+const pathName = computed(() =>
+  player.cultivationPath ? CULTIVATION_PATH_MODULES[player.cultivationPath]?.name ?? null : null,
 )
 
 const hasElementalCasting = computed(() => skillTree.value.elementCasting)
@@ -325,12 +338,18 @@ function close() {
     scene="skill" :open="ui.standalonePanel === 'skill'" :title="t('panels.skillPath.title')" @close="close">
       <template #header>
         <span class="skill-path-panel__subtitle">{{ wayIdentity }}</span>
-        <span v-if="showTree" class="skill-path-panel__points">✦ {{ t('panels.nodeTree.labels.insight') }}: {{ player.skillInsight }}</span>
+        <SkillInsightChip v-if="showTree" :insight="player.skillInsight" />
       </template>
       <div class="skill-path-panel">
         <div class="skill-path-panel__body">
-          <!-- Spec 07: way-card column (identity + skill library) -->
+          <!-- Spec 07: way-card region (way identity + committed element;
+               the learned-arts library rides below it in the same rail) -->
           <div class="skill-path-panel__col skill-path-panel__col--left">
+            <SkillWayCard
+              :way-identity="wayIdentity"
+              :path-name="pathName"
+              :committed-element="committedElement ?? null"
+            />
             <SkillPathList :entries="skillPathEntries" :selected-id="selectedSkillId" @select="onSelectEntry" />
           </div>
 
@@ -339,80 +358,52 @@ function close() {
             <!-- Phap Tu element tabs (Task 16) - the tab row shows the
                  branches the model renders; scope-hidden branches (the
                  non-committed elements) are absent, not locked. -->
-            <div
+            <SkillElementTabs
               v-if="hasElementalCasting && visibleElementTabs.length > 0"
-              class="skill-path-panel__element-tabs"
-              role="group"
-              :aria-label="t('panels.skillPath.elementTabs.aria')"
-            >
-              <button
-                v-for="element in visibleElementTabs"
-                :key="element"
-                type="button"
-                class="skill-path-panel__element-tab"
-                :class="{ 'is-selected': element === selectedBranch, 'is-committed': element === committedElement }"
-                :style="{ '--element-color': ELEMENT_COLOR_VARS[element] }"
-                @click="onSelectBranch(element)"
-              >
-                {{ ELEMENT_LABELS[element] }}
-              </button>
-            </div>
-
-            <NodeTreePanel
-              v-if="showTree && !showDetail"
-              :branch-tag="treeBranchTag"
-              :selected-node-id="selectedNode?.id ?? null"
-              :unlock-trigger="unlockTrigger"
-              @select="onSelectNode"
+              :elements="visibleElementTabs"
+              :selected="selectedBranch"
+              :committed="committedElement"
+              @select="onSelectBranch"
             />
 
-            <NativeCoreDetail v-else-if="selectedNativeEntry" :entry="selectedNativeEntry" />
+            <SkillTreeCanvas>
+              <NodeTreePanel
+                v-if="showTree && !showDetail"
+                :branch-tag="treeBranchTag"
+                :selected-node-id="selectedNode?.id ?? null"
+                :unlock-trigger="unlockTrigger"
+                @select="onSelectNode"
+              />
 
-            <SkillDetailView v-else :skill="selectedSkill" />
+              <NativeCoreDetail v-else-if="selectedNativeEntry" :entry="selectedNativeEntry" />
+
+              <SkillDetailView v-else :skill="selectedSkill" />
+            </SkillTreeCanvas>
 
             <!-- M-QI-05 (D7) - Tree/Detail mode tabs (spec 07: below the
                  tree canvas); Detail renders the selected entry, Tree
                  restores the node view. -->
-            <div
-              v-if="showTree"
-              class="skill-path-panel__mode-tabs"
-              role="group"
-              :aria-label="t('panels.skillPath.centerTabs.aria')"
-            >
-              <button
-                type="button"
-                class="skill-path-panel__mode-tab"
-                :class="{ 'is-selected': centerMode === 'tree' }"
-                @click="centerMode = 'tree'"
-              >
-                {{ t('panels.skillPath.centerTabs.tree') }}
-              </button>
-              <button
-                type="button"
-                class="skill-path-panel__mode-tab"
-                :class="{ 'is-selected': centerMode === 'detail' }"
-                @click="centerMode = 'detail'"
-              >
-                {{ t('panels.skillPath.centerTabs.detail') }}
-              </button>
-            </div>
+            <SkillModeTabs v-if="showTree" :mode="centerMode" @select="centerMode = $event" />
           </div>
 
-          <!-- Spec 07: detail rail - node inspector (upgrade) + active arts -->
+          <!-- Spec 07: detail-panel region - node inspector (upgrade) +
+               active arts inside one surface-m-panel rail -->
           <div class="skill-path-panel__col skill-path-panel__col--right">
-            <NodeInspector
-              v-if="showTree && !showDetail"
-              :node="selectedNode"
-              :row="selectedRow"
-              :purchased="selectedNodePurchased"
-              :purchasable="selectedNodePurchasable"
-              :in-battle="inBattle"
-              @unlocked="onNodeUnlocked"
-            />
+            <SkillDetailRail>
+              <NodeInspector
+                v-if="showTree && !showDetail"
+                :node="selectedNode"
+                :row="selectedRow"
+                :purchased="selectedNodePurchased"
+                :purchasable="selectedNodePurchasable"
+                :in-battle="inBattle"
+                @unlocked="onNodeUnlocked"
+              />
 
-            <span class="skill-path-panel__col-title">{{ t('panels.skillPath.colTitles.activeArts') }}</span>
+              <span class="skill-path-panel__col-title">{{ t('panels.skillPath.colTitles.activeArts') }}</span>
 
-            <SkillRoleStrip />
+              <SkillRoleStrip />
+            </SkillDetailRail>
           </div>
         </div>
       </div>
@@ -430,11 +421,6 @@ function close() {
 .skill-path-panel__subtitle {
   font-size: var(--text-sm);
   color: var(--paper-text-muted);
-}
-
-.skill-path-panel__points {
-  font-size: var(--text-sm);
-  color: var(--hk-gold, var(--gold-700));
 }
 
 .skill-path-panel__body {
@@ -479,65 +465,6 @@ function close() {
   overflow-y: hidden;
   display: flex;
   flex-direction: column;
-}
-
-/* Phap Tu element tabs (Task 16) - 5 Hanh chips above the tree; the
-   committed element gets a filled accent, the browsed tab an outline.
-   Element identity colors stay per-element; chrome -> hk tokens. */
-.skill-path-panel__element-tabs {
-  flex: 0 0 auto;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: 8px;
-}
-
-.skill-path-panel__element-tab {
-  padding: 4px 12px;
-  background: var(--hk-surface-raised, var(--ink-800));
-  border: 1px solid var(--hk-border-muted, var(--ink-line-soft));
-  border-radius: 999px;
-  color: var(--element-color, var(--hk-text-secondary, var(--text-secondary)));
-  font-family: var(--font-body);
-  font-size: var(--text-sm);
-  cursor: pointer;
-  transition: border-color var(--hk-motion-micro, 150ms) var(--hk-ease-standard, ease);
-}
-
-.skill-path-panel__element-tab.is-selected {
-  border-color: var(--element-color, var(--hk-border-active, var(--chrome-300)));
-  font-weight: 600;
-}
-
-.skill-path-panel__element-tab.is-committed {
-  background: color-mix(in srgb, var(--element-color, var(--ink-800)) 22%, var(--hk-surface-raised, var(--ink-800)));
-}
-
-/* M-QI-05 (D7) - center mode tabs; selected = jade accent + gold edge
-   (SS47 selected state). */
-.skill-path-panel__mode-tabs {
-  flex: 0 0 auto;
-  display: flex;
-  gap: 6px;
-  margin-bottom: 8px;
-}
-
-.skill-path-panel__mode-tab {
-  padding: 4px 12px;
-  background: var(--hk-surface-raised, var(--ink-800));
-  border: 1px solid var(--hk-border-muted, var(--ink-line-soft));
-  border-radius: 999px;
-  color: var(--hk-text-secondary, var(--text-secondary));
-  font-family: var(--font-body);
-  font-size: var(--text-sm);
-  cursor: pointer;
-  transition: border-color var(--hk-motion-micro, 150ms) var(--hk-ease-standard, ease);
-}
-
-.skill-path-panel__mode-tab.is-selected {
-  border-color: var(--hk-border-ceremony, var(--chrome-300));
-  color: var(--hk-jade-soft, var(--text-primary));
-  font-weight: 600;
 }
 
 .skill-path-panel__col--right {
