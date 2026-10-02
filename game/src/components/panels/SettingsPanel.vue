@@ -2,23 +2,27 @@
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '@/stores/player'
-import { useAudioStore } from '@/stores/audio'
 import { useGameManager } from '@/composables/useGameState'
 import { useNotificationStore } from '@/stores/notification'
 import { exportSaveToFile, getRawSave, importSaveRaw, SAVE_RESET_REQUEST_EVENT } from '@/services/save/SaveSystem'
 import { validateRecoveryData } from '@/services/save/recoveryApi'
 import { cloudSaveCoordinator } from '@/services/cloudSave/CloudSaveServiceFactory'
 import { observeAuthoritySaveResult } from '@/composables/useOnlineAuthority'
-import { UI_SCALE_OPTIONS, loadUiScale, saveUiScale } from '@/composables/uiScale'
-import { LOCALE_OPTIONS, saveLocale, type AppLocale } from '@/composables/locale'
-import { BUILD_IDENTITY, shortGitSha } from '@/shared/build/BuildIdentity'
+import { loadUiScale, saveUiScale } from '@/composables/uiScale'
+import { saveLocale, type AppLocale } from '@/composables/locale'
 import { useActiveUpdates } from '@/composables/useUpdates'
 import ConfirmModal from '@/components/common/ConfirmModal.vue'
-import GameButton from '@/components/common/GameButton.vue'
-import Chip from '@/components/common/primitives/Chip.vue'
 import FeedbackDialog from '@/components/common/FeedbackDialog.vue'
-import GuestUpgradeCard from '@/components/onboarding/GuestUpgradeCard.vue'
 import GuestAbandonDialog from '@/components/panels/GuestAbandonDialog.vue'
+import SettingsNavRail from '@/components/scenes/settings/SettingsNavRail.vue'
+import SettingsSaveSection from '@/components/scenes/settings/SettingsSaveSection.vue'
+import SettingsUiScaleSection from '@/components/scenes/settings/SettingsUiScaleSection.vue'
+import SettingsLanguageSection from '@/components/scenes/settings/SettingsLanguageSection.vue'
+import SettingsAudioSection from '@/components/scenes/settings/SettingsAudioSection.vue'
+import SettingsFeedbackSection from '@/components/scenes/settings/SettingsFeedbackSection.vue'
+import SettingsAccountSection from '@/components/scenes/settings/SettingsAccountSection.vue'
+import SettingsUpdateSection from '@/components/scenes/settings/SettingsUpdateSection.vue'
+import SettingsBuildSection from '@/components/scenes/settings/SettingsBuildSection.vue'
 import { readSupabaseSession } from '@/services/supabase/SupabaseSession'
 import { requestSessionLogout } from '@/composables/useSessionAccount'
 import { hkChromeUrl } from '@/ui/huyenKimChrome'
@@ -26,7 +30,6 @@ import { hkChromeUrl } from '@/ui/huyenKimChrome'
 const player = usePlayerStore()
 const gameManager = useGameManager()
 const notification = useNotificationStore()
-const audio = useAudioStore()
 const { t, locale } = useI18n()
 
 // B1.9a - under the remote authority the panel's recovery actions keep
@@ -35,13 +38,6 @@ const { t, locale } = useI18n()
 // clears the local cache so the authoritative load restores from cloud,
 // and export stamps its provenance + revision onto the filename.
 const remoteAuthoritative = cloudSaveCoordinator.capability === 'remote-authoritative'
-
-// W3: one slider per audio channel (field = store state, channel = bus id).
-const AUDIO_CHANNELS = [
-  { field: 'musicVolume', channel: 'music', labelKey: 'musicVolume' },
-  { field: 'sfxVolume', channel: 'sfx', labelKey: 'sfxVolume' },
-  { field: 'uiVolume', channel: 'ui', labelKey: 'uiVolume' },
-] as const
 
 // Thay window.confirm() native — modal xác nhận đồng bộ hoá bằng
 // pending-action: mở ConfirmModal, hành động thật chỉ chạy khi
@@ -72,19 +68,6 @@ function handleUiScale(scale: number) {
 function handleLocale(next: AppLocale) {
   saveLocale(next)
 }
-
-// BETA-FINAL PR1 - one read of the injected build identity for the Build
-// section below (frozen; same literal the Electron main process logged).
-const build = BUILD_IDENTITY
-const BUILD_ROWS = [
-  { labelKey: 'version', testid: 'build-version', value: build.appVersion },
-  { labelKey: 'build', testid: 'build-id', value: build.buildId },
-  { labelKey: 'commit', testid: 'build-commit', value: shortGitSha() },
-  { labelKey: 'schema', testid: 'build-schema', value: build.saveSchemaVersion },
-  { labelKey: 'environment', testid: 'build-environment', value: build.backendEnvironment },
-  { labelKey: 'channel', testid: 'build-channel', value: build.releaseChannel },
-  { labelKey: 'builtAt', testid: 'build-built-at', value: build.builtAtUtc },
-] as const
 
 const lastSavedLabel = ref('')
 
@@ -305,6 +288,10 @@ function onAbandonExport() {
 // render nothing. Account/Update hide themselves with their data.
 type SettingsSection = 'general' | 'display' | 'audio' | 'account' | 'update' | 'support'
 const activeSection = ref<SettingsSection>('general')
+
+function onSelectSection(id: string) {
+  activeSection.value = id as SettingsSection
+}
 const navSections = computed(() => {
   const list: Array<{ id: SettingsSection; label: string }> = [
     { id: 'general', label: t('panels.settings.sections.save') },
@@ -337,284 +324,57 @@ const sliderChromeStyle = computed<Record<string, string> | undefined>(() =>
 <template>
   <div class="settings-panel" :class="{ 'has-hk-slider': Boolean(sliderChromeStyle) }" :style="sliderChromeStyle">
     <!-- Scene 17: left vertical seal navigation. -->
-    <nav class="settings-panel__nav" :aria-label="t('panels.settings.sections.navAria')">
-      <button
-        v-for="section in navSections"
-        :key="section.id"
-        type="button"
-        class="settings-panel__nav-seal"
-        :class="{ 'is-active': activeSection === section.id }"
-        :data-section="section.id"
-        @click="activeSection = section.id"
-      >
-        {{ section.label }}
-      </button>
-    </nav>
+    <SettingsNavRail
+      :sections="navSections"
+      :active-id="activeSection"
+      :label="t('panels.settings.sections.navAria')"
+      @select="onSelectSection"
+    />
 
     <!-- Right workspace: the active category only. -->
     <div class="settings-panel__workspace scrollfade">
-      <p v-if="activeSection === 'general'" class="settings-panel__warning">
-        {{ t('panels.settings.autosaveNote') }}
-      </p>
-
-      <section v-if="activeSection === 'general'" class="settings-panel__section" :aria-label="t('panels.settings.sections.saveAria')">
-        <h4>{{ t('panels.settings.sections.save') }}</h4>
-
-        <div class="settings-panel__actions">
-          <GameButton variant="secondary" data-testid="settings-save-button" @click="handleSave">{{ t('panels.settings.actions.save') }}</GameButton>
-
-          <GameButton variant="secondary" @click="handleLoad">{{ t('panels.settings.actions.reload') }}</GameButton>
-
-          <GameButton variant="secondary" @click="handleExport">{{ t('panels.settings.actions.export') }}</GameButton>
-
-          <label class="settings-panel__import">
-            {{ t('panels.settings.actions.import') }}
-            <input type="file" accept="application/json" @change="handleImportFile" />
-          </label>
-
-          <GameButton class="settings-panel__danger" variant="danger" @click="handleReset">
-            {{ remoteAuthoritative ? t('panels.settings.actions.resetCloud') : t('panels.settings.actions.reset') }}
-          </GameButton>
-        </div>
-      </section>
-
-    <template v-if="activeSection === 'display'">
-    <!-- WS8 — cỡ chữ giao diện: chỉ scale typography/control tokens,
-         không đụng canvas/khung layout. Áp dụng tức thời + lưu local. -->
-    <section class="settings-panel__section settings-panel__ui-scale" :aria-label="t('panels.settings.sections.uiScaleAria')">
-      <h4>{{ t('panels.settings.sections.uiScale') }}</h4>
-
-      <div class="settings-panel__ui-scale-options">
-        <Chip
-          v-for="option in UI_SCALE_OPTIONS"
-          :key="option"
-          class="settings-panel__ui-scale-option"
-          :active="uiScale === option"
-          @click="handleUiScale(option)"
-        >
-          {{ Math.round(option * 100) }}%
-        </Chip>
-      </div>
-    </section>
-
-    <!-- Language - UI locale, persisted via composables/locale. -->
-    <section class="settings-panel__section settings-panel__language" :aria-label="t('panels.settings.sections.languageAria')">
-      <h4>{{ t('panels.settings.sections.language') }}</h4>
-
-      <p class="settings-panel__section-note">{{ t('panels.settings.language.note') }}</p>
-
-      <div class="settings-panel__language-options">
-        <Chip
-          v-for="option in LOCALE_OPTIONS"
-          :key="option"
-          class="settings-panel__language-option"
-          :active="locale === option"
-          :data-testid="`settings-locale-${option}`"
-          @click="handleLocale(option)"
-        >
-          {{ t(`panels.settings.language.names.${option}`) }}
-        </Chip>
-      </div>
-    </section>
-    </template>
-
-    <!-- Audio - on/off + master/channel volumes (0-100%) + reduced shake. Persisted via useAudioStore. -->
-    <section v-if="activeSection === 'audio'" class="settings-panel__section settings-panel__audio" :aria-label="t('panels.settings.sections.audioAria')">
-      <h4>{{ t('panels.settings.sections.audio') }}</h4>
-
-      <div class="settings-panel__audio-row">
-        <Chip
-          class="settings-panel__audio-toggle"
-          :active="audio.enabled"
-          :aria-pressed="audio.enabled"
-          data-testid="settings-audio-toggle"
-          @click="audio.setEnabled(!audio.enabled)"
-        >
-          {{ audio.enabled ? t('panels.settings.audio.on') : t('panels.settings.audio.off') }}
-        </Chip>
-
-        <label class="settings-panel__audio-volume">
-          {{ t('panels.settings.audio.volume') }}
-          <input
-            type="range"
-            min="0"
-            max="100"
-            :value="Math.round(audio.masterVolume * 100)"
-            :disabled="!audio.enabled"
-            data-testid="settings-audio-volume"
-            @input="audio.setMasterVolume(Number(($event.target as HTMLInputElement).value) / 100)"
-          />
-          <span class="settings-panel__audio-volume-value">{{ Math.round(audio.masterVolume * 100) }}%</span>
-        </label>
-      </div>
-
-      <div class="settings-panel__audio-row">
-        <label
-          v-for="channel in AUDIO_CHANNELS"
-          :key="channel.field"
-          class="settings-panel__audio-volume"
-        >
-          {{ t(`panels.settings.audio.${channel.labelKey}`) }}
-          <input
-            type="range"
-            min="0"
-            max="100"
-            :value="Math.round(audio[channel.field] * 100)"
-            :disabled="!audio.enabled"
-            :data-testid="`settings-audio-${channel.field}`"
-            @input="audio.setChannelVolume(channel.channel, Number(($event.target as HTMLInputElement).value) / 100)"
-          />
-          <span class="settings-panel__audio-volume-value">{{ Math.round(audio[channel.field] * 100) }}%</span>
-        </label>
-      </div>
-
-      <div class="settings-panel__audio-row">
-        <Chip
-          class="settings-panel__audio-toggle"
-          :active="audio.reducedShake"
-          :aria-pressed="audio.reducedShake"
-          data-testid="settings-reduced-shake"
-          @click="audio.setReducedShake(!audio.reducedShake)"
-        >
-          {{ t('panels.settings.audio.reducedShake') }}
-        </Chip>
-      </div>
-    </section>
-
-    <!-- BETA-FINAL PR13 / spec B7 - feedback intake: opens the intake
-         dialog (form + opt-in redacted diagnostics + local export). -->
-    <section v-if="activeSection === 'support'" class="settings-panel__section settings-panel__feedback" :aria-label="t('panels.settings.sections.feedbackAria')">
-      <h4>{{ t('panels.settings.sections.feedback') }}</h4>
-
-      <p class="settings-panel__section-note">{{ t('panels.settings.feedback.note') }}</p>
-
-      <GameButton variant="secondary" data-testid="settings-feedback-button" @click="feedbackOpen = true">
-        {{ t('panels.settings.actions.feedback') }}
-      </GameButton>
-    </section>
-
-    <!-- B1.8/B1.9 - account: guest upgrade surface (pending-confirm
-         replay included) and the ordered logout. Remote mode only. -->
-    <section v-if="remoteAuthoritative && activeSection === 'account'" class="settings-panel__section settings-panel__account" :aria-label="t('panels.settings.sections.accountAria')">
-      <h4>{{ t('panels.settings.sections.account') }}</h4>
-
-      <p class="settings-panel__section-note">
-        {{ accountIsGuest ? t('panels.settings.account.guestNote') : t('panels.settings.account.registeredNote') }}
-      </p>
-
-      <GuestUpgradeCard
-        v-if="accountIsGuest && showAccountUpgrade"
-        :pending-login-id="pendingUpgradeLoginId"
-        @finalized="showAccountUpgrade = false; refreshStoredAccount()"
+      <SettingsSaveSection
+        v-if="activeSection === 'general'"
+        :remote-authoritative="remoteAuthoritative"
+        @save="handleSave"
+        @load="handleLoad"
+        @export="handleExport"
+        @import-file="handleImportFile"
+        @reset="handleReset"
       />
 
-      <div class="settings-panel__actions">
-        <GameButton
-          v-if="accountIsGuest && !showAccountUpgrade"
-          variant="secondary"
-          data-testid="settings-upgrade-button"
-          @click="showAccountUpgrade = true"
-        >
-{{ t('panels.settings.actions.upgrade') }}
-</GameButton>
+      <template v-if="activeSection === 'display'">
+        <SettingsUiScaleSection :ui-scale="uiScale" @select="handleUiScale" />
+        <SettingsLanguageSection :locale="(locale as AppLocale)" @select="handleLocale" />
+      </template>
 
-        <GameButton
-          variant="danger"
-          :disabled="logoutBusy"
-          data-testid="settings-logout-button"
-          @click="startLogout"
-        >
-{{ t('panels.settings.actions.logout') }}
-</GameButton>
-      </div>
-    </section>
+      <SettingsAudioSection v-if="activeSection === 'audio'" />
 
-    <!-- BETA-FINAL PR12 / spec B6 - the update surface. Hidden entirely
-         on builds with no verified feed (web/dev render 'unsupported' -
-         there is nothing honest to offer). -->
-    <section
-      v-if="activeSection === 'update' && updateState !== null && updatePhase !== 'unsupported'"
-      class="settings-panel__section settings-panel__update"
-      :aria-label="t('panels.settings.sections.updateAria')"
-    >
-      <h4>{{ t('panels.settings.update.title') }}</h4>
+      <SettingsFeedbackSection v-if="activeSection === 'support'" @open="feedbackOpen = true" />
 
-      <p class="settings-panel__section-note">
-        {{ t('panels.settings.update.note', { version: updateState.currentVersion }) }}
-      </p>
+      <SettingsAccountSection
+        v-if="remoteAuthoritative && activeSection === 'account'"
+        v-model:show-upgrade="showAccountUpgrade"
+        :account-is-guest="accountIsGuest"
+        :pending-upgrade-login-id="pendingUpgradeLoginId"
+        :logout-busy="logoutBusy"
+        @logout="startLogout"
+        @finalized="refreshStoredAccount"
+      />
 
-      <p v-if="updatePhase === 'available'" class="settings-panel__update-status" data-testid="update-status">
-        {{ t('panels.settings.update.statusAvailable', { version: updateState.candidate?.version }) }}
-      </p>
-      <p v-else-if="updatePhase === 'downloading'" class="settings-panel__update-status" data-testid="update-status">
-        {{ t('updates.downloading', { percent: updateProgressPercent }) }}
-      </p>
-      <p v-else-if="updatePhase === 'downloaded'" class="settings-panel__update-status" data-testid="update-status">
-        {{ t('updates.ready', { version: updateState.candidate?.version }) }}
-      </p>
-      <p v-else-if="updatePhase === 'checking'" class="settings-panel__update-status" data-testid="update-status">
-        {{ t('panels.settings.update.statusChecking') }}
-      </p>
-      <p v-else-if="updatePhase === 'unavailable'" class="settings-panel__update-status" data-testid="update-status">
-        {{ t('panels.settings.update.statusUpToDate') }}
-      </p>
-      <p v-else-if="updatePhase === 'error'" class="settings-panel__update-status" data-testid="update-status">
-        {{ t('updates.failed') }}
-      </p>
+      <SettingsUpdateSection
+        v-if="activeSection === 'update' && updateState !== null && updatePhase !== 'unsupported'"
+        :current-version="updateState.currentVersion"
+        :phase="updatePhase"
+        :candidate-version="updateState.candidate?.version"
+        :progress-percent="updateProgressPercent"
+        @download="updates?.download()"
+        @cancel="updates?.cancelDownload()"
+        @install="updates?.install()"
+        @check="updates?.check()"
+      />
 
-      <div class="settings-panel__actions">
-        <GameButton
-          v-if="updatePhase === 'available'"
-          size="md"
-          variant="primary"
-          data-testid="update-download"
-          @click="updates?.download()"
-        >
-          {{ t('updates.download') }}
-        </GameButton>
-        <GameButton
-          v-else-if="updatePhase === 'downloading'"
-          size="md"
-          variant="secondary"
-          data-testid="update-cancel"
-          @click="updates?.cancelDownload()"
-        >
-          {{ t('updates.cancel') }}
-        </GameButton>
-        <GameButton
-          v-else-if="updatePhase === 'downloaded'"
-          size="md"
-          variant="primary"
-          data-testid="update-install"
-          @click="updates?.install()"
-        >
-          {{ t('updates.install') }}
-        </GameButton>
-        <GameButton
-          v-else
-          size="md"
-          variant="secondary"
-          :disabled="updatePhase === 'checking' || updatePhase === 'installing'"
-          data-testid="update-check"
-          @click="updates?.check()"
-        >
-          {{ t('updates.check') }}
-        </GameButton>
-      </div>
-    </section>
-
-    <!-- BETA-FINAL PR1 / spec B2 - support-visible build identity. Values
-         match the release manifest and the error screen footer. -->
-    <section v-if="activeSection === 'support'" class="settings-panel__section settings-panel__build" :aria-label="t('panels.settings.sections.buildAria')">
-      <h4>{{ t('panels.settings.sections.build') }}</h4>
-
-      <dl class="settings-panel__build-list">
-        <div v-for="row in BUILD_ROWS" :key="row.testid" class="settings-panel__build-row">
-          <dt>{{ t(`panels.settings.build.${row.labelKey}`) }}</dt>
-          <dd :data-testid="row.testid">{{ row.value }}</dd>
-        </div>
-      </dl>
-    </section>
+      <SettingsBuildSection v-if="activeSection === 'support'" />
     </div>
 
     <p v-if="lastSavedLabel" class="settings-panel__hint">{{ t('panels.settings.hints.savedAt', { time: lastSavedLabel }) }}</p>
@@ -659,6 +419,7 @@ const sliderChromeStyle = computed<Record<string, string> | undefined>(() =>
 /* Scene 17: left seal nav | right workspace (imperial scroll content). */
 .settings-panel {
   height: 100%;
+  width: 100%;
   min-height: 0;
   display: grid;
   grid-template-columns: minmax(140px, 190px) minmax(0, 1fr);
@@ -667,39 +428,6 @@ const sliderChromeStyle = computed<Record<string, string> | undefined>(() =>
   color: var(--paper-text);
   font-size: var(--text-body);
 }
-
-.settings-panel__nav {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  min-height: 0;
-  overflow-y: auto;
-  scrollbar-width: none;
-  mask-image: linear-gradient(180deg, transparent 0, #000 14px, #000 calc(100% - 14px), transparent 100%);
-}
-.settings-panel__nav::-webkit-scrollbar { display: none; }
-
-.settings-panel__nav-seal {
-  padding: 10px 12px;
-  border: 1px solid var(--hk-border-muted, var(--paper-line));
-  border-radius: var(--hk-radius-md, 8px);
-  background: var(--hk-surface-raised, color-mix(in srgb, var(--paper-100) 30%, transparent));
-  color: var(--paper-text-soft);
-  font-family: var(--font-display);
-  font-size: var(--text-sm);
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  text-align: left;
-  cursor: pointer;
-  transition: border-color 0.16s ease, color 0.16s ease;
-}
-.settings-panel__nav-seal:hover { border-color: var(--hk-border-active, var(--paper-line)); }
-.settings-panel__nav-seal.is-active {
-  border-color: var(--hk-jade, var(--jade));
-  color: var(--paper-text);
-  box-shadow: inset 3px 0 var(--hk-jade, var(--jade));
-}
-.settings-panel__nav-seal:focus-visible { outline: 2px solid var(--hk-gold, var(--gold-700)); outline-offset: 2px; }
 
 .settings-panel__workspace {
   min-height: 0;
@@ -710,236 +438,13 @@ const sliderChromeStyle = computed<Record<string, string> | undefined>(() =>
   padding: 4px 8px;
 }
 
-.settings-panel__warning {
-  color: var(--paper-text-soft);
-  border: 1px solid var(--paper-line);
-  background: color-mix(in srgb, var(--paper-100) 45%, transparent);
-  border-radius: 2px;
-  padding: 8px;
-  margin: 0 0 12px;
-}
-
 @container (max-width: 760px) {
   .settings-panel { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
-  .settings-panel__nav { flex-direction: row; flex-wrap: wrap; }
-}
-
-.settings-panel__section {
-  padding: 14px;
-  border: 1px solid var(--paper-line);
-  border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--paper-100) 35%, transparent);
-}
-
-.settings-panel__section h4 {
-  margin: 0 0 10px;
-  color: var(--paper-text);
-  font-family: var(--font-display);
-  font-size: var(--text-md);
-  letter-spacing: 0.05em;
-}
-
-.settings-panel__section-note {
-  margin: 0 0 10px;
-  color: var(--paper-text-soft);
-  font-size: var(--text-xs);
-}
-
-.settings-panel__actions {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 10px;
-}
-
-.settings-panel__actions > .game-button,
-.settings-panel__actions > .settings-panel__import {
-  width: 100%;
-}
-
-.settings-panel__import {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: var(--tap-min);
-  padding: 8px 14px;
-  overflow: hidden;
-  text-align: center;
-  border: 1px solid var(--ink-line);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  background: var(--ink-800);
-  color: var(--text-primary);
-}
-
-.settings-panel__import input {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  cursor: pointer;
+  .settings-panel :deep(.settings-panel__nav) { flex-direction: row; flex-wrap: wrap; }
 }
 
 .settings-panel__hint {
   color: var(--jade);
   margin: 8px 0 0;
-}
-
-/* WS8 — chọn cỡ chữ giao diện. */
-.settings-panel__ui-scale h4 {
-  margin: 0 0 8px;
-}
-
-.settings-panel__ui-scale-options {
-  display: flex;
-  gap: var(--space-2);
-}
-
-.settings-panel__ui-scale-option {
-  padding: 0 var(--space-4);
-  border-color: var(--paper-line);
-  color: var(--paper-text);
-  font-size: var(--text-sm);
-  --chip-active-bg: color-mix(in srgb, var(--chrome-300) 12%, transparent);
-}
-
-.settings-panel__ui-scale-option:hover {
-  border-color: var(--chrome-500);
-}
-
-/* Audio - on/off + master volume. */
-.settings-panel__audio h4 {
-  margin: 0 0 8px;
-  color: var(--paper-text);
-}
-
-.settings-panel__audio-row {
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-  flex-wrap: wrap;
-}
-
-.settings-panel__audio-toggle {
-  padding: 0 var(--space-4);
-  border-color: var(--paper-line);
-  color: var(--paper-text);
-  font-size: var(--text-sm);
-  --chip-active-bg: color-mix(in srgb, var(--chrome-300) 12%, transparent);
-}
-
-.settings-panel__audio-volume {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  font-size: var(--text-sm);
-  color: var(--paper-text);
-}
-
-.settings-panel__audio-volume input[type='range'] {
-  width: 140px;
-  accent-color: var(--gold);
-}
-
-/* slider-track + slider-thumb chrome (scene 17 grammar); enabled only when
-   the registry resolves both URLs (has-hk-slider). */
-.settings-panel.has-hk-slider .settings-panel__audio-volume input[type='range'] {
-  -webkit-appearance: none;
-  appearance: none;
-  height: 24px;
-  background: transparent;
-  cursor: pointer;
-}
-
-.settings-panel.has-hk-slider .settings-panel__audio-volume input[type='range']::-webkit-slider-runnable-track {
-  height: 10px;
-  border-radius: 5px;
-  background: var(--hk-slider-track) center / 100% 100% no-repeat;
-}
-
-.settings-panel.has-hk-slider .settings-panel__audio-volume input[type='range']::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 20px;
-  height: 20px;
-  margin-top: -5px;
-  border: none;
-  background: var(--hk-slider-thumb) center / contain no-repeat;
-  cursor: grab;
-}
-
-.settings-panel.has-hk-slider .settings-panel__audio-volume input[type='range']::-moz-range-track {
-  height: 10px;
-  border-radius: 5px;
-  background: var(--hk-slider-track) center / 100% 100% no-repeat;
-}
-
-.settings-panel.has-hk-slider .settings-panel__audio-volume input[type='range']::-moz-range-thumb {
-  width: 20px;
-  height: 20px;
-  border: none;
-  background: var(--hk-slider-thumb) center / contain no-repeat;
-  cursor: grab;
-}
-
-.settings-panel.has-hk-slider .settings-panel__audio-volume input[type='range']:focus-visible {
-  outline: 2px solid var(--chrome-300);
-  outline-offset: 3px;
-}
-
-.settings-panel.has-hk-slider .settings-panel__audio-volume input[type='range']:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.settings-panel__audio-volume-value {
-  min-width: 3ch;
-  text-align: right;
-  color: var(--paper-text-soft);
-}
-
-/* Language - chip row in the same rhythm as ui-scale options. */
-.settings-panel__language-options {
-  display: flex;
-  gap: var(--space-2);
-}
-
-.settings-panel__language-option {
-  padding: 0 var(--space-4);
-  border-color: var(--paper-line);
-  color: var(--paper-text);
-  font-size: var(--text-sm);
-  --chip-active-bg: color-mix(in srgb, var(--chrome-300) 12%, transparent);
-}
-
-.settings-panel__language-option:hover {
-  border-color: var(--chrome-500);
-}
-
-/* Build identity - read-only dl for support/diagnostics. */
-.settings-panel__build-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  margin: 0;
-  font-size: var(--text-xs);
-}
-
-.settings-panel__build-row {
-  display: flex;
-  justify-content: space-between;
-  gap: var(--space-4);
-}
-
-.settings-panel__build-row dt {
-  color: var(--paper-text-soft);
-}
-
-.settings-panel__build-row dd {
-  margin: 0;
-  color: var(--paper-text);
-  font-family: var(--font-mono, monospace);
-  word-break: break-all;
-  text-align: right;
 }
 </style>
