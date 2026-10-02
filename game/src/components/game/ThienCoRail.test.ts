@@ -47,10 +47,12 @@ function mountRail(gameManager: GameManager) {
     ui,
     rail: () => container.querySelector<HTMLElement>('.thien-co-rail'),
     chip: () => container.querySelector<HTMLElement>('.thien-co-rail__chip'),
-    empty: () => container.querySelector<HTMLElement>('.thien-co-rail__empty'),
-    entries: () => Array.from(container.querySelectorAll<HTMLElement>('.thien-co-rail__entry')),
+    // The drawer teleports to <body> (spec: it must stack above the
+    // top-bar, escaping the rail's z9 context) - query document for it.
+    empty: () => document.querySelector<HTMLElement>('.thien-co-rail__empty'),
+    entries: () => Array.from(document.querySelectorAll<HTMLElement>('.thien-co-rail__entry')),
     entryCta: (index: number) =>
-      container.querySelectorAll<HTMLElement>('.thien-co-rail__entry')[index]?.querySelector('button'),
+      document.querySelectorAll<HTMLElement>('.thien-co-rail__entry')[index]?.querySelector('button'),
     unmount: () => {
       app.unmount()
       container.remove()
