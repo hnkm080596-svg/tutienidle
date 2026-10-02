@@ -494,6 +494,10 @@ function close() {
   flex-direction: column;
   gap: 8px;
   border-left: 1px solid var(--hk-border-muted, var(--ink-line));
+  /* The nested SkillDetailRail owns its own scrollfade; the outer
+     column fade reached into the rail's top ornament zone and halved
+     the "Phap Thuat Dang Van Hanh" column title. */
+  mask-image: none;
 }
 
 .skill-path-panel__col-title {

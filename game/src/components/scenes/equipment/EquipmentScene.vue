@@ -131,9 +131,12 @@ const workspaceTitle = computed(() =>
   position: relative;
   isolation: isolate;
   display: grid;
-  /* Spec scene 12 columns on the 1244px content band: 132 | 380 | 330 | 354. */
+  /* Spec scene 12 columns on the 1244px content band: 132 | 380 | 330 | 354
+     with three 16 design-px gaps -> column-gap 1.29% (16/1244); a raw
+     16px renders ~1.306x and pushes the columns 2-6 design px wide. */
   grid-template-columns: minmax(0, 132fr) minmax(0, 380fr) minmax(0, 330fr) minmax(0, 354fr);
-  gap: 16px;
+  row-gap: 1.97%;
+  column-gap: 1.29%;
   height: 100%;
   min-height: 0;
   padding: 6px 2px;
@@ -150,6 +153,8 @@ const workspaceTitle = computed(() =>
   .equipment-scene {
     grid-template-columns: 72px 1fr;
     grid-template-rows: minmax(220px, 38%) 1fr;
+    /* Percent row-gap resolves to 0 on the indefinite stacked height. */
+    row-gap: 16px;
     overflow-y: auto;
   }
   .equipment-scene__rail { grid-row: 1 / -1; }

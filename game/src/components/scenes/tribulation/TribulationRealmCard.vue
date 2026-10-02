@@ -38,7 +38,10 @@ const flames = computed(() => Math.min(props.strikesTaken, 7))
   text-align: center;
   isolation: isolate;
   border-radius: var(--radius-md);
-  background: linear-gradient(180deg, rgba(16, 23, 24, .72), rgba(16, 23, 24, .5));
+  /* Near-solid fill: the band sits over the canvas' glowing chapter
+     title - at .5 alpha the art bled through and erased the top half
+     of the realm title text. */
+  background: linear-gradient(180deg, rgba(16, 23, 24, .94), rgba(16, 23, 24, .88));
   border: 1px solid color-mix(in srgb, var(--hk-gold-muted, #b99a55) 45%, transparent);
 }
 .tribulation-realm-card__title {

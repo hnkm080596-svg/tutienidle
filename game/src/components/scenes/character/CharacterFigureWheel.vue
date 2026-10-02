@@ -255,12 +255,14 @@ const PORTRAIT_HEIGHT = 230
   border-color: color-mix(in srgb, var(--node-color) 65%, transparent);
 }
 
-/* Spec a11y: elements carry text labels, not color alone. */
+/* Spec a11y: elements carry text labels, not color alone. The tag sits
+   on the disc's lower rim - the orb glyphs behind each vertex are
+   larger than the disc, so a tag hung below it was ~50% occluded. */
 .element-node__tag {
   position: absolute;
   left: 50%;
-  bottom: -4px;
-  transform: translate(-50%, 100%);
+  bottom: 6%;
+  transform: translate(-50%, 0);
   padding: 0 6px;
   border: 1px solid color-mix(in srgb, var(--hk-gold-muted, #7a6234) 60%, transparent);
   border-radius: 999px;

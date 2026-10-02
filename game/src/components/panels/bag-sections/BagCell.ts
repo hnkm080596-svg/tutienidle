@@ -1,6 +1,13 @@
+import type { InjectionKey, Ref } from 'vue'
 import type { TooltipContent } from '@/composables/useTooltip'
 import type { NameSegment } from '@/core/item/NameSegment'
 import type { SlotPresentationState } from '@/components/common/SlotTypes'
+
+// Spec 05 head split - BagGrid provides the css selector of its
+// `grid-tools` band only while the host is wide enough for the spec
+// geometry; sections teleport their sort control into it. Null keeps
+// the control inside the pagination row (narrow hosts).
+export const BAG_GRID_TOOLS_KEY: InjectionKey<Ref<string | null>> = Symbol('bag-grid-tools')
 
 // Shape dùng chung cho mọi bag-section (tách từ BagGrid.vue, xem
 // composables/useBagPagination.ts) — mỗi section tự map dữ liệu bag

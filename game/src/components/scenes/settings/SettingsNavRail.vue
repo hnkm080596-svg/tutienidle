@@ -46,8 +46,11 @@ const emit = defineEmits<{ select: [id: string] }>()
   padding: 10px 12px;
   border: 1px solid var(--hk-border-muted, var(--paper-line));
   border-radius: var(--hk-radius-md, 8px);
-  background: var(--hk-surface-raised, color-mix(in srgb, var(--paper-100) 30%, transparent));
-  color: var(--paper-text-soft);
+  /* Inactive seals must stay legible over the scroll's dark ink edge -
+     a 30% paper wash read as near-invisible; 68% stays clearly below
+     the active seal's 88% while remaining readable. */
+  background: color-mix(in srgb, var(--paper-100) 68%, transparent);
+  color: var(--paper-text);
   font-family: var(--font-display);
   font-size: var(--text-sm);
   font-weight: 600;
