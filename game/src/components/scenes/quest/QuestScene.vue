@@ -97,14 +97,17 @@ function onClaim(questId: string) {
 </template>
 
 <style scoped>
-/* Spec scene "18" columns: tabs+list 620 | detail 608, 16px gap. */
+/* Spec scene "18" columns: tabs+list 620 | detail 608 on the 1244 band,
+   16 design-px column gap -> 1.29% (16/1244); 12 design-px row gap on
+   the 610 band -> 1.97% (12/610). Raw px renders ~1.306x. */
 .quest-scene {
   height: 100%;
   min-height: 0;
   display: grid;
   grid-template-columns: minmax(0, 620fr) minmax(0, 608fr);
   grid-template-rows: auto minmax(0, 1fr);
-  gap: 12px 16px;
+  row-gap: 1.97%;
+  column-gap: 1.29%;
   padding: 6px 2px;
   color: var(--hk-text-primary, var(--paper-text));
   font-family: var(--hk-font-ui, var(--font-body));
@@ -114,7 +117,8 @@ function onClaim(questId: string) {
 .quest-scene__detail { grid-row: 1 / -1; grid-column: 2; }
 
 @container (max-width: 860px) {
-  .quest-scene { grid-template-columns: 1fr; grid-template-rows: auto minmax(0, 40%) minmax(0, 1fr); overflow-y: auto; }
+  /* Percent row-gap resolves to 0 on the indefinite stacked height. */
+  .quest-scene { grid-template-columns: 1fr; grid-template-rows: auto minmax(0, 40%) minmax(0, 1fr); row-gap: 12px; overflow-y: auto; }
   .quest-scene__detail { grid-row: auto; grid-column: auto; }
 }
 </style>

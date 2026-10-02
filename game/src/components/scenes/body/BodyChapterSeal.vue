@@ -46,9 +46,9 @@ const stateLabel = computed(() => {
     <span class="body-chapter-seal__seal" aria-hidden="true">{{ label.slice(0, 1) }}</span>
     <span class="body-chapter-seal__body">
       <span class="body-chapter-seal__name">{{ label }}</span>
-      <span class="body-chapter-seal__sub">{{ subtitle }}</span>
       <span class="body-chapter-seal__state">{{ stateLabel }}</span>
     </span>
+    <span class="body-chapter-seal__sub">{{ subtitle }}</span>
   </button>
 </template>
 
@@ -59,7 +59,8 @@ const stateLabel = computed(() => {
   width: 100%;
   display: flex;
   align-items: center;
-  gap: 8px;
+  flex-wrap: wrap;
+  gap: 2px 8px;
   padding: 10px 8px;
   border: 1px solid var(--hk-border-muted, #2a352f);
   border-radius: var(--hk-radius-sm, 6px);
@@ -113,6 +114,15 @@ const stateLabel = computed(() => {
 .body-chapter-seal__state {
   font-size: var(--text-xs);
   color: var(--hk-text-muted, #7a7260);
+}
+/* The text column beside the seal is only ~43px - the subtitle takes
+   the card's full width on its own row so it wraps at word boundaries
+   (Vietnamese syllables) instead of one clipped/one syllable per line. */
+.body-chapter-seal__sub {
+  flex: 0 0 100%;
+  min-width: 0;
+}
+.body-chapter-seal__state {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

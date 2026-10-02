@@ -109,6 +109,13 @@ const stateLabel = computed(() => {
 }
 .body-detail__inner::-webkit-scrollbar { display: none; }
 
+/* The corner L-brackets reach ~50px up the card's bottom edge - the
+   last row (physique note or the invest CTA) needs its own clearance
+   so it never paints inside the ornament zone. */
+.body-detail__inner > :last-child {
+  margin-bottom: 36px;
+}
+
 .body-detail__head {
   display: flex;
   align-items: baseline;

@@ -121,7 +121,11 @@ function close() { ui.closeHomeOverlays() }
   display: grid;
   grid-template-columns: minmax(0, 400fr) minmax(0, 448fr) minmax(0, 364fr);
   grid-template-rows: minmax(0, 480fr) minmax(0, 118fr);
-  gap: 12px 16px;
+  /* Spec 06 gaps on the 1244x610 band: 16 design-px columns -> 1.29%
+     (16/1244), 12 design-px row -> 1.97% (12/610); raw px renders
+     ~1.306x and shifts grade-track off its spec band. */
+  row-gap: 1.97%;
+  column-gap: 1.29%;
   padding: 6px 2px;
 }
 
@@ -131,7 +135,8 @@ function close() { ui.closeHomeOverlays() }
 .technique-scene > :nth-child(4) { grid-area: 2 / 1 / 3; }
 
 @container (max-width: 900px) {
-  .technique-scene { grid-template-columns: 1fr; grid-template-rows: auto minmax(160px, 30%) 1fr auto; overflow-y: auto; }
+  /* Percent row-gap resolves to 0 on the indefinite stacked height. */
+  .technique-scene { grid-template-columns: 1fr; grid-template-rows: auto minmax(160px, 30%) 1fr auto; row-gap: 12px; overflow-y: auto; }
   .technique-scene > * { grid-area: auto !important; }
 }
 </style>

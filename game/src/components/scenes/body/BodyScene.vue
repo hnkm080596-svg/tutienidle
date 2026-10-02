@@ -88,8 +88,11 @@ function selectUnit(id: string): void {
   display: grid;
   grid-template-columns: minmax(0, 10.6%) minmax(0, 51.4%) minmax(0, 35.4%);
   grid-template-rows: minmax(0, 1fr);
-  /* Spec 08 column gaps: 16 design px between rail | figure | detail. */
-  column-gap: 16px;
+  /* Spec 08 column gaps: 16 design px between rail | figure | detail on
+     the 1244 band -> 1.29% each (16/1244, same convention as the
+     character scene; a raw 16px renders ~1.306x and overflows the
+     right edge ~9.6 design px). */
+  column-gap: 1.29%;
   padding: 6px 2px;
 }
 
@@ -99,7 +102,8 @@ function selectUnit(id: string): void {
   min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  /* Spec 08: tier-chips sit 8 design px under figure-focus -> 8/610. */
+  gap: 1.31%;
 }
 .body-scene__figure { flex: 1; min-height: 0; }
 .body-scene__chips { flex: 0 0 auto; }

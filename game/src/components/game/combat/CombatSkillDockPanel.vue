@@ -9,16 +9,11 @@
 // `top` cua CombatSceneOverlay), cung pattern do-DOM-that + ResizeObserver
 // voi overlay. Unmount: clear `right` ve 0 nhung giu `top`.
 //
-// Layout fix (2026-09-06) -- dock truoc do `top: 0` nen full-height, de len
-// enemy counter mep phai cua TopBar (TopBar va dock la 2 sibling absolute
-// rieng, dock khong nam trong luong flex cua overlay). Doi `top` sang
-// `var(--combat-topbar-h)` -- DUNG token TopBar dung de set height cua no
-// (CombatSceneOverlay.vue, theme.css) -- de dock bat dau ngay duoi TopBar
-// thay vi de len. Khong hardcode 60px du TurnOrderStrip tung dung so do --
-// token that la clamp(46px, 4.8vh, 72px), 60px chi la xap xi giua dai.
-// `bottom: 0` giu nguyen nen height tu co theo top moi, khong can khai
-// bao height tuong minh. Khong doi `width`/measuring logic -- publishWidth
-// do `offsetWidth` (chieu ngang), khong phu thuoc `top`.
+// Geometry ownership (2026-10-02): the CombatActionDock wrapper now carries
+// the spec region (absolute, top 8.5vh, right edge, 7.89vw) so it no longer
+// consumes the overlay's column flex space; this panel simply fills that
+// wrapper (`position: relative; width: 100%`) and keeps its own 59.5vh
+// content cap. publishWidth still reads the panel's real `offsetWidth`.
 import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import TurnCombatSkillBar from './hud/TurnCombatSkillBar.vue'
 import { clearSkillDockWidth, publishSkillDockWidth } from '@/presentation/geometry/combatInsets'
@@ -58,16 +53,15 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
-/* Spec 10 skill-dock 1540/80/132/560 on the 1672x941 canvas: flush
-   right edge, canvas-top 8.5vh, 7.89vw wide, capped at 59.5vh tall.
+/* Spec 10 skill-dock 1540/80/132/560 on the 1672x941 canvas: the dock
+   wrapper owns the region (absolute, flush right edge, canvas-top 8.5vh,
+   7.89vw wide); this panel fills it and keeps the 59.5vh tall cap.
    The ResizeObserver publish keeps the scene's right inset in sync
    with the real width. */
 .combat-skill-dock-panel {
-  position: absolute;
-  top: 8.5vh;
-  right: 0;
-  width: 7.89vw;
-  min-width: 96px;
+  position: relative;
+  box-sizing: border-box;
+  width: 100%;
   max-height: 59.5vh;
   display: flex;
   flex-direction: column;

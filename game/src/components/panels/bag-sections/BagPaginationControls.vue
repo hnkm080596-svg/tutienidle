@@ -7,9 +7,10 @@
 // grid-template-columns: 1fr auto 1fr — pagination LUÔN ở giữa, sort
 // control sát phải. Nút sort hiển thị cả khi chỉ có một trang. Khung
 // hẹp: nút sort chỉ còn icon, tooltip vẫn mang nhãn đầy đủ.
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, inject, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { SortDirection } from '@/stores/ui'
+import { BAG_GRID_TOOLS_KEY } from './BagCell'
 
 export interface BagSortOption {
   value: string
@@ -63,6 +64,10 @@ const sortButtonLabel = computed(() => {
 const isMenuOpen = ref(false)
 
 const menuRoot = ref<HTMLElement | null>(null)
+
+// Spec 05 grid-tools band: BagGrid provides the head tools selector on
+// wide hosts; the sort control teleports there. Null = stay inline.
+const sortTeleportTo = inject(BAG_GRID_TOOLS_KEY, ref(null))
 
 function toggleMenu() {
   isMenuOpen.value = !isMenuOpen.value
@@ -143,6 +148,7 @@ onBeforeUnmount(() => {
       </button>
     </div>
 
+    <Teleport :to="sortTeleportTo ?? 'body'" :disabled="!sortTeleportTo">
     <div ref="menuRoot" class="bag-pagination__sort">
       <button
         type="button"
@@ -161,7 +167,7 @@ onBeforeUnmount(() => {
         <span class="bag-pagination__sort-label">{{ sortButtonLabel }}</span>
       </button>
 
-      <div v-if="isMenuOpen" class="bag-pagination__menu" role="menu">
+      <div v-if="isMenuOpen" class="bag-pagination__menu" :class="{ 'bag-pagination__menu--below': sortTeleportTo }" role="menu">
         <button
           type="button"
           role="menuitem"
@@ -193,6 +199,7 @@ onBeforeUnmount(() => {
         </button>
       </div>
     </div>
+    </Teleport>
   </div>
 </template>
 
@@ -270,6 +277,13 @@ onBeforeUnmount(() => {
   border: 1px solid var(--chrome-500);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-panel);
+}
+
+/* Teleported into the head tools band there is no room above - drop
+   the menu downward instead. */
+.bag-pagination__menu--below {
+  top: calc(100% + 6px);
+  bottom: auto;
 }
 
 .bag-pagination__menu button {
