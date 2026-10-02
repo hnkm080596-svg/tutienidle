@@ -15,7 +15,7 @@ import {
   STATUS_FOOT_ROW_OFFSET_Y,
   STATUS_ROW_GAP,
 } from './combatConstants'
-import { HUD_MARGIN, HUD_HP_HEIGHT, HUD_SUB_HEIGHT, HUD_GAP } from './PlayerHudLayer'
+import { HUD_HP_WIDTH } from './PlayerHudLayer'
 import type { StatusVfxAttachedEvent } from '@/core/battle/BattleEvents'
 
 interface FakeGameObject {
@@ -278,7 +278,7 @@ describe('CombatVfxSpawner — status icon row (buff bar)', () => {
     expect(permanent.icon.y).toBe(temporary.icon.y + STATUS_ROW_GAP + STATUS_ICON_SIZE)
   })
 
-  it('player temporary row: y tính từ sub2Y của HUD (viewport 800x600 → 538)', () => {
+  it('player temporary row: right of the spec top-left HUD block (16/72)', () => {
     scene = makeFakeScene({ width: 800, height: 600 }, new Map([['player', { rect: { x: 100, y: 500, displayHeight: 48 } }]]))
     spawner = new CombatVfxSpawner(scene as unknown as never)
 
@@ -293,10 +293,10 @@ describe('CombatVfxSpawner — status icon row (buff bar)', () => {
     spawner.updateStatusIconPositions()
 
     const entry = scene.statuses.get('player:lam_cham:src') as { icon: FakeGameObject }
-    const sub2Y = 600 - HUD_MARGIN - HUD_HP_HEIGHT - HUD_GAP - HUD_SUB_HEIGHT - HUD_GAP - HUD_SUB_HEIGHT
+    const topY = (600 * 72) / 941
 
-    expect(entry.icon.y).toBe(sub2Y - STATUS_PLAYER_ROW_OFFSET_Y_FOR_TEST - STATUS_ICON_SIZE)
-    expect(entry.icon.x).toBe(HUD_MARGIN)
+    expect(entry.icon.y).toBe(topY + STATUS_PLAYER_ROW_OFFSET_Y_FOR_TEST + STATUS_ICON_SIZE / 2)
+    expect(entry.icon.x).toBe((800 * 16) / 1672 + HUD_HP_WIDTH + STATUS_PLAYER_ROW_OFFSET_Y_FOR_TEST + STATUS_ICON_SIZE / 2)
   })
 
   it('>8 temporary → icon 9+ ẩn, icon cuối mang counter "+N"', () => {

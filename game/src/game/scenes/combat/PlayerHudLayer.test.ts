@@ -3,7 +3,7 @@
 // trong canvas, flexible layout theo viewport (AGENTS.md UI rule),
 // ẩn MP khi maxMp<=0, ẩn Kiếm khi max<=0, update HP từ event values.
 import { describe, expect, it } from 'vitest'
-import { PlayerHudLayer, HUD_MARGIN, HUD_HP_WIDTH, HUD_SUB_WIDTH } from './PlayerHudLayer'
+import { PlayerHudLayer, HUD_HP_WIDTH, HUD_SUB_WIDTH } from './PlayerHudLayer'
 import { PLAYER_HUD_THE_ARMED_COLOR, PLAYER_HUD_THE_COLOR } from './combatConstants'
 
 interface FakeRect {
@@ -198,23 +198,25 @@ function makeScene() {
 type SceneLike = ReturnType<typeof makeScene>
 
 describe('PlayerHudLayer — in-canvas HUD (6A-T4)', () => {
-  it('layout: HP bar neo góc trái-dưới theo viewport — resize không hardcode', () => {
+  it('layout: HUD anchors TOP-LEFT per spec (16/72/330/130) - resize stays flexible', () => {
     const scene = makeScene()
     const hud = new PlayerHudLayer(scene as never, { width: 800, height: 600 })
 
     hud.layout(800, 600)
 
-    // Label HP ở trên bar; bar Y = height - margin - barH - label offset.
-    // Chỉ assert ràng buộc vị trí (không cứng số tuyệt đối ngoài hằng).
-    expect(hud.hpFill.y).toBeLessThanOrEqual(600 - HUD_MARGIN)
-    expect(hud.hpFill.y).toBeGreaterThan(600 - HUD_MARGIN - 60)
-    expect(hud.hpFill.x).toBeGreaterThanOrEqual(HUD_MARGIN)
+    // Spec left edge = 16/1672 of viewport width; the block hangs from
+    // topY = 72/941 of height, HP bar closing the ~130 design px stack.
+    expect(hud.hpFill.x).toBeCloseTo((800 * 16) / 1672, 1)
+    const topY = (600 * 72) / 941
+    expect(hud.hpFill.y).toBeGreaterThan(topY)
+    expect(hud.hpFill.y).toBeLessThan(topY + 130)
 
-    // Resize nhỏ hơn → vị trí dời theo height mới (flexible rule).
+    // Smaller viewport -> the anchor rescales with it (flexible rule).
     hud.layout(600, 360)
 
-    expect(hud.hpFill.y).toBeLessThanOrEqual(360 - HUD_MARGIN)
-    expect(hud.hpFill.y).toBeGreaterThan(360 - HUD_MARGIN - 60)
+    expect(hud.hpFill.x).toBeCloseTo((600 * 16) / 1672, 1)
+    const topY2 = (360 * 72) / 941
+    expect(hud.hpFill.y).toBeLessThan(topY2 + 130)
   })
 
   it('updateHp: fill ratio đúng + label số', () => {

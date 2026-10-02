@@ -54,7 +54,9 @@ const derivedStats = computed(() =>
   min-height: 0;
   overflow-y: auto;
   margin: 0;
-  padding: 0 var(--hk-space-2, 6px) var(--hk-space-2, 6px);
+  /* Right padding clears the frame art's painted rim (~10px), so the
+     trailing glyph of a right-aligned value never slides under it. */
+  padding: 0 12px var(--hk-space-2, 6px) var(--hk-space-2, 6px);
   list-style: none;
   scrollbar-width: none;
 }

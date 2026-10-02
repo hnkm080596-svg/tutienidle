@@ -32,8 +32,9 @@ import CreationScrollOrnaments from './CreationScrollOrnaments.vue'
   flex-direction: column;
   height: 100%;
   box-sizing: border-box;
-  /* spec padding 40 design px on a 660-wide scroll */
-  padding: clamp(18px, 3.4vh, 34px) clamp(22px, 6.3%, 42px);
+  /* spec padding 40 design px on a 660x760 scroll: 40/941 = 4.25vh,
+     40/660 = 6.06% */
+  padding: clamp(18px, 4.25vh, 42px) clamp(22px, 6.06%, 42px);
   overflow-y: auto;
   scrollbar-width: none;
 }

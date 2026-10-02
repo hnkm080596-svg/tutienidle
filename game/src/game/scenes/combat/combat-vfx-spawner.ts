@@ -30,7 +30,7 @@ import {
   STATUS_FOOT_ROW_OFFSET_Y,
   STATUS_PLAYER_ROW_OFFSET_Y,
 } from './combatConstants'
-import { HUD_MARGIN, HUD_HP_HEIGHT, HUD_SUB_HEIGHT, HUD_GAP } from './PlayerHudLayer'
+import { HUD_HP_WIDTH } from './PlayerHudLayer'
 import { StatusTooltip } from './combat-status-tooltip'
 import type { EntitySprite } from './combatTypes'
 
@@ -297,15 +297,15 @@ export class CombatVfxSpawner {
     let startX: number
 
     if (isPlayer) {
-      const height = this.scene.scale.height
-      // sub2Y = Y của sub-bar thấp nhất trong PlayerHudLayer.layout() —
-      // công thức mirror (HP bar cụm trái-dưới, MP/Kiếm xếp trên).
-      const sub2Y =
-        height - HUD_MARGIN - HUD_HP_HEIGHT - HUD_GAP - HUD_SUB_HEIGHT - HUD_GAP - HUD_SUB_HEIGHT
-      const temporaryRowY = sub2Y - STATUS_PLAYER_ROW_OFFSET_Y - STATUS_ICON_SIZE
+      const { width, height } = this.scene.scale
+      // The HUD block lives top-left per spec (16/72/330/130 on the
+      // 1672x941 canvas): status icons hang to the RIGHT of it so they
+      // stay clear of the DOM ai-panel band below the HUD.
+      const topY = (height * 72) / 941
+      const temporaryRowY = topY + STATUS_PLAYER_ROW_OFFSET_Y + STATUS_ICON_SIZE / 2
 
-      baseY = rowTier === 0 ? temporaryRowY : temporaryRowY - STATUS_ROW_GAP - STATUS_ICON_SIZE
-      startX = HUD_MARGIN
+      baseY = rowTier === 0 ? temporaryRowY : temporaryRowY + STATUS_ROW_GAP + STATUS_ICON_SIZE
+      startX = (width * 16) / 1672 + HUD_HP_WIDTH + STATUS_PLAYER_ROW_OFFSET_Y + STATUS_ICON_SIZE / 2
     } else {
       const footY = this.scene.isPerspective
         ? sprite.rect.y

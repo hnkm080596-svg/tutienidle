@@ -150,14 +150,15 @@ function majorBreakthrough() {
 </template>
 
 <style scoped>
-/* Scene 05 layout: ascent map dominant (vista + rung path) beside the
-   detail rail (spec: ascent-map 812w vs rail 416w ~= 2:1). */
+/* Scene 05 layout: ascent-map 812 | gap 16 | detail rail 416 on the
+   1244 band -> 65.27% | 1.29% | 33.44% (2fr/1fr + 18px rounded the
+   columns to 817/409). */
 .realm-scene {
   height: 100%;
   min-height: 0;
   display: grid;
-  grid-template-columns: minmax(0, 2fr) minmax(260px, 1fr);
-  gap: 18px;
+  grid-template-columns: minmax(0, 65.27%) minmax(0, 33.44%);
+  column-gap: 1.29%;
   padding: 6px 2px;
 }
 

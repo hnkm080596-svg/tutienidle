@@ -366,6 +366,10 @@ watch([searchQuery, activeGroup], () => resetPage())
   color: var(--paper-text-muted);
   font-size: var(--text-xs);
   white-space: nowrap;
+  /* Keep the count off the scroll's right rim - as the row's last item
+     it jammed against the frame edge and faded under it. */
+  margin-left: auto;
+  padding-right: 10px;
 }
 
 .bag-section__grid {

@@ -164,12 +164,12 @@ function outerOrbitRadius(): number {
   // short windows a smaller ring beats slots spilling past the viewport
   // edge.
   // margin covers the disc half (~28px) + the label hanging below (~18px)
-  // plus edge clearance - 64 keeps the bottom slot's caption off the
-  // viewport edge (it was clipping at ~2px clearance).
+  // plus ~2px edge clearance - the old 64 starved the ring (outer 256 at
+  // a 941 window instead of the spec 264).
   // (ui-audit creation-meta).
   // Huyen Kim S03 (spec scene-03): outer orbit r264 / inner r185 design px
   // on the 1672x941 canvas -> ~202/~142px at 1280x720 (scale 0.765).
-  const bottomFit = height * 0.34 - 64
+  const bottomFit = height * 0.34 - 48
   const ideal = Math.max(168, Math.min(340, shortSide * 0.28))
   return Math.max(96, Math.min(ideal, bottomFit))
 }

@@ -266,8 +266,12 @@ const tooltipContent = computed<TechniqueTooltipContent | undefined>(() => {
   letter-spacing: 0.05em;
 }
 
+/* The rune ring spills ~9px past the icon-wrap's bottom edge (inset
+   -16% of 56px), so on the column hero card the ring's lowest dot
+   lands on the name's first glyph - lift the info block past it. */
 .technique-card--hero .technique-card__info {
   align-items: center;
+  margin-top: 14px;
 }
 
 .technique-card--hero .technique-card__name {

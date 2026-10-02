@@ -65,16 +65,19 @@ const locked = computed(() => props.model?.state === 'locked')
 </template>
 
 <style scoped>
+/* Hit area = the number disc only. The 84px pill let a node's box
+   swallow its neighbour's centre (~39px spacing), so elementFromPoint
+   resolved to the next node; the copy hangs below the disc in the
+   layout, painted but inside no hit box wider than the disc. */
 .stage-map__node {
   position: absolute;
   transform: translate(-50%, -50%);
-  width: 84px;
+  width: 44px;
+  height: 44px;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
-  padding: 5px 3px;
+  padding: 0;
   border-radius: var(--radius-sm);
   background: transparent;
   border: 1px solid transparent;
@@ -95,7 +98,19 @@ const locked = computed(() => props.model?.state === 'locked')
   color: color-mix(in srgb, var(--scene-portal-accent) 60%, var(--brush-950) 40%);
   font: 700 var(--text-xs) var(--font-display);
 }
-.stage-map__copy { width: 100%; min-width: 0; display: flex; flex-direction: column; }
+/* Painted copy hangs centered under the disc; it overflows the 44px
+   hit box horizontally, which keeps each node's centre inside its own
+   border-box even when labels overlap a neighbour. */
+.stage-map__copy {
+  position: absolute;
+  top: calc(100% + 2px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 110px;
+  display: flex;
+  flex-direction: column;
+  pointer-events: none;
+}
 .stage-map__copy strong { font-size: 10px; text-shadow: 0 1px 2px var(--paper-50); }
 .stage-map__copy small { overflow: hidden; color: var(--paper-text-muted); font-size: 9px; text-overflow: ellipsis; white-space: nowrap; text-shadow: 0 1px 2px var(--paper-50); }
 /* Scene 10: boss stages wear the boss-seal badge art behind the label. */
@@ -120,6 +135,10 @@ const locked = computed(() => props.model?.state === 'locked')
 }
 
 /* Chapter-end boss medallion (ref: fiery seal at the band's right end). */
+.stage-map__node.is-boss {
+  width: 54px;
+  height: 54px;
+}
 .stage-map__node.is-boss .stage-map__number {
   width: 46px;
   height: 46px;

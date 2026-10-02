@@ -57,8 +57,12 @@ const emit = defineEmits<{ select: [id: string] }>()
   transition: border-color 0.16s ease, color 0.16s ease;
 }
 .settings-panel__nav-seal:hover { border-color: var(--hk-border-active, var(--paper-line)); }
+/* Active seal must read on the scroll's dark ink-wash edge: an almost
+   opaque paper fill keeps the dark ink text legible (the 30% raised
+   wash washed it out). */
 .settings-panel__nav-seal.is-active {
   border-color: var(--hk-jade, var(--jade));
+  background: color-mix(in srgb, var(--paper-100) 88%, var(--jade) 12%);
   color: var(--paper-text);
   box-shadow: inset 3px 0 var(--hk-jade, var(--jade));
 }

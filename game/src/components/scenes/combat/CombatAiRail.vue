@@ -15,4 +15,8 @@ import CombatAiPanel from '@/components/game/combat/CombatAiPanel.vue'
 
 <style scoped>
 .combat-ai-rail { position: relative; isolation: isolate; }
+/* The InkNineSlice fill is absolutely positioned at z-index 1; a static
+   panel paints below it, so the interior must take its own layer (same
+   pattern as TechniqueInfoCard). */
+.combat-ai-rail > :not(.ink-nine-slice) { position: relative; z-index: 2; }
 </style>
