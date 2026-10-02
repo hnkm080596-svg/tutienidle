@@ -251,7 +251,11 @@ function close() {
   font-size: var(--text-xs);
 }
 
-@container overlay-panel (max-width: 640px) {
+/* Unnamed container query: resolves against the imperial-scroll
+   envelope in scene mounts and the overlay-panel card in legacy
+   mounts - the named 'overlay-panel' container never exists inside
+   the scene shell, so the name would silently disable this block. */
+@container (max-width: 640px) {
   .building-heading__upgrade-area { align-items: flex-start; }
   .building-heading__cost { text-align: left; }
 }

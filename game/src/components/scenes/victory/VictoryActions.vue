@@ -25,7 +25,7 @@ const { t } = useI18n()
       variant="secondary"
       @click="emit('retry')"
     >
-      <svg class="victory-actions__glyph" viewBox="0 0 14 14" aria-hidden="true">
+      <svg class="victory-actions__glyph art-needed" data-art-id="victory-action-retry" viewBox="0 0 14 14" aria-hidden="true">
         <path d="M7 2a5 5 0 1 1-4.6 3.1" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
         <path d="M2.6 1.6v3.4h3.4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
       </svg>
@@ -39,7 +39,7 @@ const { t } = useI18n()
       variant="primary"
       @click="emit('continue')"
     >
-      <svg class="victory-actions__glyph" viewBox="0 0 14 14" aria-hidden="true">
+      <svg class="victory-actions__glyph art-needed" data-art-id="victory-action-continue" viewBox="0 0 14 14" aria-hidden="true">
         <path d="M3 3l4 4-4 4M8 3l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
       </svg>
       {{ t('combat.victory.continue') }}

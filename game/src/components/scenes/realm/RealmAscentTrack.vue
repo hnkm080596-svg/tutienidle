@@ -3,11 +3,12 @@
 // medallions + realm banner plaques riding it, mist veil at the summit.
 // internal-scroll region (spec: overflow internal-scroll, hidden
 // scrollbars + scrollfade mask).
+import { computed, onMounted, ref } from 'vue'
 import type { RealmPassiveNode } from '@/data/realm/RealmPassiveNodes'
 import RealmAscentNode from './RealmAscentNode.vue'
 import { useI18n } from 'vue-i18n'
 
-defineProps<{
+const props = defineProps<{
   nodes: readonly RealmPassiveNode[]
   currentTier: number
   nextTier: number | null
@@ -16,10 +17,24 @@ defineProps<{
 }>()
 
 const { t } = useI18n()
+
+// DOM order high->low so the mortal rung sits at the BOTTOM of the
+// ascent (same visual as the old column-reverse, but overflow now
+// scrolls normally - column-reverse + overflow-y + space-evenly made
+// the overflowing rungs unreachable and the ladder read as empty).
+const reversedNodes = computed(() => [...props.nodes].reverse())
+
+const trackEl = ref<HTMLElement | null>(null)
+// Anchor the scroll at the bottom rung (current realm) on mount.
+onMounted(() => {
+  const el = trackEl.value
+  if (el) el.scrollTop = el.scrollHeight
+})
 </script>
 
 <template>
   <div
+    ref="trackEl"
     class="realm-panel__nodes"
     :aria-label="t('panels.realm.nodes.aria')"
     :style="{ '--path-progress': `${pathProgress}%` }"
@@ -30,7 +45,7 @@ const { t } = useI18n()
     <i class="realm-track__mist art-needed" data-art-id="realm-summit-mist" aria-hidden="true" />
 
     <RealmAscentNode
-      v-for="(node, index) in nodes"
+      v-for="(node, index) in reversedNodes"
       :key="`${node.realmId}-${index}`"
       :node="node"
       :index="index"
@@ -47,8 +62,8 @@ const { t } = useI18n()
   position: relative;
   height: 100%;
   display: flex;
-  flex-direction: column-reverse;
-  justify-content: space-evenly;
+  flex-direction: column;
+  justify-content: flex-start;
   gap: 10px;
   padding: 14px 0 20px;
   overflow-y: auto;

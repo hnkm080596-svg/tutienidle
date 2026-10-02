@@ -29,28 +29,32 @@ function close() {
     <CharacterPanel v-if="ui.characterSceneTab === 'character'" />
     <InventoryPanel v-else />
 
-    <!-- Chi tiet drawer (scene 04 chi-tiet-drawer): rides the scroll's
-         right edge as a floating overlay, same authority as before. -->
-    <Transition name="stats-card-fade">
-      <CharacterDetailCard
-        v-if="ui.characterOverlayOpen && ui.characterSceneTab === 'character' && ui.characterDetailOpen"
-        class="character-detail-dock"
-      />
-    </Transition>
+    <!-- Chi tiet drawer (scene 04 chi-tiet-drawer): envelope-overlay
+         slot so it anchors to the scroll envelope at spec geometry
+         instead of hugging the content region's right edge. -->
+    <template #overlay>
+      <Transition name="stats-card-fade">
+        <CharacterDetailCard
+          v-if="ui.characterOverlayOpen && ui.characterSceneTab === 'character' && ui.characterDetailOpen"
+          class="character-detail-dock"
+        />
+      </Transition>
+    </template>
   </ImperialScrollScene>
 </template>
 
 <style scoped>
-/* The detail card overlays the scroll's right content column (spec:
-   envelope-right-overlay). It sits inside the scroll's main region via
-   absolute positioning against the envelope's stacking context. */
+/* Spec chi-tiet-drawer 1140/96/404/800 on the 1672x941 canvas,
+   resolved against the 1540x840 envelope (origin 66/50): left
+   69.74cqw, top 5.48cqh, w 26.23cqw, h 95.24cqh - inset, not
+   full-height edge-hugging. */
 .character-detail-dock {
   position: absolute;
-  right: 1cqw;
-  top: 0;
-  bottom: 0;
+  left: 69.74cqw;
+  top: 5.48cqh;
   z-index: 6;
-  width: min(30cqw, 400px);
+  width: 26.23cqw;
+  height: 95.24cqh;
 }
 
 .stats-card-fade-enter-active,

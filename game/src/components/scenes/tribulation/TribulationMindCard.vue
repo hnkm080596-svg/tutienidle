@@ -45,11 +45,10 @@ const seconds = computed(() => Math.ceil(props.secondsRemaining))
 </template>
 
 <style scoped>
-/* Spec 14 question-right: the mind card hugs the right edge under the
-   tracker. top:26% keeps it clear of the scene's THIEN KIEP title band
-   (~17% height) - at 16% the card edge clipped the title mid-glyph
-   (ui-audit progression fix). */
-.tribulation-ui__mind { position:absolute; top:26%; right:4%; width:min(430px, 42vw); display:flex; flex-direction:column; gap:10px; pointer-events:auto; isolation:isolate; border-radius:var(--radius-md); padding:18px 20px; }
+/* Spec 14 mind-card 1090/200/522/380: right-anchored at 21.25% top
+   (right edge 3.59% off the canvas edge), 31.22vw wide, capped at
+   40.38% tall. */
+.tribulation-ui__mind { position:absolute; top:21.25%; right:3.59%; width:min(31.22vw, 522px); max-height:40.38%; overflow-y:auto; display:flex; flex-direction:column; gap:10px; pointer-events:auto; isolation:isolate; border-radius:var(--radius-md); padding:18px 20px; }
 .tribulation-ui__mind > :not(.ink-nine-slice) { position:relative; z-index:2; }
 .tribulation-ui__question { margin:0; font-size:var(--text-lg); font-weight:700; color:var(--chrome-100); }
 .tribulation-ui__answers { display:grid; grid-template-columns:1fr; gap:8px; }

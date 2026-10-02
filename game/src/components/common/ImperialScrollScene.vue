@@ -119,6 +119,13 @@ const cloudUrl = hkChromeUrl('cloud-ornament')
               <slot name="footer" />
             </footer>
           </div>
+
+          <!-- Envelope-relative overlay layer (e.g. the scene 04
+               chi-tiet drawer, spec anchor envelope-right-overlay):
+               children position themselves in cqw/cqh. -->
+          <div v-if="$slots.overlay" class="hk-scroll__overlay">
+            <slot name="overlay" />
+          </div>
         </div>
       </div>
     </div>
@@ -233,8 +240,11 @@ const cloudUrl = hkChromeUrl('cloud-ornament')
   margin: 0 0 6%;
   padding: 0;
   color: var(--hk-text-primary, #f2ead8);
-  font: 700 clamp(15px, 1.6cqw, 26px) var(--hk-font-display, var(--font-display, serif));
-  letter-spacing: 0.14em;
+  /* Longer scene titles (e.g. the body scene's two-part name) must
+     stay inside the painted plaque: nowrap + a smaller floor. */
+  white-space: nowrap;
+  font: 700 clamp(12px, 1.35cqw, 22px) var(--hk-font-display, var(--font-display, serif));
+  letter-spacing: 0.12em;
   text-shadow: 0 1px 6px rgba(0, 0, 0, 0.55);
   pointer-events: none;
 }
@@ -305,6 +315,18 @@ const cloudUrl = hkChromeUrl('cloud-ornament')
   flex: 0 0 auto;
   min-height: 0;
   margin-top: 1.2cqh;
+}
+
+/* Overlay layer: clicks pass through the wrapper; only slotted
+   surfaces take input. */
+.hk-scroll__overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+.hk-scroll__overlay > * {
+  pointer-events: auto;
 }
 
 /* ---------- open / close signature ---------- */

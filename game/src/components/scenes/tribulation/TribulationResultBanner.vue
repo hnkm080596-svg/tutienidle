@@ -18,7 +18,9 @@ defineProps<{
 </template>
 
 <style scoped>
-.tribulation-ui__result { position:absolute; top:40%; left:50%; transform:translate(-50%, -50%); display:flex; flex-direction:column; gap:8px; isolation:isolate; padding:26px 40px; border-radius:var(--radius-md); }
+/* Spec 14 result 536/340/600/220: centered band - the 600x220 box
+   centers at ~47.8% top. */
+.tribulation-ui__result { position:absolute; top:47.82%; left:50%; transform:translate(-50%, -50%); width:min(35.89vw, 600px); display:flex; flex-direction:column; gap:8px; isolation:isolate; padding:26px 40px; border-radius:var(--radius-md); }
 .tribulation-ui__result > :not(.ink-nine-slice) { position:relative; z-index:2; }
 .tribulation-ui__result-title { font-family:var(--font-display); font-size:var(--text-display-lg); font-weight:800; text-shadow:0 0 18px var(--scene-tribulation-glow); }
 .tribulation-ui__result-text { font-size:var(--text-sm); color:var(--scene-tribulation-text-soft); }

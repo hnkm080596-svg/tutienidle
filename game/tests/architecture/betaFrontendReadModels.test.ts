@@ -193,14 +193,20 @@ describe('beta FE-contract read-models - import guards', () => {
   it(
     'no panel imports ReleasePolicy or rebuilds reward admission',
     () => {
-      // DongFuCommandWheel is a NAVIGATION surface (hotspot wheel): its
-      // isRealmAvailable deep-link check is not reward admission, so it
-      // is a recorded exception - everything under panels/ is not.
+      // The ban covers the whole component tree (panels + scenes), not
+      // just panels/. DongFuCommandWheelLayer is a NAVIGATION surface
+      // (hotspot wheel): its isRealmAvailable deep-link check is not
+      // reward admission, so it is a recorded exception - every other
+      // file under components/ is not.
+      const EXCEPTIONS = new Set([
+        'components/scenes/dong-fu/wheel/DongFuCommandWheelLayer.vue',
+      ])
       const offenders = srcCorpus(SRC_DIR)
         .filter(
           (file) =>
             !isTestFile(file.fromSrc) &&
-            file.fromSrc.startsWith('components/panels/') &&
+            file.fromSrc.startsWith('components/') &&
+            !EXCEPTIONS.has(file.fromSrc) &&
             /ReleasePolicy|itemDrops|isCompanionPullTokenSourceSuppressed|domainUnlockRealmId|breakthroughRealmId/.test(
               file.text,
             ),

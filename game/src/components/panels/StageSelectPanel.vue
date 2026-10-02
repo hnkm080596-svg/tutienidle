@@ -24,10 +24,6 @@ import ExplorationChapterBand from '@/components/scenes/exploration/ExplorationC
 import ExplorationDetailPanel from '@/components/scenes/exploration/ExplorationDetailPanel.vue'
 import ExplorationProgressFooter from '@/components/scenes/exploration/ExplorationProgressFooter.vue'
 
-// RESERVED slot (audit): the zone rail is not in ref 09 - flip this when
-// the rail is implemented so the workspace grid gains its column.
-const ZONE_RAIL_VISIBLE = false
-
 // exploration-map-chrome-kit (stable art): frame around the map panel,
 // chapter divider under the title, soft-edge mask on the scroll region.
 // Geography/routes/stage marks stay runtime-owned - the kit is chrome only.
@@ -254,40 +250,46 @@ function start() {
   <BuildingConstructionGate building-id="teleport_array">
   <div class="stage-select-shell">
     <div class="stage-select">
-      <ExplorationChapterTabs
-        :zones="zones"
-        :selected-zone-id="selectedZoneId"
-        :is-zone-unlocked="isZoneUnlocked"
-        :chapter-options="chapterOptions"
-        :selected-chapter="selectedChapter"
-        @select-zone="selectZone"
-        @select-chapter="selectChapter"
-      />
+      <div class="stage-select__workspace">
+        <!-- Spec 09 zone-rail (288/176/140/560): zone selection lives
+             on the hanging-seal rail, not the chapter tab row. -->
+        <ExplorationZoneRail
+          :zones="zones"
+          :selected-zone-id="selectedZoneId"
+          :is-zone-unlocked="isZoneUnlocked"
+          @select-zone="selectZone"
+        />
 
-      <div class="stage-select__workspace" :class="{ 'stage-select__workspace--rail': ZONE_RAIL_VISIBLE }">
-        <!-- zone-rail: RESERVED architecture slot (audit) - renders nothing. -->
-        <ExplorationZoneRail :visible="ZONE_RAIL_VISIBLE" />
-
-        <ExplorationMapPanel
-          ref="mapPanel"
-          :zone-name="selectedZone?.name ?? ''"
-          :frame-src="MAP_FRAME_SRC"
-          :divider-src="CHAPTER_DIVIDER_SRC"
-          :mask-src="MAP_MASK_SRC"
-          :has-stages="stagesInZone.length > 0"
-        >
-          <ExplorationChapterBand
-            v-for="band in chapterBands"
-            :key="band.chapter"
-            :chapter="band.chapter"
-            :label="band.label"
-            :stages="band.stages"
-            :models="modelById"
-            :selected-stage-id="selectedStageId"
-            :boss-seal-url="bossSealUrl"
-            @select-stage="selectStage"
+        <!-- Spec 09: chapter-tabs (444/176/680/44) hangs over the map
+             column only - it spans the center band, not the workspace. -->
+        <div class="stage-select__map-col">
+          <ExplorationChapterTabs
+            :chapter-options="chapterOptions"
+            :selected-chapter="selectedChapter"
+            @select-chapter="selectChapter"
           />
-        </ExplorationMapPanel>
+
+          <ExplorationMapPanel
+            ref="mapPanel"
+            :zone-name="selectedZone?.name ?? ''"
+            :frame-src="MAP_FRAME_SRC"
+            :divider-src="CHAPTER_DIVIDER_SRC"
+            :mask-src="MAP_MASK_SRC"
+            :has-stages="stagesInZone.length > 0"
+          >
+            <ExplorationChapterBand
+              v-for="band in chapterBands"
+              :key="band.chapter"
+              :chapter="band.chapter"
+              :label="band.label"
+              :stages="band.stages"
+              :models="modelById"
+              :selected-stage-id="selectedStageId"
+              :boss-seal-url="bossSealUrl"
+              @select-stage="selectStage"
+            />
+          </ExplorationMapPanel>
+        </div>
 
         <ExplorationDetailPanel
           :stage="selectedStage"
@@ -335,21 +337,33 @@ function start() {
   color: var(--paper-text);
 }
 
+/* Spec 09 workspace on the 1244 band: zone-rail 140 | map 700 |
+   detail 372 with two 16px gaps -> 11.25% | 56.27% | 29.9% + 1.29%. */
 .stage-select__workspace {
   flex: 1;
   min-height: 0;
   display: grid;
-  grid-template-columns: minmax(0, 1.25fr) minmax(290px, .75fr);
+  grid-template-columns: minmax(0, 11.25%) minmax(0, 56.27%) minmax(0, 29.9%);
+  column-gap: 1.29%;
 }
 
-/* RESERVED rail column appears only when the slot is enabled. */
-.stage-select__workspace--rail {
-  grid-template-columns: auto minmax(0, 1.25fr) minmax(290px, .75fr);
+.stage-select__map-col {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
-/* Fit-refactor dot 2 - do theo CARD (overlay-panel container), khong con
-   viewport; scene clamp tu co nen bo flex-basis override. */
-@container overlay-panel (max-width: 900px) {
+.stage-select__map-col > :last-child {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+/* Fit-refactor dot 2 - do theo CARD (unnamed container query resolves
+   against the imperial-scroll envelope in scene mounts and the
+   overlay-panel card in legacy mounts); scene clamp tu co nen bo
+   flex-basis override. */
+@container (max-width: 900px) {
   .stage-select__workspace { display: flex; flex-direction: column; }
   .stage-select__detail { min-height: 360px; }
 }

@@ -24,7 +24,9 @@ interface RewardCell {
 }
 
 const cells = computed<RewardCell[]>(
-  () => props.row.rewards.map((reward, index) => ({
+  // A malformed row (non-array rewards) renders nothing instead of
+  // throwing.
+  () => (Array.isArray(props.row.rewards) ? props.row.rewards : []).map((reward, index) => ({
     key: `${reward.kind}-${index}`,
     icon: rewardIcon(reward),
     label: rewardLabel(reward),

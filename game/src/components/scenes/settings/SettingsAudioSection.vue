@@ -2,9 +2,11 @@
 // Scene 16/17 audio section (ref's Am Thanh - CORRECTED to the real
 // store: on/off + master + per-channel volumes + reduced shake; ref's
 // spatial-audio/combat-ducking toggles are INVALID).
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Chip from '@/components/common/primitives/Chip.vue'
 import { useAudioStore } from '@/stores/audio'
+import { hkChromeUrl } from '@/ui/huyenKimChrome'
 import SettingsSectionFrame from './SettingsSectionFrame.vue'
 
 // W3: one slider per audio channel (field = store state, channel = bus id).
@@ -16,11 +18,30 @@ const AUDIO_CHANNELS = [
 
 const audio = useAudioStore()
 const { t } = useI18n()
+
+// Scene 17 grammar: audio sliders wear the slider-track + slider-thumb
+// chrome when the PNGs are ready; the native range stays the fallback.
+// The vars + flag live on THIS section root - the panel-level marker
+// cannot be scoped-selected from inside a scoped child, and the
+// :global() wrapper miscompiles the vendor pseudo-element selectors
+// (their declarations leaked onto the whole .settings-panel).
+const sliderTrackUrl = hkChromeUrl('slider-track')
+const sliderThumbUrl = hkChromeUrl('slider-thumb')
+const sliderChromeStyle = computed<Record<string, string> | undefined>(() =>
+  sliderTrackUrl && sliderThumbUrl
+    ? {
+        '--hk-slider-track': `url("${sliderTrackUrl}")`,
+        '--hk-slider-thumb': `url("${sliderThumbUrl}")`,
+      }
+    : undefined,
+)
 </script>
 
 <template>
   <SettingsSectionFrame
     class="settings-panel__audio"
+    :class="{ 'has-hk-slider': Boolean(sliderChromeStyle) }"
+    :style="sliderChromeStyle"
     :title="t('panels.settings.sections.audio')"
     :label="t('panels.settings.sections.audioAria')"
     data-hk-region="audio"
@@ -114,21 +135,23 @@ const { t } = useI18n()
   width: 140px;
   accent-color: var(--gold);
 }
-/* slider-track + slider-thumb chrome (scene 17 grammar); enabled only when
-   the registry resolves both URLs (has-hk-slider on the panel root). */
-:global(.settings-panel.has-hk-slider) .settings-panel__audio-volume input[type='range'] {
+/* slider-track + slider-thumb chrome (scene 17 grammar); enabled only
+   when the registry resolves both URLs (has-hk-slider on THIS section
+   root - plain scoped selectors keep the vendor pseudos on the input,
+   not the panel). */
+.has-hk-slider .settings-panel__audio-volume input[type='range'] {
   -webkit-appearance: none;
   appearance: none;
   height: 24px;
   background: transparent;
   cursor: pointer;
 }
-:global(.settings-panel.has-hk-slider) .settings-panel__audio-volume input[type='range']::-webkit-slider-runnable-track {
+.has-hk-slider .settings-panel__audio-volume input[type='range']::-webkit-slider-runnable-track {
   height: 10px;
   border-radius: 5px;
   background: var(--hk-slider-track) center / 100% 100% no-repeat;
 }
-:global(.settings-panel.has-hk-slider) .settings-panel__audio-volume input[type='range']::-webkit-slider-thumb {
+.has-hk-slider .settings-panel__audio-volume input[type='range']::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
   width: 20px;
@@ -138,23 +161,23 @@ const { t } = useI18n()
   background: var(--hk-slider-thumb) center / contain no-repeat;
   cursor: grab;
 }
-:global(.settings-panel.has-hk-slider) .settings-panel__audio-volume input[type='range']::-moz-range-track {
+.has-hk-slider .settings-panel__audio-volume input[type='range']::-moz-range-track {
   height: 10px;
   border-radius: 5px;
   background: var(--hk-slider-track) center / 100% 100% no-repeat;
 }
-:global(.settings-panel.has-hk-slider) .settings-panel__audio-volume input[type='range']::-moz-range-thumb {
+.has-hk-slider .settings-panel__audio-volume input[type='range']::-moz-range-thumb {
   width: 20px;
   height: 20px;
   border: none;
   background: var(--hk-slider-thumb) center / contain no-repeat;
   cursor: grab;
 }
-:global(.settings-panel.has-hk-slider) .settings-panel__audio-volume input[type='range']:focus-visible {
+.has-hk-slider .settings-panel__audio-volume input[type='range']:focus-visible {
   outline: 2px solid var(--chrome-300);
   outline-offset: 3px;
 }
-:global(.settings-panel.has-hk-slider) .settings-panel__audio-volume input[type='range']:disabled {
+.has-hk-slider .settings-panel__audio-volume input[type='range']:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }

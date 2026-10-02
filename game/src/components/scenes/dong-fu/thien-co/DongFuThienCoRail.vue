@@ -39,10 +39,12 @@ const open = ref(false)
 </template>
 
 <style scoped>
+/* Spec thien-co-collapsed 1388/856/268/52: right 16, bottom 33
+   design px on the 1672x941 canvas. */
 .thien-co-rail {
   position: absolute;
-  right: var(--hk-space-4, 12px);
-  bottom: var(--hk-space-4, 12px);
+  right: 0.96vw;
+  bottom: 3.51vh;
   z-index: 9;
   display: flex;
   flex-direction: column;

@@ -56,11 +56,16 @@ const TOAST_BOTTOM_MARGIN_PX = 24
 const TOAST_ITEM_HEIGHT_PX = 46
 const TOAST_GAP_PX = 4
 
+// Hard cap on top of the height-derived count - a 720p viewport
+// otherwise permits ~13 concurrent toasts, which reads as a pile
+// down the right edge (e.g. on victory loot bursts).
+const TOAST_MAX_VISIBLE = 6
+
 function updateMaxVisible() {
   const availableHeight = window.innerHeight - TOAST_TOP_OFFSET_PX - TOAST_BOTTOM_MARGIN_PX
   const maxVisible = Math.floor((availableHeight + TOAST_GAP_PX) / (TOAST_ITEM_HEIGHT_PX + TOAST_GAP_PX))
 
-  notification.setMaxVisible(maxVisible)
+  notification.setMaxVisible(Math.min(maxVisible, TOAST_MAX_VISIBLE))
 }
 
 onMounted(() => {

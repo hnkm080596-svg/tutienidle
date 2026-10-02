@@ -34,7 +34,17 @@ const { t } = useI18n()
 </template>
 
 <style scoped>
-.realm-passives { display: flex; flex-direction: column; gap: 6px; min-height: 0; }
+/* Rail-bounded: the passives region yields its extra height to the
+   siblings (spec region h170 with internal scrollfade) so the
+   breakthrough CTA never gets pushed out of the 610px rail (D-M5). */
+.realm-passives {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 0;
+}
+.realm-panel__passives { flex: 1 1 auto; }
 .realm-panel__passives {
   display: flex;
   flex-direction: column;

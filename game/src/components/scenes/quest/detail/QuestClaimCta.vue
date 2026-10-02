@@ -17,17 +17,19 @@ const { t } = useI18n()
 
 // Model-resolved claimability (mirrors the old panel: claimed ||
 // !available disables); the mutation itself is questOps.claimQuest.
-const claimed = computed(() => props.row.claim.claimed)
-const disabled = computed(() => claimed.value || !props.row.claim.available)
+// A row without a claim verdict is malformed - render nothing.
+const claim = computed(() => props.row.claim ?? null)
+const claimed = computed(() => claim.value?.claimed ?? false)
+const disabled = computed(() => claimed.value || !claim.value?.available)
 
 const note = computed(() => {
-  if (props.row.claim.disabledReason === 'missing-turnin-items' && props.row.turnIn) {
+  if (claim.value?.disabledReason === 'missing-turnin-items' && props.row.turnIn) {
     return t('panels.quest.bagShortfall', {
       have: props.row.turnIn.owned,
       need: props.row.turnIn.required,
     })
   }
-  if (props.row.claim.disabledReason === 'incomplete') {
+  if (claim.value?.disabledReason === 'incomplete') {
     return t('panels.quest.scene.reasonIncomplete')
   }
   return null
@@ -35,7 +37,7 @@ const note = computed(() => {
 </script>
 
 <template>
-  <footer class="quest-claim">
+  <footer v-if="claim" class="quest-claim">
     <p v-if="note" class="quest-claim__note">{{ note }}</p>
     <GameButton
       size="lg"

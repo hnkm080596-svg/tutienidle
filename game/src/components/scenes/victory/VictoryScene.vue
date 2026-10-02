@@ -60,13 +60,13 @@ const model = useVictorySceneModel(computed(() => props.summary))
 </template>
 
 <style scoped>
-/* Scene 15 ceremonial scroll: ~620px content column (design
-   526/240/620/430), rollers sit on the scroll edge band. */
+/* Scene 15 ceremonial scroll: spec envelope 760 design px (~582
+   runtime), rollers sit on the scroll edge band. */
 .victory-scene {
   position: relative;
   isolation: isolate;
   box-sizing: border-box;
-  width: min(660px, calc(100vw - 32px));
+  width: min(582px, calc(100vw - 32px));
   padding: 34px 40px 30px;
   background: transparent;
   border: 0;

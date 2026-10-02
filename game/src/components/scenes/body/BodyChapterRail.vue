@@ -58,7 +58,11 @@ const { t } = useI18n()
 .body-rail__title {
   font-family: var(--font-display, serif);
   font-weight: 700;
-  font-size: var(--text-md);
+  /* The long scene title must stay inside the 132px rail: shrink +
+     tight wrap instead of overflowing the plaque. */
+  font-size: clamp(11px, 1cqw, var(--text-md));
+  line-height: 1.15;
+  overflow-wrap: break-word;
   color: var(--hk-gold-radiant, #f4d98b);
 }
 .body-rail__help {

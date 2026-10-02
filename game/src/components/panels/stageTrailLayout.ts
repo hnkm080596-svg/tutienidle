@@ -59,11 +59,15 @@ export function layoutStageTrail(count: number): StageTrailLayout {
 // Chapter-band variant: the audit's EXACT scene-10 pattern renders all
 // three chapter tracks at once, one serpentine wave per band ending on
 // the chapter's boss medallion at the right edge.
-const BAND_START_X = 0.26
-const BAND_SPAN_X = 0.54
+// Node span keeps clear of the chapter marker (left edge, ~90px of the
+// band) on the left and of the band's right edge on the right - an
+// 84px node centered at 0.92/0.26 of a ~464px trail clipped into the
+// marker copy / off the band (D-M4).
+const BAND_START_X = 0.3
+const BAND_SPAN_X = 0.5
 const BAND_Y_HIGH = 0.36
 const BAND_Y_LOW = 0.62
-const BAND_BOSS_X = 0.92
+const BAND_BOSS_X = 0.885
 const BAND_BOSS_Y = 0.48
 
 export function layoutChapterBandTrail(count: number): StageTrailLayout {

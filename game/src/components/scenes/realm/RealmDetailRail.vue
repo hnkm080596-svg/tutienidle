@@ -24,14 +24,20 @@ import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
 .realm-scene__rail-inner {
   position: relative;
   z-index: 3;
+  /* height:100% + border-box so padding stays inside the painted rail;
+     otherwise the inner box overflows the card by the pad and the
+     rail-bottom CTA (Quan Khi) renders outside the frame (D-M5). */
   height: 100%;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding: 16px 14px;
+  /* Bottom pad > fade depth: the CTA must end fully inside the opaque
+     band, not under the scrollfade. */
+  padding: 16px 14px 24px;
   overflow-y: auto;
   scrollbar-width: none;
-  mask-image: linear-gradient(to bottom, transparent 0, #000 12px, #000 calc(100% - 12px), transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0, #000 12px, #000 calc(100% - 8px), transparent 100%);
 }
 .realm-scene__rail-inner::-webkit-scrollbar { display: none; }
 </style>

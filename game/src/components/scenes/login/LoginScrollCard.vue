@@ -80,16 +80,15 @@ const cornerOrnamentUrl = hkChromeUrl('corner-ornament')
     width: min(560px, calc(100vw - 40px));
   }
 }
-/* surface-xl-scroll's frame occupies ~12% of each side and ~15% top/
-   bottom at this size; content padding keeps everything inside the
-   paper's inner safe area (spec content width 496). */
+/* Spec padding 32 design px on both axes: the scroll's inner safe area
+   is the 496-wide band (560 - 2*32). 32/1672 = 1.91vw, 32/941 = 3.4vh. */
 .auth-card__content {
   position: relative;
   z-index: 3;
   display: flex;
   flex-direction: column;
   gap: clamp(10px, 1.5vh, 16px);
-  padding: clamp(46px, 7vh, 72px) clamp(56px, 5.6vw, 80px) clamp(40px, 5.5vh, 60px);
+  padding: 3.4vh 1.91vw;
 }
 
 .auth-card__corner {
