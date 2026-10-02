@@ -14,6 +14,7 @@ import { materials } from '../../data/materials/materials'
 import { pills } from '../../data/pill/pills'
 import { GameManager } from '../../core/game/GameManager'
 import { makeInstance } from '../../core/equipment/EquipmentInstance.fixture'
+import { alchemyJobFixture } from '../../core/alchemy/AlchemyJob.fixture'
 import { createDefaultPlayer, type PlayerData } from '../../core/player/Player'
 import { freshSwordPathState } from '../../core/kiem-tu/KiemTuState'
 import { SWORD_PATHWAY } from '../../core/kiem-tu/KiemTuPath'
@@ -227,7 +228,7 @@ function populateSource(player: PlayerData, manager: GameManager): void {
   // Alchemy — a still-running job (completesAtMs in the future so the
   // restore-time offline settle leaves it pending).
   manager.alchemySystem.restoreJobs([
-    {
+    alchemyJobFixture({
       jobId: 'conf-job',
       recipeId: 'conf-recipe',
       pillId: pills[0]!.id,
@@ -235,7 +236,7 @@ function populateSource(player: PlayerData, manager: GameManager): void {
       startedAtMs: NOW - 1_000,
       completesAtMs: NOW + 999_999,
       roomLevelAtStart: 1,
-    },
+    }),
   ])
 
   // Decompose — non-default filters, workers within capacity, live timer.

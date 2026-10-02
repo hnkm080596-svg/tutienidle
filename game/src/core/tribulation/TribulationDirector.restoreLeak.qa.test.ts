@@ -27,6 +27,7 @@ import { SKILLS } from '../../data/skill/Skills'
 import { pills } from '../../data/pill/pills'
 import { MERIDIANS } from '../../data/realm/Meridians'
 import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
+import { tribulationCommitWitnessDigest } from './TribulationCommitWitness'
 
 function setupManager() {
   const gameManager = new GameManager()
@@ -66,6 +67,9 @@ describe('TribulationDirector - restoreRuntime replacement leak (QA evidence)', 
     const director = gameManager.tribulationDirector
 
     // Timeline A: an outcome was committed (undrained, unbound receipt).
+    // F-TRB-FORGE - the record now carries the commit witness; a
+    // replay-valid literal (departing qi_refining, last chapter floor,
+    // digest folded over the whole bundle).
     director.restoreRuntime({
       committedOutcome: {
         attemptId: 7,
@@ -73,6 +77,25 @@ describe('TribulationDirector - restoreRuntime replacement leak (QA evidence)', 
         targetRealmId: 'foundation_establishment',
         grade: 'heaven',
         breakthroughType: 'normal',
+        witness: {
+          departingRealmId: 'qi_refining',
+          chapterIndex: 2,
+          chaptersTotal: 3,
+          lightningStrikesTaken: 0,
+          attemptSeed: 1,
+          digest: tribulationCommitWitnessDigest({
+            attemptId: 7,
+            outcome: 'victory',
+            targetRealmId: 'foundation_establishment',
+            grade: 'heaven',
+            breakthroughType: 'normal',
+            departingRealmId: 'qi_refining',
+            chapterIndex: 2,
+            chaptersTotal: 3,
+            lightningStrikesTaken: 0,
+            attemptSeed: 1,
+          }),
+        },
         receipt: null,
         settlementError: false,
       },

@@ -37,6 +37,7 @@ import type { Skill } from '../skill/Skill'
 import type { Technique } from '../technique/Technique'
 import type { EquipmentSlotState } from '../equipment/EquipmentSlotState'
 import type { AlchemyJobSave } from '../../services/save/saveTypes'
+import { alchemyJobReservationDigest } from '../alchemy/AlchemySystem'
 import type { Quest } from '../quest/Quest'
 import { buildGameSave, restoreGameSession, type GameSave } from '../../services/save/SaveSystem'
 import { CURRENT_SAVE_VERSION } from '../../services/save/saveVersion'
@@ -203,15 +204,34 @@ const SAVED_SLOT_STATE: EquipmentSlotState = {
   enhanceFailStreak: 2,
 }
 
-const FUTURE_JOB: AlchemyJobSave = {
-  jobId: 'saved-job',
-  recipeId: 'saved-recipe',
-  pillId: pills[0]!.id,
-  herbMaterialId: 'saved-herb',
-  startedAtMs: Date.now(),
-  completesAtMs: Date.now() + 86_400_000, // far future — never settles during the test
-  roomLevelAtStart: 1,
-}
+const FUTURE_JOB: AlchemyJobSave = (() => {
+  const jobFields = {
+    jobId: 'saved-job',
+    recipeId: 'saved-recipe',
+    pillId: pills[0]!.id,
+    herbMaterialId: 'saved-herb',
+    startedAtMs: Date.now(),
+    completesAtMs: Date.now() + 86_400_000, // far future — never settles during the test
+    roomLevelAtStart: 1,
+  }
+  const reservation = {
+    woodId: 'saved-wood',
+    fuelWoodAmount: 1,
+    spiritStoneCost: 0,
+    herbAmount: 1,
+    specialIngredients: [] as { materialId: string; amount: number }[],
+    costScale: 1,
+    digest: 0,
+  }
+
+  return {
+    ...jobFields,
+    reservation: {
+      ...reservation,
+      digest: alchemyJobReservationDigest(jobFields, reservation),
+    },
+  }
+})()
 
 function savedItem(instanceId = 'saved-item'): ReturnType<typeof makeInstance> {
   return makeInstance({

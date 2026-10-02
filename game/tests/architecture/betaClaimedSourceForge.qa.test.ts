@@ -36,6 +36,7 @@ import { QUESTS } from '../../src/data/quest/quests'
 import { buildings } from '../../src/data/building/buildings'
 import { TECHNIQUES } from '../../src/data/technique/Techniques'
 import { alchemySecondsFor } from '../../src/core/alchemy/AlchemySystem'
+import { witnessedAlchemyJob } from './helpers/witnessFixtures'
 import { CURRENT_SAVE_VERSION } from '../../src/services/save/saveVersion'
 import { validateGameSaveShape } from '../../src/services/save/saveShapeValidation'
 import type { PersistentTimedEffect } from '../../src/core/player/PersistentTimedEffect'
@@ -330,15 +331,19 @@ describe('F-A7-3: alchemy job pillId coherence', () => {
     // this assertion specific to the pillId mismatch.
     ;(save as Record<string, unknown>).buildings = pillRoomWitness
     ;(save as Record<string, unknown>).alchemyJobs = [
-      {
-        jobId: 'j1',
-        recipeId: recipe.id,
-        pillId: 'phi_van_dan_mortal',
-        herbMaterialId: recipe.herbVariants[0]!.materialId,
-        startedAtMs: 1,
-        completesAtMs: 2,
-        roomLevelAtStart: 1,
-      },
+      witnessedAlchemyJob(
+        {
+          jobId: 'j1',
+          recipeId: recipe.id,
+          pillId: 'phi_van_dan_mortal',
+          herbMaterialId: recipe.herbVariants[0]!.materialId,
+          startedAtMs: 1,
+          completesAtMs: 2,
+          roomLevelAtStart: 1,
+        },
+        undefined,
+        recipe,
+      ),
     ]
 
     expect(validateGameSaveShape(save).ok).toBe(false)
@@ -349,16 +354,20 @@ describe('F-A7-3: alchemy job pillId coherence', () => {
     const save = validSave()
     ;(save as Record<string, unknown>).buildings = pillRoomWitness
     ;(save as Record<string, unknown>).alchemyJobs = [
-      {
-        jobId: 'j1',
-        recipeId: recipe.id,
-        pillId: recipe.pillId,
-        herbMaterialId: recipe.herbVariants[0]!.materialId,
-        // F-A12-4: the span replays the authored recipe duration.
-        startedAtMs: 1,
-        completesAtMs: 1 + alchemySecondsFor(recipe, 1) * 1000,
-        roomLevelAtStart: 1,
-      },
+      witnessedAlchemyJob(
+        {
+          jobId: 'j1',
+          recipeId: recipe.id,
+          pillId: recipe.pillId,
+          herbMaterialId: recipe.herbVariants[0]!.materialId,
+          // F-A12-4: the span replays the authored recipe duration.
+          startedAtMs: 1,
+          completesAtMs: 1 + alchemySecondsFor(recipe, 1) * 1000,
+          roomLevelAtStart: 1,
+        },
+        undefined,
+        recipe,
+      ),
     ]
 
     expect(validateGameSaveShape(save).ok).toBe(true)
@@ -397,17 +406,21 @@ describe('F-A7-3 emit: settle delivers the authored recipe pill, never the forge
     )!
 
     manager.alchemySystem.restoreJobs([
-      {
-        jobId: 'j-forged',
-        recipeId: recipe.id,
-        // Forged denormalized claim - a dormant pill a live recipe
-        // could never mint.
-        pillId: 'phi_van_dan_mortal',
-        herbMaterialId: recipe.herbVariants[0]!.materialId,
-        startedAtMs: 1,
-        completesAtMs: 2,
-        roomLevelAtStart: 9,
-      },
+      witnessedAlchemyJob(
+        {
+          jobId: 'j-forged',
+          recipeId: recipe.id,
+          // Forged denormalized claim - a dormant pill a live recipe
+          // could never mint.
+          pillId: 'phi_van_dan_mortal',
+          herbMaterialId: recipe.herbVariants[0]!.materialId,
+          startedAtMs: 1,
+          completesAtMs: 2,
+          roomLevelAtStart: 9,
+        },
+        undefined,
+        recipe,
+      ),
     ])
 
     manager.alchemySystem.tick(

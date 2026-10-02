@@ -100,6 +100,7 @@ import { buildings } from '../../src/data/building/buildings'
 import { SKILLS } from '../../src/data/skill/Skills'
 import { TECHNIQUES } from '../../src/data/technique/Techniques'
 import { alchemySecondsFor } from '../../src/core/alchemy/AlchemySystem'
+import { witnessedAlchemyJob, witnessedCommitOutcomeFields } from './helpers/witnessFixtures'
 import { calculateOfflineTime } from '../../src/core/idle/GameClock'
 import {
   getActiveCultivationSpeedPercent,
@@ -204,12 +205,27 @@ function writerOf(player: PlayerData): TribulationPlayerWriter & { mods: unknown
 }
 
 function parkedHiddenOutcome(): NonNullable<TribulationRuntimeSave['committedOutcome']> {
+  // F-TRB-FORGE: carries the provenance witness a real commit leaves
+  // behind - spreads that retarget the record keep the original
+  // witness, which is exactly what the digest arm rejects.
   return {
     attemptId: 1,
     outcome: 'victory',
     targetRealmId: 'foundation_establishment',
     grade: 'human',
     breakthroughType: 'hidden',
+    ...witnessedCommitOutcomeFields({
+      attemptId: 1,
+      outcome: 'victory',
+      targetRealmId: 'foundation_establishment',
+      grade: 'human',
+      breakthroughType: 'hidden',
+      departingRealmId: 'qi_refining',
+      chapterIndex: 2,
+      chaptersTotal: 3,
+      lightningStrikesTaken: 0,
+      attemptSeed: 1,
+    }),
     receipt: null,
     settlementError: false,
   }
@@ -240,15 +256,19 @@ describe('beta scope - flagged saves load', () => {
     expect(recipe, 'fixture: a dormant-family recipe must exist').toBeDefined()
 
     const T0 = 1_700_000_000_000
-    const job = {
-      jobId: 'j1',
-      recipeId: recipe!.id,
-      pillId: recipe!.pillId,
-      herbMaterialId: recipe!.herbVariants[0]!.materialId,
-      startedAtMs: T0,
-      completesAtMs: T0 + alchemySecondsFor(recipe!, 1) * 1000,
-      roomLevelAtStart: 1,
-    }
+    const job = witnessedAlchemyJob(
+      {
+        jobId: 'j1',
+        recipeId: recipe!.id,
+        pillId: recipe!.pillId,
+        herbMaterialId: recipe!.herbVariants[0]!.materialId,
+        startedAtMs: T0,
+        completesAtMs: T0 + alchemySecondsFor(recipe!, 1) * 1000,
+        roomLevelAtStart: 1,
+      },
+      undefined,
+      recipe,
+    )
 
     const patched = {
       ...save,
@@ -675,6 +695,18 @@ describe('tribulation lifecycle + restore', () => {
         targetRealmId: 'foundation_establishment',
         grade: 'human',
         breakthroughType: 'normal',
+        ...witnessedCommitOutcomeFields({
+          attemptId: 7,
+          outcome: 'defeat',
+          targetRealmId: 'foundation_establishment',
+          grade: 'human',
+          breakthroughType: 'normal',
+          departingRealmId: 'qi_refining',
+          chapterIndex: 0,
+          chaptersTotal: 3,
+          lightningStrikesTaken: 0,
+          attemptSeed: 7,
+        }),
         receipt: null,
         settlementError: false,
       },

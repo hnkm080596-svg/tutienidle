@@ -40,6 +40,7 @@ import { SKILLS } from '../../src/data/skill/Skills'
 import { TECHNIQUES } from '../../src/data/technique/Techniques'
 import { alchemyRecipes } from '../../src/data/alchemy/alchemyRecipes'
 import { alchemySecondsFor } from '../../src/core/alchemy/AlchemySystem'
+import { witnessedAlchemyJob, witnessedCommitOutcomeFields } from './helpers/witnessFixtures'
 import { CYCLE_BASE_SECONDS_BY_REALM, computeCycleSeconds } from '../../src/core/production/ProductionBalance'
 import { QUESTS } from '../../src/data/quest/quests'
 import { lockBetaFeaturesForTests } from '../../src/core/game/__fixtures__/betaFeaturesUnlock'
@@ -326,6 +327,18 @@ describe('F-TRB-1: foundation grade rank must be resolvable', () => {
             targetRealmId: 'foundation_establishment',
             grade: 'earth',
             breakthroughType: 'normal',
+            ...witnessedCommitOutcomeFields({
+              attemptId: 1,
+              outcome: 'victory',
+              targetRealmId: 'foundation_establishment',
+              grade: 'earth',
+              breakthroughType: 'normal',
+              departingRealmId: 'qi_refining',
+              chapterIndex: 2,
+              chaptersTotal: 3,
+              lightningStrikesTaken: 0,
+              attemptSeed: 1,
+            }),
             receipt: null,
             settlementError: false,
           },
@@ -348,6 +361,18 @@ describe('F-TRB-1: foundation grade rank must be resolvable', () => {
             targetRealmId: 'foundation_establishment',
             grade: 'human',
             breakthroughType: 'normal',
+            ...witnessedCommitOutcomeFields({
+              attemptId: 1,
+              outcome: 'victory',
+              targetRealmId: 'foundation_establishment',
+              grade: 'human',
+              breakthroughType: 'normal',
+              departingRealmId: 'qi_refining',
+              chapterIndex: 2,
+              chaptersTotal: 3,
+              lightningStrikesTaken: 0,
+              attemptSeed: 1,
+            }),
             receipt: null,
             settlementError: false,
           },
@@ -449,15 +474,19 @@ describe('F-A12-4: alchemy job span replays the authored recipe duration', () =>
     const { save } = committedSave('qi_refining', {}, {
       buildings: [pillRoom],
       alchemyJobs: [
-        {
-          jobId: 'j1',
-          recipeId: recipe.id,
-          pillId: recipe.pillId,
-          herbMaterialId: recipe.herbVariants[0]!.materialId,
-          startedAtMs: 1,
-          completesAtMs: 999,
-          roomLevelAtStart: 1,
-        },
+        witnessedAlchemyJob(
+          {
+            jobId: 'j1',
+            recipeId: recipe.id,
+            pillId: recipe.pillId,
+            herbMaterialId: recipe.herbVariants[0]!.materialId,
+            startedAtMs: 1,
+            completesAtMs: 999,
+            roomLevelAtStart: 1,
+          },
+          undefined,
+          recipe,
+        ),
       ],
     })
     expect(classify(save).shape.ok).toBe(false)
@@ -467,15 +496,19 @@ describe('F-A12-4: alchemy job span replays the authored recipe duration', () =>
     const { save } = committedSave('qi_refining', {}, {
       buildings: [pillRoom],
       alchemyJobs: [
-        {
-          jobId: 'j1',
-          recipeId: recipe.id,
-          pillId: recipe.pillId,
-          herbMaterialId: recipe.herbVariants[0]!.materialId,
-          startedAtMs: Date.now() + 1_000,
-          completesAtMs: Date.now() + 1_000 + alchemySecondsFor(recipe, 1) * 1000,
-          roomLevelAtStart: 1,
-        },
+        witnessedAlchemyJob(
+          {
+            jobId: 'j1',
+            recipeId: recipe.id,
+            pillId: recipe.pillId,
+            herbMaterialId: recipe.herbVariants[0]!.materialId,
+            startedAtMs: Date.now() + 1_000,
+            completesAtMs: Date.now() + 1_000 + alchemySecondsFor(recipe, 1) * 1000,
+            roomLevelAtStart: 1,
+          },
+          undefined,
+          recipe,
+        ),
       ],
     })
     expect(classify(save).shape.ok).toBe(false)
@@ -485,15 +518,19 @@ describe('F-A12-4: alchemy job span replays the authored recipe duration', () =>
     const { save } = committedSave('qi_refining', {}, {
       buildings: [pillRoom],
       alchemyJobs: [
-        {
-          jobId: 'j1',
-          recipeId: recipe.id,
-          pillId: recipe.pillId,
-          herbMaterialId: recipe.herbVariants[0]!.materialId,
-          startedAtMs: 1,
-          completesAtMs: 1 + alchemySecondsFor(recipe, 1) * 1000,
-          roomLevelAtStart: 1,
-        },
+        witnessedAlchemyJob(
+          {
+            jobId: 'j1',
+            recipeId: recipe.id,
+            pillId: recipe.pillId,
+            herbMaterialId: recipe.herbVariants[0]!.materialId,
+            startedAtMs: 1,
+            completesAtMs: 1 + alchemySecondsFor(recipe, 1) * 1000,
+            roomLevelAtStart: 1,
+          },
+          undefined,
+          recipe,
+        ),
       ],
     })
     expect(classify(save).shape.ok).toBe(true)

@@ -45,6 +45,8 @@ import { GENERIC_PHYSICAL_BASIC } from '@/data/skill/TurnBasicAttacks'
 import { DEFAULT_PARTY_FORMATION } from '@/core/game/PartyFormation'
 import { VAN_PHAP_THAN_HOA_ID } from '@/data/buff/ReactionStatusBuffs'
 import { AlchemySystem, type ActiveAlchemyJob, type AlchemyRecipe } from '@/core/alchemy/AlchemySystem'
+import { alchemyRecipes } from '@/data/alchemy/alchemyRecipes'
+import { witnessedAlchemyJob } from './helpers/witnessFixtures'
 import { MaterialBag } from '@/core/material/MaterialBag'
 import { materials } from '@/data/materials/materials'
 import { buildings } from '@/data/building/buildings'
@@ -792,7 +794,9 @@ describe('dormancy: a hidden-family in-flight job cannot occupy the live alchemy
   }
 
   function dormantJob(jobId: string): ActiveAlchemyJob {
-    return {
+    // F-ALCH-JOB-FORGE: carried jobs need the reservation witness
+    // startJob stamps - derive it from the authored recipe.
+    const job = {
       jobId,
       recipeId: 'alchemy_phi_van_dan_qi_refining',
       pillId: 'phi_van_dan_qi_refining',
@@ -801,6 +805,8 @@ describe('dormancy: a hidden-family in-flight job cannot occupy the live alchemy
       completesAtMs: 60_000,
       roomLevelAtStart: 1,
     }
+    const recipe = alchemyRecipes.find((r) => r.id === job.recipeId)
+    return witnessedAlchemyJob(job, undefined, recipe) as ActiveAlchemyJob
   }
 
   it('a restored dormant job does not reject the beta recipe as job_slots_full', () => {

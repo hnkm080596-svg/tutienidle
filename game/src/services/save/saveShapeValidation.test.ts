@@ -6,6 +6,9 @@ import { COMPANIONS } from '../../data/companion/Companions'
 import { CULTIVATION_PATH_MODULES, type CultivationPathId } from '../../core/player/CultivationPathKit'
 import { skillCoreNodeId } from '../../core/progression/SkillCoreLevel'
 import { TECHNIQUES } from '../../data/technique/Techniques'
+import { alchemyRecipes } from '../../data/alchemy/alchemyRecipes'
+import { alchemyJobFixture } from '../../core/alchemy/AlchemyJob.fixture'
+import { alchemySecondsFor } from '../../core/alchemy/AlchemySystem'
 
 // F-REALM-1: a realm witness must carry an authored technique object.
 function fiveElementsTechnique() {
@@ -840,15 +843,24 @@ describe('validateGameSaveShape — productionSites slice (Mission A1)', () => {
 
 describe('validateGameSaveShape — alchemyJobs slice (Mission A1)', () => {
   function validJob(): Record<string, unknown> {
+    const recipe = alchemyRecipes.find((r) => r.id === 'alchemy_thong_mach_dan')!
+    // F-ALCH-JOB-FORGE: jobs carry the startJob reservation witness.
+    // F-A12-4: the span replays the authored recipe duration.
     return {
-      jobId: 'job-1',
-      recipeId: 'pill_regen_mortal',
-      pillId: 'pill_regen_mortal',
-      herbMaterialId: 'mortal_herb_decade',
-      startedAtMs: 1_725_000_000_000,
-      completesAtMs: 1_725_000_060_000,
-      roomLevelAtStart: 1,
-    }
+      ...alchemyJobFixture(
+        {
+          jobId: 'job-1',
+          recipeId: recipe.id,
+          pillId: recipe.pillId,
+          herbMaterialId: recipe.herbVariants[0]!.materialId,
+          startedAtMs: 1_725_000_000_000,
+          completesAtMs: 1_725_000_000_000 + alchemySecondsFor(recipe, 1) * 1000,
+          roomLevelAtStart: 1,
+        },
+        undefined,
+        recipe,
+      ),
+    } as Record<string, unknown>
   }
 
   it('chấp nhận alchemyJobs entry hợp lệ', () => {
@@ -1543,7 +1555,8 @@ describe('validateGameSaveShape - talent v4 M2 fields (v61)', () => {
     player.cultivationOvercharge = 12
     player.totalCultivationGained = 100
     player.nodeFreePurchaseRecord = { node_a: 2 }
-    player.phaGiapCarryStacks = 4
+    // F-PHAGIAP-CARRY: the bankable max is 2 (floor(5 * 0.5)).
+    player.phaGiapCarryStacks = 2
     player.phaGiapCarryRealmId = 'qi_refining'
 
     expect(validateGameSaveShape(save).ok).toBe(true)

@@ -26,6 +26,10 @@ import {
   type BreakthroughType,
 } from '../realm/hidden/HiddenLineage'
 import { getTribulationIntensityMultiplier } from '../talent/TalentEffects'
+import {
+  tribulationCommitWitnessDigest,
+  type TribulationCommitWitness,
+} from './TribulationCommitWitness'
 
 // TribulationDirector (spec dot-pha-loi-kiep S5) - runtime loi kiep
 // MOI thay TribulationSystem: KHONG di qua BattleSystem, khong quai
@@ -67,6 +71,14 @@ export interface CommittedTribulationOutcome {
    * facts read, not here).
    */
   readonly breakthroughType: BreakthroughType
+  /**
+   * F-TRB-FORGE - provenance witness stamped at the same commit site.
+   * Carries run-derived facts (departing realm, chapter floor, strikes,
+   * per-attempt seed) folded into one digest; save validation and
+   * settleOutcome reject records whose witness cannot replay a real
+   * commit, so a fabricated victory cannot settle the breakthrough.
+   */
+  readonly witness: TribulationCommitWitness
   /** Bound once by the outcome service; presentation renders it. */
   receipt: TribulationOutcomeResult | null
   /**
@@ -116,6 +128,7 @@ export interface TribulationRuntimeSave {
     // this slot (mirror of TribulationSaveSlice in saveTypes.ts).
     grade: ResolvableKienCoGrade
     breakthroughType: BreakthroughType
+    witness: TribulationCommitWitness
     receipt: TribulationOutcomeResult | null
     settlementError: boolean
   }
@@ -168,6 +181,11 @@ export class TribulationDirector {
   // bound to attemptId (the session id allocated at start()).
   private committedOutcome: CommittedTribulationOutcome | null = null
   private attemptId = 0
+  // F-TRB-FORGE - the run-facts the commit witness snapshots: the realm
+  // the run departed (captured before any realm write, which only
+  // settles after) and a per-attempt seed drawn once per start().
+  private attemptRealmId = ''
+  private attemptSeed = 0
   // Talent v4 M2 - Loi Kiep: snapshot of the player's tribulation
   // intensity multiplier, captured at start() so the whole kiep obeys
   // the talent that was held when it began (neutral 1 otherwise).
@@ -175,7 +193,7 @@ export class TribulationDirector {
   private readonly presentationSession: PresentationSession
   private presentationMode: PresentationMode = 'headless'
 
-  constructor(private readonly deps: { eventBus: EventBus; sessionAllocator?: { allocate(): number } }) {
+  constructor(private readonly deps: { eventBus: EventBus; sessionAllocator?: { allocate(): number }; rng?: () => number }) {
     this.vitals = new EntityVitalsSystem(deps.eventBus)
     this.presentationSession = new PresentationSession(deps.sessionAllocator)
   }
@@ -262,6 +280,11 @@ export class TribulationDirector {
       player.selectedTalentIds,
       player.talentLevels,
     )
+    // F-TRB-FORGE - capture the witness facts while they exist: the
+    // realm the run departs (only start() sees it pre-settle) and a
+    // fresh per-attempt seed. commitOutcome folds both into the record.
+    this.attemptRealmId = player.realmId
+    this.attemptSeed = Math.floor((this.deps.rng ?? Math.random)() * 0x7fffffff)
 
     this.active = {
       targetRealmId,
@@ -610,6 +633,25 @@ export class TribulationDirector {
       targetRealmId: active.targetRealmId,
       grade: active.grade,
       breakthroughType: active.breakthroughType,
+      witness: {
+        departingRealmId: this.attemptRealmId,
+        chapterIndex: active.chapterIndex,
+        chaptersTotal: active.chaptersTotal,
+        lightningStrikesTaken: active.lightningStrikesTaken,
+        attemptSeed: this.attemptSeed,
+        digest: tribulationCommitWitnessDigest({
+          attemptId: this.attemptId,
+          outcome,
+          targetRealmId: active.targetRealmId,
+          grade: active.grade,
+          breakthroughType: active.breakthroughType,
+          departingRealmId: this.attemptRealmId,
+          chapterIndex: active.chapterIndex,
+          chaptersTotal: active.chaptersTotal,
+          lightningStrikesTaken: active.lightningStrikesTaken,
+          attemptSeed: this.attemptSeed,
+        }),
+      },
       receipt: null,
       settlementError: null,
     }
@@ -768,6 +810,7 @@ export class TribulationDirector {
         targetRealmId: this.committedOutcome.targetRealmId,
         grade: this.committedOutcome.grade,
         breakthroughType: this.committedOutcome.breakthroughType,
+        witness: { ...this.committedOutcome.witness },
         receipt: this.committedOutcome.receipt,
         settlementError: this.committedOutcome.settlementError !== null,
       }
@@ -800,6 +843,8 @@ export class TribulationDirector {
     this.mindCorrectLightningReduction = 0
     this.lightningTalentMultiplier = 1
     this.cooldownUntil = slice?.cooldownUntil ?? 0
+    this.attemptRealmId = ''
+    this.attemptSeed = 0
 
     if (slice?.committedOutcome) {
       this.committedOutcome = {
@@ -808,6 +853,7 @@ export class TribulationDirector {
         targetRealmId: slice.committedOutcome.targetRealmId,
         grade: slice.committedOutcome.grade,
         breakthroughType: slice.committedOutcome.breakthroughType,
+        witness: { ...slice.committedOutcome.witness },
         receipt: slice.committedOutcome.receipt,
         settlementError: slice.committedOutcome.settlementError
           ? new Error('restored tribulation settlement error')

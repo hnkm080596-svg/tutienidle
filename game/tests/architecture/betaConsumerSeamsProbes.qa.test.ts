@@ -76,6 +76,8 @@ import { resolveFinalCultivationGain } from '@/core/cultivation/CultivationDiver
 // final-cultivation-gain seam exactly as production load does.
 import '@/core/realm/hidden/QuanTheDiversion'
 import { AlchemySystem, type ActiveAlchemyJob } from '@/core/alchemy/AlchemySystem'
+import { alchemyRecipes } from '@/data/alchemy/alchemyRecipes'
+import { witnessedAlchemyJob } from './helpers/witnessFixtures'
 import { PillBag } from '@/core/pill/PillBag'
 import { pills } from '@/data/pill/pills'
 import { DecomposeSystem } from '@/core/production/DecomposeSystem'
@@ -338,15 +340,22 @@ describe('carried hidden mechanics mint nothing downstream', () => {
 })
 
 describe('dormant production settle seams', () => {
-  const dormantJob = (jobId: string): ActiveAlchemyJob => ({
-    jobId,
-    recipeId: 'alchemy_phi_van_dan_qi_refining',
-    pillId: 'phi_van_dan_qi_refining',
-    herbMaterialId: 'herb_decade',
-    startedAtMs: 0,
-    completesAtMs: 60_000,
-    roomLevelAtStart: 1,
-  })
+  const dormantJob = (jobId: string): ActiveAlchemyJob => {
+    const job = {
+      jobId,
+      recipeId: 'alchemy_phi_van_dan_qi_refining',
+      pillId: 'phi_van_dan_qi_refining',
+      herbMaterialId: 'herb_decade',
+      startedAtMs: 0,
+      completesAtMs: 60_000,
+      roomLevelAtStart: 1,
+    }
+    return witnessedAlchemyJob(
+      job,
+      undefined,
+      alchemyRecipes.find((r) => r.id === job.recipeId),
+    ) as ActiveAlchemyJob
+  }
 
   it('a carried dormant alchemy job parks at settle - no pill, no event', () => {
     const system = new AlchemySystem()

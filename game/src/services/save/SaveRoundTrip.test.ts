@@ -9,6 +9,7 @@ import { GameManager } from '../../core/game/GameManager'
 import { createDefaultPlayer } from '../../core/player/Player'
 import { TECHNIQUES } from '../../data/technique/Techniques'
 import { getRealmIndex } from '../../core/realm/realmSystem'
+import { alchemyJobFixture } from '../../core/alchemy/AlchemyJob.fixture'
 import type { Material } from '../../core/material/Material'
 import type { EquipmentInstance } from '../../core/equipment/EquipmentInstance'
 
@@ -587,17 +588,16 @@ describe('SaveRoundTrip — buildGameSave() luôn qua validateGameSaveShape()', 
       level: 1,
       lastCollectedAt: 0,
     })
-    gameManager.alchemySystem.restoreJobs([
-      {
-        jobId: 'job_pin_1',
-        recipeId: 'tu_linh_dan',
-        pillId: 'tu_linh_dan',
-        herbMaterialId: 'tu_linh_thao_qi_refining_0',
-        startedAtMs: 1_000,
-        completesAtMs: 601_000,
-        roomLevelAtStart: 1,
-      },
-    ])
+    const pinnedJob = alchemyJobFixture({
+      jobId: 'job_pin_1',
+      recipeId: 'tu_linh_dan',
+      pillId: 'tu_linh_dan',
+      herbMaterialId: 'tu_linh_thao_qi_refining_0',
+      startedAtMs: 1_000,
+      completesAtMs: 601_000,
+      roomLevelAtStart: 1,
+    })
+    gameManager.alchemySystem.restoreJobs([pinnedJob])
 
     const save = buildGameSave(player, gameManager)
     const roundTripped: unknown = JSON.parse(JSON.stringify(save))
@@ -617,6 +617,9 @@ describe('SaveRoundTrip — buildGameSave() luôn qua validateGameSaveShape()', 
         startedAtMs: 1_000,
         completesAtMs: 601_000,
         roomLevelAtStart: 1,
+        // F-ALCH-JOB-FORGE: the reservation witness startJob stamps
+        // rides the persisted record end to end.
+        reservation: pinnedJob.reservation,
       },
     ])
   })

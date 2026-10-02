@@ -19,6 +19,7 @@ import { defineEnemy } from '../enemy/Enemy'
 import { SKILLS } from '../../data/skill/Skills'
 import { pills } from '../../data/pill/pills'
 import { alchemyRecipes } from '../../data/alchemy/alchemyRecipes'
+import { alchemyJobFixture } from '../alchemy/AlchemyJob.fixture'
 import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
 
 // ARCH-008 (M10) — authored-parity regression matrix through REAL
@@ -334,15 +335,19 @@ describe('ARCH-008 — Hoi Xuan Dan explicitly retired (user-locked, HP regen no
     const recipe = alchemyRecipes.find((candidate) => candidate.id === 'alchemy_hoi_xuan_dan_mortal')!
 
     gameManager.alchemySystem.restoreJobs([
-      {
-        jobId: 'legacy_hoi_xuan_job',
-        recipeId: recipe.id,
-        pillId: recipe.pillId,
-        herbMaterialId: 'hoi_xuan_thao_mortal_decade',
-        startedAtMs: 1_000,
-        completesAtMs: 2_000,
-        roomLevelAtStart: 1,
-      },
+      alchemyJobFixture(
+        {
+          jobId: 'legacy_hoi_xuan_job',
+          recipeId: recipe.id,
+          pillId: recipe.pillId,
+          herbMaterialId: 'hoi_xuan_thao_mortal_decade',
+          startedAtMs: 1_000,
+          completesAtMs: 2_000,
+          roomLevelAtStart: 1,
+        },
+        undefined,
+        recipe,
+      ),
     ])
 
     const settled = gameManager.alchemySystem.settleOffline(

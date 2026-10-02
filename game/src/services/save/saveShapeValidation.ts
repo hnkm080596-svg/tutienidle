@@ -18,7 +18,7 @@ import { isAuthoredRealmId, producibleEquippedGrades } from '../../core/equipmen
 import { createBaseStats } from '../../core/stats/StatBlock'
 import { EQUIPMENT_SLOTS } from '../../core/equipment/EquipmentSlotState'
 import type { EquipmentSlot } from '../../core/equipment/EquipmentTypes'
-import { MAX_SLOT_ENHANCE_LEVEL } from '../../core/equipment/EnhanceCurve'
+import { ENHANCE_PITY_THRESHOLD, MAX_SLOT_ENHANCE_LEVEL } from '../../core/equipment/EnhanceCurve'
 import { MAIN_STAT_REALM_SCALE } from '../../core/equipment/EquipmentRolling'
 import { ITEM_QUALITY_IMPLICIT_MULTIPLIER } from '../../core/equipment/ItemQualityBalance'
 import { EQUIPMENT_BAG_SOFT_CAP } from '../../core/equipment/EquipmentBag'
@@ -51,7 +51,16 @@ import { authoredRealmPassiveEntries, REALM_PASSIVES } from '../../data/realm/Re
 import { MERIDIANS } from '../../data/realm/Meridians'
 import { resolveKienCoGrade } from '../../data/breakthrough/BreakthroughGrades'
 import { CHARACTER_CREATION_TALENT_COUNT } from '../character/CharacterCreationService'
-import { alchemySecondsFor } from '../../core/alchemy/AlchemySystem'
+import {
+  alchemySecondsFor,
+  verifyAlchemyJobReservation,
+  type ActiveAlchemyJob,
+} from '../../core/alchemy/AlchemySystem'
+import { TALENT_PASSIVE_SKILLS } from '../../data/skill/TalentPassives'
+import {
+  verifyTribulationCommitWitness,
+  type TribulationCommitWitnessedRecord,
+} from '../../core/tribulation/TribulationCommitWitness'
 import {
   CYCLE_BASE_SECONDS_BY_REALM,
   computeCycleSeconds,
@@ -108,6 +117,71 @@ import { getActiveElement } from '../../core/player/CultivationPathSystem'
 const SKILL_CORE_BY_ID = new Map(SKILL_CORE_NODES.map((node) => [node.id, node]))
 
 const LEVELLED_SKILL_IDS = new Set(SKILLS.filter((skill) => skill.maxLevel > 1).map((skill) => skill.id))
+
+// Wave-2 writer bounds scan the whole authored talent catalog - the
+// producible sets below hold for any selection the player could hold.
+const ALL_TALENT_DEFINITIONS = [
+  ...CHARACTER_CREATION_TALENTS,
+  ...GREAT_DAO_REWARD_TALENTS,
+  ...PARKED_TALENTS,
+]
+
+// F-ALCH-JOB-FORGE - producible costScale set. startJob computes
+// costScale = max(1, costMultiplier) from the alchemy_double_pill
+// talent effect: 1 is always producible (no counter-cost talent),
+// plus every authored costMultiplier. A persisted reservation naming
+// any other scale was never produced by startJob.
+const ALCHEMY_JOB_PRODUCIBLE_COST_SCALES: ReadonlySet<number> = new Set(
+  [1].concat(
+    ALL_TALENT_DEFINITIONS.flatMap((talent) =>
+      [talent.effects, ...(talent.levels ?? [])]
+        .flat()
+        .flatMap((effect) =>
+          effect.kind === 'alchemy_double_pill' ? [Math.max(1, effect.costMultiplier)] : [],
+        ),
+    ),
+  ),
+)
+
+// F-PHAGIAP-CARRY - the sole writer banks floor(passiveStacks *
+// carryFraction) at battle end and stacks cap at the bound passive's
+// authored maxStacks, so the producible bank max is floor(cap *
+// fraction) over every authored passive_stack_carry effect. A carry
+// binding a passive with an unbounded stack modifier leaves the claim
+// unbounded - the bound stays Infinity and skips enforcement (recorded
+// here, never silently dropped).
+const PHA_GIAP_CARRY_BANK_MAX: number = (() => {
+  let bound = 0
+
+  for (const talent of ALL_TALENT_DEFINITIONS) {
+    for (const effects of [talent.effects, ...(talent.levels ?? [])]) {
+      for (const effect of effects) {
+        if (effect.kind !== 'passive_stack_carry') {
+          continue
+        }
+
+        const passive = TALENT_PASSIVE_SKILLS.find((skill) => skill.id === effect.passiveSkillId)
+
+        if (passive === undefined) {
+          continue
+        }
+
+        const modifiers = passive.passiveModifiers ?? []
+
+        if (modifiers.some((modifier) => modifier.maxStacks === undefined)) {
+          bound = Number.POSITIVE_INFINITY
+          continue
+        }
+
+        const stackCap = modifiers.reduce((sum, modifier) => sum + (modifier.maxStacks ?? 0), 0)
+
+        bound = Math.max(bound, Math.floor(stackCap * effect.fraction))
+      }
+    }
+  }
+
+  return bound
+})()
 
 const SKILL_TEMPLATE_BY_ID = new Map(SKILLS.map((skill) => [skill.id, skill]))
 
@@ -1972,6 +2046,20 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
     }
   }
   requireNonNegativeNumber(player, 'phaGiapCarryStacks', 'player', issues)
+  // F-PHAGIAP-CARRY: the only writer banks floor(passiveStacks *
+  // carry.fraction) capped by the bound passive's authored maxStacks -
+  // a persisted bank above the producible max is a fabricated claim
+  // that re-seeds free stacks into every later battle.
+  if (
+    Number.isFinite(PHA_GIAP_CARRY_BANK_MAX) &&
+    isNonNegativeFiniteNumber(player.phaGiapCarryStacks) &&
+    (player.phaGiapCarryStacks as number) > PHA_GIAP_CARRY_BANK_MAX
+  ) {
+    issues.push({
+      path: 'player.phaGiapCarryStacks',
+      message: `vượt producible bank max (${PHA_GIAP_CARRY_BANK_MAX})`,
+    })
+  }
   if (player.phaGiapCarryRealmId !== null && typeof player.phaGiapCarryRealmId !== 'string') {
     issues.push({ path: 'player.phaGiapCarryRealmId', message: 'phải là string hoặc null' })
   }
@@ -3113,6 +3201,36 @@ function validateAlchemyJobsSave(
         message: 'startedAtMs vượt lastSavedAt (job bắt đầu sau save là bất khả thi)',
       })
     }
+
+    // F-ALCH-JOB-FORGE: a persisted job must carry the reservation
+    // witness startJob stamps when it burns the inputs. The verifier
+    // replays the digest (recipe-independent - it binds the job
+    // identity + every reserved input atomically), the cost scale
+    // against the authored producible set, and every reserved amount
+    // against this save's own recipe. A fabricated finished job that
+    // never paid inputs cannot produce the witness and is rejected
+    // here instead of settling the pill for free on restore.
+    const reservation = entry.reservation
+
+    if (!isObject(reservation)) {
+      issues.push({
+        path: `${entryPath}.reservation`,
+        message: 'thiếu reservation witness (job chưa reserve là bất khả thi)',
+      })
+    } else {
+      const badField = verifyAlchemyJobReservation(
+        entry as unknown as ActiveAlchemyJob,
+        recipe,
+        ALCHEMY_JOB_PRODUCIBLE_COST_SCALES,
+      )
+
+      if (badField !== null) {
+        issues.push({
+          path: `${entryPath}.reservation.${badField}`,
+          message: 'reservation witness không replay được (startJob chưa reserve)',
+        })
+      }
+    }
   }
 }
 
@@ -3599,6 +3717,20 @@ function validateEquipmentSlotEntries(
 
     if (entry.enhanceFailStreak !== undefined) {
       requireNonNegativeNumber(entry, 'enhanceFailStreak', `${path}[${i}]`, issues)
+      // F-ENHANCE-STREAK: the only writer increments on failure and
+      // resets on success, and the pity threshold makes the next roll
+      // succeed - a persisted streak past ENHANCE_PITY_THRESHOLD is
+      // unproducible (== threshold IS producible: pity only guarantees
+      // the NEXT attempt).
+      if (
+        isNonNegativeFiniteNumber(entry.enhanceFailStreak) &&
+        (entry.enhanceFailStreak as number) > ENHANCE_PITY_THRESHOLD
+      ) {
+        issues.push({
+          path: `${path}[${i}].enhanceFailStreak`,
+          message: `vượt ENHANCE_PITY_THRESHOLD (${ENHANCE_PITY_THRESHOLD})`,
+        })
+      }
     }
 
     normalizedEntries.push(
@@ -3937,6 +4069,65 @@ export function validateGameSaveShape(parsed: unknown): ShapeValidationResult {
               path: '.tribulation.committedOutcome.settlementError',
               message: 'phải là boolean',
             })
+          }
+
+          // F-TRB-FORGE: the record is provenance-bound - commitOutcome
+          // stamps a witness carrying run-derived facts (departing
+          // realm, chapter floor, strikes, per-attempt seed) folded
+          // into one digest. A fabricated victory that never ran the
+          // commit site cannot replay it and is rejected here instead
+          // of settling the authored breakthrough free.
+          const witness = committed.witness
+
+          if (!isObject(witness)) {
+            issues.push({
+              path: '.tribulation.committedOutcome.witness',
+              message: 'thiếu commit witness (record chưa chạy commitOutcome là bất khả thi)',
+            })
+          } else {
+            const witnessBadField = verifyTribulationCommitWitness(
+              committed as unknown as TribulationCommitWitnessedRecord,
+            )
+
+            if (witnessBadField !== null) {
+              issues.push({
+                path: `.tribulation.committedOutcome.witness.${witnessBadField}`,
+                message: 'commit witness không replay được (commitOutcome chưa chạy)',
+              })
+            }
+
+            // Realm binding: the settle-time realm write is what a
+            // pending record is still owed. Pending (receipt null)
+            // or a bound defeat - the player must still sit in the
+            // departing realm; a bound victory has already landed the
+            // realm write (realmId === targetRealmId). A
+            // settlementError record is terminal-after-first-attempt -
+            // mid-apply landed state is unknowable, skip the binding.
+            const playerRealmId =
+              isObject(parsed.player) && typeof parsed.player.realmId === 'string'
+                ? (parsed.player.realmId as string)
+                : undefined
+
+            if (
+              playerRealmId !== undefined &&
+              typeof witness.departingRealmId === 'string' &&
+              typeof committed.targetRealmId === 'string' &&
+              committed.settlementError === false
+            ) {
+              const expectedRealmId =
+                committed.receipt !== null &&
+                committed.receipt !== undefined &&
+                committed.outcome === 'victory'
+                  ? committed.targetRealmId
+                  : witness.departingRealmId
+
+              if (playerRealmId !== expectedRealmId) {
+                issues.push({
+                  path: '.tribulation.committedOutcome.witness.departingRealmId',
+                  message: `departingRealmId không bind vào player.realmId ('${String(playerRealmId)}' != '${String(expectedRealmId)}')`,
+                })
+              }
+            }
           }
         }
       }

@@ -30,6 +30,7 @@ import { SKILLS } from '../../src/data/skill/Skills'
 import { TECHNIQUES } from '../../src/data/technique/Techniques'
 import { alchemyRecipes } from '../../src/data/alchemy/alchemyRecipes'
 import { alchemySecondsFor } from '../../src/core/alchemy/AlchemySystem'
+import { witnessedAlchemyJob, witnessedCommitOutcomeFields } from './helpers/witnessFixtures'
 import { QUESTS } from '../../src/data/quest/quests'
 import { REALM_PASSIVES } from '../../src/data/realm/RealmPassives'
 import { TribulationOutcomeService } from '../../src/core/tribulation/TribulationOutcomeService'
@@ -372,6 +373,18 @@ describe('TC6-B dormant-record liveness', () => {
             // path (hidden type) stays what this test exercises.
             grade: 'human',
             breakthroughType: 'hidden',
+            ...witnessedCommitOutcomeFields({
+              attemptId: 1,
+              outcome: 'victory',
+              targetRealmId: 'foundation_establishment',
+              grade: 'human',
+              breakthroughType: 'hidden',
+              departingRealmId: 'qi_refining',
+              chapterIndex: 2,
+              chaptersTotal: 3,
+              lightningStrikesTaken: 0,
+              attemptSeed: 11,
+            }),
             receipt: null,
             settlementError: false,
           },
@@ -409,6 +422,18 @@ describe('TC6-B dormant-record liveness', () => {
             // type - that is what the boundary arm rejects.
             grade: 'great_dao' as never,
             breakthroughType: 'normal',
+            ...witnessedCommitOutcomeFields({
+              attemptId: 9,
+              outcome: 'victory',
+              targetRealmId: 'golden_core',
+              grade: 'great_dao' as never,
+              breakthroughType: 'normal',
+              departingRealmId: 'foundation_establishment',
+              chapterIndex: 0,
+              chaptersTotal: 1,
+              lightningStrikesTaken: 0,
+              attemptSeed: 12,
+            }),
             receipt: null,
             settlementError: false,
           },
@@ -420,7 +445,11 @@ describe('TC6-B dormant-record liveness', () => {
     expect(shape.ok).toBe(false)
   })
 
-  it('B4 - forged NORMAL outcome targeting a dormant realm transition parks inert', () => {
+  it('B4 - committed outcome targeting an unauthored gauntlet is rejected at shape', () => {
+    // F-TRB-FORGE (wave 2): the provenance witness requires a floor
+    // inside the authored chapter table - golden_core has no authored
+    // chapters, so no writer can ever have produced this record and the
+    // dormant-transition park arm can no longer launder it.
     const { save } = committedSave(
       'foundation_establishment',
       {},
@@ -432,6 +461,18 @@ describe('TC6-B dormant-record liveness', () => {
             targetRealmId: 'golden_core',
             grade: 'human',
             breakthroughType: 'normal',
+            ...witnessedCommitOutcomeFields({
+              attemptId: 7,
+              outcome: 'victory',
+              targetRealmId: 'golden_core',
+              grade: 'human',
+              breakthroughType: 'normal',
+              departingRealmId: 'foundation_establishment',
+              chapterIndex: 0,
+              chaptersTotal: 1,
+              lightningStrikesTaken: 0,
+              attemptSeed: 7,
+            }),
             receipt: null,
             settlementError: false,
           },
@@ -439,12 +480,8 @@ describe('TC6-B dormant-record liveness', () => {
         } satisfies TribulationSaveSlice,
       },
     )
-    const { playerStore, manager, result } = boot(save)
-    expect(result.status).toBe('ok')
-    expect(
-      new TribulationOutcomeService().settleOutcome(playerStore, manager, manager.tribulationDirector),
-    ).toBeNull()
-    expect(playerStore.realmId).toBe('foundation_establishment')
+    const { result } = boot(save)
+    expect(result.status).toBe('rejected')
   })
 
   it('B5 - dormant-family alchemy job parks: no pill delivered, job retained, flagged', () => {
@@ -452,15 +489,19 @@ describe('TC6-B dormant-record liveness', () => {
     // compute it from the catalog entry like the real writer does.
     const dormantRecipe = alchemyRecipes.find((r) => r.id === 'alchemy_phi_van_dan_mortal')!
     const authoredStart = Date.now() - 999_000
-    const job: AlchemyJobSave = {
-      jobId: 'j1',
-      recipeId: dormantRecipe.id,
-      pillId: dormantRecipe.pillId,
-      herbMaterialId: 'phi_van_thao_mortal_thuong_co',
-      startedAtMs: authoredStart,
-      completesAtMs: authoredStart + alchemySecondsFor(dormantRecipe, 1) * 1000,
-      roomLevelAtStart: 1,
-    }
+    const job: AlchemyJobSave = witnessedAlchemyJob(
+      {
+        jobId: 'j1',
+        recipeId: dormantRecipe.id,
+        pillId: dormantRecipe.pillId,
+        herbMaterialId: 'phi_van_thao_mortal_thuong_co',
+        startedAtMs: authoredStart,
+        completesAtMs: authoredStart + alchemySecondsFor(dormantRecipe, 1) * 1000,
+        roomLevelAtStart: 1,
+      },
+      undefined,
+      dormantRecipe,
+    )
     const { save } = committedSave('qi_refining', {}, { alchemyJobs: [job], buildings: [pillRoom] })
     const { playerStore, manager, result } = boot(save)
     expect(result.status).toBe('ok')
@@ -477,15 +518,19 @@ describe('TC6-B dormant-record liveness', () => {
   })
 
   it('B6 - beta recipe job with mismatched pillId is rejected at shape (recipe↔pill binding)', () => {
-    const job: AlchemyJobSave = {
-      jobId: 'j2',
-      recipeId: 'alchemy_tu_linh_dan_qi_refining',
-      pillId: 'thong_mach_dan', // forged: wrong family member entirely
-      herbMaterialId: 'tu_linh_thao_qi_refining_thuong_co',
-      startedAtMs: Date.now() - 999_000,
-      completesAtMs: Date.now() - 1,
-      roomLevelAtStart: 1,
-    }
+    const job: AlchemyJobSave = witnessedAlchemyJob(
+      {
+        jobId: 'j2',
+        recipeId: 'alchemy_tu_linh_dan_qi_refining',
+        pillId: 'thong_mach_dan', // forged: wrong family member entirely
+        herbMaterialId: 'tu_linh_thao_qi_refining_thuong_co',
+        startedAtMs: Date.now() - 999_000,
+        completesAtMs: Date.now() - 1,
+        roomLevelAtStart: 1,
+      },
+      undefined,
+      alchemyRecipes.find((r) => r.id === 'alchemy_tu_linh_dan_qi_refining'),
+    )
     const { save } = committedSave('qi_refining', {}, { alchemyJobs: [job], buildings: [pillRoom] })
     const shape = validateGameSaveShape(JSON.parse(JSON.stringify(save)))
     expect(shape.ok).toBe(false)
@@ -550,16 +595,20 @@ describe('TC6-B dormant-record liveness', () => {
     const retiredRecipe = alchemyRecipes.find((r) => r.id === 'alchemy_hoi_xuan_dan_qi_refining')!
     expect(retiredRecipe.retired).toBe(true)
     const authoredStart = Date.now() - 999_000
-    const job: AlchemyJobSave = {
-      jobId: 'j3',
-      recipeId: retiredRecipe.id,
-      pillId: retiredRecipe.pillId,
-      herbMaterialId: 'hoi_xuan_thao_qi_refining_thuong_co', // 100% base
-      // F-A12-4: span must replay the authored recipe duration.
-      startedAtMs: authoredStart,
-      completesAtMs: authoredStart + alchemySecondsFor(retiredRecipe, 1) * 1000,
-      roomLevelAtStart: 1,
-    }
+    const job: AlchemyJobSave = witnessedAlchemyJob(
+      {
+        jobId: 'j3',
+        recipeId: retiredRecipe.id,
+        pillId: retiredRecipe.pillId,
+        herbMaterialId: 'hoi_xuan_thao_qi_refining_thuong_co', // 100% base
+        // F-A12-4: span must replay the authored recipe duration.
+        startedAtMs: authoredStart,
+        completesAtMs: authoredStart + alchemySecondsFor(retiredRecipe, 1) * 1000,
+        roomLevelAtStart: 1,
+      },
+      undefined,
+      retiredRecipe,
+    )
     const { save } = committedSave('qi_refining', {}, { alchemyJobs: [job], buildings: [pillRoom] })
     const { acceptable, shape } = classify(save)
     expect(shape.ok).toBe(true)
@@ -718,20 +767,36 @@ describe('TC6-C hostile slices', () => {
 })
 
 describe('TC6-D sequence / replay', () => {
-  it('D1 - dormant committed outcome round-trips restore->serialize intact (parked, not dropped)', () => {
+  it('D1 - parked committed outcome round-trips restore->serialize intact (not dropped)', () => {
+    // Wave 2: a parked record must be producible - hidden-type victory
+    // qi_refining -> foundation_establishment is the parked case a real
+    // commit can leave pending (an unauthored gauntlet target like
+    // golden_core is now rejected, not parked).
     const tribulation: TribulationSaveSlice = {
       committedOutcome: {
         attemptId: 3,
         outcome: 'victory',
-        targetRealmId: 'golden_core',
+        targetRealmId: 'foundation_establishment',
         grade: 'human',
         breakthroughType: 'hidden',
+        ...witnessedCommitOutcomeFields({
+          attemptId: 3,
+          outcome: 'victory',
+          targetRealmId: 'foundation_establishment',
+          grade: 'human',
+          breakthroughType: 'hidden',
+          departingRealmId: 'qi_refining',
+          chapterIndex: 2,
+          chaptersTotal: 3,
+          lightningStrikesTaken: 0,
+          attemptSeed: 3,
+        }),
         receipt: null,
         settlementError: false,
       },
       cooldownUntil: 0,
     }
-    const { save } = committedSave('foundation_establishment', {}, { tribulation })
+    const { save } = committedSave('qi_refining', {}, { tribulation })
     const { manager, result } = boot(save)
     expect(result.status).toBe('ok')
     const committed = manager.tribulationDirector.getCommittedOutcome()

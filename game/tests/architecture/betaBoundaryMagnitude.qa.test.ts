@@ -57,6 +57,7 @@ import { ITEM_QUALITY_IMPLICIT_MULTIPLIER } from '../../src/core/equipment/ItemQ
 import { MAIN_STAT_REALM_SCALE } from '../../src/core/equipment/EquipmentRolling'
 import { CURRENT_SAVE_VERSION } from '../../src/services/save/saveVersion'
 import { validateGameSaveShape } from '../../src/services/save/saveShapeValidation'
+import { commitWitnessFor } from '../../src/core/tribulation/TribulationCommitWitness.fixture'
 import { restoreGameSession, type GameSave } from '../../src/services/save/SaveSystem'
 import { usePlayerStore } from '../../src/stores/player'
 import type { Technique } from '../../src/core/technique/Technique'
@@ -426,12 +427,27 @@ describe('F-TC7-ENT: pendingTalentEntitlement is bound to the realm it minted in
 
 describe('F-TC7-TRIB: committedOutcome re-derives the breakthrough gate at settle', () => {
   function committedOutcome(overrides: Record<string, unknown> = {}) {
+    // F-TRB-FORGE: the settled record carries the commitOutcome witness
+    // a real run stamps (qi_refining -> foundation_establishment,
+    // 3 chapters, victory on the last floor).
     return {
       attemptId: 7,
       outcome: 'victory' as const,
       targetRealmId: 'foundation_establishment',
       grade: 'human' as const,
       breakthroughType: 'normal' as const,
+      ...commitWitnessFor({
+        attemptId: 7,
+        outcome: 'victory',
+        targetRealmId: 'foundation_establishment',
+        grade: 'human',
+        breakthroughType: 'normal',
+        departingRealmId: 'qi_refining',
+        chapterIndex: 2,
+        chaptersTotal: 3,
+        lightningStrikesTaken: 0,
+        attemptSeed: 7,
+      }),
       receipt: null,
       settlementError: false,
       ...overrides,

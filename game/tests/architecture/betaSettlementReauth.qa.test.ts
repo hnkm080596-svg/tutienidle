@@ -26,6 +26,8 @@ import { resolveKienCoGrade } from '@/data/breakthrough/BreakthroughGrades'
 import { betaRecipeFamilyOfId } from '@/core/betaScope'
 import { alchemyRecipes } from '@/data/alchemy/alchemyRecipes'
 import type { ActiveAlchemyJob } from '@/core/alchemy/AlchemySystem'
+import { getTribulationChapters } from '@/data/tribulation/TribulationChapters'
+import { witnessedAlchemyJob, witnessedCommitOutcomeFields } from './helpers/witnessFixtures'
 import { materials } from '@/data/materials/materials'
 import { pills } from '@/data/pill/pills'
 import { equipment } from '@/data/equipment/equipment'
@@ -157,7 +159,11 @@ function writerOf(p: PlayerData): TribulationPlayerWriter {
 }
 
 function dormantJob(overrides: Partial<ActiveAlchemyJob> = {}): ActiveAlchemyJob {
-  return {
+  // F-ALCH-JOB-FORGE: every carried job needs the reservation witness
+  // startJob stamps - derive it from the (possibly overridden) recipe
+  // so the fixture replays a producible record.
+  const { reservation, ...jobOverrides } = overrides
+  const job = {
     jobId: 'carried-dormant',
     recipeId: 'alchemy_phi_van_dan_mortal',
     pillId: 'phi_van_dan_mortal',
@@ -165,20 +171,50 @@ function dormantJob(overrides: Partial<ActiveAlchemyJob> = {}): ActiveAlchemyJob
     startedAtMs: 1,
     completesAtMs: 2, // long past - settles at restore
     roomLevelAtStart: 1,
-    ...overrides,
+    ...jobOverrides,
   }
+  const recipe = alchemyRecipes.find((r) => r.id === job.recipeId)
+  return witnessedAlchemyJob(job, reservation, recipe) as ActiveAlchemyJob
 }
 
-function dormantOutcome(overrides: Record<string, unknown> = {}) {
-  return {
+function dormantOutcome(overrides: {
+  attemptId?: number
+  outcome?: 'victory' | 'defeat'
+  targetRealmId?: string
+  grade?: 'human'
+  breakthroughType?: 'normal' | 'hidden'
+  departingRealmId?: string
+} = {}) {
+  // F-TRB-FORGE: the record must carry the provenance witness
+  // commitOutcome stamps - derive the floor from the authored chapter
+  // table of the (possibly overridden) target realm.
+  const record = {
     attemptId: 7,
-    outcome: 'victory' as const,
+    outcome: 'victory' as 'victory' | 'defeat',
     targetRealmId: 'golden_core',
     grade: 'human' as const,
-    breakthroughType: 'normal' as const,
+    breakthroughType: 'normal' as 'normal' | 'hidden',
+    ...overrides,
+  }
+  const chaptersTotal = getTribulationChapters(record.targetRealmId)?.length ?? 1
+  const chapterIndex = record.outcome === 'victory' ? chaptersTotal - 1 : 0
+  const departingRealmId = overrides.departingRealmId ?? 'qi_refining'
+  return {
+    attemptId: record.attemptId,
+    outcome: record.outcome,
+    targetRealmId: record.targetRealmId,
+    grade: record.grade,
+    breakthroughType: record.breakthroughType,
+    ...witnessedCommitOutcomeFields({
+      ...record,
+      departingRealmId,
+      chapterIndex,
+      chaptersTotal,
+      lightningStrikesTaken: 0,
+      attemptSeed: 7,
+    }),
     receipt: null,
     settlementError: false,
-    ...overrides,
   }
 }
 

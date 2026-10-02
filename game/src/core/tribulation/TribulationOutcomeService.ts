@@ -55,6 +55,7 @@ import {
 import { isRealmTransitionEnabled } from '../realm/ReleasePolicy'
 import { canTriggerBreakthrough } from '../realm/BreakthroughGate'
 import { isBetaFeature } from '../betaScope'
+import { verifyTribulationCommitWitness } from './TribulationCommitWitness'
 
 /** Victory outcome facts for presentation. */
 export interface TribulationVictoryResult {
@@ -184,6 +185,21 @@ export class TribulationOutcomeService {
       hiddenDormant ||
       !isRealmTransitionEnabled(player.realmId, committed.targetRealmId) ||
       !canTriggerBreakthrough(player)
+    ) {
+      return null
+    }
+
+    // F-TRB-FORGE - the record is also provenance-bound now: settle
+    // replays the commit witness commitOutcome stamped (run facts folded
+    // into the digest) and requires the departing realm it names to be
+    // the realm the player is still in - a real run departs the realm
+    // this settle leaves behind. A fabricated record whose witness was
+    // never produced by commitOutcome stays pending (inert data)
+    // instead of minting the free breakthrough.
+    if (
+      verifyTribulationCommitWitness(committed) !== null ||
+      committed.witness.departingRealmId !== player.realmId ||
+      !isRealmTransitionEnabled(committed.witness.departingRealmId, committed.targetRealmId)
     ) {
       return null
     }

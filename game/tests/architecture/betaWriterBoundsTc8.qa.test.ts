@@ -50,6 +50,9 @@ import { TECHNIQUES } from '../../src/data/technique/Techniques'
 import { PASSIVE_SKILLS } from '../../src/data/skill/PassiveSkills'
 import { CURRENT_SAVE_VERSION } from '../../src/services/save/saveVersion'
 import { validateGameSaveShape } from '../../src/services/save/saveShapeValidation'
+import { alchemyRecipes } from '../../src/data/alchemy/alchemyRecipes'
+import { alchemyJobFixture } from '../../src/core/alchemy/AlchemyJob.fixture'
+import { alchemySecondsFor } from '../../src/core/alchemy/AlchemySystem'
 import { TU_LINH_TRAN_DURATION_MS, TU_LINH_TRAN_EFFECT_GROUP } from '../../src/core/economy/TuLinhTranBalance'
 import type { GameSave } from '../../src/services/save/SaveSystem'
 import type { Skill } from '../../src/core/skill/Skill'
@@ -772,15 +775,23 @@ describe('F-TC9-2: stage clear chain-prefix coherence', () => {
 })
 
 describe('F-TC9-3: alchemy job room-level bound', () => {
-  const job = {
-    jobId: 'job-tc9',
-    recipeId: 'pill_regen_mortal',
-    pillId: 'pill_regen_mortal',
-    herbMaterialId: 'mortal_herb_decade',
-    startedAtMs: 1_000,
-    completesAtMs: 61_000,
-    roomLevelAtStart: 5,
-  }
+  // F-ALCH-JOB-FORGE: jobs carry the startJob reservation witness.
+  const thongMach = alchemyRecipes.find((r) => r.id === 'alchemy_thong_mach_dan')!
+  const job = alchemyJobFixture(
+    {
+      jobId: 'job-tc9',
+      recipeId: thongMach.id,
+      pillId: thongMach.pillId,
+      herbMaterialId: thongMach.herbVariants[0]!.materialId,
+      startedAtMs: 1_000,
+      // F-A12-4: the span replays the authored recipe duration at the
+      // persisted room level.
+      completesAtMs: 1_000 + alchemySecondsFor(thongMach, 5) * 1000,
+      roomLevelAtStart: 5,
+    },
+    undefined,
+    thongMach,
+  )
 
   it('a job claiming a room level above the persisted pill_room is rejected', () => {
     const save = validSave()
@@ -997,15 +1008,21 @@ describe('F-A11-5: alchemyJobs slot-count, span and herb bounds', () => {
   }
   // F-A12-4: the span replays the authored recipe duration
   // (alchemy_truc_co_dan base 1200s at room level-1 speed -> 1_200_000ms).
-  const job = (id: string) => ({
-    jobId: id,
-    recipeId: 'alchemy_truc_co_dan',
-    pillId: 'truc_co_dan',
-    herbMaterialId: 'tu_linh_thao_qi_refining_century',
-    startedAtMs: 1,
-    completesAtMs: 1_200_001,
-    roomLevelAtStart: 1,
-  })
+  const trucCoRecipe = alchemyRecipes.find((r) => r.id === 'alchemy_truc_co_dan')!
+  const job = (id: string) =>
+    alchemyJobFixture(
+      {
+        jobId: id,
+        recipeId: trucCoRecipe.id,
+        pillId: trucCoRecipe.pillId,
+        herbMaterialId: trucCoRecipe.herbVariants[0]!.materialId,
+        startedAtMs: 1,
+        completesAtMs: 1 + alchemySecondsFor(trucCoRecipe, 1) * 1000,
+        roomLevelAtStart: 1,
+      },
+      undefined,
+      trucCoRecipe,
+    )
 
   it('two running jobs on a level-1 room (one slot) are rejected', () => {
     const save = validSave()

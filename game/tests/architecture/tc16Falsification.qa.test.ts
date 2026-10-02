@@ -30,6 +30,7 @@ import { buffs } from '@/data/buff/buffs'
 import { talismans } from '@/data/talisman/talismans'
 import { formations } from '@/data/formation/formations'
 import { alchemyRecipes } from '@/data/alchemy/alchemyRecipes'
+import { witnessedAlchemyJob, witnessedCommitOutcomeFields } from './helpers/witnessFixtures'
 import { buildings } from '@/data/building/buildings'
 import { QUESTS } from '@/data/quest/quests'
 import { GameManager } from '@/core/game/GameManager'
@@ -174,6 +175,18 @@ describe('F-TC16-TRIB-SKIPREALM: forged skipped-realm victory receipt', () => {
         targetRealmId: 'golden_core',
         grade: 'human',
         breakthroughType: 'normal',
+        ...witnessedCommitOutcomeFields({
+          attemptId: 1,
+          outcome: 'victory',
+          targetRealmId: 'golden_core',
+          grade: 'human',
+          breakthroughType: 'normal',
+          departingRealmId: 'mortal',
+          chapterIndex: 0,
+          chaptersTotal: 1,
+          lightningStrikesTaken: 0,
+          attemptSeed: 1,
+        }),
         receipt: null,
         settlementError: false,
       },
@@ -209,15 +222,19 @@ describe('F-TC16-ALCHEMY-RECIPE-MISMATCH: forged pillId on a live recipe', () =>
     const recipe = alchemyRecipes.find((candidate) => candidate.id === 'alchemy_tu_linh_dan_mortal')!
     const save = mortalSave()
     save.alchemyJobs = [
-      {
-        jobId: 'forged-job',
-        recipeId: recipe.id,
-        pillId: 'phi_van_dan_mortal',
-        herbMaterialId: recipe.herbVariants[0]!.materialId,
-        startedAtMs: save.player.lastSavedAt - 10_000,
-        completesAtMs: save.player.lastSavedAt,
-        roomLevelAtStart: 1,
-      },
+      witnessedAlchemyJob(
+        {
+          jobId: 'forged-job',
+          recipeId: recipe.id,
+          pillId: 'phi_van_dan_mortal',
+          herbMaterialId: recipe.herbVariants[0]!.materialId,
+          startedAtMs: save.player.lastSavedAt - 10_000,
+          completesAtMs: save.player.lastSavedAt,
+          roomLevelAtStart: 1,
+        },
+        undefined,
+        recipe,
+      ),
     ]
 
     const shape = validateGameSaveShape(save)
