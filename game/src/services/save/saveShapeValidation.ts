@@ -11,7 +11,11 @@ import { CURRENT_SAVE_VERSION } from './saveVersion'
 import { REALMS } from '../../data/realms/realm'
 import { COMPANIONS, isBetaCompanionGift } from '../../data/companion/Companions'
 import { COMPANION_GIFT_MOMENTS } from '../../data/companion/CompanionGiftMoments'
-import { MAX_CONSTELLATION_RANK } from '../../core/companion/CompanionProgression'
+import { COMPANION_UNLOCK_REALM_ID } from '../../core/companion/CompanionAvailability'
+import {
+  companionExpRequiredForLevel,
+  MAX_CONSTELLATION_RANK,
+} from '../../core/companion/CompanionProgression'
 import { ITEM_QUALITY_ORDER, type ItemQuality } from '../../core/item/ItemQuality'
 import { getRealmIdForProfessionGrade, isProfessionGrade } from '../../core/profession/ProfessionGrade'
 import { isHerbAge } from '../../core/production/ProductionTypes'
@@ -106,6 +110,9 @@ import {
 import { getRealmTier } from '../../core/realm/RealmTierMap'
 import {
   isBeyondReleaseCeiling,
+  isBreakthroughAcquisitionEnabled,
+  isCompanionPullTokenSourceSuppressed,
+  isRealmAvailable,
   progressionCeilingRealmId,
 } from '../../core/realm/ReleasePolicy'
 import { isBetaStandalonePanel } from '../../core/betaScopeSurface'
@@ -300,6 +307,25 @@ const PROFESSION_MATERIAL_REALM_TIER_BY_ID = new Map<string, number>(
       : ([[material.id, getRealmTier(material.profession.realmId)]] as [string, number][]),
   ),
 )
+
+// F-MAT-DOMAIN-SCOPE: domain-scoped materials (no profession meta -
+// they escape the F-MAT-REALM pin) deliver only while
+// isDomainScopedAcquisitionEnabled can open: the authored domain-unlock
+// realm must sit inside the release window AND within reach of the
+// claimed realm.
+const DOMAIN_UNLOCK_REALM_ID_BY_MATERIAL_ID = new Map<string, string>(
+  materialCatalog.flatMap((material) =>
+    material.domainUnlockRealmId === undefined
+      ? []
+      : ([[material.id, material.domainUnlockRealmId]] as [string, string][]),
+  ),
+)
+
+// F-PILL-REALM-PIN: realm-keyed pills mint only through same-realm
+// alchemy recipes or realm-bounded grants, and breakthroughRealmId pills
+// only inside an open acquisition window - the catalog lookup below keys
+// the per-record pin.
+const CATALOG_PILL_BY_ID = new Map(pills.map((pill) => [pill.id, pill]))
 
 const STAT_TYPES = new Set<string>(Object.keys(createBaseStats()))
 
@@ -2183,7 +2209,7 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
   const companions = requireArray(player, 'companions', 'player', issues)
 
   if (companions) {
-    validateCompanionEntries(companions, 'player.companions', issues)
+    validateCompanionEntries(companions, 'player.companions', issues, stageClaimRealmIndex)
   }
 
   // v77 companion gifts - authored mail/gift records. A persisted gift
@@ -2193,11 +2219,22 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
   const companionGifts = requireArray(player, 'companionGifts', 'player', issues)
 
   if (companionGifts) {
+    // F-GIFT-CLAIM-WITNESS: claimCompanionGift creates/ranks the roster
+    // instance before stamping claimed, so the owned-definition set is
+    // the claim's mandatory witness.
     validateCompanionGiftEntries(
       companionGifts,
       'player.companionGifts',
       issues,
       stageClaimRealmIndex,
+      new Set(
+        (companions ?? [])
+          .filter(
+            (entry): entry is Record<string, unknown> =>
+              isObject(entry) && typeof entry.definitionId === 'string',
+          )
+          .map((entry) => entry.definitionId as string),
+      ),
       new Set(
         (completedStageIds ?? []).filter(
           (stageId): stageId is string => typeof stageId === 'string',
@@ -2355,6 +2392,7 @@ function validateCompanionEntries(
   entries: unknown[],
   path: string,
   issues: ShapeIssue[],
+  playerRealmIndex: number,
 ) {
   // Domain invariant: 1 instance per definitionId, and instanceId is the
   // identity key every consumer first-matches on (findIndex). A duplicated
@@ -2414,6 +2452,38 @@ function validateCompanionEntries(
       })
     }
 
+    // F-COMP-REALM-PIN: every acquisition seam (pull/exchange/gift
+    // claim/feed) gates on isCompanionDomainUnlocked - realm order is
+    // monotonic, so an owned record on a save below the unlock realm is
+    // unproducible. The bound keys on realm order rather than the domain
+    // predicate because the domain is scope-hidden in beta - a carried
+    // record must still load once the realm claim reaches the tier.
+    if (
+      playerRealmIndex >= 0 &&
+      playerRealmIndex < getRealmIndex(COMPANION_UNLOCK_REALM_ID)
+    ) {
+      issues.push({
+        path: entryPath,
+        message: `realm chưa đạt '${COMPANION_UNLOCK_REALM_ID}' - companion bất khả thi`,
+      })
+    }
+
+    // F-COMP-REALM-PIN: applyCompanionExp hard-caps the companion's
+    // realmIndex at the player's own (the ceiling check runs before any
+    // level write), so a record out-realming its holder is unproducible.
+    const companionRealmIndex = realm !== undefined ? getRealmIndex(realm.id) : -1
+
+    if (
+      companionRealmIndex >= 0 &&
+      playerRealmIndex >= 0 &&
+      companionRealmIndex > playerRealmIndex
+    ) {
+      issues.push({
+        path: `${entryPath}.realmId`,
+        message: 'vượt realm người chơi (applyCompanionExp cap tại player realmIndex)',
+      })
+    }
+
     if (
       !isFiniteNumber(entry.realmLevel) ||
       !Number.isInteger(entry.realmLevel) ||
@@ -2427,6 +2497,38 @@ function validateCompanionEntries(
     }
 
     requireNonNegativeNumber(entry, 'exp', entryPath, issues)
+
+    // F-COMP-EXP-BANK: replay the writer invariant - applyCompanionExp
+    // spends exp while exp >= companionExpRequiredForLevel, so a banked
+    // value at/above the tier cost is unproducible; and at the player-
+    // realm ceiling the writer discards leftover exp into clampedExp,
+    // so exp must be exactly 0 there.
+    if (
+      realm !== undefined &&
+      Number.isInteger(entry.realmLevel) &&
+      (entry.realmLevel as number) >= 1 &&
+      (entry.realmLevel as number) <= realm.maxLevel &&
+      isNonNegativeFiniteNumber(entry.exp)
+    ) {
+      const atPlayerRealmCap =
+        companionRealmIndex >= 0 &&
+        playerRealmIndex >= 0 &&
+        companionRealmIndex >= playerRealmIndex &&
+        (entry.realmLevel as number) >= realm.maxLevel
+
+      if (
+        (atPlayerRealmCap && (entry.exp as number) !== 0) ||
+        (!atPlayerRealmCap &&
+          (entry.exp as number) >= companionExpRequiredForLevel(realm.id, entry.realmLevel as number))
+      ) {
+        issues.push({
+          path: `${entryPath}.exp`,
+          message: atPlayerRealmCap
+            ? 'exp phải là 0 tại trần realm người chơi (clampedExp discard)'
+            : 'exp banked >= required của tầng (applyCompanionExp luôn level-up)',
+        })
+      }
+    }
 
     if (
       !isFiniteNumber(entry.constellationRank) ||
@@ -2454,6 +2556,7 @@ function validateCompanionGiftEntries(
   path: string,
   issues: ShapeIssue[],
   playerRealmIndex: number,
+  ownedDefinitionIds: ReadonlySet<string>,
   completedStageIds: ReadonlySet<string>,
 ) {
   const seenIds = new Set<string>()
@@ -2540,6 +2643,20 @@ function validateCompanionGiftEntries(
 
     if (typeof entry.claimed !== 'boolean') {
       issues.push({ path: `${entryPath}.claimed`, message: 'phải là boolean' })
+    }
+
+    // F-GIFT-CLAIM-WITNESS: claimCompanionGift mints/ranks the roster
+    // instance before stamping claimed, so claimed=true without a roster
+    // companion carrying this definitionId is unproducible.
+    if (
+      entry.claimed === true &&
+      typeof entry.definitionId === 'string' &&
+      !ownedDefinitionIds.has(entry.definitionId)
+    ) {
+      issues.push({
+        path: `${entryPath}.claimed`,
+        message: 'claimed nhưng roster thiếu instance cho definitionId này',
+      })
     }
   }
 }
@@ -4489,14 +4606,50 @@ export function validateGameSaveShape(parsed: unknown): ShapeValidationResult {
   if (materials) {
     validateStackEntries(materials, 'materialId', 'materials', issues)
 
-    // F-SCOPE-1: every authored stone writer pays the tier keyed by
-    // getSpiritStoneMaterialIdForRealmTier(realmTier) - a trung stack
-    // needs a tier >= 4 realm claim, thuong needs tier >= 7; below
-    // that, the stack is unproducible.
-    if (claimedRealmTier !== undefined) {
-      for (let i = 0; i < materials.length; i += 1) {
-        const entry = materials[i]
-        if (!isObject(entry) || typeof entry.materialId !== 'string') continue
+    for (let i = 0; i < materials.length; i += 1) {
+      const entry = materials[i]
+      if (!isObject(entry) || typeof entry.materialId !== 'string') continue
+
+      // F-MAT-PULL-TOKEN: the companion pull pool is permanently closed
+      // and every token source is suppressed at origination (quest
+      // unlock/claim filters + loot delivery all consult it) - no writer
+      // mints the id, ever, so the stack is permanently unproducible.
+      if (isCompanionPullTokenSourceSuppressed(entry.materialId)) {
+        issues.push({
+          path: `materials[${i}]`,
+          message: `'${entry.materialId}' không có writer mint (pull pool đóng vĩnh viễn, mọi nguồn suppressed)`,
+        })
+      }
+
+      // F-MAT-DOMAIN-SCOPE: domain-scoped materials have no profession
+      // meta (they escape the F-MAT-REALM pin) and deliver only while
+      // isDomainScopedAcquisitionEnabled can open - an unlock realm
+      // outside the release window is never mintable, and one more than
+      // a tier above the claim follows the F-MAT-REALM convention.
+      const domainUnlockRealmId = DOMAIN_UNLOCK_REALM_ID_BY_MATERIAL_ID.get(entry.materialId)
+
+      if (domainUnlockRealmId !== undefined) {
+        if (!isRealmAvailable(domainUnlockRealmId)) {
+          issues.push({
+            path: `materials[${i}]`,
+            message: `vật liệu domain '${entry.materialId}' ngoài release window ('${domainUnlockRealmId}' không reachable)`,
+          })
+        } else if (
+          claimedRealmTier !== undefined &&
+          getRealmTier(domainUnlockRealmId) > claimedRealmTier + 1
+        ) {
+          issues.push({
+            path: `materials[${i}]`,
+            message: `vật liệu domain '${entry.materialId}' vượt realm tier người chơi (${claimedRealmTier})`,
+          })
+        }
+      }
+
+      if (claimedRealmTier !== undefined) {
+        // F-SCOPE-1: every authored stone writer pays the tier keyed by
+        // getSpiritStoneMaterialIdForRealmTier(realmTier) - a trung stack
+        // needs a tier >= 4 realm claim, thuong needs tier >= 7; below
+        // that, the stack is unproducible.
         const requiredTier =
           entry.materialId === SPIRIT_STONE_THUONG_PHAM_MATERIAL_ID
             ? 7
@@ -4531,6 +4684,41 @@ export function validateGameSaveShape(parsed: unknown): ShapeValidationResult {
 
   if (pills) {
     validateStackEntries(pills, 'pillId', 'pills', issues)
+
+    // F-PILL-REALM-PIN: the only pill mint route is alchemy, whose
+    // recipes bind to same-realm parity - a realm-keyed pill above the
+    // claimed realm tier is unproducible, and a breakthrough-scoped pill
+    // whose acquisition transition is permanently closed is never
+    // producible. A carried save inside the window (e.g. foundation
+    // holding truc_co_dan) still validates.
+    for (let i = 0; i < pills.length; i += 1) {
+      const entry = pills[i]
+      if (!isObject(entry) || typeof entry.pillId !== 'string') continue
+
+      const pill = CATALOG_PILL_BY_ID.get(entry.pillId)
+      if (pill === undefined) continue
+
+      if (
+        pill.breakthroughRealmId !== undefined &&
+        !isBreakthroughAcquisitionEnabled(pill.breakthroughRealmId)
+      ) {
+        issues.push({
+          path: `pills[${i}]`,
+          message: `đan '${entry.pillId}' ngoài acquisition window ('${pill.breakthroughRealmId}' đóng vĩnh viễn)`,
+        })
+      }
+
+      if (
+        pill.realmId !== undefined &&
+        claimedRealmTier !== undefined &&
+        getRealmTier(pill.realmId) > claimedRealmTier
+      ) {
+        issues.push({
+          path: `pills[${i}]`,
+          message: `đan '${entry.pillId}' vượt realm tier người chơi (${claimedRealmTier})`,
+        })
+      }
+    }
   }
 
   // Mission A1 - Phu/Tran bags are retired (serializer always emits []),

@@ -43,7 +43,10 @@ const CONF_TECHNIQUE: Technique = {
   rank: 0,
   mastery: 0,
   quality: 'hoang',
-  gradeHistory: {},
+  // The fixture's save claims foundation_establishment - the live
+  // grade-1 cycle lags the realm, so it must carry its sealed
+  // realm-exit record (untrained commit -> partial at rank 0).
+  gradeHistory: { 1: { finalRank: 0, completionState: 'partial' } },
   gradeEffects: {},
 }
 
@@ -142,10 +145,14 @@ function populateSource(player: PlayerData, manager: GameManager): void {
   player.cultivationPath = 'sword'
   player.cultivationWay = 'sword_pathway'
   player.swordPath = freshSwordPathState()
-  player.realmId = 'qi_refining'
+  // F-COMP-REALM-PIN: the fixture carries a companion, so the realm
+  // claim must reach the companion-domain unlock tier.
+  player.realmId = 'foundation_establishment'
   player.realmLevel = 1
-  // F-REALM-1 / F-A12-2: a committed qi+ save carries the stamped grade.
+  // F-REALM-1 / F-A12-2: a committed qi+ save carries the stamped grade
+  // and the foundation victory record.
   player.breakthroughGrade = 1
+  player.highestFoundationAchieved = 'human'
   // M-QI-05 (v73) - the committed way's coreSkillIds are granted at the
   // ritual: nodeLevels[core_<id>] = 1 plus purchasedNodeIds membership.
   for (const skillId of SWORD_PATHWAY.coreSkillIds ?? []) {

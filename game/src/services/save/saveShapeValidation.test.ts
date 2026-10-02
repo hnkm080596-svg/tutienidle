@@ -36,6 +36,22 @@ function pathsOf(result: ReturnType<typeof validateGameSaveShape>): string[] {
   return result.issues.map((issue) => issue.path)
 }
 
+// A coherent foundation_establishment save: realm witnesses
+// (technique + grade + foundation record) plus the full Thanh Van
+// stage chain so foundation_floor_10's clear is claimed.
+function coherentFoundationSave(): Record<string, unknown> {
+  const save = validSave()
+  const player = save.player as Record<string, unknown>
+
+  player.realmId = 'foundation_establishment'
+  save.techniques = [fiveElementsTechnique()]
+  player.breakthroughGrade = 1
+  player.highestFoundationAchieved = 'human'
+  player.completedStageIds = zones[0]!.stageIds.slice()
+
+  return save
+}
+
 function normalizedSaveOf(
   result: ReturnType<typeof validateGameSaveShape>,
 ): Record<string, unknown> {
@@ -1343,7 +1359,9 @@ describe('validateGameSaveShape - companion gacha (v60)', () => {
   }
 
   it('chấp nhận player shape v60 có companion hợp lệ', () => {
-    const save = validSave()
+    // F-COMP-REALM-PIN: companion records require the player realm to
+    // sit at/above the domain unlock - a foundation save carries them.
+    const save = coherentFoundationSave()
     const player = playerOf(save)
 
     player.companions = [validCompanionEntry()]
@@ -1383,7 +1401,7 @@ describe('validateGameSaveShape - companion gacha (v60)', () => {
   })
 
   it('từ chối companions entry thiếu instanceId', () => {
-    const save = validSave()
+    const save = coherentFoundationSave()
     const entry = validCompanionEntry()
 
     delete entry.instanceId
@@ -1396,7 +1414,7 @@ describe('validateGameSaveShape - companion gacha (v60)', () => {
   })
 
   it('từ chối companions entry có instanceId rỗng', () => {
-    const save = validSave()
+    const save = coherentFoundationSave()
     const entry = validCompanionEntry()
 
     entry.instanceId = ''
@@ -1409,7 +1427,7 @@ describe('validateGameSaveShape - companion gacha (v60)', () => {
   })
 
   it('từ chối companions entry có realmId không tồn tại trong REALMS', () => {
-    const save = validSave()
+    const save = coherentFoundationSave()
     const entry = validCompanionEntry()
 
     entry.realmId = 'khong_ton_tai'
@@ -1424,7 +1442,7 @@ describe('validateGameSaveShape - companion gacha (v60)', () => {
   it.each([0, -1, 1.5, Number.NaN])(
     'từ chối companions entry có realmLevel = %s',
     (realmLevel) => {
-      const save = validSave()
+      const save = coherentFoundationSave()
       const entry = validCompanionEntry()
 
       entry.realmLevel = realmLevel
@@ -1438,7 +1456,7 @@ describe('validateGameSaveShape - companion gacha (v60)', () => {
   )
 
   it('từ chối (không clamp) companions entry có realmLevel vượt maxLevel của cảnh giới', () => {
-    const save = validSave()
+    const save = coherentFoundationSave()
     const entry = validCompanionEntry()
 
     // mortal.maxLevel = 18 - 19 must fail loud, not be clamped.
@@ -1454,7 +1472,7 @@ describe('validateGameSaveShape - companion gacha (v60)', () => {
   it.each([7, -1, 1.5, Number.NaN])(
     'từ chối companions entry có constellationRank = %s',
     (constellationRank) => {
-      const save = validSave()
+      const save = coherentFoundationSave()
       const entry = validCompanionEntry()
 
       entry.constellationRank = constellationRank
@@ -1469,7 +1487,7 @@ describe('validateGameSaveShape - companion gacha (v60)', () => {
 
   it('từ chối companions entry có exp âm / NaN', () => {
     for (const bad of [-1, Number.NaN]) {
-      const save = validSave()
+      const save = coherentFoundationSave()
       const entry = validCompanionEntry()
 
       entry.exp = bad
@@ -1483,7 +1501,7 @@ describe('validateGameSaveShape - companion gacha (v60)', () => {
   })
 
   it('từ chối companions entry không phải object', () => {
-    const save = validSave()
+    const save = coherentFoundationSave()
 
     playerOf(save).companions = ['not-an-object']
 
@@ -1494,7 +1512,7 @@ describe('validateGameSaveShape - companion gacha (v60)', () => {
   })
 
   it('từ chối companions có instanceId trùng giữa 2 entry', () => {
-    const save = validSave()
+    const save = coherentFoundationSave()
 
     playerOf(save).companions = [
       validCompanionEntry(),
@@ -1508,7 +1526,7 @@ describe('validateGameSaveShape - companion gacha (v60)', () => {
   })
 
   it('từ chối companions có definitionId trùng (invariant 1 instance / definition)', () => {
-    const save = validSave()
+    const save = coherentFoundationSave()
 
     playerOf(save).companions = [
       validCompanionEntry(),
@@ -1522,7 +1540,7 @@ describe('validateGameSaveShape - companion gacha (v60)', () => {
   })
 
   it('từ chối companions entry có definitionId không tồn tại trong COMPANIONS (registry drift)', () => {
-    const save = validSave()
+    const save = coherentFoundationSave()
     const entry = validCompanionEntry()
 
     // An owned companion whose definitionId fell out of the roster is
@@ -2752,25 +2770,22 @@ describe('validateGameSaveShape - companion gifts (v77)', () => {
     return save.player as Record<string, unknown>
   }
 
-  // A coherent foundation_establishment save: realm witnesses
-  // (technique + grade + foundation record) plus the full Thanh Van
-  // stage chain so foundation_floor_10's clear is claimed.
-  function coherentFoundationSave(): Record<string, unknown> {
-    const save = validSave()
-    const player = playerOf(save)
-
-    player.realmId = 'foundation_establishment'
-    save.techniques = [fiveElementsTechnique()]
-    player.breakthroughGrade = 1
-    player.highestFoundationAchieved = 'human'
-    player.completedStageIds = zones[0]!.stageIds.slice()
-
-    return save
-  }
-
   it('chấp nhận companionGifts hợp lệ (pending + claimed)', () => {
     const save = coherentFoundationSave()
 
+    // F-GIFT-CLAIM-WITNESS: claimCompanionGift mints/ranks the roster
+    // instance before stamping claimed - the claimed khai_minh record
+    // carries its roster witness.
+    playerOf(save).companions = [
+      {
+        instanceId: 'comp-km',
+        definitionId: 'khai_minh',
+        realmId: 'mortal',
+        realmLevel: 1,
+        exp: 0,
+        constellationRank: 0,
+      },
+    ]
     playerOf(save).companionGifts = [
       { id: 'gift_than_nong_foundation_entry', definitionId: 'than_nong', claimed: false },
       { id: 'gift_khai_minh_foundation_floor_10', definitionId: 'khai_minh', claimed: true },
@@ -3089,5 +3104,248 @@ describe('validateGameSaveShape — v82 seam repair cross-checks', () => {
 
     expect(result.ok).toBe(false)
     expect(pathsOf(result)).toContain('player.formationLoadout.assignments[0].combatantId')
+  })
+})
+
+// WAVE 6 - deferred-mint record bindings. Companion records pin the
+// player realm to the companion-domain unlock tier (realm order only -
+// the domain is scope-hidden in beta but a carried record must still
+// load once the realm claim reaches it), companion exp replays the
+// applyCompanionExp bank/cap invariants, claimed gifts carry their
+// roster instance witness, domain-scoped materials join the realm pin,
+// the permanently-closed pull token rejects outright, and realm-keyed
+// pills pin to the alchemy same-realm mint rule.
+describe('validateGameSaveShape - wave 6 deferred-mint bindings', () => {
+  function playerOf(save: Record<string, unknown>): Record<string, unknown> {
+    return save.player as Record<string, unknown>
+  }
+
+  function mortalCompanion(): Record<string, unknown> {
+    return {
+      instanceId: 'comp-1',
+      definitionId: 'than_nong',
+      realmId: 'mortal',
+      realmLevel: 1,
+      exp: 0,
+      constellationRank: 0,
+    }
+  }
+
+  it('F-COMP-REALM-PIN(a): từ chối companion trên mortal save', () => {
+    const save = validSave()
+
+    playerOf(save).companions = [mortalCompanion()]
+
+    const result = validateGameSaveShape(save)
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.companions[0]')
+  })
+
+  it('F-COMP-REALM-PIN(a): từ chối companion trên qi_refining save', () => {
+    const save = validSave()
+
+    playerOf(save).realmId = 'qi_refining'
+    save.techniques = [fiveElementsTechnique()]
+    playerOf(save).breakthroughGrade = 1
+    playerOf(save).companions = [mortalCompanion()]
+
+    const result = validateGameSaveShape(save)
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.companions[0]')
+  })
+
+  it('F-COMP-REALM-PIN(b): từ chối companion realm vượt realm người chơi', () => {
+    const save = coherentFoundationSave()
+
+    playerOf(save).companions = [
+      { ...mortalCompanion(), realmId: 'golden_core' },
+    ]
+
+    const result = validateGameSaveShape(save)
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.companions[0].realmId')
+  })
+
+  it('F-COMP-REALM-PIN: chấp nhận carried foundation save kèm companions', () => {
+    const save = coherentFoundationSave()
+
+    playerOf(save).companions = [
+      mortalCompanion(),
+      {
+        instanceId: 'comp-2',
+        definitionId: 'khai_minh',
+        realmId: 'foundation_establishment',
+        realmLevel: 18,
+        exp: 0,
+        constellationRank: 0,
+      },
+    ]
+
+    expect(validateGameSaveShape(save).ok).toBe(true)
+  })
+
+  it('F-COMP-EXP-BANK: từ chối exp banked >= required của tầng', () => {
+    const save = coherentFoundationSave()
+
+    // mortal level 1: required = round(40 * 1 * 1) = 40 - a banked 40
+    // would have leveled on the writer's own loop.
+    playerOf(save).companions = [{ ...mortalCompanion(), exp: 40 }]
+
+    const result = validateGameSaveShape(save)
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.companions[0].exp')
+  })
+
+  it('F-COMP-EXP-BANK: từ chối exp != 0 tại trần realm người chơi', () => {
+    const save = coherentFoundationSave()
+
+    // Foundation companion at maxLevel on a foundation player: the
+    // writer clamps leftover exp into clampedExp, leaving 0.
+    playerOf(save).companions = [
+      {
+        instanceId: 'comp-1',
+        definitionId: 'than_nong',
+        realmId: 'foundation_establishment',
+        realmLevel: 18,
+        exp: 7,
+        constellationRank: 0,
+      },
+    ]
+
+    const result = validateGameSaveShape(save)
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.companions[0].exp')
+  })
+
+  it('F-COMP-EXP-BANK: chấp nhận exp = 0 tại trần realm người chơi', () => {
+    const save = coherentFoundationSave()
+
+    playerOf(save).companions = [
+      {
+        instanceId: 'comp-1',
+        definitionId: 'than_nong',
+        realmId: 'foundation_establishment',
+        realmLevel: 18,
+        exp: 0,
+        constellationRank: 0,
+      },
+    ]
+
+    expect(validateGameSaveShape(save).ok).toBe(true)
+  })
+
+  it('F-GIFT-CLAIM-WITNESS: từ chối claimed mà không có instance trong roster', () => {
+    const save = coherentFoundationSave()
+
+    playerOf(save).companionGifts = [
+      { id: 'gift_khai_minh_foundation_floor_10', definitionId: 'khai_minh', claimed: true },
+    ]
+
+    const result = validateGameSaveShape(save)
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.companionGifts[0].claimed')
+  })
+
+  it('F-GIFT-CLAIM-WITNESS: chấp nhận claimed khi roster có instance', () => {
+    const save = coherentFoundationSave()
+
+    playerOf(save).companions = [
+      {
+        instanceId: 'comp-km',
+        definitionId: 'khai_minh',
+        realmId: 'mortal',
+        realmLevel: 1,
+        exp: 0,
+        constellationRank: 0,
+      },
+    ]
+    playerOf(save).companionGifts = [
+      { id: 'gift_khai_minh_foundation_floor_10', definitionId: 'khai_minh', claimed: true },
+    ]
+
+    expect(validateGameSaveShape(save).ok).toBe(true)
+  })
+
+  it('F-GIFT-CLAIM-WITNESS: chấp nhận claimed=false khi roster vắng instance', () => {
+    const save = coherentFoundationSave()
+
+    playerOf(save).companionGifts = [
+      { id: 'gift_than_nong_foundation_entry', definitionId: 'than_nong', claimed: false },
+    ]
+
+    expect(validateGameSaveShape(save).ok).toBe(true)
+  })
+
+  it.each(['mortal', 'qi_refining', 'foundation_establishment'])(
+    'F-MAT-DOMAIN-SCOPE: từ chối doan_bao_thach trên realm %s (unlock ngoài release window)',
+    (realmId) => {
+      const save = validSave()
+
+      playerOf(save).realmId = realmId
+      if (realmId !== 'mortal') {
+        save.techniques = [fiveElementsTechnique()]
+        playerOf(save).breakthroughGrade = 1
+      }
+      if (realmId === 'foundation_establishment') {
+        playerOf(save).highestFoundationAchieved = 'human'
+      }
+      save.materials = [{ materialId: 'doan_bao_thach', amount: 1 }]
+
+      const result = validateGameSaveShape(save)
+      expect(result.ok).toBe(false)
+      expect(pathsOf(result)).toContain('materials[0]')
+    },
+  )
+
+  it('F-MAT-PULL-TOKEN: từ chối chieu_hien_lenh (pull pool đóng vĩnh viễn)', () => {
+    const save = validSave()
+
+    save.materials = [{ materialId: 'chieu_hien_lenh', amount: 5 }]
+
+    const result = validateGameSaveShape(save)
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('materials[0]')
+  })
+
+  it('F-PILL-REALM-PIN: từ chối truc_co_dan trên mortal save', () => {
+    const save = validSave()
+
+    save.pills = [{ pillId: 'truc_co_dan', amount: 1 }]
+
+    const result = validateGameSaveShape(save)
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('pills[0]')
+  })
+
+  it('F-PILL-REALM-PIN: chấp nhận truc_co_dan trên qi_refining save', () => {
+    const save = validSave()
+
+    playerOf(save).realmId = 'qi_refining'
+    save.techniques = [fiveElementsTechnique()]
+    playerOf(save).breakthroughGrade = 1
+    save.pills = [{ pillId: 'truc_co_dan', amount: 1 }]
+
+    expect(validateGameSaveShape(save).ok).toBe(true)
+  })
+
+  it('F-PILL-REALM-PIN: chấp nhận truc_co_dan trên foundation save (carried)', () => {
+    const save = coherentFoundationSave()
+
+    save.pills = [{ pillId: 'truc_co_dan', amount: 1 }]
+
+    expect(validateGameSaveShape(save).ok).toBe(true)
+  })
+
+  it('F-PILL-REALM-PIN: từ chối đan vượt realm tier người chơi', () => {
+    const save = coherentFoundationSave()
+
+    // tu_linh_dan_golden_core is a tier-4 realm-keyed pill - a
+    // foundation (tier 3) save could never mint it via same-realm
+    // alchemy.
+    save.pills = [{ pillId: 'tu_linh_dan_golden_core', amount: 1 }]
+
+    const result = validateGameSaveShape(save)
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('pills[0]')
   })
 })

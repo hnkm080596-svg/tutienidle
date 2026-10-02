@@ -539,6 +539,17 @@ describe('SaveRoundTrip — buildGameSave() luôn qua validateGameSaveShape()', 
     // clear write - an issued record always co-exists with the stage
     // claim, so the full Thanh Van chain is the coherent witness.
     player.completedStageIds = zones.flatMap((zone) => zone.stageIds)
+    // F-GIFT-CLAIM-WITNESS: claimCompanionGift mints/ranks the roster
+    // instance before stamping claimed - the claimed record carries its
+    // witness instance.
+    player.companions.push({
+      instanceId: 'comp-km',
+      definitionId: 'khai_minh',
+      realmId: 'mortal',
+      realmLevel: 1,
+      exp: 0,
+      constellationRank: 0,
+    })
     player.companionGifts.push(
       {
         id: 'gift_than_nong_foundation_entry',

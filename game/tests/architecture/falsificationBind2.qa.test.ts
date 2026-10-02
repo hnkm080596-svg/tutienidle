@@ -484,15 +484,19 @@ describe('accepted residuals (Minh ruling: same-value class, deferred to online 
 
   it('F-COMPANION-EXP: a within-bounds companion exp claim stays accepted', () => {
     // Same class: the exp counter is inside authored bounds; nothing in
-    // the save schema can separate it from earned kills.
-    const { save } = committedSave('qi_refining')
+    // the save schema can separate it from earned kills. F-COMP-REALM-PIN
+    // (wave 6) binds the record to the companion-domain unlock realm and
+    // F-COMP-EXP-BANK bounds banked exp below the tier cost - a
+    // foundation save holding a mid-tier bank stays the accepted
+    // residual.
+    const { save } = committedSave('foundation_establishment')
     save.player.companions = [
       {
         instanceId: 'c1',
         definitionId: 'ho_ly_tinh',
         realmId: 'mortal',
         realmLevel: 10,
-        exp: 9_999,
+        exp: 9,
         constellationRank: 0,
       },
     ]
