@@ -15,7 +15,6 @@ import {
   STATUS_FOOT_ROW_OFFSET_Y,
   STATUS_ROW_GAP,
 } from './combatConstants'
-import { HUD_HP_WIDTH } from './PlayerHudLayer'
 import type { StatusVfxAttachedEvent } from '@/core/battle/BattleEvents'
 
 interface FakeGameObject {
@@ -296,7 +295,7 @@ describe('CombatVfxSpawner — status icon row (buff bar)', () => {
     const topY = (600 * 72) / 941
 
     expect(entry.icon.y).toBe(topY + STATUS_PLAYER_ROW_OFFSET_Y_FOR_TEST + STATUS_ICON_SIZE / 2)
-    expect(entry.icon.x).toBe((800 * 16) / 1672 + HUD_HP_WIDTH + STATUS_PLAYER_ROW_OFFSET_Y_FOR_TEST + STATUS_ICON_SIZE / 2)
+    expect(entry.icon.x).toBe((800 * 16) / 1672 + (800 * 330) / 1672 + STATUS_PLAYER_ROW_OFFSET_Y_FOR_TEST + STATUS_ICON_SIZE / 2)
   })
 
   it('>8 temporary → icon 9+ ẩn, icon cuối mang counter "+N"', () => {

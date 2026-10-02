@@ -37,7 +37,13 @@ const { t } = useI18n()
 .thien-co-rail__chip {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: var(--hk-space-2, 6px);
+  /* Spec thien-co-collapsed 1388/856/268/52: 16.03% of the 1672 design
+     width, 5.53% of the 941 design height. */
+  width: 16.03vw;
+  height: 5.53vh;
+  box-sizing: border-box;
   padding: var(--hk-space-2, 6px) var(--hk-space-4, 12px);
   border: 1px solid var(--hk-border-muted, #2a352f);
   border-radius: 999px;

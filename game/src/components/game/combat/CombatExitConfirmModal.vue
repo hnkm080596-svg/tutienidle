@@ -138,7 +138,9 @@ onUnmounted(() => {
   background: var(--ink-900);
   border: 1px solid var(--frame-outer);
   border-radius: 10px;
-  max-width: min(360px, calc(100vw - 48px));
+  /* Spec exit-confirm box: 800 design px wide -> 47.85vw on the 1672
+     design canvas (was 470 design measured vs spec 800). */
+  width: min(47.85vw, calc(100vw - 48px));
 }
 
 .combat-exit-confirm__text {

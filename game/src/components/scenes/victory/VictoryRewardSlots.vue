@@ -28,7 +28,9 @@ defineProps<{ slots: VictorySlotView[] }>()
   margin: 0;
   padding: 6px 4px;
   list-style: none;
-  max-height: 168px;
+  /* Spec rewards band 120 design px incl. its section plaque -> the
+     slot grid keeps ~94 design px (10vh) instead of shrinking away. */
+  height: 10vh;
   overflow-y: auto;
   scrollbar-width: none;
 }

@@ -91,8 +91,14 @@ const model = useVictorySceneModel(computed(() => props.summary))
 .victory-scene__inner {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
   height: 100%;
+  min-height: 0;
+}
+/* No squashing: spec-height blocks keep their size inside the fixed
+   720 envelope instead of shrinking to slivers when the stack grows. */
+.victory-scene__inner > * {
+  flex: 0 0 auto;
   min-height: 0;
 }
 .victory-scene__inner > :last-child {

@@ -13,8 +13,15 @@
 
 <style scoped>
 .skill-scene__canvas {
-  flex: 1 1 auto;
+  /* Spec 07 tree-canvas band 516/232/640/470 -> 49.95vh fixed (the
+     canvas must not grow/shrink with column content). */
+  flex: 0 0 49.95vh;
   min-height: 0;
   position: relative;
+}
+/* With no element-tabs row above, the canvas is the column's first
+   child and owes the 56 design-px headroom to its spec top at y232. */
+.skill-scene__canvas:first-child {
+  margin-top: 4.5vh;
 }
 </style>

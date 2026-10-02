@@ -17,11 +17,13 @@ import TurnOrderStrip from '@/components/game/combat/TurnOrderStrip.vue'
 /* Ref: dark rail behind the ATB chips (temp art - ornate capsule). */
 .combat-turn-rail__band {
   position: absolute;
-  top: 2px;
+  top: 50%;
   left: 50%;
-  transform: translateX(-50%);
-  width: min(620px, 90%);
-  height: 100%;
+  transform: translate(-50%, -50%);
+  /* Spec turn-band 436/64/800/96 -> ~612x73 at 1280x720; 620x~53 left it
+     +10w/-20h off the spec box. */
+  width: min(612px, 90%);
+  height: 73px;
   border-radius: 999px;
   background: linear-gradient(180deg, rgba(16, 23, 24, 0.55), rgba(16, 23, 24, 0.3));
   border: 1px solid color-mix(in srgb, var(--hk-border-muted, #2a352f) 70%, transparent);

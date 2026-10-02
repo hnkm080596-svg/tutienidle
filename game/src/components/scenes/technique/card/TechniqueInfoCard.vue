@@ -94,7 +94,10 @@ const qualityLine = computed(() => {
   gap: var(--hk-space-3);
   min-width: 0;
   min-height: 0;
-  padding: var(--hk-space-4);
+  /* surface-m-panel's inner ring line sits ~8px deeper than the base
+     pad - at 16px the 'Cong Phap' title's glyph caps were struck
+     through by the border. */
+  padding: calc(var(--hk-space-4) + 8px) var(--hk-space-4) var(--hk-space-4);
   overflow-y: auto;
 }
 

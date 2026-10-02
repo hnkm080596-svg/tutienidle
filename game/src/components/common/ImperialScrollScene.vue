@@ -271,10 +271,11 @@ const cloudUrl = hkChromeUrl('cloud-ornament')
 .hk-scroll__rail {
   position: absolute;
   left: 4.8cqw;
-  top: 12cqh;
-  /* End above the frame band so the rail's scrollfade never straddles
-     the paper edge (the bottom ornament occupies ~13cqh). */
-  bottom: 13cqh;
+  /* Spec nav rail 140/140/132/698 on the 66/50/1540/840 envelope:
+     top (140-50.25)/840.5 ~= 10.7cqh, bottom (838-50.25)/840.5 ~= 93.7cqh
+     -> bottom reserve 6.3cqh. */
+  top: 10.7cqh;
+  bottom: 6.3cqh;
   /* .hk-nav sets height:100% internally - with top+bottom pinned the
      height must yield or the rail runs past the envelope. */
   height: auto;
@@ -324,6 +325,9 @@ const cloudUrl = hkChromeUrl('cloud-ornament')
      8.5cqh of inner-rel margin lands main there whether or not the
      scene supplies a #header - the header lives inside the band. */
   margin-top: 8.5cqh;
+  /* Scene grids must not paint past the inner band bottom (~y849):
+     clip the overflow instead of letting content reach the frame ring. */
+  overflow: hidden;
 }
 .hk-scroll__footer {
   flex: 0 0 auto;

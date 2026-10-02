@@ -169,7 +169,7 @@ function outerOrbitRadius(): number {
   // (ui-audit creation-meta).
   // Huyen Kim S03 (spec scene-03): outer orbit r264 / inner r185 design px
   // on the 1672x941 canvas -> ~202/~142px at 1280x720 (scale 0.765).
-  const bottomFit = height * 0.34 - 48
+  const bottomFit = height * 0.34 - 68
   const ideal = Math.max(168, Math.min(340, shortSide * 0.28))
   return Math.max(96, Math.min(ideal, bottomFit))
 }

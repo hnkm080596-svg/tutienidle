@@ -14,7 +14,6 @@ import { useActiveUpdates } from '@/composables/useUpdates'
 import ConfirmModal from '@/components/common/ConfirmModal.vue'
 import FeedbackDialog from '@/components/common/FeedbackDialog.vue'
 import GuestAbandonDialog from '@/components/panels/GuestAbandonDialog.vue'
-import SettingsNavRail from '@/components/scenes/settings/SettingsNavRail.vue'
 import SettingsSaveSection from '@/components/scenes/settings/SettingsSaveSection.vue'
 import SettingsUiScaleSection from '@/components/scenes/settings/SettingsUiScaleSection.vue'
 import SettingsLanguageSection from '@/components/scenes/settings/SettingsLanguageSection.vue'
@@ -283,30 +282,10 @@ function onAbandonExport() {
   void handleExport()
 }
 
-// Huyen Kim scene 17: left seal nav + right workspace. Sections map to
-// real surfaces only - reserved categories (Graphics Quality etc.)
-// render nothing. Account/Update hide themselves with their data.
-type SettingsSection = 'general' | 'display' | 'audio' | 'account' | 'update' | 'support'
-const activeSection = ref<SettingsSection>('general')
-
-function onSelectSection(id: string) {
-  activeSection.value = id as SettingsSection
-}
-const navSections = computed(() => {
-  const list: Array<{ id: SettingsSection; label: string }> = [
-    { id: 'general', label: t('panels.settings.sections.save') },
-    { id: 'display', label: t('panels.settings.sections.display') },
-    { id: 'audio', label: t('panels.settings.sections.audio') },
-  ]
-  if (remoteAuthoritative) {
-    list.push({ id: 'account', label: t('panels.settings.sections.account') })
-  }
-  if (updateState.value !== null && updatePhase.value !== 'unsupported') {
-    list.push({ id: 'update', label: t('panels.settings.update.title') })
-  }
-  list.push({ id: 'support', label: t('panels.settings.sections.support') })
-  return list
-})
+// Huyen Kim scene 17 sections-grid (spec 288/176/1244/610): no internal
+// nav column - the shared imperial rail owns navigation, and every
+// section flows in a two-column workspace across the full 1244 band.
+// Account/Update still hide themselves with their data.
 // Scene 17 grammar: audio/ui sliders wear the slider-track + slider-thumb
 // chrome when the PNGs are ready; the native range keeps working as fallback.
 const sliderTrackUrl = hkChromeUrl('slider-track')
@@ -323,18 +302,9 @@ const sliderChromeStyle = computed<Record<string, string> | undefined>(() =>
 
 <template>
   <div class="settings-panel" :class="{ 'has-hk-slider': Boolean(sliderChromeStyle) }" :style="sliderChromeStyle">
-    <!-- Scene 17: left vertical seal navigation. -->
-    <SettingsNavRail
-      :sections="navSections"
-      :active-id="activeSection"
-      :label="t('panels.settings.sections.navAria')"
-      @select="onSelectSection"
-    />
-
-    <!-- Right workspace: the active category only. -->
+    <!-- Sections-grid: every section flows two-column across the band. -->
     <div class="settings-panel__workspace scrollfade">
       <SettingsSaveSection
-        v-if="activeSection === 'general'"
         :remote-authoritative="remoteAuthoritative"
         @save="handleSave"
         @load="handleLoad"
@@ -343,17 +313,15 @@ const sliderChromeStyle = computed<Record<string, string> | undefined>(() =>
         @reset="handleReset"
       />
 
-      <template v-if="activeSection === 'display'">
-        <SettingsUiScaleSection :ui-scale="uiScale" @select="handleUiScale" />
-        <SettingsLanguageSection :locale="(locale as AppLocale)" @select="handleLocale" />
-      </template>
+      <SettingsUiScaleSection :ui-scale="uiScale" @select="handleUiScale" />
+      <SettingsLanguageSection :locale="(locale as AppLocale)" @select="handleLocale" />
 
-      <SettingsAudioSection v-if="activeSection === 'audio'" />
+      <SettingsAudioSection />
 
-      <SettingsFeedbackSection v-if="activeSection === 'support'" @open="feedbackOpen = true" />
+      <SettingsFeedbackSection @open="feedbackOpen = true" />
 
       <SettingsAccountSection
-        v-if="remoteAuthoritative && activeSection === 'account'"
+        v-if="remoteAuthoritative"
         v-model:show-upgrade="showAccountUpgrade"
         :account-is-guest="accountIsGuest"
         :pending-upgrade-login-id="pendingUpgradeLoginId"
@@ -363,7 +331,7 @@ const sliderChromeStyle = computed<Record<string, string> | undefined>(() =>
       />
 
       <SettingsUpdateSection
-        v-if="activeSection === 'update' && updateState !== null && updatePhase !== 'unsupported'"
+        v-if="updateState !== null && updatePhase !== 'unsupported'"
         :current-version="updateState.currentVersion"
         :phase="updatePhase"
         :candidate-version="updateState.candidate?.version"
@@ -374,7 +342,7 @@ const sliderChromeStyle = computed<Record<string, string> | undefined>(() =>
         @check="updates?.check()"
       />
 
-      <SettingsBuildSection v-if="activeSection === 'support'" />
+      <SettingsBuildSection />
     </div>
 
     <p v-if="lastSavedLabel" class="settings-panel__hint">{{ t('panels.settings.hints.savedAt', { time: lastSavedLabel }) }}</p>
@@ -416,31 +384,32 @@ const sliderChromeStyle = computed<Record<string, string> | undefined>(() =>
 </template>
 
 <style scoped>
-/* Scene 17: left seal nav | right workspace (imperial scroll content). */
+/* Scene 17 sections-grid: no nav column - the workspace spans the full
+   1244 band with sections in a two-column flow. */
 .settings-panel {
   height: 100%;
   width: 100%;
   min-height: 0;
-  display: grid;
-  grid-template-columns: minmax(140px, 190px) minmax(0, 1fr);
-  gap: 16px;
+  display: block;
   padding: 0.93cqh 0.2cqw;
   color: var(--paper-text);
   font-size: var(--text-body);
 }
 
 .settings-panel__workspace {
+  height: 100%;
   min-height: 0;
   overflow-y: auto;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-content: start;
   gap: 14px;
   padding: 4px 8px;
+  box-sizing: border-box;
 }
 
 @container (max-width: 760px) {
-  .settings-panel { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
-  .settings-panel :deep(.settings-panel__nav) { flex-direction: row; flex-wrap: wrap; }
+  .settings-panel__workspace { grid-template-columns: 1fr; }
 }
 
 .settings-panel__hint {

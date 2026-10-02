@@ -158,11 +158,16 @@ onMounted(() => {
   position: relative;
   isolation: isolate;
   box-sizing: border-box;
-  /* Spec envelope 760 design px wide (760/1672 vw) - identical to the
-     victory scroll. The 70 design-px side insets (70/1672 vw) cap the
-     inner content at the spec 620 content band; the 520 title band
-     centers inside it via DefeatTitleBand's own width cap. */
+  /* Spec envelope 760x720 design px (760/1672 vw, 720/941 vh) -
+     identical to the victory scroll: FIXED height, not content-sized.
+     The 70 design-px side insets (70/1672 vw) cap the inner content at
+     the spec 620 content band; the 520 title band centers inside it
+     via DefeatTitleBand's own width cap. */
   width: min(45.43vw, calc(100vw - 32px));
+  height: min(76.51vh, calc(100vh - 32px));
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
   padding: 3.19vh 4.19vw 6.38vh;
   background: transparent;
   border: 0;
@@ -175,5 +180,15 @@ onMounted(() => {
 .combat-defeat-panel > :not(.ink-nine-slice):not(.ink-wash-backdrop) {
   position: relative;
   z-index: 3;
+}
+
+/* No squashing inside the fixed envelope: blocks keep their own size
+   and the action row pins to the bottom inset (spec y580..660). */
+.combat-defeat-panel > * {
+  flex: 0 0 auto;
+  min-height: 0;
+}
+.combat-defeat-panel > :last-child {
+  margin-top: auto;
 }
 </style>

@@ -43,7 +43,11 @@ const sealUrl = hkChromeUrl('nav-seal-vertical')
   list-style: none;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  /* stretch, not center: centering shrank each li to its child, and the
+     seal's own `width: min(100%, 84px)` % had no definite containing
+     width to resolve against - the whole rail rendered ~25px-wide
+     slivers with illegible labels. */
+  align-items: stretch;
   gap: clamp(6px, 0.9cqh, 12px);
   overflow-y: auto;
   scrollbar-width: none;
@@ -55,6 +59,8 @@ const sealUrl = hkChromeUrl('nav-seal-vertical')
 .hk-nav-seal {
   position: relative;
   flex: 0 0 auto;
+  /* Center the 84px cap inside the stretched li (~93px rail). */
+  margin-inline: auto;
   width: min(100%, 84px);
   aspect-ratio: 96 / 128;
   display: flex;

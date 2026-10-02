@@ -60,8 +60,10 @@ const orbs = computed(() => {
   position: absolute;
   /* 5% top clearance: the topmost node (y4% centers) is a 30-44px disc
      plus label - without the offset its cap clipped at the figure box's
-     overflow-hidden top edge. */
-  inset: 5% 0 0;
+     overflow-hidden top edge. 4% horizontal clearance keeps the edge
+     orbs' nowrap name lines ('Duong Duy Mach', 'Am Duy Mach') inside
+     the clipped figure box - at x90% a ~80px label lost its last glyph. */
+  inset: 5% 4% 0;
   pointer-events: none;
 }
 .body-orb-ring__ellipse {

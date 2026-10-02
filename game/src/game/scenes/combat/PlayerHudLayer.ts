@@ -172,6 +172,9 @@ export class PlayerHudLayer {
 
     const leftX = (width * 16) / 1672
     const topY = (height * 72) / 941
+    /* Spec player-hud 16/72/330/130: every bar lane is 330 design px
+       wide -> viewport-relative like the anchor. */
+    const hudBarWidth = (width * 330) / 1672
     const subLabelH = 10
     const hpLabelH = 12
     const subStep =
@@ -184,11 +187,11 @@ export class PlayerHudLayer {
     const sub1Y = sub2Y + subStep
     const hpBarY = sub1Y + hpStep
 
-    this.positionGroup(this.wardGroup, leftX, wardBarY, HUD_SUB_WIDTH, HUD_SUB_HEIGHT)
-    this.positionGroup(this.kiemGroup, leftX, sub2Y, HUD_SUB_WIDTH, HUD_SUB_HEIGHT)
-    this.positionGroup(this.theGroup, leftX, sub2Y, HUD_SUB_WIDTH, HUD_SUB_HEIGHT)
-    this.positionGroup(this.mpGroup, leftX, sub1Y, HUD_SUB_WIDTH, HUD_SUB_HEIGHT)
-    this.positionGroup(this.hpGroup, leftX, hpBarY, HUD_HP_WIDTH, HUD_HP_HEIGHT)
+    this.positionGroup(this.wardGroup, leftX, wardBarY, hudBarWidth, HUD_SUB_HEIGHT)
+    this.positionGroup(this.kiemGroup, leftX, sub2Y, hudBarWidth, HUD_SUB_HEIGHT)
+    this.positionGroup(this.theGroup, leftX, sub2Y, hudBarWidth, HUD_SUB_HEIGHT)
+    this.positionGroup(this.mpGroup, leftX, sub1Y, hudBarWidth, HUD_SUB_HEIGHT)
+    this.positionGroup(this.hpGroup, leftX, hpBarY, hudBarWidth, HUD_HP_HEIGHT)
     this.layoutTheExtras()
   }
 

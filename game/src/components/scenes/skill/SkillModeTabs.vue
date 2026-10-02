@@ -45,8 +45,12 @@ const { t } = useI18n()
 .skill-path-panel__mode-tabs {
   flex: 0 0 auto;
   display: flex;
+  align-items: center;
   gap: 6px;
-  margin-top: 8px;
+  /* Spec 07 mode-tabs band 516/708/640/44 -> 4.68vh fixed, a 6
+     design-px gap under the tree canvas. */
+  height: 4.68vh;
+  margin-top: 0.64vh;
 }
 .skill-path-panel__mode-tab {
   position: relative;

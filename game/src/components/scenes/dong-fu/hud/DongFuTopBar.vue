@@ -36,9 +36,13 @@ const { t } = useI18n()
   z-index: 9;
   display: grid;
   grid-template-columns: 1fr auto 1fr;
-  align-items: start;
+  align-items: center;
   gap: var(--hk-space-4, 12px);
-  padding: var(--hk-space-3, 8px) var(--hk-space-4, 12px) var(--hk-space-5, 16px);
+  /* Spec top-bar band height 74 design px -> 7.86% of the 941 design
+     height (7.86vh of the runtime stage). */
+  height: 7.86vh;
+  box-sizing: border-box;
+  padding: 0 var(--hk-space-4, 12px);
   background: linear-gradient(
     180deg,
     color-mix(in srgb, var(--hk-surface-base, #0b0f0d) 88%, transparent) 0%,

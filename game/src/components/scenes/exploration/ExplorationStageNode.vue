@@ -106,13 +106,18 @@ const locked = computed(() => props.model?.state === 'locked')
   top: calc(100% + 2px);
   left: 50%;
   transform: translateX(-50%);
-  width: 110px;
+  /* Cap at the pip's own width (~44px): at 110px a node's enemy name
+     bled ~35px past its neighbours' centers, so 'Da Tru' labels of
+     adjacent pips merged into one run on the map. */
+  width: 40px;
   display: flex;
   flex-direction: column;
+  align-items: center;
+  text-align: center;
   pointer-events: none;
 }
-.stage-map__copy strong { font-size: 10px; text-shadow: 0 1px 2px var(--paper-50); }
-.stage-map__copy small { overflow: hidden; color: var(--paper-text-muted); font-size: 9px; text-overflow: ellipsis; white-space: nowrap; text-shadow: 0 1px 2px var(--paper-50); }
+.stage-map__copy strong { font-size: 9px; text-shadow: 0 1px 2px var(--paper-50); }
+.stage-map__copy small { overflow: hidden; max-width: 40px; color: var(--paper-text-muted); font-size: 8px; text-overflow: ellipsis; white-space: nowrap; text-shadow: 0 1px 2px var(--paper-50); }
 /* Scene 10: boss stages wear the boss-seal badge art behind the label. */
 .stage-map__boss {
   position: absolute;

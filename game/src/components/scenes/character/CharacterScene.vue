@@ -48,7 +48,9 @@ import CharacterActionRail from './CharacterActionRail.vue'
     'talents talents talents'
     'figure stats rightcol';
   column-gap: 1.29%;
-  row-gap: 0.64%;
+  /* spec 8 design-px row gap of the ~656 band height (row gaps resolve
+     on the container HEIGHT axis). */
+  row-gap: 1.22%;
   color: var(--paper-text);
   font-family: var(--font-body);
 }
@@ -63,8 +65,12 @@ import CharacterActionRail from './CharacterActionRail.vue'
   min-height: 0;
   display: grid;
   grid-template-rows: minmax(0, 48%) minmax(0, 52%);
-  /* spec gap 8 design px of the ~252 col. */
-  row-gap: 3.17%;
+  /* spec 8 design-px gap of the ~497 right-col height (block axis). */
+  row-gap: 1.61%;
+  /* Lift the derived-stats card off the scroll's painted bottom rim -
+     its last row's tail clipped at the inner-band line. */
+  padding-bottom: 14px;
+  box-sizing: border-box;
 }
 .character-scene__elements,
 .character-scene__derived { min-height: 0; min-width: 0; }

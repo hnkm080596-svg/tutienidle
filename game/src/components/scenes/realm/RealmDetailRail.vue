@@ -31,12 +31,14 @@ import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  /* spec gap 8 design px of the ~414 rail. */
-  gap: 1.93%;
-  /* Envelope-unit pads (~16/14/48 runtime px): the bottom pad covers the
-     fade depth AND the sticky CTA's docked room, so Quan Khi always ends
+  /* spec gap 8 design px of the ~656 rail band -> 1.22% resolves
+     against the rail HEIGHT (row gaps resolve on the block axis). */
+  gap: 1.22%;
+  /* Envelope-unit pads: rail sub-stack sits +29..+43 low at 2.5cqh top,
+     so the top pad drops to ~1.2cqh; the bottom pad covers the fade
+     depth AND the sticky CTA's docked room, so Quan Khi always ends
      inside the opaque band, not under the scrollfade. */
-  padding: 2.5cqh 1.42cqw 7.5cqh;
+  padding: 1.2cqh 1.42cqw 7.5cqh;
   overflow-y: auto;
   scrollbar-width: none;
   mask-image: linear-gradient(to bottom, transparent 0, #000 12px, #000 calc(100% - 8px), transparent 100%);

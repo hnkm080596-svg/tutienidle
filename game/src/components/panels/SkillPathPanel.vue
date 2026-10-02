@@ -506,7 +506,10 @@ function close() {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.03em;
-  color: var(--hk-text-muted, var(--paper-eyebrow));
+  /* The muted token sat ~30% luminance on the dark rail - the column
+     title read as ghost glyphs at runtime. Step up to the brighter
+     gold-secondary ramp for legibility. */
+  color: var(--hk-text-secondary, #cfc4a8);
   /* Clear the rail frame's corner ornaments on both ends - the leading
      padding was for the left arm, and the trailing 'H' of the vi title
      clipped against the rail's right edge. */

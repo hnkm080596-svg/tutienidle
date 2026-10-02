@@ -53,7 +53,9 @@ function openQuanKhi() {
   align-items: center;
   justify-content: flex-end;
   gap: var(--hk-space-3, 8px);
-  padding: var(--hk-space-2, 4px) var(--hk-space-3, 8px) 0;
+  /* Bottom pad lifts the Chi Tiet button off the scroll's painted bottom
+     rim - with no pad its box straddled the frame line. */
+  padding: var(--hk-space-2, 4px) var(--hk-space-3, 8px) 12px;
   border-top: 1px solid color-mix(in srgb, var(--paper-line) 70%, transparent);
 }
 

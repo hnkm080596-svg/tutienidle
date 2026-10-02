@@ -34,8 +34,10 @@ const names = computed(() => props.chapterNames)
    moved there, so the top row no longer collides. */
 .tribulation-ui__tracker { position:absolute; top:4.68%; left:50%; transform:translateX(-50%); width:min(35.89vw, 600px); justify-content:center; display:flex; gap:18px; margin:0; padding:0; list-style:none; }
 .tribulation-ui__tracker-pip { position:relative; display:grid; place-items:center; min-width:64px; padding:4px 10px; font-family:var(--font-display); font-size:var(--text-xs); letter-spacing:.12em; color:var(--scene-tribulation-text-soft); opacity:.55; }
-.tribulation-ui__tracker-pip img { position:absolute; inset:-6px; width:calc(100% + 12px); height:calc(100% + 12px); object-fit:fill; opacity:.5; pointer-events:none; }
-.tribulation-ui__tracker-pip span { position:relative; }
+/* The medallion overhangs the pip and its dark center used to swallow
+   the phase label; keep it inside the pip bounds and under the text. */
+.tribulation-ui__tracker-pip img { position:absolute; inset:-2px; width:calc(100% + 4px); height:calc(100% + 4px); object-fit:fill; opacity:.35; pointer-events:none; z-index:0; }
+.tribulation-ui__tracker-pip span { position:relative; z-index:1; padding:0 6px; border-radius:8px; background:color-mix(in srgb, var(--scene-tribulation-deep, #08101e) 62%, transparent); }
 .tribulation-ui__tracker-pip.is-done { opacity:.8; color:var(--scene-tribulation-text); }
 .tribulation-ui__tracker-pip.is-current { opacity:1; color:var(--chrome-100); text-shadow:0 0 10px var(--scene-tribulation-glow); }
 .tribulation-ui__tracker-pip.is-current img { opacity:1; filter:drop-shadow(0 0 8px var(--scene-tribulation-glow)); }

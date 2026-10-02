@@ -59,8 +59,11 @@ const runeMask = computed(() =>
     <span class="realm-node__banner art-needed" data-art-id="realm-banner-plaque">
       <span v-if="currentTier === node.unlockTier" class="realm-node__seal" aria-hidden="true">{{ sealChar }}</span>
       <strong>{{ node.label }}</strong>
-      <small>{{ statusText }}</small>
     </span>
+    <!-- Status rides the trail under the medallion, not inside the
+         vertical name column (inline strong+small used to interleave
+         glyphs into one garbled stream). -->
+    <small class="realm-node__status">{{ statusText }}</small>
   </div>
 </template>
 
@@ -108,10 +111,9 @@ const runeMask = computed(() =>
 }
 
 /* --- banner plaque (art-needed: vertical hanging realm tag) ---
-   Plain inline flow inside vertical-rl: strong + small stay in ONE
-   upright column (a flex column in vertical writing lays items out
-   as side-by-side columns that collide inside 34px). Height is
-   content-driven so the longest realm name + status always render. */
+   ONE upright column: the realm name only. The status used to flow
+   inline after it, so both labels interleaved in a single garbled
+   glyph stream - it now renders as its own horizontal caption. */
 .realm-node__banner {
   position: relative;
   display: block;
@@ -128,11 +130,22 @@ const runeMask = computed(() =>
   border-bottom: 0;
   clip-path: polygon(0 0, 100% 0, 100% calc(100% - 9px), 50% 100%, 0 calc(100% - 9px));
 }
-.realm-node__banner strong { font-weight: 700; letter-spacing: 0.08em; }
-.realm-node__banner small {
-  margin-inline-start: 0.5em;
+.realm-node__banner strong { font-weight: 700; letter-spacing: 0.08em; white-space: nowrap; }
+
+/* Horizontal status caption under the spine medallion. */
+.realm-node__status {
+  position: absolute;
+  left: 50%;
+  top: calc(50% + 26px);
+  transform: translateX(-50%);
+  z-index: 2;
+  padding: 0 6px;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--hk-surface-base, #0b0f0d) 78%, transparent);
   color: var(--hk-text-muted, #7a7260);
+  font-size: 10px;
   letter-spacing: 0.05em;
+  white-space: nowrap;
 }
 
 .realm-node:nth-child(odd) .realm-node__banner { margin-left: calc(50% + 34px); }
@@ -173,7 +186,7 @@ const runeMask = computed(() =>
 .is-current .realm-node__medallion b,
 .is-current .realm-node__banner strong { color: var(--hk-jade-soft, #67c4ab); }
 .is-current .realm-node__banner { border-color: var(--hk-jade, #3fa68b); }
-.is-current .realm-node__banner small { color: var(--hk-jade-soft, #67c4ab); }
+.is-current .realm-node__status { color: var(--hk-jade-soft, #67c4ab); }
 
 .is-next .realm-node__medallion {
   border-color: var(--hk-gold, #c99a4a);
@@ -183,7 +196,7 @@ const runeMask = computed(() =>
 .is-next .realm-node__medallion b,
 .is-next .realm-node__banner strong { color: var(--hk-gold, #c99a4a); }
 .is-next .realm-node__banner { border-color: var(--hk-gold-muted, #7a6234); }
-.is-next .realm-node__banner small { color: var(--hk-gold, #c99a4a); }
+.is-next .realm-node__status { color: var(--hk-gold, #c99a4a); }
 
 .is-future .realm-node__medallion,
 .is-future .realm-node__banner { opacity: 0.6; }

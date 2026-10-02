@@ -31,7 +31,10 @@ const { t } = useI18n()
    78.21% top. */
 .tribulation-ui__hp-cluster { position:absolute; top:78.21%; left:50%; transform:translateX(-50%); display:flex; flex-direction:column; align-items:center; width:min(26.32vw, 440px); }
 .tribulation-ui__hp-frame { position:relative; width:100%; padding:2px 4px; }
-.tribulation-ui__hp-track { width:100%; border-radius:4px; --bar-track: var(--scene-tribulation-deep); --bar-from: var(--scene-tribulation-hp); --bar-to: var(--scene-tribulation-hp); }
+/* z3 lifts the bar above the entity-bar frame slice (z2): the slice's
+   fill art used to paint OVER the fill, so a full bar still read as an
+   empty dark track. The frame ring still peeks at the 4px pad edges. */
+.tribulation-ui__hp-track { position:relative; z-index:3; width:100%; border-radius:4px; --bar-track: var(--scene-tribulation-deep); --bar-from: var(--scene-tribulation-hp); --bar-to: var(--scene-tribulation-hp); }
 .tribulation-ui__hp { margin-top:6px; font-size:var(--text-xs); text-shadow:0 1px 3px #000; }
 .tribulation-ui__resolve { margin-top:8px; font-size:var(--text-xs); font-style:italic; color:var(--hk-gold-muted, #b99a55); text-shadow:0 1px 3px #000; }
 </style>

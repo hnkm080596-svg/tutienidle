@@ -26,8 +26,10 @@ defineProps<{
   top: 0;
   display: grid;
   place-items: end center;
-  width: 92px;
-  height: 92px;
+  /* Spec dao-luan-hub: 192px diameter at design scale -> ~147px at the
+     1280x720 stage (x0.7655), matching the wheel orbit convention. */
+  width: 147px;
+  height: 147px;
   padding-bottom: 6px;
   border: 1px solid color-mix(in srgb, var(--hk-gold, var(--mineral-gold)) 78%, transparent);
   border-radius: 50%;

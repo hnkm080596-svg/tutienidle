@@ -221,7 +221,9 @@ function close() {
 
 .building-heading--imperial {
   justify-content: space-between;
-  padding: 0 4px;
+  /* The #header slot clips at the inner band's right edge - 4px left
+     the cost hint's last glyph under the rim. */
+  padding: 0 14px 0 4px;
 }
 /* The imperial scroll interior is PALE paper - the on-dark ramp used by
    OverlayPanel's ink header would render the name as washed-out glyphs
@@ -229,7 +231,10 @@ function close() {
 .building-heading--imperial .building-heading__name { color: var(--paper-text); }
 .building-heading--imperial .building-heading__level { color: color-mix(in srgb, var(--hk-gold, var(--jade)) 55%, var(--paper-text)); }
 .building-heading--imperial .building-heading__text { margin-right: auto; }
-.building-heading--imperial .building-heading__upgrade-area { flex-direction: row; align-items: center; gap: 10px; }
+/* Row wrap + a max-width on the cost line: button + 'Can dat ...' hint
+   ran past the header band's right edge and clipped mid-word. */
+.building-heading--imperial .building-heading__upgrade-area { flex-direction: row; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end; row-gap: 2px; }
+.building-heading--imperial .building-heading__cost { max-width: 170px; text-align: right; }
 
 .building-heading__text { min-width: 0; }
 /* Name/cost sit on the DARK ink header of OverlayPanel -- they must use

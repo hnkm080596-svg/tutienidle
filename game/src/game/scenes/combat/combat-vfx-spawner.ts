@@ -305,7 +305,7 @@ export class CombatVfxSpawner {
       const temporaryRowY = topY + STATUS_PLAYER_ROW_OFFSET_Y + STATUS_ICON_SIZE / 2
 
       baseY = rowTier === 0 ? temporaryRowY : temporaryRowY + STATUS_ROW_GAP + STATUS_ICON_SIZE
-      startX = (width * 16) / 1672 + HUD_HP_WIDTH + STATUS_PLAYER_ROW_OFFSET_Y + STATUS_ICON_SIZE / 2
+      startX = (width * 16) / 1672 + (width * 330) / 1672 + STATUS_PLAYER_ROW_OFFSET_Y + STATUS_ICON_SIZE / 2
     } else {
       const footY = this.scene.isPerspective
         ? sprite.rect.y

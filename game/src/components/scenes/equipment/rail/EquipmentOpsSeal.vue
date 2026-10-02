@@ -111,9 +111,12 @@ const sealArt = computed(() => hkChromeUrl('nav-seal-vertical'))
   position: relative;
   writing-mode: vertical-rl;
   max-height: 82%;
-  font-size: clamp(9px, 0.8cqw, 11px);
+  /* 11px + 0.12em ran 'Hoa Luyen' past the 82% cap and the hidden
+     overflow cut its last glyph at the pennant's bottom point - step
+     the cap and tracking down so the longest op name fits whole. */
+  font-size: clamp(8px, 0.65cqw, 8.5px);
   font-weight: 600;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.04em;
   line-height: 1;
   text-align: start;
   color: inherit;

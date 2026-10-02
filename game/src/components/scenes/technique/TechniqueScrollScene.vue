@@ -133,7 +133,9 @@ function close() { ui.closeHomeOverlays() }
 .technique-scene > :nth-child(1) { grid-area: 1 / 1 / -1 / 2; }
 .technique-scene > :nth-child(2) { grid-area: 1 / 2; }
 .technique-scene > :nth-child(3) { grid-area: 1 / 3 / -1; }
-.technique-scene > :nth-child(4) { grid-area: 2 / 2; }
+/* Spec grade-track x288 w864: span cols 1+2 (288..1152), not the
+   single col-2 cell (704 w448). */
+.technique-scene > :nth-child(4) { grid-area: 2 / 1 / 3 / 3; }
 
 @container (max-width: 900px) {
   /* Percent row-gap resolves to 0 on the indefinite stacked height. */

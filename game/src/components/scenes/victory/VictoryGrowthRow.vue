@@ -31,7 +31,9 @@ const { t } = useI18n()
   margin: 0;
   padding: 6px 4px;
   list-style: none;
-  max-height: 140px;
+  /* Spec growth band 140 design px incl. its section plaque -> the row
+     keeps ~116 design px (12.4vh) instead of collapsing to a bar. */
+  height: 12.4vh;
   overflow-y: auto;
   scrollbar-width: none;
 }

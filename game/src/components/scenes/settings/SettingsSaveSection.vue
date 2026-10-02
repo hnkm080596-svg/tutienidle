@@ -62,6 +62,14 @@ const { t } = useI18n()
 .settings-panel__actions > .settings-panel__import {
   width: 100%;
 }
+/* The cinnabar-tinted danger slice turns the whole face dark red; the
+   label was inheriting the same tone and read as dark-red-on-red. Keep
+   the label on the light primary tone so it stays legible. */
+.settings-panel__danger,
+.settings-panel__danger :deep(.game-button__label) {
+  color: var(--hk-text-primary, #ede6d6);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
+}
 .settings-panel__import {
   position: relative;
   display: flex;

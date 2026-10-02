@@ -329,13 +329,17 @@ describe('PlayerHudLayer — in-canvas HUD (6A-T4)', () => {
     hud.destroy()
   })
 
-  it('kích thước flexible: HP width hằng số, sub bars nhỏ hơn (không cứng theo màn hình)', () => {
+  it('kích thước flexible: bars theo spec 330 design px (viewport-relative)', () => {
     const scene = makeScene()
     const hud = new PlayerHudLayer(scene as never, { width: 1280, height: 720 })
 
     hud.layout(1280, 720)
 
-    expect(hud.hpWidth).toBe(HUD_HP_WIDTH)
-    expect(hud.subWidth).toBe(HUD_SUB_WIDTH)
+    expect(hud.hpWidth).toBeCloseTo((1280 * 330) / 1672, 1)
+    expect(hud.subWidth).toBeCloseTo((1280 * 330) / 1672, 1)
+
+    hud.layout(800, 600)
+
+    expect(hud.hpWidth).toBeCloseTo((800 * 330) / 1672, 1)
   })
 })

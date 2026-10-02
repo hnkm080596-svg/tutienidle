@@ -77,7 +77,9 @@ const toLabel = computed(() =>
   gap: var(--hk-space-4);
   min-width: 0;
   min-height: 0;
-  padding: var(--hk-space-4);
+  /* Same surface-m-panel inner ring - the 'Nang Canh' title struck
+     through by the border line at the base pad. */
+  padding: calc(var(--hk-space-4) + 8px) var(--hk-space-4) var(--hk-space-4);
   overflow-y: auto;
   mask-image: linear-gradient(to bottom, transparent 0, #000 12px, #000 calc(100% - 12px), transparent 100%);
 }

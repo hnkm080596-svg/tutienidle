@@ -44,7 +44,7 @@ const KIND_GLYPH: Record<VictorySlotView['kind'], string> = {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
   margin: 0;
   list-style: none;
 }
@@ -52,8 +52,10 @@ const KIND_GLYPH: Record<VictorySlotView['kind'], string> = {
 .victory-slot__tile {
   position: relative;
   isolation: isolate;
-  width: 58px;
-  height: 58px;
+  /* 58px tile + 2-line name (~25px) overflowed the 10vh slots band -
+     the second label line clipped. 50px keeps both lines inside. */
+  width: 50px;
+  height: 50px;
   display: grid;
   place-items: center;
 }
@@ -101,8 +103,8 @@ const KIND_GLYPH: Record<VictorySlotView['kind'], string> = {
   overflow: hidden;
   white-space: normal;
   overflow-wrap: break-word;
-  line-height: 1.25;
-  font-size: 10px;
+  line-height: 1.2;
+  font-size: 9.5px;
   color: var(--hk-text-secondary, #b8ae97);
 }
 </style>

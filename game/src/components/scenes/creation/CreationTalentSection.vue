@@ -97,8 +97,9 @@ const { t } = useI18n()
   justify-content: flex-end;
   margin-top: clamp(6px, 1vh, 10px);
   /* Pull the reroll button off the parchment's right edge - flush
-     flex-end put it under the scroll's painted rim. */
-  margin-right: 10px;
+     flex-end put it under the scroll's painted rim; 10px still left
+     the button's right cap clipped under the rim art. */
+  margin-right: 34px;
 }
 
 @media (max-width: 760px) {

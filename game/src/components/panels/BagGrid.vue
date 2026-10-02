@@ -82,6 +82,7 @@ provide(BAG_GRID_TOOLS_KEY, toolsTarget)
         class="bag-grid__tabs"
         :tabs="bagTabs"
         :model-value="ui.activeBagTab"
+        :columns="isWide ? undefined : 2"
         art-id="tab-pill"
         @update:model-value="ui.setActiveBagTab($event as BagTab)"
       />
@@ -130,7 +131,16 @@ provide(BAG_GRID_TOOLS_KEY, toolsTarget)
 }
 /* Narrow hosts (equipment drawer ~354 design px): the three vi labels
    must render whole - tighten the chip chrome instead of truncating
-   'Nguyen Lieu'/'Dan Duoc' mid-word. */
+   'Nguyen Lieu'/'Dan Duoc' mid-word. The outer pad also needs ~12px so
+   the outermost chips' caps clear the host card's painted rim (the
+   'Dan Duoc' tab's right cap and the 'Giay' filter's left cap clipped
+   under the rim at 8px). */
+.bag-grid:has(.bag-grid__head:not(.is-wide)) {
+  padding-inline: 12px;
+}
+/* Narrow hosts pass columns=2 (see template) so the three vi labels
+   render whole over two rows instead of ellipsizing 'Nguyen Lieu' or
+   clipping the last chip's cap at the host rim. */
 .bag-grid__head:not(.is-wide) .bag-grid__tabs :deep(.tab-bar__item) {
   font-size: 10px;
   letter-spacing: 0.02em;
@@ -159,6 +169,11 @@ provide(BAG_GRID_TOOLS_KEY, toolsTarget)
   display: flex;
   align-items: baseline;
   justify-content: flex-end;
+  /* Spec capacity-bar 288/760/1244/48: the bar is 48 design px tall
+     (5.1vh) and its bottom sits 41 design px above the inner band
+     bottom (~y849), so lift it 4.36vh off the container edge. */
+  height: 5.1vh;
+  margin-bottom: 4.36vh;
   padding: 4px 2px 0;
 }
 

@@ -37,13 +37,27 @@ const showUpgrade = ref(false)
 </template>
 
 <style scoped>
+/* Spec upgrade-card 1048/468/496/~140: anchored inside the card's
+   content band (content top = card 120 + 32 pad -> y152; 468-152=316
+   design px -> 33.58vh), NOT in-flow - in-flow it landed ~y608 and
+   pushed divider/secondary +140 past spec. */
 .login-upgrade {
+  position: absolute;
+  top: 33.58vh;
+  left: 0;
+  right: 0;
+  z-index: 5;
+  max-height: 14.88vh;
+  overflow: hidden;
   text-align: left;
 }
 .login-upgrade :deep(.upgrade-card) {
   padding: 10px 12px;
   border: 1px solid var(--paper-line, rgba(42, 41, 36, 0.42));
   border-radius: var(--radius-sm, 2px);
+  /* Spec band overlaps the form's tail - the panel must carry its own
+     opaque paper surface so the fields beneath never show through. */
+  background: var(--paper-100, #efe8d5);
 }
 .login-upgrade__link {
   display: block;

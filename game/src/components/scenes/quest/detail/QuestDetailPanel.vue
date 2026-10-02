@@ -74,6 +74,9 @@ const headSlice = computed(() => chromeSlice('entity-bar'))
   min-height: 0;
   display: flex;
   flex-direction: column;
+  /* border-box: content-box made the panel 30px taller than its grid
+     track, so the bottom row overflowed the scroll inner ~15px. */
+  box-sizing: border-box;
   padding: 14px 16px 16px;
   border-radius: var(--hk-radius-lg, 10px);
 }

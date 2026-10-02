@@ -13,7 +13,7 @@
 // (dock mep phai, publish `right` rieng). Overlay nay gio chi publish
 // `top` (publishTopBarHeight - giu nguyen `right` cua dock), khong con
 // giu import cho 2 component da doi.
-import { nextTick, onBeforeUnmount, onMounted, onUnmounted, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, onUnmounted, ref } from 'vue'
 import CombatTopRail from '@/components/scenes/combat/CombatTopRail.vue'
 import CombatTurnRail from '@/components/scenes/combat/CombatTurnRail.vue'
 import CombatAiRail from '@/components/scenes/combat/CombatAiRail.vue'
@@ -22,8 +22,19 @@ import CombatLogFeed from '@/components/scenes/combat/CombatLogFeed.vue'
 import CombatModalLayer from '@/components/scenes/combat/CombatModalLayer.vue'
 import { publishTopBarHeight, resetCombatInsets } from '@/presentation/geometry/combatInsets'
 import { useTurnCombatManual } from '@/composables/useTurnCombatManual'
+import { useGameManager, useStateVersion } from '@/composables/useGameState'
 
 const rootRef = ref<HTMLElement | null>(null)
+
+// While the victory/defeat scroll dims the scene, the live combat HUD
+// (AI panel, turn strip, stage chip) must not render beneath it.
+const gameManager = useGameManager()
+const { stateVersion } = useStateVersion()
+const hasBattleOutcome = computed(() => {
+  stateVersion.value
+  const state = gameManager.getTurnBattle()?.state
+  return state === 'victory' || state === 'defeat'
+})
 
 // Skill dock mounts only while the battle is fighting: its only content
 // (TurnCombatSkillBar) self-hides otherwise, and an empty dock would be a
@@ -104,18 +115,18 @@ onUnmounted(() => {
        Overlay chi con TopBar (thong tin zone/stage), AI panel, dock
        ky nang mep phai va cac modal. Bottom = full canvas. -->
   <div ref="rootRef" class="combat-scene-overlay">
-    <CombatTopRail class="combat-scene-overlay__top-bar" />
+    <CombatTopRail v-show="!hasBattleOutcome" class="combat-scene-overlay__top-bar" />
 
     <CombatActionDock :fighting="isBattleFighting" />
 
     <div class="combat-scene-overlay__battlefield">
       <!-- Combat AI panel - goc TRAI battlefield, chi panel nhan pointer. -->
-      <CombatAiRail class="combat-scene-overlay__ai-panel" />
+      <CombatAiRail v-show="!hasBattleOutcome" class="combat-scene-overlay__ai-panel" />
     </div>
 
     <!-- Slice 7 extension - turn-order preview (top, duoi TopBar) + battle
          log (goc phai-duoi, self-guarded khi khong fighting). -->
-    <CombatTurnRail class="combat-scene-overlay__turn-order-strip" />
+    <CombatTurnRail v-show="!hasBattleOutcome" class="combat-scene-overlay__turn-order-strip" />
 
     <CombatLogFeed />
 

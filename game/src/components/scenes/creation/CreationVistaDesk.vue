@@ -10,10 +10,9 @@
       class="creation-vista-desk__slab art-needed"
       data-art-id="creation-vista-desk"
     />
-    <div
-      class="creation-vista-desk__scroll art-needed"
-      data-art-id="creation-desk-scroll"
-    />
+    <!-- The lone cream desk-scroll prop read as a stray fragment floating
+         under the scroll's bottom rail at runtime; drop it until the
+         painted prop set lands. -->
     <div
       class="creation-vista-desk__burner art-needed"
       data-art-id="creation-desk-burner"
@@ -53,6 +52,7 @@
     radial-gradient(50% 80% at 12% 50%, rgba(122, 98, 52, 0.9), rgba(122, 98, 52, 0) 60%),
     linear-gradient(100deg, #d8cdb2 0%, #ede6d6 30%, #c9bd9f 78%, #8f8368 100%);
   box-shadow: 0 4px 10px rgba(5, 8, 9, 0.55), inset -4px 0 8px rgba(122, 98, 52, 0.5);
+  display: none;
 }
 
 .creation-vista-desk__burner {
