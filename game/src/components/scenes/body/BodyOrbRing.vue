@@ -58,7 +58,10 @@ const orbs = computed(() => {
 <style scoped>
 .body-orb-ring {
   position: absolute;
-  inset: 0;
+  /* 5% top clearance: the topmost node (y4% centers) is a 30-44px disc
+     plus label - without the offset its cap clipped at the figure box's
+     overflow-hidden top edge. */
+  inset: 5% 0 0;
   pointer-events: none;
 }
 .body-orb-ring__ellipse {

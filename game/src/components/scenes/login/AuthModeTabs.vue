@@ -52,13 +52,16 @@ function switchTab(target: 'login' | 'register') {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
+  /* spec region h 44 design px (44/941) */
+  min-height: 4.68vh;
 }
 .auth-tabs__tab {
   position: relative;
   isolation: isolate;
   display: grid;
   place-items: center;
-  min-height: 44px;
+  /* spec tab h 44 design px (44/941) */
+  min-height: 4.68vh;
   border: 0;
   padding: 8px 10px;
   background: transparent;

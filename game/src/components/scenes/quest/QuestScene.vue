@@ -108,7 +108,7 @@ function onClaim(questId: string) {
   grid-template-rows: auto minmax(0, 1fr);
   row-gap: 1.97%;
   column-gap: 1.29%;
-  padding: 6px 2px;
+  padding: 0.93cqh 0.2cqw;
   color: var(--hk-text-primary, var(--paper-text));
   font-family: var(--hk-font-ui, var(--font-body));
 }

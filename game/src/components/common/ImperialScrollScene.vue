@@ -296,14 +296,23 @@ const cloudUrl = hkChromeUrl('cloud-ornament')
   min-height: 0;
   z-index: 2;
 }
+/* Spec: the header band (scene-y 100..168, envelope-rel 50..118 =
+   inner-rel ~-4..64) is reserved space - a supplied #header is
+   absolutely confined to it so the main grid start stays invariant.
+   Inner top sits at envelope-rel 54.6, so the band maps to inner-rel
+   -4.4..63.6 -> top -0.5cqh, height 8.1cqh. */
 .hk-scroll__header {
-  flex: 0 0 auto;
-  min-height: 0;
+  position: absolute;
+  top: -0.5cqh;
+  left: 0;
+  right: 0;
+  height: 8.1cqh;
+  overflow: hidden;
   /* The paper art's top curl shadow reaches ~2cqh into the inner
      region - header content starts below it so glyph tops never sit
      on the dark band. */
   padding-top: 4.2cqh;
-  margin-bottom: 1.2cqh;
+  box-sizing: border-box;
 }
 .hk-scroll__main {
   flex: 1 1 auto;
@@ -311,12 +320,9 @@ const cloudUrl = hkChromeUrl('cloud-ornament')
   position: relative;
   display: flex;
   flex-direction: column;
-}
-/* Spec content grid starts at y176 (header band 100..168): scenes that
-   supply no #header slot still land their main at the grid top, so the
-   absent header's band is reserved here. With a real header the slot
-   renders as the first child and this rule does not apply. */
-.hk-scroll__main:first-child {
+  /* Spec content grid starts at scene-y 176 (envelope-rel 126):
+     8.5cqh of inner-rel margin lands main there whether or not the
+     scene supplies a #header - the header lives inside the band. */
   margin-top: 8.5cqh;
 }
 .hk-scroll__footer {
@@ -325,12 +331,14 @@ const cloudUrl = hkChromeUrl('cloud-ornament')
   margin-top: 1.2cqh;
 }
 
-/* Overlay layer: clicks pass through the wrapper; only slotted
-   surfaces take input. */
+/* Overlay layer (e.g. the chi-tiet drawer): clicks pass through the
+   wrapper; only slotted surfaces take input. Spec z-order is
+   contents < close seal < drawer, so the overlay must sit above the
+   close seal's z5 inside the chrome stacking context. */
 .hk-scroll__overlay {
   position: absolute;
   inset: 0;
-  z-index: 3;
+  z-index: 6;
   pointer-events: none;
 }
 .hk-scroll__overlay > * {

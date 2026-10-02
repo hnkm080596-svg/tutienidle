@@ -107,16 +107,18 @@ const runeMask = computed(() =>
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
 }
 
-/* --- banner plaque (art-needed: vertical hanging realm tag) --- */
+/* --- banner plaque (art-needed: vertical hanging realm tag) ---
+   Plain inline flow inside vertical-rl: strong + small stay in ONE
+   upright column (a flex column in vertical writing lays items out
+   as side-by-side columns that collide inside 34px). Height is
+   content-driven so the longest realm name + status always render. */
 .realm-node__banner {
   position: relative;
+  display: block;
   width: 34px;
   min-height: 96px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  padding: 8px 3px 14px;
+  /* Top pad clears the absolute seal badge; bottom pad hangs the tag. */
+  padding: 28px 3px 14px;
   writing-mode: vertical-rl;
   text-orientation: upright;
   font: 600 var(--text-xs) var(--font-display, serif);
@@ -127,20 +129,28 @@ const runeMask = computed(() =>
   clip-path: polygon(0 0, 100% 0, 100% calc(100% - 9px), 50% 100%, 0 calc(100% - 9px));
 }
 .realm-node__banner strong { font-weight: 700; letter-spacing: 0.08em; }
-.realm-node__banner small { color: var(--hk-text-muted, #7a7260); letter-spacing: 0.05em; }
+.realm-node__banner small {
+  margin-inline-start: 0.5em;
+  color: var(--hk-text-muted, #7a7260);
+  letter-spacing: 0.05em;
+}
 
 .realm-node:nth-child(odd) .realm-node__banner { margin-left: calc(50% + 34px); }
 .realm-node:nth-child(even) .realm-node__banner { order: -1; margin-right: calc(50% + 34px); margin-left: 0; }
 .realm-node:nth-child(even) { justify-content: flex-end; }
 
-/* Player seal riding the current banner (SS16 "player seal/avatar"). */
+/* Player seal: absolute badge on the banner head (horizontal-tb
+   inside the vertical-rl parent), not a flex column sibling. */
 .realm-node__seal {
+  position: absolute;
+  top: 4px;
+  left: 50%;
+  transform: translateX(-50%);
   writing-mode: horizontal-tb;
   display: inline-grid;
   place-items: center;
   width: 20px;
   height: 20px;
-  flex: 0 0 auto;
   border: 1px solid var(--hk-border-ceremony, #e8c35a);
   border-radius: 3px;
   background: color-mix(in srgb, var(--hk-jade, #3fa68b) 24%, var(--hk-surface-base, #0b0f0d));

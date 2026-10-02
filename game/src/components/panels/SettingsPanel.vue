@@ -424,7 +424,7 @@ const sliderChromeStyle = computed<Record<string, string> | undefined>(() =>
   display: grid;
   grid-template-columns: minmax(140px, 190px) minmax(0, 1fr);
   gap: 16px;
-  padding: 6px 2px;
+  padding: 0.93cqh 0.2cqw;
   color: var(--paper-text);
   font-size: var(--text-body);
 }

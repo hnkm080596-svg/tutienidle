@@ -35,6 +35,9 @@ const emit = defineEmits<{ submit: [] }>()
   display: grid;
   gap: 16px;
   text-align: left;
+  /* spec region h 240 design px (240/941) */
+  min-height: 25.5vh;
+  align-content: start;
 }
 .auth-form__hint {
   margin: 0;

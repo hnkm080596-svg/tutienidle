@@ -122,6 +122,9 @@ const stateLabel = computed(() => {
   justify-content: space-between;
   gap: 8px;
   padding-bottom: 8px;
+  /* Right clearance: the uppercase state badge ('CHUA TOI CANH GIOI')
+     space-between'ed to the row's edge clipped at the panel rim. */
+  padding-right: 10px;
   border-bottom: 1px solid var(--hk-border-muted, #2a352f);
 }
 .body-detail__title {

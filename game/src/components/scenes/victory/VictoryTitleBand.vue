@@ -46,8 +46,9 @@ const subtitle = computed(() => props.stageName ?? t('combat.victory.subtitle'))
   position: relative;
   display: grid;
   place-items: center;
-  width: min(520px, 100%);
-  min-height: 96px;
+  /* Spec title band 520x96 design px: 520/1672 vw, 96/941 vh. */
+  width: min(31.1vw, 100%);
+  min-height: 10.2vh;
 }
 
 .victory-title__ribbon {

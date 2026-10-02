@@ -148,10 +148,12 @@ function lastNameText(name: string): string {
   position: fixed;
   top: 24px;
   right: 24px;
-  /* z-index via OVERLAY_LAYERS.toast (inline style). */
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+  /* z-index via OVERLAY_LAYERS.toast (inline style).
+     Block (not flex) layout: a leaving toast's position:absolute
+     keeps its former slot so TransitionGroup's -move glide works -
+     inside a flex column every leaver collapsed to the sole-flex-item
+     spot and the stack overlapped. */
+  display: block;
   pointer-events: none;
 }
 
@@ -160,7 +162,11 @@ function lastNameText(name: string): string {
   isolation: isolate;
   pointer-events: auto;
   min-width: 100px;
-  max-width: 160px;
+  /* Own width per toast, right-aligned at the 24px edge, and never
+     wider than the viewport. */
+  width: max-content;
+  max-width: min(160px, calc(100vw - 48px));
+  margin-left: auto;
   padding: 5px 7px;
   border-left: 3px solid var(--toast-color, var(--hk-border-active));
   border-radius: var(--hk-radius-sm);
@@ -170,6 +176,8 @@ function lastNameText(name: string): string {
   /* UI-006 (Task 4) — toast text dài (vi/en) tự xuống dòng, không tràn. */
   overflow-wrap: anywhere;
 }
+
+.toast-item + .toast-item { margin-top: 4px; }
 
 /* Chrome slice stays under the content (same lift as ConfirmModal);
    the dismiss rule below overrides its own z back up to 4. */
@@ -209,6 +217,8 @@ function lastNameText(name: string): string {
   align-items: center;
   gap: 5px;
   min-width: 140px;
+  /* The icon layout needs an explicit width for max-content. */
+  width: auto;
 }
 
 .toast-item__icon-shell {
@@ -288,6 +298,8 @@ function lastNameText(name: string): string {
 
 .toast-leave-active {
   transition: transform var(--hk-motion-scene) ease-in, opacity var(--hk-motion-scene) ease-in;
+  /* Leaves the block flow so siblings glide up (-move) while the
+     leaver fades - the block container keeps its static spot. */
   position: absolute;
 }
 
@@ -297,7 +309,9 @@ function lastNameText(name: string): string {
 
 .toast-enter-from,
 .toast-leave-to {
-  transform: translateX(56px);
+  /* 56px pushed entering/leaving toasts 32px past the 24px right
+     edge off-viewport; 16px still reads as a slide from the edge. */
+  transform: translateX(16px);
   opacity: 0;
 }
 

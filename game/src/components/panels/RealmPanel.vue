@@ -159,7 +159,7 @@ function majorBreakthrough() {
   display: grid;
   grid-template-columns: minmax(0, 65.27%) minmax(0, 33.44%);
   column-gap: 1.29%;
-  padding: 6px 2px;
+  padding: 0.93cqh 0.2cqw;
 }
 
 @container (max-width: 860px) {

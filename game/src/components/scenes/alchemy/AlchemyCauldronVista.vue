@@ -65,11 +65,17 @@ const CAULDRON_SRC = hkChromeUrl('alchemy-cauldron-prop')
 .alchemy-banner {
   position: absolute;
   top: 4%;
-  height: 78%;
+  /* Single upright column: nowrap + content-driven height (an overlong
+     string clips at the plaque bottom instead of spawning a colliding
+     second column inside the 30px strip). */
+  height: auto;
+  max-height: 86%;
   width: 30px;
   padding: 10px 0;
   writing-mode: vertical-rl;
   text-orientation: upright;
+  white-space: nowrap;
+  overflow: hidden;
   font-style: normal;
   font-family: var(--font-display);
   font-size: var(--text-sm);

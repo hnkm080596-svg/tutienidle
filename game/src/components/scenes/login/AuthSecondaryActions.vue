@@ -51,15 +51,17 @@ const { t } = useI18n()
 </template>
 
 <style scoped>
-/* Ref pair: two equal ornate buttons side by side. */
+/* Ref pair: two equal ornate buttons side by side. Spec region
+   1048/644/496/120 -> h 120 design px (120/941). */
 .auth-secondary {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
+  min-height: 12.75vh;
 }
 .auth-secondary__action {
   width: 100%;
-  min-height: 44px;
+  min-height: 12.75vh;
 }
 .auth-secondary__label {
   position: relative;

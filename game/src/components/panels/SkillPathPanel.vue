@@ -501,13 +501,16 @@ function close() {
 }
 
 .skill-path-panel__col-title {
+  display: block;
   font-size: var(--text-sm);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.03em;
   color: var(--hk-text-muted, var(--paper-eyebrow));
-  /* Clear the rail frame's corner ornament (was crossing the leading
-     glyph ~3px). */
+  /* Clear the rail frame's corner ornaments on both ends - the leading
+     padding was for the left arm, and the trailing 'H' of the vi title
+     clipped against the rail's right edge. */
   padding-left: 8px;
+  padding-right: 10px;
 }
 </style>

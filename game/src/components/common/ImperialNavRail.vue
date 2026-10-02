@@ -90,7 +90,12 @@ const sealUrl = hkChromeUrl('nav-seal-vertical')
 .hk-nav-seal__label {
   position: relative;
   writing-mode: vertical-rl;
-  max-height: 82%;
+  /* Longest labels wrap into a second upright column (vertical-rl wraps
+     leftwards) inside the seal width instead of clipping mid-glyph at
+     the seal bottom; overflow stays guarded past ~3 columns. */
+  white-space: normal;
+  max-height: 88%;
+  max-width: 62%;
   font-size: clamp(9px, 0.8cqw, 11px);
   font-weight: 600;
   letter-spacing: 0.12em;
@@ -98,7 +103,6 @@ const sealUrl = hkChromeUrl('nav-seal-vertical')
   text-align: start;
   color: inherit;
   overflow: hidden;
-  white-space: nowrap;
 }
 .hk-nav-seal:hover {
   transform: translateY(-2px);

@@ -357,8 +357,13 @@ export class CombatGridView {
   // thuá»™c origin (foot anchor á»Ÿ perspective, center anchor á»Ÿ flat).
   entityHeadY(sprite: EntitySprite): number {
     const displayHeight = sprite.rect.displayHeight
+    const frameTop = this.host.isPerspective ? sprite.rect.y - displayHeight : sprite.rect.y - displayHeight / 2
 
-    return this.host.isPerspective ? sprite.rect.y - displayHeight : sprite.rect.y - displayHeight / 2
+    // Authored frames pad the character with empty space: extent.y is the
+    // art's real top as a frame fraction. Anchoring head chrome to it keeps
+    // HP bars hugging the visible sprite instead of floating over the
+    // trimmed headroom (was ~50-70px above the art on padded textures).
+    return frameTop + (sprite.extent?.y ?? 0) * displayHeight
   }
 
   positionSprite(sprite: EntitySprite, worldColumn: number, _id = '') {

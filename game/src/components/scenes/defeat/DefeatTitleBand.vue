@@ -24,8 +24,11 @@ const ribbonUrl = hkChromeUrl('ceremony-ribbon')
   position: relative;
   display: grid;
   place-items: center;
-  min-height: 76px;
-  margin: -10px 0 4px;
+  /* Spec title band 520x96 design px (520/1672 vw, 96/941 vh), centered
+     inside the 620 content band. */
+  width: min(31.1vw, 100%);
+  min-height: 10.2vh;
+  margin: 0 auto 4px;
 }
 .combat-defeat-panel__title-band img {
   position: absolute;

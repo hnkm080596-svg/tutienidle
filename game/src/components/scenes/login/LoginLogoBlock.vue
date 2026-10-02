@@ -20,15 +20,29 @@ const { t } = useI18n()
 
 <style scoped>
 /* Ref: brush wordmark over a dark ink-mountain silhouette with a red
-   seal stamp at its right edge. Region 368x120 inside the card top. */
+   seal stamp at its right edge. Region 368x120 inside the card top,
+   16 design px under the content band's padded top (spec 1112/168):
+   368/1672 = 22.01vw, 120/941 = 12.75vh, 16/941 = 1.7vh. */
 .login-logo {
   position: relative;
   isolation: isolate;
-  width: min(100%, 368px);
-  height: 120px;
-  margin: 0 auto;
+  width: min(100%, 22.01vw);
+  height: 12.75vh;
+  margin: 1.7vh auto 0;
   display: grid;
   place-items: center;
+}
+/* Light ivory plaque behind the wordmark: the dark mountain silhouette
+   plate alone swallowed the gold gradient text (QA - logo unreadable). */
+.login-logo::after {
+  content: '';
+  position: absolute;
+  inset: 16% 7%;
+  z-index: 0;
+  background: linear-gradient(180deg, rgba(237, 230, 214, 0.94), rgba(226, 216, 196, 0.88));
+  border: 1px solid color-mix(in srgb, var(--hk-gold-muted, #b99a55) 45%, transparent);
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(16, 23, 24, 0.25);
 }
 /* Ink-mountain silhouette plate (temp art). */
 .login-logo__mountains {

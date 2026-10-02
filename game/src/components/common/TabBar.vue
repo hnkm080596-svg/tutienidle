@@ -88,7 +88,9 @@ function onKeydown(event: KeyboardEvent) {
 <style scoped>
 .tab-bar {
   display: grid;
-  grid-template-columns: repeat(var(--tab-columns), 1fr);
+  /* minmax(0,1fr): a long nowrap label's min-content must not push the
+     last column past the rail's right edge. */
+  grid-template-columns: repeat(var(--tab-columns), minmax(0, 1fr));
   align-items: stretch;
   gap: var(--hk-space-2);
 }

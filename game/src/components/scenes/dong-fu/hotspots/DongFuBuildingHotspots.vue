@@ -64,6 +64,19 @@ const sceneBuildings = computed<SceneBuilding[]>(() =>
 )
 
 function anchorStyle(entry: DongFuBuildingArtEntry) {
+  // The anchor is a square of side `scale` * 1672 design px in the art
+  // space, top-left at (xPercent * 16.72 - s/2, yPercent * 9.41 -
+  // baselineY/1254 * s) via the translate(-50%, baseline-offset) rule.
+  // The hit span sizes in % OF THE ANCHOR SIDE, so the spec rect maps in
+  // as (spec - anchorTopLeft) / s * 100 - the spec hotspot rect wins over
+  // the measured canvas hitbox so the hit area covers the spec region.
+  const anchorSide = entry.scenePlacement.scale * 1672
+  const anchorLeft = entry.scenePlacement.xPercent * 16.72 - anchorSide / 2
+  const anchorTop =
+    entry.scenePlacement.yPercent * 9.41
+    - (entry.baselineY / entry.canvas.height) * anchorSide
+  const spec = entry.specRect
+
   return {
     left: `${entry.scenePlacement.xPercent}%`,
     top: `${entry.scenePlacement.yPercent}%`,
@@ -71,10 +84,10 @@ function anchorStyle(entry: DongFuBuildingArtEntry) {
     zIndex: entry.scenePlacement.zIndex,
     '--baseline-y': `${entry.baselineY / entry.canvas.height * 100}%`,
     '--baseline-offset': `${-entry.baselineY / entry.canvas.height * 100}%`,
-    '--hit-left': `${entry.hitbox.x / entry.canvas.width * 100}%`,
-    '--hit-top': `${entry.hitbox.y / entry.canvas.height * 100}%`,
-    '--hit-width': `${entry.hitbox.width / entry.canvas.width * 100}%`,
-    '--hit-height': `${entry.hitbox.height / entry.canvas.height * 100}%`,
+    '--hit-left': `${(spec.x - anchorLeft) / anchorSide * 100}%`,
+    '--hit-top': `${(spec.y - anchorTop) / anchorSide * 100}%`,
+    '--hit-width': `${spec.width / anchorSide * 100}%`,
+    '--hit-height': `${spec.height / anchorSide * 100}%`,
   }
 }
 

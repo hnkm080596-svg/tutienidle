@@ -60,14 +60,18 @@ const model = useVictorySceneModel(computed(() => props.summary))
 </template>
 
 <style scoped>
-/* Scene 15 ceremonial scroll: spec envelope 760 design px (~582
-   runtime), rollers sit on the scroll edge band. */
+/* Scene 15 ceremonial scroll: FIXED spec envelope 760x720 design px
+   centered (760/1672 vw, 720/941 vh) - not content-sized. Content
+   insets come straight off the spec regions: title band x120 w520 /
+   y30 inside the envelope, content x70 w620, actions band ends 60
+   design px above the envelope bottom. */
 .victory-scene {
   position: relative;
   isolation: isolate;
   box-sizing: border-box;
-  width: min(582px, calc(100vw - 32px));
-  padding: 34px 40px 30px;
+  width: min(45.43vw, calc(100vw - 32px));
+  height: min(76.51vh, calc(100vh - 32px));
+  padding: 3.19vh 4.19vw 6.38vh;
   background: transparent;
   border: 0;
   border-radius: 0;
@@ -81,15 +85,17 @@ const model = useVictorySceneModel(computed(() => props.summary))
   z-index: 3;
 }
 
-/* Spec scene 15: the title band (140..236) hangs on the scroll's top
-   edge (240) and the action row (690) sits just below its painted
-   bottom (670) - so the inner column is hoisted at both ends instead
-   of floating entirely inside the paper. */
+/* Spec scene 15: every region lives inside the scroll - the old
+   -44px/-52px negative margins hoisted the title band and action row
+   outside the paper. The action row pins to the bottom inset instead. */
 .victory-scene__inner {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  margin-top: -44px;
-  margin-bottom: -52px;
+  height: 100%;
+  min-height: 0;
+}
+.victory-scene__inner > :last-child {
+  margin-top: auto;
 }
 </style>

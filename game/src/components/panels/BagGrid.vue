@@ -128,6 +128,14 @@ provide(BAG_GRID_TOOLS_KEY, toolsTarget)
   flex: 1 1 auto;
   min-width: 0;
 }
+/* Narrow hosts (equipment drawer ~354 design px): the three vi labels
+   must render whole - tighten the chip chrome instead of truncating
+   'Nguyen Lieu'/'Dan Duoc' mid-word. */
+.bag-grid__head:not(.is-wide) .bag-grid__tabs :deep(.tab-bar__item) {
+  font-size: 10px;
+  letter-spacing: 0.02em;
+  padding-inline: 4px;
+}
 /* Spec 05 bands: tabs 640/1244 = 51.45% on the left; grid-tools
    352/1244 = 28.3% anchored right (the 252px design gap between them
    stays empty). Narrow hosts keep the full-width tab bar. */

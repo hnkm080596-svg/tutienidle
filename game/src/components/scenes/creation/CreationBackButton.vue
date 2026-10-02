@@ -23,7 +23,11 @@ const { t } = useI18n()
 
 <style scoped>
 .creation-back-button {
-  /* keeps the ghost legible over the bright vista band at the top edge */
+  /* Keeps the ghost legible over the vista band's red seal marks at the
+     top-left - a translucent ink plate behind the label. */
   text-shadow: 0 1px 4px rgba(5, 8, 9, 0.65);
+  background: color-mix(in srgb, var(--hk-surface-base, #0b0f0d) 62%, transparent);
+  border-radius: var(--hk-radius-sm, 6px);
+  backdrop-filter: blur(2px);
 }
 </style>

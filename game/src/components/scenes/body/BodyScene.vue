@@ -93,7 +93,7 @@ function selectUnit(id: string): void {
      character scene; a raw 16px renders ~1.306x and overflows the
      right edge ~9.6 design px). */
   column-gap: 1.29%;
-  padding: 6px 2px;
+  padding: 0.93cqh 0.17cqw;
 }
 
 .body-scene__rail { min-width: 0; }
@@ -102,11 +102,14 @@ function selectUnit(id: string): void {
   min-height: 0;
   display: flex;
   flex-direction: column;
-  /* Spec 08: tier-chips sit 8 design px under figure-focus -> 8/610. */
-  gap: 1.31%;
+  /* Spec 08: tier-chips sit 8 design px under figure-focus (8/8.4). */
+  gap: 0.95cqh;
 }
-.body-scene__figure { flex: 1; min-height: 0; }
-.body-scene__chips { flex: 0 0 auto; }
+/* figure-focus 436/176/640/520 and tier-chips 436/704/640/56 are fixed
+   spec bands inside the main grid (cqh on the envelope: h/8.4) - the
+   extra footer-safe depth below the chips stays unused. */
+.body-scene__figure { flex: 0 0 auto; height: 61.9cqh; min-height: 0; }
+.body-scene__chips { flex: 0 0 auto; height: 6.67cqh; min-height: 0; }
 
 .body-scene__detail { min-width: 0; min-height: 0; }
 
@@ -118,5 +121,8 @@ function selectUnit(id: string): void {
     overflow-y: auto;
   }
   .body-scene__center { min-height: 340px; }
+  /* Stacked narrow layout: fixed cqh bands revert to flex sizing. */
+  .body-scene__figure { flex: 1; height: auto; }
+  .body-scene__chips { height: auto; }
 }
 </style>

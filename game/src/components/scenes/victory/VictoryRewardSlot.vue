@@ -96,9 +96,12 @@ const KIND_GLYPH: Record<VictorySlotView['kind'], string> = {
 
 .victory-slot__name {
   max-width: 76px;
+  /* Wrap to a second line instead of truncating 'Ha pham Linh ...' -
+     the slot column is fixed, so the full name needs the height. */
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: normal;
+  overflow-wrap: break-word;
+  line-height: 1.25;
   font-size: 10px;
   color: var(--hk-text-secondary, #b8ae97);
 }

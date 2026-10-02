@@ -29,6 +29,12 @@ export interface DongFuBuildingArtEntry {
   readonly visualBounds: PixelRect
   readonly baselineY: number
   readonly hitbox: PixelRect
+  /**
+   * Scene-03 spec `hotspot.<building>` rect in the 1672x941 design space -
+   * what the clickable hit area must cover. The hotspots layer maps it into
+   * the anchored art square; specRect wins over the measured canvas hitbox.
+   */
+  readonly specRect: PixelRect
   readonly scenePlacement: Readonly<{
     xPercent: number
     yPercent: number
@@ -52,6 +58,7 @@ export const DONG_FU_BUILDING_ART: readonly DongFuBuildingArtEntry[] = [
     visualBounds: { x: 114, y: 118, width: 1028, height: 914 },
     baselineY: 1032,
     hitbox: { x: 217, y: 621, width: 822, height: 411 },
+    specRect: { x: 97, y: 465, width: 240, height: 160 },
     scenePlacement: { xPercent: 13, yPercent: 58, scale: 0.1, zIndex: 11 },
     futureVfxAnchors: {
       entrance: { x: 627, y: 900 },
@@ -65,6 +72,7 @@ export const DONG_FU_BUILDING_ART: readonly DongFuBuildingArtEntry[] = [
     visualBounds: { x: 0, y: 298, width: 1254, height: 604 },
     baselineY: 902,
     hitbox: { x: 125, y: 630, width: 1004, height: 272 },
+    specRect: { x: 1045, y: 373, width: 200, height: 110 },
     scenePlacement: { xPercent: 68.5, yPercent: 45.5, scale: 0.05, zIndex: 21 },
     futureVfxAnchors: {
       entrance: { x: 627, y: 830 },
@@ -78,6 +86,7 @@ export const DONG_FU_BUILDING_ART: readonly DongFuBuildingArtEntry[] = [
     visualBounds: { x: 86, y: 167, width: 1075, height: 882 },
     baselineY: 1049,
     hitbox: { x: 194, y: 652, width: 860, height: 397 },
+    specRect: { x: 1380, y: 678, width: 250, height: 150 },
     scenePlacement: { xPercent: 90, yPercent: 80, scale: 0.2, zIndex: 10 },
     futureVfxAnchors: {
       entrance: { x: 627, y: 1010 },
@@ -91,6 +100,7 @@ export const DONG_FU_BUILDING_ART: readonly DongFuBuildingArtEntry[] = [
     visualBounds: { x: 85, y: 185, width: 1133, height: 756 },
     baselineY: 941,
     hitbox: { x: 198, y: 601, width: 906, height: 340 },
+    specRect: { x: 303, y: 353, width: 230, height: 140 },
     scenePlacement: { xPercent: 25, yPercent: 45, scale: 0.1, zIndex: 20 },
     futureVfxAnchors: {
       entrance: { x: 650, y: 875 },
@@ -109,6 +119,7 @@ export const DONG_FU_BUILDING_ART: readonly DongFuBuildingArtEntry[] = [
     visualBounds: { x: 150, y: 200, width: 950, height: 850 },
     baselineY: 1050,
     hitbox: { x: 200, y: 600, width: 850, height: 380 },
+    specRect: { x: 1248, y: 378, width: 180, height: 110 },
     scenePlacement: { xPercent: 80, yPercent: 46, scale: 0.05, zIndex: 15 },
     futureVfxAnchors: {
       entrance: { x: 627, y: 950 },
@@ -124,6 +135,7 @@ export const DONG_FU_BUILDING_ART: readonly DongFuBuildingArtEntry[] = [
     visualBounds: { x: 0, y: 294, width: 1244, height: 659 },
     baselineY: 953,
     hitbox: { x: 124, y: 657, width: 995, height: 296 },
+    specRect: { x: 565, y: 470, width: 200, height: 120 },
     scenePlacement: { xPercent: 40, yPercent: 55, scale: 0.1, zIndex: 22 },
     futureVfxAnchors: {
       entrance: { x: 627, y: 920 },

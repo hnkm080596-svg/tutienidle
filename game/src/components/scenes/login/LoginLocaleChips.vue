@@ -32,8 +32,10 @@ const { t, locale } = useI18n()
    inside the 560px card), hanging near the frame's top edge. */
 .login-locale {
   position: absolute;
-  top: 18px;
-  right: 16px;
+  /* Nudged inside the card: spec 1336/138 put the row astride the frame's
+     top painted edge; 30px lands it inside the parchment interior. */
+  top: 30px;
+  right: 18px;
   z-index: 4;
   display: flex;
   align-items: center;

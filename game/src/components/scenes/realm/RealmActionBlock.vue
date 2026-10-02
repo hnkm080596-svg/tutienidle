@@ -62,6 +62,13 @@ const rows = computed(() =>
   flex-direction: column;
   gap: 8px;
   margin-top: auto;
+  /* Dock to the rail's visible bottom while content scrolls: the CTA
+     never slides under the bottom scrollfade. The gradient keeps
+     scrolled rows from showing through the dock zone. */
+  position: sticky;
+  bottom: 0;
+  z-index: 4;
+  background: linear-gradient(180deg, transparent, var(--hk-surface-base, #0b0f0d) 30%);
   padding-top: 10px;
   padding-bottom: 4px;
   border-top: 1px solid var(--hk-border-muted, var(--ink-line));

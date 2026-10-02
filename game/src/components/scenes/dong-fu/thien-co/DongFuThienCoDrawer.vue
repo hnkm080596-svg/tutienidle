@@ -25,46 +25,55 @@ const drawerSlice = chromeSlice('surface-l-drawer')
 </script>
 
 <template>
-  <div
-    class="thien-co-rail__drawer"
-    data-hk-region="thien-co-open"
-    :art-needed="!drawerSlice"
-    data-art-id="surface-l-drawer"
-  >
-    <InkNineSlice v-if="drawerSlice" chrome-id="surface-l-drawer" layer="surface" />
-    <header class="thien-co-rail__header">
-      <span class="thien-co-rail__seal" aria-hidden="true">✦</span>
-      <h2 class="thien-co-rail__title">{{ t('home.thienCo.title') }}</h2>
-      <GameButton
-        shape="circle"
-        size="sm"
-        variant="ghost"
-        class="thien-co-rail__collapse"
-        :aria-label="t('home.thienCo.collapse')"
-        @click="emit('collapse')"
-      >
-        <HuyenKimSymbol name="close" />
-      </GameButton>
-    </header>
+  <!-- Escapes .thien-co-rail's stacking context: the rail is z9, the
+       fixed drawer inside it can never rise above the z9 top bar no
+       matter its own z. Spec wants drawer z11 > top-bar z9, so the
+       drawer teleports to body and carries its own scene z-index. -->
+  <Teleport to="body">
+    <div
+      class="thien-co-rail__drawer"
+      data-hk-region="thien-co-open"
+      :art-needed="!drawerSlice"
+      data-art-id="surface-l-drawer"
+    >
+      <InkNineSlice v-if="drawerSlice" chrome-id="surface-l-drawer" layer="surface" />
+      <header class="thien-co-rail__header">
+        <span class="thien-co-rail__seal" aria-hidden="true">✦</span>
+        <h2 class="thien-co-rail__title">{{ t('home.thienCo.title') }}</h2>
+        <GameButton
+          shape="circle"
+          size="sm"
+          variant="ghost"
+          class="thien-co-rail__collapse"
+          :aria-label="t('home.thienCo.collapse')"
+          @click="emit('collapse')"
+        >
+          <HuyenKimSymbol name="close" />
+        </GameButton>
+      </header>
 
-    <p v-if="entries.length === 0" class="thien-co-rail__empty">{{ t('home.thienCo.empty') }}</p>
+      <p v-if="entries.length === 0" class="thien-co-rail__empty">{{ t('home.thienCo.empty') }}</p>
 
-    <ul v-else class="thien-co-rail__list">
-      <DongFuThienCoEntry
-        v-for="(entry, index) in entries"
-        :key="entry.id"
-        :entry="entry"
-        :lead="index === 0"
-      />
-    </ul>
-  </div>
+      <ul v-else class="thien-co-rail__list">
+        <DongFuThienCoEntry
+          v-for="(entry, index) in entries"
+          :key="entry.id"
+          :entry="entry"
+          :lead="index === 0"
+        />
+      </ul>
+    </div>
+  </Teleport>
 </template>
 
 <style scoped>
 .thien-co-rail__drawer {
   /* Spec thien-co-open 1296/140/360/640: top-anchored right drawer -
-     right 16, top 140, w 360, h 640 design px on the 1672x941 canvas. */
+     right 16, top 140, w 360, h 640 design px on the 1672x941 canvas.
+     Spec z11 (above the z9 top bar); the body teleport escapes the
+     rail's stacking context. */
   position: fixed;
+  z-index: 11;
   isolation: isolate;
   right: 0.96vw;
   top: 14.88vh;

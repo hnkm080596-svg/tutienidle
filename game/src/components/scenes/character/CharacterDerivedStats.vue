@@ -55,8 +55,10 @@ const derivedStats = computed(() =>
   overflow-y: auto;
   margin: 0;
   /* Right padding clears the frame art's painted rim (~10px), so the
-     trailing glyph of a right-aligned value never slides under it. */
-  padding: 0 12px var(--hk-space-2, 6px) var(--hk-space-2, 6px);
+     trailing glyph of a right-aligned value never slides under it.
+     Bottom pad keeps the last row ('Hoi linh luc') fully inside the
+     opaque band above the scrollfade. */
+  padding: 0 12px 16px var(--hk-space-2, 6px);
   list-style: none;
   scrollbar-width: none;
 }

@@ -87,7 +87,8 @@ const cornerOrnamentUrl = hkChromeUrl('corner-ornament')
   z-index: 3;
   display: flex;
   flex-direction: column;
-  gap: clamp(10px, 1.5vh, 16px);
+  /* Spec 01 interior rhythm: 12 design px between regions (12/941). */
+  gap: 1.27vh;
   padding: 3.4vh 1.91vw;
 }
 

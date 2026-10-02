@@ -75,7 +75,9 @@ const stageCode = computed(() => {
   gap: 8px;
   min-width: 0;
   min-height: 0;
-  padding: 12px;
+  /* Deeper bottom pad: the last content line clipped at the panel's
+     bottom edge against the slab's painted rim. */
+  padding: 12px 12px 20px;
   border-radius: var(--radius-sm);
   margin: 8px;
   background:

@@ -113,26 +113,27 @@ function close() { ui.closeHomeOverlays() }
 </template>
 
 <style scoped>
-/* Ref 06: card (400) | artifact vista (448) | upgrade rail (364, full
-   height), grade track across card+vista bottom (864 x 118). */
+/* Ref 06: card (400, full height) | artifact vista (448) | upgrade rail
+   (364, full height), grade track under the vista (118). Spec 06 on the
+   610 design-px band: vista row 480 + row-gap 12 + track 118 = 610, so
+   the card and upgrade rail span both rows for their spec h610. Rows
+   are fixed cqh (envelope units) so a taller band cannot stretch the
+   vista's plinth art; the leftover footer-safe depth stays unused. */
 .technique-scene {
   height: 100%;
   min-height: 0;
   display: grid;
   grid-template-columns: minmax(0, 400fr) minmax(0, 448fr) minmax(0, 364fr);
-  grid-template-rows: minmax(0, 480fr) minmax(0, 118fr);
-  /* Spec 06 gaps on the 1244x610 band: 16 design-px columns -> 1.29%
-     (16/1244), 12 design-px row -> 1.97% (12/610); raw px renders
-     ~1.306x and shifts grade-track off its spec band. */
-  row-gap: 1.97%;
+  grid-template-rows: minmax(0, 57.14cqh) minmax(0, 14.05cqh);
+  row-gap: 1.43cqh;
   column-gap: 1.29%;
-  padding: 6px 2px;
+  padding: 0.93cqh 0.17cqw;
 }
 
-.technique-scene > :nth-child(1) { grid-area: 1 / 1; }
+.technique-scene > :nth-child(1) { grid-area: 1 / 1 / -1 / 2; }
 .technique-scene > :nth-child(2) { grid-area: 1 / 2; }
 .technique-scene > :nth-child(3) { grid-area: 1 / 3 / -1; }
-.technique-scene > :nth-child(4) { grid-area: 2 / 1 / 3; }
+.technique-scene > :nth-child(4) { grid-area: 2 / 2; }
 
 @container (max-width: 900px) {
   /* Percent row-gap resolves to 0 on the indefinite stacked height. */

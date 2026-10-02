@@ -25,18 +25,26 @@ const plaqueUrl = computed(() => hkChromeUrl('scroll-title-plaque'))
 
 <style scoped>
 .creation-title-block {
-  flex: 0 0 auto;
+  /* Fold into the scroll's crown zone (scroll-rel 0-60 design px):
+     the plaque hangs on the top rod art as an overlay instead of
+     consuming ~120px of flow height - name-section then lands at the
+     spec band (scroll-rel ~60). */
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 4;
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-bottom: clamp(4px, 1.2vh, 12px);
+  margin-bottom: 0;
 }
 
-.creation-title-block__kicker {
-  margin: 0;
-  color: #6b6151;
-  font-size: var(--text-xs);
-  letter-spacing: 0.32em;
+/* The kicker/subtitle are decorative eyebrows - hidden so the block
+   stays inside the crown zone without overlapping the name field. */
+.creation-title-block__kicker,
+.creation-title-block__subtitle {
+  display: none;
 }
 
 .creation-title-block__plaque {
@@ -44,8 +52,8 @@ const plaqueUrl = computed(() => hkChromeUrl('scroll-title-plaque'))
   isolation: isolate;
   display: grid;
   place-items: center;
-  width: min(84%, 380px);
-  min-height: clamp(46px, 7.4vh, 66px);
+  width: min(64%, 300px);
+  min-height: clamp(38px, 5.6vh, 54px);
   margin-top: 2px;
 }
 
@@ -73,11 +81,5 @@ const plaqueUrl = computed(() => hkChromeUrl('scroll-title-plaque'))
   top: 12%;
 }
 
-.creation-title-block__subtitle {
-  margin: 4px 0 0;
-  color: #6b6151;
-  font-size: var(--text-xs);
-  letter-spacing: 0.3em;
-  text-align: center;
-}
+
 </style>

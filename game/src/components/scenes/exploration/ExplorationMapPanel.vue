@@ -105,7 +105,7 @@ defineExpose({ scrollToChapter })
      and the pinned head band occupies ~90px - the node field starts
      under both and clears the bottom band. All three chapter bands
      fit inside the frame at design res (ref 09) without scrolling. */
-  padding: 104px 36px 22px;
+  padding: 104px 36px 44px;
 }
 
 /* Scene 10: the floor field rides the vertical center of the map frame
@@ -133,6 +133,10 @@ defineExpose({ scrollToChapter })
   justify-content: center;
   gap: 4px;
   min-height: 0;
+  /* The last chapter row's 'Tang N' + enemy-name copy hangs ~30px
+     below its node disc - internal bottom room keeps it fully inside
+     the painted mask instead of clipping at the map's bottom edge. */
+  padding-bottom: 36px;
   -webkit-mask-image: var(--map-mask, none);
   mask-image: var(--map-mask, none);
   -webkit-mask-size: 100% 100%;

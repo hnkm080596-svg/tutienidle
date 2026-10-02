@@ -19,7 +19,8 @@ const dividerOrnamentUrl = hkChromeUrl('divider-ornament')
   position: relative;
   display: grid;
   place-items: center;
-  min-height: 24px;
+  /* spec region h 24 design px (24/941) */
+  min-height: 2.55vh;
   color: var(--paper-text-muted, #6b6860);
   font-size: var(--text-xs);
 }

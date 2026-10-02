@@ -158,10 +158,12 @@ onMounted(() => {
   position: relative;
   isolation: isolate;
   box-sizing: border-box;
-  /* Spec envelope 760 design px (~582 runtime) - identical to
-     the victory scroll's width. */
-  width: min(582px, calc(100vw - 32px));
-  padding: 34px 40px 30px;
+  /* Spec envelope 760 design px wide (760/1672 vw) - identical to the
+     victory scroll. The 70 design-px side insets (70/1672 vw) cap the
+     inner content at the spec 620 content band; the 520 title band
+     centers inside it via DefeatTitleBand's own width cap. */
+  width: min(45.43vw, calc(100vw - 32px));
+  padding: 3.19vh 4.19vw 6.38vh;
   background: transparent;
   border: 0;
   border-radius: 0;
