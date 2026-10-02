@@ -834,7 +834,22 @@
         "claimed": "Đã Nhận",
         "claim": "Nhận Thưởng"
       },
-      "empty": "Chưa có nhiệm vụ nào khả dụng."
+      "empty": "Chưa có nhiệm vụ nào khả dụng.",
+      "tabs": {
+        "all": "Tất Cả"
+      },
+      "cadence": {
+        "once": "Một Lần"
+      },
+      "scene": {
+        "tabsAria": "Nhóm nhiệm vụ",
+        "railAria": "Danh sách nhiệm vụ",
+        "objectives": "Mục Tiêu Nhiệm Vụ",
+        "rewardsTitle": "Thưởng Nhiệm Vụ",
+        "turnIn": "Nộp {name}",
+        "done": "Đã hoàn thành",
+        "reasonIncomplete": "Chưa đủ tiến độ mục tiêu."
+      }
     },
     "buildingPopover": {
       "costTitle": "Chi phí xây dựng",
