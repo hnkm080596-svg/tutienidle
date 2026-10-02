@@ -64,12 +64,12 @@ describe('CombatSceneOverlay — style contract (T8.1)', () => {
     expect(rule).toContain('pointer-events: none')
   })
 
-  it('AI panel (bảng chọn mục tiêu): absolute + left/top var + z-12', () => {
+  it('AI panel (bảng chọn mục tiêu): absolute at spec coords 16/140/228/280 + z-12', () => {
     const rule = ruleOf('.combat-scene-overlay__ai-panel')
 
     expect(rule).toContain('position: absolute')
-    expect(rule).toContain('left: var(--space-3)')
-    expect(rule).toContain('top: var(--space-3)')
+    expect(rule).toContain('left: 0.96vw')
+    expect(rule).toContain('top: calc(14.88vh - var(--combat-topbar-h))')
     expect(rule).toContain('z-index: 12')
   })
 
