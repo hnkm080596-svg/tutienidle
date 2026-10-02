@@ -6,7 +6,9 @@ import authSource from '@/components/onboarding/AuthEntryScreen.vue?raw'
 import loginVistaSource from '@/components/scenes/login/LoginSceneVista.vue?raw'
 import modeTabsSource from '@/components/scenes/login/AuthModeTabs.vue?raw'
 import creationSource from '@/components/onboarding/CharacterCreationScreen.vue?raw'
-import victorySource from '@/components/game/combat/CombatVictoryPanel.vue?raw'
+// Scene 14: the victory ceremonial surface lives in the scene layer
+// (scenes/victory/VictoryScene); the panel wrapper keeps the behavior.
+import victorySource from '@/components/scenes/victory/VictoryScene.vue?raw'
 import defeatSource from '@/components/game/combat/CombatDefeatPanel.vue?raw'
 
 const mounted: Array<{ app: App; container: HTMLElement }> = []
