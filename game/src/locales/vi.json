@@ -43,6 +43,15 @@
         "dissolve": "Hóa Luyện",
         "decompose": "Phân Giải"
       },
+      "rail": {
+        "aria": "Điều khiển trang bị"
+      },
+      "scene": {
+        "equip": "Trang Bị",
+        "unequip": "Tháo",
+        "equipped": "Đã Mặc",
+        "starsAria": "Phẩm chất {rank}/{total}"
+      },
       "aria": {
         "enhanceSlots": "Chọn slot cường hóa",
         "washSlots": "Chọn trang bị để tẩy luyện",

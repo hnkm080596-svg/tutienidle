@@ -2,9 +2,15 @@
 // Task 19 (item-grade-quality-rework, rework P6) — shell now only owns
 // the tab bar + shared HALL_SELECTION_KEY provide(); per-tab behavior
 // tests moved to src/components/panels/equipment-hall/*Tab.test.ts.
-// This file only verifies: tab-bar renders all 5 tabs, switching tabs
-// swaps the mounted child, and each <XTab/> actually mounts under its
-// corresponding activeTab.
+// This file only verifies: the ops rail renders the view seal + all 5
+// op tabs, switching workspaces swaps the mounted child, and each
+// <XTab/> actually mounts under its corresponding seal.
+//
+// Scene-12 scaffold update (reason: ref 12-equipment.jpg shows the
+// equipment scene opening on the item DETAIL card - "Trang Bi" state -
+// with the ops rail as seals on the left). The rail gains a view seal
+// before the op seals, so tab count is 6 (was 5) and op indexes shift
+// +1; the default workspace is the detail card, not EnhanceTab.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createApp, h, nextTick, ref } from 'vue'
 import { createPinia } from 'pinia'
@@ -78,14 +84,29 @@ afterEach(() => {
   document.body.innerHTML = ''
 })
 
-describe('EquipmentHallPanel — shell: tab bar + tab switching', () => {
-  it('render đủ 5 tab trong TabBar', () => {
+// Rail order: Trang Bị view seal first, then the op seals in contract
+// order (beta gating happens in the scene; the test env unlocks all).
+const SEAL = {
+  view: 0,
+  enhance: 1,
+  wash: 2,
+  refine: 3,
+  dissolve: 4,
+  decompose: 5,
+} as const
+
+describe('EquipmentHallPanel — shell: ops rail + workspace switching', () => {
+  it('render view seal + đủ 5 op seal trong rail', () => {
     const mounted = mountHall()
 
     const tabs = mounted.container.querySelectorAll<HTMLButtonElement>('.qi-hall__tabs button')
 
-    expect(tabs).toHaveLength(5)
-    expect(Array.from(tabs).map((t) => t.textContent?.trim())).toEqual([
+    expect(tabs).toHaveLength(6)
+    // Label span only - the decorative glyph is aria-hidden text.
+    expect(
+      Array.from(tabs).map((t) => t.querySelector('.equipment-ops-seal__label')?.textContent?.trim()),
+    ).toEqual([
+      'Trang Bị',
       'Cường Hóa',
       'Tẩy Luyện',
       'Tinh Luyện',
@@ -96,19 +117,34 @@ describe('EquipmentHallPanel — shell: tab bar + tab switching', () => {
     mounted.unmount()
   })
 
-  it('mặc định mount EnhanceTab (slot cường hóa)', () => {
+  it('mặc định mount detail card (Trang Bị), chưa mount EnhanceTab', () => {
     const mounted = mountHall()
+
+    // Detail workspace quotes the equipped fixture via the shared
+    // ItemCardBody; the enhance workspace stays unmounted until its seal.
+    expect(mounted.container.querySelector('[data-hk-region="item-card"]')).not.toBeNull()
+    expect(mounted.container.querySelector('[aria-label="Chọn slot cường hóa"]')).toBeNull()
+
+    mounted.unmount()
+  })
+
+  it('seal Cường Hóa → mount EnhanceTab (slot cường hóa)', async () => {
+    const mounted = mountHall()
+
+    const tabs = mounted.container.querySelectorAll<HTMLButtonElement>('.qi-hall__tabs button')
+    tabs[SEAL.enhance]!.click()
+    await nextTick()
 
     expect(mounted.container.querySelectorAll('[aria-label="Chọn slot cường hóa"] .slot-view')).toHaveLength(6)
 
     mounted.unmount()
   })
 
-  it('chuyển tab Tẩy Luyện → mount WashTab (unmount EnhanceTab)', async () => {
+  it('seal Tẩy Luyện → mount WashTab (unmount detail card)', async () => {
     const mounted = mountHall()
 
     const tabs = mounted.container.querySelectorAll<HTMLButtonElement>('.qi-hall__tabs button')
-    tabs[1]!.click()
+    tabs[SEAL.wash]!.click()
     await nextTick()
 
     expect(mounted.container.querySelector('[aria-label="Chọn slot cường hóa"]')).toBeNull()
@@ -117,11 +153,11 @@ describe('EquipmentHallPanel — shell: tab bar + tab switching', () => {
     mounted.unmount()
   })
 
-  it('chuyển tab Tinh Luyện → mount RefineTab', async () => {
+  it('seal Tinh Luyện → mount RefineTab', async () => {
     const mounted = mountHall()
 
     const tabs = mounted.container.querySelectorAll<HTMLButtonElement>('.qi-hall__tabs button')
-    tabs[2]!.click()
+    tabs[SEAL.refine]!.click()
     await nextTick()
 
     expect(mounted.container.querySelectorAll('[aria-label="Chọn trang bị để tinh luyện"] .slot-view')).toHaveLength(6)
@@ -129,11 +165,11 @@ describe('EquipmentHallPanel — shell: tab bar + tab switching', () => {
     mounted.unmount()
   })
 
-  it('chuyển tab Hóa Luyện → mount DissolveTab', async () => {
+  it('seal Hóa Luyện → mount DissolveTab', async () => {
     const mounted = mountHall()
 
     const tabs = mounted.container.querySelectorAll<HTMLButtonElement>('.qi-hall__tabs button')
-    tabs[3]!.click()
+    tabs[SEAL.dissolve]!.click()
     await nextTick()
 
     expect(mounted.container.querySelector('.dissolve-filters')).not.toBeNull()
@@ -141,11 +177,11 @@ describe('EquipmentHallPanel — shell: tab bar + tab switching', () => {
     mounted.unmount()
   })
 
-  it('chuyển tab Phân Giải → mount DecomposeTab', async () => {
+  it('seal Phân Giải → mount DecomposeTab', async () => {
     const mounted = mountHall()
 
     const tabs = mounted.container.querySelectorAll<HTMLButtonElement>('.qi-hall__tabs button')
-    tabs[4]!.click()
+    tabs[SEAL.decompose]!.click()
     await nextTick()
 
     expect(mounted.container.querySelector('.decompose-tab')).not.toBeNull()
@@ -153,16 +189,17 @@ describe('EquipmentHallPanel — shell: tab bar + tab switching', () => {
     mounted.unmount()
   })
 
-  it('quay lại tab Cường Hóa vẫn mount đúng EnhanceTab (round-trip)', async () => {
+  it('seal Trang Bị quay về detail card (round-trip)', async () => {
     const mounted = mountHall()
 
     const tabs = mounted.container.querySelectorAll<HTMLButtonElement>('.qi-hall__tabs button')
-    tabs[1]!.click()
+    tabs[SEAL.enhance]!.click()
     await nextTick()
-    tabs[0]!.click()
+    tabs[SEAL.view]!.click()
     await nextTick()
 
-    expect(mounted.container.querySelectorAll('[aria-label="Chọn slot cường hóa"] .slot-view')).toHaveLength(6)
+    expect(mounted.container.querySelector('[aria-label="Chọn slot cường hóa"]')).toBeNull()
+    expect(mounted.container.querySelector('.equipment-item-detail')).not.toBeNull()
 
     mounted.unmount()
   })
