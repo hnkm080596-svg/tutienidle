@@ -823,6 +823,47 @@
     "scripture": {
       "empty": "Chưa tìm thấy manh mối nào.",
       "emptyHint": "Manh mối ghi lại những chuyện xưa — rơi ra khi thám hiểm và chiến đấu."
+    },
+    "body": {
+      "help": "Ba chương đạo thể: rèn thân thể, khai thông kinh mạch, vận chuyển chân khí.",
+      "tierRailAria": "Bộ chọn tầng",
+      "chapters": {
+        "bodyRefinement": {
+          "subtitle": "Cường Hóa Thân Thể"
+        },
+        "meridian": {
+          "subtitle": "Khai Thông Kinh Mạch"
+        },
+        "zhouTian": {
+          "subtitle": "Vận Chuyển Chân Khí"
+        }
+      },
+      "chips": {
+        "tier": "Tầng {n}",
+        "meridian": "Mạch {n}",
+        "step": "Bước {n}",
+        "milestone": "Cột mốc"
+      },
+      "states": {
+        "locked": "Chưa mở",
+        "active": "Đang luyện",
+        "done": "Hoàn thành",
+        "realmLocked": "Chưa tới cảnh giới"
+      },
+      "sections": {
+        "gains": "Thuộc Tính Tăng",
+        "requirements": "Điều Kiện Luyện Thể"
+      },
+      "actions": {
+        "investRefinement": "Luyện Thể"
+      },
+      "unit": {
+        "tierTitle": "Tầng {tier} · {name}",
+        "stepTitle": "Bước {n} / {total}"
+      },
+      "zhouTian": {
+        "description": "Vận chuyển chân khí qua chu thiên; mỗi bước củng cố nền tảng thân thể."
+      }
     }
   },
   "workerLodge": {
