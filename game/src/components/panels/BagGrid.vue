@@ -53,10 +53,6 @@ const bagTabs = computed(() => [
 
 <template>
   <div class="bag-grid">
-    <div class="bag-grid__header">
-      <span class="bag-grid__count">{{ activeTabCount }} {{ t('panels.bag.countSuffix') }}</span>
-    </div>
-
     <TabBar
       :tabs="bagTabs"
       :model-value="ui.activeBagTab"
@@ -70,6 +66,13 @@ const bagTabs = computed(() => [
       <MaterialBagSection v-else-if="activeTab === 'material'" />
 
       <PillBagSection v-else-if="activeTab === 'pill'" />
+    </div>
+
+    <!-- Spec 09 capacity-bar footer (288/760/1244/48): the count rides
+         the bottom edge, not a stray header pinned under the close
+         button. -->
+    <div class="bag-grid__footer">
+      <span class="bag-grid__count">{{ activeTabCount }} {{ t('panels.bag.countSuffix') }}</span>
     </div>
   </div>
 </template>
@@ -87,11 +90,12 @@ const bagTabs = computed(() => [
   color: var(--paper-text);
 }
 
-.bag-grid__header {
+.bag-grid__footer {
   flex: 0 0 auto;
   display: flex;
   align-items: baseline;
   justify-content: flex-end;
+  padding: 4px 2px 0;
 }
 
 .bag-grid__count {

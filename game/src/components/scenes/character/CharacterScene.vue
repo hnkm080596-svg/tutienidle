@@ -63,7 +63,22 @@ import CharacterActionRail from './CharacterActionRail.vue'
   row-gap: var(--hk-space-3, 8px);
 }
 .character-scene__elements,
-.character-scene__derived { min-height: 0; }
+.character-scene__derived { min-height: 0; min-width: 0; }
+
+/* The right column is ~193px but the shared section plaque's floor +
+   rigid 44px orns make each card's min-content ~285px - the cards
+   overflow their track and their right-aligned values clip at the
+   envelope rim. Let the plaque and its flourishes shrink here. */
+.character-scene__right :deep(.section-plaque) {
+  box-sizing: border-box;
+  min-width: 0;
+  width: 100%;
+}
+.character-scene__right :deep(.section-plaque__orn) { flex: 0 1 44px; }
+.character-scene__right :deep(.section-plaque__title) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
 .character-scene__rail { grid-area: rail; min-height: 0; }
 

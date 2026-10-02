@@ -179,7 +179,9 @@ onUnmounted(() => {
    task nay (xem bao cao). */
 .combat-scene-overlay__turn-order-strip {
   position: absolute;
-  top: var(--combat-topbar-h);
+  /* Spec scene 13 turn-strip y=64 of 941 (6.8vh) - it rides 8 design px
+     (0.85vh) below the 56px top bar rather than flush against it. */
+  top: calc(var(--combat-topbar-h) + 0.85vh);
   left: 0;
   right: 0;
   display: flex;

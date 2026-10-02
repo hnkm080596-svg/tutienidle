@@ -411,7 +411,10 @@ function cancelJob(jobId: string) {
   grid-template-columns: minmax(0, 380fr) minmax(0, 420fr) minmax(0, 412fr);
   column-gap: 1.29%;
   row-gap: 6px;
-  grid-template-rows: minmax(0, 1fr) auto;
+  /* Row 1 pinned to the spec recipe-list height (540 design px = 64.286
+     of the 840cqh envelope) so the cauldron/recipes never share height
+     with the job queue; cqh resolves against the scroll envelope. */
+  grid-template-rows: minmax(0, 64.286cqh) minmax(0, 1fr);
   grid-template-areas:
     "recipes cauldron detail"
     "queue   queue    detail";

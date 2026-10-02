@@ -68,7 +68,9 @@ const elementRows = computed(() => {
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  padding: 0 var(--hk-space-2, 6px) var(--hk-space-2, 6px);
+  /* Same frame-rim clearance as derived-stats: right values were
+     clipping under the card's painted edge. */
+  padding: 0 12px var(--hk-space-2, 6px) var(--hk-space-2, 6px);
   scrollbar-width: none;
 }
 .element-summary__rows::-webkit-scrollbar { display: none; }

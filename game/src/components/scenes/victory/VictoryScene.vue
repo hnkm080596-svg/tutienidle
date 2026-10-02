@@ -81,9 +81,15 @@ const model = useVictorySceneModel(computed(() => props.summary))
   z-index: 3;
 }
 
+/* Spec scene 15: the title band (140..236) hangs on the scroll's top
+   edge (240) and the action row (690) sits just below its painted
+   bottom (670) - so the inner column is hoisted at both ends instead
+   of floating entirely inside the paper. */
 .victory-scene__inner {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
+  margin-top: -44px;
+  margin-bottom: -52px;
 }
 </style>

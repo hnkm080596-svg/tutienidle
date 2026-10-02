@@ -311,6 +311,13 @@ const cloudUrl = hkChromeUrl('cloud-ornament')
   display: flex;
   flex-direction: column;
 }
+/* Spec content grid starts at y176 (header band 100..168): scenes that
+   supply no #header slot still land their main at the grid top, so the
+   absent header's band is reserved here. With a real header the slot
+   renders as the first child and this rule does not apply. */
+.hk-scroll__main:first-child {
+  margin-top: 8.5cqh;
+}
 .hk-scroll__footer {
   flex: 0 0 auto;
   min-height: 0;

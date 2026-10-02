@@ -33,10 +33,10 @@ const CAULDRON_SRC = hkChromeUrl('alchemy-cauldron-prop')
 <style scoped>
 .alchemy-view__cauldron {
   grid-area: cauldron;
-  /* Spec 11: focal-cauldron is 360 tall in the 610 band -> top-anchored
-     at 59% of the row, not a full-height fill. */
+  /* Spec 11: focal-cauldron is exactly 360 design px (42.857cqh of the
+     840px envelope) - top-anchored, not a share of the row height. */
   align-self: start;
-  height: 59.02%;
+  height: 42.857cqh;
   position: relative;
   display: flex;
   flex-direction: column;

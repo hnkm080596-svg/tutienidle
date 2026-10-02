@@ -27,7 +27,10 @@ const { t } = useI18n()
 .exploration-marker {
   position: absolute;
   top: 50%;
-  left: 8px;
+  /* The map-content mask feathers the field's left ~2.9% (~20px at
+     700px) - anchor the seal column past it so the realm name's first
+     glyph stays fully opaque instead of fading into the parchment. */
+  left: 28px;
   transform: translateY(-50%);
   z-index: 3;
   display: flex;
