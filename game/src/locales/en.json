@@ -787,7 +787,22 @@
         "claimed": "Claimed",
         "claim": "Claim Reward"
       },
-      "empty": "No quests available yet."
+      "empty": "No quests available yet.",
+      "tabs": {
+        "all": "All"
+      },
+      "cadence": {
+        "once": "One-Time"
+      },
+      "scene": {
+        "tabsAria": "Quest groups",
+        "railAria": "Quest list",
+        "objectives": "Quest Objectives",
+        "rewardsTitle": "Quest Rewards",
+        "turnIn": "Hand in {name}",
+        "done": "Done",
+        "reasonIncomplete": "Objective incomplete."
+      }
     },
     "buildingPopover": {
       "costTitle": "Build Cost",
