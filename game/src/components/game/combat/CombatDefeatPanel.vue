@@ -6,12 +6,12 @@ import { useBattleActions } from '@/composables/useBattleActions'
 import { useAutoRetryCountdown } from '@/composables/useAutoRetryCountdown'
 import { useUiStore } from '@/stores/ui'
 import { usePlayerStore } from '@/stores/player'
-import { formatDuration } from '@/core/format/formatDuration'
-import GameButton from '@/components/common/GameButton.vue'
 import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
 import InkWashBackdrop from '@/components/common/InkWashBackdrop.vue'
-import RewardList from './RewardList.vue'
-import { hkChromeUrl } from '@/ui/huyenKimChrome'
+import DefeatTitleBand from '@/components/scenes/defeat/DefeatTitleBand.vue'
+import DefeatHintBlock from '@/components/scenes/defeat/DefeatHintBlock.vue'
+import DefeatRewardBlock from '@/components/scenes/defeat/DefeatRewardBlock.vue'
+import DefeatActionRow from '@/components/scenes/defeat/DefeatActionRow.vue'
 
 // Combat UI Redesign muc 18/23, mo rong 2026-08-22 -- truoc day CHI 1
 // nut "Ve Dong Phu" (khong danh lai). Gio them "Tai Chien" (LUON danh
@@ -71,9 +71,6 @@ const hasAnyReward = computed(() => {
 })
 
 const isAutoRetrying = ref(false)
-
-// Scene 16 spec: same ceremonial family as Victory; cinnabar title.
-const ribbonUrl = hkChromeUrl('ceremony-ribbon')
 
 async function refight(): Promise<void> {
   if (!ui.selectedStageId) {
@@ -137,32 +134,20 @@ onMounted(() => {
     <InkWashBackdrop left-mountain bottom-mist :right-mountain="false" />
     <InkNineSlice chrome-id="surface-xl-scroll" layer="surface" />
     <InkNineSlice asset-id="frame-xl-ceremony" layer="frame" tint-var="--cinnabar" />
-    <div class="combat-defeat-panel__title-band">
-      <img v-if="ribbonUrl" :src="ribbonUrl" alt="" aria-hidden="true" />
-      <h2 class="combat-defeat-panel__title">{{ t('combat.defeat.title') }}</h2>
-    </div>
 
-    <p class="combat-defeat-panel__hint">
-      {{ t(isCultivationGap ? 'combat.defeat.hintCultivate' : 'combat.defeat.hintGear') }}
-    </p>
+    <DefeatTitleBand :title="t('combat.defeat.title')" :subtitle="t('combat.defeat.subtitle')" />
 
-    <RewardList v-if="hasAnyReward" :summary="summary" class="combat-defeat-panel__rewards scrollfade" />
+    <DefeatHintBlock :hint="t(isCultivationGap ? 'combat.defeat.hintCultivate' : 'combat.defeat.hintGear')" />
 
-    <div class="combat-defeat-panel__actions">
-      <GameButton
-        class="combat-defeat-panel__retry"
-        variant="danger"
-        :class="{ 'is-disabled': isAutoRetrying }"
-        :disabled="isAutoRetrying"
-        @click="retryNow"
-      >
-        {{ t('combat.defeat.retry') }}<template v-if="isAutoRetrying"> {{ t('combat.defeat.retryCountdown', { duration: formatDuration(retryCountdown, 'countdown') }) }}</template>
-      </GameButton>
+    <DefeatRewardBlock v-if="hasAnyReward" :summary="summary" />
 
-      <GameButton class="combat-defeat-panel__return" variant="secondary" @click="returnHome">
-        {{ t('combat.defeat.returnHome') }} {{ t('combat.defeat.returnCountdown', { duration: formatDuration(returnCountdown, 'countdown') }) }}
-      </GameButton>
-    </div>
+    <DefeatActionRow
+      :is-auto-retrying="isAutoRetrying"
+      :retry-countdown="retryCountdown"
+      :return-countdown="returnCountdown"
+      @retry="retryNow"
+      @return-home="returnHome"
+    />
   </div>
 </template>
 
@@ -186,64 +171,5 @@ onMounted(() => {
 .combat-defeat-panel > :not(.ink-nine-slice):not(.ink-wash-backdrop) {
   position: relative;
   z-index: 3;
-}
-
-.combat-defeat-panel__title-band {
-  position: relative;
-  display: grid;
-  place-items: center;
-  min-height: 76px;
-  margin: -10px 0 10px;
-}
-
-.combat-defeat-panel__title-band img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: fill;
-  pointer-events: none;
-  /* Defeat variation: wash the ribbon toward ink/cinnabar. */
-  filter: sepia(0.45) hue-rotate(-18deg) saturate(1.3);
-}
-
-.combat-defeat-panel__title {
-  position: relative;
-  margin: 0;
-  font-family: var(--font-display);
-  color: var(--crimson);
-  font-size: var(--text-display-lg);
-  letter-spacing: 0.22em;
-}
-
-.combat-defeat-panel__rewards {
-  margin-bottom: 20px;
-}
-
-.combat-defeat-panel__hint {
-  margin: 0 0 16px;
-  color: var(--text-muted);
-  font-size: var(--text-small);
-  font-style: italic;
-}
-
-.combat-defeat-panel__actions {
-  display: flex;
-  gap: 10px;
-}
-
-.combat-defeat-panel__actions button {
-  flex: 1;
-  padding: 10px;
-}
-
-.combat-defeat-panel__retry.is-disabled {
-  background: var(--ink-700);
-  color: var(--text-muted);
-}
-
-.combat-defeat-panel__return:hover {
-  border-color: var(--crimson);
-  color: var(--crimson);
 }
 </style>
