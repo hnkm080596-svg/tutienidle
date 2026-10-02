@@ -51,7 +51,8 @@ export function useVictorySceneModel(summary: Ref<BattleRewardSummary>) {
       })
     }
 
-    for (const item of summary.value.items) {
+    const items = Array.isArray(summary.value.items) ? summary.value.items : []
+    for (const item of items) {
       let icon: string | null = null
       if (item.kind === 'material') {
         icon = gameManager.materialBag.get(item.itemId)?.material.icon ?? null

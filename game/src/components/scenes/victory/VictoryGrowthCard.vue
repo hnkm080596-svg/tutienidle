@@ -18,13 +18,23 @@ const GLYPH: Record<VictoryGrowthCardView['id'], string> = {
   artifactInsight: '',
 }
 
+const SEAL_ART_ID: Record<VictoryGrowthCardView['id'], string> = {
+  techniqueMastery: 'victory-growth-seal-technique',
+  skillInsight: 'victory-growth-seal-skill',
+  artifactInsight: 'victory-growth-seal-artifact',
+}
+
 const label = computed(() => t(props.card.labelKey))
 </script>
 
 <template>
   <li class="victory-growth-card" :class="`is-${props.card.accent}`">
     <InkNineSlice chrome-id="list-row" layer="surface" />
-    <span class="victory-growth-card__seal" aria-hidden="true">{{ GLYPH[props.card.id] }}</span>
+    <span
+      class="victory-growth-card__seal art-needed"
+      :data-art-id="SEAL_ART_ID[props.card.id]"
+      aria-hidden="true"
+    >{{ GLYPH[props.card.id] }}</span>
     <span class="victory-growth-card__body">
       <span class="victory-growth-card__label">{{ label }}</span>
     </span>
