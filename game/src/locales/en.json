@@ -968,7 +968,14 @@
       "title": "★ VICTORY ★",
       "retry": "Refight",
       "retryCountdown": "{duration}",
-      "continue": "Continue"
+      "continue": "Continue",
+      "subtitle": "A Perfect Victory",
+      "flavor": "The demons are vanquished; heaven and earth are clear once more.",
+      "growthEmpty": "No cultivation gains this battle",
+      "sections": {
+        "rewards": "Rewards Received",
+        "growth": "Growth"
+      }
     },
     "defeat": {
       "title": "☠ DEFEAT",

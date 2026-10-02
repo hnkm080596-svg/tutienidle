@@ -1,4 +1,9 @@
 <script setup lang="ts">
+// Scene 14 VICTORY mount point: owns the battle-side behavior (refight
+// stage resolution, continue teardown, auto-refight countdown) and
+// renders the decomposed scroll in components/scenes/victory/*.
+// Presentation restructure only - same countdown contract (manual:
+// retry+continue; auto: locked retry with countdown).
 import { computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
@@ -7,12 +12,8 @@ import { useAutoRetryCountdown } from '@/composables/useAutoRetryCountdown'
 import { useUiStore } from '@/stores/ui'
 import { usePlayerStore } from '@/stores/player'
 import { formatDuration } from '@/core/format/formatDuration'
-import GameButton from '@/components/common/GameButton.vue'
 import { resolveNextProgressStage } from '@/core/stage/ProgressStageResolver'
-import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
-import InkWashBackdrop from '@/components/common/InkWashBackdrop.vue'
-import RewardList from './RewardList.vue'
-import { hkChromeUrl } from '@/ui/huyenKimChrome'
+import VictoryScene from '@/components/scenes/victory/VictoryScene.vue'
 
 // Combat UI Redesign muc 14-19 -- thang thi hien reward tich luy ca
 // tran (xem GameManager.getBattleRewardSummary()). Auto Battle OFF:
@@ -26,7 +27,6 @@ const COUNTDOWN_SECONDS = 3
 const gameManager = useGameManager()
 const ui = useUiStore()
 const player = usePlayerStore()
-const { t } = useI18n()
 const { startBattle, exitCombatToHome } = useBattleActions()
 
 // ARCH-005 (M12): getBattleRewardSummary() returns the same in-place-
@@ -63,9 +63,6 @@ function continueToStageSelect() {
   // screen until the swap behind it is ready (useBattleActions).
   exitCombatToHome()
 }
-
-// Scene 15 spec: ceremonial title ribbon over the victory seal.
-const ribbonUrl = hkChromeUrl('ceremony-ribbon')
 
 const { remaining: countdown, start: startAutoRefightCountdown } = useAutoRetryCountdown(COUNTDOWN_SECONDS, async () => {
   // Tu Dong Tham Hiem -- chi tien khi resolver xac nhan man ke da mo. Man
@@ -115,6 +112,9 @@ const { remaining: countdown, start: startAutoRefightCountdown } = useAutoRetryC
   }
 })
 
+const { t } = useI18n()
+const countdownLabel = computed(() => t('combat.victory.retryCountdown', { duration: formatDuration(countdown.value, 'countdown') }))
+
 onMounted(() => {
   if (ui.battleRunMode !== 'manual') {
     startAutoRefightCountdown()
@@ -123,100 +123,12 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="combat-victory-panel paper-on-dark">
-    <InkWashBackdrop :left-mountain="false" bottom-mist seal="large" />
-    <InkNineSlice chrome-id="surface-xl-scroll" layer="surface" />
-    <InkNineSlice asset-id="frame-xl-ceremony" layer="frame" />
-    <div class="combat-victory-panel__title-band">
-      <img v-if="ribbonUrl" :src="ribbonUrl" alt="" aria-hidden="true" />
-      <h2 class="combat-victory-panel__title">{{ t('combat.victory.title') }}</h2>
-    </div>
-
-    <RewardList :summary="summary" class="combat-victory-panel__rewards scrollfade" />
-
-    <div class="combat-victory-panel__actions">
-      <GameButton
-        class="combat-victory-panel__retry"
-        :class="{ 'is-disabled': ui.battleRunMode !== 'manual' }"
-        :disabled="ui.battleRunMode !== 'manual'"
-        @click="retryNow"
-      >
-        {{ t('combat.victory.retry') }}<template v-if="ui.battleRunMode !== 'manual'"> {{ t('combat.victory.retryCountdown', { duration: formatDuration(countdown, 'countdown') }) }}</template>
-      </GameButton>
-
-      <GameButton v-if="ui.battleRunMode === 'manual'" class="combat-victory-panel__continue" variant="secondary" @click="continueToStageSelect">
-        {{ t('combat.victory.continue') }}
-      </GameButton>
-    </div>
-  </div>
+  <VictoryScene
+    class="combat-victory-panel"
+    :summary="summary"
+    :run-mode="ui.battleRunMode"
+    :countdown-label="countdownLabel"
+    @retry="retryNow"
+    @continue="continueToStageSelect"
+  />
 </template>
-
-<style scoped>
-/* Scene 15 ceremonial scroll: ~620px content column, ribbon title band,
-   reward slot row, action pair. */
-.combat-victory-panel {
-  /* .paper-on-dark owns the paper->surface remap (theme.css). */
-  position: relative;
-  isolation: isolate;
-  box-sizing: border-box;
-  width: min(620px, calc(100vw - 32px));
-  padding: 34px 40px 30px;
-  background: transparent;
-  border: 0;
-  border-radius: 0;
-  box-shadow: none;
-  text-align: center;
-  font-family: var(--font-body);
-}
-
-.combat-victory-panel > :not(.ink-nine-slice):not(.ink-wash-backdrop) {
-  position: relative;
-  z-index: 3;
-}
-
-.combat-victory-panel__title-band {
-  position: relative;
-  display: grid;
-  place-items: center;
-  min-height: 76px;
-  margin: -10px 0 14px;
-}
-
-.combat-victory-panel__title-band img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: fill;
-  pointer-events: none;
-}
-
-.combat-victory-panel__title {
-  position: relative;
-  margin: 0;
-  font-family: var(--font-display);
-  color: var(--paper-text, #211f1a);
-  font-size: var(--text-display-lg);
-  letter-spacing: 0.22em;
-  text-shadow: 0 0 12px color-mix(in srgb, var(--hk-glow-gold, rgba(232,195,90,.6)) 60%, transparent);
-}
-
-.combat-victory-panel__rewards {
-  margin-bottom: 20px;
-}
-
-.combat-victory-panel__actions {
-  display: flex;
-  gap: 10px;
-}
-
-.combat-victory-panel__actions button {
-  flex: 1;
-  padding: 10px;
-}
-
-.combat-victory-panel__retry.is-disabled {
-  background: var(--ink-700);
-  color: var(--text-muted);
-}
-</style>

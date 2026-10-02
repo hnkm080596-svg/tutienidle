@@ -968,7 +968,14 @@
       "title": "★ THẮNG ★",
       "retry": "Đánh Lại",
       "retryCountdown": "{duration}",
-      "continue": "Tiếp Tục"
+      "continue": "Tiếp Tục",
+      "subtitle": "Trận Chiến Viên Mãn",
+      "flavor": "Yêu Ma đã bị trừ, thiên địa lại thanh minh.",
+      "growthEmpty": "Chưa có thu hoạch tu hành",
+      "sections": {
+        "rewards": "Phần Thưởng Nhận Được",
+        "growth": "Tăng Trưởng"
+      }
     },
     "defeat": {
       "title": "☠ THẤT BẠI",
