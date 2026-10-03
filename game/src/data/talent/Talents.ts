@@ -134,7 +134,7 @@ export const CHARACTER_CREATION_TALENTS: TalentDefinition[] = [
     // data/materials/materials.ts). Effect duy nhat: -75% toc do tu luyen
     // (10/s -> 2.5/s). La mot gate cua dai dao Truc Co - dieu kien gate do
     // tac gia thiet ke sau, doc qua PlayerData.selectedTalentIds chua
-    // 'pham_cot' (xem core/breakthrough/FoundationResolver.ts).
+    // 'pham_cot' (xem core/tribulation/TribulationOutcomeService.ts).
     id: 'pham_cot',
     name: 'Phàm Cốt',
     description: 'Ngươi sinh ra chính là người bình thường, lớn lên là kẻ bình thường, sau này khả năng vẫn sẽ luôn như vậy ...',
