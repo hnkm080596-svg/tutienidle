@@ -46,7 +46,11 @@ const NAV_TARGETS: Record<string, PaperNavTarget> = {
   technique: { kind: 'standalone', panel: 'technique' },
   body: { kind: 'standalone', panel: 'body' },
   alchemy: { kind: 'building', buildingId: 'pill_room' },
-  equipment: { kind: 'building', buildingId: 'equipment_hall' },
+  // The Trang Bi surface is a left-panel surface, not a building-gated
+  // surface: routing it through openBuilding() sent players without a lo
+  // ren to the build popover and the tab could never open. Building
+  // hotspots / command wheel keep openBuilding('equipment_hall').
+  equipment: { kind: 'left_panel', mode: 'equipment_hall' },
   exploration: { kind: 'building', buildingId: 'teleport_array' },
   quest: { kind: 'standalone', panel: 'quest' },
   settings: { kind: 'left_panel', mode: 'settings' },
