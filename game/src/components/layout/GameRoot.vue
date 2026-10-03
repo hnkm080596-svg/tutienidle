@@ -32,8 +32,10 @@ import BreakthroughRequirementPanel from '../common/BreakthroughRequirementPanel
 import TutorialOverlay from '../common/TutorialOverlay.vue'
 import { useOfflineSummaryStore } from '@/stores/offlineSummary'
 import { useUiStore } from '@/stores/ui'
+import { usePlayerStore } from '@/stores/player'
 import { useCombatSceneActive } from '@/composables/useCombatSceneActive'
 import { betaAdmittedBuildingPopoverId, isBetaStandalonePanel } from '@/core/betaScopeSurface'
+import { isBetaTechniqueSurfaceUnlocked } from '@/core/betaScopeTechniqueDomain'
 
 const offlineSummary = useOfflineSummaryStore()
 
@@ -46,6 +48,7 @@ const offlineSummary = useOfflineSummaryStore()
 // trong PhaserCanvas.vue + cac scene da handle 'resize'); khoang
 // reserved combat duoc dong bo qua presentation/geometry/combatInsets.ts.
 const ui = useUiStore()
+const player = usePlayerStore()
 
 // Combat UI Redesign - Combat Scene chiem TOAN man hinh, thay han
 // chrome Dong Phu (LeftPanel/CommandWheel) - HomeBuildingIcons duoc render
@@ -76,7 +79,16 @@ watch(
     // chokepoint - a scope-hidden panel can never mount even when a
     // caller bypasses ui.openStandalonePanel and assigns the state
     // field directly (e.g. the tribulation outcome seam).
-    if (panel && isBetaStandalonePanel(panel)) mountedStandalone.add(panel)
+    if (panel && isBetaStandalonePanel(panel)) {
+      // PROGRESSION LOCK (2026-10-03): Tam Phap stays sealed below
+      // Luyen Khi + a committed pathway - direct state writes get
+      // bounced back so no seam can leave a stale open panel behind.
+      if (panel === 'technique' && !isBetaTechniqueSurfaceUnlocked(player.$state)) {
+        ui.standalonePanel = null
+        return
+      }
+      mountedStandalone.add(panel)
+    }
   },
   { immediate: true },
 )

@@ -36,8 +36,11 @@ export interface RealmUiModel {
 }
 
 // Normalized anchors on the complete six-landing artwork, not gameplay data.
+// Dang Tien Lo spacing pass (2026-10-03): each flight now carries its two
+// minor steps at arc-length 1/3 and 2/3 along the painted stair run so the
+// 18 steps read evenly; the major landings stay pinned to their ovals.
 export const realmMapAnchors = [
-  [55, 88], [58, 82], [62, 71], [49, 65], [39, 60], [33, 55],
-  [47, 50], [50, 46], [51, 42], [62, 39], [67, 36], [69, 32],
-  [61, 29], [52, 26], [49, 22.5], [57, 21], [61, 18.5], [63, 15.5],
+  [49, 86.5], [53.4, 80.2], [62, 71.5], [48.9, 62.8], [43.6, 60], [32.5, 55.5],
+  [40.1, 48.9], [44.1, 46.2], [50, 40.5], [56.6, 38.6], [62.4, 35.3], [71, 30.5],
+  [58.4, 26.8], [53.7, 25.1], [46, 21.5], [54.6, 17.9], [57.3, 16.9], [63.5, 15],
 ] as const

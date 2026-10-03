@@ -1,5 +1,9 @@
 export interface TechniqueUiRow { id: string; label: string; value: string }
 export interface TechniqueUiModel {
+  /** False when no technique is bound - the scene then renders ONLY the
+   *  empty info card (no artifact vista, tier track, or upgrade rail:
+   *  placeholders never stand in for data the player does not have). */
+  hasTechnique: boolean
   name: string
   quality: string
   description: string

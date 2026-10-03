@@ -3,6 +3,7 @@ export const techniqueMessages = { vi: {
   combat: 'Chiến Đấu', system: 'Hệ', systemValue: 'Kiếm Tu', might: 'Sức mạnh', defense: 'Phòng ngự', mana: 'Linh lực tối đa',
   rank: 'Cảnh 1 · Tầng 7 / 18', stage: { entry: 'Sơ Nhập', minor: 'Tiểu Thành', major: 'Đại Thành', complete: 'Viên Mãn' },
   currentGrade: 'Phẩm 1', nextGrade: 'Phẩm 2', material: 'Linh Thạch', materialNote: 'Tên và số lượng là dữ liệu mẫu để duyệt bố cục.',
+  empty: 'Chưa gắn tâm pháp nào. Hoàn thành điển lễ khởi đầu để nhận tâm pháp đầu tiên.',
   notice: 'Chỉ xem trước UI — chưa nâng cảnh hay tiêu hao nguyên liệu.', navNotice: '{name} — chưa có bản duyệt trong màn này.', selection: 'Đang xem: {name}. Không thay đổi tiến trình tu luyện.',
   // Mirrors the production `technique.*` + `dongFu.aria` keys the
   // fidelity components resolve through i18n.

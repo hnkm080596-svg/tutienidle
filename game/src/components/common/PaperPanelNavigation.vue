@@ -1,6 +1,13 @@
 <script setup lang="ts">
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
-export interface PaperNavigationItem { id: string; label: string; icon: string }
+export interface PaperNavigationItem {
+  id: string
+  label: string
+  icon: string
+  /** Progression-gated entries stay on the rail dimmed but cannot open
+   *  (navigate() refuses them too) - e.g. Tam Phap below Luyen Khi. */
+  locked?: boolean
+}
 defineProps<{ items: readonly PaperNavigationItem[]; active: string; label: string; backLabel: string }>()
 const emit = defineEmits<{ select: [id: string]; back: [] }>()
 const backIcon = resolveAssetUrl('/assets/ui/huyen-kim/symbols/back.svg')
@@ -9,7 +16,7 @@ const backIcon = resolveAssetUrl('/assets/ui/huyen-kim/symbols/back.svg')
   <nav class="paper-navigation" :aria-label="label">
     <button class="paper-back" :aria-label="backLabel" :title="backLabel" @click="emit('back')"><img :src="backIcon" alt=""></button>
     <div class="paper-navigation-items">
-      <button v-for="item in items" :key="item.id" class="paper-navigation-item" :class="{ active: active === item.id }" :aria-current="active === item.id ? 'page' : undefined" :data-nav-id="item.id" @click="emit('select', item.id)">
+      <button v-for="item in items" :key="item.id" class="paper-navigation-item" :class="{ active: active === item.id, 'is-locked': item.locked }" :aria-current="active === item.id ? 'page' : undefined" :aria-disabled="item.locked || undefined" :data-nav-id="item.id" @click="emit('select', item.id)">
         <span class="paper-navigation-icon"><img :src="item.icon" alt=""></span><span>{{ item.label }}</span>
       </button>
     </div>
@@ -27,4 +34,5 @@ const backIcon = resolveAssetUrl('/assets/ui/huyen-kim/symbols/back.svg')
 .paper-navigation-icon img { width:17px; height:17px; transform:rotate(-45deg); }
 .active .paper-navigation-icon { background:#a47d30; box-shadow:0 0 12px #c49c4960; }.active img { filter:invert(94%) sepia(24%) saturate(325%); }
 button:hover { color:#362407; }button:focus-visible { outline:2px solid #386b59; outline-offset:3px; }
+.is-locked { opacity:.45; cursor:default; }
 </style>

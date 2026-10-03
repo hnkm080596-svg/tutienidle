@@ -6,12 +6,14 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useUiStore } from '@/stores/ui'
+import { usePlayerStore } from '@/stores/player'
 import { useBuildingNavigation } from '@/composables/useBuildingNavigation'
 import {
   isBetaBuildingSurface,
   isBetaLeftPanelMode,
   isBetaStandalonePanel,
 } from '@/core/betaScopeSurface'
+import { isBetaTechniqueSurfaceUnlocked } from '@/core/betaScopeTechniqueDomain'
 import { symbolUrl } from '@/components/scenes/dong-fu/fidelity/dongFuUi'
 import type { PaperNavigationItem } from '@/components/common/PaperPanelNavigation.vue'
 import type { LeftPanelMode, StandalonePanel } from '@/presentation/contracts/panelIds'
@@ -86,12 +88,26 @@ function admitted(target: PaperNavTarget): boolean {
 export function usePaperNavigation(ids: readonly string[] = PAPER_NAV_IDS) {
   const { t } = useI18n()
   const ui = useUiStore()
+  const player = usePlayerStore()
   const navigation = useBuildingNavigation()
+
+  // Progression locks beyond the beta-scope admission gate: the Tam Phap
+  // surface stays sealed until Luyen Khi + a committed pathway
+  // (isBetaTechniqueSurfaceUnlocked). Locked items stay on the rail dimmed
+  // and navigate() refuses them; the mount seam defends direct writes.
+  function progressionLocked(id: string): boolean {
+    return id === 'technique' && !isBetaTechniqueSurfaceUnlocked(player.$state)
+  }
 
   const items = computed<readonly PaperNavigationItem[]>(() =>
     ids
       .filter((id) => NAV_TARGETS[id] && admitted(NAV_TARGETS[id]))
-      .map((id) => ({ id, label: t(NAV_LABEL_KEY[id] ?? id), icon: symbolUrl(id) })),
+      .map((id) => ({
+        id,
+        label: t(NAV_LABEL_KEY[id] ?? id),
+        icon: symbolUrl(id),
+        locked: progressionLocked(id) || undefined,
+      })),
   )
 
   // The rail item matching the currently open surface; '' when nothing
@@ -107,7 +123,7 @@ export function usePaperNavigation(ids: readonly string[] = PAPER_NAV_IDS) {
 
   function navigate(id: string): void {
     const target = NAV_TARGETS[id]
-    if (!target || !admitted(target)) return
+    if (!target || !admitted(target) || progressionLocked(id)) return
     if (target.kind === 'building') {
       navigation.openBuilding(target.buildingId)
       return
