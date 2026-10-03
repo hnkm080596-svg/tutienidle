@@ -357,9 +357,16 @@ describe('beta scope - flagged saves load', () => {
     p3.formationLoadout = { slots: [] } as unknown as PlayerData['formationLoadout']
     expect(unsupportedReleaseReason(p3)).toBe('formation_loadout')
 
+    // pham_nhan_chi_cot stays dormant (Great Dao reward - minted only
+    // by the hidden conversion), while pham_cot is a legitimate beta
+    // creation talent again and must NOT flag.
     const p4 = mortalPlayer()
-    p4.selectedTalentIds = ['pham_cot']
+    p4.selectedTalentIds = ['pham_nhan_chi_cot']
     expect(unsupportedReleaseReason(p4)).toBe('dormant_talent_state')
+
+    const p5 = mortalPlayer()
+    p5.selectedTalentIds = ['pham_cot']
+    expect(unsupportedReleaseReason(p5)).toBeNull()
   })
 
   it('reason ordering is deterministic - realm_beyond_release wins over way', () => {

@@ -2,7 +2,8 @@
 // counterpart to betaWaysUnlock.ts. Production gates stay beta-locked;
 // a suite exercising talent DATA wiring that predates the lock (the V4
 // effect-table tests resolve ids outside the beta roster, e.g.
-// pham_cot) unlocks the roster for the file's own duration. Vitest
+// pham_nhan_chi_cot) unlocks the roster for the file's own duration.
+// Vitest
 // isolates modules per test file, so an unlock here can never leak
 // into a sibling suite or into production.
 //
