@@ -477,7 +477,7 @@ describe('HomeBuildingIcons — nameplate + badge trạng thái (plan §3.1)', (
     mounted.unmount()
   })
 
-  it('Linh Tuyền có sản lượng claim được → badge ready', () => {
+  it('Linh Tuyền đầy kho → badge ready', () => {
     const springManager = new GameManager()
 
     springManager.catalogOps.registerMaterials([UPGRADE_MATERIAL])
@@ -497,7 +497,7 @@ describe('HomeBuildingIcons — nameplate + badge trạng thái (plan §3.1)', (
       instanceId: 'inst_spring',
       buildingId: 'chi_hien_quan',
       level: 1,
-      // lastCollectedAt lui sau vao qua khu -> stored >= 1.
+      // lastCollectedAt lui sau vao qua khu -> stored cham tran (capacity).
       lastCollectedAt: Date.now() / 1000 - 3600,
     })
 
@@ -507,6 +507,43 @@ describe('HomeBuildingIcons — nameplate + badge trạng thái (plan §3.1)', (
 
     expect(nameplate.classList.contains('building-nameplate--ready')).toBe(true)
     expect(nameplate.querySelector('.building-nameplate__ready')).not.toBeNull()
+
+    mounted.unmount()
+  })
+
+  it('Linh Tuyền chưa đầy kho (stored < capacity) → không badge ready', () => {
+    const springManager = new GameManager()
+
+    springManager.catalogOps.registerMaterials([UPGRADE_MATERIAL])
+    springManager.catalogOps.registerBuildings([{
+      id: 'chi_hien_quan',
+      name: 'Linh Tuyền',
+      category: 'resource',
+      tier: 1,
+      maxLevel: 3,
+      baseStorageCapacity: 60,
+      baseProductionRate: 1,
+      producesMaterialId: 'spirit_stone',
+      upgradeCost: [[], [], []],
+      functionType: 'worker_lodge',
+    }])
+    springManager.buildingManager.add({
+      instanceId: 'inst_spring',
+      buildingId: 'chi_hien_quan',
+      // max level -> status khong the roi vao 'upgradeable', chi con
+      // 'ready' vs 'default' de co lap dieu kien day kho.
+      level: 3,
+      // level 3: rate 1.4x -> 30s troi qua = stored 42 < capacity 84
+      // -> chua the bao ready.
+      lastCollectedAt: Date.now() / 1000 - 30,
+    })
+
+    const mounted = mountHomeBuildings(springManager)
+
+    const nameplate = mounted.nameplate('chi_hien_quan')!
+
+    expect(nameplate.classList.contains('building-nameplate--ready')).toBe(false)
+    expect(nameplate.querySelector('.building-nameplate__ready')).toBeNull()
 
     mounted.unmount()
   })

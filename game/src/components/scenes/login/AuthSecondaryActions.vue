@@ -23,7 +23,6 @@ const { t } = useI18n()
         {{ t('onboarding.auth.guest.button') }}
       </GameButton>
     </div>
-    <p class="auth-secondary__note">{{ t('onboarding.auth.guest.note') }}</p>
   </div>
 </template>
 
@@ -46,5 +45,4 @@ const { t } = useI18n()
 .auth-secondary__action :deep(.game-button__label) { display: flex; align-items: center; justify-content: center; gap: 1.5cqw; }
 .auth-secondary__icon { width: 4cqw; height: 4cqw; fill: none; stroke: currentColor; stroke-width: 1.8; }
 .auth-secondary__icon--lotus { fill: currentColor; stroke-width: .5; }
-.auth-secondary__note { margin: 1.5cqw 0 0; font-size: 2.25cqw; color: #6b604a; }
 </style>
