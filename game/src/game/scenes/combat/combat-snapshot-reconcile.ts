@@ -127,6 +127,21 @@ export class CombatSnapshotReconcile {
 
     this.reconcileCombatantSprites('player', event.players, PLAYER_COLOR)
     this.reconcileCombatantSprites('enemy', event.enemies, ENEMY_COLOR)
+
+    // 6A-T5 — HUD HP/MP fast-path tu entity snapshot (fast-path positions
+    // legacy da mang playerCurrentHp): seed gia tri ngay snapshot dau thay
+    // vi cho 'entity_vitals_changed' dau tien (HUD trong rong toi luc do).
+    // update* ghi object visibility truc tiep - chi feed khi phase song
+    // so mot snapshot tre sau battle_end khong re-show layer da an.
+    const playerState = event.players.find((state) => state.id === PLAYER_ID)
+
+    if (playerState && event.phase !== 'victory' && event.phase !== 'defeat') {
+      this.scene.playerHud?.updateHp(playerState.currentHp, playerState.maxHp)
+
+      if (playerState.maxMp > 0) {
+        this.scene.playerHud?.updateMp(playerState.currentMp, playerState.maxMp)
+      }
+    }
   }
 
   /**

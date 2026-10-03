@@ -926,7 +926,6 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     // 6A-T4 — HUD player trong canvas (HP/MP/Kiếm) — tạo một lần cho
     // đời scene; hiển thị/ẩn theo inBattle qua battle_start/battle_end.
     this.ensurePlayerHud()
-    this._playerHud?.setVisible(this.inBattle)
 
     // Initial snapshot reconciliation via GameManager query (Task 4/10)
     const gameManager = readOptionalGate(this.registry, 'gameManager')
@@ -946,6 +945,11 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     }
 
     this.inBattle = true
+    // This create() runs AFTER 'battle_start' already emitted (see above),
+    // so inBattle only becomes true here - the setVisible must run under
+    // the true flag or the HUD stays hidden until the first
+    // vitals_changed / a refight's battle_start reveals it.
+    this._playerHud?.setVisible(this.inBattle)
 
     // Report READY to adapter
     const adapter = readOptionalGate(this.registry, 'sceneAdapter')

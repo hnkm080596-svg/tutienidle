@@ -8,11 +8,17 @@ defineProps<{ fighting: boolean }>()
 </script>
 
 <template>
-  <div v-if="fighting" class="combat-action-dock" data-hk-region="skill-dock">
+  <div v-if="fighting" class="combat-action-dock">
     <CombatSkillDockPanel />
   </div>
 </template>
 
 <style scoped>
-.combat-action-dock { height: 100%; }
+/* display:contents removes the wrapper from the overlay's column flex
+   flow - a real height:100% box starved .combat-scene-overlay__battlefield
+   to 0 height and pushed the ai-panel off-viewport. The dock panel inside
+   is position:absolute against the overlay root, so it keeps its spec
+   anchor (and carries data-hk-region itself) without the wrapper
+   producing a flex box. */
+.combat-action-dock { display: contents; }
 </style>

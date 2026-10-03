@@ -158,9 +158,10 @@ onMounted(() => {
   position: relative;
   isolation: isolate;
   box-sizing: border-box;
-  /* Spec envelope 760 design px (~582 runtime) - identical to
-     the victory scroll's width. */
-  width: min(582px, calc(100vw - 32px));
+  /* Spec envelope 760 design px = 45.45% of the 1672 frame - identical
+     to the victory scroll's width; a fixed ~582px was only correct at
+     1280w. */
+  width: min(45.45vw, calc(100vw - 32px));
   padding: 34px 40px 30px;
   background: transparent;
   border: 0;

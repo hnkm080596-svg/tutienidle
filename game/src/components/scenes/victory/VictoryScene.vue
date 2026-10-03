@@ -60,13 +60,15 @@ const model = useVictorySceneModel(computed(() => props.summary))
 </template>
 
 <style scoped>
-/* Scene 15 ceremonial scroll: spec envelope 760 design px (~582
-   runtime), rollers sit on the scroll edge band. */
+/* Scene 15 ceremonial scroll: spec envelope 760 design px = 45.45% of
+   the 1672 frame - a fixed ~582px was only correct at 1280w (audit:
+   ~30% at 1080p). vw keeps the ratio at every viewport; rollers sit on
+   the scroll edge band. */
 .victory-scene {
   position: relative;
   isolation: isolate;
   box-sizing: border-box;
-  width: min(582px, calc(100vw - 32px));
+  width: min(45.45vw, calc(100vw - 32px));
   padding: 34px 40px 30px;
   background: transparent;
   border: 0;

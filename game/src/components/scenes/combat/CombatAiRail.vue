@@ -15,4 +15,7 @@ import CombatAiPanel from '@/components/game/combat/CombatAiPanel.vue'
 
 <style scoped>
 .combat-ai-rail { position: relative; isolation: isolate; }
+
+/* InkNineSlice 'surface' renders at z-index 1 - contents need 2. */
+.combat-ai-rail > :not(.ink-nine-slice) { position: relative; z-index: 2; }
 </style>

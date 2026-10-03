@@ -47,6 +47,15 @@ const navigation = useBuildingNavigation()
 const { entries } = useThienCoEntries()
 const { chips } = useCurrencyChips()
 
+// Overlay scene canvases (stage select, character, settings, standalone
+// panels...) stack a second scaled canvas above this stage - floating
+// home chrome must not bleed onto their paper surfaces (audit: the
+// Thien Co Bang chip overlapped the exploration journal's top-right
+// corner).
+const surfaceOpen = computed(
+  () => ui.leftPanelMode !== null || ui.characterOverlayOpen || ui.standalonePanel !== null,
+)
+
 const feedbackOpen = ref(false)
 const boardOpen = ref(true)
 const notice = ref('')
@@ -340,6 +349,7 @@ function move(event: PointerEvent) {
   <SceneDesignCanvas v-if="!stageActive">
     <main
       class="df-scene"
+      :class="{ 'df-scene--covered': surfaceOpen }"
       :aria-label="t('dongFu.aria')"
       :style="{ '--df-x': pointer.x, '--df-y': pointer.y }"
       @pointermove="move"
@@ -373,4 +383,11 @@ function move(event: PointerEvent) {
 .df-scene :deep(button:focus-visible) { outline: 2px solid #fff1b8; outline-offset: 5px; }
 .df-scene :deep(button:hover) { filter: brightness(1.16); }
 .df-scene :deep(button:active) { filter: brightness(1.3); }
+
+/* While an overlay surface owns the screen, the home scene's floating
+   chrome (Thien Co Bang board, quest tracker, transient notice) hides -
+   the scroll envelopes are spec'd above it (z 12+ vs board z 8/11). */
+.df-scene--covered :deep(.df-board),
+.df-scene--covered :deep(.df-quest),
+.df-scene--covered :deep(.df-notice) { display: none; }
 </style>

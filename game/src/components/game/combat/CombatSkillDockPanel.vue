@@ -52,7 +52,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <aside ref="rootRef" class="combat-skill-dock-panel dark-drawer-fill">
+  <aside ref="rootRef" class="combat-skill-dock-panel dark-drawer-fill" data-hk-region="skill-dock">
     <TurnCombatSkillBar />
   </aside>
 </template>
