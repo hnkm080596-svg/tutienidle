@@ -164,14 +164,18 @@ describe('TechniquePanel (Huyen Kim scene 06)', () => {
     view.unmount()
   })
 
-  it('shows the empty state with the grade CTA disabled when no technique is active', async () => {
+  it('shows only the empty info card when no technique is bound', async () => {
+    // No empty silhouettes or disabled fake CTAs: without an active
+    // technique the scene renders the info card alone - the artifact
+    // vista, stage track, and upgrade rail stay unmounted.
     const view = mountPanel({ technique: undefined })
 
     await nextTick()
 
     const expected = i18n.global.t('panels.skillPath.technique.emptyNoTechnique')
     expect(view.container.textContent).toContain(expected)
-    expect(view.gradeButton()!.disabled).toBe(true)
+    expect(view.gradeButton()).toBeNull()
+    expect(view.container.querySelector('.technique-artifact')).toBeNull()
 
     view.unmount()
   })

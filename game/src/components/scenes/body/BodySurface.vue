@@ -183,6 +183,7 @@ const paperModel = computed<BodyPaperModel>(() => ({
   milestones: milestones.value,
   identity: identity.value,
   extra: extra.value,
+  lockHint: activeModel.value.lockHint,
   progressLabel: `${activeModel.value.completed} / ${activeModel.value.total}`,
   progress: activeModel.value.total > 0
     ? (activeModel.value.completed / activeModel.value.total) * 100
@@ -194,7 +195,16 @@ const paperUnit = computed(() => {
   return unit !== null ? toUiUnit(unit) : null
 })
 
-function selectChapter(id: string) { pickedChapter.value = id }
+function selectChapter(id: string) {
+  // Out-of-reach chapters are not viewable: the sealed tab refuses the
+  // flip, same rule the technique tab lock uses on the nav rail.
+  const domain = UI_TO_DOMAIN[id]
+  const chapter = model.chapters.value.find((entry) => entry.id === domain)
+  if (chapter && !chapter.unlocked) {
+    return
+  }
+  pickedChapter.value = id
+}
 function selectUnit(id: string) { model.selectUnit(activeDomainChapter.value, id) }
 function invest() {
   const consumed = model.investActive(activeDomainChapter.value)

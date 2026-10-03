@@ -57,6 +57,10 @@ export interface BodyChapterModel {
   total: number
   units: BodyUnitView[]
   chips: BodyChipView[]
+  /** Single gate line for a chapter whose every unit is out of reach
+   *  (e.g. the meridian page below Luyen Khi) - real unlock condition,
+   *  rendered in place of the hidden unit content. */
+  lockHint?: string
 }
 
 function materialName(manager: GameManager, id: string): string {
@@ -81,7 +85,7 @@ function buildRefinementUnits(
   const have = manager.materialBag.getAmount(TINH_HOA_PHAM_THE_MATERIAL_ID)
   const essenceName = materialName(manager, TINH_HOA_PHAM_THE_MATERIAL_ID)
 
-  return BODY_REFINEMENT_TIERS.map((tier, index) => {
+  return BODY_REFINEMENT_TIERS.map((tier, index): BodyUnitView => {
     const cap = getTierCap(index)
 
     let unitProgress = 0
@@ -105,11 +109,14 @@ function buildRefinementUnits(
       id: tier.id,
       chip: {
         id: tier.id,
-        label: t('panels.body.chips.tier', { n: index + 1 }),
-        hint: tier.name,
+        // Canonical tier naming restored (docs/systems/body-refinement.md):
+        // the chips carry Luyen Bi/Nhuc/Cot/... directly, the positional
+        // 'Tang N' survives only as the ordinal hint.
+        label: tier.name,
+        hint: t('panels.body.chips.tier', { n: index + 1 }),
         status: status === 'done' ? 'done' : status === 'active' ? 'active' : 'locked',
       },
-      title: t('panels.body.unit.tierTitle', { tier: index + 1, name: tier.name }),
+      title: tier.name,
       description: tier.description,
       status,
       gains: baseGainKeys(tier.baseGains).map(stat => ({
@@ -132,7 +139,7 @@ function buildRefinementUnits(
       canInvest: status === 'active' && have > 0,
       progress: { value: unitProgress, max: cap },
     }
-  })
+  }).filter((unit) => unit.status !== 'locked')
 }
 
 function buildMeridianUnits(
@@ -157,7 +164,7 @@ function buildMeridianUnits(
     }
   }
 
-  return MERIDIANS.map((meridian, flatIndex) => {
+  return MERIDIANS.map((meridian, flatIndex): BodyUnitView => {
     const pageGate = pageGateByRealm.get(meridian.pageRealmId) ?? null
     const pageUnlocked = pageGate === null
     const inPageRealm = player.realmId === meridian.pageRealmId
@@ -193,8 +200,11 @@ function buildMeridianUnits(
       id: meridian.id,
       chip: {
         id: meridian.id,
-        label: t('panels.body.chips.meridian', { n: flatIndex + 1 }),
-        hint: meridian.name,
+        // Canonical meridian naming restored (Ky Kinh Bat Mach catalog):
+        // the chips carry Nham/Doi/Am Kieu/... directly, the positional
+        // 'Mach N' survives only as the ordinal hint.
+        label: meridian.name,
+        hint: t('panels.body.chips.meridian', { n: flatIndex + 1 }),
         status: status === 'done' ? 'done' : status === 'next' ? 'active' : 'locked',
       },
       title: meridian.name,
@@ -218,7 +228,7 @@ function buildMeridianUnits(
       canInvest: pageUnlocked && seqUnlocked && status === 'next'
         && ownedPills >= meridian.thongMachDanCost && paced,
     }
-  })
+  }).filter((unit) => unit.status !== 'locked')
 }
 
 function buildZhouTianUnits(
@@ -256,6 +266,13 @@ function buildZhouTianUnits(
   const atCap = completed >= capacity
   const need = atCap ? 0 : zhouTianStepCost(completed)
   const reward = zhouTianStepReward(Math.min(completed, capacity - 1))
+
+  // The sequential gate (incomplete Bat Mach) leaves nothing viewable -
+  // hidden like every other out-of-reach unit; the chapter seal stays
+  // locked and the page cannot be opened anyway.
+  if (status === 'locked') {
+    return []
+  }
 
   return [{
     id: 'zhou_tian_next',
@@ -385,9 +402,31 @@ export function useBodySceneModel() {
         total: progress.total,
         units,
         chips,
+        lockHint: units.length === 0 ? chapterLockHint(id) : undefined,
       }
     })
   })
+
+  // A chapter whose whole catalog sits out of reach renders just its
+  // unlock condition instead of empty rows (the meridian page below
+  // Luyen Khi, the sealed Chu Thien before Bat Mach completes).
+  function chapterLockHint(id: BodyChapterId): string {
+    if (id === 'meridian') {
+      const lockedPage = listMeridianPages().find(
+        (page) => !isMeridianPageUnlocked(player.$state, page.pageRealmId),
+      )
+      if (lockedPage) {
+        const realmName = REALMS.find(
+          (realm) => realm.id === lockedPage.pageRealmId,
+        )?.name ?? lockedPage.pageRealmId
+        return t('panels.realm.meridian.pageLocked', { realm: realmName })
+      }
+    }
+    if (id === 'zhou_tian') {
+      return t('panels.realm.zhouTian.locked')
+    }
+    return t('body.empty')
+  }
 
   // Selection: remembered per chapter; defaults to the actionable unit
   // (the "next" row), falling back to the first unit.

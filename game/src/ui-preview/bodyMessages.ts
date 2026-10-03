@@ -1,6 +1,9 @@
 export const bodyMessages = { vi: {
   chapter:{refinement:'Luyện Thể',meridian:'Bát Mạch',cycle:'Chu Thiên'}, chapterHint:{refinement:'Cường hóa thân thể',meridian:'Khai thông kinh mạch',cycle:'Vận chuyển chân khí'},
   tier:'Tầng {n}', vessel:'Mạch {n}', milestone:'Mốc {n}', unitTitle:'{chapter} · {unit}', description:'Rèn luyện thân thể, bồi dưỡng kinh mạch. Thông tin và lợi ích của mốc được hiển thị tại đây.',
+  tierNames:['Luyện Bì','Luyện Nhục','Luyện Cốt','Luyện Huyết','Luyện Tạng','Luyện Mạch'],
+  vesselNames:['Nhâm Mạch','Đới Mạch','Âm Kiều Mạch','Âm Duy Mạch','Dương Duy Mạch','Dương Kiều Mạch','Xung Mạch','Đốc Mạch'],
+  meridianGate:'Mở khóa ở Luyện Khí', cycleGate:'Hoàn thành Kỳ Kinh Bát Mạch trước', tieu:'Tiểu Chu Thiên',
   hp:'Khí huyết', might:'Sức mạnh', defense:'Phòng ngự', invest:'Tu Luyện',
   resource:{refinement:'Tinh Hoa Phàm Thể',meridian:'Thông Mạch Đan',cycle:'Tinh Hoa Pháp Thể'},
   lockedHint:'Điều kiện mở mốc sẽ được cung cấp khi nối logic.',
