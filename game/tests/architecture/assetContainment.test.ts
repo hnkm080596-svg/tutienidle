@@ -43,7 +43,14 @@ function expectContainedAssetUrl(url: string, where: string): void {
 
 describe('R14.6a — runtime asset URLs stay under assets/', () => {
   it('every AssetBundleCatalog descriptor URL resolves under assets/', () => {
-    const descriptors = enumerateResources(['core-ui', 'home', 'combat', 'tribulation'])
+    const descriptors = enumerateResources([
+      'core-ui',
+      'home',
+      'combat',
+      'tribulation',
+      'ui-chrome',
+      'ui-scenes',
+    ])
 
     expect(descriptors.length).toBeGreaterThan(0)
 

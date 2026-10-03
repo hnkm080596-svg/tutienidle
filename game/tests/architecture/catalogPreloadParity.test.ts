@@ -27,7 +27,7 @@ import {
 } from '@/presentation/assets/AssetBundleCatalog'
 
 const GAME_ROOT = process.cwd()
-const ALL_BUNDLES = ['core-ui', 'home', 'combat', 'tribulation'] as const
+const ALL_BUNDLES = ['core-ui', 'home', 'combat', 'tribulation', 'ui-chrome', 'ui-scenes'] as const
 
 function queuedCombatKeys(): Set<string> {
   const keys = new Set<string>()
