@@ -174,7 +174,11 @@ function realmName(id: string): string {
   try { return getCurrentRealm(id as never).name } catch { return id }
 }
 function skillName(id: string): string {
-  return gameManager.skillManager.get(id)?.name ?? id
+  // Resolve from the template registry first - skillManager only knows
+  // skills the player owns, so unowned foreign-element ids leaked raw.
+  return gameManager.catalogOps.getSkillTemplate(id)?.name
+    ?? gameManager.skillManager.get(id)?.name
+    ?? id
 }
 
 // ONE authored prereq -> localized reason (same contract the retired

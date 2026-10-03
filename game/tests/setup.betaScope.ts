@@ -14,9 +14,9 @@
 // lockBetaFeaturesForTests().
 //
 // The same contract applies to BETA_TALENT_IDS: pre-lock effect-table
-// suites resolve ids outside the beta roster (pham_cot and its Great
-// Dao reward), so the talent roster also starts fully admitted and
-// lock suites call lockBetaTalentsForTests().
+// suites resolve ids outside the beta roster (the Great Dao reward
+// pham_nhan_chi_cot, PARKED talents), so the talent roster also starts
+// fully admitted and lock suites call lockBetaTalentsForTests().
 import { unlockAllWaysForTests } from '../src/core/game/__fixtures__/betaWaysUnlock'
 import { unlockAllFeaturesForTests } from '../src/core/game/__fixtures__/betaFeaturesUnlock'
 import { unlockAllTalentsForTests } from '../src/core/game/__fixtures__/betaTalentsUnlock'

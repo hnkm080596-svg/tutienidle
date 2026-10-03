@@ -1203,12 +1203,10 @@
         "login": "Enter Cave",
         "register": "Create Identity"
       },
-      "divider": "or",
       "guest": {
         "button": "Play Now",
         "note": "Guest progress stops at Foundation Establishment"
       },
-      "status": "Test server · UI prototype",
       "continue": "Continue — {name}",
       "continueNoName": "Continue",
       "language": "Language",
@@ -1267,11 +1265,7 @@
         "pending": "Revealed after you choose a talent"
       },
       "chooseOne": "Choose one",
-      "hoverDetail": "Hover for details",
-      "pagination": {
-        "previous": "Previous page",
-        "next": "Next page"
-      }
+      "hoverDetail": "Hover for details"
     }
   },
   "skillResource": {

@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { TALENT_RARITY_LABELS, type TalentDefinition, type TalentTag } from '@/core/talent/Talent'
 import type { StableSymbolId } from '@/presentation/huyenKim/StableSceneArt'
 import CreationChoiceTile from './CreationChoiceTile.vue'
+import TalentCardEmblem from './TalentCardEmblem.vue'
 const props = defineProps<{ talent: TalentDefinition; selected: boolean; disabled?: boolean }>()
 defineEmits<{ toggle: [] }>()
 const symbols: Record<TalentTag, StableSymbolId> = {
@@ -17,7 +18,11 @@ const detail = computed(() => ({
 </script>
 
 <template>
-  <CreationChoiceTile :name="talent.name" :symbol="symbol" :tooltip="detail"
+  <CreationChoiceTile
+    :name="talent.name" :symbol="symbol" :tooltip="detail" radio
     :selected="selected" :disabled="disabled" :data-testid="`creation-talent-${talent.id}`"
-    class="talent-card" @select="$emit('toggle')" />
+    class="talent-card" @select="$emit('toggle')"
+  >
+    <template #icon><TalentCardEmblem :rarity="talent.rarity" /></template>
+  </CreationChoiceTile>
 </template>

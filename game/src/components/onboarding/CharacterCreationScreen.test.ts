@@ -51,11 +51,13 @@ describe('CharacterCreationScreen — beta name + talent flow', () => {
     expect(container.querySelector('[data-testid^="creation-talent-"]')).toBeTruthy()
 
     // BETA SCOPE LOCK v2 (phase-2): no allocation, no stepper. The starter
-    // slot renders as a visual preview strip (CREATION_SKILL_PREVIEW) per
-    // the approved creation design - it never enters the payload (pinned
-    // by the emit test below).
-    expect(container.querySelector('[data-hk-region="starter-slot"]')).toBeTruthy()
-    expect(container.querySelector('[data-testid^="creation-skill-"]')).toBeTruthy()
+    // slot renders as a cosmetic preview strip (CREATION_SKILL_PREVIEW) per
+    // the approved creation design - display-only tiles, no controls, and
+    // it never enters the payload (pinned by the emit test below).
+    const starter = container.querySelector('[data-hk-region="starter-slot"]')
+    expect(starter).toBeTruthy()
+    expect(starter!.querySelectorAll('.creation-choice-tile--display')).toHaveLength(3)
+    expect(starter!.querySelector('button')).toBeNull()
     expect(container.querySelector('[data-testid^="creation-attribute-"]')).toBeNull()
     expect(container.querySelector('.stepper')).toBeNull()
 

@@ -261,13 +261,19 @@ function buildZhouTianUnits(
     id: 'zhou_tian_next',
     chip: {
       id: 'zhou_tian_next',
-      label: t('panels.body.chips.step', { n: Math.min(completed + 1, capacity) }),
+      label: status === 'active' || status === 'complete'
+        ? t('panels.body.chips.step', { n: Math.min(completed + 1, capacity) })
+        : t(`panels.realm.zhouTian.${status === 'realm_locked' ? 'stateRealmLocked' : 'stateLocked'}`),
       hint: t('panels.realm.zhouTian.title'),
       status: status === 'complete' ? 'done' : status === 'active' ? 'active' : 'locked',
     },
     title: status === 'complete'
       ? t('panels.realm.zhouTian.stateComplete')
-      : t('panels.body.unit.stepTitle', { n: completed + 1, total: capacity }),
+      : status === 'active'
+        // Step counter only means something while a next step exists -
+        // locked units carry the state label instead of 'Buoc 1 / 0'.
+        ? t('panels.body.unit.stepTitle', { n: Math.min(completed + 1, capacity), total: capacity })
+        : t(`panels.realm.zhouTian.${status === 'realm_locked' ? 'stateRealmLocked' : 'stateLocked'}`),
     description: t('panels.body.zhouTian.description'),
     status,
     gains: status === 'active'

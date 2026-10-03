@@ -75,7 +75,10 @@ const SPECIAL_PILLS: Pill[] = [
     grade: 'huyen',
     realmId: 'qi_refining',
     professionGrade: getProfessionGradeForRealm('qi_refining'),
-    icon: '/assets/pills/thong_mach_dan.png',
+    // No dedicated art yet - shares the Khai Linh pill orb until the
+    // thong_mach_dan illustration lands (previously pointed at a missing
+    // file and rendered a broken-image glyph in the Mach cost rows).
+    icon: '/assets/pills/khai_linh_dan.png',
     effects: [],
   },
   {
@@ -86,7 +89,9 @@ const SPECIAL_PILLS: Pill[] = [
     grade: 'huyen',
     realmId: 'qi_refining',
     professionGrade: getProfessionGradeForRealm('qi_refining'),
-    icon: '/assets/pills/truc_co_dan.png',
+    // No dedicated art yet - shares the To Cot pill orb (same missing-file
+    // defect class as thong_mach_dan).
+    icon: '/assets/pills/to_cot_dan.png',
     effects: [],
     // M-F-CEILING - held input of the Truc Co breakthrough gate; tagged
     // so release policy gates its acquisition routes.

@@ -358,7 +358,7 @@ describe('beta scope - flagged saves load', () => {
     expect(unsupportedReleaseReason(p3)).toBe('formation_loadout')
 
     const p4 = mortalPlayer()
-    p4.selectedTalentIds = ['pham_cot']
+    p4.selectedTalentIds = ['pham_nhan_chi_cot']
     expect(unsupportedReleaseReason(p4)).toBe('dormant_talent_state')
   })
 

@@ -120,9 +120,11 @@ export const BETA_CREATION_TALENT_IDS: readonly string[] = [
   // Production (2)
   'hoa_hau_thong_than',
   'bach_luyen_thanh_khi',
-  // Excluded from the 19-entry creation catalog:
-  //   pham_cot  - hidden/perfection-lineage feeder (Dai Dao conversion
-  //             is out of beta scope; its only value is the hidden path)
+  // Easter egg (1) - 'pham_cot' stays rollable in the offer pool. The
+  // hidden Dai Dao conversion it feeds is out of beta scope, but the
+  // pick itself is allowed (its -75% effect must emit, so admission is
+  // required for a picked pham_cot to work at all).
+  'pham_cot',
   // PARKED_TALENTS (tran_tam, phu_van) are already outside the creation
   // pool - formation/talisman dependent, never admissible here.
 ]

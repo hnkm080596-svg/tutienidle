@@ -70,7 +70,10 @@ const model = computed<TechniqueUiModel>(() => {
     name: m.name ?? '—',
     quality: m.quality !== undefined ? ITEM_QUALITY_LABELS[m.quality] : '',
     description: m.description ?? t('panels.skillPath.technique.emptyNoTechnique'),
-    art: resolveAssetUrl(m.icon ?? FALLBACK_ART),
+    // Centerpiece is a 433x404 vista slot; m.icon is a 32px bag/spellbook
+    // icon that flattens into a blob when scaled up. The scroll manual art
+    // stands in until per-technique illustrations land.
+    art: resolveAssetUrl(FALLBACK_ART),
     sections: m.sections.map((section, s) => ({
       id: `section-${s}`,
       title: section.label,
@@ -101,7 +104,7 @@ const model = computed<TechniqueUiModel>(() => {
     materialNote: '',
     advanceDisabled: !advance.available,
     disabledReason: disabledReasonLabel(advance.disabledReason),
-    artTemporary: m.icon === undefined,
+    artTemporary: true,
   }
 })
 

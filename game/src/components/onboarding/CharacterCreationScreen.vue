@@ -17,7 +17,7 @@ import CreationFooter from '@/components/scenes/creation/CreationFooter.vue'
 import { CREATION_SKILL_PREVIEW } from '@/components/scenes/creation/creationPreview'
 
 // The committed creation contract remains name + talent only.
-// Starter tiles are a local visual preview until the gameplay hookup.
+// Starter tiles are a read-only visual preview until the gameplay hookup.
 // The talent offer list still arrives from the existing service.
 export interface CharacterCreationPayload {
   name: string
@@ -36,8 +36,6 @@ const selectedTalentIds = ref<string[]>([])
 const rolling = ref(false)
 const error = ref('')
 const creating = ref(false)
-// Preview only: never added to CharacterCreationPayload or sent to the service.
-const previewSkillId = ref('linh_bao')
 
 const { t } = useI18n()
 
@@ -120,7 +118,7 @@ onMounted(() => { void reroll() })
           @toggle="toggleTalent"
           @reroll="reroll"
         />
-        <CreationStarterSlot v-model="previewSkillId" :options="CREATION_SKILL_PREVIEW" :disabled="creating" />
+        <CreationStarterSlot :options="CREATION_SKILL_PREVIEW" />
         <CreationFooter
           :ready="ready"
           :creating="creating"

@@ -1203,12 +1203,10 @@
         "login": "Vào động phủ",
         "register": "Lập đạo danh"
       },
-      "divider": "hoặc",
       "guest": {
         "button": "Chơi khách",
         "note": "Tiến trình khách dừng tại Trúc Cơ"
       },
-      "status": "Máy chủ thử nghiệm · UI prototype",
       "continue": "Tiếp Tục — {name}",
       "continueNoName": "Tiếp Tục",
       "language": "Ngôn ngữ",
@@ -1267,11 +1265,7 @@
         "pending": "Sẽ hiển thị sau khi chọn Thiên Phú"
       },
       "chooseOne": "Chọn một",
-      "hoverDetail": "Di chuột để xem chi tiết",
-      "pagination": {
-        "previous": "Trang trước",
-        "next": "Trang sau"
-      }
+      "hoverDetail": "Di chuột để xem chi tiết"
     }
   },
   "skillResource": {

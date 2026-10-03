@@ -19,6 +19,11 @@ const connections = computed(() => props.edges.flatMap(edge => {
   const to = props.nodes.find(node => node.id === edge.to)
   return from && to ? [{ ...edge, fromNode: from, toNode: to }] : []
 }))
+
+// Paint lowest nodes first: a node's name/level label hangs below its disc
+// into the next ring, so any disc that can cover it sits at a larger y.
+// Descending-y order keeps every label above every disc that could occlude it.
+const paintNodes = computed(() => [...props.nodes].sort((a, b) => b.y - a.y))
 const viewBox = computed(() => `0 0 ${props.size} ${props.size}`)
 const graphStyle = computed(() => ({
   width: `${props.size}px`,
@@ -32,7 +37,7 @@ const graphStyle = computed(() => ({
       <svg class="skill-tree-lines" :viewBox="viewBox" aria-hidden="true">
         <line v-for="edge in connections" :key="`${edge.from}-${edge.to}`" :x1="edge.fromNode.x" :y1="edge.fromNode.y" :x2="edge.toNode.x" :y2="edge.toNode.y" :class="['skill-connection', { muted: edge.toNode.state === 'locked' }]" />
       </svg>
-      <SkillPaperNode v-for="node in nodes" :key="node.id" class="skill-positioned-node" :node="node" :selected="selected === node.id" :style="{ left: `${node.x}px`, top: `${node.y}px` }" @select="emit('select', $event)" />
+      <SkillPaperNode v-for="node in paintNodes" :key="node.id" class="skill-positioned-node" :node="node" :selected="selected === node.id" :style="{ left: `${node.x}px`, top: `${node.y}px` }" @select="emit('select', $event)" />
     </div>
   </div>
 </template>
