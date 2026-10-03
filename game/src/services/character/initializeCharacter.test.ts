@@ -47,6 +47,7 @@ function makeOwners() {
     materialAdd: vi.fn(),
     setProductionAutoRestart: vi.fn(),
     setActivePlayer: vi.fn(),
+    reconcileQuestLifecycle: vi.fn(),
   }
 
   const gameManager = {
@@ -69,6 +70,9 @@ function makeOwners() {
       getSiteDefinitions: () => [{ siteId: 'linh_tuyen' }, { siteId: 'khi_duong' }],
     },
     setActivePlayer: calls.setActivePlayer,
+    tickOps: {
+      reconcileQuestLifecycle: calls.reconcileQuestLifecycle,
+    },
   } as unknown as GameManager
 
   const owners: InitializeCharacterOwners = {
@@ -147,6 +151,10 @@ describe('initializeCharacter - one starter snapshot from canonical metadata', (
     expect(calls.setProductionAutoRestart).toHaveBeenCalledWith('khi_duong', true)
 
     expect(calls.setActivePlayer).toHaveBeenCalledWith(player)
+
+    // Quest activation runs at init (not deferred to reload): without it
+    // a fresh character sees an empty Nhiem Vu board for the session.
+    expect(calls.reconcileQuestLifecycle).toHaveBeenCalledTimes(1)
   })
 
   it('a rejected starter write propagates (a boot that cannot pin linh_bao never defaults silently)', () => {
