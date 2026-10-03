@@ -68,8 +68,8 @@ export function useBuildingNavigation() {
    * tu system hien co qua GameManager facade, khong mutate gi:
    * - locked: chua co instance (can xay ra duy nhat voi save cu chua
    *   reconcile / id khong dang ky).
-   * - ready: resource building (Linh Tuyen) co san luong claim duoc
-   *   (getStoredAmount >= 1).
+   * - ready: resource building (Linh Tuyen) day kho san luong -
+   *   BuildingSystem.isStorageFull (cham tran tich luy thuc te).
    * - active: dang co job chay - vong job DUY NHAT cua building la luyen
    *   dan pill_room (AlchemySystem qua getAlchemyJobs()).
    * - upgradeable: built + chua max + du nguyen lieu nang KE TIEP
@@ -85,9 +85,7 @@ export function useBuildingNavigation() {
     }
 
     if (template.producesMaterialId) {
-      const stored = gameManager.buildingOps.getBuildingStoredAmount(instance.instanceId, Date.now() / 1000)
-
-      if (stored >= 1) {
+      if (gameManager.buildingOps.isBuildingStorageFull(instance.instanceId, Date.now() / 1000)) {
         return 'ready'
       }
     }

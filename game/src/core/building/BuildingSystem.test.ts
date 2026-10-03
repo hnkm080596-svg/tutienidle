@@ -217,6 +217,30 @@ describe('BuildingSystem Linh Tuyá»n (engine offline, balance 2026-08-28)', 
     expect(stored).toBe(capacity)
   })
 
+  it('isStorageFull: L1 mortal full sau 10h (capacity ceil > yield 1 chut)', () => {
+    const s = spring()
+    const instance = { ...springInstance(1), lastCollectedAt: 0 }
+
+    // mortal L1: yield 10h = 1269.23... -> capacity ceil len 1270,
+    // stored khong bao gio cham capacity - phai dat "day" qua
+    // attainable max (min(capacity, capOffline * rate)).
+    expect(system.isStorageFull(instance, s, 36_000, 'mortal')).toBe(true)
+    expect(system.isStorageFull(instance, s, 36_000 - 1, 'mortal')).toBe(false)
+    expect(system.isStorageFull(instance, s, 3_600, 'mortal')).toBe(false)
+  })
+
+  it('isStorageFull: L9 qi_refining full dung tai tran 10h', () => {
+    const s = spring()
+    const instance = { ...springInstance(9), lastCollectedAt: 0 }
+
+    expect(system.isStorageFull(instance, s, 36_000, 'qi_refining')).toBe(true)
+    expect(system.isStorageFull(instance, s, 36_000 - 1, 'qi_refining')).toBe(false)
+  })
+
+  it('isStorageFull: building khong san xuat -> false', () => {
+    expect(system.isStorageFull(instanceAt(5), TEMPLATE, 999_999)).toBe(false)
+  })
+
   it('storage tÄƒng theo realm (foundation > qi > mortal)', () => {
     const s = spring()
 

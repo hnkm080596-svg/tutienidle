@@ -1206,8 +1206,7 @@
         "register": "Create Identity"
       },
       "guest": {
-        "button": "Play Now",
-        "note": "Guest progress stops at Foundation Establishment"
+        "button": "Play Now"
       },
       "continue": "Continue — {name}",
       "continueNoName": "Continue",

@@ -359,6 +359,32 @@ export class BuildingSystem {
   }
 
   /**
+   * "Day kho" cho resource building = san luong cham tran TICH LUY THUC
+   * TE - muc toi da la min(capacity, capOffline * rate). Linh mach
+   * gathering_outpost duoc thiet ke capacity = ceil(10h yield) nen luon
+   * con ~1 don vi headroom so voi muc tich luy toi da: so sanh thang
+   * voi capacity se khong bao gio dat "day". Non-producer tra false.
+   */
+  isStorageFull(
+    instance: BuildingInstance,
+    template: Building,
+    currentTime: number,
+    realmId?: string,
+  ): boolean {
+    const accrualRealmId = resolveAccrualRealmId(instance, realmId)
+    const attainable = Math.min(
+      this.getEffectiveCapacity(template, instance.level, accrualRealmId),
+      PRODUCTION_OFFLINE_CAP_SECONDS * this.getEffectiveRate(template, instance.level, accrualRealmId),
+    )
+
+    if (attainable <= 0) {
+      return false
+    }
+
+    return this.getStoredAmount(instance, template, currentTime, accrualRealmId) >= attainable
+  }
+
+  /**
    * Resolve materialId ma claim() se tra - linh mach Khai Vat Duong cap
    * Linh Thach dung PHAM theo realm thu thap, building khac dung template.
    * Tach rieng de caller (GameManager.collectBuilding) pre-check registry

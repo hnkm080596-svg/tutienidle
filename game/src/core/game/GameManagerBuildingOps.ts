@@ -328,6 +328,21 @@ export class GameManagerBuildingOps {
     )
   }
 
+  isBuildingStorageFull(instanceId: string, currentTime = Date.now() / 1000): boolean {
+    const instance = this.deps.buildingManager.get(instanceId)
+
+    if (!instance) {
+      return false
+    }
+
+    return this.deps.buildingSystem.isStorageFull(
+      instance,
+      this.deps.buildingRegistry.get(instance.buildingId),
+      currentTime,
+      this.deps.getActivePlayer()?.realmId,
+    )
+  }
+
   // =========================
   // PRODUCTION (2026-08-25 - Lam/Quang/Dong Thien, plan sec4/sec9)
   // =========================
