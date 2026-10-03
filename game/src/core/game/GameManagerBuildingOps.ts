@@ -13,6 +13,7 @@ import { getRealmTier } from '../realm/RealmTierMap'
 import type { PlayerData } from '../player/Player'
 import { NotificationQueue } from './NotificationQueue'
 import { createBagOverflowEvent } from '../notification/bagOverflow'
+import { isCompanionDomainUnlocked } from '../companion/CompanionAvailability'
 import {
   betaSurfaceVerdict,
   isScopeHidden,
@@ -189,14 +190,19 @@ export class GameManagerBuildingOps {
   }
 
   /**
-   * BETA SCOPE LOCK v2 sec.13 - the Worker Lodge tab read-model. Each
-   * authored tab resolves through the scope authority so the frontend
-   * renders verdicts directly and never imports CompanionAvailability to
-   * decide which tabs exist. STRICTLY ADDITIVE - existing accessors keep
-   * their shape. nhan_cong is the workforce tab itself (always offered);
-   * manualAssignOffered reports whether the manual split write is live.
+   * BETA SCOPE LOCK v2 sec.13 + FINAL POLICY (sec.4C) - the Worker
+   * Lodge tab read-model. Each authored tab resolves through the scope
+   * authority so the frontend renders verdicts directly and never
+   * imports CompanionAvailability to decide which tabs exist. Under
+   * beta every tab - nhan_cong included - resolves 'scope-hidden':
+   * the lodge is entirely out of scope while automatic production
+   * keeps running in the background. manualAssignOffered reports
+   * whether the manual split write is live on the workforce tab.
+   * Post-beta the companion tabs keep their Tru Co realm gate via
+   * ctx.progressionMet - CompanionAvailability feeds the verdict here,
+   * never in the frontend.
    */
-  getWorkerLodgeSurfaceModel(): {
+  getWorkerLodgeSurfaceModel(player: PlayerData): {
     tabs: {
       id: BetaWorkerLodgeTabId
       verdict: BetaScopeVerdict
@@ -206,18 +212,22 @@ export class GameManagerBuildingOps {
     return {
       tabs: BETA_WORKER_LODGE_TABS.map((tabId) => {
         const feature = WORKER_LODGE_TAB_FEATURE[tabId]
+        const verdict = betaSurfaceVerdict(feature, {
+          progressionMet:
+            feature === 'companion' ? isCompanionDomainUnlocked(player.realmId) : true,
+        })
 
-        if (feature === null) {
+        if (tabId === 'nhan_cong') {
           return {
             id: tabId,
-            verdict: 'available' as BetaScopeVerdict,
-            manualAssignOffered: !isScopeHidden('manualWorkforce'),
+            verdict,
+            manualAssignOffered: verdict === 'available',
           }
         }
 
         return {
           id: tabId,
-          verdict: betaSurfaceVerdict(feature),
+          verdict,
         }
       }),
     }

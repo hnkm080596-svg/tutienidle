@@ -145,6 +145,10 @@ const BETA_STANDALONE_PANEL_FEATURES: Readonly<Record<string, BetaFeatureName | 
   artifact: 'artifact',
   tran_phap: 'formation',
   companion: 'companion',
+  // Huyen Kim scroll scenes: the technique showcase and the body-cultivation
+  // scene are presentation surfaces of already-shipped beta domains.
+  technique: null,
+  body: null,
 }
 
 /**

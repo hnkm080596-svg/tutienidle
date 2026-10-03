@@ -7,6 +7,7 @@ import { VUE_ROUTE_ADAPTER_KEY, type Route } from '@/presentation/PresentationCo
 import type { VueRouteAdapter } from '@/presentation/VueRouteAdapter'
 import { GameManager } from '@/core/game/GameManager'
 import { buildings } from '@/data/building/buildings'
+import { DONG_FU_BUILDING_ART } from '@/presentation/background/DongFuBuildingArt'
 import { commitThanhVanVariant } from '@/game/support/ThanhVanArt'
 import { useUiStore } from '@/stores/ui'
 import { i18n } from '@/i18n'
@@ -310,6 +311,57 @@ describe('DongFuScene seasonal parallax background', () => {
     expect(mounted.ui.isCommandWheelOpen).toBe(false)
     mounted.playerTrigger()!.click()
     expect(mounted.ui.isCommandWheelOpen).toBe(true)
+
+    mounted.unmount()
+  })
+
+  it('formalizes the canonical layer stack and drifts parallax toward the focused building', async () => {
+    setReducedMotion(false)
+    const mounted = mountDongFuScene()
+
+    const byLayer = (name: string) =>
+      mounted.activeLayers().find((layer) => layer.dataset.layer === name)!
+
+    expect(byLayer('00-sky').dataset.canonicalLayer).toBe('L0')
+    expect(byLayer('03-far-mountains').dataset.canonicalLayer).toBe('L1')
+    expect(byLayer('08-low-mist').dataset.canonicalLayer).toBe('L5')
+    expect(byLayer('09-foreground').dataset.canonicalLayer).toBe('L2')
+    expect(byLayer('05-mid-landscape').dataset.fxPending).toBe('waterfall-shimmer')
+    expect(byLayer('06-water-valley').dataset.fxPending).toBe('water-shimmer')
+    expect(byLayer('00-sky').dataset.fxPending).toBeUndefined()
+    expect(mounted.buildings()!.dataset.canonicalLayer).toBe('L3')
+    expect(
+      mounted.root()!.querySelector('.home-player')!.getAttribute('data-canonical-layer'),
+    ).toBe('L4')
+    expect(mounted.root()!.classList.contains('is-focusing')).toBe(false)
+
+    mounted.ui.openBuildingPopover('pill_room')
+    await nextTick()
+
+    expect(mounted.root()!.classList.contains('is-focusing')).toBe(true)
+
+    const art = DONG_FU_BUILDING_ART.find((entry) => entry.buildingId === 'pill_room')!
+    const dim = mounted.root()!.querySelector<HTMLElement>('.home-scene__focus-dim')!
+    expect(dim.style.getPropertyValue('--focus-x')).toBe(`${art.scenePlacement.xPercent}%`)
+    expect(dim.style.getPropertyValue('--focus-y')).toBe(`${art.scenePlacement.yPercent}%`)
+
+    // Pointer at top-left (-1,-1); the anchor blend (FOCUS_BLEND=0.4)
+    // pulls the parallax unit toward the building instead.
+    window.dispatchEvent(new PointerEvent('pointermove', { clientX: 0, clientY: 0 }))
+    await nextTick()
+
+    const anchorXUnit = Math.max(-1, Math.min(1, (art.scenePlacement.xPercent - 50) / 50))
+    const expectedUnit = Math.max(-1, Math.min(1, -1 * 0.6 + anchorXUnit * 0.4))
+    const foregroundX = Number.parseFloat(
+      byLayer('09-foreground').style.getPropertyValue('--parallax-x'),
+    )
+    expect(foregroundX).toBeCloseTo(-expectedUnit * 18, 5)
+
+    mounted.ui.closeHomeOverlays()
+    await nextTick()
+
+    expect(mounted.root()!.classList.contains('is-focusing')).toBe(false)
+    expect(byLayer('09-foreground').style.getPropertyValue('--parallax-x')).toBe('18px')
 
     mounted.unmount()
   })

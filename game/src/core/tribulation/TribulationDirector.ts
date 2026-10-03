@@ -100,6 +100,9 @@ export interface ActiveTribulationState {
   chapterIndex: number
   chaptersTotal: number
   chapterName: string
+  /** All chapter names in run order - the sequential tracker UI (scene
+   *  14) renders pips from this list; chapterName stays the current one. */
+  chapterNames: readonly string[]
   state: TribulationOutcome
   /** Cau hoi dang hien (chi chuong mind giua 2 cau nghi). */
   currentQuestion: MindQuestion | null
@@ -293,6 +296,7 @@ export class TribulationDirector {
       chapterIndex: 0,
       chaptersTotal: chapters.length,
       chapterName: chapters[0]!.name,
+      chapterNames: chapters.map((chapter) => chapter.name),
       state: 'ongoing',
       currentQuestion: null,
       questionSecondsRemaining: 0,

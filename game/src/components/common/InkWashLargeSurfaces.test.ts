@@ -4,6 +4,9 @@ import { createApp, h, type App } from 'vue'
 import OverlayPanel from './OverlayPanel.vue'
 import confirmSource from './ConfirmModal.vue?raw'
 import victorySource from '@/components/game/combat/CombatVictoryPanel.vue?raw'
+// Scene 14: XL scroll + ceremony frame moved into the scene layer; the
+// panel wrapper still owns the auto-refight countdown.
+import victorySurfaceSource from '@/components/scenes/victory/VictoryScene.vue?raw'
 import defeatSource from '@/components/game/combat/CombatDefeatPanel.vue?raw'
 
 const mounted: Array<{ app: App; container: HTMLElement }> = []
@@ -36,8 +39,8 @@ describe('ink-wash large surfaces', () => {
     const dialog = container.querySelector<HTMLElement>('[role="dialog"]')!
 
     expect(dialog.getAttribute('aria-modal')).toBe('true')
-    expect(dialog.querySelector('[data-ink-slice="surface-xl-paper-scroll"]')).not.toBeNull()
-    expect(dialog.querySelector('[data-ink-slice="frame-xl-ceremony"]')).not.toBeNull()
+    expect(dialog.querySelector('[data-hk-slice="surface-m-panel"]')).not.toBeNull()
+    expect(dialog.querySelector('[data-hk-slice="frame-m-modal"]')).not.toBeNull()
     overlay.click()
     expect(onClose).toHaveBeenCalledTimes(1)
   })
@@ -46,8 +49,10 @@ describe('ink-wash large surfaces', () => {
     // M-UI-SYSTEM: ConfirmModal migrated to SysModalBase (system chrome) -
     // it intentionally no longer carries the XL ink layers, so only the
     // combat victory/defeat panels stay in this ceremonial assertion.
-    for (const source of [victorySource, defeatSource]) {
-      expect(source).toContain('asset-id="surface-xl-paper-scroll"')
+    for (const source of [victorySurfaceSource, defeatSource]) {
+      // XL scroll surface migrated to the Huyen Kim chrome registry;
+      // the ceremony frame stays on the legacy ink-wash asset id.
+      expect(source).toContain('chrome-id="surface-xl-scroll"')
       expect(source).toContain('asset-id="frame-xl-ceremony"')
     }
     expect(confirmSource).toContain("emit('confirm')")

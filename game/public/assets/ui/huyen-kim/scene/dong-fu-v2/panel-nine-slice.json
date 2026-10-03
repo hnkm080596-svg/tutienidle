@@ -1,0 +1,13 @@
+{
+  "image": "panel-nine-slice.png",
+  "sourceWidth": 1254,
+  "sourceHeight": 1254,
+  "slices": { "top": 360, "right": 360, "bottom": 360, "left": 360 },
+  "displayBorderWidth": 52,
+  "center": "fill",
+  "edgeMode": "stretch",
+  "minimumWidth": 160,
+  "minimumHeight": 160,
+  "contentPadding": 32,
+  "note": "Source slice coordinates are image pixels. Display border width is in scene design pixels, before uniform scene scaling. Do not stretch the whole image."
+}

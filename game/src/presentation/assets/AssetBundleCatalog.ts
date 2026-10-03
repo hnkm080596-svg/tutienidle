@@ -51,6 +51,7 @@ import {
 } from '@/presentation/art/CombatPresentationCatalogue'
 import { ENTITY_ART_MODE } from '@/presentation/art/EntityArtMode'
 import { atlasClipsOf } from '@/presentation/art/CombatEntityPresentation'
+import { stableSceneArtUrl } from '@/presentation/huyenKim/StableSceneArt'
 import { AUDIO_CUES } from '@/core/audio/AudioCueManifest'
 
 export type AudioBundleId = 'audio-core' | 'audio-combat' | 'audio-tribulation'
@@ -372,8 +373,27 @@ export function getTribulationDescriptors(): readonly AssetResourceDescriptor[] 
     atlasUrl: INK_WASH_UI_ATLAS_DATA_URL,
   })
 
+  // Huyen Kim tribulation-environment-kit (stable art): storm-far/storm-
+  // near/dais/sky-vignette Phaser textures around the runtime character,
+  // lightning and meter presentation. @1x suffices - these render
+  // cover-fit at runtime canvas size, never at 2x.
+  for (const assetId of TRIBULATION_SCENE_ASSET_IDS) {
+    descriptors.push({
+      kind: 'image',
+      key: `hk-${assetId}`,
+      url: stableSceneArtUrl(assetId, '@1x'),
+    })
+  }
+
   return descriptors
 }
+
+export const TRIBULATION_SCENE_ASSET_IDS = [
+  'tribulation-storm-far',
+  'tribulation-storm-near',
+  'tribulation-dais',
+  'tribulation-sky-vignette',
+] as const
 
 /**
  * Cue-id prefixes each lazy audio bundle covers. `audio-core` carries every

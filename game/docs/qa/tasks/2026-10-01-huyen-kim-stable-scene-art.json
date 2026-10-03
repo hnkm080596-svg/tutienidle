@@ -1,0 +1,132 @@
+{
+  "taskId": "HK-STABLE-SCENE-ART-2026-10-01",
+  "planningBaseline": {
+    "productStateId": "a35f3a3808ebbaa4135c6aa839e8e84d343450f25295c6daf8200b446b83d8a7",
+    "contractId": "6fae4351b928de5516d63beb68fea41ade5f295bcee4009261f30b155baebb41",
+    "attackModelId": "e1730ca7e1a965022c59ae638f3a3d12299e4f88117babb3daab28b8ce28607e",
+    "environmentId": "bac72de04cfbc46a19108b62991adb4e245b8afb97ad317b6158d00c39149242"
+  },
+  "requirementRefs": [
+    {
+      "path": "docs/superpowers/specs/2026-10-01-huyen-kim-stable-scene-art-extension-design.md",
+      "symbolOrSection": "approved design",
+      "revision": "sha256:6fae4351b928de5516d63beb68fea41ade5f295bcee4009261f30b155baebb41",
+      "basis": "USER"
+    },
+    {
+      "path": "../AGENTS.md",
+      "symbolOrSection": "P1-P18 and internal QA authority",
+      "revision": "sha256:f90fcf000fe830f86d0d06027100e738663aaeed0cfc3f8dcb92f8b0432a2be7",
+      "basis": "MAINTAINED_CONTRACT"
+    }
+  ],
+  "invariantIds": [
+    "I-HK-TEXT-FREE-PRODUCTION",
+    "I-HK-VOLATILE-CONTENT-EXCLUDED",
+    "I-HK-EXACT-PAIRED-GEOMETRY",
+    "I-HK-ALPHA-AND-SAFE-AREA",
+    "I-HK-BACKGROUND-PARALLAX-STACK",
+    "I-HK-RUNTIME-OWNS-STATE-AND-TOPOLOGY",
+    "I-HK-MANIFEST-PATH-PARITY",
+    "I-HK-NO-FRONTEND-WIRING"
+  ],
+  "dependencyRefs": [
+    {
+      "path": "docs/design/huyen-kim-scene-layout-spec.md",
+      "symbolOrSection": "scene regions 01/02/05/06/07/08/10/12/14",
+      "revision": "sha256:796f272021145d717dd92ecceee5ee59432ac73cd486c03c8254c5049c6e3053",
+      "basis": "MAINTAINED_CONTRACT"
+    },
+    {
+      "path": "docs/design/huyen-kim-reference-audit.md",
+      "symbolOrSection": "scene art and ownership rulings",
+      "revision": "sha256:7ae29534f2efe73c0e4e95d98ae213e71d9402319aa49dd9dab3ff51df098975",
+      "basis": "MAINTAINED_CONTRACT"
+    },
+    {
+      "path": "docs/design/huyen-kim-ui-art-agent-brief.md",
+      "symbolOrSection": "production boundaries and frontend prohibition",
+      "revision": "sha256:bc607820c5ca186b88c2b71bc5fc3752b9a0d2d810adfe545ccb8b7e905fca4f",
+      "basis": "MAINTAINED_CONTRACT"
+    }
+  ],
+  "sourceDependencyHashes": [
+    {
+      "path": "docs/superpowers/specs/2026-10-01-huyen-kim-stable-scene-art-extension-design.md",
+      "symbolOrSection": "full spec",
+      "revision": "sha256:6fae4351b928de5516d63beb68fea41ade5f295bcee4009261f30b155baebb41",
+      "basis": "USER"
+    },
+    {
+      "path": "docs/design/huyen-kim-scene-layout-spec.md",
+      "symbolOrSection": "scene geometry",
+      "revision": "sha256:796f272021145d717dd92ecceee5ee59432ac73cd486c03c8254c5049c6e3053",
+      "basis": "SOURCE"
+    },
+    {
+      "path": "docs/design/huyen-kim-reference-audit.md",
+      "symbolOrSection": "ownership audit",
+      "revision": "sha256:7ae29534f2efe73c0e4e95d98ae213e71d9402319aa49dd9dab3ff51df098975",
+      "basis": "SOURCE"
+    },
+    {
+      "path": "docs/design/huyen-kim-ui-art-agent-brief.md",
+      "symbolOrSection": "art scope",
+      "revision": "sha256:bc607820c5ca186b88c2b71bc5fc3752b9a0d2d810adfe545ccb8b7e905fca4f",
+      "basis": "SOURCE"
+    },
+    {
+      "path": "docs/design/huyen-kim-ui-art-manifest.json",
+      "symbolOrSection": "existing 43-entry chrome pack",
+      "revision": "sha256:b9a4a5cd8a20af1f8dc2da06ac129d071a710e35fdac10416664007f9642e6ee",
+      "basis": "SOURCE"
+    }
+  ],
+  "expectedChangeSet": [
+    "public/assets/ui/huyen-kim/_source/stable-scene-extension.json",
+    "public/assets/ui/huyen-kim/_source/generate-pack.mjs",
+    "public/assets/ui/huyen-kim/_source/generate-scene-extension.mjs",
+    "public/assets/ui/huyen-kim/_source/stable-scene-extension-qa.json",
+    "public/assets/ui/huyen-kim/_source/generated/**",
+    "public/assets/ui/huyen-kim/symbols/**",
+    "public/assets/ui/huyen-kim/scene/**",
+    "public/assets/ui/huyen-kim/preview/09-*.png through 14-*.png",
+    "docs/design/huyen-kim-ui-art-manifest.json",
+    "docs/design/huyen-kim-ui-art-production-report.md",
+    "docs/design/huyen-kim-stable-scene-art-prompts.md",
+    "docs/design/huyen-kim-frontend-art-handoff.md",
+    "docs/design/huyen-kim-devin-art-handoff-prompt.md",
+    "docs/qa/tasks/2026-10-01-huyen-kim-stable-scene-art*.json",
+    "docs/qa/2026-10-02-huyen-kim-stable-scene-art-quick.md",
+    "docs/qa/protocol/learning.md"
+  ],
+  "slices": [
+    "shared-contract",
+    "background-parallax-contract",
+    "symbol-set",
+    "realm-ascent-vista",
+    "body-cultivation-kit",
+    "tribulation-environment-kit",
+    "equipment-paperdoll-base",
+    "exploration-map-chrome",
+    "technique-display-plinth",
+    "skill-tree-substrate",
+    "auth-creation-vista",
+    "visual-qa-and-handoff"
+  ],
+  "firstProofObligations": [
+    {
+      "oracle": "manifest-driven validator fails on missing outputs, then proves exact dimensions, required alpha, aligned paired scales, aligned parallax canvases with unique depth and bounded drift, text-free intent, and zero gameplay-art output paths",
+      "stage": "BEFORE_WRITE",
+      "admittedSlice": "shared-contract",
+      "evidenceIds": []
+    }
+  ],
+  "unresolvedAssumptions": [],
+  "applicabilityKeys": [
+    "ui-art",
+    "asset-pipeline",
+    "huyen-kim",
+    "image-generation"
+  ]
+}

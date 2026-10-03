@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="vi">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Duyệt khung 9-slice — Động Phủ</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #101b22; color: #eee0bd; font: 16px/1.5 Georgia, serif; }
+  main { padding: 36px; }
+  h1 { font-size: 24px; font-weight: normal; margin: 0 0 8px; }
+  p { color: #b5b6ab; margin: 0 0 28px; }
+  .examples { display: flex; align-items: flex-start; gap: 32px; flex-wrap: wrap; }
+  .column { display: grid; gap: 28px; }
+  .panel { position: relative; display: grid; place-content: center; padding: 32px; text-align: center; }
+  .panel::before {
+    content: ''; position: absolute; inset: 0; pointer-events: none;
+    border: 52px solid transparent;
+    border-image-source: url('/assets/ui/huyen-kim/scene/dong-fu-v2/panel-nine-slice.png');
+    border-image-slice: 360 fill;
+    border-image-width: 52px;
+    border-image-repeat: stretch;
+  }
+  .panel > * { position: relative; }
+  .portrait { width: 320px; height: 460px; }
+  .wide { width: 600px; height: 180px; }
+  .square { width: 252px; height: 252px; }
+  strong { color: #e7c984; font-size: 22px; font-weight: normal; }
+  small { color: #c3b99c; margin-top: 12px; }
+</style>
+<main>
+  <h1>Một texture · ba kích thước khung</h1>
+  <p>Góc 52 px giữ nguyên. Chỉ cạnh và nền giữa co giãn. Đây là bản duyệt asset, chưa phải scene đã tích hợp.</p>
+  <div class="examples">
+    <section class="panel portrait"><strong>Thiên Cơ</strong><small>320 × 460</small></section>
+    <div class="column">
+      <section class="panel wide"><strong>Thông báo</strong><small>600 × 180</small></section>
+      <section class="panel square"><strong>Bảng vuông</strong><small>252 × 252</small></section>
+    </div>
+  </div>
+</main>
+</html>

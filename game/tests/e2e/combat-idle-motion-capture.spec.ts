@@ -241,10 +241,13 @@ test.describe('Combat idle motion (static mode + wave-1 reskins)', { tag: '@capt
     expect(probeGone, 'probe sprite still present after death sequence').toBe(true)
 
     // Player probe (character-art-infra): `ult` is the one clip combat may
-    // never fire on floor 1 (ult slot gating is deep progression). pham_nhan
-    // authors no ult clip (Minh wave 2026-09-29), so driving the ultimate
-    // call exercises the live MISSING_CLIP_FALLBACK degrade onto 'attack' -
-    // play-once, then TRANSITION_DESTINATION lands it on standby.
+    // never fire on floor 1 (ult slot gating is deep progression). Neither
+    // pham_nhan variant authors an ult clip (Minh wave 2026-09-29), so
+    // driving the ultimate call exercises the live MISSING_CLIP_FALLBACK
+    // degrade onto 'attack' - play-once, then TRANSITION_DESTINATION lands
+    // it on standby. The canonical beta starter is linh_bao -> the unarmed
+    // reskin binds 'pham_nhan_unarmed', so the degrade lands on ITS attack
+    // clip (armed 'pham_nhan-attack' applies only to the tram starter).
     const ultAnim = await page.evaluate(() => {
       const w = window as unknown as {
         __tutienPhaserGame?: { scene: { getScene(k: string): unknown } }
@@ -263,7 +266,7 @@ test.describe('Combat idle motion (static mode + wave-1 reskins)', { tag: '@capt
     })
 
     expect(ultAnim.anim, `player ult degrade did not start attack (got '${ultAnim.anim}')`).toBe(
-      'pham_nhan-attack',
+      'pham_nhan_unarmed-attack',
     )
 
     await page
@@ -286,7 +289,7 @@ test.describe('Combat idle motion (static mode + wave-1 reskins)', { tag: '@capt
           sprites: Map<string, { rect: { anims?: { currentAnim?: { key: string } } } }>
         }
         const key = scene.sprites.get('player')?.rect.anims?.currentAnim?.key
-        return typeof key === 'string' && /^pham_nhan-(idle|standby)$/.test(key)
+        return typeof key === 'string' && /^pham_nhan_unarmed-(idle|standby)$/.test(key)
       },
       undefined,
       { timeout: 12_000, polling: 200 },
@@ -484,7 +487,9 @@ test.describe('Combat idle motion (static mode + wave-1 reskins)', { tag: '@capt
       expect(
         sample.playerAnim,
         `reskinned player is not playing a pham_nhan clip (got '${sample.playerAnim}')`,
-      ).toMatch(/^pham_nhan-(idle|standby|attack|death|idle_to_standby|standby_to_idle)$/)
+      // The unarmed variant authors a per-skill cast clip (linh_bao) -
+      // a live combat cast can land mid-sample and is a legal reskin clip.
+      ).toMatch(/^pham_nhan_unarmed-(idle|standby|attack|death|idle_to_standby|standby_to_idle|cast-\w+)$/)
     }
 
     const playerFrames = new Set(playerSamples.map((sample) => sample.playerFrame))

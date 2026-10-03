@@ -4,6 +4,11 @@
 // (TurnSkillDisplayMeta) thay nhan role co dinh; fallback nhan role khi
 // id khong co trong map.
 //
+// BETA FE-CONTRACT sec.3 -- the rail renders the betaCombatRolesFor
+// read-model: basic + special for every beta player; the ultimate role
+// is permanently scope-hidden and never reaches the DOM. The ngo_dao
+// emblem is a separate betaCombatSurfacesFor verdict.
+//
 // Mount theo pattern project (createApp + h, KHONG @vue/test-utils --
 // chua cai, xem CombatExitConfirmModal.test.ts). Mock composable bang
 // vi.mock (hoisted factory).
@@ -11,28 +16,19 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createApp, h, nextTick } from 'vue'
 import { i18n } from '@/i18n'
 import type { TurnSkillPresentationEntry } from '@/core/combat/CombatSkillPresentation'
-import { hasPathCapability } from '@/core/player/CultivationPathSystem'
-import type { CultivationPathId, CultivationWayId, PathCapability } from '@/core/player/CultivationPathKit'
+import { createDefaultPlayer } from '@/core/player/Player'
+import type { PlayerData } from '@/core/player/Player'
+import {
+  betaCombatRolesFor,
+  betaCombatSurfacesFor,
+} from '@/core/betaScopeSkillDomain'
 
 const mocks = vi.hoisted(() => ({
   slotList: [] as TurnSkillPresentationEntry[],
-  cultivationPath: undefined as string | undefined,
-  cultivationWay: undefined as CultivationWayId | undefined,
+  playerState: undefined as unknown as PlayerData,
   chooseSlot: vi.fn(),
   setBattleManualMode: vi.fn(),
   setCombatInputMode: vi.fn(),
-  // Beta scope lock - the role rail the bar consumes. Tests reassign
-  // per case; default = the beta rail (ultimate scope-hidden).
-  rail: [
-    { role: 'basic', skillId: 'tram', state: 'available' },
-    { role: 'special', skillId: null, state: 'progression-locked', reason: 'realm-gate' },
-    { role: 'ultimate', skillId: null, state: 'scope-hidden', reason: 'out-of-beta-scope' },
-  ] as { role: string; skillId: string | null; state: string; reason?: string }[],
-  // P1 - assigned after imports below; delegates to the REAL capability
-  // resolver so the emblem test pins real behavior, not a reimplemented
-  // gate. hasSkill: true models the post-ritual invariant (the ngo_dao
-  // kit assertion makes the dao passive always learned on that way).
-  hasPathCapability: undefined as unknown as (capability: PathCapability) => boolean,
 }))
 
 vi.mock('@/composables/useTurnCombatManual', () => ({
@@ -42,7 +38,7 @@ vi.mock('@/composables/useTurnCombatManual', () => ({
     slotList: { value: mocks.slotList },
     chooseSlot: mocks.chooseSlot,
     // Kiem Tu Reimagined -- no dynamicBasic provider in this fixture:
-    // the orb picker stays hidden and the 3-slot row renders. The
+    // the orb picker stays hidden and the role row renders. The
     // __v_isRef tag is required: template v-if/v-for unrefs these,
     // a bare {value: x} object is truthy and would render a phantom
     // orb button (merged phap_tu_an emblem test caught this).
@@ -52,15 +48,21 @@ vi.mock('@/composables/useTurnCombatManual', () => ({
   }),
 }))
 
+// Canonical-model seam - delegate to the REAL domain functions so the
+// rail/emblem assertions pin real verdicts, not a reimplemented gate.
+// hasSkill: true models the post-ritual invariant (the ngo_dao kit
+// assertion makes the dao passive always learned on that way).
 vi.mock('@/composables/useGameState', () => ({
   useGameManager: () => ({
     setBattleManualMode: mocks.setBattleManualMode,
-    hasPathCapability: (capability: PathCapability) => mocks.hasPathCapability(capability),
-    // Beta scope lock - the rail verdict the bar consumes.
     progressionOps: {
-      betaCombatRolesFor: () => mocks.rail,
+      betaCombatRolesFor: (player: PlayerData) =>
+        betaCombatRolesFor(player, { hasSkill: () => true }),
+      betaCombatSurfacesFor: (player: PlayerData) =>
+        betaCombatSurfacesFor(player, { hasSkill: () => true }),
     },
   }),
+  useStateVersion: () => ({ stateVersion: { value: 0 } }),
 }))
 
 vi.mock('@/stores/ui', () => ({
@@ -72,40 +74,31 @@ vi.mock('@/stores/ui', () => ({
 
 vi.mock('@/stores/player', () => ({
   usePlayerStore: () => ({
-    get cultivationPath() {
-      return mocks.cultivationPath
+    get $state() {
+      return mocks.playerState
     },
-    get cultivationWay() {
-      return mocks.cultivationWay
-    },
-    // $state surfaces as an opaque PlayerData handle for the beta rail
-    // read-model; the mocked betaCombatRolesFor ignores its argument.
-    $state: {},
   }),
 }))
 
 import TurnCombatSkillBar from './TurnCombatSkillBar.vue'
 
-// P1 - bind the facade after imports resolve (vi.mock factories run
-// lazily; the field must be live before the first mount).
-mocks.hasPathCapability = (capability) =>
-  hasPathCapability(
-    {
-      cultivationPath: mocks.cultivationPath as CultivationPathId | undefined,
-      cultivationWay: mocks.cultivationWay,
-    },
-    capability,
-    { hasSkill: () => true },
-  )
+function mortalPlayer(): PlayerData {
+  return createDefaultPlayer()
+}
+
+function qiPlayer(way: 'spell_pathway' | 'hidden_spell_pathway'): PlayerData {
+  return {
+    ...createDefaultPlayer(),
+    realmId: 'qi_refining',
+    cultivationPath: 'spell',
+    cultivationWay: way,
+    mortalBasicSkillId: undefined,
+  }
+}
 
 afterEach(() => {
-  mocks.cultivationPath = undefined
-  mocks.cultivationWay = undefined
-  mocks.rail = [
-    { role: 'basic', skillId: 'tram', state: 'available' },
-    { role: 'special', skillId: null, state: 'progression-locked', reason: 'realm-gate' },
-    { role: 'ultimate', skillId: null, state: 'scope-hidden', reason: 'out-of-beta-scope' },
-  ]
+  mocks.slotList = []
+  mocks.playerState = undefined as unknown as PlayerData
 })
 
 function entry(overrides: Partial<TurnSkillPresentationEntry> = {}): TurnSkillPresentationEntry {
@@ -136,6 +129,7 @@ function mountBar(): HTMLElement {
 
 describe('TurnCombatSkillBar — display label (9.5 #5)', () => {
   it('slot mang skillName → hiển thị tên thật thay nhãn role', async () => {
+    mocks.playerState = mortalPlayer()
     mocks.slotList = [
       entry({ skillId: 'tram', skillName: 'Huy Kiếm', skillDescription: 'Một chiêu thức cơ bản.' }),
       entry(),
@@ -146,15 +140,15 @@ describe('TurnCombatSkillBar — display label (9.5 #5)', () => {
     await nextTick()
 
     expect(container.textContent).toContain('Huy Kiếm')
-    // slot con lai fallback nhan role; the ultimate label is
-    // scope-hidden in beta - the rail verdict keeps it un-rendered.
+    // Special fallback nhan role; ultimate khong bao gio render.
     expect(container.textContent).toContain('Đặc Biệt')
     expect(container.textContent).not.toContain('Tuyệt Kỹ')
 
     appCleanup(container)
   })
 
-  it('không có skillName nào → giữ nguyên nhãn role, ultimate scope-hidden', async () => {
+  it('không có skillName nào → giữ nguyên 2 nhãn role (basic + special)', async () => {
+    mocks.playerState = mortalPlayer()
     mocks.slotList = [entry(), entry(), entry()]
 
     const container = mountBar()
@@ -168,21 +162,12 @@ describe('TurnCombatSkillBar — display label (9.5 #5)', () => {
   })
 })
 
-// Phap Tu Reimagined (Task 16) -- the ngo_dao way owns NO active ultimate: the
-// ult slot is the ngo_dao_hon_don dao passive, rendered as an emblem,
-// never a button (spec S3.3). BETA SCOPE LOCK v2: the hidden way itself
-// is scope-hidden, so on a hidden-way save the beta rail hides every
-// role -- the emblem never renders (dormant UI may not appear, and the
-// save is flagged unsupported under contract sec.H anyway).
-describe('TurnCombatSkillBar — ngo_dao passive emblem (scope-hidden way)', () => {
-  it('hidden way: the beta rail renders nothing -- no buttons, no emblem', async () => {
-    mocks.cultivationPath = 'spell'
-    mocks.cultivationWay = 'hidden_spell_pathway'
-    mocks.rail = [
-      { role: 'basic', skillId: null, state: 'scope-hidden', reason: 'non-beta-way' },
-      { role: 'special', skillId: null, state: 'scope-hidden', reason: 'non-beta-way' },
-      { role: 'ultimate', skillId: null, state: 'scope-hidden', reason: 'non-beta-way' },
-    ]
+// Phap Tu Reimagined (Task 16) -- the ngo_dao emblem is a
+// betaCombatSurfacesFor verdict, not a role button (spec S3.3): it
+// renders only while 'an-ultimate-emblem' is 'available'.
+describe('TurnCombatSkillBar — ngo_dao passive emblem', () => {
+  it('hidden way → emblem ngo_dao_hon_don renders, KHÔNG phải button', async () => {
+    mocks.playerState = qiPlayer('hidden_spell_pathway')
     mocks.slotList = [
       entry({ skillId: 'van_phap_tuy_tam', skillName: 'Vạn Pháp Tùy Tâm' }),
       entry({ skillId: 'da_phap_lien_tuyen', skillName: 'Đa Pháp Liên Tuyến' }),
@@ -192,18 +177,21 @@ describe('TurnCombatSkillBar — ngo_dao passive emblem (scope-hidden way)', () 
     const container = mountBar()
     await nextTick()
 
+    // Emblem present with the passive name + tag.
+    expect(container.textContent).toContain('Ngộ Đạo Hỗn Độn')
+    expect(container.textContent).toContain('Bị Động')
+    expect(container.textContent).not.toContain('Tuyệt Kỹ')
+
+    // Exactly 2 buttons (basic + special) -- the emblem is a div.
     const buttons = container.querySelectorAll('button.turn-combat-skill-bar__slot-button')
 
-    expect(buttons).toHaveLength(0)
-    expect(container.querySelector('.turn-combat-skill-bar__emblem')).toBeNull()
-    expect(container.textContent).not.toContain('Ngộ Đạo Hỗn Độn')
+    expect(buttons).toHaveLength(2)
 
     appCleanup(container)
   })
 
-  it('beta way: ultimate slot does not render (scope-hidden role)', async () => {
-    mocks.cultivationPath = 'spell'
-    mocks.cultivationWay = 'spell_pathway'
+  it('path thường → 2 role buttons, no emblem, no ultimate slot', async () => {
+    mocks.playerState = qiPlayer('spell_pathway')
     mocks.slotList = [entry(), entry(), entry()]
 
     const container = mountBar()

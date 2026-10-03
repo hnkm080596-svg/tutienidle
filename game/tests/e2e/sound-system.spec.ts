@@ -127,10 +127,12 @@ test.describe('Sound system', () => {
     await expect.poll(async () => (await cues(page)).includes('combat.crit')).toBe(true)
     await expect.poll(async () => (await cues(page)).includes('combat.victory')).toBe(true)
 
-    // (5): settings sliders + shake toggle.
+    // (5): settings sliders + shake toggle - scene 17 seal nav puts the
+    // sliders under the 'audio' section.
     await settingsSlot.click()
     const panel = page.locator('.settings-panel')
     await expect(panel).toBeVisible({ timeout: 10_000 })
+    await panel.locator('.settings-panel__nav-seal[data-section="audio"]').click()
 
     const sfxSlider = page.getByTestId('settings-audio-sfxVolume')
     await expect(sfxSlider).toBeVisible()
@@ -146,7 +148,9 @@ test.describe('Sound system', () => {
     const settingsSlot2 = page.locator('[data-wheel-slot="settings"]')
     await expect(settingsSlot2).toBeVisible({ timeout: 10_000 })
     await settingsSlot2.click()
-    await expect(page.locator('.settings-panel')).toBeVisible({ timeout: 10_000 })
+    const reopenedPanel = page.locator('.settings-panel')
+    await expect(reopenedPanel).toBeVisible({ timeout: 10_000 })
+    await reopenedPanel.locator('.settings-panel__nav-seal[data-section="audio"]').click()
 
     await expect(page.getByTestId('settings-audio-sfxVolume')).toHaveValue('30')
     await expect(page.getByTestId('settings-reduced-shake')).toHaveAttribute(

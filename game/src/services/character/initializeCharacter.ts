@@ -96,4 +96,9 @@ export function initializeCharacter(
   }
 
   gameManager.setActivePlayer(player)
+
+  // Activate eligible quests now - the tick path only reconciles on
+  // daily rollover / realm transitions / restore, so a fresh character
+  // would otherwise see an empty quest board until the first reload.
+  gameManager.tickOps.reconcileQuestLifecycle()
 }

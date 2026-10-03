@@ -187,8 +187,8 @@ describe('ARCH-005 (M12) — combat HUD reactivity over the in-place-mutated Tur
     await bump()
 
     expect(container.querySelector('.turn-combat-skill-bar')).not.toBeNull()
-    // BETA SCOPE LOCK v2 - the rail's scope-hidden ultimate slot no
-    // longer renders; basic + special remain.
+    // Mortal rail = basic + progression-locked special; the ultimate
+    // role is scope-hidden and never renders a slot.
     expect(container.querySelectorAll('.turn-combat-skill-bar__slot-button')).toHaveLength(2)
     expect(container.querySelector('.turn-order-strip')).not.toBeNull()
 

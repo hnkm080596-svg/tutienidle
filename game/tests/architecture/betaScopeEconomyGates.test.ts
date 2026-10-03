@@ -287,19 +287,22 @@ describe('sec.13 workforce - automatic allocation is the only beta path', () => 
     expect(gm.productionSystem.setWorkerAssignment('thanh_van_lam', undefined, 5)).toBe(false)
   })
 
-  it('worker lodge read-model resolves tab verdicts without companion-domain logic', () => {
+  it('worker lodge read-model resolves EVERY tab scope-hidden (final hide-completely policy)', () => {
     const gm = new GameManager()
-    const surface = gm.buildingOps.getWorkerLodgeSurfaceModel()
+    const surface = gm.buildingOps.getWorkerLodgeSurfaceModel(foundationPlayer())
 
     expect(surface.tabs.map((tab) => tab.id)).toEqual([...BETA_WORKER_LODGE_TABS])
 
+    // FINAL POLICY (sec.4C): the whole Worker Lodge surface is out of
+    // beta scope - nhan_cong is bound to manualWorkforce like the
+    // building surface/wheel/left-panel mode; companion tabs resolve
+    // scope-hidden as before. Automatic production keeps running with
+    // no UI.
     const workforce = surface.tabs.find((tab) => tab.id === 'nhan_cong')
-    expect(workforce?.verdict).toBe('available')
-    // Manual assignment itself is scope-hidden; the site runs
-    // automatic allocation.
+    expect(workforce?.verdict).toBe('scope-hidden')
     expect(workforce?.manualAssignOffered).toBe(false)
 
-    for (const tab of surface.tabs.filter((entry) => entry.id !== 'nhan_cong')) {
+    for (const tab of surface.tabs) {
       expect(tab.verdict).toBe('scope-hidden')
     }
   })

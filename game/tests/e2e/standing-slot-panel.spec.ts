@@ -1,4 +1,5 @@
 import { expect, test, type Page } from './fixtures'
+import { BETA_FEATURES } from '../../src/core/betaFeatureFlags'
 import {
   bootToGuestHome,
   createCharacterThroughUi,
@@ -174,6 +175,8 @@ async function dragCardToCell(page: Page, cardIndex: number, cellIndex: number):
 
 test.describe('Standing slot panel (P14)', () => {
   test('panel opens, drag-drop works without crash, 3x3 grid with distinct occupied state', async ({ page }) => {
+    // The Tran Phap wheel slot is scope-hidden under the beta lock.
+    test.skip(!BETA_FEATURES.formation, 'formation scope-hidden under the beta lock')
     test.setTimeout(300_000)
 
     await bootToGuestHome(page)
@@ -242,9 +245,12 @@ test.describe('Standing slot panel (P14)', () => {
     await expect(choice).toBeEnabled({ timeout: 15_000 })
     await choice.click()
 
-    const confirm = page.locator('.confirm-modal__confirm')
-    await expect(confirm).toBeVisible({ timeout: 10_000 })
-    await confirm.click()
+    // Beta initiation is atomic: element-axis ways commit on the element
+    // pick itself - no generic confirm modal appears (spell_pathway is
+    // the only beta-offerable way and it declares the element axis).
+    const elementButton = page.locator('.quan-khi-panel__element-btn').first()
+    await expect(elementButton).toBeVisible({ timeout: 10_000 })
+    await elementButton.click()
     await expect(page.locator('.overlay-panel')).toHaveCount(0, { timeout: 10_000 })
 
     if (await announcement.isVisible().catch(() => false)) {

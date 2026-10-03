@@ -148,8 +148,8 @@ describe('TurnActionPresentationEvents', () => {
       emitTurnBattleEntitySnapshot(eventBus, battle)
 
       expect(received).toHaveLength(1)
-      expect(received[0]!.players).toEqual([{ id: 'player', name: 'Player', row: 4, column: 1, currentHp: 80, maxHp: 100, alive: true, isBoss: false }])
-      expect(received[0]!.enemies).toEqual([{ id: 'enemy', name: 'Boss Enemy', row: 5, column: 9, currentHp: 0, maxHp: 50, alive: false, isBoss: true }])
+      expect(received[0]!.players).toEqual([{ id: 'player', name: 'Player', row: 4, column: 1, currentHp: 80, maxHp: 100, currentMp: 0, maxMp: 0, alive: true, isBoss: false }])
+      expect(received[0]!.enemies).toEqual([{ id: 'enemy', name: 'Boss Enemy', row: 5, column: 9, currentHp: 0, maxHp: 50, currentMp: 0, maxMp: 0, alive: false, isBoss: true }])
     })
 
     it('defaults isBoss to false when CombatEntity.isBoss is undefined', () => {
@@ -322,6 +322,8 @@ describe('TurnActionPresentationEvents', () => {
         column: 0,
         currentHp: 10,
         maxHp: 10,
+        currentMp: 0,
+        maxMp: 0,
         alive: true,
         isBoss: false,
       })

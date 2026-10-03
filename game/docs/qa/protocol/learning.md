@@ -151,6 +151,20 @@ Each candidate must pass the promotion predicate during Devin adoption before be
   - **Detector escape:** the FakeUpdater in tests accepted any signature; semantics only live in electron-updater docs, not types.
   - **Pin/attack proposal:** for provider-boundary adapters, pin every defaulted argument that carries a journey invariant in the adapter comment AND verify launch-failure recovery (state returns to a retryable phase). Qualify as CANDIDATE.
 
+
+### 2026-09-30 huyen-kim-primitives (Phase-1 reskin worker) - escapes + one base defect
+
+- **Incident:** New `InkNineSlice` chrome layer mounted inside `ToastContainer` painted an opaque fill ABOVE the toast's non-positioned text/icon children (absolute z=1 beats static content inside an isolated stacking context) - toasts would have rendered as blank tinted boxes.
+  - **Root class:** L-ZINDEX-OVERLAY - adding a positioned chrome layer under a "sibling" content tree without lifting the content. Same pattern was already pinned in `ConfirmModal` (`> :not(.ink-nine-slice)` lift) but the rule was not generalized to every new slice consumer.
+  - **Detector escape:** jsdom unit tests assert attribute presence, never paint order; scoped vitest stayed green while the render was visually empty.
+  - **Pin/attack proposal:** for every new InkNineSlice/chrome mount, enumerate the sibling content tree and require `position + z-index >= slice layer` on each (or a `> :not(.ink-nine-slice)` lift rule); P5 passes must inspect stacking context, not just DOM presence. Qualify as CANDIDATE.
+- **Incident:** `--hk-shadow-low/high` (declared as rgba COLOR tokens) were dropped into bare `box-shadow: var(--hk-shadow-low)` declarations - invalid, so the whole declaration was discarded in 5 sites (tooltip/toast/overlay/confirm/slot-shadow).
+  - **Root class:** L-TOKEN-SHAPE-MISMATCH - reusing a token under a shorthand position that requires a different value shape (full shadow spec vs color).
+  - **Detector escape:** CSS declarations fail silently; no lint asserts token/shape fit; unit tests don't read computed styles.
+  - **Pin/attack proposal:** when retokening, verify each token's VALUE SHAPE against the property grammar (color vs length vs list); a grep for `box-shadow: var(--` with color-valued tokens is a cheap pin. Qualify as CANDIDATE.
+- **Out-of-scope finding (base defect, frozen file):** `src/assets/huyen-kim.tokens.css:9` doc comment contains `--ink-*/--paper-*`; the `*/` inside `--ink-*` terminates the comment early and the browser discards the ENTIRE `:root` block - every `--hk-*` var resolves empty at runtime AND `lightningcss` minify fails `npm run build` (`Unexpected token Delim('*')`). Verified: dev server serves the file, computed `getPropertyValue('--hk-density-ceremonial-height')` is `''`, and injecting a vars shim restores the reskinned primitives (48px ceremonial button, tinted slice). Reported to coordinator; foundation file was not modified per scope.
+
+
 ### 2026-09-30 qa-fixpoint-master (beta-scope-v2 master gate) - 9 incidents across 15 findings
 
 - **Incident:** carried-save hidden-progression records kept applying effects into live play (F-DL-1 stat-cap inflation, F-DL-2 enhanced realm passive) on a save the reader itself flagged unsupported.
@@ -518,3 +532,17 @@ Each candidate must pass the promotion predicate during Devin adoption before be
   - **Root class:** L-WAY-CAPABILITY-VERDICT - CONSUMER (shared-predicate bypass recurrence).
   - **Detector escape:** same class as B18 - consumers enumerated raw catalogs (stat label list, material stacks) instead of consulting the scope verdicts; the gated WRITE seams stayed closed while a display surface branded the dormant domain.
   - **Pin/attack proposal:** every consumer rendering a catalog enumeration must apply the scope predicate at the same seam the entries pass through - new stat/display keys need an admission row (BETA_SCOPE_HIDDEN_STAT_KEYS, isDomainScopedAcquisitionEnabled), and tab badges must count the filtered set, not the raw bag.
+
+
+### 2026-10-02 huyen-kim-stable-scene-art - generator replay escapes caught before handoff
+
+- **Incident:** The pre-extension core chrome generator rewrote the shared manifest and production report from scratch. Replaying it after adding the stable scene package would silently remove the stable-scene manifest contract and its parallax handoff evidence.
+  - **Root class:** L-MULTI-PRODUCER-CLOBBER - an older producer treated a now-shared aggregate artifact as exclusively owned output.
+  - **Detector escape:** final-file census and image inspection exercised the extension generator but did not replay every older producer against the integrated state.
+  - **Evidence:** SOURCE_PROOF from the unconditional manifest/report writes, followed by an isolated clean-tree replay after repair that retained `stable_scene_extension`, aggregate count 154, and the exact integrated-report hash.
+  - **Pin/attack proposal:** every additive asset-pack extension must replay all producers of shared manifests/reports in an isolated tree and assert preservation of unknown/additive sections. Capture as CANDIDATE; independent qualification is still required before promotion.
+- **Incident:** The core generator assumed `preview/` already existed. A populated worktree hid the problem; the first isolated clean-tree replay failed when Sharp opened `preview/01-p0-foundation.png` for writing.
+  - **Root class:** L-IMPLICIT-FILESYSTEM-PRECONDITION - a producer depended on a directory created by prior local history rather than owning creation of its output parents.
+  - **Detector escape:** regeneration had only been run in the existing populated pack, not in a clean output root.
+  - **Evidence:** EXECUTED_TOOLING failure in the isolated replay, then a successful clean replay producing all nine preview sheets after the generator created each output parent.
+  - **Pin/attack proposal:** asset-generator qualification must include a clean-root replay with no output directories, followed by exact output and preservation census. Capture as CANDIDATE; independent qualification is still required before promotion.

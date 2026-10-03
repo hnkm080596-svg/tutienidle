@@ -166,7 +166,7 @@ describe('combat build resolution on a carried way_out_of_scope save', () => {
 describe('survive-lethal charges minted from carried talent ids', () => {
   it('a forged non-beta talent list mints zero lethal-survival uses', () => {
     const guard = new SurviveLethalGuard()
-    guard.beginBattle(['pham_nhan_chi_cot', 'tran_tam'], {})
+    guard.beginBattle(['pham_nhan_chi_cot', 'tran_tam', 'phu_van'], {})
     expect(guard.getRemainingUses()).toBe(0)
     expect(guard.tryConsumeUse()).toBe(false)
   })
@@ -230,11 +230,12 @@ describe('dormant talent effects', () => {
     // rollable easter-egg talent, so an owned id emits. The hidden Dai
     // Dao conversion stays locked: pham_nhan_chi_cot (+75%) is minted
     // only by that path, so a carried id still mints nothing.
-    expect(collectTalentEffects(['pham_cot', 'pham_nhan_chi_cot'], {})).toEqual([
+    expect(collectTalentEffects(['pham_cot', 'pham_nhan_chi_cot', 'tran_tam'], {})).toEqual([
       { kind: 'cultivation_speed', percent: -0.75 },
     ])
     // pham_cot carries no combat passive.
     expect(getTalentCombatPassiveSkillId(['pham_cot'], {})).toBeUndefined()
+    expect(getTalentCombatPassiveSkillId(['pham_nhan_chi_cot'], {})).toBeUndefined()
     expect(collectTalentEffects(['pham_nhan_chi_cot'], {})).toEqual([])
   })
 
