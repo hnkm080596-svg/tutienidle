@@ -5,11 +5,13 @@
 // Commands keep their owners - allocation goes through
 // useProgressionActions (domain gate: points/cap/in-battle), navigation
 // through the ui store / building navigation. No domain state lives here.
+// The five element discs were removed - only the hand effect slot stays
+// (CharacterFidelityFigure); element data keeps the summary row.
 import { computed, onBeforeUnmount, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useUiStore } from '@/stores/ui'
 import { usePlayerStore } from '@/stores/player'
-import { useStateVersion } from '@/composables/useGameState'
+import { useStateVersion, useGameManager } from '@/composables/useGameState'
 import { useProgressionActions } from '@/composables/useProgressionActions'
 import { useTurnBattleInfo } from '@/composables/useTurnBattleInfo'
 import { usePaperNavigation } from '@/composables/usePaperNavigation'
@@ -17,22 +19,25 @@ import { getCurrentRealm } from '@/core/realm/realmSystem'
 import { CULTIVATION_PATH_MODULES } from '@/core/player/CultivationPathKit'
 import type { CultivationPathId } from '@/core/player/CultivationPathKit'
 import { BASE_STAT_LABELS, formatStat, type StatCategory } from '@/core/stats/StatLabels'
-import { MAIN_STAT_KEYS, type MainStatKey } from '@/core/stats/StatTypes'
+import { MAIN_STAT_KEYS, type MainStatKey, type StatType } from '@/core/stats/StatTypes'
+import type { ModifierSourceType } from '@/core/stats/StatCalculator'
+import { resolvePlayerStatAssembly } from '@/core/player/Player'
+import { buildStatSources, type StatSourceContext } from './fidelity/statSources'
 import { getEffectiveMainStatCap } from '@/core/stats/StatCap'
 import { ELEMENT_LABELS, ELEMENT_ORDER } from '@/core/element/ElementLabels'
-import type { ElementType } from '@/core/element/ElementType'
 import { formatNumber } from '@/core/format/NumberFormatter'
 import { getTalentDefinition } from '@/data/talent/Talents'
 import { isBetaStatLabelVisible, isBetaTalentId } from '@/core/betaScope'
 import type { Stats } from '@/core/stats/StatBlock'
 import SceneDesignCanvas from '@/components/common/SceneDesignCanvas.vue'
 import CharacterFidelityScene from './fidelity/CharacterFidelityScene.vue'
-import type { CharacterUiModel, CharacterUiStat } from './fidelity/characterUi'
+import type { CharacterUiModel, CharacterUiStat, CharacterUiStatSources } from './fidelity/characterUi'
 
 
 const { t } = useI18n()
 const ui = useUiStore()
 const player = usePlayerStore()
+const gameManager = useGameManager()
 const { stateVersion } = useStateVersion()
 const { allocateAttributePoint } = useProgressionActions()
 const { isBattleInProgress: inBattle } = useTurnBattleInfo()
@@ -47,8 +52,6 @@ function flashNotice(text: string) {
 }
 onBeforeUnmount(() => { if (noticeTimer !== undefined) clearTimeout(noticeTimer) })
 
-const selectedElement = ref<string | null>(null)
-
 // Stat row order + seals/colors from the approved ui-character layout.
 const STAT_ORDER = ['vitality', 'strength', 'dexterity', 'attunement', 'intelligence'] as const
 type StatId = (typeof STAT_ORDER)[number]
@@ -58,15 +61,6 @@ const STAT_LAYOUT: Record<StatId, { color: string; symbol: string }> = {
   dexterity: { color: '#477f47', symbol: 'exploration' },
   attunement: { color: '#357c97', symbol: 'realm' },
   intelligence: { color: '#77419b', symbol: 'skill' },
-}
-
-// Element pentagon anchors from the approved layout (design px).
-const ELEMENT_POSITION: Record<ElementType, { x: number; y: number }> = {
-  fire: { x: 645, y: 194 },
-  wood: { x: 493, y: 267 },
-  earth: { x: 794, y: 267 },
-  water: { x: 481, y: 411 },
-  metal: { x: 803, y: 411 },
 }
 
 const DETAIL_CATEGORIES: Record<'combat' | 'other', readonly StatCategory[]> = {
@@ -92,14 +86,19 @@ const pathName = computed(() => {
   return (pathId && CULTIVATION_PATH_MODULES[pathId]?.name) ?? t('panels.skillPath.mortalName')
 })
 
-function detailRows(categories: readonly StatCategory[]) {
+function detailRows(
+  categories: readonly StatCategory[],
+  stats: Stats,
+  sourcesFor: (stat: StatType) => CharacterUiStatSources,
+) {
   return BASE_STAT_LABELS
     .filter((stat) => categories.includes(stat.category) && isBetaStatLabelVisible(stat.key))
     .map((stat) => ({
       id: stat.key,
       label: stat.label,
-      value: formatStat(stat.key, player.finalStats[stat.key]),
+      value: formatStat(stat.key, stats[stat.key]),
       description: stat.description,
+      sources: sourcesFor(stat.key),
     }))
 }
 
@@ -107,6 +106,25 @@ const model = computed<CharacterUiModel>(() => {
   stateVersion.value
   const realm = getCurrentRealm(player.realmId)
   const cap = getEffectiveMainStatCap(player)
+
+  // One assembly resolve per state bump feeds BOTH the shown values
+  // and the per-source breakdown (same modifier set the formula ran).
+  const assembly = resolvePlayerStatAssembly(player.$state, player.externalModifiers)
+  const resolved = assembly.stats
+  const sourceContext: StatSourceContext = {
+    player: player.$state,
+    pipelineBase: assembly.pipelineBase,
+    bodyBaseDeltas: assembly.bodyBaseDeltas,
+    modifiers: assembly.modifiers,
+    nodeRegistry: gameManager.nodeRegistry,
+    equipmentBag: gameManager.equipmentBag,
+    getEquipmentTemplate: (itemId) => gameManager.equipmentOps.getEquipmentTemplate(itemId),
+    zoneRegistry: gameManager.zoneRegistry,
+  }
+  const sourcesFor = (stat: StatType) =>
+    buildStatSources(stat, sourceContext, (sourceType: ModifierSourceType) =>
+      t(`character.sources.${sourceType}`),
+    )
 
   const stats: CharacterUiStat[] = STAT_ORDER.map((id) => {
     const entry = BASE_STAT_LABELS.find((stat) => stat.key === id)
@@ -116,16 +134,17 @@ const model = computed<CharacterUiModel>(() => {
       id,
       label: entry?.label ?? id,
       description: entry?.description,
-      value: formatStat(id as keyof Stats, player.finalStats[id as keyof Stats]),
+      value: formatStat(id as keyof Stats, resolved[id as keyof Stats]),
       fill: isMain ? Math.min(100, (player.baseStats[id as MainStatKey] / Math.max(1, cap)) * 100) : 0,
       color: STAT_LAYOUT[id].color,
       symbol: STAT_LAYOUT[id].symbol,
+      sources: sourcesFor(id),
       capped,
       allocatable: isMain && player.attributePoints > 0 && !capped && !inBattle.value,
     }
   })
 
-  const powers = ELEMENT_ORDER.map((element) => Math.max(0, player.finalStats[`${element}Power` as keyof Stats] ?? 0))
+  const powers = ELEMENT_ORDER.map((element) => Math.max(0, resolved[`${element}Power` as keyof Stats] ?? 0))
   const totalPower = powers.reduce((sum, power) => sum + power, 0)
 
   return {
@@ -139,10 +158,8 @@ const model = computed<CharacterUiModel>(() => {
       name: ELEMENT_LABELS[element],
       share: `${totalPower > 0 ? Math.round(((powers[index] ?? 0) / totalPower) * 100) : 0}%`,
       power: formatNumber(powers[index] ?? 0),
-      resistance: formatStat(`${element}Resistance` as keyof Stats, player.finalStats[`${element}Resistance` as keyof Stats] ?? 0),
-      penetration: formatStat(`${element}Penetration` as keyof Stats, player.finalStats[`${element}Penetration` as keyof Stats] ?? 0),
-      x: ELEMENT_POSITION[element].x,
-      y: ELEMENT_POSITION[element].y,
+      resistance: formatStat(`${element}Resistance` as keyof Stats, resolved[`${element}Resistance` as keyof Stats] ?? 0),
+      penetration: formatStat(`${element}Penetration` as keyof Stats, resolved[`${element}Penetration` as keyof Stats] ?? 0),
     })),
     talents: player.selectedTalentIds.flatMap((talentId) => {
       const talent = getTalentDefinition(talentId)
@@ -150,8 +167,8 @@ const model = computed<CharacterUiModel>(() => {
         ? [{ id: talent.id, name: talent.name, description: talent.description, rarity: talent.rarity }]
         : []
     }),
-    combat: detailRows(DETAIL_CATEGORIES.combat),
-    other: detailRows(DETAIL_CATEGORIES.other),
+    combat: detailRows(DETAIL_CATEGORIES.combat, resolved, sourcesFor),
+    other: detailRows(DETAIL_CATEGORIES.other, resolved, sourcesFor),
     attributePoints: player.attributePoints,
   }
 })
@@ -175,7 +192,6 @@ function onSelect(id: string) {
 }
 
 function onElement(id: string) {
-  selectedElement.value = id
   const element = model.value.elements.find((entry) => entry.id === id)
   if (element) {
     flashNotice(t('character.elementNotice', { name: element.name, power: element.power, resistance: element.resistance, penetration: element.penetration }))
@@ -191,15 +207,11 @@ function onAllocate(id: string) {
   <SceneDesignCanvas overlay>
     <CharacterFidelityScene
       :model="model"
-      :selected-element="selectedElement"
       :notice="notice"
       :navigation="navItems"
-      :details-open="ui.characterDetailOpen"
       @select="onSelect"
-      @element="onElement"
       @navigate="navigate"
       @allocate="onAllocate"
-      @toggle-details="ui.toggleCharacterDetail()"
       @back="ui.closeHomeOverlays()"
     />
   </SceneDesignCanvas>

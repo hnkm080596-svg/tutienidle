@@ -130,11 +130,6 @@ export const useUiStore = defineStore('ui', {
     // keeps governing whether the overlay is open at all.
     characterSceneTab: 'character' as 'character' | 'inventory',
 
-    // Detail stat card - small card docked at the right edge of the
-    // Character drawer (LeftPanel), toggled by a button in
-    // CharacterPanel. Transient per session, NOT persisted to save.
-    characterDetailOpen: false,
-
     // Command wheel (dong-fu-command-wheel plan) - mo/dong bang click
     // nhan vat tu luyen giua Dong Phu; Escape/click vung trong dong.
     // Transient theo phien, KHONG luu save.
@@ -223,7 +218,7 @@ export const useUiStore = defineStore('ui', {
         if (this.characterOverlayOpen) {
           this.characterSceneTab = mode
           this.activeBagTab = 'equipment'
-        } else this.characterDetailOpen = false
+        }
         return
       }
       const shouldClose = this.leftPanelMode === mode
@@ -266,15 +261,10 @@ export const useUiStore = defineStore('ui', {
       this.standalonePanel = panel
     },
 
-    toggleCharacterDetail() {
-      this.characterDetailOpen = !this.characterDetailOpen
-    },
-
     /** Dong toan bo chrome/overlay cua Dong Phu khi click nen chinh. */
     closeHomeOverlays() {
       this.leftPanelMode = null
       this.characterOverlayOpen = false
-      this.characterDetailOpen = false
       this.standalonePanel = null
       this.activeBuildingPopoverId = null
       this.isCommandWheelOpen = false

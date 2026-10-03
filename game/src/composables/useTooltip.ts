@@ -198,6 +198,23 @@ export interface ElementTooltipContent {
   description?: string
 }
 
+// Aggregate-stat tooltip (character stat board source breakdown) - the
+// stat title + its resolved aggregate + the per-source fold (base row,
+// then each contributing source + its Added/Increased/More amounts).
+// Reuses the item-info-card section/row vocabulary.
+export interface StatBreakdownTooltipContent {
+  kind: 'stat'
+
+  name: string
+
+  /** Pre-formatted aggregate value shown beside the title. */
+  total?: string
+
+  description?: string
+
+  sections: TooltipSection[]
+}
+
 export type TooltipContent =
   | PlainTooltipContent
   | TechniqueTooltipContent
@@ -205,6 +222,7 @@ export type TooltipContent =
   | EquipmentTooltipContent
   | BuildingTooltipContent
   | ElementTooltipContent
+  | StatBreakdownTooltipContent
 
 // State module-level (khong phai Pinia) - chi 1 tooltip hien thi
 // tai 1 thoi diem trong toan game, khong can theo doi lich su/persist.

@@ -2,16 +2,15 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '@/stores/player'
-import { useUiStore } from '@/stores/ui'
 import { BASE_STAT_LABELS, formatStat, type StatCategory } from '@/core/stats/StatLabels'
 import { isBetaStatLabelVisible } from '@/core/betaScope'
 
 // Detail stat card - split out of CharacterPanel (which now keeps only
 // the meridian figure + Ngu Hanh) and docked to the right edge of the
-// Character drawer (rendered by LeftPanel.vue). Toggled via ui.characterDetailOpen.
+// Character drawer. The Chi Tiet toggle mechanism was removed: the
+// fidelity dock is always open.
 const { t } = useI18n()
 const player = usePlayerStore()
-const ui = useUiStore()
 
 const STAT_CATEGORY_KEYS: Record<Exclude<StatCategory, 'attribute'>, string> = {
   combat: 'panels.character.sections.combat',
@@ -42,12 +41,6 @@ const statGroups = computed(() =>
   <aside class="character-detail sys-surface" data-testid="character-detail-card" data-hk-region="chi-tiet-drawer" role="complementary">
     <div class="character-detail__head">
       <h4 class="character-detail__title">{{ t('panels.character.labels.detailsTitle') }}</h4>
-      <button
-        type="button"
-        class="character-detail__close"
-        :aria-label="t('panels.character.actions.details')"
-        @click="ui.toggleCharacterDetail()"
-      >✕</button>
     </div>
 
     <div class="character-detail__body scrollfade">
