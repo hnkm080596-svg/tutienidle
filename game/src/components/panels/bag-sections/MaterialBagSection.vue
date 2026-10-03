@@ -27,7 +27,7 @@ import { betaMaterialStackVisible } from '@/core/betaScope'
 import { usePlayerStore } from '@/stores/player'
 import type { BagCell } from './BagCell'
 import type { Material, MaterialCategory } from '@/core/material/Material'
-import { createMaterialTooltipBuilder, materialRealmLabel, professionRankOfMaterial } from './materialTooltip'
+import { createMaterialTooltipBuilder, materialRealmLabel, professionRankOfMaterial } from '@/composables/useMaterialTooltip'
 
 const { t } = useI18n()
 
@@ -77,7 +77,7 @@ const SORT_OPTIONS = computed<Array<BagSortOption & { value: MaterialSortMode }>
   { value: 'source', label: t('panels.bag.sort.source') },
 ])
 
-// Material item-info card builder now lives in materialTooltip.ts -
+// Material item-info card builder now lives in useMaterialTooltip.ts -
 // see createMaterialTooltipBuilder above.
 
 const ui = useUiStore()

@@ -41,8 +41,8 @@ const model = computed<ExplorationPaperModel>(() => ({
 // info card on hover (drop amount is part of the card).
 const EQUIPMENT_ANY_ICON = resolveAssetUrl('/assets/ui/huyen-kim/symbols/equipment.svg')
 const rewards = [
-  { label: 'Linh thạch', amount: '2.000', tooltip: { kind: 'plain', title: 'Linh Thạch', description: 'Tiền tệ tu luyện chung.' } },
-  { label: 'Tâm pháp tinh thông', amount: '50', tooltip: { kind: 'plain', title: 'Tâm Pháp Tinh Thông', description: 'Điểm tinh thông tâm pháp.' } },
+  { label: 'Linh thạch', amount: '×2.000', tooltip: { kind: 'plain', title: 'Linh Thạch', description: 'Tiền tệ tu luyện chung.' } },
+  { label: 'Tâm pháp tinh thông', amount: '×50', tooltip: { kind: 'plain', title: 'Tâm Pháp Tinh Thông', description: 'Điểm tinh thông tâm pháp.' } },
   { label: 'Linh Mộc', amount: '×5–8', icon: resolveAssetUrl('/assets/materials/linh_moc.png'), tooltip: { kind: 'plain', title: 'Linh Mộc', description: 'Gỗ linh khí, nguyên liệu phổ biến của Thanh Vân.\nSố lượng rơi: ×5–8' } },
   { label: 'Trang bị bất kỳ', amount: '×1', icon: EQUIPMENT_ANY_ICON, tooltip: { kind: 'plain', title: 'Trang Bị Bất Kỳ', description: 'Một món trang bị ngẫu nhiên từ kho chung.\nSố lượng rơi: ×1' } },
 ] as const

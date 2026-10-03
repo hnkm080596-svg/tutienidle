@@ -2,7 +2,7 @@
 import { useI18n } from 'vue-i18n'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import SlotView from '@/components/common/SlotView.vue'
-import type { ExplorationPaperModel, ExplorationDetail, ExplorationReward } from './explorationUi'
+import type { ExplorationPaperModel, ExplorationDetail } from './explorationUi'
 defineProps<{ model: ExplorationPaperModel; stage: ExplorationDetail | null; notice: string }>()
 const emit = defineEmits<{ mode: [id: string]; stopFarm: []; openBuild: []; start: [] }>()
 const { t } = useI18n()
@@ -23,7 +23,7 @@ const paper = resolveAssetUrl('/assets/ui/huyen-kim/scene/character-v2/paper-nin
         <p v-if="stage.enemySummary" class="enemy-summary">{{ stage.enemySummary }}</p>
         <p class="enemy-name">{{ stage.enemyLabel }}</p>
         <h3 class="section-heading">{{ t('exploration.rewards') }}</h3>
-        <div class="rewards"><div v-for="(reward, index) in stage.rewards" :key="index" class="reward"><SlotView :item="reward" :icon="reward.icon" :label="reward.label" :accessible-label="`${reward.label} ${reward.amount}`" :tooltip="reward.tooltip" show-label /><strong>{{ reward.amount }}</strong></div></div>
+        <div class="rewards"><div v-for="(reward, index) in stage.rewards" :key="index" class="reward"><SlotView :item="reward" :icon="reward.icon" :label="reward.label" :accessible-label="[reward.label, reward.amount].filter(Boolean).join(' ')" :tooltip="reward.tooltip" show-label /><strong>{{ reward.amount }}</strong></div></div>
       </div>
       <!-- Mode chips stay OUT of the scrollable body - arming a mode is
            part of the primary start flow and must never clip behind

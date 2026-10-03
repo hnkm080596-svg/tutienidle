@@ -1,7 +1,9 @@
 // Shared builder for the material item-info card (extracted from
 // MaterialBagSection.vue's buildTooltip): the bag passes `owned`,
 // drop previews (exploration reward cells) pass `extraRows` for drop
-// amount/chance rows instead. Label maps are built once per factory.
+// amount/chance rows instead. Label values resolve inside the builder
+// per call so a live locale switch re-translates the whole card (the
+// maps were computed()s before the extraction).
 import { ELEMENT_LABELS } from '@/core/element/ElementLabels'
 import { SPIRIT_STONE_LABEL } from '@/core/presentation/labels'
 import { getProfessionGradeForRealm } from '@/core/profession/ProfessionGrade'
@@ -24,6 +26,32 @@ const REALM_LABEL_KEYS: Record<string, string> = {
   body_integration: 'panels.bag.tooltip.realms.bodyIntegration',
   mahayana: 'panels.bag.tooltip.realms.mahayana',
   tribulation: 'panels.bag.tooltip.realms.tribulation',
+}
+
+const AGE_LABEL_KEYS: Record<string, string> = {
+  decade: 'panels.bag.tooltip.ages.decade',
+  century: 'panels.bag.tooltip.ages.century',
+  millennium: 'panels.bag.tooltip.ages.millennium',
+  myriad_year: 'panels.bag.tooltip.ages.myriadYear',
+  thuong_co: 'panels.bag.tooltip.ages.thuongCo',
+}
+
+const SOURCE_LABEL_KEYS: Record<Material['sourceType'], string> = {
+  boss: 'panels.bag.tooltip.sourceTypes.boss',
+  monster: 'panels.bag.tooltip.sourceTypes.monster',
+  building: 'panels.bag.tooltip.sourceTypes.building',
+  exploration: 'panels.bag.tooltip.sourceTypes.exploration',
+}
+
+const CATEGORY_LABEL_KEYS: Record<MaterialCategory, string | undefined> = {
+  herb: 'panels.bag.tooltip.categories.herb',
+  wood: 'panels.bag.tooltip.categories.wood',
+  ore: 'panels.bag.tooltip.categories.ore',
+  monster_core: 'panels.bag.tooltip.categories.monsterCore',
+  spirit_stone: undefined,
+  essence: 'panels.bag.tooltip.categories.essence',
+  byproduct: 'panels.bag.tooltip.categories.byproduct',
+  other: 'panels.bag.tooltip.categories.other',
 }
 
 export function materialRealmLabel(realmId: string | undefined, t: Translate): string | undefined {
@@ -56,32 +84,6 @@ export function professionRankOfMaterial(material: Material): number | undefined
 }
 
 export function createMaterialTooltipBuilder(t: Translate) {
-  const AGE_LABELS: Record<string, string> = {
-    decade: t('panels.bag.tooltip.ages.decade'),
-    century: t('panels.bag.tooltip.ages.century'),
-    millennium: t('panels.bag.tooltip.ages.millennium'),
-    myriad_year: t('panels.bag.tooltip.ages.myriadYear'),
-    thuong_co: t('panels.bag.tooltip.ages.thuongCo'),
-  }
-
-  const SOURCE_LABELS: Record<Material['sourceType'], string> = {
-    boss: t('panels.bag.tooltip.sourceTypes.boss'),
-    monster: t('panels.bag.tooltip.sourceTypes.monster'),
-    building: t('panels.bag.tooltip.sourceTypes.building'),
-    exploration: t('panels.bag.tooltip.sourceTypes.exploration'),
-  }
-
-  const CATEGORY_LABELS: Record<MaterialCategory, string> = {
-    herb: t('panels.bag.tooltip.categories.herb'),
-    wood: t('panels.bag.tooltip.categories.wood'),
-    ore: t('panels.bag.tooltip.categories.ore'),
-    monster_core: t('panels.bag.tooltip.categories.monsterCore'),
-    spirit_stone: SPIRIT_STONE_LABEL,
-    essence: t('panels.bag.tooltip.categories.essence'),
-    byproduct: t('panels.bag.tooltip.categories.byproduct'),
-    other: t('panels.bag.tooltip.categories.other'),
-  }
-
   // Nhan canh gioi cho tooltip - nguoi choi khong phan biet duoc mau
   // (color-blind) van doc duoc realm tren tooltip (spec sec"Canh gioi").
   return function buildMaterialTooltip(
@@ -91,19 +93,21 @@ export function createMaterialTooltipBuilder(t: Translate) {
     const realmId = material.profession?.realmId
     const realmText = materialRealmLabel(realmId, t)
     const rank = professionRankOfMaterial(material)
+    const categoryKey = CATEGORY_LABEL_KEYS[material.category]
 
     const rows: TooltipStatRow[] = [
-      { label: t('panels.bag.tooltip.category'), value: CATEGORY_LABELS[material.category] },
-      { label: t('panels.bag.tooltip.source'), value: SOURCE_LABELS[material.sourceType] },
+      { label: t('panels.bag.tooltip.category'), value: categoryKey ? t(categoryKey) : SPIRIT_STONE_LABEL },
+      { label: t('panels.bag.tooltip.source'), value: t(SOURCE_LABEL_KEYS[material.sourceType]) },
       // Realm text IS the material's Pham axis - carry its rank color
       // (user ruling: every Pham/Chat text shows in its set color).
       ...(realmText ? [{ label: t('panels.bag.tooltip.realm'), value: realmText, colorVar: rank !== undefined ? `--rank-color-${rank}` : undefined }] : []),
     ]
 
     if (material.profession?.age) {
+      const ageKey = AGE_LABEL_KEYS[material.profession.age]
       rows.push({
         label: t('panels.bag.tooltip.age'),
-        value: AGE_LABELS[material.profession.age] ?? t('panels.bag.tooltip.yearsSuffix', { count: material.years ?? 0 }),
+        value: ageKey ? t(ageKey) : t('panels.bag.tooltip.yearsSuffix', { count: material.years ?? 0 }),
       })
     } else if (material.years !== undefined) {
       rows.push({ label: t('panels.bag.tooltip.age'), value: t('panels.bag.tooltip.yearsSuffix', { count: material.years }) })

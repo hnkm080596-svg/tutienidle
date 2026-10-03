@@ -43,6 +43,7 @@ import {
   type GrottoChannel,
 } from '../../data/drop/HiddenMaterialChannels'
 import { getRealmIndex } from '../realm/realmSystem'
+import { getRealmTier, PRODUCIBLE_REALM_TIER_LEAD } from '../realm/RealmTierMap'
 import { isBreakthroughAcquisitionEnabled } from '../realm/ReleasePolicy'
 import { betaRecipeFamilyOfId, isScopeHidden } from '../betaScope'
 
@@ -605,17 +606,23 @@ export class ProductionSystem {
       this.deps.territory.realmIds,
     )
 
-    // F-MAT-REALM (saveShapeValidation): a holding more than one realm
-    // tier above the collector fails producibility, so the tier roll
-    // caps at collection tier + 1 - a mortal cycle can still pull
-    // qi_refining materials but can never mint foundation_establishment
-    // ones (the un-capped low profile leaked them ~11% of the time and
-    // corrupted mortal saves).
-    const collectionTierIndex = this.deps.territory.realmIds.indexOf(collectionRealmId)
+    // F-MAT-REALM (saveShapeValidation): a holding more than
+    // PRODUCIBLE_REALM_TIER_LEAD realm tiers above the collector fails
+    // producibility, so the tier roll caps at the same ceiling - a
+    // mortal cycle can still pull qi_refining materials but can never
+    // mint foundation_establishment ones (the un-capped low profile
+    // leaked them ~11% of the time and corrupted mortal saves). The
+    // bound compares real realm tiers, not realmIds positions, so a
+    // territory ladder with gaps stays inside the validator window.
+    const collectionTier = getRealmTier(collectionRealmId)
 
-    const cappedProfile = profile.map((weight, index) =>
-      index <= collectionTierIndex + 1 ? weight : 0,
-    )
+    const cappedProfile = profile.map((weight, index) => {
+      const candidateRealmId = this.deps.territory.realmIds[index]
+      return candidateRealmId !== undefined &&
+        getRealmTier(candidateRealmId) <= collectionTier + PRODUCIBLE_REALM_TIER_LEAD
+        ? weight
+        : 0
+    })
 
     const tierIndex = rollWeightedIndex(cappedProfile, random)
 
