@@ -22,9 +22,9 @@
 //               level <= maxLevel, level <= realm tier, accrual pin <=
 //               player realm) but never deduplicated on buildingId or
 //               instanceId. Every building template is category
-//               'crafting_station', and canBuildDetailed returns
-//               'already_built' for that category - a second instance of
-//               the same buildingId is unproducible by the sole writer.
+//               'crafting_station', and the sole writer never creates a
+//               second instance once one exists - a duplicate buildingId
+//               is unproducible.
 //               BuildingManager.restore maps entries verbatim
 //               (BuildingManager.ts:39-41), and claim(instanceId) pays
 //               each instance's independent accrual window
@@ -192,9 +192,9 @@ describe('F-BLD-DUP-1: duplicate buildingId/instanceId instances are rejected', 
     const save = validSave()
     save.buildings = structuredClone(dupBuildings)
 
-    // The sole writer (build()) can never place a second crafting_station
-    // of the same buildingId - 'already_built' rejects it - so this
-    // payload is unproducible by construction.
+    // The sole writer can never place a second instance of the same
+    // buildingId - the default-built reconcile skips ids already
+    // present - so this payload is unproducible by construction.
     expect(validateGameSaveShape(save).ok).toBe(false)
   })
 

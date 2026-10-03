@@ -44,6 +44,7 @@ function makeOwners() {
     }),
     buildingAdd: vi.fn(),
     refreshAutoWorkerCapacity: vi.fn(),
+    reconcileBuildings: vi.fn(),
     materialAdd: vi.fn(),
     setProductionAutoRestart: vi.fn(),
     setActivePlayer: vi.fn(),
@@ -60,6 +61,7 @@ function makeOwners() {
     buildingOps: {
       refreshAutoWorkerCapacity: calls.refreshAutoWorkerCapacity,
       setProductionAutoRestart: calls.setProductionAutoRestart,
+      reconcileBuildings: calls.reconcileBuildings,
     },
     materialRegistry: {
       has: () => true,
@@ -120,19 +122,15 @@ describe('initializeCharacter - one starter snapshot from canonical metadata', (
     expect(calls.setMortalBasicSkill).toHaveBeenCalledWith(player, 'linh_bao')
   })
 
-  it('grants the two base buildings + starter materials + auto-restart + active player', () => {
+  it('grants all registered buildings at lv1 + starter materials + auto-restart + active player', () => {
     const { owners, player, calls } = makeOwners()
 
     initializeCharacter(METADATA, owners)
 
-    const buildingIds = calls.buildingAdd.mock.calls.map(([instance]) => (instance as { buildingId: string }).buildingId)
-    expect(buildingIds).toEqual(['teleport_array', 'gathering_outpost'])
-    for (const [instance] of calls.buildingAdd.mock.calls) {
-      expect((instance as { level: number }).level).toBe(1)
-      expect((instance as { lastCollectedAt: number }).lastCollectedAt).toBe(4242)
-      expect(typeof (instance as { instanceId: string }).instanceId).toBe('string')
-    }
-    expect(calls.refreshAutoWorkerCapacity).toHaveBeenCalledTimes(2)
+    // Default-built (2026-10-03): the building grant goes through the
+    // ops reconcile - every registered building starts at level 1.
+    expect(calls.reconcileBuildings).toHaveBeenCalledTimes(1)
+    expect(calls.reconcileBuildings).toHaveBeenCalledWith(player, 4242)
 
     expect(calls.materialAdd).toHaveBeenCalledTimes(2)
     const materials = calls.materialAdd.mock.calls.map(([material, amount]) => [
@@ -185,7 +183,7 @@ describe('initializeCharacter - one starter snapshot from canonical metadata', (
       expect(second.player.selectedTalentIds).toEqual(first.player.selectedTalentIds)
       expect(second.player.mortalBasicSkillId).toBe(first.player.mortalBasicSkillId)
       expect(second.calls.learnSkill.mock.calls).toEqual(first.calls.learnSkill.mock.calls)
-      expect(second.calls.buildingAdd.mock.calls.length).toBe(first.calls.buildingAdd.mock.calls.length)
+      expect(second.calls.reconcileBuildings.mock.calls.length).toBe(first.calls.reconcileBuildings.mock.calls.length)
     } finally {
       vi.useRealTimers()
     }

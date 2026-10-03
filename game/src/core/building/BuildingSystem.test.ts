@@ -317,15 +317,21 @@ describe('BuildingSystem Linh Tuyá»n (engine offline, balance 2026-08-28)', 
     expect(manager.get('i1')!.accrualRealmId).toBe('qi_refining')
   })
 
-  it('build moi pin accrualRealmId = realm luc xay', () => {
+  it('ensureAllBuilt grant lv1 + pin accrualRealmId = realm hien tai, idempotent', () => {
     const registry = new BuildingRegistry()
     const manager = new BuildingManager()
-    const bag = new MaterialBag()
     registry.register({ ...spring(), upgradeCost: [[]] })
 
-    const player = { realmId: 'mortal' } as never
-    const built = system.build('gathering_outpost', registry, manager, player, bag, 1_000)
+    const added = system.ensureAllBuilt(registry, manager, 1_000, 'mortal')
 
-    expect(built?.accrualRealmId).toBe('mortal')
+    expect(added).toHaveLength(1)
+    expect(added[0]?.level).toBe(1)
+    expect(added[0]?.lastCollectedAt).toBe(1_000)
+    expect(added[0]?.accrualRealmId).toBe('mortal')
+    expect(manager.getByBuildingId('gathering_outpost')).toBe(added[0])
+
+    // Idempotent - instance da co thi khong them nua.
+    expect(system.ensureAllBuilt(registry, manager, 2_000, 'mortal')).toEqual([])
+    expect(manager.getAll()).toHaveLength(1)
   })
 })

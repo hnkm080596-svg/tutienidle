@@ -8,13 +8,10 @@ import type { Building } from '@/core/building/Building'
 // tren background va shortcut ring 3 cua command wheel. Khong entry nao
 // tu giu navigation rieng.
 //
-// Quy tac:
-// - Chua xay -> mo popover xay dung (shared popover authority).
-// - Da xay + functionType -> mo panel chuc nang (leftPanelMode).
-// - Da xay + functionType (bao gom Linh Tuyen) -> LeftPanel.
-// - Resource building tuong lai khong co functionType -> popover fallback.
-// - CHI MOT BuildingDetailPopover o GameRoot, dieu khien qua
-//   ui.activeBuildingPopoverId.
+// Quy tac (post default-built 2026-10-03): moi building luon co instance
+// lv1 - khong con trang thai chua xay, khong con popover xay dung.
+// - functionType -> mo panel chuc nang (leftPanelMode).
+// - Building khong functionType -> khong mo gi (hien chua co loai nao).
 
 /** Trinh bay building cho hotspot/wheel - suy ra tu state hien hanh. */
 export interface BuildingPresentation {
@@ -69,9 +66,10 @@ export function useBuildingNavigation() {
   /**
    * Badge trang thai nameplate (plan ui-discoverability sec3.1) - DOC THUAN
    * tu system hien co qua GameManager facade, khong mutate gi:
-   * - locked: chua co instance (canBuild DUNG nguon su that voi popover).
+   * - locked: chua co instance (can xay ra duy nhat voi save cu chua
+   *   reconcile / id khong dang ky).
    * - ready: resource building (Linh Tuyen) co san luong claim duoc
-   *   (getStoredAmount >= 1, cung nguon voi nut thu hoach popover).
+   *   (getStoredAmount >= 1).
    * - active: dang co job chay - vong job DUY NHAT cua building la luyen
    *   dan pill_room (AlchemySystem qua getAlchemyJobs()).
    * - upgradeable: built + chua max + du nguyen lieu nang KE TIEP
@@ -111,9 +109,8 @@ export function useBuildingNavigation() {
 
   function openBuilding(buildingId: string): void {
     // BETA SCOPE LOCK v2 (Phase-6): the single navigation funnel fails
-    // closed - a scope-hidden building (chi_hien_quan) opens no popover
-    // and no function panel from ANY caller (hotspot, wheel, popover
-    // deep-link).
+    // closed - a scope-hidden building (chi_hien_quan) opens no
+    // function panel from ANY caller (hotspot, wheel, deep-link).
     if (!isBetaBuildingSurface(buildingId)) {
       return
     }
@@ -124,22 +121,10 @@ export function useBuildingNavigation() {
       return
     }
 
-    // Chua xay -> popover xay dung.
-    if (!presentation.isBuilt) {
-      ui.openBuildingPopover(buildingId)
-
-      return
-    }
-
     // Da xay + functionType -> mo thang panel chuc nang.
     if (presentation.template.functionType) {
       ui.openLeftPanel(presentation.template.functionType as Exclude<LeftPanelMode, null>)
-
-      return
     }
-
-    // Resource building (Linh Tuyen) -> popover thu hoach/nang cap.
-    ui.openBuildingPopover(buildingId)
   }
 
   return {

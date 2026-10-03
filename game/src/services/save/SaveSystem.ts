@@ -296,6 +296,13 @@ export function restoreGameSession(
 
     const equipmentModifiers = gameManager.saveOps.restoreFromSave(save, timeAuthority)
 
+    // Default-built (2026-10-03) - save cu co the thieu building: grant
+    // lv1 cho moi building con thieu SAU khi slice restore xong. Dat o
+    // session seam (khong phai restoreFromSave) de giu contract
+    // "moi slice = replacement thuan" cua M1; moi duong load save thuc
+    // deu di qua day. Idempotent - retry cung payload khong them lan 2.
+    gameManager.buildingOps.reconcileBuildings(player.$state, Date.now() / 1000)
+
     player.setEquipmentModifiers(equipmentModifiers)
 
     return { status: 'ok', offline }

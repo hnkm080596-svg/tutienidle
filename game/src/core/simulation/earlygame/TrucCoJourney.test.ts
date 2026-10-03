@@ -103,6 +103,7 @@ import {
 } from '../../realm/body/ZhouTianChapter'
 import { EarlyGameSession } from './EarlyGameSession'
 import { SeededCombatRng } from '../../battle/runtime/rng/SeededCombatRng'
+import { getWorkerCapacityForLevel } from '../../production/WorkerCapacity'
 
 const PINNED_PROFILE = {
   name: 'journey',
@@ -269,13 +270,37 @@ function normalizeVolatileSaveFields(save: GameSave): GameSave {
  * every persisted authority field. Restore legitimately MATERIALIZES
  * derived state the live session had not (ensureSiteState seeds a
  * default row per site definition; quest reconcile activates newly
- * unlocked realm quests), so those two slices are subset-compared -
+ * unlocked realm quests; default-built reconcile grants the missing
+ * registered buildings at lv1), so those slices are subset-compared -
  * every persisted row must round-trip byte-identically while extra
  * defaulted rows are allowed. Everything else must be byte-equal
  * after volatile normalization. */
 function assertRestoredSaveParity(before: GameSave, after: GameSave): void {
   const expected = normalizeVolatileSaveFields(before)
   const actual = normalizeVolatileSaveFields(after)
+  // Default-built (2026-10-03): the session restore grants any missing
+  // registered building at lv1 - a carried row must round-trip verbatim.
+  const actualChq = (actual.buildings ?? []).find(
+    (entry) => entry.buildingId === 'chi_hien_quan',
+  )
+  if (expected.buildings !== undefined || actual.buildings !== undefined) {
+    expect(actual.buildings ?? []).toEqual(
+      expect.arrayContaining(
+        (expected.buildings ?? []).map((entry) => expect.objectContaining(entry)),
+      ),
+    )
+    actual.buildings = expected.buildings
+  }
+  // autoWorkerCapacity is re-derived from the carried chi_hien_quan
+  // instance at restore (formula over the persisted field): a carried
+  // 0 becomes the lv1 baseline 3. Verify the restored value against the
+  // ACTUAL instance level, then exclude the field from byte-parity.
+  if (actualChq !== undefined) {
+    expect(actual.player.autoWorkerCapacity).toBe(
+      getWorkerCapacityForLevel(actualChq.level),
+    )
+    actual.player.autoWorkerCapacity = expected.player.autoWorkerCapacity
+  }
   if (expected.productionSites !== undefined || actual.productionSites !== undefined) {
     expect(actual.productionSites ?? []).toEqual(
       expect.arrayContaining(

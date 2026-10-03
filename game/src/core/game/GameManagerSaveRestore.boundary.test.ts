@@ -43,7 +43,7 @@ import { buildGameSave, restoreGameSession, type GameSave } from '../../services
 import { CURRENT_SAVE_VERSION } from '../../services/save/saveVersion'
 import { usePlayerStore } from '../../stores/player'
 import { freshSwordPathState } from '../kiem-tu/KiemTuState'
-import { resolveProductionWorkerCapacity } from '../production/WorkerCapacity'
+import { resolveProductionWorkerCapacity, getWorkerCapacityForLevel } from '../production/WorkerCapacity'
 import { getRealmIndex } from '../realm/realmSystem'
 
 function makeManager(): GameManager {
@@ -687,8 +687,42 @@ describe('M1 (ARCH-001) — repeat application + failure semantics', () => {
     // not - retry must run the manager restore, not skip it.
     const retry = restoreGameSession(playerStore, manager, save)
     expect(retry.status).toBe('ok')
-    expect(manager.buildingManager.getAll().map((instance) => instance.instanceId)).toEqual(['b1'])
+    // Default-built (2026-10-03) - the session seam grants every missing
+    // registered building at lv1, so the slice converges to the full
+    // catalog (the declared b1 plus the granted ids).
+    expect(manager.buildingManager.getAll().map((instance) => instance.instanceId)).toContain('b1')
+    expect(manager.buildingManager.getAll().map((instance) => instance.buildingId).sort()).toEqual(
+      buildings.map((entry) => entry.id).sort(),
+    )
     expect(playerStore.name).toBe(save.player.name)
+  })
+
+  it('restoreGameSession grants missing registered buildings at lv1 (default-built, idempotent)', () => {
+    setActivePinia(createPinia())
+    const playerStore = usePlayerStore()
+    const manager = makeManager()
+    const player = createDefaultPlayer()
+
+    // Old-save shape: the buildings slice predates the default-built
+    // world - every registered building must appear at lv1 on load.
+    const save = populatedSave(manager, player)
+    save.buildings = []
+
+    const result = restoreGameSession(playerStore, manager, save)
+    expect(result.status).toBe('ok')
+
+    const ids = manager.buildingManager.getAll().map((instance) => instance.buildingId).sort()
+    expect(ids).toEqual(buildings.map((entry) => entry.id).sort())
+    for (const instance of manager.buildingManager.getAll()) {
+      expect(instance.level).toBe(1)
+    }
+
+    // A carried instance keeps its level - grant is fill-only, not reset.
+    const save2 = populatedSave(manager, player)
+    save2.buildings = [{ instanceId: 'chq-2', buildingId: 'chi_hien_quan', level: 5, lastCollectedAt: 0 }]
+    expect(restoreGameSession(playerStore, manager, save2).status).toBe('ok')
+    expect(manager.buildingManager.getByBuildingId('chi_hien_quan')!.level).toBe(5)
+    expect(playerStore.autoWorkerCapacity).toBe(getWorkerCapacityForLevel(5))
   })
 })
 

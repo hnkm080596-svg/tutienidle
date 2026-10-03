@@ -2,19 +2,16 @@
 //
 // Workstream C (dong-fu plan) - hotspot la MOT trong HAI entry point
 // (entry kia = command wheel ring 3); ca hai di qua
-// composables/useBuildingNavigation.ts va popover DUNG CHUNG duoc render
-// o tang GameRoot (ui.activeBuildingPopoverId). Test mount cung luc
-// hotspot layer + popover authority stub y het GameRoot.
+// composables/useBuildingNavigation.ts.
 //
 // Building da xay mo LeftPanel; nut nang cap song trong header panel,
 // khong con chip noi tren world hotspot.
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 import { computed, nextTick } from 'vue'
-import { createApp, defineComponent, h, ref } from 'vue'
+import { createApp, h, ref } from 'vue'
 import { createPinia } from 'pinia'
 import { i18n } from '@/i18n'
 import HomeBuildingIcons from './HomeBuildingIcons.vue'
-import BuildingDetailPopover from './BuildingDetailPopover.vue'
 import { GameManager } from '@/core/game/GameManager'
 import type { Building } from '@/core/building/Building'
 import {
@@ -62,25 +59,9 @@ function mountHomeBuildings(
 
   document.body.appendChild(container)
 
-  // Stub tang GameRoot: hotspot layer + shared popover authority.
-  const RootStub = defineComponent({
-    setup() {
-      const ui = useUiStore()
-
-      return () =>
-        h('div', [
-          h(HomeBuildingIcons, { variant: renderedVariant.value }),
-          ui.activeBuildingPopoverId
-            ? h(BuildingDetailPopover, {
-                buildingId: ui.activeBuildingPopoverId,
-                onClose: () => ui.closeBuildingPopover(),
-              })
-            : null,
-        ])
-    },
+  const app = createApp({
+    render: () => h(HomeBuildingIcons, { variant: renderedVariant.value }),
   })
-
-  const app = createApp({ render: () => h(RootStub) })
 
   app.use(createPinia())
   app.use(i18n)
@@ -152,10 +133,6 @@ beforeEach(() => {
   gameManager.catalogOps.registerBuildings(
     gameBuildings.map((building) => building.id === PILL_ROOM_DEF.id ? PILL_ROOM_DEF : building),
   )
-})
-
-afterEach(() => {
-  window.localStorage.removeItem('dev.testModeUnlockAll')
 })
 
 describe('HomeBuildingIcons — building navigation không dùng chip nổi', () => {
@@ -241,7 +218,6 @@ describe('HomeBuildingIcons — building navigation không dùng chip nổi', ()
     const ui = useUiStore()
 
     expect(ui.leftPanelMode).toBe('pill_room')
-    expect(ui.activeBuildingPopoverId).toBeNull()
 
     mounted.unmount()
   })
@@ -273,37 +249,7 @@ describe('HomeBuildingIcons — building navigation không dùng chip nổi', ()
     mounted.unmount()
   })
 
-  it('chưa xây → click hotspot → popover Xây dựng → mở khóa building thật', async () => {
-    window.localStorage.setItem('dev.testModeUnlockAll', '1')
-
-    const mounted = mountHomeBuildings(gameManager)
-    const hotspot = mounted.buildingButton('pill_room')
-
-    expect(hotspot).not.toBeNull()
-    hotspot!.click()
-    await nextTick()
-    await nextTick()
-
-    const buildButton = mounted.container.querySelector<HTMLButtonElement>('.building-popover__action')
-
-    expect(buildButton).not.toBeNull()
-    expect(buildButton!.disabled).toBe(false)
-
-    buildButton!.click()
-    await nextTick()
-    await nextTick()
-
-    expect(gameManager.buildingManager.getByBuildingId('pill_room')).toBeDefined()
-
-    const ui = useUiStore()
-
-    expect(ui.leftPanelMode).toBe('pill_room')
-    expect(ui.activeBuildingPopoverId).toBeNull()
-
-    mounted.unmount()
-  })
-
-  it('đã xây + có functionType → click hotspot mở PANEL chức năng (không popover)', async () => {
+  it('đã xây + có functionType → click hotspot mở PANEL chức năng', async () => {
     gameManager.buildingManager.add({
       instanceId: 'inst_pill_fn',
 
@@ -323,7 +269,6 @@ describe('HomeBuildingIcons — building navigation không dùng chip nổi', ()
     const ui = useUiStore()
 
     expect(ui.leftPanelMode).toBe('pill_room')
-    expect(ui.activeBuildingPopoverId).toBeNull()
 
     mounted.unmount()
   })
@@ -358,7 +303,6 @@ describe('HomeBuildingIcons — building navigation không dùng chip nổi', ()
     const ui = useUiStore()
 
     expect(ui.leftPanelMode).toBe('worker_lodge')
-    expect(ui.activeBuildingPopoverId).toBeNull()
 
     mounted.unmount()
   })

@@ -75,10 +75,6 @@ function variantsMatch(left: ThanhVanVariant, right: ThanhVanVariant): boolean {
 const FOCUS_BLEND = 0.4
 
 const focusBuildingId = computed<string | null>(() => {
-  if (ui.activeBuildingPopoverId) {
-    return ui.activeBuildingPopoverId
-  }
-
   const mode = ui.leftPanelMode
   if (!mode) {
     return null

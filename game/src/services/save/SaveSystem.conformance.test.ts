@@ -210,6 +210,11 @@ function populateSource(player: PlayerData, manager: GameManager): void {
     manager.buildingManager.get('b-chq')!,
   )
 
+  // Default-built (2026-10-03): every real manager carries ALL registered
+  // buildings - grant the rest at lv1 through the same ops seam so the
+  // source payload is a conforming post-change save.
+  manager.buildingOps.reconcileBuildings(player, NOW / 1000)
+
   // Production - one populated site (worker cycles + manual
   // assignment); the other definitions get default ensured states.
   const siteId = manager.productionSystem.getSiteDefinitions()[0]!.siteId

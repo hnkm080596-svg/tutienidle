@@ -4,7 +4,6 @@ import {
   savePersistedUiAutomationFlags,
 } from './uiFlagsPersistence'
 import {
-  isBetaBuildingSurface,
   isBetaLeftPanelMode,
   isBetaStandalonePanel,
 } from '@/core/betaScopeSurface'
@@ -140,12 +139,6 @@ export const useUiStore = defineStore('ui', {
     // Transient theo phien, KHONG luu save.
     isCommandWheelOpen: false,
 
-    // Shared popover authority (plan Workstream C) - CHI MOT
-    // BuildingDetailPopover o tang GameRoot, id building dang hien thi
-    // popover. null = dong. Ca hotspot lan command wheel cung ghi vao
-    // day qua composables/useBuildingNavigation.ts.
-    activeBuildingPopoverId: null as string | null,
-
     activeBagTab: 'material' as BagTab,
 
     // Sort theo tung tab (plan Workstream E) - chi song trong phien choi,
@@ -276,7 +269,6 @@ export const useUiStore = defineStore('ui', {
       this.characterOverlayOpen = false
       this.characterDetailOpen = false
       this.standalonePanel = null
-      this.activeBuildingPopoverId = null
       this.isCommandWheelOpen = false
     },
 
@@ -293,22 +285,6 @@ export const useUiStore = defineStore('ui', {
 
     closeCommandWheel() {
       this.isCommandWheelOpen = false
-    },
-
-    openBuildingPopover(buildingId: string) {
-      // BETA SCOPE LOCK v2 (Phase-6): scope-hidden buildings open no
-      // popover (chi_hien_quan deep-link fails closed).
-      if (!isBetaBuildingSurface(buildingId)) {
-        return
-      }
-
-      this.closeHomeOverlays()
-
-      this.activeBuildingPopoverId = buildingId
-    },
-
-    closeBuildingPopover() {
-      this.activeBuildingPopoverId = null
     },
 
     setActiveBagTab(tab: BagTab) {
