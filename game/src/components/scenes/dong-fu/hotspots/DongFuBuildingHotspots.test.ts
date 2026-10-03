@@ -11,7 +11,7 @@ import { computed, nextTick } from 'vue'
 import { createApp, h, ref } from 'vue'
 import { createPinia } from 'pinia'
 import { i18n } from '@/i18n'
-import HomeBuildingIcons from './HomeBuildingIcons.vue'
+import DongFuBuildingHotspots from './DongFuBuildingHotspots.vue'
 import { GameManager } from '@/core/game/GameManager'
 import type { Building } from '@/core/building/Building'
 import {
@@ -60,7 +60,7 @@ function mountHomeBuildings(
   document.body.appendChild(container)
 
   const app = createApp({
-    render: () => h(HomeBuildingIcons, { variant: renderedVariant.value }),
+    render: () => h(DongFuBuildingHotspots, { variant: renderedVariant.value }),
   })
 
   app.use(createPinia())
@@ -135,7 +135,7 @@ beforeEach(() => {
   )
 })
 
-describe('HomeBuildingIcons — building navigation không dùng chip nổi', () => {
+describe('DongFuBuildingHotspots — building navigation không dùng chip nổi', () => {
   it('renders six manifest-ordered building sprites and one shared season overlay', () => {
     const mounted = mountHomeBuildings(gameManager)
 
@@ -308,7 +308,7 @@ describe('HomeBuildingIcons — building navigation không dùng chip nổi', ()
   })
 })
 
-describe('HomeBuildingIcons — nameplate + badge trạng thái (plan §3.1)', () => {
+describe('DongFuBuildingHotspots — nameplate + badge trạng thái (plan §3.1)', () => {
   it('uses the approved Khai Vật Đường display name for gathering_outpost', () => {
     const mounted = mountHomeBuildings(gameManager)
 

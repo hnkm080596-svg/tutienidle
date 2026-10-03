@@ -23,7 +23,7 @@ import {
 // Tham Hiem rework (2026-08-14) - 'building' (Kien Truc, panel liet ke
 // phang moi Building) va 'asset_reference' (dev-only, khong thuoc nav
 // nguoi choi) bi GO KHOI union nay - Kien Truc bi thay hoan toan boi
-// icon Building dat trong Home Scene (xem HomeBuildingIcons.vue).
+// icon Building dat trong Home Scene (xem scenes/dong-fu/hotspots/DongFuBuildingHotspots.vue).
 // 'exploration' GIU NGUYEN key (label gio "San Xuat") - day la he Thu
 // Thap nguyen lieu tu dong cu, KHONG phai Tham Hiem moi.
 // 'stage_select' MOI - man hinh chon Dia Gioi -> Man -> che do truoc khi

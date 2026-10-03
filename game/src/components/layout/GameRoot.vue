@@ -50,7 +50,7 @@ const ui = useUiStore()
 const player = usePlayerStore()
 
 // Combat UI Redesign - Combat Scene chiem TOAN man hinh, thay han
-// chrome Dong Phu (LeftPanel/CommandWheel) - HomeBuildingIcons duoc render
+// chrome Dong Phu (LeftPanel/CommandWheel) - DongFuBuildingHotspots duoc render
 // trong DongFuScene de art cong trinh nam dung phia sau nhan vat.
 // MainScene (Phaser canvas) van LUON mount (tu chuyen scene noi bo,
 // xem MainScene.vue), chi DOM chrome xung quanh no an/hien theo co nay.
