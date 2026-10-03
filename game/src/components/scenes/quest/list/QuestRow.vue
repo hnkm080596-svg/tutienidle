@@ -9,6 +9,7 @@ import { useI18n } from 'vue-i18n'
 import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
 import HuyenKimSymbol from '@/components/common/HuyenKimSymbol.vue'
 import { chromeSlice } from '@/ui/huyenKimChrome'
+import { getCurrentRealm } from '@/core/realm/realmSystem'
 import type { BetaQuestSurfaceModel } from '@/core/betaScopeQuestDomain'
 
 const props = defineProps<{
@@ -26,15 +27,35 @@ const complete = computed(
   () => props.row.claim.claimed || props.row.progress >= props.row.target,
 )
 const claimable = computed(() => props.row.claim.available && !props.row.claim.claimed)
+const locked = computed(() => props.row.lockedPreview !== undefined)
+
+const lockReasons = computed(() => {
+  const preview = props.row.lockedPreview
+  if (!preview) return []
+  const reasons: string[] = []
+  if (preview.afterQuestName) {
+    reasons.push(t('panels.quest.lockedAfter', { name: preview.afterQuestName }))
+  }
+  if (preview.requiredRealmId) {
+    let realmName = preview.requiredRealmId
+    try {
+      realmName = getCurrentRealm(preview.requiredRealmId).name
+    } catch { /* unknown realm id renders raw, same as the old panel */ }
+    reasons.push(t('panels.quest.lockedRealm', { realm: realmName }))
+  }
+  return reasons
+})
 </script>
 
 <template>
   <button
     type="button"
     class="quest-row"
-    :class="{ 'is-selected': selected, 'is-claimable': claimable, 'is-claimed': row.claim.claimed }"
+    :class="{ 'is-selected': selected, 'is-claimable': claimable, 'is-claimed': row.claim.claimed, 'is-locked': locked }"
     :aria-pressed="selected"
-    @click="onSelect()"
+    :aria-disabled="locked || undefined"
+    :tabindex="locked ? -1 : 0"
+    @click="locked ? undefined : onSelect()"
   >
     <InkNineSlice
       chrome-id="list-row"
@@ -67,13 +88,18 @@ const claimable = computed(() => props.row.claim.available && !props.row.claim.c
           />
           <span class="quest-row__cadence-text">{{ t(`panels.quest.cadence.${row.cadence}`) }}</span>
         </span>
+        <span v-if="row.chainId === 'mainline'" class="quest-row__chain">{{ t('panels.quest.groups.mainline') }}</span>
         <span v-if="row.claim.claimed" class="quest-row__done">{{ t('panels.quest.scene.done') }}</span>
       </span>
-      <span class="quest-row__desc">{{ row.description }}</span>
+      <span v-if="locked" class="quest-row__desc">
+        <template v-for="reason in lockReasons" :key="reason">{{ reason }}<br v-if="reason !== lockReasons[lockReasons.length - 1]"></template>
+      </span>
+      <span v-else class="quest-row__desc">{{ row.description }}</span>
     </span>
 
     <span class="quest-row__state">
-      <span v-if="complete" class="quest-row__check" aria-hidden="true">✓</span>
+      <span v-if="locked" class="quest-row__lock" aria-hidden="true">✕</span>
+      <span v-else-if="complete" class="quest-row__check" aria-hidden="true">✓</span>
       <span v-else class="quest-row__progress">{{ Math.min(row.progress, row.target) }}/{{ row.target }}</span>
     </span>
   </button>
@@ -108,6 +134,8 @@ const claimable = computed(() => props.row.claim.available && !props.row.claim.c
 .quest-row.is-selected .quest-row__name { color: var(--hk-gold, #e3bd67); }
 .quest-row.is-claimable .quest-row__check { color: var(--hk-gold, #e3bd67); }
 .quest-row.is-claimed { opacity: 0.75; }
+.quest-row.is-locked { opacity: 0.5; filter: grayscale(0.9); cursor: default; }
+.quest-row.is-locked:hover { border-color: var(--hk-border-muted, var(--paper-line)); }
 
 .quest-row__thumb {
   width: 58px;
@@ -186,6 +214,30 @@ const claimable = computed(() => props.row.claim.available && !props.row.claim.c
 }
 
 .quest-row__state { display: flex; align-items: center; }
+
+.quest-row__chain {
+  flex: 0 0 auto;
+  padding: 0 8px;
+  border: 1px solid var(--hk-gold-muted, #b99a55);
+  border-radius: 7px;
+  font-size: var(--text-xs, 10px);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--hk-gold, #e3bd67);
+  background: color-mix(in srgb, var(--hk-gold, #e3bd67) 12%, transparent);
+}
+
+.quest-row__lock {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1px solid var(--hk-border-muted, var(--paper-line));
+  color: var(--hk-text-muted, #b8ad97);
+  font-size: var(--text-xs);
+  font-weight: 700;
+}
 
 .quest-row__check {
   display: grid;

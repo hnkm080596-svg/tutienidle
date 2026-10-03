@@ -14,8 +14,10 @@ import type { Enemy } from '../enemy/Enemy'
 import type { PlayerData } from '../player/Player'
 import {
   betaQuestSurfaceFor,
+  type BetaQuestSurfaceDeps,
   type BetaQuestSurfaceModel,
 } from '../betaScopeQuestDomain'
+import { getRealmIndex } from '../realm/realmSystem'
 
 export interface GameManagerQuestOpsDeps {
   questSystem: QuestSystem
@@ -106,17 +108,104 @@ export class GameManagerQuestOps {
       return []
     }
 
-    return this.getActiveQuests()
+    const surfaceDeps: BetaQuestSurfaceDeps = {
+      materialRegistry: this.deps.materialRegistry,
+      materialBag: this.deps.materialBag,
+      pillRegistry: this.deps.pillRegistry,
+      pillBag: this.deps.pillBag,
+      enemyName: (enemyId) => this.deps.getEnemyTemplate(enemyId)?.name,
+    }
+
+    const models = this.getActiveQuests()
       .filter(({ quest }) => quest.cadence === 'once')
       .map(({ quest, progress }) =>
-        betaQuestSurfaceFor(quest, progress, player, {
-          materialRegistry: this.deps.materialRegistry,
-          materialBag: this.deps.materialBag,
-          pillRegistry: this.deps.pillRegistry,
-          pillBag: this.deps.pillBag,
-          enemyName: (enemyId) => this.deps.getEnemyTemplate(enemyId)?.name,
-        }),
+        betaQuestSurfaceFor(quest, progress, player, surfaceDeps),
       )
+
+    // Mainline (Chinh Tuyen) ordering: chain members emit first, in
+    // unlocksAfterQuestId walk order - the chain is linear so the walk
+    // depth IS the display order. Members the walk cannot reach append
+    // in registry order (registration is the authored sequence).
+    const chainQuests = this.deps.questRegistry
+      .getAll()
+      .filter((quest) => quest.chainId === 'mainline')
+    const byId = new Map(models.map((model) => [model.id, model]))
+    const chainOrder = this.mainlineChainOrder(chainQuests)
+
+    const ordered: BetaQuestSurfaceModel[] = []
+    for (const quest of chainOrder) {
+      const model = byId.get(quest.id)
+      if (model) {
+        ordered.push(model)
+        byId.delete(quest.id)
+      }
+    }
+    for (const model of byId.values()) {
+      ordered.push(model)
+    }
+
+    // Locked preview (design sec.4): the first chain member that is
+    // neither active nor completed renders as a read-only dimmed row at
+    // the chain tail, with the gates that still hold it. Pure read -
+    // never admits, never mutates.
+    const completed = new Set(this.deps.questManager.getState().completedOnceIds)
+    const preview = chainOrder.find(
+      (quest) => !models.some((model) => model.id === quest.id) && !completed.has(quest.id),
+    )
+    if (preview) {
+      ordered.splice(
+        chainOrder.filter((quest) => models.some((model) => model.id === quest.id)).length,
+        0,
+        this.lockedPreviewFor(preview, player, surfaceDeps, completed),
+      )
+    }
+
+    return ordered
+  }
+
+  private mainlineChainOrder(chainQuests: Quest[]): Quest[] {
+    const nextOf = new Map(chainQuests.map((quest) => [quest.id, quest]))
+    const reached = new Set<Quest>()
+    let cursor = chainQuests.find((quest) => quest.unlocksAfterQuestId === undefined)
+    while (cursor) {
+      reached.add(cursor)
+      const next = chainQuests.find((quest) => quest.unlocksAfterQuestId === cursor!.id)
+      cursor = next && !reached.has(next) ? next : undefined
+    }
+    return [...reached, ...chainQuests.filter((quest) => !reached.has(quest) && nextOf.has(quest.id))]
+  }
+
+  private lockedPreviewFor(
+    quest: Quest,
+    player: PlayerData,
+    deps: BetaQuestSurfaceDeps,
+    completed: ReadonlySet<string>,
+  ): BetaQuestSurfaceModel {
+    const model = betaQuestSurfaceFor(
+      quest,
+      { questId: quest.id, progress: 0, claimed: false },
+      player,
+      deps,
+    )
+    const lockedPreview: BetaQuestSurfaceModel['lockedPreview'] = {}
+
+    if (
+      quest.unlocksAfterQuestId !== undefined &&
+      !completed.has(quest.unlocksAfterQuestId) &&
+      this.deps.questRegistry.has(quest.unlocksAfterQuestId)
+    ) {
+      lockedPreview.afterQuestName = this.deps.questRegistry.get(quest.unlocksAfterQuestId).name
+    }
+
+    if (
+      quest.requiredRealmId !== undefined &&
+      getRealmIndex(player.realmId) < getRealmIndex(quest.requiredRealmId)
+    ) {
+      lockedPreview.requiredRealmId = quest.requiredRealmId
+    }
+
+    model.lockedPreview = lockedPreview
+    return model
   }
 
   canClaimQuest(questId: string): boolean {
