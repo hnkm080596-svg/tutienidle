@@ -164,7 +164,6 @@ export class GameManagerQuestOps {
   }
 
   private mainlineChainOrder(chainQuests: Quest[]): Quest[] {
-    const nextOf = new Map(chainQuests.map((quest) => [quest.id, quest]))
     const reached = new Set<Quest>()
     let cursor = chainQuests.find((quest) => quest.unlocksAfterQuestId === undefined)
     while (cursor) {
@@ -172,7 +171,7 @@ export class GameManagerQuestOps {
       const next = chainQuests.find((quest) => quest.unlocksAfterQuestId === cursor!.id)
       cursor = next && !reached.has(next) ? next : undefined
     }
-    return [...reached, ...chainQuests.filter((quest) => !reached.has(quest) && nextOf.has(quest.id))]
+    return [...reached, ...chainQuests.filter((quest) => !reached.has(quest))]
   }
 
   private lockedPreviewFor(
