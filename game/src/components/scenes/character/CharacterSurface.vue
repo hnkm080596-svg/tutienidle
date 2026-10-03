@@ -12,7 +12,7 @@ import { usePlayerStore } from '@/stores/player'
 import { useStateVersion } from '@/composables/useGameState'
 import { useProgressionActions } from '@/composables/useProgressionActions'
 import { useTurnBattleInfo } from '@/composables/useTurnBattleInfo'
-import { usePaperNavigation } from '@/components/scenes/usePaperNavigation'
+import { usePaperNavigation } from '@/composables/usePaperNavigation'
 import { getCurrentRealm } from '@/core/realm/realmSystem'
 import { CULTIVATION_PATH_MODULES } from '@/core/player/CultivationPathKit'
 import type { CultivationPathId } from '@/core/player/CultivationPathKit'
@@ -29,7 +29,6 @@ import SceneDesignCanvas from '@/components/common/SceneDesignCanvas.vue'
 import CharacterFidelityScene from './fidelity/CharacterFidelityScene.vue'
 import type { CharacterUiModel, CharacterUiStat } from './fidelity/characterUi'
 
-const PAPER_NAV_IDS = ['realm', 'character', 'inventory', 'skill', 'technique', 'body', 'alchemy', 'equipment', 'exploration'] as const
 
 const { t } = useI18n()
 const ui = useUiStore()
@@ -37,7 +36,7 @@ const player = usePlayerStore()
 const { stateVersion } = useStateVersion()
 const { allocateAttributePoint } = useProgressionActions()
 const { isBattleInProgress: inBattle } = useTurnBattleInfo()
-const { items: navItems, navigate } = usePaperNavigation(PAPER_NAV_IDS)
+const { items: navItems, navigate } = usePaperNavigation()
 
 const notice = ref('')
 let noticeTimer: ReturnType<typeof setTimeout> | undefined

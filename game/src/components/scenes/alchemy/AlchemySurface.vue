@@ -19,7 +19,7 @@ import { PROFESSION_GRADE_NAMES, getProfessionGradeForRealm } from '@/core/profe
 import { professionGradeRank } from '@/core/profession/slotRank'
 import { useAudioStore } from '@/stores/audio'
 import SceneDesignCanvas from '@/components/common/SceneDesignCanvas.vue'
-import { usePaperNavigation } from '@/components/scenes/usePaperNavigation'
+import { usePaperNavigation } from '@/composables/usePaperNavigation'
 import AlchemyFidelityScene from './fidelity/AlchemyFidelityScene.vue'
 import type {
   AlchemyCostRow,
@@ -29,14 +29,13 @@ import type {
   AlchemyRecipeDisplay,
 } from './fidelity/alchemyUi'
 
-const PAPER_NAV_IDS = ['realm', 'character', 'inventory', 'skill', 'technique', 'body', 'alchemy', 'equipment', 'exploration'] as const
 
 const { t, te } = useI18n()
 
 const player = usePlayerStore()
 const ui = useUiStore()
 const gameManager = useGameManager()
-const { items: navItems, navigate } = usePaperNavigation(PAPER_NAV_IDS)
+const { items: navItems, navigate } = usePaperNavigation()
 
 const { stateVersion, bumpState } = useStateVersion()
 

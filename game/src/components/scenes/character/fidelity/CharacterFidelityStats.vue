@@ -25,23 +25,26 @@ const { t } = useI18n()
   </section>
 </template>
 <style scoped>
-.cf-stats { position: absolute; left: 891px; top: 180px; width: 248px; max-height: 520px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #7f714c transparent; z-index: 4; color: #302c20; }
-.cf-section { display: flex; align-items: center; gap: 9px; justify-content: center; font-size: 18px; font-weight: 500; margin: 0 0 12px; white-space: nowrap; }
+/* Extended down to the paper's lower margin and tightened so the Ngu
+   Hanh summary sits inside the visible column (ref shows it inline) -
+   no scrollbar: content fits the region. */
+.cf-stats { position: absolute; left: 891px; top: 180px; width: 248px; max-height: 560px; overflow-y: auto; scrollbar-width: none; z-index: 4; color: #302c20; }
+.cf-section { display: flex; align-items: center; gap: 9px; justify-content: center; font-size: 18px; font-weight: 500; margin: 0 0 7px; white-space: nowrap; }
 .cf-section::before, .cf-section::after { content: ''; flex: 1; height: 1px; background: #a58b50; }
 .cf-points { font-size: 12px; color: #8a5a1f; }
-.cf-stat-list { display: grid; gap: 11px; }
+.cf-stat-list { display: grid; gap: 7px; }
 .cf-stat { display: flex; align-items: center; gap: 6px; }
 .cf-stat__main { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; border: 0; background: transparent; padding: 0; color: inherit; cursor: pointer; text-align: left; }
-.cf-stat__seal { width: 40px; height: 40px; flex: 0 0 40px; padding: 8px; border-radius: 50%; background: var(--stat-color); border: 2px solid #f5e5b7; box-shadow: 0 0 0 1px #8e7444; }
+.cf-stat__seal { width: 36px; height: 36px; flex: 0 0 36px; padding: 7px; border-radius: 50%; background: var(--stat-color); border: 2px solid #f5e5b7; box-shadow: 0 0 0 1px #8e7444; }
 .cf-stat__seal img { width: 100%; filter: invert(91%) sepia(35%) saturate(251%); }
-.cf-stat__content { flex: 1; display: grid; gap: 7px; }.cf-stat__label { display: flex; justify-content: space-between; font-size: 17px; }.cf-stat__label b { font-weight: 500; }
+.cf-stat__content { flex: 1; display: grid; gap: 5px; }.cf-stat__label { display: flex; justify-content: space-between; font-size: 17px; }.cf-stat__label b { font-weight: 500; }
 .cf-stat__max { font-style: normal; font-size: 11px; color: #9a5a1e; margin-left: 4px; }
 .cf-stat__add { flex: 0 0 26px; height: 26px; border-radius: 50%; border: 1.5px solid #a5762e; background: linear-gradient(#ffe9ae,#d3a952); color: #4a2f0c; font-size: 17px; line-height: 1; cursor: pointer; }
 .cf-stat__track { height: 7px; background: #474839; border: 1px solid #c7b984; border-radius: 5px; overflow: hidden; }.cf-stat__track i { display: block; height: 100%; background: linear-gradient(90deg,var(--stat-color),#fff3c9); }
-.cf-section--talent { margin-top: 31px; }
-.cf-talent { display: flex; align-items: center; width: 100%; gap: 12px; border: 0; background: none; padding: 0; color: inherit; text-align: left; cursor: pointer; }
-.cf-talent + .cf-talent { margin-top: 10px; }
-.cf-talent__seal { flex: 0 0 63px; height: 63px; padding: 13px; border: 2px solid #e4c778; border-radius: 50%; background: radial-gradient(circle,#7c5c22,#25261b); box-shadow: 0 0 0 2px #9f7b36, 0 0 12px #dfb95799; }.cf-talent__seal img { width: 100%; filter: invert(90%) sepia(38%) saturate(474%); }
-.cf-talent__text { display: grid; gap: 7px; }.cf-talent__text strong { font-size: 15px; font-weight: 500; }.cf-talent__text small { font-size: 12px; line-height: 1.45; }
-.cf-section--elements { margin-top: 25px; }.cf-element-summary { display: flex; justify-content: space-between; }.cf-element-summary button { width: 44px; border: 0; background: none; color: #302c20; padding: 0; display: grid; justify-items: center; gap: 3px; cursor: pointer; font-size: 12px; }.cf-element-summary img { width: 40px; height: 40px; border-radius: 50%; }.cf-element-summary b { font-size: 13px; font-weight: 500; }
+.cf-section--talent { margin-top: 14px; }
+.cf-talent { display: flex; align-items: center; width: 100%; gap: 11px; border: 0; background: none; padding: 0; color: inherit; text-align: left; cursor: pointer; }
+.cf-talent + .cf-talent { margin-top: 8px; }
+.cf-talent__seal { flex: 0 0 54px; height: 54px; padding: 11px; border: 2px solid #e4c778; border-radius: 50%; background: radial-gradient(circle,#7c5c22,#25261b); box-shadow: 0 0 0 2px #9f7b36, 0 0 12px #dfb95799; }.cf-talent__seal img { width: 100%; filter: invert(90%) sepia(38%) saturate(474%); }
+.cf-talent__text { display: grid; gap: 5px; }.cf-talent__text strong { font-size: 15px; font-weight: 500; }.cf-talent__text small { font-size: 12px; line-height: 1.4; }
+.cf-section--elements { margin-top: 13px; }.cf-element-summary { display: flex; justify-content: space-between; }.cf-element-summary button { width: 42px; border: 0; background: none; color: #302c20; padding: 0; display: grid; justify-items: center; gap: 3px; cursor: pointer; font-size: 12px; }.cf-element-summary img { width: 36px; height: 36px; border-radius: 50%; }.cf-element-summary b { font-size: 13px; font-weight: 500; }
 </style>

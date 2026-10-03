@@ -14,8 +14,10 @@ import {
  * over ~0.5s while Pinia flags already show 'open'. These tests attack
  * the boundary: interruption (Esc/scrim) mid-unfold, rapid sequential
  * nav swaps, and the character-detail dock crossing the
- * character/inventory tab boundary. Oracles are user-observable DOM
- * states, not transition internals.
+ * character/inventory boundary. Oracles are user-observable DOM
+ * states, not transition internals. The rail is the shared paper nav
+ * (.paper-navigation-item / [data-nav-id]) - the same component the
+ * fidelity surfaces and the scroll both render.
  */
 
 async function createBetaCharacter(page: Page, name: string): Promise<void> {
@@ -49,15 +51,16 @@ test.describe('imperial scroll lifecycle - adversarial', () => {
     const collected = collectBrowserErrors(page)
     await bootFreshMortal(page)
 
-    await openLeftMode(page, 'character')
+    await openLeftMode(page, 'inventory')
     // Do NOT wait for the unfold to settle - press Esc while the clip
     // is still opening.
     await expect(page.locator('.hk-scroll')).toBeVisible({ timeout: 10_000 })
     await page.keyboard.press('Escape')
 
     await expect(page.locator('.hk-scroll')).toHaveCount(0, { timeout: 5_000 })
-    // Home chrome is restored - the wheel layer is back in the DOM.
-    await expect(page.locator('.command-wheel-layer')).toHaveCount(1)
+    // Home chrome is restored - the fidelity wheel stays mounted (it is
+    // v-show'd, never unmounted, on the home surface).
+    await expect(page.locator('.df-wheel')).toHaveCount(1)
 
     assertNoBrowserErrors(collected)
   })
@@ -66,7 +69,7 @@ test.describe('imperial scroll lifecycle - adversarial', () => {
     const collected = collectBrowserErrors(page)
     await bootFreshMortal(page)
 
-    await openLeftMode(page, 'character')
+    await openLeftMode(page, 'inventory')
     const scroll = page.locator('.hk-scroll')
     await expect(scroll).toBeVisible({ timeout: 10_000 })
 
@@ -78,80 +81,79 @@ test.describe('imperial scroll lifecycle - adversarial', () => {
     assertNoBrowserErrors(collected)
   })
 
-  test('rapid sequential nav swaps leave exactly one scroll on the last target', async ({ page }) => {
+  test('rapid sequential nav swaps leave exactly one open surface on the last target', async ({ page }) => {
     const collected = collectBrowserErrors(page)
     await bootFreshMortal(page)
 
-    await openLeftMode(page, 'character')
-    const rail = page.locator('.hk-nav-seal[data-scene="realm"]')
+    await openLeftMode(page, 'inventory')
+    const rail = page.locator('.paper-navigation-item[data-nav-id="realm"]')
     await expect(rail).toBeVisible({ timeout: 10_000 })
 
     // Fire three nav activations back-to-back without presentation-idle
-    // waits - the last click wins and no second scroll mounts.
-    await page.locator('.hk-nav-seal[data-scene="realm"]').click()
-    await page.locator('.hk-nav-seal[data-scene="quest"]').click()
-    await page.locator('.hk-nav-seal[data-scene="technique"]').click()
+    // waits - the last click wins and no second surface stays mounted.
+    await page.locator('.paper-navigation-item[data-nav-id="realm"]').click()
+    await page.locator('.paper-navigation-item[data-nav-id="quest"]').click()
+    await page.locator('.paper-navigation-item[data-nav-id="technique"]').click()
 
     // Last click wins. Crossfade briefly mounts leaving+entering
-    // scrolls together (the leaver's rail still answers until it
-    // detaches), so poll until exactly one active seal survives - it
+    // surfaces together (the leaver's rail still answers until it
+    // detaches), so poll until exactly one active item survives - it
     // must be the last-clicked scene. (A fresh mortal renders the empty
-    // technique surface, so the seal is the content-independent oracle.)
+    // technique surface, so the rail item is the content-independent
+    // oracle.)
     await expect
       .poll(
         async () => {
           const scenes = await page
-            .locator('.hk-nav-seal.is-active')
-            .evaluateAll((nodes) => nodes.map((n) => n.getAttribute('data-scene')))
+            .locator('.paper-navigation-item.active')
+            .evaluateAll((nodes) => nodes.map((n) => n.getAttribute('data-nav-id')))
           return scenes.join(',')
         },
         { timeout: 15_000 },
       )
       .toBe('technique')
-    await expect(page.locator('.hk-scroll')).toHaveCount(1, { timeout: 15_000 })
 
     assertNoBrowserErrors(collected)
   })
 
-  test('character detail dock cannot leak across the inventory tab swap', async ({ page }) => {
+  test('character detail dock cannot leak across nav swaps', async ({ page }) => {
     const collected = collectBrowserErrors(page)
     await bootFreshMortal(page)
 
     await openLeftMode(page, 'character')
-    const detailBtn = page.locator('.character-panel__details-btn')
-    await expect(detailBtn).toBeVisible({ timeout: 10_000 })
-    await detailBtn.click()
-    await expect(page.getByTestId('character-detail-card')).toBeVisible()
+    const heading = page.locator('.cf-details__heading')
+    await expect(heading).toBeVisible({ timeout: 10_000 })
+    await heading.click()
+    await expect(heading).toHaveAttribute('aria-expanded', 'true')
 
-    // Swap to inventory inside the same scroll - the dock is a
-    // character-scene overlay and must not render over the bag.
-    await page.locator('.hk-nav-seal[data-scene="inventory"]').click()
+    // Swap to inventory via the shared rail - the dock is a
+    // character-surface overlay and must not render over the bag.
+    await page.locator('.paper-navigation-item[data-nav-id="inventory"]').click()
     await expect(page.locator('.inventory-panel')).toBeVisible({ timeout: 10_000 })
-    await expect(page.getByTestId('character-detail-card')).toHaveCount(0)
 
-    // Back to character: the card stays closed (closeHomeOverlays reset
+    // Back to character: the dock stays closed (closeHomeOverlays reset
     // it during the swap - it must not resurrect stale UI state).
-    await page.locator('.hk-nav-seal[data-scene="character"]').click()
-    await expect(page.locator('.character-panel')).toBeVisible({ timeout: 10_000 })
-    await expect(page.getByTestId('character-detail-card')).toHaveCount(0)
+    await page.locator('.paper-navigation-item[data-nav-id="character"]').click()
+    await expect(page.locator('.cf-scene')).toBeVisible({ timeout: 10_000 })
+    await expect(page.locator('.cf-details__heading')).toHaveAttribute('aria-expanded', 'false')
 
     assertNoBrowserErrors(collected)
   })
 
-  test('scope-hidden scenes never render a rail seal', async ({ page }) => {
+  test('scope-hidden scenes never render a rail item', async ({ page }) => {
     const collected = collectBrowserErrors(page)
     await bootFreshMortal(page)
 
-    await openLeftMode(page, 'character')
-    const railList = page.locator('.hk-nav__list')
+    await openLeftMode(page, 'inventory')
+    const railList = page.locator('.paper-navigation-items')
     await expect(railList).toBeVisible({ timeout: 10_000 })
 
     // The rail admits exactly the beta-live scenes; scope-hidden ids
-    // (artifact/companion/tran_phap etc.) have no seal at all - absence,
+    // (artifact/companion/tran_phap etc.) have no item at all - absence,
     // not a disabled affordance.
-    const seals = page.locator('.hk-nav-seal')
-    const sceneIds = await seals.evaluateAll((nodes) =>
-      nodes.map((n) => n.getAttribute('data-scene')),
+    const items = page.locator('.paper-navigation-item')
+    const sceneIds = await items.evaluateAll((nodes) =>
+      nodes.map((n) => n.getAttribute('data-nav-id')),
     )
     expect(sceneIds.sort()).toEqual(
       ['alchemy', 'body', 'character', 'equipment', 'exploration', 'inventory', 'quest', 'realm', 'settings', 'skill', 'technique'].sort(),

@@ -13,7 +13,7 @@ import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useBreakthroughRequirementStore } from '@/stores/breakthroughRequirement'
 import { useRealmStatPassives } from '@/composables/useRealmStatPassives'
-import { usePaperNavigation } from '@/components/scenes/usePaperNavigation'
+import { usePaperNavigation } from '@/composables/usePaperNavigation'
 import { getCurrentRealm, CORE_REALM_LEVEL } from '@/core/realm/realmSystem'
 import { betaNextRealmSurfaceFor } from '@/core/betaScopeSurface'
 import { formatNumber } from '@/core/format/NumberFormatter'
@@ -22,7 +22,6 @@ import SceneDesignCanvas from '@/components/common/SceneDesignCanvas.vue'
 import RealmFidelityScene from './fidelity/RealmFidelityScene.vue'
 import type { RealmUiModel } from './fidelity/realmUi'
 
-const PAPER_NAV_IDS = ['realm', 'character', 'inventory', 'skill', 'technique', 'body', 'alchemy', 'equipment', 'exploration'] as const
 
 const { t } = useI18n()
 const ui = useUiStore()
@@ -31,7 +30,7 @@ const gameManager = useGameManager()
 const { stateVersion } = useStateVersion()
 const requirement = useBreakthroughRequirementStore()
 const { realmStatPassiveRows } = useRealmStatPassives()
-const { items: navItems, navigate } = usePaperNavigation(PAPER_NAV_IDS)
+const { items: navItems, navigate } = usePaperNavigation()
 
 const selected = ref(0)
 const notice = ref('')

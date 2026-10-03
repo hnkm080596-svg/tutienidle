@@ -1931,6 +1931,7 @@
     "unhandled": "This feature is not open yet."
   },
   "paperNav": {
+    "navigation": "Functions",
     "realm": "Realm",
     "character": "Character",
     "inventory": "Bag",

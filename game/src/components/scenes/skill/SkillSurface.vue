@@ -18,7 +18,7 @@ import { useI18n } from 'vue-i18n'
 import { useUiStore } from '@/stores/ui'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
-import { usePaperNavigation } from '@/components/scenes/usePaperNavigation'
+import { usePaperNavigation } from '@/composables/usePaperNavigation'
 import { useTurnBattleInfo } from '@/composables/useTurnBattleInfo'
 import { useProgressionActions } from '@/composables/useProgressionActions'
 import { ELEMENT_ORDER, ELEMENT_LABELS } from '@/core/element/ElementLabels'
@@ -35,7 +35,6 @@ import type { NodePrerequisite, ProgressionNode } from '@/core/progression/Progr
 import SkillFidelityScene from './fidelity/SkillFidelityScene.vue'
 import type { SkillUiEdge, SkillUiElement, SkillUiNode } from './fidelity/skillUi'
 
-const PAPER_NAV_IDS = ['realm', 'character', 'inventory', 'skill', 'technique', 'body', 'alchemy', 'equipment', 'exploration'] as const
 const CANVAS_W = 710
 const CANVAS_H = 445
 const FALLBACK_ICON = resolveAssetUrl('/assets/ui/huyen-kim/symbols/skill.svg')
@@ -45,7 +44,7 @@ const ui = useUiStore()
 const player = usePlayerStore()
 const gameManager = useGameManager()
 const { stateVersion } = useStateVersion()
-const { items: navItems, navigate } = usePaperNavigation(PAPER_NAV_IDS)
+const { items: navItems, navigate } = usePaperNavigation()
 const { isBattleInProgress: inBattle } = useTurnBattleInfo()
 const { purchaseNode, upgradeNode, respecNodeTree } = useProgressionActions()
 

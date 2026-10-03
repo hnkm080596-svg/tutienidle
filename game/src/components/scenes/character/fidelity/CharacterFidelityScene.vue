@@ -56,5 +56,5 @@ useDialogFocus(rootRef, () => true, { onEscape: () => emit('back') })
 .cf-scene :deep(button:focus-visible), .cf-scene :deep(a:focus-visible) { outline: 2px solid #7a481f; outline-offset: 4px; }.cf-scene :deep(button:hover) { filter: brightness(1.12); }
 .cf-paper { position: absolute; left: 94px; top: 123px; width: 1334px; height: 633px; border: 0 solid transparent; border-image-slice: 300 fill; border-image-width: 83px; border-image-repeat: stretch; filter: drop-shadow(0 12px 15px #0009); }
 .cf-preview { position: absolute; left: 215px; top: 705px; width: 210px; font-size: 10px; line-height: 15px; letter-spacing: .4px; color: #675c43; z-index: 4; }
-.cf-notice { position: absolute; left: 450px; top: 718px; width: 675px; height: 25px; text-align: center; font-size: 13px; color: #4e3b1d; z-index: 6; pointer-events: none; }
+.cf-notice { position: absolute; left: 450px; top: 704px; width: 675px; height: 25px; text-align: center; font-size: 13px; color: #4e3b1d; z-index: 6; pointer-events: none; }
 </style>

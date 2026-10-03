@@ -29,10 +29,9 @@ import type {
   ExplorationNode,
   ExplorationPaperModel,
 } from './fidelity/explorationUi'
-import { usePaperNavigation } from '@/components/scenes/usePaperNavigation'
+import { usePaperNavigation } from '@/composables/usePaperNavigation'
 import { disabledReasonLabel } from './disabledReasonLabel'
 
-const PAPER_NAV_IDS = ['realm', 'character', 'inventory', 'skill', 'technique', 'body', 'alchemy', 'equipment', 'exploration'] as const
 const TERRAIN_SRC = resolveAssetUrl('/assets/ui/huyen-kim/scene/exploration-v2/terrain-three-realms-v1.png')
 const MODES: readonly BattleRunMode[] = ['manual', 'repeat', 'progress', 'perfect_farm']
 const MODE_LABEL_KEYS: Record<BattleRunMode, string> = {
@@ -66,7 +65,7 @@ const ui = useUiStore()
 const gameManager = useGameManager()
 const { startSelectedStage } = useBattleActions()
 const assetManager = inject(ASSET_BUNDLE_MANAGER_KEY, null)
-const { items: navItems, navigate } = usePaperNavigation(PAPER_NAV_IDS)
+const { items: navItems, navigate } = usePaperNavigation()
 
 const notice = ref('')
 let noticeTimer: number | undefined

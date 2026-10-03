@@ -20,7 +20,7 @@ import { isBetaEquipmentTab } from '@/core/betaScope'
 import { EQUIPMENT_SLOTS } from '@/core/equipment/EquipmentSlotState'
 import { HALL_SELECTION_KEY } from '@/components/panels/equipment-hall/hallSelection'
 import SceneDesignCanvas from '@/components/common/SceneDesignCanvas.vue'
-import { usePaperNavigation } from '@/components/scenes/usePaperNavigation'
+import { usePaperNavigation } from '@/composables/usePaperNavigation'
 import EquipmentFidelityScene from './fidelity/EquipmentFidelityScene.vue'
 import EquipmentPaperdollStage from './paperdoll/EquipmentPaperdollStage.vue'
 import EquipmentItemDetail from './detail/EquipmentItemDetail.vue'
@@ -32,13 +32,12 @@ import DissolveTab from '@/components/panels/equipment-hall/DissolveTab.vue'
 import DecomposeTab from '@/components/panels/equipment-hall/DecomposeTab.vue'
 import type { Stats } from '@/core/stats/StatBlock'
 
-const PAPER_NAV_IDS = ['realm', 'character', 'inventory', 'skill', 'technique', 'body', 'alchemy', 'equipment', 'exploration'] as const
 
 const { t } = useI18n()
 const player = usePlayerStore()
 const ui = useUiStore()
 const gameManager = useGameManager()
-const { items: navItems, navigate } = usePaperNavigation(PAPER_NAV_IDS)
+const { items: navItems, navigate } = usePaperNavigation()
 const { stateVersion } = useStateVersion()
 
 // Canonical authored op table (same ids the old shell declared); the

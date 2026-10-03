@@ -12,7 +12,7 @@ import { useI18n } from 'vue-i18n'
 import { useUiStore } from '@/stores/ui'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
-import { usePaperNavigation } from '@/components/scenes/usePaperNavigation'
+import { usePaperNavigation } from '@/composables/usePaperNavigation'
 import { formatNumber } from '@/core/format/NumberFormatter'
 import { resolveAssetUrl } from '@/presentation/assets/AssetBaseUrl'
 import { TECHNIQUE_TIER_LABELS } from '@/core/technique/TechniqueProgression'
@@ -23,7 +23,6 @@ import SceneDesignCanvas from '@/components/common/SceneDesignCanvas.vue'
 import TechniqueFidelityScene from './fidelity/TechniqueFidelityScene.vue'
 import type { TechniqueUiModel } from './fidelity/techniqueUi'
 
-const PAPER_NAV_IDS = ['realm', 'character', 'inventory', 'skill', 'technique', 'body', 'alchemy', 'equipment', 'exploration'] as const
 const TIER_ORDER: readonly TechniqueTier[] = ['so_nhap', 'tieu_thanh', 'dai_thanh', 'vien_man']
 const FALLBACK_ART = '/assets/ui/huyen-kim/scene/technique-v2/temporary-manual-v1.png'
 
@@ -32,7 +31,7 @@ const ui = useUiStore()
 const player = usePlayerStore()
 const gameManager = useGameManager()
 const { stateVersion, bumpState } = useStateVersion()
-const { items: navItems, navigate } = usePaperNavigation(PAPER_NAV_IDS)
+const { items: navItems, navigate } = usePaperNavigation()
 
 const selected = ref('')
 const notice = ref('')

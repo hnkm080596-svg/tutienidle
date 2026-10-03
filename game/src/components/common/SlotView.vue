@@ -537,7 +537,11 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
      transparent padding into its edges, so the layer overshoots the
      cell by 4% to land its bright stroke on the slot border. */
 .slot-view--item {
-  --slot-hover-image: url('/assets/ui/Slot/bag-slot-hover.png');
+  /* The old "cell select" wisp (a 1024x93 strip) squashed into square
+     cells read as a smudge inside empty slots - the clean pale-gold
+     frame is the square-cell hover art everywhere now. */
+  --slot-hover-image: url('/assets/ui/Slot/slot-frame-hover.png');
+  --slot-hover-inset: -4%;
 }
 
 .slot-view--equipment {

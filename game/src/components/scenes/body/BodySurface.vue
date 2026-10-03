@@ -12,7 +12,7 @@ import { useI18n } from 'vue-i18n'
 import { useUiStore } from '@/stores/ui'
 import { usePlayerStore } from '@/stores/player'
 import { useStateVersion } from '@/composables/useGameState'
-import { usePaperNavigation } from '@/components/scenes/usePaperNavigation'
+import { usePaperNavigation } from '@/composables/usePaperNavigation'
 import { useBodySceneModel, bodyChapterCtaKey, bodyChapterSubtitleKey } from './useBodySceneModel'
 import { BODY_CHAPTER_LABEL_KEYS } from './useBodySceneModel'
 import type { BodyChapterId } from '@/core/realm/body/BodyChapter'
@@ -31,13 +31,12 @@ import type {
   BodyPaperUnit,
 } from './fidelity/bodyUi'
 
-const PAPER_NAV_IDS = ['realm', 'character', 'inventory', 'skill', 'technique', 'body', 'alchemy', 'equipment', 'exploration'] as const
 
 const { t } = useI18n()
 const ui = useUiStore()
 const player = usePlayerStore()
 const { stateVersion } = useStateVersion()
-const { items: navItems, navigate } = usePaperNavigation(PAPER_NAV_IDS)
+const { items: navItems, navigate } = usePaperNavigation()
 const model = useBodySceneModel()
 
 const notice = ref('')
