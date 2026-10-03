@@ -1,0 +1,15 @@
+{
+  "op": "t9-ledger-fixup",
+  "ops": [
+    "finding F-AS-1: actionable+pinEvidence fixed",
+    "finding F-AS-2: actionable+pinEvidence fixed",
+    "finding F-AS-3: actionable+pinEvidence fixed",
+    "lesson L-DUP-WAVE-OVERLAP findingIds+=F-AS-1..3",
+    "RV-CLOSURE-8 previousPhaseReviewId<-RV-CLOSURE-6",
+    "review RV-SEQ8-COR added",
+    "review RV-SEQ8-AUT added",
+    "review RV-SEQ8-INT added",
+    "CY-SEQ-8 reviewIds<-SEQ8 passes",
+    "EV-FINAL-VERIFY-T9 hash+status fixed"
+  ]
+}

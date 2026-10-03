@@ -1,0 +1,6 @@
+
+Running 2 tests using 2 workers
+
+[1/2] tests/e2e/save-reload.spec.ts:63:3 › Save and reload persistence › persists character and seeded spirit stones exactly across reload
+[2/2] tests/e2e/boot-fresh.spec.ts:9:3 › Boot fresh (no saved state) › boots to character-creation when no save exists
+  2 passed (21.2s)

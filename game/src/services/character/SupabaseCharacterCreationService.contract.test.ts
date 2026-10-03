@@ -19,9 +19,9 @@ const config = { url: 'https://example.supabase.co', anonKey: 'anon' }
 const CREATED_CHARACTER = {
   id: 'char-1',
   name: 'Lạc Vân',
-  selectedTalentIds: ['talent-a'],
+  selectedTalentIds: ['hap_linh'],
   baseAttributes: { strength: 1, dexterity: 1, intelligence: 1, attunement: 1, vitality: 1 },
-  mortalBasicSkillId: 'huy_quyen',
+  mortalBasicSkillId: 'linh_bao',
   realmId: 'mortal',
   realmLevel: 0,
   createdAt: '2026-09-30T00:00:00Z',
@@ -67,16 +67,18 @@ beforeEach(() => {
 })
 
 describe('SupabaseCharacterCreationService - create_character RPC contract (B1.4 metadata-only)', () => {
+  // BETA SCOPE LOCK v2: the draft is name + talent only; the talent
+  // id must be beta-admitted (the roll's own entries pass the
+  // same gate).
   const draft: CharacterCreationDraft = {
     name: 'Lạc Vân',
-    talentIds: ['talent-a'],
-    mortalBasicSkillId: 'huy_quyen',
+    talentIds: ['hap_linh'],
   }
 
   it('sends exactly the migration signature - no p_initial_save / p_schema_version channel', async () => {
     const calls = stubFetch((call) => {
       if (call.url.endsWith('/rpc/create_talent_roll')) {
-        return json({ rollId: 'roll-1', talents: [{ id: 'talent-a' }] })
+        return json({ rollId: 'roll-1', talents: [{ id: 'hap_linh' }] })
       }
       if (call.url.endsWith('/rpc/is_character_name_available')) return json(true)
       if (call.url.endsWith('/rpc/create_character')) {
@@ -102,8 +104,8 @@ describe('SupabaseCharacterCreationService - create_character RPC contract (B1.4
     expect(body).not.toHaveProperty('p_initial_save')
     expect(body).not.toHaveProperty('p_schema_version')
     expect(body).not.toHaveProperty('p_attributes')
-    expect(body.p_mortal_basic_skill_id).toBe('huy_quyen')
-    expect(body.p_talent_ids).toEqual(['talent-a'])
+    expect(body.p_mortal_basic_skill_id).toBe('linh_bao')
+    expect(body.p_talent_ids).toEqual(['hap_linh'])
     expect(body.p_roll_id).toBe('roll-1')
     expect(body.p_session_id).toBe('s1')
   })
@@ -111,7 +113,7 @@ describe('SupabaseCharacterCreationService - create_character RPC contract (B1.4
   it('CREATED returns the canonical character metadata (reconstruction input)', async () => {
     stubFetch((call) => {
       if (call.url.endsWith('/rpc/create_talent_roll')) {
-        return json({ rollId: 'roll-1', talents: [{ id: 'talent-a' }] })
+        return json({ rollId: 'roll-1', talents: [{ id: 'hap_linh' }] })
       }
       if (call.url.endsWith('/rpc/is_character_name_available')) return json(true)
       if (call.url.endsWith('/rpc/create_character')) {
@@ -140,7 +142,7 @@ describe('SupabaseCharacterCreationService - create_character RPC contract (B1.4
     for (const [rpcCode, expectedCode] of cases) {
       stubFetch((call) => {
         if (call.url.endsWith('/rpc/create_talent_roll')) {
-          return json({ rollId: 'roll-1', talents: [{ id: 'talent-a' }] })
+          return json({ rollId: 'roll-1', talents: [{ id: 'hap_linh' }] })
         }
         if (call.url.endsWith('/rpc/is_character_name_available')) return json(true)
         if (call.url.endsWith('/rpc/create_character')) {
@@ -160,7 +162,7 @@ describe('SupabaseCharacterCreationService - create_character RPC contract (B1.4
   it('a malformed CREATED payload is rejected client-side (no silent half-creation)', async () => {
     stubFetch((call) => {
       if (call.url.endsWith('/rpc/create_talent_roll')) {
-        return json({ rollId: 'roll-1', talents: [{ id: 'talent-a' }] })
+        return json({ rollId: 'roll-1', talents: [{ id: 'hap_linh' }] })
       }
       if (call.url.endsWith('/rpc/is_character_name_available')) return json(true)
       if (call.url.endsWith('/rpc/create_character')) {
@@ -180,7 +182,7 @@ describe('SupabaseCharacterCreationService - create_character RPC contract (B1.4
   it('keeps the roll consumable only after a successful create (rollId cleared)', async () => {
     stubFetch((call) => {
       if (call.url.endsWith('/rpc/create_talent_roll')) {
-        return json({ rollId: 'roll-1', talents: [{ id: 'talent-a' }] })
+        return json({ rollId: 'roll-1', talents: [{ id: 'hap_linh' }] })
       }
       if (call.url.endsWith('/rpc/is_character_name_available')) return json(true)
       if (call.url.endsWith('/rpc/create_character')) {
@@ -200,7 +202,7 @@ describe('SupabaseCharacterCreationService - create_character RPC contract (B1.4
     let createCalls = 0
     stubFetch((call) => {
       if (call.url.endsWith('/rpc/create_talent_roll')) {
-        return json({ rollId: 'roll-1', talents: [{ id: 'talent-a' }] })
+        return json({ rollId: 'roll-1', talents: [{ id: 'hap_linh' }] })
       }
       if (call.url.endsWith('/rpc/is_character_name_available')) return json(true)
       if (call.url.endsWith('/rpc/create_character')) {

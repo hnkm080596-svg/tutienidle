@@ -1,0 +1,6 @@
+RV-ADV-B7 (devin-17675f9babeb448f80971898027f1682) - blind integration/consumer seam review @ 3e802342 (T12)
+Verdict: FAIL WITH REASON - 2 confirmed defects, each with failing vitest repro.
+Probes: src/core/betaScope.carriedSave.probe.test.ts (4 of 5 FAIL pre-fix)
+F-B7-1 [Medium] dormant talents render as selectable UPGRADE cards on mandatory breakthrough-talent modal - getUpgradeableTalentIds + UPGRADE branch of resolveTalentEntitlement lack isBetaTalentId gate; carried kd_* talents offered on uncancellable modal, consuming the player's ONE entitlement.
+F-B7-2 [Medium] closeHiddenLineage not scope-gated - every live normal breakthrough (commitInitiationRealmAdvance, TribulationOutcomeService.resolveVictory) permanently mutates a carried open lineage (lineageActive->false, lineageClosedByRealmId written) - destructive write on dormant state.
+Tried-and-clean: combat consumer seams (kits/roles/auras), tri-state verdicts, read-model honesty, save-consumer seams, shop/loot/quest consumers.

@@ -25,26 +25,30 @@ afterEach(() => {
 })
 
 describe('ink-wash shared primitives', () => {
-  it('maps each rectangular button variant to the approved XS/S slice', () => {
-    const cases = [
-      ['primary', 'button-s-paper'],
-      ['secondary', 'button-s-ink'],
-      ['danger', 'button-s-seal'],
-      ['ghost', 'frame-xs-ink-line'],
-    ] as const
-
-    for (const [variant, asset] of cases) {
+  it('maps each rectangular button variant to the huyen-kim button slot', () => {
+    for (const variant of ['primary', 'secondary', 'danger'] as const) {
       const container = mount(GameButton, { variant })
-      expect(container.querySelector(`[data-ink-slice="${asset}"]`)).not.toBeNull()
+      expect(container.querySelector('[data-hk-slice="button-standard"]')).not.toBeNull()
     }
+    // ghost stays a bare hairline frame on the element - no slice layer.
+    const ghost = mount(GameButton, { variant: 'ghost' })
+    expect(ghost.querySelector('[data-hk-slice]')).toBeNull()
+    expect(ghost.querySelector('[data-ink-slice]')).toBeNull()
   })
 
-  it('keeps circular buttons round with their CSS border instead of a rectangular slice', () => {
+  it('maps circular buttons to the icon-button-utility seal slot', () => {
     const circle = mount(GameButton, { shape: 'circle' })
     const button = circle.querySelector('button')
 
-    expect(circle.querySelector('[data-ink-slice]')).toBeNull()
+    expect(circle.querySelector('[data-hk-slice="icon-button-utility"]')).not.toBeNull()
     expect(button?.classList).toContain('game-button--circle')
+  })
+
+  it('keeps ghost circles a bare hairline - no slice layer', () => {
+    const ghostCircle = mount(GameButton, { shape: 'circle', variant: 'ghost' })
+
+    expect(ghostCircle.querySelector('[data-hk-slice]')).toBeNull()
+    expect(ghostCircle.querySelector('[data-ink-slice]')).toBeNull()
   })
 
   it('keeps enabled, disabled, and loading click behavior unchanged', () => {
@@ -64,11 +68,11 @@ describe('ink-wash shared primitives', () => {
     expect(loadingClick).not.toHaveBeenCalled()
   })
 
-  it('adds ink frames without replacing primitive semantics', () => {
+  it('adds chrome frames without replacing primitive semantics', () => {
     const chip = mount(Chip, { active: true })
     const badge = mount(NotificationBadge, { count: 3 })
 
-    expect(chip.querySelector('[data-ink-slice="frame-xs-ink-line"]')).not.toBeNull()
+    expect(chip.querySelector('[data-hk-slice="seal-chip"]')).not.toBeNull()
     expect(chip.querySelector('button')?.classList.contains('is-active')).toBe(true)
     expect(badge.querySelector('[data-ink-slice="frame-xs-ink-line"]')).not.toBeNull()
     expect(badge.textContent).toContain('3')
@@ -76,10 +80,11 @@ describe('ink-wash shared primitives', () => {
 
   // SlotView KHÔNG dùng ink-wash frame — lặp lại trên lưới dày đặc (Kho
   // Vật) gây rối; giữ viền CSS đơn giản (xem SlotView.vue).
-  it('SlotView stays plain CSS border, no repeated ink-wash frame', () => {
+  it('SlotView stays plain CSS border, no repeated nine-slice frame', () => {
     const slot = mount(SlotView as Component, { item: null, label: 'Trống' })
 
     expect(slot.querySelector('[data-ink-slice]')).toBeNull()
+    expect(slot.querySelector('[data-hk-slice]')).toBeNull()
     expect(slot.querySelector('button')?.getAttribute('aria-label')).toBe('Trống')
   })
 })

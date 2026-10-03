@@ -17,7 +17,6 @@ import { MORTAL_PRECURSOR_SKILL_IDS } from '../../core/skill/MortalPrecursors'
 const METADATA: CharacterInitializationMetadata = {
   name: 'Vo Danh',
   talentIds: ['talent-a'],
-  mortalBasicSkillId: 'linh_bao',
 }
 
 const REMOTE_CHARACTER: RemoteCharacterMetadata = {
@@ -48,6 +47,7 @@ function makeOwners() {
     materialAdd: vi.fn(),
     setProductionAutoRestart: vi.fn(),
     setActivePlayer: vi.fn(),
+    reconcileQuestLifecycle: vi.fn(),
   }
 
   const gameManager = {
@@ -70,6 +70,9 @@ function makeOwners() {
       getSiteDefinitions: () => [{ siteId: 'linh_tuyen' }, { siteId: 'khi_duong' }],
     },
     setActivePlayer: calls.setActivePlayer,
+    tickOps: {
+      reconcileQuestLifecycle: calls.reconcileQuestLifecycle,
+    },
   } as unknown as GameManager
 
   const owners: InitializeCharacterOwners = {
@@ -88,8 +91,18 @@ describe('initializeCharacter - one starter snapshot from canonical metadata', (
     expect(mapped).toEqual({
       name: 'Vo Danh',
       talentIds: ['talent-a'],
-      mortalBasicSkillId: 'linh_bao',
     })
+  })
+
+  it('rejects a remote row whose starter pick is not the beta constant', () => {
+    // BETA SCOPE LOCK v2: a row carrying any other starter pick is
+    // corrupt server data - the adapter fails closed at the metadata
+    // seam, before any boot grant runs.
+    for (const pick of ['tram', 'huy_quyen', 'hoa_cau_thuat', '']) {
+      expect(() =>
+        initializationMetadataFromRemote({ ...REMOTE_CHARACTER, mortalBasicSkillId: pick }),
+      ).toThrow(/not the beta starter/)
+    }
   })
 
   it('writes the creation profile + deterministic picks through the real grant owners', () => {
@@ -138,15 +151,17 @@ describe('initializeCharacter - one starter snapshot from canonical metadata', (
     expect(calls.setProductionAutoRestart).toHaveBeenCalledWith('khi_duong', true)
 
     expect(calls.setActivePlayer).toHaveBeenCalledWith(player)
+
+    // Quest activation runs at init (not deferred to reload): without it
+    // a fresh character sees an empty Nhiem Vu board for the session.
+    expect(calls.reconcileQuestLifecycle).toHaveBeenCalledTimes(1)
   })
 
-  it('a rejected mortal-skill pick propagates (corrupt metadata never defaults silently)', () => {
+  it('a rejected starter write propagates (a boot that cannot pin linh_bao never defaults silently)', () => {
     const { owners, calls } = makeOwners()
     calls.setMortalBasicSkill.mockReturnValue(false)
 
-    expect(() =>
-      initializeCharacter({ ...METADATA, mortalBasicSkillId: 'not-a-precursor' }, owners),
-    ).toThrow(/pick rejected/)
+    expect(() => initializeCharacter(METADATA, owners)).toThrow()
   })
 
   it('reconstructing from the same metadata produces the identical snapshot shape', () => {

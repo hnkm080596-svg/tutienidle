@@ -29,9 +29,9 @@ function buildLegacySave(skills: Skill[]): GameSave {
       // grant (three-channel write, CREATION) and the hiddenPerfection
       // lineage slice (HIDDEN-A).
       realmId: 'mortal',
-      mortalBasicSkillId: 'tram',
-      nodeLevels: { core_tram: 1 },
-      purchasedNodeIds: ['core_tram'],
+      mortalBasicSkillId: 'linh_bao',
+      nodeLevels: { core_linh_bao: 1, core_tram: 1 },
+      purchasedNodeIds: ['core_linh_bao', 'core_tram'],
       hiddenPerfection: createDefaultHiddenPerfection(),
     },
     techniques: [],
@@ -61,7 +61,13 @@ describe('GameManager — restore skill legacy thiếu execution (bugfix 2026-08
 
     delete legacyTram.execution
 
-    gameManager.saveOps.restoreFromSave(buildLegacySave([legacyTram]))
+    // The pick pairs with a learned linh_bao (beta starter contract);
+    // tram is the second learned precursor exercising the backfill.
+    const linhBao = JSON.parse(
+      JSON.stringify(SKILLS.find((skill) => skill.id === 'linh_bao')),
+    ) as Skill
+
+    gameManager.saveOps.restoreFromSave(buildLegacySave([legacyTram, linhBao]))
 
     const restored = gameManager.skillManager.get('tram')!
 
@@ -82,7 +88,11 @@ describe('GameManager — restore skill legacy thiếu execution (bugfix 2026-08
 
     delete legacyTram.execution
 
-    gameManager.saveOps.restoreFromSave(buildLegacySave([legacyTram]))
+    const linhBao = JSON.parse(
+      JSON.stringify(SKILLS.find((skill) => skill.id === 'linh_bao')),
+    ) as Skill
+
+    gameManager.saveOps.restoreFromSave(buildLegacySave([legacyTram, linhBao]))
 
     const player = createDefaultPlayer()
     // (2026-09-04) pin speed 1 nhu attackSpeed cu - khong pin thi cadence

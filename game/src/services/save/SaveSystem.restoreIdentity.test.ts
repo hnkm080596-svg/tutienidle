@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest'
 import { createDefaultPlayer } from '../../core/player/Player'
 import { materials } from '../../data/materials/materials'
 import { makeInstance } from '../../core/equipment/EquipmentInstance.fixture'
+import { alchemyJobFixture } from '../../core/alchemy/AlchemyJob.fixture'
 import { computeRestoreIdentity, type GameSave } from '../../services/save/SaveSystem'
 import { CURRENT_SAVE_VERSION } from '../../services/save/saveVersion'
 
@@ -107,10 +108,10 @@ describe('restore identity (AR-12)', () => {
       save.productionSites = [{ siteId: 'site-1', level: 2, autoRestart: true }]
     }],
     ['alchemyJobs', (save: GameSave) => {
-      save.alchemyJobs = [{
+      save.alchemyJobs = [alchemyJobFixture({
         jobId: 'j1', recipeId: 'r1', pillId: 'p1', herbMaterialId: 'h1',
         startedAtMs: 0, completesAtMs: 1, roomLevelAtStart: 1,
-      }]
+      })]
     }],
     ['quests', (save: GameSave) => {
       save.quests = { active: [{ questId: 'q1', progress: 1, claimed: false }], completedOnceIds: [], lastDailyResetAtMs: 0 }

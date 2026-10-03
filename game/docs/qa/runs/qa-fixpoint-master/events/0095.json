@@ -1,0 +1,8 @@
+{
+  "runPatch": {
+    "finalEvidenceIds": [
+      "EV-VERIFY-T19"
+    ]
+  },
+  "reason": "rebind final gate to T19 verify (a2bd826f) after TC8/B10/A10 wave"
+}

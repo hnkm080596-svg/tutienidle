@@ -1,4 +1,15 @@
 import { describe, expect, it, vi } from 'vitest'
+
+// BETA SCOPE LOCK v2 - companion + formation domains are scope-hidden
+// in the beta build, so the combat build skips companion participants
+// and the Tran Phap buff under the real flag table. This file keeps
+// exercising the dormant build's enabled semantics by stubbing the
+// scope flags open, matching the dormant-system test convention.
+vi.mock('../betaScope', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../betaScope')>()),
+  isBetaFeature: () => true,
+  isScopeHidden: () => false,
+}))
 import { createDefaultPlayer, resolvePlayerFinalStats, resolvePlayerStatAssembly, type PlayerData } from '../player/Player'
 import { freshSwordPathState } from '../kiem-tu/KiemTuState'
 import { createSpellPathState } from '../phap-tu/PhapTuState'
@@ -485,8 +496,13 @@ function makeCompanionInstance(definitionId: string, instanceId = 'inst_1'): Com
 }
 
 describe('resolveCombatBuild — formation/companions/entry buffs/survive (M3)', () => {
+  // The companion/formation unlock realms sit at foundation: enabled
+  // semantics need a player there even with the scope flags open.
+  const domainPlayer = (overrides: Partial<PlayerData> = {}) =>
+    makePlayer({ realmId: 'foundation_establishment', ...overrides })
+
   it('companions resolve entity + kit + position from the formation slot', () => {
-    const player = makePlayer()
+    const player = domainPlayer()
     player.companions = [makeCompanionInstance('ho_ly_tinh')]
     player.formationLoadout = {
       formationId: 'luong_nghi_tran',
@@ -510,7 +526,7 @@ describe('resolveCombatBuild — formation/companions/entry buffs/survive (M3)',
   })
 
   it('companions skip silently on missing definition or missing formation slot', () => {
-    const player = makePlayer()
+    const player = domainPlayer()
     player.companions = [
       makeCompanionInstance('no_such_companion', 'inst_missing_def'),
       makeCompanionInstance('ho_ly_tinh', 'inst_missing_slot'),
@@ -521,7 +537,7 @@ describe('resolveCombatBuild — formation/companions/entry buffs/survive (M3)',
   })
 
   it('formation buff declares one self-sourced entry per allied entity', () => {
-    const player = makePlayer()
+    const player = domainPlayer()
     player.companions = [makeCompanionInstance('ho_ly_tinh')]
     player.formationLoadout = {
       formationId: 'luong_nghi_tran',
@@ -553,7 +569,7 @@ describe('resolveCombatBuild — formation/companions/entry buffs/survive (M3)',
   })
 
   it('reaction aura declares van_phap_than_hoa per ally, source = primary entity id', () => {
-    const player = makePlayer()
+    const player = domainPlayer()
     player.companions = [makeCompanionInstance('ho_ly_tinh')]
     player.formationLoadout = {
       formationId: 'luong_nghi_tran',
@@ -578,7 +594,7 @@ describe('resolveCombatBuild — formation/companions/entry buffs/survive (M3)',
   })
 
   it('entryBuffs order: formation x allies, aura x allies, clones (player then companions)', () => {
-    const player = makePlayer()
+    const player = domainPlayer()
     player.companions = [makeCompanionInstance('ho_ly_tinh')]
     player.formationLoadout = {
       formationId: 'luong_nghi_tran',
@@ -607,7 +623,7 @@ describe('resolveCombatBuild — formation/companions/entry buffs/survive (M3)',
   })
 
   it('survive.extraSources binds runtime.buildSurviveSources to (source, participant, hasBuff)', () => {
-    const player = makePlayer()
+    const player = domainPlayer()
     const sentinel = [{} as SurviveLethalSource]
     const buildSurviveSources = vi.fn(() => sentinel)
     const runtime = makeRuntime({ buildSurviveSources })
@@ -622,7 +638,7 @@ describe('resolveCombatBuild — formation/companions/entry buffs/survive (M3)',
   })
 
   it('determinism: identical inputs produce deep-equal data fields', () => {
-    const player = makePlayer()
+    const player = domainPlayer()
     player.companions = [makeCompanionInstance('ho_ly_tinh')]
     player.formationLoadout = {
       formationId: 'luong_nghi_tran',
@@ -648,7 +664,7 @@ describe('resolveCombatBuild — formation/companions/entry buffs/survive (M3)',
   })
 
   it('fail-closed pair: a corrupt way resolves mortal semantics (identity undefined)', () => {
-    const player = makePlayer()
+    const player = domainPlayer()
     player.cultivationPath = 'sword'
     player.cultivationWay = 'hidden_spell_pathway' as never // a way sword does not own
 

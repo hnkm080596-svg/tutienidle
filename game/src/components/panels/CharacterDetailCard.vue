@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '@/stores/player'
 import { useUiStore } from '@/stores/ui'
 import { BASE_STAT_LABELS, formatStat, type StatCategory } from '@/core/stats/StatLabels'
+import { isBetaStatLabelVisible } from '@/core/betaScope'
 
 // Detail stat card - split out of CharacterPanel (which now keeps only
 // the meridian figure + Ngu Hanh) and docked to the right edge of the
@@ -30,13 +31,15 @@ const statGroups = computed(() =>
   STAT_CATEGORY_ORDER.map(category => ({
     category,
     label: t(STAT_CATEGORY_KEYS[category]),
-    stats: BASE_STAT_LABELS.filter(stat => stat.category === category),
+    stats: BASE_STAT_LABELS.filter(
+      stat => stat.category === category && isBetaStatLabelVisible(stat.key),
+    ),
   })),
 )
 </script>
 
 <template>
-  <aside class="character-detail sys-surface" data-testid="character-detail-card" role="complementary">
+  <aside class="character-detail sys-surface" data-testid="character-detail-card" data-hk-region="chi-tiet-drawer" role="complementary">
     <div class="character-detail__head">
       <h4 class="character-detail__title">{{ t('panels.character.labels.detailsTitle') }}</h4>
       <button
@@ -62,10 +65,10 @@ const statGroups = computed(() =>
 </template>
 
 <style scoped>
-/* Docked card - position (absolute, left:100% of the drawer) is set by
-   LeftPanel via the incoming .left-panel__detail class; this file only
-   styles the surface. --paper-* tokens are remapped dark by .ink-drawer
-   so the card inherits the drawer tone. */
+/* Docked card - position is set by LeftPanel via the incoming
+   .character-detail-dock class; this file only styles the surface. The
+   imperial scroll host supplies the dark --paper-* token remap the card
+   inherits. */
 .character-detail {
   width: 280px;
   max-height: calc(100% - 24px);

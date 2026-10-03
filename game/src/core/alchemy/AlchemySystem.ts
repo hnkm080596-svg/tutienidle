@@ -15,6 +15,8 @@ import type { HerbAge } from '../production/ProductionTypes'
 import { HERB_AGE_BASE_SUCCESS_PERCENT } from '../production/ProductionBalance'
 import { buildProfessionMaterialId } from '../profession/ProfessionMaterial'
 import { mulberry32 } from '../production/ProductionBalance'
+import { betaRecipeFamilyOfId, scopeHiddenPillFamilyOfId } from '../betaScope'
+import { witnessDigest } from '../math/witnessDigest'
 
 /** Biến thể nguyên liệu của thảo — stack cụ thể trong Bag. */
 export interface AlchemyHerbVariant {
@@ -99,6 +101,161 @@ export interface ActiveAlchemyJob {
 
   /** Level Đan Phòng lúc bắt đầu — nâng cấp giữa job chỉ tác động job kế tiếp. */
   roomLevelAtStart: number
+
+  /**
+   * F-ALCH-JOB-FORGE - the reservation witness startJob stamps the
+   * same moment it burns the inputs. Settle and save validation replay
+   * it: a job that never ran the atomic reserve cannot mint the pill.
+   */
+  reservation: AlchemyJobReservation
+}
+
+/**
+ * F-ALCH-JOB-FORGE (qa-fixpoint wave 2) - provenance witness for an
+ * in-flight job. The persisted job used to carry only the outcome
+ * claim (which pill, when it lands); nothing witnessed that startJob
+ * actually reserved the inputs, so a fabricated finished job settled
+ * the pill for free. The reservation snapshots exactly what the
+ * atomic reserve burned - canonical fuel wood id, the scaled costs,
+ * herb + specials, and the cost scale applied - folded with the job
+ * identity into one digest. A fabricated job can mimic the shape but
+ * cannot name the inputs a real startJob reserved; validation/settle
+ * re-derive every field from the save's own recipe and reject
+ * (reject-not-clamp: witness-mismatch settles as a failed job, never
+ * as a rewritten one). A fully self-consistent forged bundle stays
+ * possible - the same-value residual class owned by the future
+ * online-authority layer.
+ */
+export interface AlchemyJobReservation {
+  /** Canonical fuel wood id reserved: `<realm>_wood_<age>`. */
+  readonly woodId: string
+
+  readonly fuelWoodAmount: number
+
+  /** Spirit stone cost the caller deducted - startJob's own formula. */
+  readonly spiritStoneCost: number
+
+  readonly herbAmount: number
+
+  readonly specialIngredients: readonly { materialId: string; amount: number }[]
+
+  /** Cost scale the start applied (talent surcharge snapshot, >= 1). */
+  readonly costScale: number
+
+  /** FNV-1a fold over the job identity + every reserved input. */
+  readonly digest: number
+}
+
+/** Everything the reservation digest binds - job identity plus the
+ * reserved inputs, in one fixed order shared by writer and verifier. */
+export function alchemyJobReservationDigest(
+  job: Pick<
+    ActiveAlchemyJob,
+    'jobId' | 'recipeId' | 'pillId' | 'herbMaterialId' | 'startedAtMs' | 'completesAtMs' | 'roomLevelAtStart'
+  >,
+  reservation: Omit<AlchemyJobReservation, 'digest'>,
+): number {
+  return witnessDigest([
+    job.jobId,
+    job.recipeId,
+    job.pillId,
+    job.herbMaterialId,
+    job.startedAtMs,
+    job.completesAtMs,
+    job.roomLevelAtStart,
+    reservation.woodId,
+    reservation.fuelWoodAmount,
+    reservation.spiritStoneCost,
+    reservation.herbAmount,
+    reservation.costScale,
+    reservation.specialIngredients.map((special) => `${special.materialId}:${special.amount}`).join(','),
+  ])
+}
+
+/**
+ * Replay a job's reservation witness against the authored recipe.
+ * Returns the reservation field whose binding fails, 'digest' when
+ * the atomic fold mismatches, or null when the reservation replays a
+ * producible startJob reserve. `allowedCostScales` narrows the cost
+ * scale to the authored producible set when the caller can supply it
+ * (save validation); settle passes none and only replays the
+ * recipe-derived bindings + digest.
+ */
+export function verifyAlchemyJobReservation(
+  job: Pick<
+    ActiveAlchemyJob,
+    'jobId' | 'recipeId' | 'pillId' | 'herbMaterialId' | 'startedAtMs' | 'completesAtMs' | 'roomLevelAtStart'
+  > & { reservation: unknown },
+  recipe: AlchemyRecipe | undefined,
+  allowedCostScales?: ReadonlySet<number>,
+): string | null {
+  const reservation = job.reservation
+
+  if (typeof reservation !== 'object' || reservation === null) {
+    return 'reservation'
+  }
+
+  const witness = reservation as AlchemyJobReservation
+
+  if (!Number.isFinite(witness.costScale) || witness.costScale <= 0) {
+    return 'costScale'
+  }
+
+  if (allowedCostScales !== undefined && !allowedCostScales.has(witness.costScale)) {
+    return 'costScale'
+  }
+
+  // The digest is recipe-independent - it binds the job identity and
+  // every reserved input atomically, so it replays even when the
+  // recipe no longer resolves (data changed between save and load).
+  if (witness.digest !== alchemyJobReservationDigest(job, witness)) {
+    return 'digest'
+  }
+
+  if (recipe === undefined) {
+    return null
+  }
+
+  if (witness.herbAmount !== recipe.herbAmount) {
+    return 'herbAmount'
+  }
+
+  if (witness.fuelWoodAmount !== Math.ceil(recipe.fuelWoodAmount * witness.costScale)) {
+    return 'fuelWoodAmount'
+  }
+
+  if (witness.spiritStoneCost !== Math.ceil(recipe.spiritStoneCost * witness.costScale)) {
+    return 'spiritStoneCost'
+  }
+
+  const expectedSpecials = recipe.specialIngredients ?? []
+  const witnessSpecials = witness.specialIngredients
+
+  if (
+    !Array.isArray(witnessSpecials) ||
+    witnessSpecials.length !== expectedSpecials.length ||
+    expectedSpecials.some(
+      (expected, index) =>
+        witnessSpecials[index]?.materialId !== expected.materialId ||
+        witnessSpecials[index]?.amount !== expected.amount,
+    )
+  ) {
+    return 'specialIngredients'
+  }
+
+  const variant = recipe.herbVariants.find((candidate) => candidate.materialId === job.herbMaterialId)
+
+  if (!variant) {
+    return 'herbMaterialId'
+  }
+
+  // 6E - the canonical fuel wood id is derivable: same realm as the
+  // recipe, same age as the reserved herb variant.
+  if (witness.woodId !== buildProfessionMaterialId('wood', recipe.fuelWoodRealmId, variant.age)) {
+    return 'woodId'
+  }
+
+  return null
 }
 
 export interface AlchemySettlementEvent {
@@ -199,7 +356,13 @@ export class AlchemySystem {
    * live state (A3).
    */
   restoreJobs(jobs: ActiveAlchemyJob[]): void {
-    this.jobs = jobs.map((job) => ({ ...job }))
+    this.jobs = jobs.map((job) => ({
+      ...job,
+      reservation: {
+        ...job.reservation,
+        specialIngredients: (job.reservation?.specialIngredients ?? []).map((special) => ({ ...special })),
+      },
+    }))
   }
 
   getJobs(): ActiveAlchemyJob[] {
@@ -235,13 +398,30 @@ export class AlchemySystem {
     // fuel wood + spirit stone requirements; herb/specials stay base.
     costMultiplier = 1,
   ): { ok: boolean; reason?: string; spiritStoneCost?: number } {
+    // BETA SCOPE LOCK v2 sec.12 - recipe families outside
+    // BETA_ENABLED_RECIPE_FAMILIES are dormant: their definitions stay in
+    // the registry but jobs cannot start via ANY entry path (the domain
+    // fails closed, not just the ops layer). In-flight/loaded jobs for
+    // dormant families PARK at the tick delivery seam - the record stays
+    // intact, no pill lands, no event/toast fires (see tick()).
+    if (betaRecipeFamilyOfId(recipe.id) === null) {
+      return { ok: false, reason: 'scope_hidden' }
+    }
+
     // M10 (ARCH-008) — retired pill families (Hoi Xuan Dan) cannot start
     // new jobs; in-flight jobs still settle via the resolvable recipe.
     if (recipe.retired === true) {
       return { ok: false, reason: 'retired' }
     }
 
-    if (this.jobs.length >= Math.max(1, maxConcurrentJobs)) {
+    // Scope-hidden families keep their in-flight jobs PARKED (record
+    // intact, no delivery - see tick()) but may not occupy the live slot
+    // budget - a restored dormant job rendered nowhere would otherwise
+    // reject every beta recipe job_slots_full with no visible cause or
+    // cancel path.
+    const liveJobs = this.jobs.filter((job) => betaRecipeFamilyOfId(job.recipeId) !== null)
+
+    if (liveJobs.length >= Math.max(1, maxConcurrentJobs)) {
       return { ok: false, reason: 'job_slots_full' }
     }
 
@@ -294,14 +474,50 @@ export class AlchemySystem {
       bag.remove(special.materialId, special.amount)
     }
 
+    const jobId = nextJobId()
+    const completesAtMs = nowMs + alchemySecondsFor(recipe, roomLevel) * 1000
+    const specialIngredients = (recipe.specialIngredients ?? []).map((special) => ({ ...special }))
+
+    // F-ALCH-JOB-FORGE - stamp the reservation witness at the same
+    // atomic point the inputs burn: only a real startJob reserve can
+    // produce this record.
+    const reservation: AlchemyJobReservation = {
+      woodId,
+      fuelWoodAmount,
+      spiritStoneCost,
+      herbAmount: recipe.herbAmount,
+      specialIngredients,
+      costScale,
+      digest: alchemyJobReservationDigest(
+        {
+          jobId,
+          recipeId: recipe.id,
+          pillId: recipe.pillId,
+          herbMaterialId,
+          startedAtMs: nowMs,
+          completesAtMs,
+          roomLevelAtStart: roomLevel,
+        },
+        {
+          woodId,
+          fuelWoodAmount,
+          spiritStoneCost,
+          herbAmount: recipe.herbAmount,
+          specialIngredients,
+          costScale,
+        },
+      ),
+    }
+
     this.jobs.push({
-      jobId: nextJobId(),
+      jobId,
       recipeId: recipe.id,
       pillId: recipe.pillId,
       herbMaterialId,
       startedAtMs: nowMs,
-      completesAtMs: nowMs + alchemySecondsFor(recipe, roomLevel) * 1000,
+      completesAtMs,
       roomLevelAtStart: roomLevel,
+      reservation,
     })
 
     // Caller deducts exactly the cost validated here — single formula.
@@ -342,7 +558,25 @@ export class AlchemySystem {
 
       const recipe = this.recipeLookup?.(job.recipeId)
 
-      const pill = resolvePill(job.pillId)
+      // BETA SCOPE LOCK - a carried dormant-family job stays inert at
+      // the delivery seam: startJob gates origination but restore and
+      // settle used to trust persisted intent. The record parks (data
+      // intact) - no pill lands and no event/toast fires. Only AUTHORED
+      // dormant recipes park: an unknown/corrupt recipeId falls through
+      // to the recipe-miss failure arm instead of parking forever.
+      // F-TC6-4: retired is NOT an exemption - hoi_xuan_dan is retired
+      // AND scope-hidden, and dormancy is the stronger claim (the
+      // retired contract predates the scope lock).
+      if (scopeHiddenPillFamilyOfId(job.recipeId) !== null) {
+        remaining.push(job)
+
+        continue
+      }
+
+      // F-A7-3: settle re-derives the deliverable from the authored
+      // recipe - job.pillId is only a denormalized snapshot, so a forged
+      // job claiming a different pill can never mint it.
+      const pill = recipe !== undefined ? resolvePill(recipe.pillId) : undefined
 
       if (!recipe || !pill) {
         // Recipe/pill không resolve được (data đổi/xoá giữa save và load) —
@@ -350,6 +584,25 @@ export class AlchemySystem {
         // không có event nào (review 2026-08-28). Giờ phát event thất bại để
         // UI thông báo; nguyên liệu đã đốt KHÔNG hoàn trả (job coi như luyện
         // thất bại — đúng semantic §8.3, không tạo refund exploit).
+        this.pendingEvents.push({
+          jobId: job.jobId,
+          pillId: job.pillId,
+          pills: 0,
+          success: false,
+          delivered: 0,
+          overflow: 0,
+        })
+
+        continue
+      }
+
+      // F-ALCH-JOB-FORGE - settle replays the reservation witness
+      // startJob stamped when it burned the inputs. A fabricated job
+      // (persisted record that never reserved materials) cannot
+      // produce the witness and settles as a failed job instead of
+      // minting the pill for free - same arm as a recipe/pill miss,
+      // burned inputs never refund.
+      if (verifyAlchemyJobReservation(job, recipe) !== null) {
         this.pendingEvents.push({
           jobId: job.jobId,
           pillId: job.pillId,
@@ -382,7 +635,7 @@ export class AlchemySystem {
         // R9 (AR-34): surface the delivery receipt instead of ignoring it.
         this.pendingEvents.push({
           jobId: job.jobId,
-          pillId: job.pillId,
+          pillId: recipe.pillId,
           pills,
           success: pills > 0,
           delivered: pills - overflow,

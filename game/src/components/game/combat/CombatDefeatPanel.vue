@@ -6,11 +6,12 @@ import { useBattleActions } from '@/composables/useBattleActions'
 import { useAutoRetryCountdown } from '@/composables/useAutoRetryCountdown'
 import { useUiStore } from '@/stores/ui'
 import { usePlayerStore } from '@/stores/player'
-import { formatDuration } from '@/core/format/formatDuration'
-import GameButton from '@/components/common/GameButton.vue'
 import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
 import InkWashBackdrop from '@/components/common/InkWashBackdrop.vue'
-import RewardList from './RewardList.vue'
+import DefeatTitleBand from '@/components/scenes/defeat/DefeatTitleBand.vue'
+import DefeatHintBlock from '@/components/scenes/defeat/DefeatHintBlock.vue'
+import DefeatRewardBlock from '@/components/scenes/defeat/DefeatRewardBlock.vue'
+import DefeatActionRow from '@/components/scenes/defeat/DefeatActionRow.vue'
 
 // Combat UI Redesign muc 18/23, mo rong 2026-08-22 -- truoc day CHI 1
 // nut "Ve Dong Phu" (khong danh lai). Gio them "Tai Chien" (LUON danh
@@ -131,42 +132,37 @@ onMounted(() => {
 <template>
   <div class="combat-defeat-panel paper-on-dark">
     <InkWashBackdrop left-mountain bottom-mist :right-mountain="false" />
-    <InkNineSlice asset-id="surface-xl-paper-scroll" layer="surface" />
+    <InkNineSlice chrome-id="surface-xl-scroll" layer="surface" />
     <InkNineSlice asset-id="frame-xl-ceremony" layer="frame" tint-var="--cinnabar" />
-    <h2 class="combat-defeat-panel__title">{{ t('combat.defeat.title') }}</h2>
 
-    <RewardList v-if="hasAnyReward" :summary="summary" class="combat-defeat-panel__rewards scrollfade" />
+    <DefeatTitleBand :title="t('combat.defeat.title')" :subtitle="t('combat.defeat.subtitle')" />
 
-    <p class="combat-defeat-panel__hint">
-      {{ t(isCultivationGap ? 'combat.defeat.hintCultivate' : 'combat.defeat.hintGear') }}
-    </p>
+    <DefeatHintBlock :hint="t(isCultivationGap ? 'combat.defeat.hintCultivate' : 'combat.defeat.hintGear')" />
 
-    <div class="combat-defeat-panel__actions">
-      <GameButton
-        class="combat-defeat-panel__retry"
-        variant="danger"
-        :class="{ 'is-disabled': isAutoRetrying }"
-        :disabled="isAutoRetrying"
-        @click="retryNow"
-      >
-        {{ t('combat.defeat.retry') }}<template v-if="isAutoRetrying"> {{ t('combat.defeat.retryCountdown', { duration: formatDuration(retryCountdown, 'countdown') }) }}</template>
-      </GameButton>
+    <DefeatRewardBlock v-if="hasAnyReward" :summary="summary" />
 
-      <GameButton class="combat-defeat-panel__return" variant="secondary" @click="returnHome">
-        {{ t('combat.defeat.returnHome') }} {{ t('combat.defeat.returnCountdown', { duration: formatDuration(returnCountdown, 'countdown') }) }}
-      </GameButton>
-    </div>
+    <DefeatActionRow
+      :is-auto-retrying="isAutoRetrying"
+      :retry-countdown="retryCountdown"
+      :return-countdown="returnCountdown"
+      @retry="retryNow"
+      @return-home="returnHome"
+    />
   </div>
 </template>
 
 <style scoped>
+/* Scene 16: same ceremonial family as Victory - ink + cinnabar. */
 .combat-defeat-panel {
   /* .paper-on-dark owns the paper->surface remap (theme.css). */
   position: relative;
   isolation: isolate;
   box-sizing: border-box;
-  width: min(420px, calc(100vw - 32px));
-  padding: 28px 32px;
+  /* Spec envelope 760 design px = 45.45% of the 1672 frame - identical
+     to the victory scroll's width; a fixed ~582px was only correct at
+     1280w. */
+  width: min(45.45vw, calc(100vw - 32px));
+  padding: 34px 40px 30px;
   background: transparent;
   border: 0;
   border-radius: 0;
@@ -178,43 +174,5 @@ onMounted(() => {
 .combat-defeat-panel > :not(.ink-nine-slice):not(.ink-wash-backdrop) {
   position: relative;
   z-index: 3;
-}
-
-.combat-defeat-panel__title {
-  margin: 0 0 16px;
-  font-family: var(--font-display);
-  color: var(--crimson);
-  font-size: var(--text-panel-title);
-}
-
-.combat-defeat-panel__rewards {
-  margin-bottom: 20px;
-}
-
-.combat-defeat-panel__hint {
-  margin: 0 0 16px;
-  color: var(--text-muted);
-  font-size: var(--text-small);
-  font-style: italic;
-}
-
-.combat-defeat-panel__actions {
-  display: flex;
-  gap: 10px;
-}
-
-.combat-defeat-panel__actions button {
-  flex: 1;
-  padding: 10px;
-}
-
-.combat-defeat-panel__retry.is-disabled {
-  background: var(--ink-700);
-  color: var(--text-muted);
-}
-
-.combat-defeat-panel__return:hover {
-  border-color: var(--crimson);
-  color: var(--crimson);
 }
 </style>

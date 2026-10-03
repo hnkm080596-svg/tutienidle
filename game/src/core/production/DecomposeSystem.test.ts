@@ -8,7 +8,17 @@
 //   hệ_số chất = 2^qualityIndex (Hoang 1 → Tiên 16)
 //   khoáng tiêu thụ mỗi cycle = min(workers × 2, owned) stacks khớp filter
 //   cycle 30s; workers 0 → không chạy; workers clamp theo capacity.
-import { describe, expect, it, beforeEach } from 'vitest'
+import { describe, expect, it, beforeEach, vi } from 'vitest'
+
+// BETA SCOPE LOCK v2 Phase-5 - this suite exercises the scope-hidden
+// system's ENABLED implementation (sec.11-15: dormant, not deleted),
+// so the scope authority reports in-scope for this file.
+vi.mock('../betaScope', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../betaScope')>()),
+  isBetaFeature: () => true,
+  isScopeHidden: () => false,
+}))
+
 import { DecomposeSystem } from './DecomposeSystem'
 import { MaterialBag } from '../material/MaterialBag'
 import { materials } from '../../data/materials/materials'

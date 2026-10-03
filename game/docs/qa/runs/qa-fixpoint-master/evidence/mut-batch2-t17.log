@@ -1,0 +1,822 @@
+===== MUT-A4-roster :: A4: talent roster BETA_TALENT_IDS filter removed (upgrade pool)
+MUT-A4-roster: SURVIVED (exit=0)
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+
+ Test Files  3 passed (3)
+      Tests  30 passed | 2 skipped (32)
+   Start at  11:29:10
+   Duration  9.86s (transform 21.48s, setup 1.69s, import 24.15s, tests 219ms, environment 1.47s)
+
+
+===== MUT-A4-devReset :: A4: holdsDormant refusal removed
+MUT-A4-devReset: KILLED_EXPECTED (exit=1)
+ment 1.33s)
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/architecture/betaScopeAuthoritySeam.qa.test.ts > write seam: devResetBranch must honor the same dormant-save refusal as respecNodeTree > refuses to refund or revoke dormant kiem_pho records on a carried sword save
+AssertionError: expected 2 to be null
+
+- Expected:
+null
+
++ Received:
+2
+
+ ❯ tests/architecture/betaScopeAuthoritySeam.qa.test.ts:68:67
+     66|  // nodeLevels is refused outright - dormant records freeze, they are
+     67|  // never monetized back into live skillInsight.
+     68|  expect(gameManager.progressionOps.devResetBranch('kiem_pho', p)).toBe…
+       |                                                                   ^
+     69|  expect(p.nodeLevels).toEqual({ thich_can: 2 })
+     70|  expect(p.skillInsight).toBe(100)
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  tests/architecture/betaScopeAuthoritySeam.qa.test.ts > write seam: devResetBranch must honor the same dormant-save refusal as respecNodeTree > refuses dormant the_tu records on a carried body save the same way
+AssertionError: expected +0 to be null
+
+- Expected:
+null
+
++ Received:
+0
+
+ ❯ tests/architecture/betaScopeAuthoritySeam.qa.test.ts:85:65
+     83|  })
+     84|
+     85|  expect(gameManager.progressionOps.devResetBranch('the_tu', p)).toBeNu…
+       |                                                                 ^
+     86|  expect(p.nodeLevels).toEqual({ cuong_chien: 1 })
+     87|  expect(p.skillInsight).toBe(100)
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+===== MUT-A4-buildWrite :: A4: isBetaBuildingSurface early-return removed (canBuild/buildBuilding)
+MUT-A4-buildWrite: KILLED_EXPECTED (exit=1)
+the scope-hidden building and writes dormant capacity
+AssertionError: expected { …(5) } to be null
+
+- Expected:
+null
+
++ Received:
+{
+  "accrualRealmId": "mortal",
+  "buildingId": "chi_hien_quan",
+  "instanceId": "d281473d-b570-488f-a970-5a2e9cc62b00",
+  "lastCollectedAt": 1790854175.012,
+  "level": 1,
+}
+
+ ❯ tests/architecture/betaConsumerSeams.qa.test.ts:220:19
+    218|
+    219|     // DEFECT evidence: ungated build - instance created, dormant fiel…
+    220|     expect(built).toBeNull()
+       |                   ^
+    221|     expect(gameManager.buildingManager.getByBuildingId('chi_hien_quan'…
+    222|   })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  tests/architecture/betaScopeAuthoritySeam.qa.test.ts > building write seam: scope-hidden chi_hien_quan must be unbuildable / unupgradable > canBuildBuilding and buildBuilding refuse chi_hien_quan under the lock
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/architecture/betaScopeAuthoritySeam.qa.test.ts:127:71
+    125|  // fail closed identically instead of minting a live instance and
+    126|  // writing player.autoWorkerCapacity.
+    127|  expect(gameManager.buildingOps.canBuildBuilding('chi_hien_quan', p)).…
+       |                                                                       ^
+    128|  expect(gameManager.buildingOps.buildBuilding('chi_hien_quan', p)).toB…
+    129|  expect(gameManager.buildingManager.getAll()).toEqual([])
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+===== MUT-A4-upgradeWrite :: A4: upgrade admission check removed
+MUT-A4-upgradeWrite: KILLED_EXPECTED (exit=1)
+betaConsumerSeams.qa.test.ts > consumer seam: worker_lodge left-panel mode (contract sec.G + sec.F) > the mounted surface can spend live materials on the scope-hidden building (upgrade chain)
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/architecture/betaConsumerSeams.qa.test.ts:184:22
+    182|     // DEFECT evidence: the domain command is ungated - materials are
+    183|     // spent and the dormant autoWorkerCapacity field is written.
+    184|     expect(upgraded).toBe(false)
+       |                      ^
+    185|     expect(gameManager.materialBag.getAmount('mortal_ore_decade')).toB…
+    186|   })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  tests/architecture/betaScopeAuthoritySeam.qa.test.ts > building write seam: scope-hidden chi_hien_quan must be unbuildable / unupgradable > upgradeBuilding refuses a carried chi_hien_quan instance and spends nothing
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/architecture/betaScopeAuthoritySeam.qa.test.ts:165:62
+    163|  gameManager.materialBag.add(ore, 10)
+    164|
+    165|  expect(gameManager.buildingOps.upgradeBuilding('inst_chq')).toBe(fals…
+       |                                                              ^
+    166|  expect(gameManager.materialBag.getAmount('mortal_ore_decade')).toBe(1…
+    167|  expect(gameManager.buildingManager.get('inst_chq')?.level).toBe(1)
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+===== MUT-A4-gainMastery :: A4: betaTechniqueAdmitted clause removed (gainMastery)
+MUT-A4-gainMastery: KILLED_EXPECTED (exit=1)
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+ ❯ tests/architecture/betaScopeAuthoritySeam.qa.test.ts (12 tests | 1 failed) 54ms
+     × gainMastery stays inert for a dormant-way active technique 18ms
+
+ Test Files  1 failed | 2 passed (3)
+      Tests  1 failed | 29 passed | 2 skipped (32)
+   Start at  11:29:47
+   Duration  8.50s (transform 17.31s, setup 966ms, import 19.93s, tests 295ms, environment 1.43s)
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/architecture/betaScopeAuthoritySeam.qa.test.ts > technique training seam: dormant-way techniques must not accrue mastery on a carried save > gainMastery stays inert for a dormant-way active technique
+AssertionError: expected { gained: 2400, rankUps: 8 } to deeply equal { gained: +0, rankUps: +0 }
+
+- Expected
++ Received
+
+  {
+-   "gained": 0,
+-   "rankUps": 0,
++   "gained": 2400,
++   "rankUps": 8,
+  }
+
+ ❯ tests/architecture/betaScopeAuthoritySeam.qa.test.ts:200:17
+    198|  const result = gameManager.techniqueSystem.gainMastery(10_000, 'qi_re…
+    199|
+    200|  expect(result).toEqual({ gained: 0, rankUps: 0 })
+       |                 ^
+    201|  expect(gameManager.techniqueManager.getActive()?.rank).toBe(4)
+    202|  expect(sword.techniqueProgress).toEqual({ rank: 4, grade: 1 })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+===== MUT-A4-popoverGate :: A4: betaAdmittedBuildingPopoverId returns raw id
+MUT-A4-popoverGate: KILLED_EXPECTED (exit=1)
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+stdout | tests/architecture/betaConsumerSeamMounts.qa.test.ts
+ * Tone.js v15.1.22 * 
+
+ ❯ tests/architecture/betaConsumerSeamMounts.qa.test.ts (5 tests | 1 failed) 165ms
+     × the chokepoint the popover template binds rejects chi_hien_quan 8ms
+
+ Test Files  1 failed | 2 passed (3)
+      Tests  1 failed | 29 passed | 2 skipped (32)
+   Start at  11:29:57
+   Duration  8.71s (transform 15.51s, setup 581ms, import 18.39s, tests 312ms, environment 1.68s)
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/architecture/betaConsumerSeamMounts.qa.test.ts > mount seam: activeBuildingPopoverId raw write (F-B-CONS-2) > the chokepoint the popover template binds rejects chi_hien_quan
+AssertionError: expected 'chi_hien_quan' to be null
+
+- Expected:
+null
+
++ Received:
+"chi_hien_quan"
+
+ ❯ tests/architecture/betaConsumerSeamMounts.qa.test.ts:89:60
+     87|     // The GameRoot template mounts BuildingDetailPopover only through
+     88|     // betaAdmittedBuildingPopoverId - assert the seam contract direct…
+     89|     expect(betaAdmittedBuildingPopoverId('chi_hien_quan')).toBeNull()
+       |                                                            ^
+     90|     expect(betaAdmittedBuildingPopoverId(null)).toBeNull()
+     91|     expect(betaAdmittedBuildingPopoverId('pill_room')).toBe('pill_room…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+===== MUT-A4-leftPanel :: A4: isBetaLeftPanelMode clause removed
+MUT-A4-leftPanel: KILLED_EXPECTED (exit=1)
+fca9f261=""
+        style="--ink-slice-layer: 2; opacity: 1; pointer-events: none; --ink-slice-tint: var(--mineral-gold);"
+      />
+      <span
+        class="chip__content"
+        data-v-a5ee19df=""
+      >
+        
+        Nhân Công 
+        <!--v-if-->
+        
+      </span>
+    </button>
+    
+  </nav>
+  <div
+    class="worker-lodge-panel__card"
+    data-v-1066f992=""
+  >
+    <h3
+      data-v-1066f992=""
+    >
+      Nhân công
+    </h3>
+    <p
+      class="worker-lodge-panel__capacity"
+      data-v-1066f992=""
+    >
+      <strong
+        data-v-1066f992=""
+      >
+        7
+      </strong>
+       hiền sĩ theo về
+    </p>
+    <small
+      class="worker-lodge-panel__next"
+      data-v-1066f992=""
+    >
+      Cấp 4: 9 nhân công
+    </small>
+    <p
+      class="worker-lodge-panel__hint"
+      data-v-1066f992=""
+    >
+      Nhân công được phân bổ vào các nguồn khai thác ở panel Sản Xuất.
+    </p>
+  </div>
+</section>
+
+ ❯ tests/architecture/betaConsumerSeams.qa.test.ts:157:65
+    155|     // DEFECT evidence: the scope-hidden worker lodge renders - tab ba…
+    156|     // capacity card, and the chi_hien_quan building header all appear.
+    157|     expect(view.container.querySelector('.worker-lodge-panel')).toBeNu…
+       |                                                                 ^
+    158|     expect(view.container.querySelector('.building-heading')).toBeNull…
+    159|     expect(view.container.textContent).not.toContain('Chiêu Hiền Quán')
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+===== MUT-A4-selfGate :: A4: BuildingDetailPopover computed admission removed
+MUT-A4-selfGate: KILLED_EXPECTED (exit=1)
+hí xây dựng
+        
+      </h4>
+      <ul
+        class="building-popover__costs"
+        data-v-5e2d7e0d=""
+      >
+        
+        
+      </ul>
+    </div>
+  </div>
+  <!-- Nút hành động cố định NGOÀI vùng scroll (2026-08-30, bug report:
+         popup nhiều chi phí đẩy nút "Xây dựng" xuống dưới, phải cuộn mới
+         bấm được) — luôn hiện dù nội dung chi phí dài cỡ nào. -->
+  <button
+    class="game-button game-button--primary game-button--md game-button--rect building-popover__action"
+    data-v-5e2d7e0d=""
+    data-v-95e3ff4f=""
+    disabled=""
+    type="button"
+  >
+    <span
+      aria-hidden="true"
+      class="ink-nine-slice ink-nine-slice--surface ink-nine-slice--button-s-paper"
+      data-ink-slice="button-s-paper"
+      data-v-95e3ff4f=""
+      data-v-fca9f261=""
+      style="--ink-slice-layer: 1; opacity: 1; pointer-events: none;"
+    />
+    <!--v-if-->
+    <span
+      class="game-button__label"
+      data-v-95e3ff4f=""
+    >
+      
+      Xây dựng
+      
+    </span>
+  </button>
+</div>
+
+ ❯ tests/architecture/betaConsumerSeams.qa.test.ts:206:63
+    204|     // DEFECT evidence: the scope-hidden building renders its full bui…
+    205|     // surface (name + cost rows + actionable Build button).
+    206|     expect(view.container.querySelector('.building-popover')).toBeNull…
+       |                                                               ^
+    207|     expect(view.container.textContent).not.toContain('Chiêu Hiền Quán')
+    208|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+===== MUT-BS-hiddenRealm :: BS: hiddenRealmGate removed
+MUT-BS-hiddenRealm: KILLED_EXPECTED (exit=1)
+ tests/architecture/betaPersistedRealmModifiers.qa.test.ts > persisted realm modifiers under the beta lock > a hidden-breakthrough kien_co enhanced passive carried on a flagged save emits nothing
+AssertionError: expected 1.2 to be 1 // Object.is equality
+
+- Expected
++ Received
+
+- 1
++ 1.2
+
+ ❯ tests/architecture/betaPersistedRealmModifiers.qa.test.ts:99:35
+     97|     const carriedStats = resolvePlayerStatAssembly(carried, []).stats
+     98|
+     99|     expect(carriedStats.strength).toBe(controlStats.strength)
+       |                                   ^
+    100|     expect(carriedStats.vitality).toBe(controlStats.vitality)
+    101|     expect(carriedStats.intelligence).toBe(controlStats.intelligence)
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  src/core/realm/enhancedPassivePersisted.qa.test.ts > persisted enhanced hidden-breakthrough passive on a flagged save > the save is flag-coherent, flagged out-of-scope, yet enhanced modifiers still emit
+AssertionError: expected 1.2 to be 1 // Object.is equality
+
+- Expected
++ Received
+
+- 1
++ 1.2
+
+ ❯ src/core/realm/enhancedPassivePersisted.qa.test.ts:74:28
+     72|     // filter in resolvePlayerStatAssembly drops any entry whose realm…
+     73|     // sits in hiddenBreakthroughRealmIds while hiddenContent is locke…
+     74|     expect(stats.strength).toBe(baselineStats.strength)
+       |                            ^
+     75|     expect(stats.intelligence).toBe(baselineStats.intelligence)
+     76|     expect(
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+===== MUT-BS-marker :: BS: markerGate removed (ungranted passive payloads emit)
+MUT-BS-marker: SURVIVED (exit=0)
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+
+ Test Files  4 passed (4)
+      Tests  12 passed (12)
+   Start at  11:30:35
+   Duration  1.97s (transform 5.45s, setup 2.99s, import 3.35s, tests 42ms, environment 1ms)
+
+
+===== MUT-BS-meridian :: BS: meridianGate openedIds check removed
+MUT-BS-meridian: SURVIVED (exit=0)
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+
+ Test Files  4 passed (4)
+      Tests  12 passed (12)
+   Start at  11:30:38
+   Duration  687ms (transform 1.59s, setup 869ms, import 1.19s, tests 29ms, environment 1ms)
+
+
+===== MUT-BS-bodyChannel :: BS: bodyChannelGate removed
+MUT-BS-bodyChannel: KILLED_EXPECTED (exit=1)
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+ ❯ tests/architecture/betaPersistedRealmModifiers.qa.test.ts (8 tests | 1 failed) 17ms
+     × carried body-chapter realm modifiers (meridian) emit nothing under the lock 6ms
+
+ Test Files  1 failed | 3 passed (4)
+      Tests  1 failed | 11 passed (12)
+   Start at  11:30:40
+   Duration  687ms (transform 1.56s, setup 922ms, import 1.10s, tests 34ms, environment 1ms)
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/architecture/betaPersistedRealmModifiers.qa.test.ts > persisted realm modifiers under the beta lock > carried body-chapter realm modifiers (meridian) emit nothing under the lock
+AssertionError: expected 113.4 to be 108 // Object.is equality
+
+- Expected
++ Received
+
+- 108
++ 113.4
+
+ ❯ tests/architecture/betaPersistedRealmModifiers.qa.test.ts:171:49
+    169|
+    170|     for (const stat of meridian!.stats) {
+    171|       expect(stats[stat as keyof typeof stats]).toBe(base[stat as keyo…
+       |                                                 ^
+    172|     }
+    173|   })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+===== MUT-BS-bodyDelta :: BS: bodyDeltaGate removed (collectBodyBaseStatDeltas ungated)
+MUT-BS-bodyDelta: KILLED_EXPECTED (exit=1)
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+ ❯ tests/architecture/betaPersistedRealmModifiers.qa.test.ts (8 tests | 1 failed) 22ms
+     × carried bodyProgression base-stat deltas emit nothing under the lock 6ms
+
+ Test Files  1 failed | 3 passed (4)
+      Tests  1 failed | 11 passed (12)
+   Start at  11:30:41
+   Duration  697ms (transform 1.53s, setup 936ms, import 1.05s, tests 40ms, environment 1ms)
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/architecture/betaPersistedRealmModifiers.qa.test.ts > persisted realm modifiers under the beta lock > carried bodyProgression base-stat deltas emit nothing under the lock
+AssertionError: expected 400 to be 108 // Object.is equality
+
+- Expected
++ Received
+
+- 108
++ 400
+
+ ❯ tests/architecture/betaPersistedRealmModifiers.qa.test.ts:183:32
+    181|     const base = resolvePlayerStatAssembly(player(), []).stats
+    182|
+    183|     expect(carriedStats.maxHp).toBe(base.maxHp)
+       |                                ^
+    184|     expect(carriedStats.strength).toBe(base.strength)
+    185|     expect(collectBodyBaseStatDeltas(carried)).toEqual({})
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+===== MUT-BS-validatorPayload :: BS: validatorPayload direction removed
+MUT-BS-validatorPayload: KILLED_EXPECTED (exit=1)
+whose marker was never granted 8ms
+
+ Test Files  2 failed | 2 passed (4)
+      Tests  2 failed | 10 passed (12)
+   Start at  11:30:43
+   Duration  707ms (transform 1.52s, setup 848ms, import 1.12s, tests 37ms, environment 1ms)
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/architecture/betaPersistedRealmModifiers.qa.test.ts > persisted realm modifiers under the beta lock > acceptance flags a realm-passive payload whose marker was never granted
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ tests/architecture/betaPersistedRealmModifiers.qa.test.ts:215:7
+    213|     expect(
+    214|       result.issues.some((issue) => issue.path.startsWith('player.modi…
+    215|     ).toBe(true)
+       |       ^
+    216|   })
+    217| })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/services/save/forgedModifierMints.qa.test.ts > forged player.modifiers mint stats past acceptance > a realm-sourced modifier with no granted marker validates and emits
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ src/services/save/forgedModifierMints.qa.test.ts:53:23
+     51|     // acceptance flags the payload and the emit seam resolves it iner…
+     52|     const result = validateGameSaveShape(save)
+     53|     expect(result.ok).toBe(false)
+       |                       ^
+     54|     expect(result.issues.some((issue) => issue.message.includes('nhap_…
+     55|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+===== MUT-REAUTH-hiddenDormant :: REAUTH: hiddenDormant -> false
+MUT-REAUTH-hiddenDormant: SURVIVED (exit=0)
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+
+ Test Files  1 passed (1)
+      Tests  16 passed (16)
+   Start at  11:30:45
+   Duration  1.79s (transform 1.33s, setup 211ms, import 1.44s, tests 35ms, environment 0ms)
+
+
+===== MUT-REAUTH-settleGate :: REAUTH: settle transition gate -> false
+MUT-REAUTH-settleGate: SURVIVED (exit=0)
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+
+ Test Files  1 passed (1)
+      Tests  16 passed (16)
+   Start at  11:30:47
+   Duration  1.74s (transform 1.28s, setup 241ms, import 1.35s, tests 37ms, environment 0ms)
+
+
+===== MUT-REAUTH-alchemyPark :: REAUTH: alchemy settle park gate -> false
+MUT-REAUTH-alchemyPark: KILLED_EXPECTED (exit=1)
+             ^
+    298|     expect(manager.alchemySystem.drainSettlementEvents()).toEqual([])
+    299|     expect(manager.alchemySystem.getJobs()).toHaveLength(1)
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  tests/architecture/betaSettlementReauth.qa.test.ts > F-CONS-B2: a carried dormant-family alchemy job must not deliver > a carried thong_mach_dan job (special recipe, no realm suffix) also parks
+AssertionError: expected 1 to be +0 // Object.is equality
+
+- Expected
++ Received
+
+- 0
++ 1
+
+ ❯ tests/architecture/betaSettlementReauth.qa.test.ts:315:57
+    313|     )
+    314|
+    315|     expect(manager.pillBag.getAmount('thong_mach_dan')).toBe(0)
+       |                                                         ^
+    316|     expect(manager.alchemySystem.getJobs()).toHaveLength(1)
+    317|     expect(manager.alchemySystem.drainSettlementEvents()).toEqual([])
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  tests/architecture/betaSettlementReauth.qa.test.ts > F-CONS-B2: a carried dormant-family alchemy job must not deliver > a parked dormant job never delivers on later ticks either
+AssertionError: expected [] to have a length of 1 but got +0
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ tests/architecture/betaSettlementReauth.qa.test.ts:352:45
+    350|
+    351|     expect(manager.pillBag.getAmount('phi_van_dan_mortal')).toBe(0)
+    352|     expect(manager.alchemySystem.getJobs()).toHaveLength(1)
+       |                                             ^
+    353|   })
+    354|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+===== MUT-REAUTH-bodyArm :: REAUTH: body modifier arm always emits
+MUT-REAUTH-bodyArm: KILLED_EXPECTED (exit=1)
+ts/architecture/betaSettlementReauth.qa.test.ts (16 tests | 1 failed) 64ms
+     × restore rehydration strips the owned bat-mach slice instead of re-emitting it 15ms
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 15 passed (16)
+   Start at  11:30:53
+   Duration  2.81s (transform 2.19s, setup 275ms, import 2.31s, tests 64ms, environment 0ms)
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/architecture/betaSettlementReauth.qa.test.ts > F-BODY-EMIT: carried body-progression records never emit modifiers under lock > restore rehydration strips the owned bat-mach slice instead of re-emitting it
+AssertionError: expected [ { …(5) }, { …(5) }, { …(5) } ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   {
++     "id": "bat-mach:nham_mach:maxHp",
++     "percent": 0.05,
++     "sourceId": "nham_mach",
++     "sourceType": "realm",
++     "stat": "maxHp",
++   },
++   {
++     "id": "bat-mach:doi_mach:defense",
++     "percent": 0.05,
++     "sourceId": "doi_mach",
++     "sourceType": "realm",
++     "stat": "defense",
++   },
++   {
++     "id": "bat-mach:am_kieu_mach:hpRegenPerTurn",
++     "percent": 0.08,
++     "sourceId": "am_kieu_mach",
++     "sourceType": "realm",
++     "stat": "hpRegenPerTurn",
++   },
++ ]
+
+ ❯ tests/architecture/betaSettlementReauth.qa.test.ts:400:22
+    398|
+    399|     const bodyMods = p.modifiers.filter((m) => m.id.startsWith('bat-ma…
+    400|     expect(bodyMods).toEqual([])
+       |                      ^
+    401|   })
+    402| })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+===== MUT-REAUTH-bodyLive :: REAUTH: bodyLive -> true (kien-co grade leak)
+MUT-REAUTH-bodyLive: KILLED_EXPECTED (exit=1)
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+ ❯ tests/architecture/betaSettlementReauth.qa.test.ts (16 tests | 1 failed) 61ms
+     × resolveKienCoGrade returns human on a carried max-body save 7ms
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 15 passed (16)
+   Start at  11:30:57
+   Duration  2.73s (transform 2.10s, setup 407ms, import 2.08s, tests 61ms, environment 0ms)
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/architecture/betaSettlementReauth.qa.test.ts > F-BODY-GRADE: the Truc Co grade ignores carried body records under lock > resolveKienCoGrade returns human on a carried max-body save
+AssertionError: expected 'earth' to be 'human' // Object.is equality
+
+Expected: "human"
+Received: "earth"
+
+ ❯ tests/architecture/betaSettlementReauth.qa.test.ts:414:41
+    412|       physiqueGrade: 'bao',
+    413|     })
+    414|     expect(resolveKienCoGrade(p, true)).toBe('human')
+       |                                         ^
+    415|   })
+    416| })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+===== MUT-B5-workforce :: B5: autoWorkerCapacity -> manual_workforce_state detection removed
+MUT-B5-workforce: KILLED_EXPECTED (exit=1)
+L  tests/architecture/betaDormantSaveLeak.qa.test.ts > save-safety: unsupportedReleaseReason robustness > flags a save carrying dormant chi_hien_quan workforce capacity (F-B5-1)
+AssertionError: expected null to be 'manual_workforce_state' // Object.is equality
+
+- Expected:
+"manual_workforce_state"
+
++ Received:
+null
+
+ ❯ tests/architecture/betaDormantSaveLeak.qa.test.ts:97:41
+     95|     const p = player()
+     96|     p.autoWorkerCapacity = 5
+     97|     expect(unsupportedReleaseReason(p)).toBe('manual_workforce_state')
+       |                                         ^
+     98|   })
+     99|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  tests/architecture/betaDormantSaveLeak.qa.test.ts > dormancy: manualWorkforce stays inert while auto production runs the flat pool (F-B3-01 / F-B3-02) > a carried CHQ save keeps persisted assignments inert - they cannot starve a live site (F-B3-02)
+AssertionError: expected null to be 'manual_workforce_state' // Object.is equality
+
+- Expected:
+"manual_workforce_state"
+
++ Received:
+null
+
+ ❯ tests/architecture/betaDormantSaveLeak.qa.test.ts:725:41
+    723|     // must surface the unsupported notice - capacity>0 always implies
+    724|     // a chi_hien_quan record since CHQ is the only capacity source.
+    725|     expect(unsupportedReleaseReason(p)).toBe('manual_workforce_state')
+       |                                         ^
+    726|
+    727|     // The manual allocator input is inert - a dormant choice may not
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+===== MUT-BODY-invest :: BODY: investBodyChapter bodyPath gate removed
+MUT-BODY-invest: KILLED_EXPECTED (exit=1)
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+ ❯ tests/architecture/betaScopeAuthoritySeam.qa.test.ts (12 tests | 1 failed) 24ms
+     × investBodyChapter dispatch is a closed sink for every dormant chapter (F-BODY-W-1) 7ms
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  1 failed | 16 passed (17)
+   Start at  11:31:05
+   Duration  5.72s (transform 6.66s, setup 648ms, import 7.60s, tests 198ms, environment 637ms)
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/architecture/betaScopeAuthoritySeam.qa.test.ts > technique training seam: dormant-way techniques must not accrue mastery on a carried save > investBodyChapter dispatch is a closed sink for every dormant chapter (F-BODY-W-1)
+AssertionError: expected 50 to be +0 // Object.is equality
+
+- Expected
++ Received
+
+- 0
++ 50
+
+ ❯ tests/architecture/betaScopeAuthoritySeam.qa.test.ts:261:71
+    259|
+    260|  for (const chapterId of ['body_refinement', 'meridian', 'zhou_tian'] …
+    261|   expect(gameManager.realmAdvanceOps.investBodyChapter(p, chapterId)).…
+       |                                                                       ^
+    262|  }
+    263|  expect(gameManager.materialBag.getAmount('tinh_hoa_pham_the')).toBe(5…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+===== MUT-BODY-panel :: BODY: RealmPanel v-if bodyPathLive removed
+MUT-BODY-panel: SURVIVED (exit=0)
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+
+ Test Files  2 passed (2)
+      Tests  17 passed (17)
+   Start at  11:31:12
+   Duration  5.35s (transform 6.04s, setup 738ms, import 6.91s, tests 173ms, environment 651ms)
+
+
+===== MUT-AS3B-seal :: AS3B: sealFrozenCycle betaTechniqueAdmitted gate removed
+MUT-AS3B-seal: KILLED_EXPECTED (exit=1)
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+ ❯ tests/architecture/betaScopeAuthoritySeam.qa.test.ts (12 tests | 1 failed) 26ms
+     × applyTechniqueRealmTransition stays inert for a dormant-way active technique 8ms
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 11 passed (12)
+   Start at  11:31:19
+   Duration  2.74s (transform 2.15s, setup 401ms, import 2.15s, tests 26ms, environment 0ms)
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/architecture/betaScopeAuthoritySeam.qa.test.ts > technique training seam: dormant-way techniques must not accrue mastery on a carried save > applyTechniqueRealmTransition stays inert for a dormant-way active technique
+AssertionError: expected { '1': { finalRank: 4, …(1) } } to deeply equal {}
+
+- Expected
++ Received
+
+- {}
++ {
++   "1": {
++     "completionState": "partial",
++     "finalRank": 4,
++   },
++ }
+
+ ❯ tests/architecture/betaScopeAuthoritySeam.qa.test.ts:224:65
+    222|  gameManager.realmAdvanceOps.applyTechniqueRealmTransition(sword, 'fou…
+    223|
+    224|  expect(gameManager.techniqueManager.getActive()?.gradeHistory).toEqua…
+       |                                                                 ^
+    225|  })
+    226|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+
+Corpus: 23 mutants, 17 KILLED_EXPECTED, 6 SURVIVED

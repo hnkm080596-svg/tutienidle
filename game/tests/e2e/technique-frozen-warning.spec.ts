@@ -146,11 +146,12 @@ test.describe('BreakthroughRequirementPanel unperfected-technique warning (M-F-T
     await expect(quanKhiButton).toBeEnabled({ timeout: 10_000 })
     await quanKhiButton.click()
 
-    // Mortal confirm: no technique held -> exactly ONE warning line
-    // (the still-equipped subtitle), no unperfected-technique line.
+    // Mortal confirm: a fresh character holds no technique AND wears no
+    // gear (the still-equipped subtitle is suppressed when nothing is
+    // equipped) -> zero warning lines on this first gate.
     let confirmDialog = page.getByRole('dialog', { name: /Độ kiếp cũng là độ thân/ })
     await expect(confirmDialog).toBeVisible({ timeout: 10_000 })
-    await expect(confirmDialog.locator('.breakthrough-confirm__warning')).toHaveCount(1)
+    await expect(confirmDialog.locator('.breakthrough-confirm__warning')).toHaveCount(0)
     await confirmDialog.getByRole('button', { name: 'Đã hiểu' }).click()
 
     const tribulationUi = page.locator('.tribulation-ui')
@@ -192,9 +193,11 @@ test.describe('BreakthroughRequirementPanel unperfected-technique warning (M-F-T
     await expect(choice).toBeEnabled({ timeout: 15_000 })
     await choice.click()
 
-    const confirm = page.locator('.confirm-modal__confirm')
-    await expect(confirm).toBeVisible({ timeout: 10_000 })
-    await confirm.click()
+    // The spell way declares the element axis - the element pick IS the
+    // commit (no generic confirm modal).
+    const elementButton = page.locator('.quan-khi-panel__element-btn').first()
+    await expect(elementButton).toBeVisible({ timeout: 10_000 })
+    await elementButton.click()
     await expect(page.locator('.overlay-panel')).toHaveCount(0, { timeout: 10_000 })
 
     if (await announcement.isVisible().catch(() => false)) {
@@ -214,11 +217,12 @@ test.describe('BreakthroughRequirementPanel unperfected-technique warning (M-F-T
     await expect(trucCoButton).toBeEnabled({ timeout: 10_000 })
     await trucCoButton.click()
 
-    // P14 oracle: TWO warning lines - the still-equipped subtitle plus
-    // the unperfected technique warning with its i18n interpolation.
+    // P14 oracle: ONE warning line - the unperfected technique warning
+    // with its i18n interpolation (no gear is worn, so the
+    // still-equipped subtitle stays suppressed).
     confirmDialog = page.getByRole('dialog', { name: /Độ kiếp cũng là độ thân/ })
     await expect(confirmDialog).toBeVisible({ timeout: 10_000 })
-    await expect(confirmDialog.locator('.breakthrough-confirm__warning')).toHaveCount(2)
+    await expect(confirmDialog.locator('.breakthrough-confirm__warning')).toHaveCount(1)
     await expect(confirmDialog).toContainText('Tâm pháp cảnh 1 chưa viên mãn')
     await expect(confirmDialog).toContainText('dở dang')
 

@@ -45,28 +45,34 @@ function mountStageSelect() {
   app.provide(BUMP_STATE_KEY, () => { version.value += 1 })
   app.mount(container)
 
+  const ui = useUiStore(pinia)
+  ui.leftPanelMode = 'stage_select'
+
   return { container, pinia, manager, unmount: () => app.unmount() }
 }
 
 afterEach(() => { document.body.innerHTML = '' })
 
 describe('StageSelectPanel — thông tin Truyền Tống Trận', () => {
-  it('hiện tên quái trên tuyến ải và đội hình của stage đang chọn (2026-08-30: bỏ banner ảnh dư thừa + intro text trùng lặp title bar)', async () => {
+  it('hiện tên quái trên tuyến ải và đội hình của stage đang chọn', async () => {
     const mounted = mountStageSelect()
+    await nextTick()
+    await nextTick()
 
-    expect(mounted.container.querySelector('.stage-select__intro')).toBeNull()
-    expect(mounted.container.querySelector('.stage-select__scene')).toBeNull()
-    expect(mounted.container.querySelectorAll('.stage-select__filter-group--chapters button')).toHaveLength(3)
-    expect(mounted.container.querySelectorAll('.stage-map__node')).toHaveLength(10)
+    // Son Ha Do fidelity (S10): all 3 chapter bands render at once -
+    // 30 nodes across the bands; nodes[9] is still mortal_dong_10
+    // (band order = chapter order).
+    expect(mounted.container.querySelectorAll('.stage-node')).toHaveLength(30)
     expect(mounted.container.textContent).toContain('Dã Trư')
-    expect(mounted.container.textContent).toContain('Sơn Khấu')
+    // BETA roster: deep-floor nodes show the band-C species.
+    expect(mounted.container.textContent).toContain('Man Hổ')
     expect(mounted.container.textContent).toContain(`10 ${t('panels.stageSelect.labels.enemiesSuffix')}`)
 
     // Spec v3 D9 (2026-09-11): bossEnemyId only exists on floor 10 -
-    // floor 1 must NOT show the Boss badge (27 nodes had a false badge).
+    // floor 1 must NOT show the Boss badge.
     expect(mounted.container.textContent).not.toContain(t('panels.stageSelect.labels.bossNamePrefix'))
 
-    const nodes = mounted.container.querySelectorAll('.stage-map__node')
+    const nodes = mounted.container.querySelectorAll('.stage-node')
     ;(nodes[9] as HTMLElement).click()
     await nextTick()
 
@@ -107,13 +113,10 @@ describe('StageSelectPanel — B5 auto-farm armed state + refused start guard (a
     player.perfectClearSeconds['mortal_dong_2'] = 100
     // Occupy the single stage slot with a farm on another stage.
     expect(manager.turnBattleOps.autoFarmOps.startAutoFarm(player.$state, 'mortal_dong_2')).toBe(true)
-    ui.leftPanelMode = 'stage_select'
     await nextTick()
 
     // Select perfect_farm on the already-selected first stage, then Start.
-    // The mode row renders 4 <Chip> children in order manual/repeat/
-    // progress/perfect_farm (StageSelectPanel.vue mode row).
-    const farmChip = container.querySelectorAll<HTMLElement>('.stage-select__mode .chip')[3]!
+    const farmChip = container.querySelector<HTMLElement>('.mode-chip[data-mode="perfect_farm"]')!
     farmChip.click()
     await nextTick()
     container.querySelector<HTMLButtonElement>('[data-testid="stage-start-button"]')!.click()
@@ -128,7 +131,7 @@ describe('StageSelectPanel — B5 auto-farm armed state + refused start guard (a
 // T4-38 (Mission E Task 10) - `mode` was a local ref that survived stage
 // changes: arm 'repeat'/'perfect_farm' on stage A, click stage B, and the
 // armed mode silently applied to B. The fix disarms to 'manual' on every
-// selectedStageId change (direct click AND zone/chapter re-picks).
+// selectedStageId change (direct click AND zone re-picks).
 describe('StageSelectPanel - mode disarms on stage change (T4-38)', () => {
   it('armed mode resets to manual when a different stage node is clicked', async () => {
     const { container, pinia, unmount } = mountStageSelect()
@@ -137,47 +140,38 @@ describe('StageSelectPanel - mode disarms on stage change (T4-38)', () => {
     await nextTick()
     await nextTick()
 
-    const chips = Array.from(
-      container.querySelectorAll<HTMLElement>('.stage-select__mode .chip'),
-    )
+    const chips = Array.from(container.querySelectorAll<HTMLElement>('.mode-chip'))
     expect(chips.length).toBeGreaterThanOrEqual(3)
 
-    chips[1]!.click() // arm 'repeat'
+    container.querySelector<HTMLElement>('.mode-chip[data-mode="repeat"]')!.click()
     await nextTick()
-    expect(chips[1]!.classList.contains('is-active')).toBe(true)
+    expect(container.querySelector<HTMLElement>('.mode-chip[data-mode="repeat"]')!.classList.contains('active')).toBe(true)
 
     container
-      .querySelector<HTMLElement>('[data-testid="stage-node-mortal_dong_2"]')!
+      .querySelector<HTMLElement>('[data-stage-id="mortal_dong_2"]')!
       .click()
     await nextTick()
 
-    expect(chips[0]!.classList.contains('is-active')).toBe(true)
-    expect(chips[1]!.classList.contains('is-active')).toBe(false)
+    expect(container.querySelector<HTMLElement>('.mode-chip[data-mode="manual"]')!.classList.contains('active')).toBe(true)
+    expect(container.querySelector<HTMLElement>('.mode-chip[data-mode="repeat"]')!.classList.contains('active')).toBe(false)
 
     unmount()
   })
 
-  it('armed mode also disarms when a chapter change re-picks the stage', async () => {
+  it('armed mode also disarms when a cross-chapter node is picked', async () => {
     const { container, unmount } = mountStageSelect()
     await nextTick()
     await nextTick()
 
-    const chips = Array.from(
-      container.querySelectorAll<HTMLElement>('.stage-select__mode .chip'),
-    )
-    chips[2]!.click() // arm 'progress'
+    container.querySelector<HTMLElement>('.mode-chip[data-mode="progress"]')!.click()
     await nextTick()
-    expect(chips[2]!.classList.contains('is-active')).toBe(true)
+    expect(container.querySelector<HTMLElement>('.mode-chip[data-mode="progress"]')!.classList.contains('active')).toBe(true)
 
-    // Chapter 2 chip -> selectFirstStageInChapter re-picks mortal_dong_11.
-    const chapterChips = Array.from(
-      container.querySelectorAll<HTMLElement>('.stage-select__filter-group--chapters .chip'),
-    )
-    chapterChips[1]!.click()
-    await nextTick()
+    // Chapter-2 band node (qi_refining_forest) -> mode resets to manual.
+    container.querySelector<HTMLElement>('[data-stage-id="qi_refining_forest"]')!.click()
     await nextTick()
 
-    expect(chips[0]!.classList.contains('is-active')).toBe(true)
+    expect(container.querySelector<HTMLElement>('.mode-chip[data-mode="manual"]')!.classList.contains('active')).toBe(true)
 
     unmount()
   })

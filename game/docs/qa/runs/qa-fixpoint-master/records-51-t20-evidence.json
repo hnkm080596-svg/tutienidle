@@ -1,0 +1,299 @@
+{
+ "records": [
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-PROBE-TC9",
+    "kind": "EXECUTED_PROPERTY",
+    "state": {
+     "productStateId": "1e111dc87b6fb8330d9c3aab07fceb6eafacee22cc67ee47ee7e36c49390bf35",
+     "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "CURRENT",
+    "commandOrMethod": "TC9 blind falsification sweep probes (9/21 fail) - child VM, exits before upload; rejects reproduced by pin suite",
+    "cwd": "game/",
+    "artifactPath": "evidence/tc9-findings.json",
+    "artifactHash": "a098b789860c567daed3a0ff6f6b1f5ed6851c9b66f10f7f347b533beb8894e5",
+    "result": "PASS",
+    "exitCode": 0,
+    "startedAt": "2026-10-01T13:45:00Z",
+    "finishedAt": "2026-10-01T13:45:00Z",
+    "producer": "coord-main",
+    "invariantIds": [
+     "I-SF-1"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [],
+    "claims": [
+     "6 finding classes on a2bd826f: 4 Medium+ provably-impossible claims accepted (future appliedAtMs, stage chain-prefix, roomLevelAtStart, unbounded cultivationPerSecond), 2 Low"
+    ],
+    "limitations": [
+     "probe .test.ts files lost with terminated child VM; deterministic rejects are reproduced by EV-PIN-T20"
+    ]
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-REPORT-TC9",
+    "kind": "HISTORICAL",
+    "state": {
+     "productStateId": "1e111dc87b6fb8330d9c3aab07fceb6eafacee22cc67ee47ee7e36c49390bf35",
+     "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "CURRENT",
+    "commandOrMethod": "TC9 falsification findings report (event-01a0f794f56f7be0aae837759b638ee5)",
+    "cwd": "game/",
+    "artifactPath": "evidence/tc9-findings.json",
+    "artifactHash": "a098b789860c567daed3a0ff6f6b1f5ed6851c9b66f10f7f347b533beb8894e5",
+    "result": "PASS",
+    "exitCode": 0,
+    "startedAt": "2026-10-01T13:45:00Z",
+    "finishedAt": "2026-10-01T13:45:00Z",
+    "producer": "coord-main",
+    "invariantIds": [
+     "I-SF-1"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [],
+    "claims": [
+     "TC9 report archived verbatim"
+    ],
+    "limitations": []
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-PROBE-A11",
+    "kind": "EXECUTED_PROPERTY",
+    "state": {
+     "productStateId": "1e111dc87b6fb8330d9c3aab07fceb6eafacee22cc67ee47ee7e36c49390bf35",
+     "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "CURRENT",
+    "commandOrMethod": "A11 authority-seam probe suite - 12 tests: 6 VALIDATOR asserts fail + 6 CONSUMER asserts pass on a2bd826f",
+    "cwd": "game/",
+    "artifactPath": "evidence/a11-findings.json",
+    "artifactHash": "24c55798c25da1108c57a1cf6e3acd1495ad65b544d6e856ab3d6045fa47319c",
+    "result": "PASS",
+    "exitCode": 0,
+    "startedAt": "2026-10-01T13:45:00Z",
+    "finishedAt": "2026-10-01T13:45:00Z",
+    "producer": "coord-main",
+    "invariantIds": [
+     "I-SF-1"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [],
+    "claims": [
+     "6 claim classes unbounded at the boundary: overcharge/accumulator unwitnessed, skillInsight>total, workerCycles+alchemyJobs count/span, purchasedNodeIds orphan"
+    ],
+    "limitations": [
+     "probe file remained on child VM at report time; rejects reproduced by EV-PIN-T20"
+    ]
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-REPORT-A11",
+    "kind": "HISTORICAL",
+    "state": {
+     "productStateId": "1e111dc87b6fb8330d9c3aab07fceb6eafacee22cc67ee47ee7e36c49390bf35",
+     "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "CURRENT",
+    "commandOrMethod": "A11 authority-seam findings report (event-01a0f79f6b367152a697d647d1d6a5a6)",
+    "cwd": "game/",
+    "artifactPath": "evidence/a11-findings.json",
+    "artifactHash": "24c55798c25da1108c57a1cf6e3acd1495ad65b544d6e856ab3d6045fa47319c",
+    "result": "PASS",
+    "exitCode": 0,
+    "startedAt": "2026-10-01T13:45:00Z",
+    "finishedAt": "2026-10-01T13:45:00Z",
+    "producer": "coord-main",
+    "invariantIds": [
+     "I-SF-1"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [],
+    "claims": [
+     "A11 report archived verbatim"
+    ],
+    "limitations": []
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-PROBE-B11",
+    "kind": "EXECUTED_PROPERTY",
+    "state": {
+     "productStateId": "1e111dc87b6fb8330d9c3aab07fceb6eafacee22cc67ee47ee7e36c49390bf35",
+     "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "CURRENT",
+    "commandOrMethod": "B11 consumer-seam probe - mortal skill-tree tri-state divergence (3/3 pass)",
+    "cwd": "game/",
+    "artifactPath": "evidence/b11-mortal-tree-tristate.test.ts",
+    "artifactHash": "796c6200b8e4cd2a9040d47f53f1fcb9db7afe325707f6b9b06611f3b19c40f4",
+    "result": "PASS",
+    "exitCode": 0,
+    "startedAt": "2026-10-01T13:45:00Z",
+    "finishedAt": "2026-10-01T13:45:00Z",
+    "producer": "coord-main",
+    "invariantIds": [
+     "I-DS-1"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [],
+    "claims": [
+     "canonical read-model marks mortal phap-tu nodes progression-locked; SkillPathPanel gate hides the tree entirely"
+    ],
+    "limitations": []
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-REPORT-B11",
+    "kind": "HISTORICAL",
+    "state": {
+     "productStateId": "1e111dc87b6fb8330d9c3aab07fceb6eafacee22cc67ee47ee7e36c49390bf35",
+     "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "CURRENT",
+    "commandOrMethod": "B11 consumer-seam findings report (event-01a0f797391f7ee28c7f0b3363b1ce1f)",
+    "cwd": "game/",
+    "artifactPath": "evidence/b11-findings.json",
+    "artifactHash": "5bb4f6317cbe54d978bfc3e9c1f7da88d95b3359d375b9e99a05178844af1ce4",
+    "result": "PASS",
+    "exitCode": 0,
+    "startedAt": "2026-10-01T13:45:00Z",
+    "finishedAt": "2026-10-01T13:45:00Z",
+    "producer": "coord-main",
+    "invariantIds": [
+     "I-DS-1"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [],
+    "claims": [
+     "B11 report: all findings Low/Nit - no dormancy leak into visible play, flagged saves fail-closed at audited write seams"
+    ],
+    "limitations": []
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-PIN-T20",
+    "kind": "EXECUTED_UNIT_STRUCTURAL",
+    "state": {
+     "productStateId": "c521ac4278bf1126d0bfe9421d02b2c851d4a53cd3e8727eff49b5e30094a5da",
+     "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "CURRENT",
+    "commandOrMethod": "npx vitest run tests/architecture/betaWriterBoundsTc8.qa.test.ts (61 tests)",
+    "cwd": "game/",
+    "artifactPath": "evidence/t20-pins.log",
+    "artifactHash": "7da35d49ca3aa3a3f6eab9e3813628a592b69cabaddd280b82fe47d386313ece",
+    "result": "PASS",
+    "exitCode": 0,
+    "startedAt": "2026-10-01T13:45:00Z",
+    "finishedAt": "2026-10-01T13:45:00Z",
+    "producer": "coord-main",
+    "invariantIds": [
+     "I-SF-1",
+     "I-DS-1"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [],
+    "claims": [
+     "18 new pins for F-A11-1..6 all green on d615f4fc; 10 TC9 pins from prior commit also green"
+    ],
+    "limitations": []
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-MUT-T20",
+    "kind": "EXECUTED_MUTATION",
+    "state": {
+     "productStateId": "c521ac4278bf1126d0bfe9421d02b2c851d4a53cd3e8727eff49b5e30094a5da",
+     "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "CURRENT",
+    "commandOrMethod": "11 hand mutants - one per new A11 gate; each disabled bound reverts a reject pin",
+    "cwd": "game/",
+    "artifactPath": "evidence/t20-mutants.log",
+    "artifactHash": "bf06458ee2f598003b07409fbb2b9776dda56fc7b1a43647913d4abf3c65c9ff",
+    "result": "PASS",
+    "exitCode": 0,
+    "startedAt": "2026-10-01T13:45:00Z",
+    "finishedAt": "2026-10-01T13:45:00Z",
+    "producer": "coord-main",
+    "invariantIds": [
+     "I-SF-1"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [],
+    "claims": [
+     "11/11 mutants KILLED (M-AS6 needed fixture correction - base nodeLevels wipe tripped an unrelated grant check)"
+    ],
+    "limitations": []
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-VERIFY-T20",
+    "kind": "EXECUTED_INTEGRATION",
+    "state": {
+     "productStateId": "c521ac4278bf1126d0bfe9421d02b2c851d4a53cd3e8727eff49b5e30094a5da",
+     "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "CURRENT",
+    "commandOrMethod": "npm run verify (type-check + build + vitest)",
+    "cwd": "game/",
+    "artifactPath": "evidence/t20-verify-final.log",
+    "artifactHash": "4fbc5df306fea8fdb2dd04f4e0c5352f76f7faabf97a8319253f024df57e79f5",
+    "result": "PASS",
+    "exitCode": 0,
+    "startedAt": "2026-10-01T13:45:00Z",
+    "finishedAt": "2026-10-01T13:45:00Z",
+    "producer": "coord-main",
+    "invariantIds": [
+     "I-SF-1",
+     "I-DS-1",
+     "I-CC-1"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [],
+    "claims": [
+     "verify GREEN on T20 tip d615f4fc: 8097 tests passed, 5 expected-fail, 4 skipped"
+    ],
+    "limitations": []
+   }
+  }
+ ]
+}

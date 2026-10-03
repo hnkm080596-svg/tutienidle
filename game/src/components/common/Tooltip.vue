@@ -10,6 +10,7 @@ import type { EquipmentTooltipContent, GradedItemTooltipContent, TechniqueToolti
 import { i18n } from '@/i18n'
 
 const { content, reference } = useTooltip()
+const props = withDefaults(defineProps<{ contained?: boolean }>(), { contained: false })
 const floating = ref<HTMLElement | null>(null)
 const open = computed(() => content.value !== null)
 
@@ -71,8 +72,8 @@ const elementBannerUrl = computed(() =>
 
 const { floatingStyles } = useFloating(reference, floating, {
   open,
-  placement: 'right-start',
-  strategy: 'fixed',
+  placement: computed(() => props.contained ? 'left-start' : 'right-start'),
+  strategy: computed(() => props.contained ? 'absolute' : 'fixed'),
   whileElementsMounted: autoUpdate,
   middleware: [
     offset(10),
@@ -135,7 +136,7 @@ function hideBrokenImage(event: Event) {
 </script>
 
 <template>
-  <Teleport to="body">
+  <Teleport to="body" :disabled="contained">
     <Transition name="tooltip-fade">
       <div
         v-if="content"
@@ -143,14 +144,12 @@ function hideBrokenImage(event: Event) {
         ref="floating"
         role="tooltip"
         class="tooltip"
-        :class="[content.kind ? `tooltip--${content.kind}` : 'tooltip--plain', content.kind === 'element' ? `tooltip--element-${content.element}` : '', content.kind === 'equipment' ? 'tooltip--detailed' : '', content.kind && content.kind !== 'plain' ? 'tooltip--rich' : '', itemAuraColor ? 'tooltip--aura' : '', content.kind !== 'element' ? 'paper-on-dark' : '']"
+        :data-contained="contained || undefined"
+        :class="[content.kind ? `tooltip--${content.kind}` : 'tooltip--plain', content.kind === 'element' ? `tooltip--element-${content.element}` : '', content.kind === 'equipment' ? 'tooltip--detailed' : '', content.kind && content.kind !== 'plain' ? 'tooltip--rich' : '', itemAuraColor ? 'tooltip--aura' : '']"
         :style="{ ...floatingStyles, '--tooltip-accent': qualityAccentColor ?? itemAuraColor, '--tooltip-aura': itemAuraColor, zIndex: OVERLAY_LAYERS.tooltip }"
       >
         <img v-if="elementBannerUrl" class="tooltip__banner" :src="elementBannerUrl" alt="" aria-hidden="true" />
-        <template v-else>
-          <InkNineSlice asset-id="surface-m-paper" layer="surface" />
-          <InkNineSlice asset-id="frame-m-seal-corner" layer="frame" />
-        </template>
+        <InkNineSlice v-else-if="!contained" chrome-id="frame-xs-tooltip" layer="surface" />
         <div class="tooltip__content">
         <!-- Compare pair (spec section 4): equipped card LEFT, hovered card
              RIGHT; each is a role=group with its own aria-label so
@@ -217,51 +216,53 @@ function hideBrokenImage(event: Event) {
 
 <style scoped>
 .tooltip {
-  --tooltip-accent: var(--chrome-300);
+  --tooltip-accent: var(--hk-gold-muted);
   position: fixed; width: max-content; max-width: min(240px, calc(100vw - 24px));
   padding: 8px 10px; overflow: hidden auto;
-  border: 0; border-radius: 0;
+  border: 0; border-radius: var(--hk-radius-sm);
   background: transparent;
-  box-shadow: none; color: var(--paper-text, #211f1a); font: var(--text-xs) var(--font-body); pointer-events: none; isolation: isolate;
+  box-shadow: 0 4px 14px var(--hk-shadow-low); color: var(--hk-text-primary); font: var(--text-xs) var(--hk-font-ui); pointer-events: none; isolation: isolate;
 }
-/* Non-element tooltips carry .paper-on-dark (theme.css owns the remap):
-   the tooltip teleports to <body> so it never inherits .ink-drawer.
-   Element banners keep the real paper inks: their art is cream. */
+/* Element banners keep their painted art and dark text (cream art);
+   every other kind renders the frame-xs-tooltip huyen surface. */
 .tooltip::before { content: ''; position: absolute; z-index: 4; inset: 12px auto 12px 5px; width: 2px; background: var(--tooltip-accent); opacity: .72; }
 /* Item aura - soft outer glow in the item's own rank color (bag item
    tooltips only, see itemAuraColor). color-mix keeps it translucent. */
 .tooltip--aura { box-shadow: 0 0 20px color-mix(in srgb, var(--tooltip-aura) 38%, transparent), 0 0 6px color-mix(in srgb, var(--tooltip-aura) 26%, transparent); }
 .tooltip__content { position: relative; z-index: 3; }
+.tooltip[data-contained] { padding: 12px 15px; border: 1px solid #a58c53; border-radius: 3px; background: #172c25; box-shadow: inset 0 0 0 3px #a58c5326, 0 6px 20px #08181066; }
+.tooltip[data-contained] .tooltip__title { color: #e6d39f; font-size: 16px; }
+.tooltip[data-contained] .tooltip__description { color: #d3cbb4; font-size: 13px; }
 .tooltip--rich { max-width: min(320px, calc(100vw - 24px)); padding: 12px 14px; }
 .tooltip--detailed { max-width: min(380px, calc(100vw - 24px)); }
 .tooltip__header { display: flex; align-items: center; gap: 10px; }
-/* Icon wells keep their deliberate CREAM medallion even under
-   .paper-on-dark (literal tokens, not --paper-* vars): icons read as
-   painted art on parchment, not on the dark surface. */
-.tooltip__icon-shell { flex: 0 0 54px; display: grid; place-items: center; width: 54px; height: 54px; border: 1px solid color-mix(in srgb, var(--tooltip-accent) 42%, rgba(42,41,36,.42)); border-radius: 2px; background: color-mix(in srgb, #ebe3d2 82%, transparent); overflow: hidden; }
-.tooltip__icon, .tooltip__icon-fallback { grid-area: 1 / 1; } .tooltip__icon { width: 100%; height: 100%; padding: 5px; object-fit: contain; box-sizing: border-box; background: color-mix(in srgb, #f5f0e4 84%, transparent); } .tooltip__icon-fallback { color: var(--tooltip-accent); font: 700 var(--text-panel-title) var(--font-display); }
+/* Icon wells keep their deliberate CREAM medallion on the dark huyen
+   surface (literal tokens, not theme vars): icons read as painted art
+   on parchment. */
+.tooltip__icon-shell { flex: 0 0 54px; display: grid; place-items: center; width: 54px; height: 54px; border: 1px solid color-mix(in srgb, var(--tooltip-accent) 42%, rgba(42,41,36,.42)); border-radius: var(--hk-radius-sm); background: color-mix(in srgb, #ebe3d2 82%, transparent); overflow: hidden; }
+.tooltip__icon, .tooltip__icon-fallback { grid-area: 1 / 1; } .tooltip__icon { width: 100%; height: 100%; padding: 5px; object-fit: contain; box-sizing: border-box; background: color-mix(in srgb, #f5f0e4 84%, transparent); } .tooltip__icon-fallback { color: var(--tooltip-accent); font: 700 var(--text-panel-title) var(--hk-font-display); }
 .tooltip__pair { display: flex; gap: 12px; }
 .tooltip__card { min-width: 0; flex: 1 1 0; }
 .tooltip__heading { min-width: 0; }
 /* Title trước đây thừa hưởng font-size 12px của .tooltip gốc — cùng cỡ
    với meta/description, chỉ khác weight/family (2026-08-30 frontend-
    design pass: tiêu đề tooltip cần tách bậc rõ khỏi nội dung). */
-.tooltip__title { margin: 0 0 3px; color: var(--paper-text, #211f1a); font-family: var(--font-display); font-size: var(--text-md); font-weight: 700; line-height: 1.25; }
-.tooltip__meta { margin: 0; color: var(--paper-text-muted, #8f897c); font-size: var(--text-xs); }
+.tooltip__title { margin: 0 0 3px; color: var(--hk-text-primary); font-family: var(--hk-font-display); font-size: var(--text-md); font-weight: 700; line-height: 1.25; }
+.tooltip__meta { margin: 0; color: var(--hk-text-muted); font-size: var(--text-xs); }
 /* pre-line: authored multi-line descriptions (Phap Tu Reimagine special
    previews -- cost %MaxLL + duration + effect + consequence) render as
    lines; single-line descriptions are unaffected. */
-.tooltip__description { margin: 3px 0 0; color: var(--paper-text-soft, #5e5a50); line-height: 1.45; white-space: pre-line; } .tooltip__description--rich { margin-top: 9px; }
-.tooltip__section { margin-top: 10px; padding-top: 7px; border-top: 1px solid color-mix(in srgb, var(--tooltip-accent) 18%, var(--paper-line, rgba(42,41,36,.42))); }
-.tooltip__section-label { margin: 0 0 5px; color: color-mix(in srgb, var(--tooltip-accent) 76%, var(--paper-text, #211f1a)); font-size: var(--text-xs); font-weight: 700; letter-spacing: .07em; text-transform: uppercase; }
-.tooltip__section-row { display: grid; grid-template-columns: minmax(0,1fr) auto; column-gap: 14px; align-items: baseline; color: var(--paper-text-soft, #5e5a50); line-height: 1.55; }
-.tooltip__row-value { color: var(--paper-text, #211f1a); font-variant-numeric: tabular-nums; text-align: right; } .tooltip__row-detail { grid-column: 1/-1; color: var(--paper-text-muted, #8f897c); }
-.tooltip__section-row--positive .tooltip__row-value { color: var(--jade); } .tooltip__section-row--negative .tooltip__row-value { color: var(--crimson); }
-.tooltip__section-row--warning .tooltip__row-value { color: var(--mineral-gold, #b79653); } .tooltip__section-row--muted { color: var(--paper-text-muted, #8f897c); } .tooltip__section-row--special .tooltip__row-value { color: var(--affix-exalted); }
+.tooltip__description { margin: 3px 0 0; color: var(--hk-text-secondary); line-height: 1.45; white-space: pre-line; } .tooltip__description--rich { margin-top: 9px; }
+.tooltip__section { margin-top: 10px; padding-top: 7px; border-top: 1px solid color-mix(in srgb, var(--tooltip-accent) 24%, var(--hk-border-muted)); }
+.tooltip__section-label { margin: 0 0 5px; color: color-mix(in srgb, var(--tooltip-accent) 76%, var(--hk-text-primary)); font-size: var(--text-xs); font-weight: 700; letter-spacing: .07em; text-transform: uppercase; }
+.tooltip__section-row { display: grid; grid-template-columns: minmax(0,1fr) auto; column-gap: 14px; align-items: baseline; color: var(--hk-text-secondary); line-height: 1.55; }
+.tooltip__row-value { color: var(--hk-text-primary); font-variant-numeric: tabular-nums; text-align: right; } .tooltip__row-detail { grid-column: 1/-1; color: var(--hk-text-muted); }
+.tooltip__section-row--positive .tooltip__row-value { color: var(--hk-jade); } .tooltip__section-row--negative .tooltip__row-value { color: var(--hk-cinnabar-bright); }
+.tooltip__section-row--warning .tooltip__row-value { color: var(--hk-gold); } .tooltip__section-row--muted { color: var(--hk-text-muted); } .tooltip__section-row--special .tooltip__row-value { color: var(--affix-exalted); }
 .tooltip__section-row--tier-1 .tooltip__row-label { color: var(--affix-tier-1); } .tooltip__section-row--tier-2 .tooltip__row-label { color: var(--affix-tier-2); }
 .tooltip__section-row--tier-3 .tooltip__row-label { color: var(--affix-tier-3); } .tooltip__section-row--tier-4 .tooltip__row-label { color: var(--affix-tier-4); } .tooltip__section-row--tier-5 .tooltip__row-label { color: transparent; background: var(--rank-gradient-10); background-clip: text; -webkit-background-clip: text; font-weight: 700; }
-.tooltip__building-status { margin: 5px 0 0; color: var(--jade); font-size: var(--text-xs); }
-.tooltip__building-status--locked { color: var(--paper-text-muted, #8f897c); }
+.tooltip__building-status { margin: 5px 0 0; color: var(--hk-jade); font-size: var(--text-xs); }
+.tooltip__building-status--locked { color: var(--hk-text-muted); }
 
 /* Element banner tooltip (Ngu Hanh formation redesign) - the element's
    painted banner is the background layer; the stat line lives on a

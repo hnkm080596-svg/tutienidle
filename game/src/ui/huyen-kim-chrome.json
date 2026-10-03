@@ -2,25 +2,865 @@
   "version": 1,
   "note": "Huyen Kim Son Thuy chrome slots — art drawn by Minh lands under public/assets/ui/huyen-kim/. status 'pending' = render CSS fallback (no file expected yet); 'ready' = PNG present at url1x/url2x. See docs/design/huyen-kim-chrome-art-spec.md for drawing requirements per slot.",
   "assets": [
-    { "id": "frame-xs-tooltip", "role": "tooltip / inline popup chrome", "status": "pending", "url1x": "/assets/ui/huyen-kim/frame-xs-tooltip@1x.png", "url2x": "/assets/ui/huyen-kim/frame-xs-tooltip@2x.png", "sourceWidth": 96, "sourceHeight": 96, "slices": { "left": 20, "right": 20, "top": 20, "bottom": 20 }, "center": "fill", "edgeMode": "stretch", "tintable": true, "minimumWidth": 32, "minimumHeight": 32 },
-    { "id": "frame-s-slot", "role": "item slot / icon cell", "status": "pending", "url1x": "/assets/ui/huyen-kim/frame-s-slot@1x.png", "url2x": "/assets/ui/huyen-kim/frame-s-slot@2x.png", "sourceWidth": 96, "sourceHeight": 96, "slices": { "left": 20, "right": 20, "top": 20, "bottom": 20 }, "center": "transparent", "edgeMode": "stretch", "tintable": true, "minimumWidth": 32, "minimumHeight": 32 },
-    { "id": "surface-m-panel", "role": "standard panel body (Study rails)", "status": "pending", "url1x": "/assets/ui/huyen-kim/surface-m-panel@1x.png", "url2x": "/assets/ui/huyen-kim/surface-m-panel@2x.png", "sourceWidth": 256, "sourceHeight": 256, "slices": { "left": 32, "right": 32, "top": 32, "bottom": 32 }, "center": "fill", "edgeMode": "stretch", "tintable": false, "minimumWidth": 64, "minimumHeight": 64 },
-    { "id": "frame-m-modal", "role": "feature modal frame (filter/detail)", "status": "pending", "url1x": "/assets/ui/huyen-kim/frame-m-modal@1x.png", "url2x": "/assets/ui/huyen-kim/frame-m-modal@2x.png", "sourceWidth": 256, "sourceHeight": 256, "slices": { "left": 40, "right": 40, "top": 40, "bottom": 40 }, "center": "transparent", "edgeMode": "stretch", "tintable": false, "minimumWidth": 80, "minimumHeight": 80 },
-    { "id": "surface-l-drawer", "role": "side drawer / Thien Co Bang card", "status": "pending", "url1x": "/assets/ui/huyen-kim/surface-l-drawer@1x.png", "url2x": "/assets/ui/huyen-kim/surface-l-drawer@2x.png", "sourceWidth": 384, "sourceHeight": 384, "slices": { "left": 48, "right": 48, "top": 48, "bottom": 48 }, "center": "fill", "edgeMode": "stretch", "tintable": false, "minimumWidth": 96, "minimumHeight": 96 },
-    { "id": "surface-xl-scroll", "role": "ceremonial scroll (victory/offline journal/dialog)", "status": "pending", "url1x": "/assets/ui/huyen-kim/surface-xl-scroll@1x.png", "url2x": "/assets/ui/huyen-kim/surface-xl-scroll@2x.png", "sourceWidth": 512, "sourceHeight": 640, "slices": { "left": 64, "right": 64, "top": 96, "bottom": 96 }, "center": "fill", "edgeMode": "stretch", "tintable": false, "minimumWidth": 128, "minimumHeight": 160 },
-    { "id": "frame-xl-ceremony", "role": "ceremony surface (breakthrough/tribulation)", "status": "pending", "url1x": "/assets/ui/huyen-kim/frame-xl-ceremony@1x.png", "url2x": "/assets/ui/huyen-kim/frame-xl-ceremony@2x.png", "sourceWidth": 512, "sourceHeight": 512, "slices": { "left": 72, "right": 72, "top": 72, "bottom": 72 }, "center": "transparent", "edgeMode": "stretch", "tintable": false, "minimumWidth": 144, "minimumHeight": 144 },
-    { "id": "button-compact", "role": "compact button (combat rail, counters)", "status": "pending", "url1x": "/assets/ui/huyen-kim/button-compact@1x.png", "url2x": "/assets/ui/huyen-kim/button-compact@2x.png", "sourceWidth": 160, "sourceHeight": 56, "slices": { "left": 28, "right": 28, "top": 16, "bottom": 16 }, "center": "fill", "edgeMode": "stretch", "tintable": true, "minimumWidth": 56, "minimumHeight": 28 },
-    { "id": "button-standard", "role": "standard button (Study actions)", "status": "pending", "url1x": "/assets/ui/huyen-kim/button-standard@1x.png", "url2x": "/assets/ui/huyen-kim/button-standard@2x.png", "sourceWidth": 192, "sourceHeight": 72, "slices": { "left": 32, "right": 32, "top": 20, "bottom": 20 }, "center": "fill", "edgeMode": "stretch", "tintable": true, "minimumWidth": 72, "minimumHeight": 36 },
-    { "id": "button-ceremonial", "role": "dominant CTA (Dot Pha / Nhap Tran / Luyen Dan)", "status": "pending", "url1x": "/assets/ui/huyen-kim/button-ceremonial@1x.png", "url2x": "/assets/ui/huyen-kim/button-ceremonial@2x.png", "sourceWidth": 256, "sourceHeight": 96, "slices": { "left": 40, "right": 40, "top": 24, "bottom": 24 }, "center": "fill", "edgeMode": "stretch", "tintable": true, "minimumWidth": 96, "minimumHeight": 48 },
-    { "id": "icon-button-utility", "role": "top-bar utility circular seal (mail/bag/settings)", "status": "pending", "url1x": "/assets/ui/huyen-kim/icon-button-utility@1x.png", "url2x": "/assets/ui/huyen-kim/icon-button-utility@2x.png", "sourceWidth": 96, "sourceHeight": 96, "slices": { "left": 30, "right": 30, "top": 30, "bottom": 30 }, "center": "fill", "edgeMode": "stretch", "tintable": true, "minimumWidth": 32, "minimumHeight": 32 },
-    { "id": "seal-chip", "role": "seal chip (talent, requirement badge)", "status": "pending", "url1x": "/assets/ui/huyen-kim/seal-chip@1x.png", "url2x": "/assets/ui/huyen-kim/seal-chip@2x.png", "sourceWidth": 128, "sourceHeight": 48, "slices": { "left": 24, "right": 24, "top": 14, "bottom": 14 }, "center": "fill", "edgeMode": "stretch", "tintable": true, "minimumWidth": 48, "minimumHeight": 24 },
-    { "id": "resource-pill", "role": "top-bar resource counter capsule", "status": "pending", "url1x": "/assets/ui/huyen-kim/resource-pill@1x.png", "url2x": "/assets/ui/huyen-kim/resource-pill@2x.png", "sourceWidth": 160, "sourceHeight": 48, "slices": { "left": 24, "right": 24, "top": 14, "bottom": 14 }, "center": "fill", "edgeMode": "stretch", "tintable": false, "minimumWidth": 56, "minimumHeight": 24 },
-    { "id": "entity-bar", "role": "combat entity HP/status bar (tint jade player / cinnabar enemy)", "status": "pending", "url1x": "/assets/ui/huyen-kim/entity-bar@1x.png", "url2x": "/assets/ui/huyen-kim/entity-bar@2x.png", "sourceWidth": 192, "sourceHeight": 32, "slices": { "left": 20, "right": 20, "top": 10, "bottom": 10 }, "center": "fill", "edgeMode": "stretch", "tintable": true, "minimumWidth": 64, "minimumHeight": 16 },
-    { "id": "divider-ornament", "role": "horizontal divider with ornament center", "status": "pending", "url1x": "/assets/ui/huyen-kim/divider-ornament@1x.png", "url2x": "/assets/ui/huyen-kim/divider-ornament@2x.png", "sourceWidth": 256, "sourceHeight": 16, "slices": { "left": 96, "right": 96, "top": 4, "bottom": 4 }, "center": "stretch", "edgeMode": "stretch", "tintable": true, "minimumWidth": 96, "minimumHeight": 8 },
-    { "id": "scrollbar", "role": "scrollbar track+thumb composite", "status": "pending", "url1x": "/assets/ui/huyen-kim/scrollbar@1x.png", "url2x": "/assets/ui/huyen-kim/scrollbar@2x.png", "sourceWidth": 32, "sourceHeight": 128, "slices": { "left": 12, "right": 12, "top": 24, "bottom": 24 }, "center": "fill", "edgeMode": "stretch", "tintable": true, "minimumWidth": 10, "minimumHeight": 48 },
-    { "id": "dao-luan-center", "role": "Dao Luan medallion center (Tu Luyen)", "status": "pending", "url1x": "/assets/ui/huyen-kim/dao-luan-center@1x.png", "url2x": "/assets/ui/huyen-kim/dao-luan-center@2x.png", "sourceWidth": 192, "sourceHeight": 192, "slices": { "left": 0, "right": 0, "top": 0, "bottom": 0 }, "center": "fill", "edgeMode": "stretch", "tintable": false, "minimumWidth": 96, "minimumHeight": 96 },
-    { "id": "dao-luan-node", "role": "Dao Luan ring node (inner/outer)", "status": "pending", "url1x": "/assets/ui/huyen-kim/dao-luan-node@1x.png", "url2x": "/assets/ui/huyen-kim/dao-luan-node@2x.png", "sourceWidth": 96, "sourceHeight": 96, "slices": { "left": 0, "right": 0, "top": 0, "bottom": 0 }, "center": "fill", "edgeMode": "stretch", "tintable": true, "minimumWidth": 48, "minimumHeight": 48 },
-    { "id": "rune-node", "role": "node-graph vertex (locked/available/learned tint)", "status": "pending", "url1x": "/assets/ui/huyen-kim/rune-node@1x.png", "url2x": "/assets/ui/huyen-kim/rune-node@2x.png", "sourceWidth": 64, "sourceHeight": 64, "slices": { "left": 0, "right": 0, "top": 0, "bottom": 0 }, "center": "fill", "edgeMode": "stretch", "tintable": true, "minimumWidth": 32, "minimumHeight": 32 },
-    { "id": "tab-seal", "role": "tab indicator / nav seal", "status": "pending", "url1x": "/assets/ui/huyen-kim/tab-seal@1x.png", "url2x": "/assets/ui/huyen-kim/tab-seal@2x.png", "sourceWidth": 96, "sourceHeight": 64, "slices": { "left": 20, "right": 20, "top": 16, "bottom": 16 }, "center": "fill", "edgeMode": "stretch", "tintable": true, "minimumWidth": 40, "minimumHeight": 28 }
+    {
+      "id": "frame-xs-tooltip",
+      "role": "tooltip / inline popup chrome",
+      "status": "ready",
+      "url1x": "/assets/ui/huyen-kim/frames/frame-xs-tooltip@1x.png",
+      "url2x": "/assets/ui/huyen-kim/frames/frame-xs-tooltip@2x.png",
+      "sourceWidth": 96,
+      "sourceHeight": 96,
+      "slices": {
+        "left": 20,
+        "right": 20,
+        "top": 20,
+        "bottom": 20
+      },
+      "center": "transparent",
+      "edgeMode": "stretch",
+      "tintable": true,
+      "minimumWidth": 32,
+      "minimumHeight": 32
+    },
+    {
+      "id": "frame-s-slot",
+      "role": "item slot / icon cell",
+      "status": "ready",
+      "url1x": "/assets/ui/huyen-kim/slots/frame-s-slot@1x.png",
+      "url2x": "/assets/ui/huyen-kim/slots/frame-s-slot@2x.png",
+      "sourceWidth": 96,
+      "sourceHeight": 96,
+      "slices": {
+        "left": 20,
+        "right": 20,
+        "top": 20,
+        "bottom": 20
+      },
+      "center": "transparent",
+      "edgeMode": "stretch",
+      "tintable": true,
+      "minimumWidth": 32,
+      "minimumHeight": 32
+    },
+    {
+      "id": "surface-m-panel",
+      "role": "standard panel body (Study rails)",
+      "status": "ready",
+      "url1x": "/assets/ui/huyen-kim/surfaces/surface-m-panel@1x.png",
+      "url2x": "/assets/ui/huyen-kim/surfaces/surface-m-panel@2x.png",
+      "sourceWidth": 256,
+      "sourceHeight": 256,
+      "slices": {
+        "left": 32,
+        "right": 32,
+        "top": 32,
+        "bottom": 32
+      },
+      "center": "fill",
+      "edgeMode": "stretch",
+      "tintable": false,
+      "minimumWidth": 64,
+      "minimumHeight": 64
+    },
+    {
+      "id": "frame-m-modal",
+      "role": "feature modal frame (filter/detail)",
+      "status": "ready",
+      "url1x": "/assets/ui/huyen-kim/frames/frame-m-modal@1x.png",
+      "url2x": "/assets/ui/huyen-kim/frames/frame-m-modal@2x.png",
+      "sourceWidth": 256,
+      "sourceHeight": 256,
+      "slices": {
+        "left": 40,
+        "right": 40,
+        "top": 40,
+        "bottom": 40
+      },
+      "center": "transparent",
+      "edgeMode": "stretch",
+      "tintable": false,
+      "minimumWidth": 80,
+      "minimumHeight": 80
+    },
+    {
+      "id": "surface-l-drawer",
+      "role": "side drawer / Thien Co Bang card",
+      "status": "ready",
+      "url1x": "/assets/ui/huyen-kim/surfaces/surface-l-drawer@1x.png",
+      "url2x": "/assets/ui/huyen-kim/surfaces/surface-l-drawer@2x.png",
+      "sourceWidth": 384,
+      "sourceHeight": 384,
+      "slices": {
+        "left": 48,
+        "right": 48,
+        "top": 48,
+        "bottom": 48
+      },
+      "center": "fill",
+      "edgeMode": "stretch",
+      "tintable": false,
+      "minimumWidth": 96,
+      "minimumHeight": 96
+    },
+    {
+      "id": "surface-xl-scroll",
+      "role": "ceremonial scroll (victory/offline journal/dialog)",
+      "status": "ready",
+      "url1x": "/assets/ui/huyen-kim/scroll/surface-xl-scroll@1x.png",
+      "url2x": "/assets/ui/huyen-kim/scroll/surface-xl-scroll@2x.png",
+      "sourceWidth": 512,
+      "sourceHeight": 640,
+      "slices": {
+        "left": 64,
+        "right": 64,
+        "top": 96,
+        "bottom": 96
+      },
+      "center": "fill",
+      "edgeMode": "stretch",
+      "tintable": false,
+      "minimumWidth": 128,
+      "minimumHeight": 160
+    },
+    {
+      "id": "frame-xl-ceremony",
+      "role": "ceremony surface (breakthrough/tribulation)",
+      "status": "ready",
+      "url1x": "/assets/ui/huyen-kim/frames/frame-xl-ceremony@1x.png",
+      "url2x": "/assets/ui/huyen-kim/frames/frame-xl-ceremony@2x.png",
+      "sourceWidth": 512,
+      "sourceHeight": 512,
+      "slices": {
+        "left": 72,
+        "right": 72,
+        "top": 72,
+        "bottom": 72
+      },
+      "center": "transparent",
+      "edgeMode": "stretch",
+      "tintable": false,
+      "minimumWidth": 144,
+      "minimumHeight": 144
+    },
+    {
+      "id": "button-compact",
+      "role": "compact button (combat rail, counters)",
+      "status": "ready",
+      "url1x": "/assets/ui/huyen-kim/buttons/button-compact@1x.png",
+      "url2x": "/assets/ui/huyen-kim/buttons/button-compact@2x.png",
+      "sourceWidth": 160,
+      "sourceHeight": 56,
+      "slices": {
+        "left": 28,
+        "right": 28,
+        "top": 16,
+        "bottom": 16
+      },
+      "center": "fill",
+      "edgeMode": "stretch",
+      "tintable": true,
+      "minimumWidth": 56,
+      "minimumHeight": 28
+    },
+    {
+      "id": "button-standard",
+      "role": "standard button (Study actions)",
+      "status": "ready",
+      "url1x": "/assets/ui/huyen-kim/buttons/button-standard@1x.png",
+      "url2x": "/assets/ui/huyen-kim/buttons/button-standard@2x.png",
+      "sourceWidth": 192,
+      "sourceHeight": 72,
+      "slices": {
+        "left": 32,
+        "right": 32,
+        "top": 20,
+        "bottom": 20
+      },
+      "center": "fill",
+      "edgeMode": "stretch",
+      "tintable": true,
+      "minimumWidth": 72,
+      "minimumHeight": 36
+    },
+    {
+      "id": "button-ceremonial",
+      "role": "dominant CTA (Dot Pha / Nhap Tran / Luyen Dan)",
+      "status": "ready",
+      "url1x": "/assets/ui/huyen-kim/buttons/button-ceremonial@1x.png",
+      "url2x": "/assets/ui/huyen-kim/buttons/button-ceremonial@2x.png",
+      "sourceWidth": 256,
+      "sourceHeight": 96,
+      "slices": {
+        "left": 40,
+        "right": 40,
+        "top": 24,
+        "bottom": 24
+      },
+      "center": "fill",
+      "edgeMode": "stretch",
+      "tintable": false,
+      "minimumWidth": 96,
+      "minimumHeight": 48
+    },
+    {
+      "id": "icon-button-utility",
+      "role": "top-bar utility circular seal (mail/bag/settings)",
+      "status": "ready",
+      "url1x": "/assets/ui/huyen-kim/buttons/icon-button-utility@1x.png",
+      "url2x": "/assets/ui/huyen-kim/buttons/icon-button-utility@2x.png",
+      "sourceWidth": 96,
+      "sourceHeight": 96,
+      "slices": {
+        "left": 30,
+        "right": 30,
+        "top": 30,
+        "bottom": 30
+      },
+      "center": "fill",
+      "edgeMode": "stretch",
+      "tintable": true,
+      "minimumWidth": 32,
+      "minimumHeight": 32
+    },
+    {
+      "id": "seal-chip",
+      "role": "seal chip (talent, requirement badge)",
+      "status": "ready",
+      "url1x": "/assets/ui/huyen-kim/badges/seal-chip@1x.png",
+      "url2x": "/assets/ui/huyen-kim/badges/seal-chip@2x.png",
+      "sourceWidth": 128,
+      "sourceHeight": 48,
+      "slices": {
+        "left": 24,
+        "right": 24,
+        "top": 14,
+        "bottom": 14
+      },
+      "center": "fill",
+      "edgeMode": "stretch",
+      "tintable": true,
+      "minimumWidth": 48,
+      "minimumHeight": 24
+    },
+    {
+      "id": "resource-pill",
+      "role": "top-bar resource counter capsule",
+      "status": "ready",
+      "url1x": "/assets/ui/huyen-kim/hud/resource-pill@1x.png",
+      "url2x": "/assets/ui/huyen-kim/hud/resource-pill@2x.png",
+      "sourceWidth": 160,
+      "sourceHeight": 48,
+      "slices": {
+        "left": 24,
+        "right": 24,
+        "top": 14,
+        "bottom": 14
+      },
+      "center": "fill",
+      "edgeMode": "stretch",
+      "tintable": false,
+      "minimumWidth": 56,
+      "minimumHeight": 24
+    },
+    {
+      "id": "entity-bar",
+      "role": "combat entity HP/status bar (tint jade player / cinnabar enemy)",
+      "status": "ready",
+      "url1x": "/assets/ui/huyen-kim/bars/entity-bar@1x.png",
+      "url2x": "/assets/ui/huyen-kim/bars/entity-bar@2x.png",
+      "sourceWidth": 192,
+      "sourceHeight": 32,
+      "slices": {
+        "left": 20,
+        "right": 20,
+        "top": 10,
+        "bottom": 10
+      },
+      "center": "fill",
+      "edgeMode": "stretch",
+      "tintable": true,
+      "minimumWidth": 64,
+      "minimumHeight": 16
+    },
+    {
+      "id": "divider-ornament",
+      "role": "horizontal divider with ornament center",
+      "status": "ready",
+      "url1x": "/assets/ui/huyen-kim/ornaments/divider-ornament@1x.png",
+      "url2x": "/assets/ui/huyen-kim/ornaments/divider-ornament@2x.png",
+      "sourceWidth": 256,
+      "sourceHeight": 16,
+      "slices": {
+        "left": 96,
+        "right": 96,
+        "top": 4,
+        "bottom": 4
+      },
+      "center": "fill",
+      "edgeMode": "stretch",
+      "tintable": true,
+      "minimumWidth": 96,
+      "minimumHeight": 8
+    },
+    {
+      "id": "scrollbar",
+      "role": "scrollbar track+thumb composite",
+      "status": "pending",
+      "url1x": "/assets/ui/huyen-kim/scrollbar@1x.png",
+      "url2x": "/assets/ui/huyen-kim/scrollbar@2x.png",
+      "sourceWidth": 32,
+      "sourceHeight": 128,
+      "slices": {
+        "left": 12,
+        "right": 12,
+        "top": 24,
+        "bottom": 24
+      },
+      "center": "fill",
+      "edgeMode": "stretch",
+      "tintable": true,
+      "minimumWidth": 10,
+      "minimumHeight": 48
+    },
+    {
+      "id": "dao-luan-center",
+      "role": "Dao Luan medallion center (Tu Luyen)",
+      "status": "ready",
+      "url1x": "/assets/ui/huyen-kim/nodes/dao-luan-center@1x.png",
+      "url2x": "/assets/ui/huyen-kim/nodes/dao-luan-center@2x.png",
+      "sourceWidth": 192,
+      "sourceHeight": 192,
+      "slices": {
+        "left": 0,
+        "right": 0,
+        "top": 0,
+        "bottom": 0
+      },
+      "center": "fill",
+      "edgeMode": "stretch",
+      "tintable": false,
+      "minimumWidth": 96,
+      "minimumHeight": 96
+    },
+    {
+      "id": "dao-luan-node",
+      "role": "Dao Luan ring node (inner/outer)",
+      "status": "ready",
+      "url1x": "/assets/ui/huyen-kim/nodes/dao-luan-node@1x.png",
+      "url2x": "/assets/ui/huyen-kim/nodes/dao-luan-node@2x.png",
+      "sourceWidth": 96,
+      "sourceHeight": 96,
+      "slices": {
+        "left": 0,
+        "right": 0,
+        "top": 0,
+        "bottom": 0
+      },
+      "center": "fill",
+      "edgeMode": "stretch",
+      "tintable": true,
+      "minimumWidth": 48,
+      "minimumHeight": 48
+    },
+    {
+      "id": "rune-node",
+      "role": "node-graph vertex (locked/available/learned tint)",
+      "status": "ready",
+      "url1x": "/assets/ui/huyen-kim/nodes/rune-node@1x.png",
+      "url2x": "/assets/ui/huyen-kim/nodes/rune-node@2x.png",
+      "sourceWidth": 64,
+      "sourceHeight": 64,
+      "slices": {
+        "left": 0,
+        "right": 0,
+        "top": 0,
+        "bottom": 0
+      },
+      "center": "fill",
+      "edgeMode": "stretch",
+      "tintable": true,
+      "minimumWidth": 32,
+      "minimumHeight": 32
+    },
+    {
+      "id": "tab-seal",
+      "role": "tab indicator / nav seal",
+      "status": "ready",
+      "url1x": "/assets/ui/huyen-kim/tabs/tab-seal@1x.png",
+      "url2x": "/assets/ui/huyen-kim/tabs/tab-seal@2x.png",
+      "sourceWidth": 96,
+      "sourceHeight": 64,
+      "slices": {
+        "left": 20,
+        "right": 20,
+        "top": 16,
+        "bottom": 16
+      },
+      "center": "fill",
+      "edgeMode": "stretch",
+      "tintable": true,
+      "minimumWidth": 40,
+      "minimumHeight": 28
+    },
+    {
+      "id": "imperial-scroll-body",
+      "role": "imperial scroll envelope surface",
+      "status": "ready",
+      "url1x": "/assets/ui/huyen-kim/scroll/imperial-scroll-body@1x.png",
+      "url2x": "/assets/ui/huyen-kim/scroll/imperial-scroll-body@2x.png",
+      "sourceWidth": 768,
+      "sourceHeight": 512,
+      "slices": {
+        "left": 56,
+        "right": 56,
+        "top": 48,
+        "bottom": 48
+      },
+      "center": "fill",
+      "edgeMode": "stretch",
+      "tintable": false,
+      "minimumWidth": 192,
+      "minimumHeight": 128
+    },
+    {
+      "id": "imperial-scroll-roller",
+      "role": "scroll end roller (mirrored)",
+      "status": "ready",
+      "url1x": "/assets/ui/huyen-kim/scroll/imperial-scroll-roller@1x.png",
+      "url2x": "/assets/ui/huyen-kim/scroll/imperial-scroll-roller@2x.png",
+      "sourceWidth": 96,
+      "sourceHeight": 896,
+      "slices": {
+        "left": 0,
+        "right": 0,
+        "top": 0,
+        "bottom": 0
+      },
+      "center": "fill",
+      "edgeMode": "stretch",
+      "tintable": false,
+      "minimumWidth": 24,
+      "minimumHeight": 224
+    },
+    {
+      "id": "scroll-title-plaque",
+      "role": "scroll title plaque",
+      "status": "ready",
+      "url1x": "/assets/ui/huyen-kim/plaques/scroll-title-plaque@1x.png",
+      "url2x": "/assets/ui/huyen-kim/plaques/scroll-title-plaque@2x.png",
+      "sourceWidth": 320,
+      "sourceHeight": 88,
+      "slices": {
+        "left": 0,
+        "right": 0,
+        "top": 0,
+        "bottom": 0
+      },
+      "center": "fill",
+      "edgeMode": "stretch",
+      "tintable": false,
+      "minimumWidth": 80,
+      "minimumHeight": 22
+    },
+    {
+      "id": "section-plaque",
+      "role": "section header plaque",
+      "status": "ready",
+      "url1x": "/assets/ui/huyen-kim/plaques/section-plaque@1x.png",
+      "url2x": "/assets/ui/huyen-kim/plaques/section-plaque@2x.png",
+      "sourceWidth": 240,
+      "sourceHeight": 56,
+      "slices": {
+        "left": 24,
+        "right": 24,
+        "top": 16,
+        "bottom": 16
+      },
+      "center": "fill",
+      "edgeMode": "stretch",
+      "tintable": false,
+      "minimumWidth": 60,
+      "minimumHeight": 16
+    },
+    {
+      "id": "nav-seal-vertical",
+      "role": "vertical nav seal button",
+      "status": "ready",
+      "url1x": "/assets/ui/huyen-kim/tabs/nav-seal-vertical@1x.png",
+      "url2x": "/assets/ui/huyen-kim/tabs/nav-seal-vertical@2x.png",
+      "sourceWidth": 96,
+      "sourceHeight": 128,
+      "slices": {
+        "left": 0,
+        "right": 0,
+        "top": 0,
+        "bottom": 0
+      },
+      "center": "fill",
+      "edgeMode": "stretch",
+      "tintable": false,
+      "minimumWidth": 24,
+      "minimumHeight": 32
+    },
+    {
+      "id": "list-row",
+      "role": "list row surface",
+      "status": "ready",
+      "url1x": "/assets/ui/huyen-kim/list/list-row@1x.png",
+      "url2x": "/assets/ui/huyen-kim/list/list-row@2x.png",
+      "sourceWidth": 384,
+      "sourceHeight": 64,
+      "slices": {
+        "left": 16,
+        "right": 16,
+        "top": 12,
+        "bottom": 12
+      },
+      "center": "fill",
+      "edgeMode": "stretch",
+      "tintable": false,
+      "minimumWidth": 96,
+      "minimumHeight": 16
+    },
+    {
+      "id": "avatar-frame",
+      "role": "avatar/portrait frame",
+      "status": "ready",
+      "url1x": "/assets/ui/huyen-kim/hud/avatar-frame@1x.png",
+      "url2x": "/assets/ui/huyen-kim/hud/avatar-frame@2x.png",
+      "sourceWidth": 96,
+      "sourceHeight": 96,
+      "slices": {
+        "left": 0,
+        "right": 0,
+        "top": 0,
+        "bottom": 0
+      },
+      "center": "fill",
+      "edgeMode": "stretch",
+      "tintable": false,
+      "minimumWidth": 24,
+      "minimumHeight": 24
+    },
+    {
+      "id": "identity-plate",
+      "role": "top-bar identity plate",
+      "status": "ready",
+      "url1x": "/assets/ui/huyen-kim/hud/identity-plate@1x.png",
+      "url2x": "/assets/ui/huyen-kim/hud/identity-plate@2x.png",
+      "sourceWidth": 384,
+      "sourceHeight": 96,
+      "slices": {
+        "left": 24,
+        "right": 24,
+        "top": 20,
+        "bottom": 20
+      },
+      "center": "fill",
+      "edgeMode": "stretch",
+      "tintable": false,
+      "minimumWidth": 96,
+      "minimumHeight": 24
+    },
+    {
+      "id": "text-field",
+      "role": "text input field",
+      "status": "ready",
+      "url1x": "/assets/ui/huyen-kim/forms/text-field@1x.png",
+      "url2x": "/assets/ui/huyen-kim/forms/text-field@2x.png",
+      "sourceWidth": 320,
+      "sourceHeight": 56,
+      "slices": {
+        "left": 20,
+        "right": 20,
+        "top": 16,
+        "bottom": 16
+      },
+      "center": "fill",
+      "edgeMode": "stretch",
+      "tintable": false,
+      "minimumWidth": 80,
+      "minimumHeight": 16
+    },
+    {
+      "id": "toggle-track",
+      "role": "toggle track",
+      "status": "ready",
+      "url1x": "/assets/ui/huyen-kim/settings/toggle-track@1x.png",
+      "url2x": "/assets/ui/huyen-kim/settings/toggle-track@2x.png",
+      "sourceWidth": 96,
+      "sourceHeight": 48,
+      "slices": {
+        "left": 0,
+        "right": 0,
+        "top": 0,
+        "bottom": 0
+      },
+      "center": "fill",
+      "edgeMode": "stretch",
+      "tintable": false,
+      "minimumWidth": 24,
+      "minimumHeight": 16
+    },
+    {
+      "id": "slider-track",
+      "role": "slider track",
+      "status": "ready",
+      "url1x": "/assets/ui/huyen-kim/settings/slider-track@1x.png",
+      "url2x": "/assets/ui/huyen-kim/settings/slider-track@2x.png",
+      "sourceWidth": 256,
+      "sourceHeight": 24,
+      "slices": {
+        "left": 16,
+        "right": 16,
+        "top": 8,
+        "bottom": 8
+      },
+      "center": "fill",
+      "edgeMode": "stretch",
+      "tintable": false,
+      "minimumWidth": 64,
+      "minimumHeight": 16
+    },
+    {
+      "id": "slider-thumb",
+      "role": "slider thumb",
+      "status": "ready",
+      "url1x": "/assets/ui/huyen-kim/settings/slider-thumb@1x.png",
+      "url2x": "/assets/ui/huyen-kim/settings/slider-thumb@2x.png",
+      "sourceWidth": 40,
+      "sourceHeight": 40,
+      "slices": {
+        "left": 0,
+        "right": 0,
+        "top": 0,
+        "bottom": 0
+      },
+      "center": "fill",
+      "edgeMode": "stretch",
+      "tintable": false,
+      "minimumWidth": 16,
+      "minimumHeight": 16
+    },
+    {
+      "id": "skill-orb-frame",
+      "role": "combat skill orb frame",
+      "status": "ready",
+      "url1x": "/assets/ui/huyen-kim/combat/skill-orb-frame@1x.png",
+      "url2x": "/assets/ui/huyen-kim/combat/skill-orb-frame@2x.png",
+      "sourceWidth": 96,
+      "sourceHeight": 96,
+      "slices": {
+        "left": 0,
+        "right": 0,
+        "top": 0,
+        "bottom": 0
+      },
+      "center": "fill",
+      "edgeMode": "stretch",
+      "tintable": false,
+      "minimumWidth": 24,
+      "minimumHeight": 24
+    },
+    {
+      "id": "turn-token",
+      "role": "turn order token",
+      "status": "ready",
+      "url1x": "/assets/ui/huyen-kim/combat/turn-token@1x.png",
+      "url2x": "/assets/ui/huyen-kim/combat/turn-token@2x.png",
+      "sourceWidth": 64,
+      "sourceHeight": 64,
+      "slices": {
+        "left": 0,
+        "right": 0,
+        "top": 0,
+        "bottom": 0
+      },
+      "center": "fill",
+      "edgeMode": "stretch",
+      "tintable": false,
+      "minimumWidth": 16,
+      "minimumHeight": 16
+    },
+    {
+      "id": "boss-seal",
+      "role": "boss stage seal",
+      "status": "ready",
+      "url1x": "/assets/ui/huyen-kim/badges/boss-seal@1x.png",
+      "url2x": "/assets/ui/huyen-kim/badges/boss-seal@2x.png",
+      "sourceWidth": 80,
+      "sourceHeight": 104,
+      "slices": {
+        "left": 0,
+        "right": 0,
+        "top": 0,
+        "bottom": 0
+      },
+      "center": "fill",
+      "edgeMode": "stretch",
+      "tintable": false,
+      "minimumWidth": 20,
+      "minimumHeight": 26
+    },
+    {
+      "id": "stage-node",
+      "role": "exploration stage node",
+      "status": "ready",
+      "url1x": "/assets/ui/huyen-kim/map-ui/stage-node@1x.png",
+      "url2x": "/assets/ui/huyen-kim/map-ui/stage-node@2x.png",
+      "sourceWidth": 80,
+      "sourceHeight": 80,
+      "slices": {
+        "left": 0,
+        "right": 0,
+        "top": 0,
+        "bottom": 0
+      },
+      "center": "fill",
+      "edgeMode": "stretch",
+      "tintable": false,
+      "minimumWidth": 20,
+      "minimumHeight": 20
+    },
+    {
+      "id": "building-plaque",
+      "role": "building plaque tag",
+      "status": "ready",
+      "url1x": "/assets/ui/huyen-kim/plaques/building-plaque@1x.png",
+      "url2x": "/assets/ui/huyen-kim/plaques/building-plaque@2x.png",
+      "sourceWidth": 96,
+      "sourceHeight": 160,
+      "slices": {
+        "left": 0,
+        "right": 0,
+        "top": 0,
+        "bottom": 0
+      },
+      "center": "fill",
+      "edgeMode": "stretch",
+      "tintable": false,
+      "minimumWidth": 24,
+      "minimumHeight": 40
+    },
+    {
+      "id": "corner-ornament",
+      "role": "corner ornament",
+      "status": "ready",
+      "url1x": "/assets/ui/huyen-kim/ornaments/corner-ornament@1x.png",
+      "url2x": "/assets/ui/huyen-kim/ornaments/corner-ornament@2x.png",
+      "sourceWidth": 64,
+      "sourceHeight": 64,
+      "slices": {
+        "left": 0,
+        "right": 0,
+        "top": 0,
+        "bottom": 0
+      },
+      "center": "fill",
+      "edgeMode": "stretch",
+      "tintable": false,
+      "minimumWidth": 16,
+      "minimumHeight": 16
+    },
+    {
+      "id": "cloud-ornament",
+      "role": "cloud ornament",
+      "status": "ready",
+      "url1x": "/assets/ui/huyen-kim/ornaments/cloud-ornament@1x.png",
+      "url2x": "/assets/ui/huyen-kim/ornaments/cloud-ornament@2x.png",
+      "sourceWidth": 256,
+      "sourceHeight": 128,
+      "slices": {
+        "left": 0,
+        "right": 0,
+        "top": 0,
+        "bottom": 0
+      },
+      "center": "fill",
+      "edgeMode": "stretch",
+      "tintable": false,
+      "minimumWidth": 64,
+      "minimumHeight": 32
+    },
+    {
+      "id": "timer-ring",
+      "role": "circular timer ring",
+      "status": "ready",
+      "url1x": "/assets/ui/huyen-kim/combat/timer-ring@1x.png",
+      "url2x": "/assets/ui/huyen-kim/combat/timer-ring@2x.png",
+      "sourceWidth": 128,
+      "sourceHeight": 128,
+      "slices": {
+        "left": 0,
+        "right": 0,
+        "top": 0,
+        "bottom": 0
+      },
+      "center": "fill",
+      "edgeMode": "stretch",
+      "tintable": false,
+      "minimumWidth": 32,
+      "minimumHeight": 32
+    },
+    {
+      "id": "ceremony-ribbon",
+      "role": "ceremonial title ribbon",
+      "status": "ready",
+      "url1x": "/assets/ui/huyen-kim/ceremony/ceremony-ribbon@1x.png",
+      "url2x": "/assets/ui/huyen-kim/ceremony/ceremony-ribbon@2x.png",
+      "sourceWidth": 320,
+      "sourceHeight": 96,
+      "slices": {
+        "left": 0,
+        "right": 0,
+        "top": 0,
+        "bottom": 0
+      },
+      "center": "fill",
+      "edgeMode": "stretch",
+      "tintable": false,
+      "minimumWidth": 80,
+      "minimumHeight": 24
+    },
+    {
+      "id": "paper-grain-tile",
+      "role": "paper grain texture tile",
+      "status": "ready",
+      "url1x": "/assets/ui/huyen-kim/textures/paper-grain-tile@1x.png",
+      "url2x": "/assets/ui/huyen-kim/textures/paper-grain-tile@2x.png",
+      "sourceWidth": 256,
+      "sourceHeight": 256,
+      "slices": {
+        "left": 0,
+        "right": 0,
+        "top": 0,
+        "bottom": 0
+      },
+      "center": "fill",
+      "edgeMode": "tile",
+      "tintable": false,
+      "minimumWidth": 64,
+      "minimumHeight": 64
+    },
+    {
+      "id": "alchemy-cauldron-prop",
+      "role": "alchemy cauldron scene prop",
+      "status": "ready",
+      "url1x": "/assets/ui/huyen-kim/alchemy/alchemy-cauldron-prop@1x.png",
+      "url2x": "/assets/ui/huyen-kim/alchemy/alchemy-cauldron-prop@2x.png",
+      "sourceWidth": 384,
+      "sourceHeight": 320,
+      "slices": {
+        "left": 0,
+        "right": 0,
+        "top": 0,
+        "bottom": 0
+      },
+      "center": "fill",
+      "edgeMode": "stretch",
+      "tintable": false,
+      "minimumWidth": 96,
+      "minimumHeight": 80
+    }
   ]
 }

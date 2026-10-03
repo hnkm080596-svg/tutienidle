@@ -130,9 +130,15 @@ describe('SettingsPanel — build identity section', () => {
     }
   }
 
-  it('renders every manifest field in the Build section', () => {
+  it('renders every manifest field in the Build section', async () => {
     const mounted = mountPanel()
     const { container } = mounted
+
+    // Scene 17 recompose: Build lives under the Support nav section.
+    container
+      .querySelector<HTMLButtonElement>('[data-section="support"]')!
+      .click()
+    await nextTick()
 
     const value = (testid: string) =>
       container.querySelector<HTMLElement>(`[data-testid="${testid}"]`)!.textContent
@@ -148,8 +154,13 @@ describe('SettingsPanel — build identity section', () => {
     mounted.unmount()
   })
 
-  it('shows the short sha, not the full 40-char sha', () => {
+  it('shows the short sha, not the full 40-char sha', async () => {
     const mounted = mountPanel()
+
+    mounted.container
+      .querySelector<HTMLButtonElement>('[data-section="support"]')!
+      .click()
+    await nextTick()
 
     expect(mounted.container.textContent).not.toContain(BUILD_IDENTITY.gitSha)
 

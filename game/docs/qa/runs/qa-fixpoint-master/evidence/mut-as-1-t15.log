@@ -1,0 +1,49 @@
+=== EV-MUT-AS-1 pill-gate-removed T15 2026-10-01T10:27:24 ===
+diff --git a/game/src/core/game/GameManagerPillOps.ts b/game/src/core/game/GameManagerPillOps.ts
+index 76276a77..5560ce42 100644
+--- a/game/src/core/game/GameManagerPillOps.ts
++++ b/game/src/core/game/GameManagerPillOps.ts
+@@ -71,9 +71,6 @@ export class GameManagerPillOps {
+     // live play (same seam class as the hostile-save flag readers).
+     // Unknown/legacy ids return null - only authored dormant families
+     // are rejected.
+-    if (scopeHiddenPillFamilyOfId(pillId) !== null) {
+-      return { ok: false, reason: 'scope_hidden' }
+-    }
+ 
+     // Exact-realm gate for profession pills (plan S5.2). A defined-
+     // but-empty tag is authored-data drift - fail closed at any realm.
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+ ❯ tests/architecture/betaDormantSaveLeak.qa.test.ts (46 tests | 1 failed) 45ms
+     × usePillDetailed rejects a dormant-family pill without consuming it 11ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/architecture/betaDormantSaveLeak.qa.test.ts > dormancy: dormant-family pills on a carried save stay inert (F-TRI-1) > usePillDetailed rejects a dormant-family pill without consuming it
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/architecture/betaDormantSaveLeak.qa.test.ts:173:23
+    171|     const result = gameManager.pillOps.usePillDetailed('phi_van_dan_mo…
+    172|
+    173|     expect(result.ok).toBe(false)
+       |                       ^
+    174|     expect(result.reason).toBe('scope_hidden')
+    175|     expect(gameManager.pillBag.getAmount('phi_van_dan_mortal')).toBe(1)
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 45 passed (46)
+   Start at  10:27:25
+   Duration  1.84s (transform 1.35s, setup 208ms, import 1.47s, tests 45ms, environment 0ms)
+
+DETECTOR_EXIT=1

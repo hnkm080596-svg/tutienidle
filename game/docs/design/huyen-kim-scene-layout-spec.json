@@ -1,0 +1,275 @@
+{
+  "meta": {
+    "baseline": { "branch": "devin/frontend-ready", "sha": "e9cb0dd6" },
+    "design_viewport": { "width": 1672, "height": 941 },
+    "qa_viewports": [[1600, 900], [1366, 768]],
+    "runtime_stage": { "width": 1280, "height": 720, "scale_factor": 0.7655, "engine": "HDViewport.ts" },
+    "shell_types": ["world", "imperial-scroll", "ceremonial-scroll", "micro-overlay"],
+    "scrollbar_policy": "hidden-scrollbars + scrollfade masks",
+    "text_policy": "all text rendered by app; art carries empty safe rects"
+  },
+  "shared_shells": {
+    "global_top_bar": {
+      "regions": [
+        { "region_id": "topbar-plate", "x": 0, "y": 0, "w": 1672, "h": 74, "z_index": 9, "anchor": "top", "component_family": "hud", "overflow": "none", "responsive_behavior": "pinned; paddings shrink at 1366" },
+        { "region_id": "identity-plate", "x": 16, "y": 10, "w": 372, "h": 58, "z_index": 9, "anchor": "top-left", "component_family": "hud", "assets": ["identity-plate", "avatar-frame"], "overflow": "clip" },
+        { "region_id": "resource-cluster", "x": 580, "y": 10, "w": 520, "h": 48, "z_index": 9, "anchor": "top-center", "component_family": "hud", "assets": ["resource-pill"], "gap": 12, "overflow": "collapse-secondary" },
+        { "region_id": "utility-seals", "x": 1400, "y": 10, "w": 256, "h": 48, "z_index": 9, "anchor": "top-right", "component_family": "button", "assets": ["icon-button-utility"], "gap": 8, "overflow": "clip" }
+      ]
+    },
+    "imperial_scroll": {
+      "open_ms": [450, 550], "close_ms": [300, 380], "reduced_motion": "crossfade",
+      "regions": [
+        { "region_id": "envelope", "x": 66, "y": 50, "w": 1540, "h": 840, "x_pct": 3.9, "w_pct": 92.1, "z_index": 12, "anchor": "center", "component_family": "shell-scroll", "assets": ["imperial-scroll-body", "imperial-scroll-roller", "frame-xl-ceremony"], "responsive_behavior": "scales to 92%x90% at 1366" },
+        { "region_id": "roller-left", "x": 50, "y": 34, "w": 96, "h": 872, "z_index": 13, "anchor": "envelope-left", "component_family": "shell-scroll", "assets": ["imperial-scroll-roller"], "responsive_behavior": "fixed" },
+        { "region_id": "roller-right", "x": 1526, "y": 34, "w": 96, "h": 872, "z_index": 13, "anchor": "envelope-right", "component_family": "shell-scroll", "assets": ["imperial-scroll-roller"], "responsive_behavior": "fixed" },
+        { "region_id": "title-plaque", "x": 676, "y": 30, "w": 320, "h": 88, "z_index": 14, "anchor": "envelope-top-center", "component_family": "shell-scroll", "assets": ["scroll-title-plaque"], "text_safe_rect_px": { "x": 44, "y": 24, "w": 232, "h": 40 } },
+        { "region_id": "close-zone", "x": 1500, "y": 66, "w": 48, "h": 48, "z_index": 15, "anchor": "frame-top-right", "component_family": "button", "assets": ["icon-button-utility"], "interaction": "Esc + click close" },
+        { "region_id": "nav-rail", "x": 140, "y": 140, "w": 132, "h": 698, "z_index": 14, "anchor": "content-left", "component_family": "navigation", "assets": ["nav-seal-vertical"], "gap": 8, "overflow": "scrollfade", "visibility_rule": "only real panel ids; hidden panels render nothing", "responsive_behavior": "icon-only 96w at 1366" },
+        { "region_id": "header-band", "x": 288, "y": 100, "w": 1244, "h": 68, "z_index": 14, "anchor": "content-top", "component_family": "shell-scroll", "overflow": "clip" },
+        { "region_id": "content-grid", "x": 288, "y": 176, "w": 1244, "h": 610, "z_index": 14, "anchor": "content", "component_family": "shell-scroll", "padding": 16, "gap": 16 },
+        { "region_id": "footer-safe", "x": 288, "y": 794, "w": 1244, "h": 56, "z_index": 14, "anchor": "content-bottom", "component_family": "button", "overflow": "clip" }
+      ]
+    },
+    "ceremonial_scroll": {
+      "regions": [
+        { "region_id": "envelope", "x": 456, "y": 110, "w": 760, "h": 720, "z_index": 30, "anchor": "center", "component_family": "shell-scroll", "assets": ["surface-xl-scroll", "imperial-scroll-roller", "frame-xl-ceremony"] },
+        { "region_id": "title-flourish", "x": 576, "y": 140, "w": 520, "h": 96, "z_index": 31, "anchor": "top-center", "assets": ["ceremony-ribbon"], "text_safe_rect_px": { "x": 56, "y": 28, "w": 408, "h": 40 } },
+        { "region_id": "content", "x": 526, "y": 240, "w": 620, "h": 430, "z_index": 31, "anchor": "center", "padding": 16 },
+        { "region_id": "actions", "x": 526, "y": 690, "w": 620, "h": 80, "z_index": 31, "anchor": "bottom-center", "gap": 16 }
+      ]
+    }
+  },
+  "scenes": [
+    {
+      "scene_id": "01", "name": "Login", "shell_type": "world",
+      "background_content_area": { "x": 0, "y": 0, "w": 1672, "h": 941, "note": "full-bleed vista (gameplay art)" },
+      "primary_visual_focus": "auth scroll card, right-of-center",
+      "regions": [
+        { "region_id": "vista", "purpose": "world backdrop", "x": 0, "y": 0, "w": 1672, "h": 941, "anchor": "fill", "z_index": 0, "component_family": "backdrop", "visibility_rule": "always", "responsive_behavior": "cover-crop", "overflow": "crop" },
+        { "region_id": "auth-scroll", "purpose": "auth card", "x": 1016, "y": 120, "w": 560, "h": 700, "anchor": "right-center", "z_index": 10, "padding": 32, "component_family": "shell-scroll", "visibility_rule": "always", "responsive_behavior": "min-w 480; recenters at 1366", "overflow": "scrollfade-y", "assets": ["surface-m-panel", "frame-m-modal"] },
+        { "region_id": "logo-block", "purpose": "title + seal", "x": 1112, "y": 168, "w": 368, "h": 120, "anchor": "card-top", "z_index": 11, "component_family": "ornament", "visibility_rule": "always", "responsive_behavior": "fixed" },
+        { "region_id": "locale-chips", "purpose": "language select", "x": 1336, "y": 138, "w": 224, "h": 36, "anchor": "card-top-right", "z_index": 11, "component_family": "badge", "visibility_rule": "always", "gap": 8 },
+        { "region_id": "mode-tabs", "purpose": "login/register", "x": 1048, "y": 300, "w": 496, "h": 44, "anchor": "card-top", "z_index": 11, "component_family": "navigation", "assets": ["tab-seal"], "visibility_rule": "always" },
+        { "region_id": "form", "purpose": "id + password", "x": 1048, "y": 352, "w": 496, "h": 240, "anchor": "card", "z_index": 11, "component_family": "form", "assets": ["text-field", "button-ceremonial"], "gap": 16, "visibility_rule": "always" },
+        { "region_id": "divider", "purpose": "hoặc divider", "x": 1048, "y": 612, "w": 496, "h": 24, "anchor": "card", "z_index": 11, "component_family": "navigation", "assets": ["divider-ornament"] },
+        { "region_id": "secondary-actions", "purpose": "continue + guest", "x": 1048, "y": 644, "w": 496, "h": 120, "anchor": "card", "z_index": 11, "component_family": "button", "assets": ["button-standard"], "gap": 12, "visibility_rule": "resume only when saved session; guest always" },
+        { "region_id": "upgrade-card", "purpose": "guest upgrade", "x": 1048, "y": 468, "w": 496, "h": 140, "anchor": "card", "z_index": 11, "component_family": "shell-panel", "visibility_rule": "guest session only", "overflow": "clip" }
+      ]
+    },
+    {
+      "scene_id": "02", "name": "Character Creation", "shell_type": "world",
+      "background_content_area": { "x": 0, "y": 0, "w": 940, "h": 941 },
+      "primary_visual_focus": "creation scroll, right ~40%",
+      "regions": [
+        { "region_id": "vista", "x": 0, "y": 0, "w": 940, "h": 941, "anchor": "fill-left", "z_index": 0, "component_family": "backdrop", "visibility_rule": "always", "responsive_behavior": "cover-crop", "overflow": "crop" },
+        { "region_id": "back-btn", "x": 24, "y": 24, "w": 96, "h": 40, "anchor": "top-left", "z_index": 12, "component_family": "button", "assets": ["button-compact"], "visibility_rule": "always" },
+        { "region_id": "creation-scroll", "x": 940, "y": 90, "w": 660, "h": 760, "anchor": "right-center", "z_index": 10, "padding": 40, "component_family": "shell-scroll", "visibility_rule": "always", "responsive_behavior": "min-w 560", "overflow": "scrollfade-y" },
+        { "region_id": "name-section", "x": 988, "y": 150, "w": 564, "h": 170, "anchor": "card", "z_index": 11, "component_family": "form", "assets": ["text-field", "section-plaque"], "visibility_rule": "always", "note": "dice button INVALID" },
+        { "region_id": "talent-grid", "x": 988, "y": 340, "w": 564, "h": 360, "anchor": "card", "z_index": 11, "component_family": "list", "gap": 8, "visibility_rule": "always", "note": "3x3 = 9 offers (roll size 9)" },
+        { "region_id": "starter-slot", "x": 988, "y": 716, "w": 564, "h": 56, "anchor": "card", "z_index": 11, "component_family": "form", "visibility_rule": "RESERVED-hidden: fixed starter linh_bao", "note": "full-product architecture slot; renders nothing in beta" },
+        { "region_id": "footer", "x": 988, "y": 780, "w": 564, "h": 60, "anchor": "card-bottom", "z_index": 11, "component_family": "button", "assets": ["button-ceremonial"], "visibility_rule": "always" }
+      ]
+    },
+    {
+      "scene_id": "03", "name": "Dong Phu", "shell_type": "world",
+      "background_content_area": { "x": 0, "y": 0, "w": 1672, "h": 941 },
+      "primary_visual_focus": "cultivation dais + Dao Luan wheel, center-low; vista >=70%",
+      "regions": [
+        { "region_id": "vista", "x": 0, "y": 0, "w": 1672, "h": 941, "anchor": "fill", "z_index": 0, "component_family": "backdrop", "visibility_rule": "always", "responsive_behavior": "cover-crop" },
+        { "region_id": "top-bar", "x": 0, "y": 0, "w": 1672, "h": 74, "anchor": "top", "z_index": 9, "component_family": "hud", "visibility_rule": "always", "note": "3 resource pills + farm/feedback/bag/settings seals" },
+        { "region_id": "hotspot-pill-room", "x": 97, "y": 465, "w": 240, "h": 160, "anchor": "vista-anchor(13%,58%)", "z_index": 5, "component_family": "ornament", "assets": ["building-plaque"], "visibility_rule": "isBetaBuildingSurface(pill_room)", "interaction": "click -> BuildingDetailPopover -> panel" },
+        { "region_id": "hotspot-equipment-hall", "x": 303, "y": 353, "w": 230, "h": 140, "anchor": "vista-anchor(25%,45%)", "z_index": 5, "component_family": "ornament", "assets": ["building-plaque"], "visibility_rule": "beta equipment_hall" },
+        { "region_id": "hotspot-gathering-outpost", "x": 1045, "y": 373, "w": 200, "h": 110, "anchor": "vista-anchor(68.5%,45.5%)", "z_index": 5, "component_family": "ornament", "assets": ["building-plaque"], "visibility_rule": "beta gathering_outpost" },
+        { "region_id": "hotspot-vendor", "x": 1248, "y": 378, "w": 180, "h": 110, "anchor": "vista-anchor(80%,46%)", "z_index": 5, "component_family": "ornament", "assets": ["building-plaque"], "visibility_rule": "beta vendor" },
+        { "region_id": "hotspot-teleport-array", "x": 1380, "y": 678, "w": 250, "h": 150, "anchor": "vista-anchor(90%,80%)", "z_index": 5, "component_family": "ornament", "assets": ["building-plaque"], "visibility_rule": "beta teleport_array", "note": "badge pulse when stageSelect has progress" },
+        { "region_id": "chi-hien-quan", "x": 565, "y": 470, "w": 200, "h": 120, "anchor": "vista-anchor(40%,55%)", "z_index": 4, "component_family": "ornament", "visibility_rule": "HIDDEN beta (scope-hidden)" },
+        { "region_id": "dao-luan-hub", "x": 740, "y": 524, "w": 192, "h": 192, "anchor": "vista-center-low(50%,66%)", "z_index": 6, "component_family": "node", "assets": ["dao-luan-center"], "visibility_rule": "always" },
+        { "region_id": "wheel-inner-orbit", "x": 651, "y": 435, "w": 370, "h": 370, "anchor": "hub-r185", "z_index": 7, "component_family": "node", "assets": ["dao-luan-node"], "visibility_rule": "wheel open", "note": "ring1 slots: character/realm/skill" },
+        { "region_id": "wheel-outer-orbit", "x": 572, "y": 356, "w": 528, "h": 528, "anchor": "hub-r264", "z_index": 7, "component_family": "node", "assets": ["dao-luan-node"], "visibility_rule": "wheel open; slots = betaWheelSlots rings 2-4 (scope-filtered)", "note": "hidden slots render NOTHING" },
+        { "region_id": "thien-co-collapsed", "x": 1388, "y": 856, "w": 268, "h": 52, "anchor": "bottom-right", "z_index": 8, "component_family": "shell-panel", "visibility_rule": "always (chips when counts>0)" },
+        { "region_id": "thien-co-open", "x": 1296, "y": 140, "w": 360, "h": 640, "anchor": "right", "z_index": 11, "component_family": "shell-panel", "assets": ["surface-l-drawer", "list-row"], "visibility_rule": "expanded", "overflow": "scrollfade", "note": "daily-cadence entries hidden beta" },
+        { "region_id": "quest-tracker", "x": 1232, "y": 872, "w": 424, "h": 48, "anchor": "bottom-right", "z_index": 8, "component_family": "hud", "assets": ["resource-pill"], "visibility_rule": "always when quests exist" },
+        { "region_id": "chat-strip", "x": 16, "y": 880, "w": 0, "h": 0, "anchor": "bottom-left", "z_index": 8, "component_family": "none", "visibility_rule": "INVALID - removed (no chat system)" }
+      ]
+    },
+    {
+      "scene_id": "04", "name": "Character", "shell_type": "imperial-scroll",
+      "background_content_area": { "x": 288, "y": 176, "w": 1244, "h": 610 },
+      "primary_visual_focus": "identity + element wheel left, stats right",
+      "regions": [
+        { "region_id": "identity-header", "purpose": "name/realm/power", "x": 288, "y": 176, "w": 1244, "h": 84, "anchor": "grid-top", "z_index": 14, "padding": 12, "component_family": "hud", "visibility_rule": "always" },
+        { "region_id": "talent-seals", "purpose": "talent chips", "x": 288, "y": 268, "w": 1244, "h": 88, "anchor": "grid", "z_index": 14, "component_family": "badge", "assets": ["seal-chip"], "gap": 8, "visibility_rule": "talents exist" },
+        { "region_id": "figure-wheel", "purpose": "portrait + ngu hanh wheel", "x": 288, "y": 368, "w": 400, "h": 418, "anchor": "grid-left", "z_index": 14, "component_family": "hud", "assets": ["avatar-frame", "el-formation-orbs", "el-formation-ring"], "visibility_rule": "always" },
+        { "region_id": "main-stats", "purpose": "5 stats + allocate", "x": 704, "y": 368, "w": 560, "h": 418, "anchor": "grid", "z_index": 14, "component_family": "list", "assets": ["list-row", "section-plaque"], "visibility_rule": "always" },
+        { "region_id": "element-summary", "purpose": "element % discs", "x": 1280, "y": 368, "w": 252, "h": 200, "anchor": "grid-right", "z_index": 14, "component_family": "badge", "assets": ["el-* icons"], "visibility_rule": "always" },
+        { "region_id": "derived-stats", "purpose": "derived stat list", "x": 1280, "y": 576, "w": 252, "h": 210, "anchor": "grid-right", "z_index": 14, "component_family": "list", "assets": ["list-row"], "overflow": "scrollfade" },
+        { "region_id": "chi-tiet-drawer", "purpose": "full derived detail", "x": 1140, "y": 96, "w": 404, "h": 800, "anchor": "envelope-right-overlay", "z_index": 16, "component_family": "shell-panel", "assets": ["surface-l-drawer"], "visibility_rule": "toggled", "overflow": "scrollfade" }
+      ]
+    },
+    {
+      "scene_id": "05", "name": "Realm", "shell_type": "imperial-scroll",
+      "background_content_area": { "x": 288, "y": 176, "w": 1244, "h": 610 },
+      "primary_visual_focus": "ascent node track over inner vista",
+      "regions": [
+        { "region_id": "ascent-map", "purpose": "realm ladder vista + 18 tầng", "x": 288, "y": 176, "w": 812, "h": 610, "anchor": "grid-left", "z_index": 14, "component_family": "node", "assets": ["rune-node"], "visibility_rule": "nodes = betaRealmLadderNodes() only", "overflow": "internal-scroll" },
+        { "region_id": "realm-card", "purpose": "realm icon + Tầng n/18", "x": 1116, "y": 176, "w": 416, "h": 150, "anchor": "rail-top", "z_index": 14, "component_family": "shell-panel", "assets": ["surface-m-panel"] },
+        { "region_id": "cultivation-bar", "purpose": "progress + rate + ETA", "x": 1116, "y": 334, "w": 416, "h": 110, "anchor": "rail", "z_index": 14, "component_family": "hud", "assets": ["entity-bar"] },
+        { "region_id": "passives", "purpose": "realm passive rows", "x": 1116, "y": 452, "w": 416, "h": 170, "anchor": "rail", "z_index": 14, "component_family": "list", "assets": ["list-row"], "overflow": "scrollfade" },
+        { "region_id": "requirements", "purpose": "breakthrough conditions", "x": 1116, "y": 630, "w": 416, "h": 92, "anchor": "rail", "z_index": 14, "component_family": "badge", "assets": ["seal-chip"] },
+        { "region_id": "breakthrough-cta", "purpose": "Đột Phá", "x": 1116, "y": 730, "w": 416, "h": 56, "anchor": "rail-bottom", "z_index": 14, "component_family": "button", "assets": ["button-ceremonial"], "visibility_rule": "hidden at release ceiling (betaNextRealmSurfaceFor null)" }
+      ]
+    },
+    {
+      "scene_id": "06", "name": "Technique", "shell_type": "imperial-scroll",
+      "background_content_area": { "x": 288, "y": 176, "w": 1244, "h": 610 },
+      "primary_visual_focus": "artifact centerpiece + grade track",
+      "regions": [
+        { "region_id": "tech-card", "purpose": "active technique card", "x": 288, "y": 176, "w": 400, "h": 610, "anchor": "grid-left", "z_index": 14, "component_family": "shell-panel", "assets": ["surface-m-panel", "seal-chip"], "visibility_rule": "active technique exists" },
+        { "region_id": "artifact-vista", "purpose": "technique illustration frame", "x": 704, "y": 176, "w": 448, "h": 480, "anchor": "grid", "z_index": 14, "component_family": "ornament", "visibility_rule": "always", "note": "content illustration = excluded gameplay art; frame + dais only" },
+        { "region_id": "grade-track", "purpose": "technique grade nodes", "x": 288, "y": 668, "w": 864, "h": 118, "anchor": "grid-bottom", "z_index": 14, "component_family": "node", "assets": ["dao-luan-node"], "visibility_rule": "grades from technique domain" },
+        { "region_id": "upgrade-panel", "purpose": "rank compare + costs + CTA", "x": 1168, "y": 176, "w": 364, "h": 610, "anchor": "grid-right", "z_index": 14, "component_family": "shell-panel", "assets": ["surface-m-panel", "list-row", "seal-chip", "button-ceremonial"], "overflow": "scrollfade" }
+      ]
+    },
+    {
+      "scene_id": "07", "name": "Skill", "shell_type": "imperial-scroll",
+      "background_content_area": { "x": 288, "y": 176, "w": 1244, "h": 610 },
+      "primary_visual_focus": "radial skill tree (core + orbit)",
+      "regions": [
+        { "region_id": "way-card", "purpose": "way identity + committed element", "x": 288, "y": 176, "w": 212, "h": 610, "anchor": "grid-left", "z_index": 14, "component_family": "shell-panel", "assets": ["surface-m-panel", "banner-* elements"] },
+        { "region_id": "element-tabs", "purpose": "ngu hanh initiation pick", "x": 516, "y": 176, "w": 640, "h": 48, "anchor": "tree-top", "z_index": 15, "component_family": "navigation", "assets": ["tab-seal"], "visibility_rule": "pre-commitment only" },
+        { "region_id": "tree-canvas", "purpose": "branch node orbit", "x": 516, "y": 232, "w": 640, "h": 470, "anchor": "grid", "z_index": 14, "component_family": "node", "assets": ["dao-luan-node", "rune-node"], "visibility_rule": "committed branch nodes only" },
+        { "region_id": "mode-tabs", "purpose": "tree/detail toggle", "x": 516, "y": 708, "w": 640, "h": 44, "anchor": "grid-bottom", "z_index": 14, "component_family": "navigation", "assets": ["tab-seal"] },
+        { "region_id": "detail-panel", "purpose": "skill detail + upgrade", "x": 1172, "y": 176, "w": 360, "h": 610, "anchor": "grid-right", "z_index": 14, "component_family": "shell-panel", "assets": ["surface-m-panel", "seal-chip", "list-row", "button-ceremonial"], "visibility_rule": "selection", "overflow": "scrollfade" }
+      ]
+    },
+    {
+      "scene_id": "08", "name": "Body", "shell_type": "imperial-scroll",
+      "background_content_area": { "x": 288, "y": 176, "w": 1244, "h": 610 },
+      "primary_visual_focus": "central figure + meridian orb ring",
+      "regions": [
+        { "region_id": "chapter-rail", "purpose": "Luyện Thể/Bát Mạch/Chu Thiên", "x": 288, "y": 176, "w": 132, "h": 610, "anchor": "grid-left", "z_index": 15, "component_family": "navigation", "assets": ["nav-seal-vertical"], "gap": 8, "visibility_rule": "chapters from BodyChapter registry; hidden pages per discovery" },
+        { "region_id": "figure-focus", "purpose": "silhouette + orb ring", "x": 436, "y": 176, "w": 640, "h": 520, "anchor": "grid", "z_index": 14, "component_family": "node", "assets": ["dao-luan-node", "stat-meridian-figure"], "visibility_rule": "always" },
+        { "region_id": "tier-chips", "purpose": "Tầng/page selector", "x": 436, "y": 704, "w": 640, "h": 56, "anchor": "grid-bottom", "z_index": 14, "component_family": "badge", "assets": ["seal-chip"], "gap": 8 },
+        { "region_id": "detail-panel", "purpose": "stats + requirements + invest", "x": 1092, "y": 176, "w": 440, "h": 610, "anchor": "grid-right", "z_index": 14, "component_family": "shell-panel", "assets": ["surface-m-panel", "list-row", "seal-chip", "button-ceremonial"], "overflow": "scrollfade" }
+      ]
+    },
+    {
+      "scene_id": "09", "name": "Inventory", "shell_type": "imperial-scroll",
+      "background_content_area": { "x": 288, "y": 176, "w": 1244, "h": 610 },
+      "primary_visual_focus": "dense slot grid",
+      "regions": [
+        { "region_id": "category-tabs", "purpose": "Equipment/Material/Pill", "x": 288, "y": 176, "w": 640, "h": 44, "anchor": "grid-top", "z_index": 15, "component_family": "navigation", "assets": ["tab-seal"], "visibility_rule": "3 real sections only" },
+        { "region_id": "grid-tools", "purpose": "sort/filter", "x": 1180, "y": 176, "w": 352, "h": 44, "anchor": "grid-top-right", "z_index": 15, "component_family": "button", "assets": ["button-compact"] },
+        { "region_id": "slot-grid", "purpose": "bag cells", "x": 288, "y": 232, "w": 1244, "h": 520, "anchor": "grid", "z_index": 14, "component_family": "slot", "padding": 8, "gap": 8, "overflow": "paginate/scrollfade", "note": "84px cells; slice-free SlotView + rarity tint" },
+        { "region_id": "capacity-bar", "purpose": "capacity + actions", "x": 288, "y": 760, "w": 1244, "h": 48, "anchor": "grid-bottom", "z_index": 14, "component_family": "hud" },
+        { "region_id": "item-detail", "purpose": "item popover", "x": 0, "y": 0, "w": 400, "h": 0, "anchor": "anchored-to-cell", "z_index": 20, "component_family": "shell-panel", "assets": ["frame-xs-tooltip"], "visibility_rule": "selection" }
+      ]
+    },
+    {
+      "scene_id": "10", "name": "Exploration", "shell_type": "imperial-scroll",
+      "background_content_area": { "x": 288, "y": 176, "w": 1244, "h": 610 },
+      "primary_visual_focus": "map bands with stage nodes",
+      "regions": [
+        { "region_id": "zone-rail", "purpose": "zone selector", "x": 288, "y": 176, "w": 140, "h": 560, "anchor": "grid-left", "z_index": 15, "component_family": "navigation", "assets": ["nav-seal-vertical"], "visibility_rule": "real zones only (1 beta); RESERVED for expansion" },
+        { "region_id": "chapter-tabs", "purpose": "chapter chips", "x": 444, "y": 176, "w": 680, "h": 44, "anchor": "map-top", "z_index": 15, "component_family": "navigation", "assets": ["tab-seal"], "visibility_rule": "isBetaStageSurface" },
+        { "region_id": "map-canvas", "purpose": "3 bands x 10 nodes + boss", "x": 444, "y": 228, "w": 700, "h": 524, "anchor": "grid", "z_index": 14, "component_family": "badge", "assets": ["stage-node", "boss-seal", "rune-node"], "visibility_rule": "stage surface models; painted substrate = gameplay/world art pipeline (Ruling 04, excluded); UI owns chrome only: frame/route-lines/stage-node/boss-seal/selected+locked treatment/chapter markers/zone labels/masks/edge treatment/stage-detail chrome", "overflow": "scrollfade" },
+        { "region_id": "detail-panel", "purpose": "stage info + modes + CTA", "x": 1160, "y": 176, "w": 372, "h": 610, "anchor": "grid-right", "z_index": 14, "component_family": "shell-panel", "assets": ["surface-m-panel", "list-row", "seal-chip", "button-ceremonial"], "visibility_rule": "selection", "overflow": "scrollfade" },
+        { "region_id": "progress-footer", "purpose": "zone progress + milestones", "x": 288, "y": 792, "w": 1244, "h": 56, "anchor": "grid-bottom", "z_index": 14, "component_family": "hud", "assets": ["entity-bar"], "note": "chest milestones RESERVED" }
+      ]
+    },
+    {
+      "scene_id": "11", "name": "Alchemy", "shell_type": "imperial-scroll",
+      "background_content_area": { "x": 288, "y": 176, "w": 1244, "h": 610 },
+      "primary_visual_focus": "recipe->detail flow + job queue",
+      "regions": [
+        { "region_id": "recipe-list", "purpose": "recipe rows", "x": 288, "y": 176, "w": 380, "h": 540, "anchor": "grid-left", "z_index": 14, "component_family": "list", "assets": ["list-row"], "overflow": "scrollfade", "visibility_rule": "realm-filtered, non-retired recipes; category filters RESERVED" },
+        { "region_id": "focal-cauldron", "purpose": "centerpiece prop", "x": 684, "y": 176, "w": 420, "h": 360, "anchor": "grid", "z_index": 14, "component_family": "ornament", "assets": ["alchemy-cauldron-prop"], "visibility_rule": "UI scene prop (Ruling 02, UI Art Agent owned; decorative only - no gameplay/item/world identity)" },
+        { "region_id": "detail-panel", "purpose": "preview + variants + costs + brew", "x": 1120, "y": 176, "w": 412, "h": 610, "anchor": "grid-right", "z_index": 14, "component_family": "shell-panel", "assets": ["surface-m-panel", "seal-chip", "button-ceremonial"], "overflow": "scrollfade" },
+        { "region_id": "job-queue", "purpose": "brew jobs + cancel", "x": 288, "y": 724, "w": 824, "h": 118, "anchor": "grid-bottom", "z_index": 14, "component_family": "list", "assets": ["list-row", "entity-bar"], "visibility_rule": "slots = maxJobSlots(building); no fast-forward, no paid unlock" }
+      ]
+    },
+    {
+      "scene_id": "12", "name": "Equipment", "shell_type": "imperial-scroll",
+      "background_content_area": { "x": 288, "y": 176, "w": 1244, "h": 610 },
+      "primary_visual_focus": "paperdoll + item card + bag",
+      "regions": [
+        { "region_id": "ops-rail", "purpose": "enhance/wash/refine/dissolve/decompose", "x": 288, "y": 176, "w": 132, "h": 610, "anchor": "grid-left", "z_index": 15, "component_family": "navigation", "assets": ["nav-seal-vertical"], "gap": 8, "visibility_rule": "isBetaEquipmentTab (beta: enhance+dissolve only; hidden tabs absent)" },
+        { "region_id": "paperdoll", "purpose": "figure + 6 sockets", "x": 436, "y": 176, "w": 380, "h": 610, "anchor": "grid", "z_index": 14, "component_family": "slot", "assets": ["frame-s-slot"], "visibility_rule": "6 slots: helmet/necklace/ring/weapon/armor/boots" },
+        { "region_id": "item-card", "purpose": "selected item detail + ops", "x": 832, "y": 176, "w": 330, "h": 610, "anchor": "grid", "z_index": 14, "component_family": "shell-panel", "assets": ["surface-m-panel", "seal-chip", "button-standard"], "overflow": "scrollfade" },
+        { "region_id": "bag-grid", "purpose": "compact inventory", "x": 1178, "y": 176, "w": 354, "h": 610, "anchor": "grid-right", "z_index": 14, "component_family": "slot", "overflow": "paginate" },
+        { "region_id": "stats-strip", "purpose": "derived stats summary", "x": 436, "y": 794, "w": 1096, "h": 52, "anchor": "grid-bottom", "z_index": 14, "component_family": "hud", "visibility_rule": "RESERVED (secondary)" }
+      ]
+    },
+    {
+      "scene_id": "13", "name": "Combat", "shell_type": "world",
+      "background_content_area": { "x": 0, "y": 0, "w": 1672, "h": 941 },
+      "primary_visual_focus": "battlefield center >=75% clear",
+      "regions": [
+        { "region_id": "combat-top-bar", "purpose": "title + progress + exit", "x": 0, "y": 0, "w": 1672, "h": 56, "anchor": "top", "z_index": 15, "component_family": "hud", "visibility_rule": "always", "note": "progress = spawned/total or survival banner; no speed control" },
+        { "region_id": "turn-strip", "purpose": "ATB turn order + round", "x": 436, "y": 64, "w": 800, "h": 96, "anchor": "top-center", "z_index": 14, "component_family": "combat", "assets": ["turn-token"], "visibility_rule": "always" },
+        { "region_id": "ai-panel", "purpose": "AI strategy radios", "x": 16, "y": 140, "w": 228, "h": 280, "anchor": "left", "z_index": 12, "component_family": "shell-panel", "assets": ["surface-m-panel", "list-row"], "visibility_rule": "always; 5 strategies" },
+        { "region_id": "skill-dock", "purpose": "role skill orbs", "x": 1540, "y": 80, "w": 132, "h": 560, "anchor": "right", "z_index": 12, "component_family": "combat", "assets": ["skill-orb-frame"], "gap": 12, "visibility_rule": "betaCombatRolesFor -> Basic+Special beta; Ultimate hidden", "note": "Q/W keybadges RESERVED" },
+        { "region_id": "player-hud", "purpose": "HP/MP/Kiem/The", "x": 16, "y": 72, "w": 330, "h": 130, "anchor": "top-left", "z_index": 11, "component_family": "hud", "assets": ["entity-bar", "avatar-frame"], "visibility_rule": "always", "note": "canvas-drawn today; DOM parity target" },
+        { "region_id": "battle-log", "purpose": "combat feed", "x": 1330, "y": 620, "w": 326, "h": 280, "anchor": "bottom-right", "z_index": 11, "component_family": "shell-panel", "assets": ["surface-m-panel"], "overflow": "scrollfade", "visibility_rule": "always" },
+        { "region_id": "enemy-bars", "purpose": "per-enemy HP", "x": 0, "y": 0, "w": 0, "h": 0, "anchor": "over-actors", "z_index": 8, "component_family": "hud", "assets": ["entity-bar"], "visibility_rule": "per enemy alive" },
+        { "region_id": "modals", "purpose": "intro/pause/exit-confirm/result", "x": 436, "y": 220, "w": 800, "h": 500, "anchor": "center", "z_index": 30, "component_family": "shell-panel", "visibility_rule": "state-driven" }
+      ]
+    },
+    {
+      "scene_id": "14", "name": "Tribulation", "shell_type": "world",
+      "background_content_area": { "x": 0, "y": 0, "w": 1672, "h": 941 },
+      "primary_visual_focus": "chapter track + question/status cards over trial vista",
+      "regions": [
+        { "region_id": "chapter-tracker", "purpose": "sequential chapters", "x": 536, "y": 44, "w": 600, "h": 66, "anchor": "top-center", "z_index": 12, "component_family": "node", "assets": ["dao-luan-node"], "visibility_rule": "chaptersTotal dynamic; NOT selectable" },
+        { "region_id": "title-band", "purpose": "realm + trial name", "x": 436, "y": 120, "w": 800, "h": 80, "anchor": "top-center", "z_index": 12, "component_family": "ornament", "assets": ["scroll-title-plaque"] },
+        { "region_id": "status-card", "purpose": "timer + strikes + progress", "x": 60, "y": 560, "w": 420, "h": 220, "anchor": "bottom-left", "z_index": 12, "component_family": "shell-panel", "assets": ["surface-m-panel", "timer-ring"], "visibility_rule": "while active" },
+        { "region_id": "mind-card", "purpose": "question + answers", "x": 1090, "y": 200, "w": 522, "h": 380, "anchor": "right", "z_index": 12, "component_family": "shell-panel", "assets": ["surface-m-panel", "button-standard", "timer-ring"], "visibility_rule": "question phase; answers dynamic count" },
+        { "region_id": "hp-cluster", "purpose": "Dao Tam bar + strikes", "x": 616, "y": 736, "w": 440, "h": 84, "anchor": "bottom-center", "z_index": 12, "component_family": "hud", "assets": ["entity-bar"], "visibility_rule": "while active" },
+        { "region_id": "result", "purpose": "victory/defeat summary", "x": 536, "y": 340, "w": 600, "h": 220, "anchor": "center", "z_index": 30, "component_family": "shell-panel", "visibility_rule": "isFinished" }
+      ]
+    },
+    {
+      "scene_id": "15", "name": "Victory", "shell_type": "ceremonial-scroll",
+      "background_content_area": { "x": 526, "y": 240, "w": 620, "h": 430 },
+      "primary_visual_focus": "title flourish + reward slots",
+      "regions": [
+        { "region_id": "title", "purpose": "Thắng + subtitle", "x": 576, "y": 140, "w": 520, "h": 96, "anchor": "top-center", "z_index": 31, "component_family": "ornament", "assets": ["ceremony-ribbon"], "text_safe_rect_px": { "x": 56, "y": 28, "w": 408, "h": 40 } },
+        { "region_id": "rewards", "purpose": "reward slot row", "x": 526, "y": 280, "w": 620, "h": 120, "anchor": "content", "z_index": 31, "component_family": "slot", "gap": 8, "visibility_rule": "hasAnyReward" },
+        { "region_id": "growth", "purpose": "reward lines (cultivation/insight/stones/items)", "x": 526, "y": 420, "w": 620, "h": 140, "anchor": "content", "z_index": 31, "component_family": "list", "assets": ["list-row"], "overflow": "scrollfade" },
+        { "region_id": "actions", "purpose": "retry + continue", "x": 526, "y": 690, "w": 620, "h": 80, "anchor": "bottom-center", "z_index": 31, "component_family": "button", "assets": ["button-standard", "button-ceremonial"], "visibility_rule": "manual: both; auto: retry w/ 3s countdown only" }
+      ]
+    },
+    {
+      "scene_id": "16", "name": "Defeat", "shell_type": "ceremonial-scroll",
+      "background_content_area": { "x": 526, "y": 240, "w": 620, "h": 430 },
+      "primary_visual_focus": "cinnabar title + hint + actions",
+      "regions": [
+        { "region_id": "title", "purpose": "Bại + subtitle", "x": 576, "y": 140, "w": 520, "h": 96, "anchor": "top-center", "z_index": 31, "component_family": "ornament", "assets": ["ceremony-ribbon"], "state_strategy": "cinnabar tint" },
+        { "region_id": "hint", "purpose": "weakness hint", "x": 526, "y": 260, "w": 620, "h": 80, "anchor": "content", "z_index": 31, "component_family": "shell-panel", "visibility_rule": "isCultivationGap picks text" },
+        { "region_id": "rewards", "purpose": "partial rewards", "x": 526, "y": 360, "w": 620, "h": 110, "anchor": "content", "z_index": 31, "component_family": "slot", "visibility_rule": "hasAnyReward" },
+        { "region_id": "actions", "purpose": "retry + return", "x": 526, "y": 690, "w": 620, "h": 80, "anchor": "bottom-center", "z_index": 31, "component_family": "button", "assets": ["button-ceremonial", "button-standard"], "visibility_rule": "retry countdown repeat-mode 3s; return 10s label" }
+      ]
+    },
+    {
+      "scene_id": "17", "name": "Settings", "shell_type": "imperial-scroll",
+      "background_content_area": { "x": 288, "y": 176, "w": 1244, "h": 610 },
+      "primary_visual_focus": "two-column option sections",
+      "regions": [
+        { "region_id": "sections-grid", "purpose": "option sections", "x": 288, "y": 176, "w": 1244, "h": 610, "anchor": "grid", "z_index": 14, "component_family": "settings", "assets": ["section-plaque", "list-row", "slider-track", "slider-thumb", "toggle-track", "seal-chip"], "padding": 16, "gap": 16, "overflow": "scrollfade", "visibility_rule": "real controls only: language/ui-scale/audio/save/account/feedback/updates/build; display section RESERVED" },
+        { "region_id": "footer-actions", "purpose": "per-action confirms", "x": 288, "y": 794, "w": 1244, "h": 56, "anchor": "grid-bottom", "z_index": 14, "component_family": "button", "visibility_rule": "RESERVED pattern (no global save)" }
+      ]
+    },
+    {
+      "scene_id": "18", "name": "Quest", "shell_type": "imperial-scroll",
+      "background_content_area": { "x": 288, "y": 176, "w": 1244, "h": 610 },
+      "primary_visual_focus": "list + detail split",
+      "regions": [
+        { "region_id": "group-tabs", "purpose": "cadence groups", "x": 288, "y": 176, "w": 640, "h": 44, "anchor": "grid-top", "z_index": 15, "component_family": "navigation", "assets": ["tab-seal"], "visibility_rule": "once only beta; daily RESERVED" },
+        { "region_id": "quest-list", "purpose": "quest rows", "x": 288, "y": 232, "w": 620, "h": 540, "anchor": "grid-left", "z_index": 14, "component_family": "list", "assets": ["list-row", "seal-chip"], "gap": 8, "overflow": "scrollfade" },
+        { "region_id": "detail-panel", "purpose": "objectives + rewards + claim", "x": 924, "y": 176, "w": 608, "h": 610, "anchor": "grid-right", "z_index": 14, "component_family": "shell-panel", "assets": ["surface-m-panel", "entity-bar", "button-ceremonial"], "visibility_rule": "selection", "overflow": "scrollfade" },
+        { "region_id": "empty-state", "purpose": "no quests", "x": 924, "y": 380, "w": 608, "h": 200, "anchor": "grid-right-center", "z_index": 14, "component_family": "shell-panel", "visibility_rule": "empty list" }
+      ]
+    }
+  ]
+}

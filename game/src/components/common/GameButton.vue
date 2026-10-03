@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import InkNineSlice from './primitives/InkNineSlice.vue'
-import type { InkWashUiAssetId } from '@/assets/inkWashUi'
 import { AudioManager } from '@/core/audio/AudioManager'
 // Shared chrome primitive (UI/UX rework phase A) — replaces hand-rolled
 // buttons (each panel declaring its own background/color/border) with one
 // component reusing the --gold/--jade/--crimson/--tap-* tokens in theme.css.
+//
+// Huyen Kim phase 1: chrome comes from the huyen-kim manifest button-*
+// slots (size -> compact/standard/ceremonial) with --hk-* token fallbacks
+// while the art stays 'pending'.
 const props = withDefaults(defineProps<{
   variant?: 'primary' | 'secondary' | 'danger' | 'ghost'
   size?: 'sm' | 'md' | 'lg'
@@ -45,22 +48,28 @@ function handleClick(event: MouseEvent) {
   emit('click', event)
 }
 
-const sliceAsset = computed<InkWashUiAssetId | undefined>(() => {
-  // border-image (InkNineSlice) does not follow border-radius — circle
-  // buttons use a plain CSS border (.game-button--circle) instead.
-  if (props.shape === 'circle') return undefined
-  switch (props.variant) {
-    case 'secondary': return 'button-s-ink'
-    case 'danger': return 'button-s-seal'
-    case 'ghost': return 'frame-xs-ink-line'
-    default: return 'button-s-paper'
-  }
+const CHROME_SLOT_BY_SIZE = {
+  sm: 'button-compact',
+  md: 'button-standard',
+  lg: 'button-ceremonial',
+} as const
+
+const chromeSlot = computed(() => {
+  // ghost stays a bare hairline frame on the element itself. Circle maps
+  // to the icon-button-utility seal slot (the pending --hk-* fallback
+  // rounds via border-radius: inherit like every other slice).
+  if (props.variant === 'ghost') return undefined
+  if (props.shape === 'circle') return 'icon-button-utility'
+  return CHROME_SLOT_BY_SIZE[props.size]
 })
 
-const sliceLayer = computed(() => (
-  sliceAsset.value?.startsWith('frame-') ? 'frame' as const : 'surface' as const
-))
-const sliceTint = computed(() => (props.variant === 'danger' ? '--cinnabar' : undefined))
+const sliceTint = computed(() => {
+  switch (props.variant) {
+    case 'danger': return '--hk-cinnabar'
+    case 'primary': return '--hk-gold'
+    default: return undefined
+  }
+})
 </script>
 
 <template>
@@ -73,7 +82,7 @@ const sliceTint = computed(() => (props.variant === 'danger' ? '--cinnabar' : un
     :aria-busy="loading || undefined"
     @click="handleClick"
   >
-    <InkNineSlice v-if="sliceAsset" :asset-id="sliceAsset" :layer="sliceLayer" :tint-var="sliceTint" />
+    <InkNineSlice v-if="chromeSlot" :chrome-id="chromeSlot" layer="surface" :tint-var="sliceTint" />
     <span v-if="loading" class="game-button__spinner" aria-hidden="true" />
     <span class="game-button__label"><slot /></span>
   </button>
@@ -87,14 +96,14 @@ const sliceTint = computed(() => (props.variant === 'danger' ? '--cinnabar' : un
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: var(--space-2);
+  gap: var(--hk-space-2);
   border: 0;
-  border-radius: var(--radius-sm);
-  font-family: var(--font-body);
+  border-radius: var(--hk-radius-sm);
+  font-family: var(--hk-font-ui);
   font-weight: 700;
   cursor: pointer;
   background: transparent;
-  transition: transform 120ms ease, opacity 120ms ease, color 120ms ease;
+  transition: transform var(--hk-motion-micro) var(--hk-ease-standard), opacity var(--hk-motion-micro) var(--hk-ease-standard), color var(--hk-motion-micro) var(--hk-ease-standard);
 }
 
 .game-button:disabled {
@@ -103,54 +112,57 @@ const sliceTint = computed(() => (props.variant === 'danger' ? '--cinnabar' : un
 }
 
 .game-button--sm {
-  min-height: var(--tap-min);
-  padding: var(--space-1) var(--space-3);
+  min-height: var(--hk-density-compact-height);
+  padding: var(--hk-density-compact-pad-y) var(--hk-density-compact-pad-x);
   font-size: var(--text-xs);
 }
 
 .game-button--md {
-  min-height: var(--tap-comfortable);
-  padding: var(--space-2) var(--space-4);
+  min-height: var(--hk-density-standard-height);
+  padding: var(--hk-density-standard-pad-y) var(--hk-density-standard-pad-x);
   font-size: var(--text-sm);
 }
 
 .game-button--lg {
-  min-height: calc(var(--tap-comfortable) + 8px);
-  padding: var(--space-3) var(--space-6);
+  min-height: var(--hk-density-ceremonial-height);
+  padding: var(--hk-density-ceremonial-pad-y) var(--hk-density-ceremonial-pad-x);
   font-size: var(--text-body);
 }
 
 /* DARK MODE (2026-08-31) — nút trên nền tối */
 .game-button--primary {
-  color: var(--surface-text);
+  color: var(--hk-text-primary);
 }
 
 .game-button--primary:not(:disabled):hover {
-  color: var(--chrome-100);
+  color: var(--hk-gold-bright);
 }
 
 .game-button--secondary {
-  color: var(--chrome-300);
+  color: var(--hk-text-secondary);
 }
 
 .game-button--secondary:not(:disabled):hover {
-  color: var(--chrome-100);
+  color: var(--hk-text-primary);
 }
 
 .game-button--danger {
-  color: var(--chrome-100);
+  color: var(--hk-text-primary);
 }
 
 .game-button--danger:not(:disabled):hover {
-  color: var(--chrome-300);
+  color: var(--hk-cinnabar-bright);
 }
 
 .game-button--ghost {
-  color: var(--surface-text-soft);
+  color: var(--hk-text-secondary);
+  border: 1px solid var(--hk-border-muted);
+  transition: transform var(--hk-motion-micro) var(--hk-ease-standard), opacity var(--hk-motion-micro) var(--hk-ease-standard), color var(--hk-motion-micro) var(--hk-ease-standard), border-color var(--hk-motion-micro) var(--hk-ease-standard);
 }
 
 .game-button--ghost:not(:disabled):hover {
-  color: var(--surface-text);
+  color: var(--hk-text-primary);
+  border-color: var(--hk-border-active);
 }
 
 .game-button:focus-visible {
@@ -161,7 +173,7 @@ const sliceTint = computed(() => (props.variant === 'danger' ? '--cinnabar' : un
   outline-offset: 2px;
   outline-color: transparent;
   outline-style: solid;
-  box-shadow: var(--focus-ring-chrome, 0 0 0 2px rgba(217, 212, 199, 0.65));
+  box-shadow: 0 0 0 2px var(--hk-gold-muted), 0 0 10px var(--hk-glow-gold);
 }
 
 /* M-UI-SYSTEM: scoped-attribute specificity (0,3,0) beats the global sys
@@ -173,17 +185,22 @@ const sliceTint = computed(() => (props.variant === 'danger' ? '--cinnabar' : un
   box-shadow: none;
 }
 
-/* Dạng tròn — nút icon (+/−). */
+/* Circle icon buttons. The element border is the fallback when no slice
+   is mounted (ghost-circle); a mounted chrome slice owns the ring. */
 .game-button--circle {
-  min-width: var(--tap-min);
-  min-height: var(--tap-min);
+  min-width: var(--hk-density-compact-height);
+  min-height: var(--hk-density-compact-height);
   padding: 0;
-  border: 1px solid var(--surface-line);
+  border: 0;
   border-radius: 50%;
 }
 
+.game-button--circle:not(:has(> .ink-nine-slice)) {
+  border: 1px solid var(--hk-border-muted);
+}
+
 .game-button--circle:not(:disabled):hover {
-  border-color: var(--chrome-500);
+  border-color: var(--hk-border-active);
 }
 
 .game-button:not(:disabled):active {
@@ -217,6 +234,11 @@ const sliceTint = computed(() => (props.variant === 'danger' ? '--cinnabar' : un
 
 /* UI-006 (Task 1) — reduced motion: spinner đứng yên, không quay. */
 @media (prefers-reduced-motion: reduce) {
+  .game-button,
+  .game-button--ghost {
+    transition: none;
+  }
+
   .game-button__spinner {
     animation: none;
   }

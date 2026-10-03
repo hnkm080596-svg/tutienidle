@@ -1,0 +1,5 @@
+{
+  "action": "T25 wave close: 20 findings recorded - 11 CLOSED (F-SKILLS-TXP High, QA-FS-1/2a(Critical)/2b/3/4, F-LC-1 Medium, F-BCS-HUD-1/4/5 + F-BCS-SUR-6 Medium), 1 DUP, 8 deferred exceptions; fix chain 9df920ad/ea406a1f/abc35473/f61b09c2; L-AUXILIARY-FIELD-ALLOWLIST + L-WAY-CAPABILITY-VERDICT captured",
+  "tip": "f61b09c2",
+  "wave": "T25"
+}

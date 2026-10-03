@@ -1,0 +1,34 @@
+=== EV-STATIC-SEAMS T7: authority-seam census Thu Oct  1 04:17:35 UTC 2026 ===
+
+-- all isScopeHidden/isBetaWay/isBetaTalentId consumers (non-test):
+src/components/game/combat/hud/TurnCombatSkillBar.vue
+src/components/panels/AlchemyView.vue
+src/components/panels/CharacterPanel.vue
+src/components/panels/ProductionPanel.vue
+src/components/panels/QuanKhiPanel.vue
+src/components/panels/SkillPathPanel.vue
+src/components/panels/skill-path/SkillRoleStrip.vue
+src/core/alchemy/AlchemySystem.ts
+src/core/companion/CompanionGifts.ts
+src/core/equipment/EquipmentSystem.ts
+src/core/game/BattleLootSystem.ts
+src/core/game/CombatBuild.ts
+src/core/game/GameManagerAlchemyOps.ts
+src/core/game/GameManagerBuildingOps.ts
+src/core/game/GameManagerPersistentEffectOps.ts
+src/core/game/GameManagerPillOps.ts
+src/core/game/GameManagerProgressionOps.ts
+src/core/game/GameManagerRealmAdvanceOps.ts
+src/core/game/GameManagerSaveRestore.ts
+src/core/game/GameManagerTickOps.ts
+src/core/game/HiddenBeastSystem.ts
+src/core/player/CultivationPathSystem.ts
+src/core/production/DecomposeSystem.ts
+src/core/production/ProductionSystem.ts
+src/core/production/WorkerCapacity.ts
+src/core/skill/SkillSystem.ts
+src/core/talent/TalentEffects.ts
+
+-- nodeRegistry.get without sibling has() guard (dead-guard rule):
+156
+(manual spot-check: all progressionOps registry.get sites now has()-guarded)

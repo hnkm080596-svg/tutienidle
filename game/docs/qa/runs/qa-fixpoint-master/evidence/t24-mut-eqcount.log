@@ -1,0 +1,35 @@
+=== M1 unprotected-count-bound removed ===
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+ ❯ tests/architecture/saveFalsificationSweep.qa.test.ts (8 tests | 1 failed) 41ms
+     × a save carrying 500 + 5 unprotected items is rejected at the shape gate 13ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/architecture/saveFalsificationSweep.qa.test.ts > F-EQ-COUNT-1: equipment array writer-producible count bound > a save carrying 500 + 5 unprotected items is rejected at the shape gate
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/architecture/saveFalsificationSweep.qa.test.ts:129:44
+    127|     save.equipment = forgedEquipmentBag(EQUIPMENT_BAG_SOFT_CAP + 5)
+    128|
+    129|     expect(validateGameSaveShape(save).ok).toBe(false)
+       |                                            ^
+    130|   })
+    131|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 7 passed (8)
+   Start at  17:51:11
+   Duration  1.75s (transform 1.29s, setup 208ms, import 1.39s, tests 41ms, environment 0ms)
+
+EXIT=1

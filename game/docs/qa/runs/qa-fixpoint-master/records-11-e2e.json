@@ -1,0 +1,125 @@
+{
+  "records": [
+    {
+      "kind": "evidence",
+      "body": {
+        "id": "EV-E2E-1",
+        "state": {
+          "productStateId": "4311fc4d636dc9808f8fcc3699a4f41eb4e9db05e3b22623cc5409502f115a42",
+          "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+          "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+          "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+        },
+        "kind": "EXECUTED_RUNTIME",
+        "producer": "coord-main",
+        "startedAt": "2026-10-01T00:20:00Z",
+        "finishedAt": "2026-10-01T00:23:00Z",
+        "commandOrMethod": "npx playwright test tests/e2e/boot-fresh.spec.ts tests/e2e/save-reload.spec.ts --reporter=line",
+        "cwd": "game/",
+        "exitCode": 0,
+        "result": "PASS",
+        "artifactPath": "docs/qa/runs/qa-fixpoint-master/evidence/probe-e2e-1.log",
+        "artifactHash": "fb5c9846dd0c0fa691765643c9cd0d1a7c6ab4615ab912b5c3ffc6c676b05c1f",
+        "inputPaths": [
+          "tests/e2e/boot-fresh.spec.ts",
+          "tests/e2e/save-reload.spec.ts",
+          "tests/e2e/helpers.ts",
+          "src/components/onboarding/CharacterCreationScreen.vue"
+        ],
+        "inputEvidenceIds": [
+          "EV-BASE-VERIFY"
+        ],
+        "invariantIds": [
+          "I-UH-1",
+          "I-CC-1",
+          "I-PM-1"
+        ],
+        "claims": [
+          "live browser e2e: fresh boot reaches the unified creation screen (name + talent, no skill-pick section per scope-lock), character creation completes, save/reload persists character + seeded spirit stones byte-exact",
+          "F-E2E-1 fix verified: the shared createCharacterThroughUi helper and boot-fresh spec now match the shipped creation contract (22 specs were dead at the creation step pre-fix)"
+        ],
+        "limitations": [
+          "2 of 27 e2e specs executed; the remaining specs share the repaired helper but their own assertions were not re-run this wave"
+        ],
+        "status": "CURRENT"
+      }
+    },
+    {
+      "kind": "finding",
+      "body": {
+        "id": "F-E2E-1",
+        "title": "e2e suite dead at character creation: specs click removed creation-skill-tram testid",
+        "state": {
+          "productStateId": "4311fc4d636dc9808f8fcc3699a4f41eb4e9db05e3b22623cc5409502f115a42",
+          "contractId": "048c9f88e8cb35d956638d7195ab6724f331ccbc0acddacd053fbee73ec15d24",
+          "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+          "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+        },
+        "severity": "Medium",
+        "classification": "TEST_DEFECT",
+        "actionable": true,
+        "reachability": "PRODUCTION",
+        "locations": [
+          {
+            "path": "tests/e2e/helpers.ts",
+            "symbolOrSection": "createCharacterThroughUi (~L50) clicks creation-skill-tram",
+            "revision": "46bb1482",
+            "basis": "SOURCE"
+          },
+          {
+            "path": "tests/e2e/boot-fresh.spec.ts",
+            "symbolOrSection": "stale creation-skill-tram visibility assert",
+            "revision": "46bb1482",
+            "basis": "SOURCE"
+          }
+        ],
+        "discoveredBy": "coord-main",
+        "invariantIds": [
+          "I-UH-1",
+          "I-TQ-1"
+        ],
+        "evidenceIds": [
+          "EV-E2E-1"
+        ],
+        "counterexample": "npx playwright test tests/e2e/boot-fresh.spec.ts: timeout waiting for creation-skill-tram (15s)",
+        "expected": "specs exercise the shipped unified creation flow (name + talent only - mortal starter pick removed by scope-lock)",
+        "actual": "22 e2e specs share a helper that clicks a testid removed in fb16d2b7; e2e coverage silently dead",
+        "rootCause": "creation flow unified post-e2e-authoring; specs never updated because e2e is outside npm run verify",
+        "rootClass": "L-FIXTURE-ENCODES-DRIFT",
+        "subsystem": "e2e",
+        "siblingSearch": [
+          {
+            "roots": [
+              "tests/e2e"
+            ],
+            "termsAndMethod": "grepped all 27 specs for creation-skill references and createCharacterThroughUi call sites",
+            "evidenceIds": [
+              "EV-E2E-1"
+            ],
+            "hitDispositions": [
+              "22 specs share createCharacterThroughUi - one helper fix unblocks all of them",
+              "boot-fresh.spec.ts carried its own stale creation-skill-tram assert - updated to the shipped contract (talent cards visible, no skill-pick section)",
+              "remaining specs' own assertions not re-executed this wave - recorded as a coverage limit"
+            ],
+            "coverageLimits": [
+              "only boot-fresh + save-reload re-run post-fix; other 25 specs not re-executed"
+            ]
+          }
+        ],
+        "siblingFindingIds": [],
+        "repair": "helpers.ts drops the skill click; boot-fresh asserts talent-card presence instead of the removed skill testid",
+        "pinEvidenceIds": [
+          "EV-E2E-1"
+        ],
+        "verificationEvidenceIds": [
+          "EV-E2E-1"
+        ],
+        "closureReviewIds": [],
+        "status": "FIXED_PENDING_PROOF",
+        "duplicateOf": null,
+        "rejectionReason": null,
+        "exception": null
+      }
+    }
+  ]
+}

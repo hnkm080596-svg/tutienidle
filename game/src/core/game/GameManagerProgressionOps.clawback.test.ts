@@ -121,8 +121,8 @@ describe('progressionOps respec one-shot clawback (F-W-2)', () => {
 
     const preview = gameManager.progressionOps.previewNodeRespec(player)
 
-    expect(preview.resetNodeIds).not.toContain('ngu_kiem_khoi')
-    expect(preview.resetNodeIds).not.toContain('ngu_kiem_lien')
+    expect(preview!.resetNodeIds).not.toContain('ngu_kiem_khoi')
+    expect(preview!.resetNodeIds).not.toContain('ngu_kiem_lien')
   })
 
   it('respec clears a node-applied specialization', () => {

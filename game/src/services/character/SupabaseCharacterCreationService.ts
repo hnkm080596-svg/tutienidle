@@ -1,9 +1,11 @@
 import type { TalentDefinition } from '@/core/talent/Talent'
+import { BETA_MORTAL_STARTER_SKILL_ID, isBetaCreationTalentId } from '@/core/betaScope'
 import type { SupabaseConfig } from '../supabase/SupabaseConfig'
 import { resolveSupabaseSession, type StoredSupabaseSession } from '../supabase/SupabaseSession'
 import { requestSupabase, SupabaseHttpError } from '../supabase/SupabaseHttp'
 import { parseRemoteCharacterMetadata, type RemoteCharacterMetadata } from '../session/BackendStatus'
 import {
+  CHARACTER_CREATION_ROLL_SIZE,
   validateCharacterCreationDraft,
   type CharacterCreationDraft,
   type CharacterCreationResult,
@@ -62,8 +64,16 @@ export class SupabaseCharacterCreationService implements CharacterCreationServic
       method: 'POST', body: JSON.stringify({ p_session_id: session.sessionId }),
     }, session.accessToken)
     this.rollId = response.rollId
-    this.availableTalentIds = new Set(response.talents.map(talent => talent.id))
-    return response.talents
+    // Beta scope: the server roll is the offer authority, but the
+    // client boundary still admits only beta talents - a stale or
+    // drifted server-side catalog can never surface an out-of-scope
+    // pick to the UI or to validateDraft. Offer = first ROLL_SIZE of the
+    // admitted roll (same weighted-no-replacement semantics as a 3-roll).
+    const offered = response.talents
+      .filter(talent => isBetaCreationTalentId(talent.id))
+      .slice(0, CHARACTER_CREATION_ROLL_SIZE)
+    this.availableTalentIds = new Set(offered.map(talent => talent.id))
+    return offered
   }
 
   async checkNameAvailable(name: string): Promise<boolean> {
@@ -93,7 +103,10 @@ export class SupabaseCharacterCreationService implements CharacterCreationServic
           p_roll_id: this.rollId,
           p_name: draft.name,
           p_talent_ids: draft.talentIds,
-          p_mortal_basic_skill_id: draft.mortalBasicSkillId,
+          // Beta scope: the starter pick is server-side constant now -
+          // the draft carries no pick, the client always declares
+          // 'linh_bao' and the RPC rejects anything else.
+          p_mortal_basic_skill_id: BETA_MORTAL_STARTER_SKILL_ID,
         }),
       }, session.accessToken)
 

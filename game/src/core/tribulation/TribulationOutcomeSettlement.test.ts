@@ -25,6 +25,7 @@ import {
 } from '../../data/tribulation/TribulationChapters'
 import { completeHiddenBody } from '../realm/hidden/HiddenLineage'
 import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
+import { commitSpellInitiationForTest } from '../game/__fixtures__/betaWaysUnlock'
 
 /** Drive a started tribulation to its real terminal via the director's
  * own tick/answer contract. */
@@ -70,7 +71,7 @@ function investForHidden(player: ReturnType<typeof usePlayerStore>, gameManager:
   player.realmLevel = 18
   player.baseStats = { ...player.baseStats, strength: 11, dexterity: 11, intelligence: 11, attunement: 11, vitality: 11 }
   completeHiddenBody(player.$state, 'mortal')
-  gameManager.realmAdvanceOps.chooseCultivationPath('spell', 'spell_pathway', player.$state)
+  commitSpellInitiationForTest(gameManager, player.$state)
   player.realmLevel = 18
   completeHiddenBody(player.$state, 'qi_refining')
   player.completedStageIds = ['qi_refining_abyssal_pool']

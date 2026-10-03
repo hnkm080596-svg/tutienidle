@@ -4,6 +4,8 @@ import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
 import { useDialogFocus } from '@/composables/useDialogFocus'
 import { i18n } from '@/i18n'
 import InkNineSlice from './primitives/InkNineSlice.vue'
+import GameButton from './GameButton.vue'
+import HuyenKimSymbol from './HuyenKimSymbol.vue'
 import SysPanel from './system/SysPanel.vue'
 
 const props = withDefaults(defineProps<{
@@ -59,8 +61,8 @@ const closeLabel = computed(() => i18n.global.t('panels.common.close'))
         aria-modal="true"
         :aria-labelledby="headingId"
       >
-        <InkNineSlice v-if="variant === 'ink'" asset-id="surface-xl-paper-scroll" layer="surface" />
-        <InkNineSlice v-if="variant === 'ink'" asset-id="frame-xl-ceremony" layer="frame" />
+        <InkNineSlice v-if="variant === 'ink'" chrome-id="surface-m-panel" layer="surface" />
+        <InkNineSlice v-if="variant === 'ink'" chrome-id="frame-m-modal" layer="frame" />
         <header class="overlay-panel__header">
           <div class="overlay-panel__heading">
             <slot name="heading">
@@ -76,35 +78,44 @@ const closeLabel = computed(() => i18n.global.t('panels.common.close'))
              could be closed. Kept LAST in DOM order (absolute-positioned
              visually) so focus-on-open still lands on slotted content,
              not on this button. -->
-        <button
-          type="button"
+        <GameButton
+          variant="ghost"
+          shape="circle"
+          size="sm"
           class="overlay-panel__close"
           :aria-label="closeLabel"
           @click="emit('close')"
-        >✕</button>
+        ><HuyenKimSymbol name="close" /></GameButton>
       </component>
     </div>
   </Transition>
 </template>
 
 <style scoped>
-.overlay-panel { position: absolute; inset: 0; display: grid; place-items: center; padding: 3vh 3vw; background: var(--scrim-heavy); backdrop-filter: blur(6px); }
-.overlay-panel__card { position: relative; isolation: isolate; max-width: 100%; max-height: 94vh; min-height: 0; display: flex; flex-direction: column; overflow: hidden; container-type: inline-size; container-name: overlay-panel; color: var(--surface-text); font-family: var(--font-body); background: transparent; border: 0; border-radius: 0; box-shadow: none; }
-.overlay-panel__header { position: relative; z-index: 3; flex: 0 0 auto; display: flex; align-items: center; gap: 12px; padding: clamp(32px, 4vw, 48px) clamp(30px, 4vw, 48px) 14px; border-bottom: 1px solid var(--surface-line); }
+.overlay-panel { position: absolute; inset: 0; display: grid; place-items: center; padding: 3vh 3vw; background: color-mix(in srgb, var(--hk-surface-base) 78%, transparent); backdrop-filter: blur(6px); }
+.overlay-panel__card { position: relative; isolation: isolate; max-width: 100%; max-height: 94vh; min-height: 0; display: flex; flex-direction: column; overflow: hidden; container-type: inline-size; container-name: overlay-panel; color: var(--hk-text-primary); font-family: var(--hk-font-ui); background: transparent; border: 0; border-radius: var(--hk-radius-lg); box-shadow: 0 8px 32px var(--hk-shadow-high); }
+.overlay-panel__header { position: relative; z-index: 3; flex: 0 0 auto; display: flex; align-items: center; gap: var(--hk-space-4); padding: clamp(32px, 4vw, 48px) clamp(30px, 4vw, 48px) var(--hk-space-4); border-bottom: 1px solid var(--hk-border-muted); }
 .overlay-panel__heading { min-width: 0; margin-right: auto; }
-.overlay-panel__heading h3 { margin: 0; color: var(--surface-text); font: 700 var(--text-title) var(--font-display); letter-spacing: .06em; }
-/* currentColor-based border so the same button reads on ink (light text)
-   and system variants without a variant-specific token. Absolute in the
-   card's top-right corner (DOM order stays last for focus-on-open). */
-.overlay-panel__close { position: absolute; top: clamp(20px, 3vw, 40px); right: clamp(20px, 3vw, 40px); z-index: 4; width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center; padding: 0; background: transparent; border: 1px solid color-mix(in srgb, currentColor 30%, transparent); border-radius: var(--radius-sm); color: inherit; opacity: .75; font-size: 15px; line-height: 1; cursor: pointer; transition: opacity .15s, border-color .15s, color .15s; }
-.overlay-panel__close:hover { opacity: 1; border-color: var(--mineral-gold); color: var(--mineral-gold); }
-.overlay-panel__close:focus-visible { outline: 2px solid var(--mineral-gold); outline-offset: 2px; opacity: 1; }
+.overlay-panel__heading h3 { margin: 0; color: var(--hk-text-primary); font: 700 var(--text-title) var(--hk-font-display); letter-spacing: .06em; }
+/* Absolute in the card's top-right corner (DOM order stays last for
+   focus-on-open); GameButton supplies the ghost-circle chrome. Nested
+   under the card so these overrides outrank GameButton's own scoped
+   size rules regardless of injection order. */
+.overlay-panel__card .overlay-panel__close { position: absolute; top: clamp(20px, 3vw, 40px); right: clamp(20px, 3vw, 40px); z-index: 4; width: 34px; height: 34px; min-width: 0; min-height: 0; padding: 0; opacity: .75; }
+.overlay-panel__card .overlay-panel__close:hover { opacity: 1; }
 /* Fit-engine (2026-08-29) — body là ngân sách flex cho nội dung: con chiếm
    flex thay vì scroll. Con tự paginate khi vượt ngân sách (pattern BagGrid).
    overflow hidden là rào chặn cuối — panel con KHÔNG được dựa vào nó. */
 .overlay-panel__body { position: relative; z-index: 3; flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; box-sizing: border-box; padding: 0 clamp(30px, 4vw, 48px) clamp(30px, 4vw, 48px); overflow: hidden; }
-.overlay-fade-enter-active,.overlay-fade-leave-active { transition: opacity .2s ease; }
-.overlay-fade-enter-active .overlay-panel__card,.overlay-fade-leave-active .overlay-panel__card { transition: transform .22s ease, opacity .22s ease; }
+.overlay-fade-enter-active,.overlay-fade-leave-active { transition: opacity var(--hk-motion-micro) var(--hk-ease-standard); }
+.overlay-fade-enter-active .overlay-panel__card,.overlay-fade-leave-active .overlay-panel__card { transition: transform var(--hk-motion-panel) var(--hk-ease-standard), opacity var(--hk-motion-panel) var(--hk-ease-standard); }
 .overlay-fade-enter-from,.overlay-fade-leave-to { opacity: 0; }
 .overlay-fade-enter-from .overlay-panel__card,.overlay-fade-leave-to .overlay-panel__card { transform: translateY(12px) scale(.985); opacity: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  .overlay-fade-enter-active,.overlay-fade-leave-active,
+  .overlay-fade-enter-active .overlay-panel__card,.overlay-fade-leave-active .overlay-panel__card {
+    transition: none;
+  }
+}
 </style>

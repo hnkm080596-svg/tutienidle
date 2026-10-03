@@ -8,6 +8,7 @@ import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
 import { usePlayerStore } from '@/stores/player'
 import { useUiStore, type LeftPanelMode } from '@/stores/ui'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
+import { isBetaBuildingSurface } from '@/core/betaScopeSurface'
 
 const props = defineProps<{ buildingId: string }>()
 
@@ -26,7 +27,9 @@ const isBusy = ref(false)
 const template = computed(() => {
   stateVersion.value
 
-  return gameManager.buildingOps.getBuildingDefinitions().find((entry) => entry.id === props.buildingId)
+  return isBetaBuildingSurface(props.buildingId)
+    ? gameManager.buildingOps.getBuildingDefinitions().find((entry) => entry.id === props.buildingId)
+    : undefined
 })
 
 const instance = computed(() => {

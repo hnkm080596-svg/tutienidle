@@ -1,0 +1,12 @@
+{
+  "action": "T21 evidence rebind",
+  "rebound": 18,
+  "cells": 52,
+  "newEvidence": [
+    "EV-VERIFY-T21",
+    "EV-PINS-T21"
+  ],
+  "tip": "97f1878b",
+  "verify": "GREEN 8121 tests",
+  "mutants": "8/8 re-applied KILLED_EXPECTED"
+}

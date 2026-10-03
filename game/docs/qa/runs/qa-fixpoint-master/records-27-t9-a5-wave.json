@@ -1,0 +1,2170 @@
+{
+ "records": [
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-BASE-VERIFY",
+    "state": {
+     "productStateId": "8b9c093fd7255c17fd99302f9078b9328581b6d55e45f18414902d84ff29efb6",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "kind": "EXECUTED_INTEGRATION",
+    "producer": "coord-main",
+    "startedAt": "2026-09-30T22:50:00Z",
+    "finishedAt": "2026-09-30T22:54:48.700229+00:00",
+    "commandOrMethod": "npm run verify (type-check && build && vitest run)",
+    "cwd": "game/",
+    "exitCode": 0,
+    "result": "PASS",
+    "artifactPath": "evidence/baseline-verify.log",
+    "artifactHash": "bb3c9899357d7483fa68bdd65f60e108e6679392d8752ca3ee6da99ae7b7ecb3",
+    "inputPaths": [
+     "package.json"
+    ],
+    "inputEvidenceIds": [],
+    "invariantIds": [
+     "I-TQ-1"
+    ],
+    "claims": [
+     "baseline green: 854 files, 7808 tests pass, type-check+build clean"
+    ],
+    "limitations": [
+     "does not cover e2e/electron runtime"
+    ],
+    "status": "STALE"
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-PROBE-DORMANT-1",
+    "kind": "EXECUTED_UNIT_STRUCTURAL",
+    "state": {
+     "productStateId": "8b9c093fd7255c17fd99302f9078b9328581b6d55e45f18414902d84ff29efb6",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "STALE",
+    "commandOrMethod": "npx vitest run tests/architecture/betaDormantSaveLeak.qa.test.ts",
+    "cwd": "game/",
+    "artifactPath": "evidence/probe-dormant-leak-1.log",
+    "artifactHash": "b5a3c5eb17d216e8e25bc0e507bbca6a3cfa51819d07351f33df215d2d91c29f",
+    "result": "PASS",
+    "exitCode": 0,
+    "startedAt": "2026-10-01T04:10:00Z",
+    "finishedAt": "2026-10-01T04:24:00Z",
+    "producer": "coord-main",
+    "invariantIds": [
+     "I-DS-1",
+     "I-AS-1"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [
+     "tests/architecture/betaDormantSaveLeak.qa.test.ts"
+    ],
+    "claims": [
+     "dormant-record effect seam pins green on T7 (40 tests): hiddenPerfection cap/passive, hidden way stat channels, pill consumption, manualWorkforce capacity, way-grant replay seams, talent roster, ghost-node respec"
+    ],
+    "limitations": []
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-PIN-NOTICE-1",
+    "kind": "EXECUTED_UNIT_STRUCTURAL",
+    "state": {
+     "productStateId": "8b9c093fd7255c17fd99302f9078b9328581b6d55e45f18414902d84ff29efb6",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "STALE",
+    "commandOrMethod": "npx vitest run src/composables/useAppLifecycle.test.ts",
+    "cwd": "game/",
+    "artifactPath": "evidence/pin-notice-lifecycle.log",
+    "artifactHash": "0bccf4c9ddb1d40ca0c81799b5937769f57f1f124b21676ead76197497cdebba",
+    "result": "PASS",
+    "exitCode": 0,
+    "startedAt": "2026-10-01T04:10:00Z",
+    "finishedAt": "2026-10-01T04:24:00Z",
+    "producer": "coord-main",
+    "invariantIds": [
+     "I-SF-1",
+     "I-UH-1"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [
+     "src/composables/useAppLifecycle.ts",
+     "src/composables/useAppLifecycle.test.ts"
+    ],
+    "claims": [
+     "sec.H notice fires once on out-of-scope restored save, never on in-scope save; F-DL-5 absent-field read returns no false reason"
+    ],
+    "limitations": []
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-PIN-DORMANT-1",
+    "kind": "EXECUTED_UNIT_STRUCTURAL",
+    "state": {
+     "productStateId": "8b9c093fd7255c17fd99302f9078b9328581b6d55e45f18414902d84ff29efb6",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "STALE",
+    "commandOrMethod": "npx vitest run tests/architecture/betaDormantSaveLeak.qa.test.ts",
+    "cwd": "game/",
+    "artifactPath": "evidence/probe-dormant-leak-1.log",
+    "artifactHash": "b5a3c5eb17d216e8e25bc0e507bbca6a3cfa51819d07351f33df215d2d91c29f",
+    "result": "PASS",
+    "exitCode": 0,
+    "startedAt": "2026-10-01T04:10:00Z",
+    "finishedAt": "2026-10-01T04:24:00Z",
+    "producer": "coord-main",
+    "invariantIds": [
+     "I-DS-1",
+     "I-AS-1",
+     "I-SV-1",
+     "I-PA-1",
+     "I-CR-1",
+     "I-PG-1",
+     "I-RM-1",
+     "I-UH-1",
+     "I-CC-1"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [
+     "tests/architecture/betaDormantSaveLeak.qa.test.ts"
+    ],
+    "claims": [
+     "leak pin battery green: hostile dormant saves emit nothing through any gated channel; positive controls keep beta behavior identical"
+    ],
+    "limitations": []
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-PROBE-READMODEL-1",
+    "kind": "EXECUTED_UNIT_STRUCTURAL",
+    "state": {
+     "productStateId": "8b9c093fd7255c17fd99302f9078b9328581b6d55e45f18414902d84ff29efb6",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "STALE",
+    "commandOrMethod": "npx vitest run tests/architecture/betaReadModelHonesty.qa.test.ts + npm run type-check",
+    "cwd": "game/",
+    "artifactPath": "evidence/probe-readmodel-2.log",
+    "artifactHash": "d04293c92c8292a19771652a0bb10c4442f03d49410269982e501870662847e7",
+    "result": "PASS",
+    "exitCode": 0,
+    "startedAt": "2026-10-01T04:10:00Z",
+    "finishedAt": "2026-10-01T04:24:00Z",
+    "producer": "coord-main",
+    "invariantIds": [
+     "I-RM-1",
+     "I-SV-1"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [
+     "tests/architecture/betaReadModelHonesty.qa.test.ts"
+    ],
+    "claims": [
+     "read-model honesty pins: surfaces render only read-model verdicts (skill bar roles, alchemy families, production workforce block)"
+    ],
+    "limitations": []
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-PROBE-READMODEL-2",
+    "kind": "EXECUTED_UNIT_STRUCTURAL",
+    "state": {
+     "productStateId": "8b9c093fd7255c17fd99302f9078b9328581b6d55e45f18414902d84ff29efb6",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "STALE",
+    "commandOrMethod": "npx vitest run tests/architecture/betaReadModelHonesty.qa.test.ts + npm run type-check",
+    "cwd": "game/",
+    "artifactPath": "evidence/probe-readmodel-2.log",
+    "artifactHash": "d04293c92c8292a19771652a0bb10c4442f03d49410269982e501870662847e7",
+    "result": "PASS",
+    "exitCode": 0,
+    "startedAt": "2026-10-01T04:10:00Z",
+    "finishedAt": "2026-10-01T04:24:00Z",
+    "producer": "coord-main",
+    "invariantIds": [
+     "I-RM-1",
+     "I-SV-1"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [
+     "tests/architecture/betaReadModelHonesty.qa.test.ts"
+    ],
+    "claims": [
+     "read-model honesty post-fix pins green on T7 (5 tests): committed-element tabs only, no dormant slot, betaCompletion surface, alchemy family filter, ProductionPanel worker block hidden under lock"
+    ],
+    "limitations": []
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-ATOMICITY-1",
+    "kind": "EXECUTED_UNIT_STRUCTURAL",
+    "state": {
+     "productStateId": "8b9c093fd7255c17fd99302f9078b9328581b6d55e45f18414902d84ff29efb6",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "STALE",
+    "commandOrMethod": "npx vitest run src/core/game/GameManager.fiveElementInitiation.test.ts src/core/game/GameManager.realmAdvanceUnequip.test.ts src/composables/cultivationRitualFlow.integration.test.ts",
+    "cwd": "game/",
+    "artifactPath": "evidence/atomicity-1.log",
+    "artifactHash": "947432df621f7c2b17b613106c5918be68afbf01a5656f2e2ab1fe6dd30daab3",
+    "result": "PASS",
+    "exitCode": 0,
+    "startedAt": "2026-10-01T04:10:00Z",
+    "finishedAt": "2026-10-01T04:24:00Z",
+    "producer": "coord-main",
+    "invariantIds": [
+     "I-CC-1",
+     "I-IA-1",
+     "I-IA-2"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [
+     "src/core/game/GameManagerRealmAdvanceOps.ts"
+    ],
+    "claims": [
+     "commitFiveElementInitiation atomicity: every injected post-preflight fault leg rolls back byte-equivalent; way/element admission fails closed"
+    ],
+    "limitations": []
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-PROBE-TRISAVE-1",
+    "kind": "EXECUTED_UNIT_STRUCTURAL",
+    "state": {
+     "productStateId": "8b9c093fd7255c17fd99302f9078b9328581b6d55e45f18414902d84ff29efb6",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "STALE",
+    "commandOrMethod": "npx vitest run tests/architecture/betaDormantSaveLeak.qa.test.ts",
+    "cwd": "game/",
+    "artifactPath": "evidence/probe-dormant-leak-1.log",
+    "artifactHash": "b5a3c5eb17d216e8e25bc0e507bbca6a3cfa51819d07351f33df215d2d91c29f",
+    "result": "PASS",
+    "exitCode": 0,
+    "startedAt": "2026-10-01T04:10:00Z",
+    "finishedAt": "2026-10-01T04:24:00Z",
+    "producer": "coord-main",
+    "invariantIds": [
+     "I-DS-1"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [
+     "tests/architecture/betaDormantSaveLeak.qa.test.ts"
+    ],
+    "claims": [
+     "tri-state hostile-save probe green: dormant kit runtime inert on way_out_of_scope saves"
+    ],
+    "limitations": []
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-PROBE-TRISAVE-2",
+    "kind": "EXECUTED_UNIT_STRUCTURAL",
+    "state": {
+     "productStateId": "8b9c093fd7255c17fd99302f9078b9328581b6d55e45f18414902d84ff29efb6",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "STALE",
+    "commandOrMethod": "npx vitest run tests/architecture/betaDormantSaveLeak.qa.test.ts",
+    "cwd": "game/",
+    "artifactPath": "evidence/probe-dormant-leak-1.log",
+    "artifactHash": "b5a3c5eb17d216e8e25bc0e507bbca6a3cfa51819d07351f33df215d2d91c29f",
+    "result": "PASS",
+    "exitCode": 0,
+    "startedAt": "2026-10-01T04:10:00Z",
+    "finishedAt": "2026-10-01T04:24:00Z",
+    "producer": "coord-main",
+    "invariantIds": [
+     "I-AS-1",
+     "I-DS-1"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [
+     "tests/architecture/betaDormantSaveLeak.qa.test.ts"
+    ],
+    "claims": [
+     "way-gated combat + pill-consumption pins green under lock"
+    ],
+    "limitations": []
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-PROBE-WAVE6",
+    "kind": "EXECUTED_UNIT_STRUCTURAL",
+    "state": {
+     "productStateId": "8b9c093fd7255c17fd99302f9078b9328581b6d55e45f18414902d84ff29efb6",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "STALE",
+    "commandOrMethod": "npx vitest run src/main-process/electronUpdater.test.ts src/core/skill/SkillSystem.test.ts src/core/game/GameManagerStageOps.test.ts tests/architecture/betaEconomyCensus.test.ts src/services/save/SaveSystem.bootRestore.test.ts src/services/save/SaveSystem.snapshotIsolation.test.ts",
+    "cwd": "game/",
+    "artifactPath": "evidence/probe-wave6.log",
+    "artifactHash": "56648cc876933ec8b1d9bfb040f4157545d691042bd9933d092fb4f9ce02f15d",
+    "result": "PASS",
+    "exitCode": 0,
+    "startedAt": "2026-10-01T04:10:00Z",
+    "finishedAt": "2026-10-01T04:24:00Z",
+    "producer": "coord-main",
+    "invariantIds": [
+     "I-EC-1",
+     "I-SF-1"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [],
+    "claims": [
+     "wave-6 probe green: economy census integrity (no orphan sources/sinks), stage ops state machine, skill system, electron seams, save boot/snapshot isolation"
+    ],
+    "limitations": []
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-MUT-IA-1",
+    "kind": "EXECUTED_MUTATION",
+    "state": {
+     "productStateId": "8b9c093fd7255c17fd99302f9078b9328581b6d55e45f18414902d84ff29efb6",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "STALE",
+    "commandOrMethod": "mutant 'rollback-noop' applied to src/core/game/GameManagerRealmAdvanceOps.ts; detector: npx vitest run src/core/game/GameManager.fiveElementInitiation.test.ts",
+    "cwd": "game/",
+    "artifactPath": "evidence/mut-ia-1.log",
+    "artifactHash": "9eb90824fc3f608f491a3893229a2d6cb0a5616ce0b6d06f75af61bbd2d1333d",
+    "result": "FAIL",
+    "exitCode": 1,
+    "startedAt": "2026-10-01T04:10:00Z",
+    "finishedAt": "2026-10-01T04:24:00Z",
+    "producer": "coord-main",
+    "invariantIds": [
+     "I-IA-1",
+     "I-IA-2"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [],
+    "claims": [
+     "rollback() reduced to void: mid-commit failure must still produce byte-equivalent player - detector failed as expected, mutant KILLED_EXPECTED"
+    ],
+    "limitations": []
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-MUT-PA-1",
+    "kind": "EXECUTED_MUTATION",
+    "state": {
+     "productStateId": "8b9c093fd7255c17fd99302f9078b9328581b6d55e45f18414902d84ff29efb6",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "STALE",
+    "commandOrMethod": "mutant 'way-gate-removed' applied to chooseCultivationPath in GameManagerRealmAdvanceOps.ts; detector: npx vitest run tests/architecture/betaDormantSaveLeak.qa.test.ts",
+    "cwd": "game/",
+    "artifactPath": "evidence/mut-pa-1.log",
+    "artifactHash": "b08d57fd50ac916ffab0f13c365804b2ac49a8b17c92d7ae67abe0b81ace4ac6",
+    "result": "FAIL",
+    "exitCode": 1,
+    "startedAt": "2026-10-01T04:10:00Z",
+    "finishedAt": "2026-10-01T04:24:00Z",
+    "producer": "coord-main",
+    "invariantIds": [
+     "I-PA-1"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [],
+    "claims": [
+     "isBetaWay clause removed from ritual admission: dormant way must still fail closed - detector failed as expected, KILLED_EXPECTED"
+    ],
+    "limitations": []
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-MUT-SV-1",
+    "kind": "EXECUTED_MUTATION",
+    "state": {
+     "productStateId": "8b9c093fd7255c17fd99302f9078b9328581b6d55e45f18414902d84ff29efb6",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "STALE",
+    "commandOrMethod": "mutant 'verdict-flip' applied to src/core/betaScopeSkillDomain.ts (betaWay forced true); detector: npx vitest run tests/architecture/betaScopeSkillDomain.test.ts tests/architecture/betaReadModelHonesty.qa.test.ts",
+    "cwd": "game/",
+    "artifactPath": "evidence/mut-sv-1.log",
+    "artifactHash": "123269abca05e413e32ac27e15807fcc8ac930559ee2de0397ee54f4c00eab5a",
+    "result": "FAIL",
+    "exitCode": 1,
+    "startedAt": "2026-10-01T04:10:00Z",
+    "finishedAt": "2026-10-01T04:24:00Z",
+    "producer": "coord-main",
+    "invariantIds": [
+     "I-SV-1",
+     "I-RM-1"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [],
+    "claims": [
+     "combat-role verdict flipped to admit dormant ways - detector failed as expected, KILLED_EXPECTED"
+    ],
+    "limitations": []
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-MUT-AS-1",
+    "kind": "EXECUTED_MUTATION",
+    "state": {
+     "productStateId": "8b9c093fd7255c17fd99302f9078b9328581b6d55e45f18414902d84ff29efb6",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "STALE",
+    "commandOrMethod": "mutant 'pill-gate-removed' applied to src/core/game/GameManagerPillOps.ts; detector: npx vitest run tests/architecture/betaDormantSaveLeak.qa.test.ts",
+    "cwd": "game/",
+    "artifactPath": "evidence/mut-as-1.log",
+    "artifactHash": "d08a763d20f1b54bc7180a3b34ec2814de7e3aad95c9b2261170c615a03e43a9",
+    "result": "FAIL",
+    "exitCode": 1,
+    "startedAt": "2026-10-01T04:10:00Z",
+    "finishedAt": "2026-10-01T04:24:00Z",
+    "producer": "coord-main",
+    "invariantIds": [
+     "I-AS-1",
+     "I-DS-1"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [],
+    "claims": [
+     "scopeHiddenPillFamilyOfId gate removed: dormant pill must still be refused - detector failed as expected, KILLED_EXPECTED"
+    ],
+    "limitations": []
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-MUT-DS-1",
+    "kind": "EXECUTED_MUTATION",
+    "state": {
+     "productStateId": "8b9c093fd7255c17fd99302f9078b9328581b6d55e45f18414902d84ff29efb6",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "STALE",
+    "commandOrMethod": "mutant 'cap-ungated' applied to src/core/stats/StatCap.ts; detector: npx vitest run tests/architecture/betaDormantSaveLeak.qa.test.ts",
+    "cwd": "game/",
+    "artifactPath": "evidence/mut-ds-1.log",
+    "artifactHash": "f60807b84020fe02fef2b21dc93d675c58725ef708bd3619a3346b3925d2dd22",
+    "result": "FAIL",
+    "exitCode": 1,
+    "startedAt": "2026-10-01T04:10:00Z",
+    "finishedAt": "2026-10-01T04:24:00Z",
+    "producer": "coord-main",
+    "invariantIds": [
+     "I-DS-1"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [],
+    "claims": [
+     "hidden-body cap bonus ungated - detector failed as expected, KILLED_EXPECTED"
+    ],
+    "limitations": []
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-MUT-RM-1",
+    "kind": "EXECUTED_MUTATION",
+    "state": {
+     "productStateId": "8b9c093fd7255c17fd99302f9078b9328581b6d55e45f18414902d84ff29efb6",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "STALE",
+    "commandOrMethod": "mutant 'slot-unfiltered' applied to src/components/game/combat/hud/TurnCombatSkillBar.vue; detector: npx vitest run tests/architecture/betaReadModelHonesty.qa.test.ts",
+    "cwd": "game/",
+    "artifactPath": "evidence/mut-rm-1.log",
+    "artifactHash": "9a4aee3b5d1b5fe06c4f74a7bebc8ba7257c00cd96b587c949e568ca7b67c36a",
+    "result": "FAIL",
+    "exitCode": 1,
+    "startedAt": "2026-10-01T04:10:00Z",
+    "finishedAt": "2026-10-01T04:24:00Z",
+    "producer": "coord-main",
+    "invariantIds": [
+     "I-RM-1"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [],
+    "claims": [
+     "scope-hidden role filter removed from visibleSlots - detector failed as expected, KILLED_EXPECTED"
+    ],
+    "limitations": []
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-MUT-CR-1",
+    "kind": "EXECUTED_MUTATION",
+    "state": {
+     "productStateId": "8b9c093fd7255c17fd99302f9078b9328581b6d55e45f18414902d84ff29efb6",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "STALE",
+    "commandOrMethod": "mutant 'double-publish' applied to src/core/game/GameManagerBattleRewardOps.ts; detector: npx vitest run src/core/game/GameManager.battleEndPublication.test.ts",
+    "cwd": "game/",
+    "artifactPath": "evidence/mut-cr-1.log",
+    "artifactHash": "03e526e77223ac9c0bd5a3353dfe09d5ca1f527bfdb24a180f8da9e6c32ae1d4",
+    "result": "FAIL",
+    "exitCode": 1,
+    "startedAt": "2026-10-01T04:10:00Z",
+    "finishedAt": "2026-10-01T04:24:00Z",
+    "producer": "coord-main",
+    "invariantIds": [
+     "I-CR-1"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [],
+    "claims": [
+     "battle_end emitted twice per cycle - detector failed as expected, KILLED_EXPECTED"
+    ],
+    "limitations": []
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-MUT-PG-1",
+    "kind": "EXECUTED_MUTATION",
+    "state": {
+     "productStateId": "8b9c093fd7255c17fd99302f9078b9328581b6d55e45f18414902d84ff29efb6",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "STALE",
+    "commandOrMethod": "mutant 'precursor-cap' applied to src/core/skill/SkillSystem.ts; detector: npx vitest run src/core/skill/SkillSystem.huyKiem.test.ts",
+    "cwd": "game/",
+    "artifactPath": "evidence/mut-pg-1.log",
+    "artifactHash": "84f975e11f88f460b0d82f955359bfeeb6874f49f87fafdd7b9cc6e158cb6f3f",
+    "result": "FAIL",
+    "exitCode": 1,
+    "startedAt": "2026-10-01T04:10:00Z",
+    "finishedAt": "2026-10-01T04:24:00Z",
+    "producer": "coord-main",
+    "invariantIds": [
+     "I-PG-1"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [],
+    "claims": [
+     "floor(casts/10) capped at 10 - parity property detector failed as expected, KILLED_EXPECTED"
+    ],
+    "limitations": []
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-MUT-EC-1",
+    "kind": "EXECUTED_MUTATION",
+    "state": {
+     "productStateId": "8b9c093fd7255c17fd99302f9078b9328581b6d55e45f18414902d84ff29efb6",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "STALE",
+    "commandOrMethod": "mutant 'orphan-sink' applied to src/data/alchemy/alchemyRecipes.ts; detector: npx vitest run tests/architecture/betaEconomyCensus.test.ts",
+    "cwd": "game/",
+    "artifactPath": "evidence/mut-ec-1.log",
+    "artifactHash": "118776b1ed9b6ddb62fc05a346c4770506bdf09c3b0c3daa40319ef8fe256587",
+    "result": "FAIL",
+    "exitCode": 1,
+    "startedAt": "2026-10-01T04:10:00Z",
+    "finishedAt": "2026-10-01T04:24:00Z",
+    "producer": "coord-main",
+    "invariantIds": [
+     "I-EC-1"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [],
+    "claims": [
+     "special recipe made to consume an unproducible material - census detector failed as expected, KILLED_EXPECTED"
+    ],
+    "limitations": []
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-MUT-SF-1",
+    "kind": "EXECUTED_MUTATION",
+    "state": {
+     "productStateId": "8b9c093fd7255c17fd99302f9078b9328581b6d55e45f18414902d84ff29efb6",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "STALE",
+    "commandOrMethod": "mutant 'flag-removed' applied to src/core/betaScopeSurface.ts (way_out_of_scope branch dropped); detector: npx vitest run tests/architecture/betaDormantSaveLeak.qa.test.ts",
+    "cwd": "game/",
+    "artifactPath": "evidence/mut-sf-1.log",
+    "artifactHash": "03bf1532883913714dd0bdc0f160e951e4196c6702aa1d0c9fe069107e855033",
+    "result": "FAIL",
+    "exitCode": 1,
+    "startedAt": "2026-10-01T04:10:00Z",
+    "finishedAt": "2026-10-01T04:24:00Z",
+    "producer": "coord-main",
+    "invariantIds": [
+     "I-SF-1",
+     "I-UH-1"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [],
+    "claims": [
+     "unsupportedReleaseReason no longer flags dormant-way saves - detector failed as expected, KILLED_EXPECTED"
+    ],
+    "limitations": []
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-E2E-1",
+    "kind": "EXECUTED_RUNTIME",
+    "state": {
+     "productStateId": "8b9c093fd7255c17fd99302f9078b9328581b6d55e45f18414902d84ff29efb6",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "STALE",
+    "commandOrMethod": "npx playwright test tests/e2e/boot-fresh.spec.ts tests/e2e/save-reload.spec.ts --reporter=line",
+    "cwd": "game/",
+    "artifactPath": "evidence/probe-e2e-1.log",
+    "artifactHash": "e6774773e326c99730495c00e2ec79a5687b662c6c7eaf0b5f44a04aa816304b",
+    "result": "PASS",
+    "exitCode": 0,
+    "startedAt": "2026-10-01T04:10:00Z",
+    "finishedAt": "2026-10-01T04:24:00Z",
+    "producer": "coord-main",
+    "invariantIds": [
+     "I-CC-1",
+     "I-SF-1"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [],
+    "claims": [
+     "e2e boot-fresh + save-reload green on T7: real browser boot to character-creation; persisted character + seeded spirit stones byte-exact across reload"
+    ],
+    "limitations": []
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-PROBE-DET-FINAL",
+    "kind": "EXECUTED_UNIT_STRUCTURAL",
+    "state": {
+     "productStateId": "8b9c093fd7255c17fd99302f9078b9328581b6d55e45f18414902d84ff29efb6",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "STALE",
+    "commandOrMethod": "npx vitest run tests/architecture/betaDormantSaveLeak.qa.test.ts tests/architecture/betaReadModelHonesty.qa.test.ts src/core/game/GameManager.battleEndPublication.test.ts src/core/skill/SkillSystem.huyKiem.test.ts tests/architecture/betaScopeLockV2.test.ts src/core/game/GameManagerSaveRestore.boundary.test.ts",
+    "cwd": "game/",
+    "artifactPath": "evidence/probe-det-final.log",
+    "artifactHash": "7f5a018bc2f5b26649e589d507262a8ab13f3f29bdbbd1c9f8c74f510448873f",
+    "result": "PASS",
+    "exitCode": 0,
+    "startedAt": "2026-10-01T04:10:00Z",
+    "finishedAt": "2026-10-01T04:24:00Z",
+    "producer": "coord-main",
+    "invariantIds": [
+     "I-CC-1",
+     "I-CR-1",
+     "I-PG-1",
+     "I-RM-1",
+     "I-SF-1",
+     "I-UH-1",
+     "I-DS-1",
+     "I-AS-1",
+     "I-PA-1",
+     "I-SV-1"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [],
+    "claims": [
+     "detector suite green on T7 (177 tests): all pin files + battle-end single-publish + precursor parity + scope-lock contract + save boundary"
+    ],
+    "limitations": []
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-PROBE-PERSIST",
+    "kind": "EXECUTED_UNIT_STRUCTURAL",
+    "state": {
+     "productStateId": "8b9c093fd7255c17fd99302f9078b9328581b6d55e45f18414902d84ff29efb6",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "STALE",
+    "commandOrMethod": "npx vitest run src/services/save/saveVersion.test.ts src/services/save/saveShapeValidation.test.ts src/services/save/SaveSystem.saveLoadRoundTrip.test.ts src/services/save/SaveMigration.test.ts src/services/save/saveAcceptance.test.ts",
+    "cwd": "game/",
+    "artifactPath": "evidence/probe-persistence.log",
+    "artifactHash": "87fcd1bbb493d9a14918207ea50ee62af8d9c8deb3230bb2003caeb2e57bb826",
+    "result": "PASS",
+    "exitCode": 0,
+    "startedAt": "2026-10-01T04:10:00Z",
+    "finishedAt": "2026-10-01T04:24:00Z",
+    "producer": "coord-main",
+    "invariantIds": [
+     "I-DS-1",
+     "I-SF-1",
+     "I-UH-1"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [],
+    "claims": [
+     "save-safety persistence battery green (388 tests): version coverage, hostile-shape tolerance incl ghost nodeLevels ids, round-trip byte-equivalence, migration edges, acceptance corpus"
+    ],
+    "limitations": []
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-STATIC-SEAMS",
+    "kind": "SOURCE_PROOF",
+    "state": {
+     "productStateId": "8b9c093fd7255c17fd99302f9078b9328581b6d55e45f18414902d84ff29efb6",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "STALE",
+    "commandOrMethod": "coordinator static audit of authority-seam files + consumer map on T7 (grep census over all betaScope consumers; dead-guard rule spot-check on registry.get sites)",
+    "cwd": "game/",
+    "artifactPath": "evidence/static-seams.log",
+    "artifactHash": "2506fc53b1be6c8eb5118f0baa1764e9d9e8a5941f168a10aa33c3b444e6fc53",
+    "result": "PASS",
+    "exitCode": 0,
+    "startedAt": "2026-10-01T04:10:00Z",
+    "finishedAt": "2026-10-01T04:24:00Z",
+    "producer": "coord-main",
+    "invariantIds": [
+     "I-IA-2",
+     "I-RM-1",
+     "I-AS-1"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [
+     "src/core/betaScope.ts",
+     "src/core/betaScopeSkillDomain.ts",
+     "src/core/game/GameManagerRealmAdvanceOps.ts",
+     "src/core/talent/TalentEffects.ts",
+     "src/core/game/GameManagerProgressionOps.ts",
+     "src/core/player/CultivationPathSystem.ts",
+     "evidence/static-seam-audit.md"
+    ],
+    "claims": [
+     "every isScopeHidden/isBeta*/beta*Admitted consumer enumerated non-test; all progressionOps registry.get sites over save-side keys carry a has() guard after the T-1 fix"
+    ],
+    "limitations": []
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-FINAL-VERIFY",
+    "state": {
+     "productStateId": "8b9c093fd7255c17fd99302f9078b9328581b6d55e45f18414902d84ff29efb6",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "kind": "EXECUTED_UNIT_STRUCTURAL",
+    "producer": "coord-main",
+    "startedAt": "2026-10-01T00:26:00Z",
+    "finishedAt": "2026-10-01T00:29:00Z",
+    "commandOrMethod": "npm run verify (type-check + build + full vitest)",
+    "cwd": "game/",
+    "exitCode": 0,
+    "result": "PASS",
+    "artifactPath": "evidence/verify-final.log",
+    "artifactHash": "3bc3d339f5e59aa45ebf1d6f2efad08d34b7106f8ac3a7acb2225cf88eb20910",
+    "inputPaths": [
+     "src/**",
+     "tests/**",
+     "package.json",
+     "vitest.config.ts",
+     "vite.config.ts"
+    ],
+    "inputEvidenceIds": [
+     "EV-BASE-VERIFY"
+    ],
+    "invariantIds": [
+     "I-CC-1",
+     "I-IA-1",
+     "I-IA-2",
+     "I-PA-1",
+     "I-SV-1",
+     "I-AS-1",
+     "I-DS-1",
+     "I-RM-1",
+     "I-CR-1",
+     "I-PG-1",
+     "I-SS-1",
+     "I-EC-1",
+     "I-SF-1",
+     "I-PM-1",
+     "I-EN-1",
+     "I-UH-1",
+     "I-RT-1",
+     "I-TS-1",
+     "I-CN-1",
+     "I-TQ-1",
+     "I-QI-1"
+    ],
+    "claims": [
+     "final gate: 856 files / 7826 tests pass / type-check + production build clean on the post-fix aggregate state"
+    ],
+    "limitations": [
+     "e2e specs are outside verify - covered separately by EV-E2E-1"
+    ],
+    "status": "STALE"
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-PROP-IA-1",
+    "kind": "EXECUTED_PROPERTY",
+    "state": {
+     "productStateId": "8b9c093fd7255c17fd99302f9078b9328581b6d55e45f18414902d84ff29efb6",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "STALE",
+    "commandOrMethod": "vitest atomicity suite: byte-equivalence property asserted across every injected post-preflight fault leg",
+    "cwd": "game/",
+    "artifactPath": "evidence/atomicity-1.log",
+    "artifactHash": "947432df621f7c2b17b613106c5918be68afbf01a5656f2e2ab1fe6dd30daab3",
+    "result": "PASS",
+    "exitCode": 0,
+    "startedAt": "2026-10-01T04:10:00Z",
+    "finishedAt": "2026-10-01T04:24:00Z",
+    "producer": "coord-main",
+    "invariantIds": [
+     "I-IA-1",
+     "I-IA-2"
+    ],
+    "inputEvidenceIds": [
+     "EV-ATOMICITY-1"
+    ],
+    "inputPaths": [],
+    "claims": [
+     "rollback byte-equivalence holds for every fault injection leg (pre-commit, skill grant, node grant, element commit)"
+    ],
+    "limitations": []
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-PROP-PG-1",
+    "kind": "EXECUTED_PROPERTY",
+    "state": {
+     "productStateId": "8b9c093fd7255c17fd99302f9078b9328581b6d55e45f18414902d84ff29efb6",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "STALE",
+    "commandOrMethod": "vitest huyKiem suite: parity property flatBonus(w,x)=floor(max(0,x)/10) shared by all 3 precursors over cast matrix",
+    "cwd": "game/",
+    "artifactPath": "evidence/prop-pg-1.log",
+    "artifactHash": "6460139f021fd98c9d6dcafea453e97bc5ff4cd02cfeccc614c626aa8522d6a9",
+    "result": "PASS",
+    "exitCode": 0,
+    "startedAt": "2026-10-01T04:10:00Z",
+    "finishedAt": "2026-10-01T04:24:00Z",
+    "producer": "coord-main",
+    "invariantIds": [
+     "I-PG-1"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [],
+    "claims": [
+     "precursor parity: floor(casts/10) uncapped and identical across tram/huy_quyen/huy_kiem over the probed cast matrix"
+    ],
+    "limitations": []
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-MUT-TQ-1",
+    "kind": "EXECUTED_MUTATION",
+    "state": {
+     "productStateId": "8b9c093fd7255c17fd99302f9078b9328581b6d55e45f18414902d84ff29efb6",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "STALE",
+    "commandOrMethod": "fixture mutant: betaWaysUnlock lockBetaWaysForTests neutered (mutableWays.clear() dropped); detector: npx vitest run tests/architecture/betaDormantSaveLeak.qa.test.ts",
+    "cwd": "game/",
+    "artifactPath": "evidence/mut-tq-1.log",
+    "artifactHash": "29f32b4c207da9c77260a7d4f122d26c3c24345efe792c7b0d66ab225559d728",
+    "result": "FAIL",
+    "exitCode": 1,
+    "startedAt": "2026-10-01T04:10:00Z",
+    "finishedAt": "2026-10-01T04:24:00Z",
+    "producer": "coord-main",
+    "invariantIds": [
+     "I-TQ-1",
+     "I-DS-1"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [],
+    "claims": [
+     "lock helper neutered - lock-dependent pins failed as expected, KILLED_EXPECTED (detector-quality proof)"
+    ],
+    "limitations": []
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-PROBE-CA-FIX",
+    "kind": "EXECUTED_UNIT_STRUCTURAL",
+    "state": {
+     "productStateId": "8b9c093fd7255c17fd99302f9078b9328581b6d55e45f18414902d84ff29efb6",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "STALE",
+    "commandOrMethod": "npx vitest run tests/architecture/betaDormantSaveLeak.qa.test.ts",
+    "cwd": "game/",
+    "artifactPath": "evidence/probe-dormant-leak-1.log",
+    "artifactHash": "b5a3c5eb17d216e8e25bc0e507bbca6a3cfa51819d07351f33df215d2d91c29f",
+    "result": "PASS",
+    "exitCode": 0,
+    "startedAt": "2026-10-01T04:10:00Z",
+    "finishedAt": "2026-10-01T04:24:00Z",
+    "producer": "coord-main",
+    "invariantIds": [
+     "I-PA-1",
+     "I-IA-2"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [
+     "tests/architecture/betaDormantSaveLeak.qa.test.ts"
+    ],
+    "claims": [
+     "clean-A node-tree admission pins green on T7"
+    ],
+    "limitations": []
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-MUT-CA-1",
+    "kind": "EXECUTED_MUTATION",
+    "state": {
+     "productStateId": "8b9c093fd7255c17fd99302f9078b9328581b6d55e45f18414902d84ff29efb6",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "STALE",
+    "commandOrMethod": "mutant: betaTreeNodeAdmitted neutered to return true; detector: npx vitest run tests/architecture/betaDormantSaveLeak.qa.test.ts",
+    "cwd": "game/",
+    "artifactPath": "evidence/mut-ca-1.log",
+    "artifactHash": "1887e0ae51b5b58b8b225305ae57acf611f5699e0ff47c9a465fdce539b5b407",
+    "result": "FAIL",
+    "exitCode": 1,
+    "startedAt": "2026-10-01T04:10:00Z",
+    "finishedAt": "2026-10-01T04:24:00Z",
+    "producer": "coord-main",
+    "invariantIds": [
+     "I-PA-1",
+     "I-IA-2"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [],
+    "claims": [
+     "node-tree admission opened wholesale - dormant tree pins failed as expected, KILLED_EXPECTED"
+    ],
+    "limitations": []
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-FINAL-VERIFY-2",
+    "state": {
+     "productStateId": "8b9c093fd7255c17fd99302f9078b9328581b6d55e45f18414902d84ff29efb6",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "kind": "EXECUTED_INTEGRATION",
+    "producer": "coord-main",
+    "startedAt": "2026-10-01T00:59:30Z",
+    "finishedAt": "2026-10-01T01:01:30Z",
+    "commandOrMethod": "npm run verify (type-check + build + full vitest) on acbe096a",
+    "cwd": "game/",
+    "exitCode": 0,
+    "result": "PASS",
+    "artifactPath": "evidence/verify-ca-fixes.log",
+    "artifactHash": "3291182d79218c8c1e47f26af55d1da42ea3b39e5f72de0de88c4a018223399e",
+    "inputPaths": [
+     "src/**",
+     "tests/**",
+     "package.json",
+     "vitest.config.ts",
+     "vite.config.ts"
+    ],
+    "inputEvidenceIds": [],
+    "invariantIds": [
+     "I-CC-1",
+     "I-IA-1",
+     "I-IA-2",
+     "I-PA-1",
+     "I-SV-1",
+     "I-AS-1",
+     "I-DS-1",
+     "I-RM-1",
+     "I-CR-1",
+     "I-PG-1",
+     "I-SS-1",
+     "I-EC-1",
+     "I-SF-1",
+     "I-PM-1",
+     "I-EN-1",
+     "I-UH-1",
+     "I-RT-1",
+     "I-TS-1",
+     "I-CN-1",
+     "I-TQ-1",
+     "I-QI-1"
+    ],
+    "claims": [
+     "post-CA-fix verify green: 856 files, 7830 tests pass, type-check+build clean"
+    ],
+    "limitations": [
+     "does not cover e2e/electron runtime"
+    ],
+    "status": "STALE"
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-FEREADY-VERIFY-2",
+    "state": {
+     "productStateId": "8b9c093fd7255c17fd99302f9078b9328581b6d55e45f18414902d84ff29efb6",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "kind": "EXECUTED_INTEGRATION",
+    "producer": "coord-main",
+    "startedAt": "2026-10-01T01:26:51Z",
+    "finishedAt": "2026-10-01T01:28:45Z",
+    "commandOrMethod": "npm run verify in temp clone of origin/devin/frontend-ready @ bc37c0c0bcffb3cbcaa8d483b6b0030a35e26cda",
+    "cwd": "/tmp/fe-ready-check/game/",
+    "exitCode": 0,
+    "result": "PASS",
+    "artifactPath": "evidence/verify-frontend-ready-bc37c0c0.log",
+    "artifactHash": "5ae04ed0c757aad037cb1fe0025e5ca8105ce33e2b1c3a7eaeb6a8bd6f8888e4",
+    "inputPaths": [
+     "origin/devin/frontend-ready tip bc37c0c0"
+    ],
+    "inputEvidenceIds": [],
+    "invariantIds": [
+     "I-TQ-1"
+    ],
+    "claims": [
+     "coordinator-required baseline check: frontend-ready tip bc37c0c0 (post QA-fix merges NOT included) verify GREEN - 860 files, 7857 tests; master baseline 46bb1482 green at 7808->7826 via fix branch"
+    ],
+    "limitations": [
+     "frontend-ready does not yet contain the qa-fixpoint fixes - coordinator ports them post-PR"
+    ],
+    "status": "STALE"
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-PROBE-A2-FIX",
+    "kind": "EXECUTED_UNIT_STRUCTURAL",
+    "state": {
+     "productStateId": "8b9c093fd7255c17fd99302f9078b9328581b6d55e45f18414902d84ff29efb6",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "STALE",
+    "commandOrMethod": "npx vitest run tests/architecture/betaDormantSaveLeak.qa.test.ts",
+    "cwd": "game/",
+    "artifactPath": "evidence/probe-dormant-leak-1.log",
+    "artifactHash": "b5a3c5eb17d216e8e25bc0e507bbca6a3cfa51819d07351f33df215d2d91c29f",
+    "result": "PASS",
+    "exitCode": 0,
+    "startedAt": "2026-10-01T04:10:00Z",
+    "finishedAt": "2026-10-01T04:24:00Z",
+    "producer": "coord-main",
+    "invariantIds": [
+     "I-PA-1",
+     "I-IA-2",
+     "I-SV-1"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [
+     "tests/architecture/betaDormantSaveLeak.qa.test.ts"
+    ],
+    "claims": [
+     "A2 aura/dormant-kit skill write-seam pins green on T7"
+    ],
+    "limitations": []
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-FINAL-VERIFY-3",
+    "state": {
+     "productStateId": "8b9c093fd7255c17fd99302f9078b9328581b6d55e45f18414902d84ff29efb6",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "kind": "EXECUTED_INTEGRATION",
+    "producer": "coord-main",
+    "startedAt": "2026-10-01T02:02:00Z",
+    "finishedAt": "2026-10-01T02:04:00Z",
+    "commandOrMethod": "npm run verify (type-check + build + full vitest) on c94f5955",
+    "cwd": "game/",
+    "exitCode": 0,
+    "result": "PASS",
+    "artifactPath": "evidence/verify-a2-fixes.log",
+    "artifactHash": "5f44b007ca0bde2d41595c2174c6b0547985377e667d51bc6cf4f408479301e2",
+    "inputPaths": [
+     "src/**",
+     "tests/**",
+     "package.json",
+     "vitest.config.ts",
+     "vite.config.ts"
+    ],
+    "status": "STALE",
+    "inputEvidenceIds": [],
+    "invariantIds": [
+     "I-CC-1",
+     "I-IA-1",
+     "I-IA-2",
+     "I-PA-1",
+     "I-SV-1",
+     "I-AS-1",
+     "I-DS-1",
+     "I-RM-1",
+     "I-CR-1",
+     "I-PG-1",
+     "I-SS-1",
+     "I-EC-1",
+     "I-SF-1",
+     "I-PM-1",
+     "I-EN-1",
+     "I-UH-1",
+     "I-RT-1",
+     "I-TS-1",
+     "I-CN-1",
+     "I-TQ-1",
+     "I-QI-1"
+    ],
+    "claims": [
+     "post-A2-fix verify green: 857 files, 7834 tests pass, type-check+build clean"
+    ],
+    "limitations": [
+     "does not cover e2e/electron runtime"
+    ]
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-PIN-TC-FIX",
+    "kind": "EXECUTED_UNIT_STRUCTURAL",
+    "state": {
+     "productStateId": "8b9c093fd7255c17fd99302f9078b9328581b6d55e45f18414902d84ff29efb6",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "STALE",
+    "commandOrMethod": "npx vitest run tests/architecture/betaDormantSaveLeak.qa.test.ts",
+    "cwd": "game/",
+    "artifactPath": "evidence/probe-dormant-leak-1.log",
+    "artifactHash": "b5a3c5eb17d216e8e25bc0e507bbca6a3cfa51819d07351f33df215d2d91c29f",
+    "result": "PASS",
+    "exitCode": 0,
+    "startedAt": "2026-10-01T04:10:00Z",
+    "finishedAt": "2026-10-01T04:24:00Z",
+    "producer": "coord-main",
+    "invariantIds": [
+     "I-AS-1",
+     "I-CR-1"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [
+     "tests/architecture/betaDormantSaveLeak.qa.test.ts"
+    ],
+    "claims": [
+     "F-TC stat-channel + technique-grade pins green on T7"
+    ],
+    "limitations": []
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-MUT-TC-1",
+    "kind": "EXECUTED_MUTATION",
+    "state": {
+     "productStateId": "8b9c093fd7255c17fd99302f9078b9328581b6d55e45f18414902d84ff29efb6",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "STALE",
+    "commandOrMethod": "mutant: F-TC admission predicates neutered (betaTechniqueAdmitted/betaActiveWayAdmitted/betaNodeWriteAdmitted return true - equivalent to reverting all F-TC gates); detector: npx vitest run tests/architecture/betaDormantSaveLeak.qa.test.ts",
+    "cwd": "game/",
+    "artifactPath": "evidence/mut-tc-1.log",
+    "artifactHash": "c20f461accfeb25c43c41881384b5fbfb988d6c2676c1bff97dc9ff61ede855a",
+    "result": "FAIL",
+    "exitCode": 1,
+    "startedAt": "2026-10-01T04:10:00Z",
+    "finishedAt": "2026-10-01T04:24:00Z",
+    "producer": "coord-main",
+    "invariantIds": [
+     "I-AS-1",
+     "I-CR-1",
+     "I-PA-1"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [],
+    "claims": [
+     "dormant way stat-channel + technique-grade gates opened - detector failed as expected, KILLED_EXPECTED"
+    ],
+    "limitations": []
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-FINAL-VERIFY-4",
+    "state": {
+     "productStateId": "8b9c093fd7255c17fd99302f9078b9328581b6d55e45f18414902d84ff29efb6",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "producer": "coord-main",
+    "startedAt": "2026-10-01T02:50:00Z",
+    "finishedAt": "2026-10-01T03:15:00Z",
+    "commandOrMethod": "npm run verify (type-check + build + full vitest) on 0599c32a+learning.md (T5 state)",
+    "cwd": "game/",
+    "exitCode": 0,
+    "result": "PASS",
+    "artifactPath": "evidence/verify-ftc-fixes.log",
+    "artifactHash": "94af6fd2fa48a3b606ee3b3afb31bd7a25e6b6815b2ad9378c5fd1cd8c42351b",
+    "inputPaths": [],
+    "inputEvidenceIds": [],
+    "invariantIds": [
+     "I-CC-1",
+     "I-IA-1",
+     "I-IA-2",
+     "I-PA-1",
+     "I-SV-1",
+     "I-AS-1",
+     "I-DS-1",
+     "I-RM-1",
+     "I-CR-1",
+     "I-PG-1",
+     "I-SS-1",
+     "I-EC-1",
+     "I-SF-1",
+     "I-PM-1",
+     "I-EN-1",
+     "I-UH-1",
+     "I-RT-1",
+     "I-TS-1",
+     "I-CN-1",
+     "I-TQ-1",
+     "I-QI-1"
+    ],
+    "claims": [
+     "full gate green on the post-F-TC state: 7841 tests, type-check, build"
+    ],
+    "limitations": [],
+    "status": "STALE",
+    "kind": "EXECUTED_INTEGRATION"
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-PROBE-A3-FIX",
+    "kind": "EXECUTED_UNIT_STRUCTURAL",
+    "state": {
+     "productStateId": "8b9c093fd7255c17fd99302f9078b9328581b6d55e45f18414902d84ff29efb6",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "STALE",
+    "commandOrMethod": "npx vitest run tests/architecture/betaDormantSaveLeak.qa.test.ts",
+    "cwd": "game/",
+    "artifactPath": "evidence/probe-dormant-leak-1.log",
+    "artifactHash": "b5a3c5eb17d216e8e25bc0e507bbca6a3cfa51819d07351f33df215d2d91c29f",
+    "result": "PASS",
+    "exitCode": 0,
+    "startedAt": "2026-10-01T04:10:00Z",
+    "finishedAt": "2026-10-01T04:24:00Z",
+    "producer": "coord-main",
+    "invariantIds": [
+     "I-AS-1",
+     "I-DS-1",
+     "I-SV-1"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [
+     "tests/architecture/betaDormantSaveLeak.qa.test.ts",
+     "src/core/betaScope.ts",
+     "src/core/player/CultivationPathSystem.ts",
+     "src/core/game/GameManagerRealmAdvanceOps.ts",
+     "src/core/game/GameManagerProgressionOps.ts",
+     "src/core/talent/TalentEffects.ts"
+    ],
+    "claims": [
+     "A3/T2 wave pins green (9 new asserts): hidden_spell reconcile+grant mint nothing, syncRealmPassive learns nothing, applySwordPathRealmTransition preserves slice, pham_nhan_chi_cot emits nothing, ghost-node respec no-throw; beta positive controls intact"
+    ],
+    "limitations": []
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-MUT-A3-1",
+    "kind": "EXECUTED_MUTATION",
+    "state": {
+     "productStateId": "8b9c093fd7255c17fd99302f9078b9328581b6d55e45f18414902d84ff29efb6",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "STALE",
+    "commandOrMethod": "mutant: A3/T2 wave gates neutered (isBetaWay realm-replay early-returns, sword-merge isScopeHidden gate, isBetaTalentId filter, has()-guards reverted to dead get() guards); detector: npx vitest run tests/architecture/betaDormantSaveLeak.qa.test.ts",
+    "cwd": "game/",
+    "artifactPath": "evidence/mut-a3-1.log",
+    "artifactHash": "e5695364b29b056fc4341f45e6ee817fdb099dd1dafb3470f528d17ee3bbbee1",
+    "result": "FAIL",
+    "exitCode": 1,
+    "startedAt": "2026-10-01T04:10:00Z",
+    "finishedAt": "2026-10-01T04:24:00Z",
+    "producer": "coord-main",
+    "invariantIds": [
+     "I-AS-1",
+     "I-DS-1",
+     "I-SV-1"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [],
+    "claims": [
+     "each neutered gate fails its pin (6 pins across two runs: A3-02/03/08 then A3-01/T2-1) - KILLED_EXPECTED"
+    ],
+    "limitations": []
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-FINAL-VERIFY-5",
+    "kind": "EXECUTED_INTEGRATION",
+    "state": {
+     "productStateId": "8b9c093fd7255c17fd99302f9078b9328581b6d55e45f18414902d84ff29efb6",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "STALE",
+    "commandOrMethod": "npm run verify (type-check + build + full vitest) on 5431ae7e (T7 state)",
+    "cwd": "game/",
+    "artifactPath": "evidence/final-verify.log",
+    "artifactHash": "be68901ed9c1830f3bad184b9ad7279fc8d82b826ca13147df3cc89bb8f91a0a",
+    "result": "PASS",
+    "exitCode": 0,
+    "startedAt": "2026-10-01T04:10:00Z",
+    "finishedAt": "2026-10-01T04:24:00Z",
+    "producer": "coord-main",
+    "invariantIds": [
+     "I-CC-1",
+     "I-CR-1",
+     "I-DS-1",
+     "I-AS-1",
+     "I-PA-1",
+     "I-SV-1",
+     "I-RM-1",
+     "I-EC-1",
+     "I-SF-1",
+     "I-UH-1",
+     "I-PG-1",
+     "I-IA-1",
+     "I-IA-2",
+     "I-TQ-1"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [],
+    "claims": [
+     "full verify green on T7: 7856 tests passed, vue-tsc clean, production build OK"
+    ],
+    "limitations": []
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-PROBE-A4-SEAM",
+    "kind": "EXECUTED_UNIT_STRUCTURAL",
+    "state": {
+     "productStateId": "8b9c093fd7255c17fd99302f9078b9328581b6d55e45f18414902d84ff29efb6",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "STALE",
+    "commandOrMethod": "npx vitest run tests/architecture/betaScopeAuthoritySeam.qa.test.ts (adopted from blind round A4)",
+    "cwd": "game/",
+    "artifactPath": "evidence/probe-a4-authority-seam.log",
+    "artifactHash": "87cbd913c11a864fc1ac6e77eb4708ddca20fbc9b720a57ba5a14b14d4d9e4de",
+    "result": "PASS",
+    "exitCode": 0,
+    "startedAt": "2026-10-01T04:40:00Z",
+    "finishedAt": "2026-10-01T05:25:00Z",
+    "producer": "coord-main",
+    "invariantIds": [
+     "I-AS-1"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [
+     "tests/architecture/betaScopeAuthoritySeam.qa.test.ts"
+    ],
+    "claims": [
+     "A4 blind repro suite adopted: devResetBranch dormant refusal, golden_core roster exclusion, chi_hien_quan write gates, gainMastery dormant gate"
+    ],
+    "limitations": []
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-PROBE-B4-SEAM",
+    "kind": "EXECUTED_UNIT_STRUCTURAL",
+    "state": {
+     "productStateId": "8b9c093fd7255c17fd99302f9078b9328581b6d55e45f18414902d84ff29efb6",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "STALE",
+    "commandOrMethod": "npx vitest run tests/architecture/betaConsumerSeamMounts.qa.test.ts tests/architecture/betaConsumerSeams.qa.test.ts (adopted from blind round B4)",
+    "cwd": "game/",
+    "artifactPath": "evidence/probe-b4-consumer-seam.log",
+    "artifactHash": "c84daf9d021cbf4d172e55dfed880581be022250a0052c500601fabcdb1cb040",
+    "result": "PASS",
+    "exitCode": 0,
+    "startedAt": "2026-10-01T04:40:00Z",
+    "finishedAt": "2026-10-01T05:25:00Z",
+    "producer": "coord-main",
+    "invariantIds": [
+     "I-AS-1",
+     "I-RM-1"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [
+     "tests/architecture/betaConsumerSeamMounts.qa.test.ts",
+     "tests/architecture/betaConsumerSeams.qa.test.ts"
+    ],
+    "claims": [
+     "B4 blind repro suite adopted: left-panel/popover mount gates, component self-gate"
+    ],
+    "limitations": []
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-MUT-A4-1",
+    "kind": "EXECUTED_MUTATION",
+    "state": {
+     "productStateId": "8b9c093fd7255c17fd99302f9078b9328581b6d55e45f18414902d84ff29efb6",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "STALE",
+    "commandOrMethod": "manual mutant sweep over A4/B4-wave gates (isBetaBuildingSurface, betaTechniqueAdmitted, isBetaLeftPanelMode, admittedBuildingPopoverId, component self-gate)",
+    "cwd": "game/",
+    "artifactPath": "evidence/mut-a4.log",
+    "artifactHash": "eed2541d225f4912adb7277ea1db401b70f95edbea16ecf343a7bf3849abd9e6",
+    "result": "PASS",
+    "exitCode": 0,
+    "startedAt": "2026-10-01T04:40:00Z",
+    "finishedAt": "2026-10-01T05:25:00Z",
+    "producer": "coord-main",
+    "invariantIds": [],
+    "inputEvidenceIds": [],
+    "inputPaths": [
+     "src/core/game/GameManagerBuildingOps.ts",
+     "src/core/betaScopeSurface.ts",
+     "src/components/layout/FunctionOverlayPanel.vue",
+     "src/components/layout/GameRoot.vue",
+     "src/components/game/BuildingDetailPopover.vue"
+    ],
+    "claims": [
+     "A4/B4-wave mutant corpus all KILLED_EXPECTED"
+    ],
+    "limitations": []
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-PIN-BS-WAVE",
+    "kind": "EXECUTED_UNIT_STRUCTURAL",
+    "state": {
+     "productStateId": "8b9c093fd7255c17fd99302f9078b9328581b6d55e45f18414902d84ff29efb6",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "STALE",
+    "commandOrMethod": "npx vitest run tests/architecture/betaPersistedRealmModifiers.qa.test.ts src/core/realm/enhancedPassivePersisted.qa.test.ts src/services/save/forgedModifierMints.qa.test.ts src/core/progression/devResetBranch.admission.qa.test.ts",
+    "cwd": "game/",
+    "artifactPath": "evidence/pin-bs-wave.log",
+    "artifactHash": "8e0b9b95222ee4230bbb01ea5c07bbbb9a7de244b0ccaaec4321065ccd83d741",
+    "result": "PASS",
+    "exitCode": 0,
+    "startedAt": "2026-10-01T04:40:00Z",
+    "finishedAt": "2026-10-01T05:25:00Z",
+    "producer": "coord-main",
+    "invariantIds": [
+     "I-DS-1",
+     "I-SV-1"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [
+     "tests/architecture/betaPersistedRealmModifiers.qa.test.ts",
+     "src/core/realm/enhancedPassivePersisted.qa.test.ts",
+     "src/services/save/forgedModifierMints.qa.test.ts",
+     "src/core/progression/devResetBranch.admission.qa.test.ts"
+    ],
+    "claims": [
+     "F-BS1/F-BS3 pins green on T8 (12 tests): persisted enhanced passives inert, forged realm payloads inert+flagged, meridian+body deltas inert, phap tu playable channel control live"
+    ],
+    "limitations": []
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-MUT-BS-1",
+    "kind": "EXECUTED_MUTATION",
+    "state": {
+     "productStateId": "8b9c093fd7255c17fd99302f9078b9328581b6d55e45f18414902d84ff29efb6",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "STALE",
+    "commandOrMethod": "manual mutant sweep over F-BS gates (hiddenRealmGate, markerGate, meridianGate, bodyChannelGate, bodyDeltaGate, validatorPayload, bodyPathAdmitted)",
+    "cwd": "game/",
+    "artifactPath": "evidence/mut-bs.log",
+    "artifactHash": "85138fcce98ce24579fef9b75a636b314690c24c72b9f258e1bd43b8bfd96493",
+    "result": "PASS",
+    "exitCode": 0,
+    "startedAt": "2026-10-01T04:40:00Z",
+    "finishedAt": "2026-10-01T05:25:00Z",
+    "producer": "coord-main",
+    "invariantIds": [],
+    "inputEvidenceIds": [],
+    "inputPaths": [
+     "src/core/player/Player.ts",
+     "src/core/realm/body/BodyProgressionSystem.ts",
+     "src/services/save/saveShapeValidation.ts"
+    ],
+    "claims": [
+     "F-BS-wave mutant corpus all KILLED_EXPECTED (7 mutants)"
+    ],
+    "limitations": []
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-FINAL-VERIFY-T9",
+    "kind": "EXECUTED_INTEGRATION",
+    "state": {
+     "productStateId": "8b9c093fd7255c17fd99302f9078b9328581b6d55e45f18414902d84ff29efb6",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "STALE",
+    "commandOrMethod": "npm run verify @ c32bc29e",
+    "cwd": "game/",
+    "artifactPath": "evidence/final-verify-t9.log",
+    "artifactHash": "d134c2a3a68005b996af64cf7b140db1e58e5c4f11f6dd9c103be46fcc1b3846",
+    "result": "PASS",
+    "exitCode": 0,
+    "startedAt": "2026-10-01T04:40:00Z",
+    "finishedAt": "2026-10-01T05:25:00Z",
+    "producer": "coord-main",
+    "invariantIds": [],
+    "inputEvidenceIds": [],
+    "inputPaths": [
+     "package.json"
+    ],
+    "claims": [
+     "full verify green on T8 tip c32bc29e: 7895 tests passed, 863 files"
+    ],
+    "limitations": []
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-PIN-AS3B",
+    "kind": "EXECUTED_UNIT_STRUCTURAL",
+    "state": {
+     "productStateId": "8b9c093fd7255c17fd99302f9078b9328581b6d55e45f18414902d84ff29efb6",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "CURRENT",
+    "commandOrMethod": "npx vitest run tests/architecture/betaScopeAuthoritySeam.qa.test.ts",
+    "cwd": "game/",
+    "artifactPath": "evidence/pin-as3b.log",
+    "artifactHash": "d9560253b85019bd8c0754483aac73cf80ddc2fa3a499afd9b22d1c351da7584",
+    "result": "PASS",
+    "exitCode": 0,
+    "startedAt": "2026-10-01T05:33:00Z",
+    "finishedAt": "2026-10-01T05:34:00Z",
+    "producer": "coord-main",
+    "invariantIds": [
+     "I-AS-1",
+     "I-DS-1"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [
+     "tests/architecture/betaScopeAuthoritySeam.qa.test.ts",
+     "src/core/technique/TechniqueSystem.ts"
+    ],
+    "claims": [
+     "13 pins green on T9 incl. applyTechniqueRealmTransition dormant-technique seal pin + five_elements_art control"
+    ],
+    "limitations": []
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-MUT-AS3B",
+    "kind": "EXECUTED_MUTATION",
+    "state": {
+     "productStateId": "8b9c093fd7255c17fd99302f9078b9328581b6d55e45f18414902d84ff29efb6",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "CURRENT",
+    "commandOrMethod": "python source-edit mutant + vitest pin suite",
+    "cwd": "game/",
+    "artifactPath": "evidence/mut-as3b.log",
+    "artifactHash": "27e990a6976d517d3bb331b05cf4ea036d3610b03a95a803388a539e87ad54e0",
+    "result": "PASS",
+    "exitCode": 0,
+    "startedAt": "2026-10-01T05:30:00Z",
+    "finishedAt": "2026-10-01T05:31:00Z",
+    "producer": "coord-main",
+    "invariantIds": [
+     "I-AS-1"
+    ],
+    "inputEvidenceIds": [
+     "EV-PIN-AS3B"
+    ],
+    "inputPaths": [
+     "src/core/technique/TechniqueSystem.ts"
+    ],
+    "claims": [
+     "sealFrozenCycle admission-gate mutant KILLED_EXPECTED by pin suite"
+    ],
+    "limitations": []
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "classification": "REAL_DEFECT",
+    "discoveredBy": "devin-1e0b8103c83c42ef86139606aab51f5d",
+    "subsystem": "betaScope",
+    "reachability": "PRODUCTION",
+    "state": {
+     "productStateId": "8b9c093fd7255c17fd99302f9078b9328581b6d55e45f18414902d84ff29efb6",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "invariantIds": [
+     "I-AS-1",
+     "I-DS-1"
+    ],
+    "id": "F-AS-1",
+    "title": "devResetBranch refunds/revokes dormant-tree records bypassing respecNodeTree refusal (stale-state report on 5431ae7e)",
+    "severity": "Medium",
+    "status": "DUPLICATE_LINKED",
+    "duplicateOf": "F-A4-1",
+    "actionable": false,
+    "rootClass": "AUTHORITY",
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/core/game/GameManagerSkillOps.ts",
+      "revision": "1b310881",
+      "symbolOrSection": "-"
+     }
+    ],
+    "expected": "dormant-tree branch reset refused on way_out_of_scope save",
+    "actual": "on 5431ae7e (pre-A4 fix) devResetBranch refunded dormant nodes - A5 tip predated the F-A4-1 fix",
+    "counterexample": "sword save + devResetBranch on stale tip",
+    "repair": "F-A4-1",
+    "evidenceIds": [],
+    "pinEvidenceIds": [
+     "EV-PIN-A4"
+    ],
+    "verificationEvidenceIds": [
+     "EV-PIN-A4"
+    ],
+    "siblingSearch": [],
+    "siblingFindingIds": [],
+    "closeReason": "duplicate of F-A4-1 fixed before reviewed tip",
+    "closedAt": "2026-10-01T05:35:00Z",
+    "closureReviewIds": [
+     "RV-CLOSURE-8"
+    ],
+    "rootCause": "dormant write seam ungated (stale-tip report: pre-F-A4 state)",
+    "rejectionReason": null,
+    "exception": null
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "classification": "REAL_DEFECT",
+    "discoveredBy": "devin-1e0b8103c83c42ef86139606aab51f5d",
+    "subsystem": "betaScope",
+    "reachability": "PRODUCTION",
+    "state": {
+     "productStateId": "8b9c093fd7255c17fd99302f9078b9328581b6d55e45f18414902d84ff29efb6",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "invariantIds": [
+     "I-AS-1",
+     "I-DS-1"
+    ],
+    "id": "F-AS-2",
+    "title": "chi_hien_quan build/upgrade write seams admitted dormant building on carried save (stale-state report on 5431ae7e)",
+    "severity": "Medium",
+    "status": "DUPLICATE_LINKED",
+    "duplicateOf": "F-A4-3",
+    "actionable": false,
+    "rootClass": "AUTHORITY",
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/core/game/GameManagerBuildingOps.ts",
+      "revision": "1b310881",
+      "symbolOrSection": "-"
+     }
+    ],
+    "expected": "dormant building write seams refuse on way_out_of_scope save",
+    "actual": "on 5431ae7e chi_hien_quan build/upgrade wrote records - A5 tip predated the F-A4-3 fix",
+    "counterexample": "sword save + chi_hien_quan build/upgrade on stale tip",
+    "repair": "F-A4-3",
+    "evidenceIds": [],
+    "pinEvidenceIds": [
+     "EV-PIN-A4"
+    ],
+    "verificationEvidenceIds": [
+     "EV-PIN-A4"
+    ],
+    "siblingSearch": [],
+    "siblingFindingIds": [],
+    "closeReason": "duplicate of F-A4-3 fixed before reviewed tip",
+    "closedAt": "2026-10-01T05:35:00Z",
+    "closureReviewIds": [
+     "RV-CLOSURE-8"
+    ],
+    "rootCause": "dormant write seam ungated (stale-tip report: pre-F-A4 state)",
+    "rejectionReason": null,
+    "exception": null
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "classification": "REAL_DEFECT",
+    "discoveredBy": "devin-1e0b8103c83c42ef86139606aab51f5d",
+    "subsystem": "betaScope",
+    "reachability": "PRODUCTION",
+    "state": {
+     "productStateId": "8b9c093fd7255c17fd99302f9078b9328581b6d55e45f18414902d84ff29efb6",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "invariantIds": [
+     "I-AS-1",
+     "I-DS-1"
+    ],
+    "id": "F-AS-3",
+    "title": "gainMastery accrues on dormant-way active technique (stale-state report on 5431ae7e; mastery half of A5 technique-write finding)",
+    "severity": "Medium",
+    "status": "DUPLICATE_LINKED",
+    "duplicateOf": "F-A4-4",
+    "actionable": false,
+    "rootClass": "AUTHORITY",
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/core/technique/TechniqueSystem.ts",
+      "revision": "1b310881",
+      "symbolOrSection": "-"
+     }
+    ],
+    "expected": "dormant technique accrual inert",
+    "actual": "on 5431ae7e gainMastery wrote mastery/rank into dormant record - A5 tip predated F-A4-4 fix",
+    "counterexample": "sword_control_art active on sword save + gainMastery",
+    "repair": "F-A4-4",
+    "evidenceIds": [],
+    "pinEvidenceIds": [
+     "EV-PIN-A4"
+    ],
+    "verificationEvidenceIds": [
+     "EV-PIN-A4"
+    ],
+    "siblingSearch": [],
+    "siblingFindingIds": [
+     "F-A5-1"
+    ],
+    "closeReason": "duplicate of F-A4-4 fixed before reviewed tip",
+    "closedAt": "2026-10-01T05:35:00Z",
+    "closureReviewIds": [
+     "RV-CLOSURE-8"
+    ],
+    "rootCause": "dormant write seam ungated (stale-tip report: pre-F-A4 state)",
+    "rejectionReason": null,
+    "exception": null
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "classification": "REAL_DEFECT",
+    "discoveredBy": "devin-1e0b8103c83c42ef86139606aab51f5d",
+    "subsystem": "betaScope",
+    "reachability": "PRODUCTION",
+    "state": {
+     "productStateId": "8b9c093fd7255c17fd99302f9078b9328581b6d55e45f18414902d84ff29efb6",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "invariantIds": [
+     "I-AS-1",
+     "I-DS-1"
+    ],
+    "id": "F-A5-1",
+    "title": "sealFrozenCycle seals a grade-history cycle onto a dormant-way active technique on a live realm advance - realm-exit freeze write seam missed betaTechniqueAdmitted",
+    "severity": "Medium",
+    "status": "CLOSED",
+    "actionable": true,
+    "rootClass": "AUTHORITY",
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/core/technique/TechniqueSystem.ts",
+      "revision": "1b310881",
+      "symbolOrSection": "sealFrozenCycle"
+     },
+     {
+      "basis": "SOURCE",
+      "path": "src/core/game/GameManagerRealmAdvanceOps.ts",
+      "revision": "1b310881",
+      "symbolOrSection": "applyTechniqueRealmTransition"
+     }
+    ],
+    "expected": "dormant technique record stays data - live realm advance writes nothing onto it",
+    "actual": "applyTechniqueRealmTransition -> sealFrozenCycle wrote gradeHistory[grade]={finalRank,completionState} on the dormant technique",
+    "counterexample": "sword save (way_out_of_scope) at qi_refining with sword_control_art active + advance to foundation_establishment -> gradeHistory mutated",
+    "repair": "sealFrozenCycle gates on betaTechniqueAdmitted (sibling of gainMastery/tryAdvanceTechniqueGrade gates)",
+    "evidenceIds": [
+     "EV-PIN-AS3B",
+     "EV-MUT-AS3B"
+    ],
+    "pinEvidenceIds": [
+     "EV-PIN-AS3B"
+    ],
+    "verificationEvidenceIds": [
+     "EV-PIN-AS3B",
+     "EV-MUT-AS3B"
+    ],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src/core/technique",
+       "src/core/game/GameManagerRealmAdvanceOps.ts"
+      ],
+      "termsAndMethod": "all TechniqueSystem + realmAdvanceOps writes: gainMastery, sealFrozenCycle, advanceTechniqueGrade, tryAdvanceTechniqueGrade, switchActive - each checked for betaTechniqueAdmitted or beta-playable precondition",
+      "hitDispositions": [
+       "all other technique write paths gated (gainMastery F-A4-4, tryAdvanceTechniqueGrade pre-existing gate, advanceTechniqueGrade unreachable without gated try*)"
+      ],
+      "coverageLimits": [
+       "manual enumeration of technique system write ops + caller walk of applyTechniqueRealmTransition (realm advance + TribulationOutcomeService)"
+      ],
+      "evidenceIds": [
+       "EV-PIN-AS3B"
+      ]
+     }
+    ],
+    "siblingFindingIds": [
+     "F-A4-4",
+     "F-AS-3"
+    ],
+    "closeReason": "betaTechniqueAdmitted gate inside sealFrozenCycle; pin + control green; mutant KILLED_EXPECTED",
+    "closedAt": "2026-10-01T05:35:00Z",
+    "closureReviewIds": [
+     "RV-CLOSURE-8"
+    ],
+    "rootCause": "sealFrozenCycle realm-exit freeze hook lacked the betaTechniqueAdmitted gate that sibling technique write ops enforce",
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null
+   }
+  },
+  {
+   "kind": "review",
+   "body": {
+    "id": "RV-ADV-A5",
+    "contextId": "ctx-child-a5",
+    "reviewerId": "devin-1e0b8103c83c42ef86139606aab51f5d",
+    "model": "SWE-2",
+    "phase": "AUTHORITY",
+    "round": 13,
+    "role": "independent clean-round authority-seam review: reported F-AS-1/2/3 on stale tip 5431ae7e - F-AS-3b sealFrozenCycle half confirmed novel on T8/T9, rest dups of F-A4 fixes",
+    "state": {
+     "productStateId": "8b9c093fd7255c17fd99302f9078b9328581b6d55e45f18414902d84ff29efb6",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "STALE",
+    "startedAt": "2026-10-01T05:00:00Z",
+    "sealedAt": "2026-10-01T05:28:00Z",
+    "priorFindingsVisible": false,
+    "reviewedAfterPreviousFixes": true,
+    "inputBundleHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "evidenceIds": [],
+    "coverageIds": [],
+    "findingIds": [
+     "F-AS-1",
+     "F-AS-2",
+     "F-AS-3",
+     "F-A5-1"
+    ],
+    "novelAttackIds": [],
+    "accessLimitations": [
+     "claimed tip 46399f1a not yet on remote - reviewed fetched tip 5431ae7e; findings triaged against T8"
+    ],
+    "previousPhaseReviewId": "RV-ADV-A4"
+   }
+  },
+  {
+   "kind": "review",
+   "body": {
+    "id": "RV-CLOSURE-8",
+    "contextId": "ctx-rv-closure-8",
+    "reviewerId": "coord-main",
+    "model": "coordinator",
+    "phase": "CORRECTNESS",
+    "round": 13,
+    "role": "closure review of F-AS-3b fix wave (1b310881): gate placement mirrors gainMastery/tryAdvanceTechniqueGrade precedent; positive controls prove playable path unaffected",
+    "state": {
+     "productStateId": "8b9c093fd7255c17fd99302f9078b9328581b6d55e45f18414902d84ff29efb6",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "SEALED",
+    "startedAt": "2026-10-01T05:35:00Z",
+    "sealedAt": "2026-10-01T05:40:00Z",
+    "priorFindingsVisible": true,
+    "reviewedAfterPreviousFixes": true,
+    "inputBundleHash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "evidenceIds": [
+     "EV-PIN-AS3B",
+     "EV-MUT-AS3B"
+    ],
+    "coverageIds": [],
+    "findingIds": [
+     "F-A5-1",
+     "F-AS-1",
+     "F-AS-2",
+     "F-AS-3"
+    ],
+    "novelAttackIds": [],
+    "accessLimitations": [],
+    "previousPhaseReviewId": "RV-CLOSURE-7"
+   }
+  },
+  {
+   "kind": "cycle",
+   "body": {
+    "id": "CY-SEQ-8",
+    "state": {
+     "productStateId": "8b9c093fd7255c17fd99302f9078b9328581b6d55e45f18414902d84ff29efb6",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "STALE",
+    "reviewIds": [
+     "RV-ADV-A5",
+     "RV-CLOSURE-8"
+    ],
+    "coverageIds": [],
+    "evidenceIds": [
+     "EV-PIN-AS3B",
+     "EV-MUT-AS3B"
+    ],
+    "noveltyEvidenceIds": [],
+    "startedAt": "2026-10-01T05:30:00Z",
+    "finishedAt": "2026-10-01T05:40:00Z"
+   }
+  },
+  {
+   "kind": "lesson",
+   "body": {
+    "id": "L-TRANSITION-SEAL-LOCK",
+    "version": 1,
+    "supersedes": null,
+    "triggerType": "DEFECT",
+    "findingIds": [
+     "F-A5-1"
+    ],
+    "incidentEvidenceIds": [
+     "EV-PIN-AS3B",
+     "EV-MUT-AS3B"
+    ],
+    "originatingRun": "qa-fixpoint-master",
+    "rootClass": "AUTHORITY",
+    "missedInvariantIds": [
+     "I-AS-1"
+    ],
+    "escapeReason": "realm-exit freeze hook sealFrozenCycle escaped the technique write-op census - sibling ops (gainMastery, tryAdvanceTechniqueGrade) gated first, transition hooks audited as a separate class and missed until stale-tip blind review A5",
+    "applicability": [
+     "technique write ops, transition/freeze hooks, any op mutating dormant records on a live path"
+    ],
+    "exclusions": [],
+    "proposedProtection": [
+     "write-op census includes transition/hook ops (advance, seal, tribulation outcomes), not only explicit user actions"
+    ],
+    "promotionEvidenceIds": [],
+    "qualifiedBy": [],
+    "capabilityDelta": "RECORDED - awaiting independent qualification",
+    "status": "CAPTURED",
+    "policyVersion": null,
+    "effectiveFromRun": null,
+    "recurrenceFindingIds": [],
+    "preventionEvidenceIds": [],
+    "guidance": null
+   }
+  }
+ ]
+}

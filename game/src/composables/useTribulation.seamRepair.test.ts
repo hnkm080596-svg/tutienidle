@@ -9,6 +9,7 @@ import { TECHNIQUES } from '../data/technique/Techniques'
 import { KIEM_TU_NODES } from '../data/progression/KiemTuNodes'
 import { SKILL_CORE_NODES } from '../data/progression/SkillCoreNodes'
 import { checkTribulationOutcomeAction } from './useTribulation'
+import { tribulationCommitWitnessDigest } from '../core/tribulation/TribulationCommitWitness'
 
 // Beta seam repair (v82): F-W-3 pour, F-W-8 fail-closed admission,
 // F-W-4 settlementError stale-entitlement clear.
@@ -88,6 +89,26 @@ describe('F-W-4 — settlementError drain clears the stale pending entitlement',
         targetRealmId: 'foundation_establishment',
         grade: 'earth',
         breakthroughType: 'normal',
+        // F-TRB-FORGE - required witness on the committed record.
+        witness: {
+          departingRealmId: 'qi_refining',
+          chapterIndex: 0,
+          chaptersTotal: 3,
+          lightningStrikesTaken: 0,
+          attemptSeed: 1,
+          digest: tribulationCommitWitnessDigest({
+            attemptId: 1,
+            outcome: 'defeat',
+            targetRealmId: 'foundation_establishment',
+            grade: 'earth',
+            breakthroughType: 'normal',
+            departingRealmId: 'qi_refining',
+            chapterIndex: 0,
+            chaptersTotal: 3,
+            lightningStrikesTaken: 0,
+            attemptSeed: 1,
+          }),
+        },
         receipt: null,
         settlementError: true,
       },

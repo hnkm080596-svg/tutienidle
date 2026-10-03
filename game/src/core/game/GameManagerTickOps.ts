@@ -8,7 +8,7 @@ import type { PillRegistry } from '../pill/PillRegistry'
 import type { PlayerData } from '../player/Player'
 import type { DecomposeSystem, DecomposeOutputEntry } from '../production/DecomposeSystem'
 import type { ProductionSystem } from '../production/ProductionSystem'
-import { resolveProductionWorkerCapacity } from '../production/WorkerCapacity'
+import { betaEffectiveWorkerCapacity, resolveProductionWorkerCapacity } from '../production/WorkerCapacity'
 import type { QuestManager } from '../quest/QuestManager'
 import type { QuestRegistry } from '../quest/QuestRegistry'
 import type { QuestSystem } from '../quest/QuestSystem'
@@ -16,6 +16,7 @@ import type { PassiveSystem } from '../skill/PassiveSystem'
 import { getAlchemyDoublePill } from '../talent/TalentEffects'
 import type { TribulationDirector } from '../tribulation/TribulationDirector'
 import { createBagOverflowEvent } from '../notification/bagOverflow'
+import { isBetaFeature } from '../betaScope'
 import type { NotificationQueue } from './NotificationQueue'
 import type { GameManagerTurnBattleOps } from './GameManagerTurnBattleOps'
 
@@ -129,7 +130,11 @@ export class GameManagerTickOps {
 
       // Quest daily reset (Quest System plan) - wall-clock day-bucket,
       // check moi tick nen van reset ke ca khi panel Nhiem Vu dang dong.
+      // BETA SCOPE LOCK v2 (Phase-6): the daily cadence is scope-hidden
+      // - the reset does not run, no "daily refreshed" toast fires,
+      // and the daily board is never rebuilt for beta players.
       if (
+        isBetaFeature('dailyQuest') &&
         this.deps.questSystem.checkAndResetDaily(
           this.deps.questRegistry,
           this.deps.questManager,
@@ -150,9 +155,12 @@ export class GameManagerTickOps {
       // restore path uses (GameManagerSaveRestore). Capacity is
       // re-supplied every tick so CHQ build/upgrade takes effect without
       // a restart, and stale restored workers clamp down.
-      this.deps.decomposeSystem.updateCapacity(activePlayer.autoWorkerCapacity ?? 0)
-      const productionCapacity = resolveProductionWorkerCapacity(
+      const effectiveWorkerCapacity = betaEffectiveWorkerCapacity(
         activePlayer.autoWorkerCapacity ?? 0,
+      )
+      this.deps.decomposeSystem.updateCapacity(effectiveWorkerCapacity)
+      const productionCapacity = resolveProductionWorkerCapacity(
+        effectiveWorkerCapacity,
         this.deps.decomposeSystem.getSettings().workers,
       )
 

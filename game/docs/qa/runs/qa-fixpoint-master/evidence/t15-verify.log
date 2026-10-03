@@ -1,0 +1,7 @@
+npm run verify on devin/qa-fixpoint @ 4c691c7e (T15 tip)
+> vue-tsc --build : PASS
+> vite build : PASS (2.19s)
+> npx vitest run : 868 files passed / 1 skipped; 8008 tests passed, 5 expected fail, 5 skipped
+Duration 102.68s. Exit 0.
+Includes: tc6ForgedSaveFalsification.qa.test.ts adopted (25 probes), F-TC6-7 residual pin,
+Player.ts rebuild-don't-trust (for-of form, authority-scanner clean), F-TC6-7 clamp reverted.

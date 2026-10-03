@@ -3,8 +3,8 @@ import type { ProgressionNode } from '../../core/progression/ProgressionNode'
 // The Tu beta (the-tu-body-pathway-design sec.56) - the visible body
 // tree: two excludesNode-mutex roots, each a vertical line
 //   root -> Basic branch (2 nodes) -> - Truc Co - -> Special branch (2 nodes)
-// rendered by TheTuTreePanel (two root cards, realm separators, the
-// abandoned root shows 'Da bo con duong nay').
+// (the dedicated TheTuTreePanel renderer was retired with the beta
+// scope lock - the data shape stays authored for the dormant path).
 //
 // Path gate: every node carries requiredCultivationPath 'body' +
 // requiredWay 'body_pathway' (stamped once at the export below) -

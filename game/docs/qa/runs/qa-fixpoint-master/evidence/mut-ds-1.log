@@ -1,0 +1,37 @@
+=== EV-MUT-DS-1 cap-ungated T7 2026-10-01T04:15:21.518959Z ===
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+ ❯ tests/architecture/betaDormantSaveLeak.qa.test.ts (40 tests | 1 failed) 46ms
+     × completedHiddenBodyRealmIds does not raise the main-stat cap under beta scope 7ms
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 39 passed (40)
+   Start at  04:15:22
+   Duration  1.88s (transform 1.39s, setup 247ms, import 1.46s, tests 46ms, environment 0ms)
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/architecture/betaDormantSaveLeak.qa.test.ts > dormancy: hidden progression on a loaded save must not affect visible play > completedHiddenBodyRealmIds does not raise the main-stat cap under beta scope
+AssertionError: expected 36 to be 30 // Object.is equality
+
+- Expected
++ Received
+
+- 30
++ 36
+
+ ❯ tests/architecture/betaDormantSaveLeak.qa.test.ts:108:40
+    106|     // Under beta scope the hidden-content domain is dormant: a carried
+    107|     // record must not grant its +10pp/realm cap bonus into visible pl…
+    108|     expect(getEffectiveMainStatCap(p)).toBe(getMainStatCap('qi_refinin…
+       |                                        ^
+    109|   })
+    110|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+DETECTOR_EXIT=1  (nonzero = mutant killed the suite = KILLED_EXPECTED)
+RESULT=KILLED_EXPECTED

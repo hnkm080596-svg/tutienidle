@@ -33,7 +33,7 @@ const REMOTE_CHARACTER = {
   name: 'Vo Danh',
   selectedTalentIds: ['talent-a'],
   baseAttributes: { strength: 1, dexterity: 1, intelligence: 1, attunement: 1, vitality: 1 },
-  mortalBasicSkillId: 'tram',
+  mortalBasicSkillId: 'linh_bao',
   realmId: 'mortal',
   realmLevel: 0,
   createdAt: '2026-09-30T00:00:00Z',
@@ -43,17 +43,17 @@ function validGameSave(): GameSave {
   const player = createDefaultPlayer()
   // v82 mortal boundary contract - the fixture doubles as a legal
   // creation output: pick + learned entry + core grant.
-  player.mortalBasicSkillId = 'tram'
-  player.nodeLevels = { ...player.nodeLevels, core_tram: 1 }
-  player.purchasedNodeIds = [...player.purchasedNodeIds, 'core_tram']
+  player.mortalBasicSkillId = 'linh_bao'
+  player.nodeLevels = { ...player.nodeLevels, core_linh_bao: 1 }
+  player.purchasedNodeIds = [...player.purchasedNodeIds, 'core_linh_bao']
   return {
     version: CURRENT_SAVE_VERSION,
     player,
     techniques: [],
     skills: [
       {
-        id: 'tram',
-        name: 'Trảm',
+        id: 'linh_bao',
+        name: 'Linh Bão',
         description: 'creation pick',
         type: 'active',
         level: 1,

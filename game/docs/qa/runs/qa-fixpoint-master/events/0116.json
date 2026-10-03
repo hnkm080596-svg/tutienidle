@@ -1,0 +1,7 @@
+{
+  "action": "dedupe T21 final evidence (keep latest-hash entries)",
+  "removed": [
+    "EV-VERIFY-T21#1",
+    "EV-PINS-T21#1"
+  ]
+}

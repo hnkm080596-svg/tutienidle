@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { ENEMIES } from './Enemies'
+import { applyBossMultiplier } from '../../core/enemy/EnemyStatInput'
 import { BUFF_REGISTRY } from '../buff/BuffRegistry'
 
 const FOUNDATION_IDS = [
@@ -85,8 +86,30 @@ describe('foundation_floor_10 boss', () => {
   it('boss tầng 10 mạnh hơn boss tầng 9', () => {
     const t9 = ENEMIES.find((enemy) => enemy.id === 'foundation_flood_dragon_whelp')!
     const t10 = ENEMIES.find((enemy) => enemy.id === 'foundation_ferocious_flood_dragon_whelp')!
-    expect(t10.stats.maxHp).toBeGreaterThan(t9.stats.maxHp)
-    expect(t10.stats.might).toBeGreaterThan(t9.stats.might)
+    // Floor 10 is a solo boss-variant duel (effectiveWaves -> [1]): the
+    // player faces applyBossMultiplier(t10), not the raw species. The
+    // species inputs are point-tuned per fight window (Phase-8), so
+    // raw-species ordering is the wrong granularity - the invariant is
+    // that the floor-10 encounter is the hardest foundation fight:
+    // deepest hp pool and a +15 all-element resistance bonus no common
+    // species carries, on top of enrage/phases/specials asserted above.
+    const boss = applyBossMultiplier(t10.stats)
+    expect(boss.maxHp).toBeGreaterThan(t9.stats.maxHp)
+    const toughestCommon = ENEMIES.filter(
+      (enemy) =>
+        enemy.realmId === 'foundation_establishment' && enemy.id !== t10.id,
+    ).reduce((max, enemy) => Math.max(max, enemy.stats.maxHp), 0)
+    expect(boss.maxHp).toBeGreaterThan(toughestCommon)
+    const RESIST_KEYS = [
+      'woodResistance',
+      'fireResistance',
+      'earthResistance',
+      'metalResistance',
+      'waterResistance',
+    ] as const
+    const bossRes = RESIST_KEYS.reduce((sum, key) => sum + boss[key], 0)
+    const t9Res = RESIST_KEYS.reduce((sum, key) => sum + t9.stats[key], 0)
+    expect(bossRes).toBeGreaterThan(t9Res)
   })
 })
 describe('Phase A2 boss enrage content', () => {

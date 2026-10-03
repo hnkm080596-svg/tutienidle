@@ -1,0 +1,68 @@
+// Scene 08 (Luyen The) fidelity contract. The adapter maps the canonical
+// useBodySceneModel() chapter units into this shape - nothing here owns
+// progression predicates, costs, or invest semantics.
+export interface BodyPaperCost {
+  id: string
+  name: string
+  icon?: string
+  /** Resolved "have / need" line (domain-formatted). */
+  amountLabel: string
+  met: boolean
+}
+
+export interface BodyPaperUnit {
+  id: string
+  label: string
+  title: string
+  description: string
+  state: 'done' | 'current' | 'locked'
+  /** Gain rows (stat label -> value). */
+  rows: readonly { label: string; value: string }[]
+  /** Material/pill requirements of THIS unit. */
+  costs: readonly BodyPaperCost[]
+  /** Gate lines (realm/page/sequential) rendered cinnabar. */
+  gates: readonly string[]
+  /** Unit-level progress line (e.g. refinement tier essence fill). */
+  progressLabel?: string
+  /** Resolved CTA text - empty hides the invest button. */
+  actionLabel: string
+  actionDisabled: boolean
+}
+
+export interface BodyPaperChapter {
+  id: string
+  label: string
+  hint: string
+  unlocked: boolean
+}
+
+/** Lore milestone chip (Chu Thien Tieu/Dai markers) - display only. */
+export interface BodyPaperMilestone {
+  id: string
+  label: string
+  done: boolean
+}
+
+/** Discovery-gated hidden row (AUTH-2 hidden tiers/Quan The). */
+export interface BodyPaperExtra {
+  title: string
+  stateLabel: string
+  description: string
+  progressLabel?: string
+  progress?: number
+  progressMax?: number
+  done: boolean
+}
+
+export interface BodyPaperModel {
+  chapter: string
+  chapterLabel: string
+  chapters: readonly BodyPaperChapter[]
+  units: readonly BodyPaperUnit[]
+  milestones: readonly BodyPaperMilestone[]
+  /** Identity line under the title (physique grade / chapter subtitle). */
+  identity: string
+  extra: BodyPaperExtra | null
+  progressLabel: string
+  progress: number
+}

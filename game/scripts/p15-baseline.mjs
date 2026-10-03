@@ -42,8 +42,28 @@ const normalize = (s) => s.replace(/\s+/g, ' ').trim()
 
 function scanTsChunk(text, violations) {
   const scanner = createScanner(ScriptTarget.Latest, false, LanguageVariant.Standard, text)
+  // The raw scanner is context-free: a '}' closing a '${' template hole is
+  // emitted as CloseBraceToken, so the template tail re-tokenizes as a brand
+  // new template literal and swallows real code (and its comments) until the
+  // next backtick. Track which unclosed braces came from '${' so we can
+  // re-scan those '}' as TemplateMiddle/TemplateTail.
+  const braceStack = [] // true = opened by '${', false = plain '{'
   let kind = scanner.scan()
   while (kind !== SyntaxKind.EndOfFileToken) {
+    if (kind === SyntaxKind.OpenBraceToken) {
+      braceStack.push(false)
+    } else if (kind === SyntaxKind.TemplateHead || kind === SyntaxKind.TemplateMiddle) {
+      braceStack.push(true) // token ends with '${'
+    } else if (kind === SyntaxKind.CloseBraceToken) {
+      if (braceStack[braceStack.length - 1] === true) {
+        braceStack.pop()
+        kind = scanner.reScanTemplateToken(false)
+        if (kind === SyntaxKind.TemplateMiddle) braceStack.push(true)
+        if (kind === SyntaxKind.EndOfFileToken) break
+      } else {
+        braceStack.pop()
+      }
+    }
     if (
       (kind === SyntaxKind.SingleLineCommentTrivia || kind === SyntaxKind.MultiLineCommentTrivia) &&
       NON_ASCII.test(scanner.getTokenText())

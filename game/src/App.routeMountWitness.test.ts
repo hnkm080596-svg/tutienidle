@@ -45,6 +45,8 @@ interface Branch {
   condition?: string
   /** The element's `route` attribute/prop value when statically bound, e.g. 'error'. */
   routeProp?: string
+  /** Raw `:route` binding expression, e.g. "entryStage === 'auth' ? 'auth' : 'character'". */
+  routeExp?: string
 }
 
 function readTemplateAst(): Node[] {
@@ -85,6 +87,21 @@ function staticRouteProp(el: ElementNode): string | undefined {
   return undefined
 }
 
+function rawRouteExp(el: ElementNode): string | undefined {
+  for (const prop of el.props) {
+    if (
+      prop.type === 7 &&
+      prop.name === 'bind' &&
+      prop.arg?.type === 4 &&
+      prop.arg.content === 'route' &&
+      prop.exp?.type === 4
+    ) {
+      return prop.exp.content
+    }
+  }
+  return undefined
+}
+
 function elementChildren(nodes: Node[]): ElementNode[] {
   return nodes.filter((n): n is ElementNode => n.type === 1)
 }
@@ -105,13 +122,13 @@ function collectIfChains(nodes: Node[]): Branch[][] {
     const hasElse = el.props.some((p) => p.type === 7 && p.name === 'else')
 
     if (ifCond !== undefined) {
-      current = [{ tag: el.tag, kind: 'if', condition: ifCond, routeProp: staticRouteProp(el) }]
+      current = [{ tag: el.tag, kind: 'if', condition: ifCond, routeProp: staticRouteProp(el), routeExp: rawRouteExp(el) }]
       chains.push(current)
       continue
     }
 
     if (elseIfCond !== undefined && current) {
-      current.push({ tag: el.tag, kind: 'else-if', condition: elseIfCond, routeProp: staticRouteProp(el) })
+      current.push({ tag: el.tag, kind: 'else-if', condition: elseIfCond, routeProp: staticRouteProp(el), routeExp: rawRouteExp(el) })
       continue
     }
 
@@ -208,18 +225,35 @@ describe('App.vue route-witness invariant — every renderRoute has exactly one 
     for (const branch of entryStageChain) {
       if (branch.tag !== 'RouteMount' || !branch.condition) continue
 
-      const stageMatch = /entryStage\s*===\s*'([a-z]+)'/.exec(branch.condition)
-      const stage = stageMatch?.[1]
-      if (!stage) continue
+      const declaredStages = [...branch.condition.matchAll(/entryStage\s*===\s*'([a-z]+)'/g)]
+        .map((m) => m[1]!)
+        .filter((stage) => stageToRoute[stage])
+      const expectedRoutes = [...new Set(declaredStages.map((stage) => stageToRoute[stage]!))]
+      if (!expectedRoutes.length) continue
 
-      const expectedRoute = stageToRoute[stage]
-      if (!expectedRoute) continue
+      if (expectedRoutes.length === 1) {
+        expect(
+          branch.routeProp,
+          `<RouteMount> branch guarded by "${branch.condition}" does not declare route="${expectedRoutes[0]}". ` +
+            'A mismatched witness reports the wrong route readiness.',
+        ).toBe(expectedRoutes[0])
+        continue
+      }
 
+      // A multi-stage branch (the shared OnboardingStage covering auth +
+      // character under one backdrop) witnesses the ACTIVE route through a
+      // bound :route expression - RouteMount re-marks on prop change. The
+      // quoted route literals in that expression must resolve to exactly
+      // the declared stages' routes, no more and no less.
+      const routeLiterals = new Set(
+        [...(branch.routeExp ?? branch.routeProp ?? '').matchAll(/'([a-z]+)'/g)].map((m) => m[1]),
+      )
       expect(
-        branch.routeProp,
-        `<RouteMount> branch guarded by "${branch.condition}" does not declare route="${expectedRoute}". ` +
-          'A mismatched witness reports the wrong route readiness.',
-      ).toBe(expectedRoute)
+        routeLiterals,
+        `<RouteMount> branch guarded by "${branch.condition}" must bind :route so it resolves ` +
+          `to exactly { ${expectedRoutes.join(', ')} } - missing a route means an unreadiness ` +
+          'hang; an extra one reports readiness for a route this branch never renders.',
+      ).toEqual(new Set(expectedRoutes))
     }
   })
 

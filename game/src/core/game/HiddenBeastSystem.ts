@@ -6,6 +6,7 @@ import {
   type HiddenBeastChannel,
 } from '../../data/drop/HiddenMaterialChannels'
 import { isRealmAvailable } from '../realm/ReleasePolicy'
+import { isBetaFeature, isScopeHidden } from '../betaScope'
 
 // Quai an (spec m-f-body-hidden sec.3) - generalized channel-driven
 // spawn substitution: each authored hidden_beast channel opens its own
@@ -46,6 +47,13 @@ export class HiddenBeastSystem {
     stageRealmId: string | undefined,
     rng: () => number = Math.random,
   ): Enemy | undefined {
+    // BETA SCOPE LOCK v2 (Phase-6): hidden beasts are scope-hidden -
+    // no substitution regardless of persisted counters (they stay
+    // dormant, not deleted).
+    if (!isBetaFeature('hiddenContent')) {
+      return undefined
+    }
+
     for (const channel of this.channels()) {
       if (channel.bandRealmId !== stageRealmId) {
         continue
@@ -85,6 +93,13 @@ export class HiddenBeastSystem {
    * eventBus-free - return value, not a dep.
    */
   onEnemyDefeated(player: PlayerData, enemyId: string, enemyRealmId: string): string[] {
+    // BETA SCOPE LOCK v2 sec.14 - no counting means no threshold cross,
+    // which means no `hidden_window_opened` cue and no record mutations:
+    // the cue can never leak into the beta experience.
+    if (isScopeHidden('hiddenContent')) {
+      return []
+    }
+
     const opened: string[] = []
 
     for (const channel of this.channels()) {

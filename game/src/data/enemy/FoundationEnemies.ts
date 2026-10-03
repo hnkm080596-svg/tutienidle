@@ -111,6 +111,9 @@ function foundationBeast(params: {
   element: 'wood' | 'fire' | 'earth' | 'metal' | 'water'
   power: number
   resistance: number
+  // When true, `resistance` applies to all five elements instead of only
+  // the beast's own element (stage-boss elemental fairness).
+  uniformResistance?: boolean
   tribulationPhases?: TribulationPhase[]
   enrage?: BossEnrage
   // Phase A2 (2026-09-07) — turn-based enrage trigger, threaded through
@@ -120,6 +123,11 @@ function foundationBeast(params: {
   // Per-enemy named drops (Task 6: floor-10 boss Chieu Hien Lenh) -
   // threaded to defineEnemy() unchanged, resolved by resolveDrops.
   signatureDrops?: SignatureDrop[]
+  // BETA SCOPE LOCK v2 Phase-5 - "ho quai" label forwarded to
+  // defineEnemy (the family drop-table layer reads it; the foundation
+  // tier previously never passed it, so only beasts whose family table
+  // needs them declare one).
+  family?: string
 }) {
   const hp = Math.round(450 * 1.15 ** (params.t - 1))
   const atk = Math.round(42 * 1.15 ** (params.t - 1))
@@ -148,6 +156,7 @@ function foundationBeast(params: {
     bossTrigger: params.bossTrigger,
     specialAttacks: params.specialAttacks,
     signatureDrops: params.signatureDrops,
+    family: params.family,
     statsInput: {
       maxHp: Math.round(hp * mult.hp),
       might: Math.round(atk * mult.atk),
@@ -159,7 +168,15 @@ function foundationBeast(params: {
       criticalDamage: 2,
       armor: Math.round(armor * mult.armor),
       evasionRate: 20,
-      resistances: { [params.element]: params.resistance },
+      resistances: params.uniformResistance
+        ? {
+            wood: params.resistance,
+            fire: params.resistance,
+            earth: params.resistance,
+            metal: params.resistance,
+            water: params.resistance,
+          }
+        : { [params.element]: params.resistance },
       elemental: { element: params.element, power: params.power },
     },
     rewards: {
@@ -238,6 +255,9 @@ export const FOUNDATION_ENEMIES: Enemy[] = [
     element: 'fire',
     power: 11,
     resistance: 14,
+    // BETA SCOPE LOCK v2 Phase-5 - roster species carrying the
+    // re-sourced base_gioi family drop (was metal_beetle's pool).
+    family: 'sand_scorpion',
   }),
   foundationBeast({
     id: 'foundation_ferocious_lava_hound',
@@ -260,6 +280,9 @@ export const FOUNDATION_ENEMIES: Enemy[] = [
     element: 'fire',
     power: 11,
     resistance: 14,
+    // Same species family as the roster normal (data truth; the ferocious
+    // variant is off-roster in beta so the pool never fires here).
+    family: 'sand_scorpion',
   }),
 
   // --- Tầng 5-6 (Thổ, thạch cốc hậu sơn) ---
@@ -388,16 +411,13 @@ export const FOUNDATION_ENEMIES: Enemy[] = [
     power: 14,
     resistance: 14,
   }),
-  foundationBeast({
+  defineEnemy({
     id: 'foundation_ferocious_flood_dragon_whelp',
     name: 'Hung Giao Sủng',
-    t: 10,
+    level: 10,
+    realmId: 'foundation_establishment',
     lane: 'ground',
     archetype: 'caster',
-    bossEligible: true,
-    element: 'water',
-    power: 14,
-    resistance: 20,
     tribulationPhases: FLOOD_DRAGON_PHASES,
     enrage: FLOOD_DRAGON_ENRAGE,
     // Phase A2 (2026-09-07) — turn-based twin of the legacy `enrage`
@@ -412,6 +432,29 @@ export const FOUNDATION_ENEMIES: Enemy[] = [
     // TurnBattleSystem's specialAttackCounter), so this existing example
     // is live in turn-based combat as of A3.
     specialAttacks: [{ everyNth: 4, damageMultiplier: 2.5, presetId: 'water_surge' }],
+    statsInput: {
+      // Beta P8 (2026-09-30) - literal stats replace the shared
+      // foundationBeast formula for the act-3 boss only. The formula
+      // (t10 boss-eligible: 2532 hp / 207 might) put the floor-10 boss
+      // variant at ~17.7k/414 - far past every beta element kit's legal
+      // output (~300-350/cast, ~600hp at foundation:10 geared). Retuned
+      // so the variant lands ~3850/70: a ~13-cast duel the strong
+      // element build wins narrowly, ~1.2x the act-2 boss variant.
+      maxHp: 550,
+      might: 35,
+      attackSpeed: 1.2,
+      criticalRate: 0.08,
+      criticalDamage: 2,
+      armor: 34,
+      evasionRate: 20,
+      // Uniform across the five elements (stage-boss fairness).
+      resistances: { wood: 20, fire: 20, earth: 20, metal: 20, water: 20 },
+      elemental: { element: 'water', power: 14 },
+    },
+    rewards: {
+      techniqueMastery: 100,
+      spiritStone: 28,
+    },
     signatureDrops: [
       // Companion gacha (Task 6) - chapter-3 floor-10 boss drops 3x
       // Chieu Hien Lenh; boss-only via requiresModifier.

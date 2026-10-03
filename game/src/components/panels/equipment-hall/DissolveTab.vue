@@ -11,7 +11,7 @@
 // grade (real ProfessionGrade axis, PROFESSION_GRADE_ORDER) and
 // Chất (ITEM_QUALITY_ORDER, the merged rarity/quality dropdown) — plus
 // a visual mismatch hint via canUseItemGrade() (Task 16's equip gate).
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
@@ -198,6 +198,23 @@ const {
 
 const dissolveSelected = ref<Set<string>>(new Set())
 
+// Reconcile the Set whenever the candidate list changes (filter edits,
+// failed submits, items removed by a successful dissolve): a selection
+// id that no longer maps to a candidate is a ghost - it would keep the
+// '(n)' count and preview wrong while the slot is gone.
+watch(dissolveCandidates, (candidates) => {
+  if (dissolveSelected.value.size === 0) {
+    return
+  }
+
+  const live = new Set(candidates.map((candidate) => candidate.instanceId))
+  const next = new Set([...dissolveSelected.value].filter((id) => live.has(id)))
+
+  if (next.size !== dissolveSelected.value.size) {
+    dissolveSelected.value = next
+  }
+})
+
 function toggleDissolve(instanceId: string) {
   const next = new Set(dissolveSelected.value)
 
@@ -230,6 +247,14 @@ const dissolvePreview = computed(() => {
 })
 
 const dissolveConfirming = ref(false)
+
+// The armed confirm belongs to the selection it was raised on: any
+// churn (prune, clear, toggle, select-all, post-dissolve reset) makes
+// the confirmed set stale, so a re-selected item needs a fresh 2-step
+// confirm.
+watch(dissolveSelected, () => {
+  dissolveConfirming.value = false
+})
 
 function doDissolve() {
   if (dissolveSelected.value.size === 0) {

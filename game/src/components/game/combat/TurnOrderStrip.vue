@@ -11,6 +11,10 @@ import { useI18n } from 'vue-i18n'
 import { formatNumber } from '@/core/format/NumberFormatter'
 import { useTurnBattleInfo } from '@/composables/useTurnBattleInfo'
 import { useStateVersion } from '@/composables/useGameState'
+import { hkChromeUrl } from '@/ui/huyenKimChrome'
+
+// Scene 13 spec: upcoming actors render as turn-token chips.
+const turnTokenUrl = hkChromeUrl('turn-token')
 import { buffDisplayName } from '@/core/buff2/BuffNames'
 import { BUFF_REGISTRY } from '@/data/buff/BuffRegistry'
 import { GAUGE_MAX } from '@/core/battle/turn/ActionGauge'
@@ -157,7 +161,8 @@ function buffPolarity(buff: BuffInstanceSnapshot): string {
             class="turn-order-strip__item"
             :class="{ 'is-current': index === 0, 'is-enemy': actor.entity.type === 'enemy' }"
           >
-            {{ label(index) }}{{ actor.entity.name || actor.id }}
+            <img v-if="turnTokenUrl" class="turn-order-strip__token" :src="turnTokenUrl" alt="" aria-hidden="true" />
+            <span class="turn-order-strip__actor-name">{{ label(index) }}{{ actor.entity.name || actor.id }}</span>
             <span
               class="turn-order-strip__gauge"
               role="progressbar"
@@ -260,6 +265,22 @@ function buffPolarity(buff: BuffInstanceSnapshot): string {
   background: color-mix(in srgb, var(--ink-950, #111) 70%, transparent);
   color: var(--text-primary, #eee);
   white-space: nowrap;
+}
+
+/* turn-token chrome behind the actor name (scene 13 token strip). */
+.turn-order-strip__token {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+.turn-order-strip__actor-name {
+  position: relative;
+  z-index: 1;
 }
 
 .turn-order-strip__item.is-current {

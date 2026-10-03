@@ -1,0 +1,11 @@
+{
+  "applied": [
+    "evidence:EV-PROBE-WAVE6",
+    "coverage:COV-PRECURSOR-PARITY-1",
+    "coverage:COV-STAGE-STATE-1",
+    "coverage:COV-ECONOMY-1",
+    "coverage:COV-ELECTRON-1",
+    "coverage:COV-TOOLING-1",
+    "coverage:COV-CONCURRENCY-1"
+  ]
+}

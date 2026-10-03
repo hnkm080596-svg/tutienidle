@@ -8,6 +8,8 @@ import {
   SkillManager,
 } from './SkillManager'
 import { getCastLeveledSkillLevel } from './CastLeveling'
+import { isMortalPrecursorSkillId } from './MortalPrecursors'
+import { betaSkillAdmitted } from '../betaScopeSkillDomain'
 
 import type { ActionTargeting } from '../battle/CombatAction'
 import type { SkillProgressionState } from '../skilldef/SkillProgressionState'
@@ -20,12 +22,18 @@ import type { SkillId } from '../battle/contracts/ids'
 // khong can hang so rieng.
 const ACTIVE_SKILL_DAMAGE_PERCENT_PER_LEVEL = 0.05
 
-export const HUY_KIEM_CASTS_PER_LEVEL = 10
+export const PRECURSOR_FLAT_DAMAGE_CASTS = 10
 
-/** Moi 10 cast vinh vien +1 flat damage cho Huy Kiem - KHONG tran. */
-export function getHuyKiemFlatDamageBonus(totalExperience: number): number {
-  return Math.floor(Math.max(0, totalExperience) / HUY_KIEM_CASTS_PER_LEVEL)
+/** Moi 10 cast vinh vien +1 flat damage cho cac mortal precursor
+ * (tram/linh_bao/huy_quyen) - KHONG tran. Level van tran Lv3 qua
+ * CAST_LEVELING_THRESHOLDS; day la kenh tang truong khong tran duy nhat
+ * cua bo basic Pham Nhan (beta scope: linh_bao la starter duy nhat). */
+export function getPrecursorFlatDamageBonus(totalExperience: number): number {
+  return Math.floor(Math.max(0, totalExperience) / PRECURSOR_FLAT_DAMAGE_CASTS)
 }
+
+export const HUY_KIEM_CASTS_PER_LEVEL = PRECURSOR_FLAT_DAMAGE_CASTS
+export const getHuyKiemFlatDamageBonus = getPrecursorFlatDamageBonus
 
 // P1 - the cast-leveling table lives in ./CastLeveling (a leaf module):
 // CultivationPathKit evaluates offer gates through it, and NodeSystem
@@ -111,10 +119,10 @@ export class SkillSystem {
     const effectiveLevel = levelOverride ?? this.levelOf(skill)
     const levelMultiplier = 1 + (effectiveLevel - 1) * ACTIVE_SKILL_DAMAGE_PERCENT_PER_LEVEL
 
-    const isHuyKiem = skill.id === 'tram'
+    const isPrecursor = isMortalPrecursorSkillId(skill.id)
 
     const scaleDamageValue = (value: number): number =>
-      isHuyKiem ? value + getHuyKiemFlatDamageBonus(skill.totalExperience ?? 0) : value * levelMultiplier
+      isPrecursor ? value + getPrecursorFlatDamageBonus(skill.totalExperience ?? 0) : value * levelMultiplier
 
     const effects = baseEffects.map((effect) => {
       if (effect.type !== 'damage' || effect.value === undefined) {
@@ -211,6 +219,12 @@ export class SkillSystem {
     const modifiers: StatModifier[] = []
 
     for (const skill of this.manager.getPassiveSkills()) {
+      // BETA SCOPE LOCK - a learned passive owned only by a dormant way
+      // emits nothing on a carried way_out_of_scope save.
+      if (!betaSkillAdmitted(skill.id)) {
+        continue
+      }
+
       const effective = this.getEffectiveSkill(skill)
 
       for (const modifier of effective.passiveModifiers ?? []) {

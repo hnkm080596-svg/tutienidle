@@ -1,0 +1,48 @@
+=== EV-MUT-PA-1 way-gate-removed T15 2026-10-01T10:27:38 ===
+diff --git a/game/src/core/game/GameManagerRealmAdvanceOps.ts b/game/src/core/game/GameManagerRealmAdvanceOps.ts
+index fe669313..e648b2c9 100644
+--- a/game/src/core/game/GameManagerRealmAdvanceOps.ts
++++ b/game/src/core/game/GameManagerRealmAdvanceOps.ts
+@@ -324,7 +324,7 @@ export class GameManagerRealmAdvanceOps {
+     // entry point is commitFiveElementInitiation() below (a permanent
+     // contract, not a beta flag: an element-committing way must commit
+     // atomically).
+-    if (!isBetaWay(wayId) || declaresElementAxis(way)) {
++    if (declaresElementAxis(way)) {
+       return false
+     }
+ 
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+ ❯ tests/architecture/betaDormantSaveLeak.qa.test.ts (46 tests | 1 failed) 44ms
+     × chooseCultivationPath rejects a non-beta way pair before any other check 8ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/architecture/betaDormantSaveLeak.qa.test.ts > path authority: the ritual gate fails closed for dormant ways (I-PA-1) > chooseCultivationPath rejects a non-beta way pair before any other check
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/architecture/betaDormantSaveLeak.qa.test.ts:272:92
+    270|     const p = player({ realmLevel: 12 })
+    271|
+    272|     expect(gameManager.realmAdvanceOps.chooseCultivationPath('sword', …
+       |                                                                                            ^
+    273|     expect(gameManager.realmAdvanceOps.chooseCultivationPath('body', '…
+    274|     // spell_pathway carries an element axis - it also fails closed he…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 45 passed (46)
+   Start at  10:27:39
+   Duration  1.84s (transform 1.36s, setup 230ms, import 1.45s, tests 44ms, environment 0ms)
+
+DETECTOR_EXIT=1

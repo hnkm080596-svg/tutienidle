@@ -200,9 +200,9 @@ describe('progressionOps.respecNodeTree', () => {
     const preview = gameManager.progressionOps.previewNodeRespec(player)
 
     // The preserved element root is not counted as a reset target.
-    expect(preview.refund).toBe(0)
-    expect(preview.resetCount).toBe(0)
-    expect(preview.resetNodeIds).toEqual([])
+    expect(preview!.refund).toBe(0)
+    expect(preview!.resetCount).toBe(0)
+    expect(preview!.resetNodeIds).toEqual([])
     expect(player).toEqual(before)
   })
 
@@ -219,7 +219,7 @@ describe('progressionOps.respecNodeTree', () => {
     player.skillInsight = 100
 
     const preview = gameManager.progressionOps.previewNodeRespec(player)
-    expect(preview.resetNodeIds).not.toContain(reward.id)
+    expect(preview!.resetNodeIds).not.toContain(reward.id)
 
     const refund = gameManager.progressionOps.respecNodeTree(player)
 
@@ -302,20 +302,20 @@ describe('progressionOps.respecNodeTree', () => {
 
     const coreRefund = getSkillCoreUpgradeCost(1) + getSkillCoreUpgradeCost(2)
 
-    expect(scoped.clawback?.unlearnedSkillIds).toEqual(['linh_bao'])
-    expect(scoped.clawback?.removedNodeIds).toEqual(['core_linh_bao'])
-    expect(scoped.clawback?.refund).toBe(coreRefund)
-    expect(scoped.refund).toBe(2 + coreRefund)
-    expect([...scoped.resetNodeIds].sort()).toEqual(['core_linh_bao', 'grant_skill'].sort())
+    expect(scoped!.clawback?.unlearnedSkillIds).toEqual(['linh_bao'])
+    expect(scoped!.clawback?.removedNodeIds).toEqual(['core_linh_bao'])
+    expect(scoped!.clawback?.refund).toBe(coreRefund)
+    expect(scoped!.refund).toBe(2 + coreRefund)
+    expect([...scoped!.resetNodeIds].sort()).toEqual(['core_linh_bao', 'grant_skill'].sort())
     // grant_spec survives the scoped reset, so its applied
     // specialization is still claimed and not reported cleared.
-    expect(scoped.clawback?.clearedSpecializations).toEqual([])
+    expect(scoped!.clawback?.clearedSpecializations).toEqual([])
 
     // Whole-tree: the spec claimant resets too, so the applied
     // specialization is reported cleared.
     const whole = gameManager.progressionOps.previewNodeRespec(player)
 
-    expect(whole.clawback?.clearedSpecializations).toEqual([
+    expect(whole!.clawback?.clearedSpecializations).toEqual([
       { skillId: 'hoa_cau_thuat', specializationId: 'hoa_tu_diem' },
     ])
 

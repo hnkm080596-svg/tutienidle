@@ -7,6 +7,16 @@
 // vào save đã build.
 import { primeMortalCreationPick } from './GameSave.fixture'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+
+// BETA SCOPE LOCK v2 Phase-5 - this suite exercises the scope-hidden
+// system's ENABLED implementation (sec.11-15: dormant, not deleted),
+// so the scope authority reports in-scope for this file.
+vi.mock('../../core/betaScope', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../../core/betaScope')>()),
+  isBetaFeature: () => true,
+  isScopeHidden: () => false,
+}))
+
 import { GameManager } from '../../core/game/GameManager'
 import { createDefaultPlayer } from '../../core/player/Player'
 import { materials } from '../../data/materials/materials'
@@ -144,16 +154,18 @@ describe('SaveSystem — build/write/load round-trip (Task 3, double-serialize a
 
     const gameManager = createBootedGameManager()
     const player = createDefaultPlayer()
-    // F-W-16: capacity derives from the CHQ instance - level 2 -> 5.
+    // F-W-16: capacity derives from the CHQ instance - level 1 -> 3.
     gameManager.buildingManager.add({
       instanceId: 'b-chq',
       buildingId: 'chi_hien_quan',
-      level: 2,
+      // F-SCOPE-3: level 2 needs realm tier 2 (qi_refining) - the
+      // default mortal player only carries level 1 (capacity 3).
+      level: 1,
       lastCollectedAt: Date.now(),
     })
     gameManager.buildingOps.refreshAutoWorkerCapacity(player, gameManager.buildingManager.get('b-chq')!)
 
-    gameManager.decomposeSystem.updateCapacity(5)
+    gameManager.decomposeSystem.updateCapacity(3)
     gameManager.decomposeSystem.setSetting({ workers: 3, ageFilter: 'decade' })
     gameManager.decomposeSystem.tick(Date.now()) // start the cycle timer
 
@@ -187,7 +199,7 @@ describe('SaveSystem — build/write/load round-trip (Task 3, double-serialize a
     fresh.setActivePlayer(freshPlayer)
     const restoredModifiers = fresh.saveOps.restoreFromSave(outcome.save as ReturnType<typeof buildGameSave>)
     expect(Array.isArray(restoredModifiers)).toBe(true)
-    expect(freshPlayer.autoWorkerCapacity).toBe(5)
+    expect(freshPlayer.autoWorkerCapacity).toBe(3)
     expect(fresh.decomposeSystem.getSettings()).toEqual({
       gradeFilter: 'all',
       ageFilter: 'decade',
@@ -203,11 +215,13 @@ describe('SaveSystem — build/write/load round-trip (Task 3, double-serialize a
 
     const gameManager = createBootedGameManager()
     const player = createDefaultPlayer()
-    // F-W-16: capacity derives from the CHQ instance - level 2 -> 5.
+    // F-W-16: capacity derives from the CHQ instance - level 1 -> 3.
     gameManager.buildingManager.add({
       instanceId: 'b-chq',
       buildingId: 'chi_hien_quan',
-      level: 2,
+      // F-SCOPE-3: level 2 needs realm tier 2 (qi_refining) - the
+      // default mortal player only carries level 1 (capacity 3).
+      level: 1,
       lastCollectedAt: Date.now(),
     })
     gameManager.buildingOps.refreshAutoWorkerCapacity(player, gameManager.buildingManager.get('b-chq')!)

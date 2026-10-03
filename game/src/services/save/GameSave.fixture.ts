@@ -24,7 +24,7 @@ import type { GameSave } from './saveTypes'
  *
  * Mutates the given save (callers own the fixture lifetime). Returns the
  * same save for chaining. */
-export function withMortalCreationPick(save: GameSave, skillId = 'tram'): GameSave {
+export function withMortalCreationPick(save: GameSave, skillId = 'linh_bao'): GameSave {
   if (!isMortalPrecursorSkillId(skillId)) {
     throw new Error(`mortalSaveFixture: '${skillId}' is not a mortal precursor id`)
   }
@@ -54,7 +54,7 @@ export function withMortalCreationPick(save: GameSave, skillId = 'tram'): GameSa
 export function primeMortalCreationPick(
   player: PlayerData,
   skillManager: Pick<SkillManager, 'add' | 'has'>,
-  skillId = 'tram',
+  skillId = 'linh_bao',
 ): void {
   if (!isMortalPrecursorSkillId(skillId)) {
     throw new Error(`mortalSaveFixture: '${skillId}' is not a mortal precursor id`)

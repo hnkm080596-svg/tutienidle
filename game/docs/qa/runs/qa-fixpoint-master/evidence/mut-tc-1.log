@@ -1,0 +1,37 @@
+=== EV-MUT-TC-1 T7 2026-10-01T04:16:13.110313Z ===
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+ ❯ tests/architecture/betaDormantSaveLeak.qa.test.ts (40 tests | 5 failed) 47ms
+     × canPurchaseNode / purchaseNode / upgradeNode all reject dormant-tree nodes 8ms
+     × respecNodeTree refuses a save holding dormant records - dormant insight is never refunded 2ms
+     × canUpgradeNode and levelUpSkill reject a dormant way core on a carried save 1ms
+     × a dormant way technique emits no tier modifiers; the beta way technique still emits 3ms
+     × tryAdvanceTechniqueGrade refuses a dormant technique and debits no stones 1ms
+
+ Test Files  1 failed (1)
+      Tests  5 failed | 35 passed (40)
+   Start at  04:16:14
+   Duration  1.84s (transform 1.35s, setup 205ms, import 1.45s, tests 47ms, environment 1ms)
+
+xpected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/architecture/betaDormantSaveLeak.qa.test.ts:621:69
+    619|     gameManager.materialBag.add(stoneMaterial, 1000)
+    620|
+    621|     expect(gameManager.realmAdvanceOps.tryAdvanceTechniqueGrade(p)).to…
+       |                                                                     ^
+    622|     expect(gameManager.materialBag.getAmount(stoneId)).toBe(1000)
+    623|   })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯
+
+
+DETECTOR_EXIT=1 (nonzero = KILLED_EXPECTED)
+RESULT=KILLED_EXPECTED

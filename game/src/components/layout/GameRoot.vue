@@ -6,12 +6,8 @@ import RouteMount from '../game/RouteMount.vue'
 import CombatSceneOverlay from '../game/combat/CombatSceneOverlay.vue'
 import TribulationSceneOverlay from '../game/tribulation/TribulationSceneOverlay.vue'
 import { VUE_ROUTE_ADAPTER_KEY } from '@/presentation/PresentationContracts'
-import DongFuCommandWheel from '../game/DongFuCommandWheel.vue'
-import AutoFarmIndicator from '../game/AutoFarmIndicator.vue'
-import CurrencyHud from '../game/CurrencyHud.vue'
 import BuildingDetailPopover from '../game/BuildingDetailPopover.vue'
 import LeftPanel from './LeftPanel.vue'
-import RightPanel from './RightPanel.vue'
 import FunctionOverlayPanel from './FunctionOverlayPanel.vue'
 // Standalone overlay panels load lazily: the module is fetched on first
 // open (v-if below), then the component stays mounted so OverlayPanel's
@@ -24,6 +20,8 @@ const QuestPanel = defineAsyncComponent(() => import('../panels/QuestPanel.vue')
 const ArtifactPanel = defineAsyncComponent(() => import('../panels/ArtifactPanel.vue'))
 const TranPhapPanel = defineAsyncComponent(() => import('../panels/TranPhapPanel.vue'))
 const CompanionPanel = defineAsyncComponent(() => import('../panels/CompanionPanel.vue'))
+const TechniquePanel = defineAsyncComponent(() => import('../panels/TechniquePanel.vue'))
+const BodyPanel = defineAsyncComponent(() => import('../panels/BodyPanel.vue'))
 import Tooltip from '../common/Tooltip.vue'
 import ToastContainer from '../common/ToastContainer.vue'
 import ActionFeedbackLog from '../common/ActionFeedbackLog.vue'
@@ -35,6 +33,7 @@ import TutorialOverlay from '../common/TutorialOverlay.vue'
 import { useOfflineSummaryStore } from '@/stores/offlineSummary'
 import { useUiStore } from '@/stores/ui'
 import { useCombatSceneActive } from '@/composables/useCombatSceneActive'
+import { betaAdmittedBuildingPopoverId, isBetaStandalonePanel } from '@/core/betaScopeSurface'
 
 const offlineSummary = useOfflineSummaryStore()
 
@@ -73,9 +72,21 @@ const mountedStandalone = reactive(new Set<Exclude<StandalonePanel, null>>())
 watch(
   () => ui.standalonePanel,
   (panel) => {
-    if (panel) mountedStandalone.add(panel)
+    // BETA SCOPE LOCK v2 (Phase-6): the mount seam is the deep-link
+    // chokepoint - a scope-hidden panel can never mount even when a
+    // caller bypasses ui.openStandalonePanel and assigns the state
+    // field directly (e.g. the tribulation outcome seam).
+    if (panel && isBetaStandalonePanel(panel)) mountedStandalone.add(panel)
   },
   { immediate: true },
+)
+
+// BETA SCOPE LOCK: the popover mount seam carries the same chokepoint
+// defense as the standalone-panel watcher - a scope-hidden building's
+// card never renders even when ui.activeBuildingPopoverId is assigned
+// directly (e.g. by a surface that skipped openBuildingPopover).
+const admittedBuildingPopoverId = computed(() =>
+  betaAdmittedBuildingPopoverId(ui.activeBuildingPopoverId),
 )
 
 /** Which route this Vue tree is currently standing in for (mount witness). */
@@ -103,17 +114,18 @@ function closeSidePanels() {
         <!-- Shared popover authority (plan Workstream C) - CHI MOT
              BuildingDetailPopover cho CA hotspot lan command wheel,
              dieu khien qua ui.activeBuildingPopoverId. -->
-        <div v-if="ui.activeBuildingPopoverId" class="game-root__building-popover-layer">
-          <BuildingDetailPopover :building-id="ui.activeBuildingPopoverId" />
+        <div v-if="admittedBuildingPopoverId" class="game-root__building-popover-layer">
+          <BuildingDetailPopover :building-id="admittedBuildingPopoverId" />
         </div>
 
-        <!-- Economy currency strip (audit H1) - pinned top-left so the
-             Linh Thach / companion-currency balances are readable from
-             the home scene without opening a panel. -->
-        <CurrencyHud />
+        <!-- Spec SS11/SS12 home chrome (top bar, Thien Co rail, quest
+             tracker, command wheel) moved INSIDE DongFuStage - the
+             approved dong-fu-v2 fidelity surface renders all of it in
+             the scaled design canvas above the vista. -->
 
-        <LeftPanel class="game-root__left-panel" />
-        <RightPanel />
+        <!-- LeftPanel hosts the imperial scroll itself; the old
+             drawer-width wrapper is gone (the scene owns its overlay). -->
+        <LeftPanel />
         <FunctionOverlayPanel />
 
         <!-- Ky Nang (2026-08-20) - tach khoi LeftPanel thanh overlay
@@ -134,14 +146,11 @@ function closeSidePanels() {
 
         <CompanionPanel v-if="mountedStandalone.has('companion')" />
 
-        <!-- Command wheel nhieu tang - trigger la nhan vat tu luyen
-             giua dong Phu (DongFuScene.vue). -->
-        <DongFuCommandWheel />
+        <!-- Huyen Kim scenes 06/08 - Tam Phap + Dao The as dedicated
+             imperial scroll scenes (extracted out of Skill/Realm). -->
+        <TechniquePanel v-if="mountedStandalone.has('technique')" />
 
-        <!-- Armed auto-farm holds the single StageManager slot (no combat
-             can mount) - the indicator lives in home chrome, not the
-             combat HUD, so the stop path is always reachable (T1-6). -->
-        <AutoFarmIndicator />
+        <BodyPanel v-if="mountedStandalone.has('body')" />
       </template>
 
       <CombatSceneOverlay v-if="isCombatSceneActive" />
@@ -191,40 +200,6 @@ function closeSidePanels() {
   height: 100%;
   overflow: hidden;
   background: var(--ink-950);
-}
-
-.game-root__left-panel {
-  position: absolute;
-  /* Full-height overlay o canh trai - khong con chua top/bottom bar. */
-  inset: 0 auto 0 0;
-  /* WS3 - drawer responsive thay vi % cung cua frame cu: du rong de
-     noi dung panel tho o cua so hep (1280px -> ~384px), khong phinh
-     vo han o man lon (max 480px). */
-  width: clamp(360px, 30vw, 480px);
-  /* Noi tren hotspot (5)/command wheel (8) - panel chuc nang mo thi
-     noi dung phai bam duoc tron ven. */
-  z-index: 10;
-  container-type: inline-size;
-  container-name: left-panel;
-}
-
-/* Workstream G (gameplay-ui-feedback-responsive-cleanup-plan.md S10) -
-   viewport rat hep (vd 800x600): clamp(360px,...) buoc panel chiem gan
-   1 nua man hinh. Chuyen sang drawer gan/full width thay vi giu tran
-   360px cung, van chua loi dong (panel luon co nut back/close rieng). */
-@media (max-width: 900px) {
-  .game-root__left-panel {
-    /* Ca Left+Right cung mo theo characterOverlayOpen - moi ben toi da
-       44vw de tong khong vuot viewport (tranh chong panel). Floor 260px
-       (Dot 4 fit-refactor): duoi 620px drawer chiem tron man hinh. */
-    width: max(min(44vw, 400px), 260px);
-  }
-}
-
-@media (max-width: 620px) {
-  .game-root__left-panel {
-    width: 100%;
-  }
 }
 
 .game-root__building-popover-layer {

@@ -66,7 +66,7 @@ describe('perfect clear feasibility on a real floor shape', () => {
       ids: Array.from({ length: 10 }, (_, i) => `qa_floor_${i + 1}`),
       names: (f) => `QA ${f}`,
       descriptions: Array.from({ length: 10 }, () => ''),
-      speciesByFloor: Array.from({ length: 10 }, () => ({ common: species.id, elite: species.id })),
+      roster: { normals: [species.id, species.id, species.id], boss: species.id },
     })
 
     return { ...stages[floor - 1]!, spawnIntervalSeconds: 0 }

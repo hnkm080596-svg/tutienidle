@@ -1,0 +1,10 @@
+=== EV-PROBE-WAVE6 T15 ===
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+
+ Test Files  5 passed (5)
+      Tests  31 passed (31)
+   Start at  10:25:59
+   Duration  2.46s (transform 5.77s, setup 1.31s, import 6.05s, tests 103ms, environment 2ms)
+

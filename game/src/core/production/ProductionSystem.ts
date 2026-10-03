@@ -44,6 +44,7 @@ import {
 } from '../../data/drop/HiddenMaterialChannels'
 import { getRealmIndex } from '../realm/realmSystem'
 import { isBreakthroughAcquisitionEnabled } from '../realm/ReleasePolicy'
+import { betaRecipeFamilyOfId, isScopeHidden } from '../betaScope'
 
 /** Một giao dịch settle đã xảy ra — dùng cho notification UI (§9.1). */
 export interface ProductionSettlementEvent {
@@ -183,6 +184,15 @@ export class ProductionSystem {
     count: number | undefined,
     productionCapacity: number,
   ): boolean {
+    // BETA SCOPE LOCK v2 sec.13 - manualWorkforce is scope-hidden: the
+    // domain fails closed so a stored request cannot be rewritten through
+    // a direct call; persisted assignedWorkers keep their values and the
+    // allocator's automatic path covers the site (restored data is not
+    // re-checked per the single-check invariant).
+    if (isScopeHidden('manualWorkforce')) {
+      return false
+    }
+
     if (!this.getSiteDefinition(siteId)) {
       return false
     }
@@ -509,6 +519,14 @@ export class ProductionSystem {
     cycle: ProductionCycle,
     registry: MaterialRegistry,
   ): ResolvedProductionReward[] {
+    // BETA SCOPE LOCK v2 sec.14 - hidden channels are part of the
+    // scope-hidden hidden domain: while hiddenContent is off the channel
+    // engine stays frozen (no counter advance, no draw, no emission),
+    // matching the HiddenBeastSystem counter freeze.
+    if (isScopeHidden('hiddenContent')) {
+      return []
+    }
+
     const definition = this.getSiteDefinition(cycle.siteId)
     const channels = this.deps.hiddenGrottoChannels ?? hiddenGrottoChannels()
 
@@ -649,7 +667,15 @@ export class ProductionSystem {
     }
 
     // Grotto: tier → thảo trong pool tier → niên đại (§6.1 hai bước roll).
-    const pool = this.deps.grottoHerbs.filter((herb) => herb.realmId === tierRealmId)
+    // BETA SCOPE LOCK v2 sec.12/sec.17 - herbs of dormant recipe families
+    // have no beta sink (the brew gate rejects them), so the faucet
+    // closes at the roll: identity admission is filtered to
+    // beta-enabled families, which also concentrates the live pool's
+    // odds onto herbs beta recipes can consume.
+    const pool = this.deps.grottoHerbs.filter(
+      (herb) =>
+        herb.realmId === tierRealmId && betaRecipeFamilyOfId(herb.pillRecipeId) !== null,
+    )
 
     if (pool.length === 0) {
       return []

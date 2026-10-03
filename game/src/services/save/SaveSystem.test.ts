@@ -76,9 +76,9 @@ function validGameSave(name?: string): GameSave {
   // v82 mortal boundary contract (F-INT-03 import gate): the fixture
   // doubles as a legal creation output - pick + learned entry + core
   // grant, same shape the SupabaseRemoteSave fixture uses.
-  player.mortalBasicSkillId = 'tram'
-  player.nodeLevels = { ...player.nodeLevels, core_tram: 1 }
-  player.purchasedNodeIds = [...player.purchasedNodeIds, 'core_tram']
+  player.mortalBasicSkillId = 'linh_bao'
+  player.nodeLevels = { ...player.nodeLevels, core_linh_bao: 1 }
+  player.purchasedNodeIds = [...player.purchasedNodeIds, 'core_linh_bao']
 
   return {
     version: CURRENT_SAVE_VERSION,
@@ -86,8 +86,8 @@ function validGameSave(name?: string): GameSave {
     techniques: [],
     skills: [
       {
-        id: 'tram',
-        name: 'Trảm',
+        id: 'linh_bao',
+        name: 'Linh Bão',
         description: 'creation pick',
         type: 'active',
         level: 1,
@@ -225,8 +225,8 @@ describe('loadGame — shape validation (save-shape-validation-plan.md)', () => 
       quality: 'hoang',
       mainStat: { stat: 'might', flat: 1 },
       affixes: [{ affixId: 'suffix_accuracy', tier: 1, value: 3 }],
-      forgeUsesTotal: 6,
-      forgeUsesRemaining: 6,
+      forgeUsesTotal: 5,
+      forgeUsesRemaining: 5,
     }]
     localStorage.setItem(SAVE_KEY, JSON.stringify(save))
 
@@ -419,7 +419,7 @@ describe('importSaveRaw', () => {
     const pickless = validGameSave()
 
     delete pickless.player.mortalBasicSkillId
-    delete pickless.player.nodeLevels.core_tram
+    delete pickless.player.nodeLevels.core_linh_bao
     pickless.player.purchasedNodeIds = []
     pickless.skills = []
 

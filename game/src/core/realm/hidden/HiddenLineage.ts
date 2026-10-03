@@ -18,6 +18,7 @@ import { EXTENDED_REALM_LEVEL, getRealmIndex } from '../realmSystem'
 import { MAIN_STAT_KEYS } from '../../stats/StatTypes'
 import { countCompletedHiddenBodyRealms, getEffectiveMainStatCap } from '../../stats/StatCap'
 import { canTriggerBreakthrough } from '../BreakthroughGate'
+import { isBetaFeature } from '../../betaScope'
 import type {
   HiddenPerfectionState,
   RealmHiddenState,
@@ -78,6 +79,12 @@ export function wasHiddenBreakthrough(
   player: Pick<HiddenLineagePlayer, 'hiddenPerfection'>,
   realmId: string,
 ): boolean {
+  // Dormant under beta scope: a carried breakthrough record stays data -
+  // it never picks the enhanced realm-passive variant while the hidden
+  // domain is gated off.
+  if (!isBetaFeature('hiddenContent')) {
+    return false
+  }
   return asRealmIdList(player.hiddenPerfection?.hiddenBreakthroughRealmIds).includes(realmId)
 }
 
@@ -121,6 +128,15 @@ export function canProgressHiddenBody(
   player: Pick<HiddenLineagePlayer, 'hiddenPerfection' | 'realmId'>,
   realmId: string,
 ): boolean {
+  // BETA SCOPE LOCK v2 (Phase-6): hidden content is scope-hidden -
+  // fail closed at the root gate so discovery, mechanism progress,
+  // completion, Quan The diversion, the ancient beast trial and Nghich
+  // Chu Thien eligibility can never fire for a beta build. Persisted
+  // hidden records stay readable-but-inert (no destructive mutation).
+  if (!isBetaFeature('hiddenContent')) {
+    return false
+  }
+
   const state = player.hiddenPerfection
   if (state === undefined || !state.lineageActive) {
     return false
@@ -237,6 +253,14 @@ export function closeHiddenLineage(
   player: HiddenLineagePlayer,
   closingRealmId: string,
 ): void {
+  // BETA SCOPE LOCK v2 (Phase-6): hidden content is scope-hidden - a
+  // carried open lineage stays readable-but-inert under the lock, so a
+  // live normal breakthrough must NOT destructively mutate it (close +
+  // freeze). Same fail-closed contract as the sibling reads/writes.
+  if (!isBetaFeature('hiddenContent')) {
+    return
+  }
+
   const state = player.hiddenPerfection
   if (state === undefined || !state.lineageActive) {
     return
@@ -268,6 +292,14 @@ export function recordHiddenBreakthrough(
   player: HiddenLineagePlayer,
   enteredRealmId: string,
 ): boolean {
+  // BETA SCOPE LOCK v2 (Phase-6): hidden breakthroughs are scope-hidden
+  // - no record write may fire under the lock (unreachable on the live
+  // seam since resolveBreakthroughType resolves 'normal'; fail-closed
+  // twin so a forged call path cannot mint hidden records either).
+  if (!isBetaFeature('hiddenContent')) {
+    return false
+  }
+
   const state = player.hiddenPerfection
   if (state === undefined || !state.lineageActive) {
     return false
@@ -311,6 +343,14 @@ export function recordHiddenBreakthrough(
  * surfaces it (sec.5 visibility law).
  */
 export function isHiddenBreakthroughEligible(player: HiddenLineagePlayer): boolean {
+  // BETA SCOPE LOCK v2 (Phase-6): hidden breakthroughs (Dai Dao route)
+  // are scope-hidden - resolveBreakthroughType resolves 'normal' for
+  // every beta commit; persisted hidden-breakthrough records on legacy
+  // saves are left untouched.
+  if (!isBetaFeature('hiddenContent')) {
+    return false
+  }
+
   const state = player.hiddenPerfection
   if (state === undefined || !state.lineageActive) {
     return false

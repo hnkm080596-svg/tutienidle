@@ -1,0 +1,396 @@
+{
+ "records": [
+  {
+   "kind": "lesson",
+   "body": {
+    "id": "L-WRITER-SHAPE-CENSUS",
+    "version": 1,
+    "supersedes": null,
+    "triggerType": "DEFECT",
+    "findingIds": [
+     "F-A8-1",
+     "F-TC6-8"
+    ],
+    "incidentEvidenceIds": [
+     "EV-PIN-T14",
+     "EV-PIN-T15"
+    ],
+    "originatingRun": "qa-fixpoint-master",
+    "rootClass": "AUTHORITY",
+    "missedInvariantIds": [
+     "I-AS-1",
+     "I-SF-1"
+    ],
+    "escapeReason": "the claim census resolved a sourceItemId against the authored catalog but never checked whether that writer actually MINTS the record type, and scope-ordering let a dormant claim pass while authored in shape; a claim must resolve against the writer's PRODUCT, not just its identity, and scope checks must run before shape checks",
+    "applicability": [
+     "every persisted claim whose source resolves to a typed writer (timed effects, timed jobs, timed modifiers)"
+    ],
+    "exclusions": [],
+    "proposedProtection": [
+     "bound each claim class to the writer-shape inventory that produces it; order scope/dormant checks before writer-shape checks"
+    ],
+    "promotionEvidenceIds": [],
+    "qualifiedBy": [],
+    "capabilityDelta": "RECORDED - awaiting independent qualification",
+    "status": "CAPTURED",
+    "policyVersion": null,
+    "effectiveFromRun": null,
+    "recurrenceFindingIds": [],
+    "preventionEvidenceIds": [],
+    "guidance": null
+   }
+  },
+  {
+   "kind": "lesson",
+   "body": {
+    "id": "L-PERSISTED-LEVEL-BOUND",
+    "version": 1,
+    "supersedes": null,
+    "triggerType": "DEFECT",
+    "findingIds": [
+     "F-A8-2",
+     "F-TC6-5"
+    ],
+    "incidentEvidenceIds": [
+     "EV-PIN-T14",
+     "EV-PIN-T15"
+    ],
+    "originatingRun": "qa-fixpoint-master",
+    "rootClass": "AUTHORITY",
+    "missedInvariantIds": [
+     "I-AS-1",
+     "I-SF-1"
+    ],
+    "escapeReason": "persisted level claims were shape-checked >=1 while the writer's ceiling (template.maxLevel) was never consulted at the boundary or the effective-read seam",
+    "applicability": [
+     "every persisted level/scale field with a writer ceiling (buildings, production sites, node levels)"
+    ],
+    "exclusions": [],
+    "proposedProtection": [
+     "bound persisted levels to the writer maximum at shape AND clamp at the effective-read seam for non-save paths"
+    ],
+    "promotionEvidenceIds": [],
+    "qualifiedBy": [],
+    "capabilityDelta": "RECORDED - awaiting independent qualification",
+    "status": "CAPTURED",
+    "policyVersion": null,
+    "effectiveFromRun": null,
+    "recurrenceFindingIds": [],
+    "preventionEvidenceIds": [],
+    "guidance": null
+   }
+  },
+  {
+   "kind": "lesson",
+   "body": {
+    "id": "L-VERBATIM-READ-SURFACE",
+    "version": 1,
+    "supersedes": null,
+    "triggerType": "DEFECT",
+    "findingIds": [
+     "F-B8-1",
+     "F-B8-2",
+     "F-B8-3"
+    ],
+    "incidentEvidenceIds": [
+     "EV-PIN-T14",
+     "EV-VERIFY-T15"
+    ],
+    "originatingRun": "qa-fixpoint-master",
+    "rootClass": "AUTHORITY",
+    "missedInvariantIds": [
+     "I-AS-1",
+     "I-SF-1"
+    ],
+    "escapeReason": "consumer surfaces mapped domain getAll() outputs verbatim while the domain write seams were already gated; a carried dormant record rendered as a selectable row or an enabled-but-dead control - the rail verdict must reach the surface, not just the write path",
+    "applicability": [
+     "every list/table/hero surface rendering a manager's getAll()/getActive() verbatim (skills, pills, techniques, bag counts)"
+    ],
+    "exclusions": [],
+    "proposedProtection": [
+     "filter surfaces through the same admission predicate the write seam uses (betaSkillAdmitted / scopeHiddenPillFamilyOfId / betaTechniqueAdmitted); treat a non-admitted record as absent"
+    ],
+    "promotionEvidenceIds": [],
+    "qualifiedBy": [],
+    "capabilityDelta": "RECORDED - awaiting independent qualification",
+    "status": "CAPTURED",
+    "policyVersion": null,
+    "effectiveFromRun": null,
+    "recurrenceFindingIds": [],
+    "preventionEvidenceIds": [],
+    "guidance": null
+   }
+  },
+  {
+   "kind": "lesson",
+   "body": {
+    "id": "L-OWNERSHIP-WITNESS-EMIT",
+    "version": 1,
+    "supersedes": null,
+    "triggerType": "DEFECT",
+    "findingIds": [
+     "F-TC6-1"
+    ],
+    "incidentEvidenceIds": [
+     "EV-PIN-T15",
+     "EV-MUT-T15"
+    ],
+    "originatingRun": "qa-fixpoint-master",
+    "rootClass": "AUTHORITY",
+    "missedInvariantIds": [
+     "I-AS-1",
+     "I-SF-1"
+    ],
+    "escapeReason": "the emit filter verified the claim's sourceId but not the ownership record that produces it - a grant claim survived with no owning talent selected",
+    "applicability": [
+     "every persisted grant/effect claim whose existence is conditional on a sibling ownership record (talent grant, marker pair)"
+    ],
+    "exclusions": [],
+    "proposedProtection": [
+     "emit requires the ownership witness (selectedTalentIds/marker); validator mirrors the same canonical shape"
+    ],
+    "promotionEvidenceIds": [],
+    "qualifiedBy": [],
+    "capabilityDelta": "RECORDED - awaiting independent qualification",
+    "status": "CAPTURED",
+    "policyVersion": null,
+    "effectiveFromRun": null,
+    "recurrenceFindingIds": [],
+    "preventionEvidenceIds": [],
+    "guidance": null
+   }
+  },
+  {
+   "kind": "lesson",
+   "body": {
+    "id": "L-FLAG-WRITER-COVERAGE",
+    "version": 1,
+    "supersedes": null,
+    "triggerType": "DEFECT",
+    "findingIds": [
+     "F-TC6-3"
+    ],
+    "incidentEvidenceIds": [
+     "EV-PIN-T15",
+     "EV-VERIFY-T15"
+    ],
+    "originatingRun": "qa-fixpoint-master",
+    "rootClass": "AUTHORITY",
+    "missedInvariantIds": [
+     "I-AS-1",
+     "I-SF-1"
+    ],
+    "escapeReason": "the hidden-progression flag enumerated dormant-record writers but missed highestFoundationAchieved='great_dao', so a save only hidden writers could produce loaded unflagged and emitted under lock",
+    "applicability": [
+     "the unsupported-release/hidden-progression reason census - every field only a dormant writer can produce"
+    ],
+    "exclusions": [],
+    "proposedProtection": [
+     "enumerate flag conditions over the closed writer inventory (great_dao is a hidden-writer product); suppress the gated emissions while locked"
+    ],
+    "promotionEvidenceIds": [],
+    "qualifiedBy": [],
+    "capabilityDelta": "RECORDED - awaiting independent qualification",
+    "status": "CAPTURED",
+    "policyVersion": null,
+    "effectiveFromRun": null,
+    "recurrenceFindingIds": [],
+    "preventionEvidenceIds": [],
+    "guidance": null
+   }
+  },
+  {
+   "kind": "lesson",
+   "body": {
+    "id": "L-SETTLE-EXEMPTION-ORDER",
+    "version": 1,
+    "supersedes": null,
+    "triggerType": "DEFECT",
+    "findingIds": [
+     "F-TC6-4"
+    ],
+    "incidentEvidenceIds": [
+     "EV-PIN-T15",
+     "EV-VERIFY-T15"
+    ],
+    "originatingRun": "qa-fixpoint-master",
+    "rootClass": "AUTHORITY",
+    "missedInvariantIds": [
+     "I-AS-1",
+     "I-SF-1"
+    ],
+    "escapeReason": "the settle path's retired exemption ran without the dormant-family check, so a retired-but-dormant job delivered its pill - an exemption applied before a scope check silently re-admits the record",
+    "applicability": [
+     "every settle/deliver path with per-record exemptions (retired, legacy, unknown-id)"
+    ],
+    "exclusions": [],
+    "proposedProtection": [
+     "scope/dormant checks run before all exemptions; exemptions may soften handling of LIVE records only"
+    ],
+    "promotionEvidenceIds": [],
+    "qualifiedBy": [],
+    "capabilityDelta": "RECORDED - awaiting independent qualification",
+    "status": "CAPTURED",
+    "policyVersion": null,
+    "effectiveFromRun": null,
+    "recurrenceFindingIds": [],
+    "preventionEvidenceIds": [],
+    "guidance": null
+   }
+  },
+  {
+   "kind": "lesson",
+   "body": {
+    "id": "L-EARNABLE-BOUND",
+    "version": 1,
+    "supersedes": null,
+    "triggerType": "DEFECT",
+    "findingIds": [
+     "F-TC6-6"
+    ],
+    "incidentEvidenceIds": [
+     "EV-PIN-T15",
+     "EV-VERIFY-T15"
+    ],
+    "originatingRun": "qa-fixpoint-master",
+    "rootClass": "AUTHORITY",
+    "missedInvariantIds": [
+     "I-AS-1",
+     "I-SF-1"
+    ],
+    "escapeReason": "attributePoints was shape-checked >=0 but never bounded against the maximum earnable from the authored progression table (realmLevel + prior maxLevels)",
+    "applicability": [
+     "every persisted currency/points field whose earning rate is closed-world enumerable (attribute points, mastery, insight)"
+    ],
+    "exclusions": [],
+    "proposedProtection": [
+     "bound persisted accumulators to the max a writer could produce from the recorded progression state"
+    ],
+    "promotionEvidenceIds": [],
+    "qualifiedBy": [],
+    "capabilityDelta": "RECORDED - awaiting independent qualification",
+    "status": "CAPTURED",
+    "policyVersion": null,
+    "effectiveFromRun": null,
+    "recurrenceFindingIds": [],
+    "preventionEvidenceIds": [],
+    "guidance": null
+   }
+  },
+  {
+   "kind": "lesson",
+   "body": {
+    "id": "L-DEFERRED-TRANSIENT-MIRROR",
+    "version": 1,
+    "supersedes": null,
+    "triggerType": "DEFECT",
+    "findingIds": [
+     "F-A8-3"
+    ],
+    "incidentEvidenceIds": [
+     "EV-PIN-T14"
+    ],
+    "originatingRun": "qa-fixpoint-master",
+    "rootClass": "AUTHORITY",
+    "missedInvariantIds": [
+     "I-AS-1",
+     "I-SF-1"
+    ],
+    "escapeReason": "deferred per Medium+-only ruling: externalModifiers lacks a claimed-source census, but the per-tick mirror overwrite scrubs forged entries after one frame - a transient window on hostile saves only",
+    "applicability": [
+     "persisted slices mirrored per-tick by an authoritative recompute"
+    ],
+    "exclusions": [],
+    "proposedProtection": [
+     "if the deferral is reversed, census externalModifiers like player.modifiers"
+    ],
+    "promotionEvidenceIds": [],
+    "qualifiedBy": [],
+    "capabilityDelta": "RECORDED - awaiting independent qualification",
+    "status": "CAPTURED",
+    "policyVersion": null,
+    "effectiveFromRun": null,
+    "recurrenceFindingIds": [],
+    "preventionEvidenceIds": [],
+    "guidance": null
+   }
+  },
+  {
+   "kind": "lesson",
+   "body": {
+    "id": "L-DEFERRED-DISPLAY-ONLY-DORMANT",
+    "version": 1,
+    "supersedes": null,
+    "triggerType": "DEFECT",
+    "findingIds": [
+     "F-B8-4"
+    ],
+    "incidentEvidenceIds": [
+     "EV-PIN-T14"
+    ],
+    "originatingRun": "qa-fixpoint-master",
+    "rootClass": "AUTHORITY",
+    "missedInvariantIds": [
+     "I-AS-1",
+     "I-SF-1"
+    ],
+    "escapeReason": "deferred per Medium+-only ruling: CharacterPanel renders carried dormant talents + dormant-way aura - display-only on flagged saves, no live effect",
+    "applicability": [
+     "display-only dormant renders on flagged saves"
+    ],
+    "exclusions": [],
+    "proposedProtection": [
+     "if the deferral is reversed, filter selectedTalentIds via isBetaTalentId and gate the aura read via isBetaWay"
+    ],
+    "promotionEvidenceIds": [],
+    "qualifiedBy": [],
+    "capabilityDelta": "RECORDED - awaiting independent qualification",
+    "status": "CAPTURED",
+    "policyVersion": null,
+    "effectiveFromRun": null,
+    "recurrenceFindingIds": [],
+    "preventionEvidenceIds": [],
+    "guidance": null
+   }
+  },
+  {
+   "kind": "lesson",
+   "body": {
+    "id": "L-LATENT-UNGATED-HOOK",
+    "version": 1,
+    "supersedes": null,
+    "triggerType": "DEFECT",
+    "findingIds": [
+     "F-B8-5",
+     "F-B8-6"
+    ],
+    "incidentEvidenceIds": [
+     "EV-PIN-T14"
+    ],
+    "originatingRun": "qa-fixpoint-master",
+    "rootClass": "AUTHORITY",
+    "missedInvariantIds": [
+     "I-AS-1",
+     "I-SF-1"
+    ],
+    "escapeReason": "latent hooks (runtime.buildSurviveSources, pill drop branch) lack scope gates but are unreachable at this commit - recorded so a future writer enabling the path sees the gate requirement",
+    "applicability": [
+     "extension hooks with no live writer at the checked commit"
+    ],
+    "exclusions": [],
+    "proposedProtection": [
+     "when a writer lands for a latent seam, the scope gate must ship with it"
+    ],
+    "promotionEvidenceIds": [],
+    "qualifiedBy": [],
+    "capabilityDelta": "RECORDED - awaiting independent qualification",
+    "status": "CAPTURED",
+    "policyVersion": null,
+    "effectiveFromRun": null,
+    "recurrenceFindingIds": [],
+    "preventionEvidenceIds": [],
+    "guidance": null
+   }
+  }
+ ]
+}

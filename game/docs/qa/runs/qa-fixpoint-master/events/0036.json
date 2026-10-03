@@ -1,0 +1,6 @@
+{
+  "applied": [
+    "correction: finding F-TC-2 status CLOSED->DUPLICATE_LINKED (schema status for duplicate-of-F-A2-2; siblingSearch + closeReason filled)",
+    "run.finalEvidenceIds -> [EV-FINAL-VERIFY-4]"
+  ]
+}

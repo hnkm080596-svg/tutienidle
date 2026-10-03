@@ -1,0 +1,801 @@
+{
+ "records": [
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-PIN-TC-FIX",
+    "state": {
+     "productStateId": "4528ef3873ec57b53bb2cf012e15105104bee7eb1f51031400cd03977b7855ba",
+     "contractId": "357b3bff016e4300e72ad462451074a2c8ab36a5a68081aaf629bddeab16b964",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "producer": "coord-main",
+    "startedAt": "2026-10-01T02:50:00Z",
+    "finishedAt": "2026-10-01T03:15:00Z",
+    "commandOrMethod": "npx vitest run tests/architecture/betaDormantSaveLeak.qa.test.ts (F-TC pins: facet/statModifiers/technique_tier/passive/grade-advance channels + positive controls)",
+    "cwd": "game/",
+    "exitCode": 0,
+    "result": "PASS",
+    "artifactPath": "evidence/pin-ftc-fixes.log",
+    "artifactHash": "424bdf9bae952ac4b3dcd5850edac2500889f755fd3c6a1fcc42fc15f718e01e",
+    "inputPaths": [
+     "tests/architecture/betaDormantSaveLeak.qa.test.ts",
+     "src/core/player/CultivationPathSystem.ts",
+     "src/core/game/GameManagerPersistentEffectOps.ts",
+     "src/core/skill/SkillSystem.ts",
+     "src/core/game/GameManagerRealmAdvanceOps.ts",
+     "src/core/betaScopeSkillDomain.ts"
+    ],
+    "inputEvidenceIds": [
+     "EV-FINAL-VERIFY-4"
+    ],
+    "invariantIds": [
+     "I-AS-1",
+     "I-DS-1"
+    ],
+    "claims": [
+     "post-fix pin: way facet [], cultivation_path channel [] on hidden_spell save, technique_tier [] for diamond_body_art, dormant passive emits nothing, tryAdvanceTechniqueGrade refuses dormant technique without debiting; beta positive controls emit normally"
+    ],
+    "limitations": [],
+    "status": "CURRENT",
+    "kind": "EXECUTED_UNIT_STRUCTURAL"
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-MUT-TC-1",
+    "state": {
+     "productStateId": "4528ef3873ec57b53bb2cf012e15105104bee7eb1f51031400cd03977b7855ba",
+     "contractId": "357b3bff016e4300e72ad462451074a2c8ab36a5a68081aaf629bddeab16b964",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "producer": "coord-main",
+    "startedAt": "2026-10-01T02:50:00Z",
+    "finishedAt": "2026-10-01T03:15:00Z",
+    "commandOrMethod": "mutant: F-TC gates reverted (all 6 src files to pre-0599c32a) -> npx vitest run tests/architecture/betaDormantSaveLeak.qa.test.ts",
+    "cwd": "game/",
+    "exitCode": 1,
+    "result": "PASS",
+    "artifactPath": "evidence/mut-tc-1.log",
+    "artifactHash": "5351ff2577b752775df701e1333e5024c47aa7499b037765354cfc75749e4e3a",
+    "inputPaths": [],
+    "inputEvidenceIds": [
+     "EV-FINAL-VERIFY-4"
+    ],
+    "invariantIds": [
+     "I-AS-1",
+     "I-DS-1"
+    ],
+    "claims": [
+     "all 5 F-TC pins fail under the ungated revert - pins isolate exactly the dormant-channel defects they claim"
+    ],
+    "limitations": [],
+    "status": "CURRENT",
+    "kind": "EXECUTED_MUTATION"
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-FINAL-VERIFY-4",
+    "state": {
+     "productStateId": "4528ef3873ec57b53bb2cf012e15105104bee7eb1f51031400cd03977b7855ba",
+     "contractId": "357b3bff016e4300e72ad462451074a2c8ab36a5a68081aaf629bddeab16b964",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "producer": "coord-main",
+    "startedAt": "2026-10-01T02:50:00Z",
+    "finishedAt": "2026-10-01T03:15:00Z",
+    "commandOrMethod": "npm run verify (type-check + build + full vitest) on 0599c32a+learning.md (T5 state)",
+    "cwd": "game/",
+    "exitCode": 0,
+    "result": "PASS",
+    "artifactPath": "evidence/verify-ftc-fixes.log",
+    "artifactHash": "94af6fd2fa48a3b606ee3b3afb31bd7a25e6b6815b2ad9378c5fd1cd8c42351b",
+    "inputPaths": [],
+    "inputEvidenceIds": [],
+    "invariantIds": [
+     "I-CC-1",
+     "I-IA-1",
+     "I-IA-2",
+     "I-PA-1",
+     "I-SV-1",
+     "I-AS-1",
+     "I-DS-1",
+     "I-RM-1",
+     "I-CR-1",
+     "I-PG-1",
+     "I-SS-1",
+     "I-EC-1",
+     "I-SF-1",
+     "I-PM-1",
+     "I-EN-1",
+     "I-UH-1",
+     "I-RT-1",
+     "I-TS-1",
+     "I-CN-1",
+     "I-TQ-1",
+     "I-QI-1"
+    ],
+    "claims": [
+     "full gate green on the post-F-TC state: 7841 tests, type-check, build"
+    ],
+    "limitations": [],
+    "status": "CURRENT",
+    "kind": "EXECUTED_INTEGRATION"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-B-1",
+    "title": "physique-essence drop suppression starved LIVE realm body chapters (Kien Co grade inputs + beta-enabled meridian pill) under the bodyPath scope key",
+    "state": {
+     "productStateId": "4528ef3873ec57b53bb2cf012e15105104bee7eb1f51031400cd03977b7855ba",
+     "contractId": "357b3bff016e4300e72ad462451074a2c8ab36a5a68081aaf629bddeab16b964",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "severity": "High",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "PRODUCTION",
+    "locations": [
+     {
+      "path": "src/core/game/BattleLootSystem.ts",
+      "symbolOrSection": "grantResolvedDrops ~L591 (suppression break on physiqueEssenceGradeOf)",
+      "revision": "9a5b1a3f",
+      "basis": "SOURCE"
+     }
+    ],
+    "discoveredBy": "clean-round-B blind review (child session devin-f0b1dae0a61844b5b339352dfde9d275)",
+    "invariantIds": [
+     "I-EC-1",
+     "I-DS-1"
+    ],
+    "evidenceIds": [
+     "EV-PIN-DORMANT-1"
+    ],
+    "counterexample": "beta-lock player killing an act-1 mob: tinh_hoa_pham_the drops suppressed -> material bag stays 0 -> RealmPanel chapters permanently 0/7 while resolveKienCoGrade requires 3+/6 refinement tiers + 6 meridians",
+    "expected": "beta-live progression faucets stay open: the chapter chain is required by the live Kien Co breakthrough grade",
+    "actual": "chapter essences dropped under isScopeHidden(bodyPath) - suppressed a faucet feeding live machinery",
+    "rootCause": "domain-keyed suppression swept content whose live-ness is defined by a different ownership boundary (bodyPath tag means the The Tu WAY, not realm body progression)",
+    "rootClass": "L-SUPPRESSION-OVERBROAD",
+    "subsystem": "betaScope",
+    "siblingSearch": [
+     {
+      "roots": [
+       "src/core/game/BattleLootSystem.ts",
+       "src/data/realm/PhysiqueEssence.ts",
+       "src/data/breakthrough/BreakthroughGrades.ts",
+       "src/core/betaScope.ts"
+      ],
+      "termsAndMethod": "enumerated every scope-keyed suppression in the loot/bag economy and cross-checked each suppressed item consumer against live contract surfaces (resolveKienCoGrade, investBodyChapter, thong_mach_dan policy)",
+      "evidenceIds": [
+       "EV-PIN-DORMANT-1"
+      ],
+      "hitDispositions": [
+       "physique essence faucet: UNSUPPRESSED (live consumer)",
+       "other bodyPath suppressions audited: consumers genuinely dormant"
+      ],
+      "coverageLimits": [
+       "bounded to the enumerated roots and predicates; prod callers outside these roots verified absent via grep census"
+      ]
+     }
+    ],
+    "siblingFindingIds": [
+     "F-B-2"
+    ],
+    "repair": "suppression removed; comment documents the chapter-consumer chain",
+    "pinEvidenceIds": [
+     "EV-PIN-DORMANT-1"
+    ],
+    "verificationEvidenceIds": [
+     "EV-FINAL-VERIFY-4",
+     "EV-PIN-DORMANT-1"
+    ],
+    "closureReviewIds": [
+     "RV-CLOSURE-4"
+    ],
+    "status": "CLOSED",
+    "closedAt": "2026-10-01T03:15:00Z",
+    "closeReason": "FIXED - faucet open + pin green + full verify green (7841) at T5",
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-B-2",
+    "title": "carried sword save could drive sword machinery: setKiemPhoPreset wrote presets and QuanKhiPanel/CharacterPanel mounted the dormant orb editor behind the raw path flag",
+    "state": {
+     "productStateId": "4528ef3873ec57b53bb2cf012e15105104bee7eb1f51031400cd03977b7855ba",
+     "contractId": "357b3bff016e4300e72ad462451074a2c8ab36a5a68081aaf629bddeab16b964",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "severity": "Medium",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "PRODUCTION",
+    "locations": [
+     {
+      "path": "src/core/game/GameManagerProgressionOps.ts",
+      "symbolOrSection": "setKiemPhoPreset",
+      "revision": "9a5b1a3f",
+      "basis": "SOURCE"
+     },
+     {
+      "path": "src/components/panels/QuanKhiPanel.vue",
+      "symbolOrSection": "isSwordPath mount predicate",
+      "revision": "9a5b1a3f",
+      "basis": "SOURCE"
+     },
+     {
+      "path": "src/components/panels/CharacterPanel.vue",
+      "symbolOrSection": "showQuanKhiEntry",
+      "revision": "9a5b1a3f",
+      "basis": "SOURCE"
+     }
+    ],
+    "discoveredBy": "clean-round-B blind review (child session devin-f0b1dae0a61844b5b339352dfde9d275)",
+    "invariantIds": [
+     "I-AS-1",
+     "I-PA-1"
+    ],
+    "evidenceIds": [
+     "EV-PIN-DORMANT-1"
+    ],
+    "counterexample": "player{qi_refining, sword_pathway}: setKiemPhoPreset([orb_dam,orb_dam])=true (writes state); QuanKhiPanel mounted the spec card + editor",
+    "expected": "dormant way machinery: write seams refuse; panels do not mount the sword surface on a flagged save",
+    "actual": "capability gate admitted the write; panel re-derived sword-ness from the path flag (parallel verdict)",
+    "rootCause": "sword machinery assumed covered by way-level dormancy; per-op write seams and per-panel mount predicates needed their own gates",
+    "rootClass": "L-WRITE-SEAM-UNGATED",
+    "subsystem": "betaScope",
+    "siblingSearch": [
+     {
+      "roots": [
+       "src/core/game/GameManagerProgressionOps.ts",
+       "src/components/panels/"
+      ],
+      "termsAndMethod": "enumerated every sword-feature write op and panel mount: setKiemPhoPreset, orb spec card, CharacterPanel entry",
+      "evidenceIds": [
+       "EV-PIN-DORMANT-1"
+      ],
+      "hitDispositions": [
+       "setKiemPhoPreset: gated isScopeHidden(swordPath)",
+       "QuanKhiPanel/CharacterPanel mounts: gated isScopeHidden(swordPath)",
+       "no other sword write seam found"
+      ],
+      "coverageLimits": [
+       "bounded to the enumerated roots and predicates; prod callers outside these roots verified absent via grep census"
+      ]
+     }
+    ],
+    "siblingFindingIds": [
+     "F-B-1"
+    ],
+    "repair": "isScopeHidden(swordPath) gate after capability gate on write; both mounts gated identically",
+    "pinEvidenceIds": [
+     "EV-PIN-DORMANT-1"
+    ],
+    "verificationEvidenceIds": [
+     "EV-FINAL-VERIFY-4",
+     "EV-PIN-DORMANT-1"
+    ],
+    "closureReviewIds": [
+     "RV-CLOSURE-4"
+    ],
+    "status": "CLOSED",
+    "closedAt": "2026-10-01T03:15:00Z",
+    "closeReason": "FIXED - write refuses + mounts hidden + pins green (mutant-killed) at T5",
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-TC-1",
+    "title": "dormant way kept its stat channels live on flagged saves: way facet, way statModifiers, technique tier+combat channels, learned passives, node_levels all emitted into the shared stat registry",
+    "state": {
+     "productStateId": "4528ef3873ec57b53bb2cf012e15105104bee7eb1f51031400cd03977b7855ba",
+     "contractId": "357b3bff016e4300e72ad462451074a2c8ab36a5a68081aaf629bddeab16b964",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "severity": "Medium",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "PRODUCTION",
+    "locations": [
+     {
+      "path": "src/core/player/CultivationPathSystem.ts",
+      "symbolOrSection": "collectActiveWayStatModifiers + getCultivationPathStatModifiers",
+      "revision": "0599c32a",
+      "basis": "SOURCE"
+     },
+     {
+      "path": "src/core/game/GameManagerPersistentEffectOps.ts",
+      "symbolOrSection": "getTechniqueTierModifiers/getTechniqueCombatModifiers/node_levels channel",
+      "revision": "0599c32a",
+      "basis": "SOURCE"
+     },
+     {
+      "path": "src/core/skill/SkillSystem.ts",
+      "symbolOrSection": "getScaledPassiveModifiers",
+      "revision": "0599c32a",
+      "basis": "SOURCE"
+     }
+    ],
+    "discoveredBy": "terminal-check blind review (child session devin-cb76191eb60d496f80c3851155766c27, on state acbe096a; verified repro still present on 0599c32a-pre)",
+    "invariantIds": [
+     "I-AS-1",
+     "I-DS-1"
+    ],
+    "evidenceIds": [
+     "EV-PIN-TC-FIX",
+     "EV-MUT-TC-1"
+    ],
+    "counterexample": "player{body_pathway flagged}: resolvePlayerStatAssembly emits way facet vitality->enduranceThreshold; hidden_spell save emits ngo_dao_linh_luc maxMp+100; diamond_body_art active emits technique_tier modifiers; learned sword passive emits criticalDamage",
+    "expected": "a dormant way record stays inert: no channel emits its effects into live stats",
+    "actual": "every effect channel downstream of the preserved way record emitted on flagged saves",
+    "rootCause": "dormancy enforced at access seams; stat-channel emitters treated as beta machinery because the beta way shares the channels",
+    "rootClass": "L-EFFECT-CHANNEL-UNGATED",
+    "subsystem": "betaScope",
+    "siblingSearch": [
+     {
+      "roots": [
+       "src/core/game/GameManagerPersistentEffectOps.ts",
+       "src/core/player/Player.ts",
+       "src/core/game/CombatBuild.ts"
+      ],
+      "termsAndMethod": "full channel census: persistentBuffs(runtime,live) / scaled passives / technique_tier / cultivation_path / node_levels / technique_combat / getLiveBattleModifiers; verified every emitter routes through a gated predicate; ungated remainder is runtime-owned",
+      "evidenceIds": [
+       "EV-PIN-TC-FIX"
+      ],
+      "hitDispositions": [
+       "way facet: isBetaWay gate",
+       "way statModifiers: isBetaWay gate",
+       "technique tier+combat: betaTechniqueAdmitted",
+       "scaled passives: betaSkillAdmitted",
+       "node_levels: betaNodeWriteAdmitted call-site filter (acyclic constraint)",
+       "resolveActiveWayStatDomains: deliberately ungated - consumers already gated"
+      ],
+      "coverageLimits": [
+       "bounded to the enumerated roots and predicates; prod callers outside these roots verified absent via grep census"
+      ]
+     }
+    ],
+    "siblingFindingIds": [
+     "F-TC-2",
+     "F-TC-3"
+    ],
+    "repair": "source-level gates on each emitter + new betaTechniqueAdmitted/betaActiveWayAdmitted/betaNodeWriteAdmitted domain predicates (all live-evaluated)",
+    "pinEvidenceIds": [
+     "EV-PIN-TC-FIX"
+    ],
+    "verificationEvidenceIds": [
+     "EV-FINAL-VERIFY-4",
+     "EV-PIN-TC-FIX",
+     "EV-MUT-TC-1"
+    ],
+    "closureReviewIds": [
+     "RV-CLOSURE-4"
+    ],
+    "status": "CLOSED",
+    "closedAt": "2026-10-01T03:15:00Z",
+    "closeReason": "FIXED - all channels inert on flagged saves, positive controls green, combined mutant killed (5 pin failures)",
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-TC-2",
+    "title": "dormant-kit write seam accepted insight (levelUpSkill/core admission on flagged saves) - stale duplicate of F-A2-2 reported by TERMINAL_CHECK on pre-fix tip acbe096a",
+    "state": {
+     "productStateId": "4528ef3873ec57b53bb2cf012e15105104bee7eb1f51031400cd03977b7855ba",
+     "contractId": "357b3bff016e4300e72ad462451074a2c8ab36a5a68081aaf629bddeab16b964",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "severity": "Medium",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "PRODUCTION",
+    "locations": [
+     {
+      "path": "src/core/game/GameManagerProgressionOps.ts",
+      "symbolOrSection": "levelUpSkill/canUpgradeNode admission",
+      "revision": "c94f5955",
+      "basis": "SOURCE"
+     }
+    ],
+    "discoveredBy": "terminal-check blind review (child session devin-cb76191eb60d496f80c3851155766c27) on stale tip acbe096a - defect already fixed at c94f5955 before its review",
+    "invariantIds": [
+     "I-AS-1"
+    ],
+    "evidenceIds": [
+     "EV-PROBE-A2-FIX"
+    ],
+    "counterexample": "same repro as F-A2-2: canUpgradeNode/levelUpSkill on core_tham_the - verified already gated at c94f5955 by betaNodeWriteAdmitted/betaSkillAdmitted",
+    "expected": "as F-A2-2",
+    "actual": "reviewer saw acbe096a (pre-push stale fetch); the seam is closed on 0599c32a and pinned",
+    "rootCause": "stale-review artifact, not a new defect",
+    "rootClass": "L-PARALLEL-VERDICT",
+    "subsystem": "betaScope",
+    "siblingSearch": [
+     {
+      "roots": [
+       "src/core/game/GameManagerProgressionOps.ts",
+       "src/core/skill/"
+      ],
+      "termsAndMethod": "reused F-A2-2 sibling census: purchase/upgrade/learn/respec/spec-claim all route through betaNodeWriteAdmitted + betaSkillAdmitted",
+      "evidenceIds": [
+       "EV-PROBE-A2-FIX"
+      ],
+      "hitDispositions": [
+       "all write seams unified under the admission predicates - duplicate of F-A2-2 lineage"
+      ],
+      "coverageLimits": [
+       "same bounded roots as F-A2-2"
+      ]
+     }
+    ],
+    "siblingFindingIds": [
+     "F-A2-2"
+    ],
+    "repair": "none needed - closed by F-A2-2 fix (betaNodeWriteAdmitted unified predicate) at c94f5955",
+    "pinEvidenceIds": [
+     "EV-PROBE-A2-FIX"
+    ],
+    "verificationEvidenceIds": [
+     "EV-FINAL-VERIFY-4"
+    ],
+    "closureReviewIds": [
+     "RV-CLOSURE-4"
+    ],
+    "status": "CLOSED",
+    "closedAt": "2026-10-01T03:15:00Z",
+    "closeReason": "DUPLICATE-OF F-A2-2: verified closed + pinned on current state",
+    "duplicateOf": "F-A2-2",
+    "rejectionReason": null,
+    "exception": null
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-TC-3",
+    "title": "tryAdvanceTechniqueGrade spent spirit stones grading a dormant way canonical technique on a carried save",
+    "state": {
+     "productStateId": "4528ef3873ec57b53bb2cf012e15105104bee7eb1f51031400cd03977b7855ba",
+     "contractId": "357b3bff016e4300e72ad462451074a2c8ab36a5a68081aaf629bddeab16b964",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "severity": "Medium",
+    "classification": "REAL_DEFECT",
+    "actionable": true,
+    "reachability": "PRODUCTION",
+    "locations": [
+     {
+      "path": "src/core/game/GameManagerRealmAdvanceOps.ts",
+      "symbolOrSection": "tryAdvanceTechniqueGrade",
+      "revision": "0599c32a",
+      "basis": "SOURCE"
+     }
+    ],
+    "discoveredBy": "terminal-check blind review (child session devin-cb76191eb60d496f80c3851155766c27)",
+    "invariantIds": [
+     "I-AS-1",
+     "I-EC-1"
+    ],
+    "evidenceIds": [
+     "EV-PIN-TC-FIX"
+    ],
+    "counterexample": "player{foundation_establishment, body_pathway, diamond_body_art g1, 1000 stones}: tryAdvanceTechniqueGrade consumed stones and graded the dormant technique",
+    "expected": "grade advancement fails closed on a dormant way technique; no currency debited",
+    "actual": "advance-band checks passed; scope admission never consulted",
+    "rootCause": "way.techniqueId ownership was never enumerated as a dormancy boundary for economy writes",
+    "rootClass": "L-WRITE-SEAM-UNGATED",
+    "subsystem": "betaScope",
+    "siblingSearch": [
+     {
+      "roots": [
+       "src/core/game/GameManagerRealmAdvanceOps.ts",
+       "src/core/technique/"
+      ],
+      "termsAndMethod": "enumerated technique write seams: grade advance (gated), learn/grant (initiation-owned, admission-covered), switch/respec (none found consuming dormant technique)",
+      "evidenceIds": [
+       "EV-PIN-TC-FIX"
+      ],
+      "hitDispositions": [
+       "tryAdvanceTechniqueGrade: betaTechniqueAdmitted",
+       "grantCanonicalTechnique: initiation-only, admission-covered"
+      ],
+      "coverageLimits": [
+       "bounded to the enumerated roots and predicates; prod callers outside these roots verified absent via grep census"
+      ]
+     }
+    ],
+    "siblingFindingIds": [
+     "F-TC-1",
+     "F-TC-2"
+    ],
+    "repair": "betaTechniqueAdmitted gate after existence/band checks, before currency debit",
+    "pinEvidenceIds": [
+     "EV-PIN-TC-FIX"
+    ],
+    "verificationEvidenceIds": [
+     "EV-FINAL-VERIFY-4",
+     "EV-PIN-TC-FIX",
+     "EV-MUT-TC-1"
+    ],
+    "closureReviewIds": [
+     "RV-CLOSURE-4"
+    ],
+    "status": "CLOSED",
+    "closedAt": "2026-10-01T03:15:00Z",
+    "closeReason": "FIXED - advance refused, stones untouched, pin green at T5",
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null
+   }
+  },
+  {
+   "kind": "lesson",
+   "body": {
+    "id": "L-SUPPRESSION-OVERBROAD",
+    "version": 1,
+    "supersedes": null,
+    "triggerType": "DEFECT",
+    "findingIds": [
+     "F-B-1"
+    ],
+    "incidentEvidenceIds": [
+     "EV-PIN-DORMANT-1"
+    ],
+    "originatingRun": "qa-fixpoint-master",
+    "rootClass": "AUTHORITY",
+    "missedInvariantIds": [],
+    "escapeReason": "leak checks run one direction (does hidden content reach live play); never inverted to does a suppressed faucet feed a consumer the live contract requires",
+    "applicability": [
+     "any domain-keyed suppression of content whose live-ness rides a different ownership boundary"
+    ],
+    "exclusions": [],
+    "proposedProtection": [
+     "for every scope-keyed suppression enumerate the suppressed items consumers; a suppressed item with a live consumer is broken visible scope",
+     "consumer-chain audit is mandatory before domain-keyed suppression (Kien Co grade -> body chapters is canonical)"
+    ],
+    "promotionEvidenceIds": [],
+    "qualifiedBy": [],
+    "capabilityDelta": "RECORDED - awaiting independent qualification",
+    "status": "CAPTURED",
+    "policyVersion": null,
+    "effectiveFromRun": null,
+    "recurrenceFindingIds": [],
+    "preventionEvidenceIds": [],
+    "guidance": null
+   }
+  },
+  {
+   "kind": "lesson",
+   "body": {
+    "id": "L-EFFECT-CHANNEL-UNGATED",
+    "version": 1,
+    "supersedes": null,
+    "triggerType": "DEFECT",
+    "findingIds": [
+     "F-TC-1",
+     "F-TC-3"
+    ],
+    "incidentEvidenceIds": [
+     "EV-PIN-TC-FIX",
+     "EV-MUT-TC-1"
+    ],
+    "originatingRun": "qa-fixpoint-master",
+    "rootClass": "AUTHORITY",
+    "missedInvariantIds": [],
+    "escapeReason": "dormancy enforced at access seams; stat-channel emitters treated as beta machinery because the beta way shares the channels - preserved way records emit downstream of the gate",
+    "applicability": [
+     "every channel aggregating per-player modifiers/stat effects",
+     "every write op on way-owned entities (techniqueId, skillIds, nodes)"
+    ],
+    "exclusions": [],
+    "proposedProtection": [
+     "enumerate every modifier-aggregation channel and gate each dormant-ownership emitter at its source",
+     "way.techniqueId is an ownership claim; grade/tier/combat channels fail closed on dormant techniques",
+     "call-site filtering when the aggregator cannot import the domain module (acyclic)"
+    ],
+    "promotionEvidenceIds": [],
+    "qualifiedBy": [],
+    "capabilityDelta": "RECORDED - awaiting independent qualification",
+    "status": "CAPTURED",
+    "policyVersion": null,
+    "effectiveFromRun": null,
+    "recurrenceFindingIds": [],
+    "preventionEvidenceIds": [],
+    "guidance": null
+   }
+  },
+  {
+   "kind": "review",
+   "body": {
+    "id": "RV-SEQ5-COR",
+    "state": {
+     "productStateId": "4528ef3873ec57b53bb2cf012e15105104bee7eb1f51031400cd03977b7855ba",
+     "contractId": "357b3bff016e4300e72ad462451074a2c8ab36a5a68081aaf629bddeab16b964",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "reviewerId": "coord-main",
+    "model": "coordinator",
+    "role": "P5 pass 5 CORRECTNESS: T4/T5 diff = F-TC gates. Reviewed predicate semantics (dormant set = way-owned ids minus beta-owned; way-less baseline admitted), gate placement before any debit, admittedNodeModifiers structural-type fit (aggregate needs only getAll), pins + mutant kills on all 5 channels; positive controls verified",
+    "priorFindingsVisible": true,
+    "accessLimitations": [],
+    "coverageIds": [],
+    "novelAttackIds": [],
+    "status": "SEALED",
+    "round": 8,
+    "phase": "CORRECTNESS",
+    "contextId": "ctx-coord-seq-5",
+    "inputBundleHash": "a69228c96a801bbe17b5e76af885402a43e9896a2c9731d662f5afd997ce58a9",
+    "startedAt": "2026-10-01T02:56:00Z",
+    "sealedAt": "2026-10-01T03:05:00Z",
+    "previousPhaseReviewId": null,
+    "reviewedAfterPreviousFixes": true,
+    "evidenceIds": [
+     "EV-PIN-TC-FIX",
+     "EV-MUT-TC-1",
+     "EV-FINAL-VERIFY-4"
+    ],
+    "findingIds": []
+   }
+  },
+  {
+   "kind": "review",
+   "body": {
+    "id": "RV-SEQ5-AUT",
+    "state": {
+     "productStateId": "4528ef3873ec57b53bb2cf012e15105104bee7eb1f51031400cd03977b7855ba",
+     "contractId": "357b3bff016e4300e72ad462451074a2c8ab36a5a68081aaf629bddeab16b964",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "reviewerId": "coord-main",
+    "model": "coordinator",
+    "role": "P5 pass 5 AUTHORITY: betaNodeWriteAdmitted moved into the domain module (single write-admission authority); new predicates live-evaluated (no module-load snapshots); call-site filtering on node_levels preserves the acyclic import boundary; no duplicated sources of truth; gates read the same admission contract as CombatBuild.wayAdmitted",
+    "priorFindingsVisible": true,
+    "accessLimitations": [],
+    "coverageIds": [],
+    "novelAttackIds": [],
+    "status": "SEALED",
+    "round": 8,
+    "phase": "AUTHORITY",
+    "contextId": "ctx-coord-seq-5",
+    "inputBundleHash": "a69228c96a801bbe17b5e76af885402a43e9896a2c9731d662f5afd997ce58a9",
+    "startedAt": "2026-10-01T03:05:00Z",
+    "sealedAt": "2026-10-01T03:10:00Z",
+    "previousPhaseReviewId": "RV-SEQ5-COR",
+    "reviewedAfterPreviousFixes": true,
+    "evidenceIds": [
+     "EV-STATIC-SEAMS",
+     "EV-PIN-TC-FIX"
+    ],
+    "findingIds": []
+   }
+  },
+  {
+   "kind": "review",
+   "body": {
+    "id": "RV-SEQ5-INT",
+    "state": {
+     "productStateId": "4528ef3873ec57b53bb2cf012e15105104bee7eb1f51031400cd03977b7855ba",
+     "contractId": "357b3bff016e4300e72ad462451074a2c8ab36a5a68081aaf629bddeab16b964",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "reviewerId": "coord-main",
+    "model": "coordinator",
+    "role": "P5 pass 5 INTEGRATION: channel census - every consumer of collectActiveWayStatModifiers/getCultivationPathStatModifiers/getScaledPassiveModifiers/getTechniqueTier+CombatModifiers/aggregateNodeStatModifiers routes through a gated seam (Player.ts:547, PersistentEffectOps x4, CombatBuild); no other aggregateNodeStatModifiers callers outside tests; all 12 mutants re-killed at T5; verify 7841 green",
+    "priorFindingsVisible": true,
+    "accessLimitations": [],
+    "coverageIds": [],
+    "novelAttackIds": [],
+    "status": "SEALED",
+    "round": 8,
+    "phase": "INTEGRATION",
+    "contextId": "ctx-coord-seq-5",
+    "inputBundleHash": "a69228c96a801bbe17b5e76af885402a43e9896a2c9731d662f5afd997ce58a9",
+    "startedAt": "2026-10-01T03:10:00Z",
+    "sealedAt": "2026-10-01T03:14:00Z",
+    "previousPhaseReviewId": "RV-SEQ5-AUT",
+    "reviewedAfterPreviousFixes": true,
+    "evidenceIds": [
+     "EV-PIN-TC-FIX",
+     "EV-FINAL-VERIFY-4"
+    ],
+    "findingIds": []
+   }
+  },
+  {
+   "kind": "review",
+   "body": {
+    "id": "RV-CLOSURE-4",
+    "state": {
+     "productStateId": "4528ef3873ec57b53bb2cf012e15105104bee7eb1f51031400cd03977b7855ba",
+     "contractId": "357b3bff016e4300e72ad462451074a2c8ab36a5a68081aaf629bddeab16b964",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "reviewerId": "coord-main",
+    "model": "coordinator",
+    "role": "closure review: F-B-1/F-B-2/F-TC-1/F-TC-2(dup)/F-TC-3 fix correctness - pins isolate each defect (mutant-killed), sibling seams enumerated, positive controls keep beta behavior identical",
+    "priorFindingsVisible": true,
+    "accessLimitations": [],
+    "coverageIds": [],
+    "novelAttackIds": [],
+    "status": "SEALED",
+    "round": 8,
+    "phase": "CLOSURE",
+    "contextId": "ctx-coord-closure-4",
+    "inputBundleHash": "a69228c96a801bbe17b5e76af885402a43e9896a2c9731d662f5afd997ce58a9",
+    "startedAt": "2026-10-01T03:14:00Z",
+    "sealedAt": "2026-10-01T03:16:00Z",
+    "previousPhaseReviewId": null,
+    "reviewedAfterPreviousFixes": true,
+    "evidenceIds": [
+     "EV-PIN-DORMANT-1",
+     "EV-PIN-TC-FIX",
+     "EV-MUT-TC-1",
+     "EV-FINAL-VERIFY-4"
+    ],
+    "findingIds": [
+     "F-B-1",
+     "F-B-2",
+     "F-TC-1",
+     "F-TC-2",
+     "F-TC-3"
+    ]
+   }
+  },
+  {
+   "kind": "cycle",
+   "body": {
+    "id": "CY-SEQ-5",
+    "state": {
+     "productStateId": "4528ef3873ec57b53bb2cf012e15105104bee7eb1f51031400cd03977b7855ba",
+     "contractId": "357b3bff016e4300e72ad462451074a2c8ab36a5a68081aaf629bddeab16b964",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "reviewIds": [
+     "RV-SEQ5-COR",
+     "RV-SEQ5-AUT",
+     "RV-SEQ5-INT"
+    ],
+    "coverageIds": [],
+    "evidenceIds": [
+     "EV-PIN-TC-FIX",
+     "EV-MUT-TC-1",
+     "EV-FINAL-VERIFY-4"
+    ],
+    "noveltyEvidenceIds": [],
+    "startedAt": "2026-10-01T02:56:00Z",
+    "finishedAt": "2026-10-01T03:16:00Z",
+    "status": "CLEAN"
+   }
+  }
+ ]
+}

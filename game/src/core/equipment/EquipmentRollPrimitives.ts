@@ -52,7 +52,19 @@ export function normalizeRolledAffixValue(value: number, min: number, max: numbe
 // nếu sau này đổi cách xử lý tier không khớp (vd data cũ thiếu tier).
 export function getEffectiveAffixValue(rolled: RolledAffix, affix: Affix): number {
   const tier = affix.tiers.find((candidate) => candidate.tier === rolled.tier)
-  return tier ? normalizeRolledAffixValue(rolled.value, tier.min, tier.max) : rolled.value
+  if (tier) {
+    return normalizeRolledAffixValue(rolled.value, tier.min, tier.max)
+  }
+  // A roll naming no authored tier carries no authored range (legacy
+  // drift or a forged value) - the emitted number normalizes against
+  // the union of the affix's authored tiers rather than trusting the
+  // raw claim.
+  if (affix.tiers.length === 0) {
+    return rolled.value
+  }
+  const min = Math.min(...affix.tiers.map((candidate) => candidate.min))
+  const max = Math.max(...affix.tiers.map((candidate) => candidate.max))
+  return normalizeRolledAffixValue(rolled.value, min, max)
 }
 
 /**

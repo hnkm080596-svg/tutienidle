@@ -1,0 +1,1043 @@
+{
+ "records": [
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-FINAL-VERIFY-T12",
+    "kind": "EXECUTED_INTEGRATION",
+    "state": {
+     "productStateId": "a1ddad7788a9afc923faa1ea24847bf36b89c14b8849e0078ab973dda011c4f8",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "CURRENT",
+    "commandOrMethod": "npm run verify (type-check && build && vitest run)",
+    "cwd": "game/",
+    "artifactPath": "evidence/t12-verify.log",
+    "artifactHash": "4b084ef93734ce46f8ca9bbf18c6d776514242098d521de5e4976834bb084c20",
+    "result": "PASS",
+    "exitCode": 0,
+    "startedAt": "2026-10-01T06:38:00Z",
+    "finishedAt": "2026-10-01T06:55:00Z",
+    "producer": "coord-main",
+    "invariantIds": [
+     "I-TQ-1"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [],
+    "claims": [
+     "T12 @ cedaac21 GREEN: 864 files, 7918 tests pass, type-check+build clean after B6/TC4 settlement-reauth wave"
+    ],
+    "limitations": []
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-PIN-REAUTH-1",
+    "kind": "EXECUTED_UNIT_STRUCTURAL",
+    "state": {
+     "productStateId": "a1ddad7788a9afc923faa1ea24847bf36b89c14b8849e0078ab973dda011c4f8",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "CURRENT",
+    "commandOrMethod": "npx vitest run tests/architecture/betaSettlementReauth.qa.test.ts",
+    "cwd": "game/",
+    "artifactPath": "evidence/t12-pin-reauth.log",
+    "artifactHash": "bf3d2167ed0512dcee03006951414bbce55d321910e476a32bf4c3e51801e9e5",
+    "result": "PASS",
+    "exitCode": 0,
+    "startedAt": "2026-10-01T06:38:00Z",
+    "finishedAt": "2026-10-01T06:55:00Z",
+    "producer": "coord-main",
+    "invariantIds": [
+     "I-AS-1",
+     "I-DS-1",
+     "I-SF-1",
+     "I-UH-1"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [],
+    "claims": [
+     "16 pins green: dormant committedOutcome parks + flags; hidden-type parks under lock; dormant alchemy job parks (family + special recipe); unknown recipeId fails honestly; bat-mach slice stripped under lock; kien-co grade ignores carried body; flag covers body/tribulation/alchemy carry classes; thong_mach_dan fails closed at origination; admissible controls settle"
+    ],
+    "limitations": []
+   }
+  },
+  {
+   "kind": "evidence",
+   "body": {
+    "id": "EV-MUT-REAUTH-1",
+    "kind": "EXECUTED_MUTATION",
+    "state": {
+     "productStateId": "a1ddad7788a9afc923faa1ea24847bf36b89c14b8849e0078ab973dda011c4f8",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "CURRENT",
+    "commandOrMethod": "manual mutants over T12 hot gates vs betaSettlementReauth.qa.test.ts",
+    "cwd": "game/",
+    "artifactPath": "evidence/t12-mutant-reauth.log",
+    "artifactHash": "70f73ac3782bda6d9cd103a22b01fe597e8f7d331e02988960af553577a97073",
+    "result": "PASS",
+    "exitCode": 0,
+    "startedAt": "2026-10-01T06:38:00Z",
+    "finishedAt": "2026-10-01T06:55:00Z",
+    "producer": "coord-main",
+    "invariantIds": [
+     "I-AS-1",
+     "I-DS-1"
+    ],
+    "inputEvidenceIds": [],
+    "inputPaths": [],
+    "claims": [
+     "5/5 mutants killed: hiddenDormant->false, settle-gate->false, alchemy-park->false, modifier-arm->always-emit, bodyLive->true; post-restore 16/16 green"
+    ],
+    "limitations": []
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-CONS-B1",
+    "title": "settleOutcome trusts a carried committedOutcome verbatim - dormant realm transition + hidden lineage re-authorized without re-deriving the scope verdict",
+    "severity": "High",
+    "status": "CLOSED",
+    "classification": "REAL_DEFECT",
+    "discoveredBy": "devin-7adbe5c55e06462dbbcfe91d587be01f",
+    "actionable": true,
+    "subsystem": "betaScope",
+    "rootClass": "AUTHORITY",
+    "rootCause": "scope verdict enforced at start() but persisted intent trusted verbatim at restore/settle: committed outcome was never re-validated against transition availability or hidden-type dormancy",
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/core/tribulation/TribulationOutcomeService.ts",
+      "revision": "cedaac21",
+      "symbolOrSection": "settleOutcome"
+     },
+     {
+      "basis": "SOURCE",
+      "path": "src/core/tribulation/TribulationDirector.ts",
+      "revision": "cedaac21",
+      "symbolOrSection": "restoreRuntime"
+     }
+    ],
+    "reachability": "PRODUCTION",
+    "state": {
+     "productStateId": "a1ddad7788a9afc923faa1ea24847bf36b89c14b8849e0078ab973dda011c4f8",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "invariantIds": [
+     "I-AS-1",
+     "I-DS-1"
+    ],
+    "siblingFindingIds": [],
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "expected": "dormant committedOutcome: parked (record intact), no realm entry/passives/penalties/lineage writes",
+    "actual": "carried FE->golden_core victory settled: realm entries + passives + hidden-lineage writes emitted under the lock",
+    "counterexample": "restore save with committedOutcome{victory,golden_core,normal} then settleOutcome -> realmId advances to a scope-hidden realm",
+    "repair": "re-derive the verdict at the settle seam: hidden-type parks while hiddenContent is scope-hidden; any target failing isRealmTransitionEnabled parks; record stays pending (inert data)",
+    "evidenceIds": [
+     "EV-PIN-REAUTH-1",
+     "EV-MUT-REAUTH-1",
+     "EV-FINAL-VERIFY-T12"
+    ],
+    "pinEvidenceIds": [
+     "EV-PIN-REAUTH-1",
+     "EV-MUT-REAUTH-1",
+     "EV-FINAL-VERIFY-T12"
+    ],
+    "verificationEvidenceIds": [
+     "EV-PIN-REAUTH-1",
+     "EV-MUT-REAUTH-1",
+     "EV-FINAL-VERIFY-T12"
+    ],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src/core",
+       "src/services",
+       "src/components",
+       "tests"
+      ],
+      "termsAndMethod": "sibling-seam census: every restore/settle/write dispatch enumerated for persisted-intent trust; emitter siblings of gated records enumerated",
+      "hitDispositions": [
+       "see claims in evidence"
+      ],
+      "coverageLimits": [
+       "state-boundary slice reads pass via preflight for hostile shapes"
+      ],
+      "evidenceIds": [
+       "EV-PIN-REAUTH-1",
+       "EV-MUT-REAUTH-1",
+       "EV-FINAL-VERIFY-T12"
+      ]
+     }
+    ],
+    "closeReason": "settle re-authenticates transition + hidden-type verdicts; parked record intact; pin + mutant green",
+    "closedAt": "2026-10-01T06:55:00Z",
+    "closureReviewIds": [
+     "RV-CLOSURE-11"
+    ]
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-CONS-B2",
+    "title": "alchemy tick/settleOffline delivers carried dormant-family jobs into the live pillBag - restore trusted persisted intent without re-deriving the family verdict",
+    "severity": "Medium",
+    "status": "CLOSED",
+    "classification": "REAL_DEFECT",
+    "discoveredBy": "devin-7adbe5c55e06462dbbcfe91d587be01f",
+    "actionable": true,
+    "subsystem": "betaScope",
+    "rootClass": "AUTHORITY",
+    "rootCause": "same settlement-reauth root class as F-CONS-B1: startJob gates origination but the delivery seam re-emitted dormant-family pills (phi_van_dan etc.) and fired toasts on carried saves",
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/core/alchemy/AlchemySystem.ts",
+      "revision": "cedaac21",
+      "symbolOrSection": "tick"
+     },
+     {
+      "basis": "SOURCE",
+      "path": "src/core/game/GameManagerSaveRestore.ts",
+      "revision": "cedaac21",
+      "symbolOrSection": "settleOffline call at restore"
+     }
+    ],
+    "reachability": "PRODUCTION",
+    "state": {
+     "productStateId": "a1ddad7788a9afc923faa1ea24847bf36b89c14b8849e0078ab973dda011c4f8",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "invariantIds": [
+     "I-DS-1"
+    ],
+    "siblingFindingIds": [],
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "expected": "dormant-family job parked (record intact): no pill delivery, no settlement event/toast",
+    "actual": "carried alchemy_phi_van_dan_mortal job settled +1 phi_van_dan_mortal into the live pillBag on restore",
+    "counterexample": "restore save with completed dormant-family job -> pill lands during restoreFromSave",
+    "repair": "authored-dormant recipe check at the delivery seam (scopeHiddenPillFamilyOfId): parks; unknown ids keep honest recipe-miss failure; retired recipes keep in-flight settle contract",
+    "evidenceIds": [
+     "EV-PIN-REAUTH-1",
+     "EV-MUT-REAUTH-1",
+     "EV-FINAL-VERIFY-T12"
+    ],
+    "pinEvidenceIds": [
+     "EV-PIN-REAUTH-1",
+     "EV-MUT-REAUTH-1",
+     "EV-FINAL-VERIFY-T12"
+    ],
+    "verificationEvidenceIds": [
+     "EV-PIN-REAUTH-1",
+     "EV-MUT-REAUTH-1",
+     "EV-FINAL-VERIFY-T12"
+    ],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src/core",
+       "src/services",
+       "src/components",
+       "tests"
+      ],
+      "termsAndMethod": "sibling-seam census: every restore/settle/write dispatch enumerated for persisted-intent trust; emitter siblings of gated records enumerated",
+      "hitDispositions": [
+       "see claims in evidence"
+      ],
+      "coverageLimits": [
+       "state-boundary slice reads pass via preflight for hostile shapes"
+      ],
+      "evidenceIds": [
+       "EV-PIN-REAUTH-1",
+       "EV-MUT-REAUTH-1",
+       "EV-FINAL-VERIFY-T12"
+      ]
+     }
+    ],
+    "closeReason": "delivery seam re-authenticates family verdict; parked record intact; pin + mutant green",
+    "closedAt": "2026-10-01T06:55:00Z",
+    "closureReviewIds": [
+     "RV-CLOSURE-11"
+    ]
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-BODY-EMIT",
+    "title": "applyChapterEffect modifier chapters re-emit their owned modifier slice from carried bodyProgression records under the lock - restore rehydration trusted carried state",
+    "severity": "High",
+    "status": "CLOSED",
+    "classification": "REAL_DEFECT",
+    "discoveredBy": "devin-2fe7c666d0d44c738779da09b92aa398",
+    "actionable": true,
+    "subsystem": "betaScope",
+    "rootClass": "AUTHORITY",
+    "rootCause": "sibling-gate asymmetry: collectBodyBaseStatDeltas was gated (F-BS wave) but the StatModifier emission sibling applyAllBodyModifiers->applyChapterEffect was left open; carried openedIds re-emitted 'bat-mach:*' modifiers at every restore",
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/core/realm/body/BodyProgressionSystem.ts",
+      "revision": "cedaac21",
+      "symbolOrSection": "applyChapterEffect"
+     },
+     {
+      "basis": "SOURCE",
+      "path": "src/core/game/GameManagerSaveRestore.ts",
+      "revision": "cedaac21",
+      "symbolOrSection": "applyAllBodyModifiers at restore"
+     }
+    ],
+    "reachability": "PRODUCTION",
+    "state": {
+     "productStateId": "a1ddad7788a9afc923faa1ea24847bf36b89c14b8849e0078ab973dda011c4f8",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "invariantIds": [
+     "I-DS-1"
+    ],
+    "siblingFindingIds": [],
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "expected": "under lock the owned slice is stripped (carried records emit nothing, forged entries cannot linger)",
+    "actual": "carried meridian.openedIds re-emitted 1-2 stat modifiers per opened meridian at restore; forged bat-mach entries survived rehydration",
+    "counterexample": "save with bodyProgression.meridian.openedIds + no live body path -> restore rebuilds the bat-mach slice",
+    "repair": "modifier arm strips the owned prefix slice under lock instead of re-emitting; live behavior unchanged when the feature is admitted",
+    "evidenceIds": [
+     "EV-PIN-REAUTH-1",
+     "EV-MUT-REAUTH-1",
+     "EV-FINAL-VERIFY-T12"
+    ],
+    "pinEvidenceIds": [
+     "EV-PIN-REAUTH-1",
+     "EV-MUT-REAUTH-1",
+     "EV-FINAL-VERIFY-T12"
+    ],
+    "verificationEvidenceIds": [
+     "EV-PIN-REAUTH-1",
+     "EV-MUT-REAUTH-1",
+     "EV-FINAL-VERIFY-T12"
+    ],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src/core",
+       "src/services",
+       "src/components",
+       "tests"
+      ],
+      "termsAndMethod": "sibling-seam census: every restore/settle/write dispatch enumerated for persisted-intent trust; emitter siblings of gated records enumerated",
+      "hitDispositions": [
+       "see claims in evidence"
+      ],
+      "coverageLimits": [
+       "state-boundary slice reads pass via preflight for hostile shapes"
+      ],
+      "evidenceIds": [
+       "EV-PIN-REAUTH-1",
+       "EV-MUT-REAUTH-1",
+       "EV-FINAL-VERIFY-T12"
+      ]
+     }
+    ],
+    "closeReason": "emission sibling fails closed with slice-strip; pin + mutant green",
+    "closedAt": "2026-10-01T06:55:00Z",
+    "closureReviewIds": [
+     "RV-CLOSURE-11"
+    ]
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-BODY-GRADE",
+    "title": "resolveKienCoGrade counts carried bodyProgression investment toward the Truc Co grade - earth/heaven grades reachable on a flagged save",
+    "severity": "Medium",
+    "status": "CLOSED",
+    "classification": "REAL_DEFECT",
+    "discoveredBy": "devin-2fe7c666d0d44c738779da09b92aa398",
+    "actionable": true,
+    "subsystem": "betaScope",
+    "rootClass": "AUTHORITY",
+    "rootCause": "the grade resolver read persisted body records verbatim: EARTH_BODY_TIERS/HEAVEN checks never consulted the bodyPath feature verdict",
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/data/breakthrough/BreakthroughGrades.ts",
+      "revision": "cedaac21",
+      "symbolOrSection": "resolveKienCoGrade"
+     }
+    ],
+    "reachability": "PRODUCTION",
+    "state": {
+     "productStateId": "a1ddad7788a9afc923faa1ea24847bf36b89c14b8849e0078ab973dda011c4f8",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "invariantIds": [
+     "I-DS-1"
+    ],
+    "siblingFindingIds": [],
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "expected": "beta ceiling 'human': carried body investment cannot upgrade the grade under the lock",
+    "actual": "carried 6/6 body_refinement + meridian opens resolved 'earth'/'heaven' on a dormant save",
+    "counterexample": "player{bodyProgression maxed} + hasTrucCoDan -> resolveKienCoGrade returns 'earth'",
+    "repair": "grade contribution gated on isBetaFeature('bodyPath') - records stay intact, contribution inert",
+    "evidenceIds": [
+     "EV-PIN-REAUTH-1",
+     "EV-MUT-REAUTH-1",
+     "EV-FINAL-VERIFY-T12"
+    ],
+    "pinEvidenceIds": [
+     "EV-PIN-REAUTH-1",
+     "EV-MUT-REAUTH-1",
+     "EV-FINAL-VERIFY-T12"
+    ],
+    "verificationEvidenceIds": [
+     "EV-PIN-REAUTH-1",
+     "EV-MUT-REAUTH-1",
+     "EV-FINAL-VERIFY-T12"
+    ],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src/core",
+       "src/services",
+       "src/components",
+       "tests"
+      ],
+      "termsAndMethod": "sibling-seam census: every restore/settle/write dispatch enumerated for persisted-intent trust; emitter siblings of gated records enumerated",
+      "hitDispositions": [
+       "see claims in evidence"
+      ],
+      "coverageLimits": [
+       "state-boundary slice reads pass via preflight for hostile shapes"
+      ],
+      "evidenceIds": [
+       "EV-PIN-REAUTH-1",
+       "EV-MUT-REAUTH-1",
+       "EV-FINAL-VERIFY-T12"
+      ]
+     }
+    ],
+    "closeReason": "body contribution gated; 'human' pinned on carried max-body save",
+    "closedAt": "2026-10-01T06:55:00Z",
+    "closureReviewIds": [
+     "RV-CLOSURE-11"
+    ]
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-BODY-FLAG",
+    "title": "unsupportedReleaseReason misses the body-progression carry class - maxed body saves load unflagged",
+    "severity": "Medium",
+    "status": "CLOSED",
+    "classification": "REAL_DEFECT",
+    "discoveredBy": "devin-2fe7c666d0d44c738779da09b92aa398",
+    "actionable": true,
+    "subsystem": "betaScope",
+    "rootClass": "AUTHORITY",
+    "rootCause": "flag census gap: bodyProgression slices (refinement tiers, meridian opens, zhou_tian, non-default physiqueGrade) had no reason id, and no slice input existed for tribulation/alchemy carry classes either",
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/core/betaScopeSurface.ts",
+      "revision": "cedaac21",
+      "symbolOrSection": "unsupportedReleaseReason"
+     },
+     {
+      "basis": "SOURCE",
+      "path": "src/composables/useAppLifecycle.ts",
+      "revision": "cedaac21",
+      "symbolOrSection": "notice call passes save slices"
+     }
+    ],
+    "reachability": "PRODUCTION",
+    "state": {
+     "productStateId": "a1ddad7788a9afc923faa1ea24847bf36b89c14b8849e0078ab973dda011c4f8",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "invariantIds": [
+     "I-UH-1",
+     "I-SF-1"
+    ],
+    "siblingFindingIds": [],
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "expected": "carried body/tribulation/alchemy dormant records flag explicitly (VI+EN notices), deserialize-safe on hostile shapes",
+    "actual": "maxed body save + pending dormant tribulation outcome + dormant alchemy job all loaded silently",
+    "counterexample": "saveSlices-aware checks return body_progression_state / pending_tribulation_state / dormant_alchemy_job",
+    "repair": "new reason ids wired through BetaUnsupportedSaveSlices param from the boot path; absent fields never false-flag",
+    "evidenceIds": [
+     "EV-PIN-REAUTH-1",
+     "EV-MUT-REAUTH-1",
+     "EV-FINAL-VERIFY-T12"
+    ],
+    "pinEvidenceIds": [
+     "EV-PIN-REAUTH-1",
+     "EV-MUT-REAUTH-1",
+     "EV-FINAL-VERIFY-T12"
+    ],
+    "verificationEvidenceIds": [
+     "EV-PIN-REAUTH-1",
+     "EV-MUT-REAUTH-1",
+     "EV-FINAL-VERIFY-T12"
+    ],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src/core",
+       "src/services",
+       "src/components",
+       "tests"
+      ],
+      "termsAndMethod": "sibling-seam census: every restore/settle/write dispatch enumerated for persisted-intent trust; emitter siblings of gated records enumerated",
+      "hitDispositions": [
+       "see claims in evidence"
+      ],
+      "coverageLimits": [
+       "state-boundary slice reads pass via preflight for hostile shapes"
+      ],
+      "evidenceIds": [
+       "EV-PIN-REAUTH-1",
+       "EV-MUT-REAUTH-1",
+       "EV-FINAL-VERIFY-T12"
+      ]
+     }
+    ],
+    "closeReason": "three new reason ids + i18n wired; hostile-shape no-throw pinned",
+    "closedAt": "2026-10-01T06:55:00Z",
+    "closureReviewIds": [
+     "RV-CLOSURE-11"
+    ]
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-SINK",
+    "title": "thong_mach_dan is a live-craftable silent sink: beta-admitted recipe whose only consumer (meridian chapter) is dormant - live herbs/wood/stones drain into a pill that can never emit",
+    "severity": "High",
+    "status": "CLOSED",
+    "classification": "REAL_DEFECT",
+    "discoveredBy": "devin-7adbe5c55e06462dbbcfe91d587be01f",
+    "actionable": true,
+    "subsystem": "betaScope",
+    "rootClass": "AUTHORITY",
+    "rootCause": "economy census gap: family admitted in BETA_ENABLED_RECIPE_FAMILY_IDS while its sole sink (MeridianChapter invest, gated by F-BODY-W-1) is dormant; completed the sink chain F-BODY-W-1 exposed",
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/core/betaScope.ts",
+      "revision": "cedaac21",
+      "symbolOrSection": "BETA_ENABLED_RECIPE_FAMILY_IDS"
+     },
+     {
+      "basis": "SOURCE",
+      "path": "src/data/alchemy/alchemyRecipes.ts",
+      "revision": "cedaac21",
+      "symbolOrSection": "alchemy_thong_mach_dan"
+     }
+    ],
+    "reachability": "PRODUCTION",
+    "state": {
+     "productStateId": "a1ddad7788a9afc923faa1ea24847bf36b89c14b8849e0078ab973dda011c4f8",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "invariantIds": [
+     "I-DS-1"
+    ],
+    "siblingFindingIds": [],
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": null,
+    "expected": "no craftable product with only dormant consumers: family un-admitted (contract revision 5 -> 4 families)",
+    "actual": "startJob accepted the recipe and burned yao-dan + herbs + spirit stones for an inert pill",
+    "counterexample": "register recipes + startJob(alchemy_thong_mach_dan) -> ok:true pre-fix",
+    "repair": "removed from the enabled family set; authored-id resolver extended to special recipes so carried jobs park and the pill carries the scope-hidden verdict",
+    "evidenceIds": [
+     "EV-PIN-REAUTH-1",
+     "EV-MUT-REAUTH-1",
+     "EV-FINAL-VERIFY-T12"
+    ],
+    "pinEvidenceIds": [
+     "EV-PIN-REAUTH-1",
+     "EV-MUT-REAUTH-1",
+     "EV-FINAL-VERIFY-T12"
+    ],
+    "verificationEvidenceIds": [
+     "EV-PIN-REAUTH-1",
+     "EV-MUT-REAUTH-1",
+     "EV-FINAL-VERIFY-T12"
+    ],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src/core",
+       "src/services",
+       "src/components",
+       "tests"
+      ],
+      "termsAndMethod": "sibling-seam census: every restore/settle/write dispatch enumerated for persisted-intent trust; emitter siblings of gated records enumerated",
+      "hitDispositions": [
+       "see claims in evidence"
+      ],
+      "coverageLimits": [
+       "state-boundary slice reads pass via preflight for hostile shapes"
+      ],
+      "evidenceIds": [
+       "EV-PIN-REAUTH-1",
+       "EV-MUT-REAUTH-1",
+       "EV-FINAL-VERIFY-T12"
+      ]
+     }
+    ],
+    "closeReason": "family un-admitted; startJob rejects scope_hidden; carried jobs park",
+    "closedAt": "2026-10-01T06:55:00Z",
+    "closureReviewIds": [
+     "RV-CLOSURE-11"
+    ]
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "id": "F-TIMED-EMIT",
+    "title": "carried timed alchemy jobs may emit completion notifications long after save timestamp (future completesAtMs) - display-only ordering nit",
+    "severity": "Low",
+    "status": "HUMAN_EXCEPTION",
+    "classification": "REAL_DEFECT",
+    "discoveredBy": "devin-7adbe5c55e06462dbbcfe91d587be01f",
+    "actionable": true,
+    "subsystem": "betaScope",
+    "rootClass": "AUTHORITY",
+    "rootCause": "deferred per Medium+-only ruling: future-dated job records are data; notification ordering is cosmetic on a flagged save",
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/core/game/GameManagerTickOps.ts",
+      "revision": "cedaac21",
+      "symbolOrSection": "alchemy tick drain"
+     }
+    ],
+    "reachability": "PRODUCTION",
+    "state": {
+     "productStateId": "a1ddad7788a9afc923faa1ea24847bf36b89c14b8849e0078ab973dda011c4f8",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "invariantIds": [
+     "I-DS-1"
+    ],
+    "siblingFindingIds": [],
+    "duplicateOf": null,
+    "rejectionReason": null,
+    "exception": {
+     "humanInstructionRef": "user ruling: attacks/scope fixes are Medium+ only; Low/Nit recorded as deferred exceptions",
+     "scope": "beta-scope-v2 master gate",
+     "reason": "future-dated carried job records park silently; notification ordering is display-only on flagged saves with no live effect on beta play",
+     "expiresWhen": "next scope contract revision or user reversal of the Medium+-only ruling"
+    },
+    "expected": "dormant content stays scope-hidden",
+    "actual": "future-dated dormant records park silently",
+    "counterexample": "n/a",
+    "repair": "deferred per Medium+-only ruling",
+    "evidenceIds": [
+     "EV-PIN-REAUTH-1"
+    ],
+    "pinEvidenceIds": [
+     "EV-PIN-REAUTH-1"
+    ],
+    "verificationEvidenceIds": [
+     "EV-PIN-REAUTH-1"
+    ],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src/core",
+       "src/services",
+       "src/components",
+       "tests"
+      ],
+      "termsAndMethod": "sibling-seam census: every restore/settle/write dispatch enumerated for persisted-intent trust; emitter siblings of gated records enumerated",
+      "hitDispositions": [
+       "see claims in evidence"
+      ],
+      "coverageLimits": [
+       "state-boundary slice reads pass via preflight for hostile shapes"
+      ],
+      "evidenceIds": [
+       "EV-PIN-REAUTH-1"
+      ]
+     }
+    ],
+    "closeReason": null,
+    "closedAt": null,
+    "closureReviewIds": []
+   }
+  },
+  {
+   "kind": "review",
+   "body": {
+    "id": "RV-ADV-B6",
+    "contextId": "ctx-child-b6",
+    "reviewerId": "devin-7adbe5c55e06462dbbcfe91d587be01f",
+    "model": "SWE-2",
+    "phase": "INTEGRATION",
+    "round": 16,
+    "role": "independent clean-round consumer-seam review on 315af000 (pre-workforce/body state; still-fresh seams harvested): F-CONS-B1 High + F-CONS-B2 Medium + F-SINK High confirmed on T12",
+    "state": {
+     "productStateId": "a1ddad7788a9afc923faa1ea24847bf36b89c14b8849e0078ab973dda011c4f8",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "SEALED",
+    "startedAt": "2026-10-01T05:55:00Z",
+    "sealedAt": "2026-10-01T06:20:00Z",
+    "priorFindingsVisible": false,
+    "reviewedAfterPreviousFixes": true,
+    "inputBundleHash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+    "evidenceIds": [],
+    "coverageIds": [],
+    "findingIds": [
+     "F-CONS-B1",
+     "F-CONS-B2",
+     "F-SINK",
+     "F-TIMED-EMIT"
+    ],
+    "novelAttackIds": [],
+    "accessLimitations": [
+     "reviewed a state 2 commits older than T12; all 4 findings re-verified reproducible on T12 before recording"
+    ],
+    "previousPhaseReviewId": "RV-ADV-B5"
+   }
+  },
+  {
+   "kind": "review",
+   "body": {
+    "id": "RV-ADV-TC4",
+    "contextId": "ctx-child-tc4",
+    "reviewerId": "devin-2fe7c666d0d44c738779da09b92aa398",
+    "model": "SWE-2",
+    "phase": "TERMINAL_CHECK",
+    "round": 16,
+    "role": "fresh blind terminal-check falsification sweep on 65bdcf22 (T11): F-BODY-EMIT High + F-BODY-GRADE Medium + F-BODY-FLAG Medium confirmed on T12",
+    "state": {
+     "productStateId": "a1ddad7788a9afc923faa1ea24847bf36b89c14b8849e0078ab973dda011c4f8",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "SEALED",
+    "startedAt": "2026-10-01T05:55:00Z",
+    "sealedAt": "2026-10-01T06:25:00Z",
+    "priorFindingsVisible": false,
+    "reviewedAfterPreviousFixes": true,
+    "inputBundleHash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+    "evidenceIds": [],
+    "coverageIds": [],
+    "findingIds": [
+     "F-BODY-EMIT",
+     "F-BODY-GRADE",
+     "F-BODY-FLAG"
+    ],
+    "novelAttackIds": [],
+    "accessLimitations": [],
+    "previousPhaseReviewId": "RV-ADV-TC3"
+   }
+  },
+  {
+   "kind": "review",
+   "body": {
+    "id": "RV-SEQ11-COR",
+    "contextId": "ctx-coord-seq11",
+    "reviewerId": "coord-main",
+    "model": "SWE-2",
+    "phase": "CORRECTNESS",
+    "round": 16,
+    "role": "P5 sequential pass 1 (local correctness) over T12 wave diff: gate predicates live-evaluated, retired-recipe contract preserved, unknown-recipe honest-failure preserved, absent physiqueGrade never false-flags",
+    "state": {
+     "productStateId": "a1ddad7788a9afc923faa1ea24847bf36b89c14b8849e0078ab973dda011c4f8",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "SEALED",
+    "startedAt": "2026-10-01T06:45:00Z",
+    "sealedAt": "2026-10-01T06:55:00Z",
+    "priorFindingsVisible": true,
+    "reviewedAfterPreviousFixes": true,
+    "inputBundleHash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+    "evidenceIds": [
+     "EV-PIN-REAUTH-1",
+     "EV-MUT-REAUTH-1",
+     "EV-FINAL-VERIFY-T12"
+    ],
+    "coverageIds": [],
+    "findingIds": [],
+    "novelAttackIds": [],
+    "accessLimitations": [],
+    "previousPhaseReviewId": "RV-SEQ10-COR"
+   }
+  },
+  {
+   "kind": "review",
+   "body": {
+    "id": "RV-SEQ11-AUT",
+    "contextId": "ctx-coord-seq11",
+    "reviewerId": "coord-main",
+    "model": "SWE-2",
+    "phase": "AUTHORITY",
+    "round": 16,
+    "role": "P5 sequential pass 2 (architecture/authority) over pass-1 state: settle seams now re-derive scope verdicts (same authority as origination), parked-vs-failed discriminator is authored-vs-unknown not registered-vs-unregistered, feature-table consulted live in all three gates",
+    "state": {
+     "productStateId": "a1ddad7788a9afc923faa1ea24847bf36b89c14b8849e0078ab973dda011c4f8",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "SEALED",
+    "startedAt": "2026-10-01T06:50:00Z",
+    "sealedAt": "2026-10-01T06:58:00Z",
+    "priorFindingsVisible": true,
+    "reviewedAfterPreviousFixes": true,
+    "inputBundleHash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+    "evidenceIds": [
+     "EV-PIN-REAUTH-1",
+     "EV-MUT-REAUTH-1",
+     "EV-FINAL-VERIFY-T12"
+    ],
+    "coverageIds": [],
+    "findingIds": [],
+    "novelAttackIds": [],
+    "accessLimitations": [],
+    "previousPhaseReviewId": "RV-SEQ11-COR"
+   }
+  },
+  {
+   "kind": "review",
+   "body": {
+    "id": "RV-SEQ11-INT",
+    "contextId": "ctx-coord-seq11",
+    "reviewerId": "coord-main",
+    "model": "SWE-2",
+    "phase": "INTEGRATION",
+    "round": 16,
+    "role": "P5 sequential pass 3 (adversarial integration) over pass-2 state: hostile-shape slices (malformed outcome, hostile bodyProgression, unknown recipeId, absent physiqueGrade) all fail inert; controls settle; sibling emitters (settleOffline/tick, applyAllBodyModifiers, grade resolver, flag read) enumerated",
+    "state": {
+     "productStateId": "a1ddad7788a9afc923faa1ea24847bf36b89c14b8849e0078ab973dda011c4f8",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "SEALED",
+    "startedAt": "2026-10-01T06:55:00Z",
+    "sealedAt": "2026-10-01T07:00:00Z",
+    "priorFindingsVisible": true,
+    "reviewedAfterPreviousFixes": true,
+    "inputBundleHash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+    "evidenceIds": [
+     "EV-PIN-REAUTH-1",
+     "EV-MUT-REAUTH-1",
+     "EV-FINAL-VERIFY-T12"
+    ],
+    "coverageIds": [],
+    "findingIds": [],
+    "novelAttackIds": [],
+    "accessLimitations": [],
+    "previousPhaseReviewId": "RV-SEQ11-AUT"
+   }
+  },
+  {
+   "kind": "review",
+   "body": {
+    "id": "RV-CLOSURE-11",
+    "contextId": "ctx-coord-seq11",
+    "reviewerId": "coord-main",
+    "model": "SWE-2",
+    "phase": "CLOSURE",
+    "round": 16,
+    "role": "closure review: all six B6/TC4 findings re-verified fixed on T12 with pin + mutant + full-verify proof; one Low deferred per ruling",
+    "state": {
+     "productStateId": "a1ddad7788a9afc923faa1ea24847bf36b89c14b8849e0078ab973dda011c4f8",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "SEALED",
+    "startedAt": "2026-10-01T07:00:00Z",
+    "sealedAt": "2026-10-01T07:02:00Z",
+    "priorFindingsVisible": true,
+    "reviewedAfterPreviousFixes": true,
+    "inputBundleHash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+    "evidenceIds": [
+     "EV-PIN-REAUTH-1",
+     "EV-MUT-REAUTH-1",
+     "EV-FINAL-VERIFY-T12"
+    ],
+    "coverageIds": [],
+    "findingIds": [
+     "F-CONS-B1",
+     "F-CONS-B2",
+     "F-BODY-EMIT",
+     "F-BODY-GRADE",
+     "F-BODY-FLAG",
+     "F-SINK",
+     "F-TIMED-EMIT"
+    ],
+    "novelAttackIds": [],
+    "accessLimitations": [],
+    "previousPhaseReviewId": "RV-SEQ11-INT"
+   }
+  },
+  {
+   "kind": "cycle",
+   "body": {
+    "id": "CY-SEQ-11",
+    "state": {
+     "productStateId": "a1ddad7788a9afc923faa1ea24847bf36b89c14b8849e0078ab973dda011c4f8",
+     "contractId": "6e05f978209bedfd388d7b952bd3a852363ac6402ce54e8fa2d8113ac165b2aa",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "status": "FINDINGS",
+    "reviewIds": [
+     "RV-ADV-B6",
+     "RV-ADV-TC4",
+     "RV-SEQ11-COR",
+     "RV-SEQ11-AUT",
+     "RV-SEQ11-INT",
+     "RV-CLOSURE-11"
+    ],
+    "coverageIds": [],
+    "evidenceIds": [
+     "EV-PIN-REAUTH-1",
+     "EV-MUT-REAUTH-1",
+     "EV-FINAL-VERIFY-T12"
+    ],
+    "noveltyEvidenceIds": [],
+    "startedAt": "2026-10-01T06:30:00Z",
+    "finishedAt": "2026-10-01T07:02:00Z"
+   }
+  },
+  {
+   "kind": "lesson",
+   "body": {
+    "id": "L-SETTLEMENT-REAUTH",
+    "version": 1,
+    "supersedes": null,
+    "triggerType": "DEFECT",
+    "findingIds": [
+     "F-CONS-B1",
+     "F-CONS-B2",
+     "F-BODY-EMIT",
+     "F-BODY-GRADE",
+     "F-BODY-FLAG",
+     "F-SINK"
+    ],
+    "incidentEvidenceIds": [
+     "EV-PIN-REAUTH-1",
+     "EV-MUT-REAUTH-1"
+    ],
+    "originatingRun": "qa-fixpoint-master",
+    "rootClass": "AUTHORITY",
+    "missedInvariantIds": [
+     "I-AS-1",
+     "I-DS-1"
+    ],
+    "escapeReason": "review/test coverage exercised origination gates (start/startJob) but never the persisted-intent path: restore+settle of a forged-or-carried record was uncovered until the B6/TC4 blind rounds",
+    "applicability": [
+     "every seam that applies persisted or carried records: the scope verdict must be re-derived at the apply site, not trusted from origination-time intent",
+     "dormant records park (data intact, no effect, no event) - never silently consumed, never silently emitted"
+    ],
+    "exclusions": [],
+    "proposedProtection": [
+     "settle seam checklists: tribulation settleOutcome, alchemy tick/settleOffline delivery, body modifier emission, grade resolvers, flag surfaces"
+    ],
+    "promotionEvidenceIds": [],
+    "qualifiedBy": [],
+    "capabilityDelta": "RECORDED - awaiting independent qualification",
+    "status": "CAPTURED",
+    "policyVersion": null,
+    "effectiveFromRun": null,
+    "recurrenceFindingIds": [],
+    "preventionEvidenceIds": [],
+    "guidance": null
+   }
+  },
+  {
+   "kind": "lesson",
+   "body": {
+    "id": "L-SIBLING-EMITTER-ASYMMETRY",
+    "version": 1,
+    "supersedes": null,
+    "triggerType": "DEFECT",
+    "findingIds": [
+     "F-BODY-EMIT",
+     "F-SINK"
+    ],
+    "incidentEvidenceIds": [
+     "EV-PIN-REAUTH-1",
+     "EV-MUT-REAUTH-1"
+    ],
+    "originatingRun": "qa-fixpoint-master",
+    "rootClass": "AUTHORITY",
+    "missedInvariantIds": [
+     "I-AS-1",
+     "I-DS-1"
+    ],
+    "escapeReason": "per-fix sibling searches looked for the same emission kind (base-stat vs StatModifier); the census step must enumerate ALL consumers/emitters of a gated record class, not siblings of the same mechanism; F-SINK: recipe-family admission was never census-checked against consumer dormancy",
+    "applicability": [
+     "for every gated record class, enumerate its write/read/emit/consumer siblings across systems and probe each",
+     "economy census: every live-craftable product must have at least one live consumer"
+    ],
+    "exclusions": [],
+    "proposedProtection": [
+     "sibling-emitter table in fix records (writer | reader | emitter | consumer columns)"
+    ],
+    "promotionEvidenceIds": [],
+    "qualifiedBy": [],
+    "capabilityDelta": "RECORDED - awaiting independent qualification",
+    "status": "CAPTURED",
+    "policyVersion": null,
+    "effectiveFromRun": null,
+    "recurrenceFindingIds": [],
+    "preventionEvidenceIds": [],
+    "guidance": null
+   }
+  }
+ ]
+}

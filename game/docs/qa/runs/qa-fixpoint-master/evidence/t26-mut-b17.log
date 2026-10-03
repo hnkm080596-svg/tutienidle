@@ -1,0 +1,8 @@
+M1: resolvePathCapabilities way-admission gate removed
+      Tests  7 failed | 7 passed (14)
+--- restored ---
+M2: pull-token bag filter removed
+      Tests  1 failed | 13 passed (14)
+--- restored ---
+post-restore suite:
+      Tests  14 passed (14)

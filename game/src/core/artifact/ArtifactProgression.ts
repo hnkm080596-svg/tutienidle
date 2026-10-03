@@ -11,6 +11,7 @@ import { getRealmIndex } from '../realm/realmSystem'
 import { isRealmAvailable } from '../realm/ReleasePolicy'
 import type { MaterialBag } from '../material/MaterialBag'
 import { ARTIFACT_UNLOCK_REALM_ID } from './ArtifactDomain'
+import { isBetaFeature } from '../betaScope'
 
 export const DOAN_BAO_THACH_MATERIAL_ID = 'doan_bao_thach'
 
@@ -173,7 +174,11 @@ export function advanceArtifactRealmLevel(progress: ArtifactProgress, playerReal
 export { ARTIFACT_UNLOCK_REALM_ID } from './ArtifactDomain'
 
 export function isArtifactDomainUnlocked(realmId: string): boolean {
+  // BETA SCOPE LOCK v2 sec.14 - the artifact domain is scope-hidden in
+  // beta; the predicate stays the single seam so exp grants, the wheel
+  // slot, and the awaken gate all close together.
   return (
+    isBetaFeature('artifact') &&
     isRealmAvailable(ARTIFACT_UNLOCK_REALM_ID) &&
     isRealmAvailable(realmId) &&
     getRealmIndex(realmId) >= getRealmIndex(ARTIFACT_UNLOCK_REALM_ID)

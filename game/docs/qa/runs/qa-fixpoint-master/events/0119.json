@@ -1,0 +1,5 @@
+{
+  "action": "T21 harvest wave close: 14 findings recorded (9 CLOSED at d956f3c8/120cba78, 1 DUPLICATE_LINKED, 3 HUMAN_EXCEPTION Low, equipment envelope cluster), 3 blind reviews + closure review, 5 evidence artifacts, 3 new lessons + 6 attachments",
+  "tip": "120cba78",
+  "wave": "T21 -> T22"
+}

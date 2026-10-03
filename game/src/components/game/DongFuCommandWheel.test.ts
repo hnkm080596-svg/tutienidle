@@ -7,6 +7,16 @@
 // - Ring 4: Tàng Kinh Các TRÁI / Cài Đặt PHẢI đối xứng ngang cùng ring.
 // - Building shortcut đi qua building navigation controller.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+
+// BETA SCOPE LOCK v2 Phase-5 - this suite exercises the scope-hidden
+// system's ENABLED implementation (sec.11-15: dormant, not deleted),
+// so the scope authority reports in-scope for this file.
+vi.mock('../../core/betaScope', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../../core/betaScope')>()),
+  isBetaFeature: () => true,
+  isScopeHidden: () => false,
+}))
+
 import { computed, nextTick, ref } from 'vue'
 import { createApp, defineComponent, h } from 'vue'
 import { createPinia } from 'pinia'
@@ -18,6 +28,7 @@ import type { VueRouteAdapter } from '@/presentation/VueRouteAdapter'
 import { useUiStore } from '@/stores/ui'
 import { usePlayerStore } from '@/stores/player'
 import { getCommandWheelOrbitDirection } from '@/data/ui/commandWheelOrbit'
+import { COMMAND_WHEEL_SLOTS } from '@/data/ui/commandWheelCatalog'
 import { i18n } from '@/i18n'
 
 function mountWheel(gameManager: GameManager) {
@@ -349,5 +360,23 @@ describe('DongFuCommandWheel', () => {
     expect(getCommandWheelOrbitDirection(2)).toBe('counterclockwise')
 
     expect(mounted.slot('scripture_pavilion')!.getAttribute('aria-label')).toBe('Tàng Kinh Các')
+  })
+
+  it('Đạo Luân: slot ring 1 đi quỹ đạo trong (CCW), mọi slot khác đi quỹ đạo ngoài (CW)', async () => {
+    await mounted.open()
+
+    const ringBySlotId = new Map(COMMAND_WHEEL_SLOTS.map((slot) => [slot.id, slot.ring]))
+
+    for (const anchor of mounted.slots()) {
+      const slotId = anchor.dataset.wheelSlot!
+      const expectedOrbit = ringBySlotId.get(slotId) === 1 ? '0' : '1'
+
+      expect(anchor.dataset.wheelOrbit).toBe(expectedOrbit)
+    }
+
+    // Center seal -- Dao Luan hub marker, decorative and non-interactive.
+    const seal = mounted.wheel()!.querySelector<HTMLElement>('.command-wheel__center-seal')
+    expect(seal).not.toBeNull()
+    expect(seal!.getAttribute('aria-hidden')).toBe('true')
   })
 })

@@ -19,7 +19,11 @@ import type { StageWaveSystem } from './StageWaveSystem'
  * lastCheckedMs forever.
  */
 function isValidCycleSeconds(cycleSeconds: number | undefined): cycleSeconds is number {
-  return cycleSeconds !== undefined && cycleSeconds > 0 && Number.isFinite(cycleSeconds)
+  // F-TC8-7: >= 1 second authored floor - a sub-second claim mints
+  // thousands of reward cycles per tick (cycleMs halves the value).
+  return (
+    cycleSeconds !== undefined && cycleSeconds >= 1 && Number.isFinite(cycleSeconds)
+  )
 }
 
 /**
@@ -74,6 +78,15 @@ export class GameManagerAutoFarmOps {
     }
 
     return this.deps.stageTemplates.get(stageId) ?? null
+  }
+
+  /**
+   * Read-model probe (stageOps): does this stage currently satisfy the
+   * auto-farm eligibility contract? Delegates to the one eligibility
+   * authority above - no second rule.
+   */
+  isAutoFarmStageEligible(player: PlayerData, stageId: string): boolean {
+    return this.resolveValidAutoFarmStage(player, stageId) !== null
   }
 
   /**

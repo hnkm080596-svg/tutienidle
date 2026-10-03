@@ -1,0 +1,40 @@
+=== EV-MUT-RM-1 slot-unfiltered T7 2026-10-01T04:15:24.431266Z ===
+
+ RUN  v4.1.11 /home/ubuntu/repos/tutienidle/.agent-worktrees/qa-fixpoint-master/game
+
+stdout | tests/architecture/betaReadModelHonesty.qa.test.ts
+ * Tone.js v15.1.22 * 
+
+ ❯ tests/architecture/betaReadModelHonesty.qa.test.ts (5 tests | 1 failed) 150ms
+     × a scope-hidden ultimate role renders no slot button for a beta player 23ms
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 4 passed (5)
+   Start at  04:15:25
+   Duration  3.93s (transform 2.39s, setup 249ms, import 2.76s, tests 150ms, environment 643ms)
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/architecture/betaReadModelHonesty.qa.test.ts > QA read-model honesty: combat role rail (contract sec.7/8) > a scope-hidden ultimate role renders no slot button for a beta player
+AssertionError: expected 3 to be 2 // Object.is equality
+
+- Expected
++ Received
+
+- 2
++ 3
+
+ ❯ tests/architecture/betaReadModelHonesty.qa.test.ts:194:28
+    192|     )
+    193|
+    194|     expect(buttons.length).toBe(2)
+       |                            ^
+    195|
+    196|     view.unmount()
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+DETECTOR_EXIT=1  (nonzero = mutant killed the suite = KILLED_EXPECTED)
+RESULT=KILLED_EXPECTED

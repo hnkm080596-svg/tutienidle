@@ -1,0 +1,969 @@
+{
+ "records": [
+  {
+   "kind": "finding",
+   "body": {
+    "actionable": true,
+    "classification": "REAL_DEFECT",
+    "status": "CLOSED",
+    "closeReason": "fixed on devin/qa-fixpoint (9522454d/a2bd826f); pin + mutant-killed + verify green",
+    "closedAt": "2026-10-01T13:00:00Z",
+    "closureReviewIds": [
+     "RV-CLOSURE-15"
+    ],
+    "counterexample": "hostile save grade=50 passes full acceptance + emits",
+    "duplicateOf": null,
+    "evidenceIds": [],
+    "exception": null,
+    "expected": "persisted grade bounded to authored [1,6]",
+    "actual": "grade=50 accepted -> +150% maxHp emitted",
+    "invariantIds": [
+     "I-SF-1"
+    ],
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/services/save/saveShapeValidation.ts",
+      "revision": "ae4af514",
+      "symbolOrSection": "breakthroughGrade bound"
+     },
+     {
+      "basis": "SOURCE",
+      "path": "src/core/realm/nhapDao",
+      "revision": "ae4af514",
+      "symbolOrSection": "buildNhapDaoModifiers"
+     }
+    ],
+    "pinEvidenceIds": [
+     "EV-PIN-T19",
+     "EV-MUT-T19"
+    ],
+    "reachability": "PRODUCTION",
+    "rejectionReason": null,
+    "repair": "validator rejects breakthroughGrade>6; pin betaWriterBoundsTc8 'v\u01b0\u1ee3t authored grade ceiling (6)'",
+    "rootCause": "validator ran requireNonNegativeNumber only; buildNhapDaoModifiers multiplies grade*0.03 unclamped (writer mints 1-6)",
+    "rootClass": "BOUNDARY",
+    "severity": "Critical",
+    "siblingFindingIds": [],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src/services/save",
+       "src/core/realm"
+      ],
+      "termsAndMethod": "magnitude claims enumerated across all persisted numeric fields (grade/percent/seconds/count/expiry); authors' bounds audited per writer",
+      "hitDispositions": [
+       "every authored writer mints bounded magnitudes; all bounded fields now carry bounds (this wave + TC7)"
+      ],
+      "coverageLimits": [],
+      "evidenceIds": [
+       "EV-PIN-T19",
+       "EV-PIN-SUITE-T19"
+      ]
+     }
+    ],
+    "state": {
+     "productStateId": "e81120ad6870aa0455576e0b9a33b54eb01b4ba309483a363cfacd625c4dc8e7",
+     "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "subsystem": "betaScope",
+    "title": "breakthroughGrade magnitude unchecked -> realm-passive builder emits unbounded stats",
+    "verificationEvidenceIds": [
+     "EV-PIN-SUITE-T19",
+     "EV-VERIFY-T19"
+    ],
+    "id": "F-TC8-1",
+    "discoveredBy": "devin-24605d880dc547f58218cf826b6c6202"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "actionable": true,
+    "classification": "REAL_DEFECT",
+    "status": "CLOSED",
+    "closeReason": "fixed on devin/qa-fixpoint (9522454d/a2bd826f); pin + mutant-killed + verify green",
+    "closedAt": "2026-10-01T13:00:00Z",
+    "closureReviewIds": [
+     "RV-CLOSURE-15"
+    ],
+    "counterexample": "mortal + grantedRealmPassiveIds=['foundation_establishment'] + matching modifier -> +10% main stats",
+    "duplicateOf": null,
+    "evidenceIds": [],
+    "exception": null,
+    "expected": "marker indexed above player realm is impossible",
+    "actual": "mortal save claiming foundation marker emitted kien_co passive",
+    "invariantIds": [
+     "I-SF-1"
+    ],
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/services/save/saveShapeValidation.ts",
+      "revision": "ae4af514",
+      "symbolOrSection": "grantedRealmPassiveIds loop"
+     },
+     {
+      "basis": "SOURCE",
+      "path": "src/core/player/Player.ts",
+      "revision": "ae4af514",
+      "symbolOrSection": "hasGrantedRealmPassive realm-order gate"
+     }
+    ],
+    "pinEvidenceIds": [
+     "EV-PIN-T19",
+     "EV-MUT-T19"
+    ],
+    "reachability": "PRODUCTION",
+    "rejectionReason": null,
+    "repair": "validator: marker realm-order bound (marker realm <= player realm); emit: getRealmIndex(passive.id) > player realm -> inert",
+    "rootCause": "marker verified vs registry+modifier witness but never vs player realm; emit seam also marker-only",
+    "rootClass": "AUTHORITY",
+    "severity": "High",
+    "siblingFindingIds": [],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src/core/player",
+       "src/core/realm"
+      ],
+      "termsAndMethod": "granted*-marker claims and their emit seams enumerated; realm-order bound applied to the marker class",
+      "hitDispositions": [
+       "hiddenBreakthrough enhanced passive handled by F-BS-1 emit reconciliation"
+      ],
+      "coverageLimits": [],
+      "evidenceIds": [
+       "EV-PIN-T19",
+       "EV-PIN-SUITE-T19"
+      ]
+     }
+    ],
+    "state": {
+     "productStateId": "e81120ad6870aa0455576e0b9a33b54eb01b4ba309483a363cfacd625c4dc8e7",
+     "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "subsystem": "betaScope",
+    "title": "grantedRealmPassiveIds marker has no realm eligibility -> dormant kien_co passive emits on mortal",
+    "verificationEvidenceIds": [
+     "EV-PIN-SUITE-T19",
+     "EV-VERIFY-T19"
+    ],
+    "id": "F-TC8-2",
+    "discoveredBy": "devin-24605d880dc547f58218cf826b6c6202"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "actionable": true,
+    "classification": "REAL_DEFECT",
+    "status": "CLOSED",
+    "closeReason": "fixed on devin/qa-fixpoint (9522454d/a2bd826f); pin + mutant-killed + verify green",
+    "closedAt": "2026-10-01T13:00:00Z",
+    "closureReviewIds": [
+     "RV-CLOSURE-15"
+    ],
+    "counterexample": "mortal + talent_loi_kiep_* percent 0.9 -> +90% emitted",
+    "duplicateOf": null,
+    "evidenceIds": [],
+    "exception": null,
+    "expected": "percent <= 0.1 * realmIndex(player.realmId)",
+    "actual": "mortal save carrying 0.9 accrual validates",
+    "invariantIds": [
+     "I-SF-1"
+    ],
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/services/save/saveShapeValidation.ts",
+      "revision": "ae4af514",
+      "symbolOrSection": "loi_kiep percent bound"
+     }
+    ],
+    "pinEvidenceIds": [
+     "EV-PIN-T19",
+     "EV-MUT-T19"
+    ],
+    "reachability": "PRODUCTION",
+    "rejectionReason": null,
+    "repair": "bound replaced with realm-scaled 0.1*getRealmIndex(realmId)+eps (mortal=0, qi_refining=0.1, foundation=0.2)",
+    "rootCause": "LOI_KIEP_MAX_PERCENT used all-realm bound (0.1*9); victory writer mints +0.1 per realm transition witnessed",
+    "rootClass": "BOUNDARY",
+    "severity": "High",
+    "siblingFindingIds": [],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src/services/save",
+       "src/data/talent"
+      ],
+      "termsAndMethod": "persisted talent/skill percent claims enumerated; loi_kiep is the only realm-scaled percent claim",
+      "hitDispositions": [
+       "other percent claims bounded to authored flat writers (timed effects, pill caps)"
+      ],
+      "coverageLimits": [],
+      "evidenceIds": [
+       "EV-PIN-T19",
+       "EV-PIN-SUITE-T19"
+      ]
+     }
+    ],
+    "state": {
+     "productStateId": "e81120ad6870aa0455576e0b9a33b54eb01b4ba309483a363cfacd625c4dc8e7",
+     "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "subsystem": "betaScope",
+    "title": "loi_kiep persisted percent pushed verbatim (bound 0.9 vs beta-legit ~0.2)",
+    "verificationEvidenceIds": [
+     "EV-PIN-SUITE-T19",
+     "EV-VERIFY-T19"
+    ],
+    "id": "F-TC8-3",
+    "discoveredBy": "devin-24605d880dc547f58218cf826b6c6202"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "actionable": true,
+    "classification": "REAL_DEFECT",
+    "status": "CLOSED",
+    "closeReason": "fixed on devin/qa-fixpoint (9522454d/a2bd826f); pin + mutant-killed + verify green",
+    "closedAt": "2026-10-01T13:00:00Z",
+    "closureReviewIds": [
+     "RV-CLOSURE-15"
+    ],
+    "counterexample": "save.skills[].cooldown=0 target='party' -> live skill fights with forged scalars",
+    "duplicateOf": null,
+    "evidenceIds": [],
+    "exception": null,
+    "expected": "combat-authored fields re-derived from registered template",
+    "actual": "persisted scalars became live skill config",
+    "invariantIds": [
+     "I-SF-1"
+    ],
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/core/game/GameManagerSaveRestore.ts",
+      "revision": "ae4af514",
+      "symbolOrSection": "restoredSkills template-rebuild"
+     }
+    ],
+    "pinEvidenceIds": [
+     "EV-PIN-T19",
+     "EV-MUT-T19"
+    ],
+    "reachability": "PRODUCTION",
+    "rejectionReason": null,
+    "repair": "restore rebuilds every skill from template; only instance progress (experience/totalExperience/selectedSpecializationId) survives",
+    "rootCause": "restore field-by-field refreshed only some fields; cooldown/cost/targeting/requiredRealmId/... claims persisted as authority",
+    "rootClass": "AUTHORITY",
+    "severity": "High",
+    "siblingFindingIds": [],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src/core/game",
+       "src/data/skill"
+      ],
+      "termsAndMethod": "persisted skill record fields enumerated vs template authority; non-instance fields identified",
+      "hitDispositions": [
+       "item/equipment restores already template-rebuild (F-TC7-AFFIXTIER lineage)"
+      ],
+      "coverageLimits": [],
+      "evidenceIds": [
+       "EV-PIN-T19",
+       "EV-PIN-SUITE-T19"
+      ]
+     }
+    ],
+    "state": {
+     "productStateId": "e81120ad6870aa0455576e0b9a33b54eb01b4ba309483a363cfacd625c4dc8e7",
+     "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "subsystem": "betaScope",
+    "title": "persisted skill combat scalars trusted verbatim on restore",
+    "verificationEvidenceIds": [
+     "EV-PIN-SUITE-T19",
+     "EV-VERIFY-T19"
+    ],
+    "id": "F-TC8-4",
+    "discoveredBy": "devin-24605d880dc547f58218cf826b6c6202"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "actionable": true,
+    "classification": "REAL_DEFECT",
+    "status": "CLOSED",
+    "closeReason": "fixed on devin/qa-fixpoint (9522454d/a2bd826f); pin + mutant-killed + verify green",
+    "closedAt": "2026-10-01T13:00:00Z",
+    "closureReviewIds": [
+     "RV-CLOSURE-15"
+    ],
+    "counterexample": "hostile save skills[] += passive_kim_cang_y_chi -> event trigger stacks on a locked way",
+    "duplicateOf": null,
+    "evidenceIds": [],
+    "exception": null,
+    "expected": "dormant skill records stay inert end-to-end",
+    "actual": "golden_core/dormant passives emitted on carried saves",
+    "invariantIds": [
+     "I-SF-1"
+    ],
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/core/skill/PassiveSystem.ts",
+      "revision": "ae4af514",
+      "symbolOrSection": "betaSkillAdmitted gates (event loop, per_second, bank/seed carry)"
+     },
+     {
+      "basis": "SOURCE",
+      "path": "src/services/save/saveShapeValidation.ts",
+      "revision": "ae4af514",
+      "symbolOrSection": "skill requiredRealmId membership bound"
+     }
+    ],
+    "pinEvidenceIds": [
+     "EV-PIN-T19",
+     "EV-MUT-T19"
+    ],
+    "reachability": "PRODUCTION",
+    "rejectionReason": null,
+    "repair": "PassiveSystem admission gates on all emit/seed paths; membership realm bound (F-A10-2) rejects lower-realm realm-ladder claims",
+    "rootCause": "restore accepted any template-registered id; PassiveSystem seeded/passive loops never consulted admission",
+    "rootClass": "AUTHORITY",
+    "severity": "High",
+    "siblingFindingIds": [],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src/core/skill",
+       "src/services/save"
+      ],
+      "termsAndMethod": "all PassiveSystem emit/seed paths enumerated; skills[] membership paths bounded by template requiredRealmId",
+      "hitDispositions": [
+       "way-owned dormant skills gated by betaSkillAdmitted; realm-ladder passives gated by membership bound"
+      ],
+      "coverageLimits": [],
+      "evidenceIds": [
+       "EV-PIN-T19",
+       "EV-PIN-SUITE-T19"
+      ]
+     }
+    ],
+    "state": {
+     "productStateId": "e81120ad6870aa0455576e0b9a33b54eb01b4ba309483a363cfacd625c4dc8e7",
+     "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "subsystem": "betaScope",
+    "title": "skills[] accepts any registered id with no scope/kit membership check -> dormant golden_core passives emit",
+    "verificationEvidenceIds": [
+     "EV-PIN-SUITE-T19",
+     "EV-VERIFY-T19"
+    ],
+    "id": "F-TC8-6",
+    "discoveredBy": "devin-24605d880dc547f58218cf826b6c6202"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "actionable": true,
+    "classification": "REAL_DEFECT",
+    "status": "CLOSED",
+    "closeReason": "fixed on devin/qa-fixpoint (9522454d/a2bd826f); pin + mutant-killed + verify green",
+    "closedAt": "2026-10-01T13:00:00Z",
+    "closureReviewIds": [
+     "RV-CLOSURE-15"
+    ],
+    "counterexample": "perfectClearSeconds={x:0.001} -> settle pays floor(elapsed/0.5s) cycles",
+    "duplicateOf": null,
+    "evidenceIds": [],
+    "exception": null,
+    "expected": "clear seconds floored at authored minimum (>=1s)",
+    "actual": "seconds=0.001 accepted -> reward flood",
+    "invariantIds": [
+     "I-SF-1"
+    ],
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/services/save/saveShapeValidation.ts",
+      "revision": "ae4af514",
+      "symbolOrSection": "perfectClearSeconds floor"
+     },
+     {
+      "basis": "SOURCE",
+      "path": "src/core/game/GameManagerAutoFarmOps.ts",
+      "revision": "ae4af514",
+      "symbolOrSection": "isValidCycleSeconds >=1"
+     }
+    ],
+    "pinEvidenceIds": [
+     "EV-PIN-T19",
+     "EV-MUT-T19"
+    ],
+    "reachability": "PRODUCTION",
+    "rejectionReason": null,
+    "repair": "seconds<1 rejected; isValidCycleSeconds requires >=1; autoFarm stage realm coherence added (F-A10-6)",
+    "rootCause": "seconds<=0 rejected only; sub-1s claims mint reward floors; autoFarm cycleSeconds=0.5*2 loop bounds exploited",
+    "rootClass": "BOUNDARY",
+    "severity": "High",
+    "siblingFindingIds": [],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src/core/game",
+       "src/services/save"
+      ],
+      "termsAndMethod": "all persisted seconds/duration claims enumerated (perfectClearSeconds, autoFarm cycleSeconds, timed effect durations)",
+      "hitDispositions": [
+       "cycleSeconds bound via isValidCycleSeconds>=1; effect durations bound via TU_LINH_TRAN_DURATION_MS"
+      ],
+      "coverageLimits": [],
+      "evidenceIds": [
+       "EV-PIN-T19",
+       "EV-PIN-SUITE-T19"
+      ]
+     }
+    ],
+    "state": {
+     "productStateId": "e81120ad6870aa0455576e0b9a33b54eb01b4ba309483a363cfacd625c4dc8e7",
+     "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "subsystem": "betaScope",
+    "title": "perfectClearSeconds magnitude unbounded -> auto-farm reward flood / restore-path DoS",
+    "verificationEvidenceIds": [
+     "EV-PIN-SUITE-T19",
+     "EV-VERIFY-T19"
+    ],
+    "id": "F-TC8-7",
+    "discoveredBy": "devin-24605d880dc547f58218cf826b6c6202"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "actionable": true,
+    "classification": "REAL_DEFECT",
+    "status": "CLOSED",
+    "closeReason": "fixed on devin/qa-fixpoint (9522454d/a2bd826f); pin + mutant-killed + verify green",
+    "closedAt": "2026-10-01T13:00:00Z",
+    "closureReviewIds": [
+     "RV-CLOSURE-15"
+    ],
+    "counterexample": "tu_linh_tran effect expiring year 2126 validates and stays live",
+    "duplicateOf": null,
+    "evidenceIds": [],
+    "exception": null,
+    "expected": "effect window <= TU_LINH_TRAN_DURATION_MS (24h)",
+    "actual": "+100yr expiry accepted -> permanent +25%",
+    "invariantIds": [
+     "I-SF-1"
+    ],
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/services/save/saveShapeValidation.ts",
+      "revision": "ae4af514",
+      "symbolOrSection": "tu_linh_tran duration bound"
+     }
+    ],
+    "pinEvidenceIds": [
+     "EV-PIN-T19",
+     "EV-MUT-T19"
+    ],
+    "reachability": "PRODUCTION",
+    "rejectionReason": null,
+    "repair": "duration bound: expiresAtMs-appliedAtMs > TU_LINH_TRAN_DURATION_MS rejected",
+    "rootCause": "percent writer-bound (<=0.25) but expiresAtMs-appliedAtMs unbounded; writer mints 24h only",
+    "rootClass": "BOUNDARY",
+    "severity": "Medium",
+    "siblingFindingIds": [],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src/services/save",
+       "src/core"
+      ],
+      "termsAndMethod": "all persistentTimedEffects writers enumerated; only tu_linh_tran persists (24h authored)",
+      "hitDispositions": [
+       "minute-speed channel already bounded to authored 0.25"
+      ],
+      "coverageLimits": [],
+      "evidenceIds": [
+       "EV-PIN-T19",
+       "EV-PIN-SUITE-T19"
+      ]
+     }
+    ],
+    "state": {
+     "productStateId": "e81120ad6870aa0455576e0b9a33b54eb01b4ba309483a363cfacd625c4dc8e7",
+     "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "subsystem": "betaScope",
+    "title": "persistentTimedEffects expiry unbounded -> permanent tu_linh_tran buff",
+    "verificationEvidenceIds": [
+     "EV-PIN-SUITE-T19",
+     "EV-VERIFY-T19"
+    ],
+    "id": "F-TC8-8",
+    "discoveredBy": "devin-24605d880dc547f58218cf826b6c6202"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "actionable": true,
+    "classification": "REAL_DEFECT",
+    "status": "CLOSED",
+    "closeReason": "fixed on devin/qa-fixpoint (9522454d/a2bd826f); pin + mutant-killed + verify green",
+    "closedAt": "2026-10-01T13:00:00Z",
+    "closureReviewIds": [
+     "RV-CLOSURE-15"
+    ],
+    "counterexample": "9x prefix_max_hp on weapon validates",
+    "duplicateOf": null,
+    "evidenceIds": [],
+    "exception": null,
+    "expected": "affixes <= GLOBAL_MAX_AFFIXES (8) and slot-in-authored-list",
+    "actual": "9 affixes + prefix_ward on weapon accepted",
+    "invariantIds": [
+     "I-SF-1"
+    ],
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/services/save/saveShapeValidation.ts",
+      "revision": "ae4af514",
+      "symbolOrSection": "affix count + slot eligibility"
+     }
+    ],
+    "pinEvidenceIds": [
+     "EV-PIN-T19",
+     "EV-MUT-T19"
+    ],
+    "reachability": "PRODUCTION",
+    "rejectionReason": null,
+    "repair": "count bound + slot eligibility via affixes catalog slots list",
+    "rootCause": "affix count and slot eligibility never checked against authored roll tables",
+    "rootClass": "BOUNDARY",
+    "severity": "High",
+    "siblingFindingIds": [],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src/services/save",
+       "src/data/equipment"
+      ],
+      "termsAndMethod": "all equipment claim fields enumerated vs authored roll tables (count, slot, tier, grade)",
+      "hitDispositions": [
+       "affix tier bound via authored tier table (F-TC7-AFFIXTIER)"
+      ],
+      "coverageLimits": [],
+      "evidenceIds": [
+       "EV-PIN-T19",
+       "EV-PIN-SUITE-T19"
+      ]
+     }
+    ],
+    "state": {
+     "productStateId": "e81120ad6870aa0455576e0b9a33b54eb01b4ba309483a363cfacd625c4dc8e7",
+     "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "subsystem": "betaScope",
+    "title": "equipment affix list unbounded by GLOBAL_MAX_AFFIXES and slot-ineligible affixes emit",
+    "verificationEvidenceIds": [
+     "EV-PIN-SUITE-T19",
+     "EV-VERIFY-T19"
+    ],
+    "id": "F-TC8-11",
+    "discoveredBy": "devin-24605d880dc547f58218cf826b6c6202"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "actionable": true,
+    "classification": "REAL_DEFECT",
+    "status": "CLOSED",
+    "closeReason": "fixed on devin/qa-fixpoint (9522454d/a2bd826f); pin + mutant-killed + verify green",
+    "closedAt": "2026-10-01T13:00:00Z",
+    "closureReviewIds": [
+     "RV-CLOSURE-15"
+    ],
+    "counterexample": "decompose.started=true save -> unsupportedReleaseReason null",
+    "duplicateOf": null,
+    "evidenceIds": [],
+    "exception": null,
+    "expected": "every dormant record class flags explicitly",
+    "actual": "decompose/dormant-talent carries report beta-clean",
+    "invariantIds": [
+     "I-SF-1"
+    ],
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/core/betaScopeSurface.ts",
+      "revision": "ae4af514",
+      "symbolOrSection": "dormant_decompose_state + dormant_talent_state"
+     },
+     {
+      "basis": "SOURCE",
+      "path": "src/composables/useAppLifecycle.ts",
+      "revision": "ae4af514",
+      "symbolOrSection": "decompose slice wiring"
+     }
+    ],
+    "pinEvidenceIds": [
+     "EV-PIN-T19",
+     "EV-MUT-T19"
+    ],
+    "reachability": "PRODUCTION",
+    "rejectionReason": null,
+    "repair": "new reasons dormant_decompose_state (started||workers>0) + dormant_talent_state (!isBetaTalentId member); decompose slice wired through useAppLifecycle; i18n vi/en",
+    "rootCause": "BetaUnsupportedSaveSlices admitted only {tribulation, alchemyJobs}; decompose slice could not be passed; dormant talent ids unflagged",
+    "rootClass": "AUTHORITY",
+    "severity": "Medium",
+    "siblingFindingIds": [],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src/core/betaScopeSurface",
+       "src/composables"
+      ],
+      "termsAndMethod": "unsupportedReleaseReason slice census vs dormant-class inventory (decompose, talent, body, tribulation, alchemy...)",
+      "hitDispositions": [
+       "remaining dormant classes already flagged (body_path_state, tribulation_carry, alchemy_job_carry, workforce...)"
+      ],
+      "coverageLimits": [],
+      "evidenceIds": [
+       "EV-PIN-T19",
+       "EV-PIN-SUITE-T19"
+      ]
+     }
+    ],
+    "state": {
+     "productStateId": "e81120ad6870aa0455576e0b9a33b54eb01b4ba309483a363cfacd625c4dc8e7",
+     "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "subsystem": "betaScope",
+    "title": "unsupportedReleaseReason blind to save.decompose and dormant selectedTalentIds",
+    "verificationEvidenceIds": [
+     "EV-PIN-SUITE-T19",
+     "EV-VERIFY-T19"
+    ],
+    "id": "F-B10-001",
+    "discoveredBy": "devin-05160ba8d67042da95992e83ce45723a"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "actionable": true,
+    "classification": "REAL_DEFECT",
+    "status": "CLOSED",
+    "closeReason": "fixed on devin/qa-fixpoint (9522454d/a2bd826f); pin + mutant-killed + verify green",
+    "closedAt": "2026-10-01T13:00:00Z",
+    "closureReviewIds": [
+     "RV-CLOSURE-15"
+    ],
+    "counterexample": "carried save selectedTalentIds+=kd_thanh_dan -> card renders name/rarity/description",
+    "duplicateOf": null,
+    "evidenceIds": [],
+    "exception": null,
+    "expected": "dormant talent ids never render on beta surfaces",
+    "actual": "full dormant card rendered as owned",
+    "invariantIds": [
+     "I-SF-1"
+    ],
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/components/panels/CharacterPanel.vue",
+      "revision": "ae4af514",
+      "symbolOrSection": "selectedTalents filter"
+     }
+    ],
+    "pinEvidenceIds": [
+     "EV-PIN-T19",
+     "EV-MUT-T19"
+    ],
+    "reachability": "PRODUCTION",
+    "rejectionReason": null,
+    "repair": "filter consumes isBetaTalentId; F-B8-4 pin unskipped (talent half promoted)",
+    "rootCause": "selectedTalents filtered on getTalentDefinition existence only - no isBetaTalentId admission like sibling surfaces",
+    "rootClass": "AUTHORITY",
+    "severity": "Medium",
+    "siblingFindingIds": [],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src/components"
+      ],
+      "termsAndMethod": "panel surfaces rendering selectedTalentIds enumerated vs canonical isBetaTalentId admission",
+      "hitDispositions": [
+       "sibling panels already filter via isBetaTalentId; B8-4 pin covers card render"
+      ],
+      "coverageLimits": [],
+      "evidenceIds": [
+       "EV-PIN-T19",
+       "EV-PIN-SUITE-T19"
+      ]
+     }
+    ],
+    "state": {
+     "productStateId": "e81120ad6870aa0455576e0b9a33b54eb01b4ba309483a363cfacd625c4dc8e7",
+     "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "subsystem": "betaScope",
+    "title": "CharacterPanel renders dormant talent cards on a carried save",
+    "verificationEvidenceIds": [
+     "EV-PIN-SUITE-T19",
+     "EV-VERIFY-T19"
+    ],
+    "id": "F-B10-002",
+    "discoveredBy": "devin-05160ba8d67042da95992e83ce45723a"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "actionable": true,
+    "classification": "REAL_DEFECT",
+    "status": "CLOSED",
+    "closeReason": "fixed on devin/qa-fixpoint (9522454d/a2bd826f); pin + mutant-killed + verify green",
+    "closedAt": "2026-10-01T13:00:00Z",
+    "closureReviewIds": [
+     "RV-CLOSURE-15"
+    ],
+    "counterexample": "mortal+lk_linh_mach and qi_refining+tc_truc_hon both pass acceptance and emit",
+    "duplicateOf": null,
+    "evidenceIds": [],
+    "exception": null,
+    "expected": "lk_* needs qi_refining+, tc_* needs foundation+",
+    "actual": "mortal+lk_linh_mach -> +15% spirit stones emitted",
+    "invariantIds": [
+     "I-SF-1"
+    ],
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/services/save/saveShapeValidation.ts",
+      "revision": "ae4af514",
+      "symbolOrSection": "TALENT_POOL_REALM_BY_ID bound"
+     }
+    ],
+    "pinEvidenceIds": [
+     "EV-PIN-T19",
+     "EV-MUT-T19"
+    ],
+    "reachability": "PRODUCTION",
+    "rejectionReason": null,
+    "repair": "validator: talent pool realm bound via BREAKTHROUGH_TALENT_POOLS keyed map",
+    "rootCause": "isBetaTalentId is target-keyed not holder-keyed; pool realm never compared to player realm",
+    "rootClass": "BOUNDARY",
+    "severity": "High",
+    "siblingFindingIds": [],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src/data/talent",
+       "src/services/save"
+      ],
+      "termsAndMethod": "all persisted id-references to realm-gated catalogs enumerated (talents, skills, stages)",
+      "hitDispositions": [
+       "non-pool talent ids gated by isBetaTalentId; loi_kiep percent realm-scaled"
+      ],
+      "coverageLimits": [],
+      "evidenceIds": [
+       "EV-PIN-T19",
+       "EV-PIN-SUITE-T19"
+      ]
+     }
+    ],
+    "state": {
+     "productStateId": "e81120ad6870aa0455576e0b9a33b54eb01b4ba309483a363cfacd625c4dc8e7",
+     "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "subsystem": "betaScope",
+    "title": "forged selectedTalentIds admit breakthrough-pool talents on realms that can never hold them",
+    "verificationEvidenceIds": [
+     "EV-PIN-SUITE-T19",
+     "EV-VERIFY-T19"
+    ],
+    "id": "F-A10-1",
+    "discoveredBy": "devin-fe65867bb7114a7faaeb9fa4fe403e1d"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "actionable": true,
+    "classification": "REAL_DEFECT",
+    "status": "CLOSED",
+    "closeReason": "fixed on devin/qa-fixpoint (9522454d/a2bd826f); pin + mutant-killed + verify green",
+    "closedAt": "2026-10-01T13:00:00Z",
+    "closureReviewIds": [
+     "RV-CLOSURE-15"
+    ],
+    "counterexample": "mortal save claiming golden_core passive emits live",
+    "duplicateOf": null,
+    "evidenceIds": [],
+    "exception": null,
+    "expected": "skill.requiredRealmId <= player realm",
+    "actual": "mortal+passive_kim_dan_chi_quang restores and emits",
+    "invariantIds": [
+     "I-SF-1"
+    ],
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/services/save/saveShapeValidation.ts",
+      "revision": "ae4af514",
+      "symbolOrSection": "SKILL_TEMPLATE_BY_ID requiredRealmId membership bound"
+     }
+    ],
+    "pinEvidenceIds": [
+     "EV-PIN-T19",
+     "EV-MUT-T19"
+    ],
+    "reachability": "PRODUCTION",
+    "rejectionReason": null,
+    "repair": "validator: skills[] membership bound to template.requiredRealmId realm order",
+    "rootCause": "realm-ladder passives composed via realmRewards (not way-owned) so betaSkillAdmitted admits; restore had no realm check",
+    "rootClass": "BOUNDARY",
+    "severity": "High",
+    "siblingFindingIds": [],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src/data/skill",
+       "src/services/save"
+      ],
+      "termsAndMethod": "skills[] membership vs all gated catalogs enumerated (way kits, realm-ladder passives, pools)",
+      "hitDispositions": [
+       "dormant way kits already gated by betaSkillAdmitted (F-A2-2)"
+      ],
+      "coverageLimits": [],
+      "evidenceIds": [
+       "EV-PIN-T19",
+       "EV-PIN-SUITE-T19"
+      ]
+     }
+    ],
+    "state": {
+     "productStateId": "e81120ad6870aa0455576e0b9a33b54eb01b4ba309483a363cfacd625c4dc8e7",
+     "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "subsystem": "betaScope",
+    "title": "forged skills[] membership learns realm-ladder passives beyond holder realm",
+    "verificationEvidenceIds": [
+     "EV-PIN-SUITE-T19",
+     "EV-VERIFY-T19"
+    ],
+    "id": "F-A10-2",
+    "discoveredBy": "devin-fe65867bb7114a7faaeb9fa4fe403e1d"
+   }
+  },
+  {
+   "kind": "finding",
+   "body": {
+    "actionable": true,
+    "classification": "REAL_DEFECT",
+    "status": "CLOSED",
+    "closeReason": "fixed on devin/qa-fixpoint (9522454d/a2bd826f); pin + mutant-killed + verify green",
+    "closedAt": "2026-10-01T13:00:00Z",
+    "closureReviewIds": [
+     "RV-CLOSURE-15"
+    ],
+    "counterexample": "mortal save perfectClear foundation_floor_1 -> eligible -> settle pays",
+    "duplicateOf": null,
+    "evidenceIds": [],
+    "exception": null,
+    "expected": "stage claim realm <= player realm",
+    "actual": "mortal+foundation_floor_1 perfect-clear -> settle mints spirit stones",
+    "invariantIds": [
+     "I-SF-1"
+    ],
+    "locations": [
+     {
+      "basis": "SOURCE",
+      "path": "src/services/save/saveShapeValidation.ts",
+      "revision": "ae4af514",
+      "symbolOrSection": "stage requiredRealmId bounds on completed/perfectClear/autoFarm"
+     }
+    ],
+    "pinEvidenceIds": [
+     "EV-PIN-T19",
+     "EV-MUT-T19"
+    ],
+    "reachability": "PRODUCTION",
+    "rejectionReason": null,
+    "repair": "validator: stage.requiredRealmId realm-order bound on completedStageIds/perfectClearStageIds/autoFarmStage.stageId",
+    "rootCause": "resolveValidAutoFarmStage re-derives eligibility from persisted claims only - no realm check on stage claims",
+    "rootClass": "AUTHORITY",
+    "severity": "High",
+    "siblingFindingIds": [],
+    "siblingSearch": [
+     {
+      "roots": [
+       "src/services/save",
+       "src/data/stage"
+      ],
+      "termsAndMethod": "all persisted stage-claim fields enumerated (completedStageIds, perfectClearStageIds, autoFarmStage)",
+      "hitDispositions": [
+       "stage read-model state machine covered by F-E2E/transition seams"
+      ],
+      "coverageLimits": [],
+      "evidenceIds": [
+       "EV-PIN-T19",
+       "EV-PIN-SUITE-T19"
+      ]
+     }
+    ],
+    "state": {
+     "productStateId": "e81120ad6870aa0455576e0b9a33b54eb01b4ba309483a363cfacd625c4dc8e7",
+     "contractId": "aac71c51aaae6c125d7cd1b55ebc49537316490fe1c8af5090f5d5ce89509fd3",
+     "attackModelId": "f45e091d357de5997128bc2e2db82eabba023256ff1a258ff3f7fbd1805a028a",
+     "environmentId": "3825c7b955e1aeb6c565accd68ca29b3366c040df122e95593ab3ff340f9a2b5"
+    },
+    "subsystem": "betaScope",
+    "title": "forged perfectClear+autoFarm on beyond-realm stage mints offline rewards",
+    "verificationEvidenceIds": [
+     "EV-PIN-SUITE-T19",
+     "EV-VERIFY-T19"
+    ],
+    "id": "F-A10-6",
+    "discoveredBy": "devin-fe65867bb7114a7faaeb9fa4fe403e1d"
+   }
+  }
+ ]
+}

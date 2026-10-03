@@ -1,0 +1,128 @@
+{
+ "records": [
+  {
+   "kind": "lesson",
+   "body": {
+    "id": "L-NO-AUTHORED-CEILING",
+    "version": 1,
+    "supersedes": null,
+    "triggerType": "DEFECT",
+    "findingIds": [
+     "F-TC7-STAGES",
+     "F-TC7-AUTOFARM",
+     "F-TC7-ETERNAL",
+     "F-TC7-MATERIAL",
+     "F-TC7-BETAPILL",
+     "F-TC7-ALCHEMY",
+     "F-TC7-CULT"
+    ],
+    "incidentEvidenceIds": [
+     "EV-PIN-T17",
+     "EV-VERIFY-T18"
+    ],
+    "originatingRun": "qa-fixpoint-master",
+    "rootClass": "BOUNDARY",
+    "missedInvariantIds": [
+     "I-SF-1"
+    ],
+    "escapeReason": "same class as L-SAME-VALUE-FORGE but for non-counter records: eligibility markers (completedStageIds, perfectClear*), durations (expiresAtMs), and stockpile magnitudes (materials, pill stacks, cultivation, job completion) have no authored ceiling or witness in the schema - a claim inside the authored shape is indistinguishable from earned state",
+    "applicability": [
+     "persisted eligibility markers and stockpile magnitudes with no authored bound or provenance field"
+    ],
+    "exclusions": [],
+    "proposedProtection": [
+     "schema-level provenance (event ledger / writer-signed counters) is the only complete repair; recorded as residual exceptions pending coordinator ruling - all magnitude-bounded classes meanwhile closed at the boundary"
+    ],
+    "promotionEvidenceIds": [],
+    "qualifiedBy": [],
+    "capabilityDelta": "RECORDED - awaiting independent qualification",
+    "status": "CAPTURED",
+    "policyVersion": null,
+    "effectiveFromRun": null,
+    "recurrenceFindingIds": [],
+    "preventionEvidenceIds": [],
+    "guidance": null
+   }
+  },
+  {
+   "kind": "lesson",
+   "body": {
+    "id": "L-DEFERRED-B9-LOW",
+    "version": 1,
+    "supersedes": null,
+    "triggerType": "DEFECT",
+    "findingIds": [
+     "F-TC7-WORKERS",
+     "F-TC7-CPS",
+     "F-B9-CON-01",
+     "F-B9-CON-03",
+     "F-B9-CON-04",
+     "F-B9-CON-05",
+     "F-B9-CON-06"
+    ],
+    "incidentEvidenceIds": [
+     "EV-VERIFY-T18"
+    ],
+    "originatingRun": "qa-fixpoint-master",
+    "rootClass": "BOUNDARY",
+    "missedInvariantIds": [
+     "I-SF-1"
+    ],
+    "escapeReason": "low-severity residuals: forged building capacity already clamped to authored max, forged rate claim hard-capped by offline accrual, latent grantedOnly filter gap with no live trigger, display-only talent cards + flagging coverage gaps + stale tutorial copy + dead CSS",
+    "applicability": [
+     "deferred Low/Nit findings on flagged saves or inert display seams"
+    ],
+    "exclusions": [],
+    "proposedProtection": [
+     "deferred per the Medium+-only ruling; revisit at next contract revision"
+    ],
+    "promotionEvidenceIds": [],
+    "qualifiedBy": [],
+    "capabilityDelta": "RECORDED - awaiting independent qualification",
+    "status": "CAPTURED",
+    "policyVersion": null,
+    "effectiveFromRun": null,
+    "recurrenceFindingIds": [],
+    "preventionEvidenceIds": [],
+    "guidance": null
+   }
+  },
+  {
+   "kind": "lesson",
+   "body": {
+    "id": "L-CONSUMER-PREVIEW-PARITY",
+    "version": 1,
+    "supersedes": null,
+    "triggerType": "DEFECT",
+    "findingIds": [
+     "F-B9-CON-02"
+    ],
+    "incidentEvidenceIds": [
+     "EV-VERIFY-T18"
+    ],
+    "originatingRun": "qa-fixpoint-master",
+    "rootClass": "BOUNDARY",
+    "missedInvariantIds": [
+     "I-SF-1"
+    ],
+    "escapeReason": "a read-side preview fabricated an affirmative shape where the write op refused - every preview/confirm that precedes a gated write must share the op's admission verdict, else the UI mounts a confirm that silently no-ops",
+    "applicability": [
+     "any UI preview/estimate computed ahead of a scope- or authority-gated write op"
+    ],
+    "exclusions": [],
+    "proposedProtection": [
+     "preview and confirm consume one shared admission predicate; null preview must suppress the dialog mount"
+    ],
+    "promotionEvidenceIds": [],
+    "qualifiedBy": [],
+    "capabilityDelta": "RECORDED - awaiting independent qualification",
+    "status": "CAPTURED",
+    "policyVersion": null,
+    "effectiveFromRun": null,
+    "recurrenceFindingIds": [],
+    "preventionEvidenceIds": [],
+    "guidance": null
+   }
+  }
+ ]
+}

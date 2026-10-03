@@ -19,6 +19,7 @@ import { buildings } from '../../data/building/buildings'
 import { SKILLS } from '../../data/skill/Skills'
 import { TECHNIQUES } from '../../data/technique/Techniques'
 import { SKILL_CORE_NODES } from '../../data/progression/SkillCoreNodes'
+import { commitSpellInitiationForTest } from './__fixtures__/betaWaysUnlock'
 
 const NHAP_DAO_ENHANCED_PERCENT = 0.3 // spec sec.4.4 authored value
 
@@ -59,7 +60,7 @@ describe('hidden lineage - save/restore chain (restoreGameSession)', () => {
     const player = usePlayerStore()
     eligibleForHiddenMortal(player)
 
-    expect(gameManager.realmAdvanceOps.chooseCultivationPath('spell', 'spell_pathway', player.$state)).toBe(true)
+    commitSpellInitiationForTest(gameManager, player.$state)
     expect(player.realmId).toBe('qi_refining')
     expect(player.hiddenPerfection.hiddenBreakthroughRealmIds).toEqual(['qi_refining'])
     expect(player.hiddenPerfection.lineageActive).toBe(true)
@@ -96,7 +97,7 @@ describe('hidden lineage - save/restore chain (restoreGameSession)', () => {
     const player = usePlayerStore()
     player.realmLevel = 12 // normal gate, no hidden investment
 
-    expect(gameManager.realmAdvanceOps.chooseCultivationPath('spell', 'spell_pathway', player.$state)).toBe(true)
+    commitSpellInitiationForTest(gameManager, player.$state)
     expect(player.hiddenPerfection.lineageActive).toBe(false)
     expect(player.hiddenPerfection.lineageClosedByRealmId).toBe('mortal')
 
@@ -117,7 +118,7 @@ describe('hidden lineage - save/restore chain (restoreGameSession)', () => {
     const gameManager = makeManager()
     const player = usePlayerStore()
     eligibleForHiddenMortal(player)
-    expect(gameManager.realmAdvanceOps.chooseCultivationPath('spell', 'spell_pathway', player.$state)).toBe(true)
+    commitSpellInitiationForTest(gameManager, player.$state)
 
     // Drive the qi->foundation HIDDEN commit through the real outcome
     // service seam (the same seam TribulationOutcomeSettlement.dotPha
@@ -130,6 +131,7 @@ describe('hidden lineage - save/restore chain (restoreGameSession)', () => {
       chapterIndex: 0,
       chaptersTotal: 1,
       chapterName: '',
+      chapterNames: [''],
       state: 'victory',
       currentQuestion: null,
       questionSecondsRemaining: 0,
@@ -193,7 +195,7 @@ describe('hidden lineage - save/restore chain (restoreGameSession)', () => {
     const gameManager = makeManager()
     const player = usePlayerStore()
     player.realmLevel = 12
-    expect(gameManager.realmAdvanceOps.chooseCultivationPath('spell', 'spell_pathway', player.$state)).toBe(true)
+    commitSpellInitiationForTest(gameManager, player.$state)
 
     const save = JSON.parse(JSON.stringify(buildGameSave(player.$state, gameManager)))
     // Tamper: claim a hidden foundation entry while the player sits at qi_refining.
@@ -210,7 +212,7 @@ describe('hidden lineage - save/restore chain (restoreGameSession)', () => {
     const gameManager = makeManager()
     const player = usePlayerStore()
     player.realmLevel = 12
-    expect(gameManager.realmAdvanceOps.chooseCultivationPath('spell', 'spell_pathway', player.$state)).toBe(true)
+    commitSpellInitiationForTest(gameManager, player.$state)
 
     const save = JSON.parse(JSON.stringify(buildGameSave(player.$state, gameManager)))
     // Tamper: completed list skips the lineage root.

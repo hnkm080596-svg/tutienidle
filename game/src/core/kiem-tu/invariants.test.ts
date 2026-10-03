@@ -828,7 +828,7 @@ describe('INV-15 — precursor lock (K3)', () => {
       player.skillCastCounts = { tram: 0 }
       gameManager.setActivePlayer(player)
       gameManager.progressionOps.learnSkill('tram', player)
-      gameManager.progressionOps.setMortalBasicSkill(player, 'tram')
+      gameManager.progressionOps.setMortalBasicSkill(player, 'linh_bao')
 
       expect(gameManager.realmAdvanceOps.chooseCultivationPath('sword', 'sword_pathway', player)).toBe(true)
       expect(gameManager.progressionOps.setMortalBasicSkill(player, skillId)).toBe(false)

@@ -12,6 +12,7 @@ import { buildings } from '../../data/building/buildings'
 import { SKILLS } from '../../data/skill/Skills'
 import { TECHNIQUES } from '../../data/technique/Techniques'
 import { makeInstance } from '../../core/equipment/EquipmentInstance.fixture'
+import { alchemyJobFixture } from '../../core/alchemy/AlchemyJob.fixture'
 import { buildGameSave } from './SaveSystem'
 
 function createBootedGameManager(): GameManager {
@@ -93,7 +94,7 @@ describe('buildGameSave snapshot isolation (AR-12)', () => {
     const liveSite = gameManager.productionSystem.ensureSiteState(siteId)
     liveSite.workerCycles = [{ cycleId: 'w1', siteId, collectionRealmId: 'mortal', siteLevelAtStart: 1, rewardTableVersion: 1, rollSeed: 2, startedAtMs: 0, completesAtMs: 1000 }]
 
-    gameManager.alchemySystem.restoreJobs([{
+    gameManager.alchemySystem.restoreJobs([alchemyJobFixture({
       jobId: 'iso-job',
       recipeId: 'r',
       pillId: 'p',
@@ -101,7 +102,7 @@ describe('buildGameSave snapshot isolation (AR-12)', () => {
       startedAtMs: 0,
       completesAtMs: 999,
       roomLevelAtStart: 1,
-    }])
+    })])
 
     const save = buildGameSave(player, gameManager)
     const snapshot = structuredClone(save)
@@ -138,10 +139,10 @@ describe('buildGameSave snapshot isolation (AR-12)', () => {
       lastCollectedAt: 0,
     })
     gameManager.equipmentSlotManager.get('weapon').enhanceLevel = 4
-    gameManager.alchemySystem.restoreJobs([{
+    gameManager.alchemySystem.restoreJobs([alchemyJobFixture({
       jobId: 'iso-job', recipeId: 'r', pillId: 'p', herbMaterialId: 'h',
       startedAtMs: 0, completesAtMs: 999, roomLevelAtStart: 1,
-    }])
+    })])
     gameManager.questManager.ensureActive({
       id: 'iso_quest', name: 'q', description: 'd',
       condition: { kind: 'kill', amount: 1 }, reward: {}, cadence: 'daily',

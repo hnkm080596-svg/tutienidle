@@ -1,0 +1,66 @@
+=== EV-STATIC-SEAMS T15 audit 2026-10-01T10:26:44 sha 0015f185 ===
+
+--- betaScope consumer census (scope-admission reads outside betaScope.ts; src ts+vue, tests excluded) ---
+src/App.vue
+src/components/common/BetaCompletionModal.vue
+src/components/common/BreakthroughRequirementPanel.vue
+src/components/game/CurrencyHud.vue
+src/components/game/combat/hud/TurnCombatSkillBar.vue
+src/components/panels/AlchemyView.vue
+src/components/panels/BagGrid.vue
+src/components/panels/CharacterPanel.vue
+src/components/panels/ProductionPanel.vue
+src/components/panels/QuanKhiPanel.vue
+src/components/panels/RealmPanel.vue
+src/components/panels/SkillPathPanel.vue
+src/components/panels/bag-sections/PillBagSection.vue
+src/components/panels/skill-path/SkillRoleStrip.vue
+src/components/panels/skill-path/TechniqueBand.vue
+src/composables/useAppLifecycle.ts
+src/core/alchemy/AlchemySystem.ts
+src/core/artifact/ArtifactProgression.ts
+src/core/betaScope.ts
+src/core/betaScopeSkillDomain.ts
+src/core/betaScopeSurface.ts
+src/core/companion/CompanionAvailability.ts
+src/core/companion/CompanionGifts.ts
+src/core/equipment/EquipmentSystem.ts
+src/core/game/BattleLootSystem.ts
+src/core/game/CombatBuild.ts
+src/core/game/FormationPlacement.ts
+src/core/game/GameManagerAlchemyOps.ts
+src/core/game/GameManagerBuildingOps.ts
+src/core/game/GameManagerPersistentEffectOps.ts
+src/core/game/GameManagerPillOps.ts
+src/core/game/GameManagerProgressionOps.ts
+src/core/game/GameManagerRealmAdvanceOps.ts
+src/core/game/GameManagerSaveRestore.ts
+src/core/game/GameManagerTickOps.ts
+src/core/game/HiddenBeastSystem.ts
+src/core/player/CultivationPathSystem.ts
+src/core/player/Player.ts
+src/core/production/DecomposeSystem.ts
+src/core/production/ProductionSystem.ts
+src/core/production/WorkerCapacity.ts
+src/core/realm/body/BodyProgressionSystem.ts
+src/core/realm/hidden/HiddenLineage.ts
+src/core/realm/hidden/NghichChuTian.ts
+src/core/skill/SkillSystem.ts
+src/core/stats/StatCap.ts
+src/core/talent/TalentEffects.ts
+src/core/talent/TalentEntitlement.ts
+src/core/technique/TechniqueSystem.ts
+src/core/tribulation/TribulationOutcomeService.ts
+src/data/breakthrough/BreakthroughGrades.ts
+src/data/realm/RealmPassives.ts
+src/services/save/saveShapeValidation.ts
+
+consumer count:
+53
+
+--- registry.get sites (has()-guard spot-check) ---
+481
+(manual spot-check: throwing registry accessors are has()-guarded at call sites)
+
+--- verdict rail producers ---
+56

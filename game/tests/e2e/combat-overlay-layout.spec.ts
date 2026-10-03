@@ -91,13 +91,16 @@ test.describe('Combat overlay layout (T8.3)', () => {
 
       const contentBox = await skillDock.locator('*').first().boundingBox()
       expect(contentBox).not.toBeNull()
-      const canvasHudZoneRight = 210
-      const canvasHudZoneTop = viewport.height - 100
+      // Spec 13 player-hud zone is canvas-left TOP (16/72 of 1672x941) -
+      // the dock is right-edge so the guard still only needs the left
+      // strip + spec band height.
+      const canvasHudZoneRight = 350
+      const canvasHudZoneBottom = viewport.height * (202 / 941)
       const overlapsCanvasHud =
         contentBox!.x < canvasHudZoneRight &&
         contentBox!.x + contentBox!.width > 0 &&
-        contentBox!.y + contentBox!.height > canvasHudZoneTop
-      expect(overlapsCanvasHud, 'Skill dock content must not overlap canvas HUD zone (bottom-left)').toBe(false)
+        contentBox!.y < canvasHudZoneBottom
+      expect(overlapsCanvasHud, 'Skill dock content must not overlap canvas HUD zone (top-left)').toBe(false)
 
       await page.screenshot({
         path: testInfo.outputPath(`overlay-${viewport.name}.png`),
