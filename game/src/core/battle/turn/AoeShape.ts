@@ -1,8 +1,8 @@
-// Turn-Based Combat Foundation (spec Phần 4) — mọi shape neo tại Ô MỤC
-// TIÊU (anchor = target cell, KHÔNG phải ô người thực hiện). boundingBox
-// dùng cho VFX (khối chữ nhật clamp biên qua getCellsInArea sẵn có);
-// isCellInShape mới là luật targeting THẬT — cross là hình chữ thập, một
-// khối chữ nhật clamp sẽ SAI (sẽ lẫn cả ô chéo).
+// Turn-Based Combat Foundation (spec Phan 4) - moi shape neo tai O MUC
+// TIEU (anchor = target cell, KHONG phai o nguoi thuc hien). boundingBox
+// dung cho VFX (khoi chu nhat clamp bien qua getCellsInArea san co);
+// isCellInShape moi la luat targeting THAT - cross la hinh chu thap, mot
+// khoi chu nhat clamp se SAI (se lan ca o cheo).
 import { getCellsInArea, type CellArea, type GridPosition } from '../BattleGrid'
 
 export type AoeShapeId = 'single' | 'cross' | 'square' | 'line' | 'row' | 'column'
@@ -10,13 +10,13 @@ export type AoeShapeId = 'single' | 'cross' | 'square' | 'line' | 'row' | 'colum
 export interface AoeShapeSpec {
   shape: AoeShapeId
   radius: number
-  /** Bắt buộc cho 'line': trục nào là chiều dài (thay Pierce cũ). */
+  /** Bat buoc cho 'line': truc nao la chieu dai (thay Pierce cu). */
   axis?: 'row' | 'column'
 }
 
-// Đủ lớn để phủ hết 10x16 khi dùng cho 'row'/'column' — getCellsInArea tự
-// clamp về biên grid thật, không cần biết GRID_ROW_COUNT/GRID_COLUMN_COUNT
-// ở đây.
+// Du lon de phu het 10x16 khi dung cho 'row'/'column' - getCellsInArea tu
+// clamp ve bien grid that, khong can biet GRID_ROW_COUNT/GRID_COLUMN_COUNT
+// o day.
 const FULL_GRID_RADIUS = 999
 
 export function boundingBoxForShape(anchor: GridPosition, spec: AoeShapeSpec): CellArea {

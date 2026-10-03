@@ -169,11 +169,11 @@ describe('QuestSystem', () => {
 
     system.reconcileActiveQuests(registry, manager, player)
 
-    // Material lệch id → không tăng.
+    // Material lech id -> khong tang.
     system.onMaterialCollected(registry, manager, 'other_material', 9)
     expect(manager.getProgress('collect_test')?.progress).toBe(0)
 
-    // Đúng materialId → tăng đúng lượng.
+    // Dung materialId -> tang dung luong.
     system.onMaterialCollected(registry, manager, 'linh_chi', 3)
     expect(manager.getProgress('collect_test')?.progress).toBe(3)
 
@@ -192,7 +192,7 @@ describe('QuestSystem', () => {
     const receiver = createReceiver()
     expect(system.claim(registry, manager, rewardSystem, receiver, bags, 'collect_test')).toBe(true)
 
-    // Đã claim → không tăng nữa; NaN/âm bị bỏ qua.
+    // Da claim -> khong tang nua; NaN/am bi bo qua.
     system.onMaterialCollected(registry, manager, 'linh_chi', 7)
     system.onMaterialCollected(registry, manager, 'linh_chi', Number.NaN)
     system.onMaterialCollected(registry, manager, 'linh_chi', -5)

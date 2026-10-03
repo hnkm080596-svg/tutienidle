@@ -20,19 +20,19 @@ import EntitySpriteCanvas from './EntitySpriteCanvas.vue'
 //   giua Dong Phu (trigger command wheel), CO chuyen dong CSS khi animated.
 // - variant 'portrait'  -> portrait PNG / mortal idle clip, tab Nhan Vat.
 //
-// Chuyển động chỉ-Presentation (cultivate + animated):
-// - Float dọc nhẹ 3-5px, chu kỳ chậm; nhịp thở scale 1 → 1.015.
-// - Aura pulse ĐỘC LẬP (không scale toàn bộ hit target).
-// - Vòng linh khí dưới chân mở rộng/nhạt dần theo chu kỳ.
-// - KHÔNG sway ngang/rotate/tilt.
-// - prefers-reduced-motion: reduce → tắt float/scale/rings, rút ngắn transition.
+// Chuyen dong chi-Presentation (cultivate + animated):
+// - Float doc nhe 3-5px, chu ky cham; nhip tho scale 1 -> 1.015.
+// - Aura pulse DOC LAP (khong scale toan bo hit target).
+// - Vong linh khi duoi chan mo rong/nhat dan theo chu ky.
+// - KHONG sway ngang/rotate/tilt.
+// - prefers-reduced-motion: reduce -> tat float/scale/rings, rut ngan transition.
 export interface PlayerPortraitProps {
   variant: 'cultivate' | 'portrait'
 
-  /** Chiều cao hiển thị — số (px) hoặc chuỗi CSS length (vd clamp(...)). */
+  /** Chieu cao hien thi - so (px) hoac chuoi CSS length (vd clamp(...)). */
   height?: number | string
 
-  /** Chỉ variant 'cultivate' honor cờ này. */
+  /** Chi variant 'cultivate' honor co nay. */
   animated?: boolean
 }
 
@@ -216,7 +216,7 @@ const portraitHeight = computed(() =>
   to { transform: rotate(360deg); }
 }
 
-/* ================= Chuyển động tu luyện (chỉ cultivate) ============= */
+/* ================= Chuyen dong tu luyen (chi cultivate) ============= */
 .is-animated .player-portrait__image {
   animation:
     player-portrait-float 6s ease-in-out infinite,
@@ -224,7 +224,7 @@ const portraitHeight = computed(() =>
   will-change: transform;
 }
 
-/* Aura pulse ĐỘC LẬP — không scale hit target. */
+/* Aura pulse DOC LAP - khong scale hit target. */
 .player-portrait__aura {
   position: absolute;
   inset: -18% -30%;
@@ -236,7 +236,7 @@ const portraitHeight = computed(() =>
   pointer-events: none;
 }
 
-/* Vòng linh khí dưới chân — mở rộng + nhạt dần theo chu kỳ. */
+/* Vong linh khi duoi chan - mo rong + nhat dan theo chu ky. */
 .player-portrait__qi-ring {
   position: absolute;
   left: 50%;
@@ -272,7 +272,7 @@ const portraitHeight = computed(() =>
   100% { opacity: 0; scale: 1.35; }
 }
 
-/* Reduced motion — tắt float/scale/ring pulse; rút ngắn transition. */
+/* Reduced motion - tat float/scale/ring pulse; rut ngan transition. */
 @media (prefers-reduced-motion: reduce) {
   .is-animated .player-portrait__image {
     animation: none;

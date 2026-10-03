@@ -11,13 +11,13 @@ import { CURRENT_SAVE_VERSION } from '../../services/save/saveVersion'
 import { usePlayerStore } from '../../stores/player'
 
 // Mission B external-audit finding (HIGH): a persisted autoFarmStage used
-// to restore WITHOUT re-acquiring the single StageManager slot —
+// to restore WITHOUT re-acquiring the single StageManager slot -
 // settleAutoFarmOffline pays the offline window but nothing re-arms the
 // runtime lease, while tickAutoFarm reads persisted state alone. After
 // reload the slot reads free, so a real stage start succeeds and combat
 // runs CONCURRENT with an auto-farm that keeps mutating the shared
 // BattleLootSystem session every cycle. This suite drives the full
-// restoreGameSession seam — not a hand-set player.autoFarmStage.
+// restoreGameSession seam - not a hand-set player.autoFarmStage.
 
 const DUMMY = defineEnemy({
   id: 'restore_farm_dummy', name: 'Restore Farm Dummy', level: 1, realmId: 'mortal', lane: 'ground',
@@ -88,7 +88,7 @@ function harness() {
   gameManager.catalogOps.registerStages([FARM_STAGE, COMBAT_STAGE, FARM_STAGE_B])
 
   // The save's player slice carries an armed farm for FARM_STAGE. A recent
-  // lastSavedAt keeps the offline window UNDER the >60s settle gate —
+  // lastSavedAt keeps the offline window UNDER the >60s settle gate -
   // the reconcile must not hide behind that gate (a fast reload restores
   // an armed farm too).
   const savedPlayer = createDefaultPlayer()
@@ -183,7 +183,7 @@ describe('Mission B audit — auto-farm StageManager lease survives restore', ()
 
   it('persisted farm for a stage never perfect-cleared -> lease cleared (same gate as startAutoFarm)', () => {
     const { playerStore, gameManager, save } = harness()
-    // Registered stage, but the save drops it from perfectClearStageIds —
+    // Registered stage, but the save drops it from perfectClearStageIds -
     // a crafted/foreign payload must not hold the slot while paying
     // nothing (tickAutoFarm needs perfectClearSeconds too).
     save.player.perfectClearStageIds = []
@@ -202,7 +202,7 @@ describe('Mission B audit — auto-farm StageManager lease survives restore', ()
     expect(gameManager.stageManager.getActive()?.stageId).toBe(FARM_STAGE.id)
 
     // A genuinely different payload carrying the SAME armed farm must not
-    // see the held slot as a conflict and disarm it — stageManager.start
+    // see the held slot as a conflict and disarm it - stageManager.start
     // returns false for any occupied slot.
     const secondSave = baseSave({
       ...save.player,
@@ -220,7 +220,7 @@ describe('Mission B audit — auto-farm StageManager lease survives restore', ()
   it('re-restoring a NO-farm payload releases the previously-armed farm lease', () => {
     // Same-GameManager re-restore of a DIFFERENT payload is a supported
     // contract (boot retry loading a changed save, replace/onceOnlySettle
-    // suites). Persisted authority switched farm A off — the lease the
+    // suites). Persisted authority switched farm A off - the lease the
     // first restore acquired must not stay orphaned on the slot.
     const { playerStore, gameManager, save } = harness()
 
@@ -260,7 +260,7 @@ describe('Mission B audit — auto-farm StageManager lease survives restore', ()
 
   it('a foreign lease on the SAME stage is not converged — imported farm drops fail-closed', () => {
     // A manual battle holding the slot for the very stage the incoming
-    // payload farms: matching stageId alone must NOT satisfy reconcile —
+    // payload farms: matching stageId alone must NOT satisfy reconcile -
     // the farm never acquired that lease. Arming the persisted farm on
     // top of it would let tickAutoFarm pay into the live battle's shared
     // BattleLootSystem session.
@@ -272,7 +272,7 @@ describe('Mission B audit — auto-farm StageManager lease survives restore', ()
     expect(restoreGameSession(playerStore, gameManager, save).status).toBe('ok')
 
     expect(playerStore.$state.autoFarmStage).toBeNull()
-    // The foreign lease is untouched — reconcile never releases a slot
+    // The foreign lease is untouched - reconcile never releases a slot
     // it did not acquire.
     expect(gameManager.stageManager.owns(foreignLease)).toBe(true)
     expect(gameManager.stageManager.getActive()?.stageId).toBe(FARM_STAGE.id)
@@ -310,7 +310,7 @@ describe('Mission B audit — auto-farm StageManager lease survives restore', ()
 
     // Shape-valid payload: no cross-field invariant ties armed farm to
     // perfectClearStageIds. A converged-check before validation would
-    // keep the lease minting on a revoked stage — the tick never
+    // keep the lease minting on a revoked stage - the tick never
     // re-checks perfectClearStageIds.
     const secondSave = baseSave({ ...save.player, name: 'Revoked', perfectClearStageIds: [] })
 
@@ -332,7 +332,7 @@ describe('Mission B audit — auto-farm StageManager lease survives restore', ()
     expect(gameManager.stageManager.getActive()?.stageId).toBe(FARM_STAGE.id)
 
     // Shape-valid payload: perfectClearSeconds validates only PRESENT
-    // entries — a missing key passes shape checks but can never complete
+    // entries - a missing key passes shape checks but can never complete
     // a cycle. Keeping the lease would block manual stages inertly.
     const secondPlayer = { ...save.player, name: 'NoCycle', perfectClearSeconds: {} }
 

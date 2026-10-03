@@ -202,7 +202,7 @@ describe('BuildingSystem Linh Tuyá»n (engine offline, balance 2026-08-28)', 
     const s = spring()
     const instance = springInstance(9)
 
-    // 10h = 600 phÃºt â†’ capacity â‰ˆ rate/phÃºt Ã— 600
+    // 10h = 600 phut -> capacity ~ rate/phut x 600
     const ratePerMinute = system.getRatePerMinute(instance, s, 'qi_refining')
     expect(system.getCapacity(instance, s, 'qi_refining')).toBeCloseTo(ratePerMinute * 600, 0)
   })
@@ -239,16 +239,16 @@ describe('BuildingSystem Linh Tuyá»n (engine offline, balance 2026-08-28)', 
 
     manager.add(instance)
 
-    // Rate L1 mortal â‰ˆ 0.03526/s â†’ 100s tÃ­ch â‰ˆ 3.53 (3 nguyÃªn + 0.53 láº»).
+    // Rate L1 mortal ~ 0.03526/s -> 100s tich ~ 3.53 (3 nguyen + 0.53 le).
     const first = system.claim('i1', registry, manager, 100, 'mortal')
 
     expect(first.amount).toBe(3)
 
-    // Pháº§n láº» Ä‘Æ°á»£c giá»¯: má»‘c lÃ¹i vá» quÃ¡ khá»©, KHÃ”NG reset vá» currentTime.
+    // Phan le duoc giu: moc lui ve qua khu, KHONG reset ve currentTime.
     expect(manager.get('i1')!.lastCollectedAt).toBeLessThan(100)
     expect(manager.get('i1')!.lastCollectedAt).toBeGreaterThan(0)
 
-    // Claim láº§n 2 á»Ÿ t=200: nháº­n cáº£ pháº§n láº» cÅ© â†’ tá»•ng 2 láº§n = floor(200 Ã— rate) = 7.
+    // Claim lan 2 o t=200: nhan ca phan le cu -> tong 2 lan = floor(200 x rate) = 7.
     const second = system.claim('i1', registry, manager, 200, 'mortal')
 
     expect(second.amount).toBe(4)
@@ -266,7 +266,7 @@ describe('BuildingSystem Linh Tuyá»n (engine offline, balance 2026-08-28)', 
 
     manager.add(instance)
 
-    // 10s Ã— 0.035 â‰ˆ 0.35 < 1 â†’ chÆ°a claim Ä‘Æ°á»£c.
+    // 10s x 0.035 ~ 0.35 < 1 -> chua claim duoc.
     const result = system.claim('i1', registry, manager, 10, 'mortal')
 
     expect(result.amount).toBe(0)

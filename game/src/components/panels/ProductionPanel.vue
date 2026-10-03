@@ -14,9 +14,9 @@ import { formatStat } from '@/core/stats/StatLabels'
 import { formatDuration } from '@/core/format/formatDuration'
 import { betaRecipeFamilyOfId, betaSurfaceVisible } from '@/core/betaScope'
 
-// Sản Xuất (2026-08-25, resource-professions-rework plan §9.1) — thay
-// ExplorationPanel: mỗi Địa Giới hiển thị đúng ba card Lâm/Quáng/
-// Động Thiên với level + speed, trạng thái idle/producing, đồng hồ
+// San Xuat (2026-08-25, resource-professions-rework plan sec9.1) - thay
+// ExplorationPanel: moi Dia Gioi hien thi dung ba card Lam/Quang/
+// Dong Thien voi level + speed, trang thai idle/producing, dong ho
 // cycle, normalized realm-tier weights, Auto toggle. Mission D
 // (spec D3): sites produce on worker lanes only - no Start button;
 // NO Claim button - completions go straight to Bag (sec 4.3).
@@ -196,7 +196,7 @@ function upgradeCostRows(siteId: string, level: number) {
         ? gameManager.materialRegistry.get(spiritStoneId).name
         : SPIRIT_STONE_LABEL,
 
-      // Plan Workstream F — Linh Thạch đọc từ MaterialBag.
+      // Plan Workstream F - Linh Thach doc tu MaterialBag.
       owned: gameManager.materialBag.getAmount(spiritStoneId),
 
       amount: quote.cost.spiritStone,
@@ -218,7 +218,7 @@ function upgrade(siteId: string) {
   }
 }
 
-// ================= Chiêu Hiền Quán — phân bổ nhân công (2026-09-02) =================
+// ================= Chieu Hien Quan - phan bo nhan cong (2026-09-02) =================
 
 // FINAL POLICY (sec.4C): the manual workforce surface is scope-hidden
 // under beta - the allocation block AND the workers stat are governed
@@ -275,7 +275,7 @@ function assign(row: SiteRow, count: number) {
   bumpState()
 }
 
-// ================= Linh mạch Khai Vật Đường (thế Linh Tuyền, 2026-09-02) =================
+// ================= Linh mach Khai Vat Duong (the Linh Tuyen, 2026-09-02) =================
 
 const OUTPOST_ID = 'gathering_outpost'
 
@@ -330,7 +330,7 @@ function collectLinMach() {
         {{ t('panels.production.summary') }}
       </p>
 
-      <!-- Chiêu Hiền Quán — phân bổ nhân công (2026-09-02) -->
+      <!-- Chieu Hien Quan - phan bo nhan cong (2026-09-02) -->
       <!-- FINAL POLICY (sec.4C): the whole block is scope-hidden under
            beta via manualWorkforce - hidden, not merely disabled. -->
       <div v-if="workerSurfaceVisible" class="worker-allocation">
@@ -388,7 +388,7 @@ function collectLinMach() {
         </p>
       </div>
 
-      <!-- Linh mạch Khai Vật Đường — claim Linh Thạch (thế Linh Tuyền) -->
+      <!-- Linh mach Khai Vat Duong - claim Linh Thach (the Linh Tuyen) -->
       <div v-if="outpostInstance" class="lin-mach">
         <h3 class="lin-mach__title">{{ t('panels.production.linMach.title') }}</h3>
 
@@ -442,9 +442,9 @@ function collectLinMach() {
             <span v-if="workerSurfaceVisible">{{ t('panels.production.workers', { count: row.activeWorkerSlots }) }}</span>
           </div>
 
-          <!-- Bỏ dòng "Trọng số tier" (2026-08-30, bug report: thông tin
-               hệ thống — số trọng số RNG nội bộ, người chơi không tác
-               động được nên không giúp ra quyết định gì). -->
+          <!-- Bo dong "Trong so tier" (2026-08-30, bug report: thong tin
+               he thong - so trong so RNG noi bo, nguoi choi khong tac
+               dong duoc nen khong giup ra quyet dinh gi). -->
           <p class="site-card__reward">{{ rewardSummary(row.kind) }}</p>
 
           <template v-if="row.isProducing">
@@ -513,7 +513,7 @@ function collectLinMach() {
   font-size: var(--text-sm);
 }
 
-/* Chiêu Hiền Quán — phân bổ nhân công */
+/* Chieu Hien Quan - phan bo nhan cong */
 .worker-allocation {
   display: grid;
   gap: 8px;
@@ -574,7 +574,7 @@ function collectLinMach() {
   font-size: var(--text-xs);
 }
 
-/* Linh mạch Khai Vật Đường */
+/* Linh mach Khai Vat Duong */
 .lin-mach__title {
   margin: 0;
   color: var(--paper-text-soft);

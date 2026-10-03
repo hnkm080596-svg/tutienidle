@@ -1,11 +1,11 @@
 <script setup lang="ts">
-// Slice 7 extension (Completion Task 11) — turn-order strip: "ai sắp tới
-// lượt" (đặc trưng HSR/FF ATB). Render peekUpcomingActors(battle, 5),
-// refresh theo stateVersion (không setInterval riêng).
+// Slice 7 extension (Completion Task 11) - turn-order strip: "ai sap toi
+// luot" (dac trung HSR/FF ATB). Render peekUpcomingActors(battle, 5),
+// refresh theo stateVersion (khong setInterval rieng).
 //
-// Future Systems Task 10 Step 6 — party status tối thiểu: HP/alive mỗi
-// member hiện cạnh turn-order (bare minimum để manual UI dùng được với
-// >1 player unit; polish đầy đủ là Party UI spec riêng sau).
+// Future Systems Task 10 Step 6 - party status toi thieu: HP/alive moi
+// member hien canh turn-order (bare minimum de manual UI dung duoc voi
+// >1 player unit; polish day du la Party UI spec rieng sau).
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { formatNumber } from '@/core/format/NumberFormatter'
@@ -24,7 +24,7 @@ import type { TurnBattleParticipant } from '@/core/battle/turn/TurnBattleSystem'
 const { t } = useI18n()
 const { isBattleFighting, upcomingActors, battle, roundsElapsed, activeStage, buffsForTarget } =
   useTurnBattleInfo()
-// ARCH-005 (M12): derived projections read the version signal directly —
+// ARCH-005 (M12): derived projections read the version signal directly -
 // `battle` resolves to the same in-place-mutated object forever, so a
 // computed chained on it never re-invalidates (same rule as
 // useTurnBattleInfo/useTurnCombatManual).
@@ -42,18 +42,18 @@ const partyMembers = computed(() => {
   return battle.value?.players ?? []
 })
 
-// Combat speed gauge (2026-09-12) — ATB fill on every combatant chip:
+// Combat speed gauge (2026-09-12) - ATB fill on every combatant chip:
 // actionGauge / GAUGE_MAX as an integer percent, clamped (a ready actor can
 // overfill). Dead members keep their last value but the bar is hidden.
 function gaugePercent(actor: TurnBattleParticipant): number {
   return Math.round(Math.min(100, Math.max(0, (actor.actionGauge / GAUGE_MAX) * 100)))
 }
 
-// Round indicator (2026-09-12) — the CURRENT round (1-based, i.e.
+// Round indicator (2026-09-12) - the CURRENT round (1-based, i.e.
 // roundsElapsed + 1; the PC predicate requires roundsElapsed < limit at
 // victory, so the deadline reads "finish before this round completes"),
 // and the limit comes from the stage that launched THIS battle (not the
-// UI selection). is-over once roundsElapsed >= limit — PC already lost.
+// UI selection). is-over once roundsElapsed >= limit - PC already lost.
 const perfectClearLimit = computed(() => activeStage.value?.perfectClearTurnLimit)
 
 const currentRound = computed(() => roundsElapsed.value + 1)
@@ -78,9 +78,9 @@ function label(index: number): string {
   return index === 0 ? '▶ ' : ''
 }
 
-// Phase A6 (2026-09-08) — visible buff badges for a party member's chip:
+// Phase A6 (2026-09-08) - visible buff badges for a party member's chip:
 // hidden buffs skipped (same convention as the buff pipeline), badge text
-// = name ×stacks (remaining), title = description tooltip. buff2 M4:
+// = name xstacks (remaining), title = description tooltip. buff2 M4:
 // snapshots come from the battle's buff authority via the composable;
 // def metadata (hidden/description) resolves through BUFF_REGISTRY.
 // Read-only (P17).
@@ -221,7 +221,7 @@ function buffPolarity(buff: BuffInstanceSnapshot): string {
   color: var(--danger, #e53935);
 }
 
-/* Phase A6 — buff duration badges (buff = jade, debuff = danger). */
+/* Phase A6 - buff duration badges (buff = jade, debuff = danger). */
 .turn-order-strip__buff {
   padding: 1px 4px;
   border-radius: 3px;
@@ -288,7 +288,7 @@ function buffPolarity(buff: BuffInstanceSnapshot): string {
   color: var(--jade, #4caf50);
 }
 
-/* Combat speed gauge (2026-09-12) — thin ATB fill along the bottom edge of
+/* Combat speed gauge (2026-09-12) - thin ATB fill along the bottom edge of
    each combatant chip. Jade for the party, danger for enemies; a full bar
    brightens to signal "ready to act". */
 .turn-order-strip__gauge {
@@ -315,7 +315,7 @@ function buffPolarity(buff: BuffInstanceSnapshot): string {
   background: var(--danger, #e53935);
 }
 
-/* Round indicator (2026-09-12) — completed ATB rounds (+ perfect-clear
+/* Round indicator (2026-09-12) - completed ATB rounds (+ perfect-clear
    limit when the launching stage has one). is-over = window missed. */
 .turn-order-strip__round {
   padding: 2px 8px;

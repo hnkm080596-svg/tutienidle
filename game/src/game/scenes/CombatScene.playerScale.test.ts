@@ -1,9 +1,9 @@
 ﻿// @vitest-environment jsdom
 //
-// Renderer 2.5D (plan Â§12.1): avatar Player Lá»šN Gáº¤P ÄÃ”I enemy â€” cÃ¹ng
-// depth scale thÃ¬ kÃ­ch thÆ°á»›c cuá»‘i = baseline Ã— depthScale Ã— sizeMultiplier,
-// vá»›i sizeMultiplier chá»‰ Ã¡p lÃªn PLAYER sprite (enemy/VFX footprint giá»¯
-// nguyÃªn), bÃ³ng ellipse dÆ°á»›i chÃ¢n co giÃ£n theo nhÃ¢n sá»‘ nhÃ¢n.
+// Renderer 2.5D (plan Asec12.1): avatar Player La"sN Gao*P AA"I enemy aEUR" cA1ng
+// depth scale thi kich thuOc cuoi = baseline x depthScale x sizeMultiplier,
+// vOi sizeMultiplier chi ap len PLAYER sprite (enemy/VFX footprint giu
+// nguyen), bong ellipse duOi chan co gian theo nhan so nhan.
 import { describe, expect, it } from 'vitest'
 import { createTestScene } from './combat/combatTestHarness'
 

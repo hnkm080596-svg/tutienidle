@@ -1,69 +1,69 @@
-// Projection layer 2.5D (2026-08-24) — lớp TOÁN HỌC THUẦN biến đổi giữa
-// tọa độ gameplay lưới (row/column, xem BattleGrid.ts) và pixel màn hình.
+// Projection layer 2.5D (2026-08-24) - lop TOAN HOC THUAN bien doi giua
+// toa do gameplay luoi (row/column, xem BattleGrid.ts) va pixel man hinh.
 //
-// Nguyên tắc:
-// - KHÔNG import Phaser, KHÔNG cầm GameObject — module này chỉ tính số,
-//   unit test được không cần canvas.
-// - KHÔNG thay đổi tọa độ gameplay: input/output đều là row (lane rời
-//   rạc) + column liên tục theo ĐƠN VỊ CỘT y hệt 'positions'/'action_impact'
-//   đang emit. Mọi damage/range/AOE vẫn nằm ở core qua BattleGrid.
-// - 2 hiện thực cùng 1 interface:
-//     + 'flat'        : lưới ô VUÔNG đồng đều + letterbox — sao chép CHÍNH
-//                       XÁC công thức cũ của CombatScene.applyBattlefieldLayout()
-//                       (cellSize = min((w-24)/COLS, availH/ROWS)...) để renderer
-//                       cũ còn chạy nguyên vẹn sau feature flag.
-//     + 'perspective' : mặt đất nghiêng có phối cảnh — hàng xa (row 0) nhỏ
-//                       và dày đặc hơn, hàng gần (row R-1) to và thưa hơn;
-//                       scale trả về kèm mỗi điểm để entity/VFX tự scale
-//                       theo chiều sâu.
-// - Anchor quy ước: gridToScreen() trả về ĐIỂM CHÂN ĐẤT (foot point) tại
-//   TÂM ô — sprite neo origin (0.5, 1) vào đúng điểm đó ở chế độ
-//   perspective; health bar/cast bar/label tự suy từ foot point.
+// Nguyen tac:
+// - KHONG import Phaser, KHONG cam GameObject - module nay chi tinh so,
+//   unit test duoc khong can canvas.
+// - KHONG thay doi toa do gameplay: input/output deu la row (lane roi
+//   rac) + column lien tuc theo DON VI COT y het 'positions'/'action_impact'
+//   dang emit. Moi damage/range/AOE van nam o core qua BattleGrid.
+// - 2 hien thuc cung 1 interface:
+//     + 'flat'        : luoi o VUONG dong deu + letterbox - sao chep CHINH
+//                       XAC cong thuc cu cua CombatScene.applyBattlefieldLayout()
+//                       (cellSize = min((w-24)/COLS, availH/ROWS)...) de renderer
+//                       cu con chay nguyen ven sau feature flag.
+//     + 'perspective' : mat dat nghieng co phoi canh - hang xa (row 0) nho
+//                       va day dac hon, hang gan (row R-1) to va thua hon;
+//                       scale tra ve kem moi diem de entity/VFX tu scale
+//                       theo chieu sau.
+// - Anchor quy uoc: gridToScreen() tra ve DIEM CHAN DAT (foot point) tai
+//   TAM o - sprite neo origin (0.5, 1) vao dung diem do o che do
+//   perspective; health bar/cast bar/label tu suy tu foot point.
 //
-// Toán phối cảnh (đóng form, invert chính xác để round-trip không trôi):
-//   v = (row + 0.5) / ROWS              ∈ [0,1]  (0 = xa, 1 = gần)
-//   u = (column + 0.5) / COLUMNS        ∈ [0,1]
+// Toan phoi canh (dong form, invert chinh xac de round-trip khong troi):
+//   v = (row + 0.5) / ROWS              in [0,1]  (0 = xa, 1 = gan)
+//   u = (column + 0.5) / COLUMNS        in [0,1]
 //   denom(v) = q + (1 - q) * v          (q > 1)
-//   f(v)     = v / denom(v)             → y = top + H * f(v)
-//   scale(v) = 1 / denom(v)^2           (scale(gần) = 1, scale(xa) = 1/q²)
+//   f(v)     = v / denom(v)             -> y = top + H * f(v)
+//   scale(v) = 1 / denom(v)^2           (scale(gan) = 1, scale(xa) = 1/q2)
 //   x = cx + (u - 0.5) * nearWidth * scale(v)
-// Khoảng cách dọc giữa 2 hàng liền nhau ∝ f'(v) = q/denom² — cùng tỉ lệ
-// với scale ngang ⇒ cell bị ép về hình chữ nhật MỘT TỈ LỆ NHẤT trên mọi
-// hàng (nén đều như ảnh chụp thật, không méo lệch trục).
+// Khoang cach doc giua 2 hang lien nhau ~ f'(v) = q/denom2 - cung ti le
+// voi scale ngang => cell bi ep ve hinh chu nhat MOT TI LE NHAT tren moi
+// hang (nen deu nhu anh chup that, khong meo lech truc).
 import { GRID_COLUMN_COUNT, GRID_ROW_COUNT, type CellArea } from '@/core/battle/BattleGrid'
 import type { BattlefieldRenderMode } from './BattlefieldRenderMode'
 
-/** Cường độ phối cảnh: q = 1 + strength; tỉ lệ rộng gần/xa = q². */
+/** Cuong do phoi canh: q = 1 + strength; ti le rong gan/xa = q2. */
 export const PERSPECTIVE_STRENGTH = 0.42
 
 /**
- * Bố cục "nửa trên phong cảnh, nửa dưới con đường": trong băng trống
- * giữa 2 HUD, phần TRÊN (trời/núi chân trời) chiếm ratio này, phần DƯỚI
- * là mặt đường combat. Chỉ áp dụng cho perspective — flat giữ nguyên
- * băng full legacy.
+ * Bo cuc "nua tren phong canh, nua duoi con duong": trong bang trong
+ * giua 2 HUD, phan TREN (troi/nui chan troi) chiem ratio nay, phan DUOI
+ * la mat duong combat. Chi ap dung cho perspective - flat giu nguyen
+ * bang full legacy.
  */
 export const PERSPECTIVE_SCENERY_RATIO = 0.5
 
-/** Lề hai bên khi tính bề rộng cạnh GẦN của lưới (đồng bộ gutter 24px cũ). */
+/** Le hai ben khi tinh be rong canh GAN cua luoi (dong bo gutter 24px cu). */
 export const PERSPECTIVE_SIDE_MARGIN = 12
 
 /**
- * Chiều cao TỐI THIỂU của mặt đường (px) — scenery ratio 50% chỉ áp dụng
- * khi băng trống đủ cao; màn thấp/portrait ưu tiên road trước để nhân vật
- * không bị dính chùm. Khoảng 300–340px là ngưỡng đọc được của character
- * scale hiện hành.
+ * Chieu cao TOI THIEU cua mat duong (px) - scenery ratio 50% chi ap dung
+ * khi bang trong du cao; man thap/portrait uu tien road truoc de nhan vat
+ * khong bi dinh chum. Khoang 300-340px la nguong doc duoc cua character
+ * scale hien hanh.
  */
 export const PERSPECTIVE_MIN_ROAD_HEIGHT = 320
 
 export interface PerspectiveGeometry {
-  /** Chân trời = đáy vùng phong cảnh = đỉnh mặt đường. */
+  /** Chan troi = day vung phong canh = dinh mat duong. */
   horizonY: number
   roadBottomY: number
   sceneryHeight: number
   roadHeight: number
 }
 
-/** Snapshot hình học layout phục vụ e2e/visual gate (không dùng gameplay). */
+/** Snapshot hinh hoc layout phuc vu e2e/visual gate (khong dung gameplay). */
 export interface BattlefieldGeometrySnapshot extends PerspectiveGeometry {
   viewportWidth: number
   viewportHeight: number
@@ -72,9 +72,9 @@ export interface BattlefieldGeometrySnapshot extends PerspectiveGeometry {
 }
 
 /**
- * Quyết định bố cục "nửa trên phong cảnh, nửa dưới con đường" với clamp
- * thích ứng: desired = 50% băng trống, nhưng road luôn giữ tối thiểu
- * PERSPECTIVE_MIN_ROAD_HEIGHT. Hàm thuần — test được không cần canvas.
+ * Quyet dinh bo cuc "nua tren phong canh, nua duoi con duong" voi clamp
+ * thich ung: desired = 50% bang trong, nhung road luon giu toi thieu
+ * PERSPECTIVE_MIN_ROAD_HEIGHT. Ham thuan - test duoc khong can canvas.
  */
 export function computePerspectiveGeometry(
   viewport: ProjectionViewport,
@@ -96,27 +96,27 @@ export function computePerspectiveGeometry(
 export interface ProjectionViewport {
   width: number
   height: number
-  /** Khoảng reserved phía trên cho DOM chrome (Top+Status bar). */
+  /** Khoang reserved phia tren cho DOM chrome (Top+Status bar). */
   topInset: number
-  /** Khoảng reserved phía dưới cho DOM chrome (Event+Control bar). */
+  /** Khoang reserved phia duoi cho DOM chrome (Event+Control bar). */
   bottomInset: number
   /**
-   * Khoảng reserved phía PHẢI cho skill dock panel mới (Combat Art
-   * Pipeline spec §7.5) — mặc định 0 khi bỏ qua để mọi call site cũ
-   * (chưa biết dock) không phải sửa gì.
+   * Khoang reserved phia PHAI cho skill dock panel moi (Combat Art
+   * Pipeline spec sec7.5) - mac dinh 0 khi bo qua de moi call site cu
+   * (chua biet dock) khong phai sua gi.
    */
   rightInset?: number
 }
 
 export interface GridScreenPoint {
   x: number
-  /** Điểm CHÂN ĐẤT tại tâm ô — foot anchor của sprite. */
+  /** Diem CHAN DAT tai tam o - foot anchor cua sprite. */
   y: number
-  /** Hệ số scale theo chiều sâu (hàng gần = 1, càng xa càng nhỏ). */
+  /** He so scale theo chieu sau (hang gan = 1, cang xa cang nho). */
   scale: number
 }
 
-/** Row/column LIÊN TỤC (float) — caller tự làm tròn/clamp qua BattleGrid. */
+/** Row/column LIEN TUC (float) - caller tu lam tron/clamp qua BattleGrid. */
 export interface GridFloatPosition {
   row: number
   column: number
@@ -143,10 +143,10 @@ export interface FootprintPoint {
 export interface BattleGridProjection {
   readonly mode: BattlefieldRenderMode
   readonly viewport: ProjectionViewport
-  // Battlefield Perspective Panel (2026-09-06) — nguồn sự thật DUY NHẤT
-  // cho kích thước lưới; combat-grid-view.ts's redrawGridLines() đọc trực
-  // tiếp 2 field này thay vì import hằng số cứng, nên panel Trận Pháp
-  // (6x6) và combat thật (10x16) dùng chung được 1 hàm vẽ lưới.
+  // Battlefield Perspective Panel (2026-09-06) - nguon su that DUY NHAT
+  // cho kich thuoc luoi; combat-grid-view.ts's redrawGridLines() doc truc
+  // tiep 2 field nay thay vi import hang so cung, nen panel Tran Phap
+  // (6x6) va combat that (10x16) dung chung duoc 1 ham ve luoi.
   readonly rows: number
   readonly columns: number
 
@@ -155,26 +155,26 @@ export interface BattleGridProjection {
   screenToGrid(x: number, y: number): GridFloatPosition
 
   /**
-   * Nghịch đảo KHÔNG clamp: y ngoài mặt đường (vùng phong cảnh phía trên
-   * chân trời hoặc dưới cạnh gần) trả về null thay vì "kẹt" về hàng biên
-   * — caller (hover) kiểm tra containment TRƯỚC khi quy đổi.
+   * Nghich dao KHONG clamp: y ngoai mat duong (vung phong canh phia tren
+   * chan troi hoac duoi canh gan) tra ve null thay vi "ket" ve hang bien
+   * - caller (hover) kiem tra containment TRUOC khi quy doi.
    */
   screenToGridUnclamped(x: number, y: number): GridFloatPosition | null
 
   /**
-   * Điểm màn hình có nằm TRÊN MẶT ĐƯỜNG (road polygon, gồm cả viền) không.
-   * Sky/bên ngoài lưới → false. Đây là phép kiểm tra duy nhất caller cần
-   * trước khi round/clamp về cell.
+   * Diem man hinh co nam TREN MAT DUONG (road polygon, gom ca vien) khong.
+   * Sky/ben ngoai luoi -> false. Day la phep kiem tra duy nhat caller can
+   * truoc khi round/clamp ve cell.
    */
   containsScreenPoint(x: number, y: number): boolean
 
-  /** Kích thước pixel 1 ô TẠM hàng đó (perspective co dần về xa). */
+  /** Kich thuoc pixel 1 o TAM hang do (perspective co dan ve xa). */
   cellSizeAt(row: number): CellPixelSize
 
   /**
-   * Tứ giác AOE chiếu lên mặt đất từ footprint lưới trong action_impact —
-   * CHỈ dùng để VẼ decal/telegraph. Damage vẫn do core quyết định bằng
-   * isInCellArea(); tuyệt đối không suy ngược damage từ polygon này.
+   * Tu giac AOE chieu len mat dat tu footprint luoi trong action_impact -
+   * CHI dung de VE decal/telegraph. Damage van do core quyet dinh bang
+   * isInCellArea(); tuyet doi khong suy nguoc damage tu polygon nay.
    */
   footprintPolygon(area: CellArea): FootprintPoint[]
 
@@ -198,10 +198,10 @@ function makeViewport(viewport: ProjectionViewport): Required<ProjectionViewport
 }
 
 /**
- * Dựng footprint 4 đỉnh từ CellArea (đÃ gồm shape ở event action_impact).
- * Góc = tâm ô biên ± nửa cell ⇒ gọi gridToScreen với rowFloat/columnFloat
- * lệch .5 (công thức tuyến tính nên chính xác cả 2 mode).
- * Thứ tự kim đồng hồ: trên-trái → trên-phải → dưới-phải → dưới-trái.
+ * Dung footprint 4 dinh tu CellArea (dA gom shape o event action_impact).
+ * Goc = tam o bien +/- nua cell => goi gridToScreen voi rowFloat/columnFloat
+ * lech .5 (cong thuc tuyen tinh nen chinh xac ca 2 mode).
+ * Thu tu kim dong ho: tren-trai -> tren-phai -> duoi-phai -> duoi-trai.
  */
 function buildFootprint(
   area: CellArea,
@@ -220,15 +220,15 @@ function buildFootprint(
   ].map((point) => ({ x: point.x, y: point.y }))
 }
 
-// ================= flat — PARITY với renderer cũ =================
+// ================= flat - PARITY voi renderer cu =================
 
 class FlatGridProjection implements BattleGridProjection {
   readonly mode = 'flat' as const
 
-  // makeViewport() chuẩn hóa mọi trường (default 0 cho rightInset) nên
-  // instance lưu sẵn là bản Required — khai báo Required<ProjectionViewport>
-  // thay vì interface gốc (rightInset? optional) để caller nội bộ không phải
-  // xử lý undefined (TS2532 khi trừ thẳng vào availableWidth).
+  // makeViewport() chuan hoa moi truong (default 0 cho rightInset) nen
+  // instance luu san la ban Required - khai bao Required<ProjectionViewport>
+  // thay vi interface goc (rightInset? optional) de caller noi bo khong phai
+  // xu ly undefined (TS2532 khi tru thang vao availableWidth).
   viewport: Required<ProjectionViewport>
   readonly rows: number
   readonly columns: number
@@ -249,25 +249,25 @@ class FlatGridProjection implements BattleGridProjection {
     this.recalculate()
   }
 
-  // Sao chép NGUYÊN VĂN công thức legacy của CombatScene cũ:
+  // Sao chep NGUYEN VAN cong thuc legacy cua CombatScene cu:
   //   cellSize = min((width - 24) / COLS, availHeight / ROWS)
   //   gridLeft = width/2 - gridPixelWidth/2
   //   gridTop  = battlefieldTop + (availHeight - gridPixelHeight)/2
   private recalculate(): void {
-    // rightInset trừ thẳng vào bề rộng khả dụng — cùng cách xử lý insets
-    // trên/dưới đã có, không đụng công thức chiều cao (parity legacy).
+    // rightInset tru thang vao be rong kha dung - cung cach xu ly insets
+    // tren/duoi da co, khong dung cong thuc chieu cao (parity legacy).
     const availableWidth = Math.max(0, this.viewport.width - this.viewport.rightInset)
     const availableHeight = Math.max(
       0,
       this.viewport.height - this.viewport.topInset - this.viewport.bottomInset,
     )
 
-    // Clamp dưới 1px: availableWidth - 24 có thể ÂM khi rightInset rộng
-    // + viewport hẹp (dock chiếm gần hết bề ngang) — nếu không chặn, số
-    // âm này thắng Math.min trước số dương của chiều cao, cellSizePx ra
-    // âm và gridToScreen() đảo ngược trục x (cột tăng → x giảm) thay vì
-    // co lưới lại một cách hợp lý. Đồng bộ pattern Math.max(1, ...) đã
-    // dùng ở nhánh perspective (xem nearWidth bên dưới).
+    // Clamp duoi 1px: availableWidth - 24 co the AM khi rightInset rong
+    // + viewport hep (dock chiem gan het be ngang) - neu khong chan, so
+    // am nay thang Math.min truoc so duong cua chieu cao, cellSizePx ra
+    // am va gridToScreen() dao nguoc truc x (cot tang -> x giam) thay vi
+    // co luoi lai mot cach hop ly. Dong bo pattern Math.max(1, ...) da
+    // dung o nhanh perspective (xem nearWidth ben duoi).
     this.cellSizePx = Math.max(
       1,
       Math.min((availableWidth - 24) / this.columns, availableHeight / this.rows),
@@ -325,20 +325,20 @@ class FlatGridProjection implements BattleGridProjection {
       top: this.gridTop,
       right: this.gridLeft + this.cellSizePx * this.columns,
       bottom: this.gridTop + this.cellSizePx * this.rows,
-      // rightInset-aware: tâm của chính khoảng [left, right] đã bị co/dịch
-      // ở trên — KHÔNG dùng viewport.width/2 (bỏ qua rightInset), khớp
-      // pattern derive-từ-centerX đã đúng ở PerspectiveGridProjection.
+      // rightInset-aware: tam cua chinh khoang [left, right] da bi co/dich
+      // o tren - KHONG dung viewport.width/2 (bo qua rightInset), khop
+      // pattern derive-tu-centerX da dung o PerspectiveGridProjection.
       centerX: this.gridLeft + (this.cellSizePx * this.columns) / 2,
     }
   }
 }
 
-// ================= perspective — 2.5D =================
+// ================= perspective - 2.5D =================
 
 class PerspectiveGridProjection implements BattleGridProjection {
   readonly mode = 'perspective' as const
 
-  // Cùng lý do với FlatGridProjection ở trên — bản lưu sẵn luôn Required.
+  // Cung ly do voi FlatGridProjection o tren - ban luu san luon Required.
   viewport: Required<ProjectionViewport>
   readonly rows: number
   readonly columns: number
@@ -371,17 +371,17 @@ class PerspectiveGridProjection implements BattleGridProjection {
   private recalculate(): void {
     this.q = 1 + PERSPECTIVE_STRENGTH
 
-    // Nửa trên băng trống = phong cảnh (trời/núi, vẽ bởi backdrop tới
-    // chân trời = bandTop); nửa dưới = mặt đường combat — với clamp thích
-    // ứng giữ mặt đường tối thiểu trên màn thấp/portrait.
+    // Nua tren bang trong = phong canh (troi/nui, ve boi backdrop toi
+    // chan troi = bandTop); nua duoi = mat duong combat - voi clamp thich
+    // ung giu mat duong toi thieu tren man thap/portrait.
     const geometry = computePerspectiveGeometry(this.viewport, this.minRoadHeight)
 
     this.bandTop = geometry.horizonY
     this.bandHeight = Math.max(1, geometry.roadHeight)
 
-    // rightInset trừ vào bề rộng khả dụng TRƯỚC khi trừ margin hai bên —
-    // cùng pattern availableWidth với flat; geometry chiều cao ở trên
-    // không đụng tới (computePerspectiveGeometry chỉ nhận topInset/
+    // rightInset tru vao be rong kha dung TRUOC khi tru margin hai ben -
+    // cung pattern availableWidth voi flat; geometry chieu cao o tren
+    // khong dung toi (computePerspectiveGeometry chi nhan topInset/
     // bottomInset).
     const availableWidth = Math.max(0, this.viewport.width - this.viewport.rightInset)
 
@@ -407,8 +407,8 @@ class PerspectiveGridProjection implements BattleGridProjection {
 
   screenToGrid(x: number, y: number): GridFloatPosition {
     const f = clamp01((y - this.bandTop) / this.bandHeight)
-    // Nghịch đảo closed-form của f(v) = v/(q + (1-q)v):
-    //   v = f*q / (1 - f*(1-q))   (mẫu số ≥ 1 nên không chia nhỏ vô hạn)
+    // Nghich dao closed-form cua f(v) = v/(q + (1-q)v):
+    //   v = f*q / (1 - f*(1-q))   (mau so >= 1 nen khong chia nho vo han)
     const inverseDenominator = 1 - f * (1 - this.q)
     const v = (f * this.q) / inverseDenominator
     const denominator = this.denominatorAt(v)
@@ -444,7 +444,7 @@ class PerspectiveGridProjection implements BattleGridProjection {
 
     return {
       width: (this.nearWidth / this.columns) * scale,
-      // Chiều cao ô ∝ f'(v) = q/denom² — cùng hệ số scale với chiều ngang.
+      // Chieu cao o ~ f'(v) = q/denom2 - cung he so scale voi chieu ngang.
       height: (this.bandHeight / this.rows) * this.q * scale,
     }
   }

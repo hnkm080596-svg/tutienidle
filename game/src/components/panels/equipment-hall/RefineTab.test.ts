@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
-// Task 19 (item-grade-quality-rework, rework P6) — RefineTab extracted
+// Task 19 (item-grade-quality-rework, rework P6) - RefineTab extracted
 // from EquipmentHallPanel.test.ts. RefineTab injects HALL_SELECTION_KEY
-// (shared with WashTab) — test harness provides it like the shell does.
+// (shared with WashTab) - test harness provides it like the shell does.
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 // BETA SCOPE LOCK v2 Phase-5 - this suite exercises the scope-hidden

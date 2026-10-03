@@ -78,13 +78,13 @@ function assignmentAt(row: number, column: number): FormationSlotAssignment | un
   return currentAssignments.value.find((a) => a.row === row && a.column === column)
 }
 
-// Battlefield Slot spec (2026-09-06) — thay boolean rời (--lit) bằng
-// SlotState dùng chung, để nếu sau này combat thật cần state tương tự
-// (targeting thủ công, tooltip theo ô) không phải bịa lại tên khác.
+// Battlefield Slot spec (2026-09-06) - thay boolean roi (--lit) bang
+// SlotState dung chung, de neu sau nay combat that can state tuong tu
+// (targeting thu cong, tooltip theo o) khong phai bia lai ten khac.
 const hoveredCell = ref<{ row: number; column: number } | null>(null)
 
-// V8 — slot hit-zones are derived from the SAME projection the canvas draws
-// with, via the shared factory in FormationCanvasSpec (§3.6.2). Before this,
+// V8 - slot hit-zones are derived from the SAME projection the canvas draws
+// with, via the shared factory in FormationCanvasSpec (sec3.6.2). Before this,
 // the DOM grid was a uniform 56px CSS grid laid over a perspective canvas: the
 // two could not align, and because the absolutely-positioned canvas left the
 // container to be sized by that 176px grid, most of the 420x480 render was
@@ -136,9 +136,9 @@ function slotStateAt(row: number, column: number): SlotState {
   return 'enabled'
 }
 
-// Danh sách quân "chưa được xếp vào ô nào" — kéo từ đây vào lưới.
-// Player luôn là 1 lá bài cố định (id 'player'), cộng thêm mọi
-// companion đã thu phục (Task 11) chưa được gán ô.
+// Danh sach quan "chua duoc xep vao o nao" - keo tu day vao luoi.
+// Player luon la 1 la bai co dinh (id 'player'), cong them moi
+// companion da thu phuc (Task 11) chua duoc gan o.
 function combatantCards(): { combatantId: string; label: string; artUrl?: string }[] {
   const placed = new Set(currentAssignments.value.map((a) => a.combatantId))
   const cards: { combatantId: string; label: string; artUrl?: string }[] = []
@@ -179,8 +179,8 @@ function combatantCards(): { combatantId: string; label: string; artUrl?: string
 function onSelectFormation(formation: TranPhapDefinition) {
   selectedFormationId.value = formation.id
 
-  // Đổi trận pháp -> loại bỏ mọi assignment nằm ở ô KHÔNG còn hợp lệ
-  // trong pattern mới; quân bị loại tự động quay lại hàng chờ (spec §4).
+  // Doi tran phap -> loai bo moi assignment nam o o KHONG con hop le
+  // trong pattern moi; quan bi loai tu dong quay lai hang cho (spec sec4).
   currentAssignments.value = currentAssignments.value.filter((a) =>
     formation.cellPattern.some((cell) => cell.row === a.row && cell.column === a.column),
   )
@@ -191,13 +191,13 @@ function onDrop(row: number, column: number, combatantId: string) {
     return
   }
 
-  // Gỡ combatant khỏi vị trí cũ (nếu có) VÀ gỡ bất kỳ ai đang chiếm ô
-  // đích, rồi gán lại — đảm bảo mỗi ô + mỗi combatant chỉ xuất hiện
-  // đúng 1 lần trong danh sách assignment. Nhờ filter "gỡ vị trí cũ" này,
-  // hàm cũng TỰ ĐỘNG đúng cho việc kéo từ Ô SANG Ô (không chỉ từ hàng
-  // chờ) — bug fix 2026-09-06: chỉ cần cho ô đã gán trở thành draggable
-  // (xem template, :draggable + @dragstart trên .tran-phap-panel__cell),
-  // không cần sửa gì ở đây.
+  // Go combatant khoi vi tri cu (neu co) VA go bat ky ai dang chiem o
+  // dich, roi gan lai - dam bao moi o + moi combatant chi xuat hien
+  // dung 1 lan trong danh sach assignment. Nho filter "go vi tri cu" nay,
+  // ham cung TU DONG dung cho viec keo tu O SANG O (khong chi tu hang
+  // cho) - bug fix 2026-09-06: chi can cho o da gan tro thanh draggable
+  // (xem template, :draggable + @dragstart tren .tran-phap-panel__cell),
+  // khong can sua gi o day.
   currentAssignments.value = [
     ...currentAssignments.value.filter(
       (a) => a.combatantId !== combatantId && !(a.row === row && a.column === column),
@@ -206,11 +206,11 @@ function onDrop(row: number, column: number, combatantId: string) {
   ]
 }
 
-// Bug fix (2026-09-06, user report "chỉ gắn vào chứ không tháo được ra") —
-// onDrop() trước đây chỉ có nhánh GÁN, không có cách nào gỡ 1 combatant
-// khỏi ô đã chiếm. Gỡ = filter theo combatantId, quân tự quay lại hàng chờ
-// combatantCards() (không cần state riêng, danh sách đó vốn đã suy ra từ
-// phần bù của currentAssignments).
+// Bug fix (2026-09-06, user report "chi gan vao chu khong thao duoc ra") -
+// onDrop() truoc day chi co nhanh GAN, khong co cach nao go 1 combatant
+// khoi o da chiem. Go = filter theo combatantId, quan tu quay lai hang cho
+// combatantCards() (khong can state rieng, danh sach do von da suy ra tu
+// phan bu cua currentAssignments).
 function removeAssignment(combatantId: string) {
   currentAssignments.value = currentAssignments.value.filter((a) => a.combatantId !== combatantId)
 }
@@ -251,15 +251,15 @@ function close() {
 }
 
 // --- Formation combat preview tooling (2026-09-06) --------------------
-// Lớp hiển thị Phaser (TranPhapPreviewScene, Task 4) vẽ NGAY BÊN DƯỚI
-// lưới CSS/overlay kéo-thả ở trên — thuần hiển thị (sprite animate tại
-// từng ô đã gán), KHÔNG phải drop target. Overlay HTML phía trên vẫn là
-// nơi nhận @dragover/@drop thật, giữ nguyên 100% logic đã có.
+// Lop hien thi Phaser (TranPhapPreviewScene, Task 4) ve NGAY BEN DUOI
+// luoi CSS/overlay keo-tha o tren - thuan hien thi (sprite animate tai
+// tung o da gan), KHONG phai drop target. Overlay HTML phia tren van la
+// noi nhan @dragover/@drop that, giu nguyen 100% logic da co.
 const previewContainerRef = ref<HTMLDivElement | null>(null)
 
 // One atomic snapshot per dispatch: slot contents + the player's current
 // visual form, derived on the entity (player.visualProfileId). The preview
-// scene resolves art from it through the shared combat catalogue — without
+// scene resolves art from it through the shared combat catalogue - without
 // it the scene would have to guess or hardcode a placeholder.
 function assignmentsPayload(): FormationAssignmentsPayload {
   return {
@@ -269,10 +269,10 @@ function assignmentsPayload(): FormationAssignmentsPayload {
   }
 }
 
-// V4/V10 — the hosting mechanics (dynamic import, construction, teardown
+// V4/V10 - the hosting mechanics (dynamic import, construction, teardown
 // ordering, the close-during-boot race, the local error boundary) belong to
 // useDynamicRegion, not to this panel; and this panel no longer holds the
-// scene. It holds a region handle and sends it one named event (§3.6).
+// scene. It holds a region handle and sends it one named event (sec3.6).
 const previewRegion = useDynamicRegion({
   container: previewContainerRef,
 
@@ -282,7 +282,7 @@ const previewRegion = useDynamicRegion({
 
   config: {
     transparent: true,
-    // Crash fix (standing-slot plan Task 6, 2026-09-07) — missing physics
+    // Crash fix (standing-slot plan Task 6, 2026-09-07) - missing physics
     // config made the bootstrap crash when dropping a unit into the panel
     // (CombatGridView/sprite pipeline touches the physics world). Mirrors
     // PhaserCanvas.vue's real-combat bootstrap exactly.
@@ -310,7 +310,7 @@ watch(
   () => syncDraftFromLoadout(),
 )
 
-// Bootstrap only while the panel is actually open — the container ref lives
+// Bootstrap only while the panel is actually open - the container ref lives
 // inside OverlayPanel's slot, so it exists in the DOM only then.
 //
 // GameRoot mounts this component LAZILY on first open (mountedStandalone +
@@ -438,7 +438,7 @@ watch([currentAssignments, () => player.visualProfileId], () => {
   overflow-y: auto;
 }
 
-/* V8 — the body sizes to its content instead of being squeezed.
+/* V8 - the body sizes to its content instead of being squeezed.
    It used to be `flex: 1 1 auto; min-height: 0`, which was harmless while the
    grid stack was 176px tall: nothing ever hit the limit. With the stack at the
    canvas's real 480px, a shrunken body let it overflow and cover the roster
@@ -451,7 +451,7 @@ watch([currentAssignments, () => player.visualProfileId], () => {
   gap: var(--space-4, 16px);
 }
 
-/* V8 — the stack now declares the canvas's own size (FormationCanvasSpec).
+/* V8 - the stack now declares the canvas's own size (FormationCanvasSpec).
    It used to have none, so an absolutely-positioned canvas left the overlay
    grid to size it: 176px, clipping ~85% of a 420x480 render. */
 .tran-phap-panel__grid-stack {
@@ -468,13 +468,13 @@ watch([currentAssignments, () => player.visualProfileId], () => {
      to whatever the stack can spare. The overlay is in percent, so it scales
      with it rather than beside it. */
   z-index: 0;
-  /* Canvas size: FormationCanvasSpec (presentation/geometry) — overlay grid
-     3x3 lưới slot vẽ PHỦ lên trên. Canvas/overlay alignment VẪN LÀ khuyết tật
-     đã biết: lưới DOM là ô vuông đều, canvas vẽ hình thang phối cảnh, và
-     container này bị lưới overlay quy định kích thước nên phần lớn canvas bị
-     cắt. Xem V8 trong
+  /* Canvas size: FormationCanvasSpec (presentation/geometry) - overlay grid
+     3x3 luoi slot ve PHU len tren. Canvas/overlay alignment VAN LA khuyet tat
+     da biet: luoi DOM la o vuong deu, canvas ve hinh thang phoi canh, va
+     container nay bi luoi overlay quy dinh kich thuoc nen phan lon canvas bi
+     cat. Xem V8 trong
      docs/superpowers/specs/2026-09-11-frontend-static-dynamic-boundary-design.md
-     — có plan riêng, KHÔNG sửa ở đợt dời hằng số này. */
+     - co plan rieng, KHONG sua o dot doi hang so nay. */
   overflow: hidden;
 }
 
@@ -507,16 +507,16 @@ watch([currentAssignments, () => player.visualProfileId], () => {
      are. */
 }
 
-/* SlotState (Battlefield Slot spec, 2026-09-06) — 'locked' giữ đúng look
-   mờ cũ (--lit trước đây = false); 'enabled'/'occupied' giữ đúng look
-   sáng cũ (--lit trước đây = true); 'hover' thêm viền nhấn khi đang kéo
-   một quân TỚI ô này (chỉ hiện trên ô enabled, chưa có ai chiếm — xem
-   slotStateAt()'s thứ tự ưu tiên locked > occupied > hover > enabled). */
-/* V8 — state is carried by a BACKGROUND FILL, not a border.
+/* SlotState (Battlefield Slot spec, 2026-09-06) - 'locked' giu dung look
+   mo cu (--lit truoc day = false); 'enabled'/'occupied' giu dung look
+   sang cu (--lit truoc day = true); 'hover' them vien nhan khi dang keo
+   mot quan TOI o nay (chi hien tren o enabled, chua co ai chiem - xem
+   slotStateAt()'s thu tu uu tien locked > occupied > hover > enabled). */
+/* V8 - state is carried by a BACKGROUND FILL, not a border.
    clip-path clips the background to the trapezoid exactly, giving a crisp
    projected cell; a border traces the element's rectangle and a box-shadow
    traces its border box, so neither can follow the clip. The four states keep
-   their original meanings and their original jade hue — only the property
+   their original meanings and their original jade hue - only the property
    carrying them changed. */
 .tran-phap-panel__cell--locked {
   opacity: 0.35;
@@ -527,7 +527,7 @@ watch([currentAssignments, () => player.visualProfileId], () => {
   background: rgba(76, 175, 80, 0.1);
 }
 
-/* Standing-slot plan Task 6 (2026-09-07) — occupied SPLIT from enabled, so
+/* Standing-slot plan Task 6 (2026-09-07) - occupied SPLIT from enabled, so
    "empty tappable cell" reads differently from "cell already occupied" by
    colour and not only by the combatant id text inside. */
 .tran-phap-panel__cell--occupied {

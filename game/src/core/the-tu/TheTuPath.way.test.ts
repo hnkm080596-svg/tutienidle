@@ -331,7 +331,7 @@ describe('battle builds — participant kit is way-resolved', () => {
     (_label, build) => {
       const { gameManager } = makeManager()
       const player = build()
-      // Max-The node fillers are retired — the cap is the flat MAX_THE
+      // Max-The node fillers are retired - the cap is the flat MAX_THE
       // no matter the node levels.
       player.nodeLevels = { minor_thau_the: 3 }
       const battle = startBattle(gameManager, player)
@@ -481,7 +481,7 @@ describe('way-authored kits still compose from the node collectors', () => {
     expect(ungTheMods.observationGainBonus).toBe(2)
     const ungTheKit = buildTheTuAnKit(ungTheMods)
     expect(ungTheKit.basic.id).toBe('tham_the')
-    // The cap is flat — no node channel touches it in beta.
+    // The cap is flat - no node channel touches it in beta.
     expect(ungTheKit.maxThe).toBe(MAX_THE)
   })
 

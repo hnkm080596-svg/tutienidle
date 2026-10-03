@@ -1,24 +1,24 @@
 import type { EquipmentSlot } from './EquipmentTypes'
 
 /**
- * MASTER SPEC Mục XVI ("Item và Slot phải tách hoàn toàn") — Cường
- * Hóa + Khắc Trận (Formation) + Yểm Phù (bonus affix slots) giờ
- * gắn theo SLOT của nhân vật, KHÔNG còn theo từng EquipmentInstance —
- * đổi trang bị trong slot đó KHÔNG mất enhanceLevel/Formation/bonus
- * slots đã đầu tư (chỉ 6 slot cố định, sống suốt đời nhân vật, không
- * bị xoá khi tháo/đổi đồ). EquipmentInstance chỉ còn giữ
- * refineLevel/affixes/quality/rarity — những thứ THẬT SỰ gắn liền
- * với 1 món đồ cụ thể (Tẩy Luyện/Tinh Luyện/Nâng Phẩm vẫn item-level).
+ * MASTER SPEC Muc XVI ("Item va Slot phai tach hoan toan") - Cuong
+ * Hoa + Khac Tran (Formation) + Yem Phu (bonus affix slots) gio
+ * gan theo SLOT cua nhan vat, KHONG con theo tung EquipmentInstance -
+ * doi trang bi trong slot do KHONG mat enhanceLevel/Formation/bonus
+ * slots da dau tu (chi 6 slot co dinh, song suot doi nhan vat, khong
+ * bi xoa khi thao/doi do). EquipmentInstance chi con giu
+ * refineLevel/affixes/quality/rarity - nhung thu THAT SU gan lien
+ * voi 1 mon do cu the (Tay Luyen/Tinh Luyen/Nang Pham van item-level).
  */
 export interface EquipmentSlotState {
   slot: EquipmentSlot
 
   enhanceLevel: number
 
-  // Task 10 (rework P3, 2026-09-01) — pity counter cường hóa: đếm lần
-  // THẤT BẠI liên tiếp; đạt ENHANCE_PITY_THRESHOLD (10) → lần kế chắc
-  // chắn thành công, reset khi thành công. Persist qua save slot
-  // entries (saveShapeValidation Task 7 đã nhận enhanceFailStreak).
+  // Task 10 (rework P3, 2026-09-01) - pity counter cuong hoa: dem lan
+  // THAT BAI lien tiep; dat ENHANCE_PITY_THRESHOLD (10) -> lan ke chac
+  // chan thanh cong, reset khi thanh cong. Persist qua save slot
+  // entries (saveShapeValidation Task 7 da nhan enhanceFailStreak).
   enhanceFailStreak: number
 
 }

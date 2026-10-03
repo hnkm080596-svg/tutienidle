@@ -6,9 +6,9 @@ import { EventBus } from '../../events/EventBus'
 import { createBaseStats } from '../../stats/StatBlock'
 import type { CombatEntity } from '../../combat/CombatEntity'
 
-// Slice 7 extension (Completion Task 11) — turn-order preview: trả N actor
-// kế tiếp theo gauge-fill order mà KHÔNG mutate battle thật (so gauge
-// before/after phải không đổi), và battle log: 1 entry/resolveActorTurn.
+// Slice 7 extension (Completion Task 11) - turn-order preview: tra N actor
+// ke tiep theo gauge-fill order ma KHONG mutate battle that (so gauge
+// before/after phai khong doi), va battle log: 1 entry/resolveActorTurn.
 
 function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
   const stats = createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0 })
@@ -63,8 +63,8 @@ describe('peekUpcomingActors', () => {
       slow: battle.enemies[1]!.actionGauge,
     }
 
-    // Gauge lệch pha: enemyFast ready @1 step, player @50, player-2nd @100,
-    // enemySlow @200. Preview 3 lượt kế: enemyFast → player → player.
+    // Gauge lech pha: enemyFast ready @1 step, player @50, player-2nd @100,
+    // enemySlow @200. Preview 3 luot ke: enemyFast -> player -> player.
     const upcoming = peekUpcomingActors(battle, 3)
 
     expect(upcoming.map((a) => a.id)).toEqual(['enemyFast', 'player', 'player'])

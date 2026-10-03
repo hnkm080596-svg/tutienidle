@@ -1,10 +1,10 @@
 import { getRealmIndex } from '../realm/realmSystem'
 
-// Scale phần thưởng quái theo cảnh giới của stage (2026-08-28, balance
-// playtest) — Trúc Cơ hiện tái sử dụng enemyPool Luyện Khí (Stages.ts
-// foundationStages chỉ override realmId), khiến thu nhập Linh Thạch/Cảm
-// ngộ ở Trúc Cơ bị "khựng" bằng Luyện Khí trong khi chi phí token/enhance
-// tăng. Nhân thưởng theo bậc cảnh giới để tiến trình có ý nghĩa.
+// Scale phan thuong quai theo canh gioi cua stage (2026-08-28, balance
+// playtest) - Truc Co hien tai su dung enemyPool Luyen Khi (Stages.ts
+// foundationStages chi override realmId), khien thu nhap Linh Thach/Cam
+// ngo o Truc Co bi "khung" bang Luyen Khi trong khi chi phi token/enhance
+// tang. Nhan thuong theo bac canh gioi de tien trinh co y nghia.
 //
 // Convention: mortal & Luyen Khi x1 (baseline); Foundation+ x3 per
 // realm tier (matching the ~x3/realm time/effort curve). enemy.realmId

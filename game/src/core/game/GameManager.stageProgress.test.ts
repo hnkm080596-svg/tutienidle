@@ -6,7 +6,7 @@ import { asBaseStats } from '../stats/StatBlock'
 import { defineEnemy } from '../enemy/Enemy'
 import type { Stage } from '../stage/Stage'
 
-// Phase A0 (2026-09-07) — CombatTopBar's "alive" enemy count used to read
+// Phase A0 (2026-09-07) - CombatTopBar's "alive" enemy count used to read
 // the legacy battleSystem's enemy list (always empty during real
 // turn-based gameplay), so the HUD counter was stuck at 0 for the whole
 // fight. After the fix, GameManager.getStageProgress() composes `alive`

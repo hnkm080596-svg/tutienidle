@@ -1,12 +1,12 @@
-// Định dạng thời gian dùng chung (i18n refactor Task 8) — thay các chỗ
-// tự viết formatter rải rác (ProductionPanel, OfflineSummaryModal,
+// Dinh dang thoi gian dung chung (i18n refactor Task 8) - thay cac cho
+// tu viet formatter rai rac (ProductionPanel, OfflineSummaryModal,
 // CombatVictoryPanel, CombatDefeatPanel). 3 style:
-//   - compact:   "2h 30p", "5p 10s", "45s" — bỏ unit 0; h>0 luôn kèm p;
-//                m>0 luôn kèm s (pad 2 chữ số).
-//   - precise:   "2h 30m 15s" — luôn đủ h/m/s, không bỏ unit 0.
-//   - countdown: "45s" — tổng giây nguyên, cho đếm ngược combat.
-// Giá trị lẻ: compact/precise làm tròn XUỐNG, countdown làm tròn GẦN.
-// Âm / NaN / Infinity bị kẹp về 0 — cùng chính sách defensive với
+//   - compact:   "2h 30p", "5p 10s", "45s" - bo unit 0; h>0 luon kem p;
+//                m>0 luon kem s (pad 2 chu so).
+//   - precise:   "2h 30m 15s" - luon du h/m/s, khong bo unit 0.
+//   - countdown: "45s" - tong giay nguyen, cho dem nguoc combat.
+// Gia tri le: compact/precise lam tron XUONG, countdown lam tron GAN.
+// Am / NaN / Infinity bi kep ve 0 - cung chinh sach defensive voi
 // NumberFormatter.ts.
 
 export type DurationStyle = 'compact' | 'precise' | 'countdown'

@@ -1,7 +1,7 @@
 <script setup lang="ts">
-// Bản Mệnh Pháp Bảo — vùng 2 (doc §12.1): cảnh giới/tầng, trần theo
-// player, EXP hiện tại/yêu cầu, trạng thái chạm trần. 3 trạng thái
-// (doc §12.1): đang luyện / đầy chờ chủ nhân / đạt trần content — kết
+// Ban Menh Phap Bao - vung 2 (doc sec12.1): canh gioi/tang, tran theo
+// player, EXP hien tai/yeu cau, trang thai cham tran. 3 trang thai
+// (doc sec12.1): dang luyen / day cho chu nhan / dat tran content - ket
 // hop toan %/label voi union trang thai + dong message (cu y kieu
 // cac panel progression da gop vao SkillPath/Realm o P7-M7).
 import { computed } from 'vue'

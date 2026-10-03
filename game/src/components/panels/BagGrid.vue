@@ -10,9 +10,9 @@ import MaterialBagSection from './bag-sections/MaterialBagSection.vue'
 import PillBagSection from './bag-sections/PillBagSection.vue'
 import TabBar from '@/components/common/TabBar.vue'
 
-// Hành Trang (2026-08-25, resource-professions-rework plan §10.1) —
-// Phù/Trận khai tử: còn 3 tab (Trang Bị/Nguyên Liệu/Đan Dược), bỏ hẳn
-// luồng pending-select phù/trận liên-panel.
+// Hanh Trang (2026-08-25, resource-professions-rework plan sec10.1) -
+// Phu/Tran khai tu: con 3 tab (Trang Bi/Nguyen Lieu/Dan Duoc), bo han
+// luong pending-select phu/tran lien-panel.
 const { t } = useI18n()
 
 const ui = useUiStore()

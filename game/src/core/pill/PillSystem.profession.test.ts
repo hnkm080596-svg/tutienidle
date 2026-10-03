@@ -1,7 +1,7 @@
-// Pill nghề (2026-08-24, plan §5): gate wrong_realm KHÔNG consume; main
-// stat roll bỏ stat đã cap + deterministic RNG; regen = timed effect
-// deadline tuyệt đối có hiệu lực trong combat và hết đúng hạn; Tu Vi đi
-// qua addCultivation (giữ cap); Cảm Ngộ tăng cả current + lifetime.
+// Pill nghe (2026-08-24, plan sec5): gate wrong_realm KHONG consume; main
+// stat roll bo stat da cap + deterministic RNG; regen = timed effect
+// deadline tuyet doi co hieu luc trong combat va het dung han; Tu Vi di
+// qua addCultivation (giu cap); Cam Ngo tang ca current + lifetime.
 // @vitest-environment jsdom
 import { describe, expect, it, vi, afterEach } from 'vitest'
 import { GameManager } from '../game/GameManager'
@@ -44,7 +44,7 @@ function setup() {
   return { gameManager, player }
 }
 
-// M10 (ARCH-008) — hoi_xuan_dan retired; hoi_linh_dan keeps the regen
+// M10 (ARCH-008) - hoi_xuan_dan retired; hoi_linh_dan keeps the regen
 // profession-pill path covered (realm gate still fires before its
 // spell gate, so the wrong_realm test is unaffected).
 const REGEN_PILL = 'hoi_linh_dan_mortal'
@@ -55,8 +55,8 @@ const PERMANENT_PILL = 'khai_linh_dan_mortal'
 const CULTIVATION_PILL = 'tu_linh_dan_mortal'
 
 function registerPill(gameManager: GameManager, pillId: string, amount = 1) {
-  // Pill đã register qua bootstrap data ở App.vue; ở test, lấy từ registry
-  // data bằng import gián tiếp để tránh phụ thuộc App.vue.
+  // Pill da register qua bootstrap data o App.vue; o test, lay tu registry
+  // data bang import gian tiep de tranh phu thuoc App.vue.
   return import('../../data/pill/pills').then(({ pills }) => {
     gameManager.catalogOps.registerPills(pills.filter((pill) => pill.id === pillId))
     gameManager.pillBag.add(gameManager.pillRegistry.get(pillId), amount)
@@ -139,8 +139,8 @@ describe('Pill nghề — gate + atomic consumption', () => {
 
     await registerPill(gameManager, CULTIVATION_PILL)
 
-    // Đặt cultivation sát trần: pill cộng 3% required nhưng KHÔNG vượt
-    // required (addCultivation chặn ở required — hành vi giữ cap).
+    // Dat cultivation sat tran: pill cong 3% required nhung KHONG vuot
+    // required (addCultivation chan o required - hanh vi giu cap).
     const required = getRequiredCultivation(player.realmId, player.realmLevel)
 
     player.cultivation = required - 1
@@ -151,7 +151,7 @@ describe('Pill nghề — gate + atomic consumption', () => {
   })
 })
 
-// M10 (ARCH-008, user-locked 2026-09-14): Hoi Xuan Dan RETIRED — the pill
+// M10 (ARCH-008, user-locked 2026-09-14): Hoi Xuan Dan RETIRED - the pill
 // is no longer consumable at all (reason 'retired', bag item kept). The
 // earlier hpRegenPerTurn-stripping tests retired with the mechanic
 // (2026-09-05); this pins the retired state instead of a silent no-op.
@@ -168,8 +168,8 @@ describe('Hoi Xuan Dan — retired family (ARCH-008 / M10)', () => {
     expect(player.persistentTimedEffects).toHaveLength(0)
   })
 })
-// M3 (spec 2026-09-03 talent catalog v4 §4.2) — Hoa Hau Thong Than: dan
-// tu luyen dung hieu qua +50% — scale tai PillSystem consumption seam.
+// M3 (spec 2026-09-03 talent catalog v4 sec4.2) - Hoa Hau Thong Than: dan
+// tu luyen dung hieu qua +50% - scale tai PillSystem consumption seam.
 describe('Pill nghề — Hỏa Hầu Thông Thần +50% hiệu quả (M3)', () => {
   it('đan tu vi: cultivationPercent ×1.5 khi có talent', async () => {
     const { gameManager, player } = setup()
@@ -206,7 +206,7 @@ describe('Pill nghề — Hỏa Hầu Thông Thần +50% hiệu quả (M3)', () 
     const { gameManager, player } = setup()
     player.selectedTalentIds = ['hoa_hau_thong_than']
 
-    // Không có production pill nào emit skill_insight — đăng ký synthetic.
+    // Khong co production pill nao emit skill_insight - dang ky synthetic.
     const insightPill = {
       id: 'test_insight_pill',
       name: 'Đan Cảm Ngộ Test',

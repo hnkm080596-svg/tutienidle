@@ -10,9 +10,9 @@ import { createBaseStats } from '../../stats/StatBlock'
 import { MAX_THE, THE_GAIN_PER_FINISHER, THE_GAIN_PER_LINK } from '../../combat/CombatTypes'
 import { makeTestBuffRegistry, makeTurnRuntime } from './testing/TurnRuntimeFixtures'
 
-// M8 (ARCH-003 + ARCH-010 + C05/C06) — combat resources & turn-phase
+// M8 (ARCH-003 + ARCH-010 + C05/C06) - combat resources & turn-phase
 // contract. MP/Ward regen joins hpRegenPerTurn on the entity-turn cadence
-// through the vitals authority — the *RegenPerTurn stats tick once per
+// through the vitals authority - the *RegenPerTurn stats tick once per
 // entity turn, matching authored content. A lethal status tick ends the
 // actor's turn before regen and
 // before any charged-hit resolution; charged completion accrues The
@@ -100,7 +100,7 @@ function makeDotSource(): CombatEntity {
 }
 
 /**
- * Punching-bag enemy: speed/maxHp live INSIDE the stats override —
+ * Punching-bag enemy: speed/maxHp live INSIDE the stats override -
  * refreshParticipantStats re-syncs participant.speed from entity.stats.speed
  * and reconciles entity.maxHp to stats.maxHp, so an entity-field-only
  * override would be folded back to the defaults on the first declare.
@@ -157,7 +157,7 @@ describe('TurnBattleSystem — per-turn resource regeneration (ARCH-003)', () =>
       currentHp: 950,
       currentMp: 50,
       currentWard: 0,
-      // Never hit — the delayed-ward gate opens immediately (Infinity).
+      // Never hit - the delayed-ward gate opens immediately (Infinity).
       turnsSinceLastHitLanded: Infinity,
     })
 
@@ -186,7 +186,7 @@ describe('TurnBattleSystem — per-turn resource regeneration (ARCH-003)', () =>
       stats,
       baseStats: stats,
       currentWard: 0,
-      // Just hit — the delay counter restarts at 0 on the holder's cadence.
+      // Just hit - the delay counter restarts at 0 on the holder's cadence.
       turnsSinceLastHitLanded: 0,
     })
 
@@ -277,7 +277,7 @@ describe('TurnBattleSystem — post-status liveness boundary (ARCH-010)', () => 
 
     system.resolveNextStep(battle)
 
-    // DoT killed the player at the status phase — the turn ended there:
+    // DoT killed the player at the status phase - the turn ended there:
     // no regen touched the pools and no hit landed on the enemy.
     expect(player.alive).toBe(false)
     expect(player.currentHp).toBe(0)
@@ -360,7 +360,7 @@ describe('TurnBattleSystem — charged-hit The gain (C05)', () => {
     const player = createCombatant('player', { stats, baseStats: stats })
     const playerParticipant = makeParticipant('player', player, 100, 0)
     // chargeTurns is a generic engine primitive (kept post-kiem-tu
-    // teardown) — inline fixture carries the same 3-turn shape the
+    // teardown) - inline fixture carries the same 3-turn shape the
     // retired bat_kiem_thuat authored. The gain is skill-authored
     // (theGainOnLandedCast) under the phap-tu The model.
     const CHARGED_SPECIAL: TurnSkillDefinition = {
@@ -377,7 +377,7 @@ describe('TurnBattleSystem — charged-hit The gain (C05)', () => {
     const battle = makeBattle([playerParticipant], [enemy])
     const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 10_000)
 
-    // Turn 1: charge INITIATION — resource/cooldown commit, no gain yet.
+    // Turn 1: charge INITIATION - resource/cooldown commit, no gain yet.
     system.resolveNextStep(battle)
     expect(player.currentThe ?? 0).toBe(0)
     expect(playerParticipant.chargingTurnsRemaining).toBe(CHARGED_SPECIAL.chargeTurns)
@@ -386,7 +386,7 @@ describe('TurnBattleSystem — charged-hit The gain (C05)', () => {
     runPlayerTurns(system, battle, 4)
 
     expect(playerParticipant.chargingTurnsRemaining).toBeUndefined()
-    // Exactly once — not once per charge tick, not zero from the early return.
+    // Exactly once - not once per charge tick, not zero from the early return.
     expect(player.currentThe).toBe(THE_GAIN_PER_LINK)
     expect(enemy.entity.currentHp).toBeLessThan(1_000_000)
   })
@@ -408,7 +408,7 @@ describe('TurnBattleSystem — charged-hit The gain (C05)', () => {
         chargeTurns: 2,
         resourceType: 'the',
         resourceCost: MAX_THE,
-        // Task 8 — the finisher gain is authored on the skill, not
+        // Task 8 - the finisher gain is authored on the skill, not
         // inferred from the ultimate slot.
         theGainOnLandedCast: THE_GAIN_PER_FINISHER,
         damage: { kind: 'physical', multiplier: 1 },

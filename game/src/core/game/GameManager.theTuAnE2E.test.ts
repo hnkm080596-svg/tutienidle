@@ -240,7 +240,7 @@ describe('an e2e — Ho intercept + Phan counter through the live stack', () => 
     // (lands only after both windows closed).
     expect(cycleDelta).toBe(-THE_PROC_COST * 2 + 4)
 
-    // The substitution resolved fully vs the protector — the companion
+    // The substitution resolved fully vs the protector - the companion
     // was never touched.
     expect(companion!.entity.currentHp).toBe(companionHp)
     expect(protector!.entity.currentHp).toBeLessThan(protector!.entity.stats.maxHp)

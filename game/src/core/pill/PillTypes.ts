@@ -1,4 +1,4 @@
-// 'material' (spec dot-pha-loi-kiep §4.1b) — đan dùng làm NGUYÊN LIỆU
+// 'material' (spec dot-pha-loi-kiep sec4.1b) - dan dung lam NGUYEN LIEU
 // (Thong Mach Dan tieu qua meridian chapter, Truc Co Dan la vat chung
-// bậc Kiến Cơ) — KHÔNG được uống trực tiếp.
+// bac Kien Co) - KHONG duoc uong truc tiep.
 export type PillType = 'healing' | 'cultivation' | 'buff' | 'permanent' | 'material'

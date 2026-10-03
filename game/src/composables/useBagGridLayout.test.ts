@@ -1,23 +1,23 @@
 // @vitest-environment jsdom
 //
-// Remediation Task 4 (2026-09-05) — useBagGridLayout đo grid CHỈ tại
-// onMounted: grid nằm trong v-if/tab (như tab Hóa Luyện, EquipmentHall)
-// sẽ KHÔNG tồn tại lúc mount → observer không bao giờ attach → layout
-// kẹt fallback MIN_COLUMNS/MIN_ROWS vĩnh viễn dù container render và
-// resize sau đó. Sửa: watch gridRef (immediate) — disconnect observer cũ
-// khi ref đổi, attach khi element mới xuất hiện, cleanup khi unmount.
-// Pattern mirror usePanelPagination (audit H4 2026-08-31 đã sửa cùng
-// lỗi cho list dọc).
+// Remediation Task 4 (2026-09-05) - useBagGridLayout do grid CHI tai
+// onMounted: grid nam trong v-if/tab (nhu tab Hoa Luyen, EquipmentHall)
+// se KHONG ton tai luc mount -> observer khong bao gio attach -> layout
+// ket fallback MIN_COLUMNS/MIN_ROWS vinh vien du container render va
+// resize sau do. Sua: watch gridRef (immediate) - disconnect observer cu
+// khi ref doi, attach khi element moi xuat hien, cleanup khi unmount.
+// Pattern mirror usePanelPagination (audit H4 2026-08-31 da sua cung
+// loi cho list doc).
 //
-// KHÔNG có @vue/test-utils trong devDeps → mount thủ công createApp
-// (cùng pattern usePanelPagination.test.ts).
+// KHONG co @vue/test-utils trong devDeps -> mount thu cong createApp
+// (cung pattern usePanelPagination.test.ts).
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createApp, h, nextTick, ref } from 'vue'
 import { useBagGridLayout } from './useBagGridLayout'
 import { GRID_GAP, MIN_COLUMNS, MIN_ROWS } from '@/core/ui/SlotSizes'
 
-// jsdom không có ResizeObserver thật — stub global bằng class mock
-// (giống usePanelPagination.test.ts).
+// jsdom khong co ResizeObserver that - stub global bang class mock
+// (giong usePanelPagination.test.ts).
 class MockResizeObserver {
   static instances: MockResizeObserver[] = []
 
@@ -63,9 +63,9 @@ function mountHost() {
         observedWidths.push(layout.value.columns)
 
         return [
-          // Grid như tab bag: chỉ tồn tại khi show = true.
+          // Grid nhu tab bag: chi ton tai khi show = true.
           show.value ? h('div', { ref: gridRef }) : null,
-          // Render layout ra text để assert không cần expose.
+          // Render layout ra text de assert khong can expose.
           h('div', `columns:${layout.value.columns};pageSize:${pageSize.value};style:${gridStyle.value['--grid-columns']}`),
         ]
       }
@@ -95,12 +95,12 @@ describe('useBagGridLayout — conditional mount (Remediation Task 4)', () => {
 
     const host = mountHost()
 
-    // Chưa show → layout fallback MIN.
+    // Chua show -> layout fallback MIN.
     expect(host.root.textContent).toBe(
       `columns:${MIN_COLUMNS};pageSize:${MIN_COLUMNS * MIN_ROWS};style:${MIN_COLUMNS}`,
     )
 
-    // Show grid (như mở tab bag) → ref gán → observer attach.
+    // Show grid (nhu mo tab bag) -> ref gan -> observer attach.
     host.show.value = true
     await nextTick()
     await nextTick()
@@ -110,7 +110,7 @@ describe('useBagGridLayout — conditional mount (Remediation Task 4)', () => {
     expect(observer).toBeDefined()
     expect(observer!.observe).toHaveBeenCalledTimes(1)
 
-    // Callback fire: container 600×200 → layout tính từ kích thước thật.
+    // Callback fire: container 600x200 -> layout tinh tu kich thuoc that.
     fireLayout([{ width: 600, height: 200 }])
     await nextTick()
 
@@ -164,7 +164,7 @@ describe('useBagGridLayout — conditional mount (Remediation Task 4)', () => {
     expect(first).toBeDefined()
     expect(first!.observe).toHaveBeenCalledTimes(1)
 
-    // Ẩn rồi hiện lại → ref null rồi gán element mới.
+    // An roi hien lai -> ref null roi gan element moi.
     host.show.value = false
     await nextTick()
     await nextTick()
@@ -183,7 +183,7 @@ describe('useBagGridLayout — conditional mount (Remediation Task 4)', () => {
 
     host.unmount()
 
-    // Unmount cleanup: observer cuối disconnect.
+    // Unmount cleanup: observer cuoi disconnect.
     expect(second!.disconnect).toHaveBeenCalled()
   })
 

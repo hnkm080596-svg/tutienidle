@@ -19,7 +19,7 @@ import { makeTestBuffRegistry, makeTurnRuntime } from './testing/TurnRuntimeFixt
 // Expected after the eventual production fix: the tick skips the buff
 // gracefully (mirror of the GameManager.ts formation-buff try/catch
 // pattern), the battle keeps running, firedAlready stays false so a
-// corrected id could still fire later — and, critically, resolveNextStep
+// corrected id could still fire later - and, critically, resolveNextStep
 // does NOT throw.
 //
 // This test intentionally FAILS against current code (throw propagates),
@@ -51,7 +51,7 @@ function makeParticipant(id: string, entity: CombatEntity, speed: number, priori
   return { id, entity, speed, priority, actionGauge: 0, alive: entity.alive, consecutiveHardCcTurns: 0 }
 }
 
-// No-op skill: no damage, no targets — nothing outside the boss-trigger
+// No-op skill: no damage, no targets - nothing outside the boss-trigger
 // block can throw, so any unexpected exception in resolveNextStep traces
 // back to the trigger lookup itself.
 const BASIC: { id: string; cooldownTurns: number; damage: { kind: 'physical'; multiplier: number }; targeting: { shape: 'single' } } = {
@@ -104,7 +104,7 @@ describe('QA — TurnBattleSystem boss trigger vs unknown buff id (Phase A2 quic
     })
     const system = new TurnBattleSystem(combat, 10, REGISTRY, undefined, runtime)
 
-    // Turn 1 resolves the player (no bossTrigger — block skipped).
+    // Turn 1 resolves the player (no bossTrigger - block skipped).
     // Turn 2 resolves the enemy: reaches the boss-trigger block inside
     // declareActorAction, where the unguarded registry.get() throws.
     expect(() => system.resolveNextStep(battle)).not.toThrow()

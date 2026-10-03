@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 //
-// combat-grid-view.spriteVisibility.test.ts — regression for the 2026-09-12
+// combat-grid-view.spriteVisibility.test.ts - regression for the 2026-09-12
 // "floating HP bars" bug: sprite.rect.setVisible() hid ONLY the body
 // GameObject, while label / shadow / healthBar (background + fill) are
 // separate GameObjects and kept rendering over the invisible combatant

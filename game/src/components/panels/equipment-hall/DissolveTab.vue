@@ -1,15 +1,15 @@
 <script setup lang="ts">
-// Task 19 (item-grade-quality-rework, rework P6) — Tab Hóa Luyện extracted
-// from EquipmentHallPanel.vue shell. Fully self-contained multi-select —
+// Task 19 (item-grade-quality-rework, rework P6) - Tab Hoa Luyen extracted
+// from EquipmentHallPanel.vue shell. Fully self-contained multi-select -
 // does NOT use the shared HALL_SELECTION_KEY (selectedInstanceId/
-// selectEquipped) since Hóa Luyện has its own independent Set-based
+// selectEquipped) since Hoa Luyen has its own independent Set-based
 // selection, confirmed by reading the pre-extraction template/script.
 //
 // Filter rework (Task 19 plan): the old 3-dropdown bridge (realm +
 // rarity + quality, where rarity/quality secretly read the SAME
-// ITEM_QUALITY/ITEM_GRADE-aliased axis) is now 2 dropdowns —
+// ITEM_QUALITY/ITEM_GRADE-aliased axis) is now 2 dropdowns -
 // grade (real ProfessionGrade axis, PROFESSION_GRADE_ORDER) and
-// Chất (ITEM_QUALITY_ORDER, the merged rarity/quality dropdown) — plus
+// Chat (ITEM_QUALITY_ORDER, the merged rarity/quality dropdown) - plus
 // a visual mismatch hint via canUseItemGrade() (Task 16's equip gate).
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -39,7 +39,7 @@ const { stateVersion } = useStateVersion()
 const { dissolve } = useEquipmentActions()
 
 // =========================
-// Tab Hóa Luyện (§7.5) — filter + multi-select + preview + confirm
+// Tab Hoa Luyen (sec7.5) - filter + multi-select + preview + confirm
 // =========================
 
 interface DissolveCandidate {
@@ -57,19 +57,19 @@ interface DissolveCandidate {
 
   nameSegments: ReturnType<typeof composeEquipmentNameSegments>
 
-  // Audit fix 2026-08-31 — registry miss → không tooltip (pattern
+  // Audit fix 2026-08-31 - registry miss -> khong tooltip (pattern
   // EquippedRow.tooltip trong useEquippedRows.ts).
   tooltip?: ReturnType<typeof buildEquipmentTooltip>
 
-  // Rework P6 (final-review round 2) — renamed from qualityRank/rarityRank
+  // Rework P6 (final-review round 2) - renamed from qualityRank/rarityRank
   // (content was INVERSE to those names, see useEquippedRows.ts's
   // EquippedRow for the same fix); SlotView's own props stay unchanged.
   gradeRank: number
 
   qualityRank: number
 
-  // Task 19 — hint trực quan khi phẩm món KHÔNG khớp cảnh giới hiện tại
-  // của người chơi (canUseItemGrade, Task 16 equip gate).
+  // Task 19 - hint truc quan khi pham mon KHONG khop canh gioi hien tai
+  // cua nguoi choi (canUseItemGrade, Task 16 equip gate).
   gradeMismatch: boolean
 }
 
@@ -92,8 +92,8 @@ function passesDissolveFilter(instance: EquipmentInstance): boolean {
   return true
 }
 
-// Tick nhẹ để preview cập nhật khi selection đổi (computed phụ thuộc
-// stateVersion là chính).
+// Tick nhe de preview cap nhat khi selection doi (computed phu thuoc
+// stateVersion la chinh).
 const nowTick = ref(0)
 
 const dissolveCandidates = computed<DissolveCandidate[]>(() => {
@@ -144,9 +144,9 @@ const dissolveCandidates = computed<DissolveCandidate[]>(() => {
           ? composeEquipmentNameSegments(instance, template, gameManager.zoneRegistry)
           : [{ text: instance.itemId }],
 
-        // Audit fix 2026-08-31 — dùng lại template đã tra an toàn ở trên;
-        // registry miss → không tooltip (SlotView tooltip optional),
-        // không chết tab Hóa Luyện qua ErrorBoundary.
+        // Audit fix 2026-08-31 - dung lai template da tra an toan o tren;
+        // registry miss -> khong tooltip (SlotView tooltip optional),
+        // khong chet tab Hoa Luyen qua ErrorBoundary.
         tooltip: template && mainStatRangeQuote
           ? buildEquipmentTooltip(
               instance,
@@ -178,12 +178,12 @@ const dissolveCandidates = computed<DissolveCandidate[]>(() => {
     })
 })
 
-// Hóa Luyện phân trang theo ngân sách chiều cao + CHIỀU RỘNG thật của
-// lưới — bug 2026-09-01 (T2.3, user report "chỉ show đúng 1 món"):
-// usePanelPagination gọi KHÔNG có columnWidth → columnCount cứng 1, khi
-// ResizeObserver chưa fire availableHeight = 0 → pageSize = 1×1 = 1.
-// Grid thật là CSS auto-fill minmax(64px) + gap 8px → columnWidth = 72
-// (64 + 8 gap), pageSize = rows × measured columns.
+// Hoa Luyen phan trang theo ngan sach chieu cao + CHIEU RONG that cua
+// luoi - bug 2026-09-01 (T2.3, user report "chi show dung 1 mon"):
+// usePanelPagination goi KHONG co columnWidth -> columnCount cung 1, khi
+// ResizeObserver chua fire availableHeight = 0 -> pageSize = 1x1 = 1.
+// Grid that la CSS auto-fill minmax(64px) + gap 8px -> columnWidth = 72
+// (64 + 8 gap), pageSize = rows x measured columns.
 const {
   containerEl: dissolveListEl,
   currentPage: dissolvePage,
@@ -228,9 +228,9 @@ function toggleDissolve(instanceId: string) {
 }
 
 /**
- * Chọn TẤT CẢ candidate đang qua filter hiện hành (yêu cầu "hóa luyện
- * toàn bộ/theo filter") — an toàn vì candidates đã loại equipped/locked/
- * favorite ở computed nguồn.
+ * Chon TAT CA candidate dang qua filter hien hanh (yeu cau "hoa luyen
+ * toan bo/theo filter") - an toan vi candidates da loai equipped/locked/
+ * favorite o computed nguon.
  */
 function selectAllDissolveByFilter() {
   dissolveSelected.value = new Set(dissolveCandidates.value.map((candidate) => candidate.instanceId))
@@ -293,8 +293,8 @@ function doDissolve() {
         </option>
       </select>
 
-      <!-- Chất — dropdown Chất duy nhất (Task 19: gộp rarity+quality cũ,
-           2 dropdown đó vốn đã đọc CHUNG 1 trục ITEM_QUALITY/ITEM_GRADE). -->
+      <!-- Chat - dropdown Chat duy nhat (Task 19: gop rarity+quality cu,
+           2 dropdown do von da doc CHUNG 1 truc ITEM_QUALITY/ITEM_GRADE). -->
       <select v-model="dissolveFilterQuality">
         <option value="any">{{ t('panels.equipmentHall.select.anyQuality') }}</option>
 
@@ -383,7 +383,7 @@ function doDissolve() {
 </template>
 
 <style scoped>
-/* Shared .qi-hall__* layout lives in ./qi-hall.css (one owner — see the
+/* Shared .qi-hall__* layout lives in ./qi-hall.css (one owner - see the
    sheet header for the specificity-war rationale). Only Dissolve-private
    classes stay scoped here. */
 .dissolve-filters {
@@ -418,8 +418,8 @@ function doDissolve() {
   cursor: not-allowed;
 }
 
-/* Lưới slot Hóa Luyện — tham chiếu đúng kiểu ô inventory (2026-08-30
-   spec), thay danh sách <li> text cũ. */
+/* Luoi slot Hoa Luyen - tham chieu dung kieu o inventory (2026-08-30
+   spec), thay danh sach <li> text cu. */
 .dissolve-grid {
   flex: 1 1 auto;
   min-height: 0;
@@ -435,16 +435,16 @@ function doDissolve() {
   cursor: pointer;
 }
 
-/* Task 19 — hint trực quan món KHÔNG khớp cảnh giới hiện tại (mờ đi,
-   không chặn chọn — canUseItemGrade chỉ là gợi ý, Hóa Luyện không cần
-   dùng được món mới thao tác). */
+/* Task 19 - hint truc quan mon KHONG khop canh gioi hien tai (mo di,
+   khong chan chon - canUseItemGrade chi la goi y, Hoa Luyen khong can
+   dung duoc mon moi thao tac). */
 .dissolve-slot-wrap--grade-mismatch {
   opacity: 0.55;
 }
 
-/* Dấu tick món đã chọn (2026-08-30 spec: "hiệu ứng gì đó, ví dụ dấu
-   tick") — SlotView tự viền sáng qua state.interaction='selected',
-   badge tick này là tín hiệu PHỤ rõ ràng hơn ở góc. */
+/* Dau tick mon da chon (2026-08-30 spec: "hieu ung gi do, vi du dau
+   tick") - SlotView tu vien sang qua state.interaction='selected',
+   badge tick nay la tin hieu PHU ro rang hon o goc. */
 .dissolve-slot-tick {
   position: absolute;
   top: -4px;

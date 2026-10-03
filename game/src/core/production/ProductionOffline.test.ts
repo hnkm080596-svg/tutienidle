@@ -1,4 +1,4 @@
-// ProductionOffline.test.ts — direct unit coverage for settleProductionOffline.
+// ProductionOffline.test.ts - direct unit coverage for settleProductionOffline.
 //
 // Scope: edges the system-level suites do NOT isolate.
 // ProductionSystem.test.ts covers the happy sequential path and the

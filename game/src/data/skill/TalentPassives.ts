@@ -54,8 +54,8 @@ function stat(
   }
 }
 
-// CP-01 — variant flat cho stat base-0 (rate stat): percent nhân lên
-// (base+flat)=0 vẫn ra 0, nên các passive dưới đây phải cộng tuyệt đối.
+// CP-01 - variant flat cho stat base-0 (rate stat): percent nhan len
+// (base+flat)=0 van ra 0, nen cac passive duoi day phai cong tuyet doi.
 function flatStat(
   stat: StatModifier['stat'],
   flat: number,
@@ -139,7 +139,7 @@ export const TALENT_PASSIVE_SKILLS: Skill[] = [
     [stat('evasionRate', 0.02, 5)],
     { passiveConvertsTo: { buffId: 'sat_na' } },
   ),
-  // 8. Can Than - endurance: duoi nguong HP nhan −10% (finalDamage
+  // 8. Can Than - endurance: duoi nguong HP nhan -10% (finalDamage
   // ReductionPercent), tren nguong nhan +5% - dao doi sinh tu: 2
   // passive trai dau theo condition.
   talentPassive(
@@ -156,8 +156,8 @@ export const TALENT_PASSIVE_SKILLS: Skill[] = [
     'Nội tại Cẩn Thận của thiên phú — chủ quan khi an toàn.',
     'per_second',
     [flatStat('finalDamageReductionPercent', -0.05)],
-    // CP-01 — downside leg chỉ áp TRÊN ngưỡng; không condition thì nó
-    // luôn active và triệt tiêu một nửa leg 'hpBelow' phía trên.
+    // CP-01 - downside leg chi ap TREN nguong; khong condition thi no
+    // luon active va triet tieu mot nua leg 'hpBelow' phia tren.
     { passiveCondition: { kind: 'hpNotBelow', percent: 0.35 } },
   ),
   // 9. Ho The - ward vo no AoE + hoi ward: phan bung no ward-break nam

@@ -1,22 +1,22 @@
-// ProductionBalance.simulation.test.ts (gp123 6F, task D1) — simulation
-// 24h × 1 worker × 3 chuỗi kinh tế với seed cố định, khoá bất đẳng thức
-// theo từng chuỗi (mỗi chuỗi bất đẳng thức riêng, nêu chi tiết bên dưới) bằng số liệu thực
-// của engine (ProductionSystem/AlchemySystem/DecomposeSystem) — không
-// dùng mô hình rút gọn:
+// ProductionBalance.simulation.test.ts (gp123 6F, task D1) - simulation
+// 24h x 1 worker x 3 chuoi kinh te voi seed co dinh, khoa bat dang thuc
+// theo tung chuoi (moi chuoi bat dang thuc rieng, neu chi tiet ben duoi) bang so lieu thuc
+// cua engine (ProductionSystem/AlchemySystem/DecomposeSystem) - khong
+// dung mo hinh rut gon:
 //
-// - Chuỗi Thảo (Động Thiên → Đan Phòng): đan sản xuất ≤ thảo tiêu thụ.
-// - Chuỗi Gỗ (Lâm → nhiên liệu Đan Phòng): gỗ theo tuổi ≥ nhiên liệu
-//   các job đan cần (rule resolveFuelWood: đúng realm + đúng tuổi).
-// - Chuỗi Khoáng (Quáng → Phân Giải): khoáng sản xuất ≥ khoáng phân
-//   giải tiêu thụ.
+// - Chuoi Thao (Dong Thien -> Dan Phong): dan san xuat <= thao tieu thu.
+// - Chuoi Go (Lam -> nhien lieu Dan Phong): go theo tuoi >= nhien lieu
+//   cac job dan can (rule resolveFuelWood: dung realm + dung tuoi).
+// - Chuoi Khoang (Quang -> Phan Giai): khoang san xuat >= khoang phan
+//   giai tieu thu.
 //
-// Determinism: Math.random bị pin qua mulberry32(seed) — đường duy nhất
-// dùng RNG ngoài seed snapshot là buildCycle (rollSeed) và roll extra
-// pill của AlchemySystem.tick. Kết quả lặp lại y hệt mỗi run.
+// Determinism: Math.random bi pin qua mulberry32(seed) - duong duy nhat
+// dung RNG ngoai seed snapshot la buildCycle (rollSeed) va roll extra
+// pill cua AlchemySystem.tick. Ket qua lap lai y het moi run.
 //
-// Nếu bất đẳng thức VIOLATE: KHÔNG tune ProductionBalance tại đây —
-// số liệu violation được in ra để user quyết (balance tuning là quyết
-// định design, plan 6F).
+// Neu bat dang thuc VIOLATE: KHONG tune ProductionBalance tai day -
+// so lieu violation duoc in ra de user quyet (balance tuning la quyet
+// dinh design, plan 6F).
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 // BETA SCOPE LOCK v2 Phase-5 - this suite exercises the scope-hidden
@@ -64,7 +64,7 @@ import {
 } from './ProductionBalance'
 
 // =========================
-// Tham số simulation — 24h game time, bước 1s, 1 worker mỗi chuỗi.
+// Tham so simulation - 24h game time, buoc 1s, 1 worker moi chuoi.
 // =========================
 
 const SIM_SECONDS = 86_400
@@ -76,13 +76,13 @@ const FOREST_SITE_ID = TERRITORY_THANH_VAN.productionSiteIds.forest
 const MINE_SITE_ID = TERRITORY_THANH_VAN.productionSiteIds.mine
 const GROTTO_SITE_ID = TERRITORY_THANH_VAN.productionSiteIds.grotto
 
-/** Đan phương mô hình hoá: 1 trong 8 đan phẩm Phàm Nhân (chain Thảo/Gỗ). */
+/** Dan phuong mo hinh hoa: 1 trong 8 dan pham Pham Nhan (chain Thao/Go). */
 const HERB_RECIPE = alchemyRecipes.find((recipe) => recipe.id === 'alchemy_tu_linh_dan_mortal')!
 
-/** Đan Phòng nhận thảo ĐỦ trục HerbAge 5 bậc (recipes sinh từ HERB_AGES). */
+/** Dan Phong nhan thao DU truc HerbAge 5 bac (recipes sinh tu HERB_AGES). */
 const CRAFTABLE_AGES: readonly HerbAge[] = HERB_AGES
 
-/** Level Đan Phòng 1 — bonus 0, success % đúng bằng bảng base theo tuổi. */
+/** Level Dan Phong 1 - bonus 0, success % dung bang bang base theo tuoi. */
 const ALCHEMY_ROOM_LEVEL = 1
 
 function createRegistry(): MaterialRegistry {
@@ -92,8 +92,8 @@ function createRegistry(): MaterialRegistry {
     registry.register(material)
   }
 
-  // SPIRIT_STONE_MATERIAL đã nằm trong catalog materials — chỉ đăng ký
-  // khi thiếu (catalog đổi tay không còn Linh Thạch vẫn chạy được).
+  // SPIRIT_STONE_MATERIAL da nam trong catalog materials - chi dang ky
+  // khi thieu (catalog doi tay khong con Linh Thach van chay duoc).
   if (!registry.has(SPIRIT_STONE_MATERIAL.id)) {
     registry.register(SPIRIT_STONE_MATERIAL)
   }
@@ -141,7 +141,7 @@ function accumulateEvents(
 const WOOD_ID_PATTERN = /^(.+)_wood_(decade|century|millennium|myriad_year|thuong_co)$/
 const ORE_ID_PATTERN = /^(.+)_ore_(decade|century|millennium|myriad_year|thuong_co)$/
 
-/** Gỗ theo tuổi từ kết quả Lâm — key `${realmId}_wood_${age}`. */
+/** Go theo tuoi tu ket qua Lam - key `${realmId}_wood_${age}`. */
 function woodByRealmAge(produced: Map<string, number>): Map<string, Record<HerbAge, number>> {
   const table = new Map<string, Record<HerbAge, number>>()
 
@@ -166,8 +166,8 @@ function woodByRealmAge(produced: Map<string, number>): Map<string, Record<HerbA
 }
 
 // =========================
-// Chuỗi Thảo (Động Thiên → Đan Phòng) — dùng chung cho test thảo và gỗ
-// (chain Gỗ cần phân bố tuổi của job đan để tính nhu cầu nhiên liệu).
+// Chuoi Thao (Dong Thien -> Dan Phong) - dung chung cho test thao va go
+// (chain Go can phan bo tuoi cua job dan de tinh nhu cau nhien lieu).
 // =========================
 
 interface HerbChainResult {
@@ -194,8 +194,8 @@ function runHerbChain(): HerbChainResult {
     const registry = createRegistry()
     const bag = new MaterialBag()
 
-    // Seed nhiên liệu ĐỦ cho mọi tuổi — thiếu hụt gỗ là bài của chain Gỗ,
-    // không được chặn chain Thảo (tách biến).
+    // Seed nhien lieu DU cho moi tuoi - thieu hut go la bai cua chain Go,
+    // khong duoc chan chain Thao (tach bien).
     for (const age of HERB_AGES) {
       bag.add(registry.get(`mortal_wood_${age}`), 1_000_000)
     }
@@ -211,12 +211,12 @@ function runHerbChain(): HerbChainResult {
     const herbsProduced = new Map<string, number>()
 
     for (let nowMs = 0; nowMs <= SIM_END_MS; nowMs += STEP_MS) {
-      // 1 worker Động Thiên — pool capacity 1, không assignment (round-robin).
+      // 1 worker Dong Thien - pool capacity 1, khong assignment (round-robin).
       system.tickWorkers(nowMs, bag, registry, 'mortal', 1)
 
       accumulateEvents(herbsProduced, new Map(), system.drainSettlementEvents())
 
-      // Đan Phòng 1 job slot — luôn chọn biến thể tuổi đầu tiên còn đủ thảo.
+      // Dan Phong 1 job slot - luon chon bien the tuoi dau tien con du thao.
       if (!alchemy.hasActiveJob()) {
         const variant = HERB_RECIPE.herbVariants.find(
           (candidate) => bag.getAmount(candidate.materialId) >= HERB_RECIPE.herbAmount,
@@ -244,7 +244,7 @@ function runHerbChain(): HerbChainResult {
         }
       }
 
-      // Settle job theo lịch — roll extra pill dùng cùng stream seeded.
+      // Settle job theo lich - roll extra pill dung cung stream seeded.
       alchemy.tick(nowMs, pillBag, (pillId) => ({ id: pillId }), random, 0)
     }
 
@@ -261,7 +261,7 @@ function runHerbChain(): HerbChainResult {
 }
 
 // =========================
-// Chain Gỗ — Lâm 24h, đối chiếu từng tuổi với nhu cầu nhiên liệu chain Thảo.
+// Chain Go - Lam 24h, doi chieu tung tuoi voi nhu cau nhien lieu chain Thao.
 // =========================
 
 interface WoodChainResult {
@@ -300,7 +300,7 @@ function runWoodChain(): WoodChainResult {
 }
 
 // =========================
-// Chain Khoáng — Quáng + Phân Giải chạy CÙNG bag trong cùng cửa sổ 24h.
+// Chain Khoang - Quang + Phan Giai chay CUNG bag trong cung cua so 24h.
 // =========================
 
 interface OreChainResult {
@@ -368,7 +368,7 @@ function runOreChain(): OreChainResult {
       oreRemaining += bag.getAmount(materialId)
     }
 
-    // Khoáng tiêu thụ = sản xuất - tràn stack - tồn cuối (không đường rò khác).
+    // Khoang tieu thu = san xuat - tran stack - ton cuoi (khong duong ro khac).
     const oreConsumed = oreProduced - oreOverflow - oreRemaining
 
     return { oreProduced, oreOverflow, oreRemaining, oreConsumed, tinhHoaProduced }
@@ -442,8 +442,8 @@ describe('Simulation 24h × 1 worker — cân bằng từng chuỗi (gp123 6F)',
     const herbChain = runHerbChain()
     const woodChain = runWoodChain()
 
-    // Nhiên liệu cần theo tuổi — rule resolveFuelWood: đúng `<realm>_wood_<age>`,
-    // realm của đan phương mortal → chỉ gỗ mortal của ĐÚNG tuổi dùng được.
+    // Nhien lieu can theo tuoi - rule resolveFuelWood: dung `<realm>_wood_<age>`,
+    // realm cua dan phuong mortal -> chi go mortal cua DUNG tuoi dung duoc.
     const fuelNeeded = zeroByAge()
 
     for (const age of CRAFTABLE_AGES) {
@@ -472,9 +472,9 @@ describe('Simulation 24h × 1 worker — cân bằng từng chuỗi (gp123 6F)',
       `tồn=${chain.oreRemaining} TT=${chain.oreConsumed} tinh_hoa=${chain.tinhHoaProduced}`,
     )
 
-    // Bất đẳng thức SX ≥ TT trên là hằng đẳng thức bảo toàn (tràn + tồn ≥ 0
-    // luôn đúng) — khoá FALSIFIABLE nằm ở tồn cuối: Phân Giải phải theo kịp
-    // Quáng, không để khoáng tồn đọng cuối 24h.
+    // Bat dang thuc SX >= TT tren la hang dang thuc bao toan (tran + ton >= 0
+    // luon dung) - khoa FALSIFIABLE nam o ton cuoi: Phan Giai phai theo kip
+    // Quang, khong de khoang ton dong cuoi 24h.
     expect(chain.oreRemaining).toBe(0)
 
     expect(chain.oreProduced).toBeGreaterThanOrEqual(chain.oreConsumed)

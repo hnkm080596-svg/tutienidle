@@ -1,4 +1,4 @@
-// scripts/electron-quit-flush-smoke.mjs — Mission B external-audit B1
+// scripts/electron-quit-flush-smoke.mjs - Mission B external-audit B1
 // evidence: native Electron close -> quit-flush IPC -> renderer save ->
 // flush-complete ACK -> window closes -> relaunch -> state persisted.
 //
@@ -12,7 +12,7 @@
 //   node scripts/electron-quit-flush-smoke.mjs
 //
 // Env overrides (worktree runs):
-//   ELECTRON_EXE            path to electron.exe (binary only — the code
+//   ELECTRON_EXE            path to electron.exe (binary only - the code
 //                           under test is ELECTRON_APP_MAIN)
 //   ELECTRON_APP_MAIN       path to the built dist-electron/main.js
 //   PLAYWRIGHT_CORE_FROM    dir whose node_modules provides playwright-core
@@ -62,7 +62,7 @@ const userData = fs.mkdtempSync(path.join(os.tmpdir(), 'tutien-electron-smoke-')
 
 // The packaged renderer references absolute /assets/... URLs which cannot
 // resolve under loadFile(file://). Serve dist/ over loopback HTTP and use
-// the app's own VITE_DEV_SERVER_URL hook (electron/main.ts) — the
+// the app's own VITE_DEV_SERVER_URL hook (electron/main.ts) - the
 // quit-flush IPC path under test is identical either way.
 const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.png': 'image/png', '.jpg': 'image/jpeg', '.svg': 'image/svg+xml', '.ico': 'image/x-icon', '.woff': 'font/woff', '.woff2': 'font/woff2', '.ttf': 'font/ttf', '.mp3': 'audio/mpeg', '.ogg': 'audio/ogg', '.wav': 'audio/wav', '.webp': 'image/webp', '.gif': 'image/gif' }
 const distDir = path.join(gameDir, 'dist')
@@ -196,7 +196,7 @@ try {
 
   // Mutate LIVE state (not localStorage) so only the quit-flush write can
   // carry it to disk: Pinia reachable through the mounted Vue app. The
-  // sentinel is `name` — NOT an accrued field: a per-tick authority like
+  // sentinel is `name` - NOT an accrued field: a per-tick authority like
   // addCultivation() would normalize a tampered cultivation value before
   // the flush save runs.
   const sentinelName = 'SmokeBotFlush'
@@ -245,7 +245,7 @@ try {
   }
 
   // Durability end-to-end: guest re-auth restores INTO the game. The
-  // boot path re-runs restore + presentation on cold caches — give the
+  // boot path re-runs restore + presentation on cold caches - give the
   // home mount more room than the creation-screen default.
   await win2.getByTestId('auth-guest-button').click()
   await win2.locator('.game-root').waitFor({ state: 'visible', timeout: 60_000 })

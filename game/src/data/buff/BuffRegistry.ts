@@ -3,7 +3,7 @@ import { createDamageProfileCatalog } from '../../core/combat/DamageProfiles'
 import { createDefaultCapabilityValidators } from '../../core/battle/runtime/capability/DefaultCapabilityValidators'
 import { buffs as LIVE_BUFFS } from './buffs'
 
-// buff2 migration (M4) — the legacy `toBuffDefinition` load-time
+// buff2 migration (M4) - the legacy `toBuffDefinition` load-time
 // converter is gone: every data file now authors the canonical
 // BuffDefinition shape directly (stacking/lifetime/application/
 // periodic/statModifiers/controls/capabilities). The registry validates

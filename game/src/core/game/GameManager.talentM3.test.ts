@@ -1,4 +1,4 @@
-// M3 (spec 2026-09-03 talent catalog v4 §4.2) — production talent wiring
+// M3 (spec 2026-09-03 talent catalog v4 sec4.2) - production talent wiring
 // qua GameManager ops layer: Bach Luyen Thanh Khi (equipment) va Hoa Hau
 // Thong Than (alchemy cost). Unit-level seams da cover o
 // EnhanceSlotLevel/AlchemySystem/PillSystem.profession tests.
@@ -41,7 +41,7 @@ describe('GameManager — Bach Luyen Thanh Khi wiring (M3)', () => {
 
     const before = gameManager.materialBag.getAmount(SPIRIT_STONE_MATERIAL_ID)
 
-    // L2 rate 96 — 0.999 se fail voi nguoi thuong; talent bao dam.
+    // L2 rate 96 - 0.999 se fail voi nguoi thuong; talent bao dam.
     gameManager.equipmentOps.enhanceSlot('weapon', player) // L0 -> L1 (rate 100)
     const result = gameManager.equipmentOps.enhanceSlot('weapon', player) // L1 -> L2 (rate 96)
 

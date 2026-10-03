@@ -22,10 +22,10 @@ import { alchemyRecipes } from '../../data/alchemy/alchemyRecipes'
 import { alchemyJobFixture } from '../alchemy/AlchemyJob.fixture'
 import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
 
-// ARCH-008 (M10) — authored-parity regression matrix through REAL
+// ARCH-008 (M10) - authored-parity regression matrix through REAL
 // GameManager entry points (not converter isolation):
 //  - BASIC_PROGRESS: production basic consumes canonical resolved skill
-//    output — tram's per-cast flat bonus (L3 @ 10000 casts => x1001)
+//    output - tram's per-cast flat bonus (L3 @ 10000 casts => x1001)
 //    reaches the participant basic, and the mortal kit reports 'tram'
 //    so skillCastCounts accrue toward the bat_kiem route gate.
 //  - SPECIALIZATION_DURATION: authored buff-effect duration rides
@@ -87,7 +87,7 @@ describe('ARCH-008 — production basic consumes canonical resolved output', () 
     const basic = gameManager.getTurnBattle()!.players[0]!.basic!
 
     // Post-path tram is locked (K3): participant.basic stays the inert
-    // static fallback — the Kiem Pho provider (Task 6) OWNS the slot via
+    // static fallback - the Kiem Pho provider (Task 6) OWNS the slot via
     // dynamicBasic, so authored per-cast scaling never reaches combat.
     expect(basic.id).toBe('tram')
     expect(basic.damage?.kind).toBe('physical')

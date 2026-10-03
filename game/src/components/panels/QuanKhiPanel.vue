@@ -105,9 +105,9 @@ function choiceKitLine(way: PathWayDefinition): string {
     : ''
 }
 
-// Thay window.confirm() native — modal xác nhận đồng bộ hoá qua state
-// (giữ nguyên yêu cầu "lựa chọn KHÔNG thể đổi lại" bằng modal riêng
-// thay vì browser confirm() mặc định).
+// Thay window.confirm() native - modal xac nhan dong bo hoa qua state
+// (giu nguyen yeu cau "lua chon KHONG the doi lai" bang modal rieng
+// thay vi browser confirm() mac dinh).
 const pendingChoice = ref<{ pathId: CultivationPathId; wayId: CultivationWayId } | null>(null)
 
 const pendingWay = computed(() =>
@@ -194,9 +194,9 @@ function confirmChoosePath() {
   if (gameManager.realmAdvanceOps.chooseCultivationPath(choice.pathId, choice.wayId, player.$state)) {
     bumpState()
 
-    // Nghi Lễ Nhập Môn — chọn path VỪA LÀ hành động đột phá Phàm Nhân
-    // -> Luyện Khí (xem GameManager.chooseCultivationPath()), xứng đáng
-    // 1 world announcement giống mọi lần đổi đại cảnh giới khác.
+    // Nghi Le Nhap Mon - chon path VUA LA hanh dong dot pha Pham Nhan
+    // -> Luyen Khi (xem GameManager.chooseCultivationPath()), xung dang
+    // 1 world announcement giong moi lan doi dai canh gioi khac.
     if (realmIdBefore === 'mortal' && player.realmId !== 'mortal') {
       useWorldAnnouncementStore().show(
         t('panels.quanKhi.world.ceremonyTitle'),
@@ -212,9 +212,9 @@ function close() {
   ui.closeHomeOverlays()
 }
 
-// Kiem Tu specialization card below — shown only after the player has
+// Kiem Tu specialization card below - shown only after the player has
 // chosen the sword path (read-only display; the way was locked at
-// the Initiation Ritual — there is no in-panel conversion).
+// the Initiation Ritual - there is no in-panel conversion).
 const isSwordPath = computed(() => {
   stateVersion.value
 
@@ -226,7 +226,7 @@ const isSwordPath = computed(() => {
   return isActivePath(player, 'sword') && !isScopeHidden('swordPath')
 })
 
-// Cultivation Path Framework (M6/M9) — the sword/hidden way is canonical on
+// Cultivation Path Framework (M6/M9) - the sword/hidden way is canonical on
 // PlayerData.cultivationWay. P1 - read through the declared capability:
 // 'sword.sword_riding' only resolves for the ('sword','hidden_sword_pathway') pair.
 const swordPathWay = computed(() => {
@@ -241,9 +241,9 @@ const specNameDisplay = computed(() =>
     : t('panels.quanKhi.specNames.kiemPho'),
 )
 
-// Kiem Tu Reimagined (spec §11) — out-of-combat Kiem Pho preset editor.
+// Kiem Tu Reimagined (spec sec11) - out-of-combat Kiem Pho preset editor.
 // Direct-op editing: every click goes through setKiemPhoPreset() so
-// PlayerData stays the single source of truth — no draft copy to sync.
+// PlayerData stays the single source of truth - no draft copy to sync.
 const orbPalette = Object.keys(KIEM_PHO_ORBS) as OrbId[]
 
 const realmIndex = computed(() => {

@@ -6,13 +6,13 @@ export interface RecipeMaterialCost {
   amount: number
 }
 
-// MASTER SPEC Mục VI (Phase 6, hợp nhất framework COST) — Luyện Khí
-// (Cường Hóa/Tẩy Luyện/Tinh Luyện/Hóa Luyện) dùng CHUNG shape chi phí
-// nguyên liệu với Recipe (Đan) thay vì tự định nghĩa lại
-// {materialId,amount} riêng — Khí vẫn KHÔNG dùng Recipe/CraftingSystem
-// thật (giữ nguyên hành vi INSTANT, không có craftDuration/hàng chờ) vì
-// đây là thao tác tức thời quen thuộc với người chơi, chỉ hợp nhất
-// phần TYPE của chi phí, không hợp nhất luồng thực thi.
+// MASTER SPEC Muc VI (Phase 6, hop nhat framework COST) - Luyen Khi
+// (Cuong Hoa/Tay Luyen/Tinh Luyen/Hoa Luyen) dung CHUNG shape chi phi
+// nguyen lieu voi Recipe (Dan) thay vi tu dinh nghia lai
+// {materialId,amount} rieng - Khi van KHONG dung Recipe/CraftingSystem
+// that (giu nguyen hanh vi INSTANT, khong co craftDuration/hang cho) vi
+// day la thao tac tuc thoi quen thuoc voi nguoi choi, chi hop nhat
+// phan TYPE cua chi phi, khong hop nhat luong thuc thi.
 export type EquipmentEnhanceCost = RecipeMaterialCost
 
 export interface EquipmentStatRange {
@@ -26,16 +26,16 @@ export interface EquipmentStatRange {
 export interface Equipment {
   id: string
 
-  // Tên GỐC, KHÔNG chứa tiền tố Phẩm/Set/Địa Giới (2026-08-15, cơ chế
-  // Set + tên ghép động) — vd "Trảm Không Kiếm", không phải "Thái Hư
-  // Trảm Không Kiếm". Tên đầy đủ hiển thị ghép động lúc runtime, xem
+  // Ten GOC, KHONG chua tien to Pham/Set/Dia Gioi (2026-08-15, co che
+  // Set + ten ghep dong) - vd "Tram Khong Kiem", khong phai "Thai Hu
+  // Tram Khong Kiem". Ten day du hien thi ghep dong luc runtime, xem
   // EquipmentNaming.ts's composeEquipmentNameSegments().
   name: string
 
   description?: string
 
-  // Path ảnh minh hoạ — khai NGAY TRÊN data item (2026-08-15), xem
-  // ghi chú tương tự trong core/technique/Technique.ts.
+  // Path anh minh hoa - khai NGAY TREN data item (2026-08-15), xem
+  // ghi chu tuong tu trong core/technique/Technique.ts.
   icon?: string
 
   iconPool?: string[]
@@ -46,18 +46,18 @@ export interface Equipment {
 
   maxEnhanceLevel: number
 
-  // Implicit — chỉ số CHẮC CHẮN có trên mọi instance của template này
-  // (roll 1 giá trị trong range rồi scale thêm theo cảnh giới người
-  // chơi lúc rớt, xem EquipmentSystem.createInstance()), tách biệt
-  // hoàn toàn khỏi Affix pool (Prefix/Suffix, xem Affix.ts) — Implicit
-  // không tính vào giới hạn số Affix theo Rarity.
-  // Mỗi lựa chọn main stat sở hữu range riêng. Chỉ Nhẫn/Dây Chuyền có
-  // nhiều hơn một lựa chọn; các slot còn lại luôn có đúng một phần tử.
+  // Implicit - chi so CHAC CHAN co tren moi instance cua template nay
+  // (roll 1 gia tri trong range roi scale them theo canh gioi nguoi
+  // choi luc rot, xem EquipmentSystem.createInstance()), tach biet
+  // hoan toan khoi Affix pool (Prefix/Suffix, xem Affix.ts) - Implicit
+  // khong tinh vao gioi han so Affix theo Rarity.
+  // Moi lua chon main stat so huu range rieng. Chi Nhan/Day Chuyen co
+  // nhieu hon mot lua chon; cac slot con lai luon co dung mot phan tu.
   mainStats: readonly EquipmentStatRange[]
 
   enhanceCost?: EquipmentEnhanceCost[]
 
-  // "tunghematandsuch" pass (2026-08-14) — Cường Hóa giờ CŨNG tốn
-  // Linh Thạch (MaterialBag), xem EquipmentSystem.enhance().
+  // "tunghematandsuch" pass (2026-08-14) - Cuong Hoa gio CUNG ton
+  // Linh Thach (MaterialBag), xem EquipmentSystem.enhance().
   enhanceSpiritStoneCost?: number
 }

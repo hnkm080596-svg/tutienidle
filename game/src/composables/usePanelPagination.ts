@@ -26,7 +26,7 @@ export function usePanelPagination(rowCount: ComputedRef<number>, rowHeight: num
   padding?: number
   headerHeight?: number
   maxRows?: number
-  /** Chiều rộng 1 ô (đã gồm gap) của flex-wrap grid — truyền để bật capacity đa cột. */
+  /** Chieu rong 1 o (da gom gap) cua flex-wrap grid - truyen de bat capacity da cot. */
   columnWidth?: number
 }) {
   const containerEl = ref<HTMLElement | null>(null)
@@ -40,10 +40,10 @@ export function usePanelPagination(rowCount: ComputedRef<number>, rowHeight: num
 
   let observer: ResizeObserver | undefined
 
-  // Audit fix 2026-08-31: container có thể nằm trong v-else/v-if — chưa tồn
-  // tại lúc onMounted (tab Hóa Luyện của EquipmentHallPanel, lore grid rỗng).
-  // Watch containerEl để attach KHI ref được gán (bất kể lúc nào trong đời
-  // component), thay vì chỉ thử đúng 1 lần ở mount.
+  // Audit fix 2026-08-31: container co the nam trong v-else/v-if - chua ton
+  // tai luc onMounted (tab Hoa Luyen cua EquipmentHallPanel, lore grid rong).
+  // Watch containerEl de attach KHI ref duoc gan (bat ke luc nao trong doi
+  // component), thay vi chi thu dung 1 lan o mount.
   const stopContainerWatch = watch(containerEl, (el) => {
     observer?.disconnect()
     observer = undefined
@@ -65,8 +65,8 @@ export function usePanelPagination(rowCount: ComputedRef<number>, rowHeight: num
     observer?.disconnect()
   })
 
-  // Số cột đo được — 1 khi list dọc (không truyền columnWidth), floor
-  // (width / columnWidth) khi flex-wrap grid. Clamp tối thiểu 1.
+  // So cot do duoc - 1 khi list doc (khong truyen columnWidth), floor
+  // (width / columnWidth) khi flex-wrap grid. Clamp toi thieu 1.
   const columnCount = computed(() => {
     if (columnWidth === undefined) {
       return 1
@@ -75,14 +75,14 @@ export function usePanelPagination(rowCount: ComputedRef<number>, rowHeight: num
     return Math.max(1, Math.floor(availableWidth.value / columnWidth))
   })
 
-  // Bug 2026-09-01 (T2.3, "chỉ show đúng 1 món"): container nằm trong
-  // v-else tab + panel có thể ẩn (display:none) lúc observer attach —
-  // contentRect.height = 0, budget âm → rows max(1,...) = 1 → pageSize
-  // 1 món, grid overflow:hidden giấu phần còn lại. Khi observer fire
-  // lại với height thật, pageSize nhảy nhưng TRANG đang chứa selection
-  // có thể trống vùng nhìn thấy trong 1 tick.
-  // Fallback: height chưa đo được (0) → dùng 6 hàng mặc định thay vì 1
-  // — sai số hiển thị tạm thời chấp nhận được, KHÔNG chặn content.
+  // Bug 2026-09-01 (T2.3, "chi show dung 1 mon"): container nam trong
+  // v-else tab + panel co the an (display:none) luc observer attach -
+  // contentRect.height = 0, budget am -> rows max(1,...) = 1 -> pageSize
+  // 1 mon, grid overflow:hidden giau phan con lai. Khi observer fire
+  // lai voi height that, pageSize nhay nhung TRANG dang chua selection
+  // co the trong vung nhin thay trong 1 tick.
+  // Fallback: height chua do duoc (0) -> dung 6 hang mac dinh thay vi 1
+  // - sai so hien thi tam thoi chap nhan duoc, KHONG chan content.
   const FALLBACK_ROWS_WHEN_UNMEASURED = 6
 
   const pageSize = computed(() => {

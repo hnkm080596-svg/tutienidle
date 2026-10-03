@@ -1,29 +1,29 @@
-// Combat Grid Rework (2026-08-24) — nguồn DUY NHẤT cho hệ tọa độ chiến
-// trường dạng lưới vuông 10 hàng × 16 cột.
+// Combat Grid Rework (2026-08-24) - nguon DUY NHAT cho he toa do chien
+// truong dang luoi vuong 10 hang x 16 cot.
 //
-// Nguyên tắc:
-// - `row` (LaneIndex) là giá trị RỜI RẠC — chính là lane.
-// - Entity giữ `x` LIÊN TỤC đo bằng ĐƠN VỊ CỘT (column units): quái di
-//   chuyển mượt, column chiếm chỗ = làm tròn x tại thời điểm query/impact.
-// - Renderer tự scale đồng đều để ô luôn VUÔNG (không kéo chữ nhật);
-//   viewport lệch tỉ lệ xử lý bằng letterbox/padding, không đụng logic.
-// - Core KHÔNG biết pixel — mọi khoảng cách combat (range/AOE) tính bằng
-//   cột/hàng qua BattleGrid.
+// Nguyen tac:
+// - `row` (LaneIndex) la gia tri ROI RAC - chinh la lane.
+// - Entity giu `x` LIEN TUC do bang DON VI COT (column units): quai di
+//   chuyen muot, column chiem cho = lam tron x tai thoi diem query/impact.
+// - Renderer tu scale dong deu de o luon VUONG (khong keo chu nhat);
+//   viewport lech ti le xu ly bang letterbox/padding, khong dung logic.
+// - Core KHONG biet pixel - moi khoang cach combat (range/AOE) tinh bang
+//   cot/hang qua BattleGrid.
 import type { CombatEntity } from '../combat/CombatEntity'
 
 export const GRID_ROW_COUNT = 10
 export const GRID_COLUMN_COUNT = 16
 
-// Quái spawn NGOÀI mép phải grid (offscreen) rồi đi vào.
+// Quai spawn NGOAI mep phai grid (offscreen) roi di vao.
 export const SPAWN_COLUMN = GRID_COLUMN_COUNT
 
-// Cột xa nhất còn tính là "trong tầm nhìn" (mirror semantics cũ của
-// SCREEN_VISIBLE_MAX_X: spawn phải nằm ngoài mốc này).
+// Cot xa nhat con tinh la "trong tam nhin" (mirror semantics cu cua
+// SCREEN_VISIBLE_MAX_X: spawn phai nam ngoai moc nay).
 export const VISIBLE_MAX_COLUMN = GRID_COLUMN_COUNT - 0.5
 
 /**
- * Hàng rời rạc 0..GRID_ROW_COUNT-1 — trùng khái niệm lane cũ nhưng mở
- * rộng từ 5 lên 10 hàng (grid vuông 16×10).
+ * Hang roi rac 0..GRID_ROW_COUNT-1 - trung khai niem lane cu nhung mo
+ * rong tu 5 len 10 hang (grid vuong 16x10).
  */
 export type LaneIndex = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
 
@@ -33,19 +33,19 @@ export interface GridPosition {
 }
 
 /**
- * Khoảng cách Chebyshev giữa 2 ô grid (range 1 phủ cả 8 ô kề, gồm đường
- * chéo). MỌI logic targeting đo khoảng cách ô dùng helper này, không tự
- * tính khoảng cách riêng (plan §4.1).
+ * Khoang cach Chebyshev giua 2 o grid (range 1 phu ca 8 o ke, gom duong
+ * cheo). MOI logic targeting do khoang cach o dung helper nay, khong tu
+ * tinh khoang cach rieng (plan sec4.1).
  */
 export function getChebyshevDistance(from: GridPosition, to: GridPosition): number {
   return Math.max(Math.abs(to.row - from.row), Math.abs(to.column - from.column))
 }
 
 /**
- * Chuẩn hoá vị trí entity về ô grid — column LÀM TRÒN qua đúng
- * getColumnFromWorldX() (x là world-unit liên tục), row giữ nguyên vì đã
- * rời rạc. Player targeting/enemy gate đều đi qua đây để tránh tự làm tròn
- * lệch nhau giữa các nơi gọi.
+ * Chuan hoa vi tri entity ve o grid - column LAM TRON qua dung
+ * getColumnFromWorldX() (x la world-unit lien tuc), row giu nguyen vi da
+ * roi rac. Player targeting/enemy gate deu di qua day de tranh tu lam tron
+ * lech nhau giua cac noi goi.
  */
 export function entityGridPosition(entity: Pick<CombatEntity, 'x' | 'row'>): GridPosition {
   return {
@@ -54,7 +54,7 @@ export function entityGridPosition(entity: Pick<CombatEntity, 'x' | 'row'>): Gri
   }
 }
 
-/** Tâm ô theo đơn vị cột/hàng (dùng cho renderer neo VFX/tween). */
+/** Tam o theo don vi cot/hang (dung cho renderer neo VFX/tween). */
 export interface WorldPoint {
   x: number
   y: number
@@ -64,7 +64,7 @@ export function isValidLane(value: number): value is LaneIndex {
   return Number.isInteger(value) && value >= 0 && value < GRID_ROW_COUNT
 }
 
-/** y liên tục (đơn vị hàng) → row rời rạc, clamp trong grid. */
+/** y lien tuc (don vi hang) -> row roi rac, clamp trong grid. */
 export function getLaneFromWorldY(y: number): LaneIndex {
   const row = Math.floor(y)
   if (row < 0) return 0
@@ -72,7 +72,7 @@ export function getLaneFromWorldY(y: number): LaneIndex {
   return row as LaneIndex
 }
 
-/** x liên tục (đơn vị cột) → column chiếm chỗ (làm tròn về ô gần nhất; -0 chuẩn hoá thành 0). */
+/** x lien tuc (don vi cot) -> column chiem cho (lam tron ve o gan nhat; -0 chuan hoa thanh 0). */
 export function getColumnFromWorldX(x: number): number {
   const rounded = x < GRID_COLUMN_COUNT
     ? Math.min(GRID_COLUMN_COUNT - 1, Math.round(x))
@@ -88,7 +88,7 @@ export function worldToGridPosition(x: number, y: number): GridPosition {
   }
 }
 
-/** Tâm ô (row, column) theo đơn vị cột/hàng — renderer tự nhân cellSize. */
+/** Tam o (row, column) theo don vi cot/hang - renderer tu nhan cellSize. */
 export function gridToWorldCenter(row: LaneIndex, column: number): WorldPoint {
   return { x: column + 0.5, y: row + 0.5 }
 }
@@ -110,12 +110,12 @@ export interface CellArea {
 }
 
 /**
- * Vùng ảnh hưởng quanh anchor theo laneRadius/columnRadius — CLAMP sẵn
- * vào biên grid nên AOE ở góc/tứ cạnh không tràn ra ngoài (acceptance
- * criteria: "AOE chọn đúng row/column ở cả bốn cạnh grid").
+ * Vung anh huong quanh anchor theo laneRadius/columnRadius - CLAMP san
+ * vao bien grid nen AOE o goc/tu canh khong tran ra ngoai (acceptance
+ * criteria: "AOE chon dung row/column o ca bon canh grid").
  *
- * Quy ước radius (spec mục 2): radius = 0 → chỉ hàng/cột của anchor;
- * radius = n → mở rộng n ô mỗi phía.
+ * Quy uoc radius (spec muc 2): radius = 0 -> chi hang/cot cua anchor;
+ * radius = n -> mo rong n o moi phia.
  */
 export function getCellsInArea(
   anchor: GridPosition,
@@ -134,7 +134,7 @@ export function getCellsInArea(
   }
 }
 
-/** Entity tại (x, row) có đang nằm trong vùng CellArea không. */
+/** Entity tai (x, row) co dang nam trong vung CellArea khong. */
 export function isInCellArea(
   x: number,
   row: number,

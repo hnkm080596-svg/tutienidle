@@ -10,8 +10,8 @@ import type { TurnSkillDefinition } from './TurnSkillAction'
 import type { BuffDefinition } from '../../buff2/BuffDefinition'
 import { makeTestBuffRegistry, makeTurnRuntime, type TurnRuntimeFixture } from './testing/TurnRuntimeFixtures'
 
-// Phase A3 (2026-09-07) — consume-for-damage skill effects (Pháp Tu
-// Detonate / Thổ Tu ward burst), ported from legacy SkillEffect's
+// Phase A3 (2026-09-07) - consume-for-damage skill effects (Phap Tu
+// Detonate / Tho Tu ward burst), ported from legacy SkillEffect's
 // consumesAilmentId/damagePerStack and consumesWardForDamage/
 // damagePerWardPoint. Orchestration lives in TurnBattleSystem's
 // per-target hit loop; stack state is read/cleared ONLY through
@@ -41,7 +41,7 @@ function createCombatant(id: string, overrides: Partial<CombatEntity> = {}): Com
   } as CombatEntity
 
   // ARCH-002 (M7 R1): refreshParticipantStats reconciles entity.maxHp from
-  // entity.stats.maxHp and clamps currentHp — the fixture's declared vitals
+  // entity.stats.maxHp and clamps currentHp - the fixture's declared vitals
   // ceiling must exist in the resolved/base stats or refresh reverts it.
   entity.baseStats = (overrides.baseStats ?? overrides.stats ?? entity.baseStats) as CombatEntity['baseStats']
   const ceiling = Math.max(entity.maxHp, entity.currentHp)
@@ -158,7 +158,7 @@ describe('consume-for-damage skill effects (Phase A3)', () => {
 
     system.resolveNextStep(battle)
 
-    // Base damage 0 — the entire drop is 3 stacks × 50 = 150 true damage.
+    // Base damage 0 - the entire drop is 3 stacks x 50 = 150 true damage.
     // resolveActionHit floors base damage at 1 even with multiplier 0, so the total drop is 150 bonus + 1 base.
     expect(hpBefore - enemyParticipant.entity.currentHp).toBe(151)
     // The ailment is fully cleared afterward.
@@ -176,14 +176,14 @@ describe('consume-for-damage skill effects (Phase A3)', () => {
 
     system.resolveNextStep(battle)
 
-    // Base damage 0 — the entire drop is 20 ward × 5 = 100 true damage.
+    // Base damage 0 - the entire drop is 20 ward x 5 = 100 true damage.
     // Same engine floor: 100 bonus + 1 base.
     expect(hpBefore - enemyParticipant.entity.currentHp).toBe(101)
     // The source's ward is fully consumed.
     expect(playerParticipant.entity.currentWard).toBe(0)
   })
 
-  // R1 (AR-01) — consumption bonus damage must go through the authoritative
+  // R1 (AR-01) - consumption bonus damage must go through the authoritative
   // damage path: completion (death), survive-lethal intervention, vitals
   // events and exactly-once death are part of the outcome contract.
   describe('R1 authoritative damage/vitals closure (AR-01)', () => {
@@ -202,7 +202,7 @@ describe('consume-for-damage skill effects (Phase A3)', () => {
     it('lethal ward-consumption bonus completes death: alive becomes false and exactly one death event fires', () => {
       const { battle, playerParticipant, enemyParticipant, system, eventBus } = battleWith(WARD_BURST, () => {})
 
-      // One ward point × 5 damage/point leaves the enemy at exactly 0 HP.
+      // One ward point x 5 damage/point leaves the enemy at exactly 0 HP.
       playerParticipant.entity.currentWard = 20
       enemyParticipant.entity.currentHp = 21
       enemyParticipant.entity.maxHp = 1_000_000
@@ -223,7 +223,7 @@ describe('consume-for-damage skill effects (Phase A3)', () => {
         rt.applyBuff('qa_dot', target, source, { stacks: 3 })
       })
 
-      // 3 stacks × 50 = 150 bonus damage against 101 remaining HP.
+      // 3 stacks x 50 = 150 bonus damage against 101 remaining HP.
       enemyParticipant.entity.currentHp = 101
       enemyParticipant.entity.maxHp = 1_000_000
 

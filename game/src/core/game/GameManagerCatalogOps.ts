@@ -65,7 +65,7 @@ export class GameManagerCatalogOps {
   ) {}
 
   registerMaterials(materials: Material[]) {
-    // Boot validator (plan §4.1/§10 Phase 1): profession-material authoring
+    // Boot validator (plan sec4.1/sec10 Phase 1): profession-material authoring
     // errors fail AT registration time instead of silently building a
     // broken economy. Only materials WITH profession metadata are checked
     // (legacy materials untouched); per-entry validation (id convention +
@@ -119,7 +119,7 @@ export class GameManagerCatalogOps {
     }
   }
 
-  /** Registers alchemy recipes (plan §8) - validates unique herb variants. */
+  /** Registers alchemy recipes (plan sec8) - validates unique herb variants. */
   registerAlchemyRecipes(recipes: AlchemyRecipe[]) {
     for (const recipe of recipes) {
       if (this.deps.alchemyRecipesById.has(recipe.id)) {
@@ -170,7 +170,7 @@ export class GameManagerCatalogOps {
   }
 
   registerFormations(formations: Formation[]) {
-    // Tombstone-only (plan §10.1.4).
+    // Tombstone-only (plan sec10.1.4).
     for (const formation of formations) {
       if (!this.deps.formationRegistry.has(formation.id)) {
         this.deps.formationRegistry.register(formation)
@@ -179,7 +179,7 @@ export class GameManagerCatalogOps {
   }
 
   registerTalismans(talismans: Talisman[]) {
-    // Tombstone-only (plan §10.1.4) - registered so old saves can load
+    // Tombstone-only (plan sec10.1.4) - registered so old saves can load
     // without crashing on registry lookup; does NOT create new sources.
     for (const talisman of talismans) {
       if (!this.deps.talismanRegistry.has(talisman.id)) {
@@ -315,7 +315,7 @@ export class GameManagerCatalogOps {
 
   /**
    * Why a stage is locked, as a display-ready reason code. null = unlocked.
-   * Same gates as isStageUnlocked — this is the read model, not a second
+   * Same gates as isStageUnlocked - this is the read model, not a second
    * authority; UI must render the code via i18n, never re-derive the rule.
    */
   stageLockReasonCode(

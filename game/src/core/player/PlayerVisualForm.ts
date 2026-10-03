@@ -1,9 +1,9 @@
-// PlayerVisualForm (2026-09-14) — the character's visual form, derived
+// PlayerVisualForm (2026-09-14) - the character's visual form, derived
 // FROM the entity itself (cultivationPath). This is domain data: every
 // place the character appears (PhaserCanvas gate -> CombatScene/MainScene,
 // Tran Phap preview, future portrait/paperdoll surfaces) reads the SAME
 // answer instead of re-deriving it. The profile contents (texture keys,
-// anchors, ...) stay presentation — see
+// anchors, ...) stay presentation - see
 // presentation/art/PlayerVisualProfiles, looked up by this id.
 import { isBetaWay, isScopeHidden } from '../betaScope'
 

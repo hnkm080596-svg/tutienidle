@@ -1,12 +1,12 @@
 import type { KiemPhoCombo } from '../../core/kiem-tu/KiemPhoSystem'
 import { KIEM_PHO_BUFFS } from '../buff/KiemPhoBuffs'
 
-// Kiem Tu Reimagined Task 5 (spec 2026-09-15 §4.3) — the 37-combo
-// table, verbatim locked patterns. Shorthand in comments: Đ=orb_dam,
+// Kiem Tu Reimagined Task 5 (spec 2026-09-15 sec4.3) - the 37-combo
+// table, verbatim locked patterns. Shorthand in comments: D=orb_dam,
 // C=orb_chem, B=orb_bo, H=orb_hat, Q=orb_quet (doc notation only).
 //
 // Suffix-free (K10): the matcher is a TAIL matcher, so no shorter
-// pattern may equal the last-k of a longer one — enforced by
+// pattern may equal the last-k of a longer one - enforced by
 // KiemPhoCombos.test.ts. The three corrected len-4s end in H/Q because
 // any X-A-A-Y tail can only stay free when Y is a late-unlock orb.
 //
@@ -122,7 +122,7 @@ export const KIEM_PHO_COMBOS: KiemPhoCombo[] = [
   combo('thich_tao_tram_thich', 'Thích Tảo Trảm Thích', [D, Q, C, D], L4),
   combo('tram_lieu_phach_tram', 'Trảm Liêu Phách Trảm', [C, H, B, C], L4),
   combo('phach_lieu_tram_phach', 'Phách Liêu Trảm Phách', [B, H, C, B], L4),
-  // Suffix-free corrections (spec §4.3 note): X-A-A-Y tails end in H/Q.
+  // Suffix-free corrections (spec sec4.3 note): X-A-A-Y tails end in H/Q.
   combo('thich_tram_tram_lieu', 'Thích Trảm Trảm Liêu', [D, C, C, H], L4),
   combo('tram_thich_thich_lieu', 'Trảm Thích Thích Liêu', [C, D, D, H], L4),
   combo('phach_thich_thich_tao', 'Phách Thích Thích Tảo', [B, D, D, Q], L4),

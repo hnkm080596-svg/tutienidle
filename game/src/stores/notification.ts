@@ -14,30 +14,30 @@ export interface ToastItem {
   loot?: LootNotificationPresentation
 }
 
-// Thời gian hiện trước khi tự gỡ — đủ đọc 1 dòng ngắn không cần thao
-// tác gì, khớp phong cách "Where Winds Meet" mô tả trong tài liệu
+// Thoi gian hien truoc khi tu go - du doc 1 dong ngan khong can thao
+// tac gi, khop phong cach "Where Winds Meet" mo ta trong tai lieu
 // beta (slide in -> display -> slide out -> destroy).
 const TOAST_DURATION_MS = 3500
 
-// Audit fix 2026-08-31 — cap hàng đợi: farm AoE late-game push >10 toast/s
-// trong khi drain chỉ ~1.4/s (maxVisible / 3.5s); không cap thì queue phình
-// + replay stale toast hàng phút sau. Vượt cap thì BỎ toast MỚI (toast cũ đã
-// chờ lâu hơn, bỏ cũ làm thứ tự loot lệch).
+// Audit fix 2026-08-31 - cap hang doi: farm AoE late-game push >10 toast/s
+// trong khi drain chi ~1.4/s (maxVisible / 3.5s); khong cap thi queue phinh
+// + replay stale toast hang phut sau. Vuot cap thi BO toast MOI (toast cu da
+// cho lau hon, bo cu lam thu tu loot lech).
 const MAX_QUEUED_TOASTS = 100
 
 export const useNotificationStore = defineStore('notification', {
   state: () => ({
-    // Nhiều toast có thể hiện ĐỒNG THỜI (xếp chồng), tối đa
-    // `maxVisible` cái cùng lúc — vượt mới rơi vào queuedToasts.
+    // Nhieu toast co the hien DONG THOI (xep chong), toi da
+    // `maxVisible` cai cung luc - vuot moi roi vao queuedToasts.
     toasts: [] as ToastItem[],
     queuedToasts: [] as ToastItem[],
     maxVisible: 5,
   }),
 
   actions: {
-    // ToastContainer.vue gọi lúc mount/resize — số toast hiện cùng lúc
-    // tuỳ theo chiều cao màn hình thật (Teleport to body nên thoát
-    // khỏi scale transform của .game-root, xem GameRoot.vue).
+    // ToastContainer.vue goi luc mount/resize - so toast hien cung luc
+    // tuy theo chieu cao man hinh that (Teleport to body nen thoat
+    // khoi scale transform cua .game-root, xem GameRoot.vue).
     setMaxVisible(max: number) {
       this.maxVisible = Math.max(1, max)
       this.fillFromQueue()

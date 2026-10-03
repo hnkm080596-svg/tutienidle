@@ -1,10 +1,10 @@
 // @vitest-environment jsdom
-// 9.6 — DefeatPanel 10s auto-return-home fallback: 10 giây không tương
-// tác → tự về Động Phủ (combat_scene_exit + battleRunMode=manual), giống
-// fallback đã hứa trong comment panel (dùng useAutoRetryCountdown(10)
-// chạy song song nhánh 3s auto-refight).
-// Mount theo pattern project (createApp + h + provide, KHÔNG
-// @vue/test-utils — chưa cài).
+// 9.6 - DefeatPanel 10s auto-return-home fallback: 10 giay khong tuong
+// tac -> tu ve Dong Phu (combat_scene_exit + battleRunMode=manual), giong
+// fallback da hua trong comment panel (dung useAutoRetryCountdown(10)
+// chay song song nhanh 3s auto-refight).
+// Mount theo pattern project (createApp + h + provide, KHONG
+// @vue/test-utils - chua cai).
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
 import { createApp, h, nextTick, ref } from 'vue'
 import { createPinia } from 'pinia'
@@ -54,7 +54,7 @@ function mountPanel(gm: MockGameManager, battleRunMode: 'manual' | 'repeat' = 'm
   app.provide(STATE_VERSION_KEY, ref(0))
   app.provide(BUMP_STATE_KEY, () => {})
 
-  // battleRunMode must be armed BEFORE mount — onMounted reads it to
+  // battleRunMode must be armed BEFORE mount - onMounted reads it to
   // decide whether the 3s auto-retry countdown starts (B4).
   const ui = useUiStore(pinia)
 
@@ -137,8 +137,8 @@ describe('CombatDefeatPanel — 9.6 10s auto-return-home fallback', () => {
   })
 })
 
-// B2-1 ruling (2026-09-14, user decision "giữ nguyên + hint"): floor 1
-// intentionally cannot be cleared on first entry — the defeat panel
+// B2-1 ruling (2026-09-14, user decision "giu nguyen + hint"): floor 1
+// intentionally cannot be cleared on first entry - the defeat panel
 // carries the cultivate-then-fight hint instead of a retune. Hint
 // switches copy by whether the player sits at/below the stage's
 // required realm level (cultivation gate) vs above it (gear gap).
@@ -158,7 +158,7 @@ describe('CombatDefeatPanel — B2-1 progression hint', () => {
 
   it('player above requiredRealmLevel → gear/power hint', async () => {
     const gm = makeGameManager()
-    // Player store defaults to mortal realmLevel 1 — a stage gating at
+    // Player store defaults to mortal realmLevel 1 - a stage gating at
     // level 0/undefined means the loss is not a cultivation gap.
     gm.catalogOps.getStage.mockReturnValue({ id: 'mortal_dong_1', requiredRealmLevel: 0 })
     const panel = mountPanel(gm)

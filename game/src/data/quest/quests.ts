@@ -1,12 +1,12 @@
 import { QUEST_FLAG_ALCHEMY_CRAFTED, type Quest } from '../../core/quest/Quest'
 
-// Nội dung khởi tạo Quest System v1 — id material/enemy xác nhận thật
-// trong data/materials/materials.ts và data/enemy/Enemies.ts. Linh Chi/
-// Quế/Cúc Hoa legacy đã bị loại khỏi registry runtime (materials.ts
-// dòng 569-571, filter category 'herb' khỏi legacyMaterials) — dùng
-// linh thảo MỚI từ buildReworkPillHerbs() (`${herbId}_${realmId}_${age}`,
-// xem data/pill/PillFamilies.ts) thay thế. Số liệu thưởng chỉ ở mức
-// tham khảo, cân bằng kỹ hơn để sau.
+// Noi dung khoi tao Quest System v1 - id material/enemy xac nhan that
+// trong data/materials/materials.ts va data/enemy/Enemies.ts. Linh Chi/
+// Que/Cuc Hoa legacy da bi loai khoi registry runtime (materials.ts
+// dong 569-571, filter category 'herb' khoi legacyMaterials) - dung
+// linh thao MOI tu buildReworkPillHerbs() (`${herbId}_${realmId}_${age}`,
+// xem data/pill/PillFamilies.ts) thay the. So lieu thuong chi o muc
+// tham khao, can bang ky hon de sau.
 export const QUESTS: Quest[] = [
   // ---------------------------------------------------------------
   // MAINLINE (Chinh Tuyen) - tutorial -> feature intro -> realm push.
@@ -198,12 +198,12 @@ export const QUESTS: Quest[] = [
     cadence: 'once',
     requiredRealmId: 'qi_refining',
   },
-  // Trúc Cơ content pass M1 (2026-08-29) — 5 quest chuỗi Trúc Cơ,
-  // tham chiếu quái `foundation_*` mới (data/enemy/Enemies.ts) + sink
-  // Linh Khoáng hiện có. Phần thưởng tài nguyên (spiritStone/
+  // Truc Co content pass M1 (2026-08-29) - 5 quest chuoi Truc Co,
+  // tham chieu quai `foundation_*` moi (data/enemy/Enemies.ts) + sink
+  // Linh Khoang hien co. Phan thuong tai nguyen (spiritStone/
   // skillInsight/cultivation) - QuestItemReward chua ho tro
-  // equipment, thưởng trang bị lần đầu dời sau (spec mục 4.3 ghi chú).
-  // Số liệu thưởng first pass, cân bằng kỹ hơn để sau.
+  // equipment, thuong trang bi lan dau doi sau (spec muc 4.3 ghi chu).
+  // So lieu thuong first pass, can bang ky hon de sau.
   {
     // BETA SCOPE LOCK v2 Phase-5 (Phase-4 fallout): foundation_stone_fungus
     // has no beta spawn source - the kill target retargets onto the

@@ -4,7 +4,7 @@
  * and buildEquipmentTooltip's parameter, so the type system forces
  * every tooltip caller through EquipmentSystem.quoteMainStatRange().
  * The defect class it closed: `| undefined` let a caller skip the
- * authoritative quote and silently render '[—]'.
+ * authoritative quote and silently render '[-]'.
  *
  * Behavioral coverage lives in useEquipmentTooltip.test.ts. This static
  * guard pins the contract text itself: a drift back to `| undefined`

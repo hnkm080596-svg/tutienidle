@@ -2,10 +2,10 @@ import { defineStore } from 'pinia'
 
 import { recordDiagnostic } from '../services/diagnostics/DiagnosticRecorder'
 
-// Phase 5 (Reliability) — báo cho App.vue biết save hiện có KHÔNG
-// đọc được (incompatible version / JSON hỏng), để chặn boot vào màn
-// nhân vật mới một cách âm thầm. Khác useErrorStore (lỗi runtime sau
-// khi đã boot): store này chặn TRƯỚC khi game khởi động, xem
+// Phase 5 (Reliability) - bao cho App.vue biet save hien co KHONG
+// doc duoc (incompatible version / JSON hong), de chan boot vao man
+// nhan vat moi mot cach am tham. Khac useErrorStore (loi runtime sau
+// khi da boot): store nay chan TRUOC khi game khoi dong, xem
 // SaveIncompatibleScreen.vue.
 export const useSaveIssueStore = defineStore('saveIssue', {
   state: () => ({

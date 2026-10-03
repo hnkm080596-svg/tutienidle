@@ -137,7 +137,7 @@ export const COMBAT_VFX_PRESETS = {
     durationMs: 230,
     signature: ['crescent', 'arc', 'scar']
   },
-  // Kiem Tu Reimagined (spec 2026-09-15 §4.3, K11) — one entry per
+  // Kiem Tu Reimagined (spec 2026-09-15 sec4.3, K11) - one entry per
   // Kiem Pho combo: tier-scaled shape (len3 hybrid 1.15 / len4 hybrid
   // 1.3 / len5 screen 1.5 + shake) plus a golden-angle distinct color
   // signature per combo -- the fired payload is the only discovery

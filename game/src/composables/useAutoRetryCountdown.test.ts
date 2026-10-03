@@ -2,17 +2,17 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { useAutoRetryCountdown } from './useAutoRetryCountdown'
 
-// Uncommitted audit followup plan, mục "Countdown auto retry dùng deadline
-// thực" (2026-08-24) — trước đây mỗi callback setInterval trừ cứng
-// remaining -= 1 bất kể bao nhiêu giây THẬT đã trôi qua. Khi tab bị
-// trình duyệt throttle (nền/minimize), callback có thể quay lại trễ (ví
-// dụ 5 giây thực trôi qua nhưng chỉ fire đúng 1 lần) — code cũ vẫn chỉ
-// trừ 1, khiến countdown kéo dài lâu hơn thời gian thực đã hứa. Giờ mỗi
-// callback tính lại remaining từ deadline = timestamp thực, nên callback
-// trễ bao lâu cũng resolve đúng ngay lần fire đó.
-// 9.9 — start() gọi khi countdown đang chạy phải clear interval cũ TRƯỚC
-// khi lập lịch mới, nếu không interval cũ bị orphan: vẫn tick mãi, đuỵ
-// cùng deadline/completed dùng chung (stop() thủ công không dừng được nó).
+// Uncommitted audit followup plan, muc "Countdown auto retry dung deadline
+// thuc" (2026-08-24) - truoc day moi callback setInterval tru cung
+// remaining -= 1 bat ke bao nhieu giay THAT da troi qua. Khi tab bi
+// trinh duyet throttle (nen/minimize), callback co the quay lai tre (vi
+// du 5 giay thuc troi qua nhung chi fire dung 1 lan) - code cu van chi
+// tru 1, khien countdown keo dai lau hon thoi gian thuc da hua. Gio moi
+// callback tinh lai remaining tu deadline = timestamp thuc, nen callback
+// tre bao lau cung resolve dung ngay lan fire do.
+// 9.9 - start() goi khi countdown dang chay phai clear interval cu TRUOC
+// khi lap lich moi, neu khong interval cu bi orphan: van tick mai, duy
+// cung deadline/completed dung chung (stop() thu cong khong dung duoc no).
 describe('useAutoRetryCountdown — 9.9 restart an toàn', () => {
   afterEach(() => {
     vi.useRealTimers()
@@ -29,7 +29,7 @@ describe('useAutoRetryCountdown — 9.9 restart an toàn', () => {
     vi.advanceTimersByTime(500)
     start()
 
-    // 9.9 — restart phải clear ngay interval đầu tiên (handle cũ).
+    // 9.9 - restart phai clear ngay interval dau tien (handle cu).
     expect(clearSpy).toHaveBeenCalledTimes(1)
 
     vi.advanceTimersByTime(5000)
@@ -37,8 +37,8 @@ describe('useAutoRetryCountdown — 9.9 restart an toàn', () => {
     expect(onComplete).toHaveBeenCalledTimes(1)
     expect(remaining.value).toBe(0)
 
-    // Hoàn tất rồi thì không interval nào còn — clearInterval lần 2 nhận
-    // handle của interval mới (lập ở start thứ 2), advance thêm không đổi gì.
+    // Hoan tat roi thi khong interval nao con - clearInterval lan 2 nhan
+    // handle cua interval moi (lap o start thu 2), advance them khong doi gi.
     expect(clearSpy).toHaveBeenCalledTimes(2)
     stop()
     vi.advanceTimersByTime(10000)
@@ -60,18 +60,18 @@ describe('useAutoRetryCountdown — deadline thực (uncommitted audit followup 
     start()
     expect(remaining.value).toBe(3)
 
-    // Mô phỏng trình duyệt throttle callback đầu tiên: 5 giây THỰC trôi
-    // qua (deadline 3s đã quá từ lâu) nhưng setInterval chỉ kịp fire
-    // ĐÚNG 1 LẦN khi tab được foreground trở lại — không phải 5 lần
-    // liên tiếp như mô phỏng "advance timers" thông thường.
+    // Mo phong trinh duyet throttle callback dau tien: 5 giay THUC troi
+    // qua (deadline 3s da qua tu lau) nhung setInterval chi kip fire
+    // DUNG 1 LAN khi tab duoc foreground tro lai - khong phai 5 lan
+    // lien tiep nhu mo phong "advance timers" thong thuong.
     vi.setSystemTime(Date.now() + 5000)
     vi.advanceTimersToNextTimer()
 
     expect(onComplete).toHaveBeenCalledTimes(1)
     expect(remaining.value).toBe(0)
 
-    // Interval đã tự stop() khi hoàn tất — không còn callback nào chạy
-    // thêm dù thời gian tiếp tục trôi.
+    // Interval da tu stop() khi hoan tat - khong con callback nao chay
+    // them du thoi gian tiep tuc troi.
     vi.advanceTimersByTime(10000)
     expect(onComplete).toHaveBeenCalledTimes(1)
   })

@@ -47,7 +47,7 @@ function createBag(): { bag: MaterialBag; registry: MaterialRegistry } {
 
 function makeAutoSystem(siteIds: string[]): ProductionSystem {
   const system = createSystem()
-  // restoreStates REPLACES the whole map — pass all sites in ONE call.
+  // restoreStates REPLACES the whole map - pass all sites in ONE call.
   system.restoreStates(
     siteIds.map(siteId => ({
       siteId,

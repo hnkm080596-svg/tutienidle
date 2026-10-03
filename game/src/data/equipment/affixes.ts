@@ -1,21 +1,21 @@
 import type { Affix } from '@/core/equipment/Affix'
 
-// Core Loop Foundation checklist (Phase 3, Mục AFFIX) — data mẫu minh
-// hoạ, phủ đúng các stat từng có trong substatPool cũ của
+// Core Loop Foundation checklist (Phase 3, Muc AFFIX) - data mau minh
+// hoa, phu dung cac stat tung co trong substatPool cu cua
 // iron_sword/spirit_silver_armor (might/defense/maxHp/maxMp/
-// dexterity/vitality) + thêm 4 affix mới (criticalRate/
-// criticalDamage/attackSpeed/movementSpeed) cho phong phú. Không khai
-// `slots` = roll được trên mọi loại trang bị (đơn giản hoá cho đợt
-// data mẫu này, có thể thu hẹp sau nếu cần cân bằng riêng theo slot).
+// dexterity/vitality) + them 4 affix moi (criticalRate/
+// criticalDamage/attackSpeed/movementSpeed) cho phong phu. Khong khai
+// `slots` = roll duoc tren moi loai trang bi (don gian hoa cho dot
+// data mau nay, co the thu hep sau neu can can bang rieng theo slot).
 //
-// Equipment Rework (2026-08-14) — 9 affix gốc đều gắn `pool: 'basic'`
-// (giữ nguyên hành vi cũ, mọi Quality đều truy cập được — xem
+// Equipment Rework (2026-08-14) - 9 affix goc deu gan `pool: 'basic'`
+// (giu nguyen hanh vi cu, moi Quality deu truy cap duoc - xem
 // ITEM_QUALITY_UNLOCKED_POOLS trong core/equipment/ItemQualityBalance.ts).
-// Thêm 2 affix mới ở pool 'supreme' — trước đây ITEM_QUALITY_AFFIX_TIER
-// đã cho phép tier tới 5 nhưng chưa affix nào roll quá tier 3 (data
-// gap), giờ có nội dung thật để pool 'supreme'/roll "Exalted Affix"
-// (quality tien cao nhất, xem ITEM_QUALITY_EXALTED_AFFIX_CHANCE trong
-// ItemQualityBalance.ts) không rơi vào no-op.
+// Them 2 affix moi o pool 'supreme' - truoc day ITEM_QUALITY_AFFIX_TIER
+// da cho phep tier toi 5 nhung chua affix nao roll qua tier 3 (data
+// gap), gio co noi dung that de pool 'supreme'/roll "Exalted Affix"
+// (quality tien cao nhat, xem ITEM_QUALITY_EXALTED_AFFIX_CHANCE trong
+// ItemQualityBalance.ts) khong roi vao no-op.
 export const affixes: Affix[] = [
   {
     id: 'prefix_attack',
@@ -108,10 +108,10 @@ export const affixes: Affix[] = [
     ],
   },
 
-  // Pool advanced mở từ Linh Khí: bổ sung lớp phòng thủ thật thay vì gate
-  // rỗng. Kháng dùng thang rating (1 điểm = 1%) giống Resistance.ts.
-  // Spec 2026-08-30-phap-tu-dao-sac §5 — nhóm affix kháng Phong/Lôi đã
-  // xoá cùng element wind/lightning.
+  // Pool advanced mo tu Linh Khi: bo sung lop phong thu that thay vi gate
+  // rong. Khang dung thang rating (1 diem = 1%) giong Resistance.ts.
+  // Spec 2026-08-30-phap-tu-dao-sac sec5 - nhom affix khang Phong/Loi da
+  // xoa cung element wind/lightning.
   ...(
     [
       ['fire', 'Hỏa', ['helmet', 'armor', 'boots', 'necklace']],
@@ -182,11 +182,11 @@ export const affixes: Affix[] = [
     ],
   },
 
-  // Pháp Tu profession-tier ladder (2026-08-14) — 2 affix Hỏa hệ đầu
-  // tiên, pool 'specialized' (mở từ Pháp Bảo/Tiên Bảo Quality trở lên,
-  // xem ITEM_QUALITY_UNLOCKED_POOLS) — ailmentPotencyPercent nền
-  // = 0 nên tiers dùng giá trị nhỏ, trực tiếp CỘNG THẲNG vào % (0.03 =
-  // +3 điểm %, không phải +3% của 0).
+  // Phap Tu profession-tier ladder (2026-08-14) - 2 affix Hoa he dau
+  // tien, pool 'specialized' (mo tu Phap Bao/Tien Bao Quality tro len,
+  // xem ITEM_QUALITY_UNLOCKED_POOLS) - ailmentPotencyPercent nen
+  // = 0 nen tiers dung gia tri nho, truc tiep CONG THANG vao % (0.03 =
+  // +3 diem %, khong phai +3% cua 0).
   {
     id: 'prefix_fire_power',
     name: 'Viêm Uy',
@@ -213,11 +213,11 @@ export const affixes: Affix[] = [
     ],
   },
 
-  // Mộc Tu (2026-08-15) — Mộc Uy song hành prefix_fire_power, Của Hấp
-  // Huyết là affix leechPercent ĐẦU TIÊN (trước đó chỉ có nguồn kỹ
-  // năng/tâm pháp) — applyScaledModifier() luôn roll affix dưới dạng
-  // `flat` bất kể stat (xem EquipmentSystem.ts), nên không dính gotcha
-  // percent-trên-nền-0 như modifier tự khai tay.
+  // Moc Tu (2026-08-15) - Moc Uy song hanh prefix_fire_power, Cua Hap
+  // Huyet la affix leechPercent DAU TIEN (truoc do chi co nguon ky
+  // nang/tam phap) - applyScaledModifier() luon roll affix duoi dang
+  // `flat` bat ke stat (xem EquipmentSystem.ts), nen khong dinh gotcha
+  // percent-tren-nen-0 nhu modifier tu khai tay.
   {
     id: 'prefix_wood_power',
     name: 'Mộc Uy',
@@ -244,15 +244,15 @@ export const affixes: Affix[] = [
     ],
   },
 
-  // Thủy/Kim/Thổ Tu (2026-08-15) — mỗi hành thêm 1 affix Power (song
-  // hành prefix_fire_power/prefix_wood_power) + 1 affix theo ĐÚNG cơ
-  // chế riêng của hành đó (Thủy: speed cho lối chơi ra đòn nhanh hơn
-  // giữ Làm Chậm; Kim tái dùng thẳng suffix_ailment_potency có sẵn ở
-  // trên, khuếch đại Chảy Máu, không cần thêm affix riêng). The Tu
-  // Reimagined (spec 2026-09-15 T12): generic thorns stat retired — the
-  // "Bàn Thạch" thorns affix is gone with the stat.
-  // Turn-based conversion (2026-09-04): cooldownReduction retired —
-  // affix Lưu Thủy chuyển sang speed, cùng cơ chế giữ nhịp.
+  // Thuy/Kim/Tho Tu (2026-08-15) - moi hanh them 1 affix Power (song
+  // hanh prefix_fire_power/prefix_wood_power) + 1 affix theo DUNG co
+  // che rieng cua hanh do (Thuy: speed cho loi choi ra don nhanh hon
+  // giu Lam Cham; Kim tai dung thang suffix_ailment_potency co san o
+  // tren, khuech dai Chay Mau, khong can them affix rieng). The Tu
+  // Reimagined (spec 2026-09-15 T12): generic thorns stat retired - the
+  // "Ban Thach" thorns affix is gone with the stat.
+  // Turn-based conversion (2026-09-04): cooldownReduction retired -
+  // affix Luu Thuy chuyen sang speed, cung co che giu nhip.
   {
     id: 'prefix_water_power',
     name: 'Thủy Uy',

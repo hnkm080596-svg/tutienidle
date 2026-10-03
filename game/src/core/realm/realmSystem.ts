@@ -20,27 +20,27 @@ export function getNextRealm(realmId: string) {
   return REALMS[index + 1] ?? null
 }
 
-// Rework "100% mỗi tiểu cảnh giới" (2026-08-16) — x, đơn vị thời gian
-// GỐC (giây) cho ngân sách tu luyện mỗi đại cảnh giới, xem
-// RealmData.realmDurationMultiplier. Hằng số điều chỉnh được theo yêu
-// cầu — đổi 1 dòng này để retune toàn bộ tốc độ tu luyện của MỌI cảnh
-// giới trừ Phàm Nhân. Tạm thời = 1 ngày.
+// Rework "100% moi tieu canh gioi" (2026-08-16) - x, don vi thoi gian
+// GOC (giay) cho ngan sach tu luyen moi dai canh gioi, xem
+// RealmData.realmDurationMultiplier. Hang so dieu chinh duoc theo yeu
+// cau - doi 1 dong nay de retune toan bo toc do tu luyen cua MOI canh
+// gioi tru Pham Nhan. Tam thoi = 1 ngay.
 export const BASE_CULTIVATION_UNIT_SECONDS = 86400
 
-// Tốc độ tu luyện CƠ BẢN dùng để quy đổi ngân sách thời gian ở trên
-// thành lượng cultivation cần. Pháp Tu Redesign (magicpath, 2026-08-18)
-// — cultivationRate đã bị xoá HOÀN TOÀN khỏi Stats; đây là tốc độ NỀN.
-// Từ 2026-08-27, thiên phú character creation có thể nhân tốc độ này
-// (xem core/talent/TalentEffects.ts's getCultivationSpeedMultiplier), nhưng
-// yêu cầu tu vi mỗi tầng vẫn tính theo tốc độ nền để không phá vỡ pace.
+// Toc do tu luyen CO BAN dung de quy doi ngan sach thoi gian o tren
+// thanh luong cultivation can. Phap Tu Redesign (magicpath, 2026-08-18)
+// - cultivationRate da bi xoa HOAN TOAN khoi Stats; day la toc do NEN.
+// Tu 2026-08-27, thien phu character creation co the nhan toc do nay
+// (xem core/talent/TalentEffects.ts's getCultivationSpeedMultiplier), nhung
+// yeu cau tu vi moi tang van tinh theo toc do nen de khong pha vo pace.
 export const BASE_CULTIVATION_PER_SECOND = 10
 
-// Mốc tầng tối thiểu CHUNG cho mọi cổng đột phá đại cảnh giới
-// (2026-08-27): mốc 12 = Nhân Đạo baseline. Tu vi luôn chỉ là mốc thấp
-// nhất; các gate/cấp đột phá ẩn khác (ví dụ 4 mức Kiến Cơ cho Luyện Khí
-// → Trúc Cơ) sẽ được thiết kế sau. Dùng lại 1 hằng số duy nhất cho
-// mortal → qi_refining (GameManager.chooseCultivationPath()) VÀ
-// qi_refining → foundation_establishment (GameManager.canTriggerBreakthrough()).
+// Moc tang toi thieu CHUNG cho moi cong dot pha dai canh gioi
+// (2026-08-27): moc 12 = Nhan Dao baseline. Tu vi luon chi la moc thap
+// nhat; cac gate/cap dot pha an khac (vi du 4 muc Kien Co cho Luyen Khi
+// -> Truc Co) se duoc thiet ke sau. Dung lai 1 hang so duy nhat cho
+// mortal -> qi_refining (GameManager.chooseCultivationPath()) VA
+// qi_refining -> foundation_establishment (GameManager.canTriggerBreakthrough()).
 export const CORE_REALM_LEVEL = 12
 
 // QI-D5 - the Truc Co admission gate pins the qi_refining chapter-final
@@ -50,9 +50,9 @@ export const QI_REFINING_BREAKTHROUGH_STAGE_ID = 'qi_refining_abyssal_pool'
 
 export const EXTENDED_REALM_LEVEL = 18
 
-// Trong 1 đại cảnh giới, tầng cuối tốn thời gian lâu hơn tầng đầu theo
-// đường cong mũ này (trọng số tầng T = growthRate^(T-1), tổng ngân
-// sách chia theo tỉ lệ trọng số) — hằng số điều chỉnh được.
+// Trong 1 dai canh gioi, tang cuoi ton thoi gian lau hon tang dau theo
+// duong cong mu nay (trong so tang T = growthRate^(T-1), tong ngan
+// sach chia theo ti le trong so) - hang so dieu chinh duoc.
 const INTRA_REALM_DURATION_GROWTH_RATE = 1.15
 
 export function getRequiredCultivation(realmId: string, realmLevel: number): number {
@@ -66,7 +66,7 @@ export function getRequiredCultivation(realmId: string, realmLevel: number): num
 
   if (realm.realmDurationMultiplier === undefined) {
     // XOR data contract (pinned in CultivationSystem.test.ts): a realm
-    // without EITHER formula field is a data bug — fail loudly.
+    // without EITHER formula field is a data bug - fail loudly.
     throw new Error(`Realm "${realmId}" declares no cultivation formula field`)
   }
 
@@ -91,18 +91,18 @@ export function canBreakthrough(realmId: string, realmLevel: number): boolean {
 }
 
 /**
- * Vị trí (0-based) của 1 đại cảnh giới trong REALMS — dùng để so
- * sánh "cảnh giới nào cao hơn" mà không cần biết realmLevel (vd
- * tính Realm Pressure trong combat).
+ * Vi tri (0-based) cua 1 dai canh gioi trong REALMS - dung de so
+ * sanh "canh gioi nao cao hon" ma khong can biet realmLevel (vd
+ * tinh Realm Pressure trong combat).
  */
 export function getRealmIndex(realmId: string): number {
   return REALMS.findIndex((realm) => realm.id === realmId)
 }
 
 /**
- * Quy đổi (realmId, realmLevel) thành 1 số tăng dần xuyên suốt 9
- * đại cảnh giới — dùng để scale chỉ số chính trang bị theo cảnh
- * giới người chơi lúc rớt đồ (xem EquipmentSystem.createInstance()).
+ * Quy doi (realmId, realmLevel) thanh 1 so tang dan xuyen suot 9
+ * dai canh gioi - dung de scale chi so chinh trang bi theo canh
+ * gioi nguoi choi luc rot do (xem EquipmentSystem.createInstance()).
  */
 export function getGlobalCultivationLevel(realmId: string, realmLevel: number): number {
   const index = REALMS.findIndex((realm) => realm.id === realmId)

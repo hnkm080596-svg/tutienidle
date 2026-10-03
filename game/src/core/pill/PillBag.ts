@@ -6,13 +6,13 @@ export class PillBag {
   private readonly pills = new Map<string, PillStack>()
 
   /**
-   * Cộng dồn stack, clamp tại MAX_STACK_AMOUNT. Trả về lượng TRÀN bị
-   * mất (0 nếu vừa đủ chỗ) — caller đường reward dùng để báo "túi đầy"
-   * thay vì mất lặng lẽ.
+   * Cong don stack, clamp tai MAX_STACK_AMOUNT. Tra ve luong TRAN bi
+   * mat (0 neu vua du cho) - caller duong reward dung de bao "tui day"
+   * thay vi mat lang le.
    */
   add(pill: Pill, amount: number): number {
-    // Guard NaN/Infinity (cùng vector đã harden ở MaterialBag): NaN <= 0 là
-    // false nên lọt qua, cộng vào stack sẽ poison amount vĩnh viễn.
+    // Guard NaN/Infinity (cung vector da harden o MaterialBag): NaN <= 0 la
+    // false nen lot qua, cong vao stack se poison amount vinh vien.
     if (!Number.isFinite(amount) || amount <= 0) {
       return 0
     }
@@ -41,9 +41,9 @@ export class PillBag {
   }
 
   remove(pillId: string, amount: number): boolean {
-    // Guard: amount <= 0 KHÔNG phải remove hợp lệ — amount âm sẽ CỘNG
-    // ngược vào stack (vector nhân bản tiềm ẩn). NaN lọt qua guard <= 0
-    // nên phải chặn Number.isFinite trước.
+    // Guard: amount <= 0 KHONG phai remove hop le - amount am se CONG
+    // nguoc vao stack (vector nhan ban tiem an). NaN lot qua guard <= 0
+    // nen phai chan Number.isFinite truoc.
     if (!Number.isFinite(amount) || amount <= 0) {
       return false
     }

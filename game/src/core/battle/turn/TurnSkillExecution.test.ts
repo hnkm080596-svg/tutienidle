@@ -6,12 +6,12 @@ import { EventBus } from '../../events/EventBus'
 import { createBaseStats } from '../../stats/StatBlock'
 import type { TurnSkillDefinition } from './TurnSkillAction'
 
-// Phap Tu Reimagined Task 9 — TurnSkillExecution separates the cast's
+// Phap Tu Reimagined Task 9 - TurnSkillExecution separates the cast's
 // ROOT identity (cast count, slot cooldown, progression identity) from
 // the RESOLVED payload (damage/ailments/targeting actually applied).
 // source 'repeat'/'multicast' executions never re-consume the slot
 // cooldown or fire the cast sink; 'original'/'empowered'/'composite'
-// do — always under rootSkillId.
+// do - always under rootSkillId.
 
 function createCombatant(id: string, overrides: Partial<CombatEntity> = {}): CombatEntity {
   const stats = createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0 })

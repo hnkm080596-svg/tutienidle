@@ -1,7 +1,7 @@
 <script setup lang="ts">
-// Primitive hàng label — value dùng cho mọi bảng chỉ số 2 cột (đang lặp
-// ~14 chỗ). Value luôn tabular-nums; tone khớp hệ tone của Tooltip.
-// Nội dung value qua slot (cho span màu riêng); label qua prop.
+// Primitive hang label - value dung cho moi bang chi so 2 cot (dang lap
+// ~14 cho). Value luon tabular-nums; tone khop he tone cua Tooltip.
+// Noi dung value qua slot (cho span mau rieng); label qua prop.
 withDefaults(defineProps<{
   label: string
   tone?: 'default' | 'positive' | 'negative' | 'warning' | 'muted'

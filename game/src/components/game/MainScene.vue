@@ -2,9 +2,9 @@
 import DongFuStage from '@/components/scenes/dong-fu/DongFuStage.vue'
 import PhaserCanvas from './PhaserCanvas.vue'
 
-// Command-wheel plan (2026-08-26) — không còn BottomBar nên home dùng
-// trọn viewport (bottom: 0). Combat Scene vẫn là full-screen overlay
-// độc lập; canvas Phaser luôn chiếm TOÀN container.
+// Command-wheel plan (2026-08-26) - khong con BottomBar nen home dung
+// tron viewport (bottom: 0). Combat Scene van la full-screen overlay
+// doc lap; canvas Phaser luon chiem TOAN container.
 </script>
 
 <template>

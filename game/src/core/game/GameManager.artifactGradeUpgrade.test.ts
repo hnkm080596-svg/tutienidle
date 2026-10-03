@@ -7,9 +7,9 @@ import type { EnemyDefinition } from '../enemy/Enemy'
 import { createDefaultPlayer } from '../player/Player'
 import { createDefaultArtifactProgress } from '../artifact/ArtifactProgression'
 
-// Bản Mệnh Pháp Bảo (doc §5.3) — GameManager.tryUpgradeArtifactGrade()
-// route qua materialBag thật + chặn giữa combat, ngoài combat mới cho
-// nâng phẩm.
+// Ban Menh Phap Bao (doc sec5.3) - GameManager.tryUpgradeArtifactGrade()
+// route qua materialBag that + chan giua combat, ngoai combat moi cho
+// nang pham.
 // M-F-ARTIFACT-DEFER: the artifact domain is deferred to Kim Dan+ - the
 // op is additionally gated by isArtifactDomainUnlocked(player.realmId),
 // so every real-policy case here (mortal/Truc Co) stays false. The

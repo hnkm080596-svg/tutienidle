@@ -1,4 +1,4 @@
-// Mission A7 — whole-payload round-trip conformance: a save built from a
+// Mission A7 - whole-payload round-trip conformance: a save built from a
 // fully-populated manager must survive
 //   buildGameSave -> JSON.stringify/parse -> validateGameSaveShape
 //     -> restoreGameSession (fresh Pinia store + fresh manager)
@@ -72,7 +72,7 @@ function createRegisteredManager(): GameManager {
   manager.catalogOps.registerPills(pills)
   manager.catalogOps.registerSkillTemplates([CONF_SKILL])
   manager.catalogOps.registerTechniqueTemplates([CONF_TECHNIQUE])
-  // Mission B audit — the persisted autoFarmStage lease below only
+  // Mission B audit - the persisted autoFarmStage lease below only
   // survives restore when its stage is registered (reconcile drops a dead
   // lease). stage_a must exist as a template for the round-trip.
   manager.catalogOps.registerStages([
@@ -109,7 +109,7 @@ function productionCycle(cycleId: string, siteId: string, completesAtMs: number)
 
 /** Populate every declared GameSave slice on (player, manager). */
 function populateSource(player: PlayerData, manager: GameManager): void {
-  // Player slice — touch several non-trivial fields.
+  // Player slice - touch several non-trivial fields.
   player.name = 'Conformance'
   player.cultivation = 321
   player.duyenPhan = 55
@@ -120,7 +120,7 @@ function populateSource(player: PlayerData, manager: GameManager): void {
   player.nodeLevels = { test_node: 2 }
   player.purchasedNodeIds = ['test_node']
   player.completedStageIds = ['stage_a']
-  // A real armed-farm save always carries the perfect-clear row —
+  // A real armed-farm save always carries the perfect-clear row -
   // reconcileAutoFarmRuntime drops a farm whose stage was never cleared
   // (same precondition as startAutoFarm).
   player.perfectClearStageIds = ['stage_a']
@@ -190,7 +190,7 @@ function populateSource(player: PlayerData, manager: GameManager): void {
     }),
   )
 
-  // Buildings — Chi Hien Quan level 1 sets worker capacity 3 (1+level*2).
+  // Buildings - Chi Hien Quan level 1 sets worker capacity 3 (1+level*2).
   // pill_room level 1 witnesses the alchemy job's roomLevelAtStart
   // claim (F-TC9-3 bound: building level never decreases).
   manager.buildingManager.add({
@@ -232,7 +232,7 @@ function populateSource(player: PlayerData, manager: GameManager): void {
     manager.productionSystem.ensureSiteState(definition.siteId)
   }
 
-  // Alchemy — a still-running job (completesAtMs in the future so the
+  // Alchemy - a still-running job (completesAtMs in the future so the
   // restore-time offline settle leaves it pending).
   manager.alchemySystem.restoreJobs([
     alchemyJobFixture({
@@ -246,12 +246,12 @@ function populateSource(player: PlayerData, manager: GameManager): void {
     }),
   ])
 
-  // Decompose — non-default filters, workers within capacity, live timer.
+  // Decompose - non-default filters, workers within capacity, live timer.
   manager.decomposeSystem.updateCapacity(3)
   manager.decomposeSystem.setSetting({ workers: 2, gradeFilter: 'cuu_pham', ageFilter: 'century' })
   manager.decomposeSystem.tick(NOW)
 
-  // Quests — the registry stays empty so restore-time
+  // Quests - the registry stays empty so restore-time
   // reconcileQuestLifecycle is a no-op and the slice round-trips as-is.
   manager.questManager.restore({
     active: [{ questId: 'conf_quest', progress: 2, claimed: false }],
@@ -309,7 +309,7 @@ describe('Mission A7 — whole-payload save conformance', () => {
 
     const save2 = buildGameSave(freshPlayer.$state, freshManager)
 
-    // save2 must equal the normalized persisted form — only the volatile
+    // save2 must equal the normalized persisted form - only the volatile
     // lastSavedAt may differ (Date.now is mocked equal anyway).
     expect(stripVolatile(save2)).toEqual(stripVolatile(normalized))
   })

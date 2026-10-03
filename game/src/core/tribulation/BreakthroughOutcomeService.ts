@@ -41,7 +41,7 @@ export interface BreakthroughSuccessResult {
   kind: 'success'
   /** Player realmLevel after the breakthrough. */
   newLevel: number
-  /** True when realmId changed — impossible today (see header), kept for parity. */
+  /** True when realmId changed - impossible today (see header), kept for parity. */
   majorRealmChanged: boolean
   /** True when an artifact existed and the banked-tier release ran. */
   artifactTouched: boolean
@@ -92,7 +92,7 @@ export class BreakthroughOutcomeService {
     context.syncRealmStatPassive(player)
 
     let artifactTouched = false
-    // Banked artifact tier release on every success (doc SS5.1) — the
+    // Banked artifact tier release on every success (doc SS5.1) - the
     // artifact exists only after a KC awakening (tribulation chain today).
     // M-F-ARTIFACT-DEFER: the release additionally composes the domain
     // gate - a persisted dormant artifact is never advanced while the

@@ -10,23 +10,23 @@ import { getRequiredCultivation } from '../realm/realmSystem'
 import type { BuffDefinition } from '../buff2/BuffDefinition'
 
 /**
- * Nơi hiệu ứng pill thật sự ghi vào — do PillSystem không giữ
- * PlayerData/CombatEntity cụ thể (giống RewardSystem/RewardReceiver),
- * caller tự cung cấp adapter phù hợp với ngữ cảnh dùng pill
- * (ngoài trận: player store; trong trận: CombatEntity đang chiến đấu).
+ * Noi hieu ung pill that su ghi vao - do PillSystem khong giu
+ * PlayerData/CombatEntity cu the (giong RewardSystem/RewardReceiver),
+ * caller tu cung cap adapter phu hop voi ngu canh dung pill
+ * (ngoai tran: player store; trong tran: CombatEntity dang chien dau).
  */
 export interface PillTarget {
   addCultivation(amount: number): void
 
   heal(amount: number): void
 
-  // Unified Buff System (Task 13b) — trước đây PillSystem tự giữ 1
-  // BuffSystem và gọi thẳng buffSystem.apply(effect.buff), nhưng
-  // apply() giờ đòi hỏi (definition, source: CombatEntity, target:
-  // CombatEntity, registry?) — PillSystem không giữ CombatEntity cụ
-  // thể nào (đúng doc comment ở trên: "PillSystem không giữ
-  // PlayerData/CombatEntity cụ thể"), nên adapter tự resolve entity
-  // phù hợp ngữ cảnh của nó, giống addCultivation/heal.
+  // Unified Buff System (Task 13b) - truoc day PillSystem tu giu 1
+  // BuffSystem va goi thang buffSystem.apply(effect.buff), nhung
+  // apply() gio doi hoi (definition, source: CombatEntity, target:
+  // CombatEntity, registry?) - PillSystem khong giu CombatEntity cu
+  // the nao (dung doc comment o tren: "PillSystem khong giu
+  // PlayerData/CombatEntity cu the"), nen adapter tu resolve entity
+  // phu hop ngu canh cua no, giong addCultivation/heal.
   applyBuff(definition: BuffDefinition): void
 }
 
@@ -269,7 +269,7 @@ export class PillSystem {
 
           modifiers: [
             // Gameplay fixes (2026-09-05): removed the hpRegenPerTurn pill
-            // modifier — drinking a pill for HP regen is meaningless under
+            // modifier - drinking a pill for HP regen is meaningless under
             // the turn-based engine (user request). MP regen pill unaffected.
             {
               id: `pill-regen-mp:${pill.id}`,
@@ -282,7 +282,7 @@ export class PillSystem {
 
               flat: (effect.mpPerSecond ?? 0) * potencyMultiplier,
 
-              // Task 3 (D17): MP pool stat — spell credential so the
+              // Task 3 (D17): MP pool stat - spell credential so the
               // Task-7 domain gate keeps accepting this grant.
               domain: 'spell',
             },
@@ -296,8 +296,8 @@ export class PillSystem {
       // {cultivation, value:N} is residual (legacy use() semantics) and
       // must fall through to the adapter below, not pay floor(x * 0)=0.
       if (effect.type === 'cultivation' && effect.cultivationPercent !== undefined) {
-        // Tu Vi theo % yêu cầu tầng HIỆN TẠI lúc uống (plan §5.5), qua
-        // addCultivation để giữ cap tầng.
+        // Tu Vi theo % yeu cau tang HIEN TAI luc uong (plan sec5.5), qua
+        // addCultivation de giu cap tang.
         const required = getRequiredCultivation(player.realmId, player.realmLevel)
 
         addCultivation(player, Math.floor(required * effect.cultivationPercent * potencyMultiplier))
@@ -306,7 +306,7 @@ export class PillSystem {
       }
 
       if (effect.type === 'skill_insight') {
-        // Cảm Ngộ = skillInsight + lifetime counter, cùng transaction.
+        // Cam Ngo = skillInsight + lifetime counter, cung transaction.
         // potency rounds to the nearest whole insight point.
         const amount = Math.round((effect.value ?? 0) * potencyMultiplier)
 

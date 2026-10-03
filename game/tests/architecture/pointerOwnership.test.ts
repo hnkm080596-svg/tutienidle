@@ -1,10 +1,10 @@
 /**
- * Guard (V3) — canvas-side pointer input stays a declared, short list.
+ * Guard (V3) - canvas-side pointer input stays a declared, short list.
  *
  * Spec: docs/superpowers/specs/2026-09-11-frontend-static-dynamic-boundary-design.md
- * §3.5 and §7.
+ * sec3.5 and sec7.
  *
- * §3.5 does NOT say the DOM receives every pointer event — an earlier draft did,
+ * sec3.5 does NOT say the DOM receives every pointer event - an earlier draft did,
  * and it was wrong: a world-anchored icon should be hit-tested where its
  * geometry lives, which is the canvas. So this guard is not a prohibition. It is
  * an allowlist, and its job is to make each canvas-side interaction a decision
@@ -39,7 +39,7 @@ const GAME_FILES = srcCorpus(SRC_DIR).filter(
   (file) => file.fromSrc.startsWith('game/') && !isTestFile(file.fromSrc),
 )
 
-/** `setInteractive(`, or an `on('pointer…')` / `once('pointer…')` subscription. */
+/** `setInteractive(`, or an `on('pointer...')` / `once('pointer...')` subscription. */
 const TAKES_POINTER = /\bsetInteractive\s*\(|\b(?:on|once)\s*\(\s*['"]pointer\w*['"]/
 
 describe('pointer ownership', () => {

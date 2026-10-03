@@ -41,7 +41,7 @@ describe('SkillSystem.getEffectiveSkill — specialization targeting override (2
 
     const effective = system.getEffectiveSkill(skill)
 
-    // The base def authors no targeting → undefined (single default).
+    // The base def authors no targeting -> undefined (single default).
     expect(skill.targeting).toBeUndefined()
     expect(effective.targeting).toBeUndefined()
   })
@@ -56,7 +56,7 @@ describe('SkillSystem.getEffectiveSkill — specialization targeting override (2
 
     expect(effective.targeting).toEqual({ shape: 'square', laneRadius: 1 })
     // The BattleSystem lane: resolveSkillEffects infers the shape via
-    // targetingForSkill(effective) — 'square', not the single default.
+    // targetingForSkill(effective) - 'square', not the single default.
     expect(targetingForSkill({ ...skill, targeting: effective.targeting }).shape).toBe('square')
   })
 
@@ -68,7 +68,7 @@ describe('SkillSystem.getEffectiveSkill — specialization targeting override (2
 
     const effective = system.getEffectiveSkill(skill)
 
-    // No override = keep the base shape — `specialization?.targeting ??
+    // No override = keep the base shape - `specialization?.targeting ??
     // skill.targeting`; the basic authors none, so undefined.
     expect(effective.targeting).toBeUndefined()
   })
@@ -86,7 +86,7 @@ describe('SkillSystem.getEffectiveSkill — specialization targeting override (2
       }
     }
 
-    // The five element basics each carry the Tán Diễm spread override —
+    // The five element basics each carry the Tan Diem spread override -
     // 5 targeting overrides total (reimagined tree's only spec-level
     // targeting surface).
     expect(overrideCount).toBe(5)

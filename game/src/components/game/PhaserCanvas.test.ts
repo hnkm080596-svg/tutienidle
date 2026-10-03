@@ -1,24 +1,24 @@
 // @vitest-environment jsdom
-// Task 4 (perf-optimize-pass, phần 3) — bootstrap error boundary.
-// Mô phỏng 2 đường lỗi của khối bootstrap async trong PhaserCanvas.vue:
-//   1) new Phaser.Game() throw (dòng đầu setupGame()).
-//   2) lỗi throw SAU khi đã đăng ký EventBus handler (mô phỏng qua
-//      ResizeObserver.observe() throw — statement cuối setupGame()).
-// Cả 2 đều phải: không unhandled rejection, dọn dẹp EventBus handler/
-// resizeObserver/game/window.__tutienPhaserGame đã đăng ký (nếu có),
-// và set bootError CỤC BỘ (KHÔNG route qua errorStore/ErrorScreen.vue
-// toàn app — xem code review Task 4 finding 2, fix report).
+// Task 4 (perf-optimize-pass, phan 3) - bootstrap error boundary.
+// Mo phong 2 duong loi cua khoi bootstrap async trong PhaserCanvas.vue:
+//   1) new Phaser.Game() throw (dong dau setupGame()).
+//   2) loi throw SAU khi da dang ky EventBus handler (mo phong qua
+//      ResizeObserver.observe() throw - statement cuoi setupGame()).
+// Ca 2 deu phai: khong unhandled rejection, don dep EventBus handler/
+// resizeObserver/game/window.__tutienPhaserGame da dang ky (neu co),
+// va set bootError CUC BO (KHONG route qua errorStore/ErrorScreen.vue
+// toan app - xem code review Task 4 finding 2, fix report).
 //
-// import('phaser') reject thẳng (trước khi vào setupGame()) không có
-// pattern mock ổn định trong repo này (vi.doMock cho 1 factory throw
-// làm hỏng cache module cho các test sau trong cùng file — không đáng
-// công sức ép cho 1 task nhỏ, xem ghi chú task-4-report.md) — 2 test
-// dưới đây đã phủ đúng yêu cầu cốt lõi: try/catch bọc quanh CẢ khối
-// import lẫn setupGame(), và cleanup chạy đúng dù lỗi xảy ra ở đâu
-// trong khối đó.
+// import('phaser') reject thang (truoc khi vao setupGame()) khong co
+// pattern mock on dinh trong repo nay (vi.doMock cho 1 factory throw
+// lam hong cache module cho cac test sau trong cung file - khong dang
+// cong suc ep cho 1 task nho, xem ghi chu task-4-report.md) - 2 test
+// duoi day da phu dung yeu cau cot loi: try/catch boc quanh CA khoi
+// import lan setupGame(), va cleanup chay dung du loi xay ra o dau
+// trong khoi do.
 //
-// Mount theo pattern project (createApp + h + provide, KHÔNG
-// @vue/test-utils — xem CombatExitConfirmModal.test.ts).
+// Mount theo pattern project (createApp + h + provide, KHONG
+// @vue/test-utils - xem CombatExitConfirmModal.test.ts).
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createApp, h, ref, type App, type Ref } from 'vue'
 import { createPinia, type Pinia } from 'pinia'
@@ -31,8 +31,8 @@ import {
 import type { VueRouteAdapter } from '@/presentation/VueRouteAdapter'
 import PhaserCanvas from './PhaserCanvas.vue'
 
-// Scene modules import 'phaser' ở top-level (extends Phaser.Scene) —
-// mock hẳn ra để test không phụ thuộc runtime WebGL/canvas thật.
+// Scene modules import 'phaser' o top-level (extends Phaser.Scene) -
+// mock han ra de test khong phu thuoc runtime WebGL/canvas that.
 vi.mock('@/game/scenes/AssetLoaderScene', () => ({
   AssetLoaderScene: class {},
   ASSET_LOADER_SCENE_KEY: 'AssetLoaderScene',
@@ -41,10 +41,10 @@ vi.mock('@/game/scenes/MainScene', () => ({ MainScene: class {} }))
 vi.mock('@/game/scenes/CombatScene', () => ({ CombatScene: class {} }))
 vi.mock('@/game/scenes/TribulationScene', () => ({ TribulationScene: class {} }))
 
-// vi.hoisted — state mutable đọc được bên trong factory vi.mock('phaser')
-// (factory bị hoist lên đầu file, không được đóng gói biến top-level
-// thường; đây là cách vitest khuyến nghị để factory vẫn phản ứng theo
-// từng test).
+// vi.hoisted - state mutable doc duoc ben trong factory vi.mock('phaser')
+// (factory bi hoist len dau file, khong duoc dong goi bien top-level
+// thuong; day la cach vitest khuyen nghi de factory van phan ung theo
+// tung test).
 const { gameCtor, phaserMockState } = vi.hoisted(() => ({
   gameCtor: vi.fn(),
   phaserMockState: { failGameCtor: false },
@@ -126,7 +126,7 @@ afterEach(() => {
 })
 
 /**
- * The retry hook only reads two adapter fields — a partial carrying those
+ * The retry hook only reads two adapter fields - a partial carrying those
  * refs is enough to drive it (the real adapter mirrors coordinator
  * snapshots; the fake writes them directly).
  */
@@ -146,9 +146,9 @@ function mountCanvas(gm: MockGameManager, routeAdapter?: FakeRouteAdapter) {
   container = document.createElement('div')
   document.body.appendChild(container)
 
-  // app.mount() trả về root instance của WRAPPER ({ render: () => h(...) }),
-  // KHÔNG phải instance của PhaserCanvas — phải bắt qua template ref
-  // để đọc được giá trị defineExpose({ bootError }) của nó.
+  // app.mount() tra ve root instance cua WRAPPER ({ render: () => h(...) }),
+  // KHONG phai instance cua PhaserCanvas - phai bat qua template ref
+  // de doc duoc gia tri defineExpose({ bootError }) cua no.
   const canvasRef = ref<{ bootError: string | null } | null>(null)
 
   app = createApp({ render: () => h(PhaserCanvas, { ref: canvasRef }) })
@@ -161,7 +161,7 @@ function mountCanvas(gm: MockGameManager, routeAdapter?: FakeRouteAdapter) {
     app.provide(VUE_ROUTE_ADAPTER_KEY, routeAdapter as unknown as VueRouteAdapter)
   }
 
-  // usePlayerStore() cần pinia active trước khi mount.
+  // usePlayerStore() can pinia active truoc khi mount.
   usePlayerStore(pinia)
 
   app.mount(container)
@@ -189,23 +189,23 @@ describe('PhaserCanvas — bootstrap error boundary (Task 4)', () => {
 
     const gm = makeGameManager()
 
-    // Không có "unhandled rejection" nào lọt ra — nếu try/catch trong
-    // component thiếu, `await Promise.all([...])`/setupGame() throw sẽ
-    // làm chính IIFE async đó reject không ai bắt (vitest sẽ tự fail
-    // test file với lỗi "Unhandled Rejection" nếu điều đó xảy ra), nên
-    // việc mountCanvas + waitForBootError chạy xong sạch sẽ tới cuối
-    // (không có unhandled rejection nào được vitest báo) đã là bằng
-    // chứng gián tiếp đủ mà không cần tự cài process listener.
+    // Khong co "unhandled rejection" nao lot ra - neu try/catch trong
+    // component thieu, `await Promise.all([...])`/setupGame() throw se
+    // lam chinh IIFE async do reject khong ai bat (vitest se tu fail
+    // test file voi loi "Unhandled Rejection" neu dieu do xay ra), nen
+    // viec mountCanvas + waitForBootError chay xong sach se toi cuoi
+    // (khong co unhandled rejection nao duoc vitest bao) da la bang
+    // chung gian tiep du ma khong can tu cai process listener.
     const { instance } = mountCanvas(gm)
 
     await waitForBootError(instance)
 
     expect(instance.bootError).toContain('Phaser.Game khởi tạo thất bại')
 
-    // new Phaser.Game(...) là dòng ĐẦU TIÊN của setupGame() (xem
-    // PhaserCanvas.vue) — throw ở đây nghĩa là chưa có eventBus.on()
-    // nào chạy tới, nên off() cũng không cần gọi. Test này khẳng định
-    // đúng invariant đó (không giả định nhầm có state mồ côi).
+    // new Phaser.Game(...) la dong DAU TIEN cua setupGame() (xem
+    // PhaserCanvas.vue) - throw o day nghia la chua co eventBus.on()
+    // nao chay toi, nen off() cung khong can goi. Test nay khang dinh
+    // dung invariant do (khong gia dinh nham co state mo coi).
     expect(gm.eventBus.on).not.toHaveBeenCalled()
     expect(gm.eventBus.off).not.toHaveBeenCalled()
   })
@@ -233,15 +233,15 @@ describe('PhaserCanvas — bootstrap error boundary (Task 4)', () => {
 
     expect(instance.bootError).toContain('ResizeObserver.observe thất bại')
 
-    // setupGame() đã kịp new Phaser.Game() thành công + đăng ký 2
-    // EventBus handler (battle_end/combat_scene_exit — ARCH-014 retired
+    // setupGame() da kip new Phaser.Game() thanh cong + dang ky 2
+    // EventBus handler (battle_end/combat_scene_exit - ARCH-014 retired
     // the dead 'positions' listener: no live producer) + set
-    // window.__tutienPhaserGame + tạo resizeObserver TRƯỚC khi observe()
-    // throw — catch phải dọn HẾT: off() lại đúng 2 handler, disconnect()
-    // resizeObserver, VÀ reset window.__tutienPhaserGame về undefined
-    // (code review Task 4 finding 1 — trước fix, global này bị bỏ sót,
-    // để lại tham chiếu mồ côi tới 1 Phaser.Game đã destroy cho tooling
-    // e2e/visual-gate đọc registry qua đó).
+    // window.__tutienPhaserGame + tao resizeObserver TRUOC khi observe()
+    // throw - catch phai don HET: off() lai dung 2 handler, disconnect()
+    // resizeObserver, VA reset window.__tutienPhaserGame ve undefined
+    // (code review Task 4 finding 1 - truoc fix, global nay bi bo sot,
+    // de lai tham chieu mo coi toi 1 Phaser.Game da destroy cho tooling
+    // e2e/visual-gate doc registry qua do).
     expect(gameCtor).toHaveBeenCalledOnce()
     expect(gm.eventBus.on).toHaveBeenCalledTimes(2)
     expect(gm.eventBus.off).toHaveBeenCalledTimes(2)
@@ -252,7 +252,7 @@ describe('PhaserCanvas — bootstrap error boundary (Task 4)', () => {
 
 describe('PhaserCanvas — host bootstrap retry hook (ARCH-013/L04)', () => {
   beforeEach(() => {
-    // jsdom has no ResizeObserver — a SUCCESSFUL construct() reaches
+    // jsdom has no ResizeObserver - a SUCCESSFUL construct() reaches
     // observe(), so the healthy/retry tests need a working stub (the
     // existing suite only ever exercised the throwing path on purpose).
     vi.stubGlobal(
@@ -267,8 +267,8 @@ describe('PhaserCanvas — host bootstrap retry hook (ARCH-013/L04)', () => {
 
   // L04 gap: import/construct failure leaves the region's game === null and
   // bootError set, while a failed game-route transition keeps this component
-  // mounted. coordinator.retry()/Back only re-run the TRANSITION — they
-  // cannot recreate the Phaser.Game — so the host must reboot itself when a
+  // mounted. coordinator.retry()/Back only re-run the TRANSITION - they
+  // cannot recreate the Phaser.Game - so the host must reboot itself when a
   // new transition (transitionId bump) targets a Phaser-backed route.
   async function waitFor(assertion: () => void) {
     for (let i = 0; i < 50; i += 1) {
@@ -294,7 +294,7 @@ describe('PhaserCanvas — host bootstrap retry hook (ARCH-013/L04)', () => {
     expect(gameCtor).toHaveBeenCalledTimes(1)
 
     // Retry path: the coordinator admits a new transition with the failed
-    // (Phaser-backed) target already recorded — transitionId bumps first.
+    // (Phaser-backed) target already recorded - transitionId bumps first.
     phaserMockState.failGameCtor = false
     routeAdapter.targetRoute.value = 'home'
     routeAdapter.transitionId.value = 1
@@ -338,7 +338,7 @@ describe('PhaserCanvas — host bootstrap retry hook (ARCH-013/L04)', () => {
     routeAdapter.transitionId.value = 1
     await new Promise((resolve) => setTimeout(resolve, 0))
 
-    // bootError is null on a healthy host — the hook must stay inert.
+    // bootError is null on a healthy host - the hook must stay inert.
     expect(gameCtor).toHaveBeenCalledTimes(1)
   })
 })

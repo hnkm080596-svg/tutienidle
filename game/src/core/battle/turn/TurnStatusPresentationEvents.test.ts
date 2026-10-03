@@ -18,7 +18,7 @@ import type {
 } from '../BattleEvents'
 import { makeTestBuffRegistry, makeTurnRuntime } from './testing/TurnRuntimeFixtures'
 
-// Phase A6 (9.5 #7) — turn-based status presentation feed. Fixture shape
+// Phase A6 (9.5 #7) - turn-based status presentation feed. Fixture shape
 // copied from TurnActionPresentationEvents.test.ts (per-file fixture
 // convention of this suite). buff2 M4: instances are seeded through the
 // shared test runtime's buff authority; def metadata (hidden/polarity)
@@ -101,7 +101,7 @@ describe('snapshotTurnStatuses', () => {
     runtime.applyBuff('ward', enemy, srcX, { durationOverride: undefined })
 
     // ward permanent: reseed with a permanent-clock def via a dedicated
-    // registry lane is overkill — durationOverride undefined lands the
+    // registry lane is overkill - durationOverride undefined lands the
     // authored 5-turn duration, so use a permanent def instead.
     const snapshot = snapshotTurnStatuses(
       makeBattle({ players: [player], enemies: [enemy] }),
@@ -217,7 +217,7 @@ describe('diffAndEmitTurnStatusVfx', () => {
     expect(events.updated).toHaveLength(1)
     expect(events.updated[0]).toMatchObject({ statusInstanceId: 'player:burn:source_1', stacks: 2, durationSeconds: 5 })
 
-    // Plain decay (stacks same, remainingTurns lower) must NOT emit —
+    // Plain decay (stacks same, remainingTurns lower) must NOT emit -
     // otherwise every tick spams an update event.
     events.updated.length = 0
     const beforeDecayed = new Map<string, TurnStatusSnapshotEntry>([
@@ -257,7 +257,7 @@ describe('diffAndEmitTurnStatusVfx', () => {
     expect(events.removed[0]!.reason).toBe('target_dead')
 
     // Holder gone from the battle entirely (e.g. dead participants can be
-    // filtered out of battle.enemies) — still target_dead.
+    // filtered out of battle.enemies) - still target_dead.
     events.removed.length = 0
     diffAndEmitTurnStatusVfx(bus, makeBattle({}), before, runtime.buffs, REGISTRY)
     expect(events.removed[0]!.reason).toBe('target_dead')

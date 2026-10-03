@@ -7,9 +7,9 @@ import type { EnemyDefinition } from '../enemy/Enemy'
 import { createDefaultPlayer } from '../player/Player'
 import { createDefaultArtifactProgress } from '../artifact/ArtifactProgression'
 
-// Bản Mệnh Pháp Bảo (doc §7.1) — setArtifactPath() đổi được NHIỀU LẦN
-// ngoài combat, chặn trong countdown/fighting/tribulation, không cần
-// artifact tồn tại thì no-op false.
+// Ban Menh Phap Bao (doc sec7.1) - setArtifactPath() doi duoc NHIEU LAN
+// ngoai combat, chan trong countdown/fighting/tribulation, khong can
+// artifact ton tai thi no-op false.
 // M-F-ARTIFACT-DEFER: the artifact domain is deferred to Kim Dan+ - the
 // op is gated by isArtifactDomainUnlocked(player.realmId), so every
 // real-policy case here (mortal/Truc Co) stays false. The open-window

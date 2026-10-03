@@ -4,12 +4,12 @@ import type { Talisman } from '../talisman/Talisman'
 import type { Material } from '../material/Material'
 
 /**
- * Wrapper hợp nhất 4 loại item của game dưới một type duy nhất,
- * dùng cho ItemRegistry.get()/getAll(). Không gộp field của 4
- * interface gốc vào một base chung: Equipment/Pill/Talisman/Material
- * đã có shape ổn định riêng (Material.category ví dụ đang mang
- * nghĩa khác — herb/ore/...), gộp field sẽ phải sửa lại các file đó
- * ngoài phạm vi hệ thống Item.
+ * Wrapper hop nhat 4 loai item cua game duoi mot type duy nhat,
+ * dung cho ItemRegistry.get()/getAll(). Khong gop field cua 4
+ * interface goc vao mot base chung: Equipment/Pill/Talisman/Material
+ * da co shape on dinh rieng (Material.category vi du dang mang
+ * nghia khac - herb/ore/...), gop field se phai sua lai cac file do
+ * ngoai pham vi he thong Item.
  */
 export type Item =
   | { category: 'equipment'; item: Equipment }

@@ -1,10 +1,10 @@
 // @vitest-environment jsdom
 //
-// MaterialBag filter/search/group (economy-fixes-sinks-plan.md §3.2 B4):
-// - Ô tìm kiếm theo tên (case-insensitive).
-// - Filter chip theo nhóm (gỗ/quặng/thảo/tinh hoa/khác).
-// - Gộp thảo theo HỌ (herbBaseId) với badge realm/niên đại thay vì
-//   liệt kê phẳng 288 biến thể niên đại.
+// MaterialBag filter/search/group (economy-fixes-sinks-plan.md sec3.2 B4):
+// - O tim kiem theo ten (case-insensitive).
+// - Filter chip theo nhom (go/quang/thao/tinh hoa/khac).
+// - Gop thao theo HO (herbBaseId) voi badge realm/nien dai thay vi
+//   liet ke phang 288 bien the nien dai.
 import { beforeEach, describe, expect, it } from 'vitest'
 import { nextTick } from 'vue'
 import { createApp, defineComponent, h, ref } from 'vue'
@@ -38,9 +38,9 @@ const ORE: Material = {
   sourceType: 'exploration',
 }
 
-// Quáng thật (có profession meta) × 2 tuổi cùng realm — nhãn khác nhau
-// ("Thập Niên"/"Bách Niên" Linh Khoáng) nhưng vẫn gộp về 1 ô như họ
-// thảo theo resourceKind+realmId (useBagFilter.familyKeyFor).
+// Quang that (co profession meta) x 2 tuoi cung realm - nhan khac nhau
+// ("Thap Nien"/"Bach Nien" Linh Khoang) nhung van gop ve 1 o nhu ho
+// thao theo resourceKind+realmId (useBagFilter.familyKeyFor).
 function ore(age: HerbAge): Material {
   return {
     id: `mortal_ore_${age}`,
@@ -80,8 +80,8 @@ const OTHER: Material = {
   sourceType: 'monster',
 }
 
-// Cùng 1 HỌ thảo (herbBaseId 'tu_linh_thao_mortal') × 2 niên đại —
-// gộp family phải collapse còn 1 ô duy nhất.
+// Cung 1 HO thao (herbBaseId 'tu_linh_thao_mortal') x 2 nien dai -
+// gop family phai collapse con 1 o duy nhat.
 function herb(id: string, age: HerbAge, years: number): Material {
   return {
     id,
@@ -102,8 +102,8 @@ function herb(id: string, age: HerbAge, years: number): Material {
 const HERB_DECADE = herb('tu_linh_thao_mortal_decade', 'decade', 10)
 const HERB_CENTURY = herb('tu_linh_thao_mortal_century', 'century', 100)
 
-// Họ khác (recipe khác) — gộp family KHÔNG nhầm với họ trên. herbBaseId
-// phải khớp id conventions (validator: id = `${herbBaseId}_${age}`).
+// Ho khac (recipe khac) - gop family KHONG nham voi ho tren. herbBaseId
+// phai khop id conventions (validator: id = `${herbBaseId}_${age}`).
 const HERB_OTHER_FAMILY: Material = {
   id: 'hoi_xuan_thao_mortal_decade',
   name: 'Hồi Xuân Thảo',
@@ -119,8 +119,8 @@ const HERB_OTHER_FAMILY: Material = {
   },
 }
 
-// Thảo legacy KHÔNG profession meta (không có herbBaseId) — phải rơi
-// về 1 ô riêng, không bị gộp/chủ ý nuốt mất.
+// Thao legacy KHONG profession meta (khong co herbBaseId) - phai roi
+// ve 1 o rieng, khong bi gop/chu y nuot mat.
 const HERB_LEGACY: Material = {
   id: 'thao_legacy',
   name: 'Linh Thảo Lạ',
@@ -165,8 +165,8 @@ function mountSection(gameManager: GameManager) {
 
     container,
 
-    // Grid luôn đủ pageSize ô (ô đệm rỗng) — chỉ đếm ô có nội dung.
-    // Nametag caption removed 2026-09-15 — name lives on aria-label;
+    // Grid luon du pageSize o (o dem rong) - chi dem o co noi dung.
+    // Nametag caption removed 2026-09-15 - name lives on aria-label;
     // badges/amount still render as text.
     slotLabels: () =>
       Array.from(container.querySelectorAll('.bag-section__grid .bag-section__slot'))
@@ -249,13 +249,13 @@ describe('MaterialBag — filter/search/group họ thảo (plan §3.2 B4)', () =
     mounted.clickChip('Thảo')
     await nextTick()
 
-    // 2 biến thể cùng họ thảo → gộp còn 1 ô.
+    // 2 bien the cung ho thao -> gop con 1 o.
     let labels = mounted.slotLabels()
 
     expect(labels).toHaveLength(1)
     expect(labels[0]).toContain('Tứ Linh Thảo')
 
-    // Chip khác — nhóm khác gồm Đoán Bảo Thạch (other).
+    // Chip khac - nhom khac gom Doan Bao Thach (other).
     mounted.clickChip('Khác')
     await nextTick()
 
@@ -264,8 +264,8 @@ describe('MaterialBag — filter/search/group họ thảo (plan §3.2 B4)', () =
     expect(labels).toHaveLength(1)
     expect(labels[0]).toContain('Đoán Bảo Thạch')
 
-    // Bấm lại chip đang chọn → bỏ filter, hiện tất cả (5 ô: 4 nhóm
-    // + 1 họ thảo đã gộp).
+    // Bam lai chip dang chon -> bo filter, hien tat ca (5 o: 4 nhom
+    // + 1 ho thao da gop).
     mounted.clickChip('Khác')
     await nextTick()
 
@@ -285,7 +285,7 @@ describe('MaterialBag — filter/search/group họ thảo (plan §3.2 B4)', () =
 
     const labels = mounted.slotLabels()
 
-    // 2 họ thảo + 1 thảo legacy = 3 ô (thay vì 4 biến thể phẳng).
+    // 2 ho thao + 1 thao legacy = 3 o (thay vi 4 bien the phang).
     expect(labels).toHaveLength(3)
     expect(labels[0]).toContain('Tứ Linh Thảo')
     expect(labels[1]).toContain('Hồi Xuân Thảo')
@@ -329,7 +329,7 @@ describe('MaterialBag — filter/search/group họ thảo (plan §3.2 B4)', () =
 
     mounted = mountSection(gameManager)
 
-    // 6 material − 1 biến thể gộp = 5 ô hiển thị.
+    // 6 material - 1 bien the gop = 5 o hien thi.
     expect(mounted.visibleCountText()).toContain('5')
 
     mounted.clickChip('Gỗ')

@@ -7,11 +7,11 @@ import { EventBus } from '../../events/EventBus'
 import { asBaseStats, createBaseStats } from '../../stats/StatBlock'
 import { makeTestBuffRegistry, makeTurnRuntime } from './testing/TurnRuntimeFixtures'
 
-// Action Playback Task 5 — reactiveTrigger buff effect:
-//   onCastBegin    — roll khi actor bắt đầu cast (punish-on-cast); nếu áp
-//                    hard-CC buff, CC-check kế tiếp block turn (ccBlocked)
-//   onImpactLanded — roll trên TARGET bị hit (counter); queuesFollowUp
-//                    đặt battle.queuedFollowUpActorId (counter-turn)
+// Action Playback Task 5 - reactiveTrigger buff effect:
+//   onCastBegin    - roll khi actor bat dau cast (punish-on-cast); neu ap
+//                    hard-CC buff, CC-check ke tiep block turn (ccBlocked)
+//   onImpactLanded - roll tren TARGET bi hit (counter); queuesFollowUp
+//                    dat battle.queuedFollowUpActorId (counter-turn)
 
 const PERMANENT = { clock: 'permanent', scaling: 'fixed' } as const
 
@@ -75,7 +75,7 @@ function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
   } as CombatEntity
 
   // ARCH-002 (M7 R1): refreshParticipantStats reconciles entity.maxHp from
-  // entity.stats.maxHp and clamps currentHp — the fixture's declared vitals
+  // entity.stats.maxHp and clamps currentHp - the fixture's declared vitals
   // ceiling must exist in the resolved/base stats or refresh reverts it.
   entity.baseStats = (overrides.baseStats ?? overrides.stats ?? entity.baseStats) as CombatEntity['baseStats']
   const ceiling = Math.max(entity.maxHp, entity.currentHp)
@@ -132,8 +132,8 @@ function fixture(targetBuffs: BuffDefinition[], actorBuffs: BuffDefinition[] = [
   })
   const system = new TurnBattleSystem(combat, 10_000, registry, undefined, runtime)
 
-  // Pre-apply reactive_trigger buffs through the authority (mô phỏng
-  // buff đã active trước lượt này).
+  // Pre-apply reactive_trigger buffs through the authority (mo phong
+  // buff da active truoc luot nay).
   for (const def of actorBuffs ?? []) {
     runtime.applyBuff(def.id, playerParticipant)
   }
@@ -153,7 +153,7 @@ describe('BuffSystem — reactiveTrigger effect', () => {
 
     const declared = system.declareActorAction(battle, actor)
 
-    // Punish fired → stun applied → ccBlocked đúng như spec §4.2 ordering.
+    // Punish fired -> stun applied -> ccBlocked dung nhu spec sec4.2 ordering.
     expect(declared.ccBlocked).toBe(true)
 
     const { targetIds } = system.applyActionImpact(battle, declared)
@@ -219,9 +219,9 @@ describe('BuffSystem — reactiveTrigger effect', () => {
   })
 })
 
-// Defect-fix Task 1 — helper cũ chạy applyActionImpact lần 2 (re-apply →
-// push queue 2 entry). Đã inline tại call site, helper giữ chỉ để không
-// vỡ signature cũ nếu test khác tham chiếu.
+// Defect-fix Task 1 - helper cu chay applyActionImpact lan 2 (re-apply ->
+// push queue 2 entry). Da inline tai call site, helper giu chi de khong
+// vo signature cu neu test khac tham chieu.
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function targetIdsHelper(
   declared: Parameters<TurnBattleSystem['applyActionImpact']>[1],

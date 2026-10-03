@@ -2,10 +2,10 @@ import { ref, shallowRef } from 'vue'
 import type { ElementType } from '@/core/element/ElementType'
 import type { SlotPreviewProps } from '@/components/common/SlotTypes'
 
-// Dạng cũ, DÙNG CHUNG cho tuyệt đại đa số v-tooltip hiện có trong
-// game (chỉ tiêu đề + mô tả 1 dòng) — `kind` optional để mọi object
-// literal `{ title, description }` sẵn có (hàng chục nơi) vẫn khớp
-// union TooltipContent bên dưới mà KHÔNG cần sửa gì.
+// Dang cu, DUNG CHUNG cho tuyet dai da so v-tooltip hien co trong
+// game (chi tieu de + mo ta 1 dong) - `kind` optional de moi object
+// literal `{ title, description }` san co (hang chuc noi) van khop
+// union TooltipContent ben duoi ma KHONG can sua gi.
 export interface PlainTooltipContent {
   kind?: 'plain'
 
@@ -49,11 +49,11 @@ export interface TooltipSection {
   rows: TooltipStatRow[]
 }
 
-// Tooltip Tâm Pháp (2026-08-15, mẫu đầu tiên cho hướng "tooltip có
-// cấu trúc theo từng loại item" — làm TỪNG LOẠI một, đủ) — hình +
-// nhiều khối chỉ số (Cộng Thêm/Chiến Đấu/Tu Luyện/Đột Phá), builder ở
-// TechniqueSlotCard.vue. Loại item khác (Equipment/Pill/...) sẽ thêm
-// biến thể riêng vào union này khi tới lượt, theo đúng khuôn.
+// Tooltip Tam Phap (2026-08-15, mau dau tien cho huong "tooltip co
+// cau truc theo tung loai item" - lam TUNG LOAI mot, du) - hinh +
+// nhieu khoi chi so (Cong Them/Chien Dau/Tu Luyen/Dot Pha), builder o
+// TechniqueSlotCard.vue. Loai item khac (Equipment/Pill/...) se them
+// bien the rieng vao union nay khi toi luot, theo dung khuon.
 export interface TechniqueTooltipContent {
   kind: 'technique'
 
@@ -61,8 +61,8 @@ export interface TechniqueTooltipContent {
 
   imagePath?: string
 
-  // Pháp Tu Redesign (magicpath) — Tâm Pháp không còn level/maxLevel
-  // (không còn cộng chỉ số nên không còn gì để lên cấp).
+  // Phap Tu Redesign (magicpath) - Tam Phap khong con level/maxLevel
+  // (khong con cong chi so nen khong con gi de len cap).
   levelLabel?: string
 
   elementLabel?: string
@@ -72,13 +72,13 @@ export interface TechniqueTooltipContent {
   sections: TooltipSection[]
 }
 
-// Tooltip Đan/Phù/Trận (2026-08-15) — 3 loại item CÙNG SHAPE
-// (name/image/gradeLabel Ngũ Phẩm/description/sections), khác Equipment
-// (không có instance state riêng — pill/talisman/formation chỉ là
-// template + số lượng trong túi, không roll/enhance/affix như
-// EquipmentInstance) nên gộp chung 1 kind union thay vì 3 interface
-// riêng, Tooltip.vue render CHUNG 1 nhánh cho cả 3. Builder ở từng
-// BagSection tương ứng (PillBagSection.vue/TalismanBagSection.vue/
+// Tooltip Dan/Phu/Tran (2026-08-15) - 3 loai item CUNG SHAPE
+// (name/image/gradeLabel Ngu Pham/description/sections), khac Equipment
+// (khong co instance state rieng - pill/talisman/formation chi la
+// template + so luong trong tui, khong roll/enhance/affix nhu
+// EquipmentInstance) nen gop chung 1 kind union thay vi 3 interface
+// rieng, Tooltip.vue render CHUNG 1 nhanh cho ca 3. Builder o tung
+// BagSection tuong ung (PillBagSection.vue/TalismanBagSection.vue/
 // FormationBagSection.vue).
 export interface GradedItemTooltipContent {
   kind: 'material' | 'pill' | 'talisman' | 'formation'
@@ -121,10 +121,10 @@ export interface GradedItemTooltipContent {
   sections: TooltipSection[]
 }
 
-// Tooltip Equipment (2026-08-15) — loại CUỐI trong đợt "tooltip theo
-// từng loại item". KHÁC GradedItemTooltipContent (có instance state
-// thật: quality/rarity/affix/enhance/forge, xem
-// composables/useEquipmentTooltip.ts's builder) nên tự 1 kind riêng.
+// Tooltip Equipment (2026-08-15) - loai CUOI trong dot "tooltip theo
+// tung loai item". KHAC GradedItemTooltipContent (co instance state
+// that: quality/rarity/affix/enhance/forge, xem
+// composables/useEquipmentTooltip.ts's builder) nen tu 1 kind rieng.
 export interface EquipmentTooltipContent {
   kind: 'equipment'
 
@@ -157,10 +157,10 @@ export interface EquipmentTooltipContent {
   compareWith?: Omit<EquipmentTooltipContent, 'compareWith'>
 }
 
-// Tooltip Building (Động Phủ UI redesign) — công trình trong Home
-// Scene giờ là world object thật (xem components/game/HomeBuildingIcons.vue),
-// tooltip cần tên + chức năng + trạng thái xây/cấp cùng khuôn với
-// ItemTooltip/SkillTooltip thay vì {title, description} phẳng cũ.
+// Tooltip Building (Dong Phu UI redesign) - cong trinh trong Home
+// Scene gio la world object that (xem components/game/HomeBuildingIcons.vue),
+// tooltip can ten + chuc nang + trang thai xay/cap cung khuon voi
+// ItemTooltip/SkillTooltip thay vi {title, description} phang cu.
 export interface BuildingTooltipContent {
   kind: 'building'
 
@@ -170,10 +170,10 @@ export interface BuildingTooltipContent {
 
   statusLabel: string
 
-  // 2026-08-30 frontend-design pass — statusLabel trước đây LUÔN tô màu
-  // jade dù đang nói "Chưa mở" (locked) hay "Đã mở" (built), gây hiểu
-  // nhầm trạng thái khóa trông như tích cực. Optional để không phá vỡ
-  // caller cũ khác (không caller nào khác ngoài HomeBuildingIcons.vue).
+  // 2026-08-30 frontend-design pass - statusLabel truoc day LUON to mau
+  // jade du dang noi "Chua mo" (locked) hay "Da mo" (built), gay hieu
+  // nham trang thai khoa trong nhu tich cuc. Optional de khong pha vo
+  // caller cu khac (khong caller nao khac ngoai HomeBuildingIcons.vue).
   isBuilt?: boolean
 }
 
@@ -206,23 +206,23 @@ export type TooltipContent =
   | BuildingTooltipContent
   | ElementTooltipContent
 
-// State module-level (không phải Pinia) — chỉ 1 tooltip hiển thị
-// tại 1 thời điểm trong toàn game, không cần theo dõi lịch sử/persist.
+// State module-level (khong phai Pinia) - chi 1 tooltip hien thi
+// tai 1 thoi diem trong toan game, khong can theo doi lich su/persist.
 const content = ref<TooltipContent | null>(null)
 
 const reference = shallowRef<HTMLElement | null>(null)
 
-// Element đang "sở hữu" tooltip hiện tại — cần để directive tooltip.ts
-// tự dọn đúng lúc unmounted() (vd BreakthroughButton biến mất ngay
-// giữa lúc đang hover, do v-if tắt khi cultivation reset sau khi
-// bấm) mà không vô tình xoá nhầm tooltip của 1 element KHÁC vừa mới
-// showTooltip() sau đó (edge case chuột di chuyển rất nhanh).
+// Element dang "so huu" tooltip hien tai - can de directive tooltip.ts
+// tu don dung luc unmounted() (vd BreakthroughButton bien mat ngay
+// giua luc dang hover, do v-if tat khi cultivation reset sau khi
+// bam) ma khong vo tinh xoa nham tooltip cua 1 element KHAC vua moi
+// showTooltip() sau do (edge case chuot di chuyen rat nhanh).
 let ownerElement: HTMLElement | null = null
 
 let hideTimer: ReturnType<typeof setTimeout> | undefined
 
-// Tooltip của slot cần phản hồi ngay khi hover. Khoảng đệm lúc đóng vẫn
-// giữ rất ngắn để tránh chớp khi con trỏ đi qua ranh giới hai slot.
+// Tooltip cua slot can phan hoi ngay khi hover. Khoang dem luc dong van
+// giu rat ngan de tranh chop khi con tro di qua ranh gioi hai slot.
 const TOOLTIP_HIDE_DELAY_MS = 30
 
 function clearTimers() {

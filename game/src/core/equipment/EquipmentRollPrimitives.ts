@@ -6,25 +6,25 @@ import type { AffixRegistry } from './AffixRegistry'
 import { isValidEquipmentSubstat } from './EquipmentStatPolicy'
 
 /**
- * Task 8 (phase7-gamemanager-split) — primitives roll-affix dùng CHUNG
- * giữa EquipmentSystem.createInstance() và EquipmentWash.ts (Tẩy
- * Luyện). Tách khỏi EquipmentSystem.ts để wash không phải sao chép lại
- * logic roll — hành vi giữ NGUYÊN 1:1, chỉ đổi chỗ ở. EquipmentSystem.ts
- * re-export lại các hàm public để mọi import site cũ (`from
- * './EquipmentSystem'`) không phải đổi.
+ * Task 8 (phase7-gamemanager-split) - primitives roll-affix dung CHUNG
+ * giua EquipmentSystem.createInstance() va EquipmentWash.ts (Tay
+ * Luyen). Tach khoi EquipmentSystem.ts de wash khong phai sao chep lai
+ * logic roll - hanh vi giu NGUYEN 1:1, chi doi cho o. EquipmentSystem.ts
+ * re-export lai cac ham public de moi import site cu (`from
+ * './EquipmentSystem'`) khong phai doi.
  */
 
-// Trần TUYỆT ĐỐI số Affix 1 item có thể mang (base rarity cap + Exalted
-// Affix bonus + Yểm Phù tích luỹ trên slot) — cao hơn mức cap tự nhiên
-// của thien_duyen (3 prefix + 3 suffix + 1 exalted = 7) để Yểm Phù vẫn
-// có giá trị thật ngay cả trên đồ thien_duyen đã có Exalted Affix.
-// Export (2026-08-15) — tooltip Equipment (useEquipmentTooltip.ts) cần
-// hiện đúng dung lượng Affix tối đa, không được tự lặp lại số "8".
+// Tran TUYET DOI so Affix 1 item co the mang (base rarity cap + Exalted
+// Affix bonus + Yem Phu tich luy tren slot) - cao hon muc cap tu nhien
+// cua thien_duyen (3 prefix + 3 suffix + 1 exalted = 7) de Yem Phu van
+// co gia tri that ngay ca tren do thien_duyen da co Exalted Affix.
+// Export (2026-08-15) - tooltip Equipment (useEquipmentTooltip.ts) can
+// hien dung dung luong Affix toi da, khong duoc tu lap lai so "8".
 export const GLOBAL_MAX_AFFIXES = 8
 
-// Affix có cả miền số nguyên (Attack, HP...) lẫn miền thập phân
-// (criticalRate, cooldownReduction...). randomInt trực tiếp làm miền 0.01–0.09
-// co lại sai thành 1, nên mọi đường roll affix phải đi qua hàm này.
+// Affix co ca mien so nguyen (Attack, HP...) lan mien thap phan
+// (criticalRate, cooldownReduction...). randomInt truc tiep lam mien 0.01-0.09
+// co lai sai thanh 1, nen moi duong roll affix phai di qua ham nay.
 export function rollAffixRange(
   min: number,
   max: number,
@@ -39,17 +39,17 @@ export function rollAffixRange(
 export function normalizeRolledAffixValue(value: number, min: number, max: number): number {
   if (value >= min && value <= max) return value
 
-  // Dữ liệu cũ từng lưu percent theo điểm nguyên hoặc bị randomInt ép thành
-  // 1. Ưu tiên phục hồi theo /100, sau đó mới clamp vào tier hiện tại.
+  // Du lieu cu tung luu percent theo diem nguyen hoac bi randomInt ep thanh
+  // 1. Uu tien phuc hoi theo /100, sau do moi clamp vao tier hien tai.
   const legacyPercent = value / 100
   if (legacyPercent >= min && legacyPercent <= max) return legacyPercent
   return Math.min(max, Math.max(min, legacyPercent))
 }
 
-// Dùng chung bởi applyModifiers() (áp modifier thật lúc equip) VÀ
-// useEquipmentTooltip.ts (hiện số trong tooltip) — 1 nguồn tính "giá trị
-// hiệu lực" của 1 RolledAffix duy nhất, tránh combat và tooltip lệch số
-// nếu sau này đổi cách xử lý tier không khớp (vd data cũ thiếu tier).
+// Dung chung boi applyModifiers() (ap modifier that luc equip) VA
+// useEquipmentTooltip.ts (hien so trong tooltip) - 1 nguon tinh "gia tri
+// hieu luc" cua 1 RolledAffix duy nhat, tranh combat va tooltip lech so
+// neu sau nay doi cach xu ly tier khong khop (vd data cu thieu tier).
 export function getEffectiveAffixValue(rolled: RolledAffix, affix: Affix): number {
   const tier = affix.tiers.find((candidate) => candidate.tier === rolled.tier)
   if (tier) {
@@ -68,10 +68,10 @@ export function getEffectiveAffixValue(rolled: RolledAffix, affix: Affix): numbe
 }
 
 /**
- * P2 cleanup (plan "Audit findings") — predicate chọn affix hợp lệ
- * (đúng slot/pool, chưa trùng excluded stat, stat hợp lệ trên slot)
- * dùng CHUNG cho roll thường (rollEligibleAffix, createInstance) và Tẩy
- * Luyện (washAffixes candidates + fallback) — một rule duy nhất, không lặp.
+ * P2 cleanup (plan "Audit findings") - predicate chon affix hop le
+ * (dung slot/pool, chua trung excluded stat, stat hop le tren slot)
+ * dung CHUNG cho roll thuong (rollEligibleAffix, createInstance) va Tay
+ * Luyen (washAffixes candidates + fallback) - mot rule duy nhat, khong lap.
  */
 export function filterEligibleAffixes(
   affixes: readonly Affix[],
@@ -92,10 +92,10 @@ export function filterEligibleAffixes(
 }
 
 /**
- * Roll 1 affix ở ĐÚNG tier cho trước (dùng cho Exalted Affix — cả
- * createInstance lẫn washAffixes reserve 1 dòng 'supreme' ở tier cao
- * nhất trước khi roll các dòng base). Trả về null nếu không còn
- * candidate hợp lệ ở tier đó.
+ * Roll 1 affix o DUNG tier cho truoc (dung cho Exalted Affix - ca
+ * createInstance lan washAffixes reserve 1 dong 'supreme' o tier cao
+ * nhat truoc khi roll cac dong base). Tra ve null neu khong con
+ * candidate hop le o tier do.
  */
 export function rollEligibleAffixAtTier(
   template: Equipment,

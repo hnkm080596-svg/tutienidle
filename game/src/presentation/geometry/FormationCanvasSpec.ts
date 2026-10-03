@@ -1,4 +1,4 @@
-// FormationCanvasSpec — the single owner of the Formation preview canvas size.
+// FormationCanvasSpec - the single owner of the Formation preview canvas size.
 //
 // V9 of the frontend static/dynamic boundary spec
 // (docs/superpowers/specs/2026-09-11-frontend-static-dynamic-boundary-design.md).
@@ -40,7 +40,7 @@ export const FORMATION_CANVAS_ASPECT_RATIO = FORMATION_CANVAS_WIDTH / FORMATION_
 /**
  * Minimum road height for the preview panel. Smaller than combat's, because
  * the panel is short and the road would otherwise be squeezed to nothing by
- * the scenery band. Moved here from the scene (V7/§3.6.2): the shell needs it
+ * the scenery band. Moved here from the scene (V7/sec3.6.2): the shell needs it
  * to build the same projection the canvas draws with, and a constant stranded
  * in `src/game/` would force the static layer to import from the dynamic one.
  */
@@ -57,16 +57,16 @@ export const FORMATION_VIEWPORT: ProjectionViewport = {
 /**
  * Build the Formation preview's projection.
  *
- * Both layers call this — the scene to draw with, the shell to hit-test
- * against — and that is exactly what §3.6.2 requires: two instances are safe
+ * Both layers call this - the scene to draw with, the shell to hit-test
+ * against - and that is exactly what sec3.6.2 requires: two instances are safe
  * only while they derive from the *same declared parameters*. Before this
  * existed, the five parameters were restated at each construction site, and one
  * of them lived in the Phaser layer where the shell could not legally read it.
  *
  * Each caller gets its own instance. That is deliberate: the projection is
  * mutable through `resize()`, so a shared singleton would let one caller move
- * the other's geometry. Nothing resizes this one today — the panel canvas is a
- * fixed size — which is precisely why Formation is allowed the two-instance
+ * the other's geometry. Nothing resizes this one today - the panel canvas is a
+ * fixed size - which is precisely why Formation is allowed the two-instance
  * pattern while Combat, whose viewport is dynamic, is not.
  */
 export function createFormationProjection(): BattleGridProjection {

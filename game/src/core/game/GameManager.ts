@@ -1007,7 +1007,7 @@ export class GameManager {
    * active - fail closed, same as the resolver.
    */
   /** Presentation-gate query (FE-06): active player's authored name for
-      scene nameplates — null when no player is active. */
+      scene nameplates - null when no player is active. */
   getActivePlayerName(): string | null {
     return this.activePlayer?.name ?? null
   }
@@ -1101,7 +1101,7 @@ export class GameManager {
     this.battleLoot.setLootRng(rng)
   }
 
-  // F-W-7 session rng seam — one injectable stream for non-combat,
+  // F-W-7 session rng seam - one injectable stream for non-combat,
   // non-loot rolls (alchemy yields, Van Dao free-purchase, hidden-beast
   // substitution, breakthrough talent draw). `undefined` restores
   // Math.random. Deterministic harnesses pin it like setLootRng.

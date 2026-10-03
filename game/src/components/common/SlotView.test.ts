@@ -1,18 +1,18 @@
 // @vitest-environment jsdom
 //
-// Không có @vue/test-utils trong project (mọi test khác chỉ test core
-// logic thuần TS) — mount thẳng bằng API công khai của Vue
-// (createApp/h) thay vì thêm dependency mới, vẫn render đúng SFC thật
-// qua @vitejs/plugin-vue đã cấu hình sẵn trong vite.config.ts.
+// Khong co @vue/test-utils trong project (moi test khac chi test core
+// logic thuan TS) - mount thang bang API cong khai cua Vue
+// (createApp/h) thay vi them dependency moi, van render dung SFC that
+// qua @vitejs/plugin-vue da cau hinh san trong vite.config.ts.
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createApp, h } from 'vue'
 import SlotView from './SlotView.vue'
 import { vTooltip } from '@/directives/tooltip'
 import { useTooltip } from '@/composables/useTooltip'
 
-// Test fixture nhận props lỏng (từng case chỉ truyền 1 phần) — ép kiểu
-// tại đây vì SlotView props thật (generic + nhiều optional) không thể
-// biểu diễn gọn bằng Partial thông thường cho mục đích test.
+// Test fixture nhan props long (tung case chi truyen 1 phan) - ep kieu
+// tai day vi SlotView props that (generic + nhieu optional) khong the
+// bieu dien gon bang Partial thong thuong cho muc dich test.
 function mountSlot(props: Record<string, unknown>) {
   const container = document.createElement('div')
   document.body.appendChild(container)
@@ -224,7 +224,7 @@ describe('SlotView — precedence (mục 17.2)', () => {
     expect(onClick).not.toHaveBeenCalled()
     expect(button.getAttribute('aria-disabled')).toBe('true')
     expect(button.classList.contains('slot-view--veil-locked')).toBe(true)
-    // rule 1: locked chặn validation — không còn class validation-invalid
+    // rule 1: locked chan validation - khong con class validation-invalid
     expect(button.classList.contains('slot-view--validation-invalid')).toBe(false)
 
     // Focus tooltips only appear for keyboard focus navigation - a bare

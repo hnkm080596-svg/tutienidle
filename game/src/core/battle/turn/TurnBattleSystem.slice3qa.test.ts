@@ -7,7 +7,7 @@ import { EventBus } from '../../events/EventBus'
 import { asBaseStats, createBaseStats } from '../../stats/StatBlock'
 import { makeTestBuffRegistry, makeTurnRuntime, type TurnRuntimeFixture } from './testing/TurnRuntimeFixtures'
 
-// QA adversarial probes (2026-09-04 quick review) — Slice 3 buff/CC wiring.
+// QA adversarial probes (2026-09-04 quick review) - Slice 3 buff/CC wiring.
 // M4: definitions are authored buff2; instances live in the shared runtime
 // store; death sweeps a dead target's instances at the kill boundary
 // (spec sec.40) instead of leaving them on the corpse.
@@ -31,13 +31,13 @@ function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
     row: 2,
     alive: true,
     ...overrides,
-    // ARCH-002 (M7): entity.stats is derived from baseStats every refresh —
+    // ARCH-002 (M7): entity.stats is derived from baseStats every refresh -
     // an injected `stats` override must become the resolved base as well.
     baseStats: overrides.baseStats ?? overrides.stats ?? stats,
   } as CombatEntity
 
   // ARCH-002 (M7 R1): refreshParticipantStats reconciles entity.maxHp from
-  // entity.stats.maxHp and clamps currentHp — the fixture's declared vitals
+  // entity.stats.maxHp and clamps currentHp - the fixture's declared vitals
   // ceiling must exist in the resolved/base stats or the first refresh
   // reverts it.
   const ceiling = Math.max(entity.maxHp, entity.currentHp)
@@ -113,7 +113,7 @@ function makeRuntime(participants: () => TurnBattleParticipant[], combat: Combat
 
 describe('Slice 3 adversarial (QA probes)', () => {
   it('INV-S3-1: stun duration-2 block đúng 2 lượt rồi hết (CC check trước tick)', () => {
-    // R2 (AR-05): effective speed lives on entity.stats — the participant
+    // R2 (AR-05): effective speed lives on entity.stats - the participant
     // speed cache is synced from it. Fixtures must set speed there (the
     // adapter copies entity.stats.speed into participant.speed).
     const player = createCombatant({ id: 'player', type: 'player' as never, stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, might: 10, speed: 10 }) })
@@ -139,7 +139,7 @@ describe('Slice 3 adversarial (QA probes)', () => {
     const step2 = system.resolveNextStep(battle)
     expect(step2.ccBlocked).toBe(true)
 
-    // duration 2: sau 2 lượt block, buff expire → lượt 3 hành động được.
+    // duration 2: sau 2 luot block, buff expire -> luot 3 hanh dong duoc.
     const step3 = system.resolveNextStep(battle)
     expect(step3.ccBlocked).toBe(false)
     expect(step3.targetIds.length).toBeGreaterThan(0)
@@ -161,7 +161,7 @@ describe('Slice 3 adversarial (QA probes)', () => {
 
     new TurnBattleSystem(combat, 10, runtime.registry, undefined, runtime).resolveNextStep(battle)
 
-    // enemy (holder burn) tick buff ở lượt của chính nó → hp giảm.
+    // enemy (holder burn) tick buff o luot cua chinh no -> hp giam.
     expect(enemy.currentHp).toBeLessThan(hpBefore)
     expect(player.currentHp).toBe(playerHpBefore)
   })
@@ -180,7 +180,7 @@ describe('Slice 3 adversarial (QA probes)', () => {
 
     const step = new TurnBattleSystem(combat, 10, runtime.registry, undefined, runtime).resolveNextStep(battle)
 
-    // player giết dying trước; dying không được chọn làm actor. buff2: the
+    // player giet dying truoc; dying khong duoc chon lam actor. buff2: the
     // death boundary sweeps the corpse's instances (reason 'death').
     expect(step.state).toBe('victory')
     expect(runtime.buffs.getForTarget('dying')).toHaveLength(0)
@@ -202,7 +202,7 @@ describe('Slice 3 adversarial (QA probes)', () => {
     const step = new TurnBattleSystem(combat, 10, runtime.registry, undefined, runtime).resolveNextStep(battle)
 
     expect(step.ccBlocked).toBe(true)
-    // DoT tick trong holder-turn-end TRƯỚC step action — hp giảm dù bị block.
+    // DoT tick trong holder-turn-end TRUOC step action - hp giam du bi block.
     expect(player.currentHp).toBeLessThan(hpBefore)
   })
 

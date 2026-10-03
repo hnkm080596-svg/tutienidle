@@ -1,5 +1,5 @@
 /**
- * R14.3 guard (R2/AR-02+AR-05 and R8.1/AR-09) — stat provenance and quest
+ * R14.3 guard (R2/AR-02+AR-05 and R8.1/AR-09) - stat provenance and quest
  * query purity.
  *
  * R2 contract (2026-09-08): `entity.baseStats` is the RESOLVED base stats
@@ -54,7 +54,7 @@ describe('R14.3c — R2 type level: raw base stats are nominally branded', () =>
 
   it('the derivation pipeline accepts only the branded raw input', () => {
     const source = readTs(STAT_CALCULATOR)
-    // Resolved Stats values (entity.stats, entity.baseStats — the resolved
+    // Resolved Stats values (entity.stats, entity.baseStats - the resolved
     // at-entry snapshot) must NOT be passable here: feeding a derived
     // snapshot back into calculateStats re-derives attribute bonuses
     // (R2 audit: 10 -> 70 -> 130). The brand makes that a compile error.

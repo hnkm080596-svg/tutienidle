@@ -1,4 +1,4 @@
-// Coverage extension for EquipmentDissolve.ts — branches not exercised by
+// Coverage extension for EquipmentDissolve.ts - branches not exercised by
 // EquipmentSystem.dissolve.test.ts (commit) or EquipmentDissolve.quote.test.ts
 // (quote): empty/not_found/favorite/no_conversion_rule rejections, guard
 // priority, reward-roll boundaries for every quality, the discardRefinePreview

@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
-// Deferred follow-up Task 2 (2026-09-03) — useDialogFocus trên
-// CombatExitConfirmModal: open → focus vào card; Escape = hủy thoát
-// (Ở LẠI trận, KHÔNG abandon/exit); Tab cycle không thoát khỏi modal.
+// Deferred follow-up Task 2 (2026-09-03) - useDialogFocus tren
+// CombatExitConfirmModal: open -> focus vao card; Escape = huy thoat
+// (O LAI tran, KHONG abandon/exit); Tab cycle khong thoat khoi modal.
 // Mount theo pattern CombatExitConfirmModal.test.ts (createApp + h +
-// provide mock GameManager, KHÔNG @vue/test-utils).
+// provide mock GameManager, KHONG @vue/test-utils).
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
 import { createApp, h, nextTick, ref } from 'vue'
 import { createPinia } from 'pinia'

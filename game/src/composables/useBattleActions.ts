@@ -7,22 +7,22 @@ import type { Stage } from '../core/stage/Stage'
 import type { BattleRunMode } from '../stores/ui'
 
 /**
- * Trước đây chỉ gọi được qua debug hook/console (fightWolf() cục bộ
- * trong App.vue) — tách ra composable để nút "Bắt Đầu" thật trong UI
- * (StageSelectPanel.vue) gọi được.
+ * Truoc day chi goi duoc qua debug hook/console (fightWolf() cuc bo
+ * trong App.vue) - tach ra composable de nut "Bat Dau" that trong UI
+ * (StageSelectPanel.vue) goi duoc.
  *
- * Thám Hiểm rework — startBattle() không còn hardcode STAGES[0] nữa,
- * nhận thẳng `stage` do caller chọn. Combat UI Redesign — caller giờ
- * là StageSelectPanel.vue's startSelectedStage() (trận đầu) hoặc
- * CombatVictoryPanel.vue's refight() (Đánh Lại/Auto-refight — đọc lại
- * ui.selectedStageId, KHÔNG còn App.vue's fightStage() cũ nữa, xem
+ * Tham Hiem rework - startBattle() khong con hardcode STAGES[0] nua,
+ * nhan thang `stage` do caller chon. Combat UI Redesign - caller gio
+ * la StageSelectPanel.vue's startSelectedStage() (tran dau) hoac
+ * CombatVictoryPanel.vue's refight() (Danh Lai/Auto-refight - doc lai
+ * ui.selectedStageId, KHONG con App.vue's fightStage() cu nua, xem
  * App.vue's tick()).
  *
- * Trảm gate (blockIfNoBasicAttack, 2026-08-20 → gỡ 2026-08-21) — Pháp
- * Tu giờ tự học + trang bị SẴN 1 chiêu cơ bản (Hỏa Cầu Thuật) ngay lúc
- * chọn path (xem GameManager.chooseCultivationPath()), nên tình huống
- * "chưa trang bị gì" không còn xảy ra nữa — bỏ hẳn kiểm tra trước
- * trận đấu này, không chỉ Pháp Tu mà mọi path.
+ * Tram gate (blockIfNoBasicAttack, 2026-08-20 -> go 2026-08-21) - Phap
+ * Tu gio tu hoc + trang bi SAN 1 chieu co ban (Hoa Cau Thuat) ngay luc
+ * chon path (xem GameManager.chooseCultivationPath()), nen tinh huong
+ * "chua trang bi gi" khong con xay ra nua - bo han kiem tra truoc
+ * tran dau nay, khong chi Phap Tu ma moi path.
  */
 export function useBattleActions() {
   const player = usePlayerStore()
@@ -36,7 +36,7 @@ export function useBattleActions() {
    * after the domain accepted the start" is structural instead of repeated
    * at each call site (F07). `commit` runs only on acceptance.
    *
-   * ARCH-002 (M7): callers no longer pass finalStats — the ops resolves
+   * ARCH-002 (M7): callers no longer pass finalStats - the ops resolves
    * the base post-reset via resolvePlayerFinalStats + the live provider.
    */
   async function runStageStart(
@@ -89,7 +89,7 @@ export function useBattleActions() {
 
   /**
    * Combat -> home exit shared by every result/exit control (victory
-   * "Tiếp Tục", defeat "Về Động Phủ", exit-confirm "Thoát Trận", the 10s
+   * "Tiep Tuc", defeat "Ve Dong Phu", exit-confirm "Thoat Tran", the 10s
    * auto-return fallback). All visible teardown - battle abandon, run-mode
    * reset, dismissed flag, the scene-exit event the canvas listens to -
    * runs inside the closed-curtain window so nothing changes on screen
@@ -122,8 +122,8 @@ export function useBattleActions() {
   }
 
   /**
-   * Bấm "Bắt Đầu" ở StageSelectPanel.vue — admission trước startSelectedStage (F07).
-   * Chỉ khi startStage thành công mới đóng panel, emit pose, và vào combat UI.
+   * Bam "Bat Dau" o StageSelectPanel.vue - admission truoc startSelectedStage (F07).
+   * Chi khi startStage thanh cong moi dong panel, emit pose, va vao combat UI.
    */
   function startSelectedStage(zoneId: string, stage: Stage, mode: BattleRunMode): Promise<boolean> {
     return runStageStart(stage, mode === 'repeat', () => {

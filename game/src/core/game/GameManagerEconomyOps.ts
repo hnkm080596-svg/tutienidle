@@ -23,7 +23,7 @@ export class GameManagerEconomyOps {
   ) {}
 
   /**
-   * HOA BAN (economy-fixes-sinks-plan §3.2 B2, 2026-08-29) - sells spare
+   * HOA BAN (economy-fixes-sinks-plan sec3.2 B2, 2026-08-29) - sells spare
    * materials to the Vendor for same-tier spirit stones. VendorSystem is
    * created per-call (small, stateless) with the registry + the current
    * recipe list - the sole-ingredient guard needs every recipe's

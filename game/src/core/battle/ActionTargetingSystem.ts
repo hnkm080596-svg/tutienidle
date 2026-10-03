@@ -10,7 +10,7 @@
 // stat-system-reimagined Task 3 (D16): the range helpers
 // (canPlayerReachTarget / canEnemyReachGate / selectPrimaryTargetForEnemy
 // / selectAttackableTarget) were deleted with the retired attackRange
-// stat — reach now belongs to action targeting, not Stats.
+// stat - reach now belongs to action targeting, not Stats.
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { ActionTargeting, TargetSelectionMode } from './CombatAction'
 import {
@@ -33,7 +33,7 @@ function compareBySelection(a: Candidate, b: Candidate, selection: TargetSelecti
     case 'highest_hp':
       return b.entity.currentHp - a.entity.currentHp
     default:
-      // nearest: gần theo CỘT trước, hòa thì theo thứ tự danh sách ổn định.
+      // nearest: gan theo COT truoc, hoa thi theo thu tu danh sach on dinh.
       return a.columnDistance - b.columnDistance
   }
 }

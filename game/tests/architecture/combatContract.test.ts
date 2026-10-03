@@ -1,5 +1,5 @@
 /**
- * R14.4 guard (combat turn mechanism contract) — the invariants the
+ * R14.4 guard (combat turn mechanism contract) - the invariants the
  * 2026-09-10 combat specs settled, now enforceable since the branch
  * merged (5718137e). Protects the regression classes each spec AC named.
  *

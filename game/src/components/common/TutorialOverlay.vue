@@ -8,16 +8,16 @@ import { useDialogFocus } from '@/composables/useDialogFocus'
 import { TUTORIAL_STEPS } from '@/data/tutorial/tutorialSteps'
 import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
 
-// UI-005 (Task 3, 2026-09-07) — tutorial là modal blocking: role="dialog"
-// + aria-modal + focus trap qua useDialogFocus (cùng primitive ConfirmModal/
-// OverlayPanel đang dùng, không tự dựng overlay behavior riêng nữa).
+// UI-005 (Task 3, 2026-09-07) - tutorial la modal blocking: role="dialog"
+// + aria-modal + focus trap qua useDialogFocus (cung primitive ConfirmModal/
+// OverlayPanel dang dung, khong tu dung overlay behavior rieng nua).
 const player = usePlayerStore()
 const { t } = useI18n()
 
 const panelRef = ref<HTMLElement | null>(null)
 const isOpen = computed(() => !player.hasSeenTutorial)
-// Escape = bỏ qua tutorial (cùng action với nút "Bỏ Qua" — behavior hợp lý
-// cho dialog hướng dẫn, không mất dữ liệu gì).
+// Escape = bo qua tutorial (cung action voi nut "Bo Qua" - behavior hop ly
+// cho dialog huong dan, khong mat du lieu gi).
 useDialogFocus(panelRef, isOpen, { onEscape: finish })
 
 const titleId = useId()

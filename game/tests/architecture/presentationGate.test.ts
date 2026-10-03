@@ -1,11 +1,11 @@
 /**
- * Guard (V5) — the Phaser registry is reached only through the typed gate.
+ * Guard (V5) - the Phaser registry is reached only through the typed gate.
  *
  * Spec: docs/superpowers/specs/2026-09-11-frontend-static-dynamic-boundary-design.md
- * §4 and §7.
+ * sec4 and sec7.
  *
  * Measured before the gate existed: 22 reads across 8 keys, 11 carrying an
- * `as { … }` cast. A rename on the domain side produced no type error anywhere;
+ * `as { ... }` cast. A rename on the domain side produced no type error anywhere;
  * it failed at runtime, inside a scene, usually as a silently missing visual.
  * The gate declares each key's type once. This keeps the casts from growing
  * back.
@@ -13,7 +13,7 @@
  * What it does NOT police: `registry` is also the name of the CONTENT registry
  * in `src/core/` (`this.registry.get(buffId)`), which is a different object
  * entirely and none of this spec's business. So the guard matches on the gate's
- * own key names rather than on the word "registry" — a narrower rule that
+ * own key names rather than on the word "registry" - a narrower rule that
  * cannot produce a false positive on core.
  */
 import { describe, expect, it } from 'vitest'

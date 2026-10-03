@@ -10,12 +10,12 @@ import type { DiagnosticExportResult } from '../main-process/DiagnosticBundle'
 import { recordDiagnostic } from '../services/diagnostics/DiagnosticRecorder'
 import type { GuestCredentialBridge } from '../services/supabase/SupabaseSession'
 
-// Uncommitted audit followup plan, Ưu tiên 2 "xử lý khi đóng gói Electron"
-// (2026-08-24) — cầu nối renderer ↔ main process, CHỈ tồn tại khi chạy
-// trong bản Electron (window.electronAPI do electron/preload.ts expose qua
-// contextBridge — interface bên dưới PHẢI khớp đúng shape object export ở
-// đó). Bản build web thường (npm run dev/build) không có window.electronAPI
-// -> mọi hàm ở đây no-op ngay, không ảnh hưởng gì tới target web.
+// Uncommitted audit followup plan, Uu tien 2 "xu ly khi dong goi Electron"
+// (2026-08-24) - cau noi renderer <-> main process, CHI ton tai khi chay
+// trong ban Electron (window.electronAPI do electron/preload.ts expose qua
+// contextBridge - interface ben duoi PHAI khop dung shape object export o
+// do). Ban build web thuong (npm run dev/build) khong co window.electronAPI
+// -> moi ham o day no-op ngay, khong anh huong gi toi target web.
 //
 // B1-D quits the comment's old claim: the quit flush is now a
 // RESULT-BEARING protocol - 'app:before-quit-flush' carries a requestId,
@@ -31,8 +31,8 @@ import type { GuestCredentialBridge } from '../services/supabase/SupabaseSession
 // log-only - GameClock self-corrects via Date.now() diff regardless.
 export interface ElectronBridgeAPI {
   isElectron: true
-  // Mỗi onX trả về hàm unsubscribe (preload.ts gỡ đúng ipcRenderer handler
-  // đã đăng ký) — teardown gọi được, không chồng listener qua HMR/remount
+  // Moi onX tra ve ham unsubscribe (preload.ts go dung ipcRenderer handler
+  // da dang ky) - teardown goi duoc, khong chong listener qua HMR/remount
   // (ARCH-013/L04).
   onSystemSuspend(callback: (timestamp: number) => void): () => void
   onSystemResume(callback: (timestamp: number) => void): () => void
@@ -101,16 +101,16 @@ export interface ElectronBridgeHandlers {
   resume?: () => void
 }
 
-// `gameManagerOverride` — cùng lý do useBreakthrough.ts's tham số cùng tên:
-// App.vue gọi composable này trên CHÍNH cây component đã provide()
-// GameManager ra, useGameManager() inject bên trong sẽ throw nếu tự gọi
-// trên chính App.vue — truyền thẳng instance cục bộ để bỏ qua inject.
+// `gameManagerOverride` - cung ly do useBreakthrough.ts's tham so cung ten:
+// App.vue goi composable nay tren CHINH cay component da provide()
+// GameManager ra, useGameManager() inject ben trong se throw neu tu goi
+// tren chinh App.vue - truyen thang instance cuc bo de bo qua inject.
 //
-// Trả về disposer gỡ cả 3 subscription (ARCH-013/L04): trước đây các
-// ipcRenderer.on này không có đường gỡ — App unmount/HMR để lại handler
-// mồ côi, và mount lại sẽ đăng ký TRÙNG (quit-flush save chạy kép).
-// Caller giữ disposer; gọi lại useElectronBridge sau khi đã dispose, hoặc
-// dispose trước khi subscribe lần nữa.
+// Tra ve disposer go ca 3 subscription (ARCH-013/L04): truoc day cac
+// ipcRenderer.on nay khong co duong go - App unmount/HMR de lai handler
+// mo coi, va mount lai se dang ky TRUNG (quit-flush save chay kep).
+// Caller giu disposer; goi lai useElectronBridge sau khi da dispose, hoac
+// dispose truoc khi subscribe lan nua.
 //
 // B1-D adds the authority-driven handlers (suspend/resume/quit flush) to
 // the same disposer contract - every subscription tears down together.

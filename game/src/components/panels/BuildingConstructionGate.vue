@@ -1,14 +1,14 @@
 <script setup lang="ts">
-// BUILDing spec mục 2/5 — mỗi panel Tứ Nghệ (Đan Phòng/Trận Đài/Phù
-// Viện/Khí Đường) giờ đi qua đúng 1 BuildingInstance thật: CHƯA xây
-// thì chặn hẳn Function UI, hiện màn Construction (tái dùng
-// BuildingSystem.canBuild/build); ĐÃ xây thì hiện header Lv.X + Nâng
-// Cấp, rồi mới tới nội dung thật qua <slot /> — click Building (nav
-// entry) vẫn mở THẲNG panel như cũ, gate này chỉ quyết định BÊN TRONG
-// panel render gì (không thêm màn hình trung gian nào ngoài panel).
-// Thám Hiểm rework — build() thêm window.confirm() (y/n mở khoá) TRƯỚC
-// khi trừ nguyên liệu, cùng pattern HomeBuildingIcons.vue's
-// BuildingDetailPopover.vue (2 nơi build Building giờ đều xác nhận).
+// BUILDing spec muc 2/5 - moi panel Tu Nghe (Dan Phong/Tran Dai/Phu
+// Vien/Khi Duong) gio di qua dung 1 BuildingInstance that: CHUA xay
+// thi chan han Function UI, hien man Construction (tai dung
+// BuildingSystem.canBuild/build); DA xay thi hien header Lv.X + Nang
+// Cap, roi moi toi noi dung that qua <slot /> - click Building (nav
+// entry) van mo THANG panel nhu cu, gate nay chi quyet dinh BEN TRONG
+// panel render gi (khong them man hinh trung gian nao ngoai panel).
+// Tham Hiem rework - build() them window.confirm() (y/n mo khoa) TRUOC
+// khi tru nguyen lieu, cung pattern HomeBuildingIcons.vue's
+// BuildingDetailPopover.vue (2 noi build Building gio deu xac nhan).
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '@/stores/player'
@@ -33,12 +33,12 @@ const instance = computed(() => {
   return gameManager.buildingManager.getByBuildingId(props.buildingId)
 })
 
-// Cờ test (2026-08-20) — tự cấp instance MIỄN PHÍ thay vì hiện màn
-// Construction, cùng pattern App.vue's grant khởi tạo cho
-// teleport_array/gathering_outpost (add THẲNG qua buildingManager, bỏ
-// qua canBuild/cost). Làm ở đây (thay vì fake `instance` trong template)
-// để nội dung thật phía sau gate (Lv.X/Nâng Cấp/<slot>) đọc 1 instance
-// THẬT, không cần né null-check riêng.
+// Co test (2026-08-20) - tu cap instance MIEN PHI thay vi hien man
+// Construction, cung pattern App.vue's grant khoi tao cho
+// teleport_array/gathering_outpost (add THANG qua buildingManager, bo
+// qua canBuild/cost). Lam o day (thay vi fake `instance` trong template)
+// de noi dung that phia sau gate (Lv.X/Nang Cap/<slot>) doc 1 instance
+// THAT, khong can ne null-check rieng.
 onMounted(() => {
   if (isTestModeUnlockAll() && !instance.value) {
     gameManager.buildingManager.add({
@@ -72,9 +72,9 @@ function materialLabel(materialId: string): string {
   return gameManager.materialRegistry.has(materialId) ? gameManager.materialRegistry.get(materialId).name : materialId
 }
 
-// UI-007 (Task 5, 2026-09-07) — window.confirm() native → ConfirmModal
-// dùng chung (in-game modal, keyboard + focus trap, hủy các luồng native
-// còn sót). Modal xác nhận hiện khi bấm Xây; confirm mới trừ tài nguyên.
+// UI-007 (Task 5, 2026-09-07) - window.confirm() native -> ConfirmModal
+// dung chung (in-game modal, keyboard + focus trap, huy cac luong native
+// con sot). Modal xac nhan hien khi bam Xay; confirm moi tru tai nguyen.
 const confirmOpen = ref(false)
 
 function requestBuild() {
@@ -113,8 +113,8 @@ function build() {
       <slot />
     </div>
 
-    <!-- UI-007 — xác nhận xây qua ConfirmModal dùng chung (thay window.confirm).
-         Đặt NGOÀI cặp v-if/v-else để không phá adjacency của chúng. -->
+    <!-- UI-007 - xac nhan xay qua ConfirmModal dung chung (thay window.confirm).
+         Dat NGOAI cap v-if/v-else de khong pha adjacency cua chung. -->
     <ConfirmModal
       :open="confirmOpen"
       :title="t('buildingGate.confirmTitle', { name: template.name })"

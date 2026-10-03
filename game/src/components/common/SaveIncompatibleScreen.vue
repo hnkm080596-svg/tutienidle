@@ -24,9 +24,9 @@ const { t } = useI18n()
 // the authoritative row holds.
 const remoteAuthoritative = cloudSaveCoordinator.capability === 'remote-authoritative'
 
-// Thay window.confirm()/window.alert() native — modal xác nhận đồng bộ
-// hoá bằng pending-action giống SettingsPanel.vue: mở ConfirmModal, hành
-// động thật chỉ chạy khi resolvePendingConfirm() (nút "Xác Nhận") được gọi.
+// Thay window.confirm()/window.alert() native - modal xac nhan dong bo
+// hoa bang pending-action giong SettingsPanel.vue: mo ConfirmModal, hanh
+// dong that chi chay khi resolvePendingConfirm() (nut "Xac Nhan") duoc goi.
 const pendingConfirm = ref<null | { title: string; message: string; danger: boolean; onConfirm: () => void }>(null)
 
 function requestConfirm(title: string, message: string, onConfirm: () => void, danger = false) {
@@ -60,7 +60,7 @@ function handleReset() {
       ? t('saveIncompatible.confirm.resetCloudBody')
       : t('saveIncompatible.confirm.resetBody'),
     () => {
-      // Mission A review — deleteSave() returns false on storage
+      // Mission A review - deleteSave() returns false on storage
       // failure; reloading would boot back into the same corrupt save.
       // In remote mode this is only a CACHE reset: the authoritative
       // load re-fetches the cloud row after reload (an unchanged
@@ -110,8 +110,8 @@ function handleImport(event: Event) {
     if (ok) {
       window.location.reload()
     } else {
-      // UI-007/UI-014 (Task 5) — confirm rỗng-callback → alert close-only
-      // (không có action "xác nhận" vô nghĩa); reset file input để retry.
+      // UI-007/UI-014 (Task 5) - confirm rong-callback -> alert close-only
+      // (khong co action "xac nhan" vo nghia); reset file input de retry.
       requestConfirm(t('saveIncompatible.confirm.importFailedTitle'), t('saveIncompatible.confirm.importFailedBody'), () => {}, false)
 
       input.value = ''
@@ -179,8 +179,8 @@ function handleImport(event: Event) {
 }
 
 .save-incompatible__panel {
-  /* margin:auto — vẫn căn giữa khi vừa màn hình, nhưng khi overflow
-     thì panel dạt lên trên để cuộn tới được toàn bộ nội dung. */
+  /* margin:auto - van can giua khi vua man hinh, nhung khi overflow
+     thi panel dat len tren de cuon toi duoc toan bo noi dung. */
   position: relative;
   isolation: isolate;
   margin: auto;

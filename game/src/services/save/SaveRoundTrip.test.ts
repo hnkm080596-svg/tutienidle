@@ -588,7 +588,7 @@ describe('SaveRoundTrip — buildGameSave() luôn qua validateGameSaveShape()', 
   })
 
   // Mutation finding F-MUT-ALCHEMY-ROUNDTRIP (beta-release-2026-09-29):
-  // dropping alchemyJobs from buildGameSave passed the whole corpus — an
+  // dropping alchemyJobs from buildGameSave passed the whole corpus - an
   // in-flight job (elapsed / recipe / inputs already debited) would
   // silently evaporate on reload. Pin: a running job survives the
   // detach -> JSON -> shape-validate pipeline.

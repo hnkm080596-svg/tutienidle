@@ -17,7 +17,7 @@ import { defineEnemy } from '../enemy/Enemy'
 import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
 import { commitSpellInitiationForTest } from './__fixtures__/betaWaysUnlock'
 
-// Phap Tu Reimagined (Task 7) + Cultivation Path Framework M7 — the
+// Phap Tu Reimagined (Task 7) + Cultivation Path Framework M7 - the
 // hidden Phap Tu variant is the 'hidden_spell_pathway' WAY under path 'spell',
 // offered ONLY inside the initiation ritual, gated by live linh_bao
 // cast count (>= lv3 threshold). No element or The pool. The
@@ -137,14 +137,14 @@ describe('ngo_dao way — ritual offer gate', () => {
     expect(gameManager.realmAdvanceOps.chooseCultivationPath('sword', 'sword_pathway', player)).toBe(true)
     expect(player.cultivationPath).toBe('sword')
     expect(player.cultivationWay).toBe('sword_pathway')
-    // M6 — way membership is the discriminator (swordPath.mode retired);
+    // M6 - way membership is the discriminator (swordPath.mode retired);
     // the ritual still creates the canonical way-agnostic slice.
     expect(player.swordPath).toEqual(freshSwordPathState())
   })
 
   it('chooseCultivationPath(spell, ngo_dao) fails atomically when a kit template is missing — nothing committed', () => {
     // Review round-4 (atomicity): cultivationPath was written BEFORE the
-    // grants were verified — a missing template left the path committed
+    // grants were verified - a missing template left the path committed
     // with a partial kit. The whole choice must fail instead.
     const gameManager = new GameManager()
     gameManager.catalogOps.registerSkillTemplates(
@@ -186,7 +186,7 @@ describe('ngo_dao way — ritual offer gate', () => {
   })
 
   it('ngo_dao way owns the spell stat domain for its kit modifiers', () => {
-    // Kit statModifiers are domain:'spell' — the way must claim that
+    // Kit statModifiers are domain:'spell' - the way must claim that
     // domain or every gated stat (maxMp/manaShieldPercent/...) rejects.
     const { gameManager, player } = makeManager()
     gameManager.setActivePlayer(player)
@@ -197,14 +197,14 @@ describe('ngo_dao way — ritual offer gate', () => {
   })
 })
 
-// P14 review fix (HIGH-1 + integration gap) — the An composite pool must
+// P14 review fix (HIGH-1 + integration gap) - the An composite pool must
 // be the CANONICAL Skill -> TurnSkillDefinition conversion of the five
 // authored basics, not a hand-duplicated static table. The static pool
 // had already drifted: authored doc_chuong is ailment-only (0 direct
 // damage) while the duplicate gave wood an elemental hit, and none of
 // the five carried authored manaScalingRatio/attributeScaling. These
-// tests drive the REAL production path — ritual -> startBattleWithPlayer
-// -> resolved participant — the same chain the browser pass crashed on.
+// tests drive the REAL production path - ritual -> startBattleWithPlayer
+// -> resolved participant - the same chain the browser pass crashed on.
 describe('phap_tu_an — battle build resolves the canonical element pool', () => {
   function anPlayerReady() {
     const { gameManager, player } = makeManager()
@@ -230,7 +230,7 @@ describe('phap_tu_an — battle build resolves the canonical element pool', () =
         criticalRate: 0,
         criticalDamage: 1.5,
         armor: 0,
-        evasionRate: 0, // deterministic hits — see actionPlayback harness note
+        evasionRate: 0, // deterministic hits - see actionPlayback harness note
       },
       rewards: { techniqueMastery: 0, spiritStone: 0 },
     })
@@ -244,7 +244,7 @@ describe('phap_tu_an — battle build resolves the canonical element pool', () =
 
     const pool = gameManager.getTurnBattle()!.players[0]!.basic!.compositePicks!.pool
 
-    // Five authored basics, converted — ids are the authored skill ids.
+    // Five authored basics, converted - ids are the authored skill ids.
     expect(pool.map((entry) => entry.id).sort()).toEqual(
       ['diem_kim_thuat', 'doc_chuong', 'hoa_cau_thuat', 'tho_cau_thuat', 'thuy_tien_thuat'].sort(),
     )
@@ -257,7 +257,7 @@ describe('phap_tu_an — battle build resolves the canonical element pool', () =
       'doc_can',
     )
 
-    // Authored scaling survives conversion — hoa_cau_thuat carries
+    // Authored scaling survives conversion - hoa_cau_thuat carries
     // manaScalingRatio + attunement attributeScaling.
     const fire = pool.find((entry) => entry.id === 'hoa_cau_thuat')!
     expect(fire.damage?.scaling?.manaScalingRatio).toBe(0.001)
@@ -331,7 +331,7 @@ describe('phap_tu_an — battle build resolves the canonical element pool', () =
     expect(battle.state === 'fighting' || battle.state === 'victory').toBe(true)
     expect(battle.totalTurnsElapsed ?? 0).toBeGreaterThan(0)
 
-    // The participant was built through the REAL adapter chain —
+    // The participant was built through the REAL adapter chain -
     // canonical composite pool and repeatCasts stamped by production code.
     const participant = battle.players[0]!
     expect(participant.basic?.compositePicks?.pool).toHaveLength(5)
@@ -342,7 +342,7 @@ describe('phap_tu_an — battle build resolves the canonical element pool', () =
 describe('phap basic resolution — fail-fast on converter rejection (no static fallback)', () => {
   // Review round-2 (LOW): the SPELL_BASICS static table was a second
   // authority that drifted from authored skills. A converter rejection is
-  // an authored-data defect — it must surface loudly at battle build,
+  // an authored-data defect - it must surface loudly at battle build,
   // never silently substitute wrong gameplay.
   function spellPathPlayerReady() {
     const { gameManager, player } = makeManager()
@@ -383,7 +383,7 @@ describe('phap basic resolution — fail-fast on converter rejection (no static 
     gameManager.setActivePlayer(player)
     player.skillCastCounts = { linh_bao: LING_BAO_L3 }
 
-    // The kit is granted from the template registry at the ritual — the
+    // The kit is granted from the template registry at the ritual - the
     // corrupted template must be in place BEFORE the grant.
     const authored = SKILLS.find((skill) => skill.id === 'van_phap_tuy_tam')!
     gameManager.catalogOps.registerSkillTemplates([{ ...authored, effects: [] }])
@@ -394,7 +394,7 @@ describe('phap basic resolution — fail-fast on converter rejection (no static 
 
   it('spell: committed element but basic NOT learned → throws instead of generic melee', () => {
     // Review round-3 (MEDIUM): converter rejection throws, but a MISSING
-    // required basic silently degraded to GENERIC_PHYSICAL_BASIC —
+    // required basic silently degraded to GENERIC_PHYSICAL_BASIC -
     // stripping the path's kit. A committed element implies the basic
     // was granted (selectSpellPathElement); absent = corrupt state.
     const { gameManager, player } = spellPathPlayerReady()
@@ -405,7 +405,7 @@ describe('phap basic resolution — fail-fast on converter rejection (no static 
   it('phap_tu_an: missing van_phap_tuy_tam → throws instead of generic melee', () => {
     const { gameManager, player } = makeManager()
     gameManager.setActivePlayer(player)
-    // Path state without the ritual grant — required kit skill absent.
+    // Path state without the ritual grant - required kit skill absent.
     player.cultivationPath = 'spell'
     player.cultivationWay = 'hidden_spell_pathway'
 
@@ -413,7 +413,7 @@ describe('phap basic resolution — fail-fast on converter rejection (no static 
   })
 
   it('phap_tu_an: missing da_phap_lien_tuyen → throws instead of silently dropping the special', () => {
-    // Review round-4 (MEDIUM): the An kit is a fixed three-skill set —
+    // Review round-4 (MEDIUM): the An kit is a fixed three-skill set -
     // a corrupt save missing the special entered combat with no button.
     const { gameManager, player } = makeManager()
     gameManager.setActivePlayer(player)

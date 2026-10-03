@@ -11,11 +11,11 @@ import type { BuffDefinition } from '../buff2/BuffDefinition'
 import { isBattleInProgress } from '../battle/BattleTypes'
 import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
 
-// Math.random là state TOÀN CỤC theo worker thread — file test chạy
-// trước trong cùng worker làm đổi chuỗi random của test này khiến trận
-// đấu tự nhiên có thể kết thúc 'defeat' (flaky chỉ hiện khi chạy full
-// suite). Seed PRNG cố định (mulberry32) để vòng lặp MVP deterministic
-// bất kể thứ tự chia worker.
+// Math.random la state TOAN CUC theo worker thread - file test chay
+// truoc trong cung worker lam doi chuoi random cua test nay khien tran
+// dau tu nhien co the ket thuc 'defeat' (flaky chi hien khi chay full
+// suite). Seed PRNG co dinh (mulberry32) de vong lap MVP deterministic
+// bat ke thu tu chia worker.
 function mulberry32(seed: number): () => number {
   let state = seed >>> 0
 
@@ -31,27 +31,27 @@ function mulberry32(seed: number): () => number {
   }
 }
 
-// Seed chọn sao cho trận thắng ổn định (đã xác minh qua nhiều lần chạy).
+// Seed chon sao cho tran thang on dinh (da xac minh qua nhieu lan chay).
 const MVP_LOOP_SEED = 1
 
-// Combat Rework Phase 9 — mirror checklist "MVP cuối cùng" (plan mục
-// 20): PLAYER (HP/Attack/Class→Projectile Pierce) + ENEMY (HP/Defense/
+// Combat Rework Phase 9 - mirror checklist "MVP cuoi cung" (plan muc
+// 20): PLAYER (HP/Attack/Class->Projectile Pierce) + ENEMY (HP/Defense/
 // AttackRange/Projectile) + COMBAT (Targeting/Collision/Damage Engine/
-// Death) + BOSS (HP/Phase/Enrage) chạy chung 1 vòng lặp THẬT qua
-// GameManager — không mock lại BattleSystem, dùng đúng data skill/
-// technique thật (Kiếm Tu) đã ship. Đây là bài test "tất cả ráp lại
-// có chạy được không", không lặp lại các test chi tiết từng cơ chế đã
-// có ở Phase 3-8.
+// Death) + BOSS (HP/Phase/Enrage) chay chung 1 vong lap THAT qua
+// GameManager - khong mock lai BattleSystem, dung dung data skill/
+// technique that (Kiem Tu) da ship. Day la bai test "tat ca rap lai
+// co chay duoc khong", khong lap lai cac test chi tiet tung co che da
+// co o Phase 3-8.
 describe('GameManager — MVP loop end-to-end (Combat Rework Phase 9)', () => {
   afterEach(() => {
     vi.restoreAllMocks()
   })
 
-  // Boss stages are always solo (Combat Art Pipeline spec §7 addendum,
-  // 2026-09-05, effectiveTotalEnemyCount()) — totalEnemyCount:2 ở stage
-  // fixture dưới đây CỐ TÌNH giữ nguyên như content-author cũ để chứng
-  // minh guarantee hệ thống: dù data khai 2, mob KHÔNG BAO GIỜ spawn,
-  // quái ĐẦU TIÊN (và DUY NHẤT) luôn là Boss.
+  // Boss stages are always solo (Combat Art Pipeline spec sec7 addendum,
+  // 2026-09-05, effectiveTotalEnemyCount()) - totalEnemyCount:2 o stage
+  // fixture duoi day CO TINH giu nguyen nhu content-author cu de chung
+  // minh guarantee he thong: du data khai 2, mob KHONG BAO GIO spawn,
+  // quai DAU TIEN (va DUY NHAT) luon la Boss.
   it('Class thật (Kiếm Tu) đánh xuyên 1 Stage Boss-solo (Phase/Enrage) tới Victory — mob trong enemyPool không bao giờ spawn', () => {
     vi.spyOn(Math, 'random').mockImplementation(mulberry32(MVP_LOOP_SEED))
 
@@ -61,7 +61,7 @@ describe('GameManager — MVP loop end-to-end (Combat Rework Phase 9)', () => {
 
     gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
     gameManager.catalogOps.registerSkillTemplates(SKILLS)
-    // Kiem Tu Reimagined — KIEM_TU_NODES is the live node tree; register
+    // Kiem Tu Reimagined - KIEM_TU_NODES is the live node tree; register
     // it so node purchases in this loop behave like the real game (App.vue
     // registers the same table).
     gameManager.catalogOps.registerProgressionNodes(KIEM_TU_NODES)
@@ -93,11 +93,11 @@ describe('GameManager — MVP loop end-to-end (Combat Rework Phase 9)', () => {
       level: 1,
       realmId: 'qi_refining',
       lane: 'ground',
-      // attackRange thật (không phải 999999 "vô hạn" kiểu player) — quái
-      // với range vô hạn nghĩ đã đủ tầm nên KHÔNG BAO GIỜ đi tới
-      // (resolveMovement() chỉ bước khi distance>range), mãi mãi đứng
-      // ngoài SCREEN_VISIBLE_MAX_X (2026-08-22, xem BattleLane.ts) —
-      // gate "không bắn quái offscreen" sẽ khoá cứng cả 2 phía.
+      // attackRange that (khong phai 999999 "vo han" kieu player) - quai
+      // voi range vo han nghi da du tam nen KHONG BAO GIO di toi
+      // (resolveMovement() chi buoc khi distance>range), mai mai dung
+      // ngoai SCREEN_VISIBLE_MAX_X (2026-08-22, xem BattleLane.ts) -
+      // gate "khong ban quai offscreen" se khoa cung ca 2 phia.
       statsInput: {
         maxHp: 20,
         might: 0,
@@ -115,7 +115,7 @@ describe('GameManager — MVP loop end-to-end (Combat Rework Phase 9)', () => {
       level: 1,
       realmId: 'qi_refining',
       lane: 'ground',
-      // attackRange thật, cùng lý do đã ghi ở mob phía trên (2026-08-22).
+      // attackRange that, cung ly do da ghi o mob phia tren (2026-08-22).
       statsInput: {
         maxHp: 15,
         might: 0,
@@ -126,7 +126,7 @@ describe('GameManager — MVP loop end-to-end (Combat Rework Phase 9)', () => {
       },
       rewards: { techniqueMastery: 0, spiritStone: 0 },
       isBoss: true,
-      // createBossVariant() nhân maxHp x7 -> 105 HP thật khi vào trận.
+      // createBossVariant() nhan maxHp x7 -> 105 HP that khi vao tran.
       tribulationPhases: [
         { hpThresholdPercent: 0.5, buff: phaseBuff, archetypeOverride: 'ranged' },
       ],
@@ -150,21 +150,21 @@ describe('GameManager — MVP loop end-to-end (Combat Rework Phase 9)', () => {
 
     const player = createDefaultPlayer()
 
-    // Class — Kiếm Tu THẬT theo route-lock mới (spec 2026-08-29
-    // kiem-the-kiem-y): tram chưa Lv3 → route Kiếm Trận, slot 0 = Lưỡng
-    // Nghi Kiếm Trận (2 kiếm) — đúng 1 active skill duy nhất của route,
-    // thay bộ 3 skill kit cũ.
+    // Class - Kiem Tu THAT theo route-lock moi (spec 2026-08-29
+    // kiem-the-kiem-y): tram chua Lv3 -> route Kiem Tran, slot 0 = Luong
+    // Nghi Kiem Tran (2 kiem) - dung 1 active skill duy nhat cua route,
+    // thay bo 3 skill kit cu.
     player.realmLevel = 12
     expect(gameManager.realmAdvanceOps.chooseCultivationPath('sword', 'sword_pathway', player)).toBe(true)
 
-    // Spawn telegraph (2026-08-24): quái materialize trễ hơn (0.75–1.4s)
-    // khiến trận dài thêm ~2-3s, realm pressure tích lũy thêm — cộng
-    // buffer HP nhỏ để bài test giữ đúng mục đích "vòng lặp đầy đủ tới
-    // Victory" thay vì đua trên biên HP mỏng của seed.
+    // Spawn telegraph (2026-08-24): quai materialize tre hon (0.75-1.4s)
+    // khien tran dai them ~2-3s, realm pressure tich luy them - cong
+    // buffer HP nho de bai test giu dung muc dich "vong lap day du toi
+    // Victory" thay vi dua tren bien HP mong cua seed.
     player.baseStats.maxHp += 40
 
     // stat-system-reimagined Task 3 (D16/D17): the attackRange stat and
-    // the realtime kiting fixture bump retired — the ATB engine targets
+    // the realtime kiting fixture bump retired - the ATB engine targets
     // by rank/lane, not spatial range.
 
     expect(gameManager.turnBattleOps.startStage(player, stage)).toBe(true)
@@ -172,11 +172,11 @@ describe('GameManager — MVP loop end-to-end (Combat Rework Phase 9)', () => {
     let sawBossSpawn = false
     let sawMobSpawn = false
 
-    // Slice 6 cutover: unified flow (Countdown → Spawn → Gauge → Wave →
-    // Result). Boss Phase (archetype override) + Enrage theo giây là cơ
-    // chế real-time KHÔNG migrate (Deep Review §2 — boss chỉ là quái +
-    // buff, sẽ thiết kế lại bằng BossTurnTriggers khi content thật tới) —
-    // chỉ giữ assertions core: spawn qua wave + victory + loop terminate.
+    // Slice 6 cutover: unified flow (Countdown -> Spawn -> Gauge -> Wave ->
+    // Result). Boss Phase (archetype override) + Enrage theo giay la co
+    // che real-time KHONG migrate (Deep Review sec2 - boss chi la quai +
+    // buff, se thiet ke lai bang BossTurnTriggers khi content that toi) -
+    // chi giu assertions core: spawn qua wave + victory + loop terminate.
     for (let i = 0; i < 4000 && isBattleInProgress(gameManager.getTurnBattle()?.state); i++) {
       combatSource.advance(COMBAT_STEP_SECONDS)
 
@@ -195,18 +195,18 @@ describe('GameManager — MVP loop end-to-end (Combat Rework Phase 9)', () => {
       }
     }
 
-    // COMBAT + PLAYER + ENEMY: trận phải THẮNG thật (không phải hết tick
-    // mà vẫn 'fighting' — nghĩa là Damage Engine/Targeting/Wave spawn/
-    // Death của TOÀN BỘ vòng lặp turn-based hoạt động đúng).
+    // COMBAT + PLAYER + ENEMY: tran phai THANG that (khong phai het tick
+    // ma van 'fighting' - nghia la Damage Engine/Targeting/Wave spawn/
+    // Death cua TOAN BO vong lap turn-based hoat dong dung).
     expect(gameManager.getTurnBattle()!.state).toBe('victory')
 
-    // BOSS: quái Boss thật đã spawn (wave spawn floor-10 boss-final hoạt
-    // động trong turn-based flow).
+    // BOSS: quai Boss that da spawn (wave spawn floor-10 boss-final hoat
+    // dong trong turn-based flow).
     expect(sawBossSpawn).toBe(true)
 
-    // Boss stages are always solo — mob của enemyPool KHÔNG BAO GIỜ được
-    // roll dù stage.totalEnemyCount (data thô) khai 2, vì
-    // effectiveTotalEnemyCount() ép quái ĐẦU TIÊN đã là lượt spawn CUỐI.
+    // Boss stages are always solo - mob cua enemyPool KHONG BAO GIO duoc
+    // roll du stage.totalEnemyCount (data tho) khai 2, vi
+    // effectiveTotalEnemyCount() ep quai DAU TIEN da la luot spawn CUOI.
     expect(sawMobSpawn).toBe(false)
   })
 })

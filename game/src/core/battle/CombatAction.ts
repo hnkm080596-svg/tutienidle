@@ -120,11 +120,11 @@ export type CombatVfxPresetId =
   // beta orbs: Dam point->line->converge (silver/cool-blue), Chem
   // crescent->arc->scar (silver + restrained dark-red). DATA ONLY.
   | 'kiem_orb_dam' | 'kiem_orb_chem'
-  // Kiem Tu Reimagined (spec 2026-09-15 §4.3, K11) — one preset per
+  // Kiem Tu Reimagined (spec 2026-09-15 sec4.3, K11) - one preset per
   // Kiem Pho combo. The fired payload is the ONLY discovery signal, so
   // every combo must render distinguishably; renderer maps each preset
   // to its length-tier base + per-combo name/color signature. DATA
-  // ONLY until the presentation pass registers diễn xuất.
+  // ONLY until the presentation pass registers dien xuat.
   // Kiem Pho Beta (design sec.7) - the six beta combos carry the
   // design's locked ids: nhat_tuyen/liet_ngan/khai_ngan/thau_ngan/
   // hoi_tuyen/diep_ngan.

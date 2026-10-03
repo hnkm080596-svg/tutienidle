@@ -1,25 +1,25 @@
-// combatTestHarness (Remediation Task 8, 2026-09-05) — typed adapter thay
-// thế `as any` lặp lại trong 12+ CombatScene test file.CombatScene private
-// fields không test được qua public type — một assertion boundary CỤC BỘ
-// tại đây expose Record-typed scene view; test consume interface này thay
-// vì cast any từng file. KHÔNG dùng trong production code.
+// combatTestHarness (Remediation Task 8, 2026-09-05) - typed adapter thay
+// the `as any` lap lai trong 12+ CombatScene test file.CombatScene private
+// fields khong test duoc qua public type - mot assertion boundary CUC BO
+// tai day expose Record-typed scene view; test consume interface nay thay
+// vi cast any tung file. KHONG dung trong production code.
 import { CombatScene } from '../CombatScene'
 
 /**
- * Typed view của CombatScene cho test: private/readonly fields của scene
- * là chi tiết test phải stub/ghi đè bằng PARTIAL stubs (graphics/tweens/
- * time… chỉ cần vài method) — mapping sâu keyof CombatScene ép stubs đủ
- * full interface là vô ích. Boundary DUY NHẤT: scene coi như record
- * dynamic; MỌI `as any` cũ ở 12+ file test nay đi qua một chỗ này, được
- * ghi chép + audit được. Production KHÔNG dùng type này.
+ * Typed view cua CombatScene cho test: private/readonly fields cua scene
+ * la chi tiet test phai stub/ghi de bang PARTIAL stubs (graphics/tweens/
+ * time... chi can vai method) - mapping sau keyof CombatScene ep stubs du
+ * full interface la vo ich. Boundary DUY NHAT: scene coi nhu record
+ * dynamic; MOI `as any` cu o 12+ file test nay di qua mot cho nay, duoc
+ * ghi chep + audit duoc. Production KHONG dung type nay.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type CombatSceneTestView = Record<string, any>
 
 /**
- * Tạo scene instance cho test. `new CombatScene()` (constructor thật) khi
- * cần class fields có identity thật (lifecycle tests); `Object.create`
- * (không chạy constructor) khi test method thuần.
+ * Tao scene instance cho test. `new CombatScene()` (constructor that) khi
+ * can class fields co identity that (lifecycle tests); `Object.create`
+ * (khong chay constructor) khi test method thuan.
  */
 export function createTestScene(
   mode: 'construct' | 'bare' = 'construct',
@@ -33,8 +33,8 @@ export function createTestScene(
 }
 
 /**
- * Gán nhiều stub fields một lần — ghi qua boundary duy nhất này thay vì
- *cast từng field.
+ * Gan nhieu stub fields mot lan - ghi qua boundary duy nhat nay thay vi
+ *cast tung field.
  */
 export function patchScene(
   scene: CombatSceneTestView,

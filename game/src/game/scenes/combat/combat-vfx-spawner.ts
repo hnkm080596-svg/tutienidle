@@ -1,9 +1,9 @@
-// combat-vfx-spawner (ui-discoverability-refactor-plan.md §3.2) — tách từ
+// combat-vfx-spawner (ui-discoverability-refactor-plan.md sec3.2) - tach tu
 // CombatScene.ts: Spawn VFX theo preset (action impact, spawn telegraph,
-// teleport, hit-flash, lunge/recoil, status icon). Module nhận dependency
-// tường minh qua `scene` — mọi cross-call đi qua scene delegate để giữ
-// nguyên seam test (flashColor bị spy trong CombatScene.playerMotion.test.ts;
-// applyPendingPositions đếm add/Graphics qua proxy trong spawnVfx test).
+// teleport, hit-flash, lunge/recoil, status icon). Module nhan dependency
+// tuong minh qua `scene` - moi cross-call di qua scene delegate de giu
+// nguyen seam test (flashColor bi spy trong CombatScene.playerMotion.test.ts;
+// applyPendingPositions dem add/Graphics qua proxy trong spawnVfx test).
 import Phaser from 'phaser'
 
 import type { BattlePositionsEvent } from '@/core/battle/BattleEvents'
@@ -46,11 +46,11 @@ interface StatusEntry {
   stackLabel: Phaser.GameObjects.Text
 }
 
-// Turn-Based Wave Redesign (2026-09-06) — subset của BattlePositionsEvent
-// mà reconcileSpawnVfx() thực sự đọc. BattlePositionsEvent thỏa mãn cấu
-// trúc này (TypeScript structural typing) — legacy call site hiện có
-// (CombatScene.reconcileSpawnVfx()) KHÔNG cần thay đổi gì. Turn-based
-// combat tự dựng object shape này từ TurnBattleEntitySnapshotEvent
+// Turn-Based Wave Redesign (2026-09-06) - subset cua BattlePositionsEvent
+// ma reconcileSpawnVfx() thuc su doc. BattlePositionsEvent thoa man cau
+// truc nay (TypeScript structural typing) - legacy call site hien co
+// (CombatScene.reconcileSpawnVfx()) KHONG can thay doi gi. Turn-based
+// combat tu dung object shape nay tu TurnBattleEntitySnapshotEvent
 // (CombatScene.onTurnBattleEntitySnapshot(), Task 7).
 export interface SpawnVfxSnapshot {
   spawningEnemies?: {
@@ -67,8 +67,8 @@ export class CombatVfxSpawner {
   constructor(private readonly scene: CombatScene) {}
 
   /**
-   * Buff bar (2026-09-02) — tooltip instance (lazy-create tại
-   * onStatusAttached/showTooltipFor); onStatusRemoved/cleanup gọi hideFor.
+   * Buff bar (2026-09-02) - tooltip instance (lazy-create tai
+   * onStatusAttached/showTooltipFor); onStatusRemoved/cleanup goi hideFor.
    */
   statusTooltip?: StatusTooltip
 
@@ -116,10 +116,10 @@ export class CombatVfxSpawner {
   }
 
   /**
-   * Depth lớp upright cho impact tại anchorCell: cùng hệ với entity sprite
-   * (foot Y) + bias nhỏ → effect đè đúng target của nó nhưng vẫn bị
-   * entity hàng GẦN camera che (occlusion 2.5D). Flat mode giữ lớp
-   * upright cố định như renderer cũ.
+   * Depth lop upright cho impact tai anchorCell: cung he voi entity sprite
+   * (foot Y) + bias nho -> effect de dung target cua no nhung van bi
+   * entity hang GAN camera che (occlusion 2.5D). Flat mode giu lop
+   * upright co dinh nhu renderer cu.
    */
   resolveUprightVfxDepth(anchorCell: GridPosition): number {
     if (!this.scene.isPerspective || !this.scene.projection) {
@@ -158,9 +158,9 @@ export class CombatVfxSpawner {
 
     const preset = getStatusVfxPreset(event.dotType, event.polarity)
 
-    // Buff bar (2026-09-02) — shape taxonomy: circle=buff, diamond=CC/DoT
-    // (kế thừa hình cũ), square=statModifier debuff. Icon tạo tại (0,0) —
-    // updateStatusIconPositions() đặt vị trí row mỗi frame.
+    // Buff bar (2026-09-02) - shape taxonomy: circle=buff, diamond=CC/DoT
+    // (ke thua hinh cu), square=statModifier debuff. Icon tao tai (0,0) -
+    // updateStatusIconPositions() dat vi tri row moi frame.
     const icon =
       preset.shape === 'circle'
         ? this.scene.add.circle(0, 0, STATUS_ICON_SIZE / 2, preset.color)
@@ -195,8 +195,8 @@ export class CombatVfxSpawner {
       stackLabel,
     })
 
-    // Buff bar — tooltip wire (Task 5): hover/tap. Scene input mặc định
-    // enabled; icon nhỏ nên dùng hitArea mở rộng nhẹ qua square size.
+    // Buff bar - tooltip wire (Task 5): hover/tap. Scene input mac dinh
+    // enabled; icon nho nen dung hitArea mo rong nhe qua square size.
     this.statusTooltip ??= new StatusTooltip(this.scene)
 
     icon.setInteractive({ useHandCursor: true })
@@ -240,11 +240,11 @@ export class CombatVfxSpawner {
   }
 
   /**
-   * Buff bar (2026-09-02) — vị trí icon THEO ROW mỗi frame (flexible rule:
-   * tính từ sprite/viewport hiện hành, không hardcode màn hình dev).
-   * Enemy: hàng dưới foot (temporary tier 0, permanent tier 1 — xa hơn).
-   * Player: hàng trên cụm sub-bar HUD (temporary tier 0, permanent tier 1 —
-   * cao hơn). >8 icon: icon cuối mang counter "+N", icon dư ẩn.
+   * Buff bar (2026-09-02) - vi tri icon THEO ROW moi frame (flexible rule:
+   * tinh tu sprite/viewport hien hanh, khong hardcode man hinh dev).
+   * Enemy: hang duoi foot (temporary tier 0, permanent tier 1 - xa hon).
+   * Player: hang tren cum sub-bar HUD (temporary tier 0, permanent tier 1 -
+   * cao hon). >8 icon: icon cuoi mang counter "+N", icon du an.
    */
   updateStatusIconPositions() {
     const byTarget = new Map<string, StatusEntry[]>()
@@ -376,7 +376,7 @@ export class CombatVfxSpawner {
     })
   }
 
-  /** Fade-in + scale 0.7→1 cho enemy vừa materialize (một lần duy nhất). */
+  /** Fade-in + scale 0.7->1 cho enemy vua materialize (mot lan duy nhat). */
   playMaterializeFadeIn(sprite: EntitySprite) {
     sprite.boost.value = 0.7
 
@@ -387,8 +387,8 @@ export class CombatVfxSpawner {
       ease: 'Quad.easeOut',
     })
 
-    // Chỉ cần khả năng setAlpha — structural typing thay vì component
-    // interface của Phaser 4 (gồm alphaTopLeft... không khớp GameObject).
+    // Chi can kha nang setAlpha - structural typing thay vi component
+    // interface cua Phaser 4 (gom alphaTopLeft... khong khop GameObject).
     const alphaTargets: Array<{ target: { setAlpha(value: number): unknown }; final: number }> = []
 
     alphaTargets.push({ target: sprite.rect, final: 1 })
@@ -428,10 +428,10 @@ export class CombatVfxSpawner {
   }
 
   /**
-   * Reconcile telegraph spawn VFX theo SNAPSHOT (không event tức thời):
-   * id mới → tạo handle; id còn → cập nhật progress; id MẤT → materialize
-   * (flash ngắn + fade-in sprite) và dọn handle. Flat mode bỏ qua (renderer
-   * legacy giữ hành vi cũ).
+   * Reconcile telegraph spawn VFX theo SNAPSHOT (khong event tuc thoi):
+   * id moi -> tao handle; id con -> cap nhat progress; id MAT -> materialize
+   * (flash ngan + fade-in sprite) va don handle. Flat mode bo qua (renderer
+   * legacy giu hanh vi cu).
    */
   reconcileSpawnVfx(event: SpawnVfxSnapshot) {
     if (!this.scene.isPerspective) {
@@ -479,9 +479,9 @@ export class CombatVfxSpawner {
   }
 
   /**
-   * Reconcile telegraph spawn của PLAYER theo SNAPSHOT (plan §12.2).
-   * Flat mode vẫn chạy visibility (ẩn/hiện sprite) nhưng bỏ VFX telegraph
-   * như enemy spawn.
+   * Reconcile telegraph spawn cua PLAYER theo SNAPSHOT (plan sec12.2).
+   * Flat mode van chay visibility (an/hien sprite) nhung bo VFX telegraph
+   * nhu enemy spawn.
    */
   reconcilePlayerSpawn(event: BattlePositionsEvent) {
     const sprite = this.scene.sprites.get(PLAYER_ID)
@@ -489,7 +489,7 @@ export class CombatVfxSpawner {
     if (!event.playerMaterialized) {
       this.scene.entityVisual.hidePlayer(sprite)
 
-      // Telegraph tại projected cell (4,1) — chỉ perspective vẽ VFX.
+      // Telegraph tai projected cell (4,1) - chi perspective ve VFX.
       if (this.scene.isPerspective && event.playerSpawn && this.scene.projection) {
         if (!this.scene.playerSpawnHandle) {
           this.scene.playerSpawnHandle = spawnEnemySpawnVfx({
@@ -513,7 +513,7 @@ export class CombatVfxSpawner {
       return
     }
 
-    // Materialize: kết thúc telegraph rồi hiện sprite (loại trừ nhau).
+    // Materialize: ket thuc telegraph roi hien sprite (loai tru nhau).
     this.scene.playerSpawnHandle?.complete()
     this.scene.playerSpawnHandle = undefined
 
@@ -521,9 +521,9 @@ export class CombatVfxSpawner {
   }
 
   /**
-   * Debug mode (plan §5.4) — dev-only, bật qua
-   * localStorage['debug.playerBodyAnchors']='1'; vẽ chấm màu tại từng
-   * body anchor mỗi frame. Không có UI production nào đụng tới.
+   * Debug mode (plan sec5.4) - dev-only, bat qua
+   * localStorage['debug.playerBodyAnchors']='1'; ve cham mau tai tung
+   * body anchor moi frame. Khong co UI production nao dung toi.
    */
   drawDebugBodyAnchors() {
     if (!this.scene.debugBodyAnchorsEnabled) {

@@ -1,8 +1,8 @@
-// ThanhVanArt — the Phaser-side facts about the battlefield backdrop: the
+// ThanhVanArt - the Phaser-side facts about the battlefield backdrop: the
 // explicit DEPTH of each layer, and the time-of-day tint laid over the stack.
 //
-// The art itself — which variant is showing, its texture keys, its load list —
-// moved to `presentation/background/ThanhVanBackdropArt.ts` (§5.4, 2026-09-11),
+// The art itself - which variant is showing, its texture keys, its load list -
+// moved to `presentation/background/ThanhVanBackdropArt.ts` (sec5.4, 2026-09-11),
 // because the static layer was already reading it across the boundary. What
 // remains here is display-list ordering and a canvas tint, which only a scene
 // calls and which mean nothing to the DOM.
@@ -39,12 +39,12 @@ export {
 } from '@/presentation/background/ThanhVanBackdropArt'
 
 /**
- * Depth tường minh THEO TEXTURE KEY (yêu cầu 2026-08-26 — hết dựa vào
+ * Depth tuong minh THEO TEXTURE KEY (yeu cau 2026-08-26 - het dua vao
  * insertion order): sky < far mountains < midground < atmosphere
- * < battle ground < foreground left/right; grading thời gian nằm TRÊN
- * cùng (DEPTH_THANH_VAN_TIME_GRADE). Mọi depth background đều nhỏ hơn
- * DEPTH_GROUND_GRID. Lưu ý atmosphere DƯỚI battle ground (art sương/mưa
- * phải bị mặt đất che phần thấp) và foreground TRÊN battle ground.
+ * < battle ground < foreground left/right; grading thoi gian nam TREN
+ * cung (DEPTH_THANH_VAN_TIME_GRADE). Moi depth background deu nho hon
+ * DEPTH_GROUND_GRID. Luu y atmosphere DUOI battle ground (art suong/mua
+ * phai bi mat dat che phan thap) va foreground TREN battle ground.
  */
 export function thanhVanLayerDepth(textureKey: string): number {
   if (textureKey.endsWith('-sky')) {
@@ -71,13 +71,13 @@ export function thanhVanLayerDepth(textureKey: string): number {
     return DEPTH_BACKGROUND_FOREGROUND
   }
 
-  // Key lạ — về đáy stack để không đè lên grid/entity.
+  // Key la - ve day stack de khong de len grid/entity.
   return DEPTH_BACKGROUND
 }
 
 /**
- * Grading nhẹ theo giờ (README modular §"Suggested runtime grading") —
- * phủ một lớp màu mờ TRÊN cùng stack; undefined = không grading thêm.
+ * Grading nhe theo gio (README modular sec"Suggested runtime grading") -
+ * phu mot lop mau mo TREN cung stack; undefined = khong grading them.
  */
 export function thanhVanTimeGrade(time: ThanhVanTime): { color: number; alpha: number } | undefined {
   switch (time) {

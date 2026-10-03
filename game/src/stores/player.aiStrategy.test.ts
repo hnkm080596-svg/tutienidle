@@ -3,8 +3,8 @@ import { createPinia, setActivePinia } from 'pinia'
 import { usePlayerStore } from './player'
 import type { GameSave } from '../services/save/SaveSystem'
 
-// Combat AI strategy save/restore (plan §10): PlayerData là authority;
-// restore validate — save thiếu field hoặc giá trị sai dùng 'nearest'.
+// Combat AI strategy save/restore (plan sec10): PlayerData la authority;
+// restore validate - save thieu field hoac gia tri sai dung 'nearest'.
 function buildMinimalSave(playerOverrides: Record<string, unknown>): GameSave {
   const base = {
     name: 'Test',

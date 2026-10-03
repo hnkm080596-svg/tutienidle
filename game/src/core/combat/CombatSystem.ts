@@ -20,11 +20,11 @@ import type { BuffDefinitionId } from '../battle/contracts/ids'
 import type { ActiveCapabilityGrant } from '../battle/contracts/capability'
 import type { CombatAuthorityExecutionContext } from '../battle/contracts/context'
 
-// Plans/magicpathgeneral Phase 9 (2026-08-21) — DOT RES is a
+// Plans/magicpathgeneral Phase 9 (2026-08-21) - DOT RES is a
 // "*Percent" stat (fraction 0..1, same scale as ailmentResistPercent/
 // ailmentPotencyPercent...), NOT the "Rating" (net/100) scale of
 // Resistance.ts's getResistanceMitigationPercent() (used for the 5
-// element Power/Resistance/Penetration stats) — do not reuse that
+// element Power/Resistance/Penetration stats) - do not reuse that
 // helper here or the scale drifts.
 const DOT_RESISTANCE_CAP = 0.75
 const DOT_RESISTANCE_FLOOR = -1
@@ -89,14 +89,14 @@ export interface SurviveLethalSource {
 export class CombatSystem {
   readonly vitals: EntityVitalsSystem
 
-  // Thiên phú Bất Tử Thể (talent-direction-choice-plan §6) — session
-  // battle-scoped: id entity player + guard giữ lượt sống sót. null =
-  // không bảo vệ (trận Độ Kiếp, trận không có PlayerData, hoặc không có
-  // thiên phú). GameManager set/reset mỗi lần bắt đầu trận.
+  // Thien phu Bat Tu The (talent-direction-choice-plan sec6) - session
+  // battle-scoped: id entity player + guard giu luot song sot. null =
+  // khong bao ve (tran Do Kiep, tran khong co PlayerData, hoac khong co
+  // thien phu). GameManager set/reset moi lan bat dau tran.
   //
-  // v4 (spec 2026-09-03 §4.1): surviveEffects mở rộng cho Bất Tử Thể
-  // — khi guard cứu sống: tẩy debuff trên player + áp buff sống sót (mặc định Tử Sinh Ngộ).
-  // R4 (AR-18): SurviveEffectsPolicy là cấu hình declarative, không hardcode 'tu_sinh_ngo'.
+  // v4 (spec 2026-09-03 sec4.1): surviveEffects mo rong cho Bat Tu The
+  // - khi guard cuu song: tay debuff tren player + ap buff song sot (mac dinh Tu Sinh Ngo).
+  // R4 (AR-18): SurviveEffectsPolicy la cau hinh declarative, khong hardcode 'tu_sinh_ngo'.
   private surviveLethalSession: {
     playerEntityId: string
     guard: SurviveLethalGuard
@@ -120,7 +120,7 @@ export class CombatSystem {
    * shared per-GameManager, so the source is SETTABLE, never
    * constructor-frozen.
    */
-  // Lazy default — reads Math.random at each call so test spies still
+  // Lazy default - reads Math.random at each call so test spies still
   // intercept (matches TurnBattleSystem's rng convention).
   private randomSource: () => number = () => Math.random()
 
@@ -146,11 +146,11 @@ export class CombatSystem {
   }
 
   // finalDamagePercent/finalDamageReductionPercent (affix top-tier, thay
-  // Supreme Strength/Intelligence) — HIT-layer multiplier: dùng chung bởi
-  // resolveAttack() VÀ mọi damage phản hồi trực tiếp (ward-break,
-  // reaction) để affix này thật sự áp dụng xuyên suốt pipeline, không chỉ
-  // đòn đánh chính. KHÔNG áp cho DoT — dotResistancePercent là lớp giảm
-  // duy nhất của DoT (stat-system-reimagined Task 6, D13).
+  // Supreme Strength/Intelligence) - HIT-layer multiplier: dung chung boi
+  // resolveAttack() VA moi damage phan hoi truc tiep (ward-break,
+  // reaction) de affix nay that su ap dung xuyen suot pipeline, khong chi
+  // don danh chinh. KHONG ap cho DoT - dotResistancePercent la lop giam
+  // duy nhat cua DoT (stat-system-reimagined Task 6, D13).
   private finalDamageMultiplier(attacker: CombatEntity | undefined, defender: CombatEntity): number {
     return (1 + (attacker?.stats.finalDamagePercent ?? 0)) * (1 - clampStatValue('finalDamageReductionPercent', defender.stats.finalDamageReductionPercent))
   }
@@ -214,11 +214,11 @@ export class CombatSystem {
 
     const isCritical = options.critical !== undefined ? options.critical : this.rollCritical(source, target)
 
-    // R3 re-audit (AR-03 gap) — authored per-skill scaling (attributeScaling/
+    // R3 re-audit (AR-03 gap) - authored per-skill scaling (attributeScaling/
     // manaScalingRatio, carried on ActionDamageInfo.
     // scaling since the converter used to drop them) plus the general
     // skillDamagePercent stat (equipment/node), which previously
-    // had no live consumer in the turn engine at all — same formula
+    // had no live consumer in the turn engine at all - same formula
     // the deleted legacy executor used for the non-turn execution path.
     const scalingBonus = calculateScalingBonus(source, damage.scaling)
 
@@ -229,10 +229,10 @@ export class CombatSystem {
       (1 + clampStatValue('skillDamagePercent', source.stats.skillDamagePercent)) *
       getRealmPressureMultiplier(source, target)
 
-    // Chance to Ignore Resistance — roll 1 LẦN/đòn (khác Penetration phẳng,
-    // đây là "bỏ qua hoàn toàn" mitigation của đòn đó nếu trúng).
+    // Chance to Ignore Resistance - roll 1 LAN/don (khac Penetration phang,
+    // day la "bo qua hoan toan" mitigation cua don do neu trung).
     // Resolved armor policy (armorBypass/armorPierceFraction) comes from the
-    // caller — the calculator executes the already-rolled outcome.
+    // caller - the calculator executes the already-rolled outcome.
     const ignoreResistance =
       options.armorBypass === true ||
       this.randomSource() < clampStatValue('chanceToIgnoreResistance', source.stats.chanceToIgnoreResistance)
@@ -266,10 +266,10 @@ export class CombatSystem {
 
     const afterEndurance = applyEndurance(afterBlock, target.stats.enduranceThreshold, clampStatValue('endurancePercent', target.stats.endurancePercent))
 
-    // Floor "tối thiểu 1" áp trong resolveAttack() SAU finalDamageMultiplier
-    // (finalDamagePercent/finalDamageReductionPercent) — đòn bị giảm nhiều
-    // tầng vẫn luôn gây được ít nhất 1 sát thương, kể cả khi affix giảm
-    // sát thương cuối cùng kéo về dưới 1.
+    // Floor "toi thieu 1" ap trong resolveAttack() SAU finalDamageMultiplier
+    // (finalDamagePercent/finalDamageReductionPercent) - don bi giam nhieu
+    // tang van luon gay duoc it nhat 1 sat thuong, ke ca khi affix giam
+    // sat thuong cuoi cung keo ve duoi 1.
     const finalDamage = afterEndurance
 
     const result: DamageResult = {
@@ -284,7 +284,7 @@ export class CombatSystem {
       hpDamage: 0,
 
       // resolveAttack() overwrites with the real outcome once the absorb
-      // layers run — 'taken' is only the pre-absorb placeholder.
+      // layers run - 'taken' is only the pre-absorb placeholder.
       outcome: 'taken',
 
       damageType: damage.kind,
@@ -302,7 +302,7 @@ export class CombatSystem {
       manaShieldAbsorbed: 0,
 
       // Settled AFTER ward/MP-shield absorb, HP apply and
-      // SurviveLethalGuard inside resolveAttack() — predicting it here
+      // SurviveLethalGuard inside resolveAttack() - predicting it here
       // (pre-multiplier, pre-absorb) lies on both directions.
       targetKilled: false,
     }
@@ -315,8 +315,8 @@ export class CombatSystem {
   }
 
   // Block hard cap 90% (2026-09-01, T5.5): soft cap 0.75 (StatMetadata)
-  // chặn stat cộng dồn từ affix/talent; buff tạm có thể vượt soft cap
-  // nhưng KHÔNG BAO GIỜ vượt 0.90 tại điểm roll — chặn "bất tử chặn đòn".
+  // chan stat cong don tu affix/talent; buff tam co the vuot soft cap
+  // nhung KHONG BAO GIO vuot 0.90 tai diem roll - chan "bat tu chan don".
   private static readonly BLOCK_HARD_CAP = 0.9
 
   private rollBlock(target: CombatEntity): boolean {
@@ -396,8 +396,8 @@ export class CombatSystem {
     blocked: boolean,
   ) {
     const targetBefore = { hp: target.currentHp, ward: target.currentWard, mp: target.currentMp }
-    // Floor "tối thiểu 1" áp SAU finalDamageMultiplier (xem resolveActionHit)
-    // — mọi đòn trúng đích luôn gây ít nhất 1 sát thương.
+    // Floor "toi thieu 1" ap SAU finalDamageMultiplier (xem resolveActionHit)
+    // - moi don trung dich luon gay it nhat 1 sat thuong.
     result.finalDamage = Math.max(1, result.finalDamage * this.finalDamageMultiplier(source, target))
 
     // Phap Tu Reimagined (spec D9, F11) - Linh Luc Ho The: DR on the
@@ -451,13 +451,13 @@ export class CombatSystem {
       targetId: target.id,
     })
 
-    // Pháp Tu (Thổ Tu, 2026-08-15) — reset đồng hồ "chưa bị đánh" MỖI
-    // LẦN thật sự trúng đòn (kể cả khi bị block/không có ward) —
-    // wardRegenPerTurn chỉ hồi sau khi mốc này đủ lâu, xem
+    // Phap Tu (Tho Tu, 2026-08-15) - reset dong ho "chua bi danh" MOI
+    // LAN that su trung don (ke ca khi bi block/khong co ward) -
+    // wardRegenPerTurn chi hoi sau khi moc nay du lau, xem
     // BattleSystem.updateRegen().
     target.turnsSinceLastHitLanded = 0
 
-    // The Tu Reimagined (plan Task 11, D3) — external ward absorbs
+    // The Tu Reimagined (plan Task 11, D3) - external ward absorbs
     // FIRST: the source-tagged, protection-only pool takes the hit
     // before the native ward. result.wardAbsorbed keeps the TOTAL for
     // the existing events/UI; externalWardAbsorbed splits the new layer.
@@ -472,8 +472,8 @@ export class CombatSystem {
       }
     }
 
-    // Ward hấp thụ TRƯỚC currentHp — phần dư (nếu ward không đủ hoặc
-    // không có) mới thật sự trừ máu.
+    // Ward hap thu TRUOC currentHp - phan du (neu ward khong du hoac
+    // khong co) moi that su tru mau.
     const remainingAfterExternal = result.finalDamage - externalWardAbsorbed
     const nativeWardAbsorbed = Math.min(target.currentWard, remainingAfterExternal)
 
@@ -483,11 +483,11 @@ export class CombatSystem {
 
     let hpDamage = remainingAfterExternal - nativeWardAbsorbed
 
-    // Pháp Tu Redesign (magicpath) — Mana Shield: SAU Ward, TRƯỚC HP.
-    // % phần damage CÒN LẠI (không phải finalDamage gốc — Ward đã che
-    // bớt trước) được đẩy sang mana, quy đổi 1:1, PHẦN MANA KHÔNG ĐỦ
-    // CHE thì tràn ngược lại HP (không "ăn free" khi cạn mana, đúng
-    // yêu cầu "sát thương giảm sẽ đánh đổi bằng mana").
+    // Phap Tu Redesign (magicpath) - Mana Shield: SAU Ward, TRUOC HP.
+    // % phan damage CON LAI (khong phai finalDamage goc - Ward da che
+    // bot truoc) duoc day sang mana, quy doi 1:1, PHAN MANA KHONG DU
+    // CHE thi tran nguoc lai HP (khong "an free" khi can mana, dung
+    // yeu cau "sat thuong giam se danh doi bang mana").
     const manaShieldPortion = hpDamage * clampStatValue('manaShieldPercent', target.stats.manaShieldPercent)
 
     const manaShieldAbsorbed = Math.min(manaShieldPortion, target.currentMp)
@@ -496,7 +496,7 @@ export class CombatSystem {
 
     hpDamage -= manaShieldAbsorbed
 
-    // D11 — hpDamage is the ACTUAL HP the target lost: the vitals
+    // D11 - hpDamage is the ACTUAL HP the target lost: the vitals
     // authority clamps at 0, so an overkill hit counts only the HP that
     // existed. The returned delta, not the pre-clamp amount, is what
     // leech/on-taken triggers scale on.
@@ -508,20 +508,20 @@ export class CombatSystem {
 
     result.manaShieldAbsorbed = manaShieldAbsorbed
 
-    // D5/D11 — hpDamage is the post-absorb truth: the hit "landed"
+    // D5/D11 - hpDamage is the post-absorb truth: the hit "landed"
     // either way (timer reset + hit event above), but only `taken`
     // (hpDamage > 0) may fire damage-proportional triggers below.
     result.hpDamage = actualHpDamage
 
     result.outcome = actualHpDamage > 0 ? 'taken' : 'absorbed'
 
-    // Nộ (rage) đã GỠ (spec 2026-08-29-kiem-the-kiem-y mục 5.4) —
-    // khối tích currentRage theo damage gây/nhận dỡ sạch.
+    // No (rage) da GO (spec 2026-08-29-kiem-the-kiem-y muc 5.4) -
+    // khoi tich currentRage theo damage gay/nhan do sach.
 
     // Explicit contract (review 2026-09-15): `value` stays the
     // pre-absorb impact (finalDamage); hpDamage/wardAbsorbed/
     // manaShieldAbsorbed carry the post-absorb truth. Presentation
-    // showing "HP lost" must read hpDamage — a fully absorbed hit shows
+    // showing "HP lost" must read hpDamage - a fully absorbed hit shows
     // no HP number.
     this.eventBus.emit('damage', {
       type: 'damage',
@@ -545,20 +545,20 @@ export class CombatSystem {
       critical,
     })
 
-    // Leech — damage-proportional trigger: fires only on `taken`
-    // (hpDamage > 0), scaled on the HP THẬT SỰ lost post-absorb (D11 —
+    // Leech - damage-proportional trigger: fires only on `taken`
+    // (hpDamage > 0), scaled on the HP THAT SU lost post-absorb (D11 -
     // a fully-warded hit feeds no leech, an overkill feeds only the HP
     // the target actually had).
     if (actualHpDamage > 0 && source.stats.leechPercent > 0 && source.alive) {
       this.applyHealing(source, actualHpDamage * clampStatValue('leechPercent', source.stats.leechPercent), source.id, 'leech')
     }
 
-    // Pháp Tu (Thổ Tu) — "Khiên Nổ": Ward VỪA hấp thụ xong VÀ vừa vỡ
-    // hẳn (currentWard chạm 0 sau đòn này) thì phản thêm 1 cục damage
-    // riêng vào NGUỒN, tỉ lệ theo wardMax (khiên càng lớn nổ càng
-    // đau). The Tu Reimagined (spec 2026-09-15 T12): generic thorns stat
-    // retired — ward-break is the surviving defender-side kickback.
-    // Task 11 — the gate reads the NATIVE component only: an
+    // Phap Tu (Tho Tu) - "Khien No": Ward VUA hap thu xong VA vua vo
+    // han (currentWard cham 0 sau don nay) thi phan them 1 cuc damage
+    // rieng vao NGUON, ti le theo wardMax (khien cang lon no cang
+    // dau). The Tu Reimagined (spec 2026-09-15 T12): generic thorns stat
+    // retired - ward-break is the surviving defender-side kickback.
+    // Task 11 - the gate reads the NATIVE component only: an
     // external-only absorb with currentWard already 0 never procs
     // ward break, and externalWard never feeds its wardMax-scaled
     // magnitude (it isn't the holder's own ward).
@@ -568,11 +568,11 @@ export class CombatSystem {
 
     this.killIfDead(target, source.id)
 
-    // targetKilled is only truthful now — absorb layers, the HP clamp
+    // targetKilled is only truthful now - absorb layers, the HP clamp
     // and SurviveLethalGuard have all run.
     result.targetKilled = !target.alive
 
-    // Ward-break kickback can kill the source — check it too; the
+    // Ward-break kickback can kill the source - check it too; the
     // target is the "killer" in that case.
     this.killIfDead(source, target.id)
 
@@ -610,7 +610,7 @@ export class CombatSystem {
 
     const mitigation = Math.min(DOT_RESISTANCE_CAP, Math.max(DOT_RESISTANCE_FLOOR, target.stats.dotResistancePercent))
 
-    // stat-system-reimagined Task 6 (D13/INV-4) — DoT is a closed
+    // stat-system-reimagined Task 6 (D13/INV-4) - DoT is a closed
     // economy: dotResistancePercent (minus authored penetration) is the
     // ONLY mitigation. finalDamageMultiplier (finalDamagePercent/
     // finalDamageReductionPercent) is a HIT-layer lever and does NOT
@@ -618,7 +618,7 @@ export class CombatSystem {
     const finalDamage = Math.max(0, rawDamage * (1 - mitigation))
 
     // hpDamage contract (review 2026-09-15): DoT has no absorb layers,
-    // but the 0-clamp still applies — an overkill tick reports only the
+    // but the 0-clamp still applies - an overkill tick reports only the
     // HP the target actually had.
     const actualHpDamage = this.vitals.applyDamage(target, finalDamage, 'dot', sourceId)
 
@@ -638,11 +638,11 @@ export class CombatSystem {
       effectId,
     })
 
-    // stat-system-reimagined Task 4 (D18) — authored DoT recovery: buff
+    // stat-system-reimagined Task 4 (D18) - authored DoT recovery: buff
     // effects of type 'dotRecovery' on the SOURCE heal it for a fraction
-    // of the damage THẬT SỰ đã trừ (sau DOT RES và HP clamp — overkill
+    // of the damage THAT SU da tru (sau DOT RES va HP clamp - overkill
     // ticks cannot recover more than the target lost). The element match
-    // is authored on the effect (Doc Can = 'wood'), not hardcoded here —
+    // is authored on the effect (Doc Can = 'wood'), not hardcoded here -
     // dead/absent sources recover nothing. Reason 'healing', not 'leech':
     // this is an authored recovery trigger that DOES scale with the
     // source's healingEffectivenessPercent, unlike damage-derived leech.
@@ -691,10 +691,10 @@ export class CombatSystem {
     // GameManager clears it when tribulation starts via
     // setSurviveLethalSession(null)).
     //
-    // The Tu Reimagined (plan Task 9, D9) — the session's ordered
+    // The Tu Reimagined (plan Task 9, D9) - the session's ordered
     // extraSources run BEFORE the talent guard: Bat Tu Ba The's ultimate
     // is the first line; the talent charge is the extra life once the
-    // ult is spent/on cooldown. Each source returns a result object —
+    // ult is spent/on cooldown. Each source returns a result object -
     // HP=1 plus an OPTIONAL buff grant (a free survive grants nothing,
     // so an active buff can never be refreshed by repeat lethals).
     const surviveSession = this.surviveLethalSession
@@ -705,11 +705,11 @@ export class CombatSystem {
       ) => {
         entity.currentHp = 1
 
-        // v4 (spec 2026-09-03 §4.1) — "độ thân cũng là độ tâm": tẩy mọi
-        // debuff đang bám trên player + áp buff sống sót. Chỉ chạy khi
-        // session mang surviveEffects (GameManager wiring set từ battle
-        // hiện tại — buff authority của PLAYER, không phải của địch).
-        // buff2 M4 — the wired lane owns the cleanse+grant mechanics;
+        // v4 (spec 2026-09-03 sec4.1) - "do than cung la do tam": tay moi
+        // debuff dang bam tren player + ap buff song sot. Chi chay khi
+        // session mang surviveEffects (GameManager wiring set tu battle
+        // hien tai - buff authority cua PLAYER, khong phai cua dich).
+        // buff2 M4 - the wired lane owns the cleanse+grant mechanics;
         // clearsCcOnApply resolves inside the buff2 apply itself.
         surviveSession.surviveEffects?.apply(
           entity,
@@ -721,10 +721,10 @@ export class CombatSystem {
           execCtx,
         )
 
-        // Event vitals của đòn damage (emit TRƯỚC killIfDead) đã mang
-        // killed = true vì HP chạm 0 — phát thêm event hiệu chỉnh SAU khi
-        // guard giữ lượt sống sót để consumer (HUD/scene) đọc trạng thái
-        // CUỐI là còn sống, không kẹt ở hình ảnh "đã chết".
+        // Event vitals cua don damage (emit TRUOC killIfDead) da mang
+        // killed = true vi HP cham 0 - phat them event hieu chinh SAU khi
+        // guard giu luot song sot de consumer (HUD/scene) doc trang thai
+        // CUOI la con song, khong ket o hinh anh "da chet".
         this.vitals.emitCurrent(entity, 'survive_lethal', 1, {
           hp: 0,
           ward: entity.currentWard,

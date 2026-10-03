@@ -54,8 +54,8 @@ describe('CloudSaveCoordinator', () => {
     expect(coordinator.getRevision()).toBe(5)
   })
 
-  // Fix (2026-08-24) — conflict không còn terminal: coordinator re-sync
-  // revision mới nhất rồi retry đúng một lần.
+  // Fix (2026-08-24) - conflict khong con terminal: coordinator re-sync
+  // revision moi nhat roi retry dung mot lan.
   it('recovers from conflict by re-syncing the latest revision and retrying once', async () => {
     const { service, writes } = mockService(
       [
@@ -110,7 +110,7 @@ describe('CloudSaveCoordinator', () => {
 
     expect(result.status).toBe('conflict')
     expect(writes).toEqual([4, 0])
-    // Revision đã được nạp lại từ storage — autosave kế tiếp sẽ dùng giá trị đúng.
+    // Revision da duoc nap lai tu storage - autosave ke tiep se dung gia tri dung.
     expect(coordinator.getRevision()).toBe(0)
   })
 

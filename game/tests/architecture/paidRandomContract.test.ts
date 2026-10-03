@@ -1,5 +1,5 @@
 /**
- * R14 / R9 (AR-21) guard — paid random results require a domain-owned
+ * R14 / R9 (AR-21) guard - paid random results require a domain-owned
  * capability (ticket) and the commit path can never trust caller-supplied
  * outcomes.
  *
@@ -7,7 +7,7 @@
  *  - previewWashAffixes() pays the cost, rolls, and stores the result in a
  *    single domain-owned pending slot, returning only a ticketId.
  *  - commitWashAffixes() CONSUMES the ticket on every attempt and applies
- *    the domain-held affixes — never caller data.
+ *    the domain-held affixes - never caller data.
  *  - getWashPreviewAffixes() hands the UI a display copy.
  *  - The refine pending preview is EquipmentSystem instance state.
  *
@@ -18,7 +18,7 @@
  * affixes array).
  *
  * Regression class: a paid preview result that presentation can invent,
- * replay, or mutate — the exact failure mode AR-21 / QA-R9-001 fixed.
+ * replay, or mutate - the exact failure mode AR-21 / QA-R9-001 fixed.
  */
 import { describe, expect, it } from 'vitest'
 import { join } from 'node:path'

@@ -55,7 +55,7 @@ export function collectHiddenBodyMechanicModifiers(
   for (const node of registry.getAll()) {
     const level = getNodeLevel(player, node.id)
 
-    // Same ownership gate as collectBodyKitModifiers — nodePathApplies
+    // Same ownership gate as collectBodyKitModifiers - nodePathApplies
     // is the single authority; callers must not be trusted to pre-filter.
     // M3: the way-membership gate rides the same line.
     if (level <= 0 || !nodePathApplies(player, node) || !nodeWayApplies(player, node)) {

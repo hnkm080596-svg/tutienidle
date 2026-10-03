@@ -7,11 +7,11 @@ import {
   TEST_EQUIPMENT_TEMPLATE,
 } from './battleLootTestSetup'
 
-// Scale thưởng theo cảnh giới stage (balance playtest 2026-08-28) — Trúc Cơ
-// tái sử dụng enemyPool Luyện Khí nên nhân thưởng ×3 để thu nhập không khựng.
-// Drop-system (2026-09-12): currency giờ đến từ STAGE DROP TABLE qua
-// resolveDrops — enemy.rewards không còn là bảng thưởng. Hệ số realm/talent
-// giữ nguyên vị trí: nhân SAU hệ số modifier của resolver (spec §1.6).
+// Scale thuong theo canh gioi stage (balance playtest 2026-08-28) - Truc Co
+// tai su dung enemyPool Luyen Khi nen nhan thuong x3 de thu nhap khong khung.
+// Drop-system (2026-09-12): currency gio den tu STAGE DROP TABLE qua
+// resolveDrops - enemy.rewards khong con la bang thuong. He so realm/talent
+// giu nguyen vi tri: nhan SAU he so modifier cua resolver (spec sec1.6).
 const PILL = { id: 'pill_grade_drop', name: 'Đan Phẩm', grade: 'tien', icon: undefined }
 
 describe('getRealmRewardMultiplier', () => {
@@ -33,7 +33,7 @@ describe('BattleLootSystem — realm reward scaling', () => {
   })
 
   it('Luyện Khí ×1 — currency stage-table đi nguyên qua', () => {
-    // rng 0: mọi amount roll về min — qi_refining table: 8 thạch / 35 cảm ngộ.
+    // rng 0: moi amount roll ve min - qi_refining table: 8 thach / 35 cam ngo.
     vi.spyOn(Math, 'random').mockReturnValue(0)
     const { killEnemy, giveReward, loot, gainMastery } = createLootTestSetup({
       realmId: 'qi_refining',
@@ -51,7 +51,7 @@ describe('BattleLootSystem — realm reward scaling', () => {
   })
 
   it('Trúc Cơ ×3 — currency stage-table nhân 3', () => {
-    // rng 0 -> foundation table min: 25 thạch / 90 cảm ngộ, sau ×3.
+    // rng 0 -> foundation table min: 25 thach / 90 cam ngo, sau x3.
     vi.spyOn(Math, 'random').mockReturnValue(0)
     const { killEnemy, giveReward, loot, gainMastery } = createLootTestSetup({
       realmId: 'foundation_establishment',
@@ -76,7 +76,7 @@ describe('BattleLootSystem — realm reward scaling', () => {
 
     killEnemy()
 
-    // Tụ Bảo retired — chỉ còn realm ×3, đúng hành vi "save cũ an toàn".
+    // Tu Bao retired - chi con realm x3, dung hanh vi "save cu an toan".
     expect(giveReward.mock.calls[0]?.[1]).toMatchObject({ spiritStone: 75 })
     loot.settleTechniqueMastery()
     expect(gainMastery).toHaveBeenCalledWith(270, 'mortal', 1)
@@ -99,7 +99,7 @@ describe('BattleLootSystem — realm reward scaling', () => {
   })
 
   it('Trúc Cơ — hệ số áp lên giá trị resolver trả về (mid-range)', () => {
-    // rng 0.5 -> spiritStone floor(0.5*11)+25 = 30, ×3 = 90.
+    // rng 0.5 -> spiritStone floor(0.5*11)+25 = 30, x3 = 90.
     vi.spyOn(Math, 'random').mockReturnValue(0.5)
     const { killEnemy, giveReward, loot, gainMastery } = createLootTestSetup({
       realmId: 'foundation_establishment',
@@ -114,8 +114,8 @@ describe('BattleLootSystem — realm reward scaling', () => {
   })
 
   it('equipment rơi qua pool draw dùng quality cho particle và rank accent', () => {
-    // rng 0.8: guaranteed tinh_hoa (0.7) trượt; pool roll 0.8*35=28 ->
-    // qua base_kiem (15) -> equipment_any -> rút template từ registry.
+    // rng 0.8: guaranteed tinh_hoa (0.7) truot; pool roll 0.8*35=28 ->
+    // qua base_kiem (15) -> equipment_any -> rut template tu registry.
     vi.spyOn(Math, 'random').mockReturnValue(0.8)
     const { killEnemy, equipmentBag, eventBus, notifications, createInstance } =
       createLootTestSetup({

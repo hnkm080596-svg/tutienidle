@@ -1,13 +1,13 @@
 // @vitest-environment jsdom
-// Task 19 (item-grade-quality-rework, rework P6) — DissolveTab extracted
+// Task 19 (item-grade-quality-rework, rework P6) - DissolveTab extracted
 // from EquipmentHallPanel.test.ts. Fully self-contained (own multi-select,
 // no HALL_SELECTION_KEY needed).
 //
-// The old "cả hai filter bridge đọc trục quality đã hợp nhất" test
-// documented a KNOWN TEMPORARY bridge (its own comment: "Task 19 sẽ hợp
-// nhất UI/filter contract") — 3 dropdowns where 2 secretly read the same
+// The old "ca hai filter bridge doc truc quality da hop nhat" test
+// documented a KNOWN TEMPORARY bridge (its own comment: "Task 19 se hop
+// nhat UI/filter contract") - 3 dropdowns where 2 secretly read the same
 // ITEM_QUALITY-aliased axis. Task 19 replaces it with the real 2-dropdown
-// contract (grade = ProfessionGrade axis, Chất = merged ITEM_QUALITY
+// contract (grade = ProfessionGrade axis, Chat = merged ITEM_QUALITY
 // dropdown), so this file replaces that test with coverage of the new
 // contract rather than moving it verbatim.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -44,8 +44,8 @@ function equipmentInstance(instanceId: string, equipped: boolean): EquipmentInst
   })
 }
 
-/** Instance với itemId tuỳ ý — registry miss (save lệch data, audit fix
- * 2026-08-31): candidate vẫn phải liệt kê, không throw. */
+/** Instance voi itemId tuy y - registry miss (save lech data, audit fix
+ * 2026-08-31): candidate van phai liet ke, khong throw. */
 function equipmentInstanceWithItemId(
   instanceId: string,
   itemId: string,
@@ -58,7 +58,7 @@ function equipmentInstanceWithItemId(
   return instance
 }
 
-/** Instance với quality tùy ý — dùng test dropdown Chất (merged). */
+/** Instance voi quality tuy y - dung test dropdown Chat (merged). */
 function equipmentInstanceWithQuality(
   instanceId: string,
   quality: EquipmentInstance['quality'],
@@ -72,7 +72,7 @@ function equipmentInstanceWithQuality(
   return instance
 }
 
-/** Instance với grade (ProfessionGrade) tùy ý — dùng test dropdown Phẩm. */
+/** Instance voi grade (ProfessionGrade) tuy y - dung test dropdown Pham. */
 function equipmentInstanceWithProfessionGrade(
   instanceId: string,
   grade: ProfessionGrade,
@@ -108,7 +108,7 @@ function mountTab(prepare?: (manager: GameManager) => void) {
   return { container, manager, unmount: () => app.unmount() }
 }
 
-// jsdom không có ResizeObserver — usePanelPagination tạo observer khi
+// jsdom khong co ResizeObserver - usePanelPagination tao observer khi
 // container render; stub theo pattern InventorySort.test.ts.
 beforeEach(() => {
   window.ResizeObserver = window.ResizeObserver || (class {
@@ -128,10 +128,10 @@ afterEach(() => {
 describe('DissolveTab — Hóa Luyện', () => {
   it('itemId lạ (registry miss) ở đồ trong túi không chết tab Hóa Luyện — ứng viên vẫn liệt kê', async () => {
     const mounted = mountTab((manager) => {
-      // jsdom không có ResizeObserver → contentRect chưa đo được →
-      // usePanelPagination dùng FALLBACK_ROWS_WHEN_UNMEASURED (6 hàng);
-      // bỏ fixture 'in-bag' để ghost là ứng viên DUY NHẤT, chắc chắn nằm
-      // trong trang đầu bất kể pageSize thật là bao nhiêu.
+      // jsdom khong co ResizeObserver -> contentRect chua do duoc ->
+      // usePanelPagination dung FALLBACK_ROWS_WHEN_UNMEASURED (6 hang);
+      // bo fixture 'in-bag' de ghost la ung vien DUY NHAT, chac chan nam
+      // trong trang dau bat ke pageSize that la bao nhieu.
       manager.equipmentBag.remove('in-bag')
       manager.equipmentBag.add(equipmentInstanceWithItemId('ghost-bag', 'nonexistent_item', false))
     })
@@ -161,7 +161,7 @@ describe('DissolveTab — Hóa Luyện', () => {
       '.dissolve-filters select:nth-of-type(1)',
     )!
 
-    expect(gradeSelect.options.length).toBe(11) // 10 phẩm + "Mọi phẩm"
+    expect(gradeSelect.options.length).toBe(11) // 10 pham + "Moi pham"
 
     mounted.unmount()
   })
@@ -184,8 +184,8 @@ describe('DissolveTab — Hóa Luyện', () => {
     let visible = mounted.container.querySelectorAll('.dissolve-slot-wrap .slot-view')
     expect(visible).toHaveLength(1)
 
-    // Reset phẩm, lọc theo Chất thay vào đó — 2 fixture đều 'hoang' nên
-    // vẫn khớp cả 2; đổi 1 fixture sang 'dia' để kiểm tra thu hẹp.
+    // Reset pham, loc theo Chat thay vao do - 2 fixture deu 'hoang' nen
+    // van khop ca 2; doi 1 fixture sang 'dia' de kiem tra thu hep.
     gradeSelect.value = 'any'
     gradeSelect.dispatchEvent(new Event('change'))
 
@@ -202,7 +202,7 @@ describe('DissolveTab — Hóa Luyện', () => {
     visible = mounted.container.querySelectorAll('.dissolve-slot-wrap .slot-view')
     expect(visible).toHaveLength(1)
 
-    // Phẩm + Chất mâu thuẫn thì không còn ứng viên (giao rỗng).
+    // Pham + Chat mau thuan thi khong con ung vien (giao rong).
     gradeSelect.value = 'cuu_pham'
     gradeSelect.dispatchEvent(new Event('change'))
     await nextTick()
@@ -213,9 +213,9 @@ describe('DissolveTab — Hóa Luyện', () => {
   })
 
   it('món KHÔNG khớp phẩm cảnh giới hiện tại (canUseItemGrade) được đánh dấu mờ (hint, KHÔNG bị ẩn)', async () => {
-    // Player mặc định realmId 'mortal' → phẩm nghề 'cuu_pham'. Món
-    // 'luc_pham' không khớp nhưng vẫn phải liệt kê (Hóa Luyện không cần
-    // dùng được món mới thao tác được) — chỉ là hint trực quan.
+    // Player mac dinh realmId 'mortal' -> pham nghe 'cuu_pham'. Mon
+    // 'luc_pham' khong khop nhung van phai liet ke (Hoa Luyen khong can
+    // dung duoc mon moi thao tac duoc) - chi la hint truc quan.
     const mounted = mountTab((manager) => {
       manager.equipmentBag.remove('in-bag')
       manager.equipmentBag.add(equipmentInstanceWithProfessionGrade('mismatch', 'luc_pham'))

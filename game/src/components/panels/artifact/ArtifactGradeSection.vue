@@ -1,6 +1,6 @@
 <script setup lang="ts">
-// Bản Mệnh Pháp Bảo — vùng 3 (doc §12.1): phẩm, bonus, số Đoán Bảo
-// Thạch, chi phí, nút Nâng Phẩm.
+// Ban Menh Phap Bao - vung 3 (doc sec12.1): pham, bonus, so Doan Bao
+// Thach, chi phi, nut Nang Pham.
 import { computed } from 'vue'
 import { formatNumber } from '@/core/format/NumberFormatter'
 import GameButton from '@/components/common/GameButton.vue'

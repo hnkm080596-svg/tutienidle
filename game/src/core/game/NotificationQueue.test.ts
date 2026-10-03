@@ -6,8 +6,8 @@ import type { Skill } from '../skill/Skill'
 import { createDefaultPlayer } from '../player/Player'
 import { i18n } from '../../i18n'
 
-// Hàng đợi toast trong core — drain kiểu "rút hết và xoá" để App.vue's
-// tick() đẩy lên store mỗi frame (xem NotificationQueue.ts's ghi chú).
+// Hang doi toast trong core - drain kieu "rut het va xoa" de App.vue's
+// tick() day len store moi frame (xem NotificationQueue.ts's ghi chu).
 
 function lootEvent(itemId: string): NotificationEvent {
   return { kind: 'loot', message: `Nhặt được ${itemId}` }

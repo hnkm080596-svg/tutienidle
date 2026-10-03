@@ -1,10 +1,10 @@
-// Buff bar (2026-09-02) — tooltip canvas cho status icon: hover/tap icon
-// → panel 2 dòng (tên — màu polarity; stacks · thời gian). Một active
-// duy nhất; hideFor gắn theo statusInstanceId để onStatusRemoved đóng đúng.
-// Flexible rule: vị trí clamp trong viewport mỗi lần show.
-// Limitation đã chốt (spec §5): remainingTime là snapshot attach/update —
-// decay giữa 2 update không reflect vào tooltip đang mở. Phase A6 (9.5 #7):
-// giá trị giờ là số LƯỢT (turn engine feed), render "N lượt".
+// Buff bar (2026-09-02) - tooltip canvas cho status icon: hover/tap icon
+// -> panel 2 dong (ten - mau polarity; stacks * thoi gian). Mot active
+// duy nhat; hideFor gan theo statusInstanceId de onStatusRemoved dong dung.
+// Flexible rule: vi tri clamp trong viewport moi lan show.
+// Limitation da chot (spec sec5): remainingTime la snapshot attach/update -
+// decay giua 2 update khong reflect vao tooltip dang mo. Phase A6 (9.5 #7):
+// gia tri gio la so LUOT (turn engine feed), render "N luot".
 import Phaser from 'phaser'
 import { DEPTH_OVERLAY_UI } from '@/game/support/BattleLayers'
 

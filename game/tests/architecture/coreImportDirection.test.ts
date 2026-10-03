@@ -1,5 +1,5 @@
 /**
- * R14.1b guard (A6) — dependency direction for `src/core/**`.
+ * R14.1b guard (A6) - dependency direction for `src/core/**`.
  *
  * AGENTS.md A6: `foundation -> domain primitives -> mechanisms -> domain
  * systems -> orchestration -> presentation`; core gameplay stays
@@ -61,7 +61,7 @@ function resolveSpecifierToSrcPath(specifier: string, fromFile: string): string 
   if (specifier.startsWith('@/')) return join('src', specifier.slice(2))
   // Relative imports resolve against the IMPORTING FILE's directory
   // (not the core root): `../presentation/X` from core/game/ is
-  // core/presentation/X — still inside core, hence legal.
+  // core/presentation/X - still inside core, hence legal.
   if (specifier.startsWith('.')) {
     const abs = join(fromFile, '..', specifier)
     const rel = relative(GAME_ROOT, abs)
@@ -76,7 +76,7 @@ function checkFile(path: string): Violation[] {
   for (const spec of extractImportSpecifiers(source)) {
     // 1. Framework modules (exact module id; @vue/* submodules are
     // handled by the layer check only if they resolve into src/, which
-    // they never do — npm packages stay outside src/).
+    // they never do - npm packages stay outside src/).
     if ((FORBIDDEN_MODULES as readonly string[]).includes(spec)) {
       violations.push({ file: path, specifier: spec, rule: 'A6-framework' })
       continue
@@ -98,7 +98,7 @@ function checkFile(path: string): Violation[] {
 describe('R14.1b — A6: core never imports presentation/framework upward', () => {
   // A6 targets PRODUCTION core: the headless, framework-free invariant.
   // Core *.test.ts files may mount the real composition root (Pinia stores,
-  // vue) to characterize behavior through production wiring (A12) — e.g.
+  // vue) to characterize behavior through production wiring (A12) - e.g.
   // TribulationOutcomeService.test.ts needs the real player store because
   // writing absent optional keys on store.$state does not reflect (probe
   // evidence 2026-09-11). Exempt tests explicitly, production stays strict.

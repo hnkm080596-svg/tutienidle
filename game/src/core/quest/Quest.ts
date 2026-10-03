@@ -7,17 +7,17 @@ export interface CollectQuestCondition {
 
   materialId: string
 
-  // Số lượng phải đang sở hữu; bị TRỪ khỏi MaterialBag khi claim (turn-in).
+  // So luong phai dang so huu; bi TRU khoi MaterialBag khi claim (turn-in).
   amount: number
 }
 
 export interface KillQuestCondition {
   kind: 'kill'
 
-  // Bỏ trống = bất kỳ quái nào (trong zoneId nếu có).
+  // Bo trong = bat ky quai nao (trong zoneId neu co).
   enemyId?: string
 
-  // Bỏ trống = không giới hạn khu vực.
+  // Bo trong = khong gioi han khu vuc.
   zoneId?: string
 
   amount: number
@@ -74,7 +74,7 @@ export interface Quest {
 
   cadence: QuestCadence
 
-  // Gate theo cảnh giới, giống Stage/Building convention.
+  // Gate theo canh gioi, giong Stage/Building convention.
   requiredRealmId?: string
 
   // Chain admission gate: unlocked only once this quest id sits in

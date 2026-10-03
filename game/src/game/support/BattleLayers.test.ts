@@ -1,5 +1,5 @@
-// Depth sort entity — projected Y phải thắng tuyệt đối, column/id chỉ
-// phá hòa; cùng input cho cùng depth (không flicker giữa các frame).
+// Depth sort entity - projected Y phai thang tuyet doi, column/id chi
+// pha hoa; cung input cho cung depth (khong flicker giua cac frame).
 import { describe, expect, it } from 'vitest'
 import {
   DEPTH_ENTITY_SPRITE_BASE,
@@ -63,8 +63,8 @@ describe('uprightVfxDepth — occlusion 2.5D', () => {
   it('bias PHẢI lớn hơn toàn bộ dải ID tie-breaker (bất kể hash)', () => {
     expect(UPRIGHT_VFX_DEPTH_BIAS).toBeGreaterThan(ID_TIE_BREAKER_MAX)
 
-    // Property test: với MỌI entity id, effect cùng foot Y + column luôn
-    // phủ entity — không phụ thuộc may rủi hash của key.
+    // Property test: voi MOI entity id, effect cung foot Y + column luon
+    // phu entity - khong phu thuoc may rui hash cua key.
     const ids = ['enemy_a', 'enemy_b', 'boss_1', 'player', 'x', 'zz-99-đạo', '']
 
     for (const id of ids) {
@@ -76,7 +76,7 @@ describe('uprightVfxDepth — occlusion 2.5D', () => {
   })
 
   it('entity hàng GẦN hơn vẫn che được effect ở hàng sau', () => {
-    // Effect nổ ở hàng xa (foot 160); entity đứng gần camera (foot 460).
+    // Effect no o hang xa (foot 160); entity dung gan camera (foot 460).
     const vfxDepth = uprightVfxDepth(160, MIN, MAX, 8)
     const foregroundEntity = entitySpriteDepth(460, MIN, MAX, 0, 'enemy_near')
 

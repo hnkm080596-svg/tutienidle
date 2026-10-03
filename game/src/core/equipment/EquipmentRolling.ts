@@ -30,19 +30,19 @@ import {
   rollEligibleAffixAtTier,
 } from './EquipmentRollPrimitives'
 
-// Chỉ số chính scale thêm theo cảnh giới người chơi lúc rớt/tạo đồ
-// — quy đổi qua getGlobalCultivationLevel() (xuyên suốt 9 đại cảnh
-// giới) để đồ ở cảnh giới cao luôn mạnh hơn đồ cùng phẩm ở cảnh
-// giới thấp. (large-file-split: chuyển từ EquipmentSystem — sống cùng
-// pipeline roll vì chỉ rollMainStat + quoteMainStatRange dùng.)
+// Chi so chinh scale them theo canh gioi nguoi choi luc rot/tao do
+// - quy doi qua getGlobalCultivationLevel() (xuyen suot 9 dai canh
+// gioi) de do o canh gioi cao luon manh hon do cung pham o canh
+// gioi thap. (large-file-split: chuyen tu EquipmentSystem - song cung
+// pipeline roll vi chi rollMainStat + quoteMainStatRange dung.)
 export const MAIN_STAT_REALM_SCALE = 0.05
 
 /**
- * Roll 1 instance mới từ template. Grade theo realm của người chơi;
- * quality roll độc lập theo trọng số cố định và quyết định implicit,
- * số lượng/tier/pool substat cùng ngân sách Rèn.
+ * Roll 1 instance moi tu template. Grade theo realm cua nguoi choi;
+ * quality roll doc lap theo trong so co dinh va quyet dinh implicit,
+ * so luong/tier/pool substat cung ngan sach Ren.
  * (large-file-split: EquipmentSystem.createInstance() -> free function,
- * hành vi giữ NGUYÊN 1:1.)
+ * hanh vi giu NGUYEN 1:1.)
  */
 export function createEquipmentInstance(
   template: Equipment,
@@ -108,14 +108,14 @@ function rollItemQuality(): ItemQuality {
   )
 }
 
-// Roll trong miền số nguyên có scale để giữ được main stat dạng
-// tỉ lệ 0~1 (criticalRate/attackSpeed...) mà không làm tròn về 0.
+// Roll trong mien so nguyen co scale de giu duoc main stat dang
+// ti le 0~1 (criticalRate/attackSpeed...) ma khong lam tron ve 0.
 //
-// Equipment Rework — Quality scale RANGE trước khi roll (mục 6 kế
-// hoạch "Quality chỉ ảnh hưởng range, không cộng trực tiếp
-// multiplier"), Realm scale KẾT QUẢ sau khi roll — 2 trục nhân dồn
-// độc lập (Quality = tiềm năng của BẢN THÂN món đồ, Realm = sức
-// mạnh chung của người chơi lúc rớt đồ).
+// Equipment Rework - Quality scale RANGE truoc khi roll (muc 6 ke
+// hoach "Quality chi anh huong range, khong cong truc tiep
+// multiplier"), Realm scale KET QUA sau khi roll - 2 truc nhan don
+// doc lap (Quality = tiem nang cua BAN THAN mon do, Realm = suc
+// manh chung cua nguoi choi luc rot do).
 function rollMainStat(
   template: Equipment,
   grade: EquipmentInstance['grade'],
@@ -139,8 +139,8 @@ function rollMainStat(
   const scaled = base * (1 + globalLevel * MAIN_STAT_REALM_SCALE)
 
   return {
-    // id/sourceId ở đây chỉ là placeholder — applyModifiers() sẽ
-    // build lại modifier thật (id theo instanceId) khi equip.
+    // id/sourceId o day chi la placeholder - applyModifiers() se
+    // build lai modifier that (id theo instanceId) khi equip.
     id: `roll-main-${stat}`,
 
     sourceId: 'roll-main',
@@ -154,13 +154,13 @@ function rollMainStat(
 }
 
 /**
- * Roll số substat trong miền của quality; số lẻ ưu tiên prefix.
+ * Roll so substat trong mien cua quality; so le uu tien prefix.
  *
- * Equipment Rework mục 2 ("Exalted Affix") — quality cao nhất
- * (tien) có thêm ITEM_QUALITY_EXALTED_AFFIX_CHANCE cơ hội
- * roll 1 affix BONUS từ pool 'supreme' — bỏ qua giới hạn pool theo
- * Quality của chính item,
- * vẫn random hoàn toàn (không phải item cố định kiểu Unique cũ).
+ * Equipment Rework muc 2 ("Exalted Affix") - quality cao nhat
+ * (tien) co them ITEM_QUALITY_EXALTED_AFFIX_CHANCE co hoi
+ * roll 1 affix BONUS tu pool 'supreme' - bo qua gioi han pool theo
+ * Quality cua chinh item,
+ * van random hoan toan (khong phai item co dinh kieu Unique cu).
  */
 function rollAffixes(
   template: Equipment,
@@ -181,10 +181,10 @@ function rollAffixes(
 
   const unlockedPools = ITEM_QUALITY_UNLOCKED_POOLS[quality]
 
-  // Mảng dùng CHUNG, mutate qua từng lượt roll — đảm bảo prefix và
-  // suffix không bao giờ trùng STAT với nhau lẫn với Implicit
-  // (mainStat), giống hệt cách rollAdditionalSubstats cũ tránh
-  // trùng lặp.
+  // Mang dung CHUNG, mutate qua tung luot roll - dam bao prefix va
+  // suffix khong bao gio trung STAT voi nhau lan voi Implicit
+  // (mainStat), giong het cach rollAdditionalSubstats cu tranh
+  // trung lap.
   const excludeStats: StatType[] = [mainStat]
 
   // Resolve and reserve the compatible bonus before base rolls so a
@@ -258,12 +258,12 @@ function rollAffixesWithKindFallback(
 }
 
 /**
- * Roll 1 affix hợp lệ (đúng kind, đúng slot, đúng pool, chưa trùng
- * stat) — primitive dùng chung cho roll hàng loạt lúc tạo instance
- * (rollAffixesWithKindFallback) VÀ Tẩy
- * Luyện. Trả về null nếu không còn candidate hợp lệ. `maxTier` dùng
- * làm TRẦN roll được (Exalted Affix roll truyền trần cao nhất toàn
- * hệ thống để không tự giới hạn oan tier 4-5 của chính pool
+ * Roll 1 affix hop le (dung kind, dung slot, dung pool, chua trung
+ * stat) - primitive dung chung cho roll hang loat luc tao instance
+ * (rollAffixesWithKindFallback) VA Tay
+ * Luyen. Tra ve null neu khong con candidate hop le. `maxTier` dung
+ * lam TRAN roll duoc (Exalted Affix roll truyen tran cao nhat toan
+ * he thong de khong tu gioi han oan tier 4-5 cua chinh pool
  * supreme).
  */
 function rollEligibleAffix(

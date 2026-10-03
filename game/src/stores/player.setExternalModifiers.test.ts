@@ -3,11 +3,11 @@ import { createPinia, setActivePinia } from 'pinia'
 import { usePlayerStore } from './player'
 import type { StatModifier } from '@/core/stats/StatCalculator'
 
-// Task 5 (perf-optimize-pass, Phase 2) — dirty-check của
-// setExternalModifiers. App.vue gọi hàm này mỗi tick (10Hz) với mảng
-// MỚI; gán reference mới mỗi lần làm getter `finalStats` recompute vô
-// ích. Test này khóa CẢ HAI mặt: (a) bỏ qua khi nội dung trùng, (b)
-// KHÔNG bỏ sót thay đổi thật (kể cả khi nguồn mutate tại chỗ).
+// Task 5 (perf-optimize-pass, Phase 2) - dirty-check cua
+// setExternalModifiers. App.vue goi ham nay moi tick (10Hz) voi mang
+// MOI; gan reference moi moi lan lam getter `finalStats` recompute vo
+// ich. Test nay khoa CA HAI mat: (a) bo qua khi noi dung trung, (b)
+// KHONG bo sot thay doi that (ke ca khi nguon mutate tai cho).
 function attackModifier(id: string, flat: number): StatModifier {
   return {
     id,
@@ -33,7 +33,7 @@ describe('player store — setExternalModifiers dirty-check', () => {
 
     store.setExternalModifiers([attackModifier('buff:might', 42)])
 
-    // Reference mảng state không đổi → getter computed vẫn cache.
+    // Reference mang state khong doi -> getter computed van cache.
     expect(store.externalModifiers).toBe(appliedArray)
     expect(store.finalStats).toBe(statsBefore)
   })
@@ -49,7 +49,7 @@ describe('player store — setExternalModifiers dirty-check', () => {
 
     expect(store.finalStats.might).toBe(baseline + 1)
 
-    // Field không phải flat cũng phải phá chữ ký.
+    // Field khong phai flat cung phai pha chu ky.
     const withStacks: StatModifier = { ...attackModifier('buff:might', 43), stacks: 2 }
 
     store.setExternalModifiers([withStacks])
@@ -68,7 +68,7 @@ describe('player store — setExternalModifiers dirty-check', () => {
 
     expect(store.finalStats.might).toBe(before - 20)
 
-    // Đổi thứ tự (cùng số lượng, cùng tập entry) vẫn coi là khác.
+    // Doi thu tu (cung so luong, cung tap entry) van coi la khac.
     store.setExternalModifiers([attackModifier('a', 10), attackModifier('b', 20)])
 
     const applied = store.externalModifiers
@@ -81,8 +81,8 @@ describe('player store — setExternalModifiers dirty-check', () => {
   it('nguồn mutate TẠI CHỖ chính object modifier cũ → vẫn phát hiện (chữ ký snapshot theo giá trị)', () => {
     const store = usePlayerStore()
 
-    // Mô phỏng BuffSystem trả về CÙNG object mỗi tick rồi tự đổi giá trị
-    // bên trong — deep-compare với state sẽ bỏ sót vì hai bên cùng object.
+    // Mo phong BuffSystem tra ve CUNG object moi tick roi tu doi gia tri
+    // ben trong - deep-compare voi state se bo sot vi hai ben cung object.
     const shared = attackModifier('buff:might', 42)
 
     store.setExternalModifiers([shared])
@@ -106,7 +106,7 @@ describe('player store — setExternalModifiers dirty-check', () => {
 
     expect(() => store.finalStats.maxMp).toThrow(/gate violation/)
 
-    // Same fields, now carrying the owning domain — must NOT be
+    // Same fields, now carrying the owning domain - must NOT be
     // signature-equal (domain decides whether the gate delivers it);
     // a stale signature would keep the untagged array and still throw.
     store.setExternalModifiers([
@@ -123,12 +123,12 @@ describe('player store — setExternalModifiers dirty-check', () => {
 
     const withBuff = store.finalStats.might
 
-    // Ví dụ load save / reset: state thay mảng khác mà không qua action.
+    // Vi du load save / reset: state thay mang khac ma khong qua action.
     store.$patch({ externalModifiers: [] })
 
     expect(store.finalStats.might).toBeCloseTo(withBuff - 42, 6)
 
-    // Tick kế tiếp gửi lại ĐÚNG nội dung cũ — phải gán lại thật.
+    // Tick ke tiep gui lai DUNG noi dung cu - phai gan lai that.
     store.setExternalModifiers([attackModifier('buff:might', 42)])
 
     expect(store.finalStats.might).toBeCloseTo(withBuff, 6)

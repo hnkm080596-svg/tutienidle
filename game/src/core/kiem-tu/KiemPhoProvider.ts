@@ -12,11 +12,11 @@ import { getRealmIndex } from '../realm/realmSystem'
 import { KIEM_PHO_ORBS, unlockedOrbs } from '../../data/skill/KiemPhoOrbs'
 import { KIEM_PHO_COMBOS } from '../../data/skill/KiemPhoCombos'
 
-// Kiem Tu Reimagined Task 6 — the sword_pathway (Kiem Pho) DynamicBasicProvider.
+// Kiem Tu Reimagined Task 6 - the sword_pathway (Kiem Pho) DynamicBasicProvider.
 // Owns the battle-scoped matcher state (preset snapshot + cursor + log)
-// in closure — A3: never on PlayerData, never persisted. Auto-repeat
+// in closure - A3: never on PlayerData, never persisted. Auto-repeat
 // reuses participants, so resetForBattle() re-inits from the persisted
-// preset (spec §4.1: cursor starts at slot 1, log empty).
+// preset (spec sec4.1: cursor starts at slot 1, log empty).
 
 function isOrbId(skillId: string): skillId is OrbId {
   return skillId in KIEM_PHO_ORBS
@@ -32,7 +32,7 @@ function comboToExtraDef(combo: KiemPhoCombo, triggeringOrbId: string): TurnSkil
         // damage-bearing native channel.
         { kind: 'physical', multiplier: combo.damage.multiplier, levelScaling: 0.05 }
       : undefined,
-    // Spec §4.2 default: same target as the completing cast — 'single'
+    // Spec sec4.2 default: same target as the completing cast - 'single'
     // re-collects the deterministic primary target in applyExtraImpact.
     targeting: combo.targeting ?? { shape: 'single' },
     appliesBuffs: combo.appliesBuffs?.map((buff) => ({ ...buff })),
@@ -54,7 +54,7 @@ function comboToExtraDef(combo: KiemPhoCombo, triggeringOrbId: string): TurnSkil
 /**
  * Read-only peek handle for HUD bridges (Task 7): exposes a DETACHED
  * copy of the battle-runtime matcher state (preset snapshot, cursor,
- * log). Kept off the generic DynamicBasicProvider contract — content
+ * log). Kept off the generic DynamicBasicProvider contract - content
  * reads belong to the owning provider (A8).
  */
 export interface KiemPhoProviderHandle extends DynamicBasicProvider {
@@ -123,8 +123,8 @@ export function buildKiemPhoProvider(
       if (!isOrbId(defId)) return null
       const def = orbDef(defId)
       // Manual pick validates against realm-unlocked options only; the
-      // cast lands in the log via onCastResolved — the cursor does NOT
-      // advance (spec §4.1: resuming auto continues where it left off).
+      // cast lands in the log via onCastResolved - the cursor does NOT
+      // advance (spec sec4.1: resuming auto continues where it left off).
       return def !== undefined && manualDefs().includes(def) ? def : null
     },
 

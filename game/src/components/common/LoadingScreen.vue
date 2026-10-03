@@ -3,11 +3,11 @@ import { i18n } from '@/i18n'
 
 // Brand title via i18n.global.t (module composer - the component mounts
 // without the i18n plugin installed and still stays locale-reactive).
-// Beta Phase 4 (mục XVIII) — Boot → Load Save → Initialize → Home.
-// Boot hiện tại HOÀN TOÀN đồng bộ (không await gì) nên màn này chỉ
-// hiện trong khoảnh khắc rất ngắn trên thực tế — dựng đúng khung sườn
-// cho tài liệu yêu cầu, sẵn sàng nếu sau này có việc bất đồng bộ thật
-// (vd load save từ remote) xen vào mà không cần thiết kế lại UI.
+// Beta Phase 4 (muc XVIII) - Boot -> Load Save -> Initialize -> Home.
+// Boot hien tai HOAN TOAN dong bo (khong await gi) nen man nay chi
+// hien trong khoanh khac rat ngan tren thuc te - dung dung khung suon
+// cho tai lieu yeu cau, san sang neu sau nay co viec bat dong bo that
+// (vd load save tu remote) xen vao ma khong can thiet ke lai UI.
 </script>
 
 <template>
@@ -59,7 +59,7 @@ import { i18n } from '@/i18n'
   }
 }
 
-/* UI-006 (Task 4, 2026-09-07) — reduced motion: pulse đứng yên. */
+/* UI-006 (Task 4, 2026-09-07) - reduced motion: pulse dung yen. */
 @media (prefers-reduced-motion: reduce) {
   .loading-screen__pulse {
     animation: none;

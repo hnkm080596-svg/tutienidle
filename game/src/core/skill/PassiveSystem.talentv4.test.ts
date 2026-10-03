@@ -7,15 +7,15 @@ import type { SkillSystem } from './SkillSystem'
 import type { Skill } from './Skill'
 import type { StatModifier } from '../stats/StatCalculator'
 
-// E2 (spec talent v4 2026-09-03 §3.3) — PassiveSystem mở 2 nhánh cho
-// talent combat v4: passiveCondition (chỉ tích stack khi điều kiện HP
-// của player đúng — đọc qua hpReader closure) và passiveConvertsTo
-// (modifier chạm maxStacks → apply buff lên player qua buffApplier,
-// reset stack về 0 — nhịp "tích → ngưỡng → bùng nổ → tích lại").
+// E2 (spec talent v4 2026-09-03 sec3.3) - PassiveSystem mo 2 nhanh cho
+// talent combat v4: passiveCondition (chi tich stack khi dieu kien HP
+// cua player dung - doc qua hpReader closure) va passiveConvertsTo
+// (modifier cham maxStacks -> apply buff len player qua buffApplier,
+// reset stack ve 0 - nhip "tich -> nguong -> bung no -> tich lai").
 //
-// Fixture pattern: PassiveSystem nhận (eventBus, skillManager,
-// skillSystem) thật — eventBus thật để emit event, 2 manager còn lại
-// stub tối giản vì PassiveSystem chỉ gọi getPassiveSkills() +
+// Fixture pattern: PassiveSystem nhan (eventBus, skillManager,
+// skillSystem) that - eventBus that de emit event, 2 manager con lai
+// stub toi gian vi PassiveSystem chi goi getPassiveSkills() +
 // getEffectiveSkill().
 
 interface Harness {
@@ -93,12 +93,12 @@ describe('PassiveSystem — E2 passiveCondition + passiveConvertsTo (spec talent
     const event: CombatEventPayload = { type: 'damage', targetId: PLAYER_ID }
     bus.emit('damage', event)
 
-    // Chưa từng addStack → field stacks chưa được gán (undefined ≠ 0 là
-    // đúng ngữ nghĩa "không có stack nào được tích").
+    // Chua tung addStack -> field stacks chua duoc gan (undefined != 0 la
+    // dung ngu nghia "khong co stack nao duoc tich").
     expect(mod.stacks).toBeUndefined()
 
-    // hpRatio là closure — hạ HP bằng cách dựng harness thứ 2 với cùng
-    // modifier object (stacks vẫn 0 từ lần đầu).
+    // hpRatio la closure - ha HP bang cach dung harness thu 2 voi cung
+    // modifier object (stacks van 0 tu lan dau).
     const mod2 = modifier({ maxStacks: 10 })
     const low = makeHarness({
       skill: {
@@ -131,7 +131,7 @@ describe('PassiveSystem — E2 passiveCondition + passiveConvertsTo (spec talent
     expect(mod.stacks).toBe(2)
     expect(appliedBuffs).toEqual([])
 
-    // Lần thứ 3 — chạm maxStacks 3 → bùng nổ.
+    // Lan thu 3 - cham maxStacks 3 -> bung no.
     bus.emit('critical', event)
 
     expect(appliedBuffs).toEqual(['kiem_vuc'])
@@ -169,7 +169,7 @@ describe('PassiveSystem — E2 passiveCondition + passiveConvertsTo (spec talent
 
     system.tick(3)
 
-    // Điều kiện chặn trước khi tích — stacks chưa được gán lần nào.
+    // Dieu kien chan truoc khi tich - stacks chua duoc gan lan nao.
     expect(mod.stacks).toBeUndefined()
   })
 
@@ -201,9 +201,9 @@ describe('PassiveSystem — E2 passiveCondition + passiveConvertsTo (spec talent
       bus.emit('critical', { type: 'critical', sourceId: PLAYER_ID } satisfies CombatEventPayload)
     }).not.toThrow()
 
-    // Stack vẫn reset theo nhịp dù không có applier (kế hoạch: applier
-    // là đường apply buff thật; vắng applier thì bùng nổ bị bỏ qua nhưng
-    // stack reset — tránh tích kẹt vô hạn ở maxStacks).
+    // Stack van reset theo nhip du khong co applier (ke hoach: applier
+    // la duong apply buff that; vang applier thi bung no bi bo qua nhung
+    // stack reset - tranh tich ket vo han o maxStacks).
     expect(mod.stacks).toBe(0)
   })
 })

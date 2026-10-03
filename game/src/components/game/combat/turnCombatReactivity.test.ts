@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 //
-// ARCH-005 (M12) — real-engine HUD invalidation regression.
+// ARCH-005 (M12) - real-engine HUD invalidation regression.
 //
 // The 2026-09-14 Edge probe found the skill bar invisible in live combat:
 // TurnCombatSkillBar stayed `isBattleFighting:false` while the engine
@@ -9,7 +9,7 @@
 // to the same reference forever and derived projections never invalidate.
 //
 // This test mounts the REAL consumers (TurnCombatSkillBar + BattleLogPanel
-// + TurnOrderStrip) against a REAL GameManager + ManualClockSource — the
+// + TurnOrderStrip) against a REAL GameManager + ManualClockSource - the
 // same domain object, the same in-place mutations, the same shared
 // stateVersion bridge App.vue drives. It asserts:
 //   countdown/intro -> HUD hidden

@@ -11,8 +11,8 @@ import type { Building } from '@/core/building/Building'
 import type { Material } from '@/core/material/Material'
 import { i18n } from '@/i18n'
 
-// i18n (task 2.2 lô 3) — component render qua t() nên assertion qua
-// i18n.global.t(key) thay vì raw vi string (pattern HomeResourceStrip.test).
+// i18n (task 2.2 lo 3) - component render qua t() nen assertion qua
+// i18n.global.t(key) thay vi raw vi string (pattern HomeResourceStrip.test).
 function t(key: string, params?: Record<string, unknown>): string {
   return (i18n.global as unknown as { t: (k: string, p?: Record<string, unknown>) => string }).t(key, params)
 }
@@ -95,9 +95,9 @@ describe('FunctionOverlayPanel — building header và Chiêu Hiền Quán', () 
     const heading = mounted.container.querySelector<HTMLElement>('.overlay-panel__heading')!
     const actions = mounted.container.querySelector<HTMLElement>('.overlay-panel__header')!
 
-    // Tên công trình CHỈ hiện MỘT LẦN DUY NHẤT, trong chính title bar —
-    // không còn dải header con riêng bên dưới (BuildingPanelHeader.vue
-    // đã bị xoá hẳn, thay bằng slot #heading/#header-actions của
+    // Ten cong trinh CHI hien MOT LAN DUY NHAT, trong chinh title bar -
+    // khong con dai header con rieng ben duoi (BuildingPanelHeader.vue
+    // da bi xoa han, thay bang slot #heading/#header-actions cua
     // OverlayPanel qua useBuildingHeaderState).
     expect(mounted.container.querySelector('.building-panel-header')).toBeNull()
     expect(heading.querySelector('.building-heading__art')).not.toBeNull()

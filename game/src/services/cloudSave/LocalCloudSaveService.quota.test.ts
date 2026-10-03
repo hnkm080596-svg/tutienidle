@@ -14,8 +14,8 @@ import { createDefaultPlayer } from '../../core/player/Player'
 const SAVE_KEY = resolveSaveKey()
 const SAVE_REVISION_KEY = resolveRevisionKey()
 
-// Mock Storage.prototype.setItem có chọn lọc: chỉ throw khi key khớp,
-// các key khác vẫn ghi bình thường qua impl gốc.
+// Mock Storage.prototype.setItem co chon loc: chi throw khi key khop,
+// cac key khac van ghi binh thuong qua impl goc.
 function throwOnKey(keyToThrow: string): void {
   const original = Storage.prototype.setItem
   vi.spyOn(Storage.prototype, 'setItem').mockImplementation(
@@ -83,10 +83,10 @@ describe('LocalCloudSaveService.save — write fail trả unavailable (không th
   })
 })
 
-// 9.11 — thứ tự ghi phải là revision-first: SAVE_REVISION_KEY trước, SAVE_KEY
-// sau; save write fail → rollback revision + trả failure (không fabricate
-// success). Crash giữa 2 key giờ để lại revision mới + save cũ → CAS mismatch
-// → coordinator resync, an toàn hơn stale-revision.
+// 9.11 - thu tu ghi phai la revision-first: SAVE_REVISION_KEY truoc, SAVE_KEY
+// sau; save write fail -> rollback revision + tra failure (khong fabricate
+// success). Crash giua 2 key gio de lai revision moi + save cu -> CAS mismatch
+// -> coordinator resync, an toan hon stale-revision.
 describe('LocalCloudSaveService.save — revision-first ordering + rollback (9.11)', () => {
   beforeEach(() => localStorage.clear())
 

@@ -1,4 +1,4 @@
-// Mission A3 defense-in-depth — restore normalizes malformed slices so a
+// Mission A3 defense-in-depth - restore normalizes malformed slices so a
 // payload that somehow bypassed the shape validator cannot crash
 // getActive()/incrementProgress() with a TypeError downstream.
 import { describe, expect, it } from 'vitest'
@@ -118,7 +118,7 @@ describe('QuestManager.restore — canonicalization (Mission A review)', () => {
 
     const state = manager.getState()
 
-    // Canonical shape only — no __junk to self-replicate into the next
+    // Canonical shape only - no __junk to self-replicate into the next
     // buildGameSave() output.
     expect(state.active).toEqual([{ questId: 'q_ok', progress: 1, claimed: false }])
     expect(JSON.stringify(state.active)).not.toContain('__junk')

@@ -1,5 +1,5 @@
-﻿// R5 (AR-29) — CombatCastBar encapsulates its own private castBars map.
-// M13: cleanup-only now — the creation path (onCastStart/CastStartEvent)
+﻿// R5 (AR-29) - CombatCastBar encapsulates its own private castBars map.
+// M13: cleanup-only now - the creation path (onCastStart/CastStartEvent)
 // was retired with the legacy 'cast'/'cast_start' producers; what remains
 // is position/destroy/clear driven by entity-removal paths.
 import type Phaser from 'phaser'
@@ -7,10 +7,10 @@ import { CAST_BAR_OFFSET_Y } from './combatConstants'
 import type { CastBarSprite, EntitySprite } from './combatTypes'
 
 /**
- * R11 (AR-29) — the narrow capability the cast bar consumes. The scene
+ * R11 (AR-29) - the narrow capability the cast bar consumes. The scene
  * satisfies this structurally; the helper never sees the full CombatScene.
  * M13: shrunk after onCastStart/CastStartEvent were retired (no live
- * 'cast_start' producer) — only the position/destroy/clear cleanup API
+ * 'cast_start' producer) - only the position/destroy/clear cleanup API
  * remains, driven by entity-removal paths.
  */
 export interface CastBarHost {
@@ -21,8 +21,8 @@ export interface CastBarHost {
 export class CombatCastBar {
   private castBarsMap = new Map<string, CastBarSprite>()
 
-  // S3 (AR-29) — read-only exposure; mutation only via the owned
-  // destroyCastBar/delete/clear API below (no creation path remains —
+  // S3 (AR-29) - read-only exposure; mutation only via the owned
+  // destroyCastBar/delete/clear API below (no creation path remains -
   // the 'cast_start' producer was retired with the legacy engine, M13).
   get castBars(): ReadonlyMap<string, CastBarSprite> {
     return this.castBarsMap

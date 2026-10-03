@@ -1,10 +1,10 @@
-// Buff bar (2026-09-02, Task 4) — CombatVfxSpawner status icon ROW:
-// - enemy: hàng icon dưới foot sprite (perspective: foot = rect.y)
-// - player: hàng icon trên cụm sub-bar HUD (tính từ viewport height)
-// - 2 tầng: temporary (rowTier 0) + permanent (rowTier 1)
-// - stack label góc phải-dưới; >8 icon gộp counter "+N" ở icon cuối
-// Mock scene = fake objects thuần (pattern PlayerHudLayer.test.ts),
-// KHÔNG instantiate Phaser thật.
+// Buff bar (2026-09-02, Task 4) - CombatVfxSpawner status icon ROW:
+// - enemy: hang icon duoi foot sprite (perspective: foot = rect.y)
+// - player: hang icon tren cum sub-bar HUD (tinh tu viewport height)
+// - 2 tang: temporary (rowTier 0) + permanent (rowTier 1)
+// - stack label goc phai-duoi; >8 icon gop counter "+N" o icon cuoi
+// Mock scene = fake objects thuan (pattern PlayerHudLayer.test.ts),
+// KHONG instantiate Phaser that.
 // @vitest-environment jsdom
 import { describe, expect, it, beforeEach } from 'vitest'
 import { CombatVfxSpawner } from './combat-vfx-spawner'
@@ -165,7 +165,7 @@ describe('CombatVfxSpawner — status icon row (buff bar)', () => {
     expect(entry.buffName).toBe('Hỏa Ấn')
     expect(entry.remainingTime).toBe(4)
     expect(entry.icon.angle).toBe(45) // diamond
-    expect(entry.stackLabel.visible).toBe(false) // stacks 1 → ẩn
+    expect(entry.stackLabel.visible).toBe(false) // stacks 1 -> an
   })
 
   it('attach buff circle → icon angle 0 (add.circle)', () => {
@@ -240,7 +240,7 @@ describe('CombatVfxSpawner — status icon row (buff bar)', () => {
     const entry = scene.statuses.get('enemy:hoa_an:src') as { icon: FakeGameObject }
 
     expect(entry.icon.y).toBe(ENEMY_SPRITE.rect.y + STATUS_FOOT_ROW_OFFSET_Y)
-    // 1 icon: x = giữa sprite
+    // 1 icon: x = giua sprite
     expect(entry.icon.x).toBe(ENEMY_SPRITE.rect.x)
   })
 
@@ -274,7 +274,7 @@ describe('CombatVfxSpawner — status icon row (buff bar)', () => {
     const temporary = scene.statuses.get('enemy:hoa_an:src') as { icon: FakeGameObject }
     const permanent = scene.statuses.get('enemy:vinh_cuu:src') as { icon: FakeGameObject }
 
-    // permanent row nằm DƯỚI temporary row (dưới chân, xa sprite hơn)
+    // permanent row nam DUOI temporary row (duoi chan, xa sprite hon)
     expect(permanent.icon.y).toBe(temporary.icon.y + STATUS_ROW_GAP + STATUS_ICON_SIZE)
   })
 
@@ -316,6 +316,6 @@ describe('CombatVfxSpawner — status icon row (buff bar)', () => {
   })
 })
 
-// Local alias tránh import lặp — cùng giá trị STATUS_PLAYER_ROW_OFFSET_Y
-// nhưng tách tên để test không phụ thuộc vào constant source-of-truth.
+// Local alias tranh import lap - cung gia tri STATUS_PLAYER_ROW_OFFSET_Y
+// nhung tach ten de test khong phu thuoc vao constant source-of-truth.
 const STATUS_PLAYER_ROW_OFFSET_Y_FOR_TEST = 6

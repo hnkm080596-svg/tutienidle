@@ -1,6 +1,6 @@
 // Economy simulation (2026-08-25, plan Phase 5 "can bang"): yield/hour
-// cua ba nguon Thanh Van → sink chinh (Khi Duong, Dan Phong, xay/nang).
-// Bao cao ty le bao phu — baseline la khoi diem playtest; chi fail CI
+// cua ba nguon Thanh Van -> sink chinh (Khi Duong, Dan Phong, xay/nang).
+// Bao cao ty le bao phu - baseline la khoi diem playtest; chi fail CI
 // khi hong authoring that su (thieu kenh tieu thu).
 import { describe, expect, it } from 'vitest'
 import { materials } from '../../data/materials/materials'
@@ -50,7 +50,7 @@ describe('Economy simulation — yield → sink', () => {
     const herbs = materials.filter(material => material.category === 'herb')
     const legacyIds = ['linh_chi', 'que', 'cuc_hoa', 'linh_thao_chung', 'huyet_tham_decade']
 
-    // 8 họ × 9 realm × 5 tuổi (gp123 6E C1: thêm thuong_co).
+    // 8 ho x 9 realm x 5 tuoi (gp123 6E C1: them thuong_co).
     expect(herbs).toHaveLength(8 * 9 * 5)
     expect(legacyIds.every(id => !materials.some(material => material.id === id))).toBe(true)
   })
@@ -86,7 +86,7 @@ describe('Economy simulation — yield → sink', () => {
     // Level 1 Pham Nhan: ~108 go/gio tong (60%*3 + 20%*2 + 10%*1)*36.
     expect(totalLow).toBeGreaterThan(50)
 
-    // Nang cap cap 2 can 5 go mortal → du trong vua mot cycle.
+    // Nang cap cap 2 can 5 go mortal -> du trong vua mot cycle.
     expect(perHourLow[0]!).toBeGreaterThan(50)
   })
 
@@ -109,10 +109,10 @@ describe('Economy simulation — yield → sink', () => {
       if (index === HERB_AGES.length - 1) thuongCoPerHour = probs[index]! * amount * cyclesPerHour
     })
 
-    // Tuổi thấp phải cho nhiều hơn thuong_co rất nhiều (engine enforce thứ tự).
+    // Tuoi thap phai cho nhieu hon thuong_co rat nhieu (engine enforce thu tu).
     expect(decadePerHour).toBeGreaterThan(thuongCoPerHour * 5)
 
-    // Sink: Cuong Hoa an 2 ore decade / lan, Wash an 3 → nhu cau hop ly.
+    // Sink: Cuong Hoa an 2 ore decade / lan, Wash an 3 -> nhu cau hop ly.
     expect(decadePerHour).toBeGreaterThan(10)
   })
 
@@ -133,8 +133,8 @@ describe('Economy simulation — yield → sink', () => {
       }
     }
 
-    // 72 đan phương generated theo PILL_FAMILIES × 9 realm + 2 đan đặc
-    // biệt của gate Trúc Cơ (spec dot-pha-loi-kiep §4.1b).
+    // 72 dan phuong generated theo PILL_FAMILIES x 9 realm + 2 dan dac
+    // biet cua gate Truc Co (spec dot-pha-loi-kiep sec4.1b).
     expect(alchemyRecipes).toHaveLength(72 + 2)
   })
 })

@@ -1,4 +1,4 @@
-// ProductionCycles.test.ts — unit coverage for the cycle factory leaf.
+// ProductionCycles.test.ts - unit coverage for the cycle factory leaf.
 // The factory is exercised indirectly through ProductionSystem.startCycle
 // and WorkerLaneAdvance spawned successors; this file locks the factory
 // contract itself: verbatim snapshot fields, deadline math (speed-table

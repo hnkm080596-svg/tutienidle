@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-// Primitive thanh fill ngang — nguồn sự thật duy nhất cho mọi progress bar
-// của app (tu vi, EXP, cycle, HP/MP, countdown...). Visual điều khiển qua
-// CSS var: nơi dùng override `style="--bar-from: var(--el-color)"`.
-// House style mặc định: track --ink-700, fill gradient jade → chrome-300.
+// Primitive thanh fill ngang - nguon su that duy nhat cho moi progress bar
+// cua app (tu vi, EXP, cycle, HP/MP, countdown...). Visual dieu khien qua
+// CSS var: noi dung override `style="--bar-from: var(--el-color)"`.
+// House style mac dinh: track --ink-700, fill gradient jade -> chrome-300.
 const props = withDefaults(defineProps<{
   value: number
   max: number

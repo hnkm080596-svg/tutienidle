@@ -3,7 +3,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import { usePlayerStore } from './player'
 import type { GameSave } from '../services/save/SaveSystem'
 
-// Talent v4 M2 (spec §4.3) — store-level hooks:
+// Talent v4 M2 (spec sec4.3) - store-level hooks:
 // - Hau Tich Bat Phat: cultivation ramp per realmLevel inside cultivate().
 // - Ngo Dao: the insight_per_cultivation accumulator also settles the
 //   OFFLINE cultivation grant inside restoreFromSave().
@@ -67,7 +67,7 @@ describe('player store — talent v4 M2 (Hau Tich / Ngo Dao offline)', () => {
     store.cultivation = 0
     store.selectedTalentIds = ['ho_tich_bat_phat']
 
-    store.cultivate(100) // base 10/s * 100s = 1000, ramp t1 = x0.5 → 500
+    store.cultivate(100) // base 10/s * 100s = 1000, ramp t1 = x0.5 -> 500
 
     expect(store.cultivation).toBe(500)
   })

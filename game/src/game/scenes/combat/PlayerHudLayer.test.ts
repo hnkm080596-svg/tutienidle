@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
-// 6A-T4 (2026-09-01) — PlayerHudLayer: HP/MP/Kiếm bars + labels vẽ
+// 6A-T4 (2026-09-01) - PlayerHudLayer: HP/MP/Kiem bars + labels ve
 // trong canvas, flexible layout theo viewport (AGENTS.md UI rule),
-// ẩn MP khi maxMp<=0, ẩn Kiếm khi max<=0, update HP từ event values.
+// an MP khi maxMp<=0, an Kiem khi max<=0, update HP tu event values.
 import { describe, expect, it } from 'vitest'
 import { PlayerHudLayer, HUD_HP_WIDTH, HUD_SUB_WIDTH } from './PlayerHudLayer'
 import { PLAYER_HUD_THE_ARMED_COLOR, PLAYER_HUD_THE_COLOR } from './combatConstants'

@@ -21,7 +21,7 @@ import type { BattleLootSystem } from './BattleLootSystem'
 
 // Drop-system Task 9 (2026-09-12): the auto-farm shim runs on the IDLE
 // channel (spec E10/E11). Idle keeps the boss modifier (a stage property)
-// but strips the tinh_anh tag and every chance<1 signature drop — idle is
+// but strips the tinh_anh tag and every chance<1 signature drop - idle is
 // a background progression channel, never the farm ceiling.
 
 const PROBE_MATERIAL = {

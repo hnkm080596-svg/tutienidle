@@ -4,8 +4,8 @@ import { COMBAT_VFX_PRESETS } from '../vfx/CombatVfxPresets'
 import { BUFF_REGISTRY } from '../buff/BuffRegistry'
 import type { OrbId } from '../../core/kiem-tu/KiemTuState'
 
-// Kiem Tu Reimagined Task 5 — data invariants for the 37-combo table
-// (spec 2026-09-15 §4.3, K10/K11): exact pattern set, SUFFIX-free
+// Kiem Tu Reimagined Task 5 - data invariants for the 37-combo table
+// (spec 2026-09-15 sec4.3, K10/K11): exact pattern set, SUFFIX-free
 // against the tail matcher, unique presetId per combo (the payload is
 // the ONLY discovery signal).
 
@@ -49,7 +49,7 @@ describe('KIEM_PHO_COMBOS table', () => {
   })
 
   it('SUFFIX-free: no shorter pattern equals the tail of a longer pattern', () => {
-    // The matcher is a TAIL matcher — the real collision class is a
+    // The matcher is a TAIL matcher - the real collision class is a
     // shorter combo pattern appearing as the last-k entries of a longer
     // one. Without this property the same input sequence would change
     // meaning after a realm breakthrough (K10).
@@ -103,7 +103,7 @@ describe('KIEM_PHO_COMBOS table', () => {
 
   it('every presetId resolves to a COMBAT_VFX_PRESETS entry', () => {
     // The `as CombatVfxPresetId` construction in the table would compile
-    // even for a mistyped id; registry membership is the real guard —
+    // even for a mistyped id; registry membership is the real guard -
     // a missing entry silently degrades the K11 discovery VFX.
     for (const combo of KIEM_PHO_COMBOS) {
       expect(

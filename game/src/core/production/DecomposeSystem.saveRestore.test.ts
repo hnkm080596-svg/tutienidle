@@ -88,7 +88,7 @@ describe('DecomposeSystem save/restore (AR-08)', () => {
 
     expect(Number.isFinite(system.getSaveState().nextCycleAt)).toBe(true)
 
-    // Two ticks past the old deadline run at most the settled cycles —
+    // Two ticks past the old deadline run at most the settled cycles -
     // never a per-tick runaway.
     system.tick(31_000)
     system.tick(31_500)

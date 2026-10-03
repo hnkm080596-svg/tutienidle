@@ -99,11 +99,11 @@ export const DONG_FU_BUILDING_ART: readonly DongFuBuildingArtEntry[] = [
     },
   },
   {
-    // Ký Bảo Các (2026-08-30) — building CHUYÊN cho Hóa Bán/quy đổi
-    // (VendorPanel.vue). Bounds/hitbox tạm dùng tỉ lệ trung bình giống
-    // Truyền Tống Trận cho tới khi có asset thật (asset-drop convention,
-    // v2/vendor/*.png) — degrade an toàn qua has-asset-error, hotspot
-    // vẫn bấm được nhờ hitbox %.
+    // Ky Bao Cac (2026-08-30) - building CHUYEN cho Hoa Ban/quy doi
+    // (VendorPanel.vue). Bounds/hitbox tam dung ti le trung binh giong
+    // Truyen Tong Tran cho toi khi co asset that (asset-drop convention,
+    // v2/vendor/*.png) - degrade an toan qua has-asset-error, hotspot
+    // van bam duoc nho hitbox %.
     buildingId: 'vendor',
     canvas: { width: 1254, height: 1254 },
     visualBounds: { x: 150, y: 200, width: 950, height: 850 },
@@ -117,8 +117,8 @@ export const DONG_FU_BUILDING_ART: readonly DongFuBuildingArtEntry[] = [
     },
   },
   {
-    // chi_hien_quan — placeholder layout tái dùng entry Linh Tuyền cũ
-    // (art v2 riêng làm theo dong-fu pipeline đợt sau).
+    // chi_hien_quan - placeholder layout tai dung entry Linh Tuyen cu
+    // (art v2 rieng lam theo dong-fu pipeline dot sau).
     buildingId: 'chi_hien_quan',
     canvas: { width: 1254, height: 1254 },
     visualBounds: { x: 0, y: 294, width: 1244, height: 659 },

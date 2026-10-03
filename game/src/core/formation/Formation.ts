@@ -3,11 +3,11 @@ import type { TwoModifiers } from '../equipment/SocketedModifierItem'
 import type { ProfessionGrade } from '../profession/ProfessionGrade'
 
 /**
- * Trận (2026-08-24, resource-professions-rework §7) — modifier-item gắn
- * TRÊN EQUIPMENT SLOT (mỗi slot tối đa 1 Trận), cấp ĐÚNG HAI modifier
- * tĩnh thiên tấn công/ngũ hành. MVP BỎ trigger/stack khỏi Trận — nếu
- * sau này cần trigger, đó là archetype riêng đi qua modifier runtime
- * authority, không nhét vào schema socket tĩnh.
+ * Tran (2026-08-24, resource-professions-rework sec7) - modifier-item gan
+ * TREN EQUIPMENT SLOT (moi slot toi da 1 Tran), cap DUNG HAI modifier
+ * tinh thien tan cong/ngu hanh. MVP BO trigger/stack khoi Tran - neu
+ * sau nay can trigger, do la archetype rieng di qua modifier runtime
+ * authority, khong nhet vao schema socket tinh.
  */
 export interface Formation {
   id: string

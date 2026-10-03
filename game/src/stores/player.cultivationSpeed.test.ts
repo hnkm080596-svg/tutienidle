@@ -3,9 +3,9 @@ import { createPinia, setActivePinia } from 'pinia'
 import { usePlayerStore } from './player'
 import { TU_LINH_TRAN_BUFF_PERCENT } from '../core/economy/TuLinhTranBalance'
 
-// Khóa hành vi cultivation_speed (talent-direction-choice-plan §9) —
-// BASE_CULTIVATION_PER_SECOND = 10: Phàm Cốt −75% → đúng 2.5/s, Tiên
-// Thiên Đạo Thể +100% → đúng 20/s, guard không cho về 0/âm.
+// Khoa hanh vi cultivation_speed (talent-direction-choice-plan sec9) -
+// BASE_CULTIVATION_PER_SECOND = 10: Pham Cot -75% -> dung 2.5/s, Tien
+// Thien Dao The +100% -> dung 20/s, guard khong cho ve 0/am.
 describe('player store — tốc độ tu luyện theo thiên phú', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
@@ -75,8 +75,8 @@ describe('player store — tốc độ tu luyện theo thiên phú', () => {
     expect(store.cultivationPerSecond).toBeCloseTo(0.1)
   })
 
-  // Tụ Linh Trận (economy-fixes-sinks-plan §3.2 B1) — effect active nhân
-  // tốc độ tu luyện thêm cultivationSpeedPercent; hết hạn thì mất buff.
+  // Tu Linh Tran (economy-fixes-sinks-plan sec3.2 B1) - effect active nhan
+  // toc do tu luyen them cultivationSpeedPercent; het han thi mat buff.
   it('effect tu_linh_tran active — cultivationPerSecond nhân (1 + 25%)', () => {
     const store = usePlayerStore()
 

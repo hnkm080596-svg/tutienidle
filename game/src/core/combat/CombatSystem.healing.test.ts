@@ -6,10 +6,10 @@ import type { CombatEntity } from './CombatEntity'
 import type { ActiveCapabilityGrant } from '../battle/contracts/capability'
 import type { BuffDefinitionId, BuffInstanceId, CombatEntityId } from '../battle/contracts/ids'
 
-// stat-system-reimagined Task 4 (D18 / INV-13) — healingEffectivenessPercent:
+// stat-system-reimagined Task 4 (D18 / INV-13) - healingEffectivenessPercent:
 // receiver-side amplification of HP restores that are NOT damage-derived
 // (hpRegenPerTurn ticks, direct heal effects, authored dotRecovery triggers
-// like Doc Can). leechPercent stays the SOLE leech lever — its output is
+// like Doc Can). leechPercent stays the SOLE leech lever - its output is
 // hpDamage * leechPercent, bitwise unchanged. Ward/MP regen and shield
 // absorb are never scaled either.
 
@@ -40,7 +40,7 @@ let grantSeq = 0
 
 /** Doc Can-shaped authored trigger grant: heal the DoT source for a
     fraction of the wood damage actually dealt, per stack (stacks live
-    on the grant — the buff2 capability descriptor). */
+    on the grant - the buff2 capability descriptor). */
 function dotRecoveryGrant(holder: CombatEntity, stacks: number): ActiveCapabilityGrant {
   grantSeq += 1
   return {
@@ -184,7 +184,7 @@ describe('healingEffectivenessPercent (INV-13)', () => {
     })
 
     expect(target.currentHp).toBe(0)
-    // 0.25 x 5 actual HP lost = 1.25 — not 0.25 x 100 post-resist.
+    // 0.25 x 5 actual HP lost = 1.25 - not 0.25 x 100 post-resist.
     expect(source.currentHp).toBeCloseTo(101.25, 5)
   })
 

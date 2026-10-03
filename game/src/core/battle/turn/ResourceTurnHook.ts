@@ -1,7 +1,7 @@
-// Turn-Based Combat Foundation (spec Phần 5) — thay MỌI regen/decay
-// resource theo deltaSeconds (Ngũ Hành Thế, Kiếm Thế/Kiếm Ý, Kim Thế
-// decay...): áp dụng đúng 1 lần tại thời điểm entity bắt đầu lượt của
-// chính nó, không có clock thứ hai song song với ActionGauge.
+// Turn-Based Combat Foundation (spec Phan 5) - thay MOI regen/decay
+// resource theo deltaSeconds (Ngu Hanh The, Kiem The/Kiem Y, Kim The
+// decay...): ap dung dung 1 lan tai thoi diem entity bat dau luot cua
+// chinh no, khong co clock thu hai song song voi ActionGauge.
 export interface TurnResourceDelta {
   stat: string
   amount: number

@@ -48,7 +48,7 @@ describe('GameManager.sellMaterialToVendor — economy-fixes-sinks-plan §3.2 B2
   it('bán herb phẩm thấp hơn cảnh giới — trừ nguyên liệu, cộng Linh Thạch Hạ đúng giá', () => {
     const { gameManager, player } = setup()
 
-    // gp123 6G: người chơi luyện khí (bát phẩm) bán herb phàm nhân (cửu phẩm).
+    // gp123 6G: nguoi choi luyen khi (bat pham) ban herb pham nhan (cuu pham).
     player.realmId = 'qi_refining'
 
     gameManager.materialBag.add(VENDOR_HERB, 10)

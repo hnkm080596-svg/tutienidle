@@ -138,14 +138,14 @@ export class CloudSaveCoordinator {
       return result
     }
 
-    // Fix (2026-08-24) — conflict KHÔNG còn là trạng thái terminal. Trước
-    // đây revision của coordinator bị stale vĩnh viễn sau 1 lần conflict
-    // (ví dụ mở 2 tab), khiến mọi autosave về sau đều fail âm thầm.
-    // Hành vi mới: re-sync revision mới nhất từ storage rồi thử ghi lại
-    // ĐÚNG MỘT lần (last-writer-wins — hợp lệ cho game local 1 người;
-    // không có merge cấp GameSave nào khả thi giữa 2 phiên cùng chơi).
-    // Nếu retry vẫn conflict/unavailable, revision hiện đã cập nhật nên
-    // autosave kế tiếp (15s) sẽ tự thành công — không còn kẹt vĩnh viễn.
+    // Fix (2026-08-24) - conflict KHONG con la trang thai terminal. Truoc
+    // day revision cua coordinator bi stale vinh vien sau 1 lan conflict
+    // (vi du mo 2 tab), khien moi autosave ve sau deu fail am tham.
+    // Hanh vi moi: re-sync revision moi nhat tu storage roi thu ghi lai
+    // DUNG MOT lan (last-writer-wins - hop le cho game local 1 nguoi;
+    // khong co merge cap GameSave nao kha thi giua 2 phien cung choi).
+    // Neu retry van conflict/unavailable, revision hien da cap nhat nen
+    // autosave ke tiep (15s) se tu thanh cong - khong con ket vinh vien.
     if (result.status !== 'conflict') {
       return result
     }
@@ -166,9 +166,9 @@ export class CloudSaveCoordinator {
     return retry
   }
 
-  // Nhân vật mới bắt đầu chuỗi revision mới từ 0 — gọi thay vì fabricate
-  // `{status:'empty', revision:0}` ngoài vòng đời coordinator (App.vue
-  // bootGame(true)), đảm bảo revision nội bộ luôn khớp trạng thái storage.
+  // Nhan vat moi bat dau chuoi revision moi tu 0 - goi thay vi fabricate
+  // `{status:'empty', revision:0}` ngoai vong doi coordinator (App.vue
+  // bootGame(true)), dam bao revision noi bo luon khop trang thai storage.
   // B1-C: also the generation fence - bumps the adapter generation so
   // in-flight remote writes from the previous session cannot touch the
   // journal/cache when they resolve, and drains any queued writers with

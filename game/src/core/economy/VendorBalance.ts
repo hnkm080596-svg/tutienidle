@@ -1,16 +1,16 @@
-// VendorBalance (economy-fixes-sinks-plan §3.2 B2, 2026-08-29) — bảng giá
-// Hóa Bán của Vendor (bán nguyên liệu thừa lấy Linh Thạch). MỌI giá là
-// ĐƠN VỊ HẠ TƯƠNG ĐƯƠNG (hạ phẩm Linh Thạch), caller quy đổi ra phẩm
-// Linh Thạch đúng theo realm (xem VendorSystem.ts).
+// VendorBalance (economy-fixes-sinks-plan sec3.2 B2, 2026-08-29) - bang gia
+// Hoa Ban cua Vendor (ban nguyen lieu thua lay Linh Thach). MOI gia la
+// DON VI HA TUONG DUONG (ha pham Linh Thach), caller quy doi ra pham
+// Linh Thach dung theo realm (xem VendorSystem.ts).
 //
-// Nguồn realm của 1 material: meta nghề `profession.realmId` (herb/wood/
-// ore) — realmIndex quyết định hệ số nhân VENDOR_REALM_GROWTH. Essence/
-// byproduct không có meta đủ tốt thì fallback theo realmId truyền vào.
+// Nguon realm cua 1 material: meta nghe `profession.realmId` (herb/wood/
+// ore) - realmIndex quyet dinh he so nhan VENDOR_REALM_GROWTH. Essence/
+// byproduct khong co meta du tot thi fallback theo realmId truyen vao.
 import type { Material } from '../material/Material'
 import { getRealmTier } from '../realm/RealmTierMap'
 import type { HerbAge } from '../production/ProductionTypes'
 
-/** Danh mục material category được phép bán cho Vendor. */
+/** Danh muc material category duoc phep ban cho Vendor. */
 export const VENDOR_SELLABLE_CATEGORIES = [
   'herb',
   'wood',
@@ -21,7 +21,7 @@ export const VENDOR_SELLABLE_CATEGORIES = [
 
 export type VendorSellableCategory = (typeof VENDOR_SELLABLE_CATEGORIES)[number]
 
-/** Giá herb (hạ tương đương) theo biến thể niên đại — thuong_co bậc 6E. */
+/** Gia herb (ha tuong duong) theo bien the nien dai - thuong_co bac 6E. */
 export const VENDOR_HERB_PRICES: Record<string, number> = {
   decade: 2,
   century: 4,
@@ -30,7 +30,7 @@ export const VENDOR_HERB_PRICES: Record<string, number> = {
   thuong_co: 32,
 }
 
-/** Giá gỗ (hạ tương đương) theo tuổi (gp123 6E C2 — giá trị giữ nguyên từ bảng theo phẩm). */
+/** Gia go (ha tuong duong) theo tuoi (gp123 6E C2 - gia tri giu nguyen tu bang theo pham). */
 export const VENDOR_WOOD_PRICES: Record<HerbAge, number> = {
   decade: 2,
   century: 5,
@@ -39,7 +39,7 @@ export const VENDOR_WOOD_PRICES: Record<HerbAge, number> = {
   thuong_co: 75,
 }
 
-/** Giá quáng (hạ tương đương) theo tuổi (gp123 6E C2 — giá trị giữ nguyên từ bảng theo phẩm). */
+/** Gia quang (ha tuong duong) theo tuoi (gp123 6E C2 - gia tri giu nguyen tu bang theo pham). */
 export const VENDOR_ORE_PRICES: Record<HerbAge, number> = {
   decade: 3,
   century: 8,
@@ -48,19 +48,19 @@ export const VENDOR_ORE_PRICES: Record<HerbAge, number> = {
   thuong_co: 120,
 }
 
-/** Giá nền Tinh Hoa (essence) — nhân theo index realm trong essence tier. */
+/** Gia nen Tinh Hoa (essence) - nhan theo index realm trong essence tier. */
 export const VENDOR_ESSENCE_PRICE_BASE = 5
 
-/** Giá nền phế liệu (byproduct). */
+/** Gia nen phe lieu (byproduct). */
 export const VENDOR_BYPRODUCT_PRICE_BASE = 1
 
-/** Hệ số nhân giá mỗi bậc realm tier. */
+/** He so nhan gia moi bac realm tier. */
 export const VENDOR_REALM_GROWTH = 3
 
 /**
- * Hệ số nhân theo realm CỦA MATERIAL (meta nghề) — giá trị là thuộc tính
- * nội tại của nguyên liệu. Material không có meta realm (essence/byproduct
- * data mới) thì fallback theo realmId truyền vào.
+ * He so nhan theo realm CUA MATERIAL (meta nghe) - gia tri la thuoc tinh
+ * noi tai cua nguyen lieu. Material khong co meta realm (essence/byproduct
+ * data moi) thi fallback theo realmId truyen vao.
  */
 function realmGrowthFactor(material: Material, realmId: string): number {
   const tier = getRealmTier(material.profession?.realmId ?? realmId)
@@ -69,8 +69,8 @@ function realmGrowthFactor(material: Material, realmId: string): number {
 }
 
 /**
- * Đơn giá bán (hạ tương đương) của 1 material theo realm truyền vào —
- * undefined nếu material KHÔNG nằm trong danh mục bán được.
+ * Don gia ban (ha tuong duong) cua 1 material theo realm truyen vao -
+ * undefined neu material KHONG nam trong danh muc ban duoc.
  */
 export function getUnitSellPrice(material: Material, realmId: string): number | undefined {
   const category = material.category

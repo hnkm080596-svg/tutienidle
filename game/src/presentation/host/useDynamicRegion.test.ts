@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 //
-// The host's contract is its ORDERING, not its API surface (§5.2). These tests
+// The host's contract is its ORDERING, not its API surface (sec5.2). These tests
 // assert the parts that are load-bearing: a teardown mid-import must leave no
 // game behind, teardown must disconnect the observer before destroying the
 // game, and a 'ready' that arrives after teardown must not be delivered.
@@ -72,7 +72,7 @@ function makeFakePhaser() {
       scale = { resize: vi.fn() }
 
       // Real Phaser instantiates scenes inside bootQueue (a 'ready'
-      // listener) — the fake mirrors that: instances exist once 'ready'
+      // listener) - the fake mirrors that: instances exist once 'ready'
       // listeners run, but their create() stays pending until tests fire it.
       scene: { scenes: FakeScene[] }
 
@@ -225,7 +225,7 @@ describe('useDynamicRegion', () => {
     region.destroy()
 
     // A game destroyed first can still be resized by an observer that is still
-    // connected - §5.2's teardown order exists to make that impossible.
+    // connected - sec5.2's teardown order exists to make that impossible.
     expect(trace).toEqual(['disconnect', 'destroy'])
   })
 
@@ -263,7 +263,7 @@ describe('useDynamicRegion', () => {
     const game = games[0]!
 
     region.dispatch('evt', 'first')
-    readyCallbacks[0]!() // game 'ready' — scene create() still pending
+    readyCallbacks[0]!() // game 'ready' - scene create() still pending
     region.dispatch('evt', 'second')
 
     expect(game.events.emit).not.toHaveBeenCalled()
@@ -328,7 +328,7 @@ describe('useDynamicRegion', () => {
     expect(onReady).toHaveBeenCalledTimes(1)
 
     // A late create() from the dormant scene (scene.start() later on) is
-    // harmless — the region is already ready and dispatches pass through.
+    // harmless - the region is already ready and dispatches pass through.
     games[0]!.scene.scenes[1]!.fireCreate()
 
     region.dispatch('evt', 'after')
@@ -396,7 +396,7 @@ describe('useDynamicRegion', () => {
   it('start() again after a failed bootstrap retries and clears bootError (ARCH-013/L04)', async () => {
     // The coordinator-retry host hook (PhaserCanvas) depends on this: a
     // failed bootstrap leaves game === null, so a later start() must run a
-    // NEW import — before this existed, nothing ever re-invoked start().
+    // NEW import - before this existed, nothing ever re-invoked start().
     let attempts = 0
 
     const { region } = mountWith(() =>
@@ -443,7 +443,7 @@ describe('useDynamicRegion', () => {
     )
 
     region.start()
-    region.start() // same generation, import still in flight — dedupe
+    region.start() // same generation, import still in flight - dedupe
 
     await vi.waitFor(() => expect(resolveLoad).not.toBeNull())
     resolveLoad!()
@@ -454,7 +454,7 @@ describe('useDynamicRegion', () => {
 
   it('start() after teardown begins a NEW attempt even while the old import is still pending', async () => {
     // TranPhapPanel's close-mid-import -> reopen path: destroy() bumps the
-    // generation, so the still-pending import is already stale — a reopen
+    // generation, so the still-pending import is already stale - a reopen
     // must not dedupe against it and wait forever on a dead boot.
     let attempts = 0
     const resolvers: Array<() => void> = []
@@ -482,8 +482,8 @@ describe('useDynamicRegion', () => {
 
     await vi.waitFor(() => expect(attempts).toBe(2))
 
-    resolvers[0]!() // stale import resolves — must not boot
-    resolvers[1]!() // current import resolves — boots
+    resolvers[0]!() // stale import resolves - must not boot
+    resolvers[1]!() // current import resolves - boots
 
     await vi.waitFor(() => expect(trace).toContain('booted'))
     expect(games).toHaveLength(1)

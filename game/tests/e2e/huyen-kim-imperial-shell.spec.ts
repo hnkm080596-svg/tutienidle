@@ -68,7 +68,7 @@ async function expectImperialScroll(page: Page): Promise<void> {
   const box = await envelope.boundingBox()
   expect(box).not.toBeNull()
   const viewport = page.viewportSize()!
-  // Envelope ≈ 92.1vw x 89.3vh - far beyond the old 900px card.
+  // Envelope ~ 92.1vw x 89.3vh - far beyond the old 900px card.
   expect(box!.width).toBeGreaterThan(viewport.width * 0.85)
   expect(box!.height).toBeGreaterThan(viewport.height * 0.8)
 

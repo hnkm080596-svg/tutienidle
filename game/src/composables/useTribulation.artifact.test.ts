@@ -6,23 +6,23 @@ import { checkTribulationOutcomeAction } from './useTribulation'
 import { createDefaultArtifactProgress } from '../core/artifact/ArtifactProgression'
 import { getTribulationChapters } from '../data/tribulation/TribulationChapters'
 
-// Bản Mệnh Pháp Bảo (doc §4) — resolveVictory() trong useTribulation.ts
-// là điểm chuyển đại cảnh giới THẬT cho Trúc Cơ (khác
-// useBreakthrough.ts's breakthrough(), giờ chỉ còn xử lý tiểu cảnh
-// giới, xem CultivationSystem.breakthrough()).
+// Ban Menh Phap Bao (doc sec4) - resolveVictory() trong useTribulation.ts
+// la diem chuyen dai canh gioi THAT cho Truc Co (khac
+// useBreakthrough.ts's breakthrough(), gio chi con xu ly tieu canh
+// gioi, xem CultivationSystem.breakthrough()).
 function winFoundationTribulation(player: ReturnType<typeof usePlayerStore>, gameManager: GameManager) {
   player.realmId = 'qi_refining'
   player.realmLevel = 12
   player.completedStageIds = ['qi_refining_abyssal_pool']
-  player.baseStats.defense = 10_000 // mitigation gần tuyệt đối
-  player.baseStats.maxHp = 500_000 // sống sót hết kiếp dù sai hết câu
+  player.baseStats.defense = 10_000 // mitigation gan tuyet doi
+  player.baseStats.maxHp = 500_000 // song sot het kiep du sai het cau
 
   expect(
     gameManager.startTribulation(player.$state, 'foundation_establishment'),
   ).toBe(true)
 
-  // Trôi đủ tổng thời gian các chương (không trả lời — hết giờ = sai
-  // nhưng HP đủ trụ vì defense cao + maxHp lớn).
+  // Troi du tong thoi gian cac chuong (khong tra loi - het gio = sai
+  // nhung HP du tru vi defense cao + maxHp lon).
   const chapters = getTribulationChapters('foundation_establishment')!
   const totalSeconds = chapters.reduce((total, chapter) => {
     if (chapter.mind) {
@@ -76,7 +76,7 @@ describe('useTribulation resolveVictory — Bản Mệnh Pháp Bảo thức tỉ
     player.realmId = 'foundation_establishment'
     player.artifact = { ...createDefaultArtifactProgress('ngu_hanh_chau'), experience: 42 }
 
-    // Không có active tribulation -> checkTribulationOutcomeAction() no-op.
+    // Khong co active tribulation -> checkTribulationOutcomeAction() no-op.
     checkTribulationOutcomeAction(player, gameManager)
 
     expect(player.artifact.experience).toBe(42)

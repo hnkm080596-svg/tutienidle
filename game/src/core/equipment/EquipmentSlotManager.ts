@@ -3,9 +3,9 @@ import type { EquipmentSlotState } from './EquipmentSlotState'
 import { EQUIPMENT_SLOTS, createDefaultSlotState } from './EquipmentSlotState'
 
 /**
- * Sống ở cấp GameManager (KHÔNG thuộc EquipmentBag) — 6 slot cố định
- * khởi tạo sẵn từ đầu, tồn tại suốt đời nhân vật, độc lập với việc
- * slot đó có đang trang bị gì hay không (xem EquipmentSlotState.ts).
+ * Song o cap GameManager (KHONG thuoc EquipmentBag) - 6 slot co dinh
+ * khoi tao san tu dau, ton tai suot doi nhan vat, doc lap voi viec
+ * slot do co dang trang bi gi hay khong (xem EquipmentSlotState.ts).
  */
 export class EquipmentSlotManager {
   private readonly slots = new Map<EquipmentSlot, EquipmentSlotState>()
@@ -25,9 +25,9 @@ export class EquipmentSlotManager {
   }
 
   /**
-   * Nạp lại từ save.
+   * Nap lai tu save.
    *
-   * M1 (ARCH-001) — the payload replaces the WHOLE fixed 6-slot set:
+   * M1 (ARCH-001) - the payload replaces the WHOLE fixed 6-slot set:
    * a slot absent from the payload resets to its default instead of
    * keeping stale live progress (a partial merge leaked enhance levels
    * across restores), and every stored entry is a detached copy so the
@@ -39,9 +39,9 @@ export class EquipmentSlotManager {
     }
 
     for (const entry of entries) {
-      // 9.10 defense-in-depth (validator v55 là gate chính) — entry với
-      // slot id lạ (save cũ/lỗi data) bị bỏ qua, không thêm slot mới vào
-      // map cố định 6 slot.
+      // 9.10 defense-in-depth (validator v55 la gate chinh) - entry voi
+      // slot id la (save cu/loi data) bi bo qua, khong them slot moi vao
+      // map co dinh 6 slot.
       if (!EQUIPMENT_SLOTS.includes(entry.slot)) continue
 
       this.slots.set(entry.slot, structuredClone(entry))

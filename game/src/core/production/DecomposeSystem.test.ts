@@ -1,13 +1,13 @@
 // @vitest-environment node
-// Task 14 (rework P4, spec §5.6) — DecomposeSystem: tab Phân Giải —
-// phân giải Linh Khoáng thành Luyện Khí Tinh Hoa.
+// Task 14 (rework P4, spec sec5.6) - DecomposeSystem: tab Phan Giai -
+// phan giai Linh Khoang thanh Luyen Khi Tinh Hoa.
 //
-// Công thức (spec-khóa, tuning sau playtest):
-//   output/lượt = base(grade) × hệ_số(quality) × workers
-//   base(grade) = 1 + gradeIndex × 0.5 (Cửu 1.0 → Tiên 5.5)
-//   hệ_số chất = 2^qualityIndex (Hoang 1 → Tiên 16)
-//   khoáng tiêu thụ mỗi cycle = min(workers × 2, owned) stacks khớp filter
-//   cycle 30s; workers 0 → không chạy; workers clamp theo capacity.
+// Cong thuc (spec-khoa, tuning sau playtest):
+//   output/luot = base(grade) x he_so(quality) x workers
+//   base(grade) = 1 + gradeIndex x 0.5 (Cuu 1.0 -> Tien 5.5)
+//   he_so chat = 2^qualityIndex (Hoang 1 -> Tien 16)
+//   khoang tieu thu moi cycle = min(workers x 2, owned) stacks khop filter
+//   cycle 30s; workers 0 -> khong chay; workers clamp theo capacity.
 import { describe, expect, it, beforeEach, vi } from 'vitest'
 
 // BETA SCOPE LOCK v2 Phase-5 - this suite exercises the scope-hidden
@@ -27,7 +27,7 @@ import { LUYEN_KHI_TINH_HOA_ID } from '../equipment/TinhHoaMaterial'
 let bag: MaterialBag
 
 // R7 (AR-08): capacity is now a dynamic command, not a constructor
-// option — old fixtures migrate to updateCapacity.
+// option - old fixtures migrate to updateCapacity.
 function createSystemWithCapacity(capacity: number, cycleSeconds = 30): DecomposeSystem {
   const system = new DecomposeSystem(bag, { cycleSeconds })
   system.updateCapacity(capacity)
@@ -105,7 +105,7 @@ describe('DecomposeSystem — cycle + output (Task 14)', () => {
 
     const output = system.drainOutput()
 
-    // base(1 + 0×0.5)=1 × chất Hoang 2^0=1 × 1 worker = 1 tinh hoa/lượt.
+    // base(1 + 0x0.5)=1 x chat Hoang 2^0=1 x 1 worker = 1 tinh hoa/luot.
     expect(output).toEqual([{ materialId: LUYEN_KHI_TINH_HOA_ID, amount: 1 }])
   })
 
@@ -134,7 +134,7 @@ describe('DecomposeSystem — cycle + output (Task 14)', () => {
     system.tick(0)
     system.tick(30_000)
 
-    // 5.5 × 1 × 2 = 11.
+    // 5.5 x 1 x 2 = 11.
     expect(system.drainOutput()).toEqual([
       { materialId: LUYEN_KHI_TINH_HOA_ID, amount: 11 },
     ])
@@ -164,7 +164,7 @@ describe('DecomposeSystem — cycle + output (Task 14)', () => {
     system.tick(0)
     system.tick(30_000)
 
-    // Chỉ mortal_ore_decade (Cửu phẩm/Hoang) khớp: -2 khoáng, +1 tinh hoa.
+    // Chi mortal_ore_decade (Cuu pham/Hoang) khop: -2 khoang, +1 tinh hoa.
     expect(bag.getAmount('mortal_ore_decade')).toBe(48)
     expect(bag.getAmount('qi_refining_ore_century')).toBe(50)
     expect(system.drainOutput()).toEqual([{ materialId: LUYEN_KHI_TINH_HOA_ID, amount: 1 }])
@@ -180,8 +180,8 @@ describe('DecomposeSystem — cycle + output (Task 14)', () => {
     system.tick(0)
     system.tick(30_000)
 
-    // Chỉ 1 khoáng (< target 6): fullOutput = 1×1×3 = 3;
-    // fairness ceil: ceil(consumed × fullOutput / target) = ceil(3/6) = 1.
+    // Chi 1 khoang (< target 6): fullOutput = 1x1x3 = 3;
+    // fairness ceil: ceil(consumed x fullOutput / target) = ceil(3/6) = 1.
     const output = system.drainOutput()
 
     expect(output).toHaveLength(1)
@@ -218,13 +218,13 @@ describe('DecomposeSystem — online catch-up policy (Mission A review)', () => 
     system.setSetting({ workers: 1 })
     system.tick(0) // deadline = 30_000
 
-    // 300 cycles late — the tick runs exactly one cycle and the deadline
+    // 300 cycles late - the tick runs exactly one cycle and the deadline
     // rebases to now + cycleMs instead of advancing one step per tick.
     system.tick(30_000 + 300 * 30_000)
 
     expect(system.drainOutput()).toHaveLength(1)
 
-    // The very next tick must NOT run another cycle — old behavior would
+    // The very next tick must NOT run another cycle - old behavior would
     // keep replaying the backlog one run per tick.
     system.tick(30_000 + 300 * 30_000 + 1)
 
@@ -247,7 +247,7 @@ describe('DecomposeSystem — online catch-up policy (Mission A review)', () => 
 
     system.tick(1_000)
 
-    // Deadline rebased to 1_000 + 30_000 — the next due tick produces.
+    // Deadline rebased to 1_000 + 30_000 - the next due tick produces.
     system.tick(31_000)
 
     expect(system.drainOutput()).toHaveLength(1)

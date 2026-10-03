@@ -36,7 +36,7 @@ export function useBuildingHeaderState(buildingId: Ref<string | undefined>) {
   // mapped in FunctionOverlayPanel has a v2/<id>/base.png.
   const artPath = computed(() => `/assets/buildings/dong-fu/v2/${buildingId.value}/base.png`)
 
-  // Upgrade rules live in BuildingSystem.quoteUpgrade (via buildingOps) —
+  // Upgrade rules live in BuildingSystem.quoteUpgrade (via buildingOps) -
   // the header consumes the quote and keeps label formatting only.
   const quote = computed(() => {
     stateVersion.value

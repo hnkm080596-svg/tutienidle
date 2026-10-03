@@ -62,7 +62,7 @@ const currentTierLabel = computed(() => {
 })
 
 // Thanh exp = mastery / masteryForNextRank; rankCapped -> full
-// (không còn rank kế để tiến).
+// (khong con rank ke de tien).
 const tierExpValue = computed(() => {
   const active = technique.value
 
@@ -167,9 +167,9 @@ const tooltipContent = computed<TechniqueTooltipContent | undefined>(() => {
   box-sizing: border-box;
 }
 
-/* Kích thước icon cố định tường minh — flex-basis (SlotView KHÔNG tự
-   set flex) quyết định kích cỡ trên trục row, không còn dựa vào tie
-   injection-order với width:100% nội bộ của SlotView.vue. */
+/* Kich thuoc icon co dinh tuong minh - flex-basis (SlotView KHONG tu
+   set flex) quyet dinh kich co tren truc row, khong con dua vao tie
+   injection-order voi width:100% noi bo cua SlotView.vue. */
 .technique-card__icon-wrap {
   position: relative;
   z-index: 3;
@@ -237,8 +237,8 @@ const tooltipContent = computed<TechniqueTooltipContent | undefined>(() => {
   color: var(--paper-text-soft);
 }
 
-/* Biến thể hero (spec mục 15 "Tâm pháp hiện tại lớn") — layout dọc,
-   icon lớn hẳn, tên có thể xuống dòng thay vì ellipsis. */
+/* Bien the hero (spec muc 15 "Tam phap hien tai lon") - layout doc,
+   icon lon han, ten co the xuong dong thay vi ellipsis. */
 .technique-card--hero {
   flex-direction: column;
   align-items: center;

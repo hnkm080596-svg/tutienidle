@@ -2,16 +2,16 @@ import { inject, type InjectionKey, type Ref } from 'vue'
 import type { GameManager } from '../core/game/GameManager'
 
 /**
- * GameManager là plain class, không phải Vue reactive state (đúng
- * ý thiết kế — core logic tách biệt khỏi framework, xem ghi chú
- * trong GameManager.ts). Component con cần gọi method trên nó thì
- * inject qua đây thay vì prop-drilling qua nhiều tầng panel.
+ * GameManager la plain class, khong phai Vue reactive state (dung
+ * y thiet ke - core logic tach biet khoi framework, xem ghi chu
+ * trong GameManager.ts). Component con can goi method tren no thi
+ * inject qua day thay vi prop-drilling qua nhieu tang panel.
  *
- * `stateVersion` là cầu nối reactivity duy nhất: App.vue tick()
- * tăng nó mỗi giây, và mọi action làm thay đổi bag/equipment (equip,
- * craft, enhance...) PHẢI gọi `bumpState()` ngay sau khi mutate qua
- * GameManager để UI phản hồi tức thời thay vì chờ tick kế tiếp.
- * Component đọc bag chỉ cần `computed(() => { stateVersion.value; return gameManager.xxxBag.getAll() })`.
+ * `stateVersion` la cau noi reactivity duy nhat: App.vue tick()
+ * tang no moi giay, va moi action lam thay doi bag/equipment (equip,
+ * craft, enhance...) PHAI goi `bumpState()` ngay sau khi mutate qua
+ * GameManager de UI phan hoi tuc thoi thay vi cho tick ke tiep.
+ * Component doc bag chi can `computed(() => { stateVersion.value; return gameManager.xxxBag.getAll() })`.
  */
 export const GAME_MANAGER_KEY: InjectionKey<GameManager> = Symbol('gameManager')
 

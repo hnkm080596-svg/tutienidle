@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
-// Phase A6 (2026-09-08) — TurnOrderStrip buff badge row: visible buffs
-// render as polarity-colored badges with name ×stacks (remainingTurns)
+// Phase A6 (2026-09-08) - TurnOrderStrip buff badge row: visible buffs
+// render as polarity-colored badges with name xstacks (remainingTurns)
 // and a description tooltip; hidden buffs are skipped. Mount per project
 // pattern (createApp + h + provide, no @vue/test-utils).
 import { describe, expect, it, vi } from 'vitest'
@@ -137,7 +137,7 @@ describe('TurnOrderStrip buff badges (Phase A6)', () => {
     const badges = Array.from(container.querySelectorAll('.turn-order-strip__buff'))
 
     // 3 instances on the pool (2x hoa_an stacks = 1 instance with 2 stacks +
-    // thach_giap_buff) + 1 hidden → 2 visible badges.
+    // thach_giap_buff) + 1 hidden -> 2 visible badges.
     expect(badges).toHaveLength(2)
 
     const sealBadge = badges.find((badge) => badge.textContent?.includes('Hỏa Ấn'))
@@ -187,7 +187,7 @@ describe('TurnOrderStrip buff badges (Phase A6)', () => {
   })
 })
 
-// Combat speed gauge + round indicator (2026-09-12) — each combatant chip
+// Combat speed gauge + round indicator (2026-09-12) - each combatant chip
 // carries a thin ATB fill bar (actionGauge / GAUGE_MAX) and the strip shows
 // the completed-round counter, capped by the stage's perfectClearTurnLimit
 // when the current battle was launched from a stage that has one.
@@ -252,7 +252,7 @@ describe('TurnOrderStrip speed gauge + round indicator', () => {
 
   it('shows the CURRENT round (roundsElapsed + 1, 1-based) on the round chip', () => {
     // 3 rounds completed -> the 4th is in progress, so the chip reads
-    // "Hiệp 4", matching the PC predicate `roundsElapsed < limit at
+    // "Hiep 4", matching the PC predicate `roundsElapsed < limit at
     // victory` (finish before the displayed round completes).
     const { battle } = bareBattle({ roundsElapsed: 3 })
 
@@ -267,8 +267,8 @@ describe('TurnOrderStrip speed gauge + round indicator', () => {
 
   it('appends the stage perfect-clear limit and marks the chip over-limit when exceeded', () => {
     // PC requires roundsElapsed < limit at victory. At roundsElapsed = 15,
-    // limit = 15 the window is already gone — the in-progress round is the
-    // 16th, displayed as "Hiệp 16/15" with is-over.
+    // limit = 15 the window is already gone - the in-progress round is the
+    // 16th, displayed as "Hiep 16/15" with is-over.
     const { battle } = bareBattle({ roundsElapsed: 15 })
     const stage = { perfectClearTurnLimit: 15 }
 

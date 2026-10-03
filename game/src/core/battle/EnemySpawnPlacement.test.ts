@@ -77,7 +77,7 @@ describe('resolveEnemySpawnPosition', () => {
       resolveEnemySpawnPosition({ isBoss: false, random: Math.random }, ENEMY_SIDE_REGION, occupied)
     }
 
-    // every slot is now occupied — the resolver must still return a valid position
+    // every slot is now occupied - the resolver must still return a valid position
     for (let i = 0; i < 5; i++) {
       const position = resolveEnemySpawnPosition({ isBoss: false, random: Math.random }, ENEMY_SIDE_REGION, occupied)
 

@@ -62,8 +62,8 @@ function mountHall(prepare?: (manager: GameManager) => void) {
   return { container, manager, unmount: () => app.unmount() }
 }
 
-// jsdom không có ResizeObserver — usePanelPagination (tab Hóa Luyện)
-// tạo observer khi container render; stub theo pattern InventorySort.test.ts.
+// jsdom khong co ResizeObserver - usePanelPagination (tab Hoa Luyen)
+// tao observer khi container render; stub theo pattern InventorySort.test.ts.
 beforeEach(() => {
   window.ResizeObserver = window.ResizeObserver || (class {
     observe() {}

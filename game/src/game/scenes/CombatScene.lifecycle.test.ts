@@ -1,20 +1,20 @@
-﻿// Lifecycle regression (migration gate P1/P5): listener resize Ä‘Äƒng kÃ½
-// trÃªn ScaleManager (game-level) báº±ng anonymous callback tá»«ng TÃCH Tá»¤C
-// qua má»—i láº§n Home â†’ Combat â€” N listener cÃ¹ng cháº¡y má»—i resize, scene bá»‹
-// giá»¯ bá»Ÿi ScaleManager. create() pháº£i dÃ¹ng handler á»•n Ä‘á»‹nh + events.once
-// Ä‘á»ƒ 10 láº§n vÃ o/ra váº«n Ä‘Ãºng 1 listener active táº¡i má»i thá»i Ä‘iá»ƒm.
+﻿// Lifecycle regression (migration gate P1/P5): listener resize dang ky
+// tren ScaleManager (game-level) bang anonymous callback tung TICH TUC
+// qua moi lan Home -> Combat - N listener cung chay moi resize, scene bI
+// giu boi ScaleManager. create() phai dung handler on dInh + events.once
+// de 10 lan vao/ra van dung 1 listener active tai moi thoi diem.
 // @vitest-environment jsdom
 import { describe, expect, it, vi } from 'vitest'
 import { createTestScene } from './combat/combatTestHarness'
-// ?raw import (vite/client types) â€” Ä‘á»c source khÃ´ng cáº§n @types/node.
+// ?raw import (vite/client types) - doc source khong can @types/node.
 import combatSceneSource from './CombatScene.ts?raw'
 
 const VIEWPORT = { width: 1600, height: 900 }
 
 function createSceneWithStubs() {
-  // new CombatScene() (khÃ´ng pháº£i Object.create) â€” PHáº¢I cháº¡y constructor
-  // Ä‘á»ƒ class field resizeHandler/shutdownHandler cÃ³ identity tháº­t: test
-  // nÃ y verify chÃ­nh tÃ­nh "cÃ¹ng 1 reference qua cÃ¡c láº§n create" cá»§a chÃºng.
+  // new CombatScene() (khong phai Object.create) - PHAI chay constructor
+  // de class field resizeHandler/shutdownHandler co identity that: test
+  // nay verify chinh tinh "cung 1 reference qua cac lan create" cua chung.
   const scene = createTestScene()
 
   const activeResizeListeners = new Set<unknown>()
@@ -61,7 +61,7 @@ function createSceneWithStubs() {
     },
   )
   scene.physics = { add: { existing: vi.fn() } }
-  // Static-mode entities bob via a tween (uniformity 2026-09-19) — stub the
+  // Static-mode entities bob via a tween (uniformity 2026-09-19) - stub the
   // tween manager so sprite creation doesn't need a real Tweens plugin.
   scene.tweens = { add: vi.fn(), killTweensOf: vi.fn() }
 
@@ -78,11 +78,11 @@ describe('CombatScene lifecycle â€” listener khÃ´ng tÃ­ch lÅ©y qua re
 
       expect(activeResizeListeners.size).toBe(1)
 
-      // Combat tá»± Ä‘á»™ng hoÃ n toÃ n (yÃªu cáº§u 2026-08-26) â€” KHÃ”NG Ä‘Äƒng kÃ½
-      // báº¥t ká»³ input listener nÃ o ná»¯a (hover circle Ä‘Ã£ gá»¡).
+      // Combat tu dong hoan toan (yeu cau 2026-08-26) - KHONG dang ky
+      // bat ky input listener nao nua (hover circle da go).
       expect(inputOn).not.toHaveBeenCalled()
 
-      // KÃ­ch hoáº¡t shutdown handler mÃ  events.once Ä‘Ã£ Ä‘Äƒng kÃ½.
+      // Kich hoat shutdown handler ma events.once da dang ky.
       const shutdownHandler = shutdownHandlers.at(-1)
 
       expect(shutdownHandler).toBeDefined()
@@ -92,7 +92,7 @@ describe('CombatScene lifecycle â€” listener khÃ´ng tÃ­ch lÅ©y qua re
       expect(inputOff).not.toHaveBeenCalled()
     }
 
-    // 10 chu ká»³ = váº«n KHÃ”NG cÃ³ input listener nÃ o tÃ­ch lÅ©y.
+    // 10 chu ky = van KHONG co input listener nao tich luy.
     expect(inputOn).not.toHaveBeenCalled()
     expect(inputOff).not.toHaveBeenCalled()
   })
@@ -111,7 +111,7 @@ describe('CombatScene lifecycle â€” listener khÃ´ng tÃ­ch lÅ©y qua re
     listener({ width: 1280, height: 720 })
     listener({ width: 1440, height: 810 })
 
-    // 1 listener Ã— 2 láº§n báº¯n = Ä‘Ãºng 2 láº§n layout (khÃ´ng nhÃ¢n Ä‘Ã´i).
+    // 1 listener x 2 lan ban = dung 2 lan layout (khong nhan doi).
     expect(layoutSpy).toHaveBeenCalledTimes(2)
   })
 
@@ -123,7 +123,7 @@ describe('CombatScene lifecycle â€” listener khÃ´ng tÃ­ch lÅ©y qua re
     const minBefore = scene.entityFootMinY
     const maxBefore = scene.entityFootMaxY
 
-    // Giáº£ láº­p spawn/death: sprites thÃªm/bá»›t rá»“i sort láº¡i nhiá»u frame.
+    // Gia lap spawn/death: sprites them/bOt roi sort lai nhieu frame.
     scene.sprites.set('a', { footY: 500, columnFloat: 3, rect: { setDepth: vi.fn() } })
     scene.updateEntityDepths()
 
@@ -158,9 +158,9 @@ describe('CombatScene lifecycle â€” listener khÃ´ng tÃ­ch lÅ©y qua re
   })
 
   it('source khÃ³a lifecycle Ä‘Ãºng: scale.on/off cÃ¹ng handler á»•n Ä‘á»‹nh + events.once', () => {
-    // Stub khÃ´ng mÃ´ phá»ng Ä‘Æ°á»£c auto-remove cá»§a events.once â€” khÃ³a báº±ng
-    // source assertion: cáº¥m .on('shutdown') (tÃ­ch lÅ©y) vÃ  anonymous
-    // resize callback (má»—i create má»™t reference má»›i).
+    // Stub khong mo phong duoc auto-remove cua events.once - khoa bang
+    // source assertion: cam .on('shutdown') (tich luy) va anonymous
+    // resize callback (moi create mot reference mOi).
     expect(combatSceneSource).toContain("this.scale.on('resize', this.resizeHandler)")
     expect(combatSceneSource).toContain("this.scale.off('resize', this.resizeHandler)")
     expect(combatSceneSource).toContain("this.events.once('shutdown', this.shutdownHandler)")
@@ -169,8 +169,8 @@ describe('CombatScene lifecycle â€” listener khÃ´ng tÃ­ch lÅ©y qua re
   })
 
   it('onBattleStart pháº£i dá»n statuses (icon DoT khÃ´ng sÃ³t qua auto-refight)', () => {
-    // onBattleStart pháº£i clear statuses â€” match body method (source-contract,
-    // cÃ¹ng giá»›i háº¡n vá»›i cÃ¡c case khÃ¡c trong file nÃ y).
+    // onBattleStart phai clear statuses - match body method (source-contract,
+    // cung giOi han vOi cac case khac trong file nay).
     const onBattleStartBody =
       combatSceneSource.match(/onBattleStart\([^)]*\) \{[\s\S]*?\n  \}/)?.[0] ?? ''
     expect(onBattleStartBody).toMatch(/statuses/)

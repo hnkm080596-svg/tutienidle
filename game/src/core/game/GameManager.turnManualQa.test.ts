@@ -9,8 +9,8 @@ import { toTurnSkillDefinition } from '../skilldef/LegacySkillAdapter'
 import { createDefaultPlayer } from '../player/Player'
 import type { Stage } from '../stage/Stage'
 
-// QA probes (Slice 7 manual mode) â€” adversarial checks: exactly-once
-// submit, no-op tap khi khÃ´ng awaiting, toggle off giá»¯a pause.
+// QA probes (Slice 7 manual mode) - adversarial checks: exactly-once
+// submit, no-op tap khi khong awaiting, toggle off giua pause.
 
 const ENEMY_STATS = {
   maxHp: 10_000_000,
@@ -143,8 +143,8 @@ describe('QA probe â€” manual mode adversarial (Slice 7)', () => {
       combatSource.advance(COMBAT_STEP_SECONDS)
     }
 
-    // Trong lÃºc pause, reward shim váº«n cháº¡y (khÃ´ng crash, khÃ´ng grant sá»›m
-    // â€” battle váº«n fighting, khÃ´ng cÃ³ victory Ä‘á»ƒ grant).
+    // Trong luc pause, reward shim van chay (khong crash, khong grant sOm
+    // - battle van fighting, khong co victory de grant).
     expect(gameManager.getTurnBattle()?.state).toBe('fighting')
   })
 })
@@ -152,10 +152,10 @@ describe('QA probe â€” manual mode adversarial (Slice 7)', () => {
 
 // ---------------------------------------------------------------------------
 // Smoke-test regression (browser runtime evidence 2026-09-04): sau victory,
-// "Đánh Lại" no-op vĩnh viễn — StageManager.active không được stop sau Slice
-// 6 cutover (StageWaveSystem.update() return sớm khi battle state đã
-// 'victory'). startStage() → stageManager.start()
-// return false → refight im lặng thất bại.
+// "Danh Lai" no-op vinh vien - StageManager.active khong duoc stop sau Slice
+// 6 cutover (StageWaveSystem.update() return som khi battle state da
+// 'victory'). startStage() -> stageManager.start()
+// return false -> refight im lang that bai.
 // ---------------------------------------------------------------------------
 
 describe('QA regression — refight after turn-battle victory (smoke test evidence)', () => {
@@ -189,7 +189,7 @@ describe('QA regression — refight after turn-battle victory (smoke test eviden
 
     expect(gameManager.getTurnBattle()?.state).toBe('victory')
 
-    // Refight — must succeed (was silently failing: StageManager.active stale)
+    // Refight - must succeed (was silently failing: StageManager.active stale)
     expect(gameManager.turnBattleOps.startStage(player, stage, false)).toBe(true)
     expect(gameManager.getTurnBattle()?.state).toBe('intro')
     expect(gameManager.getTurnBattle()?.introTurnsRemaining).toBe(INTRO_TOTAL_TICKS)
@@ -198,8 +198,8 @@ describe('QA regression — refight after turn-battle victory (smoke test eviden
 
 
 // ---------------------------------------------------------------------------
-// Future Systems Task 10 — party manual pause: BẤT KỲ party member nào
-// tới lượt đều pause, resolveActorTurn resolve đúng member đó.
+// Future Systems Task 10 - party manual pause: BAT KY party member nao
+// toi luot deu pause, resolveActorTurn resolve dung member do.
 // ---------------------------------------------------------------------------
 
 describe('Future Systems Task 10 — party manual pause', () => {
@@ -226,13 +226,13 @@ describe('Future Systems Task 10 — party manual pause', () => {
 
     expect(gameManager.turnBattleOps.startStage(player, stage, false)).toBe(true)
 
-    // Mô phỏng party 2 người: thêm players[1] với gauge ready ngay.
+    // Mo phong party 2 nguoi: them players[1] voi gauge ready ngay.
     const battle = gameManager.getTurnBattle()
     expect(battle).not.toBeNull()
     expect(battle!.players).toHaveLength(1)
 
-    // (Party member thứ 2 là redesign nội dung recruit — engine check:
-    // players[] đã là mảng; test này pin engine-side includes-check.)
+    // (Party member thu 2 la redesign noi dung recruit - engine check:
+    // players[] da la mang; test nay pin engine-side includes-check.)
     gameManager.setBattleManualMode(true)
 
     // Intro 20 ticks (2026-09-07 plan Task 4) then fighting - speed 100
@@ -241,7 +241,7 @@ describe('Future Systems Task 10 — party manual pause', () => {
       combatSource.advance(COMBAT_STEP_SECONDS)
     }
 
-    // Pause xảy ra khi players[0] tới lượt (đơn vị duy nhất hiện có).
+    // Pause xay ra khi players[0] toi luot (don vi duy nhat hien co).
     expect(gameManager.isAwaitingManualTurnChoice()).toBe(true)
     expect(gameManager.consumeAwaitedActorId()).toBe('player')
 
@@ -254,8 +254,8 @@ describe('Future Systems Task 10 — party manual pause', () => {
 
 
 // ---------------------------------------------------------------------------
-// Gameplay fixes (2026-09-05) — refight chain: Đánh Lại phải hoạt động
-// LẶP LẠI nhiều lần (user report: lần 2 lỗi).
+// Gameplay fixes (2026-09-05) - refight chain: Danh Lai phai hoat dong
+// LAP LAI nhieu lan (user report: lan 2 loi).
 // ---------------------------------------------------------------------------
 
 describe('Gameplay fixes — refight chain', () => {

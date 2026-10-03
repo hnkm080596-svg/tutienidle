@@ -6,7 +6,7 @@ import { EventBus } from '../../events/EventBus'
 import { createBaseStats } from '../../stats/StatBlock'
 import type { TurnSkillDefinition } from './TurnSkillAction'
 
-// Phap Tu Reimagined Task 10 — ultimate empowerment: the equipped
+// Phap Tu Reimagined Task 10 - ultimate empowerment: the equipped
 // chain-E ultimate carries `empowerment`; at cast time, when the actor's
 // The pool meets theThreshold, the RESOLVED payload swaps to the
 // empowered form while rootSkillId stays the equipped skill (INV-18).
@@ -144,7 +144,7 @@ describe('Ultimate empowerment (Task 10)', () => {
     // Slot cooldown consumed exactly once, on the equipped skill.
     expect(playerParticipant.ultimate!.remainingCooldownTurns).toBe(3)
 
-    // The cast sink reports ONLY the root id — the god-ult payload id
+    // The cast sink reports ONLY the root id - the god-ult payload id
     // must never appear (no cast count, no progression identity).
     expect(onSkillCast).toHaveBeenCalledTimes(1)
     expect(onSkillCast).toHaveBeenCalledWith(playerParticipant, 'hoa_ha_cuu_thien')

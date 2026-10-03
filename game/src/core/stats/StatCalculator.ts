@@ -15,8 +15,8 @@ export type ModifierSourceType =
   | 'pill'
   | 'formation'
   | 'talisman'
-  // 'attribute': modifier tự sinh ra bởi deriveAttributeModifiers() bên
-  // dưới (dẫn xuất từ 5 attribute gốc) — không phải nguồn nào tạo tay.
+  // 'attribute': modifier tu sinh ra boi deriveAttributeModifiers() ben
+  // duoi (dan xuat tu 5 attribute goc) - khong phai nguon nao tao tay.
   | 'attribute'
 
 export interface StatModifier {
@@ -28,10 +28,10 @@ export interface StatModifier {
 
   stat: StatType
 
-  // Phân nhóm tầng Increased (LE tách "Increased Fire Damage" khỏi
-  // "Increased Damage" chung — mỗi nhóm tự cộng dồn rồi nhân RIÊNG,
-  // xem runPipeline()). KHÔNG khai = rơi vào pool chung (untagged),
-  // hành vi giữ nguyên như trước khi có field này.
+  // Phan nhom tang Increased (LE tach "Increased Fire Damage" khoi
+  // "Increased Damage" chung - moi nhom tu cong don roi nhan RIENG,
+  // xem runPipeline()). KHONG khai = roi vao pool chung (untagged),
+  // hanh vi giu nguyen nhu truoc khi co field nay.
   tag?: string
 
   // D10 domain gate: the domain this modifier claims to belong to
@@ -56,12 +56,12 @@ export interface StatModifier {
   perLevelPercent?: number
 }
 
-// Tầng Attribute gốc (Căn Cốt/Thân Pháp/Thần Thức/Linh Căn/Thể Chất) —
-// dẫn xuất ra stat phái sinh, KHÔNG có UI phân bổ điểm riêng: attribute
-// chỉ là StatType như mọi stat khác, nhận modifier qua đúng pipeline
-// hiện có (equipment/technique/buff/pill), calculateStats() tự động
-// quy đổi ra bonus mỗi lần tính lại. Số liệu dưới đây là khởi điểm
-// hợp lý, cần tinh chỉnh qua playtest, không phải số chốt cứng.
+// Tang Attribute goc (Can Cot/Than Phap/Than Thuc/Linh Can/The Chat) -
+// dan xuat ra stat phai sinh, KHONG co UI phan bo diem rieng: attribute
+// chi la StatType nhu moi stat khac, nhan modifier qua dung pipeline
+// hien co (equipment/technique/buff/pill), calculateStats() tu dong
+// quy doi ra bonus moi lan tinh lai. So lieu duoi day la khoi diem
+// hop ly, can tinh chinh qua playtest, khong phai so chot cung.
 const ATTRIBUTE_MIGHT_PER_POINT = 0.6
 const ATTRIBUTE_DEFENSE_PER_POINT = 0.4
 // stat-system-reimagined Task 8 (D7): speed removed from ALL attribute
@@ -86,13 +86,13 @@ const ATTRIBUTE_HP_REGEN_PER_POINT = 0.1
 // the deriver is declared on the way facet's deltaDerivers and
 // registered from the catalog by CultivationPathSystem).
 
-// Linh Căn (Attunement) hấp thụ nguyên vai trò "độ thiên hành" cũ của
-// ElementAffinity (đã xoá — luôn = 0 với player, chỉ có ý nghĩa thật
-// với enemy) — 1 điểm Linh Căn tăng đều sát thương CẢ 6 hành (kể cả
-// Hỗn Nguyên), đúng nghĩa "linh căn tốt thì dùng thuật pháp hành nào
-// cũng mạnh hơn", không thiên vị 1 hành cụ thể. Spec
-// 2026-08-30-phap-tu-dao-sac §5 — Phong/Lôi đã bỏ toàn hệ nên không
-// còn trong danh sách này.
+// Linh Can (Attunement) hap thu nguyen vai tro "do thien hanh" cu cua
+// ElementAffinity (da xoa - luon = 0 voi player, chi co y nghia that
+// voi enemy) - 1 diem Linh Can tang deu sat thuong CA 6 hanh (ke ca
+// Hon Nguyen), dung nghia "linh can tot thi dung thuat phap hanh nao
+// cung manh hon", khong thien vi 1 hanh cu the. Spec
+// 2026-08-30-phap-tu-dao-sac sec5 - Phong/Loi da bo toan he nen khong
+// con trong danh sach nay.
 const ATTUNEMENT_POWER_STATS: { stat: StatType; tag: string }[] = [
   { stat: 'woodPower', tag: 'wood' },
   { stat: 'firePower', tag: 'fire' },
@@ -128,11 +128,11 @@ function percentAttributeModifier(
   }
 }
 
-// Linh Căn CAO thì hành đang tu luyện càng "thuần" — % nhỏ Increased
-// riêng theo TỪNG hành (tag = tên hành), tách biệt khỏi pool Increased
-// chung của stat đó (vd equipment/technique "+X% Increased Fire
-// Damage" sau này cũng gắn tag 'fire' để cộng dồn ĐÚNG vào chung pool
-// này, không lẫn vào pool tổng quát) — minh hoạ tag-hierarchy Increased.
+// Linh Can CAO thi hanh dang tu luyen cang "thuan" - % nho Increased
+// rieng theo TUNG hanh (tag = ten hanh), tach biet khoi pool Increased
+// chung cua stat do (vd equipment/technique "+X% Increased Fire
+// Damage" sau nay cung gan tag 'fire' de cong don DUNG vao chung pool
+// nay, khong lan vao pool tong quat) - minh hoa tag-hierarchy Increased.
 const ATTRIBUTE_ELEMENT_TAG_PERCENT_PER_POINT = 0.001
 
 // Parameter narrowed to the 5 main stats (M9): this function only reads
@@ -205,28 +205,28 @@ function deriveAttributeModifiers(finalized: Pick<Stats, MainStatKey>): StatModi
   return modifiers
 }
 
-// Key untagged (pool "Increased X" chung) trong bảng `increased` bên
-// dưới — tách biệt khỏi các tag pool cụ thể (vd 'fire').
+// Key untagged (pool "Increased X" chung) trong bang `increased` ben
+// duoi - tach biet khoi cac tag pool cu the (vd 'fire').
 const UNTAGGED = ''
 
 /**
- * 1 lượt Added -> Increased -> More cho TOÀN BỘ stat, dùng chung bởi
- * cả 2 pass của calculateStats() bên dưới.
+ * 1 luot Added -> Increased -> More cho TOAN BO stat, dung chung boi
+ * ca 2 pass cua calculateStats() ben duoi.
  *
- * SỬA lỗi so với bản trước: "Increased" (percent) giờ CỘNG DỒN theo
- * CÙNG STAT trước rồi mới nhân 1 LẦN — trước đây mỗi nguồn percent tự
- * nhân riêng (compound), khiến nhiều modifier percent nhỏ cộng dồn
- * MẠNH hơn đáng kể so với ý nghĩa ban đầu của field này (2 nguồn
- * +20% từng cho ra ×1.44 thay vì ×1.40 đúng ra phải có). "More"
- * (multiplier) giữ nguyên hành vi nhân tuần tự — đúng ý nghĩa gốc.
+ * SUA loi so voi ban truoc: "Increased" (percent) gio CONG DON theo
+ * CUNG STAT truoc roi moi nhan 1 LAN - truoc day moi nguon percent tu
+ * nhan rieng (compound), khien nhieu modifier percent nho cong don
+ * MANH hon dang ke so voi y nghia ban dau cua field nay (2 nguon
+ * +20% tung cho ra x1.44 thay vi x1.40 dung ra phai co). "More"
+ * (multiplier) giu nguyen hanh vi nhan tuan tu - dung y nghia goc.
  *
- * Tag-hierarchy Increased (LE thật): modifier có `tag` (vd 'fire') rơi
- * vào 1 pool RIÊNG cho (stat, tag) đó, tự cộng dồn nội bộ rồi nhân như
- * 1 TẦNG multiplier ĐỘC LẬP với pool chung (untagged) — "+20% Increased
- * Fire Damage" và "+20% Increased Damage" ra ×1.2 × ×1.2 = ×1.44,
- * không gộp chung 1 pool ×1.4 như 2 nguồn cùng tag. Modifier không
- * khai `tag` luôn rơi vào pool chung — 100% content hiện có (chưa
- * dùng field mới) hành vi giữ nguyên không đổi.
+ * Tag-hierarchy Increased (LE that): modifier co `tag` (vd 'fire') roi
+ * vao 1 pool RIENG cho (stat, tag) do, tu cong don noi bo roi nhan nhu
+ * 1 TANG multiplier DOC LAP voi pool chung (untagged) - "+20% Increased
+ * Fire Damage" va "+20% Increased Damage" ra x1.2 x x1.2 = x1.44,
+ * khong gop chung 1 pool x1.4 nhu 2 nguon cung tag. Modifier khong
+ * khai `tag` luon roi vao pool chung - 100% content hien co (chua
+ * dung field moi) hanh vi giu nguyen khong doi.
  */
 function runPipeline(base: Stats, modifiers: StatModifier[]): Stats {
   const result = { ...base }
@@ -279,14 +279,14 @@ function runPipeline(base: Stats, modifiers: StatModifier[]): Stats {
 }
 
 /**
- * 2 lượt: lượt 1 tính đủ mọi modifier THẬT (equipment/technique/buff/
- * ...) để CHỐT giá trị 5 attribute; lượt 2 dẫn xuất bonus từ attribute
- * đã chốt rồi hoà CHUNG vào đúng pool Added/Increased của stat đích
- * (vd attribute-derived +might hoà chung pool với +might từ trang
- * bị, % tăng tốc đánh từ Dexterity hoà chung pool % từ buff...) —
- * chữ ký hàm KHÔNG đổi nên mọi call site hiện có (BattleSystem, store
- * player.ts) tự động nhận cả 2 sửa đổi (Increased + Attribute) mà
- * không cần sửa gì thêm.
+ * 2 luot: luot 1 tinh du moi modifier THAT (equipment/technique/buff/
+ * ...) de CHOT gia tri 5 attribute; luot 2 dan xuat bonus tu attribute
+ * da chot roi hoa CHUNG vao dung pool Added/Increased cua stat dich
+ * (vd attribute-derived +might hoa chung pool voi +might tu trang
+ * bi, % tang toc danh tu Dexterity hoa chung pool % tu buff...) -
+ * chu ky ham KHONG doi nen moi call site hien co (BattleSystem, store
+ * player.ts) tu dong nhan ca 2 sua doi (Increased + Attribute) ma
+ * khong can sua gi them.
  */
 export function calculateStats(baseStats: BaseStats, modifiers: StatModifier[]): Stats {
   // D10: the domain gate runs before any pipeline work; with an empty
@@ -330,7 +330,7 @@ export function resolveAttributeTotals(
 // attribute-reactive stats never register (no-op by absence).
 //
 // Review fix (2026-09-15): derivers are globally registered but must run
-// ONLY for entities that own the domain — the caller declares the
+// ONLY for entities that own the domain - the caller declares the
 // entity's domains via EffectiveStatContext. A globally-registered
 // spell deriver would otherwise leak maxMp/manaRegenPerTurn onto a
 // sword entity that gains attunement mid-battle.
@@ -351,7 +351,7 @@ const DOMAIN_DELTA_DERIVERS = new Map<StatDomain, DomainDeltaDeriver>()
 export function registerDomainDeltaDeriver(domain: StatDomain, deriver: DomainDeltaDeriver): void {
   const existing = DOMAIN_DELTA_DERIVERS.get(domain)
 
-  // Review cycle (M4-followup) — two ways sharing a domain must register
+  // Review cycle (M4-followup) - two ways sharing a domain must register
   // the SAME deriver instance (the phap ways share one facet object); a
   // different function overwriting silently would flip the delta channel
   // for a domain another way owns.
@@ -371,7 +371,7 @@ export function unregisterDomainDeltaDeriver(domain: StatDomain): void {
  * Effective battle stats (R2 / AR-02): fold TEMPORARY battle modifiers
  * (turn buffs, live passive/persistent/timed modifiers) on top of an
  * ALREADY-RESOLVED base. The input must be calculateStats() output (or
- * an equivalent already-normalized stat snapshot) — calculateStats()
+ * an equivalent already-normalized stat snapshot) - calculateStats()
  * remains the only full attribute-derivation owner.
  *
  * ARCH-009-adjacent retained debt (M7 -> M9): live modifiers may move
@@ -386,14 +386,14 @@ export function unregisterDomainDeltaDeriver(domain: StatDomain): void {
  *   result     = runPipeline(effective, deriveAttributeModifiers(delta))
  *
  * The derived delta folds AFTER the temp-modifier pools (Added into
- * Added, per-tag Increased into its own tag pool) — equivalent to the
+ * Added, per-tag Increased into its own tag pool) - equivalent to the
  * menu view's single-pass derivation up to pool-fold ordering: the
  * delta's tag pools multiply the already-folded result instead of
  * merging into the same tag sum, so the battle value diverges from the
  * menu value in ONE direction (below it for positive deltas in the
  * authored range). The divergence is bounded, not sub-percent:
  * ~1% at moderate deltas, ~3.3% at the authored cap (50 stacks x
- * attunement 100), ~5% at attunement 200/cap — documented in the M9
+ * attunement 100), ~5% at attunement 200/cap - documented in the M9
  * report. A live main-stat modifier that nets to zero changes nothing.
  */
 export function calculateEffectiveStats(
@@ -433,7 +433,7 @@ export function calculateEffectiveStats(
     }
   }
 
-  // Review fix (2026-09-15) — deriver-emitted modifiers are
+  // Review fix (2026-09-15) - deriver-emitted modifiers are
   // system-generated, so the runtime gate is their ONLY guard
   // (architecture whitelist scans authored data/** only). A deriver
   // emitting a wrong-domain gated stat must hit the same wall as any

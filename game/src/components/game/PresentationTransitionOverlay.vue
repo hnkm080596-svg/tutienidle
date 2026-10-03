@@ -255,7 +255,7 @@ defineExpose({
 .presentation-overlay {
   position: fixed;
   inset: 0;
-  /* z-index comes from OVERLAY_LAYERS.curtain (inline style) — the curtain
+  /* z-index comes from OVERLAY_LAYERS.curtain (inline style) - the curtain
      is the TOPMOST app layer: while closed it must cover every other
      panel, including modals, toasts, the save gate and the error screen. */
   pointer-events: none;

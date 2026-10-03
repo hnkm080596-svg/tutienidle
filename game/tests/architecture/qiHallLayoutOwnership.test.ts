@@ -1,24 +1,24 @@
 /**
- * Guard — the Khi Duong (equipment hall) `qi-hall__*` layout vocabulary has
+ * Guard - the Khi Duong (equipment hall) `qi-hall__*` layout vocabulary has
  * exactly one owner: `src/components/panels/equipment-hall/qi-hall.css`.
  *
  * Source of authority:
- * - docs/roadmap.md Phase R11 "Khi Duong 3-tab layout defect" — the
+ * - docs/roadmap.md Phase R11 "Khi Duong 3-tab layout defect" - the
  *   user-reported bug: Enhance/Wash/Refine tabs rendered an invisible item
  *   grid because the shell's scoped `.qi-hall__body { flex-direction: column }`
  *   and each tab's scoped `.qi-hall__split { flex-direction: row }` share
  *   specificity (0,2,0) on the tab root element, so bundle injection order
  *   decided the layout. Splitting the monolith (330b9feb) flipped that order.
  *
- * What this polices (style definitions only — template class= usage is not
+ * What this polices (style definitions only - template class= usage is not
  * a definition and is never scanned):
  *   1. Every `.qi-hall__*` selector is defined in qi-hall.css only. The two
  *      shell-owned selectors are the exception: `.qi-hall` (root) and
  *      `.qi-hall__tabs` may additionally be defined in EquipmentHallPanel.vue.
  *   2. `.qi-hall` itself is defined ONLY by the shell (it is shell-private
- *      structure: nine-slice stacking context), never in the shared sheet —
+ *      structure: nine-slice stacking context), never in the shared sheet -
  *      a second definition would re-open the same specificity war.
- *   3. The shell actually imports the shared sheet (P13 wiring check — a
+ *   3. The shell actually imports the shared sheet (P13 wiring check - a
  *      vocabulary file nobody imports silently styles nothing).
  */
 import { describe, expect, it } from 'vitest'

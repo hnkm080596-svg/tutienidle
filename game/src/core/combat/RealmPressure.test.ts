@@ -26,9 +26,9 @@ function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
   }
 }
 
-// Realm Passive & Pressure System (2026-08-20) — bảng số liệu ở đây
-// khớp ĐÚNG mục VII/VIII tài liệu Plan gốc (gap=1) — xem
-// RealmPressure.ts's hằng số cho phần mở rộng gap>1.
+// Realm Passive & Pressure System (2026-08-20) - bang so lieu o day
+// khop DUNG muc VII/VIII tai lieu Plan goc (gap=1) - xem
+// RealmPressure.ts's hang so cho phan mo rong gap>1.
 describe('RealmPressure — getRealmPressureMultiplier', () => {
   it('cùng cảnh giới -> không có Pressure (×1.00), bất kể grade', () => {
     const a = createCombatant({ type: 'player', realmIndex: 1, breakthroughGrade: 1 })
@@ -96,11 +96,11 @@ describe('RealmPressure — getRealmPressureMultiplier', () => {
     const high = createCombatant({ type: 'player', realmIndex: 3, breakthroughGrade: 1 })
     const low = createCombatant({ realmIndex: 1 })
 
-    // HIGH_TO_LOW: 1 + 2×1.0×1.0 = 3.0 (tuyến tính theo gap — comment code
-    // tự nhận là ngoại đơn giản nhất, test này KHÓA hành vi đó).
+    // HIGH_TO_LOW: 1 + 2x1.0x1.0 = 3.0 (tuyen tinh theo gap - comment code
+    // tu nhan la ngoai don gian nhat, test nay KHOA hanh vi do).
     expect(getRealmPressureMultiplier(high, low)).toBeCloseTo(3.0)
 
-    // LOW_TO_HIGH: 1 − 2×0.5×1.0 = 0.0 → floor 0.1.
+    // LOW_TO_HIGH: 1 - 2x0.5x1.0 = 0.0 -> floor 0.1.
     expect(getRealmPressureMultiplier(low, high)).toBeCloseTo(0.1)
   })
 
@@ -113,9 +113,9 @@ describe('RealmPressure — getRealmPressureMultiplier', () => {
   })
 
   it('CONTENT PROOF: stages chặn player vào realm cao hơn (playerRealmIndex < requiredRealmIndex → chặn) nên gap âm (player đánh LÊN) không thể xảy ra — pressure ×0.5 chỉ xuất hiện khi farm quay lại stage cũ (gap dương cho player: ×2.0 thưởng)', () => {
-    // Test này khóa giả định cân bằng: nếu sau này stages cho phép đánh lên
-    // realm cao hơn, test FAIL nhắc review lại "tường thành ×0.5" trước khi
-    // ship. Hiện tại chỉ confirm giá trị biên đã có test riêng (L48, L86).
+    // Test nay khoa gia dinh can bang: neu sau nay stages cho phep danh len
+    // realm cao hon, test FAIL nhac review lai "tuong thanh x0.5" truoc khi
+    // ship. Hien tai chi confirm gia tri bien da co test rieng (L48, L86).
     const up = getRealmPressureMultiplier(
       createCombatant({ realmIndex: 1 }),
       createCombatant({ type: 'player', realmIndex: 2, breakthroughGrade: 1 }),
@@ -125,7 +125,7 @@ describe('RealmPressure — getRealmPressureMultiplier', () => {
       createCombatant({ realmIndex: 1 }),
     )
 
-    // Bên thấp đánh lên: 0.5 (bị áp). Player cao đánh xuống: 2.0 (thưởng).
+    // Ben thap danh len: 0.5 (bi ap). Player cao danh xuong: 2.0 (thuong).
     expect(up).toBeCloseTo(0.5)
     expect(down).toBeCloseTo(2.0)
   })

@@ -4,7 +4,7 @@ import { createDefaultPlayer, type PlayerData } from '../player/Player'
 import { createBaseStats, type Stats } from '../stats/StatBlock'
 import { EventBus } from '../events/EventBus'
 
-// Talent v4 M2 — Loi Kiep (spec §4.3 row 17): lightning intensity x2
+// Talent v4 M2 - Loi Kiep (spec sec4.3 row 17): lightning intensity x2
 // while the talent is held; each tribulation victory grants a permanent
 // +10% all-attribute bonus (talent_loi_kiep_* modifiers).
 function makeDirector() {

@@ -15,10 +15,10 @@ import { gradeLabel, realmLabel } from '@/core/presentation/labels'
 import type { SlotComparison } from '@/components/common/SlotTypes'
 import type { EquipmentTooltipContent, TooltipSection, TooltipStatRow } from './useTooltip'
 
-// Dùng chung bởi buildEquipmentTooltip (build rows "So với trang bị
-// đang mặc") VÀ getEquipmentComparisonTone (Slot Revamp mục 17.7 —
-// tín hiệu upgrade/downgrade nhỏ NGAY TRÊN SlotView, không chỉ trong
-// tooltip) — 1 nguồn tính delta duy nhất, tránh lệch nhau giữa 2 nơi.
+// Dung chung boi buildEquipmentTooltip (build rows "So voi trang bi
+// dang mac") VA getEquipmentComparisonTone (Slot Revamp muc 17.7 -
+// tin hieu upgrade/downgrade nho NGAY TREN SlotView, khong chi trong
+// tooltip) - 1 nguon tinh delta duy nhat, tranh lech nhau giua 2 noi.
 function statValuesByStat(instance: EquipmentInstance, affixRegistry: AffixRegistry): Map<string, number> {
   return new Map<string, number>([
     [instance.mainStat.stat, instance.mainStat.flat ?? 0],
@@ -41,10 +41,10 @@ function computeEquipmentStatDeltas(
   }))
 }
 
-// Tổng hợp delta nhiều stat khác thang đo (percent lẫn flat) thành 1
-// tone duy nhất — đếm số stat tăng/giảm thay vì cộng dồn giá trị thô
-// (không thể cộng %crit với flat might có ý nghĩa), khớp cách
-// buildEquipmentTooltip() đã tô tone từng dòng.
+// Tong hop delta nhieu stat khac thang do (percent lan flat) thanh 1
+// tone duy nhat - dem so stat tang/giam thay vi cong don gia tri tho
+// (khong the cong %crit voi flat might co y nghia), khop cach
+// buildEquipmentTooltip() da to tone tung dong.
 export function getEquipmentComparisonTone(
   instance: EquipmentInstance,
   comparedInstance: EquipmentInstance | undefined,
@@ -79,19 +79,19 @@ export interface EquipmentCompareContext {
   mainStatRangeQuote: { min: number; max: number }
 }
 
-// Tooltip Equipment có cấu trúc (2026-08-15) — loại CUỐI trong đợt
-// "tooltip theo từng loại item" (Technique/Pill/Talisman/Formation/
-// Equipment). Build TỪ ĐÚNG EquipmentInstance + Equipment template
-// thật, không bịa số. Tách hàm dùng chung ở đây (khác 4 loại trước tự
-// build tại chỗ trong component) vì CẢ EquipmentBagSection.vue LẪN
-// EquipmentPaperdoll.vue đều cần — 2 component, không có 1 nơi hiển
-// nhiên để đặt hàm cục bộ.
+// Tooltip Equipment co cau truc (2026-08-15) - loai CUOI trong dot
+// "tooltip theo tung loai item" (Technique/Pill/Talisman/Formation/
+// Equipment). Build TU DUNG EquipmentInstance + Equipment template
+// that, khong bia so. Tach ham dung chung o day (khac 4 loai truoc tu
+// build tai cho trong component) vi CA EquipmentBagSection.vue LAN
+// EquipmentPaperdoll.vue deu can - 2 component, khong co 1 noi hien
+// nhien de dat ham cuc bo.
 //
-// `slotState` = null cho đồ CHƯA trang bị trong túi (Cường Hóa/Trận
-// Pháp/Phù Chú gắn theo SLOT nhân vật chứ không theo item cụ thể, xem
-// EquipmentSlotState.ts — 1 món đồ nằm im trong túi KHÔNG thừa hưởng
-// cấp Cường Hóa/Trận Pháp/Phù Chú của slot đó, chỉ món ĐANG MẶC mới
-// thật sự có những thứ này).
+// `slotState` = null cho do CHUA trang bi trong tui (Cuong Hoa/Tran
+// Phap/Phu Chu gan theo SLOT nhan vat chu khong theo item cu the, xem
+// EquipmentSlotState.ts - 1 mon do nam im trong tui KHONG thua huong
+// cap Cuong Hoa/Tran Phap/Phu Chu cua slot do, chi mon DANG MAC moi
+// that su co nhung thu nay).
 export function buildEquipmentTooltip(
   instance: EquipmentInstance,
   template: Equipment,
@@ -206,7 +206,7 @@ export function buildEquipmentTooltip(
     sections.push({ label: 'Rèn', rows: forgeRows })
   }
 
-  // Phù/Trận legacy đã khai tử (plan §10.1) — không còn socket rows.
+  // Phu/Tran legacy da khai tu (plan sec10.1) - khong con socket rows.
 
   const instanceRealmId = realmFromGrade(instance.grade)
   const displayName = composeEquipmentDisplayName(instance, template, zoneRegistry)

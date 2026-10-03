@@ -1,7 +1,7 @@
-// combat-player-visual (ui-discoverability-refactor-plan.md §3.2) — tách
-// từ CombatScene.ts: đổi hình thái Player (visual profile: texture +
-// kích thước nguồn + bảng anchor) và body-anchor resolver (điểm neo VFX
-// bám theo transform sprite hiện hành). Module nhận dependency tường
+// combat-player-visual (ui-discoverability-refactor-plan.md sec3.2) - tach
+// tu CombatScene.ts: doi hinh thai Player (visual profile: texture +
+// kich thuoc nguon + bang anchor) va body-anchor resolver (diem neo VFX
+// bam theo transform sprite hien hanh). Module nhan dependency tuong
 // minh qua `scene`.
 import type Phaser from 'phaser'
 
@@ -23,9 +23,9 @@ export class CombatPlayerVisual {
   constructor(private readonly scene: CombatScene) {}
 
   /**
-   * Đổi hình thái Player (plan §4.3): thay texture + kích thước nguồn +
-   * bảng anchor nhưng GIỮ NGUYÊN entity, position interpolation, HP/VFX
-   * state — chỉ "lột xác" presentation.
+   * Doi hinh thai Player (plan sec4.3): thay texture + kich thuoc nguon +
+   * bang anchor nhung GIU NGUYEN entity, position interpolation, HP/VFX
+   * state - chi "lot xac" presentation.
    */
   applyPlayerVisualProfile(profileId: PlayerVisualProfileId) {
     const profile = PLAYER_VISUAL_PROFILES[profileId] ?? PLAYER_VISUAL_PROFILES.mortal

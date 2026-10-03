@@ -2,18 +2,18 @@ import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { calculateBagGridLayout, GRID_GAP, MIN_COLUMNS, MIN_ROWS, type BagGridLayout } from '@/core/ui/SlotSizes'
 
 /**
- * Đo CHIỀU RỘNG/CAO THẬT của .bag-section__grid qua ResizeObserver —
- * mọi bag-section (Equipment/Material/Pill/Talisman/Formation) gắn
- * `gridRef` lên chính div đó để layout tự tính lại mỗi khi container
- * đổi kích thước (resize cửa sổ, panel, ...), KHÔNG chỉ tính 1 lần lúc
- * mount. Trước khi ResizeObserver bắn lần đầu, layout tạm dùng
- * MIN_COLUMNS/MIN_ROWS làm fallback (không NaN/0 cột).
+ * Do CHIEU RONG/CAO THAT cua .bag-section__grid qua ResizeObserver -
+ * moi bag-section (Equipment/Material/Pill/Talisman/Formation) gan
+ * `gridRef` len chinh div do de layout tu tinh lai moi khi container
+ * doi kich thuoc (resize cua so, panel, ...), KHONG chi tinh 1 lan luc
+ * mount. Truoc khi ResizeObserver ban lan dau, layout tam dung
+ * MIN_COLUMNS/MIN_ROWS lam fallback (khong NaN/0 cot).
  *
- * Remediation Task 4 (2026-09-05) — grid có thể nằm trong v-if/tab nên
- * KHÔNG tồn tại lúc onMounted (bag section chỉ render khi tab active).
- * Watch `gridRef` (immediate) để attach KHI ref được gán — bất kể lúc
- * nào trong đời component; observer cũ disconnect khi ref đổi (grid
- * unmount/remount), cleanup cả watcher + observer khi unmount. Cùng
+ * Remediation Task 4 (2026-09-05) - grid co the nam trong v-if/tab nen
+ * KHONG ton tai luc onMounted (bag section chi render khi tab active).
+ * Watch `gridRef` (immediate) de attach KHI ref duoc gan - bat ke luc
+ * nao trong doi component; observer cu disconnect khi ref doi (grid
+ * unmount/remount), cleanup ca watcher + observer khi unmount. Cung
  * pattern usePanelPagination (audit H4 2026-08-31).
  */
 export function useBagGridLayout() {
@@ -50,14 +50,14 @@ export function useBagGridLayout() {
     observer = null
   })
 
-  // pageSize thật (= columns * rows hiện tại) — truyền vào
-  // useBagPagination thay cho hằng số PAGE_SIZE cố định cũ, đổi cột
-  // lúc resize không làm mất/lệch item.
+  // pageSize that (= columns * rows hien tai) - truyen vao
+  // useBagPagination thay cho hang so PAGE_SIZE co dinh cu, doi cot
+  // luc resize khong lam mat/lech item.
   const pageSize = computed(() => layout.value.columns * layout.value.rows)
 
-  // Bind qua CSS custom property thay vì width/height px cứng — slot
-  // tự fill 100% cột nhờ CSS Grid + aspect-ratio (xem bag-section__grid
-  // trong từng *.vue), KHÔNG còn v-bind ra 1 con số px cố định.
+  // Bind qua CSS custom property thay vi width/height px cung - slot
+  // tu fill 100% cot nho CSS Grid + aspect-ratio (xem bag-section__grid
+  // trong tung *.vue), KHONG con v-bind ra 1 con so px co dinh.
   const gridStyle = computed(() => ({
     '--grid-columns': String(layout.value.columns),
     '--grid-gap': `${layout.value.gap}px`,

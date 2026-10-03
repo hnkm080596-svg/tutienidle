@@ -1,7 +1,7 @@
-// Turn-Based Combat Foundation (spec Phần 3) — vòng lặp step tìm actor kế
-// tiếp đến lượt. priority chỉ dùng khi speed bằng nhau tuyệt đối (spec:
-// player > ally theo slot > enemy theo spawn — caller truyền priority
-// theo đúng thứ tự đó, số nhỏ hơn = ưu tiên cao hơn).
+// Turn-Based Combat Foundation (spec Phan 3) - vong lap step tim actor ke
+// tiep den luot. priority chi dung khi speed bang nhau tuyet doi (spec:
+// player > ally theo slot > enemy theo spawn - caller truyen priority
+// theo dung thu tu do, so nho hon = uu tien cao hon).
 import { advanceGauge, isGaugeReady, type GaugeActor } from './ActionGauge'
 
 export interface TurnQueueActor extends GaugeActor {
@@ -15,7 +15,7 @@ export interface ResolvedTurn<T extends TurnQueueActor> {
 
 const STEP_RATE = 1
 
-// Chặn vòng lặp vô hạn nếu mọi actor còn sống đều có speed <= 0.
+// Chan vong lap vo han neu moi actor con song deu co speed <= 0.
 const MAX_STEPS = 100_000
 
 export function resolveNextTurn<T extends TurnQueueActor>(actors: T[]): ResolvedTurn<T> | null {

@@ -1,10 +1,10 @@
 /**
- * R14.1a guard (AR-33) — effective ESLint severity for `src/core/**`.
+ * R14.1a guard (AR-33) - effective ESLint severity for `src/core/**`.
  *
  * Mission 0 AR-33 evidence: the later `src/**` rule block in eslint.config.js
  * matches the same files as the earlier `src/core/**` block and downgrades
  * `@typescript-eslint/no-explicit-any` / `no-unused-vars` from 'error' back
- * to 'warn' — so the stricter core rules were never effective. This guard
+ * to 'warn' - so the stricter core rules were never effective. This guard
  * lints real probe strings through the actual ESLint resolution (flat-config
  * merge included) and asserts the EFFECTIVE severity, so a future re-overlap
  * fails the suite even if `npm run lint` is not a CI gate.

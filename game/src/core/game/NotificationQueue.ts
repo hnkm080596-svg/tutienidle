@@ -1,14 +1,14 @@
 import type { NotificationEvent } from '../notification/NotificationEvent'
 
-// Hàng đợi toast phát sinh TRONG core (loot từ BattleLootSystem, upgrade
-// skill từ SkillSystem callback) — GameManager là plain class không phụ
-// thuộc Vue, Vue layer (App.vue's tick()) tự rút ra mỗi tick qua
-// GameManager.drainNotifications() rồi đẩy vào stores/notification.ts.
-// Nguồn toast khác (upgrade/craft/save) đã ở Vue layer sẵn, gọi thẳng
-// store, không qua hàng đợi này.
-// Hàng rỗng dùng chung — drain() trên queue rỗng (đường phổ biến nhất
-// mỗi tick khi không có loot/toast) trả về hằng số này thay vì alloc
-// mảng [] mới mỗi lần gọi vô ích.
+// Hang doi toast phat sinh TRONG core (loot tu BattleLootSystem, upgrade
+// skill tu SkillSystem callback) - GameManager la plain class khong phu
+// thuoc Vue, Vue layer (App.vue's tick()) tu rut ra moi tick qua
+// GameManager.drainNotifications() roi day vao stores/notification.ts.
+// Nguon toast khac (upgrade/craft/save) da o Vue layer san, goi thang
+// store, khong qua hang doi nay.
+// Hang rong dung chung - drain() tren queue rong (duong pho bien nhat
+// moi tick khi khong co loot/toast) tra ve hang so nay thay vi alloc
+// mang [] moi moi lan goi vo ich.
 const EMPTY_EVENTS: NotificationEvent[] = Object.freeze([]) as unknown as NotificationEvent[]
 
 export class NotificationQueue {

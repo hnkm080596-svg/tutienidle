@@ -14,14 +14,14 @@ import { allocateWorkerSlots } from './WorkerAllocator'
 import { advanceWorkerLanes } from './WorkerLaneAdvance'
 
 /**
- * Offline settle (plan §4.3) — tach khoi ProductionSystem
+ * Offline settle (plan sec4.3) - tach khoi ProductionSystem
  * (large-file-split): policy catch-up (ngan sach PRODUCTION_OFFLINE_CAP,
  * forfeit backlog, worker-cycle window) song hanh voi tickWorkers
- * online qua CUNG allocateWorkerSlots + grantCycleRewards — online va
+ * online qua CUNG allocateWorkerSlots + grantCycleRewards - online va
  * offline dung mot quy tac phan bo/settle.
  *
  * M11 (ARCH-007): worker-cycle advancement shares the SAME mechanism
- * advanceWorkerLanes (WorkerLaneAdvance.ts) with tickWorkers — per-lane
+ * advanceWorkerLanes (WorkerLaneAdvance.ts) with tickWorkers - per-lane
  * deadline chaining replaces the pooled floor(windowMs * slots / cycleMs).
  */
 export interface ProductionOfflineDeps {
@@ -39,8 +39,8 @@ export interface ProductionOfflineDeps {
 export interface ProductionOfflineOptions {
   workerCapacity?: number
   offlineSinceMs?: number
-  /** Chi-hien-quan — assignments snapshot (từ states trước settle) để
-   *  offline khớp online. */
+  /** Chi-hien-quan - assignments snapshot (tu states truoc settle) de
+   *  offline khop online. */
   workerAssignments?: Map<string, number>
 }
 
@@ -73,15 +73,15 @@ export function settleProductionOffline(
  * (Mission D: no manual phase eats budget first anymore).
  *
  * M11 (ARCH-007): each site runs `slots` parallel worker LANES inside the
- * [offlineSinceMs, nowMs] window — one sequential cycle chain per lane on
+ * [offlineSinceMs, nowMs] window - one sequential cycle chain per lane on
  * its OWN deadline, via the same advanceWorkerLanes mechanism as
  * tickWorkers (driver 'deadline'). Pending cycles past nowMs keep their
  * original lane/deadline for the online tickWorkers; completions over the
  * remaining budget are forfeited. Fractional lane time is never pooled
  * into a synthetic cycle.
  *
- * Chi-hien-quan (2026-09-02): `workerAssignments` — cùng phân bổ manual
- * của tickWorkers để OFFLINE KHỚP ONLINE (spec §6).
+ * Chi-hien-quan (2026-09-02): `workerAssignments` - cung phan bo manual
+ * cua tickWorkers de OFFLINE KHOP ONLINE (spec sec6).
  */
 function settleWorkersOffline(
   deps: ProductionOfflineDeps,
@@ -104,7 +104,7 @@ function settleWorkersOffline(
     state.activeWorkerSlots = 0
   }
 
-  // D1 (INV-D-03) — same retained-lane contract as tickWorkers: saved
+  // D1 (INV-D-03) - same retained-lane contract as tickWorkers: saved
   // in-flight lanes keep their own deadlines and settle under the cap
   // budget even when the pool is zero or the site left the auto set.
   // Only a total absence of advanceable work skips the pass.
@@ -141,12 +141,12 @@ function settleWorkersOffline(
 
     state.workerCycles ??= []
 
-    // M11 (ARCH-007) — per-lane advancement via the SAME mechanism as
+    // M11 (ARCH-007) - per-lane advancement via the SAME mechanism as
     // tickWorkers (advanceWorkerLanes): each lane completes on its OWN
     // deadline; pending cycles keep their lane + original deadline;
     // empty lanes produce only from the save instant (offlineSinceMs).
     // No floor(windowMs * slots / cycleMs) pooling across lanes.
-    // Completions over the budget are forfeited — past-due backlog is
+    // Completions over the budget are forfeited - past-due backlog is
     // never left behind for a free online grant outside the cap.
     const result = advanceWorkerLanes({
       siteId: state.siteId,

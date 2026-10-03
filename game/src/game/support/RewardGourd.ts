@@ -1,42 +1,42 @@
-// RewardGourd (player-body-anchor-reward-gourd-plan §6/§7) — hợp đồng +
-// các hàm thuần cho collector hồ lô: vị trí safe-area, anchor miệng và
-// quỹ đạo hút Bézier. Vẽ placeholder (Graphics) nằm ở CombatScene dùng
-// đúng các hằng số/anchor từ module này để sau này thay art thật chỉ cần
-// đổi texture + normalized mouth anchor.
+// RewardGourd (player-body-anchor-reward-gourd-plan sec6/sec7) - hop dong +
+// cac ham thuan cho collector ho lo: vi tri safe-area, anchor mieng va
+// quy dao hut Bezier. Ve placeholder (Graphics) nam o CombatScene dung
+// dung cac hang so/anchor tu module nay de sau nay thay art that chi can
+// doi texture + normalized mouth anchor.
 
 import type { BattleRewardParticleEvent } from '@/core/battle/BattleEvents'
 
-/** Anchor hút chuẩn hoá trên ảnh hồ lô — MIỆNG hồ lô. */
+/** Anchor hut chuan hoa tren anh ho lo - MIENG ho lo. */
 export const GOURD_MOUTH_ANCHOR = { x: 0.5, y: 0.14 } as const
 
-/** Kích thước HIỂN THỊ px trên battlefield (plan §8: đọc tốt 48–64px). */
+/** Kich thuoc HIEN THI px tren battlefield (plan sec8: doc tot 48-64px). */
 export const GOURD_PLACEHOLDER_SIZE = { w: 52, h: 64 } as const
 
 /**
- * Art thật (plan §8) — PNG RGBA trong suốt, hồ lô chibi mặc họa tông
- * ngọc sẫm/đồng cổ/dây đỏ. Mount giữ nguyên collector API: chỉ đổi
- * texture + kích thước hiển thị; normalized mouth anchor KHÔNG đổi.
+ * Art that (plan sec8) - PNG RGBA trong suot, ho lo chibi mac hoa tong
+ * ngoc sam/dong co/day do. Mount giu nguyen collector API: chi doi
+ * texture + kich thuoc hien thi; normalized mouth anchor KHONG doi.
  */
 export const GOURD_TEXTURE_KEY = 'reward-gourd-v1'
 
 export const GOURD_TEXTURE_URL = '/assets/ui/combat/reward-gourd-v1.png'
 
-/** Lề tối thiểu tới mép trái và tới đường inset dưới. */
+/** Le toi thieu toi mep trai va toi duong inset duoi. */
 export const GOURD_SAFE_MARGIN_PX = 18
 
 export interface GourdPlacementInput {
-  /** Chiều cao canvas hiện hành. */
+  /** Chieu cao canvas hien hanh. */
   canvasHeight: number
 
   /**
-   * Bottom inset đã đo của Event Bar + Control Bar — gourd nằm NGAY phía
-   * trên đường này (plan §6.2).
+   * Bottom inset da do cua Event Bar + Control Bar - gourd nam NGAY phia
+   * tren duong nay (plan sec6.2).
    */
   bottomInset: number
 }
 
 export interface GourdPlacement {
-  /** Điểm neo đáy-giữa placeholder. */
+  /** Diem neo day-giua placeholder. */
   baseX: number
 
   baseY: number
@@ -47,8 +47,8 @@ export interface GourdPlacement {
 }
 
 /**
- * Vị trí góc TRÁI DƯỚI battlefield an toàn: neo theo canvas + bottom
- * inset, KHÔNG theo grid Player. Pure để test được resize math.
+ * Vi tri goc TRAI DUOI battlefield an toan: neo theo canvas + bottom
+ * inset, KHONG theo grid Player. Pure de test duoc resize math.
  */
 export function computeGourdPlacement(input: GourdPlacementInput): GourdPlacement {
   const { w: width, h: height } = GOURD_PLACEHOLDER_SIZE
@@ -68,7 +68,7 @@ export function computeGourdPlacement(input: GourdPlacementInput): GourdPlacemen
   }
 }
 
-/** Screen point của miệng hồ lô từ placement hiện hành. */
+/** Screen point cua mieng ho lo tu placement hien hanh. */
 export function resolveGourdMouth(placement: GourdPlacement): { x: number; y: number } {
   return {
     x: placement.baseX,
@@ -77,7 +77,7 @@ export function resolveGourdMouth(placement: GourdPlacement): { x: number; y: nu
   }
 }
 
-/** Độ vồng cung Bézier theo loại thưởng (giữ màu riêng, plan §7.3). */
+/** Do vong cung Bezier theo loai thuong (giu mau rieng, plan sec7.3). */
 function arcHeightFor(kind: BattleRewardParticleEvent['kind']): number {
   switch (kind) {
     case 'insight':
@@ -98,8 +98,8 @@ export interface RewardStreamPoint {
 }
 
 /**
- * Điểm điều khiển Bézier cho 1 mote — tính LIVE từ end hiện hành nên
- * resize giữa animation hoặc Player teleport đều không lệch đích.
+ * Diem dieu khien Bezier cho 1 mote - tinh LIVE tu end hien hanh nen
+ * resize giua animation hoac Player teleport deu khong lech dich.
  */
 export function resolveRewardControlPoint(
   start: RewardStreamPoint,
@@ -116,8 +116,8 @@ export function resolveRewardControlPoint(
 }
 
 /**
- * Tiến độ chuyển động của 1 mote trên tham số tween t ∈ [0,1] tuyến
- * tính: tăng tốc nửa sau (quad-in) — cảm giác "bị hút" về miệng.
+ * Tien do chuyen dong cua 1 mote tren tham so tween t in [0,1] tuyen
+ * tinh: tang toc nua sau (quad-in) - cam giac "bi hut" ve mieng.
  */
 export function easeRewardProgress(t: number): number {
   const clamped = Math.min(1, Math.max(0, t))
@@ -126,17 +126,17 @@ export function easeRewardProgress(t: number): number {
 }
 
 /**
- * Xoáy nhỏ đoạn cuối (plan §7.3): offset vuông góc với hướng bay, biên
- * độ tắt dần khi tới miệng.
+ * Xoay nho doan cuoi (plan sec7.3): offset vuong goc voi huong bay, bien
+ * do tat dan khi toi mieng.
  */
 export function rewardSwirlOffset(
   p: number,
 
   seed: number,
 ): { x: number; y: number } {
-  const amplitude = 10 * (1 - p) * p * 4 // peak ~p=0.5, về 0 ở hai đầu
+  const amplitude = 10 * (1 - p) * p * 4 // peak ~p=0.5, ve 0 o hai dau
 
-  // Tránh -0 ở hai đầu quỹ đạo — mote phải chui THẲNG vào miệng.
+  // Tranh -0 o hai dau quy dao - mote phai chui THANG vao mieng.
   if (amplitude <= 0) {
     return { x: 0, y: 0 }
   }
@@ -150,7 +150,7 @@ export function rewardSwirlOffset(
   }
 }
 
-/** Scale mote co lại khi tiến gần miệng (từ 1 về 0.35). */
+/** Scale mote co lai khi tien gan mieng (tu 1 ve 0.35). */
 export function rewardMoteScale(p: number): number {
   return 1 - 0.65 * easeRewardProgress(p)
 }

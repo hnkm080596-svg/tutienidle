@@ -4,10 +4,10 @@ import { EventBus } from '../events/EventBus'
 import { createBaseStats } from '../stats/StatBlock'
 import type { CombatEntity } from './CombatEntity'
 
-// R3 re-audit (AR-03 gap) — SkillToTurnSkillConverter used to drop
+// R3 re-audit (AR-03 gap) - SkillToTurnSkillConverter used to drop
 // attributeScaling/manaScalingRatio entirely, and
 // no live turn-combat code path ever read source.stats.skillDamagePercent.
-// This meant every Pháp Tu skill's authored scaling and the
+// This meant every Phap Tu skill's authored scaling and the
 // entire skillDamagePercent stat had zero effect once cast through the
 // active TurnBattleSystem. These tests prove resolveActionHit() now
 // applies both, deterministically (evasionRate/criticalRate/blockChance
@@ -44,7 +44,7 @@ function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
 }
 
 describe('CombatSystem.resolveActionHit — skill scaling (R3 re-audit)', () => {
-  // Pin RNG deterministically — hit/crit/block/ignore-resistance rolls all
+  // Pin RNG deterministically - hit/crit/block/ignore-resistance rolls all
   // consume Math.random(); a low fixed value guarantees hit (chance is
   // always > 0 with evasion 0) and no crit/block/ignore-resistance (all
   // zeroed chances) regardless of what the surrounding suite run order
@@ -77,7 +77,7 @@ describe('CombatSystem.resolveActionHit — skill scaling (R3 re-audit)', () => 
       { critical: false },
     )
 
-    // ratioPerPoint 0.004 × attunement 50 = 0.2 bonus multiplier.
+    // ratioPerPoint 0.004 x attunement 50 = 0.2 bonus multiplier.
     expect(withScaling.finalDamage).toBeCloseTo(withoutScaling.finalDamage * 1.2, 5)
   })
 
@@ -98,7 +98,7 @@ describe('CombatSystem.resolveActionHit — skill scaling (R3 re-audit)', () => 
       { critical: false },
     )
 
-    // baseDamage 100 × (1 + 0.001×200) = 120.
+    // baseDamage 100 x (1 + 0.001x200) = 120.
     expect(result.finalDamage).toBeCloseTo(120, 5)
   })
 
@@ -114,7 +114,7 @@ describe('CombatSystem.resolveActionHit — skill scaling (R3 re-audit)', () => 
 
     const result = combat.resolveActionHit(source, target, { kind: 'physical', multiplier: 1 }, { critical: false })
 
-    // baseDamage 100 × (1 + 0.5) = 150.
+    // baseDamage 100 x (1 + 0.5) = 150.
     expect(result.finalDamage).toBeCloseTo(150, 5)
   })
 })

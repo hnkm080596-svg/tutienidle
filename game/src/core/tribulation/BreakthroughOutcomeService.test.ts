@@ -1,5 +1,5 @@
 /**
- * R8.2 Slice 2 — BreakthroughOutcomeService characterization + parity.
+ * R8.2 Slice 2 - BreakthroughOutcomeService characterization + parity.
  *
  * RED phase: encodes CURRENT behavior of the Vue-owned breakthrough
  * consequence sequencing (useBreakthrough.ts) so the domain service is
@@ -7,7 +7,7 @@
  *
  * Evidence note (2026-09-11, characterized): CultivationSystem.
  * breakthrough() NEVER crosses a major realm (returns false at maxLevel;
- * major transitions go through the tribulation chain — Slice 1). The
+ * major transitions go through the tribulation chain - Slice 1). The
  * technique-grant / artifact-awakening branches in useBreakthrough keyed
  * on realmId change are therefore unreachable in the production flow;
  * this slice migrates the LIVE consequence chain and keeps the

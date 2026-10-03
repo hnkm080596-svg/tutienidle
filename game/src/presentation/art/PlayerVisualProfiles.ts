@@ -1,18 +1,18 @@
-// PlayerVisualProfiles (player-body-anchor-reward-gourd-plan §4.1) —
-// catalog hình ảnh Player theo hình thái: texture combat, texture tu
-// luyện và bảng body anchor chuẩn hoá (tỷ lệ 0..1 của ảnh nguồn).
+// PlayerVisualProfiles (player-body-anchor-reward-gourd-plan sec4.1) -
+// catalog hinh anh Player theo hinh thai: texture combat, texture tu
+// luyen va bang body anchor chuan hoa (ty le 0..1 cua anh nguon).
 //
-// Policy hình thái (plan §2):
-// - `mortal`: art Phàm Nhân mới (combat + kiết già tu luyện).
-// - `phap_tu`: art Pháp Tu mới trong combat; tu luyện tạm dùng fallback
-//   Phàm Nhân đã thống nhất.
-// - `kiem_tu`: CHƯA có art riêng — fallback toàn bộ sang Phàm Nhân.
+// Policy hinh thai (plan sec2):
+// - `mortal`: art Pham Nhan moi (combat + kiet gia tu luyen).
+// - `phap_tu`: art Phap Tu moi trong combat; tu luyen tam dung fallback
+//   Pham Nhan da thong nhat.
+// - `kiem_tu`: CHUA co art rieng - fallback toan bo sang Pham Nhan.
 // - `the_tu`: NO dedicated art yet - falls back entirely to mortal.
 //
-// Scenes chỉ nhận PROFILE ID (không cầm Player store/GameManager) qua
+// Scenes chi nhan PROFILE ID (khong cam Player store/GameManager) qua
 // Phaser registry + event `player_visual_profile_changed`.
 //
-// 2026-09-14 — the id type + resolution rule moved to
+// 2026-09-14 - the id type + resolution rule moved to
 // `core/player/PlayerVisualForm.ts`: the visual form is entity domain data,
 // derived once (player store getter `visualProfileId`) for every place the
 // character appears. Re-exports kept so existing importers stay unchanged.
@@ -24,7 +24,7 @@ import type { CultivationWayId } from '@/core/player/CultivationPathKit'
 import type { ArtExtent } from '@/presentation/art/CombatEntityPresentation'
 import { isBetaWay } from '@/core/betaScope'
 
-/** Điểm bám VFX chuẩn hoá trên ảnh nguồn (plan §5.1). */
+/** Diem bam VFX chuan hoa tren anh nguon (plan sec5.1). */
 export type PlayerBodyAnchorId =
   | 'head'
   | 'chest'
@@ -41,14 +41,14 @@ export interface NormalizedBodyAnchor {
 export interface PlayerVisualProfile {
   id: PlayerVisualProfileId
 
-  /** Texture đứng (combat) — static art thay cho atlas idle cũ. */
+  /** Texture dung (combat) - static art thay cho atlas idle cu. */
   combatTextureKey: string
 
   combatTextureUrl: string
 
   combatSourceSize: { w: number; h: number }
 
-  /** Texture kiết già tu luyện — undefined thì fallback sang mortal. */
+  /** Texture kiet gia tu luyen - undefined thi fallback sang mortal. */
   cultivateTextureKey?: string
 
   cultivateTextureUrl?: string
@@ -56,12 +56,12 @@ export interface PlayerVisualProfile {
   cultivateSourceSize?: { w: number; h: number }
 
   /**
-   * Bảng anchor RIÊNG từng hình thái (vị trí tay/tỷ lệ đạo bào khác
-   * nhau) — combat pose.
+   * Bang anchor RIENG tung hinh thai (vi tri tay/ty le dao bao khac
+   * nhau) - combat pose.
    */
   bodyAnchors: Record<PlayerBodyAnchorId, NormalizedBodyAnchor>
 
-  /** Anchor cho pose kiết già nếu profile có texture tu luyện riêng. */
+  /** Anchor cho pose kiet gia neu profile co texture tu luyen rieng. */
   cultivateBodyAnchors?: Record<PlayerBodyAnchorId, NormalizedBodyAnchor>
 }
 
@@ -76,7 +76,7 @@ const PHAP_TU_CULTIVATE_KEY = 'player-phap-tu-cultivate-ngu-hanh-v1'
 const KIEM_TU_COMBAT_KEY = 'player-kiem-tu-v1'
 const KIEM_TU_CULTIVATE_KEY = 'player-kiem-tu-cultivate-v1'
 
-/** Anchor mặc định — tư thế đứng đạo bào, chân ở đáy ảnh (foot anchor). */
+/** Anchor mac dinh - tu the dung dao bao, chan o day anh (foot anchor). */
 function standingAnchors(
   overrides?: Partial<Record<PlayerBodyAnchorId, NormalizedBodyAnchor>>,
 ): Record<PlayerBodyAnchorId, NormalizedBodyAnchor> {
@@ -90,7 +90,7 @@ function standingAnchors(
   }
 }
 
-/** Anchor pose kiết già — tay hạ thấp đặt trước danh. */
+/** Anchor pose kiet gia - tay ha thap dat truoc danh. */
 function lotusAnchors(): Record<PlayerBodyAnchorId, NormalizedBodyAnchor> {
   return {
     head: { x: 0.5, y: 0.13 },
@@ -114,7 +114,7 @@ export const PLAYER_VISUAL_PROFILES: Record<PlayerVisualProfileId, PlayerVisualP
     cultivateSourceSize: { w: 1254, h: 1254 },
 
     bodyAnchors: standingAnchors({
-      // Art thủy mặc cầm kiếm v2: tay kiếm nằm bên trái texture.
+      // Art thuy mac cam kiem v2: tay kiem nam ben trai texture.
       head: { x: 0.55, y: 0.25 },
       chest: { x: 0.55, y: 0.46 },
       castHand: { x: 0.32, y: 0.62 },
@@ -132,14 +132,14 @@ export const PLAYER_VISUAL_PROFILES: Record<PlayerVisualProfileId, PlayerVisualP
     combatTextureUrl: `/assets/characters/player/phap-tu/${PHAP_TU_COMBAT_KEY}.png`,
     combatSourceSize: { w: 732, h: 756 },
 
-    // Minh hand-drawn Ngũ Hành cultivate (2026-09-27). Pháp Tu Ẩn
-    // (Vạn Đạo) has a dedicated PNG on disk but no profile id - the
+    // Minh hand-drawn Ngu Hanh cultivate (2026-09-27). Phap Tu An
+    // (Van Dao) has a dedicated PNG on disk but no profile id - the
     // hidden ways collapse into 'phap_tu' before art lookup.
     cultivateTextureKey: PHAP_TU_CULTIVATE_KEY,
     cultivateTextureUrl: `/assets/characters/player/phap-tu/${PHAP_TU_CULTIVATE_KEY}.png`,
     cultivateSourceSize: { w: 1254, h: 1254 },
 
-    // Art Pháp Tu tay tung chú cao hơn và thân áo rộng hơn.
+    // Art Phap Tu tay tung chu cao hon va than ao rong hon.
     bodyAnchors: standingAnchors({
       chest: { x: 0.5, y: 0.34 },
       castHand: { x: 0.7, y: 0.4 },
@@ -152,7 +152,7 @@ export const PLAYER_VISUAL_PROFILES: Record<PlayerVisualProfileId, PlayerVisualP
   kiem_tu: {
     id: 'kiem_tu',
 
-    // Minh hand-drawn Ngự Kiếm set (2026-09-27): static frame extracted
+    // Minh hand-drawn Ngu Kiem set (2026-09-27): static frame extracted
     // from the idle sheet for non-combat surfaces; combat itself runs the
     // 'ngu_kiem' animated variant via CHARACTER_RESKIN_MAP.
     combatTextureKey: KIEM_TU_COMBAT_KEY,
@@ -224,7 +224,7 @@ export const CULTIVATE_TEXTURE_OVERRIDES: Partial<
   },
 }
 
-/** Texture tu luyện hiệu lực — hidden-way override first, then fallback chuỗi về mortal khi profile thiếu. */
+/** Texture tu luyen hieu luc - hidden-way override first, then fallback chuoi ve mortal khi profile thieu. */
 export function getCultivateTexture(
   profile: PlayerVisualProfile,
   way?: CultivationWayId,
@@ -261,7 +261,7 @@ export function getCultivateTexture(
   }
 }
 
-/** Bảng anchor hiệu lực cho pose đang hiển thị. */
+/** Bang anchor hieu luc cho pose dang hien thi. */
 export function getBodyAnchors(
   profile: PlayerVisualProfile,
 

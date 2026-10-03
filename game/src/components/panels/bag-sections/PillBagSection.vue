@@ -71,8 +71,8 @@ function buildTooltip(pill: Pill, owned: number): GradedItemTooltipContent {
         return { label: 'Hồi Khí Huyết', value: `+${formatStat('maxHp', effect.value ?? 0)}` }
 
       case 'cultivation':
-        // Pill nghề dùng % yêu cầu tầng; legacy dùng flat.
-        // formatStat('cultivationPercent') already appends "%" — the
+        // Pill nghe dung % yeu cau tang; legacy dung flat.
+        // formatStat('cultivationPercent') already appends "%" - the
         // extra literal here rendered "+3.0%%" (audit M2).
         return effect.cultivationPercent !== undefined
           ? {
@@ -183,11 +183,11 @@ function buildTooltip(pill: Pill, owned: number): GradedItemTooltipContent {
   }
 }
 
-// Đan Dược dùng được cả trong lẫn ngoài trận — cultivation cộng thẳng
-// qua đúng công thức chặn-trần dùng chung (addCultivation), hồi máu
-// chỉ có tác dụng khi đang có trận đang đánh (ngoài trận player không
-// có HP sống để hồi, uống "Tiểu Hồi Đan" lúc đó coi như không có gì
-// để hồi — không phải lỗi, chỉ là không có đích).
+// Dan Duoc dung duoc ca trong lan ngoai tran - cultivation cong thang
+// qua dung cong thuc chan-tran dung chung (addCultivation), hoi mau
+// chi co tac dung khi dang co tran dang danh (ngoai tran player khong
+// co HP song de hoi, uong "Tieu Hoi Dan" luc do coi nhu khong co gi
+// de hoi - khong phai loi, chi la khong co dich).
 function drinkPill(pillId: string, pillName: string) {
   const target: PillTarget = {
     addCultivation: (amount) => addCultivation(player.$state, amount),
@@ -200,11 +200,11 @@ function drinkPill(pillId: string, pillName: string) {
       }
     },
 
-    // Unified Buff System (Task 13b) — trong trận thì áp thẳng lên
-    // CombatEntity thật đang chiến đấu (source = target = player, giống
-    // cách skill tự buff bản thân); ngoài trận không có CombatEntity nào
-    // sống nên đi qua applyPersistentBuff() (đúng pattern Kiếp Thương
-    // debuff dùng, xem GameManager.ts).
+    // Unified Buff System (Task 13b) - trong tran thi ap thang len
+    // CombatEntity that dang chien dau (source = target = player, giong
+    // cach skill tu buff ban than); ngoai tran khong co CombatEntity nao
+    // song nen di qua applyPersistentBuff() (dung pattern Kiep Thuong
+    // debuff dung, xem GameManager.ts).
     applyBuff: (definition) => {
       const battleEntity = gameManager.getTurnBattle()?.players[0]?.entity
 
@@ -221,7 +221,7 @@ function drinkPill(pillId: string, pillName: string) {
   const result = gameManager.pillOps.usePillDetailed(pillId, target, player.$state)
 
   if (result.ok) {
-    // audit M2: one-click consume had NO success feedback — mirror the
+    // audit M2: one-click consume had NO success feedback - mirror the
     // vendor fix and push a loot toast with the pill name.
     useNotificationStore().push('loot', t('bag.pill.used', { name: pillName }))
 
@@ -230,7 +230,7 @@ function drinkPill(pillId: string, pillName: string) {
     return
   }
 
-  // Reason channel (plan §8): sai cảnh giới/capped báo ngay thay vì
+  // Reason channel (plan sec8): sai canh gioi/capped bao ngay thay vi
   // fail silently. Mission E Task 2: keyed messages through the i18n
   // gateway (P16) - one map entry per domain reason.
   const reasonKeys: Record<NonNullable<typeof result.reason>, string> = {
@@ -410,8 +410,8 @@ function toggleGroup(value: PillEffectGroup | 'all') {
   activeGroup.value = activeGroup.value === value ? 'all' : value
 }
 
-// Tiêu chí Đan Dược (plan Workstream E) — phẩm đan/loại hiệu ứng/số
-// lượng/tên. "Loại hiệu ứng" so sánh effect type ĐẦU TIÊN của recipe.
+// Tieu chi Dan Duoc (plan Workstream E) - pham dan/loai hieu ung/so
+// luong/ten. "Loai hieu ung" so sanh effect type DAU TIEN cua recipe.
 const PILL_COMPARATORS: Record<Exclude<PillSortMode, 'default'>, (a: PillEntry, b: PillEntry) => number> = {
   grade: (a, b) => a.pill.professionGrade && b.pill.professionGrade
     ? compareProfessionGrades(a.pill.professionGrade, b.pill.professionGrade)
@@ -424,8 +424,8 @@ const PILL_COMPARATORS: Record<Exclude<PillSortMode, 'default'>, (a: PillEntry, 
   name: (a, b) => compareText(a.pill.name, b.pill.name),
 }
 
-// Sort trên bản copy TRƯỚC pagination (plan Workstream E) — sort đọc
-// list ĐÃ filter (filter chạy trước sort, xem MaterialBagSection).
+// Sort tren ban copy TRUOC pagination (plan Workstream E) - sort doc
+// list DA filter (filter chay truoc sort, xem MaterialBagSection).
 const cells = computed<BagCell[]>(() => {
   const sortState = ui.bagSorts.pill
 
@@ -450,10 +450,10 @@ watch(
 
 watch([searchQuery, activeGroup], () => resetPage())
 
-// Buff regen deadline (plan §8): hiển thị timed effect ĐANG hoạt động
-// với thời gian còn lại THỰC (Date.now vs expiresAtMs) — menu và combat
-// đọc cùng một nguồn (player.persistentTimedEffects), không tạo timer
-// thứ hai. Tick mỗi giây cùng progressTimer của panel.
+// Buff regen deadline (plan sec8): hien thi timed effect DANG hoat dong
+// voi thoi gian con lai THUC (Date.now vs expiresAtMs) - menu va combat
+// doc cung mot nguon (player.persistentTimedEffects), khong tao timer
+// thu hai. Tick moi giay cung progressTimer cua panel.
 const activeTimedEffects = computed(() => {
   stateVersion.value
 
@@ -479,9 +479,9 @@ const activeTimedEffects = computed(() => {
       return {
         id: effect.id,
 
-        // 2026-08-30 bug report: fallback cũ hiện thẳng ID nội bộ nếu pill
-        // không còn trong registry — thay bằng nhãn trung tính, không lộ
-        // dữ liệu hệ thống ra UI.
+        // 2026-08-30 bug report: fallback cu hien thang ID noi bo neu pill
+        // khong con trong registry - thay bang nhan trung tinh, khong lo
+        // du lieu he thong ra UI.
         label: gameManager.pillRegistry.has(effect.sourceItemId)
           ? gameManager.pillRegistry.get(effect.sourceItemId).name
           : 'Đan dược không rõ',

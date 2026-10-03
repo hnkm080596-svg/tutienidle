@@ -48,7 +48,7 @@ export function bindUiAudio(uiStore: UiStore): () => void {
   const audio = AudioManager.getInstance()
   let prev = snapshotOf(uiStore)
 
-  // flush:'sync' — cues must land inside the pointer gesture that caused
+  // flush:'sync' - cues must land inside the pointer gesture that caused
   // the transition; 'pre' would batch past the autoplay window.
   return uiStore.$subscribe(
     () => {

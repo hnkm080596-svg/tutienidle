@@ -1,14 +1,14 @@
 // @vitest-environment jsdom
-// T6 gap-2 (chi-hien-quan, 2026-09-02) — integration smoke thay manual
-// browser probe (browser probe treo với môi trường agent; oracle DOM
-// qua mount Vue thật + GameManager thật — cùng cấu trúc render).
+// T6 gap-2 (chi-hien-quan, 2026-09-02) - integration smoke thay manual
+// browser probe (browser probe treo voi moi truong agent; oracle DOM
+// qua mount Vue that + GameManager that - cung cau truc render).
 //
-// Chứng minh chuỗi người chơi cần thấy:
-// 1. WorkerLodgePanel render capacity từ CHQ instance (1+level×2)
+// Chung minh chuoi nguoi choi can thay:
+// 1. WorkerLodgePanel render capacity tu CHQ instance (1+levelx2)
 // 2. ProductionPanel: worker allocation block (auto/manual toggle +
-//    slider → assignWorkers → state persist qua bumpState)
-// 3. Linh mạch card render khi outpost ĐÃ xây (sau xóa spirit_spring)
-//    + collect gọi collectBuilding
+//    slider -> assignWorkers -> state persist qua bumpState)
+// 3. Linh mach card render khi outpost DA xay (sau xoa spirit_spring)
+//    + collect goi collectBuilding
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 // BETA SCOPE LOCK v2 Phase-5 - this suite exercises the scope-hidden
@@ -155,10 +155,10 @@ describe('CHQ integration smoke — DOM oracle thay browser probe', () => {
     // is pure worker allocation + auto-repeat gating.
     expect(deps.container.querySelector('.site-card__action')).toBeNull()
 
-    // Linh mạch card render (outpost đã xây — sau khi xóa spirit_spring).
+    // Linh mach card render (outpost da xay - sau khi xoa spirit_spring).
     expect(text).toContain('Linh Mạch')
 
-    // Manual: assign qua GameManager (như handler slider) → state persist.
+    // Manual: assign qua GameManager (nhu handler slider) -> state persist.
     const siteId = deps.gameManager.buildingOps.getProductionViews(Date.now())[0]!.definition.siteId
 
     deps.gameManager.buildingOps.assignWorkers(siteId, 2)

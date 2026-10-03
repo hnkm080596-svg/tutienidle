@@ -15,8 +15,8 @@ import type { MaterialBag } from '../material/MaterialBag'
 import type { PillRegistry } from '../pill/PillRegistry'
 import type { PillBag } from '../pill/PillBag'
 import { isBetaQuestEnabled } from '../betaScope'
-// 9.8 — CHỈ import TYPE (không runtime import core/game) tránh dependency
-// cycle: NotificationQueue sống ở core/game nhưng event type thuần.
+// 9.8 - CHI import TYPE (khong runtime import core/game) tranh dependency
+// cycle: NotificationQueue song o core/game nhung event type thuan.
 import type { NotificationEvent } from '../notification/NotificationEvent'
 import type { Material } from '../material/Material'
 
@@ -28,8 +28,8 @@ export interface QuestBagDeps {
   pillRegistry: PillRegistry
   pillBag: PillBag
 
-  // 9.8 (optional) — caller có notification sink thì push toast khi
-  // reward material tràn túi; không có thì bỏ qua (test/mock path).
+  // 9.8 (optional) - caller co notification sink thi push toast khi
+  // reward material tran tui; khong co thi bo qua (test/mock path).
   notifications?: { push: (event: NotificationEvent) => void }
 
   // M-F-BODY-PERFECTION (optional) - the ONE material-landing funnel.
@@ -159,8 +159,8 @@ function dayBucket(ms: number): number {
 }
 
 /**
- * Quest KHÔNG giữ state nội bộ (giống BuildingSystem) — registry/
- * manager/bags truyền theo từng method.
+ * Quest KHONG giu state noi bo (giong BuildingSystem) - registry/
+ * manager/bags truyen theo tung method.
  */
 export class QuestSystem {
   /**
@@ -283,8 +283,8 @@ export class QuestSystem {
   }
 
   /**
-   * Turn-in: collect quest tiêu hao vật phẩm khỏi bag khi claim. Trả
-   * false nếu canClaim() false (chống double-claim, idempotent).
+   * Turn-in: collect quest tieu hao vat pham khoi bag khi claim. Tra
+   * false neu canClaim() false (chong double-claim, idempotent).
    */
   claim(
     registry: QuestRegistry,
@@ -324,7 +324,7 @@ export class QuestSystem {
       }
 
       if (drop.kind === 'material' && bags.materialRegistry.has(drop.itemId)) {
-        // 9.8 — tràn túi: quest chỉ tính delivered; push toast khi có sink.
+        // 9.8 - tran tui: quest chi tinh delivered; push toast khi co sink.
         const template: Material = bags.materialRegistry.get(drop.itemId)
 
         const overflow = bags.materialBag.add(template, amount)
@@ -342,8 +342,8 @@ export class QuestSystem {
         }
 
         if (overflow > 0 && bags.notifications) {
-          // Event dựng inline (fallback message vi — convention core):
-          // chỉ import TYPE NotificationEvent, không runtime import.
+          // Event dung inline (fallback message vi - convention core):
+          // chi import TYPE NotificationEvent, khong runtime import.
           const overflowEvent: NotificationEvent = {
             kind: 'warning',
 
@@ -391,10 +391,10 @@ export class QuestSystem {
   }
 
   /**
-   * So sánh day-bucket UTC hiện tại với lastDailyResetAtMs — qua ngày
-   * mới thì xoá progress 'daily' chưa claim + reset mốc. Không random
-   * chọn quest (v1): "daily board" = mọi quest cadence 'daily' đang mở
-   * khoá theo cảnh giới người chơi.
+   * So sanh day-bucket UTC hien tai voi lastDailyResetAtMs - qua ngay
+   * moi thi xoa progress 'daily' chua claim + reset moc. Khong random
+   * chon quest (v1): "daily board" = moi quest cadence 'daily' dang mo
+   * khoa theo canh gioi nguoi choi.
    */
   checkAndResetDaily(
     registry: QuestRegistry,
@@ -417,9 +417,9 @@ export class QuestSystem {
   }
 
   /**
-   * Gọi từ BattleLootSystem.processDefeatedEnemies() mỗi lần quái chết
-   * thật sự cấp thưởng (Kiếp không tính). Tăng progress mọi kill-quest
-   * ĐANG active, chưa claim, có enemyId/zoneId khớp (hoặc bỏ trống).
+   * Goi tu BattleLootSystem.processDefeatedEnemies() moi lan quai chet
+   * that su cap thuong (Kiep khong tinh). Tang progress moi kill-quest
+   * DANG active, chua claim, co enemyId/zoneId khop (hoac bo trong).
    */
   onEnemyDefeated(
     registry: QuestRegistry,
@@ -451,13 +451,13 @@ export class QuestSystem {
   }
 
   /**
-   * Gọi MỖI KHI material vào túi người chơi (production settle, loot quái,
-   * claim toà nhà, Hóa Luyện, quest turn-in trả item...) — tăng progress
-   * collect-quest ĐANG active, chưa claim, có materialId khớp.
+   * Goi MOI KHI material vao tui nguoi choi (production settle, loot quai,
+   * claim toa nha, Hoa Luyen, quest turn-in tra item...) - tang progress
+   * collect-quest DANG active, chua claim, co materialId khop.
    *
-   * KHÔNG gọi khi restore từ save (double-count) — review 2026-08-28 bug #3:
-   * trước đây collect-quest không có hook nào nên progress mãi 0/N,
-   * reward không bao giờ claim được.
+   * KHONG goi khi restore tu save (double-count) - review 2026-08-28 bug #3:
+   * truoc day collect-quest khong co hook nao nen progress mai 0/N,
+   * reward khong bao gio claim duoc.
    */
   onMaterialCollected(
     registry: QuestRegistry,

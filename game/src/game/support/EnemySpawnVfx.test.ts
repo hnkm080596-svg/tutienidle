@@ -1,7 +1,7 @@
-// EnemySpawnVfx — MỘT pending spawn = MỘT handle instance (2 Graphics:
-// ground pháp trận + cột linh khí), update() theo progress snapshot,
-// complete() flash rồi tự dọn, destroy() dọn NGAY; toạ độ vẽ lấy từ
-// projection.gridToScreen (đúng phối cảnh cả hàng gần lẫn hàng xa).
+// EnemySpawnVfx - MOT pending spawn = MOT handle instance (2 Graphics:
+// ground phap tran + cot linh khi), update() theo progress snapshot,
+// complete() flash roi tu don, destroy() don NGAY; toa do ve lay tu
+// projection.gridToScreen (dung phoi canh ca hang gan lan hang xa).
 // @vitest-environment jsdom
 import { describe, expect, it, vi } from 'vitest'
 import Phaser from 'phaser'
@@ -155,7 +155,7 @@ describe('spawnEnemySpawnVfx', () => {
 
     expect(destroyCalls).toHaveLength(2)
 
-    // complete() lần 2 sau destroy — no-op an toàn.
+    // complete() lan 2 sau destroy - no-op an toan.
     expect(() => handle.complete()).not.toThrow()
   })
 
@@ -173,7 +173,7 @@ describe('spawnEnemySpawnVfx', () => {
     expect(destroyCalls).toHaveLength(2)
     expect(tweens).toHaveLength(0)
 
-    // update sau destroy — no-op an toàn.
+    // update sau destroy - no-op an toan.
     expect(() => handle.update(0.5)).not.toThrow()
   })
 

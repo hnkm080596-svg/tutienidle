@@ -143,7 +143,7 @@ async function seedAndReload(
 /**
  * Drives the Quan Khi tribulation to victory and leaves the QuanKhiPanel
  * offer list on screen (the outcome service opens standalonePanel
- * 'quan_khi' on the mortal -> qi_refining kiếp).
+ * 'quan_khi' on the mortal -> qi_refining kiep).
  */
 async function winQuanKhiAndOpenRitual(page: import('@playwright/test').Page): Promise<void> {
   await page.keyboard.press('Tab')
@@ -203,7 +203,7 @@ async function elementButtonCommit(page: import('@playwright/test').Page): Promi
   await elementButton.click()
 }
 
-/** Clicks a way card by its "Bước Vào {name}" button and confirms. */
+/** Clicks a way card by its "Buoc Vao {name}" button and confirms. */
 async function chooseWay(page: import('@playwright/test').Page, wayNamePattern: RegExp): Promise<void> {
   const choice = page.getByRole('button', { name: wayNamePattern })
   await expect(choice).toBeEnabled({ timeout: 10_000 })
@@ -293,7 +293,7 @@ async function startStageOneBattle(page: import('@playwright/test').Page): Promi
     .toBe(true)
 }
 
-/** Reopens the QuanKhiPanel via CharacterPanel's Kiếm Tu-only entry. */
+/** Reopens the QuanKhiPanel via CharacterPanel's Kiem Tu-only entry. */
 async function reopenQuanKhiViaCharacter(page: import('@playwright/test').Page): Promise<void> {
   await page.keyboard.press('Tab')
   const characterSlot = page.locator('[data-wheel-slot="character"]')
@@ -325,7 +325,7 @@ test.describe('Cultivation Path ritual - six-way matrix (P14)', () => {
     await winQuanKhiAndOpenRitual(page)
 
     // Exactly the three ungated base ways - ngo_dao/ung_the/ngu stay
-    // hidden without their gates (no locked-card tease, spec §11).
+    // hidden without their gates (no locked-card tease, spec sec11).
     await expect(page.locator('.quan-khi-panel__choice')).toHaveCount(3)
     await expect(page.locator('.quan-khi-panel__hidden-card')).toHaveCount(0)
 

@@ -1,7 +1,7 @@
-// WS8 — UI scale setting (2026-08-24): người chơi chọn 90/100/110/125%.
-// CHỈ nhân các semantic token (typography/interaction sizing trong
-// theme.css qua var(--ui-scale)), KHÔNG quay lại transform-scale toàn
-// game root — canvas Phaser và khung layout giữ nguyên.
+// WS8 - UI scale setting (2026-08-24): nguoi choi chon 90/100/110/125%.
+// CHI nhan cac semantic token (typography/interaction sizing trong
+// theme.css qua var(--ui-scale)), KHONG quay lai transform-scale toan
+// game root - canvas Phaser va khung layout giu nguyen.
 const STORAGE_KEY = 'tien-hiep-idle-ui-scale'
 
 export const UI_SCALE_OPTIONS = [0.9, 1, 1.1, 1.25] as const
@@ -26,8 +26,8 @@ export function loadUiScale(): number {
 
     return clampToOptions(Number(raw))
   } catch {
-    // Audit fix 2026-08-31 — storage bị chặn (privacy mode/SSR) từng
-    // throw ở boot (main.ts gọi initUiScale() trước app.mount()).
+    // Audit fix 2026-08-31 - storage bi chan (privacy mode/SSR) tung
+    // throw o boot (main.ts goi initUiScale() truoc app.mount()).
     return DEFAULT_UI_SCALE
   }
 }
@@ -43,7 +43,7 @@ export function saveUiScale(scale: number): void {
   applyUiScale(valid)
 }
 
-// Gọi 1 lần lúc boot (main.ts) — trước app.mount() để không nhấp nháy.
+// Goi 1 lan luc boot (main.ts) - truoc app.mount() de khong nhap nhay.
 export function initUiScale(): void {
   applyUiScale(loadUiScale())
 }

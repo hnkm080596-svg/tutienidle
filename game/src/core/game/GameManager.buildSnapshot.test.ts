@@ -49,12 +49,12 @@ function createTestEnemy() {
   })
 }
 
-// Combat Rework Phase 8 — Class (PathWayDefinition) + Equipment
-// (static modifier) + Pre-Battle Upgrade (Skill Specialization) đều
-// ĐÃ có sẵn hạ tầng riêng (audit xác nhận, không phải xây mới) —
-// test này là "acceptance test" DUY NHẤT xác nhận CẢ 3 nguồn thật sự
-// cộng dồn đúng vào 1 build snapshot rồi flow đúng vào battle.players[0].stats
-// khi vào trận, mirror finalStats getter thật của stores/player.ts
+// Combat Rework Phase 8 - Class (PathWayDefinition) + Equipment
+// (static modifier) + Pre-Battle Upgrade (Skill Specialization) deu
+// DA co san ha tang rieng (audit xac nhan, khong phai xay moi) -
+// test nay la "acceptance test" DUY NHAT xac nhan CA 3 nguon that su
+// cong don dung vao 1 build snapshot roi flow dung vao battle.players[0].stats
+// khi vao tran, mirror finalStats getter that cua stores/player.ts
 // (calculateStats(baseStats, [...modifiers, ...externalModifiers])).
 describe('GameManager — Build Snapshot: Class + Equipment + Pre-Battle Upgrade → Combat (Combat Rework Phase 8)', () => {
   it('cả 3 nguồn build cộng dồn đúng vào finalStats, rồi flow đúng vào battle.players[0].stats lúc vào trận', () => {
@@ -73,8 +73,8 @@ describe('GameManager — Build Snapshot: Class + Equipment + Pre-Battle Upgrade
       ...gameManager.effectOps.getAggregatedModifiers(),
     ]).might
 
-    // --- Class: chọn Kiếm Tu (path THẬT đã ship, không phải fixture)
-    // — tự cấp Tâm Pháp (Technique) + 3 skill cố định.
+    // --- Class: chon Kiem Tu (path THAT da ship, khong phai fixture)
+    // - tu cap Tam Phap (Technique) + 3 skill co dinh.
     player.realmLevel = 12
     expect(gameManager.realmAdvanceOps.chooseCultivationPath('sword', 'sword_pathway', player)).toBe(true)
 
@@ -83,9 +83,9 @@ describe('GameManager — Build Snapshot: Class + Equipment + Pre-Battle Upgrade
       ...gameManager.effectOps.getAggregatedModifiers(),
     ]).might
 
-    // --- Equipment: trang bị vũ khí +50 might (static modifier, KHÔNG
-    // qua getAggregatedModifiers() — đi vào player.modifiers riêng,
-    // đúng kiến trúc thật, xem stores/player.ts's finalStats).
+    // --- Equipment: trang bi vu khi +50 might (static modifier, KHONG
+    // qua getAggregatedModifiers() - di vao player.modifiers rieng,
+    // dung kien truc that, xem stores/player.ts's finalStats).
     gameManager.equipmentBag.add(manualWeaponInstance())
 
     expect(gameManager.equipmentOps.equipItem('build-snapshot-test-1', player)).toEqual({ ok: true })
@@ -99,8 +99,8 @@ describe('GameManager — Build Snapshot: Class + Equipment + Pre-Battle Upgrade
 
     expect(attackAfterEquipment).toBeGreaterThanOrEqual(attackAfterClass + 50)
 
-    // --- Pre-Battle Upgrade: nâng cấp 1 skill bất kỳ (Kiem Tu
-    // Reimagined — hien basics come from the orb preset, so the generic
+    // --- Pre-Battle Upgrade: nang cap 1 skill bat ky (Kiem Tu
+    // Reimagined - hien basics come from the orb preset, so the generic
     // authored skill here is hoa_cau_thuat).
     gameManager.progressionOps.learnSkill('hoa_cau_thuat', player)
 
@@ -109,9 +109,9 @@ describe('GameManager — Build Snapshot: Class + Equipment + Pre-Battle Upgrade
     // Trang thai goc - elemental fire damage components.
     expect(rawSkill.effects[0]?.components).toBeDefined()
 
-    // --- Build Snapshot -> Combat: finalStats CUỐI CÙNG (đủ cả 3
-    // nguồn: Class + Equipment + Upgrade) phải flow ĐÚNG vào
-    // battle.players[0].stats khi bắt đầu trận — không tính lại gì khác.
+    // --- Build Snapshot -> Combat: finalStats CUOI CUNG (du ca 3
+    // nguon: Class + Equipment + Upgrade) phai flow DUNG vao
+    // battle.players[0].stats khi bat dau tran - khong tinh lai gi khac.
     const finalStats = calculateStats(player.baseStats, [
       ...player.modifiers,
       ...gameManager.effectOps.getAggregatedModifiers(),

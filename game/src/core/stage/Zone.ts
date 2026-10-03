@@ -1,9 +1,9 @@
-// Thám Hiểm rework (2026-08-14) — "Địa Giới", nhóm nhiều Stage ("Màn")
-// lại thành 1 vùng bản đồ lớn, thường ứng với 1 đại cảnh giới
-// (requiredRealmId, cùng convention getRealmIndex() đã dùng ở Recipe/
-// Building/Equipment). Màn hình chọn màn (StageSelectPanel.vue) đi
-// qua đúng 2 tầng: chọn Địa Giới → chọn Màn trong `stageIds` (thứ tự
-// mảng = thứ tự Màn, dùng cho Tự Động Thám Hiểm leo tầng — xem
+// Tham Hiem rework (2026-08-14) - "Dia Gioi", nhom nhieu Stage ("Man")
+// lai thanh 1 vung ban do lon, thuong ung voi 1 dai canh gioi
+// (requiredRealmId, cung convention getRealmIndex() da dung o Recipe/
+// Building/Equipment). Man hinh chon man (StageSelectPanel.vue) di
+// qua dung 2 tang: chon Dia Gioi -> chon Man trong `stageIds` (thu tu
+// mang = thu tu Man, dung cho Tu Dong Tham Hiem leo tang - xem
 // GameManager.getNextStageInZone()).
 export interface Zone {
   id: string

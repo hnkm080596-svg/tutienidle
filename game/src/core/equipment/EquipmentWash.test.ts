@@ -221,7 +221,7 @@ describe('getWashPreviewAffixes', () => {
 
     expect(getWashPreviewAffixes(ctx.slot, 'wrong-ticket')).toBeUndefined()
 
-    // The mismatch only hides the copy — the pending ticket survives.
+    // The mismatch only hides the copy - the pending ticket survives.
     expect(ctx.slot.get()).not.toBeNull()
     expect(getWashPreviewAffixes(ctx.slot, ticketId)).toBeDefined()
   })
@@ -296,7 +296,7 @@ describe('previewWashAffixes — roll-time guards', () => {
 
   it('rejects template_not_found when the injected template lookup resolves nothing', () => {
     const ctx = setup()
-    // registry.has() passes — only the deps lookup fails (EquipmentSystem's
+    // registry.has() passes - only the deps lookup fails (EquipmentSystem's
     // binding cannot reach this; the seam exists for other hosts).
     ctx.deps.tryGetTemplate = () => undefined
     const instance = washable()

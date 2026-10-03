@@ -17,11 +17,11 @@ interface TooltipBinding {
   onKeyDown: (event: KeyboardEvent) => void
 }
 
-// Value + listener hiện tại của mỗi element — tách khỏi closure
-// trong mounted() vì binding.value có thể đổi qua updated() (vd
-// label/description đến từ prop reactive), không muốn tooltip hiển
-// thị dữ liệu cũ; lưu listener để unmounted() gỡ đúng, tránh rò rỉ
-// khi element bị tạo/huỷ liên tục (vd v-for của SlotView).
+// Value + listener hien tai cua moi element - tach khoi closure
+// trong mounted() vi binding.value co the doi qua updated() (vd
+// label/description den tu prop reactive), khong muon tooltip hien
+// thi du lieu cu; luu listener de unmounted() go dung, tranh ro ri
+// khi element bi tao/huy lien tuc (vd v-for cua SlotView).
 const bindings = new WeakMap<HTMLElement, TooltipBinding>()
 
 // Pointer-vs-keyboard modality: focusin tooltips are a keyboard-nav aid,
@@ -49,10 +49,10 @@ function normalize(value: TooltipDirectiveValue): TooltipContent {
 }
 
 /**
- * `v-tooltip="description"` hoặc `v-tooltip="{ title, description }"`
- * — tự gắn pointer/focus lifecycle, gọi thẳng useTooltip().
- * Đây là "điểm chạm" duy nhất cần thêm vào bất kỳ element nào muốn
- * có tooltip, không cần tự viết handler mỗi chỗ.
+ * `v-tooltip="description"` hoac `v-tooltip="{ title, description }"`
+ * - tu gan pointer/focus lifecycle, goi thang useTooltip().
+ * Day la "diem cham" duy nhat can them vao bat ky element nao muon
+ * co tooltip, khong can tu viet handler moi cho.
  */
 export const vTooltip: Directive<HTMLElement, TooltipDirectiveValue> = {
   mounted(el, binding) {
@@ -119,10 +119,10 @@ export const vTooltip: Directive<HTMLElement, TooltipDirectiveValue> = {
 
     bindings.delete(el)
 
-    // Element có thể bị unmount ngay giữa lúc đang hover (vd
-    // BreakthroughButton biến mất do v-if tắt ngay sau khi bấm,
-    // cultivation reset) — mouseleave tự nhiên không kịp fire, tooltip
-    // sẽ dính màn hình vĩnh viễn nếu không dọn ở đây.
+    // Element co the bi unmount ngay giua luc dang hover (vd
+    // BreakthroughButton bien mat do v-if tat ngay sau khi bam,
+    // cultivation reset) - mouseleave tu nhien khong kip fire, tooltip
+    // se dinh man hinh vinh vien neu khong don o day.
     useTooltip().hideTooltip(el, true)
   },
 }

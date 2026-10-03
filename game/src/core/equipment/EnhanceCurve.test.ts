@@ -1,7 +1,7 @@
 // @vitest-environment node
-// Task 10 (rework P3, plan §Task 10) — EnhanceCurve: đường cong mũ
-// 0.956 (spec §5.1, user-approved) + pity 10. Curve thuần, không phụ
-// thuộc class — dùng chung EquipmentSystem (roll) và UI preview.
+// Task 10 (rework P3, plan secTask 10) - EnhanceCurve: duong cong mu
+// 0.956 (spec sec5.1, user-approved) + pity 10. Curve thuan, khong phu
+// thuoc class - dung chung EquipmentSystem (roll) va UI preview.
 import { describe, expect, it } from 'vitest'
 import {
   enhanceSuccessRate,
@@ -16,12 +16,12 @@ describe('EnhanceCurve — success rate (Task 10)', () => {
   })
 
   it('giảm theo mũ 0.956^(L-1), làm tròn nguyên', () => {
-    // Khóa bằng chính công thức — tránh cứng số sai do làm tròn float.
+    // Khoa bang chinh cong thuc - tranh cung so sai do lam tron float.
     expect(enhanceSuccessRate(5)).toBe(Math.round(100 * 0.956 ** 4))
     expect(enhanceSuccessRate(10)).toBe(Math.round(100 * 0.956 ** 9))
     expect(enhanceSuccessRate(40)).toBe(Math.round(100 * 0.956 ** 39))
 
-    // Dải behavior (không phụ thuộc rounding): L10 ~64%, L40 ~17%.
+    // Dai behavior (khong phu thuoc rounding): L10 ~64%, L40 ~17%.
     expect(enhanceSuccessRate(10)).toBeGreaterThanOrEqual(60)
     expect(enhanceSuccessRate(10)).toBeLessThanOrEqual(68)
     expect(enhanceSuccessRate(40)).toBeGreaterThanOrEqual(14)

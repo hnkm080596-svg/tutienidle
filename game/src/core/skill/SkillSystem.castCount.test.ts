@@ -8,7 +8,7 @@ import { SKILLS } from '@/data/skill/Skills'
 import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
 import { skillCoreNodeId } from '../progression/SkillCoreLevel'
 
-// 9.5 #9 — cast counting revived on the turn engine: the engine reports
+// 9.5 #9 - cast counting revived on the turn engine: the engine reports
 // each committed cast via onSkillCast, GameManagerTurnBattleOps filters
 // to the primary player and forwards here. recordCast() is the single
 // writer of the cast-count mirror (player.skillCastCounts via
@@ -125,7 +125,7 @@ describe('SkillSystem.recordCast — turn-engine cast counting', () => {
     expect(skill.totalExperience).toBe(10001)
   })
 
-  // Phap Tu Reimagined Task 2 — linh_bao/huy_quyen join tram in the
+  // Phap Tu Reimagined Task 2 - linh_bao/huy_quyen join tram in the
   // CAST_LEVELING_THRESHOLDS table (same Lv2@1000/Lv3@10000 curve).
   // linh_bao Lv3 is the phap_tu_an ritual gate, so cast leveling must
   // be exact.

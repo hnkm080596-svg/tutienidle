@@ -429,7 +429,7 @@ describe('TrucCoJourney - ordered journey', () => {
       // Phase (a): settle binds/applies ONCE; the drain holds while the
       // entitlement is unresolved. F-W-6: runTribulation goes through
       // startTribulationPrepared so equipment is already stripped at
-      // tribulation start — zero equipment modifiers BEFORE the settle.
+      // tribulation start - zero equipment modifiers BEFORE the settle.
       expect(
         s.player.modifiers.filter((m) => m.sourceType === 'equipment')
           .length,

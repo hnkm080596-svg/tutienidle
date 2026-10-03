@@ -1,9 +1,9 @@
 /**
  * QA probe (R8.2 slice 2): the auto-breakthrough tick path (App.vue calls
- * breakthrough() once per tick) through the new facade — repeated successes
+ * breakthrough() once per tick) through the new facade - repeated successes
  * accumulate levels/points exactly once per call, and the announcement
  * fires only on a major-realm change (which cannot happen through this
- * path — see BreakthroughOutcomeService header).
+ * path - see BreakthroughOutcomeService header).
  */
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'

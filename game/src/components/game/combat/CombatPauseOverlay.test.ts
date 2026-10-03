@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
-// Task 8 (A11) — pause overlay's only behaviour is emitting 'continue' when
+// Task 8 (A11) - pause overlay's only behaviour is emitting 'continue' when
 // the player presses the button; useCombatPause.ts owns the freeze/resume
 // wiring itself (unit-tested separately).
-// Mount theo pattern project (createApp + h, KHÔNG @vue/test-utils — chưa
-// cài, xem CombatCountdownOverlay.test.ts / CombatDefeatPanel.test.ts).
+// Mount theo pattern project (createApp + h, KHONG @vue/test-utils - chua
+// cai, xem CombatCountdownOverlay.test.ts / CombatDefeatPanel.test.ts).
 import { describe, expect, it, vi, afterEach } from 'vitest'
 import { createApp, h } from 'vue'
 import CombatPauseOverlay from './CombatPauseOverlay.vue'

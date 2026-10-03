@@ -13,7 +13,7 @@ import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
 import { PHAP_TU_NODES } from '../../data/progression/PhapTuNodes'
 import { CAST_LEVELING_THRESHOLDS } from '../skill/SkillSystem'
 
-// The sword resolveBasic only reads BASIC_ATTACKS_BY_BUILD — the dep
+// The sword resolveBasic only reads BASIC_ATTACKS_BY_BUILD - the dep
 // surface is stubbed; nothing here is invoked for this path.
 const PATH_RUNTIME_STUB_DEPS = {
   skillManager: {},
@@ -24,7 +24,7 @@ const PATH_RUNTIME_STUB_DEPS = {
   getSpellPathElement: () => undefined,
 } as unknown as CultivationPathRuntimeDeps
 
-// Kiem Tu Reimagined (spec 2026-09-15 K1/K3/K19) — path choice commits
+// Kiem Tu Reimagined (spec 2026-09-15 K1/K3/K19) - path choice commits
 // way 'sword_pathway' with the canonical fresh state; NO route lock, no
 // legacy skill grants, no keystone purchase. Mortal precursor skills
 // (the whole set, table-driven) become uncastable/unequippable the
@@ -138,9 +138,9 @@ describe('K3 — mortal precursor pick lock post-path', () => {
 
     // The authored-skill seam: post-path, no Skill object backs the
     // basic (orbs take over at Task 6; the static SWORD_BASIC fallback
-    // — which coincidentally carries id 'tram' — is a separate def with
+    // - which coincidentally carries id 'tram' - is a separate def with
     // no authored scaling/cast-count semantics). Mission C Task 9 moved
-    // the resolution behind the path-runtime boundary — assert through
+    // the resolution behind the path-runtime boundary - assert through
     // it: the resolved basic IS the static authored def, by identity.
     const runtime = resolveCultivationPathRuntime(player, PATH_RUNTIME_STUB_DEPS)
 

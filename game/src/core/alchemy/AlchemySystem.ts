@@ -1,11 +1,11 @@
-// Alchemy (2026-08-25, resource-professions-rework plan §8) — Đan Phòng
-// mới: mỗi đan phương nhận ĐÚNG một Linh Thảo riêng (có niên đại) +
-// Gỗ nhiên liệu + Linh Thạch. Không còn Recipe/CraftingSystem cho đan.
-// gp123 6E: nhiên liệu phải CÙNG realm + CÙNG age với thảo được chọn.
+// Alchemy (2026-08-25, resource-professions-rework plan sec8) - Dan Phong
+// moi: moi dan phuong nhan DUNG mot Linh Thao rieng (co nien dai) +
+// Go nhien lieu + Linh Thach. Khong con Recipe/CraftingSystem cho dan.
+// gp123 6E: nhien lieu phai CUNG realm + CUNG age voi thao duoc chon.
 //
-// §8.2: snapshot recipe/nguyên liệu/level phòng lúc bắt đầu; nguyên liệu
-// reserve/trừ atomically lúc start để không dùng một stack cho nhiều job.
-// §8.3: totalSuccessPercent = herbAgeBasePercent + roomBonus[level];
+// sec8.2: snapshot recipe/nguyen lieu/level phong luc bat dau; nguyen lieu
+// reserve/tru atomically luc start de khong dung mot stack cho nhieu job.
+// sec8.3: totalSuccessPercent = herbAgeBasePercent + roomBonus[level];
 // guaranteedPills = floor(total/100); extraPillChance = total % 100.
 
 import type { PillBag } from '../pill/PillBag'
@@ -18,39 +18,39 @@ import { mulberry32 } from '../production/ProductionBalance'
 import { betaRecipeFamilyOfId, scopeHiddenPillFamilyOfId } from '../betaScope'
 import { witnessDigest } from '../math/witnessDigest'
 
-/** Biến thể nguyên liệu của thảo — stack cụ thể trong Bag. */
+/** Bien the nguyen lieu cua thao - stack cu the trong Bag. */
 export interface AlchemyHerbVariant {
-  /** Material id đầy đủ (kèm hậu tố niên đại hoặc biến thể legacy). */
+  /** Material id day du (kem hau to nien dai hoac bien the legacy). */
   materialId: string
 
-  /** Khóa tra HERB_AGE_BASE_SUCCESS_PERCENT — trục HerbAge 5 bậc (6E C1). */
+  /** Khoa tra HERB_AGE_BASE_SUCCESS_PERCENT - truc HerbAge 5 bac (6E C1). */
   age: HerbAge
 
-  /** Nhãn hiển thị biến thể (vd "Bách Niên"). */
+  /** Nhan hien thi bien the (vd "Bach Nien"). */
   label: string
 }
 
 export interface AlchemyRecipe {
   id: string
 
-  /** Đan phương sản xuất (Pill.id). */
+  /** Dan phuong san xuat (Pill.id). */
   pillId: string
 
-  /** Cảnh giới của đan phương — nhóm UI + gate. */
+  /** Canh gioi cua dan phuong - nhom UI + gate. */
   realmId: string
 
   /**
-   * Thảo DUY NHẤT được chấp nhận (plan §8.1 — không cho thay thảo khác
-   * chỉ vì cùng realm/niên đại). Người chơi chọn biến thể niên đại có
-   * sẵn trong Bag.
+   * Thao DUY NHAT duoc chap nhan (plan sec8.1 - khong cho thay thao khac
+   * chi vi cung realm/nien dai). Nguoi choi chon bien the nien dai co
+   * san trong Bag.
    */
   herbVariants: readonly AlchemyHerbVariant[]
 
   herbAmount: number
 
   /**
-   * Realm của gỗ nhiên liệu (gp123 6E) — gỗ phải CÙNG realm này VÀ
-   * CÙNG age với thảo được chọn (resolveFuelWood).
+   * Realm cua go nhien lieu (gp123 6E) - go phai CUNG realm nay VA
+   * CUNG age voi thao duoc chon (resolveFuelWood).
    */
   fuelWoodRealmId: string
 
@@ -61,14 +61,14 @@ export interface AlchemyRecipe {
   baseDurationSeconds: number
 
   /**
-   * Nguyên liệu đặc biệt ngoài thảo/gỗ (spec dot-pha-loi-kiep §4.1b —
-   * vd Yêu Đan của Thông Mạch Đan/Trúc Cơ Đan). undefined = recipe
-   * generated theo PILL_FAMILIES, không có nguyên liệu phụ.
+   * Nguyen lieu dac biet ngoai thao/go (spec dot-pha-loi-kiep sec4.1b -
+   * vd Yeu Dan cua Thong Mach Dan/Truc Co Dan). undefined = recipe
+   * generated theo PILL_FAMILIES, khong co nguyen lieu phu.
    */
   specialIngredients?: { materialId: string; amount: number }[]
 
   /**
-   * M10 (ARCH-008) — retired pill family (Hoi Xuan Dan): the recipe stays
+   * M10 (ARCH-008) - retired pill family (Hoi Xuan Dan): the recipe stays
    * resolvable so in-flight jobs from old saves settle normally, but a new
    * job is rejected with reason 'retired' and the recipe is hidden from
    * the craft list.
@@ -92,14 +92,14 @@ export interface ActiveAlchemyJob {
 
   pillId: string
 
-  /** Biến thể thảo đã reserve (snapshot §8.2). */
+  /** Bien the thao da reserve (snapshot sec8.2). */
   herbMaterialId: string
 
   startedAtMs: number
 
   completesAtMs: number
 
-  /** Level Đan Phòng lúc bắt đầu — nâng cấp giữa job chỉ tác động job kế tiếp. */
+  /** Level Dan Phong luc bat dau - nang cap giua job chi tac dong job ke tiep. */
   roomLevelAtStart: number
 
   /**
@@ -285,22 +285,22 @@ export function jobSuccessPercent(
 
   const bonus = alchemyRoomSuccessBonus(job.roomLevelAtStart)
 
-  // Optional flat percent-point bonus (content sources may pass one) —
-  // added before the guaranteed/extra split, cap 300 preserved (plan §6).
+  // Optional flat percent-point bonus (content sources may pass one) -
+  // added before the guaranteed/extra split, cap 300 preserved (plan sec6).
   return Math.min(base + bonus + successBonusPercentPoints, 300)
 }
 
-/** Bảng bonus tỷ lệ thành đan theo level Đan Phòng — TÁCH BIỆT bảng speed (§8.3).
- * Đan Phòng maxLevel 9 (buildings.ts) — bảng phải đủ 9 entry; trước đây
- * chỉ 5 entry khiến level 6-9 kẹt ở giá trị level 5 (review 2026-08-28,
+/** Bang bonus ty le thanh dan theo level Dan Phong - TACH BIET bang speed (sec8.3).
+ * Dan Phong maxLevel 9 (buildings.ts) - bang phai du 9 entry; truoc day
+ * chi 5 entry khien level 6-9 ket o gia tri level 5 (review 2026-08-28,
  * economy-ecosystem-plan T5). */
 export const ALCHEMY_SUCCESS_BONUS_PERCENT: readonly number[] = [0, 5, 10, 15, 20, 25, 30, 35, 40]
 
 /**
- * Bonus % thành đan theo level Đan Phòng — index clamp 1..length. Nguồn
- * sự thật DUY NHẤT cho cả settle (jobSuccessPercent) lẫn preview
- * (GameManager.previewAlchemyOutcome) để hai đường không bao giờ lệch
- * (review 2026-08-28: preview dùng `?? 0` không clamp, settle clamp).
+ * Bonus % thanh dan theo level Dan Phong - index clamp 1..length. Nguon
+ * su that DUY NHAT cho ca settle (jobSuccessPercent) lan preview
+ * (GameManager.previewAlchemyOutcome) de hai duong khong bao gio lech
+ * (review 2026-08-28: preview dung `?? 0` khong clamp, settle clamp).
  */
 export function alchemyRoomSuccessBonus(roomLevel: number): number {
   const index = Math.min(Math.max(roomLevel, 1), ALCHEMY_SUCCESS_BONUS_PERCENT.length) - 1
@@ -308,7 +308,7 @@ export function alchemyRoomSuccessBonus(roomLevel: number): number {
   return ALCHEMY_SUCCESS_BONUS_PERCENT[index] ?? 0
 }
 
-/** Hệ số tốc độ luyện theo level Đan Phòng (§8.2) — đủ 9 level (T5). */
+/** He so toc do luyen theo level Dan Phong (sec8.2) - du 9 level (T5). */
 export const ALCHEMY_SPEED_MULTIPLIERS: readonly number[] = [
   1.0, 1.15, 1.32, 1.52, 1.75, 2.01, 2.31, 2.66, 3.06,
 ]
@@ -328,10 +328,10 @@ function nextJobId(): string {
 }
 
 /**
- * Nhiên liệu lò (gp123 6E — design rule): gỗ phải CÙNG realm với recipe
- * VÀ CÙNG age với thảo được chọn — KHÔNG cheapest-first scan, không
- * xuyên realm, không thay thế age. Chỉ chấp nhận
- * `<realmId>_wood_<requiredAge>`; thiếu → null (job từ chối
+ * Nhien lieu lo (gp123 6E - design rule): go phai CUNG realm voi recipe
+ * VA CUNG age voi thao duoc chon - KHONG cheapest-first scan, khong
+ * xuyen realm, khong thay the age. Chi chap nhan
+ * `<realmId>_wood_<requiredAge>`; thieu -> null (job tu choi
  * `missing_fuel_wood`).
  */
 export function resolveFuelWood(
@@ -351,7 +351,7 @@ export class AlchemySystem {
   private pendingEvents: AlchemySettlementEvent[] = []
 
   /**
-   * M1 (ARCH-001) — restore REPLACES the job list with detached copies:
+   * M1 (ARCH-001) - restore REPLACES the job list with detached copies:
    * the payload is a value, so mutating it afterwards must not leak into
    * live state (A3).
    */
@@ -382,8 +382,8 @@ export class AlchemySystem {
   }
 
   /**
-   * Bắt đầu job — validation TRƯỚC, trừ TOÀN BỘ sau khi hợp lệ
-   * (atomic reserve, plan §7.2/§8.2). Trả về lỗi cụ thể cho UI preview.
+   * Bat dau job - validation TRUOC, tru TOAN BO sau khi hop le
+   * (atomic reserve, plan sec7.2/sec8.2). Tra ve loi cu the cho UI preview.
    */
   startJob(
     recipe: AlchemyRecipe,
@@ -394,7 +394,7 @@ export class AlchemySystem {
     roomLevel: number,
     nowMs: number,
     maxConcurrentJobs: number,
-    // M3 (talent v4 §4.2) — Hoa Hau Thong Than counter-cost: multiplies
+    // M3 (talent v4 sec4.2) - Hoa Hau Thong Than counter-cost: multiplies
     // fuel wood + spirit stone requirements; herb/specials stay base.
     costMultiplier = 1,
   ): { ok: boolean; reason?: string; spiritStoneCost?: number } {
@@ -408,7 +408,7 @@ export class AlchemySystem {
       return { ok: false, reason: 'scope_hidden' }
     }
 
-    // M10 (ARCH-008) — retired pill families (Hoi Xuan Dan) cannot start
+    // M10 (ARCH-008) - retired pill families (Hoi Xuan Dan) cannot start
     // new jobs; in-flight jobs still settle via the resolvable recipe.
     if (recipe.retired === true) {
       return { ok: false, reason: 'retired' }
@@ -435,14 +435,14 @@ export class AlchemySystem {
       return { ok: false, reason: 'wrong_herb' }
     }
 
-    // Counter-cost is a surcharge — clamp >= 1 so bad data can't make jobs free.
+    // Counter-cost is a surcharge - clamp >= 1 so bad data can't make jobs free.
     const costScale = Math.max(1, costMultiplier)
 
     const fuelWoodAmount = Math.ceil(recipe.fuelWoodAmount * costScale)
     const spiritStoneCost = Math.ceil(recipe.spiritStoneCost * costScale)
 
-    // 6E — nhiên liệu CÙNG age với thảo đã chọn (variant luôn có age
-    // theo type — post-C2 mọi thảo đều `profession.age`).
+    // 6E - nhien lieu CUNG age voi thao da chon (variant luon co age
+    // theo type - post-C2 moi thao deu `profession.age`).
     const woodId = resolveFuelWood(bag, recipe.fuelWoodRealmId, fuelWoodAmount, variant.age)
 
     if (!woodId) {
@@ -457,15 +457,15 @@ export class AlchemySystem {
       return { ok: false, reason: 'missing_spirit_stone' }
     }
 
-    // Nguyên liệu đặc biệt (spec dot-pha-loi-kiep §4.1b) — check đủ
-    // TẤT CẢ trước khi reserve bất cứ thứ gì (giữ atomic §7.2).
+    // Nguyen lieu dac biet (spec dot-pha-loi-kiep sec4.1b) - check du
+    // TAT CA truoc khi reserve bat cu thu gi (giu atomic sec7.2).
     for (const special of recipe.specialIngredients ?? []) {
       if (!bag.has(special.materialId, special.amount)) {
         return { ok: false, reason: 'missing_special_ingredient' }
       }
     }
 
-    // Reserve atomic — trừ toàn bộ sau khi mọi check pass.
+    // Reserve atomic - tru toan bo sau khi moi check pass.
     bag.remove(herbMaterialId, recipe.herbAmount)
 
     bag.remove(woodId, fuelWoodAmount)
@@ -520,11 +520,11 @@ export class AlchemySystem {
       reservation,
     })
 
-    // Caller deducts exactly the cost validated here — single formula.
+    // Caller deducts exactly the cost validated here - single formula.
     return { ok: true, spiritStoneCost }
   }
 
-  /** Huỷ job — nguyên liệu đã đốt không hoàn trả (lò đã khởi động). */
+  /** Huy job - nguyen lieu da dot khong hoan tra (lo da khoi dong). */
   cancelJob(jobId: string): boolean {
     const before = this.jobs.length
 
@@ -534,9 +534,9 @@ export class AlchemySystem {
   }
 
   /**
-   * Settle job hoàn thành theo công thức §8.3: luôn nhận guaranteedPills,
-   * roll một lần theo extraPillChance để nhận thêm một viên. Idempotent —
-   * settle xoá job trước khi cộng Bag.
+   * Settle job hoan thanh theo cong thuc sec8.3: luon nhan guaranteedPills,
+   * roll mot lan theo extraPillChance de nhan them mot vien. Idempotent -
+   * settle xoa job truoc khi cong Bag.
    */
   tick(
     nowMs: number,
@@ -544,7 +544,7 @@ export class AlchemySystem {
     resolvePill: (pillId: string) => { id: string } | undefined,
     random: () => number = Math.random,
     successBonusPercentPoints = 0,
-    // M3 — Hoa Hau Thong Than: successful jobs yield pills x multiplier.
+    // M3 - Hoa Hau Thong Than: successful jobs yield pills x multiplier.
     pillYieldMultiplier = 1,
   ): void {
     const remaining: ActiveAlchemyJob[] = []
@@ -579,11 +579,11 @@ export class AlchemySystem {
       const pill = recipe !== undefined ? resolvePill(recipe.pillId) : undefined
 
       if (!recipe || !pill) {
-        // Recipe/pill không resolve được (data đổi/xoá giữa save và load) —
-        // TRƯỚC ĐÂY job bị xoá im lặng, mất trắng nguyên liệu đã reserve mà
-        // không có event nào (review 2026-08-28). Giờ phát event thất bại để
-        // UI thông báo; nguyên liệu đã đốt KHÔNG hoàn trả (job coi như luyện
-        // thất bại — đúng semantic §8.3, không tạo refund exploit).
+        // Recipe/pill khong resolve duoc (data doi/xoa giua save va load) -
+        // TRUOC DAY job bi xoa im lang, mat trang nguyen lieu da reserve ma
+        // khong co event nao (review 2026-08-28). Gio phat event that bai de
+        // UI thong bao; nguyen lieu da dot KHONG hoan tra (job coi nhu luyen
+        // that bai - dung semantic sec8.3, khong tao refund exploit).
         this.pendingEvents.push({
           jobId: job.jobId,
           pillId: job.pillId,
@@ -658,7 +658,7 @@ export class AlchemySystem {
     this.jobs = remaining
   }
 
-  /** Offline settle — job hoàn thành trong quá khứ settle đúng một lần. */
+  /** Offline settle - job hoan thanh trong qua khu settle dung mot lan. */
   settleOffline(
     pillBag: PillBag,
     resolvePill: (pillId: string) => { id: string } | undefined,
@@ -674,7 +674,7 @@ export class AlchemySystem {
     return before - this.jobs.length
   }
 
-  /** Wiring recipe lookup từ GameManager để tick resolve snapshot recipe. */
+  /** Wiring recipe lookup tu GameManager de tick resolve snapshot recipe. */
   private recipeLookup?: (recipeId: string) => AlchemyRecipe | undefined
 
   setRecipeLookup(lookup: (recipeId: string) => AlchemyRecipe | undefined): void {

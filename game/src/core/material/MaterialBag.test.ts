@@ -15,8 +15,8 @@ const LIMITED_MATERIAL: Material = {
   stackLimit: 10,
 }
 
-// Linh Thạch thật đặt MAX_SAFE_INTEGER (Material.ts) — chi phí Đột Phá
-// scale tới hàng tỷ, KHÔNG được bị clamp về MAX_STACK_AMOUNT chung.
+// Linh Thach that dat MAX_SAFE_INTEGER (Material.ts) - chi phi Dot Pha
+// scale toi hang ty, KHONG duoc bi clamp ve MAX_STACK_AMOUNT chung.
 const SPIRIT_STONE_MATERIAL: Material = {
   ...MATERIAL,
   id: 'spirit_stone_test',

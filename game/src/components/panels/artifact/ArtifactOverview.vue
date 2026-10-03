@@ -1,8 +1,8 @@
 <script setup lang="ts">
-// Bản Mệnh Pháp Bảo — vùng 1 (doc §12.1): artwork/icon, tên, nghề sở
-// hữu, identity. Chưa có art asset riêng — dùng khối biểu tượng chữ
-// (cùng tinh thần fallback của PlayerPortrait khi thiếu ảnh), không
-// chặn phần còn lại của panel.
+// Ban Menh Phap Bao - vung 1 (doc sec12.1): artwork/icon, ten, nghe so
+// huu, identity. Chua co art asset rieng - dung khoi bieu tuong chu
+// (cung tinh than fallback cua PlayerPortrait khi thieu anh), khong
+// chan phan con lai cua panel.
 defineProps<{
   name: string
   cultivationPathLabel: string

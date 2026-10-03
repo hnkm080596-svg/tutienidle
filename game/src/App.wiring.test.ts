@@ -1,44 +1,44 @@
 // Wiring guard - the test that would have caught the 2026-09-05 freeze
 // (commit d6d9a1d, "lifecycle idempotence").
 //
-// Bối cảnh: refactor đó extract boot/tick logic của App.vue sang
-// useAppLifecycle.ts, nhưng làm rớt lời gọi startTickLoop() — hàm vẫn
-// TỒN TẠI, ESLint không kêu (script setup: mọi top-level function coi
-// như "có thể" dùng ở template nên linter không thể khẳng định orphan),
-// và toàn bộ 2651 unit test vẫn xanh vì test gọi thẳng
-// gameManager.tickOps.update() chứ không đi qua App.vue. Kết quả: game đứng
-// hình vô thời hạn trong browser thật, zero console error (hàm không
-// bao giờ chạy thì không thể throw). Xem
+// Boi canh: refactor do extract boot/tick logic cua App.vue sang
+// useAppLifecycle.ts, nhung lam rot loi goi startTickLoop() - ham van
+// TON TAI, ESLint khong keu (script setup: moi top-level function coi
+// nhu "co the" dung o template nen linter khong the khang dinh orphan),
+// va toan bo 2651 unit test van xanh vi test goi thang
+// gameManager.tickOps.update() chu khong di qua App.vue. Ket qua: game dung
+// hinh vo thoi han trong browser that, zero console error (ham khong
+// bao gio chay thi khong the throw). Xem
 // .superpowers/sdd/2026-09-05-combat-art-roster-tranphap/freeze-rootcause.md
-// để đọc đầy đủ cơ chế.
+// de doc day du co che.
 //
-// File này KHÔNG chứng minh game chạy đúng (đó là việc của integration
-// test/E2E mà agent khác đã thêm) — nó chỉ chứng minh KHÔNG có hàm nào
-// trong App.vue bị "mồ côi" (định nghĩa nhưng zero reference thật), và
-// mọi capability mà useAppLifecycle() trả về đều có nơi tiêu thụ (hoặc
-// được allowlist tường minh kèm lý do). Đây là guard tĩnh, không cần
-// browser/Playwright — chạy trong `vitest` gate bình thường.
+// File nay KHONG chung minh game chay dung (do la viec cua integration
+// test/E2E ma agent khac da them) - no chi chung minh KHONG co ham nao
+// trong App.vue bi "mo coi" (dinh nghia nhung zero reference that), va
+// moi capability ma useAppLifecycle() tra ve deu co noi tieu thu (hoac
+// duoc allowlist tuong minh kem ly do). Day la guard tinh, khong can
+// browser/Playwright - chay trong `vitest` gate binh thuong.
 //
-// PHẠM VI CỐ Ý HẸP: chỉ App.vue + useAppLifecycle.ts (app shell +
-// lifecycle composable — đúng 2 file liên quan tới regression này).
-// KHÔNG mở rộng ra mọi SFC trong repo — một sweep toàn repo sẽ ồn (nhiều
-// component hợp lệ có prop/callback chỉ dùng nội bộ theo cách phức tạp
-// hơn heuristic ở đây xử lý đúng) và chậm, dẫn tới nguy cơ bị tắt đi.
-// Nếu một class bug tương tự xuất hiện ở composable/SFC khác trong
-// tương lai, hãy viết guard riêng cho ranh giới đó thay vì nới rộng
-// file này.
+// PHAM VI CO Y HEP: chi App.vue + useAppLifecycle.ts (app shell +
+// lifecycle composable - dung 2 file lien quan toi regression nay).
+// KHONG mo rong ra moi SFC trong repo - mot sweep toan repo se on (nhieu
+// component hop le co prop/callback chi dung noi bo theo cach phuc tap
+// hon heuristic o day xu ly dung) va cham, dan toi nguy co bi tat di.
+// Neu mot class bug tuong tu xuat hien o composable/SFC khac trong
+// tuong lai, hay viet guard rieng cho ranh gioi do thay vi noi rong
+// file nay.
 //
-// GIỚI HẠN QUAN TRỌNG — đọc trước khi tin tưởng file này: chính DÒNG SỬA
-// lỗi freeze (`startTickLoop(tick)` nằm BÊN TRONG bootGame() ở
-// useAppLifecycle.ts) KHÔNG được guard tĩnh này che. Layer 1 chỉ soi hàm
-// top-level của App.vue; Layer 2 chỉ hỏi "member mà useAppLifecycle()
-// TRẢ VỀ có ai tiêu thụ không" — một lời gọi nội bộ trong thân composable
-// không rơi vào cả hai. Nếu ai xoá dòng đó, file này vẫn xanh (entry
-// allowlist của `startTickLoop` ở dưới cũng vẫn xanh, vì nó chưa bao giờ
-// kiểm tra lời gọi ấy). Thứ duy nhất bắt được là test HÀNH VI
-// 'bootGame thành công → tick loop tự khởi động' trong
-// useAppLifecycle.test.ts. Hai file phải cùng tồn tại mới đủ lưới —
-// đừng xoá test bên đó vì nghĩ rằng guard này đã lo.
+// GIOI HAN QUAN TRONG - doc truoc khi tin tuong file nay: chinh DONG SUA
+// loi freeze (`startTickLoop(tick)` nam BEN TRONG bootGame() o
+// useAppLifecycle.ts) KHONG duoc guard tinh nay che. Layer 1 chi soi ham
+// top-level cua App.vue; Layer 2 chi hoi "member ma useAppLifecycle()
+// TRA VE co ai tieu thu khong" - mot loi goi noi bo trong than composable
+// khong roi vao ca hai. Neu ai xoa dong do, file nay van xanh (entry
+// allowlist cua `startTickLoop` o duoi cung van xanh, vi no chua bao gio
+// kiem tra loi goi ay). Thu duy nhat bat duoc la test HANH VI
+// 'bootGame thanh cong -> tick loop tu khoi dong' trong
+// useAppLifecycle.test.ts. Hai file phai cung ton tai moi du luoi -
+// dung xoa test ben do vi nghi rang guard nay da lo.
 
 // @ts-expect-error project omits Node ambient types by design (pattern: deadReferences.test.ts)
 import { readFileSync } from 'node:fs'
@@ -52,18 +52,18 @@ import { bindPresentationActive } from './presentation/bindPresentationActive'
 const APP_VUE_PATH = fileURLToPath(new URL('./App.vue', import.meta.url))
 const LIFECYCLE_TS_PATH = fileURLToPath(new URL('./composables/useAppLifecycle.ts', import.meta.url))
 
-/** Một function top-level ứng viên, kèm node AST để tính vùng "thân hàm" loại trừ self-reference. */
+/** Mot function top-level ung vien, kem node AST de tinh vung "than ham" loai tru self-reference. */
 interface TopLevelFunctionCandidate {
   name: string
-  /** Statement bao trọn declaration — dùng để loại trừ occurrence NẰM TRONG chính nó (gọi đệ quy, JSDoc...). */
+  /** Statement bao tron declaration - dung de loai tru occurrence NAM TRONG chinh no (goi de quy, JSDoc...). */
   span: { start: number; end: number }
 }
 
 /**
- * Parse App.vue, tách riêng nội dung <script setup> và <template> thô.
- * Dùng @vue/compiler-sfc thay vì regex thủ công trên toàn file — biên
- * chính xác giữa script/template/style đã được Vue tự parse, tránh
- * trường hợp một thẻ template chứa chuỗi trông giống code script.
+ * Parse App.vue, tach rieng noi dung <script setup> va <template> tho.
+ * Dung @vue/compiler-sfc thay vi regex thu cong tren toan file - bien
+ * chinh xac giua script/template/style da duoc Vue tu parse, tranh
+ * truong hop mot the template chua chuoi trong giong code script.
  */
 function readAppVueBlocks(): { scriptSetup: string; template: string } {
   const raw = readFileSync(APP_VUE_PATH, 'utf-8')
@@ -75,14 +75,14 @@ function readAppVueBlocks(): { scriptSetup: string; template: string } {
 
   return {
     scriptSetup: descriptor.scriptSetup.content,
-    // Template raw source (chưa compile) — đủ để tìm tên identifier xuất
-    // hiện dạng @click="foo", :prop="foo", {{ foo }}, shorthand @foo...
-    // mà không cần dựng full template AST.
+    // Template raw source (chua compile) - du de tim ten identifier xuat
+    // hien dang @click="foo", :prop="foo", {{ foo }}, shorthand @foo...
+    // ma khong can dung full template AST.
     template: descriptor.template?.content ?? '',
   }
 }
 
-/** Bỏ HTML comment (<!-- ... -->) khỏi template thô — comment có thể nhắc tên hàm mà không thật sự dùng nó. */
+/** Bo HTML comment (<!-- ... -->) khoi template tho - comment co the nhac ten ham ma khong that su dung no. */
 function stripHtmlComments(template: string): string {
   return template.replace(/<!--[\s\S]*?-->/g, '')
 }
@@ -92,10 +92,10 @@ function parseScript(content: string, fileName: string): ts.SourceFile {
 }
 
 /**
- * Thu thập function top-level trong <script setup>: cả `function foo() {}`
- * và `const foo = () => {}` / `const foo = function () {}`. CHỈ xét
- * statement ở top level (sourceFile.statements) — khớp đúng thứ script
- * setup expose cho template (Vue chỉ auto-expose binding top-level).
+ * Thu thap function top-level trong <script setup>: ca `function foo() {}`
+ * va `const foo = () => {}` / `const foo = function () {}`. CHI xet
+ * statement o top level (sourceFile.statements) - khop dung thu script
+ * setup expose cho template (Vue chi auto-expose binding top-level).
  */
 function collectTopLevelFunctions(sourceFile: ts.SourceFile): TopLevelFunctionCandidate[] {
   const candidates: TopLevelFunctionCandidate[] = []
@@ -118,9 +118,9 @@ function collectTopLevelFunctions(sourceFile: ts.SourceFile): TopLevelFunctionCa
         ) {
           candidates.push({
             name: decl.name.text,
-            // Dùng span cả VariableStatement (không chỉ initializer) để
-            // loại trừ luôn identifier lặp trong cùng khai báo (hiếm khi
-            // xảy ra, nhưng an toàn hơn khi chỉ dùng span initializer).
+            // Dung span ca VariableStatement (khong chi initializer) de
+            // loai tru luon identifier lap trong cung khai bao (hiem khi
+            // xay ra, nhung an toan hon khi chi dung span initializer).
             span: { start: statement.getStart(sourceFile), end: statement.getEnd() },
           })
         }
@@ -132,12 +132,12 @@ function collectTopLevelFunctions(sourceFile: ts.SourceFile): TopLevelFunctionCa
 }
 
 /**
- * Tìm mọi Identifier node có text === name trong toàn bộ sourceFile, trừ
- * những occurrence NẰM TRONG excludeSpan (chính khai báo — kể cả gọi đệ
- * quy trong thân hàm). Dùng AST (không phải regex trên text) vì AST tự
- * nhiên bỏ qua comment — comment nhắc tên hàm không được tính là
- * "reference", tránh false negative (bug gốc: nếu comment nhắc tên hàm
- * đủ để qua guard, guard sẽ không bắt được orphan thật).
+ * Tim moi Identifier node co text === name trong toan bo sourceFile, tru
+ * nhung occurrence NAM TRONG excludeSpan (chinh khai bao - ke ca goi de
+ * quy trong than ham). Dung AST (khong phai regex tren text) vi AST tu
+ * nhien bo qua comment - comment nhac ten ham khong duoc tinh la
+ * "reference", tranh false negative (bug goc: neu comment nhac ten ham
+ * du de qua guard, guard se khong bat duoc orphan that).
  */
 function hasExternalIdentifierReference(
   sourceFile: ts.SourceFile,
@@ -167,7 +167,7 @@ function hasExternalIdentifierReference(
   return found
 }
 
-/** Regex word-boundary trên template thô (đã strip comment) — đủ bắt @click="foo", :prop="foo", {{ foo() }}, shorthand @foo. */
+/** Regex word-boundary tren template tho (da strip comment) - du bat @click="foo", :prop="foo", {{ foo() }}, shorthand @foo. */
 function isReferencedInTemplate(template: string, name: string): boolean {
   const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
   return new RegExp(`\\b${escaped}\\b`).test(stripHtmlComments(template))
@@ -179,9 +179,9 @@ describe('App.vue wiring guard — no orphaned top-level functions', () => {
   const candidates = collectTopLevelFunctions(sourceFile)
 
   it('found at least one top-level function to check (guard sanity — file structure changed?)', () => {
-    // Nếu con số này về 0, có thể App.vue đã đổi cấu trúc script setup
-    // (ví dụ chuyển hết logic ra composable) — không phải guard fail,
-    // nhưng cần review lại xem guard còn ý nghĩa ở đây không.
+    // Neu con so nay ve 0, co the App.vue da doi cau truc script setup
+    // (vi du chuyen het logic ra composable) - khong phai guard fail,
+    // nhung can review lai xem guard con y nghia o day khong.
     expect(candidates.length).toBeGreaterThan(0)
   })
 
@@ -208,14 +208,14 @@ describe('App.vue wiring guard — no orphaned top-level functions', () => {
   )
 })
 
-// --- Layer 2: mọi capability useAppLifecycle() trả về phải có consumer ---
+// --- Layer 2: moi capability useAppLifecycle() tra ve phai co consumer ---
 
 /**
- * Tìm function `useAppLifecycle` trong useAppLifecycle.ts, đọc object
- * literal của `return { ... }` cuối cùng trong thân hàm, trả về danh
- * sách tên property (cả shorthand `{ foo }` lẫn `{ foo: bar }` — lấy tên
- * property, không phải tên biến cục bộ, vì đó là tên PUBLIC API mà
- * App.vue tiêu thụ qua `lifecycle.<tên>`).
+ * Tim function `useAppLifecycle` trong useAppLifecycle.ts, doc object
+ * literal cua `return { ... }` cuoi cung trong than ham, tra ve danh
+ * sach ten property (ca shorthand `{ foo }` lan `{ foo: bar }` - lay ten
+ * property, khong phai ten bien cuc bo, vi do la ten PUBLIC API ma
+ * App.vue tieu thu qua `lifecycle.<ten>`).
  */
 function collectLifecycleReturnMembers(sourceFile: ts.SourceFile): string[] {
   let lifecycleFn: ts.FunctionDeclaration | undefined
@@ -230,11 +230,11 @@ function collectLifecycleReturnMembers(sourceFile: ts.SourceFile): string[] {
     throw new Error('Không tìm thấy function useAppLifecycle() ở top level — composable đã đổi cấu trúc, cần cập nhật guard này.')
   }
 
-  // CHỈ xét statement top-level trong THÂN của useAppLifecycle (không đệ
-  // quy vào các function lồng bên trong như bootGame()) — bootGame() cũng
-  // có nhiều `return { status: ... }` riêng của nó (BootOutcome), đệ quy
-  // bừa sẽ vớ nhầm object literal đó thay vì object thật sự được
-  // useAppLifecycle() trả ra cho caller.
+  // CHI xet statement top-level trong THAN cua useAppLifecycle (khong de
+  // quy vao cac function long ben trong nhu bootGame()) - bootGame() cung
+  // co nhieu `return { status: ... }` rieng cua no (BootOutcome), de quy
+  // bua se vo nham object literal do thay vi object that su duoc
+  // useAppLifecycle() tra ra cho caller.
   const returnStatement = lifecycleFn.body.statements.find(
     (s): s is ts.ReturnStatement =>
       ts.isReturnStatement(s) && s.expression !== undefined && ts.isObjectLiteralExpression(s.expression),
@@ -262,22 +262,22 @@ function collectLifecycleReturnMembers(sourceFile: ts.SourceFile): string[] {
 }
 
 /**
- * Members cố ý KHÔNG được App.vue tiêu thụ trực tiếp — mỗi entry BẮT
- * BUỘC kèm lý do. Đây là escape hatch tường minh: rơi vào danh sách này
- * là một QUYẾT ĐỊNH có thể review được trong PR diff, không phải một lỗ
- * hổng âm thầm của guard.
+ * Members co y KHONG duoc App.vue tieu thu truc tiep - moi entry BAT
+ * BUOC kem ly do. Day la escape hatch tuong minh: roi vao danh sach nay
+ * la mot QUYET DINH co the review duoc trong PR diff, khong phai mot lo
+ * hong am tham cua guard.
  */
 const INTENTIONALLY_UNWIRED_LIFECYCLE_MEMBERS: Record<string, string> = {
-  // Fix cho chính bug freeze 2026-09-05: bootGame() giờ TỰ gọi
-  // startTickLoop(tick) bên trong nó (xem useAppLifecycle.ts, comment
-  // "Fix (2026-09-06)") — App.vue chỉ cần truyền `tick` qua deps, không
-  // còn tự gọi startTickLoop() nữa. Method vẫn được export vì
-  // useAppLifecycle.test.ts gọi trực tiếp để assert tính idempotent
-  // (gọi 2 lần không leak interval thứ 2).
+  // Fix cho chinh bug freeze 2026-09-05: bootGame() gio TU goi
+  // startTickLoop(tick) ben trong no (xem useAppLifecycle.ts, comment
+  // "Fix (2026-09-06)") - App.vue chi can truyen `tick` qua deps, khong
+  // con tu goi startTickLoop() nua. Method van duoc export vi
+  // useAppLifecycle.test.ts goi truc tiep de assert tinh idempotent
+  // (goi 2 lan khong leak interval thu 2).
   startTickLoop: 'bootGame() tự gọi nội bộ (fix 2026-09-06); export chỉ để useAppLifecycle.test.ts assert idempotency trực tiếp.',
-  // Getter debug/test-only (chính composable tự chú thích "Test/mount-
-  // tracing" ngay tại điểm khai báo) — App.vue không cần đọc handle số
-  // nguyên của interval, chỉ useAppLifecycle.test.ts assert qua đây.
+  // Getter debug/test-only (chinh composable tu chu thich "Test/mount-
+  // tracing" ngay tai diem khai bao) - App.vue khong can doc handle so
+  // nguyen cua interval, chi useAppLifecycle.test.ts assert qua day.
   getTickHandle: 'Debug/test-only getter — chỉ useAppLifecycle.test.ts đọc để assert interval handle tồn tại/bị clear.',
   getAutosaveHandle: 'Debug/test-only getter — chỉ useAppLifecycle.test.ts đọc để assert interval handle tồn tại/bị clear.',
   // R5 (AR-14 / Law A7) - investBodyChapter() auto-invests directly in
@@ -306,14 +306,14 @@ describe('useAppLifecycle() exports have a consumer in App.vue', () => {
 
   it.each(members)('member "%s" is either consumed via lifecycle.<member>(...) in App.vue, or explicitly allowlisted', (name) => {
     if (name in INTENTIONALLY_UNWIRED_LIFECYCLE_MEMBERS) {
-      // Cố ý bỏ qua — lý do đã ghi trong INTENTIONALLY_UNWIRED_LIFECYCLE_MEMBERS ở trên.
+      // Co y bo qua - ly do da ghi trong INTENTIONALLY_UNWIRED_LIFECYCLE_MEMBERS o tren.
       return
     }
 
-    // App.vue dùng dạng `const lifecycle = useAppLifecycle(...)` rồi gọi
-    // property (lifecycle.foo), KHÔNG destructure — tìm PropertyAccess
-    // `lifecycle.<name>` bất kỳ đâu trong script. AST-based (không phải
-    // text regex) nên comment nhắc tên member không tính là consumer.
+    // App.vue dung dang `const lifecycle = useAppLifecycle(...)` roi goi
+    // property (lifecycle.foo), KHONG destructure - tim PropertyAccess
+    // `lifecycle.<name>` bat ky dau trong script. AST-based (khong phai
+    // text regex) nen comment nhac ten member khong tinh la consumer.
     let consumed = false
 
     const visit = (node: ts.Node): void => {

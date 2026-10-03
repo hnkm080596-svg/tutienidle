@@ -1,9 +1,9 @@
 import type { Formation } from '@/core/formation/Formation'
 import type { StatModifier } from '@/core/stats/StatCalculator'
 
-// Trận (2026-08-24, resource-professions-rework §7) — modifier-item hai
-// modifier tĩnh tấn công, socket mọi slot (mỗi slot 1 Trận cạnh 1 Phù).
-// MVP bỏ trigger/stack — FormationSystem legacy không còn chạy.
+// Tran (2026-08-24, resource-professions-rework sec7) - modifier-item hai
+// modifier tinh tan cong, socket moi slot (moi slot 1 Tran canh 1 Phu).
+// MVP bo trigger/stack - FormationSystem legacy khong con chay.
 function modifier(
   id: string,
   sourceId: string,

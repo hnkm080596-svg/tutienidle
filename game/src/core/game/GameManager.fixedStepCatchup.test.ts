@@ -50,9 +50,9 @@ function createAttackerPlayer(): CombatEntity {
   }
 }
 
-// Scheduler thống nhất (plan §8.4) — mọi đòn của player là skill
-// auto-cast; skill fixture 'attack_speed' chiếm slot 0 (nhịp theo Attack
-// Speed), xem cùng fixture ở BattleSystem.attackRangeVisibility.test.ts.
+// Scheduler thong nhat (plan sec8.4) - moi don cua player la skill
+// auto-cast; skill fixture 'attack_speed' chiem slot 0 (nhip theo Attack
+// Speed), xem cung fixture o BattleSystem.attackRangeVisibility.test.ts.
 function createBasicSkill(): Skill {
   return {
     id: 'basic_test',
@@ -77,9 +77,9 @@ function createStubbornEnemy() {
     level: 1,
     realmId: 'mortal',
     lane: 'ground',
-    // HP + armor rất cao — không bao giờ chết trong lúc test, đòn địch
-    // đánh lại player cũng không đáng kể (might=0) để player.alive luôn
-    // true suốt bài test, không ảnh hưởng số đòn đếm được.
+    // HP + armor rat cao - khong bao gio chet trong luc test, don dich
+    // danh lai player cung khong dang ke (might=0) de player.alive luon
+    // true suot bai test, khong anh huong so don dem duoc.
     statsInput: { ...ATTACKER_STATS_INPUT, maxHp: 10_000_000, might: 0, armor: 0 },
     rewards: { techniqueMastery: 0, spiritStone: 0 },
   })
@@ -114,21 +114,21 @@ describe('CombatClock — chunking invariant + no world-tick catch-up for combat
 
     gameManager.startBattle(player, createStubbornEnemy())
 
-    // Slice 6 cutover: countdown là phase của TurnBattle (30 pacing ticks
-    // = 3s hệ sống) — chạy hết countdown trước khi đếm turn.
+    // Slice 6 cutover: countdown la phase cua TurnBattle (30 pacing ticks
+    // = 3s he song) - chay het countdown truoc khi dem turn.
     for (let i = 0; i < 30; i++) {
       combatSource.advance(COMBAT_STEP_SECONDS)
     }
 
-    // Materialize gán vị trí từ resolver — đặt quái trong tầm teleport
-    // (col 2: sau khi đổi row về hàng quái, Chebyshev = 1) để player
-    // đánh được ngay khi 'fighting' bắt đầu.
+    // Materialize gan vi tri tu resolver - dat quai trong tam teleport
+    // (col 2: sau khi doi row ve hang quai, Chebyshev = 1) de player
+    // danh duoc ngay khi 'fighting' bat dau.
     gameManager.getTurnBattle()!.enemies[0]!.entity.x = 2
 
-    // Slice 6 cutover: 'attack' event là cơ chế real-time (BattleSystem cũ
-    // emit) — turn-based đếm TỔNG TURNS đã resolve qua totalTurnsElapsed.
-    // Invariant đang bảo vệ giữ nguyên: cùng tổng thời gian → cùng số
-    // bước, bất kể chia nhỏ hay dồn 1 delta lớn (fixed-step loop).
+    // Slice 6 cutover: 'attack' event la co che real-time (BattleSystem cu
+    // emit) - turn-based dem TONG TURNS da resolve qua totalTurnsElapsed.
+    // Invariant dang bao ve giu nguyen: cung tong thoi gian -> cung so
+    // buoc, bat ke chia nho hay don 1 delta lon (fixed-step loop).
     const _attackCount = 0
 
     if (stepSeconds === null) {
@@ -154,9 +154,9 @@ describe('CombatClock — chunking invariant + no world-tick catch-up for combat
     const oneBigDelta = runScenario(totalSeconds, null)
 
     expect(oneBigDelta).toBe(manySmallDeltas)
-    // Sanity: với attackSpeed=2 (interval 0.5s) trong 20s phải có nhiều
-    // hơn 1 đòn — chặn regression về hành vi cũ (chỉ đánh đúng 1 lần
-    // rồi vứt hết phần nợ timer).
+    // Sanity: voi attackSpeed=2 (interval 0.5s) trong 20s phai co nhieu
+    // hon 1 don - chan regression ve hanh vi cu (chi danh dung 1 lan
+    // roi vut het phan no timer).
     expect(oneBigDelta).toBeGreaterThan(10)
   })
 
@@ -172,8 +172,8 @@ describe('CombatClock — chunking invariant + no world-tick catch-up for combat
 
     const turnsBefore = gameManager.getTurnBattle()?.totalTurnsElapsed ?? 0
 
-    // Máy ngủ nhiều giờ rồi resume: GameClock trả về deltaSeconds cực lớn.
-    // Cultivation/production/auto-farm vẫn nhận nó; combat thì không.
+    // May ngu nhieu gio roi resume: GameClock tra ve deltaSeconds cuc lon.
+    // Cultivation/production/auto-farm van nhan no; combat thi khong.
     expect(() => gameManager.tickOps.update(6 * 60 * 60)).not.toThrow()
 
     expect(gameManager.getTurnBattle()?.totalTurnsElapsed ?? 0).toBe(turnsBefore)

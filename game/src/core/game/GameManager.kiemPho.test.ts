@@ -7,7 +7,7 @@ import { defineEnemy } from '../enemy/Enemy'
 import { SKILLS } from '../../data/skill/Skills'
 import { SKILL_CORE_NODES } from '@/data/progression/SkillCoreNodes'
 
-// Kiem Tu Reimagined Task 6 — hien wiring through the real build path:
+// Kiem Tu Reimagined Task 6 - hien wiring through the real build path:
 // the player participant carries a dynamicBasic provider, orbs resolve
 // through the normal turn pipeline, and a matched combo emits its own
 // action_impact with the unique combo presetId (K11).
@@ -55,7 +55,7 @@ function setup(preset: string[] = ['orb_dam', 'orb_dam', 'orb_dam']) {
 }
 
 function advanceTurns(gameManager: GameManager, combatSource: ManualClockSource, turns: number) {
-  // Speed 100 → ~10 ticks/turn; intro+countdown pads are skipped by the
+  // Speed 100 -> ~10 ticks/turn; intro+countdown pads are skipped by the
   // no-presentation path. Drive enough ticks for N player turns.
   for (let i = 0; i < turns * 40 + 80; i++) {
     combatSource.advance(COMBAT_STEP_SECONDS)

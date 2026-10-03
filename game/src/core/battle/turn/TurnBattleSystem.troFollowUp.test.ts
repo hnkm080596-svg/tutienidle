@@ -86,7 +86,7 @@ interface World {
 }
 
 /** Live-data registry with the given defs swapped in under their own
-    ids — the kit-clone seam the battle-local registry performs. */
+    ids - the kit-clone seam the battle-local registry performs. */
 function registryWith(replacements: readonly BuffDefinition[]): BuffRegistry {
   const byId = new Map(replacements.map((def) => [def.id, def]))
   return makeTestBuffRegistry(LIVE_BUFFS.map((def) => byId.get(def.id) ?? def))

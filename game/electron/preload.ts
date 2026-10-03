@@ -1,22 +1,22 @@
 import { contextBridge, ipcRenderer } from 'electron'
 
-// Uncommitted audit followup plan, Ưu tiên 2 (2026-08-24) — bề mặt API DUY
-// NHẤT renderer được phép thấy, đúng 6 field, không expose ipcRenderer/
-// require thô ra window. Xem game/src/composables/useElectronBridge.ts cho
-// phía renderer tiêu thụ các hàm này (interface ElectronBridgeAPI ở đó
-// phải khớp đúng shape object bên dưới).
+// Uncommitted audit followup plan, Uu tien 2 (2026-08-24) - be mat API DUY
+// NHAT renderer duoc phep thay, dung 6 field, khong expose ipcRenderer/
+// require tho ra window. Xem game/src/composables/useElectronBridge.ts cho
+// phia renderer tieu thu cac ham nay (interface ElectronBridgeAPI o do
+// phai khop dung shape object ben duoi).
 //
 // combatClock (Task 7, 2026-09-10) - main-process clock host
-// (src/main-process/combatClockHost.ts) wrapped as onTick/stop only; không
-// thêm global window.combatClock riêng để giữ đúng bất biến "1 bề mặt duy
-// nhất". MainProcessClockSource (src/presentation/clock/) tiêu thụ field này.
+// (src/main-process/combatClockHost.ts) wrapped as onTick/stop only; khong
+// them global window.combatClock rieng de giu dung bat bien "1 be mat duy
+// nhat". MainProcessClockSource (src/presentation/clock/) tieu thu field nay.
 contextBridge.exposeInMainWorld('electronAPI', {
   isElectron: true,
 
-  // Mỗi onX TRẢ VỀ hàm unsubscribe (gỡ đúng handler đã đăng ký) — giữ
-  // symmetric với combatClock.onTick và để renderer teardown/HMR có thể
-  // gỡ subscription thay vì chồng listener (xem useElectronBridge: App
-  // gọi disposer khi unmount — ARCH-013/L04).
+  // Moi onX TRA VE ham unsubscribe (go dung handler da dang ky) - giu
+  // symmetric voi combatClock.onTick va de renderer teardown/HMR co the
+  // go subscription thay vi chong listener (xem useElectronBridge: App
+  // goi disposer khi unmount - ARCH-013/L04).
   onSystemSuspend(callback: (timestamp: number) => void) {
     const handler = (_event: Electron.IpcRendererEvent, timestamp: number) => callback(timestamp)
     ipcRenderer.on('system:suspend', handler)

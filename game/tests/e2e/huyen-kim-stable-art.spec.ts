@@ -139,7 +139,7 @@ function stackDepths(page: Page, stackSelector: string) {
 /**
  * Raw computed translations. The transform is
  * `translate(-50%,-50%) translate3d(x,y,0)`, so the matrix includes the
- * centering offset — always diff two states to isolate the drift delta.
+ * centering offset - always diff two states to isolate the drift delta.
  */
 function layerTranslations(page: Page, stackSelector: string) {
   return page.locator(`${stackSelector} .hk-parallax-stack__layer`).evaluateAll((els) =>
@@ -166,7 +166,7 @@ test.describe('Huyen Kim stable scene art', () => {
     await expect(page.locator(`${stack} .hk-parallax-stack__layer`)).toHaveCount(6)
     expect(await stackDepths(page, stack)).toEqual(['L0', 'L1', 'L2', 'L3', 'L4', 'L5'])
 
-    // Paint order contract: the login card must sit above the vista —
+    // Paint order contract: the login card must sit above the vista -
     // elementFromPoint at the card's center must hit card content, never
     // a parallax layer (regression pin for the stacking-context fix).
     const hitHost = await page.evaluate(() => {
@@ -324,7 +324,7 @@ test.describe('Huyen Kim stable scene art', () => {
     await waitForPresentationIdle(page)
     await shot(page, '07-skill')
 
-    // Scene 06 is its own paper scene now — the artifact centerpiece
+    // Scene 06 is its own paper scene now - the artifact centerpiece
     // lives in TechniquePanel, not the skill tree.
     await page.keyboard.press('Escape')
     await openStandalone(page, 'technique')
@@ -356,7 +356,7 @@ test.describe('Huyen Kim stable scene art', () => {
     const scene = page.locator('.exploration-scene')
     await expect(scene).toBeVisible({ timeout: 15_000 })
 
-    // Stable terrain art behind the live Sơn Hà Đồ map.
+    // Stable terrain art behind the live Son Ha Do map.
     const terrain = scene.locator('.terrain')
     await expect(terrain).toBeVisible()
     expect(await terrain.getAttribute('src')).toContain('exploration-v2/terrain-three-realms-v1')

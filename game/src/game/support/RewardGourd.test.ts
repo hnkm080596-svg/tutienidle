@@ -8,8 +8,8 @@ import {
   rewardSwirlOffset,
 } from './RewardGourd'
 
-// Reward gourd pure helpers (plan §6.2/§7.3 + §9): safe-area placement,
-// mouth anchor và quỹ đạo hút.
+// Reward gourd pure helpers (plan sec6.2/sec7.3 + sec9): safe-area placement,
+// mouth anchor va quy dao hut.
 describe('computeGourdPlacement — safe area (plan §6.2)', () => {
   it('góc trái dưới, NGAY phía trên bottom inset', () => {
     const placement = computeGourdPlacement({ canvasHeight: 900, bottomInset: 120 })
@@ -36,7 +36,7 @@ describe('resolveGourdMouth', () => {
     expect(mouth.x).toBeCloseTo(placement.baseX, 5)
     expect(mouth.y).toBeCloseTo(placement.baseY - placement.height * 0.86, 5)
 
-    // Miệng phải nằm TRÊN thân (y nhỏ hơn đáy).
+    // Mieng phai nam TREN than (y nho hon day).
     expect(mouth.y).toBeLessThan(placement.baseY)
   })
 })
@@ -47,13 +47,13 @@ describe('reward stream motion (plan §7.3)', () => {
   it('control point tính từ start; end được inject LIVE qua closure', () => {
     const controlFor = resolveRewardControlPoint(start, 'insight')
 
-    // Cùng start, end khác → control khác: resize/teleport re-resolve
-    // đích mà không phụ thuộc state cũ.
+    // Cung start, end khac -> control khac: resize/teleport re-resolve
+    // dich ma khong phu thuoc state cu.
     const c1 = controlFor({ x: 100, y: 700 })
     const c2 = controlFor({ x: 140, y: 640 })
 
     expect(c1.x).toBeCloseTo((start.x + 100) / 2, 5)
-    expect(c1.y).toBeLessThan(Math.min(start.y, 700)) // vồng LÊN trên
+    expect(c1.y).toBeLessThan(Math.min(start.y, 700)) // vong LEN tren
     expect(c2.x).toBeCloseTo((start.x + 140) / 2, 5)
   })
 
@@ -61,7 +61,7 @@ describe('reward stream motion (plan §7.3)', () => {
     expect(easeRewardProgress(0)).toBe(0)
     expect(easeRewardProgress(0.5)).toBeCloseTo(0.25, 5)
     expect(easeRewardProgress(1)).toBe(1)
-    // Nửa sau đi được quãng dài hơn nửa đầu.
+    // Nua sau di duoc quang dai hon nua dau.
     expect(easeRewardProgress(0.9) - easeRewardProgress(0.5)).toBeGreaterThan(
       easeRewardProgress(0.5) - easeRewardProgress(0.1),
     )
@@ -73,7 +73,7 @@ describe('reward stream motion (plan §7.3)', () => {
       expect(rewardSwirlOffset(1, seed)).toEqual({ x: 0, y: 0 })
     }
 
-    // Giữa đường có lệch hữu hạn.
+    // Giua duong co lech huu han.
     const mid = rewardSwirlOffset(0.5, 0.4)
 
     expect(Math.hypot(mid.x, mid.y)).toBeLessThan(12)

@@ -1,15 +1,15 @@
-// Background 2.5D (2026-08-24) — nền chiến trường vẽ THỦ TỤC (procedural)
-// theo mặt phẳng nghiêng, tách khỏi lưới gameplay:
-// - foreground RỘNG hơn hậu cảnh: quad đất nở rộng ra hai bên về phía gần.
-// - đường dẫn + đá môi trường HỘI TỤ về điểm biến mất ngang chân trời.
-// - KHÔNG bao giờ vẽ sẵn ô lưới vào background — grid là lớp động riêng
-//   (CombatScene vẽ lại mỗi lần layout/resize qua projection).
-// - đốm texture đất rải theo phân phối phối cảnh để 10 lane không lộ cảm
-//   giác bàn cờ (mật độ + kích thước đốm tăng dần về gần).
+// Background 2.5D (2026-08-24) - nen chien truong ve THU TUC (procedural)
+// theo mat phang nghieng, tach khoi luoi gameplay:
+// - foreground RONG hon hau canh: quad dat no rong ra hai ben ve phia gan.
+// - duong dan + da moi truong HOI TU ve diem bien mat ngang chan troi.
+// - KHONG bao gio ve san o luoi vao background - grid la lop dong rieng
+//   (CombatScene ve lai moi lan layout/resize qua projection).
+// - dom texture dat rai theo phan phoi phoi canh de 10 lane khong lo cam
+//   giac ban co (mat do + kich thuoc dom tang dan ve gan).
 //
-// Deterministic: mọi yếu tố ngẫu nhiên dùng mulberry32 với seed cố định ⇒
-// redraw sau resize cho cùng hình khối — screenshot parity giữa các lần
-// chụp cùng viewport.
+// Deterministic: moi yeu to ngau nhien dung mulberry32 voi seed co dinh =>
+// redraw sau resize cho cung hinh khoi - screenshot parity giua cac lan
+// chup cung viewport.
 import type Phaser from 'phaser'
 import { GRID_COLUMN_COUNT, GRID_ROW_COUNT } from '@/core/battle/BattleGrid'
 import { DEPTH_BACKGROUND } from './BattleLayers'
@@ -19,7 +19,7 @@ import {
   type BattleGridProjection,
 } from '@/presentation/geometry/BattleGridProjection'
 
-/** Đất mở rộng ra ngoài lưới (hệ số trên nửa bề rộng cạnh gần). */
+/** Dat mo rong ra ngoai luoi (he so tren nua be rong canh gan). */
 const GROUND_EXTEND = 1.35
 
 const SKY_TOP_COLOR = 0x0b0e17
@@ -48,7 +48,7 @@ function mulberry32(seed: number): () => number {
   }
 }
 export interface BattlefieldBackdropHandle {
-  /** width/height/horizonY optional — procedural backdrop bỏ qua (đọc thẳng projection), art mount dùng để neo layer vào horizonY thật. */
+  /** width/height/horizonY optional - procedural backdrop bo qua (doc thang projection), art mount dung de neo layer vao horizonY that. */
   redraw(width?: number, height?: number, horizonY?: number): void
 
   destroy(): void
@@ -72,7 +72,7 @@ export function attachBattlefieldBackdrop(
     )
     graphics.fillRect(0, 0, width, bounds.top + 2)
 
-    // Sao — dày về phía trời cao, mờ dần xuống chân trời.
+    // Sao - day ve phia troi cao, mo dan xuong chan troi.
     const random = mulberry32(0x51a75)
 
     for (let index = 0; index < 90; index++) {
@@ -84,7 +84,7 @@ export function attachBattlefieldBackdrop(
       graphics.fillCircle(x, y, size)
     }
 
-    // Trăng + quầng sáng.
+    // Trang + quang sang.
     const moonX = width * 0.82
     const moonY = bounds.top * 0.26
     const moonRadius = Math.max(10, bounds.top * 0.09)
@@ -136,9 +136,9 @@ export function attachBattlefieldBackdrop(
     right: number
   }): void {
     const { width } = projection.viewport
-    // Nửa bề rộng quad đất tại cạnh GẦN — nở rộng hơn lưới một chút để
-    // lưới không trôi như hòn đảo; cạnh xa tự thu nhỏ theo q² nên mọi
-    // đường dọc của quad hội tụ đúng hướng điểm biến mất.
+    // Nua be rong quad dat tai canh GAN - no rong hon luoi mot chut de
+    // luoi khong troi nhu hon dao; canh xa tu thu nho theo q2 nen moi
+    // duong doc cua quad hoi tu dung huong diem bien mat.
     const nearHalfWidth = Math.min(
       width / 2 - PERSPECTIVE_SIDE_MARGIN / 2,
       ((bounds.right - bounds.left) / 2) * GROUND_EXTEND * (1 + PERSPECTIVE_STRENGTH) ** 2,
@@ -146,9 +146,9 @@ export function attachBattlefieldBackdrop(
     const farHalfWidth = nearHalfWidth / (1 + PERSPECTIVE_STRENGTH) ** 2
     const centerX = (bounds.left + bounds.right) / 2
 
-    // Gradient theo trục dọc polygon: ĐỈNH = far edge (màu sáng mờ sương
-    // phối cảnh), ĐÁY = near edge (đậm) — tham số fillGradientStyle theo
-    // thứ tự top→bottom nên FAR phải đứng trước.
+    // Gradient theo truc doc polygon: DINH = far edge (mau sang mo suong
+    // phoi canh), DAY = near edge (dam) - tham so fillGradientStyle theo
+    // thu tu top->bottom nen FAR phai dung truoc.
     graphics.fillGradientStyle(
       GROUND_FAR_COLOR,
       GROUND_FAR_COLOR,
@@ -164,11 +164,11 @@ export function attachBattlefieldBackdrop(
     graphics.closePath()
     graphics.fillPath()
 
-    // Đường dẫn trên mặt đường — endpoint lấy THẲNG từ projection nên
-    // hội tụ đúng theo far edge của lưới (cạnh xa còn rộng), KHÔNG tự nội
-    // suy về một vanishing point riêng gây lệch luật với grid. Các cột
-    // chọn lệch pha để không đè lên vạch lưới; spread nằm trong biên an
-    // toàn của quad đất mở rộng (|u - 0.5| ≤ 0.65).
+    // Duong dan tren mat duong - endpoint lay THANG tu projection nen
+    // hoi tu dung theo far edge cua luoi (canh xa con rong), KHONG tu noi
+    // suy ve mot vanishing point rieng gay lech luat voi grid. Cac cot
+    // chon lech pha de khong de len vach luoi; spread nam trong bien an
+    // toan cua quad dat mo rong (|u - 0.5| <= 0.65).
     graphics.lineStyle(1, PATH_COLOR, 0.2)
 
     for (const column of [-2.7, 0.9, 4.2, 7.6, 10.8, 14.3, 17.9]) {
@@ -185,8 +185,8 @@ export function attachBattlefieldBackdrop(
   function drawGroundSpecklesAndRocks(bounds: { top: number }): void {
     const random = mulberry32(0xbeef01)
 
-    // Đốm texture đất — phân bố theo u/v rồi đi qua projection nên tự co
-    // nhỏ và dày đặc về xa đúng luật phối cảnh.
+    // Dom texture dat - phan bo theo u/v roi di qua projection nen tu co
+    // nho va day dac ve xa dung luat phoi canh.
     for (let index = 0; index < 240; index++) {
       const depthBias = random() ** 1.45
       const row = depthBias * (GRID_ROW_COUNT - 1) - 0.5
@@ -206,7 +206,7 @@ export function attachBattlefieldBackdrop(
       graphics.fillEllipse(point.x, point.y, size, size * 0.38)
     }
 
-    // Đá môi trường hai biên — to ở foreground, tí hon ở hậu cảnh.
+    // Da moi truong hai bien - to o foreground, ti hon o hau canh.
     for (let index = 0; index < 9; index++) {
       const side = index % 2 === 0 ? -1 : 1
       const depthBias = 0.12 + random() * 0.88

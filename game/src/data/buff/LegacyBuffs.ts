@@ -1,6 +1,6 @@
 import type { BuffDefinition } from '@/core/buff2/BuffDefinition'
 
-// buff2 migration (megaplan M4) — mechanical per M1 mapping:
+// buff2 migration (megaplan M4) - mechanical per M1 mapping:
 //   stackMode:'stack'   -> stacking{onReapplyStacks:'add', onReapplyDuration:'refresh'}
 //   stackMode:'refresh' -> stacking{onReapplyStacks:'keep', onReapplyDuration:'refresh'}
 //   duration turn-ticks -> lifetime{clock:'holder_turns', scaling:'ailment_scaled'}
@@ -13,10 +13,10 @@ import type { BuffDefinition } from '@/core/buff2/BuffDefinition'
 //   polarity:'debuff' combat statuses -> kind:'ailment' + resistance 'ailment'
 
 export const LEGACY_BUFFS: BuffDefinition[] = [
-  // Pháp Tu (Thổ Tu, 2026-08-15) — Thạch Giáp Trận (special skill,
-  // xem data/skill/Skills.ts) tự buff wardMax tạm thời lên bản thân,
-  // tái dùng effect 'buff' có sẵn (zero plumbing mới).
-  // The Tu Reimagined (spec 2026-09-15 T12): generic thorns stat retired —
+  // Phap Tu (Tho Tu, 2026-08-15) - Thach Giap Tran (special skill,
+  // xem data/skill/Skills.ts) tu buff wardMax tam thoi len ban than,
+  // tai dung effect 'buff' co san (zero plumbing moi).
+  // The Tu Reimagined (spec 2026-09-15 T12): generic thorns stat retired -
   // the thorns leg is gone, wardMax remains the buff's payload.
   {
     id: 'thach_giap_buff',
@@ -174,7 +174,7 @@ export const LEGACY_BUFFS: BuffDefinition[] = [
     dispellable: true,
   },
 
-  // Plans/EarthPath mục VI — "Trói Chân": Root.
+  // Plans/EarthPath muc VI - "Troi Chan": Root.
   {
     id: 'troi_chan',
     element: 'earth',
@@ -217,10 +217,10 @@ export const LEGACY_BUFFS: BuffDefinition[] = [
     dispellable: true,
   },
 
-  // Pháp Tu (Thủy Tu, 2026-08-15) — giữ Làm Chậm LIÊN TỤC đủ
-  // convertsAfterContinuousTurns thì tự chuyển thành Đóng Băng (the
+  // Phap Tu (Thuy Tu, 2026-08-15) - giu Lam Cham LIEN TUC du
+  // convertsAfterContinuousTurns thi tu chuyen thanh Dong Bang (the
   // legacy registry converter already normalized seconds->turns at
-  // load — the field is authored as turns directly now).
+  // load - the field is authored as turns directly now).
   {
     id: 'lam_cham',
     name: 'Làm Chậm',
@@ -236,7 +236,7 @@ export const LEGACY_BUFFS: BuffDefinition[] = [
     dispellable: true,
   },
 
-  // Hàn Khí (Chill) — STACK tới 5 lần thì tự chuyển thành Đóng Băng.
+  // Han Khi (Chill) - STACK toi 5 lan thi tu chuyen thanh Dong Bang.
   {
     id: 'han_khi',
     name: 'Hàn Khí',
@@ -252,7 +252,7 @@ export const LEGACY_BUFFS: BuffDefinition[] = [
     dispellable: true,
   },
 
-  // Cuồng Bạo (Haste).
+  // Cuong Bao (Haste).
   {
     id: 'cuong_bao',
     name: 'Cuồng Bạo',
@@ -266,7 +266,7 @@ export const LEGACY_BUFFS: BuffDefinition[] = [
     dispellable: true,
   },
 
-  // Suy Nhược (Frailty) — debuff phòng ngự.
+  // Suy Nhuoc (Frailty) - debuff phong ngu.
   {
     id: 'suy_nhuoc',
     name: 'Suy Nhược',
@@ -280,7 +280,7 @@ export const LEGACY_BUFFS: BuffDefinition[] = [
     dispellable: true,
   },
 
-  // Uy Áp (Dread) — debuff sát thương gây ra.
+  // Uy Ap (Dread) - debuff sat thuong gay ra.
   {
     id: 'uy_ap',
     name: 'Uy Áp',
@@ -294,8 +294,8 @@ export const LEGACY_BUFFS: BuffDefinition[] = [
     dispellable: true,
   },
 
-  // Giáp Rạn (Pháp Tu Kim Tu, 2026-08-15) — trừ THẲNG metalResistance
-  // (flat, không phải percent).
+  // Giap Ran (Phap Tu Kim Tu, 2026-08-15) - tru THANG metalResistance
+  // (flat, khong phai percent).
   {
     id: 'giap_ran',
     name: 'Giáp Rạn',
@@ -309,8 +309,8 @@ export const LEGACY_BUFFS: BuffDefinition[] = [
     dispellable: true,
   },
 
-  // Vạn Kiếm Vũ (Kiếm Tu, 2026-08-15) — "mưa kiếm 9 giây toàn màn hình,
-  // bỏ qua 10%-90% giáp/kháng theo cảnh giới" — armorIgnorePercentByRealm
+  // Van Kiem Vu (Kiem Tu, 2026-08-15) - "mua kiem 9 giay toan man hinh,
+  // bo qua 10%-90% giap/khang theo canh gioi" - armorIgnorePercentByRealm
   // -> periodic tags 'armor_ignore_by_realm' (request forward-carrier).
   {
     id: 'van_kiem_vu',

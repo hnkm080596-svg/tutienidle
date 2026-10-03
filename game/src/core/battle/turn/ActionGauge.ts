@@ -1,7 +1,7 @@
-// Turn-Based Combat Foundation (2026-09-03 spec, Phần 3) — thanh hành
-// động ATB: mỗi entity tích luỹ actionGauge theo speed mỗi "step" (đơn vị
-// logic rời rạc, KHÔNG phải giây thực). Ai đạt GAUGE_MAX trước hành động
-// trước — xem TurnQueue.ts cho vòng lặp tìm actor kế tiếp.
+// Turn-Based Combat Foundation (2026-09-03 spec, Phan 3) - thanh hanh
+// dong ATB: moi entity tich luy actionGauge theo speed moi "step" (don vi
+// logic roi rac, KHONG phai giay thuc). Ai dat GAUGE_MAX truoc hanh dong
+// truoc - xem TurnQueue.ts cho vong lap tim actor ke tiep.
 
 export const GAUGE_MAX = 1000
 

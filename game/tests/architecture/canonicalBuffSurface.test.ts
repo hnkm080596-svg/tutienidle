@@ -11,7 +11,7 @@
  *   ACK handling is owned by CombatAnimationRuntime; a resync hook is the
  *   legacy-synchronization scaffolding R13 removed.
  *
- * Scans production source only — test files may name the retired surfaces
+ * Scans production source only - test files may name the retired surfaces
  * when documenting the history of the retirement.
  */
 import { describe, expect, it } from 'vitest'

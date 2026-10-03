@@ -28,9 +28,9 @@ describe('SettingsPanel reset save', () => {
     window.addEventListener(SAVE_RESET_REQUEST_EVENT, requested)
     app.mount(container)
 
-    // ConfirmModal thay window.confirm() native (UI/UX rework) — bấm nút
-    // reset chỉ MỞ modal, phải bấm "Xác Nhận" trong ConfirmModal mới thật
-    // sự dispatch event.
+    // ConfirmModal thay window.confirm() native (UI/UX rework) - bam nut
+    // reset chi MO modal, phai bam "Xac Nhan" trong ConfirmModal moi that
+    // su dispatch event.
     container.querySelector<HTMLButtonElement>('.settings-panel__danger')!.click()
     await nextTick()
 
@@ -79,10 +79,10 @@ describe('SettingsPanel — toast kind khi save thất bại', () => {
   }
 
   it('Lưu thất bại (quota) → toast kind "error" đỏ, không còn kind "save" xanh', async () => {
-    // Audit fix 2026-08-31 — Task 2 để failure toast kind 'save' (màu
-    // xanh nhạt) trong khi App.vue autosave fail push kind 'error'
-    // (đỏ); thông báo thất bại phải đồng nhất màu đỏ để người chơi
-    // nhận biết mất nguy cơ.
+    // Audit fix 2026-08-31 - Task 2 de failure toast kind 'save' (mau
+    // xanh nhat) trong khi App.vue autosave fail push kind 'error'
+    // (do); thong bao that bai phai dong nhat mau do de nguoi choi
+    // nhan biet mat nguy co.
     vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
       throw new DOMException('quota exceeded', 'QuotaExceededError')
     })
@@ -92,11 +92,11 @@ describe('SettingsPanel — toast kind khi save thất bại', () => {
 
     mounted.saveButton().click()
 
-    // handleSave await cả chuỗi coordinator → service → writeGameSave;
-    // setTimeout(0) chờ hết chuỗi microtask trước khi assert.
+    // handleSave await ca chuoi coordinator -> service -> writeGameSave;
+    // setTimeout(0) cho het chuoi microtask truoc khi assert.
     await new Promise((resolve) => setTimeout(resolve, 0))
 
-    // Failure toast phải là kind 'error' (đỏ), không phải 'save' (xanh).
+    // Failure toast phai la kind 'error' (do), khong phai 'save' (xanh).
     const failureToast = notification.toasts.find(
       (toast) => toast.message.includes('Không lưu được'),
     )

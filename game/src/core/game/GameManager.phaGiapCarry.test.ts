@@ -5,8 +5,8 @@ import { GameManager } from './GameManager'
 import { defineEnemy } from '../enemy/Enemy'
 import { createDefaultPlayer } from '../player/Player'
 
-// Talent v4 M2 — Pha Giap cross-battle carry wiring (spec §4.1 row 2,
-// §7): the ops layer banks floor(stacks * 0.5) at the victory terminal
+// Talent v4 M2 - Pha Giap cross-battle carry wiring (spec sec4.1 row 2,
+// sec7): the ops layer banks floor(stacks * 0.5) at the victory terminal
 // and re-seeds them at the next startBattleWithPlayer, AFTER the
 // per-battle resetStacks. PassiveSystem owns the stacks; PlayerData
 // owns the bank. These tests pin the ops wiring end-to-end.
@@ -75,7 +75,7 @@ describe('GameManager — Pha Giap carry wiring (M2)', () => {
     expect(player.phaGiapCarryRealmId).toBe('qi_refining')
 
     // Battle 2: resetStacks ran inside startBattle, then the bank
-    // re-seeded the passive — stacks open at 2, not 0.
+    // re-seeded the passive - stacks open at 2, not 0.
     manager.startBattleWithPlayer(player, makeEnemy())
 
     expect(phaGiapModifier(manager).stacks).toBe(2)

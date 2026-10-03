@@ -8,9 +8,9 @@ import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
 import { asBaseStats, createBaseStats } from '../../stats/StatBlock'
 
-// Phase A3 Task 5 (2026-09-07) — turn-based reader for
+// Phase A3 Task 5 (2026-09-07) - turn-based reader for
 // CombatEntity.specialAttacks (enemy periodic heavy attack). Legacy
-// semantics (EnemyAttackSystem.fireEnemyAttack — retired M13): 1-based counter per
+// semantics (EnemyAttackSystem.fireEnemyAttack - retired M13): 1-based counter per
 // enemy, incremented on each of ITS OWN attacks; when
 // counter % everyNth === 0 the special attack replaces the basic attack
 // (damageMultiplier swap, presetId carried for presentation). Counter
@@ -41,7 +41,7 @@ function createCombatant(id: string, overrides: Partial<CombatEntity> = {}): Com
   } as CombatEntity
 
   // ARCH-002 (M7 R1): refreshParticipantStats reconciles entity.maxHp from
-  // entity.stats.maxHp and clamps currentHp — the fixture's declared vitals
+  // entity.stats.maxHp and clamps currentHp - the fixture's declared vitals
   // ceiling must exist in the resolved/base stats or refresh reverts it.
   entity.baseStats = (overrides.baseStats ?? overrides.stats ?? entity.baseStats) as CombatEntity['baseStats']
   const ceiling = Math.max(entity.maxHp, entity.currentHp)
@@ -108,19 +108,19 @@ describe('turn-based enemy specialAttacks reader (Phase A3)', () => {
     const hpBefore = playerEntity.currentHp
 
     // Each resolveNextStep = one full turn (the internal queue advances the
-    // gauge until someone acts). Boss speed 100 vs player 10 → boss takes
-    // ~10 of every 11 turns; 50 turns ≈ 45 boss actions, comfortably past
+    // gauge until someone acts). Boss speed 100 vs player 10 -> boss takes
+    // ~10 of every 11 turns; 50 turns ~ 45 boss actions, comfortably past
     // the first everyNth=4 special.
     for (let i = 0; i < 50; i++) {
       system.resolveNextStep(battle)
     }
 
-    // The boss counter advanced past 4 → at least one special attack fired.
+    // The boss counter advanced past 4 -> at least one special attack fired.
     expect((bossParticipant.specialAttackCounter ?? 0)).toBeGreaterThanOrEqual(4)
 
-    // A 3x heavy hit (base 10 × 3 = 30 raw, minus armor) must have landed;
+    // A 3x heavy hit (base 10 x 3 = 30 raw, minus armor) must have landed;
     // basic hits with the same stats cap well below 20. Assert via
-    // cumulative damage: at least one 3x hit among ≥4 landed actions.
+    // cumulative damage: at least one 3x hit among >=4 landed actions.
     const totalDamage = hpBefore - playerEntity.currentHp
     expect(totalDamage).toBeGreaterThanOrEqual(25)
   })
@@ -139,7 +139,7 @@ describe('turn-based enemy specialAttacks reader (Phase A3)', () => {
 
     expect(bossParticipant.specialAttackCounter).toBe(1)
 
-    // Only the first basic hit has landed (multiplier 1 → single-digit
+    // Only the first basic hit has landed (multiplier 1 -> single-digit
     // damage after armor; the engine floors every landed hit at 1).
     const totalDamage = hpBefore - playerEntity.currentHp
     expect(totalDamage).toBeGreaterThanOrEqual(1)

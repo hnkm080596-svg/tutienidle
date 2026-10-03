@@ -1,11 +1,11 @@
 ﻿// @vitest-environment jsdom
 //
-// Walk sway Ä‘Ã£ XÃ“A Háº´N (yÃªu cáº§u 2026-08-26 â€” "khÃ´ng dÃ¹ng flag táº¡m thá»i,
-// xÃ³a háº³n Ä‘á»ƒ trÃ¡nh quay láº¡i lá»—i cÅ©"): positionSprite chá»‰ cÃ²n tá»a Ä‘á»™
-// projection/interpolation + action offset (lunge/recoil) + rotation cá»§a
-// death animation. Test nÃ y khÃ³a hÃ nh vi: di chuyá»ƒn bÃ¬nh thÆ°á»ng KHÃ”NG
-// BAO GIá»œ sinh offset/bob/tilt â€” rotation luÃ´n 0, vá»‹ trÃ­ bÃ¡m Ä‘Ãºng Ä‘iá»ƒm
-// chiáº¿u.
+// Walk sway da XOA HAN (yeu cau 2026-08-26 - "khong dung flag tam thoi,
+// xoa han de tranh quay lai loi cu"): positionSprite chi con toa do
+// projection/interpolation + action offset (lunge/recoil) + rotation cua
+// death animation. Test nay khoa hanh vi: di chuyen binh thuong KHONG
+// BAO GIO sinh offset/bob/tilt - rotation luon 0, vI tri bam dung diem
+// chieu.
 import { describe, expect, it } from 'vitest'
 import { createTestScene } from './combat/combatTestHarness'
 
@@ -45,7 +45,7 @@ function createScene(renderMode: 'flat' | 'perspective') {
   scene.renderMode = renderMode
   scene.projection = {
     gridToScreen(row: number, column: number) {
-      // Äiá»ƒm chiáº¿u tuyáº¿n tÃ­nh theo column â€” mÃ´ phá»ng unit Ä‘ang Ä‘i.
+      // Diem chieu tuyen tinh theo column - mo phong unit dang di.
       return { x: 100 + column * 10, y: 200 + row * 5, scale: 1 }
     },
   }
@@ -76,7 +76,7 @@ describe('CombatScene â€” walk sway bá»‹ xÃ³a hoÃ n toÃ n', () =>
   it('di chuyá»ƒn liÃªn tá»¥c: rotation giá»¯ nguyÃªn, khÃ´ng bao giá» bá»‹ xoay', () => {
     const { scene, sprite, rect } = createScene('perspective')
 
-    // Sentinel 123 rad â€” má»i lá»‡nh setRotation ngoÃ i death tween Ä‘á»u lá»™.
+    // Sentinel 123 rad - moi lenh setRotation ngoai death tween deu lo.
     for (let frame = 0; frame < 40; frame++) {
       scene.positionSprite(sprite, frame * 0.25, 'enemy_walk')
     }

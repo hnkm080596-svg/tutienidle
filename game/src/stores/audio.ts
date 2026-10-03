@@ -1,9 +1,9 @@
-// useAudioStore — thin Pinia adapter over AudioManager so that:
+// useAudioStore - thin Pinia adapter over AudioManager so that:
 //   1. UI (e.g. SettingsPanel) can read/write enabled + volumes reactively.
 //   2. Vue reactivity stays in sync with the engine (AudioManager).
 //
 // AudioManager remains a Vue-free singleton (directly unit-testable);
-// the store owns no logic — only state mirroring + localStorage
+// the store owns no logic - only state mirroring + localStorage
 // persistence.
 //
 // Sound System W3: v2 blob adds per-channel volumes + reducedShake (W10).
@@ -73,7 +73,7 @@ function persist(state: {
       reducedShake: state.reducedShake,
     }))
   } catch {
-    // Quota/blocked storage — settings stay session-only.
+    // Quota/blocked storage - settings stay session-only.
   }
 }
 

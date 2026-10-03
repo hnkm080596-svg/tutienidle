@@ -1,9 +1,9 @@
-// ThanhVanBackdropArt — WHICH battlefield backdrop is showing, and which files
+// ThanhVanBackdropArt - WHICH battlefield backdrop is showing, and which files
 // it is made of.
 //
-// §5.4 of
+// sec5.4 of
 // docs/superpowers/specs/2026-09-11-frontend-static-dynamic-boundary-design.md:
-// "the art is a presentation asset". This is that asset — the sixteen-variant
+// "the art is a presentation asset". This is that asset - the sixteen-variant
 // composition (1 opaque time-of-day sky + 6 transparent season layers, combined
 // at runtime rather than duplicating raster), the session's variant lifecycle,
 // and the texture keys and URLs it resolves to.
@@ -12,17 +12,17 @@
 // there is the Phaser DEPTH table and the tint grade: display-list ordering and
 // a canvas tint are dynamic-layer facts, and only a scene calls them. What
 // moved is everything the STATIC layer was already reaching across the boundary
-// to read — `DongFuScene.vue` needs the current variant to pick the matching
+// to read - `DongFuScene.vue` needs the current variant to pick the matching
 // home stack, and `AssetBundleCatalog` needs the load list.
 //
 // Variant lifecycle (2026-08-26):
-//   boot → peekThanhVanVariant() returns a FIXED preset, spring/morning (or a
-//   specific QA override) → the first battle uses that preset directly →
-//   battle_end → selectNextThanhVanVariant() picks the next one at random
-//   (different from the current one where possible) → the scene loads the
+//   boot -> peekThanhVanVariant() returns a FIXED preset, spring/morning (or a
+//   specific QA override) -> the first battle uses that preset directly ->
+//   battle_end -> selectNextThanhVanVariant() picks the next one at random
+//   (different from the current one where possible) -> the scene loads the
 //   missing assets while the result overlay is up, then swaps the whole stack.
 //
-// Deterministic override through localStorage for preview/QA — a CONCRETE
+// Deterministic override through localStorage for preview/QA - a CONCRETE
 // value locks that dimension at boot and at every later selection; 'random' or
 // unset means it takes part in the post-battle roll:
 //   dev.thanhvanSeason = spring|summer|autumn|winter|random
@@ -61,13 +61,13 @@ function readConcreteOverride<T extends string>(key: string, allowed: readonly T
       ? (value as T)
       : undefined
   } catch {
-    // localStorage unavailable — không có override.
+    // localStorage unavailable - khong co override.
     return undefined
   }
 }
 
 function randomFrom<T extends string>(allowed: readonly T[], avoid?: T): T {
-  // Ưu tiên KHÁC giá trị cần tránh (nếu pool còn lựa chọn khác).
+  // Uu tien KHAC gia tri can tranh (neu pool con lua chon khac).
   const pool =
     avoid !== undefined && allowed.length > 1 ? allowed.filter((value) => value !== avoid) : [...allowed]
 
@@ -77,11 +77,11 @@ function randomFrom<T extends string>(allowed: readonly T[], avoid?: T): T {
 let cachedVariant: ThanhVanVariant | undefined
 
 /**
- * Variant của PHIÊN HIỆN TẠI — resolve ĐÚNG MỘT LẦN lúc boot: preset
- * cố định DEFAULT_THANH_VAN_VARIANT trừ khi override QA cụ thể khóa
- * trước. KHÔNG random ở đây nữa (trận đầu dùng ngay preset đã preload);
- * cache được selectNextThanhVanVariant() cập nhật để mọi scene preload
- * sau đó (Home ↔ Combat quay lại) khớp bộ texture đang hiển thị.
+ * Variant cua PHIEN HIEN TAI - resolve DUNG MOT LAN luc boot: preset
+ * co dinh DEFAULT_THANH_VAN_VARIANT tru khi override QA cu the khoa
+ * truoc. KHONG random o day nua (tran dau dung ngay preset da preload);
+ * cache duoc selectNextThanhVanVariant() cap nhat de moi scene preload
+ * sau do (Home <-> Combat quay lai) khop bo texture dang hien thi.
  */
 export function peekThanhVanVariant(): ThanhVanVariant {
   cachedVariant ??= {
@@ -96,10 +96,10 @@ export function peekThanhVanVariant(): ThanhVanVariant {
 }
 
 /**
- * Variant KẾ TIẾP cho trận mới — gọi tại battle_end (KHÔNG còn gọi lúc
- * battle_start). Override QA cụ thể vẫn khóa chiều tương ứng; chiều
- * không khóa thì random và TRÁNH giá trị đang hiển thị nếu có thể
- * (variant mới phải khác variant hiện tại khi được).
+ * Variant KE TIEP cho tran moi - goi tai battle_end (KHONG con goi luc
+ * battle_start). Override QA cu the van khoa chieu tuong ung; chieu
+ * khong khoa thi random va TRANH gia tri dang hien thi neu co the
+ * (variant moi phai khac variant hien tai khi duoc).
  */
 export function selectNextThanhVanVariant(current: ThanhVanVariant): ThanhVanVariant {
   return {
@@ -113,15 +113,15 @@ export function selectNextThanhVanVariant(current: ThanhVanVariant): ThanhVanVar
 }
 
 /**
- * Ghi nhận variant vừa SWAP xong vào cache phiên — CombatScene gọi sau
- * khi backdrop mới thực sự hiển thị, để peekThanhVanVariant() (preload
- * của lần vào combat kế tiếp) trả đúng bộ texture đang có sẵn.
+ * Ghi nhan variant vua SWAP xong vao cache phien - CombatScene goi sau
+ * khi backdrop moi thuc su hien thi, de peekThanhVanVariant() (preload
+ * cua lan vao combat ke tiep) tra dung bo texture dang co san.
  */
 export function commitThanhVanVariant(variant: ThanhVanVariant): void {
   cachedVariant = variant
 }
 
-/** Texture key duy nhất cho từng ảnh trong variant. */
+/** Texture key duy nhat cho tung anh trong variant. */
 export function thanhVanTextureKeys(variant: ThanhVanVariant): string[] {
   return [
     `tv-${variant.time}-sky`,
@@ -129,7 +129,7 @@ export function thanhVanTextureKeys(variant: ThanhVanVariant): string[] {
   ]
 }
 
-/** Cặp [key, url] để preload đúng thứ tự vẽ (sky trước, atmosphere sau). */
+/** Cap [key, url] de preload dung thu tu ve (sky truoc, atmosphere sau). */
 export function thanhVanLoadList(variant: ThanhVanVariant): Array<{ key: string; url: string }> {
   return [
     {

@@ -14,13 +14,13 @@ export interface StatLabelEntry {
   category: StatCategory
 }
 
-// Trích từ CharacterPanel.vue (2026-08-15, dùng chung với tooltip Tâm
-// Pháp — cả 2 nơi đều cần label/description người-đọc-được cho từng
-// stat, tránh lặp lại bảng 30 dòng). movementSpeed KHÔNG có trong danh
-// sách — player là tower cố định, không di chuyển, stat này chỉ còn ý
-// nghĩa cho quái.
+// Trich tu CharacterPanel.vue (2026-08-15, dung chung voi tooltip Tam
+// Phap - ca 2 noi deu can label/description nguoi-doc-duoc cho tung
+// stat, tranh lap lai bang 30 dong). movementSpeed KHONG co trong danh
+// sach - player la tower co dinh, khong di chuyen, stat nay chi con y
+// nghia cho quai.
 export const BASE_STAT_LABELS: StatLabelEntry[] = [
-  // stat-system-reimagined Task 12 (D14): attack -> might, label = Sức mạnh
+  // stat-system-reimagined Task 12 (D14): attack -> might, label = Suc manh
   // (universal damage base, not "basic attack").
   { key: 'might', label: 'Sức mạnh', description: 'Nền sát thương chung cho mọi loại damage — vật lý, ngũ hành và hỗn nguyên.', category: 'combat' },
   { key: 'defense', label: 'Phòng ngự (Giáp)', description: 'Giảm % sát thương vật lý phải nhận theo đường cong (Armor) — càng cao càng giảm dần, có trần.', category: 'combat' },
@@ -73,15 +73,15 @@ export const BASE_STAT_LABELS: StatLabelEntry[] = [
   { key: 'ailmentPotencyPercent', label: 'Uy lực dị thường', description: 'Tăng % hiệu lực (sát thương/giây) của dị thường mình gây ra.', category: 'defense_advanced' },
 ]
 
-// i18n refactor 2026-08-31 — các stat key không thuộc CharacterPanel
-// stat table (đó là các stat per-entity, vd maxHp/attackSpeed); đây là
-// các giá trị "kỹ thuật" hiện qua formatStat() ở UI rải rác
-// (tooltip tầng Tâm Pháp, bảng Đặc Quyền Cảnh Giới, badge Δ affix
-// Cường Hóa, nhãn ×tốc độ Địa Giới, ×phẩm Pháp Bảo, % Tu Vi Đan
-// Dược). Tách riêng khỏi BASE_STAT_LABELS để:
-//   1. Không xuất hiện trong bảng chỉ số nhân vật (stat key không
-//      thuộc nhân vật — vd production speed là hệ số site).
-//   2. statLabel() vẫn trả về label người-đọc-được qua lookup bổ
+// i18n refactor 2026-08-31 - cac stat key khong thuoc CharacterPanel
+// stat table (do la cac stat per-entity, vd maxHp/attackSpeed); day la
+// cac gia tri "ky thuat" hien qua formatStat() o UI rai rac
+// (tooltip tang Tam Phap, bang Dac Quyen Canh Gioi, badge Delta affix
+// Cuong Hoa, nhan xtoc do Dia Gioi, xpham Phap Bao, % Tu Vi Dan
+// Duoc). Tach rieng khoi BASE_STAT_LABELS de:
+//   1. Khong xuat hien trong bang chi so nhan vat (stat key khong
+//      thuoc nhan vat - vd production speed la he so site).
+//   2. statLabel() van tra ve label nguoi-doc-duoc qua lookup bo
 //      sung.
 const FORMAT_ADOPTED_STAT_LABELS: Partial<Record<keyof Stats, string>> = {
   realmPassivePercent: 'Cộng % Cảnh Giới',
@@ -91,69 +91,69 @@ const FORMAT_ADOPTED_STAT_LABELS: Partial<Record<keyof Stats, string>> = {
   cultivationPercent: 'Tu Vi (Đan Dược)',
 }
 
-// Ngũ Hành + Hỗn Nguyên — KHÔNG có trong BASE_STAT_LABELS (CharacterPanel.vue
-// hiện thị riêng qua elementRows, xem ELEMENT_LABELS ở đó) nhưng
-// technique.modifiers CÓ THỂ nhắm thẳng các stat này (vd
-// xich_viem_combat_fire_power sửa `firePower`) — statLabel() dưới đây
-// cần phủ luôn để tooltip không hiện tên field thô.
+// Ngu Hanh + Hon Nguyen - KHONG co trong BASE_STAT_LABELS (CharacterPanel.vue
+// hien thi rieng qua elementRows, xem ELEMENT_LABELS o do) nhung
+// technique.modifiers CO THE nham thang cac stat nay (vd
+// xich_viem_combat_fire_power sua `firePower`) - statLabel() duoi day
+// can phu luon de tooltip khong hien ten field tho.
 const ELEMENT_STAT_LABELS: Partial<Record<keyof Stats, string>> = {
   woodPower: 'Mộc Lực', woodResistance: 'Kháng Mộc', woodPenetration: 'Xuyên Mộc',
   firePower: 'Hỏa Lực', fireResistance: 'Kháng Hỏa', firePenetration: 'Xuyên Hỏa',
   earthPower: 'Thổ Lực', earthResistance: 'Kháng Thổ', earthPenetration: 'Xuyên Thổ',
   metalPower: 'Kim Lực', metalResistance: 'Kháng Kim', metalPenetration: 'Xuyên Kim',
   waterPower: 'Thủy Lực', waterResistance: 'Kháng Thủy', waterPenetration: 'Xuyên Thủy',
-  // Spec 2026-08-30-phap-tu-dao-sac §5 — label Phong/Lôi đã xoá cùng
-  // stat wind/lightning khỏi Stats.
+  // Spec 2026-08-30-phap-tu-dao-sac sec5 - label Phong/Loi da xoa cung
+  // stat wind/lightning khoi Stats.
   primordialPower: 'Hỗn Nguyên Lực',
 }
 
 // ================= SYSTEM vs DISPLAY =================
-// System value (StatMetadata.unit + giá trị trong Stats) CHỈ phục vụ
-// tính toán (CombatSystem, ProductionSystem...). Display layer DƯỚI
-// ĐÂY là duy nhất chịu trách nhiệm biến system value thành chuỗi cho
-// UI/tooltip — không UI nào tự format stat.
+// System value (StatMetadata.unit + gia tri trong Stats) CHI phuc vu
+// tinh toan (CombatSystem, ProductionSystem...). Display layer DUOI
+// DAY la duy nhat chiu trach nhiem bien system value thanh chuoi cho
+// UI/tooltip - khong UI nao tu format stat.
 //
 // System units (StatMetadata):
-//   percent    — fraction 0..1 trong công thức (0.05 = +5%)
-//   multiplier — hệ số nhân trực tiếp (1.5 = ×1.5 damage/speed)
-//   rating/flat— điểm thuần (accuracy 100, might 1250)
+//   percent    - fraction 0..1 trong cong thuc (0.05 = +5%)
+//   multiplier - he so nhan truc tiep (1.5 = x1.5 damage/speed)
+//   rating/flat- diem thuan (accuracy 100, might 1250)
 //
 // Display rules:
-//   percent    → LUÔN "5.0%" (không ngoại lệ; bug cũ: blockEffectiveness
-//                từng rơi vào DECIMAL hiển thị "0.25")
-//   multiplier → 2 kiểu hiển thị theo ý nghĩa người chơi đọc:
-//                  DISPLAY_AS_PERCENT: hệ số sát thương/phòng thủ đọc
-//                    qua % (crit dmg 1.5 → "150%": 100% đòn thường + 50%)
-//                  mặc định: hệ số throughput đọc qua hệ số (1.25 → "1.25")
-//   rating/flat→ formatNumber
+//   percent    -> LUON "5.0%" (khong ngoai le; bug cu: blockEffectiveness
+//                tung roi vao DECIMAL hien thi "0.25")
+//   multiplier -> 2 kieu hien thi theo y nghia nguoi choi doc:
+//                  DISPLAY_AS_PERCENT: he so sat thuong/phong thu doc
+//                    qua % (crit dmg 1.5 -> "150%": 100% don thuong + 50%)
+//                  mac dinh: he so throughput doc qua he so (1.25 -> "1.25")
+//   rating/flat-> formatNumber
 export const DECIMAL_STAT_KEYS: (keyof Stats)[] = []
 
-// Multiplier hệ số ĐỌC qua % — chỉ hiển thị, không đổi unit công thức.
+// Multiplier he so DOC qua % - chi hien thi, khong doi unit cong thuc.
 const MULTIPLIER_DISPLAY_AS_PERCENT: readonly (keyof Stats)[] = ['criticalDamage']
 
 export function statLabel(key: keyof Stats): string {
   return BASE_STAT_LABELS.find(entry => entry.key === key)?.label ?? ELEMENT_STAT_LABELS[key] ?? FORMAT_ADOPTED_STAT_LABELS[key] ?? key
 }
 
-// Trích từ CharacterPanel.vue — dùng chung cho mọi nơi hiện giá trị
-// stat cho người chơi đọc (bảng chỉ số, tooltip Tâm Pháp...).
+// Trich tu CharacterPanel.vue - dung chung cho moi noi hien gia tri
+// stat cho nguoi choi doc (bang chi so, tooltip Tam Phap...).
 export function formatStat(key: keyof Stats, value: number): string {
-  // percent (fraction 0..1) → LUÔN % — không ngoại lệ.
+  // percent (fraction 0..1) -> LUON % - khong ngoai le.
   if (isPercentStat(key)) {
     return `${(value * 100).toFixed(1)}%`
   }
 
-  // multiplier đọc qua % (crit damage 1.5 → "150%").
+  // multiplier doc qua % (crit damage 1.5 -> "150%").
   if (MULTIPLIER_DISPLAY_AS_PERCENT.includes(key)) {
     return `${Math.round(value * 100)}%`
   }
 
-  // multiplier throughput (attackSpeed 1.25 → "1.25").
+  // multiplier throughput (attackSpeed 1.25 -> "1.25").
   if (DECIMAL_STAT_KEYS.includes(key)) {
     return (Math.round(value * 100) / 100).toString()
   }
 
-  // Multiplier còn lại (productionSpeedMultiplier/artifactGradeMultiplier).
+  // Multiplier con lai (productionSpeedMultiplier/artifactGradeMultiplier).
   if (STAT_METADATA[key]?.unit === 'multiplier') {
     return (Math.round(value * 100) / 100).toString()
   }

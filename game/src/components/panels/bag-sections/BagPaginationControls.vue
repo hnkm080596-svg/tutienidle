@@ -1,12 +1,12 @@
 <script setup lang="ts">
-// Shared pagination footer (plan Workstream E) — dùng chung cho cả 3
-// bag-section (Trang Bị/Nguyên Liệu/Đan Dược) thay lặp cùng pagination:
+// Shared pagination footer (plan Workstream E) - dung chung cho ca 3
+// bag-section (Trang Bi/Nguyen Lieu/Dan Duoc) thay lap cung pagination:
 //
-//   | khoảng cân bằng | ‹ 1 2 3 › | [Sắp xếp ↕] |
+//   | khoang can bang | < 1 2 3 > | [Sap xep <->] |
 //
-// grid-template-columns: 1fr auto 1fr — pagination LUÔN ở giữa, sort
-// control sát phải. Nút sort hiển thị cả khi chỉ có một trang. Khung
-// hẹp: nút sort chỉ còn icon, tooltip vẫn mang nhãn đầy đủ.
+// grid-template-columns: 1fr auto 1fr - pagination LUON o giua, sort
+// control sat phai. Nut sort hien thi ca khi chi co mot trang. Khung
+// hep: nut sort chi con icon, tooltip van mang nhan day du.
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { SortDirection } from '@/stores/ui'
@@ -16,7 +16,7 @@ export interface BagSortOption {
 
   label: string
 
-  /** Nhãn hiển thị riêng cho chiều (vd "Tên A–Z"). */
+  /** Nhan hien thi rieng cho chieu (vd "Ten A-Z"). */
   ascLabel?: string
 
   descLabel?: string
@@ -235,7 +235,7 @@ onBeforeUnmount(() => {
   border-color: var(--chrome-500);
 }
 
-/* ================= Sort control — sát phải ========================== */
+/* ================= Sort control - sat phai ========================== */
 .bag-pagination__sort {
   position: relative;
   display: flex;

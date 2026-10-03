@@ -1,7 +1,7 @@
-// Validator dữ liệu nghề (2026-08-25, plan §5/§6) — lỗi authoring fail
-// ngay: id convention từng kind, tuổi gỗ/khoáng hợp lệ, niên đại thảo hợp
-// lệ, catalog đầy đủ (gỗ/khoáng 3 realm × 5 tuổi / 12 đan phương × 5 tuổi).
-// gp123 6E (task C2): gỗ/khoáng dùng trục tuổi thống nhất.
+// Validator du lieu nghe (2026-08-25, plan sec5/sec6) - loi authoring fail
+// ngay: id convention tung kind, tuoi go/khoang hop le, nien dai thao hop
+// le, catalog day du (go/khoang 3 realm x 5 tuoi / 12 dan phuong x 5 tuoi).
+// gp123 6E (task C2): go/khoang dung truc tuoi thong nhat.
 import { describe, expect, it } from 'vitest'
 import {
   validateProfessionMaterialCatalog,

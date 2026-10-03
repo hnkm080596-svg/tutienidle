@@ -6,7 +6,7 @@ import { createDefaultPlayer } from '../player/Player'
 import { asBaseStats } from '../stats/StatBlock'
 import type { Stage } from '../stage/Stage'
 
-// Combat speed gauge + round indicator (2026-09-12) — the round-limit chip
+// Combat speed gauge + round indicator (2026-09-12) - the round-limit chip
 // needs the stage THAT LAUNCHED the current battle, not the UI's
 // selectedStageId (which can point at a different stage). The accessor must
 // also not leak a stale stage into a later non-stage battle (tribulation
@@ -60,7 +60,7 @@ describe('GameManager.getActiveTurnBattleStage', () => {
     expect(gameManager.turnBattleOps.startStage(player, gameManager.catalogOps.getStage('bound_stage')!, false)).toBe(true)
     expect(gameManager.getActiveTurnBattleStage()?.id).toBe('bound_stage')
 
-    // Tribulation-style battle: launched without a stage — the previous
+    // Tribulation-style battle: launched without a stage - the previous
     // stage binding must be dropped or the round chip would show that
     // stage's perfect-clear limit during a battle it does not apply to.
     gameManager.startBattleWithPlayer(player, enemy)

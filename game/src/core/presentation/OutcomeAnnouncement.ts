@@ -1,7 +1,7 @@
 /**
  * Announcement descriptor returned by outcome services (R8.2 i18n
- * migration, P16). Domain services must stay framework-free — they cannot
- * call t() — so they return the semantic intent: which i18n keys to show
+ * migration, P16). Domain services must stay framework-free - they cannot
+ * call t() - so they return the semantic intent: which i18n keys to show
  * plus the data params (realm/foundation names). The Vue adapter resolves
  * the keys through i18n.global.t and hands plain strings to the
  * worldAnnouncement store (same pattern as QuanKhiPanel).

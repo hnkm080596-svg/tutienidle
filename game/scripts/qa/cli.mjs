@@ -143,7 +143,7 @@ const RECORD_COLLECTION = {
   // lifecycle-verified release), never via the raw record path.
 };
 
-// Records in a terminal/immutable state cannot be replaced via `record` —
+// Records in a terminal/immutable state cannot be replaced via `record` -
 // sealing is the point; correction happens through new linked records.
 function assertReplaceable(kind, existing) {
   if (!existing) return;
@@ -177,12 +177,12 @@ function cmdRecord(args) {
     // {kind, body:{...}} or flat {kind, ...fields}; `kind` is the routing key, not a body field
     const body = rec.body && typeof rec.body === "object" ? rec.body : Object.fromEntries(Object.entries(rec).filter(([k]) => k !== "kind"));
     if (kind === "message") {
-      // declared runId is verified inside recordMessage — never silently rewritten
+      // declared runId is verified inside recordMessage - never silently rewritten
       body.runId = body.runId ?? ledger.run.id;
       const res = recordMessage(ledger, body);
       if (!res.duplicate) {
         // New (non-replay) message: its id and requestId join the MC1
-        // namespaces — collision with another namespace bricks decide.
+        // namespaces - collision with another namespace bricks decide.
         if (ledgerIdTaken(ledger, body.id, "messages")) throw new Error(`message ${body.id}: id already exists in another namespace`);
         if (ledgerIdTaken(ledger, body.requestId, null, { skipRequestIds: true })) throw new Error(`message ${body.id}: requestId collides with a record id`);
         touched.push(["messages", ledger.messages.length - 1]);
@@ -208,9 +208,9 @@ function cmdRecord(args) {
   }
   if (applied.length) {
     // Write-path structural validation (F-PU31-01): a record that fails the
-    // schema may not be committed — previously malformed records landed and
+    // schema may not be committed - previously malformed records landed and
     // later became unreachable through assertReplaceable. Attribution is by
-    // (collection, index) touched during this write — id-keyed attribution
+    // (collection, index) touched during this write - id-keyed attribution
     // would miss records pushed without an id, which then become permanently
     // uncorrectable and brick the decide gate. Pre-existing failures
     // elsewhere in the ledger do not block this write.
@@ -257,7 +257,7 @@ function cmdValidate(args) {
   }
 }
 
-// Integrity checks that must pass before an outcome may be written — coverage
+// Integrity checks that must pass before an outcome may be written - coverage
 // gaps (MC7) and open findings (MC12) are decision *inputs*, not integrity
 // failures, so they stay out of this gate.
 const DECIDE_INTEGRITY_CHECKS = new Set(["SCHEMA", "MC1", "MC2", "MC14"]);
@@ -275,8 +275,8 @@ function cmdDecide(args) {
     process.exitCode = 1;
     return;
   }
-  // No decision may be written while reservations are still live — final
-  // synthesis happens after all workers ended (agent-instructions §G).
+  // No decision may be written while reservations are still live - final
+  // synthesis happens after all workers ended (agent-instructions secG).
   const live = ledger.assignments.filter((a) => ASSIGNMENT_ACTIVE.has(a.status));
   if (live.length) {
     console.log(`decide refused: ${live.length} assignment(s) still hold live slots: ${live.map((a) => `${a.id}=${a.status}`).join(", ")}`);
@@ -308,7 +308,7 @@ function cmdQualify() {
   let code = 0;
   try {
     // TAP reporter is required: the parser reads `# pass N`/`# fail N` counters,
-    // which the default spec reporter (Node >=22) does not emit — a parse miss
+    // which the default spec reporter (Node >=22) does not emit - a parse miss
     // would emit a vacuous QUALIFIED verdict (F-PU30-04 / QAI-08).
     out = execFileSync(process.execPath, ["--test", "--test-reporter", "tap", path.join(testDir, "*.test.mjs")], { cwd: GAME_ROOT, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], env: { ...process.env, QA_QUALIFY_RUN: "1" } });
   } catch (e) {
@@ -370,7 +370,7 @@ function utcNowMarker() { return new Date().toISOString(); }
 
 function cmdPreflight(args) {
   // `qa:internal preflight --brief <file>` -> readiness verdict + unmet list.
-  // Accepts either a raw brief or the `prepare --out` wrapper {…, brief}.
+  // Accepts either a raw brief or the `prepare --out` wrapper {..., brief}.
   const raw = readJson(path.resolve(args.brief));
   const brief = raw.brief && typeof raw.brief === "object" ? raw.brief : raw;
   const { activePolicy, policyDir } = learningPaths();
@@ -429,7 +429,7 @@ function cmdSchedule(args) {
     const existing = ledger.assignments.find((a) => a.id === input.assignment?.id);
     if (existing && (ASSIGNMENT_ACTIVE.has(existing.status) || ASSIGNMENT_TERMINAL.has(existing.status))) {
       // Re-admission is only a path for waiting work (QUEUED/BLOCKED). An
-      // active or finished record must never be demoted/replaced — its slot is
+      // active or finished record must never be demoted/replaced - its slot is
       // released only via observe with lifecycle proof.
       throw new Error(`assignment ${existing.id} is ${existing.status} — re-admission refused; waiting records only. Use observe for lifecycle`);
     }

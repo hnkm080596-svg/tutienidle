@@ -61,7 +61,7 @@ describe('buildGameSave snapshot isolation (AR-12)', () => {
     expect(save).toEqual(snapshot)
   })
 
-  // M1 (ARCH-001) — every GameSave slice is a detached value: mutating a
+  // M1 (ARCH-001) - every GameSave slice is a detached value: mutating a
   // live manager object AFTER buildGameSave() must not reach the snapshot,
   // and mutating the snapshot must not reach live state. Before this fix,
   // getAll()-sourced slices (skills/techniques/equipment/buildings/
@@ -170,13 +170,13 @@ describe('buildGameSave snapshot isolation (AR-12)', () => {
   // Production regression (found live, not from a synthetic fixture):
   // usePlayerStore's actual `this.$state` is a Vue-reactive Proxy, not a
   // plain PlayerData object. structuredClone has no concept of Proxy
-  // exotic objects — it throws DataCloneError the instant it meets one,
+  // exotic objects - it throws DataCloneError the instant it meets one,
   // at ANY nesting depth, including a field Vue only wrapped lazily after
   // some earlier getter/computed touched it (this is why a
   // freshly-constructed reactive() with no prior access still needs to
-  // exercise a getter here to reproduce it — real gameplay's `finalStats`
+  // exercise a getter here to reproduce it - real gameplay's `finalStats`
   // getter runs every tick and touches baseStats/modifiers/
-  // externalModifiers this way). toRaw() alone is not sufficient either —
+  // externalModifiers this way). toRaw() alone is not sufficient either -
   // it only unwraps the OUTERMOST proxy, not nested ones.
   it('accepts a Vue-reactive player object (real usePlayerStore.$state shape), even after nested fields were reactively accessed', () => {
     const gameManager = createBootedGameManager()

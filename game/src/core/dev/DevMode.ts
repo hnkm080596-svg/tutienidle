@@ -1,16 +1,16 @@
-// Cờ test tạm thời (2026-08-20) — bật để bỏ qua MỌI gate Building/cảnh
-// giới, cho phép thử toàn bộ hệ thống trong game mà không cần grind thật.
+// Co test tam thoi (2026-08-20) - bat de bo qua MOI gate Building/canh
+// gioi, cho phep thu toan bo he thong trong game ma khong can grind that.
 //
-// 2026-08-26 — đổi sang OVERRIDE qua localStorage thay vì hằng số compile-
-// time: người chơi/lead cần BẬT TẮT nhanh khi test chức năng building
-// (xây miễn phí mọi công trình) mà không phải build lại. Cách bật:
+// 2026-08-26 - doi sang OVERRIDE qua localStorage thay vi hang so compile-
+// time: nguoi choi/lead can BAT TAT nhanh khi test chuc nang building
+// (xay mien phi moi cong trinh) ma khong phai build lai. Cach bat:
 //   localStorage.setItem('dev.testModeUnlockAll', '1')  -> reload trang
-// Tắt: removeItem('dev.testModeUnlockAll') hoặc set giá trị khác '1'.
-// Mặc định FALSE cho bản chạy thực tế.
+// Tat: removeItem('dev.testModeUnlockAll') hoac set gia tri khac '1'.
+// Mac dinh FALSE cho ban chay thuc te.
 //
-// 2026-08-28 (review 2026-08-28 bug #11) — cờ này CHỈ còn hiệu lực trong
-// dev build: production build mà đọc được flag từ localStorage sẽ bypass
-// realm gate + chi phí vật liệu, xây mọi công trình miễn phí.
+// 2026-08-28 (review 2026-08-28 bug #11) - co nay CHI con hieu luc trong
+// dev build: production build ma doc duoc flag tu localStorage se bypass
+// realm gate + chi phi vat lieu, xay moi cong trinh mien phi.
 //
 // B1.9a (beta-final PR3) - dev tools are explicit MOCK-only: under
 // VITE_BACKEND_MODE=supabase a free build/write would land in the

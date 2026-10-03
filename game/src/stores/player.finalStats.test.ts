@@ -3,11 +3,11 @@ import { createPinia, setActivePinia } from 'pinia'
 import { usePlayerStore } from './player'
 import type { StatModifier } from '@/core/stats/StatCalculator'
 
-// Task 1 (perf-optimize-pass, Phase 0) — safety-net cho finalStats getter.
-// Khóa hành vi HIỆN TẠI (không phải TDD đỏ): Task 4 sẽ đụng vào cách
-// finalStats/externalModifiers recompute (liên quan stateVersion) để tối
-// ưu hiệu năng — test này phải VẪN xanh sau đó, nếu đỏ nghĩa là Task 4 đã
-// phá reactivity.
+// Task 1 (perf-optimize-pass, Phase 0) - safety-net cho finalStats getter.
+// Khoa hanh vi HIEN TAI (khong phai TDD do): Task 4 se dung vao cach
+// finalStats/externalModifiers recompute (lien quan stateVersion) de toi
+// uu hieu nang - test nay phai VAN xanh sau do, neu do nghia la Task 4 da
+// pha reactivity.
 function attackModifier(id: string, flat: number): StatModifier {
   return {
     id,
@@ -47,8 +47,8 @@ describe('player store — finalStats reactivity qua externalModifiers', () => {
 
     const before = store.finalStats.might
 
-    // Hai mảng khác object reference nhưng nội dung y hệt — mô phỏng
-    // GameManager tạo mảng mới mỗi tick dù giá trị buff không đổi.
+    // Hai mang khac object reference nhung noi dung y het - mo phong
+    // GameManager tao mang moi moi tick du gia tri buff khong doi.
     const firstCall = () => store.setExternalModifiers([attackModifier('buff:might', 42)])
     const secondCall = () => store.setExternalModifiers([attackModifier('buff:might', 42)])
 

@@ -1,10 +1,10 @@
 import type { Talisman } from '@/core/talisman/Talisman'
 import type { StatModifier } from '@/core/stats/StatCalculator'
 
-// Phù (2026-08-24, resource-professions-rework §7) — modifier-item hai
-// modifier tĩnh phòng thủ/tiện ích, socket theo slot. Product scope 3
-// realm × 3 rarity; allowedSlots: mọi slot trừ weapon (weapon dành Trận
-// tấn công mạnh nhất — vẫn socket Phù được nếu data mở, mặc định đóng).
+// Phu (2026-08-24, resource-professions-rework sec7) - modifier-item hai
+// modifier tinh phong thu/tien ich, socket theo slot. Product scope 3
+// realm x 3 rarity; allowedSlots: moi slot tru weapon (weapon danh Tran
+// tan cong manh nhat - van socket Phu duoc neu data mo, mac dinh dong).
 function modifier(
   id: string,
   sourceId: string,

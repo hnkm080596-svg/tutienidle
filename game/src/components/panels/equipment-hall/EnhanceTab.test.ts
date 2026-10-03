@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-// Task 19 (item-grade-quality-rework, rework P6) — EnhanceTab extracted
+// Task 19 (item-grade-quality-rework, rework P6) - EnhanceTab extracted
 // from EquipmentHallPanel.test.ts. Enhance is fully self-contained (slot
 // selection, no shared HALL_SELECTION_KEY needed).
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -34,7 +34,7 @@ function equipmentInstance(instanceId: string, equipped: boolean): EquipmentInst
   })
 }
 
-/** Instance với mainStat tuỳ ý — dùng test hiển thị số thập phân nhỏ. */
+/** Instance voi mainStat tuy y - dung test hien thi so thap phan nho. */
 function equipmentInstanceWithStat(
   instanceId: string,
   stat: EquipmentInstance['mainStat']['stat'],
@@ -47,8 +47,8 @@ function equipmentInstanceWithStat(
   return instance
 }
 
-/** Instance với itemId tuỳ ý — registry miss (save lệch data, audit fix
- * 2026-08-31): computed phải tra an toàn thay vì throw chết panel. */
+/** Instance voi itemId tuy y - registry miss (save lech data, audit fix
+ * 2026-08-31): computed phai tra an toan thay vi throw chet panel. */
 function equipmentInstanceWithItemId(
   instanceId: string,
   itemId: string,
@@ -100,16 +100,16 @@ describe('EnhanceTab — Cường Hóa', () => {
   })
 
   it('Cường Hóa mainStat thập phân nhỏ (speed 0.015) không bị làm tròn thành 0.0', async () => {
-    // Bug report 2026-08-30: bảng Cường Hóa dùng toFixed(1) → mainStat
-    // nhỏ hiển thị "0.0". formatStat phải giữ nguyên giá trị hiển thị
-    // được. (Turn-based conversion 2026-09-04: attackSpeed→speed, giá
-    // trị fixture +105 cho speed thang ~100.)
+    // Bug report 2026-08-30: bang Cuong Hoa dung toFixed(1) -> mainStat
+    // nho hien thi "0.0". formatStat phai giu nguyen gia tri hien thi
+    // duoc. (Turn-based conversion 2026-09-04: attackSpeed->speed, gia
+    // tri fixture +105 cho speed thang ~100.)
     const mounted = mountTab((manager) => {
       manager.equipmentBag.remove('equipped')
       manager.equipmentBag.add(equipmentInstanceWithStat('fast-weapon', 'speed', 105.015))
     })
 
-    // Tab Cường Hóa mặc định — slot weapon đang mặc 'fast-weapon'.
+    // Tab Cuong Hoa mac dinh - slot weapon dang mac 'fast-weapon'.
     const slots = mounted.container.querySelectorAll(
       '[aria-label="Chọn slot cường hóa"] .slot-view',
     )
@@ -129,17 +129,17 @@ describe('EnhanceTab — Cường Hóa', () => {
   })
 
   it('itemId lạ (registry miss) không chết panel — trang bị đang mặc vẫn render slot, hiện itemId thô', async () => {
-    // Audit fix 2026-08-31 — equipmentRegistry.get() throw với itemId lạ
-    // (data edit/save lệch) từng chết cả panel qua ErrorBoundary; các
-    // computed phải dùng getEquipmentTemplate() an toàn + fallback hiển
-    // thị (pattern Task 13 EquipmentBagSection.vue).
+    // Audit fix 2026-08-31 - equipmentRegistry.get() throw voi itemId la
+    // (data edit/save lech) tung chet ca panel qua ErrorBoundary; cac
+    // computed phai dung getEquipmentTemplate() an toan + fallback hien
+    // thi (pattern Task 13 EquipmentBagSection.vue).
     const mounted = mountTab((manager) => {
       manager.equipmentBag.remove('equipped')
       manager.equipmentBag.add(equipmentInstanceWithItemId('ghost-item', 'nonexistent_item', true))
     })
 
-    // Không throw khi render — slot weapon vẫn hiện (caption = itemId thô
-    // vì template không tra được).
+    // Khong throw khi render - slot weapon van hien (caption = itemId tho
+    // vi template khong tra duoc).
     const slots = mounted.container.querySelectorAll(
       '[aria-label="Chọn slot cường hóa"] .slot-view',
     )
@@ -150,22 +150,22 @@ describe('EnhanceTab — Cường Hóa', () => {
   })
 
   it('Task 1 (perf-optimize-pass, Phase 0 safety-net): equip trang bị mới vào 1 slot → enhanceRows phản ánh đúng slot đó sau lần recompute kế tiếp', async () => {
-    // Khóa hành vi HIỆN TẠI của enhanceRows (đọc gameManager.equipmentBag
-    // qua stateVersion) trước khi Task 4/5 đụng vào cách nó recompute —
-    // nếu Task 4/5 phá reactivity, test này đỏ ngay.
+    // Khoa hanh vi HIEN TAI cua enhanceRows (doc gameManager.equipmentBag
+    // qua stateVersion) truoc khi Task 4/5 dung vao cach no recompute -
+    // neu Task 4/5 pha reactivity, test nay do ngay.
     const mounted = mountTab()
 
     const slots = () =>
       mounted.container.querySelectorAll('[aria-label="Chọn slot cường hóa"] .slot-view')
 
-    // Slot helmet (index 1 trong EQUIPMENT_SLOTS) ban đầu trống — chưa có
-    // equipment nào trong bag mang slot 'helmet'.
+    // Slot helmet (index 1 trong EQUIPMENT_SLOTS) ban dau trong - chua co
+    // equipment nao trong bag mang slot 'helmet'.
     expect(slots()[1]!.classList.contains('slot-view--empty')).toBe(true)
 
-    // Equip trang bị mới vào slot helmet, rồi bump stateVersion — đúng
-    // pattern app thật (useEquipmentActions gọi bumpState sau khi mutate
-    // gameManager); enhanceRows đọc `stateVersion.value` làm dependency
-    // tường minh (xem EnhanceTab.vue) nên PHẢI bump version mới recompute.
+    // Equip trang bi moi vao slot helmet, roi bump stateVersion - dung
+    // pattern app that (useEquipmentActions goi bumpState sau khi mutate
+    // gameManager); enhanceRows doc `stateVersion.value` lam dependency
+    // tuong minh (xem EnhanceTab.vue) nen PHAI bump version moi recompute.
     mounted.manager.equipmentBag.add(equipmentInstance('new-helmet', true))
     mounted.manager.equipmentBag.get('new-helmet')!.slot = 'helmet'
     mounted.manager.equipmentBag.get('new-helmet')!.itemId = 'base_quan'

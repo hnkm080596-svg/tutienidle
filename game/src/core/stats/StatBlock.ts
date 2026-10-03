@@ -2,14 +2,14 @@ import type { StatType } from './StatTypes'
 
 export type Stats = Record<StatType, number>
 
-// R14 (AR-02/AR-05, type-level half) — nominal marker for RAW authored
+// R14 (AR-02/AR-05, type-level half) - nominal marker for RAW authored
 // base stats (createBaseStats output, PlayerData.baseStats). The phantom
 // brand makes `calculateStats(baseStats)` reject resolved `Stats`
 // values: feeding an already-derived snapshot back into the derivation
 // pipeline (the R2 double-derivation regression class) no longer
 // compiles without an explicit `asBaseStats` boundary cast. Type-only:
 // zero runtime cost, save payloads unchanged. CombatEntity.baseStats
-// intentionally stays plain `Stats` — it holds the resolved-at-entry
+// intentionally stays plain `Stats` - it holds the resolved-at-entry
 // snapshot (the combat base), not authored raw input.
 declare const baseStatsBrand: unique symbol
 
@@ -37,27 +37,27 @@ export function createBaseStats(overrides: Partial<Stats> = {}): BaseStats {
     maxHp: 100,
     maxMp: 0,
 
-    // Turn-based conversion (2026-09-04) — nền 100, ATB gauge-fill-rate
-    // stat (ActionGauge.advanceGauge() đọc trực tiếp). Neo giá trị 100
-    // theo quy ước SPD của Honkai: Star Rail (baseline ~100-115) — chỉ
-    // là chọn đơn vị dễ đọc, GAUGE_MAX=1000 không quan tâm độ lớn tuyệt
-    // đối, chỉ quan tâm tỉ lệ speed giữa các actor.
+    // Turn-based conversion (2026-09-04) - nen 100, ATB gauge-fill-rate
+    // stat (ActionGauge.advanceGauge() doc truc tiep). Neo gia tri 100
+    // theo quy uoc SPD cua Honkai: Star Rail (baseline ~100-115) - chi
+    // la chon don vi de doc, GAUGE_MAX=1000 khong quan tam do lon tuyet
+    // doi, chi quan tam ti le speed giua cac actor.
     speed: 100,
 
     criticalRate: 0.05,
     criticalDamage: 1.5,
 
-    // Rating (không còn xác suất 0..1) — đấu với accuracyRating của
-    // đối phương qua getHitChance() (xem CombatSystem.ts). Baseline
-    // 25 vs accuracyRating mặc định 100 -> ~80% tỉ lệ trúng gốc, gần
-    // với cảm giác "95% trúng/5% né" cũ nhưng vẫn để chỗ cho đầu tư
-    // thật vào 1 trong 2 phía.
+    // Rating (khong con xac suat 0..1) - dau voi accuracyRating cua
+    // doi phuong qua getHitChance() (xem CombatSystem.ts). Baseline
+    // 25 vs accuracyRating mac dinh 100 -> ~80% ti le trung goc, gan
+    // voi cam giac "95% trung/5% ne" cu nhung van de cho cho dau tu
+    // that vao 1 trong 2 phia.
     evasionRate: 5,
 
-    // Tầng Attribute gốc — baseline 1 cho player (2026-08-20, giảm từ
-    // 10: ở baseline cũ, trần Phàm Nhân cũng là 10 nên
-    // allocateAttributePoint() không có headroom nào để đầu tư — 1 chừa
-    // đúng 9 điểm tới trần Phàm Nhân, xem StatCap.ts). Quái mặc định 0
+    // Tang Attribute goc - baseline 1 cho player (2026-08-20, giam tu
+    // 10: o baseline cu, tran Pham Nhan cung la 10 nen
+    // allocateAttributePoint() khong co headroom nao de dau tu - 1 chua
+    // dung 9 diem toi tran Pham Nhan, xem StatCap.ts). Quai mac dinh 0
     // qua normalizeEnemyStats(), xem core/enemy/EnemyStatInput.ts.
     strength: 1,
     dexterity: 1,
@@ -65,13 +65,13 @@ export function createBaseStats(overrides: Partial<Stats> = {}): BaseStats {
     attunement: 1,
     vitality: 1,
 
-    // Cơ chế mới (Last Epoch) — xem core/combat/{Armor,Resistance,
+    // Co che moi (Last Epoch) - xem core/combat/{Armor,Resistance,
     // Endurance}.ts.
     accuracyRating: 100,
-    // Block (2026-09-01, T5.5): base 5% — đối xứng 2 chiều với enemy (elite
-    // author được block qua special; player nhận base + affix boots/armor
-    // + sau này Thể Tu skill). Soft cap 0.75 trong StatMetadata chặn nguồn
-    // cộng dồn; HARD cap 0.90 áp tại rollBlock (buff tạm không vượt).
+    // Block (2026-09-01, T5.5): base 5% - doi xung 2 chieu voi enemy (elite
+    // author duoc block qua special; player nhan base + affix boots/armor
+    // + sau nay The Tu skill). Soft cap 0.75 trong StatMetadata chan nguon
+    // cong don; HARD cap 0.90 ap tai rollBlock (buff tam khong vuot).
     blockChance: 0.05,
     blockEffectiveness: 0.25,
     enduranceThreshold: 10,
@@ -92,7 +92,7 @@ export function createBaseStats(overrides: Partial<Stats> = {}): BaseStats {
     chanceToIgnoreResistance: 0,
     ailmentResistPercent: 0,
     ailmentPotencyPercent: 0,
-    // The Tu An reactive chances (spec 2026-09-15 section 3.2) — base 0;
+    // The Tu An reactive chances (spec 2026-09-15 section 3.2) - base 0;
     // the only source is the hidden_body attribute->chance emission.
     counterChance: 0,
     protectChance: 0,
@@ -114,10 +114,10 @@ export function createBaseStats(overrides: Partial<Stats> = {}): BaseStats {
     // Pill cultivation percent.
     cultivationPercent: 0,
 
-    // Ngũ hành — mặc định 0, chỉ có giá trị khi được cấp qua
+    // Ngu hanh - mac dinh 0, chi co gia tri khi duoc cap qua
     // StatModifier (equipment/technique/buff...). Xem
-    // core/element/ElementStatType.ts. Không còn chu kỳ sinh/khắc —
-    // mỗi hành là 1 damage type độc lập kiểu Last Epoch.
+    // core/element/ElementStatType.ts. Khong con chu ky sinh/khac -
+    // moi hanh la 1 damage type doc lap kieu Last Epoch.
     woodPower: 0,
     woodResistance: 0,
     woodPenetration: 0,
@@ -138,13 +138,13 @@ export function createBaseStats(overrides: Partial<Stats> = {}): BaseStats {
     waterResistance: 0,
     waterPenetration: 0,
 
-    // Spec 2026-08-30-phap-tu-dao-sac §5 — Phong/Lôi (wind/lightning
-    // Power/Resistance/Penetration) đã bị XOÁ khỏi Stats: 0 skill/0
-    // node/0 reaction từng tồn tại nên đây toàn stat chết, không giữ
-    // baseline 0 vô nghĩa.
+    // Spec 2026-08-30-phap-tu-dao-sac sec5 - Phong/Loi (wind/lightning
+    // Power/Resistance/Penetration) da bi XOA khoi Stats: 0 skill/0
+    // node/0 reaction tung ton tai nen day toan stat chet, khong giu
+    // baseline 0 vo nghia.
 
-    // Hỗn Nguyên (Void) — bỏ qua mọi mitigation, không có Resistance/
-    // Penetration riêng (xem StatTypes.ts).
+    // Hon Nguyen (Void) - bo qua moi mitigation, khong co Resistance/
+    // Penetration rieng (xem StatTypes.ts).
     primordialPower: 0,
 
     ...overrides,

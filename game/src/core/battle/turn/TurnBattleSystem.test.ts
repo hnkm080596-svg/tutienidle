@@ -13,8 +13,8 @@ import { makeTestBuffRegistry, makeTurnRuntime } from './testing/TurnRuntimeFixt
 import type { BuffDefinition } from '../../buff2/BuffDefinition'
 import type { BuffDefinitionId } from '../contracts/ids'
 
-// Fixture giá»‘ng há»‡t quy Æ°á»›c Ä‘Ã£ dÃ¹ng trong ActionTargetingSystem.test.ts â€”
-// selectTarget chá»‰ Ä‘á»c id/x/row/alive, khÃ´ng cáº§n Stats Ä‘áº§y Ä‘á»§.
+// Fixture giong het quy uOc da dung trong ActionTargetingSystem.test.ts -
+// selectTarget chi doc id/x/row/alive, khong can Stats day du.
 function entity(id: string, column: number, row: number, alive = true): CombatEntity {
   return {
     id,
@@ -66,8 +66,8 @@ describe('selectTarget', () => {
   })
 })
 
-// Fixture giá»‘ng há»‡t quy Æ°á»›c CombatSystem.damageFloor.test.ts â€” cáº§n Stats
-// Ä‘áº§y Ä‘á»§ vÃ¬ runToCompletion gá»i tháº­t CombatSystem.resolveActionHit().
+// Fixture giong het quy uOc CombatSystem.damageFloor.test.ts - can Stats
+// day du vi runToCompletion goi that CombatSystem.resolveActionHit().
 function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
   const stats = createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0 })
 
@@ -86,14 +86,14 @@ function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
     row: 2,
     alive: true,
     ...overrides,
-    // ARCH-002 (M7): entity.stats is the derived effective view — a fixture
+    // ARCH-002 (M7): entity.stats is the derived effective view - a fixture
     // that injects `stats` must have them as the resolved base too, or the
     // per-tick recompute reverts them to the defaults above.
     baseStats: overrides.baseStats ?? overrides.stats ?? stats,
   } as CombatEntity
 
   // ARCH-002 (M7 R1): refreshParticipantStats reconciles entity.maxHp from
-  // entity.stats.maxHp and clamps currentHp — the fixture's declared vitals
+  // entity.stats.maxHp and clamps currentHp - the fixture's declared vitals
   // ceiling must exist in the resolved/base stats or the first refresh
   // reverts it.
   const ceiling = Math.max(entity.maxHp, entity.currentHp)
@@ -818,7 +818,7 @@ describe('TurnBattleSystem.resolveNextStep boss trigger', () => {
     const runtime = makeTurnRuntime({ registry, participants: () => participants, combatSystem })
     const system = new TurnBattleSystem(combatSystem, 10, registry, undefined, runtime)
 
-    // Turn 1: player acts (round 1 in progress). Turn 2: enemy acts —
+    // Turn 1: player acts (round 1 in progress). Turn 2: enemy acts -
     // closes round 1 (roundsElapsed = 1 >= afterTurns 1) and its own
     // trigger check runs after the round close in the same declare.
     system.resolveNextStep(battle)
@@ -906,7 +906,7 @@ describe('TurnBattleSystem.resolveNextStep boss trigger', () => {
   it('does not fire mid-round even when the raw action counter passed afterTurns', () => {
     // Regression: afterTurns counts ATB rounds, not actor actions. At step
     // 3 the action counter is 3 >= afterTurns 2, but round 2 has not
-    // closed — the boss must wait for its own round-2 action.
+    // closed - the boss must wait for its own round-2 action.
     const player = createCombatant({
       id: 'player',
       type: 'player',
@@ -936,15 +936,15 @@ describe('TurnBattleSystem.resolveNextStep boss trigger', () => {
     const runtime = makeTurnRuntime({ registry, participants: () => participants, combatSystem })
     const system = new TurnBattleSystem(combatSystem, 10, registry, undefined, runtime)
 
-    system.resolveNextStep(battle) // player — round 1 open
-    system.resolveNextStep(battle) // boss — closes round 1; 1 < 2, no fire
-    system.resolveNextStep(battle) // player — action 3, still mid round 2
+    system.resolveNextStep(battle) // player - round 1 open
+    system.resolveNextStep(battle) // boss - closes round 1; 1 < 2, no fire
+    system.resolveNextStep(battle) // player - action 3, still mid round 2
 
     expect(battle.totalTurnsElapsed).toBe(3)
     expect(battle.roundsElapsed).toBe(1)
     expect(bossTrigger.firedAlready).toBe(false)
 
-    system.resolveNextStep(battle) // boss — closes round 2; fires
+    system.resolveNextStep(battle) // boss - closes round 2; fires
 
     expect(bossTrigger.firedAlready).toBe(true)
     expect(runtime.buffs.getForTarget(enemyParticipant.entity.id).some((i) => i.definitionId === 'fixture_enrage')).toBe(true)
@@ -986,9 +986,9 @@ describe('TurnBattleSystem.resolveNextStep boss trigger', () => {
   it('fires real production boss enrage content (mortal_crocodile_enrage) after 60 rounds', () => {
     // Player must survive ~600 boss turns while dealing no damage, so it
     // gets a huge HP pool and zero might. NOTE: afterTurns counts ATB
-    // rounds (D2 contract) — a round only closes when the slow boss has
+    // rounds (D2 contract) - a round only closes when the slow boss has
     // acted, and its gauge means it acts roughly once every 10
-    // resolveNextStep calls, so 60 rounds need ~600+ steps — hence the
+    // resolveNextStep calls, so 60 rounds need ~600+ steps - hence the
     // 800-call loop (60 rounds + margin), not the naive 61.
     const player = createCombatant({
       id: 'player',
@@ -1338,7 +1338,7 @@ describe('TurnBattleSystem.resolveNextStep Ba Tu (CC-lock guard)', () => {
       targeting: { shape: 'single' },
     }
     // Simulates "already had 2 consecutive blocked turns" WITHOUT applying
-    // any CC buff ï¿½ isolates the reset behavior from buff-timing entirely.
+    // any CC buff i?1/2 isolates the reset behavior from buff-timing entirely.
     playerParticipant.consecutiveHardCcTurns = 2
 
     const battle: TurnBattle = {
@@ -1357,8 +1357,8 @@ describe('TurnBattleSystem.resolveNextStep Ba Tu (CC-lock guard)', () => {
 
 describe('TurnBattleSystem.resolveNextStep Sudden Death escalation', () => {
   function bareBattle(roundsElapsed: number, extraEnemies = 0) {
-    // blockChance: 0 â€” test so sÃ¡nh damage tuyá»‡t Ä‘á»‘i giá»¯a 2 runs; block
-    // lÃ  roll 5% ngáº«u nhiÃªn (blockChance base 0.05) sáº½ lÃ m test flaky.
+    // blockChance: 0 - test so sanh damage tuyet doi giua 2 runs; block
+    // la roll 5% ngau nhien (blockChance base 0.05) se lam test flaky.
     const player = createCombatant({
       id: 'player',
       type: 'player',
@@ -1390,11 +1390,11 @@ describe('TurnBattleSystem.resolveNextStep Sudden Death escalation', () => {
       enemies.push(makeParticipant(`enemy_extra_${i}`, extraEntity, 5, 1))
     }
 
-    // Sudden Death counts ATB ROUNDS (D2 revision contract, 2026-09-12 —
+    // Sudden Death counts ATB ROUNDS (D2 revision contract, 2026-09-12 -
     // same unit perfectClearTurnLimit uses), not the raw actor-action
     // counter: "from turn 11" = once 10 full rounds have elapsed. A
     // per-action count makes escalation arrive participant-count times
-    // early and compound ~0.3 x actors per round — the reported
+    // early and compound ~0.3 x actors per round - the reported
     // "damage rises abnormally" defect.
     const battle: TurnBattle = {
       players: [playerParticipant],
@@ -1417,8 +1417,8 @@ describe('TurnBattleSystem.resolveNextStep Sudden Death escalation', () => {
 
     const rawDamageDealt = hpBefore - enemyEntity.currentHp
     expect(battle.roundsElapsed).toBe(9)
-    // At exactly turn 10, Sudden Death has not started yet (starts turn 11) ï¿½ damage is the normal, unscaled amount.
-    // (Exact expected HP delta depends on calculateBaseDamage's real formula ï¿½ assert only that it's the SAME
+    // At exactly turn 10, Sudden Death has not started yet (starts turn 11) i?1/2 damage is the normal, unscaled amount.
+    // (Exact expected HP delta depends on calculateBaseDamage's real formula i?1/2 assert only that it's the SAME
     // as a control run at turn 1, not a hardcoded number, to avoid coupling this test to damage-formula internals.)
     const { enemyEntity: controlEnemy, battle: controlBattle } = bareBattle(0)
     const controlHpBefore = controlEnemy.currentHp
@@ -1443,9 +1443,9 @@ describe('TurnBattleSystem.resolveNextStep Sudden Death escalation', () => {
     const baseDamage = controlHpBefore - controlEnemy.currentHp
 
     expect(battle.roundsElapsed).toBe(10)
-    // Endurance cá»§a há»‡ sá»‘ng trá»« PHáº²NG thresholdÃ—percent = 10Ã—0.7 = 7 SAU
-    // scale (má»i Ä‘Ã²n > threshold), nÃªn scaled = baseÃ—m âˆ’ 7, khÃ´ng pháº£i
-    // baseÃ—m nguyÃªn váº¹n (plan test gá»‘c Ä‘Ã£ bá» qua táº§ng endurance nÃ y).
+    // Endurance cua he song tru PHANG thresholdxpercent = 10x0.7 = 7 SAU
+    // scale (moi don > threshold), nen scaled = basexm - 7, khong phai
+    // basexm nguyen ven (plan test goc da bo qua tang endurance nay).
     const enduranceFlat = (10 * 0.7)
     expect(scaledDamage).toBeCloseTo((baseDamage + enduranceFlat) * 1.3 - enduranceFlat, 1)
   })
@@ -1878,8 +1878,8 @@ describe('TurnBattleSystem.resolveActorTurn', () => {
 
     expect(system.resolveNextStep(battle).state).toBe('victory')
 
-    // Caller gá»i thá»«a 1 láº§n sau victory (fixed-step loop cÃ³ thá»ƒ trÃ´i 1 tick
-    // trÆ°á»›c khi GameManager dá»«ng) â€” state pháº£i giá»¯ nguyÃªn victory.
+    // Caller goi thua 1 lan sau victory (fixed-step loop co the troi 1 tick
+    // truOc khi GameManager dung) - state phai giu nguyen victory.
     expect(system.resolveNextStep(battle).state).toBe('victory')
     expect(battle.state).toBe('victory')
   })
@@ -2021,7 +2021,7 @@ describe('TurnBattleSystem.resolveActorTurn', () => {
         damage: { kind: 'physical', multiplier: 2 },
         targeting: { shape: 'single' },
       },
-      remainingCooldownTurns: 2, // ON cooldown â€” unready
+      remainingCooldownTurns: 2, // ON cooldown - unready
     }
 
     const battle: TurnBattle = {
@@ -2035,7 +2035,7 @@ describe('TurnBattleSystem.resolveActorTurn', () => {
 
     const step = system.resolveActorTurn(battle, actor!, 'special')
 
-    // special unready â†’ forced slot ignored â†’ normal priority â†’ basic
+    // special unready -> forced slot ignored -> normal priority -> basic
     expect(step.skillId).toBe('fixture_basic')
     // resource NOT consumed (special was never cast)
     expect(player.currentMp).toBe(100)
@@ -2070,7 +2070,7 @@ describe('TurnBattleSystem.resolveActorTurn', () => {
 
 
 // ---------------------------------------------------------------------------
-// Future Systems Task 6 â€” gauge-delta buff effect (one-shot ATB push)
+// Future Systems Task 6 - gauge-delta buff effect (one-shot ATB push)
 // ---------------------------------------------------------------------------
 
 describe('TurnBattleSystem gauge-delta buff (one-shot)', () => {
@@ -2143,7 +2143,7 @@ describe('TurnBattleSystem gauge-delta buff (one-shot)', () => {
 
 
 // ---------------------------------------------------------------------------
-// Future Systems Task 7 — channel/charge skill primitive (Thế/Trảm)
+// Future Systems Task 7 - channel/charge skill primitive (The/Tram)
 // ---------------------------------------------------------------------------
 
 describe('TurnBattleSystem charge skill (Thế/Trảm)', () => {
@@ -2193,7 +2193,7 @@ describe('TurnBattleSystem charge skill (Thế/Trảm)', () => {
     const { battle, enemyEntity } = chargeFixture()
     const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
 
-    // Lượt 1 (player): bắt đầu charge — không hit
+    // Luot 1 (player): bat dau charge - khong hit
     const step1 = system.resolveNextStep(battle)
 
     expect(step1.skillId).toBe('fixture_charge')
@@ -2201,19 +2201,19 @@ describe('TurnBattleSystem charge skill (Thế/Trảm)', () => {
     expect(battle.players[0]!.chargingTurnsRemaining).toBe(2)
     expect(battle.players[0]!.pendingChargedSkillId).toBe('fixture_charge')
 
-    // Lượt 2 (enemy tự chạy) — player chưa tới lượt
+    // Luot 2 (enemy tu chay) - player chua toi luot
     system.resolveNextStep(battle)
 
-    // Lượt 3 (player): charge đếm 2→1 — vẫn không hit
+    // Luot 3 (player): charge dem 2->1 - van khong hit
     const step3 = system.resolveNextStep(battle)
 
     expect(battle.players[0]!.chargingTurnsRemaining).toBe(1)
     expect(step3.targetIds).toEqual([])
 
-    // Lượt 4 (enemy)
+    // Luot 4 (enemy)
     system.resolveNextStep(battle)
 
-    // Lượt 5 (player): charge xong — resolve đòn thật
+    // Luot 5 (player): charge xong - resolve don that
     const hpBefore = enemyEntity.currentHp
     const step5 = system.resolveNextStep(battle)
 
@@ -2237,9 +2237,9 @@ describe('TurnBattleSystem charge skill (Thế/Trảm)', () => {
 
 
 // ---------------------------------------------------------------------------
-// Gameplay fixes (2026-09-05) — wall-clock pacing: 1 tick = 1 gauge-step,
-// KHÔNG resolve-scan trong cùng tick (bug: trận chớp mắt vì mỗi 0.1s tick
-// resolve cả 1 turn nguyên).
+// Gameplay fixes (2026-09-05) - wall-clock pacing: 1 tick = 1 gauge-step,
+// KHONG resolve-scan trong cung tick (bug: tran chop mat vi moi 0.1s tick
+// resolve ca 1 turn nguyen).
 // ---------------------------------------------------------------------------
 
 describe('TurnBattleSystem.tickPacing — wall-clock pacing', () => {
@@ -2264,7 +2264,7 @@ describe('TurnBattleSystem.tickPacing — wall-clock pacing', () => {
 
     const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
 
-    // 5 ticks × speed 100 = gauge 500 < GAUGE_MAX 1000 — chưa ai tới lượt.
+    // 5 ticks x speed 100 = gauge 500 < GAUGE_MAX 1000 - chua ai toi luot.
     for (let i = 0; i < 5; i++) {
       system.tickPacing(battle)
     }

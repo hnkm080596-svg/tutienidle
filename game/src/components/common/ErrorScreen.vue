@@ -16,11 +16,11 @@ import { useActiveUpdates } from '@/composables/useUpdates'
 const errorStore = useErrorStore()
 const { t } = useI18n()
 
-// UI-014 (Task 9, 2026-09-07) — nút trước đây nhãn "Thử Lại" nhưng thực
-// chất CHỈ clear error store (không retry/re-mount operation nào). Đổi
-// nhãn thành "Đóng" khớp behavior thật (plan Task 9: "rename it if it
-// only clears the store"); "Tải Lại Trang" reload thật là path recovery
-// chính (reset an toàn, autosave đã có pagehide guard).
+// UI-014 (Task 9, 2026-09-07) - nut truoc day nhan "Thu Lai" nhung thuc
+// chat CHI clear error store (khong retry/re-mount operation nao). Doi
+// nhan thanh "Dong" khop behavior that (plan Task 9: "rename it if it
+// only clears the store"); "Tai Lai Trang" reload that la path recovery
+// chinh (reset an toan, autosave da co pagehide guard).
 function dismiss() {
   errorStore.clear()
 }
@@ -201,7 +201,7 @@ async function exportDiagnostics() {
 .error-screen {
   position: fixed;
   inset: 0;
-  /* z-index via OVERLAY_LAYERS.appError (inline style) — high, but the
+  /* z-index via OVERLAY_LAYERS.appError (inline style) - high, but the
      route-transition curtain still sits above it by contract. */
   display: flex;
   align-items: center;

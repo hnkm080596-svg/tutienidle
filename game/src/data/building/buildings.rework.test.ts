@@ -24,7 +24,7 @@ describe('building 9-tier scaffold', () => {
   })
 })
 
-// Chiêu Hiền Quán (2026-09-02, spec 2026-09-02-chi-hien-quan-design.md)
+// Chieu Hien Quan (2026-09-02, spec 2026-09-02-chi-hien-quan-design.md)
 describe('chi_hien_quan + linh mạch Khai Vật Đường', () => {
   it('chi_hien_quan tồn tại — maxLevel 9 + 9 cost bands + functionType worker_lodge', () => {
     const chq = buildings.find((entry) => entry.id === 'chi_hien_quan')!

@@ -1,9 +1,9 @@
 import type { SkillResourceType } from './SkillTypes'
 
-// Skill resource type labels — 2026-08-30 frontend-design pass (moved
+// Skill resource type labels - 2026-08-30 frontend-design pass (moved
 // from SkillDetailView.vue). Covers the meaningful resource types on
 // Skill.resourceType. 'none' is excluded (no cost shown). 'the' added
-// Phase A3 (2026-09-07) — Pháp Tu Thế pool.
+// Phase A3 (2026-09-07) - Phap Tu The pool.
 export const SKILL_RESOURCE_TYPE_LABELS: Record<Exclude<SkillResourceType, 'none'>, string> = {
   mana: 'Linh Lực',
   the: 'Thế',

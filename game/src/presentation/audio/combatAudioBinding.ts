@@ -163,7 +163,7 @@ const PAYLOAD_CUES: ReadonlyArray<readonly [string, (event: never) => string | u
   // double-chime past the 80ms cooldown. It is a progress signal for the
   // Luyen The bar, not a sound trigger.
   ['essence_stream_arrival', () => undefined],
-  // 'damage' fires alongside hit/critical — audible only when the PLAYER
+  // 'damage' fires alongside hit/critical - audible only when the PLAYER
   // takes the hit (combat.hurt), else silent to avoid double-triggering.
   [
     'damage',
@@ -251,7 +251,7 @@ const PAYLOAD_CUES: ReadonlyArray<readonly [string, (event: never) => string | u
     (event: CultivationLike) =>
       event.isCultivating ? 'ambient.cultivate.on' : 'ambient.cultivate.off',
   ],
-  // W6: reactive proc — success-only cue per spec (failed rolls stay silent).
+  // W6: reactive proc - success-only cue per spec (failed rolls stay silent).
   [
     'reactive_proc',
     (event: ReactiveProcLike) => {
@@ -298,7 +298,7 @@ export function bindCombatAudio(
     subscribe(eventType, select)
   }
 
-  // farm.cycle only matters on the home screen — ticks continue off-route
+  // farm.cycle only matters on the home screen - ticks continue off-route
   // and must not sound from combat/tribulation.
   const farmHandler: EventHandler<unknown> = () => {
     const route = options.routeProvider?.()

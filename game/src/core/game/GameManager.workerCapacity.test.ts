@@ -1,7 +1,7 @@
-// T3 (chi-hien-quan, 2026-09-02) — nguồn nhân công DUY NHẤT là CHQ:
-// - build/upgrade chi_hien_quan → autoWorkerCapacity = 1 + level×2
-// - gathering_outpost KHÔNG còn cấp capacity (nguồn cũ gỡ)
-// - restore save có CHQ instance → capacity khôi phục đúng
+// T3 (chi-hien-quan, 2026-09-02) - nguon nhan cong DUY NHAT la CHQ:
+// - build/upgrade chi_hien_quan -> autoWorkerCapacity = 1 + levelx2
+// - gathering_outpost KHONG con cap capacity (nguon cu go)
+// - restore save co CHQ instance -> capacity khoi phuc dung
 import { withMortalCreationPick } from '../../services/save/GameSave.fixture'
 import { describe, expect, it, vi } from 'vitest'
 
@@ -40,7 +40,7 @@ describe('GameManager — worker capacity nguồn CHQ duy nhất', () => {
 
     manager.setActivePlayer(player)
 
-    // Xây CHQ level 1 (canBuild qua buildingSystem — chi phí [] band đầu).
+    // Xay CHQ level 1 (canBuild qua buildingSystem - chi phi [] band dau).
     expect(manager.buildingOps.buildBuilding('chi_hien_quan', player)).not.toBe(false)
 
     const instance = manager.buildingManager.getByBuildingId('chi_hien_quan')!
@@ -71,7 +71,7 @@ describe('GameManager — worker capacity nguồn CHQ duy nhất', () => {
 
     manager.setActivePlayer(player)
 
-    // Outpost ở bất kỳ level nào — capacity vẫn 0 (chưa có CHQ).
+    // Outpost o bat ky level nao - capacity van 0 (chua co CHQ).
     const outpost = buildInstance('outpost_inst', 'gathering_outpost', 9)
 
     manager.buildingManager.add(outpost)
@@ -86,7 +86,7 @@ describe('GameManager — worker capacity nguồn CHQ duy nhất', () => {
 
     manager.setActivePlayer(player)
 
-    // save.buildings chứa CHQ level 2 — restore phải re-apply capacity 5.
+    // save.buildings chua CHQ level 2 - restore phai re-apply capacity 5.
     manager.saveOps.restoreFromSave(withMortalCreationPick({
       version: CURRENT_SAVE_VERSION,
       player: { ...player, autoWorkerCapacity: 0 },
@@ -119,7 +119,7 @@ describe('GameManager — assignWorkers (UI phân bổ, INV-CHQ-10)', () => {
     manager.buildingManager.add(chq)
     manager.buildingOps.refreshAutoWorkerCapacity(player, chq)
 
-    // Đăng ký production sites thật (THANH_VAN) để assignWorkers có state.
+    // Dang ky production sites that (THANH_VAN) de assignWorkers co state.
     const siteId = THANH_VAN_PRODUCTION_SITES[0]!.siteId
 
     manager.productionSystem.ensureSiteState(siteId)

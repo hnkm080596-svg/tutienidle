@@ -12,13 +12,13 @@ import { getRealmIndex } from '../realm/realmSystem'
 export type { EnemyLane }
 
 /**
- * Combat Balance Pass (2026-08-29, plan §3.6) — 1 action ĐẶC BIỆT data-
- * driven của quái (boss mẫu trước): mỗi lần attack MỚI thứ `everyNth`
- * (1-based, đếm LẠI TỪ ĐẦU sau khi khớp) thay basic attack bằng impact
- * với `damageMultiplier` (nhân cả stats might qua pipeline thường) và
- * `presetId` riêng để renderer diễn xuất khác biệt. `windupSeconds`
- * override thời gian chuẩn bị (undefined = theo basic của archetype).
- * KHÔNG có UI báo hiệu telegraph riêng — phần đó để dành phase sau.
+ * Combat Balance Pass (2026-08-29, plan sec3.6) - 1 action DAC BIET data-
+ * driven cua quai (boss mau truoc): moi lan attack MOI thu `everyNth`
+ * (1-based, dem LAI TU DAU sau khi khop) thay basic attack bang impact
+ * voi `damageMultiplier` (nhan ca stats might qua pipeline thuong) va
+ * `presetId` rieng de renderer dien xuat khac biet. `windupSeconds`
+ * override thoi gian chuan bi (undefined = theo basic cua archetype).
+ * KHONG co UI bao hieu telegraph rieng - phan do de danh phase sau.
  */
 export interface EnemySpecialAttack {
   everyNth: number
@@ -36,17 +36,17 @@ export interface EnemyReward {
   // TechniqueSystem.gainMastery o VICTORY (active) / per-cycle (idle).
   techniqueMastery: number
 
-  // Cảm ngộ Kỹ năng — LUÔN cấp bất kể có trang bị tâm pháp hay không
-  // (skill-insight-and-auto-combat-hud-plan.md mục 3), xem
-  // GameManager.grantBattleRewardIfNeeded(). Optional — undefined thì
+  // Cam ngo Ky nang - LUON cap bat ke co trang bi tam phap hay khong
+  // (skill-insight-and-auto-combat-hud-plan.md muc 3), xem
+  // GameManager.grantBattleRewardIfNeeded(). Optional - undefined thi
   // suy ra tu techniqueMastery qua getSkillInsightReward() (xem
-  // core/reward/SkillInsightBalance.ts), tránh phải sửa lại TOÀN BỘ
-  // data enemy hiện có (72 entry) chỉ để thêm 1 con số phase-đầu tạm.
+  // core/reward/SkillInsightBalance.ts), tranh phai sua lai TOAN BO
+  // data enemy hien co (72 entry) chi de them 1 con so phase-dau tam.
   skillInsight?: number
 
-  // Tu vi giờ CHỈ đến từ tu luyện (2026-08-20) — giết quái KHÔNG cộng
-  // tu vi, nên EnemyReward không có cultivation. Quest reward vẫn dùng
-  // Reward.cultivation (core/reward/Reward.ts) — đó là đường riêng.
+  // Tu vi gio CHI den tu tu luyen (2026-08-20) - giet quai KHONG cong
+  // tu vi, nen EnemyReward khong co cultivation. Quest reward van dung
+  // Reward.cultivation (core/reward/Reward.ts) - do la duong rieng.
   spiritStone: number
 }
 
@@ -62,8 +62,8 @@ export interface Enemy {
 
   level: number
 
-  // Cảnh giới của quái — dùng để tính Realm Pressure khi đối đầu
-  // player (xem core/combat/RealmPressure.ts). Phải khớp 1 id trong
+  // Canh gioi cua quai - dung de tinh Realm Pressure khi doi dau
+  // player (xem core/combat/RealmPressure.ts). Phai khop 1 id trong
   // REALMS (data/realms/realm.ts).
   realmId: string
 
@@ -77,57 +77,57 @@ export interface Enemy {
 
   rewards: EnemyReward
 
-  // Cờ đánh dấu bản Elite ("Tinh Anh") — buff vừa phải, spawn NGẪU
-  // NHIÊN theo eliteChance (xem Stage.StageEnemyEntry). Chỉ true khi
-  // tag tinh_anh được gắn qua applyEnemyTags() (core/enemy/EnemyTag.ts).
+  // Co danh dau ban Elite ("Tinh Anh") - buff vua phai, spawn NGAU
+  // NHIEN theo eliteChance (xem Stage.StageEnemyEntry). Chi true khi
+  // tag tinh_anh duoc gan qua applyEnemyTags() (core/enemy/EnemyTag.ts).
   isElite?: boolean
 
-  // Core Loop Foundation checklist (Mục BOSS) — tier RIÊNG, tách hẳn
-  // khỏi Elite: buff lớn hơn nhiều (applyBossMultiplier), KHÔNG spawn
-  // ngẫu nhiên (đặt CỐ ĐỊNH qua Stage.bossEnemyId, luôn là quái CUỐI
-  // của stage) — chỉ true khi tạo qua createBossVariant().
+  // Core Loop Foundation checklist (Muc BOSS) - tier RIENG, tach han
+  // khoi Elite: buff lon hon nhieu (applyBossMultiplier), KHONG spawn
+  // ngau nhien (dat CO DINH qua Stage.bossEnemyId, luon la quai CUOI
+  // cua stage) - chi true khi tao qua createBossVariant().
   isBoss?: boolean
 
-  // Core Loop Foundation checklist (Mục MONSTER) — nhãn hành vi nhẹ
-  // (không phải AI đầy đủ), xem EnemyArchetype.ts + BattleSystem.ts's
-  // resolveMovement()/updateEnemyAttacks(). Không khai = 'melee'.
+  // Core Loop Foundation checklist (Muc MONSTER) - nhan hanh vi nhe
+  // (khong phai AI day du), xem EnemyArchetype.ts + BattleSystem.ts's
+  // resolveMovement()/updateEnemyAttacks(). Khong khai = 'melee'.
   archetype?: EnemyArchetype
 
-  // "Họ quái" (MASTER SPEC Mục III — vd 'wolf', 'demon') — nhóm các
-  // quái cùng chủ đề để có bộ material riêng (Wolf → Beast Fang/Hide/
-  // Core). Thuần label, không ảnh hưởng combat/stats.
+  // "Ho quai" (MASTER SPEC Muc III - vd 'wolf', 'demon') - nhom cac
+  // quai cung chu de de co bo material rieng (Wolf -> Beast Fang/Hide/
+  // Core). Thuan label, khong anh huong combat/stats.
   family?: string
 
   // Drop-system (2026-09-12): per-enemy named drops (rare/narrative
-  // items) resolved as their own layer by resolveDrops — never scaled
+  // items) resolved as their own layer by resolveDrops - never scaled
   // by the family/stage pool. Replaces hand-placed itemDrops lines.
   signatureDrops?: SignatureDrop[]
 
-  // Đột Phá Trúc Cơ (Phase 4) — quái Kiếp (Nhân/Địa/Thiên/Đại Đạo Kiếp,
-  // xem data/enemy/Tribulations.ts) leo thang sức mạnh giữa trận qua
-  // các mốc HP. Combat Rework Phase 4 generic hoá: Boss thường
-  // (Stage.bossEnemyId) cũng dùng chung field này (Attack Pattern/
-  // Summon), quái thường để trống.
+  // Dot Pha Truc Co (Phase 4) - quai Kiep (Nhan/Dia/Thien/Dai Dao Kiep,
+  // xem data/enemy/Tribulations.ts) leo thang suc manh giua tran qua
+  // cac moc HP. Combat Rework Phase 4 generic hoa: Boss thuong
+  // (Stage.bossEnemyId) cung dung chung field nay (Attack Pattern/
+  // Summon), quai thuong de trong.
   tribulationPhases?: TribulationPhase[]
 
-  // Combat Rework Phase 4 (Boss Mechanics) — DPS check, xem
-  // TribulationPhase.ts's BossEnrage. CHỈ Boss cần khai, quái thường
-  // để trống.
+  // Combat Rework Phase 4 (Boss Mechanics) - DPS check, xem
+  // TribulationPhase.ts's BossEnrage. CHI Boss can khai, quai thuong
+  // de trong.
   enrage?: BossEnrage
 
-  // Turn-based boss enrage (Phase A2, 2026-09-07) — static config only;
+  // Turn-based boss enrage (Phase A2, 2026-09-07) - static config only;
   // TurnBattleAdapter.toTurnBattleParticipant() turns this into a live
   // TurnBossTrigger (adds firedAlready: false) on spawn. Separate from
   // the legacy `enrage`/`tribulationPhases` fields above, which remain
   // consumed only by battle/legacy/BattleSystem and are untouched here.
   bossTrigger?: { afterTurns: number; buffDefinitionId: string }
 
-  // Thể Tu (Combat Rework Phase 7) — thanh Break, xem CombatEntity.ts.
-  // CHỈ Boss/quái lớn cần khai, quái thường để trống.
+  // The Tu (Combat Rework Phase 7) - thanh Break, xem CombatEntity.ts.
+  // CHI Boss/quai lon can khai, quai thuong de trong.
   breakGaugeMax?: number
 
-  // Combat Balance Pass (2026-08-29, plan §3.6) — action đặc biệt data-
-  // driven thay basic attack cứng, xem EnemySpecialAttack. Boss mẫu trước.
+  // Combat Balance Pass (2026-08-29, plan sec3.6) - action dac biet data-
+  // driven thay basic attack cung, xem EnemySpecialAttack. Boss mau truoc.
   specialAttacks?: EnemySpecialAttack[]
 
   // Hidden Perfection Lineage (design 2026-09-23 sec.9) - semantic
@@ -139,9 +139,9 @@ export interface Enemy {
   lane: EnemyLane
 }
 
-// Shape gọn cho data/enemy/Enemies.ts — statsInput (~13-14 field,
-// xem EnemyStatInput.ts) thay vì phải khai đủ 41 field Stats. Đúng
-// khuyến nghị Last Epoch: quái thường không cần bộ stat đầy đủ như
+// Shape gon cho data/enemy/Enemies.ts - statsInput (~13-14 field,
+// xem EnemyStatInput.ts) thay vi phai khai du 41 field Stats. Dung
+// khuyen nghi Last Epoch: quai thuong khong can bo stat day du nhu
 // player.
 export interface EnemyDefinition {
   id: string
@@ -170,21 +170,21 @@ export interface EnemyDefinition {
 
   enrage?: BossEnrage
 
-  // Turn-based boss enrage (Phase A2, 2026-09-07) — same shape as the
+  // Turn-based boss enrage (Phase A2, 2026-09-07) - same shape as the
   // Enemy interface's bossTrigger; threaded through defineEnemy() and
   // enemyToCombatEntity() unchanged.
   bossTrigger?: { afterTurns: number; buffDefinitionId: string }
 
   breakGaugeMax?: number
 
-  // Combat Balance Pass (2026-08-29, plan §3.6) — thread qua Enemy/
-  // CombatEntity, tiêu thụ ở BattleSystem.fireEnemyAttack().
+  // Combat Balance Pass (2026-08-29, plan sec3.6) - thread qua Enemy/
+  // CombatEntity, tieu thu o BattleSystem.fireEnemyAttack().
   specialAttacks?: EnemySpecialAttack[]
 
-  // Đột Phá Trúc Cơ (Phase 4) — quái Kiếp set true trực tiếp lúc định
-  // nghĩa (KHÔNG qua createBossVariant(), vì multiplier 8x/3x của Boss
-  // thường không áp dụng — mỗi tier Kiếp tự khai statsInput riêng).
-  // Chỉ tái dùng cờ isBoss để Combat HUD hiện thanh máu cố định.
+  // Dot Pha Truc Co (Phase 4) - quai Kiep set true truc tiep luc dinh
+  // nghia (KHONG qua createBossVariant(), vi multiplier 8x/3x cua Boss
+  // thuong khong ap dung - moi tier Kiep tu khai statsInput rieng).
+  // Chi tai dung co isBoss de Combat HUD hien thanh mau co dinh.
   isBoss?: boolean
 
   // Hidden Perfection Lineage (design 2026-09-23 sec.9) - semantic
@@ -193,10 +193,10 @@ export interface EnemyDefinition {
 }
 
 /**
- * Tính sẵn `stats` (normalizeEnemyStats) + `currentHp`/`maxHp`/`alive`
- * (luôn = stats.maxHp/true cho 1 TEMPLATE mới định nghĩa) — data file
- * chỉ cần khai statsInput, không phải tự lặp lại currentHp=maxHp mỗi
- * lần.
+ * Tinh san `stats` (normalizeEnemyStats) + `currentHp`/`maxHp`/`alive`
+ * (luon = stats.maxHp/true cho 1 TEMPLATE moi dinh nghia) - data file
+ * chi can khai statsInput, khong phai tu lap lai currentHp=maxHp moi
+ * lan.
  */
 export function defineEnemy(definition: EnemyDefinition): Enemy {
   // stat-system-reimagined Task 10 (D21/INV-14) -- reaction-tagged
@@ -253,10 +253,10 @@ export function defineEnemy(definition: EnemyDefinition): Enemy {
 const BOSS_NAME_PREFIX = 'Đại Vương '
 
 /**
- * Core Loop Foundation checklist (Mục BOSS) — tier RIÊNG, buff LỚN
- * HƠN Elite nhiều (applyBossMultiplier). Gọi khi Stage.bossEnemyId
- * khớp lượt spawn CUỐI (xem GameManager.pickEnemyForSpawn()) — KHÔNG
- * roll ngẫu nhiên như Elite.
+ * Core Loop Foundation checklist (Muc BOSS) - tier RIENG, buff LON
+ * HON Elite nhieu (applyBossMultiplier). Goi khi Stage.bossEnemyId
+ * khop luot spawn CUOI (xem GameManager.pickEnemyForSpawn()) - KHONG
+ * roll ngau nhien nhu Elite.
  */
 export function createBossVariant(enemy: Enemy): Enemy {
   const stats = applyBossMultiplier(enemy.stats)
@@ -277,8 +277,8 @@ export function createBossVariant(enemy: Enemy): Enemy {
 }
 
 /**
- * Chuyển Enemy thành CombatEntity
- * trước khi đưa vào Combat System.
+ * Chuyen Enemy thanh CombatEntity
+ * truoc khi dua vao Combat System.
  */
 export function enemyToCombatEntity(enemy: Enemy): CombatEntity {
   return {
@@ -307,17 +307,17 @@ export function enemyToCombatEntity(enemy: Enemy): CombatEntity {
 
     realmIndex: getRealmIndex(enemy.realmId),
 
-    // Placeholder — BattleSystem.start()/spawnEnemyInto() set lại
-    // thành ENEMY_SPAWN_X ngay khi quái vào trận (xem
+    // Placeholder - BattleSystem.start()/spawnEnemyInto() set lai
+    // thanh ENEMY_SPAWN_X ngay khi quai vao tran (xem
     // core/battle/BattleLane.ts).
     x: 0,
 
-    // Placeholder — vị trí THẬT được resolver roll ĐÚNG MỘT LẦN khi đặt
-    // lịch spawn telegraph (plan §5.1): quái thường row 0..9, column
-    // 7..15; Boss luôn HERO_LANE_INDEX. Xem
-    // core/battle/EnemySpawnPlacement.ts. `enemy.row` (EnemyLane cũ,
-    // authored trong data/enemy/*.ts) không còn quyết định vị trí hiển
-    // thị nữa.
+    // Placeholder - vi tri THAT duoc resolver roll DUNG MOT LAN khi dat
+    // lich spawn telegraph (plan sec5.1): quai thuong row 0..9, column
+    // 7..15; Boss luon HERO_LANE_INDEX. Xem
+    // core/battle/EnemySpawnPlacement.ts. `enemy.row` (EnemyLane cu,
+    // authored trong data/enemy/*.ts) khong con quyet dinh vi tri hien
+    // thi nua.
     row: 0,
 
     alive: enemy.alive,

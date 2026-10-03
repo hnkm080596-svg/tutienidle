@@ -1,4 +1,4 @@
-/** Chín bậc nội dung dùng chung cho kinh tế và UI progression. */
+/** Chin bac noi dung dung chung cho kinh te va UI progression. */
 export const REALM_TIERS = [
   'mortal',
   'qi_refining',
@@ -13,7 +13,7 @@ export const REALM_TIERS = [
 
 export type RealmTierId = (typeof REALM_TIERS)[number]
 
-/** Hợp Thể dùng chung tier kinh tế với Đại Thừa theo quyết định của plan. */
+/** Hop The dung chung tier kinh te voi Dai Thua theo quyet dinh cua plan. */
 export function getRealmTier(realmId: string): number {
   if (realmId === 'body_integration') return 8
   const index = REALM_TIERS.indexOf(realmId as RealmTierId)

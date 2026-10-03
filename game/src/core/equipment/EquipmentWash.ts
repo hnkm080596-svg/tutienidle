@@ -32,15 +32,15 @@ import { LUYEN_KHI_TINH_HOA_ID } from './TinhHoaMaterial'
 import { SPIRIT_STONE_MATERIAL_ID } from '../material/SpiritStoneMaterial'
 
 /**
- * TẦY LUYỆN (plan §7.3) — reroll TOÀN BỘ identity substat: số dòng
- * trong trần Chất, identity từ pool hợp lệ, tier weighted theo Chất.
- * Tách khỏi EquipmentSystem (Task 8, phase7-gamemanager-split), hành vi
- * giữ NGUYÊN 1:1, chỉ đổi chỗ ở.
+ * TAY LUYEN (plan sec7.3) - reroll TOAN BO identity substat: so dong
+ * trong tran Chat, identity tu pool hop le, tier weighted theo Chat.
+ * Tach khoi EquipmentSystem (Task 8, phase7-gamemanager-split), hanh vi
+ * giu NGUYEN 1:1, chi doi cho o.
  *
- * Wash vẫn cần vài mảnh state/API của EquipmentSystem (cost discount,
- * ModifierSystem riêng) — nhận qua `WashDeps` do EquipmentSystem tự
- * bind (`this.X`) thay vì tách nốt các phần đó ra khỏi class, đúng
- * cách tiếp cận layered mà task brief đề xuất.
+ * Wash van can vai manh state/API cua EquipmentSystem (cost discount,
+ * ModifierSystem rieng) - nhan qua `WashDeps` do EquipmentSystem tu
+ * bind (`this.X`) thay vi tach not cac phan do ra khoi class, dung
+ * cach tiep can layered ma task brief de xuat.
  */
 export interface WashDeps {
   tryGetTemplate: (registry: EquipmentRegistry, itemId: string) => Equipment | undefined
@@ -49,14 +49,14 @@ export interface WashDeps {
 
   spendItemRefinementPoints: (instance: EquipmentInstance, amount: number) => void
 
-  /** Không-op nếu instance chưa equipped — khớp guard gốc trong commitWashAffixes(). */
+  /** Khong-op neu instance chua equipped - khop guard goc trong commitWashAffixes(). */
   refreshEquippedModifiers: (
     instance: EquipmentInstance,
     slotManager: EquipmentSlotManager,
     affixRegistry: AffixRegistry,
   ) => void
 
-  /** R9 (AR-21) — instance-owned pending wash slot (see createWashPendingSlotAccessor). */
+  /** R9 (AR-21) - instance-owned pending wash slot (see createWashPendingSlotAccessor). */
   washPendingSlot: WashPendingSlotAccessor
 }
 
@@ -77,8 +77,8 @@ function rollWashAffixes(
     return { ok: false, reason: 'not_found' }
   }
 
-  // Guard nhất quán với Hóa Luyện (§7.5) — item locked/favorite
-  // không được Tẩy Luyện.
+  // Guard nhat quan voi Hoa Luyen (sec7.5) - item locked/favorite
+  // khong duoc Tay Luyen.
   if (instance.locked) {
     return { ok: false, reason: 'locked' }
   }
@@ -128,7 +128,7 @@ function rollWashAffixes(
 
   const rolled: RolledAffix[] = []
 
-  // Reserve a compatible Tiên Chất Exalted line before base rolls so
+  // Reserve a compatible Tien Chat Exalted line before base rolls so
   // another affix cannot consume its stat.
   let exalted: RolledAffix | null = null
   if (instance.quality === 'tien' && random() < ITEM_QUALITY_EXALTED_AFFIX_CHANCE) {
@@ -204,7 +204,7 @@ function rollWashAffixes(
     rolled.push(exalted)
   }
 
-  // M2 (ARCH-011) — exact-object membership capability, captured before
+  // M2 (ARCH-011) - exact-object membership capability, captured before
   // payment (refine precedent): the lookup above already proved this is
   // the live object in the bag; the undefined guard keeps a misbehaving
   // EquipmentBag from charging resources for an unbindable ticket.
@@ -249,7 +249,7 @@ export function washAffixes(
 }
 
 /**
- * R9 (AR-21) — domain-owned paid wash result. Preview returns a one-use
+ * R9 (AR-21) - domain-owned paid wash result. Preview returns a one-use
  * TICKET; the rolled affixes never leave the domain as authoritative
  * data. Modeled on the refine pending-preview precedent. A single
  * pending slot per wash flow: a new preview replaces (and thereby
@@ -260,7 +260,7 @@ export function washAffixes(
  * from a previous session be committed). The instance injects the
  * slot accessor through WashDeps.
  *
- * M2 (ARCH-011) — the ticket binds ONE item lifetime, not a string id:
+ * M2 (ARCH-011) - the ticket binds ONE item lifetime, not a string id:
  * the exact live object, its bag-membership generation, and a detached
  * issued-at snapshot. Commit revalidates all three plus current
  * locked/favorite eligibility, so a same-instanceId replacement, a
@@ -330,7 +330,7 @@ export function discardWashTicket(
 }
 
 /**
- * M1 (ARCH-001) — unconditional invalidation for session restore: the
+ * M1 (ARCH-001) - unconditional invalidation for session restore: the
  * item set is being replaced wholesale, so whatever pending paid ticket
  * exists dies with the old set (its instanceId binding can silently
  * resolve to a different restored object). Distinct from
@@ -341,11 +341,11 @@ export function invalidatePendingWashTicket(slot: WashPendingSlotAccessor): void
 }
 
 /**
- * Xem trước Tẩy Luyện (UI "giữ/bỏ") — roll + validate + TRỪ COST giống
- * hệt washAffixes(), nhưng KHÔNG ghi affixes mới vào instance. Trả
- * TICKET cho UI; affixes hiển thị đọc qua getWashPreviewAffixes() —
- * người chơi bấm lại (ticket cũ bị thay + trả cost lần nữa, roll mới)
- * hoặc "Giữ" (commitWashAffixes, không tốn thêm) để chốt.
+ * Xem truoc Tay Luyen (UI "giu/bo") - roll + validate + TRU COST giong
+ * het washAffixes(), nhung KHONG ghi affixes moi vao instance. Tra
+ * TICKET cho UI; affixes hien thi doc qua getWashPreviewAffixes() -
+ * nguoi choi bam lai (ticket cu bi thay + tra cost lan nua, roll moi)
+ * hoac "Giu" (commitWashAffixes, khong ton them) de chot.
  */
 export function previewWashAffixes(
   instanceId: string,
@@ -364,7 +364,7 @@ export function previewWashAffixes(
 
   const ticketId = deps.washPendingSlot.nextTicketId()
 
-  // M2 (ARCH-011) — bind the paid roll to the exact item lifetime: the
+  // M2 (ARCH-011) - bind the paid roll to the exact item lifetime: the
   // live object, its current membership generation, and the post-payment
   // snapshot (same position as refine: forge spend already recorded).
   deps.washPendingSlot.set({
@@ -379,12 +379,12 @@ export function previewWashAffixes(
 }
 
 /**
- * Chốt kết quả đã preview — KHÔNG kiểm tra/trừ cost lần nữa. R9
- * (AR-21): mọi commit attempt TIÊU ticket (kể cả khi item đã biến
- * mất); affixes áp vào instance là bản DOMAIN đã giữ, không nhận
- * dữ liệu từ caller.
+ * Chot ket qua da preview - KHONG kiem tra/tru cost lan nua. R9
+ * (AR-21): moi commit attempt TIEU ticket (ke ca khi item da bien
+ * mat); affixes ap vao instance la ban DOMAIN da giu, khong nhan
+ * du lieu tu caller.
  *
- * M2 (ARCH-011) — commit revalidates against the CURRENT bag: the
+ * M2 (ARCH-011) - commit revalidates against the CURRENT bag: the
  * ticket only authorizes the exact bound object while it still occupies
  * the same membership generation AND keeps its issued-at snapshot
  * (locked/favorite included). Current eligibility is re-checked so a
@@ -413,7 +413,7 @@ export function commitWashAffixes(
     return { ok: false, reason: 'no_pending_wash' }
   }
 
-  // Eligibility revalidation — flags flipped after preview must reject
+  // Eligibility revalidation - flags flipped after preview must reject
   // instead of overwriting a protected item (preview vocabulary kept).
   if (instance.locked) {
     return { ok: false, reason: 'locked' }

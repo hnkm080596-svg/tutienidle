@@ -151,10 +151,10 @@ function reportAssetError(): void {
   opacity: 0;
 }
 
-/* Hover/focus (2026-08-30 bug report: "hover làm mờ building thay vì rõ
-   hơn") — filter riêng SÁNG hơn mặc định (brightness 0.72 → 1.15) thay vì
-   dùng chung filter tối của outline mặc định, cho cảm giác "sáng lên" chứ
-   không phải quầng vàng xỉn màu phủ lên. */
+/* Hover/focus (2026-08-30 bug report: "hover lam mo building thay vi ro
+   hon") - filter rieng SANG hon mac dinh (brightness 0.72 -> 1.15) thay vi
+   dung chung filter toi cua outline mac dinh, cho cam giac "sang len" chu
+   khong phai quang vang xin mau phu len. */
 :global(.building-hotspot:hover) .dong-fu-building-sprite__outline,
 :global(.building-hotspot:focus-visible) .dong-fu-building-sprite__outline {
   opacity: 0.4;
@@ -165,8 +165,8 @@ function reportAssetError(): void {
   opacity: 0.52;
 }
 
-/* Ảnh chính SÁNG/RÕ hơn khi hover — trước đây chỉ có quầng viền xỉn màu
-   phủ lên, không có gì làm base rõ hơn nên cảm giác ngược lại (mờ đi). */
+/* Anh chinh SANG/RO hon khi hover - truoc day chi co quang vien xin mau
+   phu len, khong co gi lam base ro hon nen cam giac nguoc lai (mo di). */
 :global(.building-hotspot:hover) .dong-fu-building-sprite__base,
 :global(.building-hotspot:focus-visible) .dong-fu-building-sprite__base {
   filter: brightness(1.12) saturate(1.08);

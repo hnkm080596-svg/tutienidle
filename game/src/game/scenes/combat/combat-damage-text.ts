@@ -1,7 +1,7 @@
-﻿// combat-damage-text (ui-discoverability-refactor-plan.md Â§3.2) â€” tÃ¡ch tá»«
-// CombatScene.ts: Náº¢Y Sá» damage/crit/DoT gom 3 láº§n/giÃ¢y. Module nháº­n
-// dependency tÆ°á»ng minh qua `scene` (má»i cross-call Ä‘á»u Ä‘i qua scene
-// delegate Ä‘á»ƒ giá»¯ nguyÃªn seam test â€” showDotDamageNumber bá»‹ stub trong
+﻿// combat-damage-text (ui-discoverability-refactor-plan.md sec3.2) - tach tu
+// CombatScene.ts: NAY SO damage/crit/DoT gom 3 lan/giay. Module nhan
+// dependency tuong minh qua `scene` (moi cross-call deu di qua scene
+// delegate de giu nguyen seam test - showDotDamageNumber bI stub trong
 // CombatScene.dotPresentation.test.ts).
 import Phaser from 'phaser'
 
@@ -30,7 +30,7 @@ export class CombatDamageText {
     const target = this.scene.spriteFor(event.targetId)
 
     // The floating number tracks HP actually lost (hpDamage), matching
-    // the HP bar — `value` is the pre-absorb impact and would show a
+    // the HP bar - `value` is the pre-absorb impact and would show a
     // phantom "-100" on a fully warded hit. Older emitters without the
     // breakdown fall back to `value`.
     const hpDamage = event.hpDamage ?? event.value
@@ -39,7 +39,7 @@ export class CombatDamageText {
       return
     }
 
-    // Gameplay khÃ´ng Ä‘á»•i tick rate (Â§7.1) â€” chá»‰ giáº£m táº§n suáº¥t trÃ¬nh diá»…n.
+    // Gameplay khong doi tick rate (sec7.1) - chi giam tan suat trinh dien.
     if (event.effectId) {
       this.accumulateDotText(event)
 
@@ -56,7 +56,7 @@ export class CombatDamageText {
     this.showDamageNumber(target, hpDamage, color, event.critical ?? false)
   }
 
-  /** Bộ gom DoT — khóa `targetId|effectId|sourceId`, cửa sổ 1/3 giây. */
+  /** Bo gom DoT - khoa `targetId|effectId|sourceId`, cua so 1/3 giay. */
   private accumulateDotText(event: CombatEvent) {
     const key = `${event.targetId}|${event.effectId ?? ''}|${event.sourceId ?? ''}`
 
@@ -71,7 +71,7 @@ export class CombatDamageText {
     bucket.value += event.hpDamage ?? event.value ?? 0
   }
 
-  /** Flush cÃ¡c bucket Ä‘Ã£ Ä‘áº¿n háº¡n â€” Má»–I KHÃ“A Ä‘Ãºng 1 text (Â§7.2). */
+  /** Flush cac bucket da den han - MOI KHOA dung 1 text (sec7.2). */
   flushDueDotTexts() {
     this.scene.dotAccumulators ??= new Map()
 
@@ -96,11 +96,11 @@ export class CombatDamageText {
     }
   }
 
-  // "Náº£y sá»‘" tháº­t sá»± â€” pop-in báº±ng Back.easeOut (báº­t náº£y quÃ¡ cá»¡ rá»“i
-  // co vá», khÃ¡c easeOut tuyáº¿n tÃ­nh cá»§a showFloatingText) rá»“i má»›i trÃ´i
-  // lÃªn/má» dáº§n, tÃ¡ch biá»‡t háº³n pháº§n chá»¯ "ChÃ­ Máº¡ng!"/"NÃ©!" (showFloatingText)
-  // â€” jitter ngang nhá» Ä‘á»ƒ 2 hiá»‡u á»©ng khÃ´ng Ä‘Ã¨ khÃ­t lÃªn nhau khi cÃ¹ng
-  // 1 Ä‘Ã²n vá»«a ChÃ­ Máº¡ng vá»«a cÃ³ sÃ¡t thÆ°Æ¡ng.
+  // "Nay so" that su - pop-in bang Back.easeOut (bat nay qua co roi
+  // co ve, khac easeOut tuyen tinh cua showFloatingText) roi mOi troi
+  // len/mo dan, tach biet han phan chu "Chi Mang!"/"Ne!" (showFloatingText)
+  // - jitter ngang nho de 2 hieu ung khong de khit len nhau khi cung
+  // 1 don vua Chi Mang vua co sat thuong.
   showDamageNumber(sprite: EntitySprite, value: number, color: string, critical: boolean) {
     const jitterX = Phaser.Math.Between(-10, 10)
     const fontSize = critical ? 20 : 14
@@ -192,10 +192,10 @@ export class CombatDamageText {
   }
 
   /**
-   * 6A-T2 (2026-09-01) — floating "Hạ Gục!" trên đầu enemy vừa chết.
-   * 18px bold trắng stroke đỏ (spec §2); scene subscribe event 'kill'
-   * và gọi với sprite của targetId — fade của sprite chết không chặn
-   * text (text tự destroy sau tween).
+   * 6A-T2 (2026-09-01) - floating "Ha Guc!" tren dau enemy vua chet.
+   * 18px bold trang stroke do (spec sec2); scene subscribe event 'kill'
+   * va goi voi sprite cua targetId - fade cua sprite chet khong chan
+   * text (text tu destroy sau tween).
    */
   showKillText(sprite: EntitySprite) {
     const label = this.scene.add
@@ -220,8 +220,8 @@ export class CombatDamageText {
   }
 
   /**
-   * 6A-T2 (2026-09-01) — floating "+N" xanh cho heal (event 'heal' từ
-   * EntityVitalsSystem — healing/leech). formatNumber cho số lớn.
+   * 6A-T2 (2026-09-01) - floating "+N" xanh cho heal (event 'heal' tu
+   * EntityVitalsSystem - healing/leech). formatNumber cho so lon.
    */
   showHealText(sprite: EntitySprite, value: number) {
     if (!Number.isFinite(value) || value <= 0) {

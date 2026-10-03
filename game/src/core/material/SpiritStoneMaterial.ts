@@ -1,10 +1,10 @@
 import type { Material } from './Material'
 
-// Linh Thạch là MATERIAL (plan Workstream F) — KHÔNG còn currency state
-// riêng trên PlayerData. Số dư duy nhất:
+// Linh Thach la MATERIAL (plan Workstream F) - KHONG con currency state
+// rieng tren PlayerData. So du duy nhat:
 //   materialBag.getAmount(SPIRIT_STONE_MATERIAL_ID)
-// Cộng bằng materialBag.add(); tiêu bằng materialBag.remove() sau khi
-// kiểm tra has(). Với penalty có thể trừ quá số dư, dùng amount thực tế
+// Cong bang materialBag.add(); tieu bang materialBag.remove() sau khi
+// kiem tra has(). Voi penalty co the tru qua so du, dung amount thuc te
 // Math.min(owned, requested).
 export type SpiritStoneTier = 'ha_pham' | 'trung_pham' | 'thuong_pham'
 
@@ -23,9 +23,9 @@ export const SPIRIT_STONE_MATERIAL: Material = {
 
   description: 'Tinh thể linh khí dùng làm vật liệu và đơn vị trao đổi.',
 
-  // Trần stack chung (MAX_STACK_AMOUNT = 1000) KHÔNG phù hợp Linh Thạch
-  // — chi phí Đột Phá lên tới hàng tỷ. undefined với material khác =
-  // trần chung.
+  // Tran stack chung (MAX_STACK_AMOUNT = 1000) KHONG phu hop Linh Thach
+  // - chi phi Dot Pha len toi hang ty. undefined voi material khac =
+  // tran chung.
   stackLimit: Number.MAX_SAFE_INTEGER,
 }
 
@@ -53,7 +53,7 @@ export function getSpiritStoneMaterialIdForRealmTier(tier: number): string {
   return SPIRIT_STONE_MATERIAL_ID
 }
 
-/** Mỗi 30 cấp Cường Hóa chuyển sang một phẩm Linh Thạch cao hơn. */
+/** Moi 30 cap Cuong Hoa chuyen sang mot pham Linh Thach cao hon. */
 export function getSpiritStoneMaterialIdForEnhanceLevel(level: number): string {
   if (level >= 60) return SPIRIT_STONE_THUONG_PHAM_MATERIAL_ID
   if (level >= 30) return SPIRIT_STONE_TRUNG_PHAM_MATERIAL_ID
@@ -61,14 +61,14 @@ export function getSpiritStoneMaterialIdForEnhanceLevel(level: number): string {
 }
 
 // =========================
-// Quy đổi phẩm (review 2026-08-28, economy-ecosystem-plan T2): CHỈ có
-// quy đổi 1 CHIỀU LÊN — 100 Hạ → 1 Trung, 100 Trung → 1 Thượng. Không
-// có chiều ngược để giữ sink (Linh Thạch thượng phẩm không bị tháo ra
-// lại thành 100 hạ phẩm bypass chi phí).
-// gp123 6G (2026-09-06):getNextSpiritStoneMaterialId đã bị XÓA cùng API
-// quy đổi (GameManager.convertSpiritStonesUp/convertMaterialTier) —
-// thu mua theo gate phẩm thay thế. SPIRIT_STONE_CONVERSION_RATIO giữ
-// lại: TuLinhTranBalance vẫn dùng làm hệ số quy đổi giá (xem
+// Quy doi pham (review 2026-08-28, economy-ecosystem-plan T2): CHI co
+// quy doi 1 CHIEU LEN - 100 Ha -> 1 Trung, 100 Trung -> 1 Thuong. Khong
+// co chieu nguoc de giu sink (Linh Thach thuong pham khong bi thao ra
+// lai thanh 100 ha pham bypass chi phi).
+// gp123 6G (2026-09-06):getNextSpiritStoneMaterialId da bi XOA cung API
+// quy doi (GameManager.convertSpiritStonesUp/convertMaterialTier) -
+// thu mua theo gate pham thay the. SPIRIT_STONE_CONVERSION_RATIO giu
+// lai: TuLinhTranBalance van dung lam he so quy doi gia (xem
 // core/economy/TuLinhTranBalance.ts).
 // =========================
 

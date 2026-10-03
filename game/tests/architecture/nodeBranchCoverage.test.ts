@@ -10,7 +10,7 @@ import { ELEMENT_ORDER } from '../../src/core/element/ElementLabels'
  * Node-branch coverage guard (B1 fix, 2026-09-14).
  *
  * Origin: PhapTuNodes shipped 45 `thuan_*` nodes + the shared `lap_dao`
- * gate under branchTags no tree view could ever select — NodeTreePanel
+ * gate under branchTags no tree view could ever select - NodeTreePanel
  * filters `branchTag === viewTag` and views only ever pass an ElementType
  * or a kiem-tu route. The whole Thuan chain was dead content.
  *
@@ -20,10 +20,10 @@ import { ELEMENT_ORDER } from '../../src/core/element/ElementLabels'
  * tag without a render path fails here instead of shipping silently.
  */
 
-// Kiem Tu Reimagined Task 11 — the retired kiem_tran/bat_kiem route
+// Kiem Tu Reimagined Task 11 - the retired kiem_tran/bat_kiem route
 // tags are gone; the reimagined tree renders through 'kiem_pho' and
 // 'ngu_kiem' (both map to the combined kiem-tu view).
-// The Tu Reimagined (Task 12) — 'the_tu' is a single-tag pass-through
+// The Tu Reimagined (Task 12) - 'the_tu' is a single-tag pass-through
 // view (one tree, mutex roots inside it); 'the_tu_an' is the hidden
 // path's view tag.
 const VIEW_TAGS = [...ELEMENT_ORDER, 'kiem_pho', 'ngu_kiem', 'the_tu', 'the_tu_an']
@@ -45,7 +45,7 @@ describe('node branch coverage', () => {
     const unrenderable: string[] = []
 
     for (const node of [...PHAP_TU_NODES, ...KIEM_TU_NODES, ...THE_TU_NODES, ...THE_TU_AN_NODES]) {
-      // Phap Tu Reimagined (Task 16) — the view membership tag is
+      // Phap Tu Reimagined (Task 16) - the view membership tag is
       // elementTag for the reworked Phap Tu tree, branchTag for the
       // Kiem Tu routes and the The Tu trees; a node is renderable when
       // its view tag is.

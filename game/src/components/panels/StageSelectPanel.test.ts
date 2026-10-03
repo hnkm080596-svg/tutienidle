@@ -14,8 +14,8 @@ import { BUMP_STATE_KEY, GAME_MANAGER_KEY, STATE_VERSION_KEY } from '@/composabl
 import { vTooltip } from '@/directives/tooltip'
 import { i18n } from '@/i18n'
 
-// i18n (2.5 task 8) — assert qua i18n.global.t(key) thay vì raw vi string
-// (pattern HomeResourceStrip). Tên quái/boss từ dữ liệu core, không locale.
+// i18n (2.5 task 8) - assert qua i18n.global.t(key) thay vi raw vi string
+// (pattern HomeResourceStrip). Ten quai/boss tu du lieu core, khong locale.
 function t(key: string): string {
   return (i18n.global as unknown as { t: (k: string) => string }).t(key)
 }
@@ -108,7 +108,7 @@ describe('StageSelectPanel — B5 auto-farm armed state + refused start guard (a
 
     player.perfectClearStageIds.push('mortal_dong_1', 'mortal_dong_2')
     // Eligibility contract (Mission B round 3): arming needs a valid
-    // cycle time too — perfectClearStageIds alone is not enough.
+    // cycle time too - perfectClearStageIds alone is not enough.
     player.perfectClearSeconds['mortal_dong_1'] = 100
     player.perfectClearSeconds['mortal_dong_2'] = 100
     // Occupy the single stage slot with a farm on another stage.
