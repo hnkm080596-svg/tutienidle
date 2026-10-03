@@ -54,6 +54,8 @@ import { alchemyRecipes } from '../../src/data/alchemy/alchemyRecipes'
 import { alchemyJobFixture } from '../../src/core/alchemy/AlchemyJob.fixture'
 import { alchemySecondsFor } from '../../src/core/alchemy/AlchemySystem'
 import { TU_LINH_TRAN_DURATION_MS, TU_LINH_TRAN_EFFECT_GROUP } from '../../src/core/economy/TuLinhTranBalance'
+import { BASE_CULTIVATION_PER_SECOND } from '../../src/core/realm/realmSystem'
+import { applyCreationProfile } from '../../src/core/game/EarlyGameBootstrap'
 import type { GameSave } from '../../src/services/save/SaveSystem'
 import type { Skill } from '../../src/core/skill/Skill'
 
@@ -703,8 +705,11 @@ describe('F-A10-6: stage-clear and autofarm claims respect the stage realm', () 
 //          persisted pill_room level is the ceiling.
 // F-TC9-4  cultivationPerSecond was unbounded despite being a fully
 //          derived snapshot - the writer computes BASE x claimed talent
-//          speed x claimed talent ramp x (1 + tu linh tran <= 0.25), so
-//          a rate above the save's own claims is a forged magnitude.
+//          speed x claimed talent ramp x (1 + tu linh tran <= 0.25). A
+//          rate above the derivable ceiling is now clamped into
+//          normalizedSave instead of flagging the save: the next tick
+//          rewrites the field anyway, so the clamp cannot lose state
+//          and still neutralizes a forged magnitude.
 
 describe('F-TC9-1: timed-effect temporal coherence', () => {
   it('an effect applied after lastSavedAt is rejected', () => {
@@ -848,12 +853,43 @@ describe('F-TC9-3: alchemy job room-level bound', () => {
 })
 
 describe('F-TC9-4: cultivationPerSecond derived-snapshot bound', () => {
-  it('a rate above the derivable maximum is rejected', () => {
+  it('a rate above the derivable maximum is clamped into normalizedSave', () => {
+    // The next tick rewrites this derived snapshot regardless, so the
+    // seam clamps rather than flagging - the forged magnitude never
+    // reaches restore's offlineSeconds x cps accrual, and the raw
+    // claim stays untouched in the caller's copy for recovery/audit.
     const save = validSave()
     const p = save.player as ReturnType<typeof createDefaultPlayer>
     p.cultivationPerSecond = 1_000_000
 
-    expect(validateGameSaveShape(save).ok).toBe(false)
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(true)
+    if (result.ok) {
+      expect((result.normalizedSave as GameSave).player.cultivationPerSecond).toBe(
+        BASE_CULTIVATION_PER_SECOND,
+      )
+    }
+    expect(p.cultivationPerSecond).toBe(1_000_000)
+  })
+
+  it('clamps a persisted pre-tick base rate to the pham_cot-derived ceiling', () => {
+    // Regression for the revision-1 wedge: applyCreationProfile leaves
+    // createDefaultPlayer's pre-tick BASE rate persisted (10), which
+    // exceeds the 2.5 ceiling the owned -75% speed talent implies and
+    // wedged the fresh character 'corrupted' until the first post-tick
+    // save could land (crash / quick close / second device).
+    const save = validSave()
+    const p = save.player as ReturnType<typeof createDefaultPlayer>
+    applyCreationProfile(p, { name: 'Lac Van', talentIds: ['pham_cot'] })
+    p.cultivationPerSecond = 10
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(true)
+    if (result.ok) {
+      expect((result.normalizedSave as GameSave).player.cultivationPerSecond).toBe(2.5)
+    }
   })
 
   it('the plain base rate still validates', () => {

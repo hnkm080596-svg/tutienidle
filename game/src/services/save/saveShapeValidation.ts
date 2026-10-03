@@ -490,11 +490,21 @@ function validateNonNegativeIntMap(
   }
 }
 
-function validatePlayer(player: unknown, issues: ShapeIssue[]) {
+// Fixups the validator derives but does not flag: values the restore
+// seam folds into normalizedSave (like the equipment normalization at
+// the tail of this file). A fixup is only ever a DERIVED SNAPSHOT the
+// owning writer recomputes anyway, so clamping can never lose state.
+interface PlayerShapeNormalization {
+  cultivationPerSecond?: number
+}
+
+function validatePlayer(player: unknown, issues: ShapeIssue[]): PlayerShapeNormalization {
+  const normalization: PlayerShapeNormalization = {}
+
   if (!isObject(player)) {
     issues.push({ path: 'player', message: 'phải là object' })
 
-    return
+    return normalization
   }
 
   requireString(player, 'name', 'player', issues)
@@ -758,9 +768,15 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
   // F-TC9-4: cultivationPerSecond is a derived snapshot - cultivateTick
   // rewrites it every tick from authored factors (BASE x claimed talent
   // speed x claimed talent ramp x tu linh tran <= +25%). A persisted
-  // rate above what the save's own claims can produce is a forged
-  // accrual magnitude: restore pays offlineSeconds x cps and banks the
-  // overflow into cultivationOvercharge.
+  // rate above what the save's own claims can produce is CLAMPED to
+  // that ceiling at the normalize seam instead of failing the save:
+  // the field is rewritten by the next tick regardless, so the clamp
+  // can never lose legitimate state - and it rescues the legit wedge
+  // (createDefaultPlayer persists the pre-tick BASE rate, so a
+  // revision-1 save of a character holding a speed-shrinking talent
+  // like pham_cot or ho_tich_bat_phat would otherwise stay 'corrupted'
+  // until a tick-save could land) while still neutralizing a forged
+  // high-cps payload before restore pays offlineSeconds x cps.
   if (
     isNonNegativeFiniteNumber(player.cultivationPerSecond) &&
     isNonNegativeFiniteNumber(player.realmLevel)
@@ -801,10 +817,7 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
       (hasLiveTlt ? 1 + TU_LINH_TRAN_BUFF_PERCENT : 1)
 
     if (player.cultivationPerSecond > maxPersistedCps + 1e-9) {
-      issues.push({
-        path: 'player.cultivationPerSecond',
-        message: 'vượt rate tối đa derive được từ talent claims hiện tại',
-      })
+      normalization.cultivationPerSecond = maxPersistedCps
     }
   }
 
@@ -2381,6 +2394,8 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
       }
     }
   }
+
+  return normalization
 }
 
 /**
@@ -4099,7 +4114,7 @@ export function validateGameSaveShape(parsed: unknown): ShapeValidationResult {
     })
   }
 
-  validatePlayer(parsed.player, issues)
+  const playerNormalization = validatePlayer(parsed.player, issues)
 
   const techniques = requireArray(parsed, 'techniques', '', issues)
   const skills = requireArray(parsed, 'skills', '', issues)
@@ -4755,6 +4770,16 @@ export function validateGameSaveShape(parsed: unknown): ShapeValidationResult {
     issues: [],
     normalizedSave: {
       ...parsed,
+      // F-TC9-4 fixup: the clamped derived snapshot replaces the raw
+      // claim so every consumer of normalizedSave (inspect/load, remote
+      // pull, pending adoption, import) behaves with the ceiling rate.
+      player:
+        isObject(parsed.player) && playerNormalization.cultivationPerSecond !== undefined
+          ? {
+              ...parsed.player,
+              cultivationPerSecond: playerNormalization.cultivationPerSecond,
+            }
+          : parsed.player,
       equipment: equipmentValidation?.normalizedEntries ?? [],
       equipmentSlots: normalizedEquipmentSlots ?? [],
     },

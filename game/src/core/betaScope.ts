@@ -88,14 +88,16 @@ export function isBetaMortalStarterId(skillId: string): boolean {
 }
 
 /**
- * Creation talent offers admitted in beta: the creation catalog
- * minus 'pham_cot' (the hidden/perfection-lineage feeder - its Dai
- * Dao conversion path is out of beta scope). The allow-list covers
- * every exclusion class at once: hidden/perfection feeders,
- * future-realm-only talents, companion/formation/artifact-dependent
- * talents, and talents only meaningful on non-beta paths simply
- * never appear here. A talent added to CHARACTER_CREATION_TALENTS
- * stays unoffered until admitted to this list (fail closed).
+ * Creation talent offers admitted in beta: the full creation
+ * catalog including 'pham_cot' - the easter-egg talent is a normal
+ * (if bad, -75% cultivation speed) rollable pick. Remaining
+ * exclusions: PARKED_TALENTS (weight 0, no writer) and the Great
+ * Dao rewards (minted only by the hidden Dai Dao conversion)
+ * never appear here, and a talent added to
+ * CHARACTER_CREATION_TALENTS stays unoffered until admitted to
+ * this list (fail closed). The hidden breakthrough lock is NOT
+ * this table's job: it lives at canProgressHiddenBody via
+ * isBetaFeature('hiddenContent').
  */
 export const BETA_CREATION_TALENT_IDS: readonly string[] = [
   // Combat - offense (5)
@@ -137,10 +139,11 @@ export function isBetaCreationTalentId(talentId: string): boolean {
 /**
  * Every talent id a beta save can legitimately own - the creation
  * allow-list plus every breakthrough-pool member (the realm-scoped
- * transaction catalogs). Great Dao reward evolutions (pham_nhan_chi_cot
- * via the excluded pham_cot feeder) and parked ids stay inert: their
- * only acquisition paths are out of beta scope, so an owned record is
- * a carried-save record and must not emit through the effect seam.
+ * transaction catalogs). Great Dao reward evolutions (pham_nhan_chi_cot,
+ * minted only by the hidden pham_cot conversion) and parked ids stay
+ * inert: their only acquisition paths are out of beta scope, so an
+ * owned record is a carried-save record and must not emit through the
+ * effect seam.
  * Seeded from static catalogs; the test-only roster-open seam
  * (betaTalentsUnlock) admits every defined talent when the lock is
  * lifted, so suites asserting pre-beta data wiring resolve the full

@@ -9,7 +9,7 @@
 //     survive.extraSources channels;
 //   * survive-lethal charges minted from carried talent ids;
 //   * persisted realm-sourced modifier claims and the main-stat cap;
-//   * dormant talent effects (pham_cot / pham_nhan_chi_cot);
+//   * dormant talent effects (the Great Dao reward pham_nhan_chi_cot);
 //   * hidden-beast spawn substitution + kill-counter writes;
 //   * carried Quan The diverter and Nghich Chu Tian mechanics minting
 //     cultivation banking / level writes downstream of eligibility;
@@ -141,8 +141,8 @@ describe('combat build resolution on a carried way_out_of_scope save', () => {
       cultivationPath: 'sword',
       cultivationWay: 'sword_pathway',
       swordPath: freshSwordPathState(),
-      // A carried formation loadout + a survive-lethal talent claim ride
-      // the same save - none of it may reach the build.
+      // A carried formation loadout + dormant talent claims ride the
+      // same save - none of it may reach the build.
       formationLoadout: { formationId: 'tran_ngu_hanh', slots: [] } as never,
       selectedTalentIds: ['tran_tam', 'pham_nhan_chi_cot'],
     })
@@ -225,11 +225,18 @@ describe('persisted stat modifiers + main-stat cap', () => {
 })
 
 describe('dormant talent effects', () => {
-  it('a forged non-beta talent emits no effects', () => {
-    // pham_nhan_chi_cot (+75% cultivation speed) and tran_tam are
-    // outside the beta talent roster - carried ids must mint nothing.
-    expect(collectTalentEffects(['pham_nhan_chi_cot', 'tran_tam'], {})).toEqual([])
+  it('pham_cot emits its effect; only still-dormant ids mint nothing', () => {
+    // pham_cot (-75% cultivation speed) is beta-admitted - a normal
+    // rollable easter-egg talent, so an owned id emits. The hidden Dai
+    // Dao conversion stays locked: pham_nhan_chi_cot (+75%) is minted
+    // only by that path, so a carried id still mints nothing.
+    expect(collectTalentEffects(['pham_cot', 'pham_nhan_chi_cot', 'tran_tam'], {})).toEqual([
+      { kind: 'cultivation_speed', percent: -0.75 },
+    ])
+    // pham_cot carries no combat passive.
+    expect(getTalentCombatPassiveSkillId(['pham_cot'], {})).toBeUndefined()
     expect(getTalentCombatPassiveSkillId(['pham_nhan_chi_cot'], {})).toBeUndefined()
+    expect(collectTalentEffects(['pham_nhan_chi_cot'], {})).toEqual([])
   })
 
   it('control: a beta talent still emits', () => {

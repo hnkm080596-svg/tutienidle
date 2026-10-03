@@ -549,17 +549,29 @@ describe('F-TC10-CPS: cultivationPerSecond TLT headroom requires a live record',
     expiresAtMs: lastSavedAt + 86_399_000,
   })
 
-  it('cps above base x speed x ramp without any tu_linh_tran record rejects', () => {
+  it('cps above base x speed x ramp without any tu_linh_tran record clamps', () => {
     // The +25% TLT factor is only derivable while a live record exists;
-    // a TLT-less save claiming the headroom mints extra offline accrual.
+    // a TLT-less save claiming the headroom is clamped down to the
+    // derivable ceiling (derived snapshot, see F-TC9-4) instead of
+    // flagging the save.
     const { save } = committedSave('qi_refining', { cultivationPerSecond: 12 })
-    expect(classify(save).shape.ok).toBe(false)
+    const { shape } = classify(save)
+
+    expect(shape.ok).toBe(true)
+    if (shape.ok) {
+      expect((shape.normalizedSave as GameSave).player.cultivationPerSecond).toBe(10)
+    }
   })
 
-  it('cps beyond the TLT headroom rejects even with a live record', () => {
+  it('cps beyond the TLT headroom clamps even with a live record', () => {
     const { save } = committedSave('qi_refining', { cultivationPerSecond: 20 })
     save.player.persistentTimedEffects = [liveTlt(save.player.lastSavedAt)]
-    expect(classify(save).shape.ok).toBe(false)
+    const { shape } = classify(save)
+
+    expect(shape.ok).toBe(true)
+    if (shape.ok) {
+      expect((shape.normalizedSave as GameSave).player.cultivationPerSecond).toBe(12.5)
+    }
   })
 
   it('control: cps at base x speed x ramp x 1.25 with a live record validates', () => {
