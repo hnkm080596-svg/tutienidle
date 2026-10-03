@@ -134,8 +134,9 @@ function slotBadge(slot: CommandWheelSlot): 'alert' | 'dot' | null {
   if (slot.id === 'character' && gameManager.realmAdvanceOps.canTriggerBreakthrough(player.$state)) {
     return 'alert'
   }
-  if (slot.buildingId && navigation.getBuildingPresentation(slot.buildingId).isUpgradeable) {
-    return 'dot'
+  if (slot.buildingId) {
+    const status = navigation.getBuildingStatus(slot.buildingId)
+    if (status === 'ready' || status === 'upgradeable') return 'dot'
   }
   return null
 }
