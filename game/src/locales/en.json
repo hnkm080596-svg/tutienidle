@@ -1962,10 +1962,25 @@
     "details": "Details",
     "combat": "Combat",
     "other": "Other",
-    "close": "Collapse details",
-    "open": "Expand details",
     "statNotice": "{name}: {value}",
-    "elementNotice": "{name} · Power {power} · Resist {resistance} · Pierce {penetration}"
+    "elementNotice": "{name} · Power {power} · Resist {resistance} · Pierce {penetration}",
+    "sources": {
+      "title": "Breakdown",
+      "base": "Base",
+      "bodyDelta": "Body Refinement",
+      "realm": "Realm",
+      "technique": "Technique",
+      "skill": "Skill",
+      "buff": "Buff",
+      "debuff": "Debuff",
+      "equipment": "Equipment",
+      "talent": "Talent",
+      "reincarnation": "Reincarnation",
+      "pill": "Pill",
+      "formation": "Formation",
+      "talisman": "Talisman",
+      "attribute": "Attribute"
+    }
   },
   "realm": {
     "title": "ASCENSION PATH",

@@ -6,6 +6,7 @@ import { MERIDIANS } from '../../data/realm/Meridians'
 import { isBetaFeature } from '../betaScope'
 import { getHiddenBreakthroughRealmIds } from '../realm/hidden/HiddenLineage'
 import { asBaseStats, createBaseStats, type BaseStats, type Stats } from '../stats/StatBlock'
+import type { StatType } from '../stats/StatTypes'
 import type { CombatEntity } from '../combat/CombatEntity'
 import { CENTER_LANE_INDEX } from '../battle/BattleLane'
 import {
@@ -519,7 +520,17 @@ export function createDefaultPlayer(): PlayerData {
 export function resolvePlayerStatAssembly(
   player: PlayerData,
   externalModifiers: StatModifier[],
-): { stats: Stats; wayFacetModifiers: readonly StatModifier[] } {
+): {
+  stats: Stats
+  wayFacetModifiers: readonly StatModifier[]
+  // Attribution read-model fields (character board source hover):
+  // the exact base + modifier list the canonical formula consumed,
+  // plus the body-refinement slice so 'Luyen The' is separable from
+  // the persisted raw base.
+  pipelineBase: BaseStats
+  bodyBaseDeltas: Partial<Record<StatType, number>>
+  modifiers: readonly StatModifier[]
+} {
   // Persisted realm-sourced modifiers reconcile against the CURRENT
   // scope verdict: realm-passive entries granted through a hidden
   // breakthrough stay recorded on flagged saves but emit nothing while
@@ -630,7 +641,8 @@ export function resolvePlayerStatAssembly(
   // mutated, so saves, mortal perfection's persisted-base read, and
   // restore rehydration are unaffected.
   const assembledBase = { ...player.baseStats }
-  for (const [stat, delta] of statDeltaEntries(collectBodyBaseStatDeltas(player))) {
+  const bodyBaseDeltas = collectBodyBaseStatDeltas(player)
+  for (const [stat, delta] of statDeltaEntries(bodyBaseDeltas)) {
     assembledBase[stat] += delta
   }
   const pipelineBase = asBaseStats(assembledBase)
@@ -647,9 +659,14 @@ export function resolvePlayerStatAssembly(
   const attributeTotals = resolveAttributeTotals(pipelineBase, allModifiers)
   const pathModifiers = collectActiveWayStatModifiers(player, attributeTotals)
 
+  const modifiers = [...allModifiers, ...pathModifiers]
+
   return {
-    stats: calculateStats(pipelineBase, [...allModifiers, ...pathModifiers]),
+    stats: calculateStats(pipelineBase, modifiers),
     wayFacetModifiers: pathModifiers,
+    pipelineBase,
+    bodyBaseDeltas,
+    modifiers,
   }
 }
 
